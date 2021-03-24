@@ -1,10 +1,10 @@
 {
   "apiBase": "/client/api",
   "docBase": "http://docs.cloudstack.apache.org/en/latest",
-  "appTitle": "CloudStack",
+  "appTitle": "ABLESTACK",
   "footer": "Licensed under the <a href='http://www.apache.org/licenses/' target='_blank'>Apache License</a>, Version 2.0.",
-  "logo": "assets/logo.svg",
-  "banner": "assets/banner.svg",
+  "logo": "assets/ablestack-logo.png",
+  "banner": "assets/ablestack-banner.png",
   "error": {
     "404": "assets/404.png",
     "403": "assets/403.png",
@@ -32,9 +32,10 @@
     "@border-color-base": "#d9d9d9",
     "@border-radius-base": "4px",
     "@box-shadow-base": "0 2px 8px rgba(0, 0, 0, 0.15)",
-    "@logo-width": "256px",
+    "@logo-width": "210px",
     "@logo-height": "64px",
-    "@banner-width": "700px",
+    "@logo-margin-left": "45px",
+    "@banner-width": "350px",
     "@banner-height": "110px",
     "@error-width": "256px",
     "@error-height": "256px"
