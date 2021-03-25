@@ -22,7 +22,6 @@
       :style="{
         width: $config.theme['@logo-width'],
         height: $config.theme['@logo-height'],
-        marginLeft: $config.theme['@logo-margin-left']
       }"
       :src="$config.logo"
       class="logo-image" />
