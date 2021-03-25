@@ -21,7 +21,7 @@
       v-if="$config.logo"
       :style="{
         width: $config.theme['@logo-width'],
-        height: $config.theme['@logo-height'],
+        height: $config.theme['@logo-height']
       }"
       :src="$config.logo"
       class="logo-image" />
