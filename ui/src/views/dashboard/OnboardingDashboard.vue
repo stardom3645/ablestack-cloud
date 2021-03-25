@@ -26,7 +26,7 @@
         <div class="title">{{ $t('label.what.is.cloudstack') }}</div>
         <div class="subtitle">{{ $t('label.introduction.to.cloudstack') }}</div>
         <p>{{ $t('message.installwizard.copy.whatiscloudstack') }}</p>
-        <img class="center" src="assets/bg-what-is-cloudstack.png">
+        <img class="center" src="assets/bg-what-is-ablestack.png">
         <a-button @click="() => { this.step = 1 }" type="primary">
           {{ $t('label.continue.install') }}
           <a-icon type="double-right"/>
