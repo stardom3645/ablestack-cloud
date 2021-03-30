@@ -2,7 +2,7 @@
   "apiBase": "/client/api",
   "docBase": "http://docs.cloudstack.apache.org/en/latest",
   "appTitle": "ABLESTACK",
-  "footer": "Licensed under the <a href='http://www.apache.org/licenses/' target='_blank'>Apache License</a>, Version 2.0.",
+  "footer": "Copyright (c) 2021, ABLECLOUD.Co.Ltd",
   "logo": "assets/ablestack-logo.png",
   "banner": "assets/ablestack-logo.png",
   "error": {

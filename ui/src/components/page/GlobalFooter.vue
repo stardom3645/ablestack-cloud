@@ -21,12 +21,13 @@
       <span v-html="$config.footer" />
     </div>
     <div class="line" v-if="$store.getters.userInfo.roletype === 'Admin'">
-      CloudStack {{ $store.getters.features.cloudstackversion }}
+      ABLESTACK Allo (v1.0.0) - Powered By Apache CloudStack
+      <!-- CloudStack {{ $store.getters.features.cloudstackversion }}
       <a-divider type="vertical" />
       <a href="https://github.com/apache/cloudstack/issues/new" target="_blank">
         <a-icon type="github"/>
         {{ $t('label.report.bug') }}
-      </a>
+      </a> -->
     </div>
   </div>
 </template>
