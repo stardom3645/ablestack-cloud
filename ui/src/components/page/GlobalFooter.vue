@@ -26,7 +26,7 @@
       <a href="https://github.com/ablecloud-team/ablestack-cloud/issues/new" target="_blank">
         <a-icon type="github"/>
         {{ $t('label.report.bug') }}
-      </a> -->
+      </a>
     </div>
   </div>
 </template>
