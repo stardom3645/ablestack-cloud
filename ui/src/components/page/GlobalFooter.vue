@@ -22,9 +22,8 @@
     </div>
     <div class="line" v-if="$store.getters.userInfo.roletype === 'Admin'">
       ABLESTACK Allo (v1.0.0) - Powered By Apache CloudStack
-      <!-- CloudStack {{ $store.getters.features.cloudstackversion }}
       <a-divider type="vertical" />
-      <a href="https://github.com/apache/cloudstack/issues/new" target="_blank">
+      <a href="https://github.com/ablecloud-team/ablestack-cloud/issues/new" target="_blank">
         <a-icon type="github"/>
         {{ $t('label.report.bug') }}
       </a> -->
