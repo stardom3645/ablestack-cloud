@@ -3320,5 +3320,5 @@ dict={
 "user.logout": "\uB85C\uADF8\uC544\uC6C3"
 }
 
-with open('test.json','w',encoding='UTF-8-sig') as file:
+with open('ko_KR2.json','w',encoding='UTF-8-sig') as file:
     file.write(json.dumps(dict, ensure_ascii=False, separators=(',',':')))
