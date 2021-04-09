@@ -592,7 +592,7 @@
     "label.console.proxy": "콘솔 프록시",
     "label.console.proxy.vm": "콘솔 프록시 VM",
     "label.continue": "계속",
-    "label.continue.basic.install": "설치 계속",
+    "label.continue.install": "설치 계속",
     "label.copied.clipboard": "클립보드에 복사됨",
     "label.copy": "복사",
     "label.copy.clipboard": "클립보드에 복사",
