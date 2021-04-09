@@ -631,7 +631,7 @@
     "label.create.template": "템플릿 생성",
     "label.create.user": "사용자 생성",
     "label.create.vpn.connection": "VPN 접속 생성",
-    "label.created": "생성된",
+    "label.created": "생성일",
     "label.created.by.system": "시스템에서 생성",
     "label.createnfscache": "NFS 2차 스테이징 스토리지 생성",
     "label.creating.iprange": "IP 범위 생성",
