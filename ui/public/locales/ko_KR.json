@@ -1260,7 +1260,7 @@
     "label.localstorageenabledforsystemvm": "\uc2dc\uc2a4\ud15c VM\uc5d0 \ub85c\uceec \uc2a4\ud1a0\ub9ac\uc9c0 \uc0ac\uc6a9",
     "label.login": "\ub85c\uadf8\uc778",
     "label.login.portal": "\ud3ec\ud138 \ub85c\uadf8\uc778",
-    "label.login.single.signon": "SSO Login",
+    "label.login.single.signon": "SSO \ub85c\uadf8\uc778",
     "label.logout": "\ub85c\uadf8\uc544\uc6c3",
     "label.lun": "LUN",
     "label.lun.number": "LUN \ubc88\ud638",
