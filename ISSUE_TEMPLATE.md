@@ -1,76 +1,78 @@
 <!--
-Verify first that your issue/request is not already reported on GitHub.
-Also test if the latest release and master branch are affected too.
-Always add information AFTER of these HTML comments, but no need to delete the comments.
+먼저 GitHub에 작성하고자 하는 이슈 및 요청이 이미 등록되어 있는지 확인하십시오.
+또한, 최신 릴리즈 및 기본 브랜치에 해당 사항이 반영되어 있는지도 확인하십시오.
+이슈를 작성한 후에 발견한 정보는 코멘트에 남겨 주십시오. 작성된 코멘트는 삭제하지 않아도 됩니다.
 -->
 
-##### ISSUE TYPE
-<!-- Pick one below and delete the rest -->
- * Bug Report
- * Improvement Request
- * Enhancement Request
- * Feature Idea
- * Documentation Report
- * Other
+##### 이슈 타입
+<!-- 아래에서 해당하는 타입을 선택하고 나머지는 지우세요. 복수선택 가능 -->
+ * 버그 및 오류 보고
+ * 기능 개선 요청
+ * 기능 추가 요청
+ * 새 기능 아이디어
+ * 문서 보고서
+ * 기타
 
-##### COMPONENT NAME
+##### 컴포넌트 이름
 <!--
-Categorize the issue, e.g. API, VR, VPN, UI, etc.
+이슈를 카테고리화 하십시오. 예를 들어, API, VR, VM, VPN, UI 등.
 -->
 ~~~
 
 ~~~
 
-##### CLOUDSTACK VERSION
+##### ABLESTACK 버전
 <!--
-New line separated list of affected versions, commit ID for issues on master branch.
+새 라인으로 구분하여 이슈가 영향을 받는 버전, 기본 브랜치 상의 커밋 아이디, 이슈 아이디 등을 기재하십시오.
 -->
 
 ~~~
 
 ~~~
 
-##### CONFIGURATION
+##### 구성
 <!--
-Information about the configuration if relevant, e.g. basic network, advanced networking, etc.  N/A otherwise
+이슈와 관련된 구성 정보를 기재하십시오 예, 기본 네트워크, 확장 네트워크, iSCSI, NFS 등.
 -->
+~~~
 
+~~~
 
-##### OS / ENVIRONMENT
+##### OS / 환경
 <!--
-Information about the environment if relevant, N/A otherwise
+이슈와 관련된 운영체제 및 환경 정보를 기재하십시오. 없다면 N/A를 기재합니다.
 -->
+~~~
+
+~~~
+
+##### 이슈 내용
+<!-- 문제 또는 기능에 대한 설명을 간단하게 작성합니다. -->
 
 
-##### SUMMARY
-<!-- Explain the problem/feature briefly -->
-
-
-##### STEPS TO REPRODUCE
+##### 재현 과정
 <!--
-For bugs, show exactly how to reproduce the problem, using a minimal test-case. Use Screenshots if accurate.
+버그/오류 이슈라면, 문제를 어떻게 재현할 수 있는지 정확하게 보여줘야 합니다. 필요하다면 최소한의 테스트 케이스와 스크린 샷을 사용하십시오.
 
-For new features, show how the feature would be used.
+새로운 기능에 대한 이슈라면, 기능이 어떻게 사용되야 하는지를 보여주십시오.
 -->
 
-<!-- Paste example playbooks or commands between quotes below -->
+<!-- 예제가 될 수 있는 플레이북 또는 명령행을 작성하십시오. -->
 ~~~
 
 ~~~
 
-<!-- You can also paste gist.github.com links for larger files -->
-
-##### EXPECTED RESULTS
-<!-- What did you expect to happen when running the steps above? -->
+##### 기대한 결과
+<!-- 위의 과정을 실행했을 때 기대한 결과가 무엇입니까? -->
 
 ~~~
 
 ~~~
 
-##### ACTUAL RESULTS
-<!-- What actually happened? -->
+##### 실제 결과
+<!-- 실제로 발생한 결과는 무엇입니까? -->
 
-<!-- Paste verbatim command output between quotes below -->
+<!-- 실행한 명령행 등의 결과를 아래에 붙여 넣습니다. -->
 ~~~
 
 ~~~
