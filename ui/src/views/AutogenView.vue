@@ -583,13 +583,21 @@ export default {
 
       const customRender = {}
       for (var columnKey of this.columnKeys) {
-        var key = columnKey
+        let key = columnKey
+        let title = columnKey
         if (typeof columnKey === 'object') {
-          key = Object.keys(columnKey)[0]
-          customRender[key] = columnKey[key]
+          if ('customTitle' in columnKey && 'field' in columnKey) {
+            key = columnKey.field
+            title = columnKey.customTitle
+            customRender[key] = columnKey[key]
+          } else {
+            key = Object.keys(columnKey)[0]
+            title = Object.keys(columnKey)[0]
+            customRender[key] = columnKey[key]
+          }
         }
         this.columns.push({
-          title: this.$t('label.' + String(key).toLowerCase()),
+          title: this.$t('label.' + String(title).toLowerCase()),
           dataIndex: key,
           scopedSlots: { customRender: key },
           sorter: function (a, b) { return genericCompare(a[this.dataIndex] || '', b[this.dataIndex] || '') }
@@ -871,6 +879,9 @@ export default {
               })
             }
           }
+          if ('successMethod' in action) {
+            action.successMethod(this, result)
+          }
         },
         errorMethod: () => this.fetchData(),
         loadingMessage: `${this.$t(action.label)} - ${resourceName}`,
@@ -962,6 +973,9 @@ export default {
           }
           break
         }
+      }
+      if (['addLdapConfiguration', 'deleteLdapConfiguration'].includes(action.api)) {
+        this.$store.dispatch('UpdateConfiguration')
       }
       return false
     },

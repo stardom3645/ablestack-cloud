@@ -142,8 +142,8 @@ public class KubernetesClusterResourceModifierActionWorker extends KubernetesClu
     private String getKubernetesNodeConfig(final String joinIp, final boolean ejectIso) throws IOException {
         String k8sNodeConfig = readResourceFile("/conf/k8s-node.yml");
         final String sshPubKey = "{{ k8s.ssh.pub.key }}";
-        final String joinIpKey = "{{ k8s_master.join_ip }}";
-        final String clusterTokenKey = "{{ k8s_master.cluster.token }}";
+        final String joinIpKey = "{{ k8s_control_node.join_ip }}";
+        final String clusterTokenKey = "{{ k8s_control_node.cluster.token }}";
         final String ejectIsoKey = "{{ k8s.eject.iso }}";
         String pubKey = "- \"" + configurationDao.getValue("ssh.publickey") + "\"";
         String sshKeyPair = kubernetesCluster.getKeyPair();
@@ -328,7 +328,9 @@ public class KubernetesClusterResourceModifierActionWorker extends KubernetesClu
         for (int i = offset + 1; i <= nodeCount; i++) {
             UserVm vm = createKubernetesNode(publicIpAddress, i);
             addKubernetesClusterVm(kubernetesCluster.getId(), vm.getId());
-            resizeNodeVolume(vm);
+            if (kubernetesCluster.getNodeRootDiskSize() > 0) {
+                resizeNodeVolume(vm);
+            }
             startKubernetesVM(vm);
             vm = userVmDao.findById(vm.getId());
             if (vm == null) {
@@ -372,7 +374,7 @@ public class KubernetesClusterResourceModifierActionWorker extends KubernetesClu
         nodeVm = userVmService.createAdvancedVirtualMachine(zone, serviceOffering, clusterTemplate, networkIds, owner,
                 hostName, hostName, null, null, null,
                 Hypervisor.HypervisorType.None, BaseCmd.HTTPMethod.POST, base64UserData, kubernetesCluster.getKeyPair(),
-                null, addrs, null, null, null, customParameterMap, null, null, null, null);
+                null, addrs, null, null, null, customParameterMap, null, null, null, null, true);
         if (LOGGER.isInfoEnabled()) {
             LOGGER.info(String.format("Created node VM : %s, %s in the Kubernetes cluster : %s", hostName, nodeVm.getUuid(), kubernetesCluster.getName()));
         }

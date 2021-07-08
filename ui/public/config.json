@@ -6,8 +6,8 @@
   "logo": "assets/ablestack-logo.png",
   "banner": "assets/ablestack-logo.png",
   "error": {
-    "404": "assets/404.png",
     "403": "assets/403.png",
+    "404": "assets/404.png",
     "500": "assets/500.png"
   },
   "theme": {
@@ -46,7 +46,7 @@
     "jp": "label.japanese.keyboard",
     "sc": "label.simplified.chinese.keyboard"
   },
-  "docHelpMappings": {},
   "plugins": [],
-  "basicZoneEnabled": true
+  "basicZoneEnabled": true,
+  "docHelpMappings": {}
 }
