@@ -3333,5 +3333,10 @@
 "state.suspended": "Suspended",
 "title.upload.volume": "Upload Volume",
 "user.login": "Login",
-"user.logout": "Logout"
+"user.logout": "Logout",
+"label.addomain": "AD Domain",
+"label.templateversion": "Template Version",
+"label.adminurl": "Admin Portal URL",
+"label.userurl": "User Portal URL",
+"label.templatestate": "Template State"
 }
