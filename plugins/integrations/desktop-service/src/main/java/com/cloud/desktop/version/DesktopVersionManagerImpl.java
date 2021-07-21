@@ -64,7 +64,7 @@ public class DesktopVersionManagerImpl extends ManagerBase implements DesktopVer
 
     private DesktopControllerVersionResponse createDesktopControllerVersionResponse(final DesktopControllerVersion desktopControllerVersion) {
         DesktopControllerVersionResponse response = new DesktopControllerVersionResponse();
-        response.setObjectName("desktopsupportedversion");
+        response.setObjectName("desktopcontrollerversion");
         response.setId(desktopControllerVersion.getUuid());
         response.setName(desktopControllerVersion.getName());
         response.setVersion(desktopControllerVersion.getVersion());

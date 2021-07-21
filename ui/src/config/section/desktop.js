@@ -133,7 +133,7 @@ export default {
           docHelp: 'adminguide/templates.html#uploading-templates-from-a-remote-http-server',
           listView: true,
           popup: true,
-          component: () => import('@/views/desktop/AddDesktopControllerVersion.vue')
+          component: () => import('@/views/desktop/AddDesktopMasterVersion.vue')
         },
         {
           api: 'updateTemplatePermissions',
