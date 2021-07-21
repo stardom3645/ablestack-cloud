@@ -25,22 +25,98 @@
       <a-tab-pane :tab="$t('label.details')" key="details">
         <DetailsTab :resource="resource" :loading="loading" />
       </a-tab-pane>
-      <a-tab-pane :tab="'IP Range'" key="nics" v-if="'listNics' in $store.getters.apis">
+      <a-tab-pane :tab="'NICs'" key="desktopnics">
+        <DesktopNicsTable :resource="vm" :loading="loading">
+          <span slot="actions" slot-scope="record">
+            <a-popconfirm
+              :title="$t('label.set.default.nic')"
+              @confirm="setAsDefault(record.nic)"
+              :okText="$t('label.yes')"
+              :cancelText="$t('label.no')"
+              v-if="!record.nic.isdefault"
+            >
+              <tooltip-button
+                tooltipPlacement="bottom"
+                :tooltip="$t('label.set.default.nic')"
+                :disabled="!('updateDefaultNicForVirtualMachine' in $store.getters.apis)"
+                icon="check-square" />
+            </a-popconfirm>
+            <tooltip-button
+              v-if="record.nic.type !== 'L2'"
+              tooltipPlacement="bottom"
+              :tooltip="$t('label.change.ip.addess')"
+              icon="swap"
+              :disabled="!('updateVmNicIp' in $store.getters.apis)"
+              @click="onChangeIPAddress(record)" />
+            <tooltip-button
+              v-if="record.nic.type !== 'L2'"
+              tooltipPlacement="bottom"
+              :tooltip="$t('label.edit.secondary.ips')"
+              icon="environment"
+              :disabled="(!('addIpToNic' in $store.getters.apis) && !('addIpToNic' in $store.getters.apis))"
+              @click="onAcquireSecondaryIPAddress(record)" />
+            <a-popconfirm
+              :title="$t('message.network.removenic')"
+              @confirm="removeNIC(record.nic)"
+              :okText="$t('label.yes')"
+              :cancelText="$t('label.no')"
+              v-if="!record.nic.isdefault"
+            >
+              <tooltip-button
+                tooltipPlacement="bottom"
+                :tooltip="$t('label.action.delete.nic')"
+                :disabled="!('removeNicFromVirtualMachine' in $store.getters.apis)"
+                type="danger"
+                icon="delete" />
+            </a-popconfirm>
+          </span>
+        </DesktopNicsTable>
+      </a-tab-pane>
+      <a-tab-pane :tab="'IP Range'" key="volumesss">
         <a-button
           type="dashed"
           style="width: 100%; margin-bottom: 10px"
-          @click="showAddModal"
+          @click="showAddModal2"
           :loading="loadingNic"
           :disabled="!('addNicToVirtualMachine' in $store.getters.apis)">
           <a-icon type="plus"></a-icon> {{ 'Add IP Range' }}
         </a-button>
-        <NicsTab :resource="resource" :loading="loading" />
+        <a-table
+          class="table"
+          size="small"
+          :columns="volumeColumnsss"
+          :dataSource="volumesss"
+          :rowKey="item => item.id"
+          :pagination="false"
+        >
+          <template slot="name" slot-scope="text, item">
+            <a-icon type="hdd" />
+            <router-link :to="{ path: '/volume/' + item.id }">
+              {{ text }}
+            </router-link>
+            <a-tag v-if="item.provisioningtype">
+              {{ item.provisioningtype }}
+            </a-tag>
+          </template>
+          <template slot="state" slot-scope="text">
+            <status :text="text ? text : ''" />{{ text }}
+          </template>
+          <template slot="size" slot-scope="text, item">
+            {{ parseFloat(item.size / (1024.0 * 1024.0 * 1024.0)).toFixed(2) }} GB
+          </template>
+          <template slot="path" slot-scope="text">
+            <status :text="text ? text : ''" />{{ text }}
+          </template>
+          <template slot="hypervisor" slot-scope="text">
+            <status :text="text ? text : ''" />{{ text }}
+          </template>
+        </a-table>
       </a-tab-pane>
       <a-tab-pane :tab="'Control VM'" key="instances">
         <a-table
           class="table"
           size="small"
-          :columns="this.vmColumns"
+          :columns="vmColumns"
           :dataSource="this.virtualmachines"
           :rowKey="item => item.id"
           :pagination="false"
@@ -51,23 +127,23 @@
           <template slot="state" slot-scope="text">
             <status :text="text ? text : ''" displayText />
           </template>
-          <template slot="internal" slot-scope="text">
+          <template slot="instancename" slot-scope="text">
             <status :text="text ? text : ''" />{{ text }}
           </template>
           <template slot="ipaddress" slot-scope="text">
             <status :text="text ? text : ''" />{{ text }}
           </template>
-          <template slot="host" slot-scope="text">
-            <status :text="text ? text : ''" />{{ text }}
+          <template slot="hostname" slot-scope="text, record">
+            <router-link :to="{ path: '/host/' + record.hostid }">{{ record.hostname }}</router-link>
           </template>
         </a-table>
       </a-tab-pane>
-      <a-tab-pane :tab="'Desktop VM'" key="instances" v-if="'listVolumes' in $store.getters.apis">
+      <a-tab-pane :tab="'Desktop VM'" key="volumess" v-if="'listVolumes' in $store.getters.apis">
         <a-table
           class="table"
           size="small"
-          :columns="vmColumnss"
-          :dataSource="virtualmachines"
+          :columns="volumeColumnss"
+          :dataSource="volumess"
           :rowKey="item => item.id"
           :pagination="false"
         >
@@ -98,6 +174,30 @@
 
     <a-modal
       :visible="showAddNetworkModal"
+      :title="$t('label.network.addvm')"
+      :maskClosable="false"
+      :okText="$t('label.ok')"
+      :cancelText="$t('label.cancel')"
+      @cancel="closeModals"
+      @ok="submitAddNetwork">
+      {{ $t('message.network.addvm.desc') }}
+      <div class="modal-form">
+        <p class="modal-form__label">{{ $t('label.network') }}:</p>
+        <a-select :defaultValue="addNetworkData.network" @change="e => addNetworkData.network = e" autoFocus>
+          <a-select-option
+            v-for="network in addNetworkData.allNetworks"
+            :key="network.id"
+            :value="network.id">
+            {{ network.name }}
+          </a-select-option>
+        </a-select>
+        <p class="modal-form__label">{{ $t('label.publicip') }}:</p>
+        <a-input v-model="addNetworkData.ip"></a-input>
+      </div>
+    </a-modal>
+
+    <a-modal
+      :visible="showAddNetworkModal2"
       :title="'ADD IP Range to Desktop'"
       :maskClosable="false"
       :okText="$t('label.ok')"
@@ -212,6 +312,7 @@ import ResourceLayout from '@/layouts/ResourceLayout'
 import Status from '@/components/widgets/Status'
 import DetailsTab from '@/components/view/DetailsTab'
 import NicsTable from '@/views/network/NicsTable'
+import DesktopNicsTable from '@/views/network/DesktopNicsTable'
 import ListResourceTable from '@/components/view/ListResourceTable'
 import TooltipButton from '@/components/view/TooltipButton'
 
@@ -221,6 +322,7 @@ export default {
     ResourceLayout,
     DetailsTab,
     NicsTable,
+    DesktopNicsTable,
     Status,
     ListResourceTable,
     TooltipButton
@@ -240,12 +342,13 @@ export default {
   data () {
     return {
       vm: {},
-      volumes: [],
+      instances: [],
       volumess: [],
-      virtualmachines: [],
+      volumesss: [],
       totalStorage: 0,
       currentTab: 'details',
       showAddNetworkModal: false,
+      showAddNetworkModal2: false,
       showUpdateIpModal: false,
       showSecondaryIpModal: false,
       addNetworkData: {
@@ -273,17 +376,16 @@ export default {
         },
         {
           title: this.$t('label.instancename'),
-          dataIndex: 'internal'
+          dataIndex: 'instancename'
         },
         {
           title: this.$t('label.ip'),
-          dataIndex: 'ipaddress',
-          scopedSlots: { customRender: 'ipaddress' }
+          dataIndex: 'ipaddress'
         },
         {
           title: this.$t('label.hostid'),
-          dataIndex: 'host',
-          scopedSlots: { customRender: 'host' }
+          dataIndex: 'hostname',
+          scopedSlots: { customRender: 'hostname' }
         }
       ],
       editNicResource: {},
@@ -291,7 +393,7 @@ export default {
         loading: false,
         opts: []
       },
-      vmColumnss: [
+      volumeColumnss: [
         {
           title: this.$t('label.name'),
           dataIndex: 'name',
@@ -315,6 +417,25 @@ export default {
           title: this.$t('label.hostid'),
           dataIndex: 'hypervisor',
           scopedSlots: { customRender: 'hypervisor' }
+        }
+      ],
+      volumeColumnsss: [
+        {
+          title: this.$t('label.gateway'),
+          dataIndex: 'gateway',
+          scopedSlots: { customRender: 'gateway' }
+        },
+        {
+          title: this.$t('label.netmask'),
+          dataIndex: 'netmask'
+        },
+        {
+          title: this.$t('label.startip'),
+          dataIndex: 'startip'
+        },
+        {
+          title: this.$t('label.endip'),
+          dataIndex: 'endip'
         }
       ]
     }
@@ -410,8 +531,12 @@ export default {
       this.showAddNetworkModal = true
       this.listNetworks()
     },
+    showAddModal2 () {
+      this.showAddNetworkModal2 = true
+    },
     closeModals () {
       this.showAddNetworkModal = false
+      this.showAddNetworkModal2 = false
       this.showUpdateIpModal = false
       this.showSecondaryIpModal = false
       this.addNetworkData.network = ''

@@ -14,7 +14,7 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-package com.cloud.desktop.vm;
+package com.cloud.desktop.cluster;
 
 import java.util.Date;
 
@@ -26,11 +26,11 @@ import org.apache.cloudstack.api.InternalIdentity;
 import com.cloud.utils.fsm.StateMachine2;
 
 /**
- * KubernetesCluster describes the properties of a Kubernetes cluster
+ * DesktopCluster describes the properties of a Desktop cluster
  * StateMachine maintains its states.
  *
  */
-public interface Desktop extends ControlledEntity, com.cloud.utils.fsm.StateObject<Desktop.State>, Identity, InternalIdentity, Displayable {
+public interface DesktopCluster extends ControlledEntity, com.cloud.utils.fsm.StateObject<DesktopCluster.State>, Identity, InternalIdentity, Displayable {
 
     enum Event {
         StartRequested,
@@ -47,22 +47,22 @@ public interface Desktop extends ControlledEntity, com.cloud.utils.fsm.StateObje
     }
 
     enum State {
-        Created("Initial State of Kubernetes cluster. At this state its just a logical/DB entry with no resources consumed"),
-        Starting("Resources needed for Kubernetes cluster are being provisioned"),
-        Running("Necessary resources are provisioned and Kubernetes cluster is in operational ready state to launch Kubernetes"),
-        Stopping("Resources for the Kubernetes cluster are being destroyed"),
-        Stopped("All resources for the Kubernetes cluster are destroyed, Kubernetes cluster may still have ephemeral resource like persistent volumes provisioned"),
+        Created("Initial State of Desktop cluster. At this state its just a logical/DB entry with no resources consumed"),
+        Starting("Resources needed for Desktop cluster are being provisioned"),
+        Running("Necessary resources are provisioned and Desktop cluster is in operational ready state to launch Desktop"),
+        Stopping("Resources for the Desktop cluster are being destroyed"),
+        Stopped("All resources for the Desktop cluster are destroyed, Desktop cluster may still have ephemeral resource like persistent volumes provisioned"),
         Scaling("Transient state in which resources are either getting scaled up/down"),
         Upgrading("Transient state in which cluster is getting upgraded"),
-        Alert("State to represent Kubernetes clusters which are not in expected desired state (operationally in active control place, stopped cluster VM's etc)."),
-        Recovering("State in which Kubernetes cluster is recovering from alert state"),
-        Destroyed("End state of Kubernetes cluster in which all resources are destroyed, cluster will not be usable further"),
-        Destroying("State in which resources for the Kubernetes cluster is getting cleaned up or yet to be cleaned up by garbage collector"),
-        Error("State of the failed to create Kubernetes clusters");
+        Alert("State to represent Desktop clusters which are not in expected desired state (operationally in active control place, stopped cluster VM's etc)."),
+        Recovering("State in which Desktop cluster is recovering from alert state"),
+        Destroyed("End state of Desktop cluster in which all resources are destroyed, cluster will not be usable further"),
+        Destroying("State in which resources for the Desktop cluster is getting cleaned up or yet to be cleaned up by garbage collector"),
+        Error("State of the failed to create Desktop clusters");
 
-        protected static final StateMachine2<State, Desktop.Event, Desktop> s_fsm = new StateMachine2<State, Desktop.Event, Desktop>();
+        protected static final StateMachine2<State, DesktopCluster.Event, DesktopCluster> s_fsm = new StateMachine2<State, DesktopCluster.Event, DesktopCluster>();
 
-        public static StateMachine2<State, Desktop.Event, Desktop> getStateMachine() { return s_fsm; }
+        public static StateMachine2<State, DesktopCluster.Event, DesktopCluster> getStateMachine() { return s_fsm; }
 
         static {
             s_fsm.addTransition(State.Created, Event.StartRequested, State.Starting);
@@ -111,6 +111,7 @@ public interface Desktop extends ControlledEntity, com.cloud.utils.fsm.StateObje
 
     long getId();
     String getName();
+    String getPassword();
     long getZoneId();
     long getDesktopVersionId();
     long getServiceOfferingId();

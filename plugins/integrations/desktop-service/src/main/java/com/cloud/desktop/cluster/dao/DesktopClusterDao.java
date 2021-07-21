@@ -14,26 +14,21 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
+package com.cloud.desktop.cluster.dao;
 
-package com.cloud.desktop.version;
+import java.util.List;
 
-import org.apache.cloudstack.api.Identity;
-import org.apache.cloudstack.api.InternalIdentity;
+import com.cloud.desktop.cluster.DesktopCluster;
+import com.cloud.desktop.cluster.DesktopClusterVO;
+import com.cloud.utils.db.GenericDao;
+import com.cloud.utils.fsm.StateDao;
 
-/**
- * DesktopSupportedVersion describes the properties of supported desktop version
- *
- */
-public interface DesktopSupportedVersion extends InternalIdentity, Identity {
+public interface DesktopClusterDao extends GenericDao<DesktopClusterVO, Long>,
+        StateDao<DesktopCluster.State, DesktopCluster.Event, DesktopCluster> {
 
-    public enum State {
-        Disabled, Enabled
-    }
-
-    long getId();
-    String getName();
-    String getVersion();
-    long getTemplateId();
-    Long getZoneId();
-    State getState();
+    List<DesktopClusterVO> listByAccount(long accountId);
+    List<DesktopClusterVO> findDesktopToGarbageCollect();
+    List<DesktopClusterVO> findDesktopInState(DesktopCluster.State state);
+    List<DesktopClusterVO> listByNetworkId(long networkId);
+    List<DesktopClusterVO> listAllByDesktopVersion(long desktopVersionId);
 }

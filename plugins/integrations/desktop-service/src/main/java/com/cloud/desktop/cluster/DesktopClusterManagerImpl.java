@@ -14,7 +14,7 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-package com.cloud.desktop.vm;
+package com.cloud.desktop.cluster;
 
 import java.util.ArrayList;
 import java.util.EnumSet;
@@ -23,8 +23,8 @@ import java.util.List;
 import javax.inject.Inject;
 
 import org.apache.cloudstack.api.ResponseObject.ResponseView;
-import org.apache.cloudstack.api.command.user.desktop.vm.ListDesktopCmd;
-import org.apache.cloudstack.api.response.DesktopResponse;
+import org.apache.cloudstack.api.command.user.desktop.vm.ListDesktopClusterCmd;
+import org.apache.cloudstack.api.response.DesktopClusterResponse;
 import org.apache.cloudstack.api.response.ListResponse;
 import org.apache.cloudstack.api.response.UserVmResponse;
 import org.apache.cloudstack.context.CallContext;
@@ -38,10 +38,10 @@ import com.cloud.api.query.vo.UserVmJoinVO;
 import com.cloud.api.query.dao.UserVmJoinDao;
 import com.cloud.dc.DataCenterVO;
 import com.cloud.domain.Domain;
-import com.cloud.desktop.vm.dao.DesktopDao;
-import com.cloud.desktop.vm.dao.DesktopVmMapDao;
-import com.cloud.desktop.version.dao.DesktopSupportedVersionDao;
-import com.cloud.desktop.version.DesktopSupportedVersionVO;
+import com.cloud.desktop.version.dao.DesktopControllerVersionDao;
+import com.cloud.desktop.cluster.dao.DesktopClusterDao;
+import com.cloud.desktop.cluster.dao.DesktopClusterVmMapDao;
+import com.cloud.desktop.version.DesktopControllerVersionVO;
 import com.cloud.network.Network;
 import com.cloud.network.dao.NetworkDao;
 import com.cloud.network.dao.IPAddressVO;
@@ -62,18 +62,18 @@ import com.cloud.utils.db.SearchBuilder;
 import com.cloud.utils.db.SearchCriteria;
 import com.cloud.utils.exception.CloudRuntimeException;
 
-public class DesktopManagerImpl extends ManagerBase implements DesktopService {
+public class DesktopClusterManagerImpl extends ManagerBase implements DesktopClusterService {
 
-    private static final Logger LOGGER = Logger.getLogger(DesktopManagerImpl.class);
+    private static final Logger LOGGER = Logger.getLogger(DesktopClusterManagerImpl.class);
 
-    protected StateMachine2<Desktop.State, Desktop.Event, Desktop> _stateMachine = Desktop.State.getStateMachine();
+    protected StateMachine2<DesktopCluster.State, DesktopCluster.Event, DesktopCluster> _stateMachine = DesktopCluster.State.getStateMachine();
 
     @Inject
-    public DesktopDao desktopDao;
+    public DesktopClusterDao desktopClusterDao;
     @Inject
-    public DesktopVmMapDao desktopVmMapDao;
+    public DesktopClusterVmMapDao desktopClusterVmMapDao;
     @Inject
-    public DesktopSupportedVersionDao desktopSupportedVersionDao;
+    public DesktopControllerVersionDao desktopControllerVersionDao;
     @Inject
     protected AccountManager accountManager;
     @Inject
@@ -103,10 +103,10 @@ public class DesktopManagerImpl extends ManagerBase implements DesktopService {
         }
     }
 
-    private void logTransitStateAndThrow(final Level logLevel, final String message, final Long desktopId, final Desktop.Event event, final Exception e) throws CloudRuntimeException {
+    private void logTransitStateAndThrow(final Level logLevel, final String message, final Long desktopClusterId, final DesktopCluster.Event event, final Exception e) throws CloudRuntimeException {
         logMessage(logLevel, message, e);
-        if (desktopId != null && event != null) {
-            stateTransitTo(desktopId, event);
+        if (desktopClusterId != null && event != null) {
+            stateTransitTo(desktopClusterId, event);
         }
         if (e == null) {
             throw new CloudRuntimeException(message);
@@ -122,10 +122,10 @@ public class DesktopManagerImpl extends ManagerBase implements DesktopService {
         logTransitStateAndThrow(logLevel, message, null, null, ex);
     }
 
-    protected boolean stateTransitTo(long desktopId, Desktop.Event e) {
-        DesktopVO desktop = desktopDao.findById(desktopId);
+    protected boolean stateTransitTo(long desktopCusterId, DesktopCluster.Event e) {
+        DesktopClusterVO desktop = desktopClusterDao.findById(desktopCusterId);
         try {
-            return _stateMachine.transitTo(desktop, e, null, desktopDao);
+            return _stateMachine.transitTo(desktop, e, null, desktopClusterDao);
         } catch (NoTransitionException nte) {
             LOGGER.warn(String.format("Failed to transition state of the Desktop : %s in state %s on event %s", desktop.getName(), desktop.getState().toString(), e.toString()), nte);
             return false;
@@ -133,23 +133,24 @@ public class DesktopManagerImpl extends ManagerBase implements DesktopService {
     }
 
     @Override
-    public DesktopResponse createDesktopResponse(long desktopId) {
-        DesktopVO desktop = desktopDao.findById(desktopId);
-        DesktopResponse response = new DesktopResponse();
-        response.setObjectName(Desktop.class.getSimpleName().toLowerCase());
+    public DesktopClusterResponse createDesktopClusterResponse(long desktopCusterId) {
+        DesktopClusterVO desktop = desktopClusterDao.findById(desktopCusterId);
+        DesktopClusterResponse response = new DesktopClusterResponse();
+        response.setObjectName(DesktopCluster.class.getSimpleName().toLowerCase());
         response.setId(desktop.getUuid());
         response.setName(desktop.getName());
         response.setAdDomainName(desktop.getAdDomainName());
+        response.setState(desktop.getState().toString());
         DataCenterVO zone = ApiDBUtils.findZoneById(desktop.getZoneId());
         response.setZoneId(zone.getUuid());
         response.setZoneName(zone.getName());
         ServiceOfferingVO offering = serviceOfferingDao.findById(desktop.getServiceOfferingId());
         response.setServiceOfferingId(offering.getUuid());
         response.setServiceOfferingName(offering.getName());
-        DesktopSupportedVersionVO version = desktopSupportedVersionDao.findById(desktop.getDesktopVersionId());
+        DesktopControllerVersionVO version = desktopControllerVersionDao.findById(desktop.getDesktopVersionId());
         if (version != null) {
-            response.setDesktopVersionId(version.getUuid());
-            response.setDesktopVersionName(version.getName());
+            response.setControllerVersionName(version.getName());
+            response.setControllerVersion(version.getVersion());
         }
         Account account = ApiDBUtils.findAccountById(desktop.getAccountId());
         if (account.getType() == Account.ACCOUNT_TYPE_PROJECT) {
@@ -173,7 +174,7 @@ public class DesktopManagerImpl extends ManagerBase implements DesktopService {
             }
         }
         List<UserVmResponse> vmResponses = new ArrayList<UserVmResponse>();
-        List<DesktopVmMapVO> vmList = desktopVmMapDao.listByDesktopId(desktop.getId());
+        List<DesktopClusterVmMapVO> vmList = desktopClusterVmMapDao.listByDesktopClusterId(desktop.getId());
         ResponseView respView = ResponseView.Restricted;
         Account caller = CallContext.current().getCallingAccount();
         if (accountService.isRootAdmin(caller.getId())) {
@@ -181,7 +182,7 @@ public class DesktopManagerImpl extends ManagerBase implements DesktopService {
         }
         final String responseName = "virtualmachine";
         if (vmList != null && !vmList.isEmpty()) {
-            for (DesktopVmMapVO vmMapVO : vmList) {
+            for (DesktopClusterVmMapVO vmMapVO : vmList) {
                 UserVmJoinVO userVM = userVmJoinDao.findById(vmMapVO.getVmId());
                 if (userVM != null) {
                     UserVmResponse vmResponse = ApiDBUtils.newUserVmResponse(respView, responseName, userVM,
@@ -195,31 +196,31 @@ public class DesktopManagerImpl extends ManagerBase implements DesktopService {
     }
 
     @Override
-    public ListResponse<DesktopResponse> listDesktop(ListDesktopCmd cmd) {
+    public ListResponse<DesktopClusterResponse> listDesktopCluster(ListDesktopClusterCmd cmd) {
         if (!DesktopServiceEnabled.value()) {
             logAndThrow(Level.ERROR, "Desktop Service plugin is disabled");
         }
         final CallContext ctx = CallContext.current();
         final Account caller = ctx.getCallingAccount();
-        final Long desktopId = cmd.getId();
+        final Long desktopClusterId = cmd.getId();
         final String state = cmd.getState();
         final String name = cmd.getName();
         final String keyword = cmd.getKeyword();
-        List<DesktopResponse> responsesList = new ArrayList<DesktopResponse>();
+        List<DesktopClusterResponse> responsesList = new ArrayList<DesktopClusterResponse>();
         List<Long> permittedAccounts = new ArrayList<Long>();
         Ternary<Long, Boolean, Project.ListProjectResourcesCriteria> domainIdRecursiveListProject = new Ternary<Long, Boolean, Project.ListProjectResourcesCriteria>(cmd.getDomainId(), cmd.isRecursive(), null);
-        accountManager.buildACLSearchParameters(caller, desktopId, cmd.getAccountName(), cmd.getProjectId(), permittedAccounts, domainIdRecursiveListProject, cmd.listAll(), false);
+        accountManager.buildACLSearchParameters(caller, desktopClusterId, cmd.getAccountName(), cmd.getProjectId(), permittedAccounts, domainIdRecursiveListProject, cmd.listAll(), false);
         Long domainId = domainIdRecursiveListProject.first();
         Boolean isRecursive = domainIdRecursiveListProject.second();
         Project.ListProjectResourcesCriteria listProjectResourcesCriteria = domainIdRecursiveListProject.third();
-        Filter searchFilter = new Filter(DesktopVO.class, "id", true, cmd.getStartIndex(), cmd.getPageSizeVal());
-        SearchBuilder<DesktopVO> sb = desktopDao.createSearchBuilder();
+        Filter searchFilter = new Filter(DesktopClusterVO.class, "id", true, cmd.getStartIndex(), cmd.getPageSizeVal());
+        SearchBuilder<DesktopClusterVO> sb = desktopClusterDao.createSearchBuilder();
         accountManager.buildACLSearchBuilder(sb, domainId, isRecursive, permittedAccounts, listProjectResourcesCriteria);
         sb.and("id", sb.entity().getId(), SearchCriteria.Op.EQ);
         sb.and("name", sb.entity().getName(), SearchCriteria.Op.EQ);
         sb.and("keyword", sb.entity().getName(), SearchCriteria.Op.LIKE);
         sb.and("state", sb.entity().getState(), SearchCriteria.Op.IN);
-        SearchCriteria<DesktopVO> sc = sb.create();
+        SearchCriteria<DesktopClusterVO> sc = sb.create();
         accountManager.buildACLSearchCriteria(sc, domainId, isRecursive, permittedAccounts, listProjectResourcesCriteria);
         if (state != null) {
             sc.setParameters("state", state);
@@ -227,18 +228,18 @@ public class DesktopManagerImpl extends ManagerBase implements DesktopService {
         if(keyword != null){
             sc.setParameters("keyword", "%" + keyword + "%");
         }
-        if (desktopId != null) {
-            sc.setParameters("id", desktopId);
+        if (desktopClusterId != null) {
+            sc.setParameters("id", desktopClusterId);
         }
         if (name != null) {
             sc.setParameters("name", name);
         }
-        List<DesktopVO> desktop = desktopDao.search(sc, searchFilter);
-        for (DesktopVO cluster : desktop) {
-            DesktopResponse desktopResponse = createDesktopResponse(cluster.getId());
-            responsesList.add(desktopResponse);
+        List<DesktopClusterVO> desktop = desktopClusterDao.search(sc, searchFilter);
+        for (DesktopClusterVO cluster : desktop) {
+            DesktopClusterResponse desktopClusterResponse = createDesktopClusterResponse(cluster.getId());
+            responsesList.add(desktopClusterResponse);
         }
-        ListResponse<DesktopResponse> response = new ListResponse<DesktopResponse>();
+        ListResponse<DesktopClusterResponse> response = new ListResponse<DesktopClusterResponse>();
         response.setResponses(responsesList);
         return response;
     }
@@ -250,18 +251,18 @@ public class DesktopManagerImpl extends ManagerBase implements DesktopService {
             return cmdList;
         }
 
-        cmdList.add(ListDesktopCmd.class);
+        cmdList.add(ListDesktopClusterCmd.class);
         return cmdList;
     }
 
     @Override
-    public Desktop findById(final Long id) {
-        return desktopDao.findById(id);
+    public DesktopCluster findById(final Long id) {
+        return desktopClusterDao.findById(id);
     }
 
     @Override
     public String getConfigComponentName() {
-        return DesktopService.class.getSimpleName();
+        return DesktopClusterService.class.getSimpleName();
     }
 
     @Override

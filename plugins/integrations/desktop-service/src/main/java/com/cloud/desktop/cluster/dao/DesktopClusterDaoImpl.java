@@ -14,29 +14,29 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-package com.cloud.desktop.vm.dao;
+package com.cloud.desktop.cluster.dao;
 
 import java.util.List;
 
 import org.springframework.stereotype.Component;
 
-import com.cloud.desktop.vm.Desktop;
-import com.cloud.desktop.vm.DesktopVO;
+import com.cloud.desktop.cluster.DesktopCluster;
+import com.cloud.desktop.cluster.DesktopClusterVO;
 import com.cloud.utils.db.GenericDaoBase;
 import com.cloud.utils.db.SearchBuilder;
 import com.cloud.utils.db.SearchCriteria;
 import com.cloud.utils.db.TransactionLegacy;
 
 @Component
-public class DesktopDaoImpl extends GenericDaoBase<DesktopVO, Long> implements DesktopDao {
+public class DesktopClusterDaoImpl extends GenericDaoBase<DesktopClusterVO, Long> implements DesktopClusterDao {
 
-    private final SearchBuilder<DesktopVO> AccountIdSearch;
-    private final SearchBuilder<DesktopVO> GarbageCollectedSearch;
-    private final SearchBuilder<DesktopVO> StateSearch;
-    private final SearchBuilder<DesktopVO> SameNetworkSearch;
-    private final SearchBuilder<DesktopVO> DesktopVersionSearch;
+    private final SearchBuilder<DesktopClusterVO> AccountIdSearch;
+    private final SearchBuilder<DesktopClusterVO> GarbageCollectedSearch;
+    private final SearchBuilder<DesktopClusterVO> StateSearch;
+    private final SearchBuilder<DesktopClusterVO> SameNetworkSearch;
+    private final SearchBuilder<DesktopClusterVO> DesktopVersionSearch;
 
-    public DesktopDaoImpl() {
+    public DesktopClusterDaoImpl() {
         AccountIdSearch = createSearchBuilder();
         AccountIdSearch.and("account", AccountIdSearch.entity().getAccountId(), SearchCriteria.Op.EQ);
         AccountIdSearch.done();
@@ -59,27 +59,27 @@ public class DesktopDaoImpl extends GenericDaoBase<DesktopVO, Long> implements D
     }
 
     @Override
-    public List<DesktopVO> listByAccount(long accountId) {
-        SearchCriteria<DesktopVO> sc = AccountIdSearch.create();
+    public List<DesktopClusterVO> listByAccount(long accountId) {
+        SearchCriteria<DesktopClusterVO> sc = AccountIdSearch.create();
         sc.setParameters("account", accountId);
         return listBy(sc, null);
     }
 
     @Override
-    public List<DesktopVO> findDesktopToGarbageCollect() {
-        SearchCriteria<DesktopVO> sc = GarbageCollectedSearch.create();
-        sc.setParameters("state", Desktop.State.Destroying);
+    public List<DesktopClusterVO> findDesktopToGarbageCollect() {
+        SearchCriteria<DesktopClusterVO> sc = GarbageCollectedSearch.create();
+        sc.setParameters("state", DesktopCluster.State.Destroying);
         return listBy(sc);
     }
 
     @Override
-    public boolean updateState(Desktop.State currentState, Desktop.Event event, Desktop.State nextState,
-    Desktop vo, Object data) {
+    public boolean updateState(DesktopCluster.State currentState, DesktopCluster.Event event, DesktopCluster.State nextState,
+    DesktopCluster vo, Object data) {
         // TODO: ensure this update is correct
         TransactionLegacy txn = TransactionLegacy.currentTxn();
         txn.start();
 
-        DesktopVO ccVo = (DesktopVO)vo;
+        DesktopClusterVO ccVo = (DesktopClusterVO)vo;
         ccVo.setState(nextState);
         super.update(ccVo.getId(), ccVo);
 
@@ -88,24 +88,23 @@ public class DesktopDaoImpl extends GenericDaoBase<DesktopVO, Long> implements D
     }
 
     @Override
-    public List<DesktopVO> findDesktopInState(Desktop.State state) {
-        SearchCriteria<DesktopVO> sc = StateSearch.create();
+    public List<DesktopClusterVO> findDesktopInState(DesktopClusterVO.State state) {
+        SearchCriteria<DesktopClusterVO> sc = StateSearch.create();
         sc.setParameters("state", state);
         return listBy(sc);
     }
 
     @Override
-    public List<DesktopVO> listByNetworkId(long networkId) {
-        SearchCriteria<DesktopVO> sc = SameNetworkSearch.create();
+    public List<DesktopClusterVO> listByNetworkId(long networkId) {
+        SearchCriteria<DesktopClusterVO> sc = SameNetworkSearch.create();
         sc.setParameters("network_id", networkId);
         return this.listBy(sc);
     }
 
     @Override
-    public List<DesktopVO> listAllByDesktopVersion(long desktopVersionId) {
-        SearchCriteria<DesktopVO> sc = DesktopVersionSearch.create();
+    public List<DesktopClusterVO> listAllByDesktopVersion(long desktopVersionId) {
+        SearchCriteria<DesktopClusterVO> sc = DesktopVersionSearch.create();
         sc.setParameters("desktopVersionId", desktopVersionId);
         return this.listBy(sc);
     }
 }
-

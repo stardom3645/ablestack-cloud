@@ -30,7 +30,7 @@
             v-decorator="['username', {
               rules: [{ required: true, message: $t('message.error.required.input') }]
             }]"
-            :placeholder="'Desktop 이름 입력'" />
+            :placeholder="'Cluster 이름 입력'" />
         </a-form-item>
         <a-form-item>
           <span slot="label">
@@ -82,7 +82,7 @@
         </a-row>
         <a-form-item>
           <span slot="label">
-            {{ 'Template Version' }}
+            {{ 'Desktop Controller Template Version' }}
             <a-tooltip :title="apiParams.timezone.description">
               <a-icon type="info-circle" style="color: rgba(0,0,0,.45)" />
             </a-tooltip>
@@ -93,7 +93,7 @@
               rules: [{ required: true, message: $t('message.error.required.input') }]
             }]"
             :loading="timeZoneLoading"
-            :placeholder="'Template 버전 선택'">
+            :placeholder="'Desktop Controller Template Version 선택'">
             <a-select-option v-for="opt in timeZoneMap" :key="opt.id">
               {{ opt.name || opt.description }}
             </a-select-option>
@@ -118,6 +118,31 @@
             </a-select-option>
           </a-select>
         </a-form-item>
+        <a-form-item>
+          <span slot="label">
+            {{ 'Access Type' }}
+            <a-tooltip :title="apiParams.domainid.description">
+              <a-icon type="info-circle" style="color: rgba(0,0,0,.45)" />
+            </a-tooltip>
+          </span>
+          <a-radio-group
+            v-decorator="['accesstype', {
+              initialValue: this.accessType,
+              rules: [{ required: true, message: $t('message.error.select') }]
+            }]"
+            buttonStyle="solid"
+            @change="selected => { this.handleAccessTypeChange(selected.target.value) }">
+            <a-radio-button value="internal">
+              {{ 'Internal' }}
+            </a-radio-button>
+            <a-radio-button value="external">
+              {{ 'External' }}
+            </a-radio-button>
+            <a-radio-button value="mixed">
+              {{ 'Mixed' }}
+            </a-radio-button>
+          </a-radio-group>
+        </a-form-item>
         <a-form-item v-if="this.isAdminOrDomainAdmin()">
           <span slot="label">
             {{ 'Networks' }}
@@ -136,58 +161,68 @@
             </a-select-option>
           </a-select>
         </a-form-item>
-        <a-form-item>
-          <span slot="label">
-            {{ 'Desktop Gateway' }}
-            <a-tooltip :title="apiParams.account.description">
-              <a-icon type="info-circle" style="color: rgba(0,0,0,.45)" />
-            </a-tooltip>
-          </span>
-          <a-input
-            v-decorator="['account', {
-              rules: [{ required: true, message: $t('message.error.required.input') }]
-            }]"
-            :placeholder="'IP Range 설정'" />
-        </a-form-item>
-        <a-form-item>
-          <span slot="label">
-            {{ 'Desktop Netmask' }}
-            <a-tooltip :title="apiParams.account.description">
-              <a-icon type="info-circle" style="color: rgba(0,0,0,.45)" />
-            </a-tooltip>
-          </span>
-          <a-input
-            v-decorator="['account', {
-              rules: [{ required: true, message: $t('message.error.required.input') }]
-            }]"
-            :placeholder="'IP Range 설정'" />
-        </a-form-item>
-        <a-form-item>
-          <span slot="label">
-            {{ 'Desktop Start IP' }}
-            <a-tooltip :title="apiParams.account.description">
-              <a-icon type="info-circle" style="color: rgba(0,0,0,.45)" />
-            </a-tooltip>
-          </span>
-          <a-input
-            v-decorator="['account', {
-              rules: [{ required: true, message: $t('message.error.required.input') }]
-            }]"
-            :placeholder="'IP Range 설정'" />
-        </a-form-item>
-        <a-form-item>
-          <span slot="label">
-            {{ 'Desktop End IP' }}
-            <a-tooltip :title="apiParams.account.description">
-              <a-icon type="info-circle" style="color: rgba(0,0,0,.45)" />
-            </a-tooltip>
-          </span>
-          <a-input
-            v-decorator="['account', {
-              rules: [{ required: true, message: $t('message.error.required.input') }]
-            }]"
-            :placeholder="'IP Range 설정'" />
-        </a-form-item>
+        <a-row :gutter="12">
+          <a-col :md="24" :lg="12">
+            <a-form-item v-if="this.accessType=='internal'">
+              <span slot="label">
+                {{ 'Desktop Gateway' }}
+                <a-tooltip :title="apiParams.account.description">
+                  <a-icon type="info-circle" style="color: rgba(0,0,0,.45)" />
+                </a-tooltip>
+              </span>
+              <a-input
+                v-decorator="['account', {
+                  rules: [{ required: true, message: $t('message.error.required.input') }]
+                }]"
+                :placeholder="'IP Range 설정'" />
+            </a-form-item>
+          </a-col>
+          <a-col :md="24" :lg="12">
+            <a-form-item v-if="this.accessType=='internal'">
+              <span slot="label">
+                {{ 'Desktop Netmask' }}
+                <a-tooltip :title="apiParams.account.description">
+                  <a-icon type="info-circle" style="color: rgba(0,0,0,.45)" />
+                </a-tooltip>
+              </span>
+              <a-input
+                v-decorator="['account', {
+                  rules: [{ required: true, message: $t('message.error.required.input') }]
+                }]"
+                :placeholder="'IP Range 설정'" />
+            </a-form-item>
+          </a-col>
+          <a-col :md="24" :lg="12">
+            <a-form-item v-if="this.accessType=='internal'">
+              <span slot="label">
+                {{ 'Desktop Start IP' }}
+                <a-tooltip :title="apiParams.account.description">
+                  <a-icon type="info-circle" style="color: rgba(0,0,0,.45)" />
+                </a-tooltip>
+              </span>
+              <a-input
+                v-decorator="['account', {
+                  rules: [{ required: true, message: $t('message.error.required.input') }]
+                }]"
+                :placeholder="'IP Range 설정'" />
+            </a-form-item>
+          </a-col>
+          <a-col :md="24" :lg="12">
+            <a-form-item v-if="this.accessType=='internal'">
+              <span slot="label">
+                {{ 'Desktop End IP' }}
+                <a-tooltip :title="apiParams.account.description">
+                  <a-icon type="info-circle" style="color: rgba(0,0,0,.45)" />
+                </a-tooltip>
+              </span>
+              <a-input
+                v-decorator="['account', {
+                  rules: [{ required: true, message: $t('message.error.required.input') }]
+                }]"
+                :placeholder="'IP Range 설정'" />
+            </a-form-item>
+          </a-col>
+        </a-row>
         <a-form-item>
           <span slot="label">
             {{ 'Works VM IP' }}
@@ -214,9 +249,9 @@
             }]"
             :placeholder="'IP를 입력하지 않으면 자동으로 할당'" />
         </a-form-item>
-        <a-form-item :label="'External Access'">
+        <!--<a-form-item :label="'External Access'">
           <a-switch v-decorator="['haenable', {initialValue: this.externalEnabled}]" :checked="this.haEnabled" @change="val => { this.haEnabled = val }" />
-        </a-form-item>
+        </a-form-item>-->
         <div :span="24" class="action-button">
           <a-button @click="closeAction">{{ $t('label.cancel') }}</a-button>
           <a-button :loading="loading" type="primary" @click="handleSubmit">{{ $t('label.ok') }}</a-button>
@@ -241,6 +276,7 @@ export default {
       selectedDomain: '',
       roleLoading: false,
       roles: [],
+      accessType: 'internal',
       selectedRole: '',
       timeZoneLoading: false,
       timeZoneMap: [],
@@ -283,6 +319,9 @@ export default {
     },
     isValidValueForKey (obj, key) {
       return key in obj && obj[key] != null
+    },
+    handleAccessTypeChange (pvlan) {
+      this.accessType = pvlan
     },
     validateConfirmPassword (rule, value, callback) {
       if (!value || value.length === 0) {

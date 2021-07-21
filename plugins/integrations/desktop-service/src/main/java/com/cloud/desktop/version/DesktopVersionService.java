@@ -17,12 +17,13 @@
 
 package com.cloud.desktop.version;
 
-import org.apache.cloudstack.api.command.user.desktop.version.ListDesktopSupportedVersionsCmd;
-import org.apache.cloudstack.api.response.DesktopSupportedVersionResponse;
+import org.apache.cloudstack.api.command.user.desktop.version.ListDesktopControllerVersionsCmd;
+import org.apache.cloudstack.api.response.DesktopControllerVersionResponse;
 import org.apache.cloudstack.api.response.ListResponse;
 
 import com.cloud.utils.component.PluggableService;
 
 public interface DesktopVersionService extends PluggableService {
-    ListResponse<DesktopSupportedVersionResponse> listDesktopSupportedVersions(ListDesktopSupportedVersionsCmd cmd);
+    ListResponse<DesktopControllerVersionResponse> listDesktopControllerVersions(ListDesktopControllerVersionsCmd cmd);
 }
+

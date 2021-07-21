@@ -14,7 +14,7 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-package com.cloud.desktop.vm;
+package com.cloud.desktop.cluster;
 
 import javax.persistence.Column;
 
@@ -26,7 +26,7 @@ import javax.persistence.GenerationType;
 
 @Entity
 @Table(name = "desktop_vm_map")
-public class DesktopVmMapVO implements DesktopVmMap {
+public class DesktopClusterVmMapVO implements DesktopClusterVmMap {
 
     @Override
     public long getId() {
@@ -34,14 +34,14 @@ public class DesktopVmMapVO implements DesktopVmMap {
     }
 
     @Override
-    public long getDesktopId() {
-        return desktopId;
+    public long getDesktopClusterId() {
+        return desktopClusterId;
 
     }
 
-    public void setdesktopId(long desktopId) {
+    public void setdesktopClusterId(long desktopClusterId) {
 
-        this.desktopId = desktopId;
+        this.desktopClusterId = desktopClusterId;
     }
 
     @Override
@@ -59,18 +59,18 @@ public class DesktopVmMapVO implements DesktopVmMap {
     @Column(name = "id")
     long id;
 
-    @Column(name = "desktop_id")
-    long desktopId;
+    @Column(name = "desktop_cluster_id")
+    long desktopClusterId;
 
     @Column(name = "vm_id")
     long vmId;
 
-    public DesktopVmMapVO() {
+    public DesktopClusterVmMapVO() {
 
     }
 
-    public DesktopVmMapVO(long desktopId, long vmId) {
+    public DesktopClusterVmMapVO(long desktopClusterId, long vmId) {
         this.vmId = vmId;
-        this.desktopId = desktopId;
+        this.desktopClusterId = desktopClusterId;
     }
 }

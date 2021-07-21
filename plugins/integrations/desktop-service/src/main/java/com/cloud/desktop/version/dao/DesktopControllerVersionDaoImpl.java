@@ -14,33 +14,30 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-package com.cloud.desktop.vm.dao;
+
+package com.cloud.desktop.version.dao;
 
 import java.util.List;
 
 import org.springframework.stereotype.Component;
 
-import com.cloud.desktop.vm.DesktopVmMapVO;
+import com.cloud.desktop.version.DesktopControllerVersionVO;
 import com.cloud.utils.db.GenericDaoBase;
-import com.cloud.utils.db.SearchBuilder;
 import com.cloud.utils.db.SearchCriteria;
 
-
 @Component
-public class DesktopVmMapDaoImpl extends GenericDaoBase<DesktopVmMapVO, Long> implements DesktopVmMapDao {
-
-    private final SearchBuilder<DesktopVmMapVO> desktopIdSearch;
-
-    public DesktopVmMapDaoImpl() {
-        desktopIdSearch = createSearchBuilder();
-        desktopIdSearch.and("desktopId", desktopIdSearch.entity().getDesktopId(), SearchCriteria.Op.EQ);
-        desktopIdSearch.done();
+public class DesktopControllerVersionDaoImpl extends GenericDaoBase<DesktopControllerVersionVO, Long> implements DesktopControllerVersionDao {
+    public DesktopControllerVersionDaoImpl() {
     }
 
     @Override
-    public List<DesktopVmMapVO> listByDesktopId(long desktopId) {
-        SearchCriteria<DesktopVmMapVO> sc = desktopIdSearch.create();
-        sc.setParameters("desktopId", desktopId);
-        return listBy(sc, null);
+    public List<DesktopControllerVersionVO> listAllInZone(long dataCenterId) {
+        SearchCriteria<DesktopControllerVersionVO> sc = createSearchCriteria();
+        SearchCriteria<DesktopControllerVersionVO> scc = createSearchCriteria();
+        scc.addOr("zoneId", SearchCriteria.Op.EQ, dataCenterId);
+        scc.addOr("zoneId", SearchCriteria.Op.NULL);
+        sc.addAnd("zoneId", SearchCriteria.Op.SC, scc);
+        return listBy(sc);
     }
 }
+

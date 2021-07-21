@@ -27,80 +27,26 @@
         :form="form"
         @submit="handleSubmit"
         layout="vertical">
-        <div v-if="currentForm === 'Create'">
-          <a-row :gutter="12">
-            <a-form-item :label="$t('label.url')">
+        <a-row :gutter="12">
+          <a-col :md="24" :lg="24">
+            <a-form-item :label="$t('label.name')">
               <a-input
-                :autoFocus="currentForm === 'Create'"
-                v-decorator="['url', {
+                v-decorator="['name', {
                   rules: [{ required: true, message: `${this.$t('message.error.required.input')}` }]
                 }]"
-                :placeholder="apiParams.url.description" />
+                :placeholder="apiParams.name.description"
+                :autoFocus="currentForm !== 'Create'"/>
             </a-form-item>
-          </a-row>
-        </div>
-        <div v-if="currentForm === 'Upload'">
-          <a-form-item :label="$t('label.templatefileupload')">
-            <a-upload-dragger
-              :multiple="false"
-              :fileList="fileList"
-              :remove="handleRemove"
-              :beforeUpload="beforeUpload"
-              v-decorator="['file', {
-                rules: [{ required: true, message: `${this.$t('message.error.required.input')}` }]
-              }]">
-              <p class="ant-upload-drag-icon">
-                <a-icon type="cloud-upload" />
-              </p>
-              <p class="ant-upload-text" v-if="fileList.length === 0">
-                {{ $t('label.volume.volumefileupload.description') }}
-              </p>
-            </a-upload-dragger>
-          </a-form-item>
-        </div>
-        <a-row :gutter="12">
-          <a-form-item :label="$t('label.name')">
-            <a-input
-              v-decorator="['name', {
-                rules: [{ required: true, message: `${this.$t('message.error.required.input')}` }]
-              }]"
-              :placeholder="apiParams.name.description"
-              :autoFocus="currentForm !== 'Create'"/>
-          </a-form-item>
+          </a-col>
         </a-row>
         <a-row :gutter="12">
-          <a-form-item :label="$t('label.templateversion')">
-            <a-input
-              v-decorator="['displaytext', {
-                rules: [{ required: true, message: `${this.$t('message.error.required.input')}` }]
-              }]"
-              :placeholder="'템플릿 버전 선택'" />
-          </a-form-item>
-        </a-row>
-        <a-row :gutter="12" v-if="!hyperVMWShow || (hyperVMWShow && !deployasis)">
           <a-col :md="24" :lg="24">
-            <a-form-item :label="$t('label.type')">
-              <a-select
-                showSearch
-                optionFilterProp="children"
-                :filterOption="(input, option) => {
-                  return option.componentOptions.children[0].text.toLowerCase().indexOf(input.toLowerCase()) >= 0
-                }"
-                v-decorator="['ostypeid', {
-                  initialValue: defaultOsId,
-                  rules: [
-                    {
-                      required: true,
-                      message: `${this.$t('message.error.select')}`
-                    }
-                  ]
+            <a-form-item :label="$t('label.version')">
+              <a-input
+                v-decorator="['displaytext', {
+                  rules: [{ required: true, message: `${this.$t('message.error.required.input')}` }]
                 }]"
-                :loading="osTypes.loading"
-                :placeholder="'타입 선택 (Works/DC)'">
-                <a-select-option v-for="opt in osTypes.opts" :key="opt.id">
-                  {{ opt.name || opt.description }}
-                </a-select-option>
-              </a-select>
+                :placeholder="'버전 입력'" />
             </a-form-item>
           </a-col>
         </a-row>
@@ -211,25 +157,64 @@
             </a-form-item>
           </a-col>
         </a-row>
-        <a-row :gutter="12" v-if="allowed && hyperKVMShow && currentForm !== 'Upload'">
-          <a-col :md="24" :lg="12">
-            <a-form-item :label="$t('label.directdownload')">
-              <a-switch v-decorator="['directdownload']" @change="handleChangeDirect" />
-            </a-form-item>
-          </a-col>
-          <a-col :md="24" :lg="12" v-if="allowDirectDownload">
-            <a-form-item :label="$t('label.checksum')">
-              <a-input
-                v-decorator="['checksum', {
-                  rules: [{ required: false, message: `${this.$t('message.error.required.input')}` }]
+        <div v-if="currentForm === 'Create'">
+          <a-row :gutter="12">
+            <a-col :md="24" :lg="24">
+              <a-form-item :label="'DC URL'">
+                <a-input
+                  :autoFocus="currentForm === 'Create'"
+                  v-decorator="['url', {
+                    rules: [{ required: true, message: `${this.$t('message.error.required.input')}` }]
+                  }]"
+                  :placeholder="apiParams.url.description" />
+              </a-form-item>
+            </a-col>
+          </a-row>
+        </div>
+        <a-row :gutter="12" v-if="!hyperVMWShow || (hyperVMWShow && !deployasis)">
+          <a-col :md="24" :lg="24">
+            <a-form-item :label="'DC OS Type'">
+              <a-select
+                showSearch
+                optionFilterProp="children"
+                :filterOption="(input, option) => {
+                  return option.componentOptions.children[0].text.toLowerCase().indexOf(input.toLowerCase()) >= 0
+                }"
+                v-decorator="['ostypeid', {
+                  initialValue: defaultOsId,
+                  rules: [
+                    {
+                      required: true,
+                      message: `${this.$t('message.error.select')}`
+                    }
+                  ]
                 }]"
-                :placeholder="apiParams.checksum.description" />
+                :loading="osTypes.loading"
+                :placeholder="apiParams.ostypeid.description">
+                <a-select-option v-for="opt in osTypes.opts" :key="opt.id">
+                  {{ opt.name || opt.description }}
+                </a-select-option>
+              </a-select>
             </a-form-item>
           </a-col>
         </a-row>
+        <div v-if="currentForm === 'Create'">
+          <a-row :gutter="12">
+            <a-col :md="24" :lg="24">
+              <a-form-item :label="'Works URL'">
+                <a-input
+                  :autoFocus="currentForm === 'Create'"
+                  v-decorator="['url', {
+                    rules: [{ required: true, message: `${this.$t('message.error.required.input')}` }]
+                  }]"
+                  :placeholder="apiParams.url.description" />
+              </a-form-item>
+            </a-col>
+          </a-row>
+        </div>
         <a-row :gutter="12" v-if="!hyperVMWShow || (hyperVMWShow && !deployasis)">
           <a-col :md="24" :lg="24">
-            <a-form-item :label="$t('label.ostypeid')">
+            <a-form-item :label="'Works OS Type'">
               <a-select
                 showSearch
                 optionFilterProp="children"

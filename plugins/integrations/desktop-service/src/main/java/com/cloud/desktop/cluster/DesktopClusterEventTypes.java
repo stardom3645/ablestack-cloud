@@ -14,19 +14,13 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-package com.cloud.desktop.vm.dao;
+package com.cloud.desktop.cluster;
 
-import org.apache.cloudstack.resourcedetail.ResourceDetailsDaoBase;
-import org.springframework.stereotype.Component;
-
-import com.cloud.desktop.vm.DesktopDetailsVO;
-
-
-@Component
-public class DesktopDetailsDaoImpl extends ResourceDetailsDaoBase<DesktopDetailsVO> implements DesktopDetailsDao {
-
-    @Override
-    public void addDetail(long resourceId, String key, String value, boolean display) {
-        super.addDetail(new DesktopDetailsVO(resourceId, key, value, display));
-    }
+public class DesktopClusterEventTypes {
+    public static final String EVENT_DESKTOP_CLUSTER_CREATE = "DESKTOP.CLUSTER.CREATE";
+    public static final String EVENT_DESKTOP_CLUSTER_CDELETE = "DESKTOP.CLUSTER.DELETE";
+    public static final String EVENT_DESKTOP_CLUSTER_CSTART = "DESKTOP.CLUSTER.START";
+    public static final String EVENT_DESKTOP_CLUSTER_CSTOP = "DESKTOP.CLUSTER.STOP";
+    public static final String EVENT_DESKTOP_CLUSTER_CSCALE = "DESKTOP.CLUSTER.SCALE";
+    public static final String EVENT_DESKTOP_CLUSTER_CUPGRADE = "DESKTOP.CLUSTER.UPGRADE";
 }

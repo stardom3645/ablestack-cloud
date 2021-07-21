@@ -14,13 +14,13 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-package com.cloud.desktop.vm.dao;
+package com.cloud.desktop.version.dao;
 
-import com.cloud.desktop.vm.DesktopVmMapVO;
+import com.cloud.desktop.version.DesktopTemplateMapVO;
 import com.cloud.utils.db.GenericDao;
 
 import java.util.List;
 
-public interface DesktopVmMapDao extends GenericDao<DesktopVmMapVO, Long> {
-    public List<DesktopVmMapVO> listByDesktopId(long desktopId);
+public interface DesktopTemplateMapDao extends GenericDao<DesktopTemplateMapVO, Long> {
+    public List<DesktopTemplateMapVO> listByVersionId(long versionId);
 }

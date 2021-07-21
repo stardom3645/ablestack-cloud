@@ -417,59 +417,6 @@ export default {
       ]
     },
     {
-      name: 'desktop',
-      title: 'Desktop',
-      icon: 'cloud-server',
-      docHelp: 'adminguide/virtual_machines.html',
-      permission: ['listDesktop'],
-      columns: ['name', 'state', 'addomain', 'account', 'zonename'],
-      searchFilters: ['name', 'state'],
-      details: ['name', 'id', 'templateversion', 'account', 'addomain', 'zonename', 'adminurl', 'userurl'],
-      tabs: [{
-        component: () => import('@/views/compute/DesktopTab.vue')
-      }],
-      actions: [
-        {
-          api: 'createAccount',
-          icon: 'plus',
-          label: 'Deploy Desktop',
-          docHelp: 'adminguide/virtual_machines.html#creating-vms',
-          listView: true,
-          popup: true,
-          component: () => import('@/views/compute/DeployDesktop.vue')
-        },
-        {
-          api: 'startVirtualMachine',
-          icon: 'caret-right',
-          label: 'Enable',
-          message: '이 Desktop을 활성화 하시겠습니까?',
-          docHelp: 'adminguide/virtual_machines.html#stopping-and-starting-vms',
-          dataView: true,
-          show: (record) => { return ['disabled'].includes(record.state) }
-        },
-        {
-          api: 'stopVirtualMachine',
-          icon: 'poweroff',
-          label: 'Disable',
-          message: '이 Desktop을 비활성화 하시겠습니까?',
-          docHelp: 'adminguide/virtual_machines.html#stopping-and-starting-vms',
-          dataView: true,
-          show: (record) => { return ['enabled'].includes(record.state) }
-        },
-        {
-          api: 'destroyVirtualMachine',
-          icon: 'delete',
-          label: 'Destroy Desktop',
-          message: '이 Desktop을 삭제하시겠습니까?',
-          docHelp: 'adminguide/virtual_machines.html#deleting-vms',
-          dataView: true,
-          popup: true,
-          show: (record) => { return ['enabled', 'disabled'].includes(record.state) },
-          component: () => import('@/views/compute/DestroyDesktop.vue')
-        }
-      ]
-    },
-    {
       name: 'kubernetes',
       title: 'label.kubernetes',
       icon: kubernetes,

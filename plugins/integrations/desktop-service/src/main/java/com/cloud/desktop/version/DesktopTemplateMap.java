@@ -14,21 +14,17 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-package com.cloud.desktop.vm.dao;
+package com.cloud.desktop.version;
 
-import java.util.List;
-
-import com.cloud.desktop.vm.Desktop;
-import com.cloud.desktop.vm.DesktopVO;
-import com.cloud.utils.db.GenericDao;
-import com.cloud.utils.fsm.StateDao;
-
-public interface DesktopDao extends GenericDao<DesktopVO, Long>,
-        StateDao<Desktop.State, Desktop.Event, Desktop> {
-
-    List<DesktopVO> listByAccount(long accountId);
-    List<DesktopVO> findDesktopToGarbageCollect();
-    List<DesktopVO> findDesktopInState(Desktop.State state);
-    List<DesktopVO> listByNetworkId(long networkId);
-    List<DesktopVO> listAllByDesktopVersion(long desktopVersionId);
+/**
+ * DesktopTemplateMap will describe mapping of ID of Desktop
+ * and ID of its Templates. A Desktop can have multiple Templates
+ * deployed for it therefore a list of DesktopTemplateMap are associated
+ * with a Desktop.
+ * A particular VM can be deployed only for a single Desktop.
+ */
+public interface DesktopTemplateMap {
+    long getId();
+    long getVersionId();
+    long getTemplateId();
 }

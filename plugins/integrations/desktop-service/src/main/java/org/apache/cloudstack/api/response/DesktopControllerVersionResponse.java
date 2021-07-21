@@ -17,51 +17,45 @@
 
 package org.apache.cloudstack.api.response;
 
+import java.util.List;
+
 import org.apache.cloudstack.api.ApiConstants;
 import org.apache.cloudstack.api.BaseResponse;
 import org.apache.cloudstack.api.EntityReference;
 
-import com.cloud.desktop.version.DesktopSupportedVersion;
+import com.cloud.desktop.version.DesktopControllerVersion;
 import com.cloud.serializer.Param;
 import com.google.gson.annotations.SerializedName;
 
 @SuppressWarnings("unused")
-@EntityReference(value = {DesktopSupportedVersion.class})
-public class DesktopSupportedVersionResponse extends BaseResponse {
+@EntityReference(value = {DesktopControllerVersion.class})
+public class DesktopControllerVersionResponse extends BaseResponse {
     @SerializedName(ApiConstants.ID)
-    @Param(description = "the id of the Desktop supported version")
+    @Param(description = "the id of the Desktop Controller Version")
     private String id;
 
     @SerializedName(ApiConstants.NAME)
-    @Param(description = "Name of the Desktop supported version")
+    @Param(description = "Name of the Desktop Controller Version")
     private String name;
 
     @SerializedName(ApiConstants.VERSION)
     @Param(description = "Desktop version")
     private String version;
 
-    @SerializedName(ApiConstants.TEMPLATE_ID)
-    @Param(description = "the id of the template for Desktop supported version")
-    private String templateId;
-
-    @SerializedName(ApiConstants.TEMPLATE_NAME)
-    @Param(description = "the name of the template for Desktop supported version")
-    private String templateName;
-
-    @SerializedName(ApiConstants.TEMPLATE_STATE)
-    @Param(description = "the state of the template for Desktop supported version")
-    private String templateState;
+    @SerializedName(ApiConstants.TEMPLATES)
+    @Param(description = "the list of templates associated with this Desktop")
+    private List<TemplateResponse> templates;
 
     @SerializedName(ApiConstants.ZONE_ID)
-    @Param(description = "the id of the zone in which Desktop supported version is available")
+    @Param(description = "the id of the zone in which Desktop Controller Version is available")
     private String zoneId;
 
     @SerializedName(ApiConstants.ZONE_NAME)
-    @Param(description = "the name of the zone in which Desktop supported version is available")
+    @Param(description = "the name of the zone in which Desktop Controller Version is available")
     private String zoneName;
 
     @SerializedName(ApiConstants.STATE)
-    @Param(description = "the enabled or disabled state of the Desktop supported version")
+    @Param(description = "the enabled or disabled state of the Desktop Controller Version")
     private String state;
 
     public String getId() {
@@ -88,28 +82,12 @@ public class DesktopSupportedVersionResponse extends BaseResponse {
         this.version = version;
     }
 
-    public String getTemplateId() {
-        return templateId;
+    public void setTemplates(List<TemplateResponse> templates) {
+        this.templates = templates;
     }
 
-    public void setTemplateId(String templateId) {
-        this.templateId = templateId;
-    }
-
-    public String getTemplateName() {
-        return templateName;
-    }
-
-    public void setTemplateName(String templateName) {
-        this.templateName = templateName;
-    }
-
-    public String getTemplateState() {
-        return templateState;
-    }
-
-    public void setTemplateState(String templateState) {
-        this.templateState = templateState;
+    public List<TemplateResponse> getTemplates() {
+        return templates;
     }
 
     public String getZoneId() {

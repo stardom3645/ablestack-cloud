@@ -14,7 +14,7 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-package com.cloud.desktop.vm;
+package com.cloud.desktop.cluster;
 
 import java.util.Date;
 import java.util.UUID;
@@ -31,8 +31,8 @@ import javax.persistence.GenerationType;
 import com.cloud.utils.db.GenericDao;
 
 @Entity
-@Table(name = "desktop")
-public class DesktopVO implements Desktop {
+@Table(name = "desktop_cluster")
+public class DesktopClusterVO implements DesktopCluster {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -44,6 +44,9 @@ public class DesktopVO implements Desktop {
 
     @Column(name = "name")
     private String name;
+
+    @Column(name = "password")
+    private String password;
 
     @Column(name = "zone_id")
     private long zoneId;
@@ -100,6 +103,15 @@ public class DesktopVO implements Desktop {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    @Override
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
     }
 
     @Override
@@ -190,11 +202,11 @@ public class DesktopVO implements Desktop {
         return created;
     }
 
-    public DesktopVO() {
+    public DesktopClusterVO() {
         this.uuid = UUID.randomUUID().toString();
     }
 
-    public DesktopVO(String name, long zoneId, long desktopVersionId, long serviceOfferingId, String adDomainName,
+    public DesktopClusterVO(String name, long zoneId, long desktopVersionId, long serviceOfferingId, String adDomainName,
                                long networkId, long domainId, long accountId, State state) {
         this.uuid = UUID.randomUUID().toString();
         this.name = name;
@@ -210,6 +222,6 @@ public class DesktopVO implements Desktop {
 
     @Override
     public Class<?> getEntityType() {
-        return Desktop.class;
+        return DesktopCluster.class;
     }
 }

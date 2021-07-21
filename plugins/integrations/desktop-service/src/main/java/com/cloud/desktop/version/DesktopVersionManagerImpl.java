@@ -18,22 +18,31 @@
 package com.cloud.desktop.version;
 
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.List;
 
 import javax.inject.Inject;
 
-import org.apache.cloudstack.api.command.user.desktop.version.ListDesktopSupportedVersionsCmd;
-import org.apache.cloudstack.api.response.DesktopSupportedVersionResponse;
+import org.apache.cloudstack.api.ResponseObject.ResponseView;
+import org.apache.cloudstack.api.command.user.desktop.version.ListDesktopControllerVersionsCmd;
+import org.apache.cloudstack.api.response.DesktopControllerVersionResponse;
 import org.apache.cloudstack.api.response.ListResponse;
+import org.apache.cloudstack.api.response.TemplateResponse;
+import org.apache.cloudstack.context.CallContext;
 import org.apache.log4j.Logger;
 
+import com.cloud.api.ApiDBUtils;
+import org.apache.cloudstack.api.ApiConstants.DomainDetails;
 import com.cloud.api.query.dao.TemplateJoinDao;
 import com.cloud.api.query.vo.TemplateJoinVO;
 import com.cloud.dc.DataCenterVO;
 import com.cloud.dc.dao.DataCenterDao;
-import com.cloud.desktop.vm.DesktopService;
-import com.cloud.desktop.version.dao.DesktopSupportedVersionDao;
+import com.cloud.desktop.cluster.DesktopClusterService;
+import com.cloud.desktop.version.dao.DesktopControllerVersionDao;
+import com.cloud.desktop.version.dao.DesktopTemplateMapDao;
 import com.cloud.utils.component.ManagerBase;
+import com.cloud.user.Account;
+import com.cloud.user.AccountService;
 import com.cloud.utils.db.Filter;
 import com.cloud.utils.db.SearchBuilder;
 import com.cloud.utils.db.SearchCriteria;
@@ -43,64 +52,79 @@ public class DesktopVersionManagerImpl extends ManagerBase implements DesktopVer
     public static final Logger LOGGER = Logger.getLogger(DesktopVersionManagerImpl.class.getName());
 
     @Inject
-    private DesktopSupportedVersionDao desktopSupportedVersionDao;
+    private DesktopControllerVersionDao desktopControllerVersionDao;
     @Inject
     private TemplateJoinDao templateJoinDao;
     @Inject
+    public DesktopTemplateMapDao desktopTemplateMapDao;
+    @Inject
     private DataCenterDao dataCenterDao;
+    @Inject
+    protected AccountService accountService;
 
-
-    private DesktopSupportedVersionResponse createDesktopSupportedVersionResponse(final DesktopSupportedVersion desktopSupportedVersion) {
-        DesktopSupportedVersionResponse response = new DesktopSupportedVersionResponse();
+    private DesktopControllerVersionResponse createDesktopControllerVersionResponse(final DesktopControllerVersion desktopControllerVersion) {
+        DesktopControllerVersionResponse response = new DesktopControllerVersionResponse();
         response.setObjectName("desktopsupportedversion");
-        response.setId(desktopSupportedVersion.getUuid());
-        response.setName(desktopSupportedVersion.getName());
-        response.setVersion(desktopSupportedVersion.getVersion());
-        if (desktopSupportedVersion.getState() != null) {
-            response.setState(desktopSupportedVersion.getState().toString());
+        response.setId(desktopControllerVersion.getUuid());
+        response.setName(desktopControllerVersion.getName());
+        response.setVersion(desktopControllerVersion.getVersion());
+        if (desktopControllerVersion.getState() != null) {
+            response.setState(desktopControllerVersion.getState().toString());
         }
-        DataCenterVO zone = dataCenterDao.findById(desktopSupportedVersion.getZoneId());
+        DataCenterVO zone = dataCenterDao.findById(desktopControllerVersion.getZoneId());
         if (zone != null) {
             response.setZoneId(zone.getUuid());
             response.setZoneName(zone.getName());
         }
-        TemplateJoinVO template = templateJoinDao.findById(desktopSupportedVersion.getTemplateId());
-        if (template != null) {
-            response.setTemplateId(template.getUuid());
-            response.setTemplateName(template.getName());
-            response.setTemplateState(template.getState().toString());
+        List<TemplateResponse> templateResponses = new ArrayList<TemplateResponse>();
+        List<DesktopTemplateMapVO> templateList = desktopTemplateMapDao.listByVersionId(desktopControllerVersion.getId());
+        ResponseView respView = ResponseView.Restricted;
+        Account caller = CallContext.current().getCallingAccount();
+        if (accountService.isRootAdmin(caller.getId())) {
+            respView = ResponseView.Full;
         }
+        final String responseName = "template";
+        if (templateList != null && !templateList.isEmpty()) {
+            for (DesktopTemplateMapVO templateMapVO : templateList) {
+                TemplateJoinVO userTemplate = templateJoinDao.findById(templateMapVO.getTemplateId());
+                if (userTemplate != null) {
+                    TemplateResponse templateResponse = ApiDBUtils.newTemplateResponse(EnumSet.of(DomainDetails.resource), respView, userTemplate);
+                    templateResponses.add(templateResponse);
+                }
+            }
+        }
+        response.setTemplates(templateResponses);
         return response;
     }
 
-    private ListResponse<DesktopSupportedVersionResponse> createDesktopSupportedVersionListResponse(List<DesktopSupportedVersionVO> versions) {
-        List<DesktopSupportedVersionResponse> responseList = new ArrayList<>();
-        for (DesktopSupportedVersionVO version : versions) {
-            responseList.add(createDesktopSupportedVersionResponse(version));
+    private ListResponse<DesktopControllerVersionResponse> createDesktopControllerVersionListResponse(List<DesktopControllerVersionVO> versions) {
+        List<DesktopControllerVersionResponse> responseList = new ArrayList<>();
+        for (DesktopControllerVersionVO version : versions) {
+            responseList.add(createDesktopControllerVersionResponse(version));
         }
-        ListResponse<DesktopSupportedVersionResponse> response = new ListResponse<>();
+        ListResponse<DesktopControllerVersionResponse> response = new ListResponse<>();
         response.setResponses(responseList);
         return response;
     }
 
     @Override
-    public ListResponse<DesktopSupportedVersionResponse> listDesktopSupportedVersions(final ListDesktopSupportedVersionsCmd cmd) {
-        if (!DesktopService.DesktopServiceEnabled.value()) {
+    public ListResponse<DesktopControllerVersionResponse> listDesktopControllerVersions(final ListDesktopControllerVersionsCmd cmd) {
+        if (!DesktopClusterService.DesktopServiceEnabled.value()) {
             throw new CloudRuntimeException("Desktop Service plugin is disabled");
         }
         final Long versionId = cmd.getId();
         final Long zoneId = cmd.getZoneId();
-        Filter searchFilter = new Filter(DesktopSupportedVersionVO.class, "id", true, cmd.getStartIndex(), cmd.getPageSizeVal());
-        SearchBuilder<DesktopSupportedVersionVO> sb = desktopSupportedVersionDao.createSearchBuilder();
+        Filter searchFilter = new Filter(DesktopControllerVersionVO.class, "id", true, cmd.getStartIndex(), cmd.getPageSizeVal());
+        SearchBuilder<DesktopControllerVersionVO> sb = desktopControllerVersionDao.createSearchBuilder();
         sb.and("id", sb.entity().getId(), SearchCriteria.Op.EQ);
         sb.and("keyword", sb.entity().getName(), SearchCriteria.Op.LIKE);
-        SearchCriteria<DesktopSupportedVersionVO> sc = sb.create();
+        SearchCriteria<DesktopControllerVersionVO> sc = sb.create();
         String keyword = cmd.getKeyword();
         if (versionId != null) {
             sc.setParameters("id", versionId);
         }
         if (zoneId != null) {
-            SearchCriteria<DesktopSupportedVersionVO> scc = desktopSupportedVersionDao.createSearchCriteria();
+            SearchCriteria<DesktopControllerVersionVO> scc = desktopControllerVersionDao.createSearchCriteria();
             scc.addOr("zoneId", SearchCriteria.Op.EQ, zoneId);
             scc.addOr("zoneId", SearchCriteria.Op.NULL);
             sc.addAnd("zoneId", SearchCriteria.Op.SC, scc);
@@ -108,19 +132,18 @@ public class DesktopVersionManagerImpl extends ManagerBase implements DesktopVer
         if(keyword != null){
             sc.setParameters("keyword", "%" + keyword + "%");
         }
-        List <DesktopSupportedVersionVO> versions = desktopSupportedVersionDao.search(sc, searchFilter);
+        List <DesktopControllerVersionVO> versions = desktopControllerVersionDao.search(sc, searchFilter);
 
-        return createDesktopSupportedVersionListResponse(versions);
+        return createDesktopControllerVersionListResponse(versions);
     }
 
     @Override
     public List<Class<?>> getCommands() {
         List<Class<?>> cmdList = new ArrayList<Class<?>>();
-        if (!DesktopService.DesktopServiceEnabled.value()) {
+        if (!DesktopClusterService.DesktopServiceEnabled.value()) {
             return cmdList;
         }
-        cmdList.add(ListDesktopSupportedVersionsCmd.class);
+        cmdList.add(ListDesktopControllerVersionsCmd.class);
         return cmdList;
     }
 }
-

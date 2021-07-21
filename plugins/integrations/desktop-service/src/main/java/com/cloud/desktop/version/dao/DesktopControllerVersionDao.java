@@ -19,25 +19,9 @@ package com.cloud.desktop.version.dao;
 
 import java.util.List;
 
-import org.springframework.stereotype.Component;
+import com.cloud.desktop.version.DesktopControllerVersionVO;
+import com.cloud.utils.db.GenericDao;
 
-import com.cloud.desktop.version.DesktopSupportedVersionVO;
-import com.cloud.utils.db.GenericDaoBase;
-import com.cloud.utils.db.SearchCriteria;
-
-@Component
-public class DesktopSupportedVersionDaoImpl extends GenericDaoBase<DesktopSupportedVersionVO, Long> implements DesktopSupportedVersionDao {
-    public DesktopSupportedVersionDaoImpl() {
-    }
-
-    @Override
-    public List<DesktopSupportedVersionVO> listAllInZone(long dataCenterId) {
-        SearchCriteria<DesktopSupportedVersionVO> sc = createSearchCriteria();
-        SearchCriteria<DesktopSupportedVersionVO> scc = createSearchCriteria();
-        scc.addOr("zoneId", SearchCriteria.Op.EQ, dataCenterId);
-        scc.addOr("zoneId", SearchCriteria.Op.NULL);
-        sc.addAnd("zoneId", SearchCriteria.Op.SC, scc);
-        return listBy(sc);
-    }
+public interface DesktopControllerVersionDao extends GenericDao<DesktopControllerVersionVO, Long> {
+    List<DesktopControllerVersionVO> listAllInZone(long dataCenterId);
 }
-

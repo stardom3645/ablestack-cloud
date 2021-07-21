@@ -14,14 +14,18 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-package com.cloud.desktop.vm.dao;
+package com.cloud.desktop.cluster;
 
-import org.apache.cloudstack.resourcedetail.ResourceDetailsDao;
-
-import com.cloud.desktop.vm.DesktopDetailsVO;
-import com.cloud.utils.db.GenericDao;
-
-
-public interface DesktopDetailsDao extends GenericDao<DesktopDetailsVO, Long>, ResourceDetailsDao<DesktopDetailsVO> {
-
+/**
+ * DesktopClusterVmMap will describe mapping of ID of DesktopCuster
+ * and ID of its VirtualMachine. A Desktop can have multiple VMs
+ * deployed for it therefore a list of DesktopClusterVmMap are associated
+ * with a Desktop.
+ * A particular VM can be deployed only for a single Desktop.
+ */
+public interface DesktopClusterVmMap {
+    long getId();
+    long getDesktopClusterId();
+    long getVmId();
 }
+

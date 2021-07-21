@@ -14,17 +14,17 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-package com.cloud.desktop.vm;
+package com.cloud.desktop.cluster;
 
-import org.apache.cloudstack.api.command.user.desktop.vm.ListDesktopCmd;
-import org.apache.cloudstack.api.response.DesktopResponse;
+import org.apache.cloudstack.api.command.user.desktop.vm.ListDesktopClusterCmd;
+import org.apache.cloudstack.api.response.DesktopClusterResponse;
 import org.apache.cloudstack.api.response.ListResponse;
 import org.apache.cloudstack.framework.config.ConfigKey;
 import org.apache.cloudstack.framework.config.Configurable;
 
 import com.cloud.utils.component.PluggableService;
 
-public interface DesktopService extends PluggableService, Configurable {
+public interface DesktopClusterService extends PluggableService, Configurable {
 
     static final ConfigKey<Boolean> DesktopServiceEnabled = new ConfigKey<Boolean>("Advanced", Boolean.class,
             "cloud.desktop.service.enabled",
@@ -32,9 +32,9 @@ public interface DesktopService extends PluggableService, Configurable {
             "Indicates whether Desktop Service plugin is enabled or not. Management server restart needed on change",
             false);
 
-    Desktop findById(final Long id);
+    DesktopCluster findById(final Long id);
 
-    ListResponse<DesktopResponse> listDesktop(ListDesktopCmd cmd);
+    ListResponse<DesktopClusterResponse> listDesktopCluster(ListDesktopClusterCmd cmd);
 
-    DesktopResponse createDesktopResponse(long desktopId);
+    DesktopClusterResponse createDesktopClusterResponse(long desktopClusterId);
 }

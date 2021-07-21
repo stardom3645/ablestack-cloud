@@ -830,10 +830,11 @@ public class ApiConstants {
     public static final String MIN_KUBERNETES_VERSION_ID = "minimumkubernetesversionid";
     public static final String NODE_ROOT_DISK_SIZE = "noderootdisksize";
     public static final String SUPPORTS_HA = "supportsha";
-    public static final String DESKTOP_VERSION_ID = "desktopversionid";
-    public static final String DESKTOP_VERSION_NAME = "desktopversionname";
+    public static final String CONTROLLER_VERSION = "controllerversion";
+    public static final String CONTROLLER_VERSION_NAME = "controllerversionname";
     public static final String TEMPLATE_STATE = "templatestate";
     public static final String AD_DOMAIN_NAME = "addomainname";
+    public static final String TEMPLATES = "templates";
 
     public static final String BOOT_TYPE = "boottype";
     public static final String BOOT_MODE = "bootmode";

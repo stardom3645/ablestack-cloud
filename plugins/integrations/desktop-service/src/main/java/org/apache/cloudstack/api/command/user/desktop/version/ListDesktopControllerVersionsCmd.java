@@ -26,7 +26,7 @@ import org.apache.cloudstack.api.BaseListCmd;
 import org.apache.cloudstack.api.Parameter;
 import org.apache.cloudstack.api.ResponseObject;
 import org.apache.cloudstack.api.ServerApiException;
-import org.apache.cloudstack.api.response.DesktopSupportedVersionResponse;
+import org.apache.cloudstack.api.response.DesktopControllerVersionResponse;
 import org.apache.cloudstack.api.response.ListResponse;
 import org.apache.cloudstack.api.response.ZoneResponse;
 import org.apache.log4j.Logger;
@@ -34,14 +34,14 @@ import org.apache.log4j.Logger;
 import com.cloud.exception.ConcurrentOperationException;
 import com.cloud.desktop.version.DesktopVersionService;
 
-@APICommand(name = ListDesktopSupportedVersionsCmd.APINAME,
-        description = "Lists supported Desktop version",
-        responseObject = DesktopSupportedVersionResponse.class,
+@APICommand(name = ListDesktopControllerVersionsCmd.APINAME,
+        description = "Lists Desktop Controller Version",
+        responseObject = DesktopControllerVersionResponse.class,
         responseView = ResponseObject.ResponseView.Restricted,
         authorized = {RoleType.Admin, RoleType.ResourceAdmin, RoleType.DomainAdmin, RoleType.User})
-public class ListDesktopSupportedVersionsCmd extends BaseListCmd {
-    public static final Logger LOGGER = Logger.getLogger(ListDesktopSupportedVersionsCmd.class.getName());
-    public static final String APINAME = "listDesktopSupportedVersions";
+public class ListDesktopControllerVersionsCmd extends BaseListCmd {
+    public static final Logger LOGGER = Logger.getLogger(ListDesktopControllerVersionsCmd.class.getName());
+    public static final String APINAME = "listDesktopControllerVersions";
 
     @Inject
     private DesktopVersionService desktopVersionService;
@@ -50,13 +50,13 @@ public class ListDesktopSupportedVersionsCmd extends BaseListCmd {
     //////////////// API parameters /////////////////////
     /////////////////////////////////////////////////////
     @Parameter(name = ApiConstants.ID, type = CommandType.UUID,
-            entityType = DesktopSupportedVersionResponse.class,
-            description = "the ID of the Desktop supported version")
+            entityType = DesktopControllerVersionResponse.class,
+            description = "the ID of the Desktop Controller Version")
     private Long id;
 
     @Parameter(name = ApiConstants.ZONE_ID, type = CommandType.UUID,
             entityType = ZoneResponse.class,
-            description = "the ID of the zone in which Desktop supported version will be available")
+            description = "the ID of the zone in which Desktop Controller Version will be available")
     private Long zoneId;
 
     /////////////////////////////////////////////////////
@@ -80,7 +80,7 @@ public class ListDesktopSupportedVersionsCmd extends BaseListCmd {
     /////////////////////////////////////////////////////
     @Override
     public void execute() throws ServerApiException, ConcurrentOperationException {
-        ListResponse<DesktopSupportedVersionResponse> response = desktopVersionService.listDesktopSupportedVersions(this);
+        ListResponse<DesktopControllerVersionResponse> response = desktopVersionService.listDesktopControllerVersions(this);
         response.setResponseName(getCommandName());
         setResponseObject(response);
     }

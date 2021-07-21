@@ -14,13 +14,25 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-package com.cloud.desktop.vm;
 
-public class DesktopEventTypes {
-    public static final String EVENT_DESKTOP_CREATE = "DESKTOP.CREATE";
-    public static final String EVENT_DESKTOP_DELETE = "DESKTOP.DELETE";
-    public static final String EVENT_DESKTOP_START = "DESKTOP.START";
-    public static final String EVENT_DESKTOP_STOP = "DESKTOP.STOP";
-    public static final String EVENT_DESKTOP_SCALE = "DESKTOP.SCALE";
-    public static final String EVENT_DESKTOP_UPGRADE = "DESKTOP.UPGRADE";
+package com.cloud.desktop.version;
+
+import org.apache.cloudstack.api.Identity;
+import org.apache.cloudstack.api.InternalIdentity;
+
+/**
+ * DesktopControllerVersion describes the properties of supported desktop controller version
+ *
+ */
+public interface DesktopControllerVersion extends InternalIdentity, Identity {
+
+    public enum State {
+        Disabled, Enabled
+    }
+
+    long getId();
+    String getName();
+    String getVersion();
+    Long getZoneId();
+    State getState();
 }

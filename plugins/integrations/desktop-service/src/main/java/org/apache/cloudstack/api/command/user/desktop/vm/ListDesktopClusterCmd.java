@@ -26,39 +26,39 @@ import org.apache.cloudstack.api.BaseListProjectAndAccountResourcesCmd;
 import org.apache.cloudstack.api.Parameter;
 import org.apache.cloudstack.api.ResponseObject.ResponseView;
 import org.apache.cloudstack.api.ServerApiException;
-import org.apache.cloudstack.api.response.DesktopResponse;
+import org.apache.cloudstack.api.response.DesktopClusterResponse;
 import org.apache.cloudstack.api.response.ListResponse;
 import org.apache.log4j.Logger;
 
-import com.cloud.desktop.vm.DesktopService;
+import com.cloud.desktop.cluster.DesktopClusterService;
 import com.cloud.utils.exception.CloudRuntimeException;
 
-@APICommand(name = ListDesktopCmd.APINAME,
-        description = "Lists Desktop",
-        responseObject = DesktopResponse.class,
+@APICommand(name = ListDesktopClusterCmd.APINAME,
+        description = "Lists Desktop Cluster",
+        responseObject = DesktopClusterResponse.class,
         responseView = ResponseView.Restricted,
         requestHasSensitiveInfo = false,
         responseHasSensitiveInfo = true,
         authorized = {RoleType.Admin, RoleType.ResourceAdmin, RoleType.DomainAdmin, RoleType.User})
-public class ListDesktopCmd extends BaseListProjectAndAccountResourcesCmd {
-    public static final Logger LOGGER = Logger.getLogger(ListDesktopCmd.class.getName());
-    public static final String APINAME = "listDesktop";
+public class ListDesktopClusterCmd extends BaseListProjectAndAccountResourcesCmd {
+    public static final Logger LOGGER = Logger.getLogger(ListDesktopClusterCmd.class.getName());
+    public static final String APINAME = "listDesktopClusters";
 
     @Inject
-    public DesktopService desktopService;
+    public DesktopClusterService desktopService;
 
     /////////////////////////////////////////////////////
     //////////////// API parameters /////////////////////
     /////////////////////////////////////////////////////
     @Parameter(name = ApiConstants.ID, type = CommandType.UUID,
-            entityType = DesktopResponse.class,
-            description = "the ID of the Desktop")
+            entityType = DesktopClusterResponse.class,
+            description = "the ID of the Desktop Cluster")
     private Long id;
 
-    @Parameter(name = ApiConstants.STATE, type = CommandType.STRING, description = "state of the Desktop")
+    @Parameter(name = ApiConstants.STATE, type = CommandType.STRING, description = "state of the Desktop Cluster")
     private String state;
 
-    @Parameter(name = ApiConstants.NAME, type = CommandType.STRING, description = "name of the Desktop" +
+    @Parameter(name = ApiConstants.NAME, type = CommandType.STRING, description = "name of the Desktop Cluster" +
             " (a substring match is made against the parameter value, data for all matching Desktop will be returned)")
     private String name;
 
@@ -90,7 +90,7 @@ public class ListDesktopCmd extends BaseListProjectAndAccountResourcesCmd {
     @Override
     public void execute() throws ServerApiException {
         try {
-            ListResponse<DesktopResponse> response = desktopService.listDesktop(this);
+            ListResponse<DesktopClusterResponse> response = desktopService.listDesktopCluster(this);
             response.setResponseName(getCommandName());
             setResponseObject(response);
         } catch (CloudRuntimeException e) {

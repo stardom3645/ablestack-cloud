@@ -177,42 +177,6 @@ export default {
       ]
     },
     {
-      name: 'desktoptemplate',
-      title: 'Desktop Templates',
-      icon: 'shop',
-      docHelp: 'adminguide/templates.html',
-      permission: ['listDesktopSupportedVersions'],
-      columns: ['name', 'hypervisor', 'ostypename', 'version'],
-      details: ['name', 'version', 'templatename', 'templatestate'],
-      searchFilters: ['name', 'zoneid', 'tags'],
-      actions: [
-        {
-          api: 'registerTemplate',
-          icon: 'plus',
-          label: 'Desktop Template Version',
-          docHelp: 'adminguide/templates.html#uploading-templates-from-a-remote-http-server',
-          listView: true,
-          popup: true,
-          component: () => import('@/views/image/AddDesktopSupportedVersion.vue')
-        },
-        {
-          api: 'updateTemplatePermissions',
-          icon: 'edit',
-          label: 'Manage Desktop Version',
-          dataView: true,
-          popup: true,
-          component: () => import('@/views/image/UpdateDesktopSupportedVersion.vue')
-        },
-        {
-          api: 'updateTemplate',
-          icon: 'delete',
-          label: 'Delete Desktop Version',
-          message: '이 Desktop Template Version 을 삭제하시겠습니까?',
-          dataView: true
-        }
-      ]
-    },
-    {
       name: 'iso',
       title: 'label.isos',
       icon: 'usb',

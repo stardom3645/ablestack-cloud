@@ -22,83 +22,83 @@ import org.apache.cloudstack.api.ApiConstants;
 import org.apache.cloudstack.api.BaseResponse;
 import org.apache.cloudstack.api.EntityReference;
 
-import com.cloud.desktop.vm.Desktop;
+import com.cloud.desktop.cluster.DesktopCluster;
 import com.cloud.serializer.Param;
 import com.google.gson.annotations.SerializedName;
 
 @SuppressWarnings("unused")
-@EntityReference(value = {Desktop.class})
-public class DesktopResponse extends BaseResponse implements ControlledEntityResponse {
+@EntityReference(value = {DesktopCluster.class})
+public class DesktopClusterResponse extends BaseResponse implements ControlledEntityResponse {
     @SerializedName(ApiConstants.ID)
-    @Param(description = "the id of the Desktop")
+    @Param(description = "the id of the Desktop Cluster")
     private String id;
 
     @SerializedName(ApiConstants.NAME)
-    @Param(description = "the name of the Desktop")
+    @Param(description = "the name of the Desktop Cluster")
     private String name;
 
     @SerializedName(ApiConstants.ZONE_ID)
-    @Param(description = "the name of the zone of the Desktop")
+    @Param(description = "the name of the zone of the Desktop Cluster")
     private String zoneId;
 
     @SerializedName(ApiConstants.ZONE_NAME)
-    @Param(description = "the name of the zone of the Desktop")
+    @Param(description = "the name of the zone of the Desktop Cluster")
     private String zoneName;
 
     @SerializedName(ApiConstants.SERVICE_OFFERING_ID)
-    @Param(description = "the ID of the service offering of the Desktop")
+    @Param(description = "the ID of the service offering of the Desktop Cluster")
     private String serviceOfferingId;
 
     @SerializedName("serviceofferingname")
-    @Param(description = "the name of the service offering of the Desktop")
+    @Param(description = "the name of the service offering of the Desktop Cluster")
     private String serviceOfferingName;
 
     @SerializedName(ApiConstants.AD_DOMAIN_NAME)
-    @Param(description = "the ID of the template of the Desktop")
+    @Param(description = "the ID of the template of the Desktop Cluster")
     private String adDomainName;
 
     @SerializedName(ApiConstants.NETWORK_ID)
-    @Param(description = "the ID of the network of the Desktop")
+    @Param(description = "the ID of the network of the Desktop Cluster")
     private String networkId;
 
     @SerializedName(ApiConstants.ASSOCIATED_NETWORK_NAME)
-    @Param(description = "the name of the network of the Desktop")
+    @Param(description = "the name of the network of the Desktop Cluster")
     private String associatedNetworkName;
 
-    @SerializedName(ApiConstants.DESKTOP_VERSION_ID)
-    @Param(description = "the ID of the Desktop version for the Desktop")
-    private String desktopVersionId;
+    @SerializedName(ApiConstants.CONTROLLER_VERSION)
+    @Param(description = "the Controller version for the Desktop Cluster")
+    private String controllerVersion;
 
-    @SerializedName(ApiConstants.DESKTOP_VERSION_NAME)
-    @Param(description = "the name of the Desktop version for the Desktop")
-    private String desktopVersionName;
+    @SerializedName(ApiConstants.CONTROLLER_VERSION_NAME)
+    @Param(description = "the name of the Controller version for the Desktop Cluster")
+    private String controllerVersionName;
 
     @SerializedName(ApiConstants.ACCOUNT)
-    @Param(description = "the account associated with the Desktop")
+    @Param(description = "the account associated with the Desktop Cluster")
     private String accountName;
 
     @SerializedName(ApiConstants.PROJECT_ID)
-    @Param(description = "the project id of the Desktop")
+    @Param(description = "the project id of the Desktop Cluster")
     private String projectId;
 
     @SerializedName(ApiConstants.PROJECT)
-    @Param(description = "the project name of the Desktop")
+    @Param(description = "the project name of the Desktop Cluster")
     private String projectName;
 
     @SerializedName(ApiConstants.DOMAIN_ID)
-    @Param(description = "the ID of the domain in which the Desktop exists")
+    @Param(description = "the ID of the domain in which the Desktop Cluster exists")
     private String domainId;
 
     @SerializedName(ApiConstants.DOMAIN)
-    @Param(description = "the name of the domain in which the Desktop exists")
+    @Param(description = "the name of the domain in which the Desktop Cluster exists")
     private String domainName;
 
     @SerializedName(ApiConstants.STATE)
-    @Param(description = "the state of the Desktop")
+    @Param(description = "the state of the Desktop Cluster")
     private String state;
 
     @SerializedName(ApiConstants.VIRTUAL_MACHINES)
-    @Param(description = "the list of virtualmachine associated with this Desktop")
+    @Param(description = "the list of virtualmachine associated with this Desktop Cluster")
     private List<UserVmResponse> virtualMachines;
 
     @SerializedName(ApiConstants.IP_ADDRESS)
@@ -109,7 +109,7 @@ public class DesktopResponse extends BaseResponse implements ControlledEntityRes
     @Param(description = "Public IP Address ID of the cluster")
     private String ipAddressId;
 
-    public DesktopResponse() {
+    public DesktopClusterResponse() {
     }
 
     public String getName() {
@@ -168,20 +168,20 @@ public class DesktopResponse extends BaseResponse implements ControlledEntityRes
         this.associatedNetworkName = associatedNetworkName;
     }
 
-    public String getDesktopVersionId() {
-        return desktopVersionId;
+    public String getControllerVersion() {
+        return controllerVersion;
     }
 
-    public void setDesktopVersionId(String desktopVersionId) {
-        this.desktopVersionId = desktopVersionId;
+    public void setControllerVersion(String controllerVersion) {
+        this.controllerVersion = controllerVersion;
     }
 
-    public String getDesktopVersionName() {
-        return desktopVersionName;
+    public String getControllerVersionName() {
+        return controllerVersionName;
     }
 
-    public void setDesktopVersionName(String desktopVersionName) {
-        this.desktopVersionName = desktopVersionName;
+    public void setControllerVersionName(String controllerVersionName) {
+        this.controllerVersionName= controllerVersionName;
     }
 
     public String getProjectId() {
@@ -252,4 +252,5 @@ public class DesktopResponse extends BaseResponse implements ControlledEntityRes
     public void setIpAddressId(String ipAddressId) {
         this.ipAddressId = ipAddressId;
     }
+
 }
