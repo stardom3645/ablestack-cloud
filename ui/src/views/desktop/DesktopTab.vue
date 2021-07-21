@@ -314,7 +314,7 @@ import DetailsTab from '@/components/view/DetailsTab'
 import NicsTable from '@/views/network/NicsTable'
 import DesktopNicsTable from '@/views/network/DesktopNicsTable'
 import ListResourceTable from '@/components/view/ListResourceTable'
-import TooltipButton from '@/components/view/TooltipButton'
+import TooltipButton from '@/components/widgets/TooltipButton'
 
 export default {
   name: 'InstanceTab',
