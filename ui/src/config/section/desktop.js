@@ -70,7 +70,7 @@ export default {
         {
           api: 'destroyVirtualMachine',
           icon: 'delete',
-          label: 'label.desktop.cluster.destroy',
+          label: 'label.desktop.cluster.delete',
           message: 'message.desktop.cluster.delete',
           docHelp: 'adminguide/virtual_machines.html#deleting-vms',
           dataView: true,

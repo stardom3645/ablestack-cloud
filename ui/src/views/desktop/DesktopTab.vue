@@ -25,7 +25,7 @@
       <a-tab-pane :tab="$t('label.details')" key="details">
         <DetailsTab :resource="resource" :loading="loading" />
       </a-tab-pane>
-      <a-tab-pane :tab="'Networks'" key="desktopnics">
+      <a-tab-pane :tab="$t('label.networks')" key="desktopnics">
         <DesktopNicsTable :resource="vm" :loading="loading" />
       </a-tab-pane>
       <a-tab-pane :tab="'IP Range'" key="iprange">
@@ -161,7 +161,6 @@ export default {
   data () {
     return {
       vm: {},
-      networks: [],
       instances: [],
       desktops: [],
       iprange: [],
@@ -288,16 +287,16 @@ export default {
       this.virtualmachines = this.resource.virtualmachines || []
       this.virtualmachines.map(x => { x.ipaddress = x.nic[0].ipaddress })
       this.instanceLoading = false
-      this.networks = []
+      this.desktopnetworks = []
       if (!this.vm || !this.vm.id) {
         return
       }
       api('listNetworks', { listall: true, networkid: this.resource.networkid }).then(json => {
-        this.networks = json.listnetworksresponse.network
-        if (this.networks) {
-          this.networks.sort((a, b) => { return a.deviceid - b.deviceid })
+        this.desktopnetworks = json.listnetworksresponse.network
+        if (this.desktopnetworks) {
+          this.desktopnetworks.sort((a, b) => { return a.deviceid - b.deviceid })
         }
-        this.$set(this.resource, 'networks', this.networks)
+        this.$set(this.resource, 'desktopnetworks', this.desktopnetworks)
       })
     },
     showAddModal () {

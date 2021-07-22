@@ -3362,7 +3362,7 @@
 "title.desktop.controller": "Controller Templates",
 "title.desktop.master": "Master Templates",
 "label.desktop.cluster.deploy": "Deploy Cluster",
-"label.desktop.cluster.destroy": "Destroy Desktop",
+"label.desktop.cluster.delete": "Delete Desktop Cluster",
 "label.desktop.controller.template.version": "Controller Template Version",
 "label.desktop.controller.version.manage": "Manage Controller Version",
 "label.desktop.controller.version.delete": "Delete Controller Version",
@@ -3380,5 +3380,6 @@
 "message.desktop.cluster.disable": "이 Cluster를 비활성화 하시겠습니까?",
 "message.desktop.cluster.delete": "이 Cluster를 삭제하시겠습니까?",
 "message.desktop.controller.version.delete": "이 Controller Template Version 을 삭제하시겠습니까?",
-"message.desktop.master.veresion.delete": "이 Master Template Version 을 삭제하시겠습니까?"
+"message.desktop.master.veresion.delete": "이 Master Template Version 을 삭제하시겠습니까?",
+"message.error.desktop.cluster.name": "Please enter Desktop Cluster name"
 }

@@ -33,19 +33,9 @@
             <router-link :to="{ path: '/volume/' + volume.uuid }">{{ volume.type }} - {{ volume.path }}</router-link> ({{ parseFloat(volume.size / (1024.0 * 1024.0 * 1024.0)).toFixed(1) }} GB)
           </div>
         </div>
-        <div v-else-if="item === 'templates'">
+        <div v-else-if="$route.meta.name === 'desktoptemplate' && item === 'templates'">
           <div v-for="(templates, idx) in resource[item]" :key="idx">
             <router-link :to="{ path: '/template/' + templates.id }">{{ templates.name }}</router-link>
-          </div>
-          <br>
-          <div v-for="(templates, idx) in resource[item]" :key="idx" v-if="idx === 0">
-            <strong>{{ $t('label.hypervisor') }}</strong>
-            <br/>
-            <div>{{ templates.hypervisor }}</div>
-            <br>
-            <strong>{{ $t('label.format') }}</strong>
-            <br/>
-            <div>{{ templates.format }}</div>
           </div>
         </div>
         <div v-else-if="$route.meta.name === 'computeoffering' && item === 'rootdisksize'">
