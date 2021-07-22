@@ -21,7 +21,7 @@ export default {
   children: [
     {
       name: 'desktop',
-      title: 'Clusters',
+      title: 'title.desktop.cluster',
       icon: 'block',
       docHelp: 'adminguide/virtual_machines.html',
       permission: ['listDesktopClusters'],
@@ -35,7 +35,7 @@ export default {
         {
           api: 'createAccount',
           icon: 'plus',
-          label: 'Deploy Cluster',
+          label: 'label.desktop.cluster.deploy',
           docHelp: 'adminguide/virtual_machines.html#creating-vms',
           listView: true,
           popup: true,
@@ -45,7 +45,7 @@ export default {
           api: 'startVirtualMachine',
           icon: 'caret-right',
           label: 'Enable',
-          message: '이 Cluster를 활성화 하시겠습니까?',
+          message: 'message.desktop.cluster.enable',
           docHelp: 'adminguide/virtual_machines.html#stopping-and-starting-vms',
           dataView: true,
           show: (record) => { return ['Stopped'].includes(record.state) }
@@ -54,7 +54,7 @@ export default {
           api: 'stopVirtualMachine',
           icon: 'poweroff',
           label: 'Disable',
-          message: '이 Cluster를 비활성화 하시겠습니까?',
+          message: 'message.desktop.cluster.disable',
           docHelp: 'adminguide/virtual_machines.html#stopping-and-starting-vms',
           dataView: true,
           show: (record) => { return ['Running'].includes(record.state) }
@@ -70,8 +70,8 @@ export default {
         {
           api: 'destroyVirtualMachine',
           icon: 'delete',
-          label: 'Destroy Desktop',
-          message: '이 Cluster를 삭제하시겠습니까?',
+          label: 'label.desktop.cluster.destroy',
+          message: 'message.desktop.cluster.delete',
           docHelp: 'adminguide/virtual_machines.html#deleting-vms',
           dataView: true,
           popup: true,
@@ -82,7 +82,7 @@ export default {
     },
     {
       name: 'desktoptemplate',
-      title: 'Controller Templates',
+      title: 'title.desktop.controller',
       icon: 'shop',
       docHelp: 'adminguide/templates.html',
       permission: ['listDesktopControllerVersions'],
@@ -93,7 +93,7 @@ export default {
         {
           api: 'registerTemplate',
           icon: 'plus',
-          label: 'Controller Template Version',
+          label: 'label.desktop.controller.template.version',
           docHelp: 'adminguide/templates.html#uploading-templates-from-a-remote-http-server',
           listView: true,
           popup: true,
@@ -102,7 +102,7 @@ export default {
         {
           api: 'updateTemplatePermissions',
           icon: 'edit',
-          label: 'Manage Controller Version',
+          label: 'label.desktop.controller.version.manage',
           dataView: true,
           popup: true,
           component: () => import('@/views/desktop/UpdateDesktopControllerVersion.vue')
@@ -110,26 +110,26 @@ export default {
         {
           api: 'updateTemplate',
           icon: 'delete',
-          label: 'Delete Controller Version',
-          message: '이 Controller Template Version 을 삭제하시겠습니까?',
+          label: 'label.desktop.controller.version.delete',
+          message: 'message.desktop.controller.version.delete',
           dataView: true
         }
       ]
     },
     {
       name: 'mastertemplate',
-      title: 'Master Templates',
+      title: 'title.desktop.master',
       icon: 'hdd',
       docHelp: 'adminguide/templates.html',
       permission: ['listDesktopMasterVersions'],
       columns: ['name', 'state', 'version', 'zonename'],
-      details: ['name', 'version', 'description', 'templatestate'],
+      details: ['name', 'version', 'description', 'templateostype', 'templatestate'],
       searchFilters: ['name', 'zoneid', 'tags'],
       actions: [
         {
           api: 'registerTemplate',
           icon: 'plus',
-          label: 'Master Template Version',
+          label: 'label.desktop.master.template.version',
           docHelp: 'adminguide/templates.html#uploading-templates-from-a-remote-http-server',
           listView: true,
           popup: true,
@@ -138,7 +138,7 @@ export default {
         {
           api: 'updateTemplatePermissions',
           icon: 'edit',
-          label: 'Manage Master Version',
+          label: 'label.desktop.master.version.manage',
           dataView: true,
           popup: true,
           component: () => import('@/views/desktop/UpdateDesktopMasterVersion.vue')
@@ -146,8 +146,8 @@ export default {
         {
           api: 'updateTemplate',
           icon: 'delete',
-          label: 'Delete Master Version',
-          message: '이 Master Template Version 을 삭제하시겠습니까?',
+          label: 'label.desktop.master.version.delete',
+          message: 'message.desktop.master.veresion.delete',
           dataView: true
         }
       ]

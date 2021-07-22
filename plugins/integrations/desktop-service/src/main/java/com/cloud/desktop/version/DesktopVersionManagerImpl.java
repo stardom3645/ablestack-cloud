@@ -163,6 +163,7 @@ public class DesktopVersionManagerImpl extends ManagerBase implements DesktopVer
             response.setTemplateId(template.getUuid());
             response.setTemplateName(template.getName());
             response.setTemplateState(template.getState().toString());
+            response.setTemplateOSType(template.getGuestOSName());
         }
         return response;
     }

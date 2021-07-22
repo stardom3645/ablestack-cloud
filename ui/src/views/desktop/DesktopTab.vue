@@ -295,7 +295,6 @@ export default {
       api('listNetworks', { listall: true, networkid: this.resource.networkid }).then(json => {
         this.networks = json.listnetworksresponse.network
         if (this.networks) {
-          console.log(this.networks)
           this.networks.sort((a, b) => { return a.deviceid - b.deviceid })
         }
         this.$set(this.resource, 'networks', this.networks)
