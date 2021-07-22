@@ -28,6 +28,7 @@
                       >
 
     <bean id="desktopControllerVersionDaoImpl" class="com.cloud.desktop.version.dao.DesktopControllerVersionDaoImpl" />
+    <bean id="desktopMasterVersionDaoImpl" class="com.cloud.desktop.version.dao.DesktopMasterVersionDaoImpl" />
     <bean id="desktopVersionManagerImpl" class="com.cloud.desktop.version.DesktopVersionManagerImpl" />
     <bean id="desktopTemplateMapDaoImpl" class="com.cloud.desktop.version.dao.DesktopTemplateMapDaoImpl" />
     <bean id="desktopClusterDaoImpl" class="com.cloud.desktop.cluster.dao.DesktopClusterDaoImpl" />

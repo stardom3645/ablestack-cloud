@@ -45,6 +45,9 @@ public class DesktopClusterVO implements DesktopCluster {
     @Column(name = "name")
     private String name;
 
+    @Column(name = "description")
+    private String description;
+
     @Column(name = "password")
     private String password;
 
@@ -103,6 +106,15 @@ public class DesktopClusterVO implements DesktopCluster {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    @Override
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
     }
 
     @Override
@@ -206,10 +218,11 @@ public class DesktopClusterVO implements DesktopCluster {
         this.uuid = UUID.randomUUID().toString();
     }
 
-    public DesktopClusterVO(String name, long zoneId, long desktopVersionId, long serviceOfferingId, String adDomainName,
+    public DesktopClusterVO(String name, String description, long zoneId, long desktopVersionId, long serviceOfferingId, String adDomainName,
                                long networkId, long domainId, long accountId, State state) {
         this.uuid = UUID.randomUUID().toString();
         this.name = name;
+        this.description = description;
         this.zoneId = zoneId;
         this.desktopVersionId = desktopVersionId;
         this.serviceOfferingId = serviceOfferingId;

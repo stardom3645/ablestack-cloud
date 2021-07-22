@@ -34,6 +34,19 @@
         </a-form-item>
         <a-form-item>
           <span slot="label">
+            {{ 'Description' }}
+            <a-tooltip :title="apiParams.username.description">
+              <a-icon type="info-circle" style="color: rgba(0,0,0,.45)" />
+            </a-tooltip>
+          </span>
+          <a-input
+            v-decorator="['username', {
+              rules: [{ required: true, message: $t('message.error.required.input') }]
+            }]"
+            :placeholder="'Description'" />
+        </a-form-item>
+        <a-form-item>
+          <span slot="label">
             {{ 'AD Domain Name' }}
             <a-tooltip :title="apiParams.username.description">
               <a-icon type="info-circle" style="color: rgba(0,0,0,.45)" />

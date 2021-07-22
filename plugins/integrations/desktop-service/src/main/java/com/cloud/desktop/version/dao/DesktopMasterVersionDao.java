@@ -15,25 +15,13 @@
 // specific language governing permissions and limitations
 // under the License.
 
-package com.cloud.desktop.version;
+package com.cloud.desktop.version.dao;
 
-import org.apache.cloudstack.api.Identity;
-import org.apache.cloudstack.api.InternalIdentity;
+import java.util.List;
 
-/**
- * DesktopControllerVersion describes the properties of supported desktop controller version
- *
- */
-public interface DesktopControllerVersion extends InternalIdentity, Identity {
+import com.cloud.desktop.version.DesktopMasterVersionVO;
+import com.cloud.utils.db.GenericDao;
 
-    public enum State {
-        Disabled, Enabled
-    }
-
-    long getId();
-    String getDescription();
-    String getName();
-    String getVersion();
-    Long getZoneId();
-    State getState();
+public interface DesktopMasterVersionDao extends GenericDao<DesktopMasterVersionVO, Long> {
+    List<DesktopMasterVersionVO> listAllInZone(long dataCenterId);
 }

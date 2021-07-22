@@ -112,6 +112,7 @@ public interface DesktopCluster extends ControlledEntity, com.cloud.utils.fsm.St
     long getId();
     String getName();
     String getPassword();
+    String getDescription();
     long getZoneId();
     long getDesktopVersionId();
     long getServiceOfferingId();

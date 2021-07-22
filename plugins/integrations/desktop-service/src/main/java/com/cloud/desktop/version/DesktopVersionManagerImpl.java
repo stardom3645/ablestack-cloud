@@ -25,7 +25,9 @@ import javax.inject.Inject;
 
 import org.apache.cloudstack.api.ResponseObject.ResponseView;
 import org.apache.cloudstack.api.command.user.desktop.version.ListDesktopControllerVersionsCmd;
+import org.apache.cloudstack.api.command.user.desktop.version.ListDesktopMasterVersionsCmd;
 import org.apache.cloudstack.api.response.DesktopControllerVersionResponse;
+import org.apache.cloudstack.api.response.DesktopMasterVersionResponse;
 import org.apache.cloudstack.api.response.ListResponse;
 import org.apache.cloudstack.api.response.TemplateResponse;
 import org.apache.cloudstack.context.CallContext;
@@ -39,6 +41,7 @@ import com.cloud.dc.DataCenterVO;
 import com.cloud.dc.dao.DataCenterDao;
 import com.cloud.desktop.cluster.DesktopClusterService;
 import com.cloud.desktop.version.dao.DesktopControllerVersionDao;
+import com.cloud.desktop.version.dao.DesktopMasterVersionDao;
 import com.cloud.desktop.version.dao.DesktopTemplateMapDao;
 import com.cloud.utils.component.ManagerBase;
 import com.cloud.user.Account;
@@ -54,6 +57,8 @@ public class DesktopVersionManagerImpl extends ManagerBase implements DesktopVer
     @Inject
     private DesktopControllerVersionDao desktopControllerVersionDao;
     @Inject
+    private DesktopMasterVersionDao desktopMasterVersionDao;
+    @Inject
     private TemplateJoinDao templateJoinDao;
     @Inject
     public DesktopTemplateMapDao desktopTemplateMapDao;
@@ -67,6 +72,7 @@ public class DesktopVersionManagerImpl extends ManagerBase implements DesktopVer
         response.setObjectName("desktopcontrollerversion");
         response.setId(desktopControllerVersion.getUuid());
         response.setName(desktopControllerVersion.getName());
+        response.setDescription(desktopControllerVersion.getDescription());
         response.setVersion(desktopControllerVersion.getVersion());
         if (desktopControllerVersion.getState() != null) {
             response.setState(desktopControllerVersion.getState().toString());
@@ -137,6 +143,70 @@ public class DesktopVersionManagerImpl extends ManagerBase implements DesktopVer
         return createDesktopControllerVersionListResponse(versions);
     }
 
+    private DesktopMasterVersionResponse createDesktopMasterVersionResponse(final DesktopMasterVersion desktopMasterVersion) {
+        DesktopMasterVersionResponse response = new DesktopMasterVersionResponse();
+        response.setObjectName("desktopmasterversion");
+        response.setId(desktopMasterVersion.getUuid());
+        response.setName(desktopMasterVersion.getName());
+        response.setDescription(desktopMasterVersion.getDescription());
+        response.setVersion(desktopMasterVersion.getVersion());
+        if (desktopMasterVersion.getState() != null) {
+            response.setState(desktopMasterVersion.getState().toString());
+        }
+        DataCenterVO zone = dataCenterDao.findById(desktopMasterVersion.getZoneId());
+        if (zone != null) {
+            response.setZoneId(zone.getUuid());
+            response.setZoneName(zone.getName());
+        }
+        TemplateJoinVO template = templateJoinDao.findById(desktopMasterVersion.getTemplateId());
+        if (template != null) {
+            response.setTemplateId(template.getUuid());
+            response.setTemplateName(template.getName());
+            response.setTemplateState(template.getState().toString());
+        }
+        return response;
+    }
+
+    private ListResponse<DesktopMasterVersionResponse> createDesktopMasterVersionListResponse(List<DesktopMasterVersionVO> versions) {
+        List<DesktopMasterVersionResponse> responseList = new ArrayList<>();
+        for (DesktopMasterVersionVO version : versions) {
+            responseList.add(createDesktopMasterVersionResponse(version));
+        }
+        ListResponse<DesktopMasterVersionResponse> response = new ListResponse<>();
+        response.setResponses(responseList);
+        return response;
+    }
+
+    @Override
+    public ListResponse<DesktopMasterVersionResponse> listDesktopMasterVersions(final ListDesktopMasterVersionsCmd cmd) {
+        if (!DesktopClusterService.DesktopServiceEnabled.value()) {
+            throw new CloudRuntimeException("Desktop Service plugin is disabled");
+        }
+        final Long versionId = cmd.getId();
+        final Long zoneId = cmd.getZoneId();
+        Filter searchFilter = new Filter(DesktopMasterVersionVO.class, "id", true, cmd.getStartIndex(), cmd.getPageSizeVal());
+        SearchBuilder<DesktopMasterVersionVO> sb = desktopMasterVersionDao.createSearchBuilder();
+        sb.and("id", sb.entity().getId(), SearchCriteria.Op.EQ);
+        sb.and("keyword", sb.entity().getName(), SearchCriteria.Op.LIKE);
+        SearchCriteria<DesktopMasterVersionVO> sc = sb.create();
+        String keyword = cmd.getKeyword();
+        if (versionId != null) {
+            sc.setParameters("id", versionId);
+        }
+        if (zoneId != null) {
+            SearchCriteria<DesktopMasterVersionVO> scc = desktopMasterVersionDao.createSearchCriteria();
+            scc.addOr("zoneId", SearchCriteria.Op.EQ, zoneId);
+            scc.addOr("zoneId", SearchCriteria.Op.NULL);
+            sc.addAnd("zoneId", SearchCriteria.Op.SC, scc);
+        }
+        if(keyword != null){
+            sc.setParameters("keyword", "%" + keyword + "%");
+        }
+        List <DesktopMasterVersionVO> versions = desktopMasterVersionDao.search(sc, searchFilter);
+
+        return createDesktopMasterVersionListResponse(versions);
+    }
+
     @Override
     public List<Class<?>> getCommands() {
         List<Class<?>> cmdList = new ArrayList<Class<?>>();
@@ -144,6 +214,7 @@ public class DesktopVersionManagerImpl extends ManagerBase implements DesktopVer
             return cmdList;
         }
         cmdList.add(ListDesktopControllerVersionsCmd.class);
+        cmdList.add(ListDesktopMasterVersionsCmd.class);
         return cmdList;
     }
 }

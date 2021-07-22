@@ -3362,5 +3362,6 @@
 "label.desktopversion": "Controller Template Version",
 "label.adminurl": "Admin Portal URL",
 "label.userurl": "User Portal URL",
-"label.controllerversion": "Controller Version"
+"label.controllerversion": "Controller Version",
+"label.templatestate": "Template State"
 }

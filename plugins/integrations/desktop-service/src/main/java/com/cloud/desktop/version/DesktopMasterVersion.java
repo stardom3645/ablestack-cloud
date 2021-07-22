@@ -21,10 +21,10 @@ import org.apache.cloudstack.api.Identity;
 import org.apache.cloudstack.api.InternalIdentity;
 
 /**
- * DesktopControllerVersion describes the properties of supported desktop controller version
+ * DesktopMasterVersion describes the properties of supported desktop Master version
  *
  */
-public interface DesktopControllerVersion extends InternalIdentity, Identity {
+public interface DesktopMasterVersion extends InternalIdentity, Identity {
 
     public enum State {
         Disabled, Enabled
@@ -34,6 +34,7 @@ public interface DesktopControllerVersion extends InternalIdentity, Identity {
     String getDescription();
     String getName();
     String getVersion();
+    long getTemplateId();
     Long getZoneId();
     State getState();
 }

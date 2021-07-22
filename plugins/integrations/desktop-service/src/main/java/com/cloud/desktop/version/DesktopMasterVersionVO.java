@@ -32,8 +32,8 @@ import javax.persistence.Table;
 import com.cloud.utils.db.GenericDao;
 
 @Entity
-@Table(name = "desktop_controller_version")
-public class DesktopControllerVersionVO implements DesktopControllerVersion {
+@Table(name = "desktop_master_version")
+public class DesktopMasterVersionVO implements DesktopMasterVersion {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
@@ -47,6 +47,9 @@ public class DesktopControllerVersionVO implements DesktopControllerVersion {
 
     @Column(name = "description")
     private String description;
+
+    @Column(name = "template_id")
+    private long templateId;
 
     @Column(name = "version")
     private String version;
@@ -64,14 +67,15 @@ public class DesktopControllerVersionVO implements DesktopControllerVersion {
     @Column(name = GenericDao.REMOVED_COLUMN)
     Date removed;
 
-    public DesktopControllerVersionVO() {
+    public DesktopMasterVersionVO() {
         this.uuid = UUID.randomUUID().toString();
     }
 
-    public DesktopControllerVersionVO(String name, String version, String description, long templateId, Long zoneId) {
+    public DesktopMasterVersionVO(String name, String version, String description, long templateId, Long zoneId) {
         this.uuid = UUID.randomUUID().toString();
         this.name = name;
         this.description = description;
+        this.templateId = templateId;
         this.version = version;
         this.zoneId = zoneId;
     }
@@ -111,6 +115,15 @@ public class DesktopControllerVersionVO implements DesktopControllerVersion {
 
     public void setVersion(String version) {
         this.version = version;
+    }
+
+    @Override
+    public long getTemplateId() {
+        return templateId;
+    }
+
+    public void setTemplateId(long templateId) {
+        this.templateId = templateId;
     }
 
     @Override

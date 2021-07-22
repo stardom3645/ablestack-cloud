@@ -17,49 +17,59 @@
 
 package org.apache.cloudstack.api.response;
 
-import java.util.List;
-
 import org.apache.cloudstack.api.ApiConstants;
 import org.apache.cloudstack.api.BaseResponse;
 import org.apache.cloudstack.api.EntityReference;
 
-import com.cloud.desktop.version.DesktopControllerVersion;
+import com.cloud.desktop.version.DesktopMasterVersion;
 import com.cloud.serializer.Param;
 import com.google.gson.annotations.SerializedName;
 
 @SuppressWarnings("unused")
-@EntityReference(value = {DesktopControllerVersion.class})
-public class DesktopControllerVersionResponse extends BaseResponse {
+@EntityReference(value = {DesktopMasterVersion.class})
+public class DesktopMasterVersionResponse extends BaseResponse {
     @SerializedName(ApiConstants.ID)
-    @Param(description = "the id of the Desktop Controller Version")
+    @Param(description = "the id of the Desktop Master Version")
     private String id;
 
     @SerializedName(ApiConstants.NAME)
-    @Param(description = "Name of the Desktop Controller Version")
+    @Param(description = "Name of the Desktop Master Version")
     private String name;
 
     @SerializedName(ApiConstants.DESCRIPTION)
-    @Param(description = "the description of the Desktop Controller Version")
+    @Param(description = "the description of the Desktop Master Version")
     private String description;
+
+    @SerializedName(ApiConstants.TEMPLATE_ID)
+    @Param(description = "the id of templates associated with this Desktop")
+    private String templateId;
+
+    @SerializedName(ApiConstants.TEMPLATE_NAME)
+    @Param(description = "the name of templates associated with this Desktop")
+    private String templateName;
+
+    @SerializedName(ApiConstants.TEMPLATE_STATE)
+    @Param(description = "the state of templates associated with this Desktop")
+    private String templateState;
+
+    @SerializedName(ApiConstants.TEMPLATE_TYPE)
+    @Param(description = "the type of templates associated with this Desktop")
+    private String templateType;
 
     @SerializedName(ApiConstants.VERSION)
     @Param(description = "Desktop version")
     private String version;
 
-    @SerializedName(ApiConstants.TEMPLATES)
-    @Param(description = "the list of templates associated with this Desktop")
-    private List<TemplateResponse> templates;
-
     @SerializedName(ApiConstants.ZONE_ID)
-    @Param(description = "the id of the zone in which Desktop Controller Version is available")
+    @Param(description = "the id of the zone in which Desktop Master Version is available")
     private String zoneId;
 
     @SerializedName(ApiConstants.ZONE_NAME)
-    @Param(description = "the name of the zone in which Desktop Controller Version is available")
+    @Param(description = "the name of the zone in which Desktop Master Version is available")
     private String zoneName;
 
     @SerializedName(ApiConstants.STATE)
-    @Param(description = "the enabled or disabled state of the Desktop Controller Version")
+    @Param(description = "the enabled or disabled state of the Desktop Master Version")
     private String state;
 
     public String getId() {
@@ -86,20 +96,44 @@ public class DesktopControllerVersionResponse extends BaseResponse {
         this.description = description;
     }
 
+    public String getTemplateId() {
+        return templateId;
+    }
+
+    public void setTemplateId(String templateId) {
+        this.templateId = templateId;
+    }
+
+    public String getTemplateName() {
+        return templateName;
+    }
+
+    public void setTemplateName(String templateName) {
+        this.templateName = templateName;
+    }
+
+    public String getTemplateState() {
+        return templateState;
+    }
+
+    public void setTemplateState(String templateState) {
+        this.templateState = templateState;
+    }
+
+    public String getTemplateType() {
+        return templateType;
+    }
+
+    public void setTemplateType(String templateType) {
+        this.templateType = templateType;
+    }
+
     public String getVersion() {
         return version;
     }
 
     public void setVersion(String version) {
         this.version = version;
-    }
-
-    public void setTemplates(List<TemplateResponse> templates) {
-        this.templates = templates;
-    }
-
-    public List<TemplateResponse> getTemplates() {
-        return templates;
     }
 
     public String getZoneId() {

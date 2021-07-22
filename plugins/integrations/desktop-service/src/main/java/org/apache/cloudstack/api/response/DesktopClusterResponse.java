@@ -37,6 +37,10 @@ public class DesktopClusterResponse extends BaseResponse implements ControlledEn
     @Param(description = "the name of the Desktop Cluster")
     private String name;
 
+    @SerializedName(ApiConstants.DESCRIPTION)
+    @Param(description = "the description of the Desktop cluster")
+    private String description;
+
     @SerializedName(ApiConstants.ZONE_ID)
     @Param(description = "the name of the zone of the Desktop Cluster")
     private String zoneId;
@@ -118,6 +122,14 @@ public class DesktopClusterResponse extends BaseResponse implements ControlledEn
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
     }
 
     public String getZoneId() {

@@ -27,7 +27,7 @@ export default {
       permission: ['listDesktopClusters'],
       columns: ['name', 'state', 'addomainname', 'account', 'zonename'],
       searchFilters: ['name', 'state'],
-      details: ['name', 'id', 'controllerversion', 'account', 'addomainname', 'zonename', 'associatednetworkname', 'adminurl', 'userurl'],
+      details: ['name', 'id', 'description', 'controllerversion', 'account', 'addomainname', 'zonename', 'associatednetworkname', 'adminurl', 'userurl'],
       tabs: [{
         component: () => import('@/views/desktop/DesktopTab.vue')
       }],
@@ -45,7 +45,7 @@ export default {
           api: 'startVirtualMachine',
           icon: 'caret-right',
           label: 'Enable',
-          message: '이 Desktop을 활성화 하시겠습니까?',
+          message: '이 Cluster를 활성화 하시겠습니까?',
           docHelp: 'adminguide/virtual_machines.html#stopping-and-starting-vms',
           dataView: true,
           show: (record) => { return ['Stopped'].includes(record.state) }
@@ -54,7 +54,7 @@ export default {
           api: 'stopVirtualMachine',
           icon: 'poweroff',
           label: 'Disable',
-          message: '이 Desktop을 비활성화 하시겠습니까?',
+          message: '이 Cluster를 비활성화 하시겠습니까?',
           docHelp: 'adminguide/virtual_machines.html#stopping-and-starting-vms',
           dataView: true,
           show: (record) => { return ['Running'].includes(record.state) }
@@ -71,7 +71,7 @@ export default {
           api: 'destroyVirtualMachine',
           icon: 'delete',
           label: 'Destroy Desktop',
-          message: '이 Desktop을 삭제하시겠습니까?',
+          message: '이 Cluster를 삭제하시겠습니까?',
           docHelp: 'adminguide/virtual_machines.html#deleting-vms',
           dataView: true,
           popup: true,
@@ -87,7 +87,7 @@ export default {
       docHelp: 'adminguide/templates.html',
       permission: ['listDesktopControllerVersions'],
       columns: ['name', 'state', 'version', 'zonename'],
-      details: ['name', 'version', 'templates'],
+      details: ['name', 'description', 'version', 'templates'],
       searchFilters: ['name', 'zoneid', 'tags'],
       actions: [
         {
@@ -121,9 +121,9 @@ export default {
       title: 'Master Templates',
       icon: 'hdd',
       docHelp: 'adminguide/templates.html',
-      permission: ['listDesktopControllerVersions'],
+      permission: ['listDesktopMasterVersions'],
       columns: ['name', 'state', 'version', 'zonename'],
-      details: ['name', 'version', 'templates'],
+      details: ['name', 'version', 'description', 'templatestate'],
       searchFilters: ['name', 'zoneid', 'tags'],
       actions: [
         {
@@ -141,7 +141,7 @@ export default {
           label: 'Manage Master Version',
           dataView: true,
           popup: true,
-          component: () => import('@/views/desktop/UpdateDesktopControllerVersion.vue')
+          component: () => import('@/views/desktop/UpdateDesktopMasterVersion.vue')
         },
         {
           api: 'updateTemplate',

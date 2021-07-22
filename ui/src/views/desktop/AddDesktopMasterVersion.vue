@@ -41,6 +41,18 @@
         </a-row>
         <a-row :gutter="12">
           <a-col :md="24" :lg="24">
+            <a-form-item :label="$t('label.description')">
+              <a-input
+                v-decorator="['description', {
+                  rules: [{ required: true, message: `${this.$t('message.error.required.input')}` }]
+                }]"
+                :placeholder="apiParams.name.description"
+                :autoFocus="currentForm !== 'Create'"/>
+            </a-form-item>
+          </a-col>
+        </a-row>
+        <a-row :gutter="12">
+          <a-col :md="24" :lg="24">
             <a-form-item :label="$t('label.version')">
               <a-input
                 v-decorator="['displaytext', {
@@ -199,9 +211,36 @@
             </a-form-item>
           </a-col>
         </a-row>
+        <a-row :gutter="12" v-if="this.uploadType=='url'">
+          <a-col :md="24" :lg="24">
+            <a-form-item :label="'OS Type'">
+              <a-select
+                showSearch
+                optionFilterProp="children"
+                :filterOption="(input, option) => {
+                  return option.componentOptions.children[0].text.toLowerCase().indexOf(input.toLowerCase()) >= 0
+                }"
+                v-decorator="['ostypeid', {
+                  initialValue: defaultOsId,
+                  rules: [
+                    {
+                      required: true,
+                      message: `${this.$t('message.error.select')}`
+                    }
+                  ]
+                }]"
+                :loading="osTypes.loading"
+                :placeholder="apiParams.ostypeid.description">
+                <a-select-option v-for="opt in osTypes.opts" :key="opt.id">
+                  {{ opt.name || opt.description }}
+                </a-select-option>
+              </a-select>
+            </a-form-item>
+          </a-col>
+        </a-row>
         <a-row :gutter="12" v-if="this.uploadType=='templates'">
           <a-col :md="24" :lg="24">
-            <a-form-item :label="'Template list'">
+            <a-form-item :label="'Template'">
               <a-select
                 showSearch
                 optionFilterProp="children"

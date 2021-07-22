@@ -41,6 +41,18 @@
         </a-row>
         <a-row :gutter="12">
           <a-col :md="24" :lg="24">
+            <a-form-item :label="$t('label.description')">
+              <a-input
+                v-decorator="['description', {
+                  rules: [{ required: true, message: `${this.$t('message.error.required.input')}` }]
+                }]"
+                :placeholder="apiParams.name.description"
+                :autoFocus="currentForm !== 'Create'"/>
+            </a-form-item>
+          </a-col>
+        </a-row>
+        <a-row :gutter="12">
+          <a-col :md="24" :lg="24">
             <a-form-item :label="$t('label.version')">
               <a-input
                 v-decorator="['displaytext', {
