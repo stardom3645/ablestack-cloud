@@ -419,19 +419,6 @@
             </div>
           </div>
         </div>
-        <!--<div class="resource-detail-item" v-if="resource.templates && resource.templates.length > 0">
-          <div class="resource-detail-item__label">{{ $t('label.templates') }}</div>
-          <div class="resource-detail-item__details resource-detail-item__details--start">
-            <div>
-              <div
-                v-for="temp in resource.templates"
-                :key="temp.id"
-                style="margin-top: 5px;">
-                <a-icon type="api" />{{ temp.name }}
-              </div>
-            </div>
-          </div>
-        </div>-->
         <div class="resource-detail-item" v-if="resource.serviceofferingname && resource.serviceofferingid">
           <div class="resource-detail-item__label">{{ $t('label.serviceofferingname') }}</div>
           <div class="resource-detail-item__details">
