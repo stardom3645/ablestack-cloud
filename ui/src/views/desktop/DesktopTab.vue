@@ -25,17 +25,17 @@
       <a-tab-pane :tab="$t('label.details')" key="details">
         <DetailsTab :resource="resource" :loading="loading" />
       </a-tab-pane>
-      <a-tab-pane :tab="$t('label.networks')" key="desktopnics">
+      <a-tab-pane :tab="$t('label.networks')" key="desktopnetworks">
         <DesktopNicsTable :resource="vm" :loading="loading" />
       </a-tab-pane>
-      <a-tab-pane :tab="'IP Range'" key="iprange">
+      <a-tab-pane :tab="$t('label.iprange')" key="iprange" v-if="'listDesktopClusterIpRanges' in $store.getters.apis">
         <a-button
           type="dashed"
           style="width: 100%; margin-bottom: 10px"
           @click="showAddModal"
           :loading="loadingNic"
           :disabled="!('addNicToVirtualMachine' in $store.getters.apis)">
-          <a-icon type="plus"></a-icon> {{ 'Add IP Range' }}
+          <a-icon type="plus"></a-icon> {{ $t('label.add.ip.range') }}
         </a-button>
         <a-table
           class="table"
@@ -47,7 +47,7 @@
         >
         </a-table>
       </a-tab-pane>
-      <a-tab-pane :tab="'Control VM'" key="instances">
+      <a-tab-pane :tab="$t('label.controlvm')" key="instances">
         <a-table
           class="table"
           size="small"
@@ -73,7 +73,7 @@
           </template>
         </a-table>
       </a-tab-pane>
-      <a-tab-pane :tab="'Desktop VM'" key="desktops">
+      <a-tab-pane :tab="$t('label.desktopvm')" key="desktops">
         <a-table
           class="table"
           size="small"
@@ -103,21 +103,21 @@
 
     <a-modal
       :visible="showAddNetworkModal"
-      :title="'ADD IP Range to Desktop'"
+      :title="$t('label.desktop.cluster.add.ip.range')"
       :maskClosable="false"
       :okText="$t('label.ok')"
       :cancelText="$t('label.cancel')"
       @cancel="closeModals"
       @ok="submitAddNetwork">
-      {{ '이 Desktop 에 추가할 IP 범위를 입력하십시오.' }}
+      {{ $t('message.desktop.cluster.add.ip.range') }}
       <div class="modal-form">
-        <p class="modal-form__label">{{ 'Gateway' }}:</p>
+        <p class="modal-form__label">{{ $t('label.gateway') }}:</p>
         <a-input v-model="addNetworkData.gateway"></a-input>
-        <p class="modal-form__label">{{ 'Netmask' }}:</p>
+        <p class="modal-form__label">{{ $t('label.netmask') }}:</p>
         <a-input v-model="addNetworkData.netmask"></a-input>
-        <p class="modal-form__label">{{ 'Start IP' }}:</p>
+        <p class="modal-form__label">{{ $t('label.startip') }}:</p>
         <a-input v-model="addNetworkData.startip"></a-input>
-        <p class="modal-form__label">{{ 'End IP' }}:</p>
+        <p class="modal-form__label">{{ $t('label.endip') }}:</p>
         <a-input v-model="addNetworkData.endip"></a-input>
       </div>
     </a-modal>
@@ -161,6 +161,7 @@ export default {
   data () {
     return {
       vm: {},
+      desktopnetworks: [],
       instances: [],
       desktops: [],
       iprange: [],
@@ -288,6 +289,7 @@ export default {
       this.virtualmachines.map(x => { x.ipaddress = x.nic[0].ipaddress })
       this.instanceLoading = false
       this.desktopnetworks = []
+      this.iprange = []
       if (!this.vm || !this.vm.id) {
         return
       }
@@ -297,6 +299,13 @@ export default {
           this.desktopnetworks.sort((a, b) => { return a.deviceid - b.deviceid })
         }
         this.$set(this.resource, 'desktopnetworks', this.desktopnetworks)
+      })
+      api('listDesktopClusterIpRanges', { listall: true }).then(json => {
+        this.iprange = json.listdesktopclusteriprangesresponse.desktopclusteriprange
+        if (this.iprange) {
+          this.iprange.sort((a, b) => { return a.deviceid - b.deviceid })
+        }
+        this.$set(this.resource, 'iprange', this.iprange)
       })
     },
     showAddModal () {

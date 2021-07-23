@@ -23,8 +23,10 @@ import java.util.List;
 import javax.inject.Inject;
 
 import org.apache.cloudstack.api.ResponseObject.ResponseView;
-import org.apache.cloudstack.api.command.user.desktop.vm.ListDesktopClusterCmd;
+import org.apache.cloudstack.api.command.user.desktop.cluster.ListDesktopClusterCmd;
+import org.apache.cloudstack.api.command.user.desktop.cluster.ListDesktopClusterIpRangeCmd;
 import org.apache.cloudstack.api.response.DesktopClusterResponse;
+import org.apache.cloudstack.api.response.DesktopClusterIpRangeResponse;
 import org.apache.cloudstack.api.response.ListResponse;
 import org.apache.cloudstack.api.response.UserVmResponse;
 import org.apache.cloudstack.context.CallContext;
@@ -40,6 +42,7 @@ import com.cloud.dc.DataCenterVO;
 import com.cloud.domain.Domain;
 import com.cloud.desktop.version.dao.DesktopControllerVersionDao;
 import com.cloud.desktop.cluster.dao.DesktopClusterDao;
+import com.cloud.desktop.cluster.dao.DesktopClusterIpRangeDao;
 import com.cloud.desktop.cluster.dao.DesktopClusterVmMapDao;
 import com.cloud.desktop.version.DesktopControllerVersionVO;
 import com.cloud.network.Network;
@@ -70,6 +73,8 @@ public class DesktopClusterManagerImpl extends ManagerBase implements DesktopClu
 
     @Inject
     public DesktopClusterDao desktopClusterDao;
+    @Inject
+    public DesktopClusterIpRangeDao desktopClusterIpRangeDao;
     @Inject
     public DesktopClusterVmMapDao desktopClusterVmMapDao;
     @Inject
@@ -246,6 +251,56 @@ public class DesktopClusterManagerImpl extends ManagerBase implements DesktopClu
     }
 
     @Override
+    public DesktopClusterIpRangeResponse createDesktopClusterIpRangeResponse(long ipRangeId) {
+        DesktopClusterIpRangeVO desktopIp = desktopClusterIpRangeDao.findById(ipRangeId);
+        DesktopClusterIpRangeResponse response = new DesktopClusterIpRangeResponse();
+        response.setObjectName(DesktopClusterIpRange.class.getSimpleName().toLowerCase());
+        response.setId(desktopIp.getUuid());
+        response.setGateway(desktopIp.getGateway());
+        response.setNetmask(desktopIp.getNetmask());
+        response.setStartIp(desktopIp.getStartIp());
+        response.setEndIp(desktopIp.getEndIp());
+        DesktopClusterVO desktop = desktopClusterDao.findById(desktopIp.getDesktopClusterId());
+        if (desktop != null) {
+            response.setDesktopClusterName(desktop.getName());
+            NetworkVO desktopNetwork = networkDao.findByIdIncludingRemoved(desktop.getNetworkId());
+            response.setNetworkId(desktopNetwork.getUuid());
+            response.setAssociatedNetworkName(desktopNetwork.getName());
+        }
+        return response;
+    }
+
+    @Override
+    public ListResponse<DesktopClusterIpRangeResponse> listDesktopClusterIpRanges(ListDesktopClusterIpRangeCmd cmd) {
+        if (!DesktopServiceEnabled.value()) {
+            logAndThrow(Level.ERROR, "Desktop Service plugin is disabled");
+        }
+        final Long ipRangeId = cmd.getId();
+        final Long desktopClusterId = cmd.getDesktopClusterId();
+        final String keyword = cmd.getKeyword();
+        List<DesktopClusterIpRangeResponse> responsesList = new ArrayList<DesktopClusterIpRangeResponse>();
+        Filter searchFilter = new Filter(DesktopClusterIpRangeVO.class, "id", true, cmd.getStartIndex(), cmd.getPageSizeVal());
+        SearchBuilder<DesktopClusterIpRangeVO> sb = desktopClusterIpRangeDao.createSearchBuilder();
+        sb.and("id", sb.entity().getId(), SearchCriteria.Op.EQ);
+        sb.and("desktopClusterId", sb.entity().getDesktopClusterId(), SearchCriteria.Op.EQ);
+        SearchCriteria<DesktopClusterIpRangeVO> sc = sb.create();
+        if (ipRangeId != null) {
+            sc.setParameters("id", ipRangeId);
+        }
+        if (desktopClusterId != null) {
+            sc.setParameters("desktopClusterId", desktopClusterId);
+        }
+        List<DesktopClusterIpRangeVO> ipRange = desktopClusterIpRangeDao.search(sc, searchFilter);
+        for (DesktopClusterIpRangeVO ip : ipRange) {
+            DesktopClusterIpRangeResponse desktopClusterIpRangeResponse = createDesktopClusterIpRangeResponse(ip.getId());
+            responsesList.add(desktopClusterIpRangeResponse);
+        }
+        ListResponse<DesktopClusterIpRangeResponse> response = new ListResponse<DesktopClusterIpRangeResponse>();
+        response.setResponses(responsesList);
+        return response;
+    }
+
+    @Override
     public List<Class<?>> getCommands() {
         List<Class<?>> cmdList = new ArrayList<Class<?>>();
         if (!DesktopServiceEnabled.value()) {
@@ -253,6 +308,7 @@ public class DesktopClusterManagerImpl extends ManagerBase implements DesktopClu
         }
 
         cmdList.add(ListDesktopClusterCmd.class);
+        cmdList.add(ListDesktopClusterIpRangeCmd.class);
         return cmdList;
     }
 

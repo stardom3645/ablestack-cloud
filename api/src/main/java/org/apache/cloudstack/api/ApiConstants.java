@@ -836,6 +836,9 @@ public class ApiConstants {
     public static final String AD_DOMAIN_NAME = "addomainname";
     public static final String TEMPLATES = "templates";
     public static final String TEMPLATE_OS_TYPE = "templateostype";
+    public static final String DESKTOP_CLUSTER_ID = "desktopclusterid";
+    public static final String DESKTOP_CLUSTER_NAME = "desktopclustername";
+    public static final String IP_RANGE = "iprange";
 
     public static final String BOOT_TYPE = "boottype";
     public static final String BOOT_MODE = "bootmode";

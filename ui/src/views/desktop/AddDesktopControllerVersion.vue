@@ -34,7 +34,7 @@
                 v-decorator="['name', {
                   rules: [{ required: true, message: `${this.$t('message.error.required.input')}` }]
                 }]"
-                :placeholder="apiParams.name.description"
+                :placeholder="$t('placeholder.name')"
                 :autoFocus="currentForm !== 'Create'"/>
             </a-form-item>
           </a-col>
@@ -46,7 +46,7 @@
                 v-decorator="['description', {
                   rules: [{ required: true, message: `${this.$t('message.error.required.input')}` }]
                 }]"
-                :placeholder="apiParams.name.description"
+                :placeholder="$t('placeholder.description')"
                 :autoFocus="currentForm !== 'Create'"/>
             </a-form-item>
           </a-col>
@@ -58,7 +58,7 @@
                 v-decorator="['displaytext', {
                   rules: [{ required: true, message: `${this.$t('message.error.required.input')}` }]
                 }]"
-                :placeholder="'버전 입력'" />
+                :placeholder="$t('placeholder.version')" />
             </a-form-item>
           </a-col>
         </a-row>
@@ -85,7 +85,7 @@
                   :filterOption="(input, option) => {
                     return option.componentOptions.children[0].text.toLowerCase().indexOf(input.toLowerCase()) >= 0
                   }"
-                  :placeholder="apiParams.zoneids.description"
+                  :placeholder="$t('placeholder.zone')"
                   @change="handlerSelectZone">
                   <a-select-option v-for="opt in zones.opts" :key="opt.id">
                     {{ opt.name || opt.description }}
@@ -99,7 +99,7 @@
           <a-row :gutter="12">
             <a-col :md="24" :lg="24">
               <a-form-item
-                :label="$t('label.zoneid')"
+                :label="$t('label.zones')"
                 :validate-status="zoneError"
                 :help="zoneErrorMessage">
                 <a-select
@@ -118,7 +118,7 @@
                     return option.componentOptions.children[0].text.toLowerCase().indexOf(input.toLowerCase()) >= 0
                   }"
                   @change="handlerSelectZone"
-                  :placeholder="apiParams.zoneid.description"
+                  :placeholder="$t('placeholder.zones')"
                   :loading="zones.loading">
                   <a-select-option :value="zone.id" v-for="zone in zones.opts" :key="zone.id">
                     {{ zone.name || zone.description }}
@@ -141,7 +141,7 @@
                   ]
                 }]"
                 :loading="hyperVisor.loading"
-                :placeholder="apiParams.hypervisor.description"
+                :placeholder="$t('placeholder.hypervisor')"
                 @change="handlerSelectHyperVisor">
                 <a-select-option v-for="(opt, optIndex) in hyperVisor.opts" :key="optIndex">
                   {{ opt.name || opt.description }}
@@ -160,7 +160,7 @@
                     }
                   ]
                 }]"
-                :placeholder="apiParams.format.description"
+                :placeholder="$t('placeholder.format')"
                 @change="val => { selectedFormat = val }">
                 <a-select-option v-for="opt in format.opts" :key="opt.id">
                   {{ opt.name || opt.description }}
@@ -172,20 +172,20 @@
         <div v-if="currentForm === 'Create'">
           <a-row :gutter="12">
             <a-col :md="24" :lg="24">
-              <a-form-item :label="'DC URL'">
+              <a-form-item :label="$t('label.dcvm.template.upload.url')">
                 <a-input
                   :autoFocus="currentForm === 'Create'"
                   v-decorator="['url', {
                     rules: [{ required: true, message: `${this.$t('message.error.required.input')}` }]
                   }]"
-                  :placeholder="apiParams.url.description" />
+                  :placeholder="$t('placeholder.dcvm.template.upload.url')" />
               </a-form-item>
             </a-col>
           </a-row>
         </div>
         <a-row :gutter="12" v-if="!hyperVMWShow || (hyperVMWShow && !deployasis)">
           <a-col :md="24" :lg="24">
-            <a-form-item :label="'DC OS Type'">
+            <a-form-item :label="$t('label.dcvm.template.ostype')">
               <a-select
                 showSearch
                 optionFilterProp="children"
@@ -202,7 +202,7 @@
                   ]
                 }]"
                 :loading="osTypes.loading"
-                :placeholder="apiParams.ostypeid.description">
+                :placeholder="$t('placeholder.dcvm.template.ostype')">
                 <a-select-option v-for="opt in osTypes.opts" :key="opt.id">
                   {{ opt.name || opt.description }}
                 </a-select-option>
@@ -213,20 +213,20 @@
         <div v-if="currentForm === 'Create'">
           <a-row :gutter="12">
             <a-col :md="24" :lg="24">
-              <a-form-item :label="'Works URL'">
+              <a-form-item :label="$t('label.worksvm.template.upload.url')">
                 <a-input
                   :autoFocus="currentForm === 'Create'"
                   v-decorator="['url', {
                     rules: [{ required: true, message: `${this.$t('message.error.required.input')}` }]
                   }]"
-                  :placeholder="apiParams.url.description" />
+                  :placeholder="$t('placeholder.worksvm.template.upload.url')" />
               </a-form-item>
             </a-col>
           </a-row>
         </div>
         <a-row :gutter="12" v-if="!hyperVMWShow || (hyperVMWShow && !deployasis)">
           <a-col :md="24" :lg="24">
-            <a-form-item :label="'Works OS Type'">
+            <a-form-item :label="$t('label.worksvm.template.ostype')">
               <a-select
                 showSearch
                 optionFilterProp="children"
@@ -243,7 +243,7 @@
                   ]
                 }]"
                 :loading="osTypes.loading"
-                :placeholder="apiParams.ostypeid.description">
+                :placeholder="$t('placeholder.worksvm.template.ostype')">
                 <a-select-option v-for="opt in osTypes.opts" :key="opt.id">
                   {{ opt.name || opt.description }}
                 </a-select-option>

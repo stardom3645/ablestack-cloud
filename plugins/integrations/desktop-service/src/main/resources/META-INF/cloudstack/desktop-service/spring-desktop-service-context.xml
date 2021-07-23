@@ -32,6 +32,7 @@
     <bean id="desktopVersionManagerImpl" class="com.cloud.desktop.version.DesktopVersionManagerImpl" />
     <bean id="desktopTemplateMapDaoImpl" class="com.cloud.desktop.version.dao.DesktopTemplateMapDaoImpl" />
     <bean id="desktopClusterDaoImpl" class="com.cloud.desktop.cluster.dao.DesktopClusterDaoImpl" />
+    <bean id="desktopClusterIpRangeDaoImpl" class="com.cloud.desktop.cluster.dao.DesktopClusterIpRangeDaoImpl" />
     <bean id="desktopClusterVmMapDaoImpl" class="com.cloud.desktop.cluster.dao.DesktopClusterVmMapDaoImpl" />
     <bean id="desktopClusterManagerImpl" class="com.cloud.desktop.cluster.DesktopClusterManagerImpl" />
 

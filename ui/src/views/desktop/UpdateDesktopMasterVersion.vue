@@ -34,7 +34,7 @@
               return option.componentOptions.children[0].text.toLowerCase().indexOf(input.toLowerCase()) >= 0
             }"
             :loading="stateLoading"
-            :placeholder="'the enabled or disabled state of the Desktop Master Version'"
+            :placeholder="$t('placeholder.state')"
             autoFocus >
             <a-select-option v-for="(opt, optIndex) in this.states" :key="optIndex">
               {{ opt.name || opt.description }}

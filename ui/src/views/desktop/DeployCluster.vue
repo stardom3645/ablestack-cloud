@@ -21,49 +21,49 @@
       <a-form :form="form" :loading="loading" @submit="handleSubmit" layout="vertical">
         <a-form-item>
           <span slot="label">
-            {{ 'Name' }}
-            <a-tooltip :title="apiParams.username.description">
+            {{ $t('label.name') }}
+            <a-tooltip :title="$t('label.name')">
               <a-icon type="info-circle" style="color: rgba(0,0,0,.45)" />
             </a-tooltip>
           </span>
           <a-input
-            v-decorator="['username', {
+            v-decorator="['name', {
               rules: [{ required: true, message: $t('message.error.required.input') }]
             }]"
-            :placeholder="'Cluster 이름 입력'" />
+            :placeholder="$t('label.name')" />
         </a-form-item>
         <a-form-item>
           <span slot="label">
-            {{ 'Description' }}
-            <a-tooltip :title="apiParams.username.description">
+            {{ $t('label.description') }}
+            <a-tooltip :title="$t('label.description')">
               <a-icon type="info-circle" style="color: rgba(0,0,0,.45)" />
             </a-tooltip>
           </span>
           <a-input
-            v-decorator="['username', {
+            v-decorator="['description', {
               rules: [{ required: true, message: $t('message.error.required.input') }]
             }]"
-            :placeholder="'Description'" />
+            :placeholder="$t('label.description')" />
         </a-form-item>
         <a-form-item>
           <span slot="label">
-            {{ 'AD Domain Name' }}
-            <a-tooltip :title="apiParams.username.description">
+            {{ $t('label.addomainname') }}
+            <a-tooltip :title="$t('label.addomainname')">
               <a-icon type="info-circle" style="color: rgba(0,0,0,.45)" />
             </a-tooltip>
           </span>
           <a-input
-            v-decorator="['username', {
+            v-decorator="['addomainname', {
               rules: [{ required: true, message: $t('message.error.required.input') }]
             }]"
-            :placeholder="'AD Domain 이름 입력'" />
+            :placeholder="$t('placeholder.addomainname')" />
         </a-form-item>
         <a-row :gutter="12">
           <a-col :md="24" :lg="12">
             <a-form-item>
               <span slot="label">
                 {{ $t('label.password') }}
-                <a-tooltip :title="apiParams.password.description">
+                <a-tooltip :title="$t('placeholder.password')">
                   <a-icon type="info-circle" style="color: rgba(0,0,0,.45)" />
                 </a-tooltip>
               </span>
@@ -71,14 +71,14 @@
                 v-decorator="['password', {
                   rules: [{ required: true, message: $t('message.error.required.input') }]
                 }]"
-                :placeholder="apiParams.password.description"/>
+                :placeholder="$t('placeholder.password')"/>
             </a-form-item>
           </a-col>
           <a-col :md="24" :lg="12">
             <a-form-item>
               <span slot="label">
                 {{ $t('label.confirmpassword') }}
-                <a-tooltip :title="apiParams.password.description">
+                <a-tooltip :title="$t('placeholder.confirmpassword')">
                   <a-icon type="info-circle" style="color: rgba(0,0,0,.45)" />
                 </a-tooltip>
               </span>
@@ -89,14 +89,14 @@
                     { validator: validateConfirmPassword }
                   ]
                 }]"
-                :placeholder="apiParams.password.description"/>
+                :placeholder="$t('placeholder.confirmpassword')"/>
             </a-form-item>
           </a-col>
         </a-row>
         <a-form-item>
           <span slot="label">
-            {{ 'Desktop Controller Template Version' }}
-            <a-tooltip :title="apiParams.timezone.description">
+            {{ $t('label.desktop.controller.template.version') }}
+            <a-tooltip :title="$t('placeholder.desktop.controller.template.version')">
               <a-icon type="info-circle" style="color: rgba(0,0,0,.45)" />
             </a-tooltip>
           </span>
@@ -106,7 +106,7 @@
               rules: [{ required: true, message: $t('message.error.required.input') }]
             }]"
             :loading="timeZoneLoading"
-            :placeholder="'Desktop Controller Template Version 선택'">
+            :placeholder="$t('placeholder.desktop.controller.template.version')">
             <a-select-option v-for="opt in timeZoneMap" :key="opt.id">
               {{ opt.name || opt.description }}
             </a-select-option>
@@ -114,27 +114,32 @@
         </a-form-item>
         <a-form-item>
           <span slot="label">
-            {{ 'Compute Offering' }}
-            <a-tooltip :title="apiParams.roleid.description">
+            {{ $t('label.compute.offerings') }}
+            <a-tooltip :title="$t('placeholder.compute.offering')">
               <a-icon type="info-circle" style="color: rgba(0,0,0,.45)" />
             </a-tooltip>
           </span>
           <a-select
-            v-decorator="['roleid', {
-              initialValue: selectedRole,
-              rules: [{ required: true, message: $t('message.error.select') }] }]"
-            :loading="roleLoading"
-            :placeholder="apiParams.roleid.description"
-            autoFocus>
-            <a-select-option v-for="role in roles" :key="role.id">
-              {{ role.name + ' (' + role.type + ')' }}
+            id="offering-selection"
+            v-decorator="['serviceofferingid', {
+              rules: [{ required: true, message: $t('message.error.required.input') }]
+            }]"
+            showSearch
+            optionFilterProp="children"
+            :filterOption="(input, option) => {
+              return option.componentOptions.children[0].text.toLowerCase().indexOf(input.toLowerCase()) >= 0
+            }"
+            :loading="serviceOfferingLoading"
+            :placeholder="$t('placeholder.compute.offering')">
+            <a-select-option v-for="(opt, optIndex) in this.serviceOfferings" :key="optIndex">
+              {{ opt.name || opt.description }}
             </a-select-option>
           </a-select>
         </a-form-item>
         <a-form-item>
           <span slot="label">
-            {{ 'Access Type' }}
-            <a-tooltip :title="apiParams.domainid.description">
+            {{ $t('label.access.type') }}
+            <a-tooltip :title="$t('placeholder.accesstype')">
               <a-icon type="info-circle" style="color: rgba(0,0,0,.45)" />
             </a-tooltip>
           </span>
@@ -146,20 +151,20 @@
             buttonStyle="solid"
             @change="selected => { this.handleAccessTypeChange(selected.target.value) }">
             <a-radio-button value="internal">
-              {{ 'Internal' }}
+              {{ $t('label.access.internal') }}
             </a-radio-button>
             <a-radio-button value="external">
-              {{ 'External' }}
+              {{ $t('label.access.external') }}
             </a-radio-button>
             <a-radio-button value="mixed">
-              {{ 'Mixed' }}
+              {{ $t('label.access.mixed') }}
             </a-radio-button>
           </a-radio-group>
         </a-form-item>
         <a-form-item v-if="this.isAdminOrDomainAdmin()">
           <span slot="label">
-            {{ 'Networks' }}
-            <a-tooltip :title="apiParams.domainid.description">
+            {{ $t('label.network') }}
+            <a-tooltip :title="$t('placeholder.network')">
               <a-icon type="info-circle" style="color: rgba(0,0,0,.45)" />
             </a-tooltip>
           </span>
@@ -168,7 +173,7 @@
             v-decorator="['domainid', {
               initialValue: selectedDomain,
               rules: [{ required: true, message: $t('message.error.select') }] }]"
-            :placeholder="apiParams.domainid.description">
+            :placeholder="$t('placeholder.network')">
             <a-select-option v-for="domain in domainsList" :key="domain.id">
               {{ domain.path || domain.name || domain.description }}
             </a-select-option>
@@ -178,8 +183,8 @@
           <a-col :md="24" :lg="12">
             <a-form-item v-if="this.accessType=='internal'">
               <span slot="label">
-                {{ 'Desktop Gateway' }}
-                <a-tooltip :title="apiParams.account.description">
+                {{ $t('label.gateway') }}
+                <a-tooltip :title="$t('label.gateway')">
                   <a-icon type="info-circle" style="color: rgba(0,0,0,.45)" />
                 </a-tooltip>
               </span>
@@ -187,14 +192,14 @@
                 v-decorator="['account', {
                   rules: [{ required: true, message: $t('message.error.required.input') }]
                 }]"
-                :placeholder="'IP Range 설정'" />
+                :placeholder="$t('label.gateway')" />
             </a-form-item>
           </a-col>
           <a-col :md="24" :lg="12">
             <a-form-item v-if="this.accessType=='internal'">
               <span slot="label">
-                {{ 'Desktop Netmask' }}
-                <a-tooltip :title="apiParams.account.description">
+                {{ $t('label.netmask') }}
+                <a-tooltip :title="$t('placeholder.netmask')">
                   <a-icon type="info-circle" style="color: rgba(0,0,0,.45)" />
                 </a-tooltip>
               </span>
@@ -202,44 +207,44 @@
                 v-decorator="['account', {
                   rules: [{ required: true, message: $t('message.error.required.input') }]
                 }]"
-                :placeholder="'IP Range 설정'" />
+                :placeholder="$t('placeholder.netmask')" />
             </a-form-item>
           </a-col>
           <a-col :md="24" :lg="12">
             <a-form-item v-if="this.accessType=='internal'">
               <span slot="label">
-                {{ 'Desktop Start IP' }}
-                <a-tooltip :title="apiParams.account.description">
+                {{ $t('label.startip') }}
+                <a-tooltip :title="$t('placeholder.startip')">
                   <a-icon type="info-circle" style="color: rgba(0,0,0,.45)" />
                 </a-tooltip>
               </span>
               <a-input
-                v-decorator="['account', {
+                v-decorator="['startip', {
                   rules: [{ required: true, message: $t('message.error.required.input') }]
                 }]"
-                :placeholder="'IP Range 설정'" />
+                :placeholder="$t('placeholder.startip')" />
             </a-form-item>
           </a-col>
           <a-col :md="24" :lg="12">
             <a-form-item v-if="this.accessType=='internal'">
               <span slot="label">
-                {{ 'Desktop End IP' }}
-                <a-tooltip :title="apiParams.account.description">
+                {{ $t('label.endip') }}
+                <a-tooltip :title="$t('placeholder.endip')">
                   <a-icon type="info-circle" style="color: rgba(0,0,0,.45)" />
                 </a-tooltip>
               </span>
               <a-input
-                v-decorator="['account', {
+                v-decorator="['endip', {
                   rules: [{ required: true, message: $t('message.error.required.input') }]
                 }]"
-                :placeholder="'IP Range 설정'" />
+                :placeholder="$t('placeholder.endip')" />
             </a-form-item>
           </a-col>
         </a-row>
         <a-form-item>
           <span slot="label">
-            {{ 'Works VM IP' }}
-            <a-tooltip :title="apiParams.email.description">
+            {{ $t('label.worksvmip') }}
+            <a-tooltip :title="$t('placeholder.worksvmip')">
               <a-icon type="info-circle" style="color: rgba(0,0,0,.45)" />
             </a-tooltip>
           </span>
@@ -247,12 +252,12 @@
             v-decorator="['email', {
               rules: [{ message: $t('message.error.required.input') }]
             }]"
-            :placeholder="'IP를 입력하지 않으면 자동으로 할당'" />
+            :placeholder="$t('placeholder.worksvmip')" />
         </a-form-item>
         <a-form-item>
           <span slot="label">
-            {{ 'DC VM IP' }}
-            <a-tooltip :title="apiParams.email.description">
+            {{ $t('label.dcvmip') }}
+            <a-tooltip :title="$t('placeholder.dcvmip')">
               <a-icon type="info-circle" style="color: rgba(0,0,0,.45)" />
             </a-tooltip>
           </span>
@@ -260,11 +265,8 @@
             v-decorator="['email', {
               rules: [{ message: $t('message.error.required.input') }]
             }]"
-            :placeholder="'IP를 입력하지 않으면 자동으로 할당'" />
+            :placeholder="$t('placeholder.dcvmip')" />
         </a-form-item>
-        <!--<a-form-item :label="'External Access'">
-          <a-switch v-decorator="['haenable', {initialValue: this.externalEnabled}]" :checked="this.haEnabled" @change="val => { this.haEnabled = val }" />
-        </a-form-item>-->
         <div :span="24" class="action-button">
           <a-button @click="closeAction">{{ $t('label.cancel') }}</a-button>
           <a-button :loading="loading" type="primary" @click="handleSubmit">{{ $t('label.ok') }}</a-button>
@@ -293,7 +295,9 @@ export default {
       selectedRole: '',
       timeZoneLoading: false,
       timeZoneMap: [],
-      externalEnabled: false
+      externalEnabled: false,
+      serviceOfferings: [],
+      serviceOfferingLoading: false
     }
   },
   beforeCreate () {
@@ -320,6 +324,7 @@ export default {
       this.fetchDomains()
       this.fetchRoles()
       this.fetchTimeZone()
+      this.fetchServiceOfferingData()
       if ('listIdps' in this.$store.getters.apis) {
         this.fetchIdps()
       }
@@ -402,6 +407,34 @@ export default {
         this.idpLoading = false
       })
     },
+    fetchServiceOfferingData () {
+      this.serviceOfferings = []
+      const params = {}
+      this.serviceOfferingLoading = true
+      api('listServiceOfferings', params).then(json => {
+        var items = json.listserviceofferingsresponse.serviceoffering
+        if (items != null) {
+          for (var i = 0; i < items.length; i++) {
+            if (items[i].iscustomized === false &&
+                items[i].cpunumber >= this.minCpu && items[i].memory >= this.minMemory) {
+              this.serviceOfferings.push(items[i])
+            }
+          }
+        }
+      }).finally(() => {
+        this.serviceOfferingLoading = false
+        if (this.arrayHasItems(this.serviceOfferings)) {
+          for (var i = 0; i < this.serviceOfferings.length; i++) {
+            if (this.serviceOfferings[i].id === this.resource.serviceofferingid) {
+              this.form.setFieldsValue({
+                serviceofferingid: i
+              })
+              break
+            }
+          }
+        }
+      })
+    },
     handleSubmit (e) {
       e.preventDefault()
       this.form.validateFields((err, values) => {
@@ -421,6 +454,9 @@ export default {
         }
         if (this.isValidValueForKey(values, 'timezone') && values.timezone.length > 0) {
           params.timezone = values.timezone
+        }
+        if (this.isValidValueForKey(values, 'serviceofferingid') && this.arrayHasItems(this.serviceOfferings)) {
+          params.serviceofferingid = this.serviceOfferings[values.serviceofferingid].id
         }
         api('createAccount', {}, 'POST', params).then(response => {
           this.$emit('refresh-data')

@@ -34,7 +34,7 @@
                 v-decorator="['name', {
                   rules: [{ required: true, message: `${this.$t('message.error.required.input')}` }]
                 }]"
-                :placeholder="apiParams.name.description"
+                :placeholder="$t('placeholder.name')"
                 :autoFocus="currentForm !== 'Create'"/>
             </a-form-item>
           </a-col>
@@ -46,7 +46,7 @@
                 v-decorator="['description', {
                   rules: [{ required: true, message: `${this.$t('message.error.required.input')}` }]
                 }]"
-                :placeholder="apiParams.name.description"
+                :placeholder="$t('placeholder.description')"
                 :autoFocus="currentForm !== 'Create'"/>
             </a-form-item>
           </a-col>
@@ -58,7 +58,7 @@
                 v-decorator="['displaytext', {
                   rules: [{ required: true, message: `${this.$t('message.error.required.input')}` }]
                 }]"
-                :placeholder="'버전 입력'" />
+                :placeholder="$t('placeholder.version')" />
             </a-form-item>
           </a-col>
         </a-row>
@@ -67,8 +67,8 @@
             <a-col :md="24" :lg="24">
               <a-form-item>
                 <span slot="label">
-                  {{ 'Upload Type' }}
-                  <a-tooltip :title="apiParams.domainid.description">
+                  {{ $t('label.upload.type') }}
+                  <a-tooltip :title="$t('placeholder.upload.type')">
                     <a-icon type="info-circle" style="color: rgba(0,0,0,.45)" />
                   </a-tooltip>
                 </span>
@@ -80,10 +80,10 @@
                   buttonStyle="solid"
                   @change="selected => { this.handleUploadTypeChange(selected.target.value) }">
                   <a-radio-button value="url">
-                    {{ 'URL' }}
+                    {{ $t('label.url') }}
                   </a-radio-button>
                   <a-radio-button value="templates">
-                    {{ 'Template' }}
+                    {{ $t('label.templatename') }}
                   </a-radio-button>
                 </a-radio-group>
               </a-form-item>
@@ -93,13 +93,13 @@
         <div v-if="currentForm === 'Create'">
           <a-row :gutter="12" v-if="this.uploadType=='url'">
             <a-col :md="24" :lg="24">
-              <a-form-item :label="'URL'">
+              <a-form-item :label="$t('label.url')">
                 <a-input
                   :autoFocus="currentForm === 'Create'"
                   v-decorator="['url', {
                     rules: [{ required: true, message: `${this.$t('message.error.required.input')}` }]
                   }]"
-                  :placeholder="apiParams.url.description" />
+                  :placeholder="$t('placeholder.url')" />
               </a-form-item>
             </a-col>
           </a-row>
@@ -127,7 +127,7 @@
                   :filterOption="(input, option) => {
                     return option.componentOptions.children[0].text.toLowerCase().indexOf(input.toLowerCase()) >= 0
                   }"
-                  :placeholder="apiParams.zoneids.description"
+                  :placeholder="$t('placeholder.zones')"
                   @change="handlerSelectZone">
                   <a-select-option v-for="opt in zones.opts" :key="opt.id">
                     {{ opt.name || opt.description }}
@@ -141,7 +141,7 @@
           <a-row :gutter="12" v-if="this.uploadType=='url'">
             <a-col :md="24" :lg="24">
               <a-form-item
-                :label="$t('label.zoneid')"
+                :label="$t('label.zones')"
                 :validate-status="zoneError"
                 :help="zoneErrorMessage">
                 <a-select
@@ -160,7 +160,7 @@
                     return option.componentOptions.children[0].text.toLowerCase().indexOf(input.toLowerCase()) >= 0
                   }"
                   @change="handlerSelectZone"
-                  :placeholder="apiParams.zoneid.description"
+                  :placeholder="$t('placeholder.zones')"
                   :loading="zones.loading">
                   <a-select-option :value="zone.id" v-for="zone in zones.opts" :key="zone.id">
                     {{ zone.name || zone.description }}
@@ -183,7 +183,7 @@
                   ]
                 }]"
                 :loading="hyperVisor.loading"
-                :placeholder="apiParams.hypervisor.description"
+                :placeholder="$t('placeholder.hypervisor')"
                 @change="handlerSelectHyperVisor">
                 <a-select-option v-for="(opt, optIndex) in hyperVisor.opts" :key="optIndex">
                   {{ opt.name || opt.description }}
@@ -202,7 +202,7 @@
                     }
                   ]
                 }]"
-                :placeholder="apiParams.format.description"
+                :placeholder="$t('placeholder.format')"
                 @change="val => { selectedFormat = val }">
                 <a-select-option v-for="opt in format.opts" :key="opt.id">
                   {{ opt.name || opt.description }}
@@ -213,7 +213,7 @@
         </a-row>
         <a-row :gutter="12" v-if="this.uploadType=='url'">
           <a-col :md="24" :lg="24">
-            <a-form-item :label="'OS Type'">
+            <a-form-item :label="$t('label.templateostype')">
               <a-select
                 showSearch
                 optionFilterProp="children"
@@ -230,7 +230,7 @@
                   ]
                 }]"
                 :loading="osTypes.loading"
-                :placeholder="apiParams.ostypeid.description">
+                :placeholder="$t('placeholder.ostype')">
                 <a-select-option v-for="opt in osTypes.opts" :key="opt.id">
                   {{ opt.name || opt.description }}
                 </a-select-option>
@@ -240,15 +240,14 @@
         </a-row>
         <a-row :gutter="12" v-if="this.uploadType=='templates'">
           <a-col :md="24" :lg="24">
-            <a-form-item :label="'Template'">
+            <a-form-item :label="$t('label.templatename')">
               <a-select
                 showSearch
                 optionFilterProp="children"
                 :filterOption="(input, option) => {
                   return option.componentOptions.children[0].text.toLowerCase().indexOf(input.toLowerCase()) >= 0
                 }"
-                v-decorator="['ostypeid', {
-                  initialValue: defaultOsId,
+                v-decorator="['template', {
                   rules: [
                     {
                       required: true,
@@ -256,9 +255,9 @@
                     }
                   ]
                 }]"
-                :loading="osTypes.loading"
-                :placeholder="apiParams.ostypeid.description">
-                <a-select-option v-for="opt in osTypes.opts" :key="opt.id">
+                :loading="template.loading"
+                :placeholder="$t('placeholder.template')">
+                <a-select-option v-for="opt in template.opts" :key="opt.id">
                   {{ opt.name || opt.description }}
                 </a-select-option>
               </a-select>
@@ -304,6 +303,7 @@ export default {
       nicAdapterType: {},
       keyboardType: {},
       format: {},
+      template: {},
       osTypes: {},
       uploadType: 'url',
       defaultOsType: '',
@@ -347,6 +347,8 @@ export default {
     this.$set(this.format, 'opts', [])
     this.$set(this.osTypes, 'loading', false)
     this.$set(this.osTypes, 'opts', [])
+    this.$set(this.template, 'loading', false)
+    this.$set(this.template, 'opts', [])
     this.fetchData()
   },
   computed: {
@@ -355,6 +357,7 @@ export default {
     fetchData () {
       this.fetchZone()
       this.fetchOsTypes()
+      this.fetchTemplateData()
       if (Object.prototype.hasOwnProperty.call(store.getters.apis, 'listConfigurations')) {
         this.fetchXenServerProvider()
       }
@@ -469,6 +472,22 @@ export default {
         this.defaultOsId = this.osTypes.opts[1].id
       }).finally(() => {
         this.osTypes.loading = false
+      })
+    },
+    fetchTemplateData () {
+      let listTemplates = []
+      const params = {}
+      params.templatefilter = 'executable'
+      params.listall = true
+      this.template.loading = true
+      this.template.opts = []
+      api('listTemplates', params).then(json => {
+        const listTemplatesResponse = json.listtemplatesresponse.template
+        listTemplates = listTemplates.concat(listTemplatesResponse)
+        this.$set(this.template, 'opts', listTemplates)
+      }).finally(() => {
+        this.zoneSelected = (this.template.opts && this.template.opts[1]) ? this.template.opts[1].id : ''
+        this.template.loading = false
       })
     },
     fetchXenServerProvider () {

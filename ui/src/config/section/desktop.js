@@ -16,14 +16,14 @@
 // under the License.
 export default {
   name: 'desktop',
-  title: 'Desktop Service',
+  title: 'label.desktop.service',
   icon: 'cloud-server',
   children: [
     {
       name: 'desktop',
       title: 'title.desktop.cluster',
       icon: 'block',
-      docHelp: 'adminguide/virtual_machines.html',
+      docHelp: '',
       permission: ['listDesktopClusters'],
       columns: ['name', 'state', 'addomainname', 'account', 'zonename'],
       searchFilters: ['name', 'state'],
@@ -36,7 +36,7 @@ export default {
           api: 'createAccount',
           icon: 'plus',
           label: 'label.desktop.cluster.deploy',
-          docHelp: 'adminguide/virtual_machines.html#creating-vms',
+          docHelp: '',
           listView: true,
           popup: true,
           component: () => import('@/views/desktop/DeployCluster.vue')
@@ -44,26 +44,26 @@ export default {
         {
           api: 'startVirtualMachine',
           icon: 'caret-right',
-          label: 'Enable',
+          label: 'label.action.enable.cluster',
           message: 'message.desktop.cluster.enable',
-          docHelp: 'adminguide/virtual_machines.html#stopping-and-starting-vms',
+          docHelp: '',
           dataView: true,
           show: (record) => { return ['Stopped'].includes(record.state) }
         },
         {
           api: 'stopVirtualMachine',
           icon: 'poweroff',
-          label: 'Disable',
+          label: 'label.action.disable.cluster',
           message: 'message.desktop.cluster.disable',
-          docHelp: 'adminguide/virtual_machines.html#stopping-and-starting-vms',
+          docHelp: '',
           dataView: true,
           show: (record) => { return ['Running'].includes(record.state) }
         },
         {
           api: 'destroyVirtualMachine',
           icon: 'link',
-          label: 'Works Portal Link',
-          docHelp: 'adminguide/virtual_machines.html#deleting-vms',
+          label: 'label.works.portal.url',
+          docHelp: '',
           dataView: true,
           show: (record) => { return ['Running'].includes(record.state) }
         },
@@ -72,7 +72,7 @@ export default {
           icon: 'delete',
           label: 'label.desktop.cluster.delete',
           message: 'message.desktop.cluster.delete',
-          docHelp: 'adminguide/virtual_machines.html#deleting-vms',
+          docHelp: '',
           dataView: true,
           popup: true,
           show: (record) => { return ['Running', 'Stopped'].includes(record.state) },
@@ -84,7 +84,7 @@ export default {
       name: 'desktoptemplate',
       title: 'title.desktop.controller',
       icon: 'shop',
-      docHelp: 'adminguide/templates.html',
+      docHelp: '',
       permission: ['listDesktopControllerVersions'],
       columns: ['name', 'state', 'version', 'zonename'],
       details: ['name', 'description', 'version', 'templates'],
@@ -93,8 +93,8 @@ export default {
         {
           api: 'registerTemplate',
           icon: 'plus',
-          label: 'label.desktop.controller.template.version',
-          docHelp: 'adminguide/templates.html#uploading-templates-from-a-remote-http-server',
+          label: 'label.desktop.controller.template.version.create',
+          docHelp: '',
           listView: true,
           popup: true,
           component: () => import('@/views/desktop/AddDesktopControllerVersion.vue')
@@ -120,7 +120,7 @@ export default {
       name: 'mastertemplate',
       title: 'title.desktop.master',
       icon: 'hdd',
-      docHelp: 'adminguide/templates.html',
+      docHelp: '',
       permission: ['listDesktopMasterVersions'],
       columns: ['name', 'state', 'version', 'zonename'],
       details: ['name', 'version', 'description', 'templateostype', 'templatestate'],
@@ -130,7 +130,7 @@ export default {
           api: 'registerTemplate',
           icon: 'plus',
           label: 'label.desktop.master.template.version',
-          docHelp: 'adminguide/templates.html#uploading-templates-from-a-remote-http-server',
+          docHelp: '',
           listView: true,
           popup: true,
           component: () => import('@/views/desktop/AddDesktopMasterVersion.vue')
