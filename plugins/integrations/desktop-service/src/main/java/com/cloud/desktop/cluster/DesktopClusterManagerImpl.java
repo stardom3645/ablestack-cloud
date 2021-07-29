@@ -59,6 +59,7 @@ import com.cloud.user.Account;
 import com.cloud.user.AccountManager;
 import com.cloud.user.AccountService;
 import com.cloud.utils.Ternary;
+import com.cloud.utils.net.NetUtils;
 import com.cloud.utils.component.ManagerBase;
 import com.cloud.utils.fsm.NoTransitionException;
 import com.cloud.utils.fsm.StateMachine2;
@@ -298,10 +299,67 @@ public class DesktopClusterManagerImpl extends ManagerBase implements DesktopClu
         if (!DesktopServiceEnabled.value()) {
             throw new CloudRuntimeException("Desktop Service plugin is disabled");
         }
+        boolean ipv4 = false;
         final String gateway = cmd.getGateway();
         final String netmask = cmd.getNetmask();
         final String startIp = cmd.getStartIp();
         final String endIp = cmd.getEndIp();
+
+        if (startIp != null) {
+            ipv4 = true;
+        }
+        if (!ipv4) {
+            throw new InvalidParameterValueException("Please specify IP address.");
+        }
+        if (ipv4) {
+            // Make sure the gateway is valid
+            if (!NetUtils.isValidIp4(gateway)) {
+                throw new InvalidParameterValueException("Please specify a valid gateway");
+            }
+
+            // Make sure the netmask is valid
+            if (!NetUtils.isValidIp4Netmask(netmask)) {
+                throw new InvalidParameterValueException("Please specify a valid netmask");
+            }
+
+            final String newCidr = NetUtils.getCidrFromGatewayAndNetmask(gateway, netmask);
+
+            //Make sure start and end ips are with in the range of cidr calculated for this gateway and netmask {
+            if (!NetUtils.isIpWithInCidrRange(gateway, newCidr) || !NetUtils.isIpWithInCidrRange(startIp, newCidr) || !NetUtils.isIpWithInCidrRange(endIp, newCidr)) {
+                throw new InvalidParameterValueException("Please specify a valid IP range or valid netmask or valid gateway");
+            }
+
+            final List<DesktopClusterIpRangeVO> ips = desktopClusterIpRangeDao.listByDesktopClusterId(cmd.getDesktopClusterId());
+            for (final DesktopClusterIpRangeVO range : ips) {
+                final String otherGateway = range.getGateway();
+                final String otherNetmask = range.getNetmask();
+                final String otherStartIp = range.getStartIp();
+                final String otherEndIp = range.getEndIp();
+
+                // Continue if it's not IPv4
+                if ( otherGateway == null || otherNetmask == null ) {
+                    continue;
+                }
+                final String otherCidr = NetUtils.getCidrFromGatewayAndNetmask(otherGateway, otherNetmask);
+                if( !NetUtils.isNetworksOverlap(newCidr,  otherCidr)) {
+                    continue;
+                }
+
+                // extend IP range
+                if (!gateway.equals(otherGateway) || !netmask.equals(range.getNetmask())) {
+                    throw new InvalidParameterValueException("The IP range has already been added with gateway "
+                            + otherGateway + " ,and netmask " + otherNetmask
+                            + ", Please specify the gateway/netmask if you want to extend ip range" );
+                }
+                if (!NetUtils.is31PrefixCidr(newCidr)) {
+                    if (NetUtils.ipRangesOverlap(startIp, endIp, otherStartIp, otherEndIp)) {
+                        throw new InvalidParameterValueException("The IP range already has IPs that overlap with the new range." +
+                                " Please specify a different start IP/end IP.");
+                    }
+                }
+            }
+        }
+
         DesktopClusterVO desktopCluster = desktopClusterDao.findById(cmd.getDesktopClusterId());
 
         if (desktopCluster == null) {
