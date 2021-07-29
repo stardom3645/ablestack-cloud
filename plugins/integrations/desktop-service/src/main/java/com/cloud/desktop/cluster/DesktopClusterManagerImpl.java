@@ -275,23 +275,10 @@ public class DesktopClusterManagerImpl extends ManagerBase implements DesktopClu
         if (!DesktopServiceEnabled.value()) {
             logAndThrow(Level.ERROR, "Desktop Service plugin is disabled");
         }
-        final Long ipRangeId = cmd.getId();
-        final Long desktopClusterId = cmd.getDesktopClusterId();
-        final String keyword = cmd.getKeyword();
+        final Long clusterId = cmd.getId();
         List<DesktopClusterIpRangeResponse> responsesList = new ArrayList<DesktopClusterIpRangeResponse>();
-        Filter searchFilter = new Filter(DesktopClusterIpRangeVO.class, "id", true, cmd.getStartIndex(), cmd.getPageSizeVal());
-        SearchBuilder<DesktopClusterIpRangeVO> sb = desktopClusterIpRangeDao.createSearchBuilder();
-        sb.and("id", sb.entity().getId(), SearchCriteria.Op.EQ);
-        sb.and("desktopClusterId", sb.entity().getDesktopClusterId(), SearchCriteria.Op.EQ);
-        SearchCriteria<DesktopClusterIpRangeVO> sc = sb.create();
-        if (ipRangeId != null) {
-            sc.setParameters("id", ipRangeId);
-        }
-        if (desktopClusterId != null) {
-            sc.setParameters("desktopClusterId", desktopClusterId);
-        }
-        List<DesktopClusterIpRangeVO> ipRange = desktopClusterIpRangeDao.search(sc, searchFilter);
-        for (DesktopClusterIpRangeVO ip : ipRange) {
+        List<DesktopClusterIpRangeVO> id = desktopClusterIpRangeDao.listByDesktopClusterId(clusterId);
+        for (DesktopClusterIpRangeVO ip : id) {
             DesktopClusterIpRangeResponse desktopClusterIpRangeResponse = createDesktopClusterIpRangeResponse(ip.getId());
             responsesList.add(desktopClusterIpRangeResponse);
         }

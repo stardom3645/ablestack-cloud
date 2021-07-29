@@ -27,6 +27,7 @@ import org.apache.cloudstack.api.Parameter;
 import org.apache.cloudstack.api.ResponseObject.ResponseView;
 import org.apache.cloudstack.api.ServerApiException;
 import org.apache.cloudstack.api.response.DesktopClusterIpRangeResponse;
+import org.apache.cloudstack.api.response.DesktopClusterResponse;
 import org.apache.cloudstack.api.response.ListResponse;
 import org.apache.log4j.Logger;
 
@@ -51,12 +52,9 @@ public class ListDesktopClusterIpRangeCmd extends BaseListProjectAndAccountResou
     //////////////// API parameters /////////////////////
     /////////////////////////////////////////////////////
     @Parameter(name = ApiConstants.ID, type = CommandType.UUID,
-            entityType = DesktopClusterIpRangeResponse.class,
-            description = "the ID of the Desktop Cluster IP Range")
+            entityType = DesktopClusterResponse.class,
+            description = "the ID of the Desktop Cluster")
     private Long id;
-
-    @Parameter(name = ApiConstants.DESKTOP_CLUSTER_ID, type = CommandType.UUID, description = "the ID of the Desktop Cluster")
-    private Long desktopClusterId;
 
     /////////////////////////////////////////////////////
     /////////////////// Accessors ///////////////////////
@@ -64,10 +62,6 @@ public class ListDesktopClusterIpRangeCmd extends BaseListProjectAndAccountResou
 
     public Long getId() {
         return id;
-    }
-
-    public Long getDesktopClusterId() {
-        return desktopClusterId;
     }
 
     /////////////////////////////////////////////////////
