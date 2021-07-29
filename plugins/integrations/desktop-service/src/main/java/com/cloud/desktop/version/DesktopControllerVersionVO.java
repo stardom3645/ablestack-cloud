@@ -68,7 +68,7 @@ public class DesktopControllerVersionVO implements DesktopControllerVersion {
         this.uuid = UUID.randomUUID().toString();
     }
 
-    public DesktopControllerVersionVO(String name, String version, String description, long templateId, Long zoneId) {
+    public DesktopControllerVersionVO(String name, String version, String description, Long zoneId) {
         this.uuid = UUID.randomUUID().toString();
         this.name = name;
         this.description = description;
