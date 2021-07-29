@@ -29,6 +29,7 @@ import org.apache.cloudstack.api.ResponseObject.ResponseView;
 import org.apache.cloudstack.api.ServerApiException;
 import org.apache.cloudstack.api.response.DesktopClusterIpRangeResponse;
 import org.apache.cloudstack.api.response.DesktopClusterResponse;
+import org.apache.cloudstack.context.CallContext;
 import org.apache.log4j.Logger;
 
 import com.cloud.desktop.cluster.DesktopClusterIpRange;
@@ -114,7 +115,7 @@ public class AddDesktopClusterIpRangeCmd extends BaseAsyncCreateCmd {
 
     @Override
     public long getEntityOwnerId() {
-        return desktopClusterId;
+        return CallContext.current().getCallingAccountId();
     }
 
     @Override

@@ -43,8 +43,20 @@
           :columns="iprangeColumns"
           :dataSource="iprange"
           :rowKey="item => item.id"
-          :pagination="false"
-        >
+          :pagination="false">
+          <template slot="action" slot-scope="text, record">
+            <a-popconfirm
+              :title="$t('message.confirm.remove.ip.range')"
+              @confirm="removeIpRange(record.id)"
+              :okText="$t('label.yes')"
+              :cancelText="$t('label.no')" >
+              <tooltip-button
+                tooltipPlacement="bottom"
+                :tooltip="$t('label.action.delete.ip.range')"
+                type="danger"
+                icon="delete" />
+            </a-popconfirm>
+          </template>
         </a-table>
       </a-tab-pane>
       <a-tab-pane :tab="$t('label.controlvm')" key="instances">
@@ -246,6 +258,10 @@ export default {
         {
           title: this.$t('label.endip'),
           dataIndex: 'endip'
+        },
+        {
+          title: '',
+          scopedSlots: { customRender: 'action' }
         }
       ]
     }
@@ -307,6 +323,12 @@ export default {
           this.iprange.sort((a, b) => { return a.deviceid - b.deviceid })
         }
         this.$set(this.resource, 'iprange', this.iprange)
+      })
+    },
+    removeIpRange (id) {
+      api('deleteDesktopClusterIpRanges', { id: id }).then(json => {
+      }).finally(() => {
+        this.fetchData()
       })
     },
     showAddModal () {

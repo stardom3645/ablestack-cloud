@@ -24,6 +24,7 @@ import javax.inject.Inject;
 
 import org.apache.cloudstack.api.ResponseObject.ResponseView;
 import org.apache.cloudstack.api.command.user.desktop.cluster.AddDesktopClusterIpRangeCmd;
+import org.apache.cloudstack.api.command.user.desktop.cluster.DeleteDesktopClusterIpRangeCmd;
 import org.apache.cloudstack.api.command.user.desktop.cluster.ListDesktopClusterCmd;
 import org.apache.cloudstack.api.command.user.desktop.cluster.ListDesktopClusterIpRangeCmd;
 import org.apache.cloudstack.api.response.DesktopClusterResponse;
@@ -324,6 +325,20 @@ public class DesktopClusterManagerImpl extends ManagerBase implements DesktopClu
     }
 
     @Override
+    public boolean deleteDesktopClusterIpRange(final DeleteDesktopClusterIpRangeCmd cmd) {
+        if (!DesktopServiceEnabled.value()) {
+            throw new CloudRuntimeException("Desktop Service plugin is disabled");
+        }
+        final Long ipRangeId = cmd.getId();
+        DesktopClusterIpRange iprange = desktopClusterIpRangeDao.findById(ipRangeId);
+        if (iprange == null) {
+            throw new InvalidParameterValueException("Invalid Desktop cluster ip range id specified");
+        }
+
+        return desktopClusterIpRangeDao.remove(iprange.getId());
+    }
+
+    @Override
     public List<Class<?>> getCommands() {
         List<Class<?>> cmdList = new ArrayList<Class<?>>();
         if (!DesktopServiceEnabled.value()) {
@@ -333,6 +348,7 @@ public class DesktopClusterManagerImpl extends ManagerBase implements DesktopClu
         cmdList.add(ListDesktopClusterCmd.class);
         cmdList.add(ListDesktopClusterIpRangeCmd.class);
         cmdList.add(AddDesktopClusterIpRangeCmd.class);
+        cmdList.add(DeleteDesktopClusterIpRangeCmd.class);
         return cmdList;
     }
 
