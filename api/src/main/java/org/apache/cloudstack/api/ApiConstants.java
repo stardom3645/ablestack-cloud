@@ -832,6 +832,10 @@ public class ApiConstants {
     public static final String SUPPORTS_HA = "supportsha";
     public static final String CONTROLLER_VERSION = "controllerversion";
     public static final String CONTROLLER_VERSION_NAME = "controllerversionname";
+    public static final String CONTROLLER_VERSION_DC_URL = "dcurl";
+    public static final String CONTROLLER_VERSION_WORKS_URL = "worksurl";
+    public static final String CONTROLLER_VERSION_DC_OSTYPE = "dcostype";
+    public static final String CONTROLLER_VERSION_WORKS_OSTYPE = "worksostype";
     public static final String TEMPLATE_STATE = "templatestate";
     public static final String AD_DOMAIN_NAME = "addomainname";
     public static final String TEMPLATES = "templates";
