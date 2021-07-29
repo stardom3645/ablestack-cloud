@@ -22,5 +22,5 @@ public class DesktopClusterEventTypes {
     public static final String EVENT_DESKTOP_CLUSTER_CSTART = "DESKTOP.CLUSTER.START";
     public static final String EVENT_DESKTOP_CLUSTER_CSTOP = "DESKTOP.CLUSTER.STOP";
     public static final String EVENT_DESKTOP_CLUSTER_CSCALE = "DESKTOP.CLUSTER.SCALE";
-    public static final String EVENT_DESKTOP_CLUSTER_CUPGRADE = "DESKTOP.CLUSTER.UPGRADE";
+    public static final String EVENT_DESKTOP_CLUSTER_IP_RANGE_ADD = "DESKTOP.CLUSTER.IP.RANGE.ADD";
 }

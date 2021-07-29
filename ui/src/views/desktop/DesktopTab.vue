@@ -34,7 +34,7 @@
           style="width: 100%; margin-bottom: 10px"
           @click="showAddModal"
           :loading="loadingNic"
-          :disabled="!('addNicToVirtualMachine' in $store.getters.apis)">
+          :disabled="!('addDesktopClusterIpRanges' in $store.getters.apis)">
           <a-icon type="plus"></a-icon> {{ $t('label.add.ip.range') }}
         </a-button>
         <a-table
@@ -102,13 +102,13 @@
     </a-tabs>
 
     <a-modal
-      :visible="showAddNetworkModal"
+      :visible="showAddIpModal"
       :title="$t('label.desktop.cluster.add.ip.range')"
       :maskClosable="false"
       :okText="$t('label.ok')"
       :cancelText="$t('label.cancel')"
       @cancel="closeModals"
-      @ok="submitAddNetwork">
+      @ok="submitAddIp">
       {{ $t('message.desktop.cluster.add.ip.range') }}
       <div class="modal-form">
         <p class="modal-form__label">{{ $t('label.gateway') }}:</p>
@@ -167,11 +167,12 @@ export default {
       iprange: [],
       totalStorage: 0,
       currentTab: 'details',
-      showAddNetworkModal: false,
+      showAddIpModal: false,
       addNetworkData: {
-        allNetworks: [],
-        network: '',
-        ip: ''
+        netmask: '',
+        gateway: '',
+        startip: '',
+        endip: ''
       },
       loadingNic: false,
       secondaryIPs: [],
@@ -309,38 +310,40 @@ export default {
       })
     },
     showAddModal () {
-      this.showAddNetworkModal = true
+      this.showAddIpModal = true
     },
     closeModals () {
-      this.showAddNetworkModal = false
-      this.addNetworkData.network = ''
-      this.addNetworkData.ip = ''
+      this.showAddIpModal = false
+      this.addNetworkData.netmask = ''
+      this.addNetworkData.gateway = ''
+      this.addNetworkData.startip = ''
+      this.addNetworkData.endip = ''
     },
-    submitAddNetwork () {
+    submitAddIp () {
       const params = {}
-      params.virtualmachineid = this.vm.id
-      params.networkid = this.addNetworkData.network
-      if (this.addNetworkData.ip) {
-        params.ipaddress = this.addNetworkData.ip
-      }
-      this.showAddNetworkModal = false
+      params.desktopclusterid = this.resource.id
+      params.netmask = this.addNetworkData.netmask
+      params.gateway = this.addNetworkData.gateway
+      params.startip = this.addNetworkData.startip
+      params.endip = this.addNetworkData.endip
+      this.showAddIpModal = false
       this.loadingNic = true
-      api('addNicToVirtualMachine', params).then(response => {
+      api('addDesktopClusterIpRanges', params).then(response => {
         this.$pollJob({
-          jobId: response.addnictovirtualmachineresponse.jobid,
-          successMessage: this.$t('message.success.add.network'),
+          jobId: response.adddesktopclusteriprangesresponse.jobid,
+          successMessage: this.$t('message.success.add.desktop.ip'),
           successMethod: () => {
             this.loadingNic = false
             this.closeModals()
             this.parentFetchData()
           },
-          errorMessage: this.$t('message.add.network.failed'),
+          errorMessage: this.$t('message.add.desktop.ip.failed'),
           errorMethod: () => {
             this.loadingNic = false
             this.closeModals()
             this.parentFetchData()
           },
-          loadingMessage: this.$t('message.add.network.processing'),
+          loadingMessage: this.$t('message.add.desktop.ip.processing'),
           catchMessage: this.$t('error.fetching.async.job.result'),
           catchMethod: () => {
             this.loadingNic = false

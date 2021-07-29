@@ -23,6 +23,7 @@ import java.util.List;
 import javax.inject.Inject;
 
 import org.apache.cloudstack.api.ResponseObject.ResponseView;
+import org.apache.cloudstack.api.command.user.desktop.cluster.AddDesktopClusterIpRangeCmd;
 import org.apache.cloudstack.api.command.user.desktop.cluster.ListDesktopClusterCmd;
 import org.apache.cloudstack.api.command.user.desktop.cluster.ListDesktopClusterIpRangeCmd;
 import org.apache.cloudstack.api.response.DesktopClusterResponse;
@@ -61,9 +62,13 @@ import com.cloud.utils.component.ManagerBase;
 import com.cloud.utils.fsm.NoTransitionException;
 import com.cloud.utils.fsm.StateMachine2;
 import com.cloud.utils.db.Filter;
+import com.cloud.utils.db.Transaction;
+import com.cloud.utils.db.TransactionCallback;
+import com.cloud.utils.db.TransactionStatus;
 import com.cloud.utils.db.SearchBuilder;
 import com.cloud.utils.db.SearchCriteria;
 import com.cloud.utils.exception.CloudRuntimeException;
+import com.cloud.exception.InvalidParameterValueException;
 
 public class DesktopClusterManagerImpl extends ManagerBase implements DesktopClusterService {
 
@@ -74,7 +79,7 @@ public class DesktopClusterManagerImpl extends ManagerBase implements DesktopClu
     @Inject
     public DesktopClusterDao desktopClusterDao;
     @Inject
-    public DesktopClusterIpRangeDao desktopClusterIpRangeDao;
+    private DesktopClusterIpRangeDao desktopClusterIpRangeDao;
     @Inject
     public DesktopClusterVmMapDao desktopClusterVmMapDao;
     @Inject
@@ -288,6 +293,37 @@ public class DesktopClusterManagerImpl extends ManagerBase implements DesktopClu
     }
 
     @Override
+    public DesktopClusterIpRange addDesktopClusterIpRange(final AddDesktopClusterIpRangeCmd cmd) {
+        if (!DesktopServiceEnabled.value()) {
+            throw new CloudRuntimeException("Desktop Service plugin is disabled");
+        }
+        final String gateway = cmd.getGateway();
+        final String netmask = cmd.getNetmask();
+        final String startIp = cmd.getStartIp();
+        final String endIp = cmd.getEndIp();
+        DesktopClusterVO desktopCluster = desktopClusterDao.findById(cmd.getDesktopClusterId());
+
+        if (desktopCluster == null) {
+            throw new InvalidParameterValueException("Invalid desktop cluster specified");
+        }
+        Long desktopClusterId = desktopCluster.getId();
+
+        final DesktopClusterIpRangeVO cluster = Transaction.execute(new TransactionCallback<DesktopClusterIpRangeVO>() {
+            @Override
+            public DesktopClusterIpRangeVO doInTransaction(TransactionStatus status) {
+                DesktopClusterIpRangeVO newCluster = new DesktopClusterIpRangeVO(desktopClusterId, gateway, netmask, startIp, endIp);
+                desktopClusterIpRangeDao.persist(newCluster);
+                return newCluster;
+            }
+        });
+
+        if (LOGGER.isInfoEnabled()) {
+            LOGGER.info(String.format("Desktop cluster ID: %s has been created", cluster.getUuid()));
+        }
+        return cluster;
+    }
+
+    @Override
     public List<Class<?>> getCommands() {
         List<Class<?>> cmdList = new ArrayList<Class<?>>();
         if (!DesktopServiceEnabled.value()) {
@@ -296,6 +332,7 @@ public class DesktopClusterManagerImpl extends ManagerBase implements DesktopClu
 
         cmdList.add(ListDesktopClusterCmd.class);
         cmdList.add(ListDesktopClusterIpRangeCmd.class);
+        cmdList.add(AddDesktopClusterIpRangeCmd.class);
         return cmdList;
     }
 

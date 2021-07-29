@@ -3387,5 +3387,8 @@
     "message.desktop.cluster.delete": "해당 클러스터를 삭제하시겠습니까?",
     "message.desktop.controller.version.delete": "이 컨트롤러 템플릿을 삭제하시겠습니까?",
     "message.desktop.master.veresion.delete": "이 마스터 템플릿을 삭제하시겠습니까?",
-    "message.desktop.cluster.add.ip.range": "이 데스크톱 클러스터에 추가 할 IP 범위를 입력하십시오."
+    "message.desktop.cluster.add.ip.range": "이 데스크톱 클러스터에 추가 할 IP 범위를 입력하십시오.",
+    "message.success.add.desktop.ip": "데스크톱 클러스터의 IP 범위가 추가되었습니다.",
+    "message.add.desktop.ip.failed": "데스크톱 클러스터의 IP 범위 추가에 실패하였습니다.",
+    "message.add.desktop.ip.processing": "데스크톱 클러스터의 IP 범위 추가중..."
 }
