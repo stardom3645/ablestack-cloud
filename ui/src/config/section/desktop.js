@@ -108,7 +108,7 @@ export default {
           component: () => import('@/views/desktop/UpdateDesktopControllerVersion.vue')
         },
         {
-          api: 'updateTemplate',
+          api: 'deleteDesktopControllerVersion',
           icon: 'delete',
           label: 'label.desktop.controller.version.delete',
           message: 'message.desktop.controller.version.delete',
