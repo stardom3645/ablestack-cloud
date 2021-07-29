@@ -81,7 +81,7 @@ export default {
       ]
     },
     {
-      name: 'desktoptemplate',
+      name: 'controllertemplate',
       title: 'title.desktop.controller',
       icon: 'shop',
       docHelp: '',
@@ -91,7 +91,7 @@ export default {
       searchFilters: ['name', 'zoneid', 'tags'],
       actions: [
         {
-          api: 'registerTemplate',
+          api: 'addDesktopControllerVersion',
           icon: 'plus',
           label: 'label.desktop.controller.template.version.create',
           docHelp: '',
