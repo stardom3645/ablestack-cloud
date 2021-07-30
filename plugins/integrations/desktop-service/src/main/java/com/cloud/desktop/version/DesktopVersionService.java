@@ -21,6 +21,7 @@ import org.apache.cloudstack.api.command.user.desktop.version.ListDesktopControl
 import org.apache.cloudstack.api.command.user.desktop.version.AddDesktopControllerVersionCmd;
 import org.apache.cloudstack.api.command.user.desktop.version.DeleteDesktopControllerVersionCmd;
 import org.apache.cloudstack.api.command.user.desktop.version.ListDesktopMasterVersionsCmd;
+import org.apache.cloudstack.api.command.user.desktop.version.UpdateDesktopControllerVersionCmd;
 import org.apache.cloudstack.api.response.DesktopControllerVersionResponse;
 import org.apache.cloudstack.api.response.DesktopMasterVersionResponse;
 import org.apache.cloudstack.api.response.ListResponse;
@@ -34,4 +35,5 @@ public interface DesktopVersionService extends PluggableService {
     ListResponse<DesktopMasterVersionResponse> listDesktopMasterVersions(ListDesktopMasterVersionsCmd cmd);
     DesktopControllerVersionResponse addDesktopControllerVersion(AddDesktopControllerVersionCmd cmd);
     boolean deleteDesktopContollerVersion(DeleteDesktopControllerVersionCmd cmd) throws CloudRuntimeException;
+    DesktopControllerVersionResponse updateDesktopControllerVersion(UpdateDesktopControllerVersionCmd cmd) throws CloudRuntimeException;
 }

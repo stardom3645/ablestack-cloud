@@ -23,11 +23,13 @@ import java.util.EnumSet;
 import java.util.List;
 import javax.inject.Inject;
 
+import org.apache.cloudstack.api.ApiConstants;
 import org.apache.cloudstack.api.ResponseObject.ResponseView;
 import org.apache.cloudstack.api.command.user.desktop.version.ListDesktopControllerVersionsCmd;
 import org.apache.cloudstack.api.command.user.desktop.version.AddDesktopControllerVersionCmd;
 import org.apache.cloudstack.api.command.user.desktop.version.DeleteDesktopControllerVersionCmd;
 import org.apache.cloudstack.api.command.user.desktop.version.ListDesktopMasterVersionsCmd;
+import org.apache.cloudstack.api.command.user.desktop.version.UpdateDesktopControllerVersionCmd;
 import org.apache.cloudstack.api.response.DesktopControllerVersionResponse;
 import org.apache.cloudstack.api.response.DesktopMasterVersionResponse;
 import org.apache.cloudstack.api.response.ListResponse;
@@ -156,7 +158,7 @@ public class DesktopVersionManagerImpl extends ManagerBase implements DesktopVer
         String templateName = "";
 
         if (compareVersions(controllerVersion, MIN_DESKTOP_CONTOLLER_VERSION) < 0) {
-            throw new InvalidParameterValueException(String.format("New supported Kubernetes version cannot be added as %s is minimum version supported by Kubernetes Service", MIN_DESKTOP_CONTOLLER_VERSION));
+            throw new InvalidParameterValueException(String.format("New desktop controller version cannot be added as %s is minimum version supported by Desktop Service", MIN_DESKTOP_CONTOLLER_VERSION));
         }
         if (zoneId != null && dataCenterDao.findById(zoneId) == null) {
             throw new InvalidParameterValueException("Invalid zone specified");
@@ -198,8 +200,8 @@ public class DesktopVersionManagerImpl extends ManagerBase implements DesktopVer
             desktopTemplateMapDao.persist(new DesktopTemplateMapVO(desktopControllerVersionVO.getId(), template.getId()));
 
         } catch (URISyntaxException | IllegalAccessException | NoSuchFieldException | IllegalArgumentException | ResourceAllocationException ex) {
-            LOGGER.error(String.format("Unable to register binaries ISO for supported kubernetes version, %s, with url: %s", templateName, dcUrl), ex);
-            throw new CloudRuntimeException(String.format("Unable to register binaries ISO for supported kubernetes version, %s, with url: %s", templateName, dcUrl));
+            LOGGER.error(String.format("Unable to register template for desktop controller version, %s, with url: %s", templateName, dcUrl), ex);
+            throw new CloudRuntimeException(String.format("Unable to register template for desktop controller version, %s, with url: %s", templateName, dcUrl));
         }
 
         return createDesktopControllerVersionResponse(desktopControllerVersionVO);
@@ -406,33 +408,33 @@ public class DesktopVersionManagerImpl extends ManagerBase implements DesktopVer
         templateService.deleteTemplate(deleteTemplateCmd);
     }
 
-    // @Override
-    // @ActionEvent(eventType = KubernetesVersionEventTypes.EVENT_KUBERNETES_VERSION_UPDATE, eventDescription = "Updating Kubernetes supported version")
-    // public KubernetesSupportedVersionResponse updateKubernetesSupportedVersion(final UpdateKubernetesSupportedVersionCmd cmd) {
-    //     if (!KubernetesClusterService.KubernetesServiceEnabled.value()) {
-    //         throw new CloudRuntimeException("Kubernetes Service plugin is disabled");
-    //     }
-    //     final Long versionId = cmd.getId();
-    //     KubernetesSupportedVersion.State state = null;
-    //     KubernetesSupportedVersionVO version = kubernetesSupportedVersionDao.findById(versionId);
-    //     if (version == null) {
-    //         throw new InvalidParameterValueException("Invalid Kubernetes version id specified");
-    //     }
-    //     try {
-    //         state = KubernetesSupportedVersion.State.valueOf(cmd.getState());
-    //     } catch (IllegalArgumentException iae) {
-    //         throw new InvalidParameterValueException(String.format("Invalid value for %s parameter", ApiConstants.STATE));
-    //     }
-    //     if (!state.equals(version.getState())) {
-    //         version = kubernetesSupportedVersionDao.createForUpdate(version.getId());
-    //         version.setState(state);
-    //         if (!kubernetesSupportedVersionDao.update(version.getId(), version)) {
-    //             throw new CloudRuntimeException(String.format("Failed to update Kubernetes supported version ID: %s", version.getUuid()));
-    //         }
-    //         version = kubernetesSupportedVersionDao.findById(versionId);
-    //     }
-    //     return  createKubernetesSupportedVersionResponse(version);
-    // }
+    @Override
+    @ActionEvent(eventType = DesktopVersionEventTypes.EVENT_DESKTOP_CONTROLLER_VERSION_UPDATE, eventDescription = "Updating desktop controller version")
+    public DesktopControllerVersionResponse updateDesktopControllerVersion(final UpdateDesktopControllerVersionCmd cmd) {
+        if (!DesktopClusterService.DesktopServiceEnabled.value()) {
+            throw new CloudRuntimeException("Desktop Service plugin is disabled");
+        }
+        final Long versionId = cmd.getId();
+        DesktopControllerVersion.State state = null;
+        DesktopControllerVersionVO version = desktopControllerVersionDao.findById(versionId);
+        if (version == null) {
+            throw new InvalidParameterValueException("Invalid desktop controller version id specified");
+        }
+        try {
+            state = DesktopControllerVersion.State.valueOf(cmd.getState());
+        } catch (IllegalArgumentException iae) {
+            throw new InvalidParameterValueException(String.format("Invalid value for %s parameter", ApiConstants.STATE));
+        }
+        if (!state.equals(version.getState())) {
+            version = desktopControllerVersionDao.createForUpdate(version.getId());
+            version.setState(state);
+            if (!desktopControllerVersionDao.update(version.getId(), version)) {
+                throw new CloudRuntimeException(String.format("Failed to update desktop controller version ID: %s", version.getUuid()));
+            }
+            version = desktopControllerVersionDao.findById(versionId);
+        }
+        return  createDesktopControllerVersionResponse(version);
+    }
 
     @Override
     public List<Class<?>> getCommands() {
@@ -444,6 +446,7 @@ public class DesktopVersionManagerImpl extends ManagerBase implements DesktopVer
         cmdList.add(ListDesktopMasterVersionsCmd.class);
         cmdList.add(AddDesktopControllerVersionCmd.class);
         cmdList.add(DeleteDesktopControllerVersionCmd.class);
+        cmdList.add(UpdateDesktopControllerVersionCmd.class);
         return cmdList;
     }
 }

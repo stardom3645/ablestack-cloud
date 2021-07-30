@@ -100,7 +100,7 @@ export default {
           component: () => import('@/views/desktop/AddDesktopControllerVersion.vue')
         },
         {
-          api: 'updateTemplatePermissions',
+          api: 'updateDesktopControllerVersion',
           icon: 'edit',
           label: 'label.desktop.controller.version.manage',
           dataView: true,
