@@ -179,12 +179,24 @@ public class RegisterTemplateCmd extends BaseCmd implements UserCmd {
         return displayText;
     }
 
+    public void setDisplayText(String displayText) {
+        this.displayText = displayText;
+    }
+
     public String getFormat() {
         return format;
     }
 
+    public void setFormat(String format) {
+        this.format = format;
+    }
+
     public String getHypervisor() {
         return hypervisor;
+    }
+
+    public void setHypervisor(String hypervisor) {
+        this.hypervisor = hypervisor;
     }
 
     public Boolean isFeatured() {
@@ -195,12 +207,24 @@ public class RegisterTemplateCmd extends BaseCmd implements UserCmd {
         return publicTemplate;
     }
 
+    public void setPublic(Boolean publicTemplate) {
+        this.publicTemplate = publicTemplate;
+    }
+
     public String getTemplateName() {
         return templateName;
     }
 
+    public void setTemplateName(String templateName) {
+        this.templateName = templateName;
+    }
+
     public Long getOsTypeId() {
         return osTypeId;
+    }
+
+    public void setOsTypeId(Long osTypeId) {
+        this.osTypeId = osTypeId;
     }
 
     public Boolean isPasswordEnabled() {
@@ -221,6 +245,10 @@ public class RegisterTemplateCmd extends BaseCmd implements UserCmd {
 
     public String getUrl() {
         return url;
+    }
+
+    public void setUrl(String url) {
+        this.url = url;
     }
 
     public List<Long> getZoneIds() {
@@ -245,8 +273,16 @@ public class RegisterTemplateCmd extends BaseCmd implements UserCmd {
         return domainId;
     }
 
+    public void setDomainId(Long domainId) {
+        this.domainId = domainId;
+    }
+
     public String getAccountName() {
         return accountName;
+    }
+
+    public void setAccountName(String accountName) {
+        this.accountName = accountName;
     }
 
     public String getChecksum() {
@@ -255,6 +291,14 @@ public class RegisterTemplateCmd extends BaseCmd implements UserCmd {
 
     public String getTemplateTag() {
         return templateTag;
+    }
+
+    public Long getZoneId() {
+        return zoneId;
+    }
+
+    public void setZoneId(Long zoneId) {
+        this.zoneId = zoneId;
     }
 
     public Map getDetails() {
