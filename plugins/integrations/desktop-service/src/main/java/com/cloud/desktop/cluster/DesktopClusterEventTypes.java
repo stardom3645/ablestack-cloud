@@ -18,10 +18,10 @@ package com.cloud.desktop.cluster;
 
 public class DesktopClusterEventTypes {
     public static final String EVENT_DESKTOP_CLUSTER_CREATE = "DESKTOP.CLUSTER.CREATE";
-    public static final String EVENT_DESKTOP_CLUSTER_CDELETE = "DESKTOP.CLUSTER.DELETE";
-    public static final String EVENT_DESKTOP_CLUSTER_CSTART = "DESKTOP.CLUSTER.START";
-    public static final String EVENT_DESKTOP_CLUSTER_CSTOP = "DESKTOP.CLUSTER.STOP";
-    public static final String EVENT_DESKTOP_CLUSTER_CSCALE = "DESKTOP.CLUSTER.SCALE";
+    public static final String EVENT_DESKTOP_CLUSTER_DELETE = "DESKTOP.CLUSTER.DELETE";
+    public static final String EVENT_DESKTOP_CLUSTER_START = "DESKTOP.CLUSTER.START";
+    public static final String EVENT_DESKTOP_CLUSTER_STOP = "DESKTOP.CLUSTER.STOP";
+    public static final String EVENT_DESKTOP_CLUSTER_SCALE = "DESKTOP.CLUSTER.SCALE";
     public static final String EVENT_DESKTOP_CLUSTER_IP_RANGE_ADD = "DESKTOP.CLUSTER.IP.RANGE.ADD";
     public static final String EVENT_DESKTOP_CLUSTER_IP_RANGE_DELETE = "DESKTOP.CLUSTER.IP.RANGE.DELETE";
 }
