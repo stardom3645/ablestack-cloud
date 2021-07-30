@@ -830,15 +830,19 @@ public class ApiConstants {
     public static final String MIN_KUBERNETES_VERSION_ID = "minimumkubernetesversionid";
     public static final String NODE_ROOT_DISK_SIZE = "noderootdisksize";
     public static final String SUPPORTS_HA = "supportsha";
-    public static final String CONTROLLER_VERSION = "controllerversion";
-    public static final String CONTROLLER_VERSION_NAME = "controllerversionname";
-    public static final String TEMPLATE_STATE = "templatestate";
-    public static final String AD_DOMAIN_NAME = "addomainname";
-    public static final String TEMPLATES = "templates";
-    public static final String TEMPLATE_OS_TYPE = "templateostype";
+
+    public static final String DESKTOP_CONTROLLER_VERSION = "controllerversion";
+    public static final String DESKTOP_CONTROLLER_VERSION_NAME = "controllerversionname";
+    public static final String DESKTOP_CONTROLLER_VERSION_DC_URL = "dcurl";
+    public static final String DESKTOP_CONTROLLER_VERSION_WORKS_URL = "worksurl";
+    public static final String DESKTOP_CONTROLLER_VERSION_DC_OSTYPE = "dcostype";
+    public static final String DESKTOP_CONTROLLER_VERSION_WORKS_OSTYPE = "worksostype";
+    public static final String DESKTOP_TEMPLATE_STATE = "templatestate";
+    public static final String DESKTOP_AD_DOMAIN_NAME = "addomainname";
+    public static final String DESKTOP_TEMPLATES = "templates";
+    public static final String DESKTOP_TEMPLATE_OS_TYPE = "templateostype";
     public static final String DESKTOP_CLUSTER_ID = "desktopclusterid";
     public static final String DESKTOP_CLUSTER_NAME = "desktopclustername";
-    public static final String IP_RANGE = "iprange";
 
     public static final String BOOT_TYPE = "boottype";
     public static final String BOOT_MODE = "bootmode";
