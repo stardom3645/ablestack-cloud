@@ -16,6 +16,8 @@
 // under the License.
 package com.cloud.desktop.cluster;
 
+import org.apache.cloudstack.api.command.user.desktop.cluster.AddDesktopClusterIpRangeCmd;
+import org.apache.cloudstack.api.command.user.desktop.cluster.DeleteDesktopClusterIpRangeCmd;
 import org.apache.cloudstack.api.command.user.desktop.cluster.ListDesktopClusterCmd;
 import org.apache.cloudstack.api.command.user.desktop.cluster.ListDesktopClusterIpRangeCmd;
 import org.apache.cloudstack.api.response.DesktopClusterResponse;
@@ -25,6 +27,7 @@ import org.apache.cloudstack.framework.config.ConfigKey;
 import org.apache.cloudstack.framework.config.Configurable;
 
 import com.cloud.utils.component.PluggableService;
+import com.cloud.utils.exception.CloudRuntimeException;
 
 public interface DesktopClusterService extends PluggableService, Configurable {
 
@@ -38,6 +41,8 @@ public interface DesktopClusterService extends PluggableService, Configurable {
 
     ListResponse<DesktopClusterResponse> listDesktopCluster(ListDesktopClusterCmd cmd);
     ListResponse<DesktopClusterIpRangeResponse> listDesktopClusterIpRanges(ListDesktopClusterIpRangeCmd cmd);
+    DesktopClusterIpRange addDesktopClusterIpRange(AddDesktopClusterIpRangeCmd cmd);
+    boolean deleteDesktopClusterIpRange(DeleteDesktopClusterIpRangeCmd cmd) throws CloudRuntimeException;
 
     DesktopClusterResponse createDesktopClusterResponse(long desktopClusterId);
     DesktopClusterIpRangeResponse createDesktopClusterIpRangeResponse(long ipRangeId);

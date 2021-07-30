@@ -42,4 +42,10 @@ public class DesktopClusterIpRangeDaoImpl extends GenericDaoBase<DesktopClusterI
         sc.setParameters("desktopClusterId", desktopClusterId);
         return listBy(sc);
     }
+
+    @Override
+    public List<DesktopClusterIpRangeVO> listAll() {
+        SearchCriteria<DesktopClusterIpRangeVO> sc = DesktopClusterSearch.create();
+        return listBy(sc);
+    }
 }

@@ -16,25 +16,19 @@
 // under the License.
 package com.cloud.desktop.cluster;
 
-import org.apache.cloudstack.acl.InfrastructureEntity;
 import org.apache.cloudstack.api.Identity;
 import org.apache.cloudstack.api.InternalIdentity;
 
 import java.util.Date;
 
-public interface DesktopClusterIpRange extends InfrastructureEntity, InternalIdentity, Identity {
+public interface DesktopClusterIpRange extends InternalIdentity, Identity {
 
-    public long getDesktopClusterId();
-
-    public String getGateway();
-
-    public String getNetmask();
-
-    public String getStartIp();
-
-    public String getEndIp();
-
-    public Date getRemoved();
-
-    public Date getCreated();
+    long getId();
+    long getDesktopClusterId();
+    String getGateway();
+    String getNetmask();
+    String getStartIp();
+    String getEndIp();
+    Date getRemoved();
+    Date getCreated();
 }

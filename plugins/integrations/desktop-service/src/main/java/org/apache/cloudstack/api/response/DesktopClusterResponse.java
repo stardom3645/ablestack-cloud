@@ -57,7 +57,7 @@ public class DesktopClusterResponse extends BaseResponse implements ControlledEn
     @Param(description = "the name of the service offering of the Desktop Cluster")
     private String serviceOfferingName;
 
-    @SerializedName(ApiConstants.AD_DOMAIN_NAME)
+    @SerializedName(ApiConstants.DESKTOP_AD_DOMAIN_NAME)
     @Param(description = "the ID of the template of the Desktop Cluster")
     private String adDomainName;
 
