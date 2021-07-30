@@ -830,6 +830,7 @@ public class ApiConstants {
     public static final String MIN_KUBERNETES_VERSION_ID = "minimumkubernetesversionid";
     public static final String NODE_ROOT_DISK_SIZE = "noderootdisksize";
     public static final String SUPPORTS_HA = "supportsha";
+
     public static final String DESKTOP_CONTROLLER_VERSION = "controllerversion";
     public static final String DESKTOP_CONTROLLER_VERSION_NAME = "controllerversionname";
     public static final String DESKTOP_CONTROLLER_VERSION_DC_URL = "dcurl";
