@@ -100,6 +100,10 @@ public class CapabilitiesResponse extends BaseResponse {
     @Param(description = "true if experimental features for Kubernetes cluster such as Docker private registry are enabled, false otherwise")
     private boolean kubernetesClusterExperimentalFeaturesEnabled;
 
+    @SerializedName("desktopserviceenabled")
+    @Param(description = "true if Desktop Service plugin is enabled, false otherwise")
+    private boolean desktopServiceEnabled;
+
     public void setSecurityGroupsEnabled(boolean securityGroupsEnabled) {
         this.securityGroupsEnabled = securityGroupsEnabled;
     }
@@ -174,5 +178,9 @@ public class CapabilitiesResponse extends BaseResponse {
 
     public void setKubernetesClusterExperimentalFeaturesEnabled(boolean kubernetesClusterExperimentalFeaturesEnabled) {
         this.kubernetesClusterExperimentalFeaturesEnabled = kubernetesClusterExperimentalFeaturesEnabled;
+    }
+
+    public void setDesktopServiceEnabled(boolean desktopServiceEnabled) {
+        this.desktopServiceEnabled = desktopServiceEnabled;
     }
 }
