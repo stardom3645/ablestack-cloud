@@ -58,6 +58,7 @@ import com.cloud.projects.Project;
 import com.cloud.user.Account;
 import com.cloud.user.AccountManager;
 import com.cloud.user.AccountService;
+import com.cloud.event.ActionEvent;
 import com.cloud.utils.Ternary;
 import com.cloud.utils.net.NetUtils;
 import com.cloud.utils.component.ManagerBase;
@@ -307,6 +308,7 @@ public class DesktopClusterManagerImpl extends ManagerBase implements DesktopClu
     }
 
     @Override
+    @ActionEvent(eventType = DesktopClusterEventTypes.EVENT_DESKTOP_CLUSTER_IP_RANGE_ADD, eventDescription = "Adding Desktop cluster ip range")
     public DesktopClusterIpRange addDesktopClusterIpRange(final AddDesktopClusterIpRangeCmd cmd) {
         if (!DesktopServiceEnabled.value()) {
             throw new CloudRuntimeException("Desktop Service plugin is disabled");
@@ -395,6 +397,7 @@ public class DesktopClusterManagerImpl extends ManagerBase implements DesktopClu
     }
 
     @Override
+    @ActionEvent(eventType = DesktopClusterEventTypes.EVENT_DESKTOP_CLUSTER_IP_RANGE_DELETE, eventDescription = "Deleting Desktop cluster ip range")
     public boolean deleteDesktopClusterIpRange(final DeleteDesktopClusterIpRangeCmd cmd) {
         if (!DesktopServiceEnabled.value()) {
             throw new CloudRuntimeException("Desktop Service plugin is disabled");
