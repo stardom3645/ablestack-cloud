@@ -238,7 +238,7 @@ public class DesktopClusterManagerImpl extends ManagerBase implements DesktopClu
         if (state != null) {
             sc.setParameters("state", state);
         }
-        if(keyword != null){
+        if (keyword != null){
             sc.setParameters("keyword", "%" + keyword + "%");
         }
         if (desktopClusterId != null) {
@@ -282,9 +282,21 @@ public class DesktopClusterManagerImpl extends ManagerBase implements DesktopClu
         if (!DesktopServiceEnabled.value()) {
             logAndThrow(Level.ERROR, "Desktop Service plugin is disabled");
         }
-        final Long clusterId = cmd.getId();
+        final Long rangeId = cmd.getId();
+        final Long desktopClusterId = cmd.getDesktopClusterId();
+        Filter searchFilter = new Filter(DesktopClusterIpRangeVO.class, "id", true, cmd.getStartIndex(), cmd.getPageSizeVal());
+        SearchBuilder<DesktopClusterIpRangeVO> sb = desktopClusterIpRangeDao.createSearchBuilder();
+        sb.and("id", sb.entity().getId(), SearchCriteria.Op.EQ);
+        sb.and("desktopClusterId", sb.entity().getDesktopClusterId(), SearchCriteria.Op.EQ);
+        SearchCriteria<DesktopClusterIpRangeVO> sc = sb.create();
+        if (rangeId != null) {
+            sc.setParameters("id", rangeId);
+        }
+        if (desktopClusterId != null) {
+            sc.setParameters("desktopClusterId", desktopClusterId);
+        }
         List<DesktopClusterIpRangeResponse> responsesList = new ArrayList<DesktopClusterIpRangeResponse>();
-        List<DesktopClusterIpRangeVO> id = desktopClusterIpRangeDao.listByDesktopClusterId(clusterId);
+        List<DesktopClusterIpRangeVO> id = desktopClusterIpRangeDao.search(sc, searchFilter);
         for (DesktopClusterIpRangeVO ip : id) {
             DesktopClusterIpRangeResponse desktopClusterIpRangeResponse = createDesktopClusterIpRangeResponse(ip.getId());
             responsesList.add(desktopClusterIpRangeResponse);

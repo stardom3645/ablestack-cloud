@@ -52,9 +52,14 @@ public class ListDesktopClusterIpRangeCmd extends BaseListProjectAndAccountResou
     //////////////// API parameters /////////////////////
     /////////////////////////////////////////////////////
     @Parameter(name = ApiConstants.ID, type = CommandType.UUID,
+            entityType = DesktopClusterIpRangeResponse.class,
+            description = "the ID of the Desktop Cluster IP Range")
+    private Long id;
+
+    @Parameter(name = ApiConstants.DESKTOP_CLUSTER_ID, type = CommandType.UUID,
             entityType = DesktopClusterResponse.class,
             description = "the ID of the Desktop Cluster")
-    private Long id;
+    private Long desktopClusterId;
 
     /////////////////////////////////////////////////////
     /////////////////// Accessors ///////////////////////
@@ -62,6 +67,10 @@ public class ListDesktopClusterIpRangeCmd extends BaseListProjectAndAccountResou
 
     public Long getId() {
         return id;
+    }
+
+    public Long getDesktopClusterId() {
+        return desktopClusterId;
     }
 
     /////////////////////////////////////////////////////

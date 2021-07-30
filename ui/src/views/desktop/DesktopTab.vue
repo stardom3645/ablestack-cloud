@@ -317,7 +317,7 @@ export default {
         }
         this.$set(this.resource, 'desktopnetworks', this.desktopnetworks)
       })
-      api('listDesktopClusterIpRanges', { listall: true, id: this.resource.id }).then(json => {
+      api('listDesktopClusterIpRanges', { listall: true, desktopclusterid: this.resource.id }).then(json => {
         this.iprange = json.listdesktopclusteriprangesresponse.desktopclusteriprange
         if (this.iprange) {
           this.iprange.sort((a, b) => { return a.deviceid - b.deviceid })
