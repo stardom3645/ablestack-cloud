@@ -28,32 +28,6 @@ import javax.persistence.GenerationType;
 @Table(name = "desktop_template_map")
 public class DesktopTemplateMapVO implements DesktopTemplateMap {
 
-    @Override
-    public long getId() {
-        return id;
-    }
-
-    @Override
-    public long getVersionId() {
-        return versionId;
-
-    }
-
-    public void setVersionId(long versionId) {
-
-        this.versionId = versionId;
-    }
-
-    @Override
-    public long getTemplateId() {
-        return templateId;
-    }
-
-    public void setTemplateId(long templateId) {
-
-        this.templateId = templateId;
-    }
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
@@ -65,8 +39,30 @@ public class DesktopTemplateMapVO implements DesktopTemplateMap {
     @Column(name = "template_id")
     long templateId;
 
-    public DesktopTemplateMapVO() {
+    @Override
+    public long getId() {
+        return id;
+    }
 
+    @Override
+    public long getVersionId() {
+        return versionId;
+    }
+
+    public void setVersionId(long versionId) {
+        this.versionId = versionId;
+    }
+
+    @Override
+    public long getTemplateId() {
+        return templateId;
+    }
+
+    public void setTemplateId(long templateId) {
+        this.templateId = templateId;
+    }
+
+    public DesktopTemplateMapVO() {
     }
 
     public DesktopTemplateMapVO(long versionId, long templateId) {

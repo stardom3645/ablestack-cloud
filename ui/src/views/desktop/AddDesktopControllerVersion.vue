@@ -31,7 +31,7 @@
           <a-col :md="24" :lg="24">
             <a-form-item :label="$t('label.name')">
               <a-input
-                v-decorator="['name', {
+                v-decorator="['controllerversionname', {
                   rules: [{ required: true, message: `${this.$t('message.error.required.input')}` }]
                 }]"
                 :placeholder="$t('placeholder.name')"
@@ -55,14 +55,14 @@
           <a-col :md="24" :lg="24">
             <a-form-item :label="$t('label.version')">
               <a-input
-                v-decorator="['displaytext', {
+                v-decorator="['controllerversion', {
                   rules: [{ required: true, message: `${this.$t('message.error.required.input')}` }]
                 }]"
                 :placeholder="$t('placeholder.version')" />
             </a-form-item>
           </a-col>
         </a-row>
-        <div v-if="currentForm === 'Create'">
+        <!-- <div v-if="currentForm === 'Create'">
           <a-row :gutter="12">
             <a-col :md="24" :lg="24">
               <a-form-item
@@ -85,7 +85,7 @@
                   :filterOption="(input, option) => {
                     return option.componentOptions.children[0].text.toLowerCase().indexOf(input.toLowerCase()) >= 0
                   }"
-                  :placeholder="$t('placeholder.zone')"
+                  :placeholder="$t('placeholder.zones')"
                   @change="handlerSelectZone">
                   <a-select-option v-for="opt in zones.opts" :key="opt.id">
                     {{ opt.name || opt.description }}
@@ -94,8 +94,8 @@
               </a-form-item>
             </a-col>
           </a-row>
-        </div>
-        <div v-else>
+        </div> -->
+        <div v-if="currentForm === 'Create'">
           <a-row :gutter="12">
             <a-col :md="24" :lg="24">
               <a-form-item
@@ -175,7 +175,7 @@
               <a-form-item :label="$t('label.dcvm.template.upload.url')">
                 <a-input
                   :autoFocus="currentForm === 'Create'"
-                  v-decorator="['url', {
+                  v-decorator="['dcurl', {
                     rules: [{ required: true, message: `${this.$t('message.error.required.input')}` }]
                   }]"
                   :placeholder="$t('placeholder.dcvm.template.upload.url')" />
@@ -192,7 +192,7 @@
                 :filterOption="(input, option) => {
                   return option.componentOptions.children[0].text.toLowerCase().indexOf(input.toLowerCase()) >= 0
                 }"
-                v-decorator="['ostypeid', {
+                v-decorator="['dcostype', {
                   initialValue: defaultOsId,
                   rules: [
                     {
@@ -216,7 +216,7 @@
               <a-form-item :label="$t('label.worksvm.template.upload.url')">
                 <a-input
                   :autoFocus="currentForm === 'Create'"
-                  v-decorator="['url', {
+                  v-decorator="['worksurl', {
                     rules: [{ required: true, message: `${this.$t('message.error.required.input')}` }]
                   }]"
                   :placeholder="$t('placeholder.worksvm.template.upload.url')" />
@@ -233,7 +233,7 @@
                 :filterOption="(input, option) => {
                   return option.componentOptions.children[0].text.toLowerCase().indexOf(input.toLowerCase()) >= 0
                 }"
-                v-decorator="['ostypeid', {
+                v-decorator="['worksostype', {
                   initialValue: defaultOsId,
                   rules: [
                     {
@@ -617,6 +617,10 @@ export default {
             id: 'VHD',
             description: 'VHD'
           })
+          format.push({
+            id: 'QCOW2',
+            description: 'QCOW2'
+          })
           break
         case 'VMware':
           this.hyperVMWShow = true
@@ -752,10 +756,10 @@ export default {
         }
         if (this.currentForm === 'Create') {
           this.loading = true
-          api('registerTemplate', params).then(json => {
+          api('addDesktopControllerVersion', params).then(json => {
             this.$notification.success({
               message: this.$t('label.register.template'),
-              description: `${this.$t('message.success.register.template')} ${params.name}`
+              description: `${this.$t('message.success.register.contoller.template.version')}`
             })
             this.$emit('refresh-data')
             this.closeAction()

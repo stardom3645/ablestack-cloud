@@ -18,4 +18,7 @@
 package com.cloud.desktop.version;
 
 public class DesktopVersionEventTypes {
+    public static final String EVENT_DESKTOP_CONTROLLER_VERSION_ADD = "DESKTOP.CONTROL.VERSION.ADD";
+    public static final String EVENT_DESKTOP_CONTROLLER_VERSION_DELETE = "DESKTOP.CONTROL.VERSION.DELETE";
+    public static final String EVENT_DESKTOP_CONTROLLER_VERSION_UPDATE = "DESKTOP.CONTROL.VERSION.UPDATE";
 }

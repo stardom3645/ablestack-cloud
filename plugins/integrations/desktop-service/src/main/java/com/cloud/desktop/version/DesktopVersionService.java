@@ -17,6 +17,9 @@
 
 package com.cloud.desktop.version;
 
+import org.apache.cloudstack.api.command.admin.desktop.AddDesktopControllerVersionCmd;
+import org.apache.cloudstack.api.command.admin.desktop.DeleteDesktopControllerVersionCmd;
+import org.apache.cloudstack.api.command.admin.desktop.UpdateDesktopControllerVersionCmd;
 import org.apache.cloudstack.api.command.user.desktop.version.ListDesktopControllerVersionsCmd;
 import org.apache.cloudstack.api.command.user.desktop.version.ListDesktopMasterVersionsCmd;
 import org.apache.cloudstack.api.response.DesktopControllerVersionResponse;
@@ -24,9 +27,13 @@ import org.apache.cloudstack.api.response.DesktopMasterVersionResponse;
 import org.apache.cloudstack.api.response.ListResponse;
 
 import com.cloud.utils.component.PluggableService;
+import com.cloud.utils.exception.CloudRuntimeException;
 
 public interface DesktopVersionService extends PluggableService {
+    static final String MIN_DESKTOP_CONTOLLER_VERSION = "1.0.0";
     ListResponse<DesktopControllerVersionResponse> listDesktopControllerVersions(ListDesktopControllerVersionsCmd cmd);
     ListResponse<DesktopMasterVersionResponse> listDesktopMasterVersions(ListDesktopMasterVersionsCmd cmd);
+    DesktopControllerVersionResponse addDesktopControllerVersion(AddDesktopControllerVersionCmd cmd);
+    boolean deleteDesktopContollerVersion(DeleteDesktopControllerVersionCmd cmd) throws CloudRuntimeException;
+    DesktopControllerVersionResponse updateDesktopControllerVersion(UpdateDesktopControllerVersionCmd cmd) throws CloudRuntimeException;
 }
-

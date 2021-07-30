@@ -69,11 +69,11 @@ public class DesktopClusterResponse extends BaseResponse implements ControlledEn
     @Param(description = "the name of the network of the Desktop Cluster")
     private String associatedNetworkName;
 
-    @SerializedName(ApiConstants.CONTROLLER_VERSION)
+    @SerializedName(ApiConstants.DESKTOP_CONTROLLER_VERSION)
     @Param(description = "the Controller version for the Desktop Cluster")
     private String controllerVersion;
 
-    @SerializedName(ApiConstants.CONTROLLER_VERSION_NAME)
+    @SerializedName(ApiConstants.DESKTOP_CONTROLLER_VERSION_NAME)
     @Param(description = "the name of the Controller version for the Desktop Cluster")
     private String controllerVersionName;
 

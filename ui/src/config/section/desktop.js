@@ -81,7 +81,7 @@ export default {
       ]
     },
     {
-      name: 'desktoptemplate',
+      name: 'controllertemplate',
       title: 'title.desktop.controller',
       icon: 'shop',
       docHelp: '',
@@ -91,7 +91,7 @@ export default {
       searchFilters: ['name', 'zoneid', 'tags'],
       actions: [
         {
-          api: 'registerTemplate',
+          api: 'addDesktopControllerVersion',
           icon: 'plus',
           label: 'label.desktop.controller.template.version.create',
           docHelp: '',
@@ -100,7 +100,7 @@ export default {
           component: () => import('@/views/desktop/AddDesktopControllerVersion.vue')
         },
         {
-          api: 'updateTemplatePermissions',
+          api: 'updateDesktopControllerVersion',
           icon: 'edit',
           label: 'label.desktop.controller.version.manage',
           dataView: true,
@@ -108,7 +108,7 @@ export default {
           component: () => import('@/views/desktop/UpdateDesktopControllerVersion.vue')
         },
         {
-          api: 'updateTemplate',
+          api: 'deleteDesktopControllerVersion',
           icon: 'delete',
           label: 'label.desktop.controller.version.delete',
           message: 'message.desktop.controller.version.delete',
