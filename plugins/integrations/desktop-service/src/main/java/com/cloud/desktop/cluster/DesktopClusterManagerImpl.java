@@ -341,7 +341,7 @@ public class DesktopClusterManagerImpl extends ManagerBase implements DesktopClu
                 throw new InvalidParameterValueException("Please specify a valid IP range or valid netmask or valid gateway");
             }
 
-            final List<DesktopClusterIpRangeVO> ips = desktopClusterIpRangeDao.listByDesktopClusterId(cmd.getDesktopClusterId());
+            final List<DesktopClusterIpRangeVO> ips = desktopClusterIpRangeDao.listAll();
             for (final DesktopClusterIpRangeVO range : ips) {
                 final String otherGateway = range.getGateway();
                 final String otherNetmask = range.getNetmask();
