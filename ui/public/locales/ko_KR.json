@@ -3170,7 +3170,7 @@
     "message.success.resize.volume": "볼륨 크기를 조정했습니다.",
     "message.success.scale.kubernetes": "쿠버네테스 클러스터가 확장되었습니다.",
     "message.success.update.ipaddress": "IP 주소를 업데이트했습니다.",
-    "message.success.update.kubeversion": "쿠버네테스 지원 버전을 업데이트했습니다.",
+    "message.success.update.kubeversion": "쿠버네테스 지원 버전을 업데이트했습니다.",    
     "message.success.update.user": "사용자를 업데이트했습니다.",
     "message.success.upgrade.kubernetes": "쿠버네테스 클러스터를 업그레이드했습니다.",
     "message.success.upload": "업로드 성공",
@@ -3331,8 +3331,8 @@
     "label.desktop.cluster.delete": "데스크톱 클러스터 삭제",
     "label.desktop.controller.template.version": "컨트롤러 템플릿 버전",
     "label.desktop.controller.template.version.create": "컨트롤러 템플릿 버전 생성",
-    "label.desktop.controller.version.manage": "컨트롤러 템플릿 사용여부",
-    "label.desktop.controller.version.delete": "컨트롤러 템플릿 삭제",
+    "label.desktop.controller.version.manage": "컨트롤러 템플릿 버전 사용여부",
+    "label.desktop.controller.version.delete": "컨트롤러 템플릿 버전 삭제",
     "label.desktop.master.template.version": "마스터 템플릿 버전",
     "label.desktop.master.template.version.create": "마스터 템플릿 버전 생성",
     "label.desktop.master.version.manage": "마스터 템플릿 버전 사용여부",
@@ -3385,8 +3385,9 @@
     "message.desktop.cluster.enable": "해당 클러스터를 활성화 하시겠습니까?",
     "message.desktop.cluster.disable": "해당 클러스터를 비활성화 하시겠습니까?",
     "message.desktop.cluster.delete": "해당 클러스터를 삭제하시겠습니까?",
-    "message.desktop.controller.version.delete": "이 컨트롤러 템플릿을 삭제하시겠습니까?",
+    "message.desktop.controller.version.delete": "이 컨트롤러 템플릿 버전을 삭제하시겠습니까?",
     "message.desktop.master.veresion.delete": "이 마스터 템플릿을 삭제하시겠습니까?",
     "message.desktop.cluster.add.ip.range": "이 데스크톱 클러스터에 추가 할 IP 범위를 입력하십시오.",
-    "message.success.register.contoller.template.version": "신규 컨트롤러 템플릿 버전이 등록되었습니다."
+    "message.success.register.contoller.template.version": "신규 컨트롤러 템플릿 버전이 등록되었습니다.",
+    "message.success.update.desktop.controller.version": "데스크톱 컨트롤러 버전의 상태값을 업데이트했습니다."
 }
