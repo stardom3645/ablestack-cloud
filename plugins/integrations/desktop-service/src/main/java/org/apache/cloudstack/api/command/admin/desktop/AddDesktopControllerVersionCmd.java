@@ -64,7 +64,7 @@ public class AddDesktopControllerVersionCmd extends BaseCmd implements AdminCmd 
             description = "the target hypervisor for the template")
     protected String hypervisor;
 
-    @Parameter(name = ApiConstants.CONTROLLER_VERSION_NAME, type = CommandType.STRING,
+    @Parameter(name = ApiConstants.DESKTOP_CONTROLLER_VERSION_NAME, type = CommandType.STRING,
             description = "the name of the desktop controller version")
     private String controllerVersionName;
 
@@ -72,7 +72,7 @@ public class AddDesktopControllerVersionCmd extends BaseCmd implements AdminCmd 
             description = "the name of the desktop controller version")
     private String description;
 
-    @Parameter(name = ApiConstants.CONTROLLER_VERSION, type = CommandType.STRING, required = true,
+    @Parameter(name = ApiConstants.DESKTOP_CONTROLLER_VERSION, type = CommandType.STRING, required = true,
             description = "the desktop controller version.")
     private String controllerVersion;
 
@@ -80,21 +80,21 @@ public class AddDesktopControllerVersionCmd extends BaseCmd implements AdminCmd 
             description = "the ID of the zone in which desktop controller version will be available")
     private Long zoneId;
 
-    @Parameter(name = ApiConstants.CONTROLLER_VERSION_DC_URL, type = CommandType.STRING,
+    @Parameter(name = ApiConstants.DESKTOP_CONTROLLER_VERSION_DC_URL, type = CommandType.STRING,
             description = "the URL of the dcvm template for desktop controller version")
     private String dcUrl;
 
-    @Parameter(name = ApiConstants.CONTROLLER_VERSION_WORKS_URL, type = CommandType.STRING,
+    @Parameter(name = ApiConstants.DESKTOP_CONTROLLER_VERSION_WORKS_URL, type = CommandType.STRING,
             description = "the URL of the worksvm template for desktop controller version")
     private String worksUrl;
 
-    @Parameter(name = ApiConstants.CONTROLLER_VERSION_DC_OSTYPE,
+    @Parameter(name = ApiConstants.DESKTOP_CONTROLLER_VERSION_DC_OSTYPE,
             type = CommandType.UUID,
             entityType = GuestOSResponse.class,
             description = "the ID of the OS Type that best represents the OS of this template. Not applicable with VMware, as we honour what is defined in the template")
     private Long dcOsType;
 
-    @Parameter(name = ApiConstants.CONTROLLER_VERSION_WORKS_OSTYPE,
+    @Parameter(name = ApiConstants.DESKTOP_CONTROLLER_VERSION_WORKS_OSTYPE,
             type = CommandType.UUID,
             entityType = GuestOSResponse.class,
             description = "the ID of the OS Type that best represents the OS of this template. Not applicable with VMware, as we honour what is defined in the template")
