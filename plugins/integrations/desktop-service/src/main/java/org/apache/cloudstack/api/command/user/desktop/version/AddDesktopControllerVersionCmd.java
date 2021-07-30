@@ -57,7 +57,7 @@ public class AddDesktopControllerVersionCmd extends BaseCmd implements AdminCmd 
     //////////////// API parameters /////////////////////
     /////////////////////////////////////////////////////
     @Parameter(name = ApiConstants.FORMAT, type = CommandType.STRING, required = true,
-            description = "the format for the template. Possible values include QCOW2, RAW, VHD and OVA.")
+            description = "the format for the template. Possible values include QCOW2")
     private String format;
 
     @Parameter(name = ApiConstants.HYPERVISOR, type = CommandType.STRING, required = true,
@@ -65,27 +65,27 @@ public class AddDesktopControllerVersionCmd extends BaseCmd implements AdminCmd 
     protected String hypervisor;
 
     @Parameter(name = ApiConstants.CONTROLLER_VERSION_NAME, type = CommandType.STRING,
-            description = "the name of the Kubernetes supported version")
+            description = "the name of the desktop controller version")
     private String controllerVersionName;
 
     @Parameter(name = ApiConstants.DESCRIPTION, type = CommandType.STRING,
-            description = "the name of the Kubernetes supported version")
+            description = "the name of the desktop controller version")
     private String description;
 
     @Parameter(name = ApiConstants.CONTROLLER_VERSION, type = CommandType.STRING, required = true,
-            description = "the semantic version of the Kubernetes version. It needs to be specified in MAJOR.MINOR.PATCH format")
+            description = "the desktop controller version.")
     private String controllerVersion;
 
     @Parameter(name = ApiConstants.ZONE_ID, type = CommandType.UUID, entityType = ZoneResponse.class,
-            description = "the ID of the zone in which Kubernetes supported version will be available")
+            description = "the ID of the zone in which desktop controller version will be available")
     private Long zoneId;
 
     @Parameter(name = ApiConstants.CONTROLLER_VERSION_DC_URL, type = CommandType.STRING,
-            description = "the URL of the binaries ISO for Kubernetes supported version")
+            description = "the URL of the dcvm template for desktop controller version")
     private String dcUrl;
 
     @Parameter(name = ApiConstants.CONTROLLER_VERSION_WORKS_URL, type = CommandType.STRING,
-            description = "the URL of the binaries ISO for Kubernetes supported version")
+            description = "the URL of the worksvm template for desktop controller version")
     private String worksUrl;
 
     @Parameter(name = ApiConstants.CONTROLLER_VERSION_DC_OSTYPE,

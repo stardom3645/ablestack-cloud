@@ -100,7 +100,7 @@ public class DeleteDesktopControllerVersionCmd extends BaseAsyncCmd implements A
     public void execute() throws ServerApiException, ConcurrentOperationException {
         try {
             if (!desktopVersionService.deleteDesktopContollerVersion(this)) {
-                throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, String.format("Failed to delete Kubernetes supported version ID: %d", getId()));
+                throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, String.format("Failed to delete desktop controller version ID: %d", getId()));
             }
             SuccessResponse response = new SuccessResponse(getCommandName());
             setResponseObject(response);
