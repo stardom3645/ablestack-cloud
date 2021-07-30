@@ -23,9 +23,12 @@ import java.util.EnumSet;
 import java.util.List;
 import javax.inject.Inject;
 
+import org.apache.cloudstack.api.ApiConstants;
 import org.apache.cloudstack.api.ResponseObject.ResponseView;
+import org.apache.cloudstack.api.command.admin.desktop.AddDesktopControllerVersionCmd;
+import org.apache.cloudstack.api.command.admin.desktop.DeleteDesktopControllerVersionCmd;
+import org.apache.cloudstack.api.command.admin.desktop.UpdateDesktopControllerVersionCmd;
 import org.apache.cloudstack.api.command.user.desktop.version.ListDesktopControllerVersionsCmd;
-import org.apache.cloudstack.api.command.user.desktop.version.AddDesktopControllerVersionCmd;
 import org.apache.cloudstack.api.command.user.desktop.version.ListDesktopMasterVersionsCmd;
 import org.apache.cloudstack.api.response.DesktopControllerVersionResponse;
 import org.apache.cloudstack.api.response.DesktopMasterVersionResponse;
@@ -35,6 +38,7 @@ import org.apache.cloudstack.context.CallContext;
 import org.apache.log4j.Logger;
 import org.apache.cloudstack.api.ApiConstants.DomainDetails;
 import org.apache.cloudstack.api.command.user.template.RegisterTemplateCmd;
+import org.apache.cloudstack.api.command.user.template.DeleteTemplateCmd;
 
 import com.cloud.api.ApiDBUtils;
 import com.cloud.api.query.dao.TemplateJoinDao;
@@ -42,6 +46,8 @@ import com.cloud.api.query.vo.TemplateJoinVO;
 import com.cloud.dc.DataCenterVO;
 import com.cloud.dc.dao.DataCenterDao;
 import com.cloud.desktop.cluster.DesktopClusterService;
+import com.cloud.desktop.cluster.DesktopClusterVO;
+import com.cloud.desktop.cluster.dao.DesktopClusterDao;
 import com.cloud.desktop.version.dao.DesktopControllerVersionDao;
 import com.cloud.desktop.version.dao.DesktopMasterVersionDao;
 import com.cloud.desktop.version.dao.DesktopTemplateMapDao;
@@ -84,6 +90,8 @@ public class DesktopVersionManagerImpl extends ManagerBase implements DesktopVer
     private VMTemplateDao templateDao;
     @Inject
     private AccountManager accountManager;
+    @Inject
+    private DesktopClusterDao desktopClusterDao;
 
     private DesktopControllerVersionResponse createDesktopControllerVersionResponse(final DesktopControllerVersion desktopControllerVersion) {
         DesktopControllerVersionResponse response = new DesktopControllerVersionResponse();
@@ -150,7 +158,7 @@ public class DesktopVersionManagerImpl extends ManagerBase implements DesktopVer
         String templateName = "";
 
         if (compareVersions(controllerVersion, MIN_DESKTOP_CONTOLLER_VERSION) < 0) {
-            throw new InvalidParameterValueException(String.format("New supported Kubernetes version cannot be added as %s is minimum version supported by Kubernetes Service", MIN_DESKTOP_CONTOLLER_VERSION));
+            throw new InvalidParameterValueException(String.format("New desktop controller version cannot be added as %s is minimum version supported by Desktop Service", MIN_DESKTOP_CONTOLLER_VERSION));
         }
         if (zoneId != null && dataCenterDao.findById(zoneId) == null) {
             throw new InvalidParameterValueException("Invalid zone specified");
@@ -167,38 +175,33 @@ public class DesktopVersionManagerImpl extends ManagerBase implements DesktopVer
         }
 
         VMTemplateVO template = null;
-
-        //desktop_controller_version 테이블에 버전 추가
-        DesktopControllerVersionVO desktopControllerVersionVO = new DesktopControllerVersionVO(versionName, controllerVersion, description, zoneId);
-        desktopControllerVersionVO = desktopControllerVersionDao.persist(desktopControllerVersionVO);
-
-        //vm_template 테이블에 dc 템플릿 추가
+        DesktopControllerVersionVO desktopControllerVersionVO = null;
+        VirtualMachineTemplate vmTemplate = null;
         try {
+
+            //desktop_controller_version 테이블에 버전 추가
+            desktopControllerVersionVO = new DesktopControllerVersionVO(versionName, controllerVersion, description, zoneId);
+            desktopControllerVersionVO = desktopControllerVersionDao.persist(desktopControllerVersionVO);
+
+            //vm_template 테이블에 dc 템플릿 추가
             templateName = String.format("%s(Desktop Controller DC-Template)", versionName);
-            VirtualMachineTemplate vmTemplate = registerDesktopTemplateVersion(zoneId, templateName, dcUrl, hypervisor, dcOsTypeId, format);
+            vmTemplate = registerDesktopTemplateVersion(zoneId, templateName, dcUrl, hypervisor, dcOsTypeId, format);
             template = templateDao.findById(vmTemplate.getId());
 
             //desktop_template_map 테이블에 DC template 매핑 데이터 추가
-            DesktopTemplateMapVO desktopTemplateMapVO = new DesktopTemplateMapVO(desktopControllerVersionVO.getId(), template.getId());
-            desktopTemplateMapVO = desktopTemplateMapDao.persist(desktopTemplateMapVO);
+            desktopTemplateMapDao.persist(new DesktopTemplateMapVO(desktopControllerVersionVO.getId(), template.getId()));
 
-        } catch (URISyntaxException | IllegalAccessException | NoSuchFieldException | IllegalArgumentException | ResourceAllocationException ex) {
-            LOGGER.error(String.format("Unable to register binaries ISO for supported kubernetes version, %s, with url: %s", templateName, dcUrl), ex);
-            throw new CloudRuntimeException(String.format("Unable to register binaries ISO for supported kubernetes version, %s, with url: %s", templateName, dcUrl));
-        }
-
-        //vm_template 테이블에 works 템플릿 추가
-        try {
+            //vm_template 테이블에 works 템플릿 추가
             templateName = String.format("%s(Desktop Controller Works-Template)", versionName);
-            VirtualMachineTemplate vmTemplate = registerDesktopTemplateVersion(zoneId, templateName, worksUrl, hypervisor ,worksOsTypeId ,format);
+            vmTemplate = registerDesktopTemplateVersion(zoneId, templateName, worksUrl, hypervisor ,worksOsTypeId ,format);
             template = templateDao.findById(vmTemplate.getId());
 
             //desktop_template_map 테이블에 works template 매핑 데이터 추가
-            DesktopTemplateMapVO desktopTemplateMapVO = new DesktopTemplateMapVO(desktopControllerVersionVO.getId(), template.getId());
-            desktopTemplateMapVO = desktopTemplateMapDao.persist(desktopTemplateMapVO);
+            desktopTemplateMapDao.persist(new DesktopTemplateMapVO(desktopControllerVersionVO.getId(), template.getId()));
+
         } catch (URISyntaxException | IllegalAccessException | NoSuchFieldException | IllegalArgumentException | ResourceAllocationException ex) {
-            LOGGER.error(String.format("Unable to register binaries ISO for supported kubernetes version, %s, with url: %s", templateName, worksUrl), ex);
-            throw new CloudRuntimeException(String.format("Unable to register binaries ISO for supported kubernetes version, %s, with url: %s", templateName, worksUrl));
+            LOGGER.error(String.format("Unable to register template for desktop controller version, %s, with url: %s", templateName, dcUrl), ex);
+            throw new CloudRuntimeException(String.format("Unable to register template for desktop controller version, %s, with url: %s", templateName, dcUrl));
         }
 
         return createDesktopControllerVersionResponse(desktopControllerVersionVO);
@@ -357,6 +360,83 @@ public class DesktopVersionManagerImpl extends ManagerBase implements DesktopVer
     }
 
     @Override
+    @ActionEvent(eventType = DesktopVersionEventTypes.EVENT_DESKTOP_CONTROLLER_VERSION_DELETE, eventDescription = "Deleting Desktop Controller Version", async = true)
+    public boolean deleteDesktopContollerVersion(final DeleteDesktopControllerVersionCmd cmd) {
+        if (!DesktopClusterService.DesktopServiceEnabled.value()) {
+            throw new CloudRuntimeException("Desktop Service plugin is disabled");
+        }
+        final Long versionId = cmd.getId();
+        DesktopControllerVersion version = desktopControllerVersionDao.findById(versionId);
+        if (version == null) {
+            throw new InvalidParameterValueException("Invalid desktop controller version id specified");
+        }
+        List<DesktopClusterVO> clusters = desktopClusterDao.listAllByDesktopVersion(versionId);
+        if (clusters.size() > 0) {
+            throw new CloudRuntimeException(String.format("Unable to delete desktop controller version ID: %s. Existing clusters currently using the version.", version.getUuid()));
+        }
+
+        List<DesktopTemplateMapVO> templateList = desktopTemplateMapDao.listByVersionId(versionId);
+
+        VMTemplateVO template = null;
+
+        if (templateList != null && !templateList.isEmpty()) {
+            for (DesktopTemplateMapVO templateMapVO : templateList) {
+                template = templateDao.findByIdIncludingRemoved(templateMapVO.getTemplateId());
+                if (template == null) {
+                    LOGGER.warn(String.format("Unable to find template associated with supported desktop controller version ID: %s", version.getUuid()));
+                }
+                if (template != null && template.getRemoved() == null) { // Delete Templates
+                    try {
+                        deleteDesktopControllerVersionTemplate(template.getId());
+                    } catch (IllegalAccessException | NoSuchFieldException | IllegalArgumentException ex) {
+                        LOGGER.error(String.format("Unable to delete ID: %s associated with supported desktop controller version ID: %s", template.getUuid(), version.getUuid()), ex);
+                        throw new CloudRuntimeException(String.format("Unable to delete ID: %s associated with supported desktop controller version ID: %s", template.getUuid(), version.getUuid()));
+                    }
+                }
+            }
+        }else{
+            LOGGER.info("There are no registered templates for that desktop controller version.");
+            //throw new CloudRuntimeException(String.format("There are no registered templates for that desktop controller version.", version.getUuid()));
+        }
+        return desktopControllerVersionDao.remove(version.getId());
+    }
+
+    private void deleteDesktopControllerVersionTemplate(long templateId) throws IllegalAccessException, NoSuchFieldException, IllegalArgumentException {
+        DeleteTemplateCmd deleteTemplateCmd = new DeleteTemplateCmd();
+        deleteTemplateCmd = ComponentContext.inject(deleteTemplateCmd);
+        deleteTemplateCmd.setId(templateId);
+        templateService.deleteTemplate(deleteTemplateCmd);
+    }
+
+    @Override
+    @ActionEvent(eventType = DesktopVersionEventTypes.EVENT_DESKTOP_CONTROLLER_VERSION_UPDATE, eventDescription = "Updating desktop controller version")
+    public DesktopControllerVersionResponse updateDesktopControllerVersion(final UpdateDesktopControllerVersionCmd cmd) {
+        if (!DesktopClusterService.DesktopServiceEnabled.value()) {
+            throw new CloudRuntimeException("Desktop Service plugin is disabled");
+        }
+        final Long versionId = cmd.getId();
+        DesktopControllerVersion.State state = null;
+        DesktopControllerVersionVO version = desktopControllerVersionDao.findById(versionId);
+        if (version == null) {
+            throw new InvalidParameterValueException("Invalid desktop controller version id specified");
+        }
+        try {
+            state = DesktopControllerVersion.State.valueOf(cmd.getState());
+        } catch (IllegalArgumentException iae) {
+            throw new InvalidParameterValueException(String.format("Invalid value for %s parameter", ApiConstants.STATE));
+        }
+        if (!state.equals(version.getState())) {
+            version = desktopControllerVersionDao.createForUpdate(version.getId());
+            version.setState(state);
+            if (!desktopControllerVersionDao.update(version.getId(), version)) {
+                throw new CloudRuntimeException(String.format("Failed to update desktop controller version ID: %s", version.getUuid()));
+            }
+            version = desktopControllerVersionDao.findById(versionId);
+        }
+        return  createDesktopControllerVersionResponse(version);
+    }
+
+    @Override
     public List<Class<?>> getCommands() {
         List<Class<?>> cmdList = new ArrayList<Class<?>>();
         if (!DesktopClusterService.DesktopServiceEnabled.value()) {
@@ -365,6 +445,8 @@ public class DesktopVersionManagerImpl extends ManagerBase implements DesktopVer
         cmdList.add(ListDesktopControllerVersionsCmd.class);
         cmdList.add(ListDesktopMasterVersionsCmd.class);
         cmdList.add(AddDesktopControllerVersionCmd.class);
+        cmdList.add(DeleteDesktopControllerVersionCmd.class);
+        cmdList.add(UpdateDesktopControllerVersionCmd.class);
         return cmdList;
     }
 }

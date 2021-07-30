@@ -3370,8 +3370,8 @@
 "label.desktop.cluster.delete": "Delete Desktop Cluster",
 "label.desktop.controller.template.version": "Controller Template Version",
 "label.desktop.controller.template.version.create": "Create Controller Template Version",
-"label.desktop.controller.version.manage": "Whether to use a Controller Template",
-"label.desktop.controller.version.delete": "Delete Controller Template",
+"label.desktop.controller.version.manage": "Whether to use a Controller Template Version",
+"label.desktop.controller.version.delete": "Delete Controller Template Version",
 "label.desktop.master.template.version": "Master Template Version",
 "label.desktop.master.template.version.create": "Create Master Template Version",
 "label.desktop.master.version.manage": "Whether to use a Master Template",
@@ -3427,5 +3427,9 @@
 "message.desktop.controller.version.delete": "Are you sure you want to delete this Controller Template Version?",
 "message.desktop.master.veresion.delete": "Are you sure you want to delete this Master Template Version?",
 "message.desktop.cluster.add.ip.range": "Enter the IP ranges you want to add to this Desktop Cluster.",
-"message.success.register.contoller.template.version": "A new controller template version has been registered."
+"message.success.register.contoller.template.version": "A new controller template version has been registered.",
+"message.success.update.desktop.controller.version": "Updated status value for desktop controller version.",
+"message.success.add.desktop.ip": "Successfully added desktop cluster ip range",
+"message.add.desktop.ip.failed": "Adding desktop cluster ip range failed",
+"message.add.desktop.ip.processing": "Adding desktop cluster ip range..."
 }

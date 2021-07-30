@@ -14,6 +14,7 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
+
 package org.apache.cloudstack.api.command.user.desktop.cluster;
 
 import javax.inject.Inject;
@@ -22,44 +23,40 @@ import org.apache.cloudstack.acl.RoleType;
 import org.apache.cloudstack.api.APICommand;
 import org.apache.cloudstack.api.ApiConstants;
 import org.apache.cloudstack.api.ApiErrorCode;
-import org.apache.cloudstack.api.BaseListProjectAndAccountResourcesCmd;
+import org.apache.cloudstack.api.BaseAsyncCmd;
 import org.apache.cloudstack.api.Parameter;
-import org.apache.cloudstack.api.ResponseObject.ResponseView;
 import org.apache.cloudstack.api.ServerApiException;
 import org.apache.cloudstack.api.response.DesktopClusterIpRangeResponse;
-import org.apache.cloudstack.api.response.DesktopClusterResponse;
-import org.apache.cloudstack.api.response.ListResponse;
+import org.apache.cloudstack.api.response.SuccessResponse;
+import org.apache.cloudstack.context.CallContext;
 import org.apache.log4j.Logger;
 
+import com.cloud.exception.ConcurrentOperationException;
+import com.cloud.desktop.cluster.DesktopClusterIpRange;
+import com.cloud.desktop.cluster.DesktopClusterEventTypes;
 import com.cloud.desktop.cluster.DesktopClusterService;
 import com.cloud.utils.exception.CloudRuntimeException;
 
-@APICommand(name = ListDesktopClusterIpRangeCmd.APINAME,
-        description = "Lists Desktop Cluster IP Range",
-        responseObject = DesktopClusterIpRangeResponse.class,
-        responseView = ResponseView.Restricted,
-        requestHasSensitiveInfo = false,
-        responseHasSensitiveInfo = true,
+@APICommand(name = DeleteDesktopClusterIpRangeCmd.APINAME,
+        description = "Add a Desktop Cluster Ip Range",
+        responseObject = SuccessResponse.class,
+        entityType = {DesktopClusterIpRange.class},
         authorized = {RoleType.Admin, RoleType.ResourceAdmin, RoleType.DomainAdmin, RoleType.User})
-public class ListDesktopClusterIpRangeCmd extends BaseListProjectAndAccountResourcesCmd {
-    public static final Logger LOGGER = Logger.getLogger(ListDesktopClusterIpRangeCmd.class.getName());
-    public static final String APINAME = "listDesktopClusterIpRanges";
+public class DeleteDesktopClusterIpRangeCmd extends BaseAsyncCmd {
+    public static final Logger LOGGER = Logger.getLogger(AddDesktopClusterIpRangeCmd.class.getName());
+    public static final String APINAME = "deleteDesktopClusterIpRanges";
 
     @Inject
-    public DesktopClusterService desktopService;
+    private DesktopClusterService desktopService;
 
     /////////////////////////////////////////////////////
     //////////////// API parameters /////////////////////
     /////////////////////////////////////////////////////
     @Parameter(name = ApiConstants.ID, type = CommandType.UUID,
             entityType = DesktopClusterIpRangeResponse.class,
-            description = "the ID of the Desktop Cluster IP Range")
+            description = "the ID of the Desktop cluster ip range",
+            required = true)
     private Long id;
-
-    @Parameter(name = ApiConstants.DESKTOP_CLUSTER_ID, type = CommandType.UUID,
-            entityType = DesktopClusterResponse.class,
-            description = "the ID of the Desktop Cluster")
-    private Long desktopClusterId;
 
     /////////////////////////////////////////////////////
     /////////////////// Accessors ///////////////////////
@@ -69,8 +66,24 @@ public class ListDesktopClusterIpRangeCmd extends BaseListProjectAndAccountResou
         return id;
     }
 
-    public Long getDesktopClusterId() {
-        return desktopClusterId;
+    @Override
+    public String getCommandName() {
+        return APINAME.toLowerCase() + "response";
+    }
+
+    @Override
+    public long getEntityOwnerId() {
+        return CallContext.current().getCallingAccountId();
+    }
+
+    @Override
+    public String getEventType() {
+        return DesktopClusterEventTypes.EVENT_DESKTOP_CLUSTER_IP_RANGE_DELETE;
+    }
+
+    @Override
+    public String getEventDescription() {
+        return "Deleting Desktop cluster ip range. Ip range Id: " + getId();
     }
 
     /////////////////////////////////////////////////////
@@ -78,18 +91,15 @@ public class ListDesktopClusterIpRangeCmd extends BaseListProjectAndAccountResou
     /////////////////////////////////////////////////////
 
     @Override
-    public String getCommandName() {
-        return APINAME.toLowerCase() + "response";
-    }
-
-    @Override
-    public void execute() throws ServerApiException {
+    public void execute() throws ServerApiException, ConcurrentOperationException {
         try {
-            ListResponse<DesktopClusterIpRangeResponse> response = desktopService.listDesktopClusterIpRanges(this);
-            response.setResponseName(getCommandName());
+            if (!desktopService.deleteDesktopClusterIpRange(this)) {
+                throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, String.format("Failed to delete Desktop cluster Ip range ID: %d", getId()));
+            }
+            SuccessResponse response = new SuccessResponse(getCommandName());
             setResponseObject(response);
-        } catch (CloudRuntimeException e) {
-            throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, e.getMessage());
+        } catch (CloudRuntimeException ex) {
+            throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, ex.getMessage());
         }
     }
 }

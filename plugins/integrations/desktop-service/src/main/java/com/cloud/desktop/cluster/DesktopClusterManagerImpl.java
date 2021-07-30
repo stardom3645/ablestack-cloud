@@ -23,6 +23,8 @@ import java.util.List;
 import javax.inject.Inject;
 
 import org.apache.cloudstack.api.ResponseObject.ResponseView;
+import org.apache.cloudstack.api.command.user.desktop.cluster.AddDesktopClusterIpRangeCmd;
+import org.apache.cloudstack.api.command.user.desktop.cluster.DeleteDesktopClusterIpRangeCmd;
 import org.apache.cloudstack.api.command.user.desktop.cluster.ListDesktopClusterCmd;
 import org.apache.cloudstack.api.command.user.desktop.cluster.ListDesktopClusterIpRangeCmd;
 import org.apache.cloudstack.api.response.DesktopClusterResponse;
@@ -57,13 +59,18 @@ import com.cloud.user.Account;
 import com.cloud.user.AccountManager;
 import com.cloud.user.AccountService;
 import com.cloud.utils.Ternary;
+import com.cloud.utils.net.NetUtils;
 import com.cloud.utils.component.ManagerBase;
 import com.cloud.utils.fsm.NoTransitionException;
 import com.cloud.utils.fsm.StateMachine2;
 import com.cloud.utils.db.Filter;
+import com.cloud.utils.db.Transaction;
+import com.cloud.utils.db.TransactionCallback;
+import com.cloud.utils.db.TransactionStatus;
 import com.cloud.utils.db.SearchBuilder;
 import com.cloud.utils.db.SearchCriteria;
 import com.cloud.utils.exception.CloudRuntimeException;
+import com.cloud.exception.InvalidParameterValueException;
 
 public class DesktopClusterManagerImpl extends ManagerBase implements DesktopClusterService {
 
@@ -74,7 +81,7 @@ public class DesktopClusterManagerImpl extends ManagerBase implements DesktopClu
     @Inject
     public DesktopClusterDao desktopClusterDao;
     @Inject
-    public DesktopClusterIpRangeDao desktopClusterIpRangeDao;
+    private DesktopClusterIpRangeDao desktopClusterIpRangeDao;
     @Inject
     public DesktopClusterVmMapDao desktopClusterVmMapDao;
     @Inject
@@ -231,7 +238,7 @@ public class DesktopClusterManagerImpl extends ManagerBase implements DesktopClu
         if (state != null) {
             sc.setParameters("state", state);
         }
-        if(keyword != null){
+        if (keyword != null){
             sc.setParameters("keyword", "%" + keyword + "%");
         }
         if (desktopClusterId != null) {
@@ -275,29 +282,130 @@ public class DesktopClusterManagerImpl extends ManagerBase implements DesktopClu
         if (!DesktopServiceEnabled.value()) {
             logAndThrow(Level.ERROR, "Desktop Service plugin is disabled");
         }
-        final Long ipRangeId = cmd.getId();
+        final Long rangeId = cmd.getId();
         final Long desktopClusterId = cmd.getDesktopClusterId();
-        final String keyword = cmd.getKeyword();
-        List<DesktopClusterIpRangeResponse> responsesList = new ArrayList<DesktopClusterIpRangeResponse>();
         Filter searchFilter = new Filter(DesktopClusterIpRangeVO.class, "id", true, cmd.getStartIndex(), cmd.getPageSizeVal());
         SearchBuilder<DesktopClusterIpRangeVO> sb = desktopClusterIpRangeDao.createSearchBuilder();
         sb.and("id", sb.entity().getId(), SearchCriteria.Op.EQ);
         sb.and("desktopClusterId", sb.entity().getDesktopClusterId(), SearchCriteria.Op.EQ);
         SearchCriteria<DesktopClusterIpRangeVO> sc = sb.create();
-        if (ipRangeId != null) {
-            sc.setParameters("id", ipRangeId);
+        if (rangeId != null) {
+            sc.setParameters("id", rangeId);
         }
         if (desktopClusterId != null) {
             sc.setParameters("desktopClusterId", desktopClusterId);
         }
-        List<DesktopClusterIpRangeVO> ipRange = desktopClusterIpRangeDao.search(sc, searchFilter);
-        for (DesktopClusterIpRangeVO ip : ipRange) {
+        List<DesktopClusterIpRangeResponse> responsesList = new ArrayList<DesktopClusterIpRangeResponse>();
+        List<DesktopClusterIpRangeVO> id = desktopClusterIpRangeDao.search(sc, searchFilter);
+        for (DesktopClusterIpRangeVO ip : id) {
             DesktopClusterIpRangeResponse desktopClusterIpRangeResponse = createDesktopClusterIpRangeResponse(ip.getId());
             responsesList.add(desktopClusterIpRangeResponse);
         }
         ListResponse<DesktopClusterIpRangeResponse> response = new ListResponse<DesktopClusterIpRangeResponse>();
         response.setResponses(responsesList);
         return response;
+    }
+
+    @Override
+    public DesktopClusterIpRange addDesktopClusterIpRange(final AddDesktopClusterIpRangeCmd cmd) {
+        if (!DesktopServiceEnabled.value()) {
+            throw new CloudRuntimeException("Desktop Service plugin is disabled");
+        }
+        boolean ipv4 = false;
+        final String gateway = cmd.getGateway();
+        final String netmask = cmd.getNetmask();
+        final String startIp = cmd.getStartIp();
+        final String endIp = cmd.getEndIp();
+
+        if (startIp != null) {
+            ipv4 = true;
+        }
+        if (!ipv4) {
+            throw new InvalidParameterValueException("Please specify IP address.");
+        }
+        if (ipv4) {
+            // Make sure the gateway is valid
+            if (!NetUtils.isValidIp4(gateway)) {
+                throw new InvalidParameterValueException("Please specify a valid gateway");
+            }
+
+            // Make sure the netmask is valid
+            if (!NetUtils.isValidIp4Netmask(netmask)) {
+                throw new InvalidParameterValueException("Please specify a valid netmask");
+            }
+
+            final String newCidr = NetUtils.getCidrFromGatewayAndNetmask(gateway, netmask);
+
+            //Make sure start and end ips are with in the range of cidr calculated for this gateway and netmask {
+            if (!NetUtils.isIpWithInCidrRange(gateway, newCidr) || !NetUtils.isIpWithInCidrRange(startIp, newCidr) || !NetUtils.isIpWithInCidrRange(endIp, newCidr)) {
+                throw new InvalidParameterValueException("Please specify a valid IP range or valid netmask or valid gateway");
+            }
+
+            final List<DesktopClusterIpRangeVO> ips = desktopClusterIpRangeDao.listAll();
+            for (final DesktopClusterIpRangeVO range : ips) {
+                final String otherGateway = range.getGateway();
+                final String otherNetmask = range.getNetmask();
+                final String otherStartIp = range.getStartIp();
+                final String otherEndIp = range.getEndIp();
+
+                // Continue if it's not IPv4
+                if ( otherGateway == null || otherNetmask == null ) {
+                    continue;
+                }
+                final String otherCidr = NetUtils.getCidrFromGatewayAndNetmask(otherGateway, otherNetmask);
+                if( !NetUtils.isNetworksOverlap(newCidr,  otherCidr)) {
+                    continue;
+                }
+
+                // extend IP range
+                if (!gateway.equals(otherGateway) || !netmask.equals(range.getNetmask())) {
+                    throw new InvalidParameterValueException("The IP range has already been added with gateway "
+                            + otherGateway + " ,and netmask " + otherNetmask
+                            + ", Please specify the gateway/netmask if you want to extend ip range" );
+                }
+                if (!NetUtils.is31PrefixCidr(newCidr)) {
+                    if (NetUtils.ipRangesOverlap(startIp, endIp, otherStartIp, otherEndIp)) {
+                        throw new InvalidParameterValueException("The IP range already has IPs that overlap with the new range." +
+                                " Please specify a different start IP/end IP.");
+                    }
+                }
+            }
+        }
+
+        DesktopClusterVO desktopCluster = desktopClusterDao.findById(cmd.getDesktopClusterId());
+
+        if (desktopCluster == null) {
+            throw new InvalidParameterValueException("Invalid desktop cluster specified");
+        }
+        Long desktopClusterId = desktopCluster.getId();
+
+        final DesktopClusterIpRangeVO cluster = Transaction.execute(new TransactionCallback<DesktopClusterIpRangeVO>() {
+            @Override
+            public DesktopClusterIpRangeVO doInTransaction(TransactionStatus status) {
+                DesktopClusterIpRangeVO newCluster = new DesktopClusterIpRangeVO(desktopClusterId, gateway, netmask, startIp, endIp);
+                desktopClusterIpRangeDao.persist(newCluster);
+                return newCluster;
+            }
+        });
+
+        if (LOGGER.isInfoEnabled()) {
+            LOGGER.info(String.format("Desktop cluster ID: %s has been created", cluster.getUuid()));
+        }
+        return cluster;
+    }
+
+    @Override
+    public boolean deleteDesktopClusterIpRange(final DeleteDesktopClusterIpRangeCmd cmd) {
+        if (!DesktopServiceEnabled.value()) {
+            throw new CloudRuntimeException("Desktop Service plugin is disabled");
+        }
+        final Long ipRangeId = cmd.getId();
+        DesktopClusterIpRange iprange = desktopClusterIpRangeDao.findById(ipRangeId);
+        if (iprange == null) {
+            throw new InvalidParameterValueException("Invalid Desktop cluster ip range id specified");
+        }
+
+        return desktopClusterIpRangeDao.remove(iprange.getId());
     }
 
     @Override
@@ -309,6 +417,8 @@ public class DesktopClusterManagerImpl extends ManagerBase implements DesktopClu
 
         cmdList.add(ListDesktopClusterCmd.class);
         cmdList.add(ListDesktopClusterIpRangeCmd.class);
+        cmdList.add(AddDesktopClusterIpRangeCmd.class);
+        cmdList.add(DeleteDesktopClusterIpRangeCmd.class);
         return cmdList;
     }
 

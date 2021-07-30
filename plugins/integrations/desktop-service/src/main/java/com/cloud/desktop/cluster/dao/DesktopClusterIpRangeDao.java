@@ -22,6 +22,5 @@ import com.cloud.desktop.cluster.DesktopClusterIpRangeVO;
 import com.cloud.utils.db.GenericDao;
 
 public interface DesktopClusterIpRangeDao extends GenericDao<DesktopClusterIpRangeVO, Long> {
-
     List<DesktopClusterIpRangeVO> listByDesktopClusterId(long desktopClusterId);
 }
