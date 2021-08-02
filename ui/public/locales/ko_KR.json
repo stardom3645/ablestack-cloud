@@ -3392,5 +3392,9 @@
     "message.success.update.desktop.controller.version": "데스크톱 컨트롤러 버전의 상태값을 업데이트했습니다.",
     "message.success.add.desktop.ip": "데스크톱 클러스터의 IP 범위가 추가되었습니다.",
     "message.add.desktop.ip.failed": "데스크톱 클러스터의 IP 범위 추가에 실패하였습니다.",
-    "message.add.desktop.ip.processing": "데스크톱 클러스터의 IP 범위 추가중..."
+    "message.add.desktop.ip.processing": "데스크톱 클러스터의 IP 범위 추가중...",
+    "label.desktop.gateway": "데스크톱 클러스터 IP 범위의 게이트웨이",
+    "label.desktop.netmask": "데스크톱 클러스터 IP 범위의 넷마스크",
+    "label.desktop.startip": "데스크톱 클러스터 IP 범위의 시작 IP",
+    "label.desktop.endip": "데스크톱 클러스터 IP 범위의 종료 IP"
 }
