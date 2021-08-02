@@ -48,11 +48,11 @@ public class DesktopMasterVersionResponse extends BaseResponse {
     @Param(description = "the name of templates associated with this Desktop")
     private String templateName;
 
-    @SerializedName(ApiConstants.TEMPLATE_STATE)
+    @SerializedName(ApiConstants.DESKTOP_TEMPLATE_STATE)
     @Param(description = "the state of templates associated with this Desktop")
     private String templateState;
 
-    @SerializedName(ApiConstants.TEMPLATE_OS_TYPE)
+    @SerializedName(ApiConstants.DESKTOP_TEMPLATE_OS_TYPE)
     @Param(description = "the OS type of templates associated with this Desktop")
     private String templateOSType;
 

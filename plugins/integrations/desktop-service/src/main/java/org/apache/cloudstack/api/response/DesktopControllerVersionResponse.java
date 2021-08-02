@@ -46,7 +46,7 @@ public class DesktopControllerVersionResponse extends BaseResponse {
     @Param(description = "Desktop version")
     private String version;
 
-    @SerializedName(ApiConstants.TEMPLATES)
+    @SerializedName(ApiConstants.DESKTOP_TEMPLATES)
     @Param(description = "the list of templates associated with this Desktop")
     private List<TemplateResponse> templates;
 
