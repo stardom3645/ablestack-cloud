@@ -443,9 +443,6 @@ public class DesktopVersionManagerImpl extends ManagerBase implements DesktopVer
         Long templateId = version.getTemplateId();
         String uploadType = version.getUploadType();
 
-        LOGGER.info("templateId ::::::::5::::::::: "+templateId);
-        LOGGER.info("uploadType ::::::::5::::::::: "+uploadType);
-
         template = templateDao.findByIdIncludingRemoved(templateId);
         if (template == null) {
             LOGGER.warn(String.format("Unable to find template associated with supported desktop master version ID: %s", version.getUuid()));
