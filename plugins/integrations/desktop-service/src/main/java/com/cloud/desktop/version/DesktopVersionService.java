@@ -17,11 +17,15 @@
 
 package com.cloud.desktop.version;
 
+
+import org.apache.cloudstack.api.command.user.desktop.version.ListDesktopControllerVersionsCmd;
+import org.apache.cloudstack.api.command.user.desktop.version.ListDesktopMasterVersionsCmd;
 import org.apache.cloudstack.api.command.admin.desktop.AddDesktopControllerVersionCmd;
 import org.apache.cloudstack.api.command.admin.desktop.DeleteDesktopControllerVersionCmd;
 import org.apache.cloudstack.api.command.admin.desktop.UpdateDesktopControllerVersionCmd;
-import org.apache.cloudstack.api.command.user.desktop.version.ListDesktopControllerVersionsCmd;
-import org.apache.cloudstack.api.command.user.desktop.version.ListDesktopMasterVersionsCmd;
+import org.apache.cloudstack.api.command.admin.desktop.AddDesktopMasterVersionCmd;
+import org.apache.cloudstack.api.command.admin.desktop.DeleteDesktopMasterVersionCmd;
+import org.apache.cloudstack.api.command.admin.desktop.UpdateDesktopMasterVersionCmd;
 import org.apache.cloudstack.api.response.DesktopControllerVersionResponse;
 import org.apache.cloudstack.api.response.DesktopMasterVersionResponse;
 import org.apache.cloudstack.api.response.ListResponse;
@@ -31,9 +35,13 @@ import com.cloud.utils.exception.CloudRuntimeException;
 
 public interface DesktopVersionService extends PluggableService {
     static final String MIN_DESKTOP_CONTOLLER_VERSION = "1.0.0";
+    static final String MIN_DESKTOP_MASTER_VERSION = "1.0.0";
     ListResponse<DesktopControllerVersionResponse> listDesktopControllerVersions(ListDesktopControllerVersionsCmd cmd);
     ListResponse<DesktopMasterVersionResponse> listDesktopMasterVersions(ListDesktopMasterVersionsCmd cmd);
     DesktopControllerVersionResponse addDesktopControllerVersion(AddDesktopControllerVersionCmd cmd);
     boolean deleteDesktopContollerVersion(DeleteDesktopControllerVersionCmd cmd) throws CloudRuntimeException;
     DesktopControllerVersionResponse updateDesktopControllerVersion(UpdateDesktopControllerVersionCmd cmd) throws CloudRuntimeException;
+    DesktopMasterVersionResponse addDesktopMasterVersion(AddDesktopMasterVersionCmd cmd);
+    boolean deleteDesktopMasterVersion(DeleteDesktopMasterVersionCmd cmd) throws CloudRuntimeException;
+    DesktopMasterVersionResponse updateDesktopMasterVersion(UpdateDesktopMasterVersionCmd cmd) throws CloudRuntimeException;
 }

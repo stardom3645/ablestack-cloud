@@ -843,6 +843,11 @@ public class ApiConstants {
     public static final String DESKTOP_TEMPLATE_OS_TYPE = "templateostype";
     public static final String DESKTOP_CLUSTER_ID = "desktopclusterid";
     public static final String DESKTOP_CLUSTER_NAME = "desktopclustername";
+    public static final String DESKTOP_MASTER_VERSION_NAME = "masterversionname";
+    public static final String DESKTOP_MASTER_VERSION = "masterversion";
+    public static final String DESKTOP_MASTER_VERSION_URL = "masterurl";
+    public static final String DESKTOP_MASTER_VERSION_OSTYPE = "masterostype";
+    public static final String DESKTOP_MASTER_VERSION_UPLOADTYPE = "masteruploadtype";
 
     public static final String BOOT_TYPE = "boottype";
     public static final String BOOT_MODE = "bootmode";

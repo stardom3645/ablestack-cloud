@@ -48,11 +48,11 @@ public class DesktopMasterVersionResponse extends BaseResponse {
     @Param(description = "the name of templates associated with this Desktop")
     private String templateName;
 
-    @SerializedName(ApiConstants.TEMPLATE_STATE)
+    @SerializedName(ApiConstants.DESKTOP_TEMPLATE_STATE)
     @Param(description = "the state of templates associated with this Desktop")
     private String templateState;
 
-    @SerializedName(ApiConstants.TEMPLATE_OS_TYPE)
+    @SerializedName(ApiConstants.DESKTOP_TEMPLATE_OS_TYPE)
     @Param(description = "the OS type of templates associated with this Desktop")
     private String templateOSType;
 
@@ -71,6 +71,10 @@ public class DesktopMasterVersionResponse extends BaseResponse {
     @SerializedName(ApiConstants.STATE)
     @Param(description = "the enabled or disabled state of the Desktop Master Version")
     private String state;
+
+    @SerializedName(ApiConstants.DESKTOP_MASTER_VERSION_UPLOADTYPE)
+    @Param(description = "the upload type of the Desktop Master Version")
+    private String uploadType;
 
     public String getId() {
         return id;
@@ -158,5 +162,13 @@ public class DesktopMasterVersionResponse extends BaseResponse {
 
     public void setState(String state) {
         this.state = state;
+    }
+
+    public String getUploadType() {
+        return uploadType;
+    }
+
+    public void setUploadType(String uploadType) {
+        this.uploadType = uploadType;
     }
 }

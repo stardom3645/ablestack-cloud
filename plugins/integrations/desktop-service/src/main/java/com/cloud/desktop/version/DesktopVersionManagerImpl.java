@@ -25,11 +25,14 @@ import javax.inject.Inject;
 
 import org.apache.cloudstack.api.ApiConstants;
 import org.apache.cloudstack.api.ResponseObject.ResponseView;
+import org.apache.cloudstack.api.command.user.desktop.version.ListDesktopControllerVersionsCmd;
+import org.apache.cloudstack.api.command.user.desktop.version.ListDesktopMasterVersionsCmd;
 import org.apache.cloudstack.api.command.admin.desktop.AddDesktopControllerVersionCmd;
 import org.apache.cloudstack.api.command.admin.desktop.DeleteDesktopControllerVersionCmd;
 import org.apache.cloudstack.api.command.admin.desktop.UpdateDesktopControllerVersionCmd;
-import org.apache.cloudstack.api.command.user.desktop.version.ListDesktopControllerVersionsCmd;
-import org.apache.cloudstack.api.command.user.desktop.version.ListDesktopMasterVersionsCmd;
+import org.apache.cloudstack.api.command.admin.desktop.AddDesktopMasterVersionCmd;
+import org.apache.cloudstack.api.command.admin.desktop.DeleteDesktopMasterVersionCmd;
+import org.apache.cloudstack.api.command.admin.desktop.UpdateDesktopMasterVersionCmd;
 import org.apache.cloudstack.api.response.DesktopControllerVersionResponse;
 import org.apache.cloudstack.api.response.DesktopMasterVersionResponse;
 import org.apache.cloudstack.api.response.ListResponse;
@@ -56,6 +59,7 @@ import com.cloud.user.Account;
 import com.cloud.user.AccountService;
 import com.cloud.user.AccountManager;
 import com.cloud.storage.VMTemplateVO;
+import com.cloud.storage.VMTemplateZoneVO;
 import com.cloud.utils.db.Filter;
 import com.cloud.utils.db.SearchBuilder;
 import com.cloud.utils.db.SearchCriteria;
@@ -64,6 +68,7 @@ import com.cloud.utils.component.ComponentContext;
 import com.cloud.template.VirtualMachineTemplate;
 import com.cloud.event.ActionEvent;
 import com.cloud.storage.dao.VMTemplateDao;
+import com.cloud.storage.dao.VMTemplateZoneDao;
 import com.google.common.base.Strings;
 import com.cloud.template.TemplateApiService;
 import com.cloud.exception.ResourceAllocationException;
@@ -88,6 +93,8 @@ public class DesktopVersionManagerImpl extends ManagerBase implements DesktopVer
     private TemplateApiService templateService;
     @Inject
     private VMTemplateDao templateDao;
+    @Inject
+    private VMTemplateZoneDao templateZoneDao;
     @Inject
     private AccountManager accountManager;
     @Inject
@@ -140,7 +147,65 @@ public class DesktopVersionManagerImpl extends ManagerBase implements DesktopVer
     }
 
     @Override
-    @ActionEvent(eventType = DesktopVersionEventTypes.EVENT_DESKTOP_CONTROLLER_VERSION_ADD, eventDescription = "Adding Desktop controller version")
+    @ActionEvent(eventType = DesktopVersionEventTypes.EVENT_DESKTOP_MASTER_VERSION_ADD, eventDescription = "Adding desktop master template version")
+    public DesktopMasterVersionResponse addDesktopMasterVersion(final AddDesktopMasterVersionCmd cmd) {
+        if (!DesktopClusterService.DesktopServiceEnabled.value()) {
+            throw new CloudRuntimeException("Desktop Service plugin is disabled");
+        }
+        final String format = cmd.getFormat();
+        final String hypervisor = cmd.getHypervisor();
+        final String versionName = cmd.getMasterVersionName();
+        final String description = cmd.getDescription();
+        final String masterVersion = cmd.getMasterVersion();
+        Long zoneId = cmd.getZoneId();
+        final String masterUrl = cmd.getMasterUrl();
+        final Long masterOsTypeId = cmd.getMasterOsType();
+        final String masterUploadType = cmd.getMasterUploadType();
+        final Long templateId =cmd.getTemplateId();
+        String templateName = "";
+
+        if (compareVersions(masterVersion, MIN_DESKTOP_MASTER_VERSION) < 0) {
+            throw new InvalidParameterValueException(String.format("New desktop master version cannot be added as %s is minimum version supported by Desktop Service", MIN_DESKTOP_CONTOLLER_VERSION));
+        }
+        if (zoneId != null && dataCenterDao.findById(zoneId) == null) {
+            throw new InvalidParameterValueException("Invalid zone specified");
+        }
+        if ("url".equals(masterUploadType) && Strings.isNullOrEmpty(masterUrl)) {
+            throw new InvalidParameterValueException(String.format("Invalid master URL for template specified, %s", masterUrl));
+        }
+        if (Strings.isNullOrEmpty(versionName)) {
+            throw new InvalidParameterValueException(String.format("Invalid Version Name for template specified, %s", versionName));
+        }
+        DesktopMasterVersionVO desktopMasterVersionVO = null;
+        VirtualMachineTemplate vmTemplate = null;
+        VMTemplateVO template = null;
+        try {
+            if("url".equals(masterUploadType)){
+                //vm_template 테이블에 master 템플릿 추가
+                templateName = String.format("%s(Desktop Master Template)", versionName);
+                vmTemplate = registerDesktopTemplateVersion(zoneId, templateName, masterUrl, hypervisor, masterOsTypeId, format);
+                template = templateDao.findById(vmTemplate.getId());
+            }else{
+                template = templateDao.findById(templateId);
+                List<VMTemplateZoneVO> templateZones = templateZoneDao.listByTemplateId(templateId);
+                if (templateZones != null) {
+                    for (VMTemplateZoneVO templateZone : templateZones) {
+                        zoneId = templateZone.getZoneId();
+                    }
+                }
+            }
+            //desktop_master_version 테이블에 버전 추가
+            desktopMasterVersionVO = new DesktopMasterVersionVO(versionName, masterVersion, description, template.getId() ,zoneId, masterUploadType);
+            desktopMasterVersionVO = desktopMasterVersionDao.persist(desktopMasterVersionVO);
+        } catch (URISyntaxException | IllegalAccessException | NoSuchFieldException | IllegalArgumentException | ResourceAllocationException ex) {
+            LOGGER.error(String.format("Unable to register template for desktop master version, %s, with url: %s", templateName, masterUrl), ex);
+            throw new CloudRuntimeException(String.format("Unable to register template for desktop master version, %s, with url: %s", templateName, masterUrl));
+        }
+        return createDesktopMasterVersionResponse(desktopMasterVersionVO);
+    }
+
+    @Override
+    @ActionEvent(eventType = DesktopVersionEventTypes.EVENT_DESKTOP_CONTROLLER_VERSION_ADD, eventDescription = "Adding desktop controller template version")
     public DesktopControllerVersionResponse addDesktopControllerVersion(final AddDesktopControllerVersionCmd cmd) {
         if (!DesktopClusterService.DesktopServiceEnabled.value()) {
             throw new CloudRuntimeException("Desktop Service plugin is disabled");
@@ -178,7 +243,6 @@ public class DesktopVersionManagerImpl extends ManagerBase implements DesktopVer
         DesktopControllerVersionVO desktopControllerVersionVO = null;
         VirtualMachineTemplate vmTemplate = null;
         try {
-
             //desktop_controller_version 테이블에 버전 추가
             desktopControllerVersionVO = new DesktopControllerVersionVO(versionName, controllerVersion, description, zoneId);
             desktopControllerVersionVO = desktopControllerVersionDao.persist(desktopControllerVersionVO);
@@ -203,10 +267,8 @@ public class DesktopVersionManagerImpl extends ManagerBase implements DesktopVer
             LOGGER.error(String.format("Unable to register template for desktop controller version, %s, with url: %s", templateName, dcUrl), ex);
             throw new CloudRuntimeException(String.format("Unable to register template for desktop controller version, %s, with url: %s", templateName, dcUrl));
         }
-
         return createDesktopControllerVersionResponse(desktopControllerVersionVO);
     }
-
 
     private VirtualMachineTemplate registerDesktopTemplateVersion(final Long zoneId, final String templateName, final String url, final String hypervisor, final Long osTypeId, final String format)throws IllegalAccessException, NoSuchFieldException,
             IllegalArgumentException, ResourceAllocationException, URISyntaxException {
@@ -301,6 +363,7 @@ public class DesktopVersionManagerImpl extends ManagerBase implements DesktopVer
         response.setName(desktopMasterVersion.getName());
         response.setDescription(desktopMasterVersion.getDescription());
         response.setVersion(desktopMasterVersion.getVersion());
+        response.setUploadType(desktopMasterVersion.getUploadType());
         if (desktopMasterVersion.getState() != null) {
             response.setState(desktopMasterVersion.getState().toString());
         }
@@ -360,6 +423,45 @@ public class DesktopVersionManagerImpl extends ManagerBase implements DesktopVer
     }
 
     @Override
+    @ActionEvent(eventType = DesktopVersionEventTypes.EVENT_DESKTOP_MASTER_VERSION_DELETE, eventDescription = "Deleting Desktop Master Version", async = true)
+    public boolean deleteDesktopMasterVersion(final DeleteDesktopMasterVersionCmd cmd) {
+        if (!DesktopClusterService.DesktopServiceEnabled.value()) {
+            throw new CloudRuntimeException("Desktop Service plugin is disabled");
+        }
+        final Long versionId = cmd.getId();
+        DesktopMasterVersion version = desktopMasterVersionDao.findById(versionId);
+
+        if (version == null) {
+            throw new InvalidParameterValueException("Invalid desktop master version id specified");
+        }
+        List<DesktopClusterVO> clusters = desktopClusterDao.listAllByDesktopVersion(versionId);
+        if (clusters.size() > 0) {
+            throw new CloudRuntimeException(String.format("Unable to delete desktop master version ID: %s. Existing clusters currently using the version.", version.getUuid()));
+        }
+
+        VMTemplateVO template = null;
+        Long templateId = version.getTemplateId();
+        String uploadType = version.getUploadType();
+
+        LOGGER.info("templateId ::::::::5::::::::: "+templateId);
+        LOGGER.info("uploadType ::::::::5::::::::: "+uploadType);
+
+        template = templateDao.findByIdIncludingRemoved(templateId);
+        if (template == null) {
+            LOGGER.warn(String.format("Unable to find template associated with supported desktop master version ID: %s", version.getUuid()));
+        }
+        if ("url".equals(uploadType) && template != null && template.getRemoved() == null) {// upload type이 'url' 타입일 경우 템플릿까지 삭제, 'template' 타입 일 경우 템플릿은 삭제 안됨.
+            try {
+                deleteDesktopVersionTemplate(template.getId());
+            } catch (IllegalAccessException | NoSuchFieldException | IllegalArgumentException ex) {
+                LOGGER.error(String.format("Unable to delete ID: %s associated with supported desktop master version ID: %s", template.getUuid(), version.getUuid()), ex);
+                throw new CloudRuntimeException(String.format("Unable to delete ID: %s associated with supported desktop master version ID: %s", template.getUuid(), version.getUuid()));
+            }
+        }
+        return desktopMasterVersionDao.remove(version.getId());
+    }
+
+    @Override
     @ActionEvent(eventType = DesktopVersionEventTypes.EVENT_DESKTOP_CONTROLLER_VERSION_DELETE, eventDescription = "Deleting Desktop Controller Version", async = true)
     public boolean deleteDesktopContollerVersion(final DeleteDesktopControllerVersionCmd cmd) {
         if (!DesktopClusterService.DesktopServiceEnabled.value()) {
@@ -387,7 +489,7 @@ public class DesktopVersionManagerImpl extends ManagerBase implements DesktopVer
                 }
                 if (template != null && template.getRemoved() == null) { // Delete Templates
                     try {
-                        deleteDesktopControllerVersionTemplate(template.getId());
+                        deleteDesktopVersionTemplate(template.getId());
                     } catch (IllegalAccessException | NoSuchFieldException | IllegalArgumentException ex) {
                         LOGGER.error(String.format("Unable to delete ID: %s associated with supported desktop controller version ID: %s", template.getUuid(), version.getUuid()), ex);
                         throw new CloudRuntimeException(String.format("Unable to delete ID: %s associated with supported desktop controller version ID: %s", template.getUuid(), version.getUuid()));
@@ -401,11 +503,39 @@ public class DesktopVersionManagerImpl extends ManagerBase implements DesktopVer
         return desktopControllerVersionDao.remove(version.getId());
     }
 
-    private void deleteDesktopControllerVersionTemplate(long templateId) throws IllegalAccessException, NoSuchFieldException, IllegalArgumentException {
+    private void deleteDesktopVersionTemplate(long templateId) throws IllegalAccessException, NoSuchFieldException, IllegalArgumentException {
         DeleteTemplateCmd deleteTemplateCmd = new DeleteTemplateCmd();
         deleteTemplateCmd = ComponentContext.inject(deleteTemplateCmd);
         deleteTemplateCmd.setId(templateId);
         templateService.deleteTemplate(deleteTemplateCmd);
+    }
+
+    @Override
+    @ActionEvent(eventType = DesktopVersionEventTypes.EVENT_DESKTOP_MASTER_VERSION_UPDATE, eventDescription = "Updating desktop master version")
+    public DesktopMasterVersionResponse updateDesktopMasterVersion(final UpdateDesktopMasterVersionCmd cmd) {
+        if (!DesktopClusterService.DesktopServiceEnabled.value()) {
+            throw new CloudRuntimeException("Desktop Service plugin is disabled");
+        }
+        final Long versionId = cmd.getId();
+        DesktopMasterVersion.State state = null;
+        DesktopMasterVersionVO version = desktopMasterVersionDao.findById(versionId);
+        if (version == null) {
+            throw new InvalidParameterValueException("Invalid desktop master version id specified");
+        }
+        try {
+            state = DesktopMasterVersion.State.valueOf(cmd.getState());
+        } catch (IllegalArgumentException iae) {
+            throw new InvalidParameterValueException(String.format("Invalid value for %s parameter", ApiConstants.STATE));
+        }
+        if (!state.equals(version.getState())) {
+            version = desktopMasterVersionDao.createForUpdate(version.getId());
+            version.setState(state);
+            if (!desktopMasterVersionDao.update(version.getId(), version)) {
+                throw new CloudRuntimeException(String.format("Failed to update desktop master version ID: %s", version.getUuid()));
+            }
+            version = desktopMasterVersionDao.findById(versionId);
+        }
+        return  createDesktopMasterVersionResponse(version);
     }
 
     @Override
@@ -447,6 +577,9 @@ public class DesktopVersionManagerImpl extends ManagerBase implements DesktopVer
         cmdList.add(AddDesktopControllerVersionCmd.class);
         cmdList.add(DeleteDesktopControllerVersionCmd.class);
         cmdList.add(UpdateDesktopControllerVersionCmd.class);
+        cmdList.add(AddDesktopMasterVersionCmd.class);
+        cmdList.add(DeleteDesktopMasterVersionCmd.class);
+        cmdList.add(UpdateDesktopMasterVersionCmd.class);
         return cmdList;
     }
 }
