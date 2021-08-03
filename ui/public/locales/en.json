@@ -3392,7 +3392,7 @@
 "label.worksvm.template.ostype": "Works VM OS Type",
 "label.dcvm.template.upload.url": "DC VM Template Upload URL",
 "label.dcvm.template.ostype": "DC VM OS Type",
-"label.upload.type": "Upload Type",
+"label.masteruploadtype": "Upload Type",
 "placeholder.name": "Input Name",
 "placeholder.description": "Input Description",
 "placeholder.addomainname": "Input AD Domain Name",
@@ -3417,7 +3417,7 @@
 "placeholder.hypervisor": "Select Hypervisor",
 "placeholder.format": "Select Format",
 "placeholder.state": "Select State",
-"placeholder.upload.type": "Select Upload Type",
+"placeholder.masteruploadtype": "Select Upload Type",
 "placeholder.url": "Input URL",
 "placeholder.ostype": "Select OS Type",
 "placeholder.template": "Select Template",
@@ -3431,5 +3431,7 @@
 "message.success.update.desktop.controller.version": "Updated status value for desktop controller version.",
 "message.success.add.desktop.ip": "Successfully added desktop cluster ip range",
 "message.add.desktop.ip.failed": "Adding desktop cluster ip range failed",
-"message.add.desktop.ip.processing": "Adding desktop cluster ip range..."
+"message.add.desktop.ip.processing": "Adding desktop cluster ip range...",
+"message.success.register.master.template.version":"A new master template version has been registered.",
+"message.success.update.desktop.master.template.version": "Updated status value for desktop master version."
 }
