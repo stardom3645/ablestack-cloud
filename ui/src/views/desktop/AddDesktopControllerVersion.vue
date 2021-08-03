@@ -402,8 +402,8 @@ export default {
       if (store.getters.userInfo.roletype === this.rootAdmin && this.currentForm === 'Create') {
         this.allowed = true
         listZones.push({
-          id: this.$t('label.all.zone'),
-          name: this.$t('label.all.zone')
+        // id: this.$t('label.all.zone'),
+        // name: this.$t('label.all.zone')
         })
       }
 
