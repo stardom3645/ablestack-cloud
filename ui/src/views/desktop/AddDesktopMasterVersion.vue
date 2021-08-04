@@ -54,18 +54,18 @@
         <a-row :gutter="12">
           <a-col :md="24" :lg="24">
             <a-form-item>
-            <span slot="label">
-              {{ $t('label.version') }}
-              <a-tooltip :title="$t('placeholder.version')">
-                <a-icon type="info-circle" style="color: rgba(0,0,0,.45)" />
-              </a-tooltip>
-            </span>
+              <span slot="label">
+                {{ $t('label.version') }}
+                <a-tooltip :title="$t('placeholder.version')">
+                  <a-icon type="info-circle" style="color: rgba(0,0,0,.45)" />
+                </a-tooltip>
+              </span>
               <a-input
                 v-decorator="['masterversion', {
                   rules: [{ required: true, message: `${this.$t('message.error.required.input')}` }]
                 }]"
                 :placeholder="$t('placeholder.version')" />
-          </a-form-item>
+            </a-form-item>
           </a-col>
         </a-row>
         <div v-if="currentForm === 'Create'">
