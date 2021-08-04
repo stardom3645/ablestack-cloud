@@ -3410,7 +3410,7 @@
 "placeholder.endip": "Input End IP",
 "placeholder.worksvmip": "Automatically assigned if you do not enter an IP",
 "placeholder.dcvmip": "Automatically assigned if you do not enter an IP",
-"placeholder.version": "Input Version",
+"placeholder.version": "Input Version(Enter a minimum version of 1.0.0 or higher)",
 "placeholder.worksvm.template.upload.url": "Input Works VM Template Upload URL",
 "placeholder.worksvm.template.ostype": "Select Works VM OS Type",
 "placeholder.dcvm.template.upload.url": "Input DC VM Template Upload URL",

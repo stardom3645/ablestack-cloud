@@ -53,7 +53,13 @@
         </a-row>
         <a-row :gutter="12">
           <a-col :md="24" :lg="24">
-            <a-form-item :label="$t('label.version')">
+            <a-form-item>
+              <span slot="label">
+                {{ $t('label.version') }}
+                <a-tooltip :title="$t('placeholder.version')">
+                  <a-icon type="info-circle" style="color: rgba(0,0,0,.45)" />
+                </a-tooltip>
+              </span>
               <a-input
                 v-decorator="['controllerversion', {
                   rules: [{ required: true, message: `${this.$t('message.error.required.input')}` }]
