@@ -39,6 +39,9 @@ public class DesktopTemplateMapVO implements DesktopTemplateMap {
     @Column(name = "template_id")
     long templateId;
 
+    @Column(name = "type")
+    String type;
+
     @Override
     public long getId() {
         return id;
@@ -62,11 +65,20 @@ public class DesktopTemplateMapVO implements DesktopTemplateMap {
         this.templateId = templateId;
     }
 
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
+    }
+
     public DesktopTemplateMapVO() {
     }
 
-    public DesktopTemplateMapVO(long versionId, long templateId) {
+    public DesktopTemplateMapVO(long versionId, long templateId, String type) {
         this.templateId = templateId;
         this.versionId = versionId;
+        this.type = type;
     }
 }

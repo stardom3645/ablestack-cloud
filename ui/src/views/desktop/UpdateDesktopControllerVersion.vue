@@ -128,7 +128,7 @@ export default {
           params.state = this.states[values.state].id
         }
         api('updateDesktopControllerVersion', params).then(json => {
-          this.$message.success(`${this.$t('message.success.update.desktop.controller.version')}: ${this.resource.name}`)
+          this.$message.success(`${this.$t('message.success.update.desktop.controller.template.version')}: ${this.resource.name}`)
           this.$emit('refresh-data')
           this.closeAction()
         }).catch(error => {
