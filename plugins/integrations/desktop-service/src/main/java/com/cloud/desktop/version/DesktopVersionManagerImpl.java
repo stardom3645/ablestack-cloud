@@ -115,6 +115,8 @@ public class DesktopVersionManagerImpl extends ManagerBase implements DesktopVer
             response.setZoneId(zone.getUuid());
             response.setZoneName(zone.getName());
         }
+        List<TemplateResponse> dcTempResp = new ArrayList<TemplateResponse>();
+        List<TemplateResponse> worksTempResp = new ArrayList<TemplateResponse>();
         List<TemplateResponse> templateResponses = new ArrayList<TemplateResponse>();
         List<DesktopTemplateMapVO> templateList = desktopTemplateMapDao.listByVersionId(desktopControllerVersion.getId());
         ResponseView respView = ResponseView.Restricted;
@@ -125,10 +127,19 @@ public class DesktopVersionManagerImpl extends ManagerBase implements DesktopVer
         final String responseName = "template";
         if (templateList != null && !templateList.isEmpty()) {
             for (DesktopTemplateMapVO templateMapVO : templateList) {
+                String tempMapType = templateMapVO.getType();
                 TemplateJoinVO userTemplate = templateJoinDao.findById(templateMapVO.getTemplateId());
                 if (userTemplate != null) {
                     TemplateResponse templateResponse = ApiDBUtils.newTemplateResponse(EnumSet.of(DomainDetails.resource), respView, userTemplate);
                     templateResponses.add(templateResponse);
+
+                    if("dc".equals(tempMapType)){
+                        dcTempResp.add(templateResponse);
+                        response.setDcTemplate(dcTempResp);
+                    }else{
+                        worksTempResp.add(templateResponse);
+                        response.setWorksTemplate(worksTempResp);
+                    }
                 }
             }
         }
@@ -253,7 +264,7 @@ public class DesktopVersionManagerImpl extends ManagerBase implements DesktopVer
             template = templateDao.findById(vmTemplate.getId());
 
             //desktop_template_map 테이블에 DC template 매핑 데이터 추가
-            desktopTemplateMapDao.persist(new DesktopTemplateMapVO(desktopControllerVersionVO.getId(), template.getId()));
+            desktopTemplateMapDao.persist(new DesktopTemplateMapVO(desktopControllerVersionVO.getId(), template.getId(), "dc"));
 
             //vm_template 테이블에 works 템플릿 추가
             templateName = String.format("%s(Desktop Controller Works-Template)", versionName);
@@ -261,7 +272,7 @@ public class DesktopVersionManagerImpl extends ManagerBase implements DesktopVer
             template = templateDao.findById(vmTemplate.getId());
 
             //desktop_template_map 테이블에 works template 매핑 데이터 추가
-            desktopTemplateMapDao.persist(new DesktopTemplateMapVO(desktopControllerVersionVO.getId(), template.getId()));
+            desktopTemplateMapDao.persist(new DesktopTemplateMapVO(desktopControllerVersionVO.getId(), template.getId(), "works"));
 
         } catch (URISyntaxException | IllegalAccessException | NoSuchFieldException | IllegalArgumentException | ResourceAllocationException ex) {
             LOGGER.error(String.format("Unable to register template for desktop controller version, %s, with url: %s", templateName, dcUrl), ex);

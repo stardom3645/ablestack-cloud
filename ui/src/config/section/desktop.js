@@ -87,8 +87,7 @@ export default {
       docHelp: '',
       permission: ['listDesktopControllerVersions'],
       columns: ['name', 'state', 'version', 'zonename'],
-      details: ['name', 'description', 'version', 'templates'],
-      searchFilters: ['name', 'zoneid', 'tags'],
+      details: ['name', 'description', 'version', 'dctemplate', 'workstemplate'],
       actions: [
         {
           api: 'addDesktopControllerVersion',
@@ -123,8 +122,7 @@ export default {
       docHelp: '',
       permission: ['listDesktopMasterVersions'],
       columns: ['name', 'state', 'version', 'zonename', 'masteruploadtype'],
-      details: ['name', 'version', 'description', 'templateostype', 'templatestate', 'masteruploadtype'],
-      searchFilters: ['name', 'zoneid', 'tags'],
+      details: ['name', 'version', 'description', 'templateostype', 'templatestate', 'masteruploadtype', 'templatename'],
       actions: [
         {
           api: 'addDesktopControllerVersion',

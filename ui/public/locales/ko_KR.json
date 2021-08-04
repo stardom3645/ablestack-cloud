@@ -3354,6 +3354,8 @@
     "label.dcvm.template.upload.url": "DC VM 템플릿 업로드 URL",
     "label.dcvm.template.ostype": "DC VM OS 유형",
     "label.masteruploadtype": "업로드 유형",
+    "label.dctemplate": "DC 템플릿",
+    "label.workstemplate": "Works 템플릿",
     "placeholder.name": "이름 입력",
     "placeholder.description": "설명 입력",
     "placeholder.addomainname": "AD 도메인 명 입력",
@@ -3389,10 +3391,11 @@
     "message.desktop.master.veresion.delete": "이 마스터 템플릿을 삭제하시겠습니까?",
     "message.desktop.cluster.add.ip.range": "이 데스크톱 클러스터에 추가 할 IP 범위를 입력하십시오.",
     "message.success.register.contoller.template.version": "신규 컨트롤러 템플릿 버전이 등록되었습니다.",
-    "message.success.update.desktop.controller.version": "데스크톱 컨트롤러 템플릿 버전의 상태값을 업데이트했습니다.",
+    "message.success.update.desktop.controller.template.version": "데스크톱 컨트롤러 템플릿 버전의 상태값을 업데이트했습니다.",
     "message.success.add.desktop.ip": "데스크톱 클러스터의 IP 범위가 추가되었습니다.",
     "message.add.desktop.ip.failed": "데스크톱 클러스터의 IP 범위 추가에 실패하였습니다.",
     "message.add.desktop.ip.processing": "데스크톱 클러스터의 IP 범위 추가중...",
     "message.success.register.master.template.version":"신규 마스터 템플릿 버전이 등록되었습니다.",
-    "message.success.update.desktop.master.template.version": "데스크톱 마스터 템플릿 버전의 상태값을 업데이트했습니다."
+    "message.success.update.desktop.master.template.version": "데스크톱 마스터 템플릿 버전의 상태값을 업데이트했습니다.",
+    "label.controllerversionname": "이름"
 }

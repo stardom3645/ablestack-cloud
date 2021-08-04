@@ -50,6 +50,14 @@ public class DesktopControllerVersionResponse extends BaseResponse {
     @Param(description = "the list of templates associated with this Desktop")
     private List<TemplateResponse> templates;
 
+    @SerializedName(ApiConstants.DESKTOP_DC_TEMPLATE)
+    @Param(description = "the dc template associated with this Desktop")
+    private List<TemplateResponse> dcTemplate;
+
+    @SerializedName(ApiConstants.DESKTOP_WORKS_TEMPLATE)
+    @Param(description = "the dc template associated with this Desktop")
+    private List<TemplateResponse> worksTemplate;
+
     @SerializedName(ApiConstants.ZONE_ID)
     @Param(description = "the id of the zone in which Desktop Controller Version is available")
     private String zoneId;
@@ -100,6 +108,22 @@ public class DesktopControllerVersionResponse extends BaseResponse {
 
     public List<TemplateResponse> getTemplates() {
         return templates;
+    }
+
+    public List<TemplateResponse> getDcTemplate() {
+        return dcTemplate;
+    }
+
+    public void setDcTemplate(List<TemplateResponse> dcTemplate) {
+        this.dcTemplate = dcTemplate;
+    }
+
+    public List<TemplateResponse> getWorksTemplate() {
+        return worksTemplate;
+    }
+
+    public void setWorksTemplate(List<TemplateResponse> worksTemplate) {
+        this.worksTemplate = worksTemplate;
     }
 
     public String getZoneId() {
