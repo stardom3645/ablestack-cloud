@@ -80,9 +80,6 @@ import com.cloud.vm.Nic;
 import com.cloud.vm.UserVmManager;
 import com.cloud.vm.VirtualMachine;
 import com.cloud.vm.dao.VMInstanceDao;
-import com.cloud.desktop.version.DesktopTemplateMapVO;
-import com.cloud.desktop.version.dao.DesktopTemplateMapDao;
-import com.cloud.template.VirtualMachineTemplate;
 import com.google.common.base.Strings;
 
 import static com.cloud.utils.NumbersUtil.toHumanReadableSize;
@@ -119,10 +116,6 @@ public class DesktopClusterResourceModifierActionWorker extends DesktopClusterAc
     protected VolumeApiService volumeService;
     @Inject
     protected VolumeDao volumeDao;
-    @Inject
-    protected DesktopTemplateMapDao desktopTemplateMapDao;
-
-    protected String desktopClusterNodeNamePrefix;
 
     protected DesktopClusterResourceModifierActionWorker(final DesktopCluster desktopCluster, final DesktopClusterManagerImpl clusterManager) {
         super(desktopCluster, clusterManager);
@@ -135,15 +128,6 @@ public class DesktopClusterResourceModifierActionWorker extends DesktopClusterAc
     protected DeployDestination plan(final long nodesCount, final DataCenter zone, final ServiceOffering offering) throws InsufficientServerCapacityException {
         final int cpu_requested = offering.getCpu() * offering.getSpeed();
         final long ram_requested = offering.getRamSize() * 1024L * 1024L;
-        VirtualMachineTemplate dcTemplate = null;
-        List<DesktopTemplateMapVO> templateList = desktopTemplateMapDao.listByVersionId(desktopCluster.getDesktopVersionId());
-        for (DesktopTemplateMapVO templateMapVO : templateList) {
-            if (templateMapVO.getVersionId() == desktopCluster.getDesktopVersionId()) {
-                if (templateMapVO.getType() == "dc") {
-                    dcTemplate = templateDao.findById(templateMapVO.getTemplateId());
-                }
-            }
-        }
         List<HostVO> hosts = resourceManager.listAllHostsInOneZoneByType(Host.Type.Routing, zone.getId());
         final Map<String, Pair<HostVO, Integer>> hosts_with_resevered_capacity = new ConcurrentHashMap<String, Pair<HostVO, Integer>>();
         for (HostVO h : hosts) {
@@ -155,6 +139,10 @@ public class DesktopClusterResourceModifierActionWorker extends DesktopClusterAc
             for (Map.Entry<String, Pair<HostVO, Integer>> hostEntry : hosts_with_resevered_capacity.entrySet()) {
                 Pair<HostVO, Integer> hp = hostEntry.getValue();
                 HostVO h = hp.first();
+                LOGGER.info("=================");
+                LOGGER.info(dcTemplate);
+                LOGGER.info(worksTemplate);
+                LOGGER.info("=================");
                 if (!h.getHypervisorType().equals(dcTemplate.getHypervisorType())) {
                     continue;
                 }

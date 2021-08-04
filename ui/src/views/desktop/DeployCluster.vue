@@ -434,7 +434,7 @@ export default {
           controllerversion: this.templateVersions[values.templateversion].id,
           serviceofferingid: this.serviceOfferings[values.serviceofferingid].id,
           networkid: this.selectedNetwork.id,
-          accesstype: this.accessType
+          clustertype: this.accessType
         }
         if (this.isValidValueForKey(values, 'gateway')) {
           params.gateway = values.gateway

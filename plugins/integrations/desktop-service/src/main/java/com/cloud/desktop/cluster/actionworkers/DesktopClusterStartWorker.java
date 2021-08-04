@@ -48,12 +48,9 @@ import com.cloud.utils.Pair;
 import com.cloud.utils.exception.CloudRuntimeException;
 import com.cloud.utils.net.Ip;
 import com.cloud.utils.net.NetUtils;
-import com.cloud.template.VirtualMachineTemplate;
 import com.cloud.desktop.cluster.DesktopCluster;
 import com.cloud.desktop.cluster.DesktopClusterVmMapVO;
 import com.cloud.desktop.cluster.DesktopClusterManagerImpl;
-import com.cloud.desktop.version.DesktopTemplateMapVO;
-import com.cloud.desktop.version.dao.DesktopTemplateMapDao;
 import com.cloud.desktop.version.DesktopControllerVersion;
 import com.cloud.vm.Nic;
 import com.cloud.vm.ReservationContext;
@@ -65,7 +62,6 @@ public class DesktopClusterStartWorker extends DesktopClusterResourceModifierAct
 
     private DesktopControllerVersion desktopClusterVersion;
     private IpAddressManager ipAddressManager;
-    private DesktopTemplateMapDao desktopTemplateMapDao;
 
     public DesktopClusterStartWorker(final DesktopCluster desktopCluster, final DesktopClusterManagerImpl clusterManager) {
         super(desktopCluster, clusterManager);
@@ -130,15 +126,6 @@ public class DesktopClusterStartWorker extends DesktopClusterResourceModifierAct
         if (Network.GuestType.Shared.equals(network.getGuestType()) && Strings.isNullOrEmpty(serverIp)) {
             serverIp = controlDcIp;
         }
-        VirtualMachineTemplate dcTemplate = null;
-        List<DesktopTemplateMapVO> templateList = desktopTemplateMapDao.listByVersionId(desktopCluster.getDesktopVersionId());
-        for (DesktopTemplateMapVO templateMapVO : templateList) {
-            if (templateMapVO.getVersionId() == desktopCluster.getDesktopVersionId()) {
-                if (templateMapVO.getType() == "dc") {
-                    dcTemplate = templateDao.findById(templateMapVO.getTemplateId());
-                }
-            }
-        }
         Network.IpAddresses addrs = new Network.IpAddresses(controlDcIp, null);
         String hostName = desktopCluster.getName() + "-dc-control";
         dcControlVm = userVmService.createAdvancedVirtualMachine(zone, serviceOffering, dcTemplate, networkIds, owner,
@@ -175,15 +162,6 @@ public class DesktopClusterStartWorker extends DesktopClusterResourceModifierAct
         ServiceOffering serviceOffering = serviceOfferingDao.findById(desktopCluster.getServiceOfferingId());
         List<Long> networkIds = new ArrayList<Long>();
         networkIds.add(desktopCluster.getNetworkId());
-        VirtualMachineTemplate worksTemplate = null;
-        List<DesktopTemplateMapVO> templateList = desktopTemplateMapDao.listByVersionId(desktopCluster.getDesktopVersionId());
-        for (DesktopTemplateMapVO templateMapVO : templateList) {
-            if (templateMapVO.getVersionId() == desktopCluster.getDesktopVersionId()) {
-                if (templateMapVO.getType() == "works") {
-                    worksTemplate = templateDao.findById(templateMapVO.getTemplateId());
-                }
-            }
-        }
         Network.IpAddresses addrs = new Network.IpAddresses(null, null);
         String hostName = desktopCluster.getName() + "-works-control";
         worksControlVm = userVmService.createAdvancedVirtualMachine(zone, serviceOffering, worksTemplate, networkIds, owner,

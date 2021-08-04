@@ -43,10 +43,4 @@ public class DesktopTemplateMapDaoImpl extends GenericDaoBase<DesktopTemplateMap
         sc.setParameters("versionId", versionId);
         return listBy(sc, null);
     }
-
-    @Override
-    public List<DesktopTemplateMapVO> listAll() {
-        SearchCriteria<DesktopTemplateMapVO> sc = versionIdSearch.create();
-        return listBy(sc);
-    }
 }

@@ -29,6 +29,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 
 import com.cloud.utils.db.GenericDao;
+import com.cloud.utils.db.Encrypt;
 
 @Entity
 @Table(name = "desktop_cluster")
@@ -48,6 +49,7 @@ public class DesktopClusterVO implements DesktopCluster {
     @Column(name = "description")
     private String description;
 
+    @Encrypt
     @Column(name = "password")
     private String password;
 

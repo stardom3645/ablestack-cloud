@@ -41,8 +41,8 @@ import com.cloud.desktop.cluster.DesktopClusterVO;
 import com.cloud.desktop.cluster.dao.DesktopClusterDao;
 import com.cloud.desktop.cluster.dao.DesktopClusterVmMapDao;
 import com.cloud.desktop.cluster.DesktopClusterVmMapVO;
-// import com.cloud.desktop.version.DesktopTemplateMapVO;
-// import com.cloud.desktop.version.dao.DesktopTemplateMapDao;
+import com.cloud.desktop.version.DesktopTemplateMapVO;
+import com.cloud.desktop.version.dao.DesktopTemplateMapDao;
 import com.cloud.desktop.version.dao.DesktopControllerVersionDao;
 import com.cloud.network.IpAddress;
 import com.cloud.network.Network;
@@ -51,7 +51,7 @@ import com.cloud.network.dao.NetworkDao;
 import com.cloud.service.dao.ServiceOfferingDao;
 import com.cloud.storage.dao.VMTemplateDao;
 import com.cloud.template.TemplateApiService;
-// import com.cloud.template.VirtualMachineTemplate;
+import com.cloud.template.VirtualMachineTemplate;
 import com.cloud.user.Account;
 import com.cloud.user.AccountService;
 import com.cloud.user.dao.AccountDao;
@@ -102,15 +102,15 @@ public class DesktopClusterActionWorker {
     @Inject
     protected AccountService accountService;
 
+    protected DesktopTemplateMapDao desktopTemplateMapDao;
     protected DesktopClusterDao desktopClusterDao;
     protected DesktopClusterVmMapDao desktopClusterVmMapDao;
     protected DesktopControllerVersionDao desktopControllerVersionDao;
-    //protected DesktopTemplateMapDao desktopTemplateMapDao;
 
     protected DesktopCluster desktopCluster;
     protected Account owner;
-    // protected VirtualMachineTemplate dcTemplate;
-    // protected VirtualMachineTemplate worksTemplate;
+    protected VirtualMachineTemplate dcTemplate;
+    protected VirtualMachineTemplate worksTemplate;
     protected String publicIpAddress;
 
     protected DesktopClusterActionWorker(final DesktopCluster desktopCluster, final DesktopClusterManagerImpl clusterManager) {
@@ -118,20 +118,21 @@ public class DesktopClusterActionWorker {
         this.desktopClusterDao = clusterManager.desktopClusterDao;
         this.desktopClusterVmMapDao = clusterManager.desktopClusterVmMapDao;
         this.desktopControllerVersionDao = clusterManager.desktopControllerVersionDao;
+        this.desktopTemplateMapDao = clusterManager.desktopTemplateMapDao;
     }
 
     protected void init() {
         this.owner = accountDao.findById(desktopCluster.getAccountId());
-        // List<DesktopTemplateMapVO> templateList = desktopTemplateMapDao.listAll();
-        // for (DesktopTemplateMapVO templateMapVO : templateList) {
-        //     if (templateMapVO.getVersionId() == desktopCluster.getDesktopVersionId()) {
-        //         if (templateMapVO.getType() == "dc") {
-        //             this.dcTemplate = templateDao.findById(templateMapVO.getTemplateId());
-        //         } else {
-        //             this.worksTemplate = templateDao.findById(templateMapVO.getTemplateId());
-        //         }
-        //     }
-        // }
+        List<DesktopTemplateMapVO> templateList = desktopTemplateMapDao.listByVersionId(desktopCluster.getDesktopVersionId());
+        for (DesktopTemplateMapVO templateMapVO : templateList) {
+            if (templateMapVO.getType() == "dc") {
+                this.dcTemplate = templateDao.findById(templateMapVO.getTemplateId());
+            } else {
+                this.worksTemplate = templateDao.findById(templateMapVO.getTemplateId());
+            }
+        }
+        LOGGER.info(this.dcTemplate);
+        LOGGER.info(this.worksTemplate);
     }
 
     protected String readResourceFile(String resource) throws IOException {

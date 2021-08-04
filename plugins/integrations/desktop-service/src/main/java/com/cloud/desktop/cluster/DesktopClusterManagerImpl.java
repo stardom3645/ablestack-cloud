@@ -60,6 +60,7 @@ import com.cloud.desktop.cluster.actionworkers.DesktopClusterDestroyWorker;
 import com.cloud.desktop.cluster.actionworkers.DesktopClusterStartWorker;
 import com.cloud.desktop.cluster.actionworkers.DesktopClusterStopWorker;
 import com.cloud.desktop.version.dao.DesktopControllerVersionDao;
+import com.cloud.desktop.version.dao.DesktopTemplateMapDao;
 import com.cloud.desktop.cluster.dao.DesktopClusterDao;
 import com.cloud.desktop.cluster.dao.DesktopClusterIpRangeDao;
 import com.cloud.desktop.cluster.dao.DesktopClusterVmMapDao;
@@ -97,7 +98,6 @@ import com.cloud.utils.db.TransactionCallback;
 import com.cloud.utils.db.TransactionStatus;
 import com.cloud.utils.db.SearchBuilder;
 import com.cloud.utils.db.SearchCriteria;
-import com.cloud.utils.crypt.DBEncryptionUtil;
 import com.cloud.utils.component.ComponentContext;
 import com.cloud.utils.db.TransactionCallbackNoReturn;
 import com.cloud.utils.concurrency.NamedThreadFactory;
@@ -121,6 +121,8 @@ public class DesktopClusterManagerImpl extends ManagerBase implements DesktopClu
     public DesktopClusterVmMapDao desktopClusterVmMapDao;
     @Inject
     public DesktopControllerVersionDao desktopControllerVersionDao;
+    @Inject
+    public DesktopTemplateMapDao desktopTemplateMapDao;
     @Inject
     protected AccountManager accountManager;
     @Inject
@@ -540,10 +542,10 @@ public class DesktopClusterManagerImpl extends ManagerBase implements DesktopClu
             if (network == null) {
                 throw new InvalidParameterValueException("Unable to find network with given ID");
             }
-            LOGGER.info(network.getGuestType());
-            LOGGER.info(network.getGateway());
-            LOGGER.info(network.getNetworkCidr());
-            LOGGER.info(network.getNetworkCidr());
+            LOGGER.info(network.getGuestType()); //Shared
+            LOGGER.info(network.getGateway()); //null
+            LOGGER.info(network.getNetworkCidr()); //null
+            LOGGER.info(network.getNetworkCidr()); //null
             //network 타입이 L2인 경우 gateway, netmask, startip, endip 벨리데이션 체크 , dc/works ip 입력된 경우 벨리데이션 체크
             //network 타입이 isolated인 경우 dc/works ip 입력된 경우 벨리데이션 체크
             //network 타입이 shared인 경우 dc/works ip 입력된 경우 벨리데이션 체크
