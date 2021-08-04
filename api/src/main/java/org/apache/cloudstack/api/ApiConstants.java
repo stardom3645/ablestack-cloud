@@ -843,6 +843,10 @@ public class ApiConstants {
     public static final String DESKTOP_TEMPLATE_OS_TYPE = "templateostype";
     public static final String DESKTOP_CLUSTER_ID = "desktopclusterid";
     public static final String DESKTOP_CLUSTER_NAME = "desktopclustername";
+    public static final String DESKTOP_PASSWORD = "desktoppassword";
+    public static final String DESKTOP_CLUSTER_TYPE = "clustertype";
+    public static final String DESKTOP_CONTROLLER_DC_IP = "dcip";
+    public static final String DESKTOP_CONTROLLER_WORKS_IP = "worksip";
 
     public static final String BOOT_TYPE = "boottype";
     public static final String BOOT_MODE = "bootmode";

@@ -66,6 +66,9 @@ public class DesktopClusterVO implements DesktopCluster {
     @Column(name = "network_id")
     private long networkId;
 
+    @Column(name = "access_type")
+    private String accessType;
+
     @Column(name = "domain_id")
     private long domainId;
 
@@ -80,6 +83,9 @@ public class DesktopClusterVO implements DesktopCluster {
 
     @Column(name = GenericDao.REMOVED_COLUMN)
     private Date removed;
+
+    @Column(name = "gc")
+    private boolean checkForGc;
 
     @Override
     public long getId() {
@@ -172,6 +178,15 @@ public class DesktopClusterVO implements DesktopCluster {
     }
 
     @Override
+    public String getAccessType() {
+        return accessType;
+    }
+
+    public void setAccessType(String accessType) {
+        this.accessType = accessType;
+    }
+
+    @Override
     public long getDomainId() {
         return domainId;
     }
@@ -210,6 +225,15 @@ public class DesktopClusterVO implements DesktopCluster {
     }
 
     @Override
+    public boolean isCheckForGc() {
+        return checkForGc;
+    }
+
+    public void setCheckForGc(boolean check) {
+        checkForGc = check;
+    }
+
+    @Override
     public Date getCreated() {
         return created;
     }
@@ -218,19 +242,22 @@ public class DesktopClusterVO implements DesktopCluster {
         this.uuid = UUID.randomUUID().toString();
     }
 
-    public DesktopClusterVO(String name, String description, long zoneId, long desktopVersionId, long serviceOfferingId, String adDomainName,
-                               long networkId, long domainId, long accountId, State state) {
+    public DesktopClusterVO(String name, String description, String password, long zoneId, long desktopVersionId, long serviceOfferingId,
+                                String adDomainName, long networkId, String accessType, long domainId, long accountId, State state) {
         this.uuid = UUID.randomUUID().toString();
         this.name = name;
         this.description = description;
+        this.password = password;
         this.zoneId = zoneId;
         this.desktopVersionId = desktopVersionId;
         this.serviceOfferingId = serviceOfferingId;
         this.adDomainName = adDomainName;
         this.networkId = networkId;
+        this.accessType = accessType;
         this.domainId = domainId;
         this.accountId = accountId;
         this.state = state;
+        this.checkForGc = false;
     }
 
     @Override

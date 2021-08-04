@@ -350,9 +350,9 @@ export default {
       params.endip = this.addNetworkData.endip
       this.showAddIpModal = false
       this.loadingNic = true
-      api('addDesktopClusterIpRanges', params).then(response => {
+      api('addDesktopClusterIpRange', params).then(response => {
         this.$pollJob({
-          jobId: response.adddesktopclusteriprangesresponse.jobid,
+          jobId: response.adddesktopclusteriprangeresponse.jobid,
           successMessage: this.$t('message.success.add.desktop.ip'),
           successMethod: () => {
             this.loadingNic = false
