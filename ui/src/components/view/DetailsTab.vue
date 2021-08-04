@@ -44,7 +44,7 @@
           </div>
         </div>
         <div v-else-if="$route.meta.name === 'mastertemplate' && item === 'templatename'">
-            <router-link :to="{ path: '/template/' + resource.templateid }">{{ resource.templatename }} </router-link>
+          <router-link :to="{ path: '/template/' + resource.templateid }">{{ resource.templatename }} </router-link>
         </div>
         <div v-else-if="$route.meta.name === 'computeoffering' && item === 'rootdisksize'">
           <div>
