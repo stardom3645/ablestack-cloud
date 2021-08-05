@@ -122,17 +122,18 @@ public class DesktopClusterActionWorker {
     }
 
     protected void init() {
+        final String DC = "dc";
+        final String WORKS = "works";
         this.owner = accountDao.findById(desktopCluster.getAccountId());
         List<DesktopTemplateMapVO> templateList = desktopTemplateMapDao.listByVersionId(desktopCluster.getDesktopVersionId());
         for (DesktopTemplateMapVO templateMapVO : templateList) {
-            if (templateMapVO.getType() == "dc") {
+            if (templateMapVO.getType().equals(DC)) {
                 this.dcTemplate = templateDao.findById(templateMapVO.getTemplateId());
-            } else {
+            }
+            if (templateMapVO.getType().equals(WORKS)) {
                 this.worksTemplate = templateDao.findById(templateMapVO.getTemplateId());
             }
         }
-        LOGGER.info(this.dcTemplate);
-        LOGGER.info(this.worksTemplate);
     }
 
     protected String readResourceFile(String resource) throws IOException {

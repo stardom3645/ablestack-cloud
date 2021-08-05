@@ -74,28 +74,28 @@ public class DesktopClusterStartWorker extends DesktopClusterResourceModifierAct
         return desktopClusterVersion;
     }
 
-    private Pair<String, Map<Long, Network.IpAddresses>> getDesktopControlNodeIpAddresses(final DataCenter zone, final Network network, final Account account) throws InsufficientAddressCapacityException {
-        String controlNodeIp = null;
-        Map<Long, Network.IpAddresses> requestedIps = null;
-        if (Network.GuestType.Shared.equals(network.getGuestType())) {
-            List<Long> vlanIds = new ArrayList<>();
-            List<VlanVO> vlans = vlanDao.listVlansByNetworkId(network.getId());
-            for (VlanVO vlan : vlans) {
-                vlanIds.add(vlan.getId());
-            }
-            PublicIp ip = ipAddressManager.getAvailablePublicIpAddressFromVlans(zone.getId(), null, account, Vlan.VlanType.DirectAttached, vlanIds,network.getId(), null, false);
-            if (ip != null) {
-                controlNodeIp = ip.getAddress().toString();
-            }
-            requestedIps = new HashMap<>();
-            Ip ipAddress = ip.getAddress();
-            boolean isIp6 = ipAddress.isIp6();
-            requestedIps.put(network.getId(), new Network.IpAddresses(ipAddress.isIp4() ? ip.getAddress().addr() : null, null));
-        } else {
-            controlNodeIp = ipAddressManager.acquireGuestIpAddress(networkDao.findById(desktopCluster.getNetworkId()), null);
-        }
-        return new Pair<>(controlNodeIp, requestedIps);
-    }
+    // private Pair<String, Map<Long, Network.IpAddresses>> getDesktopControlNodeIpAddresses(final DataCenter zone, final Network network, final Account account) throws InsufficientAddressCapacityException {
+    //     String controlNodeIp = null;
+    //     Map<Long, Network.IpAddresses> requestedIps = null;
+    //     if (Network.GuestType.Shared.equals(network.getGuestType())) {
+    //         List<Long> vlanIds = new ArrayList<>();
+    //         List<VlanVO> vlans = vlanDao.listVlansByNetworkId(network.getId());
+    //         for (VlanVO vlan : vlans) {
+    //             vlanIds.add(vlan.getId());
+    //         }
+    //         PublicIp ip = ipAddressManager.getAvailablePublicIpAddressFromVlans(zone.getId(), null, account, Vlan.VlanType.DirectAttached, vlanIds,network.getId(), null, false);
+    //         if (ip != null) {
+    //             controlNodeIp = ip.getAddress().toString();
+    //         }
+    //         requestedIps = new HashMap<>();
+    //         Ip ipAddress = ip.getAddress();
+    //         boolean isIp6 = ipAddress.isIp6();
+    //         requestedIps.put(network.getId(), new Network.IpAddresses(ipAddress.isIp4() ? ip.getAddress().addr() : null, null));
+    //     } else {
+    //         controlNodeIp = ipAddressManager.acquireGuestIpAddress(networkDao.findById(desktopCluster.getNetworkId()), null);
+    //     }
+    //     return new Pair<>(controlNodeIp, requestedIps);
+    // }
 
     private UserVm provisionDesktopClusterDcControlVm(final Network network, String publicIpAddress) throws ManagementServerException,
             ResourceUnavailableException, InsufficientCapacityException {
@@ -120,18 +120,12 @@ public class DesktopClusterStartWorker extends DesktopClusterResourceModifierAct
         ServiceOffering serviceOffering = serviceOfferingDao.findById(desktopCluster.getServiceOfferingId());
         List<Long> networkIds = new ArrayList<Long>();
         networkIds.add(desktopCluster.getNetworkId());
-        Pair<String, Map<Long, Network.IpAddresses>> ipAddresses = getDesktopControlNodeIpAddresses(zone, network, owner);
-        String controlDcIp = ipAddresses.first();
-        Map<Long, Network.IpAddresses> requestedIps = ipAddresses.second();
-        if (Network.GuestType.Shared.equals(network.getGuestType()) && Strings.isNullOrEmpty(serverIp)) {
-            serverIp = controlDcIp;
-        }
-        Network.IpAddresses addrs = new Network.IpAddresses(controlDcIp, null);
+        Network.IpAddresses addrs = new Network.IpAddresses(null, null);
         String hostName = desktopCluster.getName() + "-dc-control";
         dcControlVm = userVmService.createAdvancedVirtualMachine(zone, serviceOffering, dcTemplate, networkIds, owner,
                 hostName, hostName, null, null, null,
                 dcTemplate.getHypervisorType(), BaseCmd.HTTPMethod.POST, null, null,
-                requestedIps, addrs, null, null, null, null, null, null, null, null, true);
+                null, addrs, null, null, null, null, null, null, null, null, true);
         if (LOGGER.isInfoEnabled()) {
             LOGGER.info(String.format("Created control VM ID: %s, %s in the Desktop cluster : %s", dcControlVm.getUuid(), hostName, desktopCluster.getName()));
         }
@@ -197,23 +191,23 @@ public class DesktopClusterStartWorker extends DesktopClusterResourceModifierAct
         return network;
     }
 
-    private void provisionLoadBalancerRule(final IpAddress publicIp, final Network network,
-                                           final Account account, final List<Long> clusterVMIds, final int port) throws NetworkRuleConflictException,
-            InsufficientAddressCapacityException {
-        LoadBalancer lb = lbService.createPublicLoadBalancerRule(null, "api-lb", "LB rule for API access",
-                port, port, port, port,
-                publicIp.getId(), NetUtils.TCP_PROTO, "roundrobin", network.getId(),
-                account.getId(), false, NetUtils.TCP_PROTO, true);
+    // private void provisionLoadBalancerRule(final IpAddress publicIp, final Network network,
+    //                                        final Account account, final List<Long> clusterVMIds, final int port) throws NetworkRuleConflictException,
+    //         InsufficientAddressCapacityException {
+    //     LoadBalancer lb = lbService.createPublicLoadBalancerRule(null, "api-lb", "LB rule for API access",
+    //             port, port, port, port,
+    //             publicIp.getId(), NetUtils.TCP_PROTO, "roundrobin", network.getId(),
+    //             account.getId(), false, NetUtils.TCP_PROTO, true);
 
-        Map<Long, List<String>> vmIdIpMap = new HashMap<>();
-        for (int i = 0; i < 3; ++i) {
-            List<String> ips = new ArrayList<>();
-            Nic controlVmNic = networkModel.getNicInNetwork(clusterVMIds.get(i), desktopCluster.getNetworkId());
-            ips.add(controlVmNic.getIPv4Address());
-            vmIdIpMap.put(clusterVMIds.get(i), ips);
-        }
-        lbService.assignToLoadBalancer(lb.getId(), null, vmIdIpMap);
-    }
+    //     Map<Long, List<String>> vmIdIpMap = new HashMap<>();
+    //     for (int i = 0; i < 3; ++i) {
+    //         List<String> ips = new ArrayList<>();
+    //         Nic controlVmNic = networkModel.getNicInNetwork(clusterVMIds.get(i), desktopCluster.getNetworkId());
+    //         ips.add(controlVmNic.getIPv4Address());
+    //         vmIdIpMap.put(clusterVMIds.get(i), ips);
+    //     }
+    //     lbService.assignToLoadBalancer(lb.getId(), null, vmIdIpMap);
+    // }
 
     private void startDesktopClusterVMs() {
         List <UserVm> clusterVms = getDesktopClusterVMs();

@@ -139,11 +139,7 @@ public class DesktopClusterResourceModifierActionWorker extends DesktopClusterAc
             for (Map.Entry<String, Pair<HostVO, Integer>> hostEntry : hosts_with_resevered_capacity.entrySet()) {
                 Pair<HostVO, Integer> hp = hostEntry.getValue();
                 HostVO h = hp.first();
-                LOGGER.info("=================");
-                LOGGER.info(dcTemplate);
-                LOGGER.info(worksTemplate);
-                LOGGER.info("=================");
-                if (!h.getHypervisorType().equals(dcTemplate.getHypervisorType())) {
+                if (!h.getHypervisorType().equals(worksTemplate.getHypervisorType())) {
                     continue;
                 }
                 hostDao.loadHostTags(h);
@@ -172,7 +168,7 @@ public class DesktopClusterResourceModifierActionWorker extends DesktopClusterAc
             if (!suitable_host_found) {
                 if (LOGGER.isInfoEnabled()) {
                     LOGGER.info(String.format("Suitable hosts not found in datacenter : %s for node %d, with offering : %s and hypervisor: %s",
-                        zone.getName(), i, offering.getName(), dcTemplate.getHypervisorType().toString()));
+                        zone.getName(), i, offering.getName(), worksTemplate.getHypervisorType().toString()));
                 }
                 break;
             }
@@ -184,7 +180,7 @@ public class DesktopClusterResourceModifierActionWorker extends DesktopClusterAc
             return new DeployDestination(zone, null, null, null);
         }
         String msg = String.format("Cannot find enough capacity for Desktop cluster(requested cpu=%d memory=%s) with offering : %s and hypervisor: %s",
-                cpu_requested * nodesCount, toHumanReadableSize(ram_requested * nodesCount), offering.getName(), dcTemplate.getHypervisorType().toString());
+                cpu_requested * nodesCount, toHumanReadableSize(ram_requested * nodesCount), offering.getName(), worksTemplate.getHypervisorType().toString());
 
         LOGGER.warn(msg);
         throw new InsufficientServerCapacityException(msg, DataCenter.class, zone.getId());
@@ -198,28 +194,6 @@ public class DesktopClusterResourceModifierActionWorker extends DesktopClusterAc
         }
         final long dest = 2;
         return plan(dest, zone, offering);
-    }
-
-    protected void resizeNodeVolume(final UserVm vm) throws ManagementServerException {
-        try {
-            if (vm.getHypervisorType() == Hypervisor.HypervisorType.VMware && templateDao.findById(vm.getTemplateId()).isDeployAsIs()) {
-                List<VolumeVO> vmVols = volumeDao.findByInstance(vm.getId());
-                for (VolumeVO volumeVO : vmVols) {
-                    if (volumeVO.getVolumeType() == Volume.Type.ROOT) {
-                        ResizeVolumeCmd resizeVolumeCmd = new ResizeVolumeCmd();
-                        resizeVolumeCmd = ComponentContext.inject(resizeVolumeCmd);
-                        Field f = resizeVolumeCmd.getClass().getDeclaredField("size");
-                        Field f1 = resizeVolumeCmd.getClass().getDeclaredField("id");
-                        f.setAccessible(true);
-                        f1.setAccessible(true);
-                        f1.set(resizeVolumeCmd, volumeVO.getId());
-                        volumeService.resizeVolume(resizeVolumeCmd);
-                    }
-                }
-            }
-        } catch (IllegalAccessException | NoSuchFieldException e) {
-            throw new ManagementServerException(String.format("Failed to resize volume of  VM in the Desktop cluster : %s", desktopCluster.getName()), e);
-        }
     }
 
     protected void startDesktopVM(final UserVm vm) throws ManagementServerException {

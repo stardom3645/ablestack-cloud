@@ -175,7 +175,10 @@
             showSearch
             @change="val => { this.handleNetworkChange(this.networks[val]) }">
             <a-select-option v-for="(opt, optIndex) in this.networks" :key="optIndex">
-              {{ opt.name }}
+              <span v-if="opt.type!=='L2'">
+                {{ opt.name || opt.description }} ({{ `${$t('label.cidr')}: ${opt.cidr}` }})
+              </span>
+              <span v-else>{{ opt.name || opt.description }}</span>
             </a-select-option>
           </a-select>
         </a-form-item>

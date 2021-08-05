@@ -84,6 +84,7 @@ import com.cloud.event.ActionEvent;
 import com.cloud.vm.VMInstanceVO;
 import com.cloud.vm.VirtualMachine;
 import com.cloud.vm.dao.VMInstanceDao;
+import com.cloud.utils.crypt.DBEncryptionUtil;
 import com.cloud.utils.Ternary;
 import com.cloud.utils.net.NetUtils;
 import com.cloud.utils.component.ManagerBase;
@@ -464,14 +465,10 @@ public class DesktopClusterManagerImpl extends ManagerBase implements DesktopClu
         final ServiceOffering serviceOffering = serviceOfferingDao.findById(cmd.getServiceOfferingId());
         final Account owner = accountService.getActiveAccountById(cmd.getEntityOwnerId());
         final DesktopControllerVersion clusterDesktopVersion = desktopControllerVersionDao.findById(cmd.getControllerVersion());
-        final String encryptPw = DBEncryptionUtil.encrypt(cmd.getPassword());
-        LOGGER.info("=========================");
-        LOGGER.info(encryptPw);
-        LOGGER.info("=========================");
         final DesktopClusterVO cluster = Transaction.execute(new TransactionCallback<DesktopClusterVO>() {
             @Override
             public DesktopClusterVO doInTransaction(TransactionStatus status) {
-                DesktopClusterVO newCluster = new DesktopClusterVO(cmd.getName(), cmd.getDescription(), encryptPw, clusterDesktopVersion.getZoneId(), clusterDesktopVersion.getId(),
+                DesktopClusterVO newCluster = new DesktopClusterVO(cmd.getName(), cmd.getDescription(), DBEncryptionUtil.encrypt(cmd.getPassword()), clusterDesktopVersion.getZoneId(), clusterDesktopVersion.getId(),
                         serviceOffering.getId(), cmd.getAdDomainName(), cmd.getNetworkId(), cmd.getAccessType(),
                         owner.getDomainId(), owner.getAccountId(), DesktopCluster.State.Created);
                 desktopClusterDao.persist(newCluster);
@@ -542,13 +539,83 @@ public class DesktopClusterManagerImpl extends ManagerBase implements DesktopClu
             if (network == null) {
                 throw new InvalidParameterValueException("Unable to find network with given ID");
             }
-            LOGGER.info(network.getGuestType()); //Shared
-            LOGGER.info(network.getGateway()); //null
-            LOGGER.info(network.getNetworkCidr()); //null
-            LOGGER.info(network.getNetworkCidr()); //null
-            //network 타입이 L2인 경우 gateway, netmask, startip, endip 벨리데이션 체크 , dc/works ip 입력된 경우 벨리데이션 체크
-            //network 타입이 isolated인 경우 dc/works ip 입력된 경우 벨리데이션 체크
-            //network 타입이 shared인 경우 dc/works ip 입력된 경우 벨리데이션 체크
+            final String dcIp = cmd.getDcIp();
+            final String worksIp = cmd.getWorksIp();
+            final String cider = cmd.getNetworkCidr();
+            if (network.getGuestType().equals("L2")){
+                //L2 일 경우 IP 범위 조회하여 벨리데이션 체크
+                final String gateway = cmd.getGateway();
+                final String netmask = cmd.getNetmask();
+                final String startIp = cmd.getStartIp();
+                final String endIp = cmd.getEndIp();
+
+                if (gateway == null || gateway.isEmpty()) {
+                    throw new InvalidParameterValueException("Invalid gateway for the Desktop cluster gateway:" + gateway);
+                }
+                if (netmask == null || netmask.isEmpty()) {
+                    throw new InvalidParameterValueException("Invalid netmask for the Desktop cluster netmask:" + netmask);
+                }
+                if (startIp == null || startIp.isEmpty()) {
+                    throw new InvalidParameterValueException("Invalid startIp for the Desktop cluster nastartIpme:" + startIp);
+                }
+                if (endIp == null || endIp.isEmpty()) {
+                    throw new InvalidParameterValueException("Invalid endIp for the Desktop cluster endIp:" + endIp);
+                }
+                if (!NetUtils.isValidIp4(gateway)) {
+                    throw new InvalidParameterValueException("Please specify a valid gateway");
+                }
+                if (!NetUtils.isValidIp4Netmask(netmask)) {
+                    throw new InvalidParameterValueException("Please specify a valid netmask");
+                }
+    
+                final String newCidr = NetUtils.getCidrFromGatewayAndNetmask(gateway, netmask);
+
+                if (!NetUtils.isIpWithInCidrRange(gateway, newCidr) || !NetUtils.isIpWithInCidrRange(startIp, newCidr) || !NetUtils.isIpWithInCidrRange(endIp, newCidr)) {
+                    throw new InvalidParameterValueException("Please specify a valid IP range or valid netmask or valid gateway");
+                }
+    
+                final List<DesktopClusterIpRangeVO> ips = desktopClusterIpRangeDao.listAll();
+                for (final DesktopClusterIpRangeVO range : ips) {
+                    final String otherGateway = range.getGateway();
+                    final String otherNetmask = range.getNetmask();
+                    final String otherStartIp = range.getStartIp();
+                    final String otherEndIp = range.getEndIp();
+    
+                    if ( otherGateway == null || otherNetmask == null ) {
+                        continue;
+                    }
+                    final String otherCidr = NetUtils.getCidrFromGatewayAndNetmask(otherGateway, otherNetmask);
+                    if( !NetUtils.isNetworksOverlap(newCidr,  otherCidr)) {
+                        continue;
+                    }
+    
+                    if (!gateway.equals(otherGateway) || !netmask.equals(range.getNetmask())) {
+                        throw new InvalidParameterValueException("The IP range has already been added with gateway "
+                                + otherGateway + " ,and netmask " + otherNetmask
+                                + ", Please specify the gateway/netmask if you want to extend ip range" );
+                    }
+                    if (!NetUtils.is31PrefixCidr(newCidr)) {
+                        if (NetUtils.ipRangesOverlap(startIp, endIp, otherStartIp, otherEndIp)) {
+                            throw new InvalidParameterValueException("The IP range already has IPs that overlap with the new range." +
+                                    " Please specify a different start IP/end IP.");
+                        }
+                    }
+                }
+                //L2 일 경우 dc ip, works ip 입력된 경우 벨리데이션 체크
+                if ((dcIp != null || !dcIp.isEmpty()) && (worksIp != null || !worksIp.isEmpty())) {
+                    if (!NetUtils.isIpWithInCidrRange(dcIp, newCidr) || !NetUtils.isIpWithInCidrRange(worksIp, newCidr)) {
+                        throw new InvalidParameterValueException("Please specify a valid IP range or valid netmask or valid gateway");
+                    }
+                }
+            } 
+            if (network.getGuestType().equals("Isolated") || network.getGuestType().equals("Shared")) {
+                //Isolated 일 경우 dc ip, works ip 입력된 경우 벨리데이션 체크
+                if ((dcIp != null || !dcIp.isEmpty()) && (worksIp != null || !worksIp.isEmpty())) {
+                    if (!NetUtils.isIpWithInCidrRange(dcIp, cider) || !NetUtils.isIpWithInCidrRange(worksIp, cider)) {
+                        throw new InvalidParameterValueException("Please specify a valid IP range or valid netmask or valid gateway");
+                    }
+                }
+            }
         }
     }
 
