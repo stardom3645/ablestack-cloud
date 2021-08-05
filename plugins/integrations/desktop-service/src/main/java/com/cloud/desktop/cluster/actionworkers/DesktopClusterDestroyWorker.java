@@ -33,6 +33,7 @@ import com.cloud.exception.ResourceUnavailableException;
 import com.cloud.desktop.cluster.DesktopCluster;
 import com.cloud.desktop.cluster.DesktopClusterVO;
 import com.cloud.desktop.cluster.DesktopClusterVmMapVO;
+import com.cloud.desktop.cluster.DesktopClusterIpRangeVO;
 import com.cloud.desktop.cluster.DesktopClusterVmMap;
 import com.cloud.desktop.cluster.DesktopClusterManagerImpl;
 import com.cloud.network.Network;
@@ -170,6 +171,22 @@ public class DesktopClusterDestroyWorker extends DesktopClusterResourceModifierA
         }
     }
 
+    private boolean destroyClusterIps() {
+        boolean ipDestroyed = true;
+        List<DesktopClusterIpRangeVO> ipRangeList = desktopClusterIpRangeDao.listByDesktopClusterId(desktopCluster.getId());
+            for (DesktopClusterIpRangeVO iprange : ipRangeList) {
+                boolean deletedIp = desktopClusterIpRangeDao.remove(iprange.getId());
+                if (!deletedIp) {
+                    logMessage(Level.WARN, String.format("Failed to delete Desktop cluster ip range : %s", desktopCluster.getName()), null);
+                    return false;
+                }
+                if (LOGGER.isInfoEnabled()) {
+                    LOGGER.info(String.format("Desktop cluster Ip Range : %s is successfully deleted", desktopCluster.getName()));
+                }
+            }
+        return ipDestroyed;
+    }
+
     public boolean destroy() throws CloudRuntimeException {
         init();
         validateClusterSate();
@@ -201,6 +218,12 @@ public class DesktopClusterDestroyWorker extends DesktopClusterResourceModifierA
             throw new CloudRuntimeException(msg);
         }
         stateTransitTo(desktopCluster.getId(), DesktopCluster.Event.OperationSucceeded);
+        final String accessType = "internal";
+        // Desktop Cluster IP Range remove
+        if (desktopCluster.getAccessType().equals(accessType)) {
+            boolean ipDestroyed = destroyClusterIps();
+        }
+        // Desktop VM remove
         boolean deleted = desktopClusterDao.remove(desktopCluster.getId());
         if (!deleted) {
             logMessage(Level.WARN, String.format("Failed to delete Desktop cluster : %s", desktopCluster.getName()), null);

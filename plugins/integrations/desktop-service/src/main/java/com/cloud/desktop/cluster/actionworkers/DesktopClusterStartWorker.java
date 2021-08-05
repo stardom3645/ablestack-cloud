@@ -18,41 +18,28 @@
 package com.cloud.desktop.cluster.actionworkers;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.cloudstack.api.BaseCmd;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.log4j.Level;
 
 import com.cloud.dc.DataCenter;
-import com.cloud.dc.Vlan;
-import com.cloud.dc.VlanVO;
 import com.cloud.deploy.DeployDestination;
 import com.cloud.exception.ConcurrentOperationException;
-import com.cloud.exception.InsufficientAddressCapacityException;
 import com.cloud.exception.InsufficientCapacityException;
 import com.cloud.exception.ManagementServerException;
-import com.cloud.exception.NetworkRuleConflictException;
 import com.cloud.exception.ResourceUnavailableException;
-import com.cloud.network.IpAddress;
 import com.cloud.network.IpAddressManager;
 import com.cloud.network.Network;
-import com.cloud.network.addr.PublicIp;
-import com.cloud.network.rules.LoadBalancer;
 import com.cloud.offering.ServiceOffering;
-import com.cloud.user.Account;
 import com.cloud.uservm.UserVm;
 import com.cloud.utils.Pair;
 import com.cloud.utils.exception.CloudRuntimeException;
-import com.cloud.utils.net.Ip;
-import com.cloud.utils.net.NetUtils;
 import com.cloud.desktop.cluster.DesktopCluster;
 import com.cloud.desktop.cluster.DesktopClusterVmMapVO;
 import com.cloud.desktop.cluster.DesktopClusterManagerImpl;
 import com.cloud.desktop.version.DesktopControllerVersion;
-import com.cloud.vm.Nic;
 import com.cloud.vm.ReservationContext;
 import com.cloud.vm.ReservationContextImpl;
 import com.cloud.vm.VirtualMachine;

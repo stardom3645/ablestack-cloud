@@ -117,7 +117,7 @@ public class DesktopClusterManagerImpl extends ManagerBase implements DesktopClu
     @Inject
     public DesktopClusterDao desktopClusterDao;
     @Inject
-    private DesktopClusterIpRangeDao desktopClusterIpRangeDao;
+    public DesktopClusterIpRangeDao desktopClusterIpRangeDao;
     @Inject
     public DesktopClusterVmMapDao desktopClusterVmMapDao;
     @Inject
@@ -541,7 +541,7 @@ public class DesktopClusterManagerImpl extends ManagerBase implements DesktopClu
             }
             final String dcIp = cmd.getDcIp();
             final String worksIp = cmd.getWorksIp();
-            final String cider = cmd.getNetworkCidr();
+            final String cider = network.getNetworkCidr();
             if (network.getGuestType().equals("L2")){
                 //L2 일 경우 IP 범위 조회하여 벨리데이션 체크
                 final String gateway = cmd.getGateway();
@@ -567,20 +567,16 @@ public class DesktopClusterManagerImpl extends ManagerBase implements DesktopClu
                 if (!NetUtils.isValidIp4Netmask(netmask)) {
                     throw new InvalidParameterValueException("Please specify a valid netmask");
                 }
-    
                 final String newCidr = NetUtils.getCidrFromGatewayAndNetmask(gateway, netmask);
-
                 if (!NetUtils.isIpWithInCidrRange(gateway, newCidr) || !NetUtils.isIpWithInCidrRange(startIp, newCidr) || !NetUtils.isIpWithInCidrRange(endIp, newCidr)) {
                     throw new InvalidParameterValueException("Please specify a valid IP range or valid netmask or valid gateway");
                 }
-    
                 final List<DesktopClusterIpRangeVO> ips = desktopClusterIpRangeDao.listAll();
                 for (final DesktopClusterIpRangeVO range : ips) {
                     final String otherGateway = range.getGateway();
                     final String otherNetmask = range.getNetmask();
                     final String otherStartIp = range.getStartIp();
                     final String otherEndIp = range.getEndIp();
-    
                     if ( otherGateway == null || otherNetmask == null ) {
                         continue;
                     }
@@ -588,7 +584,6 @@ public class DesktopClusterManagerImpl extends ManagerBase implements DesktopClu
                     if( !NetUtils.isNetworksOverlap(newCidr,  otherCidr)) {
                         continue;
                     }
-    
                     if (!gateway.equals(otherGateway) || !netmask.equals(range.getNetmask())) {
                         throw new InvalidParameterValueException("The IP range has already been added with gateway "
                                 + otherGateway + " ,and netmask " + otherNetmask
@@ -607,7 +602,7 @@ public class DesktopClusterManagerImpl extends ManagerBase implements DesktopClu
                         throw new InvalidParameterValueException("Please specify a valid IP range or valid netmask or valid gateway");
                     }
                 }
-            } 
+            }
             if (network.getGuestType().equals("Isolated") || network.getGuestType().equals("Shared")) {
                 //Isolated 일 경우 dc ip, works ip 입력된 경우 벨리데이션 체크
                 if ((dcIp != null || !dcIp.isEmpty()) && (worksIp != null || !worksIp.isEmpty())) {

@@ -40,6 +40,7 @@ import com.cloud.desktop.cluster.DesktopClusterManagerImpl;
 import com.cloud.desktop.cluster.DesktopClusterVO;
 import com.cloud.desktop.cluster.dao.DesktopClusterDao;
 import com.cloud.desktop.cluster.dao.DesktopClusterVmMapDao;
+import com.cloud.desktop.cluster.dao.DesktopClusterIpRangeDao;
 import com.cloud.desktop.cluster.DesktopClusterVmMapVO;
 import com.cloud.desktop.version.DesktopTemplateMapVO;
 import com.cloud.desktop.version.dao.DesktopTemplateMapDao;
@@ -105,6 +106,7 @@ public class DesktopClusterActionWorker {
     protected DesktopTemplateMapDao desktopTemplateMapDao;
     protected DesktopClusterDao desktopClusterDao;
     protected DesktopClusterVmMapDao desktopClusterVmMapDao;
+    protected DesktopClusterIpRangeDao desktopClusterIpRangeDao;
     protected DesktopControllerVersionDao desktopControllerVersionDao;
 
     protected DesktopCluster desktopCluster;
@@ -117,6 +119,7 @@ public class DesktopClusterActionWorker {
         this.desktopCluster = desktopCluster;
         this.desktopClusterDao = clusterManager.desktopClusterDao;
         this.desktopClusterVmMapDao = clusterManager.desktopClusterVmMapDao;
+        this.desktopClusterIpRangeDao = clusterManager.desktopClusterIpRangeDao;
         this.desktopControllerVersionDao = clusterManager.desktopControllerVersionDao;
         this.desktopTemplateMapDao = clusterManager.desktopTemplateMapDao;
     }

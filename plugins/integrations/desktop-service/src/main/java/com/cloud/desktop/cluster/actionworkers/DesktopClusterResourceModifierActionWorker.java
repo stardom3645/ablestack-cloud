@@ -27,7 +27,6 @@ import javax.inject.Inject;
 
 import org.apache.cloudstack.api.command.user.firewall.CreateFirewallRuleCmd;
 import org.apache.cloudstack.api.command.user.vm.StartVMCmd;
-import org.apache.cloudstack.api.command.user.volume.ResizeVolumeCmd;
 import org.apache.commons.collections.CollectionUtils;
 
 import com.cloud.capacity.CapacityManager;
@@ -46,7 +45,6 @@ import com.cloud.exception.ResourceUnavailableException;
 import com.cloud.host.Host;
 import com.cloud.host.HostVO;
 import com.cloud.host.dao.HostDao;
-import com.cloud.hypervisor.Hypervisor;
 import com.cloud.desktop.cluster.DesktopCluster;
 import com.cloud.desktop.cluster.DesktopClusterManagerImpl;
 import com.cloud.network.IpAddress;
@@ -63,9 +61,7 @@ import com.cloud.network.rules.RulesService;
 import com.cloud.network.rules.dao.PortForwardingRulesDao;
 import com.cloud.offering.ServiceOffering;
 import com.cloud.resource.ResourceManager;
-import com.cloud.storage.Volume;
 import com.cloud.storage.VolumeApiService;
-import com.cloud.storage.VolumeVO;
 import com.cloud.storage.dao.VolumeDao;
 import com.cloud.user.Account;
 import com.cloud.uservm.UserVm;
