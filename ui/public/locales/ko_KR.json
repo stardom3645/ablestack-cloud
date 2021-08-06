@@ -3360,7 +3360,7 @@
     "label.desktop.netmask": "데스크톱 클러스터 IP 범위의 넷마스크",
     "label.desktop.startip": "데스크톱 클러스터 IP 범위의 시작 IP",
     "label.desktop.endip": "데스크톱 클러스터 IP 범위의 종료 IP",
-    "label.controllerversionname": "이름"
+    "label.controllerversionname": "이름",
     "placeholder.name": "이름을 입력하세요.",
     "placeholder.description": "설명을 입력하세요.",
     "placeholder.addomainname": "AD 도메인 명을 입력하세요.",
