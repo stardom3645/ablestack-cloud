@@ -39,7 +39,6 @@ import com.cloud.desktop.cluster.DesktopClusterManagerImpl;
 import com.cloud.network.Network;
 import com.cloud.network.IpAddress;
 import com.cloud.network.dao.NetworkVO;
-import com.cloud.network.rules.FirewallRule;
 import com.cloud.user.AccountManager;
 import com.cloud.uservm.UserVm;
 import com.cloud.utils.exception.CloudRuntimeException;
@@ -121,19 +120,6 @@ public class DesktopClusterDestroyWorker extends DesktopClusterResourceModifierA
             throw new ManagementServerException(String.format("No source NAT IP addresses found for network : %s", network.getName()));
         }
         try {
-            removeLoadBalancingRule(publicIp, network, owner, 6443);
-        } catch (ResourceUnavailableException e) {
-            throw new ManagementServerException(String.format("Failed to DesktopCluster load balancing rule for network : %s", network.getName()));
-        }
-        FirewallRule firewallRule = removeApiFirewallRule(publicIp);
-        if (firewallRule == null) {
-            logMessage(Level.WARN, "Firewall rule for API access can't be removed", null);
-        }
-        firewallRule = removeSshFirewallRule(publicIp);
-        if (firewallRule == null) {
-            logMessage(Level.WARN, "Firewall rule for SSH access can't be removed", null);
-        }
-        try {
             removePortForwardingRules(publicIp, network, owner, removedVmIds);
         } catch (ResourceUnavailableException e) {
             throw new ManagementServerException(String.format("Failed to DesktopCluster port forwarding rules for network : %s", network.getName()));
@@ -187,6 +173,12 @@ public class DesktopClusterDestroyWorker extends DesktopClusterResourceModifierA
         return ipDestroyed;
     }
 
+    private boolean destroyDesktopVMs() {
+        boolean desktopDestroyed = true;
+        // Tag or Instance Group
+        return desktopDestroyed;
+    }
+
     public boolean destroy() throws CloudRuntimeException {
         init();
         validateClusterSate();
@@ -224,6 +216,7 @@ public class DesktopClusterDestroyWorker extends DesktopClusterResourceModifierA
             boolean ipDestroyed = destroyClusterIps();
         }
         // Desktop VM remove
+        boolean desktopVmDestroyed = destroyDesktopVMs();
         boolean deleted = desktopClusterDao.remove(desktopCluster.getId());
         if (!deleted) {
             logMessage(Level.WARN, String.format("Failed to delete Desktop cluster : %s", desktopCluster.getName()), null);

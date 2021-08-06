@@ -50,6 +50,7 @@ import com.cloud.network.Network;
 import com.cloud.network.NetworkModel;
 import com.cloud.network.dao.NetworkDao;
 import com.cloud.service.dao.ServiceOfferingDao;
+import com.cloud.storage.dao.DiskOfferingDao;
 import com.cloud.storage.dao.VMTemplateDao;
 import com.cloud.template.TemplateApiService;
 import com.cloud.template.VirtualMachineTemplate;
@@ -90,6 +91,8 @@ public class DesktopClusterActionWorker {
     protected NetworkModel networkModel;
     @Inject
     protected ServiceOfferingDao serviceOfferingDao;
+    @Inject
+    protected DiskOfferingDao diskOfferingDao;
     @Inject
     protected VMTemplateDao templateDao;
     @Inject

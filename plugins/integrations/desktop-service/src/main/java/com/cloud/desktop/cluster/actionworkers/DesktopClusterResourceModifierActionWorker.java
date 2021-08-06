@@ -18,14 +18,12 @@
 package com.cloud.desktop.cluster.actionworkers;
 
 import java.lang.reflect.Field;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.inject.Inject;
 
-import org.apache.cloudstack.api.command.user.firewall.CreateFirewallRuleCmd;
 import org.apache.cloudstack.api.command.user.vm.StartVMCmd;
 import org.apache.commons.collections.CollectionUtils;
 
@@ -39,7 +37,6 @@ import com.cloud.deploy.DeployDestination;
 import com.cloud.exception.InsufficientCapacityException;
 import com.cloud.exception.InsufficientServerCapacityException;
 import com.cloud.exception.ManagementServerException;
-import com.cloud.exception.NetworkRuleConflictException;
 import com.cloud.exception.ResourceAllocationException;
 import com.cloud.exception.ResourceUnavailableException;
 import com.cloud.host.Host;
@@ -51,11 +48,8 @@ import com.cloud.network.IpAddress;
 import com.cloud.network.Network;
 import com.cloud.network.dao.FirewallRulesDao;
 import com.cloud.network.dao.LoadBalancerDao;
-import com.cloud.network.dao.LoadBalancerVO;
 import com.cloud.network.firewall.FirewallService;
 import com.cloud.network.lb.LoadBalancingRulesService;
-import com.cloud.network.rules.FirewallRule;
-import com.cloud.network.rules.FirewallRuleVO;
 import com.cloud.network.rules.PortForwardingRuleVO;
 import com.cloud.network.rules.RulesService;
 import com.cloud.network.rules.dao.PortForwardingRulesDao;
@@ -67,12 +61,7 @@ import com.cloud.user.Account;
 import com.cloud.uservm.UserVm;
 import com.cloud.utils.Pair;
 import com.cloud.utils.component.ComponentContext;
-import com.cloud.utils.db.Transaction;
-import com.cloud.utils.db.TransactionCallbackWithException;
-import com.cloud.utils.db.TransactionStatus;
 import com.cloud.utils.exception.ExecutionException;
-import com.cloud.utils.net.Ip;
-import com.cloud.vm.Nic;
 import com.cloud.vm.UserVmManager;
 import com.cloud.vm.VirtualMachine;
 import com.cloud.vm.dao.VMInstanceDao;
@@ -227,116 +216,6 @@ public class DesktopClusterResourceModifierActionWorker extends DesktopClusterAc
         return null;
     }
 
-    protected void provisionFirewallRules(final IpAddress publicIp, final Account account, int startPort, int endPort) throws NoSuchFieldException,
-            IllegalAccessException, ResourceUnavailableException, NetworkRuleConflictException {
-        List<String> sourceCidrList = new ArrayList<String>();
-        sourceCidrList.add("0.0.0.0/0");
-
-        CreateFirewallRuleCmd rule = new CreateFirewallRuleCmd();
-        rule = ComponentContext.inject(rule);
-
-        Field addressField = rule.getClass().getDeclaredField("ipAddressId");
-        addressField.setAccessible(true);
-        addressField.set(rule, publicIp.getId());
-
-        Field protocolField = rule.getClass().getDeclaredField("protocol");
-        protocolField.setAccessible(true);
-        protocolField.set(rule, "TCP");
-
-        Field startPortField = rule.getClass().getDeclaredField("publicStartPort");
-        startPortField.setAccessible(true);
-        startPortField.set(rule, startPort);
-
-        Field endPortField = rule.getClass().getDeclaredField("publicEndPort");
-        endPortField.setAccessible(true);
-        endPortField.set(rule, endPort);
-
-        Field cidrField = rule.getClass().getDeclaredField("cidrlist");
-        cidrField.setAccessible(true);
-        cidrField.set(rule, sourceCidrList);
-
-        firewallService.createIngressFirewallRule(rule);
-        firewallService.applyIngressFwRules(publicIp.getId(), account);
-    }
-
-    /**
-     * To provision SSH port forwarding rules for the given Desktop cluster
-     * for its given virtual machines
-     * @param publicIp
-     * @param network
-     * @param account
-     * @param List<Long> clusterVMIds (when empty then method must be called while
-     *                  down-scaling of the DesktopCluster therefore no new rules
-     *                  to be added)
-     * @param firewallRuleSourcePortStart
-     * @throws ResourceUnavailableException
-     * @throws NetworkRuleConflictException
-     */
-    protected void provisionSshPortForwardingRules(IpAddress publicIp, Network network, Account account,
-                                                   List<Long> clusterVMIds, int firewallRuleSourcePortStart) throws ResourceUnavailableException,
-            NetworkRuleConflictException {
-        if (!CollectionUtils.isEmpty(clusterVMIds)) {
-            final long publicIpId = publicIp.getId();
-            final long networkId = network.getId();
-            final long accountId = account.getId();
-            final long domainId = account.getDomainId();
-            for (int i = 0; i < clusterVMIds.size(); ++i) {
-                long vmId = clusterVMIds.get(i);
-                Nic vmNic = networkModel.getNicInNetwork(vmId, networkId);
-                final Ip vmIp = new Ip(vmNic.getIPv4Address());
-                final long vmIdFinal = vmId;
-                final int srcPortFinal = firewallRuleSourcePortStart + i;
-
-                PortForwardingRuleVO pfRule = Transaction.execute(new TransactionCallbackWithException<PortForwardingRuleVO, NetworkRuleConflictException>() {
-                    @Override
-                    public PortForwardingRuleVO doInTransaction(TransactionStatus status) throws NetworkRuleConflictException {
-                        PortForwardingRuleVO newRule =
-                                new PortForwardingRuleVO(null, publicIpId,
-                                        srcPortFinal, srcPortFinal,
-                                        vmIp,
-                                        22, 22,
-                                        "tcp", networkId, accountId, domainId, vmIdFinal);
-                        newRule.setDisplay(true);
-                        newRule.setState(FirewallRule.State.Add);
-                        newRule = portForwardingRulesDao.persist(newRule);
-                        return newRule;
-                    }
-                });
-                rulesService.applyPortForwardingRules(publicIp.getId(), account);
-                if (LOGGER.isInfoEnabled()) {
-                    LOGGER.info(String.format("Provisioned SSH port forwarding rule from port %d to 22 on %s to the VM IP : %s in Desktop cluster : %s", srcPortFinal, publicIp.getAddress().addr(), vmIp.toString(), desktopCluster.getName()));
-                }
-            }
-        }
-    }
-
-    protected FirewallRule removeApiFirewallRule(final IpAddress publicIp) {
-        FirewallRule rule = null;
-        List<FirewallRuleVO> firewallRules = firewallRulesDao.listByIpAndPurposeAndNotRevoked(publicIp.getId(), FirewallRule.Purpose.Firewall);
-        for (FirewallRuleVO firewallRule : firewallRules) {
-            if (firewallRule.getSourcePortStart() == 6443 &&
-                    firewallRule.getSourcePortEnd() == 6443) {
-                rule = firewallRule;
-                firewallService.revokeIngressFwRule(firewallRule.getId(), true);
-                break;
-            }
-        }
-        return rule;
-    }
-
-    protected FirewallRule removeSshFirewallRule(final IpAddress publicIp) {
-        FirewallRule rule = null;
-        List<FirewallRuleVO> firewallRules = firewallRulesDao.listByIpAndPurposeAndNotRevoked(publicIp.getId(), FirewallRule.Purpose.Firewall);
-        for (FirewallRuleVO firewallRule : firewallRules) {
-            if (firewallRule.getSourcePortStart() == 2222) {
-                rule = firewallRule;
-                firewallService.revokeIngressFwRule(firewallRule.getId(), true);
-                break;
-            }
-        }
-        return rule;
-    }
-
     protected void removePortForwardingRules(final IpAddress publicIp, final Network network, final Account account, final List<Long> removedVMIds) throws ResourceUnavailableException {
         if (!CollectionUtils.isEmpty(removedVMIds)) {
             for (Long vmId : removedVMIds) {
@@ -349,20 +228,6 @@ public class DesktopClusterResourceModifierActionWorker extends DesktopClusterAc
                 }
             }
             rulesService.applyPortForwardingRules(publicIp.getId(), account);
-        }
-    }
-
-    protected void removeLoadBalancingRule(final IpAddress publicIp, final Network network,
-                                           final Account account, final int port) throws ResourceUnavailableException {
-        List<LoadBalancerVO> rules = loadBalancerDao.listByIpAddress(publicIp.getId());
-        for (LoadBalancerVO rule : rules) {
-            if (rule.getNetworkId() == network.getId() &&
-                    rule.getAccountId() == account.getId() &&
-                    rule.getSourcePortStart() == port &&
-                    rule.getSourcePortEnd() == port) {
-                lbService.deleteLoadBalancerRule(rule.getId(), true);
-                break;
-            }
         }
     }
 }

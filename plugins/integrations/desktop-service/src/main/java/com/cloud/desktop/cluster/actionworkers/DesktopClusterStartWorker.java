@@ -19,6 +19,8 @@ package com.cloud.desktop.cluster.actionworkers;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.apache.cloudstack.api.BaseCmd;
 import org.apache.commons.collections.CollectionUtils;
@@ -32,6 +34,7 @@ import com.cloud.exception.ManagementServerException;
 import com.cloud.exception.ResourceUnavailableException;
 import com.cloud.network.IpAddressManager;
 import com.cloud.network.Network;
+import com.cloud.storage.DiskOfferingVO;
 import com.cloud.offering.ServiceOffering;
 import com.cloud.uservm.UserVm;
 import com.cloud.utils.Pair;
@@ -49,6 +52,7 @@ public class DesktopClusterStartWorker extends DesktopClusterResourceModifierAct
 
     private DesktopControllerVersion desktopClusterVersion;
     private IpAddressManager ipAddressManager;
+    private static final long GiB_TO_BYTES = 1024 * 1024 * 1024;
 
     public DesktopClusterStartWorker(final DesktopCluster desktopCluster, final DesktopClusterManagerImpl clusterManager) {
         super(desktopCluster, clusterManager);
@@ -108,11 +112,18 @@ public class DesktopClusterStartWorker extends DesktopClusterResourceModifierAct
         List<Long> networkIds = new ArrayList<Long>();
         networkIds.add(desktopCluster.getNetworkId());
         Network.IpAddresses addrs = new Network.IpAddresses(null, null);
-        String hostName = desktopCluster.getName() + "-dc-control";
+        String hostName = desktopCluster.getName() + "-dc";
+        Map<String, String> customParameterMap = new HashMap<String, String>();
+        DiskOfferingVO diskOffering = diskOfferingDao.findById(serviceOffering.getId());
+        long rootDiskSizeInBytes = diskOffering.getDiskSize();
+        if (rootDiskSizeInBytes > 0) {
+            long rootDiskSizeInGiB = rootDiskSizeInBytes / GiB_TO_BYTES;
+            customParameterMap.put("rootdisksize", String.valueOf(rootDiskSizeInGiB));
+        }
         dcControlVm = userVmService.createAdvancedVirtualMachine(zone, serviceOffering, dcTemplate, networkIds, owner,
                 hostName, hostName, null, null, null,
                 dcTemplate.getHypervisorType(), BaseCmd.HTTPMethod.POST, null, null,
-                null, addrs, null, null, null, null, null, null, null, null, true);
+                null, addrs, null, null, null, customParameterMap, null, null, null, null, true);
         if (LOGGER.isInfoEnabled()) {
             LOGGER.info(String.format("Created control VM ID: %s, %s in the Desktop cluster : %s", dcControlVm.getUuid(), hostName, desktopCluster.getName()));
         }
@@ -144,11 +155,18 @@ public class DesktopClusterStartWorker extends DesktopClusterResourceModifierAct
         List<Long> networkIds = new ArrayList<Long>();
         networkIds.add(desktopCluster.getNetworkId());
         Network.IpAddresses addrs = new Network.IpAddresses(null, null);
-        String hostName = desktopCluster.getName() + "-works-control";
+        String hostName = desktopCluster.getName() + "-works";
+        Map<String, String> customParameterMap = new HashMap<String, String>();
+        DiskOfferingVO diskOffering = diskOfferingDao.findById(serviceOffering.getId());
+        long rootDiskSizeInBytes = diskOffering.getDiskSize();
+        if (rootDiskSizeInBytes > 0) {
+            long rootDiskSizeInGiB = rootDiskSizeInBytes / GiB_TO_BYTES;
+            customParameterMap.put("rootdisksize", String.valueOf(rootDiskSizeInGiB));
+        }
         worksControlVm = userVmService.createAdvancedVirtualMachine(zone, serviceOffering, worksTemplate, networkIds, owner,
                 hostName, hostName, null, null, null,
                 worksTemplate.getHypervisorType(), BaseCmd.HTTPMethod.POST, null, null,
-                null, addrs, null, null, null, null, null, null, null, null, true);
+                null, addrs, null, null, null, customParameterMap, null, null, null, null, true);
         if (LOGGER.isInfoEnabled()) {
             LOGGER.info(String.format("Created control VM ID : %s, %s in the Desktop cluster : %s", worksControlVm.getUuid(), hostName, desktopCluster.getName()));
         }
