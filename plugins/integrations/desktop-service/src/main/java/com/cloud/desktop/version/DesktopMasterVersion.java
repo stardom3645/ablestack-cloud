@@ -37,4 +37,5 @@ public interface DesktopMasterVersion extends InternalIdentity, Identity {
     long getTemplateId();
     Long getZoneId();
     State getState();
+    String getUploadType();
 }
