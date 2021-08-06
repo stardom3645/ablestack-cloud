@@ -87,8 +87,7 @@ export default {
       docHelp: '',
       permission: ['listDesktopControllerVersions'],
       columns: ['name', 'state', 'version', 'zonename'],
-      details: ['name', 'description', 'version', 'templates'],
-      searchFilters: ['name', 'zoneid', 'tags'],
+      details: ['name', 'description', 'version', 'dctemplate', 'workstemplate'],
       actions: [
         {
           api: 'addDesktopControllerVersion',
@@ -122,12 +121,11 @@ export default {
       icon: 'hdd',
       docHelp: '',
       permission: ['listDesktopMasterVersions'],
-      columns: ['name', 'state', 'version', 'zonename'],
-      details: ['name', 'version', 'description', 'templateostype', 'templatestate'],
-      searchFilters: ['name', 'zoneid', 'tags'],
+      columns: ['name', 'state', 'version', 'zonename', 'masteruploadtype'],
+      details: ['name', 'version', 'description', 'templateostype', 'templatestate', 'masteruploadtype', 'templatename'],
       actions: [
         {
-          api: 'registerTemplate',
+          api: 'addDesktopControllerVersion',
           icon: 'plus',
           label: 'label.desktop.master.template.version',
           docHelp: '',
@@ -136,7 +134,7 @@ export default {
           component: () => import('@/views/desktop/AddDesktopMasterVersion.vue')
         },
         {
-          api: 'updateTemplatePermissions',
+          api: 'updateDesktopMasterVersion',
           icon: 'edit',
           label: 'label.desktop.master.version.manage',
           dataView: true,
@@ -144,7 +142,7 @@ export default {
           component: () => import('@/views/desktop/UpdateDesktopMasterVersion.vue')
         },
         {
-          api: 'updateTemplate',
+          api: 'deleteDesktopMasterVersion',
           icon: 'delete',
           label: 'label.desktop.master.version.delete',
           message: 'message.desktop.master.veresion.delete',

@@ -31,7 +31,7 @@
           <a-col :md="24" :lg="24">
             <a-form-item :label="$t('label.name')">
               <a-input
-                v-decorator="['name', {
+                v-decorator="['masterversionname', {
                   rules: [{ required: true, message: `${this.$t('message.error.required.input')}` }]
                 }]"
                 :placeholder="$t('placeholder.name')"
@@ -53,9 +53,15 @@
         </a-row>
         <a-row :gutter="12">
           <a-col :md="24" :lg="24">
-            <a-form-item :label="$t('label.version')">
+            <a-form-item>
+              <span slot="label">
+                {{ $t('label.version') }}
+                <a-tooltip :title="$t('placeholder.version')">
+                  <a-icon type="info-circle" style="color: rgba(0,0,0,.45)" />
+                </a-tooltip>
+              </span>
               <a-input
-                v-decorator="['displaytext', {
+                v-decorator="['masterversion', {
                   rules: [{ required: true, message: `${this.$t('message.error.required.input')}` }]
                 }]"
                 :placeholder="$t('placeholder.version')" />
@@ -67,13 +73,13 @@
             <a-col :md="24" :lg="24">
               <a-form-item>
                 <span slot="label">
-                  {{ $t('label.upload.type') }}
-                  <a-tooltip :title="$t('placeholder.upload.type')">
+                  {{ $t('label.masteruploadtype') }}
+                  <a-tooltip :title="$t('placeholder.masteruploadtype')">
                     <a-icon type="info-circle" style="color: rgba(0,0,0,.45)" />
                   </a-tooltip>
                 </span>
                 <a-radio-group
-                  v-decorator="['uploadtype', {
+                  v-decorator="['masteruploadtype', {
                     initialValue: this.uploadType,
                     rules: [{ required: true, message: $t('message.error.select') }]
                   }]"
@@ -82,7 +88,7 @@
                   <a-radio-button value="url">
                     {{ $t('label.url') }}
                   </a-radio-button>
-                  <a-radio-button value="templates">
+                  <a-radio-button value="template">
                     {{ $t('label.templatename') }}
                   </a-radio-button>
                 </a-radio-group>
@@ -96,7 +102,7 @@
               <a-form-item :label="$t('label.url')">
                 <a-input
                   :autoFocus="currentForm === 'Create'"
-                  v-decorator="['url', {
+                  v-decorator="['masterurl', {
                     rules: [{ required: true, message: `${this.$t('message.error.required.input')}` }]
                   }]"
                   :placeholder="$t('placeholder.url')" />
@@ -104,7 +110,7 @@
             </a-col>
           </a-row>
         </div>
-        <div v-if="currentForm === 'Create'">
+        <!-- <div v-if="currentForm === 'Create'">
           <a-row :gutter="12" v-if="this.uploadType=='url'">
             <a-col :md="24" :lg="24">
               <a-form-item
@@ -136,8 +142,8 @@
               </a-form-item>
             </a-col>
           </a-row>
-        </div>
-        <div v-else>
+        </div> -->
+        <div v-if="currentForm === 'Create'">
           <a-row :gutter="12" v-if="this.uploadType=='url'">
             <a-col :md="24" :lg="24">
               <a-form-item
@@ -220,7 +226,7 @@
                 :filterOption="(input, option) => {
                   return option.componentOptions.children[0].text.toLowerCase().indexOf(input.toLowerCase()) >= 0
                 }"
-                v-decorator="['ostypeid', {
+                v-decorator="['masterostype', {
                   initialValue: defaultOsId,
                   rules: [
                     {
@@ -238,7 +244,7 @@
             </a-form-item>
           </a-col>
         </a-row>
-        <a-row :gutter="12" v-if="this.uploadType=='templates'">
+        <a-row :gutter="12" v-if="this.uploadType=='template'">
           <a-col :md="24" :lg="24">
             <a-form-item :label="$t('label.templatename')">
               <a-select
@@ -247,7 +253,7 @@
                 :filterOption="(input, option) => {
                   return option.componentOptions.children[0].text.toLowerCase().indexOf(input.toLowerCase()) >= 0
                 }"
-                v-decorator="['template', {
+                v-decorator="['templateid', {
                   rules: [
                     {
                       required: true,
@@ -337,12 +343,6 @@ export default {
     this.$set(this.zones, 'opts', [])
     this.$set(this.hyperVisor, 'loading', false)
     this.$set(this.hyperVisor, 'opts', [])
-    this.$set(this.rootDisk, 'loading', false)
-    this.$set(this.rootDisk, 'opts', [])
-    this.$set(this.nicAdapterType, 'loading', false)
-    this.$set(this.nicAdapterType, 'opts', [])
-    this.$set(this.keyboardType, 'loading', false)
-    this.$set(this.keyboardType, 'opts', [])
     this.$set(this.format, 'loading', false)
     this.$set(this.format, 'opts', [])
     this.$set(this.osTypes, 'loading', false)
@@ -420,8 +420,8 @@ export default {
       if (store.getters.userInfo.roletype === this.rootAdmin && this.currentForm === 'Create') {
         this.allowed = true
         listZones.push({
-          id: this.$t('label.all.zone'),
-          name: this.$t('label.all.zone')
+        // id: this.$t('label.all.zone'),
+        // name: this.$t('label.all.zone')
         })
       }
 
@@ -486,7 +486,7 @@ export default {
         listTemplates = listTemplates.concat(listTemplatesResponse)
         this.$set(this.template, 'opts', listTemplates)
       }).finally(() => {
-        this.zoneSelected = (this.template.opts && this.template.opts[1]) ? this.template.opts[1].id : ''
+        // this.zoneSelected = (this.template.opts && this.template.opts[1]) ? this.template.opts[1].id : ''
         this.template.loading = false
       })
     },
@@ -651,6 +651,10 @@ export default {
             id: 'VHD',
             description: 'VHD'
           })
+          format.push({
+            id: 'QCOW2',
+            description: 'QCOW2'
+          })
           break
         case 'VMware':
           this.hyperVMWShow = true
@@ -697,11 +701,11 @@ export default {
 
       const params = {}
 
-      if (value.includes(this.$t('label.all.zone'))) {
-        params.listAll = true
-        this.fetchHyperVisor(params)
-        return
-      }
+      // if (value.includes(this.$t('label.all.zone'))) {
+      //   params.listAll = true
+      //   this.fetchHyperVisor(params)
+      //   return
+      // }
 
       for (let i = 0; i < value.length; i++) {
         const zoneSelected = this.zones.opts.filter(zone => zone.id === value[i])
@@ -784,12 +788,13 @@ export default {
         if (!('requireshvm' in params)) { // handled as default true by API
           params.requireshvm = false
         }
+        params.uploadType = this.uploadType
         if (this.currentForm === 'Create') {
           this.loading = true
-          api('registerTemplate', params).then(json => {
+          api('addDesktopMasterVersion', params).then(json => {
             this.$notification.success({
               message: this.$t('label.register.template'),
-              description: `${this.$t('message.success.register.template')} ${params.name}`
+              description: `${this.$t('message.success.register.master.template.version')}`
             })
             this.$emit('refresh-data')
             this.closeAction()
