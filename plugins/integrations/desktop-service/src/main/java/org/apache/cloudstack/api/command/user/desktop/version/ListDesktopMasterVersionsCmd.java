@@ -49,6 +49,10 @@ public class ListDesktopMasterVersionsCmd extends BaseListCmd {
     /////////////////////////////////////////////////////
     //////////////// API parameters /////////////////////
     /////////////////////////////////////////////////////
+    @Parameter(name = ApiConstants.NAME, type = CommandType.STRING,
+    description = "name of the Desktop Cluster(a substring match is made against the parameter value, data for all matching Desktop will be returned)")
+    private String name;
+
     @Parameter(name = ApiConstants.ID, type = CommandType.UUID,
             entityType = DesktopMasterVersionResponse.class,
             description = "the ID of the Desktop Master Version")
@@ -64,6 +68,10 @@ public class ListDesktopMasterVersionsCmd extends BaseListCmd {
     /////////////////////////////////////////////////////
     public Long getId() {
         return id;
+    }
+
+    public String getName() {
+        return name;
     }
 
     public Long getZoneId() {

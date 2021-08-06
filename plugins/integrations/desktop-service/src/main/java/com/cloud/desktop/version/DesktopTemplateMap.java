@@ -27,4 +27,5 @@ public interface DesktopTemplateMap {
     long getId();
     long getVersionId();
     long getTemplateId();
+    String getType();
 }
