@@ -192,7 +192,7 @@
                 </a-tooltip>
               </span>
               <a-input
-                v-decorator="['account', {
+                v-decorator="['gateway', {
                   rules: [{ required: true, message: $t('message.error.required.input') }]
                 }]"
                 :placeholder="$t('label.gateway')" />
@@ -207,7 +207,7 @@
                 </a-tooltip>
               </span>
               <a-input
-                v-decorator="['account', {
+                v-decorator="['netmask', {
                   rules: [{ required: true, message: $t('message.error.required.input') }]
                 }]"
                 :placeholder="$t('placeholder.netmask')" />
