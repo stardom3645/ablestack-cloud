@@ -54,6 +54,9 @@ public class DesktopMasterVersionVO implements DesktopMasterVersion {
     @Column(name = "version")
     private String version;
 
+    @Column(name = "upload_type")
+    private String uploadType;
+
     @Column(name = "zone_id")
     private Long zoneId;
 
@@ -71,13 +74,14 @@ public class DesktopMasterVersionVO implements DesktopMasterVersion {
         this.uuid = UUID.randomUUID().toString();
     }
 
-    public DesktopMasterVersionVO(String name, String version, String description, long templateId, Long zoneId) {
+    public DesktopMasterVersionVO(String name, String version, String description, long templateId, Long zoneId, String uploadType) {
         this.uuid = UUID.randomUUID().toString();
         this.name = name;
         this.description = description;
         this.templateId = templateId;
         this.version = version;
         this.zoneId = zoneId;
+        this.uploadType = uploadType;
     }
 
     @Override
@@ -150,5 +154,13 @@ public class DesktopMasterVersionVO implements DesktopMasterVersion {
 
     public Date getRemoved() {
         return removed;
+    }
+
+    public String getUploadType() {
+        return uploadType;
+    }
+
+    public void setUploadType(String uploadType) {
+        this.uploadType = uploadType;
     }
 }

@@ -65,7 +65,6 @@ public class DesktopTemplateMapVO implements DesktopTemplateMap {
         this.templateId = templateId;
     }
 
-    @Override
     public String getType() {
         return type;
     }
@@ -78,8 +77,8 @@ public class DesktopTemplateMapVO implements DesktopTemplateMap {
     }
 
     public DesktopTemplateMapVO(long versionId, long templateId, String type) {
-        this.versionId = versionId;
         this.templateId = templateId;
+        this.versionId = versionId;
         this.type = type;
     }
 }

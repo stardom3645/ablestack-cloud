@@ -116,22 +116,68 @@
     <a-modal
       :visible="showAddIpModal"
       :title="$t('label.desktop.cluster.add.ip.range')"
+      :closable="true"
       :maskClosable="false"
       :okText="$t('label.ok')"
       :cancelText="$t('label.cancel')"
       @cancel="closeModals"
       @ok="submitAddIp">
-      {{ $t('message.desktop.cluster.add.ip.range') }}
-      <div class="modal-form">
-        <p class="modal-form__label">{{ $t('label.gateway') }}:</p>
-        <a-input v-model="addNetworkData.gateway"></a-input>
-        <p class="modal-form__label">{{ $t('label.netmask') }}:</p>
-        <a-input v-model="addNetworkData.netmask"></a-input>
-        <p class="modal-form__label">{{ $t('label.startip') }}:</p>
-        <a-input v-model="addNetworkData.startip"></a-input>
-        <p class="modal-form__label">{{ $t('label.endip') }}:</p>
-        <a-input v-model="addNetworkData.endip"></a-input>
-      </div>
+        <a-spin :spinning="loadingNic">
+          <a-form :form="form" @submit="submitAddIp" layout="vertical">
+            <a-form-item>
+              <span slot="label">
+                {{ $t('label.gateway') }}
+                <a-tooltip :title="$t('label.desktop.gateway')">
+                  <a-icon type="info-circle" style="color: rgba(0,0,0,.45)" />
+                </a-tooltip>
+              </span>
+              <a-input
+                v-decorator="['gateway', {
+                  rules: [{ required: true, message: $t('message.error.required.input') }]
+                }]"
+                :placeholder="$t('placeholder.gateway')" />
+            </a-form-item>
+            <a-form-item>
+              <span slot="label">
+                {{ $t('label.netmask') }}
+                <a-tooltip :title="$t('label.desktop.netmask')">
+                  <a-icon type="info-circle" style="color: rgba(0,0,0,.45)" />
+                </a-tooltip>
+              </span>
+              <a-input
+                v-decorator="['netmask', {
+                  rules: [{ required: true, message: $t('message.error.required.input') }]
+                }]"
+                :placeholder="$t('placeholder.netmask')" />
+            </a-form-item>
+            <a-form-item>
+              <span slot="label">
+                {{ $t('label.startip') }}
+                <a-tooltip :title="$t('label.desktop.startip')">
+                  <a-icon type="info-circle" style="color: rgba(0,0,0,.45)" />
+                </a-tooltip>
+              </span>
+              <a-input
+                v-decorator="['startip', {
+                  rules: [{ required: true, message: $t('message.error.required.input') }]
+                }]"
+                :placeholder="$t('placeholder.startip')" />
+            </a-form-item>
+            <a-form-item>
+              <span slot="label">
+                {{ $t('label.endip') }}
+                <a-tooltip :title="$t('label.desktop.endip')">
+                  <a-icon type="info-circle" style="color: rgba(0,0,0,.45)" />
+                </a-tooltip>
+              </span>
+              <a-input
+                v-decorator="['endip', {
+                  rules: [{ required: true, message: $t('message.error.required.input') }]
+                }]"
+                :placeholder="$t('placeholder.endip')" />
+            </a-form-item>
+          </a-form>
+        </a-spin>
     </a-modal>
 
   </a-spin>
@@ -180,12 +226,6 @@ export default {
       totalStorage: 0,
       currentTab: 'details',
       showAddIpModal: false,
-      addNetworkData: {
-        netmask: '',
-        gateway: '',
-        startip: '',
-        endip: ''
-      },
       loadingNic: false,
       secondaryIPs: [],
       selectedNicId: '',
@@ -266,6 +306,10 @@ export default {
       ]
     }
   },
+  beforeCreate () {
+    this.form = this.$form.createForm(this)
+    this.apiParams = this.$getApiParams('addDesktopClusterIpRanges')
+  },
   created () {
     this.vm = this.resource
     this.fetchData()
@@ -333,49 +377,57 @@ export default {
     },
     showAddModal () {
       this.showAddIpModal = true
+      this.form.setFieldsValue({
+        gateway: [],
+        netmask: [],
+        startip: [],
+        endip: []
+      })
     },
     closeModals () {
       this.showAddIpModal = false
-      this.addNetworkData.netmask = ''
-      this.addNetworkData.gateway = ''
-      this.addNetworkData.startip = ''
-      this.addNetworkData.endip = ''
     },
-    submitAddIp () {
-      const params = {}
-      params.desktopclusterid = this.resource.id
-      params.netmask = this.addNetworkData.netmask
-      params.gateway = this.addNetworkData.gateway
-      params.startip = this.addNetworkData.startip
-      params.endip = this.addNetworkData.endip
-      this.showAddIpModal = false
-      this.loadingNic = true
-      api('addDesktopClusterIpRange', params).then(response => {
-        this.$pollJob({
-          jobId: response.adddesktopclusteriprangeresponse.jobid,
-          successMessage: this.$t('message.success.add.desktop.ip'),
-          successMethod: () => {
-            this.loadingNic = false
-            this.closeModals()
-            this.parentFetchData()
-          },
-          errorMessage: this.$t('message.add.desktop.ip.failed'),
-          errorMethod: () => {
-            this.loadingNic = false
-            this.closeModals()
-            this.parentFetchData()
-          },
-          loadingMessage: this.$t('message.add.desktop.ip.processing'),
-          catchMessage: this.$t('error.fetching.async.job.result'),
-          catchMethod: () => {
-            this.loadingNic = false
-            this.closeModals()
-            this.parentFetchData()
-          }
+    submitAddIp (e) {
+      e.preventDefault()
+      this.form.validateFields((err, values) => {
+        if (err) {
+          return
+        }
+        const params = {}
+        params.desktopclusterid = this.resource.id
+        params.netmask = values.netmask
+        params.gateway = values.gateway
+        params.startip = values.startip
+        params.endip = values.endip
+        this.showAddIpModal = false
+        this.loadingNic = true
+        api('addDesktopClusterIpRanges', params).then(response => {
+          this.$pollJob({
+            jobId: response.adddesktopclusteriprangesresponse.jobid,
+            successMessage: this.$t('message.success.add.desktop.ip'),
+            successMethod: () => {
+              this.loadingNic = false
+              this.closeModals()
+              this.parentFetchData()
+            },
+            errorMessage: this.$t('message.add.desktop.ip.failed'),
+            errorMethod: () => {
+              this.loadingNic = false
+              this.closeModals()
+              this.parentFetchData()
+            },
+            loadingMessage: this.$t('message.add.desktop.ip.processing'),
+            catchMessage: this.$t('error.fetching.async.job.result'),
+            catchMethod: () => {
+              this.loadingNic = false
+              this.closeModals()
+              this.parentFetchData()
+            }
+          })
+        }).catch(error => {
+          this.$notifyError(error)
+          this.loadingNic = false
         })
-      }).catch(error => {
-        this.$notifyError(error)
-        this.loadingNic = false
       })
     }
   }

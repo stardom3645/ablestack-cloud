@@ -840,9 +840,16 @@ public class ApiConstants {
     public static final String DESKTOP_TEMPLATE_STATE = "templatestate";
     public static final String DESKTOP_AD_DOMAIN_NAME = "addomainname";
     public static final String DESKTOP_TEMPLATES = "templates";
+    public static final String DESKTOP_DC_TEMPLATE = "dctemplate";
+    public static final String DESKTOP_WORKS_TEMPLATE = "workstemplate";
     public static final String DESKTOP_TEMPLATE_OS_TYPE = "templateostype";
     public static final String DESKTOP_CLUSTER_ID = "desktopclusterid";
     public static final String DESKTOP_CLUSTER_NAME = "desktopclustername";
+    public static final String DESKTOP_MASTER_VERSION_NAME = "masterversionname";
+    public static final String DESKTOP_MASTER_VERSION = "masterversion";
+    public static final String DESKTOP_MASTER_VERSION_URL = "masterurl";
+    public static final String DESKTOP_MASTER_VERSION_OSTYPE = "masterostype";
+    public static final String DESKTOP_MASTER_VERSION_UPLOADTYPE = "masteruploadtype";
     public static final String DESKTOP_PASSWORD = "desktoppassword";
     public static final String DESKTOP_CLUSTER_TYPE = "clustertype";
     public static final String DESKTOP_CONTROLLER_DC_IP = "dcip";

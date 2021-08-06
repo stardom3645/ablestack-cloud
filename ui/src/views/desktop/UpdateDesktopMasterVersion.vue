@@ -55,7 +55,7 @@
 import { api } from '@/api'
 
 export default {
-  name: 'UpdateKubernetesSupportedVersion',
+  name: 'updateDesktopMasterVersion',
   props: {
     resource: {
       type: Object,
@@ -127,8 +127,8 @@ export default {
         if (this.isValidValueForKey(values, 'state') && this.arrayHasItems(this.states)) {
           params.state = this.states[values.state].id
         }
-        api('updateKubernetesSupportedVersion', params).then(json => {
-          this.$message.success(`${this.$t('message.success.update.kubeversion')}: ${this.resource.name}`)
+        api('updateDesktopMasterVersion', params).then(json => {
+          this.$message.success(`${this.$t('message.success.update.desktop.master.template.version')}: ${this.resource.name}`)
           this.$emit('refresh-data')
           this.closeAction()
         }).catch(error => {

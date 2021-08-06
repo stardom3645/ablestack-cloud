@@ -72,6 +72,10 @@ public class DesktopMasterVersionResponse extends BaseResponse {
     @Param(description = "the enabled or disabled state of the Desktop Master Version")
     private String state;
 
+    @SerializedName(ApiConstants.DESKTOP_MASTER_VERSION_UPLOADTYPE)
+    @Param(description = "the upload type of the Desktop Master Version")
+    private String uploadType;
+
     public String getId() {
         return id;
     }
@@ -158,5 +162,13 @@ public class DesktopMasterVersionResponse extends BaseResponse {
 
     public void setState(String state) {
         this.state = state;
+    }
+
+    public String getUploadType() {
+        return uploadType;
+    }
+
+    public void setUploadType(String uploadType) {
+        this.uploadType = uploadType;
     }
 }
