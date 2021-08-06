@@ -3401,5 +3401,5 @@
     "message.add.desktop.ip.failed": "데스크톱 클러스터의 IP 범위 추가에 실패하였습니다.",
     "message.add.desktop.ip.processing": "데스크톱 클러스터의 IP 범위 추가중...",
     "message.success.register.master.template.version":"신규 마스터 템플릿 버전이 등록되었습니다.",
-    "message.success.update.desktop.master.template.version": "데스크톱 마스터 템플릿 버전의 상태값을 업데이트했습니다.",   
+    "message.success.update.desktop.master.template.version": "데스크톱 마스터 템플릿 버전의 상태값을 업데이트했습니다."
 }
