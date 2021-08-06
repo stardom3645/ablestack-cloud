@@ -3356,6 +3356,11 @@
     "label.masteruploadtype": "업로드 유형",
     "label.dctemplate": "DC 템플릿",
     "label.workstemplate": "Works 템플릿",
+    "label.desktop.gateway": "데스크톱 클러스터 IP 범위의 게이트웨이",
+    "label.desktop.netmask": "데스크톱 클러스터 IP 범위의 넷마스크",
+    "label.desktop.startip": "데스크톱 클러스터 IP 범위의 시작 IP",
+    "label.desktop.endip": "데스크톱 클러스터 IP 범위의 종료 IP",
+    "label.controllerversionname": "이름",
     "placeholder.name": "이름을 입력하세요.",
     "placeholder.description": "설명을 입력하세요.",
     "placeholder.addomainname": "AD 도메인 명을 입력하세요.",
@@ -3396,6 +3401,5 @@
     "message.add.desktop.ip.failed": "데스크톱 클러스터의 IP 범위 추가에 실패하였습니다.",
     "message.add.desktop.ip.processing": "데스크톱 클러스터의 IP 범위 추가중...",
     "message.success.register.master.template.version":"신규 마스터 템플릿 버전이 등록되었습니다.",
-    "message.success.update.desktop.master.template.version": "데스크톱 마스터 템플릿 버전의 상태값을 업데이트했습니다.",
-    "label.controllerversionname": "이름"
+    "message.success.update.desktop.master.template.version": "데스크톱 마스터 템플릿 버전의 상태값을 업데이트했습니다."
 }
