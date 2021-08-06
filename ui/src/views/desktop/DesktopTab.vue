@@ -122,64 +122,63 @@
       :cancelText="$t('label.cancel')"
       @cancel="closeModals"
       @ok="submitAddIp">
-        <a-spin :spinning="loadingNic">
-          <a-form :form="form" @submit="submitAddIp" layout="vertical">
-            <a-form-item>
-              <span slot="label">
-                {{ $t('label.gateway') }}
-                <a-tooltip :title="$t('label.desktop.gateway')">
-                  <a-icon type="info-circle" style="color: rgba(0,0,0,.45)" />
-                </a-tooltip>
-              </span>
-              <a-input
-                v-decorator="['gateway', {
-                  rules: [{ required: true, message: $t('message.error.required.input') }]
-                }]"
-                :placeholder="$t('placeholder.gateway')" />
-            </a-form-item>
-            <a-form-item>
-              <span slot="label">
-                {{ $t('label.netmask') }}
-                <a-tooltip :title="$t('label.desktop.netmask')">
-                  <a-icon type="info-circle" style="color: rgba(0,0,0,.45)" />
-                </a-tooltip>
-              </span>
-              <a-input
-                v-decorator="['netmask', {
-                  rules: [{ required: true, message: $t('message.error.required.input') }]
-                }]"
-                :placeholder="$t('placeholder.netmask')" />
-            </a-form-item>
-            <a-form-item>
-              <span slot="label">
-                {{ $t('label.startip') }}
-                <a-tooltip :title="$t('label.desktop.startip')">
-                  <a-icon type="info-circle" style="color: rgba(0,0,0,.45)" />
-                </a-tooltip>
-              </span>
-              <a-input
-                v-decorator="['startip', {
-                  rules: [{ required: true, message: $t('message.error.required.input') }]
-                }]"
-                :placeholder="$t('placeholder.startip')" />
-            </a-form-item>
-            <a-form-item>
-              <span slot="label">
-                {{ $t('label.endip') }}
-                <a-tooltip :title="$t('label.desktop.endip')">
-                  <a-icon type="info-circle" style="color: rgba(0,0,0,.45)" />
-                </a-tooltip>
-              </span>
-              <a-input
-                v-decorator="['endip', {
-                  rules: [{ required: true, message: $t('message.error.required.input') }]
-                }]"
-                :placeholder="$t('placeholder.endip')" />
-            </a-form-item>
-          </a-form>
-        </a-spin>
+      <a-spin :spinning="loadingNic">
+        <a-form :form="form" @submit="submitAddIp" layout="vertical">
+          <a-form-item>
+            <span slot="label">
+              {{ $t('label.gateway') }}
+              <a-tooltip :title="$t('label.desktop.gateway')">
+                <a-icon type="info-circle" style="color: rgba(0,0,0,.45)" />
+              </a-tooltip>
+            </span>
+            <a-input
+              v-decorator="['gateway', {
+                rules: [{ required: true, message: $t('message.error.required.input') }]
+              }]"
+              :placeholder="$t('placeholder.gateway')" />
+          </a-form-item>
+          <a-form-item>
+            <span slot="label">
+              {{ $t('label.netmask') }}
+              <a-tooltip :title="$t('label.desktop.netmask')">
+                <a-icon type="info-circle" style="color: rgba(0,0,0,.45)" />
+              </a-tooltip>
+            </span>
+            <a-input
+              v-decorator="['netmask', {
+                rules: [{ required: true, message: $t('message.error.required.input') }]
+              }]"
+              :placeholder="$t('placeholder.netmask')" />
+          </a-form-item>
+          <a-form-item>
+            <span slot="label">
+              {{ $t('label.startip') }}
+              <a-tooltip :title="$t('label.desktop.startip')">
+                <a-icon type="info-circle" style="color: rgba(0,0,0,.45)" />
+              </a-tooltip>
+            </span>
+            <a-input
+              v-decorator="['startip', {
+                rules: [{ required: true, message: $t('message.error.required.input') }]
+              }]"
+              :placeholder="$t('placeholder.startip')" />
+          </a-form-item>
+          <a-form-item>
+            <span slot="label">
+              {{ $t('label.endip') }}
+              <a-tooltip :title="$t('label.desktop.endip')">
+                <a-icon type="info-circle" style="color: rgba(0,0,0,.45)" />
+              </a-tooltip>
+            </span>
+            <a-input
+              v-decorator="['endip', {
+                rules: [{ required: true, message: $t('message.error.required.input') }]
+              }]"
+              :placeholder="$t('placeholder.endip')" />
+          </a-form-item>
+        </a-form>
+      </a-spin>
     </a-modal>
-
   </a-spin>
 </template>
 
