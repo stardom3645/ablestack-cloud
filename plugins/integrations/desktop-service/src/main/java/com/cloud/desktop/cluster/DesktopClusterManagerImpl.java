@@ -67,6 +67,7 @@ import com.cloud.desktop.cluster.dao.DesktopClusterVmMapDao;
 import com.cloud.desktop.version.DesktopControllerVersionVO;
 import com.cloud.desktop.version.DesktopControllerVersion;
 import com.cloud.network.Network;
+import com.cloud.network.Network.GuestType;
 import com.cloud.network.NetworkService;
 import com.cloud.network.dao.NetworkDao;
 import com.cloud.network.dao.IPAddressVO;
@@ -492,7 +493,6 @@ public class DesktopClusterManagerImpl extends ManagerBase implements DesktopClu
         final String password = cmd.getPassword();
         final Long desktopVersionId = cmd.getControllerVersion();
         final Long serviceOfferingId = cmd.getServiceOfferingId();
-        final Account owner = accountService.getActiveAccountById(cmd.getEntityOwnerId());
         final Long networkId = cmd.getNetworkId();
 
         if (name == null || name.isEmpty()) {
@@ -542,7 +542,7 @@ public class DesktopClusterManagerImpl extends ManagerBase implements DesktopClu
             final String dcIp = cmd.getDcIp();
             final String worksIp = cmd.getWorksIp();
             final String cider = network.getNetworkCidr();
-            if (network.getGuestType().equals("L2")){
+            if (network.getGuestType().equals(GuestType.L2)){
                 //L2 일 경우 IP 범위 조회하여 벨리데이션 체크
                 final String gateway = cmd.getGateway();
                 final String netmask = cmd.getNetmask();
@@ -597,15 +597,15 @@ public class DesktopClusterManagerImpl extends ManagerBase implements DesktopClu
                     }
                 }
                 //L2 일 경우 dc ip, works ip 입력된 경우 벨리데이션 체크
-                if ((dcIp != null || !dcIp.isEmpty()) && (worksIp != null || !worksIp.isEmpty())) {
-                    if (!NetUtils.isIpWithInCidrRange(dcIp, newCidr) || !NetUtils.isIpWithInCidrRange(worksIp, newCidr)) {
-                        throw new InvalidParameterValueException("Please specify a valid IP range or valid netmask or valid gateway");
+                if ((dcIp != null && !dcIp.isEmpty()) && (worksIp != null && !worksIp.isEmpty())) {
+                    if (!NetUtils.isIpInRange(dcIp, startIp, endIp) || !NetUtils.isIpInRange(worksIp, startIp, endIp)) {
+                        throw new InvalidParameterValueException("DC or Works VM IP provided is not within the specified range: " + startIp + " - " + endIp);
                     }
                 }
             }
-            if (network.getGuestType().equals("Isolated") || network.getGuestType().equals("Shared")) {
+            if (network.getGuestType().equals(GuestType.Isolated) || network.getGuestType().equals(GuestType.Shared)) {
                 //Isolated 일 경우 dc ip, works ip 입력된 경우 벨리데이션 체크
-                if ((dcIp != null || !dcIp.isEmpty()) && (worksIp != null || !worksIp.isEmpty())) {
+                if ((dcIp != null && !dcIp.isEmpty()) && (worksIp != null && !worksIp.isEmpty())) {
                     if (!NetUtils.isIpWithInCidrRange(dcIp, cider) || !NetUtils.isIpWithInCidrRange(worksIp, cider)) {
                         throw new InvalidParameterValueException("Please specify a valid IP range or valid netmask or valid gateway");
                     }
