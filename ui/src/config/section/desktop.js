@@ -20,13 +20,12 @@ export default {
   icon: 'cloud-server',
   children: [
     {
-      name: 'desktop',
+      name: 'desktopcluster',
       title: 'title.desktop.cluster',
       icon: 'block',
       docHelp: '',
       permission: ['listDesktopClusters'],
       columns: ['name', 'state', 'addomainname', 'account', 'zonename'],
-      searchFilters: ['name', 'state'],
       details: ['name', 'id', 'description', 'controllerversion', 'account', 'addomainname', 'zonename', 'associatednetworkname', 'adminurl', 'userurl'],
       tabs: [{
         component: () => import('@/views/desktop/DesktopTab.vue')
