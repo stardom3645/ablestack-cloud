@@ -463,6 +463,7 @@ public class DesktopClusterManagerImpl extends ManagerBase implements DesktopClu
 
         validateDesktopClusterCreateParameters(cmd);
 
+        final String L2Type = "internal";
         final ServiceOffering serviceOffering = serviceOfferingDao.findById(cmd.getServiceOfferingId());
         final Account owner = accountService.getActiveAccountById(cmd.getEntityOwnerId());
         final DesktopControllerVersion clusterDesktopVersion = desktopControllerVersionDao.findById(cmd.getControllerVersion());
@@ -473,13 +474,12 @@ public class DesktopClusterManagerImpl extends ManagerBase implements DesktopClu
                         serviceOffering.getId(), cmd.getAdDomainName(), cmd.getNetworkId(), cmd.getAccessType(),
                         owner.getDomainId(), owner.getAccountId(), DesktopCluster.State.Created);
                 desktopClusterDao.persist(newCluster);
+                if(cmd.getAccessType().equals(L2Type)){
+                    addDesktopClusterIpRangeInDeployCluster(newCluster, cmd);
+                }
                 return newCluster;
             }
         });
-
-        if(cmd.getAccessType() == "internal"){
-            addDesktopClusterIpRangeInDeployCluster(cluster, cmd);
-        }
         if (LOGGER.isInfoEnabled()) {
             LOGGER.info(String.format("Desktop cluster name: %s and ID: %s has been created", cluster.getName(), cluster.getUuid()));
         }
