@@ -198,9 +198,6 @@ public class DesktopClusterManagerImpl extends ManagerBase implements DesktopClu
         List<DesktopClusterVmMapVO> controlVmList = desktopClusterVmMapDao.listByDesktopClusterIdAndNotVmType(desktop.getId(), "desktopvm");
         List<DesktopClusterVmMapVO> desktopVmList = desktopClusterVmMapDao.listByDesktopClusterIdAndVmType(desktop.getId(), "desktopvm");
 
-        LOGGER.info("::::::::::::::::::::::::::::::::::::::::::::::"+controlVmList.size());
-        LOGGER.info("::::::::::::::::::::::::::::::::::::::::::::::"+desktopVmList.size());
-
         ResponseView respView = ResponseView.Restricted;
         Account caller = CallContext.current().getCallingAccount();
         if (accountService.isRootAdmin(caller.getId())) {
