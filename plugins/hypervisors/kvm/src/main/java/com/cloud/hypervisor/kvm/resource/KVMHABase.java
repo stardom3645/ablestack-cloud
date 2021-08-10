@@ -34,7 +34,7 @@ public class KVMHABase {
     protected static String s_heartBeatPath;
     protected long _heartBeatUpdateTimeout = 60000;
     protected long _heartBeatUpdateFreq = 60000;
-    protected long _heartBeatUpdateMaxTries = 5;
+    protected long _heartBeatUpdateMaxTries = 10;
     protected long _heartBeatUpdateRetrySleep = 10000;
 
     public static enum PoolType {
