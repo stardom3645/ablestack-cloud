@@ -101,9 +101,13 @@ public class DesktopClusterResponse extends BaseResponse implements ControlledEn
     @Param(description = "the state of the Desktop Cluster")
     private String state;
 
-    @SerializedName(ApiConstants.VIRTUAL_MACHINES)
+    @SerializedName(ApiConstants.DESKTOP_CONTROL_VIRTUAL_MACHINES)
     @Param(description = "the list of virtualmachine associated with this Desktop Cluster")
-    private List<UserVmResponse> virtualMachines;
+    private List<UserVmResponse> controlVms;
+
+    @SerializedName(ApiConstants.DESKTOP_USER_VIRTUAL_MACHINES)
+    @Param(description = "the list of virtualmachine associated with this Desktop Cluster")
+    private List<UserVmResponse> desktopVms;
 
     @SerializedName(ApiConstants.IP_ADDRESS)
     @Param(description = "Public IP Address of the cluster")
@@ -249,12 +253,20 @@ public class DesktopClusterResponse extends BaseResponse implements ControlledEn
         this.serviceOfferingName = serviceOfferingName;
     }
 
-    public void setVirtualMachines(List<UserVmResponse> virtualMachines) {
-        this.virtualMachines = virtualMachines;
+    public List<UserVmResponse> getControlVms() {
+        return controlVms;
     }
 
-    public List<UserVmResponse> getVirtualMachines() {
-        return virtualMachines;
+    public void setControlVms(List<UserVmResponse> controlVms) {
+        this.controlVms = controlVms;
+    }
+
+    public List<UserVmResponse> getDesktopVms() {
+        return desktopVms;
+    }
+
+    public void setDesktopVms(List<UserVmResponse> desktopVms) {
+        this.desktopVms = desktopVms;
     }
 
     public void setIpAddress(String ipAddress) {
