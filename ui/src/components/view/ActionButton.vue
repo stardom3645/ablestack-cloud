@@ -23,6 +23,12 @@
       </template>
       <console :resource="resource" :size="size" />
     </a-tooltip>
+    <a-tooltip arrowPointAtCenter placement="bottomRight">
+      <template slot="title">
+        {{ $t('label.works.portal.url') }}
+      </template>
+      <linkurl :resource="resource" :size="size" v-if="resource && resource.id && dataView"/>
+    </a-tooltip>
     <a-tooltip
       v-for="(action, actionIndex) in actions"
       :key="actionIndex"
@@ -79,11 +85,13 @@
 <script>
 import { api } from '@/api'
 import Console from '@/components/widgets/Console'
+import Linkurl from '@/components/widgets/Linkurl'
 
 export default {
   name: 'ActionButton',
   components: {
-    Console
+    Console,
+    Linkurl
   },
   data () {
     return {
