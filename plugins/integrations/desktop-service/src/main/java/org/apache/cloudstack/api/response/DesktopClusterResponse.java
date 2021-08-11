@@ -114,6 +114,14 @@ public class DesktopClusterResponse extends BaseResponse implements ControlledEn
     @Param(description = "the list of virtualmachine associated with this Desktop Cluster")
     private List<UserVmResponse> desktopVms;
 
+    @SerializedName(ApiConstants.DESKTOP_WORKS_VM_IP)
+    @Param(description = "Public IP Address of the cluster")
+    private String worksVmIp;
+
+    @SerializedName(ApiConstants.DESKTOP_DC_VM_IP)
+    @Param(description = "Public IP Address of the cluster")
+    private String dcVmIp;
+
     @SerializedName(ApiConstants.IP_ADDRESS)
     @Param(description = "Public IP Address of the cluster")
     private String ipAddress;
@@ -288,5 +296,21 @@ public class DesktopClusterResponse extends BaseResponse implements ControlledEn
 
     public void setNetworkType(GuestType networkType) {
         this.networkType = networkType;
+    }
+
+    public String getWorksVmIp() {
+        return worksVmIp;
+    }
+
+    public void setWorksVmIp(String worksVmIp) {
+        this.worksVmIp = worksVmIp;
+    }
+
+    public String getDcVmIp() {
+        return dcVmIp;
+    }
+
+    public void setDcVmIp(String dcVmIp) {
+        this.dcVmIp = dcVmIp;
     }
 }

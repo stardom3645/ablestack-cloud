@@ -209,9 +209,14 @@ public class DesktopClusterManagerImpl extends ManagerBase implements DesktopClu
             for (DesktopClusterVmMapVO vmMapVO : controlVmList) {
                 UserVmJoinVO userVM = userVmJoinDao.findById(vmMapVO.getVmId());
                 if (userVM != null) {
-                    UserVmResponse cvmResponse = ApiDBUtils.newUserVmResponse(respView, responseName, userVM,
-                        EnumSet.of(VMDetails.nics), caller);
-                        controlVmResponses.add(cvmResponse);
+                    UserVmResponse cvmResponse = ApiDBUtils.newUserVmResponse(respView, responseName, userVM, EnumSet.of(VMDetails.nics), caller);
+                    controlVmResponses.add(cvmResponse);
+                    if("worksvm".equals(vmMapVO.getType())) {
+                        response.setWorksVmIp(userVM.getIpAddress());
+                    }
+                    if("dcvm".equals(vmMapVO.getType())) {
+                        response.setDcVmIp(userVM.getIpAddress());
+                    }
                 }
             }
         }
@@ -221,9 +226,8 @@ public class DesktopClusterManagerImpl extends ManagerBase implements DesktopClu
             for (DesktopClusterVmMapVO vmMapVO : desktopVmList) {
                 UserVmJoinVO userVM = userVmJoinDao.findById(vmMapVO.getVmId());
                 if (userVM != null) {
-                    UserVmResponse dvmResponse = ApiDBUtils.newUserVmResponse(respView, responseName, userVM,
-                        EnumSet.of(VMDetails.nics), caller);
-                        desktopVmResponses.add(dvmResponse);
+                    UserVmResponse dvmResponse = ApiDBUtils.newUserVmResponse(respView, responseName, userVM, EnumSet.of(VMDetails.nics), caller);
+                    desktopVmResponses.add(dvmResponse);
                 }
             }
         }
