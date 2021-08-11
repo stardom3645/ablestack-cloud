@@ -2537,7 +2537,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
         GuestResourceDef grd = new GuestResourceDef();
 
         grd.setMemorySize(vmTO.getMaxRam() / 1024);
-        if (vmTO.getMinRam() != vmTO.getMaxRam() && !_noMemBalloon) {
+        if (vmTO.getMinRam() != vmTO.getMaxRam() && _noMemBalloon == false) {
             grd.setMemBalloning(true);
             grd.setCurrentMem(vmTO.getMinRam() / 1024);
         }
@@ -3969,7 +3969,13 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
      * @return the amount of free memory in KBs
      */
     protected long getMemoryFreeInKBs(Domain dm) throws LibvirtException {
-        MemoryStatistic[] mems = dm.memoryStats(NUMMEMSTATS);
+        MemoryStatistic[] mems = dm.memoryStats();
+        s_logger.info("=======getMemoryFreeInKBs================");
+        s_logger.info("0 : " + mems[0]);
+        s_logger.info("1 : " + mems[1]);
+        s_logger.info("2 : " + mems[2]);
+        s_logger.info("length : " + mems.length);
+        s_logger.info("=======getMemoryFreeInKBs================");
         if (ArrayUtils.isEmpty(mems)) {
             return NumberUtils.LONG_ZERO;
         }
