@@ -18,7 +18,7 @@
 <template>
   <a
     v-if="['desktopcluster'].includes($route.meta.name) && 'listDesktopClusters' in $store.getters.apis"
-    :href="protocol + resource.worksvmip + port"
+    :href="protocol + '://' + ip + ':' + port + params"
     target="_blank">
     <a-button style="margin-left: 5px" shape="circle" type="" :size="size" :disabled="['Stopped', 'Error', 'Destroyed'].includes(resource.state)" >
       <a-icon type="link" />
@@ -37,12 +37,22 @@ export default {
     size: {
       type: String,
       default: 'small'
-    }
-  },
-  data () {
-    return {
-      protocol: 'https://',
-      port: ':10000'// 실제 works포털 포트로 변경 필요
+    },
+    protocol: {
+      type: String,
+      default: 'http'
+    },
+    ip: {
+      type: String,
+      required: true
+    },
+    port: {
+      type: String,
+      default: ''
+    },
+    params: {
+      type: String,
+      default: '/'
     }
   }
 }

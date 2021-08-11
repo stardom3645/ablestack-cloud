@@ -27,7 +27,13 @@
       <template slot="title">
         {{ $t('label.works.portal.url') }}
       </template>
-      <linkurl :resource="resource" :size="size" v-if="resource && resource.id && dataView"/>
+      <linkurl
+        :resource="resource"
+        :ip="resource.worksvmip"
+        :protocol="https"
+        :port="10000"
+        :size="size"
+        v-if="resource && resource.id && dataView"/>
     </a-tooltip>
     <a-tooltip
       v-for="(action, actionIndex) in actions"
