@@ -33,7 +33,7 @@
         :protocol="https"
         :port="10000"
         :size="size"
-        v-if="resource && resource.id && dataView"/>
+        v-if="resource && resource.id && resource.worksvmip && dataView"/>
     </a-tooltip>
     <a-tooltip
       v-for="(action, actionIndex) in actions"
