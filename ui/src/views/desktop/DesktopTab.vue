@@ -28,7 +28,7 @@
       <a-tab-pane :tab="$t('label.networks')" key="desktopnetworks">
         <DesktopNicsTable :resource="vm" :loading="loading" />
       </a-tab-pane>
-      <a-tab-pane :tab="$t('label.iprange')" key="iprange" v-if="'listDesktopClusterIpRanges' in $store.getters.apis">
+      <a-tab-pane :tab="$t('label.iprange')" key="iprange" v-if="'listDesktopClusterIpRanges' in $store.getters.apis && resource.networktype =='L2'">
         <a-button
           type="dashed"
           style="width: 100%; margin-bottom: 10px"
