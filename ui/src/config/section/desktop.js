@@ -60,14 +60,6 @@ export default {
         },
         {
           api: 'destroyVirtualMachine',
-          icon: 'link',
-          label: 'label.works.portal.url',
-          docHelp: '',
-          dataView: true,
-          show: (record) => { return ['Running'].includes(record.state) }
-        },
-        {
-          api: 'destroyVirtualMachine',
           icon: 'delete',
           label: 'label.desktop.cluster.delete',
           message: 'message.desktop.cluster.delete',
