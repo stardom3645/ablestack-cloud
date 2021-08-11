@@ -173,6 +173,7 @@ public class DesktopVersionManagerImpl extends ManagerBase implements DesktopVer
         final Long masterOsTypeId = cmd.getMasterOsType();
         final String masterUploadType = cmd.getMasterUploadType();
         final Long templateId =cmd.getTemplateId();
+        final String masterTemplateType = cmd.getMasterTemplateType();
         String templateName = "";
 
         if (compareVersions(masterVersion, MIN_DESKTOP_MASTER_VERSION) < 0) {
@@ -206,7 +207,7 @@ public class DesktopVersionManagerImpl extends ManagerBase implements DesktopVer
                 }
             }
             //desktop_master_version 테이블에 버전 추가
-            desktopMasterVersionVO = new DesktopMasterVersionVO(versionName, masterVersion, description, template.getId() ,zoneId, masterUploadType);
+            desktopMasterVersionVO = new DesktopMasterVersionVO(versionName, masterVersion, description, template.getId() ,zoneId, masterUploadType, masterTemplateType);
             desktopMasterVersionVO = desktopMasterVersionDao.persist(desktopMasterVersionVO);
         } catch (URISyntaxException | IllegalAccessException | NoSuchFieldException | IllegalArgumentException | ResourceAllocationException ex) {
             LOGGER.error(String.format("Unable to register template for desktop master version, %s, with url: %s", templateName, masterUrl), ex);
@@ -375,6 +376,7 @@ public class DesktopVersionManagerImpl extends ManagerBase implements DesktopVer
         response.setDescription(desktopMasterVersion.getDescription());
         response.setVersion(desktopMasterVersion.getVersion());
         response.setUploadType(desktopMasterVersion.getUploadType());
+        response.setType(desktopMasterVersion.getType());
         if (desktopMasterVersion.getState() != null) {
             response.setState(desktopMasterVersion.getState().toString());
         }

@@ -112,8 +112,8 @@ export default {
       icon: 'hdd',
       docHelp: '',
       permission: ['listDesktopMasterVersions'],
-      columns: ['name', 'state', 'version', 'zonename', 'masteruploadtype'],
-      details: ['name', 'version', 'description', 'templateostype', 'templatestate', 'masteruploadtype', 'templatename'],
+      columns: ['name', 'state', 'version', 'zonename', 'masteruploadtype', 'mastertemplatetype'],
+      details: ['name', 'version', 'description', 'templateostype', 'templatestate', 'masteruploadtype', 'templatename', 'mastertemplatetype'],
       actions: [
         {
           api: 'addDesktopControllerVersion',
