@@ -185,6 +185,7 @@ public class DesktopClusterManagerImpl extends ManagerBase implements DesktopClu
         NetworkVO ntwk = networkDao.findByIdIncludingRemoved(desktop.getNetworkId());
         response.setNetworkId(ntwk.getUuid());
         response.setAssociatedNetworkName(ntwk.getName());
+        response.setNetworkType(ntwk.getGuestType());
         if (ntwk.getGuestType() == Network.GuestType.Isolated) {
             List<IPAddressVO> ipAddresses = ipAddressDao.listByAssociatedNetwork(ntwk.getId(), true);
             if (ipAddresses != null && ipAddresses.size() == 1) {

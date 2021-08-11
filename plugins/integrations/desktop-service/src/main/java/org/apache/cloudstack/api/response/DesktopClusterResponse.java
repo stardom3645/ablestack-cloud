@@ -23,6 +23,7 @@ import org.apache.cloudstack.api.BaseResponse;
 import org.apache.cloudstack.api.EntityReference;
 
 import com.cloud.desktop.cluster.DesktopCluster;
+import com.cloud.network.Network.GuestType;
 import com.cloud.serializer.Param;
 import com.google.gson.annotations.SerializedName;
 
@@ -64,6 +65,10 @@ public class DesktopClusterResponse extends BaseResponse implements ControlledEn
     @SerializedName(ApiConstants.NETWORK_ID)
     @Param(description = "the ID of the network of the Desktop Cluster")
     private String networkId;
+
+    @SerializedName(ApiConstants.NETWORK_TYPE)
+    @Param(description = "the ID of the network of the Desktop Cluster")
+    private GuestType networkType;
 
     @SerializedName(ApiConstants.ASSOCIATED_NETWORK_NAME)
     @Param(description = "the name of the network of the Desktop Cluster")
@@ -277,4 +282,11 @@ public class DesktopClusterResponse extends BaseResponse implements ControlledEn
         this.ipAddressId = ipAddressId;
     }
 
+    public GuestType getNetworkType() {
+        return networkType;
+    }
+
+    public void setNetworkType(GuestType networkType) {
+        this.networkType = networkType;
+    }
 }
