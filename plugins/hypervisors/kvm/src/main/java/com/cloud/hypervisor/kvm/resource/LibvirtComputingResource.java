@@ -3969,27 +3969,13 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
      * @return the amount of free memory in KBs
      */
     protected long getMemoryFreeInKBs(Domain dm) throws LibvirtException {
-        MemoryStatistic[] mems = dm.memoryStats(NUMMEMSTATS); //VIR_DOMAIN_MEMORY_STAT_MAJOR_FAULT
+        MemoryStatistic[] mems = dm.memoryStats(NUMMEMSTATS);
         s_logger.info("=======getMemoryFreeInKBs memoryStats(2)================");
         s_logger.info("0 : " + mems[0]);
         s_logger.info("1 : " + mems[1]);
         s_logger.info("2 : " + mems[2]);
         s_logger.info("length : " + mems.length);
         s_logger.info("=======getMemoryFreeInKBs memoryStats(2)================");
-        MemoryStatistic[] mems1 = dm.memoryStats(7); //VIR_DOMAIN_MEMORY_STAT_RSS
-        s_logger.info("=======getMemoryFreeInKBs memoryStats(7)================");
-        s_logger.info("0 : " + mems1[0]);
-        s_logger.info("1 : " + mems1[1]);
-        s_logger.info("2 : " + mems1[2]);
-        s_logger.info("length : " + mems1.length);
-        s_logger.info("=======getMemoryFreeInKBs memoryStats(7)================");
-        MemoryStatistic[] mems2 = dm.memoryStats(8); //VIR_DOMAIN_MEMORY_STAT_USABLE
-        s_logger.info("=======getMemoryFreeInKBs memoryStats(8)================");
-        s_logger.info("0 : " + mems2[0]);
-        s_logger.info("1 : " + mems2[1]);
-        s_logger.info("2 : " + mems2[2]);
-        s_logger.info("length : " + mems2.length);
-        s_logger.info("=======getMemoryFreeInKBs memoryStats(8)================");
         if (ArrayUtils.isEmpty(mems)) {
             return NumberUtils.LONG_ZERO;
         }
