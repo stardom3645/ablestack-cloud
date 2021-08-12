@@ -3973,7 +3973,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
         if (ArrayUtils.isEmpty(mems)) {
             return NumberUtils.LONG_ZERO;
         } else {
-            for (int i=0; i > mems.length; i++) {
+            for (int i=0; i < mems.length; i++) {
                 s_logger.info("=======getMemoryFreeInKBs================");
                 s_logger.info(mems.length);
                 s_logger.info(mems[i].getTag());
