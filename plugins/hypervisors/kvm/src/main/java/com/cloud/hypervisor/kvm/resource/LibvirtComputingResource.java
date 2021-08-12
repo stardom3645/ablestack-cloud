@@ -296,7 +296,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
 
     private long _hvVersion;
     private Duration _timeout;
-    private static final int NUMMEMSTATS =2;
+    private static final int NUMMEMSTATS =13;
 
     private KVMHAMonitor _monitor;
     public static final String SSHKEYSPATH = "/root/.ssh";
@@ -3973,11 +3973,12 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
         if (ArrayUtils.isEmpty(mems)) {
             return NumberUtils.LONG_ZERO;
         } else {
-            for (int i=0; i < mems.length; i++) {
+            int length = mems.length;
+            for (int i = 0; i < length; i++) {
                 s_logger.info("=======getMemoryFreeInKBs================");
-                s_logger.info(mems.length);
-                s_logger.info(mems[i].getTag());
-                s_logger.info(mems[i].getValue());
+                s_logger.info(length);
+                s_logger.info(i + " : " +mems[i].getTag());
+                s_logger.info(i + " : " +mems[i].getValue());
                 s_logger.info("=======getMemoryFreeInKBs================");
             }
         }
