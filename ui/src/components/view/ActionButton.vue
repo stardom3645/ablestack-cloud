@@ -30,8 +30,8 @@
       <linkurl
         :resource="resource"
         :ip="resource.worksvmip"
-        :protocol="https"
-        :port="10000"
+        :protocol="'https'"
+        :port="'10000'"
         :size="size"
         v-if="resource && resource.id && resource.worksvmip && dataView"/>
     </a-tooltip>
