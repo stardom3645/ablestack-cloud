@@ -298,6 +298,7 @@ public class DesktopVersionManagerImpl extends ManagerBase implements DesktopVer
         registerTemplateCmd.setUrl(url);
         registerTemplateCmd.setAccountName(accountManager.getSystemAccount().getAccountName());
         registerTemplateCmd.setDomainId(accountManager.getSystemAccount().getDomainId());
+        registerTemplateCmd.setIsDesktop(true);
         return templateService.registerTemplate(registerTemplateCmd);
     }
 

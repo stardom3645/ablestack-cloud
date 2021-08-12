@@ -855,6 +855,7 @@ public class ApiConstants {
     public static final String DESKTOP_WORKS_VM_IP = "worksvmip";
     public static final String DESKTOP_DC_VM_IP = "dcvmip";
     public static final String DESKTOP_MASTER_TEMPLATE_TYPE = "mastertemplatetype";
+    public static final String DESKTOP_CHECK = "isdesktop";
 
     public static final String BOOT_TYPE = "boottype";
     public static final String BOOT_MODE = "bootmode";
