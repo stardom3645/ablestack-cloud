@@ -266,6 +266,9 @@ public class LibvirtVMDef {
             if (_memBacking != null) {
                 resBuidler.append("<memoryBacking>" + "<" + _memBacking + "/>" + "</memoryBacking>\n");
             }
+            s_logger.info("==============memballoning==============");
+            s_logger.info(_memBalloning);
+            s_logger.info("==============memballoning==============");
             if (_memBalloning) {
                 resBuidler.append("<devices>\n" + "<memballoon model='virtio'/>\n" + "</devices>\n");
             } else {
