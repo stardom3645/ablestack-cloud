@@ -3970,15 +3970,16 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
      */
     protected long getMemoryFreeInKBs(Domain dm) throws LibvirtException {
         MemoryStatistic[] mems = dm.memoryStats(NUMMEMSTATS);
-        s_logger.info("=======getMemoryFreeInKBs================");
-        s_logger.info(mems.length);
-        s_logger.info(mems[0].getTag());
-        s_logger.info(mems[0].getValue());
-        s_logger.info(mems[1].getTag());
-        s_logger.info(mems[1].getValue());
-        s_logger.info("=======getMemoryFreeInKBs================");
         if (ArrayUtils.isEmpty(mems)) {
             return NumberUtils.LONG_ZERO;
+        } else {
+            for (int i=0; i > mems.length; i++) {
+                s_logger.info("=======getMemoryFreeInKBs================");
+                s_logger.info(mems.length);
+                s_logger.info(mems[i].getTag());
+                s_logger.info(mems[i].getValue());
+                s_logger.info("=======getMemoryFreeInKBs================");
+            }
         }
         return mems[0].getValue();
     }
