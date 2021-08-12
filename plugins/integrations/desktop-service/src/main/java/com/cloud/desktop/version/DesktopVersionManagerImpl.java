@@ -518,6 +518,7 @@ public class DesktopVersionManagerImpl extends ManagerBase implements DesktopVer
         DeleteTemplateCmd deleteTemplateCmd = new DeleteTemplateCmd();
         deleteTemplateCmd = ComponentContext.inject(deleteTemplateCmd);
         deleteTemplateCmd.setId(templateId);
+        deleteTemplateCmd.setIsDesktop(true);
         templateService.deleteTemplate(deleteTemplateCmd);
     }
 
