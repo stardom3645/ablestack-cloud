@@ -57,7 +57,7 @@ public interface DeploymentClusterPlanner extends DeploymentPlanner {
             "Enable/Disable cluster thresholds. If disabled, an instance can start in a cluster even though the threshold may be crossed.",
             false,
             ConfigKey.Scope.Global);
-    static final ConfigKey<Boolean> MemBallooningAutoCK =
+    static final ConfigKey<Boolean> MemBallooningAuto =
         new ConfigKey<Boolean>(
             "Advanced",
             Boolean.class,
