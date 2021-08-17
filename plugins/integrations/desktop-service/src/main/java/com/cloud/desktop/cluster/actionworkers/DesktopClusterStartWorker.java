@@ -112,7 +112,7 @@ public class DesktopClusterStartWorker extends DesktopClusterResourceModifierAct
         List<Long> networkIds = new ArrayList<Long>();
         networkIds.add(desktopCluster.getNetworkId());
         Network.IpAddresses addrs = new Network.IpAddresses(null, null);
-        String reName = desktopCluster.getName().replaceAll("\\s+", "");
+        String reName = desktopCluster.getName();
         String hostName = reName + "-dc";
         Map<String, String> customParameterMap = new HashMap<String, String>();
         DiskOfferingVO diskOffering = diskOfferingDao.findById(serviceOffering.getId());
@@ -156,7 +156,7 @@ public class DesktopClusterStartWorker extends DesktopClusterResourceModifierAct
         List<Long> networkIds = new ArrayList<Long>();
         networkIds.add(desktopCluster.getNetworkId());
         Network.IpAddresses addrs = new Network.IpAddresses(null, null);
-        String reName = desktopCluster.getName().replaceAll("\\s+", "");
+        String reName = desktopCluster.getName();
         String hostName = reName + "-works";
         Map<String, String> customParameterMap = new HashMap<String, String>();
         DiskOfferingVO diskOffering = diskOfferingDao.findById(serviceOffering.getId());

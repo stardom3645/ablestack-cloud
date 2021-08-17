@@ -498,6 +498,10 @@ public class DesktopClusterManagerImpl extends ManagerBase implements DesktopClu
         if (name == null || name.isEmpty()) {
             throw new InvalidParameterValueException("Invalid name for the Desktop cluster name:" + name);
         }
+        if (!NetUtils.verifyDomainNameLabel(name, true)) {
+            throw new InvalidParameterValueException("Invalid name. desktop cluster name can contain ASCII letters 'a' through 'z', the digits '0' through '9', "
+                    + "and the hyphen ('-'), must be between 1 and 63 characters long, and can't start or end with \"-\" and can't start with digit");
+        }
         final List<DesktopClusterVO> clusters = desktopClusterDao.listAll();
         for (final DesktopClusterVO cluster : clusters) {
             final String otherName = cluster.getName();
