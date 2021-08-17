@@ -18,7 +18,7 @@
 <template>
   <a
     v-if="['vm'].includes($route.meta.name) && 'updateVirtualMachine' in $store.getters.apis"
-    :href="$store.getters.features.wallportalvmurl+'?var-vm='+resource.instancename"
+    :href="$store.getters.features.wallportalvmurl+'?kiosk&var-vm='+resource.instancename"
     target="_blank" >
     <a-button style="margin-left: 5px" shape="circle" type="" :size="size" :disabled="['Stopped', 'Error', 'Destroyed'].includes(resource.state)" >
       <a-icon type="global" />
