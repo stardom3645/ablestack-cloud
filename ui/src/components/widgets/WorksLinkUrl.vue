@@ -18,17 +18,16 @@
 <template>
   <a
     v-if="['desktopcluster'].includes($route.meta.name) && 'listDesktopClusters' in $store.getters.apis"
-    :href="protocol + '://' + ip + ':' + port + params"
+    :href="'https://'+resource.worksvmip+':30000'"
     target="_blank">
     <a-button style="margin-left: 5px" shape="circle" type="" :size="size" :disabled="['Stopped', 'Error', 'Destroyed'].includes(resource.state)" >
-      <a-icon type="link" />
+      <a-icon type="global" />
     </a-button>
   </a>
 </template>
-
 <script>
 export default {
-  name: 'Liknurl',
+  name: 'WorksLinkUrl',
   props: {
     resource: {
       type: Object,
@@ -37,22 +36,6 @@ export default {
     size: {
       type: String,
       default: 'small'
-    },
-    protocol: {
-      type: String,
-      default: 'http'
-    },
-    ip: {
-      type: String,
-      required: true
-    },
-    port: {
-      type: String,
-      default: ''
-    },
-    params: {
-      type: String,
-      default: '/'
     }
   }
 }
