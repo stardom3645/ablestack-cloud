@@ -498,6 +498,13 @@ public class DesktopClusterManagerImpl extends ManagerBase implements DesktopClu
         if (name == null || name.isEmpty()) {
             throw new InvalidParameterValueException("Invalid name for the Desktop cluster name:" + name);
         }
+        final List<DesktopClusterVO> clusters = desktopClusterDao.listAll();
+        for (final DesktopClusterVO cluster : clusters) {
+            final String otherName = cluster.getName();
+            if (otherName.equals(name)) {
+                throw new InvalidParameterValueException("cluster name '" + name + "' already exists.");
+            }
+        }
         if (description == null || description.isEmpty()) {
             throw new InvalidParameterValueException("Invalid description for the Desktop cluster description:" + description);
         }
