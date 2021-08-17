@@ -17,9 +17,9 @@
 
 <template>
   <a
-    v-if="['desktopcluster'].includes($route.meta.name) && 'listDesktopClusters' in $store.getters.apis"
-    :href="'https://'+resource.worksvmip+':'+$store.getters.features.desktopworksportalport"
-    target="_blank">
+    v-if="['vm'].includes($route.meta.name) && 'updateVirtualMachine' in $store.getters.apis"
+    :href="$store.getters.features.wallportalvmurl+'?var-vm='+resource.instancename"
+    target="_blank" >
     <a-button style="margin-left: 5px" shape="circle" type="" :size="size" :disabled="['Stopped', 'Error', 'Destroyed'].includes(resource.state)" >
       <a-icon type="global" />
     </a-button>
@@ -27,7 +27,7 @@
 </template>
 <script>
 export default {
-  name: 'WorksLinkUrl',
+  name: 'WallLinkUrl',
   props: {
     resource: {
       type: Object,
@@ -36,6 +36,10 @@ export default {
     size: {
       type: String,
       default: 'small'
+    },
+    ip: {
+      type: String,
+      default: ''
     }
   }
 }

@@ -3874,6 +3874,9 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
         final boolean kubernetesClusterExperimentalFeaturesEnabled = Boolean.parseBoolean(_configDao.getValue("cloud.kubernetes.cluster.experimental.features.enabled"));
 
         final boolean desktopServiceEnabled = Boolean.parseBoolean(_configDao.getValue("cloud.desktop.service.enabled"));
+        final String desktopWorksPortalPort = _configDao.getValue("cloud.desktop.service.worksportalport");
+        final String wallPortalDashboardUrl = _configDao.getValue("monitoring.wall.portal.dashboard.url");
+        final String wallPortalVmUrl = _configDao.getValue("monitoring.wall.portal.vm.url");
 
         // check if region-wide secondary storage is used
         boolean regionSecondaryEnabled = false;
@@ -3899,6 +3902,9 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
         capabilities.put("kubernetesServiceEnabled", kubernetesServiceEnabled);
         capabilities.put("kubernetesClusterExperimentalFeaturesEnabled", kubernetesClusterExperimentalFeaturesEnabled);
         capabilities.put("desktopServiceEnabled", desktopServiceEnabled);
+        capabilities.put("desktopWorksPortalPort", desktopWorksPortalPort);
+        capabilities.put("wallPortalDashboardUrl", wallPortalDashboardUrl);
+        capabilities.put("wallPortalVmUrl", wallPortalVmUrl);
         if (apiLimitEnabled) {
             capabilities.put("apiLimitInterval", apiLimitInterval);
             capabilities.put("apiLimitMax", apiLimitMax);

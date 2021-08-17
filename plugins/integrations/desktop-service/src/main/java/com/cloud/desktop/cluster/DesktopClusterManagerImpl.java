@@ -463,7 +463,8 @@ public class DesktopClusterManagerImpl extends ManagerBase implements DesktopClu
     @Override
     public ConfigKey<?>[] getConfigKeys() {
         return new ConfigKey<?>[] {
-                DesktopServiceEnabled
+                DesktopServiceEnabled,
+                DesktopWorksPortalPort
         };
     }
 }

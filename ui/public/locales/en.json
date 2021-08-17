@@ -3410,6 +3410,8 @@
 "label.desktop.master.version.delete": "Delete Master Template",
 "label.addomainname": "AD Domain Name",
 "label.works.portal.url": "Works Portal Link",
+"label.wall.portal.vm.url": "Realtime Monitoring Link",
+"label.wall.portal.url": "Monitoring Dashboard Link",
 "label.templatestate": "Template State",
 "label.templateostype": "OS Type",
 "label.access.type": "Access Type",
