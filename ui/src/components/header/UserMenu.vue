@@ -20,6 +20,10 @@
 
     <translation-menu class="action"/>
     <header-notice class="action"/>
+    <label class="user-menu-server-info action" v-if="$config.multipleServer">
+      <a-icon slot="prefix" type="database" />
+      {{ server.name || server.apiBase || 'Local-Server' }}
+    </label>
     <a-dropdown>
       <span class="user-menu-dropdown action">
         <a-avatar class="user-menu-avatar avatar" size="small" :src="avatar()"/>
@@ -33,21 +37,27 @@
           </router-link>
         </a-menu-item>
         <a-menu-item class="user-menu-item" key="1">
-          <a @click="toggleUseBrowserTimezone">
+          <a :href="$store.getters.features.wallportaldashboardurl" target="_blank" v-if="$store.getters.userInfo.roletype === 'Admin'">
+            <a-icon class="user-menu-item-icon" type="user"/>
+            <span class="user-menu-item-name">{{ $t('label.wall.portal.url') }}</span>
+          </a>
+        </a-menu-item>
+        <a-menu-item class="user-menu-item" key="2">
+          <a @click="toggleUseBrowserTimezone" >
             <a-icon class="user-menu-item-icon" type="clock-circle"/>
             <span class="user-menu-item-name" style="margin-right: 5px">{{ $t('label.use.local.timezone') }}</span>
             <a-switch
               :checked="$store.getters.usebrowsertimezone" />
           </a>
         </a-menu-item>
-        <a-menu-item class="user-menu-item" key="2" disabled>
+        <a-menu-item class="user-menu-item" key="3" disabled>
           <a :href="$config.docBase" target="_blank">
             <a-icon class="user-menu-item-icon" type="question-circle-o"></a-icon>
             <span class="user-menu-item-name">{{ $t('label.help') }}</span>
           </a>
         </a-menu-item>
         <a-menu-divider/>
-        <a-menu-item class="user-menu-item" key="3">
+        <a-menu-item class="user-menu-item" key="4">
           <a href="javascript:;" @click="handleLogout">
             <a-icon class="user-menu-item-icon" type="logout"/>
             <span class="user-menu-item-name">{{ $t('label.logout') }}</span>
@@ -59,15 +69,22 @@
 </template>
 
 <script>
+import Vue from 'vue'
 import HeaderNotice from './HeaderNotice'
 import TranslationMenu from './TranslationMenu'
 import { mapActions, mapGetters } from 'vuex'
+import { SERVER_MANAGER } from '@/store/mutation-types'
 
 export default {
   name: 'UserMenu',
   components: {
     TranslationMenu,
     HeaderNotice
+  },
+  computed: {
+    server () {
+      return Vue.ls.get(SERVER_MANAGER) || this.$config.servers[0]
+    }
   },
   methods: {
     ...mapActions(['Logout']),
@@ -107,6 +124,12 @@ export default {
   &-item-icon i {
     min-width: 12px;
     margin-right: 8px;
+  }
+
+  &-server-info {
+    .anticon {
+      margin-right: 5px;
+    }
   }
 }
 </style>

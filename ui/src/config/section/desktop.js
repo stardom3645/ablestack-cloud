@@ -20,13 +20,12 @@ export default {
   icon: 'cloud-server',
   children: [
     {
-      name: 'desktop',
+      name: 'desktopcluster',
       title: 'title.desktop.cluster',
       icon: 'block',
       docHelp: '',
       permission: ['listDesktopClusters'],
       columns: ['name', 'state', 'addomainname', 'account', 'zonename'],
-      searchFilters: ['name', 'state'],
       details: ['name', 'id', 'description', 'controllerversion', 'account', 'addomainname', 'zonename', 'associatednetworkname', 'adminurl', 'userurl'],
       tabs: [{
         component: () => import('@/views/desktop/DesktopTab.vue')
@@ -55,14 +54,6 @@ export default {
           icon: 'poweroff',
           label: 'label.action.disable.cluster',
           message: 'message.desktop.cluster.disable',
-          docHelp: '',
-          dataView: true,
-          show: (record) => { return ['Running'].includes(record.state) }
-        },
-        {
-          api: 'destroyVirtualMachine',
-          icon: 'link',
-          label: 'label.works.portal.url',
           docHelp: '',
           dataView: true,
           show: (record) => { return ['Running'].includes(record.state) }
@@ -121,8 +112,8 @@ export default {
       icon: 'hdd',
       docHelp: '',
       permission: ['listDesktopMasterVersions'],
-      columns: ['name', 'state', 'version', 'zonename', 'masteruploadtype'],
-      details: ['name', 'version', 'description', 'templateostype', 'templatestate', 'masteruploadtype', 'templatename'],
+      columns: ['name', 'state', 'version', 'zonename', 'masteruploadtype', 'mastertemplatetype'],
+      details: ['name', 'version', 'description', 'templateostype', 'templatestate', 'masteruploadtype', 'templatename', 'mastertemplatetype'],
       actions: [
         {
           api: 'addDesktopControllerVersion',

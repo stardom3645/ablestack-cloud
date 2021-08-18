@@ -29,6 +29,7 @@ public class ApiConstants {
     public static final String ANNOTATION = "annotation";
     public static final String API_KEY = "apikey";
     public static final String ASYNC_BACKUP = "asyncbackup";
+    public static final String AUTO_SELECT = "autoselect";
     public static final String USER_API_KEY = "userapikey";
     public static final String APPLIED = "applied";
     public static final String LIST_LB_VMIPS = "lbvmips";
@@ -852,6 +853,12 @@ public class ApiConstants {
     public static final String DESKTOP_MASTER_VERSION_URL = "masterurl";
     public static final String DESKTOP_MASTER_VERSION_OSTYPE = "masterostype";
     public static final String DESKTOP_MASTER_VERSION_UPLOADTYPE = "masteruploadtype";
+    public static final String DESKTOP_CONTROL_VIRTUAL_MACHINES = "controlvms";
+    public static final String DESKTOP_USER_VIRTUAL_MACHINES = "desktopvms";
+    public static final String DESKTOP_WORKS_VM_IP = "worksvmip";
+    public static final String DESKTOP_DC_VM_IP = "dcvmip";
+    public static final String DESKTOP_MASTER_TEMPLATE_TYPE = "mastertemplatetype";
+    public static final String DESKTOP_CHECK = "isdesktop";
 
     public static final String BOOT_TYPE = "boottype";
     public static final String BOOT_MODE = "bootmode";
