@@ -4023,6 +4023,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
                 }
             }
         }
+        return NumberUtils.LONG_ZERO;
     }
 
     private boolean canBridgeFirewall(final String prvNic) {
