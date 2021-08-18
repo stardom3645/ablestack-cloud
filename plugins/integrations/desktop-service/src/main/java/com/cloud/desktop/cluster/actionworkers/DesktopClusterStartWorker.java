@@ -18,6 +18,7 @@
 package com.cloud.desktop.cluster.actionworkers;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.HashMap;
 import java.util.Map;
@@ -33,6 +34,7 @@ import com.cloud.exception.InsufficientCapacityException;
 import com.cloud.exception.ManagementServerException;
 import com.cloud.exception.ResourceUnavailableException;
 import com.cloud.network.IpAddressManager;
+import com.cloud.network.Network.IpAddresses;
 import com.cloud.network.Network;
 import com.cloud.storage.DiskOfferingVO;
 import com.cloud.offering.ServiceOffering;
@@ -65,29 +67,6 @@ public class DesktopClusterStartWorker extends DesktopClusterResourceModifierAct
         return desktopClusterVersion;
     }
 
-    // private Pair<String, Map<Long, Network.IpAddresses>> getDesktopControlNodeIpAddresses(final DataCenter zone, final Network network, final Account account) throws InsufficientAddressCapacityException {
-    //     String controlNodeIp = null;
-    //     Map<Long, Network.IpAddresses> requestedIps = null;
-    //     if (Network.GuestType.Shared.equals(network.getGuestType())) {
-    //         List<Long> vlanIds = new ArrayList<>();
-    //         List<VlanVO> vlans = vlanDao.listVlansByNetworkId(network.getId());
-    //         for (VlanVO vlan : vlans) {
-    //             vlanIds.add(vlan.getId());
-    //         }
-    //         PublicIp ip = ipAddressManager.getAvailablePublicIpAddressFromVlans(zone.getId(), null, account, Vlan.VlanType.DirectAttached, vlanIds,network.getId(), null, false);
-    //         if (ip != null) {
-    //             controlNodeIp = ip.getAddress().toString();
-    //         }
-    //         requestedIps = new HashMap<>();
-    //         Ip ipAddress = ip.getAddress();
-    //         boolean isIp6 = ipAddress.isIp6();
-    //         requestedIps.put(network.getId(), new Network.IpAddresses(ipAddress.isIp4() ? ip.getAddress().addr() : null, null));
-    //     } else {
-    //         controlNodeIp = ipAddressManager.acquireGuestIpAddress(networkDao.findById(desktopCluster.getNetworkId()), null);
-    //     }
-    //     return new Pair<>(controlNodeIp, requestedIps);
-    // }
-
     private UserVm provisionDesktopClusterDcControlVm(final Network network, String publicIpAddress) throws ManagementServerException,
             ResourceUnavailableException, InsufficientCapacityException {
         UserVm dcControlVm = null;
@@ -107,11 +86,12 @@ public class DesktopClusterStartWorker extends DesktopClusterResourceModifierAct
     private UserVm createDesktopClusterDcControlVm(final Network network, String serverIp) throws ManagementServerException,
             ResourceUnavailableException, InsufficientCapacityException {
         UserVm dcControlVm = null;
+        LinkedHashMap<Long, IpAddresses> ipToNetworkMap = null;
         DataCenter zone = dataCenterDao.findById(desktopCluster.getZoneId());
         ServiceOffering serviceOffering = serviceOfferingDao.findById(desktopCluster.getServiceOfferingId());
         List<Long> networkIds = new ArrayList<Long>();
         networkIds.add(desktopCluster.getNetworkId());
-        Network.IpAddresses addrs = new Network.IpAddresses(null, null);
+        String dcIp = desktopCluster.getDcIp();
         String reName = desktopCluster.getName();
         String hostName = reName + "-dc";
         Map<String, String> customParameterMap = new HashMap<String, String>();
@@ -121,10 +101,20 @@ public class DesktopClusterStartWorker extends DesktopClusterResourceModifierAct
             long rootDiskSizeInGiB = rootDiskSizeInBytes / GiB_TO_BYTES;
             customParameterMap.put("rootdisksize", String.valueOf(rootDiskSizeInGiB));
         }
-        dcControlVm = userVmService.createAdvancedVirtualMachine(zone, serviceOffering, dcTemplate, networkIds, owner,
+        if (dcIp == null) {
+            Network.IpAddresses addrs = new Network.IpAddresses(null, null);
+            dcControlVm = userVmService.createAdvancedVirtualMachine(zone, serviceOffering, dcTemplate, networkIds, owner,
                 hostName, hostName, null, null, null,
                 dcTemplate.getHypervisorType(), BaseCmd.HTTPMethod.POST, null, null,
                 null, addrs, null, null, null, customParameterMap, null, null, null, null, true);
+        } else {
+            Network.IpAddresses addrs = new Network.IpAddresses(dcIp, null);
+            ipToNetworkMap.put(desktopCluster.getNetworkId(), addrs);
+            dcControlVm = userVmService.createAdvancedVirtualMachine(zone, serviceOffering, dcTemplate, networkIds, owner,
+                hostName, hostName, null, null, null,
+                dcTemplate.getHypervisorType(), BaseCmd.HTTPMethod.POST, null, null,
+                ipToNetworkMap, addrs, null, null, null, customParameterMap, null, null, null, null, true);
+        }
         if (LOGGER.isInfoEnabled()) {
             LOGGER.info(String.format("Created control VM ID: %s, %s in the Desktop cluster : %s", dcControlVm.getUuid(), hostName, desktopCluster.getName()));
         }
@@ -151,11 +141,12 @@ public class DesktopClusterStartWorker extends DesktopClusterResourceModifierAct
     private UserVm createDesktopClusterWorksControlVm(final Network network, String serverIp) throws ManagementServerException,
             ResourceUnavailableException, InsufficientCapacityException {
         UserVm worksControlVm = null;
+        LinkedHashMap<Long, IpAddresses> ipToNetworkMap = null;
         DataCenter zone = dataCenterDao.findById(desktopCluster.getZoneId());
         ServiceOffering serviceOffering = serviceOfferingDao.findById(desktopCluster.getServiceOfferingId());
         List<Long> networkIds = new ArrayList<Long>();
         networkIds.add(desktopCluster.getNetworkId());
-        Network.IpAddresses addrs = new Network.IpAddresses(null, null);
+        String worksIp = desktopCluster.getWorksIp();
         String reName = desktopCluster.getName();
         String hostName = reName + "-works";
         Map<String, String> customParameterMap = new HashMap<String, String>();
@@ -165,10 +156,20 @@ public class DesktopClusterStartWorker extends DesktopClusterResourceModifierAct
             long rootDiskSizeInGiB = rootDiskSizeInBytes / GiB_TO_BYTES;
             customParameterMap.put("rootdisksize", String.valueOf(rootDiskSizeInGiB));
         }
-        worksControlVm = userVmService.createAdvancedVirtualMachine(zone, serviceOffering, worksTemplate, networkIds, owner,
+        if (worksIp == null) {
+            Network.IpAddresses addrs = new Network.IpAddresses(null, null);
+            worksControlVm = userVmService.createAdvancedVirtualMachine(zone, serviceOffering, dcTemplate, networkIds, owner,
                 hostName, hostName, null, null, null,
                 worksTemplate.getHypervisorType(), BaseCmd.HTTPMethod.POST, null, null,
                 null, addrs, null, null, null, customParameterMap, null, null, null, null, true);
+        } else {
+            Network.IpAddresses addrs = new Network.IpAddresses(worksIp, null);
+            ipToNetworkMap.put(desktopCluster.getNetworkId(), addrs);
+            worksControlVm = userVmService.createAdvancedVirtualMachine(zone, serviceOffering, dcTemplate, networkIds, owner,
+                hostName, hostName, null, null, null,
+                worksTemplate.getHypervisorType(), BaseCmd.HTTPMethod.POST, null, null,
+                ipToNetworkMap, addrs, null, null, null, customParameterMap, null, null, null, null, true);
+        }
         if (LOGGER.isInfoEnabled()) {
             LOGGER.info(String.format("Created control VM ID : %s, %s in the Desktop cluster : %s", worksControlVm.getUuid(), hostName, desktopCluster.getName()));
         }

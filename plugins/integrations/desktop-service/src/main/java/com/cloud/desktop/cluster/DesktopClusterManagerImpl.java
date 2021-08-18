@@ -472,7 +472,7 @@ public class DesktopClusterManagerImpl extends ManagerBase implements DesktopClu
             public DesktopClusterVO doInTransaction(TransactionStatus status) {
                 DesktopClusterVO newCluster = new DesktopClusterVO(cmd.getName(), cmd.getDescription(), DBEncryptionUtil.encrypt(cmd.getPassword()), clusterDesktopVersion.getZoneId(), clusterDesktopVersion.getId(),
                         serviceOffering.getId(), cmd.getAdDomainName(), cmd.getNetworkId(), cmd.getAccessType(),
-                        owner.getDomainId(), owner.getAccountId(), DesktopCluster.State.Created);
+                        owner.getDomainId(), owner.getAccountId(), DesktopCluster.State.Created, cmd.getDcIp(), cmd.getWorksIp());
                 desktopClusterDao.persist(newCluster);
                 if(cmd.getAccessType().equals(L2Type)){
                     addDesktopClusterIpRangeInDeployCluster(newCluster, cmd);
@@ -612,6 +612,9 @@ public class DesktopClusterManagerImpl extends ManagerBase implements DesktopClu
                     if (!NetUtils.isIpInRange(dcIp, startIp, endIp) || !NetUtils.isIpInRange(worksIp, startIp, endIp)) {
                         throw new InvalidParameterValueException("DC or Works VM IP provided is not within the specified range: " + startIp + " - " + endIp);
                     }
+                    if (dcIp == worksIp) {
+                        throw new InvalidParameterValueException("Please enter different Works IP and DC IP");
+                    }
                 }
             }
             if (network.getGuestType().equals(GuestType.Isolated) || network.getGuestType().equals(GuestType.Shared)) {
@@ -619,6 +622,9 @@ public class DesktopClusterManagerImpl extends ManagerBase implements DesktopClu
                 if ((dcIp != null && !dcIp.isEmpty()) && (worksIp != null && !worksIp.isEmpty())) {
                     if (!NetUtils.isIpWithInCidrRange(dcIp, cider) || !NetUtils.isIpWithInCidrRange(worksIp, cider)) {
                         throw new InvalidParameterValueException("Please specify a valid IP range or valid netmask or valid gateway");
+                    }
+                    if (dcIp == worksIp) {
+                        throw new InvalidParameterValueException("Please enter different Works IP and DC IP");
                     }
                 }
             }

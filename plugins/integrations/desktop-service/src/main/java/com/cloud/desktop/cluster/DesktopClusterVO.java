@@ -80,6 +80,12 @@ public class DesktopClusterVO implements DesktopCluster {
     @Column(name = "state")
     private State  state;
 
+    @Column(name = "dc_ip")
+    private String  dcIp;
+
+    @Column(name = "works_ip")
+    private String  worksIp;
+
     @Column(name = GenericDao.CREATED_COLUMN)
     private Date created;
 
@@ -216,6 +222,24 @@ public class DesktopClusterVO implements DesktopCluster {
     }
 
     @Override
+    public String getDcIp() {
+        return dcIp;
+    }
+
+    public void setDcIp(String dcIp) {
+        this.dcIp = dcIp;
+    }
+
+    @Override
+    public String getWorksIp() {
+        return worksIp;
+    }
+
+    public void setWorksIp(String worksIp) {
+        this.worksIp = worksIp;
+    }
+
+    @Override
     public boolean isDisplay() {
         return true;
     }
@@ -245,7 +269,7 @@ public class DesktopClusterVO implements DesktopCluster {
     }
 
     public DesktopClusterVO(String name, String description, String password, long zoneId, long desktopVersionId, long serviceOfferingId,
-                                String adDomainName, long networkId, String accessType, long domainId, long accountId, State state) {
+                                String adDomainName, long networkId, String accessType, long domainId, long accountId, State state, String dcIp, String worksIp) {
         this.uuid = UUID.randomUUID().toString();
         this.name = name;
         this.description = description;
@@ -259,6 +283,8 @@ public class DesktopClusterVO implements DesktopCluster {
         this.domainId = domainId;
         this.accountId = accountId;
         this.state = state;
+        this.dcIp = dcIp;
+        this.worksIp = worksIp;
         this.checkForGc = false;
     }
 
