@@ -218,6 +218,7 @@ public class OutOfBandManagementServiceImpl extends ManagerBase implements OutOf
             }
             return result;
         } catch (NoTransitionException ignored) {
+            if(currentPowerState.toEvent() == OutOfBandManagement.PowerState.Event.Off)   return true;
             LOG.trace(String.format("Unable to transition out-of-band management power state for %s for the event: %s and current power state: %s", host, event, currentPowerState));
         }
         return false;
@@ -426,11 +427,12 @@ public class OutOfBandManagementServiceImpl extends ManagerBase implements OutOf
             if (driverResponse.hasAuthFailure()) {
                 errorMessage = String.format("Out-of-band Management action [%s] on %s failed due to authentication error: %s. Please check configured credentials.", powerOperation, host, driverResponse.getError());
                 sendAuthError(host, errorMessage);
+                throw new CloudRuntimeException(errorMessage);
             }
             if (!powerOperation.equals(OutOfBandManagement.PowerOperation.STATUS)) {
                 LOG.debug(errorMessage);
             }
-            throw new CloudRuntimeException(errorMessage);
+            //throw new CloudRuntimeException(errorMessage);
         }
 
         final OutOfBandManagementResponse response = new OutOfBandManagementResponse(outOfBandManagementDao.findByHost(host.getId()));
