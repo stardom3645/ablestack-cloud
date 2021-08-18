@@ -3988,7 +3988,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
         MemoryStatistic[] mems = dm.memoryStats(NUMMEMSTATS);
         if (ArrayUtils.isEmpty(mems)) {
             return NumberUtils.LONG_ZERO;
-        } 
+        }
         //mem.balloon.auto = true 인 경우 tag=8 USABLE 값을 출력, 폴링이 활성화되지 않은 경우 RSS 값을 출력
         //mem.balloon.auto = false 인 경우 tag=7 RSS 값을 출력
         int length = mems.length;
