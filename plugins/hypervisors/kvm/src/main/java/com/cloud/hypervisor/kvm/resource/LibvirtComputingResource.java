@@ -3988,32 +3988,22 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
         MemoryStatistic[] mems = dm.memoryStats(NUMMEMSTATS);
         if (ArrayUtils.isEmpty(mems)) {
             return NumberUtils.LONG_ZERO;
-        } else {
-            //mem.balloon.auto = true 인 경우 tag=8 USABLE 값을 출력, 폴링이 활성화되지 않은 경우 RSS 값을 출력
-            //mem.balloon.auto = false 인 경우 tag=7 RSS 값을 출력
-            int length = mems.length;
-            for (int i = 0; i < length; i++) {
-                if (memBallooningAuto) {
-                    s_logger.info("=========memBallooningAuto = true 인 경우=========");
-                    if (length > 3) {
-                        if (mems[i].getTag() == 8){
-                            s_logger.info("=========mems tag==8인 경우=========");
-                            s_logger.info(mems[i].getTag());
-                            s_logger.info(mems[i].getValue());
-                            s_logger.info("=========mems tag==8인 경우=========");
-                            return mems[i].getValue();
-                        }
-                    } else {
-                        if (mems[i].getTag() == 7){
-                            s_logger.info("=========mems tag==7인 경우=========");
-                            s_logger.info(mems[i].getTag());
-                            s_logger.info(mems[i].getValue());
-                            s_logger.info("=========mems tag==7인 경우=========");
-                            return mems[i].getValue();
-                        }
+        } 
+        //mem.balloon.auto = true 인 경우 tag=8 USABLE 값을 출력, 폴링이 활성화되지 않은 경우 RSS 값을 출력
+        //mem.balloon.auto = false 인 경우 tag=7 RSS 값을 출력
+        int length = mems.length;
+        for (int i = 0; i < length; i++) {
+            if (memBallooningAuto) {
+                s_logger.info("=========memBallooningAuto = true 인 경우=========");
+                if (length > 3) {
+                    if (mems[i].getTag() == 8){
+                        s_logger.info("=========mems tag==8인 경우=========");
+                        s_logger.info(mems[i].getTag());
+                        s_logger.info(mems[i].getValue());
+                        s_logger.info("=========mems tag==8인 경우=========");
+                        return mems[i].getValue();
                     }
                 } else {
-                    s_logger.info("=========memBallooningAuto = false 인 경우=========");
                     if (mems[i].getTag() == 7){
                         s_logger.info("=========mems tag==7인 경우=========");
                         s_logger.info(mems[i].getTag());
@@ -4021,6 +4011,15 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
                         s_logger.info("=========mems tag==7인 경우=========");
                         return mems[i].getValue();
                     }
+                }
+            } else {
+                s_logger.info("=========memBallooningAuto = false 인 경우=========");
+                if (mems[i].getTag() == 7){
+                    s_logger.info("=========mems tag==7인 경우=========");
+                    s_logger.info(mems[i].getTag());
+                    s_logger.info(mems[i].getValue());
+                    s_logger.info("=========mems tag==7인 경우=========");
+                    return mems[i].getValue();
                 }
             }
         }
