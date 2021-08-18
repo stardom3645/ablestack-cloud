@@ -37,21 +37,27 @@
           </router-link>
         </a-menu-item>
         <a-menu-item class="user-menu-item" key="1">
-          <a @click="toggleUseBrowserTimezone">
+          <a :href="$store.getters.features.wallportaldashboardurl" target="_blank" v-if="$store.getters.userInfo.roletype === 'Admin'">
+            <a-icon class="user-menu-item-icon" type="user"/>
+            <span class="user-menu-item-name">{{ $t('label.wall.portal.url') }}</span>
+          </a>
+        </a-menu-item>
+        <a-menu-item class="user-menu-item" key="2">
+          <a @click="toggleUseBrowserTimezone" >
             <a-icon class="user-menu-item-icon" type="clock-circle"/>
             <span class="user-menu-item-name" style="margin-right: 5px">{{ $t('label.use.local.timezone') }}</span>
             <a-switch
               :checked="$store.getters.usebrowsertimezone" />
           </a>
         </a-menu-item>
-        <a-menu-item class="user-menu-item" key="2" disabled>
+        <a-menu-item class="user-menu-item" key="3" disabled>
           <a :href="$config.docBase" target="_blank">
             <a-icon class="user-menu-item-icon" type="question-circle-o"></a-icon>
             <span class="user-menu-item-name">{{ $t('label.help') }}</span>
           </a>
         </a-menu-item>
         <a-menu-divider/>
-        <a-menu-item class="user-menu-item" key="3">
+        <a-menu-item class="user-menu-item" key="4">
           <a href="javascript:;" @click="handleLogout">
             <a-icon class="user-menu-item-icon" type="logout"/>
             <span class="user-menu-item-name">{{ $t('label.logout') }}</span>

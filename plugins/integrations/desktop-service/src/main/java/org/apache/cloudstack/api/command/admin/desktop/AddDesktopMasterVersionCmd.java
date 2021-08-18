@@ -95,6 +95,10 @@ public class AddDesktopMasterVersionCmd extends BaseCmd implements AdminCmd {
             description = "the URL of the dcvm template for desktop master version")
     private String masterUploadType;
 
+    @Parameter(name = ApiConstants.DESKTOP_MASTER_TEMPLATE_TYPE, type = CommandType.STRING, required = true,
+    description = "the URL of the dcvm template for desktop master version")
+    private String masterTemplateType;
+
     @Parameter(name = ApiConstants.TEMPLATE_ID,
     type = CommandType.UUID,
     entityType = TemplateResponse.class,
@@ -142,6 +146,10 @@ public class AddDesktopMasterVersionCmd extends BaseCmd implements AdminCmd {
 
     public Long getTemplateId() {
         return templateId;
+    }
+
+    public String getMasterTemplateType() {
+        return masterTemplateType;
     }
 
     @Override
