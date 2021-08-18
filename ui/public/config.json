@@ -1,5 +1,12 @@
 {
   "apiBase": "/client/api",
+  "servers": [
+    {
+      "name": "Local-Server",
+      "apiHost": "",
+      "apiBase": "/client/api"
+    }
+  ],
   "docBase": "http://docs.cloudstack.apache.org/en/latest",
   "appTitle": "ABLESTACK",
   "footer": "Copyright (c) 2021, ABLECLOUD.Co.Ltd",
@@ -48,5 +55,6 @@
   },
   "plugins": [],
   "basicZoneEnabled": true,
+  "multipleServer": false,
   "docHelpMappings": {}
 }
