@@ -154,17 +154,21 @@ public class DesktopClusterManagerImpl extends ManagerBase implements DesktopClu
         response.setDescription(desktop.getDescription());
         response.setAdDomainName(desktop.getAdDomainName());
         response.setState(desktop.getState().toString());
+
         DataCenterVO zone = ApiDBUtils.findZoneById(desktop.getZoneId());
         response.setZoneId(zone.getUuid());
         response.setZoneName(zone.getName());
+
         ServiceOfferingVO offering = serviceOfferingDao.findById(desktop.getServiceOfferingId());
         response.setServiceOfferingId(offering.getUuid());
         response.setServiceOfferingName(offering.getName());
+
         DesktopControllerVersionVO version = desktopControllerVersionDao.findById(desktop.getDesktopVersionId());
         if (version != null) {
             response.setControllerVersionName(version.getName());
             response.setControllerVersion(version.getVersion());
         }
+
         Account account = ApiDBUtils.findAccountById(desktop.getAccountId());
         if (account.getType() == Account.ACCOUNT_TYPE_PROJECT) {
             Project project = ApiDBUtils.findProjectByProjectAccountId(account.getId());
@@ -173,12 +177,15 @@ public class DesktopClusterManagerImpl extends ManagerBase implements DesktopClu
         } else {
             response.setAccountName(account.getAccountName());
         }
+
         Domain domain = ApiDBUtils.findDomainById(desktop.getDomainId());
         response.setDomainId(domain.getUuid());
         response.setDomainName(domain.getName());
+
         NetworkVO ntwk = networkDao.findByIdIncludingRemoved(desktop.getNetworkId());
         response.setNetworkId(ntwk.getUuid());
         response.setAssociatedNetworkName(ntwk.getName());
+        response.setNetworkType(ntwk.getGuestType());
         if (ntwk.getGuestType() == Network.GuestType.Isolated) {
             List<IPAddressVO> ipAddresses = ipAddressDao.listByAssociatedNetwork(ntwk.getId(), true);
             if (ipAddresses != null && ipAddresses.size() == 1) {
@@ -186,25 +193,46 @@ public class DesktopClusterManagerImpl extends ManagerBase implements DesktopClu
                 response.setIpAddressId(ipAddresses.get(0).getUuid());
             }
         }
-        List<UserVmResponse> vmResponses = new ArrayList<UserVmResponse>();
-        List<DesktopClusterVmMapVO> vmList = desktopClusterVmMapDao.listByDesktopClusterId(desktop.getId());
+
+        List<UserVmResponse> controlVmResponses = new ArrayList<UserVmResponse>();
+        List<UserVmResponse> desktopVmResponses = new ArrayList<UserVmResponse>();
+        List<DesktopClusterVmMapVO> controlVmList = desktopClusterVmMapDao.listByDesktopClusterIdAndNotVmType(desktop.getId(), "desktopvm");
+        List<DesktopClusterVmMapVO> desktopVmList = desktopClusterVmMapDao.listByDesktopClusterIdAndVmType(desktop.getId(), "desktopvm");
+
         ResponseView respView = ResponseView.Restricted;
         Account caller = CallContext.current().getCallingAccount();
         if (accountService.isRootAdmin(caller.getId())) {
             respView = ResponseView.Full;
         }
-        final String responseName = "virtualmachine";
-        if (vmList != null && !vmList.isEmpty()) {
-            for (DesktopClusterVmMapVO vmMapVO : vmList) {
+        String responseName = "controlvmlist";
+        if (controlVmList != null && !controlVmList.isEmpty()) {
+            for (DesktopClusterVmMapVO vmMapVO : controlVmList) {
                 UserVmJoinVO userVM = userVmJoinDao.findById(vmMapVO.getVmId());
                 if (userVM != null) {
-                    UserVmResponse vmResponse = ApiDBUtils.newUserVmResponse(respView, responseName, userVM,
-                        EnumSet.of(VMDetails.nics), caller);
-                    vmResponses.add(vmResponse);
+                    UserVmResponse cvmResponse = ApiDBUtils.newUserVmResponse(respView, responseName, userVM, EnumSet.of(VMDetails.nics), caller);
+                    controlVmResponses.add(cvmResponse);
+                    if("worksvm".equals(vmMapVO.getType())) {
+                        response.setWorksVmIp(userVM.getIpAddress());
+                    }
+                    if("dcvm".equals(vmMapVO.getType())) {
+                        response.setDcVmIp(userVM.getIpAddress());
+                    }
                 }
             }
         }
-        response.setVirtualMachines(vmResponses);
+
+        responseName = "desktopvmlist";
+        if (desktopVmList != null && !desktopVmList.isEmpty()) {
+            for (DesktopClusterVmMapVO vmMapVO : desktopVmList) {
+                UserVmJoinVO userVM = userVmJoinDao.findById(vmMapVO.getVmId());
+                if (userVM != null) {
+                    UserVmResponse dvmResponse = ApiDBUtils.newUserVmResponse(respView, responseName, userVM, EnumSet.of(VMDetails.nics), caller);
+                    desktopVmResponses.add(dvmResponse);
+                }
+            }
+        }
+        response.setControlVms(controlVmResponses);
+        response.setDesktopVms(desktopVmResponses);
         return response;
     }
 
@@ -435,7 +463,8 @@ public class DesktopClusterManagerImpl extends ManagerBase implements DesktopClu
     @Override
     public ConfigKey<?>[] getConfigKeys() {
         return new ConfigKey<?>[] {
-                DesktopServiceEnabled
+                DesktopServiceEnabled,
+                DesktopWorksPortalPort
         };
     }
 }

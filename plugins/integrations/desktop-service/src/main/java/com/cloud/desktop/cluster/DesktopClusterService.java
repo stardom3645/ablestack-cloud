@@ -37,6 +37,12 @@ public interface DesktopClusterService extends PluggableService, Configurable {
             "Indicates whether Desktop Service plugin is enabled or not. Management server restart needed on change",
             false);
 
+    static final ConfigKey<String> DesktopWorksPortalPort = new ConfigKey<String>("Advanced", String.class,
+            "cloud.desktop.service.worksportalport",
+            "50000",
+            "Desktop Service Works Portal Port.(ex:50000",
+            false);
+
     DesktopCluster findById(final Long id);
 
     ListResponse<DesktopClusterResponse> listDesktopCluster(ListDesktopClusterCmd cmd);

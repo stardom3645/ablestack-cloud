@@ -28,32 +28,6 @@ import javax.persistence.GenerationType;
 @Table(name = "desktop_vm_map")
 public class DesktopClusterVmMapVO implements DesktopClusterVmMap {
 
-    @Override
-    public long getId() {
-        return id;
-    }
-
-    @Override
-    public long getDesktopClusterId() {
-        return desktopClusterId;
-
-    }
-
-    public void setdesktopClusterId(long desktopClusterId) {
-
-        this.desktopClusterId = desktopClusterId;
-    }
-
-    @Override
-    public long getVmId() {
-        return vmId;
-    }
-
-    public void setVmId(long vmId) {
-
-        this.vmId = vmId;
-    }
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
@@ -65,12 +39,45 @@ public class DesktopClusterVmMapVO implements DesktopClusterVmMap {
     @Column(name = "vm_id")
     long vmId;
 
-    public DesktopClusterVmMapVO() {
+    @Column(name = "type")
+    String type;
 
+    public DesktopClusterVmMapVO() {
     }
 
-    public DesktopClusterVmMapVO(long desktopClusterId, long vmId) {
-        this.vmId = vmId;
+    public DesktopClusterVmMapVO(long desktopClusterId, String type) {
         this.desktopClusterId = desktopClusterId;
+        this.type = type;
+    }
+
+    @Override
+    public long getId() {
+        return id;
+    }
+
+    @Override
+    public long getDesktopClusterId() {
+        return desktopClusterId;
+    }
+
+    public void setdesktopClusterId(long desktopClusterId) {
+        this.desktopClusterId = desktopClusterId;
+    }
+
+    @Override
+    public long getVmId() {
+        return vmId;
+    }
+
+    public void setVmId(long vmId) {
+        this.vmId = vmId;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
     }
 }
