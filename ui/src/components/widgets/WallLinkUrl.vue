@@ -14,15 +14,33 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-package com.cloud.desktop.cluster.dao;
 
-import com.cloud.desktop.cluster.DesktopClusterVmMapVO;
-import com.cloud.utils.db.GenericDao;
-
-import java.util.List;
-
-public interface DesktopClusterVmMapDao extends GenericDao<DesktopClusterVmMapVO, Long> {
-    public List<DesktopClusterVmMapVO> listByDesktopClusterId(long desktopClusterId);
-    public List<DesktopClusterVmMapVO> listByDesktopClusterIdAndVmType(long desktopClusterId, String type); //search for dekstop vm list
-    public List<DesktopClusterVmMapVO> listByDesktopClusterIdAndNotVmType(long desktopClusterId, String type); //search for control vm list
+<template>
+  <a
+    v-if="['vm'].includes($route.meta.name) && 'updateVirtualMachine' in $store.getters.apis"
+    :href="$store.getters.features.wallportalvmurl+'?kiosk&var-vm='+resource.instancename"
+    target="_blank" >
+    <a-button style="margin-left: 5px" shape="circle" type="" :size="size" :disabled="['Stopped', 'Error', 'Destroyed'].includes(resource.state)" >
+      <a-icon type="global" />
+    </a-button>
+  </a>
+</template>
+<script>
+export default {
+  name: 'WallLinkUrl',
+  props: {
+    resource: {
+      type: Object,
+      required: true
+    },
+    size: {
+      type: String,
+      default: 'small'
+    },
+    ip: {
+      type: String,
+      default: ''
+    }
+  }
 }
+</script>
