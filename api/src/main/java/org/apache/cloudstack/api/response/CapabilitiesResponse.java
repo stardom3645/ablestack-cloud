@@ -104,6 +104,18 @@ public class CapabilitiesResponse extends BaseResponse {
     @Param(description = "true if Desktop Service plugin is enabled, false otherwise")
     private boolean desktopServiceEnabled;
 
+    @SerializedName("desktopworksportalport")
+    @Param(description = "Desktop Service Works Portal URL setting")
+    private String desktopWorksPortalPort;
+
+    @SerializedName("wallportaldashboardurl")
+    @Param(description = "Monitoring Service Wall Portal Dashboard URL setting")
+    private String wallPortalDashboardUrl;
+
+    @SerializedName("wallportalvmurl")
+    @Param(description = "Monitoring Service Wall Portal for VM URL setting")
+    private String wallPortalVmUrl;
+
     public void setSecurityGroupsEnabled(boolean securityGroupsEnabled) {
         this.securityGroupsEnabled = securityGroupsEnabled;
     }
@@ -182,5 +194,17 @@ public class CapabilitiesResponse extends BaseResponse {
 
     public void setDesktopServiceEnabled(boolean desktopServiceEnabled) {
         this.desktopServiceEnabled = desktopServiceEnabled;
+    }
+
+    public void setDesktopWorksPortalPort(String desktopWorksPortalPort) {
+        this.desktopWorksPortalPort = desktopWorksPortalPort;
+    }
+
+    public void setWallPortalDashboardUrl(String wallPortalDashboardUrl) {
+        this.wallPortalDashboardUrl = wallPortalDashboardUrl;
+    }
+
+    public void setWallPortalVmUrl(String wallPortalVmUrl) {
+        this.wallPortalVmUrl = wallPortalVmUrl;
     }
 }

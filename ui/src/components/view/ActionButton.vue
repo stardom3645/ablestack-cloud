@@ -23,6 +23,18 @@
       </template>
       <console :resource="resource" :size="size" />
     </a-tooltip>
+    <a-tooltip arrowPointAtCenter placement="bottomRight" v-if="resource && resource.id && resource.worksvmip && dataView">
+      <template slot="title">
+        {{ $t('label.works.portal.url') }}
+      </template>
+      <works-link-url :resource="resource" :size="size"/>
+    </a-tooltip>
+    <a-tooltip arrowPointAtCenter placement="bottomRight" v-if="resource && resource.id && dataView">
+      <template slot="title">
+        {{ $t('label.wall.portal.vm.url') }}
+      </template>
+      <wall-link-url :resource="resource" :size="size" :ip="hostname"/>
+    </a-tooltip>
     <a-tooltip
       v-for="(action, actionIndex) in actions"
       :key="actionIndex"
@@ -79,15 +91,20 @@
 <script>
 import { api } from '@/api'
 import Console from '@/components/widgets/Console'
+import WorksLinkUrl from '@/components/widgets/WorksLinkUrl'
+import WallLinkUrl from '@/components/widgets/WallLinkUrl'
 
 export default {
   name: 'ActionButton',
   components: {
-    Console
+    Console,
+    WorksLinkUrl,
+    WallLinkUrl
   },
   data () {
     return {
-      actionBadge: {}
+      actionBadge: {},
+      hostname: this.serverIP()
     }
   },
   mounted () {
@@ -145,7 +162,6 @@ export default {
       this.actionBadge = {}
       const arrAsync = []
       const actionBadge = this.actions.filter(action => action.showBadge === true)
-      if ((actionBadge.dataView ? actionBadge.dataView : false) !== this.dataView) return
 
       if (actionBadge && actionBadge.length > 0) {
         const dataLength = actionBadge.length
@@ -186,6 +202,9 @@ export default {
           }
         }).catch(() => {})
       }
+    },
+    serverIP () {
+      return location.hostname
     }
   }
 }

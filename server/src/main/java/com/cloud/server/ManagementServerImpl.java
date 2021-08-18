@@ -89,7 +89,9 @@ import org.apache.cloudstack.api.command.admin.guest.UpdateGuestOsCmd;
 import org.apache.cloudstack.api.command.admin.guest.UpdateGuestOsMappingCmd;
 import org.apache.cloudstack.api.command.admin.host.AddHostCmd;
 import org.apache.cloudstack.api.command.admin.host.AddSecondaryStorageCmd;
+import org.apache.cloudstack.api.command.admin.host.CancelHostAsDegradedCmd;
 import org.apache.cloudstack.api.command.admin.host.CancelMaintenanceCmd;
+import org.apache.cloudstack.api.command.admin.host.DeclareHostAsDegradedCmd;
 import org.apache.cloudstack.api.command.admin.host.DeleteHostCmd;
 import org.apache.cloudstack.api.command.admin.host.FindHostsForMigrationCmd;
 import org.apache.cloudstack.api.command.admin.host.ListHostTagsCmd;
@@ -2128,7 +2130,7 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
             }
         }
 
-        final Filter searchFilter = new Filter(IPAddressVO.class, "address", false, cmd.getStartIndex(), cmd.getPageSizeVal());
+        final Filter searchFilter = new Filter(IPAddressVO.class, "address", false, null, null);
         final SearchBuilder<IPAddressVO> sb = _publicIpAddressDao.createSearchBuilder();
         Long domainId = null;
         Boolean isRecursive = null;
@@ -2214,7 +2216,10 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
             sc2.setParameters("ids", freeAddrIds.toArray());
             addrs.addAll(_publicIpAddressDao.search(sc2, searchFilter)); // Allocated + Free
         }
-
+        List<? extends IpAddress> wPagination = com.cloud.utils.StringUtils.applyPagination(addrs, cmd.getStartIndex(), cmd.getPageSizeVal());
+        if (wPagination != null) {
+            return new Pair<List<? extends IpAddress>, Integer>(wPagination, addrs.size());
+        }
         return new Pair<>(addrs, addrs.size());
     }
 
@@ -2972,6 +2977,8 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
         cmdList.add(AddHostCmd.class);
         cmdList.add(AddSecondaryStorageCmd.class);
         cmdList.add(CancelMaintenanceCmd.class);
+        cmdList.add(CancelHostAsDegradedCmd.class);
+        cmdList.add(DeclareHostAsDegradedCmd.class);
         cmdList.add(DeleteHostCmd.class);
         cmdList.add(ListHostsCmd.class);
         cmdList.add(ListHostTagsCmd.class);
@@ -3871,6 +3878,9 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
         final boolean kubernetesClusterExperimentalFeaturesEnabled = Boolean.parseBoolean(_configDao.getValue("cloud.kubernetes.cluster.experimental.features.enabled"));
 
         final boolean desktopServiceEnabled = Boolean.parseBoolean(_configDao.getValue("cloud.desktop.service.enabled"));
+        final String desktopWorksPortalPort = _configDao.getValue("cloud.desktop.service.worksportalport");
+        final String wallPortalDashboardUrl = _configDao.getValue("monitoring.wall.portal.dashboard.url");
+        final String wallPortalVmUrl = _configDao.getValue("monitoring.wall.portal.vm.url");
 
         // check if region-wide secondary storage is used
         boolean regionSecondaryEnabled = false;
@@ -3896,6 +3906,9 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
         capabilities.put("kubernetesServiceEnabled", kubernetesServiceEnabled);
         capabilities.put("kubernetesClusterExperimentalFeaturesEnabled", kubernetesClusterExperimentalFeaturesEnabled);
         capabilities.put("desktopServiceEnabled", desktopServiceEnabled);
+        capabilities.put("desktopWorksPortalPort", desktopWorksPortalPort);
+        capabilities.put("wallPortalDashboardUrl", wallPortalDashboardUrl);
+        capabilities.put("wallPortalVmUrl", wallPortalVmUrl);
         if (apiLimitEnabled) {
             capabilities.put("apiLimitInterval", apiLimitInterval);
             capabilities.put("apiLimitMax", apiLimitMax);

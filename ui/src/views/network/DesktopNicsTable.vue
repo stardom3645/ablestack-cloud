@@ -19,7 +19,7 @@
   <a-table
     size="small"
     :columns="desktopNicColumns"
-    :dataSource="resource.virtualmachines[0].nic"
+    :dataSource="resource.controlvms[0].nic"
     :rowKey="item => item.id"
     :pagination="false"
   >
