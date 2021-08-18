@@ -2541,10 +2541,11 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
         GuestResourceDef grd = new GuestResourceDef();
 
         grd.setMemorySize(vmTO.getMaxRam() / 1024);
-        if (vmTO.getMinRam() != vmTO.getMaxRam() && _noMemBalloon == false) {
+        if (vmTO.getMinRam() != vmTO.getMaxRam() && !_noMemBalloon) {
             grd.setMemBalloning(true);
             grd.setCurrentMem(vmTO.getMinRam() / 1024);
         }
+        // mem.balloon.auto = true 인 경우 grd.setMemBallooning(true);
         grd.setVcpuNum(vmTO.getCpus());
         return grd;
     }
@@ -3977,6 +3978,8 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
         if (ArrayUtils.isEmpty(mems)) {
             return NumberUtils.LONG_ZERO;
         } else {
+            //mem.balloon.auto = true 인 경우 tag=8 (VIR_DOMAIN_MEMORY_STAT_USABLE) 값을 출력
+            //mem.balloon.auto = false 인 경우 tag=7 (VIR_DOMAIN_MEMORY_STAT_RSS) 값을 출력
             int length = mems.length;
             for (int i = 0; i < length; i++) {
                 s_logger.info("=======getMemoryFreeInKBs================");

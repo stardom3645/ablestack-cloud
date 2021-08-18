@@ -267,9 +267,9 @@ public class LibvirtVMDef {
                 resBuidler.append("<memoryBacking>" + "<" + _memBacking + "/>" + "</memoryBacking>\n");
             }
             if (_memBalloning) {
-                resBuidler.append("<devices>\n" + "<memballoon model='virtio'>\n<stats period='5'/>\n</memballoon>" + "</devices>\n");
+                resBuidler.append("<devices>\n" + "<memballoon model='virtio'>\n<stats period='10'/>\n</memballoon>" + "</devices>\n");
             } else {
-                resBuidler.append("<devices>\n" + "<memballoon model='virtio'>\n<stats period='5'/>\n</memballoon>" + "</devices>\n");
+                resBuidler.append("<devices>\n" + "<memballoon model='none'/>\n" + "</devices>\n");
             }
             if (_vcpu != -1) {
                 resBuidler.append("<vcpu>" + _vcpu + "</vcpu>\n");
