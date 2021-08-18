@@ -115,6 +115,7 @@ import com.cloud.agent.resource.virtualnetwork.VRScripts;
 import com.cloud.agent.resource.virtualnetwork.VirtualRouterDeployer;
 import com.cloud.agent.resource.virtualnetwork.VirtualRoutingResource;
 import com.cloud.dc.Vlan;
+import com.cloud.deploy.DeploymentClusterPlanner;
 import com.cloud.exception.InternalErrorException;
 import com.cloud.host.Host.Type;
 import com.cloud.hypervisor.Hypervisor.HypervisorType;
@@ -2539,13 +2540,19 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
      */
     protected GuestResourceDef createGuestResourceDef(VirtualMachineTO vmTO) {
         GuestResourceDef grd = new GuestResourceDef();
-
+        final Boolean memBallooningAuto = DeploymentClusterPlanner.MemBallooningAuto.value();
+        s_logger.info("============createGuestResourceDef============");
+        s_logger.info(memBallooningAuto);
+        s_logger.info("============createGuestResourceDef============");
         grd.setMemorySize(vmTO.getMaxRam() / 1024);
         if (vmTO.getMinRam() != vmTO.getMaxRam() && !_noMemBalloon) {
             grd.setMemBalloning(true);
             grd.setCurrentMem(vmTO.getMinRam() / 1024);
         }
-        // mem.balloon.auto = true 인 경우 grd.setMemBallooning(true);
+        if (memBallooningAuto){
+            s_logger.info("============memBallooningAuto == true 인 경우============");
+            grd.setMemBalloning(true);
+        }
         grd.setVcpuNum(vmTO.getCpus());
         return grd;
     }
@@ -3974,22 +3981,49 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
      * @return the amount of free memory in KBs
      */
     protected long getMemoryFreeInKBs(Domain dm) throws LibvirtException {
+        final Boolean memBallooningAuto = DeploymentClusterPlanner.MemBallooningAuto.value();
+        s_logger.info("=========memBallooningAuto Setting=========");
+        s_logger.info(memBallooningAuto);
+        s_logger.info("=========memBallooningAuto Setting=========");
         MemoryStatistic[] mems = dm.memoryStats(NUMMEMSTATS);
         if (ArrayUtils.isEmpty(mems)) {
             return NumberUtils.LONG_ZERO;
         } else {
-            //mem.balloon.auto = true 인 경우 tag=8 (VIR_DOMAIN_MEMORY_STAT_USABLE) 값을 출력
-            //mem.balloon.auto = false 인 경우 tag=7 (VIR_DOMAIN_MEMORY_STAT_RSS) 값을 출력
+            //mem.balloon.auto = true 인 경우 tag=8 USABLE 값을 출력, 폴링이 활성화되지 않은 경우 RSS 값을 출력
+            //mem.balloon.auto = false 인 경우 tag=7 RSS 값을 출력
             int length = mems.length;
             for (int i = 0; i < length; i++) {
-                s_logger.info("=======getMemoryFreeInKBs================");
-                s_logger.info(length);
-                s_logger.info(i + " : " +mems[i].getTag());
-                s_logger.info(i + " : " +mems[i].getValue());
-                s_logger.info("=======getMemoryFreeInKBs================");
+                if (memBallooningAuto) {
+                    s_logger.info("=========memBallooningAuto = true 인 경우=========");
+                    if (length > 3) {
+                        if (mems[i].getTag() == 8){
+                            s_logger.info("=========mems tag==8인 경우=========");
+                            s_logger.info(mems[i].getTag());
+                            s_logger.info(mems[i].getValue());
+                            s_logger.info("=========mems tag==8인 경우=========");
+                            return mems[i].getValue();
+                        }
+                    } else {
+                        if (mems[i].getTag() == 7){
+                            s_logger.info("=========mems tag==7인 경우=========");
+                            s_logger.info(mems[i].getTag());
+                            s_logger.info(mems[i].getValue());
+                            s_logger.info("=========mems tag==7인 경우=========");
+                            return mems[i].getValue();
+                        }
+                    }
+                } else {
+                    s_logger.info("=========memBallooningAuto = false 인 경우=========");
+                    if (mems[i].getTag() == 7){
+                        s_logger.info("=========mems tag==7인 경우=========");
+                        s_logger.info(mems[i].getTag());
+                        s_logger.info(mems[i].getValue());
+                        s_logger.info("=========mems tag==7인 경우=========");
+                        return mems[i].getValue();
+                    }
+                }
             }
         }
-        return mems[0].getValue();
     }
 
     private boolean canBridgeFirewall(final String prvNic) {
