@@ -73,6 +73,33 @@
             <a-col :md="24" :lg="24">
               <a-form-item>
                 <span slot="label">
+                  {{ $t('label.mastertemplatetype') }}
+                  <a-tooltip :title="$t('placeholder.mastertemplatetype')">
+                    <a-icon type="info-circle" style="color: rgba(0,0,0,.45)" />
+                  </a-tooltip>
+                </span>
+                <a-radio-group
+                  v-decorator="['mastertemplatetype', {
+                    initialValue: this.uploadType,
+                    rules: [{ required: true, message: $t('message.error.select') }]
+                  }]"
+                  buttonStyle="solid">
+                  <a-radio-button value="DESKTOP">
+                    {{ $t('label.desktop.mastertemplate.type.desktop') }}
+                  </a-radio-button>
+                  <a-radio-button value="APP">
+                    {{ $t('label.desktop.mastertemplate.type.app') }}
+                  </a-radio-button>
+                </a-radio-group>
+              </a-form-item>
+            </a-col>
+          </a-row>
+        </div>
+        <div v-if="currentForm === 'Create'">
+          <a-row :gutter="12">
+            <a-col :md="24" :lg="24">
+              <a-form-item>
+                <span slot="label">
                   {{ $t('label.masteruploadtype') }}
                   <a-tooltip :title="$t('placeholder.masteruploadtype')">
                     <a-icon type="info-circle" style="color: rgba(0,0,0,.45)" />
@@ -311,6 +338,7 @@ export default {
       format: {},
       template: {},
       osTypes: {},
+      masterTemplateType: 'desktop',
       uploadType: 'url',
       defaultOsType: '',
       defaultOsId: null,

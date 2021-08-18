@@ -167,6 +167,9 @@ public class RegisterTemplateCmd extends BaseCmd implements UserCmd {
             description = "(VMware only) true if VM deployments should preserve all the configurations defined for this template", since = "4.15.1")
     protected Boolean deployAsIs;
 
+    @Parameter(name=ApiConstants.DESKTOP_CHECK, type = CommandType.BOOLEAN, required=false, description="Verify that it is a desktop template.")
+    protected Boolean isDesktop;
+
     /////////////////////////////////////////////////////
     /////////////////// Accessors ///////////////////////
     /////////////////////////////////////////////////////
@@ -326,6 +329,14 @@ public class RegisterTemplateCmd extends BaseCmd implements UserCmd {
     public boolean isDeployAsIs() {
         return Hypervisor.HypervisorType.VMware.toString().equalsIgnoreCase(hypervisor) &&
                 Boolean.TRUE.equals(deployAsIs);
+    }
+
+    public Boolean isDesktop() {
+        return isDesktop;
+    }
+
+    public void setIsDesktop(Boolean isDesktop) {
+        this.isDesktop = isDesktop;
     }
 
     /////////////////////////////////////////////////////
