@@ -30,11 +30,24 @@ import com.cloud.utils.db.SearchCriteria;
 public class DesktopClusterVmMapDaoImpl extends GenericDaoBase<DesktopClusterVmMapVO, Long> implements DesktopClusterVmMapDao {
 
     private final SearchBuilder<DesktopClusterVmMapVO> desktopIdSearch;
+    private final SearchBuilder<DesktopClusterVmMapVO> desktopIdAndVmType;
+    private final SearchBuilder<DesktopClusterVmMapVO> desktopIdAndNotVmType;
 
     public DesktopClusterVmMapDaoImpl() {
         desktopIdSearch = createSearchBuilder();
         desktopIdSearch.and("desktopClusterId", desktopIdSearch.entity().getDesktopClusterId(), SearchCriteria.Op.EQ);
         desktopIdSearch.done();
+
+        desktopIdAndVmType = createSearchBuilder();
+        desktopIdAndVmType.and("desktopClusterId", desktopIdAndVmType.entity().getDesktopClusterId(), SearchCriteria.Op.EQ);
+        desktopIdAndVmType.and("type", desktopIdAndVmType.entity().getType(), SearchCriteria.Op.EQ);
+        desktopIdAndVmType.done();
+
+        desktopIdAndNotVmType = createSearchBuilder();
+        desktopIdAndNotVmType.and("desktopClusterId", desktopIdAndNotVmType.entity().getDesktopClusterId(), SearchCriteria.Op.EQ);
+        desktopIdAndNotVmType.and("type", desktopIdAndNotVmType.entity().getType(), SearchCriteria.Op.NEQ);
+        desktopIdAndNotVmType.done();
+
     }
 
     @Override
@@ -42,5 +55,21 @@ public class DesktopClusterVmMapDaoImpl extends GenericDaoBase<DesktopClusterVmM
         SearchCriteria<DesktopClusterVmMapVO> sc = desktopIdSearch.create();
         sc.setParameters("desktopClusterId", desktopClusterId);
         return listBy(sc, null);
+    }
+
+    @Override
+    public List<DesktopClusterVmMapVO> listByDesktopClusterIdAndVmType(long desktopClusterId, String type) {
+        SearchCriteria<DesktopClusterVmMapVO> sc = desktopIdAndVmType.create();
+        sc.setParameters("desktopClusterId", desktopClusterId);
+        sc.setParameters("type", type);
+        return listBy(sc);
+    }
+
+    @Override
+    public List<DesktopClusterVmMapVO> listByDesktopClusterIdAndNotVmType(long desktopClusterId, String type) {
+        SearchCriteria<DesktopClusterVmMapVO> sc = desktopIdAndNotVmType.create();
+        sc.setParameters("desktopClusterId", desktopClusterId);
+        sc.setParameters("type", type);
+        return listBy(sc);
     }
 }

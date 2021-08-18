@@ -55,6 +55,9 @@ public class DeleteTemplateCmd extends BaseAsyncCmd {
     @Parameter(name = ApiConstants.FORCED, type = CommandType.BOOLEAN, required = false, description = "Force delete a template.", since = "4.9+")
     private Boolean forced;
 
+    @Parameter(name=ApiConstants.DESKTOP_CHECK, type = CommandType.BOOLEAN, required=false, description="Verify that it is a desktop template.")
+    protected Boolean isDesktop;
+
     /////////////////////////////////////////////////////
     /////////////////// Accessors ///////////////////////
     /////////////////////////////////////////////////////
@@ -74,6 +77,15 @@ public class DeleteTemplateCmd extends BaseAsyncCmd {
     public boolean isForced() {
         return (forced != null) ? forced : true;
     }
+
+    public Boolean isDesktop() {
+        return isDesktop;
+    }
+
+    public void setIsDesktop(Boolean isDesktop) {
+        this.isDesktop = isDesktop;
+    }
+
     /////////////////////////////////////////////////////
     /////////////// API Implementation///////////////////
     /////////////////////////////////////////////////////
