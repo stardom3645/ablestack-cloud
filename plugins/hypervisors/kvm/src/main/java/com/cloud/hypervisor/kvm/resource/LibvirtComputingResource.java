@@ -2540,7 +2540,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
      */
     protected GuestResourceDef createGuestResourceDef(VirtualMachineTO vmTO) {
         GuestResourceDef grd = new GuestResourceDef();
-        final Boolean memBallooningAuto = DeploymentClusterPlanner.MemBallooningAuto.value();
+        final Boolean memBallooningAuto = VirtualMachineManager.MemBallooningAuto.value();
         s_logger.info("============createGuestResourceDef============");
         s_logger.info(memBallooningAuto);
         s_logger.info("============createGuestResourceDef============");
@@ -3981,9 +3981,8 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
      * @return the amount of free memory in KBs
      */
     protected long getMemoryFreeInKBs(Domain dm) throws LibvirtException {
-        final Boolean memBallooningAuto = DeploymentClusterPlanner.MemBallooningAuto.value();
+        final Boolean memBallooningAuto = VirtualMachineManager.MemBallooningAuto.value();
         s_logger.info("=========memBallooningAuto Setting=========");
-        s_logger.info(DeploymentClusterPlanner.MemBallooningAuto);
         s_logger.info(memBallooningAuto);
         s_logger.info("=========memBallooningAuto Setting=========");
         MemoryStatistic[] mems = dm.memoryStats(NUMMEMSTATS);

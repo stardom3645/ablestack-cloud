@@ -581,6 +581,6 @@ public class FirstFitPlanner extends AdapterBase implements DeploymentClusterPla
 
     @Override
     public ConfigKey<?>[] getConfigKeys() {
-        return new ConfigKey<?>[] {ClusterCPUCapacityDisableThreshold, ClusterMemoryCapacityDisableThreshold, ClusterThresholdEnabled, MemBallooningAuto};
+        return new ConfigKey<?>[] {ClusterCPUCapacityDisableThreshold, ClusterMemoryCapacityDisableThreshold, ClusterThresholdEnabled};
     }
 }

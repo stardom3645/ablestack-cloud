@@ -30,7 +30,6 @@ public interface DeploymentClusterPlanner extends DeploymentPlanner {
     static final String ClusterCPUCapacityDisableThresholdCK = "cluster.cpu.allocated.capacity.disablethreshold";
     static final String ClusterMemoryCapacityDisableThresholdCK = "cluster.memory.allocated.capacity.disablethreshold";
     static final String ClusterThresholdEnabledCK = "cluster.threshold.enabled";
-    static final String MemBallooningAutoCK = "mem.ballooning.auto";
 
     static final ConfigKey<Float> ClusterCPUCapacityDisableThreshold =
         new ConfigKey<Float>(
@@ -55,15 +54,6 @@ public interface DeploymentClusterPlanner extends DeploymentPlanner {
             ClusterThresholdEnabledCK,
             "true",
             "Enable/Disable cluster thresholds. If disabled, an instance can start in a cluster even though the threshold may be crossed.",
-            false,
-            ConfigKey.Scope.Global);
-    static final ConfigKey<Boolean> MemBallooningAuto =
-        new ConfigKey<Boolean>(
-            "Advanced",
-            Boolean.class,
-            MemBallooningAutoCK,
-            "false",
-            "Enable/Disable auto ballooning. If enabled, automatically balancing memory amongst multiple guests running on a system by taking some memory from the idle guests and giving it to the needy guests.",
             false,
             ConfigKey.Scope.Global);
 
