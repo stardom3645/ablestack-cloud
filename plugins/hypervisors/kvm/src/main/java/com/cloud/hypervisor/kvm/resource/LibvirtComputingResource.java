@@ -3983,6 +3983,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
     protected long getMemoryFreeInKBs(Domain dm) throws LibvirtException {
         final Boolean memBallooningAuto = DeploymentClusterPlanner.MemBallooningAuto.value();
         s_logger.info("=========memBallooningAuto Setting=========");
+        s_logger.info(DeploymentClusterPlanner.MemBallooningAuto);
         s_logger.info(memBallooningAuto);
         s_logger.info("=========memBallooningAuto Setting=========");
         MemoryStatistic[] mems = dm.memoryStats(NUMMEMSTATS);
@@ -3990,7 +3991,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
             return NumberUtils.LONG_ZERO;
         }
         //mem.balloon.auto = true 인 경우 tag=8 USABLE 값을 출력, 폴링이 활성화되지 않은 경우 RSS 값을 출력
-        //mem.balloon.auto = false 인 경우 tag=7 RSS 값을 출력
+        //mem.balloon.auto = false 인 경우 tag=7 RSS 값을 출력 (테스트 완료)
         int length = mems.length;
         for (int i = 0; i < length; i++) {
             if (memBallooningAuto) {
@@ -4013,12 +4014,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
                     }
                 }
             } else {
-                s_logger.info("=========memBallooningAuto = false 인 경우=========");
                 if (mems[i].getTag() == 7){
-                    s_logger.info("=========mems tag==7인 경우=========");
-                    s_logger.info(mems[i].getTag());
-                    s_logger.info(mems[i].getValue());
-                    s_logger.info("=========mems tag==7인 경우=========");
                     return mems[i].getValue();
                 }
             }
