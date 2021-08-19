@@ -540,6 +540,10 @@ public class UserVmResponse extends BaseResponseWithTagInformation implements Co
         return memoryTargetKBs;
     }
 
+    public Long getMemoryIntUsableKBs() {
+        return memoryIntUsableKBs;
+    }
+
     public Long getDiskIORead() {
         return diskIORead;
     }
