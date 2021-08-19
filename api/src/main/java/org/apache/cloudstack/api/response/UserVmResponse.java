@@ -222,6 +222,10 @@ public class UserVmResponse extends BaseResponseWithTagInformation implements Co
     @Param(description = "the target memory in vm")
     private Long memoryTargetKBs;
 
+    @SerializedName("memoryintusablekbs")
+    @Param(description = "the internal memory that's usable in vm or zero if it can not be calculated")
+    private Long memoryIntUsableKBs;
+
     @SerializedName(ApiConstants.DISK_IO_READ)
     @Param(description = "the read (io) of disk on the vm")
     private Long diskIORead;
@@ -721,6 +725,10 @@ public class UserVmResponse extends BaseResponseWithTagInformation implements Co
 
     public void setMemoryTargetKBs(Long memoryTargetKBs) {
         this.memoryTargetKBs = memoryTargetKBs;
+    }
+
+    public void setMemoryIntUsableKBs(Long memoryIntUsableKBs) {
+        this.memoryIntUsableKBs = memoryIntUsableKBs;
     }
 
     public void setDiskIOWrite(Long diskIOWrite) {
