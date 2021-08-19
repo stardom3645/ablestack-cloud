@@ -3427,7 +3427,7 @@ public abstract class CitrixResourceBase implements ServerResource, HypervisorRe
         final HashMap<String, VmStatsEntry> vmResponseMap = new HashMap<String, VmStatsEntry>();
 
         for (final String vmUUID : vmUUIDs) {
-            vmResponseMap.put(vmUUID, new VmStatsEntry(0, 0, 0, 0, 0, 0, 0, "vm"));
+            vmResponseMap.put(vmUUID, new VmStatsEntry(0, 0, 0, 0, 0, 0, 0, 0, "vm"));
         }
 
         final Object[] rrdData = getRRDData(conn, 2); // call rrddata with 2 for
@@ -3483,6 +3483,7 @@ public abstract class CitrixResourceBase implements ServerResource, HypervisorRe
                     vmStatsAnswer.setDiskWriteKBs(vmStatsAnswer.getDiskWriteKBs() + getDataAverage(dataNode, col, numRows) / BASE_TO_CONVERT_BYTES_INTO_KILOBYTES);
                 } else if (param.contains("memory_internal_free")) {
                     vmStatsAnswer.setIntFreeMemoryKBs(vmStatsAnswer.getIntFreeMemoryKBs() + getDataAverage(dataNode, col, numRows) / BASE_TO_CONVERT_BYTES_INTO_KILOBYTES);
+                    vmStatsAnswer.setIntUsableMemoryKBs(vmStatsAnswer.getIntFreeMemoryKBs() + getDataAverage(dataNode, col, numRows) / BASE_TO_CONVERT_BYTES_INTO_KILOBYTES);
                 } else if (param.contains("memory_target")) {
                     vmStatsAnswer.setTargetMemoryKBs(vmStatsAnswer.getTargetMemoryKBs() + getDataAverage(dataNode, col, numRows) / BASE_TO_CONVERT_BYTES_INTO_KILOBYTES);
                 } else if (param.contains("memory")) {
