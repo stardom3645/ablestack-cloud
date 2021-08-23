@@ -2535,28 +2535,6 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
         return cmd;
     }
 
-    /**
-     * Creates guest resources based in VM specification.
-     */
-    protected GuestResourceDef createGuestResourceDef(VirtualMachineTO vmTO) {
-        GuestResourceDef grd = new GuestResourceDef();
-        final Boolean memBallooningAuto = VirtualMachineManager.MemBallooningAuto.value();
-        s_logger.info("============createGuestResourceDef============");
-        s_logger.info(memBallooningAuto);
-        s_logger.info("============createGuestResourceDef============");
-        grd.setMemorySize(vmTO.getMaxRam() / 1024);
-        if (vmTO.getMinRam() != vmTO.getMaxRam() && !_noMemBalloon) {
-            grd.setMemBalloning(true);
-            grd.setCurrentMem(vmTO.getMinRam() / 1024);
-        }
-        if (memBallooningAuto){
-            s_logger.info("============memBallooningAuto == true 인 경우============");
-            grd.setMemBalloning(true);
-        }
-        grd.setVcpuNum(vmTO.getCpus());
-        return grd;
-    }
-
     private void configureGuestIfUefiEnabled(boolean isSecureBoot, String bootMode, GuestDef guest) {
         setGuestLoader(bootMode, SECURE, guest, GuestDef.GUEST_LOADER_SECURE);
         setGuestLoader(bootMode, LEGACY, guest, GuestDef.GUEST_LOADER_LEGACY);
@@ -2634,6 +2612,37 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
     private void configureGuestAndUserVMToUseLXC(LibvirtVMDef vm, GuestDef guest) {
         guest.setGuestType(GuestDef.GuestType.LXC);
         vm.setHvsType(HypervisorType.LXC.toString().toLowerCase());
+    }
+
+    /**
+     * Creates guest resources based in VM specification.
+     */
+    protected GuestResourceDef createGuestResourceDef(VirtualMachineTO vmTO){
+        GuestResourceDef grd = new GuestResourceDef();
+
+        grd.setMemBalloning(!_noMemBalloon);
+
+        Long maxRam = ByteScaleUtils.bytesToKib(vmTO.getMaxRam());
+
+        grd.setMemorySize(maxRam);
+        grd.setCurrentMem(getCurrentMemAccordingToMemBallooning(vmTO, maxRam));
+
+        int vcpus = vmTO.getCpus();
+        Integer maxVcpus = vmTO.getVcpuMaxLimit();
+
+        grd.setVcpuNum(vcpus);
+        grd.setMaxVcpuNum(maxVcpus == null ? vcpus : maxVcpus);
+
+        return grd;
+    }
+
+    protected long getCurrentMemAccordingToMemBallooning(VirtualMachineTO vmTO, long maxRam) {
+        if (_noMemBalloon) {
+            s_logger.warn(String.format("Setting VM's [%s] current memory as max memory [%s] due to memory ballooning is disabled. If you are using a custom service offering, verify if memory ballooning really should be disabled.", vmTO.toString(), maxRam));
+            return maxRam;
+        } else {
+            return ByteScaleUtils.bytesToKib(vmTO.getMinRam());
+        }
     }
 
     /**

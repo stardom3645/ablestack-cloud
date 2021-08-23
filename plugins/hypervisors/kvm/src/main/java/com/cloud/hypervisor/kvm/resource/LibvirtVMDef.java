@@ -258,23 +258,19 @@ public class LibvirtVMDef {
 
         @Override
         public String toString() {
-            StringBuilder resBuidler = new StringBuilder();
-            resBuidler.append("<memory>" + _mem + "</memory>\n");
-            if (_currentMem != -1) {
-                resBuidler.append("<currentMemory>" + _currentMem + "</currentMemory>\n");
+            StringBuilder response = new StringBuilder();
+            response.append(String.format("<memory>%s</memory>\n", this.currentMemory));
+            response.append(String.format("<currentMemory>%s</currentMemory>\n", this.currentMemory));
+
+            if (this.memory > this.currentMemory) {
+                response.append(String.format("<maxMemory slots='16' unit='KiB'>%s</maxMemory>\n", this.memory));
+                response.append(String.format("<cpu> <numa> <cell id='0' cpus='0-%s' memory='%s' unit='KiB'/> </numa> </cpu>\n", this.maxVcpu - 1, this.currentMemory));
             }
-            if (_memBacking != null) {
-                resBuidler.append("<memoryBacking>" + "<" + _memBacking + "/>" + "</memoryBacking>\n");
-            }
-            if (_memBalloning) {
-                resBuidler.append("<devices>\n" + "<memballoon model='virtio'>\n<stats period='10'/>\n</memballoon>" + "</devices>\n");
-            } else {
-                resBuidler.append("<devices>\n" + "<memballoon model='none'/>\n" + "</devices>\n");
-            }
-            if (_vcpu != -1) {
-                resBuidler.append("<vcpu>" + _vcpu + "</vcpu>\n");
-            }
-            return resBuidler.toString();
+
+            response.append(String.format("<devices>\n<memballoon model='%s'/>\n</devices>\n", this.memoryBalloning ? "virtio" : "none"));
+            response.append(String.format("<vcpu current=\"%s\">%s</vcpu>\n", this.vcpu, this.maxVcpu));
+            return response.toString();
+           
         }
     }
 

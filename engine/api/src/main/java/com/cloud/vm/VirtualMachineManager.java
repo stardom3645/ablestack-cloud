@@ -76,25 +76,6 @@ public interface VirtualMachineManager extends Manager {
     ConfigKey<Boolean> AllowExposeHypervisorHostname = new ConfigKey<Boolean>("Advanced", Boolean.class, "global.allow.expose.host.hostname",
             "false", "If set to true, it allows the hypervisor host name on which the VM is spawned on to be exposed to the VM", true, ConfigKey.Scope.Global);
 
-    ConfigKey<Boolean> MemBallooningAuto = new ConfigKey<Boolean>("Advanced", Boolean.class, "mem.ballooning.auto",
-            "false", "Enable/Disable auto ballooning. If enabled, automatically balancing memory amongst multiple guests running on a system by taking some memory from the idle guests and giving it to the needy guests.", true, ConfigKey.Scope.Global);
-
-    static final ConfigKey<Integer> VmServiceOfferingMaxCPUCores = new ConfigKey<Integer>("Advanced",
-            Integer.class,
-            "vm.serviceoffering.cpu.cores.max",
-            "0",
-            "Maximum CPU cores for vm service offering. If 0 - no limitation",
-            true
-    );
-
-    static final ConfigKey<Integer> VmServiceOfferingMaxRAMSize = new ConfigKey<Integer>("Advanced",
-            Integer.class,
-            "vm.serviceoffering.ram.size.max",
-            "0",
-            "Maximum RAM size in MB for vm service offering. If 0 - no limitation",
-            true
-    );
-
     interface Topics {
         String VM_POWER_STATE = "vm.powerstate";
     }
