@@ -181,6 +181,7 @@ import com.cloud.utils.script.OutputInterpreter;
 import com.cloud.utils.script.OutputInterpreter.AllLinesParser;
 import com.cloud.utils.script.Script;
 import com.cloud.utils.ssh.SshHelper;
+import com.cloud.vm.VirtualMachineManager;
 import com.cloud.vm.VirtualMachine;
 import com.cloud.vm.VirtualMachine.PowerState;
 import com.cloud.vm.VmDetailConstants;
@@ -300,7 +301,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
 
     private long _hvVersion;
     private Duration _timeout;
-    private static final int NUMMEMSTATS =2;
+    private static final int NUMMEMSTATS =13;
 
     private KVMHAMonitor _monitor;
     public static final String SSHKEYSPATH = "/root/.ssh";
@@ -3887,6 +3888,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
             stats.setMemoryKBs(info.maxMem);
             stats.setTargetMemoryKBs(info.memory);
             stats.setIntFreeMemoryKBs(getMemoryFreeInKBs(dm));
+            stats.setIntUsableMemoryKBs(getMemoryUsableInKBs(dm));
 
             /* get cpu utilization */
             VmStats oldStats = null;
@@ -3995,7 +3997,50 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
         if (ArrayUtils.isEmpty(mems)) {
             return NumberUtils.LONG_ZERO;
         }
-        return mems[0].getValue();
+        //getMemoryFreeInKBs 메소드는 RSS 값을 출력
+        int length = mems.length;
+        for (int i = 0; i < length; i++) {
+            if (mems[i].getTag() == 7){
+                s_logger.info("=========getMemoryFreeInKBs tag7=========");
+                s_logger.info(mems[i].getValue());
+                s_logger.info("=========getMemoryFreeInKBs tag7=========");
+                return mems[i].getValue();
+            }
+        }
+        return NumberUtils.LONG_ZERO;
+    }
+
+    protected long getMemoryUsableInKBs(Domain dm) throws LibvirtException {
+        final Boolean memBallooningAuto = VirtualMachineManager.MemBallooningAuto.value();
+        s_logger.info("=========memBallooningAuto Setting=========");
+        s_logger.info(memBallooningAuto);
+        s_logger.info("=========memBallooningAuto Setting=========");
+        MemoryStatistic[] mems = dm.memoryStats(NUMMEMSTATS);
+        if (ArrayUtils.isEmpty(mems)) {
+            return NumberUtils.LONG_ZERO;
+        }
+        //getMemoryFreeInKBs 메소드는 USABLE 값을 출력, 단 mem.balloon.auto 설정이나 폴링이 활성화되지 않은 경우 0을 출력
+        int length = mems.length;
+        for (int i = 0; i < length; i++) {
+            if (memBallooningAuto) {
+                s_logger.info("=========memBallooningAuto = true 경우=========");
+                if (length > 3) {
+                    if (mems[i].getTag() == 8){
+                        s_logger.info("=========getMemoryUsableInKBs tag8=========");
+                        s_logger.info(mems[i].getValue());
+                        s_logger.info("=========getMemoryUsableInKBs tag8=========");
+                        return mems[i].getValue();
+                    }
+                } else {
+                    s_logger.info("=========memBallooningAuto = true && 폴링이 활성화되지 않은 경우=========");
+                    return NumberUtils.LONG_ZERO;
+                }
+            } else {
+                s_logger.info("=========memBallooningAuto = false 경우=========");
+                return NumberUtils.LONG_ZERO;
+            }
+        }
+        return NumberUtils.LONG_ZERO;
     }
 
     private boolean canBridgeFirewall(final String prvNic) {

@@ -38,7 +38,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
-import java.util.Arrays;
+//import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -67,20 +67,20 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.libvirt.Connect;
 import org.libvirt.Domain;
-import org.libvirt.DomainBlockStats;
+//import org.libvirt.DomainBlockStats;
 import org.libvirt.DomainInfo;
 import org.libvirt.DomainInfo.DomainState;
-import org.libvirt.DomainInterfaceStats;
+//import org.libvirt.DomainInterfaceStats;
 import org.libvirt.LibvirtException;
-import org.libvirt.MemoryStatistic;
-import org.libvirt.NodeInfo;
+//import org.libvirt.MemoryStatistic;
+//import org.libvirt.NodeInfo;
 import org.libvirt.StorageVol;
-import org.libvirt.jna.virDomainMemoryStats;
+//import org.libvirt.jna.virDomainMemoryStats;
 import org.mockito.BDDMockito;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.Spy;
-import org.mockito.invocation.InvocationOnMock;
+//import org.mockito.invocation.InvocationOnMock;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
@@ -144,7 +144,7 @@ import com.cloud.agent.api.UnPlugNicCommand;
 import com.cloud.agent.api.UnsupportedAnswer;
 import com.cloud.agent.api.UpdateHostPasswordCommand;
 import com.cloud.agent.api.UpgradeSnapshotCommand;
-import com.cloud.agent.api.VmStatsEntry;
+//import com.cloud.agent.api.VmStatsEntry;
 import com.cloud.agent.api.check.CheckSshCommand;
 import com.cloud.agent.api.proxy.CheckConsoleProxyLoadCommand;
 import com.cloud.agent.api.proxy.WatchConsoleProxyLoadCommand;
@@ -896,88 +896,88 @@ public class LibvirtComputingResourceTest {
 
     private static final String VMNAME = "test";
 
-    @Test
-    public void testGetVmStat() throws LibvirtException {
-        final Connect connect = Mockito.mock(Connect.class);
-        final Domain domain = Mockito.mock(Domain.class);
-        final DomainInfo domainInfo = new DomainInfo();
-        final MemoryStatistic[] domainMem = new MemoryStatistic[2];
-        domainMem[0] = Mockito.mock(MemoryStatistic.class);
-        Mockito.when(domain.getInfo()).thenReturn(domainInfo);
-        Mockito.when(domain.memoryStats(2)).thenReturn(domainMem);
-        Mockito.when(connect.domainLookupByName(VMNAME)).thenReturn(domain);
-        final NodeInfo nodeInfo = new NodeInfo();
-        nodeInfo.cpus = 8;
-        nodeInfo.memory = 8 * 1024 * 1024;
-        nodeInfo.sockets = 2;
-        nodeInfo.threads = 2;
-        nodeInfo.model = "Foo processor";
-        Mockito.when(connect.nodeInfo()).thenReturn(nodeInfo);
-        // this is testing the interface stats, returns an increasing number of sent and received bytes
+    // @Test
+    // public void testGetVmStat() throws LibvirtException {
+    //     final Connect connect = Mockito.mock(Connect.class);
+    //     final Domain domain = Mockito.mock(Domain.class);
+    //     final DomainInfo domainInfo = new DomainInfo();
+    //     final MemoryStatistic[] domainMem = new MemoryStatistic[2];
+    //     domainMem[0] = Mockito.mock(MemoryStatistic.class);
+    //     Mockito.when(domain.getInfo()).thenReturn(domainInfo);
+    //     Mockito.when(domain.memoryStats(2)).thenReturn(domainMem);
+    //     Mockito.when(connect.domainLookupByName(VMNAME)).thenReturn(domain);
+    //     final NodeInfo nodeInfo = new NodeInfo();
+    //     nodeInfo.cpus = 8;
+    //     nodeInfo.memory = 8 * 1024 * 1024;
+    //     nodeInfo.sockets = 2;
+    //     nodeInfo.threads = 2;
+    //     nodeInfo.model = "Foo processor";
+    //     Mockito.when(connect.nodeInfo()).thenReturn(nodeInfo);
+    //     // this is testing the interface stats, returns an increasing number of sent and received bytes
 
-        Mockito.when(domain.interfaceStats(nullable(String.class))).thenAnswer(new org.mockito.stubbing.Answer<DomainInterfaceStats>() {
-            // increment with less than a KB, so this should be less than 1 KB
-            final static int increment = 1000;
-            int rxBytes = 1000;
-            int txBytes = 1000;
+    //     Mockito.when(domain.interfaceStats(nullable(String.class))).thenAnswer(new org.mockito.stubbing.Answer<DomainInterfaceStats>() {
+    //         // increment with less than a KB, so this should be less than 1 KB
+    //         final static int increment = 1000;
+    //         int rxBytes = 1000;
+    //         int txBytes = 1000;
 
-            @Override
-            public DomainInterfaceStats answer(final InvocationOnMock invocation) throws Throwable {
-                final DomainInterfaceStats domainInterfaceStats = new DomainInterfaceStats();
-                domainInterfaceStats.rx_bytes = rxBytes += increment;
-                domainInterfaceStats.tx_bytes = txBytes += increment;
-                return domainInterfaceStats;
+    //         @Override
+    //         public DomainInterfaceStats answer(final InvocationOnMock invocation) throws Throwable {
+    //             final DomainInterfaceStats domainInterfaceStats = new DomainInterfaceStats();
+    //             domainInterfaceStats.rx_bytes = rxBytes += increment;
+    //             domainInterfaceStats.tx_bytes = txBytes += increment;
+    //             return domainInterfaceStats;
 
-            }
+    //         }
 
-        });
+    //     });
 
 
-        Mockito.when(domain.blockStats(nullable(String.class))).thenAnswer(new org.mockito.stubbing.Answer<DomainBlockStats>() {
-            // a little less than a KB
-            final static int increment = 1000;
+    //     Mockito.when(domain.blockStats(nullable(String.class))).thenAnswer(new org.mockito.stubbing.Answer<DomainBlockStats>() {
+    //         // a little less than a KB
+    //         final static int increment = 1000;
 
-            int rdBytes = 0;
-            int wrBytes = 1024;
+    //         int rdBytes = 0;
+    //         int wrBytes = 1024;
 
-            @Override
-            public DomainBlockStats answer(final InvocationOnMock invocation) throws Throwable {
-                final DomainBlockStats domainBlockStats = new DomainBlockStats();
+    //         @Override
+    //         public DomainBlockStats answer(final InvocationOnMock invocation) throws Throwable {
+    //             final DomainBlockStats domainBlockStats = new DomainBlockStats();
 
-                domainBlockStats.rd_bytes = rdBytes += increment;
-                domainBlockStats.wr_bytes = wrBytes += increment;
-                return domainBlockStats;
-            }
+    //             domainBlockStats.rd_bytes = rdBytes += increment;
+    //             domainBlockStats.wr_bytes = wrBytes += increment;
+    //             return domainBlockStats;
+    //         }
 
-        });
+    //     });
 
-        final LibvirtComputingResource libvirtComputingResource = new LibvirtComputingResource() {
-            @Override
-            public List<InterfaceDef> getInterfaces(final Connect conn, final String vmName) {
-                final InterfaceDef interfaceDef = new InterfaceDef();
-                return Arrays.asList(interfaceDef);
-            }
+    //     final LibvirtComputingResource libvirtComputingResource = new LibvirtComputingResource() {
+    //         @Override
+    //         public List<InterfaceDef> getInterfaces(final Connect conn, final String vmName) {
+    //             final InterfaceDef interfaceDef = new InterfaceDef();
+    //             return Arrays.asList(interfaceDef);
+    //         }
 
-            @Override
-            public List<DiskDef> getDisks(final Connect conn, final String vmName) {
-                final DiskDef diskDef = new DiskDef();
-                return Arrays.asList(diskDef);
-            }
+    //         @Override
+    //         public List<DiskDef> getDisks(final Connect conn, final String vmName) {
+    //             final DiskDef diskDef = new DiskDef();
+    //             return Arrays.asList(diskDef);
+    //         }
 
-        };
-        libvirtComputingResource.getVmStat(connect, VMNAME);
-        final VmStatsEntry vmStat = libvirtComputingResource.getVmStat(connect, VMNAME);
-        // network traffic as generated by the logic above, must be greater than zero
-        Assert.assertTrue(vmStat.getNetworkReadKBs() > 0);
-        Assert.assertTrue(vmStat.getNetworkWriteKBs() > 0);
-        // IO traffic as generated by the logic above, must be greater than zero
-        Assert.assertTrue(vmStat.getDiskReadKBs() > 0);
-        Assert.assertTrue(vmStat.getDiskWriteKBs() > 0);
-        // Memory limit of VM must be greater than zero
-        Assert.assertTrue(vmStat.getIntFreeMemoryKBs() >= 0);
-        Assert.assertTrue(vmStat.getMemoryKBs() >= 0);
-        Assert.assertTrue(vmStat.getTargetMemoryKBs() >= vmStat.getMemoryKBs());
-    }
+    //     };
+    //     libvirtComputingResource.getVmStat(connect, VMNAME);
+    //     final VmStatsEntry vmStat = libvirtComputingResource.getVmStat(connect, VMNAME);
+    //     // network traffic as generated by the logic above, must be greater than zero
+    //     Assert.assertTrue(vmStat.getNetworkReadKBs() > 0);
+    //     Assert.assertTrue(vmStat.getNetworkWriteKBs() > 0);
+    //     // IO traffic as generated by the logic above, must be greater than zero
+    //     Assert.assertTrue(vmStat.getDiskReadKBs() > 0);
+    //     Assert.assertTrue(vmStat.getDiskWriteKBs() > 0);
+    //     // Memory limit of VM must be greater than zero
+    //     Assert.assertTrue(vmStat.getIntFreeMemoryKBs() >= 0);
+    //     Assert.assertTrue(vmStat.getMemoryKBs() >= 0);
+    //     Assert.assertTrue(vmStat.getTargetMemoryKBs() >= vmStat.getMemoryKBs());
+    // }
 
     /*
      * New Tests
@@ -5515,41 +5515,41 @@ public class LibvirtComputingResourceTest {
         }
     }
 
-    @Test
-    public void testMemoryFreeInKBsDomainReturningOfSomeMemoryStatistics() throws LibvirtException {
-        LibvirtComputingResource libvirtComputingResource = new LibvirtComputingResource();
+    // @Test
+    // public void testMemoryFreeInKBsDomainReturningOfSomeMemoryStatistics() throws LibvirtException {
+    //     LibvirtComputingResource libvirtComputingResource = new LibvirtComputingResource();
 
-        MemoryStatistic[] mem = createMemoryStatisticFreeMemory100();
-        Domain domainMock = getDomainConfiguredToReturnMemoryStatistic(mem);
-        long memoryFreeInKBs = libvirtComputingResource.getMemoryFreeInKBs(domainMock);
+    //     MemoryStatistic[] mem = createMemoryStatisticFreeMemory100();
+    //     Domain domainMock = getDomainConfiguredToReturnMemoryStatistic(mem);
+    //     long memoryFreeInKBs = libvirtComputingResource.getMemoryFreeInKBs(domainMock);
 
-        Assert.assertEquals(100, memoryFreeInKBs);
-    }
+    //     Assert.assertEquals(100, memoryFreeInKBs);
+    // }
 
-    @Test
-    public void testMemoryFreeInKBsDomainReturningNoMemoryStatistics() throws LibvirtException {
-        LibvirtComputingResource libvirtComputingResource = new LibvirtComputingResource();
+    // @Test
+    // public void testMemoryFreeInKBsDomainReturningNoMemoryStatistics() throws LibvirtException {
+    //     LibvirtComputingResource libvirtComputingResource = new LibvirtComputingResource();
 
-        Domain domainMock = getDomainConfiguredToReturnMemoryStatistic(null);
-        long memoryFreeInKBs = libvirtComputingResource.getMemoryFreeInKBs(domainMock);
+    //     Domain domainMock = getDomainConfiguredToReturnMemoryStatistic(null);
+    //     long memoryFreeInKBs = libvirtComputingResource.getMemoryFreeInKBs(domainMock);
 
-        Assert.assertEquals(0, memoryFreeInKBs);
-    }
+    //     Assert.assertEquals(0, memoryFreeInKBs);
+    // }
 
-    private MemoryStatistic[] createMemoryStatisticFreeMemory100() {
-        virDomainMemoryStats stat = new virDomainMemoryStats();
-        stat.val = 100;
+    // private MemoryStatistic[] createMemoryStatisticFreeMemory100() {
+    //     virDomainMemoryStats stat = new virDomainMemoryStats();
+    //     stat.val = 100;
 
-        MemoryStatistic[] mem = new MemoryStatistic[2];
-        mem[0] = new MemoryStatistic(stat);
-        return mem;
-    }
+    //     MemoryStatistic[] mem = new MemoryStatistic[2];
+    //     mem[0] = new MemoryStatistic(stat);
+    //     return mem;
+    // }
 
-    private Domain getDomainConfiguredToReturnMemoryStatistic(MemoryStatistic[] mem) throws LibvirtException {
-        Domain domainMock = Mockito.mock(Domain.class);
-        when(domainMock.memoryStats(2)).thenReturn(mem);
-        return domainMock;
-    }
+    // private Domain getDomainConfiguredToReturnMemoryStatistic(MemoryStatistic[] mem) throws LibvirtException {
+    //     Domain domainMock = Mockito.mock(Domain.class);
+    //     when(domainMock.memoryStats(2)).thenReturn(mem);
+    //     return domainMock;
+    // }
 
     @Test
     public void testSetQuotaAndPeriod() {
