@@ -112,6 +112,7 @@ CREATE TABLE IF NOT EXISTS `desktop_master_version` (
   `zone_id` bigint unsigned DEFAULT NULL COMMENT 'the ID of the zone for which this Desktop Master Version is made available',
   `state` char(32) DEFAULT NULL COMMENT 'the enabled or disabled state for this Desktop Master Version',
   `upload_type` char(32) DEFAULT NULL COMMENT 'the template upload type for this Desktop Master Version',
+  `type` varchar(100) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL COMMENT 'window vm type(app or desktop)',
   `created` datetime NOT NULL COMMENT 'date created',
   `removed` datetime DEFAULT NULL COMMENT 'date removed or null, if still present',
   PRIMARY KEY (`id`),
