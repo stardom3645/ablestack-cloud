@@ -187,7 +187,6 @@ public class StatsCollector extends ManagerBase implements ComponentMethodInterc
 
     private static final String TOTAL_MEMORY_KBS_FIELD = "total_memory_kb";
     private static final String FREE_MEMORY_KBS_FIELD = "free_memory_kb";
-    private static final String USABLE_MEMORY_KBS_FIELD = "usable_memory_kb";
     private static final String CPU_UTILIZATION_FIELD = "cpu_utilization";
     private static final String CPUS_FIELD = "cpus";
     private static final String CPU_SOCKETS_FIELD = "cpu_sockets";
@@ -1453,7 +1452,6 @@ public class StatsCollector extends ManagerBase implements ComponentMethodInterc
         metrics.put(externalStatsPrefix + "cloudstack.stats.instances." + vmName + ".memory.total_kbs", statsForCurrentIteration.getMemoryKBs());
         metrics.put(externalStatsPrefix + "cloudstack.stats.instances." + vmName + ".memory.internalfree_kbs", statsForCurrentIteration.getIntFreeMemoryKBs());
         metrics.put(externalStatsPrefix + "cloudstack.stats.instances." + vmName + ".memory.target_kbs", statsForCurrentIteration.getTargetMemoryKBs());
-        metrics.put(externalStatsPrefix + "cloudstack.stats.instances." + vmName + ".memory.internalusable_kbs", statsForCurrentIteration.getIntUsableMemoryKBs());
     }
 
     /**
@@ -1478,7 +1476,6 @@ public class StatsCollector extends ManagerBase implements ComponentMethodInterc
             statsInMemory.setMemoryKBs(statsForCurrentIteration.getMemoryKBs());
             statsInMemory.setIntFreeMemoryKBs(statsForCurrentIteration.getIntFreeMemoryKBs());
             statsInMemory.setTargetMemoryKBs(statsForCurrentIteration.getTargetMemoryKBs());
-            statsInMemory.setIntUsableMemoryKBs(statsForCurrentIteration.getIntUsableMemoryKBs());
 
             _VmStats.put(statsForCurrentIteration.getVmId(), statsInMemory);
         }
@@ -1523,7 +1520,6 @@ public class StatsCollector extends ManagerBase implements ComponentMethodInterc
         fieldsToAdd.put(TOTAL_MEMORY_KBS_FIELD, vmStatsEntry.getMemoryKBs());
         fieldsToAdd.put(FREE_MEMORY_KBS_FIELD, vmStatsEntry.getIntFreeMemoryKBs());
         fieldsToAdd.put(MEMORY_TARGET_KBS_FIELD, vmStatsEntry.getTargetMemoryKBs());
-        fieldsToAdd.put(USABLE_MEMORY_KBS_FIELD, vmStatsEntry.getIntUsableMemoryKBs());
         fieldsToAdd.put(CPU_UTILIZATION_FIELD, vmStatsEntry.getCPUUtilization());
         fieldsToAdd.put(CPUS_FIELD, vmStatsEntry.getNumCPUs());
         fieldsToAdd.put(NETWORK_READ_KBS_FIELD, vmStatsEntry.getNetworkReadKBs());

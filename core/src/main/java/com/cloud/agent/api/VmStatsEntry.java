@@ -36,18 +36,16 @@ public class VmStatsEntry implements VmStats {
     private double memoryKBs;
     private double intfreememoryKBs;
     private double targetmemoryKBs;
-    private double intusablememoryKBs;
     private int numCPUs;
     private String entityType;
 
     public VmStatsEntry() {
     }
 
-    public VmStatsEntry(double memoryKBs,double intfreememoryKBs,double targetmemoryKBs, double intusablememoryKBs, double cpuUtilization, double networkReadKBs, double networkWriteKBs, int numCPUs, String entityType) {
+    public VmStatsEntry(double memoryKBs,double intfreememoryKBs,double targetmemoryKBs, double cpuUtilization, double networkReadKBs, double networkWriteKBs, int numCPUs, String entityType) {
         this.memoryKBs = memoryKBs;
         this.intfreememoryKBs = intfreememoryKBs;
         this.targetmemoryKBs = targetmemoryKBs;
-        this.intusablememoryKBs = intusablememoryKBs;
         this.cpuUtilization = cpuUtilization;
         this.networkReadKBs = networkReadKBs;
         this.networkWriteKBs = networkWriteKBs;
@@ -151,15 +149,6 @@ public class VmStatsEntry implements VmStats {
 
     public void setTargetMemoryKBs(double targetmemoryKBs) {
         this.targetmemoryKBs = targetmemoryKBs;
-    }
-
-    @Override
-    public double getIntUsableMemoryKBs() {
-        return intusablememoryKBs;
-    }
-
-    public void setIntUsableMemoryKBs(double intusablememoryKBs) {
-        this.intusablememoryKBs = intusablememoryKBs;
     }
 
     public int getNumCPUs() {

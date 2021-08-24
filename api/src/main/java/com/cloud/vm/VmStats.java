@@ -38,6 +38,4 @@ public interface VmStats {
 
     public double getTargetMemoryKBs();
 
-    public double getIntUsableMemoryKBs();
-
 }
