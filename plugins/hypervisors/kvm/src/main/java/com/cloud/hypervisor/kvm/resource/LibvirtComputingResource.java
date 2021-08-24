@@ -186,6 +186,8 @@ import com.cloud.vm.VirtualMachine;
 import com.cloud.vm.VirtualMachine.PowerState;
 import com.cloud.vm.VmDetailConstants;
 import com.google.common.base.Strings;
+import org.apache.cloudstack.utils.bytescale.ByteScaleUtils;
+import org.libvirt.VcpuInfo;
 
 /**
  * LibvirtComputingResource execute requests on the computing/routing host using
@@ -4617,4 +4619,25 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
         }
     }
 
+    /**
+     * Retrieves the memory of the running VM. <br/>
+     * The libvirt (see <a href="https://github.com/libvirt/libvirt/blob/master/src/conf/domain_conf.c">https://github.com/libvirt/libvirt/blob/master/src/conf/domain_conf.c</a>, function <b>virDomainDefParseMemory</b>) uses <b>total memory</b> as the tag <b>memory</b>, in VM's XML.
+     * @param dm domain of the VM.
+     * @return the memory of the VM.
+     * @throws org.libvirt.LibvirtException
+     **/
+    public static long getDomainMemory(Domain dm) throws LibvirtException {
+        return dm.getMaxMemory();
+    }
+
+    /**
+     * Retrieves the quantity of running VCPUs of the running VM. <br/>
+     * @param dm domain of the VM.
+     * @return the quantity of running VCPUs of the running VM.
+     * @throws org.libvirt.LibvirtException
+     **/
+    public static long countDomainRunningVcpus(Domain dm) throws LibvirtException {
+        VcpuInfo vcpus[] = dm.getVcpusInfo();
+        return Arrays.stream(vcpus).filter(vcpu -> vcpu.state.equals(VcpuInfo.VcpuState.VIR_VCPU_RUNNING)).count();
+    }
 }

@@ -230,30 +230,38 @@ public class LibvirtVMDef {
     }
 
     public static class GuestResourceDef {
-        private long _mem;
-        private long _currentMem = -1;
-        private String _memBacking;
-        private int _vcpu = -1;
-        private boolean _memBalloning = false;
+        private long memory;
+        private long currentMemory = -1;
+        private int vcpu = -1;
+        private int maxVcpu = -1;
+        private boolean memoryBalloning = false;
 
         public void setMemorySize(long mem) {
-            _mem = mem;
+            this.memory = mem;
         }
 
         public void setCurrentMem(long currMem) {
-            _currentMem = currMem;
-        }
-
-        public void setMemBacking(String memBacking) {
-            _memBacking = memBacking;
+            this.currentMemory = currMem;
         }
 
         public void setVcpuNum(int vcpu) {
-            _vcpu = vcpu;
+            this.vcpu = vcpu;
         }
 
-        public void setMemBalloning(boolean turnon) {
-            _memBalloning = turnon;
+        public void setMaxVcpuNum(int maxVcpu) {
+            this.maxVcpu = maxVcpu;
+        }
+
+        public int getVcpu() {
+            return vcpu;
+        }
+
+        public int getMaxVcpu() {
+            return maxVcpu;
+        }
+
+        public void setMemBalloning(boolean memoryBalloning) {
+            this.memoryBalloning = memoryBalloning;
         }
 
         @Override
@@ -270,7 +278,6 @@ public class LibvirtVMDef {
             response.append(String.format("<devices>\n<memballoon model='%s'/>\n</devices>\n", this.memoryBalloning ? "virtio" : "none"));
             response.append(String.format("<vcpu current=\"%s\">%s</vcpu>\n", this.vcpu, this.maxVcpu));
             return response.toString();
-           
         }
     }
 
