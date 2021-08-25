@@ -78,7 +78,7 @@ public interface VirtualMachineManager extends Manager {
 
     ConfigKey<Boolean> MemBallooningAuto = new ConfigKey<Boolean>("Advanced", Boolean.class, "mem.ballooning.auto",
             "false", "Enable/Disable auto ballooning. If enabled, automatically balancing memory amongst multiple guests running on a system by taking some memory from the idle guests and giving it to the needy guests.", true, ConfigKey.Scope.Global);
-        
+
     interface Topics {
         String VM_POWER_STATE = "vm.powerstate";
     }
