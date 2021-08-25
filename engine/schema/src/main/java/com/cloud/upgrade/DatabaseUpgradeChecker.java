@@ -360,6 +360,39 @@ public class DatabaseUpgradeChecker implements SystemIntegrityChecker {
                 final CloudStackVersion dbVersion = CloudStackVersion.parse(_dao.getCurrentVersion());
                 final String currentVersionValue = this.getClass().getPackage().getImplementationVersion();
 
+                //ablestack-allo -> ablestack-bronto db upgrade
+                TransactionLegacy txn = TransactionLegacy.open("Upgrade");
+                txn.start();
+                try {
+                    Connection conn;
+                    try {
+                        conn = txn.getConnection();
+                    } catch (SQLException e) {
+                        String errorMessage = "Unable to upgrade the database";
+                        s_logger.error(errorMessage, e);
+                        throw new CloudRuntimeException(errorMessage, e);
+                    }
+                    final String scriptFile = "META-INF/db/schema-AllotoBronto.sql";
+                    final InputStream script = Thread.currentThread().getContextClassLoader().getResourceAsStream(scriptFile);
+                    if (script == null) {
+                        throw new CloudRuntimeException("Unable to find " + scriptFile);
+                    }
+
+                    InputStream[] scripts = {script};
+                    if (scripts != null) {
+                        for (InputStream scrip : scripts) {
+                            runScript(conn, scrip);
+                        }
+                    }
+                    txn.commit();
+                } catch (CloudRuntimeException e) {
+                    String errorMessage = "Unable to upgrade the database ablestack bronto";
+                    s_logger.error(errorMessage, e);
+                    throw new CloudRuntimeException(errorMessage, e);
+                } finally {
+                    txn.close();
+                }
+
                 if (StringUtils.isBlank(currentVersionValue)) {
                     return;
                 }
