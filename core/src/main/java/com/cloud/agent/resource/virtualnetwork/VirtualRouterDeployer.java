@@ -25,7 +25,6 @@ import com.cloud.agent.api.routing.NetworkElementCommand;
 import com.cloud.utils.ExecutionResult;
 
 public interface VirtualRouterDeployer {
-
     ExecutionResult executeInVR(String routerIp, String script, String args);
     ExecutionResult executeInVR(String routerIp, String script, String args, Duration timeout);
     ExecutionResult createFileInVR(String routerIp, String path, String filename, String content);
