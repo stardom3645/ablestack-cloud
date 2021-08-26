@@ -440,9 +440,6 @@ public class ConfigurationManagerImpl extends ManagerBase implements Configurati
     public static final ConfigKey<Integer> VM_USERDATA_MAX_LENGTH = new ConfigKey<Integer>("Advanced", Integer.class, VM_USERDATA_MAX_LENGTH_STRING, "32768",
             "Max length of vm userdata after base64 decoding. Default is 32768 and maximum is 1048576", true);
 
-    public static ConfigKey<Boolean> MEM_BALLOONING_AUTO = new ConfigKey<Boolean>("Advanced", Boolean.class, "mem.ballooning.auto",
-    "false", "Enable/Disable auto ballooning. If enabled, automatically balancing memory amongst multiple guests running on a system by taking some memory from the idle guests and giving it to the needy guests.", true, ConfigKey.Scope.Global);
-
     private static final String IOPS_READ_RATE = "IOPS Read";
     private static final String IOPS_WRITE_RATE = "IOPS Write";
     private static final String BYTES_READ_RATE = "Bytes Read";
@@ -6538,6 +6535,6 @@ public class ConfigurationManagerImpl extends ManagerBase implements Configurati
     public ConfigKey<?>[] getConfigKeys() {
         return new ConfigKey<?>[] {SystemVMUseLocalStorage, IOPS_MAX_READ_LENGTH, IOPS_MAX_WRITE_LENGTH,
                 BYTES_MAX_READ_LENGTH, BYTES_MAX_WRITE_LENGTH, ADD_HOST_ON_SERVICE_RESTART_KVM, SET_HOST_DOWN_TO_MAINTENANCE, VM_SERVICE_OFFERING_MAX_CPU_CORES,
-                VM_SERVICE_OFFERING_MAX_RAM_SIZE, VM_USERDATA_MAX_LENGTH, MEM_BALLOONING_AUTO};
+                VM_SERVICE_OFFERING_MAX_RAM_SIZE, VM_USERDATA_MAX_LENGTH};
     }
 }

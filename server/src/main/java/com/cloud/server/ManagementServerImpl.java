@@ -3883,6 +3883,7 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
         final String desktopWorksPortalPort = _configDao.getValue("cloud.desktop.service.worksportalport");
         final String wallPortalDashboardUrl = _configDao.getValue("monitoring.wall.portal.dashboard.url");
         final String wallPortalVmUrl = _configDao.getValue("monitoring.wall.portal.vm.url");
+        final boolean memBallooningAuto = Boolean.parseBoolean(_configDao.getValue("mem.ballooning.auto"));
 
         // check if region-wide secondary storage is used
         boolean regionSecondaryEnabled = false;
@@ -3911,6 +3912,7 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
         capabilities.put("desktopWorksPortalPort", desktopWorksPortalPort);
         capabilities.put("wallPortalDashboardUrl", wallPortalDashboardUrl);
         capabilities.put("wallPortalVmUrl", wallPortalVmUrl);
+        capabilities.put("memBallooningAuto", memBallooningAuto);
         if (apiLimitEnabled) {
             capabilities.put("apiLimitInterval", apiLimitInterval);
             capabilities.put("apiLimitMax", apiLimitMax);

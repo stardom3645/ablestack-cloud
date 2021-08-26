@@ -66,6 +66,7 @@ public class ListCapabilitiesCmd extends BaseCmd {
         response.setDesktopServiceEnabled((Boolean)capabilities.get("desktopServiceEnabled"));
         response.setDesktopWorksPortalPort((String)capabilities.get("desktopWorksPortalPort"));
         response.setWallPortalDashboardUrl((String)capabilities.get("wallPortalDashboardUrl"));
+        response.setMemBallooningAuto((Boolean)capabilities.get("memBallooningAuto"));
         response.setWallPortalVmUrl((String)capabilities.get("wallPortalVmUrl"));
 
         if (capabilities.containsKey("apiLimitInterval")) {

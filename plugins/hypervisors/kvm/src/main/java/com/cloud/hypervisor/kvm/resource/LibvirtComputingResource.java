@@ -186,9 +186,8 @@ import com.cloud.vm.VirtualMachine.PowerState;
 import com.cloud.vm.VmDetailConstants;
 import com.google.common.base.Strings;
 import org.apache.cloudstack.utils.bytescale.ByteScaleUtils;
+import org.apache.cloudstack.framework.config.ConfigKey;
 import org.libvirt.VcpuInfo;
-
-import static com.cloud.configuration.ConfigurationManagerImpl.MEM_BALLOONING_AUTO;
 
 /**
  * LibvirtComputingResource execute requests on the computing/routing host using
@@ -4013,11 +4012,11 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
             return NumberUtils.LONG_ZERO;
         }
         s_logger.info("getMemoryUsableInKBs");
-        s_logger.info(MEM_BALLOONING_AUTO.value());
+        s_logger.info(MemBallooningAuto.value());
         //getMemoryFreeInKBs 메소드는 USABLE 값을 출력, 단 mem.balloon.auto 설정이나 폴링이 활성화되지 않은 경우 0을 출력
         int length = mems.length;
         for (int i = 0; i < length; i++) {
-            if (!MEM_BALLOONING_AUTO.value()) {
+            if (!MemBallooningAuto.value()) {
                 s_logger.info("=========memBallooningAuto = false 경우=========");
                 return NumberUtils.LONG_ZERO;
             } else {
@@ -4634,5 +4633,17 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
     public static long countDomainRunningVcpus(Domain dm) throws LibvirtException {
         VcpuInfo vcpus[] = dm.getVcpusInfo();
         return Arrays.stream(vcpus).filter(vcpu -> vcpu.state.equals(VcpuInfo.VcpuState.VIR_VCPU_RUNNING)).count();
+    }
+
+    @Override
+    public String getConfigComponentName() {
+        return VirtualRouterDeployer.class.getSimpleName();
+    }
+
+    @Override
+    public ConfigKey<?>[] getConfigKeys() {
+        return new ConfigKey<?>[] {
+                MemBallooningAuto
+        };
     }
 }
