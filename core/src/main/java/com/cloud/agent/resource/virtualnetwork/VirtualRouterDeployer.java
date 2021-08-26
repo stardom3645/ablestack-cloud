@@ -24,13 +24,7 @@ import org.joda.time.Duration;
 import com.cloud.agent.api.routing.NetworkElementCommand;
 import com.cloud.utils.ExecutionResult;
 
-import org.apache.cloudstack.framework.config.ConfigKey;
-import org.apache.cloudstack.framework.config.Configurable;
-
-public interface VirtualRouterDeployer extends Configurable {
-
-    static final ConfigKey<Boolean> MemBallooningAuto = new ConfigKey<Boolean>("Advanced", Boolean.class, "mem.ballooning.auto",
-            "false", "Enable/Disable auto ballooning. If enabled, automatically balancing memory amongst multiple guests running on a system by taking some memory from the idle guests and giving it to the needy guests.", false);
+public interface VirtualRouterDeployer {
 
     ExecutionResult executeInVR(String routerIp, String script, String args);
     ExecutionResult executeInVR(String routerIp, String script, String args, Duration timeout);

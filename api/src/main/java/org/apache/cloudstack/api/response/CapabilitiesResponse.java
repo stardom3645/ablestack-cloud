@@ -116,10 +116,6 @@ public class CapabilitiesResponse extends BaseResponse {
     @Param(description = "Monitoring Service Wall Portal for VM URL setting")
     private String wallPortalVmUrl;
 
-    @SerializedName("memballooningauto")
-    @Param(description = "true if memory ballooning auto is enabled, false otherwise")
-    private boolean memBallooningAuto;
-
     public void setSecurityGroupsEnabled(boolean securityGroupsEnabled) {
         this.securityGroupsEnabled = securityGroupsEnabled;
     }
@@ -210,9 +206,5 @@ public class CapabilitiesResponse extends BaseResponse {
 
     public void setWallPortalVmUrl(String wallPortalVmUrl) {
         this.wallPortalVmUrl = wallPortalVmUrl;
-    }
-
-    public void setMemBallooningAuto(boolean memBallooningAuto) {
-        this.memBallooningAuto = memBallooningAuto;
     }
 }
