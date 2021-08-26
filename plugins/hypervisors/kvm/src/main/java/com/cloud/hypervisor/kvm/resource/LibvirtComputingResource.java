@@ -3887,6 +3887,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
             stats.setMemoryKBs(info.maxMem);
             stats.setTargetMemoryKBs(info.memory);
             stats.setIntFreeMemoryKBs(getMemoryFreeInKBs(dm));
+            stats.setIntUsableMemoryKBs(getMemoryUsableInKBs(dm));
 
             /* get cpu utilization */
             VmStats oldStats = null;
