@@ -4014,13 +4014,8 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
         //getMemoryFreeInKBs 메소드는 USABLE 값을 출력, 값이 없는 경우 0 출력
         int length = mems.length;
         for (int i = 0; i < length; i++) {
-            if (length > 3) {
-                if (mems[i].getTag() == 8){
-                    s_logger.info(mems[i].getValue());
-                    return mems[i].getValue();
-                } else {
-                    return NumberUtils.LONG_ZERO;
-                }
+            if (mems[i].getTag() == 8){
+                return mems[i].getValue();
             }
         }
         return NumberUtils.LONG_ZERO;
