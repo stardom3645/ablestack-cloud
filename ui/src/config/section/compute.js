@@ -48,6 +48,18 @@ export default {
           'memorytotal', 'networkread', 'networkwrite', 'diskkbsread', 'diskkbswrite', 'diskiopstotal'
         ]
 
+        if (store.getters.userInfo.roletype === 'Admin') {
+          metricsFields.splice(4, 0, {
+            memoryreserved: (record) => {
+              if (record.hypervisor === 'KVM') {
+                return record.memorykbs && record.memoryintfreekbs ? (parseFloat(100.0 * record.memoryintfreekbs / record.memorykbs).toFixed(2) > 100.00 ? '100.00%' : parseFloat(100.0 * record.memoryintfreekbs / record.memorykbs).toFixed(2)) + '%' : '0.0%'
+              } else {
+                return null
+              }
+            }
+          })
+        }
+
         if (store.getters.metrics) {
           fields.push(...metricsFields)
         }
