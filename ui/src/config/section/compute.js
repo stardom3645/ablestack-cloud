@@ -42,7 +42,7 @@ export default {
         const metricsFields = ['cpunumber', 'cpuused', 'cputotal',
           {
             memoryused: (record) => {
-              return record.memorykbs && record.memoryintfreekbs ? parseFloat(100.0 * (record.memorykbs - record.memoryintfreekbs) / record.memorykbs).toFixed(2) + '%' : '0.0%'
+              return record.memorykbs && record.memoryintusablekbs ? parseFloat(100.0 * (record.memorykbs - record.memoryintusablekbs) / record.memorykbs).toFixed(2) + '%' : '0.0%'
             }
           },
           'memorytotal', 'networkread', 'networkwrite', 'diskkbsread', 'diskkbswrite', 'diskiopstotal'
