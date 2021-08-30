@@ -79,7 +79,6 @@ import com.cloud.network.dao.NetworkVO;
 import com.cloud.service.dao.ServiceOfferingDao;
 import com.cloud.service.ServiceOfferingVO;
 import com.cloud.storage.VMTemplateStorageResourceAssoc;
-import com.cloud.storage.VMTemplateStorageResourceAssoc.Status;
 import com.cloud.offering.ServiceOffering;
 import com.cloud.org.Grouping;
 import com.cloud.projects.Project;
