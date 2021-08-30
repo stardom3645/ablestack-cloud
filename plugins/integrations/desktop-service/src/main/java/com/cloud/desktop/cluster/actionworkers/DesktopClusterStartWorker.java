@@ -70,8 +70,9 @@ public class DesktopClusterStartWorker extends DesktopClusterResourceModifierAct
     private UserVm provisionDesktopClusterDcControlVm(final Network network, String publicIpAddress) throws ManagementServerException,
             ResourceUnavailableException, InsufficientCapacityException {
         UserVm dcControlVm = null;
+        final String type = "dcvm";
         dcControlVm = createDesktopClusterDcControlVm(network, publicIpAddress);
-        addDesktopClusterVm(desktopCluster.getId(), dcControlVm.getId(), "dcvm");
+        addDesktopClusterVm(desktopCluster.getId(), dcControlVm.getId(), type);
         startDesktopVM(dcControlVm);
         dcControlVm = userVmDao.findById(dcControlVm.getId());
         if (dcControlVm == null) {
@@ -124,8 +125,9 @@ public class DesktopClusterStartWorker extends DesktopClusterResourceModifierAct
     private UserVm provisionDesktopClusterWorksControlVm(final Network network, String publicIpAddress) throws
             InsufficientCapacityException, ManagementServerException, ResourceUnavailableException {
         UserVm worksControlVm = null;
+        final String type = "worksvm";
         worksControlVm = createDesktopClusterWorksControlVm(network, publicIpAddress);
-        addDesktopClusterVm(desktopCluster.getId(), worksControlVm.getId(), "worksvm");
+        addDesktopClusterVm(desktopCluster.getId(), worksControlVm.getId(), type);
         startDesktopVM(worksControlVm);
         worksControlVm = userVmDao.findById(worksControlVm.getId());
         if (worksControlVm == null) {
