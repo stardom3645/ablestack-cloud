@@ -23,4 +23,6 @@ import java.util.List;
 
 public interface DesktopClusterVmMapDao extends GenericDao<DesktopClusterVmMapVO, Long> {
     public List<DesktopClusterVmMapVO> listByDesktopClusterId(long desktopClusterId);
+    public List<DesktopClusterVmMapVO> listByDesktopClusterIdAndVmType(long desktopClusterId, String type); //search for dekstop vm list
+    public List<DesktopClusterVmMapVO> listByDesktopClusterIdAndNotVmType(long desktopClusterId, String type); //search for control vm list
 }

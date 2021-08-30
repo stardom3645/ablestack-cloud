@@ -51,10 +51,13 @@ import com.cloud.storage.GuestOS;
 import com.cloud.user.Account;
 import com.cloud.user.AccountManager;
 import com.cloud.user.User;
+import com.cloud.user.UserStatisticsVO;
 import com.cloud.user.dao.UserDao;
+import com.cloud.user.dao.UserStatisticsDao;
 import com.cloud.uservm.UserVm;
 import com.cloud.utils.db.SearchBuilder;
 import com.cloud.utils.db.SearchCriteria;
+import com.cloud.utils.db.SearchCriteria.Op;
 import com.cloud.utils.net.Dhcp;
 import com.cloud.vm.UserVmDetailVO;
 import com.cloud.vm.UserVmManager;
@@ -78,6 +81,8 @@ public class UserVmJoinDaoImpl extends GenericDaoBaseWithTagInformation<UserVmJo
     private UserDao _userDao;
     @Inject
     private NicExtraDhcpOptionDao _nicExtraDhcpOptionDao;
+    @Inject
+    UserStatisticsDao userStatsDao;
 
     private final SearchBuilder<UserVmJoinVO> VmDetailSearch;
     private final SearchBuilder<UserVmJoinVO> activeVmByIsoSearch;
@@ -136,8 +141,9 @@ public class UserVmJoinDaoImpl extends GenericDaoBaseWithTagInformation<UserVmJo
         }
         userVmResponse.setDomainId(userVm.getDomainUuid());
         userVmResponse.setDomainName(userVm.getDomainName());
-
+        userVmResponse.setInstanceName(userVm.getInstanceName());
         userVmResponse.setCreated(userVm.getCreated());
+        userVmResponse.setLastUpdated(userVm.getLastUpdated());
         userVmResponse.setDisplayVm(userVm.isDisplayVm());
 
         if (userVm.getState() != null) {
@@ -151,7 +157,6 @@ public class UserVmJoinDaoImpl extends GenericDaoBaseWithTagInformation<UserVmJo
         userVmResponse.setZoneId(userVm.getDataCenterUuid());
         userVmResponse.setZoneName(userVm.getDataCenterName());
         if (view == ResponseView.Full) {
-            userVmResponse.setInstanceName(userVm.getInstanceName());
             userVmResponse.setHostId(userVm.getHostUuid());
             userVmResponse.setHostName(userVm.getHostName());
         }
@@ -365,7 +370,24 @@ public class UserVmJoinDaoImpl extends GenericDaoBaseWithTagInformation<UserVmJo
             userVmResponse.setDynamicallyScalable(userVm.isDynamicallyScalable());
         }
 
+        addVmRxTxDataToResponse(userVm, userVmResponse);
+
         return userVmResponse;
+    }
+
+    private void addVmRxTxDataToResponse(UserVmJoinVO userVm, UserVmResponse userVmResponse) {
+        Long bytesReceived = 0L;
+        Long bytesSent = 0L;
+        SearchBuilder<UserStatisticsVO> sb = userStatsDao.createSearchBuilder();
+        sb.and("deviceId", sb.entity().getDeviceId(), Op.EQ);
+        SearchCriteria<UserStatisticsVO> sc = sb.create();
+        sc.setParameters("deviceId", userVm.getId());
+        for (UserStatisticsVO stat: userStatsDao.search(sc, null)) {
+            bytesReceived += stat.getNetBytesReceived() + stat.getCurrentBytesReceived();
+            bytesSent += stat.getNetBytesSent() + stat.getCurrentBytesSent();
+        }
+        userVmResponse.setBytesReceived(bytesReceived);
+        userVmResponse.setBytesSent(bytesSent);
     }
 
     /**

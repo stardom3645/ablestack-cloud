@@ -28,7 +28,7 @@
       <a-tab-pane :tab="$t('label.networks')" key="desktopnetworks">
         <DesktopNicsTable :resource="vm" :loading="loading" />
       </a-tab-pane>
-      <a-tab-pane :tab="$t('label.iprange')" key="iprange" v-if="'listDesktopClusterIpRanges' in $store.getters.apis">
+      <a-tab-pane :tab="$t('label.iprange')" key="iprange" v-if="'listDesktopClusterIpRanges' in $store.getters.apis && resource.networktype =='L2'">
         <a-button
           type="dashed"
           style="width: 100%; margin-bottom: 10px"
@@ -63,8 +63,8 @@
         <a-table
           class="table"
           size="small"
-          :columns="vmColumns"
-          :dataSource="this.virtualmachines"
+          :columns="controlVmColumns"
+          :dataSource="this.controlvms"
           :rowKey="item => item.id"
           :pagination="false"
         >
@@ -77,9 +77,6 @@
           <template slot="instancename" slot-scope="text">
             <status :text="text ? text : ''" />{{ text }}
           </template>
-          <template slot="ipaddress" slot-scope="text">
-            <status :text="text ? text : ''" />{{ text }}
-          </template>
           <template slot="hostname" slot-scope="text, record">
             <router-link :to="{ path: '/host/' + record.hostid }">{{ record.hostname }}</router-link>
           </template>
@@ -89,8 +86,8 @@
         <a-table
           class="table"
           size="small"
-          :columns="desktopColumns"
-          :dataSource="desktops"
+          :columns="desktopVmColumns"
+          :dataSource="this.desktopvms"
           :rowKey="item => item.id"
           :pagination="false"
         >
@@ -228,7 +225,7 @@ export default {
       loadingNic: false,
       secondaryIPs: [],
       selectedNicId: '',
-      vmColumns: [
+      controlVmColumns: [
         {
           title: this.$t('label.name'),
           dataIndex: 'name',
@@ -254,7 +251,7 @@ export default {
         }
       ],
       editNicResource: {},
-      desktopColumns: [
+      desktopVmColumns: [
         {
           title: this.$t('label.name'),
           dataIndex: 'name',
@@ -267,17 +264,16 @@ export default {
         },
         {
           title: this.$t('label.instancename'),
-          dataIndex: 'type'
+          dataIndex: 'instancename'
         },
         {
           title: this.$t('label.ip'),
-          dataIndex: 'path',
-          scopedSlots: { customRender: 'path' }
+          dataIndex: 'ipaddress'
         },
         {
           title: this.$t('label.hostid'),
-          dataIndex: 'hypervisor',
-          scopedSlots: { customRender: 'hypervisor' }
+          dataIndex: 'hostname',
+          scopedSlots: { customRender: 'hostname' }
         }
       ],
       iprangeColumns: [
@@ -345,8 +341,10 @@ export default {
     },
     fetchData () {
       this.instanceLoading = true
-      this.virtualmachines = this.resource.virtualmachines || []
-      this.virtualmachines.map(x => { x.ipaddress = x.nic[0].ipaddress })
+      this.desktopvms = this.resource.desktopvms || []
+      this.desktopvms.map(x => { x.ipaddress = x.nic[0].ipaddress })
+      this.controlvms = this.resource.controlvms || []
+      this.controlvms.map(x => { x.ipaddress = x.nic[0].ipaddress })
       this.instanceLoading = false
       this.desktopnetworks = []
       this.iprange = []

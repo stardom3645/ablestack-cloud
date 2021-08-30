@@ -48,8 +48,6 @@ import java.util.stream.Collectors;
 import javax.naming.ConfigurationException;
 import javax.xml.datatype.XMLGregorianCalendar;
 
-import com.cloud.agent.api.GetStoragePoolCapabilitiesAnswer;
-import com.cloud.agent.api.GetStoragePoolCapabilitiesCommand;
 import org.apache.cloudstack.api.ApiConstants;
 import org.apache.cloudstack.storage.command.CopyCommand;
 import org.apache.cloudstack.storage.command.StorageSubSystemCommand;
@@ -96,6 +94,8 @@ import com.cloud.agent.api.DeleteVMSnapshotAnswer;
 import com.cloud.agent.api.DeleteVMSnapshotCommand;
 import com.cloud.agent.api.GetHostStatsAnswer;
 import com.cloud.agent.api.GetHostStatsCommand;
+import com.cloud.agent.api.GetStoragePoolCapabilitiesAnswer;
+import com.cloud.agent.api.GetStoragePoolCapabilitiesCommand;
 import com.cloud.agent.api.GetStorageStatsAnswer;
 import com.cloud.agent.api.GetStorageStatsCommand;
 import com.cloud.agent.api.GetUnmanagedInstancesAnswer;
@@ -103,12 +103,12 @@ import com.cloud.agent.api.GetUnmanagedInstancesCommand;
 import com.cloud.agent.api.GetVmDiskStatsAnswer;
 import com.cloud.agent.api.GetVmDiskStatsCommand;
 import com.cloud.agent.api.GetVmIpAddressCommand;
-import com.cloud.agent.api.GetVmVncTicketCommand;
-import com.cloud.agent.api.GetVmVncTicketAnswer;
 import com.cloud.agent.api.GetVmNetworkStatsAnswer;
 import com.cloud.agent.api.GetVmNetworkStatsCommand;
 import com.cloud.agent.api.GetVmStatsAnswer;
 import com.cloud.agent.api.GetVmStatsCommand;
+import com.cloud.agent.api.GetVmVncTicketAnswer;
+import com.cloud.agent.api.GetVmVncTicketCommand;
 import com.cloud.agent.api.GetVncPortAnswer;
 import com.cloud.agent.api.GetVncPortCommand;
 import com.cloud.agent.api.GetVolumeStatsAnswer;
@@ -261,6 +261,7 @@ import com.cloud.storage.resource.VmwareStorageProcessor;
 import com.cloud.storage.resource.VmwareStorageProcessor.VmwareStorageProcessorConfigurableFields;
 import com.cloud.storage.resource.VmwareStorageSubsystemCommandHandler;
 import com.cloud.storage.template.TemplateProp;
+import com.cloud.template.TemplateManager;
 import com.cloud.utils.DateUtil;
 import com.cloud.utils.ExecutionResult;
 import com.cloud.utils.NumbersUtil;
@@ -1975,7 +1976,6 @@ public class VmwareResource implements StoragePoolResource, ServerResource, Vmwa
             int scsiControllerKey = vmMo.getScsiDeviceControllerKeyNoException();
             VirtualDeviceConfigSpec[] deviceConfigSpecArray = new VirtualDeviceConfigSpec[totalChangeDevices];
             DiskTO[] sortedDisks = sortVolumesByDeviceId(disks);
-
             VmwareHelper.setBasicVmConfig(vmConfigSpec, vmSpec.getCpus(), vmSpec.getMaxSpeed(), getReservedCpuMHZ(vmSpec), (int) (vmSpec.getMaxRam() / (1024 * 1024)),
                     getReservedMemoryMb(vmSpec), guestOsId, vmSpec.getLimitCpuUse(), deployAsIs);
 
@@ -1992,15 +1992,22 @@ public class VmwareResource implements StoragePoolResource, ServerResource, Vmwa
             }
 
             // Check for hotadd settings
-            vmConfigSpec.setMemoryHotAddEnabled(vmMo.isMemoryHotAddSupported(guestOsId));
-
+            vmConfigSpec.setMemoryHotAddEnabled(vmMo.isMemoryHotAddSupported(guestOsId) && vmSpec.isEnableDynamicallyScaleVm());
             String hostApiVersion = ((HostMO) hyperHost).getHostAboutInfo().getApiVersion();
             if (numCoresPerSocket > 1 && hostApiVersion.compareTo("5.0") < 0) {
                 s_logger.warn("Dynamic scaling of CPU is not supported for Virtual Machines with multi-core vCPUs in case of ESXi hosts 4.1 and prior. Hence CpuHotAdd will not be"
                         + " enabled for Virtual Machine: " + vmInternalCSName);
                 vmConfigSpec.setCpuHotAddEnabled(false);
             } else {
-                vmConfigSpec.setCpuHotAddEnabled(vmMo.isCpuHotAddSupported(guestOsId));
+                vmConfigSpec.setCpuHotAddEnabled(vmMo.isCpuHotAddSupported(guestOsId) && vmSpec.isEnableDynamicallyScaleVm());
+            }
+
+            if(!vmMo.isMemoryHotAddSupported(guestOsId) && vmSpec.isEnableDynamicallyScaleVm()){
+                s_logger.warn("hotadd of memory is not supported, dynamic scaling feature can not be applied to vm: " + vmInternalCSName);
+            }
+
+            if(!vmMo.isCpuHotAddSupported(guestOsId) && vmSpec.isEnableDynamicallyScaleVm()){
+                s_logger.warn("hotadd of cpu is not supported, dynamic scaling feature can not be applied to vm: " + vmInternalCSName);
             }
 
             configNestedHVSupport(vmMo, vmSpec, vmConfigSpec);
@@ -2969,6 +2976,10 @@ public class VmwareResource implements StoragePoolResource, ServerResource, Vmwa
 
     int getReservedMemoryMb(VirtualMachineTO vmSpec) {
         if (vmSpec.getDetails().get(VMwareGuru.VmwareReserveMemory.key()).equalsIgnoreCase("true")) {
+            if(vmSpec.getDetails().get(VmDetailConstants.RAM_RESERVATION) != null){
+                float reservedMemory = (vmSpec.getMaxRam() * Float.parseFloat(vmSpec.getDetails().get(VmDetailConstants.RAM_RESERVATION)));
+                return (int) (reservedMemory / ResourceType.bytesToMiB);
+            }
             return (int) (vmSpec.getMinRam() / ResourceType.bytesToMiB);
         }
         return 0;
@@ -5181,7 +5192,7 @@ public class VmwareResource implements StoragePoolResource, ServerResource, Vmwa
 
             String storeUrl = cmd.getStoreUrl();
             if (storeUrl == null) {
-                if (!cmd.getIsoPath().equalsIgnoreCase("vmware-tools.iso")) {
+                if (!cmd.getIsoPath().equalsIgnoreCase(TemplateManager.VMWARE_TOOLS_ISO)) {
                     String msg = "ISO store root url is not found in AttachIsoCommand";
                     s_logger.error(msg);
                     throw new Exception(msg);
@@ -7269,6 +7280,7 @@ public class VmwareResource implements StoragePoolResource, ServerResource, Vmwa
         try {
             instance = new UnmanagedInstanceTO();
             instance.setName(vmMo.getVmName());
+            instance.setInternalCSName(vmMo.getInternalCSName());
             instance.setCpuCores(vmMo.getConfigSummary().getNumCpu());
             instance.setCpuCoresPerSocket(vmMo.getCoresPerSocket());
             instance.setCpuSpeed(vmMo.getConfigSummary().getCpuReservation());
@@ -7540,7 +7552,7 @@ public class VmwareResource implements StoragePoolResource, ServerResource, Vmwa
                 } else {
                     String msg = String.format("Successfully migrated VM: %s with its storage to target datastore(s)", vmName);
                     if (targetHyperHost != null) {
-                        msg = String.format("% from host %s to %s", msg, sourceHyperHost.getHyperHostName(), targetHyperHost.getHyperHostName());
+                        msg = String.format("%s from host %s to %s", msg, sourceHyperHost.getHyperHostName(), targetHyperHost.getHyperHostName());
                     }
                     s_logger.debug(msg);
                 }

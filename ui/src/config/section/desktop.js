@@ -20,7 +20,7 @@ export default {
   icon: 'cloud-server',
   children: [
     {
-      name: 'desktop',
+      name: 'desktopcluster',
       title: 'title.desktop.cluster',
       icon: 'block',
       docHelp: '',
@@ -73,7 +73,7 @@ export default {
           show: (record) => { return !['Stopped', 'Destroyed', 'Destroying'].includes(record.state) }
         },
         {
-          api: 'deleteDesktopCluster',
+          api: 'destroyVirtualMachine',
           icon: 'delete',
           label: 'label.desktop.cluster.delete',
           message: 'message.desktop.cluster.delete',
@@ -127,8 +127,8 @@ export default {
       icon: 'hdd',
       docHelp: '',
       permission: ['listDesktopMasterVersions'],
-      columns: ['name', 'state', 'version', 'zonename', 'masteruploadtype'],
-      details: ['name', 'version', 'description', 'templateostype', 'templatestate', 'masteruploadtype', 'templatename'],
+      columns: ['name', 'state', 'version', 'zonename', 'masteruploadtype', 'mastertemplatetype'],
+      details: ['name', 'version', 'description', 'templateostype', 'templatestate', 'masteruploadtype', 'templatename', 'mastertemplatetype'],
       actions: [
         {
           api: 'addDesktopControllerVersion',

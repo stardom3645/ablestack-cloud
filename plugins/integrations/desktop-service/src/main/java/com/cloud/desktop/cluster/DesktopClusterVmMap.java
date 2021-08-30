@@ -27,5 +27,6 @@ public interface DesktopClusterVmMap {
     long getId();
     long getDesktopClusterId();
     long getVmId();
+    String getType();
 }
 

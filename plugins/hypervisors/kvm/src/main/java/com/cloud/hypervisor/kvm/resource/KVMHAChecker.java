@@ -29,7 +29,7 @@ public class KVMHAChecker extends KVMHABase implements Callable<Boolean> {
     private static final Logger s_logger = Logger.getLogger(KVMHAChecker.class);
     private List<NfsStoragePool> nfsStoragePools;
     private String hostIp;
-    private long heartBeatCheckerTimeout = 360000; // 6 minutes
+    private long heartBeatCheckerTimeout = 600000; // 10 minutes
 
     public KVMHAChecker(List<NfsStoragePool> pools, String host) {
         this.nfsStoragePools = pools;

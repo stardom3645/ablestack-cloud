@@ -76,6 +76,10 @@ public class DesktopMasterVersionResponse extends BaseResponse {
     @Param(description = "the upload type of the Desktop Master Version")
     private String uploadType;
 
+    @SerializedName(ApiConstants.DESKTOP_MASTER_TEMPLATE_TYPE)
+    @Param(description = "the type of desktop master version")
+    private String type;
+
     public String getId() {
         return id;
     }
@@ -170,5 +174,13 @@ public class DesktopMasterVersionResponse extends BaseResponse {
 
     public void setUploadType(String uploadType) {
         this.uploadType = uploadType;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
     }
 }

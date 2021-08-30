@@ -60,6 +60,9 @@ public class DesktopMasterVersionVO implements DesktopMasterVersion {
     @Column(name = "zone_id")
     private Long zoneId;
 
+    @Column(name = "type")
+    private String type;
+
     @Column(name = "state")
     @Enumerated(value = EnumType.STRING)
     State state = State.Enabled;
@@ -74,7 +77,7 @@ public class DesktopMasterVersionVO implements DesktopMasterVersion {
         this.uuid = UUID.randomUUID().toString();
     }
 
-    public DesktopMasterVersionVO(String name, String version, String description, long templateId, Long zoneId, String uploadType) {
+    public DesktopMasterVersionVO(String name, String version, String description, long templateId, Long zoneId, String uploadType, String type) {
         this.uuid = UUID.randomUUID().toString();
         this.name = name;
         this.description = description;
@@ -82,6 +85,7 @@ public class DesktopMasterVersionVO implements DesktopMasterVersion {
         this.version = version;
         this.zoneId = zoneId;
         this.uploadType = uploadType;
+        this.type = type;
     }
 
     @Override
@@ -162,5 +166,13 @@ public class DesktopMasterVersionVO implements DesktopMasterVersion {
 
     public void setUploadType(String uploadType) {
         this.uploadType = uploadType;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
     }
 }
