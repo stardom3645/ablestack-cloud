@@ -73,7 +73,7 @@ export default {
           show: (record) => { return !['Stopped', 'Destroyed', 'Destroying'].includes(record.state) }
         },
         {
-          api: 'destroyVirtualMachine',
+          api: 'deleteDesktopCluster',
           icon: 'delete',
           label: 'label.desktop.cluster.delete',
           message: 'message.desktop.cluster.delete',
