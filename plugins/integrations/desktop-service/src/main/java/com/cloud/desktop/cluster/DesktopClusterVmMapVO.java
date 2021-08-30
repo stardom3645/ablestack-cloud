@@ -60,7 +60,7 @@ public class DesktopClusterVmMapVO implements DesktopClusterVmMap {
         return desktopClusterId;
     }
 
-    public void setdesktopClusterId(long desktopClusterId) {
+    public void setDesktopClusterId(long desktopClusterId) {
         this.desktopClusterId = desktopClusterId;
     }
 

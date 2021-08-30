@@ -71,7 +71,7 @@ public class DesktopClusterStartWorker extends DesktopClusterResourceModifierAct
             ResourceUnavailableException, InsufficientCapacityException {
         UserVm dcControlVm = null;
         dcControlVm = createDesktopClusterDcControlVm(network, publicIpAddress);
-        addDesktopClusterVm(desktopCluster.getId(), dcControlVm.getId());
+        addDesktopClusterVm(desktopCluster.getId(), dcControlVm.getId(), "dcvm");
         startDesktopVM(dcControlVm);
         dcControlVm = userVmDao.findById(dcControlVm.getId());
         if (dcControlVm == null) {
@@ -125,7 +125,7 @@ public class DesktopClusterStartWorker extends DesktopClusterResourceModifierAct
             InsufficientCapacityException, ManagementServerException, ResourceUnavailableException {
         UserVm worksControlVm = null;
         worksControlVm = createDesktopClusterWorksControlVm(network, publicIpAddress);
-        addDesktopClusterVm(desktopCluster.getId(), worksControlVm.getId());
+        addDesktopClusterVm(desktopCluster.getId(), worksControlVm.getId(), "worksvm");
         startDesktopVM(worksControlVm);
         worksControlVm = userVmDao.findById(worksControlVm.getId());
         if (worksControlVm == null) {
@@ -218,7 +218,7 @@ public class DesktopClusterStartWorker extends DesktopClusterResourceModifierAct
     // }
 
     private void startDesktopClusterVMs() {
-        List <UserVm> clusterVms = getDesktopClusterVMs();
+        List <UserVm> clusterVms = getControlVMs();
         for (final UserVm vm : clusterVms) {
             if (vm == null) {
                 logTransitStateAndThrow(Level.ERROR, String.format("Failed to start all VMs in Desktop cluster : %s", desktopCluster.getName()), desktopCluster.getId(), DesktopCluster.Event.OperationFailed);
@@ -302,7 +302,7 @@ public class DesktopClusterStartWorker extends DesktopClusterResourceModifierAct
     public boolean reconcileAlertCluster() {
         init();
         final long startTimeoutTime = System.currentTimeMillis() + 3 * 60 * 1000;
-        List<DesktopClusterVmMapVO> vmMapVOList = getDesktopClusterVMMaps();
+        List<DesktopClusterVmMapVO> vmMapVOList = getControlVMMaps();
         if (CollectionUtils.isEmpty(vmMapVOList)) {
             return false;
         }

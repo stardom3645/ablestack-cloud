@@ -39,7 +39,7 @@ public class DesktopClusterStopWorker extends DesktopClusterActionWorker {
             LOGGER.info(String.format("Stopping Desktop cluster : %s", desktopCluster.getName()));
         }
         stateTransitTo(desktopCluster.getId(), DesktopCluster.Event.StopRequested);
-        List<UserVm> clusterVMs = getDesktopClusterVMs();
+        List<UserVm> clusterVMs = getControlVMs();
         for (UserVm vm : clusterVMs) {
             if (vm == null) {
                 logTransitStateAndThrow(Level.ERROR, String.format("Failed to find all VMs in Desktop cluster : %s", desktopCluster.getName()), desktopCluster.getId(), DesktopCluster.Event.OperationFailed);

@@ -955,7 +955,7 @@ public class DesktopClusterManagerImpl extends ManagerBase implements DesktopClu
 
     // checks if Desktop cluster is in desired state
     boolean isClusterVMsInDesiredState(DesktopCluster desktopCluster, VirtualMachine.State state) {
-        List<DesktopClusterVmMapVO> clusterVMs = desktopClusterVmMapDao.listByDesktopClusterId(desktopCluster.getId());
+        List<DesktopClusterVmMapVO> clusterVMs = desktopClusterVmMapDao.listByDesktopClusterIdAndNotVmType(desktopCluster.getId(), "desktopvm");
 
         // check if all the VM's are in same state
         for (DesktopClusterVmMapVO clusterVm : clusterVMs) {

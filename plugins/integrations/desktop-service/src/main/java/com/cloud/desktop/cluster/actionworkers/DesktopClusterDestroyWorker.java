@@ -173,12 +173,6 @@ public class DesktopClusterDestroyWorker extends DesktopClusterResourceModifierA
         return ipDestroyed;
     }
 
-    private boolean destroyDesktopVMs() {
-        boolean desktopDestroyed = true;
-        // Tag or Instance Group
-        return desktopDestroyed;
-    }
-
     public boolean destroy() throws CloudRuntimeException {
         init();
         validateClusterSate();
@@ -215,8 +209,6 @@ public class DesktopClusterDestroyWorker extends DesktopClusterResourceModifierA
         if (desktopCluster.getAccessType().equals(accessType)) {
             boolean ipDestroyed = destroyClusterIps();
         }
-        // Desktop VM remove
-        boolean desktopVmDestroyed = destroyDesktopVMs();
         boolean deleted = desktopClusterDao.remove(desktopCluster.getId());
         if (!deleted) {
             logMessage(Level.WARN, String.format("Failed to delete Desktop cluster : %s", desktopCluster.getName()), null);

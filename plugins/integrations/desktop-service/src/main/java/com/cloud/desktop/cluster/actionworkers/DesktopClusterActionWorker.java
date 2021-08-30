@@ -201,18 +201,18 @@ public class DesktopClusterActionWorker {
         logTransitStateAndThrow(logLevel, message, null, null, ex);
     }
 
-    protected DesktopClusterVmMapVO addDesktopClusterVm(final long desktopClusterId, final long vmId) {
+    protected DesktopClusterVmMapVO addDesktopClusterVm(final long desktopClusterId, final long vmId, final String type) {
         return Transaction.execute(new TransactionCallback<DesktopClusterVmMapVO>() {
             @Override
             public DesktopClusterVmMapVO doInTransaction(TransactionStatus status) {
-                DesktopClusterVmMapVO newClusterVmMap = new DesktopClusterVmMapVO(desktopClusterId, vmId);
+                DesktopClusterVmMapVO newClusterVmMap = new DesktopClusterVmMapVO(desktopClusterId, vmId, type);
                 desktopClusterVmMapDao.persist(newClusterVmMap);
                 return newClusterVmMap;
             }
         });
     }
 
-    protected List<DesktopClusterVmMapVO> getDesktopClusterVMMaps() {
+    protected List<DesktopClusterVmMapVO> getDesktopAllVMMaps() {
         List<DesktopClusterVmMapVO> clusterVMs = desktopClusterVmMapDao.listByDesktopClusterId(desktopCluster.getId());
         if (!CollectionUtils.isEmpty(clusterVMs)) {
             clusterVMs.sort((t1, t2) -> (int)((t1.getId() - t2.getId())/Math.abs(t1.getId() - t2.getId())));
@@ -220,9 +220,28 @@ public class DesktopClusterActionWorker {
         return clusterVMs;
     }
 
-    protected List<UserVm> getDesktopClusterVMs() {
+    protected List<UserVm> getDesktopAllVMs() {
         List<UserVm> vmList = new ArrayList<>();
-        List<DesktopClusterVmMapVO> clusterVMs = getDesktopClusterVMMaps();
+        List<DesktopClusterVmMapVO> clusterVMs = getDesktopAllVMMaps();
+        if (!CollectionUtils.isEmpty(clusterVMs)) {
+            for (DesktopClusterVmMapVO vmMap : clusterVMs) {
+                vmList.add(userVmDao.findById(vmMap.getVmId()));
+            }
+        }
+        return vmList;
+    }
+
+    protected List<DesktopClusterVmMapVO> getControlVMMaps() {
+        List<DesktopClusterVmMapVO> clusterVMs = desktopClusterVmMapDao.listByDesktopClusterIdAndNotVmType(desktopCluster.getId(), "desktopvm");
+        if (!CollectionUtils.isEmpty(clusterVMs)) {
+            clusterVMs.sort((t1, t2) -> (int)((t1.getId() - t2.getId())/Math.abs(t1.getId() - t2.getId())));
+        }
+        return clusterVMs;
+    }
+
+    protected List<UserVm> getControlVMs() {
+        List<UserVm> vmList = new ArrayList<>();
+        List<DesktopClusterVmMapVO> clusterVMs = getControlVMMaps();
         if (!CollectionUtils.isEmpty(clusterVMs)) {
             for (DesktopClusterVmMapVO vmMap : clusterVMs) {
                 vmList.add(userVmDao.findById(vmMap.getVmId()));
@@ -277,7 +296,7 @@ public class DesktopClusterActionWorker {
         if (controlVm != null) {
             return controlVm;
         }
-        List<DesktopClusterVmMapVO> clusterVMs = desktopClusterVmMapDao.listByDesktopClusterId(desktopCluster.getId());
+        List<DesktopClusterVmMapVO> clusterVMs = desktopClusterVmMapDao.listByDesktopClusterIdAndNotVmType(desktopCluster.getId(), "desktopvm");
         if (CollectionUtils.isEmpty(clusterVMs)) {
             LOGGER.warn(String.format("Unable to retrieve VMs for Desktop cluster : %s", desktopCluster.getName()));
             return null;
