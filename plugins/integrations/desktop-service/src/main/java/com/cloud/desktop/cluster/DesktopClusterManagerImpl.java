@@ -42,6 +42,8 @@ import org.apache.cloudstack.api.response.DesktopClusterResponse;
 import org.apache.cloudstack.api.response.DesktopClusterIpRangeResponse;
 import org.apache.cloudstack.api.response.ListResponse;
 import org.apache.cloudstack.api.response.UserVmResponse;
+import org.apache.cloudstack.storage.datastore.db.TemplateDataStoreVO;
+import org.apache.cloudstack.storage.datastore.db.TemplateDataStoreDao;
 import org.apache.cloudstack.context.CallContext;
 import org.apache.cloudstack.framework.config.ConfigKey;
 import org.apache.cloudstack.managed.context.ManagedContextRunnable;
@@ -65,6 +67,7 @@ import com.cloud.desktop.cluster.dao.DesktopClusterDao;
 import com.cloud.desktop.cluster.dao.DesktopClusterIpRangeDao;
 import com.cloud.desktop.cluster.dao.DesktopClusterVmMapDao;
 import com.cloud.desktop.version.DesktopControllerVersionVO;
+import com.cloud.desktop.version.DesktopTemplateMapVO;
 import com.cloud.desktop.version.DesktopControllerVersion;
 import com.cloud.network.Network;
 import com.cloud.network.Network.GuestType;
@@ -75,6 +78,8 @@ import com.cloud.network.dao.IPAddressDao;
 import com.cloud.network.dao.NetworkVO;
 import com.cloud.service.dao.ServiceOfferingDao;
 import com.cloud.service.ServiceOfferingVO;
+import com.cloud.storage.VMTemplateStorageResourceAssoc;
+import com.cloud.storage.VMTemplateStorageResourceAssoc.Status;
 import com.cloud.offering.ServiceOffering;
 import com.cloud.org.Grouping;
 import com.cloud.projects.Project;
@@ -139,6 +144,8 @@ public class DesktopClusterManagerImpl extends ManagerBase implements DesktopClu
     protected IPAddressDao ipAddressDao;
     @Inject
     protected NetworkDao networkDao;
+    @Inject
+    protected TemplateDataStoreDao _tmplStoreDao;
     @Inject
     protected NetworkService networkService;
     @Inject
@@ -546,6 +553,7 @@ public class DesktopClusterManagerImpl extends ManagerBase implements DesktopClu
         if (password == null || password.isEmpty()) {
             throw new InvalidParameterValueException("Invalid password for the Desktop cluster password:" + password);
         }
+
         final DesktopControllerVersion clusterDesktopVersion = desktopControllerVersionDao.findById(desktopVersionId);
         if (clusterDesktopVersion == null) {
             throw new InvalidParameterValueException("Unable to find given Desktop version in supported versions");
@@ -553,6 +561,20 @@ public class DesktopClusterManagerImpl extends ManagerBase implements DesktopClu
         if (!DesktopControllerVersion.State.Enabled.equals(clusterDesktopVersion.getState())) {
             throw new InvalidParameterValueException(String.format("Desktop version ID: %s is in %s state", clusterDesktopVersion.getUuid(), clusterDesktopVersion.getState()));
         }
+
+        TemplateDataStoreVO tmpltStoreRef = null;
+        List<DesktopTemplateMapVO> templateList = desktopTemplateMapDao.listByVersionId(clusterDesktopVersion.getId());
+        if (templateList != null && !templateList.isEmpty()) {
+            for (DesktopTemplateMapVO templateMapVO : templateList) {
+                tmpltStoreRef = _tmplStoreDao.findByStoreTemplate(clusterDesktopVersion.getZoneId(), templateMapVO.getTemplateId());
+                if (tmpltStoreRef != null) {
+                    if (tmpltStoreRef.getDownloadState() != VMTemplateStorageResourceAssoc.Status.DOWNLOADED) {
+                        throw new InvalidParameterValueException("Desktop Control Template " + templateMapVO.getTemplateId() + " has not been completely downloaded to zone " + clusterDesktopVersion.getZoneId());
+                    }
+                }
+            }
+        }
+
         DataCenter zone = dataCenterDao.findById(clusterDesktopVersion.getZoneId());
         if (zone == null) {
             throw new InvalidParameterValueException("Unable to find zone by ID: " + clusterDesktopVersion.getZoneId());
