@@ -3357,6 +3357,8 @@
     "label.desktopvm": "데스크톱 VM",
     "label.desktop.cluster.deploy": "데스크톱 클러스터 배포",
     "label.desktop.cluster.delete": "데스크톱 클러스터 삭제",
+    "label.desktop.cluster.start": "데스크톱 클러스터 시작",
+    "label.desktop.cluster.stop": "데스크톱 클러스터 정지",
     "label.desktop.controller.template.version": "컨트롤러 템플릿 버전",
     "label.desktop.controller.template.version.create": "컨트롤러 템플릿 버전 생성",
     "label.desktop.controller.version.manage": "컨트롤러 템플릿 버전 사용여부",

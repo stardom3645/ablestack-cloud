@@ -3433,6 +3433,8 @@
 "label.desktopvm": "Desktop VM",
 "label.desktop.cluster.deploy": "Deploy Desktop Cluster",
 "label.desktop.cluster.delete": "Delete Desktop Cluster",
+"label.desktop.cluster.start": "Start Desktop Cluster",
+"label.desktop.cluster.stop": "Stop Desktop Cluster",
 "label.desktop.controller.template.version": "Controller Template Version",
 "label.desktop.controller.template.version.create": "Create Controller Template Version",
 "label.desktop.controller.version.manage": "Whether to use a Controller Template Version",
