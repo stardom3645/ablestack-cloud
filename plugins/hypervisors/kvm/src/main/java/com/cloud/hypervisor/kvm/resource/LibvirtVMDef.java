@@ -275,7 +275,11 @@ public class LibvirtVMDef {
                 response.append(String.format("<cpu> <numa> <cell id='0' cpus='0-%s' memory='%s' unit='KiB'/> </numa> </cpu>\n", this.maxVcpu - 1, this.currentMemory));
             }
 
-            response.append(String.format("<devices>\n<memballoon model='%s'/>\n</devices>\n", this.memoryBalloning ? "virtio" : "none"));
+            if (this.memoryBalloning) {
+                response.append(String.format("<devices>\n<memballoon model='virtio'>\n<stats period='10'/>\n</memballoon>\n</devices>\n"));
+            } else {
+                response.append(String.format("<devices>\n<memballoon model='none'/>\n</devices>\n"));
+            }
             response.append(String.format("<vcpu current=\"%s\">%s</vcpu>\n", this.vcpu, this.maxVcpu));
             return response.toString();
         }
