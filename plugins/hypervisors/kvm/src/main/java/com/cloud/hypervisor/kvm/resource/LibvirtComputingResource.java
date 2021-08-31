@@ -300,7 +300,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
 
     private long _hvVersion;
     private Duration _timeout;
-    private static final int NUMMEMSTATS =2;
+    private static final int NUMMEMSTATS =13;
 
     private KVMHAMonitor _monitor;
     public static final String SSHKEYSPATH = "/root/.ssh";
@@ -3887,6 +3887,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
             stats.setMemoryKBs(info.maxMem);
             stats.setTargetMemoryKBs(info.memory);
             stats.setIntFreeMemoryKBs(getMemoryFreeInKBs(dm));
+            stats.setIntUsableMemoryKBs(getMemoryUsableInKBs(dm));
 
             /* get cpu utilization */
             VmStats oldStats = null;
@@ -3995,7 +3996,29 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
         if (ArrayUtils.isEmpty(mems)) {
             return NumberUtils.LONG_ZERO;
         }
-        return mems[0].getValue();
+        //getMemoryFreeInKBs 메소드는 RSS 값을 출력, 값이 없는 경우 0 출력
+        int length = mems.length;
+        for (int i = 0; i < length; i++) {
+            if (mems[i].getTag() == 7){
+                return mems[i].getValue();
+            }
+        }
+        return NumberUtils.LONG_ZERO;
+    }
+
+    protected long getMemoryUsableInKBs(Domain dm) throws LibvirtException {
+        MemoryStatistic[] mems = dm.memoryStats(NUMMEMSTATS);
+        if (ArrayUtils.isEmpty(mems)) {
+            return NumberUtils.LONG_ZERO;
+        }
+        //getMemoryFreeInKBs 메소드는 USABLE 값을 출력, 값이 없는 경우 0 출력
+        int length = mems.length;
+        for (int i = 0; i < length; i++) {
+            if (mems[i].getTag() == 8){
+                return mems[i].getValue();
+            }
+        }
+        return NumberUtils.LONG_ZERO;
     }
 
     private boolean canBridgeFirewall(final String prvNic) {
