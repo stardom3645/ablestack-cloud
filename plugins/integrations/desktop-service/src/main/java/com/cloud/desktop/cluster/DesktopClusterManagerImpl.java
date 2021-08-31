@@ -568,7 +568,7 @@ public class DesktopClusterManagerImpl extends ManagerBase implements DesktopClu
                 tmpltStoreRef = _tmplStoreDao.findByStoreTemplate(clusterDesktopVersion.getZoneId(), templateMapVO.getTemplateId());
                 if (tmpltStoreRef != null) {
                     if (tmpltStoreRef.getDownloadState() != VMTemplateStorageResourceAssoc.Status.DOWNLOADED) {
-                        throw new InvalidParameterValueException("Desktop Control Template " + templateMapVO.getTemplateId() + " has not been completely downloaded to zone " + clusterDesktopVersion.getZoneId());
+                        throw new InvalidParameterValueException("Unable to deploy cluster, Desktop Controller Template " + templateMapVO.getTemplateId() + " has not been completely downloaded to zone " + clusterDesktopVersion.getZoneId());
                     }
                 }
             }
