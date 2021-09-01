@@ -45,8 +45,6 @@ import com.cloud.desktop.cluster.DesktopClusterVmMapVO;
 import com.cloud.desktop.version.DesktopTemplateMapVO;
 import com.cloud.desktop.version.dao.DesktopTemplateMapDao;
 import com.cloud.desktop.version.dao.DesktopControllerVersionDao;
-import com.cloud.network.IpAddress;
-import com.cloud.network.Network;
 import com.cloud.network.NetworkModel;
 import com.cloud.network.dao.NetworkDao;
 import com.cloud.service.dao.ServiceOfferingDao;
@@ -58,7 +56,6 @@ import com.cloud.user.Account;
 import com.cloud.user.AccountService;
 import com.cloud.user.dao.AccountDao;
 import com.cloud.uservm.UserVm;
-import com.cloud.utils.Pair;
 import com.cloud.utils.StringUtils;
 import com.cloud.utils.db.Transaction;
 import com.cloud.utils.db.TransactionCallback;
@@ -259,37 +256,6 @@ public class DesktopClusterActionWorker {
             desktopCluster.getName(), desktopCluster.getState().toString(), e.toString()), nte);
             return false;
         }
-    }
-
-    protected Pair<String, Integer> getDesktopClusterServerIpSshPort(UserVm controlVm) {
-        Network network = networkDao.findById(desktopCluster.getNetworkId());
-        if (network == null) {
-            LOGGER.warn(String.format("Network for Desktop cluster : %s cannot be found", desktopCluster.getName()));
-            return new Pair<>(null, 22);
-        }
-        if (Network.GuestType.Isolated.equals(network.getGuestType())) {
-            List<? extends IpAddress> addresses = networkModel.listPublicIpsAssignedToGuestNtwk(network.getId(), true);
-            if (CollectionUtils.isEmpty(addresses)) {
-                LOGGER.warn(String.format("No public IP addresses found for network : %s, Desktop cluster : %s", network.getName(), desktopCluster.getName()));
-                return new Pair<>(null, 22);
-            }
-            for (IpAddress address : addresses) {
-                if (address.isSourceNat()) {
-                    return new Pair<>(address.getAddress().addr(), 22);
-                }
-            }
-            LOGGER.warn(String.format("No source NAT IP addresses found for network : %s, Desktop cluster : %s", network.getName(), desktopCluster.getName()));
-            return new Pair<>(null, 22);
-        } else if (Network.GuestType.Shared.equals(network.getGuestType())) {
-            controlVm = fetchControlVmIfMissing(controlVm);
-            if (controlVm == null) {
-                LOGGER.warn(String.format("Unable to retrieve control VM for Desktop cluster : %s", desktopCluster.getName()));
-                return new Pair<>(null, 22);
-            }
-            return new Pair<>(controlVm.getPrivateIpAddress(), 22);
-        }
-        LOGGER.warn(String.format("Unable to retrieve server IP address for Desktop cluster : %s", desktopCluster.getName()));
-        return  new Pair<>(null, 22);
     }
 
     private UserVm fetchControlVmIfMissing(final UserVm controlVm) {

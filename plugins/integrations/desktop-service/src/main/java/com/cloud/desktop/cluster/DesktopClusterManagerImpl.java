@@ -669,6 +669,9 @@ public class DesktopClusterManagerImpl extends ManagerBase implements DesktopClu
             if (network.getGuestType().equals(GuestType.Isolated) || network.getGuestType().equals(GuestType.Shared)) {
                 //Isolated 일 경우 dc ip, works ip 입력된 경우 벨리데이션 체크
                 if ((dcIp != null && !dcIp.isEmpty()) && (worksIp != null && !worksIp.isEmpty())) {
+                    LOGGER.info(cider);
+                    LOGGER.info(NetUtils.isIpWithInCidrRange(dcIp, cider));
+                    LOGGER.info(NetUtils.isIpWithInCidrRange(worksIp, cider));
                     if (!NetUtils.isIpWithInCidrRange(dcIp, cider) || !NetUtils.isIpWithInCidrRange(worksIp, cider)) {
                         throw new InvalidParameterValueException("Please specify a valid IP range or valid netmask or valid gateway");
                     }

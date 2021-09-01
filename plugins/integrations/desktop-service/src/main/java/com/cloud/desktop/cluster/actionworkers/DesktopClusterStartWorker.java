@@ -39,7 +39,6 @@ import com.cloud.network.Network;
 import com.cloud.storage.DiskOfferingVO;
 import com.cloud.offering.ServiceOffering;
 import com.cloud.uservm.UserVm;
-import com.cloud.utils.Pair;
 import com.cloud.utils.exception.CloudRuntimeException;
 import com.cloud.desktop.cluster.DesktopCluster;
 import com.cloud.desktop.cluster.DesktopClusterVmMapVO;
@@ -48,7 +47,6 @@ import com.cloud.desktop.version.DesktopControllerVersion;
 import com.cloud.vm.ReservationContext;
 import com.cloud.vm.ReservationContextImpl;
 import com.cloud.vm.VirtualMachine;
-import com.google.common.base.Strings;
 
 public class DesktopClusterStartWorker extends DesktopClusterResourceModifierActionWorker {
 
@@ -67,11 +65,11 @@ public class DesktopClusterStartWorker extends DesktopClusterResourceModifierAct
         return desktopClusterVersion;
     }
 
-    private UserVm provisionDesktopClusterDcControlVm(final Network network, String publicIpAddress) throws ManagementServerException,
+    private UserVm provisionDesktopClusterDcControlVm(final Network network) throws ManagementServerException,
             ResourceUnavailableException, InsufficientCapacityException {
         UserVm dcControlVm = null;
         final String type = "dcvm";
-        dcControlVm = createDesktopClusterDcControlVm(network, publicIpAddress);
+        dcControlVm = createDesktopClusterDcControlVm(network);
         addDesktopClusterVm(desktopCluster.getId(), dcControlVm.getId(), type);
         startDesktopVM(dcControlVm);
         dcControlVm = userVmDao.findById(dcControlVm.getId());
@@ -84,7 +82,7 @@ public class DesktopClusterStartWorker extends DesktopClusterResourceModifierAct
         return dcControlVm;
     }
 
-    private UserVm createDesktopClusterDcControlVm(final Network network, String serverIp) throws ManagementServerException,
+    private UserVm createDesktopClusterDcControlVm(final Network network) throws ManagementServerException,
             ResourceUnavailableException, InsufficientCapacityException {
         UserVm dcControlVm = null;
         LinkedHashMap<Long, IpAddresses> ipToNetworkMap = null;
@@ -102,7 +100,7 @@ public class DesktopClusterStartWorker extends DesktopClusterResourceModifierAct
             long rootDiskSizeInGiB = rootDiskSizeInBytes / GiB_TO_BYTES;
             customParameterMap.put("rootdisksize", String.valueOf(rootDiskSizeInGiB));
         }
-        if (dcIp == null) {
+        if (dcIp == null || network.getGuestType() == Network.GuestType.Shared) {
             Network.IpAddresses addrs = new Network.IpAddresses(null, null);
             dcControlVm = userVmService.createAdvancedVirtualMachine(zone, serviceOffering, dcTemplate, networkIds, owner,
                 hostName, hostName, null, null, null,
@@ -122,11 +120,11 @@ public class DesktopClusterStartWorker extends DesktopClusterResourceModifierAct
         return dcControlVm;
     }
 
-    private UserVm provisionDesktopClusterWorksControlVm(final Network network, String publicIpAddress) throws
+    private UserVm provisionDesktopClusterWorksControlVm(final Network network) throws
             InsufficientCapacityException, ManagementServerException, ResourceUnavailableException {
         UserVm worksControlVm = null;
         final String type = "worksvm";
-        worksControlVm = createDesktopClusterWorksControlVm(network, publicIpAddress);
+        worksControlVm = createDesktopClusterWorksControlVm(network);
         addDesktopClusterVm(desktopCluster.getId(), worksControlVm.getId(), type);
         startDesktopVM(worksControlVm);
         worksControlVm = userVmDao.findById(worksControlVm.getId());
@@ -140,7 +138,7 @@ public class DesktopClusterStartWorker extends DesktopClusterResourceModifierAct
     }
 
 
-    private UserVm createDesktopClusterWorksControlVm(final Network network, String serverIp) throws ManagementServerException,
+    private UserVm createDesktopClusterWorksControlVm(final Network network) throws ManagementServerException,
             ResourceUnavailableException, InsufficientCapacityException {
         UserVm worksControlVm = null;
         LinkedHashMap<Long, IpAddresses> ipToNetworkMap = null;
@@ -158,7 +156,7 @@ public class DesktopClusterStartWorker extends DesktopClusterResourceModifierAct
             long rootDiskSizeInGiB = rootDiskSizeInBytes / GiB_TO_BYTES;
             customParameterMap.put("rootdisksize", String.valueOf(rootDiskSizeInGiB));
         }
-        if (worksIp == null) {
+        if (worksIp == null || network.getGuestType() == Network.GuestType.Shared) {
             Network.IpAddresses addrs = new Network.IpAddresses(null, null);
             worksControlVm = userVmService.createAdvancedVirtualMachine(zone, serviceOffering, dcTemplate, networkIds, owner,
                 hostName, hostName, null, null, null,
@@ -201,24 +199,6 @@ public class DesktopClusterStartWorker extends DesktopClusterResourceModifierAct
         return network;
     }
 
-    // private void provisionLoadBalancerRule(final IpAddress publicIp, final Network network,
-    //                                        final Account account, final List<Long> clusterVMIds, final int port) throws NetworkRuleConflictException,
-    //         InsufficientAddressCapacityException {
-    //     LoadBalancer lb = lbService.createPublicLoadBalancerRule(null, "api-lb", "LB rule for API access",
-    //             port, port, port, port,
-    //             publicIp.getId(), NetUtils.TCP_PROTO, "roundrobin", network.getId(),
-    //             account.getId(), false, NetUtils.TCP_PROTO, true);
-
-    //     Map<Long, List<String>> vmIdIpMap = new HashMap<>();
-    //     for (int i = 0; i < 3; ++i) {
-    //         List<String> ips = new ArrayList<>();
-    //         Nic controlVmNic = networkModel.getNicInNetwork(clusterVMIds.get(i), desktopCluster.getNetworkId());
-    //         ips.add(controlVmNic.getIPv4Address());
-    //         vmIdIpMap.put(clusterVMIds.get(i), ips);
-    //     }
-    //     lbService.assignToLoadBalancer(lb.getId(), null, vmIdIpMap);
-    // }
-
     private void startDesktopClusterVMs() {
         List <UserVm> clusterVms = getControlVMs();
         for (final UserVm vm : clusterVms) {
@@ -259,22 +239,17 @@ public class DesktopClusterStartWorker extends DesktopClusterResourceModifierAct
         } catch (ManagementServerException e) {
             logTransitStateAndThrow(Level.ERROR, String.format("Failed to start Desktop cluster : %s as its network cannot be started", desktopCluster.getName()), desktopCluster.getId(), DesktopCluster.Event.CreateFailed, e);
         }
-        Pair<String, Integer> publicIpSshPort = getDesktopClusterServerIpSshPort(null);
-        publicIpAddress = publicIpSshPort.first();
-        if (Strings.isNullOrEmpty(publicIpAddress) && (Network.GuestType.Isolated.equals(network.getGuestType()))) { // Shared network, single-control node cluster won't have an IP yet
-            logTransitStateAndThrow(Level.ERROR, String.format("Failed to start Desktop cluster : %s as no public IP found for the cluster" , desktopCluster.getName()), desktopCluster.getId(), DesktopCluster.Event.CreateFailed);
-        }
         List<UserVm> clusterVMs = new ArrayList<>();
         UserVm dcVM = null;
         try {
-            dcVM = provisionDesktopClusterDcControlVm(network, publicIpAddress);
+            dcVM = provisionDesktopClusterDcControlVm(network);
         } catch (CloudRuntimeException | ManagementServerException | ResourceUnavailableException | InsufficientCapacityException e) {
             logTransitStateAndThrow(Level.ERROR, String.format("Provisioning the dc control VM failed in the Desktop cluster : %s", desktopCluster.getName()), desktopCluster.getId(), DesktopCluster.Event.CreateFailed, e);
         }
         clusterVMs.add(dcVM);
         UserVm worksVM = null;
         try {
-            worksVM = provisionDesktopClusterWorksControlVm(network, publicIpAddress);
+            worksVM = provisionDesktopClusterWorksControlVm(network);
         }  catch (CloudRuntimeException | ManagementServerException | ResourceUnavailableException | InsufficientCapacityException e) {
             logTransitStateAndThrow(Level.ERROR, String.format("Provisioning the works control VM failed in the Desktop cluster : %s", desktopCluster.getName()), desktopCluster.getId(), DesktopCluster.Event.CreateFailed, e);
         }
