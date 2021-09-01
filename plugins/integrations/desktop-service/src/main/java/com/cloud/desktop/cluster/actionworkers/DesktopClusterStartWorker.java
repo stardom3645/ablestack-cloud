@@ -100,15 +100,17 @@ public class DesktopClusterStartWorker extends DesktopClusterResourceModifierAct
             long rootDiskSizeInGiB = rootDiskSizeInBytes / GiB_TO_BYTES;
             customParameterMap.put("rootdisksize", String.valueOf(rootDiskSizeInGiB));
         }
-        if (dcIp == null || network.getGuestType() == Network.GuestType.Shared) {
-            Network.IpAddresses addrs = new Network.IpAddresses(null, null);
+        if (dcIp == null || network.getGuestType() == Network.GuestType.L2) {
+            Network.IpAddresses addrs = new Network.IpAddresses(null, null, null);
             dcControlVm = userVmService.createAdvancedVirtualMachine(zone, serviceOffering, dcTemplate, networkIds, owner,
                 hostName, hostName, null, null, null,
                 dcTemplate.getHypervisorType(), BaseCmd.HTTPMethod.POST, null, null,
                 null, addrs, null, null, null, customParameterMap, null, null, null, null, true);
         } else {
-            Network.IpAddresses addrs = new Network.IpAddresses(dcIp, null);
-            ipToNetworkMap.put(desktopCluster.getNetworkId(), addrs);
+            ipToNetworkMap = new LinkedHashMap<Long, IpAddresses>();
+            Network.IpAddresses addrs = new Network.IpAddresses(null, null, null);
+            Network.IpAddresses dcAddrs = new Network.IpAddresses(dcIp, null, null);
+            ipToNetworkMap.put(desktopCluster.getNetworkId(), dcAddrs);
             dcControlVm = userVmService.createAdvancedVirtualMachine(zone, serviceOffering, dcTemplate, networkIds, owner,
                 hostName, hostName, null, null, null,
                 dcTemplate.getHypervisorType(), BaseCmd.HTTPMethod.POST, null, null,
@@ -156,15 +158,17 @@ public class DesktopClusterStartWorker extends DesktopClusterResourceModifierAct
             long rootDiskSizeInGiB = rootDiskSizeInBytes / GiB_TO_BYTES;
             customParameterMap.put("rootdisksize", String.valueOf(rootDiskSizeInGiB));
         }
-        if (worksIp == null || network.getGuestType() == Network.GuestType.Shared) {
-            Network.IpAddresses addrs = new Network.IpAddresses(null, null);
+        if (worksIp == null || network.getGuestType() == Network.GuestType.L2) {
+            Network.IpAddresses addrs = new Network.IpAddresses(null, null, null);
             worksControlVm = userVmService.createAdvancedVirtualMachine(zone, serviceOffering, dcTemplate, networkIds, owner,
                 hostName, hostName, null, null, null,
                 worksTemplate.getHypervisorType(), BaseCmd.HTTPMethod.POST, null, null,
                 null, addrs, null, null, null, customParameterMap, null, null, null, null, true);
         } else {
-            Network.IpAddresses addrs = new Network.IpAddresses(worksIp, null);
-            ipToNetworkMap.put(desktopCluster.getNetworkId(), addrs);
+            ipToNetworkMap = new LinkedHashMap<Long, IpAddresses>();
+            Network.IpAddresses addrs = new Network.IpAddresses(null, null, null);
+            Network.IpAddresses worksAddrs = new Network.IpAddresses(worksIp, null, null);
+            ipToNetworkMap.put(desktopCluster.getNetworkId(), worksAddrs);
             worksControlVm = userVmService.createAdvancedVirtualMachine(zone, serviceOffering, dcTemplate, networkIds, owner,
                 hostName, hostName, null, null, null,
                 worksTemplate.getHypervisorType(), BaseCmd.HTTPMethod.POST, null, null,

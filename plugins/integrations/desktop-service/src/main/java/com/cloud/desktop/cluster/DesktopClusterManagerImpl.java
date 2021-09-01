@@ -601,7 +601,7 @@ public class DesktopClusterManagerImpl extends ManagerBase implements DesktopClu
             }
             final String dcIp = cmd.getDcIp();
             final String worksIp = cmd.getWorksIp();
-            final String cider = network.getNetworkCidr();
+            final String cider = network.getCidr();
             if (network.getGuestType().equals(GuestType.L2)){
                 //L2 일 경우 IP 범위 조회하여 벨리데이션 체크
                 final String gateway = cmd.getGateway();
@@ -667,11 +667,8 @@ public class DesktopClusterManagerImpl extends ManagerBase implements DesktopClu
                 }
             }
             if (network.getGuestType().equals(GuestType.Isolated) || network.getGuestType().equals(GuestType.Shared)) {
-                //Isolated 일 경우 dc ip, works ip 입력된 경우 벨리데이션 체크
+                //Isolated, Shared 일 경우 dc ip, works ip 입력된 경우 벨리데이션 체크
                 if ((dcIp != null && !dcIp.isEmpty()) && (worksIp != null && !worksIp.isEmpty())) {
-                    LOGGER.info(cider);
-                    LOGGER.info(NetUtils.isIpWithInCidrRange(dcIp, cider));
-                    LOGGER.info(NetUtils.isIpWithInCidrRange(worksIp, cider));
                     if (!NetUtils.isIpWithInCidrRange(dcIp, cider) || !NetUtils.isIpWithInCidrRange(worksIp, cider)) {
                         throw new InvalidParameterValueException("Please specify a valid IP range or valid netmask or valid gateway");
                     }
