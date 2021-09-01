@@ -164,7 +164,7 @@ public class DesktopClusterResourceModifierActionWorker extends DesktopClusterAc
             }
             return new DeployDestination(zone, null, null, null);
         }
-        String msg = String.format("Cannot find enough capacity for Desktop cluster(requested cpu=%d memory=%s) with offering : %s and hypervisor: %s",
+        String msg = String.format("Cannot find enough capacity for desktop cluster(requested cpu=%d memory=%s) with offering : %s and hypervisor: %s",
                 cpu_requested * nodesCount, toHumanReadableSize(ram_requested * nodesCount), offering.getName(), worksTemplate.getHypervisorType().toString());
 
         LOGGER.warn(msg);
@@ -175,7 +175,7 @@ public class DesktopClusterResourceModifierActionWorker extends DesktopClusterAc
         ServiceOffering offering = serviceOfferingDao.findById(desktopCluster.getServiceOfferingId());
         DataCenter zone = dataCenterDao.findById(desktopCluster.getZoneId());
         if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug(String.format("Checking deployment destination for Desktop cluster : %s in zone : %s", desktopCluster.getName(), zone.getName()));
+            LOGGER.debug(String.format("Checking deployment destination for desktop cluster : %s in zone : %s", desktopCluster.getName(), zone.getName()));
         }
         final long dest = 2;
         return plan(dest, zone, offering);
@@ -190,16 +190,16 @@ public class DesktopClusterResourceModifierActionWorker extends DesktopClusterAc
             f.set(startVm, vm.getId());
             userVmService.startVirtualMachine(startVm);
             if (LOGGER.isInfoEnabled()) {
-                LOGGER.info(String.format("Started VM : %s in the Desktop cluster : %s", vm.getDisplayName(), desktopCluster.getName()));
+                LOGGER.info(String.format("Started VM : %s in the desktop cluster : %s", vm.getDisplayName(), desktopCluster.getName()));
             }
         } catch (IllegalAccessException | NoSuchFieldException | ExecutionException |
                 ResourceUnavailableException | ResourceAllocationException | InsufficientCapacityException ex) {
-            throw new ManagementServerException(String.format("Failed to start VM in the Desktop cluster : %s", desktopCluster.getName()), ex);
+            throw new ManagementServerException(String.format("Failed to start VM in the desktop cluster : %s", desktopCluster.getName()), ex);
         }
 
         UserVm startVm = userVmDao.findById(vm.getId());
         if (!startVm.getState().equals(VirtualMachine.State.Running)) {
-            throw new ManagementServerException(String.format("Failed to start VM in the Desktop cluster : %s", desktopCluster.getName()));
+            throw new ManagementServerException(String.format("Failed to start VM in the desktop cluster : %s", desktopCluster.getName()));
         }
     }
 

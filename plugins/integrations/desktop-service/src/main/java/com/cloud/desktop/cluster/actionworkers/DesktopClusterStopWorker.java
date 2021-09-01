@@ -36,25 +36,25 @@ public class DesktopClusterStopWorker extends DesktopClusterActionWorker {
     public boolean stop() throws CloudRuntimeException {
         init();
         if (LOGGER.isInfoEnabled()) {
-            LOGGER.info(String.format("Stopping Desktop cluster : %s", desktopCluster.getName()));
+            LOGGER.info(String.format("Stopping desktop cluster : %s", desktopCluster.getName()));
         }
         stateTransitTo(desktopCluster.getId(), DesktopCluster.Event.StopRequested);
         List<UserVm> clusterVMs = getControlVMs();
         for (UserVm vm : clusterVMs) {
             if (vm == null) {
-                logTransitStateAndThrow(Level.ERROR, String.format("Failed to find all VMs in Desktop cluster : %s", desktopCluster.getName()), desktopCluster.getId(), DesktopCluster.Event.OperationFailed);
+                logTransitStateAndThrow(Level.ERROR, String.format("Failed to find Control VMs in desktop cluster : %s", desktopCluster.getName()), desktopCluster.getId(), DesktopCluster.Event.OperationFailed);
             }
             try {
                 userVmService.stopVirtualMachine(vm.getId(), false);
             } catch (ConcurrentOperationException ex) {
-                LOGGER.warn(String.format("Failed to stop VM : %s in Desktop cluster : %s",
+                LOGGER.warn(String.format("Failed to stop VM : %s in desktop cluster : %s",
                     vm.getDisplayName(), desktopCluster.getName()), ex);
             }
         }
         for (final UserVm userVm : clusterVMs) {
             UserVm vm = userVmDao.findById(userVm.getId());
             if (vm == null || !vm.getState().equals(VirtualMachine.State.Stopped)) {
-                logTransitStateAndThrow(Level.ERROR, String.format("Failed to stop all VMs in Desktop cluster : %s",
+                logTransitStateAndThrow(Level.ERROR, String.format("Failed to stop Control VMs in desktop cluster : %s",
                 desktopCluster.getName()), desktopCluster.getId(), DesktopCluster.Event.OperationFailed);
             }
         }

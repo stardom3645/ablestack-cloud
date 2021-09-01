@@ -74,10 +74,10 @@ public class DesktopClusterStartWorker extends DesktopClusterResourceModifierAct
         startDesktopVM(dcControlVm);
         dcControlVm = userVmDao.findById(dcControlVm.getId());
         if (dcControlVm == null) {
-            throw new ManagementServerException(String.format("Failed to provision dc control VM for Desktop cluster : %s" , desktopCluster.getName()));
+            throw new ManagementServerException(String.format("Failed to provision DC Control VM for desktop cluster : %s" , desktopCluster.getName()));
         }
         if (LOGGER.isInfoEnabled()) {
-            LOGGER.info(String.format("Provisioned dc control VM : %s in to the Desktop cluster : %s", dcControlVm.getDisplayName(), desktopCluster.getName()));
+            LOGGER.info(String.format("Provisioned DC Control VM : %s in to the desktop cluster : %s", dcControlVm.getDisplayName(), desktopCluster.getName()));
         }
         return dcControlVm;
     }
@@ -117,7 +117,7 @@ public class DesktopClusterStartWorker extends DesktopClusterResourceModifierAct
                 ipToNetworkMap, addrs, null, null, null, customParameterMap, null, null, null, null, true);
         }
         if (LOGGER.isInfoEnabled()) {
-            LOGGER.info(String.format("Created control VM ID: %s, %s in the Desktop cluster : %s", dcControlVm.getUuid(), hostName, desktopCluster.getName()));
+            LOGGER.info(String.format("Created Control VM ID: %s, %s in the desktop cluster : %s", dcControlVm.getUuid(), hostName, desktopCluster.getName()));
         }
         return dcControlVm;
     }
@@ -131,10 +131,10 @@ public class DesktopClusterStartWorker extends DesktopClusterResourceModifierAct
         startDesktopVM(worksControlVm);
         worksControlVm = userVmDao.findById(worksControlVm.getId());
         if (worksControlVm == null) {
-            throw new ManagementServerException(String.format("Failed to provision works control VM for Desktop cluster : %s" , desktopCluster.getName()));
+            throw new ManagementServerException(String.format("Failed to provision Works Control VM for desktop cluster : %s" , desktopCluster.getName()));
         }
         if (LOGGER.isInfoEnabled()) {
-            LOGGER.info(String.format("Provisioned works control VM : %s in to the Desktop cluster : %s", worksControlVm.getDisplayName(), desktopCluster.getName()));
+            LOGGER.info(String.format("Provisioned Works Control VM : %s in to the desktop cluster : %s", worksControlVm.getDisplayName(), desktopCluster.getName()));
         }
         return worksControlVm;
     }
@@ -175,7 +175,7 @@ public class DesktopClusterStartWorker extends DesktopClusterResourceModifierAct
                 ipToNetworkMap, addrs, null, null, null, customParameterMap, null, null, null, null, true);
         }
         if (LOGGER.isInfoEnabled()) {
-            LOGGER.info(String.format("Created control VM ID : %s, %s in the Desktop cluster : %s", worksControlVm.getUuid(), hostName, desktopCluster.getName()));
+            LOGGER.info(String.format("Created Control VM ID : %s, %s in the desktop cluster : %s", worksControlVm.getUuid(), hostName, desktopCluster.getName()));
         }
         return worksControlVm;
     }
@@ -192,7 +192,7 @@ public class DesktopClusterStartWorker extends DesktopClusterResourceModifierAct
         try {
             networkMgr.startNetwork(network.getId(), destination, context);
             if (LOGGER.isInfoEnabled()) {
-                LOGGER.info(String.format("Network : %s is started for the  desktop cluster : %s", network.getName(), desktopCluster.getName()));
+                LOGGER.info(String.format("Network : %s is started for the desktop cluster : %s", network.getName(), desktopCluster.getName()));
             }
         } catch (ConcurrentOperationException | ResourceUnavailableException |InsufficientCapacityException e) {
             String msg = String.format("Failed to start desktop cluster : %s as unable to start associated network : %s" , desktopCluster.getName(), network.getName());
@@ -207,19 +207,19 @@ public class DesktopClusterStartWorker extends DesktopClusterResourceModifierAct
         List <UserVm> clusterVms = getControlVMs();
         for (final UserVm vm : clusterVms) {
             if (vm == null) {
-                logTransitStateAndThrow(Level.ERROR, String.format("Failed to start all VMs in Desktop cluster : %s", desktopCluster.getName()), desktopCluster.getId(), DesktopCluster.Event.OperationFailed);
+                logTransitStateAndThrow(Level.ERROR, String.format("Failed to start Control VMs in desktop cluster : %s", desktopCluster.getName()), desktopCluster.getId(), DesktopCluster.Event.OperationFailed);
             }
             try {
                 startDesktopVM(vm);
             } catch (ManagementServerException ex) {
-                LOGGER.warn(String.format("Failed to start VM : %s in Desktop cluster : %s due to ", vm.getDisplayName(), desktopCluster.getName()) + ex);
+                LOGGER.warn(String.format("Failed to start VM : %s in desktop cluster : %s due to ", vm.getDisplayName(), desktopCluster.getName()) + ex);
                 // dont bail out here. proceed further to stop the reset of the VM's
             }
         }
         for (final UserVm userVm : clusterVms) {
             UserVm vm = userVmDao.findById(userVm.getId());
             if (vm == null || !vm.getState().equals(VirtualMachine.State.Running)) {
-                logTransitStateAndThrow(Level.ERROR, String.format("Failed to start all VMs in Desktop cluster : %s", desktopCluster.getName()), desktopCluster.getId(), DesktopCluster.Event.OperationFailed);
+                logTransitStateAndThrow(Level.ERROR, String.format("Failed to start Control VMs in desktop cluster : %s", desktopCluster.getName()), desktopCluster.getId(), DesktopCluster.Event.OperationFailed);
             }
         }
     }
@@ -235,31 +235,31 @@ public class DesktopClusterStartWorker extends DesktopClusterResourceModifierAct
         try {
             dest = plan();
         } catch (InsufficientCapacityException e) {
-            logTransitStateAndThrow(Level.ERROR, String.format("Provisioning the cluster failed due to insufficient capacity in the Desktop cluster: %s", desktopCluster.getUuid()), desktopCluster.getId(), DesktopCluster.Event.CreateFailed, e);
+            logTransitStateAndThrow(Level.ERROR, String.format("Provisioning the cluster failed due to insufficient capacity in the desktop cluster: %s", desktopCluster.getUuid()), desktopCluster.getId(), DesktopCluster.Event.CreateFailed, e);
         }
         Network network = null;
         try {
             network = startDesktopClusterNetwork(dest);
         } catch (ManagementServerException e) {
-            logTransitStateAndThrow(Level.ERROR, String.format("Failed to start Desktop cluster : %s as its network cannot be started", desktopCluster.getName()), desktopCluster.getId(), DesktopCluster.Event.CreateFailed, e);
+            logTransitStateAndThrow(Level.ERROR, String.format("Failed to start desktop cluster : %s as its network cannot be started", desktopCluster.getName()), desktopCluster.getId(), DesktopCluster.Event.CreateFailed, e);
         }
         List<UserVm> clusterVMs = new ArrayList<>();
         UserVm dcVM = null;
         try {
             dcVM = provisionDesktopClusterDcControlVm(network);
         } catch (CloudRuntimeException | ManagementServerException | ResourceUnavailableException | InsufficientCapacityException e) {
-            logTransitStateAndThrow(Level.ERROR, String.format("Provisioning the dc control VM failed in the Desktop cluster : %s", desktopCluster.getName()), desktopCluster.getId(), DesktopCluster.Event.CreateFailed, e);
+            logTransitStateAndThrow(Level.ERROR, String.format("Provisioning the DC Control VM failed in the desktop cluster : %s", desktopCluster.getName()), desktopCluster.getId(), DesktopCluster.Event.CreateFailed, e);
         }
         clusterVMs.add(dcVM);
         UserVm worksVM = null;
         try {
             worksVM = provisionDesktopClusterWorksControlVm(network);
         }  catch (CloudRuntimeException | ManagementServerException | ResourceUnavailableException | InsufficientCapacityException e) {
-            logTransitStateAndThrow(Level.ERROR, String.format("Provisioning the works control VM failed in the Desktop cluster : %s", desktopCluster.getName()), desktopCluster.getId(), DesktopCluster.Event.CreateFailed, e);
+            logTransitStateAndThrow(Level.ERROR, String.format("Provisioning the Works Control VM failed in the desktop cluster : %s", desktopCluster.getName()), desktopCluster.getId(), DesktopCluster.Event.CreateFailed, e);
         }
         clusterVMs.add(worksVM);
         if (LOGGER.isInfoEnabled()) {
-            LOGGER.info(String.format("Desktop cluster : %s VMs successfully provisioned", desktopCluster.getName()));
+            LOGGER.info(String.format("Desktop cluster : %s Control VMs successfully provisioned", desktopCluster.getName()));
         }
         stateTransitTo(desktopCluster.getId(), DesktopCluster.Event.OperationSucceeded);
         return true;
@@ -268,7 +268,7 @@ public class DesktopClusterStartWorker extends DesktopClusterResourceModifierAct
     public boolean startStoppedDesktopCluster() throws CloudRuntimeException {
         init();
         if (LOGGER.isInfoEnabled()) {
-            LOGGER.info(String.format("Starting Desktop cluster : %s", desktopCluster.getName()));
+            LOGGER.info(String.format("Starting desktop cluster : %s", desktopCluster.getName()));
         }
         final long startTimeoutTime = System.currentTimeMillis() + 3600 * 1000;
         stateTransitTo(desktopCluster.getId(), DesktopCluster.Event.StartRequested);

@@ -252,7 +252,7 @@ public class DesktopClusterActionWorker {
         try {
             return _stateMachine.transitTo(desktopCluster, e, null, desktopClusterDao);
         } catch (NoTransitionException nte) {
-            LOGGER.warn(String.format("Failed to transition state of the Desktop cluster : %s in state %s on event %s",
+            LOGGER.warn(String.format("Failed to transition state of the desktop cluster : %s in state %s on event %s",
             desktopCluster.getName(), desktopCluster.getState().toString(), e.toString()), nte);
             return false;
         }
@@ -264,7 +264,7 @@ public class DesktopClusterActionWorker {
         }
         List<DesktopClusterVmMapVO> clusterVMs = desktopClusterVmMapDao.listByDesktopClusterIdAndNotVmType(desktopCluster.getId(), "desktopvm");
         if (CollectionUtils.isEmpty(clusterVMs)) {
-            LOGGER.warn(String.format("Unable to retrieve VMs for Desktop cluster : %s", desktopCluster.getName()));
+            LOGGER.warn(String.format("Unable to retrieve VMs for desktop cluster : %s", desktopCluster.getName()));
             return null;
         }
         List<Long> vmIds = new ArrayList<>();

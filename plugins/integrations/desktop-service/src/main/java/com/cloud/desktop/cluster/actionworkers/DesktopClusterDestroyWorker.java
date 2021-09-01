@@ -82,15 +82,15 @@ public class DesktopClusterDestroyWorker extends DesktopClusterResourceModifierA
                 try {
                     UserVm vm = userVmService.destroyVm(vmID, true);
                     if (!userVmManager.expunge(userVM, CallContext.current().getCallingUserId(), CallContext.current().getCallingAccount())) {
-                        LOGGER.warn(String.format("Unable to expunge VM %s : %s, destroying Desktop cluster will probably fail",
+                        LOGGER.warn(String.format("Unable to expunge VM %s : %s, destroying desktop cluster will probably fail",
                             vm.getInstanceName() , vm.getUuid()));
                     }
                     desktopClusterVmMapDao.expunge(clusterVM.getId());
                     if (LOGGER.isInfoEnabled()) {
-                        LOGGER.info(String.format("Destroyed VM : %s as part of Desktop cluster : %s cleanup", vm.getDisplayName(), desktopCluster.getName()));
+                        LOGGER.info(String.format("Destroyed VM : %s as part of desktop cluster : %s cleanup", vm.getDisplayName(), desktopCluster.getName()));
                     }
                 } catch (ResourceUnavailableException | ConcurrentOperationException e) {
-                    LOGGER.warn(String.format("Failed to destroy VM : %s part of the Desktop cluster : %s cleanup. Moving on with destroying remaining resources provisioned for the Desktop cluster", userVM.getDisplayName(), desktopCluster.getName()), e);
+                    LOGGER.warn(String.format("Failed to destroy VM : %s part of the desktop cluster : %s cleanup. Moving on with destroying remaining resources provisioned for the desktop cluster", userVM.getDisplayName(), desktopCluster.getName()), e);
                     return false;
                 }
             }
@@ -122,7 +122,7 @@ public class DesktopClusterDestroyWorker extends DesktopClusterResourceModifierA
         try {
             removePortForwardingRules(publicIp, network, owner, removedVmIds);
         } catch (ResourceUnavailableException e) {
-            throw new ManagementServerException(String.format("Failed to DesktopCluster port forwarding rules for network : %s", network.getName()));
+            throw new ManagementServerException(String.format("Failed to desktop cluster port forwarding rules for network : %s", network.getName()));
         }
     }
 
@@ -163,11 +163,11 @@ public class DesktopClusterDestroyWorker extends DesktopClusterResourceModifierA
             for (DesktopClusterIpRangeVO iprange : ipRangeList) {
                 boolean deletedIp = desktopClusterIpRangeDao.remove(iprange.getId());
                 if (!deletedIp) {
-                    logMessage(Level.WARN, String.format("Failed to delete Desktop cluster ip range : %s", desktopCluster.getName()), null);
+                    logMessage(Level.WARN, String.format("Failed to delete desktop cluster ip range : %s", desktopCluster.getName()), null);
                     return false;
                 }
                 if (LOGGER.isInfoEnabled()) {
-                    LOGGER.info(String.format("Desktop cluster Ip Range : %s is successfully deleted", desktopCluster.getName()));
+                    LOGGER.info(String.format("Desktop cluster ip range : %s is successfully deleted", desktopCluster.getName()));
                 }
             }
         return ipDestroyed;
@@ -179,7 +179,7 @@ public class DesktopClusterDestroyWorker extends DesktopClusterResourceModifierA
         this.clusterVMs = desktopClusterVmMapDao.listByDesktopClusterId(desktopCluster.getId());
         boolean cleanupNetwork = true;
         if (LOGGER.isInfoEnabled()) {
-            LOGGER.info(String.format("Destroying Desktop cluster : %s", desktopCluster.getName()));
+            LOGGER.info(String.format("Destroying desktop cluster : %s", desktopCluster.getName()));
         }
         stateTransitTo(desktopCluster.getId(), DesktopCluster.Event.DestroyRequested);
         boolean vmsDestroyed = destroyClusterVMs();
@@ -191,14 +191,14 @@ public class DesktopClusterDestroyWorker extends DesktopClusterResourceModifierA
                 try {
                     checkForRulesToDelete();
                 } catch (ManagementServerException e) {
-                    String msg = String.format("Failed to remove network rules of Desktop cluster : %s", desktopCluster.getName());
+                    String msg = String.format("Failed to remove network rules of desktop cluster : %s", desktopCluster.getName());
                     LOGGER.warn(msg, e);
                     updateDesktopClusterEntryForGC();
                     throw new CloudRuntimeException(msg, e);
                 }
             }
         } else {
-            String msg = String.format("Failed to destroy one or more VMs as part of Desktop cluster : %s cleanup",desktopCluster.getName());
+            String msg = String.format("Failed to destroy one or more VMs as part of desktop cluster : %s cleanup",desktopCluster.getName());
             LOGGER.warn(msg);
             updateDesktopClusterEntryForGC();
             throw new CloudRuntimeException(msg);
@@ -211,7 +211,7 @@ public class DesktopClusterDestroyWorker extends DesktopClusterResourceModifierA
         }
         boolean deleted = desktopClusterDao.remove(desktopCluster.getId());
         if (!deleted) {
-            logMessage(Level.WARN, String.format("Failed to delete Desktop cluster : %s", desktopCluster.getName()), null);
+            logMessage(Level.WARN, String.format("Failed to delete desktop cluster : %s", desktopCluster.getName()), null);
             updateDesktopClusterEntryForGC();
             return false;
         }
