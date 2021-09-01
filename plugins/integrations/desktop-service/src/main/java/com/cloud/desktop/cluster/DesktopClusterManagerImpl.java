@@ -539,8 +539,12 @@ public class DesktopClusterManagerImpl extends ManagerBase implements DesktopClu
         final List<DesktopClusterVO> clusters = desktopClusterDao.listAll();
         for (final DesktopClusterVO cluster : clusters) {
             final String otherName = cluster.getName();
+            final String otherAdDomainName = cluster.getAdDomainName();
             if (otherName.equals(name)) {
                 throw new InvalidParameterValueException("cluster name '" + name + "' already exists.");
+            }
+            if (otherAdDomainName.equals(adDomainName)) {
+                throw new InvalidParameterValueException("cluster ad domain name '" + adDomainName + "' already exists.");
             }
         }
         if (description == null || description.isEmpty()) {
