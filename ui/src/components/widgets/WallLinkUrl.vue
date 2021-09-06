@@ -18,7 +18,7 @@
 <template>
   <a
     v-if="['vm'].includes($route.meta.name) && 'updateVirtualMachine' in $store.getters.apis"
-    :href="$store.getters.features.wallportalvmurl+'?kiosk&var-vm='+resource.instancename"
+    :href="$store.getters.features.wallportalvmurl+'?var-vm_uuid='+resource.id"
     target="_blank" >
     <a-button style="margin-left: 5px" shape="circle" type="" :size="size" :disabled="['Stopped', 'Error', 'Destroyed'].includes(resource.state)" >
       <a-icon type="global" />
@@ -37,10 +37,6 @@ export default {
       type: String,
       default: 'small'
     },
-    ip: {
-      type: String,
-      default: ''
-    }
   }
 }
 </script>
