@@ -42,11 +42,21 @@ export default {
         const metricsFields = ['cpunumber', 'cpuused', 'cputotal',
           {
             memoryused: (record) => {
-              return record.memorykbs && record.memoryintfreekbs ? parseFloat(100.0 * (record.memorykbs - record.memoryintfreekbs) / record.memorykbs).toFixed(2) + '%' : '0.0%'
+              return record.memorykbs && record.memoryintusablekbs ? parseFloat(100.0 * (record.memorykbs - record.memoryintusablekbs) / record.memorykbs).toFixed(2) + '%' : '0.0%'
             }
           },
           'memorytotal', 'networkread', 'networkwrite', 'diskkbsread', 'diskkbswrite', 'diskiopstotal'
         ]
+
+        if (store.getters.userInfo.roletype === 'Admin') {
+          metricsFields.splice(4, 0, {
+            memoryreserved: (record) => {
+              if (record.hypervisor === 'KVM') {
+                return record.memorykbs && record.memoryintfreekbs ? (parseFloat(100.0 * record.memoryintfreekbs / record.memorykbs).toFixed(2) > 100.00 ? '100.00' : parseFloat(100.0 * record.memoryintfreekbs / record.memorykbs).toFixed(2)) + '%' : '0.0%'
+              }
+            }
+          })
+        }
 
         if (store.getters.metrics) {
           fields.push(...metricsFields)
@@ -186,6 +196,10 @@ export default {
           docHelp: 'adminguide/virtual_machines.html#virtual-machine-snapshots',
           dataView: true,
           popup: true,
+          show: (record) => {
+            return ((['Running'].includes(record.state) && record.hypervisor !== 'LXC') ||
+              (['Stopped'].includes(record.state) && !['KVM', 'LXC'].includes(record.hypervisor)))
+          },
           component: () => import('@/views/compute/CreateSnapshotWizard.vue')
         },
         {

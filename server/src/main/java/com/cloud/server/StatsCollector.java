@@ -51,6 +51,7 @@ import org.apache.cloudstack.utils.usage.UsageUtils;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.BooleanUtils;
 import org.apache.log4j.Logger;
 import org.influxdb.BatchOptions;
 import org.influxdb.InfluxDB;
@@ -187,6 +188,7 @@ public class StatsCollector extends ManagerBase implements ComponentMethodInterc
 
     private static final String TOTAL_MEMORY_KBS_FIELD = "total_memory_kb";
     private static final String FREE_MEMORY_KBS_FIELD = "free_memory_kb";
+    private static final String USABLE_MEMORY_KBS_FIELD = "usable_memory_kb";
     private static final String CPU_UTILIZATION_FIELD = "cpu_utilization";
     private static final String CPUS_FIELD = "cpus";
     private static final String CPU_SOCKETS_FIELD = "cpu_sockets";
@@ -221,6 +223,9 @@ public class StatsCollector extends ManagerBase implements ComponentMethodInterc
     private static final ConfigKey<String> statsOutputUri = new ConfigKey<String>("Advanced", String.class, "stats.output.uri", "",
             "URI to send StatsCollector statistics to. The collector is defined on the URI scheme. Example: graphite://graphite-hostaddress:port or influxdb://influxdb-hostaddress/dbname. Note that the port is optional, if not added the default port for the respective collector (graphite or influxdb) will be used. Additionally, the database name '/dbname' is  also optional; default db name is 'cloudstack'. You must create and configure the database if using influxdb.",
             true);
+    private static final ConfigKey<Boolean> VM_STATS_INCREMENT_METRICS_IN_MEMORY = new ConfigKey<Boolean>("Advanced", Boolean.class, "vm.stats.increment.metrics.in.memory", "true",
+            "When set to 'true', VM metrics(NetworkReadKBs, NetworkWriteKBs, DiskWriteKBs, DiskReadKBs, DiskReadIOs and DiskWriteIOs) that are collected from the hypervisor are summed and stored in memory. "
+            + "On the other hand, when set to 'false', the VM metrics API will just display the latest metrics collected.", true);
 
     private static StatsCollector s_instance = null;
 
@@ -1452,6 +1457,7 @@ public class StatsCollector extends ManagerBase implements ComponentMethodInterc
         metrics.put(externalStatsPrefix + "cloudstack.stats.instances." + vmName + ".memory.total_kbs", statsForCurrentIteration.getMemoryKBs());
         metrics.put(externalStatsPrefix + "cloudstack.stats.instances." + vmName + ".memory.internalfree_kbs", statsForCurrentIteration.getIntFreeMemoryKBs());
         metrics.put(externalStatsPrefix + "cloudstack.stats.instances." + vmName + ".memory.target_kbs", statsForCurrentIteration.getTargetMemoryKBs());
+        metrics.put(externalStatsPrefix + "cloudstack.stats.instances." + vmName + ".memory.internalusable_kbs", statsForCurrentIteration.getIntUsableMemoryKBs());
     }
 
     /**
@@ -1460,11 +1466,12 @@ public class StatsCollector extends ManagerBase implements ComponentMethodInterc
     private void storeVirtualMachineStatsInMemory(VmStatsEntry statsForCurrentIteration) {
         VmStatsEntry statsInMemory = (VmStatsEntry)_VmStats.get(statsForCurrentIteration.getVmId());
 
-        if (statsInMemory == null) {
-            //no stats exist for this vm, directly persist
+        boolean vmStatsIncrementMetrics = BooleanUtils.toBoolean(VM_STATS_INCREMENT_METRICS_IN_MEMORY.value());
+        if (statsInMemory == null || !vmStatsIncrementMetrics) {
             _VmStats.put(statsForCurrentIteration.getVmId(), statsForCurrentIteration);
         } else {
-            //update each field
+            s_logger.debug(String.format("Increment saved values of NetworkReadKBs, NetworkWriteKBs, DiskWriteKBs, DiskReadKBs, DiskReadIOs, DiskWriteIOs, with current metrics for VM with ID [%s]. "
+                    + "To change this process, check value of 'vm.stats.increment.metrics.in.memory' configuration.", statsForCurrentIteration.getVmId()));
             statsInMemory.setCPUUtilization(statsForCurrentIteration.getCPUUtilization());
             statsInMemory.setNumCPUs(statsForCurrentIteration.getNumCPUs());
             statsInMemory.setNetworkReadKBs(statsInMemory.getNetworkReadKBs() + statsForCurrentIteration.getNetworkReadKBs());
@@ -1476,6 +1483,7 @@ public class StatsCollector extends ManagerBase implements ComponentMethodInterc
             statsInMemory.setMemoryKBs(statsForCurrentIteration.getMemoryKBs());
             statsInMemory.setIntFreeMemoryKBs(statsForCurrentIteration.getIntFreeMemoryKBs());
             statsInMemory.setTargetMemoryKBs(statsForCurrentIteration.getTargetMemoryKBs());
+            statsInMemory.setIntUsableMemoryKBs(statsForCurrentIteration.getIntUsableMemoryKBs());
 
             _VmStats.put(statsForCurrentIteration.getVmId(), statsInMemory);
         }
@@ -1520,6 +1528,7 @@ public class StatsCollector extends ManagerBase implements ComponentMethodInterc
         fieldsToAdd.put(TOTAL_MEMORY_KBS_FIELD, vmStatsEntry.getMemoryKBs());
         fieldsToAdd.put(FREE_MEMORY_KBS_FIELD, vmStatsEntry.getIntFreeMemoryKBs());
         fieldsToAdd.put(MEMORY_TARGET_KBS_FIELD, vmStatsEntry.getTargetMemoryKBs());
+        fieldsToAdd.put(USABLE_MEMORY_KBS_FIELD, vmStatsEntry.getIntUsableMemoryKBs());
         fieldsToAdd.put(CPU_UTILIZATION_FIELD, vmStatsEntry.getCPUUtilization());
         fieldsToAdd.put(CPUS_FIELD, vmStatsEntry.getNumCPUs());
         fieldsToAdd.put(NETWORK_READ_KBS_FIELD, vmStatsEntry.getNetworkReadKBs());
@@ -1625,7 +1634,7 @@ public class StatsCollector extends ManagerBase implements ComponentMethodInterc
 
     @Override
     public ConfigKey<?>[] getConfigKeys() {
-        return new ConfigKey<?>[] {vmDiskStatsInterval, vmDiskStatsIntervalMin, vmNetworkStatsInterval, vmNetworkStatsIntervalMin, StatsTimeout, statsOutputUri};
+        return new ConfigKey<?>[] {vmDiskStatsInterval, vmDiskStatsIntervalMin, vmNetworkStatsInterval, vmNetworkStatsIntervalMin, StatsTimeout, statsOutputUri, VM_STATS_INCREMENT_METRICS_IN_MEMORY};
     }
 
     public double getImageStoreCapacityThreshold() {

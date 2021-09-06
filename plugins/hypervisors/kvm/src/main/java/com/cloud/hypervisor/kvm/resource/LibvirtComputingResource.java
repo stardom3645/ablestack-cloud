@@ -185,6 +185,8 @@ import com.cloud.vm.VirtualMachine;
 import com.cloud.vm.VirtualMachine.PowerState;
 import com.cloud.vm.VmDetailConstants;
 import com.google.common.base.Strings;
+import org.apache.cloudstack.utils.bytescale.ByteScaleUtils;
+import org.libvirt.VcpuInfo;
 
 /**
  * LibvirtComputingResource execute requests on the computing/routing host using
@@ -298,7 +300,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
 
     private long _hvVersion;
     private Duration _timeout;
-    private static final int NUMMEMSTATS =2;
+    private static final int NUMMEMSTATS =13;
 
     private KVMHAMonitor _monitor;
     public static final String SSHKEYSPATH = "/root/.ssh";
@@ -2534,21 +2536,6 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
         return cmd;
     }
 
-    /**
-     * Creates guest resources based in VM specification.
-     */
-    protected GuestResourceDef createGuestResourceDef(VirtualMachineTO vmTO) {
-        GuestResourceDef grd = new GuestResourceDef();
-
-        grd.setMemorySize(vmTO.getMaxRam() / 1024);
-        if (vmTO.getMinRam() != vmTO.getMaxRam() && !_noMemBalloon) {
-            grd.setMemBalloning(true);
-            grd.setCurrentMem(vmTO.getMinRam() / 1024);
-        }
-        grd.setVcpuNum(vmTO.getCpus());
-        return grd;
-    }
-
     private void configureGuestIfUefiEnabled(boolean isSecureBoot, String bootMode, GuestDef guest) {
         setGuestLoader(bootMode, SECURE, guest, GuestDef.GUEST_LOADER_SECURE);
         setGuestLoader(bootMode, LEGACY, guest, GuestDef.GUEST_LOADER_LEGACY);
@@ -2626,6 +2613,37 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
     private void configureGuestAndUserVMToUseLXC(LibvirtVMDef vm, GuestDef guest) {
         guest.setGuestType(GuestDef.GuestType.LXC);
         vm.setHvsType(HypervisorType.LXC.toString().toLowerCase());
+    }
+
+    /**
+     * Creates guest resources based in VM specification.
+     */
+    protected GuestResourceDef createGuestResourceDef(VirtualMachineTO vmTO){
+        GuestResourceDef grd = new GuestResourceDef();
+
+        grd.setMemBalloning(!_noMemBalloon);
+
+        Long maxRam = ByteScaleUtils.bytesToKib(vmTO.getMaxRam());
+
+        grd.setMemorySize(maxRam);
+        grd.setCurrentMem(getCurrentMemAccordingToMemBallooning(vmTO, maxRam));
+
+        int vcpus = vmTO.getCpus();
+        Integer maxVcpus = vmTO.getVcpuMaxLimit();
+
+        grd.setVcpuNum(vcpus);
+        grd.setMaxVcpuNum(maxVcpus == null ? vcpus : maxVcpus);
+
+        return grd;
+    }
+
+    protected long getCurrentMemAccordingToMemBallooning(VirtualMachineTO vmTO, long maxRam) {
+        if (_noMemBalloon) {
+            s_logger.warn(String.format("Setting VM's [%s] current memory as max memory [%s] due to memory ballooning is disabled. If you are using a custom service offering, verify if memory ballooning really should be disabled.", vmTO.toString(), maxRam));
+            return maxRam;
+        } else {
+            return ByteScaleUtils.bytesToKib(vmTO.getMinRam());
+        }
     }
 
     /**
@@ -3869,6 +3887,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
             stats.setMemoryKBs(info.maxMem);
             stats.setTargetMemoryKBs(info.memory);
             stats.setIntFreeMemoryKBs(getMemoryFreeInKBs(dm));
+            stats.setIntUsableMemoryKBs(getMemoryUsableInKBs(dm));
 
             /* get cpu utilization */
             VmStats oldStats = null;
@@ -3977,7 +3996,29 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
         if (ArrayUtils.isEmpty(mems)) {
             return NumberUtils.LONG_ZERO;
         }
-        return mems[0].getValue();
+        //getMemoryFreeInKBs 메소드는 RSS 값을 출력, 값이 없는 경우 0 출력
+        int length = mems.length;
+        for (int i = 0; i < length; i++) {
+            if (mems[i].getTag() == 7){
+                return mems[i].getValue();
+            }
+        }
+        return NumberUtils.LONG_ZERO;
+    }
+
+    protected long getMemoryUsableInKBs(Domain dm) throws LibvirtException {
+        MemoryStatistic[] mems = dm.memoryStats(NUMMEMSTATS);
+        if (ArrayUtils.isEmpty(mems)) {
+            return NumberUtils.LONG_ZERO;
+        }
+        //getMemoryFreeInKBs 메소드는 USABLE 값을 출력, 값이 없는 경우 0 출력
+        int length = mems.length;
+        for (int i = 0; i < length; i++) {
+            if (mems[i].getTag() == 8){
+                return mems[i].getValue();
+            }
+        }
+        return NumberUtils.LONG_ZERO;
     }
 
     private boolean canBridgeFirewall(final String prvNic) {
@@ -4556,4 +4597,25 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
         }
     }
 
+    /**
+     * Retrieves the memory of the running VM. <br/>
+     * The libvirt (see <a href="https://github.com/libvirt/libvirt/blob/master/src/conf/domain_conf.c">https://github.com/libvirt/libvirt/blob/master/src/conf/domain_conf.c</a>, function <b>virDomainDefParseMemory</b>) uses <b>total memory</b> as the tag <b>memory</b>, in VM's XML.
+     * @param dm domain of the VM.
+     * @return the memory of the VM.
+     * @throws org.libvirt.LibvirtException
+     **/
+    public static long getDomainMemory(Domain dm) throws LibvirtException {
+        return dm.getMaxMemory();
+    }
+
+    /**
+     * Retrieves the quantity of running VCPUs of the running VM. <br/>
+     * @param dm domain of the VM.
+     * @return the quantity of running VCPUs of the running VM.
+     * @throws org.libvirt.LibvirtException
+     **/
+    public static long countDomainRunningVcpus(Domain dm) throws LibvirtException {
+        VcpuInfo vcpus[] = dm.getVcpusInfo();
+        return Arrays.stream(vcpus).filter(vcpu -> vcpu.state.equals(VcpuInfo.VcpuState.VIR_VCPU_RUNNING)).count();
+    }
 }

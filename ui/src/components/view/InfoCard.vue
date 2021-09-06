@@ -26,7 +26,7 @@
               @click="$message.success(`${$t('label.copied.clipboard')} : ${name}`)"
               v-clipboard:copy="name" >
               <slot name="avatar">
-                <os-logo v-if="resource.ostypeid || resource.ostypename" :osId="resource.ostypeid" :osName="resource.ostypename" size="4x" @update-osname="(name) => this.resource.ostypename = name"/>
+                <os-logo v-if="resource.ostypeid || resource.ostypename" :osId="resource.ostypeid" :osName="resource.ostypename" size="4x" @update-osname="(name) => resource.ostypename = name"/>
                 <a-icon v-else-if="typeof $route.meta.icon ==='string'" style="font-size: 36px" :type="$route.meta.icon" />
                 <a-icon v-else style="font-size: 36px" :component="$route.meta.icon" />
               </slot>
@@ -159,13 +159,22 @@
             <a-icon type="bulb" />{{ resource.memory + ' ' + $t('label.mb.memory') }}
           </div>
           <div>
-            <span v-if="resource.memorykbs && resource.memoryintfreekbs">
+            <span v-if="resource.memorykbs && resource.memoryintusablekbs">
               <a-progress
                 class="progress-bar"
                 size="small"
                 status="active"
-                :percent="Number(parseFloat(100.0 * (resource.memorykbs - resource.memoryintfreekbs) / resource.memorykbs).toFixed(2))"
+                :percent="Number(parseFloat(100.0 * (resource.memorykbs - resource.memoryintusablekbs) / resource.memorykbs).toFixed(2))"
                 :format="(percent, successPercent) => parseFloat(percent).toFixed(2) + '% ' + $t('label.used')"
+              />
+            </span>
+            <span v-if="resource.memorykbs && resource.memoryintfreekbs && resource.hypervisor === 'KVM' && $store.getters.userInfo.roletype === 'Admin'">
+              <a-progress
+                class="progress-bar"
+                size="small"
+                status="active"
+                :percent="Number(parseFloat(100.0 * resource.memoryintfreekbs / resource.memorykbs).toFixed(2))"
+                :format="(percent, successPercent) => parseFloat(percent).toFixed(2) + '% ' + $t('label.reserved')"
               />
             </span>
           </div>

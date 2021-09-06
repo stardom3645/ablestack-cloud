@@ -29,6 +29,7 @@ import java.util.Date;
 
 import javax.inject.Inject;
 
+import com.cloud.upgrade.dao.Upgrade41510to41520;
 import org.apache.cloudstack.utils.CloudStackVersion;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
@@ -71,7 +72,7 @@ import com.cloud.upgrade.dao.Upgrade41300to41310;
 import com.cloud.upgrade.dao.Upgrade41310to41400;
 import com.cloud.upgrade.dao.Upgrade41400to41500;
 import com.cloud.upgrade.dao.Upgrade41500to41510;
-import com.cloud.upgrade.dao.Upgrade41510to41600;
+import com.cloud.upgrade.dao.Upgrade41520to41600;
 import com.cloud.upgrade.dao.Upgrade420to421;
 import com.cloud.upgrade.dao.Upgrade421to430;
 import com.cloud.upgrade.dao.Upgrade430to440;
@@ -198,7 +199,8 @@ public class DatabaseUpgradeChecker implements SystemIntegrityChecker {
                 .next("4.14.0.0", new Upgrade41400to41500())
                 .next("4.14.1.0", new Upgrade41400to41500())
                 .next("4.15.0.0", new Upgrade41500to41510())
-                .next("4.15.1.0", new Upgrade41510to41600())
+                .next("4.15.1.0", new Upgrade41510to41520())
+                .next("4.15.2.0", new Upgrade41520to41600())
                 .build();
     }
 
@@ -359,6 +361,39 @@ public class DatabaseUpgradeChecker implements SystemIntegrityChecker {
 
                 final CloudStackVersion dbVersion = CloudStackVersion.parse(_dao.getCurrentVersion());
                 final String currentVersionValue = this.getClass().getPackage().getImplementationVersion();
+
+                //ablestack-allo -> ablestack-bronto db upgrade
+                TransactionLegacy txn = TransactionLegacy.open("Upgrade");
+                txn.start();
+                try {
+                    Connection conn;
+                    try {
+                        conn = txn.getConnection();
+                    } catch (SQLException e) {
+                        String errorMessage = "Unable to upgrade the database";
+                        s_logger.error(errorMessage, e);
+                        throw new CloudRuntimeException(errorMessage, e);
+                    }
+                    final String scriptFile = "META-INF/db/schema-AllotoBronto.sql";
+                    final InputStream script = Thread.currentThread().getContextClassLoader().getResourceAsStream(scriptFile);
+                    if (script == null) {
+                        throw new CloudRuntimeException("Unable to find " + scriptFile);
+                    }
+
+                    InputStream[] scripts = {script};
+                    if (scripts != null) {
+                        for (InputStream scrip : scripts) {
+                            runScript(conn, scrip);
+                        }
+                    }
+                    txn.commit();
+                } catch (CloudRuntimeException e) {
+                    String errorMessage = "Unable to upgrade the database ablestack bronto";
+                    s_logger.error(errorMessage, e);
+                    throw new CloudRuntimeException(errorMessage, e);
+                } finally {
+                    txn.close();
+                }
 
                 if (StringUtils.isBlank(currentVersionValue)) {
                     return;
