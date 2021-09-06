@@ -104,7 +104,6 @@ export default {
   data () {
     return {
       actionBadge: {},
-      hostname: this.serverIP()
     }
   },
   mounted () {
@@ -203,9 +202,6 @@ export default {
         }).catch(() => {})
       }
     },
-    serverIP () {
-      return location.hostname
-    }
   }
 }
 </script>
