@@ -361,7 +361,7 @@
         :pageSize="pageSize"
         :total="itemCount"
         :showTotal="total => `${$t('label.showing')} ${Math.min(total, 1+((page-1)*pageSize))}-${Math.min(page*pageSize, total)} ${$t('label.of')} ${total} ${$t('label.items')}`"
-        :pageSizeOptions="device === 'desktop' ? ['20', '50', '100', '200'] : ['10', '20', '50', '100', '200']"
+        :pageSizeOptions="pageSizeOptions"
         @change="changePage"
         @showSizeChange="changePageSize"
         showSizeChanger
@@ -438,7 +438,7 @@ export default {
       modalInfo: {},
       itemCount: 0,
       page: 1,
-      pageSize: 10,
+      pageSize: this.$store.getters.defaultListViewPageSize,
       resource: {},
       selectedRowKeys: [],
       currentAction: {},
@@ -500,21 +500,6 @@ export default {
         })
       }
     })
-    eventBus.$on('update-job-details', (jobId, resourceId) => {
-      const fullPath = this.$route.fullPath
-      const path = this.$route.path
-      var jobs = this.$store.getters.headerNotices.map(job => {
-        if (job.jobid === jobId) {
-          if (resourceId && !path.includes(resourceId)) {
-            job.path = path + '/' + resourceId
-          } else {
-            job.path = fullPath
-          }
-        }
-        return job
-      })
-      this.$store.commit('SET_HEADER_NOTICES', jobs)
-    })
 
     eventBus.$on('update-resource-state', (selectedItems, resource, state, jobid) => {
       if (selectedItems.length === 0) {
@@ -545,9 +530,6 @@ export default {
       }
     })
 
-    if (this.device === 'desktop') {
-      this.pageSize = 20
-    }
     this.currentPath = this.$route.fullPath
     this.fetchData()
     if ('projectid' in this.$route.query) {
@@ -570,7 +552,6 @@ export default {
           this.pageSize = Number(to.query.pagesize)
         } else {
           this.page = 1
-          this.pageSize = (this.device === 'desktop' ? 20 : 10)
         }
         this.itemCount = 0
         this.fetchData()
@@ -591,6 +572,15 @@ export default {
   computed: {
     hasSelected () {
       return this.selectedRowKeys.length > 0
+    },
+    pageSizeOptions () {
+      var sizes = [20, 50, 100, 200, this.$store.getters.defaultListViewPageSize]
+      if (this.device !== 'desktop') {
+        sizes.unshift(10)
+      }
+      return [...new Set(sizes)].sort(function (a, b) {
+        return a - b
+      }).map(String)
     }
   },
   methods: {
@@ -1059,7 +1049,8 @@ export default {
           showLoading: showLoading,
           catchMessage: this.$t('error.fetching.async.job.result'),
           action,
-          bulkAction: `${this.selectedItems.length > 0}` && this.showGroupActionModal
+          bulkAction: `${this.selectedItems.length > 0}` && this.showGroupActionModal,
+          resourceId: resource
         })
       })
     },
