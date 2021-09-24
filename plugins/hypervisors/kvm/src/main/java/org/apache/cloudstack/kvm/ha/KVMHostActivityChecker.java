@@ -156,7 +156,7 @@ public class KVMHostActivityChecker extends AdapterBase implements ActivityCheck
             }
             if (neighbourStatus == Status.Down && (hostStatus == Status.Disconnected || hostStatus == Status.Down)) {
                 hostStatus = Status.Down;
-            }       
+            }
         }
 
         LOG.debug(String.format("%s has the status [%s].", agent.toString(), hostStatus));
