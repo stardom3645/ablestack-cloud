@@ -103,7 +103,7 @@ export default {
   },
   data () {
     return {
-      actionBadge: {},
+      actionBadge: {}
     }
   },
   mounted () {
@@ -201,7 +201,7 @@ export default {
           }
         }).catch(() => {})
       }
-    },
+    }
   }
 }
 </script>
