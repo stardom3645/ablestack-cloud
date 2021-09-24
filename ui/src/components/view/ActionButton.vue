@@ -33,7 +33,7 @@
       <template slot="title">
         {{ $t('label.wall.portal.vm.url') }}
       </template>
-      <wall-link-url :resource="resource" :size="size" :ip="hostname"/>
+      <wall-link-url :resource="resource" :size="size" />
     </a-tooltip>
     <a-tooltip
       v-for="(action, actionIndex) in actions"
@@ -104,7 +104,6 @@ export default {
   data () {
     return {
       actionBadge: {},
-      hostname: this.serverIP()
     }
   },
   mounted () {
@@ -203,9 +202,6 @@ export default {
         }).catch(() => {})
       }
     },
-    serverIP () {
-      return location.hostname
-    }
   }
 }
 </script>
