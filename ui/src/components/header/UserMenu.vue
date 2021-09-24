@@ -38,7 +38,7 @@
         </a-menu-item>
         <a-menu-item class="user-menu-item" key="1">
           <a :href="$store.getters.features.wallportaldashboardurl" target="_blank" v-if="$store.getters.userInfo.roletype === 'Admin'">
-            <a-icon class="user-menu-item-icon" type="user"/>
+            <a-icon class="user-menu-item-icon" type="global"/>
             <span class="user-menu-item-name">{{ $t('label.wall.portal.url') }}</span>
           </a>
         </a-menu-item>
