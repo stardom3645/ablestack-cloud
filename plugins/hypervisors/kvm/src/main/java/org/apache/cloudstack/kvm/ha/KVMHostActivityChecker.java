@@ -150,7 +150,7 @@ public class KVMHostActivityChecker extends AdapterBase implements ActivityCheck
                 hostStatus = Status.Down;
             }
         }
-        if(oobm.getPowerState() == PowerState.Off){
+        if(oobm.getPowerState() == PowerState.Off || oobm.getPowerState() == PowerState.Unknown){
             if (neighbourStatus == Status.Up && (hostStatus == Status.Disconnected || hostStatus == Status.Down)) {
                 hostStatus = Status.Down;
             }
