@@ -211,7 +211,8 @@ public class CapabilitiesResponse extends BaseResponse {
     public void setWallPortalVmUrl(String wallPortalVmUrl) {
         this.wallPortalVmUrl = wallPortalVmUrl;
     }
-    
+
     public void setDefaultUiPageSize(Long defaultUiPageSize) {
         this.defaultUiPageSize = defaultUiPageSize;
     }
+}
