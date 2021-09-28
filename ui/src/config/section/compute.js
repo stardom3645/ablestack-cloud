@@ -38,7 +38,7 @@ export default {
         return filters
       },
       columns: () => {
-        const fields = ['displayname', 'name', 'state', 'ipaddress']
+        const fields = ['name', 'displayname', 'state', 'ipaddress']
         const metricsFields = ['cpunumber', 'cpuused', 'cputotal',
           {
             memoryused: (record) => {
@@ -96,7 +96,6 @@ export default {
           docHelp: 'adminguide/virtual_machines.html#changing-the-vm-name-os-or-group',
           dataView: true,
           popup: true,
-          show: (record) => { return ['Stopped'].includes(record.state) },
           component: () => import('@/views/compute/EditVM.vue')
         },
         {
@@ -452,6 +451,7 @@ export default {
         name: 'k8s',
         component: () => import('@/views/compute/KubernetesServiceTab.vue')
       }],
+      resourceType: 'KubernetesCluster',
       actions: [
         {
           api: 'createKubernetesCluster',
@@ -527,6 +527,7 @@ export default {
       title: 'label.instance.groups',
       icon: 'gold',
       docHelp: 'adminguide/virtual_machines.html#changing-the-vm-name-os-or-group',
+      resourceType: 'VMInstanceGroup',
       permission: ['listInstanceGroups'],
       columns: ['name', 'account'],
       details: ['name', 'id', 'account', 'domain', 'created'],
@@ -535,6 +536,16 @@ export default {
         title: 'label.instances',
         param: 'groupid'
       }],
+      tabs: [
+        {
+          name: 'details',
+          component: () => import('@/components/view/DetailsTab.vue')
+        },
+        {
+          name: 'comments',
+          component: () => import('@/components/view/AnnotationsTab.vue')
+        }
+      ],
       actions: [
         {
           api: 'createInstanceGroup',
@@ -575,12 +586,23 @@ export default {
         }
         return fields
       },
-      details: ['name', 'fingerprint', 'account', 'domain'],
+      resourceType: 'SSHKeyPair',
+      details: ['id', 'name', 'fingerprint', 'account', 'domain'],
       related: [{
         name: 'vm',
         title: 'label.instances',
         param: 'keypair'
       }],
+      tabs: [
+        {
+          name: 'details',
+          component: () => import('@/components/view/DetailsTab.vue')
+        },
+        {
+          name: 'comments',
+          component: () => import('@/components/view/AnnotationsTab.vue')
+        }
+      ],
       actions: [
         {
           api: 'createSSHKeyPair',

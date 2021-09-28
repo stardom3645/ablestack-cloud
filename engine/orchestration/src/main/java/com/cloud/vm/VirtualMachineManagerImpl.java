@@ -45,6 +45,8 @@ import javax.naming.ConfigurationException;
 
 import com.cloud.api.ApiDBUtils;
 import org.apache.cloudstack.affinity.dao.AffinityGroupVMMapDao;
+import org.apache.cloudstack.annotation.AnnotationService;
+import org.apache.cloudstack.annotation.dao.AnnotationDao;
 import org.apache.cloudstack.api.ApiConstants;
 import org.apache.cloudstack.api.command.admin.vm.MigrateVMCmd;
 import org.apache.cloudstack.api.command.admin.volume.MigrateVolumeCmdByAdmin;
@@ -368,6 +370,8 @@ public class VirtualMachineManagerImpl extends ManagerBase implements VirtualMac
     private NetworkOfferingDao networkOfferingDao;
     @Inject
     private DomainRouterJoinDao domainRouterJoinDao;
+    @Inject
+    private AnnotationDao annotationDao;
 
     VmWorkJobHandlerProxy _jobHandlerProxy = new VmWorkJobHandlerProxy(this);
 
@@ -627,21 +631,16 @@ public class VirtualMachineManagerImpl extends ManagerBase implements VirtualMac
         // Remove deploy as-is (if any)
         userVmDeployAsIsDetailsDao.removeDetails(vm.getId());
 
+        // Remove comments (if any)
+        annotationDao.removeByEntityType(AnnotationService.EntityType.VM.name(), vm.getUuid());
+
         // send hypervisor-dependent commands before removing
         final List<Command> finalizeExpungeCommands = hvGuru.finalizeExpunge(vm);
-        if (finalizeExpungeCommands != null && finalizeExpungeCommands.size() > 0) {
+        if (CollectionUtils.isNotEmpty(finalizeExpungeCommands) || CollectionUtils.isNotEmpty(nicExpungeCommands)) {
             if (hostId != null) {
                 final Commands cmds = new Commands(Command.OnError.Stop);
-                for (final Command command : finalizeExpungeCommands) {
-                    command.setBypassHostMaintenance(expungeCommandCanBypassHostMaintenance(vm));
-                    cmds.addCommand(command);
-                }
-                if (nicExpungeCommands != null) {
-                    for (final Command command : nicExpungeCommands) {
-                        command.setBypassHostMaintenance(expungeCommandCanBypassHostMaintenance(vm));
-                        cmds.addCommand(command);
-                    }
-                }
+                addAllExpungeCommandsFromList(finalizeExpungeCommands, cmds, vm);
+                addAllExpungeCommandsFromList(nicExpungeCommands, cmds, vm);
                 _agentMgr.send(hostId, cmds);
                 if (!cmds.isSuccessful()) {
                     for (final Answer answer : cmds.getAnswers()) {
@@ -658,6 +657,19 @@ public class VirtualMachineManagerImpl extends ManagerBase implements VirtualMac
             s_logger.debug("Expunged " + vm);
         }
 
+    }
+
+    private void addAllExpungeCommandsFromList(List<Command> cmdList, Commands cmds, VMInstanceVO vm) {
+        if (CollectionUtils.isEmpty(cmdList)) {
+            return;
+        }
+        for (final Command command : cmdList) {
+            command.setBypassHostMaintenance(expungeCommandCanBypassHostMaintenance(vm));
+            if (s_logger.isTraceEnabled()) {
+                s_logger.trace(String.format("Adding expunge command [%s] for VM [%s]", command.toString(), vm.toString()));
+            }
+            cmds.addCommand(command);
+        }
     }
 
     private List<Map<String, String>> getTargets(Long hostId, long vmId) {
@@ -1036,9 +1048,9 @@ public class VirtualMachineManagerImpl extends ManagerBase implements VirtualMac
 
         final HypervisorGuru hvGuru = _hvGuruMgr.getGuru(vm.getHypervisorType());
 
-        // check resource count if ResoureCountRunningVMsonly.value() = true
+        // check resource count if ResourceCountRunningVMsonly.value() = true
         final Account owner = _entityMgr.findById(Account.class, vm.getAccountId());
-        if (VirtualMachine.Type.User.equals(vm.type) && ResoureCountRunningVMsonly.value()) {
+        if (VirtualMachine.Type.User.equals(vm.type) && ResourceCountRunningVMsonly.value()) {
             resourceCountIncrement(owner.getAccountId(),new Long(offering.getCpu()), new Long(offering.getRamSize()));
         }
 
@@ -1355,7 +1367,7 @@ public class VirtualMachineManagerImpl extends ManagerBase implements VirtualMac
             }
         } finally {
             if (startedVm == null) {
-                if (VirtualMachine.Type.User.equals(vm.type) && ResoureCountRunningVMsonly.value()) {
+                if (VirtualMachine.Type.User.equals(vm.type) && ResourceCountRunningVMsonly.value()) {
                     resourceCountDecrement(owner.getAccountId(),new Long(offering.getCpu()), new Long(offering.getRamSize()));
                 }
                 if (canRetry) {
@@ -2121,7 +2133,7 @@ public class VirtualMachineManagerImpl extends ManagerBase implements VirtualMac
 
             boolean result = stateTransitTo(vm, Event.OperationSucceeded, null);
             if (result) {
-                if (VirtualMachine.Type.User.equals(vm.type) && ResoureCountRunningVMsonly.value()) {
+                if (VirtualMachine.Type.User.equals(vm.type) && ResourceCountRunningVMsonly.value()) {
                     //update resource count if stop successfully
                     ServiceOfferingVO offering = _offeringDao.findById(vm.getId(), vm.getServiceOfferingId());
                     resourceCountDecrement(vm.getAccountId(),new Long(offering.getCpu()), new Long(offering.getRamSize()));
@@ -4817,7 +4829,7 @@ public class VirtualMachineManagerImpl extends ManagerBase implements VirtualMac
         return new ConfigKey<?>[] { ClusterDeltaSyncInterval, StartRetry, VmDestroyForcestop, VmOpCancelInterval, VmOpCleanupInterval, VmOpCleanupWait,
                 VmOpLockStateRetry, VmOpWaitInterval, ExecuteInSequence, VmJobCheckInterval, VmJobTimeout, VmJobStateReportInterval,
                 VmConfigDriveLabel, VmConfigDriveOnPrimaryPool, VmConfigDriveForceHostCacheUse, VmConfigDriveUseHostCacheOnUnsupportedPool,
-                HaVmRestartHostUp, ResoureCountRunningVMsonly, AllowExposeHypervisorHostname, AllowExposeHypervisorHostnameAccountLevel };
+                HaVmRestartHostUp, ResourceCountRunningVMsonly, AllowExposeHypervisorHostname, AllowExposeHypervisorHostnameAccountLevel };
     }
 
     public List<StoragePoolAllocator> getStoragePoolAllocators() {
