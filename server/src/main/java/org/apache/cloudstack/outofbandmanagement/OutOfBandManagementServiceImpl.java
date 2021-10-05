@@ -432,7 +432,7 @@ public class OutOfBandManagementServiceImpl extends ManagerBase implements OutOf
             if (!powerOperation.equals(OutOfBandManagement.PowerOperation.STATUS)) {
                 LOG.debug(errorMessage);
             }
-            //throw new CloudRuntimeException(errorMessage);
+            throw new CloudRuntimeException(errorMessage);
         }
 
         final OutOfBandManagementResponse response = new OutOfBandManagementResponse(outOfBandManagementDao.findByHost(host.getId()));

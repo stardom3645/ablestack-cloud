@@ -3945,7 +3945,7 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
         capabilities.put("wallPortalDashboardUrl", wallPortalDashboardUrl);
         capabilities.put("wallPortalVmUrl", wallPortalVmUrl);
         capabilities.put(ApiServiceConfiguration.DefaultUIPageSize.key(), ApiServiceConfiguration.DefaultUIPageSize.value());
-        
+
         if (apiLimitEnabled) {
             capabilities.put("apiLimitInterval", apiLimitInterval);
             capabilities.put("apiLimitMax", apiLimitMax);
