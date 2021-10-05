@@ -36,7 +36,7 @@ router.beforeEach((to, from, next) => {
   // start progress bar
   NProgress.start()
   if (to.meta && typeof to.meta.title !== 'undefined') {
-    const title = i18n.t(to.meta.title) + ' - ' + Vue.prototype.$config.appTitle
+    const title = i18n.t(to.meta.title) + '-' + Vue.prototype.$config.appTitle
     setDocumentTitle(title)
   }
 

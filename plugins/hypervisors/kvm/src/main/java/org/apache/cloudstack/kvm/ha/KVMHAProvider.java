@@ -99,8 +99,13 @@ public final class KVMHAProvider extends HAAbstractHostProvider implements HAPro
     public boolean fence(Host r) throws HAFenceException {
         try {
             if (outOfBandManagementService.isOutOfBandManagementEnabled(r)){
-                final OutOfBandManagementResponse resp = outOfBandManagementService.executePowerOperation(r, PowerOperation.OFF, null);
-                return resp.getSuccess();
+                final OutOfBandManagement oobm = outOfBandManagementDao.findByHost(r.getId());
+                if (oobm.getPowerState() == PowerState.Unknown){
+                    return true;
+                } else {
+                    final OutOfBandManagementResponse resp = outOfBandManagementService.executePowerOperation(r, PowerOperation.OFF, null);
+                    return resp.getSuccess();
+                }
             } else {
                 LOG.warn("OOBM fence operation failed for this host " + r.getName());
                 return false;
