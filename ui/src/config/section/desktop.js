@@ -32,7 +32,7 @@ export default {
       }],
       actions: [
         {
-          api: 'createAccount',
+          api: 'createDesktopCluster',
           icon: 'plus',
           label: 'label.desktop.cluster.deploy',
           docHelp: '',
@@ -63,14 +63,6 @@ export default {
           groupAction: true,
           popup: true,
           groupMap: (selection) => { return selection.map(x => { return { id: x } }) }
-        },
-        {
-          api: 'listDesktopClusters',
-          icon: 'link',
-          label: 'label.works.portal.url',
-          docHelp: '',
-          dataView: true,
-          show: (record) => { return !['Stopped', 'Destroyed', 'Destroying'].includes(record.state) }
         },
         {
           api: 'deleteDesktopCluster',

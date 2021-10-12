@@ -41,7 +41,7 @@ public interface DesktopClusterService extends PluggableService, Configurable {
     static final ConfigKey<String> DesktopWorksPortalPort = new ConfigKey<String>("Advanced", String.class,
             "cloud.desktop.service.worksportalport",
             "50000",
-            "Desktop Service Works Portal Port.(ex:50000",
+            "Desktop Service Works Portal Port.(ex:50000)",
             false);
 
     DesktopCluster findById(final Long id);
