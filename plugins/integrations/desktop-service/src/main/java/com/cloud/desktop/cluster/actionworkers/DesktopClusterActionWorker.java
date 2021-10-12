@@ -209,25 +209,6 @@ public class DesktopClusterActionWorker {
         });
     }
 
-    protected List<DesktopClusterVmMapVO> getDesktopAllVMMaps() {
-        List<DesktopClusterVmMapVO> clusterVMs = desktopClusterVmMapDao.listByDesktopClusterId(desktopCluster.getId());
-        if (!CollectionUtils.isEmpty(clusterVMs)) {
-            clusterVMs.sort((t1, t2) -> (int)((t1.getId() - t2.getId())/Math.abs(t1.getId() - t2.getId())));
-        }
-        return clusterVMs;
-    }
-
-    protected List<UserVm> getDesktopAllVMs() {
-        List<UserVm> vmList = new ArrayList<>();
-        List<DesktopClusterVmMapVO> clusterVMs = getDesktopAllVMMaps();
-        if (!CollectionUtils.isEmpty(clusterVMs)) {
-            for (DesktopClusterVmMapVO vmMap : clusterVMs) {
-                vmList.add(userVmDao.findById(vmMap.getVmId()));
-            }
-        }
-        return vmList;
-    }
-
     protected List<DesktopClusterVmMapVO> getControlVMMaps() {
         List<DesktopClusterVmMapVO> clusterVMs = desktopClusterVmMapDao.listByDesktopClusterIdAndNotVmType(desktopCluster.getId(), "desktopvm");
         if (!CollectionUtils.isEmpty(clusterVMs)) {

@@ -85,6 +85,9 @@ import com.cloud.projects.Project;
 import com.cloud.user.Account;
 import com.cloud.user.AccountManager;
 import com.cloud.user.AccountService;
+import com.cloud.server.ResourceTag;
+import com.cloud.server.ResourceTag.ResourceObjectType;
+import com.cloud.tags.dao.ResourceTagDao;
 import com.cloud.event.ActionEvent;
 import com.cloud.vm.VMInstanceVO;
 import com.cloud.vm.VirtualMachine;
@@ -149,6 +152,8 @@ public class DesktopClusterManagerImpl extends ManagerBase implements DesktopClu
     protected NetworkService networkService;
     @Inject
     protected ServiceOfferingDao serviceOfferingDao;
+    @Inject
+    protected ResourceTagDao resourceTagDao;
 
     private void logMessage(final Level logLevel, final String message, final Exception e) {
         if (logLevel == Level.WARN) {
@@ -238,7 +243,6 @@ public class DesktopClusterManagerImpl extends ManagerBase implements DesktopClu
         List<UserVmResponse> controlVmResponses = new ArrayList<UserVmResponse>();
         List<UserVmResponse> desktopVmResponses = new ArrayList<UserVmResponse>();
         List<DesktopClusterVmMapVO> controlVmList = desktopClusterVmMapDao.listByDesktopClusterIdAndNotVmType(desktop.getId(), "desktopvm");
-        List<DesktopClusterVmMapVO> desktopVmList = desktopClusterVmMapDao.listByDesktopClusterIdAndVmType(desktop.getId(), "desktopvm");
 
         ResponseView respView = ResponseView.Restricted;
         Account caller = CallContext.current().getCallingAccount();
@@ -252,26 +256,42 @@ public class DesktopClusterManagerImpl extends ManagerBase implements DesktopClu
                 if (userVM != null) {
                     UserVmResponse cvmResponse = ApiDBUtils.newUserVmResponse(respView, responseName, userVM, EnumSet.of(VMDetails.nics), caller);
                     controlVmResponses.add(cvmResponse);
-                    if("worksvm".equals(vmMapVO.getType())) {
-                        response.setWorksVmIp(userVM.getIpAddress());
+                    if ("worksvm".equals(vmMapVO.getType())) {
+                        if (userVM.getIpAddress() != null) {
+                            response.setWorksVmIp(userVM.getIpAddress());
+                        } else {
+                            response.setWorksVmIp(desktop.getWorksIp());
+                        }
                     }
                     if("dcvm".equals(vmMapVO.getType())) {
-                        response.setDcVmIp(userVM.getIpAddress());
+                        if (userVM.getIpAddress() != null) {
+                            response.setDcVmIp(userVM.getIpAddress());
+                        } else {
+                            response.setDcVmIp(desktop.getDcIp());
+                        }
                     }
                 }
             }
         }
 
+        List<VMInstanceVO> vmList = vmInstanceDao.listByZoneId(desktop.getZoneId());
         responseName = "desktopvmlist";
-        if (desktopVmList != null && !desktopVmList.isEmpty()) {
-            for (DesktopClusterVmMapVO vmMapVO : desktopVmList) {
-                UserVmJoinVO userVM = userVmJoinDao.findById(vmMapVO.getVmId());
-                if (userVM != null) {
-                    UserVmResponse dvmResponse = ApiDBUtils.newUserVmResponse(respView, responseName, userVM, EnumSet.of(VMDetails.nics), caller);
-                    desktopVmResponses.add(dvmResponse);
+        String resourceKey = "ClusterName";
+        if (vmList != null && !vmList.isEmpty()) {
+            for (VMInstanceVO vmVO : vmList) {
+                ResourceTag desktopvm = resourceTagDao.findByKey(vmVO.getId(), ResourceObjectType.UserVm, resourceKey);
+                if (desktopvm != null) {
+                    if (desktopvm.getValue().equals(desktop.getName())) {
+                        UserVmJoinVO userVM = userVmJoinDao.findById(vmVO.getId());
+                        if (userVM != null) {
+                            UserVmResponse dvmResponse = ApiDBUtils.newUserVmResponse(respView, responseName, userVM, EnumSet.of(VMDetails.nics), caller);
+                            desktopVmResponses.add(dvmResponse);
+                        }
+                    }
                 }
             }
         }
+
         response.setControlVms(controlVmResponses);
         response.setDesktopVms(desktopVmResponses);
         return response;

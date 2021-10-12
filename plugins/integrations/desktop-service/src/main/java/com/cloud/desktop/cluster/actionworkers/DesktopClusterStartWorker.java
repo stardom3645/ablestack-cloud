@@ -33,7 +33,6 @@ import com.cloud.exception.ConcurrentOperationException;
 import com.cloud.exception.InsufficientCapacityException;
 import com.cloud.exception.ManagementServerException;
 import com.cloud.exception.ResourceUnavailableException;
-import com.cloud.network.IpAddressManager;
 import com.cloud.network.Network.IpAddresses;
 import com.cloud.network.Network;
 import com.cloud.storage.DiskOfferingVO;
@@ -51,7 +50,6 @@ import com.cloud.vm.VirtualMachine;
 public class DesktopClusterStartWorker extends DesktopClusterResourceModifierActionWorker {
 
     private DesktopControllerVersion desktopClusterVersion;
-    private IpAddressManager ipAddressManager;
     private static final long GiB_TO_BYTES = 1024 * 1024 * 1024;
 
     public DesktopClusterStartWorker(final DesktopCluster desktopCluster, final DesktopClusterManagerImpl clusterManager) {
@@ -229,7 +227,6 @@ public class DesktopClusterStartWorker extends DesktopClusterResourceModifierAct
         if (LOGGER.isInfoEnabled()) {
             LOGGER.info(String.format("Starting Desktop cluster : %s", desktopCluster.getName()));
         }
-        final long startTimeoutTime = System.currentTimeMillis() + 3600 * 1000;
         stateTransitTo(desktopCluster.getId(), DesktopCluster.Event.StartRequested);
         DeployDestination dest = null;
         try {
@@ -270,7 +267,6 @@ public class DesktopClusterStartWorker extends DesktopClusterResourceModifierAct
         if (LOGGER.isInfoEnabled()) {
             LOGGER.info(String.format("Starting desktop cluster : %s", desktopCluster.getName()));
         }
-        final long startTimeoutTime = System.currentTimeMillis() + 3600 * 1000;
         stateTransitTo(desktopCluster.getId(), DesktopCluster.Event.StartRequested);
         startDesktopClusterVMs();
         stateTransitTo(desktopCluster.getId(), DesktopCluster.Event.OperationSucceeded);
@@ -282,7 +278,6 @@ public class DesktopClusterStartWorker extends DesktopClusterResourceModifierAct
 
     public boolean reconcileAlertCluster() {
         init();
-        final long startTimeoutTime = System.currentTimeMillis() + 3 * 60 * 1000;
         List<DesktopClusterVmMapVO> vmMapVOList = getControlVMMaps();
         if (CollectionUtils.isEmpty(vmMapVOList)) {
             return false;

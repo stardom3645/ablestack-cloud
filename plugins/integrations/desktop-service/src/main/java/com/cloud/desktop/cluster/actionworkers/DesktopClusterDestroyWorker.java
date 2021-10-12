@@ -41,13 +41,19 @@ import com.cloud.network.IpAddress;
 import com.cloud.network.dao.NetworkVO;
 import com.cloud.user.AccountManager;
 import com.cloud.uservm.UserVm;
+import com.cloud.server.ResourceTag;
+import com.cloud.server.ResourceTag.ResourceObjectType;
+import com.cloud.tags.dao.ResourceTagDao;
 import com.cloud.utils.exception.CloudRuntimeException;
 import com.cloud.vm.UserVmVO;
+import com.cloud.vm.VMInstanceVO;
 
 public class DesktopClusterDestroyWorker extends DesktopClusterResourceModifierActionWorker {
 
     @Inject
     protected AccountManager accountManager;
+    @Inject
+    protected ResourceTagDao resourceTagDao;
 
     private List<DesktopClusterVmMapVO> clusterVMs;
 
@@ -70,6 +76,7 @@ public class DesktopClusterDestroyWorker extends DesktopClusterResourceModifierA
 
     private boolean destroyClusterVMs() {
         boolean vmDestroyed = true;
+        //ControlVM removed
         if (!CollectionUtils.isEmpty(clusterVMs)) {
             for (DesktopClusterVmMapVO clusterVM : clusterVMs) {
                 long vmID = clusterVM.getVmId();
@@ -92,6 +99,37 @@ public class DesktopClusterDestroyWorker extends DesktopClusterResourceModifierA
                 } catch (ResourceUnavailableException | ConcurrentOperationException e) {
                     LOGGER.warn(String.format("Failed to destroy VM : %s part of the desktop cluster : %s cleanup. Moving on with destroying remaining resources provisioned for the desktop cluster", userVM.getDisplayName(), desktopCluster.getName()), e);
                     return false;
+                }
+            }
+            //DesktopVM removed
+            List<VMInstanceVO> vmList = vmInstanceDao.listByZoneId(desktopCluster.getZoneId());
+            String resourceKey = "ClusterName";
+            if (vmList != null && !vmList.isEmpty()) {
+                for (VMInstanceVO vmVO : vmList) {
+                    ResourceTag desktopvm = resourceTagDao.findByKey(vmVO.getId(), ResourceObjectType.UserVm, resourceKey);
+                    if (desktopvm != null) {
+                        if (desktopvm.getValue().equals(desktopCluster.getName())) {
+                            long desktopvmID = vmVO.getId();
+                            // delete only if VM exists and is not removed
+                            UserVmVO userDesktopVM = userVmDao.findById(desktopvmID);
+                            if (userDesktopVM == null || userDesktopVM.isRemoved()) {
+                                continue;
+                            }
+                            try {
+                                UserVm deskvm = userVmService.destroyVm(desktopvmID, true);
+                                if (!userVmManager.expunge(userDesktopVM, CallContext.current().getCallingUserId(), CallContext.current().getCallingAccount())) {
+                                    LOGGER.warn(String.format("Unable to expunge VM %s : %s, Destroying a desktop virtual machine in a desktop cluster will probably fail",
+                                    deskvm.getInstanceName() , deskvm.getUuid()));
+                                }
+                                if (LOGGER.isInfoEnabled()) {
+                                    LOGGER.info(String.format("Destroyed VM : %s as part of desktop cluster : %s desktop virtual machine cleanup", deskvm.getDisplayName(), desktopCluster.getName()));
+                                }
+                            } catch (ResourceUnavailableException | ConcurrentOperationException e) {
+                                LOGGER.warn(String.format("Failed to destroy VM : %s part of the desktop cluster : %s desktop virtual machine cleanup. Moving on with destroying remaining resources provisioned for the desktop cluster", userDesktopVM.getDisplayName(), desktopCluster.getName()), e);
+                                return false;
+                            }
+                        }
+                    }
                 }
             }
         }
