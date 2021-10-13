@@ -241,20 +241,20 @@ public class DesktopClusterStartWorker extends DesktopClusterResourceModifierAct
             logTransitStateAndThrow(Level.ERROR, String.format("Failed to start desktop cluster : %s as its network cannot be started", desktopCluster.getName()), desktopCluster.getId(), DesktopCluster.Event.CreateFailed, e);
         }
         List<UserVm> clusterVMs = new ArrayList<>();
-        UserVm dcVM = null;
-        try {
-            dcVM = provisionDesktopClusterDcControlVm(network);
-        } catch (CloudRuntimeException | ManagementServerException | ResourceUnavailableException | InsufficientCapacityException e) {
-            logTransitStateAndThrow(Level.ERROR, String.format("Provisioning the DC Control VM failed in the desktop cluster : %s", desktopCluster.getName()), desktopCluster.getId(), DesktopCluster.Event.CreateFailed, e);
-        }
-        clusterVMs.add(dcVM);
         UserVm worksVM = null;
         try {
             worksVM = provisionDesktopClusterWorksControlVm(network);
         }  catch (CloudRuntimeException | ManagementServerException | ResourceUnavailableException | InsufficientCapacityException e) {
-            logTransitStateAndThrow(Level.ERROR, String.format("Provisioning the Works Control VM failed in the desktop cluster : %s", desktopCluster.getName()), desktopCluster.getId(), DesktopCluster.Event.CreateFailed, e);
+            logTransitStateAndThrow(Level.ERROR, String.format("Provisioning the Works Control VM failed in the desktop cluster : %s, %s", desktopCluster.getName(), e), desktopCluster.getId(), DesktopCluster.Event.CreateFailed, e);
         }
         clusterVMs.add(worksVM);
+        UserVm dcVM = null;
+        try {
+            dcVM = provisionDesktopClusterDcControlVm(network);
+        } catch (CloudRuntimeException | ManagementServerException | ResourceUnavailableException | InsufficientCapacityException e) {
+            logTransitStateAndThrow(Level.ERROR, String.format("Provisioning the DC Control VM failed in the desktop cluster : %s, %s", desktopCluster.getName(), e), desktopCluster.getId(), DesktopCluster.Event.CreateFailed, e);
+        }
+        clusterVMs.add(dcVM);
         if (LOGGER.isInfoEnabled()) {
             LOGGER.info(String.format("Desktop cluster : %s Control VMs successfully provisioned", desktopCluster.getName()));
         }

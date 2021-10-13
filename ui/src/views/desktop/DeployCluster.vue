@@ -58,7 +58,7 @@
             }]"
             :placeholder="$t('placeholder.addomainname')" />
         </a-form-item>
-        <a-row :gutter="12">
+        <!-- <a-row :gutter="12">
           <a-col :md="24" :lg="12">
             <a-form-item>
               <span slot="label">
@@ -92,7 +92,7 @@
                 :placeholder="$t('placeholder.confirmpassword')"/>
             </a-form-item>
           </a-col>
-        </a-row>
+        </a-row> -->
         <a-form-item>
           <span slot="label">
             {{ $t('label.desktop.controller.template.version') }}
@@ -134,7 +134,7 @@
             </a-select-option>
           </a-select>
         </a-form-item>
-        <a-form-item>
+        <!-- <a-form-item>
           <span slot="label">
             {{ $t('label.access.type') }}
             <a-tooltip :title="$t('placeholder.accesstype')">
@@ -148,17 +148,17 @@
             }]"
             buttonStyle="solid"
             @change="selected => { this.handleAccessTypeChange(selected.target.value) }">
-            <a-radio-button value="internal">
-              {{ $t('label.access.internal') }}
-            </a-radio-button>
             <a-radio-button value="external">
               {{ $t('label.access.external') }}
+            </a-radio-button>
+            <a-radio-button value="internal">
+              {{ $t('label.access.internal') }}
             </a-radio-button>
             <a-radio-button value="mixed">
               {{ $t('label.access.mixed') }}
             </a-radio-button>
           </a-radio-group>
-        </a-form-item>
+        </a-form-item> -->
         <a-form-item>
           <span slot="label">
             {{ $t('label.network') }}
@@ -182,7 +182,7 @@
             </a-select-option>
           </a-select>
         </a-form-item>
-        <a-row :gutter="12">
+        <!-- <a-row :gutter="12">
           <a-col :md="24" :lg="12">
             <a-form-item v-if="this.accessType=='internal'">
               <span slot="label">
@@ -243,7 +243,7 @@
                 :placeholder="$t('placeholder.endip')" />
             </a-form-item>
           </a-col>
-        </a-row>
+        </a-row> -->
         <a-form-item>
           <span slot="label">
             {{ $t('label.worksvmip') }}
@@ -253,7 +253,7 @@
           </span>
           <a-input
             v-decorator="['worksip', {
-              rules: [{ message: $t('message.error.required.input') }]
+              rules: [{ required: true, message: $t('message.error.required.input') }]
             }]"
             :placeholder="$t('placeholder.worksvmip')" />
         </a-form-item>
@@ -266,7 +266,7 @@
           </span>
           <a-input
             v-decorator="['dcip', {
-              rules: [{ message: $t('message.error.required.input') }]
+              rules: [{ required: true, message: $t('message.error.required.input') }]
             }]"
             :placeholder="$t('placeholder.dcvmip')" />
         </a-form-item>
@@ -291,7 +291,7 @@ export default {
   data () {
     return {
       loading: false,
-      accessType: 'internal',
+      accessType: 'external',
       networks: [],
       networkLoading: false,
       templateVersions: [],
@@ -323,22 +323,22 @@ export default {
       this.accessType = pvlan
       this.fetchNetworkData()
     },
-    validateConfirmPassword (rule, value, callback) {
-      if (!value || value.length === 0) {
-        callback()
-      } else if (rule.field === 'confirmpassword') {
-        const form = this.form
-        const messageConfirm = this.$t('error.password.not.match')
-        const passwordVal = form.getFieldValue('password')
-        if (passwordVal && passwordVal !== value) {
-          callback(messageConfirm)
-        } else {
-          callback()
-        }
-      } else {
-        callback()
-      }
-    },
+    // validateConfirmPassword (rule, value, callback) {
+    //   if (!value || value.length === 0) {
+    //     callback()
+    //   } else if (rule.field === 'confirmpassword') {
+    //     const form = this.form
+    //     const messageConfirm = this.$t('error.password.not.match')
+    //     const passwordVal = form.getFieldValue('password')
+    //     if (passwordVal && passwordVal !== value) {
+    //       callback(messageConfirm)
+    //     } else {
+    //       callback()
+    //     }
+    //   } else {
+    //     callback()
+    //   }
+    // },
     fetchTemplateVersionData () {
       this.templateVersions = []
       const params = {}
@@ -433,30 +433,32 @@ export default {
           name: values.name,
           description: values.description,
           addomainname: values.addomainname,
-          desktoppassword: values.password,
+          // desktoppassword: values.password,
           controllerversion: this.templateVersions[values.templateversion].id,
           serviceofferingid: this.serviceOfferings[values.serviceofferingid].id,
           networkid: this.selectedNetwork.id,
-          clustertype: this.accessType
+          clustertype: this.accessType,
+          worksip: values.worksip,
+          dcip: values.dcip
         }
-        if (this.isValidValueForKey(values, 'gateway')) {
-          params.gateway = values.gateway
-        }
-        if (this.isValidValueForKey(values, 'netmask')) {
-          params.netmask = values.netmask
-        }
-        if (this.isValidValueForKey(values, 'startip')) {
-          params.startip = values.startip
-        }
-        if (this.isValidValueForKey(values, 'endip')) {
-          params.endip = values.endip
-        }
-        if (this.isValidValueForKey(values, 'worksip')) {
-          params.worksip = values.worksip
-        }
-        if (this.isValidValueForKey(values, 'dcip')) {
-          params.dcip = values.dcip
-        }
+        // if (this.isValidValueForKey(values, 'gateway')) {
+        //   params.gateway = values.gateway
+        // }
+        // if (this.isValidValueForKey(values, 'netmask')) {
+        //   params.netmask = values.netmask
+        // }
+        // if (this.isValidValueForKey(values, 'startip')) {
+        //   params.startip = values.startip
+        // }
+        // if (this.isValidValueForKey(values, 'endip')) {
+        //   params.endip = values.endip
+        // }
+        // if (this.isValidValueForKey(values, 'worksip')) {
+        //   params.worksip = values.worksip
+        // }
+        // if (this.isValidValueForKey(values, 'dcip')) {
+        //   params.dcip = values.dcip
+        // }
         api('createDesktopCluster', params).then(json => {
           const jobId = json.createdesktopclusterresponse.jobid
           this.$pollJob({

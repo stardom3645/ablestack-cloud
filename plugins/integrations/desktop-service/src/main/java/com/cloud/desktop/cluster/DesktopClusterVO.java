@@ -29,7 +29,6 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 
 import com.cloud.utils.db.GenericDao;
-import com.cloud.utils.db.Encrypt;
 
 @Entity
 @Table(name = "desktop_cluster")
@@ -49,9 +48,9 @@ public class DesktopClusterVO implements DesktopCluster {
     @Column(name = "description")
     private String description;
 
-    @Encrypt
-    @Column(name = "password")
-    private String password;
+    // @Encrypt
+    // @Column(name = "password")
+    // private String password;
 
     @Column(name = "zone_id")
     private long zoneId;
@@ -131,14 +130,14 @@ public class DesktopClusterVO implements DesktopCluster {
         this.description = description;
     }
 
-    @Override
-    public String getPassword() {
-        return password;
-    }
+    // @Override
+    // public String getPassword() {
+    //     return password;
+    // }
 
-    public void setPassword(String password) {
-        this.password = password;
-    }
+    // public void setPassword(String password) {
+    //     this.password = password;
+    // }
 
     @Override
     public long getZoneId() {
@@ -268,12 +267,12 @@ public class DesktopClusterVO implements DesktopCluster {
         this.uuid = UUID.randomUUID().toString();
     }
 
-    public DesktopClusterVO(String name, String description, String password, long zoneId, long desktopVersionId, long serviceOfferingId,
+    public DesktopClusterVO(String name, String description, long zoneId, long desktopVersionId, long serviceOfferingId,
                                 String adDomainName, long networkId, String accessType, long domainId, long accountId, State state, String dcIp, String worksIp) {
         this.uuid = UUID.randomUUID().toString();
         this.name = name;
         this.description = description;
-        this.password = password;
+        // this.password = password;
         this.zoneId = zoneId;
         this.desktopVersionId = desktopVersionId;
         this.serviceOfferingId = serviceOfferingId;

@@ -68,8 +68,8 @@ public class CreateDesktopClusterCmd extends BaseAsyncCreateCmd {
     @Parameter(name = ApiConstants.DESCRIPTION, type = CommandType.STRING, required = true, description = "description for the Desktop cluster")
     private String description;
 
-    @Parameter(name = ApiConstants.DESKTOP_PASSWORD, type = CommandType.STRING, required = true, description = "password for the Desktop cluster")
-    private String password;
+    // @Parameter(name = ApiConstants.DESKTOP_PASSWORD, type = CommandType.STRING, required = true, description = "password for the Desktop cluster")
+    // private String password;
 
     @Parameter(name = ApiConstants.DESKTOP_CONTROLLER_VERSION, type = CommandType.UUID, entityType = DesktopControllerVersionResponse.class, required = true,
             description = "Desktop version with which cluster to be launched")
@@ -124,11 +124,11 @@ public class CreateDesktopClusterCmd extends BaseAsyncCreateCmd {
     description = "End IP for L2 Network of desktop cluster")
     private String endIp;
 
-    @Parameter(name = ApiConstants.DESKTOP_CONTROLLER_DC_IP, type = CommandType.STRING,
+    @Parameter(name = ApiConstants.DESKTOP_CONTROLLER_DC_IP, type = CommandType.STRING, required = true,
             description = "DC IP for the desktop controller")
     private String dcIp;
 
-    @Parameter(name = ApiConstants.DESKTOP_CONTROLLER_WORKS_IP, type = CommandType.STRING,
+    @Parameter(name = ApiConstants.DESKTOP_CONTROLLER_WORKS_IP, type = CommandType.STRING, required = true,
             description = "WORKS IP for the desktop controller")
     private String worksIp;
 
@@ -152,9 +152,9 @@ public class CreateDesktopClusterCmd extends BaseAsyncCreateCmd {
         return description;
     }
 
-    public String getPassword() {
-        return password;
-    }
+    // public String getPassword() {
+    //     return password;
+    // }
 
     public Long getDomainId() {
         if (domainId == null) {

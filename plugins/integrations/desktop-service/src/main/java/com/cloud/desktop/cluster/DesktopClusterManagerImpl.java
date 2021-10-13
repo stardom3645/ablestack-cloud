@@ -92,7 +92,7 @@ import com.cloud.event.ActionEvent;
 import com.cloud.vm.VMInstanceVO;
 import com.cloud.vm.VirtualMachine;
 import com.cloud.vm.dao.VMInstanceDao;
-import com.cloud.utils.crypt.DBEncryptionUtil;
+//import com.cloud.utils.crypt.DBEncryptionUtil;
 import com.cloud.utils.Ternary;
 import com.cloud.utils.net.NetUtils;
 import com.cloud.utils.component.ManagerBase;
@@ -256,19 +256,11 @@ public class DesktopClusterManagerImpl extends ManagerBase implements DesktopClu
                 if (userVM != null) {
                     UserVmResponse cvmResponse = ApiDBUtils.newUserVmResponse(respView, responseName, userVM, EnumSet.of(VMDetails.nics), caller);
                     controlVmResponses.add(cvmResponse);
-                    if ("worksvm".equals(vmMapVO.getType())) {
-                        if (userVM.getIpAddress() != null) {
-                            response.setWorksVmIp(userVM.getIpAddress());
-                        } else {
-                            response.setWorksVmIp(desktop.getWorksIp());
-                        }
+                    if("worksvm".equals(vmMapVO.getType())) {
+                        response.setWorksVmIp(userVM.getIpAddress());
                     }
                     if("dcvm".equals(vmMapVO.getType())) {
-                        if (userVM.getIpAddress() != null) {
-                            response.setDcVmIp(userVM.getIpAddress());
-                        } else {
-                            response.setDcVmIp(desktop.getDcIp());
-                        }
+                        response.setDcVmIp(userVM.getIpAddress());
                     }
                 }
             }
@@ -524,7 +516,7 @@ public class DesktopClusterManagerImpl extends ManagerBase implements DesktopClu
         final DesktopClusterVO cluster = Transaction.execute(new TransactionCallback<DesktopClusterVO>() {
             @Override
             public DesktopClusterVO doInTransaction(TransactionStatus status) {
-                DesktopClusterVO newCluster = new DesktopClusterVO(cmd.getName(), cmd.getDescription(), DBEncryptionUtil.encrypt(cmd.getPassword()), clusterDesktopVersion.getZoneId(), clusterDesktopVersion.getId(),
+                DesktopClusterVO newCluster = new DesktopClusterVO(cmd.getName(), cmd.getDescription(), clusterDesktopVersion.getZoneId(), clusterDesktopVersion.getId(),
                         serviceOffering.getId(), cmd.getAdDomainName(), cmd.getNetworkId(), cmd.getAccessType(),
                         owner.getDomainId(), owner.getAccountId(), DesktopCluster.State.Created, cmd.getDcIp(), cmd.getWorksIp());
                 desktopClusterDao.persist(newCluster);
@@ -544,7 +536,7 @@ public class DesktopClusterManagerImpl extends ManagerBase implements DesktopClu
         final String name = cmd.getName();
         final String description = cmd.getDescription();
         final String adDomainName = cmd.getAdDomainName();
-        final String password = cmd.getPassword();
+        // final String password = cmd.getPassword();
         final Long desktopVersionId = cmd.getControllerVersion();
         final Long serviceOfferingId = cmd.getServiceOfferingId();
         final Long networkId = cmd.getNetworkId();
@@ -573,9 +565,9 @@ public class DesktopClusterManagerImpl extends ManagerBase implements DesktopClu
         if (adDomainName == null || adDomainName.isEmpty()) {
             throw new InvalidParameterValueException("Invalid AD Domain Name for the Desktop cluster AD Domain name:" + adDomainName);
         }
-        if (password == null || password.isEmpty()) {
-            throw new InvalidParameterValueException("Invalid password for the Desktop cluster password:" + password);
-        }
+        // if (password == null || password.isEmpty()) {
+        //     throw new InvalidParameterValueException("Invalid password for the Desktop cluster password:" + password);
+        // }
 
         final DesktopControllerVersion clusterDesktopVersion = desktopControllerVersionDao.findById(desktopVersionId);
         if (clusterDesktopVersion == null) {
@@ -626,6 +618,12 @@ public class DesktopClusterManagerImpl extends ManagerBase implements DesktopClu
             final String dcIp = cmd.getDcIp();
             final String worksIp = cmd.getWorksIp();
             final String cider = network.getCidr();
+            if (dcIp == null || dcIp.isEmpty()) {
+                throw new InvalidParameterValueException("Invalid IP for the Desktop cluster DC VM IP:" + dcIp);
+            }
+            if (worksIp == null || worksIp.isEmpty()) {
+                throw new InvalidParameterValueException("Invalid IP for the Desktop cluster Works VM IP:" + worksIp);
+            }
             if (network.getGuestType().equals(GuestType.L2)){
                 //L2 일 경우 IP 범위 조회하여 벨리데이션 체크
                 final String gateway = cmd.getGateway();
