@@ -18,7 +18,7 @@
 <template>
   <a
     v-if="['desktopcluster'].includes($route.meta.name) && 'listDesktopClusters' in $store.getters.apis"
-    :href="'https://'+resource.worksvmip+':'+$store.getters.features.desktopworksportalport"
+    :href="'http://'+resource.worksvmip+':'+$store.getters.features.desktopworksuserportalport"
     target="_blank">
     <a-button style="margin-left: 5px" shape="circle" type="" :size="size" :disabled="['Stopped', 'Error', 'Destroyed', 'Destroying'].includes(resource.state)" >
       <a-icon type="global" />
@@ -27,7 +27,7 @@
 </template>
 <script>
 export default {
-  name: 'WorksLinkUrl',
+  name: 'WorksUserUrl',
   props: {
     resource: {
       type: Object,

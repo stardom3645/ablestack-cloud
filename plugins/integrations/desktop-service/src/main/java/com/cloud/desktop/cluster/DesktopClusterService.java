@@ -38,10 +38,15 @@ public interface DesktopClusterService extends PluggableService, Configurable {
             "Indicates whether Desktop Service plugin is enabled or not. Management server restart needed on change",
             false);
 
-    static final ConfigKey<String> DesktopWorksPortalPort = new ConfigKey<String>("Advanced", String.class,
-            "cloud.desktop.service.worksportalport",
-            "50000",
-            "Desktop Service Works Portal Port.(ex:50000)",
+    static final ConfigKey<String> DesktopWorksAdminPortalPort = new ConfigKey<String>("Advanced", String.class,
+            "cloud.desktop.service.works.adminportal.port",
+            "8081",
+            "Desktop Service Works Admin Portal Port.(ex:8081)",
+            false);
+    static final ConfigKey<String> DesktopWorksUserPortalPort = new ConfigKey<String>("Advanced", String.class,
+            "cloud.desktop.service.works.userportal.port",
+            "8080",
+            "Desktop Service Works User Portal Port.(ex:8080)",
             false);
 
     DesktopCluster findById(final Long id);
