@@ -17,14 +17,22 @@
 
 package com.cloud.desktop.cluster.actionworkers;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Properties;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.cloudstack.api.BaseCmd;
+import org.apache.cloudstack.config.ApiServiceConfiguration;
+import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.cloudstack.context.CallContext;
 import org.apache.log4j.Level;
 
 import com.cloud.dc.DataCenter;
@@ -37,8 +45,13 @@ import com.cloud.network.Network.IpAddresses;
 import com.cloud.network.Network;
 import com.cloud.storage.DiskOfferingVO;
 import com.cloud.offering.ServiceOffering;
+import com.cloud.user.Account;
+import com.cloud.user.UserAccount;
 import com.cloud.uservm.UserVm;
+import com.cloud.utils.StringUtils;
 import com.cloud.utils.exception.CloudRuntimeException;
+import com.cloud.utils.PropertiesUtil;
+import com.cloud.utils.server.ServerProperties;
 import com.cloud.desktop.cluster.DesktopCluster;
 import com.cloud.desktop.cluster.DesktopClusterVmMapVO;
 import com.cloud.desktop.cluster.DesktopClusterManagerImpl;
@@ -46,6 +59,7 @@ import com.cloud.desktop.version.DesktopControllerVersion;
 import com.cloud.vm.ReservationContext;
 import com.cloud.vm.ReservationContextImpl;
 import com.cloud.vm.VirtualMachine;
+import com.google.common.base.Strings;
 
 public class DesktopClusterStartWorker extends DesktopClusterResourceModifierActionWorker {
 
@@ -61,6 +75,51 @@ public class DesktopClusterStartWorker extends DesktopClusterResourceModifierAct
             desktopClusterVersion = desktopControllerVersionDao.findById(desktopCluster.getDesktopVersionId());
         }
         return desktopClusterVersion;
+    }
+
+    private String getDesktopClusterDcConfig(final String instance) throws IOException {
+        String desktopClusterDcConfig = readResourceFile("/conf/dc");
+        final String instanceName = "{{ instance_name }}";
+        final String sambaIp = "{{ samba_ip }}";
+        final String domainName = "{{ domain_name }}";
+        desktopClusterDcConfig = desktopClusterDcConfig.replace(instanceName, instance);
+        desktopClusterDcConfig = desktopClusterDcConfig.replace(sambaIp, desktopCluster.getWorksIp());
+        desktopClusterDcConfig = desktopClusterDcConfig.replace(domainName, desktopCluster.getAdDomainName());
+        return desktopClusterDcConfig;
+    }
+
+    private String getDesktopClusterWorksConfig(final DataCenter zone) throws IOException {
+        String[] keys = getServiceUserKeys(owner);
+        String[] info = getServerProperties();
+        final String managementIp = ApiServiceConfiguration.ManagementServerAddresses.value();
+        String desktopClusterWorksConfig = readResourceFile("/conf/works.yml");
+        final String clusterName = "{{ cluster_name }}";
+        final String domainName = "{{ domain_name }}";
+        final String worksIp = "{{ works_ip }}";
+        final String dcIp = "{{ dc_ip }}";
+        final String zoneUuid = "{{ zone_id }}";
+        final String networkId = "{{ network_id }}";
+        final String accountName = "{{ account_name }}";
+        final String accountUuid = "{{ account_uuid }}";
+        final String apiKey = "{{ api_key }}";
+        final String secretKey = "{{ secret_key }}";
+        final String moldIp = "{{ mold_ip }}";
+        final String moldPort = "{{ mold_port }}";
+        final String moldProtocol = "{{ mold_protocol }}";
+        desktopClusterWorksConfig = desktopClusterWorksConfig.replace(clusterName, desktopCluster.getName());
+        desktopClusterWorksConfig = desktopClusterWorksConfig.replace(domainName, desktopCluster.getAdDomainName());
+        desktopClusterWorksConfig = desktopClusterWorksConfig.replace(worksIp, desktopCluster.getWorksIp());
+        desktopClusterWorksConfig = desktopClusterWorksConfig.replace(dcIp, desktopCluster.getDcIp());
+        desktopClusterWorksConfig = desktopClusterWorksConfig.replace(zoneUuid, zone.getUuid());
+        desktopClusterWorksConfig = desktopClusterWorksConfig.replace(networkId, Long.toString(desktopCluster.getNetworkId()));
+        desktopClusterWorksConfig = desktopClusterWorksConfig.replace(accountName, owner.getAccountName());
+        desktopClusterWorksConfig = desktopClusterWorksConfig.replace(accountUuid, owner.getUuid());
+        desktopClusterWorksConfig = desktopClusterWorksConfig.replace(apiKey, keys[0]);
+        desktopClusterWorksConfig = desktopClusterWorksConfig.replace(secretKey, keys[1]);
+        desktopClusterWorksConfig = desktopClusterWorksConfig.replace(moldIp, managementIp);
+        desktopClusterWorksConfig = desktopClusterWorksConfig.replace(moldPort, info[0]);
+        desktopClusterWorksConfig = desktopClusterWorksConfig.replace(moldProtocol, info[1]);
+        return desktopClusterWorksConfig;
     }
 
     private UserVm provisionDesktopClusterDcControlVm(final Network network) throws ManagementServerException,
@@ -98,11 +157,19 @@ public class DesktopClusterStartWorker extends DesktopClusterResourceModifierAct
             long rootDiskSizeInGiB = rootDiskSizeInBytes / GiB_TO_BYTES;
             customParameterMap.put("rootdisksize", String.valueOf(rootDiskSizeInGiB));
         }
+        String desktopClusterDcConfig = null;
+        try {
+            desktopClusterDcConfig = getDesktopClusterDcConfig(hostName);
+        } catch (IOException e) {
+            logAndThrow(Level.ERROR, "Failed to read Desktop Cluster Userdata configuration file", e);
+        }
+        LOGGER.info(dcTemplate);
+        String base64UserData = Base64.encodeBase64String(desktopClusterDcConfig.getBytes(StringUtils.getPreferredCharset()));
         if (dcIp == null || network.getGuestType() == Network.GuestType.L2) {
             Network.IpAddresses addrs = new Network.IpAddresses(null, null, null);
             dcControlVm = userVmService.createAdvancedVirtualMachine(zone, serviceOffering, dcTemplate, networkIds, owner,
                 hostName, hostName, null, null, null,
-                dcTemplate.getHypervisorType(), BaseCmd.HTTPMethod.POST, null, null,
+                dcTemplate.getHypervisorType(), BaseCmd.HTTPMethod.POST, base64UserData, null,
                 null, addrs, null, null, null, customParameterMap, null, null, null, null, true);
         } else {
             ipToNetworkMap = new LinkedHashMap<Long, IpAddresses>();
@@ -111,7 +178,7 @@ public class DesktopClusterStartWorker extends DesktopClusterResourceModifierAct
             ipToNetworkMap.put(desktopCluster.getNetworkId(), dcAddrs);
             dcControlVm = userVmService.createAdvancedVirtualMachine(zone, serviceOffering, dcTemplate, networkIds, owner,
                 hostName, hostName, null, null, null,
-                dcTemplate.getHypervisorType(), BaseCmd.HTTPMethod.POST, null, null,
+                dcTemplate.getHypervisorType(), BaseCmd.HTTPMethod.POST, base64UserData, null,
                 ipToNetworkMap, addrs, null, null, null, customParameterMap, null, null, null, null, true);
         }
         if (LOGGER.isInfoEnabled()) {
@@ -156,20 +223,27 @@ public class DesktopClusterStartWorker extends DesktopClusterResourceModifierAct
             long rootDiskSizeInGiB = rootDiskSizeInBytes / GiB_TO_BYTES;
             customParameterMap.put("rootdisksize", String.valueOf(rootDiskSizeInGiB));
         }
+        String desktopClusterWorksConfig = null;
+        try {
+            desktopClusterWorksConfig = getDesktopClusterWorksConfig(zone);
+        } catch (IOException e) {
+            logAndThrow(Level.ERROR, "Failed to read Desktop Cluster Userdata configuration file", e);
+        }
+        String base64UserData = Base64.encodeBase64String(desktopClusterWorksConfig.getBytes(StringUtils.getPreferredCharset()));
         if (worksIp == null || network.getGuestType() == Network.GuestType.L2) {
             Network.IpAddresses addrs = new Network.IpAddresses(null, null, null);
-            worksControlVm = userVmService.createAdvancedVirtualMachine(zone, serviceOffering, dcTemplate, networkIds, owner,
+            worksControlVm = userVmService.createAdvancedVirtualMachine(zone, serviceOffering, worksTemplate, networkIds, owner,
                 hostName, hostName, null, null, null,
-                worksTemplate.getHypervisorType(), BaseCmd.HTTPMethod.POST, null, null,
+                worksTemplate.getHypervisorType(), BaseCmd.HTTPMethod.POST, base64UserData, null,
                 null, addrs, null, null, null, customParameterMap, null, null, null, null, true);
         } else {
             ipToNetworkMap = new LinkedHashMap<Long, IpAddresses>();
             Network.IpAddresses addrs = new Network.IpAddresses(null, null, null);
             Network.IpAddresses worksAddrs = new Network.IpAddresses(worksIp, null, null);
             ipToNetworkMap.put(desktopCluster.getNetworkId(), worksAddrs);
-            worksControlVm = userVmService.createAdvancedVirtualMachine(zone, serviceOffering, dcTemplate, networkIds, owner,
+            worksControlVm = userVmService.createAdvancedVirtualMachine(zone, serviceOffering, worksTemplate, networkIds, owner,
                 hostName, hostName, null, null, null,
-                worksTemplate.getHypervisorType(), BaseCmd.HTTPMethod.POST, null, null,
+                worksTemplate.getHypervisorType(), BaseCmd.HTTPMethod.POST, base64UserData, null,
                 ipToNetworkMap, addrs, null, null, null, customParameterMap, null, null, null, null, true);
         }
         if (LOGGER.isInfoEnabled()) {
@@ -220,6 +294,48 @@ public class DesktopClusterStartWorker extends DesktopClusterResourceModifierAct
                 logTransitStateAndThrow(Level.ERROR, String.format("Failed to start Control VMs in desktop cluster : %s", desktopCluster.getName()), desktopCluster.getId(), DesktopCluster.Event.OperationFailed);
             }
         }
+    }
+
+    private String[] getServiceUserKeys(Account owner) {
+        if (owner == null) {
+            owner = CallContext.current().getCallingAccount();
+        }
+        String username = owner.getAccountName();
+        UserAccount user = accountService.getActiveUserAccount(username, owner.getDomainId());
+        String[] keys = null;
+        String apiKey = user.getApiKey();
+        String secretKey = user.getSecretKey();
+        if (Strings.isNullOrEmpty(apiKey) || Strings.isNullOrEmpty(secretKey)) {
+            keys = accountService.createApiKeyAndSecretKey(user.getId());
+        } else {
+            keys = new String[]{apiKey, secretKey};
+        }
+        return keys;
+    }
+
+    private String[] getServerProperties() {
+        String[] serverInfo = null;
+        final String HTTP_PORT = "http.port";
+        final String HTTPS_ENABLE = "https.enable";
+        final String HTTPS_PORT = "https.port";
+        final File confFile = PropertiesUtil.findConfigFile("server.properties");
+        try {
+            InputStream is = new FileInputStream(confFile);
+            String port = null;
+            String protocol = null;
+            final Properties properties = ServerProperties.getServerProperties(is);
+            if (properties.getProperty(HTTPS_ENABLE).equals("true")){
+                port = properties.getProperty(HTTPS_PORT);
+                protocol = "https://";
+            } else {
+                port = properties.getProperty(HTTP_PORT);
+                protocol = "http://";
+            }
+            serverInfo = new String[]{port, protocol};
+        } catch (final IOException e) {
+            LOGGER.warn("Failed to read configuration from server.properties file", e);
+        }
+        return serverInfo;
     }
 
     public boolean startDesktopClusterOnCreate() {

@@ -564,6 +564,10 @@ public class DesktopClusterManagerImpl extends ManagerBase implements DesktopClu
         }
         if (adDomainName == null || adDomainName.isEmpty()) {
             throw new InvalidParameterValueException("Invalid AD Domain Name for the Desktop cluster AD Domain name:" + adDomainName);
+        } else {
+            if (adDomainName.contains(".")) {
+                throw new InvalidParameterValueException("AD domain name is fixed in *.local format, '.' cannot be used.");
+            }
         }
         // if (password == null || password.isEmpty()) {
         //     throw new InvalidParameterValueException("Invalid password for the Desktop cluster password:" + password);
