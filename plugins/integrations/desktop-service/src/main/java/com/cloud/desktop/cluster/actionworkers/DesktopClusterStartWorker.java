@@ -120,7 +120,6 @@ public class DesktopClusterStartWorker extends DesktopClusterResourceModifierAct
         desktopClusterWorksConfig = desktopClusterWorksConfig.replace(moldPort, info[0]);
         desktopClusterWorksConfig = desktopClusterWorksConfig.replace(moldProtocol, info[1]);
         String base64UserData = Base64.encodeBase64String(desktopClusterWorksConfig.getBytes(StringUtils.getPreferredCharset()));
-        LOGGER.info("base64UserData : " +base64UserData);
         String desktopClusterWorksEncodeConfig = readResourceFile("/conf/works.yml");
         final String worksEncode = "{{ works_encode }}";
         desktopClusterWorksEncodeConfig = desktopClusterWorksEncodeConfig.replace(worksEncode, base64UserData);
