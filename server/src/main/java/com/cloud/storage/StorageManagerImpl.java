@@ -45,6 +45,8 @@ import javax.inject.Inject;
 
 import com.cloud.agent.api.GetStoragePoolCapabilitiesAnswer;
 import com.cloud.agent.api.GetStoragePoolCapabilitiesCommand;
+import org.apache.cloudstack.annotation.AnnotationService;
+import org.apache.cloudstack.annotation.dao.AnnotationDao;
 import org.apache.cloudstack.api.ApiConstants;
 import org.apache.cloudstack.api.command.admin.storage.CancelPrimaryStorageMaintenanceCmd;
 import org.apache.cloudstack.api.command.admin.storage.CreateSecondaryStagingStoreCmd;
@@ -330,6 +332,8 @@ public class StorageManagerImpl extends ManagerBase implements StorageManager, C
     ServiceOfferingDetailsDao _serviceOfferingDetailsDao;
     @Inject
     VsphereStoragePolicyDao _vsphereStoragePolicyDao;
+    @Inject
+    private AnnotationDao annotationDao;
 
     protected List<StoragePoolDiscoverer> _discoverers;
 
@@ -461,10 +465,13 @@ public class StorageManagerImpl extends ManagerBase implements StorageManager, C
 
     @Override
     public Answer sendToPool(StoragePool pool, Command cmd) throws StorageUnavailableException {
-        if (cmd instanceof GetStorageStatsCommand && pool.getPoolType() == StoragePoolType.PowerFlex) {
-            // Get stats from the pool directly instead of sending cmd to host
-            // Added support for ScaleIO/PowerFlex pool only
-            return getStoragePoolStats(pool, (GetStorageStatsCommand) cmd);
+        if (cmd instanceof GetStorageStatsCommand) {
+            DataStoreProvider storeProvider = _dataStoreProviderMgr.getDataStoreProvider(pool.getStorageProviderName());
+            DataStoreDriver storeDriver = storeProvider.getDataStoreDriver();
+            if (storeDriver instanceof PrimaryDataStoreDriver && ((PrimaryDataStoreDriver)storeDriver).canProvideStorageStats()) {
+                // Get stats from the pool directly instead of sending cmd to host
+                return getStoragePoolStats(pool, (GetStorageStatsCommand) cmd);
+            }
         }
 
         Answer[] answers = sendToPool(pool, new Commands(cmd));
@@ -475,18 +482,16 @@ public class StorageManagerImpl extends ManagerBase implements StorageManager, C
     }
 
     private GetStorageStatsAnswer getStoragePoolStats(StoragePool pool, GetStorageStatsCommand cmd) {
-        DataStoreProvider storeProvider = _dataStoreProviderMgr.getDataStoreProvider(pool.getStorageProviderName());
-        DataStoreDriver storeDriver = storeProvider.getDataStoreDriver();
         GetStorageStatsAnswer answer = null;
 
-        if (storeDriver instanceof PrimaryDataStoreDriver && ((PrimaryDataStoreDriver)storeDriver).canProvideStorageStats()) {
-            PrimaryDataStoreDriver primaryStoreDriver = (PrimaryDataStoreDriver)storeDriver;
-            Pair<Long, Long> storageStats = primaryStoreDriver.getStorageStats(pool);
-            if (storageStats == null) {
-                answer = new GetStorageStatsAnswer((GetStorageStatsCommand) cmd, "Failed to get storage stats for pool: " + pool.getId());
-            } else {
-                answer = new GetStorageStatsAnswer((GetStorageStatsCommand) cmd, storageStats.first(), storageStats.second());
-            }
+        DataStoreProvider storeProvider = _dataStoreProviderMgr.getDataStoreProvider(pool.getStorageProviderName());
+        DataStoreDriver storeDriver = storeProvider.getDataStoreDriver();
+        PrimaryDataStoreDriver primaryStoreDriver = (PrimaryDataStoreDriver) storeDriver;
+        Pair<Long, Long> storageStats = primaryStoreDriver.getStorageStats(pool);
+        if (storageStats == null) {
+            answer = new GetStorageStatsAnswer((GetStorageStatsCommand) cmd, "Failed to get storage stats for pool: " + pool.getId());
+        } else {
+            answer = new GetStorageStatsAnswer((GetStorageStatsCommand) cmd, storageStats.first(), storageStats.second());
         }
 
         return answer;
@@ -494,30 +499,23 @@ public class StorageManagerImpl extends ManagerBase implements StorageManager, C
 
     @Override
     public Answer getVolumeStats(StoragePool pool, Command cmd) {
-        if (!(cmd instanceof GetVolumeStatsCommand)) {
-            return null;
-        }
-
         DataStoreProvider storeProvider = _dataStoreProviderMgr.getDataStoreProvider(pool.getStorageProviderName());
         DataStoreDriver storeDriver = storeProvider.getDataStoreDriver();
-
-        if (storeDriver instanceof PrimaryDataStoreDriver && ((PrimaryDataStoreDriver)storeDriver).canProvideVolumeStats()) {
-            PrimaryDataStoreDriver primaryStoreDriver = (PrimaryDataStoreDriver)storeDriver;
-            HashMap<String, VolumeStatsEntry> statEntry = new HashMap<String, VolumeStatsEntry>();
-            GetVolumeStatsCommand getVolumeStatsCommand = (GetVolumeStatsCommand) cmd;
-            for (String volumeUuid : getVolumeStatsCommand.getVolumeUuids()) {
-                Pair<Long, Long> volumeStats = primaryStoreDriver.getVolumeStats(pool, volumeUuid);
-                if (volumeStats == null) {
-                    return new GetVolumeStatsAnswer(getVolumeStatsCommand, "Failed to get stats for volume: " + volumeUuid, null);
-                } else {
-                    VolumeStatsEntry volumeStatsEntry = new VolumeStatsEntry(volumeUuid, volumeStats.first(), volumeStats.second());
-                    statEntry.put(volumeUuid, volumeStatsEntry);
-                }
+        PrimaryDataStoreDriver primaryStoreDriver = (PrimaryDataStoreDriver) storeDriver;
+        HashMap<String, VolumeStatsEntry> statEntry = new HashMap<String, VolumeStatsEntry>();
+        GetVolumeStatsCommand getVolumeStatsCommand = (GetVolumeStatsCommand) cmd;
+        for (String volumeUuid : getVolumeStatsCommand.getVolumeUuids()) {
+            Pair<Long, Long> volumeStats = primaryStoreDriver.getVolumeStats(pool, volumeUuid);
+            if (volumeStats == null) {
+                return new GetVolumeStatsAnswer(getVolumeStatsCommand, "Failed to get stats for volume: " + volumeUuid,
+                        null);
+            } else {
+                VolumeStatsEntry volumeStatsEntry = new VolumeStatsEntry(volumeUuid, volumeStats.first(),
+                        volumeStats.second());
+                statEntry.put(volumeUuid, volumeStatsEntry);
             }
-            return new GetVolumeStatsAnswer(getVolumeStatsCommand, "", statEntry);
         }
-
-        return null;
+        return new GetVolumeStatsAnswer(getVolumeStatsCommand, "", statEntry);
     }
 
     public Long chooseHostForStoragePool(StoragePoolVO poolVO, List<Long> avoidHosts, boolean sendToVmResidesOn, Long vmId) {
@@ -2076,6 +2074,7 @@ public class StorageManagerImpl extends ManagerBase implements StorageManager, C
         if (poolId != null) {
             sc.addAnd("hostOrPoolId", SearchCriteria.Op.EQ, poolId);
         }
+        sc.addAnd("parent", SearchCriteria.Op.EQ, 0L);
         if (poolId != null) {
             pools.add(_storagePoolDao.findById(poolId));
         } else {
@@ -2925,6 +2924,7 @@ public class StorageManagerImpl extends ManagerBase implements StorageManager, C
                 _snapshotStoreDao.deletePrimaryRecordsForStore(storeId, DataStoreRole.Image);
                 _volumeStoreDao.deletePrimaryRecordsForStore(storeId);
                 _templateStoreDao.deletePrimaryRecordsForStore(storeId);
+                annotationDao.removeByEntityType(AnnotationService.EntityType.SECONDARY_STORAGE.name(), store.getUuid());
                 _imageStoreDao.remove(storeId);
             }
         });
