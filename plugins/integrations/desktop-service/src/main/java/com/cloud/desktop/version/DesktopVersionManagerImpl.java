@@ -234,6 +234,14 @@ public class DesktopVersionManagerImpl extends ManagerBase implements DesktopVer
         final Long worksOsTypeId = cmd.getWorksOsType();
         String templateName = "";
 
+        final List<DesktopControllerVersionVO> versions = desktopControllerVersionDao.listAll();
+        for (final DesktopControllerVersionVO version : versions) {
+            final String otherVersion = version.getVersion();
+            if (otherVersion.equals(controllerVersion)) {
+                throw new InvalidParameterValueException("version '" + controllerVersion + "' already exists.");
+            }
+        }
+
         if (compareVersions(controllerVersion, MIN_DESKTOP_CONTOLLER_VERSION) < 0) {
             throw new InvalidParameterValueException(String.format("New desktop controller version cannot be added as %s is minimum version supported by Desktop Service", MIN_DESKTOP_CONTOLLER_VERSION));
         }
