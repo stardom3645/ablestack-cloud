@@ -55,6 +55,7 @@ CREATE TABLE IF NOT EXISTS `desktop_cluster` (
   `works_ip` char(255) NOT NULL COMMENT 'the IP Address of this Desktop ControlVM Works',
   `created` datetime NOT NULL COMMENT 'date created',
   `removed` datetime DEFAULT NULL COMMENT 'date removed or null, if still present',
+  `gc` tinyint NOT NULL DEFAULT '1' COMMENT 'gc this Desktop cluster or not',
   PRIMARY KEY (`id`),
   KEY `fk_cluster__desktop__zone_id` (`zone_id`),
   KEY `fk_cluster__desktop_version_id` (`desktop_version_id`),
