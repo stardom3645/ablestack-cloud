@@ -92,7 +92,7 @@ public class DesktopClusterStartWorker extends DesktopClusterResourceModifierAct
         String[] keys = getServiceUserKeys(owner);
         String[] info = getServerProperties();
         final String managementIp = ApiServiceConfiguration.ManagementServerAddresses.value();
-        String desktopClusterWorksConfig = readResourceFile("/conf/works.yml");
+        String desktopClusterWorksConfig = readResourceFile("/conf/works");
         final String clusterName = "{{ cluster_name }}";
         final String domainName = "{{ domain_name }}";
         final String worksIp = "{{ works_ip }}";
@@ -119,7 +119,12 @@ public class DesktopClusterStartWorker extends DesktopClusterResourceModifierAct
         desktopClusterWorksConfig = desktopClusterWorksConfig.replace(moldIp, managementIp);
         desktopClusterWorksConfig = desktopClusterWorksConfig.replace(moldPort, info[0]);
         desktopClusterWorksConfig = desktopClusterWorksConfig.replace(moldProtocol, info[1]);
-        return desktopClusterWorksConfig;
+        String base64UserData = Base64.encodeBase64String(desktopClusterWorksConfig.getBytes(StringUtils.getPreferredCharset()));
+        LOGGER.info("base64UserData : " +base64UserData);
+        String desktopClusterWorksEncodeConfig = readResourceFile("/conf/works.yml");
+        final String worksEncode = "{{ works_encode }}";
+        desktopClusterWorksEncodeConfig = desktopClusterWorksEncodeConfig.replace(worksEncode, base64UserData);
+        return desktopClusterWorksEncodeConfig;
     }
 
     private UserVm provisionDesktopClusterDcControlVm(final Network network) throws ManagementServerException,
@@ -163,7 +168,6 @@ public class DesktopClusterStartWorker extends DesktopClusterResourceModifierAct
         } catch (IOException e) {
             logAndThrow(Level.ERROR, "Failed to read Desktop Cluster Userdata configuration file", e);
         }
-        LOGGER.info(dcTemplate);
         String base64UserData = Base64.encodeBase64String(desktopClusterDcConfig.getBytes(StringUtils.getPreferredCharset()));
         if (dcIp == null || network.getGuestType() == Network.GuestType.L2) {
             Network.IpAddresses addrs = new Network.IpAddresses(null, null, null);
