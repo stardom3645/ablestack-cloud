@@ -280,6 +280,7 @@
 </template>
 <script>
 import { api } from '@/api'
+import store from '@/store'
 import TooltipLabel from '@/components/widgets/TooltipLabel'
 
 export default {
@@ -385,7 +386,10 @@ export default {
     },
     fetchNetworkData () {
       this.networks = []
-      const params = {}
+      const params = {
+        domainid: store.getters.project && store.getters.project.id ? null : store.getters.userInfo.domainid,
+        account: store.getters.project && store.getters.project.id ? null : store.getters.userInfo.account
+      }
       this.networkLoading = true
       this.handleNetworkChange(null)
       api('listNetworks', params).then(json => {
