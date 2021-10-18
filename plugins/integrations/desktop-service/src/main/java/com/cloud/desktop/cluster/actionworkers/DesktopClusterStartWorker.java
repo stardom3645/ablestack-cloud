@@ -422,7 +422,7 @@ public class DesktopClusterStartWorker extends DesktopClusterResourceModifierAct
             conn.setRequestMethod("GET");
             conn.setRequestProperty("Content-Type", "application/json");
             conn.setRequestProperty("Connection", "keep-alive");
-            conn.setConnectTimeout(180000); // 3분
+            conn.setConnectTimeout(600000);
             conn.setDoOutput(true);
             int responseCode = conn.getResponseCode();
             if (responseCode == 200) {
