@@ -20,6 +20,8 @@ package com.cloud.desktop.cluster.actionworkers;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Properties;
@@ -367,18 +369,23 @@ public class DesktopClusterStartWorker extends DesktopClusterResourceModifierAct
             logTransitStateAndThrow(Level.ERROR, String.format("Provisioning the Works Control VM failed in the desktop cluster : %s, %s", desktopCluster.getName(), e), desktopCluster.getId(), DesktopCluster.Event.CreateFailed, e);
         }
         clusterVMs.add(worksVM);
-        UserVm dcVM = null;
-        try {
-            dcVM = provisionDesktopClusterDcControlVm(network);
-        } catch (CloudRuntimeException | ManagementServerException | ResourceUnavailableException | InsufficientCapacityException e) {
-            logTransitStateAndThrow(Level.ERROR, String.format("Provisioning the DC Control VM failed in the desktop cluster : %s, %s", desktopCluster.getName(), e), desktopCluster.getId(), DesktopCluster.Event.CreateFailed, e);
+        if (worksVM.getState().equals(VirtualMachine.State.Running)) {
+            if (callApi(worksVM.getPrivateIpAddress())) {
+                UserVm dcVM = null;
+                try {
+                    dcVM = provisionDesktopClusterDcControlVm(network);
+                } catch (CloudRuntimeException | ManagementServerException | ResourceUnavailableException | InsufficientCapacityException e) {
+                    logTransitStateAndThrow(Level.ERROR, String.format("Provisioning the DC Control VM failed in the desktop cluster : %s, %s", desktopCluster.getName(), e), desktopCluster.getId(), DesktopCluster.Event.CreateFailed, e);
+                }
+                clusterVMs.add(dcVM);
+                if (LOGGER.isInfoEnabled()) {
+                    LOGGER.info(String.format("Desktop cluster : %s Control VMs successfully provisioned", desktopCluster.getName()));
+                }
+                stateTransitTo(desktopCluster.getId(), DesktopCluster.Event.OperationSucceeded);
+                return true;
+            }
         }
-        clusterVMs.add(dcVM);
-        if (LOGGER.isInfoEnabled()) {
-            LOGGER.info(String.format("Desktop cluster : %s Control VMs successfully provisioned", desktopCluster.getName()));
-        }
-        stateTransitTo(desktopCluster.getId(), DesktopCluster.Event.OperationSucceeded);
-        return true;
+        return false;
     }
 
     public boolean startStoppedDesktopCluster() throws CloudRuntimeException {
@@ -405,5 +412,25 @@ public class DesktopClusterStartWorker extends DesktopClusterResourceModifierAct
         stateTransitTo(desktopCluster.getId(), DesktopCluster.Event.RecoveryRequested);
         stateTransitTo(desktopCluster.getId(), DesktopCluster.Event.OperationSucceeded);
         return true;
+    }
+
+    public boolean callApi(String sambaIp){
+        HttpURLConnection conn = null;
+        try {
+            URL url = new URL("http://"+sambaIp+":9017/api/v1/version");
+            conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("GET");
+            conn.setRequestProperty("Content-Type", "application/json");
+            conn.setRequestProperty("Connection", "keep-alive");
+            conn.setConnectTimeout(180000); // 3분
+            conn.setDoOutput(true);
+            int responseCode = conn.getResponseCode();
+            if (responseCode == 200) {
+                return true;
+            }
+        } catch (IOException e) {
+            logTransitStateAndThrow(Level.ERROR, String.format("DC Control VM could not be deployed because Works API call failed. : %s, %s", desktopCluster.getName(), e), desktopCluster.getId(), DesktopCluster.Event.CreateFailed, e);
+        }
+        return false;
     }
 }
