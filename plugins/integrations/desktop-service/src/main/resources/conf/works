@@ -12,5 +12,6 @@
 	"works.default.url":"{{ works_ip }}",
 	"samba.default.url":"{{ works_ip }}",
 	"samba.default.domain":"{{ domain_name }}",
-	"cluster.default.name":"{{ cluster_name }}"
+	"cluster.default.name":"{{ cluster_name }}",
+	"bootstrapped": "false"
 }

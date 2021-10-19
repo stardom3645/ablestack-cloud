@@ -17,9 +17,6 @@
 # under the License.
 
 ---
-runcmd:
-- [ /works/works_shell ]
-
 write_files:
 - path: /works/works_userdata.json
   encoding: b64
