@@ -18,6 +18,7 @@
 package com.cloud.desktop.cluster.actionworkers;
 
 import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -26,6 +27,7 @@ import javax.inject.Inject;
 
 import org.apache.cloudstack.api.command.user.vm.StartVMCmd;
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.cloudstack.api.command.user.firewall.CreateFirewallRuleCmd;
 
 import com.cloud.capacity.CapacityManager;
 import com.cloud.dc.ClusterDetailsDao;
@@ -37,6 +39,7 @@ import com.cloud.deploy.DeployDestination;
 import com.cloud.exception.InsufficientCapacityException;
 import com.cloud.exception.InsufficientServerCapacityException;
 import com.cloud.exception.ManagementServerException;
+import com.cloud.exception.NetworkRuleConflictException;
 import com.cloud.exception.ResourceAllocationException;
 import com.cloud.exception.ResourceUnavailableException;
 import com.cloud.host.Host;
@@ -48,6 +51,7 @@ import com.cloud.network.IpAddress;
 import com.cloud.network.Network;
 import com.cloud.network.dao.FirewallRulesDao;
 import com.cloud.network.dao.LoadBalancerDao;
+import com.cloud.network.dao.IPAddressDao;
 import com.cloud.network.firewall.FirewallService;
 import com.cloud.network.lb.LoadBalancingRulesService;
 import com.cloud.network.rules.PortForwardingRuleVO;
@@ -101,6 +105,8 @@ public class DesktopClusterResourceModifierActionWorker extends DesktopClusterAc
     protected VolumeApiService volumeService;
     @Inject
     protected VolumeDao volumeDao;
+    @Inject
+    protected IPAddressDao ipAddressDao;
 
     protected DesktopClusterResourceModifierActionWorker(final DesktopCluster desktopCluster, final DesktopClusterManagerImpl clusterManager) {
         super(desktopCluster, clusterManager);
@@ -229,5 +235,37 @@ public class DesktopClusterResourceModifierActionWorker extends DesktopClusterAc
             }
             rulesService.applyPortForwardingRules(publicIp.getId(), account);
         }
+    }
+
+    protected void provisionFirewallRules(final IpAddress publicIp, final Account account, int startPort, int endPort) throws NoSuchFieldException,
+            IllegalAccessException, ResourceUnavailableException, NetworkRuleConflictException {
+        List<String> sourceCidrList = new ArrayList<String>();
+        sourceCidrList.add("0.0.0.0/0");
+
+        CreateFirewallRuleCmd rule = new CreateFirewallRuleCmd();
+        rule = ComponentContext.inject(rule);
+
+        Field addressField = rule.getClass().getDeclaredField("ipAddressId");
+        addressField.setAccessible(true);
+        addressField.set(rule, publicIp.getId());
+
+        Field protocolField = rule.getClass().getDeclaredField("protocol");
+        protocolField.setAccessible(true);
+        protocolField.set(rule, "TCP");
+
+        // Field startPortField = rule.getClass().getDeclaredField("publicStartPort");
+        // startPortField.setAccessible(true);
+        // startPortField.set(rule, startPort);
+
+        // Field endPortField = rule.getClass().getDeclaredField("publicEndPort");
+        // endPortField.setAccessible(true);
+        // endPortField.set(rule, endPort);
+
+        Field cidrField = rule.getClass().getDeclaredField("cidrlist");
+        cidrField.setAccessible(true);
+        cidrField.set(rule, sourceCidrList);
+
+        firewallService.createIngressFirewallRule(rule);
+        firewallService.applyIngressFwRules(publicIp.getId(), account);
     }
 }

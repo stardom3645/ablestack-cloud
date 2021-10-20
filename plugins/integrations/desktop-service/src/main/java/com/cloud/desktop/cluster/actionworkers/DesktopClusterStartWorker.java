@@ -42,10 +42,13 @@ import com.cloud.deploy.DeployDestination;
 import com.cloud.exception.ConcurrentOperationException;
 import com.cloud.exception.InsufficientCapacityException;
 import com.cloud.exception.ManagementServerException;
+import com.cloud.exception.NetworkRuleConflictException;
 import com.cloud.exception.ResourceUnavailableException;
+import com.cloud.network.IpAddress;
 import com.cloud.network.Network.IpAddresses;
 import com.cloud.network.Network;
 import com.cloud.storage.DiskOfferingVO;
+import com.cloud.network.dao.IPAddressVO;
 import com.cloud.offering.ServiceOffering;
 import com.cloud.user.Account;
 import com.cloud.user.UserAccount;
@@ -343,6 +346,26 @@ public class DesktopClusterStartWorker extends DesktopClusterResourceModifierAct
         return serverInfo;
     }
 
+    private void setupDesktopClusterNetworkRules(Network network, UserVm worksVm, IpAddress publicIp) throws ManagementServerException {
+        try {
+            IPAddressVO ipVO = ipAddressDao.findByIpAndNetworkId(network.getId(), publicIp.getAddress().addr());
+            boolean result = rulesService.enableStaticNat(ipVO.getId(), worksVm.getId(), network.getId(), null);
+            if (result) {
+                try {
+                    provisionFirewallRules(publicIp, owner, 0, 0);
+                    if (LOGGER.isInfoEnabled()) {
+                        LOGGER.info(String.format("Provisioned firewall rule to open up on %s for Desktop cluster ID: %s",
+                                publicIp, desktopCluster.getUuid()));
+                    }
+                } catch (NoSuchFieldException | IllegalAccessException | ResourceUnavailableException | NetworkRuleConflictException e) {
+                    throw new ManagementServerException(String.format("Failed to provision firewall rules for API access for the Desktop cluster : %s", desktopCluster.getName()), e);
+                }
+            }
+        } catch (NetworkRuleConflictException | ResourceUnavailableException e) {
+            throw new ManagementServerException(String.format("Failed to provision enable Static Nat for the Desktop cluster : %s", desktopCluster.getName()), e);
+        }
+    }
+
     public boolean startDesktopClusterOnCreate() {
         init();
         if (LOGGER.isInfoEnabled()) {
@@ -361,6 +384,11 @@ public class DesktopClusterStartWorker extends DesktopClusterResourceModifierAct
         } catch (ManagementServerException e) {
             logTransitStateAndThrow(Level.ERROR, String.format("Failed to start desktop cluster : %s as its network cannot be started", desktopCluster.getName()), desktopCluster.getId(), DesktopCluster.Event.CreateFailed, e);
         }
+        IpAddress publicIpAddress = null;
+        publicIpAddress = getDesktopClusterServerIp();
+        if (publicIpAddress == null) {
+            logTransitStateAndThrow(Level.ERROR, String.format("Failed to start Desktop cluster : %s as no public IP found for the cluster" , desktopCluster.getName()), desktopCluster.getId(), DesktopCluster.Event.CreateFailed);
+        }
         List<UserVm> clusterVMs = new ArrayList<>();
         UserVm worksVM = null;
         try {
@@ -370,7 +398,12 @@ public class DesktopClusterStartWorker extends DesktopClusterResourceModifierAct
         }
         clusterVMs.add(worksVM);
         if (worksVM.getState().equals(VirtualMachine.State.Running)) {
-            if (callApi(worksVM.getPrivateIpAddress())) {
+            try {
+                setupDesktopClusterNetworkRules(network, worksVM, publicIpAddress);
+            } catch (ManagementServerException e) {
+                logTransitStateAndThrow(Level.ERROR, String.format("Failed to setup Desktop cluster : %s, unable to setup network rules", desktopCluster.getName()), desktopCluster.getId(), DesktopCluster.Event.CreateFailed, e);
+            }
+            if (callApi(publicIpAddress.getAddress().addr())) {
                 UserVm dcVM = null;
                 try {
                     dcVM = provisionDesktopClusterDcControlVm(network);
