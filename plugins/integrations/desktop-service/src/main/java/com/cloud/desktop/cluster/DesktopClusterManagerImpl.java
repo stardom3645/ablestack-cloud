@@ -257,7 +257,7 @@ public class DesktopClusterManagerImpl extends ManagerBase implements DesktopClu
                     UserVmResponse cvmResponse = ApiDBUtils.newUserVmResponse(respView, responseName, userVM, EnumSet.of(VMDetails.nics), caller);
                     controlVmResponses.add(cvmResponse);
                     if("worksvm".equals(vmMapVO.getType())) {
-                        response.setWorksVmIp(userVM.getIpAddress());
+                        response.setWorksVmIp(userVM.getPublicIpAddress());
                     }
                     if("dcvm".equals(vmMapVO.getType())) {
                         response.setDcVmIp(userVM.getIpAddress());
