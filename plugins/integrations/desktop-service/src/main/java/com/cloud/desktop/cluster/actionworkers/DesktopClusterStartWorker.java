@@ -457,7 +457,7 @@ public class DesktopClusterStartWorker extends DesktopClusterResourceModifierAct
     }
 
     public boolean callApi(String sambaIp) throws InterruptedException {
-        Thread.sleep(30000);
+        Thread.sleep(180000);
         HttpURLConnection conn = null;
         try {
             URL url = new URL("http://"+sambaIp+":9017/api/v1/version");
@@ -466,6 +466,7 @@ public class DesktopClusterStartWorker extends DesktopClusterResourceModifierAct
             conn.setRequestProperty("Content-Type", "application/json");
             conn.setRequestProperty("Connection", "keep-alive");
             conn.setConnectTimeout(600000);
+            conn.setReadTimeout(600000);
             conn.setDoOutput(true);
             int responseCode = conn.getResponseCode();
             if (responseCode == 200) {
