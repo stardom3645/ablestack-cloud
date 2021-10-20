@@ -271,7 +271,7 @@ public class DesktopClusterActionWorker {
                 return null;
             }
             for (IpAddress address : addresses) {
-                if (!address.isSourceNat()) {
+                if (!address.isSourceNat() && address.getVmIp() == null) {
                     return address;
                 }
             }
