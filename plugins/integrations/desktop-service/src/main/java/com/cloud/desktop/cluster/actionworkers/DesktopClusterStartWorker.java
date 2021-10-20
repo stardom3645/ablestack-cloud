@@ -346,7 +346,7 @@ public class DesktopClusterStartWorker extends DesktopClusterResourceModifierAct
         return serverInfo;
     }
 
-    private void setupDesktopClusterNetworkRules(Network network, UserVm worksVm, IpAddress publicIp) throws ManagementServerException {
+    private boolean setupDesktopClusterNetworkRules(Network network, UserVm worksVm, IpAddress publicIp) throws ManagementServerException {
         try {
             IPAddressVO ipVO = ipAddressDao.findByIpAndNetworkId(network.getId(), publicIp.getAddress().addr());
             boolean result = rulesService.enableStaticNat(ipVO.getId(), worksVm.getId(), network.getId(), null);
@@ -360,10 +360,12 @@ public class DesktopClusterStartWorker extends DesktopClusterResourceModifierAct
                 } catch (NoSuchFieldException | IllegalAccessException | ResourceUnavailableException | NetworkRuleConflictException e) {
                     throw new ManagementServerException(String.format("Failed to provision firewall rules for API access for the Desktop cluster : %s", desktopCluster.getName()), e);
                 }
+                return true;
             }
         } catch (NetworkRuleConflictException | ResourceUnavailableException e) {
             throw new ManagementServerException(String.format("Failed to provision enable Static Nat for the Desktop cluster : %s", desktopCluster.getName()), e);
         }
+        return false;
     }
 
     public boolean startDesktopClusterOnCreate() {
@@ -398,24 +400,31 @@ public class DesktopClusterStartWorker extends DesktopClusterResourceModifierAct
         }
         clusterVMs.add(worksVM);
         if (worksVM.getState().equals(VirtualMachine.State.Running)) {
+            boolean setup = false;
             try {
-                setupDesktopClusterNetworkRules(network, worksVM, publicIpAddress);
+                setup = setupDesktopClusterNetworkRules(network, worksVM, publicIpAddress);
             } catch (ManagementServerException e) {
                 logTransitStateAndThrow(Level.ERROR, String.format("Failed to setup Desktop cluster : %s, unable to setup network rules", desktopCluster.getName()), desktopCluster.getId(), DesktopCluster.Event.CreateFailed, e);
             }
-            if (callApi(publicIpAddress.getAddress().addr())) {
-                UserVm dcVM = null;
+            if (setup) {
                 try {
-                    dcVM = provisionDesktopClusterDcControlVm(network);
-                } catch (CloudRuntimeException | ManagementServerException | ResourceUnavailableException | InsufficientCapacityException e) {
-                    logTransitStateAndThrow(Level.ERROR, String.format("Provisioning the DC Control VM failed in the desktop cluster : %s, %s", desktopCluster.getName(), e), desktopCluster.getId(), DesktopCluster.Event.CreateFailed, e);
+                    if (callApi(publicIpAddress.getAddress().addr())) {
+                        UserVm dcVM = null;
+                        try {
+                            dcVM = provisionDesktopClusterDcControlVm(network);
+                        } catch (CloudRuntimeException | ManagementServerException | ResourceUnavailableException | InsufficientCapacityException e) {
+                            logTransitStateAndThrow(Level.ERROR, String.format("Provisioning the DC Control VM failed in the desktop cluster : %s, %s", desktopCluster.getName(), e), desktopCluster.getId(), DesktopCluster.Event.CreateFailed, e);
+                        }
+                        clusterVMs.add(dcVM);
+                        if (LOGGER.isInfoEnabled()) {
+                            LOGGER.info(String.format("Desktop cluster : %s Control VMs successfully provisioned", desktopCluster.getName()));
+                        }
+                        stateTransitTo(desktopCluster.getId(), DesktopCluster.Event.OperationSucceeded);
+                        return true;
+                    }
+                } catch (InterruptedException e) {
+                    //
                 }
-                clusterVMs.add(dcVM);
-                if (LOGGER.isInfoEnabled()) {
-                    LOGGER.info(String.format("Desktop cluster : %s Control VMs successfully provisioned", desktopCluster.getName()));
-                }
-                stateTransitTo(desktopCluster.getId(), DesktopCluster.Event.OperationSucceeded);
-                return true;
             }
         }
         return false;
@@ -447,7 +456,8 @@ public class DesktopClusterStartWorker extends DesktopClusterResourceModifierAct
         return true;
     }
 
-    public boolean callApi(String sambaIp){
+    public boolean callApi(String sambaIp) throws InterruptedException {
+        Thread.sleep(30000);
         HttpURLConnection conn = null;
         try {
             URL url = new URL("http://"+sambaIp+":9017/api/v1/version");
