@@ -348,19 +348,22 @@ public class DesktopClusterStartWorker extends DesktopClusterResourceModifierAct
 
     private boolean setupDesktopClusterNetworkRules(Network network, UserVm worksVm, IpAddress publicIp) throws ManagementServerException {
         try {
+            boolean firewall = false;
             IPAddressVO ipVO = ipAddressDao.findByIpAndNetworkId(network.getId(), publicIp.getAddress().addr());
             boolean result = rulesService.enableStaticNat(ipVO.getId(), worksVm.getId(), network.getId(), null);
             if (result) {
                 try {
-                    provisionFirewallRules(publicIp, owner, 0, 0);
+                    firewall = provisionFirewallRules(publicIp, owner, 0, 0);
                     if (LOGGER.isInfoEnabled()) {
                         LOGGER.info(String.format("Provisioned firewall rule to open up on %s for Desktop cluster ID: %s",
                                 publicIp, desktopCluster.getUuid()));
                     }
+                    if (firewall) {
+                        return true;
+                    }
                 } catch (NoSuchFieldException | IllegalAccessException | ResourceUnavailableException | NetworkRuleConflictException e) {
                     throw new ManagementServerException(String.format("Failed to provision firewall rules for API access for the Desktop cluster : %s", desktopCluster.getName()), e);
                 }
-                return true;
             }
         } catch (NetworkRuleConflictException | ResourceUnavailableException e) {
             throw new ManagementServerException(String.format("Failed to provision enable Static Nat for the Desktop cluster : %s", desktopCluster.getName()), e);
@@ -406,6 +409,7 @@ public class DesktopClusterStartWorker extends DesktopClusterResourceModifierAct
             } catch (ManagementServerException e) {
                 logTransitStateAndThrow(Level.ERROR, String.format("Failed to setup Desktop cluster : %s, unable to setup network rules", desktopCluster.getName()), desktopCluster.getId(), DesktopCluster.Event.CreateFailed, e);
             }
+            LOGGER.info("setup:"+setup);
             if (setup) {
                 try {
                     if (callApi(publicIpAddress.getAddress().addr())) {
@@ -457,6 +461,7 @@ public class DesktopClusterStartWorker extends DesktopClusterResourceModifierAct
     }
 
     public boolean callApi(String sambaIp) throws InterruptedException {
+        LOGGER.info("callApi Start");
         Thread.sleep(180000);
         HttpURLConnection conn = null;
         try {

@@ -54,6 +54,7 @@ import com.cloud.network.dao.LoadBalancerDao;
 import com.cloud.network.dao.IPAddressDao;
 import com.cloud.network.firewall.FirewallService;
 import com.cloud.network.lb.LoadBalancingRulesService;
+import com.cloud.network.rules.FirewallRule;
 import com.cloud.network.rules.PortForwardingRuleVO;
 import com.cloud.network.rules.RulesService;
 import com.cloud.network.rules.dao.PortForwardingRulesDao;
@@ -237,7 +238,7 @@ public class DesktopClusterResourceModifierActionWorker extends DesktopClusterAc
         }
     }
 
-    protected void provisionFirewallRules(final IpAddress publicIp, final Account account, int startPort, int endPort) throws NoSuchFieldException,
+    protected boolean provisionFirewallRules(final IpAddress publicIp, final Account account, int startPort, int endPort) throws NoSuchFieldException,
             IllegalAccessException, ResourceUnavailableException, NetworkRuleConflictException {
         List<String> sourceCidrList = new ArrayList<String>();
         sourceCidrList.add("0.0.0.0/0");
@@ -265,7 +266,11 @@ public class DesktopClusterResourceModifierActionWorker extends DesktopClusterAc
         cidrField.setAccessible(true);
         cidrField.set(rule, sourceCidrList);
 
-        firewallService.createIngressFirewallRule(rule);
-        firewallService.applyIngressFwRules(publicIp.getId(), account);
+        boolean sccuess = false;
+        FirewallRule result = firewallService.createIngressFirewallRule(rule);
+        if (result != null) {
+            sccuess = firewallService.applyIngressFwRules(publicIp.getId(), account);
+        }
+        return sccuess;
     }
 }
