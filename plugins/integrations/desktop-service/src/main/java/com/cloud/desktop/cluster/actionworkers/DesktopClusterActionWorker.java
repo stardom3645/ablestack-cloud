@@ -276,7 +276,7 @@ public class DesktopClusterActionWorker {
                 }
             }
 
-            LOGGER.warn(String.format("No source NAT IP addresses found for network : %s, Desktop cluster : %s", network.getName(), desktopCluster.getName()));
+            LOGGER.warn(String.format("No found with Static NAT and Source NAT of false for network : %s, Desktop cluster : %s", network.getName(), desktopCluster.getName()));
             return null;
         }
         LOGGER.warn(String.format("Unable to retrieve server IP address for Desktop cluster : %s", desktopCluster.getName()));
