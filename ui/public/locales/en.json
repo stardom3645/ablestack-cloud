@@ -3549,6 +3549,7 @@
 "placeholder.url": "Input URL",
 "placeholder.ostype": "Select OS Type",
 "placeholder.template": "Select Template",
+"placeholder.mastertemplatetype": "Select a master template type.",
 "message.desktop.cluster.delete": "Are you sure you want to delete this cluster?",
 "message.desktop.controller.version.delete": "Are you sure you want to delete this Controller Template Version?",
 "message.desktop.master.veresion.delete": "Are you sure you want to delete this Master Template Version?",
