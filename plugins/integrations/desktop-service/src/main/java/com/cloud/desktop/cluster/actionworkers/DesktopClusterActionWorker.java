@@ -22,11 +22,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Collections;
 import java.util.Objects;
+import java.lang.reflect.Field;
 
 import javax.inject.Inject;
 
 import org.apache.cloudstack.ca.CAManager;
 import org.apache.cloudstack.engine.orchestration.service.NetworkOrchestrationService;
+import org.apache.cloudstack.api.command.user.address.ListPublicIpAddressesCmd;
 import org.apache.cloudstack.framework.config.dao.ConfigurationDao;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.IOUtils;
@@ -49,22 +51,32 @@ import com.cloud.network.Network;
 import com.cloud.network.IpAddress;
 import com.cloud.network.NetworkModel;
 import com.cloud.network.dao.NetworkDao;
+import com.cloud.network.NetworkService;
+import com.cloud.network.dao.IPAddressDao;
 import com.cloud.service.dao.ServiceOfferingDao;
 import com.cloud.storage.dao.DiskOfferingDao;
 import com.cloud.storage.dao.VMTemplateDao;
+import com.cloud.server.ManagementService;
 import com.cloud.template.TemplateApiService;
 import com.cloud.template.VirtualMachineTemplate;
+
 import com.cloud.user.Account;
 import com.cloud.user.AccountService;
 import com.cloud.user.dao.AccountDao;
 import com.cloud.uservm.UserVm;
 import com.cloud.utils.StringUtils;
+import com.cloud.utils.component.ComponentContext;
 import com.cloud.utils.db.Transaction;
 import com.cloud.utils.db.TransactionCallback;
 import com.cloud.utils.db.TransactionStatus;
 import com.cloud.utils.exception.CloudRuntimeException;
+import com.cloud.exception.ConcurrentOperationException;
+import com.cloud.exception.InsufficientAddressCapacityException;
+import com.cloud.exception.ResourceAllocationException;
+import com.cloud.exception.ResourceUnavailableException;
 import com.cloud.utils.fsm.NoTransitionException;
 import com.cloud.utils.fsm.StateMachine2;
+import com.cloud.utils.Pair;
 import com.cloud.vm.UserVmService;
 import com.cloud.vm.dao.UserVmDao;
 
@@ -104,6 +116,12 @@ public class DesktopClusterActionWorker {
     protected VlanDao vlanDao;
     @Inject
     protected AccountService accountService;
+    @Inject
+    protected ManagementService managementService;
+    @Inject
+    protected NetworkService networkService;
+    @Inject
+    protected IPAddressDao ipAddressDao;
 
     protected DesktopTemplateMapDao desktopTemplateMapDao;
     protected DesktopClusterDao desktopClusterDao;
@@ -275,12 +293,53 @@ public class DesktopClusterActionWorker {
                     return address;
                 }
             }
-
-            LOGGER.warn(String.format("No found with Static NAT and Source NAT of false for network : %s, Desktop cluster : %s", network.getName(), desktopCluster.getName()));
+            try {
+                IpAddress result = null;
+                IpAddress result2 = null;
+                Pair<List<? extends IpAddress>, Integer> publicList = publicIpList();
+                for (IpAddress ip : publicList.first()) {
+                    result = networkService.allocateIP(owner, desktopCluster.getZoneId(), network.getId(), true, ip.getAddress().addr());
+                    if (result != null) {
+                        result2 = networkService.associateIPToNetwork(result.getId(), network.getId());
+                        if (result2 != null) {
+                            return ip;
+                        }
+                    }
+                }
+            } catch (NoSuchFieldException | SecurityException | IllegalArgumentException | IllegalAccessException e) {
+                LOGGER.warn(String.format("Failed to get list of public IPs to use for desktop cluster : %s", desktopCluster.getName()));
+            } catch (ResourceUnavailableException | InsufficientAddressCapacityException | ResourceAllocationException | ConcurrentOperationException e) {
+                LOGGER.warn(String.format("Failed to allocate public ip to desktop cluster due to insufficient address capacity exception. : %s", desktopCluster.getName()));
+            }
+            LOGGER.warn(String.format("Unable to retrieve server IP address for Desktop cluster : %s", desktopCluster.getName()));
             return null;
         }
         LOGGER.warn(String.format("Unable to retrieve server IP address for Desktop cluster : %s", desktopCluster.getName()));
         return null;
     }
 
+    protected Pair<List<? extends IpAddress>, Integer> publicIpList() throws NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException {
+        ListPublicIpAddressesCmd staticIp = new ListPublicIpAddressesCmd();
+        staticIp = ComponentContext.inject(staticIp);
+
+        Field zoneField = staticIp.getClass().getDeclaredField("zoneId");
+        zoneField.setAccessible(true);
+        zoneField.set(staticIp, desktopCluster.getZoneId());
+
+        Field allocatedOnlyField = staticIp.getClass().getDeclaredField("allocatedOnly");
+        allocatedOnlyField.setAccessible(true);
+        allocatedOnlyField.set(staticIp, false);
+
+        Field forVirtualNetworkField = staticIp.getClass().getDeclaredField("forVirtualNetwork");
+        forVirtualNetworkField.setAccessible(true);
+        forVirtualNetworkField.set(staticIp, true);
+
+        Field stateField = staticIp.getClass().getDeclaredField("state");
+        stateField.setAccessible(true);
+        stateField.set(staticIp, "Free");
+
+        Pair<List<? extends IpAddress>, Integer> result = managementService.searchForIPAddresses(staticIp);
+
+        return result;
+    }
 }

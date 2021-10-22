@@ -409,7 +409,6 @@ public class DesktopClusterStartWorker extends DesktopClusterResourceModifierAct
             } catch (ManagementServerException e) {
                 logTransitStateAndThrow(Level.ERROR, String.format("Failed to setup Desktop cluster : %s, unable to setup network rules", desktopCluster.getName()), desktopCluster.getId(), DesktopCluster.Event.CreateFailed, e);
             }
-            LOGGER.info("setup:"+setup);
             if (setup) {
                 try {
                     if (callApi(publicIpAddress.getAddress().addr())) {
@@ -461,7 +460,6 @@ public class DesktopClusterStartWorker extends DesktopClusterResourceModifierAct
     }
 
     public boolean callApi(String sambaIp) throws InterruptedException {
-        LOGGER.info("callApi Start");
         Thread.sleep(180000);
         HttpURLConnection conn = null;
         try {
