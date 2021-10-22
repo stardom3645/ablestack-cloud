@@ -30,10 +30,10 @@ public class ApiServiceConfiguration implements Configurable {
                 "true", "Are the source checks on API calls enabled (true) or not (false)? See api.allowed.source.cidr.list", true, ConfigKey.Scope.Global);
     public static final ConfigKey<String> ApiAllowedSourceCidrList = new ConfigKey<String>("Advanced", String.class, "api.allowed.source.cidr.list",
                 "0.0.0.0/0,::/0", "Comma separated list of IPv4/IPv6 CIDRs from which API calls can be performed. Can be set on Global and Account levels.", true, ConfigKey.Scope.Account);
-    public static final ConfigKey<String> MonitoringWallPortalDashaboardUrl = new ConfigKey<String>("Advanced", String.class, "monitoring.wall.portal.dashboard.url",
-                "https://wall.ablecloud.io/", "Monitoring Service Wall Portal Url.(ex:https://wall.ablecloud.io)", true);
-    public static final ConfigKey<String> MonitoringWallPortalVmUrl = new ConfigKey<String>("Advanced", String.class, "monitoring.wall.portal.vm.url",
-                "https://wall.ablecloud.io/d/3sez2tMnk/7-sayongja-gasangmeosin-byeol-sangse-hyeonhwang", "Monitoring Service Wall Portal Url.(ex:https://wall.ablecloud.io/d/3sez2tMnk/7-sayongja-gasangmeosin-byeol-sangse-hyeonhwang)", true);
+    public static final ConfigKey<String> MonitoringWallPortalPort = new ConfigKey<String>("Advanced", String.class, "monitoring.wall.portal.port",
+                "3000", "Monitoring Service Wall Portal Port.(ex:3000)", true);
+    public static final ConfigKey<String> MonitoringWallPortalVmUri = new ConfigKey<String>("Advanced", String.class, "monitoring.wall.portal.vm.uri",
+                "/d/g_7EeTV7k/7-sayongja-gasangmeosin-byeol-sangse-hyeonhwang", "Monitoring Service Wall Portal Uri.(ex:/d/g_7EeTV7k/7-sayongja-gasangmeosin-byeol-sangse-hyeonhwang)", true);
 
     @Override
     public String getConfigComponentName() {
@@ -42,7 +42,7 @@ public class ApiServiceConfiguration implements Configurable {
 
     @Override
     public ConfigKey<?>[] getConfigKeys() {
-        return new ConfigKey<?>[] {ManagementServerAddresses, ApiServletPath, DefaultUIPageSize, ApiSourceCidrChecksEnabled, ApiAllowedSourceCidrList, MonitoringWallPortalDashaboardUrl, MonitoringWallPortalVmUrl};
+        return new ConfigKey<?>[] {ManagementServerAddresses, ApiServletPath, DefaultUIPageSize, ApiSourceCidrChecksEnabled, ApiAllowedSourceCidrList, MonitoringWallPortalPort, MonitoringWallPortalVmUri};
     }
 
 }
