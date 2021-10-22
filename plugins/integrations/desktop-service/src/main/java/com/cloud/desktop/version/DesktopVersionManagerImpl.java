@@ -21,6 +21,8 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
 import javax.inject.Inject;
 
 import org.apache.cloudstack.api.ApiConstants;
@@ -274,6 +276,14 @@ public class DesktopVersionManagerImpl extends ManagerBase implements DesktopVer
 
             //desktop_template_map 테이블에 DC template 매핑 데이터 추가
             desktopTemplateMapDao.persist(new DesktopTemplateMapVO(desktopControllerVersionVO.getId(), template.getId(), "dc"));
+
+            //dc 템플릿에 세팅 추가
+            Map<String, String> details = new HashMap<String, String>();
+            details.put("rootDiskController", "virtio");
+            template = templateDao.createForUpdate(template.getId());
+            template.setDetails(details);
+            templateDao.saveDetails(template);
+            templateDao.update(template.getId(), template);
 
             //vm_template 테이블에 works 템플릿 추가
             templateName = String.format("%s(Desktop Controller Works-Template)", versionName);
