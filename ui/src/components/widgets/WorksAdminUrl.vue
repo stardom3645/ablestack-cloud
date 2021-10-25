@@ -14,21 +14,29 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-package com.cloud.desktop.cluster.dao;
 
-import java.util.List;
-
-import com.cloud.desktop.cluster.DesktopCluster;
-import com.cloud.desktop.cluster.DesktopClusterVO;
-import com.cloud.utils.db.GenericDao;
-import com.cloud.utils.fsm.StateDao;
-
-public interface DesktopClusterDao extends GenericDao<DesktopClusterVO, Long>,
-        StateDao<DesktopCluster.State, DesktopCluster.Event, DesktopCluster> {
-
-    List<DesktopClusterVO> listByAccount(long accountId);
-    List<DesktopClusterVO> findDesktopClustersToGarbageCollect();
-    List<DesktopClusterVO> findDesktopClustersInState(DesktopCluster.State state);
-    List<DesktopClusterVO> listByNetworkId(long networkId);
-    List<DesktopClusterVO> listAllByDesktopVersion(long desktopVersionId);
+<template>
+  <a
+    v-if="['desktopcluster'].includes($route.meta.name) && 'listDesktopClusters' in $store.getters.apis"
+    :href="'http://'+resource.worksvmip+':'+$store.getters.features.desktopworksadminportalport"
+    target="_blank">
+    <a-button style="margin-left: 5px" shape="circle" type="" :size="size" :disabled="['Stopping', 'Stopped', 'Error', 'Destroyed', 'Destroying'].includes(resource.state)" >
+      <a-icon type="global" />
+    </a-button>
+  </a>
+</template>
+<script>
+export default {
+  name: 'WorksAdminUrl',
+  props: {
+    resource: {
+      type: Object,
+      required: true
+    },
+    size: {
+      type: String,
+      default: 'small'
+    }
+  }
 }
+</script>
