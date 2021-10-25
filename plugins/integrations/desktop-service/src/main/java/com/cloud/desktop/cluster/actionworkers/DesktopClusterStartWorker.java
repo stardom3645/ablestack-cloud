@@ -464,7 +464,6 @@ public class DesktopClusterStartWorker extends DesktopClusterResourceModifierAct
         int tryCount = 0;
         HttpURLConnection conn = null;
         while (tryCount < 10) {
-            LOGGER.info("tryCount:"+tryCount);
             Thread.sleep(60000);
             try {
                 URL url = new URL("http://"+sambaIp+":9017/api/v1/version");
@@ -481,7 +480,6 @@ public class DesktopClusterStartWorker extends DesktopClusterResourceModifierAct
                 }
             } catch (ConnectException e) {
                 tryCount++;
-                LOGGER.info("catch tryCount:"+tryCount);
                 if (tryCount > 8) {
                     logTransitStateAndThrow(Level.ERROR, String.format("DC Control VM could not be deployed because Works API call failed. : %s, %s", desktopCluster.getName(), e), desktopCluster.getId(), DesktopCluster.Event.CreateFailed, e);
                 }
