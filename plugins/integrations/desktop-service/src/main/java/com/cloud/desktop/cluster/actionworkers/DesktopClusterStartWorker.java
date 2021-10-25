@@ -20,6 +20,7 @@ package com.cloud.desktop.cluster.actionworkers;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
+import java.net.ConnectException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.io.IOException;
@@ -425,7 +426,7 @@ public class DesktopClusterStartWorker extends DesktopClusterResourceModifierAct
                         stateTransitTo(desktopCluster.getId(), DesktopCluster.Event.OperationSucceeded);
                         return true;
                     }
-                } catch (InterruptedException e) {
+                } catch (IOException | InterruptedException e) {
                     //
                 }
             }
@@ -459,24 +460,32 @@ public class DesktopClusterStartWorker extends DesktopClusterResourceModifierAct
         return true;
     }
 
-    public boolean callApi(String sambaIp) throws InterruptedException {
-        Thread.sleep(180000);
+    public boolean callApi(String sambaIp) throws InterruptedException, IOException {
+        int tryCount = 0;
         HttpURLConnection conn = null;
-        try {
-            URL url = new URL("http://"+sambaIp+":9017/api/v1/version");
-            conn = (HttpURLConnection) url.openConnection();
-            conn.setRequestMethod("GET");
-            conn.setRequestProperty("Content-Type", "application/json");
-            conn.setRequestProperty("Connection", "keep-alive");
-            conn.setConnectTimeout(600000);
-            conn.setReadTimeout(600000);
-            conn.setDoOutput(true);
-            int responseCode = conn.getResponseCode();
-            if (responseCode == 200) {
-                return true;
+        while (tryCount < 10) {
+            LOGGER.info("tryCount:"+tryCount);
+            Thread.sleep(60000);
+            try {
+                URL url = new URL("http://"+sambaIp+":9017/api/v1/version");
+                conn = (HttpURLConnection) url.openConnection();
+                conn.setRequestMethod("GET");
+                conn.setRequestProperty("Content-Type", "application/json");
+                conn.setRequestProperty("Connection", "keep-alive");
+                conn.setConnectTimeout(180000);
+                conn.setReadTimeout(180000);
+                conn.setDoOutput(true);
+                int responseCode = conn.getResponseCode();
+                if (responseCode == 200) {
+                    return true;
+                }
+            } catch (ConnectException e) {
+                tryCount++;
+                LOGGER.info("catch tryCount:"+tryCount);
+                if (tryCount > 8) {
+                    logTransitStateAndThrow(Level.ERROR, String.format("DC Control VM could not be deployed because Works API call failed. : %s, %s", desktopCluster.getName(), e), desktopCluster.getId(), DesktopCluster.Event.CreateFailed, e);
+                }
             }
-        } catch (IOException e) {
-            logTransitStateAndThrow(Level.ERROR, String.format("DC Control VM could not be deployed because Works API call failed. : %s, %s", desktopCluster.getName(), e), desktopCluster.getId(), DesktopCluster.Event.CreateFailed, e);
         }
         return false;
     }
