@@ -3926,8 +3926,9 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
 
         final boolean desktopServiceEnabled = Boolean.parseBoolean(_configDao.getValue("cloud.desktop.service.enabled"));
         final String desktopWorksPortalPort = _configDao.getValue("cloud.desktop.service.worksportalport");
-        final String wallPortalDashboardUrl = _configDao.getValue("monitoring.wall.portal.dashboard.url");
-        final String wallPortalVmUrl = _configDao.getValue("monitoring.wall.portal.vm.url");
+        final String wallPortalPort = _configDao.getValue("monitoring.wall.portal.port");
+        final String wallPortalVmUri = _configDao.getValue("monitoring.wall.portal.vm.uri");
+        final String host = _configDao.getValue("host");
 
         // check if region-wide secondary storage is used
         boolean regionSecondaryEnabled = false;
@@ -3954,8 +3955,9 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
         capabilities.put("kubernetesClusterExperimentalFeaturesEnabled", kubernetesClusterExperimentalFeaturesEnabled);
         capabilities.put("desktopServiceEnabled", desktopServiceEnabled);
         capabilities.put("desktopWorksPortalPort", desktopWorksPortalPort);
-        capabilities.put("wallPortalDashboardUrl", wallPortalDashboardUrl);
-        capabilities.put("wallPortalVmUrl", wallPortalVmUrl);
+        capabilities.put("wallPortalPort", wallPortalPort);
+        capabilities.put("wallPortalVmUri", wallPortalVmUri);
+        capabilities.put("host", host);
         capabilities.put(ApiServiceConfiguration.DefaultUIPageSize.key(), ApiServiceConfiguration.DefaultUIPageSize.value());
 
         if (apiLimitEnabled) {
