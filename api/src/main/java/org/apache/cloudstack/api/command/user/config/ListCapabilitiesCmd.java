@@ -65,10 +65,10 @@ public class ListCapabilitiesCmd extends BaseCmd {
         response.setKubernetesServiceEnabled((Boolean)capabilities.get("kubernetesServiceEnabled"));
         response.setKubernetesClusterExperimentalFeaturesEnabled((Boolean)capabilities.get("kubernetesClusterExperimentalFeaturesEnabled"));
         response.setDesktopServiceEnabled((Boolean)capabilities.get("desktopServiceEnabled"));
-        response.setDesktopWorksAdminPortalPort((String)capabilities.get("desktopWorksAdminPortalPort"));
-        response.setDesktopWorksUserPortalPort((String)capabilities.get("desktopWorksUserPortalPort"));
-        response.setWallPortalDashboardUrl((String)capabilities.get("wallPortalDashboardUrl"));
-        response.setWallPortalVmUrl((String)capabilities.get("wallPortalVmUrl"));
+        response.setDesktopWorksPortalPort((String)capabilities.get("desktopWorksPortalPort"));
+        response.setWallPortalPort((String)capabilities.get("wallPortalPort"));
+        response.setWallPortalVmUri((String)capabilities.get("wallPortalVmUri"));
+        response.setHost((String)capabilities.get("host"));
 
         if (capabilities.containsKey("apiLimitInterval")) {
             response.setApiLimitInterval((Integer)capabilities.get("apiLimitInterval"));
