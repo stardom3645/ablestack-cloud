@@ -1036,7 +1036,7 @@ public class StatsCollector extends ManagerBase implements ComponentMethodInterc
                                     s_logger.warn("Not setting capacity bytes, received " + ((StorageStats)answer).getCapacityBytes()  + " capacity for pool ID " + poolId);
                                 }
                             }
-                            if (pool.getUsedBytes() != ((StorageStats)answer).getByteUsed() && pool.getStorageProviderName().equalsIgnoreCase(DataStoreProvider.DEFAULT_PRIMARY)) {
+                            if (pool.getUsedBytes() != ((StorageStats)answer).getByteUsed() && (pool.getStorageProviderName().equalsIgnoreCase(DataStoreProvider.DEFAULT_PRIMARY) || _storageManager.canPoolProvideStorageStats(pool))) {
                                 pool.setUsedBytes(((StorageStats) answer).getByteUsed());
                                 poolNeedsUpdating = true;
                             }
@@ -1056,7 +1056,6 @@ public class StatsCollector extends ManagerBase implements ComponentMethodInterc
                 s_logger.error("Error trying to retrieve storage stats", t);
             }
         }
-
     }
 
     class AutoScaleMonitor extends ManagedContextRunnable {
