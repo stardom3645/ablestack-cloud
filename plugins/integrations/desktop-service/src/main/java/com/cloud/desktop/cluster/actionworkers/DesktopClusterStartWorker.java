@@ -65,6 +65,7 @@ import com.cloud.desktop.version.DesktopControllerVersion;
 import com.cloud.vm.ReservationContext;
 import com.cloud.vm.ReservationContextImpl;
 import com.cloud.vm.VirtualMachine;
+import com.cloud.api.query.vo.UserAccountJoinVO;
 import com.google.common.base.Strings;
 
 public class DesktopClusterStartWorker extends DesktopClusterResourceModifierActionWorker {
@@ -106,12 +107,13 @@ public class DesktopClusterStartWorker extends DesktopClusterResourceModifierAct
         final String zoneUuid = "{{ zone_id }}";
         final String networkId = "{{ network_id }}";
         final String accountName = "{{ account_name }}";
-        final String accountUuid = "{{ account_uuid }}";
+        final String domainUuid = "{{ domain_uuid }}";
         final String apiKey = "{{ api_key }}";
         final String secretKey = "{{ secret_key }}";
         final String moldIp = "{{ mold_ip }}";
         final String moldPort = "{{ mold_port }}";
         final String moldProtocol = "{{ mold_protocol }}";
+        List<UserAccountJoinVO> domain = userAccountJoinDao.searchByAccountId(owner.getId());
         desktopClusterWorksConfig = desktopClusterWorksConfig.replace(clusterName, desktopCluster.getName());
         desktopClusterWorksConfig = desktopClusterWorksConfig.replace(domainName, desktopCluster.getAdDomainName());
         desktopClusterWorksConfig = desktopClusterWorksConfig.replace(worksIp, desktopCluster.getWorksIp());
@@ -119,7 +121,7 @@ public class DesktopClusterStartWorker extends DesktopClusterResourceModifierAct
         desktopClusterWorksConfig = desktopClusterWorksConfig.replace(zoneUuid, zone.getUuid());
         desktopClusterWorksConfig = desktopClusterWorksConfig.replace(networkId, Long.toString(desktopCluster.getNetworkId()));
         desktopClusterWorksConfig = desktopClusterWorksConfig.replace(accountName, owner.getAccountName());
-        desktopClusterWorksConfig = desktopClusterWorksConfig.replace(accountUuid, owner.getUuid());
+        desktopClusterWorksConfig = desktopClusterWorksConfig.replace(domainUuid, domain.get(0).getDomainUuid());
         desktopClusterWorksConfig = desktopClusterWorksConfig.replace(apiKey, keys[0]);
         desktopClusterWorksConfig = desktopClusterWorksConfig.replace(secretKey, keys[1]);
         desktopClusterWorksConfig = desktopClusterWorksConfig.replace(moldIp, managementIp);
