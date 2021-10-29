@@ -111,15 +111,19 @@ public interface DesktopCluster extends ControlledEntity, com.cloud.utils.fsm.St
 
     long getId();
     String getName();
-    String getPassword();
+    // String getPassword();
     String getDescription();
     long getZoneId();
     long getDesktopVersionId();
     long getServiceOfferingId();
     String getAdDomainName();
     long getNetworkId();
+    String getAccessType();
     long getDomainId();
     long getAccountId();
+    boolean isCheckForGc();
+    String getDcIp();
+    String getWorksIp();
     @Override
     State getState();
     Date getCreated();

@@ -3925,7 +3925,8 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
         final boolean kubernetesClusterExperimentalFeaturesEnabled = Boolean.parseBoolean(_configDao.getValue("cloud.kubernetes.cluster.experimental.features.enabled"));
 
         final boolean desktopServiceEnabled = Boolean.parseBoolean(_configDao.getValue("cloud.desktop.service.enabled"));
-        final String desktopWorksPortalPort = _configDao.getValue("cloud.desktop.service.worksportalport");
+        final String desktopWorksAdminPortalPort = _configDao.getValue("cloud.desktop.service.works.adminportal.port");
+        final String desktopWorksUserPortalPort = _configDao.getValue("cloud.desktop.service.works.userportal.port");
         final String wallPortalPort = _configDao.getValue("monitoring.wall.portal.port");
         final String wallPortalVmUri = _configDao.getValue("monitoring.wall.portal.vm.uri");
         final String host = _configDao.getValue("host");
@@ -3954,7 +3955,8 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
         capabilities.put("kubernetesServiceEnabled", kubernetesServiceEnabled);
         capabilities.put("kubernetesClusterExperimentalFeaturesEnabled", kubernetesClusterExperimentalFeaturesEnabled);
         capabilities.put("desktopServiceEnabled", desktopServiceEnabled);
-        capabilities.put("desktopWorksPortalPort", desktopWorksPortalPort);
+        capabilities.put("desktopWorksAdminPortalPort", desktopWorksAdminPortalPort);
+        capabilities.put("desktopWorksUserPortalPort", desktopWorksUserPortalPort);
         capabilities.put("wallPortalPort", wallPortalPort);
         capabilities.put("wallPortalVmUri", wallPortalVmUri);
         capabilities.put("host", host);

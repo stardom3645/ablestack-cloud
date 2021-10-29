@@ -16,6 +16,7 @@
 // under the License.
 package com.cloud.desktop.cluster;
 
+import org.apache.cloudstack.api.command.user.desktop.cluster.CreateDesktopClusterCmd;
 import org.apache.cloudstack.api.command.user.desktop.cluster.AddDesktopClusterIpRangeCmd;
 import org.apache.cloudstack.api.command.user.desktop.cluster.DeleteDesktopClusterIpRangeCmd;
 import org.apache.cloudstack.api.command.user.desktop.cluster.ListDesktopClusterCmd;
@@ -37,19 +38,28 @@ public interface DesktopClusterService extends PluggableService, Configurable {
             "Indicates whether Desktop Service plugin is enabled or not. Management server restart needed on change",
             false);
 
-    static final ConfigKey<String> DesktopWorksPortalPort = new ConfigKey<String>("Advanced", String.class,
-            "cloud.desktop.service.worksportalport",
-            "50000",
-            "Desktop Service Works Portal Port.(ex:50000",
+    static final ConfigKey<String> DesktopWorksAdminPortalPort = new ConfigKey<String>("Advanced", String.class,
+            "cloud.desktop.service.works.adminportal.port",
+            "8082",
+            "Desktop Service Works Admin Portal Port.(ex:8082)",
+            false);
+    static final ConfigKey<String> DesktopWorksUserPortalPort = new ConfigKey<String>("Advanced", String.class,
+            "cloud.desktop.service.works.userportal.port",
+            "8080",
+            "Desktop Service Works User Portal Port.(ex:8080)",
             false);
 
     DesktopCluster findById(final Long id);
 
+    DesktopCluster createDesktopCluster(CreateDesktopClusterCmd cmd) throws CloudRuntimeException;
+    boolean startDesktopCluster(long desktopClusterId, boolean onCreate) throws CloudRuntimeException;
+    boolean stopDesktopCluster(long desktopClusterId) throws CloudRuntimeException;
+    boolean deleteDesktopCluster(Long desktopClusterId) throws CloudRuntimeException;
     ListResponse<DesktopClusterResponse> listDesktopCluster(ListDesktopClusterCmd cmd);
     ListResponse<DesktopClusterIpRangeResponse> listDesktopClusterIpRanges(ListDesktopClusterIpRangeCmd cmd);
     DesktopClusterIpRange addDesktopClusterIpRange(AddDesktopClusterIpRangeCmd cmd);
     boolean deleteDesktopClusterIpRange(DeleteDesktopClusterIpRangeCmd cmd) throws CloudRuntimeException;
 
     DesktopClusterResponse createDesktopClusterResponse(long desktopClusterId);
-    DesktopClusterIpRangeResponse createDesktopClusterIpRangeResponse(long ipRangeId);
+    DesktopClusterIpRangeResponse addDesktopClusterIpRangeResponse(long ipRangeId);
 }

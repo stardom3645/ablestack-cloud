@@ -48,8 +48,9 @@ public class DesktopClusterVO implements DesktopCluster {
     @Column(name = "description")
     private String description;
 
-    @Column(name = "password")
-    private String password;
+    // @Encrypt
+    // @Column(name = "password")
+    // private String password;
 
     @Column(name = "zone_id")
     private long zoneId;
@@ -66,6 +67,9 @@ public class DesktopClusterVO implements DesktopCluster {
     @Column(name = "network_id")
     private long networkId;
 
+    @Column(name = "access_type")
+    private String accessType;
+
     @Column(name = "domain_id")
     private long domainId;
 
@@ -75,11 +79,20 @@ public class DesktopClusterVO implements DesktopCluster {
     @Column(name = "state")
     private State  state;
 
+    @Column(name = "dc_ip")
+    private String  dcIp;
+
+    @Column(name = "works_ip")
+    private String  worksIp;
+
     @Column(name = GenericDao.CREATED_COLUMN)
     private Date created;
 
     @Column(name = GenericDao.REMOVED_COLUMN)
     private Date removed;
+
+    @Column(name = "gc")
+    private boolean checkForGc;
 
     @Override
     public long getId() {
@@ -117,14 +130,14 @@ public class DesktopClusterVO implements DesktopCluster {
         this.description = description;
     }
 
-    @Override
-    public String getPassword() {
-        return password;
-    }
+    // @Override
+    // public String getPassword() {
+    //     return password;
+    // }
 
-    public void setPassword(String password) {
-        this.password = password;
-    }
+    // public void setPassword(String password) {
+    //     this.password = password;
+    // }
 
     @Override
     public long getZoneId() {
@@ -172,6 +185,15 @@ public class DesktopClusterVO implements DesktopCluster {
     }
 
     @Override
+    public String getAccessType() {
+        return accessType;
+    }
+
+    public void setAccessType(String accessType) {
+        this.accessType = accessType;
+    }
+
+    @Override
     public long getDomainId() {
         return domainId;
     }
@@ -199,6 +221,24 @@ public class DesktopClusterVO implements DesktopCluster {
     }
 
     @Override
+    public String getDcIp() {
+        return dcIp;
+    }
+
+    public void setDcIp(String dcIp) {
+        this.dcIp = dcIp;
+    }
+
+    @Override
+    public String getWorksIp() {
+        return worksIp;
+    }
+
+    public void setWorksIp(String worksIp) {
+        this.worksIp = worksIp;
+    }
+
+    @Override
     public boolean isDisplay() {
         return true;
     }
@@ -210,6 +250,15 @@ public class DesktopClusterVO implements DesktopCluster {
     }
 
     @Override
+    public boolean isCheckForGc() {
+        return checkForGc;
+    }
+
+    public void setCheckForGc(boolean check) {
+        checkForGc = check;
+    }
+
+    @Override
     public Date getCreated() {
         return created;
     }
@@ -218,19 +267,24 @@ public class DesktopClusterVO implements DesktopCluster {
         this.uuid = UUID.randomUUID().toString();
     }
 
-    public DesktopClusterVO(String name, String description, long zoneId, long desktopVersionId, long serviceOfferingId, String adDomainName,
-                               long networkId, long domainId, long accountId, State state) {
+    public DesktopClusterVO(String name, String description, long zoneId, long desktopVersionId, long serviceOfferingId,
+                                String adDomainName, long networkId, String accessType, long domainId, long accountId, State state, String dcIp, String worksIp) {
         this.uuid = UUID.randomUUID().toString();
         this.name = name;
         this.description = description;
+        // this.password = password;
         this.zoneId = zoneId;
         this.desktopVersionId = desktopVersionId;
         this.serviceOfferingId = serviceOfferingId;
         this.adDomainName = adDomainName;
         this.networkId = networkId;
+        this.accessType = accessType;
         this.domainId = domainId;
         this.accountId = accountId;
         this.state = state;
+        this.dcIp = dcIp;
+        this.worksIp = worksIp;
+        this.checkForGc = false;
     }
 
     @Override

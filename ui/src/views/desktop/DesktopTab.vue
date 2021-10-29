@@ -306,6 +306,12 @@ export default {
     this.apiParams = this.$getApiParams('addDesktopClusterIpRanges')
   },
   created () {
+    const userInfo = this.$store.getters.userInfo
+    if (!['Admin'].includes(userInfo.roletype) &&
+      (userInfo.account !== this.resource.account || userInfo.domain !== this.resource.domain)) {
+      this.desktopVmColumns = this.desktopVmColumns.filter(col => { return col.dataIndex !== 'hostname' })
+      this.controlVmColumns = this.controlVmColumns.filter(col => { return col.dataIndex !== 'hostname' })
+    }
     this.vm = this.resource
     this.fetchData()
   },
