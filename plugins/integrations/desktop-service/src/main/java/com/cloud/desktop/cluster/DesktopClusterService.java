@@ -40,8 +40,8 @@ public interface DesktopClusterService extends PluggableService, Configurable {
 
     static final ConfigKey<String> DesktopWorksAdminPortalPort = new ConfigKey<String>("Advanced", String.class,
             "cloud.desktop.service.works.adminportal.port",
-            "8082",
-            "Desktop Service Works Admin Portal Port.(ex:8082)",
+            "8081",
+            "Desktop Service Works Admin Portal Port.(ex:8081)",
             false);
     static final ConfigKey<String> DesktopWorksUserPortalPort = new ConfigKey<String>("Advanced", String.class,
             "cloud.desktop.service.works.userportal.port",
