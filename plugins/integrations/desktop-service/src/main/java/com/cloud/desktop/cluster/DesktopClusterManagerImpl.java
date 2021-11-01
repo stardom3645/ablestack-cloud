@@ -73,7 +73,6 @@ import com.cloud.network.Network;
 import com.cloud.network.Network.GuestType;
 import com.cloud.network.NetworkService;
 import com.cloud.network.dao.NetworkDao;
-import com.cloud.network.dao.IPAddressVO;
 import com.cloud.network.dao.IPAddressDao;
 import com.cloud.network.dao.NetworkVO;
 import com.cloud.service.dao.ServiceOfferingDao;
@@ -232,13 +231,6 @@ public class DesktopClusterManagerImpl extends ManagerBase implements DesktopClu
         response.setNetworkId(ntwk.getUuid());
         response.setAssociatedNetworkName(ntwk.getName());
         response.setNetworkType(ntwk.getGuestType());
-        if (ntwk.getGuestType() == Network.GuestType.Isolated) {
-            List<IPAddressVO> ipAddresses = ipAddressDao.listByAssociatedNetwork(ntwk.getId(), true);
-            if (ipAddresses != null && ipAddresses.size() == 1) {
-                response.setIpAddress(ipAddresses.get(0).getAddress().addr());
-                response.setIpAddressId(ipAddresses.get(0).getUuid());
-            }
-        }
 
         List<UserVmResponse> controlVmResponses = new ArrayList<UserVmResponse>();
         List<UserVmResponse> desktopVmResponses = new ArrayList<UserVmResponse>();
