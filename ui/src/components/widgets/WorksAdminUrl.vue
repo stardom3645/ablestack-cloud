@@ -18,7 +18,7 @@
 <template>
   <a
     v-if="['desktopcluster'].includes($route.meta.name) && 'listDesktopClusters' in $store.getters.apis"
-    :href="'http://'+resource.worksvmip+':'+$store.getters.features.desktopworksadminportalport"
+    :href="'http://'+resource.worksvmip+':'+$store.getters.features.desktopworksadminportalport+'/login'"
     target="_blank">
     <a-button style="margin-left: 5px" shape="circle" type="" :size="size" :disabled="['Stopping', 'Stopped', 'Error', 'Destroyed', 'Destroying'].includes(resource.state)" >
       <a-icon type="global" />
