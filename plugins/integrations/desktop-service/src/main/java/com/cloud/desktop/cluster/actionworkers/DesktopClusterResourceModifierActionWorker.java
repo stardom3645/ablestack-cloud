@@ -70,6 +70,7 @@ import com.cloud.utils.exception.ExecutionException;
 import com.cloud.vm.UserVmManager;
 import com.cloud.vm.VirtualMachine;
 import com.cloud.vm.dao.VMInstanceDao;
+import com.cloud.api.query.dao.UserAccountJoinDao;
 import com.google.common.base.Strings;
 
 import static com.cloud.utils.NumbersUtil.toHumanReadableSize;
@@ -108,6 +109,8 @@ public class DesktopClusterResourceModifierActionWorker extends DesktopClusterAc
     protected VolumeDao volumeDao;
     @Inject
     protected IPAddressDao ipAddressDao;
+    @Inject
+    protected UserAccountJoinDao userAccountJoinDao;
 
     protected DesktopClusterResourceModifierActionWorker(final DesktopCluster desktopCluster, final DesktopClusterManagerImpl clusterManager) {
         super(desktopCluster, clusterManager);

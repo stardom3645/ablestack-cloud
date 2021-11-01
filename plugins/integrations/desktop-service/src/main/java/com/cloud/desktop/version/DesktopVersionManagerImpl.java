@@ -178,6 +178,14 @@ public class DesktopVersionManagerImpl extends ManagerBase implements DesktopVer
         final String masterTemplateType = cmd.getMasterTemplateType();
         String templateName = "";
 
+        final List<DesktopMasterVersionVO> versions = desktopMasterVersionDao.listAll();
+        for (final DesktopMasterVersionVO version : versions) {
+            final String otherVersion = version.getVersion();
+            if (otherVersion.equals(masterVersion)) {
+                throw new InvalidParameterValueException("version '" + masterVersion + "' already exists.");
+            }
+        }
+
         if (compareVersions(masterVersion, MIN_DESKTOP_MASTER_VERSION) < 0) {
             throw new InvalidParameterValueException(String.format("New desktop master version cannot be added as %s is minimum version supported by Desktop Service", MIN_DESKTOP_CONTOLLER_VERSION));
         }
