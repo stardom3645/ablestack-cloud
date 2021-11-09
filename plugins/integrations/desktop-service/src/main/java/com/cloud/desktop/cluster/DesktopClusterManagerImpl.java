@@ -200,6 +200,7 @@ public class DesktopClusterManagerImpl extends ManagerBase implements DesktopClu
         response.setDescription(desktop.getDescription());
         response.setAdDomainName(desktop.getAdDomainName());
         response.setState(desktop.getState().toString());
+        response.setCreated(desktop.getCreated());
 
         DataCenterVO zone = ApiDBUtils.findZoneById(desktop.getZoneId());
         response.setZoneId(zone.getUuid());

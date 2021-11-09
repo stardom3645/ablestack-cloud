@@ -109,6 +109,7 @@ public class DesktopVersionManagerImpl extends ManagerBase implements DesktopVer
         response.setName(desktopControllerVersion.getName());
         response.setDescription(desktopControllerVersion.getDescription());
         response.setVersion(desktopControllerVersion.getVersion());
+        response.setCreated(desktopControllerVersion.getCreated());
         if (desktopControllerVersion.getState() != null) {
             response.setState(desktopControllerVersion.getState().toString());
         }
@@ -404,6 +405,7 @@ public class DesktopVersionManagerImpl extends ManagerBase implements DesktopVer
         response.setVersion(desktopMasterVersion.getVersion());
         response.setUploadType(desktopMasterVersion.getUploadType());
         response.setType(desktopMasterVersion.getType());
+        response.setCreated(desktopMasterVersion.getCreated());
         if (desktopMasterVersion.getState() != null) {
             response.setState(desktopMasterVersion.getState().toString());
         }

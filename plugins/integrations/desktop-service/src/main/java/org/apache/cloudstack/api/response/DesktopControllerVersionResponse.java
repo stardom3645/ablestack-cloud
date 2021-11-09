@@ -17,6 +17,7 @@
 
 package org.apache.cloudstack.api.response;
 
+import java.util.Date;
 import java.util.List;
 
 import org.apache.cloudstack.api.ApiConstants;
@@ -69,6 +70,10 @@ public class DesktopControllerVersionResponse extends BaseResponse {
     @SerializedName(ApiConstants.STATE)
     @Param(description = "the enabled or disabled state of the Desktop Controller Version")
     private String state;
+
+    @SerializedName(ApiConstants.CREATED)
+    @Param(description = "the date this template was created")
+    private Date created;
 
     public String getId() {
         return id;
@@ -148,5 +153,9 @@ public class DesktopControllerVersionResponse extends BaseResponse {
 
     public void setState(String state) {
         this.state = state;
+    }
+
+    public void setCreated(Date created) {
+        this.created = created;
     }
 }

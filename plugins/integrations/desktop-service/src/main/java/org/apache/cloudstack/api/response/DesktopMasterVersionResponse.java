@@ -17,6 +17,8 @@
 
 package org.apache.cloudstack.api.response;
 
+import java.util.Date;
+
 import org.apache.cloudstack.api.ApiConstants;
 import org.apache.cloudstack.api.BaseResponse;
 import org.apache.cloudstack.api.EntityReference;
@@ -79,6 +81,10 @@ public class DesktopMasterVersionResponse extends BaseResponse {
     @SerializedName(ApiConstants.DESKTOP_MASTER_TEMPLATE_TYPE)
     @Param(description = "the type of desktop master version")
     private String type;
+
+    @SerializedName(ApiConstants.CREATED)
+    @Param(description = "the date this template was created")
+    private Date created;
 
     public String getId() {
         return id;
@@ -182,5 +188,9 @@ public class DesktopMasterVersionResponse extends BaseResponse {
 
     public void setType(String type) {
         this.type = type;
+    }
+
+    public void setCreated(Date created) {
+        this.created = created;
     }
 }
