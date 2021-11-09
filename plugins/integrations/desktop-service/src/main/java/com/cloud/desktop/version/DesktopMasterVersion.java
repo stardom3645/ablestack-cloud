@@ -17,6 +17,7 @@
 
 package com.cloud.desktop.version;
 
+import java.util.Date;
 import org.apache.cloudstack.api.Identity;
 import org.apache.cloudstack.api.InternalIdentity;
 
@@ -39,4 +40,5 @@ public interface DesktopMasterVersion extends InternalIdentity, Identity {
     State getState();
     String getUploadType();
     String getType();
+    Date getCreated();
 }
