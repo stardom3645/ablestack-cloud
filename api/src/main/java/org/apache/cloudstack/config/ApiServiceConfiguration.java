@@ -33,7 +33,7 @@ public class ApiServiceConfiguration implements Configurable {
     public static final ConfigKey<String> MonitoringWallPortalPort = new ConfigKey<String>("Advanced", String.class, "monitoring.wall.portal.port",
                 "3000", "Monitoring Service Wall Portal Port.(ex:3000)", true);
     public static final ConfigKey<String> MonitoringWallPortalVmUri = new ConfigKey<String>("Advanced", String.class, "monitoring.wall.portal.vm.uri",
-                "/d/g_7EeTV7k/7-sayongja-gasangmeosin-byeol-sangse-hyeonhwang", "Monitoring Service Wall Portal Uri.(ex:/d/g_7EeTV7k/7-sayongja-gasangmeosin-byeol-sangse-hyeonhwang)", true);
+                "/d/ldwEyoKnz/gasangmeosin-sangse-hyeonhwang", "Monitoring Service Wall Portal Uri.(ex:/d/ldwEyoKnz/gasangmeosin-sangse-hyeonhwang)", true);
 
     @Override
     public String getConfigComponentName() {
