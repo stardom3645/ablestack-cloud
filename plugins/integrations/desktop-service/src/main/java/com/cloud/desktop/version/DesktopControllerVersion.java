@@ -17,6 +17,7 @@
 
 package com.cloud.desktop.version;
 
+import java.util.Date;
 import org.apache.cloudstack.api.Identity;
 import org.apache.cloudstack.api.InternalIdentity;
 
@@ -36,4 +37,5 @@ public interface DesktopControllerVersion extends InternalIdentity, Identity {
     String getVersion();
     Long getZoneId();
     State getState();
+    Date getCreated();
 }

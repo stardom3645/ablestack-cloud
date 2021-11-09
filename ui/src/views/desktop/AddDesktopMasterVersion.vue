@@ -62,7 +62,6 @@
               </span>
               <a-input
                 v-decorator="['masterversion', {
-                  initialValue: this.uploadType,
                   rules: [{ required: true, message: `${this.$t('message.error.required.input')}` }]
                 }]"
                 :placeholder="$t('placeholder.version')" />

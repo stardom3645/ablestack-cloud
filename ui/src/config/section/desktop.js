@@ -26,7 +26,7 @@ export default {
       docHelp: '',
       permission: ['listDesktopClusters'],
       columns: ['name', 'state', 'addomainname', 'account', 'zonename'],
-      details: ['name', 'id', 'description', 'controllerversion', 'account', 'addomainname', 'zonename', 'associatednetworkname', 'adminurl', 'userurl'],
+      details: ['name', 'id', 'description', 'controllerversion', 'account', 'addomainname', 'zonename', 'associatednetworkname', 'adminurl', 'userurl', 'created'],
       tabs: [{
         component: () => import('@/views/desktop/DesktopTab.vue')
       }],
@@ -85,7 +85,7 @@ export default {
       docHelp: '',
       permission: ['listDesktopControllerVersions'],
       columns: ['name', 'state', 'version', 'zonename'],
-      details: ['name', 'description', 'version', 'dctemplate', 'workstemplate'],
+      details: ['name', 'description', 'version', 'dctemplate', 'workstemplate', 'created'],
       actions: [
         {
           api: 'addDesktopControllerVersion',
@@ -120,7 +120,7 @@ export default {
       docHelp: '',
       permission: ['listDesktopMasterVersions'],
       columns: ['name', 'state', 'version', 'zonename', 'masteruploadtype', 'mastertemplatetype'],
-      details: ['name', 'version', 'description', 'templateostype', 'templatestate', 'masteruploadtype', 'templatename', 'mastertemplatetype'],
+      details: ['name', 'version', 'description', 'templateostype', 'templatestate', 'masteruploadtype', 'templatename', 'mastertemplatetype', 'created'],
       actions: [
         {
           api: 'addDesktopControllerVersion',

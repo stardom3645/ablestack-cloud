@@ -16,6 +16,7 @@
 // under the License.
 package org.apache.cloudstack.api.response;
 
+import java.util.Date;
 import java.util.List;
 
 import org.apache.cloudstack.api.ApiConstants;
@@ -129,6 +130,10 @@ public class DesktopClusterResponse extends BaseResponse implements ControlledEn
     @SerializedName(ApiConstants.IP_ADDRESS_ID)
     @Param(description = "Public IP Address ID of the cluster")
     private String ipAddressId;
+
+    @SerializedName(ApiConstants.CREATED)
+    @Param(description = "the date this template was created")
+    private Date created;
 
     public DesktopClusterResponse() {
     }
@@ -312,5 +317,9 @@ public class DesktopClusterResponse extends BaseResponse implements ControlledEn
 
     public void setDcVmIp(String dcVmIp) {
         this.dcVmIp = dcVmIp;
+    }
+
+    public void setCreated(Date created) {
+        this.created = created;
     }
 }
