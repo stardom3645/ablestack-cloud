@@ -8,9 +8,6 @@ $username = "${{ domain_name }}\administrator"
 $credential = New-Object System.Management.Automation.PSCredential($username,$password)
 echo Rename-Computer >> "c:\Works-DC\installed.txt"
 Rename-Computer -NewName $comname
-echo Add-Computer >> "c:\Works-DC\installed.txt"
-Add-Computer -DomainName {{ domain_name }}.local -Credential $credential -NewName $comname
-echo Add-Computer end>> "c:\Works-DC\installed.txt"
 $conf = '{  "ADusername": "Administrator",  "ADpassword": "Ablecloud1!",  "ADdomain": "{{ domain_name }}.local",  "ADserver": "{{ domain_name }}.local",  "ADport": 636,  "ADbasedn": "DC={{ domain_name }},DC=local",  "Silent": false,  "PolicyPATH": "./grouppolicy",  "PolicyLIST": "policylist.json",  "UpdatePolicy": true}'
 echo $conf| Out-File -Encoding ascii "c:\Works-DC\conf.json"
 echo $conf
