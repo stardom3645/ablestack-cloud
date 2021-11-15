@@ -28,6 +28,8 @@ import javax.inject.Inject;
 import org.apache.cloudstack.api.command.user.vm.StartVMCmd;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.cloudstack.api.command.user.firewall.CreateFirewallRuleCmd;
+import org.apache.cloudstack.api.command.user.firewall.CreateEgressFirewallRuleCmd;
+import org.apache.cloudstack.config.ApiServiceConfiguration;
 
 import com.cloud.capacity.CapacityManager;
 import com.cloud.dc.ClusterDetailsDao;
@@ -55,6 +57,8 @@ import com.cloud.network.dao.IPAddressDao;
 import com.cloud.network.firewall.FirewallService;
 import com.cloud.network.lb.LoadBalancingRulesService;
 import com.cloud.network.rules.FirewallRule;
+import com.cloud.network.rules.FirewallRule.TrafficType;
+import com.cloud.network.rules.FirewallRuleVO;
 import com.cloud.network.rules.PortForwardingRuleVO;
 import com.cloud.network.rules.RulesService;
 import com.cloud.network.rules.dao.PortForwardingRulesDao;
@@ -64,9 +68,14 @@ import com.cloud.storage.VolumeApiService;
 import com.cloud.storage.dao.VolumeDao;
 import com.cloud.user.Account;
 import com.cloud.uservm.UserVm;
+import com.cloud.utils.net.Ip;
 import com.cloud.utils.Pair;
 import com.cloud.utils.component.ComponentContext;
 import com.cloud.utils.exception.ExecutionException;
+import com.cloud.utils.db.Transaction;
+import com.cloud.utils.db.TransactionCallbackWithException;
+import com.cloud.utils.db.TransactionStatus;
+import com.cloud.vm.Nic;
 import com.cloud.vm.UserVmManager;
 import com.cloud.vm.VirtualMachine;
 import com.cloud.vm.dao.VMInstanceDao;
@@ -226,6 +235,20 @@ public class DesktopClusterResourceModifierActionWorker extends DesktopClusterAc
         return null;
     }
 
+    protected FirewallRule removeFirewallRule(final IpAddress publicIp) {
+        FirewallRule rule = null;
+        List<FirewallRuleVO> firewallRules = firewallRulesDao.listByIpAndPurposeAndNotRevoked(publicIp.getId(), FirewallRule.Purpose.Firewall);
+        for (FirewallRuleVO firewallRule : firewallRules) {
+            if (firewallRule.getSourcePortStart() == CLUSTER_USER_PORTAL_PORT &&
+                    firewallRule.getSourcePortEnd() == CLUSTER_ADMIN_PORTAL_PORT && firewallRule.getTrafficType() == TrafficType.Ingress) {
+                rule = firewallRule;
+                firewallService.revokeIngressFwRule(firewallRule.getId(), true);
+                break;
+            }
+        }
+        return rule;
+    }
+
     protected void removePortForwardingRules(final IpAddress publicIp, final Network network, final Account account, final List<Long> removedVMIds) throws ResourceUnavailableException {
         if (!CollectionUtils.isEmpty(removedVMIds)) {
             for (Long vmId : removedVMIds) {
@@ -257,13 +280,13 @@ public class DesktopClusterResourceModifierActionWorker extends DesktopClusterAc
         protocolField.setAccessible(true);
         protocolField.set(rule, "TCP");
 
-        // Field startPortField = rule.getClass().getDeclaredField("publicStartPort");
-        // startPortField.setAccessible(true);
-        // startPortField.set(rule, startPort);
+        Field startPortField = rule.getClass().getDeclaredField("publicStartPort");
+        startPortField.setAccessible(true);
+        startPortField.set(rule, startPort);
 
-        // Field endPortField = rule.getClass().getDeclaredField("publicEndPort");
-        // endPortField.setAccessible(true);
-        // endPortField.set(rule, endPort);
+        Field endPortField = rule.getClass().getDeclaredField("publicEndPort");
+        endPortField.setAccessible(true);
+        endPortField.set(rule, endPort);
 
         Field cidrField = rule.getClass().getDeclaredField("cidrlist");
         cidrField.setAccessible(true);
@@ -275,5 +298,96 @@ public class DesktopClusterResourceModifierActionWorker extends DesktopClusterAc
             sccuess = firewallService.applyIngressFwRules(publicIp.getId(), account);
         }
         return sccuess;
+    }
+
+    protected boolean provisionEgressFirewallRules(final Network network, final Account account, int startPort, int endPort) throws NoSuchFieldException,
+            IllegalAccessException, ResourceUnavailableException, NetworkRuleConflictException {
+        List<String> sourceCidrList = new ArrayList<String>();
+        String worksVmIp = desktopCluster.getWorksIp();
+        sourceCidrList.add(worksVmIp+"/32");
+
+        List<String> destinationCidrList = new ArrayList<String>();
+        String manageIp = ApiServiceConfiguration.ManagementServerAddresses.value();
+        destinationCidrList.add(manageIp+"/32");
+
+        CreateEgressFirewallRuleCmd rule = new CreateEgressFirewallRuleCmd();
+        rule = ComponentContext.inject(rule);
+
+        Field addressField = rule.getClass().getDeclaredField("networkId");
+        addressField.setAccessible(true);
+        addressField.set(rule, network.getId());
+
+        Field protocolField = rule.getClass().getDeclaredField("protocol");
+        protocolField.setAccessible(true);
+        protocolField.set(rule, "TCP");
+
+        Field startPortField = rule.getClass().getDeclaredField("publicStartPort");
+        startPortField.setAccessible(true);
+        startPortField.set(rule, startPort);
+
+        Field endPortField = rule.getClass().getDeclaredField("publicEndPort");
+        endPortField.setAccessible(true);
+        endPortField.set(rule, endPort);
+
+        Field cidrField = rule.getClass().getDeclaredField("cidrlist");
+        cidrField.setAccessible(true);
+        cidrField.set(rule, sourceCidrList);
+
+        Field destCidrField = rule.getClass().getDeclaredField("destCidrList");
+        destCidrField.setAccessible(true);
+        destCidrField.set(rule, destinationCidrList);
+
+        boolean sccuess = false;
+        FirewallRule result = firewallService.createEgressFirewallRule(rule);
+        if (result != null) {
+            sccuess = firewallService.applyEgressFirewallRules(result, account);
+        }
+        return sccuess;
+    }
+
+    protected boolean provisionPortForwardingRules(IpAddress publicIp, Network network, Account account, UserVm worksVM, int adminPort, int userPort) throws ResourceUnavailableException, NetworkRuleConflictException {
+        boolean result = false;
+        if (worksVM != null) {
+            final long publicIpId = publicIp.getId();
+            final long networkId = network.getId();
+            final long accountId = account.getId();
+            final long domainId = account.getDomainId();
+            long vmId = worksVM.getId();
+            Nic vmNic = networkModel.getNicInNetwork(vmId, networkId);
+            final Ip vmIp = new Ip(vmNic.getIPv4Address());
+            final long vmIdFinal = vmId;
+            PortForwardingRuleVO pfRule = Transaction.execute(new TransactionCallbackWithException<PortForwardingRuleVO, NetworkRuleConflictException>() {
+                @Override
+                public PortForwardingRuleVO doInTransaction(TransactionStatus status) throws NetworkRuleConflictException {
+                    PortForwardingRuleVO newRule =
+                        new PortForwardingRuleVO(null, publicIpId, adminPort, adminPort, vmIp, 8081, 8081, "tcp", networkId, accountId, domainId, vmIdFinal);
+                    newRule.setDisplay(true);
+                    newRule.setState(FirewallRule.State.Add);
+                    newRule = portForwardingRulesDao.persist(newRule);
+                    return newRule;
+                }
+            });
+            rulesService.applyPortForwardingRules(publicIp.getId(), account);
+            if (LOGGER.isInfoEnabled()) {
+                LOGGER.info(String.format("Provisioned web access port forwarding rule from port %d to 8081 on %s to the VM IP : %s in Desktop cluster : %s", adminPort, publicIp.getAddress().addr(), vmIp.toString(), desktopCluster.getName()));
+            }
+            PortForwardingRuleVO pfRule2 = Transaction.execute(new TransactionCallbackWithException<PortForwardingRuleVO, NetworkRuleConflictException>() {
+                @Override
+                public PortForwardingRuleVO doInTransaction(TransactionStatus status) throws NetworkRuleConflictException {
+                    PortForwardingRuleVO newRule2 =
+                        new PortForwardingRuleVO(null, publicIpId, userPort, userPort, vmIp, 8080, 8080, "tcp", networkId, accountId, domainId, vmIdFinal);
+                    newRule2.setDisplay(true);
+                    newRule2.setState(FirewallRule.State.Add);
+                    newRule2 = portForwardingRulesDao.persist(newRule2);
+                    return newRule2;
+                }
+            });
+            rulesService.applyPortForwardingRules(publicIp.getId(), account);
+            if (LOGGER.isInfoEnabled()) {
+                LOGGER.info(String.format("Provisioned web access port forwarding rule from port %d to 8080 on %s to the VM IP : %s in Desktop cluster : %s", userPort, publicIp.getAddress().addr(), vmIp.toString(), desktopCluster.getName()));
+            }
+            return true;
+        }
+        return false;
     }
 }
