@@ -567,12 +567,12 @@ public class DesktopClusterManagerImpl extends ManagerBase implements DesktopClu
         if (adDomainName == null || adDomainName.isEmpty()) {
             throw new InvalidParameterValueException("Invalid AD Domain Name for the Desktop cluster AD Domain name:" + adDomainName);
         } else {
+            if (adDomainName.contains(".")) {
+                throw new InvalidParameterValueException("AD domain name is fixed in *.local format, '.' cannot be used.");
+            }
             if (!NetUtils.verifyDomainNameLabel(adDomainName, true)) {
                 throw new InvalidParameterValueException("Invalid AD domain name. desktop cluster AD domain name can contain ASCII letters 'a' through 'z', the digits '0' through '9', "
                         + "and the hyphen ('-'), must be between 1 and 63 characters long, and can't start or end with \"-\" and can't start with digit");
-            }
-            if (adDomainName.contains(".")) {
-                throw new InvalidParameterValueException("AD domain name is fixed in *.local format, '.' cannot be used.");
             }
         }
         // if (password == null || password.isEmpty()) {
