@@ -158,9 +158,13 @@ public class DesktopClusterDestroyWorker extends DesktopClusterResourceModifierA
         if (publicIp == null) {
             throw new ManagementServerException(String.format("No source NAT IP addresses found for network : %s", network.getName()));
         }
-        FirewallRule firewallRule = removeFirewallRule(publicIp);
-        if (firewallRule == null) {
-            logMessage(Level.WARN, "Firewall rule for Web access can't be removed", null);
+        FirewallRule firewallIngressRule = removeFirewallIngressRule(publicIp);
+        if (firewallIngressRule == null) {
+            logMessage(Level.WARN, "Firewall Ingress rule for Web access can't be removed", null);
+        }
+        FirewallRule firewallEgressRule = removeFirewallEgressRule(network.getId());
+        if (firewallEgressRule == null) {
+            logMessage(Level.WARN, "Firewall Egressrule for Web access can't be removed", null);
         }
         try {
             removePortForwardingRules(publicIp, network, owner, removedVmIds);

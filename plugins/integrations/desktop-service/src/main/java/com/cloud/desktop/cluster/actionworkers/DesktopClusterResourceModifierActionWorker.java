@@ -253,6 +253,20 @@ public class DesktopClusterResourceModifierActionWorker extends DesktopClusterAc
         return rule;
     }
 
+    protected FirewallRule removeFirewallRule2(final Network network) {
+        FirewallRule rule = null;
+        List<FirewallRuleVO> firewallRules = firewallRulesDao.listByNetworkAndPurposeAndNotRevoked(network.getId(), FirewallRule.Purpose.Firewall);
+        for (FirewallRuleVO firewallRule : firewallRules) {
+            if (firewallRule.getSourcePortStart() == CLUSTER_USER_PORTAL_PORT &&
+                    firewallRule.getSourcePortEnd() == CLUSTER_ADMIN_PORTAL_PORT && firewallRule.getTrafficType() == TrafficType.Egress) {
+                rule = firewallRule;
+                firewallService.revokeIngressFwRule(firewallRule.getId(), true);
+                break;
+            }
+        }
+        return rule;
+    }
+
     protected void removePortForwardingRules(final IpAddress publicIp, final Network network, final Account account, final List<Long> removedVMIds) throws ResourceUnavailableException {
         if (!CollectionUtils.isEmpty(removedVMIds)) {
             for (Long vmId : removedVMIds) {
