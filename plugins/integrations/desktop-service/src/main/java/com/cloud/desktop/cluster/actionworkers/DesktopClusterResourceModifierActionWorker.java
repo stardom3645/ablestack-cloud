@@ -240,10 +240,14 @@ public class DesktopClusterResourceModifierActionWorker extends DesktopClusterAc
         List<FirewallRuleVO> firewallRules = firewallRulesDao.listByIpAndPurposeAndNotRevoked(publicIp.getId(), FirewallRule.Purpose.Firewall);
         for (FirewallRuleVO firewallRule : firewallRules) {
             if (firewallRule.getSourcePortStart() == CLUSTER_USER_PORTAL_PORT &&
-                    firewallRule.getSourcePortEnd() == CLUSTER_ADMIN_PORTAL_PORT && firewallRule.getTrafficType() == TrafficType.Ingress) {
+                    firewallRule.getSourcePortEnd() == CLUSTER_API_PORT && firewallRule.getTrafficType() == TrafficType.Ingress) {
                 rule = firewallRule;
                 firewallService.revokeIngressFwRule(firewallRule.getId(), true);
-                break;
+            }
+            if (firewallRule.getSourcePortStart() == CLUSTER_SAMBA_PORT &&
+                    firewallRule.getSourcePortEnd() == CLUSTER_SAMBA_PORT && firewallRule.getTrafficType() == TrafficType.Ingress) {
+                rule = firewallRule;
+                firewallService.revokeIngressFwRule(firewallRule.getId(), true);
             }
         }
         return rule;
