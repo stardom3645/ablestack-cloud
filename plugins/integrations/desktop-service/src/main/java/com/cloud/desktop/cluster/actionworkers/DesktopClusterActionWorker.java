@@ -74,8 +74,10 @@ import com.cloud.vm.dao.UserVmDao;
 
 public class DesktopClusterActionWorker {
 
-    public static final int CLUSTER_ADMIN_PORTAL_PORT = 8081;
     public static final int CLUSTER_USER_PORTAL_PORT = 8080;
+    public static final int CLUSTER_ADMIN_PORTAL_PORT = 8081;
+    public static final int CLUSTER_API_PORT = 8082;
+    public static final int CLUSTER_SAMBA_PORT = 9017;
 
     protected static final Logger LOGGER = Logger.getLogger(DesktopClusterActionWorker.class);
 

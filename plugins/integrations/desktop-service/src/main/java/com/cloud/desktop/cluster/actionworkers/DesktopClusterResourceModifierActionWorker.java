@@ -345,7 +345,7 @@ public class DesktopClusterResourceModifierActionWorker extends DesktopClusterAc
         return sccuess;
     }
 
-    protected boolean provisionPortForwardingRules(IpAddress publicIp, Network network, Account account, UserVm worksVM, int adminPort, int userPort) throws ResourceUnavailableException, NetworkRuleConflictException {
+    protected boolean provisionPortForwardingRules(IpAddress publicIp, Network network, Account account, UserVm worksVM, int adminPort, int userPort, int sambaPort, int apiPort) throws ResourceUnavailableException, NetworkRuleConflictException {
         boolean result = false;
         if (worksVM != null) {
             final long publicIpId = publicIp.getId();
@@ -360,7 +360,7 @@ public class DesktopClusterResourceModifierActionWorker extends DesktopClusterAc
                 @Override
                 public PortForwardingRuleVO doInTransaction(TransactionStatus status) throws NetworkRuleConflictException {
                     PortForwardingRuleVO newRule =
-                        new PortForwardingRuleVO(null, publicIpId, adminPort, adminPort, vmIp, 8081, 8081, "tcp", networkId, accountId, domainId, vmIdFinal);
+                        new PortForwardingRuleVO(null, publicIpId, userPort, userPort, vmIp, 8080, 8080, "tcp", networkId, accountId, domainId, vmIdFinal);
                     newRule.setDisplay(true);
                     newRule.setState(FirewallRule.State.Add);
                     newRule = portForwardingRulesDao.persist(newRule);
@@ -369,13 +369,13 @@ public class DesktopClusterResourceModifierActionWorker extends DesktopClusterAc
             });
             rulesService.applyPortForwardingRules(publicIp.getId(), account);
             if (LOGGER.isInfoEnabled()) {
-                LOGGER.info(String.format("Provisioned web access port forwarding rule from port %d to 8081 on %s to the VM IP : %s in Desktop cluster : %s", adminPort, publicIp.getAddress().addr(), vmIp.toString(), desktopCluster.getName()));
+                LOGGER.info(String.format("Provisioned web access port forwarding rule from port %d to 8080 on %s to the VM IP : %s in Desktop cluster : %s", userPort, publicIp.getAddress().addr(), vmIp.toString(), desktopCluster.getName()));
             }
             PortForwardingRuleVO pfRule2 = Transaction.execute(new TransactionCallbackWithException<PortForwardingRuleVO, NetworkRuleConflictException>() {
                 @Override
                 public PortForwardingRuleVO doInTransaction(TransactionStatus status) throws NetworkRuleConflictException {
                     PortForwardingRuleVO newRule2 =
-                        new PortForwardingRuleVO(null, publicIpId, userPort, userPort, vmIp, 8080, 8080, "tcp", networkId, accountId, domainId, vmIdFinal);
+                        new PortForwardingRuleVO(null, publicIpId, adminPort, adminPort, vmIp, 8081, 8081, "tcp", networkId, accountId, domainId, vmIdFinal);
                     newRule2.setDisplay(true);
                     newRule2.setState(FirewallRule.State.Add);
                     newRule2 = portForwardingRulesDao.persist(newRule2);
@@ -384,7 +384,37 @@ public class DesktopClusterResourceModifierActionWorker extends DesktopClusterAc
             });
             rulesService.applyPortForwardingRules(publicIp.getId(), account);
             if (LOGGER.isInfoEnabled()) {
-                LOGGER.info(String.format("Provisioned web access port forwarding rule from port %d to 8080 on %s to the VM IP : %s in Desktop cluster : %s", userPort, publicIp.getAddress().addr(), vmIp.toString(), desktopCluster.getName()));
+                LOGGER.info(String.format("Provisioned web access port forwarding rule from port %d to 8081 on %s to the VM IP : %s in Desktop cluster : %s", adminPort, publicIp.getAddress().addr(), vmIp.toString(), desktopCluster.getName()));
+            }
+            PortForwardingRuleVO pfRule3 = Transaction.execute(new TransactionCallbackWithException<PortForwardingRuleVO, NetworkRuleConflictException>() {
+                @Override
+                public PortForwardingRuleVO doInTransaction(TransactionStatus status) throws NetworkRuleConflictException {
+                    PortForwardingRuleVO newRule3 =
+                        new PortForwardingRuleVO(null, publicIpId, apiPort, apiPort, vmIp, 8082, 8082, "tcp", networkId, accountId, domainId, vmIdFinal);
+                    newRule3.setDisplay(true);
+                    newRule3.setState(FirewallRule.State.Add);
+                    newRule3 = portForwardingRulesDao.persist(newRule3);
+                    return newRule3;
+                }
+            });
+            rulesService.applyPortForwardingRules(publicIp.getId(), account);
+            if (LOGGER.isInfoEnabled()) {
+                LOGGER.info(String.format("Provisioned api access port forwarding rule from port %d to 8082 on %s to the VM IP : %s in Desktop cluster : %s", apiPort, publicIp.getAddress().addr(), vmIp.toString(), desktopCluster.getName()));
+            }
+            PortForwardingRuleVO pfRule4 = Transaction.execute(new TransactionCallbackWithException<PortForwardingRuleVO, NetworkRuleConflictException>() {
+                @Override
+                public PortForwardingRuleVO doInTransaction(TransactionStatus status) throws NetworkRuleConflictException {
+                    PortForwardingRuleVO newRule4 =
+                        new PortForwardingRuleVO(null, publicIpId, sambaPort, sambaPort, vmIp, 9017, 9017, "tcp", networkId, accountId, domainId, vmIdFinal);
+                    newRule4.setDisplay(true);
+                    newRule4.setState(FirewallRule.State.Add);
+                    newRule4 = portForwardingRulesDao.persist(newRule4);
+                    return newRule4;
+                }
+            });
+            rulesService.applyPortForwardingRules(publicIp.getId(), account);
+            if (LOGGER.isInfoEnabled()) {
+                LOGGER.info(String.format("Provisioned samba access port forwarding rule from port %d to 9017 on %s to the VM IP : %s in Desktop cluster : %s", sambaPort, publicIp.getAddress().addr(), vmIp.toString(), desktopCluster.getName()));
             }
             return true;
         }

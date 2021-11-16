@@ -427,7 +427,13 @@ export default {
           },
           popup: true,
           groupMap: (selection, values) => { return selection.map(x => { return { id: x, expunge: values.expunge } }) },
-          show: (record) => { return ['Running', 'Stopped', 'Error'].includes(record.state) },
+          show: (record) => {
+            if (record.tags.length > 0) {
+              return !['ClusterName', 'WorkspaceName', 'ServiceDaaS'].includes(record.tags[0].key) && ['Running', 'Stopped', 'Error'].includes(record.state)
+            } else {
+              return ['Running', 'Stopped', 'Error'].includes(record.state)
+            }
+          },
           component: () => import('@/views/compute/DestroyVM.vue')
         }
       ]
