@@ -428,10 +428,14 @@ export default {
           popup: true,
           groupMap: (selection, values) => { return selection.map(x => { return { id: x, expunge: values.expunge } }) },
           show: (record) => {
+            var controlVm = []
+            if (record.name.slice(-3) === '-dc' || record.name.slice(-6) === '-works') {
+              controlVm.push(record.name)
+            }
             if (record.tags.length > 0) {
-              return !['ClusterName', 'WorkspaceName', 'ServiceDaaS'].includes(record.tags[0].key) && ['Running', 'Stopped', 'Error'].includes(record.state)
+              return !['ClusterName', 'WorkspaceName', 'ServiceDaaS'].includes(record.tags[0].key) && ['Running', 'Stopped', 'Error'].includes(record.state) && ![controlVm[0]].includes(record.name)
             } else {
-              return ['Running', 'Stopped', 'Error'].includes(record.state)
+              return ['Running', 'Stopped', 'Error'].includes(record.state) && ![controlVm[0]].includes(record.name)
             }
           },
           component: () => import('@/views/compute/DestroyVM.vue')
