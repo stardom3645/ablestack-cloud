@@ -235,7 +235,7 @@ public class DesktopClusterResourceModifierActionWorker extends DesktopClusterAc
         return null;
     }
 
-    protected FirewallRule removeFirewallRule(final IpAddress publicIp) {
+    protected FirewallRule removeFirewallIngressRule(final IpAddress publicIp) {
         FirewallRule rule = null;
         List<FirewallRuleVO> firewallRules = firewallRulesDao.listByIpAndPurposeAndNotRevoked(publicIp.getId(), FirewallRule.Purpose.Firewall);
         for (FirewallRuleVO firewallRule : firewallRules) {
@@ -253,7 +253,7 @@ public class DesktopClusterResourceModifierActionWorker extends DesktopClusterAc
         return rule;
     }
 
-    protected FirewallRule removeFirewallRule2(final Network network) {
+    protected FirewallRule removeFirewallEgressRule(final Network network) {
         FirewallRule rule = null;
         List<FirewallRuleVO> firewallRules = firewallRulesDao.listByNetworkAndPurposeAndNotRevoked(network.getId(), FirewallRule.Purpose.Firewall);
         for (FirewallRuleVO firewallRule : firewallRules) {

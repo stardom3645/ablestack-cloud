@@ -162,7 +162,7 @@ public class DesktopClusterDestroyWorker extends DesktopClusterResourceModifierA
         if (firewallIngressRule == null) {
             logMessage(Level.WARN, "Firewall Ingress rule for Web access can't be removed", null);
         }
-        FirewallRule firewallEgressRule = removeFirewallEgressRule(network.getId());
+        FirewallRule firewallEgressRule = removeFirewallEgressRule(network);
         if (firewallEgressRule == null) {
             logMessage(Level.WARN, "Firewall Egressrule for Web access can't be removed", null);
         }
