@@ -418,11 +418,16 @@ export default {
               this.handleNetworkChange(this.networks[0])
             }
             if (this.accessType === 'external' && items[i].type === 'Isolated') {
-              for (var j = 0; j < this.clusters[0].length; j++) {
-                if (![this.clusters[0][j].networkid].includes(items[i].id)) {
-                  this.networks.push(items[i])
-                  this.handleNetworkChange(this.networks[0])
+              if (this.clusters.length !== 0) {
+                for (var j = 0; j < this.clusters[0].length; j++) {
+                  if (![this.clusters[0][j].networkid].includes(items[i].id)) {
+                    this.networks.push(items[i])
+                    this.handleNetworkChange(this.networks[0])
+                  }
                 }
+              } else {
+                this.networks.push(items[i])
+                this.handleNetworkChange(this.networks[0])
               }
             }
             if (this.accessType === 'mixed' && items[i].type === 'Shared') {
