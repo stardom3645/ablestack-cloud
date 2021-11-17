@@ -293,6 +293,7 @@ export default {
     return {
       loading: false,
       accessType: 'external',
+      clusters: [],
       networks: [],
       networkLoading: false,
       templateVersions: [],
@@ -310,7 +311,7 @@ export default {
   },
   methods: {
     fetchData () {
-      this.fetchNetworkData()
+      this.fetchClusterData()
       this.fetchTemplateVersionData()
       this.fetchServiceOfferingData()
     },
@@ -384,6 +385,22 @@ export default {
         }
       })
     },
+    fetchClusterData () {
+      this.clusters = []
+      const params = {
+        domainid: store.getters.project && store.getters.project.id ? null : store.getters.userInfo.domainid,
+        account: store.getters.project && store.getters.project.id ? null : store.getters.userInfo.account,
+        listall: true
+      }
+      api('listDesktopClusters', params).then(json => {
+        var items = json.listdesktopclustersresponse.desktopcluster
+        if (items != null) {
+          this.clusters.push(items)
+        }
+      }).finally(() => {
+        this.fetchNetworkData()
+      })
+    },
     fetchNetworkData () {
       this.networks = []
       const params = {
@@ -401,8 +418,12 @@ export default {
               this.handleNetworkChange(this.networks[0])
             }
             if (this.accessType === 'external' && items[i].type === 'Isolated') {
-              this.networks.push(items[i])
-              this.handleNetworkChange(this.networks[0])
+              for (var j = 0; j < this.clusters[0].length; j++) {
+                if (![this.clusters[0][j].networkid].includes(items[i].id)) {
+                  this.networks.push(items[i])
+                  this.handleNetworkChange(this.networks[0])
+                }
+              }
             }
             if (this.accessType === 'mixed' && items[i].type === 'Shared') {
               this.networks.push(items[i])
