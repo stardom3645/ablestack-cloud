@@ -3557,7 +3557,7 @@
 "message.success.register.contoller.template.version": "A new controller template version has been registered.",
 "message.success.update.desktop.controller.template.version": "Updated status value for desktop controller version.",
 "message.success.add.desktop.ip": "Successfully added desktop cluster ip range",
-"message.success.create.desktop.cluter": "Successfully deployed Desktop cluster",
+"message.success.create.desktop.cluter": "The desktop cluster has been successfully deployed. It will take some time for the cluster Control VM to use normal services.",
 "message.add.desktop.ip.failed": "Adding desktop cluster ip range failed",
 "message.add.desktop.ip.processing": "Adding desktop cluster ip range...",
 "message.success.register.master.template.version":"A new master template version has been registered.",

@@ -492,7 +492,7 @@ export default {
             description: values.name,
             loadingMessage: `${this.$t('label.desktop.cluster.deploy')} ${values.name} ${this.$t('label.in.progress')}`,
             catchMessage: this.$t('error.fetching.async.job.result'),
-            successMessage: this.$t('message.success.create.desktop.cluter') + ' ' + values.name
+            successMessage: values.name + ' ' + this.$t('message.success.create.desktop.cluter')
           })
           this.closeAction()
         }).catch(error => {
