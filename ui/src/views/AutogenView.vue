@@ -523,6 +523,7 @@ export default {
     eventBus.$off('vm-refresh-data')
     eventBus.$off('async-job-complete')
     eventBus.$off('exec-action')
+    eventBus.$off('desktop-refresh-data')
   },
   mounted () {
     eventBus.$on('exec-action', (action, isGroupAction) => {
@@ -532,6 +533,11 @@ export default {
   created () {
     eventBus.$on('vm-refresh-data', () => {
       if (this.$route.path === '/vm' || this.$route.path.includes('/vm/')) {
+        this.fetchData()
+      }
+    })
+    eventBus.$on('desktop-refresh-data', () => {
+      if (this.$route.path === '/desktopcluster' || this.$route.path.includes('/desktopcluster/')) {
         this.fetchData()
       }
     })
