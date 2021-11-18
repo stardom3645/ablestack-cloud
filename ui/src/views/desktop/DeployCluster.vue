@@ -281,6 +281,7 @@
 <script>
 import { api } from '@/api'
 import store from '@/store'
+import eventBus from '@/config/eventBus'
 import TooltipLabel from '@/components/widgets/TooltipLabel'
 
 export default {
@@ -495,9 +496,21 @@ export default {
             jobId,
             title: this.$t('label.desktop.cluster.deploy'),
             description: values.name,
+            successMethod: () => {
+              this.$notification.success({
+                message: this.$t('message.success.create.desktop.cluter'),
+                duration: 0
+              })
+              eventBus.$emit('desktop-refresh-data')
+            },
             loadingMessage: `${this.$t('label.desktop.cluster.deploy')} ${values.name} ${this.$t('label.in.progress')}`,
             catchMessage: this.$t('error.fetching.async.job.result'),
-            successMessage: values.name + ' ' + this.$t('message.success.create.desktop.cluter')
+            catchMethod: () => {
+              eventBus.$emit('desktop-refresh-data')
+            },
+            action: {
+              isFetchData: false
+            }
           })
           this.closeAction()
         }).catch(error => {
