@@ -69,7 +69,9 @@ import com.cloud.desktop.cluster.dao.DesktopClusterVmMapDao;
 import com.cloud.desktop.version.DesktopControllerVersionVO;
 import com.cloud.desktop.version.DesktopTemplateMapVO;
 import com.cloud.desktop.version.DesktopControllerVersion;
+import com.cloud.network.IpAddress;
 import com.cloud.network.Network;
+import com.cloud.network.NetworkModel;
 import com.cloud.network.Network.GuestType;
 import com.cloud.network.NetworkService;
 import com.cloud.network.dao.NetworkDao;
@@ -153,6 +155,8 @@ public class DesktopClusterManagerImpl extends ManagerBase implements DesktopClu
     protected ServiceOfferingDao serviceOfferingDao;
     @Inject
     protected ResourceTagDao resourceTagDao;
+    @Inject
+    protected NetworkModel networkModel;
 
     private void logMessage(final Level logLevel, final String message, final Exception e) {
         if (logLevel == Level.WARN) {
@@ -250,7 +254,12 @@ public class DesktopClusterManagerImpl extends ManagerBase implements DesktopClu
                     UserVmResponse cvmResponse = ApiDBUtils.newUserVmResponse(respView, responseName, userVM, EnumSet.of(VMDetails.nics), caller);
                     controlVmResponses.add(cvmResponse);
                     if("worksvm".equals(vmMapVO.getType())) {
-                        response.setWorksVmIp(userVM.getPublicIpAddress());
+                        List<? extends IpAddress> addresses = networkModel.listPublicIpsAssignedToGuestNtwk(ntwk.getId(), true);
+                        for (IpAddress address : addresses) {
+                            if (address.isSourceNat()) {
+                                response.setWorksVmIp(address.getAddress().addr());
+                            }
+                        }
                     }
                     if("dcvm".equals(vmMapVO.getType())) {
                         response.setDcVmIp(userVM.getIpAddress());
@@ -537,19 +546,23 @@ public class DesktopClusterManagerImpl extends ManagerBase implements DesktopClu
         if (name == null || name.isEmpty()) {
             throw new InvalidParameterValueException("Invalid name for the Desktop cluster name:" + name);
         }
-        if (!NetUtils.verifyDomainNameLabel(name, true)) {
+        if (!NetUtils.verifyDomainNameLabel(name, true) || name.length() > 8) {
             throw new InvalidParameterValueException("Invalid name. desktop cluster name can contain ASCII letters 'a' through 'z', the digits '0' through '9', "
-                    + "and the hyphen ('-'), must be between 1 and 63 characters long, and can't start or end with \"-\" and can't start with digit");
+                    + "and the hyphen ('-'), must be between 1 and 8 characters long, and can't start or end with \"-\" and can't start with digit");
         }
         final List<DesktopClusterVO> clusters = desktopClusterDao.listAll();
         for (final DesktopClusterVO cluster : clusters) {
             final String otherName = cluster.getName();
             final String otherAdDomainName = cluster.getAdDomainName();
+            final Long otherNetwork = cluster.getNetworkId();
             if (otherName.equals(name)) {
                 throw new InvalidParameterValueException("cluster name '" + name + "' already exists.");
             }
             if (otherAdDomainName.equals(adDomainName)) {
                 throw new InvalidParameterValueException("cluster ad domain name '" + adDomainName + "' already exists.");
+            }
+            if (otherNetwork.equals(networkId)){
+                throw new InvalidParameterValueException("cluster network id '" + networkId + "' already cluster deployed.");
             }
         }
         if (description == null || description.isEmpty()) {
@@ -560,6 +573,10 @@ public class DesktopClusterManagerImpl extends ManagerBase implements DesktopClu
         } else {
             if (adDomainName.contains(".")) {
                 throw new InvalidParameterValueException("AD domain name is fixed in *.local format, '.' cannot be used.");
+            }
+            if (!NetUtils.verifyDomainNameLabel(adDomainName, true)) {
+                throw new InvalidParameterValueException("Invalid AD domain name. desktop cluster AD domain name can contain ASCII letters 'a' through 'z', the digits '0' through '9', "
+                        + "and the hyphen ('-'), must be between 1 and 63 characters long, and can't start or end with \"-\" and can't start with digit");
             }
         }
         // if (password == null || password.isEmpty()) {
