@@ -39,6 +39,7 @@ import com.cloud.desktop.cluster.DesktopClusterManagerImpl;
 import com.cloud.network.Network;
 import com.cloud.network.IpAddress;
 import com.cloud.network.dao.NetworkVO;
+import com.cloud.network.rules.FirewallRule;
 import com.cloud.user.AccountManager;
 import com.cloud.uservm.UserVm;
 import com.cloud.server.ResourceTag;
@@ -61,7 +62,7 @@ public class DesktopClusterDestroyWorker extends DesktopClusterResourceModifierA
         super(desktopCluster, clusterManager);
     }
 
-    private void validateClusterSate() {
+    private void validateClusterState() {
         if (!(desktopCluster.getState().equals(DesktopCluster.State.Running)
                 || desktopCluster.getState().equals(DesktopCluster.State.Stopped)
                 || desktopCluster.getState().equals(DesktopCluster.State.Alert)
@@ -157,6 +158,14 @@ public class DesktopClusterDestroyWorker extends DesktopClusterResourceModifierA
         if (publicIp == null) {
             throw new ManagementServerException(String.format("No source NAT IP addresses found for network : %s", network.getName()));
         }
+        FirewallRule firewallIngressRule = removeFirewallIngressRule(publicIp);
+        if (firewallIngressRule == null) {
+            logMessage(Level.WARN, "Firewall Ingress rule for Web access can't be removed", null);
+        }
+        FirewallRule firewallEgressRule = removeFirewallEgressRule(network);
+        if (firewallEgressRule == null) {
+            logMessage(Level.WARN, "Firewall Egressrule for Web access can't be removed", null);
+        }
         try {
             removePortForwardingRules(publicIp, network, owner, removedVmIds);
         } catch (ResourceUnavailableException e) {
@@ -213,9 +222,8 @@ public class DesktopClusterDestroyWorker extends DesktopClusterResourceModifierA
 
     public boolean destroy() throws CloudRuntimeException {
         init();
-        validateClusterSate();
+        validateClusterState();
         this.clusterVMs = desktopClusterVmMapDao.listByDesktopClusterId(desktopCluster.getId());
-        boolean cleanupNetwork = true;
         if (LOGGER.isInfoEnabled()) {
             LOGGER.info(String.format("Destroying desktop cluster : %s", desktopCluster.getName()));
         }
@@ -223,17 +231,14 @@ public class DesktopClusterDestroyWorker extends DesktopClusterResourceModifierA
         boolean vmsDestroyed = destroyClusterVMs();
         // if there are VM's that were not expunged, we can not delete the network
         if (vmsDestroyed) {
-            if (cleanupNetwork) {
-                validateClusterVMsDestroyed();
-            } else {
-                try {
-                    checkForRulesToDelete();
-                } catch (ManagementServerException e) {
-                    String msg = String.format("Failed to remove network rules of desktop cluster : %s", desktopCluster.getName());
-                    LOGGER.warn(msg, e);
-                    updateDesktopClusterEntryForGC();
-                    throw new CloudRuntimeException(msg, e);
-                }
+            validateClusterVMsDestroyed();
+            try {
+                checkForRulesToDelete();
+            } catch (ManagementServerException e) {
+                String msg = String.format("Failed to remove network rules of desktop cluster : %s", desktopCluster.getName());
+                LOGGER.warn(msg, e);
+                updateDesktopClusterEntryForGC();
+                throw new CloudRuntimeException(msg, e);
             }
         } else {
             String msg = String.format("Failed to destroy one or more VMs as part of desktop cluster : %s cleanup",desktopCluster.getName());
