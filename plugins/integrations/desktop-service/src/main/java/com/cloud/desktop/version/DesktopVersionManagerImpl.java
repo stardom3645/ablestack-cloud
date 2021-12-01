@@ -372,29 +372,33 @@ public class DesktopVersionManagerImpl extends ManagerBase implements DesktopVer
             throw new IllegalArgumentException(String.format("Invalid version comparision with versions %s, %s", v1, v2));
         }
         if(!isSemanticVersion(v1)) {
-            throw new IllegalArgumentException(String.format("Invalid version format, %s. Semantic version should be specified in MAJOR.MINOR.PATCH format", v1));
+            throw new IllegalArgumentException(String.format("Invalid version format, %s. version should be specified in MAJOR.MINOR.PATCH format. PATCH accepts only numbers and lowercase letters.", v1));
         }
         if(!isSemanticVersion(v2)) {
-            throw new IllegalArgumentException(String.format("Invalid version format, %s. Semantic version should be specified in MAJOR.MINOR.PATCH format", v2));
+            throw new IllegalArgumentException(String.format("Invalid version format, %s. version should be specified in MAJOR.MINOR.PATCH format", v2));
         }
-        String[] thisParts = v1.split("\\.");
-        String[] thatParts = v2.split("\\.");
-        int length = Math.max(thisParts.length, thatParts.length);
-        for(int i = 0; i < length; i++) {
-            int thisPart = i < thisParts.length ?
-                    Integer.parseInt(thisParts[i]) : 0;
-            int thatPart = i < thatParts.length ?
-                    Integer.parseInt(thatParts[i]) : 0;
-            if(thisPart < thatPart)
-                return -1;
-            if(thisPart > thatPart)
-                return 1;
+        if (v1.matches("[0-9]+(\\.[0-9]+)*")) {
+            String[] thisParts = v1.split("\\.");
+            String[] thatParts = v2.split("\\.");
+            int length = Math.max(thisParts.length, thatParts.length);
+            for(int i = 0; i < length; i++) {
+                int thisPart = i < thisParts.length ?
+                        Integer.parseInt(thisParts[i]) : 0;
+                int thatPart = i < thatParts.length ?
+                        Integer.parseInt(thatParts[i]) : 0;
+                if(thisPart < thatPart)
+                    return -1;
+                if(thisPart > thatPart)
+                    return 1;
+            }
+        } else {
+            return 1;
         }
         return 0;
     }
 
     private static boolean isSemanticVersion(final String version) {
-        if(!version.matches("[0-9]+(\\.[0-9]+)*")) {
+        if(!version.matches("[0-9]+(\\.[0-9]+)*") && !version.matches("[0-9]+\\.[0-9]+\\.[a-z]|[0.9]")) {
             return false;
         }
         String[] parts = version.split("\\.");
