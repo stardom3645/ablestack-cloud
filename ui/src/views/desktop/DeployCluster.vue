@@ -423,6 +423,7 @@ export default {
                 for (var j = 0; j < this.clusters[0].length; j++) {
                   if (![this.clusters[0][j].networkid].includes(items[i].id)) {
                     this.networks.push(items[i])
+                    this.networks = Array.from(new Set(this.networks))
                     this.handleNetworkChange(this.networks[0])
                   }
                 }
