@@ -523,6 +523,7 @@ export default {
     eventBus.$off('vm-refresh-data')
     eventBus.$off('async-job-complete')
     eventBus.$off('exec-action')
+    eventBus.$off('desktop-refresh-data')
   },
   mounted () {
     eventBus.$on('exec-action', (action, isGroupAction) => {
@@ -532,6 +533,11 @@ export default {
   created () {
     eventBus.$on('vm-refresh-data', () => {
       if (this.$route.path === '/vm' || this.$route.path.includes('/vm/')) {
+        this.fetchData()
+      }
+    })
+    eventBus.$on('desktop-refresh-data', () => {
+      if (this.$route.path === '/desktopcluster' || this.$route.path.includes('/desktopcluster/')) {
         this.fetchData()
       }
     })
@@ -1135,6 +1141,9 @@ export default {
                 })
               }
             }
+            if ('successMethod' in action) {
+              action.successMethod(this, result)
+            }
             resolve(true)
           },
           errorMethod: () => {
@@ -1198,7 +1207,7 @@ export default {
           this.modalInfo.title = this.currentAction.label
           this.modalInfo.docHelp = this.currentAction.docHelp
         }
-        this.form.validateFields((err, values) => {
+        this.form.validateFieldsAndScroll((err, values) => {
           if (!err) {
             this.actionLoading = true
             const itemsNameMap = {}
@@ -1292,7 +1301,7 @@ export default {
     },
     execSubmit (e) {
       e.preventDefault()
-      this.form.validateFields((err, values) => {
+      this.form.validateFieldsAndScroll((err, values) => {
         if (err) {
           return
         }
@@ -1525,7 +1534,7 @@ export default {
         if (!confirmPasswordVal || confirmPasswordVal.length === 0) {
           callback()
         } else if (value && this.confirmDirty) {
-          form.validateFields(['confirmpassword'], { force: true })
+          form.validateFieldsAndScroll(['confirmpassword'], { force: true })
           callback()
         } else {
           callback()

@@ -49,7 +49,6 @@ import com.cloud.network.IpAddress;
 import com.cloud.network.Network.IpAddresses;
 import com.cloud.network.Network;
 import com.cloud.storage.DiskOfferingVO;
-import com.cloud.network.dao.IPAddressVO;
 import com.cloud.offering.ServiceOffering;
 import com.cloud.user.Account;
 import com.cloud.user.UserAccount;
@@ -65,7 +64,7 @@ import com.cloud.desktop.version.DesktopControllerVersion;
 import com.cloud.vm.ReservationContext;
 import com.cloud.vm.ReservationContextImpl;
 import com.cloud.vm.VirtualMachine;
-import com.google.common.base.Strings;
+import com.cloud.api.query.vo.UserAccountJoinVO;
 
 public class DesktopClusterStartWorker extends DesktopClusterResourceModifierActionWorker {
 
@@ -106,12 +105,13 @@ public class DesktopClusterStartWorker extends DesktopClusterResourceModifierAct
         final String zoneUuid = "{{ zone_id }}";
         final String networkId = "{{ network_id }}";
         final String accountName = "{{ account_name }}";
-        final String accountUuid = "{{ account_uuid }}";
+        final String domainUuid = "{{ domain_uuid }}";
         final String apiKey = "{{ api_key }}";
         final String secretKey = "{{ secret_key }}";
         final String moldIp = "{{ mold_ip }}";
         final String moldPort = "{{ mold_port }}";
         final String moldProtocol = "{{ mold_protocol }}";
+        List<UserAccountJoinVO> domain = userAccountJoinDao.searchByAccountId(owner.getId());
         desktopClusterWorksConfig = desktopClusterWorksConfig.replace(clusterName, desktopCluster.getName());
         desktopClusterWorksConfig = desktopClusterWorksConfig.replace(domainName, desktopCluster.getAdDomainName());
         desktopClusterWorksConfig = desktopClusterWorksConfig.replace(worksIp, desktopCluster.getWorksIp());
@@ -119,7 +119,7 @@ public class DesktopClusterStartWorker extends DesktopClusterResourceModifierAct
         desktopClusterWorksConfig = desktopClusterWorksConfig.replace(zoneUuid, zone.getUuid());
         desktopClusterWorksConfig = desktopClusterWorksConfig.replace(networkId, Long.toString(desktopCluster.getNetworkId()));
         desktopClusterWorksConfig = desktopClusterWorksConfig.replace(accountName, owner.getAccountName());
-        desktopClusterWorksConfig = desktopClusterWorksConfig.replace(accountUuid, owner.getUuid());
+        desktopClusterWorksConfig = desktopClusterWorksConfig.replace(domainUuid, domain.get(0).getDomainUuid());
         desktopClusterWorksConfig = desktopClusterWorksConfig.replace(apiKey, keys[0]);
         desktopClusterWorksConfig = desktopClusterWorksConfig.replace(secretKey, keys[1]);
         desktopClusterWorksConfig = desktopClusterWorksConfig.replace(moldIp, managementIp);
@@ -314,7 +314,7 @@ public class DesktopClusterStartWorker extends DesktopClusterResourceModifierAct
         String[] keys = null;
         String apiKey = user.getApiKey();
         String secretKey = user.getSecretKey();
-        if (Strings.isNullOrEmpty(apiKey) || Strings.isNullOrEmpty(secretKey)) {
+        if ((apiKey == null || apiKey.length() == 0) || (secretKey == null || secretKey.length() == 0)) {
             keys = accountService.createApiKeyAndSecretKey(user.getId());
         } else {
             keys = new String[]{apiKey, secretKey};
@@ -348,26 +348,44 @@ public class DesktopClusterStartWorker extends DesktopClusterResourceModifierAct
     }
 
     private boolean setupDesktopClusterNetworkRules(Network network, UserVm worksVm, IpAddress publicIp) throws ManagementServerException {
+        boolean egress = false;
+        boolean firewall = false;
+        boolean firewall2 = false;
+        boolean portForwarding = false;
+        // Firewall Egress Network
         try {
-            boolean firewall = false;
-            IPAddressVO ipVO = ipAddressDao.findByIpAndNetworkId(network.getId(), publicIp.getAddress().addr());
-            boolean result = rulesService.enableStaticNat(ipVO.getId(), worksVm.getId(), network.getId(), null);
-            if (result) {
+            egress = provisionEgressFirewallRules(network, owner, CLUSTER_USER_PORTAL_PORT, CLUSTER_ADMIN_PORTAL_PORT);
+            if (LOGGER.isInfoEnabled()) {
+                LOGGER.info(String.format("Provisioned egress firewall rule to open up port %d to %d on %s for Desktop cluster : %s", CLUSTER_USER_PORTAL_PORT, CLUSTER_ADMIN_PORTAL_PORT, publicIp.getAddress().addr(), desktopCluster.getName()));
+            }
+        } catch (NoSuchFieldException | IllegalAccessException | ResourceUnavailableException | NetworkRuleConflictException e) {
+            throw new ManagementServerException(String.format("Failed to provision egress firewall rules for Web access for the Desktop cluster : %s", desktopCluster.getName()), e);
+        }
+        // Firewall rule fo Web access on WorksVM
+        if (egress) {
+            try {
+                firewall = provisionFirewallRules(publicIp, owner, CLUSTER_USER_PORTAL_PORT, CLUSTER_API_PORT);
+                if (LOGGER.isInfoEnabled()) {
+                    LOGGER.info(String.format("Provisioned firewall rule to open up port %d to %d on %s for Desktop cluster : %s", CLUSTER_USER_PORTAL_PORT, CLUSTER_API_PORT, publicIp.getAddress().addr(), desktopCluster.getName()));
+                }
+                firewall2 = provisionFirewallRules(publicIp, owner, CLUSTER_SAMBA_PORT, CLUSTER_SAMBA_PORT);
+                if (LOGGER.isInfoEnabled()) {
+                    LOGGER.info(String.format("Provisioned firewall rule to open up port %d to %d on %s for Desktop cluster : %s", CLUSTER_SAMBA_PORT, CLUSTER_SAMBA_PORT, publicIp.getAddress().addr(), desktopCluster.getName()));
+                }
+            } catch (NoSuchFieldException | IllegalAccessException | ResourceUnavailableException | NetworkRuleConflictException e) {
+                throw new ManagementServerException(String.format("Failed to provision firewall rules for Web access for the Desktop cluster : %s", desktopCluster.getName()), e);
+            }
+            if (firewall && firewall2) {
+                // Port forwarding rule fo Web access on WorksVM
                 try {
-                    firewall = provisionFirewallRules(publicIp, owner, 0, 0);
-                    if (LOGGER.isInfoEnabled()) {
-                        LOGGER.info(String.format("Provisioned firewall rule to open up on %s for Desktop cluster ID: %s",
-                                publicIp, desktopCluster.getUuid()));
-                    }
-                    if (firewall) {
-                        return true;
-                    }
-                } catch (NoSuchFieldException | IllegalAccessException | ResourceUnavailableException | NetworkRuleConflictException e) {
-                    throw new ManagementServerException(String.format("Failed to provision firewall rules for API access for the Desktop cluster : %s", desktopCluster.getName()), e);
+                    portForwarding = provisionPortForwardingRules(publicIp, network, owner, worksVm, CLUSTER_ADMIN_PORTAL_PORT, CLUSTER_USER_PORTAL_PORT, CLUSTER_SAMBA_PORT, CLUSTER_API_PORT);
+                } catch (ResourceUnavailableException | NetworkRuleConflictException e) {
+                    throw new ManagementServerException(String.format("Failed to activate Web port forwarding rules for the Desktop cluster : %s", desktopCluster.getName()), e);
+                }
+                if (portForwarding) {
+                    return true;
                 }
             }
-        } catch (NetworkRuleConflictException | ResourceUnavailableException e) {
-            throw new ManagementServerException(String.format("Failed to provision enable Static Nat for the Desktop cluster : %s", desktopCluster.getName()), e);
         }
         return false;
     }
@@ -427,7 +445,7 @@ public class DesktopClusterStartWorker extends DesktopClusterResourceModifierAct
                         return true;
                     }
                 } catch (IOException | InterruptedException e) {
-                    //
+                    logTransitStateAndThrow(Level.ERROR, String.format("Provisioning failed in the desktop cluster : %s, %s", desktopCluster.getName(), e), desktopCluster.getId(), DesktopCluster.Event.CreateFailed, e);
                 }
             }
         }

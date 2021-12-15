@@ -311,7 +311,7 @@ export default {
           label: 'label.scale.vm',
           docHelp: 'adminguide/virtual_machines.html#how-to-dynamically-scale-cpu-and-ram',
           dataView: true,
-          show: (record) => { return ['Stopped'].includes(record.state) || (['Running'].includes(record.state) && record.hypervisor !== 'KVM' && record.hypervisor !== 'LXC') },
+          show: (record) => { return ['Stopped'].includes(record.state) || (['Running'].includes(record.state) && record.hypervisor !== 'LXC') },
           disabled: (record) => { return record.state === 'Running' && !record.isdynamicallyscalable },
           popup: true,
           component: () => import('@/views/compute/ScaleVM.vue')
@@ -427,7 +427,17 @@ export default {
           },
           popup: true,
           groupMap: (selection, values) => { return selection.map(x => { return { id: x, expunge: values.expunge } }) },
-          show: (record) => { return ['Running', 'Stopped', 'Error'].includes(record.state) },
+          show: (record) => {
+            var controlVm = []
+            if (record.name !== undefined && (record.name.slice(-3) === '-dc' || record.name.slice(-6) === '-works')) {
+              controlVm.push(record.name)
+            }
+            if (record.tags !== undefined && record.tags.length > 0) {
+              return !['ClusterName', 'WorkspaceName', 'ServiceDaaS'].includes(record.tags[0].key) && ['Running', 'Stopped', 'Error'].includes(record.state) && ![controlVm[0]].includes(record.name)
+            } else {
+              return ['Running', 'Stopped', 'Error'].includes(record.state) && ![controlVm[0]].includes(record.name)
+            }
+          },
           component: () => import('@/views/compute/DestroyVM.vue')
         }
       ]

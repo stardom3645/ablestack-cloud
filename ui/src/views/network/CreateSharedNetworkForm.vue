@@ -423,12 +423,6 @@ export default {
         this.fetchNetworkOfferingData()
       }
     },
-    isAdmin () {
-      return ['Admin'].includes(this.$store.getters.userInfo.roletype)
-    },
-    isAdminOrDomainAdmin () {
-      return ['Admin', 'DomainAdmin'].includes(this.$store.getters.userInfo.roletype)
-    },
     isObjectEmpty (obj) {
       return !(obj !== null && obj !== undefined && Object.keys(obj).length > 0 && obj.constructor === Object)
     },
@@ -694,7 +688,12 @@ export default {
     },
     handleSubmit (e) {
       if (this.actionLoading) return
-      this.form.validateFields((error, values) => {
+      const options = {
+        scroll: {
+          offsetTop: 10
+        }
+      }
+      this.form.validateFieldsAndScroll(options, (error, values) => {
         if (error) {
           return
         }
@@ -761,7 +760,7 @@ export default {
         // IPv4 (end)
 
         // IPv6 (begin)
-        if (this.isValidTextValueForKey(values, 'ip4gateway')) {
+        if (this.isValidTextValueForKey(values, 'ip6gateway')) {
           params.ip6gateway = values.ip6gateway
         }
         if (this.isValidTextValueForKey(values, 'routerip')) {

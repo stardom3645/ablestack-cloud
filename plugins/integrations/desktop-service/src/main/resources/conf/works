@@ -1,6 +1,6 @@
 {
 	"mold.default.domain.account":"{{ account_name }}",
-	"mold.default.domain.id":"{{ account_uuid }}",
+	"mold.default.domain.id":"{{ domain_uuid }}",
 	"mold.default.api.key":"{{ api_key }}",
 	"mold.default.secret.key":"{{ secret_key }}",
 	"mold.default.protocol":"{{ mold_protocol }}",
