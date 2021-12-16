@@ -419,16 +419,15 @@ export default {
               this.handleNetworkChange(this.networks[0])
             }
             if (this.accessType === 'external' && items[i].type === 'Isolated') {
+              this.networks.push(items[i])
               if (this.clusters.length !== 0) {
                 for (var j = 0; j < this.clusters[0].length; j++) {
-                  if (![this.clusters[0][j].networkid].includes(items[i].id)) {
-                    this.networks.push(items[i])
-                    this.networks = Array.from(new Set(this.networks))
-                    this.handleNetworkChange(this.networks[0])
+                  if ([this.clusters[0][j].networkid].includes(items[i].id)) {
+                    this.networks.pop(items[i])
                   }
+                  this.handleNetworkChange(this.networks[0])
                 }
               } else {
-                this.networks.push(items[i])
                 this.handleNetworkChange(this.networks[0])
               }
             }
