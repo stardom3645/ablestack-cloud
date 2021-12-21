@@ -158,19 +158,10 @@ public class DesktopClusterDestroyWorker extends DesktopClusterResourceModifierA
         if (publicIp == null) {
             throw new ManagementServerException(String.format("No source NAT IP addresses found for network : %s", network.getName()));
         }
-        FirewallRule firewallIngressRule = removeFirewallIngressRule(publicIp);
-        if (firewallIngressRule == null) {
-            logMessage(Level.WARN, "Firewall Ingress rule for Web access can't be removed", null);
-        }
-        FirewallRule firewallEgressRule = removeFirewallEgressRule(network);
-        if (firewallEgressRule == null) {
-            logMessage(Level.WARN, "Firewall Egressrule for Web access can't be removed", null);
-        }
-        try {
-            removePortForwardingRules(publicIp, network, owner, removedVmIds);
-        } catch (ResourceUnavailableException e) {
-            throw new ManagementServerException(String.format("Failed to desktop cluster port forwarding rules for network : %s", network.getName()));
-        }
+        // 네트워크 관련 삭제 작업시 error 출력 없이 auto 삭제
+        removeFirewallIngressRule(publicIp);
+        removeFirewallEgressRule(network);
+        removePortForwardingRules(publicIp, network, owner, removedVmIds);
     }
 
     private void validateClusterVMsDestroyed() {
