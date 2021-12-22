@@ -39,7 +39,6 @@ import com.cloud.desktop.cluster.DesktopClusterManagerImpl;
 import com.cloud.network.Network;
 import com.cloud.network.IpAddress;
 import com.cloud.network.dao.NetworkVO;
-// import com.cloud.network.rules.FirewallRule;
 import com.cloud.user.AccountManager;
 import com.cloud.uservm.UserVm;
 import com.cloud.server.ResourceTag;
