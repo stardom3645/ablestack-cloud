@@ -238,13 +238,15 @@ public class DesktopClusterResourceModifierActionWorker extends DesktopClusterAc
     protected void removeFirewallIngressRule(final IpAddress publicIp) {
         List<FirewallRuleVO> firewallRules = firewallRulesDao.listByIpAndPurposeAndNotRevoked(publicIp.getId(), FirewallRule.Purpose.Firewall);
         for (FirewallRuleVO firewallRule : firewallRules) {
-            if (firewallRule.getSourcePortStart() == CLUSTER_USER_PORTAL_PORT &&
-                    firewallRule.getSourcePortEnd() == CLUSTER_API_PORT && firewallRule.getTrafficType() == TrafficType.Ingress) {
-                firewallService.revokeIngressFwRule(firewallRule.getId(), true);
-            }
-            if (firewallRule.getSourcePortStart() == CLUSTER_SAMBA_PORT &&
-                    firewallRule.getSourcePortEnd() == CLUSTER_SAMBA_PORT && firewallRule.getTrafficType() == TrafficType.Ingress) {
-                firewallService.revokeIngressFwRule(firewallRule.getId(), true);
+            if (firewallRule.getSourcePortStart() != null && firewallRule.getSourcePortEnd() != null) {
+                if (firewallRule.getSourcePortStart() == CLUSTER_USER_PORTAL_PORT &&
+                        firewallRule.getSourcePortEnd() == CLUSTER_API_PORT && firewallRule.getTrafficType() == TrafficType.Ingress) {
+                    firewallService.revokeIngressFwRule(firewallRule.getId(), true);
+                }
+                if (firewallRule.getSourcePortStart() == CLUSTER_SAMBA_PORT &&
+                        firewallRule.getSourcePortEnd() == CLUSTER_SAMBA_PORT && firewallRule.getTrafficType() == TrafficType.Ingress) {
+                    firewallService.revokeIngressFwRule(firewallRule.getId(), true);
+                }
             }
         }
     }
@@ -252,9 +254,10 @@ public class DesktopClusterResourceModifierActionWorker extends DesktopClusterAc
     protected void removeFirewallEgressRule(final Network network) {
         List<FirewallRuleVO> firewallRules = firewallRulesDao.listByNetworkAndPurposeAndNotRevoked(network.getId(), FirewallRule.Purpose.Firewall);
         for (FirewallRuleVO firewallRule : firewallRules) {
-            if (firewallRule.getSourcePortStart() == CLUSTER_USER_PORTAL_PORT &&
-                    firewallRule.getSourcePortEnd() == CLUSTER_ADMIN_PORTAL_PORT && firewallRule.getTrafficType() == TrafficType.Egress) {
-                firewallService.revokeIngressFwRule(firewallRule.getId(), true);
+            if (firewallRule.getSourcePortStart() != null && firewallRule.getSourcePortEnd() != null) {
+                if (firewallRule.getSourcePortStart() == CLUSTER_USER_PORTAL_PORT && firewallRule.getSourcePortEnd() == CLUSTER_ADMIN_PORTAL_PORT && firewallRule.getTrafficType() == TrafficType.Egress) {
+                    firewallService.revokeIngressFwRule(firewallRule.getId(), true);
+                }
             }
         }
     }
