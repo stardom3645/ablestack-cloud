@@ -380,17 +380,19 @@ export default {
           params.associatednetworkid = this.resource.networkid
         }
       }
-      api('listPublicIpAddresses', params).then(json => {
-        let ips = json.listpublicipaddressesresponse.publicipaddress
-        if (this.arrayHasItems(ips)) {
-          ips = ips.filter(x => x.issourcenat)
-          this.publicIpAddress = ips.length > 0 ? ips[0] : null
-        }
-      }).catch(error => {
-        this.$notifyError(error)
-      }).finally(() => {
-        this.networkLoading = false
-      })
+      if (this.resource.networkid !== undefined) {
+        api('listPublicIpAddresses', params).then(json => {
+          let ips = json.listpublicipaddressesresponse.publicipaddress
+          if (this.arrayHasItems(ips)) {
+            ips = ips.filter(x => x.issourcenat)
+            this.publicIpAddress = ips.length > 0 ? ips[0] : null
+          }
+        }).catch(error => {
+          this.$notifyError(error)
+        }).finally(() => {
+          this.networkLoading = false
+        })
+      }
     },
     downloadKubernetesClusterConfig () {
       var blob = new Blob([this.clusterConfig], { type: 'text/plain' })
