@@ -1,5 +1,4 @@
 <powershell>
-copy $MyInvocation.MyCommand.Source c:\Works-DC\userdata.ps1
 date > "c:\Works-DC\installed.txt"
 $comname ="{{ instance_name }}"
 netsh advfirewall firewall add rule name="Works-DC" dir=in action=allow localport=8083 protocol=tcp
