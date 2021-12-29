@@ -150,6 +150,7 @@
 
 <script>
 import { api } from '@/api'
+import { isAdmin } from '@/role'
 import { mixinDevice } from '@/utils/mixin.js'
 import DetailsTab from '@/components/view/DetailsTab'
 import FirewallRules from '@/views/network/FirewallRules'
@@ -230,7 +231,7 @@ export default {
         dataIndex: 'zonename'
       }
     ]
-    if (!this.isAdmin()) {
+    if (!isAdmin()) {
       this.vmColumns = this.vmColumns.filter(x => x.dataIndex !== 'instancename')
     }
     this.handleFetchData()
@@ -278,12 +279,6 @@ export default {
           )
         }).join('&')
       )
-    },
-    isAdmin () {
-      return ['Admin'].includes(this.$store.getters.userInfo.roletype)
-    },
-    isAdminOrDomainAdmin () {
-      return ['Admin', 'DomainAdmin'].includes(this.$store.getters.userInfo.roletype)
     },
     isValidValueForKey (obj, key) {
       return key in obj && obj[key] != null
@@ -385,17 +380,19 @@ export default {
           params.associatednetworkid = this.resource.networkid
         }
       }
-      api('listPublicIpAddresses', params).then(json => {
-        let ips = json.listpublicipaddressesresponse.publicipaddress
-        if (this.arrayHasItems(ips)) {
-          ips = ips.filter(x => x.issourcenat)
-          this.publicIpAddress = ips.length > 0 ? ips[0] : null
-        }
-      }).catch(error => {
-        this.$notifyError(error)
-      }).finally(() => {
-        this.networkLoading = false
-      })
+      if (this.resource.networkid !== undefined) {
+        api('listPublicIpAddresses', params).then(json => {
+          let ips = json.listpublicipaddressesresponse.publicipaddress
+          if (this.arrayHasItems(ips)) {
+            ips = ips.filter(x => x.issourcenat)
+            this.publicIpAddress = ips.length > 0 ? ips[0] : null
+          }
+        }).catch(error => {
+          this.$notifyError(error)
+        }).finally(() => {
+          this.networkLoading = false
+        })
+      }
     },
     downloadKubernetesClusterConfig () {
       var blob = new Blob([this.clusterConfig], { type: 'text/plain' })

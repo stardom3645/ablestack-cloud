@@ -39,7 +39,6 @@ import com.cloud.desktop.cluster.DesktopClusterManagerImpl;
 import com.cloud.network.Network;
 import com.cloud.network.IpAddress;
 import com.cloud.network.dao.NetworkVO;
-import com.cloud.network.rules.FirewallRule;
 import com.cloud.user.AccountManager;
 import com.cloud.uservm.UserVm;
 import com.cloud.server.ResourceTag;
@@ -158,18 +157,12 @@ public class DesktopClusterDestroyWorker extends DesktopClusterResourceModifierA
         if (publicIp == null) {
             throw new ManagementServerException(String.format("No source NAT IP addresses found for network : %s", network.getName()));
         }
-        FirewallRule firewallIngressRule = removeFirewallIngressRule(publicIp);
-        if (firewallIngressRule == null) {
-            logMessage(Level.WARN, "Firewall Ingress rule for Web access can't be removed", null);
-        }
-        FirewallRule firewallEgressRule = removeFirewallEgressRule(network);
-        if (firewallEgressRule == null) {
-            logMessage(Level.WARN, "Firewall Egressrule for Web access can't be removed", null);
-        }
+        removeFirewallIngressRule(publicIp);
+        removeFirewallEgressRule(network);
         try {
             removePortForwardingRules(publicIp, network, owner, removedVmIds);
         } catch (ResourceUnavailableException e) {
-            throw new ManagementServerException(String.format("Failed to desktop cluster port forwarding rules for network : %s", network.getName()));
+            // throw new ManagementServerException(String.format("Failed to desktop cluster port forwarding rules for network : %s", network.getName()));
         }
     }
 

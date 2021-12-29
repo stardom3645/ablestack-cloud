@@ -14,17 +14,13 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-package org.apache.cloudstack.api;
 
-import org.apache.cloudstack.api.response.ProjectResponse;
+import store from '@/store'
 
-public abstract class BaseListProjectAndAccountResourcesCmd extends BaseListAccountResourcesCmd implements IBaseListProjectAndAccountResourcesCmd {
+export function isAdmin () {
+  return ['Admin'].includes(store.getters.userInfo.roletype)
+}
 
-    @Parameter(name = ApiConstants.PROJECT_ID, type = CommandType.UUID, entityType = ProjectResponse.class, description = "list objects by project; if projectid=-1 lists All VMs")
-    private Long projectId;
-
-    @Override
-    public Long getProjectId() {
-        return projectId;
-    }
+export function isAdminOrDomainAdmin () {
+  return ['Admin', 'DomainAdmin'].includes(store.getters.userInfo.roletype)
 }
