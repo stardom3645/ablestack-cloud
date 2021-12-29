@@ -2565,21 +2565,13 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
             sc.setParameters("dataCenterId", zoneId);
         }
         if (pod != null) {
-            SearchCriteria<StoragePoolJoinVO> ssc = _poolJoinDao.createSearchCriteria();
-            ssc.addOr("podId", Op.EQ, pod);
-            ssc.addOr("podId", Op.NULL);
-
-            sc.addAnd("podId", SearchCriteria.Op.SC, ssc);
+            sc.setParameters("podId", pod);
         }
         if (address != null) {
             sc.setParameters("hostAddress", address);
         }
         if (cluster != null) {
-            SearchCriteria<StoragePoolJoinVO> ssc = _poolJoinDao.createSearchCriteria();
-            ssc.addOr("clusterId", Op.EQ, cluster);
-            ssc.addOr("clusterId", Op.NULL);
-
-            sc.addAnd("clusterId", SearchCriteria.Op.SC, ssc);
+            sc.setParameters("clusterId", cluster);
         }
         if (scopeType != null) {
             sc.setParameters("scope", scopeType.toString());
