@@ -181,9 +181,7 @@ public class KVMHAMonitor extends KVMHABase implements Runnable {
                     }
                 }
             }
-        }
-
-        if (rbdstoragePool != null && !rbdstoragePool.isEmpty()) {
+        } else if (rbdstoragePool != null && !rbdstoragePool.isEmpty()) {
             synchronized (rbdstoragePool) {
                 Set<String> removedPools = new HashSet<>();
                 for (String uuid : rbdstoragePool.keySet()) {
