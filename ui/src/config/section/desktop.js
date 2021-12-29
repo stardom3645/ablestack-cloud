@@ -123,7 +123,7 @@ export default {
       details: ['name', 'version', 'description', 'templateostype', 'templatestate', 'masteruploadtype', 'templatename', 'mastertemplatetype', 'created'],
       actions: [
         {
-          api: 'addDesktopMasterVersion',
+          api: 'addDesktopControllerVersion',
           icon: 'plus',
           label: 'label.desktop.master.template.version',
           docHelp: '',

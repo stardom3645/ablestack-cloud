@@ -107,7 +107,7 @@
             :loading="templateVersionLoading"
             :placeholder="$t('placeholder.desktop.controller.template.version')">
             <a-select-option v-for="(opt, optIndex) in this.templateVersions" :key="optIndex">
-              {{ opt.name }} {{ opt.version }}
+              {{ opt.version }}
             </a-select-option>
           </a-select>
         </a-form-item>
