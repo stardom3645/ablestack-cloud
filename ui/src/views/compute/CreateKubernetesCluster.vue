@@ -463,7 +463,7 @@ export default {
         if (this.isValidValueForKey(values, 'networkid') && this.arrayHasItems(this.networks) && this.networks[values.networkid].id != null) {
           params.networkid = this.networks[values.networkid].id
         }
-        if (this.isValidValueForKey(values, 'keypair') && this.arrayHasItems(this.keyPairs) && this.keyPairs[values.keypair].id != null) {
+        if (this.isValidValueForKey(values, 'keypair') && this.arrayHasItems(this.keyPairs) && this.keyPairs[values.keypair].id != null && this.keyPairs[values.keypair].id !== '') {
           params.keypairid = this.keyPairs[values.keypair].id
           params.keypair = this.keyPairs[values.keypair].name
         }

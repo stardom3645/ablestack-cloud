@@ -91,7 +91,7 @@ public class KubernetesClusterVO implements KubernetesCluster {
     private String keyPair;
 
     @Column(name = "keypair_id")
-    private long keyPairId;
+    private Long keyPairId;
 
     @Column(name = "endpoint")
     private String endpoint;
@@ -281,6 +281,7 @@ public class KubernetesClusterVO implements KubernetesCluster {
         this.endpoint = endpoint;
     }
 
+    @Override
     public String getKeyPair() {
         return keyPair;
     }
@@ -289,11 +290,12 @@ public class KubernetesClusterVO implements KubernetesCluster {
         this.keyPair = keyPair;
     }
 
-    public long getKeyPairId() {
+    @Override
+    public Long getKeyPairId() {
         return keyPairId;
     }
 
-    public void setKeyPairId(long keyPairId) {
+    public void setKeyPairId(Long keyPairId) {
         this.keyPairId = keyPairId;
     }
 
@@ -356,7 +358,7 @@ public class KubernetesClusterVO implements KubernetesCluster {
 
     public KubernetesClusterVO(String name, String description, long zoneId, long kubernetesVersionId, long serviceOfferingId, long templateId,
                                long networkId, long domainId, long accountId, long controlNodeCount, long nodeCount, State state,
-                               String keyPair, long keyPairId, long cores, long memory, Long nodeRootDiskSize, String endpoint) {
+                               String keyPair, Long keyPairId, long cores, long memory, Long nodeRootDiskSize, String endpoint) {
         this.uuid = UUID.randomUUID().toString();
         this.name = name;
         this.description = description;
@@ -382,7 +384,7 @@ public class KubernetesClusterVO implements KubernetesCluster {
     }
 
     public KubernetesClusterVO(String name, String description, long zoneId, long kubernetesVersionId, long serviceOfferingId, long templateId,
-        long networkId, long domainId, long accountId, long controlNodeCount, long nodeCount, State state, String keyPair, long keyPairId, long cores,
+        long networkId, long domainId, long accountId, long controlNodeCount, long nodeCount, State state, String keyPair, Long keyPairId, long cores,
         long memory, Long nodeRootDiskSize, String endpoint, boolean autoscalingEnabled, Long minSize, Long maxSize) {
         this(name, description, zoneId, kubernetesVersionId, serviceOfferingId, templateId, networkId, domainId, accountId, controlNodeCount,
             nodeCount, state, keyPair, keyPairId, cores, memory, nodeRootDiskSize, endpoint);
