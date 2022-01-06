@@ -553,6 +553,7 @@ public class KubernetesClusterManagerImpl extends ManagerBase implements Kuberne
         response.setDomainId(domain.getUuid());
         response.setDomainName(domain.getName());
         response.setKeypair(kubernetesCluster.getKeyPair());
+        response.setKeypairId(String.valueOf(kubernetesCluster.getKeyPairId()));
         response.setState(kubernetesCluster.getState().toString());
         response.setCores(String.valueOf(kubernetesCluster.getCores()));
         response.setMemory(String.valueOf(kubernetesCluster.getMemory()));
@@ -1062,7 +1063,7 @@ public class KubernetesClusterManagerImpl extends ManagerBase implements Kuberne
             public KubernetesClusterVO doInTransaction(TransactionStatus status) {
                 KubernetesClusterVO newCluster = new KubernetesClusterVO(cmd.getName(), cmd.getDisplayName(), zone.getId(), clusterKubernetesVersion.getId(),
                         serviceOffering.getId(), finalTemplate.getId(), defaultNetwork.getId(), owner.getDomainId(),
-                        owner.getAccountId(), controlNodeCount, clusterSize, KubernetesCluster.State.Created, cmd.getSSHKeyPairName(), cores, memory, cmd.getNodeRootDiskSize(), "");
+                        owner.getAccountId(), controlNodeCount, clusterSize, KubernetesCluster.State.Created, cmd.getSSHKeyPairName(), cmd.getSSHKeyPairId(), cores, memory, cmd.getNodeRootDiskSize(), "");
                 kubernetesClusterDao.persist(newCluster);
                 return newCluster;
             }

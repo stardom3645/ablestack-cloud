@@ -289,7 +289,7 @@ export default {
     ]
     this.keyPairs = [
       {
-        id: null,
+        id: '',
         name: ''
       }
     ]
@@ -415,7 +415,8 @@ export default {
         if (this.arrayHasItems(listKeyPairs)) {
           for (var i = 0; i < listKeyPairs.length; i++) {
             this.keyPairs.push({
-              id: listKeyPairs[i].name,
+              id: listKeyPairs[i].id,
+              name: listKeyPairs[i].name,
               description: listKeyPairs[i].name
             })
           }
@@ -463,7 +464,8 @@ export default {
           params.networkid = this.networks[values.networkid].id
         }
         if (this.isValidValueForKey(values, 'keypair') && this.arrayHasItems(this.keyPairs) && this.keyPairs[values.keypair].id != null) {
-          params.keypair = this.keyPairs[values.keypair].id
+          params.keypairid = this.keyPairs[values.keypair].id
+          params.keypair = this.keyPairs[values.keypair].name
         }
         if (this.usePrivateRegistry) {
           params.dockerregistryusername = values.dockerregistryusername
