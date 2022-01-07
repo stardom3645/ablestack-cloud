@@ -374,7 +374,7 @@
           <div class="resource-detail-item__label">{{ $t('label.keypair') }}</div>
           <div class="resource-detail-item__details">
             <a-icon type="key" />
-            <router-link :to="{ path: '/ssh/' + resource.keypair }">{{ resource.keypair }}</router-link>
+            <router-link v-if="!isStatic && $router.resolve('/ssh/' + resource.keypairid).route.name !== '404'" :to="{ path: '/ssh/' + resource.keypairid }">{{ resource.keypair || resource.keypairid }} </router-link>
           </div>
         </div>
         <div class="resource-detail-item" v-if="resource.virtualmachineid">
