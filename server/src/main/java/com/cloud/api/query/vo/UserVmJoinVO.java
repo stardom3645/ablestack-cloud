@@ -635,6 +635,10 @@ public class UserVmJoinVO extends BaseViewWithTagInformationVO implements Contro
         return backupOfferingUuid;
     }
 
+    public Long getBackupOfferingId() {
+        return backupOfferingId;
+    }
+
     public String getBackupOfferingName() {
         return backupOfferingName;
     }
