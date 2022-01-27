@@ -235,36 +235,31 @@ public class DesktopClusterResourceModifierActionWorker extends DesktopClusterAc
         return null;
     }
 
-    protected FirewallRule removeFirewallIngressRule(final IpAddress publicIp) {
-        FirewallRule rule = null;
+    protected void removeFirewallIngressRule(final IpAddress publicIp) {
         List<FirewallRuleVO> firewallRules = firewallRulesDao.listByIpAndPurposeAndNotRevoked(publicIp.getId(), FirewallRule.Purpose.Firewall);
         for (FirewallRuleVO firewallRule : firewallRules) {
-            if (firewallRule.getSourcePortStart() == CLUSTER_USER_PORTAL_PORT &&
-                    firewallRule.getSourcePortEnd() == CLUSTER_API_PORT && firewallRule.getTrafficType() == TrafficType.Ingress) {
-                rule = firewallRule;
-                firewallService.revokeIngressFwRule(firewallRule.getId(), true);
-            }
-            if (firewallRule.getSourcePortStart() == CLUSTER_SAMBA_PORT &&
-                    firewallRule.getSourcePortEnd() == CLUSTER_SAMBA_PORT && firewallRule.getTrafficType() == TrafficType.Ingress) {
-                rule = firewallRule;
-                firewallService.revokeIngressFwRule(firewallRule.getId(), true);
+            if (firewallRule.getSourcePortStart() != null && firewallRule.getSourcePortEnd() != null) {
+                if (firewallRule.getSourcePortStart() == CLUSTER_USER_PORTAL_PORT &&
+                        firewallRule.getSourcePortEnd() == CLUSTER_API_PORT && firewallRule.getTrafficType() == TrafficType.Ingress) {
+                    firewallService.revokeIngressFwRule(firewallRule.getId(), true);
+                }
+                if (firewallRule.getSourcePortStart() == CLUSTER_SAMBA_PORT &&
+                        firewallRule.getSourcePortEnd() == CLUSTER_SAMBA_PORT && firewallRule.getTrafficType() == TrafficType.Ingress) {
+                    firewallService.revokeIngressFwRule(firewallRule.getId(), true);
+                }
             }
         }
-        return rule;
     }
 
-    protected FirewallRule removeFirewallEgressRule(final Network network) {
-        FirewallRule rule = null;
+    protected void removeFirewallEgressRule(final Network network) {
         List<FirewallRuleVO> firewallRules = firewallRulesDao.listByNetworkAndPurposeAndNotRevoked(network.getId(), FirewallRule.Purpose.Firewall);
         for (FirewallRuleVO firewallRule : firewallRules) {
-            if (firewallRule.getSourcePortStart() == CLUSTER_USER_PORTAL_PORT &&
-                    firewallRule.getSourcePortEnd() == CLUSTER_ADMIN_PORTAL_PORT && firewallRule.getTrafficType() == TrafficType.Egress) {
-                rule = firewallRule;
-                firewallService.revokeIngressFwRule(firewallRule.getId(), true);
-                break;
+            if (firewallRule.getSourcePortStart() != null && firewallRule.getSourcePortEnd() != null) {
+                if (firewallRule.getSourcePortStart() == CLUSTER_USER_PORTAL_PORT && firewallRule.getSourcePortEnd() == CLUSTER_ADMIN_PORTAL_PORT && firewallRule.getTrafficType() == TrafficType.Egress) {
+                    firewallService.revokeIngressFwRule(firewallRule.getId(), true);
+                }
             }
         }
-        return rule;
     }
 
     protected void removePortForwardingRules(final IpAddress publicIp, final Network network, final Account account, final List<Long> removedVMIds) throws ResourceUnavailableException {
@@ -274,7 +269,6 @@ public class DesktopClusterResourceModifierActionWorker extends DesktopClusterAc
                 for (PortForwardingRuleVO pfRule : pfRules) {
                     if (pfRule.getVirtualMachineId() == vmId) {
                         portForwardingRulesDao.remove(pfRule.getId());
-                        break;
                     }
                 }
             }

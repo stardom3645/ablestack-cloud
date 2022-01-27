@@ -553,6 +553,7 @@ public class KubernetesClusterManagerImpl extends ManagerBase implements Kuberne
         response.setDomainId(domain.getUuid());
         response.setDomainName(domain.getName());
         response.setKeypair(kubernetesCluster.getKeyPair());
+        response.setKeypairId(String.valueOf(kubernetesCluster.getKeyPairId()));
         response.setState(kubernetesCluster.getState().toString());
         response.setCores(String.valueOf(kubernetesCluster.getCores()));
         response.setMemory(String.valueOf(kubernetesCluster.getMemory()));
@@ -613,6 +614,7 @@ public class KubernetesClusterManagerImpl extends ManagerBase implements Kuberne
         final Account owner = accountService.getActiveAccountById(cmd.getEntityOwnerId());
         final Long networkId = cmd.getNetworkId();
         final String sshKeyPair = cmd.getSSHKeyPairName();
+        final Long sshKeyPairId = cmd.getSSHKeyPairId();
         final Long controlNodeCount = cmd.getControlNodes();
         final Long clusterSize = cmd.getClusterSize();
         final long totalNodeCount = controlNodeCount + clusterSize;
@@ -691,10 +693,10 @@ public class KubernetesClusterManagerImpl extends ManagerBase implements Kuberne
             throw new InvalidParameterValueException("No service offering with ID: " + serviceOfferingId);
         }
 
-        if (sshKeyPair != null && !sshKeyPair.isEmpty()) {
-            SSHKeyPairVO sshKeyPairVO = sshKeyPairDao.findByName(owner.getAccountId(), owner.getDomainId(), sshKeyPair);
+        if (sshKeyPair != null && !sshKeyPair.isEmpty() && sshKeyPairId != null && sshKeyPairId <= 0) {
+            SSHKeyPairVO sshKeyPairVO = sshKeyPairDao.findById(sshKeyPairId);
             if (sshKeyPairVO == null) {
-                throw new InvalidParameterValueException(String.format("Given SSH key pair with name: %s was not found for the account %s", sshKeyPair, owner.getAccountName()));
+                throw new InvalidParameterValueException(String.format("Given SSH key pair with id: %s was not found for the account %s", sshKeyPairId, owner.getAccountName()));
             }
         }
 
@@ -1062,7 +1064,7 @@ public class KubernetesClusterManagerImpl extends ManagerBase implements Kuberne
             public KubernetesClusterVO doInTransaction(TransactionStatus status) {
                 KubernetesClusterVO newCluster = new KubernetesClusterVO(cmd.getName(), cmd.getDisplayName(), zone.getId(), clusterKubernetesVersion.getId(),
                         serviceOffering.getId(), finalTemplate.getId(), defaultNetwork.getId(), owner.getDomainId(),
-                        owner.getAccountId(), controlNodeCount, clusterSize, KubernetesCluster.State.Created, cmd.getSSHKeyPairName(), cores, memory, cmd.getNodeRootDiskSize(), "");
+                        owner.getAccountId(), controlNodeCount, clusterSize, KubernetesCluster.State.Created, cmd.getSSHKeyPairName(), cmd.getSSHKeyPairId(), cores, memory, cmd.getNodeRootDiskSize(), "");
                 kubernetesClusterDao.persist(newCluster);
                 return newCluster;
             }

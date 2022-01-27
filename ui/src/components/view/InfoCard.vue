@@ -374,7 +374,7 @@
           <div class="resource-detail-item__label">{{ $t('label.keypair') }}</div>
           <div class="resource-detail-item__details">
             <a-icon type="key" />
-            <router-link :to="{ path: '/ssh/' + resource.keypair }">{{ resource.keypair }}</router-link>
+            <router-link v-if="!isStatic && $router.resolve('/ssh/' + resource.keypairid).route.name !== '404'" :to="{ path: '/ssh/' + resource.keypairid }">{{ resource.keypair || resource.keypairid }} </router-link>
           </div>
         </div>
         <div class="resource-detail-item" v-if="resource.virtualmachineid">
@@ -660,7 +660,7 @@
         </div>
       </div>
 
-      <div class="account-center-tags" v-if="!isStatic && resourceType && 'listTags' in $store.getters.apis">
+      <div class="account-center-tags" v-if="!isStatic && resourceType && tagsSupportingResourceTypes.includes(this.resourceType) && 'listTags' in $store.getters.apis">
         <a-divider/>
         <a-spin :spinning="loadingTags">
           <div class="title">{{ $t('label.tags') }}</div>
@@ -781,10 +781,12 @@ export default {
       this.showKeys = false
       this.setData()
 
-      if ('tags' in this.resource) {
-        this.tags = this.resource.tags
-      } else if (this.resourceType) {
-        this.getTags()
+      if (this.tagsSupportingResourceTypes.includes(this.resourceType)) {
+        if ('tags' in this.resource) {
+          this.tags = this.resource.tags
+        } else if (this.resourceType) {
+          this.getTags()
+        }
       }
       if ('apikey' in this.resource) {
         this.getUserKeys()
@@ -803,6 +805,12 @@ export default {
     await this.getIcons()
   },
   computed: {
+    tagsSupportingResourceTypes () {
+      return ['UserVm', 'Template', 'ISO', 'Volume', 'Snapshot', 'Backup', 'Network',
+        'LoadBalancer', 'PortForwardingRule', 'FirewallRule', 'SecurityGroup', 'SecurityGroupRule',
+        'PublicIpAddress', 'Project', 'Account', 'Vpc', 'NetworkACL', 'StaticRoute', 'VMSnapshot',
+        'RemoteAccessVpn', 'User', 'SnapshotPolicy', 'VpcOffering']
+    },
     name () {
       return this.resource.displayname || this.resource.displaytext || this.resource.name || this.resource.username ||
         this.resource.ipaddress || this.resource.virtualmachinename || this.resource.templatetype

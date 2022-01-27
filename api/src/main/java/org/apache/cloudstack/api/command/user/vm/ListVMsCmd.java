@@ -37,6 +37,7 @@ import org.apache.cloudstack.api.ApiConstants.VMDetails;
 import org.apache.cloudstack.api.BaseListTaggedResourcesCmd;
 import org.apache.cloudstack.api.Parameter;
 import org.apache.cloudstack.api.ResponseObject.ResponseView;
+import org.apache.cloudstack.api.response.BackupOfferingResponse;
 import org.apache.cloudstack.api.response.HostResponse;
 import org.apache.cloudstack.api.response.InstanceGroupResponse;
 import org.apache.cloudstack.api.response.IsoVmResponse;
@@ -49,6 +50,7 @@ import org.apache.cloudstack.api.response.TemplateResponse;
 import org.apache.cloudstack.api.response.UserVmResponse;
 import org.apache.cloudstack.api.response.VpcResponse;
 import org.apache.cloudstack.api.response.ZoneResponse;
+import org.apache.cloudstack.api.response.SSHKeyPairResponse;
 
 import com.cloud.exception.InvalidParameterValueException;
 import com.cloud.vm.VirtualMachine;
@@ -126,11 +128,14 @@ public class ListVMsCmd extends BaseListTaggedResourcesCmd implements UserCmd {
     @Parameter(name = ApiConstants.AFFINITY_GROUP_ID, type = CommandType.UUID, entityType = AffinityGroupResponse.class, description = "list vms by affinity group")
     private Long affinityGroupId;
 
-    @Parameter(name = ApiConstants.SSH_KEYPAIR, type = CommandType.STRING, description = "list vms by ssh keypair name")
-    private String keypair;
+    @Parameter(name = ApiConstants.SSH_KEYPAIR_ID, type = CommandType.UUID, entityType = SSHKeyPairResponse.class, description = "list vms by ssh keypair ID")
+    private Long keyPairId;
 
     @Parameter(name = ApiConstants.SERVICE_OFFERING_ID, type = CommandType.UUID, entityType = ServiceOfferingResponse.class, description = "list by the service offering", since = "4.4")
     private Long serviceOffId;
+
+    @Parameter(name = ApiConstants.BACKUP_OFFERING_ID, type = CommandType.UUID, entityType = BackupOfferingResponse.class, description = "list by the backup offering", since = "4.17")
+    private Long backupOffId;
 
     @Parameter(name = ApiConstants.DISPLAY_VM, type = CommandType.BOOLEAN, description = "list resources by display flag; only ROOT admin is eligible to pass this parameter", since = "4.4", authorized = {RoleType.Admin})
     private Boolean display;
@@ -180,6 +185,10 @@ public class ListVMsCmd extends BaseListTaggedResourcesCmd implements UserCmd {
         return serviceOffId;
     }
 
+    public Long getBackupOfferingId() {
+        return backupOffId;
+    }
+
     public Long getZoneId() {
         return zoneId;
     }
@@ -210,8 +219,8 @@ public class ListVMsCmd extends BaseListTaggedResourcesCmd implements UserCmd {
         return affinityGroupId;
     }
 
-    public String getKeyPairName() {
-        return keypair;
+    public Long getKeyPairId() {
+        return keyPairId;
     }
 
     public Long getHostId() {

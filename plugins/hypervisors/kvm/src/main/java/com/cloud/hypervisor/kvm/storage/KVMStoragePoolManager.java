@@ -333,6 +333,9 @@ public class KVMStoragePoolManager {
         if (type == StoragePoolType.NetworkFilesystem && primaryStorage) {
             KVMHABase.NfsStoragePool nfspool = new KVMHABase.NfsStoragePool(pool.getUuid(), host, path, pool.getLocalPath(), PoolType.PrimaryStorage);
             _haMonitor.addStoragePool(nfspool);
+        } else if (type == StoragePoolType.RBD && primaryStorage) {
+            KVMHABase.RbdStoragePool rbdpool = new KVMHABase.RbdStoragePool(pool.getUuid(), host, path, pool.getLocalPath(), PoolType.PrimaryStorage, pool.getAuthUserName(), pool.getAuthSecret(), pool.getSourceHost());
+            _haMonitor.addStoragePool(rbdpool);
         }
         StoragePoolInformation info = new StoragePoolInformation(name, host, port, path, userInfo, type, primaryStorage);
         addStoragePool(pool.getUuid(), info);

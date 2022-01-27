@@ -604,7 +604,7 @@ export default {
       related: [{
         name: 'vm',
         title: 'label.instances',
-        param: 'keypair'
+        param: 'keypairid'
       }],
       tabs: [
         {

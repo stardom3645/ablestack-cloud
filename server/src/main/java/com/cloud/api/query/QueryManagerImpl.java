@@ -981,9 +981,10 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
         Object isoId = cmd.getIsoId();
         Object vpcId = cmd.getVpcId();
         Object affinityGroupId = cmd.getAffinityGroupId();
-        Object keyPairName = cmd.getKeyPairName();
+        Object keyPairId = cmd.getKeyPairId();
         Object serviceOffId = cmd.getServiceOfferingId();
         Object securityGroupId = cmd.getSecurityGroupId();
+        Object backupOfferingId = cmd.getBackupOfferingId();
         Object isHaEnabled = cmd.getHaEnabled();
         Object pod = null;
         Long clusterId = null;
@@ -1016,6 +1017,11 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
         if (serviceOffId != null) {
             sb.and("serviceOfferingId", sb.entity().getServiceOfferingId(), SearchCriteria.Op.EQ);
         }
+
+        if (backupOfferingId != null) {
+            sb.and("backupOfferingId", sb.entity().getBackupOfferingId(), SearchCriteria.Op.EQ);
+        }
+
         if (display != null) {
             sb.and("display", sb.entity().isDisplayVm(), SearchCriteria.Op.EQ);
         }
@@ -1054,8 +1060,8 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
             sb.and("affinityGroupId", sb.entity().getAffinityGroupId(), SearchCriteria.Op.EQ);
         }
 
-        if (keyPairName != null) {
-            sb.and("keyPairName", sb.entity().getKeypairName(), SearchCriteria.Op.EQ);
+        if (keyPairId != null) {
+            sb.and("keyPairId", sb.entity().getKeyPairId(), SearchCriteria.Op.EQ);
         }
 
         if (!isRootAdmin) {
@@ -1100,6 +1106,10 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
 
         if (serviceOffId != null) {
             sc.setParameters("serviceOfferingId", serviceOffId);
+        }
+
+        if (backupOfferingId != null) {
+            sc.setParameters("backupOfferingId", backupOfferingId);
         }
 
         if (securityGroupId != null) {
@@ -1167,8 +1177,8 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
             sc.setParameters("affinityGroupId", affinityGroupId);
         }
 
-        if (keyPairName != null) {
-            sc.setParameters("keyPairName", keyPairName);
+        if (keyPairId != null) {
+            sc.setParameters("keyPairId", keyPairId);
         }
 
         if (_accountMgr.isRootAdmin(caller.getId())) {
@@ -3142,6 +3152,7 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
             SearchCriteria<ServiceOfferingJoinVO> cpuSearchCriteria = _srvOfferingJoinDao.createSearchCriteria();
             cpuSearchCriteria.addOr("minCpu", Op.NULL);
             cpuSearchCriteria.addOr("constraints", Op.SC, cpuConstraintSearchCriteria);
+            cpuSearchCriteria.addOr("minCpu", Op.GTEQ, cpuNumber);
 
             sc.addAnd("cpuConstraints", SearchCriteria.Op.SC, cpuSearchCriteria);
         }
@@ -3154,6 +3165,7 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
             SearchCriteria<ServiceOfferingJoinVO> memSearchCriteria = _srvOfferingJoinDao.createSearchCriteria();
             memSearchCriteria.addOr("minMemory", Op.NULL);
             memSearchCriteria.addOr("memconstraints", Op.SC, memoryConstraintSearchCriteria);
+            memSearchCriteria.addOr("minMemory", Op.GTEQ, memory);
 
             sc.addAnd("memoryConstraints", SearchCriteria.Op.SC, memSearchCriteria);
         }
@@ -3161,7 +3173,7 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
         if (cpuSpeed != null) {
             SearchCriteria<ServiceOfferingJoinVO> cpuSpeedSearchCriteria = _srvOfferingJoinDao.createSearchCriteria();
             cpuSpeedSearchCriteria.addOr("speed", Op.NULL);
-            cpuSpeedSearchCriteria.addOr("speed", Op.EQ, cpuSpeed);
+            cpuSpeedSearchCriteria.addOr("speed", Op.GTEQ, cpuSpeed);
             sc.addAnd("cpuspeedconstraints", SearchCriteria.Op.SC, cpuSpeedSearchCriteria);
         }
 

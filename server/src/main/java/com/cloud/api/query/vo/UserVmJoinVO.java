@@ -354,7 +354,13 @@ public class UserVmJoinVO extends BaseViewWithTagInformationVO implements Contro
     private String projectName;
 
     @Column(name = "keypair_name")
-    private String keypairName;
+    private String keyPairName;
+
+    @Column(name = "keypair_id")
+    private long keyPairId;
+
+    @Column(name = "keypair_uuid")
+    private String keyPairUuid;
 
     @Column(name = "job_id")
     private Long jobId;
@@ -629,6 +635,10 @@ public class UserVmJoinVO extends BaseViewWithTagInformationVO implements Contro
         return backupOfferingUuid;
     }
 
+    public Long getBackupOfferingId() {
+        return backupOfferingId;
+    }
+
     public String getBackupOfferingName() {
         return backupOfferingName;
     }
@@ -775,8 +785,16 @@ public class UserVmJoinVO extends BaseViewWithTagInformationVO implements Contro
         return projectName;
     }
 
-    public String getKeypairName() {
-        return keypairName;
+    public String getKeyPairName() {
+        return keyPairName;
+    }
+
+    public long getKeyPairId() {
+        return keyPairId;
+    }
+
+    public String getKeyPairUuid() {
+        return keyPairUuid;
     }
 
     public boolean isLimitCpuUse() {
