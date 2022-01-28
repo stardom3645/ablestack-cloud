@@ -211,3 +211,5 @@ ALTER TABLE `cloud`.`kubernetes_cluster` ADD COLUMN `keypair_id` bigint COMMENT 
 UPDATE cloud.kubernetes_cluster AS kubernetes_cluster, cloud.ssh_keypairs AS ssh_keypairs
 SET kubernetes_cluster.`keypair_id`=ssh_keypairs.`id`
 WHERE kubernetes_cluster.`key_pair`=ssh_keypairs.`keypair_name` AND kubernetes_cluster.`domain_id`=ssh_keypairs.`domain_id` AND kubernetes_cluster.`account_id`=ssh_keypairs.`account_id` AND kubernetes_cluster.`removed` is null;
+
+ALTER TABLE `cloud`.`vm_work_job` ADD COLUMN `secondary_object` char(100) COMMENT 'any additional item that must be checked during queueing' AFTER `vm_instance_id`;
