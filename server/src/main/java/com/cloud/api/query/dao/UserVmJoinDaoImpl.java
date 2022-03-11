@@ -133,7 +133,7 @@ public class UserVmJoinDaoImpl extends GenericDaoBaseWithTagInformation<UserVmJo
             userVmResponse.setDisplayName(userVm.getName());
         }
 
-        if (userVm.getAccountType() == Account.ACCOUNT_TYPE_PROJECT) {
+        if (userVm.getAccountType() == Account.Type.PROJECT) {
             userVmResponse.setProjectId(userVm.getProjectUuid());
             userVmResponse.setProjectName(userVm.getProjectName());
         } else {
@@ -220,6 +220,7 @@ public class UserVmJoinDaoImpl extends GenericDaoBaseWithTagInformation<UserVmJo
         userVmResponse.setPublicIp(userVm.getPublicIpAddress());
         userVmResponse.setKeyPairName(userVm.getKeyPairName());
         userVmResponse.setKeyPairId(userVm.getKeyPairUuid());
+        userVmResponse.setKeyPairNames(userVm.getKeypairNames());
         userVmResponse.setOsTypeId(userVm.getGuestOsUuid());
         GuestOS guestOS = ApiDBUtils.findGuestOSById(userVm.getGuestOsId());
         if (guestOS != null) {
@@ -256,7 +257,7 @@ public class UserVmJoinDaoImpl extends GenericDaoBaseWithTagInformation<UserVmJo
                 resp.setName(userVm.getSecurityGroupName());
                 resp.setDescription(userVm.getSecurityGroupDescription());
                 resp.setObjectName("securitygroup");
-                if (userVm.getAccountType() == Account.ACCOUNT_TYPE_PROJECT) {
+                if (userVm.getAccountType() == Account.Type.PROJECT) {
                     resp.setProjectId(userVm.getProjectUuid());
                     resp.setProjectName(userVm.getProjectName());
                 } else {
@@ -365,14 +366,14 @@ public class UserVmJoinDaoImpl extends GenericDaoBaseWithTagInformation<UserVmJo
             }
 
             // Remove deny listed settings if user is not admin
-            if (caller.getType() != Account.ACCOUNT_TYPE_ADMIN) {
+            if (caller.getType() != Account.Type.ADMIN) {
                 String[] userVmSettingsToHide = QueryService.UserVMDeniedDetails.value().split(",");
                 for (String key : userVmSettingsToHide) {
                     resourceDetails.remove(key.trim());
                 }
             }
             userVmResponse.setDetails(resourceDetails);
-            if (caller.getType() != Account.ACCOUNT_TYPE_ADMIN) {
+            if (caller.getType() != Account.Type.ADMIN) {
                 userVmResponse.setReadOnlyDetails(QueryService.UserVMReadOnlyDetails.value());
             }
         }
@@ -417,7 +418,7 @@ public class UserVmJoinDaoImpl extends GenericDaoBaseWithTagInformation<UserVmJo
             resp.setName(uvo.getSecurityGroupName());
             resp.setDescription(uvo.getSecurityGroupDescription());
             resp.setObjectName("securitygroup");
-            if (uvo.getAccountType() == Account.ACCOUNT_TYPE_PROJECT) {
+            if (uvo.getAccountType() == Account.Type.PROJECT) {
                 resp.setProjectId(uvo.getProjectUuid());
                 resp.setProjectName(uvo.getProjectName());
             } else {
