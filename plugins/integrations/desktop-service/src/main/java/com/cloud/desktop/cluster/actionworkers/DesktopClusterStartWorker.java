@@ -175,11 +175,11 @@ public class DesktopClusterStartWorker extends DesktopClusterResourceModifierAct
         }
         String base64UserData = Base64.encodeBase64String(desktopClusterDcConfig.getBytes(StringUtils.getPreferredCharset()));
         if (dcIp == null || network.getGuestType() == Network.GuestType.L2) {
-            Network.IpAddresses addrs = new Network.IpAddresses(null, null, null, null);
+            Network.IpAddresses addrs = new Network.IpAddresses(null, null, null);
             dcControlVm = userVmService.createAdvancedVirtualMachine(zone, serviceOffering, dcTemplate, networkIds, owner,
                 hostName, hostName, null, null, null,
                 dcTemplate.getHypervisorType(), BaseCmd.HTTPMethod.POST, base64UserData, null,
-                null, addrs, null, null, null, customParameterMap, null, null, null, null, true, null);
+                null, addrs, null, null, null, customParameterMap, null, null, null, null, true, null, null);
         } else {
             ipToNetworkMap = new LinkedHashMap<Long, IpAddresses>();
             Network.IpAddresses addrs = new Network.IpAddresses(null, null, null);
