@@ -29,6 +29,7 @@ import java.util.concurrent.TimeUnit;
 
 import javax.inject.Inject;
 
+import com.cloud.offering.DiskOffering;
 import org.apache.log4j.Logger;
 
 import com.google.gson.Gson;
@@ -106,7 +107,6 @@ import com.cloud.user.dao.AccountDao;
 import com.cloud.user.dao.UserDao;
 import com.cloud.uservm.UserVm;
 import com.cloud.utils.Pair;
-import com.cloud.utils.Ternary;
 import com.cloud.utils.component.ComponentContext;
 import com.cloud.utils.component.ManagerBase;
 import com.cloud.utils.db.DB;
@@ -327,7 +327,7 @@ public class AutoScaleManagerImpl<Type> extends ManagerBase implements AutoScale
         }
 
         if (csUrl == null || csUrl.contains("localhost")) {
-            throw new InvalidParameterValueException("Global setting endpointe.url has to be set to the Management Server's API end point");
+            throw new InvalidParameterValueException(String.format("Global setting %s has to be set to the Management Server's API end point", ApiServiceConfiguration.ApiServletPath.key()));
         }
 
         vmProfile = _autoScaleVmProfileDao.persist(vmProfile);
@@ -644,13 +644,11 @@ public class AutoScaleManagerImpl<Type> extends ManagerBase implements AutoScale
             long pageSizeVal = cmd.getPageSizeVal();
             Account caller = CallContext.current().getCallingAccount();
 
-            Ternary<Long, Boolean, ListProjectResourcesCriteria> domainIdRecursiveListProject = new Ternary<Long, Boolean,
-                    ListProjectResourcesCriteria>(domainId, isRecursive, null);
+            Pair<Long, ListProjectResourcesCriteria> domainIdRecursiveListProject = new Pair<Long, ListProjectResourcesCriteria>(domainId, null);
             _accountMgr.buildACLSearchParameters(caller, id, accountName, null, permittedAccounts, domainIdRecursiveListProject,
                     listAll, false);
             domainId = domainIdRecursiveListProject.first();
-            isRecursive = domainIdRecursiveListProject.second();
-            ListProjectResourcesCriteria listProjectResourcesCriteria = domainIdRecursiveListProject.third();
+            ListProjectResourcesCriteria listProjectResourcesCriteria = domainIdRecursiveListProject.second();
             _accountMgr.buildACLSearchBuilder(searchBuilder, domainId, isRecursive, permittedAccounts, listProjectResourcesCriteria);
             searchFilter = new Filter(entityClass, "id", false, startIndex, pageSizeVal);
         }
@@ -1307,6 +1305,11 @@ public class AutoScaleManagerImpl<Type> extends ManagerBase implements AutoScale
                 throw new InvalidParameterValueException("Unable to find service offering: " + serviceOfferingId);
             }
 
+            DiskOffering diskOffering = _entityMgr.findById(DiskOffering.class, serviceOffering.getDiskOfferingId());
+            if (diskOffering == null) {
+                throw new InvalidParameterValueException("Unable to find disk offering: " + serviceOffering.getDiskOfferingId());
+            }
+
             VirtualMachineTemplate template = _entityMgr.findById(VirtualMachineTemplate.class, templateId);
             // Make sure a valid template ID was specified
             if (template == null) {
@@ -1314,8 +1317,8 @@ public class AutoScaleManagerImpl<Type> extends ManagerBase implements AutoScale
             }
 
             if (!zone.isLocalStorageEnabled()) {
-                if (serviceOffering.isUseLocalStorage()) {
-                    throw new InvalidParameterValueException("Zone is not configured to use local storage but service offering " + serviceOffering.getName() + " uses it");
+                if (diskOffering.isUseLocalStorage()) {
+                    throw new InvalidParameterValueException("Zone is not configured to use local storage but disk offering " + diskOffering.getName() + " associated to the service offering " + serviceOffering.getName() + " uses it");
                 }
             }
 
@@ -1325,18 +1328,18 @@ public class AutoScaleManagerImpl<Type> extends ManagerBase implements AutoScale
                 vm = _userVmService.createBasicSecurityGroupVirtualMachine(zone, serviceOffering, template, null, owner, "autoScaleVm-" + asGroup.getId() + "-" +
                     getCurrentTimeStampString(),
                     "autoScaleVm-" + asGroup.getId() + "-" + getCurrentTimeStampString(), null, null, null, HypervisorType.XenServer, HTTPMethod.GET, null, null, null,
-                    null, true, null, null, null, null, null, null, null, true);
+                    null, true, null, null, null, null, null, null, null, true, null);
             } else {
                 if (zone.isSecurityGroupEnabled()) {
                     vm = _userVmService.createAdvancedSecurityGroupVirtualMachine(zone, serviceOffering, template, null, null,
                         owner, "autoScaleVm-" + asGroup.getId() + "-" + getCurrentTimeStampString(),
                         "autoScaleVm-" + asGroup.getId() + "-" + getCurrentTimeStampString(), null, null, null, HypervisorType.XenServer, HTTPMethod.GET, null, null,
-                        null, null, true, null, null, null, null, null, null, null, true);
+                        null, null, true, null, null, null, null, null, null, null, true, null);
 
                 } else {
                     vm = _userVmService.createAdvancedVirtualMachine(zone, serviceOffering, template, null, owner, "autoScaleVm-" + asGroup.getId() + "-" +
                         getCurrentTimeStampString(), "autoScaleVm-" + asGroup.getId() + "-" + getCurrentTimeStampString(),
-                        null, null, null, HypervisorType.XenServer, HTTPMethod.GET, null, null, null, addrs, true, null, null, null, null, null, null, null, true, null);
+                        null, null, null, HypervisorType.XenServer, HTTPMethod.GET, null, null, null, addrs, true, null, null, null, null, null, null, null, true, null, null);
 
                 }
             }

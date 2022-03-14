@@ -1036,12 +1036,10 @@ public class SecondaryStorageManagerImpl extends ManagerBase implements Secondar
             if (host != null) {
                 s_logger.debug(String.format("Removing host entry for secondary storage VM [%s].", vmId));
                 _hostDao.remove(host.getId());
-
                 _tmplStoreDao.expireDnldUrlsForZone(host.getDataCenterId());
                 _volumeStoreDao.expireDnldUrlsForZone(host.getDataCenterId());
-                return true;
             }
-            return false;
+            return true;
         } catch (ResourceUnavailableException e) {
             s_logger.error(String.format("Unable to expunge secondary storage [%s] due to [%s].", ssvm.toString(), e.getMessage()), e);
             return false;
@@ -1127,8 +1125,11 @@ public class SecondaryStorageManagerImpl extends ManagerBase implements Secondar
             }
             if (nic.getTrafficType() == TrafficType.Management) {
                 String mgmt_cidr = _configDao.getValue(Config.ManagementNetwork.key());
-                if (NetUtils.isValidIp4Cidr(mgmt_cidr)) {
+                if (NetUtils.isValidCidrList(mgmt_cidr)) {
+                    s_logger.debug("Management server cidr list is " + mgmt_cidr);
                     buf.append(" mgmtcidr=").append(mgmt_cidr);
+                } else {
+                    s_logger.error("Inavlid management server cidr list: " + mgmt_cidr);
                 }
                 buf.append(" localgw=").append(dest.getPod().getGateway());
                 buf.append(" private.network.device=").append("eth").append(deviceId);

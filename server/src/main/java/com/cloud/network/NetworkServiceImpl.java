@@ -1249,8 +1249,8 @@ public class NetworkServiceImpl extends ManagerBase implements NetworkService, C
             }
         }
 
-        boolean ipv4 = true, ipv6 = false;
-        if (startIP != null) {
+        boolean ipv4 = false, ipv6 = false;
+        if (org.apache.commons.lang3.StringUtils.isNoneBlank(gateway, netmask)) {
             ipv4 = true;
         }
         if (StringUtils.isNoneBlank(ip6Cidr, ip6Gateway)) {
@@ -1294,14 +1294,10 @@ public class NetworkServiceImpl extends ManagerBase implements NetworkService, C
                 } else if (!NetUtils.isValidIp4(endIP)) {
                     throw new InvalidParameterValueException("Invalid format for the endIp parameter");
                 }
-            }
-
-            if (startIP != null && endIP != null) {
                 if (!(gateway != null && netmask != null)) {
                     throw new InvalidParameterValueException("gateway and netmask should be defined when startIP/endIP are passed in");
                 }
             }
-
             if (gateway != null && netmask != null) {
                 if (NetUtils.isNetworkorBroadcastIP(gateway, netmask)) {
                     if (s_logger.isDebugEnabled()) {
@@ -1335,6 +1331,10 @@ public class NetworkServiceImpl extends ManagerBase implements NetworkService, C
             if(StringUtils.isAllBlank(zone.getIp6Dns1(), zone.getIp6Dns2())) {
                 throw new InvalidParameterValueException("Can only create IPv6 network if the zone has IPv6 DNS! Please configure the zone IPv6 DNS1 and/or IPv6 DNS2.");
             }
+
+            if (!ipv4 && ntwkOff.getGuestType() == GuestType.Shared && _networkModel.isProviderForNetworkOffering(Provider.VirtualRouter, networkOfferingId)) {
+                throw new InvalidParameterValueException("Currently IPv6-only Shared network with Virtual Router provider is not supported.");
+            }
         }
 
         validateRouterIps(routerIp, routerIpv6, startIP, endIP, gateway, netmask, startIPv6, endIPv6, ip6Cidr);
@@ -1357,12 +1357,8 @@ public class NetworkServiceImpl extends ManagerBase implements NetworkService, C
 
         performBasicPrivateVlanChecks(vlanId, secondaryVlanId, privateVlanType);
 
-        // Regular user can create Guest Isolated Source Nat enabled network only
-        if (_accountMgr.isNormalUser(caller.getId()) && (ntwkOff.getTrafficType() != TrafficType.Guest
-                || ntwkOff.getGuestType() != Network.GuestType.Isolated && areServicesSupportedByNetworkOffering(ntwkOff.getId(), Service.SourceNat))) {
-            throw new InvalidParameterValueException(
-                    String.format("Regular users can only create a network from network offerings having traffic type [%s] and network type [%s] with a service [%s] enabled.", TrafficType.Guest,
-                            Network.GuestType.Isolated, Service.SourceNat.getName()));
+        if (!_accountMgr.isRootAdmin(caller.getId())) {
+            validateNetworkOfferingForNonRootAdminUser(ntwkOff);
         }
 
         // Don't allow to specify vlan if the caller is not ROOT admin
@@ -1452,6 +1448,19 @@ public class NetworkServiceImpl extends ManagerBase implements NetworkService, C
             }
         }
         return network;
+    }
+
+    private void validateNetworkOfferingForNonRootAdminUser(NetworkOfferingVO ntwkOff) {
+        if (ntwkOff.getTrafficType() != TrafficType.Guest) {
+            throw new InvalidParameterValueException("This user can only create a Guest network");
+        }
+        if (ntwkOff.getGuestType() == GuestType.L2 || ntwkOff.getGuestType() == GuestType.Isolated) {
+            s_logger.debug(String.format("Creating a network from network offerings having traffic type [%s] and network type [%s].",
+                    TrafficType.Guest, ntwkOff.getGuestType()));
+        } else {
+            throw new InvalidParameterValueException(
+                    String.format("This user can only create an %s network or a %s network.", GuestType.Isolated, GuestType.L2));
+        }
     }
 
     /**
@@ -1603,7 +1612,6 @@ public class NetworkServiceImpl extends ManagerBase implements NetworkService, C
         Long physicalNetworkId = cmd.getPhysicalNetworkId();
         List<String> supportedServicesStr = cmd.getSupportedServices();
         Boolean restartRequired = cmd.isRestartRequired();
-        boolean listAll = cmd.listAll();
         boolean isRecursive = cmd.isRecursive();
         Boolean specifyIpRanges = cmd.isSpecifyIpRanges();
         Long vpcId = cmd.getVpcId();
@@ -1681,10 +1689,6 @@ public class NetworkServiceImpl extends ManagerBase implements NetworkService, C
             path = _domainDao.findById(domainId).getPath();
         } else {
             path = _domainDao.findById(caller.getDomainId()).getPath();
-        }
-
-        if (listAll && domainId == null) {
-            isRecursive = true;
         }
 
         Filter searchFilter = new Filter(NetworkVO.class, "id", false, null, null);
@@ -1855,9 +1859,9 @@ public class NetworkServiceImpl extends ManagerBase implements NetworkService, C
         }
 
         if (skipProjectNetworks) {
-            sc.setJoinParameters("accountSearch", "typeNEQ", Account.ACCOUNT_TYPE_PROJECT);
+            sc.setJoinParameters("accountSearch", "typeNEQ", Account.Type.PROJECT);
         } else {
-            sc.setJoinParameters("accountSearch", "typeEQ", Account.ACCOUNT_TYPE_PROJECT);
+            sc.setJoinParameters("accountSearch", "typeEQ", Account.Type.PROJECT);
         }
 
         if (restartRequired != null) {
@@ -1983,12 +1987,7 @@ public class NetworkServiceImpl extends ManagerBase implements NetworkService, C
         Account caller = CallContext.current().getCallingAccount();
 
         // Verify network id
-        NetworkVO network = _networksDao.findById(networkId);
-        if (network == null) {
-            // see NetworkVO.java
-
-            throwInvalidIdException("unable to find network with specified id", String.valueOf(networkId), "networkId");
-        }
+        NetworkVO network = getNetworkVO(networkId, "Unable to find a network with the specified ID.");
 
         // don't allow to delete system network
         if (isNetworkSystem(network)) {
@@ -2018,10 +2017,20 @@ public class NetworkServiceImpl extends ManagerBase implements NetworkService, C
     @Override
     @ActionEvent(eventType = EventTypes.EVENT_NETWORK_RESTART, eventDescription = "restarting network", async = true)
     public boolean restartNetwork(Long networkId, boolean cleanup, boolean makeRedundant, User user) throws ConcurrentOperationException, ResourceUnavailableException, InsufficientCapacityException {
+        NetworkVO network = getNetworkVO(networkId, "Network with specified id doesn't exist");
+        return restartNetwork(network, cleanup, makeRedundant, user);
+    }
+
+    private NetworkVO getNetworkVO(Long networkId, String errMsgFormat) {
         NetworkVO network = _networksDao.findById(networkId);
         if (network == null) {
-            throwInvalidIdException("Network with specified id doesn't exist", networkId.toString(), "networkId");
+            throwInvalidIdException(errMsgFormat, networkId.toString(), "networkId");
         }
+        return network;
+    }
+
+    @ActionEvent(eventType = EventTypes.EVENT_NETWORK_RESTART, eventDescription = "restarting network", async = true)
+    public boolean restartNetwork(NetworkVO network, boolean cleanup, boolean makeRedundant, User user) throws ConcurrentOperationException, ResourceUnavailableException, InsufficientCapacityException {
 
         // Don't allow to restart network if it's not in Implemented/Setup state
         if (!(network.getState() == Network.State.Implemented || network.getState() == Network.State.Setup)) {
@@ -2047,11 +2056,12 @@ public class NetworkServiceImpl extends ManagerBase implements NetworkService, C
             cleanup = true;
         }
 
-        boolean success = _networkMgr.restartNetwork(networkId, callerAccount, user, cleanup);
+        long id = network.getId();
+        boolean success = _networkMgr.restartNetwork(id, callerAccount, user, cleanup);
         if (success) {
-            s_logger.debug("Network id=" + networkId + " is restarted successfully.");
+            s_logger.debug(String.format("Network id=%d is restarted successfully.",id));
         } else {
-            s_logger.warn("Network id=" + networkId + " failed to restart.");
+            s_logger.warn(String.format("Network id=%d failed to restart.",id));
         }
 
         return success;
@@ -2061,11 +2071,14 @@ public class NetworkServiceImpl extends ManagerBase implements NetworkService, C
     @ActionEvent(eventType = EventTypes.EVENT_NETWORK_RESTART, eventDescription = "restarting network", async = true)
     public boolean restartNetwork(RestartNetworkCmd cmd) throws ConcurrentOperationException, ResourceUnavailableException, InsufficientCapacityException {
         // This method restarts all network elements belonging to the network and re-applies all the rules
-        Long networkId = cmd.getNetworkId();
+        NetworkVO network = getNetworkVO(cmd.getNetworkId(), "Network [%s] to restart was not found.");
         boolean cleanup = cmd.getCleanup();
+        if (network.getVpcId() != null && cleanup) {
+            throwInvalidIdException("Cannot restart a VPC tier with cleanup, please restart the whole VPC.", network.getUuid(), "network tier");
+        }
         boolean makeRedundant = cmd.getMakeRedundant();
         User callerUser = _accountMgr.getActiveUser(CallContext.current().getCallingUserId());
-        return restartNetwork(networkId, cleanup, makeRedundant, callerUser);
+        return restartNetwork(network, cleanup, makeRedundant, callerUser);
     }
 
     @Override
@@ -2202,11 +2215,7 @@ public class NetworkServiceImpl extends ManagerBase implements NetworkService, C
         boolean restartNetwork = false;
 
         // verify input parameters
-        final NetworkVO network = _networksDao.findById(networkId);
-        if (network == null) {
-            // see NetworkVO.java
-            throwInvalidIdException("Specified network id doesn't exist in the system", String.valueOf(networkId), "networkId");
-        }
+        final NetworkVO network = getNetworkVO(networkId, "Specified network id doesn't exist in the system");
 
         //perform below validation if the network is vpc network
         if (network.getVpcId() != null && networkOfferingId != null) {
@@ -4645,7 +4654,7 @@ public class NetworkServiceImpl extends ManagerBase implements NetworkService, C
         Long networkId = cmd.getNetworkId();
         UserVmVO userVm = _userVmDao.findById(vmId);
 
-        if (userVm == null || (!userVm.isDisplayVm() && caller.getType() == Account.ACCOUNT_TYPE_NORMAL)) {
+        if (userVm == null || (!userVm.isDisplayVm() && caller.getType() == Account.Type.NORMAL)) {
             throwInvalidIdException("Virtual machine id does not exist", Long.valueOf(vmId).toString(), "vmId");
         }
 
@@ -4661,7 +4670,7 @@ public class NetworkServiceImpl extends ManagerBase implements NetworkService, C
         String keyword = cmd.getKeyword();
         UserVmVO userVm = _userVmDao.findById(vmId);
 
-        if (userVm == null || (!userVm.isDisplayVm() && caller.getType() == Account.ACCOUNT_TYPE_NORMAL)) {
+        if (userVm == null || (!userVm.isDisplayVm() && caller.getType() == Account.Type.NORMAL)) {
             throwInvalidIdException("Virtual machine id does not exist", Long.valueOf(vmId).toString(), "vmId");
         }
 
@@ -4690,7 +4699,7 @@ public class NetworkServiceImpl extends ManagerBase implements NetworkService, C
         // verify permissions
         if (ipVO.getAllocatedToAccountId() != null) {
             _accountMgr.checkAccess(caller, null, true, ipVO);
-        } else if (caller.getType() != Account.ACCOUNT_TYPE_ADMIN) {
+        } else if (caller.getType() != Account.Type.ADMIN) {
             throw new PermissionDeniedException("Only Root admin can update non-allocated ip addresses");
         }
 

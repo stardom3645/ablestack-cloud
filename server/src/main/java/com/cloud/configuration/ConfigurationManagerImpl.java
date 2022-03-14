@@ -43,7 +43,6 @@ import java.util.Vector;
 import javax.inject.Inject;
 import javax.naming.ConfigurationException;
 
-import com.googlecode.ipv6.IPv6Address;
 import org.apache.cloudstack.acl.SecurityChecker;
 import org.apache.cloudstack.affinity.AffinityGroup;
 import org.apache.cloudstack.affinity.AffinityGroupService;
@@ -85,6 +84,7 @@ import org.apache.cloudstack.config.ApiServiceConfiguration;
 import org.apache.cloudstack.config.Configuration;
 import org.apache.cloudstack.context.CallContext;
 import org.apache.cloudstack.engine.orchestration.service.NetworkOrchestrationService;
+import org.apache.cloudstack.engine.orchestration.service.VolumeOrchestrationService;
 import org.apache.cloudstack.engine.subsystem.api.storage.DataStoreManager;
 import org.apache.cloudstack.engine.subsystem.api.storage.ZoneScope;
 import org.apache.cloudstack.framework.config.ConfigDepot;
@@ -270,6 +270,7 @@ import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import org.apache.commons.lang3.StringUtils;
 import com.google.common.collect.Sets;
+import com.googlecode.ipv6.IPv6Address;
 
 public class ConfigurationManagerImpl extends ManagerBase implements ConfigurationManager, ConfigurationService, Configurable {
     public static final Logger s_logger = Logger.getLogger(ConfigurationManagerImpl.class);
@@ -421,7 +422,6 @@ public class ConfigurationManagerImpl extends ManagerBase implements Configurati
     @Inject
     protected DataCenterLinkLocalIpAddressDao _linkLocalIpAllocDao;
 
-    private int _maxVolumeSizeInGb = Integer.parseInt(Config.MaxVolumeSize.getDefaultValue());
     private long _defaultPageSize = Long.parseLong(Config.DefaultPageSize.getDefaultValue());
     private static final String DOMAIN_NAME_PATTERN = "^((?!-)[A-Za-z0-9-]{1,63}(?<!-)\\.)+[A-Za-z]{1,63}$";
     protected Set<String> configValuesForValidation;
@@ -477,9 +477,6 @@ public class ConfigurationManagerImpl extends ManagerBase implements Configurati
 
     @Override
     public boolean configure(final String name, final Map<String, Object> params) throws ConfigurationException {
-        final String maxVolumeSizeInGbString = _configDao.getValue(Config.MaxVolumeSize.key());
-        _maxVolumeSizeInGb = NumbersUtil.parseInt(maxVolumeSizeInGbString, Integer.parseInt(Config.MaxVolumeSize.getDefaultValue()));
-
         final String defaultPageSizeString = _configDao.getValue(Config.DefaultPageSize.key());
         _defaultPageSize = NumbersUtil.parseLong(defaultPageSizeString, Long.parseLong(Config.DefaultPageSize.getDefaultValue()));
 
@@ -813,13 +810,24 @@ public class ConfigurationManagerImpl extends ManagerBase implements Configurati
         final Long zoneId = cmd.getZoneId();
         final Long clusterId = cmd.getClusterId();
         final Long storagepoolId = cmd.getStoragepoolId();
-        final Long accountId = cmd.getAccountId();
         final Long imageStoreId = cmd.getImageStoreId();
-        final Long domainId = cmd.getDomainId();
+        Long accountId = cmd.getAccountId();
+        Long domainId = cmd.getDomainId();
         CallContext.current().setEventDetails(" Name: " + name + " New Value: " + (name.toLowerCase().contains("password") ? "*****" : value == null ? "" : value));
         // check if config value exists
         final ConfigurationVO config = _configDao.findByName(name);
         String catergory = null;
+
+        final Account caller = CallContext.current().getCallingAccount();
+        if (_accountMgr.isDomainAdmin(caller.getId())) {
+            if (accountId == null && domainId == null) {
+                domainId = caller.getDomainId();
+            }
+        } else if (_accountMgr.isNormalUser(caller.getId())) {
+            if (accountId == null) {
+                accountId = caller.getAccountId();
+            }
+        }
 
         // FIX ME - All configuration parameters are not moved from config.java to configKey
         if (config == null) {
@@ -851,11 +859,14 @@ public class ConfigurationManagerImpl extends ManagerBase implements Configurati
             paramCountCheck++;
         }
         if (accountId != null) {
+            Account account = _accountMgr.getAccount(accountId);
+            _accountMgr.checkAccess(caller, null, false, account);
             scope = ConfigKey.Scope.Account.toString();
             id = accountId;
             paramCountCheck++;
         }
         if (domainId != null) {
+            _accountMgr.checkAccess(caller, _domainDao.findById(domainId));
             scope = ConfigKey.Scope.Domain.toString();
             id = domainId;
             paramCountCheck++;
@@ -2865,6 +2876,14 @@ public class ConfigurationManagerImpl extends ManagerBase implements Configurati
             }
         }
 
+        final Long diskOfferingId = cmd.getDiskOfferingId();
+        if (diskOfferingId != null) {
+            DiskOfferingVO diskOffering = _diskOfferingDao.findById(diskOfferingId);
+            if ((diskOffering == null) || diskOffering.isComputeOnly()) {
+                throw new InvalidParameterValueException("Please specify a valid disk offering.");
+            }
+        }
+
         return createServiceOffering(userId, cmd.isSystem(), vmType, cmd.getServiceOfferingName(), cpuNumber, memory, cpuSpeed, cmd.getDisplayText(),
                 cmd.getProvisioningType(), localStorageRequired, offerHA, limitCpuUse, volatileVm, cmd.getTags(), cmd.getDomainIds(), cmd.getZoneIds(), cmd.getHostTag(),
                 cmd.getNetworkRate(), cmd.getDeploymentPlanner(), details, cmd.getRootDiskSize(), isCustomizedIops, cmd.getMinIops(), cmd.getMaxIops(),
@@ -2872,7 +2891,7 @@ public class ConfigurationManagerImpl extends ManagerBase implements Configurati
                 cmd.getBytesWriteRate(), cmd.getBytesWriteRateMax(), cmd.getBytesWriteRateMaxLength(),
                 cmd.getIopsReadRate(), cmd.getIopsReadRateMax(), cmd.getIopsReadRateMaxLength(),
                 cmd.getIopsWriteRate(), cmd.getIopsWriteRateMax(), cmd.getIopsWriteRateMaxLength(),
-                cmd.getHypervisorSnapshotReserve(), cmd.getCacheMode(), storagePolicyId, cmd.getDynamicScalingEnabled());
+                cmd.getHypervisorSnapshotReserve(), cmd.getCacheMode(), storagePolicyId, cmd.getDynamicScalingEnabled(), diskOfferingId, cmd.getDiskOfferingStrictness(), cmd.isCustomized());
     }
 
     protected ServiceOfferingVO createServiceOffering(final long userId, final boolean isSystem, final VirtualMachine.Type vmType,
@@ -2883,7 +2902,7 @@ public class ConfigurationManagerImpl extends ManagerBase implements Configurati
             Long bytesWriteRate, Long bytesWriteRateMax, Long bytesWriteRateMaxLength,
             Long iopsReadRate, Long iopsReadRateMax, Long iopsReadRateMaxLength,
             Long iopsWriteRate, Long iopsWriteRateMax, Long iopsWriteRateMaxLength,
-            final Integer hypervisorSnapshotReserve, String cacheMode, final Long storagePolicyID, final boolean dynamicScalingEnabled) {
+            final Integer hypervisorSnapshotReserve, String cacheMode, final Long storagePolicyID, final boolean dynamicScalingEnabled, final Long diskOfferingId, final boolean diskOfferingStrictness, final boolean isCustomized) {
         // Filter child domains when both parent and child domains are present
         List<Long> filteredDomainIds = filterChildSubDomains(domainIds);
 
@@ -2893,7 +2912,7 @@ public class ConfigurationManagerImpl extends ManagerBase implements Configurati
             throw new InvalidParameterValueException("Unable to find active user by id " + userId);
         }
         final Account account = _accountDao.findById(user.getAccountId());
-        if (account.getType() == Account.ACCOUNT_TYPE_DOMAIN_ADMIN) {
+        if (account.getType() == Account.Type.DOMAIN_ADMIN) {
             if (filteredDomainIds.isEmpty()) {
                 throw new InvalidParameterValueException(String.format("Unable to create public service offering by admin: %s because it is domain-admin", user.getUuid()));
             }
@@ -2905,7 +2924,7 @@ public class ConfigurationManagerImpl extends ManagerBase implements Configurati
                     throw new InvalidParameterValueException(String.format("Unable to create service offering by another domain-admin: %s for domain: %s", user.getUuid(), _entityMgr.findById(Domain.class, domainId).getUuid()));
                 }
             }
-        } else if (account.getType() != Account.ACCOUNT_TYPE_ADMIN) {
+        } else if (account.getType() != Account.Type.ADMIN) {
             throw new InvalidParameterValueException(String.format("Unable to create service offering by user: %s because it is not root-admin or domain-admin", user.getUuid()));
         }
 
@@ -2913,55 +2932,9 @@ public class ConfigurationManagerImpl extends ManagerBase implements Configurati
 
         tags = com.cloud.utils.StringUtils.cleanupTags(tags);
 
-        ServiceOfferingVO offering = new ServiceOfferingVO(name, cpu, ramSize, speed, networkRate, null, offerHA,
-                limitResourceUse, volatileVm, displayText, typedProvisioningType, localStorageRequired, false, tags, isSystem, vmType,
-                hostTag, deploymentPlanner, dynamicScalingEnabled);
-
-        if (Boolean.TRUE.equals(isCustomizedIops) || isCustomizedIops == null) {
-                minIops = null;
-                maxIops = null;
-        } else {
-            if (minIops == null && maxIops == null) {
-                minIops = 0L;
-                maxIops = 0L;
-            } else {
-                if (minIops == null || minIops <= 0) {
-                    throw new InvalidParameterValueException("The min IOPS must be greater than 0.");
-                }
-
-                if (maxIops == null) {
-                    maxIops = 0L;
-                }
-
-                if (minIops > maxIops) {
-                    throw new InvalidParameterValueException("The min IOPS must be less than or equal to the max IOPS.");
-                }
-            }
-        }
-
-        if (rootDiskSizeInGiB != null && rootDiskSizeInGiB <= 0L) {
-            throw new InvalidParameterValueException(String.format("The Root disk size is of %s GB but it must be greater than 0.", rootDiskSizeInGiB));
-        } else if (rootDiskSizeInGiB != null) {
-            long rootDiskSizeInBytes = rootDiskSizeInGiB * GiB_TO_BYTES;
-            offering.setDiskSize(rootDiskSizeInBytes);
-        }
-
-        offering.setCustomizedIops(isCustomizedIops);
-        offering.setMinIops(minIops);
-        offering.setMaxIops(maxIops);
-
-        setBytesRate(offering, bytesReadRate, bytesReadRateMax, bytesReadRateMaxLength, bytesWriteRate, bytesWriteRateMax, bytesWriteRateMaxLength);
-        setIopsRate(offering, iopsReadRate, iopsReadRateMax, iopsReadRateMaxLength, iopsWriteRate, iopsWriteRateMax, iopsWriteRateMaxLength);
-
-        if(cacheMode != null) {
-            offering.setCacheMode(DiskOffering.DiskCacheMode.valueOf(cacheMode.toUpperCase()));
-        }
-
-        if (hypervisorSnapshotReserve != null && hypervisorSnapshotReserve < 0) {
-            throw new InvalidParameterValueException("If provided, Hypervisor Snapshot Reserve must be greater than or equal to 0.");
-        }
-
-        offering.setHypervisorSnapshotReserve(hypervisorSnapshotReserve);
+        ServiceOfferingVO serviceOffering = new ServiceOfferingVO(name, cpu, ramSize, speed, networkRate, null, offerHA,
+                limitResourceUse, volatileVm, displayText, isSystem, vmType,
+                hostTag, deploymentPlanner, dynamicScalingEnabled, isCustomized);
 
         List<ServiceOfferingDetailsVO> detailsVO = new ArrayList<ServiceOfferingDetailsVO>();
         if (details != null) {
@@ -2996,51 +2969,141 @@ public class ConfigurationManagerImpl extends ManagerBase implements Configurati
                     // Add in disk offering details
                     continue;
                 }
-                detailsVO.add(new ServiceOfferingDetailsVO(offering.getId(), detailEntry.getKey(), detailEntryValue, true));
+                detailsVO.add(new ServiceOfferingDetailsVO(serviceOffering.getId(), detailEntry.getKey(), detailEntryValue, true));
             }
         }
 
         if (storagePolicyID != null) {
-            detailsVO.add(new ServiceOfferingDetailsVO(offering.getId(), ApiConstants.STORAGE_POLICY, String.valueOf(storagePolicyID), false));
+            detailsVO.add(new ServiceOfferingDetailsVO(serviceOffering.getId(), ApiConstants.STORAGE_POLICY, String.valueOf(storagePolicyID), false));
         }
 
-        if ((offering = _serviceOfferingDao.persist(offering)) != null) {
+        serviceOffering.setDiskOfferingStrictness(diskOfferingStrictness);
+
+        DiskOfferingVO diskOffering = null;
+        if (diskOfferingId == null) {
+            diskOffering = createDiskOfferingInternal(userId, isSystem, vmType,
+                    name, cpu, ramSize, speed, displayText, typedProvisioningType, localStorageRequired,
+                    offerHA, limitResourceUse, volatileVm, tags, domainIds, zoneIds, hostTag,
+                    networkRate, deploymentPlanner, details, rootDiskSizeInGiB, isCustomizedIops, minIops, maxIops,
+                    bytesReadRate, bytesReadRateMax, bytesReadRateMaxLength,
+                    bytesWriteRate, bytesWriteRateMax, bytesWriteRateMaxLength,
+                    iopsReadRate, iopsReadRateMax, iopsReadRateMaxLength,
+                    iopsWriteRate, iopsWriteRateMax, iopsWriteRateMaxLength,
+                    hypervisorSnapshotReserve, cacheMode, storagePolicyID);
+        } else {
+            diskOffering = _diskOfferingDao.findById(diskOfferingId);
+        }
+        if (diskOffering != null) {
+            serviceOffering.setDiskOfferingId(diskOffering.getId());
+        } else {
+            return null;
+        }
+
+        if ((serviceOffering = _serviceOfferingDao.persist(serviceOffering)) != null) {
             for (Long domainId : filteredDomainIds) {
-                detailsVO.add(new ServiceOfferingDetailsVO(offering.getId(), ApiConstants.DOMAIN_ID, String.valueOf(domainId), false));
+                detailsVO.add(new ServiceOfferingDetailsVO(serviceOffering.getId(), ApiConstants.DOMAIN_ID, String.valueOf(domainId), false));
             }
             if (CollectionUtils.isNotEmpty(zoneIds)) {
                 for (Long zoneId : zoneIds) {
-                    detailsVO.add(new ServiceOfferingDetailsVO(offering.getId(), ApiConstants.ZONE_ID, String.valueOf(zoneId), false));
+                    detailsVO.add(new ServiceOfferingDetailsVO(serviceOffering.getId(), ApiConstants.ZONE_ID, String.valueOf(zoneId), false));
                 }
             }
-            if (!detailsVO.isEmpty()) {
+            if (CollectionUtils.isNotEmpty(detailsVO)) {
                 for (ServiceOfferingDetailsVO detail : detailsVO) {
-                    detail.setResourceId(offering.getId());
+                    detail.setResourceId(serviceOffering.getId());
                 }
                 _serviceOfferingDetailsDao.saveDetails(detailsVO);
             }
 
-            if (details != null && !details.isEmpty()) {
-                List<DiskOfferingDetailVO> diskDetailsVO = new ArrayList<DiskOfferingDetailVO>();
-                // Support disk offering details for below parameters
-                if (details.containsKey(Volume.BANDWIDTH_LIMIT_IN_MBPS)) {
-                    diskDetailsVO.add(new DiskOfferingDetailVO(offering.getId(), Volume.BANDWIDTH_LIMIT_IN_MBPS, details.get(Volume.BANDWIDTH_LIMIT_IN_MBPS), false));
-                }
-                if (details.containsKey(Volume.IOPS_LIMIT)) {
-                    diskDetailsVO.add(new DiskOfferingDetailVO(offering.getId(), Volume.IOPS_LIMIT, details.get(Volume.IOPS_LIMIT), false));
-                }
-                if (!diskDetailsVO.isEmpty()) {
-                    diskOfferingDetailsDao.saveDetails(diskDetailsVO);
-                }
-            }
-
-            CallContext.current().setEventDetails("Service offering id=" + offering.getId());
-            return offering;
+            CallContext.current().setEventDetails("Service offering id=" + serviceOffering.getId());
+            return serviceOffering;
         } else {
             return null;
         }
     }
 
+    private DiskOfferingVO createDiskOfferingInternal(final long userId, final boolean isSystem, final VirtualMachine.Type vmType,
+                                                      final String name, final Integer cpu, final Integer ramSize, final Integer speed, final String displayText, final ProvisioningType typedProvisioningType, final boolean localStorageRequired,
+                                                      final boolean offerHA, final boolean limitResourceUse, final boolean volatileVm, String tags, final List<Long> domainIds, List<Long> zoneIds, final String hostTag,
+                                                      final Integer networkRate, final String deploymentPlanner, final Map<String, String> details, Long rootDiskSizeInGiB, final Boolean isCustomizedIops, Long minIops, Long maxIops,
+                                                      Long bytesReadRate, Long bytesReadRateMax, Long bytesReadRateMaxLength,
+                                                      Long bytesWriteRate, Long bytesWriteRateMax, Long bytesWriteRateMaxLength,
+                                                      Long iopsReadRate, Long iopsReadRateMax, Long iopsReadRateMaxLength,
+                                                      Long iopsWriteRate, Long iopsWriteRateMax, Long iopsWriteRateMaxLength,
+                                                      final Integer hypervisorSnapshotReserve, String cacheMode, final Long storagePolicyID) {
+
+        DiskOfferingVO diskOffering = new DiskOfferingVO(name, displayText, typedProvisioningType, false, tags, false, localStorageRequired, false);
+
+        if (Boolean.TRUE.equals(isCustomizedIops) || isCustomizedIops == null) {
+            minIops = null;
+            maxIops = null;
+        } else {
+            if (minIops == null && maxIops == null) {
+                minIops = 0L;
+                maxIops = 0L;
+            } else {
+                if (minIops == null || minIops <= 0) {
+                    throw new InvalidParameterValueException("The min IOPS must be greater than 0.");
+                }
+
+                if (maxIops == null) {
+                    maxIops = 0L;
+                }
+
+                if (minIops > maxIops) {
+                    throw new InvalidParameterValueException("The min IOPS must be less than or equal to the max IOPS.");
+                }
+            }
+        }
+
+        if (rootDiskSizeInGiB != null && rootDiskSizeInGiB <= 0L) {
+            throw new InvalidParameterValueException(String.format("The Root disk size is of %s GB but it must be greater than 0.", rootDiskSizeInGiB));
+        } else if (rootDiskSizeInGiB != null) {
+            long maxVolumeSizeInGb = VolumeOrchestrationService.MaxVolumeSize.value();
+            if (rootDiskSizeInGiB > maxVolumeSizeInGb) {
+                throw new InvalidParameterValueException(String.format("The maximum size for a disk is %d GB.", maxVolumeSizeInGb));
+            }
+            long rootDiskSizeInBytes = rootDiskSizeInGiB * GiB_TO_BYTES;
+            diskOffering.setDiskSize(rootDiskSizeInBytes);
+        }
+
+        diskOffering.setCustomizedIops(isCustomizedIops);
+        diskOffering.setMinIops(minIops);
+        diskOffering.setMaxIops(maxIops);
+
+        setBytesRate(diskOffering, bytesReadRate, bytesReadRateMax, bytesReadRateMaxLength, bytesWriteRate, bytesWriteRateMax, bytesWriteRateMaxLength);
+        setIopsRate(diskOffering, iopsReadRate, iopsReadRateMax, iopsReadRateMaxLength, iopsWriteRate, iopsWriteRateMax, iopsWriteRateMaxLength);
+
+        if(cacheMode != null) {
+            diskOffering.setCacheMode(DiskOffering.DiskCacheMode.valueOf(cacheMode.toUpperCase()));
+        }
+
+        if (hypervisorSnapshotReserve != null && hypervisorSnapshotReserve < 0) {
+            throw new InvalidParameterValueException("If provided, Hypervisor Snapshot Reserve must be greater than or equal to 0.");
+        }
+
+        diskOffering.setHypervisorSnapshotReserve(hypervisorSnapshotReserve);
+
+        if ((diskOffering = _diskOfferingDao.persist(diskOffering)) != null) {
+            if (details != null && !details.isEmpty()) {
+                List<DiskOfferingDetailVO> diskDetailsVO = new ArrayList<DiskOfferingDetailVO>();
+                // Support disk offering details for below parameters
+                if (details.containsKey(Volume.BANDWIDTH_LIMIT_IN_MBPS)) {
+                    diskDetailsVO.add(new DiskOfferingDetailVO(diskOffering.getId(), Volume.BANDWIDTH_LIMIT_IN_MBPS, details.get(Volume.BANDWIDTH_LIMIT_IN_MBPS), false));
+                }
+                if (details.containsKey(Volume.IOPS_LIMIT)) {
+                    diskDetailsVO.add(new DiskOfferingDetailVO(diskOffering.getId(), Volume.IOPS_LIMIT, details.get(Volume.IOPS_LIMIT), false));
+                }
+                if (!diskDetailsVO.isEmpty()) {
+                    diskOfferingDetailsDao.saveDetails(diskDetailsVO);
+                }
+            }
+        } else {
+            return null;
+        }
+
+        return diskOffering;
+    }
     private void setIopsRate(DiskOffering offering, Long iopsReadRate, Long iopsReadRateMax, Long iopsReadRateMaxLength, Long iopsWriteRate, Long iopsWriteRateMax, Long iopsWriteRateMaxLength) {
         if (iopsReadRate != null && iopsReadRate > 0) {
             offering.setIopsReadRate(iopsReadRate);
@@ -3145,7 +3208,7 @@ public class ConfigurationManagerImpl extends ManagerBase implements Configurati
         }
         Collections.sort(filteredZoneIds);
 
-        if (account.getType() == Account.ACCOUNT_TYPE_DOMAIN_ADMIN) {
+        if (account.getType() == Account.Type.DOMAIN_ADMIN) {
             if (!filteredZoneIds.equals(existingZoneIds)) { // Domain-admins cannot update zone(s) for offerings
                 throw new InvalidParameterValueException(String.format("Unable to update zone(s) for service offering: %s by admin: %s as it is domain-admin", offeringHandle.getUuid(), user.getUuid()));
             }
@@ -3172,7 +3235,7 @@ public class ConfigurationManagerImpl extends ManagerBase implements Configurati
                 }
             }
             filteredDomainIds.addAll(nonChildDomains); // Final list must include domains which were not child domain for domain-admin but specified for this offering prior to update
-        } else if (account.getType() != Account.ACCOUNT_TYPE_ADMIN) {
+        } else if (account.getType() != Account.Type.ADMIN) {
             throw new InvalidParameterValueException(String.format("Unable to update service offering: %s by id user: %s because it is not root-admin or domain-admin", offeringHandle.getUuid(), user.getUuid()));
         }
 
@@ -3196,7 +3259,9 @@ public class ConfigurationManagerImpl extends ManagerBase implements Configurati
             offering.setSortKey(sortKey);
         }
 
-        updateOfferingTagsIfIsNotNull(storageTags, offering);
+        DiskOfferingVO diskOffering = _diskOfferingDao.findById(offeringHandle.getDiskOfferingId());
+        updateOfferingTagsIfIsNotNull(storageTags, diskOffering);
+        _diskOfferingDao.update(diskOffering.getId(), diskOffering);
 
         updateServiceOfferingHostTagsIfNotNull(hostTags, offering);
 
@@ -3261,12 +3326,13 @@ public class ConfigurationManagerImpl extends ManagerBase implements Configurati
                                                 Long bytesWriteRate, Long bytesWriteRateMax, Long bytesWriteRateMaxLength,
                                                 Long iopsReadRate, Long iopsReadRateMax, Long iopsReadRateMaxLength,
                                                 Long iopsWriteRate, Long iopsWriteRateMax, Long iopsWriteRateMaxLength,
-                                                final Integer hypervisorSnapshotReserve, String cacheMode, final Map<String, String> details, final Long storagePolicyID) {
+                                                final Integer hypervisorSnapshotReserve, String cacheMode, final Map<String, String> details, final Long storagePolicyID, final boolean diskSizeStrictness) {
         long diskSize = 0;// special case for custom disk offerings
+        long maxVolumeSizeInGb = VolumeOrchestrationService.MaxVolumeSize.value();
         if (numGibibytes != null && numGibibytes <= 0) {
-            throw new InvalidParameterValueException("Please specify a disk size of at least 1 Gb.");
-        } else if (numGibibytes != null && numGibibytes > _maxVolumeSizeInGb) {
-            throw new InvalidParameterValueException("The maximum size for a disk is " + _maxVolumeSizeInGb + " Gb.");
+            throw new InvalidParameterValueException("Please specify a disk size of at least 1 GB.");
+        } else if (numGibibytes != null && numGibibytes > maxVolumeSizeInGb) {
+            throw new InvalidParameterValueException(String.format("The maximum size for a disk is %d GB.", maxVolumeSizeInGb));
         }
         final ProvisioningType typedProvisioningType = ProvisioningType.getProvisioningType(provisioningType);
 
@@ -3309,7 +3375,7 @@ public class ConfigurationManagerImpl extends ManagerBase implements Configurati
             throw new InvalidParameterValueException("Unable to find active user by id " + userId);
         }
         final Account account = _accountDao.findById(user.getAccountId());
-        if (account.getType() == Account.ACCOUNT_TYPE_DOMAIN_ADMIN) {
+        if (account.getType() == Account.Type.DOMAIN_ADMIN) {
             if (filteredDomainIds.isEmpty()) {
                 throw new InvalidParameterValueException(String.format("Unable to create public disk offering by admin: %s because it is domain-admin", user.getUuid()));
             }
@@ -3321,7 +3387,7 @@ public class ConfigurationManagerImpl extends ManagerBase implements Configurati
                     throw new InvalidParameterValueException(String.format("Unable to create disk offering by another domain-admin: %s for domain: %s", user.getUuid(), _entityMgr.findById(Domain.class, domainId).getUuid()));
                 }
             }
-        } else if (account.getType() != Account.ACCOUNT_TYPE_ADMIN) {
+        } else if (account.getType() != Account.Type.ADMIN) {
             throw new InvalidParameterValueException(String.format("Unable to create disk offering by user: %s because it is not root-admin or domain-admin", user.getUuid()));
         }
 
@@ -3343,6 +3409,7 @@ public class ConfigurationManagerImpl extends ManagerBase implements Configurati
         }
 
         newDiskOffering.setHypervisorSnapshotReserve(hypervisorSnapshotReserve);
+        newDiskOffering.setDiskSizeStrictness(diskSizeStrictness);
 
         CallContext.current().setEventDetails("Disk offering id=" + newDiskOffering.getId());
         final DiskOfferingVO offering = _diskOfferingDao.persist(newDiskOffering);
@@ -3391,6 +3458,7 @@ public class ConfigurationManagerImpl extends ManagerBase implements Configurati
         final List<Long> zoneIds = cmd.getZoneIds();
         final Map<String, String> details = cmd.getDetails();
         final Long storagePolicyId = cmd.getStoragePolicy();
+        final boolean diskSizeStrictness =  cmd.getDiskSizeStrictness();
 
         // check if valid domain
         if (CollectionUtils.isNotEmpty(domainIds)) {
@@ -3466,7 +3534,7 @@ public class ConfigurationManagerImpl extends ManagerBase implements Configurati
                 localStorageRequired, isDisplayOfferingEnabled, isCustomizedIops, minIops,
                 maxIops, bytesReadRate, bytesReadRateMax, bytesReadRateMaxLength, bytesWriteRate, bytesWriteRateMax, bytesWriteRateMaxLength,
                 iopsReadRate, iopsReadRateMax, iopsReadRateMaxLength, iopsWriteRate, iopsWriteRateMax, iopsWriteRateMaxLength,
-                hypervisorSnapshotReserve, cacheMode, details, storagePolicyId);
+                hypervisorSnapshotReserve, cacheMode, details, storagePolicyId, diskSizeStrictness);
     }
 
     /**
@@ -3595,7 +3663,7 @@ public class ConfigurationManagerImpl extends ManagerBase implements Configurati
         }
         Collections.sort(filteredZoneIds);
 
-        if (account.getType() == Account.ACCOUNT_TYPE_DOMAIN_ADMIN) {
+        if (account.getType() == Account.Type.DOMAIN_ADMIN) {
             if (!filteredZoneIds.equals(existingZoneIds)) { // Domain-admins cannot update zone(s) for offerings
                 throw new InvalidParameterValueException(String.format("Unable to update zone(s) for disk offering: %s by admin: %s as it is domain-admin", diskOfferingHandle.getUuid(), user.getUuid()));
             }
@@ -3622,7 +3690,7 @@ public class ConfigurationManagerImpl extends ManagerBase implements Configurati
                 }
             }
             filteredDomainIds.addAll(nonChildDomains); // Final list must include domains which were not child domain for domain-admin but specified for this offering prior to update
-        } else if (account.getType() != Account.ACCOUNT_TYPE_ADMIN) {
+        } else if (account.getType() != Account.Type.ADMIN) {
             throw new InvalidParameterValueException(String.format("Unable to update disk offering: %s by id user: %s because it is not root-admin or domain-admin", diskOfferingHandle.getUuid(), user.getUuid()));
         }
 
@@ -3750,7 +3818,7 @@ public class ConfigurationManagerImpl extends ManagerBase implements Configurati
             if (CollectionUtils.isNotEmpty(hosts)) {
                 List<String> listOfHostTags = Arrays.asList(hostTags.split(","));
                 for (HostVO host : hosts) {
-                    List<String> tagsOnHost = hostTagDao.gethostTags(host.getId());
+                    List<String> tagsOnHost = hostTagDao.getHostTags(host.getId());
                     if (CollectionUtils.isEmpty(tagsOnHost) || !tagsOnHost.containsAll(listOfHostTags)) {
                         throw new InvalidParameterValueException(String.format("There are active VMs using offering [%s], and the hosts [%s] don't have the new tags", offering.getId(), hosts));
                     }
@@ -3799,7 +3867,7 @@ public class ConfigurationManagerImpl extends ManagerBase implements Configurati
             throw new InvalidParameterValueException("Unable to find active user by id " + userId);
         }
         final Account account = _accountDao.findById(user.getAccountId());
-        if (account.getType() == Account.ACCOUNT_TYPE_DOMAIN_ADMIN) {
+        if (account.getType() == Account.Type.DOMAIN_ADMIN) {
             List<Long> existingDomainIds = diskOfferingDetailsDao.findDomainIds(diskOfferingId);
             if (existingDomainIds.isEmpty()) {
                 throw new InvalidParameterValueException(String.format("Unable to delete public disk offering: %s by admin: %s because it is domain-admin", offering.getUuid(), user.getUuid()));
@@ -3809,7 +3877,7 @@ public class ConfigurationManagerImpl extends ManagerBase implements Configurati
                     throw new InvalidParameterValueException(String.format("Unable to delete disk offering: %s as it has linked domain(s) which are not child domain for domain-admin: %s", offering.getUuid(), user.getUuid()));
                 }
             }
-        } else if (account.getType() != Account.ACCOUNT_TYPE_ADMIN) {
+        } else if (account.getType() != Account.Type.ADMIN) {
             throw new InvalidParameterValueException(String.format("Unable to delete disk offering: %s by user: %s because it is not root-admin or domain-admin", offering.getUuid(), user.getUuid()));
         }
 
@@ -3858,6 +3926,12 @@ public class ConfigurationManagerImpl extends ManagerBase implements Configurati
             throw new InvalidParameterValueException("unable to find service offering " + offeringId);
         }
 
+        // Verify disk offering id mapped to the service offering
+        final DiskOfferingVO diskOffering = _diskOfferingDao.findById(offering.getDiskOfferingId());
+        if (diskOffering == null) {
+            throw new InvalidParameterValueException("unable to find disk offering " + offering.getDiskOfferingId() + " mapped to the service offering " + offeringId);
+        }
+
         if (offering.getDefaultUse()) {
             throw new InvalidParameterValueException("Default service offerings cannot be deleted");
         }
@@ -3867,7 +3941,7 @@ public class ConfigurationManagerImpl extends ManagerBase implements Configurati
             throw new InvalidParameterValueException("Unable to find active user by id " + userId);
         }
         final Account account = _accountDao.findById(user.getAccountId());
-        if (account.getType() == Account.ACCOUNT_TYPE_DOMAIN_ADMIN) {
+        if (account.getType() == Account.Type.DOMAIN_ADMIN) {
             List<Long> existingDomainIds = _serviceOfferingDetailsDao.findDomainIds(offeringId);
             if (existingDomainIds.isEmpty()) {
                 throw new InvalidParameterValueException(String.format("Unable to delete public service offering: %s by admin: %s because it is domain-admin", offering.getUuid(), user.getUuid()));
@@ -3877,12 +3951,18 @@ public class ConfigurationManagerImpl extends ManagerBase implements Configurati
                     throw new InvalidParameterValueException(String.format("Unable to delete service offering: %s as it has linked domain(s) which are not child domain for domain-admin: %s", offering.getUuid(), user.getUuid()));
                 }
             }
-        } else if (account.getType() != Account.ACCOUNT_TYPE_ADMIN) {
+        } else if (account.getType() != Account.Type.ADMIN) {
             throw new InvalidParameterValueException(String.format("Unable to delete service offering: %s by user: %s because it is not root-admin or domain-admin", offering.getUuid(), user.getUuid()));
         }
 
         annotationDao.removeByEntityType(AnnotationService.EntityType.SERVICE_OFFERING.name(), offering.getUuid());
-        offering.setState(DiskOffering.State.Inactive);
+        if (diskOffering.isComputeOnly()) {
+            diskOffering.setState(DiskOffering.State.Inactive);
+            if (!_diskOfferingDao.update(diskOffering.getId(), diskOffering)) {
+                throw new CloudRuntimeException(String.format("Unable to delete disk offering %s mapped to the service offering %s", diskOffering.getUuid(), offering.getUuid()));
+            }
+        }
+        offering.setState(ServiceOffering.State.Inactive);
         if (_serviceOfferingDao.update(offeringId, offering)) {
             CallContext.current().setEventDetails("Service offering id=" + offeringId);
             return true;
@@ -6386,7 +6466,7 @@ public class ConfigurationManagerImpl extends ManagerBase implements Configurati
 
         final List<NetworkOfferingJoinVO> offerings = networkOfferingJoinDao.search(sc, searchFilter);
         // Remove offerings that are not associated with caller's domain or domainId passed
-        if ((caller.getType() != Account.ACCOUNT_TYPE_ADMIN || domainId != null) && CollectionUtils.isNotEmpty(offerings)) {
+        if ((caller.getType() != Account.Type.ADMIN || domainId != null) && CollectionUtils.isNotEmpty(offerings)) {
             ListIterator<NetworkOfferingJoinVO> it = offerings.listIterator();
             while (it.hasNext()) {
                 NetworkOfferingJoinVO offering = it.next();
@@ -6395,7 +6475,7 @@ public class ConfigurationManagerImpl extends ManagerBase implements Configurati
                     String[] domainIdsArray = offering.getDomainId().split(",");
                     for (String domainIdString : domainIdsArray) {
                         Long dId = Long.valueOf(domainIdString.trim());
-                        if (caller.getType() != Account.ACCOUNT_TYPE_ADMIN &&
+                        if (caller.getType() != Account.Type.ADMIN &&
                                 !_domainDao.isChildDomain(dId, caller.getDomainId())) {
                             toRemove = true;
                             break;

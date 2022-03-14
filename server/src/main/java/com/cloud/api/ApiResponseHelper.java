@@ -34,7 +34,6 @@ import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 
-import com.cloud.server.ResourceIcon;
 import org.apache.cloudstack.acl.ControlledEntity;
 import org.apache.cloudstack.acl.ControlledEntity.ACLType;
 import org.apache.cloudstack.affinity.AffinityGroup;
@@ -304,6 +303,7 @@ import com.cloud.projects.ProjectAccount;
 import com.cloud.projects.ProjectInvitation;
 import com.cloud.region.ha.GlobalLoadBalancerRule;
 import com.cloud.resource.RollingMaintenanceManager;
+import com.cloud.server.ResourceIcon;
 import com.cloud.server.ResourceTag;
 import com.cloud.server.ResourceTag.ResourceObjectType;
 import com.cloud.service.ServiceOfferingVO;
@@ -1948,7 +1948,7 @@ public class ApiResponseHelper implements ResponseGenerator {
                 continue;
             }
 
-            if (account.getType() != Account.ACCOUNT_TYPE_PROJECT) {
+            if (account.getType() != Account.Type.PROJECT) {
                 regularAccounts.add(accountName);
             } else {
                 // convert account to projectIds
@@ -2017,7 +2017,7 @@ public class ApiResponseHelper implements ResponseGenerator {
 
             Account account = securiytGroupAccounts.get(securityGroup.getAccountId());
 
-            if (securityGroup.getAccountType() == Account.ACCOUNT_TYPE_PROJECT) {
+            if (securityGroup.getAccountType() == Account.Type.PROJECT) {
                 response.setProjectId(securityGroup.getProjectUuid());
                 response.setProjectName(securityGroup.getProjectName());
             } else {
@@ -2302,6 +2302,9 @@ public class ApiResponseHelper implements ResponseGenerator {
             response.setIsSystem(networkOffering.isSystemOnly());
             response.setNetworkOfferingAvailability(networkOffering.getAvailability().toString());
             response.setIsPersistent(networkOffering.isPersistent());
+            if (Network.GuestType.Isolated.equals(network.getGuestType())) {
+                response.setEgressDefaultPolicy(networkOffering.isEgressDefaultPolicy());
+            }
         }
 
         if (network.getAclType() != null) {
@@ -2613,6 +2616,7 @@ public class ApiResponseHelper implements ResponseGenerator {
         hpvCapabilitiesResponse.setMaxDataVolumesLimit(hpvCapabilities.getMaxDataVolumesLimit());
         hpvCapabilitiesResponse.setMaxHostsPerCluster(hpvCapabilities.getMaxHostsPerCluster());
         hpvCapabilitiesResponse.setIsStorageMotionSupported(hpvCapabilities.isStorageMotionSupported());
+        hpvCapabilitiesResponse.setVmSnapshotEnabled(hpvCapabilities.isVmSnapshotEnabled());
         return hpvCapabilitiesResponse;
     }
 
@@ -2622,7 +2626,7 @@ public class ApiResponseHelper implements ResponseGenerator {
     private void populateOwner(ControlledEntityResponse response, ControlledEntity object) {
         Account account = ApiDBUtils.findAccountById(object.getAccountId());
 
-        if (account.getType() == Account.ACCOUNT_TYPE_PROJECT) {
+        if (account.getType() == Account.Type.PROJECT) {
             // find the project
             Project project = ApiDBUtils.findProjectByProjectAccountId(account.getId());
             response.setProjectId(project.getUuid());
@@ -2638,7 +2642,7 @@ public class ApiResponseHelper implements ResponseGenerator {
 
     public static void populateOwner(ControlledViewEntityResponse response, ControlledViewEntity object) {
 
-        if (object.getAccountType() == Account.ACCOUNT_TYPE_PROJECT) {
+        if (object.getAccountType() == Account.Type.PROJECT) {
             response.setProjectId(object.getProjectUuid());
             response.setProjectName(object.getProjectName());
         } else {
@@ -2653,7 +2657,7 @@ public class ApiResponseHelper implements ResponseGenerator {
         Account account = ApiDBUtils.findAccountById(accountId);
         if (account == null) {
             s_logger.debug("Unable to find account with id: " + accountId);
-        } else if (account.getType() == Account.ACCOUNT_TYPE_PROJECT) {
+        } else if (account.getType() == Account.Type.PROJECT) {
             // find the project
             Project project = ApiDBUtils.findProjectByProjectAccountId(account.getId());
             if (project != null) {
@@ -3445,7 +3449,7 @@ public class ApiResponseHelper implements ResponseGenerator {
         GuestOSResponse response = new GuestOSResponse();
         response.setDescription(guestOS.getDisplayName());
         response.setId(guestOS.getUuid());
-        response.setIsUserDefined(guestOS.isUserDefined());
+        response.setIsUserDefined(guestOS.getIsUserDefined());
         GuestOSCategoryVO category = ApiDBUtils.findGuestOsCategoryById(guestOS.getCategoryId());
         if (category != null) {
             response.setOsCategoryId(category.getUuid());
@@ -3515,7 +3519,7 @@ public class ApiResponseHelper implements ResponseGenerator {
     public UsageRecordResponse createUsageResponse(Usage usageRecord, Map<String, Set<ResourceTagResponse>> resourceTagResponseMap, boolean oldFormat) {
         UsageRecordResponse usageRecResponse = new UsageRecordResponse();
         Account account = ApiDBUtils.findAccountById(usageRecord.getAccountId());
-        if (account.getType() == Account.ACCOUNT_TYPE_PROJECT) {
+        if (account.getType() == Account.Type.PROJECT) {
             //find the project
             Project project = ApiDBUtils.findProjectByProjectAccountIdIncludingRemoved(account.getId());
             if (project != null) {

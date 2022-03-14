@@ -15,8 +15,9 @@
 // specific language governing permissions and limitations
 // under the License.
 
-import Vue from 'vue'
 import axios from 'axios'
+
+import { vueProps } from '@/vue-app'
 import router from '@/router'
 import { VueAxios } from './axios'
 import notification from 'ant-design-vue/es/notification'
@@ -24,6 +25,7 @@ import { CURRENT_PROJECT } from '@/store/mutation-types'
 import { i18n } from '@/locales'
 import store from '@/store'
 
+let source
 const service = axios.create({
   timeout: 600000
 })
@@ -39,7 +41,7 @@ const err = (error) => {
       store.commit('SET_COUNT_NOTIFY', countNotify)
       notification.error({
         top: '65px',
-        message: i18n.t('label.forbidden'),
+        message: i18n.global.t('label.forbidden'),
         description: data.message,
         onClose: () => {
           let countNotify = store.getters.countNotify
@@ -52,6 +54,7 @@ const err = (error) => {
       if (response.config && response.config.params && ['listIdps', 'cloudianIsEnabled'].includes(response.config.params.command)) {
         return
       }
+      const originalPath = router.currentRoute.value.fullPath
       for (const key in response.data) {
         if (key.includes('response')) {
           if (response.data[key].errortext.includes('not available for user')) {
@@ -60,7 +63,7 @@ const err = (error) => {
             notification.error({
               top: '65px',
               message: 'Error',
-              description: response.data[key].errortext + ' ' + i18n.t('error.unable.to.proceed'),
+              description: response.data[key].errortext + ' ' + i18n.global.t('error.unable.to.proceed'),
               duration: 0,
               onClose: () => {
                 let countNotify = store.getters.countNotify
@@ -76,8 +79,8 @@ const err = (error) => {
       store.commit('SET_COUNT_NOTIFY', countNotify)
       notification.error({
         top: '65px',
-        message: i18n.t('label.unauthorized'),
-        description: i18n.t('message.authorization.failed'),
+        message: i18n.global.t('label.unauthorized'),
+        description: i18n.global.t('message.authorization.failed'),
         key: 'http-401',
         duration: 0,
         onClose: () => {
@@ -87,8 +90,8 @@ const err = (error) => {
         }
       })
       store.dispatch('Logout').then(() => {
-        if (router.history.current.path !== '/user/login') {
-          router.push({ path: '/user/login', query: { redirect: router.history.current.fullPath } })
+        if (originalPath !== '/user/login') {
+          router.push({ path: '/user/login', query: { redirect: originalPath } })
         }
       })
     }
@@ -97,8 +100,8 @@ const err = (error) => {
       store.commit('SET_COUNT_NOTIFY', countNotify)
       notification.error({
         top: '65px',
-        message: i18n.t('label.not.found'),
-        description: i18n.t('message.resource.not.found'),
+        message: i18n.global.t('label.not.found'),
+        description: i18n.global.t('message.resource.not.found'),
         onClose: () => {
           let countNotify = store.getters.countNotify
           countNotify > 0 ? countNotify-- : countNotify = 0
@@ -113,8 +116,8 @@ const err = (error) => {
     store.commit('SET_COUNT_NOTIFY', countNotify)
     notification.warn({
       top: '65px',
-      message: error.message || i18n.t('message.network.error'),
-      description: i18n.t('message.network.error.description'),
+      message: error.message || i18n.global.t('message.network.error'),
+      description: i18n.global.t('message.network.error.description'),
       key: 'network-error',
       onClose: () => {
         let countNotify = store.getters.countNotify
@@ -128,15 +131,20 @@ const err = (error) => {
 
 // request interceptor
 service.interceptors.request.use(config => {
+  source = sourceToken.getSource()
+  config.cancelToken = source.token
   if (config && config.params) {
     config.params.response = 'json'
-    const project = Vue.ls.get(CURRENT_PROJECT)
-    if (!config.params.projectid && project && project.id) {
+    const project = vueProps.$localStorage.get(CURRENT_PROJECT)
+    if (!config.params.projectid && !config.params.ignoreproject && project && project.id) {
       if (config.params.command === 'listTags') {
         config.params.projectid = '-1'
-      } else {
+      } else if (config.params.command !== 'assignVirtualMachine') {
         config.params.projectid = project.id
       }
+    }
+    if (config.params.ignoreproject !== undefined) {
+      config.params.ignoreproject = null
     }
   }
   return config
@@ -149,12 +157,28 @@ service.interceptors.response.use((response) => {
 
 const installer = {
   vm: {},
-  install (Vue) {
-    Vue.use(VueAxios, service)
+  install (app) {
+    app.use(VueAxios, service)
+  }
+}
+
+const sourceToken = {
+  init: () => { source = axios.CancelToken.source() },
+  isCancel: (e) => {
+    return axios.isCancel(e)
+  },
+  getSource: () => {
+    if (!source) sourceToken.init()
+    return source
+  },
+  cancel: () => {
+    if (!source) sourceToken.init()
+    source.cancel()
   }
 }
 
 export {
   installer as VueAxios,
-  service as axios
+  service as axios,
+  sourceToken
 }

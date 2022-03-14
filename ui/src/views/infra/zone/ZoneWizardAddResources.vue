@@ -103,6 +103,7 @@
   </div>
 </template>
 <script>
+import { nextTick } from 'vue'
 import { api } from '@/api'
 import { mixinDevice } from '@/utils/mixin.js'
 import StaticInputsForm from '@views/infra/zone/StaticInputsForm'
@@ -130,10 +131,10 @@ export default {
   },
   computed: {
     zoneType () {
-      return this.prefillContent.zoneType?.value || null
+      return this.prefillContent?.zoneType || null
     },
     hypervisor () {
-      return this.prefillContent.hypervisor?.value || null
+      return this.prefillContent?.hypervisor || null
     },
     localstorageenabled () {
       return this.prefillContent?.localstorageenabled?.value || false
@@ -143,7 +144,7 @@ export default {
     },
     steps () {
       const steps = []
-      const hypervisor = this.prefillContent.hypervisor?.value || null
+      const hypervisor = this.prefillContent.hypervisor ? this.prefillContent.hypervisor.value : null
       steps.push({
         title: 'label.cluster',
         fromKey: 'clusterResource',
@@ -570,7 +571,7 @@ export default {
           }
         },
         {
-          title: 'label.s3.access_key',
+          title: 'label.s3.access.key',
           key: 'secondaryStorageAccessKey',
           required: true,
           placeHolder: 'message.error.access.key',
@@ -579,7 +580,7 @@ export default {
           }
         },
         {
-          title: 'label.s3.secret_key',
+          title: 'label.s3.secret.key',
           key: 'secondaryStorageSecretKey',
           required: true,
           placeHolder: 'message.error.secret.key',
@@ -605,7 +606,7 @@ export default {
           }
         },
         {
-          title: 'label.s3.use_https',
+          title: 'label.s3.use.https',
           key: 'secondaryStorageHttps',
           required: false,
           switch: true,
@@ -615,7 +616,7 @@ export default {
           }
         },
         {
-          title: 'label.s3.connection_timeoutt',
+          title: 'label.s3.connection.timeout',
           key: 'secondaryStorageConnectionTimeout',
           required: false,
           display: {
@@ -623,7 +624,7 @@ export default {
           }
         },
         {
-          title: 'label.s3.max_error_retry',
+          title: 'label.s3.max.error.retry',
           key: 'secondaryStorageMaxError',
           required: false,
           display: {
@@ -631,7 +632,7 @@ export default {
           }
         },
         {
-          title: 'label.s3.socket_timeout',
+          title: 'label.s3.socket.timeout',
           key: 'secondaryStorageSocketTimeout',
           required: false,
           display: {
@@ -653,7 +654,8 @@ export default {
           required: true,
           placeHolder: 'message.error.s3nfs.server',
           display: {
-            secondaryStorageProvider: ['S3']
+            secondaryStorageProvider: ['S3'],
+            secondaryStorageNFSStaging: true
           }
         },
         {
@@ -662,7 +664,8 @@ export default {
           required: true,
           placeHolder: 'message.error.s3nfs.path',
           display: {
-            secondaryStorageProvider: ['S3']
+            secondaryStorageProvider: ['S3'],
+            secondaryStorageNFSStaging: true
           }
         },
         {
@@ -677,7 +680,8 @@ export default {
         {
           title: 'label.account',
           key: 'secondaryStorageAccount',
-          required: false,
+          required: true,
+          placeHolder: 'message.error.swift.account',
           display: {
             secondaryStorageProvider: ['Swift']
           }
@@ -685,7 +689,8 @@ export default {
         {
           title: 'label.username',
           key: 'secondaryStorageUsername',
-          required: false,
+          required: true,
+          placeHolder: 'message.error.swift.username',
           display: {
             secondaryStorageProvider: ['Swift']
           }
@@ -693,6 +698,15 @@ export default {
         {
           title: 'label.key',
           key: 'secondaryStorageKey',
+          required: true,
+          placeHolder: 'message.error.swift.key',
+          display: {
+            secondaryStorageProvider: ['Swift']
+          }
+        },
+        {
+          title: 'label.storagepolicy',
+          key: 'secondaryStoragePolicy',
           required: false,
           display: {
             secondaryStorageProvider: ['Swift']
@@ -713,12 +727,12 @@ export default {
     }
   },
   created () {
-    this.currentStep = this.prefillContent.resourceStep?.resourceStep || 0
+    this.currentStep = this.prefillContent?.resourceStep || 0
     if (this.stepChild && this.stepChild !== '') {
       this.currentStep = this.steps.findIndex(item => item.fromKey === this.stepChild)
     }
     this.scrollToStepActive()
-    if (this.prefillContent.hypervisor.value === 'BareMetal') {
+    if (this.prefillContent.hypervisor === 'BareMetal') {
       this.$emit('nextPressed')
     } else {
       this.fetchConfigurationSwitch()
@@ -727,7 +741,7 @@ export default {
         this.$emit('fieldsChanged', {
           lastHypervisor: this.prefillContent.hypervisor
         })
-      } else if (this.prefillContent.lastHypervisor.value !== this.prefillContent.hypervisor.value) {
+      } else if (this.prefillContent.lastHypervisor !== this.prefillContent.hypervisor) {
         this.$emit('fieldsChanged', {
           lastHypervisor: this.prefillContent.hypervisor,
           primaryStorageProtocol: null,
@@ -747,7 +761,7 @@ export default {
 
       this.scrollToStepActive()
     },
-    handleBack (e) {
+    handleBack () {
       if (this.currentStep === 0) {
         this.$emit('backPressed')
       } else {
@@ -761,7 +775,7 @@ export default {
       if (!this.isMobile()) {
         return
       }
-      this.$nextTick(() => {
+      nextTick().then(() => {
         if (!this.$refs.resourceStep) {
           return
         }
@@ -791,7 +805,7 @@ export default {
       }
     },
     fetchScope () {
-      const hypervisor = this.prefillContent.hypervisor?.value || null
+      const hypervisor = this.prefillContent?.hypervisor || null
       const scope = []
       if (['KVM', 'VMware', 'Hyperv'].includes(hypervisor)) {
         scope.push({
@@ -809,10 +823,9 @@ export default {
         })
       }
       this.primaryStorageScopes = scope
-      this.$forceUpdate()
     },
     fetchProtocol () {
-      const hypervisor = this.prefillContent.hypervisor?.value || null
+      const hypervisor = this.prefillContent?.hypervisor || null
       const protocols = []
       if (hypervisor === 'KVM') {
         protocols.push({
@@ -900,12 +913,11 @@ export default {
       }
 
       this.primaryStorageProtocols = protocols
-      this.$forceUpdate()
     },
     async fetchConfigurationSwitch () {
-      const hypervisor = this.prefillContent.hypervisor?.value || null
-      this.$emit('fieldsChanged', { dvSwitchEnabled: { value: false } })
-      this.$emit('fieldsChanged', { vSwitchEnabled: { value: false } })
+      const hypervisor = this.prefillContent?.hypervisor || null
+      this.$emit('fieldsChanged', { dvSwitchEnabled: false })
+      this.$emit('fieldsChanged', { vSwitchEnabled: false })
       if (hypervisor && hypervisor === 'VMware') {
         await this.fetchNexusSwitchConfig()
         await this.fetchDvSwitchConfig()
@@ -917,7 +929,7 @@ export default {
         if (json.listconfigurationsresponse.configuration[0].value) {
           vSwitchEnabled = true
         }
-        this.$emit('fieldsChanged', { vSwitchEnabled: { value: vSwitchEnabled } })
+        this.$emit('fieldsChanged', { vSwitchEnabled: vSwitchEnabled })
       })
     },
     fetchDvSwitchConfig () {
@@ -926,7 +938,7 @@ export default {
         if (json.listconfigurationsresponse.configuration[0].value) {
           dvSwitchEnabled = true
         }
-        this.$emit('fieldsChanged', { dvSwitchEnabled: { value: dvSwitchEnabled } })
+        this.$emit('fieldsChanged', { dvSwitchEnabled: dvSwitchEnabled })
       })
     },
     fetchProvider () {
@@ -942,7 +954,6 @@ export default {
           storageProviders.push({ id: 'Swift', description: 'Swift' })
         }
         this.storageProviders = storageProviders
-        this.$forceUpdate()
       })
     },
     submitLaunchZone () {

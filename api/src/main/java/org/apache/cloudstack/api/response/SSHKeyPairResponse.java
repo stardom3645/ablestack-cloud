@@ -21,6 +21,8 @@ import com.google.gson.annotations.SerializedName;
 import org.apache.cloudstack.api.ApiConstants;
 
 import com.cloud.serializer.Param;
+import com.cloud.user.SSHKeyPair;
+
 import org.apache.cloudstack.api.BaseResponseWithAnnotations;
 import org.apache.cloudstack.api.EntityReference;
 
