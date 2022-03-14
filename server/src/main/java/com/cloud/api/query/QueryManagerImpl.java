@@ -991,6 +991,7 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
         Object vpcId = cmd.getVpcId();
         Object affinityGroupId = cmd.getAffinityGroupId();
         Object keyPairId = cmd.getKeyPairId();
+        Object keyPairName = cmd.getKeyPairName();
         Object serviceOffId = cmd.getServiceOfferingId();
         Object securityGroupId = cmd.getSecurityGroupId();
         Object backupOfferingId = cmd.getBackupOfferingId();
@@ -1072,7 +1073,7 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
         if (keyPairId != null) {
             sb.and("keyPairId", sb.entity().getKeyPairId(), SearchCriteria.Op.EQ);
         }
-        
+
         if (keyPairName != null) {
             sb.and("keyPairName", sb.entity().getKeypairNames(), SearchCriteria.Op.FIND_IN_SET);
         }
