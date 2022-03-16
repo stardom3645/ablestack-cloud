@@ -125,7 +125,7 @@ export default {
         {
           api: 'addDesktopMasterVersion',
           icon: 'plus',
-          label: 'label.desktop.master.template.version',
+          label: 'label.desktop.master.template.version.create',
           docHelp: '',
           listView: true,
           popup: true,
