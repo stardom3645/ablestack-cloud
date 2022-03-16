@@ -512,14 +512,6 @@ export default {
       promises: []
     }
   },
-  beforeCreate () {
-    this.form = this.$form.createForm(this)
-  },
-  beforeDestroy () {
-    eventBus.$off('vm-refresh-data')
-    eventBus.$off('async-job-complete')
-    eventBus.$off('exec-action')
-    eventBus.$off('desktop-refresh-data')
   beforeUnmount () {
     eventBus.off('vm-refresh-data')
     eventBus.off('async-job-complete')
@@ -540,12 +532,7 @@ export default {
         this.fetchData()
       }
     })
-    eventBus.$on('desktop-refresh-data', () => {
-      if (this.$route.path === '/desktopcluster' || this.$route.path.includes('/desktopcluster/')) {
-        this.fetchData()
-      }
-    })
-    eventBus.$on('refresh-icon', () => {
+    eventBus.on('refresh-icon', () => {
       if (this.$showIcon()) {
         this.fetchData()
       }

@@ -44,7 +44,7 @@
           :dataSource="iprange"
           :rowKey="item => item.id"
           :pagination="false">
-          <template slot="action" slot-scope="text, record">
+          <template #actions="record">
             <a-popconfirm
               :title="$t('message.confirm.remove.ip.range')"
               @confirm="removeIpRange(record.id)"
@@ -68,16 +68,16 @@
           :rowKey="item => item.id"
           :pagination="false"
         >
-          <template slot="name" slot-scope="text, record">
+          <template #name="{ record }">
             <router-link :to="{ path: '/vm/' + record.id }">{{ record.name }}</router-link>
           </template>
-          <template slot="state" slot-scope="text">
+          <template #state="{ text }">
             <status :text="text ? text : ''" displayText />
           </template>
-          <template slot="instancename" slot-scope="text">
+          <template #instancename="{ text }">
             <status :text="text ? text : ''" />{{ text }}
           </template>
-          <template slot="hostname" slot-scope="text, record">
+          <template #hostname="{ record }">
             <router-link :to="{ path: '/host/' + record.hostid }">{{ record.hostname }}</router-link>
           </template>
         </a-table>
@@ -91,19 +91,19 @@
           :rowKey="item => item.id"
           :pagination="false"
         >
-          <template slot="name" slot-scope="text, record">
+          <template #name="{ record }">
             <router-link :to="{ path: '/vm/' + record.id }">{{ record.name }}</router-link>
           </template>
-          <template slot="state" slot-scope="text">
+          <template #state="{ text }">
             <status :text="text ? text : ''" displayText />
           </template>
-          <template slot="instancename" slot-scope="text">
+          <template #instancename="{ text }">
             <status :text="text ? text : ''" />{{ text }}
           </template>
-          <template slot="ipaddress" slot-scope="text">
+          <template #ipaddress="{ text }">
             <status :text="text ? text : ''" />{{ text }}
           </template>
-          <template slot="hostname" slot-scope="text, record">
+          <template #hostname="{ record }">
             <router-link :to="{ path: '/host/' + record.hostid }">{{ record.hostname }}</router-link>
           </template>
         </a-table>
@@ -121,58 +121,35 @@
       @ok="submitAddIp">
       <a-spin :spinning="loadingNic">
         <a-form :form="form" @submit="submitAddIp" layout="vertical">
-          <a-form-item>
-            <span slot="label">
-              {{ $t('label.gateway') }}
-              <a-tooltip :title="$t('label.desktop.gateway')">
-                <a-icon type="info-circle" style="color: rgba(0,0,0,.45)" />
-              </a-tooltip>
-            </span>
+          <div class="modal-form">
+            <p class="modal-form__label">{{ $t('label.desktop.gateway') }}:</p>
             <a-input
               v-decorator="['gateway', {
                 rules: [{ required: true, message: $t('message.error.required.input') }]
               }]"
               :placeholder="$t('placeholder.gateway')" />
-          </a-form-item>
-          <a-form-item>
-            <span slot="label">
-              {{ $t('label.netmask') }}
+            <p class="modal-form__label">{{ $t('label.netmask') }}:</p>
               <a-tooltip :title="$t('label.desktop.netmask')">
                 <a-icon type="info-circle" style="color: rgba(0,0,0,.45)" />
               </a-tooltip>
-            </span>
             <a-input
               v-decorator="['netmask', {
                 rules: [{ required: true, message: $t('message.error.required.input') }]
               }]"
               :placeholder="$t('placeholder.netmask')" />
-          </a-form-item>
-          <a-form-item>
-            <span slot="label">
-              {{ $t('label.startip') }}
-              <a-tooltip :title="$t('label.desktop.startip')">
-                <a-icon type="info-circle" style="color: rgba(0,0,0,.45)" />
-              </a-tooltip>
-            </span>
+            <p class="modal-form__label">{{ $t('label.startip') }}:</p>
             <a-input
               v-decorator="['startip', {
                 rules: [{ required: true, message: $t('message.error.required.input') }]
               }]"
               :placeholder="$t('placeholder.startip')" />
-          </a-form-item>
-          <a-form-item>
-            <span slot="label">
-              {{ $t('label.endip') }}
-              <a-tooltip :title="$t('label.desktop.endip')">
-                <a-icon type="info-circle" style="color: rgba(0,0,0,.45)" />
-              </a-tooltip>
-            </span>
+            <p class="modal-form__label">{{ $t('label.endip') }}:</p>
             <a-input
               v-decorator="['endip', {
                 rules: [{ required: true, message: $t('message.error.required.input') }]
               }]"
               :placeholder="$t('placeholder.endip')" />
-          </a-form-item>
+          </div>
         </a-form>
       </a-spin>
     </a-modal>

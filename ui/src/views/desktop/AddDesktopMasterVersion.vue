@@ -53,13 +53,10 @@
         </a-row>
         <a-row :gutter="12">
           <a-col :md="24" :lg="24">
-            <a-form-item>
-              <span slot="label">
-                {{ $t('label.version') }}
-                <a-tooltip :title="$t('placeholder.version')">
-                  <a-icon type="info-circle" style="color: rgba(0,0,0,.45)" />
-                </a-tooltip>
-              </span>
+            <a-form-item ref="version" name="version">
+              <template #label>
+                <tooltip-label :title="$t('label.version')" :tooltip="apiParams.version.description"/>
+              </template>
               <a-input
                 v-decorator="['masterversion', {
                   rules: [{ required: true, message: `${this.$t('message.error.required.input')}` }]
@@ -71,13 +68,10 @@
         <div v-if="currentForm === 'Create'">
           <a-row :gutter="12">
             <a-col :md="24" :lg="24">
-              <a-form-item>
-                <span slot="label">
-                  {{ $t('label.mastertemplatetype') }}
-                  <a-tooltip :title="$t('placeholder.mastertemplatetype')">
-                    <a-icon type="info-circle" style="color: rgba(0,0,0,.45)" />
-                  </a-tooltip>
-                </span>
+              <a-form-item ref="mastertemplatetype" name="mastertemplatetype">
+                <template #label>
+                  <tooltip-label :title="$t('label.mastertemplatetype')" :tooltip="apiParams.mastertemplatetype.description"/>
+                </template>
                 <a-radio-group
                   v-decorator="['mastertemplatetype', {
                     initialValue: this.masterTemplateType,
@@ -98,13 +92,10 @@
         <div v-if="currentForm === 'Create'">
           <a-row :gutter="12">
             <a-col :md="24" :lg="24">
-              <a-form-item>
-                <span slot="label">
-                  {{ $t('label.masteruploadtype') }}
-                  <a-tooltip :title="$t('placeholder.masteruploadtype')">
-                    <a-icon type="info-circle" style="color: rgba(0,0,0,.45)" />
-                  </a-tooltip>
-                </span>
+              <a-form-item ref="masteruploadtype" name="masteruploadtype">
+                <template #label>
+                  <tooltip-label :title="$t('label.masteruploadtype')" :tooltip="apiParams.masteruploadtype.description"/>
+                </template>
                 <a-radio-group
                   v-decorator="['masteruploadtype', {
                     initialValue: this.uploadType,
