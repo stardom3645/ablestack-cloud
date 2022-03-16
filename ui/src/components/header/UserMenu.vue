@@ -38,7 +38,7 @@
         <span>{{ nickname() }}</span>
       </span>
       <template #overlay>
-        <a-menu-item class="user-menu-wrapper">
+        <a-menu class="user-menu-wrapper">
           <router-link :to="{ path: '/accountuser/' + $store.getters.userInfo.id }">
             <a-menu-item class="user-menu-item" key="0">
                 <UserOutlined class="user-menu-item-icon" />
@@ -76,7 +76,7 @@
               <span class="user-menu-item-name">{{ $t('label.logout') }}</span>
             </a-menu-item>
           </a>
-        </a-menu-item>
+        </a-menu>
       </template>
     </a-dropdown>
   </div>
