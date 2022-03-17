@@ -263,7 +263,7 @@ import { api } from '@/api'
 import store from '@/store'
 import TooltipLabel from '@/components/widgets/TooltipLabel'
 export default {
-  name: 'RegisterOrUploadTemplate',
+  name: 'AddDesktopControllerVersion',
   components: {
     TooltipLabel
   },
@@ -286,7 +286,6 @@ export default {
       template: {},
       format: {},
       osTypes: {},
-      uploadType: 'template',
       defaultOsType: '',
       defaultOsId: null,
       selectedFormat: '',
@@ -543,8 +542,12 @@ export default {
         }
 
         if (values.controlleruploadtype === 'url') {
-          params.zoneid = values.zoneid
-          params.hypervisor = values.hypervisor
+          if (values.zoneid === this.$t('label.all.zone')) {
+            delete params.zoneid
+          } else {
+            params.zoneid = values.zoneid
+          }
+          params.hypervisor = this.hyperVisor.opts[values.hypervisor].name
           params.format = values.format
           params.dcurl = values.dcurl
           params.dcostype = values.dcostype
@@ -571,8 +574,8 @@ export default {
         this.formRef.value.scrollToField(error.errorFields[0].name)
       })
     },
-    handleUploadTypeChange (pvlan) {
-      this.uploadType = pvlan
+    handleUploadTypeChange (val) {
+      this.form.controlleruploadtype = val
     },
     validZone (zones) {
       const allZoneExists = zones.filter(zone => zone === this.$t('label.all.zone'))
