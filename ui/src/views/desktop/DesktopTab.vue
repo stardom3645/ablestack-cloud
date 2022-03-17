@@ -351,7 +351,6 @@ export default {
         // this.$set(this.resource, 'desktopnetworks', this.desktopnetworks)
       }).finally(() => {
         this.instanceLoading = true
-        console.log(this.desktopnetworks)
       })
       api('listDesktopClusterIpRanges', { listall: true, desktopclusterid: this.resource.id }).then(json => {
         this.iprange = json.listdesktopclusteriprangesresponse.desktopclusteriprange
@@ -359,7 +358,6 @@ export default {
           this.iprange.sort((a, b) => { return a.deviceid - b.deviceid })
         }
         // this.$set(this.resource, 'iprange', this.iprange)
-        this.vm.iprange = this.iprange
       })
     },
     removeIpRange (id) {
