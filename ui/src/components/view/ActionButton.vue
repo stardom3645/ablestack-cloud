@@ -24,19 +24,19 @@
       <console :resource="resource" :size="size" />
     </a-tooltip>
     <a-tooltip arrowPointAtCenter placement="bottomRight" v-if="resource && resource.id && resource.worksvmip && dataView">
-      <template slot="title">
+      <template #title>
         {{ $t('label.works.admin.portal.url') }}
       </template>
       <works-admin-url :resource="resource" :size="size"/>
     </a-tooltip>
     <a-tooltip arrowPointAtCenter placement="bottomRight" v-if="resource && resource.id && resource.worksvmip && dataView">
-      <template slot="title">
+      <template #title>
         {{ $t('label.works.user.portal.url') }}
       </template>
       <works-user-url :resource="resource" :size="size"/>
     </a-tooltip>
     <a-tooltip arrowPointAtCenter placement="bottomRight" v-if="resource && resource.id && dataView">
-      <template slot="title">
+      <template #title>
         {{ $t('label.wall.portal.vm.url') }}
       </template>
       <wall-link-url :resource="resource" :size="size" />
@@ -110,7 +110,7 @@ export default {
     Console,
     WorksAdminUrl,
     WorksUserUrl,
-    WallLinkUrl
+    WallLinkUrl,
     RenderIcon
   },
   data () {
