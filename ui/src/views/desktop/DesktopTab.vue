@@ -35,7 +35,7 @@
           @click="showAddModal"
           :loading="loadingNic"
           :disabled="!('addDesktopClusterIpRanges' in $store.getters.apis)">
-          <a-icon type="plus"></a-icon> {{ $t('label.add.ip.range') }}
+          <PlusOutlined /> {{ $t('label.add.ip.range') }}
         </a-button>
         <a-table
           class="table"

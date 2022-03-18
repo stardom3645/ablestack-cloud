@@ -363,7 +363,7 @@ export default {
       }).finally(() => {
         this.fetchLoading = false
         // this.$set(this.resource, 'templates', this.templates)
-        this.resource.templetes = this.templates
+        // this.resource.templetes = this.templates
       })
       this.fetchZoneData()
     },
