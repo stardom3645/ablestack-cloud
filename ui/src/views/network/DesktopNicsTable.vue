@@ -19,11 +19,11 @@
   <a-table
     size="small"
     :columns="desktopNicColumns"
-    :dataSource="resource.virtualmachines[0].nic"
+    :dataSource="resource.controlvms[0].nic"
     :rowKey="item => item.id"
     :pagination="false"
   >
-    <p slot="expandedRowRender" slot-scope="record">
+    <template #expandedRowRender="{ record }">
       <slot name="actions" :nic="record" />
       <a-descriptions style="margin-top: 10px" layout="vertical" :column="1" :bordered="false" size="small">
         <a-descriptions-item :label="$t('label.id')">
@@ -59,8 +59,8 @@
           </a-descriptions-item>
         </template>
       </a-descriptions>
-    </p>
-    <template slot="networkname" slot-scope="text, item">
+    </template>
+    <template #networkname="{ text, item }">
       <a-icon type="apartment" />
       <router-link :to="{ path: '/guestnetwork/' + item.networkid }">
         {{ text }}
@@ -116,7 +116,7 @@ export default {
   },
   watch: {
     resource: function (newItem, oldItem) {
-      this.resource = newItem
+      this.vm = newItem
     }
   }
 }

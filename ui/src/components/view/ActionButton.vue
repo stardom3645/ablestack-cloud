@@ -23,6 +23,24 @@
       </template>
       <console :resource="resource" :size="size" />
     </a-tooltip>
+    <a-tooltip arrowPointAtCenter placement="bottomRight" v-if="resource && resource.id && resource.worksvmip && dataView">
+      <template #title>
+        {{ $t('label.works.admin.portal.url') }}
+      </template>
+      <works-admin-url :resource="resource" :size="size"/>
+    </a-tooltip>
+    <a-tooltip arrowPointAtCenter placement="bottomRight" v-if="resource && resource.id && resource.worksvmip && dataView">
+      <template #title>
+        {{ $t('label.works.user.portal.url') }}
+      </template>
+      <works-user-url :resource="resource" :size="size"/>
+    </a-tooltip>
+    <a-tooltip arrowPointAtCenter placement="bottomRight" v-if="resource && resource.id && dataView">
+      <template #title>
+        {{ $t('label.wall.portal.vm.url') }}
+      </template>
+      <wall-link-url :resource="resource" :size="size" />
+    </a-tooltip>
     <a-tooltip
       v-for="(action, actionIndex) in actions"
       :key="actionIndex"
@@ -82,12 +100,18 @@
 import { api } from '@/api'
 import RenderIcon from '@/utils/renderIcon'
 import Console from '@/components/widgets/Console'
+import WorksAdminUrl from '@/components/widgets/WorksAdminUrl'
+import WorksUserUrl from '@/components/widgets/WorksUserUrl'
+import WallLinkUrl from '@/components/widgets/WallLinkUrl'
 
 export default {
   name: 'ActionButton',
   components: {
-    RenderIcon,
-    Console
+    Console,
+    WorksAdminUrl,
+    WorksUserUrl,
+    WallLinkUrl,
+    RenderIcon
   },
   data () {
     return {

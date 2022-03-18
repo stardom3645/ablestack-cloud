@@ -38,34 +38,45 @@
         <span>{{ nickname() }}</span>
       </span>
       <template #overlay>
-        <a-menu class="user-menu-wrapper">
+        <a-menu-item class="user-menu-wrapper">
           <router-link :to="{ path: '/accountuser/' + $store.getters.userInfo.id }">
             <a-menu-item class="user-menu-item" key="0">
                 <UserOutlined class="user-menu-item-icon" />
                 <span class="user-menu-item-name">{{ $t('label.profilename') }}</span>
             </a-menu-item>
           </router-link>
-          <a @click="toggleUseBrowserTimezone">
-            <a-menu-item class="user-menu-item" key="1">
-                <ClockCircleOutlined class="user-menu-item-icon" />
-                <span class="user-menu-item-name" style="margin-right: 5px">{{ $t('label.use.local.timezone') }}</span>
-                <a-switch :checked="$store.getters.usebrowsertimezone" />
-            </a-menu-item>
+        </a-menu-item>
+        <a-menu-item class="user-menu-item" key="1">
+          <a :href="'http://' + $store.getters.features.host + ':' + $store.getters.features.wallportalport + '/login?orgId=1'" target="_blank" v-if="$store.getters.userInfo.roletype === 'Admin'">
+            <a-icon class="user-menu-item-icon" type="area-chart"/>
+            <span class="user-menu-item-name">{{ $t('label.wall.portal.url') }}</span>
           </a>
+        </a-menu-item>
+        <a-menu-item class="user-menu-item" key="2">
+          <a @click="toggleUseBrowserTimezone" >
+            <a-icon class="user-menu-item-icon" type="clock-circle"/>
+            <span class="user-menu-item-name" style="margin-right: 5px">{{ $t('label.use.local.timezone') }}</span>
+            <a-switch
+              :checked="$store.getters.usebrowsertimezone" />
+          </a>
+        </a-menu-item>
+        <a-menu-item class="user-menu-item" key="3" disabled>
           <a :href="$config.docBase" target="_blank">
             <a-menu-item class="user-menu-item" key="2">
               <QuestionCircleOutlined class="user-menu-item-icon" />
               <span class="user-menu-item-name">{{ $t('label.help') }}</span>
             </a-menu-item>
           </a>
-          <a-menu-divider/>
+        </a-menu-item>
+        <a-menu-divider/>
+        <a-menu-item class="user-menu-item" key="4">
           <a href="javascript:;" @click="handleLogout">
             <a-menu-item class="user-menu-item" key="3">
               <LogoutOutlined class="user-menu-item-icon" />
               <span class="user-menu-item-name">{{ $t('label.logout') }}</span>
             </a-menu-item>
           </a>
-        </a-menu>
+        </a-menu-item>
       </template>
     </a-dropdown>
   </div>

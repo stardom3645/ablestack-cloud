@@ -53,13 +53,10 @@
         </a-row>
         <a-row :gutter="12">
           <a-col :md="24" :lg="24">
-            <a-form-item>
-              <span slot="label">
-                {{ $t('label.version') }}
-                <a-tooltip :title="$t('placeholder.version')">
-                  <a-icon type="info-circle" style="color: rgba(0,0,0,.45)" />
-                </a-tooltip>
-              </span>
+            <a-form-item ref="version" name="version">
+              <template #label>
+                <tooltip-label :title="$t('label.version')" :tooltip="apiParams.version.description"/>
+              </template>
               <a-input
                 v-decorator="['controllerversion', {
                   rules: [{ required: true, message: `${this.$t('message.error.required.input')}` }]
@@ -68,41 +65,33 @@
             </a-form-item>
           </a-col>
         </a-row>
-        <!-- <div v-if="currentForm === 'Create'">
+        <div v-if="currentForm === 'Create'">
           <a-row :gutter="12">
             <a-col :md="24" :lg="24">
-              <a-form-item
-                :label="$t('label.zone')"
-                :validate-status="zoneError"
-                :help="zoneErrorMessage">
-                <a-select
-                  v-decorator="['zoneids', {
-                    rules: [
-                      {
-                        required: true,
-                        message: `${this.$t('message.error.select')}`,
-                        type: 'array'
-                      }
-                    ]
+              <a-form-item ref="controlleruploadtype" name="controlleruploadtype">
+                <template #label>
+                  <tooltip-label :title="$t('label.controlleruploadtype')" :tooltip="apiParams.controlleruploadtype.description"/>
+                </template>
+                <a-radio-group
+                  v-decorator="['controlleruploadtype', {
+                    initialValue: this.uploadType,
+                    rules: [{ required: true, message: $t('message.error.select') }]
                   }]"
-                  :loading="zones.loading"
-                  mode="multiple"
-                  optionFilterProp="children"
-                  :filterOption="(input, option) => {
-                    return option.componentOptions.children[0].text.toLowerCase().indexOf(input.toLowerCase()) >= 0
-                  }"
-                  :placeholder="$t('placeholder.zones')"
-                  @change="handlerSelectZone">
-                  <a-select-option v-for="opt in zones.opts" :key="opt.id">
-                    {{ opt.name || opt.description }}
-                  </a-select-option>
-                </a-select>
+                  buttonStyle="solid"
+                  @change="selected => { this.handleUploadTypeChange(selected.target.value) }">
+                  <a-radio-button value="template">
+                    {{ $t('label.templatename') }}
+                  </a-radio-button>
+                  <a-radio-button value="url">
+                    {{ $t('label.url') }}
+                  </a-radio-button>
+                </a-radio-group>
               </a-form-item>
             </a-col>
           </a-row>
-        </div> -->
+        </div>
         <div v-if="currentForm === 'Create'">
-          <a-row :gutter="12">
+          <a-row :gutter="12" v-if="this.uploadType=='url'">
             <a-col :md="24" :lg="24">
               <a-form-item
                 :label="$t('label.zones')"
@@ -134,7 +123,7 @@
             </a-col>
           </a-row>
         </div>
-        <a-row :gutter="12">
+        <a-row :gutter="12" v-if="this.uploadType=='url'">
           <a-col :md="24" :lg="12">
             <a-form-item :label="$t('label.hypervisor')">
               <a-select
@@ -176,7 +165,7 @@
           </a-col>
         </a-row>
         <div v-if="currentForm === 'Create'">
-          <a-row :gutter="12">
+          <a-row :gutter="12" v-if="this.uploadType=='url'">
             <a-col :md="24" :lg="24">
               <a-form-item :label="$t('label.dcvm.template.upload.url')">
                 <a-input
@@ -189,7 +178,7 @@
             </a-col>
           </a-row>
         </div>
-        <a-row :gutter="12" v-if="!hyperVMWShow || (hyperVMWShow && !deployasis)">
+        <a-row :gutter="12" v-if="this.uploadType=='url' && (!hyperVMWShow || (hyperVMWShow && !deployasis))">
           <a-col :md="24" :lg="24">
             <a-form-item :label="$t('label.dcvm.template.ostype')">
               <a-select
@@ -217,7 +206,7 @@
           </a-col>
         </a-row>
         <div v-if="currentForm === 'Create'">
-          <a-row :gutter="12">
+          <a-row :gutter="12" v-if="this.uploadType=='url'">
             <a-col :md="24" :lg="24">
               <a-form-item :label="$t('label.worksvm.template.upload.url')">
                 <a-input
@@ -230,7 +219,7 @@
             </a-col>
           </a-row>
         </div>
-        <a-row :gutter="12" v-if="!hyperVMWShow || (hyperVMWShow && !deployasis)">
+        <a-row :gutter="12" v-if="this.uploadType=='url' && (!hyperVMWShow || (hyperVMWShow && !deployasis))">
           <a-col :md="24" :lg="24">
             <a-form-item :label="$t('label.worksvm.template.ostype')">
               <a-select
@@ -252,6 +241,56 @@
                 :placeholder="$t('placeholder.worksvm.template.ostype')">
                 <a-select-option v-for="opt in osTypes.opts" :key="opt.id">
                   {{ opt.name || opt.description }}
+                </a-select-option>
+              </a-select>
+            </a-form-item>
+          </a-col>
+        </a-row>
+        <a-row :gutter="12" v-if="this.uploadType=='template'">
+          <a-col :md="24" :lg="24">
+            <a-form-item :label="$t('label.dctemplate')">
+              <a-select
+                showSearch
+                optionFilterProp="children"
+                :filterOption="(input, option) => {
+                  return option.componentOptions.children[0].text.toLowerCase().indexOf(input.toLowerCase()) >= 0
+                }"
+                v-decorator="['dctemplateid', {
+                  rules: [
+                    {
+                      required: true,
+                      message: `${this.$t('message.error.select')}`
+                    }
+                  ]
+                }]"
+                :loading="template.loading"
+                :placeholder="$t('placeholder.template')">
+                <a-select-option v-for="opt in template.opts" :key="opt.id">
+                  {{ opt.name || opt.description }}
+                </a-select-option>
+              </a-select>
+            </a-form-item>
+          </a-col>
+          <a-col :md="24" :lg="24">
+            <a-form-item :label="$t('label.workstemplate')">
+              <a-select
+                showSearch
+                optionFilterProp="children"
+                :filterOption="(input, option) => {
+                  return option.componentOptions.children[0].text.toLowerCase().indexOf(input.toLowerCase()) >= 0
+                }"
+                v-decorator="['workstemplateid', {
+                  rules: [
+                    {
+                      required: true,
+                      message: `${this.$t('message.error.select')}`
+                    }
+                  ]
+                }]"
+                :loading="template.loading"
+                :placeholder="$t('placeholder.template')">
+                <a-select-option v-for="opt2 in template.opts" :key="opt2.id">
+                  {{ opt2.name || opt2.description }}
                 </a-select-option>
               </a-select>
             </a-form-item>
@@ -295,8 +334,10 @@ export default {
       rootDisk: {},
       nicAdapterType: {},
       keyboardType: {},
+      template: {},
       format: {},
       osTypes: {},
+      uploadType: 'template',
       defaultOsType: '',
       defaultOsId: null,
       xenServerProvider: false,
@@ -338,6 +379,8 @@ export default {
     this.$set(this.format, 'opts', [])
     this.$set(this.osTypes, 'loading', false)
     this.$set(this.osTypes, 'opts', [])
+    this.$set(this.template, 'loading', false)
+    this.$set(this.template, 'opts', [])
     this.fetchData()
   },
   computed: {
@@ -346,6 +389,7 @@ export default {
     fetchData () {
       this.fetchZone()
       this.fetchOsTypes()
+      this.fetchTemplateData()
       if (Object.prototype.hasOwnProperty.call(store.getters.apis, 'listConfigurations')) {
         this.fetchXenServerProvider()
       }
@@ -460,6 +504,22 @@ export default {
         this.defaultOsId = this.osTypes.opts[1].id
       }).finally(() => {
         this.osTypes.loading = false
+      })
+    },
+    fetchTemplateData () {
+      let listTemplates = []
+      const params = {}
+      params.templatefilter = 'executable'
+      params.listall = true
+      this.template.loading = true
+      this.template.opts = []
+      api('listTemplates', params).then(json => {
+        const listTemplatesResponse = json.listtemplatesresponse.template
+        listTemplates = listTemplates.concat(listTemplatesResponse)
+        this.$set(this.template, 'opts', listTemplates)
+      }).finally(() => {
+        // this.zoneSelected = (this.template.opts && this.template.opts[1]) ? this.template.opts[1].id : ''
+        this.template.loading = false
       })
     },
     fetchXenServerProvider () {
@@ -757,9 +817,6 @@ export default {
             }
           }
         }
-        if (!('requireshvm' in params)) { // handled as default true by API
-          params.requireshvm = false
-        }
         if (this.currentForm === 'Create') {
           this.loading = true
           api('addDesktopControllerVersion', params).then(json => {
@@ -796,6 +853,9 @@ export default {
     },
     handleChangeDirect (checked) {
       this.allowDirectDownload = checked
+    },
+    handleUploadTypeChange (pvlan) {
+      this.uploadType = pvlan
     },
     validZone (zones) {
       const allZoneExists = zones.filter(zone => zone === this.$t('label.all.zone'))
