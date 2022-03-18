@@ -19,30 +19,39 @@
   <div class="form-layout">
     <a-spin :spinning="loading">
       <a-form :form="form" :loading="loading" @submit="handleSubmit" layout="vertical">
-        <a-form-item ref="name" name="name">
-          <template #label>
-            <tooltip-label :title="$t('label.name')" :tooltip="apiParams.name.description"/>
-          </template>
+        <a-form-item>
+          <span slot="label">
+            {{ $t('label.name') }}
+            <a-tooltip :title="$t('label.name')">
+              <a-icon type="info-circle" style="color: rgba(0,0,0,.45)" />
+            </a-tooltip>
+          </span>
           <a-input
             v-decorator="['name', {
               rules: [{ required: true, message: $t('message.error.required.input') }]
             }]"
             :placeholder="$t('label.name')" />
         </a-form-item>
-        <a-form-item ref="description" name="description">
-          <template #label>
-            <tooltip-label :title="$t('label.description')" :tooltip="apiParams.description.description"/>
-          </template>
+        <a-form-item>
+          <span slot="label">
+            {{ $t('label.description') }}
+            <a-tooltip :title="$t('label.description')">
+              <a-icon type="info-circle" style="color: rgba(0,0,0,.45)" />
+            </a-tooltip>
+          </span>
           <a-input
             v-decorator="['description', {
               rules: [{ required: true, message: $t('message.error.required.input') }]
             }]"
             :placeholder="$t('label.description')" />
         </a-form-item>
-        <a-form-item ref="addomainname" name="addomainname">
-          <template #label>
-            <tooltip-label :title="$t('label.addomainname')" :tooltip="apiParams.addomainname.description"/>
-          </template>
+        <a-form-item>
+          <span slot="label">
+            {{ $t('label.addomainname') }}
+            <a-tooltip :title="$t('label.addomainname')">
+              <a-icon type="info-circle" style="color: rgba(0,0,0,.45)" />
+            </a-tooltip>
+          </span>
           <a-input
             v-decorator="['addomainname', {
               rules: [{ required: true, message: $t('message.error.required.input') }]
@@ -51,10 +60,13 @@
         </a-form-item>
         <!-- <a-row :gutter="12">
           <a-col :md="24" :lg="12">
-            <a-form-item name="password" ref="password">
-              <template #label>
-                <tooltip-label :title="$t('label.password')" :tooltip="apiParams.password.description"/>
-              </template>
+            <a-form-item>
+              <span slot="label">
+                {{ $t('label.password') }}
+                <a-tooltip :title="$t('placeholder.password')">
+                  <a-icon type="info-circle" style="color: rgba(0,0,0,.45)" />
+                </a-tooltip>
+              </span>
               <a-input-password
                 v-decorator="['password', {
                   rules: [{ required: true, message: $t('message.error.required.input') }]
@@ -63,10 +75,13 @@
             </a-form-item>
           </a-col>
           <a-col :md="24" :lg="12">
-            <a-form-item name="confirmpassword" ref="confirmpassword">
-              <template #label>
-                <tooltip-label :title="$t('label.confirmpassword')" :tooltip="apiParams.confirmpassword.description"/>
-              </template>
+            <a-form-item>
+              <span slot="label">
+                {{ $t('label.confirmpassword') }}
+                <a-tooltip :title="$t('placeholder.confirmpassword')">
+                  <a-icon type="info-circle" style="color: rgba(0,0,0,.45)" />
+                </a-tooltip>
+              </span>
               <a-input-password
                 v-decorator="['confirmpassword', {
                   rules: [
@@ -78,10 +93,13 @@
             </a-form-item>
           </a-col>
         </a-row> -->
-        <a-form-item name="version" ref="version">
-          <template #label>
-            <tooltip-label :title="$t('label.desktop.controller.template.version')" :tooltip="apiParams.version.description"/>
-          </template>
+        <a-form-item>
+          <span slot="label">
+            {{ $t('label.desktop.controller.template.version') }}
+            <a-tooltip :title="$t('placeholder.desktop.controller.template.version')">
+              <a-icon type="info-circle" style="color: rgba(0,0,0,.45)" />
+            </a-tooltip>
+          </span>
           <a-select
             v-decorator="['templateversion', {
               rules: [{ required: true, message: $t('message.error.required.input') }]
@@ -93,10 +111,13 @@
             </a-select-option>
           </a-select>
         </a-form-item>
-        <a-form-item name="offerings" ref="offerings">
-          <template #label>
-            <tooltip-label :title="$t('abel.compute.offerings')" :tooltip="apiParams.offerings.description"/>
-          </template>
+        <a-form-item>
+          <span slot="label">
+            {{ $t('label.compute.offerings') }}
+            <a-tooltip :title="$t('placeholder.compute.offering')">
+              <a-icon type="info-circle" style="color: rgba(0,0,0,.45)" />
+            </a-tooltip>
+          </span>
           <a-select
             v-decorator="['serviceofferingid', {
               rules: [{ required: true, message: $t('message.error.required.input') }]
@@ -114,11 +135,12 @@
           </a-select>
         </a-form-item>
         <!-- <a-form-item>
-          <template #label>
-            <a-tooltip :title="$t('label.access.type')">
-                <a-icon type="info-circle" style="color: rgba(0,0,0,.45)" />
-              </a-tooltip>
-          </template>
+          <span slot="label">
+            {{ $t('label.access.type') }}
+            <a-tooltip :title="$t('placeholder.accesstype')">
+              <a-icon type="info-circle" style="color: rgba(0,0,0,.45)" />
+            </a-tooltip>
+          </span>
           <a-radio-group
             v-decorator="['accesstype', {
               initialValue: this.accessType,
@@ -137,10 +159,13 @@
             </a-radio-button>
           </a-radio-group>
         </a-form-item> -->
-        <a-form-item name="network" ref="network">
-          <template #label>
-            <tooltip-label :title="$t('label.network')" :tooltip="apiParams.network.description"/>
-          </template>
+        <a-form-item>
+          <span slot="label">
+            {{ $t('label.network') }}
+            <a-tooltip :title="$t('placeholder.network')">
+              <a-icon type="info-circle" style="color: rgba(0,0,0,.45)" />
+            </a-tooltip>
+          </span>
           <a-select
             :loading="networkLoading"
             v-decorator="['networkid', {
@@ -159,10 +184,13 @@
         </a-form-item>
         <!-- <a-row :gutter="12">
           <a-col :md="24" :lg="12">
-            <a-form-item name="gateway" ref="gateway" v-if="this.accessType=='internal'">
-              <template #label>
-                <tooltip-label :title="$t('label.gateway')" :tooltip="apiParams.gateway.description"/>
-              </template>
+            <a-form-item v-if="this.accessType=='internal'">
+              <span slot="label">
+                {{ $t('label.gateway') }}
+                <a-tooltip :title="$t('label.gateway')">
+                  <a-icon type="info-circle" style="color: rgba(0,0,0,.45)" />
+                </a-tooltip>
+              </span>
               <a-input
                 v-decorator="['gateway', {
                   rules: [{ required: true, message: $t('message.error.required.input') }]
@@ -171,10 +199,13 @@
             </a-form-item>
           </a-col>
           <a-col :md="24" :lg="12">
-            <a-form-item name="netmask" ref="netmask" v-if="this.accessType=='internal'">
-              <template #label>
-                <tooltip-label :title="$t('label.netmask')" :tooltip="apiParams.netmask.description"/>
-              </template>
+            <a-form-item v-if="this.accessType=='internal'">
+              <span slot="label">
+                {{ $t('label.netmask') }}
+                <a-tooltip :title="$t('placeholder.netmask')">
+                  <a-icon type="info-circle" style="color: rgba(0,0,0,.45)" />
+                </a-tooltip>
+              </span>
               <a-input
                 v-decorator="['netmask', {
                   rules: [{ required: true, message: $t('message.error.required.input') }]
@@ -183,10 +214,13 @@
             </a-form-item>
           </a-col>
           <a-col :md="24" :lg="12">
-            <a-form-item name="startip" ref="startip" v-if="this.accessType=='internal'">
-              <template #label>
-                <tooltip-label :title="$t('label.startip')" :tooltip="apiParams.startip.description"/>
-              </template>
+            <a-form-item v-if="this.accessType=='internal'">
+              <span slot="label">
+                {{ $t('label.startip') }}
+                <a-tooltip :title="$t('placeholder.startip')">
+                  <a-icon type="info-circle" style="color: rgba(0,0,0,.45)" />
+                </a-tooltip>
+              </span>
               <a-input
                 v-decorator="['startip', {
                   rules: [{ required: true, message: $t('message.error.required.input') }]
@@ -195,10 +229,13 @@
             </a-form-item>
           </a-col>
           <a-col :md="24" :lg="12">
-            <a-form-item name="endip" ref="endip" v-if="this.accessType=='internal'">
-              <template #label>
-                <tooltip-label :title="$t('label.endip')" :tooltip="apiParams.endip.description"/>
-              </template>
+            <a-form-item v-if="this.accessType=='internal'">
+              <span slot="label">
+                {{ $t('label.endip') }}
+                <a-tooltip :title="$t('placeholder.endip')">
+                  <a-icon type="info-circle" style="color: rgba(0,0,0,.45)" />
+                </a-tooltip>
+              </span>
               <a-input
                 v-decorator="['endip', {
                   rules: [{ required: true, message: $t('message.error.required.input') }]
@@ -207,20 +244,26 @@
             </a-form-item>
           </a-col>
         </a-row> -->
-        <a-form-item name="worksvmip" ref="worksvmip">
-          <template #label>
-            <tooltip-label :title="$t('label.worksvmip')" :tooltip="apiParams.worksvmip.description"/>
-          </template>
+        <a-form-item>
+          <span slot="label">
+            {{ $t('label.worksvmip') }}
+            <a-tooltip :title="$t('placeholder.worksvmip')">
+              <a-icon type="info-circle" style="color: rgba(0,0,0,.45)" />
+            </a-tooltip>
+          </span>
           <a-input
             v-decorator="['worksip', {
               rules: [{ required: true, message: $t('message.error.required.input') }]
             }]"
             :placeholder="$t('placeholder.worksvmip')" />
         </a-form-item>
-        <a-form-item name="dcvmip" ref="dcvmip">
-          <template #label>
-            <tooltip-label :title="$t('label.dcvmip')" :tooltip="apiParams.dcvmip.description"/>
-          </template>
+        <a-form-item>
+          <span slot="label">
+            {{ $t('label.dcvmip') }}
+            <a-tooltip :title="$t('placeholder.dcvmip')">
+              <a-icon type="info-circle" style="color: rgba(0,0,0,.45)" />
+            </a-tooltip>
+          </span>
           <a-input
             v-decorator="['dcip', {
               rules: [{ required: true, message: $t('message.error.required.input') }]
@@ -376,15 +419,16 @@ export default {
               this.handleNetworkChange(this.networks[0])
             }
             if (this.accessType === 'external' && items[i].type === 'Isolated') {
-              this.networks.push(items[i])
               if (this.clusters.length !== 0) {
                 for (var j = 0; j < this.clusters[0].length; j++) {
-                  if ([this.clusters[0][j].networkid].includes(items[i].id)) {
-                    this.networks.pop(items[i])
+                  if (![this.clusters[0][j].networkid].includes(items[i].id)) {
+                    this.networks.push(items[i])
+                    this.networks = Array.from(new Set(this.networks))
+                    this.handleNetworkChange(this.networks[0])
                   }
-                  this.handleNetworkChange(this.networks[0])
                 }
               } else {
+                this.networks.push(items[i])
                 this.handleNetworkChange(this.networks[0])
               }
             }
