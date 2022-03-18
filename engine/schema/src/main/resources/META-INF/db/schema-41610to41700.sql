@@ -472,6 +472,9 @@ SELECT
     `user_ip_address`.`uuid` AS `public_ip_uuid`,
     `user_ip_address`.`public_ip_address` AS `public_ip_address`,
     `ssh_details`.`value` AS `keypair_names`,
+    `ssh_keypairs`.`keypair_name` AS `keypair_name`,
+    `ssh_keypairs`.`id` AS `keypair_id`,
+    `ssh_keypairs`.`uuid` AS `keypair_uuid`,
     `resource_tags`.`id` AS `tag_id`,
     `resource_tags`.`uuid` AS `tag_uuid`,
     `resource_tags`.`key` AS `tag_key`,
@@ -495,7 +498,7 @@ SELECT
     `affinity_group`.`description` AS `affinity_group_description`,
     `vm_instance`.`dynamically_scalable` AS `dynamically_scalable`
 FROM
-    ((((((((((((((((((((((((((((((((`user_vm`
+    (((((((((((((((((((((((((((((((((`user_vm`
         JOIN `vm_instance` ON (((`vm_instance`.`id` = `user_vm`.`id`)
             AND ISNULL(`vm_instance`.`removed`))))
         JOIN `account` ON ((`vm_instance`.`account_id` = `account`.`id`)))
@@ -525,6 +528,8 @@ FROM
         LEFT JOIN `user_ip_address` ON ((`user_ip_address`.`vm_id` = `vm_instance`.`id`)))
         LEFT JOIN `user_vm_details` `ssh_details` ON (((`ssh_details`.`vm_id` = `vm_instance`.`id`)
             AND (`ssh_details`.`name` = 'SSH.KeyPairNames'))))
+        LEFT JOIN `ssh_keypairs` ON (((`ssh_keypairs`.`public_key` = `ssh_details`.`value`)
+            AND (`ssh_keypairs`.`account_id` = `account`.`id`))))
         LEFT JOIN `resource_tags` ON (((`resource_tags`.`resource_id` = `vm_instance`.`id`)
             AND (`resource_tags`.`resource_type` = 'UserVm'))))
         LEFT JOIN `async_job` ON (((`async_job`.`instance_id` = `vm_instance`.`id`)
