@@ -26,7 +26,7 @@
         <DetailsTab :resource="resource" :loading="loading" />
       </a-tab-pane>
       <a-tab-pane :tab="$t('label.networks')" key="desktopnetworks" >
-        <DesktopNicsTable :resource="desktopnetworks" :loading="loading" v-if="instanceLoading"/>
+        <DesktopNicsTable :resource="desktopnetworks" :loading="loading"/>
       </a-tab-pane>
       <a-tab-pane :tab="$t('label.iprange')" key="iprange" v-if="'listDesktopClusterIpRanges' in $store.getters.apis && resource.networktype =='L2'">
         <a-button
@@ -293,7 +293,6 @@ export default {
     this.apiParams = this.$getApiParams('addDesktopClusterIpRanges')
   },
   created () {
-    this.instanceLoading = false
     const userInfo = this.$store.getters.userInfo
     if (!['Admin'].includes(userInfo.roletype) &&
       (userInfo.account !== this.resource.account || userInfo.domain !== this.resource.domain)) {
@@ -343,14 +342,13 @@ export default {
       if (!this.vm || !this.vm.id) {
         return
       }
-      api('listNetworks', { listall: true, networkid: this.resource.networkid }).then(json => {
+      api('listNetworks', { id: this.resource.networkid }).then(json => {
         this.desktopnetworks = json.listnetworksresponse.network
         if (this.desktopnetworks) {
           this.desktopnetworks.sort((a, b) => { return a.deviceid - b.deviceid })
         }
         // this.$set(this.resource, 'desktopnetworks', this.desktopnetworks)
       }).finally(() => {
-        this.instanceLoading = true
       })
       api('listDesktopClusterIpRanges', { listall: true, desktopclusterid: this.resource.id }).then(json => {
         this.iprange = json.listdesktopclusteriprangesresponse.desktopclusteriprange
