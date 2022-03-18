@@ -62,7 +62,7 @@
           :dataSource="templates"
           :disabled="!('copyTemplate' in $store.getters.apis && record.isready) || templates.includes(record.id)"
           :title="$t('label.action.copy.template')"
-          icon="copy"
+          icon="copy-outlined"
           :loading="copyLoading || fetchLoading"
           @onClick="showCopyTemplate(record)" />
         <tooltip-button
@@ -362,7 +362,8 @@ export default {
         }
       }).finally(() => {
         this.fetchLoading = false
-        this.$set(this.resource, 'templates', this.templates)
+        // this.$set(this.resource, 'templates', this.templates)
+        // this.resource.templetes = this.templates
       })
       this.fetchZoneData()
     },

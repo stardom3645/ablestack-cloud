@@ -150,7 +150,12 @@ import {
   UserAddOutlined,
   UserOutlined,
   UploadOutlined,
-  WifiOutlined
+  WifiOutlined,
+  CloudServerOutlined,
+  ShopOutlined,
+  LaptopOutlined,
+  AreaChartOutlined,
+  SolutionOutlined
 } from '@ant-design/icons-vue'
 
 export default {
@@ -290,5 +295,10 @@ export default {
     app.component('UserOutlined', UserOutlined)
     app.component('UploadOutlined', UploadOutlined)
     app.component('WifiOutlined', WifiOutlined)
+    app.component('CloudServerOutlined', CloudServerOutlined)
+    app.component('ShopOutlined', ShopOutlined)
+    app.component('LaptopOutlined', LaptopOutlined)
+    app.component('AreaChartOutlined', AreaChartOutlined)
+    app.component('SolutionOutlined', SolutionOutlined)
   }
 }

@@ -369,8 +369,8 @@
         <div class="resource-detail-item" v-if="resource.keypairs && resource.keypairs.length > 0">
           <div class="resource-detail-item__label">{{ $t('label.keypairs') }}</div>
           <div class="resource-detail-item__details">
-            <a-icon type="key" />
-            <router-link v-if="!isStatic && $router.resolve('/ssh/' + resource.keypairid).route.name !== '404'" :to="{ path: '/ssh/' + resource.keypairid }">{{ resource.keypair || resource.keypairid }} </router-link>
+            <!-- <key-outlined />
+            <router-link v-if="!isStatic && $router.resolve('/ssh/' + resource.keypairid).route.name !== '404'" :to="{ path: '/ssh/' + resource.keypairid }">{{ resource.keypair || resource.keypairid }} </router-link> -->
             <key-outlined />
             <li v-for="keypair in keypairs" :key="keypair">
               <router-link :to="{ path: '/ssh/' + keypair }" style="margin-right: 5px">{{ keypair }}</router-link>

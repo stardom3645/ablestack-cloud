@@ -26,8 +26,6 @@ import com.cloud.user.SSHKeyPair;
 import org.apache.cloudstack.api.BaseResponseWithAnnotations;
 import org.apache.cloudstack.api.EntityReference;
 
-import com.cloud.user.SSHKeyPair;
-
 @SuppressWarnings("unused")
 @EntityReference(value = SSHKeyPair.class)
 public class SSHKeyPairResponse extends BaseResponseWithAnnotations {

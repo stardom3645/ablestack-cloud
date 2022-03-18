@@ -128,6 +128,9 @@ public class ListVMsCmd extends BaseListTaggedResourcesCmd implements UserCmd {
     @Parameter(name = ApiConstants.AFFINITY_GROUP_ID, type = CommandType.UUID, entityType = AffinityGroupResponse.class, description = "list vms by affinity group")
     private Long affinityGroupId;
 
+    @Parameter(name = ApiConstants.SSH_KEYPAIR, type = CommandType.STRING, description = "list vms by ssh keypair name")
+    private String keypair;
+
     @Parameter(name = ApiConstants.SSH_KEYPAIR_ID, type = CommandType.UUID, entityType = SSHKeyPairResponse.class, description = "list vms by ssh keypair ID")
     private Long keyPairId;
 
@@ -221,6 +224,10 @@ public class ListVMsCmd extends BaseListTaggedResourcesCmd implements UserCmd {
 
     public Long getKeyPairId() {
         return keyPairId;
+    }
+
+    public String getKeyPairName() {
+        return keypair;
     }
 
     public Long getHostId() {

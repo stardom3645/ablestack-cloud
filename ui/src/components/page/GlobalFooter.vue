@@ -24,7 +24,7 @@
       ABLESTACK Cerato (v3.0.0)
       <a-divider type="vertical" />
       <a href="https://github.com/ablecloud-team/ablestack-cloud/issues/new" target="_blank">
-        <a-icon type="github"/>
+        <github-outlined />
         {{ $t('label.report.bug') }}
       </a>
     </div>
