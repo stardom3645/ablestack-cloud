@@ -4220,12 +4220,14 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
         final String name = cmd.getName();
         final String fingerPrint = cmd.getFingerprint();
         final String keyword = cmd.getKeyword();
+        final Long domainid = cmd.getDomainId();
+        final String accountName = cmd.getAccount();
 
         final Account caller = getCaller();
         final List<Long> permittedAccounts = new ArrayList<Long>();
 
-        final Pair<Long, Project.ListProjectResourcesCriteria> domainIdRecursiveListProject = new Pair<Long, Project.ListProjectResourcesCriteria>(cmd.getDomainId(), null);
-        _accountMgr.buildACLSearchParameters(caller, null, cmd.getAccountName(), cmd.getProjectId(), permittedAccounts, domainIdRecursiveListProject, cmd.listAll(), false);
+        final Pair<Long, Project.ListProjectResourcesCriteria> domainIdRecursiveListProject = new Pair<Long, Project.ListProjectResourcesCriteria>(domainid, null);
+        _accountMgr.buildACLSearchParameters(caller, null, accountName, cmd.getProjectId(), permittedAccounts, domainIdRecursiveListProject, cmd.listAll(), false);
         final Long domainId = domainIdRecursiveListProject.first();
         final ListProjectResourcesCriteria listProjectResourcesCriteria = domainIdRecursiveListProject.second();
         final Boolean isRecursive = cmd.isRecursive();

@@ -104,6 +104,9 @@
           </span>
           <router-link v-else :to="{ path: $route.path + '/' + record.name }" >{{ text }}</router-link>
         </span>
+        <span v-else-if="$route.path.startsWith('/ssh')">
+          <router-link :to="{ path: $route.path + '/' + record.name , query: { account: record.account, domain: record.domainid }}" >{{ $t(text.toLowerCase()) }}</router-link>
+        </span>
         <span v-else-if="$route.path.startsWith('/globalsetting')">{{ text }}</span>
         <span v-else-if="$route.path.startsWith('/alert')">
           <router-link :to="{ path: $route.path + '/' + record.id }" v-if="record.id">{{ $t(text.toLowerCase()) }}</router-link>
