@@ -30,7 +30,6 @@ export default {
       columns: ['name', 'state', 'addomainname', 'account', 'zonename'],
       details: ['name', 'id', 'description', 'controllerversion', 'account', 'addomainname', 'zonename', 'associatednetworkname', 'adminurl', 'userurl', 'created'],
       tabs: [{
-        name: 'k8s',
         component: shallowRef(defineAsyncComponent(() => import('@/views/desktop/DesktopTab.vue')))
       }],
       actions: [

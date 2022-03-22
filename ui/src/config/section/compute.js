@@ -417,7 +417,7 @@ export default {
               return ['Running', 'Stopped', 'Error'].includes(record.state) && ![controlVm[0]].includes(record.name)
             }
           },
-          component: () => import('@/views/compute/DestroyVM.vue')
+          component: shallowRef(defineAsyncComponent(() => import('@/views/compute/DestroyVM.vue')))
         }
       ]
     },
