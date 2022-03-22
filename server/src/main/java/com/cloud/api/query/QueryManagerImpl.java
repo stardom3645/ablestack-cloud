@@ -943,9 +943,6 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
         Boolean display = cmd.getDisplay();
         Object accountName = cmd.getAccountName();
         Object keyPairName = cmd.getKeyPairName();
-        // if (keyPairName != null) {
-        //     cmd.setAccountName(null);
-        // }
         Pair<Long, ListProjectResourcesCriteria> domainIdRecursiveListProject = new Pair<Long, ListProjectResourcesCriteria>(cmd.getDomainId(), null);
         _accountMgr.buildACLSearchParameters(caller, id, cmd.getAccountName(), cmd.getProjectId(), permittedAccounts, domainIdRecursiveListProject, listAll, false);
         Long domainId = domainIdRecursiveListProject.first();
