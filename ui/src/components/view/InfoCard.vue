@@ -371,7 +371,7 @@
           <div class="resource-detail-item__details">
             <key-outlined />
             <li v-for="keypair in keypairs" :key="keypair">
-              <router-link :to="{ path: '/ssh/' + keypair , query: { account: resource.account, domain: resource.domainid } }" style="margin-right: 5px">{{ keypair }}</router-link>
+              <router-link :to="{ path: '/ssh/' + keypair , query: { account: resource.account, domainid: resource.domainid } }" style="margin-right: 5px">{{ keypair }}</router-link>
             </li>
           </div>
         </div>
@@ -1043,7 +1043,7 @@ export default {
         } else if (item.param === 'keypair') {
           query[item.param] = this.resource.name
           query.account = this.resource.account
-          query.domain = this.resource.domainid
+          query.domainid = this.resource.domainid
         } else {
           query[item.param] = this.resource.id
         }
