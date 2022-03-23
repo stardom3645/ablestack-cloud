@@ -41,9 +41,6 @@ public class ListSSHKeyPairsCmd extends BaseListProjectAndAccountResourcesCmd {
     /////////////////////////////////////////////////////
     //////////////// API parameters /////////////////////
     /////////////////////////////////////////////////////
-    @Parameter(name = ApiConstants.ID, type = CommandType.UUID, entityType = SSHKeyPairResponse.class, description = "the ID of the ssh keypair")
-    private Long id;
-
     @Parameter(name = ApiConstants.NAME, type = CommandType.STRING, description = "A key pair name to look for")
     private String name;
 
@@ -59,10 +56,6 @@ public class ListSSHKeyPairsCmd extends BaseListProjectAndAccountResourcesCmd {
     /////////////////////////////////////////////////////
     /////////////////// Accessors ///////////////////////
     /////////////////////////////////////////////////////
-    public Long getId() {
-        return id;
-    }
-
     public String getName() {
         return name;
     }

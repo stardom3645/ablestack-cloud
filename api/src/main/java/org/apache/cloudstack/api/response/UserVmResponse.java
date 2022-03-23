@@ -288,10 +288,6 @@ public class UserVmResponse extends BaseResponseWithTagInformation implements Co
     @Param(description = "ssh key-pairs")
     private String keyPairNames;
 
-    @SerializedName(ApiConstants.SSH_KEYPAIR_ID)
-    @Param(description = "ssh key-pair id")
-    private String keyPairId;
-
     @SerializedName("affinitygroup")
     @Param(description = "list of affinity groups associated with the virtual machine", responseObject = AffinityGroupResponse.class)
     private Set<AffinityGroupResponse> affinityGroupList;
@@ -604,10 +600,6 @@ public class UserVmResponse extends BaseResponseWithTagInformation implements Co
         return keyPairNames;
     }
 
-    public String getKeyPairId() {
-        return keyPairId;
-    }
-
     public Set<AffinityGroupResponse> getAffinityGroupList() {
         return affinityGroupList;
     }
@@ -870,10 +862,6 @@ public class UserVmResponse extends BaseResponseWithTagInformation implements Co
 
     public void setKeyPairNames(String keyPairNames) {
         this.keyPairNames = keyPairNames;
-    }
-
-    public void setKeyPairId(String keyPairId) {
-        this.keyPairId = keyPairId;
     }
 
     public void setAffinityGroupList(Set<AffinityGroupResponse> affinityGroups) {
