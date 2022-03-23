@@ -50,7 +50,6 @@ import org.apache.cloudstack.api.response.TemplateResponse;
 import org.apache.cloudstack.api.response.UserVmResponse;
 import org.apache.cloudstack.api.response.VpcResponse;
 import org.apache.cloudstack.api.response.ZoneResponse;
-import org.apache.cloudstack.api.response.SSHKeyPairResponse;
 
 import com.cloud.exception.InvalidParameterValueException;
 import com.cloud.vm.VirtualMachine;
@@ -130,9 +129,6 @@ public class ListVMsCmd extends BaseListTaggedResourcesCmd implements UserCmd {
 
     @Parameter(name = ApiConstants.SSH_KEYPAIR, type = CommandType.STRING, description = "list vms by ssh keypair name")
     private String keypair;
-
-    @Parameter(name = ApiConstants.SSH_KEYPAIR_ID, type = CommandType.UUID, entityType = SSHKeyPairResponse.class, description = "list vms by ssh keypair ID")
-    private Long keyPairId;
 
     @Parameter(name = ApiConstants.SERVICE_OFFERING_ID, type = CommandType.UUID, entityType = ServiceOfferingResponse.class, description = "list by the service offering", since = "4.4")
     private Long serviceOffId;
@@ -220,10 +216,6 @@ public class ListVMsCmd extends BaseListTaggedResourcesCmd implements UserCmd {
 
     public Long getAffinityGroupId() {
         return affinityGroupId;
-    }
-
-    public Long getKeyPairId() {
-        return keyPairId;
     }
 
     public String getKeyPairName() {
