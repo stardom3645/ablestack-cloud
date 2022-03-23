@@ -147,7 +147,7 @@ public class UserVmJoinDaoImpl extends GenericDaoBaseWithTagInformation<UserVmJo
         }
         userVmResponse.setDomainId(userVm.getDomainUuid());
         userVmResponse.setDomainName(userVm.getDomainName());
-        userVmResponse.setInstanceName(userVm.getInstanceName());
+
         userVmResponse.setCreated(userVm.getCreated());
         userVmResponse.setLastUpdated(userVm.getLastUpdated());
         userVmResponse.setDisplayVm(userVm.isDisplayVm());
@@ -163,6 +163,7 @@ public class UserVmJoinDaoImpl extends GenericDaoBaseWithTagInformation<UserVmJo
         userVmResponse.setZoneId(userVm.getDataCenterUuid());
         userVmResponse.setZoneName(userVm.getDataCenterName());
         if (view == ResponseView.Full) {
+            userVmResponse.setInstanceName(userVm.getInstanceName());
             userVmResponse.setHostId(userVm.getHostUuid());
             userVmResponse.setHostName(userVm.getHostName());
         }
@@ -219,7 +220,6 @@ public class UserVmJoinDaoImpl extends GenericDaoBaseWithTagInformation<UserVmJo
         userVmResponse.setPublicIpId(userVm.getPublicIpUuid());
         userVmResponse.setPublicIp(userVm.getPublicIpAddress());
         userVmResponse.setKeyPairNames(userVm.getKeypairNames());
-        userVmResponse.setKeyPairId(userVm.getKeyPairUuid());
         userVmResponse.setOsTypeId(userVm.getGuestOsUuid());
         GuestOS guestOS = ApiDBUtils.findGuestOSById(userVm.getGuestOsId());
         if (guestOS != null) {
@@ -239,11 +239,10 @@ public class UserVmJoinDaoImpl extends GenericDaoBaseWithTagInformation<UserVmJo
                 userVmResponse.setDiskIOWrite((long)vmStats.getDiskWriteIOs());
                 long totalMemory = (long)vmStats.getMemoryKBs();
                 long freeMemory = (long)vmStats.getIntFreeMemoryKBs();
-                //long correctedFreeMemory = freeMemory >= totalMemory ? 0 : freeMemory;
+                long correctedFreeMemory = freeMemory >= totalMemory ? 0 : freeMemory;
                 userVmResponse.setMemoryKBs(totalMemory);
-                userVmResponse.setMemoryIntFreeKBs(freeMemory);
+                userVmResponse.setMemoryIntFreeKBs(correctedFreeMemory);
                 userVmResponse.setMemoryTargetKBs((long)vmStats.getTargetMemoryKBs());
-                userVmResponse.setMemoryIntUsableKBs((long)vmStats.getIntUsableMemoryKBs());
 
             }
         }

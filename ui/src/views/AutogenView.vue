@@ -856,6 +856,8 @@ export default {
         if (['listSSHKeyPairs'].includes(this.apiName)) {
           delete params.id
           params.name = this.$route.params.id
+          params.account = this.$route.query.account
+          params.domainid = this.$route.query.domainid
         }
         if (this.$route.path.startsWith('/vmsnapshot/')) {
           params.vmsnapshotid = this.$route.params.id

@@ -583,7 +583,7 @@ export default {
       related: [{
         name: 'vm',
         title: 'label.instances',
-        param: 'keypairid'
+        param: 'keypair'
       }],
       tabs: [
         {

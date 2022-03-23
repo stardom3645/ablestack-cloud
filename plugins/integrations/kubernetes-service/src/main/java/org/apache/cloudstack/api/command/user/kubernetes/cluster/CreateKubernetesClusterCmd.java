@@ -38,7 +38,6 @@ import org.apache.cloudstack.api.response.NetworkResponse;
 import org.apache.cloudstack.api.response.ProjectResponse;
 import org.apache.cloudstack.api.response.ServiceOfferingResponse;
 import org.apache.cloudstack.api.response.ZoneResponse;
-import org.apache.cloudstack.api.response.SSHKeyPairResponse;
 import org.apache.cloudstack.context.CallContext;
 import org.apache.log4j.Logger;
 
@@ -109,11 +108,6 @@ public class CreateKubernetesClusterCmd extends BaseAsyncCreateCmd {
     @Parameter(name = ApiConstants.SSH_KEYPAIR, type = CommandType.STRING,
             description = "name of the ssh key pair used to login to the virtual machines")
     private String sshKeyPairName;
-
-    @ACL(accessType = AccessType.UseEntry)
-    @Parameter(name = ApiConstants.SSH_KEYPAIR_ID, type = CommandType.UUID, entityType = SSHKeyPairResponse.class,
-            description = "id of the ssh key pair used to login to the virtual machines")
-    private Long sshKeyPairId;
 
     @Parameter(name=ApiConstants.MASTER_NODES, type = CommandType.LONG,
             description = "number of Kubernetes cluster master nodes, default is 1. This option is deprecated, please use 'controlnodes' parameter.")
@@ -190,10 +184,6 @@ public class CreateKubernetesClusterCmd extends BaseAsyncCreateCmd {
 
     public String getSSHKeyPairName() {
         return sshKeyPairName;
-    }
-
-    public Long getSSHKeyPairId() {
-        return sshKeyPairId;
     }
 
     public Long getMasterNodes() {

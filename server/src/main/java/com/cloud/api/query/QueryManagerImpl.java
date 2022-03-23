@@ -941,6 +941,7 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
         Long userId = cmd.getUserId();
         Map<String, String> tags = cmd.getTags();
         Boolean display = cmd.getDisplay();
+        Object keyPairName = cmd.getKeyPairName();
         Pair<Long, ListProjectResourcesCriteria> domainIdRecursiveListProject = new Pair<Long, ListProjectResourcesCriteria>(cmd.getDomainId(), null);
         _accountMgr.buildACLSearchParameters(caller, id, cmd.getAccountName(), cmd.getProjectId(), permittedAccounts, domainIdRecursiveListProject, listAll, false);
         Long domainId = domainIdRecursiveListProject.first();
@@ -990,8 +991,6 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
         Object isoId = cmd.getIsoId();
         Object vpcId = cmd.getVpcId();
         Object affinityGroupId = cmd.getAffinityGroupId();
-        Object keyPairId = cmd.getKeyPairId();
-        Object keyPairName = cmd.getKeyPairName();
         Object serviceOffId = cmd.getServiceOfferingId();
         Object securityGroupId = cmd.getSecurityGroupId();
         Object backupOfferingId = cmd.getBackupOfferingId();
@@ -1070,12 +1069,8 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
             sb.and("affinityGroupId", sb.entity().getAffinityGroupId(), SearchCriteria.Op.EQ);
         }
 
-        if (keyPairId != null) {
-            sb.and("keyPairId", sb.entity().getKeyPairId(), SearchCriteria.Op.EQ);
-        }
-
         if (keyPairName != null) {
-            sb.and("keyPairName", sb.entity().getKeypairNames(), SearchCriteria.Op.FIND_IN_SET);
+            sb.and("keypairNames", sb.entity().getKeypairNames(), SearchCriteria.Op.FIND_IN_SET);
         }
 
         if (!isRootAdmin) {
@@ -1191,8 +1186,8 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
             sc.setParameters("affinityGroupId", affinityGroupId);
         }
 
-        if (keyPairId != null) {
-            sc.setParameters("keyPairId", keyPairId);
+        if (keyPairName != null) {
+            sc.setParameters("keypairNames", keyPairName);
         }
 
         if (_accountMgr.isRootAdmin(caller.getId())) {
