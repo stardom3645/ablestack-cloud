@@ -94,7 +94,7 @@ import com.cloud.vm.VMInstanceVO;
 import com.cloud.vm.VirtualMachine;
 import com.cloud.vm.dao.VMInstanceDao;
 //import com.cloud.utils.crypt.DBEncryptionUtil;
-import com.cloud.utils.Pair;
+import com.cloud.utils.Ternary;
 import com.cloud.utils.net.NetUtils;
 import com.cloud.utils.component.ManagerBase;
 
@@ -304,11 +304,11 @@ public class DesktopClusterManagerImpl extends ManagerBase implements DesktopClu
         final String keyword = cmd.getKeyword();
         List<DesktopClusterResponse> responsesList = new ArrayList<DesktopClusterResponse>();
         List<Long> permittedAccounts = new ArrayList<Long>();
-        Pair<Long, Project.ListProjectResourcesCriteria> domainIdRecursiveListProject = new Pair<Long, Project.ListProjectResourcesCriteria>(cmd.getDomainId(), null);
+        Ternary<Long, Boolean, Project.ListProjectResourcesCriteria> domainIdRecursiveListProject = new Ternary<Long, Boolean, Project.ListProjectResourcesCriteria>(cmd.getDomainId(), cmd.isRecursive(), null);
         accountManager.buildACLSearchParameters(caller, desktopClusterId, cmd.getAccountName(), cmd.getProjectId(), permittedAccounts, domainIdRecursiveListProject, cmd.listAll(), false);
         Long domainId = domainIdRecursiveListProject.first();
-        Project.ListProjectResourcesCriteria listProjectResourcesCriteria = domainIdRecursiveListProject.second();
-        Boolean isRecursive = cmd.isRecursive();
+        Boolean isRecursive = domainIdRecursiveListProject.second();
+        Project.ListProjectResourcesCriteria listProjectResourcesCriteria = domainIdRecursiveListProject.third();
         Filter searchFilter = new Filter(DesktopClusterVO.class, "id", true, cmd.getStartIndex(), cmd.getPageSizeVal());
         SearchBuilder<DesktopClusterVO> sb = desktopClusterDao.createSearchBuilder();
         accountManager.buildACLSearchBuilder(sb, domainId, isRecursive, permittedAccounts, listProjectResourcesCriteria);

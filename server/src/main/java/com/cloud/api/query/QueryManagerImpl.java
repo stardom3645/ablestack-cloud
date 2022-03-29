@@ -943,6 +943,7 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
         Long userId = cmd.getUserId();
         Map<String, String> tags = cmd.getTags();
         Boolean display = cmd.getDisplay();
+        Object keyPairName = cmd.getKeyPairName();
         Ternary<Long, Boolean, ListProjectResourcesCriteria> domainIdRecursiveListProject = new Ternary<Long, Boolean, ListProjectResourcesCriteria>(cmd.getDomainId(), cmd.isRecursive(), null);
         _accountMgr.buildACLSearchParameters(caller, id, cmd.getAccountName(), cmd.getProjectId(), permittedAccounts, domainIdRecursiveListProject, listAll, false);
         Long domainId = domainIdRecursiveListProject.first();
