@@ -706,7 +706,6 @@
 
 <script>
 import { api } from '@/api'
-import RenderIcon from '@/utils/renderIcon'
 import Console from '@/components/widgets/Console'
 import OsLogo from '@/components/widgets/OsLogo'
 import Status from '@/components/widgets/Status'
@@ -723,8 +722,7 @@ export default {
     Status,
     TooltipButton,
     UploadResourceIcon,
-    ResourceIcon,
-    RenderIcon
+    ResourceIcon
   },
   props: {
     resource: {

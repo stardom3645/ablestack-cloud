@@ -157,6 +157,7 @@ import {
   AreaChartOutlined,
   SolutionOutlined
 } from '@ant-design/icons-vue'
+import renderIcon from '@/utils/renderIcon'
 
 export default {
   install: (app) => {
@@ -300,5 +301,6 @@ export default {
     app.component('LaptopOutlined', LaptopOutlined)
     app.component('AreaChartOutlined', AreaChartOutlined)
     app.component('SolutionOutlined', SolutionOutlined)
+    app.component('renderIcon', renderIcon)
   }
 }

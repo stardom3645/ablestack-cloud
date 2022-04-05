@@ -98,7 +98,6 @@
 
 <script>
 import { api } from '@/api'
-import RenderIcon from '@/utils/renderIcon'
 import Console from '@/components/widgets/Console'
 import WorksAdminUrl from '@/components/widgets/WorksAdminUrl'
 import WorksUserUrl from '@/components/widgets/WorksUserUrl'
@@ -118,7 +117,7 @@ export default {
       actionBadge: {}
     }
   },
-  mounted () {
+  created () {
     this.handleShowBadge()
   },
   props: {
