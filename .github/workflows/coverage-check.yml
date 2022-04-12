@@ -15,38 +15,38 @@
 # specific language governing permissions and limitations
 # under the License.
 
-name: PR Quality Check
+# name: PR Quality Check
 
-on: [pull_request]
+#on: [pull_request]
 
-jobs:
-  build:
-    name: JaCoCo Coverage
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
+# jobs:
+#   build:
+#     name: JaCoCo Coverage
+#     runs-on: ubuntu-latest
+#     steps:
+#       - uses: actions/checkout@v3
 
-      - name: Set up JDK11
-        uses: actions/setup-java@v3
-        with:
-          distribution: 'temurin'
-          java-version: '11'
-          cache: 'maven'
+#       - name: Set up JDK11
+#         uses: actions/setup-java@v3
+#         with:
+#           distribution: 'temurin'
+#           java-version: '11'
+#           cache: 'maven'
 
-      - name: Install nonoss jar dependencies
-        run: |
-          git clone https://github.com/shapeblue/cloudstack-nonoss.git nonoss
-          cd nonoss && bash -x install-non-oss.sh && cd ..
+#       - name: Install nonoss jar dependencies
+#         run: |
+#           git clone https://github.com/shapeblue/cloudstack-nonoss.git nonoss
+#           cd nonoss && bash -x install-non-oss.sh && cd ..
 
-      - name: Run Build and Tests with Coverage
-        run: mvn -P quality -Dsimulator -Dnoredist clean install
+#       - name: Run Build and Tests with Coverage
+#         run: mvn -P quality -Dsimulator -Dnoredist clean install
 
-      - name: Generate JaCoCo Report
-        uses: Madrapps/jacoco-report@fd4800e8a81e21bdf373438e5918b975df041d15
-        with:
-          paths: ${{ github.workspace }}/client/target/site/jacoco-aggregate/jacoco.xml
-          token: ${{ secrets.GITHUB_TOKEN }}
-          min-coverage-overall: 10
-          min-coverage-changed-files: 80
-          title: PR Code Coverage
-          debug-mode: false
+#       - name: Generate JaCoCo Report
+#         uses: Madrapps/jacoco-report@fd4800e8a81e21bdf373438e5918b975df041d15
+#         with:
+#           paths: ${{ github.workspace }}/client/target/site/jacoco-aggregate/jacoco.xml
+#           token: ${{ secrets.GITHUB_TOKEN }}
+#           min-coverage-overall: 10
+#           min-coverage-changed-files: 80
+#           title: PR Code Coverage
+#           debug-mode: false
