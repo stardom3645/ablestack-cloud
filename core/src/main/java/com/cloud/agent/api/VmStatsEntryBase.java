@@ -34,6 +34,7 @@ public class VmStatsEntryBase implements VmStats {
     private double memoryKBs;
     private double intFreeMemoryKBs;
     private double targetMemoryKBs;
+    private double intusablememoryKBs;
     private int numCPUs;
     private String entityType;
 
@@ -47,6 +48,7 @@ public class VmStatsEntryBase implements VmStats {
      * @param memoryKBs the memory total (in KBs).
      * @param intFreeMemoryKBs the internal free memory (in KBs).
      * @param targetMemoryKBs the target memory (in KBs).
+     * @param intusablememoryKBs the usable memory (in KBs).
      * @param cpuUtilization the CPU utilization.
      * @param networkReadKBs the network read (in KBs).
      * @param networkWriteKBs the network write (in KBs).
@@ -57,12 +59,13 @@ public class VmStatsEntryBase implements VmStats {
      * @param diskWriteIOs the disk write I/O.
      * @param entityType the entity type.
      */
-    public VmStatsEntryBase(long vmId, double memoryKBs, double intFreeMemoryKBs, double targetMemoryKBs, double cpuUtilization, double networkReadKBs, double networkWriteKBs, int numCPUs,
+    public VmStatsEntryBase(long vmId, double memoryKBs, double intFreeMemoryKBs, double targetMemoryKBs, double intusablememoryKBs, double cpuUtilization, double networkReadKBs, double networkWriteKBs, int numCPUs,
             double diskReadKBs, double diskWriteKBs, double diskReadIOs, double diskWriteIOs, String entityType) {
         this.vmId = vmId;
         this.memoryKBs = memoryKBs;
         this.intFreeMemoryKBs = intFreeMemoryKBs;
         this.targetMemoryKBs = targetMemoryKBs;
+        this.intusablememoryKBs = intusablememoryKBs;
         this.cpuUtilization = cpuUtilization;
         this.networkReadKBs = networkReadKBs;
         this.networkWriteKBs = networkWriteKBs;
@@ -171,6 +174,15 @@ public class VmStatsEntryBase implements VmStats {
 
     public void setTargetMemoryKBs(double targetMemoryKBs) {
         this.targetMemoryKBs = targetMemoryKBs;
+    }
+
+    @Override
+    public double getIntUsableMemoryKBs() {
+        return intusablememoryKBs;
+    }
+
+    public void setIntUsableMemoryKBs(double intusablememoryKBs) {
+        this.intusablememoryKBs = intusablememoryKBs;
     }
 
     public int getNumCPUs() {
