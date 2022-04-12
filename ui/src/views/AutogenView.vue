@@ -1198,6 +1198,9 @@ export default {
                 })
               }
             }
+            if ('successMethod' in action) {
+              action.successMethod(this, result)
+            }
             resolve(true)
           },
           errorMethod: () => {
