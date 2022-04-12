@@ -81,7 +81,7 @@
         <div style="text-align: center">
           <a-tooltip placement="bottom" class="capacity-dashboard-button-wrapper">
             <template #title>
-              {{ $t('label.view') + ' ' + $t('label.host.alerts') }}
+              {{ this.$localStorage.get('LOCALE') == 'ko_KR' ? $t('label.host.alerts') + ' ' + $t('label.view') : $t('label.view') + ' ' + $t('label.host.alerts')}}
             </template>
             <a-button type="primary" danger shape="circle">
               <router-link :to="{ name: 'host', query: {'state': 'Alert'} }">
@@ -91,7 +91,7 @@
           </a-tooltip>
           <a-tooltip placement="bottom" class="capacity-dashboard-button-wrapper">
             <template #title>
-              {{ $t('label.view') + ' ' + $t('label.alerts') }}
+              {{ this.$localStorage.get('LOCALE') == 'ko_KR' ? $t('label.alerts') + ' ' + $t('label.view') : $t('label.view') + ' ' + $t('label.alerts')}}
             </template>
             <a-button shape="circle">
               <router-link :to="{ name: 'alert' }">
@@ -101,7 +101,7 @@
           </a-tooltip>
           <a-tooltip placement="bottom" class="capacity-dashboard-button-wrapper">
             <template #title>
-              {{ $t('label.view') + ' ' + $t('label.events') }}
+              {{ this.$localStorage.get('LOCALE') == 'ko_KR' ? $t('label.events') + ' ' + $t('label.view') : $t('label.view') + ' ' + $t('label.events')}}
             </template>
             <a-button shape="circle">
               <router-link :to="{ name: 'event' }">
