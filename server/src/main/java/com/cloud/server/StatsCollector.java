@@ -727,6 +727,7 @@ public class StatsCollector extends ManagerBase implements ComponentMethodInterc
         vmStatsEntry.setMemoryKBs(latestVmStats.getMemoryKBs());
         vmStatsEntry.setIntFreeMemoryKBs(latestVmStats.getIntFreeMemoryKBs());
         vmStatsEntry.setTargetMemoryKBs(latestVmStats.getTargetMemoryKBs());
+        vmStatsEntry.setIntUsableMemoryKBs(latestVmStats.getIntUsableMemoryKBs());
         vmStatsEntry.setNetworkReadKBs(latestVmStats.getNetworkReadKBs());
         vmStatsEntry.setNetworkWriteKBs(latestVmStats.getNetworkWriteKBs());
         vmStatsEntry.setDiskWriteKBs(latestVmStats.getDiskWriteKBs());
