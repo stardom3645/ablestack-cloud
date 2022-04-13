@@ -448,6 +448,7 @@
 "label.entitytype": "Entity Type",
 "label.annotated.by": "Annotator",
 "label.annotation": "Comment",
+"label.annotations": "Comment",
 "label.annotation.admins.only": "Only visible to Administrators",
 "label.annotation.entity": "Entity",
 "label.annotation.entity.type": "Entity Type",
