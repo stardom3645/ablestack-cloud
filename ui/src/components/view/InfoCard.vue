@@ -617,7 +617,7 @@
               <template #icon>
                 <render-icon :icon="$router.resolve('/' + item.name).meta.icon" />
               </template>
-              {{ $t('label.view') + ' ' + $t(item.title) }}
+              {{ this.$localStorage.get('LOCALE') == 'ko_KR'? $t(item.title) + ' ' + $t('label.view') : $t('label.view') + ' ' + $t(item.title) }}
             </a-button>
           </router-link>
         </div>

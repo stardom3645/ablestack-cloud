@@ -286,10 +286,10 @@ public class StatsCollectorTest {
     public void persistVirtualMachineStatsTestPersistsSuccessfully() {
         statsCollector.msId = 1L;
         Date timestamp = new Date();
-        VmStatsEntry statsForCurrentIteration = new VmStatsEntry(2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, "vm");
+        VmStatsEntry statsForCurrentIteration = new VmStatsEntry(2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, "vm");
         Mockito.doReturn(new VmStatsVO()).when(vmStatsDaoMock).persist(Mockito.any());
-        String expectedVmStatsStr = "{\"vmId\":2,\"cpuUtilization\":6.0,\"networkReadKBs\":7.0,\"networkWriteKBs\":8.0,\"diskReadIOs\":12.0,\"diskWriteIOs\":13.0,\"diskReadKBs\":10.0"
-                + ",\"diskWriteKBs\":11.0,\"memoryKBs\":3.0,\"intFreeMemoryKBs\":4.0,\"targetMemoryKBs\":5.0,\"numCPUs\":9,\"entityType\":\"vm\"}";
+        String expectedVmStatsStr = "{\"vmId\":2,\"cpuUtilization\":7.0,\"networkReadKBs\":8.0,\"networkWriteKBs\":9.0,\"diskReadIOs\":13.0,\"diskWriteIOs\":14.0,\"diskReadKBs\":11.0"
+                + ",\"diskWriteKBs\":12.0,\"memoryKBs\":3.0,\"intFreeMemoryKBs\":4.0,\"targetMemoryKBs\":5.0,\"intusablememoryKBs\":6.0,\"numCPUs\":10,\"entityType\":\"vm\"}";
 
         statsCollector.persistVirtualMachineStats(statsForCurrentIteration, timestamp);
 

@@ -243,6 +243,7 @@ public class UserVmJoinDaoImpl extends GenericDaoBaseWithTagInformation<UserVmJo
                 userVmResponse.setMemoryKBs(totalMemory);
                 userVmResponse.setMemoryIntFreeKBs(correctedFreeMemory);
                 userVmResponse.setMemoryTargetKBs((long)vmStats.getTargetMemoryKBs());
+                userVmResponse.setMemoryIntUsableKBs((long)vmStats.getIntUsableMemoryKBs());
 
             }
         }

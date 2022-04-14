@@ -727,6 +727,7 @@ public class StatsCollector extends ManagerBase implements ComponentMethodInterc
         vmStatsEntry.setMemoryKBs(latestVmStats.getMemoryKBs());
         vmStatsEntry.setIntFreeMemoryKBs(latestVmStats.getIntFreeMemoryKBs());
         vmStatsEntry.setTargetMemoryKBs(latestVmStats.getTargetMemoryKBs());
+        vmStatsEntry.setIntUsableMemoryKBs(latestVmStats.getIntUsableMemoryKBs());
         vmStatsEntry.setNetworkReadKBs(latestVmStats.getNetworkReadKBs());
         vmStatsEntry.setNetworkWriteKBs(latestVmStats.getNetworkWriteKBs());
         vmStatsEntry.setDiskWriteKBs(latestVmStats.getDiskWriteKBs());
@@ -1578,7 +1579,7 @@ public class StatsCollector extends ManagerBase implements ComponentMethodInterc
      */
     protected void persistVirtualMachineStats(VmStatsEntry statsForCurrentIteration, Date timestamp) {
         VmStatsEntryBase vmStats = new VmStatsEntryBase(statsForCurrentIteration.getVmId(), statsForCurrentIteration.getMemoryKBs(), statsForCurrentIteration.getIntFreeMemoryKBs(),
-                statsForCurrentIteration.getTargetMemoryKBs(), statsForCurrentIteration.getCPUUtilization(), statsForCurrentIteration.getNetworkReadKBs(),
+                statsForCurrentIteration.getTargetMemoryKBs(), statsForCurrentIteration.getIntUsableMemoryKBs(), statsForCurrentIteration.getCPUUtilization(), statsForCurrentIteration.getNetworkReadKBs(),
                 statsForCurrentIteration.getNetworkWriteKBs(), statsForCurrentIteration.getNumCPUs(), statsForCurrentIteration.getDiskReadKBs(),
                 statsForCurrentIteration.getDiskWriteKBs(), statsForCurrentIteration.getDiskReadIOs(), statsForCurrentIteration.getDiskWriteIOs(),
                 statsForCurrentIteration.getEntityType());

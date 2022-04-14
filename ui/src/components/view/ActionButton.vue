@@ -109,8 +109,7 @@ export default {
     Console,
     WorksAdminUrl,
     WorksUserUrl,
-    WallLinkUrl,
-    RenderIcon
+    WallLinkUrl
   },
   data () {
     return {
