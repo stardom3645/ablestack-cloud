@@ -22,6 +22,7 @@ import java.util.Map;
 
 import org.apache.cloudstack.api.command.admin.cluster.ListClustersCmd;
 import org.apache.cloudstack.api.command.admin.config.ListCfgsByCmd;
+import org.apache.cloudstack.api.command.admin.config.UpdateHypervisorCapabilitiesCmd;
 import org.apache.cloudstack.api.command.admin.guest.AddGuestOsCmd;
 import org.apache.cloudstack.api.command.admin.guest.AddGuestOsMappingCmd;
 import org.apache.cloudstack.api.command.admin.guest.ListGuestOsMappingCmd;
@@ -90,7 +91,7 @@ public interface ManagementService {
     static final String Name = "management-server";
 
     /**
-     * returns the a map of the names/values in the configuraton table
+     * returns the a map of the names/values in the configuration table
      *
      * @return map of configuration name/values
      */
@@ -410,7 +411,7 @@ public interface ManagementService {
     Pair<List<? extends HypervisorCapabilities>, Integer> listHypervisorCapabilities(Long id, HypervisorType hypervisorType, String keyword, Long startIndex,
             Long pageSizeVal);
 
-    HypervisorCapabilities updateHypervisorCapabilities(Long id, Long maxGuestsLimit, Boolean securityGroupEnabled);
+    HypervisorCapabilities updateHypervisorCapabilities(UpdateHypervisorCapabilitiesCmd cmd);
 
     /**
      * list all the top consumed resources across different capacity types
