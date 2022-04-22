@@ -336,7 +336,6 @@ export default {
     //   } else {
     //     callback()
     //   }
-    //
     // },
     fetchTemplateVersionData () {
       this.controllerVersions = []
