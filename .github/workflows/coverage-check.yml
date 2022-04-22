@@ -17,17 +17,17 @@
 
 # name: PR Quality Check
 
-# on: [pull_request_target]
+on: [pull_request_target]
 
-# jobs:
-#   build:
-#     name: JaCoCo Coverage
-#     runs-on: ubuntu-latest
-#     steps:
-#       - uses: actions/checkout@v3
-#         with:
-#           ref: "refs/pull/${{ github.event.number }}/merge"
-#           fetch-depth: 0
+jobs:
+  build:
+    name: JaCoCo Coverage
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          ref: "refs/pull/${{ github.event.number }}/merge"
+          fetch-depth: 0
 
       - name: Changed UI Files
         id: ui-changes
