@@ -51,6 +51,8 @@
           <div>
             {{ dataResource.rootdisksize }} GB
           </div>
+          <div v-else-if="['created', 'sent', 'lastannotated', 'collectiontime', 'lastboottime', 'lastserverstart', 'lastserverstop'].includes(item)">
+            {{ $toLocaleDate(dataResource[item]) }}
           </div>
           <div v-else-if="$route.meta.name === 'guestnetwork' && item === 'egressdefaultpolicy'">
             {{ dataResource[item]? $t('message.egress.rules.allow') : $t('message.egress.rules.deny') }}
