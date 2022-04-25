@@ -42,7 +42,7 @@ jobs:
         uses: peter-evans/create-or-update-comment@c9fcb64660bc90ec1cc535646af190c992007c32
         if: steps.ui-changes.outputs.any_changed == 'true'
         with:
-          token: ${{ secrets.ACS_ROBOT_TOKEN }}
+          token: ${{ secrets.GITHUB_TOKEN }}
           issue-number: ${{ github.event.pull_request.number }}
           body: |
             Found UI changes, kicking a new UI QA build
