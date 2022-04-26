@@ -336,13 +336,12 @@ export default {
     //   } else {
     //     callback()
     //   }
-    //
     // },
     fetchTemplateVersionData () {
       this.controllerVersions = []
       const params = {}
       this.controllerVersionLoading = true
-      api('listDesktopControllerVersions', params).then(json => {
+      api('listAutomationControllerVersion', params).then(json => {
         var items = json.listdesktopcontrollerversionsresponse.desktopcontrollerversion
         if (items != null) {
           this.controllerVersions = items.filter(it => it.state === 'Enabled')
@@ -483,12 +482,12 @@ export default {
                 message: this.$t('message.success.create.desktop.cluter'),
                 duration: 0
               })
-              eventBus.emit('desktop-refresh-data')
+              eventBus.emit('automation-refresh-data')
             },
             loadingMessage: `${this.$t('label.desktop.cluster.deploy')} ${values.name} ${this.$t('label.in.progress')}`,
             catchMessage: this.$t('error.fetching.async.job.result'),
             catchMethod: () => {
-              eventBus.emit('desktop-refresh-data')
+              eventBus.emit('automation-refresh-data')
             },
             action: {
               isFetchData: false
