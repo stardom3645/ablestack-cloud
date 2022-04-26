@@ -157,7 +157,6 @@ import {
   UserOutlined,
   UploadOutlined,
   WifiOutlined,
-  CloudServerOutlined,
   ShopOutlined,
   LaptopOutlined,
   AreaChartOutlined,
@@ -308,7 +307,6 @@ export default {
     app.component('UserOutlined', UserOutlined)
     app.component('UploadOutlined', UploadOutlined)
     app.component('WifiOutlined', WifiOutlined)
-    app.component('CloudServerOutlined', CloudServerOutlined)
     app.component('ShopOutlined', ShopOutlined)
     app.component('LaptopOutlined', LaptopOutlined)
     app.component('AreaChartOutlined', AreaChartOutlined)

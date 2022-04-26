@@ -4110,14 +4110,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
         if (freeMemory == NumberUtils.LONG_MINUS_ONE){
             s_logger.warn("Couldn't retrieve free memory, returning -1.");
         }
-        //getMemoryFreeInKBs 메소드는 RSS 값을 출력, 값이 없는 경우 0 출력
-        int length = mems.length;
-        for (int i = 0; i < length; i++) {
-            if (mems[i].getTag() == 7){
-                return mems[i].getValue();
-            }
-        }
-        return NumberUtils.LONG_ZERO;
+        return freeMemory;
     }
 
     protected long getMemoryUsableInKBs(Domain dm) throws LibvirtException {
