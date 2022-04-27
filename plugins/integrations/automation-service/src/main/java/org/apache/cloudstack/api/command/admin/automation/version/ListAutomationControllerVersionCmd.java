@@ -15,7 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 
-package org.apache.cloudstack.api.command.user.automation.version;
+package org.apache.cloudstack.api.command.admin.automation.version;
 
 import javax.inject.Inject;
 

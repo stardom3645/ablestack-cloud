@@ -17,17 +17,21 @@
 
 package com.cloud.automation.version;
 
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
 import javax.inject.Inject;
 
-import org.apache.cloudstack.api.command.user.automation.version.ListAutomationControllerVersionCmd;
-// import org.apache.cloudstack.api.command.admin.automation.AddAutomationControllerVersionCmd;
-// import org.apache.cloudstack.api.command.admin.automation.DeleteAutomationControllerVersionCmd;
+import org.apache.cloudstack.api.command.admin.automation.version.AddAutomationControllerVersionCmd;
+import org.apache.cloudstack.api.command.admin.automation.version.ListAutomationControllerVersionCmd;
 import org.apache.cloudstack.api.response.AutomationControllerVersionResponse;
 import org.apache.cloudstack.api.response.ListResponse;
 import org.apache.cloudstack.framework.config.ConfigKey;
 import org.apache.log4j.Logger;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.cloudstack.api.command.user.template.RegisterTemplateCmd;
 
 import com.cloud.api.query.dao.TemplateJoinDao;
 import com.cloud.dc.dao.DataCenterDao;
@@ -39,11 +43,16 @@ import com.cloud.utils.db.Filter;
 import com.cloud.utils.db.SearchBuilder;
 import com.cloud.utils.db.SearchCriteria;
 import com.cloud.utils.exception.CloudRuntimeException;
+import com.cloud.utils.component.ComponentContext;
 import com.cloud.storage.dao.VMTemplateDao;
 import com.cloud.storage.dao.VMTemplateZoneDao;
+import com.cloud.storage.VMTemplateVO;
+import com.cloud.storage.VMTemplateZoneVO;
 import com.cloud.template.TemplateApiService;
-
-
+import com.cloud.template.VirtualMachineTemplate;
+import com.cloud.event.ActionEvent;
+import com.cloud.exception.ResourceAllocationException;
+import com.cloud.exception.InvalidParameterValueException;
 import com.cloud.dc.DataCenterVO;
 
 public class AutomationVersionManagerImpl extends ManagerBase implements AutomationVersionService {
@@ -65,26 +74,6 @@ public class AutomationVersionManagerImpl extends ManagerBase implements Automat
     private VMTemplateZoneDao templateZoneDao;
     @Inject
     private AccountManager accountManager;
-
-    private AutomationControllerVersionResponse createAutomationControllerVersionResponse(final AutomationControllerVersion automationControllerVersion) {
-        AutomationControllerVersionResponse response = new AutomationControllerVersionResponse();
-        response.setObjectName("automationcontrollerversion");
-        response.setId(automationControllerVersion.getUuid());
-        response.setName(automationControllerVersion.getName());
-        response.setDescription(automationControllerVersion.getDescription());
-        response.setVersion(automationControllerVersion.getVersion());
-        response.setCreated(automationControllerVersion.getCreated());
-        response.setUploadType(automationControllerVersion.getUploadType());
-        if (automationControllerVersion.getState() != null) {
-            response.setState(automationControllerVersion.getState().toString());
-        }
-        DataCenterVO zone = dataCenterDao.findById(automationControllerVersion.getZoneId());
-        if (zone != null) {
-            response.setZoneId(zone.getUuid());
-            response.setZoneName(zone.getName());
-        }
-        return response;
-    }
 
     @Override
     public ListResponse<AutomationControllerVersionResponse> listAutomationControllerVersion(final ListAutomationControllerVersionCmd cmd) {
@@ -126,6 +115,170 @@ public class AutomationVersionManagerImpl extends ManagerBase implements Automat
         return response;
     }
 
+    private AutomationControllerVersionResponse createAutomationControllerVersionResponse(final AutomationControllerVersion automationControllerVersion) {
+        AutomationControllerVersionResponse response = new AutomationControllerVersionResponse();
+        response.setObjectName("automationcontrollerversion");
+        response.setId(automationControllerVersion.getUuid());
+        response.setName(automationControllerVersion.getName());
+        response.setDescription(automationControllerVersion.getDescription());
+        response.setVersion(automationControllerVersion.getVersion());
+        response.setCreated(automationControllerVersion.getCreated());
+        response.setUploadType(automationControllerVersion.getUploadType());
+        response.setTemplateId(automationControllerVersion.getTemplateId());
+        if (automationControllerVersion.getState() != null) {
+            response.setState(automationControllerVersion.getState().toString());
+        }
+        DataCenterVO zone = dataCenterDao.findById(automationControllerVersion.getZoneId());
+        if (zone != null) {
+            response.setZoneId(zone.getUuid());
+            response.setZoneName(zone.getName());
+        }
+        return response;
+    }
+
+    @Override
+    @ActionEvent(eventType = AutomationVersionEventTypes.EVENT_AUTOMATION_CONTROLLER_VERSION_ADD, eventDescription = "Adding automation controller template version")
+    public AutomationControllerVersionResponse addAutomationControllerVersion(final AddAutomationControllerVersionCmd cmd) {
+        if (!AutomationVersionService.AutomationServiceEnabled.value()) {
+            throw new CloudRuntimeException("Automation Service plugin is disabled");
+        }
+        final String format = cmd.getFormat();
+        final String hypervisor = cmd.getHypervisor();
+        final String versionName = cmd.getControllerVersionName();
+        final String description = cmd.getDescription();
+        final String controllerVersion = cmd.getControllerVersion();
+        final Long zoneId = cmd.getZoneId();
+        final String uploadType = cmd.getUploadType();
+        final String url = cmd.getUrl();
+        final Long osTypeId = cmd.getOsType();
+        final Long templateId =cmd.getTemplateId();
+        String templateName = "";
+
+        final List<AutomationControllerVersionVO> versions = automationControllerVersionDao.listAll();
+        for (final AutomationControllerVersionVO version : versions) {
+            final String otherVersion = version.getVersion();
+            if (otherVersion.equals(controllerVersion)) {
+                throw new InvalidParameterValueException("version '" + controllerVersion + "' already exists.");
+            }
+        }
+
+        if (compareVersions(controllerVersion, MIN_AUTOMATION_CONTOLLER_VERSION) < 0) {
+            throw new InvalidParameterValueException(String.format("New automation controller version cannot be added as %s is minimum version supported by Desktop Service", MIN_AUTOMATION_CONTOLLER_VERSION));
+        }
+        if (zoneId != null && dataCenterDao.findById(zoneId) == null) {
+            throw new InvalidParameterValueException("Invalid zone specified");
+        }
+        if ("url".equals(uploadType) && StringUtils.isEmpty(url)) {
+            throw new InvalidParameterValueException(String.format("Invalid URL for template specified, %s", url));
+        }
+
+        if (StringUtils.isEmpty(versionName)) {
+            throw new InvalidParameterValueException(String.format("Invalid VersionName for template specified, %s", versionName));
+        }
+
+        Long zone = null;
+        VMTemplateVO template = null;
+        AutomationControllerVersionVO automationControllerVersionVO = null;
+        VirtualMachineTemplate vmTemplate = null;
+        try {
+            if ("url".equals(uploadType)) {
+                //vm_template 테이블에 automation 템플릿 추가
+                templateName = String.format("%s(Automation Controller Template)", versionName);
+                vmTemplate = registerAutomationTemplateVersion(zoneId, templateName, url, hypervisor, osTypeId, format);
+                template = templateDao.findById(vmTemplate.getId());
+
+                //automation_controller_version 테이블에 버전 추가
+                automationControllerVersionVO = new AutomationControllerVersionVO(versionName, controllerVersion, description, zoneId, template.getId(), uploadType);
+                automationControllerVersionVO = automationControllerVersionDao.persist(automationControllerVersionVO);
+
+                //템플릿에 세팅 추가
+                Map<String, String> details = new HashMap<String, String>();
+                details.put("rootDiskController", "virtio");
+                template = templateDao.createForUpdate(template.getId());
+                template.setDetails(details);
+                templateDao.saveDetails(template);
+                templateDao.update(template.getId(), template);
+            } else {
+                template = templateDao.findById(templateId);
+                List<VMTemplateZoneVO> templateZones = templateZoneDao.listByTemplateId(templateId);
+                if (templateZones != null) {
+                    for (VMTemplateZoneVO templateZone : templateZones) {
+                        zone = templateZone.getZoneId();
+                    }
+                }
+
+                //automation_controller_version 테이블에 버전 추가
+                automationControllerVersionVO = new AutomationControllerVersionVO(versionName, controllerVersion, description, zone, template.getId(), uploadType);
+                automationControllerVersionVO = automationControllerVersionDao.persist(automationControllerVersionVO);
+            }
+        } catch (URISyntaxException | IllegalAccessException | NoSuchFieldException | IllegalArgumentException | ResourceAllocationException ex) {
+            LOGGER.error(String.format("Unable to register template for desktop controller version, %s, with url: %s", templateName, url), ex);
+            throw new CloudRuntimeException(String.format("Unable to register template for desktop controller version, %s, with url: %s", templateName, url));
+        }
+        return createAutomationControllerVersionResponse(automationControllerVersionVO);
+    }
+
+    public static int compareVersions(String v1, String v2) throws IllegalArgumentException {
+        if (StringUtils.isEmpty(v1) || StringUtils.isEmpty(v2)) {
+            throw new IllegalArgumentException(String.format("Invalid version comparision with versions %s, %s", v1, v2));
+        }
+        if(!isSemanticVersion(v1)) {
+            throw new IllegalArgumentException(String.format("Invalid version format, %s. version should be specified in MAJOR.MINOR.PATCH format. PATCH accepts only numbers and lowercase letters.", v1));
+        }
+        if(!isSemanticVersion(v2)) {
+            throw new IllegalArgumentException(String.format("Invalid version format, %s. version should be specified in MAJOR.MINOR.PATCH format", v2));
+        }
+        if (v1.matches("[0-9]+(\\.[0-9]+)*")) {
+            String[] thisParts = v1.split("\\.");
+            String[] thatParts = v2.split("\\.");
+            int length = Math.max(thisParts.length, thatParts.length);
+            for(int i = 0; i < length; i++) {
+                int thisPart = i < thisParts.length ?
+                        Integer.parseInt(thisParts[i]) : 0;
+                int thatPart = i < thatParts.length ?
+                        Integer.parseInt(thatParts[i]) : 0;
+                if(thisPart < thatPart)
+                    return -1;
+                if(thisPart > thatPart)
+                    return 1;
+            }
+        } else {
+            return 1;
+        }
+        return 0;
+    }
+
+    private static boolean isSemanticVersion(final String version) {
+        if(!version.matches("[0-9]+(\\.[0-9]+)*") && !version.matches("[0-9]+\\.[0-9]+\\.[a-z]|[0.9]")) {
+            return false;
+        }
+        String[] parts = version.split("\\.");
+        if (parts.length < 3) {
+            return false;
+        }
+        return true;
+    }
+
+    private VirtualMachineTemplate registerAutomationTemplateVersion(final Long zoneId, final String templateName, final String url, final String hypervisor, final Long osTypeId, final String format)throws IllegalAccessException, NoSuchFieldException,
+            IllegalArgumentException, ResourceAllocationException, URISyntaxException {
+        RegisterTemplateCmd registerTemplateCmd = new RegisterTemplateCmd();
+        registerTemplateCmd = ComponentContext.inject(registerTemplateCmd);
+        registerTemplateCmd.setTemplateName(templateName);
+        registerTemplateCmd.setHypervisor(hypervisor);
+        registerTemplateCmd.setFormat(format);
+        registerTemplateCmd.setPublic(true);
+        registerTemplateCmd.setOsTypeId(osTypeId);
+        if (zoneId != null) {
+            registerTemplateCmd.setZoneId(zoneId);
+        }
+        registerTemplateCmd.setDisplayText(templateName);
+        registerTemplateCmd.setUrl(url);
+        registerTemplateCmd.setAccountName(accountManager.getSystemAccount().getAccountName());
+        registerTemplateCmd.setDomainId(accountManager.getSystemAccount().getDomainId());
+        registerTemplateCmd.setIsDesktop(true);
+        return templateService.registerTemplate(registerTemplateCmd);
+    }
+
     @Override
     public List<Class<?>> getCommands() {
         List<Class<?>> cmdList = new ArrayList<Class<?>>();
@@ -133,6 +286,7 @@ public class AutomationVersionManagerImpl extends ManagerBase implements Automat
             return cmdList;
         }
         cmdList.add(ListAutomationControllerVersionCmd.class);
+        cmdList.add(AddAutomationControllerVersionCmd.class);
         return cmdList;
     }
 

@@ -908,6 +908,7 @@ public class ApiConstants {
     public static final String AUTOMATION_CONTROLLER_VERSION_UPLOADTYPE = "controlleruploadtype";
     public static final String AUTOMATION_CONTROLLER_VERSION_NAME = "controllerversionname";
     public static final String AUTOMATION_CONTROLLER_VERSION = "controllerversion";
+    public static final String OS_TYPE = "ostype";
 
     public static final String BOOT_TYPE = "boottype";
     public static final String BOOT_MODE = "bootmode";

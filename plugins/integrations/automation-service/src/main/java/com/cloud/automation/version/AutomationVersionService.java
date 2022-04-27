@@ -18,9 +18,9 @@
 package com.cloud.automation.version;
 
 
-import org.apache.cloudstack.api.command.user.automation.version.ListAutomationControllerVersionCmd;
+import org.apache.cloudstack.api.command.admin.automation.version.ListAutomationControllerVersionCmd;
 // import org.apache.cloudstack.api.command.admin.automation.version.DeleteAutomationControllerVersionCmd;
-// import org.apache.cloudstack.api.command.admin.automation.version.AddAutomationControllerVersionCmd;
+import org.apache.cloudstack.api.command.admin.automation.version.AddAutomationControllerVersionCmd;
 import org.apache.cloudstack.api.response.AutomationControllerVersionResponse;
 import org.apache.cloudstack.api.response.ListResponse;
 
@@ -41,6 +41,6 @@ public interface AutomationVersionService extends PluggableService, Configurable
     static final String MIN_AUTOMATION_CONTOLLER_VERSION = "1.0.0";
     static final String MIN_AUTOMATION_MASTER_VERSION = "1.0.0";
     ListResponse<AutomationControllerVersionResponse> listAutomationControllerVersion(ListAutomationControllerVersionCmd cmd);
+    AutomationControllerVersionResponse addAutomationControllerVersion(AddAutomationControllerVersionCmd cmd);
     // boolean deleteAutomationContollerVersion(DeleteAutomationControllerVersionCmd cmd) throws CloudRuntimeException;
-    // AutomationControllerVersionResponse addAutomationControllerVersion(AddAutomationControllerVersionCmd cmd);
 }

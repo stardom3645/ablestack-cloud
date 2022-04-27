@@ -31,13 +31,13 @@ export default {
       details: ['name', 'description', 'version', 'controlleruploadtype', 'created'],
       actions: [
         {
-          api: 'addDesktopControllerVersion',
+          api: 'addAutomationControllerVersion',
           icon: 'plus-outlined',
           label: 'label.automation.controller.template.version.create',
           docHelp: '',
           listView: true,
           popup: true,
-          component: shallowRef(defineAsyncComponent(() => import('@/views/desktop/AddDesktopControllerVersion.vue')))
+          component: shallowRef(defineAsyncComponent(() => import('@/views/automation/AddAutomationControllerVersion.vue')))
         },
         {
           api: 'updateDesktopControllerVersion',

@@ -54,6 +54,9 @@ public class AutomationControllerVersionVO implements AutomationControllerVersio
     @Column(name = "zone_id")
     private Long zoneId;
 
+    @Column(name = "template_id")
+    private Long templateId;
+
     @Column(name = "upload_type")
     private String uploadType;
 
@@ -71,12 +74,13 @@ public class AutomationControllerVersionVO implements AutomationControllerVersio
         this.uuid = UUID.randomUUID().toString();
     }
 
-    public AutomationControllerVersionVO(String name, String version, String description, Long zoneId, String uploadType) {
+    public AutomationControllerVersionVO(String name, String version, String description, Long zoneId, Long templateId, String uploadType) {
         this.uuid = UUID.randomUUID().toString();
         this.name = name;
         this.description = description;
         this.version = version;
         this.zoneId = zoneId;
+        this.templateId = templateId;
         this.uploadType = uploadType;
     }
 
@@ -124,6 +128,15 @@ public class AutomationControllerVersionVO implements AutomationControllerVersio
 
     public void setZoneId(Long zoneId) {
         this.zoneId = zoneId;
+    }
+
+    @Override
+    public Long getTemplateId() {
+        return templateId;
+    }
+
+    public void setTemplateId(Long templateId) {
+        this.templateId = templateId;
     }
 
     @Override
