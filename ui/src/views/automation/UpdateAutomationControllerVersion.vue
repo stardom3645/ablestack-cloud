@@ -69,7 +69,7 @@ export default {
     }
   },
   beforeCreate () {
-    this.apiParams = this.$getApiParams('UpdateAutomationControllerVersion')
+    this.apiParams = this.$getApiParams('updateAutomationControllerVersion')
   },
   created () {
     this.states = [
@@ -127,7 +127,7 @@ export default {
           params.state = this.states[values.state].id
         }
         api('updateAutomationControllerVersion', params).then(json => {
-          this.$message.success(`${this.$t('message.success.update.desktop.controller.template.version')}: ${this.resource.name}`)
+          this.$message.success(`${this.$t('message.success.update.automation.controller.template.version')}: ${this.resource.name}`)
           this.$emit('refresh-data')
           this.closeAction()
         }).catch(error => {

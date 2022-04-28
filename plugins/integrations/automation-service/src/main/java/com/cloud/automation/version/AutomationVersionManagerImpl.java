@@ -24,7 +24,9 @@ import java.util.Map;
 import java.util.HashMap;
 import javax.inject.Inject;
 
+import org.apache.cloudstack.api.ApiConstants;
 import org.apache.cloudstack.api.command.admin.automation.version.AddAutomationControllerVersionCmd;
+import org.apache.cloudstack.api.command.admin.automation.version.UpdateAutomationControllerVersionCmd;
 import org.apache.cloudstack.api.command.admin.automation.version.ListAutomationControllerVersionCmd;
 import org.apache.cloudstack.api.response.AutomationControllerVersionResponse;
 import org.apache.cloudstack.api.response.ListResponse;
@@ -163,7 +165,7 @@ public class AutomationVersionManagerImpl extends ManagerBase implements Automat
         }
 
         if (compareVersions(controllerVersion, MIN_AUTOMATION_CONTOLLER_VERSION) < 0) {
-            throw new InvalidParameterValueException(String.format("New automation controller version cannot be added as %s is minimum version supported by Desktop Service", MIN_AUTOMATION_CONTOLLER_VERSION));
+            throw new InvalidParameterValueException(String.format("New automation controller version cannot be added as %s is minimum version supported by Automation Service", MIN_AUTOMATION_CONTOLLER_VERSION));
         }
         if (zoneId != null && dataCenterDao.findById(zoneId) == null) {
             throw new InvalidParameterValueException("Invalid zone specified");
@@ -212,8 +214,8 @@ public class AutomationVersionManagerImpl extends ManagerBase implements Automat
                 automationControllerVersionVO = automationControllerVersionDao.persist(automationControllerVersionVO);
             }
         } catch (URISyntaxException | IllegalAccessException | NoSuchFieldException | IllegalArgumentException | ResourceAllocationException ex) {
-            LOGGER.error(String.format("Unable to register template for desktop controller version, %s, with url: %s", templateName, url), ex);
-            throw new CloudRuntimeException(String.format("Unable to register template for desktop controller version, %s, with url: %s", templateName, url));
+            LOGGER.error(String.format("Unable to register template for automation controller version, %s, with url: %s", templateName, url), ex);
+            throw new CloudRuntimeException(String.format("Unable to register template for automation controller version, %s, with url: %s", templateName, url));
         }
         return createAutomationControllerVersionResponse(automationControllerVersionVO);
     }
@@ -280,6 +282,36 @@ public class AutomationVersionManagerImpl extends ManagerBase implements Automat
     }
 
     @Override
+    @ActionEvent(eventType = AutomationVersionEventTypes.EVENT_AUTOMATION_CONTROLLER_VERSION_UPDATE, eventDescription = "Updating automation controller version")
+    public AutomationControllerVersionResponse updateAutomationControllerVersion(final UpdateAutomationControllerVersionCmd cmd) {
+        if (!AutomationClusterService.AutomationServiceEnabled.value()) {
+            throw new CloudRuntimeException("Automation Service plugin is disabled");
+        }
+        final Long versionId = cmd.getId();
+        AutomationControllerVersion.State state = null;
+        AutomationControllerVersionVO version = automationControllerVersionDao.findById(versionId);
+        if (version == null) {
+            throw new InvalidParameterValueException("Invalid automation controller version id specified");
+        }
+        try {
+            state = AutomationControllerVersion.State.valueOf(cmd.getState());
+        } catch (IllegalArgumentException iae) {
+            throw new InvalidParameterValueException(String.format("Invalid value for %s parameter", ApiConstants.STATE));
+        }
+        if (!state.equals(version.getState())) {
+            version = automationControllerVersionDao.createForUpdate(version.getId());
+            version.setState(state);
+            if (!automationControllerVersionDao.update(version.getId(), version)) {
+                throw new CloudRuntimeException(String.format("Failed to update automation controller version ID: %s", version.getUuid()));
+            }
+            version = automationControllerVersionDao.findById(versionId);
+        }
+        return  createAutomationControllerVersionResponse(version);
+    }
+
+    
+
+    @Override
     public List<Class<?>> getCommands() {
         List<Class<?>> cmdList = new ArrayList<Class<?>>();
         if (!AutomationVersionService.AutomationServiceEnabled.value()) {
@@ -287,6 +319,7 @@ public class AutomationVersionManagerImpl extends ManagerBase implements Automat
         }
         cmdList.add(ListAutomationControllerVersionCmd.class);
         cmdList.add(AddAutomationControllerVersionCmd.class);
+        cmdList.add(UpdateAutomationControllerVersionCmd.class);
         return cmdList;
     }
 

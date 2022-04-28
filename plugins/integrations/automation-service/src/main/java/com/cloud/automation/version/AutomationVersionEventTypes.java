@@ -19,5 +19,6 @@ package com.cloud.automation.version;
 
 public class AutomationVersionEventTypes {
     public static final String EVENT_AUTOMATION_CONTROLLER_VERSION_ADD = "AUTOMATION.CONTROL.VERSION.ADD";
+    public static final String EVENT_AUTOMATION_CONTROLLER_VERSION_UPDATE = "AUTOMATION.CONTROL.VERSION.UPDATE";
     public static final String EVENT_AUTOMATION_CONTROLLER_VERSION_DELETE = "AUTOMATION.CONTROL.VERSION.DELETE";
 }

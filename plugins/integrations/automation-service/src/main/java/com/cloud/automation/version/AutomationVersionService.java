@@ -19,13 +19,14 @@ package com.cloud.automation.version;
 
 
 import org.apache.cloudstack.api.command.admin.automation.version.ListAutomationControllerVersionCmd;
-// import org.apache.cloudstack.api.command.admin.automation.version.DeleteAutomationControllerVersionCmd;
+import org.apache.cloudstack.api.command.admin.automation.version.UpdateAutomationControllerVersionCmd;
+//import org.apache.cloudstack.api.command.admin.automation.version.DeleteAutomationControllerVersionCmd;
 import org.apache.cloudstack.api.command.admin.automation.version.AddAutomationControllerVersionCmd;
 import org.apache.cloudstack.api.response.AutomationControllerVersionResponse;
 import org.apache.cloudstack.api.response.ListResponse;
 
 import com.cloud.utils.component.PluggableService;
-// import com.cloud.utils.exception.CloudRuntimeException;
+import com.cloud.utils.exception.CloudRuntimeException;
 
 import org.apache.cloudstack.framework.config.ConfigKey;
 import org.apache.cloudstack.framework.config.Configurable;
@@ -42,5 +43,6 @@ public interface AutomationVersionService extends PluggableService, Configurable
     static final String MIN_AUTOMATION_MASTER_VERSION = "1.0.0";
     ListResponse<AutomationControllerVersionResponse> listAutomationControllerVersion(ListAutomationControllerVersionCmd cmd);
     AutomationControllerVersionResponse addAutomationControllerVersion(AddAutomationControllerVersionCmd cmd);
-    // boolean deleteAutomationContollerVersion(DeleteAutomationControllerVersionCmd cmd) throws CloudRuntimeException;
+    AutomationControllerVersionResponse updateAutomationControllerVersion(UpdateAutomationControllerVersionCmd cmd) throws CloudRuntimeException;
+    //boolean deleteAutomationContollerVersion(DeleteAutomationControllerVersionCmd cmd) throws CloudRuntimeException;
 }
