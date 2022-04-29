@@ -54,7 +54,7 @@ import { ref, reactive, toRaw } from 'vue'
 import { api } from '@/api'
 
 export default {
-  name: 'UpdateAutomationControllerVersion',
+  name: 'UpdateDesktopControllerVersion',
   props: {
     resource: {
       type: Object,
@@ -69,7 +69,7 @@ export default {
     }
   },
   beforeCreate () {
-    this.apiParams = this.$getApiParams('UpdateAutomationControllerVersion')
+    this.apiParams = this.$getApiParams('UpdateDesktopControllerVersion')
   },
   created () {
     this.states = [
@@ -126,7 +126,7 @@ export default {
         if (this.isValidValueForKey(values, 'state') && this.arrayHasItems(this.states)) {
           params.state = this.states[values.state].id
         }
-        api('updateAutomationControllerVersion', params).then(json => {
+        api('UpdateDesktopControllerVersion', params).then(json => {
           this.$message.success(`${this.$t('message.success.update.desktop.controller.template.version')}: ${this.resource.name}`)
           this.$emit('refresh-data')
           this.closeAction()
