@@ -16,6 +16,7 @@
 // under the License.
 
 import { shallowRef, defineAsyncComponent } from 'vue'
+import store from '@/store'
 
 export default {
   name: 'systemvm',
@@ -30,6 +31,12 @@ export default {
     {
       name: 'details',
       component: shallowRef(defineAsyncComponent(() => import('@/components/view/DetailsTab.vue')))
+    },
+    {
+      name: 'events',
+      resourceType: 'SystemVm',
+      component: shallowRef(defineAsyncComponent(() => import('@/components/view/EventsTab.vue'))),
+      show: () => { return 'listEvents' in store.getters.apis }
     },
     {
       name: 'comments',
@@ -99,7 +106,7 @@ export default {
     },
     {
       api: 'migrateSystemVm',
-      icon: 'drag',
+      icon: 'drag-outlined',
       label: 'label.action.migrate.systemvm.to.ps',
       dataView: true,
       show: (record, store) => { return ['Stopped'].includes(record.state) && ['VMware'].includes(record.hypervisor) },

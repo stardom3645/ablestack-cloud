@@ -14,45 +14,20 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-package org.apache.cloudstack.api;
 
-public enum ApiCommandJobType {
-    None,
-    VirtualMachine,
-    DomainRouter,
-    Volume,
-    ConsoleProxy,
-    Snapshot,
-    Backup,
-    Template,
-    Iso,
-    SystemVm,
-    Host,
-    StoragePool,
-    ImageStore,
-    IpAddress,
-    PortableIpAddress,
-    SecurityGroup,
-    PhysicalNetwork,
-    TrafficType,
-    PhysicalNetworkServiceProvider,
-    FirewallRule,
-    Account,
-    User,
-    PrivateGateway,
-    StaticRoute,
-    Counter,
-    Condition,
-    AutoScalePolicy,
-    AutoScaleVmProfile,
-    AutoScaleVmGroup,
-    GlobalLoadBalancerRule,
-    LoadBalancerRule,
-    AffinityGroup,
-    InternalLbVm,
-    DedicatedGuestVlanRange,
-    GuestOs,
-    GuestOsMapping,
-    Network,
-    Management
+package com.cloud.network.dao;
+
+import java.util.List;
+
+import com.cloud.network.Ipv6GuestPrefixSubnetNetworkMap;
+import com.cloud.network.Ipv6GuestPrefixSubnetNetworkMapVO;
+import com.cloud.utils.db.GenericDao;
+
+public interface Ipv6GuestPrefixSubnetNetworkMapDao extends GenericDao<Ipv6GuestPrefixSubnetNetworkMapVO, Long> {
+    List<Ipv6GuestPrefixSubnetNetworkMapVO> listUsedByPrefix(long prefixId);
+    Ipv6GuestPrefixSubnetNetworkMapVO findFirstAvailable(long prefixId);
+    Ipv6GuestPrefixSubnetNetworkMapVO findByNetworkId(long networkId);
+    Ipv6GuestPrefixSubnetNetworkMapVO findBySubnet(String subnet);
+    List<Ipv6GuestPrefixSubnetNetworkMapVO> findPrefixesInStates(Ipv6GuestPrefixSubnetNetworkMap.State... states);
+    void deleteByPrefixId(long prefixId);
 }

@@ -251,6 +251,7 @@
 "label.action.release.ip.processing": "IP \uc8fc\uc18c\ub97c \ud574\uc81c\ud558\ub294 \uc911...",
 "label.action.remove.host": "\ud638\uc2a4\ud2b8 \uc0ad\uc81c",
 "label.action.remove.host.processing": "\ud638\uc2a4\ud2b8\ub97c \uc0ad\uc81c\ud558\ub294 \uc911...",
+"label.action.remove.nic": "NIC \uc81c\uac70",
 "label.action.remove.vm": "\uac00\uc0c1\uba38\uc2e0 \uc0ad\uc81c",
 "label.action.reserve.ip": "Public IP \uc608\uc57d",
 "label.action.reset.network.permissions": "\ub124\ud2b8\uc6cc\ud06c \uad8c\ud55c \uc7ac\uc124\uc815",
