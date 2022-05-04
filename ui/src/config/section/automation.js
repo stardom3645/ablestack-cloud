@@ -23,7 +23,7 @@ export default {
   children: [
     {
       name: 'automationtemplate',
-      title: 'title.automation.controller',
+      title: 'title.automation.controller.template',
       icon: 'block-outlined',
       docHelp: '',
       permission: ['listAutomationControllerVersion'],
@@ -48,7 +48,7 @@ export default {
           component: shallowRef(defineAsyncComponent(() => import('@/views/automation/UpdateAutomationControllerVersion.vue')))
         },
         {
-          api: 'deleteDesktopControllerVersion',
+          api: 'deleteAutomationControllerVersion',
           icon: 'delete-outlined',
           label: 'label.automation.controller.version.delete',
           message: 'message.automation.controller.version.delete',

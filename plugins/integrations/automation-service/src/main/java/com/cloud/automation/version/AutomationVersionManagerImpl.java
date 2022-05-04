@@ -27,6 +27,7 @@ import javax.inject.Inject;
 import org.apache.cloudstack.api.ApiConstants;
 import org.apache.cloudstack.api.command.admin.automation.version.AddAutomationControllerVersionCmd;
 import org.apache.cloudstack.api.command.admin.automation.version.UpdateAutomationControllerVersionCmd;
+import org.apache.cloudstack.api.command.admin.automation.version.DeleteAutomationControllerVersionCmd;
 import org.apache.cloudstack.api.command.admin.automation.version.ListAutomationControllerVersionCmd;
 import org.apache.cloudstack.api.response.AutomationControllerVersionResponse;
 import org.apache.cloudstack.api.response.ListResponse;
@@ -34,6 +35,7 @@ import org.apache.cloudstack.framework.config.ConfigKey;
 import org.apache.log4j.Logger;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.cloudstack.api.command.user.template.RegisterTemplateCmd;
+import org.apache.cloudstack.api.command.user.template.DeleteTemplateCmd;
 
 import com.cloud.api.query.dao.TemplateJoinDao;
 import com.cloud.dc.dao.DataCenterDao;
@@ -284,7 +286,7 @@ public class AutomationVersionManagerImpl extends ManagerBase implements Automat
     @Override
     @ActionEvent(eventType = AutomationVersionEventTypes.EVENT_AUTOMATION_CONTROLLER_VERSION_UPDATE, eventDescription = "Updating automation controller version")
     public AutomationControllerVersionResponse updateAutomationControllerVersion(final UpdateAutomationControllerVersionCmd cmd) {
-        if (!AutomationClusterService.AutomationServiceEnabled.value()) {
+        if (!AutomationVersionService.AutomationServiceEnabled.value()) {
             throw new CloudRuntimeException("Automation Service plugin is disabled");
         }
         final Long versionId = cmd.getId();
@@ -309,7 +311,71 @@ public class AutomationVersionManagerImpl extends ManagerBase implements Automat
         return  createAutomationControllerVersionResponse(version);
     }
 
-    
+    @Override
+    @ActionEvent(eventType = AutomationVersionEventTypes.EVENT_AUTOMATION_CONTROLLER_VERSION_DELETE, eventDescription = "Deleting Automation Controller Version", async = true)
+    public boolean deleteAutomationContollerVersion(final DeleteAutomationControllerVersionCmd cmd) {
+        if (!AutomationVersionService.AutomationServiceEnabled.value()) {
+            throw new CloudRuntimeException("Automation Service plugin is disabled");
+        }
+        final Long versionId = cmd.getId();
+        AutomationControllerVersion version = automationControllerVersionDao.findById(versionId);
+        String uploadType = version.getUploadType();
+        Long templateId = version.getTemplateId();
+        if (version == null) {
+            throw new InvalidParameterValueException("Invalid automation controller version id specified");
+        }
+        // List<AutomationClusterVO> clusters = automationClusterDao.listAllByAutomationVersion(versionId);
+        // if (clusters.size() > 0) {
+        //     throw new CloudRuntimeException(String.format("Unable to delete automation controller version ID: %s. Existing clusters currently using the version.", version.getUuid()));
+        // }
+
+        // List<AutomationTemplateMapVO> templateList = automationTemplateMapDao.listByVersionId(versionId);
+
+        // VMTemplateVO template = null;
+
+        // if (templateList != null && !templateList.isEmpty()) {
+        //     for (AutomationTemplateMapVO templateMapVO : templateList) {
+        //         template = templateDao.findByIdIncludingRemoved(templateMapVO.getTemplateId());
+        //         if (template == null) {
+        //             LOGGER.warn(String.format("Unable to find template associated with supported automation controller version ID: %s", version.getUuid()));
+        //         }
+        //         if ("url".equals(uploadType) && template != null && template.getRemoved() == null) {// upload type이 'url' 타입일 경우 템플릿까지 삭제, 'template' 타입 일 경우 템플릿은 삭제 안됨.
+        //             try {
+        //                 deleteAutomationVersionTemplate(template.getId());
+        //             } catch (IllegalAccessException | NoSuchFieldException | IllegalArgumentException ex) {
+        //                 LOGGER.error(String.format("Unable to delete ID: %s associated with supported automation controller version ID: %s", template.getUuid(), version.getUuid()), ex);
+        //                 throw new CloudRuntimeException(String.format("Unable to delete ID: %s associated with supported automation controller version ID: %s", template.getUuid(), version.getUuid()));
+        //             }
+        //         }
+        //         // automationTemplateMapDao.remove(templateMapVO.getId());
+        //     }
+        // }else{
+        //     LOGGER.info("There are no registered templates for that automation controller version.");
+        //     //throw new CloudRuntimeException(String.format("There are no registered templates for that automation controller version.", version.getUuid()));
+        // }
+
+        if (templateId == null) {
+            LOGGER.warn(String.format("Unable to find template associated with supported automation controller version ID: %s", version.getUuid()));
+        }
+        if ("url".equals(uploadType) && templateId != null) {// upload type이 'url' 타입일 경우 템플릿까지 삭제, 'template' 타입 일 경우 템플릿은 삭제 안됨.
+            try {
+                deleteAutomationVersionTemplate(templateId);
+            } catch (IllegalAccessException | NoSuchFieldException | IllegalArgumentException ex) {
+                LOGGER.error(String.format("Unable to delete ID: %s associated with supported automation controller version ID: %s", templateId, version.getUuid()), ex);
+                throw new CloudRuntimeException(String.format("Unable to delete ID: %s associated with supported automation controller version ID: %s", templateId, version.getUuid()));
+            }
+        }
+
+        return automationControllerVersionDao.remove(version.getId());
+    }
+
+    private void deleteAutomationVersionTemplate(long templateId) throws IllegalAccessException, NoSuchFieldException, IllegalArgumentException {
+        DeleteTemplateCmd deleteTemplateCmd = new DeleteTemplateCmd();
+        deleteTemplateCmd = ComponentContext.inject(deleteTemplateCmd);
+        deleteTemplateCmd.setId(templateId);
+        deleteTemplateCmd.setIsDesktop(true);
+        templateService.deleteTemplate(deleteTemplateCmd);
+    }
 
     @Override
     public List<Class<?>> getCommands() {
@@ -320,6 +386,7 @@ public class AutomationVersionManagerImpl extends ManagerBase implements Automat
         cmdList.add(ListAutomationControllerVersionCmd.class);
         cmdList.add(AddAutomationControllerVersionCmd.class);
         cmdList.add(UpdateAutomationControllerVersionCmd.class);
+        cmdList.add(DeleteAutomationControllerVersionCmd.class);
         return cmdList;
     }
 

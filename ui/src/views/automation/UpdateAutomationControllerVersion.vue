@@ -54,7 +54,7 @@ import { ref, reactive, toRaw } from 'vue'
 import { api } from '@/api'
 
 export default {
-  name: 'UpdateAutomationControllerVersion',
+  name: 'updateAutomationControllerVersion',
   props: {
     resource: {
       type: Object,
