@@ -23,7 +23,7 @@ export default {
   children: [
     {
       name: 'automationtemplate',
-      title: 'title.automation.controller',
+      title: 'title.automation.controller.template',
       icon: 'block-outlined',
       docHelp: '',
       permission: ['listAutomationControllerVersion'],
@@ -31,27 +31,27 @@ export default {
       details: ['name', 'description', 'version', 'controlleruploadtype', 'created'],
       actions: [
         {
-          api: 'addDesktopControllerVersion',
+          api: 'addAutomationControllerVersion',
           icon: 'plus-outlined',
           label: 'label.automation.controller.template.version.create',
           docHelp: '',
           listView: true,
           popup: true,
-          component: shallowRef(defineAsyncComponent(() => import('@/views/desktop/AddDesktopControllerVersion.vue')))
+          component: shallowRef(defineAsyncComponent(() => import('@/views/automation/AddAutomationControllerVersion.vue')))
         },
         {
-          api: 'updateDesktopControllerVersion',
+          api: 'updateAutomationControllerVersion',
           icon: 'edit-outlined',
-          label: 'label.desktop.controller.version.manage',
+          label: 'label.automation.controller.version.manage',
           dataView: true,
           popup: true,
-          component: shallowRef(defineAsyncComponent(() => import('@/views/desktop/UpdateDesktopControllerVersion.vue')))
+          component: shallowRef(defineAsyncComponent(() => import('@/views/automation/UpdateAutomationControllerVersion.vue')))
         },
         {
-          api: 'deleteDesktopControllerVersion',
+          api: 'deleteAutomationControllerVersion',
           icon: 'delete-outlined',
-          label: 'label.desktop.controller.version.delete',
-          message: 'message.desktop.controller.version.delete',
+          label: 'label.automation.controller.version.delete',
+          message: 'message.automation.controller.version.delete',
           dataView: true
         }
       ]

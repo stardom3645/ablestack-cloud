@@ -15,33 +15,36 @@
 // specific language governing permissions and limitations
 // under the License.
 
-package org.apache.cloudstack.api.command.user.automation.version;
+package org.apache.cloudstack.api.command.admin.automation.version;
 
 import javax.inject.Inject;
 
 import org.apache.cloudstack.acl.RoleType;
 import org.apache.cloudstack.api.APICommand;
 import org.apache.cloudstack.api.ApiConstants;
-import org.apache.cloudstack.api.BaseListCmd;
+import org.apache.cloudstack.api.ApiErrorCode;
+import org.apache.cloudstack.api.BaseCmd;
 import org.apache.cloudstack.api.Parameter;
 import org.apache.cloudstack.api.ResponseObject;
 import org.apache.cloudstack.api.ServerApiException;
+import org.apache.cloudstack.api.command.admin.AdminCmd;
 import org.apache.cloudstack.api.response.AutomationControllerVersionResponse;
-import org.apache.cloudstack.api.response.ListResponse;
-import org.apache.cloudstack.api.response.ZoneResponse;
 import org.apache.log4j.Logger;
 
 import com.cloud.exception.ConcurrentOperationException;
+import com.cloud.utils.exception.CloudRuntimeException;
+import com.cloud.automation.version.AutomationControllerVersion;
 import com.cloud.automation.version.AutomationVersionService;
 
-@APICommand(name = ListAutomationControllerVersionCmd.APINAME,
-        description = "Lists Automation Controller Version",
+@APICommand(name = UpdateAutomationControllerVersionCmd.APINAME,
+        description = "Update a automation controller version",
         responseObject = AutomationControllerVersionResponse.class,
-        responseView = ResponseObject.ResponseView.Restricted,
-        authorized = {RoleType.Admin, RoleType.ResourceAdmin, RoleType.DomainAdmin, RoleType.User})
-public class ListAutomationControllerVersionCmd extends BaseListCmd {
-    public static final Logger LOGGER = Logger.getLogger(ListAutomationControllerVersionCmd.class.getName());
-    public static final String APINAME = "listAutomationControllerVersion";
+        responseView = ResponseObject.ResponseView.Full,
+        entityType = {AutomationControllerVersion.class},
+        authorized = {RoleType.Admin})
+public class UpdateAutomationControllerVersionCmd extends BaseCmd implements AdminCmd {
+    public static final Logger LOGGER = Logger.getLogger(UpdateAutomationControllerVersionCmd.class.getName());
+    public static final String APINAME = "updateAutomationControllerVersion";
 
     @Inject
     private AutomationVersionService automationVersionService;
@@ -49,15 +52,16 @@ public class ListAutomationControllerVersionCmd extends BaseListCmd {
     /////////////////////////////////////////////////////
     //////////////// API parameters /////////////////////
     /////////////////////////////////////////////////////
-    @Parameter(name = ApiConstants.ID, type = CommandType.UUID,
+    @Parameter(name = ApiConstants.ID, type = BaseCmd.CommandType.UUID,
             entityType = AutomationControllerVersionResponse.class,
-            description = "the ID of the Automation Controller Version")
+            description = "the ID of the automation controller version",
+            required = true)
     private Long id;
 
-    @Parameter(name = ApiConstants.ZONE_ID, type = CommandType.UUID,
-            entityType = ZoneResponse.class,
-            description = "the ID of the zone in which Automation Controller Version will be available")
-    private Long zoneId;
+    @Parameter(name = ApiConstants.STATE, type = CommandType.STRING,
+            description = "the enabled or disabled state of the automation controller version",
+            required = true)
+    private String state;
 
     /////////////////////////////////////////////////////
     /////////////////// Accessors ///////////////////////
@@ -66,8 +70,8 @@ public class ListAutomationControllerVersionCmd extends BaseListCmd {
         return id;
     }
 
-    public Long getZoneId() {
-        return zoneId;
+    public String getState() {
+        return state;
     }
 
     @Override
@@ -75,14 +79,25 @@ public class ListAutomationControllerVersionCmd extends BaseListCmd {
         return APINAME.toLowerCase() + "response";
     }
 
+    @Override
+    public long getEntityOwnerId() {
+        return 0;
+    }
+
     /////////////////////////////////////////////////////
     /////////////// API Implementation///////////////////
     /////////////////////////////////////////////////////
     @Override
     public void execute() throws ServerApiException, ConcurrentOperationException {
-        ListResponse<AutomationControllerVersionResponse> response = automationVersionService.listAutomationControllerVersion(this);
-        response.setResponseName(getCommandName());
-        setResponseObject(response);
+        try {
+            AutomationControllerVersionResponse response = automationVersionService.updateAutomationControllerVersion(this);
+            if (response == null) {
+                throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, "Failed to update automation conroller version");
+            }
+            response.setResponseName(getCommandName());
+            setResponseObject(response);
+        } catch (CloudRuntimeException ex) {
+            throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, ex.getMessage());
+        }
     }
 }
-

@@ -18,7 +18,6 @@
 package org.apache.cloudstack.api.response;
 
 import java.util.Date;
-import java.util.List;
 
 import org.apache.cloudstack.api.ApiConstants;
 import org.apache.cloudstack.api.BaseResponse;
@@ -47,9 +46,9 @@ public class AutomationControllerVersionResponse extends BaseResponse {
     @Param(description = "Automation version")
     private String version;
 
-    @SerializedName(ApiConstants.AUTOMATION_TEMPLATES)
-    @Param(description = "the list of templates associated with this Automation")
-    private List<TemplateResponse> templates;
+    @SerializedName(ApiConstants.TEMPLATE_ID)
+    @Param(description = "template ID of the template to be prepared in primary storage(s).")
+    private Long templateId;
 
     @SerializedName(ApiConstants.ZONE_ID)
     @Param(description = "the id of the zone in which Automation Controller Version is available")
@@ -103,12 +102,12 @@ public class AutomationControllerVersionResponse extends BaseResponse {
         this.version = version;
     }
 
-    public void setTemplates(List<TemplateResponse> templates) {
-        this.templates = templates;
+    public Long getTemplateId() {
+        return templateId;
     }
 
-    public List<TemplateResponse> getTemplates() {
-        return templates;
+    public void setTemplateId(Long templateId) {
+        this.templateId = templateId;
     }
 
     public String getZoneId() {

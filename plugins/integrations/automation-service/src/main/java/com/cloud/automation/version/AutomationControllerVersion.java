@@ -36,6 +36,7 @@ public interface AutomationControllerVersion extends InternalIdentity, Identity 
     String getName();
     String getVersion();
     Long getZoneId();
+    Long getTemplateId();
     String getUploadType();
     State getState();
     Date getCreated();
