@@ -896,9 +896,9 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
             throw new ConfigurationException("Unable to find kvmheartbeat.sh");
         }
 
-        _heartBeatPathRbd = Script.findScript(kvmScriptsDir, "kvmheartbeat_rbd.sh");
+        _heartBeatPathRbd = Script.findScript(kvmScriptsDir, "kvmheartbeat_rbd.py");
         if (_heartBeatPathRbd == null) {
-            throw new ConfigurationException("Unable to find kvmheartbeat_rbd.sh");
+            throw new ConfigurationException("Unable to find kvmheartbeat_rbd.py");
         }
 
         _createvmPath = Script.findScript(storageScriptsDir, "createvm.sh");
@@ -921,9 +921,9 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
             throw new ConfigurationException("Unable to find kvmvmactivity.sh");
         }
 
-        _vmActivityCheckPathRbd = Script.findScript(kvmScriptsDir, "kvmvmactivity_rbd.sh");
+        _vmActivityCheckPathRbd = Script.findScript(kvmScriptsDir, "kvmvmactivity_rbd.py");
         if (_vmActivityCheckPathRbd == null) {
-            throw new ConfigurationException("Unable to find kvmvmactivity_rbd.sh");
+            throw new ConfigurationException("Unable to find kvmvmactivity_rbd.py");
         }
 
         _createTmplPath = Script.findScript(storageScriptsDir, "createtmplt.sh");
@@ -1036,6 +1036,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
             }
         }
 
+        enableSSLForKvmAgent(params);
         configureLocalStorage(params);
 
         /* Directory to use for Qemu sockets like for the Qemu Guest Agent */
@@ -1296,6 +1297,23 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
         }
 
         return true;
+    }
+
+    private void enableSSLForKvmAgent(final Map<String, Object> params) {
+        final File keyStoreFile = PropertiesUtil.findConfigFile(KeyStoreUtils.KS_FILENAME);
+        if (keyStoreFile == null) {
+            s_logger.info("Failed to find keystore file: " + KeyStoreUtils.KS_FILENAME);
+            return;
+        }
+        String keystorePass = (String)params.get(KeyStoreUtils.KS_PASSPHRASE_PROPERTY);
+        if (StringUtils.isBlank(keystorePass)) {
+            s_logger.info("Failed to find passphrase for keystore: " + KeyStoreUtils.KS_FILENAME);
+            return;
+        }
+        if (keyStoreFile.exists() && !keyStoreFile.isDirectory()) {
+            System.setProperty("javax.net.ssl.trustStore", keyStoreFile.getAbsolutePath());
+            System.setProperty("javax.net.ssl.trustStorePassword", keystorePass);
+        }
     }
 
     protected void configureLocalStorage(final Map<String, Object> params) throws ConfigurationException {
@@ -2903,14 +2921,8 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
                             We store the secret under the UUID of the pool, that's why
                             we pass the pool's UUID as the authSecret
                      */
-                    if (volume.getType() == Volume.Type.DATADISK && !(isWindowsTemplate && isUefiEnabled)) {
-                        disk.defNetworkBasedDisk(physicalDisk.getPath().replace("rbd:", ""), pool.getSourceHost(), pool.getSourcePort(), pool.getAuthUserName(),
-                        pool.getUuid(), devId, diskBusTypeData, DiskProtocol.RBD, DiskDef.DiskFmtType.RAW);
-                    }
-                    else {
-                        disk.defNetworkBasedDisk(physicalDisk.getPath().replace("rbd:", ""), pool.getSourceHost(), pool.getSourcePort(), pool.getAuthUserName(),
-                        pool.getUuid(), devId, diskBusType, DiskProtocol.RBD, DiskDef.DiskFmtType.RAW);
-                    }
+                    disk.defNetworkBasedDisk(physicalDisk.getPath().replace("rbd:", ""), pool.getSourceHost(), pool.getSourcePort(), pool.getAuthUserName(),
+                    pool.getUuid(), devId, diskBusType, DiskProtocol.RBD, DiskDef.DiskFmtType.RAW);
                 } else if (pool.getType() == StoragePoolType.PowerFlex) {
                     disk.defBlockBasedDisk(physicalDisk.getPath(), devId, diskBusTypeData);
                 } else if (pool.getType() == StoragePoolType.Gluster) {
