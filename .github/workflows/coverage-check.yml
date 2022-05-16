@@ -17,6 +17,8 @@
 
 # name: PR Quality Check
 
+name: PR Quality Check
+
 on: [pull_request_target]
 
 jobs:
@@ -37,17 +39,15 @@ jobs:
           base_sha: "${{ github.sha }}"
           files: |
             ui/*
-
       - name: Kick UI Build
         uses: peter-evans/create-or-update-comment@c9fcb64660bc90ec1cc535646af190c992007c32
         if: steps.ui-changes.outputs.any_changed == 'true'
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.ACS_ROBOT_TOKEN }}
           issue-number: ${{ github.event.pull_request.number }}
           body: |
             Found UI changes, kicking a new UI QA build
             @blueorangutan ui
-
       - name: Changed Java Files
         id: java-changes
         uses: tj-actions/changed-files@a59f800cbb60ed483623848e31be67659a2940f8
@@ -57,7 +57,6 @@ jobs:
           files: |
             **/*.java
             **/*.xml
-
       - name: Set up JDK11
         uses: actions/setup-java@v3
         if: steps.java-changes.outputs.any_changed == 'true'
@@ -80,7 +79,6 @@ jobs:
           key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
           restore-keys: |
             ${{ runner.os }}-m2
-
       - name: Run Build and Tests with Coverage
         id: coverage
         if: steps.java-changes.outputs.any_changed == 'true'
