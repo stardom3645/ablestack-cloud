@@ -33,7 +33,7 @@
                   {{ $t('label.refresh') }}
                 </a-button>
                 <a-switch
-                  v-if="!dataView && ['vm', 'volume', 'zone', 'cluster', 'host', 'storagepool'].includes($route.name)"
+                  v-if="!dataView && ['vm', 'volume', 'zone', 'cluster', 'host', 'storagepool', 'managementserver'].includes($route.name)"
                   style="margin-left: 8px"
                   :checked-children="$t('label.metrics')"
                   :un-checked-children="$t('label.metrics')"
@@ -57,7 +57,7 @@
                       ['Admin', 'DomainAdmin'].includes($store.getters.userInfo.roletype) && ['vm', 'iso', 'template'].includes($route.name)
                       ? 'all' : ['publicip'].includes($route.name)
                         ? 'allocated' : ['guestnetwork', 'guestvlans'].includes($route.name) ? 'all' : 'self')"
-                    style="min-width: 100px; margin-left: 10px"
+                    style="min-width: 120px; margin-left: 10px"
                     @change="changeFilter"
                     showSearch
                     optionFilterProp="label"
@@ -601,6 +601,8 @@ export default {
           var objIndex = 0
           if (this.$route.path.includes('/template') || this.$route.path.includes('/iso')) {
             objIndex = selectedItems.findIndex(obj => (obj.zoneid === tempResource[r]))
+          } else if (this.$route.path.includes('/router')) {
+            objIndex = selectedItems.findIndex(obj => (obj.guestnetworkid === tempResource[r]))
           } else {
             objIndex = selectedItems.findIndex(obj => (obj.id === tempResource[r] || obj.username === tempResource[r] || obj.name === tempResource[r]))
           }
@@ -814,7 +816,7 @@ export default {
       const customRender = {}
       for (var columnKey of this.columnKeys) {
         let key = columnKey
-        let title = columnKey
+        let title = columnKey === 'cidr' && this.columnKeys.includes('ip6cidr') ? 'ipv4.cidr' : columnKey
         if (typeof columnKey === 'object') {
           if ('customTitle' in columnKey && 'field' in columnKey) {
             key = columnKey.customTitle
@@ -1078,10 +1080,10 @@ export default {
       this.showAction = true
       const listIconForFillValues = ['copy-outlined', 'CopyOutlined', 'edit-outlined', 'EditOutlined', 'share-alt-outlined', 'ShareAltOutlined']
       for (const param of this.currentAction.paramFields) {
-        this.setRules(param)
         if (param.type === 'list' && ['tags', 'hosttags', 'storagetags', 'files'].includes(param.name)) {
           param.type = 'string'
         }
+        this.setRules(param)
         if (param.type === 'uuid' || param.type === 'list' || param.name === 'account' || (this.currentAction.mapping && param.name in this.currentAction.mapping)) {
           this.listUuidOpts(param)
         }
