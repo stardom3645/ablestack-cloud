@@ -11,6 +11,6 @@ var dateString = m.getFullYear() + ('0' + (m.getMonth() + 1)).slice(-2) + ('0' +
 // ('0' + m.getSeconds()).slice(-2)
 
 data.buildDate = dateString
-data.buildDev = true
+data.buildDev = false
 
 fs.writeFileSync('./public/config.json', JSON.stringify(data))

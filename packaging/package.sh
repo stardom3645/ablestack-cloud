@@ -54,7 +54,7 @@ USAGE
 }
 
 PWD=$(cd $(dirname "$0") && pwd -P)
-NOW="$(date +%y%m%d%H%M)"
+NOW="$(date +%Y%m%d%H%M)"
 
 # packaging
 #   $1 redist flag
