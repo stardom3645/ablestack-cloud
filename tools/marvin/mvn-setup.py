@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -42,7 +42,7 @@ def replaceVersion(fname, version):
 
 def runSetupScript(args):
     """Invoke setup.py with the provided arguments"""
-    cmd = ['python', setupScript] + args
+    cmd = ['python3', setupScript] + args
     exitCode = subprocess.call(cmd)
     return exitCode
 

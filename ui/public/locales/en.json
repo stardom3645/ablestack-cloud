@@ -3656,5 +3656,21 @@
 "label.automation.controller.version.manage": "Whether to use a Automation Template Version",
 "label.automation.controller.version.delete": "Delete Automation Template Version",
 "message.automation.controller.version.delete": "Are you sure you want to delete this Automation Template Version?",
-"message.success.update.automation.controller.template.version": "Updated status value for automation controller version."
+"message.success.update.automation.controller.template.version": "Updated status value for automation controller version.",
+"title.automation.controller": "Automation Controller",
+"label.automation.controller.deploy": "Create Automation Controller",
+"label.serviceip": "Automation Service IP",
+"label.automationtemplatename": "Automation Controller Template",
+"label.automation.controller.template.name": "Automation Controller Template",
+"label.automation.controller.add": "Add Automation Controller",
+"label.automation.controller.template.version": "Automation Controller Template Version",
+"placeholder.automation.controller.template.version": "Input Automation Controller Template Version",
+"placeholder.automation.controller.ip": "Select a Automation Controller IP",
+"label.automation.controller.ip": "Automation Controller IP",
+"label.automation.controller.start": "Start Automation Controller",
+"message.automation.controller.start": "Start Automation Controller",
+"label.automation.controller.stop": "Stop Automation Controller",
+"message.automation.controller.stop": "Stop Automation Controller",
+"label.automation.controller.delete": "Delete Automation Controller",
+"message.automation.controller.delete": "Delete Automation Controller"
 }
