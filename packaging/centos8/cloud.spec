@@ -41,11 +41,11 @@ BuildRoot: %{_tmppath}/%{name}-%{_maventag}-%{release}-build
 
 BuildRequires: java-11-openjdk-devel
 #BuildRequires: ws-commons-util
-BuildRequires: jpackage-utils
+#BuildRequires: jpackage-utils
 BuildRequires: gcc
 BuildRequires: glibc-devel
 BuildRequires: /usr/bin/mkisofs
-BuildRequires: maven => 3.0.0
+#BuildRequires: maven => 3.0.0
 BuildRequires: python3-setuptools
 BuildRequires: wget
 BuildRequires: nodejs
@@ -205,7 +205,7 @@ if [ \"%{_temp}\" != "" ]; then
     FLAGS="$FLAGS `rpm --eval %{?_temp}`"
 fi
 
-mvn -Psystemvm,developer $FLAGS clean package
+mvn -Psystemvm,developer -DskipTests $FLAGS clean package
 cd ui && npm install && npm run build && cd ..
 
 %install
