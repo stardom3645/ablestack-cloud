@@ -30,11 +30,16 @@ import com.cloud.utils.db.SearchCriteria;
 @Component
 public class AutomationControllerDaoImpl extends GenericDaoBase<AutomationControllerVO, Long> implements AutomationControllerDao {
     private final SearchBuilder<AutomationControllerVO> StateSearch;
+    private final SearchBuilder<AutomationControllerVO> SameNetworkSearch;
 
     public AutomationControllerDaoImpl() {
         StateSearch = createSearchBuilder();
         StateSearch.and("state", StateSearch.entity().getState(), SearchCriteria.Op.EQ);
         StateSearch.done();
+
+        SameNetworkSearch = createSearchBuilder();
+        SameNetworkSearch.and("network_id", SameNetworkSearch.entity().getNetworkId(), SearchCriteria.Op.EQ);
+        SameNetworkSearch.done();
     }
 
     @Override

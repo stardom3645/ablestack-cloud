@@ -17,21 +17,42 @@
 
 package com.cloud.automation.controller.actionworkers;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Objects;
 import java.util.List;
+import java.util.Properties;
 
+import com.cloud.api.query.vo.UserAccountJoinVO;
+import com.cloud.automation.version.AutomationControllerVersion;
+import com.cloud.dc.DataCenter;
 import com.cloud.deploy.DeployDestination;
 import com.cloud.exception.InsufficientCapacityException;
 import com.cloud.exception.ManagementServerException;
 import com.cloud.exception.ResourceAllocationException;
 import com.cloud.exception.ResourceUnavailableException;
 import com.cloud.network.IpAddress;
+import com.cloud.network.Network;
+import com.cloud.offering.ServiceOffering;
+import com.cloud.storage.DiskOfferingVO;
+import com.cloud.user.Account;
+import com.cloud.user.UserAccount;
+import com.cloud.utils.PropertiesUtil;
 import com.cloud.utils.component.ComponentContext;
 import com.cloud.utils.exception.ExecutionException;
+import com.cloud.utils.server.ServerProperties;
+import org.apache.cloudstack.api.BaseCmd;
 import org.apache.cloudstack.api.command.user.vm.StartVMCmd;
+import org.apache.cloudstack.config.ApiServiceConfiguration;
+import org.apache.cloudstack.context.CallContext;
+import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Level;
 
@@ -42,7 +63,13 @@ import com.cloud.automation.controller.AutomationController;
 import com.cloud.automation.controller.AutomationControllerManagerImpl;
 import com.cloud.vm.VirtualMachine;
 
-public class AutomationControllerStartWorker extends AutomationControllerActionWorker {
+
+
+public class AutomationControllerStartWorker extends AutomationControllerResourceModifierActionWorker {
+
+    private AutomationControllerVersion automationControllerVersion;
+    private static final long GiB_TO_BYTES = 1024 * 1024 * 1024;
+
     public AutomationControllerStartWorker(final AutomationController automationController, final AutomationControllerManagerImpl automationManager) {
         super(automationController, automationManager);
     }
@@ -95,6 +122,171 @@ public class AutomationControllerStartWorker extends AutomationControllerActionW
         }
     }
 
+//    private Network startAutomationControllerNetwork(final DeployDestination destination) throws ManagementServerException {
+//        final ReservationContext context = new ReservationContextImpl(null, null, null, owner);
+//        Network network = networkDao.findById(automationController.getNetworkId());
+//        if (network == null) {
+//            String msg  = String.format("Network for desktop cluster : %s not found", automationController.getName());
+//            LOGGER.warn(msg);
+//            stateTransitTo(automationController.getId(), AutomationControlle.Event.CreateFailed);
+//            throw new ManagementServerException(msg);
+//        }
+//        try {
+//            networkMgr.startNetwork(network.getId(), destination, context);
+//            if (LOGGER.isInfoEnabled()) {
+//                LOGGER.info(String.format("Network : %s is started for the desktop cluster : %s", network.getName(), automationController.getName()));
+//            }
+//        } catch (ConcurrentOperationException | ResourceUnavailableException | InsufficientCapacityException e) {
+//            String msg = String.format("Failed to start desktop cluster : %s as unable to start associated network : %s" , automationController.getName(), network.getName());
+//            LOGGER.error(msg, e);
+//            stateTransitTo(automationController.getId(), AutomationControlle.Event.CreateFailed);
+//            throw new ManagementServerException(msg, e);
+//        }
+//        return network;
+//    }
+
+    private UserVm createAutomationControllerVM(final Network network) throws ManagementServerException,
+            ResourceUnavailableException, InsufficientCapacityException {
+        UserVm worksControlVm = null;
+        LinkedHashMap<Long, Network.IpAddresses> ipToNetworkMap = null;
+        DataCenter zone = dataCenterDao.findById(automationController.getZoneId());
+        ServiceOffering serviceOffering = serviceOfferingDao.findById(automationController.getServiceOfferingId());
+        List<Long> networkIds = new ArrayList<Long>();
+        networkIds.add(automationController.getNetworkId());
+        String serviceIP = automationController.getServiceIp();
+        String reName = automationController.getName();
+        String hostName = reName + "-works";
+        Map<String, String> customParameterMap = new HashMap<String, String>();
+        DiskOfferingVO diskOffering = diskOfferingDao.findById(serviceOffering.getId());
+        long rootDiskSizeInBytes = diskOffering.getDiskSize();
+        if (rootDiskSizeInBytes > 0) {
+            long rootDiskSizeInGiB = rootDiskSizeInBytes / GiB_TO_BYTES;
+            customParameterMap.put("rootdisksize", String.valueOf(rootDiskSizeInGiB));
+        }
+        String automationControlleWorksConfig = null;
+        try {
+            automationControlleWorksConfig = getDesktopClusterWorksConfig(zone);
+        } catch (IOException e) {
+            logAndThrow(Level.ERROR, "Failed to read Desktop Cluster Userdata configuration file", e);
+        }
+        String base64UserData = Base64.encodeBase64String(automationControlleWorksConfig.getBytes(StringUtils.getPreferredCharset()));
+        List<String> keypairs = new ArrayList<String>(); // 키페어 파라메타 임시 생성
+        if (serviceIP == null || network.getGuestType() == Network.GuestType.L2) {
+            Network.IpAddresses addrs = new Network.IpAddresses(null, null, null);
+            worksControlVm = userVmService.createAdvancedVirtualMachine(zone, serviceOffering, automationControllerTemplate, networkIds, owner,
+                    hostName, hostName, null, null, null,
+                    automationControllerTemplate.getHypervisorType(), BaseCmd.HTTPMethod.POST, base64UserData, keypairs,
+                    null, addrs, null, null, null, customParameterMap, null, null, null, null, true, null, null);
+        } else {
+            ipToNetworkMap = new LinkedHashMap<Long, Network.IpAddresses>();
+            Network.IpAddresses addrs = new Network.IpAddresses(null, null, null);
+            Network.IpAddresses worksAddrs = new Network.IpAddresses(serviceIP, null, null);
+            ipToNetworkMap.put(automationController.getNetworkId(), worksAddrs);
+            worksControlVm = userVmService.createAdvancedVirtualMachine(zone, serviceOffering, automationControllerTemplate, networkIds, owner,
+                    hostName, hostName, null, null, null,
+                    automationControllerTemplate.getHypervisorType(), BaseCmd.HTTPMethod.POST, base64UserData, keypairs,
+                    ipToNetworkMap, addrs, null, null, null, customParameterMap, null, null, null, null, true, null, null);
+        }
+        if (LOGGER.isInfoEnabled()) {
+            LOGGER.info(String.format("Created Control VM ID : %s, %s in the desktop cluster : %s", worksControlVm.getUuid(), hostName, automationController.getName()));
+        }
+        return worksControlVm;
+    }
+
+    private String[] getServiceUserKeys(Account owner) {
+        if (owner == null) {
+            owner = CallContext.current().getCallingAccount();
+        }
+        String username = owner.getAccountName();
+        UserAccount user = accountService.getActiveUserAccount(username, owner.getDomainId());
+        String[] keys = null;
+        String apiKey = user.getApiKey();
+        String secretKey = user.getSecretKey();
+        if ((apiKey == null || apiKey.length() == 0) || (secretKey == null || secretKey.length() == 0)) {
+            keys = accountService.createApiKeyAndSecretKey(user.getId());
+        } else {
+            keys = new String[]{apiKey, secretKey};
+        }
+        return keys;
+    }
+
+    private String[] getServerProperties() {
+        String[] serverInfo = null;
+        final String HTTP_PORT = "http.port";
+        final String HTTPS_ENABLE = "https.enable";
+        final String HTTPS_PORT = "https.port";
+        final File confFile = PropertiesUtil.findConfigFile("server.properties");
+        try {
+            InputStream is = new FileInputStream(confFile);
+            String port = null;
+            String protocol = null;
+            final Properties properties = ServerProperties.getServerProperties(is);
+            if (properties.getProperty(HTTPS_ENABLE).equals("true")){
+                port = properties.getProperty(HTTPS_PORT);
+                protocol = "https://";
+            } else {
+                port = properties.getProperty(HTTP_PORT);
+                protocol = "http://";
+            }
+            serverInfo = new String[]{port, protocol};
+        } catch (final IOException e) {
+            LOGGER.warn("Failed to read configuration from server.properties file", e);
+        }
+        return serverInfo;
+    }
+
+    private String getDesktopClusterWorksConfig(final DataCenter zone) throws IOException {
+        String[] keys = getServiceUserKeys(owner);
+        String[] info = getServerProperties();
+        final String managementIp = ApiServiceConfiguration.ManagementServerAddresses.value();
+        String desktopClusterWorksConfig = readResourceFile("/conf/works");
+        final String clusterName = "{{ cluster_name }}";
+        final String domainName = "{{ domain_name }}";
+        final String worksIp = "{{ works_ip }}";
+        final String dcIp = "{{ dc_ip }}";
+        final String zoneUuid = "{{ zone_id }}";
+        final String networkId = "{{ network_id }}";
+        final String accountName = "{{ account_name }}";
+        final String domainUuid = "{{ domain_uuid }}";
+        final String apiKey = "{{ api_key }}";
+        final String secretKey = "{{ secret_key }}";
+        final String moldIp = "{{ mold_ip }}";
+        final String moldPort = "{{ mold_port }}";
+        final String moldProtocol = "{{ mold_protocol }}";
+        List<UserAccountJoinVO> domain = userAccountJoinDao.searchByAccountId(owner.getId());
+        desktopClusterWorksConfig = desktopClusterWorksConfig.replace(clusterName, automationController.getName());
+        desktopClusterWorksConfig = desktopClusterWorksConfig.replace(worksIp, automationController.getServiceIp());
+        desktopClusterWorksConfig = desktopClusterWorksConfig.replace(zoneUuid, zone.getUuid());
+        desktopClusterWorksConfig = desktopClusterWorksConfig.replace(networkId, Long.toString(automationController.getNetworkId()));
+        desktopClusterWorksConfig = desktopClusterWorksConfig.replace(accountName, owner.getAccountName());
+        desktopClusterWorksConfig = desktopClusterWorksConfig.replace(domainUuid, domain.get(0).getDomainUuid());
+        desktopClusterWorksConfig = desktopClusterWorksConfig.replace(apiKey, keys[0]);
+        desktopClusterWorksConfig = desktopClusterWorksConfig.replace(secretKey, keys[1]);
+        desktopClusterWorksConfig = desktopClusterWorksConfig.replace(moldIp, managementIp);
+        desktopClusterWorksConfig = desktopClusterWorksConfig.replace(moldPort, info[0]);
+        desktopClusterWorksConfig = desktopClusterWorksConfig.replace(moldProtocol, info[1]);
+        String base64UserData = Base64.encodeBase64String(desktopClusterWorksConfig.getBytes(StringUtils.getPreferredCharset()));
+        String desktopClusterWorksEncodeConfig = readResourceFile("/conf/works.yml");
+        final String worksEncode = "{{ works_encode }}";
+        desktopClusterWorksEncodeConfig = desktopClusterWorksEncodeConfig.replace(worksEncode, base64UserData);
+        return desktopClusterWorksEncodeConfig;
+    }
+
+    private UserVm provisionAutomationControllerWorksControlVm(final Network network) throws
+            InsufficientCapacityException, ManagementServerException, ResourceUnavailableException {
+        UserVm worksControlVm = null;
+        worksControlVm = createAutomationControllerVM(network);
+        startDesktopVM(worksControlVm);
+        worksControlVm = userVmDao.findById(worksControlVm.getId());
+        if (worksControlVm == null) {
+            throw new ManagementServerException(String.format("Failed to provision Works Control VM for desktop cluster : %s" , automationController.getName()));
+        }
+        if (LOGGER.isInfoEnabled()) {
+            LOGGER.info(String.format("Provisioned Works Control VM : %s in to the desktop cluster : %s", worksControlVm.getDisplayName(), automationController.getName()));
+        }
+        return worksControlVm;
+    }
+
     public boolean startAutomationControllerOnCreate() {
         init();
         if (LOGGER.isInfoEnabled()) {
@@ -107,7 +299,7 @@ public class AutomationControllerStartWorker extends AutomationControllerActionW
         } catch (InsufficientCapacityException e) {
             logTransitStateAndThrow(Level.ERROR, String.format("Provisioning the cluster failed due to insufficient capacity in the automation controller: %s", automationController.getUuid()), automationController.getId(), AutomationController.Event.CreateFailed, e);
         }
-//        Network network = null;
+        Network network = null;
 //        try {
 //            network = startAutomationControllerNetwork(dest);
 //        } catch (ManagementServerException e) {
@@ -118,14 +310,14 @@ public class AutomationControllerStartWorker extends AutomationControllerActionW
         if (publicIpAddress == null) {
             logTransitStateAndThrow(Level.ERROR, String.format("Failed to start Automation Controller : %s as no public IP found for the cluster" , automationController.getName()), automationController.getId(), AutomationController.Event.CreateFailed);
         }
-        List<UserVm> clusterVMs = new ArrayList<>();
+//        List<UserVm> clusterVMs = new ArrayList<>();
         UserVm worksVM = null;
-//        try {
-//            worksVM = provisionAutomationControllerWorksControlVm(network);
-//        }  catch (CloudRuntimeException | ManagementServerException | ResourceUnavailableException | InsufficientCapacityException e) {
-//            logTransitStateAndThrow(Level.ERROR, String.format("Provisioning the Works Control VM failed in the automation controller : %s, %s", automationController.getName(), e), automationController.getId(), AutomationController.Event.CreateFailed, e);
-//        }
-        clusterVMs.add(worksVM);
+        try {
+            worksVM = provisionAutomationControllerWorksControlVm(network);
+        }  catch (CloudRuntimeException | ManagementServerException | ResourceUnavailableException | InsufficientCapacityException e) {
+            logTransitStateAndThrow(Level.ERROR, String.format("Provisioning the Works Control VM failed in the automation controller : %s, %s", automationController.getName(), e), automationController.getId(), AutomationController.Event.CreateFailed, e);
+        }
+//        clusterVMs.add(worksVM);
 //        if (worksVM.getState().equals(VirtualMachine.State.Running)) {
 //            boolean setup = false;
 //            try {

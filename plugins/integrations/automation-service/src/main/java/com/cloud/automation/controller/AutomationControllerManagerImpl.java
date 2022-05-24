@@ -141,31 +141,17 @@ public class AutomationControllerManagerImpl extends ManagerBase implements Auto
         }
     }
 
-//    private void logTransitStateAndThrow(final Level logLevel, final String message, final Long automationControllerId, final AutomationController.Event event, final Exception e) throws CloudRuntimeException {
-//        logMessage(logLevel, message, e);
-//        if (automationControllerId != null && event != null) {
-//            stateTransitTo(automationControllerId, event);
-//        }
-//        if (e == null) {
-//            throw new CloudRuntimeException(message);
-//        }
-//        throw new CloudRuntimeException(message, e);
-//    }
-
-//    private void logAndThrow(final Level logLevel, final String message) throws CloudRuntimeException {
-//        logTransitStateAndThrow(logLevel, message, null, null, null);
-//    }
-
     @Override
-    public AutomationControllerResponse addAutomationControllerResponse(final AutomationController automationController) {
+    public AutomationControllerResponse addAutomationControllerResponse(long automationControllerId) {
+        AutomationControllerVO automationController = automationControllerDao.findById(automationControllerId);
         AutomationControllerResponse response = new AutomationControllerResponse();
-        AutomationControllerVO controller = automationControllerDao.findById(automationController.getId());
         response.setObjectName("automationcontroller");
         response.setId(automationController.getUuid());
         response.setName(automationController.getName());
         response.setDescription(automationController.getDescription());
         response.setCreated(automationController.getCreated());
         response.setServiceIp(automationController.getServiceIp());
+        response.setNetworkId(String.valueOf(automationController.getNetworkId()));
         response.setAutomationTemplateId(String.valueOf(automationController.getAutomationTemplateId()));
 
         AutomationControllerVersionVO acTemplate = automationControllerVersionDao.findById(automationController.getAutomationTemplateId());
@@ -254,6 +240,7 @@ public class AutomationControllerManagerImpl extends ManagerBase implements Auto
         }
         final Long versionId = cmd.getId();
         final Long zoneId = cmd.getZoneId();
+        List<AutomationControllerResponse> responsesList = new ArrayList<>();
         Filter searchFilter = new Filter(AutomationControllerVO.class, "id", true, cmd.getStartIndex(), cmd.getPageSizeVal());
         SearchBuilder<AutomationControllerVO> sb = automationControllerDao.createSearchBuilder();
         sb.and("id", sb.entity().getId(), SearchCriteria.Op.EQ);
@@ -274,44 +261,70 @@ public class AutomationControllerManagerImpl extends ManagerBase implements Auto
         }
         List <AutomationControllerVO> controllers = automationControllerDao.search(sc, searchFilter);
 
-        return createAutomationControllerListResponse(controllers);
-    }
-
-    private ListResponse<AutomationControllerResponse> createAutomationControllerListResponse(List<AutomationControllerVO> controllers) {
-        List<AutomationControllerResponse> responseList = new ArrayList<>();
-        for (AutomationControllerVO name : controllers) {
-            responseList.add(addAutomationControllerResponse(name));
+        for (AutomationControllerVO cluster : controllers) {
+            AutomationControllerResponse desktopClusterResponse = addAutomationControllerResponse(cluster.getId());
+            responsesList.add(desktopClusterResponse);
         }
         ListResponse<AutomationControllerResponse> response = new ListResponse<>();
-        response.setResponses(responseList);
+        response.setResponses(responsesList);
         return response;
+
+//        return createAutomationControllerListResponse(controllers);
     }
 
+//    private ListResponse<AutomationControllerResponse> createAutomationControllerListResponse(List<AutomationControllerVO> controllers) {
+//        List<AutomationControllerResponse> responseList = new ArrayList<>();
+//        for (AutomationControllerVO name : controllers) {
+//            responseList.add(addAutomationControllerResponse(name));
+//        }
+//        ListResponse<AutomationControllerResponse> response = new ListResponse<>();
+//        response.setResponses(responseList);
+//        return response;
+//    }
+
     @Override
-    public AutomationController addAutomationController(AddAutomationControllerCmd cmd) throws CloudRuntimeException {
+    public AutomationController addAutomationController(final AddAutomationControllerCmd cmd) {
         if (!AutomationServiceEnabled.value()) {
             throw new CloudRuntimeException("Automation Service plugin is disabled");
         }
 
-//        validateAutomationControllerCreateParameters(cmd);
+        validateAutomationControllerCreateParameters(cmd);
 
         final String L2Type = "internal";
         final ServiceOffering serviceOffering = serviceOfferingDao.findById(cmd.getServiceOfferingId());
         final Account owner = accountService.getActiveAccountById(cmd.getEntityOwnerId());
         final AutomationControllerVersion automationControllerVersion = automationControllerVersionDao.findById(cmd.getAutomationTemplateId());
-        final AutomationControllerVO cluster = Transaction.execute(new TransactionCallback<AutomationControllerVO>() {
+        Long instanceId = Long.valueOf(3);
+        final AutomationControllerVO controller = Transaction.execute(new TransactionCallback<AutomationControllerVO>() {
             @Override
             public AutomationControllerVO doInTransaction(TransactionStatus status) {
-                AutomationControllerVO newController = new AutomationControllerVO(cmd.getName(), cmd.getDescription(), automationControllerVersion.getZoneId(), automationControllerVersion.getId(),
-                        serviceOffering.getId(), owner.getDomainId(), owner.getAccountId(), AutomationController.State.Created);
+                AutomationControllerVO newController = new AutomationControllerVO(automationControllerVersion.getId(), cmd.getName(), cmd.getDescription(), cmd.getAutomationTemplateId(), cmd.getZoneId(),
+                        cmd.getServiceOfferingId(), cmd.getNetworkId(), owner.getAccountId(), cmd.getDomainId(), AutomationController.State.Created, cmd.getServiceIp());
                 automationControllerDao.persist(newController);
                 return newController;
             }
         });
         if (LOGGER.isInfoEnabled()) {
-            LOGGER.info(String.format("Automation Controller name: %s and ID: %s has been created", cluster.getName(), cluster.getUuid()));
+            LOGGER.info(String.format("Desktop cluster name: %s and ID: %s has been created", controller.getName(), controller.getUuid()));
         }
-        return cluster;
+        return controller;
+    }
+
+    private void validateAutomationControllerCreateParameters(final AddAutomationControllerCmd cmd) throws CloudRuntimeException {
+        final String description = cmd.getDescription();
+        final Long domainId =cmd.getDomainId();
+        final String serviceIp = cmd.getServiceIp();
+        final Long accountId = cmd.getAccountId();
+        final Long serviceOfferingId = cmd.getServiceOfferingId();
+        final String name = cmd.getName();
+        final Long zoneId = cmd.getZoneId();
+        final Long url = cmd.getNetworkId();
+        final Long automationTemplateId = cmd.getAutomationTemplateId();
+        String templateName = "";
+
+        if (name == null || name.isEmpty()) {
+            throw new InvalidParameterValueException("Invalid name for the Desktop cluster name:" + name);
+        }
     }
 
     @Override

@@ -30,7 +30,7 @@ public interface AutomationControllerService extends PluggableService{
 
     AutomationController findById(final Long id);
 
-    AutomationControllerResponse addAutomationControllerResponse(AutomationController automationController);
+    AutomationControllerResponse addAutomationControllerResponse(long automationControllerId);
 
     ListResponse<AutomationControllerResponse> listAutomationController(ListAutomationControllerCmd cmd);
 

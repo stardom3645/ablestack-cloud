@@ -57,6 +57,7 @@ import com.cloud.service.dao.ServiceOfferingDao;
 import com.cloud.storage.dao.DiskOfferingDao;
 import com.cloud.storage.dao.VMTemplateDao;
 import com.cloud.template.TemplateApiService;
+import com.cloud.template.VirtualMachineTemplate;
 import com.cloud.user.Account;
 import com.cloud.user.AccountService;
 import com.cloud.user.dao.AccountDao;
@@ -165,13 +166,14 @@ public class AutomationControllerActionWorker {
 
     protected AutomationControllerDao automationControllerDao;
     protected AutomationControllerVmMapDao automationControllerVmMapDao;
-
+    protected VirtualMachineTemplate automationControllerTemplate;
     protected AutomationController automationController;
     protected Account owner;
     protected String publicIpAddress;
 
     protected AutomationControllerActionWorker(final AutomationController automationController, final AutomationControllerManagerImpl automationManager) {
         this.automationController = automationController;
+        this.automationControllerTemplate = automationControllerTemplate;
         this.automationControllerDao = automationManager.automationControllerDao;
         this.automationControllerVmMapDao = automationManager.automationControllerVmMapDao;
     }

@@ -31,12 +31,13 @@ import org.apache.cloudstack.api.BaseAsyncCreateCmd;
 import org.apache.cloudstack.api.Parameter;
 import org.apache.cloudstack.api.ResponseObject;
 import org.apache.cloudstack.api.ServerApiException;
+import org.apache.cloudstack.api.response.AccountResponse;
 import org.apache.cloudstack.api.response.AutomationControllerResponse;
 import org.apache.cloudstack.api.response.AutomationControllerVersionResponse;
 import org.apache.cloudstack.api.response.DomainResponse;
 import org.apache.cloudstack.api.response.NetworkResponse;
-import org.apache.cloudstack.api.response.ProjectResponse;
 import org.apache.cloudstack.api.response.ServiceOfferingResponse;
+import org.apache.cloudstack.api.response.ZoneResponse;
 import org.apache.cloudstack.context.CallContext;
 import org.apache.log4j.Logger;
 
@@ -61,31 +62,8 @@ public class AddAutomationControllerCmd extends BaseAsyncCreateCmd {
     /////////////////////////////////////////////////////
     //////////////// API parameters /////////////////////
     /////////////////////////////////////////////////////
-    @Parameter(name = ApiConstants.ID, type = CommandType.STRING, required = true, description = "id for the Automation Controller")
-    private Long id;
-
-    @Parameter(name = ApiConstants.NAME, type = CommandType.STRING, required = true, description = "name for the Automation Controller")
-    private String name;
-
-    @Parameter(name = ApiConstants.ZONE_ID, type = CommandType.STRING, required = true, description = "zone id for the Automation Controller ")
-    private String zoneId;
-
     @Parameter(name = ApiConstants.DESCRIPTION, type = CommandType.STRING, required = true, description = "description for the Automation Controller")
     private String description;
-
-    @Parameter(name = ApiConstants.AUTOMATION_TEMPLATE_ID, type = CommandType.UUID, entityType = AutomationControllerVersionResponse.class, required = true,
-            description = "Automation Controller version with which cluster to be launched")
-    private Long automationTemplateId;
-
-    @ACL(accessType = SecurityChecker.AccessType.UseEntry)
-    @Parameter(name = ApiConstants.SERVICE_OFFERING_ID, type = CommandType.UUID, entityType = ServiceOfferingResponse.class,
-            required = true, description = "the ID of the service offering for the virtual machines in the cluster.")
-    private Long serviceOfferingId;
-
-    @ACL(accessType = SecurityChecker.AccessType.UseEntry)
-    @Parameter(name = ApiConstants.ACCOUNT, type = CommandType.STRING, description = "an optional account for the" +
-            " virtual machine. Must be used with domainId.")
-    private String accountName;
 
     @ACL(accessType = SecurityChecker.AccessType.UseEntry)
     @Parameter(name = ApiConstants.DOMAIN_ID, type = CommandType.UUID, entityType = DomainResponse.class,
@@ -93,52 +71,97 @@ public class AddAutomationControllerCmd extends BaseAsyncCreateCmd {
     private Long domainId;
 
     @ACL(accessType = SecurityChecker.AccessType.UseEntry)
-    @Parameter(name = ApiConstants.PROJECT_ID, type = CommandType.UUID, entityType = ProjectResponse.class,
-            description = "Deploy cluster for the project")
-    private Long projectId;
+    @Parameter(name = ApiConstants.SERVICE_IP, type = CommandType.STRING,
+            description = "Network in which Automation Controller is to be launched")
+    private String serviceIp;
+
+    @Parameter(name = ApiConstants.ACCOUNT_ID, type = CommandType.UUID, entityType = AccountResponse.class,
+    description = "the account's id associated with this Automation")
+    private Long accountId;
+
+    @ACL(accessType = SecurityChecker.AccessType.UseEntry)
+    @Parameter(name = ApiConstants.SERVICE_OFFERING_ID, type = CommandType.UUID, entityType = ServiceOfferingResponse.class,
+            required = true, description = "the ID of the service offering for the virtual machines in the cluster.")
+    private Long serviceOfferingId;
+
+    @Parameter(name = ApiConstants.NAME, type = CommandType.STRING, required = true, description = "name for the Automation Controller")
+    private String name;
+
+    @Parameter(name = ApiConstants.ZONE_ID, type = CommandType.UUID, required = true, entityType = ZoneResponse.class, description = "zone id for the Automation Controller ")
+    private Long zoneId;
 
     @ACL(accessType = SecurityChecker.AccessType.UseEntry)
     @Parameter(name = ApiConstants.NETWORK_ID, type = CommandType.UUID, entityType = NetworkResponse.class, required = true,
-            description = "Network in which Automation Controller is to be launched")
+            description = "Network ID which Automation Controller is to be launched")
     private Long networkId;
 
-    public AddAutomationControllerCmd() {
-    }
+    @Parameter(name = ApiConstants.AUTOMATION_CONTROLLER_VERSION_UPLOADTYPE, type = CommandType.STRING, required = true,
+            description = "upload type for automation controller version template")
+    private String uploadType;
+
+    @ACL(accessType = SecurityChecker.AccessType.UseEntry)
+    @Parameter(name = ApiConstants.ACCOUNT, type = CommandType.STRING, description = "an optional account for the" +
+            " virtual machine. Must be used with domainId.")
+    private String accountName;
+
+    @Parameter(name = ApiConstants.AUTOMATION_TEMPLATE_ID, type = CommandType.UUID, entityType = AutomationControllerVersionResponse.class, required = true,
+            description = "Automation Controller version with which cluster to be launched")
+    private Long automationTemplateId;
+
 
     /////////////////////////////////////////////////////
     /////////////////// Accessors ///////////////////////
     /////////////////////////////////////////////////////
-    public Long getId() {
-        return id;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public String getZoneId() {
-        return zoneId;
-    }
-
     public String getDescription() {
         return description;
     }
 
-    public Long getAutomationTemplateId() {
-        return automationTemplateId;
+    public Long getDomainId() {
+        if (domainId == null) {
+            return CallContext.current().getCallingAccount().getDomainId();
+        }
+        return domainId;
+    }
+
+    public String getServiceIp() {
+        return serviceIp;
+    }
+
+    public Long getAccountId() {
+        return accountId;
     }
 
     public Long getServiceOfferingId() {
         return serviceOfferingId;
     }
 
+    public String getName() {
+        return name;
+    }
+
+    public Long getZoneId() {
+        return zoneId;
+    }
+
+    public Long getNetworkId() {
+        return networkId;
+    }
+
+    public String getUploadType() {
+        return uploadType;
+    }
+
     public String getAccountName() {
+        if (accountName == null) {
+            return CallContext.current().getCallingAccount().getAccountName();
+        }
         return accountName;
     }
 
-    public Long getDomainId() {
-        return domainId;
+    public Long getAutomationTemplateId() {
+        return automationTemplateId;
     }
+
 
     /////////////////////////////////////////////////////
     /////////////// API Implementation///////////////////
@@ -149,18 +172,14 @@ public class AddAutomationControllerCmd extends BaseAsyncCreateCmd {
         return APINAME.toLowerCase() + "response";
     }
 
-    public static String getResultObjectName() {
-        return "automationcontroller";
+    @Override
+    public long getEntityOwnerId() {
+        return CallContext.current().getCallingAccountId();
     }
 
     @Override
-    public long getEntityOwnerId() {
-        Long accountId = _accountService.finalyzeAccountId(accountName, domainId, projectId, true);
-        if (accountId == null) {
-            return CallContext.current().getCallingAccount().getId();
-        }
-
-        return accountId;
+    public ApiCommandResourceType getApiResourceType() {
+        return ApiCommandResourceType.VirtualMachine;
     }
 
     @Override
@@ -183,30 +202,14 @@ public class AddAutomationControllerCmd extends BaseAsyncCreateCmd {
         return "Creating Automation Controller. Controller Id: " + getEntityId();
     }
 
-    @Override
-    public ApiCommandResourceType getApiResourceType() {
-        return ApiCommandResourceType.VirtualMachine;
-    }
-
-    public AutomationController validateRequest() {
-        if (getId() == null || getId() < 1L) {
-            throw new ServerApiException(ApiErrorCode.PARAM_ERROR, "Invalid Automation Controller ID provided");
-        }
-        final AutomationController automationController = automationControllerService.findById(getId());
-        if (automationController == null) {
-            throw new ServerApiException(ApiErrorCode.PARAM_ERROR, "Given Automation Controller was not found");
-        }
-        return automationController;
-    }
 
     @Override
     public void execute() {
-        final AutomationController automationController = validateRequest();
         try {
-            if (!automationControllerService.startAutomationController(automationController.getId(), true)) {
+            if (!automationControllerService.startAutomationController(getEntityId(), true)) {
                 throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, "Failed to start Automation Controller");
             }
-            AutomationControllerResponse response = automationControllerService.addAutomationControllerResponse(automationController);
+            AutomationControllerResponse response = automationControllerService.addAutomationControllerResponse(getEntityId());
             response.setResponseName(getCommandName());
             setResponseObject(response);
         } catch (CloudRuntimeException e) {
@@ -226,4 +229,33 @@ public class AddAutomationControllerCmd extends BaseAsyncCreateCmd {
             throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, e.getMessage());
         }
     }
+
+
+
+//    @Override
+//    public void execute() throws CloudRuntimeException {
+//        try {
+//            AutomationController automationController = automationControllerService.addAutomationController(this);
+//            if (automationController == null) {
+//                throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, "Failed to create Automation Controller");
+//            }
+//            setEntityId(automationController.getId());
+//            setEntityUuid(automationController.getUuid());
+//        } catch (CloudRuntimeException e) {
+//            throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, e.getMessage());
+//        }
+//    }
+//    @Override
+//    public void create() throws CloudRuntimeException {
+//        try {
+//            if (!automationControllerService.startAutomationController(getEntityId(), true)) {
+//                throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, "Failed to start Automation Controller");
+//            }
+//            AutomationControllerResponse response = automationControllerService.addAutomationControllerResponse(getEntityId());
+//            response.setResponseName(getCommandName());
+//            setResponseObject(response);
+//        } catch (CloudRuntimeException e) {
+//            throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, e.getMessage());
+//        }
+//    }
 }

@@ -114,7 +114,7 @@ public class StartAutomationControllerCmd extends BaseAsyncCmd {
             if (!automationControllerService.startAutomationController(automationController.getId(), false)) {
                 throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, String.format("Failed to start Automation Controller ID: %d", getId()));
             }
-            final AutomationControllerResponse response = automationControllerService.addAutomationControllerResponse(automationController);
+            final AutomationControllerResponse response = automationControllerService.addAutomationControllerResponse(automationController.getId());
             response.setResponseName(getCommandName());
             setResponseObject(response);
         } catch (CloudRuntimeException ex) {

@@ -89,47 +89,6 @@ public class AutomationControllerVO implements AutomationController {
         this.uuid = UUID.randomUUID().toString();
     }
 
-    public AutomationControllerVO(long id, String name, String description, long automationTemplateId, long zoneId, long serviceOfferingId,
-                                  long networkId, long domainId, long accountId, String serviceIp) {
-        this.uuid = UUID.randomUUID().toString();
-        this.id = id;
-        this.name = name;
-        this.description = description;
-        this.automationTemplateId = automationTemplateId;
-        this.serviceOfferingId = serviceOfferingId;
-//        this.instanceId = instanceId;
-        this.networkId = networkId;
-        this.accountId = accountId;
-        this.domainId = domainId;
-        this.serviceIp = serviceIp;
-//        this.zoneId = zoneId;
-        this.state = state;
-
-
-
-
-        this.zoneId = zoneId;
-    }
-
-    public AutomationControllerVO(String name, String description) {
-    }
-
-    public AutomationControllerVO(String name, String description, Long zoneId, long id, long automationTemplateId, long domainId, long accountId, State state) {
-        this.uuid = UUID.randomUUID().toString();
-        this.id = id;
-        this.name = name;
-        this.description = description;
-        this.automationTemplateId = automationTemplateId;
-        this.serviceOfferingId = serviceOfferingId;
-//        this.instanceId = instanceId;
-        this.networkId = networkId;
-        this.accountId = accountId;
-        this.domainId = domainId;
-        this.serviceIp = serviceIp;
-        this.zoneId = zoneId;
-        this.state = state;
-    }
-
     @Override
     public long getId() {
         return id;
@@ -262,4 +221,20 @@ public class AutomationControllerVO implements AutomationController {
 //    public boolean isCheckForGc() {
 //        return checkForGc;
 //    }
+    public AutomationControllerVO(long id, String name, String description, Long automationTemplateId, Long zoneId, Long serviceOfferingId, long networkId, long accountId, long domainId, State created, String serviceIp) {
+        this.uuid = UUID.randomUUID().toString();
+        this.id = id;
+        this.name = name;
+        this.description = description;
+        this.automationTemplateId = automationTemplateId;
+        this.serviceOfferingId = serviceOfferingId;
+        this.instanceId = instanceId;
+        this.networkId = networkId;
+        this.accountId = accountId;
+        this.domainId = domainId;
+        this.serviceIp = serviceIp;
+        this.instanceId = Long.valueOf(3);
+        this.state = state;
+        this.zoneId = zoneId;
+    }
 }

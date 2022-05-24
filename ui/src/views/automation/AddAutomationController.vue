@@ -41,11 +41,11 @@
             :placeholder="$t('placeholder.description')"/>
         </a-form-item>
         <a-form-item
-          ref="automationcontroller"
-          name="automationcontroller"
+          ref="automationcontrollerversion"
+          name="automationcontrollerversion"
           :label="$t('label.automation.controller.template.version')">
           <a-select
-            v-model:value="form.automationcontroller"
+            v-model:value="form.automationcontrollerversion"
             showSearch
             optionFilterProp="label"
             :filterOption="(input, option) => {
@@ -53,8 +53,8 @@
             }"
             :placeholder="$t('placeholder.automation.controller.template.version')"
             :loading="automationControllerLoading">
-            <a-select-option v-for="(opt, optIndex) in this.automationController" :key="optIndex">
-              {{ opt.automationtemplatename }}
+            <a-select-option v-for="(opt, optIndex) in this.automationControllerVersion" :key="optIndex">
+              {{ opt.name }} {{ opt.version }}
             </a-select-option>
           </a-select>
         </a-form-item>
@@ -135,11 +135,12 @@ export default {
     return {
       loading: false,
       accessType: 'external',
-      clusters: [],
       networks: [],
       networkLoading: false,
       automationController: [],
       automationControllerLoading: false,
+      automationControllerVersion: [],
+      automationControllerVersionLoading: false,
       serviceOfferings: [],
       serviceOfferingLoading: false
     }
@@ -157,17 +158,16 @@ export default {
       this.rules = reactive({
         name: [{ required: true, message: this.$t('message.error.required.input') }],
         description: [{ required: true, message: this.$t('message.error.required.input') }],
-        addomainname: [{ required: true, message: this.$t('message.error.required.input') }],
-        // automationcontroller: [{ required: true, message: this.$t('message.error.select') }],
+        automationcontrollerversion: [{ required: true, message: this.$t('message.error.select') }],
         serviceoffering: [{ required: true, message: this.$t('message.error.select') }],
         networkid: [{ required: true, message: this.$t('message.error.select') }],
-        automationcontrollerip: [{ required: true, message: this.$t('message.error.required.input') }],
-        serviceip: [{ required: true, message: this.$t('message.error.required.input') }]
+        automationcontrollerip: [{ required: true, message: this.$t('message.error.required.input') }]
       })
     },
     fetchData () {
       this.fetchControllerData()
       this.fetchAutomationControllerData()
+      this.fetchAutomationControllerVersionData()
       this.fetchServiceOfferingData()
     },
     isValidValueForKey (obj, key) {
@@ -194,6 +194,22 @@ export default {
         this.automationControllerLoading = false
         if (this.arrayHasItems(this.automationController)) {
           this.form.automationController = 0
+        }
+      })
+    },
+    fetchAutomationControllerVersionData () {
+      this.automationControllerVersion = []
+      const params = {}
+      this.automationControllerVersionLoading = true
+      api('listAutomationControllerVersion', params).then(json => {
+        var items = json.listautomationcontrollerversionresponse.automationcontrollerversion
+        if (items != null) {
+          this.automationControllerVersion = items.filter(it => it.state === 'Enabled')
+        }
+      }).finally(() => {
+        this.automationControllerVersionLoading = false
+        if (this.arrayHasItems(this.automationControllerVersion)) {
+          this.form.automationControllerversion = 0
         }
       })
     },
@@ -268,32 +284,32 @@ export default {
         const params = {
           name: values.name,
           description: values.description,
-          addomainname: values.addomainname,
-          // desktoppassword: values.password,
-          controllerversion: this.controllerVersions[values.controllerversion].id,
           serviceofferingid: this.serviceOfferings[values.serviceofferingid].id,
           networkid: this.selectedNetwork.id,
-          clustertype: this.accessType,
-          worksip: values.worksvmip,
-          serviceip: values.serviceip,
-          dcip: values.dcvmip
+          serviceip: values.automationcontrollerip,
+          controlleruploadtype: this.automationControllerVersion[0].controlleruploadtype,
+          zoneid: this.automationControllerVersion[0].zoneid,
+          domainid: store.getters.project && store.getters.project.id ? null : store.getters.userInfo.domainid,
+          account: store.getters.project && store.getters.project.id ? null : store.getters.userInfo.account,
+          accountid: store.getters.project && store.getters.project.id ? null : store.getters.userInfo.accountid
         }
-        if (values.masteruploadtype === 'url') {
+        if (params.controlleruploadtype === 'url') {
           if (values.zoneid === this.$t('label.all.zone')) {
             delete params.zoneid
           } else {
             params.zoneid = values.zoneid
           }
+          params.zoneid = values.zoneid
           params.hypervisor = this.hyperVisor.opts[values.hypervisor].name
           params.format = values.format
           params.masterurl = values.masterurl
           params.masterostype = values.masterostype
         } else {
-          params.templateid = values.mastertemplate
+          params.automationtemplateid = this.automationControllerVersion[values.automationcontrollerversion].id
         }
 
-        api('createDesktopCluster', params).then(json => {
-          const jobId = json.createdesktopclusterresponse.jobid
+        api('addAutomationController', params).then(json => {
+          const jobId = json.addautomationcontrollerresponse.jobid
           this.$pollJob({
             jobId,
             title: this.$t('label.desktop.cluster.deploy'),
@@ -323,25 +339,6 @@ export default {
       }).catch(error => {
         this.formRef.value.scrollToField(error.errorFields[0].name)
       })
-
-      // if (this.isValidValueForKey(values, 'gateway')) {
-      //   params.gateway = values.gateway
-      // }
-      // if (this.isValidValueForKey(values, 'netmask')) {
-      //   params.netmask = values.netmask
-      // }
-      // if (this.isValidValueForKey(values, 'startip')) {
-      //   params.startip = values.startip
-      // }
-      // if (this.isValidValueForKey(values, 'endip')) {
-      //   params.endip = values.endip
-      // }
-      // if (this.isValidValueForKey(values, 'worksip')) {
-      //   params.worksip = values.worksip
-      // }
-      // if (this.isValidValueForKey(values, 'dcip')) {
-      //   params.dcip = values.dcip
-      // }
     },
     closeAction () {
       this.$emit('close-action')
