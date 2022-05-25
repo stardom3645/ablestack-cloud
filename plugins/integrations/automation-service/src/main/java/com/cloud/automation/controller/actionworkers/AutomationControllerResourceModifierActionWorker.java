@@ -119,8 +119,8 @@ public class AutomationControllerResourceModifierActionWorker extends Automation
     @Inject
     protected UserAccountJoinDao userAccountJoinDao;
 
-    protected AutomationControllerResourceModifierActionWorker(final AutomationController desktopCluster, final AutomationControllerManagerImpl clusterManager) {
-        super(desktopCluster, clusterManager);
+    protected AutomationControllerResourceModifierActionWorker(final AutomationController automationController, final AutomationControllerManagerImpl automationManager) {
+        super(automationController, automationManager);
     }
 
     protected void init() {
@@ -141,7 +141,7 @@ public class AutomationControllerResourceModifierActionWorker extends Automation
             for (Map.Entry<String, Pair<HostVO, Integer>> hostEntry : hosts_with_resevered_capacity.entrySet()) {
                 Pair<HostVO, Integer> hp = hostEntry.getValue();
                 HostVO h = hp.first();
-                if (!h.getHypervisorType().equals(automationControllerTemplate.getHypervisorType())) {
+                if (!h.getHypervisorType().equals(templates.getHypervisorType())) {
                     continue;
                 }
                 hostDao.loadHostTags(h);
@@ -170,7 +170,7 @@ public class AutomationControllerResourceModifierActionWorker extends Automation
             if (!suitable_host_found) {
                 if (LOGGER.isInfoEnabled()) {
                     LOGGER.info(String.format("Suitable hosts not found in datacenter : %s for node %d, with offering : %s and hypervisor: %s",
-                        zone.getName(), i, offering.getName(), automationControllerTemplate.getHypervisorType().toString()));
+                        zone.getName(), i, offering.getName(), templates.getHypervisorType().toString()));
                 }
                 break;
             }
@@ -182,7 +182,7 @@ public class AutomationControllerResourceModifierActionWorker extends Automation
             return new DeployDestination(zone, null, null, null);
         }
         String msg = String.format("Cannot find enough capacity for desktop cluster(requested cpu=%d memory=%s) with offering : %s and hypervisor: %s",
-                cpu_requested * nodesCount, toHumanReadableSize(ram_requested * nodesCount), offering.getName(), automationControllerTemplate.getHypervisorType().toString());
+                cpu_requested * nodesCount, toHumanReadableSize(ram_requested * nodesCount), offering.getName(), templates.getHypervisorType().toString());
 
         LOGGER.warn(msg);
         throw new InsufficientServerCapacityException(msg, DataCenter.class, zone.getId());

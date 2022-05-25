@@ -29,23 +29,23 @@ import java.util.List;
 public class AutomationControllerVmMapDaoImpl extends GenericDaoBase<AutomationControllerVmMapVO, Long> implements AutomationControllerVmMapDao {
 
     private final SearchBuilder<AutomationControllerVmMapVO> automationIdSearch;
-    private final SearchBuilder<AutomationControllerVmMapVO> automationIdAndVmType;
-    private final SearchBuilder<AutomationControllerVmMapVO> automationIdAndNotVmType;
+//    private final SearchBuilder<AutomationControllerVmMapVO> automationIdAndVmType;
+//    private final SearchBuilder<AutomationControllerVmMapVO> automationIdAndNotVmType;
 
     public AutomationControllerVmMapDaoImpl() {
         automationIdSearch = createSearchBuilder();
         automationIdSearch.and("automationControllerId", automationIdSearch.entity().getAutomationControllerId(), SearchCriteria.Op.EQ);
         automationIdSearch.done();
 
-        automationIdAndVmType = createSearchBuilder();
-        automationIdAndVmType.and("automationControllerId", automationIdAndVmType.entity().getAutomationControllerId(), SearchCriteria.Op.EQ);
-        automationIdAndVmType.and("type", automationIdAndVmType.entity().getType(), SearchCriteria.Op.EQ);
-        automationIdAndVmType.done();
-
-        automationIdAndNotVmType = createSearchBuilder();
-        automationIdAndNotVmType.and("automationControllerId", automationIdAndNotVmType.entity().getAutomationControllerId(), SearchCriteria.Op.EQ);
-        automationIdAndNotVmType.and("type", automationIdAndNotVmType.entity().getType(), SearchCriteria.Op.NEQ);
-        automationIdAndNotVmType.done();
+//        automationIdAndVmType = createSearchBuilder();
+//        automationIdAndVmType.and("automationControllerId", automationIdAndVmType.entity().getAutomationControllerId(), SearchCriteria.Op.EQ);
+//        automationIdAndVmType.and("type", automationIdAndVmType.entity().getType(), SearchCriteria.Op.EQ);
+//        automationIdAndVmType.done();
+//
+//        automationIdAndNotVmType = createSearchBuilder();
+//        automationIdAndNotVmType.and("automationControllerId", automationIdAndNotVmType.entity().getAutomationControllerId(), SearchCriteria.Op.EQ);
+//        automationIdAndNotVmType.and("type", automationIdAndNotVmType.entity().getType(), SearchCriteria.Op.NEQ);
+//        automationIdAndNotVmType.done();
 
     }
 
@@ -56,19 +56,19 @@ public class AutomationControllerVmMapDaoImpl extends GenericDaoBase<AutomationC
         return listBy(sc, null);
     }
 
-    @Override
-    public List<AutomationControllerVmMapVO> listByAutomationControllerIdAndVmType(long automationControllerId, String type) {
-        SearchCriteria<AutomationControllerVmMapVO> sc = automationIdAndVmType.create();
-        sc.setParameters("automationControllerId", automationControllerId);
-        sc.setParameters("type", type);
-        return listBy(sc);
-    }
+//    @Override
+//    public List<AutomationControllerVmMapVO> listByAutomationControllerIdAndVmType(long automationControllerId, String type) {
+//        SearchCriteria<AutomationControllerVmMapVO> sc = automationIdAndVmType.create();
+//        sc.setParameters("automationControllerId", automationControllerId);
+//        sc.setParameters("type", type);
+//        return listBy(sc);
+//    }
 
-    @Override
-    public List<AutomationControllerVmMapVO> listByAutomationControllerIdAndNotVmType(long automationControllerId, String type) {
-        SearchCriteria<AutomationControllerVmMapVO> sc = automationIdAndNotVmType.create();
-        sc.setParameters("automationControllerId", automationControllerId);
-        sc.setParameters("type", type);
-        return listBy(sc);
-    }
+//    @Override
+//    public List<AutomationControllerVmMapVO> listByAutomationControllerIdAndNotVmType(long automationControllerId, String type) {
+//        SearchCriteria<AutomationControllerVmMapVO> sc = automationIdAndNotVmType.create();
+//        sc.setParameters("automationControllerId", automationControllerId);
+//        sc.setParameters("type", type);
+//        return listBy(sc);
+//    }
 }

@@ -23,6 +23,6 @@ import java.util.List;
 
 public interface AutomationControllerVmMapDao extends GenericDao<AutomationControllerVmMapVO, Long> {
     public List<AutomationControllerVmMapVO> listByAutomationControllerId(long automationControllerId);
-    public List<AutomationControllerVmMapVO> listByAutomationControllerIdAndVmType(long automationControllerId, String type); //search for automationController vm list
-    public List<AutomationControllerVmMapVO> listByAutomationControllerIdAndNotVmType(long automationControllerId, String type); //search for automationController vm list
+//    public List<AutomationControllerVmMapVO> listByAutomationControllerIdAndVmType(long automationControllerId, String type); //search for automationController vm list
+//    public List<AutomationControllerVmMapVO> listByAutomationControllerIdAndNotVmType(long automationControllerId, String type); //search for automationController vm list
 }

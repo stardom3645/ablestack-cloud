@@ -23,6 +23,7 @@ import com.cloud.automation.controller.AutomationControllerVO;
 import com.cloud.automation.controller.AutomationControllerVmMapVO;
 import com.cloud.automation.controller.dao.AutomationControllerDao;
 import com.cloud.automation.controller.dao.AutomationControllerVmMapDao;
+import com.cloud.automation.version.dao.AutomationControllerVersionDao;
 import com.cloud.capacity.CapacityManager;
 import com.cloud.dc.ClusterDetailsDao;
 import com.cloud.dc.ClusterDetailsVO;
@@ -85,7 +86,6 @@ import org.apache.log4j.Logger;
 import javax.inject.Inject;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -166,14 +166,15 @@ public class AutomationControllerActionWorker {
 
     protected AutomationControllerDao automationControllerDao;
     protected AutomationControllerVmMapDao automationControllerVmMapDao;
-    protected VirtualMachineTemplate automationControllerTemplate;
+    protected VirtualMachineTemplate templates;
     protected AutomationController automationController;
+    protected AutomationControllerVersionDao automationControllerVersionDao;
     protected Account owner;
     protected String publicIpAddress;
 
     protected AutomationControllerActionWorker(final AutomationController automationController, final AutomationControllerManagerImpl automationManager) {
+        this.automationControllerVersionDao = automationManager.automationControllerVersionDao;
         this.automationController = automationController;
-        this.automationControllerTemplate = automationControllerTemplate;
         this.automationControllerDao = automationManager.automationControllerDao;
         this.automationControllerVmMapDao = automationManager.automationControllerVmMapDao;
     }
@@ -252,11 +253,11 @@ public class AutomationControllerActionWorker {
         logTransitStateAndThrow(logLevel, message, null, null, ex);
     }
 
-    protected AutomationControllerVmMapVO addAutomationControllerVm(final long automationControllerId, final long vmId, final String type) {
+    protected AutomationControllerVmMapVO addAutomationControllerVm(final long automationControllerId, final long vmId) {
         return Transaction.execute(new TransactionCallback<AutomationControllerVmMapVO>() {
             @Override
             public AutomationControllerVmMapVO doInTransaction(TransactionStatus status) {
-                AutomationControllerVmMapVO newClusterVmMap = new AutomationControllerVmMapVO(automationControllerId, vmId, type);
+                AutomationControllerVmMapVO newClusterVmMap = new AutomationControllerVmMapVO(automationControllerId, vmId);
                 automationControllerVmMapDao.persist(newClusterVmMap);
                 return newClusterVmMap;
             }
@@ -264,18 +265,18 @@ public class AutomationControllerActionWorker {
     }
 
     protected List<AutomationControllerVmMapVO> getControlVMMaps() {
-        List<AutomationControllerVmMapVO> automationVMs = automationControllerVmMapDao.listByAutomationControllerIdAndNotVmType(automationController.getId(), "automationvm");
-        if (!CollectionUtils.isEmpty(automationVMs)) {
-            automationVMs.sort((t1, t2) -> (int)((t1.getId() - t2.getId())/Math.abs(t1.getId() - t2.getId())));
+        List<AutomationControllerVmMapVO> clusterVMs = automationControllerVmMapDao.listByAutomationControllerId(automationController.getId());
+        if (!CollectionUtils.isEmpty(clusterVMs)) {
+            clusterVMs.sort((t1, t2) -> (int)((t1.getId() - t2.getId())/Math.abs(t1.getId() - t2.getId())));
         }
-        return automationVMs;
+        return clusterVMs;
     }
 
     protected List<UserVm> getControlVMs() {
         List<UserVm> vmList = new ArrayList<>();
-        List<AutomationControllerVmMapVO> automationVMs = getControlVMMaps();
-        if (!CollectionUtils.isEmpty(automationVMs)) {
-            for (AutomationControllerVmMapVO vmMap : automationVMs) {
+        List<AutomationControllerVmMapVO> clusterVMs = getControlVMMaps();
+        if (!CollectionUtils.isEmpty(clusterVMs)) {
+            for (AutomationControllerVmMapVO vmMap : clusterVMs) {
                 vmList.add(userVmDao.findById(vmMap.getVmId()));
             }
         }
@@ -291,23 +292,6 @@ public class AutomationControllerActionWorker {
             automationController.getName(), automationController.getState().toString(), e.toString()), nte);
             return false;
         }
-    }
-
-    private UserVm fetchControlVmIfMissing(final UserVm controlVm) {
-        if (controlVm != null) {
-            return controlVm;
-        }
-        List<AutomationControllerVmMapVO> automationVMs = automationControllerVmMapDao.listByAutomationControllerIdAndNotVmType(automationController.getId(), "automationvm");
-        if (CollectionUtils.isEmpty(automationVMs)) {
-            LOGGER.warn(String.format("Unable to retrieve VMs for automation automation : %s", automationController.getName()));
-            return null;
-        }
-        List<Long> vmIds = new ArrayList<>();
-        for (AutomationControllerVmMapVO vmMap : automationVMs) {
-            vmIds.add(vmMap.getVmId());
-        }
-        Collections.sort(vmIds);
-        return userVmDao.findById(vmIds.get(0));
     }
 
     protected IpAddress getAutomationControllerServerIp() {

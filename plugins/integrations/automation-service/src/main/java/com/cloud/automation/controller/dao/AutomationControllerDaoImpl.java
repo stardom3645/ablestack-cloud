@@ -43,7 +43,7 @@ public class AutomationControllerDaoImpl extends GenericDaoBase<AutomationContro
     }
 
     @Override
-    public List<AutomationControllerVO> findAutomationControllersInState(AutomationControllerVO.State state) {
+    public List<AutomationControllerVO> findAutomationControllersInState(AutomationController.State state) {
         SearchCriteria<AutomationControllerVO> sc = StateSearch.create();
         sc.setParameters("state", state);
         return listBy(sc);

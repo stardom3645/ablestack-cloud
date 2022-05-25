@@ -57,9 +57,6 @@ public class AutomationControllerVO implements AutomationController {
     @Column(name = "service_offering_id")
     private long serviceOfferingId;
 
-    @Column(name = "instance_id")
-    private long instanceId;
-
     @Column(name = "network_id")
     private long networkId;
 
@@ -150,15 +147,6 @@ public class AutomationControllerVO implements AutomationController {
     }
 
     @Override
-    public long getInstanceId() {
-        return instanceId;
-    }
-
-    public void setInstanceId(long instanceId) {
-        this.instanceId = instanceId;
-    }
-
-    @Override
     public long getNetworkId() {
         return networkId;
     }
@@ -228,12 +216,10 @@ public class AutomationControllerVO implements AutomationController {
         this.description = description;
         this.automationTemplateId = automationTemplateId;
         this.serviceOfferingId = serviceOfferingId;
-        this.instanceId = instanceId;
         this.networkId = networkId;
         this.accountId = accountId;
         this.domainId = domainId;
         this.serviceIp = serviceIp;
-        this.instanceId = Long.valueOf(3);
         this.state = state;
         this.zoneId = zoneId;
     }

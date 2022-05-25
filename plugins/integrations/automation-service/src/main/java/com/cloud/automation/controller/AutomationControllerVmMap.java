@@ -27,6 +27,5 @@ public interface AutomationControllerVmMap {
     long getId();
     long getAutomationControllerId();
     long getVmId();
-    String getType();
 }
 

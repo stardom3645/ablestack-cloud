@@ -229,33 +229,4 @@ public class AddAutomationControllerCmd extends BaseAsyncCreateCmd {
             throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, e.getMessage());
         }
     }
-
-
-
-//    @Override
-//    public void execute() throws CloudRuntimeException {
-//        try {
-//            AutomationController automationController = automationControllerService.addAutomationController(this);
-//            if (automationController == null) {
-//                throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, "Failed to create Automation Controller");
-//            }
-//            setEntityId(automationController.getId());
-//            setEntityUuid(automationController.getUuid());
-//        } catch (CloudRuntimeException e) {
-//            throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, e.getMessage());
-//        }
-//    }
-//    @Override
-//    public void create() throws CloudRuntimeException {
-//        try {
-//            if (!automationControllerService.startAutomationController(getEntityId(), true)) {
-//                throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, "Failed to start Automation Controller");
-//            }
-//            AutomationControllerResponse response = automationControllerService.addAutomationControllerResponse(getEntityId());
-//            response.setResponseName(getCommandName());
-//            setResponseObject(response);
-//        } catch (CloudRuntimeException e) {
-//            throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, e.getMessage());
-//        }
-//    }
 }

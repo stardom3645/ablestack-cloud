@@ -1,0 +1,16 @@
+{
+	"mold.default.domain.account":"{{ account_name }}",
+	"mold.default.domain.id":"{{ domain_uuid }}",
+	"mold.default.protocol":"{{ mold_protocol }}",
+	"mold.default.url":"{{ mold_ip }}",
+	"mold.default.port":"{{ mold_port }}",
+	"mold.network.uuid":"{{ network_id }}",
+	"mold.zone.id":"{{ zone_id }}",
+	"works.default.url":"{{ works_ip }}",
+	"bootstrapped": "false",
+    "MOLD_API_URL": "http://10.10.3.10:8080/client/api",
+    "MOLD_API_KEY": "{{ api_key }}",
+    "MOLD_SECRET_KEY": "{{ secret_key }}",
+    "AC_INSTANT_NAME": "{{ automation_controller_name }}",
+    "AC_NETWORK_NAME": "genie-network1"
+}

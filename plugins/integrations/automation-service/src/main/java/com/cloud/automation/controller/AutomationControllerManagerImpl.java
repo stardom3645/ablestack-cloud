@@ -93,7 +93,7 @@ public class AutomationControllerManagerImpl extends ManagerBase implements Auto
     ScheduledExecutorService _stateScanner;
 
     @Inject
-    private AutomationControllerVersionDao automationControllerVersionDao;
+    public AutomationControllerVersionDao automationControllerVersionDao;
     @Inject
     public AutomationControllerDao automationControllerDao;
     @Inject
@@ -321,6 +321,8 @@ public class AutomationControllerManagerImpl extends ManagerBase implements Auto
         final Long url = cmd.getNetworkId();
         final Long automationTemplateId = cmd.getAutomationTemplateId();
         String templateName = "";
+
+        final AutomationControllerVersion automationControllerVersion = automationControllerVersionDao.findById(automationTemplateId);
 
         if (name == null || name.isEmpty()) {
             throw new InvalidParameterValueException("Invalid name for the Desktop cluster name:" + name);

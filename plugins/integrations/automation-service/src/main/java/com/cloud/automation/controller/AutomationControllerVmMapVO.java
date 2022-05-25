@@ -38,17 +38,13 @@ public class AutomationControllerVmMapVO implements AutomationControllerVmMap {
     @Column(name = "vm_id")
     long vmId;
 
-    @Column(name = "type")
-    String type;
-
-
     public AutomationControllerVmMapVO() {
     }
 
-    public AutomationControllerVmMapVO(long automationControllerId, long vmId, String type) {
+    public AutomationControllerVmMapVO(long automationControllerId, long vmId) {
         this.automationControllerId = automationControllerId;
         this.vmId = vmId;
-        this.type = type;
+
     }
 
     @Override
@@ -74,11 +70,4 @@ public class AutomationControllerVmMapVO implements AutomationControllerVmMap {
         this.vmId = vmId;
     }
 
-    public String getType() {
-        return type;
-    }
-
-    public void setType(String type) {
-        this.type = type;
-    }
 }

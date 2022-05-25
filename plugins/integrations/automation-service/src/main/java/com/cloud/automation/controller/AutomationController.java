@@ -119,7 +119,6 @@ public interface AutomationController extends ControlledEntity, com.cloud.utils.
     long getZoneId();
     long getAutomationTemplateId();
     long getServiceOfferingId();
-    long getInstanceId();
     long getNetworkId();
     long getAccountId();
     long getDomainId();
