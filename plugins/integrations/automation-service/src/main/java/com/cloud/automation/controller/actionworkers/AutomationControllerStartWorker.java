@@ -78,26 +78,26 @@ public class AutomationControllerStartWorker extends AutomationControllerResourc
         return IOUtils.toString(Objects.requireNonNull(Thread.currentThread().getContextClassLoader().getResourceAsStream(resource)), StringUtils.getPreferredCharset());
     }
 
-//    private void startAutomationControllerVMs() {
-//        List <UserVm> automationVms = getControlVMs();
-//        for (final UserVm vm : automationVms) {
-//            if (vm == null) {
-//                logTransitStateAndThrow(Level.ERROR, String.format("Failed to start Control VMs in automation controller : %s", automationController.getName()), automationController.getId(), AutomationController.Event.OperationFailed);
-//            }
-//            try {
-//                startAutomationVM(vm);
-//            } catch (ManagementServerException ex) {
-//                LOGGER.warn(String.format("Failed to start VM : %s in automation controller : %s due to ", vm.getDisplayName(), automationController.getName()) + ex);
-//                // dont bail out here. proceed further to stop the reset of the VM's
-//            }
-//        }
-//        for (final UserVm userVm : automationVms) {
-//            UserVm vm = userVmDao.findById(userVm.getId());
-//            if (vm == null || !vm.getState().equals(VirtualMachine.State.Running)) {
-//                logTransitStateAndThrow(Level.ERROR, String.format("Failed to start Control VMs in automation controller : %s", automationController.getName()), automationController.getId(), AutomationController.Event.OperationFailed);
-//            }
-//        }
-//    }
+    private void startAutomationControllerVMs() {
+        List <UserVm> automationVms = getControlVMs();
+        for (final UserVm vm : automationVms) {
+            if (vm == null) {
+                logTransitStateAndThrow(Level.ERROR, String.format("Failed to start Control VMs in automation controller : %s", automationController.getName()), automationController.getId(), AutomationController.Event.OperationFailed);
+            }
+            try {
+                startAutomationVM(vm);
+            } catch (ManagementServerException ex) {
+                LOGGER.warn(String.format("Failed to start VM : %s in automation controller : %s due to ", vm.getDisplayName(), automationController.getName()) + ex);
+                // dont bail out here. proceed further to stop the reset of the VM's
+            }
+        }
+        for (final UserVm userVm : automationVms) {
+            UserVm vm = userVmDao.findById(userVm.getId());
+            if (vm == null || !vm.getState().equals(VirtualMachine.State.Running)) {
+                logTransitStateAndThrow(Level.ERROR, String.format("Failed to start Control VMs in automation controller : %s", automationController.getName()), automationController.getId(), AutomationController.Event.OperationFailed);
+            }
+        }
+    }
 
     protected void startAutomationVM(final UserVm vm) throws ManagementServerException {
         try {
@@ -154,7 +154,7 @@ public class AutomationControllerStartWorker extends AutomationControllerResourc
         networkIds.add(automationController.getNetworkId());
         String serviceIP = automationController.getServiceIp();
         String reName = automationController.getName();
-        String hostName = reName + "-works";
+        String hostName = reName + "-genie";
         Map<String, String> customParameterMap = new HashMap<String, String>();
         DiskOfferingVO diskOffering = diskOfferingDao.findById(serviceOffering.getId());
         long rootDiskSizeInBytes = diskOffering.getDiskSize();
@@ -179,11 +179,11 @@ public class AutomationControllerStartWorker extends AutomationControllerResourc
 //        } else {
             ipToNetworkMap = new LinkedHashMap<Long, Network.IpAddresses>();
             Network.IpAddresses addrs = new Network.IpAddresses(null, null, null);
-            Network.IpAddresses worksAddrs = new Network.IpAddresses(serviceIP, null, null);
-            ipToNetworkMap.put(automationController.getNetworkId(), worksAddrs);
+            Network.IpAddresses controllerAddrs = new Network.IpAddresses(serviceIP, null, null);
+            ipToNetworkMap.put(automationController.getNetworkId(), controllerAddrs);
             genieControlVms = userVmService.createAdvancedVirtualMachine(zone, serviceOffering, templates, networkIds, owner,
                     hostName, hostName, null, null, null,
-                    templates.getHypervisorType(), BaseCmd.HTTPMethod.POST, base64UserData, keypairs,
+                    templates.getHypervisorType(), BaseCmd.HTTPMethod.POST, null, keypairs,
                     ipToNetworkMap, addrs, null, null, null, customParameterMap, null, null, null, null, true, null, null);
 //        }
         if (LOGGER.isInfoEnabled()) {
@@ -243,7 +243,7 @@ public class AutomationControllerStartWorker extends AutomationControllerResourc
         final String genieIp = "{{ genie_ip }}";
         final String zoneUuid = "{{ zone_id }}";
         final String networkId = "{{ network_id }}";
-//        final String networkName = "{{ network_name }}";
+        final String networkName = "{{ network_name }}";
         final String accountName = "{{ account_name }}";
         final String domainUuid = "{{ domain_uuid }}";
         final String apiKey = "{{ api_key }}";
@@ -256,7 +256,7 @@ public class AutomationControllerStartWorker extends AutomationControllerResourc
         automationControllerConfig = automationControllerConfig.replace(genieIp, automationController.getServiceIp());
         automationControllerConfig = automationControllerConfig.replace(zoneUuid, zone.getUuid());
         automationControllerConfig = automationControllerConfig.replace(networkId, Long.toString(automationController.getNetworkId()));
-//        automationControllerConfig = automationControllerConfig.replace(networkName, Long.toString(automationController.getNetworkId()));
+        automationControllerConfig = automationControllerConfig.replace(networkName, Long.toString(automationController.getNetworkId()));
         automationControllerConfig = automationControllerConfig.replace(accountName, owner.getAccountName());
         automationControllerConfig = automationControllerConfig.replace(domainUuid, domain.get(0).getDomainUuid());
         automationControllerConfig = automationControllerConfig.replace(apiKey, keys[0]);
@@ -271,14 +271,14 @@ public class AutomationControllerStartWorker extends AutomationControllerResourc
         return automationControllerGenieConfig;
     }
 
-    private UserVm provisionAutomationControllerWorksControlVm() throws
+    private UserVm provisionAutomationControllerVm() throws
             InsufficientCapacityException, ManagementServerException, ResourceUnavailableException {
         UserVm genieControlVms = null;
         genieControlVms = createAutomationControllerVM();
         startAutomationVM(genieControlVms);
         genieControlVms = userVmDao.findById(genieControlVms.getId());
         if (genieControlVms == null) {
-            throw new ManagementServerException(String.format("Failed to provision Works Control VM for desktop cluster : %s" , automationController.getName()));
+            throw new ManagementServerException(String.format("Failed to provision VM for automation controller : %s" , automationController.getName()));
         }
         if (LOGGER.isInfoEnabled()) {
             LOGGER.info(String.format("Provisioned Works Control VM : %s in to the desktop cluster : %s", genieControlVms.getDisplayName(), automationController.getName()));
@@ -312,12 +312,12 @@ public class AutomationControllerStartWorker extends AutomationControllerResourc
 //        List<UserVm> clusterVMs = new ArrayList<>();
         UserVm genieVM = null;
         try {
-            genieVM = provisionAutomationControllerWorksControlVm();
+            genieVM = provisionAutomationControllerVm();
         }  catch (CloudRuntimeException | ManagementServerException | ResourceUnavailableException | InsufficientCapacityException e) {
             logTransitStateAndThrow(Level.ERROR, String.format("Provisioning the Works Control VM failed in the automation controller : %s, %s", automationController.getName(), e), automationController.getId(), AutomationController.Event.CreateFailed, e);
         }
 //        clusterVMs.add(genieVM);
-//        if (genieVM.getState().equals(VirtualMachine.State.Running)) {
+        if (genieVM.getState().equals(VirtualMachine.State.Running)) {
 //            boolean setup = false;
 //            try {
 //                setup = setupAutomationControllerNetworkRules(network, genieVM, publicIpAddress);
@@ -344,7 +344,9 @@ public class AutomationControllerStartWorker extends AutomationControllerResourc
 //                    logTransitStateAndThrow(Level.ERROR, String.format("Provisioning failed in the automation controller : %s, %s", automationController.getName(), e), automationController.getId(), AutomationController.Event.CreateFailed, e);
 //                }
 //            }
-//        }
+            stateTransitTo(automationController.getId(), AutomationController.Event.OperationSucceeded);
+            return true;
+        }
         return false;
     }
 
@@ -354,7 +356,7 @@ public class AutomationControllerStartWorker extends AutomationControllerResourc
             LOGGER.info(String.format("Starting automation controller : %s", automationController.getName()));
         }
 //        stateTransitTo(automationController.getId(), AutomationController.Event.StartRequested);
-//        startAutomationControllerVMs();
+        startAutomationControllerVMs();
         stateTransitTo(automationController.getId(), AutomationController.Event.OperationSucceeded);
         if (LOGGER.isInfoEnabled()) {
             LOGGER.info(String.format("Automation Controller : %s successfully started", automationController.getName()));

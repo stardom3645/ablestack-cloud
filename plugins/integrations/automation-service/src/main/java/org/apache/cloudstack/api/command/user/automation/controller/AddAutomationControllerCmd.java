@@ -95,6 +95,11 @@ public class AddAutomationControllerCmd extends BaseAsyncCreateCmd {
             description = "Network ID which Automation Controller is to be launched")
     private Long networkId;
 
+    @ACL(accessType = SecurityChecker.AccessType.UseEntry)
+    @Parameter(name = ApiConstants.NETWORK_NAME, type = CommandType.STRING, required = true,
+            description = "Network Name which Automation Controller is to be launched")
+    private String networkName;
+
     @Parameter(name = ApiConstants.AUTOMATION_CONTROLLER_VERSION_UPLOADTYPE, type = CommandType.STRING, required = true,
             description = "upload type for automation controller version template")
     private String uploadType;
@@ -145,6 +150,10 @@ public class AddAutomationControllerCmd extends BaseAsyncCreateCmd {
 
     public Long getNetworkId() {
         return networkId;
+    }
+
+    public String getNetworkName() {
+        return networkName;
     }
 
     public String getUploadType() {

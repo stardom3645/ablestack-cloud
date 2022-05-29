@@ -286,10 +286,12 @@ export default {
           description: values.description,
           serviceofferingid: this.serviceOfferings[values.serviceofferingid].id,
           networkid: this.selectedNetwork.id,
+          networkname: this.selectedNetwork.name,
           serviceip: values.automationcontrollerip,
           controlleruploadtype: this.automationControllerVersion[0].controlleruploadtype,
           zoneid: this.automationControllerVersion[0].zoneid,
           domainid: store.getters.project && store.getters.project.id ? null : store.getters.userInfo.domainid,
+          domainname: store.getters.project && store.getters.project.id ? null : store.getters.userInfo.domainname,
           account: store.getters.project && store.getters.project.id ? null : store.getters.userInfo.account,
           accountid: store.getters.project && store.getters.project.id ? null : store.getters.userInfo.accountid
         }

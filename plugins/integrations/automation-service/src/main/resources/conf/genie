@@ -12,5 +12,5 @@
     "MOLD_API_KEY": "{{ api_key }}",
     "MOLD_SECRET_KEY": "{{ secret_key }}",
     "AC_INSTANT_NAME": "{{ automation_controller_name }}",
-    "AC_NETWORK_NAME": "genie-network1"
+    "AC_NETWORK_NAME": "{{ network_name }}"
 }

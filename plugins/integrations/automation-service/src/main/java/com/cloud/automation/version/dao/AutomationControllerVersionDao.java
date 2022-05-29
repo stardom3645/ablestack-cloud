@@ -24,4 +24,5 @@ import com.cloud.utils.db.GenericDao;
 
 public interface AutomationControllerVersionDao extends GenericDao<AutomationControllerVersionVO, Long> {
     List<AutomationControllerVersionVO> listAllInZone(long dataCenterId);
+    public List<AutomationControllerVersionVO> listByVersionId(long versionId);
 }

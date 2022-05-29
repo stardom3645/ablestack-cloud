@@ -63,6 +63,10 @@ public class AutomationControllerResponse extends BaseResponse {
     @Param(description = "the network's id associated with this Automation")
     private String networkId;
 
+    @SerializedName(ApiConstants.NETWORK_NAME)
+    @Param(description = "the network's id associated with this Automation")
+    private String networkName;
+
     @SerializedName(ApiConstants.ACCOUNT_ID)
     @Param(description = "the account's id associated with this Automation")
     private String accountId;
@@ -217,6 +221,14 @@ public class AutomationControllerResponse extends BaseResponse {
 
     public void setNetworkId(String networkId) {
         this.networkId = networkId;
+    }
+
+    public String getNetworkName() {
+        return networkName;
+    }
+
+    public void setNetworkName(String networkName) {
+        this.networkName = networkName;
     }
 
     public String getAccountId(String accountId) { return accountId; }

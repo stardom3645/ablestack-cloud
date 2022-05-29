@@ -152,6 +152,7 @@ public class AutomationControllerManagerImpl extends ManagerBase implements Auto
         response.setCreated(automationController.getCreated());
         response.setServiceIp(automationController.getServiceIp());
         response.setNetworkId(String.valueOf(automationController.getNetworkId()));
+        response.setNetworkName(automationController.getNetworkName());
         response.setAutomationTemplateId(String.valueOf(automationController.getAutomationTemplateId()));
 
         AutomationControllerVersionVO acTemplate = automationControllerVersionDao.findById(automationController.getAutomationTemplateId());
@@ -299,7 +300,7 @@ public class AutomationControllerManagerImpl extends ManagerBase implements Auto
             @Override
             public AutomationControllerVO doInTransaction(TransactionStatus status) {
                 AutomationControllerVO newController = new AutomationControllerVO(automationControllerVersion.getId(), cmd.getName(), cmd.getDescription(), cmd.getAutomationTemplateId(), cmd.getZoneId(),
-                        cmd.getServiceOfferingId(), cmd.getNetworkId(), owner.getAccountId(), cmd.getDomainId(), AutomationController.State.Created, cmd.getServiceIp());
+                        cmd.getServiceOfferingId(), cmd.getNetworkId(), cmd.getNetworkName(), owner.getAccountId(), cmd.getDomainId(), AutomationController.State.Created, cmd.getServiceIp());
                 automationControllerDao.persist(newController);
                 return newController;
             }

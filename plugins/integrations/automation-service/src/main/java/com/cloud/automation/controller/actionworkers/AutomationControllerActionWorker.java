@@ -23,6 +23,7 @@ import com.cloud.automation.controller.AutomationControllerVO;
 import com.cloud.automation.controller.AutomationControllerVmMapVO;
 import com.cloud.automation.controller.dao.AutomationControllerDao;
 import com.cloud.automation.controller.dao.AutomationControllerVmMapDao;
+import com.cloud.automation.version.AutomationControllerVersionVO;
 import com.cloud.automation.version.dao.AutomationControllerVersionDao;
 import com.cloud.capacity.CapacityManager;
 import com.cloud.dc.ClusterDetailsDao;
@@ -180,18 +181,11 @@ public class AutomationControllerActionWorker {
     }
 
     protected void init() {
-        final String DC = "dc";
-        final String WORKS = "works";
         this.owner = accountDao.findById(automationController.getAccountId());
-//        List<AutomationVersionMapVO> templateList = automationVersionMapDao.listByVersionId(automationController.getDesktopVersionId());
-//        for (AutomationVersionMapVO templateMapVO : templateList) {
-//            if (templateMapVO.getType().equals(DC)) {
-//                this.dcTemplate = templateDao.findById(templateMapVO.getTemplateId());
-//            }
-//            if (templateMapVO.getType().equals(WORKS)) {
-//                this.worksTemplate = templateDao.findById(templateMapVO.getTemplateId());
-//            }
-//        }
+        List<AutomationControllerVersionVO> templateList = automationControllerVersionDao.listByVersionId(automationController.getAutomationTemplateId());
+        for (AutomationControllerVersionVO templateMapVO : templateList) {
+            this.templates = templateDao.findById(templateMapVO.getTemplateId());
+        }
     }
 
     protected String readResourceFile(String resource) throws IOException {

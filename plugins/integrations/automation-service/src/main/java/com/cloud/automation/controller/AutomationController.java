@@ -120,6 +120,7 @@ public interface AutomationController extends ControlledEntity, com.cloud.utils.
     long getAutomationTemplateId();
     long getServiceOfferingId();
     long getNetworkId();
+    String getNetworkName();
     long getAccountId();
     long getDomainId();
     String getServiceIp();

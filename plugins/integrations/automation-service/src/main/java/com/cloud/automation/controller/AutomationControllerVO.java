@@ -60,6 +60,9 @@ public class AutomationControllerVO implements AutomationController {
     @Column(name = "network_id")
     private long networkId;
 
+    @Column(name = "network_name")
+    private String networkName;
+
     @Column(name = "account_id")
     private long accountId;
 
@@ -156,6 +159,15 @@ public class AutomationControllerVO implements AutomationController {
     }
 
     @Override
+    public String getNetworkName() {
+        return networkName;
+    }
+
+    public void setNetworkName(String networkName) {
+        this.networkName = networkName;
+    }
+
+    @Override
     public long getAccountId() {
         return accountId;
     }
@@ -209,7 +221,7 @@ public class AutomationControllerVO implements AutomationController {
 //    public boolean isCheckForGc() {
 //        return checkForGc;
 //    }
-    public AutomationControllerVO(long id, String name, String description, Long automationTemplateId, Long zoneId, Long serviceOfferingId, long networkId, long accountId, long domainId, State created, String serviceIp) {
+    public AutomationControllerVO(long id, String name, String description, Long automationTemplateId, Long zoneId, Long serviceOfferingId, long networkId, String networkName, long accountId, long domainId, State state, String serviceIp) {
         this.uuid = UUID.randomUUID().toString();
         this.id = id;
         this.name = name;
@@ -217,6 +229,7 @@ public class AutomationControllerVO implements AutomationController {
         this.automationTemplateId = automationTemplateId;
         this.serviceOfferingId = serviceOfferingId;
         this.networkId = networkId;
+        this.networkName = networkName;
         this.accountId = accountId;
         this.domainId = domainId;
         this.serviceIp = serviceIp;
