@@ -14,14 +14,29 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-package com.cloud.automation.controller.dao;
 
-import com.cloud.automation.controller.AutomationControllerVmMapVO;
-import com.cloud.utils.db.GenericDao;
-
-import java.util.List;
-
-public interface AutomationControllerVmMapDao extends GenericDao<AutomationControllerVmMapVO, Long> {
-    public List<AutomationControllerVmMapVO> listByAutomationControllerId(long automationControllerId);
-//    public List<AutomationControllerVmMapVO> listByAutomationControllerIdAndVmType(long automationControllerId, String type); //search for automationController vm list
+<template>
+  <a
+    v-if="['automationcontroller'].includes($route.meta.name) && 'listAutomationController' in $store.getters.apis"
+    :href="'http://'+resource.ipaddress+':80'"
+    target="_blank">
+    <a-button style="margin-left: 5px" shape="circle" type="" :size="size" :disabled="['Stopping', 'Stopped', 'Error', 'Destroyed', 'Destroying'].includes(resource.state)" >
+      <LaptopOutlined />
+    </a-button>
+  </a>
+</template>
+<script>
+export default {
+  name: 'GenieUrl',
+  props: {
+    resource: {
+      type: Object,
+      required: true
+    },
+    size: {
+      type: String,
+      default: 'small'
+    }
+  }
 }
+</script>

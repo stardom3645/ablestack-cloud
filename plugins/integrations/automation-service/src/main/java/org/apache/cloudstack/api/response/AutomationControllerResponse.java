@@ -75,9 +75,9 @@ public class AutomationControllerResponse extends BaseResponse {
     @Param(description = "the domain's id associated with this Automation")
     private String domainId;
 
-    @SerializedName(ApiConstants.SERVICE_IP)
+    @SerializedName(ApiConstants.AUTOMATION_CONTROLLER_IP)
     @Param(description = "the service ip address associated with this Automation")
-    private String serviceIp;
+    private String automationControllerIp;
 
     @SerializedName(ApiConstants.ZONE_ID)
     @Param(description = "the id of the zone in which Automation Controller is available")
@@ -99,7 +99,7 @@ public class AutomationControllerResponse extends BaseResponse {
     @Param(description = "the date this template was created")
     private Date removed;
 
-    @SerializedName(ApiConstants.IP_ADDRESS)
+    @SerializedName(ApiConstants.AUTOMATION_CONTROLLER_PUBLIC_IP)
     @Param(description = "Public IP Address of the cluster")
     private String ipAddress;
 
@@ -245,12 +245,12 @@ public class AutomationControllerResponse extends BaseResponse {
         this.domainId = domainId;
     }
 
-    public String getServiceIp(String serviceIp) {
-        return serviceIp;
+    public String getAutomationControllerIp(String automationControllerIp) {
+        return automationControllerIp;
     }
 
-    public void setServiceIp(String serviceIp) {
-        this.serviceIp = serviceIp;
+    public void setAutomationControllerIp(String automationControllerIp) {
+        this.automationControllerIp = automationControllerIp;
     }
     public void getRemoved(Date removed) {
     }

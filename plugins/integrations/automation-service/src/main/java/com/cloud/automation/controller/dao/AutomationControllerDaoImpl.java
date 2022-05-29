@@ -21,6 +21,7 @@ import java.util.List;
 
 import com.cloud.automation.controller.AutomationController;
 import com.cloud.utils.db.SearchBuilder;
+import com.cloud.utils.db.TransactionLegacy;
 import org.springframework.stereotype.Component;
 
 import com.cloud.automation.controller.AutomationControllerVO;
@@ -60,8 +61,18 @@ public class AutomationControllerDaoImpl extends GenericDaoBase<AutomationContro
     }
 
     @Override
-    public boolean updateState(AutomationController.State currentState, AutomationController.Event event, AutomationController.State nextState, AutomationController vo, Object data) {
-        return false;
+    public boolean updateState(AutomationController.State currentState, AutomationController.Event event, AutomationController.State nextState,
+                               AutomationController vo, Object data) {
+        // TODO: ensure this update is correct
+        TransactionLegacy txn = TransactionLegacy.currentTxn();
+        txn.start();
+
+        AutomationControllerVO ccVo = (AutomationControllerVO)vo;
+        ccVo.setState(nextState);
+        super.update(ccVo.getId(), ccVo);
+
+        txn.commit();
+        return true;
     }
 }
 

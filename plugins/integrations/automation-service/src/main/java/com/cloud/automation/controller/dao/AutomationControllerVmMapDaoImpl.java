@@ -30,7 +30,7 @@ public class AutomationControllerVmMapDaoImpl extends GenericDaoBase<AutomationC
 
     private final SearchBuilder<AutomationControllerVmMapVO> automationIdSearch;
 //    private final SearchBuilder<AutomationControllerVmMapVO> automationIdAndVmType;
-//    private final SearchBuilder<AutomationControllerVmMapVO> automationIdAndNotVmType;
+//    private final SearchBuilder<AutomationControllerVmMapVO> automationId;
 
     public AutomationControllerVmMapDaoImpl() {
         automationIdSearch = createSearchBuilder();
@@ -41,7 +41,7 @@ public class AutomationControllerVmMapDaoImpl extends GenericDaoBase<AutomationC
 //        automationIdAndVmType.and("automationControllerId", automationIdAndVmType.entity().getAutomationControllerId(), SearchCriteria.Op.EQ);
 //        automationIdAndVmType.and("type", automationIdAndVmType.entity().getType(), SearchCriteria.Op.EQ);
 //        automationIdAndVmType.done();
-//
+
 //        automationIdAndNotVmType = createSearchBuilder();
 //        automationIdAndNotVmType.and("automationControllerId", automationIdAndNotVmType.entity().getAutomationControllerId(), SearchCriteria.Op.EQ);
 //        automationIdAndNotVmType.and("type", automationIdAndNotVmType.entity().getType(), SearchCriteria.Op.NEQ);
@@ -65,7 +65,7 @@ public class AutomationControllerVmMapDaoImpl extends GenericDaoBase<AutomationC
 //    }
 
 //    @Override
-//    public List<AutomationControllerVmMapVO> listByAutomationControllerIdAndNotVmType(long automationControllerId, String type) {
+//    public List<AutomationControllerVmMapVO> listByAutomationControllerIdAndNotVmType(long automationControllerId) {
 //        SearchCriteria<AutomationControllerVmMapVO> sc = automationIdAndNotVmType.create();
 //        sc.setParameters("automationControllerId", automationControllerId);
 //        sc.setParameters("type", type);

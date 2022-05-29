@@ -930,8 +930,9 @@ public class ApiConstants {
     public static final String OS_TYPE = "ostype";
     public static final String AUTOMATION_TEMPLATE_ID = "automationtemplateid";
     public static final String AUTOMATION_TEMPLATE_NAME = "automationtemplatename";
-    public static final String SERVICE_IP = "serviceip";
+    public static final String AUTOMATION_CONTROLLER_IP = "automationcontrollerip";
     public static final String AUTOMATION_USER_VIRTUAL_MACHINES = "automationuservirtualmachines";
+    public static final String AUTOMATION_CONTROLLER_PUBLIC_IP = "automationcontrollerpublicip";
 
     public static final String BOOT_TYPE = "boottype";
     public static final String BOOT_MODE = "bootmode";

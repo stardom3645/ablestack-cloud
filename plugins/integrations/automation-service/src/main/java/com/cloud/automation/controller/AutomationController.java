@@ -123,7 +123,7 @@ public interface AutomationController extends ControlledEntity, com.cloud.utils.
     String getNetworkName();
     long getAccountId();
     long getDomainId();
-    String getServiceIp();
+    String getAutomationControllerIp();
     @Override
     State getState();
     Date getCreated();

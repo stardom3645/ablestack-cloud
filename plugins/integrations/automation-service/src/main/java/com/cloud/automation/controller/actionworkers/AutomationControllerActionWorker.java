@@ -100,6 +100,7 @@ public class AutomationControllerActionWorker {
     public static final int CLUSTER_ADMIN_PORTAL_PORT = 8081;
     public static final int CLUSTER_API_PORT = 8082;
     public static final int CLUSTER_SAMBA_PORT = 9017;
+    public static final int AUTOMATION_CONTROLLER_PORT = 80;
 
     protected static final Logger LOGGER = Logger.getLogger(AutomationControllerActionWorker.class);
 
@@ -291,13 +292,13 @@ public class AutomationControllerActionWorker {
     protected IpAddress getAutomationControllerServerIp() {
         Network network = networkDao.findById(automationController.getNetworkId());
         if (network == null) {
-            LOGGER.warn(String.format("Network for Desktop automation : %s cannot be found", automationController.getName()));
+            LOGGER.warn(String.format("Network for automation controller : %s cannot be found", automationController.getName()));
             return null;
         }
         if (Network.GuestType.Isolated.equals(network.getGuestType())) {
             List<? extends IpAddress> addresses = networkModel.listPublicIpsAssignedToGuestNtwk(network.getId(), true);
             if (CollectionUtils.isEmpty(addresses)) {
-                LOGGER.warn(String.format("No public IP addresses found for network : %s, Desktop automation : %s", network.getName(), automationController.getName()));
+                LOGGER.warn(String.format("No public IP addresses found for network : %s, automation controller : %s", network.getName(), automationController.getName()));
                 return null;
             }
             for (IpAddress address : addresses) {
@@ -305,10 +306,10 @@ public class AutomationControllerActionWorker {
                     return address;
                 }
             }
-            LOGGER.warn(String.format("No source NAT IP addresses found for network : %s, Desktop automation : %s", network.getName(), automationController.getName()));
+            LOGGER.warn(String.format("No source NAT IP addresses found for network : %s, automation controller : %s", network.getName(), automationController.getName()));
             return null;
         }
-        LOGGER.warn(String.format("Unable to retrieve server IP address for Desktop automation : %s", automationController.getName()));
+        LOGGER.warn(String.format("Unable to retrieve server IP address for automation controller : %s", automationController.getName()));
         return null;
     }
 

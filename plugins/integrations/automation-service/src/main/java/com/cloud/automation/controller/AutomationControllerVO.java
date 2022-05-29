@@ -22,8 +22,6 @@ import java.util.UUID;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -70,11 +68,10 @@ public class AutomationControllerVO implements AutomationController {
     private long domainId;
 
     @Column(name = "state")
-    @Enumerated(value = EnumType.STRING)
-    State state = State.Enabled;
+    private State  state;
 
-    @Column(name = "service_ip")
-    private String serviceIp;
+    @Column(name = "automation_controller_ip")
+    private String automationControllerIp;
 
     @Column(name = GenericDao.CREATED_COLUMN)
     Date created;
@@ -186,12 +183,12 @@ public class AutomationControllerVO implements AutomationController {
     }
 
     @Override
-    public String getServiceIp() {
-        return serviceIp;
+    public String getAutomationControllerIp() {
+        return automationControllerIp;
     }
 
-    public void setServiceIp(String serviceIp) {
-        this.serviceIp = serviceIp;
+    public void setAutomationControllerIp(String automationControllerIp) {
+        this.automationControllerIp = automationControllerIp;
     }
 
     @Override
@@ -221,7 +218,7 @@ public class AutomationControllerVO implements AutomationController {
 //    public boolean isCheckForGc() {
 //        return checkForGc;
 //    }
-    public AutomationControllerVO(long id, String name, String description, Long automationTemplateId, Long zoneId, Long serviceOfferingId, long networkId, String networkName, long accountId, long domainId, State state, String serviceIp) {
+    public AutomationControllerVO(long id, String name, String description, Long automationTemplateId, Long zoneId, Long serviceOfferingId, long networkId, String networkName, long accountId, long domainId, State state, String automationControllerIp) {
         this.uuid = UUID.randomUUID().toString();
         this.id = id;
         this.name = name;
@@ -232,7 +229,7 @@ public class AutomationControllerVO implements AutomationController {
         this.networkName = networkName;
         this.accountId = accountId;
         this.domainId = domainId;
-        this.serviceIp = serviceIp;
+        this.automationControllerIp = automationControllerIp;
         this.state = state;
         this.zoneId = zoneId;
     }

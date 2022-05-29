@@ -287,7 +287,7 @@ export default {
           serviceofferingid: this.serviceOfferings[values.serviceofferingid].id,
           networkid: this.selectedNetwork.id,
           networkname: this.selectedNetwork.name,
-          serviceip: values.automationcontrollerip,
+          automationcontrollerip: values.automationcontrollerip,
           controlleruploadtype: this.automationControllerVersion[0].controlleruploadtype,
           zoneid: this.automationControllerVersion[0].zoneid,
           domainid: store.getters.project && store.getters.project.id ? null : store.getters.userInfo.domainid,
@@ -314,16 +314,16 @@ export default {
           const jobId = json.addautomationcontrollerresponse.jobid
           this.$pollJob({
             jobId,
-            title: this.$t('label.desktop.cluster.deploy'),
+            title: this.$t('label.automation.controller.deploy'),
             description: values.name,
             successMethod: () => {
               this.$notification.success({
-                message: this.$t('message.success.create.desktop.cluter'),
+                message: this.$t('message.success.create.automation.controller'),
                 duration: 0
               })
               eventBus.emit('automation-refresh-data')
             },
-            loadingMessage: `${this.$t('label.desktop.cluster.deploy')} ${values.name} ${this.$t('label.in.progress')}`,
+            loadingMessage: `${this.$t('label.automation.controller.deploy')} ${values.name} ${this.$t('label.in.progress')}`,
             catchMessage: this.$t('error.fetching.async.job.result'),
             catchMethod: () => {
               eventBus.emit('automation-refresh-data')

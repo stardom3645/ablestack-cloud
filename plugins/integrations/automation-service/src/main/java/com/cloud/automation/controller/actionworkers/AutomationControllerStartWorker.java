@@ -31,13 +31,16 @@ import java.util.List;
 import java.util.Properties;
 
 import com.cloud.api.query.vo.UserAccountJoinVO;
+import com.cloud.automation.controller.AutomationControllerVmMapVO;
 import com.cloud.automation.version.AutomationControllerVersion;
 import com.cloud.dc.DataCenter;
 import com.cloud.deploy.DeployDestination;
+import com.cloud.exception.ConcurrentOperationException;
 import com.cloud.exception.InsufficientCapacityException;
 import com.cloud.exception.ManagementServerException;
 import com.cloud.exception.ResourceAllocationException;
 import com.cloud.exception.ResourceUnavailableException;
+import com.cloud.network.IpAddress;
 import com.cloud.network.Network;
 import com.cloud.offering.ServiceOffering;
 import com.cloud.storage.DiskOfferingVO;
@@ -47,11 +50,14 @@ import com.cloud.utils.PropertiesUtil;
 import com.cloud.utils.component.ComponentContext;
 import com.cloud.utils.exception.ExecutionException;
 import com.cloud.utils.server.ServerProperties;
+import com.cloud.vm.ReservationContext;
+import com.cloud.vm.ReservationContextImpl;
 import org.apache.cloudstack.api.BaseCmd;
 import org.apache.cloudstack.api.command.user.vm.StartVMCmd;
 import org.apache.cloudstack.config.ApiServiceConfiguration;
 import org.apache.cloudstack.context.CallContext;
 import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Level;
 
@@ -121,28 +127,28 @@ public class AutomationControllerStartWorker extends AutomationControllerResourc
         }
     }
 
-//    private Network startAutomationControllerNetwork(final DeployDestination destination) throws ManagementServerException {
-//        final ReservationContext context = new ReservationContextImpl(null, null, null, owner);
-//        Network network = networkDao.findById(automationController.getNetworkId());
-//        if (network == null) {
-//            String msg  = String.format("Network for desktop cluster : %s not found", automationController.getName());
-//            LOGGER.warn(msg);
-//            stateTransitTo(automationController.getId(), AutomationControlle.Event.CreateFailed);
-//            throw new ManagementServerException(msg);
-//        }
-//        try {
-//            networkMgr.startNetwork(network.getId(), destination, context);
-//            if (LOGGER.isInfoEnabled()) {
-//                LOGGER.info(String.format("Network : %s is started for the desktop cluster : %s", network.getName(), automationController.getName()));
-//            }
-//        } catch (ConcurrentOperationException | ResourceUnavailableException | InsufficientCapacityException e) {
-//            String msg = String.format("Failed to start desktop cluster : %s as unable to start associated network : %s" , automationController.getName(), network.getName());
-//            LOGGER.error(msg, e);
-//            stateTransitTo(automationController.getId(), AutomationControlle.Event.CreateFailed);
-//            throw new ManagementServerException(msg, e);
-//        }
-//        return network;
-//    }
+    private Network startAutomationControllerNetwork(final DeployDestination destination) throws ManagementServerException {
+        final ReservationContext context = new ReservationContextImpl(null, null, null, owner);
+        Network network = networkDao.findById(automationController.getNetworkId());
+        if (network == null) {
+            String msg  = String.format("Network for automation controller : %s not found", automationController.getName());
+            LOGGER.warn(msg);
+            stateTransitTo(automationController.getId(), AutomationController.Event.CreateFailed);
+            throw new ManagementServerException(msg);
+        }
+        try {
+            networkMgr.startNetwork(network.getId(), destination, context);
+            if (LOGGER.isInfoEnabled()) {
+                LOGGER.info(String.format("Network : %s is started for the automation controller : %s", network.getName(), automationController.getName()));
+            }
+        } catch (ConcurrentOperationException | ResourceUnavailableException | InsufficientCapacityException e) {
+            String msg = String.format("Failed to start automation controller : %s as unable to start associated network : %s" , automationController.getName(), network.getName());
+            LOGGER.error(msg, e);
+            stateTransitTo(automationController.getId(), AutomationController.Event.CreateFailed);
+            throw new ManagementServerException(msg, e);
+        }
+        return network;
+    }
 
     private UserVm createAutomationControllerVM() throws ManagementServerException,
             ResourceUnavailableException, InsufficientCapacityException {
@@ -152,7 +158,7 @@ public class AutomationControllerStartWorker extends AutomationControllerResourc
         ServiceOffering serviceOffering = serviceOfferingDao.findById(automationController.getServiceOfferingId());
         List<Long> networkIds = new ArrayList<Long>();
         networkIds.add(automationController.getNetworkId());
-        String serviceIP = automationController.getServiceIp();
+        String automationControllerIp = automationController.getAutomationControllerIp();
         String reName = automationController.getName();
         String hostName = reName + "-genie";
         Map<String, String> customParameterMap = new HashMap<String, String>();
@@ -170,7 +176,7 @@ public class AutomationControllerStartWorker extends AutomationControllerResourc
         }
         String base64UserData = Base64.encodeBase64String(automationControllerConfig.getBytes(StringUtils.getPreferredCharset()));
         List<String> keypairs = new ArrayList<String>(); // 키페어 파라메타 임시 생성
-//        if (serviceIP == null || network.getGuestType() == Network.GuestType.L2) {
+//        if (automationControllerIp == null || network.getGuestType() == Network.GuestType.L2) {
 //            Network.IpAddresses addrs = new Network.IpAddresses(null, null, null);
 //            genieControlVms = userVmService.createAdvancedVirtualMachine(zone, serviceOffering, templates, networkIds, owner,
 //                    hostName, hostName, null, null, null,
@@ -179,15 +185,15 @@ public class AutomationControllerStartWorker extends AutomationControllerResourc
 //        } else {
             ipToNetworkMap = new LinkedHashMap<Long, Network.IpAddresses>();
             Network.IpAddresses addrs = new Network.IpAddresses(null, null, null);
-            Network.IpAddresses controllerAddrs = new Network.IpAddresses(serviceIP, null, null);
+            Network.IpAddresses controllerAddrs = new Network.IpAddresses(automationControllerIp, null, null);
             ipToNetworkMap.put(automationController.getNetworkId(), controllerAddrs);
             genieControlVms = userVmService.createAdvancedVirtualMachine(zone, serviceOffering, templates, networkIds, owner,
                     hostName, hostName, null, null, null,
-                    templates.getHypervisorType(), BaseCmd.HTTPMethod.POST, null, keypairs,
+                    templates.getHypervisorType(), BaseCmd.HTTPMethod.POST, base64UserData, keypairs,
                     ipToNetworkMap, addrs, null, null, null, customParameterMap, null, null, null, null, true, null, null);
 //        }
         if (LOGGER.isInfoEnabled()) {
-            LOGGER.info(String.format("Created Control VM ID : %s, %s in the desktop cluster : %s", genieControlVms.getUuid(), hostName, automationController.getName()));
+            LOGGER.info(String.format("Created Control VM ID : %s, %s in the automation controller : %s", genieControlVms.getUuid(), hostName, automationController.getName()));
         }
         return genieControlVms;
     }
@@ -253,7 +259,7 @@ public class AutomationControllerStartWorker extends AutomationControllerResourc
         final String moldProtocol = "{{ mold_protocol }}";
         List<UserAccountJoinVO> domain = userAccountJoinDao.searchByAccountId(owner.getId());
         automationControllerConfig = automationControllerConfig.replace(automationControllerName, automationController.getName());
-        automationControllerConfig = automationControllerConfig.replace(genieIp, automationController.getServiceIp());
+        automationControllerConfig = automationControllerConfig.replace(genieIp, automationController.getAutomationControllerIp());
         automationControllerConfig = automationControllerConfig.replace(zoneUuid, zone.getUuid());
         automationControllerConfig = automationControllerConfig.replace(networkId, Long.toString(automationController.getNetworkId()));
         automationControllerConfig = automationControllerConfig.replace(networkName, Long.toString(automationController.getNetworkId()));
@@ -281,34 +287,78 @@ public class AutomationControllerStartWorker extends AutomationControllerResourc
             throw new ManagementServerException(String.format("Failed to provision VM for automation controller : %s" , automationController.getName()));
         }
         if (LOGGER.isInfoEnabled()) {
-            LOGGER.info(String.format("Provisioned Works Control VM : %s in to the desktop cluster : %s", genieControlVms.getDisplayName(), automationController.getName()));
+            LOGGER.info(String.format("Provisioned Genie Automation Control VM : %s in to the automation controller : %s", genieControlVms.getDisplayName(), automationController.getName()));
         }
         return genieControlVms;
     }
+
+//    private boolean setupAutomationControllerNetworkRules(Network network, UserVm genieVm, IpAddress publicIp) throws ManagementServerException {
+//        boolean egress = false;
+//        boolean firewall = false;
+//        boolean firewall2 = false;
+//        boolean portForwarding = false;
+//        // Firewall Egress Network
+//        try {
+//            egress = provisionEgressFirewallRules(network, owner, AUTOMATION_CONTROLLER_PORT, AUTOMATION_CONTROLLER_PORT);
+//            if (LOGGER.isInfoEnabled()) {
+//                LOGGER.info(String.format("Provisioned egress firewall rule to open up port %d to %d on %s for Desktop cluster : %s", AUTOMATION_CONTROLLER_PORT, publicIp.getAddress().addr(), automationController.getName()));
+//            }
+//        } catch (NoSuchFieldException | IllegalAccessException | ResourceUnavailableException |
+//                 NetworkRuleConflictException e) {
+//            throw new ManagementServerException(String.format("Failed to provision egress firewall rules for Web access for the Desktop cluster : %s", automationController.getName()), e);
+//        }
+//        // Firewall rule fo Web access on WorksVM
+//        if (egress) {
+//            try {
+//                firewall = provisionFirewallRules(publicIp, owner, AUTOMATION_CONTROLLER_PORT, AUTOMATION_CONTROLLER_PORT);
+//                if (LOGGER.isInfoEnabled()) {
+//                    LOGGER.info(String.format("Provisioned firewall rule to open up port %d to %d on %s for Desktop cluster : %s", AUTOMATION_CONTROLLER_PORT, publicIp.getAddress().addr(), automationController.getName()));
+//                }
+////                firewall2 = provisionFirewallRules(publicIp, owner, CLUSTER_SAMBA_PORT, CLUSTER_SAMBA_PORT);
+////                if (LOGGER.isInfoEnabled()) {
+////                    LOGGER.info(String.format("Provisioned firewall rule to open up port %d to %d on %s for Desktop cluster : %s", publicIp.getAddress().addr(), automationController.getName()));
+////                }
+//            } catch (NoSuchFieldException | IllegalAccessException | ResourceUnavailableException | NetworkRuleConflictException e) {
+//                throw new ManagementServerException(String.format("Failed to provision firewall rules for Web access for the Desktop cluster : %s", automationController.getName()), e);
+//            }
+//            if (firewall) {
+//                // Port forwarding rule fo Web access on WorksVM
+//                try {
+//                    portForwarding = provisionPortForwardingRules(publicIp, network, owner, genieVm, AUTOMATION_CONTROLLER_PORT);
+//                } catch (ResourceUnavailableException | NetworkRuleConflictException e) {
+//                    throw new ManagementServerException(String.format("Failed to activate Web port forwarding rules for the Desktop cluster : %s", automationController.getName()), e);
+//                }
+//                if (portForwarding) {
+//                    return true;
+//                }
+//            }
+//        }
+//        return false;
+//    }
 
     public boolean startAutomationControllerOnCreate() {
         init();
         if (LOGGER.isInfoEnabled()) {
             LOGGER.info(String.format("Starting Automation Controller : %s", automationController.getName()));
         }
-//        stateTransitTo(automationController.getId(), AutomationController.Event.StartRequested);
+        stateTransitTo(automationController.getId(), AutomationController.Event.StartRequested);
         DeployDestination dest = null;
-//        try {
-//            dest = plan();
-//        } catch (InsufficientCapacityException e) {
-//            logTransitStateAndThrow(Level.ERROR, String.format("Provisioning the cluster failed due to insufficient capacity in the automation controller: %s", automationController.getUuid()), automationController.getId(), AutomationController.Event.CreateFailed, e);
-//        }
-//        Network network = null;
-//        try {
-//            network = startAutomationControllerNetwork(dest);
-//        } catch (ManagementServerException e) {
-//            logTransitStateAndThrow(Level.ERROR, String.format("Failed to start automation controller : %s as its network cannot be started", automationController.getName()), automationController.getId(), AutomationController.Event.CreateFailed, e);
-//        }
-//        IpAddress publicIpAddress = null;
-//        publicIpAddress = getAutomationControllerServerIp();
-//        if (publicIpAddress == null) {
-//            logTransitStateAndThrow(Level.ERROR, String.format("Failed to start Automation Controller : %s as no public IP found for the cluster" , automationController.getName()), automationController.getId(), AutomationController.Event.CreateFailed);
-//        }
+        try {
+            dest = plan();
+        } catch (InsufficientCapacityException e) {
+            logTransitStateAndThrow(Level.ERROR, String.format("Provisioning the cluster failed due to insufficient capacity in the automation controller: %s", automationController.getUuid()), automationController.getId(), AutomationController.Event.CreateFailed, e);
+        }
+        Network network = null;
+        try {
+            network = startAutomationControllerNetwork(dest);
+        } catch (ManagementServerException e) {
+            logTransitStateAndThrow(Level.ERROR, String.format("Failed to start Automation Controller : %s as its network cannot be started", automationController.getName()), automationController.getId(), AutomationController.Event.CreateFailed, e);
+        }
+        IpAddress publicIpAddress = null;
+        publicIpAddress = getAutomationControllerServerIp();
+        if (publicIpAddress == null) {
+            logTransitStateAndThrow(Level.ERROR, String.format("Failed to start Automation Controller : %s as no public IP found for the Automation Controller" , automationController.getName()), automationController.getId(), AutomationController.Event.CreateFailed);
+        }
 //        List<UserVm> clusterVMs = new ArrayList<>();
         UserVm genieVM = null;
         try {
@@ -325,29 +375,25 @@ public class AutomationControllerStartWorker extends AutomationControllerResourc
 //                logTransitStateAndThrow(Level.ERROR, String.format("Failed to setup Automation Controller : %s, unable to setup network rules", automationController.getName()), automationController.getId(), AutomationController.Event.CreateFailed, e);
 //            }
 //            if (setup) {
-//                try {
-//                    if (callApi(publicIpAddress.getAddress().addr())) {
-//                        UserVm dcVM = null;
-//                        try {
-//                            dcVM = provisionAutomationControllerDcControlVm(network);
-//                        } catch (CloudRuntimeException | ManagementServerException | ResourceUnavailableException | InsufficientCapacityException e) {
-//                            logTransitStateAndThrow(Level.ERROR, String.format("Provisioning the DC Control VM failed in the automation controller : %s, %s", automationController.getName(), e), automationController.getId(), AutomationController.Event.CreateFailed, e);
-//                        }
-//                        clusterVMs.add(dcVM);
-//                        if (LOGGER.isInfoEnabled()) {
-//                            LOGGER.info(String.format("Automation Controller : %s Control VMs successfully provisioned", automationController.getName()));
-//                        }
-//                        stateTransitTo(automationController.getId(), AutomationController.Event.OperationSucceeded);
-//                        return true;
-//                    }
-//                } catch (IOException | InterruptedException e) {
-//                    logTransitStateAndThrow(Level.ERROR, String.format("Provisioning failed in the automation controller : %s, %s", automationController.getName(), e), automationController.getId(), AutomationController.Event.CreateFailed, e);
-//                }
-//            }
+            if (LOGGER.isInfoEnabled()) {
+                LOGGER.info(String.format("automation controller : %s automation controller VMs successfully provisioned", automationController.getName()));
+            }
             stateTransitTo(automationController.getId(), AutomationController.Event.OperationSucceeded);
             return true;
         }
         return false;
+    }
+
+    public boolean reconcileAlertCluster() {
+        init();
+        List<AutomationControllerVmMapVO> vmMapVOList = getControlVMMaps();
+        if (CollectionUtils.isEmpty(vmMapVOList)) {
+            return false;
+        }
+        // mark the cluster to be running
+        stateTransitTo(automationController.getId(), AutomationController.Event.RecoveryRequested);
+        stateTransitTo(automationController.getId(), AutomationController.Event.OperationSucceeded);
+        return true;
     }
 
     public boolean startStoppedAutomationController() throws CloudRuntimeException {
@@ -355,7 +401,7 @@ public class AutomationControllerStartWorker extends AutomationControllerResourc
         if (LOGGER.isInfoEnabled()) {
             LOGGER.info(String.format("Starting automation controller : %s", automationController.getName()));
         }
-//        stateTransitTo(automationController.getId(), AutomationController.Event.StartRequested);
+        stateTransitTo(automationController.getId(), AutomationController.Event.StartRequested);
         startAutomationControllerVMs();
         stateTransitTo(automationController.getId(), AutomationController.Event.OperationSucceeded);
         if (LOGGER.isInfoEnabled()) {

@@ -71,9 +71,9 @@ public class AddAutomationControllerCmd extends BaseAsyncCreateCmd {
     private Long domainId;
 
     @ACL(accessType = SecurityChecker.AccessType.UseEntry)
-    @Parameter(name = ApiConstants.SERVICE_IP, type = CommandType.STRING,
+    @Parameter(name = ApiConstants.AUTOMATION_CONTROLLER_IP, type = CommandType.STRING,
             description = "Network in which Automation Controller is to be launched")
-    private String serviceIp;
+    private String automationControllerIp;
 
     @Parameter(name = ApiConstants.ACCOUNT_ID, type = CommandType.UUID, entityType = AccountResponse.class,
     description = "the account's id associated with this Automation")
@@ -128,8 +128,8 @@ public class AddAutomationControllerCmd extends BaseAsyncCreateCmd {
         return domainId;
     }
 
-    public String getServiceIp() {
-        return serviceIp;
+    public String getAutomationControllerIp() {
+        return automationControllerIp;
     }
 
     public Long getAccountId() {
