@@ -85,7 +85,7 @@ public class AutomationControllerStartWorker extends AutomationControllerResourc
     }
 
     private void startAutomationControllerVMs() {
-        List <UserVm> automationVms = getControlVMs();
+        List <UserVm> automationVms = getAutomationControllerVMs();
         for (final UserVm vm : automationVms) {
             if (vm == null) {
                 logTransitStateAndThrow(Level.ERROR, String.format("Failed to start Control VMs in automation controller : %s", automationController.getName()), automationController.getId(), AutomationController.Event.OperationFailed);

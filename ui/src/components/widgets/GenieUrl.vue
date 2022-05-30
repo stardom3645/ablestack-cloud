@@ -18,7 +18,7 @@
 <template>
   <a
     v-if="['automationcontroller'].includes($route.meta.name) && 'listAutomationController' in $store.getters.apis"
-    :href="'http://'+resource.ipaddress+':80'"
+    :href="'http://'+resource.automationcontrollerpublicip+':80'"
     target="_blank">
     <a-button style="margin-left: 5px" shape="circle" type="" :size="size" :disabled="['Stopping', 'Stopped', 'Error', 'Destroyed', 'Destroying'].includes(resource.state)" >
       <LaptopOutlined />

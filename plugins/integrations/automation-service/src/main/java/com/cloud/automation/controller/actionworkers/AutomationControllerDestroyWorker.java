@@ -52,7 +52,7 @@ public class AutomationControllerDestroyWorker extends AutomationControllerActio
     @Inject
     protected ResourceTagDao resourceTagDao;
 
-    private List<AutomationControllerVmMapVO> clusterVMs;
+    private List<AutomationControllerVmMapVO> AutomationControllerVMs;
 
     public AutomationControllerDestroyWorker(final AutomationController automationController, final AutomationControllerManagerImpl clusterManager) {
         super(automationController, clusterManager);
@@ -71,12 +71,12 @@ public class AutomationControllerDestroyWorker extends AutomationControllerActio
         }
     }
 
-    private boolean destroyClusterVMs() {
+    private boolean destroyAutomationControllerVMs() {
         boolean vmDestroyed = true;
         //ControlVM removed
-        if (!CollectionUtils.isEmpty(clusterVMs)) {
-            for (AutomationControllerVmMapVO clusterVM : clusterVMs) {
-                long vmID = clusterVM.getVmId();
+        if (!CollectionUtils.isEmpty(AutomationControllerVMs)) {
+            for (AutomationControllerVmMapVO AutomationControllerVM : AutomationControllerVMs) {
+                long vmID = AutomationControllerVM.getVmId();
 
                 // delete only if VM exists and is not removed
                 UserVmVO userVM = userVmDao.findById(vmID);
@@ -89,7 +89,7 @@ public class AutomationControllerDestroyWorker extends AutomationControllerActio
                         LOGGER.warn(String.format("Unable to expunge VM %s : %s, destroying automation controller will probably fail",
                             vm.getInstanceName() , vm.getUuid()));
                     }
-                    automationControllerVmMapDao.expunge(clusterVM.getId());
+                    automationControllerVmMapDao.expunge(AutomationControllerVM.getId());
                     if (LOGGER.isInfoEnabled()) {
                         LOGGER.info(String.format("Destroyed VM : %s as part of automation controller : %s cleanup", vm.getDisplayName(), automationController.getName()));
                     }
@@ -146,9 +146,9 @@ public class AutomationControllerDestroyWorker extends AutomationControllerActio
             return;
         }
         List<Long> removedVmIds = new ArrayList<>();
-        if (!CollectionUtils.isEmpty(clusterVMs)) {
-            for (AutomationControllerVmMapVO clusterVM : clusterVMs) {
-                removedVmIds.add(clusterVM.getVmId());
+        if (!CollectionUtils.isEmpty(AutomationControllerVMs)) {
+            for (AutomationControllerVmMapVO AutomationControllerVM : AutomationControllerVMs) {
+                removedVmIds.add(AutomationControllerVM.getVmId());
             }
         }
         IpAddress publicIp = getSourceNatIp(network);
@@ -165,13 +165,13 @@ public class AutomationControllerDestroyWorker extends AutomationControllerActio
     }
 
     private void validateClusterVMsDestroyed() {
-        if(clusterVMs!=null  && !clusterVMs.isEmpty()) { // Wait for few seconds to get all VMs really expunged
+        if(AutomationControllerVMs!=null  && !AutomationControllerVMs.isEmpty()) { // Wait for few seconds to get all VMs really expunged
             final int maxRetries = 3;
             int retryCounter = 0;
             while (retryCounter < maxRetries) {
                 boolean allVMsRemoved = true;
-                for (AutomationControllerVmMap clusterVM : clusterVMs) {
-                    UserVmVO userVM = userVmDao.findById(clusterVM.getVmId());
+                for (AutomationControllerVmMap AutomationControllerVM : AutomationControllerVMs) {
+                    UserVmVO userVM = userVmDao.findById(AutomationControllerVM.getVmId());
                     if (userVM != null && !userVM.isRemoved()) {
                         allVMsRemoved = false;
                         break;
@@ -214,12 +214,12 @@ public class AutomationControllerDestroyWorker extends AutomationControllerActio
     public boolean destroy() throws CloudRuntimeException {
         init();
         validateClusterState();
-        this.clusterVMs = automationControllerVmMapDao.listByAutomationControllerId(automationController.getId());
+        this.AutomationControllerVMs = automationControllerVmMapDao.listByAutomationControllerId(automationController.getId());
         if (LOGGER.isInfoEnabled()) {
             LOGGER.info(String.format("Destroying automation controller : %s", automationController.getName()));
         }
         stateTransitTo(automationController.getId(), AutomationController.Event.DestroyRequested);
-        boolean vmsDestroyed = destroyClusterVMs();
+        boolean vmsDestroyed = destroyAutomationControllerVMs();
         // if there are VM's that were not expunged, we can not delete the network
         if (vmsDestroyed) {
             validateClusterVMsDestroyed();

@@ -267,7 +267,7 @@ public class AutomationControllerActionWorker {
         return clusterVMs;
     }
 
-    protected List<UserVm> getControlVMs() {
+    protected List<UserVm> getAutomationControllerVMs() {
         List<UserVm> vmList = new ArrayList<>();
         List<AutomationControllerVmMapVO> clusterVMs = getControlVMMaps();
         if (!CollectionUtils.isEmpty(clusterVMs)) {

@@ -131,6 +131,10 @@ public class AutomationControllerResponse extends BaseResponse {
     @Param(description = "the list of virtualmachine associated with this Automation Controller")
     private List<UserVmResponse> automationControllerVms;
 
+    @SerializedName(ApiConstants.OS_DISPLAY_NAME)
+    @Param(description = "the name of the host for the virtual machine")
+    private String osDisplayName;
+
     public String getId() {
         return id;
     }
@@ -299,6 +303,14 @@ public class AutomationControllerResponse extends BaseResponse {
 
     public void setAutomationControllerVms(List<UserVmResponse> automationControllerVms) {
         this.automationControllerVms = automationControllerVms;
+    }
+
+    public String getOsDisplayName() {
+        return osDisplayName;
+    }
+
+    public void setOsDisplayName(String osDisplayName) {
+        this.osDisplayName = osDisplayName;
     }
 
 }

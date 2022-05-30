@@ -62,8 +62,8 @@ export default {
       icon: 'block-outlined',
       docHelp: '',
       permission: ['listAutomationController'],
-      columns: ['name', 'state', 'account', 'zonename'],
-      details: ['description', 'name', 'automationcontrollerip', 'state', 'automationcontrollerpublicip', 'automationtemplatename', 'ostypename', 'serviceofferingname', 'isdynamicallyscalable', 'userurl'],
+      columns: ['name', 'state', 'account', 'hostname', 'zonename'],
+      details: ['description', 'name', 'automationcontrollerip', 'state', 'hostname', 'automationcontrollerpublicip', 'automationtemplatename', 'osdisplayname', 'serviceofferingname', 'isdynamicallyscalable'],
       tabs: [{
         component: shallowRef(defineAsyncComponent(() => import('@/views/automation/AutomationControllerTab.vue')))
       }],

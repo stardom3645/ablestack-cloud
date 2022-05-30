@@ -46,6 +46,7 @@ import com.cloud.offering.ServiceOffering;
 import com.cloud.projects.Project;
 import com.cloud.service.ServiceOfferingVO;
 import com.cloud.service.dao.ServiceOfferingDao;
+import com.cloud.storage.GuestOS;
 import com.cloud.tags.dao.ResourceTagDao;
 import com.cloud.user.Account;
 import com.cloud.utils.component.ComponentContext;
@@ -228,6 +229,11 @@ public class AutomationControllerManagerImpl extends ManagerBase implements Auto
                     UserVmResponse cvmResponse = ApiDBUtils.newUserVmResponse(respView, responseName, userVM, EnumSet.of(ApiConstants.VMDetails.nics), caller);
                     automationControllerVmResponses.add(cvmResponse);
                 }
+                GuestOS guestOS = ApiDBUtils.findGuestOSById(userVM.getGuestOsId());
+                if (guestOS != null) {
+                    response.setOsDisplayName(guestOS.getDisplayName());
+                }
+                response.setHostName(userVM.getHostName());
             }
         }
 
@@ -248,6 +254,7 @@ public class AutomationControllerManagerImpl extends ManagerBase implements Auto
 //            }
 //        }
 
+        response.setAutomationControllerVms(automationControllerVmResponses);
         response.setAutomationControllerVms(automationControllerVmResponses);
 
         return response;

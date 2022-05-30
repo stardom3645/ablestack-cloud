@@ -3754,5 +3754,6 @@
 "message.automation.controller.stop": "Stop Automation Controller",
 "label.automation.controller.delete": "Delete Automation Controller",
 "message.automation.controller.delete": "Delete Automation Controller",
-"message.success.create.automation.controller": "Successfully deployed Automation Controller. It may take some time to access the portal due to internal work for normal service provision."
+"message.success.create.automation.controller": "Successfully deployed Automation Controller. It may take some time to access the portal due to internal work for normal service provision.",
+"label.osdisplayname": "OS type"
 }

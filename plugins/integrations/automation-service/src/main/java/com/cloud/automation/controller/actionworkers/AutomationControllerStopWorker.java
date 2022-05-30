@@ -47,10 +47,10 @@ public class AutomationControllerStopWorker extends AutomationControllerActionWo
             LOGGER.info(String.format("Stopping automation controller : %s", automationController.getName()));
         }
         stateTransitTo(automationController.getId(), AutomationController.Event.StopRequested);
-        List<UserVm> clusterVMs = getControlVMs();
-        for (UserVm vm : clusterVMs) {
+        List<UserVm> automationControllerVMs = getAutomationControllerVMs();
+        for (UserVm vm : automationControllerVMs) {
             if (vm == null) {
-                logTransitStateAndThrow(Level.ERROR, String.format("Failed to find Control VMs in automation controller : %s", automationController.getName()), automationController.getId(), AutomationController.Event.OperationFailed);
+                logTransitStateAndThrow(Level.ERROR, String.format("Failed to find automation controller : %s", automationController.getName()), automationController.getId(), AutomationController.Event.OperationFailed);
             }
             try {
                 userVmService.stopVirtualMachine(vm.getId(), false);
@@ -59,10 +59,10 @@ public class AutomationControllerStopWorker extends AutomationControllerActionWo
                     vm.getDisplayName(), automationController.getName()), ex);
             }
         }
-        for (final UserVm userVm : clusterVMs) {
+        for (final UserVm userVm : automationControllerVMs) {
             UserVm vm = userVmDao.findById(userVm.getId());
             if (vm == null || !vm.getState().equals(VirtualMachine.State.Stopped)) {
-                logTransitStateAndThrow(Level.ERROR, String.format("Failed to stop Control VMs in automation controller : %s",
+                logTransitStateAndThrow(Level.ERROR, String.format("Failed to stop VMs in automation controller : %s",
                 automationController.getName()), automationController.getId(), AutomationController.Event.OperationFailed);
             }
         }
