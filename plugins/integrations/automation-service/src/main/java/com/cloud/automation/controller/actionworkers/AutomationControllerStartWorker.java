@@ -281,6 +281,7 @@ public class AutomationControllerStartWorker extends AutomationControllerResourc
             InsufficientCapacityException, ManagementServerException, ResourceUnavailableException {
         UserVm genieControlVms = null;
         genieControlVms = createAutomationControllerVM();
+        addAutomationControllerVm(automationController.getId(), genieControlVms.getId());
         startAutomationVM(genieControlVms);
         genieControlVms = userVmDao.findById(genieControlVms.getId());
         if (genieControlVms == null) {

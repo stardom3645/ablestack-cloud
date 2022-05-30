@@ -19,12 +19,14 @@ package com.cloud.automation.controller;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.concurrent.ScheduledExecutorService;
 import javax.inject.Inject;
 
 import com.cloud.api.ApiDBUtils;
 import com.cloud.api.query.dao.UserVmJoinDao;
+import com.cloud.api.query.vo.UserVmJoinVO;
 import com.cloud.automation.controller.actionworkers.AutomationControllerDestroyWorker;
 import com.cloud.automation.controller.actionworkers.AutomationControllerStartWorker;
 import com.cloud.automation.controller.actionworkers.AutomationControllerStopWorker;
@@ -61,6 +63,8 @@ import com.cloud.vm.VirtualMachine;
 import com.cloud.vm.dao.VMInstanceDao;
 import org.apache.cloudstack.acl.ControlledEntity;
 import org.apache.cloudstack.acl.SecurityChecker;
+import org.apache.cloudstack.api.ApiConstants;
+import org.apache.cloudstack.api.ResponseObject;
 import org.apache.cloudstack.api.command.user.automation.controller.AddAutomationControllerCmd;
 import org.apache.cloudstack.api.command.user.automation.controller.DeleteAutomationControllerCmd;
 import org.apache.cloudstack.api.command.user.automation.controller.ListAutomationControllerCmd;
@@ -206,28 +210,38 @@ public class AutomationControllerManagerImpl extends ManagerBase implements Auto
         }
 
 //        VMInstanceVO vmname = vmInstanceDao.findVMByInstanceName(automationController.getV());
-
         List<UserVmResponse> automationControllerVmResponses = new ArrayList<UserVmResponse>();
         List<VMInstanceVO> vmList = vmInstanceDao.listByZoneId(automationController.getZoneId());
-//        List<AutomationControllerVmMapVO> controlVmList = automationControllerVmMapDao.listByAutomationControllerIdAndNotVmType(controller.getId(), "automationvm");
+        List<AutomationControllerVmMapVO> controlVmList = automationControllerVmMapDao.listByAutomationControllerId(automationController.getId());
 
-//        ResponseObject.ResponseView respView = ResponseObject.ResponseView.Restricted;
-//        Account caller = CallContext.current().getCallingAccount();
-//        if (accountService.isRootAdmin(caller.getId())) {
-//            respView = ResponseObject.ResponseView.Full;
-//        }
-//
+        ResponseObject.ResponseView respView = ResponseObject.ResponseView.Restricted;
+        Account caller = CallContext.current().getCallingAccount();
+        if (accountService.isRootAdmin(caller.getId())) {
+            respView = ResponseObject.ResponseView.Full;
+        }
+
+        String responseName = "controlvmlist";
+        if (controlVmList != null && !controlVmList.isEmpty()) {
+            for (AutomationControllerVmMapVO vmMapVO : controlVmList) {
+                UserVmJoinVO userVM = userVmJoinDao.findById(vmMapVO.getVmId());
+                if (userVM != null) {
+                    UserVmResponse cvmResponse = ApiDBUtils.newUserVmResponse(respView, responseName, userVM, EnumSet.of(ApiConstants.VMDetails.nics), caller);
+                    automationControllerVmResponses.add(cvmResponse);
+                }
+            }
+        }
+
 //        String responseName = "controllervmlist";
 //        String resourceKey = "ControllerName";
 //        if (vmList != null && !vmList.isEmpty()) {
 //            for (VMInstanceVO vmVO : vmList) {
 //                ResourceTag controllervm = resourceTagDao.findByKey(vmVO.getId(), ResourceTag.ResourceObjectType.UserVm, resourceKey);
 //                if (controllervm != null) {
-//                    if (controllervm.getValue().equals(controller.getName())) {
+//                    if (controllervm.getValue().equals(automationController.getName())) {
 //                        UserVmJoinVO userVM = userVmJoinDao.findById(vmVO.getId());
 //                        if (userVM != null) {
 //                            UserVmResponse dvmResponse = ApiDBUtils.newUserVmResponse(respView, responseName, userVM, EnumSet.of(ApiConstants.VMDetails.nics), caller);
-//                            AutomationControllerResponse.add(dvmResponse);
+//                            automationControllerVmResponses.add(dvmResponse);
 //                        }
 //                    }
 //                }
