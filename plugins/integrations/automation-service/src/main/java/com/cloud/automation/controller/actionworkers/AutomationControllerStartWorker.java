@@ -244,6 +244,7 @@ public class AutomationControllerStartWorker extends AutomationControllerResourc
         String[] keys = getServiceUserKeys(owner);
         String[] info = getServerProperties();
         final String managementIp = ApiServiceConfiguration.ManagementServerAddresses.value();
+        final String endPointUrl = ApiServiceConfiguration.ApiServletPath.value();
         String automationControllerConfig = readResourceFile("/conf/genie");
         final String automationControllerName = "{{ automation_controller_name }}";
         final String genieIp = "{{ genie_ip }}";
@@ -257,12 +258,13 @@ public class AutomationControllerStartWorker extends AutomationControllerResourc
         final String moldIp = "{{ mold_ip }}";
         final String moldPort = "{{ mold_port }}";
         final String moldProtocol = "{{ mold_protocol }}";
+        final String moldEndPoint = "{{ mold_end_point}}";
         List<UserAccountJoinVO> domain = userAccountJoinDao.searchByAccountId(owner.getId());
         automationControllerConfig = automationControllerConfig.replace(automationControllerName, automationController.getName());
         automationControllerConfig = automationControllerConfig.replace(genieIp, automationController.getAutomationControllerIp());
         automationControllerConfig = automationControllerConfig.replace(zoneUuid, zone.getUuid());
         automationControllerConfig = automationControllerConfig.replace(networkId, Long.toString(automationController.getNetworkId()));
-        automationControllerConfig = automationControllerConfig.replace(networkName, Long.toString(automationController.getNetworkId()));
+        automationControllerConfig = automationControllerConfig.replace(networkName, automationController.getNetworkName());
         automationControllerConfig = automationControllerConfig.replace(accountName, owner.getAccountName());
         automationControllerConfig = automationControllerConfig.replace(domainUuid, domain.get(0).getDomainUuid());
         automationControllerConfig = automationControllerConfig.replace(apiKey, keys[0]);
@@ -270,6 +272,7 @@ public class AutomationControllerStartWorker extends AutomationControllerResourc
         automationControllerConfig = automationControllerConfig.replace(moldIp, managementIp);
         automationControllerConfig = automationControllerConfig.replace(moldPort, info[0]);
         automationControllerConfig = automationControllerConfig.replace(moldProtocol, info[1]);
+        automationControllerConfig = automationControllerConfig.replace(moldEndPoint, endPointUrl);
         String base64UserData = Base64.encodeBase64String(automationControllerConfig.getBytes(StringUtils.getPreferredCharset()));
         String automationControllerGenieConfig = readResourceFile("/conf/genie.yml");
         final String genieEncode = "{{ genie_encode }}";
