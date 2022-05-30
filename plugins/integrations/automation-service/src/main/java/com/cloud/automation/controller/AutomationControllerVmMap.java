@@ -19,7 +19,7 @@ package com.cloud.automation.controller;
 /**
  * AutomationControllerVmMap will describe mapping of ID of Automation Controller
  * and ID of its VirtualMachine. A Automation Controller can have multiple VMs
- * deployed for it therefore a list of DesktopClusterVmMap are associated
+ * deployed for it therefore a list of AutomationControllerVmMap are associated
  * with a Desktop.
  * A particular VM can be deployed only for a single Desktop.
  */

@@ -260,18 +260,18 @@ public class AutomationControllerActionWorker {
     }
 
     protected List<AutomationControllerVmMapVO> getControlVMMaps() {
-        List<AutomationControllerVmMapVO> clusterVMs = automationControllerVmMapDao.listByAutomationControllerId(automationController.getId());
-        if (!CollectionUtils.isEmpty(clusterVMs)) {
-            clusterVMs.sort((t1, t2) -> (int)((t1.getId() - t2.getId())/Math.abs(t1.getId() - t2.getId())));
+        List<AutomationControllerVmMapVO> automationControllerVMs = automationControllerVmMapDao.listByAutomationControllerId(automationController.getId());
+        if (!CollectionUtils.isEmpty(automationControllerVMs)) {
+            automationControllerVMs.sort((t1, t2) -> (int)((t1.getId() - t2.getId())/Math.abs(t1.getId() - t2.getId())));
         }
-        return clusterVMs;
+        return automationControllerVMs;
     }
 
     protected List<UserVm> getAutomationControllerVMs() {
         List<UserVm> vmList = new ArrayList<>();
-        List<AutomationControllerVmMapVO> clusterVMs = getControlVMMaps();
-        if (!CollectionUtils.isEmpty(clusterVMs)) {
-            for (AutomationControllerVmMapVO vmMap : clusterVMs) {
+        List<AutomationControllerVmMapVO> automationControllerVMs = getControlVMMaps();
+        if (!CollectionUtils.isEmpty(automationControllerVMs)) {
+            for (AutomationControllerVmMapVO vmMap : automationControllerVMs) {
                 vmList.add(userVmDao.findById(vmMap.getVmId()));
             }
         }

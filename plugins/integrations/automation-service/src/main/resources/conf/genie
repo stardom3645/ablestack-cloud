@@ -6,7 +6,7 @@
 	"mold.default.port":"{{ mold_port }}",
 	"mold.network.uuid":"{{ network_id }}",
 	"mold.zone.id":"{{ zone_id }}",
-	"works.default.url":"{{ works_ip }}",
+	"genie.default.url":"{{ genie_ip }}",
 	"bootstrapped": "false",
     "MOLD_API_URL": "http://10.10.3.10:8080/client/api",
     "MOLD_API_KEY": "{{ api_key }}",

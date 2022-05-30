@@ -321,12 +321,12 @@ export default {
                 message: this.$t('message.success.create.automation.controller'),
                 duration: 0
               })
-              eventBus.emit('automation-refresh-data')
+              eventBus.emit('automation-controller-refresh-data')
             },
             loadingMessage: `${this.$t('label.automation.controller.deploy')} ${values.name} ${this.$t('label.in.progress')}`,
             catchMessage: this.$t('error.fetching.async.job.result'),
             catchMethod: () => {
-              eventBus.emit('automation-refresh-data')
+              eventBus.emit('automation-controller-refresh-data')
             },
             action: {
               isFetchData: false

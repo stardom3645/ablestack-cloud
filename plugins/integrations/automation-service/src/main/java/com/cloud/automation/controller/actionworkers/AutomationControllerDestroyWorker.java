@@ -29,14 +29,11 @@ import com.cloud.exception.ResourceUnavailableException;
 import com.cloud.network.IpAddress;
 import com.cloud.network.Network;
 import com.cloud.network.dao.NetworkVO;
-import com.cloud.server.ResourceTag;
-import com.cloud.server.ResourceTag.ResourceObjectType;
 import com.cloud.tags.dao.ResourceTagDao;
 import com.cloud.user.AccountManager;
 import com.cloud.uservm.UserVm;
 import com.cloud.utils.exception.CloudRuntimeException;
 import com.cloud.vm.UserVmVO;
-import com.cloud.vm.VMInstanceVO;
 import org.apache.cloudstack.context.CallContext;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.log4j.Level;
@@ -98,37 +95,37 @@ public class AutomationControllerDestroyWorker extends AutomationControllerActio
                     return false;
                 }
             }
-            //DesktopVM removed
-            List<VMInstanceVO> vmList = vmInstanceDao.listByZoneId(automationController.getZoneId());
-            String resourceKey = "ClusterName";
-            if (vmList != null && !vmList.isEmpty()) {
-                for (VMInstanceVO vmVO : vmList) {
-                    ResourceTag desktopvm = resourceTagDao.findByKey(vmVO.getId(), ResourceObjectType.UserVm, resourceKey);
-                    if (desktopvm != null) {
-                        if (desktopvm.getValue().equals(automationController.getName())) {
-                            long desktopvmID = vmVO.getId();
-                            // delete only if VM exists and is not removed
-                            UserVmVO userDesktopVM = userVmDao.findById(desktopvmID);
-                            if (userDesktopVM == null || userDesktopVM.isRemoved()) {
-                                continue;
-                            }
-                            try {
-                                UserVm deskvm = userVmService.destroyVm(desktopvmID, true);
-                                if (!userVmManager.expunge(userDesktopVM, CallContext.current().getCallingUserId(), CallContext.current().getCallingAccount())) {
-                                    LOGGER.warn(String.format("Unable to expunge VM %s : %s, Destroying a desktop virtual machine in a automation controller will probably fail",
-                                    deskvm.getInstanceName() , deskvm.getUuid()));
-                                }
-                                if (LOGGER.isInfoEnabled()) {
-                                    LOGGER.info(String.format("Destroyed VM : %s as part of automation controller : %s desktop virtual machine cleanup", deskvm.getDisplayName(), automationController.getName()));
-                                }
-                            } catch (ResourceUnavailableException | ConcurrentOperationException e) {
-                                LOGGER.warn(String.format("Failed to destroy VM : %s part of the automation controller : %s desktop virtual machine cleanup. Moving on with destroying remaining resources provisioned for the automation controller", userDesktopVM.getDisplayName(), automationController.getName()), e);
-                                return false;
-                            }
-                        }
-                    }
-                }
-            }
+            //AutomationControllerVM removed
+//            List<VMInstanceVO> vmList = vmInstanceDao.listByZoneId(automationController.getZoneId());
+//            String resourceKey = "ClusterName";
+//            if (vmList != null && !vmList.isEmpty()) {
+//                for (VMInstanceVO vmVO : vmList) {
+//                    ResourceTag automationcontrollervm = resourceTagDao.findByKey(vmVO.getId(), ResourceObjectType.UserVm, resourceKey);
+//                    if (automationcontrollervm != null) {
+//                        if (automationcontrollervm.getValue().equals(automationController.getName())) {
+//                            long automationcontrollervmID = vmVO.getId();
+//                            // delete only if VM exists and is not removed
+//                            UserVmVO userAutomationControllerVM = userVmDao.findById(automationcontrollervmID);
+//                            if (userAutomationControllerVM == null || userAutomationControllerVM.isRemoved()) {
+//                                continue;
+//                            }
+//                            try {
+//                                UserVm deskvm = userVmService.destroyVm(automationcontrollervmID, true);
+//                                if (!userVmManager.expunge(userAutomationControllerVM, CallContext.current().getCallingUserId(), CallContext.current().getCallingAccount())) {
+//                                    LOGGER.warn(String.format("Unable to expunge VM %s : %s, Destroying a automation controller virtual machine in a automation controller will probably fail",
+//                                    deskvm.getInstanceName() , deskvm.getUuid()));
+//                                }
+//                                if (LOGGER.isInfoEnabled()) {
+//                                    LOGGER.info(String.format("Destroyed VM : %s as part of automation controller : %s automation controller virtual machine cleanup", deskvm.getDisplayName(), automationController.getName()));
+//                                }
+//                            } catch (ResourceUnavailableException | ConcurrentOperationException e) {
+//                                LOGGER.warn(String.format("Failed to destroy VM : %s part of the automation controller : %s automation controller virtual machine cleanup. Moving on with destroying remaining resources provisioned for the automation controller", userAutomationControllerVM.getDisplayName(), automationController.getName()), e);
+//                                return false;
+//                            }
+//                        }
+//                    }
+//                }
+//            }
         }
         return vmDestroyed;
     }

@@ -83,61 +83,6 @@
         </a-table>
       </a-tab-pane>
     </a-tabs>
-
-    <a-modal
-      :visible="showAddIpModal"
-      :title="$t('label.desktop.cluster.add.ip.range')"
-      :closable="true"
-      :maskClosable="false"
-      :okText="$t('label.ok')"
-      :cancelText="$t('label.cancel')"
-      @cancel="closeModals"
-      @ok="submitAddIp">
-      <a-spin :spinning="loadingNic">
-        <!-- <a-form :form="form" @submit="submitAddIp" layout="vertical">
-          <a-form-item>
-            <template #label>
-              <tooltip-label :title="$t('label.gateway')" :tooltip="$t('placeholder.gateway')"/>
-            </template>
-            <a-input
-              v-decorator="['gateway', {
-                rules: [{ required: true, message: $t('message.error.required.input') }]
-              }]"
-              :placeholder="$t('placeholder.gateway')" />
-          </a-form-item>
-          <a-form-item>
-            <template #label>
-              <tooltip-label :title="$t('label.netmask')" :tooltip="$t('placeholder.netmask')"/>
-            </template>
-            <a-input
-              v-decorator="['netmask', {
-                rules: [{ required: true, message: $t('message.error.required.input') }]
-              }]"
-              :placeholder="$t('placeholder.netmask')" />
-          </a-form-item>
-          <a-form-item>
-            <template #label>
-              <tooltip-label :title="$t('label.startip')" :tooltip="$t('placeholder.startip')"/>
-            </template>
-            <a-input
-              v-decorator="['startip', {
-                rules: [{ required: true, message: $t('message.error.required.input') }]
-              }]"
-              :placeholder="$t('placeholder.startip')" />
-          </a-form-item>
-          <a-form-item>
-            <template #label>
-              <tooltip-label :title="$t('label.endip')" :tooltip="$t('placeholder.endip')"/>
-            </template>
-            <a-input
-              v-decorator="['endip', {
-                rules: [{ required: true, message: $t('message.error.required.input') }]
-              }]"
-              :placeholder="$t('placeholder.endip')" />
-          </a-form-item>
-        </a-form> -->
-      </a-spin>
-    </a-modal>
   </a-spin>
 </template>
 
@@ -265,7 +210,7 @@ export default {
   },
   beforeCreate () {
     // this.form = this.$form.createForm(this)
-    this.apiParams = this.$getApiParams('addDesktopClusterIpRanges')
+    // this.apiParams = this.$getApiParams('addDesktopClusterIpRanges')
   },
   created () {
     const userInfo = this.$store.getters.userInfo
@@ -312,8 +257,8 @@ export default {
       this.automationuservirtualmachines.map(x => { x.ipaddress = x.nic[0].ipaddress })
       this.controlvms = this.resource.controlvms || []
       this.controlvms.map(x => { x.ipaddress = x.nic[0].ipaddress })
-      this.desktopnetworks = []
-      this.iprange = []
+      // this.desktopnetworks = []
+      // this.iprange = []
       if (!this.vm || !this.vm.id) {
         return
       }
@@ -325,13 +270,13 @@ export default {
         // this.$set(this.resource, 'desktopnetworks', this.desktopnetworks)
       }).finally(() => {
       })
-      api('listDesktopClusterIpRanges', { listall: true, desktopclusterid: this.resource.id }).then(json => {
-        this.iprange = json.listdesktopclusteriprangesresponse.desktopclusteriprange
-        if (this.iprange) {
-          this.iprange.sort((a, b) => { return a.deviceid - b.deviceid })
-        }
-        // this.$set(this.resource, 'iprange', this.iprange)
-      })
+      // api('listDesktopClusterIpRanges', { listall: true, desktopclusterid: this.resource.id }).then(json => {
+      //   this.iprange = json.listdesktopclusteriprangesresponse.desktopclusteriprange
+      //   if (this.iprange) {
+      //     this.iprange.sort((a, b) => { return a.deviceid - b.deviceid })
+      //   }
+      //   // this.$set(this.resource, 'iprange', this.iprange)
+      // })
     },
     removeIpRange (id) {
       api('deleteDesktopClusterIpRanges', { id: id }).then(json => {

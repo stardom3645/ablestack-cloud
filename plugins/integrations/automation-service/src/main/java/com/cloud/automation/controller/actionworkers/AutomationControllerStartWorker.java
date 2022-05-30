@@ -272,8 +272,8 @@ public class AutomationControllerStartWorker extends AutomationControllerResourc
         automationControllerConfig = automationControllerConfig.replace(moldProtocol, info[1]);
         String base64UserData = Base64.encodeBase64String(automationControllerConfig.getBytes(StringUtils.getPreferredCharset()));
         String automationControllerGenieConfig = readResourceFile("/conf/genie.yml");
-        final String worksEncode = "{{ genie_encode }}";
-        automationControllerGenieConfig = automationControllerGenieConfig.replace(worksEncode, base64UserData);
+        final String genieEncode = "{{ genie_encode }}";
+        automationControllerGenieConfig = automationControllerGenieConfig.replace(genieEncode, base64UserData);
         return automationControllerGenieConfig;
     }
 
@@ -302,32 +302,32 @@ public class AutomationControllerStartWorker extends AutomationControllerResourc
 //        try {
 //            egress = provisionEgressFirewallRules(network, owner, AUTOMATION_CONTROLLER_PORT, AUTOMATION_CONTROLLER_PORT);
 //            if (LOGGER.isInfoEnabled()) {
-//                LOGGER.info(String.format("Provisioned egress firewall rule to open up port %d to %d on %s for Desktop cluster : %s", AUTOMATION_CONTROLLER_PORT, publicIp.getAddress().addr(), automationController.getName()));
+//                LOGGER.info(String.format("Provisioned egress firewall rule to open up port %d to %d on %s for Automation controller : %s", AUTOMATION_CONTROLLER_PORT, publicIp.getAddress().addr(), automationController.getName()));
 //            }
 //        } catch (NoSuchFieldException | IllegalAccessException | ResourceUnavailableException |
 //                 NetworkRuleConflictException e) {
-//            throw new ManagementServerException(String.format("Failed to provision egress firewall rules for Web access for the Desktop cluster : %s", automationController.getName()), e);
+//            throw new ManagementServerException(String.format("Failed to provision egress firewall rules for Web access for the Automation controller : %s", automationController.getName()), e);
 //        }
 //        // Firewall rule fo Web access on WorksVM
 //        if (egress) {
 //            try {
 //                firewall = provisionFirewallRules(publicIp, owner, AUTOMATION_CONTROLLER_PORT, AUTOMATION_CONTROLLER_PORT);
 //                if (LOGGER.isInfoEnabled()) {
-//                    LOGGER.info(String.format("Provisioned firewall rule to open up port %d to %d on %s for Desktop cluster : %s", AUTOMATION_CONTROLLER_PORT, publicIp.getAddress().addr(), automationController.getName()));
+//                    LOGGER.info(String.format("Provisioned firewall rule to open up port %d to %d on %s for Automation controller : %s", AUTOMATION_CONTROLLER_PORT, publicIp.getAddress().addr(), automationController.getName()));
 //                }
 ////                firewall2 = provisionFirewallRules(publicIp, owner, CLUSTER_SAMBA_PORT, CLUSTER_SAMBA_PORT);
 ////                if (LOGGER.isInfoEnabled()) {
-////                    LOGGER.info(String.format("Provisioned firewall rule to open up port %d to %d on %s for Desktop cluster : %s", publicIp.getAddress().addr(), automationController.getName()));
+////                    LOGGER.info(String.format("Provisioned firewall rule to open up port %d to %d on %s for Automation controller : %s", publicIp.getAddress().addr(), automationController.getName()));
 ////                }
 //            } catch (NoSuchFieldException | IllegalAccessException | ResourceUnavailableException | NetworkRuleConflictException e) {
-//                throw new ManagementServerException(String.format("Failed to provision firewall rules for Web access for the Desktop cluster : %s", automationController.getName()), e);
+//                throw new ManagementServerException(String.format("Failed to provision firewall rules for Web access for the Automation controller : %s", automationController.getName()), e);
 //            }
 //            if (firewall) {
 //                // Port forwarding rule fo Web access on WorksVM
 //                try {
 //                    portForwarding = provisionPortForwardingRules(publicIp, network, owner, genieVm, AUTOMATION_CONTROLLER_PORT);
 //                } catch (ResourceUnavailableException | NetworkRuleConflictException e) {
-//                    throw new ManagementServerException(String.format("Failed to activate Web port forwarding rules for the Desktop cluster : %s", automationController.getName()), e);
+//                    throw new ManagementServerException(String.format("Failed to activate Web port forwarding rules for the Automation controller : %s", automationController.getName()), e);
 //                }
 //                if (portForwarding) {
 //                    return true;
@@ -360,14 +360,14 @@ public class AutomationControllerStartWorker extends AutomationControllerResourc
         if (publicIpAddress == null) {
             logTransitStateAndThrow(Level.ERROR, String.format("Failed to start Automation Controller : %s as no public IP found for the Automation Controller" , automationController.getName()), automationController.getId(), AutomationController.Event.CreateFailed);
         }
-//        List<UserVm> clusterVMs = new ArrayList<>();
+//        List<UserVm> automationControllerVMs = new ArrayList<>();
         UserVm genieVM = null;
         try {
             genieVM = provisionAutomationControllerVm();
         }  catch (CloudRuntimeException | ManagementServerException | ResourceUnavailableException | InsufficientCapacityException e) {
-            logTransitStateAndThrow(Level.ERROR, String.format("Provisioning the Works Control VM failed in the automation controller : %s, %s", automationController.getName(), e), automationController.getId(), AutomationController.Event.CreateFailed, e);
+            logTransitStateAndThrow(Level.ERROR, String.format("Provisioning the Automation Controller VM failed in the automation controller : %s, %s", automationController.getName(), e), automationController.getId(), AutomationController.Event.CreateFailed, e);
         }
-//        clusterVMs.add(genieVM);
+//        automationControllerVMs.add(genieVM);
         if (genieVM.getState().equals(VirtualMachine.State.Running)) {
 //            boolean setup = false;
 //            try {

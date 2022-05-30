@@ -18,7 +18,6 @@
 package com.cloud.automation.controller;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.concurrent.ScheduledExecutorService;
@@ -51,7 +50,6 @@ import com.cloud.tags.dao.ResourceTagDao;
 import com.cloud.user.Account;
 import com.cloud.utils.component.ComponentContext;
 import com.cloud.utils.db.Filter;
-import com.cloud.utils.db.GlobalLock;
 import com.cloud.utils.db.SearchBuilder;
 import com.cloud.utils.db.SearchCriteria;
 import com.cloud.utils.db.Transaction;
@@ -60,7 +58,6 @@ import com.cloud.utils.db.TransactionStatus;
 import com.cloud.utils.fsm.NoTransitionException;
 import com.cloud.utils.fsm.StateMachine2;
 import com.cloud.vm.VMInstanceVO;
-import com.cloud.vm.VirtualMachine;
 import com.cloud.vm.dao.VMInstanceDao;
 import org.apache.cloudstack.acl.ControlledEntity;
 import org.apache.cloudstack.acl.SecurityChecker;
@@ -75,7 +72,6 @@ import org.apache.cloudstack.api.response.AutomationControllerResponse;
 import org.apache.cloudstack.api.response.ListResponse;
 import org.apache.cloudstack.api.response.UserVmResponse;
 import org.apache.cloudstack.context.CallContext;
-import org.apache.cloudstack.managed.context.ManagedContextRunnable;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
@@ -236,7 +232,6 @@ public class AutomationControllerManagerImpl extends ManagerBase implements Auto
                 response.setHostName(userVM.getHostName());
             }
         }
-
 //        String responseName = "controllervmlist";
 //        String resourceKey = "ControllerName";
 //        if (vmList != null && !vmList.isEmpty()) {
@@ -253,7 +248,6 @@ public class AutomationControllerManagerImpl extends ManagerBase implements Auto
 //                }
 //            }
 //        }
-
         response.setAutomationControllerVms(automationControllerVmResponses);
         response.setAutomationControllerVms(automationControllerVmResponses);
 
@@ -494,135 +488,135 @@ public class AutomationControllerManagerImpl extends ManagerBase implements Auto
        in states should get picked up by Automation controller and mark the Automation controller to be 'Alert' state.
        Through recovery API, or reconciliation clusters in 'Alert' will be brought back to known good state or desired state.
      */
-    public class AutomationControllerStatusScanner extends ManagedContextRunnable {
-        private boolean firstRun = true;
-        @Override
-        protected void runInContext() {
-            GlobalLock gcLock = GlobalLock.getInternLock("AutomationController.State.Scanner.Lock");
-            try {
-                if (gcLock.lock(3)) {
-                    try {
-                        reallyRun();
-                    } finally {
-                        gcLock.unlock();
-                    }
-                }
-            } finally {
-                gcLock.releaseRef();
-            }
-        }
-
-        public void reallyRun() {
-            try {
-                // run through Automation controllers in 'Running' state and ensure all the VM's are Running in the cluster
-                List<AutomationControllerVO> runningAutomationControllers = automationControllerDao.findAutomationControllersInState(AutomationController.State.Running);
-                for (AutomationController automationController : runningAutomationControllers) {
-                    if (LOGGER.isInfoEnabled()) {
-                        LOGGER.info(String.format("Running Automation controller state scanner on Automation controller : %s",automationController.getName()));
-                    }
-                    try {
-                        if (!isClusterVMsInDesiredState(automationController, VirtualMachine.State.Running)) {
-                            stateTransitTo(automationController.getId(), AutomationController.Event.FaultsDetected);
-                        }
-                    } catch (Exception e) {
-                        LOGGER.warn(String.format("Failed to run Automation controller Running state scanner on Automation controller : %s status scanner", automationController.getName()), e);
-                    }
-                }
-
-                // run through Automation controllers in 'Stopped' state and ensure all the VM's are Stopped in the cluster
-                List<AutomationControllerVO> stoppedAutomationControllers = automationControllerDao.findAutomationControllersInState(AutomationController.State.Stopped);
-                for (AutomationController automationController : stoppedAutomationControllers) {
-                    if (LOGGER.isInfoEnabled()) {
-                        LOGGER.info(String.format("Running Automation controller state scanner on Automation controller : %s for state: %s", automationController.getName(), AutomationController.State.Stopped.toString()));
-                    }
-                    try {
-                        if (!isClusterVMsInDesiredState(automationController, VirtualMachine.State.Stopped)) {
-                            stateTransitTo(automationController.getId(), AutomationController.Event.FaultsDetected);
-                        }
-                    } catch (Exception e) {
-                        LOGGER.warn(String.format("Failed to run Automation controller Stopped state scanner on Automation controller : %s status scanner", automationController.getName()), e);
-                    }
-                }
-
-                // run through Automation controllers in 'Alert' state and reconcile state as 'Running' if the VM's are running or 'Stopped' if VM's are stopped
-                List<AutomationControllerVO> alertAutomationControllers = automationControllerDao.findAutomationControllersInState(AutomationController.State.Alert);
-                for (AutomationControllerVO automationController : alertAutomationControllers) {
-                    if (LOGGER.isInfoEnabled()) {
-                        LOGGER.info(String.format("Running Automation controller state scanner on Automation controller : %s for state: %s", automationController.getName(), AutomationController.State.Alert.toString()));
-                    }
-                    try {
-                        if (isClusterVMsInDesiredState(automationController, VirtualMachine.State.Running)) {
-                            AutomationControllerStartWorker startWorker =
-                                    new AutomationControllerStartWorker(automationController, AutomationControllerManagerImpl.this);
-                            startWorker = ComponentContext.inject(startWorker);
-                            startWorker.reconcileAlertCluster();
-                        } else if (isClusterVMsInDesiredState(automationController, VirtualMachine.State.Stopped)) {
-                            stateTransitTo(automationController.getId(), AutomationController.Event.StopRequested);
-                            stateTransitTo(automationController.getId(), AutomationController.Event.OperationSucceeded);
-                        }
-                    } catch (Exception e) {
-                        LOGGER.warn(String.format("Failed to run Automation controller Alert state scanner on Automation controller : %s status scanner", automationController.getName()), e);
-                    }
-                }
-
-
-                if (firstRun) {
-                    // run through Automation controllers in 'Starting' state and reconcile state as 'Alert' or 'Error' if the VM's are running
-                    List<AutomationControllerVO> startingAutomationControllers = automationControllerDao.findAutomationControllersInState(AutomationController.State.Starting);
-                    for (AutomationController automationController : startingAutomationControllers) {
-                        if ((new Date()).getTime() - automationController.getCreated().getTime() < 10*60*1000) {
-                            continue;
-                        }
-                        if (LOGGER.isInfoEnabled()) {
-                            LOGGER.info(String.format("Running Automation controller state scanner on Automation controller : %s for state: %s", automationController.getName(), AutomationController.State.Starting.toString()));
-                        }
-                        try {
-                            if (isClusterVMsInDesiredState(automationController, VirtualMachine.State.Running)) {
-                                stateTransitTo(automationController.getId(), AutomationController.Event.FaultsDetected);
-                            } else {
-                                stateTransitTo(automationController.getId(), AutomationController.Event.OperationFailed);
-                            }
-                        } catch (Exception e) {
-                            LOGGER.warn(String.format("Failed to run Automation controller Starting state scanner on Automation controller : %s status scanner", automationController.getName()), e);
-                        }
-                    }
-                    List<AutomationControllerVO> destroyingAutomationControllers = automationControllerDao.findAutomationControllersInState(AutomationController.State.Destroying);
-                    for (AutomationController automationController : destroyingAutomationControllers) {
-                        if (LOGGER.isInfoEnabled()) {
-                            LOGGER.info(String.format("Running Automation controller state scanner on Automation controller : %s for state: %s", automationController.getName(), AutomationController.State.Destroying.toString()));
-                        }
-                        try {
-                            AutomationControllerDestroyWorker destroyWorker = new AutomationControllerDestroyWorker(automationController, AutomationControllerManagerImpl.this);
-                            destroyWorker = ComponentContext.inject(destroyWorker);
-                            destroyWorker.destroy();
-                        } catch (Exception e) {
-                            LOGGER.warn(String.format("Failed to run Automation controller Destroying state scanner on Automation controller : %s status scanner", automationController.getName()), e);
-                        }
-                    }
-                }
-            } catch (Exception e) {
-                LOGGER.warn("Caught exception while running Automation controller state scanner", e);
-            }
-            firstRun = false;
-        }
-    }
-
-    // checks if Automation Controller is in desired state
-    boolean isClusterVMsInDesiredState(AutomationController automationController, VirtualMachine.State state) {
-        List<AutomationControllerVmMapVO> clusterVMs = automationControllerVmMapDao.listByAutomationControllerId(automationController.getId());
-
-        // check if all the VM's are in same state
-        for (AutomationControllerVmMapVO clusterVm : clusterVMs) {
-            VMInstanceVO vm = vmInstanceDao.findByIdIncludingRemoved(clusterVm.getVmId());
-            if (vm.getState() != state) {
-                if (LOGGER.isDebugEnabled()) {
-                    LOGGER.debug(String.format("Found VM : %s in the Automation Controller : %s in state: %s while expected to be in state: %s. So moving the cluster to Alert state for reconciliation",
-                            vm.getUuid(), automationController.getName(), vm.getState().toString(), state.toString()));
-                }
-                return false;
-            }
-        }
-
-        return true;
-    }
+//    public class AutomationControllerStatusScanner extends ManagedContextRunnable {
+//        private boolean firstRun = true;
+//        @Override
+//        protected void runInContext() {
+//            GlobalLock gcLock = GlobalLock.getInternLock("AutomationController.State.Scanner.Lock");
+//            try {
+//                if (gcLock.lock(3)) {
+//                    try {
+//                        reallyRun();
+//                    } finally {
+//                        gcLock.unlock();
+//                    }
+//                }
+//            } finally {
+//                gcLock.releaseRef();
+//            }
+//        }
+//
+//        public void reallyRun() {
+//            try {
+//                // run through Automation controllers in 'Running' state and ensure all the VM's are Running in the cluster
+//                List<AutomationControllerVO> runningAutomationControllers = automationControllerDao.findAutomationControllersInState(AutomationController.State.Running);
+//                for (AutomationController automationController : runningAutomationControllers) {
+//                    if (LOGGER.isInfoEnabled()) {
+//                        LOGGER.info(String.format("Running Automation controller state scanner on Automation controller : %s",automationController.getName()));
+//                    }
+//                    try {
+//                        if (!isClusterVMsInDesiredState(automationController, VirtualMachine.State.Running)) {
+//                            stateTransitTo(automationController.getId(), AutomationController.Event.FaultsDetected);
+//                        }
+//                    } catch (Exception e) {
+//                        LOGGER.warn(String.format("Failed to run Automation controller Running state scanner on Automation controller : %s status scanner", automationController.getName()), e);
+//                    }
+//                }
+//
+//                // run through Automation controllers in 'Stopped' state and ensure all the VM's are Stopped in the cluster
+//                List<AutomationControllerVO> stoppedAutomationControllers = automationControllerDao.findAutomationControllersInState(AutomationController.State.Stopped);
+//                for (AutomationController automationController : stoppedAutomationControllers) {
+//                    if (LOGGER.isInfoEnabled()) {
+//                        LOGGER.info(String.format("Running Automation controller state scanner on Automation controller : %s for state: %s", automationController.getName(), AutomationController.State.Stopped.toString()));
+//                    }
+//                    try {
+//                        if (!isClusterVMsInDesiredState(automationController, VirtualMachine.State.Stopped)) {
+//                            stateTransitTo(automationController.getId(), AutomationController.Event.FaultsDetected);
+//                        }
+//                    } catch (Exception e) {
+//                        LOGGER.warn(String.format("Failed to run Automation controller Stopped state scanner on Automation controller : %s status scanner", automationController.getName()), e);
+//                    }
+//                }
+//
+//                // run through Automation controllers in 'Alert' state and reconcile state as 'Running' if the VM's are running or 'Stopped' if VM's are stopped
+//                List<AutomationControllerVO> alertAutomationControllers = automationControllerDao.findAutomationControllersInState(AutomationController.State.Alert);
+//                for (AutomationControllerVO automationController : alertAutomationControllers) {
+//                    if (LOGGER.isInfoEnabled()) {
+//                        LOGGER.info(String.format("Running Automation controller state scanner on Automation controller : %s for state: %s", automationController.getName(), AutomationController.State.Alert.toString()));
+//                    }
+//                    try {
+//                        if (isClusterVMsInDesiredState(automationController, VirtualMachine.State.Running)) {
+//                            AutomationControllerStartWorker startWorker =
+//                                    new AutomationControllerStartWorker(automationController, AutomationControllerManagerImpl.this);
+//                            startWorker = ComponentContext.inject(startWorker);
+//                            startWorker.reconcileAlertCluster();
+//                        } else if (isClusterVMsInDesiredState(automationController, VirtualMachine.State.Stopped)) {
+//                            stateTransitTo(automationController.getId(), AutomationController.Event.StopRequested);
+//                            stateTransitTo(automationController.getId(), AutomationController.Event.OperationSucceeded);
+//                        }
+//                    } catch (Exception e) {
+//                        LOGGER.warn(String.format("Failed to run Automation controller Alert state scanner on Automation controller : %s status scanner", automationController.getName()), e);
+//                    }
+//                }
+//
+//
+//                if (firstRun) {
+//                    // run through Automation controllers in 'Starting' state and reconcile state as 'Alert' or 'Error' if the VM's are running
+//                    List<AutomationControllerVO> startingAutomationControllers = automationControllerDao.findAutomationControllersInState(AutomationController.State.Starting);
+//                    for (AutomationController automationController : startingAutomationControllers) {
+//                        if ((new Date()).getTime() - automationController.getCreated().getTime() < 10*60*1000) {
+//                            continue;
+//                        }
+//                        if (LOGGER.isInfoEnabled()) {
+//                            LOGGER.info(String.format("Running Automation controller state scanner on Automation controller : %s for state: %s", automationController.getName(), AutomationController.State.Starting.toString()));
+//                        }
+//                        try {
+//                            if (isClusterVMsInDesiredState(automationController, VirtualMachine.State.Running)) {
+//                                stateTransitTo(automationController.getId(), AutomationController.Event.FaultsDetected);
+//                            } else {
+//                                stateTransitTo(automationController.getId(), AutomationController.Event.OperationFailed);
+//                            }
+//                        } catch (Exception e) {
+//                            LOGGER.warn(String.format("Failed to run Automation controller Starting state scanner on Automation controller : %s status scanner", automationController.getName()), e);
+//                        }
+//                    }
+//                    List<AutomationControllerVO> destroyingAutomationControllers = automationControllerDao.findAutomationControllersInState(AutomationController.State.Destroying);
+//                    for (AutomationController automationController : destroyingAutomationControllers) {
+//                        if (LOGGER.isInfoEnabled()) {
+//                            LOGGER.info(String.format("Running Automation controller state scanner on Automation controller : %s for state: %s", automationController.getName(), AutomationController.State.Destroying.toString()));
+//                        }
+//                        try {
+//                            AutomationControllerDestroyWorker destroyWorker = new AutomationControllerDestroyWorker(automationController, AutomationControllerManagerImpl.this);
+//                            destroyWorker = ComponentContext.inject(destroyWorker);
+//                            destroyWorker.destroy();
+//                        } catch (Exception e) {
+//                            LOGGER.warn(String.format("Failed to run Automation controller Destroying state scanner on Automation controller : %s status scanner", automationController.getName()), e);
+//                        }
+//                    }
+//                }
+//            } catch (Exception e) {
+//                LOGGER.warn("Caught exception while running Automation controller state scanner", e);
+//            }
+//            firstRun = false;
+//        }
+//    }
+//
+//    // checks if Automation Controller is in desired state
+//    boolean isClusterVMsInDesiredState(AutomationController automationController, VirtualMachine.State state) {
+//        List<AutomationControllerVmMapVO> automationControllerVMs = automationControllerVmMapDao.listByAutomationControllerId(automationController.getId());
+//
+//        // check if all the VM's are in same state
+//        for (AutomationControllerVmMapVO clusterVm : automationControllerVMs) {
+//            VMInstanceVO vm = vmInstanceDao.findByIdIncludingRemoved(clusterVm.getVmId());
+//            if (vm.getState() != state) {
+//                if (LOGGER.isDebugEnabled()) {
+//                    LOGGER.debug(String.format("Found VM : %s in the Automation Controller : %s in state: %s while expected to be in state: %s. So moving the cluster to Alert state for reconciliation",
+//                            vm.getUuid(), automationController.getName(), vm.getState().toString(), state.toString()));
+//                }
+//                return false;
+//            }
+//        }
+//
+//        return true;
+//    }
 }

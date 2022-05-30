@@ -181,7 +181,7 @@ public class AutomationControllerResourceModifierActionWorker extends Automation
             }
             return new DeployDestination(zone, null, null, null);
         }
-        String msg = String.format("Cannot find enough capacity for desktop cluster(requested cpu=%d memory=%s) with offering : %s and hypervisor: %s",
+        String msg = String.format("Cannot find enough capacity for automation controller(requested cpu=%d memory=%s) with offering : %s and hypervisor: %s",
                 cpu_requested * nodesCount, toHumanReadableSize(ram_requested * nodesCount), offering.getName(), templates.getHypervisorType().toString());
 
         LOGGER.warn(msg);
@@ -192,13 +192,13 @@ public class AutomationControllerResourceModifierActionWorker extends Automation
         ServiceOffering offering = serviceOfferingDao.findById(automationController.getServiceOfferingId());
         DataCenter zone = dataCenterDao.findById(automationController.getZoneId());
         if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug(String.format("Checking deployment destination for desktop cluster : %s in zone : %s", automationController.getName(), zone.getName()));
+            LOGGER.debug(String.format("Checking deployment destination for automation controller : %s in zone : %s", automationController.getName(), zone.getName()));
         }
         final long dest = 2;
         return plan(dest, zone, offering);
     }
 
-    protected void startDesktopVM(final UserVm vm) throws ManagementServerException {
+    protected void startAutomationControllerVM(final UserVm vm) throws ManagementServerException {
         try {
             StartVMCmd startVm = new StartVMCmd();
             startVm = ComponentContext.inject(startVm);
@@ -207,16 +207,16 @@ public class AutomationControllerResourceModifierActionWorker extends Automation
             f.set(startVm, vm.getId());
             userVmService.startVirtualMachine(startVm);
             if (LOGGER.isInfoEnabled()) {
-                LOGGER.info(String.format("Started VM : %s in the desktop cluster : %s", vm.getDisplayName(), automationController.getName()));
+                LOGGER.info(String.format("Started VM : %s in the automation controller : %s", vm.getDisplayName(), automationController.getName()));
             }
         } catch (IllegalAccessException | NoSuchFieldException | ExecutionException |
                 ResourceUnavailableException | ResourceAllocationException | InsufficientCapacityException ex) {
-            throw new ManagementServerException(String.format("Failed to start VM in the desktop cluster : %s", automationController.getName()), ex);
+            throw new ManagementServerException(String.format("Failed to start VM in the automation controller : %s", automationController.getName()), ex);
         }
 
         UserVm startVm = userVmDao.findById(vm.getId());
         if (!startVm.getState().equals(VirtualMachine.State.Running)) {
-            throw new ManagementServerException(String.format("Failed to start VM in the desktop cluster : %s", automationController.getName()));
+            throw new ManagementServerException(String.format("Failed to start VM in the automation controller : %s", automationController.getName()));
         }
     }
 
@@ -379,7 +379,7 @@ public class AutomationControllerResourceModifierActionWorker extends Automation
             });
             rulesService.applyPortForwardingRules(publicIp.getId(), account);
             if (LOGGER.isInfoEnabled()) {
-                LOGGER.info(String.format("Provisioned web access port forwarding rule from port %d to 8080 on %s to the VM IP : %s in Desktop cluster : %s", geniePort, publicIp.getAddress().addr(), vmIp.toString(), automationController.getName()));
+                LOGGER.info(String.format("Provisioned web access port forwarding rule from port %d to 8080 on %s to the VM IP : %s in Automation controller : %s", geniePort, publicIp.getAddress().addr(), vmIp.toString(), automationController.getName()));
             }
             return true;
         }
