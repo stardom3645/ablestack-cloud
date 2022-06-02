@@ -20,6 +20,7 @@ package com.cloud.automation.controller.actionworkers;
 import com.cloud.automation.controller.AutomationController;
 import com.cloud.automation.controller.AutomationControllerManagerImpl;
 import com.cloud.automation.controller.AutomationControllerVO;
+import com.cloud.automation.controller.AutomationControllerVmMap;
 import com.cloud.automation.controller.AutomationControllerVmMapVO;
 import com.cloud.automation.controller.dao.AutomationControllerDao;
 import com.cloud.automation.controller.dao.AutomationControllerVmMapDao;
@@ -100,7 +101,7 @@ public class AutomationControllerActionWorker {
     public static final int CLUSTER_ADMIN_PORTAL_PORT = 8081;
     public static final int CLUSTER_API_PORT = 8082;
     public static final int CLUSTER_SAMBA_PORT = 9017;
-    public static final int AUTOMATION_CONTROLLER_PORT = 80;
+    public static final Integer AUTOMATION_CONTROLLER_PORT = null;
 
     protected static final Logger LOGGER = Logger.getLogger(AutomationControllerActionWorker.class);
 
@@ -170,6 +171,7 @@ public class AutomationControllerActionWorker {
     protected AutomationControllerVmMapDao automationControllerVmMapDao;
     protected VirtualMachineTemplate templates;
     protected AutomationController automationController;
+    protected AutomationControllerVmMap automationControllerVmMap;
     protected AutomationControllerVersionDao automationControllerVersionDao;
     protected Account owner;
     protected String publicIpAddress;

@@ -31,13 +31,13 @@ import java.util.List;
 import java.util.Properties;
 
 import com.cloud.api.query.vo.UserAccountJoinVO;
-import com.cloud.automation.controller.AutomationControllerVmMapVO;
 import com.cloud.automation.version.AutomationControllerVersion;
 import com.cloud.dc.DataCenter;
 import com.cloud.deploy.DeployDestination;
 import com.cloud.exception.ConcurrentOperationException;
 import com.cloud.exception.InsufficientCapacityException;
 import com.cloud.exception.ManagementServerException;
+import com.cloud.exception.NetworkRuleConflictException;
 import com.cloud.exception.ResourceAllocationException;
 import com.cloud.exception.ResourceUnavailableException;
 import com.cloud.network.IpAddress;
@@ -57,7 +57,6 @@ import org.apache.cloudstack.api.command.user.vm.StartVMCmd;
 import org.apache.cloudstack.config.ApiServiceConfiguration;
 import org.apache.cloudstack.context.CallContext;
 import org.apache.commons.codec.binary.Base64;
-import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Level;
 
@@ -246,9 +245,10 @@ public class AutomationControllerStartWorker extends AutomationControllerResourc
         final String managementIp = ApiServiceConfiguration.ManagementServerAddresses.value();
         final String endPointUrl = ApiServiceConfiguration.ApiServletPath.value();
         String automationControllerConfig = readResourceFile("/conf/genie");
-        final String automationControllerName = "{{ automation_controller_name }}";
-        final String genieIp = "{{ genie_ip }}";
+        final String automationControllerName = "{{ automation_controller_instance_name }}";
+        final String acPublicIp = "{{ ac_public_ip }}";
         final String zoneUuid = "{{ zone_id }}";
+        final String zoneName = "{{ zone_name }}";
         final String networkId = "{{ network_id }}";
         final String networkName = "{{ network_name }}";
         final String accountName = "{{ account_name }}";
@@ -260,9 +260,10 @@ public class AutomationControllerStartWorker extends AutomationControllerResourc
         final String moldProtocol = "{{ mold_protocol }}";
         final String moldEndPoint = "{{ mold_end_point}}";
         List<UserAccountJoinVO> domain = userAccountJoinDao.searchByAccountId(owner.getId());
-        automationControllerConfig = automationControllerConfig.replace(automationControllerName, automationController.getName());
-        automationControllerConfig = automationControllerConfig.replace(genieIp, automationController.getAutomationControllerIp());
+        automationControllerConfig = automationControllerConfig.replace(automationControllerName, automationController.getName()+"-genie");
+        automationControllerConfig = automationControllerConfig.replace(acPublicIp, automationController.getAutomationControllerIp());
         automationControllerConfig = automationControllerConfig.replace(zoneUuid, zone.getUuid());
+        automationControllerConfig = automationControllerConfig.replace(zoneName, zone.getName());
         automationControllerConfig = automationControllerConfig.replace(networkId, Long.toString(automationController.getNetworkId()));
         automationControllerConfig = automationControllerConfig.replace(networkName, automationController.getNetworkName());
         automationControllerConfig = automationControllerConfig.replace(accountName, owner.getAccountName());
@@ -296,22 +297,22 @@ public class AutomationControllerStartWorker extends AutomationControllerResourc
         return genieControlVms;
     }
 
-//    private boolean setupAutomationControllerNetworkRules(Network network, UserVm genieVm, IpAddress publicIp) throws ManagementServerException {
+    private boolean setupAutomationControllerNetworkRules(Network network, UserVm genieVm, IpAddress publicIp) throws ManagementServerException {
 //        boolean egress = false;
 //        boolean firewall = false;
 //        boolean firewall2 = false;
 //        boolean portForwarding = false;
-//        // Firewall Egress Network
-//        try {
-//            egress = provisionEgressFirewallRules(network, owner, AUTOMATION_CONTROLLER_PORT, AUTOMATION_CONTROLLER_PORT);
+        // Firewall Egress Network
+        try {
+            provisionEgressFirewallRules(network, owner, AUTOMATION_CONTROLLER_PORT, AUTOMATION_CONTROLLER_PORT);
 //            if (LOGGER.isInfoEnabled()) {
-//                LOGGER.info(String.format("Provisioned egress firewall rule to open up port %d to %d on %s for Automation controller : %s", AUTOMATION_CONTROLLER_PORT, publicIp.getAddress().addr(), automationController.getName()));
+//                LOGGER.info(String.format("Provisioned egress firewall rule to open up port %d to %d on %s for Automation controller : %s", publicIp.getAddress(), automationController.getName()));
 //            }
-//        } catch (NoSuchFieldException | IllegalAccessException | ResourceUnavailableException |
-//                 NetworkRuleConflictException e) {
-//            throw new ManagementServerException(String.format("Failed to provision egress firewall rules for Web access for the Automation controller : %s", automationController.getName()), e);
-//        }
-//        // Firewall rule fo Web access on WorksVM
+        } catch (NoSuchFieldException | IllegalAccessException | ResourceUnavailableException |
+                 NetworkRuleConflictException e) {
+            throw new ManagementServerException(String.format("Failed to provision egress firewall rules for Web access for the Automation controller : %s", automationController.getName()), e);
+        }
+//        // Firewall rule for Web access on GenieVM
 //        if (egress) {
 //            try {
 //                firewall = provisionFirewallRules(publicIp, owner, AUTOMATION_CONTROLLER_PORT, AUTOMATION_CONTROLLER_PORT);
@@ -337,8 +338,8 @@ public class AutomationControllerStartWorker extends AutomationControllerResourc
 //                }
 //            }
 //        }
-//        return false;
-//    }
+        return false;
+    }
 
     public boolean startAutomationControllerOnCreate() {
         init();
@@ -372,12 +373,12 @@ public class AutomationControllerStartWorker extends AutomationControllerResourc
         }
 //        automationControllerVMs.add(genieVM);
         if (genieVM.getState().equals(VirtualMachine.State.Running)) {
-//            boolean setup = false;
-//            try {
-//                setup = setupAutomationControllerNetworkRules(network, genieVM, publicIpAddress);
-//            } catch (ManagementServerException e) {
-//                logTransitStateAndThrow(Level.ERROR, String.format("Failed to setup Automation Controller : %s, unable to setup network rules", automationController.getName()), automationController.getId(), AutomationController.Event.CreateFailed, e);
-//            }
+            boolean setup = false;
+            try {
+                setupAutomationControllerNetworkRules(network, genieVM, publicIpAddress);
+            } catch (ManagementServerException e) {
+                logTransitStateAndThrow(Level.ERROR, String.format("Failed to setup Automation Controller : %s, unable to setup network rules", automationController.getName()), automationController.getId(), AutomationController.Event.CreateFailed, e);
+            }
 //            if (setup) {
             if (LOGGER.isInfoEnabled()) {
                 LOGGER.info(String.format("automation controller : %s automation controller VMs successfully provisioned", automationController.getName()));
@@ -388,17 +389,17 @@ public class AutomationControllerStartWorker extends AutomationControllerResourc
         return false;
     }
 
-    public boolean reconcileAlertCluster() {
-        init();
-        List<AutomationControllerVmMapVO> vmMapVOList = getControlVMMaps();
-        if (CollectionUtils.isEmpty(vmMapVOList)) {
-            return false;
-        }
-        // mark the cluster to be running
-        stateTransitTo(automationController.getId(), AutomationController.Event.RecoveryRequested);
-        stateTransitTo(automationController.getId(), AutomationController.Event.OperationSucceeded);
-        return true;
-    }
+//    public boolean reconcileAlertCluster() {
+//        init();
+//        List<AutomationControllerVmMapVO> vmMapVOList = getControlVMMaps();
+//        if (CollectionUtils.isEmpty(vmMapVOList)) {
+//            return false;
+//        }
+//        // mark the cluster to be running
+//        stateTransitTo(automationController.getId(), AutomationController.Event.RecoveryRequested);
+//        stateTransitTo(automationController.getId(), AutomationController.Event.OperationSucceeded);
+//        return true;
+//    }
 
     public boolean startStoppedAutomationController() throws CloudRuntimeException {
         init();

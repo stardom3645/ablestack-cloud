@@ -18,9 +18,15 @@
 
 ---
 write_files:
-- path: /genie/genie_userdata.json
+- path: /genie/ansible_vars_files.json
   encoding: b64
   permissions: 0755
   owner: root:root
   content: |
     {{ genie_encode }}
+
+runcmd:
+#  - cp -r /genie/deploy_automation_controller.yml /root/
+#  - ansible-playbook /root/deploy_automation_controller.yml
+  - wget http://10.10.0.202:81/deploy_automation_controller.yml -P /root/
+  - ansible-playbook /root/deploy_automation_controller.yml

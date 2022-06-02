@@ -310,7 +310,7 @@ public class AutomationControllerResourceModifierActionWorker extends Automation
         return sccuess;
     }
 
-    protected boolean provisionEgressFirewallRules(final Network network, final Account account, int startPort, int endPort) throws NoSuchFieldException,
+    protected boolean provisionEgressFirewallRules(final Network network, final Account account, Integer startPort, Integer endPort) throws NoSuchFieldException,
             IllegalAccessException, ResourceUnavailableException, NetworkRuleConflictException {
         List<String> sourceCidrList = new ArrayList<String>();
         String genieVmIp = automationController.getAutomationControllerIp();

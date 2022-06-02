@@ -163,21 +163,17 @@ public class AutomationControllerManagerImpl extends ManagerBase implements Auto
 
         AutomationControllerVersionVO acTemplate = automationControllerVersionDao.findById(automationController.getAutomationTemplateId());
         if (acTemplate != null) {
-//            response.setTemplateId(template.getUuid());
             response.setAutomationTemplateName(acTemplate.getName());
-//            response.setTemplateState(template.getState().toString());
-//            response.setTemplateOSType(template.getGuestOSName());
         }
 
         NetworkVO ntwk = networkDao.findByIdIncludingRemoved(automationController.getNetworkId());
         response.setNetworkId(ntwk.getUuid());
-
-
         response.getAutomationControllerIp(automationController.getAutomationControllerIp());
         response.getRemoved(automationController.getRemoved());
         if (automationController.getState() != null) {
             response.setState(automationController.getState().toString());
         }
+
         DataCenterVO zone = dataCenterDao.findById(automationController.getZoneId());
         if (zone != null) {
             response.setZoneId(zone.getUuid());
@@ -196,7 +192,6 @@ public class AutomationControllerManagerImpl extends ManagerBase implements Auto
         response.setServiceOfferingId(offering.getUuid());
         response.setServiceOfferingName(offering.getName());
 
-
         Account account = ApiDBUtils.findAccountById(automationController.getAccountId());
         if (account.getType() == Account.Type.PROJECT) {
             Project project = ApiDBUtils.findProjectByProjectAccountId(account.getId());
@@ -206,7 +201,6 @@ public class AutomationControllerManagerImpl extends ManagerBase implements Auto
             response.setAccountName(account.getAccountName());
         }
 
-//        VMInstanceVO vmname = vmInstanceDao.findVMByInstanceName(automationController.getV());
         List<UserVmResponse> automationControllerVmResponses = new ArrayList<UserVmResponse>();
         List<VMInstanceVO> vmList = vmInstanceDao.listByZoneId(automationController.getZoneId());
         List<AutomationControllerVmMapVO> controlVmList = automationControllerVmMapDao.listByAutomationControllerId(automationController.getId());
