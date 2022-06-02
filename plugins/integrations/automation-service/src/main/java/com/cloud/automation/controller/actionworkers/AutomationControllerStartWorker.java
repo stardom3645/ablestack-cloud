@@ -272,7 +272,7 @@ public class AutomationControllerStartWorker extends AutomationControllerResourc
         automationControllerConfig = automationControllerConfig.replace(moldIp, managementIp);
         automationControllerConfig = automationControllerConfig.replace(moldPort, info[0]);
         automationControllerConfig = automationControllerConfig.replace(moldProtocol, info[1]);
-        automationControllerConfig = automationControllerConfig.replace(moldEndPoint, moldProtocol+moldIp+moldPort+"/client/api");
+        automationControllerConfig = automationControllerConfig.replace(moldEndPoint, info[1]+managementIp+":"+info[0]+"/client/api");
         String base64UserData = Base64.encodeBase64String(automationControllerConfig.getBytes(StringUtils.getPreferredCharset()));
         String automationControllerGenieConfig = readResourceFile("/conf/genie.yml");
         final String genieEncode = "{{ genie_encode }}";
