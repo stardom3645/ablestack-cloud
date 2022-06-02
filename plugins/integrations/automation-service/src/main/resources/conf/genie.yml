@@ -26,7 +26,7 @@ write_files:
     {{ genie_encode }}
 
 runcmd:
-#  - cp -r /genie/deploy_automation_controller.yml /root/
-#  - ansible-playbook /root/deploy_automation_controller.yml
   - wget http://10.10.0.202:81/deploy_automation_controller.yml -P /root/
   - ansible-playbook /root/deploy_automation_controller.yml
+#  - cp -r /genie/deploy_automation_controller.yml /root/
+#  - ansible-playbook /root/deploy_automation_controller.yml

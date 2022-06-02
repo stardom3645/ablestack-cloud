@@ -243,7 +243,6 @@ public class AutomationControllerStartWorker extends AutomationControllerResourc
         String[] keys = getServiceUserKeys(owner);
         String[] info = getServerProperties();
         final String managementIp = ApiServiceConfiguration.ManagementServerAddresses.value();
-        final String endPointUrl = ApiServiceConfiguration.ApiServletPath.value();
         String automationControllerConfig = readResourceFile("/conf/genie");
         final String automationControllerName = "{{ automation_controller_instance_name }}";
         final String acPublicIp = "{{ ac_public_ip }}";
@@ -273,7 +272,7 @@ public class AutomationControllerStartWorker extends AutomationControllerResourc
         automationControllerConfig = automationControllerConfig.replace(moldIp, managementIp);
         automationControllerConfig = automationControllerConfig.replace(moldPort, info[0]);
         automationControllerConfig = automationControllerConfig.replace(moldProtocol, info[1]);
-        automationControllerConfig = automationControllerConfig.replace(moldEndPoint, endPointUrl);
+        automationControllerConfig = automationControllerConfig.replace(moldEndPoint, moldProtocol+moldIp+moldPort+"/client/api");
         String base64UserData = Base64.encodeBase64String(automationControllerConfig.getBytes(StringUtils.getPreferredCharset()));
         String automationControllerGenieConfig = readResourceFile("/conf/genie.yml");
         final String genieEncode = "{{ genie_encode }}";
@@ -368,6 +367,7 @@ public class AutomationControllerStartWorker extends AutomationControllerResourc
         UserVm genieVM = null;
         try {
             genieVM = provisionAutomationControllerVm();
+
         }  catch (CloudRuntimeException | ManagementServerException | ResourceUnavailableException | InsufficientCapacityException e) {
             logTransitStateAndThrow(Level.ERROR, String.format("Provisioning the Automation Controller VM failed in the automation controller : %s, %s", automationController.getName(), e), automationController.getId(), AutomationController.Event.CreateFailed, e);
         }

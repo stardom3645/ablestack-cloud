@@ -69,7 +69,6 @@ import com.cloud.vm.dao.VMInstanceDao;
 import org.apache.cloudstack.api.command.user.firewall.CreateEgressFirewallRuleCmd;
 import org.apache.cloudstack.api.command.user.firewall.CreateFirewallRuleCmd;
 import org.apache.cloudstack.api.command.user.vm.StartVMCmd;
-import org.apache.cloudstack.config.ApiServiceConfiguration;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 
@@ -313,12 +312,11 @@ public class AutomationControllerResourceModifierActionWorker extends Automation
     protected boolean provisionEgressFirewallRules(final Network network, final Account account, Integer startPort, Integer endPort) throws NoSuchFieldException,
             IllegalAccessException, ResourceUnavailableException, NetworkRuleConflictException {
         List<String> sourceCidrList = new ArrayList<String>();
-        String genieVmIp = automationController.getAutomationControllerIp();
-        sourceCidrList.add(genieVmIp+"/32");
+        sourceCidrList.add("0.0.0.0/0");
 
-        List<String> destinationCidrList = new ArrayList<String>();
-        String manageIp = ApiServiceConfiguration.ManagementServerAddresses.value();
-        destinationCidrList.add(manageIp+"/32");
+//        List<String> destinationCidrList = new ArrayList<String>();
+//        String manageIp = ApiServiceConfiguration.ManagementServerAddresses.value();
+//        destinationCidrList.add(manageIp+"/24");
 
         CreateEgressFirewallRuleCmd rule = new CreateEgressFirewallRuleCmd();
         rule = ComponentContext.inject(rule);
@@ -343,9 +341,9 @@ public class AutomationControllerResourceModifierActionWorker extends Automation
         cidrField.setAccessible(true);
         cidrField.set(rule, sourceCidrList);
 
-        Field destCidrField = rule.getClass().getDeclaredField("destCidrList");
-        destCidrField.setAccessible(true);
-        destCidrField.set(rule, destinationCidrList);
+//        Field destCidrField = rule.getClass().getDeclaredField("destCidrList");
+//        destCidrField.setAccessible(true);
+//        destCidrField.set(rule, destinationCidrList);
 
         boolean sccuess = false;
         FirewallRule result = firewallService.createEgressFirewallRule(rule);
