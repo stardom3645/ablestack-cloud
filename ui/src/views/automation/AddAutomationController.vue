@@ -284,7 +284,7 @@ export default {
         const params = {
           name: values.name,
           description: values.description,
-          serviceofferingid: this.serviceOfferings[values.serviceofferingid].id,
+          serviceofferingid: this.serviceOfferings[values.serviceoffering].id,
           networkid: this.selectedNetwork.id,
           networkname: this.selectedNetwork.name,
           automationcontrollerip: values.automationcontrollerip,
