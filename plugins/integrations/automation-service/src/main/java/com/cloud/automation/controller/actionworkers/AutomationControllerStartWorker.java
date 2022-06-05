@@ -42,6 +42,8 @@ import com.cloud.exception.ResourceAllocationException;
 import com.cloud.exception.ResourceUnavailableException;
 import com.cloud.network.IpAddress;
 import com.cloud.network.Network;
+import com.cloud.network.dao.IPAddressVO;
+import com.cloud.network.dao.NetworkVO;
 import com.cloud.offering.ServiceOffering;
 import com.cloud.storage.DiskOfferingVO;
 import com.cloud.user.Account;
@@ -182,14 +184,14 @@ public class AutomationControllerStartWorker extends AutomationControllerResourc
 //                    templates.getHypervisorType(), BaseCmd.HTTPMethod.POST, base64UserData, keypairs,
 //                    null, addrs, null, null, null, customParameterMap, null, null, null, null, true, null, null);
 //        } else {
-            ipToNetworkMap = new LinkedHashMap<Long, Network.IpAddresses>();
-            Network.IpAddresses addrs = new Network.IpAddresses(null, null, null);
-            Network.IpAddresses controllerAddrs = new Network.IpAddresses(automationControllerIp, null, null);
-            ipToNetworkMap.put(automationController.getNetworkId(), controllerAddrs);
-            genieControlVms = userVmService.createAdvancedVirtualMachine(zone, serviceOffering, templates, networkIds, owner,
-                    hostName, hostName, null, null, null,
-                    templates.getHypervisorType(), BaseCmd.HTTPMethod.POST, base64UserData, keypairs,
-                    ipToNetworkMap, addrs, null, null, null, customParameterMap, null, null, null, null, true, null, null);
+        ipToNetworkMap = new LinkedHashMap<Long, Network.IpAddresses>();
+        Network.IpAddresses addrs = new Network.IpAddresses(null, null, null);
+        Network.IpAddresses controllerAddrs = new Network.IpAddresses(automationControllerIp, null, null);
+        ipToNetworkMap.put(automationController.getNetworkId(), controllerAddrs);
+        genieControlVms = userVmService.createAdvancedVirtualMachine(zone, serviceOffering, templates, networkIds, owner,
+                hostName, hostName, null, null, null,
+                templates.getHypervisorType(), BaseCmd.HTTPMethod.POST, base64UserData, keypairs,
+                ipToNetworkMap, addrs, null, null, null, customParameterMap, null, null, null, null, true, null, null);
 //        }
         if (LOGGER.isInfoEnabled()) {
             LOGGER.info(String.format("Created Control VM ID : %s, %s in the automation controller : %s", genieControlVms.getUuid(), hostName, automationController.getName()));
@@ -242,8 +244,9 @@ public class AutomationControllerStartWorker extends AutomationControllerResourc
     private String getAutomationControllerConfig(final DataCenter zone) throws IOException {
         String[] keys = getServiceUserKeys(owner);
         String[] info = getServerProperties();
-        final String managementIp = ApiServiceConfiguration.ManagementServerAddresses.value();
         String automationControllerConfig = readResourceFile("/conf/genie");
+        NetworkVO ntwk = networkDao.findByIdIncludingRemoved(automationController.getNetworkId());
+        final String managementIp = ApiServiceConfiguration.ManagementServerAddresses.value();
         final String automationControllerName = "{{ automation_controller_instance_name }}";
         final String acPublicIp = "{{ ac_public_ip }}";
         final String zoneUuid = "{{ zone_id }}";
@@ -258,9 +261,14 @@ public class AutomationControllerStartWorker extends AutomationControllerResourc
         final String moldPort = "{{ mold_port }}";
         final String moldProtocol = "{{ mold_protocol }}";
         final String moldEndPoint = "{{ mold_end_point}}";
-        List<UserAccountJoinVO> domain = userAccountJoinDao.searchByAccountId(owner.getId());
         automationControllerConfig = automationControllerConfig.replace(automationControllerName, automationController.getName()+"-genie");
-        automationControllerConfig = automationControllerConfig.replace(acPublicIp, automationController.getAutomationControllerIp());
+        if (ntwk.getGuestType() == Network.GuestType.Isolated) {
+            List<IPAddressVO> ipAddresses = ipAddressDao.listByAssociatedNetwork(ntwk.getId(), true);
+            if (ipAddresses != null && ipAddresses.size() == 1) {
+                automationControllerConfig = automationControllerConfig.replace(acPublicIp, ipAddresses.get(0).getAddress().addr());
+            }
+        }
+        List<UserAccountJoinVO> domain = userAccountJoinDao.searchByAccountId(owner.getId());
         automationControllerConfig = automationControllerConfig.replace(zoneUuid, zone.getUuid());
         automationControllerConfig = automationControllerConfig.replace(zoneName, zone.getName());
         automationControllerConfig = automationControllerConfig.replace(networkId, Long.toString(automationController.getNetworkId()));
