@@ -42,8 +42,6 @@ import com.cloud.exception.ResourceAllocationException;
 import com.cloud.exception.ResourceUnavailableException;
 import com.cloud.network.IpAddress;
 import com.cloud.network.Network;
-import com.cloud.network.dao.IPAddressVO;
-import com.cloud.network.dao.NetworkVO;
 import com.cloud.offering.ServiceOffering;
 import com.cloud.storage.DiskOfferingVO;
 import com.cloud.user.Account;
@@ -244,9 +242,8 @@ public class AutomationControllerStartWorker extends AutomationControllerResourc
     private String getAutomationControllerConfig(final DataCenter zone) throws IOException {
         String[] keys = getServiceUserKeys(owner);
         String[] info = getServerProperties();
-        String automationControllerConfig = readResourceFile("/conf/genie");
-        NetworkVO ntwk = networkDao.findByIdIncludingRemoved(automationController.getNetworkId());
         final String managementIp = ApiServiceConfiguration.ManagementServerAddresses.value();
+        String automationControllerConfig = readResourceFile("/conf/genie");
         final String automationControllerName = "{{ automation_controller_instance_name }}";
         final String acPublicIp = "{{ ac_public_ip }}";
         final String zoneUuid = "{{ zone_id }}";
@@ -261,14 +258,9 @@ public class AutomationControllerStartWorker extends AutomationControllerResourc
         final String moldPort = "{{ mold_port }}";
         final String moldProtocol = "{{ mold_protocol }}";
         final String moldEndPoint = "{{ mold_end_point}}";
-        automationControllerConfig = automationControllerConfig.replace(automationControllerName, automationController.getName()+"-genie");
-        if (ntwk.getGuestType() == Network.GuestType.Isolated) {
-            List<IPAddressVO> ipAddresses = ipAddressDao.listByAssociatedNetwork(ntwk.getId(), true);
-            if (ipAddresses != null && ipAddresses.size() == 1) {
-                automationControllerConfig = automationControllerConfig.replace(acPublicIp, ipAddresses.get(0).getAddress().addr());
-            }
-        }
         List<UserAccountJoinVO> domain = userAccountJoinDao.searchByAccountId(owner.getId());
+        automationControllerConfig = automationControllerConfig.replace(automationControllerName, automationController.getName()+"-genie");
+        automationControllerConfig = automationControllerConfig.replace(acPublicIp, automationController.getAutomationControllerIp());
         automationControllerConfig = automationControllerConfig.replace(zoneUuid, zone.getUuid());
         automationControllerConfig = automationControllerConfig.replace(zoneName, zone.getName());
         automationControllerConfig = automationControllerConfig.replace(networkId, Long.toString(automationController.getNetworkId()));
