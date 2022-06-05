@@ -21,7 +21,7 @@
       <span v-html="$config.footer" />
     </div>
     <div class="line" v-if="$store.getters.userInfo.roletype === 'Admin'">
-      ABLESTACK({{ buildVersion }})
+      ABLESTACK Bronto (v2.0.1{{'-' + $config.buildDate}}{{$config.buildDev ? '-dev' : ''}})
       <a-divider type="vertical" />
       <a href="https://github.com/ablecloud-team/ablestack-cloud/issues/new" target="_blank">
         <github-outlined />
