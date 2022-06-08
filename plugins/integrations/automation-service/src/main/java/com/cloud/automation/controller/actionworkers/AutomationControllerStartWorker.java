@@ -397,18 +397,6 @@ public class AutomationControllerStartWorker extends AutomationControllerResourc
         return false;
     }
 
-//    public boolean reconcileAlertCluster() {
-//        init();
-//        List<AutomationControllerVmMapVO> vmMapVOList = getControlVMMaps();
-//        if (CollectionUtils.isEmpty(vmMapVOList)) {
-//            return false;
-//        }
-//        // mark the cluster to be running
-//        stateTransitTo(automationController.getId(), AutomationController.Event.RecoveryRequested);
-//        stateTransitTo(automationController.getId(), AutomationController.Event.OperationSucceeded);
-//        return true;
-//    }
-
     public boolean startStoppedAutomationController() throws CloudRuntimeException {
         init();
         if (LOGGER.isInfoEnabled()) {

@@ -156,7 +156,6 @@ public class AutomationControllerManagerImpl extends ManagerBase implements Auto
         response.setName(automationController.getName());
         response.setDescription(automationController.getDescription());
         response.setCreated(automationController.getCreated());
-        response.setAutomationControllerIp(automationController.getAutomationControllerIp());
         response.setNetworkId(String.valueOf(automationController.getNetworkId()));
         response.setNetworkName(automationController.getNetworkName());
         response.setAutomationTemplateId(String.valueOf(automationController.getAutomationTemplateId()));
@@ -219,6 +218,8 @@ public class AutomationControllerManagerImpl extends ManagerBase implements Auto
                 if (userVM != null) {
                     UserVmResponse cvmResponse = ApiDBUtils.newUserVmResponse(respView, responseName, userVM, EnumSet.of(ApiConstants.VMDetails.nics), caller);
                     automationControllerVmResponses.add(cvmResponse);
+                    response.setAutomationControllerIp(userVM.getIpAddress());
+                    automationController.setAutomationControllerIp(userVM.getIpAddress());
                 }
                 GuestOS guestOS = ApiDBUtils.findGuestOSById(userVM.getGuestOsId());
                 if (guestOS != null) {
@@ -227,23 +228,6 @@ public class AutomationControllerManagerImpl extends ManagerBase implements Auto
                 response.setHostName(userVM.getHostName());
             }
         }
-//        String responseName = "controllervmlist";
-//        String resourceKey = "ControllerName";
-//        if (vmList != null && !vmList.isEmpty()) {
-//            for (VMInstanceVO vmVO : vmList) {
-//                ResourceTag controllervm = resourceTagDao.findByKey(vmVO.getId(), ResourceTag.ResourceObjectType.UserVm, resourceKey);
-//                if (controllervm != null) {
-//                    if (controllervm.getValue().equals(automationController.getName())) {
-//                        UserVmJoinVO userVM = userVmJoinDao.findById(vmVO.getId());
-//                        if (userVM != null) {
-//                            UserVmResponse dvmResponse = ApiDBUtils.newUserVmResponse(respView, responseName, userVM, EnumSet.of(ApiConstants.VMDetails.nics), caller);
-//                            automationControllerVmResponses.add(dvmResponse);
-//                        }
-//                    }
-//                }
-//            }
-//        }
-        response.setAutomationControllerVms(automationControllerVmResponses);
         response.setAutomationControllerVms(automationControllerVmResponses);
 
         return response;
@@ -284,19 +268,7 @@ public class AutomationControllerManagerImpl extends ManagerBase implements Auto
         ListResponse<AutomationControllerResponse> response = new ListResponse<>();
         response.setResponses(responsesList);
         return response;
-
-//        return createAutomationControllerListResponse(controllers);
     }
-
-//    private ListResponse<AutomationControllerResponse> createAutomationControllerListResponse(List<AutomationControllerVO> controllers) {
-//        List<AutomationControllerResponse> responseList = new ArrayList<>();
-//        for (AutomationControllerVO name : controllers) {
-//            responseList.add(addAutomationControllerResponse(name));
-//        }
-//        ListResponse<AutomationControllerResponse> response = new ListResponse<>();
-//        response.setResponses(responseList);
-//        return response;
-//    }
 
     protected boolean stateTransitTo(long automationControllerId, AutomationController.Event e) {
         AutomationControllerVO automationController = automationControllerDao.findById(automationControllerId);
@@ -320,6 +292,7 @@ public class AutomationControllerManagerImpl extends ManagerBase implements Auto
         final ServiceOffering serviceOffering = serviceOfferingDao.findById(cmd.getServiceOfferingId());
         final Account owner = accountService.getActiveAccountById(cmd.getEntityOwnerId());
         final AutomationControllerVersion automationControllerVersion = automationControllerVersionDao.findById(cmd.getAutomationTemplateId());
+        AutomationControllerResponse response = new AutomationControllerResponse();
         Long instanceId = Long.valueOf(3);
         final AutomationControllerVO controller = Transaction.execute(new TransactionCallback<AutomationControllerVO>() {
             @Override
@@ -334,6 +307,7 @@ public class AutomationControllerManagerImpl extends ManagerBase implements Auto
             LOGGER.info(String.format("Automation controller name: %s and ID: %s has been created", controller.getName(), controller.getUuid()));
         }
         return controller;
+
     }
 
     private void validateAutomationControllerCreateParameters(final AddAutomationControllerCmd cmd) throws CloudRuntimeException {
