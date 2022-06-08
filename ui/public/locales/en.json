@@ -3655,7 +3655,6 @@
 "label.works.user.portal.url": "Works User Portal",
 "label.wall.portal.vm.url": "Realtime Monitoring",
 "label.wall.portal.url": "Monitoring Dashboard",
-"label.genie.portal.url": "Genie Dashboard",
 "label.templatestate": "Template State",
 "label.templateostype": "OS Type",
 "label.access.type": "Access Type",
@@ -3744,6 +3743,7 @@
 "label.automation.controller.template.name": "Automation Controller Template",
 "label.automation.controller.add": "Add Automation Controller",
 "label.automation.controller.template.version": "Automation Controller Template Version",
+"label.automationcontrollerversion": "Automation Controller Template Version",
 "placeholder.automation.controller.template.version": "Input Automation Controller Template Version",
 "placeholder.automation.controller.ip": "Select a Automation Controller IP",
 "label.automation.controller.ip": "Automation Controller IP",
@@ -3755,5 +3755,6 @@
 "label.automation.controller.delete": "Delete Automation Controller",
 "message.automation.controller.delete": "Delete Automation Controller",
 "message.success.create.automation.controller": "Successfully deployed Automation Controller. It may take some time to access the portal due to internal work for normal service provision.",
-"label.osdisplayname": "OS type"
+"label.osdisplayname": "OS type",
+"label.genie.portal.url": "Genie Dashboard"
 }

@@ -88,9 +88,8 @@
               return option.children[0].children.toLowerCase().indexOf(input.toLowerCase()) >= 0
             }"
             :placeholder="$t('placeholder.network')"
-            :loading="networkLoading"
-            @change="val => { this.handleNetworkChange(this.networks[val]) }">
-            >
+            :loading="networkLoading">
+<!--            @change="val => { this.handleNetworkChange(this.networks[val]) }">-->
             <a-select-option v-for="(opt, optIndex) in this.networks" :key="optIndex">
               <span v-if="opt.type!=='L2'">
                 {{ opt.name || opt.description }} ({{ `${$t('label.cidr')}: ${opt.cidr}` }})
@@ -161,7 +160,7 @@ export default {
         automationcontrollerversion: [{ required: true, message: this.$t('message.error.select') }],
         serviceoffering: [{ required: true, message: this.$t('message.error.select') }],
         networkid: [{ required: true, message: this.$t('message.error.select') }],
-        automationcontrollerip: [{ required: true, message: this.$t('message.error.required.input') }]
+        automationcontrollerip: [{ required: false, message: this.$t('message.error.required.input') }]
       })
     },
     fetchData () {
@@ -265,11 +264,11 @@ export default {
         }
       }).finally(() => {
         this.networkLoading = false
-        if (this.arrayHasItems(this.networks)) {
-          this.form.networkid = 0
-        } else {
-          this.form.networkid = null
-        }
+        // if (this.arrayHasItems(this.networks)) {
+        //   this.form.networkid = 0
+        // } else {
+        //   this.form.networkid = null
+        // }
       })
     },
     handleNetworkChange (network) {

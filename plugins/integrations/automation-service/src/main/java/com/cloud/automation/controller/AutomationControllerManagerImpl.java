@@ -164,6 +164,7 @@ public class AutomationControllerManagerImpl extends ManagerBase implements Auto
         AutomationControllerVersionVO acTemplate = automationControllerVersionDao.findById(automationController.getAutomationTemplateId());
         if (acTemplate != null) {
             response.setAutomationTemplateName(acTemplate.getName());
+            response.setAutomationControllerVersion(acTemplate.getVersion());
         }
 
         NetworkVO ntwk = networkDao.findByIdIncludingRemoved(automationController.getNetworkId());

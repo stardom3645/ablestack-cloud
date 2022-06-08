@@ -51,6 +51,10 @@ public class AutomationControllerResponse extends BaseResponse {
     @Param(description = "the template's name associated with this Automation")
     private String automationTemplateName;
 
+    @SerializedName(ApiConstants.AUTOMATION_CONTROLLER_VERSION)
+    @Param(description = "the template's name associated with this Automation")
+    private String automationControllerVersion;
+
     @SerializedName(ApiConstants.SERVICE_OFFERING_ID)
     @Param(description = "the service offering's id associated with this Automation")
     private String serviceOfferingId;
@@ -201,6 +205,14 @@ public class AutomationControllerResponse extends BaseResponse {
 
     public void setAutomationTemplateName(String automationTemplateName) {
         this.automationTemplateName = automationTemplateName;
+    }
+
+    public String getAutomationControllerVersion() {
+        return automationControllerVersion;
+    }
+
+    public void setAutomationControllerVersion(String automationControllerVersion) {
+        this.automationControllerVersion = automationControllerVersion;
     }
 
     public String getServiceOfferingId() {

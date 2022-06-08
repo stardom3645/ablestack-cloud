@@ -151,7 +151,7 @@ public class AutomationControllerStartWorker extends AutomationControllerResourc
         return network;
     }
 
-    private UserVm createAutomationControllerVM() throws ManagementServerException,
+    private UserVm createAutomationControllerVM(final Network network) throws ManagementServerException,
             ResourceUnavailableException, InsufficientCapacityException {
         UserVm genieControlVms = null;
         LinkedHashMap<Long, Network.IpAddresses> ipToNetworkMap = null;
@@ -177,13 +177,13 @@ public class AutomationControllerStartWorker extends AutomationControllerResourc
         }
         String base64UserData = Base64.encodeBase64String(automationControllerConfig.getBytes(StringUtils.getPreferredCharset()));
         List<String> keypairs = new ArrayList<String>(); // 키페어 파라메타 임시 생성
-//        if (automationControllerIp == null || network.getGuestType() == Network.GuestType.L2) {
-//            Network.IpAddresses addrs = new Network.IpAddresses(null, null, null);
-//            genieControlVms = userVmService.createAdvancedVirtualMachine(zone, serviceOffering, templates, networkIds, owner,
-//                    hostName, hostName, null, null, null,
-//                    templates.getHypervisorType(), BaseCmd.HTTPMethod.POST, base64UserData, keypairs,
-//                    null, addrs, null, null, null, customParameterMap, null, null, null, null, true, null, null);
-//        } else {
+        if (automationControllerIp == null || network.getGuestType() == Network.GuestType.L2) {
+            Network.IpAddresses addrs = new Network.IpAddresses(null, null, null);
+            genieControlVms = userVmService.createAdvancedVirtualMachine(zone, serviceOffering, templates, networkIds, owner,
+                    hostName, hostName, null, null, null,
+                    templates.getHypervisorType(), BaseCmd.HTTPMethod.POST, base64UserData, keypairs,
+                    null, addrs, null, null, null, customParameterMap, null, null, null, null, true, null, null);
+        } else {
         ipToNetworkMap = new LinkedHashMap<Long, Network.IpAddresses>();
         Network.IpAddresses addrs = new Network.IpAddresses(null, null, null);
         Network.IpAddresses controllerAddrs = new Network.IpAddresses(automationControllerIp, null, null);
@@ -192,7 +192,7 @@ public class AutomationControllerStartWorker extends AutomationControllerResourc
                 hostName, hostName, null, null, null,
                 templates.getHypervisorType(), BaseCmd.HTTPMethod.POST, base64UserData, keypairs,
                 ipToNetworkMap, addrs, null, null, null, customParameterMap, null, null, null, null, true, null, null);
-//        }
+        }
         if (LOGGER.isInfoEnabled()) {
             LOGGER.info(String.format("Created Control VM ID : %s, %s in the automation controller : %s", genieControlVms.getUuid(), hostName, automationController.getName()));
         }
@@ -288,10 +288,10 @@ public class AutomationControllerStartWorker extends AutomationControllerResourc
         return automationControllerGenieConfig;
     }
 
-    private UserVm provisionAutomationControllerVm() throws
+    private UserVm provisionAutomationControllerVm(final Network network) throws
             InsufficientCapacityException, ManagementServerException, ResourceUnavailableException {
         UserVm genieControlVms = null;
-        genieControlVms = createAutomationControllerVM();
+        genieControlVms = createAutomationControllerVM(network);
         addAutomationControllerVm(automationController.getId(), genieControlVms.getId());
         startAutomationVM(genieControlVms);
         genieControlVms = userVmDao.findById(genieControlVms.getId());
@@ -374,7 +374,7 @@ public class AutomationControllerStartWorker extends AutomationControllerResourc
 //        List<UserVm> automationControllerVMs = new ArrayList<>();
         UserVm genieVM = null;
         try {
-            genieVM = provisionAutomationControllerVm();
+            genieVM = provisionAutomationControllerVm(network);
 
         }  catch (CloudRuntimeException | ManagementServerException | ResourceUnavailableException | InsufficientCapacityException e) {
             logTransitStateAndThrow(Level.ERROR, String.format("Provisioning the Automation Controller VM failed in the automation controller : %s, %s", automationController.getName(), e), automationController.getId(), AutomationController.Event.CreateFailed, e);
