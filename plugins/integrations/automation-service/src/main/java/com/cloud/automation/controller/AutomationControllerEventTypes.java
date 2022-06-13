@@ -14,15 +14,11 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
+package com.cloud.automation.controller;
 
-package com.cloud.automation.version.dao;
-
-import java.util.List;
-
-import com.cloud.automation.version.AutomationControllerVersionVO;
-import com.cloud.utils.db.GenericDao;
-
-public interface AutomationControllerVersionDao extends GenericDao<AutomationControllerVersionVO, Long> {
-    List<AutomationControllerVersionVO> listAllInZone(long dataCenterId);
-    public List<AutomationControllerVersionVO> listByVersionId(long versionId);
+public class AutomationControllerEventTypes {
+    public static final String EVENT_AUTOMATION_CONTROLLER_ADD = "AUTOMATION.CONTROLLER.ADD";
+    public static final String EVENT_AUTOMATION_CONTROLLER_DELETE = "AUTOMATION.CONTROLLER.DELETE";
+    public static final String EVENT_AUTOMATION_CONTROLLER_START = "AUTOMATION.CONTROLLER.START";
+    public static final String EVENT_AUTOMATION_CONTROLLER_STOP = "AUTOMATION.CONTROLLER.STOP";
 }

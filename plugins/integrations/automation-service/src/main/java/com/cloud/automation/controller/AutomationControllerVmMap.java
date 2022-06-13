@@ -14,15 +14,18 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
+package com.cloud.automation.controller;
 
-package com.cloud.automation.version.dao;
-
-import java.util.List;
-
-import com.cloud.automation.version.AutomationControllerVersionVO;
-import com.cloud.utils.db.GenericDao;
-
-public interface AutomationControllerVersionDao extends GenericDao<AutomationControllerVersionVO, Long> {
-    List<AutomationControllerVersionVO> listAllInZone(long dataCenterId);
-    public List<AutomationControllerVersionVO> listByVersionId(long versionId);
+/**
+ * AutomationControllerVmMap will describe mapping of ID of Automation Controller
+ * and ID of its VirtualMachine. A Automation Controller can have multiple VMs
+ * deployed for it therefore a list of AutomationControllerVmMap are associated
+ * with a Desktop.
+ * A particular VM can be deployed only for a single Desktop.
+ */
+public interface AutomationControllerVmMap {
+    long getId();
+    long getAutomationControllerId();
+    long getVmId();
 }
+

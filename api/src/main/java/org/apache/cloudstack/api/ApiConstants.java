@@ -926,8 +926,13 @@ public class ApiConstants {
     public static final String AUTOMATION_TEMPLATES = "templates";
     public static final String AUTOMATION_CONTROLLER_VERSION_UPLOADTYPE = "controlleruploadtype";
     public static final String AUTOMATION_CONTROLLER_VERSION_NAME = "controllerversionname";
-    public static final String AUTOMATION_CONTROLLER_VERSION = "controllerversion";
+    public static final String AUTOMATION_CONTROLLER_VERSION = "automationcontrollerversion";
     public static final String OS_TYPE = "ostype";
+    public static final String AUTOMATION_TEMPLATE_ID = "automationtemplateid";
+    public static final String AUTOMATION_TEMPLATE_NAME = "automationtemplatename";
+    public static final String AUTOMATION_CONTROLLER_IP = "automationcontrollerip";
+    public static final String AUTOMATION_USER_VIRTUAL_MACHINES = "automationuservirtualmachines";
+    public static final String AUTOMATION_CONTROLLER_PUBLIC_IP = "automationcontrollerpublicip";
 
     public static final String BOOT_TYPE = "boottype";
     public static final String BOOT_MODE = "bootmode";

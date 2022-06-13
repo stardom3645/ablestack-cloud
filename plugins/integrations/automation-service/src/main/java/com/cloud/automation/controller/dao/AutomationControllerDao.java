@@ -15,14 +15,17 @@
 // specific language governing permissions and limitations
 // under the License.
 
-package com.cloud.automation.version.dao;
+package com.cloud.automation.controller.dao;
 
 import java.util.List;
 
-import com.cloud.automation.version.AutomationControllerVersionVO;
+import com.cloud.automation.controller.AutomationController;
+import com.cloud.automation.controller.AutomationControllerVO;
 import com.cloud.utils.db.GenericDao;
+import com.cloud.utils.fsm.StateDao;
 
-public interface AutomationControllerVersionDao extends GenericDao<AutomationControllerVersionVO, Long> {
-    List<AutomationControllerVersionVO> listAllInZone(long dataCenterId);
-    public List<AutomationControllerVersionVO> listByVersionId(long versionId);
+public interface AutomationControllerDao extends GenericDao<AutomationControllerVO, Long>,
+        StateDao<AutomationController.State, AutomationController.Event, AutomationController> {
+    List<AutomationControllerVO> listAllInZone(long dataCenterId);
+    List<AutomationControllerVO> findAutomationControllersInState(AutomationController.State state);
 }
