@@ -25,63 +25,32 @@
       <a-tab-pane :tab="$t('label.details')" key="details">
         <DetailsTab :resource="resource" :loading="loading" />
       </a-tab-pane>
-      <a-tab-pane :tab="$t('label.networks')" key="desktopnetworks" >
-        <DesktopNicsTable :resource="desktopnetworks" :loading="loading"/>
+      <a-tab-pane :tab="$t('label.networks')" key="genienetworks" >
+        <DesktopNicsTable :resource="genienetworks" :loading="loading"/>
       </a-tab-pane>
-      <a-tab-pane :tab="$t('label.resource')" key="iprange" v-if="'listDesktopClusterIpRanges' in $store.getters.apis && resource.networktype =='L2'">
-        <a-button
-          type="dashed"
-          style="width: 100%; margin-bottom: 10px"
-          @click="showAddModal"
-          :loading="loadingNic"
-          :disabled="!('addDesktopClusterIpRanges' in $store.getters.apis)">
-          <PlusOutlined /> {{ $t('label.add.ip.range') }}
-        </a-button>
-        <a-table
-          class="table"
-          size="small"
-          :columns="iprangeColumns"
-          :dataSource="iprange"
-          :rowKey="item => item.id"
-          :pagination="false">
-          <template #action="{record}">
-            <a-popconfirm
-              :title="$t('message.confirm.remove.ip.range')"
-              @confirm="removeIpRange(record.id)"
-              :okText="$t('label.yes')"
-              :cancelText="$t('label.no')" >
-              <tooltip-button
-                tooltipPlacement="bottom"
-                :tooltip="$t('label.action.delete.ip.range')"
-                type="danger"
-                icon="delete" />
-            </a-popconfirm>
-          </template>
-        </a-table>
-      </a-tab-pane>
-      <a-tab-pane :tab="$t('label.resource')" key="instances">
-        <a-table
-          class="table"
-          size="small"
-          :columns="controlVmColumns"
-          :dataSource="this.automationuservirtualmachines"
-          :rowKey="item => item.id"
-          :pagination="false"
-        >
-          <template #name="{record}">
-            <router-link :to="{ path: '/vm/' + record.id }">{{ record.name }}</router-link>
-          </template>
-          <template #state="{text}">
-            <status :text="text ? text : ''" displayText />
-          </template>
-          <template #instancename="{text}">
-            <status :text="text ? text : ''" />{{ text }}
-          </template>
-          <template #hostname="{record}">
-            <router-link :to="{ path: '/host/' + record.hostid }">{{ record.hostname }}</router-link>
-          </template>
-        </a-table>
-      </a-tab-pane>
+<!--      <a-tab-pane :tab="$t('label.resource')" key="instances">-->
+<!--        <a-table-->
+<!--          class="table"-->
+<!--          size="small"-->
+<!--          :columns="controlVmColumns"-->
+<!--          :dataSource="this.automationuservirtualmachines"-->
+<!--          :rowKey="item => item.id"-->
+<!--          :pagination="false"-->
+<!--        >-->
+<!--          <template #name="{record}">-->
+<!--            <router-link :to="{ path: '/vm/' + record.id }">{{ record.name }}</router-link>-->
+<!--          </template>-->
+<!--          <template #state="{text}">-->
+<!--            <status :text="text ? text : ''" displayText />-->
+<!--          </template>-->
+<!--          <template #instancename="{text}">-->
+<!--            <status :text="text ? text : ''" />{{ text }}-->
+<!--          </template>-->
+<!--          <template #hostname="{record}">-->
+<!--            <router-link :to="{ path: '/host/' + record.hostid }">{{ record.hostname }}</router-link>-->
+<!--          </template>-->
+<!--        </a-table>-->
+<!--      </a-tab-pane>-->
     </a-tabs>
   </a-spin>
 </template>
@@ -257,31 +226,17 @@ export default {
       this.automationuservirtualmachines.map(x => { x.ipaddress = x.nic[0].ipaddress })
       this.controlvms = this.resource.controlvms || []
       this.controlvms.map(x => { x.ipaddress = x.nic[0].ipaddress })
-      // this.desktopnetworks = []
+      // this.genienetworks = []
       // this.iprange = []
       if (!this.vm || !this.vm.id) {
         return
       }
       api('listNetworks', { id: this.resource.networkid }).then(json => {
-        this.desktopnetworks = json.listnetworksresponse.network
-        if (this.desktopnetworks) {
-          this.desktopnetworks.sort((a, b) => { return a.deviceid - b.deviceid })
+        this.genienetworks = json.listnetworksresponse.network
+        if (this.genienetworks) {
+          this.genienetworks.sort((a, b) => { return a.deviceid - b.deviceid })
         }
-        // this.$set(this.resource, 'desktopnetworks', this.desktopnetworks)
       }).finally(() => {
-      })
-      // api('listDesktopClusterIpRanges', { listall: true, desktopclusterid: this.resource.id }).then(json => {
-      //   this.iprange = json.listdesktopclusteriprangesresponse.desktopclusteriprange
-      //   if (this.iprange) {
-      //     this.iprange.sort((a, b) => { return a.deviceid - b.deviceid })
-      //   }
-      //   // this.$set(this.resource, 'iprange', this.iprange)
-      // })
-    },
-    removeIpRange (id) {
-      api('deleteDesktopClusterIpRanges', { id: id }).then(json => {
-      }).finally(() => {
-        this.fetchData()
       })
     },
     showAddModal () {

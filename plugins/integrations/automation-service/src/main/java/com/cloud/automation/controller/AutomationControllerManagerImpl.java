@@ -228,6 +228,20 @@ public class AutomationControllerManagerImpl extends ManagerBase implements Auto
                 response.setHostName(userVM.getHostName());
             }
         }
+
+        String automationControllerState = String.valueOf(automationController.getState());
+        String automationControllerVmState = automationControllerVmResponses.get(0).getState();
+        try {
+            if (automationControllerVmState == "Stopped" && automationControllerState != "Stopped") {
+                stateTransitTo(automationController.getId(), AutomationController.Event.StopRequested);
+                stateTransitTo(automationController.getId(), AutomationController.Event.OperationSucceeded);
+            }else if (automationControllerVmState == "Running" && automationControllerState != "Running") {
+                stateTransitTo(automationController.getId(), AutomationController.Event.StartRequested);
+                stateTransitTo(automationController.getId(), AutomationController.Event.OperationSucceeded);
+            }
+        } catch (Exception e) {
+            LOGGER.warn(String.format("Failed to run Automation controller Alert state scanner on Automation controller : %s status scanner", automationController.getName()), e);
+        }
         response.setAutomationControllerVms(automationControllerVmResponses);
 
         return response;
@@ -275,7 +289,8 @@ public class AutomationControllerManagerImpl extends ManagerBase implements Auto
         try {
             return _stateMachine.transitTo(automationController, e, null, automationControllerDao);
         } catch (NoTransitionException nte) {
-            LOGGER.warn(String.format("Failed to transition state of the Automation Controller : %s in state %s on event %s", automationController.getName(), automationController.getState().toString(), e.toString()), nte);
+            LOGGER.warn(String.format("Failed to transition state of the automation automation : %s in state %s on event %s",
+                    automationController.getName(), automationController.getState().toString(), e.toString()), nte);
             return false;
         }
     }

@@ -371,7 +371,7 @@ public class AutomationControllerStartWorker extends AutomationControllerResourc
         if (publicIpAddress == null) {
             logTransitStateAndThrow(Level.ERROR, String.format("Failed to start Automation Controller : %s as no public IP found for the Automation Controller" , automationController.getName()), automationController.getId(), AutomationController.Event.CreateFailed);
         }
-//        List<UserVm> automationControllerVMs = new ArrayList<>();
+        List<UserVm> automationControllerVMs = new ArrayList<>();
         UserVm genieVM = null;
         try {
             genieVM = provisionAutomationControllerVm(network);
