@@ -41,6 +41,12 @@
       </template>
       <wall-link-url :resource="resource" :size="size" />
     </a-tooltip>
+    <a-tooltip arrowPointAtCenter placement="bottomRight" v-if="resource && resource.id && dataView">
+      <template #title>
+        {{ $t('label.genie.portal.url') }}
+      </template>
+      <genie-url :resource="resource" :size="size" />
+    </a-tooltip>
     <a-tooltip
       v-for="(action, actionIndex) in actions"
       :key="actionIndex"
@@ -102,6 +108,7 @@ import Console from '@/components/widgets/Console'
 import WorksAdminUrl from '@/components/widgets/WorksAdminUrl'
 import WorksUserUrl from '@/components/widgets/WorksUserUrl'
 import WallLinkUrl from '@/components/widgets/WallLinkUrl'
+import GenieUrl from '@/components/widgets/GenieUrl'
 
 export default {
   name: 'ActionButton',
@@ -109,7 +116,8 @@ export default {
     Console,
     WorksAdminUrl,
     WorksUserUrl,
-    WallLinkUrl
+    WallLinkUrl,
+    GenieUrl
   },
   data () {
     return {

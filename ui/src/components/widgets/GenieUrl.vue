@@ -15,14 +15,28 @@
 // specific language governing permissions and limitations
 // under the License.
 
-package com.cloud.automation.version.dao;
-
-import java.util.List;
-
-import com.cloud.automation.version.AutomationControllerVersionVO;
-import com.cloud.utils.db.GenericDao;
-
-public interface AutomationControllerVersionDao extends GenericDao<AutomationControllerVersionVO, Long> {
-    List<AutomationControllerVersionVO> listAllInZone(long dataCenterId);
-    public List<AutomationControllerVersionVO> listByVersionId(long versionId);
+<template>
+  <a
+    v-if="['automationcontroller'].includes($route.meta.name) && 'listAutomationController' in $store.getters.apis"
+    :href="'http://'+resource.automationcontrollerpublicip+':80'"
+    target="_blank">
+    <a-button style="margin-left: 5px" shape="circle" type="" :size="size" :disabled="['Stopping', 'Stopped', 'Error', 'Destroyed', 'Destroying'].includes(resource.state)" >
+      <LaptopOutlined />
+    </a-button>
+  </a>
+</template>
+<script>
+export default {
+  name: 'GenieUrl',
+  props: {
+    resource: {
+      type: Object,
+      required: true
+    },
+    size: {
+      type: String,
+      default: 'small'
+    }
+  }
 }
+</script>

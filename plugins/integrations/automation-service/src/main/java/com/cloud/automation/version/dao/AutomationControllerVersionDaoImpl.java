@@ -19,6 +19,7 @@ package com.cloud.automation.version.dao;
 
 import java.util.List;
 
+import com.cloud.utils.db.SearchBuilder;
 import org.springframework.stereotype.Component;
 
 import com.cloud.automation.version.AutomationControllerVersionVO;
@@ -27,7 +28,13 @@ import com.cloud.utils.db.SearchCriteria;
 
 @Component
 public class AutomationControllerVersionDaoImpl extends GenericDaoBase<AutomationControllerVersionVO, Long> implements AutomationControllerVersionDao {
+
+    private final SearchBuilder<AutomationControllerVersionVO> versionIdSearch;
+
     public AutomationControllerVersionDaoImpl() {
+        versionIdSearch = createSearchBuilder();
+        versionIdSearch.and("versionId", versionIdSearch.entity().getId(), SearchCriteria.Op.EQ);
+        versionIdSearch.done();
     }
 
     @Override
@@ -38,6 +45,13 @@ public class AutomationControllerVersionDaoImpl extends GenericDaoBase<Automatio
         scc.addOr("zoneId", SearchCriteria.Op.NULL);
         sc.addAnd("zoneId", SearchCriteria.Op.SC, scc);
         return listBy(sc);
+    }
+
+    @Override
+    public List<AutomationControllerVersionVO> listByVersionId(long versionId) {
+        SearchCriteria<AutomationControllerVersionVO> sc = versionIdSearch.create();
+        sc.setParameters("versionId", versionId);
+        return listBy(sc, null);
     }
 }
 
