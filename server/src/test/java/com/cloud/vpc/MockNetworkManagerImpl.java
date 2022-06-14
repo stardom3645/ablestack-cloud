@@ -231,7 +231,7 @@ public class MockNetworkManagerImpl extends ManagerBase implements NetworkOrches
     }
 
     @Override
-    public boolean restartNetwork(Long networkId, boolean cleanup, boolean makeRedundant, User user) throws ConcurrentOperationException, ResourceUnavailableException, InsufficientCapacityException {
+    public boolean restartNetwork(Long networkId, boolean cleanup, boolean makeRedundant, boolean livePatch, User user) throws ConcurrentOperationException, ResourceUnavailableException, InsufficientCapacityException {
         return false;
     }
 
@@ -777,7 +777,7 @@ public class MockNetworkManagerImpl extends ManagerBase implements NetworkOrches
      * @see com.cloud.network.NetworkManager#restartNetwork(java.lang.Long, com.cloud.user.Account, com.cloud.user.User, boolean)
      */
     @Override
-    public boolean restartNetwork(Long networkId, Account callerAccount, User callerUser, boolean cleanup) throws ConcurrentOperationException,
+    public boolean restartNetwork(Long networkId, Account callerAccount, User callerUser, boolean cleanup, boolean livePatch) throws ConcurrentOperationException,
         ResourceUnavailableException, InsufficientCapacityException {
         // TODO Auto-generated method stub
         return false;
@@ -881,6 +881,12 @@ public class MockNetworkManagerImpl extends ManagerBase implements NetworkOrches
 
     @Override
     public NicVO savePlaceholderNic(Network network, String ip4Address, String ip6Address, Type vmType) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public Nic savePlaceholderNic(Network network, String ip4Address, String ip6Address, String ip6Cidr, String ip6Gateway, String reserver, Type vmType) {
         // TODO Auto-generated method stub
         return null;
     }
