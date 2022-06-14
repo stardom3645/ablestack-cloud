@@ -173,7 +173,6 @@ public class AutomationControllerManagerImpl extends ManagerBase implements Auto
         if (automationController.getState() != null) {
             response.setState(automationController.getState().toString());
         }
-        
         DataCenterVO zone = dataCenterDao.findById(automationController.getZoneId());
         if (zone != null) {
             response.setZoneId(zone.getUuid());
