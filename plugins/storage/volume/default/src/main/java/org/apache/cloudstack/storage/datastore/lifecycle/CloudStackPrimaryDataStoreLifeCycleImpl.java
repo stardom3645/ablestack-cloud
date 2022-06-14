@@ -421,7 +421,13 @@ public class CloudStackPrimaryDataStoreLifeCycleImpl implements PrimaryDataStore
             return false;
         }
         CreateStoragePoolCommand cmd = new CreateStoragePoolCommand(true, pool);
+        s_logger.info("CreateStoragePoolCommand cmd ::::::::::::: " + cmd + " on  host " + hostId);
+        s_logger.info("CreateStoragePoolCommand cmd ::::::::::::: " + cmd + " on  host " + hostId);
+        s_logger.info("CreateStoragePoolCommand cmd ::::::::::::: " + cmd + " on  host " + hostId);
         final Answer answer = agentMgr.easySend(hostId, cmd);
+        s_logger.info("CreateStoragePoolCommand answer ::::::::::::: " + answer);
+        s_logger.info("CreateStoragePoolCommand answer ::::::::::::: " + answer);
+        s_logger.info("CreateStoragePoolCommand answer ::::::::::::: " + answer);
         if (answer != null && answer.getResult()) {
             storageMgr.updateStorageCapabilities(pool.getId(), false);
             return true;
