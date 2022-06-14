@@ -20,7 +20,6 @@ package com.cloud.automation.controller;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
-import java.util.concurrent.ScheduledExecutorService;
 import javax.inject.Inject;
 
 import com.cloud.api.ApiDBUtils;
@@ -48,6 +47,7 @@ import com.cloud.service.dao.ServiceOfferingDao;
 import com.cloud.storage.GuestOS;
 import com.cloud.tags.dao.ResourceTagDao;
 import com.cloud.user.Account;
+import com.cloud.utils.Ternary;
 import com.cloud.utils.component.ComponentContext;
 import com.cloud.utils.db.Filter;
 import com.cloud.utils.db.SearchBuilder;
@@ -95,8 +95,8 @@ public class AutomationControllerManagerImpl extends ManagerBase implements Auto
 
     protected StateMachine2<AutomationController.State, AutomationController.Event, AutomationController> _stateMachine = AutomationController.State.getStateMachine();
 
-    ScheduledExecutorService _gcExecutor;
-    ScheduledExecutorService _stateScanner;
+//    ScheduledExecutorService _gcExecutor;
+//    ScheduledExecutorService _stateScanner;
 
     @Inject
     public AutomationControllerVersionDao automationControllerVersionDao;
@@ -248,19 +248,46 @@ public class AutomationControllerManagerImpl extends ManagerBase implements Auto
     }
 
     @Override
-    public ListResponse<AutomationControllerResponse> listAutomationController(final ListAutomationControllerCmd cmd) {
+    public ListResponse<AutomationControllerResponse> listAutomationController(ListAutomationControllerCmd cmd) {
         if (!AutomationServiceEnabled.value()) {
             throw new CloudRuntimeException("Automation Service plugin is disabled");
         }
         final Long versionId = cmd.getId();
         final Long zoneId = cmd.getZoneId();
+        final CallContext ctx = CallContext.current();
+        final Account caller = ctx.getCallingAccount();
+        final Long desktopClusterId = cmd.getId();
+        final String state = cmd.getState();
+        final String name = cmd.getName();
+        final String keyword = cmd.getKeyword();
         List<AutomationControllerResponse> responsesList = new ArrayList<>();
+        List<Long> permittedAccounts = new ArrayList<Long>();
+        Ternary<Long, Boolean, Project.ListProjectResourcesCriteria> domainIdRecursiveListProject = new Ternary<Long, Boolean, Project.ListProjectResourcesCriteria>(cmd.getDomainId(), cmd.isRecursive(), null);
+        accountManager.buildACLSearchParameters(caller, desktopClusterId, cmd.getAccountName(), cmd.getProjectId(), permittedAccounts, domainIdRecursiveListProject, cmd.listAll(), false);
+        Long domainId = domainIdRecursiveListProject.first();
+        Boolean isRecursive = domainIdRecursiveListProject.second();
+        Project.ListProjectResourcesCriteria listProjectResourcesCriteria = domainIdRecursiveListProject.third();
         Filter searchFilter = new Filter(AutomationControllerVO.class, "id", true, cmd.getStartIndex(), cmd.getPageSizeVal());
         SearchBuilder<AutomationControllerVO> sb = automationControllerDao.createSearchBuilder();
+        accountManager.buildACLSearchBuilder(sb, domainId, isRecursive, permittedAccounts, listProjectResourcesCriteria);
         sb.and("id", sb.entity().getId(), SearchCriteria.Op.EQ);
+        sb.and("name", sb.entity().getName(), SearchCriteria.Op.EQ);
         sb.and("keyword", sb.entity().getName(), SearchCriteria.Op.LIKE);
+        sb.and("state", sb.entity().getState(), SearchCriteria.Op.IN);
         SearchCriteria<AutomationControllerVO> sc = sb.create();
-        String keyword = cmd.getKeyword();
+        accountManager.buildACLSearchCriteria(sc, domainId, isRecursive, permittedAccounts, listProjectResourcesCriteria);
+        if (state != null) {
+            sc.setParameters("state", state);
+        }
+        if (keyword != null){
+            sc.setParameters("keyword", "%" + keyword + "%");
+        }
+        if (desktopClusterId != null) {
+            sc.setParameters("id", desktopClusterId);
+        }
+        if (name != null) {
+            sc.setParameters("name", name);
+        }
         if (versionId != null) {
             sc.setParameters("id", versionId);
         }

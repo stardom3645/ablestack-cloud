@@ -22,7 +22,7 @@ import javax.inject.Inject;
 import org.apache.cloudstack.acl.RoleType;
 import org.apache.cloudstack.api.APICommand;
 import org.apache.cloudstack.api.ApiConstants;
-import org.apache.cloudstack.api.BaseListCmd;
+import org.apache.cloudstack.api.BaseListProjectAndAccountResourcesCmd;
 import org.apache.cloudstack.api.Parameter;
 import org.apache.cloudstack.api.ResponseObject;
 import org.apache.cloudstack.api.ServerApiException;
@@ -39,7 +39,7 @@ import com.cloud.automation.controller.AutomationControllerService;
         responseObject = AutomationControllerResponse.class,
         responseView = ResponseObject.ResponseView.Restricted,
         authorized = {RoleType.DomainAdmin})
-public class ListAutomationControllerCmd extends BaseListCmd {
+public class ListAutomationControllerCmd extends BaseListProjectAndAccountResourcesCmd {
     public static final Logger LOGGER = Logger.getLogger(ListAutomationControllerCmd.class.getName());
     public static final String APINAME = "listAutomationController";
 
@@ -63,6 +63,9 @@ public class ListAutomationControllerCmd extends BaseListCmd {
             " (a substring match is made against the parameter value, data for all matching Automation Controller will be returned)")
     private String name;
 
+    @Parameter(name = ApiConstants.STATE, type = CommandType.STRING, description = "state of the Automation Controller")
+    private String state;
+
     /////////////////////////////////////////////////////
     /////////////////// Accessors ///////////////////////
     /////////////////////////////////////////////////////
@@ -82,6 +85,11 @@ public class ListAutomationControllerCmd extends BaseListCmd {
     public String getCommandName() {
         return APINAME.toLowerCase() + "response";
     }
+
+    public String getState() {
+        return state;
+    }
+
 
     /////////////////////////////////////////////////////
     /////////////// API Implementation///////////////////
