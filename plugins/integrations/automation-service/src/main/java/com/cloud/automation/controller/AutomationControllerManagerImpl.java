@@ -173,7 +173,7 @@ public class AutomationControllerManagerImpl extends ManagerBase implements Auto
         if (automationController.getState() != null) {
             response.setState(automationController.getState().toString());
         }
-
+        
         DataCenterVO zone = dataCenterDao.findById(automationController.getZoneId());
         if (zone != null) {
             response.setZoneId(zone.getUuid());
@@ -256,14 +256,14 @@ public class AutomationControllerManagerImpl extends ManagerBase implements Auto
         final Long zoneId = cmd.getZoneId();
         final CallContext ctx = CallContext.current();
         final Account caller = ctx.getCallingAccount();
-        final Long desktopClusterId = cmd.getId();
+        final Long automationControllerId = cmd.getId();
         final String state = cmd.getState();
         final String name = cmd.getName();
         final String keyword = cmd.getKeyword();
         List<AutomationControllerResponse> responsesList = new ArrayList<>();
         List<Long> permittedAccounts = new ArrayList<Long>();
         Ternary<Long, Boolean, Project.ListProjectResourcesCriteria> domainIdRecursiveListProject = new Ternary<Long, Boolean, Project.ListProjectResourcesCriteria>(cmd.getDomainId(), cmd.isRecursive(), null);
-        accountManager.buildACLSearchParameters(caller, desktopClusterId, cmd.getAccountName(), cmd.getProjectId(), permittedAccounts, domainIdRecursiveListProject, cmd.listAll(), false);
+        accountManager.buildACLSearchParameters(caller, automationControllerId, cmd.getAccountName(), cmd.getProjectId(), permittedAccounts, domainIdRecursiveListProject, cmd.listAll(), false);
         Long domainId = domainIdRecursiveListProject.first();
         Boolean isRecursive = domainIdRecursiveListProject.second();
         Project.ListProjectResourcesCriteria listProjectResourcesCriteria = domainIdRecursiveListProject.third();
@@ -282,8 +282,8 @@ public class AutomationControllerManagerImpl extends ManagerBase implements Auto
         if (keyword != null){
             sc.setParameters("keyword", "%" + keyword + "%");
         }
-        if (desktopClusterId != null) {
-            sc.setParameters("id", desktopClusterId);
+        if (automationControllerId != null) {
+            sc.setParameters("id", automationControllerId);
         }
         if (name != null) {
             sc.setParameters("name", name);
