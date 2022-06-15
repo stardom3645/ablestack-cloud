@@ -28,7 +28,7 @@ export default {
       docHelp: '',
       permission: ['listAutomationControllerVersion'],
       columns: ['name', 'state', 'version', 'zonename', 'controlleruploadtype'],
-      details: ['name', 'description', 'version', 'controlleruploadtype', 'created'],
+      details: ['name', 'description', 'version', 'templatename', 'controlleruploadtype', 'created'],
       actions: [
         {
           api: 'addAutomationControllerVersion',

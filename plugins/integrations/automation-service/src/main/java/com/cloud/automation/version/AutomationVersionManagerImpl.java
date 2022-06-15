@@ -38,6 +38,7 @@ import org.apache.cloudstack.api.command.user.template.RegisterTemplateCmd;
 import org.apache.cloudstack.api.command.user.template.DeleteTemplateCmd;
 
 import com.cloud.api.query.dao.TemplateJoinDao;
+import com.cloud.api.query.vo.TemplateJoinVO;
 import com.cloud.dc.dao.DataCenterDao;
 import com.cloud.automation.version.dao.AutomationControllerVersionDao;
 import com.cloud.utils.component.ManagerBase;
@@ -128,7 +129,7 @@ public class AutomationVersionManagerImpl extends ManagerBase implements Automat
         response.setVersion(automationControllerVersion.getVersion());
         response.setCreated(automationControllerVersion.getCreated());
         response.setUploadType(automationControllerVersion.getUploadType());
-        response.setTemplateId(automationControllerVersion.getTemplateId());
+        //response.setTemplateId(automationControllerVersion.getTemplateId());
         if (automationControllerVersion.getState() != null) {
             response.setState(automationControllerVersion.getState().toString());
         }
@@ -136,6 +137,10 @@ public class AutomationVersionManagerImpl extends ManagerBase implements Automat
         if (zone != null) {
             response.setZoneId(zone.getUuid());
             response.setZoneName(zone.getName());
+        }
+        TemplateJoinVO template = templateJoinDao.findById(automationControllerVersion.getTemplateId());
+        if (template != null) {
+            response.setTemplateName(template.getName());
         }
         return response;
     }
