@@ -114,6 +114,20 @@ export default {
           groupMap: (selection) => { return selection.map(x => { return { id: x } }) }
         }
       ]
+    },
+    {
+      name: 'deployedresource',
+      title: 'title.automation.deployed.resource',
+      icon: 'shop-outlined',
+      docHelp: '',
+      permission: ['listAutomationDeployedResource'],
+      columns: ['name', 'description', 'state', 'account'],
+      details: ['name', 'description', 'state'],
+      tabs: [{
+        component: shallowRef(defineAsyncComponent(() => import('@/views/automation/DeployedResourceTab.vue')))
+      }],
+      actions: [
+      ]
     }
   ]
 }
