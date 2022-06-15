@@ -55,6 +55,65 @@ export default {
           dataView: true
         }
       ]
+    },
+    {
+      name: 'automationcontroller',
+      title: 'title.automation.controller',
+      icon: 'block-outlined',
+      docHelp: '',
+      permission: ['listAutomationController'],
+      columns: ['name', 'state', 'account', 'hostname', 'zonename'],
+      details: ['description', 'name', 'automationcontrollerip', 'state', 'hostname', 'automationcontrollerpublicip', 'automationtemplatename', 'automationcontrollerversion', 'osdisplayname', 'serviceofferingname', 'isdynamicallyscalable'],
+      tabs: [{
+        component: shallowRef(defineAsyncComponent(() => import('@/views/automation/AutomationControllerTab.vue')))
+      }],
+      actions: [
+        {
+          api: 'addAutomationController',
+          icon: 'plus-outlined',
+          label: 'label.automation.controller.deploy',
+          docHelp: '',
+          listView: true,
+          popup: true,
+          component: shallowRef(defineAsyncComponent(() => import('@/views/automation/AddAutomationController.vue')))
+        },
+        {
+          api: 'startAutomationController',
+          icon: 'caret-right-outlined',
+          label: 'label.automation.controller.start',
+          message: 'message.automation.controller.start',
+          docHelp: '',
+          dataView: true,
+          show: (record) => { return ['Stopped'].includes(record.state) },
+          groupAction: true,
+          popup: true,
+          groupMap: (selection) => { return selection.map(x => { return { id: x } }) }
+        },
+        {
+          api: 'stopAutomationController',
+          icon: 'poweroff-outlined',
+          label: 'label.automation.controller.stop',
+          message: 'message.automation.controller.stop',
+          docHelp: '',
+          dataView: true,
+          show: (record) => { return !['Stopped', 'Destroyed', 'Destroying'].includes(record.state) },
+          groupAction: true,
+          popup: true,
+          groupMap: (selection) => { return selection.map(x => { return { id: x } }) }
+        },
+        {
+          api: 'deleteAutomationController',
+          icon: 'delete-outlined',
+          label: 'label.automation.controller.delete',
+          message: 'message.automation.controller.delete',
+          dataView: true,
+          docHelp: '',
+          show: (record) => { return !['Destroyed', 'Destroying'].includes(record.state) },
+          groupAction: true,
+          popup: true,
+          groupMap: (selection) => { return selection.map(x => { return { id: x } }) }
+        }
+      ]
     }
   ]
 }
