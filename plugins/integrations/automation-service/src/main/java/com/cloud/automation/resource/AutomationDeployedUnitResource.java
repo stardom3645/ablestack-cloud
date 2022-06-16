@@ -28,7 +28,7 @@ import org.apache.cloudstack.api.InternalIdentity;
 public interface AutomationDeployedUnitResource extends InternalIdentity, Identity {
 
     public enum State {
-        Running, Stopped
+        Active, Inactive
     }
 
     long getId();

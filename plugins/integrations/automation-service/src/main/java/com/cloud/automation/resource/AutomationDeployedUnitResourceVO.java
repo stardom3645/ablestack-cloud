@@ -53,7 +53,7 @@ public class AutomationDeployedUnitResourceVO implements AutomationDeployedUnitR
 
     @Column(name = "state")
     @Enumerated(value = EnumType.STRING)
-    State state = State.Running;
+    State state = State.Active;
 
     @Column(name = GenericDao.CREATED_COLUMN)
     Date created;
