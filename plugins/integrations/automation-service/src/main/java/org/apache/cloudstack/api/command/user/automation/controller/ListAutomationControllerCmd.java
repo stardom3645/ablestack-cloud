@@ -38,7 +38,7 @@ import com.cloud.automation.controller.AutomationControllerService;
         description = "Lists Automation Controller",
         responseObject = AutomationControllerResponse.class,
         responseView = ResponseObject.ResponseView.Restricted,
-        authorized = {RoleType.DomainAdmin})
+        authorized = {RoleType.Admin, RoleType.ResourceAdmin, RoleType.DomainAdmin, RoleType.User})
 public class ListAutomationControllerCmd extends BaseListProjectAndAccountResourcesCmd {
     public static final Logger LOGGER = Logger.getLogger(ListAutomationControllerCmd.class.getName());
     public static final String APINAME = "listAutomationController";
