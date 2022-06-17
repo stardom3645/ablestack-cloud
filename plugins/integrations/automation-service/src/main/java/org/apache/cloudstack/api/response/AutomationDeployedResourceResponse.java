@@ -18,41 +18,38 @@
 package org.apache.cloudstack.api.response;
 
 import java.util.Date;
+import java.util.List;
 
 import org.apache.cloudstack.api.ApiConstants;
 import org.apache.cloudstack.api.BaseResponse;
 import org.apache.cloudstack.api.EntityReference;
-
-import com.cloud.automation.version.AutomationControllerVersion;
+import com.cloud.automation.resource.AutomationDeployedResource;
 import com.cloud.serializer.Param;
 import com.google.gson.annotations.SerializedName;
 
 @SuppressWarnings("unused")
-@EntityReference(value = {AutomationControllerVersion.class})
-public class AutomationControllerVersionResponse extends BaseResponse {
+@EntityReference(value = {AutomationDeployedResource.class})
+public class AutomationDeployedResourceResponse extends BaseResponse {
+
     @SerializedName(ApiConstants.ID)
-    @Param(description = "the id of the Automation Controller Version")
+    @Param(description = "the id of the deployed resource")
     private String id;
 
     @SerializedName(ApiConstants.NAME)
-    @Param(description = "Name of the Automation Controller Version")
+    @Param(description = "the name of deployed service")
     private String name;
 
     @SerializedName(ApiConstants.DESCRIPTION)
-    @Param(description = "the description of the Automation Controller Version")
+    @Param(description = "the description of the running service")
     private String description;
 
-    @SerializedName(ApiConstants.VERSION)
-    @Param(description = "Automation version")
-    private String version;
+    @SerializedName(ApiConstants.ACCOUNT_ID)
+    @Param(description = "the account id associated with the Automation Service")
+    private Long accountId;
 
-    @SerializedName(ApiConstants.TEMPLATE_ID)
-    @Param(description = "template ID of the template to be prepared in primary storage(s).")
-    private Long templateId;
-
-    @SerializedName(ApiConstants.TEMPLATE_NAME)
-    @Param(description = "the name of templates associated with this Automation Controller")
-    private String templateName;
+    @SerializedName(ApiConstants.ACCOUNT)
+    @Param(description = "the account name associated with the Automation Service")
+    private String accountName;
 
     @SerializedName(ApiConstants.ZONE_ID)
     @Param(description = "the id of the zone in which Automation Controller Version is available")
@@ -62,17 +59,17 @@ public class AutomationControllerVersionResponse extends BaseResponse {
     @Param(description = "the name of the zone in which Automation Controller Version is available")
     private String zoneName;
 
-    @SerializedName(ApiConstants.AUTOMATION_CONTROLLER_VERSION_UPLOADTYPE)
-    @Param(description = "the upload type of the Automation Controller Version")
-    private String uploadType;
-
     @SerializedName(ApiConstants.STATE)
-    @Param(description = "the enabled or disabled state of the Automation Controller Version")
+    @Param(description = "the current state of this running service")
     private String state;
 
     @SerializedName(ApiConstants.CREATED)
-    @Param(description = "the date this template was created")
+    @Param(description = "date created")
     private Date created;
+
+    @SerializedName(ApiConstants.DEPLOYED_UNIT_SERVICES)
+    @Param(description = "the list of services")
+    private List<AutomationDeployedUnitResourceResponse> deployedunitservices;
 
     public String getId() {
         return id;
@@ -98,28 +95,12 @@ public class AutomationControllerVersionResponse extends BaseResponse {
         this.description = description;
     }
 
-    public String getVersion() {
-        return version;
+    public void setAccountId(Long accountId) {
+        this.accountId = accountId;
     }
 
-    public void setVersion(String version) {
-        this.version = version;
-    }
-
-    public Long getTemplateId() {
-        return templateId;
-    }
-
-    public void setTemplateId(Long templateId) {
-        this.templateId = templateId;
-    }
-
-    public String getTemplateName() {
-        return templateName;
-    }
-
-    public void setTemplateName(String templateName) {
-        this.templateName = templateName;
+    public void setAccountName(String accountName) {
+        this.accountName = accountName;
     }
 
     public String getZoneId() {
@@ -138,14 +119,6 @@ public class AutomationControllerVersionResponse extends BaseResponse {
         this.zoneName = zoneName;
     }
 
-    public String getUploadType() {
-        return uploadType;
-    }
-
-    public void setUploadType(String uploadType) {
-        this.uploadType = uploadType;
-    }
-
     public String getState() {
         return state;
     }
@@ -154,7 +127,19 @@ public class AutomationControllerVersionResponse extends BaseResponse {
         this.state = state;
     }
 
+    public Date setCreated() {
+        return created;
+    }
+
     public void setCreated(Date created) {
         this.created = created;
+    }
+
+    public List<AutomationDeployedUnitResourceResponse> getDeployedUnitServices() {
+        return deployedunitservices;
+    }
+
+    public void setDeployedUnitServices(List<AutomationDeployedUnitResourceResponse> deployedunitservices) {
+        this.deployedunitservices = deployedunitservices;
     }
 }

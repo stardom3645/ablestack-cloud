@@ -15,70 +15,62 @@
 // specific language governing permissions and limitations
 // under the License.
 
-package org.apache.cloudstack.api.command.user.automation.controller;
+package org.apache.cloudstack.api.command.user.automation.resource;
 
 import javax.inject.Inject;
 
 import org.apache.cloudstack.acl.RoleType;
 import org.apache.cloudstack.api.APICommand;
 import org.apache.cloudstack.api.ApiConstants;
-import org.apache.cloudstack.api.BaseListProjectAndAccountResourcesCmd;
+import org.apache.cloudstack.api.ApiErrorCode;
+import org.apache.cloudstack.api.BaseCmd;
 import org.apache.cloudstack.api.Parameter;
 import org.apache.cloudstack.api.ResponseObject;
 import org.apache.cloudstack.api.ServerApiException;
-import org.apache.cloudstack.api.response.AutomationControllerResponse;
-import org.apache.cloudstack.api.response.ListResponse;
+import org.apache.cloudstack.api.command.admin.AdminCmd;
+import org.apache.cloudstack.api.response.AutomationDeployedUnitResourceResponse;
+import org.apache.cloudstack.api.response.SuccessResponse;
 import org.apache.cloudstack.api.response.ZoneResponse;
+import org.apache.cloudstack.context.CallContext;
 import org.apache.log4j.Logger;
 
 import com.cloud.exception.ConcurrentOperationException;
-import com.cloud.automation.controller.AutomationControllerService;
+import com.cloud.automation.resource.AutomationDeployedUnitResource;
+import com.cloud.automation.resource.AutomationResourceService;
 
-@APICommand(name = ListAutomationControllerCmd.APINAME,
-        description = "Lists Automation Controller",
-        responseObject = AutomationControllerResponse.class,
-        responseView = ResponseObject.ResponseView.Restricted,
+@APICommand(name = DeleteDeployedResourceGroupCmd.APINAME,
+        description = "Delete a Automation Resource",
+        responseObject = AutomationDeployedUnitResourceResponse.class,
+        responseView = ResponseObject.ResponseView.Full,
+        entityType = {AutomationDeployedUnitResource.class},
         authorized = {RoleType.Admin, RoleType.ResourceAdmin, RoleType.DomainAdmin, RoleType.User})
-public class ListAutomationControllerCmd extends BaseListProjectAndAccountResourcesCmd {
-    public static final Logger LOGGER = Logger.getLogger(ListAutomationControllerCmd.class.getName());
-    public static final String APINAME = "listAutomationController";
+public class DeleteDeployedResourceGroupCmd extends BaseCmd implements AdminCmd {
+    public static final Logger s_logger = Logger.getLogger(DeleteDeployedResourceGroupCmd.class.getName());
+    public static final String APINAME = "deleteDeployedResourceGroup";
 
     @Inject
-    private AutomationControllerService automationControllerService;
+    private AutomationResourceService automationResourceService;
 
     /////////////////////////////////////////////////////
     //////////////// API parameters /////////////////////
     /////////////////////////////////////////////////////
-    @Parameter(name = ApiConstants.ID, type = CommandType.UUID,
-            entityType = AutomationControllerResponse.class,
-            description = "the ID of the Automation Controller")
-    private Long id;
-
-    @Parameter(name = ApiConstants.ZONE_ID, type = CommandType.UUID,
-            entityType = ZoneResponse.class,
-            description = "the ID of the zone in which Automation Controller will be available")
-    private Long zoneId;
-
-    @Parameter(name = ApiConstants.NAME, type = CommandType.STRING, description = "name of the Automation Controller" +
-            " (a substring match is made against the parameter value, data for all matching Automation Controller will be returned)")
+    @Parameter(name = ApiConstants.NAME, type = CommandType.STRING, required = true,
+            description = "the name of deployed service")
     private String name;
 
-    @Parameter(name = ApiConstants.STATE, type = CommandType.STRING, description = "state of the Automation Controller")
-    private String state;
+    @Parameter(name = ApiConstants.ZONE_ID, type = CommandType.UUID, entityType = ZoneResponse.class, required = true,
+            description = "the ID of the zone in which this Automation Controller VM is deployed")
+    private Long zoneId;
 
     /////////////////////////////////////////////////////
     /////////////////// Accessors ///////////////////////
     /////////////////////////////////////////////////////
-    public Long getId() {
-        return id;
+    public String getName() {
+        return name;
     }
 
     public Long getZoneId() {
         return zoneId;
-    }
-
-    public String getName() {
-        return name;
     }
 
     @Override
@@ -86,19 +78,22 @@ public class ListAutomationControllerCmd extends BaseListProjectAndAccountResour
         return APINAME.toLowerCase() + "response";
     }
 
-    public String getState() {
-        return state;
+    @Override
+    public long getEntityOwnerId() {
+        return CallContext.current().getCallingAccountId();
     }
-
 
     /////////////////////////////////////////////////////
     /////////////// API Implementation///////////////////
     /////////////////////////////////////////////////////
     @Override
     public void execute() throws ServerApiException, ConcurrentOperationException {
-        ListResponse<AutomationControllerResponse> response = automationControllerService.listAutomationController(this);
-        response.setResponseName(getCommandName());
-        setResponseObject(response);
+        try {
+            automationResourceService.deleteDeployedResource(this);
+            SuccessResponse response = new SuccessResponse(getCommandName());
+            setResponseObject(response);
+        } catch (Exception e) {
+            throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, e.getMessage(), e);
+        }
     }
 }
-

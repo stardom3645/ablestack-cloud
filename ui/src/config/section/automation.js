@@ -28,7 +28,7 @@ export default {
       docHelp: '',
       permission: ['listAutomationControllerVersion'],
       columns: ['name', 'state', 'version', 'zonename', 'controlleruploadtype'],
-      details: ['name', 'description', 'version', 'controlleruploadtype', 'created'],
+      details: ['name', 'description', 'version', 'templatename', 'controlleruploadtype', 'created'],
       actions: [
         {
           api: 'addAutomationControllerVersion',
@@ -113,6 +113,20 @@ export default {
           popup: true,
           groupMap: (selection) => { return selection.map(x => { return { id: x } }) }
         }
+      ]
+    },
+    {
+      name: 'deployedresource',
+      title: 'title.automation.deployed.resource',
+      icon: 'shop-outlined',
+      docHelp: '',
+      permission: ['listAutomationDeployedResource'],
+      columns: ['name', 'description', 'state', 'account'],
+      details: ['name', 'description', 'state'],
+      tabs: [{
+        component: shallowRef(defineAsyncComponent(() => import('@/views/automation/DeployedResourceTab.vue')))
+      }],
+      actions: [
       ]
     }
   ]

@@ -933,6 +933,11 @@ public class ApiConstants {
     public static final String AUTOMATION_CONTROLLER_IP = "automationcontrollerip";
     public static final String AUTOMATION_USER_VIRTUAL_MACHINES = "automationuservirtualmachines";
     public static final String AUTOMATION_CONTROLLER_PUBLIC_IP = "automationcontrollerpublicip";
+    public static final String DEPLOYED_UNIT_SERVICE_MACHINES = "deployedunitservicemachines";
+    public static final String DEPLOYED_UNIT_SERVICES = "deployedunitservices";
+    public static final String SERVICE_UNIT_NAME = "serviceunitname";
+    public static final String DEPLOYED_GROUP_ID = "deployedgroupid";
+    public static final String DEPLOYED_VM_ID = "deployedvmid";
 
     public static final String BOOT_TYPE = "boottype";
     public static final String BOOT_MODE = "bootmode";
