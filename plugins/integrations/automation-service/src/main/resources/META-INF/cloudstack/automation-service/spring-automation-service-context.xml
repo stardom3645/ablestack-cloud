@@ -32,5 +32,8 @@
     <bean id="automationControllerDaoImpl" class="com.cloud.automation.controller.dao.AutomationControllerDaoImpl" />
     <bean id="automationControllerVmMapDaoImpl" class="com.cloud.automation.controller.dao.AutomationControllerVmMapDaoImpl" />
     <bean id="automationControllerManagerImpl" class="com.cloud.automation.controller.AutomationControllerManagerImpl" />
+    <bean id="automationDeployedResourceDaoImpl" class="com.cloud.automation.resource.dao.AutomationDeployedResourceDaoImpl" />
+    <bean id="automationDeployedUnitResourceDaoImpl" class="com.cloud.automation.resource.dao.AutomationDeployedUnitResourceDaoImpl" />
+    <bean id="automationResourceManagerImpl" class="com.cloud.automation.resource.AutomationResourceManagerImpl" />
 
 </beans>

@@ -50,6 +50,10 @@ public class AutomationControllerVersionResponse extends BaseResponse {
     @Param(description = "template ID of the template to be prepared in primary storage(s).")
     private Long templateId;
 
+    @SerializedName(ApiConstants.TEMPLATE_NAME)
+    @Param(description = "the name of templates associated with this Automation Controller")
+    private String templateName;
+
     @SerializedName(ApiConstants.ZONE_ID)
     @Param(description = "the id of the zone in which Automation Controller Version is available")
     private String zoneId;
@@ -108,6 +112,14 @@ public class AutomationControllerVersionResponse extends BaseResponse {
 
     public void setTemplateId(Long templateId) {
         this.templateId = templateId;
+    }
+
+    public String getTemplateName() {
+        return templateName;
+    }
+
+    public void setTemplateName(String templateName) {
+        this.templateName = templateName;
     }
 
     public String getZoneId() {
