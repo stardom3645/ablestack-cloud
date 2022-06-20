@@ -155,7 +155,7 @@ public class AutomationVersionManagerImpl extends ManagerBase implements Automat
         final String hypervisor = cmd.getHypervisor();
         final String versionName = cmd.getControllerVersionName();
         final String description = cmd.getDescription();
-        final String controllerVersion = cmd.getControllerVersion();
+        final String controllerVersion = cmd.getAutomationControllerVersion();
         final Long zoneId = cmd.getZoneId();
         final String uploadType = cmd.getUploadType();
         final String url = cmd.getUrl();
