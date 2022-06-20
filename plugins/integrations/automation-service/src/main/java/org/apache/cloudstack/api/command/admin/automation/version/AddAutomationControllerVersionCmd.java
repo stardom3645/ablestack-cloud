@@ -75,7 +75,7 @@ public class AddAutomationControllerVersionCmd extends BaseCmd implements AdminC
 
     @Parameter(name = ApiConstants.AUTOMATION_CONTROLLER_VERSION, type = CommandType.STRING, required = true,
             description = "the automation controller version.")
-    private String automationControllerVersion;
+    private String controllerVersion;
 
     @Parameter(name = ApiConstants.ZONE_ID, type = CommandType.UUID, entityType = ZoneResponse.class,
             description = "the ID of the zone in which automation controller version will be available")
@@ -121,8 +121,8 @@ public class AddAutomationControllerVersionCmd extends BaseCmd implements AdminC
         return description;
     }
 
-    public String getAutomationControllerVersion() {
-        return automationControllerVersion;
+    public String getControllerVersion() {
+        return controllerVersion;
     }
 
     public Long getZoneId() {

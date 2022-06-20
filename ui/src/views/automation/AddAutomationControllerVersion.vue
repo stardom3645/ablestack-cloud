@@ -483,7 +483,7 @@ export default {
         const params = {
           controllerversionname: values.controllerversionname,
           description: values.description,
-          automationcontrollerversion: values.controllerversion,
+          controllerversion: values.controllerversion,
           controlleruploadtype: values.controlleruploadtype
         }
 
