@@ -32,6 +32,7 @@ import com.cloud.utils.db.SearchCriteria;
 public class AutomationControllerDaoImpl extends GenericDaoBase<AutomationControllerVO, Long> implements AutomationControllerDao {
     private final SearchBuilder<AutomationControllerVO> StateSearch;
     private final SearchBuilder<AutomationControllerVO> SameNetworkSearch;
+    private final SearchBuilder<AutomationControllerVO> AutomationTemplateSearch;
 
     public AutomationControllerDaoImpl() {
         StateSearch = createSearchBuilder();
@@ -41,6 +42,10 @@ public class AutomationControllerDaoImpl extends GenericDaoBase<AutomationContro
         SameNetworkSearch = createSearchBuilder();
         SameNetworkSearch.and("network_id", SameNetworkSearch.entity().getNetworkId(), SearchCriteria.Op.EQ);
         SameNetworkSearch.done();
+
+        AutomationTemplateSearch = createSearchBuilder();
+        AutomationTemplateSearch.and("automationTemplateId", AutomationTemplateSearch.entity().getAutomationTemplateId(), SearchCriteria.Op.EQ);
+        AutomationTemplateSearch.done();
     }
 
     @Override
@@ -58,6 +63,13 @@ public class AutomationControllerDaoImpl extends GenericDaoBase<AutomationContro
         scc.addOr("zoneId", SearchCriteria.Op.NULL);
         sc.addAnd("zoneId", SearchCriteria.Op.SC, scc);
         return listBy(sc);
+    }
+
+    @Override
+    public List<AutomationControllerVO> listAllByAutomationVersion(long automationTemplateId) {
+        SearchCriteria<AutomationControllerVO> sc = AutomationTemplateSearch.create();
+        sc.setParameters("automationTemplateId", automationTemplateId);
+        return this.listBy(sc);
     }
 
     @Override

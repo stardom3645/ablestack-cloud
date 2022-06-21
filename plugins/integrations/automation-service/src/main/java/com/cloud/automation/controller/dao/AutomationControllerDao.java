@@ -28,4 +28,5 @@ public interface AutomationControllerDao extends GenericDao<AutomationController
         StateDao<AutomationController.State, AutomationController.Event, AutomationController> {
     List<AutomationControllerVO> listAllInZone(long dataCenterId);
     List<AutomationControllerVO> findAutomationControllersInState(AutomationController.State state);
+    List<AutomationControllerVO> listAllByAutomationVersion(long automationTemplateId);
 }

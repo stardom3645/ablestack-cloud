@@ -40,6 +40,8 @@ import org.apache.cloudstack.api.command.user.template.DeleteTemplateCmd;
 import com.cloud.api.query.dao.TemplateJoinDao;
 import com.cloud.api.query.vo.TemplateJoinVO;
 import com.cloud.dc.dao.DataCenterDao;
+import com.cloud.automation.controller.AutomationControllerVO;
+import com.cloud.automation.controller.dao.AutomationControllerDao;
 import com.cloud.automation.version.dao.AutomationControllerVersionDao;
 import com.cloud.utils.component.ManagerBase;
 import com.cloud.user.AccountService;
@@ -65,6 +67,8 @@ public class AutomationVersionManagerImpl extends ManagerBase implements Automat
 
     @Inject
     private AutomationControllerVersionDao automationControllerVersionDao;
+    @Inject
+    private AutomationControllerDao automationControllerDao;
     @Inject
     private TemplateJoinDao templateJoinDao;
     @Inject
@@ -329,35 +333,11 @@ public class AutomationVersionManagerImpl extends ManagerBase implements Automat
         if (version == null) {
             throw new InvalidParameterValueException("Invalid automation controller version id specified");
         }
-        // List<AutomationClusterVO> clusters = automationClusterDao.listAllByAutomationVersion(versionId);
-        // if (clusters.size() > 0) {
-        //     throw new CloudRuntimeException(String.format("Unable to delete automation controller version ID: %s. Existing clusters currently using the version.", version.getUuid()));
-        // }
 
-        // List<AutomationTemplateMapVO> templateList = automationTemplateMapDao.listByVersionId(versionId);
-
-        // VMTemplateVO template = null;
-
-        // if (templateList != null && !templateList.isEmpty()) {
-        //     for (AutomationTemplateMapVO templateMapVO : templateList) {
-        //         template = templateDao.findByIdIncludingRemoved(templateMapVO.getTemplateId());
-        //         if (template == null) {
-        //             LOGGER.warn(String.format("Unable to find template associated with supported automation controller version ID: %s", version.getUuid()));
-        //         }
-        //         if ("url".equals(uploadType) && template != null && template.getRemoved() == null) {// upload type이 'url' 타입일 경우 템플릿까지 삭제, 'template' 타입 일 경우 템플릿은 삭제 안됨.
-        //             try {
-        //                 deleteAutomationVersionTemplate(template.getId());
-        //             } catch (IllegalAccessException | NoSuchFieldException | IllegalArgumentException ex) {
-        //                 LOGGER.error(String.format("Unable to delete ID: %s associated with supported automation controller version ID: %s", template.getUuid(), version.getUuid()), ex);
-        //                 throw new CloudRuntimeException(String.format("Unable to delete ID: %s associated with supported automation controller version ID: %s", template.getUuid(), version.getUuid()));
-        //             }
-        //         }
-        //         // automationTemplateMapDao.remove(templateMapVO.getId());
-        //     }
-        // }else{
-        //     LOGGER.info("There are no registered templates for that automation controller version.");
-        //     //throw new CloudRuntimeException(String.format("There are no registered templates for that automation controller version.", version.getUuid()));
-        // }
+        List<AutomationControllerVO> controllers = automationControllerDao.listAllByAutomationVersion(versionId);
+        if (controllers.size() > 0) {
+            throw new CloudRuntimeException(String.format("Unable to delete automation controller version ID: %s. Existing controller currently using the version.", version.getUuid()));
+        }
 
         if (templateId == null) {
             LOGGER.warn(String.format("Unable to find template associated with supported automation controller version ID: %s", version.getUuid()));
