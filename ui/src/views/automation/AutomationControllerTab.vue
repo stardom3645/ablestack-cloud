@@ -25,32 +25,42 @@
       <a-tab-pane :tab="$t('label.details')" key="details">
         <DetailsTab :resource="resource" :loading="loading" />
       </a-tab-pane>
+      <a-tab-pane :tab="$t('label.access')" key="access">
+        <a-card :title="$t('label.automation.controller.access.genie.dashboard')" :loading="versionLoading">
+          <a-timeline>
+            <a-timeline-item>
+              <p v-html="$t('label.automation.controller.access.genie.dashboard.login.info')">
+              </p>
+            </a-timeline-item>
+          </a-timeline>
+        </a-card>
+      </a-tab-pane>
       <a-tab-pane :tab="$t('label.networks')" key="genienetworks" >
         <DesktopNicsTable :resource="genienetworks" :loading="loading"/>
       </a-tab-pane>
-<!--      <a-tab-pane :tab="$t('label.resource')" key="instances">-->
-<!--        <a-table-->
-<!--          class="table"-->
-<!--          size="small"-->
-<!--          :columns="controlVmColumns"-->
-<!--          :dataSource="this.automationuservirtualmachines"-->
-<!--          :rowKey="item => item.id"-->
-<!--          :pagination="false"-->
-<!--        >-->
-<!--          <template #name="{record}">-->
-<!--            <router-link :to="{ path: '/vm/' + record.id }">{{ record.name }}</router-link>-->
-<!--          </template>-->
-<!--          <template #state="{text}">-->
-<!--            <status :text="text ? text : ''" displayText />-->
-<!--          </template>-->
-<!--          <template #instancename="{text}">-->
-<!--            <status :text="text ? text : ''" />{{ text }}-->
-<!--          </template>-->
-<!--          <template #hostname="{record}">-->
-<!--            <router-link :to="{ path: '/host/' + record.hostid }">{{ record.hostname }}</router-link>-->
-<!--          </template>-->
-<!--        </a-table>-->
-<!--      </a-tab-pane>-->
+      <a-tab-pane :tab="$t('label.controlvm')" key="instances">
+        <a-table
+          class="table"
+          size="small"
+          :columns="controlVmColumns"
+          :dataSource="this.automationuservirtualmachines"
+          :rowKey="item => item.id"
+          :pagination="false"
+        >
+          <template #name="{record}">
+            <router-link :to="{ path: '/vm/' + record.id }">{{ record.name }}</router-link>
+          </template>
+          <template #state="{text}">
+            <status :text="text ? text : ''" displayText />
+          </template>
+          <template #instancename="{text}">
+            <status :text="text ? text : ''" />{{ text }}
+          </template>
+          <template #hostname="{record}">
+            <router-link :to="{ path: '/host/' + record.hostid }">{{ record.hostname }}</router-link>
+          </template>
+        </a-table>
+      </a-tab-pane>
     </a-tabs>
   </a-spin>
 </template>
@@ -94,7 +104,6 @@ export default {
       automationuservirtualmachines: [],
       instances: [],
       desktops: [],
-      iprange: [],
       totalStorage: 0,
       currentTab: 'details',
       showAddIpModal: false,
@@ -151,29 +160,6 @@ export default {
           dataIndex: 'hostname',
           slots: { customRender: 'hostname' }
         }
-      ],
-      iprangeColumns: [
-        {
-          title: this.$t('label.gateway'),
-          dataIndex: 'gateway',
-          slots: { customRender: 'gateway' }
-        },
-        {
-          title: this.$t('label.netmask'),
-          dataIndex: 'netmask'
-        },
-        {
-          title: this.$t('label.startip'),
-          dataIndex: 'startip'
-        },
-        {
-          title: this.$t('label.endip'),
-          dataIndex: 'endip'
-        },
-        {
-          title: '',
-          slots: { customRender: 'action' }
-        }
       ]
     }
   },
@@ -185,7 +171,6 @@ export default {
     const userInfo = this.$store.getters.userInfo
     if (!['Admin'].includes(userInfo.roletype) &&
       (userInfo.account !== this.resource.account || userInfo.domain !== this.resource.domain)) {
-      this.desktopVmColumns = this.desktopVmColumns.filter(col => { return col.dataIndex !== 'hostname' })
       this.controlVmColumns = this.controlVmColumns.filter(col => { return col.dataIndex !== 'hostname' })
     }
     this.vm = this.resource
@@ -226,8 +211,6 @@ export default {
       this.automationuservirtualmachines.map(x => { x.ipaddress = x.nic[0].ipaddress })
       this.controlvms = this.resource.controlvms || []
       this.controlvms.map(x => { x.ipaddress = x.nic[0].ipaddress })
-      // this.genienetworks = []
-      // this.iprange = []
       if (!this.vm || !this.vm.id) {
         return
       }
@@ -250,49 +233,6 @@ export default {
     },
     closeModals () {
       this.showAddIpModal = false
-    },
-    submitAddIp (e) {
-      e.preventDefault()
-      this.form.validateFields((err, values) => {
-        if (err) {
-          return
-        }
-        const params = {}
-        params.desktopclusterid = this.resource.id
-        params.netmask = values.netmask
-        params.gateway = values.gateway
-        params.startip = values.startip
-        params.endip = values.endip
-        this.showAddIpModal = false
-        this.loadingNic = true
-        api('addDesktopClusterIpRanges', params).then(response => {
-          this.$pollJob({
-            jobId: response.adddesktopclusteriprangesresponse.jobid,
-            successMessage: this.$t('message.success.add.desktop.ip'),
-            successMethod: () => {
-              this.loadingNic = false
-              this.closeModals()
-              this.parentFetchData()
-            },
-            errorMessage: this.$t('message.add.desktop.ip.failed'),
-            errorMethod: () => {
-              this.loadingNic = false
-              this.closeModals()
-              this.parentFetchData()
-            },
-            loadingMessage: this.$t('message.add.desktop.ip.processing'),
-            catchMessage: this.$t('error.fetching.async.job.result'),
-            catchMethod: () => {
-              this.loadingNic = false
-              this.closeModals()
-              this.parentFetchData()
-            }
-          })
-        }).catch(error => {
-          this.$notifyError(error)
-          this.loadingNic = false
-        })
-      })
     }
   }
 }

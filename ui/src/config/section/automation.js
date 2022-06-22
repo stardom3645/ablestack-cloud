@@ -19,7 +19,7 @@ import { shallowRef, defineAsyncComponent } from 'vue'
 export default {
   name: 'automation',
   title: 'label.automation.service',
-  icon: 'cloud-server-outlined',
+  icon: 'CloudSyncOutlined',
   children: [
     {
       name: 'automationtemplate',
@@ -63,7 +63,7 @@ export default {
       docHelp: '',
       permission: ['listAutomationController'],
       columns: ['name', 'state', 'account', 'hostname', 'zonename'],
-      details: ['description', 'name', 'automationcontrollerip', 'state', 'hostname', 'automationcontrollerpublicip', 'automationtemplatename', 'automationcontrollerversion', 'osdisplayname', 'serviceofferingname', 'isdynamicallyscalable'],
+      details: ['description', 'name', 'hostname', 'automationcontrollerip', 'automationcontrollerpublicip', 'automationtemplatename', 'automationcontrollerversion', 'osdisplayname', 'isdynamicallyscalable'],
       tabs: [{
         component: shallowRef(defineAsyncComponent(() => import('@/views/automation/AutomationControllerTab.vue')))
       }],

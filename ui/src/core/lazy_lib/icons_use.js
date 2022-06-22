@@ -52,6 +52,7 @@ import {
   CloudServerOutlined,
   CloudUploadOutlined,
   ClusterOutlined,
+  CloudSyncOutlined,
   CodeOutlined,
   CompassOutlined,
   ControlOutlined,
@@ -200,6 +201,7 @@ export default {
     app.component('CloudDownloadOutlined', CloudDownloadOutlined)
     app.component('CloudOutlined', CloudOutlined)
     app.component('CloudServerOutlined', CloudServerOutlined)
+    app.component('CloudSyncOutlined', CloudSyncOutlined)
     app.component('CloudUploadOutlined', CloudUploadOutlined)
     app.component('ClusterOutlined', ClusterOutlined)
     app.component('CodeOutlined', CodeOutlined)
