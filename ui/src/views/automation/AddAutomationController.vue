@@ -245,6 +245,7 @@ export default {
       })
     },
     fetchNetworkData () {
+      this.networks = []
       const params = {
         domainid: store.getters.project && store.getters.project.id ? null : store.getters.userInfo.domainid,
         account: store.getters.project && store.getters.project.id ? null : store.getters.userInfo.account
@@ -252,9 +253,9 @@ export default {
       this.networkLoading = true
       api('listNetworks', params).then(json => {
         const listNetworks = json.listnetworksresponse.network
-        if (this.arrayHasItems(listNetworks)) {
-          this.networks = this.networks.concat(listNetworks)
-        }
+          if (listNetworks !== null) {
+            this.networks = listNetworks.filter(it => it.type.includes('Isolated'))
+          }
       }).finally(() => {
         this.networkLoading = false
         if (this.arrayHasItems(this.networks)) {
