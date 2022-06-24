@@ -133,7 +133,6 @@ export default {
   data () {
     return {
       loading: false,
-      accessType: 'external',
       networks: [],
       networkLoading: false,
       automationController: [],
@@ -253,9 +252,9 @@ export default {
       this.networkLoading = true
       api('listNetworks', params).then(json => {
         const listNetworks = json.listnetworksresponse.network
-          if (listNetworks !== null) {
-            this.networks = listNetworks.filter(it => it.type.includes('Isolated'))
-          }
+        if (listNetworks !== null) {
+          this.networks = listNetworks.filter(it => it.type.includes('Isolated'))
+        }
       }).finally(() => {
         this.networkLoading = false
         if (this.arrayHasItems(this.networks)) {
