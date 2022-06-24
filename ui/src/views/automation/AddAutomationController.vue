@@ -245,30 +245,21 @@ export default {
       })
     },
     fetchNetworkData () {
-      this.networks = []
       const params = {
         domainid: store.getters.project && store.getters.project.id ? null : store.getters.userInfo.domainid,
         account: store.getters.project && store.getters.project.id ? null : store.getters.userInfo.account
       }
       this.networkLoading = true
-      this.handleNetworkChange(null)
       api('listNetworks', params).then(json => {
-        var items = json.listnetworksresponse.network
-        if (items !== null) {
-          if (this.accessType === 'internal') this.networks = items.filter(it => it.type.includes('L2'))
-          if (this.accessType === 'external') this.networks = items.filter(it => it.type.includes('Isolated'))
-          if (this.accessType === 'mixed') this.networks = items.filter(it => it.type.includes('Shared'))
-
-          // console.log(this.accessType, this.networks)
-          this.handleNetworkChange(this.networks[0])
+        const listNetworks = json.listnetworksresponse.network
+        if (this.arrayHasItems(listNetworks)) {
+          this.networks = this.networks.concat(listNetworks)
         }
       }).finally(() => {
         this.networkLoading = false
-        // if (this.arrayHasItems(this.networks)) {
-        //   this.form.networkid = 0
-        // } else {
-        //   this.form.networkid = null
-        // }
+        if (this.arrayHasItems(this.networks)) {
+          this.form.networkid = 0
+        }
       })
     },
     handleNetworkChange (network) {
@@ -284,8 +275,6 @@ export default {
           name: values.name,
           description: values.description,
           serviceofferingid: this.serviceOfferings[values.serviceoffering].id,
-          networkid: this.selectedNetwork.id,
-          networkname: this.selectedNetwork.name,
           automationcontrollerip: values.automationcontrollerip,
           controlleruploadtype: this.automationControllerVersion[0].controlleruploadtype,
           zoneid: this.automationControllerVersion[0].zoneid,
@@ -293,6 +282,10 @@ export default {
           domainname: store.getters.project && store.getters.project.id ? null : store.getters.userInfo.domainname,
           account: store.getters.project && store.getters.project.id ? null : store.getters.userInfo.account,
           accountid: store.getters.project && store.getters.project.id ? null : store.getters.userInfo.accountid
+        }
+        if (this.isValidValueForKey(values, 'networkid') && this.arrayHasItems(this.networks) && this.networks[values.networkid].id != null) {
+          params.networkid = this.networks[values.networkid].id
+          params.networkname = this.networks[values.networkid].name
         }
         if (params.controlleruploadtype === 'url') {
           if (values.zoneid === this.$t('label.all.zone')) {

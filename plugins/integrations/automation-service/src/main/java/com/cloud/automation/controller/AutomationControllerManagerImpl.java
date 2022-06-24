@@ -57,6 +57,7 @@ import com.cloud.utils.db.TransactionCallback;
 import com.cloud.utils.db.TransactionStatus;
 import com.cloud.utils.fsm.NoTransitionException;
 import com.cloud.utils.fsm.StateMachine2;
+import com.cloud.utils.net.NetUtils;
 import com.cloud.vm.VMInstanceVO;
 import com.cloud.vm.dao.VMInstanceDao;
 import org.apache.cloudstack.acl.ControlledEntity;
@@ -352,21 +353,47 @@ public class AutomationControllerManagerImpl extends ManagerBase implements Auto
     }
 
     private void validateAutomationControllerCreateParameters(final AddAutomationControllerCmd cmd) throws CloudRuntimeException {
+        final String name = cmd.getName();
         final String description = cmd.getDescription();
         final Long domainId =cmd.getDomainId();
-        final String automationControllerIp = cmd.getAutomationControllerIp();
         final Long accountId = cmd.getAccountId();
-        final Long serviceOfferingId = cmd.getServiceOfferingId();
-        final String name = cmd.getName();
         final Long zoneId = cmd.getZoneId();
-        final Long url = cmd.getNetworkId();
+        final Long networkId = cmd.getNetworkId();
+        final String networkName = cmd.getNetworkName();
+        final Long serviceOfferingId = cmd.getServiceOfferingId();
         final Long automationTemplateId = cmd.getAutomationTemplateId();
         String templateName = "";
 
-        final AutomationControllerVersion automationControllerVersion = automationControllerVersionDao.findById(automationTemplateId);
+//        final AutomationControllerVersion automationControllerVersion = automationControllerVersionDao.findById(automationTemplateId);
 
         if (name == null || name.isEmpty()) {
             throw new InvalidParameterValueException("Invalid name for the Automation controller name:" + name);
+        }
+        if (!NetUtils.verifyDomainNameLabel(name, true)) {
+            throw new InvalidParameterValueException("Invalid name. Automation controller name can contain ASCII letters 'a' through 'z', the digits '0' through '9', "
+                    + "and the hyphen ('-'), and can't start or end with \"-\" and can't start with digit");
+        }
+        final List<AutomationControllerVO> controllers = automationControllerDao.listAll();
+        for (final AutomationControllerVO controller : controllers) {
+            final Long otherAccountId = controller.getAccountId();
+            final String otherName = controller.getName();
+            final Long otherNetwork = controller.getNetworkId();
+            final String otherNetworkName = controller.getNetworkName();
+//            if (otherAccountId.equals(accountId)) {
+//                throw new InvalidParameterValueException("Automation controller already exists.");
+//            }
+            if (otherName.equals(name)) {
+                throw new InvalidParameterValueException("Automation controller name '" + name + "' already exists.");
+            }
+            if (otherNetwork.equals(networkId)){
+                throw new InvalidParameterValueException("Automation controller network id '" + networkId + "' already controller deployed.");
+            }
+            if (otherNetworkName.equals(networkName)){
+                throw new InvalidParameterValueException("Automation controller network name '" + networkName + "' already controller deployed.");
+            }
+        }
+        if (description == null || description.isEmpty()) {
+            throw new InvalidParameterValueException("Invalid description for the Automation controller description:" + description);
         }
     }
 
