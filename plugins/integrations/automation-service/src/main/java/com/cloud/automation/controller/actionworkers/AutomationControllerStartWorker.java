@@ -248,6 +248,7 @@ public class AutomationControllerStartWorker extends AutomationControllerResourc
         String automationControllerConfig = readResourceFile("/conf/genie");
         NetworkVO ntwk = networkDao.findByIdIncludingRemoved(automationController.getNetworkId());
         final String managementIp = ApiServiceConfiguration.ManagementServerAddresses.value();
+        final String automationControllerUuid = "{{ automation_controller_uuid }}";
         final String automationControllerName = "{{ automation_controller_instance_name }}";
         final String acPublicIp = "{{ ac_public_ip }}";
         final String zoneUuid = "{{ zone_id }}";
@@ -262,6 +263,7 @@ public class AutomationControllerStartWorker extends AutomationControllerResourc
         final String moldPort = "{{ mold_port }}";
         final String moldProtocol = "{{ mold_protocol }}";
         final String moldEndPoint = "{{ mold_end_point}}";
+        automationControllerConfig = automationControllerConfig.replace(automationControllerUuid, automationController.getUuid());
         automationControllerConfig = automationControllerConfig.replace(automationControllerName, automationController.getName()+"-genie");
         if (ntwk.getGuestType() == Network.GuestType.Isolated) {
             List<IPAddressVO> ipAddresses = ipAddressDao.listByAssociatedNetwork(ntwk.getId(), true);
@@ -403,11 +405,19 @@ public class AutomationControllerStartWorker extends AutomationControllerResourc
 
     public boolean startStoppedAutomationController() throws CloudRuntimeException {
         init();
+        IpAddress publicIpAddress = null;
+        publicIpAddress = getAutomationControllerServerIp();
+        String publicIpAddressStr = String.valueOf(publicIpAddress.getAddress());
+        stateTransitTo(automationController.getId(), AutomationController.Event.StartRequested);
+        startAutomationControllerVMs();
         if (LOGGER.isInfoEnabled()) {
             LOGGER.info(String.format("Starting automation controller : %s", automationController.getName()));
         }
-        stateTransitTo(automationController.getId(), AutomationController.Event.StartRequested);
-        startAutomationControllerVMs();
+        try {
+            pingCheck(publicIpAddressStr, 300000);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
         stateTransitTo(automationController.getId(), AutomationController.Event.OperationSucceeded);
         if (LOGGER.isInfoEnabled()) {
             LOGGER.info(String.format("Automation Controller : %s successfully started", automationController.getName()));
