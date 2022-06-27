@@ -389,7 +389,7 @@ public class AutomationControllerStartWorker extends AutomationControllerResourc
             if (LOGGER.isInfoEnabled()) {
                 LOGGER.info(String.format("automation controller : %s automation controller VMs successfully provisioned", automationController.getName()));
             }
-            String publicIpAddressStr = String.valueOf(publicIpAddress);
+            String publicIpAddressStr = String.valueOf(publicIpAddress.getAddress());
             try {
                 pingCheck(publicIpAddressStr, 300000);
             } catch (Exception e) {
