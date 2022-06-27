@@ -410,13 +410,13 @@ public class AutomationControllerStartWorker extends AutomationControllerResourc
         String publicIpAddressStr = String.valueOf(publicIpAddress.getAddress());
         stateTransitTo(automationController.getId(), AutomationController.Event.StartRequested);
         startAutomationControllerVMs();
-        if (LOGGER.isInfoEnabled()) {
-            LOGGER.info(String.format("Starting automation controller : %s", automationController.getName()));
-        }
         try {
             pingCheck(publicIpAddressStr, 300000);
         } catch (Exception e) {
             throw new RuntimeException(e);
+        }
+        if (LOGGER.isInfoEnabled()) {
+            LOGGER.info(String.format("Starting automation controller : %s", automationController.getName()));
         }
         stateTransitTo(automationController.getId(), AutomationController.Event.OperationSucceeded);
         if (LOGGER.isInfoEnabled()) {
