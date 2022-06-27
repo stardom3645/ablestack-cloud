@@ -19,12 +19,12 @@ import { shallowRef, defineAsyncComponent } from 'vue'
 export default {
   name: 'automation',
   title: 'label.automation.service',
-  icon: 'CloudSyncOutlined',
+  icon: 'AppstoreAddOutlined',
   children: [
     {
       name: 'automationtemplate',
       title: 'title.automation.controller.template',
-      icon: 'block-outlined',
+      icon: 'shop-outlined',
       docHelp: '',
       permission: ['listAutomationControllerVersion'],
       columns: ['name', 'state', 'version', 'zonename', 'controlleruploadtype'],
@@ -59,7 +59,7 @@ export default {
     {
       name: 'automationcontroller',
       title: 'title.automation.controller',
-      icon: 'block-outlined',
+      icon: 'RocketOutlined',
       docHelp: '',
       permission: ['listAutomationController'],
       columns: ['name', 'state', 'account', 'hostname', 'zonename'],
@@ -118,7 +118,7 @@ export default {
     {
       name: 'deployedresource',
       title: 'title.automation.deployed.resource',
-      icon: 'shop-outlined',
+      icon: 'GroupOutlined',
       docHelp: '',
       permission: ['listAutomationDeployedResource'],
       columns: ['name', 'description', 'state', 'account'],

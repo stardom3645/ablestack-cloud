@@ -18,6 +18,7 @@
 import {
   ApartmentOutlined,
   ApiOutlined,
+  AppstoreAddOutlined,
   AppstoreOutlined,
   ArrowDownOutlined,
   ArrowUpOutlined,
@@ -91,6 +92,7 @@ import {
   GithubOutlined,
   GlobalOutlined,
   GoldOutlined,
+  GroupOutlined,
   HddOutlined,
   HomeOutlined,
   IdcardOutlined,
@@ -169,6 +171,7 @@ export default {
   install: (app) => {
     app.component('ApartmentOutlined', ApartmentOutlined)
     app.component('ApiOutlined', ApiOutlined)
+    app.component('AppstoreAddOutlined', AppstoreAddOutlined)
     app.component('AppstoreOutlined', AppstoreOutlined)
     app.component('ArrowDownOutlined', ArrowDownOutlined)
     app.component('ArrowUpOutlined', ArrowUpOutlined)
@@ -242,6 +245,7 @@ export default {
     app.component('GithubOutlined', GithubOutlined)
     app.component('GlobalOutlined', GlobalOutlined)
     app.component('GoldOutlined', GoldOutlined)
+    app.component('GroupOutlined', GroupOutlined)
     app.component('HddOutlined', HddOutlined)
     app.component('HomeOutlined', HomeOutlined)
     app.component('IdcardOutlined', IdcardOutlined)
