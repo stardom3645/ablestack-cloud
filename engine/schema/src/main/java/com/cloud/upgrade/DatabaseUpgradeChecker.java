@@ -393,6 +393,18 @@ public class DatabaseUpgradeChecker implements SystemIntegrityChecker {
                             runScript(conn, scrip);
                         }
                     }
+                    final String scriptFile_cerato = "META-INF/db/schema-AllotoBronto.sql";
+                    final InputStream script_cerato = Thread.currentThread().getContextClassLoader().getResourceAsStream(scriptFile_cerato);
+                    if (script_cerato == null) {
+                        throw new CloudRuntimeException("Unable to find " + scriptFile_cerato);
+                    }
+
+                    InputStream[] scripts_cerato = {script_cerato};
+                    if (scripts_cerato != null) {
+                        for (InputStream scrip : scripts_cerato) {
+                            runScript(conn, scrip);
+                        }
+                    }
                     txn.commit();
                 } catch (CloudRuntimeException e) {
                     String errorMessage = "Unable to upgrade the database ablestack bronto";

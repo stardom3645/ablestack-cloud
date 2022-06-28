@@ -18,11 +18,14 @@
 package com.cloud.automation.resource;
 
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.List;
 import javax.inject.Inject;
 
 import org.apache.cloudstack.api.command.user.automation.resource.ListAutomationDeployedResourceCmd;
 import org.apache.cloudstack.api.ApiConstants;
+import org.apache.cloudstack.api.ApiConstants.VMDetails;
+import org.apache.cloudstack.api.ResponseObject.ResponseView;
 import org.apache.cloudstack.api.command.user.automation.resource.AddDeployedResourceGroupCmd;
 import org.apache.cloudstack.api.command.user.automation.resource.AddDeployedUnitResourceCmd;
 import org.apache.cloudstack.api.command.user.automation.resource.DeleteDeployedResourceGroupCmd;
@@ -31,9 +34,11 @@ import org.apache.cloudstack.api.command.user.automation.resource.UpdateDeployed
 import org.apache.cloudstack.api.response.AutomationDeployedResourceResponse;
 import org.apache.cloudstack.api.response.AutomationDeployedUnitResourceResponse;
 import org.apache.cloudstack.api.response.ListResponse;
+import org.apache.cloudstack.api.response.UserVmResponse;
 import org.apache.cloudstack.context.CallContext;
 import org.apache.log4j.Logger;
 
+import com.cloud.api.ApiDBUtils;
 import com.cloud.api.query.dao.UserVmJoinDao;
 import com.cloud.api.query.vo.UserVmJoinVO;
 import com.cloud.automation.resource.dao.AutomationDeployedResourceDao;
@@ -80,6 +85,7 @@ public class AutomationResourceManagerImpl extends ManagerBase implements Automa
         response.setId(automationDeployedResource.getUuid());
         response.setName(automationDeployedResource.getName());
         response.setDescription(automationDeployedResource.getDescription());
+        response.setCreated(automationDeployedResource.getCreated());
 
         AccountVO account = accountDao.findById(automationDeployedResource.getAccountId());
         response.setAccountName(account.getName());
@@ -90,6 +96,14 @@ public class AutomationResourceManagerImpl extends ManagerBase implements Automa
 
         List<AutomationDeployedUnitResourceResponse> deployedUnitResourceResponses = new ArrayList<AutomationDeployedUnitResourceResponse>();
         List<AutomationDeployedUnitResourceVO> deployedUnitResourceList = automationDeployedUnitResourceDao.listAllByDeployedResourceUnit(automationDeployedResource.getId());
+        List<UserVmResponse> deployedVmResponses = new ArrayList<UserVmResponse>();
+
+        ResponseView respView = ResponseView.Restricted;
+        Account caller = CallContext.current().getCallingAccount();
+        if (accountService.isRootAdmin(caller.getId())) {
+            respView = ResponseView.Full;
+        }
+        String responseName = "controlvmlist";
 
         if (deployedUnitResourceList != null && !deployedUnitResourceList.isEmpty()) {
             for (AutomationDeployedUnitResourceVO unitResourceMapVO : deployedUnitResourceList) {
@@ -100,10 +114,28 @@ public class AutomationResourceManagerImpl extends ManagerBase implements Automa
 
                     unitResourceResponse.setServiceUnitName(unitResource.getServiceUnitName());
                     unitResourceResponse.setState(unitResource.getState().toString());
-                    unitResourceResponse.setVmName(userVM.getName());
                     unitResourceResponse.setCreated(unitResource.getCreated());
-
                     deployedUnitResourceResponses.add(unitResourceResponse);
+
+                    if (userVM != null){
+                        unitResourceResponse.setVmName(userVM.getName());
+                        UserVmResponse dvmResponse = ApiDBUtils.newUserVmResponse(respView, responseName, userVM, EnumSet.of(VMDetails.nics), caller);
+
+                        //Exclude duplicate virtual machine list
+                        if(deployedVmResponses.size() > 0){
+                            boolean uniqueCheckFlag = true;
+                            for (UserVmResponse dvr : deployedVmResponses) {
+                                if(dvr.getId().equals(dvmResponse.getId())){
+                                    uniqueCheckFlag = false;
+                                }
+                            }
+                            if(uniqueCheckFlag){
+                                deployedVmResponses.add(dvmResponse);
+                            }
+                        } else {
+                            deployedVmResponses.add(dvmResponse);
+                        }
+                    }
                 }
             }
         }
@@ -115,6 +147,7 @@ public class AutomationResourceManagerImpl extends ManagerBase implements Automa
         }
 
         response.setDeployedUnitServices(deployedUnitResourceResponses);
+        response.setDeployedVms(deployedVmResponses);
 
         return response;
     }
@@ -198,7 +231,7 @@ public class AutomationResourceManagerImpl extends ManagerBase implements Automa
     }
 
     @Override
-    @ActionEvent(eventType = AutomationResourceEventTypes.EVENT_AUTOMATION_DEPLOYED_RESOURCE_ADD, eventDescription = "Adding automation deployed resource")
+    // @ActionEvent(eventType = AutomationResourceEventTypes.EVENT_AUTOMATION_DEPLOYED_RESOURCE_ADD, eventDescription = "Adding automation deployed resource")
     public AutomationDeployedResourceResponse addDeployedResourceGroup(final AddDeployedResourceGroupCmd cmd) {
         if (!AutomationVersionService.AutomationServiceEnabled.value()) {
             throw new CloudRuntimeException("Automation Service plugin is disabled");
@@ -210,6 +243,7 @@ public class AutomationResourceManagerImpl extends ManagerBase implements Automa
         final String name = cmd.getName();
         final String description = cmd.getDescription();
         final Long zoneId = cmd.getZoneId();
+        final Long controllerId = cmd.getControllerId();
 
         final List<AutomationDeployedResourceVO> serviceGroupList = automationDeployedResourceDao.listAll();
         for (final AutomationDeployedResourceVO serviceGroup : serviceGroupList) {
@@ -219,14 +253,14 @@ public class AutomationResourceManagerImpl extends ManagerBase implements Automa
         }
 
         AutomationDeployedResourceVO automationDeployedResourceVO = null;
-        automationDeployedResourceVO = new AutomationDeployedResourceVO(accountId, domainId, zoneId, name, description);
+        automationDeployedResourceVO = new AutomationDeployedResourceVO(accountId, domainId, zoneId, controllerId, name, description);
         automationDeployedResourceVO = automationDeployedResourceDao.persist(automationDeployedResourceVO);
 
         return createAutomationDeployedResourceGroupResponse(automationDeployedResourceVO);
     }
 
     @Override
-    @ActionEvent(eventType = AutomationResourceEventTypes.EVENT_AUTOMATION_DEPLOYED_UNIT_RESOURCE_ADD, eventDescription = "Adding automation deployed unit resource")
+    // @ActionEvent(eventType = AutomationResourceEventTypes.EVENT_AUTOMATION_DEPLOYED_UNIT_RESOURCE_ADD, eventDescription = "Adding automation deployed unit resource")
     public AutomationDeployedUnitResourceResponse addDeployedUnitResource(final AddDeployedUnitResourceCmd cmd) {
         if (!AutomationVersionService.AutomationServiceEnabled.value()) {
             throw new CloudRuntimeException("Automation Service plugin is disabled");
@@ -283,7 +317,7 @@ public class AutomationResourceManagerImpl extends ManagerBase implements Automa
     }
 
     @Override
-    @ActionEvent(eventType = AutomationResourceEventTypes.EVENT_AUTOMATION_DEPLOYED_UNIT_RESOURCE_DELETE, eventDescription = "Deleting automation deployed unit resource")
+    // @ActionEvent(eventType = AutomationResourceEventTypes.EVENT_AUTOMATION_DEPLOYED_UNIT_RESOURCE_DELETE, eventDescription = "Deleting automation deployed unit resource")
     public void deleteDeployedUnitResource(final DeleteDeployedUnitResourceCmd cmd) {
         if (!AutomationVersionService.AutomationServiceEnabled.value()) {
             throw new CloudRuntimeException("Automation Service plugin is disabled");
@@ -303,7 +337,7 @@ public class AutomationResourceManagerImpl extends ManagerBase implements Automa
     }
 
     @Override
-    @ActionEvent(eventType = AutomationResourceEventTypes.EVENT_AUTOMATION_DEPLOYED_RESOURCE_UPDATE, eventDescription = "Updating automation deployed resource")
+    // @ActionEvent(eventType = AutomationResourceEventTypes.EVENT_AUTOMATION_DEPLOYED_RESOURCE_UPDATE, eventDescription = "Updating automation deployed resource")
     public AutomationDeployedResourceResponse updateDeployedResourceGroup(final UpdateDeployedResourceGroupCmd cmd) {
         if (!AutomationVersionService.AutomationServiceEnabled.value()) {
             throw new CloudRuntimeException("Automation Service plugin is disabled");

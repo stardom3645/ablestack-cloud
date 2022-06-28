@@ -40,7 +40,7 @@ import com.cloud.automation.resource.AutomationResourceService;
         responseObject = AutomationDeployedResourceResponse.class,
         responseView = ResponseObject.ResponseView.Full,
         entityType = {AutomationResourceService.class},
-        authorized = {RoleType.Admin})
+        authorized = {RoleType.Admin, RoleType.ResourceAdmin, RoleType.DomainAdmin, RoleType.User})
 public class UpdateDeployedResourceGroupCmd extends BaseCmd implements AdminCmd {
     public static final Logger LOGGER = Logger.getLogger(UpdateDeployedResourceGroupCmd.class.getName());
     public static final String APINAME = "updateDeployedResourceGroup";
