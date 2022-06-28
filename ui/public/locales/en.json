@@ -3757,6 +3757,8 @@
 "message.success.create.automation.controller": "Successfully deployed Automation Controller. It may take some time to access the portal due to internal work for normal service provision.",
 "label.osdisplayname": "OS type",
 "label.genie.portal.url": "Genie Dashboard",
+"label.automation.controller.access.genie.dashboard": "Access Genie Dashboard",
+"label.automation.controller.access.genie.dashboard.login.info": "Default login account and password for genie dashboard <br><br> <code><b>UserName: </b></code> genie <br> <code><b>Password: </b></code> password <br><br> It is Recommended that you change default password for improved security.",
 "title.automation.deployed.resource": "Deployed Packages",
 "label.serviceunitname": "Service Name",
 "label.checkedtime": "Checked Time",

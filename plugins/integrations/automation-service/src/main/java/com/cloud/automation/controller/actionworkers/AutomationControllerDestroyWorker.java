@@ -95,44 +95,12 @@ public class AutomationControllerDestroyWorker extends AutomationControllerActio
                     return false;
                 }
             }
-            //AutomationControllerVM removed
-//            List<VMInstanceVO> vmList = vmInstanceDao.listByZoneId(automationController.getZoneId());
-//            String resourceKey = "ClusterName";
-//            if (vmList != null && !vmList.isEmpty()) {
-//                for (VMInstanceVO vmVO : vmList) {
-//                    ResourceTag automationcontrollervm = resourceTagDao.findByKey(vmVO.getId(), ResourceObjectType.UserVm, resourceKey);
-//                    if (automationcontrollervm != null) {
-//                        if (automationcontrollervm.getValue().equals(automationController.getName())) {
-//                            long automationcontrollervmID = vmVO.getId();
-//                            // delete only if VM exists and is not removed
-//                            UserVmVO userAutomationControllerVM = userVmDao.findById(automationcontrollervmID);
-//                            if (userAutomationControllerVM == null || userAutomationControllerVM.isRemoved()) {
-//                                continue;
-//                            }
-//                            try {
-//                                UserVm deskvm = userVmService.destroyVm(automationcontrollervmID, true);
-//                                if (!userVmManager.expunge(userAutomationControllerVM, CallContext.current().getCallingUserId(), CallContext.current().getCallingAccount())) {
-//                                    LOGGER.warn(String.format("Unable to expunge VM %s : %s, Destroying a automation controller virtual machine in a automation controller will probably fail",
-//                                    deskvm.getInstanceName() , deskvm.getUuid()));
-//                                }
-//                                if (LOGGER.isInfoEnabled()) {
-//                                    LOGGER.info(String.format("Destroyed VM : %s as part of automation controller : %s automation controller virtual machine cleanup", deskvm.getDisplayName(), automationController.getName()));
-//                                }
-//                            } catch (ResourceUnavailableException | ConcurrentOperationException e) {
-//                                LOGGER.warn(String.format("Failed to destroy VM : %s part of the automation controller : %s automation controller virtual machine cleanup. Moving on with destroying remaining resources provisioned for the automation controller", userAutomationControllerVM.getDisplayName(), automationController.getName()), e);
-//                                return false;
-//                            }
-//                        }
-//                    }
-//                }
-//            }
         }
         return vmDestroyed;
     }
 
     private boolean updateAutomationControllerEntryForGC() {
         AutomationControllerVO automationControllerVO = automationControllerDao.findById(automationController.getId());
-//        automationControllerVO.setCheckForGc(true);
         return automationControllerDao.update(automationController.getId(), automationControllerVO);
     }
 
@@ -192,22 +160,6 @@ public class AutomationControllerDestroyWorker extends AutomationControllerActio
         }
     }
 
-//    private boolean destroyClusterIps() {
-//        boolean ipDestroyed = true;
-//        List<AutomationControllerIpRangeVO> ipRangeList = automationControllerIpRangeDao.listByAutomationControllerId(automationController.getId());
-//            for (AutomationControllerIpRangeVO iprange : ipRangeList) {
-//                boolean deletedIp = automationControllerIpRangeDao.remove(iprange.getId());
-//                if (!deletedIp) {
-//                    logMessage(Level.WARN, String.format("Failed to delete automation controller ip range : %s", automationController.getName()), null);
-//                    return false;
-//                }
-//                if (LOGGER.isInfoEnabled()) {
-//                    LOGGER.info(String.format("Automation Controller ip range : %s is successfully deleted", automationController.getName()));
-//                }
-//            }
-//        return ipDestroyed;
-//    }
-
     public boolean destroy() throws CloudRuntimeException {
         init();
         validateClusterState();
@@ -236,10 +188,6 @@ public class AutomationControllerDestroyWorker extends AutomationControllerActio
         }
         stateTransitTo(automationController.getId(), AutomationController.Event.OperationSucceeded);
         final String accessType = "internal";
-        // Automation Controller IP Range remove
-//        if (automationController.getAccessType().equals(accessType)) {
-//            boolean ipDestroyed = destroyClusterIps();
-//        }
         boolean deleted = automationControllerDao.remove(automationController.getId());
         if (!deleted) {
             logMessage(Level.WARN, String.format("Failed to delete automation controller : %s", automationController.getName()), null);
