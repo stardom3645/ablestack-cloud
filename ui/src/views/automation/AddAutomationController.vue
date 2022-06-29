@@ -77,11 +77,11 @@
           </a-select>
         </a-form-item>
         <a-form-item
-          ref="networkid"
-          name="networkid"
+          ref="network"
+          name="network"
           :label="$t('label.network')">
           <a-select
-            v-model:value="form.networkid"
+            v-model:value="form.network"
             showSearch
             optionFilterProp="label"
             :filterOption="(input, option) => {
@@ -151,14 +151,14 @@ export default {
     initForm () {
       this.formRef = ref()
       this.form = reactive({
-        networkid: this.selectedNetwork
+        network: this.selectedNetwork
       })
       this.rules = reactive({
         name: [{ required: true, message: this.$t('message.error.required.input') }],
         description: [{ required: true, message: this.$t('message.error.required.input') }],
         automationcontrollerversion: [{ required: true, message: this.$t('message.error.select') }],
         serviceoffering: [{ required: true, message: this.$t('message.error.select') }],
-        networkid: [{ required: true, message: this.$t('message.error.select') }],
+        network: [{ required: true, message: this.$t('message.error.select') }],
         automationcontrollerip: [{ required: false, message: this.$t('message.error.required.input') }]
       })
     },
@@ -283,9 +283,9 @@ export default {
           account: store.getters.project && store.getters.project.id ? null : store.getters.userInfo.account,
           accountid: store.getters.project && store.getters.project.id ? null : store.getters.userInfo.accountid
         }
-        if (this.isValidValueForKey(values, 'networkid') && this.arrayHasItems(this.networks) && this.networks[values.networkid].id != null) {
-          params.networkid = this.networks[values.networkid].id
-          params.networkname = this.networks[values.networkid].name
+        if (this.isValidValueForKey(values, 'network') && this.arrayHasItems(this.networks) && this.networks[values.network].id != null) {
+          params.networkid = this.networks[values.network].id
+          params.networkname = this.networks[values.network].name
         }
         if (params.controlleruploadtype === 'url') {
           if (values.zoneid === this.$t('label.all.zone')) {
