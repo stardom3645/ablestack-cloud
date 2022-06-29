@@ -248,7 +248,7 @@ public class AutomationControllerStartWorker extends AutomationControllerResourc
         String automationControllerConfig = readResourceFile("/conf/genie");
         NetworkVO ntwk = networkDao.findByIdIncludingRemoved(automationController.getNetworkId());
         final String managementIp = ApiServiceConfiguration.ManagementServerAddresses.value();
-        final String automationControllerUuid = "{{ automation_controller_uuid }}";
+        final String automationControllerId = "{{ automation_controller_id }}";
         final String automationControllerName = "{{ automation_controller_instance_name }}";
         final String acPublicIp = "{{ ac_public_ip }}";
         final String zoneUuid = "{{ zone_id }}";
@@ -263,7 +263,7 @@ public class AutomationControllerStartWorker extends AutomationControllerResourc
         final String moldPort = "{{ mold_port }}";
         final String moldProtocol = "{{ mold_protocol }}";
         final String moldEndPoint = "{{ mold_end_point}}";
-        automationControllerConfig = automationControllerConfig.replace(automationControllerUuid, automationController.getUuid());
+        automationControllerConfig = automationControllerConfig.replace(automationControllerId, automationController.getUuid());
         automationControllerConfig = automationControllerConfig.replace(automationControllerName, automationController.getName()+"-genie");
         if (ntwk.getGuestType() == Network.GuestType.Isolated) {
             List<IPAddressVO> ipAddresses = ipAddressDao.listByAssociatedNetwork(ntwk.getId(), true);

@@ -129,7 +129,7 @@ BEGIN
 	UPDATE automation_deployed_resources_group adrg
 	SET adrg.state = 'Alert'
 	WHERE adrg.id IN (
-		SELECT DISTINCT deployed_group_id FROM automation_deployed_resources_group_details where TIMESTAMPDIFF(MINUTE , created, now()) >= 5
+		SELECT DISTINCT deployed_group_id FROM automation_deployed_resources_group_details where TIMESTAMPDIFF(MINUTE , created, UTC_TIMESTAMP()) >= 5
 	);
 	
 	# Delete all unit details whose service group status is Alert
