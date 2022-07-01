@@ -29,6 +29,10 @@
         <a-card :title="$t('label.automation.controller.access.genie.dashboard')" :loading="versionLoading">
           <a-timeline>
             <a-timeline-item>
+              <p v-html="$t('label.automation.controller.access.genie.dashboard.info')">
+              </p>
+            </a-timeline-item>
+            <a-timeline-item>
               <p v-html="$t('label.automation.controller.access.genie.dashboard.login.info')">
               </p>
             </a-timeline-item>
@@ -103,12 +107,10 @@ export default {
       vm: ref({}),
       automationuservirtualmachines: [],
       instances: [],
-      desktops: [],
       totalStorage: 0,
       currentTab: 'details',
       showAddIpModal: false,
       loadingNic: false,
-      secondaryIPs: [],
       selectedNicId: '',
       controlVmColumns: [
         {
@@ -135,32 +137,7 @@ export default {
           slots: { customRender: 'hostname' }
         }
       ],
-      editNicResource: {},
-      desktopVmColumns: [
-        {
-          title: this.$t('label.name'),
-          dataIndex: 'name',
-          slots: { customRender: 'name' }
-        },
-        {
-          title: this.$t('label.state'),
-          dataIndex: 'state',
-          slots: { customRender: 'state' }
-        },
-        {
-          title: this.$t('label.instancename'),
-          dataIndex: 'instancename'
-        },
-        {
-          title: this.$t('label.ip'),
-          dataIndex: 'ipaddress'
-        },
-        {
-          title: this.$t('label.hostid'),
-          dataIndex: 'hostname',
-          slots: { customRender: 'hostname' }
-        }
-      ]
+      editNicResource: {}
     }
   },
   beforeCreate () {
@@ -172,6 +149,7 @@ export default {
     if (!['Admin'].includes(userInfo.roletype) &&
       (userInfo.account !== this.resource.account || userInfo.domain !== this.resource.domain)) {
       this.controlVmColumns = this.controlVmColumns.filter(col => { return col.dataIndex !== 'hostname' })
+      this.controlVmColumns = this.controlVmColumns.filter(col => { return col.dataIndex !== 'instancename' })
     }
     this.vm = this.resource
     this.fetchData()
