@@ -393,7 +393,7 @@ public class AutomationControllerStartWorker extends AutomationControllerResourc
             }
             String publicIpAddressStr = String.valueOf(publicIpAddress.getAddress());
             try {
-//                pingCheck(publicIpAddressStr, 300000);
+                pingCheck(publicIpAddressStr, 300000);
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
@@ -411,7 +411,7 @@ public class AutomationControllerStartWorker extends AutomationControllerResourc
         stateTransitTo(automationController.getId(), AutomationController.Event.StartRequested);
         startAutomationControllerVMs();
         try {
-//            pingCheck(publicIpAddressStr, 300000);
+            pingCheck(publicIpAddressStr, 300000);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
