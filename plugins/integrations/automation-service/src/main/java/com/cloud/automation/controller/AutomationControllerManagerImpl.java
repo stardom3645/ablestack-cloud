@@ -227,21 +227,23 @@ public class AutomationControllerManagerImpl extends ManagerBase implements Auto
                 }
                 response.setHostName(userVM.getHostName());
             }
+
+            String automationControllerState = String.valueOf(automationController.getState());
+            String automationControllerVmState = automationControllerVmResponses.get(0).getState();
+            try {
+                if (automationControllerVmState == "Stopped" && automationControllerState != "Stopped") {
+                    stateTransitTo(automationController.getId(), AutomationController.Event.StopRequested);
+                    stateTransitTo(automationController.getId(), AutomationController.Event.OperationSucceeded);
+                }
+//                else if (automationControllerVmState == "Running" && automationControllerState != "Running") {
+//                    stateTransitTo(automationController.getId(), AutomationController.Event.StartRequested);
+//                    stateTransitTo(automationController.getId(), AutomationController.Event.OperationSucceeded);
+//                }
+            } catch (Exception e) {
+                LOGGER.warn(String.format("Failed to run Automation controller Alert state scanner on Automation controller : %s status scanner", automationController.getName()), e);
+            }
         }
 
-        String automationControllerState = String.valueOf(automationController.getState());
-        String automationControllerVmState = automationControllerVmResponses.get(0).getState();
-        try {
-            if (automationControllerVmState == "Stopped" && automationControllerState != "Stopped") {
-                stateTransitTo(automationController.getId(), AutomationController.Event.StopRequested);
-                stateTransitTo(automationController.getId(), AutomationController.Event.OperationSucceeded);
-            }else if (automationControllerVmState == "Running" && automationControllerState != "Running") {
-                stateTransitTo(automationController.getId(), AutomationController.Event.StartRequested);
-                stateTransitTo(automationController.getId(), AutomationController.Event.OperationSucceeded);
-            }
-        } catch (Exception e) {
-            LOGGER.warn(String.format("Failed to run Automation controller Alert state scanner on Automation controller : %s status scanner", automationController.getName()), e);
-        }
         response.setAutomationControllerVms(automationControllerVmResponses);
 
         return response;
@@ -327,7 +329,6 @@ public class AutomationControllerManagerImpl extends ManagerBase implements Auto
         if (!AutomationServiceEnabled.value()) {
             throw new CloudRuntimeException("Automation Service plugin is disabled");
         }
-
         validateAutomationControllerCreateParameters(cmd);
 
         final String L2Type = "internal";
@@ -355,16 +356,10 @@ public class AutomationControllerManagerImpl extends ManagerBase implements Auto
     private void validateAutomationControllerCreateParameters(final AddAutomationControllerCmd cmd) throws CloudRuntimeException {
         final String name = cmd.getName();
         final String description = cmd.getDescription();
-        final Long domainId =cmd.getDomainId();
         final Long accountId = cmd.getAccountId();
-        final Long zoneId = cmd.getZoneId();
         final Long networkId = cmd.getNetworkId();
         final String networkName = cmd.getNetworkName();
-        final Long serviceOfferingId = cmd.getServiceOfferingId();
-        final Long automationTemplateId = cmd.getAutomationTemplateId();
-        String templateName = "";
-
-//        final AutomationControllerVersion automationControllerVersion = automationControllerVersionDao.findById(automationTemplateId);
+        final String ipAddress = cmd.getAutomationControllerIp();
 
         if (name == null || name.isEmpty()) {
             throw new InvalidParameterValueException("Invalid name for the Automation controller name:" + name);
@@ -379,6 +374,7 @@ public class AutomationControllerManagerImpl extends ManagerBase implements Auto
             final String otherName = controller.getName();
             final Long otherNetwork = controller.getNetworkId();
             final String otherNetworkName = controller.getNetworkName();
+
 //            if (otherAccountId.equals(accountId)) {
 //                throw new InvalidParameterValueException("Automation controller already exists.");
 //            }
@@ -394,6 +390,15 @@ public class AutomationControllerManagerImpl extends ManagerBase implements Auto
         }
         if (description == null || description.isEmpty()) {
             throw new InvalidParameterValueException("Invalid description for the Automation controller description:" + description);
+        }
+
+        final List<VMInstanceVO> instances = vmInstanceDao.listAll();
+        for (final VMInstanceVO instance : instances) {
+            final String otherIpAddress = instance.getPrivateIpAddress();
+
+            if (otherIpAddress.equals(ipAddress)){
+                throw new InvalidParameterValueException("Automation controller ip address '" + ipAddress + "' already controller deployed.");
+            }
         }
     }
 
