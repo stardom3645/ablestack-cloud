@@ -30,6 +30,7 @@ import org.apache.cloudstack.api.ServerApiException;
 import org.apache.cloudstack.api.command.admin.AdminCmd;
 import org.apache.cloudstack.api.response.AutomationDeployedResourceResponse;
 import org.apache.cloudstack.api.response.ZoneResponse;
+import org.apache.cloudstack.api.response.AutomationControllerResponse;
 import org.apache.cloudstack.context.CallContext;
 import org.apache.log4j.Logger;
 
@@ -67,6 +68,10 @@ public class AddDeployedResourceGroupCmd extends BaseCmd implements AdminCmd {
             description = "the ID of the zone in which this Automation Controller VM is deployed")
     private Long zoneId;
 
+    @Parameter(name = ApiConstants.AUTOMATION_CONTROLLER_ID, type = CommandType.UUID, entityType = AutomationControllerResponse.class, required = true,
+        description = "the ID of the automation controller id")
+    private Long controllerId;
+
     /////////////////////////////////////////////////////
     /////////////////// Accessors ///////////////////////
     /////////////////////////////////////////////////////
@@ -80,6 +85,10 @@ public class AddDeployedResourceGroupCmd extends BaseCmd implements AdminCmd {
 
     public Long getZoneId() {
         return zoneId;
+    }
+
+    public Long getControllerId() {
+        return controllerId;
     }
 
     @Override

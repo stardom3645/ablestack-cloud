@@ -51,6 +51,9 @@ public class AutomationDeployedResourceVO implements AutomationDeployedResource 
     @Column(name = "zone_id")
     private Long zoneId;
 
+    @Column(name = "controller_id")
+    private Long controllerId;
+
     @Column(name = "name")
     private String name;
 
@@ -68,11 +71,12 @@ public class AutomationDeployedResourceVO implements AutomationDeployedResource 
         this.uuid = UUID.randomUUID().toString();
     }
 
-    public AutomationDeployedResourceVO(long accountId,long domainId, Long zoneId, String name, String description) {
+    public AutomationDeployedResourceVO(long accountId,long domainId, Long zoneId, Long controllerId, String name, String description) {
         this.uuid = UUID.randomUUID().toString();
         this.accountId = accountId;
         this.domainId = domainId;
         this.zoneId = zoneId;
+        this.controllerId = controllerId;
         this.name = name;
         this.description = description;
     }
@@ -113,11 +117,6 @@ public class AutomationDeployedResourceVO implements AutomationDeployedResource 
 
     @Override
     public Date getCreated() {
-        return created;
-    }
-
-    @Override
-    public Date getRemoved() {
         return created;
     }
 
