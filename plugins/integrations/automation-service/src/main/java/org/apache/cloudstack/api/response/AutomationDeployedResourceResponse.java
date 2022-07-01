@@ -71,6 +71,10 @@ public class AutomationDeployedResourceResponse extends BaseResponse {
     @Param(description = "the list of services")
     private List<AutomationDeployedUnitResourceResponse> deployedunitservices;
 
+    @SerializedName(ApiConstants.DEPLOYED_VIRTUAL_MACHINES)
+    @Param(description = "the list of virtualmachine associated with this Automation Service Group")
+    private List<UserVmResponse> deployedVms;
+
     public String getId() {
         return id;
     }
@@ -141,5 +145,13 @@ public class AutomationDeployedResourceResponse extends BaseResponse {
 
     public void setDeployedUnitServices(List<AutomationDeployedUnitResourceResponse> deployedunitservices) {
         this.deployedunitservices = deployedunitservices;
+    }
+
+    public List<UserVmResponse> getDeployedVms() {
+        return deployedVms;
+    }
+
+    public void setDeployedVms(List<UserVmResponse> deployedVms) {
+        this.deployedVms = deployedVms;
     }
 }
