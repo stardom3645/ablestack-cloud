@@ -381,10 +381,10 @@ public class AutomationControllerManagerImpl extends ManagerBase implements Auto
                 throw new InvalidParameterValueException("Automation controller name '" + name + "' already exists.");
             }
             if (otherNetwork.equals(networkId)){
-                throw new InvalidParameterValueException("Automation controller network id '" + networkId + "' already controller deployed.");
+                throw new InvalidParameterValueException("Automation controller network id '" + networkId + "' already deployed.");
             }
             if (otherNetworkName.equals(networkName)){
-                throw new InvalidParameterValueException("Automation controller network name '" + networkName + "' already controller deployed.");
+                throw new InvalidParameterValueException("Automation controller network name '" + networkName + "' already deployed.");
             }
         }
         if (description == null || description.isEmpty()) {
@@ -395,8 +395,10 @@ public class AutomationControllerManagerImpl extends ManagerBase implements Auto
         for (final VMInstanceVO instance : instances) {
             final String otherIpAddress = instance.getPrivateIpAddress();
 
-            if (otherIpAddress.equals(ipAddress)){
-                throw new InvalidParameterValueException("Automation controller ip address '" + ipAddress + "' already controller deployed.");
+            if (ipAddress != null) {
+                if (otherIpAddress.equals(ipAddress)){
+                    throw new InvalidParameterValueException("Automation controller ip address '" + ipAddress + "' already deployed.");
+                }
             }
         }
     }
