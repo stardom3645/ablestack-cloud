@@ -390,17 +390,6 @@ public class AutomationControllerManagerImpl extends ManagerBase implements Auto
         if (description == null || description.isEmpty()) {
             throw new InvalidParameterValueException("Invalid description for the Automation controller description:" + description);
         }
-
-        final List<VMInstanceVO> instances = vmInstanceDao.listAll();
-        for (final VMInstanceVO instance : instances) {
-            final String otherIpAddress = instance.getPrivateIpAddress();
-
-            if (ipAddress != null) {
-                if (otherIpAddress.equals(ipAddress)){
-                    throw new InvalidParameterValueException("Automation controller ip address '" + ipAddress + "' already deployed.");
-                }
-            }
-        }
     }
 
     @Override
