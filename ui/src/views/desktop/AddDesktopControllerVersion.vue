@@ -26,7 +26,7 @@
         layout="vertical">
         <a-row :gutter="12">
           <a-col :md="24" :lg="24">
-            <a-form-item ref="controllerversionname" name="controllerversionname" :label="$t('label.name')">
+            <a-form-item ref="controllerversionname" name="controllerversionname">
               <template #label>
                 <tooltip-label :title="$t('label.name')" :tooltip="$t('placeholder.name')"/>
               </template>
@@ -38,7 +38,7 @@
         </a-row>
         <a-row :gutter="12">
           <a-col :md="24" :lg="24">
-            <a-form-item ref="description" name="description" :label="$t('label.description')">
+            <a-form-item ref="description" name="description">
               <template #label>
                 <tooltip-label :title="$t('label.description')" :tooltip="$t('placeholder.description')"/>
               </template>
@@ -50,7 +50,7 @@
         </a-row>
         <a-row :gutter="12">
           <a-col :md="24" :lg="24">
-            <a-form-item ref="controllerversion" name="controllerversion" :label="$t('label.controllerversion')">
+            <a-form-item ref="controllerversion" name="controllerversion" >
               <template #label>
                 <tooltip-label :title="$t('label.version')" :tooltip="$t('placeholder.version')"/>
               </template>
@@ -62,7 +62,7 @@
         </a-row>
         <a-row :gutter="12">
           <a-col :md="24" :lg="24">
-            <a-form-item ref="controlleruploadtype" name="controlleruploadtype" :label="$t('label.controlleruploadtype')">
+            <a-form-item ref="controlleruploadtype" name="controlleruploadtype">
               <template #label>
                 <tooltip-label :title="$t('label.controlleruploadtype')" :tooltip="$t('placeholder.controlleruploadtype')"/>
               </template>
@@ -82,10 +82,10 @@
         </a-row>
         <a-row :gutter="12" v-if="form.controlleruploadtype =='url'">
           <a-col :md="24" :lg="24">
-            <a-form-item
-              :label="$t('label.zones')"
-              ref="zoneid"
-              name="zoneid">
+            <a-form-item ref="zoneid" name="zoneid">
+              <template #label>
+                <tooltip-label :title="$t('label.zone')" :tooltip="$t('placeholder.zones')"/>
+              </template>
               <a-select
                 v-model:value="form.zoneid"
                 showSearch
@@ -109,7 +109,10 @@
         </a-row>
         <a-row :gutter="12" v-if="form.controlleruploadtype =='url'">
           <a-col :md="24" :lg="12">
-            <a-form-item ref="hypervisor" name="hypervisor" :label="$t('label.hypervisor')">
+            <a-form-item ref="hypervisor" name="hypervisor">
+              <template #label>
+                <tooltip-label :title="$t('label.hypervisor')" :tooltip="$t('placeholder.hypervisor')"/>
+              </template>
               <a-select
                 v-model:value="form.hypervisor"
                 :loading="hyperVisor.loading"
@@ -127,7 +130,10 @@
             </a-form-item>
           </a-col>
           <a-col :md="24" :lg="12">
-            <a-form-item ref="format" name="format" :label="$t('label.format')">
+            <a-form-item ref="format" name="format">
+              <template #label>
+                <tooltip-label :title="$t('label.format')" :tooltip="$t('placeholder.format')"/>
+              </template>
               <a-select
                 v-model:value="form.format"
                 :placeholder="$t('placeholder.format')"
@@ -146,7 +152,10 @@
         </a-row>
         <a-row :gutter="12" v-if="form.controlleruploadtype =='url'">
           <a-col :md="24" :lg="24">
-            <a-form-item ref="dcurl" name="dcurl"  :label="$t('label.dcvm.template.upload.url')" >
+            <a-form-item ref="dcurl" name="dcurl">
+              <template #label>
+                <tooltip-label :title="$t('label.dcvm.template.upload.url')" :tooltip="$t('placeholder.dcvm.template.upload.url')"/>
+              </template>
               <a-input
                 v-model:value="form.dcurl"
                 :placeholder="$t('placeholder.dcvm.template.upload.url')" />
@@ -155,10 +164,10 @@
         </a-row>
         <a-row :gutter="12" v-if="form.controlleruploadtype =='url'">
           <a-col :md="24" :lg="24">
-            <a-form-item
-              name="dcostype"
-              ref="dcostype"
-              :label="$t('label.dcvm.template.ostype')">
+            <a-form-item name="dcostype" ref="dcostype">
+              <template #label>
+                <tooltip-label :title="$t('label.dcvm.template.ostype')" :tooltip="$t('placeholder.dcvm.template.ostype')"/>
+              </template>
               <a-select
                 showSearch
                 optionFilterProp="label"
@@ -177,7 +186,10 @@
         </a-row>
         <a-row :gutter="12" v-if="form.controlleruploadtype =='url'">
           <a-col :md="24" :lg="24">
-            <a-form-item ref="worksurl" name="worksurl"  :label="$t('label.worksvm.template.upload.url')" >
+            <a-form-item ref="worksurl" name="worksurl">
+              <template #label>
+                <tooltip-label :title="$t('label.worksvm.template.upload.url')" :tooltip="$t('placeholder.worksvm.template.upload.url')"/>
+              </template>
               <a-input
                 v-model:value="form.worksurl"
                 :placeholder="$t('placeholder.worksvm.template.upload.url')" />
@@ -186,10 +198,10 @@
         </a-row>
         <a-row :gutter="12" v-if="form.controlleruploadtype =='url'">
           <a-col :md="24" :lg="24">
-            <a-form-item
-              name="worksostype"
-              ref="worksostype"
-              :label="$t('label.worksvm.template.ostype')">
+            <a-form-item name="worksostype" ref="worksostype">
+              <template #label>
+                <tooltip-label :title="$t('label.worksvm.template.ostype')" :tooltip="$t('placeholder.worksvm.template.ostype')"/>
+              </template>
               <a-select
                 showSearch
                 optionFilterProp="label"
@@ -208,10 +220,10 @@
         </a-row>
         <a-row :gutter="12" v-if="form.controlleruploadtype =='template'">
           <a-col :md="24" :lg="24">
-            <a-form-item
-              name="dctemplate"
-              ref="dctemplate"
-              :label="$t('label.dctemplate')">
+            <a-form-item name="dctemplate" ref="dctemplate">
+              <template #label>
+                <tooltip-label :title="$t('label.dctemplate')" :tooltip="$t('placeholder.template')"/>
+              </template>
               <a-select
                 showSearch
                 optionFilterProp="label"
@@ -228,10 +240,10 @@
             </a-form-item>
           </a-col>
           <a-col :md="24" :lg="24">
-            <a-form-item
-              name="workstemplate"
-              ref="workstemplate"
-              :label="$t('label.workstemplate')">
+            <a-form-item name="workstemplate" ref="workstemplate">
+              <template #label>
+                <tooltip-label :title="$t('label.workstemplate')" :tooltip="$t('placeholder.template')"/>
+              </template>
               <a-select
                 showSearch
                 optionFilterProp="label"
