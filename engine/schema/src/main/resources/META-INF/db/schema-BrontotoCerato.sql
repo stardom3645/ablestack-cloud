@@ -118,23 +118,23 @@ ON SCHEDULE EVERY 1 MINUTE
 COMMENT 'Check the status of the automation controller in 1 minute'
 DO
 BEGIN 
-	# If the status of the Automation Controller is not Running, change the service group status to Alert
+	# If the status of the Automation Controller is not Running, change the service group status to Disconnected
 	UPDATE automation_deployed_resources_group adrg
-	SET adrg.state = 'Alert'
+	SET adrg.state = 'Disconnected'
 	WHERE adrg.controller_id IN (
 		SELECT id FROM automation_controller_service_vm WHERE removed IS NULL AND state != 'Running'
 	);
 
-	# If the unit detail status check time differs from the now() time by more than 5 minutes, the service group status is changed to Alert.
+	# If the unit detail status check time differs from the now() time by more than 5 minutes, the service group status is changed to Disconnected.
 	UPDATE automation_deployed_resources_group adrg
-	SET adrg.state = 'Alert'
+	SET adrg.state = 'Disconnected'
 	WHERE adrg.id IN (
 		SELECT DISTINCT deployed_group_id FROM automation_deployed_resources_group_details where TIMESTAMPDIFF(MINUTE , created, UTC_TIMESTAMP()) >= 5
 	);
 	
-	# Delete all unit details whose service group status is Alert
+	# Delete all unit details whose service group status is Disconnected
 	DELETE FROM automation_deployed_resources_group_details adrgd
 	WHERE deployed_group_id IN (
-		SELECT id FROM automation_deployed_resources_group WHERE state = 'Alert'
+		SELECT id FROM automation_deployed_resources_group WHERE state = 'Disconnected'
 	);
 END
