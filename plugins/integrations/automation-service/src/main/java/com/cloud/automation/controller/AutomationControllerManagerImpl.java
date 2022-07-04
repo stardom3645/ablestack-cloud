@@ -231,14 +231,12 @@ public class AutomationControllerManagerImpl extends ManagerBase implements Auto
             String automationControllerState = String.valueOf(automationController.getState());
             String automationControllerVmState = automationControllerVmResponses.get(0).getState();
             try {
-                if (automationControllerVmState == "Stopped" && automationControllerState != "Stopped") {
-                    stateTransitTo(automationController.getId(), AutomationController.Event.StopRequested);
-                    stateTransitTo(automationController.getId(), AutomationController.Event.OperationSucceeded);
+                if (automationControllerState != "Starting") {
+                    if (automationControllerVmState == "Stopped" && automationControllerState != "Stopped") {
+                        stateTransitTo(automationController.getId(), AutomationController.Event.StopRequested);
+                        stateTransitTo(automationController.getId(), AutomationController.Event.OperationSucceeded);
+                    }
                 }
-//                else if (automationControllerVmState == "Running" && automationControllerState != "Running") {
-//                    stateTransitTo(automationController.getId(), AutomationController.Event.StartRequested);
-//                    stateTransitTo(automationController.getId(), AutomationController.Event.OperationSucceeded);
-//                }
             } catch (Exception e) {
                 LOGGER.warn(String.format("Failed to run Automation controller Alert state scanner on Automation controller : %s status scanner", automationController.getName()), e);
             }
