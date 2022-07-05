@@ -1021,7 +1021,7 @@ export default {
         if (values.enable) {
           params.enable = values.enable
         }
-        if(values.serviceofferingid){
+        if (values.serviceofferingid) {
           params.serviceofferingid = values.serviceofferingid
         }
         params.traffictype = 'GUEST' // traffic type dropdown has been removed since it has only one option ('Guest'). Hardcode traffic type value here.
