@@ -38,6 +38,27 @@
           <template #state="{text}">
             <status :text="text ? text : ''" displayText />
           </template>
+          <template #created="{ text }">
+            {{ $toLocaleDate(text) }}
+          </template>
+        </a-table>
+      </a-tab-pane>
+
+      <a-tab-pane :tab="$t('label.instances')" key="instances">
+        <a-table
+          class="table"
+          size="small"
+          :columns="vmColumns"
+          :dataSource="this.deployedvms"
+          :rowKey="item => item.id"
+          :pagination="false"
+        >
+          <template #name="{record}">
+            <router-link :to="{ path: '/vm/' + record.id }">{{ record.name }}</router-link>
+          </template>
+          <template #state="{text}">
+            <status :text="text ? text : ''" displayText />
+          </template>
         </a-table>
       </a-tab-pane>
     </a-tabs>
@@ -46,20 +67,13 @@
 
 <script>
 import { mixinDevice } from '@/utils/mixin.js'
-import ResourceLayout from '@/layouts/ResourceLayout'
-import Status from '@/components/widgets/Status'
 import DetailsTab from '@/components/view/DetailsTab'
-import ListResourceTable from '@/components/view/ListResourceTable'
-import TooltipButton from '@/components/widgets/TooltipButton'
-
+import Status from '@/components/widgets/Status'
 export default {
   name: 'AutomationTab',
   components: {
-    ResourceLayout,
     DetailsTab,
-    Status,
-    ListResourceTable,
-    TooltipButton
+    Status
   },
   mixins: [mixinDevice],
   props: {
@@ -76,7 +90,6 @@ export default {
   data () {
     return {
       currentTab: 'details',
-      showAddIpModal: false,
       deployedResourceColumns: [
         {
           title: this.$t('label.serviceunitname'),
@@ -94,9 +107,30 @@ export default {
           slots: { customRender: 'instancename' }
         },
         {
-          title: this.$t('label.checkedtime'),
+          title: this.$t('label.created'),
           dataIndex: 'created',
           slots: { customRender: 'created' }
+        }
+      ],
+      vmColumns: [
+        {
+          title: this.$t('label.name'),
+          dataIndex: 'name',
+          slots: { customRender: 'name' }
+        },
+        {
+          title: this.$t('label.displayname'),
+          dataIndex: 'displayname',
+          slots: { customRender: 'displayname' }
+        },
+        {
+          title: this.$t('label.state'),
+          dataIndex: 'state',
+          slots: { customRender: 'state' }
+        },
+        {
+          title: this.$t('label.ip'),
+          dataIndex: 'nic.[0].ipaddress'
         }
       ]
     }
@@ -106,14 +140,6 @@ export default {
   },
   created () {
     this.fetchData()
-  },
-  watch: {
-    resource: function (newItem, oldItem) {
-      this.fetchData()
-    },
-    $route: function (newItem, oldItem) {
-      this.setCurrentTab()
-    }
   },
   mounted () {
     this.setCurrentTab()
@@ -138,6 +164,7 @@ export default {
     },
     fetchData () {
       this.deployedunitservices = this.resource.deployedunitservices || []
+      this.deployedvms = this.resource.deployedvms || []
     }
   }
 }

@@ -9,10 +9,10 @@
 	"MOLD_ZONE_NAME":"{{ zone_name }}",
 	"AC_PUBLIC_IP":"{{ ac_public_ip }}",
 	"BOOTSTRAPPED": "false",
-    "MOLD_API_URL": "{{ mold_end_point}}",
-    "MOLD_API_KEY": "{{ api_key }}",
-    "MOLD_SECRET_KEY": "{{ secret_key }}",
-    "AC_INSTANCE_UUID": "{{ automation_controller_uuid }}",
-    "AC_INSTANCE_NAME": "{{ automation_controller_instance_name }}",
-    "AC_NETWORK_NAME": "{{ network_name }}"
+  "MOLD_API_URL": "{{ mold_end_point}}",
+  "MOLD_API_KEY": "{{ api_key }}",
+  "MOLD_SECRET_KEY": "{{ secret_key }}",
+  "AC_ID": "{{ automation_controller_id }}",
+  "AC_INSTANCE_NAME": "{{ automation_controller_instance_name }}",
+  "AC_NETWORK_NAME": "{{ network_name }}"
 }

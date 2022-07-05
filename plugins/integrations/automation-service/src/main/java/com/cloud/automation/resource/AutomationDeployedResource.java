@@ -30,7 +30,7 @@ import org.apache.cloudstack.api.InternalIdentity;
 public interface AutomationDeployedResource extends  InternalIdentity, Identity, ControlledEntity {
 
     public enum State {
-        Active, Inactive
+        Active, Inactive, Disconnected
     }
 
     long getId();
@@ -40,5 +40,4 @@ public interface AutomationDeployedResource extends  InternalIdentity, Identity,
     Long getZoneId();
     State getState();
     Date getCreated();
-    Date getRemoved();
 }

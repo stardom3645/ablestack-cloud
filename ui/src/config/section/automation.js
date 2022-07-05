@@ -122,7 +122,7 @@ export default {
       docHelp: '',
       permission: ['listAutomationDeployedResource'],
       columns: ['name', 'description', 'state', 'account'],
-      details: ['name', 'description', 'state'],
+      details: ['name', 'description', 'state', 'created'],
       tabs: [{
         component: shallowRef(defineAsyncComponent(() => import('@/views/automation/DeployedResourceTab.vue')))
       }],
