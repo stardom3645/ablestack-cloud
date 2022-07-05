@@ -237,7 +237,7 @@
             </a-radio-button>
           </a-radio-group>
         </a-form-item>
-        <a-form-item v-if="isVirtualRouterForAtLeastOneService || isVpcVirtualRouterForAtLeastOneService">
+        <a-form-item name="serviceofferingid" ref="serviceofferingid" v-if="isVirtualRouterForAtLeastOneService || isVpcVirtualRouterForAtLeastOneService">
           <template #label>
             <tooltip-label :title="$t('label.serviceofferingid')" :tooltip="apiParams.serviceofferingid.description"/>
           </template>
@@ -1020,6 +1020,9 @@ export default {
         }
         if (values.enable) {
           params.enable = values.enable
+        }
+        if (values.serviceofferingid) {
+          params.serviceofferingid = values.serviceofferingid
         }
         params.traffictype = 'GUEST' // traffic type dropdown has been removed since it has only one option ('Guest'). Hardcode traffic type value here.
         api('createNetworkOffering', params).then(json => {

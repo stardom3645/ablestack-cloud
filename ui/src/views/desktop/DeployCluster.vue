@@ -24,7 +24,7 @@
         :rules="rules"
         @submit="handleSubmit"
         layout="vertical">
-        <a-form-item ref="name" name="name" :label="$t('label.name')">
+        <a-form-item ref="name" name="name">
           <template #label>
             <tooltip-label :title="$t('label.name')" :tooltip="$t('placeholder.name')"/>
           </template>
@@ -32,7 +32,7 @@
             v-model:value="form.name"
             :placeholder="$t('placeholder.name')"/>
         </a-form-item>
-        <a-form-item ref="description" name="description" :label="$t('label.description')">
+        <a-form-item ref="description" name="description">
           <template #label>
             <tooltip-label :title="$t('label.description')" :tooltip="$t('placeholder.description')"/>
           </template>
@@ -40,7 +40,7 @@
             v-model:value="form.description"
             :placeholder="$t('placeholder.description')"/>
         </a-form-item>
-        <a-form-item ref="addomainname" name="addomainname" :label="$t('label.addomainname')">
+        <a-form-item ref="addomainname" name="addomainname">
           <template #label>
             <tooltip-label :title="$t('label.addomainname')" :tooltip="$t('placeholder.addomainname')"/>
           </template>
@@ -83,12 +83,12 @@
             </a-form-item>
           </a-col>
         </a-row> -->
-        <a-form-item
-          ref="controllerversion"
-          name="controllerversion"
-          :label="$t('label.desktop.controller.template.version')">
+        <a-form-item name="controllerversionid" ref="controllerversionid" >
+          <template #label>
+            <tooltip-label :title="$t('label.desktop.controller.template.version')" :tooltip="$t('placeholder.desktop.controller.template.version')"/>
+          </template>
           <a-select
-            v-model:value="form.controllerversion"
+            v-model:value="form.controllerversionid"
             showSearch
             optionFilterProp="label"
             :filterOption="(input, option) => {
@@ -101,21 +101,23 @@
             </a-select-option>
           </a-select>
         </a-form-item>
-        <a-form-item
-          ref="serviceoffering"
-          name="serviceoffering"
-          :label="$t('label.compute.offerings')">
+
+        <a-form-item name="serviceofferingid" ref="serviceofferingid">
+          <template #label>
+            <tooltip-label :title="$t('label.serviceofferingid')" :tooltip="$t('placeholder.compute.offering')"/>
+          </template>
           <a-select
-            v-model:value="form.serviceoffering"
+            id="offering-selection"
+            v-model:value="form.serviceofferingid"
             showSearch
             optionFilterProp="label"
             :filterOption="(input, option) => {
               return option.children[0].children.toLowerCase().indexOf(input.toLowerCase()) >= 0
             }"
-            :placeholder="$t('placeholder.compute.offering')"
-            :loading="templateVersionLoading">
-            <a-select-option v-for="(opt, optIndex) in this.serviceOfferings" :key="optIndex">
-              {{ opt.name }} {{ opt.version }}
+            :loading="serviceOfferingLoading"
+            :placeholder="$t('placeholder.compute.offering')">
+            <a-select-option v-for="(opt, optIndex) in serviceOfferings" :key="optIndex">
+              {{ opt.name || opt.description }}
             </a-select-option>
           </a-select>
         </a-form-item>
@@ -144,10 +146,10 @@
             </a-radio-button>
           </a-radio-group>
         </a-form-item> -->
-        <a-form-item
-          ref="networkid"
-          name="networkid"
-          :label="$t('label.network')">
+        <a-form-item ref="networkid" name="networkid">
+          <template #label>
+            <tooltip-label :title="$t('label.networkid')" :tooltip="$t('placeholder.network')"/>
+          </template>
           <a-select
             v-model:value="form.networkid"
             showSearch
@@ -229,10 +231,7 @@
             </a-form-item>
           </a-col>
         </a-row> -->
-        <a-form-item
-          ref="worksvmip"
-          name="worksvmip"
-          :label="$t('label.worksvmip')">
+        <a-form-item ref="worksvmip" name="worksvmip">
           <template #label>
             <tooltip-label :title="$t('label.worksvmip')" :tooltip="$t('placeholder.worksvmip')"/>
           </template>
@@ -240,10 +239,7 @@
             v-model:value="form.worksvmip"
             :placeholder="$t('placeholder.worksvmip')"/>
         </a-form-item>
-        <a-form-item
-          ref="dcvmip"
-          name="dcvmip"
-          :label="$t('label.dcvmip')">
+        <a-form-item ref="dcvmip"  name="dcvmip">
           <template #label>
             <tooltip-label :title="$t('label.dcvmip')" :tooltip="$t('placeholder.dcvmip')"/>
           </template>
@@ -299,8 +295,8 @@ export default {
         name: [{ required: true, message: this.$t('message.error.required.input') }],
         description: [{ required: true, message: this.$t('message.error.required.input') }],
         addomainname: [{ required: true, message: this.$t('message.error.required.input') }],
-        controllerversion: [{ required: true, message: this.$t('message.error.select') }],
-        serviceoffering: [{ required: true, message: this.$t('message.error.select') }],
+        controllerversionid: [{ required: true, message: this.$t('message.error.select') }],
+        serviceofferingid: [{ required: true, message: this.$t('message.error.serviceoffering.for.cluster') }],
         networkid: [{ required: true, message: this.$t('message.error.select') }],
         worksvmip: [{ required: true, message: this.$t('message.error.required.input') }],
         dcvmip: [{ required: true, message: this.$t('message.error.required.input') }]
@@ -345,11 +341,13 @@ export default {
         var items = json.listdesktopcontrollerversionsresponse.desktopcontrollerversion
         if (items != null) {
           this.controllerVersions = items.filter(it => it.state === 'Enabled')
+          console.log('this.controllerVersions :>> ', this.controllerVersions)
         }
       }).finally(() => {
         this.controllerVersionLoading = false
         if (this.arrayHasItems(this.controllerVersions)) {
-          this.form.controllerversion = 0
+          console.log('123 :>> ')
+          this.form.controllerversionid = 0
         }
       })
     },
@@ -362,9 +360,11 @@ export default {
         if (items != null) {
           this.serviceOfferings = items.filter(it => it.iscustomized === false)
         }
+        console.log('this.serviceOfferings :>> ', this.serviceOfferings)
       }).finally(() => {
         this.serviceOfferingLoading = false
         if (this.arrayHasItems(this.serviceOfferings)) {
+          console.log('1234444 :>> ')
           this.form.serviceofferingid = 0
         }
       })
@@ -450,7 +450,7 @@ export default {
           description: values.description,
           addomainname: values.addomainname,
           // desktoppassword: values.password,
-          controllerversion: this.controllerVersions[values.controllerversion].id,
+          controllerversion: this.controllerVersions[values.controllerversionid].id,
           serviceofferingid: this.serviceOfferings[values.serviceofferingid].id,
           networkid: this.selectedNetwork.id,
           clustertype: this.accessType,

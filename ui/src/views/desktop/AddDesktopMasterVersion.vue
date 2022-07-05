@@ -29,7 +29,7 @@ import { reactive, ref, toRaw } from 'vue'
         layout="vertical">
         <a-row :gutter="12">
           <a-col :md="24" :lg="24">
-            <a-form-item ref="masterversionname" name="masterversionname" :label="$t('label.masterversionname')">
+            <a-form-item ref="masterversionname" name="masterversionname">
               <template #label>
                 <tooltip-label :title="$t('label.masterversionname')" :tooltip="$t('placeholder.name')"/>
               </template>
@@ -41,7 +41,7 @@ import { reactive, ref, toRaw } from 'vue'
         </a-row>
         <a-row :gutter="12">
           <a-col :md="24" :lg="24">
-            <a-form-item ref="description" name="description" :label="$t('label.description')">
+            <a-form-item ref="description" name="description">
               <template #label>
                 <tooltip-label :title="$t('label.description')" :tooltip="$t('placeholder.description')"/>
               </template>
@@ -53,7 +53,7 @@ import { reactive, ref, toRaw } from 'vue'
         </a-row>
         <a-row :gutter="12">
           <a-col :md="24" :lg="24">
-            <a-form-item ref="masterversion" name="masterversion" :label="$t('label.masterversion')">
+            <a-form-item ref="masterversion" name="masterversion">
               <template #label>
                 <tooltip-label :title="$t('label.masterversion')" :tooltip="$t('placeholder.version')"/>
               </template>
@@ -65,7 +65,7 @@ import { reactive, ref, toRaw } from 'vue'
         </a-row>
         <a-row :gutter="12">
           <a-col :md="24" :lg="24">
-            <a-form-item ref="mastertemplatetype" name="mastertemplatetype" :label="$t('label.mastertemplatetype')">
+            <a-form-item ref="mastertemplatetype" name="mastertemplatetype">
               <template #label>
                 <tooltip-label :title="$t('label.mastertemplatetype')" :tooltip="$t('placeholder.mastertemplatetype')"/>
               </template>
@@ -84,7 +84,7 @@ import { reactive, ref, toRaw } from 'vue'
         </a-row>
         <a-row :gutter="12">
           <a-col :md="24" :lg="24">
-            <a-form-item ref="masteruploadtype" name="masteruploadtype" :label="$t('label.masteruploadtype')">
+            <a-form-item ref="masteruploadtype" name="masteruploadtype">
               <template #label>
                 <tooltip-label :title="$t('label.masteruploadtype')" :tooltip="$t('placeholder.masteruploadtype')"/>
               </template>
@@ -104,10 +104,10 @@ import { reactive, ref, toRaw } from 'vue'
         </a-row>
         <a-row :gutter="12" v-if="form.masteruploadtype=='url'">
           <a-col :md="24" :lg="24">
-            <a-form-item
-              :label="$t('label.zoneid')"
-              ref="zoneid"
-              name="zoneid">
+            <a-form-item ref="zoneid" name="zoneid">
+              <template #label>
+                <tooltip-label :title="$t('label.zoneid')" :tooltip="$t('placeholder.zones')"/>
+              </template>
               <a-select
                 v-model:value="form.zoneid"
                 showSearch
@@ -131,7 +131,10 @@ import { reactive, ref, toRaw } from 'vue'
         </a-row>
         <a-row :gutter="12" v-if="form.masteruploadtype=='url'">
           <a-col :md="24" :lg="12">
-            <a-form-item ref="hypervisor" name="hypervisor" :label="$t('label.hypervisor')">
+            <a-form-item ref="hypervisor" name="hypervisor">
+              <template #label>
+                <tooltip-label :title="$t('label.hypervisor')" :tooltip="$t('placeholder.hypervisor')"/>
+              </template>
               <a-select
                 v-model:value="form.hypervisor"
                 :loading="hyperVisor.loading"
@@ -149,7 +152,10 @@ import { reactive, ref, toRaw } from 'vue'
             </a-form-item>
           </a-col>
           <a-col :md="24" :lg="12">
-           <a-form-item ref="format" name="format" :label="$t('label.format')">
+           <a-form-item ref="format" name="format">
+              <template #label>
+                <tooltip-label :title="$t('label.format')" :tooltip="$t('placeholder.format')"/>
+              </template>
               <a-select
                 v-model:value="form.format"
                 :placeholder="$t('placeholder.format')"
@@ -168,10 +174,10 @@ import { reactive, ref, toRaw } from 'vue'
         </a-row>
         <a-row :gutter="12" v-if="form.masteruploadtype=='url'">
           <a-col :md="24" :lg="24">
-            <a-form-item
-              name="masterostype"
-              ref="masterostype"
-              :label="$t('label.masterostype')">
+            <a-form-item name="masterostype" ref="masterostype">
+              <template #label>
+                <tooltip-label :title="$t('label.masterostype')" :tooltip="$t('placeholder.ostype')"/>
+              </template>
               <a-select
                 showSearch
                 optionFilterProp="label"
@@ -190,7 +196,10 @@ import { reactive, ref, toRaw } from 'vue'
         </a-row>
         <a-row :gutter="12" v-if="form.masteruploadtype=='url'">
           <a-col :md="24" :lg="24">
-            <a-form-item ref="masterurl" name="masterurl"  :label="$t('label.masterurl')" >
+            <a-form-item ref="masterurl" name="masterurl">
+              <template #label>
+                <tooltip-label :title="$t('label.masterurl')" :tooltip="$t('placeholder.url')"/>
+              </template>
               <a-input
                 v-model:value="form.masterurl"
                 :placeholder="$t('placeholder.url')" />
@@ -199,10 +208,10 @@ import { reactive, ref, toRaw } from 'vue'
         </a-row>
         <a-row :gutter="12" v-if="form.masteruploadtype=='template'">
           <a-col :md="24" :lg="24">
-            <a-form-item
-              name="mastertemplate"
-              ref="mastertemplate"
-              :label="$t('label.templatename')">
+            <a-form-item name="mastertemplate" ref="mastertemplate">
+              <template #label>
+                <tooltip-label :title="$t('label.templatename')" :tooltip="$t('placeholder.template')"/>
+              </template>
               <a-select
                 showSearch
                 optionFilterProp="label"
