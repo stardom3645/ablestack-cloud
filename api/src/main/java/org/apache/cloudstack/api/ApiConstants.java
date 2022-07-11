@@ -940,6 +940,7 @@ public class ApiConstants {
     public static final String DEPLOYED_GROUP_ID = "deployedgroupid";
     public static final String DEPLOYED_VM_ID = "deployedvmid";
     public static final String DEPLOYED_VIRTUAL_MACHINES = "deployedvms";
+    public static final String ACCESS_INFO = "accessinfo";
 
     public static final String BOOT_TYPE = "boottype";
     public static final String BOOT_MODE = "bootmode";

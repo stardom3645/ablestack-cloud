@@ -43,6 +43,10 @@ public class AutomationDeployedResourceResponse extends BaseResponse {
     @Param(description = "the description of the running service")
     private String description;
 
+    @SerializedName(ApiConstants.ACCESS_INFO)
+    @Param(description = "a description of how to access the service")
+    private String accessInfo;
+
     @SerializedName(ApiConstants.ACCOUNT_ID)
     @Param(description = "the account id associated with the Automation Service")
     private Long accountId;
@@ -97,6 +101,14 @@ public class AutomationDeployedResourceResponse extends BaseResponse {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public String getAccessInfo() {
+        return accessInfo;
+    }
+
+    public void setAccessInfo(String accessInfo) {
+        this.accessInfo = accessInfo;
     }
 
     public void setAccountId(Long accountId) {

@@ -64,6 +64,10 @@ public class AddDeployedResourceGroupCmd extends BaseCmd implements AdminCmd {
             description = "the description of the running service")
     private String description;
 
+    @Parameter(name = ApiConstants.ACCESS_INFO, type = CommandType.STRING, required = true,
+    description = "a description of how to access the service")
+    private String accessInfo;
+
     @Parameter(name = ApiConstants.ZONE_ID, type = CommandType.UUID, entityType = ZoneResponse.class, required = true,
             description = "the ID of the zone in which this Automation Controller VM is deployed")
     private Long zoneId;
@@ -81,6 +85,10 @@ public class AddDeployedResourceGroupCmd extends BaseCmd implements AdminCmd {
 
     public String getDescription() {
         return description;
+    }
+
+    public String getAccessInfo() {
+        return accessInfo;
     }
 
     public Long getZoneId() {

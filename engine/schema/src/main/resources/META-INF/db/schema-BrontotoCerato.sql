@@ -20,7 +20,7 @@
 --;
 
 -- Adding automation controller version table
-CREATE TABLE `automation_controller_template_version` (
+CREATE TABLE IF NOT EXISTS `automation_controller_template_version` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,
   `uuid` varchar(40) DEFAULT NULL,
   `name` varchar(255) NOT NULL COMMENT 'the name of this Automation Controller Template Version',
@@ -40,7 +40,7 @@ CREATE TABLE `automation_controller_template_version` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
 
 -- Adding automation controller table
-CREATE TABLE `automation_controller_service_vm` (
+CREATE TABLE IF NOT EXISTS `automation_controller_service_vm` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,
   `uuid` varchar(40) DEFAULT NULL,
   `name` varchar(255) NOT NULL COMMENT 'the name of this Automation Controller Instance',
@@ -68,7 +68,7 @@ CREATE TABLE `automation_controller_service_vm` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
 
 -- Adding automation controller vm map table
-CREATE TABLE `automation_vm_map` (
+CREATE TABLE IF NOT EXISTS `automation_vm_map` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,
   `automation_controller_id` bigint unsigned NOT NULL COMMENT 'the ID of the Automation Controller',
   `vm_id` bigint unsigned NOT NULL COMMENT 'the ID of the VM',
@@ -78,7 +78,7 @@ CREATE TABLE `automation_vm_map` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
 
 -- Adding automation controller resource group table
-CREATE TABLE `automation_deployed_resources_group` (
+CREATE TABLE IF NOT EXISTS `automation_deployed_resources_group` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,
   `uuid` varchar(40) DEFAULT NULL,
   `account_id` bigint unsigned NOT NULL COMMENT 'the ID of owner account of this Automation Controller VM',
@@ -87,6 +87,7 @@ CREATE TABLE `automation_deployed_resources_group` (
   `controller_id` bigint unsigned NOT NULL COMMENT 'the ID of the Automation Controller',
   `name` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL COMMENT 'the name of deployed service',
   `description` varchar(255) NOT NULL COMMENT 'the description of the running service',
+  `access_info` varchar(255) DEFAULT NULL COMMENT 'the description of how to access the service',
   `state` char(32) NOT NULL COMMENT 'the current state of this running service',
   `created` datetime NOT NULL COMMENT 'date created',
   PRIMARY KEY (`id`),
@@ -97,7 +98,7 @@ CREATE TABLE `automation_deployed_resources_group` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
 
 -- Adding automation controller resource group detail table
-CREATE TABLE `automation_deployed_resources_group_details` (
+CREATE TABLE IF NOT EXISTS `automation_deployed_resources_group_details` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,
   `uuid` varchar(40) DEFAULT NULL,
   `deployed_group_id` bigint unsigned NOT NULL COMMENT 'the ID of the deployed service',
@@ -113,28 +114,26 @@ CREATE TABLE `automation_deployed_resources_group_details` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
 
 -- Event that changes the service state by checking the automation controller state
-CREATE EVENT automation_service_checker
+CREATE EVENT IF NOT EXISTS `cloud`.`automation_service_checker`
 ON SCHEDULE EVERY 1 MINUTE 
 COMMENT 'Check the status of the automation controller in 1 minute'
 DO
 BEGIN 
-	# If the status of the Automation Controller is not Running, change the service group status to Disconnected
+	-- If the status of the Automation Controller is not Running, change the service group status to Disconnected
 	UPDATE automation_deployed_resources_group adrg
 	SET adrg.state = 'Disconnected'
 	WHERE adrg.controller_id IN (
 		SELECT id FROM automation_controller_service_vm WHERE removed IS NULL AND state != 'Running'
-	);
-
-	# If the unit detail status check time differs from the now() time by more than 5 minutes, the service group status is changed to Disconnected.
-	UPDATE automation_deployed_resources_group adrg
+	)
+	-- If the unit detail status check time differs from the now() time by more than 5 minutes, the service group status is changed to Disconnected.
+; UPDATE automation_deployed_resources_group adrg
 	SET adrg.state = 'Disconnected'
 	WHERE adrg.id IN (
 		SELECT DISTINCT deployed_group_id FROM automation_deployed_resources_group_details where TIMESTAMPDIFF(MINUTE , created, UTC_TIMESTAMP()) >= 5
-	);
-	
-	# Delete all unit details whose service group status is Disconnected
-	DELETE FROM automation_deployed_resources_group_details adrgd
+	)
+	-- Delete all unit details whose service group status is Disconnected
+; DELETE FROM automation_deployed_resources_group_details adrgd
 	WHERE deployed_group_id IN (
 		SELECT id FROM automation_deployed_resources_group WHERE state = 'Disconnected'
-	);
-END
+	)
+;END;

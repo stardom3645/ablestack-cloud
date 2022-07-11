@@ -57,6 +57,10 @@ public class UpdateDeployedResourceGroupCmd extends BaseCmd implements AdminCmd 
             required = true)
     private Long id;
 
+    @Parameter(name = ApiConstants.ACCESS_INFO, type = CommandType.STRING, required = true,
+    description = "a description of how to access the service")
+    private String accessInfo;
+
     @Parameter(name = ApiConstants.STATE, type = CommandType.STRING,
             description = "the Running or Stopped state of the automation deployed resource",
             required = true)
@@ -67,6 +71,10 @@ public class UpdateDeployedResourceGroupCmd extends BaseCmd implements AdminCmd 
     /////////////////////////////////////////////////////
     public Long getId() {
         return id;
+    }
+
+    public String getAccessInfo() {
+        return accessInfo;
     }
 
     public String getState() {

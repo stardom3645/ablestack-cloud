@@ -60,6 +60,9 @@ public class AutomationDeployedResourceVO implements AutomationDeployedResource 
     @Column(name = "description")
     private String description;
 
+    @Column(name = "access_info")
+    private String accessInfo;
+
     @Column(name = "state")
     @Enumerated(value = EnumType.STRING)
     State state = State.Active;
@@ -71,7 +74,7 @@ public class AutomationDeployedResourceVO implements AutomationDeployedResource 
         this.uuid = UUID.randomUUID().toString();
     }
 
-    public AutomationDeployedResourceVO(long accountId,long domainId, Long zoneId, Long controllerId, String name, String description) {
+    public AutomationDeployedResourceVO(long accountId,long domainId, Long zoneId, Long controllerId, String name, String description, String accessInfo) {
         this.uuid = UUID.randomUUID().toString();
         this.accountId = accountId;
         this.domainId = domainId;
@@ -79,6 +82,7 @@ public class AutomationDeployedResourceVO implements AutomationDeployedResource 
         this.controllerId = controllerId;
         this.name = name;
         this.description = description;
+        this.accessInfo = accessInfo;
     }
 
     @Override
@@ -104,6 +108,15 @@ public class AutomationDeployedResourceVO implements AutomationDeployedResource 
     @Override
     public String getDescription() {
         return description;
+    }
+
+    @Override
+    public String getAccessInfo() {
+        return accessInfo;
+    }
+
+    public void setAccessInfo(String accessInfo) {
+        this.accessInfo = accessInfo;
     }
 
     @Override
