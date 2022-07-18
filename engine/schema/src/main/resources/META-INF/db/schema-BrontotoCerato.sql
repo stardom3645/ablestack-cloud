@@ -106,6 +106,7 @@ CREATE TABLE IF NOT EXISTS `automation_deployed_resources_group_details` (
   `service_unit_name` varchar(255) NOT NULL COMMENT 'the name of deployed unit service',
   `state` char(32) NOT NULL COMMENT 'the current state of this running service',
   `created` datetime NOT NULL COMMENT 'date created',
+  `last_updated` datetime NOT NULL COMMENT 'Last update time',
   PRIMARY KEY (`id`),
   KEY `fk_automation_deployed_resources_group_details_deployed_group_id` (`deployed_group_id`),
   KEY `fk_automation_deployed_resources_group_details_instance_id` (`deployed_vm_id`),
@@ -128,12 +129,10 @@ BEGIN
 	-- If the unit detail status check time differs from the now() time by more than 5 minutes, the service group status is changed to Disconnected.
 ; UPDATE automation_deployed_resources_group adrg
 	SET adrg.state = 'Disconnected'
-	WHERE adrg.id IN (
-		SELECT DISTINCT deployed_group_id FROM automation_deployed_resources_group_details where TIMESTAMPDIFF(MINUTE , created, UTC_TIMESTAMP()) >= 5
-	)
+	WHERE TIMESTAMPDIFF(MINUTE , adrg.last_updated , UTC_TIMESTAMP()) >= 5
 	-- Delete all unit details whose service group status is Disconnected
 ; DELETE FROM automation_deployed_resources_group_details adrgd
-	WHERE deployed_group_id IN (
+	WHERE adrgd.deployed_group_id IN (
 		SELECT id FROM automation_deployed_resources_group WHERE state = 'Disconnected'
 	)
 ;END;
