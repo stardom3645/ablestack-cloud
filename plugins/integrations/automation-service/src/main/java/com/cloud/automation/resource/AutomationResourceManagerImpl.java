@@ -85,6 +85,7 @@ public class AutomationResourceManagerImpl extends ManagerBase implements Automa
         response.setId(automationDeployedResource.getUuid());
         response.setName(automationDeployedResource.getName());
         response.setDescription(automationDeployedResource.getDescription());
+        response.setAccessInfo(automationDeployedResource.getAccessInfo());
         response.setCreated(automationDeployedResource.getCreated());
 
         AccountVO account = accountDao.findById(automationDeployedResource.getAccountId());
@@ -242,6 +243,7 @@ public class AutomationResourceManagerImpl extends ManagerBase implements Automa
         final Long domainId = caller.getDomainId();
         final String name = cmd.getName();
         final String description = cmd.getDescription();
+        final String accessInfo = cmd.getAccessInfo();
         final Long zoneId = cmd.getZoneId();
         final Long controllerId = cmd.getControllerId();
 
@@ -253,7 +255,7 @@ public class AutomationResourceManagerImpl extends ManagerBase implements Automa
         }
 
         AutomationDeployedResourceVO automationDeployedResourceVO = null;
-        automationDeployedResourceVO = new AutomationDeployedResourceVO(accountId, domainId, zoneId, controllerId, name, description);
+        automationDeployedResourceVO = new AutomationDeployedResourceVO(accountId, domainId, zoneId, controllerId, name, description, accessInfo);
         automationDeployedResourceVO = automationDeployedResourceDao.persist(automationDeployedResourceVO);
 
         return createAutomationDeployedResourceGroupResponse(automationDeployedResourceVO);
@@ -343,6 +345,7 @@ public class AutomationResourceManagerImpl extends ManagerBase implements Automa
             throw new CloudRuntimeException("Automation Service plugin is disabled");
         }
         final Long deployedGroupId = cmd.getId();
+        final String accessInfo = cmd.getAccessInfo();
         AutomationDeployedResource.State state = null;
         AutomationDeployedResourceVO resourceGroup = automationDeployedResourceDao.findById(deployedGroupId);
         if (resourceGroup == null) {
@@ -355,6 +358,7 @@ public class AutomationResourceManagerImpl extends ManagerBase implements Automa
         }
         if (!state.equals(resourceGroup.getState())) {
             resourceGroup = automationDeployedResourceDao.createForUpdate(resourceGroup.getId());
+            resourceGroup.setAccessInfo(accessInfo);
             resourceGroup.setState(state);
             if (!automationDeployedResourceDao.update(resourceGroup.getId(), resourceGroup)) {
                 throw new CloudRuntimeException(String.format("Failed to update desktop master version ID: %s", resourceGroup.getUuid()));

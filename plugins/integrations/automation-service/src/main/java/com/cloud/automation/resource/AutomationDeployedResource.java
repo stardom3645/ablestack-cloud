@@ -37,6 +37,7 @@ public interface AutomationDeployedResource extends  InternalIdentity, Identity,
     long getAccountId();
     String getName();
     String getDescription();
+    String getAccessInfo();
     Long getZoneId();
     State getState();
     Date getCreated();

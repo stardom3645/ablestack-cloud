@@ -3761,7 +3761,7 @@
 "label.automation.controller.access.genie.dashboard.info": "Click the 'Connect Genie Dashboard' button or <br> Enter the URL address <b><a href=\"#\" target='_blank'>http://[AUTOMATION_CONTROLLER_PUBLIC_IP]:80</a></b> to access. <br><br> <i> The automation controller public ip </i> information can be found in the 'Details' tab. ",
 "label.automation.controller.access.genie.dashboard.login.info": "Initial login id and password for genie dashboard <br><br> <code><b>ID: </b></code> genie <br> <code><b>Initial Password: </b></code> password <br><br> It is Recommended that you change initial password for improved security. <br> After you change your initial password, you cannot use it again.",
 "title.automation.deployed.resource": "Deployed Packages",
-"label.serviceunitname": "Service Name",
-"label.checkedtime": "Checked Time",
+"label.serviceunitname": "Service name",
+"label.accessinfo": "Access infomation",
 "label.packages": "Packages"
 }
