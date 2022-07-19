@@ -100,10 +100,6 @@ public class AddAutomationControllerCmd extends BaseAsyncCreateCmd {
             description = "Network Name which Automation Controller is to be launched")
     private String networkName;
 
-    @Parameter(name = ApiConstants.AUTOMATION_CONTROLLER_VERSION_UPLOADTYPE, type = CommandType.STRING, required = true,
-            description = "upload type for automation controller version template")
-    private String uploadType;
-
     @ACL(accessType = SecurityChecker.AccessType.UseEntry)
     @Parameter(name = ApiConstants.ACCOUNT, type = CommandType.STRING, description = "an optional account for the" +
             " virtual machine. Must be used with domainId.")
@@ -154,10 +150,6 @@ public class AddAutomationControllerCmd extends BaseAsyncCreateCmd {
 
     public String getNetworkName() {
         return networkName;
-    }
-
-    public String getUploadType() {
-        return uploadType;
     }
 
     public String getAccountName() {
