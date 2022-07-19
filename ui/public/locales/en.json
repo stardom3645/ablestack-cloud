@@ -3631,7 +3631,7 @@
 "user.login": "Login",
 "user.logout": "Logout",
 
-"label.desktop.service": "Desktop Service",
+"label.desktop.service": "Desktop",
 "title.desktop.cluster": "Clusters",
 "title.desktop.controller": "Controller Templates",
 "title.desktop.master": "Master Templates",
