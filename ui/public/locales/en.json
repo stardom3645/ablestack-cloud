@@ -3631,7 +3631,7 @@
 "user.login": "Login",
 "user.logout": "Logout",
 
-"label.desktop.service": "Desktop Service",
+"label.desktop.service": "Desktop",
 "title.desktop.cluster": "Clusters",
 "title.desktop.controller": "Controller Templates",
 "title.desktop.master": "Master Templates",
@@ -3762,6 +3762,6 @@
 "label.automation.controller.access.genie.dashboard.login.info": "Initial login id and password for genie dashboard <br><br> <code><b>ID: </b></code> genie <br> <code><b>Initial Password: </b></code> password <br><br> It is Recommended that you change initial password for improved security. <br> After you change your initial password, you cannot use it again.",
 "title.automation.deployed.resource": "Deployed Packages",
 "label.serviceunitname": "Service name",
-"label.accessinfo": "Access infomation",
+"label.accessinfo": "Access information",
 "label.packages": "Packages"
 }

@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
 import javax.inject.Inject;
+import java.util.Date;
 
 import org.apache.cloudstack.api.command.user.automation.resource.ListAutomationDeployedResourceCmd;
 import org.apache.cloudstack.api.ApiConstants;
@@ -87,7 +88,7 @@ public class AutomationResourceManagerImpl extends ManagerBase implements Automa
         response.setDescription(automationDeployedResource.getDescription());
         response.setAccessInfo(automationDeployedResource.getAccessInfo());
         response.setCreated(automationDeployedResource.getCreated());
-
+        response.setLastUpdated(automationDeployedResource.getLastUpdated());
         AccountVO account = accountDao.findById(automationDeployedResource.getAccountId());
         response.setAccountName(account.getName());
 
@@ -211,7 +212,9 @@ public class AutomationResourceManagerImpl extends ManagerBase implements Automa
         response.setName(automationDeployedResource.getName());
         response.setAccountId(automationDeployedResource.getAccountId());
         response.setDescription(automationDeployedResource.getDescription());
+        response.setAccessInfo(automationDeployedResource.getAccessInfo());
         response.setCreated(automationDeployedResource.getCreated());
+        response.setLastUpdated(automationDeployedResource.getLastUpdated());
         if (automationDeployedResource.getState() != null) {
             response.setState(automationDeployedResource.getState().toString());
         }
@@ -356,15 +359,14 @@ public class AutomationResourceManagerImpl extends ManagerBase implements Automa
         } catch (IllegalArgumentException iae) {
             throw new InvalidParameterValueException(String.format("Invalid value for %s parameter", ApiConstants.STATE));
         }
-        if (!state.equals(resourceGroup.getState())) {
-            resourceGroup = automationDeployedResourceDao.createForUpdate(resourceGroup.getId());
-            resourceGroup.setAccessInfo(accessInfo);
-            resourceGroup.setState(state);
-            if (!automationDeployedResourceDao.update(resourceGroup.getId(), resourceGroup)) {
-                throw new CloudRuntimeException(String.format("Failed to update desktop master version ID: %s", resourceGroup.getUuid()));
-            }
-            resourceGroup = automationDeployedResourceDao.findById(deployedGroupId);
+        resourceGroup = automationDeployedResourceDao.createForUpdate(resourceGroup.getId());
+        resourceGroup.setAccessInfo(accessInfo);
+        resourceGroup.setState(state);
+        resourceGroup.setLastUpdated(new Date());
+        if (!automationDeployedResourceDao.update(resourceGroup.getId(), resourceGroup)) {
+            throw new CloudRuntimeException(String.format("Failed to update desktop master version ID: %s", resourceGroup.getUuid()));
         }
+        resourceGroup = automationDeployedResourceDao.findById(deployedGroupId);
         return createAutomationDeployedResourceGroupResponse(resourceGroup);
     }
 

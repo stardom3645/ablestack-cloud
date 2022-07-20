@@ -71,6 +71,10 @@ public class AutomationDeployedResourceResponse extends BaseResponse {
     @Param(description = "date created")
     private Date created;
 
+    @SerializedName(ApiConstants.LAST_UPDATED)
+    @Param(description = "Last update time")
+    private Date lastUpdated;
+
     @SerializedName(ApiConstants.DEPLOYED_UNIT_SERVICES)
     @Param(description = "the list of services")
     private List<AutomationDeployedUnitResourceResponse> deployedunitservices;
@@ -149,6 +153,14 @@ public class AutomationDeployedResourceResponse extends BaseResponse {
 
     public void setCreated(Date created) {
         this.created = created;
+    }
+
+    public Date getLastUpdated() {
+        return lastUpdated;
+    }
+
+    public void setLastUpdated(Date lastUpdated) {
+        this.lastUpdated = lastUpdated;
     }
 
     public List<AutomationDeployedUnitResourceResponse> getDeployedUnitServices() {
