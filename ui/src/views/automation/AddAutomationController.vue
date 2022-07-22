@@ -287,7 +287,6 @@ export default {
           params.networkid = this.networks[values.network].id
           params.networkname = this.networks[values.network].name
         }
-
         api('addAutomationController', params).then(json => {
           const jobId = json.addautomationcontrollerresponse.jobid
           this.$pollJob({

@@ -41,4 +41,5 @@ public interface AutomationDeployedResource extends  InternalIdentity, Identity,
     Long getZoneId();
     State getState();
     Date getCreated();
+    Date getLastUpdated();
 }

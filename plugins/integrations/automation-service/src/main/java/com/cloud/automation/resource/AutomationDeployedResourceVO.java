@@ -30,6 +30,8 @@ import javax.persistence.Id;
 import javax.persistence.Table;
 
 import com.cloud.utils.db.GenericDao;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
 
 @Entity
 @Table(name = "automation_deployed_resources_group")
@@ -70,6 +72,10 @@ public class AutomationDeployedResourceVO implements AutomationDeployedResource 
     @Column(name = GenericDao.CREATED_COLUMN)
     Date created;
 
+    @Column(name = "last_updated")
+    @Temporal(value = TemporalType.TIMESTAMP)
+    Date lastUpdated;
+
     public AutomationDeployedResourceVO() {
         this.uuid = UUID.randomUUID().toString();
     }
@@ -83,6 +89,7 @@ public class AutomationDeployedResourceVO implements AutomationDeployedResource 
         this.name = name;
         this.description = description;
         this.accessInfo = accessInfo;
+        this.lastUpdated = new Date();
     }
 
     @Override
@@ -133,6 +140,15 @@ public class AutomationDeployedResourceVO implements AutomationDeployedResource 
         return created;
     }
 
+    @Override
+    public Date getLastUpdated() {
+        return lastUpdated;
+    }
+
+    public void setLastUpdated(Date lastUpdated) {
+        this.lastUpdated = lastUpdated;
+    }
+    
     @Override
     public long getDomainId() {
         return domainId;
