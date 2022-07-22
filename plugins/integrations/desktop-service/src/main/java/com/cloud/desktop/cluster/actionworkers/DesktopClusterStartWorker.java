@@ -356,9 +356,9 @@ public class DesktopClusterStartWorker extends DesktopClusterResourceModifierAct
         boolean portForwarding = false;
         // Firewall Egress Network
         try {
-            egress = provisionEgressFirewallRules(network, owner, CLUSTER_USER_PORTAL_PORT, CLUSTER_ADMIN_PORTAL_PORT);
+            egress = provisionEgressFirewallRules(network, owner, CLUSTER_PORTAL_PORT, CLUSTER_LITE_PORT);
             if (LOGGER.isInfoEnabled()) {
-                LOGGER.info(String.format("Provisioned egress firewall rule to open up port %d to %d on %s for Desktop cluster : %s", CLUSTER_USER_PORTAL_PORT, CLUSTER_ADMIN_PORTAL_PORT, publicIp.getAddress().addr(), desktopCluster.getName()));
+                LOGGER.info(String.format("Provisioned egress firewall rule to open up port %d to %d on %s for Desktop cluster : %s", CLUSTER_PORTAL_PORT, CLUSTER_LITE_PORT, publicIp.getAddress().addr(), desktopCluster.getName()));
             }
         } catch (NoSuchFieldException | IllegalAccessException | ResourceUnavailableException | NetworkRuleConflictException e) {
             throw new ManagementServerException(String.format("Failed to provision egress firewall rules for Web access for the Desktop cluster : %s", desktopCluster.getName()), e);
@@ -366,9 +366,9 @@ public class DesktopClusterStartWorker extends DesktopClusterResourceModifierAct
         // Firewall rule fo Web access on WorksVM
         if (egress) {
             try {
-                firewall = provisionFirewallRules(publicIp, owner, CLUSTER_USER_PORTAL_PORT, CLUSTER_API_PORT);
+                firewall = provisionFirewallRules(publicIp, owner, CLUSTER_PORTAL_PORT, CLUSTER_API_PORT);
                 if (LOGGER.isInfoEnabled()) {
-                    LOGGER.info(String.format("Provisioned firewall rule to open up port %d to %d on %s for Desktop cluster : %s", CLUSTER_USER_PORTAL_PORT, CLUSTER_API_PORT, publicIp.getAddress().addr(), desktopCluster.getName()));
+                    LOGGER.info(String.format("Provisioned firewall rule to open up port %d to %d on %s for Desktop cluster : %s", CLUSTER_PORTAL_PORT, CLUSTER_API_PORT, publicIp.getAddress().addr(), desktopCluster.getName()));
                 }
                 firewall2 = provisionFirewallRules(publicIp, owner, CLUSTER_SAMBA_PORT, CLUSTER_SAMBA_PORT);
                 if (LOGGER.isInfoEnabled()) {
@@ -380,7 +380,7 @@ public class DesktopClusterStartWorker extends DesktopClusterResourceModifierAct
             if (firewall && firewall2) {
                 // Port forwarding rule fo Web access on WorksVM
                 try {
-                    portForwarding = provisionPortForwardingRules(publicIp, network, owner, worksVm, CLUSTER_ADMIN_PORTAL_PORT, CLUSTER_USER_PORTAL_PORT, CLUSTER_SAMBA_PORT, CLUSTER_API_PORT);
+                    portForwarding = provisionPortForwardingRules(publicIp, network, owner, worksVm, CLUSTER_LITE_PORT, CLUSTER_PORTAL_PORT, CLUSTER_SAMBA_PORT, CLUSTER_API_PORT);
                 } catch (ResourceUnavailableException | NetworkRuleConflictException e) {
                     throw new ManagementServerException(String.format("Failed to activate Web port forwarding rules for the Desktop cluster : %s", desktopCluster.getName()), e);
                 }
