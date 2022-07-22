@@ -148,7 +148,6 @@ public class AutomationDeployedResourceVO implements AutomationDeployedResource 
     public void setLastUpdated(Date lastUpdated) {
         this.lastUpdated = lastUpdated;
     }
-    
     @Override
     public long getDomainId() {
         return domainId;
