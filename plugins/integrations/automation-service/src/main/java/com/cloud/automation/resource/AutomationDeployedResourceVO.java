@@ -107,6 +107,10 @@ public class AutomationDeployedResourceVO implements AutomationDeployedResource 
         return accountId;
     }
 
+    public long getControllerId() {
+        return controllerId;
+    }
+
     @Override
     public String getName() {
         return name;

@@ -30,6 +30,7 @@ import com.cloud.automation.controller.actionworkers.AutomationControllerStartWo
 import com.cloud.automation.controller.actionworkers.AutomationControllerStopWorker;
 import com.cloud.automation.controller.dao.AutomationControllerDao;
 import com.cloud.automation.controller.dao.AutomationControllerVmMapDao;
+import com.cloud.automation.resource.dao.AutomationDeployedResourceDao;
 import com.cloud.automation.version.AutomationControllerVersion;
 import com.cloud.automation.version.AutomationControllerVersionVO;
 import com.cloud.automation.version.dao.AutomationControllerVersionDao;
@@ -105,6 +106,8 @@ public class AutomationControllerManagerImpl extends ManagerBase implements Auto
     public AutomationControllerDao automationControllerDao;
     @Inject
     public AutomationControllerVmMapDao automationControllerVmMapDao;
+    @Inject
+    public AutomationDeployedResourceDao automationDeployedResourceDao;
     @Inject
     private TemplateJoinDao templateJoinDao;
     @Inject

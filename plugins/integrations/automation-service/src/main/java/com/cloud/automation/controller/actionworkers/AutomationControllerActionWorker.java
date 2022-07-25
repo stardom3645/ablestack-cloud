@@ -24,6 +24,7 @@ import com.cloud.automation.controller.AutomationControllerVmMap;
 import com.cloud.automation.controller.AutomationControllerVmMapVO;
 import com.cloud.automation.controller.dao.AutomationControllerDao;
 import com.cloud.automation.controller.dao.AutomationControllerVmMapDao;
+import com.cloud.automation.resource.dao.AutomationDeployedResourceDao;
 import com.cloud.automation.version.AutomationControllerVersionVO;
 import com.cloud.automation.version.dao.AutomationControllerVersionDao;
 import com.cloud.capacity.CapacityManager;
@@ -166,7 +167,7 @@ public class AutomationControllerActionWorker {
     @Inject
     protected CapacityManager capacityManager;
 
-
+    protected AutomationDeployedResourceDao automationDeployedResourceDao;
     protected AutomationControllerDao automationControllerDao;
     protected AutomationControllerVmMapDao automationControllerVmMapDao;
     protected VirtualMachineTemplate templates;
@@ -181,6 +182,7 @@ public class AutomationControllerActionWorker {
         this.automationController = automationController;
         this.automationControllerDao = automationManager.automationControllerDao;
         this.automationControllerVmMapDao = automationManager.automationControllerVmMapDao;
+        this.automationDeployedResourceDao = automationManager.automationDeployedResourceDao;
     }
 
     protected void init() {
