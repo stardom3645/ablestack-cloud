@@ -281,27 +281,13 @@ export default {
           domainid: store.getters.project && store.getters.project.id ? null : store.getters.userInfo.domainid,
           domainname: store.getters.project && store.getters.project.id ? null : store.getters.userInfo.domainname,
           account: store.getters.project && store.getters.project.id ? null : store.getters.userInfo.account,
-          accountid: store.getters.project && store.getters.project.id ? null : store.getters.userInfo.accountid
+          accountid: store.getters.project && store.getters.project.id ? null : store.getters.userInfo.accountid,
+          automationtemplateid: this.automationControllerVersion[values.automationcontrollerversion].id
         }
         if (this.isValidValueForKey(values, 'network') && this.arrayHasItems(this.networks) && this.networks[values.network].id != null) {
           params.networkid = this.networks[values.network].id
           params.networkname = this.networks[values.network].name
         }
-        if (params.controlleruploadtype === 'url') {
-          if (values.zoneid === this.$t('label.all.zone')) {
-            delete params.zoneid
-          } else {
-            params.zoneid = values.zoneid
-          }
-          params.zoneid = values.zoneid
-          params.hypervisor = this.hyperVisor.opts[values.hypervisor].name
-          params.format = values.format
-          params.masterurl = values.masterurl
-          params.masterostype = values.masterostype
-        } else {
-          params.automationtemplateid = this.automationControllerVersion[values.automationcontrollerversion].id
-        }
-
         api('addAutomationController', params).then(json => {
           const jobId = json.addautomationcontrollerresponse.jobid
           this.$pollJob({
