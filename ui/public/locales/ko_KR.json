@@ -3596,7 +3596,7 @@
 "user.login": "\ub85c\uadf8\uc778",
 "user.logout": "\ub85c\uadf8\uc544\uc6c3",
 
-"label.desktop.service": "\ub370\uc2a4\ud06c\ud1b1 \uc11c\ube44\uc2a4",
+"label.desktop.service": "\ub370\uc2a4\ud06c\ud1b1",
 "title.desktop.cluster": "\ud074\ub7ec\uc2a4\ud130",
 "title.desktop.controller": "\ucee8\ud2b8\ub864\ub7ec \ud15c\ud50c\ub9bf",
 "title.desktop.master": "\ub9c8\uc2a4\ud130 \ud15c\ud50c\ub9bf",
@@ -3616,8 +3616,7 @@
 "label.desktop.master.version.manage": "\ub9c8\uc2a4\ud130 \ud15c\ud50c\ub9bf \ubc84\uc804 \uc0ac\uc6a9\uc5ec\ubd80",
 "label.desktop.master.version.delete": "\ub9c8\uc2a4\ud130 \ud15c\ud50c\ub9bf \ubc84\uc804 \uc0ad\uc81c",
 "label.addomainname": "AD \ub3c4\uba54\uc778 \uba85",
-"label.works.admin.portal.url": "Works \uad00\ub9ac\uc790 \ud3ec\ud138 \uc5f0\uacb0",
-"label.works.user.portal.url": "Works \uc0ac\uc6a9\uc790 \ud3ec\ud138 \uc5f0\uacb0",
+"label.works.portal.url": "Works \ud3ec\ud138 \uc5f0\uacb0",
 "label.wall.portal.vm.url": "\uc2e4\uc2dc\uac04 \ubaa8\ub2c8\ud130\ub9c1 \uc5f0\uacb0",
 "label.wall.portal.url": "\ubaa8\ub2c8\ud130\ub9c1 \ub300\uc2dc\ubcf4\ub4dc",
 "label.templatestate": "\ud15c\ud50c\ub9bf \uc0c1\ud0dc",

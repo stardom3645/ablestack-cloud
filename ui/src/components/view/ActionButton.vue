@@ -25,15 +25,9 @@
     </a-tooltip>
     <a-tooltip arrowPointAtCenter placement="bottomRight" v-if="resource && resource.id && resource.worksvmip && dataView">
       <template #title>
-        {{ $t('label.works.admin.portal.url') }}
+        {{ $t('label.works.portal.url') }}
       </template>
-      <works-admin-url :resource="resource" :size="size"/>
-    </a-tooltip>
-    <a-tooltip arrowPointAtCenter placement="bottomRight" v-if="resource && resource.id && resource.worksvmip && dataView">
-      <template #title>
-        {{ $t('label.works.user.portal.url') }}
-      </template>
-      <works-user-url :resource="resource" :size="size"/>
+      <works-url :resource="resource" :size="size"/>
     </a-tooltip>
     <a-tooltip arrowPointAtCenter placement="bottomRight" v-if="resource && resource.id && dataView">
       <template #title>
@@ -99,16 +93,14 @@
 <script>
 import { api } from '@/api'
 import Console from '@/components/widgets/Console'
-import WorksAdminUrl from '@/components/widgets/WorksAdminUrl'
-import WorksUserUrl from '@/components/widgets/WorksUserUrl'
+import WorksUrl from '@/components/widgets/WorksUrl'
 import WallLinkUrl from '@/components/widgets/WallLinkUrl'
 
 export default {
   name: 'ActionButton',
   components: {
     Console,
-    WorksAdminUrl,
-    WorksUserUrl,
+    WorksUrl,
     WallLinkUrl
   },
   data () {
