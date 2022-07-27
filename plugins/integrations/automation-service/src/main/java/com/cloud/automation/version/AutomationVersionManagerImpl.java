@@ -132,8 +132,8 @@ public class AutomationVersionManagerImpl extends ManagerBase implements Automat
         response.setDescription(automationControllerVersion.getDescription());
         response.setVersion(automationControllerVersion.getVersion());
         response.setCreated(automationControllerVersion.getCreated());
-        response.setUploadType(automationControllerVersion.getUploadType());
-        //response.setTemplateId(automationControllerVersion.getTemplateId());
+        // response.setUploadType(automationControllerVersion.getUploadType());
+        response.setTemplateId(automationControllerVersion.getTemplateId());
         if (automationControllerVersion.getState() != null) {
             response.setState(automationControllerVersion.getState().toString());
         }
