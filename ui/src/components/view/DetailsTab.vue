@@ -52,6 +52,9 @@
           <div v-else-if="$route.meta.name === 'mastertemplate' && item === 'templatename'">
             <router-link :to="{ path: '/template/' + dataResource.templateid }">{{ dataResource.templatename }} </router-link>
           </div>
+          <div v-else-if="$route.meta.name === 'automationtemplate' && item === 'templatename'">
+            <router-link :to="{ path: '/template/' + dataResource.templateid }">{{ dataResource.templatename }} </router-link>
+          </div>
           <div v-else-if="$route.meta.name === 'computeoffering' && item === 'rootdisksize'">
             <div>
               {{ dataResource.rootdisksize }} GB
