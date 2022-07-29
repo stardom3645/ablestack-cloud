@@ -52,8 +52,8 @@
           <div v-else-if="$route.meta.name === 'mastertemplate' && item === 'templatename'">
             <router-link :to="{ path: '/template/' + dataResource.templateid }">{{ dataResource.templatename }} </router-link>
           </div>
-          <div v-else-if="$route.meta.name === 'automationtemplate' && item === 'templatename'">
-            <router-link :to="{ path: '/template/' + dataResource.templateid }">{{ dataResource.templatename }} </router-link>
+          <div v-else-if="$route.meta.name === 'deployedresource' && item === 'accessinfo'">
+            <a :href="automationDeployedPackageAccessInfoUrl" target="_blank" v-html="dataResource.accessinfo"></a>
           </div>
           <div v-else-if="$route.meta.name === 'computeoffering' && item === 'rootdisksize'">
             <div>
@@ -135,7 +135,6 @@ export default {
       if (this.dataResource.nic && this.dataResource.nic.length > 0) {
         return this.dataResource.nic.filter(e => { return e.ip6address }).map(e => { return e.ip6address }).join(', ')
       }
-
       return null
     },
     ip6routes () {
@@ -147,6 +146,12 @@ export default {
         return routes.join('<br>')
       }
       return null
+    },
+    automationDeployedPackageAccessInfoUrl () {
+      var urlRegex = /(https?:\/\/[^ ]*)/
+      var input = this.dataResource.accessinfo
+      var url = input.match(urlRegex)[1]
+      return url
     }
   },
   created () {
