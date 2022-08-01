@@ -145,6 +145,7 @@ public class AutomationVersionManagerImpl extends ManagerBase implements Automat
         TemplateJoinVO template = templateJoinDao.findById(automationControllerVersion.getTemplateId());
         if (template != null) {
             response.setTemplateName(template.getName());
+            response.setTemplateState(template.getState().toString());
         }
         return response;
     }

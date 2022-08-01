@@ -3697,7 +3697,7 @@
 "label.automation.service": "\uc624\ud1a0\uba54\uc774\uc158",
 "title.automation.controller.template": "\ucee8\ud2b8\ub864\ub7ec \ud15c\ud50c\ub9bf",
 "label.automation.controller.template.version.create": "\ucee8\ud2b8\ub864\ub7ec \ud15c\ud50c\ub9bf \ubc84\uc804 \uc0dd\uc131",
-"label.automation.controller.version.manage": "\uCEE8\uD2B8\uB864\uB7EC \uD15C\uD50C\uB9BF \uBC84\uC804 \uC0AC\uC6A9 \uC5EC\uBD80",
+"label.automation.controller.version.manage": "\uCEE8\uD2B8\uB864\uB7EC \uD15C\uD50C\uB9BF \uBC84\uC804 \uAD00\uB9AC",
 "label.automation.controller.version.delete": "\ucee8\ud2b8\ub864\ub7ec \ud15c\ud50c\ub9bf \ubc84\uc804 \uc0ad\uc81c",
 "message.automation.controller.version.delete": "\uc774 \ucee8\ud2b8\ub864\ub7ec \ud15c\ud50c\ub9bf \ubc84\uc804\uc744 \uc0ad\uc81c\ud558\uc2dc\uaca0\uc2b5\ub2c8\uae4c?",
 "message.success.update.automation.controller.template.version": "\uC624\uD1A0\uBA54\uC774\uC158 \uCEE8\uD2B8\uB864\uB7EC \uD15C\uD50C\uB9BF \uBC84\uC804\uC758 \uC0C1\uD0DC\uAC12\uC744 \uC5C5\uB370\uC774\uD2B8\uD588\uC2B5\uB2C8\uB2E4.",

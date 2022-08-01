@@ -27,8 +27,8 @@ export default {
       icon: 'shop-outlined',
       docHelp: '',
       permission: ['listAutomationControllerVersion'],
-      columns: ['name', 'state', 'version', 'zonename'],
-      details: ['name', 'description', 'version', 'templatename', 'created'],
+      columns: ['name', 'state', 'templatestate', 'version', 'zonename'],
+      details: ['name', 'description', 'version', 'templatestate', 'templatename', 'created'],
       actions: [
         {
           api: 'addAutomationControllerVersion',
