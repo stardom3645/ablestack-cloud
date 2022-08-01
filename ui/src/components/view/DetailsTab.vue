@@ -53,7 +53,7 @@
             <router-link :to="{ path: '/template/' + dataResource.templateid }">{{ dataResource.templatename }} </router-link>
           </div>
           <div v-else-if="$route.meta.name === 'deployedresource' && item === 'accessinfo'">
-            <a :href="automationDeployedPackageAccessInfoUrl" target="_blank" v-html="dataResource.accessinfo"></a>
+            <div v-html="dataResource.accessinfo"></div>
           </div>
           <div v-else-if="$route.meta.name === 'computeoffering' && item === 'rootdisksize'">
             <div>
@@ -146,12 +146,6 @@ export default {
         return routes.join('<br>')
       }
       return null
-    },
-    automationDeployedPackageAccessInfoUrl () {
-      var urlRegex = /(https?:\/\/[^ ]*)/
-      var input = this.dataResource.accessinfo
-      var url = input.match(urlRegex)[1]
-      return url
     }
   },
   created () {
