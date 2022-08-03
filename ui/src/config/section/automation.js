@@ -62,7 +62,7 @@ export default {
       icon: 'RocketOutlined',
       docHelp: '',
       permission: ['listAutomationController'],
-      columns: ['name', 'state', 'account', 'hostname', 'zonename'],
+      columns: ['name', 'state', 'networkname', 'account', 'hostname', 'zonename'],
       details: ['description', 'name', 'hostname', 'automationcontrollerip', 'automationcontrollerpublicip', 'automationtemplatename', 'automationcontrollerversion', 'osdisplayname', 'isdynamicallyscalable'],
       tabs: [{
         component: shallowRef(defineAsyncComponent(() => import('@/views/automation/AutomationControllerTab.vue')))

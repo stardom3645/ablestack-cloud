@@ -22,6 +22,7 @@ import com.cloud.automation.controller.AutomationControllerManagerImpl;
 import com.cloud.automation.controller.AutomationControllerVO;
 import com.cloud.automation.controller.AutomationControllerVmMap;
 import com.cloud.automation.controller.AutomationControllerVmMapVO;
+import com.cloud.automation.resource.AutomationDeployedResourceVO;
 import com.cloud.exception.ConcurrentOperationException;
 import com.cloud.exception.ManagementServerException;
 import com.cloud.exception.PermissionDeniedException;
@@ -55,16 +56,29 @@ public class AutomationControllerDestroyWorker extends AutomationControllerActio
         super(automationController, clusterManager);
     }
 
-    private void validateClusterState() {
+    private void validateControllerState() {
         if (!(automationController.getState().equals(AutomationController.State.Running)
                 || automationController.getState().equals(AutomationController.State.Stopped)
                 || automationController.getState().equals(AutomationController.State.Alert)
                 || automationController.getState().equals(AutomationController.State.Error)
                 || automationController.getState().equals(AutomationController.State.Destroying))) {
-            String msg = String.format("Cannot perform delete operation on cluster : %s in state: %s",
+            String msg = String.format("Cannot perform delete operation on controller : %s in state: %s",
             automationController.getName(), automationController.getState());
             LOGGER.warn(msg);
             throw new PermissionDeniedException(msg);
+        }
+    }
+
+    private void validateDeployedPackages() {
+        final Long automationControllerId = automationController.getId();
+        final List<AutomationDeployedResourceVO> serviceGroupList = automationDeployedResourceDao.listAll();
+        for (final AutomationDeployedResourceVO serviceGroup : serviceGroupList) {
+            if(serviceGroup.getControllerId() == (automationControllerId)){
+                String msg = String.format("Cannot perform delete operation. Packages deployed to that controller should be deleted.",
+                        automationController.getName(), automationController.getState());
+                LOGGER.warn(msg);
+                throw new PermissionDeniedException(msg);
+            }
         }
     }
 
@@ -162,7 +176,8 @@ public class AutomationControllerDestroyWorker extends AutomationControllerActio
 
     public boolean destroy() throws CloudRuntimeException {
         init();
-        validateClusterState();
+        validateControllerState();
+        validateDeployedPackages();
         this.AutomationControllerVMs = automationControllerVmMapDao.listByAutomationControllerId(automationController.getId());
         if (LOGGER.isInfoEnabled()) {
             LOGGER.info(String.format("Destroying automation controller : %s", automationController.getName()));

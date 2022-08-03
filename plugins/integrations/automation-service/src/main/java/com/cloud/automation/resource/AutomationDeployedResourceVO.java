@@ -107,6 +107,10 @@ public class AutomationDeployedResourceVO implements AutomationDeployedResource 
         return accountId;
     }
 
+    public long getControllerId() {
+        return controllerId;
+    }
+
     @Override
     public String getName() {
         return name;
@@ -148,7 +152,6 @@ public class AutomationDeployedResourceVO implements AutomationDeployedResource 
     public void setLastUpdated(Date lastUpdated) {
         this.lastUpdated = lastUpdated;
     }
-
     @Override
     public long getDomainId() {
         return domainId;

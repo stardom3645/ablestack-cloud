@@ -162,7 +162,6 @@ public class AutomationDeployedResourceResponse extends BaseResponse {
     public void setLastUpdated(Date lastUpdated) {
         this.lastUpdated = lastUpdated;
     }
-
     public List<AutomationDeployedUnitResourceResponse> getDeployedUnitServices() {
         return deployedunitservices;
     }

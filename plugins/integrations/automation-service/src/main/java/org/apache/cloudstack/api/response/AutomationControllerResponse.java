@@ -68,7 +68,7 @@ public class AutomationControllerResponse extends BaseResponse {
     private String networkId;
 
     @SerializedName(ApiConstants.NETWORK_NAME)
-    @Param(description = "the network's id associated with this Automation")
+    @Param(description = "the network's name associated with this Automation")
     private String networkName;
 
     @SerializedName(ApiConstants.ACCOUNT_ID)
