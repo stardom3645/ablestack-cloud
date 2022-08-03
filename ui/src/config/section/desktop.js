@@ -86,8 +86,8 @@ export default {
       icon: 'shop-outlined',
       docHelp: '',
       permission: ['listDesktopControllerVersions'],
-      columns: ['name', 'state', 'version', 'zonename', 'controlleruploadtype'],
-      details: ['name', 'description', 'version', 'controlleruploadtype', 'dctemplate', 'workstemplate', 'created'],
+      columns: ['name', 'state', 'dctemplatestate', 'workstemplatestate', 'version', 'zonename'],
+      details: ['name', 'description', 'version', 'controlleruploadtype', 'dctemplate', 'dctemplatestate', 'workstemplate', 'workstemplatestate', 'created'],
       actions: [
         {
           api: 'addDesktopControllerVersion',
@@ -121,7 +121,7 @@ export default {
       icon: 'hdd-outlined',
       docHelp: '',
       permission: ['listDesktopMasterVersions'],
-      columns: ['name', 'state', 'version', 'zonename', 'masteruploadtype', 'mastertemplatetype'],
+      columns: ['name', 'state', 'templatestate', 'version', 'zonename', 'mastertemplatetype'],
       details: ['name', 'version', 'description', 'templateostype', 'templatestate', 'masteruploadtype', 'templatename', 'mastertemplatetype', 'created'],
       actions: [
         {

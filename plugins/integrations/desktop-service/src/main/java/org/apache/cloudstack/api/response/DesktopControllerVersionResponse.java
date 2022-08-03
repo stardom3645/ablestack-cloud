@@ -47,17 +47,21 @@ public class DesktopControllerVersionResponse extends BaseResponse {
     @Param(description = "Desktop version")
     private String version;
 
-    @SerializedName(ApiConstants.DESKTOP_TEMPLATES)
-    @Param(description = "the list of templates associated with this Desktop")
-    private List<TemplateResponse> templates;
-
     @SerializedName(ApiConstants.DESKTOP_DC_TEMPLATE)
     @Param(description = "the dc template associated with this Desktop")
     private List<TemplateResponse> dcTemplate;
 
+    @SerializedName(ApiConstants.DESKTOP_DC_TEMPLATE_STATE)
+    @Param(description = "the dc template ready state with this Desktop")
+    private String dcTemplateState;
+
     @SerializedName(ApiConstants.DESKTOP_WORKS_TEMPLATE)
     @Param(description = "the dc template associated with this Desktop")
     private List<TemplateResponse> worksTemplate;
+
+    @SerializedName(ApiConstants.DESKTOP_WORKS_TEMPLATE_STATE)
+    @Param(description = "the works template ready state with this Desktop")
+    private String worksTemplateState;
 
     @SerializedName(ApiConstants.ZONE_ID)
     @Param(description = "the id of the zone in which Desktop Controller Version is available")
@@ -111,14 +115,6 @@ public class DesktopControllerVersionResponse extends BaseResponse {
         this.version = version;
     }
 
-    public void setTemplates(List<TemplateResponse> templates) {
-        this.templates = templates;
-    }
-
-    public List<TemplateResponse> getTemplates() {
-        return templates;
-    }
-
     public List<TemplateResponse> getDcTemplate() {
         return dcTemplate;
     }
@@ -133,6 +129,22 @@ public class DesktopControllerVersionResponse extends BaseResponse {
 
     public void setWorksTemplate(List<TemplateResponse> worksTemplate) {
         this.worksTemplate = worksTemplate;
+    }
+
+    public String getDcTemplateState() {
+        return dcTemplateState;
+    }
+
+    public void setDcTemplateState(String dcTemplateState) {
+        this.dcTemplateState = dcTemplateState;
+    }
+
+    public String getWorksTemplateState() {
+        return worksTemplateState;
+    }
+
+    public void setWorksTemplateState(String worksTemplateState) {
+        this.worksTemplateState = worksTemplateState;
     }
 
     public String getZoneId() {
