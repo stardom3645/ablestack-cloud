@@ -3732,7 +3732,7 @@
 "label.automation.service": "Automation",
 "title.automation.controller.template": "Controller Templates",
 "label.automation.controller.template.version.create": "Create Controller Template Version",
-"label.automation.controller.version.manage": "Whether to use a Automation Template Version",
+"label.automation.controller.version.manage": "Manage Controller Template version",
 "label.automation.controller.version.delete": "Delete Automation Template Version",
 "message.automation.controller.version.delete": "Are you sure you want to delete this Automation Template Version?",
 "message.success.update.automation.controller.template.version": "Updated status value for automation controller version.",

@@ -70,6 +70,10 @@ public class AutomationControllerVersionResponse extends BaseResponse {
     @Param(description = "the enabled or disabled state of the Automation Controller Version")
     private String state;
 
+    @SerializedName(ApiConstants.AUTOMATION_TEMPLATE_STATE)
+    @Param(description = "the state of templates associated with this Desktop")
+    private String templateState;
+
     @SerializedName(ApiConstants.CREATED)
     @Param(description = "the date this template was created")
     private Date created;
@@ -152,6 +156,14 @@ public class AutomationControllerVersionResponse extends BaseResponse {
 
     public void setState(String state) {
         this.state = state;
+    }
+
+    public String getTemplateState() {
+        return templateState;
+    }
+
+    public void setTemplateState(String templateState) {
+        this.templateState = templateState;
     }
 
     public void setCreated(Date created) {

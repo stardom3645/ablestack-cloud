@@ -934,6 +934,7 @@ public class ApiConstants {
     public static final String AUTOMATION_USER_VIRTUAL_MACHINES = "automationuservirtualmachines";
     public static final String AUTOMATION_CONTROLLER_PUBLIC_IP = "automationcontrollerpublicip";
     public static final String AUTOMATION_CONTROLLER_ID = "controllerid";
+    public static final String AUTOMATION_TEMPLATE_STATE = "templatestate";
     public static final String DEPLOYED_UNIT_SERVICE_MACHINES = "deployedunitservicemachines";
     public static final String DEPLOYED_UNIT_SERVICES = "deployedunitservices";
     public static final String SERVICE_UNIT_NAME = "serviceunitname";
