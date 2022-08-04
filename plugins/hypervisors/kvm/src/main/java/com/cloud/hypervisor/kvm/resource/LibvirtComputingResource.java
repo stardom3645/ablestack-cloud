@@ -2936,7 +2936,8 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
                     disk.defNetworkBasedDisk(physicalDisk.getPath().replace("rbd:", ""), pool.getSourceHost(), pool.getSourcePort(), pool.getAuthUserName(),
                     pool.getUuid(), devId, diskBusType, DiskProtocol.RBD, DiskDef.DiskFmtType.RAW);
 
-                    // rbd image-cache invalidate
+                    // rbd image persistent-cache or image-cache invalidate
+                    Script.runSimpleBashScript("rbd persistent-cache invalidate " + data.getPath());
                     Script.runSimpleBashScript("rbd image-cache invalidate " + data.getPath());
                 } else if (pool.getType() == StoragePoolType.PowerFlex) {
                     disk.defBlockBasedDisk(physicalDisk.getPath(), devId, diskBusTypeData);
