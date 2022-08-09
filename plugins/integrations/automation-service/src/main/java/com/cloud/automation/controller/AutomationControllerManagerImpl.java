@@ -224,9 +224,14 @@ public class AutomationControllerManagerImpl extends ManagerBase implements Auto
                     response.setAutomationControllerIp(userVM.getIpAddress());
                     automationController.setAutomationControllerIp(userVM.getIpAddress());
                 }
-                GuestOS guestOS = ApiDBUtils.findGuestOSById(userVM.getGuestOsId());
-                if (guestOS != null) {
-                    response.setOsDisplayName(guestOS.getDisplayName());
+                try {
+                    GuestOS guestOS = ApiDBUtils.findGuestOSById(userVM.getGuestOsId());
+                    if (guestOS != null) {
+                        response.setOsDisplayName(guestOS.getDisplayName());
+                    }
+                } catch (NullPointerException e) {
+                    deleteAutomationController(automationController.getId());
+                    LOGGER.warn(String.format("Failed to run Automation controller Alert state scanner on Automation controller : %s status scanner", automationController.getName()), e);
                 }
                 response.setHostName(userVM.getHostName());
             }
@@ -238,6 +243,13 @@ public class AutomationControllerManagerImpl extends ManagerBase implements Auto
                     if (automationControllerVmState == "Stopped" && automationControllerState != "Stopped") {
                         stateTransitTo(automationController.getId(), AutomationController.Event.StopRequested);
                         stateTransitTo(automationController.getId(), AutomationController.Event.OperationSucceeded);
+                    }
+                }
+                if (automationControllerState != "Destroyed" || automationControllerState != "Expunging") {
+                    if (automationControllerVmState == "Destroyed" ) {
+                        stopAutomationController(automationController.getId());
+                    }else if (automationControllerVmState == "Expunging") {
+                        deleteAutomationController(automationController.getId());
                     }
                 }
             } catch (Exception e) {
