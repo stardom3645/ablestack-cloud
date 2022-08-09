@@ -1274,6 +1274,7 @@ public class ApiDBUtils {
                 if(pool.getPoolType() == StoragePoolType.RBD ||
                     pool.getPoolType() == StoragePoolType.PowerFlex ||
                     pool.getPoolType() == StoragePoolType.CLVM ||
+                    pool.getPoolType() == StoragePoolType.KRBD ||
                     pool.getPoolType() == StoragePoolType.Linstor) {
                   // This case will note the presence of non-qcow2 primary stores, suggesting KVM without NFS. Otherwse,
                   // If this check is not passed, the hypervisor type will remain OVM.
