@@ -1861,6 +1861,7 @@
 "label.rados.pool": "RADOS pool",
 "label.rados.secret": "RADOS secret",
 "label.rados.user": "RADOS user",
+  "label.rados.path": "RADOS path",
 "label.ram": "RAM",
 "label.rbd": "RBD",
 "label.rbdid": "Cephx user",
