@@ -104,3 +104,8 @@ scripts/.pydevproject
 venv
 node_modules
 .vscode
+.python-version
+.gitignore
+**/.gitignore
+ui/package*
+/.java-version
