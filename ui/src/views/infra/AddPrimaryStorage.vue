@@ -297,6 +297,23 @@
             <a-input v-model:value="form.radossecret" :placeholder="$t('label.rados.secret')" />
           </a-form-item>
         </div>
+        <div v-if="form.protocol === 'KRBD'">
+          <a-form-item name="kradosmonitor" ref="kradosmonitor" :label="$t('label.rados.monitor')">
+            <a-input v-model:value="form.kradosmonitor" :placeholder="$t('label.rados.monitor')" />
+          </a-form-item>
+          <a-form-item name="kradospool" ref="kradospool" :label="$t('label.rados.pool')">
+            <a-input v-model:value="form.kradospool" :placeholder="$t('label.rados.pool')"/>
+          </a-form-item>
+          <a-form-item name="kradosuser" ref="kradosuser" :label="$t('label.rados.user')">
+            <a-input v-model:value="form.kradosuser" :placeholder="$t('label.rados.user')" />
+          </a-form-item>
+          <a-form-item name="kradossecret" ref="kradossecret" :label="$t('label.rados.secret')">
+            <a-input v-model:value="form.kradossecret" :placeholder="$t('label.rados.secret')" />
+          </a-form-item>
+          <a-form-item name="kradospath" ref="kradospath" :label="$t('label.rados.path')">
+            <a-input v-model:value="form.kradospath" :placeholder="$t('label.rados.path')" />
+          </a-form-item>
+        </div>
         <div v-if="form.protocol === 'CLVM'">
           <a-form-item name="volumegroup" ref="volumegroup" :label="$t('label.volumegroup')">
             <a-input v-model:value="form.volumegroup" :placeholder="$t('label.volumegroup')" />
@@ -494,7 +511,7 @@ export default {
       const cluster = this.clusters.find(cluster => cluster.id === this.form.cluster)
       this.hypervisorType = cluster.hypervisortype
       if (this.hypervisorType === 'KVM') {
-        this.protocols = ['nfs', 'SharedMountPoint', 'RBD', 'CLVM', 'Gluster', 'Linstor', 'custom']
+        this.protocols = ['nfs', 'SharedMountPoint', 'RBD', 'KRBD', 'CLVM', 'Gluster', 'Linstor', 'custom']
       } else if (this.hypervisorType === 'XenServer') {
         this.protocols = ['nfs', 'PreSetup', 'iscsi', 'custom']
       } else if (this.hypervisorType === 'VMware') {
@@ -509,7 +526,7 @@ export default {
       } else if (this.hypervisorType === 'LXC') {
         this.protocols = ['nfs', 'SharedMountPoint', 'RBD']
       } else {
-        this.protocols = ['nfs']
+        this.protocols = ['nfs', 'KRBD']
       }
       if (!value) {
         this.form.protocol = this.protocols[0]
@@ -724,6 +741,8 @@ export default {
           url = this.clvmURL(vg)
         } else if (values.protocol === 'RBD') {
           url = this.rbdURL(values.radosmonitor, values.radospool, values.radosuser, values.radossecret)
+        } else if (values.protocol === 'KRBD') {
+          url = this.rbdURL(values.kradosmonitor, values.kradospool, values.kradosuser, values.kradossecret)
         } else if (values.protocol === 'vmfs') {
           path = values.vCenterDataCenter
           if (path.substring(0, 1) !== '/') {
