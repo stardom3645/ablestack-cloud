@@ -157,7 +157,7 @@ public class KRBDPrimaryDataStoreLifeCycleImpl implements PrimaryDataStoreLifeCy
                 storageHost = storageHost + (hostPath.substring(0, hostPath.lastIndexOf("/")).replaceAll("/", ","));
                 hostPath = hostPath.substring(hostPath.lastIndexOf("/") + 1);
             }
-            parameters.setType(Storage.StoragePoolType.KRBD);
+            parameters.setType(Storage.StoragePoolType.RBD);
             parameters.setHost(storageHost);
             parameters.setPort(port);
             parameters.setPath(hostPath.replaceFirst("/", ""));
@@ -187,7 +187,7 @@ public class KRBDPrimaryDataStoreLifeCycleImpl implements PrimaryDataStoreLifeCy
     protected boolean createStoragePool(long hostId, StoragePool pool) {
         s_logger.debug("creating pool " + pool.getName() + " on  host " + hostId);
 
-        if (pool.getPoolType() != Storage.StoragePoolType.KRBD) {
+        if (pool.getPoolType() != Storage.StoragePoolType.RBD) {
             s_logger.warn(" Doesn't support storage pool type " + pool.getPoolType());
             return false;
         }
