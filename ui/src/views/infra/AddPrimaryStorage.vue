@@ -160,7 +160,7 @@
         </a-form-item>
         <div
           v-if="form.protocol === 'nfs' || form.protocol === 'SMB' || form.protocol === 'iscsi' || form.protocol === 'vmfs'|| form.protocol === 'Gluster' || form.protocol === 'Linstor' ||
-            (form.protocol === 'PreSetup' && hypervisorType === 'VMware') || form.protocol === 'datastorecluster'">
+            (form.protocol === 'PreSetup' && hypervisorType === 'VMware') || form.protocol === 'datastorecluster' && form.protocol !== 'KRBD'">
           <a-form-item name="server" ref="server">
             <template #label>
               <tooltip-label :title="$t('label.server')" :tooltip="$t('message.server.description')"/>
@@ -229,7 +229,7 @@
             </a-select>
           </a-form-item>
         </div>
-        <div v-if="form.provider !== 'DefaultPrimary' && form.provider !== 'PowerFlex' && form.provider !== 'Linstor'">
+        <div v-if="form.provider !== 'DefaultPrimary' && form.provider !== 'PowerFlex' && form.provider !== 'Linstor' && from.provider !== 'krbd'" >
           <a-form-item name="managed" ref="managed">
             <template #label>
               <tooltip-label :title="$t('label.ismanaged')" :tooltip="apiParams.managed.description"/>
@@ -297,7 +297,7 @@
             <a-input v-model:value="form.radossecret" :placeholder="$t('label.rados.secret')" />
           </a-form-item>
         </div>
-        <div v-if="form.protocol === 'KRBD'">
+        <div v-if="form.protocol === 'KRBD' || form.provider === 'KRBD'">
           <a-form-item name="kradosmonitor" ref="kradosmonitor" :label="$t('label.rados.monitor')">
             <a-input v-model:value="form.kradosmonitor" :placeholder="$t('label.rados.monitor')" />
           </a-form-item>
@@ -674,7 +674,11 @@ export default {
 
       return url
     },
+    checkParams (p) {
+      console.log(p)
+    },
     handleSubmit (e) {
+      // this.checkParams(toRaw(this.form))
       e.preventDefault()
       if (this.loading) return
       this.formRef.value.validate().then(() => {
@@ -743,6 +747,7 @@ export default {
           url = this.rbdURL(values.radosmonitor, values.radospool, values.radosuser, values.radossecret)
         } else if (values.protocol === 'KRBD') {
           url = this.rbdURL(values.kradosmonitor, values.kradospool, values.kradosuser, values.kradossecret)
+          params.krbdPath = values.kradospath
         } else if (values.protocol === 'vmfs') {
           path = values.vCenterDataCenter
           if (path.substring(0, 1) !== '/') {
@@ -770,7 +775,7 @@ export default {
           params['details[0].resourceGroup'] = values.resourcegroup
         }
         params.url = url
-        if (values.provider !== 'DefaultPrimary' && values.provider !== 'PowerFlex') {
+        if (values.provider !== 'DefaultPrimary' && values.provider !== 'PowerFlex' && values.provider !== 'KRBD') {
           if (values.managed) {
             params.managed = true
           } else {
@@ -796,6 +801,7 @@ export default {
           params.tags = this.selectedTags.join()
         }
         this.loading = true
+        this.checkParams(params)
         api('createStoragePool', {}, 'POST', params).then(json => {
           this.$notification.success({
             message: this.$t('label.add.primary.storage'),

@@ -122,6 +122,9 @@ public class StoragePoolVO implements StoragePool {
     @Column(name = "parent")
     private Long parent = 0L;
 
+    @Column(name = "krbd_path")
+    private String krbdpath;
+
     @Override
     public long getId() {
         return id;
@@ -131,6 +134,7 @@ public class StoragePoolVO implements StoragePool {
     public StoragePoolStatus getStatus() {
         return status;
     }
+
 
     public StoragePoolVO() {
         status = StoragePoolStatus.Initial;
@@ -150,6 +154,7 @@ public class StoragePoolVO implements StoragePool {
         this.podId = podId;
         setStatus(StoragePoolStatus.Initial);
         setPath(hostPath);
+        this.krbdpath = krbdpath;
     }
 
     public StoragePoolVO(StoragePoolVO that) {
@@ -392,5 +397,13 @@ public class StoragePoolVO implements StoragePool {
     public boolean isInMaintenance() {
         return status == StoragePoolStatus.PrepareForMaintenance || status == StoragePoolStatus.Maintenance || status == StoragePoolStatus.ErrorInMaintenance ||
             removed != null;
+    }
+
+    public String getKrbdpath() {
+        return krbdpath;
+    }
+
+    public void setKrbdpath(String krbdpath) {
+        this.krbdpath = krbdpath;
     }
 }
