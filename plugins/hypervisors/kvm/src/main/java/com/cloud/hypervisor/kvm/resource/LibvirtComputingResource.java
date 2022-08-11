@@ -359,6 +359,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
     protected String _guestBridgeName;
     protected String _privateIp;
     protected String _pool;
+    protected String _provider;
     protected String _localGateway;
     private boolean _canBridgeFirewall;
     protected boolean _noMemBalloon = false;
@@ -2870,6 +2871,8 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
                 }
             } else if (volume.getType() != Volume.Type.ISO) {
                 final PrimaryDataStoreTO store = (PrimaryDataStoreTO)data.getDataStore();
+                _provider = store.getProvider();
+                s_logger.info("store.getProvider(); ::::::::::::::::::::: " + _provider);
                 physicalDisk = _storagePoolMgr.getPhysicalDisk(store.getPoolType(), store.getUuid(), data.getPath());
                 pool = physicalDisk.getPool();
             }
@@ -2933,8 +2936,11 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
                             We store the secret under the UUID of the pool, that's why
                             we pass the pool's UUID as the authSecret
                      */
-                    disk.defNetworkBasedDisk(physicalDisk.getPath().replace("rbd:", ""), pool.getSourceHost(), pool.getSourcePort(), pool.getAuthUserName(),
-                    pool.getUuid(), devId, diskBusType, DiskProtocol.RBD, DiskDef.DiskFmtType.RAW);
+                    if(_provider == "KRBD"){
+                        disk.defBlockBasedDisk(physicalDisk.getPath(), devId);
+                    } else {
+                        disk.defNetworkBasedDisk(physicalDisk.getPath().replace("rbd:", ""), pool.getSourceHost(), pool.getSourcePort(), pool.getAuthUserName(), pool.getUuid(), devId, diskBusType, DiskProtocol.RBD, DiskDef.DiskFmtType.RAW);
+                    }
 
                     // rbd image-cache invalidate
                     Script.runSimpleBashScript("rbd image-cache invalidate " + data.getPath());

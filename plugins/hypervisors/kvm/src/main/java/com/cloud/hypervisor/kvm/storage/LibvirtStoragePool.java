@@ -47,6 +47,7 @@ public class LibvirtStoragePool implements KVMStoragePool {
     protected String authSecret;
     protected String sourceHost;
     protected int sourcePort;
+    protected String providerName;
 
     protected String sourceDir;
 
@@ -258,6 +259,13 @@ public class LibvirtStoragePool implements KVMStoragePool {
         this._pool = pool;
     }
 
+    public String getProviderName() {
+        return providerName;
+    }
+
+    public void setProviderName(String providerName) {
+        this.providerName = providerName;
+    }
 
     @Override
     public boolean delete() {
