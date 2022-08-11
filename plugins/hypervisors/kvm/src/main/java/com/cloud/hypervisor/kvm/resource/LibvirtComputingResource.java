@@ -45,6 +45,8 @@ import javax.naming.ConfigurationException;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.ParserConfigurationException;
 
+import org.apache.cloudstack.storage.datastore.db.PrimaryDataStoreDao;
+import org.apache.cloudstack.storage.datastore.db.StoragePoolVO;
 import org.apache.cloudstack.storage.configdrive.ConfigDrive;
 import org.apache.cloudstack.storage.to.PrimaryDataStoreTO;
 import org.apache.cloudstack.storage.to.TemplateObjectTO;
@@ -450,6 +452,8 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
     protected long getHypervisorQemuVersion() {
         return _hypervisorQemuVersion;
     }
+    @Inject
+    private PrimaryDataStoreDao _storagePoolDao;
 
     @Override
     public ExecutionResult executeInVR(final String routerIp, final String script, final String args) {
@@ -2872,7 +2876,18 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
             } else if (volume.getType() != Volume.Type.ISO) {
                 final PrimaryDataStoreTO store = (PrimaryDataStoreTO)data.getDataStore();
                 _provider = store.getProvider();
-                s_logger.info("store.getProvider(); ::::::::::::::::::::: " + _provider);
+                s_logger.info("store ::::::::::::::::::::: " + store.getId());
+                s_logger.info("store ::::::::::::::::::::: " + store.getName());
+                s_logger.info("store ::::::::::::::::::::: " + store.getUuid());
+                s_logger.info("store ::::::::::::::::::::: " + store.getPoolType());
+                s_logger.info("store ::::::::::::::::::::: " + store.getHost());
+                s_logger.info("store ::::::::::::::::::::: " + store.getPath());
+                s_logger.info("store ::::::::::::::::::::: " + store.getUrl());
+                s_logger.info("store ::::::::::::::::::::: " + store.getProvider());
+
+                StoragePoolVO storagePoolVO = _storagePoolDao.findById(store.getId());
+                _provider = storagePoolVO.getStorageProviderName();
+                s_logger.info("store :::::_provider:::::::::::::::: " + _provider);
                 physicalDisk = _storagePoolMgr.getPhysicalDisk(store.getPoolType(), store.getUuid(), data.getPath());
                 pool = physicalDisk.getPool();
             }
