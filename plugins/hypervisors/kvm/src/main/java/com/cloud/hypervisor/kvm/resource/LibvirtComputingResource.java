@@ -2886,7 +2886,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
                 s_logger.info("store ::::::::::::::::::::: " + store.getUrl());
                 s_logger.info("store ::::::::::::::::::::: " + store.getProvider());
 
-                StoragePoolVO storagePoolVO = _storagePoolDao.findById(store.getId());
+                StoragePoolVO storagePoolVO = _storagePoolDao.findPoolByUUID(store.getUuid());
                 _provider = storagePoolVO.getStorageProviderName();
                 s_logger.info("store :::::_provider:::::::::::::::: " + _provider);
                 physicalDisk = _storagePoolMgr.getPhysicalDisk(store.getPoolType(), store.getUuid(), data.getPath());
