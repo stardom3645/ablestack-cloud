@@ -40,11 +40,14 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import javax.inject.Inject;
 
 import javax.naming.ConfigurationException;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.ParserConfigurationException;
 
+import org.apache.cloudstack.storage.datastore.db.PrimaryDataStoreDao;
+import org.apache.cloudstack.storage.datastore.db.StoragePoolVO;
 import org.apache.cloudstack.storage.configdrive.ConfigDrive;
 import org.apache.cloudstack.storage.to.PrimaryDataStoreTO;
 import org.apache.cloudstack.storage.to.TemplateObjectTO;
@@ -359,6 +362,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
     protected String _guestBridgeName;
     protected String _privateIp;
     protected String _pool;
+    protected String _provider;
     protected String _localGateway;
     private boolean _canBridgeFirewall;
     protected boolean _noMemBalloon = false;
@@ -449,6 +453,8 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
     protected long getHypervisorQemuVersion() {
         return _hypervisorQemuVersion;
     }
+    @Inject
+    private PrimaryDataStoreDao _storagePoolDao;
 
     @Override
     public ExecutionResult executeInVR(final String routerIp, final String script, final String args) {
@@ -2870,6 +2876,19 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
                 }
             } else if (volume.getType() != Volume.Type.ISO) {
                 final PrimaryDataStoreTO store = (PrimaryDataStoreTO)data.getDataStore();
+                _provider = store.getProvider();
+                s_logger.info("store ::::::::::::::::::::: " + store.getId());
+                s_logger.info("store ::::::::::::::::::::: " + store.getName());
+                s_logger.info("store ::::::::::::::::::::: " + store.getUuid());
+                s_logger.info("store ::::::::::::::::::::: " + store.getPoolType());
+                s_logger.info("store ::::::::::::::::::::: " + store.getHost());
+                s_logger.info("store ::::::::::::::::::::: " + store.getPath());
+                s_logger.info("store ::::::::::::::::::::: " + store.getUrl());
+                s_logger.info("store ::::::::::::::::::::: " + store.getProvider());
+
+                StoragePoolVO storagePoolVO = _storagePoolDao.findPoolByUUID(store.getUuid());
+                _provider = storagePoolVO.getStorageProviderName();
+                s_logger.info("store :::::_provider:::::::::::::::: " + _provider);
                 physicalDisk = _storagePoolMgr.getPhysicalDisk(store.getPoolType(), store.getUuid(), data.getPath());
                 pool = physicalDisk.getPool();
             }
@@ -2933,8 +2952,11 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
                             We store the secret under the UUID of the pool, that's why
                             we pass the pool's UUID as the authSecret
                      */
-                    disk.defNetworkBasedDisk(physicalDisk.getPath().replace("rbd:", ""), pool.getSourceHost(), pool.getSourcePort(), pool.getAuthUserName(),
-                    pool.getUuid(), devId, diskBusType, DiskProtocol.RBD, DiskDef.DiskFmtType.RAW);
+                    if(_provider == "KRBD"){
+                        disk.defBlockBasedDisk(physicalDisk.getPath(), devId);
+                    } else {
+                        disk.defNetworkBasedDisk(physicalDisk.getPath().replace("rbd:", ""), pool.getSourceHost(), pool.getSourcePort(), pool.getAuthUserName(), pool.getUuid(), devId, diskBusType, DiskProtocol.RBD, DiskDef.DiskFmtType.RAW);
+                    }
 
                     // rbd image-cache invalidate
                     Script.runSimpleBashScript("rbd image-cache invalidate " + data.getPath());

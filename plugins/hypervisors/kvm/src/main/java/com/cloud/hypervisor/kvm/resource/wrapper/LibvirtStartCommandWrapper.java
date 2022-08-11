@@ -63,7 +63,7 @@ public final class LibvirtStartCommandWrapper extends CommandWrapper<StartComman
         final LibvirtUtilitiesHelper libvirtUtilitiesHelper = libvirtComputingResource.getLibvirtUtilitiesHelper();
         Connect conn = null;
         try {
-
+            s_logger.info("LibvirtStartCommandWrapper ::::::::::::::::::::: ");
             vm = libvirtComputingResource.createVMFromSpec(vmSpec);
             conn = libvirtUtilitiesHelper.getConnectionByType(vm.getHvsType());
 
