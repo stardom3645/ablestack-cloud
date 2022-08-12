@@ -1021,7 +1021,6 @@ public class VirtualMachineManagerImpl extends ManagerBase implements VirtualMac
         if (start == null) {
             return;
         }
-        s_logger.info("222222");
         vm = start.first();
         final ReservationContext ctx = start.second();
         ItWorkVO work = start.third();
@@ -1029,7 +1028,6 @@ public class VirtualMachineManagerImpl extends ManagerBase implements VirtualMac
         VMInstanceVO startedVm = null;
         final ServiceOfferingVO offering = _offeringDao.findById(vm.getId(), vm.getServiceOfferingId());
         final VirtualMachineTemplate template = _entityMgr.findByIdIncludingRemoved(VirtualMachineTemplate.class, vm.getTemplateId());
-        s_logger.info("333333");
         DataCenterDeployment plan = new DataCenterDeployment(vm.getDataCenterId(), vm.getPodIdToDeployIn(), null, null, null, null, ctx);
         if (planToDeploy != null && planToDeploy.getDataCenterId() != 0) {
             if (s_logger.isDebugEnabled()) {
@@ -1048,7 +1046,6 @@ public class VirtualMachineManagerImpl extends ManagerBase implements VirtualMac
         if (VirtualMachine.Type.User.equals(vm.type) && ResourceCountRunningVMsonly.value()) {
             resourceCountIncrement(owner.getAccountId(),new Long(offering.getCpu()), new Long(offering.getRamSize()));
         }
-        s_logger.info("111111");
         boolean canRetry = true;
         ExcludeList avoids = null;
         try {
@@ -1063,7 +1060,6 @@ public class VirtualMachineManagerImpl extends ManagerBase implements VirtualMac
             if (s_logger.isDebugEnabled()) {
                 s_logger.info("Deploy avoids pods: " + avoids.getPodsToAvoid() + ", clusters: " + avoids.getClustersToAvoid() + ", hosts: " + avoids.getHostsToAvoid());
             }
-            s_logger.info("0000000");
             boolean planChangedByVolume = false;
             boolean reuseVolume = true;
             final DataCenterDeployment originalPlan = plan;
@@ -1073,7 +1069,6 @@ public class VirtualMachineManagerImpl extends ManagerBase implements VirtualMac
 
                 if (reuseVolume) {
                     final List<VolumeVO> vols = _volsDao.findReadyRootVolumesByInstance(vm.getId());
-                    s_logger.info("vols :::: " + vols);
                     for (final VolumeVO vol : vols) {
                         s_logger.info("vol :::: " + vol);
                         final Long volTemplateId = vol.getTemplateId();
@@ -1085,8 +1080,6 @@ public class VirtualMachineManagerImpl extends ManagerBase implements VirtualMac
                         }
 
                         final StoragePool pool = (StoragePool)dataStoreMgr.getPrimaryDataStore(vol.getPoolId());
-                        provider = pool.getStorageProviderName();
-                        s_logger.info("provider :::: " + provider);
                         if (!pool.isInMaintenance()) {
                             if (s_logger.isDebugEnabled()) {
                                 s_logger.debug("Root volume is ready, need to place VM in volume's cluster");
@@ -1199,7 +1192,15 @@ public class VirtualMachineManagerImpl extends ManagerBase implements VirtualMac
                     final Map<String, String> ipAddressDetails = new HashMap<>(sshAccessDetails);
                     ipAddressDetails.remove(NetworkElementCommand.ROUTER_NAME);
 
-                    s_logger.info("provider:::::::::::provider::::" + provider);
+                    s_logger.info(":::::::::::vm.getId()::::" + vm.getId());
+                    final List<VolumeVO> vols = _volsDao.findByInstance(vm.getId());
+                    s_logger.info(":::::::::::vols::::" + vols);
+                    s_logger.info(":::::::::::vols::::" + vols.size());
+                    for (final VolumeVO vol : vols) {
+                        final StoragePool js = (StoragePool)dataStoreMgr.getPrimaryDataStore(vol.getPoolId());
+                        provider = js.getStorageProviderName();
+                        s_logger.info("provider:::::::::::provider::::" + provider);
+                    }
 
                     StartCommand command = new StartCommand(vmTO, dest.getHost(), getExecuteInSequence(vm.getHypervisorType()), provider);
                     cmds.addCommand(command);
