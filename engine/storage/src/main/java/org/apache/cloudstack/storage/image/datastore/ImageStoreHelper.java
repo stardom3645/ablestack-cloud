@@ -87,6 +87,7 @@ public class ImageStoreHelper {
         store.setProviderName((String)params.get("providerName"));
         store.setScope((ScopeType)params.get("scope"));
         store.setDataCenterId((Long)params.get("zoneId"));
+        store.setKrbdPath((String) params.get("krbdPath"));
         String uuid = (String)params.get("uuid");
         if (uuid != null) {
             store.setUuid(uuid);

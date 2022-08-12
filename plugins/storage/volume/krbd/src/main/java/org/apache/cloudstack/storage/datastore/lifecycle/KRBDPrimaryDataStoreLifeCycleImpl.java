@@ -180,6 +180,7 @@ public class KRBDPrimaryDataStoreLifeCycleImpl implements PrimaryDataStoreLifeCy
         parameters.setClusterId(clusterId);
         parameters.setProviderName(providerName);
         parameters.setHypervisorType(hypervisorType);
+        parameters.setKrbdPath((String) dsInfos.get("krbdPath"));
 
         return dataStoreHelper.createPrimaryDataStore(parameters);
     }
