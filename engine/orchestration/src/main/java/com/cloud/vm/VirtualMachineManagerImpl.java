@@ -1021,7 +1021,7 @@ public class VirtualMachineManagerImpl extends ManagerBase implements VirtualMac
         if (start == null) {
             return;
         }
-
+        s_logger.info("222222");
         vm = start.first();
         final ReservationContext ctx = start.second();
         ItWorkVO work = start.third();
@@ -1029,7 +1029,7 @@ public class VirtualMachineManagerImpl extends ManagerBase implements VirtualMac
         VMInstanceVO startedVm = null;
         final ServiceOfferingVO offering = _offeringDao.findById(vm.getId(), vm.getServiceOfferingId());
         final VirtualMachineTemplate template = _entityMgr.findByIdIncludingRemoved(VirtualMachineTemplate.class, vm.getTemplateId());
-
+        s_logger.info("333333");
         DataCenterDeployment plan = new DataCenterDeployment(vm.getDataCenterId(), vm.getPodIdToDeployIn(), null, null, null, null, ctx);
         if (planToDeploy != null && planToDeploy.getDataCenterId() != 0) {
             if (s_logger.isDebugEnabled()) {
@@ -1048,7 +1048,7 @@ public class VirtualMachineManagerImpl extends ManagerBase implements VirtualMac
         if (VirtualMachine.Type.User.equals(vm.type) && ResourceCountRunningVMsonly.value()) {
             resourceCountIncrement(owner.getAccountId(),new Long(offering.getCpu()), new Long(offering.getRamSize()));
         }
-
+        s_logger.info("111111");
         boolean canRetry = true;
         ExcludeList avoids = null;
         try {
@@ -1061,23 +1061,25 @@ public class VirtualMachineManagerImpl extends ManagerBase implements VirtualMac
                 avoids = new ExcludeList();
             }
             if (s_logger.isDebugEnabled()) {
-                s_logger.debug("Deploy avoids pods: " + avoids.getPodsToAvoid() + ", clusters: " + avoids.getClustersToAvoid() + ", hosts: " + avoids.getHostsToAvoid());
+                s_logger.info("Deploy avoids pods: " + avoids.getPodsToAvoid() + ", clusters: " + avoids.getClustersToAvoid() + ", hosts: " + avoids.getHostsToAvoid());
             }
-
+            s_logger.info("0000000");
             boolean planChangedByVolume = false;
             boolean reuseVolume = true;
             final DataCenterDeployment originalPlan = plan;
             int retry = StartRetry.value();
             while (retry-- != 0) {
-                s_logger.debug("VM start attempt #" + (StartRetry.value() - retry));
+                s_logger.info("VM start attempt #" + (StartRetry.value() - retry));
 
                 if (reuseVolume) {
                     final List<VolumeVO> vols = _volsDao.findReadyRootVolumesByInstance(vm.getId());
+                    s_logger.info("vols :::: " + vols);
                     for (final VolumeVO vol : vols) {
+                        s_logger.info("vol :::: " + vol);
                         final Long volTemplateId = vol.getTemplateId();
                         if (volTemplateId != null && volTemplateId != template.getId()) {
                             if (s_logger.isDebugEnabled()) {
-                                s_logger.debug(vol + " of " + vm + " is READY, but template ids don't match, let the planner reassign a new pool");
+                                s_logger.info(vol + " of " + vm + " is READY, but template ids don't match, let the planner reassign a new pool");
                             }
                             continue;
                         }
