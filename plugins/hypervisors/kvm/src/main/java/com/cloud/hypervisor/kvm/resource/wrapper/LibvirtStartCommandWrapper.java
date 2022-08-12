@@ -63,7 +63,6 @@ public final class LibvirtStartCommandWrapper extends CommandWrapper<StartComman
         final LibvirtUtilitiesHelper libvirtUtilitiesHelper = libvirtComputingResource.getLibvirtUtilitiesHelper();
         Connect conn = null;
         try {
-            s_logger.info("LibvirtStartCommandWrapper ::::::::::::::::::::: ");
             vm = libvirtComputingResource.createVMFromSpec(vmSpec);
             conn = libvirtUtilitiesHelper.getConnectionByType(vm.getHvsType());
 
@@ -75,7 +74,7 @@ public final class LibvirtStartCommandWrapper extends CommandWrapper<StartComman
                 }
             }
 
-            libvirtComputingResource.createVbd(conn, vmSpec, vmName, vm);
+            libvirtComputingResource.createVbd(conn, vmSpec, vmName, vm, command.getProvider());
 
             if (!storagePoolMgr.connectPhysicalDisksViaVmSpec(vmSpec)) {
                 return new StartAnswer(command, "Failed to connect physical disks to host");

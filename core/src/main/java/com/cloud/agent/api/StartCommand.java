@@ -29,6 +29,7 @@ public class StartCommand extends Command {
     String hostIp;
     boolean executeInSequence = false;
     String secondaryStorage;
+    String provider;
 
     public VirtualMachineTO getVirtualMachine() {
         return vm;
@@ -51,6 +52,18 @@ public class StartCommand extends Command {
         this.hostIp = host.getPrivateIpAddress();
         this.executeInSequence = executeInSequence;
         this.secondaryStorage = null;
+    }
+
+    public StartCommand(VirtualMachineTO vm, Host host, boolean executeInSequence, String provider) {
+        this.vm = vm;
+        this.provider = provider;
+        this.hostIp = host.getPrivateIpAddress();
+        this.executeInSequence = executeInSequence;
+        this.secondaryStorage = null;
+    }
+
+    public String getProvider() {
+        return this.provider;
     }
 
     public String getHostIp() {

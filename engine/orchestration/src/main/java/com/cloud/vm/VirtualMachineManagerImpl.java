@@ -1012,7 +1012,7 @@ public class VirtualMachineManagerImpl extends ManagerBase implements VirtualMac
         final CallContext cctxt = CallContext.current();
         final Account account = cctxt.getCallingAccount();
         final User caller = cctxt.getCallingUser();
-
+        String provider = "";
         VMInstanceVO vm = _vmDao.findByUuid(vmUuid);
 
         final VirtualMachineGuru vmGuru = getVmGuru(vm);
@@ -1067,7 +1067,6 @@ public class VirtualMachineManagerImpl extends ManagerBase implements VirtualMac
             boolean planChangedByVolume = false;
             boolean reuseVolume = true;
             final DataCenterDeployment originalPlan = plan;
-
             int retry = StartRetry.value();
             while (retry-- != 0) {
                 s_logger.debug("VM start attempt #" + (StartRetry.value() - retry));
@@ -1084,6 +1083,8 @@ public class VirtualMachineManagerImpl extends ManagerBase implements VirtualMac
                         }
 
                         final StoragePool pool = (StoragePool)dataStoreMgr.getPrimaryDataStore(vol.getPoolId());
+                        provider = pool.getStorageProviderName();
+                        s_logger.info("provider :::: " + provider);
                         if (!pool.isInMaintenance()) {
                             if (s_logger.isDebugEnabled()) {
                                 s_logger.debug("Root volume is ready, need to place VM in volume's cluster");
@@ -1196,7 +1197,9 @@ public class VirtualMachineManagerImpl extends ManagerBase implements VirtualMac
                     final Map<String, String> ipAddressDetails = new HashMap<>(sshAccessDetails);
                     ipAddressDetails.remove(NetworkElementCommand.ROUTER_NAME);
 
-                    StartCommand command = new StartCommand(vmTO, dest.getHost(), getExecuteInSequence(vm.getHypervisorType()));
+                    s_logger.info("provider:::::::::::provider::::" + provider);
+
+                    StartCommand command = new StartCommand(vmTO, dest.getHost(), getExecuteInSequence(vm.getHypervisorType()), provider);
                     cmds.addCommand(command);
 
                     vmGuru.finalizeDeployment(cmds, vmProfile, dest, ctx);
