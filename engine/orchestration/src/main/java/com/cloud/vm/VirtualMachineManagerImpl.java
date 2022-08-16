@@ -1013,6 +1013,7 @@ public class VirtualMachineManagerImpl extends ManagerBase implements VirtualMac
         final Account account = cctxt.getCallingAccount();
         final User caller = cctxt.getCallingUser();
         String provider = "";
+        String krbdpath = "";
         VMInstanceVO vm = _vmDao.findByUuid(vmUuid);
 
         final VirtualMachineGuru vmGuru = getVmGuru(vm);
@@ -1197,12 +1198,14 @@ public class VirtualMachineManagerImpl extends ManagerBase implements VirtualMac
                     s_logger.info(":::::::::::vols::::" + vols);
                     s_logger.info(":::::::::::vols::::" + vols.size());
                     for (final VolumeVO vol : vols) {
-                        final StoragePool js = (StoragePool)dataStoreMgr.getPrimaryDataStore(vol.getPoolId());
-                        provider = js.getStorageProviderName();
+                        final StoragePool sp = (StoragePool)dataStoreMgr.getPrimaryDataStore(vol.getPoolId());
+                        provider = sp.getStorageProviderName();
+                        krbdpath = sp.getKrbdPath();
                         s_logger.info("provider:::::::::::provider::::" + provider);
+                        s_logger.info("krbdpath:::::::::::krbdpath::::" + krbdpath);
                     }
 
-                    StartCommand command = new StartCommand(vmTO, dest.getHost(), getExecuteInSequence(vm.getHypervisorType()), provider);
+                    StartCommand command = new StartCommand(vmTO, dest.getHost(), getExecuteInSequence(vm.getHypervisorType()), provider, krbdpath);
                     cmds.addCommand(command);
 
                     vmGuru.finalizeDeployment(cmds, vmProfile, dest, ctx);

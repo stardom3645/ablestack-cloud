@@ -30,6 +30,7 @@ public class StartCommand extends Command {
     boolean executeInSequence = false;
     String secondaryStorage;
     String provider;
+    String krbdpath;
 
     public VirtualMachineTO getVirtualMachine() {
         return vm;
@@ -54,15 +55,20 @@ public class StartCommand extends Command {
         this.secondaryStorage = null;
     }
 
-    public StartCommand(VirtualMachineTO vm, Host host, boolean executeInSequence, String provider) {
+    public StartCommand(VirtualMachineTO vm, Host host, boolean executeInSequence, String provider, String krbdpath) {
         this.vm = vm;
         this.provider = provider;
+        this.krbdpath = krbdpath;
         this.hostIp = host.getPrivateIpAddress();
         this.executeInSequence = executeInSequence;
         this.secondaryStorage = null;
     }
 
     public String getProvider() {
+        return this.provider;
+    }
+
+    public String getKrbdPath() {
         return this.provider;
     }
 

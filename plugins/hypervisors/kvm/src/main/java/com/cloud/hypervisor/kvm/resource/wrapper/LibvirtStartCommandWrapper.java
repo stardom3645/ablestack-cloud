@@ -74,7 +74,7 @@ public final class LibvirtStartCommandWrapper extends CommandWrapper<StartComman
                 }
             }
 
-            libvirtComputingResource.createVbd(conn, vmSpec, vmName, vm, command.getProvider());
+            libvirtComputingResource.createVbd(conn, vmSpec, vmName, vm, command.getProvider(), command.getKrbdPath());
 
             if (!storagePoolMgr.connectPhysicalDisksViaVmSpec(vmSpec)) {
                 return new StartAnswer(command, "Failed to connect physical disks to host");

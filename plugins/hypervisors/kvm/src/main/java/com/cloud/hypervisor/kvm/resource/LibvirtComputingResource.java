@@ -2826,7 +2826,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
         return dataPath;
     }
 
-    public void createVbd(final Connect conn, final VirtualMachineTO vmSpec, final String vmName, final LibvirtVMDef vm, String provider) throws InternalErrorException, LibvirtException, URISyntaxException {
+    public void createVbd(final Connect conn, final VirtualMachineTO vmSpec, final String vmName, final LibvirtVMDef vm, String provider, String krbdpath) throws InternalErrorException, LibvirtException, URISyntaxException {
         final Map<String, String> details = vmSpec.getDetails();
         final List<DiskTO> disks = Arrays.asList(vmSpec.getDisks());
         boolean isSecureBoot = false;
@@ -2877,7 +2877,6 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
                 final PrimaryDataStoreTO store = (PrimaryDataStoreTO)data.getDataStore();
                 physicalDisk = _storagePoolMgr.getPhysicalDisk(store.getPoolType(), store.getUuid(), data.getPath());
                 pool = physicalDisk.getPool();
-                s_logger.info("createVbd ::::::::agent::::::provider::::::: " + provider);
             }
 
             String volPath = null;
@@ -2918,6 +2917,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
 
             final DiskDef disk = new DiskDef();
             int devId = volume.getDiskSeq().intValue();
+            s_logger.info("volume.getType() :::: " + volume.getType());
             if (volume.getType() == Volume.Type.ISO) {
 
                 disk.defISODisk(volPath, devId, isUefiEnabled);
@@ -2930,8 +2930,12 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
                     disk.setQemuDriver(true);
                     disk.setDiscard(DiscardType.UNMAP);
                 }
-
                 setDiskIoDriver(disk);
+                s_logger.info(":::::::::disk:::::::::::::::::::" + disk);
+                s_logger.info(":::::::::pool.getType():::::::::" + pool.getType());
+                s_logger.info(":::::::::provider:::::::::::::::" + provider);
+                s_logger.info(":::::::::krbdpath:::::::::::::::" + krbdpath);
+                s_logger.info(":::::::::physicalDisk.getPath():::::::::::::::" + physicalDisk.getPath());
 
                 if (pool.getType() == StoragePoolType.RBD) {
                     /*
@@ -2939,12 +2943,18 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
                             We store the secret under the UUID of the pool, that's why
                             we pass the pool's UUID as the authSecret
                      */
-                    if(provider == "KRBD"){
-                        disk.defBlockBasedDisk(physicalDisk.getPath(), devId);
+                    if("KRBD".equals(provider)){
+                        final String device = mapKrbdDevice(physicalDisk);
+                        s_logger.info(":::::::mapRbdDevice:::::device::::::" +  device);
+                        if (device != null) {
+                            s_logger.debug("RBD device on host is: " + device);
+                            disk.defBlockBasedDisk(device, devId);
+                        } else {
+                            throw new InternalErrorException("Error while mapping RBD device on host");
+                        }
                     } else {
                         disk.defNetworkBasedDisk(physicalDisk.getPath().replace("rbd:", ""), pool.getSourceHost(), pool.getSourcePort(), pool.getAuthUserName(), pool.getUuid(), devId, diskBusType, DiskProtocol.RBD, DiskDef.DiskFmtType.RAW);
                     }
-
                     // rbd image-cache invalidate
                     Script.runSimpleBashScript("rbd image-cache invalidate " + data.getPath());
                 } else if (pool.getType() == StoragePoolType.PowerFlex) {
@@ -2972,9 +2982,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
                             disk.defFileBasedDisk(physicalDisk.getPath(), devId, diskBusType, DiskDef.DiskFmtType.QCOW2);
                         }
                     }
-
                 }
-
             }
 
             if (data instanceof VolumeObjectTO) {
@@ -4817,6 +4825,19 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
     }
 
     public String mapRbdDevice(final KVMPhysicalDisk disk){
+        final KVMStoragePool pool = disk.getPool();
+        //Check if rbd image is already mapped
+        final String[] splitPoolImage = disk.getPath().split("/");
+        String device = Script.runSimpleBashScript("rbd showmapped | grep \""+splitPoolImage[0]+"[ ]*"+splitPoolImage[1]+"\" | grep -o \"[^ ]*[ ]*$\"");
+        if(device == null) {
+            //If not mapped, map and return mapped device
+            Script.runSimpleBashScript("rbd map " + disk.getPath() + " --id " + pool.getAuthUserName());
+            device = Script.runSimpleBashScript("rbd showmapped | grep \""+splitPoolImage[0]+"[ ]*"+splitPoolImage[1]+"\" | grep -o \"[^ ]*[ ]*$\"");
+        }
+        return device;
+    }
+
+    public String mapKrbdDevice(final KVMPhysicalDisk disk){
         final KVMStoragePool pool = disk.getPool();
         //Check if rbd image is already mapped
         final String[] splitPoolImage = disk.getPath().split("/");
