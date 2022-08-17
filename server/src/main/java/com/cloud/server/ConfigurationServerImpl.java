@@ -222,14 +222,14 @@ public class ConfigurationServerImpl extends ManagerBase implements Configuratio
             s_logger.debug("Configuration server excluded plaintext authenticator");
 
             // Save default service offerings
-            createServiceOffering(User.UID_SYSTEM, "Small Instance", 1, 512, 500, "Small Instance", ProvisioningType.THIN, false, false, null);
-            createServiceOffering(User.UID_SYSTEM, "Medium Instance", 1, 1024, 1000, "Medium Instance", ProvisioningType.THIN, false, false, null);
+            createServiceOffering(User.UID_SYSTEM, "1C-2GB-RBD", 1, 2048, 500, "1Core 2GB", ProvisioningType.THIN, false, false, null);
+            createServiceOffering(User.UID_SYSTEM, "2C-4GB-RBD", 2, 4096, 2000, "2Core 4GB", ProvisioningType.THIN, false, false, null);
+            createServiceOffering(User.UID_SYSTEM, "4C-8GB-RBD", 4, 8192, 2000, "4Core 8GB", ProvisioningType.THIN, false, false, null);
+            createServiceOffering(User.UID_SYSTEM, "Custom", (Integer) null, (Integer) null, (Integer) null, "Custom", ProvisioningType.THIN, false, false, null);
             // Save default disk offerings
-            createDefaultDiskOffering("Small", "Small Disk, 5 GB", ProvisioningType.THIN, 5, null, false, false);
-            createDefaultDiskOffering("Medium", "Medium Disk, 20 GB", ProvisioningType.THIN, 20, null, false, false);
-            createDefaultDiskOffering("Large", "Large Disk, 100 GB", ProvisioningType.THIN, 100, null, false, false);
-            createDefaultDiskOffering("Large", "Large Disk, 100 GB", ProvisioningType.THIN, 100, null, false, false);
-            createDefaultDiskOffering("Custom", "Custom Disk", ProvisioningType.THIN, 0, null, true, false);
+            createDefaultDiskOffering("50GB-RBD", "RBD Disk, 50 GB", ProvisioningType.THIN, 50, null, false, false);
+            createDefaultDiskOffering("100GB-RBD", "RBD Disk, 100 GB", ProvisioningType.THIN, 100, null, false, false);
+            createDefaultDiskOffering("Custom", "Custom Disk", ProvisioningType.THIN, (Integer) null, null, true, false);
 
             // Save the mount parent to the configuration table
             String mountParent = getMountParent();
