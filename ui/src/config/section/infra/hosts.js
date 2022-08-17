@@ -40,6 +40,9 @@ export default {
     name: 'details',
     component: shallowRef(defineAsyncComponent(() => import('@/components/view/DetailsTab.vue')))
   }, {
+    name: 'outofbandmanagement',
+    component: shallowRef(defineAsyncComponent(() => import('@/views/infra/OobmTab.vue')))
+  }, {
     name: 'comments',
     component: shallowRef(defineAsyncComponent(() => import('@/components/view/AnnotationsTab.vue')))
   }],

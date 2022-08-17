@@ -195,6 +195,7 @@ import org.apache.cloudstack.storage.datastore.db.StoragePoolVO;
 import org.apache.cloudstack.usage.Usage;
 import org.apache.cloudstack.usage.UsageService;
 import org.apache.cloudstack.usage.UsageTypes;
+import org.apache.cloudstack.outofbandmanagement.OutOfBandManagement;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
@@ -762,6 +763,14 @@ public class ApiResponseHelper implements ResponseGenerator {
         List<HostResponse> listHosts = ViewResponseHelper.createHostResponse(details, viewHosts.toArray(new HostJoinVO[viewHosts.size()]));
         assert listHosts != null && listHosts.size() == 1 : "There should be one host returned";
         return listHosts.get(0);
+    }
+
+    @Override
+    public OutOfBandManagement createHostOobmResponse(Host host) {
+        List<HostJoinVO> viewHosts = ApiDBUtils.newHostView(host);
+        List<OutOfBandManagement> listHostsOobm = ViewResponseHelper.createHostOobmResponse(viewHosts.toArray(new HostJoinVO[viewHosts.size()]));
+        assert listHostsOobm != null && listHostsOobm.size() == 1 : "There should be one host returned";
+        return listHostsOobm.get(0);
     }
 
     @Override
