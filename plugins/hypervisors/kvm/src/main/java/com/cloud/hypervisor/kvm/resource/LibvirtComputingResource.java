@@ -2931,11 +2931,11 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
                     disk.setDiscard(DiscardType.UNMAP);
                 }
                 setDiskIoDriver(disk);
-                s_logger.info(":::::::::disk:::::::::::::::::::" + disk);
-                s_logger.info(":::::::::pool.getType():::::::::" + pool.getType());
-                s_logger.info(":::::::::provider:::::::::::::::" + provider);
-                s_logger.info(":::::::::krbdpath:::::::::::::::" + krbdpath);
-                s_logger.info(":::::::::physicalDisk.getPath():::::::::::::::" + physicalDisk.getPath());
+                s_logger.debug(":::::::::disk:::::::::::::::::::" + disk);
+                s_logger.debug(":::::::::pool.getType():::::::::" + pool.getType());
+                s_logger.debug(":::::::::provider:::::::::::::::" + provider);
+                s_logger.debug(":::::::::krbdpath:::::::::::::::" + krbdpath);
+                s_logger.debug(":::::::::physicalDisk.getPath():::::::::::::::" + physicalDisk.getPath());
 
                 if (pool.getType() == StoragePoolType.RBD) {
                     /*
@@ -2945,10 +2945,10 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
                      */
                     if("KRBD".equals(provider)){
                         final String device = mapKrbdDevice(physicalDisk);
-                        s_logger.info(":::::::mapRbdDevice:::::device::::::" +  device);
+                        s_logger.debug(":::::::mapRbdDevice:::::device::::::" +  device);
                         if (device != null) {
                             s_logger.debug("RBD device on host is: " + device);
-                            disk.defBlockBasedDisk(device, devId);
+                            disk.defBlockBasedDisk(krbdpath + "/" + physicalDisk.getPath(), devId);
                         } else {
                             throw new InternalErrorException("Error while mapping RBD device on host");
                         }

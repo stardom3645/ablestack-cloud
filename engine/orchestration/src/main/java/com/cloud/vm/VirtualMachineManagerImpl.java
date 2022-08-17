@@ -1204,8 +1204,12 @@ public class VirtualMachineManagerImpl extends ManagerBase implements VirtualMac
                         s_logger.info("provider:::::::::::provider::::" + provider);
                         s_logger.info("krbdpath:::::::::::krbdpath::::" + krbdpath);
                     }
-
-                    StartCommand command = new StartCommand(vmTO, dest.getHost(), getExecuteInSequence(vm.getHypervisorType()), provider, krbdpath);
+                    StartCommand command = null;
+                    if ("KRBD".equals(provider) && krbdpath.length() > 0) {
+                        command = new StartCommand(vmTO, dest.getHost(), getExecuteInSequence(vm.getHypervisorType()), provider, krbdpath);
+                    } else {
+                        command = new StartCommand(vmTO, dest.getHost(), getExecuteInSequence(vm.getHypervisorType()));
+                    }
                     cmds.addCommand(command);
 
                     vmGuru.finalizeDeployment(cmds, vmProfile, dest, ctx);
@@ -2581,6 +2585,7 @@ public class VirtualMachineManagerImpl extends ManagerBase implements VirtualMac
         s_logger.info("Migrating " + vm + " to " + dest);
         final long dstHostId = dest.getHost().getId();
         final Host fromHost = _hostDao.findById(srcHostId);
+        String provider = "";
         if (fromHost == null) {
             s_logger.info("Unable to find the host to migrate from: " + srcHostId);
             throw new CloudRuntimeException("Unable to find the host to migrate from: " + srcHostId);
@@ -2628,8 +2633,23 @@ public class VirtualMachineManagerImpl extends ManagerBase implements VirtualMac
         volumeMgr.prepareForMigration(profile, dest);
         profile.setConfigDriveLabel(VmConfigDriveLabel.value());
 
+        s_logger.info(":::::::::::vm.getId()::::" + vm.getId());
+        final List<VolumeVO> vols = _volsDao.findByInstance(vm.getId());
+        s_logger.info(":::::::::::vols::::" + vols);
+        s_logger.info(":::::::::::vols::::" + vols.size());
+        for (final VolumeVO vol : vols) {
+            final StoragePool sp = (StoragePool)dataStoreMgr.getPrimaryDataStore(vol.getPoolId());
+            provider = sp.getStorageProviderName();
+            s_logger.info("provider:::::::::::provider::::" + provider);
+        }
+
         final VirtualMachineTO to = toVmTO(profile);
-        final PrepareForMigrationCommand pfmc = new PrepareForMigrationCommand(to);
+        PrepareForMigrationCommand pfmc = null;
+        if ("KRBD".equals(provider)) {
+            pfmc = new PrepareForMigrationCommand(to, provider);
+        } else {
+            pfmc = new PrepareForMigrationCommand(to);
+        }
 
         ItWorkVO work = new ItWorkVO(UUID.randomUUID().toString(), _nodeId, State.Migrating, vm.getType(), vm.getId());
         work.setStep(Step.Prepare);

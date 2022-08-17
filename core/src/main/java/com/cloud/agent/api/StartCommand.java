@@ -69,7 +69,7 @@ public class StartCommand extends Command {
     }
 
     public String getKrbdPath() {
-        return this.provider;
+        return this.krbdpath;
     }
 
     public String getHostIp() {

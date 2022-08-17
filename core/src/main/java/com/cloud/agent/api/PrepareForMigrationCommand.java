@@ -24,12 +24,18 @@ import com.cloud.agent.api.to.VirtualMachineTO;
 public class PrepareForMigrationCommand extends Command {
     private VirtualMachineTO vm;
     private boolean rollback;
+    String provider;
 
     protected PrepareForMigrationCommand() {
     }
 
     public PrepareForMigrationCommand(VirtualMachineTO vm) {
         this.vm = vm;
+    }
+
+    public PrepareForMigrationCommand(VirtualMachineTO vm, String provider) {
+        this.vm = vm;
+        this.provider = provider;
     }
 
     public VirtualMachineTO getVirtualMachine() {
@@ -47,5 +53,9 @@ public class PrepareForMigrationCommand extends Command {
     @Override
     public boolean executeInSequence() {
         return true;
+    }
+
+    public String getProvider() {
+        return provider;
     }
 }

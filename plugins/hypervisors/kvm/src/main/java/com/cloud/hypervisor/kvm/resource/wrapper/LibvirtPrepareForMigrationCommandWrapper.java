@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.cloudstack.storage.configdrive.ConfigDrive;
+import org.apache.cloudstack.storage.to.PrimaryDataStoreTO;
 import org.apache.commons.collections.MapUtils;
 import org.apache.log4j.Logger;
 import org.libvirt.Connect;
@@ -42,6 +43,8 @@ import com.cloud.hypervisor.kvm.resource.LibvirtComputingResource;
 import com.cloud.hypervisor.kvm.resource.LibvirtVMDef;
 import com.cloud.hypervisor.kvm.resource.LibvirtVMDef.InterfaceDef.GuestNetType;
 import com.cloud.hypervisor.kvm.storage.KVMStoragePoolManager;
+import com.cloud.hypervisor.kvm.storage.KVMPhysicalDisk;
+import com.cloud.storage.Storage.StoragePoolType;
 import com.cloud.resource.CommandWrapper;
 import com.cloud.resource.ResourceWrapper;
 import com.cloud.storage.Volume;
@@ -88,12 +91,27 @@ public final class LibvirtPrepareForMigrationCommandWrapper extends CommandWrapp
             /* setup disks, e.g for iso */
             final DiskTO[] volumes = vm.getDisks();
             for (final DiskTO volume : volumes) {
+                final DataTO data = volume.getData();
                 if (volume.getType() == Volume.Type.ISO) {
-                    final DataTO data = volume.getData();
                     if (data != null && data.getPath() != null && data.getPath().startsWith(ConfigDrive.CONFIGDRIVEDIR)) {
                         libvirtComputingResource.getVolumePath(conn, volume, vm.isConfigDriveOnHostCache());
                     } else {
                         libvirtComputingResource.getVolumePath(conn, volume);
+                    }
+                } else {
+                    KVMPhysicalDisk physicalDisk = null;
+                    final PrimaryDataStoreTO store = (PrimaryDataStoreTO)data.getDataStore();
+                    physicalDisk = storagePoolMgr.getPhysicalDisk(store.getPoolType(), store.getUuid(), data.getPath());
+                    if (store.getPoolType() == StoragePoolType.RBD) {
+                        if("KRBD".equals(command.getProvider())){
+                            String device = libvirtComputingResource.mapKrbdDevice(physicalDisk);
+                            s_logger.debug(":::::::mapRbdDevice:::::device::::::" +  device);
+                            if (device != null) {
+                                s_logger.debug("RBD device on host is: " + device);
+                            } else {
+                                throw new InternalErrorException("Error while mapping RBD device on host");
+                            }
+                        }
                     }
                 }
             }
