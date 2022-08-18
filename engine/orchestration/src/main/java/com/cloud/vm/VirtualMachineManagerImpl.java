@@ -2640,11 +2640,9 @@ public class VirtualMachineManagerImpl extends ManagerBase implements VirtualMac
         }
 
         final VirtualMachineTO to = toVmTO(profile);
-        PrepareForMigrationCommand pfmc = null;
+        PrepareForMigrationCommand pfmc = new PrepareForMigrationCommand(to);
         if ("KRBD".equals(provider)) {
-            pfmc = new PrepareForMigrationCommand(to, provider);
-        } else {
-            pfmc = new PrepareForMigrationCommand(to);
+            pfmc.setProvider(provider);
         }
 
         ItWorkVO work = new ItWorkVO(UUID.randomUUID().toString(), _nodeId, State.Migrating, vm.getType(), vm.getId());

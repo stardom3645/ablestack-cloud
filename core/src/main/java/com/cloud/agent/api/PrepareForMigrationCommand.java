@@ -33,11 +33,6 @@ public class PrepareForMigrationCommand extends Command {
         this.vm = vm;
     }
 
-    public PrepareForMigrationCommand(VirtualMachineTO vm, String provider) {
-        this.vm = vm;
-        this.provider = provider;
-    }
-
     public VirtualMachineTO getVirtualMachine() {
         return vm;
     }
@@ -57,5 +52,9 @@ public class PrepareForMigrationCommand extends Command {
 
     public String getProvider() {
         return provider;
+    }
+
+    public void setProvider(String provider) {
+        this.provider = provider;
     }
 }
