@@ -104,7 +104,7 @@ public final class LibvirtPrepareForMigrationCommandWrapper extends CommandWrapp
                     physicalDisk = storagePoolMgr.getPhysicalDisk(store.getPoolType(), store.getUuid(), data.getPath());
                     if (store.getPoolType() == StoragePoolType.RBD) {
                         if("KRBD".equals(command.getProvider())){
-                            String device = libvirtComputingResource.mapKrbdDevice(physicalDisk);
+                            String device = libvirtComputingResource.mapRbdDevice(physicalDisk);
                             s_logger.debug(":::::::mapRbdDevice:::::device::::::" +  device);
                             if (device != null) {
                                 s_logger.debug("RBD device on host is: " + device);

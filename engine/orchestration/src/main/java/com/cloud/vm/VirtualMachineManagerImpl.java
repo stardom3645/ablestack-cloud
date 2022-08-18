@@ -1193,22 +1193,18 @@ public class VirtualMachineManagerImpl extends ManagerBase implements VirtualMac
                     final Map<String, String> ipAddressDetails = new HashMap<>(sshAccessDetails);
                     ipAddressDetails.remove(NetworkElementCommand.ROUTER_NAME);
 
-                    s_logger.info(":::::::::::vm.getId()::::" + vm.getId());
                     final List<VolumeVO> vols = _volsDao.findByInstance(vm.getId());
-                    s_logger.info(":::::::::::vols::::" + vols);
-                    s_logger.info(":::::::::::vols::::" + vols.size());
+
                     for (final VolumeVO vol : vols) {
                         final StoragePool sp = (StoragePool)dataStoreMgr.getPrimaryDataStore(vol.getPoolId());
                         provider = sp.getStorageProviderName();
                         krbdpath = sp.getKrbdPath();
-                        s_logger.info("provider:::::::::::provider::::" + provider);
-                        s_logger.info("krbdpath:::::::::::krbdpath::::" + krbdpath);
                     }
-                    StartCommand command = null;
+                    StartCommand command = command = new StartCommand(vmTO, dest.getHost(), getExecuteInSequence(vm.getHypervisorType()));
+
                     if ("KRBD".equals(provider) && krbdpath.length() > 0) {
-                        command = new StartCommand(vmTO, dest.getHost(), getExecuteInSequence(vm.getHypervisorType()), provider, krbdpath);
-                    } else {
-                        command = new StartCommand(vmTO, dest.getHost(), getExecuteInSequence(vm.getHypervisorType()));
+                        command.setProvider(provider);
+                        command.setKrbdpath(krbdpath);
                     }
                     cmds.addCommand(command);
 
