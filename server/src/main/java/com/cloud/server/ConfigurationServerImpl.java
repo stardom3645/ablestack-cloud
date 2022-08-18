@@ -222,14 +222,14 @@ public class ConfigurationServerImpl extends ManagerBase implements Configuratio
             s_logger.debug("Configuration server excluded plaintext authenticator");
 
             // Save default service offerings
-            createServiceOffering(User.UID_SYSTEM, "1C-2GB-RBD", 1, 2048, 500, "1Core 2GB", ProvisioningType.THIN, false, false, null);
-            createServiceOffering(User.UID_SYSTEM, "2C-4GB-RBD", 2, 4096, 2000, "2Core 4GB", ProvisioningType.THIN, false, false, null);
-            createServiceOffering(User.UID_SYSTEM, "4C-8GB-RBD", 4, 8192, 2000, "4Core 8GB", ProvisioningType.THIN, false, false, null);
-            createServiceOffering(User.UID_SYSTEM, "Custom", (Integer) null, (Integer) null, (Integer) null, "Custom", ProvisioningType.THIN, false, false, null);
+            createServiceOffering(User.UID_SYSTEM, "1C-2GB-RBD-HA", 1, 2048, 500, "1Core 2GB", ProvisioningType.THIN, false, true, null);
+            createServiceOffering(User.UID_SYSTEM, "2C-4GB-RBD-HA", 2, 4096, 2000, "2Core 4GB", ProvisioningType.THIN, false, true, null);
+            createServiceOffering(User.UID_SYSTEM, "4C-8GB-RBD-HA", 4, 8192, 2000, "4Core 8GB", ProvisioningType.THIN, false, true, null);
+            createServiceOffering(User.UID_SYSTEM, "Custom-HA", 0, 0, 0, "Custom", ProvisioningType.THIN, false, true, null);
             // Save default disk offerings
             createDefaultDiskOffering("50GB-RBD", "RBD Disk, 50 GB", ProvisioningType.THIN, 50, null, false, false);
             createDefaultDiskOffering("100GB-RBD", "RBD Disk, 100 GB", ProvisioningType.THIN, 100, null, false, false);
-            createDefaultDiskOffering("Custom", "Custom Disk", ProvisioningType.THIN, (Integer) null, null, true, false);
+            createDefaultDiskOffering("Custom", "Custom Disk", ProvisioningType.THIN, 0, null, true, false);
 
             // Save the mount parent to the configuration table
             String mountParent = getMountParent();
@@ -930,6 +930,10 @@ public class ConfigurationServerImpl extends ManagerBase implements Configuratio
 
         ServiceOfferingVO offering =
                 new ServiceOfferingVO(name, cpu, ramSize, speed, null, null, offerHA, displayText, false, null, false);
+
+        if(name == "Custom-HA"){
+            offering = new ServiceOfferingVO(name, null, null, null, null, null, offerHA, displayText, false, null, false);
+        }
         offering.setUniqueName("Cloud.Com-" + name);
         offering.setDiskOfferingId(diskOfferingVO.getId());
         // leaving the above reference to cloud.com in as it is an identifyer and has no real world relevance
