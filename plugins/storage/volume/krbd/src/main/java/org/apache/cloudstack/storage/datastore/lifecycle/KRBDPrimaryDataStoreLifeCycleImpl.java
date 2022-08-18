@@ -101,12 +101,12 @@ public class KRBDPrimaryDataStoreLifeCycleImpl implements PrimaryDataStoreLifeCy
         boolean multi = false;
         try {
             String urlType = url.substring(0, 3);
-            if (urlType.equals("krbd") && url.contains(",")) {
+            if (urlType.equals("rbd") && url.contains(",")) {
                 multi = true;
                 url = url.replaceAll(",", "/");
             }
             uri = new URI(UriUtils.encodeURIComponent(url));
-            if (uri.getScheme().equalsIgnoreCase("krbd")) {
+            if (uri.getScheme().equalsIgnoreCase("rbd")) {
                 String uriHost = uri.getHost();
                 String uriPath = uri.getPath();
                 if (uriPath == null) {

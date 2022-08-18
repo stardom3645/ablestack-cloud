@@ -2717,7 +2717,7 @@ public class VolumeApiServiceImpl extends ManagerBase implements VolumeApiServic
 
             cmd.setStorageHost(volumePool.getHostAddress());
             cmd.setStoragePort(volumePool.getPort());
-            
+
             cmd.set_iScsiName(volume.get_iScsiName());
 
             try {
