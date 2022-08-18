@@ -2709,12 +2709,15 @@ public class VolumeApiServiceImpl extends ManagerBase implements VolumeApiServic
             }
 
             DettachCommand cmd = new DettachCommand(disk, vm.getInstanceName());
-
+            if ("KRBD".equals(volumePool.getStorageProviderName()) && volumePool.getKrbdPath().length() > 0) {
+                cmd.setProvider(volumePool.getStorageProviderName());
+                cmd.setKrbdpath(volumePool.getKrbdPath());
+            }
             cmd.setManaged(volumePool.isManaged());
 
             cmd.setStorageHost(volumePool.getHostAddress());
             cmd.setStoragePort(volumePool.getPort());
-
+            
             cmd.set_iScsiName(volume.get_iScsiName());
 
             try {
@@ -3896,6 +3899,11 @@ public class VolumeApiServiceImpl extends ManagerBase implements VolumeApiServic
                         volumeToAttach.getDiskOfferingId());
 
                 AttachCommand cmd = new AttachCommand(disk, vm.getInstanceName());
+
+                if ("KRBD".equals(volumeToAttachStoragePool.getStorageProviderName()) && volumeToAttachStoragePool.getKrbdPath().length() > 0) {
+                    cmd.setProvider(volumeToAttachStoragePool.getStorageProviderName());
+                    cmd.setKrbdpath(volumeToAttachStoragePool.getKrbdPath());
+                }
 
                 ChapInfo chapInfo = volService.getChapInfo(volFactory.getVolume(volumeToAttach.getId()), dataStore);
 
