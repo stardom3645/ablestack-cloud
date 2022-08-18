@@ -229,7 +229,7 @@
             </a-select>
           </a-form-item>
         </div>
-        <div v-if="form.provider !== 'DefaultPrimary' && form.provider !== 'PowerFlex' && form.provider !== 'Linstor' && from.provider !== 'krbd'" >
+        <div v-if="form.provider !== 'DefaultPrimary' && form.provider !== 'PowerFlex' && form.provider !== 'Linstor' && form.provider !== 'KRBD'" >
           <a-form-item name="managed" ref="managed">
             <template #label>
               <tooltip-label :title="$t('label.ismanaged')" :tooltip="apiParams.managed.description"/>
@@ -526,7 +526,7 @@ export default {
       } else if (this.hypervisorType === 'LXC') {
         this.protocols = ['nfs', 'SharedMountPoint', 'RBD']
       } else {
-        this.protocols = ['nfs', 'KRBD']
+        this.protocols = ['nfs']
       }
       if (!value) {
         this.form.protocol = this.protocols[0]
