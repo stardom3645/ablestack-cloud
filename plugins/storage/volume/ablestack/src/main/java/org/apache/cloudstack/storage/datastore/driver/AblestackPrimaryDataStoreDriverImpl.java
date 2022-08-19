@@ -85,8 +85,8 @@ import com.cloud.vm.VMInstanceVO;
 import com.cloud.vm.VirtualMachine;
 import com.cloud.vm.dao.VMInstanceDao;
 
-public class KRBDPrimaryDataStoreDriverImpl implements PrimaryDataStoreDriver {
-    private static final Logger s_logger = Logger.getLogger(KRBDPrimaryDataStoreDriverImpl.class);
+public class AblestackPrimaryDataStoreDriverImpl implements PrimaryDataStoreDriver {
+    private static final Logger s_logger = Logger.getLogger(AblestackPrimaryDataStoreDriverImpl.class);
     @Inject
     DiskOfferingDao diskOfferingDao;
     @Inject

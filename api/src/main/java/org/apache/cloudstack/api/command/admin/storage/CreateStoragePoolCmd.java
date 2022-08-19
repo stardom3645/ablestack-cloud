@@ -94,7 +94,7 @@ public class CreateStoragePoolCmd extends BaseCmd {
     @Parameter(name = ApiConstants.KRBD_PATH,
             type = CommandType.STRING,
             required = false,
-            description = "the path of KRBD ")
+            description = "the path of Ablestack provider")
     private String krbdpath;
 
     /////////////////////////////////////////////////////

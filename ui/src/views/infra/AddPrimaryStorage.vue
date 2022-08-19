@@ -160,7 +160,7 @@
         </a-form-item>
         <div
           v-if="form.protocol === 'nfs' || form.protocol === 'SMB' || form.protocol === 'iscsi' || form.protocol === 'vmfs'|| form.protocol === 'Gluster' || form.protocol === 'Linstor' ||
-            (form.protocol === 'PreSetup' && hypervisorType === 'VMware') || form.protocol === 'datastorecluster' && form.protocol !== 'KRBD'">
+            (form.protocol === 'PreSetup' && hypervisorType === 'VMware') || form.protocol === 'datastorecluster' && form.protocol !== 'Glue'">
           <a-form-item name="server" ref="server">
             <template #label>
               <tooltip-label :title="$t('label.server')" :tooltip="$t('message.server.description')"/>
@@ -229,7 +229,7 @@
             </a-select>
           </a-form-item>
         </div>
-        <div v-if="form.provider !== 'DefaultPrimary' && form.provider !== 'PowerFlex' && form.provider !== 'Linstor' && form.provider !== 'KRBD'" >
+        <div v-if="form.provider !== 'DefaultPrimary' && form.provider !== 'PowerFlex' && form.provider !== 'Linstor' && form.provider !== 'ABLESTACK'" >
           <a-form-item name="managed" ref="managed">
             <template #label>
               <tooltip-label :title="$t('label.ismanaged')" :tooltip="apiParams.managed.description"/>
@@ -297,7 +297,7 @@
             <a-input v-model:value="form.radossecret" :placeholder="$t('label.rados.secret')" />
           </a-form-item>
         </div>
-        <div v-if="form.protocol === 'KRBD' || form.provider === 'KRBD'">
+        <div v-if="form.protocol === 'Glue' || form.provider === 'ABLESTACK'">
           <a-form-item name="kradosmonitor" ref="kradosmonitor" :label="$t('label.rados.monitor')">
             <a-input v-model:value="form.kradosmonitor" :placeholder="$t('label.rados.monitor')" />
           </a-form-item>
@@ -511,7 +511,7 @@ export default {
       const cluster = this.clusters.find(cluster => cluster.id === this.form.cluster)
       this.hypervisorType = cluster.hypervisortype
       if (this.hypervisorType === 'KVM') {
-        this.protocols = ['nfs', 'SharedMountPoint', 'RBD', 'KRBD', 'CLVM', 'Gluster', 'Linstor', 'custom']
+        this.protocols = ['Glue', 'nfs', 'SharedMountPoint', 'RBD', 'CLVM', 'Gluster', 'Linstor', 'custom']
       } else if (this.hypervisorType === 'XenServer') {
         this.protocols = ['nfs', 'PreSetup', 'iscsi', 'custom']
       } else if (this.hypervisorType === 'VMware') {
@@ -745,7 +745,7 @@ export default {
           url = this.clvmURL(vg)
         } else if (values.protocol === 'RBD') {
           url = this.rbdURL(values.radosmonitor, values.radospool, values.radosuser, values.radossecret)
-        } else if (values.protocol === 'KRBD') {
+        } else if (values.protocol === 'Glue') {
           url = this.rbdURL(values.kradosmonitor, values.kradospool, values.kradosuser, values.kradossecret)
           params.krbdPath = values.kradospath
         } else if (values.protocol === 'vmfs') {
@@ -775,7 +775,7 @@ export default {
           params['details[0].resourceGroup'] = values.resourcegroup
         }
         params.url = url
-        if (values.provider !== 'DefaultPrimary' && values.provider !== 'PowerFlex' && values.provider !== 'KRBD') {
+        if (values.provider !== 'DefaultPrimary' && values.provider !== 'PowerFlex' && values.provider !== 'ABLESTACK') {
           if (values.managed) {
             params.managed = true
           } else {

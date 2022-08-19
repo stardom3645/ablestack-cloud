@@ -2931,11 +2931,6 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
                     disk.setDiscard(DiscardType.UNMAP);
                 }
                 setDiskIoDriver(disk);
-                s_logger.debug(":::::::::disk:::::::::::::::::::" + disk);
-                s_logger.debug(":::::::::pool.getType():::::::::" + pool.getType());
-                s_logger.debug(":::::::::provider:::::::::::::::" + provider);
-                s_logger.debug(":::::::::krbdpath:::::::::::::::" + krbdpath);
-                s_logger.debug(":::::::::physicalDisk.getPath():::::::::::::::" + physicalDisk.getPath());
 
                 if (pool.getType() == StoragePoolType.RBD) {
                     /*
@@ -2943,9 +2938,8 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
                             We store the secret under the UUID of the pool, that's why
                             we pass the pool's UUID as the authSecret
                      */
-                    if("KRBD".equals(provider)){
+                    if("ABLESTACK".equals(provider)){
                         final String device = mapRbdDevice(physicalDisk);
-                        s_logger.debug(":::::::mapRbdDevice:::::device::::::" +  device);
                         if (device != null) {
                             s_logger.debug("RBD device on host is: " + device);
                             disk.defBlockBasedDisk(krbdpath + "/" + physicalDisk.getPath(), devId);
@@ -4832,6 +4826,19 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
         if(device == null) {
             //If not mapped, map and return mapped device
             Script.runSimpleBashScript("rbd map " + disk.getPath() + " --id " + pool.getAuthUserName());
+            device = Script.runSimpleBashScript("rbd showmapped | grep \""+splitPoolImage[0]+"[ ]*"+splitPoolImage[1]+"\" | grep -o \"[^ ]*[ ]*$\"");
+        }
+        return device;
+    }
+
+    public String unmapRbdDevice(final KVMPhysicalDisk disk){
+        final KVMStoragePool pool = disk.getPool();
+        //Check if rbd image is already mapped
+        final String[] splitPoolImage = disk.getPath().split("/");
+        String device = Script.runSimpleBashScript("rbd showmapped | grep \""+splitPoolImage[0]+"[ ]*"+splitPoolImage[1]+"\" | grep -o \"[^ ]*[ ]*$\"");
+        if(device == null) {
+            //If not mapped, map and return mapped device
+            Script.runSimpleBashScript("rbd unmap " + disk.getPath() + " --id " + pool.getAuthUserName());
             device = Script.runSimpleBashScript("rbd showmapped | grep \""+splitPoolImage[0]+"[ ]*"+splitPoolImage[1]+"\" | grep -o \"[^ ]*[ ]*$\"");
         }
         return device;

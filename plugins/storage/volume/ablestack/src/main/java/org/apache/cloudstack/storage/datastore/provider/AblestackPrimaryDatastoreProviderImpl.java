@@ -24,13 +24,13 @@ import org.apache.cloudstack.engine.subsystem.api.storage.DataStoreLifeCycle;
 import org.apache.cloudstack.engine.subsystem.api.storage.HypervisorHostListener;
 import org.apache.cloudstack.engine.subsystem.api.storage.PrimaryDataStoreDriver;
 import org.apache.cloudstack.engine.subsystem.api.storage.PrimaryDataStoreProvider;
-import org.apache.cloudstack.storage.datastore.driver.KRBDPrimaryDataStoreDriverImpl;
-import org.apache.cloudstack.storage.datastore.lifecycle.KRBDPrimaryDataStoreLifeCycleImpl;
+import org.apache.cloudstack.storage.datastore.driver.AblestackPrimaryDataStoreDriverImpl;
+import org.apache.cloudstack.storage.datastore.lifecycle.AblestackPrimaryDataStoreLifeCycleImpl;
 
 import com.cloud.utils.component.ComponentContext;
 
-public class KRBDPrimaryDatastoreProviderImpl implements PrimaryDataStoreProvider {
-    private final String providerName = "KRBD";
+public class AblestackPrimaryDatastoreProviderImpl implements PrimaryDataStoreProvider {
+    private final String providerName = "ABLESTACK";
     protected PrimaryDataStoreDriver driver;
     protected HypervisorHostListener listener;
     protected DataStoreLifeCycle lifecycle;
@@ -47,8 +47,8 @@ public class KRBDPrimaryDatastoreProviderImpl implements PrimaryDataStoreProvide
 
     @Override
     public boolean configure(Map<String, Object> params) {
-        lifecycle = ComponentContext.inject(KRBDPrimaryDataStoreLifeCycleImpl.class);
-        driver = ComponentContext.inject(KRBDPrimaryDataStoreDriverImpl.class);
+        lifecycle = ComponentContext.inject(AblestackPrimaryDataStoreLifeCycleImpl.class);
+        driver = ComponentContext.inject(AblestackPrimaryDataStoreDriverImpl.class);
         listener = ComponentContext.inject(DefaultHostListener.class);
         return true;
     }

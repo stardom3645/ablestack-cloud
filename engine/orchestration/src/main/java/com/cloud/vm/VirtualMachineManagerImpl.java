@@ -1202,7 +1202,7 @@ public class VirtualMachineManagerImpl extends ManagerBase implements VirtualMac
                     }
                     StartCommand command = command = new StartCommand(vmTO, dest.getHost(), getExecuteInSequence(vm.getHypervisorType()));
 
-                    if ("KRBD".equals(provider) && krbdpath.length() > 0) {
+                    if ("ABLESTACK".equals(provider) && krbdpath.length() > 0) {
                         command.setProvider(provider);
                         command.setKrbdpath(krbdpath);
                     }
@@ -2629,19 +2629,15 @@ public class VirtualMachineManagerImpl extends ManagerBase implements VirtualMac
         volumeMgr.prepareForMigration(profile, dest);
         profile.setConfigDriveLabel(VmConfigDriveLabel.value());
 
-        s_logger.info(":::::::::::vm.getId()::::" + vm.getId());
         final List<VolumeVO> vols = _volsDao.findByInstance(vm.getId());
-        s_logger.info(":::::::::::vols::::" + vols);
-        s_logger.info(":::::::::::vols::::" + vols.size());
         for (final VolumeVO vol : vols) {
             final StoragePool sp = (StoragePool)dataStoreMgr.getPrimaryDataStore(vol.getPoolId());
             provider = sp.getStorageProviderName();
-            s_logger.info("provider:::::::::::provider::::" + provider);
         }
 
         final VirtualMachineTO to = toVmTO(profile);
         PrepareForMigrationCommand pfmc = new PrepareForMigrationCommand(to);
-        if ("KRBD".equals(provider)) {
+        if ("ABLESTACK".equals(provider)) {
             pfmc.setProvider(provider);
         }
 

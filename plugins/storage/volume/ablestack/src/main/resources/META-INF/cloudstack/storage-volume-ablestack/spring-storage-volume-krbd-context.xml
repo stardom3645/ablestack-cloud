@@ -27,6 +27,6 @@
                       http://www.springframework.org/schema/context/spring-context.xsd"
                       >
 
-    <bean id="KRBDPrimaryDatastoreProviderImpl"
-        class="org.apache.cloudstack.storage.datastore.provider.KRBDPrimaryDatastoreProviderImpl" />
+    <bean id="AblestackPrimaryDatastoreProviderImpl"
+        class="org.apache.cloudstack.storage.datastore.provider.AblestackPrimaryDatastoreProviderImpl" />
 </beans>

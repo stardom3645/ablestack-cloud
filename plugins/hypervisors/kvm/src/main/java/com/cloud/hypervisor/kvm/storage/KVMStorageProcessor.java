@@ -1231,13 +1231,17 @@ public class KVMStorageProcessor implements StorageProcessor {
                         if (device != null) {
                             s_logger.debug("RBD device on host is: "+device);
                             attachingDisk.setPath(device);
+                        } else {
+                            throw new InternalErrorException("Error while mapping disk "+attachingDisk.getPath()+" on host");
                         }
                     }
-                    if("KRBD".equals(provider)){
-                        final String device = resource.mapRbdDevice(attachingDisk);
-                        if (device != null) {
-                            s_logger.debug("RBD device on host is: "+device);
+                    if("ABLESTACK".equals(provider)){
+                        final String unmap = resource.unmapRbdDevice(attachingDisk);
+                        if (unmap == null) {
                             attachingDisk.setPath(krbdpath + "/" + attachingDisk.getPath());
+                            s_logger.debug("RBD unmap device on host is: " + attachingDisk.getPath());
+                        } else {
+                            throw new InternalErrorException("Error while mapping disk "+attachingDisk.getPath()+" on host");
                         }
                     }
                 }
@@ -1279,9 +1283,8 @@ public class KVMStorageProcessor implements StorageProcessor {
                             throw new InternalErrorException("Error while mapping disk "+attachingDisk.getPath()+" on host");
                         }
                     } else {
-                        if("KRBD".equals(provider)){
+                        if("ABLESTACK".equals(provider)){
                             final String device = resource.mapRbdDevice(attachingDisk);
-                            s_logger.debug(":::::::mapRbdDevice:::::device::::::" +  device);
                             if (device != null) {
                                 s_logger.debug("RBD device on host is: " + device);
                                 diskdef.defBlockBasedDisk(krbdpath + "/" + attachingDisk.getPath(), devId);

@@ -62,8 +62,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-public class KRBDPrimaryDataStoreLifeCycleImpl implements PrimaryDataStoreLifeCycle {
-    private static final Logger s_logger = Logger.getLogger(KRBDPrimaryDataStoreLifeCycleImpl.class);
+public class AblestackPrimaryDataStoreLifeCycleImpl implements PrimaryDataStoreLifeCycle {
+    private static final Logger s_logger = Logger.getLogger(AblestackPrimaryDataStoreLifeCycleImpl.class);
     @Inject
     protected ResourceManager _resourceMgr;
     @Inject
@@ -80,7 +80,7 @@ public class KRBDPrimaryDataStoreLifeCycleImpl implements PrimaryDataStoreLifeCy
     @Inject
     PrimaryDataStoreHelper dataStoreHelper;
 
-    public KRBDPrimaryDataStoreLifeCycleImpl() {
+    public AblestackPrimaryDataStoreLifeCycleImpl() {
     }
 
     @Override
