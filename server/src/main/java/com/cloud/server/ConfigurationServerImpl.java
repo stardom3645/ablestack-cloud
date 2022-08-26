@@ -82,6 +82,7 @@ import com.cloud.network.guru.DirectPodBasedNetworkGuru;
 import com.cloud.network.guru.PodBasedNetworkGuru;
 import com.cloud.network.guru.PublicNetworkGuru;
 import com.cloud.network.guru.StorageNetworkGuru;
+import com.cloud.offering.DiskOffering.DiskCacheMode;
 import com.cloud.offering.NetworkOffering;
 import com.cloud.offering.NetworkOffering.Availability;
 import com.cloud.offerings.NetworkOfferingServiceMapVO;
@@ -227,9 +228,10 @@ public class ConfigurationServerImpl extends ManagerBase implements Configuratio
             createServiceOffering(User.UID_SYSTEM, "4C-8GB-RBD-HA", 4, 8192, 2000, "4Core 8GB", ProvisioningType.THIN, false, true, null);
             createServiceOffering(User.UID_SYSTEM, "Custom-HA", 0, 0, 0, "Custom", ProvisioningType.THIN, false, true, null);
             // Save default disk offerings
-            createDefaultDiskOffering("50GB-RBD", "RBD Disk, 50 GB", ProvisioningType.THIN, 50, null, false, false);
-            createDefaultDiskOffering("100GB-RBD", "RBD Disk, 100 GB", ProvisioningType.THIN, 100, null, false, false);
-            createDefaultDiskOffering("Custom", "Custom Disk", ProvisioningType.THIN, 0, null, true, false);
+            createDefaultDiskOffering("50GB-RBD", "RBD Disk, 50 GB", ProvisioningType.THIN, 50, null, false, false, DiskCacheMode.WRITEBACK);
+            createDefaultDiskOffering("100GB-RBD", "RBD Disk, 100 GB", ProvisioningType.THIN, 100, null, false, false, DiskCacheMode.WRITEBACK);
+            createDefaultDiskOffering("1TB-RBD", "RBD Disk, 1 TB", ProvisioningType.THIN, 1024, null, false, false, DiskCacheMode.WRITEBACK);
+            createDefaultDiskOffering("Custom", "Custom Disk", ProvisioningType.THIN, 0, null, true, false, DiskCacheMode.WRITEBACK);
 
             // Save the mount parent to the configuration table
             String mountParent = getMountParent();
@@ -909,12 +911,12 @@ public class ConfigurationServerImpl extends ManagerBase implements Configuratio
     }
 
     private DiskOfferingVO createDefaultDiskOffering(String name, String description, ProvisioningType provisioningType,
-                                                     int numGibibytes, String tags, boolean isCustomized, boolean isSystemUse) {
+                                                     int numGibibytes, String tags, boolean isCustomized, boolean isSystemUse, DiskCacheMode cacheMode) {
         long diskSize = numGibibytes;
         diskSize = diskSize * 1024 * 1024 * 1024;
         tags = cleanupTags(tags);
 
-        DiskOfferingVO newDiskOffering = new DiskOfferingVO(name, description, provisioningType, diskSize, tags, isCustomized, null, null, null);
+        DiskOfferingVO newDiskOffering = new DiskOfferingVO(name, description, provisioningType, diskSize, tags, isCustomized, null, null, null, cacheMode);
         newDiskOffering.setUniqueName("Cloud.Com-" + name);
         // leaving the above reference to cloud.com in as it is an identifier and has no real world relevance
         newDiskOffering = _diskOfferingDao.persistDefaultDiskOffering(newDiskOffering);
