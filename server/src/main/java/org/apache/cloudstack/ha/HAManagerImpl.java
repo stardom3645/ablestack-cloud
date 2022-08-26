@@ -416,7 +416,7 @@ public final class HAManagerImpl extends ManagerBase implements HAManager, Clust
     public boolean enableHA(final Cluster cluster) {
         clusterDetailsDao.persist(cluster.getId(), HA_ENABLED_DETAIL, String.valueOf(true));
 
-        //host ha enable
+        //host enableHA
         List<? extends HAResource> resources = hostDao.findByClusterId(cluster.getId());
         for (HAResource resource : resources) {
             final HAConfig haConfig = haConfigDao.findHAResource(resource.getId(), resource.resourceType());
@@ -432,7 +432,7 @@ public final class HAManagerImpl extends ManagerBase implements HAManager, Clust
     public boolean disableHA(final Cluster cluster) {
         clusterDetailsDao.persist(cluster.getId(), HA_ENABLED_DETAIL, String.valueOf(false));
 
-        //host ha disable
+        //host disableHA
         List<? extends HAResource> resources = hostDao.findByClusterId(cluster.getId());
         for (HAResource resource : resources) {
             final HAConfig haConfig = haConfigDao.findHAResource(resource.getId(), resource.resourceType());
