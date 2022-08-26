@@ -415,6 +415,15 @@ public final class HAManagerImpl extends ManagerBase implements HAManager, Clust
     @ActionEvent(eventType = EventTypes.EVENT_HA_RESOURCE_ENABLE, eventDescription = "enabling HA for a cluster")
     public boolean enableHA(final Cluster cluster) {
         clusterDetailsDao.persist(cluster.getId(), HA_ENABLED_DETAIL, String.valueOf(true));
+
+        //host ha enable
+        List<? extends HAResource> resources = hostDao.findByClusterId(cluster.getId());
+        for (HAResource resource : resources) {
+            final HAConfig haConfig = haConfigDao.findHAResource(resource.getId(), resource.resourceType());
+            if (haConfig != null && !haConfig.isEnabled()) {
+                boolean result = enableHA(resource.getId(), resource.resourceType());
+            }
+        }
         return true;
     }
 
@@ -422,6 +431,15 @@ public final class HAManagerImpl extends ManagerBase implements HAManager, Clust
     @ActionEvent(eventType = EventTypes.EVENT_HA_RESOURCE_DISABLE, eventDescription = "disabling HA for a cluster")
     public boolean disableHA(final Cluster cluster) {
         clusterDetailsDao.persist(cluster.getId(), HA_ENABLED_DETAIL, String.valueOf(false));
+
+        //host ha disable
+        List<? extends HAResource> resources = hostDao.findByClusterId(cluster.getId());
+        for (HAResource resource : resources) {
+            final HAConfig haConfig = haConfigDao.findHAResource(resource.getId(), resource.resourceType());
+            if (haConfig != null && haConfig.isEnabled()) {
+                boolean result = disableHA(resource.getId(), resource.resourceType());
+            }
+        }
         return transitionResourceStateToDisabled(cluster);
     }
 
