@@ -21,23 +21,37 @@ package org.apache.cloudstack.storage.datastore.lifecycle;
 import com.cloud.agent.AgentManager;
 import com.cloud.agent.api.Answer;
 import com.cloud.agent.api.CreateStoragePoolCommand;
+import com.cloud.agent.api.DeleteStoragePoolCommand;
 import com.cloud.agent.api.StoragePoolInfo;
 
 import com.cloud.exception.InvalidParameterValueException;
 import com.cloud.exception.StorageConflictException;
 
-
-import com.cloud.utils.UriUtils;
+import com.cloud.host.dao.HostDao;
 import com.cloud.host.Host;
 import com.cloud.host.HostVO;
 import com.cloud.hypervisor.Hypervisor.HypervisorType;
 import com.cloud.resource.ResourceManager;
+import com.cloud.storage.dao.StoragePoolHostDao;
+import com.cloud.storage.dao.StoragePoolWorkDao;
 import com.cloud.storage.Storage;
 import com.cloud.storage.StorageManager;
 import com.cloud.storage.StoragePool;
+import com.cloud.storage.StoragePoolAutomation;
+import com.cloud.storage.StoragePoolHostVO;
+import com.cloud.utils.db.DB;
+import com.cloud.utils.UriUtils;
 
-import com.cloud.storage.dao.StoragePoolWorkDao;
 import com.cloud.utils.exception.CloudRuntimeException;
+import java.io.UnsupportedEncodingException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URLDecoder;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import javax.inject.Inject;
 import org.apache.cloudstack.engine.subsystem.api.storage.ClusterScope;
 import org.apache.cloudstack.engine.subsystem.api.storage.DataStore;
 import org.apache.cloudstack.engine.subsystem.api.storage.DataStoreManager;
@@ -52,16 +66,6 @@ import org.apache.cloudstack.storage.volume.datastore.PrimaryDataStoreHelper;
 import org.apache.log4j.Logger;
 
 
-import javax.inject.Inject;
-import java.io.UnsupportedEncodingException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.URLDecoder;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-
 public class AblestackPrimaryDataStoreLifeCycleImpl implements PrimaryDataStoreLifeCycle {
     private static final Logger s_logger = Logger.getLogger(AblestackPrimaryDataStoreLifeCycleImpl.class);
     @Inject
@@ -74,11 +78,16 @@ public class AblestackPrimaryDataStoreLifeCycleImpl implements PrimaryDataStoreL
     AgentManager agentMgr;
     @Inject
     StorageManager storageMgr;
-
+    @Inject
+    protected StoragePoolHostDao _storagePoolHostDao;
     @Inject
     protected StoragePoolWorkDao _storagePoolWorkDao;
     @Inject
     PrimaryDataStoreHelper dataStoreHelper;
+    @Inject
+    StoragePoolAutomation storagePoolAutmation;
+    @Inject
+    protected HostDao _hostDao;
 
     public AblestackPrimaryDataStoreLifeCycleImpl() {
     }
@@ -275,23 +284,67 @@ public class AblestackPrimaryDataStoreLifeCycleImpl implements PrimaryDataStoreL
     }
 
     @Override
-    public boolean attachHost(DataStore store, HostScope scope, StoragePoolInfo existingInfo) {
-        return false;
-    }
-
-    @Override
-    public boolean maintain(DataStore store) {
-        return false;
+    public boolean maintain(DataStore dataStore) {
+        storagePoolAutmation.maintain(dataStore);
+        dataStoreHelper.maintain(dataStore);
+        return true;
     }
 
     @Override
     public boolean cancelMaintain(DataStore store) {
-        return false;
+        dataStoreHelper.cancelMaintain(store);
+        storagePoolAutmation.cancelMaintain(store);
+        return true;
+    }
+
+    @DB
+    @Override
+    public boolean deleteDataStore(DataStore store) {
+        List<StoragePoolHostVO> hostPoolRecords = _storagePoolHostDao.listByPoolId(store.getId());
+        StoragePool pool = (StoragePool)store;
+        boolean deleteFlag = false;
+        // find the hypervisor where the storage is attached to.
+        HypervisorType hType = null;
+        if (hostPoolRecords.size() > 0) {
+            hType = getHypervisorType(hostPoolRecords.get(0).getHostId());
+        }
+
+        // Remove the SR associated with the Xenserver
+        for (StoragePoolHostVO host : hostPoolRecords) {
+            DeleteStoragePoolCommand deleteCmd = new DeleteStoragePoolCommand(pool);
+            final Answer answer = agentMgr.easySend(host.getHostId(), deleteCmd);
+
+            if (answer != null && answer.getResult()) {
+                deleteFlag = true;
+                // if host is KVM hypervisor then send deleteStoragepoolcmd to all the kvm hosts.
+                if (HypervisorType.KVM != hType) {
+                    break;
+                }
+            } else {
+                if (answer != null) {
+                    s_logger.debug("Failed to delete storage pool: " + answer.getResult());
+                }
+            }
+        }
+
+        if (!hostPoolRecords.isEmpty() && !deleteFlag) {
+            throw new CloudRuntimeException("Failed to delete storage pool on host");
+        }
+
+        return dataStoreHelper.deletePrimaryDataStore(store);
+    }
+
+    private HypervisorType getHypervisorType(long hostId) {
+        HostVO host = _hostDao.findById(hostId);
+        if (host != null)
+            return host.getHypervisorType();
+        return HypervisorType.None;
     }
 
     @Override
-    public boolean deleteDataStore(DataStore store) {
-        return false;
+    public boolean attachHost(DataStore store, HostScope scope, StoragePoolInfo existingInfo) {
+        dataStoreHelper.attachHost(store, scope, existingInfo);
+        return true;
     }
 
     /*
@@ -310,11 +363,12 @@ public class AblestackPrimaryDataStoreLifeCycleImpl implements PrimaryDataStoreL
     public void updateStoragePool(StoragePool storagePool, Map<String, String> details) {
     }
 
-    @Override
-    public void enableStoragePool(DataStore store) {
+    public void enableStoragePool(DataStore dataStore) {
+        dataStoreHelper.enable(dataStore);
     }
 
     @Override
-    public void disableStoragePool(DataStore store) {
+    public void disableStoragePool(DataStore dataStore) {
+        dataStoreHelper.disable(dataStore);
     }
 }
