@@ -52,6 +52,9 @@ public class UpdateStoragePoolCmd extends BaseCmd {
     @Parameter(name = ApiConstants.TAGS, type = CommandType.LIST, collectionType = CommandType.STRING, description = "comma-separated list of tags for the storage pool")
     private List<String> tags;
 
+    @Parameter(name = ApiConstants.IP_ADDRESS, type = CommandType.STRING, entityType = StoragePoolResponse.class, description = "Change the ip of the storage pool")
+    private String ipaddress;
+
     @Parameter(name = ApiConstants.CAPACITY_IOPS, type = CommandType.LONG, required = false, description = "IOPS CloudStack can provision from this storage pool")
     private Long capacityIops;
 
@@ -76,6 +79,10 @@ public class UpdateStoragePoolCmd extends BaseCmd {
 
     public List<String> getTags() {
         return tags;
+    }
+
+    public String getIpaddress() {
+        return ipaddress;
     }
 
     public Long getCapacityIops() {
