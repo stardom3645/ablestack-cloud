@@ -171,7 +171,7 @@ import static com.cloud.utils.NumbersUtil.toHumanReadableSize;
 public class KubernetesClusterManagerImpl extends ManagerBase implements KubernetesClusterService {
 
     private static final Logger LOGGER = Logger.getLogger(KubernetesClusterManagerImpl.class);
-    private static final String DEFAULT_NETWORK_OFFERING_FOR_KUBERNETES_SERVICE_NAME = "DefaultNetworkOfferingforKubernetesService";
+    private static final String DEFAULT_NETWORK_OFFERING_FOR_KUBERNETES_SERVICE_NAME = "쿠버네테스 서비스에 대한 기본 네트워크오퍼링";
 
     protected StateMachine2<KubernetesCluster.State, KubernetesCluster.Event, KubernetesCluster> _stateMachine = KubernetesCluster.State.getStateMachine();
 

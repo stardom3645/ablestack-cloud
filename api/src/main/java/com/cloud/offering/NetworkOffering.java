@@ -52,18 +52,18 @@ public interface NetworkOffering extends InfrastructureEntity, InternalIdentity,
 
     public final static String DefaultSharedNetworkOfferingWithSGService = "DefaultSharedNetworkOfferingWithSGService";
     public final static String QuickCloudNoServices = "QuickCloudNoServices";
-    public final static String DefaultIsolatedNetworkOfferingWithSourceNatService = "DefaultIsolatedNetworkOfferingWithSourceNatService";
+    public final static String DefaultIsolatedNetworkOfferingWithSourceNatService = "기본 격리 네트워크오퍼링(with SourceNat)";
     public final static String OvsIsolatedNetworkOfferingWithSourceNatService = "OvsIsolatedNetworkOfferingWithSourceNatService";
-    public final static String DefaultSharedNetworkOffering = "DefaultSharedNetworkOffering";
+    public final static String DefaultSharedNetworkOffering = "기본 공유 네트워크오퍼링";
     public final static String DefaultIsolatedNetworkOffering = "DefaultIsolatedNetworkOffering";
     public final static String DefaultSharedEIPandELBNetworkOffering = "DefaultSharedNetscalerEIPandELBNetworkOffering";
-    public final static String DefaultIsolatedNetworkOfferingForVpcNetworks = "DefaultIsolatedNetworkOfferingForVpcNetworks";
+    public final static String DefaultIsolatedNetworkOfferingForVpcNetworks = "VPC 네트워크에 대한 기본 격리 네트워크오퍼링";
     public final static String DefaultIsolatedNetworkOfferingForVpcNetworksNoLB = "DefaultIsolatedNetworkOfferingForVpcNetworksNoLB";
-    public final static String DefaultIsolatedNetworkOfferingForVpcNetworksWithInternalLB = "DefaultIsolatedNetworkOfferingForVpcNetworksWithInternalLB";
+    public final static String DefaultIsolatedNetworkOfferingForVpcNetworksWithInternalLB = "VPC 네트워크에 대한 기본 격리 네트워크오퍼링(with 내부 LB)";
     public final static String DefaultL2NetworkOffering = "DefaultL2NetworkOffering";
-    public final static String DefaultL2NetworkOfferingVlan = "DefaultL2NetworkOfferingVlan";
+    public final static String DefaultL2NetworkOfferingVlan = "기본 L2 VLAN 네트워크오퍼링";
     public final static String DefaultL2NetworkOfferingConfigDrive = "DefaultL2NetworkOfferingConfigDrive";
-    public final static String DefaultL2NetworkOfferingConfigDriveVlan = "DefaultL2NetworkOfferingConfigDriveVlan";
+    public final static String DefaultL2NetworkOfferingConfigDriveVlan = "기본 L2 VLAN 네트워크오퍼링(with ConfigDrive)";
 
     /**
      * @return name for the network offering.

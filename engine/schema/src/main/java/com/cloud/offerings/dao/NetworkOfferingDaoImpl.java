@@ -255,17 +255,17 @@ public class NetworkOfferingDaoImpl extends GenericDaoBase<NetworkOfferingVO, Lo
 
     @Override
     public void persistDefaultL2NetworkOfferings() {
-        checkPersistL2NetworkOffering(NetworkOffering.DefaultL2NetworkOffering,
+        /*checkPersistL2NetworkOffering(NetworkOffering.DefaultL2NetworkOffering,
                 "Offering for L2 networks",
-                false, false);
+                false, false);*/
 
         checkPersistL2NetworkOffering(NetworkOffering.DefaultL2NetworkOfferingVlan,
                 "Offering for L2 networks VLAN",
                 true, false);
 
-        checkPersistL2NetworkOffering(NetworkOffering.DefaultL2NetworkOfferingConfigDrive,
+        /*checkPersistL2NetworkOffering(NetworkOffering.DefaultL2NetworkOfferingConfigDrive,
                 "Offering for L2 networks with config drive user data",
-                false, true);
+                false, true);*/
 
         checkPersistL2NetworkOffering(NetworkOffering.DefaultL2NetworkOfferingConfigDriveVlan,
                 "Offering for L2 networks with config drive user data VLAN",
