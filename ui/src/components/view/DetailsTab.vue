@@ -111,6 +111,18 @@ export default {
     loading: {
       type: Boolean,
       default: false
+    },
+    items: {
+      type: Object,
+      default: () => {}
+    },
+    bordered: {
+      type: Boolean,
+      default: false
+    },
+    tab: {
+      type: String,
+      default: ''
     }
   },
   data () {
