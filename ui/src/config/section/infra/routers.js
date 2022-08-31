@@ -174,9 +174,8 @@ export default {
       message: 'message.confirm.upgrade.router.newer.template',
       docHelp: 'adminguide/systemvm.html#upgrading-virtual-routers',
       dataView: true,
-      groupAction: true,
-      // show: (record) => { return record.requiresupgrade },
-      groupMap: (selection) => { return selection.map(x => { return { id: x } }) }
+      groupAction: true
+      // show: (record) => { return record.requiresupgrade }
     },
     {
       api: 'migrateSystemVm',
@@ -190,7 +189,7 @@ export default {
     },
     {
       api: 'migrateSystemVm',
-      icon: 'drag-outlined',
+      icon: 'drag',
       label: 'label.action.migrate.systemvm.to.ps',
       dataView: true,
       show: (record, store) => { return ['Stopped'].includes(record.state) && ['VMware'].includes(record.hypervisor) },

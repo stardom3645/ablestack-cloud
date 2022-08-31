@@ -41,6 +41,7 @@ import org.apache.cloudstack.storage.RemoteHostEndPoint;
 import org.apache.cloudstack.storage.command.CommandResult;
 import org.apache.cloudstack.storage.command.CopyCommand;
 import org.apache.cloudstack.storage.command.CreateObjectAnswer;
+import org.apache.cloudstack.storage.datastore.api.Sdc;
 import org.apache.cloudstack.storage.datastore.api.StoragePoolStatistics;
 import org.apache.cloudstack.storage.datastore.api.VolumeStatistics;
 import org.apache.cloudstack.storage.datastore.client.ScaleIOGatewayClient;
@@ -71,13 +72,11 @@ import com.cloud.storage.SnapshotVO;
 import com.cloud.storage.Storage;
 import com.cloud.storage.StorageManager;
 import com.cloud.storage.StoragePool;
-import com.cloud.storage.StoragePoolHostVO;
 import com.cloud.storage.VMTemplateStoragePoolVO;
 import com.cloud.storage.Volume;
 import com.cloud.storage.VolumeDetailVO;
 import com.cloud.storage.VolumeVO;
 import com.cloud.storage.dao.SnapshotDao;
-import com.cloud.storage.dao.StoragePoolHostDao;
 import com.cloud.storage.dao.VMTemplatePoolDao;
 import com.cloud.storage.dao.VolumeDao;
 import com.cloud.storage.dao.VolumeDetailsDao;
@@ -96,8 +95,6 @@ public class ScaleIOPrimaryDataStoreDriver implements PrimaryDataStoreDriver {
     private PrimaryDataStoreDao storagePoolDao;
     @Inject
     private StoragePoolDetailsDao storagePoolDetailsDao;
-    @Inject
-    private StoragePoolHostDao storagePoolHostDao;
     @Inject
     private VolumeDao volumeDao;
     @Inject
@@ -147,38 +144,38 @@ public class ScaleIOPrimaryDataStoreDriver implements PrimaryDataStoreDriver {
                     iopsLimit = ScaleIOUtil.MINIMUM_ALLOWED_IOPS_LIMIT;
                 }
 
-                final String sdcId = getConnectedSdc(dataStore.getId(), host.getId());
-                if (StringUtils.isBlank(sdcId)) {
+                final ScaleIOGatewayClient client = getScaleIOClient(dataStore.getId());
+                final Sdc sdc = client.getConnectedSdcByIp(host.getPrivateIpAddress());
+                if (sdc == null) {
                     alertHostSdcDisconnection(host);
                     throw new CloudRuntimeException("Unable to grant access to volume: " + dataObject.getId() + ", no Sdc connected with host ip: " + host.getPrivateIpAddress());
                 }
 
-                final ScaleIOGatewayClient client = getScaleIOClient(dataStore.getId());
-                return client.mapVolumeToSdcWithLimits(ScaleIOUtil.getVolumePath(volume.getPath()), sdcId, iopsLimit, bandwidthLimitInKbps);
+                return client.mapVolumeToSdcWithLimits(ScaleIOUtil.getVolumePath(volume.getPath()), sdc.getId(), iopsLimit, bandwidthLimitInKbps);
             } else if (DataObjectType.TEMPLATE.equals(dataObject.getType())) {
                 final VMTemplateStoragePoolVO templatePoolRef = vmTemplatePoolDao.findByPoolTemplate(dataStore.getId(), dataObject.getId(), null);
                 LOGGER.debug("Granting access for PowerFlex template volume: " + templatePoolRef.getInstallPath());
 
-                final String sdcId = getConnectedSdc(dataStore.getId(), host.getId());
-                if (StringUtils.isBlank(sdcId)) {
+                final ScaleIOGatewayClient client = getScaleIOClient(dataStore.getId());
+                final Sdc sdc = client.getConnectedSdcByIp(host.getPrivateIpAddress());
+                if (sdc == null) {
                     alertHostSdcDisconnection(host);
                     throw new CloudRuntimeException("Unable to grant access to template: " + dataObject.getId() + ", no Sdc connected with host ip: " + host.getPrivateIpAddress());
                 }
 
-                final ScaleIOGatewayClient client = getScaleIOClient(dataStore.getId());
-                return client.mapVolumeToSdc(ScaleIOUtil.getVolumePath(templatePoolRef.getInstallPath()), sdcId);
+                return client.mapVolumeToSdc(ScaleIOUtil.getVolumePath(templatePoolRef.getInstallPath()), sdc.getId());
             } else if (DataObjectType.SNAPSHOT.equals(dataObject.getType())) {
                 SnapshotInfo snapshot = (SnapshotInfo) dataObject;
                 LOGGER.debug("Granting access for PowerFlex volume snapshot: " + snapshot.getPath());
 
-                final String sdcId = getConnectedSdc(dataStore.getId(), host.getId());
-                if (StringUtils.isBlank(sdcId)) {
+                final ScaleIOGatewayClient client = getScaleIOClient(dataStore.getId());
+                final Sdc sdc = client.getConnectedSdcByIp(host.getPrivateIpAddress());
+                if (sdc == null) {
                     alertHostSdcDisconnection(host);
                     throw new CloudRuntimeException("Unable to grant access to snapshot: " + dataObject.getId() + ", no Sdc connected with host ip: " + host.getPrivateIpAddress());
                 }
 
-                final ScaleIOGatewayClient client = getScaleIOClient(dataStore.getId());
-                return client.mapVolumeToSdc(ScaleIOUtil.getVolumePath(snapshot.getPath()), sdcId);
+                return client.mapVolumeToSdc(ScaleIOUtil.getVolumePath(snapshot.getPath()), sdc.getId());
             }
 
             return false;
@@ -194,57 +191,39 @@ public class ScaleIOPrimaryDataStoreDriver implements PrimaryDataStoreDriver {
                 final VolumeVO volume = volumeDao.findById(dataObject.getId());
                 LOGGER.debug("Revoking access for PowerFlex volume: " + volume.getPath());
 
-                final String sdcId = getConnectedSdc(dataStore.getId(), host.getId());
-                if (StringUtils.isBlank(sdcId)) {
+                final ScaleIOGatewayClient client = getScaleIOClient(dataStore.getId());
+                final Sdc sdc = client.getConnectedSdcByIp(host.getPrivateIpAddress());
+                if (sdc == null) {
                     throw new CloudRuntimeException("Unable to revoke access for volume: " + dataObject.getId() + ", no Sdc connected with host ip: " + host.getPrivateIpAddress());
                 }
 
-                final ScaleIOGatewayClient client = getScaleIOClient(dataStore.getId());
-                client.unmapVolumeFromSdc(ScaleIOUtil.getVolumePath(volume.getPath()), sdcId);
+                client.unmapVolumeFromSdc(ScaleIOUtil.getVolumePath(volume.getPath()), sdc.getId());
             } else if (DataObjectType.TEMPLATE.equals(dataObject.getType())) {
                 final VMTemplateStoragePoolVO templatePoolRef = vmTemplatePoolDao.findByPoolTemplate(dataStore.getId(), dataObject.getId(), null);
                 LOGGER.debug("Revoking access for PowerFlex template volume: " + templatePoolRef.getInstallPath());
 
-                final String sdcId = getConnectedSdc(dataStore.getId(), host.getId());
-                if (StringUtils.isBlank(sdcId)) {
+                final ScaleIOGatewayClient client = getScaleIOClient(dataStore.getId());
+                final Sdc sdc = client.getConnectedSdcByIp(host.getPrivateIpAddress());
+                if (sdc == null) {
                     throw new CloudRuntimeException("Unable to revoke access for template: " + dataObject.getId() + ", no Sdc connected with host ip: " + host.getPrivateIpAddress());
                 }
 
-                final ScaleIOGatewayClient client = getScaleIOClient(dataStore.getId());
-                client.unmapVolumeFromSdc(ScaleIOUtil.getVolumePath(templatePoolRef.getInstallPath()), sdcId);
+                client.unmapVolumeFromSdc(ScaleIOUtil.getVolumePath(templatePoolRef.getInstallPath()), sdc.getId());
             } else if (DataObjectType.SNAPSHOT.equals(dataObject.getType())) {
                 SnapshotInfo snapshot = (SnapshotInfo) dataObject;
                 LOGGER.debug("Revoking access for PowerFlex volume snapshot: " + snapshot.getPath());
 
-                final String sdcId = getConnectedSdc(dataStore.getId(), host.getId());
-                if (StringUtils.isBlank(sdcId)) {
+                final ScaleIOGatewayClient client = getScaleIOClient(dataStore.getId());
+                final Sdc sdc = client.getConnectedSdcByIp(host.getPrivateIpAddress());
+                if (sdc == null) {
                     throw new CloudRuntimeException("Unable to revoke access for snapshot: " + dataObject.getId() + ", no Sdc connected with host ip: " + host.getPrivateIpAddress());
                 }
 
-                final ScaleIOGatewayClient client = getScaleIOClient(dataStore.getId());
-                client.unmapVolumeFromSdc(ScaleIOUtil.getVolumePath(snapshot.getPath()), sdcId);
+                client.unmapVolumeFromSdc(ScaleIOUtil.getVolumePath(snapshot.getPath()), sdc.getId());
             }
         } catch (Exception e) {
             LOGGER.warn("Failed to revoke access due to: " + e.getMessage(), e);
         }
-    }
-
-    private String getConnectedSdc(long poolId, long hostId) {
-        try {
-            StoragePoolHostVO poolHostVO = storagePoolHostDao.findByPoolHost(poolId, hostId);
-            if (poolHostVO == null) {
-                return null;
-            }
-
-            final ScaleIOGatewayClient client = getScaleIOClient(poolId);
-            if (client.isSdcConnected(poolHostVO.getLocalPath())) {
-                return poolHostVO.getLocalPath();
-            }
-        } catch (Exception e) {
-            LOGGER.warn("Couldn't check SDC connection for the host: " + hostId + " and storage pool: " + poolId + " due to " + e.getMessage(), e);
-        }
-
-        return null;
     }
 
     @Override
@@ -951,12 +930,8 @@ public class ScaleIOPrimaryDataStoreDriver implements PrimaryDataStoreDriver {
         }
 
         try {
-            StoragePoolHostVO poolHostVO = storagePoolHostDao.findByPoolHost(pool.getId(), host.getId());
-            if (poolHostVO == null) {
-                return false;
-            }
             final ScaleIOGatewayClient client = getScaleIOClient(pool.getId());
-            return client.isSdcConnected(poolHostVO.getLocalPath());
+            return client.isSdcConnected(host.getPrivateIpAddress());
         } catch (Exception e) {
             LOGGER.warn("Unable to check the host: " + host.getId() + " access to storage pool: " + pool.getId() + " due to " + e.getMessage(), e);
             return false;

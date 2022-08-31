@@ -94,13 +94,10 @@ public class VeeamClient {
     private String veeamServerUsername;
     private String veeamServerPassword;
     private String veeamSessionId = null;
-    private int restoreTimeout;
     private final int veeamServerPort = 22;
 
-    public VeeamClient(final String url, final String username, final String password, final boolean validateCertificate, final int timeout,
-            final int restoreTimeout) throws URISyntaxException, NoSuchAlgorithmException, KeyManagementException {
+    public VeeamClient(final String url, final String username, final String password, final boolean validateCertificate, final int timeout) throws URISyntaxException, NoSuchAlgorithmException, KeyManagementException {
         this.apiURI = new URI(url);
-        this.restoreTimeout = restoreTimeout;
 
         final RequestConfig config = RequestConfig.custom()
                 .setConnectTimeout(timeout * 1000)
@@ -176,7 +173,7 @@ public class VeeamClient {
         }
     }
 
-    protected HttpResponse get(final String path) throws IOException {
+    private HttpResponse get(final String path) throws IOException {
         String url = apiURI.toString() + path;
         final HttpGet request = new HttpGet(url);
         request.setHeader(SESSION_HEADER, veeamSessionId);
@@ -277,7 +274,7 @@ public class VeeamClient {
         return objectMapper.readValue(response.getEntity().getContent(), Task.class);
     }
 
-    protected RestoreSession parseRestoreSessionResponse(HttpResponse response) throws IOException {
+    private RestoreSession parseRestoreSessionResponse(HttpResponse response) throws IOException {
         checkResponseOK(response);
         final ObjectMapper objectMapper = new XmlMapper();
         return objectMapper.readValue(response.getEntity().getContent(), RestoreSession.class);
@@ -300,7 +297,18 @@ public class VeeamClient {
                         String type = pair.second();
                         String path = url.replace(apiURI.toString(), "");
                         if (type.equals("RestoreSession")) {
-                            return checkIfRestoreSessionFinished(type, path);
+                            for (int j = 0; j < 120; j++) {
+                                HttpResponse relatedResponse = get(path);
+                                RestoreSession session = parseRestoreSessionResponse(relatedResponse);
+                                if (session.getResult().equals("Success")) {
+                                    return true;
+                                }
+                                try {
+                                    Thread.sleep(5000);
+                                } catch (InterruptedException ignored) {
+                                }
+                            }
+                            throw new CloudRuntimeException("Related job type: " + type + " was not successful");
                         }
                     }
                     return true;
@@ -314,22 +322,6 @@ public class VeeamClient {
             }
         }
         return false;
-    }
-
-    protected boolean checkIfRestoreSessionFinished(String type, String path) throws IOException {
-        for (int j = 0; j < this.restoreTimeout; j++) {
-            HttpResponse relatedResponse = get(path);
-            RestoreSession session = parseRestoreSessionResponse(relatedResponse);
-            if (session.getResult().equals("Success")) {
-                return true;
-            }
-            try {
-                Thread.sleep(1000);
-            } catch (InterruptedException ignored) {
-                LOG.trace(String.format("Ignoring InterruptedException [%s] when waiting for restore session finishes.", ignored.getMessage()));
-            }
-        }
-        throw new CloudRuntimeException("Related job type: " + type + " was not successful");
     }
 
     private Pair<String, String> getRelatedLinkPair(List<Link> links) {

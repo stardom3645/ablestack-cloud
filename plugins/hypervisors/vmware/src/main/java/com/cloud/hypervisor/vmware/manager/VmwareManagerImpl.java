@@ -331,7 +331,12 @@ public class VmwareManagerImpl extends ManagerBase implements VmwareManager, Vmw
             _storage.configure("StorageLayer", params);
         }
 
-        _fullCloneFlag = StorageManager.VmwareCreateCloneFull.value();
+        value = _configDao.getValue(Config.VmwareCreateFullClone.key());
+        if (value == null) {
+            _fullCloneFlag = false;
+        } else {
+            _fullCloneFlag = Boolean.parseBoolean(value);
+        }
 
         value = _configDao.getValue(Config.SetVmInternalNameUsingDisplayName.key());
         if (value == null) {

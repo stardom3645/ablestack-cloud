@@ -20,8 +20,6 @@ package com.cloud.kubernetes.version;
 import org.apache.cloudstack.api.Identity;
 import org.apache.cloudstack.api.InternalIdentity;
 
-import java.util.Date;
-
 /**
  * KubernetesSupportedVersion describes the properties of supported kubernetes version
  *
@@ -38,7 +36,6 @@ public interface KubernetesSupportedVersion extends InternalIdentity, Identity {
     long getIsoId();
     Long getZoneId();
     State getState();
-    Date getCreated();
 
     /**
      * @return minimum # of cpu.

@@ -274,7 +274,7 @@ public class KVMGuruTest {
     public void validateGetHostMaxMemoryAndCpuCoresHostNullAndLastHostIdNotNullAndLastHostNull(){
         Long maxMemory = Long.MAX_VALUE;
         Integer maxCpuCores = Integer.MAX_VALUE;
-        guru.hostDao = hostDao;
+        guru._hostDao = hostDao;
 
         Mockito.when(virtualMachineMock.getLastHostId()).thenReturn(1l);
         Mockito.doReturn(null).when(hostDao).findById(Mockito.any());
@@ -288,7 +288,7 @@ public class KVMGuruTest {
     public void validateGetHostMaxMemoryAndCpuCoresHostNullAndLastHostIdNotNullAndLastHostNotNull(){
         Long maxMemory = 2048l;
         Integer maxCpuCores = 16;
-        guru.hostDao = hostDao;
+        guru._hostDao = hostDao;
 
         Mockito.when(virtualMachineMock.getLastHostId()).thenReturn(1l);
         Mockito.doReturn(host).when(hostDao).findById(Mockito.any());

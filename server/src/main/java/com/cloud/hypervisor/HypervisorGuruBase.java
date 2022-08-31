@@ -71,16 +71,13 @@ public abstract class HypervisorGuruBase extends AdapterBase implements Hypervis
     public static final Logger s_logger = Logger.getLogger(HypervisorGuruBase.class);
 
     @Inject
-    protected
-    NicDao nicDao;
+    private NicDao _nicDao;
     @Inject
-    protected
-    NetworkDao networkDao;
+    private NetworkDao _networkDao;
     @Inject
     private NetworkOfferingDetailsDao networkOfferingDetailsDao;
     @Inject
-    protected
-    VMInstanceDao virtualMachineDao;
+    private VMInstanceDao _virtualMachineDao;
     @Inject
     private UserVmDetailsDao _userVmDetailsDao;
     @Inject
@@ -90,12 +87,11 @@ public abstract class HypervisorGuruBase extends AdapterBase implements Hypervis
     @Inject
     protected ServiceOfferingDetailsDao _serviceOfferingDetailsDao;
     @Inject
-    protected ServiceOfferingDao serviceOfferingDao;
+    private ServiceOfferingDao _serviceOfferingDao;
     @Inject
     private NetworkDetailsDao networkDetailsDao;
     @Inject
-    protected
-    HostDao hostDao;
+    private HostDao hostDao;
 
     public static ConfigKey<Boolean> VmMinMemoryEqualsMemoryDividedByMemOverprovisioningFactor = new ConfigKey<Boolean>("Advanced", Boolean.class, "vm.min.memory.equals.memory.divided.by.mem.overprovisioning.factor", "true",
             "If we set this to 'true', a minimum memory (memory/ mem.overprovisioning.factor) will be set to the VM, independent of using a scalable service offering or not.", true, ConfigKey.Scope.Cluster);
@@ -144,11 +140,11 @@ public abstract class HypervisorGuruBase extends AdapterBase implements Hypervis
         to.setIp6Gateway(profile.getIPv6Gateway());
         to.setIp6Cidr(profile.getIPv6Cidr());
 
-        NetworkVO network = networkDao.findById(profile.getNetworkId());
+        NetworkVO network = _networkDao.findById(profile.getNetworkId());
         to.setNetworkUuid(network.getUuid());
 
         // Workaround to make sure the TO has the UUID we need for Nicira integration
-        NicVO nicVO = nicDao.findById(profile.getId());
+        NicVO nicVO = _nicDao.findById(profile.getId());
         if (nicVO != null) {
             to.setUuid(nicVO.getUuid());
             // disable pxe on system vm nics to speed up boot time
@@ -203,7 +199,7 @@ public abstract class HypervisorGuruBase extends AdapterBase implements Hypervis
     }
 
     protected VirtualMachineTO toVirtualMachineTO(VirtualMachineProfile vmProfile) {
-        ServiceOffering offering = serviceOfferingDao.findById(vmProfile.getId(), vmProfile.getServiceOfferingId());
+        ServiceOffering offering = _serviceOfferingDao.findById(vmProfile.getId(), vmProfile.getServiceOfferingId());
         VirtualMachine vm = vmProfile.getVirtualMachine();
         Long clusterId = findClusterOfVm(vm);
         boolean divideMemoryByOverprovisioning = true;
@@ -272,7 +268,7 @@ public abstract class HypervisorGuruBase extends AdapterBase implements Hypervis
         }
 
         // Workaround to make sure the TO has the UUID we need for Niciri integration
-        VMInstanceVO vmInstance = virtualMachineDao.findById(to.getId());
+        VMInstanceVO vmInstance = _virtualMachineDao.findById(to.getId());
         to.setEnableDynamicallyScaleVm(vmInstance.isDynamicallyScalable());
         to.setUuid(vmInstance.getUuid());
 

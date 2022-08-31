@@ -248,7 +248,7 @@ export default {
             if (trafficLabel.length > 0) {
               trafficLabel += ','
             }
-            trafficLabel += trafficConfig.vlanId || ''
+            trafficLabel += trafficConfig.vlanId
           }
           if ('vSwitchType' in trafficConfig) {
             if (trafficLabel.length > 0) {
@@ -1211,7 +1211,6 @@ export default {
       this.addStep('message.adding.host', 'hostResource')
 
       const hostData = {}
-      const hostPassword = this.prefillContent?.authmethod !== 'password' ? '' : (this.prefillContent?.hostPassword || null)
       hostData.zoneid = this.stepData.zoneReturned.id
       hostData.podid = this.stepData.podReturned.id
       hostData.clusterid = this.stepData.clusterReturned.id
@@ -1219,7 +1218,7 @@ export default {
       hostData.clustertype = this.stepData.clusterReturned.clustertype
       hostData.hosttags = this.prefillContent?.hostTags || null
       hostData.username = this.prefillContent?.hostUserName || null
-      hostData.password = hostPassword
+      hostData.password = this.prefillContent?.hostPassword || null
       const hostname = this.prefillContent?.hostName || null
       let url = null
       if (hostname.indexOf('http://') === -1) {
@@ -1277,7 +1276,6 @@ export default {
       params.clusterid = this.stepData.clusterReturned.id
       params.name = this.prefillContent?.primaryStorageName || null
       params.scope = this.prefillContent?.primaryStorageScope || null
-      params.provider = this.prefillContent.provider
 
       if (params.scope === 'zone') {
         const hypervisor = this.prefillContent.hypervisor
@@ -1326,7 +1324,6 @@ export default {
         }
         url = this.ocfs2URL(server, path)
       } else if (protocol === 'SharedMountPoint') {
-        server = 'localhost'
         let path = this.prefillContent?.primaryStoragePath || ''
         if (path.substring(0, 1) !== '/') {
           path = '/' + path
@@ -1346,7 +1343,6 @@ export default {
         url = this.rbdURL(rbdmonitor, rbdpool, rbdid, rbdsecret)
       } else if (protocol === 'Linstor') {
         url = this.linstorURL(server)
-        params.provider = 'Linstor'
         params['details[0].resourceGroup'] = this.prefillContent.primaryStorageLinstorResourceGroup
       } else if (protocol === 'vmfs' || protocol === 'datastorecluster') {
         let path = this.prefillContent.primaryStorageVmfsDatacenter
@@ -1360,7 +1356,7 @@ export default {
         if (protocol === 'datastorecluster') {
           url = this.datastoreclusterURL('dummy', path)
         }
-      } else if (protocol === 'iscsi') {
+      } else {
         let iqn = this.prefillContent?.primaryStorageTargetIQN || ''
         if (iqn.substring(0, 1) !== '/') {
           iqn = '/' + iqn
@@ -1370,27 +1366,6 @@ export default {
       }
 
       params.url = url
-      if (this.prefillContent.provider !== 'DefaultPrimary' && this.prefillContent.provider !== 'PowerFlex') {
-        if (this.prefillContent.managed) {
-          params.managed = true
-        } else {
-          params.managed = false
-        }
-        if (this.prefillContent.capacityBytes && this.prefillContent.capacityBytes.length > 0) {
-          params.capacityBytes = this.prefillContent.capacityBytes.split(',').join('')
-        }
-        if (this.prefillContent.capacityIops && this.prefillContent.capacityIops.length > 0) {
-          params.capacityIops = this.prefillContent.capacityIops.split(',').join('')
-        }
-        if (this.prefillContent.url && this.prefillContent.url.length > 0) {
-          params.url = this.prefillContent.url
-        }
-      }
-      if (this.prefillContent.provider === 'PowerFlex') {
-        params.url = this.powerflexURL(this.prefillContent.powerflexGateway, this.prefillContent.powerflexGatewayUsername,
-          this.prefillContent.powerflexGatewayPassword, this.prefillContent.powerflexStoragePool)
-      }
-
       params.tags = this.prefillContent?.primaryStorageTags || ''
 
       try {
@@ -2192,11 +2167,6 @@ export default {
       } else {
         url = server + iqn + '/' + lun
       }
-      return url
-    },
-    powerflexURL (gateway, username, password, pool) {
-      var url = 'powerflex://' + encodeURIComponent(username) + ':' + encodeURIComponent(password) + '@' +
-       gateway + '/' + encodeURIComponent(pool)
       return url
     }
   }

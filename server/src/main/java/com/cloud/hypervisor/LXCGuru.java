@@ -22,6 +22,7 @@ import javax.inject.Inject;
 
 import com.cloud.agent.api.to.VirtualMachineTO;
 import com.cloud.host.HostVO;
+import com.cloud.host.dao.HostDao;
 import com.cloud.hypervisor.Hypervisor.HypervisorType;
 import com.cloud.storage.GuestOSHypervisorVO;
 import com.cloud.storage.GuestOSVO;
@@ -34,6 +35,8 @@ public class LXCGuru extends HypervisorGuruBase implements HypervisorGuru {
     GuestOSDao _guestOsDao;
     @Inject
     GuestOSHypervisorDao _guestOsHypervisorDao;
+    @Inject
+    HostDao _hostDao;
 
     @Override
     public HypervisorType getHypervisorType() {
@@ -52,7 +55,7 @@ public class LXCGuru extends HypervisorGuruBase implements HypervisorGuru {
         GuestOSVO guestOS = _guestOsDao.findByIdIncludingRemoved(vm.getVirtualMachine().getGuestOSId());
         to.setOs(guestOS.getDisplayName());
 
-        HostVO host = hostDao.findById(vm.getVirtualMachine().getHostId());
+        HostVO host = _hostDao.findById(vm.getVirtualMachine().getHostId());
         GuestOSHypervisorVO guestOsMapping = null;
         if (host != null) {
             guestOsMapping = _guestOsHypervisorDao.findByOsIdAndHypervisor(guestOS.getId(), getHypervisorType().toString(), host.getHypervisorVersion());

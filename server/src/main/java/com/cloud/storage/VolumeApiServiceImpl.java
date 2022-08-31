@@ -429,9 +429,8 @@ public class VolumeApiServiceImpl extends ManagerBase implements VolumeApiServic
                 GetUploadParamsResponse response = new GetUploadParamsResponse();
 
                 String ssvmUrlDomain = _configDao.getValue(Config.SecStorageSecureCopyCert.key());
-                String protocol = UseHttpsToUpload.value() ? "https" : "http";
 
-                String url = ImageStoreUtil.generatePostUploadUrl(ssvmUrlDomain, ep.getPublicAddr(), vol.getUuid(),  protocol);
+                String url = ImageStoreUtil.generatePostUploadUrl(ssvmUrlDomain, ep.getPublicAddr(), vol.getUuid());
                 response.setPostURL(new URL(url));
 
                 // set the post url, this is used in the monitoring thread to determine the SSVM
@@ -457,13 +456,8 @@ public class VolumeApiServiceImpl extends ManagerBase implements VolumeApiServic
                 //using the existing max upload size configuration
                 command.setProcessTimeout(NumbersUtil.parseLong(_configDao.getValue("vmware.package.ova.timeout"), 3600));
                 command.setMaxUploadSize(_configDao.getValue(Config.MaxUploadVolumeSize.key()));
+                command.setDefaultMaxAccountSecondaryStorage(_configDao.getValue(Config.DefaultMaxAccountSecondaryStorage.key()));
                 command.setAccountId(vol.getAccountId());
-                Account account = _accountDao.findById(vol.getAccountId());
-                if (account.getType().equals(Account.Type.PROJECT)) {
-                    command.setDefaultMaxSecondaryStorageInGB(ResourceLimitService.MaxProjectSecondaryStorage.value());
-                } else {
-                    command.setDefaultMaxSecondaryStorageInGB(ResourceLimitService.MaxAccountSecondaryStorage.value());
-                }
                 Gson gson = new GsonBuilder().create();
                 String metadata = EncryptionUtil.encodeData(gson.toJson(command), key);
                 response.setMetadata(metadata);
@@ -3527,7 +3521,7 @@ public class VolumeApiServiceImpl extends ManagerBase implements VolumeApiServic
         }
 
         if (volume.getVolumeType() != Volume.Type.DATADISK) {
-            // Datadisk don't have any template dependence.
+            // Datadisk dont have any template dependence.
 
             VMTemplateVO template = ApiDBUtils.findTemplateById(volume.getTemplateId());
             if (template != null) { // For ISO based volumes template = null and
@@ -4446,6 +4440,6 @@ public class VolumeApiServiceImpl extends ManagerBase implements VolumeApiServic
 
     @Override
     public ConfigKey<?>[] getConfigKeys() {
-        return new ConfigKey<?>[] {ConcurrentMigrationsThresholdPerDatastore, AllowUserExpungeRecoverVolume, MatchStoragePoolTagsWithDiskOffering, UseHttpsToUpload};
+        return new ConfigKey<?>[] {ConcurrentMigrationsThresholdPerDatastore, AllowUserExpungeRecoverVolume, MatchStoragePoolTagsWithDiskOffering};
     }
 }

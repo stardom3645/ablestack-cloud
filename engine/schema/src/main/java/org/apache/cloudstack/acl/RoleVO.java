@@ -18,7 +18,6 @@
 package org.apache.cloudstack.acl;
 
 import com.cloud.utils.db.GenericDao;
-import org.apache.cloudstack.utils.reflectiontostringbuilderutils.ReflectionToStringBuilderUtils;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -114,10 +113,5 @@ public class RoleVO implements Role {
 
     public boolean isDefault() {
         return isDefault;
-    }
-
-    @Override
-    public String toString() {
-        return ReflectionToStringBuilderUtils.reflectOnlySelectedFields(this, "name", "uuid", "roleType");
     }
 }

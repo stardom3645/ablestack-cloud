@@ -1107,7 +1107,7 @@ public class StressTestDirectAttach {
                 if (isAuthenticated == false) {
                     return "Authentication failed";
                 } else {
-                    s_logger.info("Authentication is successful");
+                    s_logger.info("Authentication is successfull");
                 }
 
                 try {

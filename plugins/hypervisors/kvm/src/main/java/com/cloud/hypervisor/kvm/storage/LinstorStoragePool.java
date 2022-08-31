@@ -185,11 +185,6 @@ public class LinstorStoragePool implements KVMStoragePool {
         return false;
     }
 
-    @Override
-    public Map<String, String> getDetails() {
-        return null;
-    }
-
     public String getResourceGroup() {
         return _resourceGroup;
     }

@@ -84,6 +84,7 @@ export default {
   },
   watch: {
     resource: {
+      deep: true,
       handler (newData) {
         if (!newData || !newData.id) {
           return
@@ -107,7 +108,7 @@ export default {
     },
     async fetchData () {
       const params = this.getParams()
-      const form = reactive({})
+      const form = {}
       try {
         this.formLoading = true
         this.dataResource = await this.listResourceLimits(params)

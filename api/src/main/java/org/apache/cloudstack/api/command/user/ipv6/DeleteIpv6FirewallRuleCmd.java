@@ -16,7 +16,6 @@
 // under the License.
 package org.apache.cloudstack.api.command.user.ipv6;
 
-import org.apache.cloudstack.acl.RoleType;
 import org.apache.cloudstack.api.APICommand;
 import org.apache.cloudstack.api.ApiCommandResourceType;
 import org.apache.cloudstack.api.ApiConstants;
@@ -34,12 +33,8 @@ import com.cloud.exception.ResourceUnavailableException;
 import com.cloud.network.rules.FirewallRule;
 import com.cloud.user.Account;
 
-@APICommand(name = DeleteIpv6FirewallRuleCmd.APINAME,
-        description = "Deletes a IPv6 firewall rule",
-        responseObject = SuccessResponse.class,
-        requestHasSensitiveInfo = false,
-        responseHasSensitiveInfo = false,
-        authorized = {RoleType.Admin, RoleType.ResourceAdmin, RoleType.DomainAdmin, RoleType.User})
+@APICommand(name = DeleteIpv6FirewallRuleCmd.APINAME, description = "Deletes a IPv6 firewall rule", responseObject = SuccessResponse.class,
+        requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class DeleteIpv6FirewallRuleCmd extends BaseAsyncCmd {
     public static final Logger s_logger = Logger.getLogger(DeleteIpv6FirewallRuleCmd.class.getName());
     public static final String APINAME = "deleteIpv6FirewallRule";

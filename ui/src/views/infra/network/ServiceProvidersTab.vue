@@ -1281,8 +1281,8 @@ export default {
       }
     },
     setFormRules () {
-      this.form = reactive({})
-      this.rules = reactive({})
+      this.form = {}
+      this.rules = {}
       this.currentAction.fieldParams.forEach(field => {
         this.rules[field.name] = []
         const rule = {}

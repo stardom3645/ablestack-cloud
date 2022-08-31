@@ -18,7 +18,6 @@ package com.cloud.user;
 
 import com.cloud.utils.db.GenericDao;
 import org.apache.cloudstack.acl.RoleType;
-import org.apache.cloudstack.utils.reflectiontostringbuilderutils.ReflectionToStringBuilderUtils;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -190,7 +189,7 @@ public class AccountVO implements Account {
 
     @Override
     public String toString() {
-        return String.format("Account [%s]", ReflectionToStringBuilderUtils.reflectOnlySelectedFields(this, "uuid","accountName", "id"));
+        return String.format("Acct[%s-%s] -- Account {\"id\": %s, \"name\": \"%s\", \"uuid\": \"%s\"}", uuid, accountName, id, accountName, uuid);
     }
 
     @Override

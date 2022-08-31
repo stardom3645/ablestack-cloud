@@ -194,9 +194,7 @@ export default {
       this.zoneLoading = true
       api('listZones', params).then(json => {
         const listZones = json.listzonesresponse.zone
-        if (listZones) {
-          this.zones = this.zones.concat(listZones)
-        }
+        this.zones = this.zones.concat(listZones)
       }).finally(() => {
         this.zoneLoading = false
         if (this.arrayHasItems(this.zones)) {

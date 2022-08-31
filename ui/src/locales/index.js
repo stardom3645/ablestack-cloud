@@ -26,8 +26,7 @@ export const i18n = createI18n({
   fallbackLocale: 'en',
   silentTranslationWarn: true,
   messages: messages,
-  silentFallbackWarn: true,
-  warnHtmlInMessage: 'off'
+  silentFallbackWarn: true
 })
 
 export function loadLanguageAsync (lang) {

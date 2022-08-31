@@ -60,91 +60,51 @@ public class ProjectRoleBasedApiAccessChecker  extends AdapterBase implements AP
 
     @Override
     public boolean isEnabled() {
-        if (!roleService.isEnabled()) {
-            LOGGER.trace("RoleService is disabled. We will not use ProjectRoleBasedApiAccessChecker.");
-        }
         return roleService.isEnabled();
     }
 
-    @Override
-    public List<String> getApisAllowedToUser(Role role, User user, List<String> apiNames) throws PermissionDeniedException {
-        if (!isEnabled()) {
-            return apiNames;
-        }
-
-        Project project = CallContext.current().getProject();
-        if (project == null) {
-            LOGGER.warn(String.format("Project is null, ProjectRoleBasedApiAccessChecker only applies to projects, returning APIs [%s] for user [%s] as allowed.", apiNames, user));
-            return apiNames;
-        }
-
-        long accountID = user.getAccountId();
-        ProjectAccount projectUser = projectAccountDao.findByProjectIdUserId(project.getId(), accountID, user.getId());
-        if (projectUser != null) {
-            if (projectUser.getAccountRole() != ProjectAccount.Role.Admin) {
-                apiNames.removeIf(apiName -> !isPermitted(project, projectUser, apiName));
-            }
-            if (LOGGER.isTraceEnabled()) {
-                LOGGER.trace(String.format("Returning APIs [%s] as allowed for user [%s].", apiNames, user));
-            }
-            return apiNames;
-        }
-
-        ProjectAccount projectAccount = projectAccountDao.findByProjectIdAccountId(project.getId(), accountID);
-        if (projectAccount == null) {
-            throw new PermissionDeniedException(String.format("The user [%s] does not belong to the project [%s].", user, project));
-        }
-
-        if (projectAccount.getAccountRole() != ProjectAccount.Role.Admin) {
-            apiNames.removeIf(apiName -> !isPermitted(project, projectAccount, apiName));
-        }
-        if (LOGGER.isTraceEnabled()) {
-            LOGGER.trace(String.format("Returning APIs [%s] as allowed for user [%s].", apiNames, user));
-        }
-        return apiNames;
+    public boolean isDisabled() {
+        return !isEnabled();
     }
 
     @Override
     public boolean checkAccess(User user, String apiCommandName) throws PermissionDeniedException {
-        if (!isEnabled()) {
-            return true;
-        }
-
-        Project project = CallContext.current().getProject();
-        if (project == null) {
-            LOGGER.warn(String.format("Project is null, ProjectRoleBasedApiAccessChecker only applies to projects, returning API [%s] for user [%s] as allowed.", apiCommandName,
-                user));
+        if (isDisabled()) {
             return true;
         }
 
         Account userAccount = accountService.getAccount(user.getAccountId());
+        Project project = CallContext.current().getProject();
+        if (project == null) {
+            return true;
+        }
+
         if (accountService.isRootAdmin(userAccount.getId()) || accountService.isDomainAdmin(userAccount.getAccountId())) {
-            LOGGER.info(String.format("Account [%s] is Root Admin or Domain Admin, all APIs are allowed.", userAccount.getAccountName()));
             return true;
         }
 
         ProjectAccount projectUser = projectAccountDao.findByProjectIdUserId(project.getId(), userAccount.getAccountId(), user.getId());
         if (projectUser != null) {
-            if (projectUser.getAccountRole() == ProjectAccount.Role.Admin || isPermitted(project, projectUser, apiCommandName)) {
+            if (projectUser.getAccountRole() == ProjectAccount.Role.Admin) {
                 return true;
+            } else {
+                return isPermitted(project, projectUser, apiCommandName);
             }
-            denyApiAccess(apiCommandName);
         }
 
         ProjectAccount projectAccount = projectAccountDao.findByProjectIdAccountId(project.getId(), userAccount.getAccountId());
         if (projectAccount != null) {
-            if (projectAccount.getAccountRole() == ProjectAccount.Role.Admin || isPermitted(project, projectAccount, apiCommandName)) {
+            if (projectAccount.getAccountRole() == ProjectAccount.Role.Admin) {
                 return true;
+            } else {
+                return isPermitted(project, projectAccount, apiCommandName);
             }
-            denyApiAccess(apiCommandName);
         }
-
         // Default deny all
         if ("updateProjectInvitation".equals(apiCommandName)) {
             return true;
         }
-
-        throw new UnavailableCommandException(String.format("The API [%s] does not exist or is not available for this account/user in project [%s].", apiCommandName, project.getUuid()));
+        throw new UnavailableCommandException("The API " + apiCommandName + " does not exist or is not available for this account/user in project "+project.getUuid());
     }
 
     @Override
@@ -152,7 +112,7 @@ public class ProjectRoleBasedApiAccessChecker  extends AdapterBase implements AP
         return true;
     }
 
-    public boolean isPermitted(Project project, ProjectAccount projectUser, String ... apiCommandNames) {
+    private boolean isPermitted(Project project, ProjectAccount projectUser, String apiCommandName) {
         ProjectRole projectRole = null;
         if(projectUser.getProjectRoleId() != null) {
             projectRole = projectRoleService.findProjectRole(projectUser.getProjectRoleId(), project.getId());
@@ -162,11 +122,12 @@ public class ProjectRoleBasedApiAccessChecker  extends AdapterBase implements AP
             return true;
         }
 
-        List<ProjectRolePermission> allProjectRolePermissions = projectRoleService.findAllProjectRolePermissions(project.getId(), projectRole.getId());
-        for (String api : apiCommandNames) {
-            for (ProjectRolePermission permission : allProjectRolePermissions) {
-                if (permission.getRule().matches(api)) {
-                    return Permission.ALLOW.equals(permission.getPermission());
+        for (ProjectRolePermission permission : projectRoleService.findAllProjectRolePermissions(project.getId(), projectRole.getId())) {
+            if (permission.getRule().matches(apiCommandName)) {
+                if (Permission.ALLOW.equals(permission.getPermission())) {
+                    return true;
+                } else {
+                    denyApiAccess(apiCommandName);
                 }
             }
         }

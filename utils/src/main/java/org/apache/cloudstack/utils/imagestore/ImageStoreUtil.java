@@ -26,7 +26,7 @@ import org.apache.log4j.Logger;
 public class ImageStoreUtil {
     public static final Logger s_logger = Logger.getLogger(ImageStoreUtil.class.getName());
 
-    public static String generatePostUploadUrl(String ssvmUrlDomain, String ipAddress, String uuid, String protocol) {
+    public static String generatePostUploadUrl(String ssvmUrlDomain, String ipAddress, String uuid) {
         String hostname = ipAddress;
 
         //if ssvm url domain is present, use it to construct hostname in the format 1-2-3-4.domain
@@ -39,7 +39,7 @@ public class ImageStoreUtil {
         }
 
         //only https works with postupload and url format is fixed
-        return String.format("%s://%s/upload/%s", protocol, hostname, uuid);
+        return "https://" + hostname + "/upload/" + uuid;
     }
 
     // given a path, returns empty if path is supported image, and the file type if unsupported

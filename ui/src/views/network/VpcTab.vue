@@ -822,6 +822,7 @@ export default {
     handleNetworkAclFormSubmit () {
       if (this.fetchLoading) return
       this.fetchLoading = true
+      this.modals.networkAcl = false
 
       this.formRef.value.validate().then(() => {
         const values = toRaw(this.form)
@@ -851,7 +852,6 @@ export default {
         }).catch(error => {
           this.$notifyError(error)
         }).finally(() => {
-          this.modals.networkAcl = false
           this.fetchLoading = false
           this.fetchAclList()
         })

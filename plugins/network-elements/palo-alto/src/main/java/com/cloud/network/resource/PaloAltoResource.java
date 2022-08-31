@@ -28,12 +28,14 @@ import java.util.List;
 import java.util.Map;
 
 import javax.naming.ConfigurationException;
+import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Source;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
+// for prettyFormat()
 import javax.xml.transform.stream.StreamSource;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
@@ -41,9 +43,9 @@ import javax.xml.xpath.XPathExpression;
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 
-import org.apache.cloudstack.utils.security.ParserUtils;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.HttpClient;
+// http client handling
 import org.apache.http.client.ResponseHandler;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpGet;
@@ -2062,7 +2064,7 @@ public class PaloAltoResource implements ServerResource {
         Document doc = null;
 
         try {
-            doc = ParserUtils.getSaferDocumentBuilderFactory().newDocumentBuilder().parse(xmlSource);
+            doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(xmlSource);
         } catch (Exception e) {
             s_logger.error(e);
             throw new ExecutionException(e.getMessage());
@@ -2079,7 +2081,7 @@ public class PaloAltoResource implements ServerResource {
     private String nodeToString(Node node) throws ExecutionException {
         StringWriter sw = new StringWriter();
         try {
-            Transformer t = ParserUtils.getSaferTransformerFactory().newTransformer();
+            Transformer t = TransformerFactory.newInstance().newTransformer();
             t.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
             t.transform(new DOMSource(node), new StreamResult(sw));
         } catch (Throwable t) {
@@ -2095,7 +2097,7 @@ public class PaloAltoResource implements ServerResource {
             Source xmlInput = new StreamSource(new StringReader(input));
             StringWriter stringWriter = new StringWriter();
             StreamResult xmlOutput = new StreamResult(stringWriter);
-            TransformerFactory transformerFactory = ParserUtils.getSaferTransformerFactory();
+            TransformerFactory transformerFactory = TransformerFactory.newInstance();
             transformerFactory.setAttribute("indent-number", indent);
             Transformer transformer = transformerFactory.newTransformer();
             transformer.setOutputProperty(OutputKeys.INDENT, "yes");
@@ -2107,7 +2109,7 @@ public class PaloAltoResource implements ServerResource {
                 Source xmlInput = new StreamSource(new StringReader(input));
                 StringWriter stringWriter = new StringWriter();
                 StreamResult xmlOutput = new StreamResult(stringWriter);
-                TransformerFactory transformerFactory = ParserUtils.getSaferTransformerFactory();
+                TransformerFactory transformerFactory = TransformerFactory.newInstance();
                 Transformer transformer = transformerFactory.newTransformer();
                 transformer.setOutputProperty(OutputKeys.INDENT, "yes");
                 transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", String.valueOf(indent));

@@ -72,8 +72,7 @@ export default {
     return {
       offerings: [],
       customDiskOffering: false,
-      loading: false,
-      customDiskOfferingIops: false
+      loading: false
     }
   },
   created () {
@@ -99,7 +98,6 @@ export default {
         this.offerings = json.listdiskofferingsresponse.diskoffering || []
         this.form.diskofferingid = this.offerings[0].id || ''
         this.customDiskOffering = this.offerings[0].iscustomized || false
-        this.customDiskOfferingIops = this.offerings[0].iscustomizediops || false
       }).finally(() => {
         this.loading = false
       })
@@ -114,7 +112,7 @@ export default {
         api('resizeVolume', values).then(response => {
           this.$pollJob({
             jobId: response.resizevolumeresponse.jobid,
-            title: this.$t('label.action.resize.volume'),
+            title: this.$t('message.success.resize.volume'),
             description: values.name,
             successMessage: this.$t('message.success.resize.volume'),
             successMethod: () => {},
@@ -122,7 +120,7 @@ export default {
             errorMethod: () => {
               this.closeModal()
             },
-            loadingMessage: this.$t('message.resize.volume.processing'),
+            loadingMessage: `Volume resize is in progress`,
             catchMessage: this.$t('error.fetching.async.job.result'),
             catchMethod: () => {
               this.loading = false

@@ -143,7 +143,7 @@
       </a-button>
     </div>
     <a-modal
-      v-model:visible="showError"
+      :visible="showError"
       :title="`${$t('label.error')}!`"
       :maskClosable="false"
       :closable="true"
@@ -151,7 +151,7 @@
       @cancel="() => { showError = false }"
       centered
     >
-      <div v-ctrl-enter="() => showError = false">
+      <div v-ctrl-enter="showError = false">
         <span>{{ $t('message.required.traffic.type') }}</span>
         <div :span="24" class="action-button">
           <a-button @click="showError = false">{{ $t('label.cancel') }}</a-button>
@@ -161,7 +161,7 @@
     </a-modal>
     <a-modal
       :title="$t('label.edit.traffic.type')"
-      v-model:visible="showEditTraffic"
+      :visible="showEditTraffic"
       :closable="true"
       :maskClosable="false"
       centered
@@ -323,7 +323,7 @@ export default {
       return traffics
     },
     hypervisor () {
-      return this.prefillContent.hypervisor || null
+      return this.prefillContent.hypervisor?.value || null
     }
   },
   created () {
@@ -414,22 +414,14 @@ export default {
       const shouldHaveLabels = this.physicalNetworks.length > 1
       let isValid = true
       this.requiredTrafficTypes.forEach(type => {
-        if (!isValid) return false
         let foundType = false
         this.physicalNetworks.forEach(net => {
           net.traffics.forEach(traffic => {
-            if (!isValid) return false
             if (traffic.type === type) {
               foundType = true
             }
-            if (this.hypervisor !== 'VMware') {
-              if (shouldHaveLabels && (!traffic.label || traffic.label.length === 0)) {
-                isValid = false
-              }
-            } else {
-              if (shouldHaveLabels && (!traffic.vSwitchName || traffic.vSwitchName.length === 0)) {
-                isValid = false
-              }
+            if (shouldHaveLabels && (!traffic.label || traffic.label.length === 0)) {
+              isValid = false
             }
           })
         })
@@ -485,12 +477,12 @@ export default {
       const fields = {}
       if (this.hypervisor === 'VMware') {
         delete this.trafficInEdit.traffic.label
-        fields.vSwitchName = this.trafficInEdit?.traffic?.vSwitchName || null
-        fields.vlanId = this.trafficInEdit?.traffic?.vlanId || null
+        fields.vSwitchName = null
+        fields.vlanId = null
         if (traffic.type === 'guest') {
           fields.vSwitchName = this.trafficInEdit?.traffic?.vSwitchName || 'vSwitch0'
         }
-        fields.vSwitchType = this.trafficInEdit?.traffic?.vSwitchType || 'vmwaresvs'
+        fields.vSwitchType = 'vmwaresvs'
       } else {
         delete this.trafficInEdit.traffic.vSwitchName
         delete this.trafficInEdit.traffic.vlanId

@@ -214,10 +214,8 @@ public class ApiXmlDocWriter {
             }
 
             boolean isAsync = ReflectUtil.isCmdClassAsync(clas, new Class<?>[] {BaseAsyncCmd.class, BaseAsyncCreateCmd.class});
-            apiCommand.setAsync(isAsync);
 
-            boolean isDeprecated = clas.getAnnotation(Deprecated.class) != null;
-            apiCommand.setDeprecated(isDeprecated);
+            apiCommand.setAsync(isAsync);
 
             Set<Field> fields = ReflectUtil.getAllFieldsForClass(clas, new Class<?>[] {BaseCmd.class, BaseAsyncCmd.class, BaseAsyncCreateCmd.class});
 

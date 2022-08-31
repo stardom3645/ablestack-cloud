@@ -476,7 +476,7 @@ public class KubernetesClusterStartWorker extends KubernetesClusterResourceModif
                 startKubernetesVM(vm);
             } catch (ManagementServerException ex) {
                 LOGGER.warn(String.format("Failed to start VM : %s in Kubernetes cluster : %s due to ", vm.getDisplayName(), kubernetesCluster.getName()) + ex);
-                // don't bail out here. proceed further to stop the reset of the VM's
+                // dont bail out here. proceed further to stop the reset of the VM's
             }
         }
         for (final UserVm userVm : clusterVms) {

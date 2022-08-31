@@ -72,6 +72,4 @@ public interface KVMStoragePool {
     public boolean createFolder(String path);
 
     public boolean supportsConfigDriveIso();
-
-    public Map<String, String> getDetails();
 }

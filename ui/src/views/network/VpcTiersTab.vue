@@ -569,8 +569,7 @@ export default {
       api('listLoadBalancers', {
         networkid: id,
         page: this.page,
-        pagesize: this.pageSize,
-        listAll: true
+        pagesize: this.pageSize
       }).then(json => {
         this.internalLB[id] = json.listloadbalancersresponse.loadbalancer || []
         this.itemCounts.internalLB[id] = json.listloadbalancersresponse.count || 0

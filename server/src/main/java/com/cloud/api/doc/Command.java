@@ -32,7 +32,6 @@ public class Command implements Serializable{
     private String sinceVersion = null;
     private ArrayList<Argument> request;
     private ArrayList<Argument> response;
-    private boolean isDeprecated;
 
     public Command(String name, String description) {
         this.name = name;
@@ -114,13 +113,5 @@ public class Command implements Serializable{
 
     public void setUsage(String usage) {
         this.usage = usage;
-    }
-
-    public boolean isDeprecated() {
-        return isDeprecated;
-    }
-
-    public void setDeprecated(boolean deprecated) {
-        isDeprecated = deprecated;
     }
 }

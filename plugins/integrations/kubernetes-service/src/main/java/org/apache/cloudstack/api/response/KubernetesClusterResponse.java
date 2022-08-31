@@ -16,7 +16,6 @@
 // under the License.
 package org.apache.cloudstack.api.response;
 
-import java.util.Date;
 import java.util.List;
 
 import org.apache.cloudstack.api.ApiConstants;
@@ -158,10 +157,6 @@ public class KubernetesClusterResponse extends BaseResponseWithAnnotations imple
     @SerializedName(ApiConstants.MAX_SIZE)
     @Param(description = "Maximum size of the cluster")
     private Long maxSize;
-
-    @SerializedName(ApiConstants.CREATED)
-    @Param(description = "the date when this Kubernetes cluster was created")
-    private Date created;
 
     public KubernetesClusterResponse() {
     }
@@ -381,9 +376,5 @@ public class KubernetesClusterResponse extends BaseResponseWithAnnotations imple
 
     public void setMaxSize(Long maxSize) {
         this.maxSize = maxSize;
-    }
-
-    public void setCreated(Date created) {
-        this.created = created;
     }
 }
