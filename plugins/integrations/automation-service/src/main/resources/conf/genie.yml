@@ -26,7 +26,7 @@ write_files:
     {{ genie_encode }}
 
 runcmd:
-  - wget http://10.10.0.202:81/deploy_automation_controller.yml -P /root/
+  - wget https://raw.githubusercontent.com/ablecloud-team/ablestack-genie/master/genie-shell/automation_controller_template/deploy_automation_controller.yml -P /root/
   - ansible-playbook /root/deploy_automation_controller.yml
 #  - cp -r /genie/deploy_automation_controller.yml /root/
 #  - ansible-playbook /root/deploy_automation_controller.yml
