@@ -26,6 +26,8 @@ import com.cloud.agent.api.to.DiskTO;
 public final class AttachCommand extends StorageSubSystemCommand {
     private DiskTO disk;
     private String vmName;
+    private String provider;
+    private String krbdpath;
     private boolean inSeq = false;
     private boolean forced = false;
     private Map<String, String> controllerInfo;
@@ -68,6 +70,22 @@ public final class AttachCommand extends StorageSubSystemCommand {
 
     public void setVmName(final String vmName) {
         this.vmName = vmName;
+    }
+
+    public String getProvider() {
+        return provider;
+    }
+
+    public void setProvider(String provider) {
+        this.provider = provider;
+    }
+
+    public String getKrbdpath() {
+        return krbdpath;
+    }
+
+    public void setKrbdpath(String krbdpath) {
+        this.krbdpath = krbdpath;
     }
 
     public boolean isForced() {

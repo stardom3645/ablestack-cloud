@@ -1344,6 +1344,13 @@ export default {
         const rbdid = this.prefillContent?.primaryStorageRADOSUser || ''
         const rbdsecret = this.prefillContent?.primaryStorageRADOSSecret || ''
         url = this.rbdURL(rbdmonitor, rbdpool, rbdid, rbdsecret)
+      } else if (protocol === 'Glue') {
+        const rbdmonitor = this.prefillContent?.primaryStorageRADOSMonitor || ''
+        const rbdpool = this.prefillContent?.primaryStorageRADOSPool || ''
+        const rbdid = this.prefillContent?.primaryStorageRADOSUser || ''
+        const rbdsecret = this.prefillContent?.primaryStorageRADOSSecret || ''
+        url = this.rbdURL(rbdmonitor, rbdpool, rbdid, rbdsecret)
+        params.krbdPath = this.prefillContent?.primaryStorageRADOSPath || ''
       } else if (protocol === 'Linstor') {
         url = this.linstorURL(server)
         params.provider = 'Linstor'

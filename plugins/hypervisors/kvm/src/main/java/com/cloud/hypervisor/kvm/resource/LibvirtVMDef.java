@@ -866,6 +866,16 @@ public class LibvirtVMDef {
             }
         }
 
+        public void defBlockBasedDisk(String diskName, int devId) {
+            _diskType = DiskType.BLOCK;
+            _deviceType = DeviceType.DISK;
+            _diskFmtType = DiskFmtType.RAW;
+            _diskCacheMode = DiskCacheMode.WRITEBACK;
+            _sourcePath = diskName;
+            _diskLabel = getDevLabel(devId, DiskBus.SCSI, false);
+            _bus = DiskBus.SCSI;
+        }
+
         public void defBlockBasedDisk(String diskName, int devId, DiskBus bus) {
             _diskType = DiskType.BLOCK;
             _deviceType = DeviceType.DISK;
