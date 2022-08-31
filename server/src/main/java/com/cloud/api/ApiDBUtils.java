@@ -1801,17 +1801,7 @@ public class ApiDBUtils {
     ///////////////////////////////////////////////////////////////////////
 
     public static DomainRouterResponse newDomainRouterResponse(DomainRouterJoinVO vr, Account caller) {
-        DomainRouterResponse response = s_domainRouterJoinDao.newDomainRouterResponse(vr, caller);
-        if (StringUtils.isBlank(response.getHypervisor())) {
-            VMInstanceVO vm = ApiDBUtils.findVMInstanceById(vr.getId());
-            if (vm.getLastHostId() != null) {
-                HostVO lastHost = ApiDBUtils.findHostById(vm.getLastHostId());
-                if (lastHost != null) {
-                    response.setHypervisor(lastHost.getHypervisorType().toString());
-                }
-            }
-        }
-        return  response;
+        return s_domainRouterJoinDao.newDomainRouterResponse(vr, caller);
     }
 
     public static DomainRouterResponse fillRouterDetails(DomainRouterResponse vrData, DomainRouterJoinVO vr) {

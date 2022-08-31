@@ -1434,6 +1434,7 @@ export default {
           params.id = this.networkId
           apiName = 'listNetworks'
         }
+        if (!apiName) return resolve(zones)
 
         api(apiName, params).then(json => {
           let objectName
