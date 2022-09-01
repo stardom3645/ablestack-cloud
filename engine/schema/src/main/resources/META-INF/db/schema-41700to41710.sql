@@ -20,7 +20,6 @@
 --;
 
 UPDATE `cloud`.`configuration` SET `value` = 'false' WHERE `name` = 'network.disable.rpfilter' AND `value` != 'true';
-<<<<<<< HEAD
 UPDATE `cloud`.`configuration` SET `value` = 'false' WHERE `name` = 'consoleproxy.disable.rpfilter' AND `value` != 'true';
 
 -- Retrieve the hypervisor_type from vm_instance
@@ -130,6 +129,3 @@ CREATE VIEW `cloud`.`domain_router_view` AS
 
 -- PR #6080 Change column `value` size from 255 to 4096 characters, matching the API "updateConfiguration" "value" size
 ALTER TABLE `cloud`.`account_details` MODIFY `value` VARCHAR(4096) NOT NULL;
-=======
-UPDATE `cloud`.`configuration` SET `value` = 'false' WHERE `name` = 'consoleproxy.disable.rpfilter' AND `value` != 'true';
->>>>>>> parent of 2a3797d596 (Revert "Merge branch 'ablecloud-team:ablestack-cerato' into ablestack-cerato")
