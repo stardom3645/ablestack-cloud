@@ -1304,7 +1304,7 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
         }
 
         UserVmDetailVO userVmDetailVO = _UserVmDetailsDao.findDetail(vm.getId(), ApiConstants.BootType.UEFI.toString());
-        if (userVmDetailVO != null) {
+        if (true) {
             s_logger.info(" Live Migration of UEFI enabled VM : " + vm.getInstanceName() + " is not supported");
             if ("legacy".equalsIgnoreCase(userVmDetailVO.getValue()) || "secure".equalsIgnoreCase(userVmDetailVO.getValue())) {
                 // Return empty list.
