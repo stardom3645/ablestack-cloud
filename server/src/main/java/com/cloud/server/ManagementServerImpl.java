@@ -1304,9 +1304,9 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
         }
 
         UserVmDetailVO userVmDetailVO = _UserVmDetailsDao.findDetail(vm.getId(), ApiConstants.BootType.UEFI.toString());
-        if (true) {
+        if (userVmDetailVO != null) {
             s_logger.info(" Live Migration of UEFI enabled VM : " + vm.getInstanceName() + " is not supported");
-            if ("legacy".equalsIgnoreCase(userVmDetailVO.getValue()) || "secure".equalsIgnoreCase(userVmDetailVO.getValue())) {
+            if ("legacy".equalsIgnoreCase(userVmDetailVO.getValue()) || "secure".equalsIgnoreCase(userVmDetailVO.getValue()) || "UEFI".equalsIgnoreCase(userVmDetailVO.getValue())) {
                 // Return empty list.
                 return new Ternary<Pair<List<? extends Host>, Integer>, List<? extends Host>, Map<Host, Boolean>>(new Pair<List<? extends Host>,
                         Integer>(new ArrayList<HostVO>(), new Integer(0)), new ArrayList<Host>(), new HashMap<Host, Boolean>());
@@ -4173,7 +4173,7 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
         if (cmd.getPrivateKey() != null) {
             _ksMgr.saveCertificate(ConsoleProxyManager.CERTIFICATE_NAME, certificate, key, cmd.getDomainSuffix());
 
-            // Reboot ssvm here since private key is present - meaning server cert being passed
+            // Reboot ssv m here since private key is present - meaning server cert being passed
             final List<SecondaryStorageVmVO> alreadyRunning = _secStorageVmDao.getSecStorageVmListInStates(null, State.Running, State.Migrating, State.Starting);
             for (final SecondaryStorageVmVO ssVmVm : alreadyRunning) {
                 _secStorageVmMgr.rebootSecStorageVm(ssVmVm.getId());
