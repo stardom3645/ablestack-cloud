@@ -1307,6 +1307,7 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
         s_logger.info("===============================================================================");
         s_logger.info(userVmDetailVO);
         s_logger.info(userVmDetailVO.getValue());
+        s_logger.info("secure".equalsIgnoreCase(userVmDetailVO.getValue()));
         if (userVmDetailVO != null) {
             s_logger.info("not null");
         } else if (userVmDetailVO == null) {
@@ -1315,7 +1316,7 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
         s_logger.info("===============================================================================");
         if (userVmDetailVO != null) {
             s_logger.info(" Live Migration of UEFI enabled VM : " + vm.getInstanceName() + " is not supported");
-            if ("legacy".equalsIgnoreCase(userVmDetailVO.getValue()) || "secure".equalsIgnoreCase(userVmDetailVO.getValue()) || "SECURE".equalsIgnoreCase(userVmDetailVO.getValue())) {
+            if ("legacy".equalsIgnoreCase(userVmDetailVO.getValue())) {
                 // Return empty list.
                 return new Ternary<Pair<List<? extends Host>, Integer>, List<? extends Host>, Map<Host, Boolean>>(new Pair<List<? extends Host>,
                         Integer>(new ArrayList<HostVO>(), new Integer(0)), new ArrayList<Host>(), new HashMap<Host, Boolean>());
