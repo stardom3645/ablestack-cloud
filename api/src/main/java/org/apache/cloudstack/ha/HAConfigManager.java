@@ -55,14 +55,14 @@ public interface HAConfigManager {
      * @param cluster the cluster
      * @return returns operation success
      */
-    boolean enableHA(final Cluster cluster, Boolean includeHost);
+    boolean enableHA(final Cluster cluster);
 
     /**
      * Disables HA across a cluster
      * @param cluster the cluster
      * @return returns operation success
      */
-    boolean disableHA(final Cluster cluster, Boolean includeHost);
+    boolean disableHA(final Cluster cluster);
 
     /**
      * Enables HA across a zone

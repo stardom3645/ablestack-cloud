@@ -944,8 +944,6 @@ public class ApiConstants {
     public static final String LOGIN = "login";
     public static final String LOGOUT = "logout";
     public static final String LIST_IDPS = "listIdps";
-    public static final String INCLUDE_HOST = "includehost";
-
 
     public enum BootType {
         UEFI, BIOS;
