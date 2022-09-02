@@ -929,6 +929,7 @@ public class ApiConstants {
 
     public static final String BOOT_TYPE = "boottype";
     public static final String BOOT_MODE = "bootmode";
+    public static final String TPM_ENABLED = "tpmenabled";
     public static final String BOOT_INTO_SETUP = "bootintosetup";
     public static final String DEPLOY_AS_IS = "deployasis";
     public static final String DEPLOY_AS_IS_DETAILS = "deployasisdetails";
@@ -956,6 +957,24 @@ public class ApiConstants {
 
     public enum BootMode {
         LEGACY, SECURE;
+
+        @Override
+        public String toString() {
+            return this.name();
+        }
+    }
+
+    public enum TpmEnabled {
+        TPM, NONE;
+
+        @Override
+        public String toString() {
+            return this.name();
+        }
+    }
+
+    public enum IoType {
+        IOURING, NATIVE;
 
         @Override
         public String toString() {

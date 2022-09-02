@@ -54,6 +54,10 @@ public interface Host extends StateObject<Status>, Identity, Partition, HAResour
     }
     public static final String HOST_UEFI_ENABLE = "host.uefi.enable";
 
+    public static final String HOST_IOURING_ENABLE = "host.iouring.enable";
+
+    public static final String HOST_TPM_ENABLE = "host.tpm.enable";
+
     /**
      * @return name of the machine.
      */

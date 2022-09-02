@@ -337,6 +337,27 @@ public class DeployVMCmd extends BaseAsyncCreateCustomIdCmd implements SecurityG
         return null;
     }
 
+    public ApiConstants.TpmEnabled getTpmEnabled() {
+        if (StringUtils.isNotBlank(bootMode)) {
+            try {
+                String mode = bootMode.trim().toUpperCase();
+                return ApiConstants.TpmEnabled.valueOf(mode);
+            } catch (IllegalArgumentException e) {
+                String msg = String.format("Invalid %s: %s specified for VM: %s. Valid values are: %s",
+                        ApiConstants.TPM_ENABLED, bootMode, getName(), Arrays.toString(ApiConstants.TpmEnabled.values()));
+                s_logger.error(msg);
+                throw new InvalidParameterValueException(msg);
+            }
+        }
+        if (ApiConstants.TpmEnabled.TPM.equals(getTpmEnabled())) {
+            String msg = String.format("%s must be specified for the VM with boot type: %s. Valid values are: %s",
+                    ApiConstants.TPM_ENABLED, getTpmEnabled(), Arrays.toString(ApiConstants.BootMode.values()));
+            s_logger.error(msg);
+            throw new InvalidParameterValueException(msg);
+        }
+        return null;
+    }
+
     public Map<String, String> getVmProperties() {
         Map<String, String> map = new HashMap<>();
         if (MapUtils.isNotEmpty(vAppProperties)) {

@@ -72,6 +72,21 @@ public class LibvirtVMDef {
             }
         }
 
+        enum TpmEnabled {
+            TPM("TPM"), NONE("NONE");
+
+            String _type;
+
+            TpmEnabled(String type) {
+                _type = type;
+            }
+
+            @Override
+            public String toString() {
+                return _type;
+            }
+        }
+
         enum BootMode {
             LEGACY("LEGACY"), SECURE("SECURE");
 
