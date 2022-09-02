@@ -1302,26 +1302,18 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
             ex.addProxyObject(vm.getUuid(), "vmId");
             throw ex;
         }
-
-        UserVmDetailVO userVmDetailVO = _UserVmDetailsDao.findDetail(vm.getId(), ApiConstants.BootType.UEFI.toString());
-        s_logger.info("===============================================================================");
-        s_logger.info(userVmDetailVO);
-        s_logger.info(userVmDetailVO.getValue());
-        s_logger.info("secure".equalsIgnoreCase(userVmDetailVO.getValue()));
-        if (userVmDetailVO != null) {
-            s_logger.info("not null");
-        } else if (userVmDetailVO == null) {
-            s_logger.info("is null");
-        }
-        s_logger.info("===============================================================================");
-        if (userVmDetailVO != null) {
-            s_logger.info(" Live Migration of UEFI enabled VM : " + vm.getInstanceName() + " is not supported");
-            if ("legacy".equalsIgnoreCase(userVmDetailVO.getValue())) {
-                // Return empty list.
-                return new Ternary<Pair<List<? extends Host>, Integer>, List<? extends Host>, Map<Host, Boolean>>(new Pair<List<? extends Host>,
-                        Integer>(new ArrayList<HostVO>(), new Integer(0)), new ArrayList<Host>(), new HashMap<Host, Boolean>());
-            }
-        }
+        //UEFI 라이브 마이그레이션 관련된 주석 처리함. 2022.09.02 이석민 책임
+        // UEFI 관련된 주석 시작
+//        UserVmDetailVO userVmDetailVO = _UserVmDetailsDao.findDetail(vm.getId(), ApiConstants.BootType.UEFI.toString());
+//        if (userVmDetailVO != null) {
+//            s_logger.info(" Live Migration of UEFI enabled VM : " + vm.getInstanceName() + " is not supported");
+//            if ("legacy".equalsIgnoreCase(userVmDetailVO.getValue()) || "secure".equalsIgnoreCase(userVmDetailVO.getValue())) {
+//                // Return empty list.
+//                return new Ternary<Pair<List<? extends Host>, Integer>, List<? extends Host>, Map<Host, Boolean>>(new Pair<List<? extends Host>,
+//                        Integer>(new ArrayList<HostVO>(), new Integer(0)), new ArrayList<Host>(), new HashMap<Host, Boolean>());
+//            }
+//        }
+        //UEFI 관련된 주석 끝
 
         if (_serviceOfferingDetailsDao.findDetail(vm.getServiceOfferingId(), GPU.Keys.pciDevice.toString()) != null) {
             s_logger.info(" Live Migration of GPU enabled VM : " + vm.getInstanceName() + " is not supported");
