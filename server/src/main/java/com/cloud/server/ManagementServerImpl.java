@@ -768,7 +768,6 @@ import com.cloud.vm.ConsoleProxyVO;
 import com.cloud.vm.DiskProfile;
 import com.cloud.vm.InstanceGroupVO;
 import com.cloud.vm.SecondaryStorageVmVO;
-import com.cloud.vm.UserVmDetailVO;
 import com.cloud.vm.UserVmManager;
 import com.cloud.vm.UserVmVO;
 import com.cloud.vm.VMInstanceVO;
