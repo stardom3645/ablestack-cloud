@@ -58,7 +58,7 @@ public final class DisableHAForClusterCmd extends BaseAsyncCmd {
             description = "ID of the cluster", required = true, validations = {ApiArgValidator.PositiveNumber})
     private Long clusterId;
 
-    @Parameter(name = ApiConstants.INCLUDE_HOST, type = CommandType.BOOLEAN, required = false, description = "Whether the host in the cluster has ha enabled")
+    @Parameter(name = ApiConstants.INCLUDE_HOST, type = CommandType.BOOLEAN, required = false, description = "Whether to enable hosts in the cluster")
     private Boolean includeHost;
 
     /////////////////////////////////////////////////////

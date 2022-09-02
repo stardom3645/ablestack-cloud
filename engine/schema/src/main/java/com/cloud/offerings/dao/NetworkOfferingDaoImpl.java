@@ -57,6 +57,8 @@ public class NetworkOfferingDaoImpl extends GenericDaoBase<NetworkOfferingVO, Lo
     NetworkOfferingDetailsDao _detailsDao;
     @Inject
     private NetworkOfferingServiceMapDao networkOfferingServiceMapDao;
+    @Inject
+    private NetworkOfferingDao networkOfferingDao;
 
     protected NetworkOfferingDaoImpl() {
         super();
@@ -259,17 +261,21 @@ public class NetworkOfferingDaoImpl extends GenericDaoBase<NetworkOfferingVO, Lo
                 "Offering for L2 networks",
                 false, false);*/
 
-        checkPersistL2NetworkOffering(NetworkOffering.DefaultL2NetworkOfferingVlan,
-                "Offering for L2 networks VLAN",
-                true, false);
+        if (networkOfferingDao.findByUniqueName(NetworkOffering.DefaultL2NetworkOfferingVlan) == null && networkOfferingDao.findByUniqueName("기본 L2 VLAN 네트워크오퍼링") == null) {
+            checkPersistL2NetworkOffering("기본 L2 VLAN 네트워크오퍼링",
+                    "Offering for L2 networks VLAN",
+                    true, false);
+        }
 
         /*checkPersistL2NetworkOffering(NetworkOffering.DefaultL2NetworkOfferingConfigDrive,
                 "Offering for L2 networks with config drive user data",
                 false, true);*/
 
-        checkPersistL2NetworkOffering(NetworkOffering.DefaultL2NetworkOfferingConfigDriveVlan,
-                "Offering for L2 networks with config drive user data VLAN",
-                true, true);
+        if (networkOfferingDao.findByUniqueName(NetworkOffering.DefaultL2NetworkOfferingConfigDriveVlan) == null && networkOfferingDao.findByUniqueName("기본 L2 VLAN 네트워크오퍼링(with ConfigDrive)") == null) {
+            checkPersistL2NetworkOffering("기본 L2 VLAN 네트워크오퍼링(with ConfigDrive)",
+                    "Offering for L2 networks with config drive user data VLAN",
+                    true, true);
+        }
     }
 
     @Override

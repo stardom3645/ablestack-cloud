@@ -500,23 +500,23 @@ public class NetworkOrchestrator extends ManagerBase implements NetworkOrchestra
                 }*/
 
                 //#3 - shared network offering with no SG service
-                if (_networkOfferingDao.findByUniqueName(NetworkOffering.DefaultSharedNetworkOffering) == null) {
-                    offering = _configMgr.createNetworkOffering(NetworkOffering.DefaultSharedNetworkOffering, "Offering for Shared networks", TrafficType.Guest, null, true,
+                if (_networkOfferingDao.findByUniqueName(NetworkOffering.DefaultSharedNetworkOffering) == null && _networkOfferingDao.findByUniqueName("기본 공유 네트워크오퍼링") == null) {
+                    offering = _configMgr.createNetworkOffering("기본 공유 네트워크오퍼링", "Offering for Shared networks", TrafficType.Guest, null, true,
                             Availability.Optional, null, defaultSharedNetworkOfferingProviders, true, Network.GuestType.Shared, false, null, true, null, true, false, null, false,
                             null, true, false, null, null, true, null);
                 }
 
                 //#4 - default isolated offering with Source nat service
-                if (_networkOfferingDao.findByUniqueName(NetworkOffering.DefaultIsolatedNetworkOfferingWithSourceNatService) == null) {
-                    offering = _configMgr.createNetworkOffering(NetworkOffering.DefaultIsolatedNetworkOfferingWithSourceNatService,
+                if (_networkOfferingDao.findByUniqueName(NetworkOffering.DefaultIsolatedNetworkOfferingWithSourceNatService) == null && _networkOfferingDao.findByUniqueName("기본 격리 네트워크오퍼링(with SourceNat)") == null) {
+                    offering = _configMgr.createNetworkOffering("기본 격리 네트워크오퍼링(with SourceNat)",
                             "Offering for Isolated networks with Source Nat service enabled", TrafficType.Guest, null, false, Availability.Required, null,
                             defaultIsolatedSourceNatEnabledNetworkOfferingProviders, true, Network.GuestType.Isolated, false, null, true, null, false, false, null, false, null,
                             true, false, null, null, true, null);
                 }
 
                 //#5 - default vpc offering with LB service
-                if (_networkOfferingDao.findByUniqueName(NetworkOffering.DefaultIsolatedNetworkOfferingForVpcNetworks) == null) {
-                    offering = _configMgr.createNetworkOffering(NetworkOffering.DefaultIsolatedNetworkOfferingForVpcNetworks,
+                if (_networkOfferingDao.findByUniqueName(NetworkOffering.DefaultIsolatedNetworkOfferingForVpcNetworks) == null && _networkOfferingDao.findByUniqueName("VPC 네트워크에 대한 기본 격리 네트워크오퍼링") == null) {
+                    offering = _configMgr.createNetworkOffering("VPC 네트워크에 대한 기본 격리 네트워크오퍼링",
                             "Offering for Isolated VPC networks with Source Nat service enabled", TrafficType.Guest, null, false, Availability.Optional, null,
                             defaultVPCOffProviders, true, Network.GuestType.Isolated, false, null, false, null, false, false, null, false, null, true, true, null, null, true, null);
                 }
@@ -553,8 +553,8 @@ public class NetworkOrchestrator extends ManagerBase implements NetworkOrchestra
                 internalLbOffProviders.put(Service.Lb, defaultInternalLbProvider);
                 internalLbOffProviders.put(Service.SourceNat, defaultVpcProvider);
 
-                if (_networkOfferingDao.findByUniqueName(NetworkOffering.DefaultIsolatedNetworkOfferingForVpcNetworksWithInternalLB) == null) {
-                    offering = _configMgr.createNetworkOffering(NetworkOffering.DefaultIsolatedNetworkOfferingForVpcNetworksWithInternalLB,
+                if (_networkOfferingDao.findByUniqueName(NetworkOffering.DefaultIsolatedNetworkOfferingForVpcNetworksWithInternalLB) == null && _networkOfferingDao.findByUniqueName("VPC 네트워크에 대한 기본 격리 네트워크오퍼링(with 내부 LB)") == null) {
+                    offering = _configMgr.createNetworkOffering("VPC 네트워크에 대한 기본 격리 네트워크오퍼링(with 내부 LB)",
                             "Offering for Isolated VPC networks with Internal Lb support", TrafficType.Guest, null, false, Availability.Optional, null, internalLbOffProviders,
                             true, Network.GuestType.Isolated, false, null, false, null, false, false, null, false, null, true, true, null, null, true, null);
                     offering.setInternalLb(true);

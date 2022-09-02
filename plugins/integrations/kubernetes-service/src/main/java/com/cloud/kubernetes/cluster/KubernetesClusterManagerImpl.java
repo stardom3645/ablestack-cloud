@@ -171,7 +171,7 @@ import static com.cloud.utils.NumbersUtil.toHumanReadableSize;
 public class KubernetesClusterManagerImpl extends ManagerBase implements KubernetesClusterService {
 
     private static final Logger LOGGER = Logger.getLogger(KubernetesClusterManagerImpl.class);
-    private static final String DEFAULT_NETWORK_OFFERING_FOR_KUBERNETES_SERVICE_NAME = "쿠버네테스 서비스에 대한 기본 네트워크오퍼링";
+    private static final String DEFAULT_NETWORK_OFFERING_FOR_KUBERNETES_SERVICE_NAME = "DefaultNetworkOfferingforKubernetesService";
 
     protected StateMachine2<KubernetesCluster.State, KubernetesCluster.Event, KubernetesCluster> _stateMachine = KubernetesCluster.State.getStateMachine();
 
@@ -1564,24 +1564,27 @@ public class KubernetesClusterManagerImpl extends ManagerBase implements Kuberne
         defaultKubernetesServiceNetworkOfferingProviders.put(Service.PortForwarding, Network.Provider.VirtualRouter);
         defaultKubernetesServiceNetworkOfferingProviders.put(Service.Vpn, Network.Provider.VirtualRouter);
 
-        NetworkOfferingVO defaultKubernetesServiceNetworkOffering =
-                new NetworkOfferingVO(DEFAULT_NETWORK_OFFERING_FOR_KUBERNETES_SERVICE_NAME,
-                        "Network Offering used for CloudStack Kubernetes service", Networks.TrafficType.Guest,
-                        false, false, null, null, true,
-                        NetworkOffering.Availability.Required, null, Network.GuestType.Isolated, true,
-                        true, false, false, false, false,
-                        false, false, false, true, true, false,
-                        false, true, false, false);
-        defaultKubernetesServiceNetworkOffering.setState(NetworkOffering.State.Enabled);
-        defaultKubernetesServiceNetworkOffering = networkOfferingDao.persistDefaultNetworkOffering(defaultKubernetesServiceNetworkOffering);
+        if (networkOfferingDao.findByUniqueName(DEFAULT_NETWORK_OFFERING_FOR_KUBERNETES_SERVICE_NAME) == null && networkOfferingDao.findByUniqueName("쿠버네테스 서비스에 대한 기본 네트워크오퍼링") == null) {
+            NetworkOfferingVO defaultKubernetesServiceNetworkOffering =
+                    new NetworkOfferingVO("쿠버네테스 서비스에 대한 기본 네트워크오퍼링",
+                            "Network Offering used for CloudStack Kubernetes service", Networks.TrafficType.Guest,
+                            false, false, null, null, true,
+                            NetworkOffering.Availability.Required, null, Network.GuestType.Isolated, true,
+                            true, false, false, false, false,
+                            false, false, false, true, true, false,
+                            false, true, false, false);
+                            defaultKubernetesServiceNetworkOffering.setState(NetworkOffering.State.Enabled);
+                            defaultKubernetesServiceNetworkOffering = networkOfferingDao.persistDefaultNetworkOffering(defaultKubernetesServiceNetworkOffering);
 
-        for (Service service : defaultKubernetesServiceNetworkOfferingProviders.keySet()) {
-            NetworkOfferingServiceMapVO offService =
-                    new NetworkOfferingServiceMapVO(defaultKubernetesServiceNetworkOffering.getId(), service,
-                            defaultKubernetesServiceNetworkOfferingProviders.get(service));
-            networkOfferingServiceMapDao.persist(offService);
-            LOGGER.trace("Added service for the network offering: " + offService);
+                            for (Service service : defaultKubernetesServiceNetworkOfferingProviders.keySet()) {
+                                NetworkOfferingServiceMapVO offService =
+                                        new NetworkOfferingServiceMapVO(defaultKubernetesServiceNetworkOffering.getId(), service,
+                                                defaultKubernetesServiceNetworkOfferingProviders.get(service));
+                                networkOfferingServiceMapDao.persist(offService);
+                                LOGGER.trace("Added service for the network offering: " + offService);
+                            }
         }
+
 
         _gcExecutor.scheduleWithFixedDelay(new KubernetesClusterGarbageCollector(), 300, 300, TimeUnit.SECONDS);
         _stateScanner.scheduleWithFixedDelay(new KubernetesClusterStatusScanner(), 300, 30, TimeUnit.SECONDS);
