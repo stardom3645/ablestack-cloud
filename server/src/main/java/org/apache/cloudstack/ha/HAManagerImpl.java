@@ -351,6 +351,9 @@ public final class HAManagerImpl extends ManagerBase implements HAManager, Clust
                         haConfig.setEnabled(enable);
                         haConfig.setManagementServerId(ManagementServerNode.getManagementServerId());
                     }
+                    if (haProvider != null && enable != null) {
+                        haConfig.setHastate(HAConfig.HAState.Available);
+                    }
                     haConfig.setResourceId(resourceId);
                     haConfig.setResourceType(resourceType);
                     if (StringUtils.isEmpty(haConfig.getHaProvider())) {
@@ -422,9 +425,10 @@ public final class HAManagerImpl extends ManagerBase implements HAManager, Clust
             for (HAResource resource : resources) {
                 final HAConfig haConfig = haConfigDao.findHAResource(resource.getId(), resource.resourceType());
                 if (haConfig == null) {
-                    boolean configureHA = configureHA(resource.getId(), resource.resourceType(), "kvmhaprovider");
+                    boolean configureHA = configureHA(resource.getId(), resource.resourceType(), true, "kvmhaprovider");
+                } else {
+                    boolean result = enableHA(resource.getId(), resource.resourceType());
                 }
-                boolean result = enableHA(resource.getId(), resource.resourceType());
             }
         }
         return true;
