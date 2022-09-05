@@ -4839,7 +4839,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
         //Check if rbd image is already mapped
         final String[] splitPoolImage = disk.getPath().split("/");
         String device = Script.runSimpleBashScript("rbd showmapped | grep \""+splitPoolImage[0]+"[ ]*"+splitPoolImage[1]+"\" | grep -o \"[^ ]*[ ]*$\"");
-        if(device == null) {
+        if(device != null) {
             //If not mapped, map and return mapped device
             Script.runSimpleBashScript("rbd unmap " + disk.getPath() + " --id " + pool.getAuthUserName());
             device = Script.runSimpleBashScript("rbd showmapped | grep \""+splitPoolImage[0]+"[ ]*"+splitPoolImage[1]+"\" | grep -o \"[^ ]*[ ]*$\"");
