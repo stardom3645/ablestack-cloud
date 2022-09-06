@@ -1567,7 +1567,7 @@ public class KubernetesClusterManagerImpl extends ManagerBase implements Kuberne
         if (networkOfferingDao.findByUniqueName(DEFAULT_NETWORK_OFFERING_FOR_KUBERNETES_SERVICE_NAME) == null && networkOfferingDao.findByUniqueName("쿠버네테스 서비스에 대한 기본 네트워크오퍼링") == null) {
             NetworkOfferingVO defaultKubernetesServiceNetworkOffering =
                     new NetworkOfferingVO("쿠버네테스 서비스에 대한 기본 네트워크오퍼링",
-                            "Network Offering used for CloudStack Kubernetes service", Networks.TrafficType.Guest,
+                            "쿠버네테스 서비스에 대한 기본 네트워크오퍼링", Networks.TrafficType.Guest,
                             false, false, null, null, true,
                             NetworkOffering.Availability.Required, null, Network.GuestType.Isolated, true,
                             true, false, false, false, false,

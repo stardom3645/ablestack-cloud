@@ -1029,7 +1029,7 @@ public class ConfigurationServerImpl extends ManagerBase implements Configuratio
 
                 // Offering #2
                 NetworkOfferingVO defaultSharedNetworkOffering =
-                        new NetworkOfferingVO("기본 공유 네트워크오퍼링", "Offering for Shared networks", TrafficType.Guest, false, true, null, null, true,
+                        new NetworkOfferingVO("기본 공유 네트워크오퍼링", "기본 공유 네트워크오퍼링", TrafficType.Guest, false, true, null, null, true,
                                 Availability.Optional, null, Network.GuestType.Shared, true, true, false, false, false, false);
 
                 defaultSharedNetworkOffering.setState(NetworkOffering.State.Enabled);
@@ -1045,7 +1045,7 @@ public class ConfigurationServerImpl extends ManagerBase implements Configuratio
                 // Offering #3
                 NetworkOfferingVO defaultIsolatedSourceNatEnabledNetworkOffering =
                         new NetworkOfferingVO("기본 격리 네트워크오퍼링(with SourceNat)",
-                                "Offering for Isolated networks with Source Nat service enabled", TrafficType.Guest, false, false, null, null, true, Availability.Required, null,
+                                "기본 격리 네트워크오퍼링(with SourceNat)", TrafficType.Guest, false, false, null, null, true, Availability.Required, null,
                                 Network.GuestType.Isolated, true, false, false, false, true, false);
 
                 defaultIsolatedSourceNatEnabledNetworkOffering.setState(NetworkOffering.State.Enabled);
@@ -1093,7 +1093,7 @@ public class ConfigurationServerImpl extends ManagerBase implements Configuratio
                 // Offering #6
                 NetworkOfferingVO defaultNetworkOfferingForVpcNetworks =
                         new NetworkOfferingVO("VPC 네트워크에 대한 기본 격리 네트워크오퍼링",
-                                "Offering for Isolated Vpc networks with Source Nat service enabled", TrafficType.Guest, false, false, null, null, true, Availability.Optional,
+                                "VPC 네트워크에 대한 기본 격리 네트워크오퍼링", TrafficType.Guest, false, false, null, null, true, Availability.Optional,
                                 null, Network.GuestType.Isolated, false, false, false, false, true, true);
 
                 defaultNetworkOfferingForVpcNetworks.setState(NetworkOffering.State.Enabled);
@@ -1148,7 +1148,7 @@ public class ConfigurationServerImpl extends ManagerBase implements Configuratio
                 //offering #8 - network offering with internal lb service
                 NetworkOfferingVO internalLbOff =
                         new NetworkOfferingVO("VPC 네트워크에 대한 기본 격리 네트워크오퍼링(with 내부 LB)",
-                                "Offering for Isolated Vpc networks with Internal LB support", TrafficType.Guest, false, false, null, null, true, Availability.Optional, null,
+                                "VPC 네트워크에 대한 기본 격리 네트워크오퍼링(with 내부 LB)", TrafficType.Guest, false, false, null, null, true, Availability.Optional, null,
                                 Network.GuestType.Isolated, false, false, false, true, false, true);
 
                 internalLbOff.setState(NetworkOffering.State.Enabled);

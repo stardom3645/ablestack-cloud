@@ -263,7 +263,7 @@ public class NetworkOfferingDaoImpl extends GenericDaoBase<NetworkOfferingVO, Lo
 
         if (networkOfferingDao.findByUniqueName(NetworkOffering.DefaultL2NetworkOfferingVlan) == null && networkOfferingDao.findByUniqueName("기본 L2 VLAN 네트워크오퍼링") == null) {
             checkPersistL2NetworkOffering("기본 L2 VLAN 네트워크오퍼링",
-                    "Offering for L2 networks VLAN",
+                    "기본 L2 VLAN 네트워크오퍼링",
                     true, false);
         }
 
@@ -273,7 +273,7 @@ public class NetworkOfferingDaoImpl extends GenericDaoBase<NetworkOfferingVO, Lo
 
         if (networkOfferingDao.findByUniqueName(NetworkOffering.DefaultL2NetworkOfferingConfigDriveVlan) == null && networkOfferingDao.findByUniqueName("기본 L2 VLAN 네트워크오퍼링(with ConfigDrive)") == null) {
             checkPersistL2NetworkOffering("기본 L2 VLAN 네트워크오퍼링(with ConfigDrive)",
-                    "Offering for L2 networks with config drive user data VLAN",
+                    "기본 L2 VLAN 네트워크오퍼링(with ConfigDrive)",
                     true, true);
         }
     }
