@@ -2528,9 +2528,31 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
         }
 
         if (busT == DiskDef.DiskBus.SCSI) {
-            devices.addDevice(createSCSIDef(vcpus));
+            int socket = getCoresPerSocket(vcpus, vmTO.getDetails());
+            for (int i = 0; i < socket; i++) {
+                devices.addDevice(createSCSIDef(i, i, vcpus));
+            }
         }
         return devices;
+    }
+
+    private int getCoresPerSocket(int vcpus, Map<String, String> details) {
+        int numCoresPerSocket = -1;
+        if (details != null) {
+            final String coresPerSocket = details.get(VmDetailConstants.CPU_CORE_PER_SOCKET);
+            final int intCoresPerSocket = NumbersUtil.parseInt(coresPerSocket, numCoresPerSocket);
+            if (intCoresPerSocket > 0 && vcpus % intCoresPerSocket == 0) {
+                numCoresPerSocket = intCoresPerSocket;
+            }
+        }
+        if (numCoresPerSocket <= 0) {
+            if (vcpus % 6 == 0) {
+                numCoresPerSocket = 6;
+            } else if (vcpus % 4 == 0) {
+                numCoresPerSocket = 4;
+            }
+        }
+        return numCoresPerSocket;
     }
 
     protected WatchDogDef createWatchDogDef() {
@@ -2566,6 +2588,10 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
      * Creates Virtio SCSI controller. <br>
      * The respective Virtio SCSI XML definition is generated only if the VM's Disk Bus is of ISCSI.
      */
+    protected SCSIDef createSCSIDef(int index, int function ,int vcpus) {
+        return new SCSIDef((short)index, 0, 0, 9, function, vcpus);
+    }
+
     protected SCSIDef createSCSIDef(int vcpus) {
         return new SCSIDef((short)0, 0, 0, 9, 0, vcpus);
     }
