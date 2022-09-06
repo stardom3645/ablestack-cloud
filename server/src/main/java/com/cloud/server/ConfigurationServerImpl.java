@@ -1029,7 +1029,7 @@ public class ConfigurationServerImpl extends ManagerBase implements Configuratio
 
                 // Offering #2
                 NetworkOfferingVO defaultSharedNetworkOffering =
-                        new NetworkOfferingVO(NetworkOffering.DefaultSharedNetworkOffering, "Offering for Shared networks", TrafficType.Guest, false, true, null, null, true,
+                        new NetworkOfferingVO("기본 공유 네트워크오퍼링", "Offering for Shared networks", TrafficType.Guest, false, true, null, null, true,
                                 Availability.Optional, null, Network.GuestType.Shared, true, true, false, false, false, false);
 
                 defaultSharedNetworkOffering.setState(NetworkOffering.State.Enabled);
@@ -1044,7 +1044,7 @@ public class ConfigurationServerImpl extends ManagerBase implements Configuratio
 
                 // Offering #3
                 NetworkOfferingVO defaultIsolatedSourceNatEnabledNetworkOffering =
-                        new NetworkOfferingVO(NetworkOffering.DefaultIsolatedNetworkOfferingWithSourceNatService,
+                        new NetworkOfferingVO("기본 격리 네트워크오퍼링(with SourceNat)",
                                 "Offering for Isolated networks with Source Nat service enabled", TrafficType.Guest, false, false, null, null, true, Availability.Required, null,
                                 Network.GuestType.Isolated, true, false, false, false, true, false);
 
@@ -1092,7 +1092,7 @@ public class ConfigurationServerImpl extends ManagerBase implements Configuratio
 
                 // Offering #6
                 NetworkOfferingVO defaultNetworkOfferingForVpcNetworks =
-                        new NetworkOfferingVO(NetworkOffering.DefaultIsolatedNetworkOfferingForVpcNetworks,
+                        new NetworkOfferingVO("VPC 네트워크에 대한 기본 격리 네트워크오퍼링",
                                 "Offering for Isolated Vpc networks with Source Nat service enabled", TrafficType.Guest, false, false, null, null, true, Availability.Optional,
                                 null, Network.GuestType.Isolated, false, false, false, false, true, true);
 
@@ -1147,7 +1147,7 @@ public class ConfigurationServerImpl extends ManagerBase implements Configuratio
 
                 //offering #8 - network offering with internal lb service
                 NetworkOfferingVO internalLbOff =
-                        new NetworkOfferingVO(NetworkOffering.DefaultIsolatedNetworkOfferingForVpcNetworksWithInternalLB,
+                        new NetworkOfferingVO("VPC 네트워크에 대한 기본 격리 네트워크오퍼링(with 내부 LB)",
                                 "Offering for Isolated Vpc networks with Internal LB support", TrafficType.Guest, false, false, null, null, true, Availability.Optional, null,
                                 Network.GuestType.Isolated, false, false, false, true, false, true);
 
