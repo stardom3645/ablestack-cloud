@@ -270,7 +270,6 @@ public class HostResponse extends BaseResponseWithAnnotations {
     @Param(description = "true if the host has capability to support UEFI boot")
     private Boolean uefiCapabilty;
     private boolean tpmCapabilty;
-    private ApiConstants.IoType ioType;
 
     @Override
     public String getObjectId() {
@@ -723,9 +722,5 @@ public class HostResponse extends BaseResponseWithAnnotations {
 
     public void setTpmCapabilty(Boolean hostCapability) {
         this.tpmCapabilty = hostCapability;
-    }
-
-    public void setIOType(ApiConstants.IoType hostCapability) {
-        this.ioType = hostCapability;
     }
 }

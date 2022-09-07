@@ -71,7 +71,6 @@ public interface VirtualMachineProfile {
         public static final Param HaTag = new Param("HaTag");
         public static final Param HaOperation = new Param("HaOperation");
         public static final Param UefiFlag = new Param("UefiFlag");
-        public static final Param IouringFlag = new Param("IouringFlag");
         public static final Param TpmFlag = new Param("TpmFlag");
         public static final Param BootMode = new Param("BootMode");
         public static final Param BootType = new Param("BootType");
