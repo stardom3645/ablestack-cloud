@@ -133,6 +133,7 @@ import org.apache.cloudstack.storage.datastore.db.StoragePoolVO;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
+import org.checkerframework.checker.units.qual.A;
 import org.springframework.stereotype.Component;
 
 import com.cloud.api.query.dao.AccountJoinDao;
@@ -4044,6 +4045,7 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
             options.put(VmDetailConstants.DATA_DISK_CONTROLLER, Arrays.asList("osdefault", "ide", "scsi", "virtio"));
             options.put(VmDetailConstants.VIDEO_HARDWARE, Arrays.asList("cirrus", "vga", "qxl", "virtio"));
             options.put(VmDetailConstants.VIDEO_RAM, Collections.emptyList());
+            options.put(ApiConstants.TpmEnabled.TPM.toString(), Arrays.asList(ApiConstants.TpmVersion.None.toString(), ApiConstants.TpmVersion.V1_2.toString(), ApiConstants.TpmVersion.V2_0.toString()));
         }
 
         if (HypervisorType.VMware.equals(hypervisorType)) {

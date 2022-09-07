@@ -45,12 +45,22 @@ public final class LibvirtReadyCommandWrapper extends CommandWrapper<ReadyComman
         if (hostSupportsUefi() && libvirtComputingResource.isUefiPropertiesFileLoaded()) {
             hostDetails.put(Host.HOST_UEFI_ENABLE, Boolean.TRUE.toString());
         }
-
+        if (hostSupportsTpm() && libvirtComputingResource.isTpmPropertiesFileLoaded()) {
+            hostDetails.put(Host.HOST_TPM_ENABLE, Boolean.TRUE.toString());
+        }
         return new ReadyAnswer(command, hostDetails);
     }
 
     private boolean hostSupportsUefi() {
         String cmd = "rpm -qa | grep -i ovmf";
+        s_logger.debug("Running command : " + cmd);
+        int result = Script.runSimpleBashScriptForExitValue(cmd);
+        s_logger.debug("Got result : " + result);
+        return result == 0;
+    }
+
+    private boolean hostSupportsTpm() {
+        String cmd = "rpm -qa | grep -i swtpm";
         s_logger.debug("Running command : " + cmd);
         int result = Script.runSimpleBashScriptForExitValue(cmd);
         s_logger.debug("Got result : " + result);

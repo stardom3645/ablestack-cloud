@@ -972,13 +972,16 @@ public class ApiConstants {
             return this.name();
         }
     }
-
-    public enum IoType {
-        IOURING, NATIVE;
+    public enum TpmVersion {
+        NONE, V1_2, V2_0;
 
         @Override
         public String toString() {
-            return this.name();
+            if (this.name().equals("V1_2"))
+                return "1.2";
+            else if (this.name().equals("V2_0"))
+                return "2.0";
+            return "NONE";
         }
     }
 

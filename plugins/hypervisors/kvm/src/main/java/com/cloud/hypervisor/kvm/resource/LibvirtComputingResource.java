@@ -2572,7 +2572,10 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
         if (isGuestAarch64()) {
             createArm64UsbDef(devices);
         }
-
+        if (isTpmEnabled)
+        {
+            devices.addDevice(createTpmDef(vmTO, guest, isTpmEnabled));
+        }
         DiskDef.DiskBus busT = getDiskModelFromVMDetail(vmTO);
         if (busT == null) {
             busT = getGuestDiskModel(vmTO.getPlatformEmulator(), isUefiEnabled);
@@ -2581,6 +2584,8 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
         if (busT == DiskDef.DiskBus.SCSI) {
             devices.addDevice(createSCSIDef(vcpus));
         }
+
+
         return devices;
     }
 

@@ -568,6 +568,17 @@
                         v-model:value="form.userdata">
                       </a-textarea>
                     </a-form-item>
+                    <a-form-item :label="$t('label.tpm')" name="tpm" ref="tpm">
+                      <a-select
+                        v-model:value="form.tpm"
+                        showSearch
+                        optionFilterProp="label"
+                        :filterOption="filterOption">
+                        <a-select-option v-for="tpm in options.tpm" :key="tpm.id">
+                          {{ tpm.description }}
+                        </a-select-option>
+                      </a-select>
+                    </a-form-item>
                     <a-form-item :label="$t('label.affinity.groups')">
                       <affinity-group-selection
                         :items="options.affinityGroups"
@@ -774,6 +785,7 @@ export default {
         keyboards: [],
         bootTypes: [],
         bootModes: [],
+        tpm: [],
         dynamicScalingVmConfig: false
       },
       rowCount: {},
@@ -797,6 +809,7 @@ export default {
       template: {},
       defaultBootType: '',
       defaultBootMode: '',
+      defaultTPM: '',
       templateConfigurations: [],
       templateNics: [],
       templateLicenses: [],
@@ -1470,11 +1483,13 @@ export default {
       }
       this.fetchBootTypes()
       this.fetchBootModes()
+      this.fetchTpm()
       this.fetchInstaceGroups()
       nextTick().then(() => {
-        ['name', 'keyboard', 'boottype', 'bootmode', 'userdata'].forEach(this.fillValue)
+        ['name', 'keyboard', 'boottype', 'bootmode', 'userdata', 'tpm'].forEach(this.fillValue)
         this.form.boottype = this.defaultBootType ? this.defaultBootType : this.options.bootTypes && this.options.bootTypes.length > 0 ? this.options.bootTypes[0].id : undefined
         this.form.bootmode = this.defaultBootMode ? this.defaultBootMode : this.options.bootModes && this.options.bootModes.length > 0 ? this.options.bootModes[0].id : undefined
+        this.form.tpm = this.defaultTPM ? this.defaultTPM : this.options.tpm && this.options.tpm.length > 0 ? this.options.tpm[0].id : undefined
         this.instanceConfig = toRaw(this.form)
       })
     },
@@ -1515,6 +1530,13 @@ export default {
         )
       }
       this.options.bootModes = bootModes
+    },
+    fetchTpm () {
+      this.options.tpm = [
+        { id: 'NONE', description: 'disabled' },
+        { id: 'V1_2', description: 'TPM v1.2' },
+        { id: 'V2_0', description: 'TPM v2.0' }
+      ]
     },
     fetchInstaceGroups () {
       this.options.instanceGroups = []
@@ -1704,6 +1726,7 @@ export default {
         if (!this.template?.deployasis) {
           deployVmData.boottype = values.boottype
           deployVmData.bootmode = values.bootmode
+          deployVmData.tpm = values.tpm
         }
         deployVmData.dynamicscalingenabled = values.dynamicscalingenabled
         if (values.userdata && values.userdata.length > 0) {
