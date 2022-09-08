@@ -945,6 +945,8 @@ public class ApiConstants {
     public static final String LOGOUT = "logout";
     public static final String LIST_IDPS = "listIdps";
 
+    public static final String KRBD_PATH = "krbdpath";
+
     public enum BootType {
         UEFI, BIOS;
 

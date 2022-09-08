@@ -444,6 +444,11 @@ public class PrimaryDataStoreImpl implements PrimaryDataStore {
     }
 
     @Override
+    public String getKrbdPath() {
+        return pdsv.getKrbdPath();
+    }
+
+    @Override
     public DataStoreTO getTO() {
         DataStoreTO to = getDriver().getStoreTO(this);
         if (to == null) {
