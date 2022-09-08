@@ -360,7 +360,7 @@ export default {
     },
     getEndDate () {
       var now = new Date()
-      if (this.$store.getters.usebrowsertimezone) {
+      if (!this.$store.getters.usebrowsertimezone) {
         return now
       }
       return new Date(now.getTime() + now.getTimezoneOffset() * 60000)
