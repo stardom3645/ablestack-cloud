@@ -402,7 +402,7 @@ public class OutOfBandManagementServiceImpl extends ManagerBase implements OutOf
         } else {
             final DetailVO detail = hostDetailsDao.findDetail(host.getId(), "webport");
             detail.setValue(options.get(OutOfBandManagement.Option.WEBPORT));
-            hostDetailsDao.update(host.getId(), detail);
+            hostDetailsDao.update(detail.getId(), detail);
         }
 
         String result = String.format("Out-of-band management successfully configured for %s.", host);

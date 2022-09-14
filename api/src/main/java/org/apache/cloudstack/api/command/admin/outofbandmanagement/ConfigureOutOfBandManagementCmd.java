@@ -72,7 +72,7 @@ public class ConfigureOutOfBandManagementCmd extends BaseCmd {
     @Parameter(name = ApiConstants.PASSWORD, type = CommandType.STRING, required = true, description = "the host management interface password")
     private String password;
 
-    @Parameter(name = ApiConstants.WEBPORT, type = CommandType.STRING, required = true, description = "the host management interface web port")
+    @Parameter(name = ApiConstants.WEBPORT, type = CommandType.STRING, description = "the host management interface web port")
     private String webport;
 
     /////////////////////////////////////////////////////
