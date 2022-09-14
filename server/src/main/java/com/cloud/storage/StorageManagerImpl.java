@@ -813,6 +813,7 @@ public class StorageManagerImpl extends ManagerBase implements StorageManager, C
         params.put("managed", cmd.isManaged());
         params.put("capacityBytes", cmd.getCapacityBytes());
         params.put("capacityIops", cmd.getCapacityIops());
+        params.put("krbdPath", cmd.getKrbdPath());
 
         DataStoreLifeCycle lifeCycle = storeProvider.getDataStoreLifeCycle();
         DataStore store = null;

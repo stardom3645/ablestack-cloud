@@ -6538,7 +6538,7 @@ public class VmwareResource extends ServerResourceBase implements StoragePoolRes
                     double doubleMemKb = NumberUtils.toDouble(memkb);
                     double guestFreeMem =  doubleMemKb - NumberUtils.toDouble(guestMemusage);
 
-                    final VmStatsEntry vmStats = new VmStatsEntry(0, doubleMemKb * 1024, guestFreeMem * 1024, NumberUtils.toDouble(memlimit) * 1024, maxCpuUsage, networkReadKBs,
+                    final VmStatsEntry vmStats = new VmStatsEntry(0, doubleMemKb * 1024, guestFreeMem * 1024, NumberUtils.toDouble(memlimit) * 1024, guestFreeMem, maxCpuUsage, networkReadKBs,
                             networkWriteKBs, NumberUtils.toInt(numberCPUs), diskReadKbs, diskWriteKbs, diskReadIops, diskWriteIops, "vm");
                     vmResponseMap.put(name, vmStats);
 
@@ -7670,5 +7670,10 @@ public class VmwareResource extends ServerResourceBase implements StoragePoolRes
         } catch (Exception e) {
             s_logger.error(String.format("Failed to log command %s due to: [%s].", cmd.getClass().getSimpleName(), e.getMessage()), e);
         }
+    }
+
+    @Override
+    public VmwareStorageProcessor getStorageProcessor() {
+        return _storageProcessor;
     }
 }
