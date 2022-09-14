@@ -1235,6 +1235,15 @@ public class KVMStorageProcessor implements StorageProcessor {
                             throw new InternalErrorException("Error while mapping disk "+attachingDisk.getPath()+" on host");
                         }
                     }
+                    if("ABLESTACK".equals(provider)){
+                        final String unmap = resource.unmapRbdDevice(attachingDisk);
+                        if (unmap == null) {
+                            attachingDisk.setPath(krbdpath + "/" + attachingDisk.getPath());
+                            s_logger.debug("RBD unmap device on host is: " + attachingDisk.getPath());
+                        } else {
+                            throw new InternalErrorException("Error while mapping disk "+attachingDisk.getPath()+" on host");
+                        }
+                    }
                 }
 
                 for (final DiskDef disk : disks) {
