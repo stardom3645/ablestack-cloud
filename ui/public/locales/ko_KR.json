@@ -2924,5 +2924,6 @@
 "message.desktop.cluster.start": "\ud574\ub2f9 \ud074\ub7ec\uc2a4\ud130\ub97c \uc2dc\uc791\ud558\uc2dc\uaca0\uc2b5\ub2c8\uae4c?",
 "message.desktop.cluster.stop": "\ud574\ub2f9 \ud074\ub7ec\uc2a4\ud130\ub97c \uc815\uc9c0\ud558\uc2dc\uaca0\uc2b5\ub2c8\uae4c?",
 "label.includehost": "\uD638\uC2A4\uD2B8 \uD3EC\uD568",
+"label.webport": "webport",
 "label.oobm.portal.url": "OOBM \uD3EC\uD138 \uC5F0\uACB0"
 }
