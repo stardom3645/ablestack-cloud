@@ -35,6 +35,12 @@
       </template>
       <wall-link-url :resource="resource" :size="size" />
     </a-tooltip>
+    <a-tooltip arrowPointAtCenter placement="bottomRight" v-if="resource && resource.id && resource.outofbandmanagement && dataView">
+      <template #title>
+        {{ $t('label.oobm.portal.url') }}
+      </template>
+      <oobm-url :resource="resource" :size="size"/>
+    </a-tooltip>
     <a-tooltip
       v-for="(action, actionIndex) in actions"
       :key="actionIndex"
@@ -95,13 +101,15 @@ import { api } from '@/api'
 import Console from '@/components/widgets/Console'
 import WorksUrl from '@/components/widgets/WorksUrl'
 import WallLinkUrl from '@/components/widgets/WallLinkUrl'
+import OobmUrl from '@/components/widgets/OobmUrl'
 
 export default {
   name: 'ActionButton',
   components: {
     Console,
     WorksUrl,
-    WallLinkUrl
+    WallLinkUrl,
+    OobmUrl
   },
   data () {
     return {

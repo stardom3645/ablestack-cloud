@@ -72,6 +72,9 @@ public class ConfigureOutOfBandManagementCmd extends BaseCmd {
     @Parameter(name = ApiConstants.PASSWORD, type = CommandType.STRING, required = true, description = "the host management interface password")
     private String password;
 
+    @Parameter(name = ApiConstants.WEBPORT, type = CommandType.STRING, required = true, description = "the host management interface web port")
+    private String webport;
+
     /////////////////////////////////////////////////////
     /////////////// API Implementation///////////////////
     /////////////////////////////////////////////////////
@@ -110,6 +113,7 @@ public class ConfigureOutOfBandManagementCmd extends BaseCmd {
         putOptionIfIsNotEmpty(builder, OutOfBandManagement.Option.PORT, port);
         putOptionIfIsNotEmpty(builder, OutOfBandManagement.Option.USERNAME, username);
         putOptionIfIsNotEmpty(builder, OutOfBandManagement.Option.PASSWORD, password);
+        putOptionIfIsNotEmpty(builder, OutOfBandManagement.Option.WEBPORT, webport);
         return builder.build();
     }
 

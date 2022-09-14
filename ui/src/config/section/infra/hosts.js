@@ -138,7 +138,7 @@ export default {
       message: 'label.outofbandmanagement.configure',
       docHelp: 'adminguide/hosts.html#out-of-band-management',
       dataView: true,
-      args: ['hostid', 'address', 'port', 'username', 'password', 'driver'],
+      args: ['hostid', 'address', 'port', 'username', 'password', 'driver', 'webport'],
       mapping: {
         hostid: {
           value: (record) => { return record.id }

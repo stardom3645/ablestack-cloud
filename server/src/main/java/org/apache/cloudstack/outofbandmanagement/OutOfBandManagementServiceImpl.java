@@ -56,8 +56,10 @@ import com.cloud.domain.Domain;
 import com.cloud.event.ActionEvent;
 import com.cloud.event.ActionEventUtils;
 import com.cloud.event.EventTypes;
+import com.cloud.host.DetailVO;
 import com.cloud.host.Host;
 import com.cloud.host.dao.HostDao;
+import com.cloud.host.dao.HostDetailsDao;
 import com.cloud.org.Cluster;
 import com.cloud.resource.ResourceState;
 import com.cloud.utils.component.Manager;
@@ -81,6 +83,8 @@ public class OutOfBandManagementServiceImpl extends ManagerBase implements OutOf
     private DataCenterDetailsDao dataCenterDetailsDao;
     @Inject
     private OutOfBandManagementDao outOfBandManagementDao;
+    @Inject
+    private HostDetailsDao hostDetailsDao;
     @Inject
     private HostDao hostDao;
     @Inject
@@ -390,6 +394,13 @@ public class OutOfBandManagementServiceImpl extends ManagerBase implements OutOf
 
         if (!updatedConfig) {
             throw new CloudRuntimeException(String.format("Failed to update out-of-band management config for %s in the database.", host));
+        }
+
+        DetailVO detail = new DetailVO(host.getId(), "webport", options.get(OutOfBandManagement.Option.WEBPORT));
+        if (hostDetailsDao.findDetail(host.getId(), "webport") == null) {
+            hostDetailsDao.persist(detail);
+        } else {
+            hostDetailsDao.update(detail);
         }
 
         String result = String.format("Out-of-band management successfully configured for %s.", host);
