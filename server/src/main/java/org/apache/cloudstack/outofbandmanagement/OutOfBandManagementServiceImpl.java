@@ -396,11 +396,13 @@ public class OutOfBandManagementServiceImpl extends ManagerBase implements OutOf
             throw new CloudRuntimeException(String.format("Failed to update out-of-band management config for %s in the database.", host));
         }
 
-        DetailVO detail = new DetailVO(host.getId(), "webport", options.get(OutOfBandManagement.Option.WEBPORT));
         if (hostDetailsDao.findDetail(host.getId(), "webport") == null) {
+            DetailVO detail = new DetailVO(host.getId(), "webport", options.get(OutOfBandManagement.Option.WEBPORT));
             hostDetailsDao.persist(detail);
         } else {
-            hostDetailsDao.update(detail);
+            final DetailVO detail = hostDetailsDao.findDetail(host.getId(), "webport");
+            detail.setValue(options.get(OutOfBandManagement.Option.WEBPORT));
+            hostDetailsDao.update(host.getId(), detail);
         }
 
         String result = String.format("Out-of-band management successfully configured for %s.", host);
