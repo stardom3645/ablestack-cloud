@@ -3470,6 +3470,9 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
         cmd.setCluster(_clusterId);
         cmd.setGatewayIpAddress(_localGateway);
         cmd.setIqn(getIqn());
+        if (cmd.getHostDetails().containsKey("guest.cpu.mode")){
+            cmd.getHostDetails().put("guest.cpu.mode","host-passthrough");
+        }
 
         if (cmd.getHostDetails().containsKey("Host.OS")) {
             _hostDistro = cmd.getHostDetails().get("Host.OS");
