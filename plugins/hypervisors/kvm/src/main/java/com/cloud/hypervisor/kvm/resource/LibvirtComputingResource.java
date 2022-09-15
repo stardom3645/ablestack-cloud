@@ -2465,7 +2465,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
         boolean isSecureBoot = false;
         boolean isTpmEnabled = false;
         String bootMode = null;
-        String tpmEnabled = null;
+        String tpmVersion = null;
 
         if (MapUtils.isNotEmpty(customParams) && customParams.containsKey(GuestDef.BootType.UEFI.toString())) {
             isUefiEnabled = true;
@@ -2479,19 +2479,25 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
             bootMode = customParams.get(GuestDef.BootType.UEFI.toString());
         }
 
-        if (MapUtils.isNotEmpty(customParams) && customParams.containsKey(GuestDef.TpmEnabled.TPM.toString())) {
+        if (MapUtils.isNotEmpty(customParams) && (
+                customParams.containsKey(GuestDef.TpmEnabled.V2_0.toString()) ||
+                        customParams.containsKey(GuestDef.TpmEnabled.V1_2.toString())
+        )) {
             isTpmEnabled = true;
             s_logger.debug(String.format("Enabled TPM for VM UUID [%s].", uuid));
 
-
-            tpmEnabled = customParams.get(GuestDef.TpmEnabled.TPM.toString());
+            if(customParams.containsKey(GuestDef.TpmEnabled.V2_0.toString())) {
+                tpmVersion = customParams.get(GuestDef.TpmEnabled.V2_0.toString());
+            }else if(customParams.containsKey(GuestDef.TpmEnabled.V1_2.toString())) {
+                tpmVersion = customParams.get(GuestDef.TpmEnabled.V1_2.toString());
+            }
         }
 
         Map<String, String> extraConfig = vmTO.getExtraConfig();
         if (dpdkSupport && (!extraConfig.containsKey(DpdkHelper.DPDK_NUMA) || !extraConfig.containsKey(DpdkHelper.DPDK_HUGE_PAGES))) {
             s_logger.info(String.format("DPDK is enabled for VM [%s], but it needs extra configurations for CPU NUMA and Huge Pages for VM deployment.", vmTO.toString()));
         }
-        configureVM(vmTO, vm, customParams, isUefiEnabled, isSecureBoot, bootMode, isTpmEnabled, tpmEnabled, extraConfig, uuid);
+        configureVM(vmTO, vm, customParams, isUefiEnabled, isSecureBoot, bootMode, isTpmEnabled, tpmVersion, extraConfig, uuid);
         return vm;
     }
 
@@ -2499,7 +2505,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
      * Configures created VM from specification, adding the necessary components to VM.
      */
     private void configureVM(VirtualMachineTO vmTO, LibvirtVMDef vm, Map<String, String> customParams, boolean isUefiEnabled, boolean isSecureBoot, String bootMode,
-                             boolean isTpmEnabled, String tpmEnabled, Map<String, String> extraConfig, String uuid) {
+                             boolean isTpmEnabled, String tpmVersion, Map<String, String> extraConfig, String uuid) {
         s_logger.debug(String.format("Configuring VM with UUID [%s].", uuid));
 
         GuestDef guest = createGuestFromSpec(vmTO, vm, uuid, customParams);
@@ -2525,7 +2531,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
 
         vm.addComp(createTermPolicy());
         vm.addComp(createClockDef(vmTO));
-        vm.addComp(createDevicesDef(vmTO, guest, vcpus, isUefiEnabled, isTpmEnabled));
+        vm.addComp(createDevicesDef(vmTO, guest, vcpus, isUefiEnabled, isTpmEnabled, tpmVersion));
         addExtraConfigsToVM(vmTO, vm, extraConfig);
     }
 
@@ -2541,18 +2547,18 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
     /**
      * Adds TPM device component to VM
      */
-    protected DevicesDef createTpmDef(VirtualMachineTO vmTO, GuestDef guest, boolean isTpmEnabled){
+    protected DevicesDef createTpmDef(VirtualMachineTO vmTO, GuestDef guest, String TpmVersion){
         DevicesDef devices = new DevicesDef();
         devices.setEmulatorPath(_hypervisorPath);
         devices.setGuestType(guest.getGuestType());
-        devices.addDevice(new LibvirtVMDef.TPMDef());
+        devices.addDevice(new LibvirtVMDef.TPMDef(TpmVersion));
 
         return devices;
     }
     /**
      * Adds devices components to VM.
      */
-    protected DevicesDef createDevicesDef(VirtualMachineTO vmTO, GuestDef guest, int vcpus, boolean isUefiEnabled, boolean isTpmEnabled) {
+    protected DevicesDef createDevicesDef(VirtualMachineTO vmTO, GuestDef guest, int vcpus, boolean isUefiEnabled, boolean isTpmEnabled, String TpmVersion) {
         DevicesDef devices = new DevicesDef();
         devices.setEmulatorPath(_hypervisorPath);
         devices.setGuestType(guest.getGuestType());
@@ -2574,7 +2580,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
         }
         if (isTpmEnabled)
         {
-            devices.addDevice(createTpmDef(vmTO, guest, isTpmEnabled));
+            devices.addDevice(createTpmDef(vmTO, guest, TpmVersion));
         }
         DiskDef.DiskBus busT = getDiskModelFromVMDetail(vmTO);
         if (busT == null) {

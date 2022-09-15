@@ -73,7 +73,7 @@ public class LibvirtVMDef {
         }
 
         enum TpmEnabled {
-            TPM("TPM"), NONE("NONE");
+            V2_0("V2_0"), V1_2("V1_2"), NONE("NONE");
 
             String _type;
 
@@ -178,6 +178,7 @@ public class LibvirtVMDef {
             this._bootmode = bootmode;
         }
 
+        public boolean getTPMEnabled() {return TpmEnabled;}
         @Override
         public String toString() {
             if (_type == GuestType.KVM) {
