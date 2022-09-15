@@ -123,6 +123,12 @@ public class DeployVMCmd extends BaseAsyncCreateCustomIdCmd implements SecurityG
     @Parameter(name = ApiConstants.BOOT_INTO_SETUP, type = CommandType.BOOLEAN, required = false, description = "Boot into hardware setup or not (ignored if startVm = false, only valid for vmware)", since = "4.15.0.0")
     private Boolean bootIntoSetup;
 
+    @Parameter(name = ApiConstants.TPM_ENABLED, type = CommandType.STRING, required = false, description = "Boot with TPM", since = "4.18.0.0")
+    private String tpm_enabled;
+
+
+    @Parameter(name = ApiConstants.TPM_VERSION, type = CommandType.STRING, required = false, description = "Boot with TPM", since = "4.18.0.0")
+    private String tpm_version;
     //DataDisk information
     @ACL
     @Parameter(name = ApiConstants.DISK_OFFERING_ID, type = CommandType.UUID, entityType = DiskOfferingResponse.class, description = "the ID of the disk offering for the virtual machine. If the template is of ISO format,"
@@ -292,6 +298,21 @@ public class DeployVMCmd extends BaseAsyncCreateCustomIdCmd implements SecurityG
         return null;
     }
 
+    public ApiConstants.TpmVersion getTpmVersion() {
+        if (StringUtils.isNotBlank(tpm_version)) {
+            try {
+                String type = tpm_version.trim().toUpperCase();
+                return ApiConstants.TpmVersion.valueOf(type);
+            } catch (IllegalArgumentException e) {
+                String errMesg = "Invalid TpmVersion " + tpm_version + "Specified for vm " + getName()
+                        + " Valid values are: " + Arrays.toString(ApiConstants.BootType.values());
+                s_logger.warn(errMesg);
+                throw new InvalidParameterValueException(errMesg);
+            }
+        }
+        return null;
+    }
+
     public Map<String, String> getDetails() {
         Map<String, String> customparameterMap = new HashMap<String, String>();
         if (details != null && details.size() != 0) {
@@ -338,20 +359,20 @@ public class DeployVMCmd extends BaseAsyncCreateCustomIdCmd implements SecurityG
     }
 
     public ApiConstants.TpmEnabled getTpmEnabled() {
-        if (StringUtils.isNotBlank(bootMode)) {
+        if (StringUtils.isNotBlank(tpm_enabled)) {
             try {
-                String mode = bootMode.trim().toUpperCase();
+                String mode = tpm_enabled.trim().toUpperCase();
                 return ApiConstants.TpmEnabled.valueOf(mode);
             } catch (IllegalArgumentException e) {
                 String msg = String.format("Invalid %s: %s specified for VM: %s. Valid values are: %s",
-                        ApiConstants.TPM_ENABLED, bootMode, getName(), Arrays.toString(ApiConstants.TpmEnabled.values()));
+                        ApiConstants.TPM_ENABLED, tpm_enabled, getName(), Arrays.toString(ApiConstants.TpmEnabled.values()));
                 s_logger.error(msg);
                 throw new InvalidParameterValueException(msg);
             }
         }
         if (ApiConstants.TpmEnabled.TPM.equals(getTpmEnabled())) {
             String msg = String.format("%s must be specified for the VM with boot type: %s. Valid values are: %s",
-                    ApiConstants.TPM_ENABLED, getTpmEnabled(), Arrays.toString(ApiConstants.BootMode.values()));
+                    ApiConstants.TPM_ENABLED, getTpmVersion(), Arrays.toString(ApiConstants.TpmEnabled.values()));
             s_logger.error(msg);
             throw new InvalidParameterValueException(msg);
         }

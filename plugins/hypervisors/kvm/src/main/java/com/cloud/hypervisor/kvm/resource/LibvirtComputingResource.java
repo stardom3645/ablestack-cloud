@@ -2545,7 +2545,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
         DevicesDef devices = new DevicesDef();
         devices.setEmulatorPath(_hypervisorPath);
         devices.setGuestType(guest.getGuestType());
-        devices.addDevice(createSerialDef());
+        devices.addDevice(new LibvirtVMDef.TPMDef());
 
         return devices;
     }
