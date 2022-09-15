@@ -579,6 +579,16 @@ public class LibvirtStorageAdaptor implements StorageAdaptor {
     public KVMStoragePool createStoragePool(String name, String host, int port, String path, String userInfo, StoragePoolType type, Map<String, String> details) {
         s_logger.info("Attempting to create storage pool " + name + " (" + type.toString() + ") in libvirt");
 
+        // gluefs mount script call
+        if (type == StoragePoolType.SharedMountPoint && "ABLESTACK".equals(details.get("provider"))) {
+            s_logger.info("Run the command to create the gluefs mount.");
+            Boolean gluefs = createGluefsMount(host, path, userInfo, details);
+            if (gluefs) {
+                s_logger.warn("Failed to fire mount event while creating gluefs.");
+                throw new CloudRuntimeException("Failed to fire mount event while creating gluefs.");
+            }
+        }
+
         StoragePool sp = null;
         Connect conn = null;
         try {
@@ -1444,4 +1454,41 @@ public class LibvirtStorageAdaptor implements StorageAdaptor {
         Script.runSimpleBashScript("rm -r --interactive=never " + vol.getPath());
     }
 
+    private boolean createGluefsMount(String host, String path, String userInfo, Map<String, String> details) {
+        String targetPath = _mountPoint + File.separator + path;
+        int mountpointResult = Script.runSimpleBashScriptForExitValue("mountpoint -q " + _mountPoint + File.separator + path);
+        // if the pool is mounted, try to unmount it
+        if(mountpointResult == 0) {
+            s_logger.info("Attempting to unmount old mount at " + targetPath);
+            String result = Script.runSimpleBashScript("umount -l " + targetPath);
+            if (result == null) {
+                s_logger.info("Succeeded in unmounting " + targetPath);
+            } else {
+                s_logger.error("Failed in unmounting storage");
+            }
+        }
+        if (createPathFolder(path)) {
+            s_logger.debug("mkdir path [" + targetPath + "]");
+        }
+        String cmd = "mount -t ceph ";
+        String user_fsname = userInfo.split(":")[0] + "@." + details.get("gluefsname") + "=/ ";
+        String secret = "-o " + userInfo.split(":")[1];
+        String mon_addr = ",mon_addr=" + host;
+        String mount = Script.runSimpleBashScript(cmd + user_fsname + secret + mon_addr);
+        if (mount == null) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    private boolean createPathFolder(String path) {
+        String mountPoint = _mountPoint + File.separator + path;
+
+        File f = new File(mountPoint + File.separator + path);
+        if (!f.exists()) {
+            f.mkdirs();
+        }
+        return true;
+    }
 }

@@ -34,7 +34,7 @@ import com.cloud.hypervisor.Hypervisor.HypervisorType;
 import com.cloud.resource.ResourceManager;
 import com.cloud.storage.dao.StoragePoolHostDao;
 import com.cloud.storage.dao.StoragePoolWorkDao;
-import com.cloud.storage.Storage;
+import com.cloud.storage.Storage.StoragePoolType;
 import com.cloud.storage.StorageManager;
 import com.cloud.storage.StoragePool;
 import com.cloud.storage.StoragePoolAutomation;
@@ -128,6 +128,12 @@ public class AblestackPrimaryDataStoreLifeCycleImpl implements PrimaryDataStoreL
                         throw new InvalidParameterValueException("RADOS monitor can support up to 5 hosts.");
                     }
                 }
+            } else if (uri.getScheme().equalsIgnoreCase("gluefs")) {
+                String uriHost = uri.getHost();
+                String uriPath = uri.getPath();
+                if (uriHost == null || uriPath == null || uriHost.trim().isEmpty() || uriPath.trim().isEmpty()) {
+                    throw new InvalidParameterValueException("host or path is null, should be gluefs://user:secret@hostname/path");
+                }
             }
         } catch (URISyntaxException e) {
             throw new InvalidParameterValueException(url + " is not a valid uri");
@@ -166,14 +172,30 @@ public class AblestackPrimaryDataStoreLifeCycleImpl implements PrimaryDataStoreL
                 storageHost = storageHost + (hostPath.substring(0, hostPath.lastIndexOf("/")).replaceAll("/", ","));
                 hostPath = hostPath.substring(hostPath.lastIndexOf("/") + 1);
             }
-            parameters.setType(Storage.StoragePoolType.RBD);
+            parameters.setType(StoragePoolType.RBD);
             parameters.setHost(storageHost);
             parameters.setPort(port);
             parameters.setPath(hostPath.replaceFirst("/", ""));
             parameters.setUserInfo(userInfo);
+            parameters.setKrbdPath((String) dsInfos.get("krbdPath"));
+        } else if (scheme.equalsIgnoreCase("gluefs")) {
+            if (port == -1) {
+                port = 0;
+            }
+            parameters.setType(StoragePoolType.SharedMountPoint);
+            parameters.setHost(storageHost);
+            parameters.setPort(0);
+            parameters.setPath(hostPath);
+            parameters.setUserInfo(userInfo);
         }
 
-        String uuid = UUID.nameUUIDFromBytes((storageHost + hostPath).getBytes()).toString();
+        String uuid = null;
+        if (scheme.equalsIgnoreCase("gluefs")) {
+            uuid = UUID.randomUUID().toString();
+        } else {
+            uuid = UUID.nameUUIDFromBytes((storageHost + hostPath).getBytes()).toString();
+        }
+
         List<StoragePoolVO> spHandles = primaryDataStoreDao.findIfDuplicatePoolsExistByUUID(uuid);
         if ((spHandles != null) && (spHandles.size() > 0)) {
             if (s_logger.isDebugEnabled()) {
@@ -181,7 +203,6 @@ public class AblestackPrimaryDataStoreLifeCycleImpl implements PrimaryDataStoreL
             }
             throw new CloudRuntimeException("Another active pool with the same uuid already exists");
         }
-
         parameters.setUuid(uuid);
         parameters.setZoneId(zoneId);
         parameters.setPodId(podId);
@@ -189,7 +210,6 @@ public class AblestackPrimaryDataStoreLifeCycleImpl implements PrimaryDataStoreL
         parameters.setClusterId(clusterId);
         parameters.setProviderName(providerName);
         parameters.setHypervisorType(hypervisorType);
-        parameters.setKrbdPath((String) dsInfos.get("krbdPath"));
 
         return dataStoreHelper.createPrimaryDataStore(parameters);
     }
@@ -197,7 +217,7 @@ public class AblestackPrimaryDataStoreLifeCycleImpl implements PrimaryDataStoreL
     protected boolean createStoragePool(long hostId, StoragePool pool) {
         s_logger.debug("creating pool " + pool.getName() + " on  host " + hostId);
 
-        if (pool.getPoolType() != Storage.StoragePoolType.RBD) {
+        if (pool.getPoolType() != StoragePoolType.RBD) {
             s_logger.warn(" Doesn't support storage pool type " + pool.getPoolType());
             return false;
         }
