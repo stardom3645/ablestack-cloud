@@ -333,6 +333,10 @@ public class DeployVMCmd extends BaseAsyncCreateCustomIdCmd implements SecurityG
             customparameterMap.put("rootdisksize", rootdisksize.toString());
         }
 
+        if (getTpmEnabled() != null){
+            customparameterMap.put(getTpmEnabled().toString(), getTpmVersion().toString());
+        }
+
         return customparameterMap;
     }
 
@@ -370,7 +374,9 @@ public class DeployVMCmd extends BaseAsyncCreateCustomIdCmd implements SecurityG
                 throw new InvalidParameterValueException(msg);
             }
         }
-        if (ApiConstants.TpmEnabled.TPM.equals(getTpmEnabled())) {
+        if (ApiConstants.TpmVersion.V1_2.equals(getTpmVersion()) ||
+                ApiConstants.TpmVersion.V2_0.equals(getTpmVersion()) ||
+                ApiConstants.TpmVersion.NONE.equals(getTpmVersion())) {
             String msg = String.format("%s must be specified for the VM with boot type: %s. Valid values are: %s",
                     ApiConstants.TPM_ENABLED, getTpmVersion(), Arrays.toString(ApiConstants.TpmEnabled.values()));
             s_logger.error(msg);
