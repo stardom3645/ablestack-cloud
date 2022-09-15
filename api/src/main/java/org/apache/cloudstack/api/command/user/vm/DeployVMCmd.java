@@ -124,11 +124,11 @@ public class DeployVMCmd extends BaseAsyncCreateCustomIdCmd implements SecurityG
     private Boolean bootIntoSetup;
 
     @Parameter(name = ApiConstants.TPM_ENABLED, type = CommandType.STRING, required = false, description = "Boot with TPM", since = "4.18.0.0")
-    private String tpm_enabled;
+    private String tpmenabled;
 
 
     @Parameter(name = ApiConstants.TPM_VERSION, type = CommandType.STRING, required = false, description = "Boot with TPM", since = "4.18.0.0")
-    private String tpm_version;
+    private String tpmversion;
     //DataDisk information
     @ACL
     @Parameter(name = ApiConstants.DISK_OFFERING_ID, type = CommandType.UUID, entityType = DiskOfferingResponse.class, description = "the ID of the disk offering for the virtual machine. If the template is of ISO format,"
@@ -299,12 +299,12 @@ public class DeployVMCmd extends BaseAsyncCreateCustomIdCmd implements SecurityG
     }
 
     public ApiConstants.TpmVersion getTpmVersion() {
-        if (StringUtils.isNotBlank(tpm_version)) {
+        if (StringUtils.isNotBlank(tpmenabled)) {
             try {
-                String type = tpm_version.trim().toUpperCase();
+                String type = tpmenabled.trim().toUpperCase();
                 return ApiConstants.TpmVersion.valueOf(type);
             } catch (IllegalArgumentException e) {
-                String errMesg = "Invalid TpmVersion " + tpm_version + "Specified for vm " + getName()
+                String errMesg = "Invalid TpmVersion " + tpmenabled + "Specified for vm " + getName()
                         + " Valid values are: " + Arrays.toString(ApiConstants.BootType.values());
                 s_logger.warn(errMesg);
                 throw new InvalidParameterValueException(errMesg);
@@ -359,13 +359,13 @@ public class DeployVMCmd extends BaseAsyncCreateCustomIdCmd implements SecurityG
     }
 
     public ApiConstants.TpmEnabled getTpmEnabled() {
-        if (StringUtils.isNotBlank(tpm_enabled)) {
+        if (StringUtils.isNotBlank(tpmversion)) {
             try {
-                String mode = tpm_enabled.trim().toUpperCase();
+                String mode = tpmversion.trim().toUpperCase();
                 return ApiConstants.TpmEnabled.valueOf(mode);
             } catch (IllegalArgumentException e) {
                 String msg = String.format("Invalid %s: %s specified for VM: %s. Valid values are: %s",
-                        ApiConstants.TPM_ENABLED, tpm_enabled, getName(), Arrays.toString(ApiConstants.TpmEnabled.values()));
+                        ApiConstants.TPM_ENABLED, tpmversion, getName(), Arrays.toString(ApiConstants.TpmEnabled.values()));
                 s_logger.error(msg);
                 throw new InvalidParameterValueException(msg);
             }
