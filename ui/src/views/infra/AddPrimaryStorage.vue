@@ -327,11 +327,11 @@
           <a-form-item name="gluefsname" ref="gluefsname" :label="$t('label.gluefs.name')">
             <a-input v-model:value="form.gluefsname" :placeholder="$t('label.gluefs.name')" />
           </a-form-item>
-          <a-form-item name="gluefspath" ref="gluefspath">
+          <a-form-item name="gluefstargetpath" ref="gluefstargetpath">
             <template #label>
               <tooltip-label :title="$t('label.gluefs.path')" :tooltip="$t('label.gluefs.path')"/>
             </template>
-            <a-input v-model:value="form.gluefspath" :placeholder="$t('label.gluefs.path')"/>
+            <a-input v-model:value="form.gluefstargetpath" :placeholder="$t('label.gluefs.path')"/>
           </a-form-item>
           <a-form-item name="gluefssecret" ref="gluefssecret" :label="$t('label.gluefs.secret')">
             <a-input v-model:value="form.gluefssecret" :placeholder="$t('label.gluefs.secret')" />

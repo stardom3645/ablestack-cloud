@@ -110,12 +110,12 @@ public class AblestackPrimaryDataStoreLifeCycleImpl implements PrimaryDataStoreL
         boolean multi = false;
         try {
             String urlType = url.substring(0, 3);
-            if (urlType.equals("rbd") && url.contains(",")) {
+            if ((urlType.equals("glu") || urlType.equals("rbd")) && url.contains(",")) {
                 multi = true;
                 url = url.replaceAll(",", "/");
             }
             uri = new URI(UriUtils.encodeURIComponent(url));
-            if (uri.getScheme().equalsIgnoreCase("rbd")) {
+            if (uri.getScheme().equalsIgnoreCase("rbd") || uri.getScheme().equalsIgnoreCase("gluefs")) {
                 String uriHost = uri.getHost();
                 String uriPath = uri.getPath();
                 if (uriPath == null) {
@@ -127,12 +127,6 @@ public class AblestackPrimaryDataStoreLifeCycleImpl implements PrimaryDataStoreL
                     if (hostArr.length > 5) {
                         throw new InvalidParameterValueException("RADOS monitor can support up to 5 hosts.");
                     }
-                }
-            } else if (uri.getScheme().equalsIgnoreCase("gluefs")) {
-                String uriHost = uri.getHost();
-                String uriPath = uri.getPath();
-                if (uriHost == null || uriPath == null || uriHost.trim().isEmpty() || uriPath.trim().isEmpty()) {
-                    throw new InvalidParameterValueException("host or path is null, should be gluefs://user:secret@hostname/path");
                 }
             }
         } catch (URISyntaxException e) {
@@ -181,6 +175,10 @@ public class AblestackPrimaryDataStoreLifeCycleImpl implements PrimaryDataStoreL
         } else if (scheme.equalsIgnoreCase("gluefs")) {
             if (port == -1) {
                 port = 0;
+            }
+            if (multi) {
+                storageHost = storageHost + (hostPath.substring(0, hostPath.lastIndexOf("/")).replaceAll("/", ","));
+                hostPath = hostPath.substring(hostPath.lastIndexOf("/") + 1);
             }
             parameters.setType(StoragePoolType.SharedMountPoint);
             parameters.setHost(storageHost);
