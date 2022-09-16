@@ -2712,7 +2712,7 @@ public class VolumeApiServiceImpl extends ManagerBase implements VolumeApiServic
             }
 
             DettachCommand cmd = new DettachCommand(disk, vm.getInstanceName());
-            if ("ABLESTACK".equals(volumePool.getStorageProviderName()) && volumePool.getKrbdPath().length() > 0) {
+            if ("ABLESTACK".equals(volumePool.getStorageProviderName()) && volumePool.getKrbdPath() != null) {
                 cmd.setProvider(volumePool.getStorageProviderName());
                 cmd.setKrbdpath(volumePool.getKrbdPath());
             }
