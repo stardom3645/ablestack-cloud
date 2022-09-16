@@ -3903,7 +3903,7 @@ public class VolumeApiServiceImpl extends ManagerBase implements VolumeApiServic
 
                 AttachCommand cmd = new AttachCommand(disk, vm.getInstanceName());
 
-                if ("ABLESTACK".equals(volumeToAttachStoragePool.getStorageProviderName()) && volumeToAttachStoragePool.getKrbdPath().length() > 0) {
+                if ("ABLESTACK".equals(volumeToAttachStoragePool.getStorageProviderName()) && volumeToAttachStoragePool.getKrbdPath() != null ) {
                     cmd.setProvider(volumeToAttachStoragePool.getStorageProviderName());
                     cmd.setKrbdpath(volumeToAttachStoragePool.getKrbdPath());
                 }
