@@ -1202,7 +1202,7 @@ public class VirtualMachineManagerImpl extends ManagerBase implements VirtualMac
                     }
                     StartCommand command = command = new StartCommand(vmTO, dest.getHost(), getExecuteInSequence(vm.getHypervisorType()));
 
-                    if ("ABLESTACK".equals(provider) && krbdpath.length() > 0) {
+                    if ("ABLESTACK".equals(provider) && krbdpath != null) {
                         command.setProvider(provider);
                         command.setKrbdpath(krbdpath);
                     }
