@@ -835,7 +835,7 @@ export default {
           if (values.url && values.url.length > 0) {
             params.url = values.url
           }
-        }``
+        }
 
         if (values.provider === 'PowerFlex') {
           params.url = this.powerflexURL(values.powerflexGateway, values.powerflexGatewayUsername,
