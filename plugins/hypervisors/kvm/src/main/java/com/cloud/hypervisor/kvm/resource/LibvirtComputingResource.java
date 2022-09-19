@@ -2547,11 +2547,11 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
     /**
      * Adds TPM device component to VM
      */
-    protected DevicesDef createTpmDef(VirtualMachineTO vmTO, GuestDef guest, String TpmVersion){
+    protected DevicesDef createTpmDef(VirtualMachineTO vmTO, GuestDef guest, String tpmVersion){
         DevicesDef devices = new DevicesDef();
         devices.setEmulatorPath(_hypervisorPath);
         devices.setGuestType(guest.getGuestType());
-        devices.addDevice(new LibvirtVMDef.TPMDef(TpmVersion));
+        devices.addDevice(new LibvirtVMDef.TPMDef(tpmVersion));
 
         return devices;
     }
