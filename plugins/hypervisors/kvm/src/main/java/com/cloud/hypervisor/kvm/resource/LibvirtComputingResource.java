@@ -2481,7 +2481,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
 
         if (MapUtils.isNotEmpty(customParams) && (
                 customParams.containsKey(GuestDef.TpmVersion.V2_0.toString()) ||
-                        customParams.containsKey(GuestDef.TpmVersion.V1_2.toString())
+                customParams.containsKey(GuestDef.TpmVersion.V1_2.toString())
         )) {
             isTpmEnabled = true;
             s_logger.debug(String.format("Enabled TPM for VM UUID [%s].", uuid));
