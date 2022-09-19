@@ -612,7 +612,7 @@ public class LibvirtStorageAdaptor implements StorageAdaptor {
         s_logger.info("Attempting to create storage pool " + name + " (" + type.toString() + ") in libvirt");
 
         // gluefs mount script call
-        if (type == StoragePoolType.SharedMountPoint && "ABLESTACK".equals(details.get("provider"))) {
+        if (type == StoragePoolType.SharedMountPoint && details.get("provider") != null && "ABLESTACK".equals(details.get("provider"))) {
             s_logger.info("Run the command to create the gluefs mount.");
             Boolean gluefs = createGluefsMount(host, path, userInfo, details);
             if (!gluefs) {
