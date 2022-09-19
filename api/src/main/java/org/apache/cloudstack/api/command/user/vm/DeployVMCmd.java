@@ -331,6 +331,7 @@ public class DeployVMCmd extends BaseAsyncCreateCustomIdCmd implements SecurityG
             customparameterMap.put("rootdisksize", rootdisksize.toString());
         }
 
+        s_logger.debug("tpmVersion:" + getTpmVersion().toString());
         if (getTpmVersion() != null || getTpmVersion() != ApiConstants.TpmVersion.NONE){
             customparameterMap.put("tpmVersion", getTpmVersion().toString());
         }
