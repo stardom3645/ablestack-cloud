@@ -147,6 +147,7 @@
           </template>
           <a-select
             v-model:value="form.protocol"
+            @change="updateProtocolGlue"
             showSearch
             optionFilterProp="label"
             :filterOption="(input, option) => {
@@ -428,7 +429,7 @@ export default {
       this.form = reactive({
         scope: 'cluster',
         hypervisor: this.hypervisors[0],
-        provider: 'DefaultPrimary'
+        provider: 'ABLESTACK' 
       })
       this.rules = reactive({
         zone: [{ required: true, message: this.$t('label.required') }],
@@ -549,7 +550,7 @@ export default {
       } else if (this.hypervisorType === 'LXC') {
         this.protocols = ['nfs', 'SharedMountPoint', 'RBD']
       } else {
-        this.protocols = ['GlueFS', 'nfs']
+        this.protocols = ['Glue', 'GlueFS', 'nfs']
       }
       if (!value) {
         this.form.protocol = this.protocols[0]
@@ -700,6 +701,11 @@ export default {
         this.form.protocol = 'custom'
       } else {
         this.fetchHypervisor(value)
+      }
+    },
+    updateProtocolGlue (value) {
+      if (value === 'Glue' || value === 'GlueFS') {
+        this.form.provider = 'ABLESTACK'
       }
     },
     closeModal () {
