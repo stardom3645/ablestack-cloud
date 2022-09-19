@@ -1235,7 +1235,7 @@ public class KVMStorageProcessor implements StorageProcessor {
                             throw new InternalErrorException("Error while mapping disk "+attachingDisk.getPath()+" on host");
                         }
                     }
-                    if("ABLESTACK".equals(provider)){
+                    if(provider != null && !provider.isEmpty() && "ABLESTACK".equals(provider)){
                         final String unmap = resource.unmapRbdDevice(attachingDisk);
                         if (unmap == null) {
                             attachingDisk.setPath(krbdpath + "/" + attachingDisk.getPath());
@@ -1248,7 +1248,7 @@ public class KVMStorageProcessor implements StorageProcessor {
 
                 for (final DiskDef disk : disks) {
                     final String file = disk.getDiskPath();
-                    if(attachingPool.getType() == StoragePoolType.RBD && "ABLESTACK".equals(provider)) {
+                    if(attachingPool.getType() == StoragePoolType.RBD && provider != null && !provider.isEmpty() && "ABLESTACK".equals(provider)) {
                         if (file != null && file.equalsIgnoreCase(krbdpath + "/" + attachingDisk.getPath())) {
                             diskdef = disk;
                             break;
@@ -1290,7 +1290,7 @@ public class KVMStorageProcessor implements StorageProcessor {
                             throw new InternalErrorException("Error while mapping disk "+attachingDisk.getPath()+" on host");
                         }
                     } else {
-                        if("ABLESTACK".equals(provider)){
+                        if(provider != null && !provider.isEmpty() && "ABLESTACK".equals(provider)){
                             final String device = resource.mapRbdDevice(attachingDisk);
                             if (device != null) {
                                 s_logger.debug("RBD device on host is: " + device);
@@ -1362,7 +1362,7 @@ public class KVMStorageProcessor implements StorageProcessor {
             if (dm != null) {
                 dm.free();
             }
-            if(!attach && attachingPool.getType() == StoragePoolType.RBD && "ABLESTACK".equals(provider)){
+            if(!attach && attachingPool.getType() == StoragePoolType.RBD && provider != null && !provider.isEmpty() && "ABLESTACK".equals(provider)){
                 final String unmap = resource.unmapRbdDevice(attachingDisk);
                 if (unmap == null) {
                     attachingDisk.setPath(krbdpath + "/" + attachingDisk.getPath());

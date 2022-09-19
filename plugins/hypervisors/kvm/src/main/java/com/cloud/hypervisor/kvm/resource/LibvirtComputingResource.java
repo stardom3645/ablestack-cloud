@@ -2965,7 +2965,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
                             We store the secret under the UUID of the pool, that's why
                             we pass the pool's UUID as the authSecret
                      */
-                    if("ABLESTACK".equals(provider)){
+                    if(provider != null && !provider.isEmpty() && "ABLESTACK".equals(provider)){
                         final String device = mapRbdDevice(physicalDisk);
                         if (device != null) {
                             s_logger.debug("RBD device on host is: " + device);
