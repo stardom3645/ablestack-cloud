@@ -415,7 +415,7 @@ public class LibvirtComputingResourceTest {
         GuestDef guest = new GuestDef();
         guest.setGuestType(GuestType.KVM);
 
-        DevicesDef devicesDef = libvirtComputingResourceSpy.createDevicesDef(to, guest, to.getCpus() + 1, false, false);
+        DevicesDef devicesDef = libvirtComputingResourceSpy.createDevicesDef(to, guest, to.getCpus() + 1, false, false,"V2_0");
         verifyDevices(devicesDef, to);
     }
 
@@ -428,7 +428,7 @@ public class LibvirtComputingResourceTest {
         GuestDef guest = new GuestDef();
         guest.setGuestType(GuestType.KVM);
 
-        DevicesDef devicesDef = libvirtComputingResourceSpy.createDevicesDef(to, guest, to.getCpus() + 1, false, false);
+        DevicesDef devicesDef = libvirtComputingResourceSpy.createDevicesDef(to, guest, to.getCpus() + 1, false, false,"V2_0");
         verifyDevices(devicesDef, to);
 
         Document domainDoc = parse(devicesDef.toString());

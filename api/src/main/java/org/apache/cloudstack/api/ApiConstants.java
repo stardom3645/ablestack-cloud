@@ -965,12 +965,12 @@ public class ApiConstants {
         }
     }
 
-    public enum TpmEnabled {
-        V2_0("V2_0"), V1_2("V1_2"), NONE("NONE");
+    public enum TpmVersion {
+        V2_0("V2_0"), V1_2("V1_2"), TPM("TPM"), NONE("NONE");
 
         String _type;
 
-        TpmEnabled(String type) {
+        TpmVersion(String type) {
             _type = type;
         }
 

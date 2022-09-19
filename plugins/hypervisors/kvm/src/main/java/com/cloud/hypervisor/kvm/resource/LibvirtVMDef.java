@@ -72,12 +72,12 @@ public class LibvirtVMDef {
             }
         }
 
-        enum TpmEnabled {
+        enum TpmVersion {
             V2_0("V2_0"), V1_2("V1_2"), NONE("NONE");
 
             String _type;
 
-            TpmEnabled(String type) {
+            TpmVersion(String type) {
                 _type = type;
             }
 
@@ -117,7 +117,7 @@ public class LibvirtVMDef {
         private String _nvram;
         private String _nvramTemplate;
 
-        private TpmEnabled _tpmEnabled;
+        private TpmVersion _tpmVersion;
 
         public static final String GUEST_LOADER_SECURE = "guest.loader.secure";
         public static final String GUEST_LOADER_LEGACY = "guest.loader.legacy";
@@ -180,12 +180,12 @@ public class LibvirtVMDef {
             this._bootmode = bootmode;
         }
 
-        public TpmEnabled getTPMEnabled() {
-            return this._tpmEnabled;
+        public TpmVersion getTpmVersion() {
+            return this._tpmVersion;
         }
 
-        public void setTPMEnabled(TpmEnabled tpmEnabled) {
-            this._tpmEnabled = tpmEnabled;
+        public void setTPMVersion(TpmVersion tpmVersion) {
+            this._tpmVersion = tpmVersion;
         }
 
         @Override
