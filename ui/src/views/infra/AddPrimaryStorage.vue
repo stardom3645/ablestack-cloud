@@ -429,7 +429,7 @@ export default {
       this.form = reactive({
         scope: 'cluster',
         hypervisor: this.hypervisors[0],
-        provider: 'ABLESTACK' 
+        provider: 'ABLESTACK'
       })
       this.rules = reactive({
         zone: [{ required: true, message: this.$t('label.required') }],
