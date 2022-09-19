@@ -298,11 +298,11 @@ public class DeployVMCmd extends BaseAsyncCreateCustomIdCmd implements SecurityG
         return null;
     }
 
-    public ApiConstants.TpmVersion getTpmVersion() {
+    public ApiConstants.TpmEnabled getTpmVersion() {
         if (StringUtils.isNotBlank(tpmenabled)) {
             try {
                 String type = tpmenabled.trim().toUpperCase();
-                return ApiConstants.TpmVersion.valueOf(type);
+                return ApiConstants.TpmEnabled.valueOf(type);
             } catch (IllegalArgumentException e) {
                 String errMesg = "Invalid TpmVersion " + tpmenabled + "Specified for vm " + getName()
                         + " Valid values are: " + Arrays.toString(ApiConstants.BootType.values());
@@ -374,9 +374,9 @@ public class DeployVMCmd extends BaseAsyncCreateCustomIdCmd implements SecurityG
                 throw new InvalidParameterValueException(msg);
             }
         }
-        if (ApiConstants.TpmVersion.V1_2.equals(getTpmVersion()) ||
-                ApiConstants.TpmVersion.V2_0.equals(getTpmVersion()) ||
-                ApiConstants.TpmVersion.NONE.equals(getTpmVersion())) {
+        if (ApiConstants.TpmEnabled.V1_2.equals(getTpmVersion()) ||
+                ApiConstants.TpmEnabled.V2_0.equals(getTpmVersion()) ||
+                ApiConstants.TpmEnabled.NONE.equals(getTpmVersion())) {
             String msg = String.format("%s must be specified for the VM with boot type: %s. Valid values are: %s",
                     ApiConstants.TPM_ENABLED, getTpmVersion(), Arrays.toString(ApiConstants.TpmEnabled.values()));
             s_logger.error(msg);

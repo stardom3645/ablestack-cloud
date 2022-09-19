@@ -966,15 +966,13 @@ public class ApiConstants {
     }
 
     public enum TpmEnabled {
-        TPM, NONE;
+        V2_0("V2_0"), V1_2("V1_2"), NONE("NONE");
 
-        @Override
-        public String toString() {
-            return this.name();
+        String _type;
+
+        TpmEnabled(String type) {
+            _type = type;
         }
-    }
-    public enum TpmVersion {
-        NONE, V1_2, V2_0;
 
         @Override
         public String toString() {
