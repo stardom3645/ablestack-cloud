@@ -1880,9 +1880,7 @@ public class AccountManagerImpl extends ManagerBase implements AccountManager, M
         } else {
             account = _accountDao.findEnabledAccount(accountName, domainId);
         }
-
         final AccountVO acctForUpdate = _accountDao.findById(account.getId());
-
         // Check if account exists
         if (account == null || account.getType() == Account.Type.PROJECT) {
             s_logger.error("Unable to find account by accountId: " + accountId + " OR by name: " + accountName + " in domain " + domainId);
@@ -1933,9 +1931,7 @@ public class AccountManagerImpl extends ManagerBase implements AccountManager, M
                 throw new InvalidParameterValueException("Role with ID '" + roleId.toString() + "' " +
                         "is not found or not available for the account '" + account.getUuid() + "' " +
                         "in the domain '" + domainId + "'.");
-            }
-
-            Role role = roleService.findRole(roleId);
+            }            Role role = roleService.findRole(roleId);
             isValidRoleChange(account, role);
             acctForUpdate.setRoleId(roleId);
             acctForUpdate.setType(role.getRoleType().getAccountType());
@@ -2800,11 +2796,9 @@ public class AccountManagerImpl extends ManagerBase implements AccountManager, M
     @Override
     public void buildACLSearchCriteria(SearchCriteria<? extends ControlledEntity> sc, Long domainId, boolean isRecursive, List<Long> permittedAccounts,
             ListProjectResourcesCriteria listProjectResourcesCriteria) {
-
         if (listProjectResourcesCriteria != null) {
             sc.setJoinParameters("accountSearch", "type", Account.Type.PROJECT);
         }
-
         if (!permittedAccounts.isEmpty()) {
             sc.setParameters("accountIdIN", permittedAccounts.toArray());
         } else if (domainId != null) {

@@ -2212,6 +2212,7 @@ public class NetworkServiceImpl extends ManagerBase implements NetworkService, C
         if (keyword != null) {
             SearchCriteria<NetworkVO> ssc = _networksDao.createSearchCriteria();
             ssc.addOr("name", SearchCriteria.Op.LIKE, "%" + keyword + "%");
+            ssc.addOr("uuid", SearchCriteria.Op.LIKE, "%" + keyword + "%");
             sc.addAnd("name", SearchCriteria.Op.SC, ssc);
         }
 
@@ -3684,6 +3685,7 @@ public class NetworkServiceImpl extends ManagerBase implements NetworkService, C
         }
 
         if (keyword != null) {
+            //ssc.addOr("uuid", SearchCriteria.Op.LIKE, "%" + keyword + "%");
             sc.addAnd("name", SearchCriteria.Op.LIKE, "%" + keyword + "%");
         }
 
@@ -5287,7 +5289,8 @@ public class NetworkServiceImpl extends ManagerBase implements NetworkService, C
             vlanSearch.addAnd("takenAt", Op.NNULL);
         }
         if (keyword != null) {
-            vlanSearch.addAnd("vnet", Op.LIKE, "%" + keyword + "%");
+           vlanSearch.addOr("uuid", SearchCriteria.Op.LIKE, "%" + keyword + "%");
+           vlanSearch.addAnd("vnet", Op.LIKE, "%" + keyword + "%");
         }
         Long pageSizeVal = cmd.getPageSizeVal();
         Long startIndex = cmd.getStartIndex();

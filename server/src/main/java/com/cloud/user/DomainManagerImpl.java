@@ -719,7 +719,7 @@ public class DomainManagerImpl extends ManagerBase implements DomainManager, Dom
         if (keyword != null) {
             SearchCriteria<DomainVO> ssc = _domainDao.createSearchCriteria();
             ssc.addOr("name", SearchCriteria.Op.LIKE, "%" + keyword + "%");
-
+            ssc.addOr("uuid", SearchCriteria.Op.LIKE, "%" + keyword + "%");
             sc.addAnd("name", SearchCriteria.Op.SC, ssc);
         }
 
