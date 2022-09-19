@@ -2558,7 +2558,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
     /**
      * Adds devices components to VM.
      */
-    protected DevicesDef createDevicesDef(VirtualMachineTO vmTO, GuestDef guest, int vcpus, boolean isUefiEnabled, boolean isTpmEnabled, String TpmVersion) {
+    protected DevicesDef createDevicesDef(VirtualMachineTO vmTO, GuestDef guest, int vcpus, boolean isUefiEnabled, boolean isTpmEnabled, String tpmVersion) {
         DevicesDef devices = new DevicesDef();
         devices.setEmulatorPath(_hypervisorPath);
         devices.setGuestType(guest.getGuestType());
@@ -2580,7 +2580,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
         }
         if (isTpmEnabled)
         {
-            devices.addDevice(createTpmDef(vmTO, guest, TpmVersion));
+            devices.addDevice(createTpmDef(vmTO, guest, tpmVersion));
         }
         DiskDef.DiskBus busT = getDiskModelFromVMDetail(vmTO);
         if (busT == null) {
