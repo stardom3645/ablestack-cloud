@@ -117,6 +117,8 @@ public class LibvirtVMDef {
         private String _nvram;
         private String _nvramTemplate;
 
+        private TpmEnabled _tpmEnabled;
+
         public static final String GUEST_LOADER_SECURE = "guest.loader.secure";
         public static final String GUEST_LOADER_LEGACY = "guest.loader.legacy";
         public static final String GUEST_NVRAM_PATH = "guest.nvram.path";
@@ -178,7 +180,14 @@ public class LibvirtVMDef {
             this._bootmode = bootmode;
         }
 
-        public boolean getTPMEnabled() {return TpmEnabled;}
+        public TpmEnabled getTPMEnabled() {
+            return this._tpmEnabled;
+        }
+
+        public void setTPMEnabled(TpmEnabled tpmEnabled) {
+            this._tpmEnabled = tpmEnabled;
+        }
+
         @Override
         public String toString() {
             if (_type == GuestType.KVM) {
