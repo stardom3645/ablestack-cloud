@@ -119,12 +119,12 @@ public class FirstFitAllocator extends AdapterBase implements HostAllocator {
         boolean isVMDeployedWithUefi = false;
         boolean isVMDeployedWithTpm = false;
         UserVmDetailVO userVmDetailVO = _userVmDetailsDao.findDetail(vmProfile.getId(), "UEFI");
-        UserVmDetailVO userVmTpmVO = _userVmDetailsDao.findDetail(vmProfile.getId(), "TPM");
+        UserVmDetailVO userVmTpmVO = _userVmDetailsDao.findDetail(vmProfile.getId(), "tpmVersion");
         if(userVmDetailVO != null){
             if ("secure".equalsIgnoreCase(userVmDetailVO.getValue()) || "legacy".equalsIgnoreCase(userVmDetailVO.getValue())) {
                 isVMDeployedWithUefi = true;
             }
-            if ("TPM".equalsIgnoreCase(userVmTpmVO.getValue())){
+            if ("tpmVersion".equalsIgnoreCase(userVmTpmVO.getValue())){
                 isVMDeployedWithTpm = true;
             }
         }

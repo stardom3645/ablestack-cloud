@@ -147,6 +147,7 @@ import com.cloud.hypervisor.kvm.resource.LibvirtVMDef.RngDef.RngBackendModel;
 import com.cloud.hypervisor.kvm.resource.LibvirtVMDef.SCSIDef;
 import com.cloud.hypervisor.kvm.resource.LibvirtVMDef.SerialDef;
 import com.cloud.hypervisor.kvm.resource.LibvirtVMDef.TermPolicy;
+import com.cloud.hypervisor.kvm.resource.LibvirtVMDef.TPMDef;
 import com.cloud.hypervisor.kvm.resource.LibvirtVMDef.VideoDef;
 import com.cloud.hypervisor.kvm.resource.LibvirtVMDef.WatchDogDef;
 import com.cloud.hypervisor.kvm.resource.LibvirtVMDef.WatchDogDef.WatchDogAction;
@@ -2497,15 +2498,14 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
         if (dpdkSupport && (!extraConfig.containsKey(DpdkHelper.DPDK_NUMA) || !extraConfig.containsKey(DpdkHelper.DPDK_HUGE_PAGES))) {
             s_logger.info(String.format("DPDK is enabled for VM [%s], but it needs extra configurations for CPU NUMA and Huge Pages for VM deployment.", vmTO.toString()));
         }
-        configureVM(vmTO, vm, customParams, isUefiEnabled, isSecureBoot, bootMode, isTpmEnabled, tpmVersion, extraConfig, uuid);
+        configureVM(vmTO, vm, customParams, isUefiEnabled, isSecureBoot, bootMode, extraConfig, uuid);
         return vm;
     }
 
     /**
      * Configures created VM from specification, adding the necessary components to VM.
      */
-    private void configureVM(VirtualMachineTO vmTO, LibvirtVMDef vm, Map<String, String> customParams, boolean isUefiEnabled, boolean isSecureBoot, String bootMode,
-                             boolean isTpmEnabled, String tpmVersion, Map<String, String> extraConfig, String uuid) {
+    private void configureVM(VirtualMachineTO vmTO, LibvirtVMDef vm, Map<String, String> customParams, boolean isUefiEnabled, boolean isSecureBoot, String bootMode, Map<String, String> extraConfig, String uuid) {
         s_logger.debug(String.format("Configuring VM with UUID [%s].", uuid));
 
         GuestDef guest = createGuestFromSpec(vmTO, vm, uuid, customParams);
@@ -2531,6 +2531,23 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
 
         vm.addComp(createTermPolicy());
         vm.addComp(createClockDef(vmTO));
+
+        String tpmVersion;
+        boolean isTpmEnabled;
+        customParams.forEach((strKey, strValue)->{
+            s_logger.debug( "ycyun: " + strKey + " : " + strValue );
+        });
+        if(customParams.containsKey(GuestDef.TpmVersion.V2_0.toString())) {
+            tpmVersion = customParams.get(GuestDef.TpmVersion.V2_0.toString());
+            isTpmEnabled = true;
+        }else if(customParams.containsKey(GuestDef.TpmVersion.V1_2.toString())) {
+            tpmVersion = customParams.get(GuestDef.TpmVersion.V1_2.toString());
+            isTpmEnabled = true;
+        }else{
+            tpmVersion = GuestDef.TpmVersion.NONE.toString();
+            isTpmEnabled = false;
+        }
+        s_logger.debug("tpmEnabled: " + isTpmEnabled + " tpmVersion: " + tpmVersion);
         vm.addComp(createDevicesDef(vmTO, guest, vcpus, isUefiEnabled, isTpmEnabled, tpmVersion));
         addExtraConfigsToVM(vmTO, vm, extraConfig);
     }
@@ -2547,13 +2564,9 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
     /**
      * Adds TPM device component to VM
      */
-    protected DevicesDef createTpmDef(VirtualMachineTO vmTO, GuestDef guest, String tpmVersion){
-        DevicesDef devices = new DevicesDef();
-        devices.setEmulatorPath(_hypervisorPath);
-        devices.setGuestType(guest.getGuestType());
-        devices.addDevice(new LibvirtVMDef.TPMDef(tpmVersion));
+    protected TPMDef createTpmDef(String tpmVersion){
 
-        return devices;
+        return new TPMDef(tpmVersion);
     }
     /**
      * Adds devices components to VM.
@@ -2578,9 +2591,8 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
         if (isGuestAarch64()) {
             createArm64UsbDef(devices);
         }
-        if (isTpmEnabled)
-        {
-            devices.addDevice(createTpmDef(vmTO, guest, tpmVersion));
+        if (isTpmEnabled) {
+            devices.addDevice(createTpmDef(tpmVersion));
         }
         DiskDef.DiskBus busT = getDiskModelFromVMDetail(vmTO);
         if (busT == null) {
