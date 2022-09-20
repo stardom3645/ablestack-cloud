@@ -126,7 +126,7 @@ public class DeployVMCmd extends BaseAsyncCreateCustomIdCmd implements SecurityG
 
 
     @Parameter(name = ApiConstants.TPM_VERSION, type = CommandType.STRING, required = false, description = "Boot with TPM", since = "4.18.0.0")
-    private String tpmversion;
+    private String tpmVersion;
     //DataDisk information
     @ACL
     @Parameter(name = ApiConstants.DISK_OFFERING_ID, type = CommandType.UUID, entityType = DiskOfferingResponse.class, description = "the ID of the disk offering for the virtual machine. If the template is of ISO format,"
@@ -297,12 +297,13 @@ public class DeployVMCmd extends BaseAsyncCreateCustomIdCmd implements SecurityG
     }
 
     public ApiConstants.TpmVersion getTpmVersion() {
-        if (StringUtils.isNotBlank(tpmversion)) {
+        s_logger.debug(tpmVersion);
+        if (StringUtils.isNotBlank(tpmVersion)) {
             try {
-                String type = tpmversion.trim().toUpperCase();
+                String type = tpmVersion.trim().toUpperCase();
                 return ApiConstants.TpmVersion.valueOf(type);
             } catch (IllegalArgumentException e) {
-                String errMesg = "Invalid TpmVersion " + tpmversion + "Specified for vm " + getName()
+                String errMesg = "Invalid TpmVersion " + tpmVersion + "Specified for vm " + getName()
                         + " Valid values are: " + Arrays.toString(ApiConstants.BootType.values());
                 s_logger.warn(errMesg);
                 throw new InvalidParameterValueException(errMesg);
@@ -331,8 +332,11 @@ public class DeployVMCmd extends BaseAsyncCreateCustomIdCmd implements SecurityG
             customparameterMap.put("rootdisksize", rootdisksize.toString());
         }
 
-        s_logger.debug("tpmVersion:" + getTpmVersion().toString());
+        customparameterMap.forEach((strKey, strValue)->{
+            s_logger.debug( "[DeployVMCmd 336] customparameterMap ycyun: " + strKey + " : " + strValue );
+        });
         if (getTpmVersion() != null || getTpmVersion() != ApiConstants.TpmVersion.NONE){
+            s_logger.debug("tpmVersion:" + getTpmVersion().toString());
             customparameterMap.put("tpmVersion", getTpmVersion().toString());
         }
 
