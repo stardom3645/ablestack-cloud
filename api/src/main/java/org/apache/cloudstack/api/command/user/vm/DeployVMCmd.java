@@ -346,15 +346,7 @@ public class DeployVMCmd extends BaseAsyncCreateCustomIdCmd implements SecurityG
             s_logger.debug("tpmVersion key:" + customparameterMap.get("tpmVersion"));
             customparameterMap.put("tpmVersion", customparameterMap.get("tpmVersion"));
 
-        }else if(getTpmVersion() != null){
-            s_logger.debug("tpmVersion null:" + getTpmVersion().toString());
-            customparameterMap.put("tpmVersion", getTpmVersion().toString());
-
-        }else if(getTpmVersion() != ApiConstants.TpmVersion.NONE){
-            s_logger.debug("tpmVersion get:" + getTpmVersion().toString());
-            customparameterMap.put("tpmVersion", getTpmVersion().toString());
         }
-
         return customparameterMap;
     }
 
