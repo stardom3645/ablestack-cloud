@@ -568,7 +568,7 @@
                         v-model:value="form.userdata">
                       </a-textarea>
                     </a-form-item>
-                    <a-form-item :label="$t('label.tpm')" name="tpm" ref="tpm">
+                    <a-form-item :label="$t('label.tpm')" name="tpmVersion" ref="tpmVersion">
                       <a-select
                         v-model:value="form.tpm"
                         showSearch
