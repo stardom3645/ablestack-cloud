@@ -45,6 +45,7 @@ import javax.naming.ConfigurationException;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.ParserConfigurationException;
 
+import org.apache.cloudstack.api.ApiConstants;
 import org.apache.cloudstack.storage.configdrive.ConfigDrive;
 import org.apache.cloudstack.storage.to.PrimaryDataStoreTO;
 import org.apache.cloudstack.storage.to.TemplateObjectTO;
@@ -2773,6 +2774,17 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
             guest.setMachineType(Q35);
             if (SECURE.equalsIgnoreCase(customParams.get(GuestDef.BootType.UEFI.toString()))) {
                 guest.setBootMode(GuestDef.BootMode.SECURE);
+            }
+        }
+        customParams.forEach((strKey, strValue)->{
+            s_logger.debug( "[LibvirtComputingResource 2780] customParams ycyun: " + strKey + " : " + strValue );
+        });
+        if (MapUtils.isNotEmpty(customParams)) {
+            if(customParams.containsKey(GuestDef.TpmVersion.V1_2.toString())){
+                guest.setTPMVersion(GuestDef.TpmVersion.V1_2);
+            }else if (customParams.containsKey(GuestDef.TpmVersion.V2_0.toString())){
+
+                guest.setTPMVersion(GuestDef.TpmVersion.V2_0);
             }
         }
         guest.setUuid(uuid);
