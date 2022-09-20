@@ -2479,7 +2479,9 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
 
             bootMode = customParams.get(GuestDef.BootType.UEFI.toString());
         }
-
+        customParams.forEach((strKey, strValue)->{
+            s_logger.debug("create vm from spec ycyun: " + strKey + " : " + strValue );
+        });
         if (MapUtils.isNotEmpty(customParams) && (
                 customParams.containsKey(GuestDef.TpmVersion.V2_0.toString()) ||
                 customParams.containsKey(GuestDef.TpmVersion.V1_2.toString())

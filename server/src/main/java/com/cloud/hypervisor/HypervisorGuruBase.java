@@ -222,6 +222,9 @@ public abstract class HypervisorGuruBase extends AdapterBase implements Hypervis
         to.setBootArgs(vmProfile.getBootArgs());
 
         Map<VirtualMachineProfile.Param, Object> map = vmProfile.getParameters();
+        map.forEach((strKey, strValue)->{
+            s_logger.debug("toVirtualMachineTO[226] ycyun: " + strKey + " : " + strValue );
+        });
         if (MapUtils.isNotEmpty(map)) {
             if (map.containsKey(VirtualMachineProfile.Param.BootMode)) {
                 if (StringUtils.isNotBlank((String) map.get(VirtualMachineProfile.Param.BootMode))) {
@@ -232,6 +235,12 @@ public abstract class HypervisorGuruBase extends AdapterBase implements Hypervis
             if (map.containsKey(VirtualMachineProfile.Param.BootType)) {
                 if (StringUtils.isNotBlank((String) map.get(VirtualMachineProfile.Param.BootType))) {
                     to.setBootType((String) map.get(VirtualMachineProfile.Param.BootType));
+                }
+            }
+
+            if (map.containsKey(VirtualMachineProfile.Param.TpmFlag)){
+                if (StringUtils.isNotBlank((String) map.get(VirtualMachineProfile.Param.TpmFlag))) {
+                    to.setTpmVersion((String) map.get(VirtualMachineProfile.Param.TpmFlag));
                 }
             }
         }
