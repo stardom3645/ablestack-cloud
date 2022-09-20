@@ -124,13 +124,15 @@ public class FirstFitAllocator extends AdapterBase implements HostAllocator {
             if ("secure".equalsIgnoreCase(userVmDetailVO.getValue()) || "legacy".equalsIgnoreCase(userVmDetailVO.getValue())) {
                 isVMDeployedWithUefi = true;
             }
+        }
+        s_logger.info(" Guest VM is requested with Custom[UEFI] Boot Type "+ isVMDeployedWithUefi);
+        if(userVmTpmVO != null){
+
             if ("tpmVersion".equalsIgnoreCase(userVmTpmVO.getValue())){
                 isVMDeployedWithTpm = true;
             }
         }
-        s_logger.info(" Guest VM is requested with Custom[UEFI] Boot Type "+ isVMDeployedWithUefi);
-
-
+        s_logger.info(" Guest VM is requested with Custom[TPM] version "+ isVMDeployedWithTpm);
         if (type == Host.Type.Storage) {
             // FirstFitAllocator should be used for user VMs only since it won't care whether the host is capable of routing or not
             return new ArrayList<Host>();

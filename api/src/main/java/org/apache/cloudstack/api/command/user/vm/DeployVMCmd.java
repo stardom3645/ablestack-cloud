@@ -282,6 +282,7 @@ public class DeployVMCmd extends BaseAsyncCreateCustomIdCmd implements SecurityG
     }
 
     public ApiConstants.BootType getBootType() {
+        s_logger.debug("inBootType ycyun: " + bootType + " bootType: " + StringUtils.isNotBlank(bootType));
         if (StringUtils.isNotBlank(bootType)) {
             try {
                 String type = bootType.trim().toUpperCase();
@@ -297,7 +298,7 @@ public class DeployVMCmd extends BaseAsyncCreateCustomIdCmd implements SecurityG
     }
 
     public ApiConstants.TpmVersion getTpmVersion() {
-        s_logger.debug("inTpmVersion ycyun: " + tpmVersion);
+        s_logger.debug("inTpmVersion ycyun: " + tpmVersion + " tpmVersion: " + StringUtils.isNotBlank(tpmVersion));
         if (StringUtils.isNotBlank(tpmVersion)) {
             try {
                 String type = tpmVersion.trim().toUpperCase();
