@@ -297,7 +297,7 @@ public class DeployVMCmd extends BaseAsyncCreateCustomIdCmd implements SecurityG
     }
 
     public ApiConstants.TpmVersion getTpmVersion() {
-        s_logger.debug(tpmVersion);
+        s_logger.debug("inTpmVersion ycyun: " + tpmVersion);
         if (StringUtils.isNotBlank(tpmVersion)) {
             try {
                 String type = tpmVersion.trim().toUpperCase();
@@ -347,6 +347,9 @@ public class DeployVMCmd extends BaseAsyncCreateCustomIdCmd implements SecurityG
             s_logger.debug("tpmVersion key:" + customparameterMap.get("tpmVersion"));
             customparameterMap.put("tpmVersion", customparameterMap.get("tpmVersion"));
 
+        }else if(getTpmVersion() != null){
+            s_logger.debug("tpmVersion getTpmVersion:" + customparameterMap.get("tpmVersion"));
+            customparameterMap.put("tpmVersion", customparameterMap.get("tpmVersion"));
         }
         return customparameterMap;
     }
