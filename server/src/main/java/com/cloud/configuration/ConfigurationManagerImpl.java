@@ -6501,7 +6501,7 @@ public class ConfigurationManagerImpl extends ManagerBase implements Configurati
             final SearchCriteria<NetworkOfferingJoinVO> ssc = networkOfferingJoinDao.createSearchCriteria();
             ssc.addOr("displayText", SearchCriteria.Op.LIKE, "%" + keyword + "%");
             ssc.addOr("name", SearchCriteria.Op.LIKE, "%" + keyword + "%");
-
+            ssc.addOr("uuid", SearchCriteria.Op.LIKE, "%" + keyword + "%");
             sc.addAnd("name", SearchCriteria.Op.SC, ssc);
         }
 

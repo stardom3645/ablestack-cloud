@@ -736,6 +736,7 @@ public class SnapshotManagerImpl extends MutualExclusiveIdsManagerBase implement
         if (keyword != null) {
             SearchCriteria<SnapshotVO> ssc = _snapshotDao.createSearchCriteria();
             ssc.addOr("name", SearchCriteria.Op.LIKE, "%" + keyword + "%");
+            ssc.addOr("uuid", SearchCriteria.Op.LIKE, "%" + keyword + "%");
             sc.addAnd("name", SearchCriteria.Op.SC, ssc);
         }
 

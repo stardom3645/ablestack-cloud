@@ -1230,6 +1230,7 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
             final SearchCriteria<ClusterVO> ssc = _clusterDao.createSearchCriteria();
             ssc.addOr("name", SearchCriteria.Op.LIKE, "%" + keyword + "%");
             ssc.addOr("hypervisorType", SearchCriteria.Op.LIKE, "%" + keyword + "%");
+            ssc.addOr("uuid", SearchCriteria.Op.LIKE, "%" + keyword + "%");
             sc.addAnd("name", SearchCriteria.Op.SC, ssc);
         }
 
@@ -1814,7 +1815,7 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
             ssc.addOr("name", SearchCriteria.Op.LIKE, "%" + keyword + "%");
             ssc.addOr("status", SearchCriteria.Op.LIKE, "%" + keyword + "%");
             ssc.addOr("type", SearchCriteria.Op.LIKE, "%" + keyword + "%");
-
+            ssc.addOr("uuid", SearchCriteria.Op.LIKE, "%" + keyword + "%");
             sc.addAnd("name", SearchCriteria.Op.SC, ssc);
         }
 
@@ -1883,7 +1884,7 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
             final SearchCriteria<HostPodVO> ssc = _hostPodDao.createSearchCriteria();
             ssc.addOr("name", SearchCriteria.Op.LIKE, "%" + keyword + "%");
             ssc.addOr("description", SearchCriteria.Op.LIKE, "%" + keyword + "%");
-
+            ssc.addOr("uuid", SearchCriteria.Op.LIKE, "%" + keyword + "%");
             sc.addAnd("name", SearchCriteria.Op.SC, ssc);
         }
 
@@ -2003,6 +2004,7 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
             final SearchCriteria<VlanVO> ssc = _vlanDao.createSearchCriteria();
             ssc.addOr("vlanTag", SearchCriteria.Op.LIKE, "%" + keyword + "%");
             ssc.addOr("ipRange", SearchCriteria.Op.LIKE, "%" + keyword + "%");
+            ssc.addOr("uuid", SearchCriteria.Op.LIKE, "%" + keyword + "%");
             sc.addAnd("vlanTag", SearchCriteria.Op.SC, ssc);
         } else {
             if (id != null) {
@@ -2120,7 +2122,7 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
             ssc.addOr("description", SearchCriteria.Op.LIKE, "%" + keyword + "%");
             ssc.addOr("category", SearchCriteria.Op.LIKE, "%" + keyword + "%");
             ssc.addOr("value", SearchCriteria.Op.LIKE, "%" + keyword + "%");
-
+            ssc.addOr("uuid", SearchCriteria.Op.LIKE, "%" + keyword + "%");
             sc.addAnd("name", SearchCriteria.Op.SC, ssc);
         }
 
@@ -2394,16 +2396,17 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
         sb.and("state", sb.entity().getState(), SearchCriteria.Op.EQ);
         sb.and("display", sb.entity().isDisplay(), SearchCriteria.Op.EQ);
         sb.and("forsystemvms", sb.entity().isForSystemVms(), SearchCriteria.Op.EQ);
-
         if (forLoadBalancing != null && forLoadBalancing) {
             final SearchBuilder<LoadBalancerVO> lbSearch = _loadbalancerDao.createSearchBuilder();
             sb.join("lbSearch", lbSearch, sb.entity().getId(), lbSearch.entity().getSourceIpAddressId(), JoinType.INNER);
             sb.groupBy(sb.entity().getId());
         }
-
         if (keyword != null && address == null) {
             sb.and("addressLIKE", sb.entity().getAddress(), SearchCriteria.Op.LIKE);
         }
+        s_logger.info("===============");
+        s_logger.info("keyword :"+keyword + ", Name :"+Name);
+        s_logger.info("===============");
 
         if (tags != null && !tags.isEmpty()) {
             final SearchBuilder<ResourceTagVO> tagSearch = _resourceTagDao.createSearchBuilder();
@@ -2470,9 +2473,9 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
         }
 
         if (address == null && keyword != null) {
+            sc.addOr("uuid", SearchCriteria.Op.LIKE, "%" + keyword + "%");
             sc.setParameters("addressLIKE", "%" + keyword + "%");
         }
-
         if (address != null) {
             sc.setParameters("address", address);
         }
@@ -2890,10 +2893,10 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
         }
 
         if (keyword != null) {
-            final SearchCriteria<AlertVO> ssc = _alertDao.createSearchCriteria();
-            ssc.addOr("subject", SearchCriteria.Op.LIKE, "%" + keyword + "%");
-
-            sc.addAnd("subject", SearchCriteria.Op.SC, ssc);
+            final SearchCriteria<AlertVO> scc = _alertDao.createSearchCriteria();
+            scc.addOr("subject", SearchCriteria.Op.LIKE, "%" + keyword + "%");
+            scc.addOr("uuid", SearchCriteria.Op.LIKE, "%" + keyword + "%");
+            sc.addAnd("subject", SearchCriteria.Op.SC, scc);
         }
 
         if (type != null) {
@@ -3794,7 +3797,7 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
             final SearchCriteria<VMInstanceVO> ssc = _vmInstanceDao.createSearchCriteria();
             ssc.addOr("hostName", SearchCriteria.Op.LIKE, "%" + keyword + "%");
             ssc.addOr("state", SearchCriteria.Op.LIKE, "%" + keyword + "%");
-
+            ssc.addOr("uuid", SearchCriteria.Op.LIKE, "%" + keyword + "%");
             sc.addAnd("hostName", SearchCriteria.Op.SC, ssc);
         }
 
@@ -4322,6 +4325,7 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
             final SearchCriteria<SSHKeyPairVO> ssc = _sshKeyPairDao.createSearchCriteria();
             ssc.addOr("name", SearchCriteria.Op.LIKE, "%" + keyword + "%");
             ssc.addOr("fingerprint", SearchCriteria.Op.LIKE, "%" + keyword + "%");
+            ssc.addOr("uuid", SearchCriteria.Op.LIKE, "%" + keyword + "%");
             sc.addAnd("name", SearchCriteria.Op.SC, ssc);
         }
 
@@ -4590,6 +4594,7 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
         if (keyword != null) {
             final SearchCriteria<HypervisorCapabilitiesVO> ssc = _hypervisorCapabilitiesDao.createSearchCriteria();
             ssc.addOr("hypervisorType", SearchCriteria.Op.LIKE, "%" + keyword + "%");
+            ssc.addOr("uuid", SearchCriteria.Op.LIKE, "%" + keyword + "%");
             sc.addAnd("hypervisorType", SearchCriteria.Op.SC, ssc);
         }
 
