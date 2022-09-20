@@ -335,7 +335,11 @@ public class DeployVMCmd extends BaseAsyncCreateCustomIdCmd implements SecurityG
         customparameterMap.forEach((strKey, strValue)->{
             s_logger.debug( "[DeployVMCmd 336] customparameterMap ycyun: " + strKey + " : " + strValue );
         });
-        if (getTpmVersion() != null || getTpmVersion() != ApiConstants.TpmVersion.NONE){
+        if (customparameterMap.containsKey(ApiConstants.TpmVersion.V1_2.toString())
+                || customparameterMap.containsKey(ApiConstants.TpmVersion.V2_0.toString())
+                || customparameterMap.containsKey("tpmVersion")
+                || getTpmVersion() != null
+                || getTpmVersion() != ApiConstants.TpmVersion.NONE){
             s_logger.debug("tpmVersion:" + getTpmVersion().toString());
             customparameterMap.put("tpmVersion", getTpmVersion().toString());
         }
