@@ -329,6 +329,8 @@ import org.apache.cloudstack.framework.jobs.dao.AsyncJobDao;
 import org.apache.cloudstack.resourcedetail.dao.DiskOfferingDetailsDao;
 import org.apache.cloudstack.storage.datastore.db.PrimaryDataStoreDao;
 import org.apache.cloudstack.storage.datastore.db.StoragePoolVO;
+import org.apache.cloudstack.outofbandmanagement.dao.OutOfBandManagementDao;
+import org.apache.cloudstack.outofbandmanagement.OutOfBandManagement;
 
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
@@ -431,6 +433,7 @@ public class ApiDBUtils {
     static ProjectAccountJoinDao s_projectAccountJoinDao;
     static ProjectInvitationJoinDao s_projectInvitationJoinDao;
     static HostJoinDao s_hostJoinDao;
+    static OutOfBandManagementDao s_outOfBandManagementDao;
     static VolumeJoinDao s_volJoinDao;
     static StoragePoolJoinDao s_poolJoinDao;
     static StoragePoolTagsDao s_tagDao;
@@ -643,6 +646,8 @@ public class ApiDBUtils {
     @Inject
     private HostJoinDao hostJoinDao;
     @Inject
+    private OutOfBandManagementDao outOfBandManagementDao;
+    @Inject
     private VolumeJoinDao volJoinDao;
     @Inject
     private StoragePoolJoinDao poolJoinDao;
@@ -807,6 +812,7 @@ public class ApiDBUtils {
         s_projectAccountJoinDao = projectAccountJoinDao;
         s_projectInvitationJoinDao = projectInvitationJoinDao;
         s_hostJoinDao = hostJoinDao;
+        s_outOfBandManagementDao = outOfBandManagementDao;
         s_volJoinDao = volJoinDao;
         s_poolJoinDao = poolJoinDao;
         s_tagDao = tagDao;
@@ -1934,6 +1940,10 @@ public class ApiDBUtils {
 
     public static HostResponse newHostResponse(HostJoinVO vr, EnumSet<HostDetails> details) {
         return s_hostJoinDao.newHostResponse(vr, details);
+    }
+
+    public static OutOfBandManagement newHostOobmResponse(HostJoinVO vr) {
+        return s_outOfBandManagementDao.findByHost(vr.getId());
     }
 
     public static HostForMigrationResponse newHostForMigrationResponse(HostJoinVO vr, EnumSet<HostDetails> details) {
