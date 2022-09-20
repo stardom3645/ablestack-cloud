@@ -574,7 +574,7 @@
                         showSearch
                         optionFilterProp="label"
                         :filterOption="filterOption">
-                        <a-select-option v-for="tpmVersion in options.tpmVersion" :key="tpm.id">
+                        <a-select-option v-for="tpmVersion in options.tpmVersion" :key="tpmVersion.id">
                           {{ tpmVersion.description }}
                         </a-select-option>
                       </a-select>
