@@ -320,6 +320,7 @@ public class DeployVMCmd extends BaseAsyncCreateCustomIdCmd implements SecurityG
             while (iter.hasNext()) {
                 HashMap<String, String> value = (HashMap<String, String>)iter.next();
                 for (Map.Entry<String,String> entry: value.entrySet()) {
+                    s_logger.debug( "[DeployVMCmd 323] details ycyun: " + entry.getKey() + " : " + entry.getValue() );
                     customparameterMap.put(entry.getKey(),entry.getValue());
                 }
             }
@@ -333,7 +334,7 @@ public class DeployVMCmd extends BaseAsyncCreateCustomIdCmd implements SecurityG
         }
 
         customparameterMap.forEach((strKey, strValue)->{
-            s_logger.debug( "[DeployVMCmd 336] customparameterMap ycyun: " + strKey + " : " + strValue );
+            s_logger.debug( "[DeployVMCmd 337] customparameterMap ycyun: " + strKey + " : " + strValue );
         });
         if (customparameterMap.containsKey(ApiConstants.TpmVersion.V1_2.toString())) {
             s_logger.debug("tpmVersion 1_2:" + customparameterMap.get(ApiConstants.TpmVersion.V1_2.toString()));
