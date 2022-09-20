@@ -1506,12 +1506,19 @@ public class LibvirtStorageAdaptor implements StorageAdaptor {
         if (createPathFolder(path)) {
             s_logger.debug("mkdir path [" + targetPath + "]");
         }
+        String kernelVer = Script.runSimpleBashScript("uname -r | cut -d '-' -f1");
+        String mainVer = kernelVer.split(".")[0];
+        String majorVer = kernelVer.split(".")[1];
+        String wsync = "";
+        if (Integer.parseInt(mainVer) >= 5 && Integer.parseInt(majorVer) >= 7) {
+            wsync = ",wsync";
+        }
         String cmd = "mount -t ceph ";
         String user_fsname = userInfo.split(":")[0] + "@." + details.get("gluefsname") + "=/ ";
         String secret = " -o secret=" + userInfo.split(":")[1];
         String mon_addr = ",mon_addr=" + host.replaceAll(",", "/");
-        s_logger.debug("mount info ::: " + cmd + user_fsname + targetPath + secret + mon_addr);
-        String mount = Script.runSimpleBashScript(cmd + user_fsname + targetPath + secret + mon_addr);
+        s_logger.debug("mount info ::: " + cmd + user_fsname + targetPath + secret + mon_addr + wsync);
+        String mount = Script.runSimpleBashScript(cmd + user_fsname + targetPath + secret + mon_addr + wsync);
 
         if (mount == null) {
             return true;
