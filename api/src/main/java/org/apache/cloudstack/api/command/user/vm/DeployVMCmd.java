@@ -334,24 +334,26 @@ public class DeployVMCmd extends BaseAsyncCreateCustomIdCmd implements SecurityG
             customparameterMap.put("rootdisksize", rootdisksize.toString());
         }
 
-        customparameterMap.forEach((strKey, strValue)->{
-            s_logger.debug( "[DeployVMCmd 337] customparameterMap ycyun: " + strKey + " : " + strValue );
-        });
         if (customparameterMap.containsKey(ApiConstants.TpmVersion.V1_2.toString())) {
             s_logger.debug("tpmVersion 1_2:" + customparameterMap.get(ApiConstants.TpmVersion.V1_2.toString()));
             customparameterMap.put("tpmVersion", customparameterMap.get(ApiConstants.TpmVersion.V1_2.toString()));
         }else if(customparameterMap.containsKey(ApiConstants.TpmVersion.V2_0.toString())){
             s_logger.debug("tpmVersion 2_0:" + customparameterMap.get(ApiConstants.TpmVersion.V2_0.toString()));
             customparameterMap.put("tpmVersion", customparameterMap.get(ApiConstants.TpmVersion.V2_0.toString()));
-
         }else if(customparameterMap.containsKey("tpmVersion")){
             s_logger.debug("tpmVersion key:" + customparameterMap.get("tpmVersion"));
             customparameterMap.put("tpmVersion", customparameterMap.get("tpmVersion"));
-
         }else if(getTpmVersion() != null){
             s_logger.debug("tpmVersion getTpmVersion:" + customparameterMap.get("tpmVersion"));
             customparameterMap.put("tpmVersion", customparameterMap.get("tpmVersion"));
+        }else{
+            s_logger.debug("tpmVersion: null");
+            customparameterMap.put("tpmVersion", "None");
         }
+
+        customparameterMap.forEach((strKey, strValue)->{
+            s_logger.debug( "[DeployVMCmd 337] customparameterMap ycyun: " + strKey + " : " + strValue );
+        });
         return customparameterMap;
     }
 

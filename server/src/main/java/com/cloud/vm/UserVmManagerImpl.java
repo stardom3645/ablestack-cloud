@@ -4744,6 +4744,10 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
         if (uefiDetail != null) {
             addVmUefiBootOptionsToParams(additionalParams, uefiDetail.getName(), uefiDetail.getValue());
         }
+        List<UserVmDetailVO> vmdetail = userVmDetailsDao.listDetails(cmd.getEntityId());
+        vmdetail.forEach((detailVO)->{
+            s_logger.debug("start vm detail ycyun: " + detailVO.toString() );
+        });
         if (cmd.getBootIntoSetup() != null) {
             additionalParams.put(VirtualMachineProfile.Param.BootIntoSetup, cmd.getBootIntoSetup());
         }
