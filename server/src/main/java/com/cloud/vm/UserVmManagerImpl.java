@@ -3112,6 +3112,10 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
             addVmUefiBootOptionsToParams(additonalParams, uefiDetail.getName(), uefiDetail.getValue());
         }
 
+        List<UserVmDetailVO> vmdetail = userVmDetailsDao.listDetails(cmd.getId());
+        vmdetail.forEach((detailVO)->{
+            s_logger.debug("start vm detail ycyun: " + detailVO.getName() + " : " + detailVO.getValue() );
+        });
         return startVirtualMachine(cmd.getId(), cmd.getPodId(), cmd.getClusterId(), cmd.getHostId(), additonalParams, cmd.getDeploymentPlanner()).first();
     }
 
@@ -4746,7 +4750,7 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
         }
         List<UserVmDetailVO> vmdetail = userVmDetailsDao.listDetails(cmd.getEntityId());
         vmdetail.forEach((detailVO)->{
-            s_logger.debug("start vm detail ycyun: " + detailVO.toString() );
+            s_logger.debug("start vm detail ycyun: " + detailVO.getName() + " : " + detailVO.getValue() );
         });
         if (cmd.getBootIntoSetup() != null) {
             additionalParams.put(VirtualMachineProfile.Param.BootIntoSetup, cmd.getBootIntoSetup());
