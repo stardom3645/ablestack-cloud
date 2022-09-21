@@ -2595,7 +2595,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
         if (isGuestAarch64()) {
             createArm64UsbDef(devices);
         }
-        if (isTpmEnabled) {
+        if (!tpmVersion.equalsIgnoreCase("NONE") && isTpmEnabled) {
             s_logger.debug("LibvirtComputingResource 2597 ycyun:" + isTpmEnabled + ": " + tpmVersion);
             devices.addDevice(createTpmDef(tpmVersion));
         }
