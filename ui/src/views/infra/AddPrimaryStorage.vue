@@ -147,6 +147,7 @@
           </template>
           <a-select
             v-model:value="form.protocol"
+            @change="updateProtocolGlue"
             showSearch
             optionFilterProp="label"
             :filterOption="(input, option) => {
@@ -160,7 +161,7 @@
         </a-form-item>
         <div
           v-if="form.protocol === 'nfs' || form.protocol === 'SMB' || form.protocol === 'iscsi' || form.protocol === 'vmfs'|| form.protocol === 'Gluster' || form.protocol === 'Linstor' ||
-            (form.protocol === 'PreSetup' && hypervisorType === 'VMware') || form.protocol === 'datastorecluster'">
+            (form.protocol === 'PreSetup' && hypervisorType === 'VMware') || form.protocol === 'datastorecluster' && form.protocol !== 'Glue'">
           <a-form-item name="server" ref="server">
             <template #label>
               <tooltip-label :title="$t('label.server')" :tooltip="$t('message.server.description')"/>
@@ -229,7 +230,7 @@
             </a-select>
           </a-form-item>
         </div>
-        <div v-if="form.provider !== 'DefaultPrimary' && form.provider !== 'PowerFlex' && form.provider !== 'Linstor'">
+        <div v-if="form.provider !== 'DefaultPrimary' && form.provider !== 'PowerFlex' && form.provider !== 'Linstor' && form.provider !== 'ABLESTACK'" >
           <a-form-item name="managed" ref="managed">
             <template #label>
               <tooltip-label :title="$t('label.ismanaged')" :tooltip="apiParams.managed.description"/>
@@ -295,6 +296,46 @@
           </a-form-item>
           <a-form-item name="radossecret" ref="radossecret" :label="$t('label.rados.secret')">
             <a-input v-model:value="form.radossecret" :placeholder="$t('label.rados.secret')" />
+          </a-form-item>
+        </div>
+        <div v-if="form.protocol === 'Glue' && form.provider === 'ABLESTACK'">
+          <a-form-item name="kradosmonitor" ref="kradosmonitor" :label="$t('label.rados.monitor')">
+            <a-input v-model:value="form.kradosmonitor" :placeholder="$t('label.rados.monitor')" />
+          </a-form-item>
+          <a-form-item name="kradospool" ref="kradospool" :label="$t('label.rados.pool')">
+            <a-input v-model:value="form.kradospool" :placeholder="$t('label.rados.pool')"/>
+          </a-form-item>
+          <a-form-item name="kradosuser" ref="kradosuser" :label="$t('label.rados.user')">
+            <a-input v-model:value="form.kradosuser" :placeholder="$t('label.rados.user')" />
+          </a-form-item>
+          <a-form-item name="kradossecret" ref="kradossecret" :label="$t('label.rados.secret')">
+            <a-input v-model:value="form.kradossecret" :placeholder="$t('label.rados.secret')" />
+          </a-form-item>
+          <a-form-item name="kradospath" ref="kradospath" :label="$t('label.rados.path')">
+            <a-input v-model:value="form.kradospath" :placeholder="$t('label.rados.path')" />
+          </a-form-item>
+        </div>
+        <div v-if="form.protocol === 'GlueFS' && form.provider === 'ABLESTACK'">
+          <a-form-item name="gluefsserver" ref="gluefsserver">
+            <template #label>
+              <tooltip-label :title="$t('label.gluefs.server')" :tooltip="$t('label.gluefs.server')"/>
+            </template>
+            <a-input v-model:value="form.gluefsserver" :placeholder="$t('label.gluefs.server')" />
+          </a-form-item>
+          <a-form-item name="gluefsuser" ref="gluefsuser" :label="$t('label.gluefs.user')">
+            <a-input v-model:value="form.gluefsuser" :placeholder="$t('label.gluefs.user')" />
+          </a-form-item>
+          <a-form-item name="gluefsname" ref="gluefsname" :label="$t('label.gluefs.name')">
+            <a-input v-model:value="form.gluefsname" :placeholder="$t('label.gluefs.name')" />
+          </a-form-item>
+          <a-form-item name="gluefstargetpath" ref="gluefstargetpath">
+            <template #label>
+              <tooltip-label :title="$t('label.gluefs.path')" :tooltip="$t('label.gluefs.path')"/>
+            </template>
+            <a-input v-model:value="form.gluefstargetpath" :placeholder="$t('label.gluefs.path')"/>
+          </a-form-item>
+          <a-form-item name="gluefssecret" ref="gluefssecret" :label="$t('label.gluefs.secret')">
+            <a-input v-model:value="form.gluefssecret" :placeholder="$t('label.gluefs.secret')" />
           </a-form-item>
         </div>
         <div v-if="form.protocol === 'CLVM'">
@@ -388,7 +429,7 @@ export default {
       this.form = reactive({
         scope: 'cluster',
         hypervisor: this.hypervisors[0],
-        provider: 'DefaultPrimary'
+        provider: 'ABLESTACK'
       })
       this.rules = reactive({
         zone: [{ required: true, message: this.$t('label.required') }],
@@ -494,7 +535,7 @@ export default {
       const cluster = this.clusters.find(cluster => cluster.id === this.form.cluster)
       this.hypervisorType = cluster.hypervisortype
       if (this.hypervisorType === 'KVM') {
-        this.protocols = ['nfs', 'SharedMountPoint', 'RBD', 'CLVM', 'Gluster', 'Linstor', 'custom']
+        this.protocols = ['Glue', 'GlueFS', 'nfs', 'SharedMountPoint', 'RBD', 'CLVM', 'Gluster', 'Linstor', 'custom']
       } else if (this.hypervisorType === 'XenServer') {
         this.protocols = ['nfs', 'PreSetup', 'iscsi', 'custom']
       } else if (this.hypervisorType === 'VMware') {
@@ -509,7 +550,7 @@ export default {
       } else if (this.hypervisorType === 'LXC') {
         this.protocols = ['nfs', 'SharedMountPoint', 'RBD']
       } else {
-        this.protocols = ['nfs']
+        this.protocols = ['Glue', 'GlueFS', 'nfs']
       }
       if (!value) {
         this.form.protocol = this.protocols[0]
@@ -526,6 +567,24 @@ export default {
         url = server + path
       }
 
+      return url
+    },
+    // ,mount.ceph fs_user@.mycephfs2=/ /mnt/mycephfs -o secret=AQATSKdNGBnwLhAAnNDKnH65FmVKpXZJVasUeQ==,mon_addr=192.168.0.1/192.168.0.2/192.168.0.3
+    gluefsURL (server, path, id, secret) {
+      var url
+      if (path.substring(0, 1) !== '/') {
+        path = '/' + path
+      }
+      secret = secret.replace(/\+/g, '-')
+      secret = secret.replace(/\//g, '_')
+      if (id !== null && secret !== null) {
+        server = id + ':' + secret + '@' + server
+      }
+      if (server.indexOf('://') === -1) {
+        url = 'gluefs://' + server + path
+      } else {
+        url = server + path
+      }
       return url
     },
     smbURL (server, path, smbUsername, smbPassword, smbDomain) {
@@ -644,6 +703,11 @@ export default {
         this.fetchHypervisor(value)
       }
     },
+    updateProtocolGlue (value) {
+      if (value === 'Glue' || value === 'GlueFS') {
+        this.form.provider = 'ABLESTACK'
+      }
+    },
     closeModal () {
       this.$emit('close-action')
     },
@@ -657,7 +721,11 @@ export default {
 
       return url
     },
+    checkParams (p) {
+      console.log(p)
+    },
     handleSubmit (e) {
+      // this.checkParams(toRaw(this.form))
       e.preventDefault()
       if (this.loading) return
       this.formRef.value.validate().then(() => {
@@ -724,6 +792,13 @@ export default {
           url = this.clvmURL(vg)
         } else if (values.protocol === 'RBD') {
           url = this.rbdURL(values.radosmonitor, values.radospool, values.radosuser, values.radossecret)
+        } else if (values.protocol === 'Glue') {
+          url = this.rbdURL(values.kradosmonitor, values.kradospool, values.kradosuser, values.kradossecret)
+          params.krbdPath = values.kradospath
+        } else if (values.protocol === 'GlueFS') {
+          url = this.gluefsURL(values.gluefsserver, values.gluefstargetpath, values.gluefsuser, values.gluefssecret)
+          params['details[0].gluefsname'] = values.gluefsname
+          params['details[0].provider'] = 'ABLESTACK'
         } else if (values.protocol === 'vmfs') {
           path = values.vCenterDataCenter
           if (path.substring(0, 1) !== '/') {
@@ -751,7 +826,7 @@ export default {
           params['details[0].resourceGroup'] = values.resourcegroup
         }
         params.url = url
-        if (values.provider !== 'DefaultPrimary' && values.provider !== 'PowerFlex') {
+        if (values.provider !== 'DefaultPrimary' && values.provider !== 'PowerFlex' && values.provider !== 'ABLESTACK') {
           if (values.managed) {
             params.managed = true
           } else {
@@ -777,6 +852,7 @@ export default {
           params.tags = this.selectedTags.join()
         }
         this.loading = true
+        this.checkParams(params)
         api('createStoragePool', {}, 'POST', params).then(json => {
           this.$notification.success({
             message: this.$t('label.add.primary.storage'),

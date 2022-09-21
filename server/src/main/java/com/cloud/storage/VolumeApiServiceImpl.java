@@ -1440,6 +1440,9 @@ public class VolumeApiServiceImpl extends ManagerBase implements VolumeApiServic
             final VolumeVO volumeNow = _volsDao.findById(volumeId);
             if (currentSize == volumeNow.getSize() && currentSize != newSize) {
                 volume.setSize(newSize);
+            } else if (volumeNow.getSize() != newSize) {
+                // consider the updated size as the new size
+                newSize = volumeNow.getSize();
             }
 
             _volsDao.update(volume.getId(), volume);
@@ -2709,7 +2712,10 @@ public class VolumeApiServiceImpl extends ManagerBase implements VolumeApiServic
             }
 
             DettachCommand cmd = new DettachCommand(disk, vm.getInstanceName());
-
+            if ("ABLESTACK".equals(volumePool.getStorageProviderName()) && volumePool.getKrbdPath() != null && !volumePool.getKrbdPath().isEmpty()) {
+                cmd.setProvider(volumePool.getStorageProviderName());
+                cmd.setKrbdpath(volumePool.getKrbdPath());
+            }
             cmd.setManaged(volumePool.isManaged());
 
             cmd.setStorageHost(volumePool.getHostAddress());
@@ -3896,6 +3902,11 @@ public class VolumeApiServiceImpl extends ManagerBase implements VolumeApiServic
                         volumeToAttach.getDiskOfferingId());
 
                 AttachCommand cmd = new AttachCommand(disk, vm.getInstanceName());
+
+                if ("ABLESTACK".equals(volumeToAttachStoragePool.getStorageProviderName()) && volumeToAttachStoragePool.getKrbdPath() != null && !volumeToAttachStoragePool.getKrbdPath().isEmpty()) {
+                    cmd.setProvider(volumeToAttachStoragePool.getStorageProviderName());
+                    cmd.setKrbdpath(volumeToAttachStoragePool.getKrbdPath());
+                }
 
                 ChapInfo chapInfo = volService.getChapInfo(volFactory.getVolume(volumeToAttach.getId()), dataStore);
 
