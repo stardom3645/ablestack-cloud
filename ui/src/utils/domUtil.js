@@ -17,6 +17,14 @@
 
 export const setDocumentTitle = function (title) {
   document.title = title
+  const metaIcons = document.getElementsByTagName('link');
+  const metaIcon = metaIcons[0];
+  const canvas = document.createElement('canvas');
+  canvas.width=16;
+  canvas.height=16;
+  const context = cavas.getContext('2d');
+  const img = document.createElement('img');
+  img.crossOrigin = 'Anonymous';
   const ua = navigator.userAgent
   // eslint-disable-next-line
   const regex = /\bMicroMessenger\/([\d\.]+)/
@@ -25,6 +33,20 @@ export const setDocumentTitle = function (title) {
     i.src = '/favicon.ico'
     i.style.display = 'none'
     i.onload = function () {
+      context.clearRect(0, 0, 16, 16);
+      context.drawImage(img, 0, 0, 16, 16, 0, 0, 16, 16);
+
+      context.beginPath();
+      context.fillStyle = "#ff3686";
+      context.arc(11, 11, 5, 0, Math.PI*2, true);
+      context.fill();
+
+      context.font = "10px arial";
+      context.fillStyle = "#ffffff";
+      context.textBaseline = "top";
+      context.textAlign = "right";
+
+      metaIcon.href = canvas.toDataURL();
       setTimeout(function () {
         i.remove()
       }, 9)
