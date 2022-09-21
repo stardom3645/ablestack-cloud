@@ -902,7 +902,9 @@ public class ApiConstants {
     public static final String DESKTOP_AD_DOMAIN_NAME = "addomainname";
     public static final String DESKTOP_TEMPLATES = "templates";
     public static final String DESKTOP_DC_TEMPLATE = "dctemplate";
+    public static final String DESKTOP_DC_TEMPLATE_STATE = "dctemplatestate";
     public static final String DESKTOP_WORKS_TEMPLATE = "workstemplate";
+    public static final String DESKTOP_WORKS_TEMPLATE_STATE = "workstemplatestate";
     public static final String DESKTOP_DC_TEMPLATE_ID = "dctemplateid";
     public static final String DESKTOP_WORKS_TEMPLATE_ID = "workstemplateid";
     public static final String DESKTOP_TEMPLATE_OS_TYPE = "templateostype";
@@ -960,6 +962,10 @@ public class ApiConstants {
     public static final String LOGIN = "login";
     public static final String LOGOUT = "logout";
     public static final String LIST_IDPS = "listIdps";
+    public static final String INCLUDE_HOST = "includehost";
+    public static final String WEBPORT = "webport";
+
+    public static final String KRBD_PATH = "krbdpath";
 
     public enum BootType {
         UEFI, BIOS;

@@ -26,6 +26,8 @@ import com.cloud.agent.api.to.DiskTO;
 public class DettachCommand extends StorageSubSystemCommand {
     private DiskTO disk;
     private String vmName;
+    private String provider;
+    private String krbdpath;
     private boolean _managed;
     private String _iScsiName;
     private String _storageHost;
@@ -65,6 +67,22 @@ public class DettachCommand extends StorageSubSystemCommand {
 
     public void setVmName(final String vmName) {
         this.vmName = vmName;
+    }
+
+    public String getProvider() {
+        return provider;
+    }
+
+    public void setProvider(String provider) {
+        this.provider = provider;
+    }
+
+    public String getKrbdpath() {
+        return krbdpath;
+    }
+
+    public void setKrbdpath(String krbdpath) {
+        this.krbdpath = krbdpath;
     }
 
     public void setManaged(final boolean managed) {

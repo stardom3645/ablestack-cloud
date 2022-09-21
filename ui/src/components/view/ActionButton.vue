@@ -25,15 +25,9 @@
     </a-tooltip>
     <a-tooltip arrowPointAtCenter placement="bottomRight" v-if="resource && resource.id && resource.worksvmip && dataView">
       <template #title>
-        {{ $t('label.works.admin.portal.url') }}
+        {{ $t('label.works.portal.url') }}
       </template>
-      <works-admin-url :resource="resource" :size="size"/>
-    </a-tooltip>
-    <a-tooltip arrowPointAtCenter placement="bottomRight" v-if="resource && resource.id && resource.worksvmip && dataView">
-      <template #title>
-        {{ $t('label.works.user.portal.url') }}
-      </template>
-      <works-user-url :resource="resource" :size="size"/>
+      <works-url :resource="resource" :size="size"/>
     </a-tooltip>
     <a-tooltip arrowPointAtCenter placement="bottomRight" v-if="resource && resource.id && dataView">
       <template #title>
@@ -46,6 +40,11 @@
         {{ $t('label.genie.portal.url') }}
       </template>
       <genie-url :resource="resource" :size="size" />
+    <a-tooltip arrowPointAtCenter placement="bottomRight" v-if="resource && resource.id && resource.outofbandmanagement && dataView">
+      <template #title>
+        {{ $t('label.oobm.portal.url') }}
+      </template>
+      <oobm-url :resource="resource" :size="size"/>
     </a-tooltip>
     <a-tooltip
       v-for="(action, actionIndex) in actions"
@@ -105,19 +104,20 @@
 <script>
 import { api } from '@/api'
 import Console from '@/components/widgets/Console'
-import WorksAdminUrl from '@/components/widgets/WorksAdminUrl'
-import WorksUserUrl from '@/components/widgets/WorksUserUrl'
+import WorksUrl from '@/components/widgets/WorksUrl'
 import WallLinkUrl from '@/components/widgets/WallLinkUrl'
 import GenieUrl from '@/components/widgets/GenieUrl'
+import OobmUrl from '@/components/widgets/OobmUrl'
 
 export default {
   name: 'ActionButton',
   components: {
     Console,
-    WorksAdminUrl,
-    WorksUserUrl,
     WallLinkUrl,
-    GenieUrl
+    GenieUrl,
+    WorksUrl,
+    WallLinkUrl,
+    OobmUrl
   },
   data () {
     return {

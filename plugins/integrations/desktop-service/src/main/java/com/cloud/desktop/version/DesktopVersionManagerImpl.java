@@ -121,7 +121,6 @@ public class DesktopVersionManagerImpl extends ManagerBase implements DesktopVer
         }
         List<TemplateResponse> dcTempResp = new ArrayList<TemplateResponse>();
         List<TemplateResponse> worksTempResp = new ArrayList<TemplateResponse>();
-        List<TemplateResponse> templateResponses = new ArrayList<TemplateResponse>();
         List<DesktopTemplateMapVO> templateList = desktopTemplateMapDao.listByVersionId(desktopControllerVersion.getId());
         ResponseView respView = ResponseView.Restricted;
         Account caller = CallContext.current().getCallingAccount();
@@ -135,19 +134,20 @@ public class DesktopVersionManagerImpl extends ManagerBase implements DesktopVer
                 TemplateJoinVO userTemplate = templateJoinDao.findById(templateMapVO.getTemplateId());
                 if (userTemplate != null) {
                     TemplateResponse templateResponse = ApiDBUtils.newTemplateResponse(EnumSet.of(DomainDetails.resource), respView, userTemplate);
-                    templateResponses.add(templateResponse);
 
                     if("dc".equals(tempMapType)){
                         dcTempResp.add(templateResponse);
                         response.setDcTemplate(dcTempResp);
+                        response.setDcTemplateState(userTemplate.getState().toString());
                     }else{
                         worksTempResp.add(templateResponse);
                         response.setWorksTemplate(worksTempResp);
+                        response.setWorksTemplateState(userTemplate.getState().toString());
+
                     }
                 }
             }
         }
-        response.setTemplates(templateResponses);
         return response;
     }
 

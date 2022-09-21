@@ -1213,7 +1213,7 @@ public class KVMStorageProcessor implements StorageProcessor {
             final Long bytesReadRate, final Long bytesReadRateMax, final Long bytesReadRateMaxLength,
             final Long bytesWriteRate, final Long bytesWriteRateMax, final Long bytesWriteRateMaxLength,
             final Long iopsReadRate, final Long iopsReadRateMax, final Long iopsReadRateMaxLength,
-            final Long iopsWriteRate, final Long iopsWriteRateMax, final Long iopsWriteRateMaxLength, final String cacheMode) throws LibvirtException, InternalErrorException {
+            final Long iopsWriteRate, final Long iopsWriteRateMax, final Long iopsWriteRateMaxLength, final String cacheMode, final String provider, final String krbdpath) throws LibvirtException, InternalErrorException {
         List<DiskDef> disks = null;
         Domain dm = null;
         DiskDef diskdef = null;
@@ -1231,15 +1231,33 @@ public class KVMStorageProcessor implements StorageProcessor {
                         if (device != null) {
                             s_logger.debug("RBD device on host is: "+device);
                             attachingDisk.setPath(device);
+                        } else {
+                            throw new InternalErrorException("Error while mapping disk "+attachingDisk.getPath()+" on host");
+                        }
+                    }
+                    if(provider != null && !provider.isEmpty() && "ABLESTACK".equals(provider)){
+                        final String unmap = resource.unmapRbdDevice(attachingDisk);
+                        if (unmap == null) {
+                            attachingDisk.setPath(krbdpath + "/" + attachingDisk.getPath());
+                            s_logger.debug("RBD unmap device on host is: " + attachingDisk.getPath());
+                        } else {
+                            throw new InternalErrorException("Error while mapping disk "+attachingDisk.getPath()+" on host");
                         }
                     }
                 }
 
                 for (final DiskDef disk : disks) {
                     final String file = disk.getDiskPath();
-                    if (file != null && file.equalsIgnoreCase(attachingDisk.getPath())) {
-                        diskdef = disk;
-                        break;
+                    if(attachingPool.getType() == StoragePoolType.RBD && provider != null && !provider.isEmpty() && "ABLESTACK".equals(provider)) {
+                        if (file != null && file.equalsIgnoreCase(krbdpath + "/" + attachingDisk.getPath())) {
+                            diskdef = disk;
+                            break;
+                        }
+                    } else {
+                        if (file != null && file.equalsIgnoreCase(attachingDisk.getPath())) {
+                            diskdef = disk;
+                            break;
+                        }
                     }
                 }
                 if (diskdef == null) {
@@ -1272,8 +1290,18 @@ public class KVMStorageProcessor implements StorageProcessor {
                             throw new InternalErrorException("Error while mapping disk "+attachingDisk.getPath()+" on host");
                         }
                     } else {
-                        diskdef.defNetworkBasedDisk(attachingDisk.getPath(), attachingPool.getSourceHost(), attachingPool.getSourcePort(), attachingPool.getAuthUserName(),
-                                attachingPool.getUuid(), devId, busT, DiskProtocol.RBD, DiskDef.DiskFmtType.RAW);
+                        if(provider != null && !provider.isEmpty() && "ABLESTACK".equals(provider)){
+                            final String device = resource.mapRbdDevice(attachingDisk);
+                            if (device != null) {
+                                s_logger.debug("RBD device on host is: " + device);
+                                diskdef.defBlockBasedDisk(krbdpath + "/" + attachingDisk.getPath(), devId);
+                            } else {
+                                throw new InternalErrorException("Error while mapping RBD device on host");
+                            }
+                        } else {
+                            diskdef.defNetworkBasedDisk(attachingDisk.getPath(), attachingPool.getSourceHost(), attachingPool.getSourcePort(), attachingPool.getAuthUserName(),
+                            attachingPool.getUuid(), devId, busT, DiskProtocol.RBD, DiskDef.DiskFmtType.RAW);
+                        }
                     }
                 } else if (attachingPool.getType() == StoragePoolType.Gluster) {
                     final String mountpoint = attachingPool.getLocalPath();
@@ -1334,6 +1362,15 @@ public class KVMStorageProcessor implements StorageProcessor {
             if (dm != null) {
                 dm.free();
             }
+            if(!attach && attachingPool.getType() == StoragePoolType.RBD && provider != null && !provider.isEmpty() && "ABLESTACK".equals(provider)){
+                final String unmap = resource.unmapRbdDevice(attachingDisk);
+                if (unmap == null) {
+                    attachingDisk.setPath(krbdpath + "/" + attachingDisk.getPath());
+                    s_logger.debug("RBD unmap device on host is: " + attachingDisk.getPath());
+                } else {
+                    throw new InternalErrorException("Error while mapping disk "+attachingDisk.getPath()+" on host");
+                }
+            }
         }
     }
 
@@ -1343,6 +1380,8 @@ public class KVMStorageProcessor implements StorageProcessor {
         final VolumeObjectTO vol = (VolumeObjectTO)disk.getData();
         final PrimaryDataStoreTO primaryStore = (PrimaryDataStoreTO)vol.getDataStore();
         final String vmName = cmd.getVmName();
+        final String provider = cmd.getProvider();
+        final String krbdpath = cmd.getKrbdpath();
         final String serial = resource.diskUuidToSerial(vol.getUuid());
         try {
             final Connect conn = LibvirtConnection.getConnectionByVmName(vmName);
@@ -1356,7 +1395,7 @@ public class KVMStorageProcessor implements StorageProcessor {
                     vol.getBytesReadRate(), vol.getBytesReadRateMax(), vol.getBytesReadRateMaxLength(),
                     vol.getBytesWriteRate(), vol.getBytesWriteRateMax(), vol.getBytesWriteRateMaxLength(),
                     vol.getIopsReadRate(), vol.getIopsReadRateMax(), vol.getIopsReadRateMaxLength(),
-                    vol.getIopsWriteRate(), vol.getIopsWriteRateMax(), vol.getIopsWriteRateMaxLength(), volCacheMode);
+                    vol.getIopsWriteRate(), vol.getIopsWriteRateMax(), vol.getIopsWriteRateMaxLength(), volCacheMode, provider, krbdpath);
 
             return new AttachAnswer(disk);
         } catch (final LibvirtException e) {
@@ -1378,6 +1417,8 @@ public class KVMStorageProcessor implements StorageProcessor {
         final VolumeObjectTO vol = (VolumeObjectTO)disk.getData();
         final PrimaryDataStoreTO primaryStore = (PrimaryDataStoreTO)vol.getDataStore();
         final String vmName = cmd.getVmName();
+        final String provider = cmd.getProvider();
+        final String krbdpath = cmd.getKrbdpath();
         final String serial = resource.diskUuidToSerial(vol.getUuid());
         try {
             final Connect conn = LibvirtConnection.getConnectionByVmName(vmName);
@@ -1389,7 +1430,7 @@ public class KVMStorageProcessor implements StorageProcessor {
                     vol.getBytesReadRate(), vol.getBytesReadRateMax(), vol.getBytesReadRateMaxLength(),
                     vol.getBytesWriteRate(), vol.getBytesWriteRateMax(), vol.getBytesWriteRateMaxLength(),
                     vol.getIopsReadRate(), vol.getIopsReadRateMax(), vol.getIopsReadRateMaxLength(),
-                    vol.getIopsWriteRate(), vol.getIopsWriteRateMax(), vol.getIopsWriteRateMaxLength(), volCacheMode);
+                    vol.getIopsWriteRate(), vol.getIopsWriteRateMax(), vol.getIopsWriteRateMaxLength(), volCacheMode, provider, krbdpath);
 
             storagePoolMgr.disconnectPhysicalDisk(primaryStore.getPoolType(), primaryStore.getUuid(), vol.getPath());
 

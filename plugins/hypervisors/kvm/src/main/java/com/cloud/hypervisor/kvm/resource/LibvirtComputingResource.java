@@ -40,31 +40,34 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import javax.inject.Inject;
 
 import javax.naming.ConfigurationException;
 import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
-import com.cloud.configuration.Config;
+import org.apache.cloudstack.storage.datastore.db.PrimaryDataStoreDao;
 import org.apache.cloudstack.storage.configdrive.ConfigDrive;
 import org.apache.cloudstack.storage.to.PrimaryDataStoreTO;
 import org.apache.cloudstack.storage.to.TemplateObjectTO;
 import org.apache.cloudstack.storage.to.VolumeObjectTO;
+import org.apache.cloudstack.utils.bytescale.ByteScaleUtils;
 import org.apache.cloudstack.utils.hypervisor.HypervisorUtils;
 import org.apache.cloudstack.utils.linux.CPUStat;
 import org.apache.cloudstack.utils.linux.KVMHostInfo;
 import org.apache.cloudstack.utils.linux.MemStat;
 import org.apache.cloudstack.utils.qemu.QemuImg;
+import org.apache.cloudstack.utils.qemu.QemuImg.PhysicalDiskFormat;
 import org.apache.cloudstack.utils.qemu.QemuImgException;
 import org.apache.cloudstack.utils.qemu.QemuImgFile;
-import org.apache.cloudstack.utils.qemu.QemuImg.PhysicalDiskFormat;
 import org.apache.cloudstack.utils.security.KeyStoreUtils;
+import org.apache.cloudstack.utils.security.ParserUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.BooleanUtils;
 import org.apache.commons.lang.math.NumberUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.joda.time.Duration;
 import org.libvirt.Connect;
@@ -118,6 +121,7 @@ import com.cloud.agent.properties.AgentPropertiesFileHandler;
 import com.cloud.agent.resource.virtualnetwork.VRScripts;
 import com.cloud.agent.resource.virtualnetwork.VirtualRouterDeployer;
 import com.cloud.agent.resource.virtualnetwork.VirtualRoutingResource;
+import com.cloud.configuration.Config;
 import com.cloud.dc.Vlan;
 import com.cloud.exception.InternalErrorException;
 import com.cloud.host.Host.Type;
@@ -187,8 +191,6 @@ import com.cloud.utils.ssh.SshHelper;
 import com.cloud.vm.VirtualMachine;
 import com.cloud.vm.VirtualMachine.PowerState;
 import com.cloud.vm.VmDetailConstants;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.cloudstack.utils.bytescale.ByteScaleUtils;
 
 /**
  * LibvirtComputingResource execute requests on the computing/routing host using
@@ -359,6 +361,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
     protected String _guestBridgeName;
     protected String _privateIp;
     protected String _pool;
+    protected String _provider;
     protected String _localGateway;
     private boolean _canBridgeFirewall;
     protected boolean _noMemBalloon = false;
@@ -449,6 +452,8 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
     protected long getHypervisorQemuVersion() {
         return _hypervisorQemuVersion;
     }
+    @Inject
+    private PrimaryDataStoreDao _storagePoolDao;
 
     @Override
     public ExecutionResult executeInVR(final String routerIp, final String script, final String args) {
@@ -538,6 +543,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
     }
 
     public MemStat getMemStat() {
+        _memStat.refresh();
         return _memStat;
     }
 
@@ -2522,9 +2528,31 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
         }
 
         if (busT == DiskDef.DiskBus.SCSI) {
-            devices.addDevice(createSCSIDef(vcpus));
+            int socket = getCoresPerSocket(vcpus, vmTO.getDetails());
+            for (int i = 0; i < socket; i++) {
+                devices.addDevice(createSCSIDef(i, i, vcpus));
+            }
         }
         return devices;
+    }
+
+    private int getCoresPerSocket(int vcpus, Map<String, String> details) {
+        int numCoresPerSocket = -1;
+        if (details != null) {
+            final String coresPerSocket = details.get(VmDetailConstants.CPU_CORE_PER_SOCKET);
+            final int intCoresPerSocket = NumbersUtil.parseInt(coresPerSocket, numCoresPerSocket);
+            if (intCoresPerSocket > 0 && vcpus % intCoresPerSocket == 0) {
+                numCoresPerSocket = intCoresPerSocket;
+            }
+        }
+        if (numCoresPerSocket <= 0) {
+            if (vcpus % 6 == 0) {
+                numCoresPerSocket = 6;
+            } else if (vcpus % 4 == 0) {
+                numCoresPerSocket = 4;
+            }
+        }
+        return numCoresPerSocket;
     }
 
     protected WatchDogDef createWatchDogDef() {
@@ -2560,6 +2588,10 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
      * Creates Virtio SCSI controller. <br>
      * The respective Virtio SCSI XML definition is generated only if the VM's Disk Bus is of ISCSI.
      */
+    protected SCSIDef createSCSIDef(int index, int function ,int vcpus) {
+        return new SCSIDef((short)index, 0, 0, 9, function, vcpus);
+    }
+
     protected SCSIDef createSCSIDef(int vcpus) {
         return new SCSIDef((short)0, 0, 0, 9, 0, vcpus);
     }
@@ -2821,7 +2853,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
         return dataPath;
     }
 
-    public void createVbd(final Connect conn, final VirtualMachineTO vmSpec, final String vmName, final LibvirtVMDef vm) throws InternalErrorException, LibvirtException, URISyntaxException {
+    public void createVbd(final Connect conn, final VirtualMachineTO vmSpec, final String vmName, final LibvirtVMDef vm, String provider, String krbdpath) throws InternalErrorException, LibvirtException, URISyntaxException {
         final Map<String, String> details = vmSpec.getDetails();
         final List<DiskTO> disks = Arrays.asList(vmSpec.getDisks());
         boolean isSecureBoot = false;
@@ -2912,6 +2944,216 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
 
             final DiskDef disk = new DiskDef();
             int devId = volume.getDiskSeq().intValue();
+            s_logger.info("volume.getType() :::: " + volume.getType());
+            if (volume.getType() == Volume.Type.ISO) {
+
+                disk.defISODisk(volPath, devId, isUefiEnabled);
+
+                if (_guestCpuArch != null && _guestCpuArch.equals("aarch64")) {
+                    disk.setBusType(DiskDef.DiskBus.SCSI);
+                }
+            } else {
+                if (diskBusType == DiskDef.DiskBus.SCSI ) {
+                    disk.setQemuDriver(true);
+                    disk.setDiscard(DiscardType.UNMAP);
+                }
+                setDiskIoDriver(disk);
+
+                if (pool.getType() == StoragePoolType.RBD) {
+                    /*
+                            For RBD pools we use the secret mechanism in libvirt.
+                            We store the secret under the UUID of the pool, that's why
+                            we pass the pool's UUID as the authSecret
+                     */
+                    if(provider != null && !provider.isEmpty() && "ABLESTACK".equals(provider)){
+                        final String device = mapRbdDevice(physicalDisk);
+                        if (device != null) {
+                            s_logger.debug("RBD device on host is: " + device);
+                            disk.defBlockBasedDisk(krbdpath + "/" + physicalDisk.getPath(), devId);
+                        } else {
+                            throw new InternalErrorException("Error while mapping RBD device on host");
+                        }
+                    } else {
+                        disk.defNetworkBasedDisk(physicalDisk.getPath().replace("rbd:", ""), pool.getSourceHost(), pool.getSourcePort(), pool.getAuthUserName(), pool.getUuid(), devId, diskBusType, DiskProtocol.RBD, DiskDef.DiskFmtType.RAW);
+                    }
+                    // rbd image-cache invalidate
+                    Script.runSimpleBashScript("rbd image-cache invalidate " + data.getPath());
+                } else if (pool.getType() == StoragePoolType.PowerFlex) {
+                    disk.defBlockBasedDisk(physicalDisk.getPath(), devId, diskBusTypeData);
+                } else if (pool.getType() == StoragePoolType.Gluster) {
+                    final String mountpoint = pool.getLocalPath();
+                    final String path = physicalDisk.getPath();
+                    final String glusterVolume = pool.getSourceDir().replace("/", "");
+                    disk.defNetworkBasedDisk(glusterVolume + path.replace(mountpoint, ""), pool.getSourceHost(), pool.getSourcePort(), null,
+                            null, devId, diskBusType, DiskProtocol.GLUSTER, DiskDef.DiskFmtType.QCOW2);
+                } else if (pool.getType() == StoragePoolType.CLVM || physicalDisk.getFormat() == PhysicalDiskFormat.RAW) {
+                    if (volume.getType() == Volume.Type.DATADISK && !(isWindowsTemplate && isUefiEnabled)) {
+                        disk.defBlockBasedDisk(physicalDisk.getPath(), devId, diskBusTypeData);
+                    }
+                    else {
+                        disk.defBlockBasedDisk(physicalDisk.getPath(), devId, diskBusType);
+                    }
+                } else {
+                    if (volume.getType() == Volume.Type.DATADISK && !(isWindowsTemplate && isUefiEnabled)) {
+                        disk.defFileBasedDisk(physicalDisk.getPath(), devId, diskBusTypeData, DiskDef.DiskFmtType.QCOW2);
+                    } else {
+                        if (isSecureBoot) {
+                            disk.defFileBasedDisk(physicalDisk.getPath(), devId, DiskDef.DiskFmtType.QCOW2, isWindowsTemplate);
+                        } else {
+                            disk.defFileBasedDisk(physicalDisk.getPath(), devId, diskBusType, DiskDef.DiskFmtType.QCOW2);
+                        }
+                    }
+                }
+            }
+
+            if (data instanceof VolumeObjectTO) {
+                final VolumeObjectTO volumeObjectTO = (VolumeObjectTO)data;
+                disk.setSerial(diskUuidToSerial(volumeObjectTO.getUuid()));
+                setBurstProperties(volumeObjectTO, disk);
+
+                if (volumeObjectTO.getCacheMode() != null) {
+                    disk.setCacheMode(DiskDef.DiskCacheMode.valueOf(volumeObjectTO.getCacheMode().toString().toUpperCase()));
+                }
+            }
+            if (vm.getDevices() == null) {
+                s_logger.error("There is no devices for" + vm);
+                throw new RuntimeException("There is no devices for" + vm);
+            }
+            vm.getDevices().addDevice(disk);
+        }
+
+        if (vmSpec.getType() != VirtualMachine.Type.User) {
+            final DiskDef iso = new DiskDef();
+            iso.defISODisk(_sysvmISOPath);
+            if (_guestCpuArch != null && _guestCpuArch.equals("aarch64")) {
+                iso.setBusType(DiskDef.DiskBus.SCSI);
+            }
+            vm.getDevices().addDevice(iso);
+        }
+
+        // For LXC, find and add the root filesystem, rbd data disks
+        if (HypervisorType.LXC.toString().toLowerCase().equals(vm.getHvsType())) {
+            for (final DiskTO volume : disks) {
+                final DataTO data = volume.getData();
+                final PrimaryDataStoreTO store = (PrimaryDataStoreTO)data.getDataStore();
+                if (volume.getType() == Volume.Type.ROOT) {
+                    final KVMPhysicalDisk physicalDisk = _storagePoolMgr.getPhysicalDisk(store.getPoolType(), store.getUuid(), data.getPath());
+                    final FilesystemDef rootFs = new FilesystemDef(physicalDisk.getPath(), "/");
+                    vm.getDevices().addDevice(rootFs);
+                } else if (volume.getType() == Volume.Type.DATADISK) {
+                    final KVMPhysicalDisk physicalDisk = _storagePoolMgr.getPhysicalDisk(store.getPoolType(), store.getUuid(), data.getPath());
+                    final KVMStoragePool pool = physicalDisk.getPool();
+                    if(StoragePoolType.RBD.equals(pool.getType())) {
+                        final int devId = volume.getDiskSeq().intValue();
+                        final String device = mapRbdDevice(physicalDisk);
+                        if (device != null) {
+                            s_logger.debug("RBD device on host is: " + device);
+                            final DiskDef diskdef = new DiskDef();
+                            diskdef.defBlockBasedDisk(device, devId, DiskDef.DiskBus.VIRTIO);
+                            diskdef.setQemuDriver(false);
+                            vm.getDevices().addDevice(diskdef);
+                        } else {
+                            throw new InternalErrorException("Error while mapping RBD device on host");
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    public void createVbd(final Connect conn, final VirtualMachineTO vmSpec, final String vmName, final LibvirtVMDef vm) throws InternalErrorException, LibvirtException, URISyntaxException {
+        final Map<String, String> details = vmSpec.getDetails();
+        final List<DiskTO> disks = Arrays.asList(vmSpec.getDisks());
+        boolean isSecureBoot = false;
+        boolean isWindowsTemplate = false;
+        Collections.sort(disks, new Comparator<DiskTO>() {
+            @Override
+            public int compare(final DiskTO arg0, final DiskTO arg1) {
+                return arg0.getDiskSeq() > arg1.getDiskSeq() ? 1 : -1;
+            }
+        });
+
+        boolean isUefiEnabled = MapUtils.isNotEmpty(details) && details.containsKey(GuestDef.BootType.UEFI.toString());
+        if (isUefiEnabled) {
+            isSecureBoot = isSecureMode(details.get(GuestDef.BootType.UEFI.toString()));
+        }
+        if (vmSpec.getOs().toLowerCase().contains("window")) {
+            isWindowsTemplate =true;
+        }
+        for (final DiskTO volume : disks) {
+            KVMPhysicalDisk physicalDisk = null;
+            KVMStoragePool pool = null;
+            final DataTO data = volume.getData();
+            if (volume.getType() == Volume.Type.ISO && data.getPath() != null) {
+                DataStoreTO dataStore = data.getDataStore();
+                String dataStoreUrl = null;
+                if (data.getPath().startsWith(ConfigDrive.CONFIGDRIVEDIR) && vmSpec.isConfigDriveOnHostCache() && data instanceof TemplateObjectTO) {
+                    String configDrivePath = getConfigPath() + "/" + data.getPath();
+                    physicalDisk = new KVMPhysicalDisk(configDrivePath, ((TemplateObjectTO) data).getUuid(), null);
+                    physicalDisk.setFormat(PhysicalDiskFormat.FILE);
+                } else if (dataStore instanceof NfsTO) {
+                    NfsTO nfsStore = (NfsTO)data.getDataStore();
+                    dataStoreUrl = nfsStore.getUrl();
+                    physicalDisk = getPhysicalDiskFromNfsStore(dataStoreUrl, data);
+                } else if (dataStore instanceof PrimaryDataStoreTO) {
+                    //In order to support directly downloaded ISOs
+                    PrimaryDataStoreTO primaryDataStoreTO = (PrimaryDataStoreTO) dataStore;
+                    if (primaryDataStoreTO.getPoolType().equals(StoragePoolType.NetworkFilesystem)) {
+                        String psHost = primaryDataStoreTO.getHost();
+                        String psPath = primaryDataStoreTO.getPath();
+                        dataStoreUrl = "nfs://" + psHost + File.separator + psPath;
+                        physicalDisk = getPhysicalDiskFromNfsStore(dataStoreUrl, data);
+                    } else if (primaryDataStoreTO.getPoolType().equals(StoragePoolType.SharedMountPoint) ||
+                            primaryDataStoreTO.getPoolType().equals(StoragePoolType.Filesystem) ||
+                            primaryDataStoreTO.getPoolType().equals(StoragePoolType.StorPool)) {
+                        physicalDisk = getPhysicalDiskPrimaryStore(primaryDataStoreTO, data);
+                    }
+                }
+            } else if (volume.getType() != Volume.Type.ISO) {
+                final PrimaryDataStoreTO store = (PrimaryDataStoreTO)data.getDataStore();
+                physicalDisk = _storagePoolMgr.getPhysicalDisk(store.getPoolType(), store.getUuid(), data.getPath());
+                pool = physicalDisk.getPool();
+            }
+
+            String volPath = null;
+            if (physicalDisk != null) {
+                volPath = physicalDisk.getPath();
+            }
+
+            if (volume.getType() != Volume.Type.ISO
+                    && physicalDisk != null && physicalDisk.getFormat() == PhysicalDiskFormat.QCOW2
+                    && (pool.getType() == StoragePoolType.NetworkFilesystem
+                    || pool.getType() == StoragePoolType.SharedMountPoint
+                    || pool.getType() == StoragePoolType.Filesystem
+                    || pool.getType() == StoragePoolType.Gluster
+                    || pool.getType() == StoragePoolType.StorPool)) {
+                setBackingFileFormat(physicalDisk.getPath());
+            }
+
+            // check for disk activity, if detected we should exit because vm is running elsewhere
+            if (_diskActivityCheckEnabled && physicalDisk != null && physicalDisk.getFormat() == PhysicalDiskFormat.QCOW2) {
+                s_logger.debug("Checking physical disk file at path " + volPath + " for disk activity to ensure vm is not running elsewhere");
+                try {
+                    HypervisorUtils.checkVolumeFileForActivity(volPath, _diskActivityCheckTimeoutSeconds, _diskActivityInactiveThresholdMilliseconds, _diskActivityCheckFileSizeMin);
+                } catch (final IOException ex) {
+                    throw new CloudRuntimeException("Unable to check physical disk file for activity", ex);
+                }
+                s_logger.debug("Disk activity check cleared");
+            }
+
+            // if params contains a rootDiskController key, use its value (this is what other HVs are doing)
+            DiskDef.DiskBus diskBusType = getDiskModelFromVMDetail(vmSpec);
+            if (diskBusType == null) {
+                diskBusType = getGuestDiskModel(vmSpec.getPlatformEmulator(), isUefiEnabled);
+            }
+
+            DiskDef.DiskBus diskBusTypeData = getDataDiskModelFromVMDetail(vmSpec);
+            if (diskBusTypeData == null) {
+                diskBusTypeData = (diskBusType == DiskDef.DiskBus.SCSI) ? diskBusType : DiskDef.DiskBus.VIRTIO;
+            }
+
+            final DiskDef disk = new DiskDef();
+            int devId = volume.getDiskSeq().intValue();
             if (volume.getType() == Volume.Type.ISO) {
 
                 disk.defISODisk(volPath, devId, isUefiEnabled);
@@ -2933,8 +3175,17 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
                             We store the secret under the UUID of the pool, that's why
                             we pass the pool's UUID as the authSecret
                      */
-                    disk.defNetworkBasedDisk(physicalDisk.getPath().replace("rbd:", ""), pool.getSourceHost(), pool.getSourcePort(), pool.getAuthUserName(),
-                    pool.getUuid(), devId, diskBusType, DiskProtocol.RBD, DiskDef.DiskFmtType.RAW);
+                    disk.defNetworkBasedDisk(physicalDisk.getPath().replace("rbd:", ""), pool.getSourceHost(), pool.getSourcePort(), pool.getAuthUserName(), pool.getUuid(), devId, diskBusType, DiskProtocol.RBD, DiskDef.DiskFmtType.RAW);
+
+                    // rbd image persistent-cache or image-cache invalidate
+                    String cmdout = Script.runSimpleBashScript("rbd persistent-cache invalidate " + data.getPath());
+                    if (cmdout == null) {
+                        s_logger.debug(cmdout);
+                    }
+                    cmdout = Script.runSimpleBashScript("rbd image-cache invalidate " + data.getPath());
+                    if (cmdout == null) {
+                        s_logger.debug(cmdout);
+                    }
                 } else if (pool.getType() == StoragePoolType.PowerFlex) {
                     disk.defBlockBasedDisk(physicalDisk.getPath(), devId, diskBusTypeData);
                 } else if (pool.getType() == StoragePoolType.Gluster) {
@@ -4616,20 +4867,40 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
         return device;
     }
 
+    public String unmapRbdDevice(final KVMPhysicalDisk disk){
+        final KVMStoragePool pool = disk.getPool();
+        //Check if rbd image is already mapped
+        final String[] splitPoolImage = disk.getPath().split("/");
+        String device = Script.runSimpleBashScript("rbd showmapped | grep \""+splitPoolImage[0]+"[ ]*"+splitPoolImage[1]+"\" | grep -o \"[^ ]*[ ]*$\"");
+        if(device != null) {
+            //If not mapped, map and return mapped device
+            Script.runSimpleBashScript("rbd unmap " + disk.getPath() + " --id " + pool.getAuthUserName());
+            device = Script.runSimpleBashScript("rbd showmapped | grep \""+splitPoolImage[0]+"[ ]*"+splitPoolImage[1]+"\" | grep -o \"[^ ]*[ ]*$\"");
+        }
+        return device;
+    }
+
     public List<Ternary<String, Boolean, String>> cleanVMSnapshotMetadata(Domain dm) throws LibvirtException {
         s_logger.debug("Cleaning the metadata of vm snapshots of vm " + dm.getName());
         List<Ternary<String, Boolean, String>> vmsnapshots = new ArrayList<Ternary<String, Boolean, String>>();
         if (dm.snapshotNum() == 0) {
+            if (s_logger.isDebugEnabled()) {
+                s_logger.debug(String.format("VM [%s] does not have any snapshots. Skipping cleanup of snapshots for this VM.", dm.getName()));
+            }
             return vmsnapshots;
         }
         String currentSnapshotName = null;
         try {
             DomainSnapshot snapshotCurrent = dm.snapshotCurrent();
             String snapshotXML = snapshotCurrent.getXMLDesc();
+            if (s_logger.isDebugEnabled()) {
+                s_logger.debug(String.format("Current snapshot of VM [%s] has the following XML: [%s].", dm.getName(), snapshotXML));
+            }
+
             snapshotCurrent.free();
             DocumentBuilder builder;
             try {
-                builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+                builder = ParserUtils.getSaferDocumentBuilderFactory().newDocumentBuilder();
 
                 InputSource is = new InputSource();
                 is.setCharacterStream(new StringReader(snapshotXML));
@@ -4637,25 +4908,25 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
                 Element rootElement = doc.getDocumentElement();
 
                 currentSnapshotName = getTagValue("name", rootElement);
-            } catch (ParserConfigurationException e) {
-                s_logger.debug(e.toString());
-            } catch (SAXException e) {
-                s_logger.debug(e.toString());
-            } catch (IOException e) {
-                s_logger.debug(e.toString());
+            } catch (ParserConfigurationException | SAXException | IOException e) {
+                s_logger.error(String.format("Failed to parse snapshot configuration [%s] of VM [%s] due to: [%s].", snapshotXML, dm.getName(), e.getMessage()), e);
             }
         } catch (LibvirtException e) {
-            s_logger.debug("Fail to get the current vm snapshot for vm: " + dm.getName() + ", continue");
+            s_logger.error(String.format("Failed to get the current snapshot of VM [%s] due to: [%s]. Continuing the migration process.", dm.getName(), e.getMessage()), e);
         }
         int flags = 2; // VIR_DOMAIN_SNAPSHOT_DELETE_METADATA_ONLY = 2
         String[] snapshotNames = dm.snapshotListNames();
         Arrays.sort(snapshotNames);
+        s_logger.debug(String.format("Found [%s] snapshots in VM [%s] to clean.", snapshotNames.length, dm.getName()));
         for (String snapshotName: snapshotNames) {
             DomainSnapshot snapshot = dm.snapshotLookupByName(snapshotName);
             Boolean isCurrent = (currentSnapshotName != null && currentSnapshotName.equals(snapshotName)) ? true: false;
             vmsnapshots.add(new Ternary<String, Boolean, String>(snapshotName, isCurrent, snapshot.getXMLDesc()));
         }
         for (String snapshotName: snapshotNames) {
+            if (s_logger.isDebugEnabled()) {
+                s_logger.debug(String.format("Cleaning snapshot [%s] of VM [%s] metadata.", snapshotNames, dm.getName()));
+            }
             DomainSnapshot snapshot = dm.snapshotLookupByName(snapshotName);
             snapshot.delete(flags); // clean metadata of vm snapshot
         }

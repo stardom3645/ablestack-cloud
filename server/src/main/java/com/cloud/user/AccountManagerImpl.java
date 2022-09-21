@@ -301,6 +301,9 @@ public class AccountManagerImpl extends ManagerBase implements AccountManager, M
     @Inject
     private RoleService roleService;
 
+    @Inject
+    private PasswordPolicy passwordPolicy;
+
     private final ScheduledExecutorService _executor = Executors.newScheduledThreadPool(1, new NamedThreadFactory("AccountChecker"));
 
     private int _allowedLoginAttempts;
@@ -1368,6 +1371,9 @@ public class AccountManagerImpl extends ManagerBase implements AccountManager, M
         if (StringUtils.isBlank(newPassword)) {
             throw new InvalidParameterValueException("Password cannot be empty or blank.");
         }
+
+        passwordPolicy.verifyIfPasswordCompliesWithPasswordPolicies(newPassword, user.getUsername(), getAccount(user.getAccountId()).getDomainId());
+
         Account callingAccount = getCurrentCallingAccount();
         boolean isRootAdminExecutingPasswordUpdate = callingAccount.getId() == Account.ACCOUNT_ID_SYSTEM || isRootAdmin(callingAccount.getId());
         boolean isDomainAdmin = isDomainAdmin(callingAccount.getId());
@@ -1874,9 +1880,7 @@ public class AccountManagerImpl extends ManagerBase implements AccountManager, M
         } else {
             account = _accountDao.findEnabledAccount(accountName, domainId);
         }
-
         final AccountVO acctForUpdate = _accountDao.findById(account.getId());
-
         // Check if account exists
         if (account == null || account.getType() == Account.Type.PROJECT) {
             s_logger.error("Unable to find account by accountId: " + accountId + " OR by name: " + accountName + " in domain " + domainId);
@@ -1927,9 +1931,7 @@ public class AccountManagerImpl extends ManagerBase implements AccountManager, M
                 throw new InvalidParameterValueException("Role with ID '" + roleId.toString() + "' " +
                         "is not found or not available for the account '" + account.getUuid() + "' " +
                         "in the domain '" + domainId + "'.");
-            }
-
-            Role role = roleService.findRole(roleId);
+            }            Role role = roleService.findRole(roleId);
             isValidRoleChange(account, role);
             acctForUpdate.setRoleId(roleId);
             acctForUpdate.setType(role.getRoleType().getAccountType());
@@ -2341,6 +2343,8 @@ public class AccountManagerImpl extends ManagerBase implements AccountManager, M
         if (s_logger.isDebugEnabled()) {
             s_logger.debug("Creating user: " + userName + ", accountId: " + accountId + " timezone:" + timezone);
         }
+
+        passwordPolicy.verifyIfPasswordCompliesWithPasswordPolicies(password, userName, getAccount(accountId).getDomainId());
 
         String encodedPassword = null;
         for (UserAuthenticator authenticator : _userPasswordEncoders) {
@@ -2792,11 +2796,9 @@ public class AccountManagerImpl extends ManagerBase implements AccountManager, M
     @Override
     public void buildACLSearchCriteria(SearchCriteria<? extends ControlledEntity> sc, Long domainId, boolean isRecursive, List<Long> permittedAccounts,
             ListProjectResourcesCriteria listProjectResourcesCriteria) {
-
         if (listProjectResourcesCriteria != null) {
             sc.setJoinParameters("accountSearch", "type", Account.Type.PROJECT);
         }
-
         if (!permittedAccounts.isEmpty()) {
             sc.setParameters("accountIdIN", permittedAccounts.toArray());
         } else if (domainId != null) {

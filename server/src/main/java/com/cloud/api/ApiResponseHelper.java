@@ -195,6 +195,7 @@ import org.apache.cloudstack.storage.datastore.db.StoragePoolVO;
 import org.apache.cloudstack.usage.Usage;
 import org.apache.cloudstack.usage.UsageService;
 import org.apache.cloudstack.usage.UsageTypes;
+import org.apache.cloudstack.outofbandmanagement.OutOfBandManagement;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
@@ -765,6 +766,14 @@ public class ApiResponseHelper implements ResponseGenerator {
     }
 
     @Override
+    public OutOfBandManagement createHostOobmResponse(Host host) {
+        List<HostJoinVO> viewHosts = ApiDBUtils.newHostView(host);
+        List<OutOfBandManagement> listHostsOobm = ViewResponseHelper.createHostOobmResponse(viewHosts.toArray(new HostJoinVO[viewHosts.size()]));
+        assert listHostsOobm != null && listHostsOobm.size() == 1 : "There should be one host returned";
+        return listHostsOobm.get(0);
+    }
+
+    @Override
     public HostForMigrationResponse createHostForMigrationResponse(Host host) {
         return createHostForMigrationResponse(host, EnumSet.of(HostDetails.all));
     }
@@ -1091,6 +1100,8 @@ public class ApiResponseHelper implements ResponseGenerator {
 
         Network ntwk = ApiDBUtils.findNetworkById(loadBalancer.getNetworkId());
         lbResponse.setNetworkId(ntwk.getUuid());
+
+        lbResponse.setCidrList(loadBalancer.getCidrList());
 
         lbResponse.setObjectName("loadbalancer");
         return lbResponse;
@@ -1536,18 +1547,13 @@ public class ApiResponseHelper implements ResponseGenerator {
                 vmResponse.setTemplateName(template.getName());
             }
             vmResponse.setCreated(vm.getCreated());
+            vmResponse.setHypervisor(vm.getHypervisorType().toString());
 
             if (vm.getHostId() != null) {
                 Host host = ApiDBUtils.findHostById(vm.getHostId());
                 if (host != null) {
                     vmResponse.setHostId(host.getUuid());
                     vmResponse.setHostName(host.getName());
-                    vmResponse.setHypervisor(host.getHypervisorType().toString());
-                }
-            } else if (vm.getLastHostId() != null) {
-                Host lastHost = ApiDBUtils.findHostById(vm.getLastHostId());
-                if (lastHost != null) {
-                    vmResponse.setHypervisor(lastHost.getHypervisorType().toString());
                 }
             }
 
@@ -2377,6 +2383,8 @@ public class ApiResponseHelper implements ResponseGenerator {
 
         response.setDns1(profile.getDns1());
         response.setDns2(profile.getDns2());
+        response.setIpv6Dns1(profile.getIp6Dns1());
+        response.setIpv6Dns2(profile.getIp6Dns2());
         // populate capability
         Map<Service, Map<Capability, String>> serviceCapabilitiesMap = ApiDBUtils.getNetworkCapabilities(network.getId(), network.getDataCenterId());
         Map<Service, Set<Provider>> serviceProviderMap = ApiDBUtils.listNetworkOfferingServices(network.getNetworkOfferingId());
@@ -3238,6 +3246,10 @@ public class ApiResponseHelper implements ResponseGenerator {
         response.setHasAnnotation(annotationDao.hasAnnotations(vpc.getUuid(), AnnotationService.EntityType.VPC.name(),
                 _accountMgr.isRootAdmin(CallContext.current().getCallingAccount().getId())));
         ipv6Service.updateIpv6RoutesForVpcResponse(vpc, response);
+        response.setDns1(vpc.getIp4Dns1());
+        response.setDns2(vpc.getIp4Dns2());
+        response.setIpv6Dns1(vpc.getIp6Dns1());
+        response.setIpv6Dns2(vpc.getIp6Dns2());
         response.setObjectName("vpc");
         return response;
     }
