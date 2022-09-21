@@ -2546,6 +2546,9 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
             tpmVersion = GuestDef.TpmVersion.NONE.toString();
             isTpmEnabled = false;
         }
+        if (tpmVersion=="NONE"){
+            isTpmEnabled = false;
+        }
         s_logger.debug("tpmEnabled: " + isTpmEnabled + " tpmVersion: " + tpmVersion);
         vm.addComp(createDevicesDef(vmTO, guest, vcpus, isUefiEnabled, isTpmEnabled, tpmVersion));
         addExtraConfigsToVM(vmTO, vm, extraConfig);
