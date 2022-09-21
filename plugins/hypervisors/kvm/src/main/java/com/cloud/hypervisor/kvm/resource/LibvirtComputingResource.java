@@ -2535,18 +2535,20 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
         vm.addComp(createClockDef(vmTO));
 
 
-        boolean isTpmEnabled;
+        boolean isTpmEnabled = false;
         customParams.forEach((strKey, strValue)->{
             s_logger.debug( "ycyun: " + strKey + " : " + strValue );
         });
         if(customParams.containsKey("tpmVersion")) {
             tpmVersion = customParams.get("tpmVersion");
-            isTpmEnabled = true;
+
+            if (tpmVersion.equalsIgnoreCase("NONE")){
+                isTpmEnabled = false;
+            }else{
+                isTpmEnabled = true;
+            }
         }else{
             tpmVersion = GuestDef.TpmVersion.NONE.toString();
-            isTpmEnabled = false;
-        }
-        if (tpmVersion=="NONE"){
             isTpmEnabled = false;
         }
         s_logger.debug("tpmEnabled: " + isTpmEnabled + " tpmVersion: " + tpmVersion);
