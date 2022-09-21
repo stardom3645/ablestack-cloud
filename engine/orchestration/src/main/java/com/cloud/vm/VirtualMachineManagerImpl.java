@@ -1395,8 +1395,8 @@ public class VirtualMachineManagerImpl extends ManagerBase implements VirtualMac
             msgBuf.append(String.format("Boot into Setup: %s ", params.get(VirtualMachineProfile.Param.BootIntoSetup)));
             log = true;
         }
-        if (params.get(VirtualMachineProfile.Param.TpmFlag) != null) {
-            msgBuf.append(String.format("TpmFlag: %s ", params.get(VirtualMachineProfile.Param.TpmFlag)));
+        if (params.get(VirtualMachineProfile.Param.TpmVersion) != null) {
+            msgBuf.append(String.format("TpmVersion: %s ", params.get(VirtualMachineProfile.Param.TpmVersion)));
             log = true;
         }
         if (log) {

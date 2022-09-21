@@ -73,13 +73,18 @@ public class LibvirtVMDef {
         }
 
         enum TpmVersion {
-            V2_0, V1_2, NONE;
+            V2_0("V2_0"), V1_2("V1_2"), NONE("NONE");
 
+            String _version;
+
+            TpmVersion(String version){
+                _version = version;
+            }
             @Override
             public String toString() {
-                if (this.name().equals("V1_2"))
+                if (_version.equals("V1_2"))
                     return "1.2";
-                else if (this.name().equals("V2_0"))
+                else if (_version.equals("V2_0"))
                     return "2.0";
                 return "NONE";
             }

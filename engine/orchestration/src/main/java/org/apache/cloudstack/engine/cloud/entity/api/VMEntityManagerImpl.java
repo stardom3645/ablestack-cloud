@@ -159,14 +159,14 @@ public class VMEntityManagerImpl implements VMEntityManager {
             vmProfile.getParameters().put(VirtualMachineProfile.Param.UefiFlag, details.get(VirtualMachineProfile.Param.UefiFlag.getName()));
         }
         if (MapUtils.isNotEmpty(vmEntityVO.getDetails()) &&
-                vmEntityVO.getDetails().containsKey(VirtualMachineProfile.Param.TpmFlag.getName()) &&
+                vmEntityVO.getDetails().containsKey(VirtualMachineProfile.Param.TpmVersion.getName()) &&
                 (
-                        "V2_0".equalsIgnoreCase(vmEntityVO.getDetails().get(VirtualMachineProfile.Param.TpmFlag.getName())) ||
-                        "V1_2".equalsIgnoreCase(vmEntityVO.getDetails().get(VirtualMachineProfile.Param.TpmFlag.getName()))
+                        "V2_0".equalsIgnoreCase(vmEntityVO.getDetails().get(VirtualMachineProfile.Param.TpmVersion.getName())) ||
+                        "V1_2".equalsIgnoreCase(vmEntityVO.getDetails().get(VirtualMachineProfile.Param.TpmVersion.getName()))
                 ) )
         {
             Map<String, String> details = vmEntityVO.getDetails();
-            vmProfile.getParameters().put(VirtualMachineProfile.Param.TpmFlag, details.get(VirtualMachineProfile.Param.TpmFlag.getName()));
+            vmProfile.getParameters().put(VirtualMachineProfile.Param.TpmVersion, details.get(VirtualMachineProfile.Param.TpmVersion.getName()));
         }
         DataCenterDeployment plan = new DataCenterDeployment(vm.getDataCenterId(), vm.getPodIdToDeployIn(), null, null, null, null);
         if (planToDeploy != null && planToDeploy.getDataCenterId() != 0) {

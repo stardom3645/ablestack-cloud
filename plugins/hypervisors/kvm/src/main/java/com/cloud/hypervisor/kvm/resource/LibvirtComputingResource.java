@@ -2500,14 +2500,14 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
         if (dpdkSupport && (!extraConfig.containsKey(DpdkHelper.DPDK_NUMA) || !extraConfig.containsKey(DpdkHelper.DPDK_HUGE_PAGES))) {
             s_logger.info(String.format("DPDK is enabled for VM [%s], but it needs extra configurations for CPU NUMA and Huge Pages for VM deployment.", vmTO.toString()));
         }
-        configureVM(vmTO, vm, customParams, isUefiEnabled, isSecureBoot, bootMode, extraConfig, uuid);
+        configureVM(vmTO, vm, customParams, isUefiEnabled, isSecureBoot, bootMode, tpmVersion, extraConfig, uuid);
         return vm;
     }
 
     /**
      * Configures created VM from specification, adding the necessary components to VM.
      */
-    private void configureVM(VirtualMachineTO vmTO, LibvirtVMDef vm, Map<String, String> customParams, boolean isUefiEnabled, boolean isSecureBoot, String bootMode, Map<String, String> extraConfig, String uuid) {
+    private void configureVM(VirtualMachineTO vmTO, LibvirtVMDef vm, Map<String, String> customParams, boolean isUefiEnabled, boolean isSecureBoot, String bootMode, String tpmVersion, Map<String, String> extraConfig, String uuid) {
         s_logger.debug(String.format("Configuring VM with UUID [%s].", uuid));
 
         GuestDef guest = createGuestFromSpec(vmTO, vm, uuid, customParams);
@@ -2534,7 +2534,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
         vm.addComp(createTermPolicy());
         vm.addComp(createClockDef(vmTO));
 
-        String tpmVersion;
+
         boolean isTpmEnabled;
         customParams.forEach((strKey, strValue)->{
             s_logger.debug( "ycyun: " + strKey + " : " + strValue );
@@ -2594,6 +2594,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
             createArm64UsbDef(devices);
         }
         if (isTpmEnabled) {
+            s_logger.debug("LibvirtComputingResource 2597 ycyun:" + isTpmEnabled + ": " + tpmVersion);
             devices.addDevice(createTpmDef(tpmVersion));
         }
         DiskDef.DiskBus busT = getDiskModelFromVMDetail(vmTO);

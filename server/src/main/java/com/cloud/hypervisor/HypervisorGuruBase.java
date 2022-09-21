@@ -238,9 +238,9 @@ public abstract class HypervisorGuruBase extends AdapterBase implements Hypervis
                 }
             }
 
-            if (map.containsKey(VirtualMachineProfile.Param.TpmFlag)){
-                if (StringUtils.isNotBlank((String) map.get(VirtualMachineProfile.Param.TpmFlag))) {
-                    to.setTpmVersion((String) map.get(VirtualMachineProfile.Param.TpmFlag));
+            if (map.containsKey(VirtualMachineProfile.Param.TpmVersion)){
+                if (StringUtils.isNotBlank((String) map.get(VirtualMachineProfile.Param.TpmVersion))) {
+                    to.setTpmVersion((String) map.get(VirtualMachineProfile.Param.TpmVersion));
                 }
             }
         }
