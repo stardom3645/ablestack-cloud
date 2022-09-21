@@ -46,7 +46,7 @@
 <script>
 import RouteView from '@/layouts/RouteView'
 import { mixinDevice } from '@/utils/mixin.js'
-import {api} from "@/api";
+import { api } from "@/api"
 
 export default {
   name: 'UserLayout',
@@ -104,7 +104,6 @@ export default {
     },
     fetchFaviconStateInterval () {
       api('listConfigurations', { name: 'favicon.state.interval' }).then(json => {
-        let vSwitchEnabled = false
         if (json.listconfigurationsresponse.configuration[0].value) {
           this.$store.dispatch('SetFaviconStateInterval', json.listconfigurationsresponse.configuration[0].value)
         }
@@ -112,7 +111,6 @@ export default {
     },
     fetchFaviconStateCapacity () {
       api('listConfigurations', { name: 'favicon.state.capacity' }).then(json => {
-        let vSwitchEnabled = false
         if (json.listconfigurationsresponse.configuration[0].value) {
           this.$store.dispatch('SetFaviconStateCapacity', json.listconfigurationsresponse.configuration[0].value)
         }

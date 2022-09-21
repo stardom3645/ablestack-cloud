@@ -54,7 +54,7 @@ const app = {
     server: '',
     vueVersion: '',
     faviconStateInterval: '',
-    faviconStateCapacity:''
+    faviconStateCapacity: ''
   },
   mutations: {
     SET_SIDEBAR_TYPE: (state, type) => {
@@ -130,8 +130,8 @@ const app = {
       vueProps.$localStorage.set(FAVICON_STATE_INTERVAL, faviconStateInterval)
       state.faviconStateInterval = faviconStateInterval
     },
-    SET_FAVICON_STATE_CAPACITY: (state, faviconStateCAPACITY) => {
-      vueProps.$localStorage.set(FAVICON_STATE_INTERVAL, faviconStateCAPACITY)
+    SET_FAVICON_STATE_CAPACITY: (state, faviconStateCapacity) => {
+      vueProps.$localStorage.set(FAVICON_STATE_CAPACITY, faviconStateCapacity)
       state.faviconStateCapacity = faviconStateCAPACITY
     }
   },
@@ -190,10 +190,10 @@ const app = {
     SetCustomColumns ({ commit }, bool) {
       commit('SET_CUSTOM_COLUMNS', bool)
     },
-    SetFaviconStateInterval ({comit}, faviconStateInterval) {
+    SetFaviconStateInterval ({ commit }, faviconStateInterval) {
       commit('SET_FAVICON_STATE_INTERVAL', faviconStateInterval)
     },
-    SetFaviconStateCapacity ({comit}, faviconStateCapacity) {
+    SetFaviconStateCapacity ({ commit }, faviconStateCapacity) {
       commit('SET_FAVICON_STATE_CAPACITY', faviconStateCapacity)
     }
   }
