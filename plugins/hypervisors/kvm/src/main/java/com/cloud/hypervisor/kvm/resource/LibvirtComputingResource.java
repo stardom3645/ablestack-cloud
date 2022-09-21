@@ -2539,11 +2539,8 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
         customParams.forEach((strKey, strValue)->{
             s_logger.debug( "ycyun: " + strKey + " : " + strValue );
         });
-        if(customParams.containsKey(GuestDef.TpmVersion.V2_0.toString())) {
-            tpmVersion = customParams.get(GuestDef.TpmVersion.V2_0.toString());
-            isTpmEnabled = true;
-        }else if(customParams.containsKey(GuestDef.TpmVersion.V1_2.toString())) {
-            tpmVersion = customParams.get(GuestDef.TpmVersion.V1_2.toString());
+        if(customParams.containsKey("tpmVersion")) {
+            tpmVersion = customParams.get("tpmVersion");
             isTpmEnabled = true;
         }else{
             tpmVersion = GuestDef.TpmVersion.NONE.toString();
