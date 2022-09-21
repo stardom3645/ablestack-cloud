@@ -46,6 +46,7 @@
 <script>
 import RouteView from '@/layouts/RouteView'
 import { mixinDevice } from '@/utils/mixin.js'
+import {api} from "@/api";
 
 export default {
   name: 'UserLayout',
@@ -53,8 +54,12 @@ export default {
   mixins: [mixinDevice],
   data () {
     return {
-      showClear: false
+      showClear: false,
+      filter: ''
     }
+  },
+  created () {
+    this.fetchConfigurationSwitch()
   },
   watch: {
     '$store.getters.darkMode' (darkMode) {
@@ -92,6 +97,26 @@ export default {
     onClearNotification () {
       this.$notification.destroy()
       this.$store.commit('SET_COUNT_NOTIFY', 0)
+    },
+    async fetchConfigurationSwitch () {
+      await this.fetchFaviconStateInterval()
+      await this.fetchFaviconStateCapacity()
+    },
+    fetchFaviconStateInterval () {
+      api('listConfigurations', { name: 'favicon.state.interval' }).then(json => {
+        let vSwitchEnabled = false
+        if (json.listconfigurationsresponse.configuration[0].value) {
+          this.$store.dispatch('SetFaviconStateInterval', json.listconfigurationsresponse.configuration[0].value)
+        }
+      })
+    },
+    fetchFaviconStateCapacity () {
+      api('listConfigurations', { name: 'favicon.state.capacity' }).then(json => {
+        let vSwitchEnabled = false
+        if (json.listconfigurationsresponse.configuration[0].value) {
+          this.$store.dispatch('SetFaviconStateCapacity', json.listconfigurationsresponse.configuration[0].value)
+        }
+      })
     }
   }
 }
