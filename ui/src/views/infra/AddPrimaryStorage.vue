@@ -161,7 +161,7 @@
         </a-form-item>
         <div
           v-if="form.protocol === 'nfs' || form.protocol === 'SMB' || form.protocol === 'iscsi' || form.protocol === 'vmfs'|| form.protocol === 'Gluster' || form.protocol === 'Linstor' ||
-            (form.protocol === 'PreSetup' && hypervisorType === 'VMware') || form.protocol === 'datastorecluster' && form.protocol !== 'Glue'">
+            (form.protocol === 'PreSetup' && hypervisorType === 'VMware') || form.protocol === 'datastorecluster'">
           <a-form-item name="server" ref="server">
             <template #label>
               <tooltip-label :title="$t('label.server')" :tooltip="$t('message.server.description')"/>
@@ -298,7 +298,7 @@
             <a-input v-model:value="form.radossecret" :placeholder="$t('label.rados.secret')" />
           </a-form-item>
         </div>
-        <div v-if="form.protocol === 'Glue' && form.provider === 'ABLESTACK'">
+        <div v-if="form.protocol === 'Glue Block' && form.provider === 'ABLESTACK'">
           <a-form-item name="kradosmonitor" ref="kradosmonitor" :label="$t('label.rados.monitor')">
             <a-input v-model:value="form.kradosmonitor" :placeholder="$t('label.rados.monitor')" />
           </a-form-item>
@@ -315,7 +315,7 @@
             <a-input v-model:value="form.kradospath" :placeholder="$t('label.rados.path')" />
           </a-form-item>
         </div>
-        <div v-if="form.protocol === 'GlueFS' && form.provider === 'ABLESTACK'">
+        <div v-if="form.protocol === 'Glue FileSystem' && form.provider === 'ABLESTACK'">
           <a-form-item name="gluefsserver" ref="gluefsserver">
             <template #label>
               <tooltip-label :title="$t('label.gluefs.server')" :tooltip="$t('label.gluefs.server')"/>
@@ -535,7 +535,7 @@ export default {
       const cluster = this.clusters.find(cluster => cluster.id === this.form.cluster)
       this.hypervisorType = cluster.hypervisortype
       if (this.hypervisorType === 'KVM') {
-        this.protocols = ['Glue', 'GlueFS', 'nfs', 'SharedMountPoint', 'RBD', 'CLVM', 'Gluster', 'Linstor', 'custom']
+        this.protocols = ['Glue Block', 'Glue FileSystem', 'nfs', 'SharedMountPoint', 'RBD', 'CLVM', 'Gluster', 'Linstor', 'custom']
       } else if (this.hypervisorType === 'XenServer') {
         this.protocols = ['nfs', 'PreSetup', 'iscsi', 'custom']
       } else if (this.hypervisorType === 'VMware') {
@@ -550,7 +550,7 @@ export default {
       } else if (this.hypervisorType === 'LXC') {
         this.protocols = ['nfs', 'SharedMountPoint', 'RBD']
       } else {
-        this.protocols = ['Glue', 'GlueFS', 'nfs']
+        this.protocols = ['Glue Block', 'Glue FileSystem', 'nfs']
       }
       if (!value) {
         this.form.protocol = this.protocols[0]
@@ -704,7 +704,7 @@ export default {
       }
     },
     updateProtocolGlue (value) {
-      if (value === 'Glue' || value === 'GlueFS') {
+      if (value === 'Glue Block' || value === 'Glue FileSystem') {
         this.form.provider = 'ABLESTACK'
       }
     },
@@ -792,10 +792,10 @@ export default {
           url = this.clvmURL(vg)
         } else if (values.protocol === 'RBD') {
           url = this.rbdURL(values.radosmonitor, values.radospool, values.radosuser, values.radossecret)
-        } else if (values.protocol === 'Glue') {
+        } else if (values.protocol === 'Glue Block') {
           url = this.rbdURL(values.kradosmonitor, values.kradospool, values.kradosuser, values.kradossecret)
           params.krbdPath = values.kradospath
-        } else if (values.protocol === 'GlueFS') {
+        } else if (values.protocol === 'Glue FileSystem') {
           url = this.gluefsURL(values.gluefsserver, values.gluefstargetpath, values.gluefsuser, values.gluefssecret)
           params['details[0].gluefsname'] = values.gluefsname
           params['details[0].provider'] = 'ABLESTACK'
