@@ -132,7 +132,7 @@ const app = {
     },
     SET_FAVICON_STATE_CAPACITY: (state, faviconStateCapacity) => {
       vueProps.$localStorage.set(FAVICON_STATE_CAPACITY, faviconStateCapacity)
-      state.faviconStateCapacity = faviconStateCAPACITY
+      state.faviconStateCapacity = faviconStateCapacity
     }
   },
   actions: {

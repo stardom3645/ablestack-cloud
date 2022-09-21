@@ -46,7 +46,7 @@
 <script>
 import RouteView from '@/layouts/RouteView'
 import { mixinDevice } from '@/utils/mixin.js'
-import { api } from "@/api"
+import { api } from '@/api'
 
 export default {
   name: 'UserLayout',
