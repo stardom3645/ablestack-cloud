@@ -111,6 +111,7 @@ public class AblestackPrimaryDataStoreLifeCycleImpl implements PrimaryDataStoreL
         try {
             String urlType = url.substring(0, 3);
             if ((urlType.equals("glu") || urlType.equals("rbd")) && url.contains(",")) {
+
                 multi = true;
                 url = url.replaceAll(",", "/");
             }

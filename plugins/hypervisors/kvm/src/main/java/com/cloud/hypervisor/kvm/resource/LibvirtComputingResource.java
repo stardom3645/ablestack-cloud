@@ -2965,7 +2965,9 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
                             We store the secret under the UUID of the pool, that's why
                             we pass the pool's UUID as the authSecret
                      */
+
                     if(provider != null && !provider.isEmpty() && "ABLESTACK".equals(provider)){
+
                         final String device = mapRbdDevice(physicalDisk);
                         if (device != null) {
                             s_logger.debug("RBD device on host is: " + device);
@@ -4872,6 +4874,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
         //Check if rbd image is already mapped
         final String[] splitPoolImage = disk.getPath().split("/");
         String device = Script.runSimpleBashScript("rbd showmapped | grep \""+splitPoolImage[0]+"[ ]*"+splitPoolImage[1]+"\" | grep -o \"[^ ]*[ ]*$\"");
+
         if(device != null) {
             //If not mapped, map and return mapped device
             Script.runSimpleBashScript("rbd unmap " + disk.getPath() + " --id " + pool.getAuthUserName());

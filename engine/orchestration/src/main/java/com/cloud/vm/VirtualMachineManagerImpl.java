@@ -2637,6 +2637,7 @@ public class VirtualMachineManagerImpl extends ManagerBase implements VirtualMac
 
         final VirtualMachineTO to = toVmTO(profile);
         PrepareForMigrationCommand pfmc = new PrepareForMigrationCommand(to);
+        
         if (provider != null && !provider.isEmpty() && "ABLESTACK".equals(provider)) {
             pfmc.setProvider(provider);
         }
