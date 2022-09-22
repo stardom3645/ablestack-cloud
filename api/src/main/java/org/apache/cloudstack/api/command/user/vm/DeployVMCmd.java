@@ -282,7 +282,6 @@ public class DeployVMCmd extends BaseAsyncCreateCustomIdCmd implements SecurityG
     }
 
     public ApiConstants.BootType getBootType() {
-        s_logger.debug("inBootType ycyun: " + bootType + " bootType: " + StringUtils.isNotBlank(bootType));
         if (StringUtils.isNotBlank(bootType)) {
             try {
                 String type = bootType.trim().toUpperCase();
@@ -298,14 +297,9 @@ public class DeployVMCmd extends BaseAsyncCreateCustomIdCmd implements SecurityG
     }
 
     public ApiConstants.TpmVersion getTpmVersion() {
-        s_logger.debug("inTpmVersion ycyun: " + tpmVersion + " tpmVersion: " + StringUtils.isNotBlank(tpmVersion));
         if (StringUtils.isNotBlank(tpmVersion)) {
             try {
                 String type = tpmVersion.trim().toUpperCase();
-                s_logger.debug("inTpmVersion ycyun: " + tpmVersion +
-                        " tpmVersion: " + StringUtils.isNotBlank(tpmVersion) +
-                        " type: " + type +
-                        " value: " + ApiConstants.TpmVersion.valueOf(type));
                 return ApiConstants.TpmVersion.valueOf(type);
             } catch (IllegalArgumentException e) {
                 String errMesg = "Invalid TpmVersion " + tpmVersion + "Specified for vm " + getName()
@@ -325,7 +319,6 @@ public class DeployVMCmd extends BaseAsyncCreateCustomIdCmd implements SecurityG
             while (iter.hasNext()) {
                 HashMap<String, String> value = (HashMap<String, String>)iter.next();
                 for (Map.Entry<String,String> entry: value.entrySet()) {
-                    s_logger.debug( "[DeployVMCmd 323] details ycyun: " + entry.getKey() + " : " + entry.getValue() );
                     customparameterMap.put(entry.getKey(),entry.getValue());
                 }
             }
@@ -338,26 +331,18 @@ public class DeployVMCmd extends BaseAsyncCreateCustomIdCmd implements SecurityG
             customparameterMap.put("rootdisksize", rootdisksize.toString());
         }
         for (Map.Entry<String,String> entry: customparameterMap.entrySet()) {
-            s_logger.debug( "[DeployVMCmd 337] details ycyun: " + entry.getKey() + " : " + entry.getValue() );
             customparameterMap.put(entry.getKey(),entry.getValue());
         }
         if(customparameterMap.containsKey(ApiConstants.TpmVersion.V2_0.toString())){
-            s_logger.debug("tpmVersion 2_0:" + customparameterMap.get(ApiConstants.TpmVersion.V2_0.toString()));
             customparameterMap.put("tpmVersion", customparameterMap.get(ApiConstants.TpmVersion.V2_0.toString()));
         }else if(customparameterMap.containsKey("tpmVersion")){
-            s_logger.debug("tpmVersion key:" + customparameterMap.get("tpmVersion"));
             customparameterMap.put("tpmVersion", customparameterMap.get("tpmVersion"));
         }else if(getTpmVersion() != null){
-            s_logger.debug("tpmVersion getTpmVersion:" + getTpmVersion());
             customparameterMap.put("tpmVersion", getTpmVersion().toString());
         }else{
-            s_logger.debug("tpmVersion: null");
             customparameterMap.put("tpmVersion", "NONE");
         }
 
-        customparameterMap.forEach((strKey, strValue)->{
-            s_logger.debug( "[DeployVMCmd 337] customparameterMap ycyun: " + strKey + " : " + strValue );
-        });
         return customparameterMap;
     }
 

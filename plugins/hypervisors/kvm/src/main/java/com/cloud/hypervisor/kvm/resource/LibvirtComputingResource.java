@@ -2479,9 +2479,6 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
 
             bootMode = customParams.get(GuestDef.BootType.UEFI.toString());
         }
-        customParams.forEach((strKey, strValue)->{
-            s_logger.debug("create vm from spec ycyun: " + strKey + " : " + strValue );
-        });
         if (MapUtils.isNotEmpty(customParams) && (
                 customParams.containsKey(GuestDef.TpmVersion.V2_0.toString()) ||
                 customParams.containsKey(GuestDef.TpmVersion.V1_2.toString())
@@ -2536,9 +2533,6 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
 
 
         boolean isTpmEnabled = false;
-        customParams.forEach((strKey, strValue)->{
-            s_logger.debug( "ycyun: " + strKey + " : " + strValue );
-        });
         if(customParams.containsKey("tpmVersion")) {
             tpmVersion = customParams.get("tpmVersion");
 
@@ -2551,7 +2545,6 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
             tpmVersion = GuestDef.TpmVersion.NONE.toString();
             isTpmEnabled = false;
         }
-        s_logger.debug("tpmEnabled: " + isTpmEnabled + " tpmVersion: " + tpmVersion);
         vm.addComp(createDevicesDef(vmTO, guest, vcpus, isUefiEnabled, isTpmEnabled, tpmVersion));
         addExtraConfigsToVM(vmTO, vm, extraConfig);
     }
@@ -2596,7 +2589,6 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
             createArm64UsbDef(devices);
         }
         if (!tpmVersion.equalsIgnoreCase("NONE") && isTpmEnabled) {
-            s_logger.debug("LibvirtComputingResource 2597 ycyun:" + isTpmEnabled + ": " + tpmVersion);
             devices.addDevice(createTpmDef(tpmVersion));
         }
         DiskDef.DiskBus busT = getDiskModelFromVMDetail(vmTO);
@@ -2781,7 +2773,6 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
             }
         }
         customParams.forEach((strKey, strValue)->{
-            s_logger.debug( "[LibvirtComputingResource 2780] customParams ycyun: " + strKey + " : " + strValue );
         });
         if (MapUtils.isNotEmpty(customParams)) {
             if(customParams.containsKey(GuestDef.TpmVersion.V1_2.toString())){
