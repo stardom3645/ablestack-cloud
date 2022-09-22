@@ -302,6 +302,10 @@ public class DeployVMCmd extends BaseAsyncCreateCustomIdCmd implements SecurityG
         if (StringUtils.isNotBlank(tpmVersion)) {
             try {
                 String type = tpmVersion.trim().toUpperCase();
+                s_logger.debug("inTpmVersion ycyun: " + tpmVersion +
+                        " tpmVersion: " + StringUtils.isNotBlank(tpmVersion) +
+                        " type: " + type +
+                        " value: " + ApiConstants.TpmVersion.valueOf(type));
                 return ApiConstants.TpmVersion.valueOf(type);
             } catch (IllegalArgumentException e) {
                 String errMesg = "Invalid TpmVersion " + tpmVersion + "Specified for vm " + getName()
