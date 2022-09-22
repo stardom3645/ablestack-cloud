@@ -286,6 +286,38 @@ public class LibvirtStorageAdaptor implements StorageAdaptor {
         }
     }
 
+    private StoragePool createGluefsSharedStoragePool(Connect conn, String uuid, String host, String path) {
+        String mountPoint = _mountPoint + File.separator + path;
+
+        if (!_storageLayer.exists(mountPoint)) {
+            s_logger.error(mountPoint + " does not exists. Check local.storage.path in agent.properties.");
+            return null;
+        }
+        LibvirtStoragePoolDef spd = new LibvirtStoragePoolDef(PoolType.DIR, uuid, uuid, host, mountPoint, mountPoint);
+        StoragePool sp = null;
+        try {
+            s_logger.debug(spd.toString());
+            sp = conn.storagePoolCreateXML(spd.toString(), 0);
+            return sp;
+        } catch (LibvirtException e) {
+            s_logger.error(e.toString());
+            if (sp != null) {
+                try {
+                    if (sp.isPersistent() == 1) {
+                        sp.destroy();
+                        sp.undefine();
+                    } else {
+                        sp.destroy();
+                    }
+                    sp.free();
+                } catch (LibvirtException l) {
+                    s_logger.debug("Failed to define shared mount point storage pool with: " + l.toString());
+                }
+            }
+            return null;
+        }
+    }
+
     private StoragePool createSharedStoragePool(Connect conn, String uuid, String host, String path) {
         String mountPoint = path;
         if (!_storageLayer.exists(mountPoint)) {
@@ -579,6 +611,16 @@ public class LibvirtStorageAdaptor implements StorageAdaptor {
     public KVMStoragePool createStoragePool(String name, String host, int port, String path, String userInfo, StoragePoolType type, Map<String, String> details) {
         s_logger.info("Attempting to create storage pool " + name + " (" + type.toString() + ") in libvirt");
 
+        // gluefs mount script call
+        if (type == StoragePoolType.SharedMountPoint && details != null && !details.isEmpty() && !details.get("provider").isEmpty() && "ABLESTACK".equals(details.get("provider"))) {
+            s_logger.info("Run the command to create the gluefs mount.");
+            Boolean gluefs = createGluefsMount(host, path, userInfo, details);
+            if (!gluefs) {
+                s_logger.warn("Failed to fire mount event while creating gluefs.");
+                throw new CloudRuntimeException("Failed to fire mount event while creating gluefs.");
+            }
+        }
+
         StoragePool sp = null;
         Connect conn = null;
         try {
@@ -660,7 +702,11 @@ public class LibvirtStorageAdaptor implements StorageAdaptor {
                     throw new CloudRuntimeException(e.toString());
                 }
             } else if (type == StoragePoolType.SharedMountPoint || type == StoragePoolType.Filesystem) {
-                sp = createSharedStoragePool(conn, name, host, path);
+                if (details != null && !details.isEmpty() && !details.get("provider").isEmpty() && "ABLESTACK".equals(details.get("provider"))) {
+                    sp = createGluefsSharedStoragePool(conn, name, host, path);
+                } else {
+                    sp = createSharedStoragePool(conn, name, host, path);
+                }
             } else if (type == StoragePoolType.RBD) {
                 sp = createRBDStoragePool(conn, name, host, port, userInfo, path);
             } else if (type == StoragePoolType.CLVM) {
@@ -1444,4 +1490,50 @@ public class LibvirtStorageAdaptor implements StorageAdaptor {
         Script.runSimpleBashScript("rm -r --interactive=never " + vol.getPath());
     }
 
+    private boolean createGluefsMount(String host, String path, String userInfo, Map<String, String> details) {
+        String targetPath = _mountPoint + File.separator + path;
+        int mountpointResult = Script.runSimpleBashScriptForExitValue("mountpoint -q " + _mountPoint + File.separator + path);
+        // if the pool is mounted, try to unmount it
+        if(mountpointResult == 0) {
+            s_logger.info("Attempting to unmount old mount at " + targetPath);
+            String result = Script.runSimpleBashScript("umount -l " + targetPath);
+            if (result == null) {
+                s_logger.info("Succeeded in unmounting " + targetPath);
+            } else {
+                s_logger.error("Failed in unmounting storage");
+            }
+        }
+        if (createPathFolder(path)) {
+            s_logger.debug("mkdir path [" + targetPath + "]");
+        }
+        String kernelVer = Script.runSimpleBashScript("uname -r | cut -d '-' -f1");
+        String mainVer = kernelVer.split(".")[0];
+        String majorVer = kernelVer.split(".")[1];
+        String nowsync = "";
+        if (Integer.parseInt(mainVer) >= 5 && Integer.parseInt(majorVer) >= 7) {
+            nowsync = ",nowsync";
+        }
+        String cmd = "mount -t ceph ";
+        String user_fsname = userInfo.split(":")[0] + "@." + details.get("gluefsname") + "=/ ";
+        String secret = " -o secret=" + userInfo.split(":")[1];
+        String mon_addr = ",mon_addr=" + host.replaceAll(",", "/");
+        s_logger.debug("mount info ::: " + cmd + user_fsname + targetPath + secret + mon_addr + nowsync);
+        String mount = Script.runSimpleBashScript(cmd + user_fsname + targetPath + secret + mon_addr + nowsync);
+
+        if (mount == null) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    private boolean createPathFolder(String path) {
+        String mountPoint = _mountPoint + File.separator + path;
+
+        File f = new File(mountPoint + File.separator + path);
+        if (!f.exists()) {
+            f.mkdirs();
+        }
+        return true;
+    }
 }

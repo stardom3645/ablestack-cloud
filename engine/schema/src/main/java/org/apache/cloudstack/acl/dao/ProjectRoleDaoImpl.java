@@ -60,6 +60,7 @@ public class ProjectRoleDaoImpl extends GenericDaoBase<ProjectRoleVO, Long>  imp
         if (StringUtils.isNotEmpty(keyword)) {
             SearchCriteria<ProjectRoleVO> ssc = createSearchCriteria();
             ssc.addOr("name", SearchCriteria.Op.LIKE, "%" + keyword + "%");
+            ssc.addOr("uuid", SearchCriteria.Op.LIKE, "%" + keyword + "%");
             sc.addAnd("name", SearchCriteria.Op.SC, ssc);
         }
         return listBy(sc);

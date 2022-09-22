@@ -206,7 +206,7 @@ if [ \"%{_temp}\" != "" ]; then
 fi
 
 mvn -Psystemvm,developer -DskipTests $FLAGS clean package
-cd ui && npm install && npm run build && cd ..
+cd ui && npm install && node build.js && npm run build && cd ..
 
 %install
 [ ${RPM_BUILD_ROOT} != "/" ] && rm -rf ${RPM_BUILD_ROOT}
