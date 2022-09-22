@@ -97,13 +97,18 @@ export default {
     return {
       image: '',
       userInitials: '',
-      countNotify: 0
+      countNotify: 0,
+      faviconStateInterval: 60000,
+      faviconStateYellowCapacity: '0.75',
+      faviconStateRedCapacity: '0.55',
+      faviconState: '#008000'
     }
   },
   created () {
     this.userInitials = (this.$store.getters.userInfo.firstname.toUpperCase().charAt(0) || '') +
       (this.$store.getters.userInfo.lastname.toUpperCase().charAt(0) || '')
     this.getIcon()
+    this.fetchConfigurationSwitch()
     eventBus.on('refresh-header', () => {
       this.getIcon()
     })
@@ -113,10 +118,14 @@ export default {
         this.countNotify = newValue
       }
     )
+    this.faviconSetting()
   },
   watch: {
     image () {
       this.getIcon()
+    },
+    faviconState () {
+      this.faviconSetting()
     }
   },
   computed: {
@@ -166,6 +175,106 @@ export default {
     wallPortalLink () {
       const url = 'http://' + this.$store.getters.features.host + ':' + this.$store.getters.features.wallportalport + '/login?orgId=1'
       window.open(url, '_blank')
+    },
+    async fetchConfigurationSwitch () {
+      await this.fetchFaviconStateInterval()
+      await this.fetchFaviconStateYellowCapacity()
+      await this.fetchFaviconStateRedCapacity()
+      await this.fetchHostState()
+    },
+    fetchFaviconStateInterval () {
+      return new Promise((resolve, reject) => {
+        api('listConfigurations', {
+          name: 'favicon.state.interval'
+        }).then(json => {
+          const response = json.listconfigurationsresponse.configuration || []
+          if (response?.[0]) {
+            this.faviconStateInterval = json.listconfigurationsresponse.configuration[0].value * 1000
+            resolve(this.faviconStateInterval)
+          }
+        }).catch(error => {
+          reject(error)
+        })
+      })
+    },
+    fetchFaviconStateYellowCapacity () {
+      return new Promise((resolve, reject) => {
+        api('listConfigurations', {
+          name: 'favicon.state.yellow.capacity'
+        }).then(json => {
+          const response = json.listconfigurationsresponse.configuration || []
+          if (response?.[0]) {
+            this.faviconStateYellowCapacity = json.listconfigurationsresponse.configuration[0].value
+          }
+          resolve(this.faviconStateYellowCapacity)
+        }).catch(error => {
+          reject(error)
+        })
+      })
+    },
+    fetchFaviconStateRedCapacity () {
+      return new Promise((resolve, reject) => {
+        api('listConfigurations', {
+          name: 'favicon.state.red.capacity'
+        }).then(json => {
+          const response = json.listconfigurationsresponse.configuration || []
+          if (response?.[0]) {
+            this.faviconStateRedCapacity = json.listconfigurationsresponse.configuration[0].value
+          }
+          resolve(this.faviconStateRedCapacity)
+        }).catch(error => {
+          reject(error)
+        })
+      })
+    },
+    async fetchHostState () {
+      return new Promise((resolve, reject) => {
+        setInterval(() => {
+          api('listHostsMetrics', { listall: true }).then(async json => {
+            const hosts = json.listhostsmetricsresponse.host || []
+            const totalHostCount = json.listhostsmetricsresponse.count
+            let errorHostCount = 0
+            hosts.forEach((host) => {
+              if (host.state !== 'Up' || host.resourcestate !== 'Enabled') {
+                errorHostCount = errorHostCount + 1
+              }
+            })
+            if (errorHostCount !== 0) {
+              const ratio = 1 - (errorHostCount / totalHostCount)
+              if (ratio <= 0.70) {
+                this.faviconState = '#FFA500'
+                if (ratio <= 0.40) {
+                  this.faviconState = '#FF0000'
+                }
+              }
+            }
+            resolve(this.faviconState)
+          }).catch(error => {
+            reject(error)
+          })
+        }, this.faviconStateInterval)
+      })
+    },
+    faviconSetting () {
+      const faviconSize = 16
+      const favicon = document.getElementById('favicon')
+      const canvas = document.createElement('canvas')
+      canvas.width = faviconSize
+      canvas.height = faviconSize
+      const context = canvas.getContext('2d')
+      const img = document.createElement('img')
+      img.src = favicon.href
+
+      img.onload = () => {
+        context.drawImage(img, 0, 0, 16, 16)
+
+        context.beginPath()
+        context.fillStyle = this.faviconState
+        context.arc(canvas.width - faviconSize / 4, faviconSize / 4, faviconSize / 4, 0, 2 * Math.PI)
+        context.fill()
+
+        favicon.href = canvas.toDataURL('image/png')
+      }
     }
   }
 }
