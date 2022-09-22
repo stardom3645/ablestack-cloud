@@ -40,6 +40,7 @@
         {{ $t('label.genie.portal.url') }}
       </template>
       <genie-url :resource="resource" :size="size" />
+    </a-tooltip>
     <a-tooltip arrowPointAtCenter placement="bottomRight" v-if="resource && resource.id && resource.outofbandmanagement && dataView">
       <template #title>
         {{ $t('label.oobm.portal.url') }}
@@ -116,7 +117,6 @@ export default {
     WallLinkUrl,
     GenieUrl,
     WorksUrl,
-    WallLinkUrl,
     OobmUrl
   },
   data () {
