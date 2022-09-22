@@ -56,6 +56,7 @@ import org.apache.cloudstack.api.response.UserResponse;
 import org.apache.cloudstack.api.response.UserVmResponse;
 import org.apache.cloudstack.api.response.VolumeResponse;
 import org.apache.cloudstack.api.response.ZoneResponse;
+import org.apache.cloudstack.outofbandmanagement.OutOfBandManagement;
 import org.apache.cloudstack.context.CallContext;
 import org.apache.log4j.Logger;
 
@@ -248,6 +249,16 @@ public class ViewResponseHelper {
             vrDataList.put(vr.getId(), vrData);
         }
         return new ArrayList<HostResponse>(vrDataList.values());
+    }
+
+    public static List<OutOfBandManagement> createHostOobmResponse(HostJoinVO... hosts) {
+        Hashtable<Long, OutOfBandManagement> vrDataList = new Hashtable<Long, OutOfBandManagement>();
+        // Initialise the vrdatalist with the input data
+        for (HostJoinVO vr : hosts) {
+            OutOfBandManagement vrData = ApiDBUtils.newHostOobmResponse(vr);
+            vrDataList.put(vr.getId(), vrData);
+        }
+        return new ArrayList<OutOfBandManagement>(vrDataList.values());
     }
 
     public static List<HostForMigrationResponse> createHostForMigrationResponse(EnumSet<HostDetails> details, HostJoinVO... hosts) {

@@ -234,6 +234,7 @@ public class BackupManagerImpl extends ManagerBase implements BackupManager {
         }
 
         if (keyword != null) {
+            sc.addOr("uuid", SearchCriteria.Op.LIKE, "%" + keyword + "%");
             sc.setParameters("name", "%" + keyword + "%");
         }
         Pair<List<BackupOfferingVO>, Integer> result = backupOfferingDao.searchAndCount(sc, searchFilter);
@@ -541,6 +542,7 @@ public class BackupManagerImpl extends ManagerBase implements BackupManager {
         }
 
         if (keyword != null) {
+            sc.addOr("uuid", SearchCriteria.Op.LIKE, "%" + keyword + "%");
             sc.setJoinParameters("vmSearch", "name", "%" + keyword + "%");
         }
 

@@ -52,6 +52,10 @@ public class ListRolesCmd extends BaseListCmd {
     @Parameter(name = ApiConstants.TYPE, type = CommandType.STRING, description = "List role by role type, valid options are: Admin, ResourceAdmin, DomainAdmin, User.")
     private String roleType;
 
+    @Parameter(name = ApiConstants.KEYWORD, type = CommandType.STRING, description = "List role by role keyword.")
+    private String keyword;
+
+
     /////////////////////////////////////////////////////
     /////////////////// Accessors ///////////////////////
     /////////////////////////////////////////////////////
@@ -62,6 +66,10 @@ public class ListRolesCmd extends BaseListCmd {
 
     public String getName() {
         return roleName;
+    }
+
+    public String getKeyword() {
+        return keyword;
     }
 
     public RoleType getRoleType() {
@@ -105,7 +113,6 @@ public class ListRolesCmd extends BaseListCmd {
         response.setResponseName(getCommandName());
         setResponseObject(response);
     }
-
     @Override
     public void execute() {
         Pair<List<Role>, Integer> roles;
@@ -115,6 +122,8 @@ public class ListRolesCmd extends BaseListCmd {
             roles = roleService.findRolesByName(getName(), getStartIndex(), getPageSizeVal());
         } else if (getRoleType() != null) {
             roles = roleService.findRolesByType(getRoleType(), getStartIndex(), getPageSizeVal());
+        } else if (StringUtils.isNotBlank(getKeyword())) {
+            roles = roleService.findRolesByKeyword(getKeyword(), getStartIndex(), getPageSizeVal());
         } else {
             roles = roleService.listRoles(getStartIndex(), getPageSizeVal());
         }

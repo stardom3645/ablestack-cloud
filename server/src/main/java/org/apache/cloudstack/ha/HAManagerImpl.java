@@ -351,6 +351,9 @@ public final class HAManagerImpl extends ManagerBase implements HAManager, Clust
                         haConfig.setEnabled(enable);
                         haConfig.setManagementServerId(ManagementServerNode.getManagementServerId());
                     }
+                    if (haProvider != null && enable != null) {
+                        haConfig.setHastate(HAConfig.HAState.Available);
+                    }
                     haConfig.setResourceId(resourceId);
                     haConfig.setResourceType(resourceType);
                     if (StringUtils.isEmpty(haConfig.getHaProvider())) {
@@ -413,15 +416,39 @@ public final class HAManagerImpl extends ManagerBase implements HAManager, Clust
 
     @Override
     @ActionEvent(eventType = EventTypes.EVENT_HA_RESOURCE_ENABLE, eventDescription = "enabling HA for a cluster")
-    public boolean enableHA(final Cluster cluster) {
+    public boolean enableHA(final Cluster cluster, Boolean includeHost) {
         clusterDetailsDao.persist(cluster.getId(), HA_ENABLED_DETAIL, String.valueOf(true));
+
+        //host enableHA
+        if (includeHost) {
+            List<? extends HAResource> resources = hostDao.findByClusterId(cluster.getId());
+            for (HAResource resource : resources) {
+                final HAConfig haConfig = haConfigDao.findHAResource(resource.getId(), resource.resourceType());
+                if (haConfig == null) {
+                    boolean configureHA = configureHA(resource.getId(), resource.resourceType(), true, "kvmhaprovider");
+                } else {
+                    boolean result = enableHA(resource.getId(), resource.resourceType());
+                }
+            }
+        }
         return true;
     }
 
     @Override
     @ActionEvent(eventType = EventTypes.EVENT_HA_RESOURCE_DISABLE, eventDescription = "disabling HA for a cluster")
-    public boolean disableHA(final Cluster cluster) {
+    public boolean disableHA(final Cluster cluster, Boolean includeHost) {
         clusterDetailsDao.persist(cluster.getId(), HA_ENABLED_DETAIL, String.valueOf(false));
+
+        //host disableHA
+        if (includeHost) {
+            List<? extends HAResource> resources = hostDao.findByClusterId(cluster.getId());
+            for (HAResource resource : resources) {
+                final HAConfig haConfig = haConfigDao.findHAResource(resource.getId(), resource.resourceType());
+                if (haConfig != null && haConfig.isEnabled()) {
+                    boolean result = disableHA(resource.getId(), resource.resourceType());
+                }
+            }
+        }
         return transitionResourceStateToDisabled(cluster);
     }
 

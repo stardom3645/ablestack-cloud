@@ -141,6 +141,7 @@ import org.apache.cloudstack.region.PortableIp;
 import org.apache.cloudstack.region.PortableIpRange;
 import org.apache.cloudstack.region.Region;
 import org.apache.cloudstack.usage.Usage;
+import org.apache.cloudstack.outofbandmanagement.OutOfBandManagement;
 
 import com.cloud.capacity.Capacity;
 import com.cloud.configuration.ResourceCount;
@@ -257,6 +258,8 @@ public interface ResponseGenerator {
     HostResponse createHostResponse(Host host, EnumSet<HostDetails> details);
 
     HostResponse createHostResponse(Host host);
+
+    OutOfBandManagement createHostOobmResponse(Host host);
 
     HostForMigrationResponse createHostForMigrationResponse(Host host);
 

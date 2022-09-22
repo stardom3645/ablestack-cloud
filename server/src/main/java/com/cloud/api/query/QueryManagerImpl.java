@@ -617,7 +617,7 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
             ssc.addOr("state", Op.LIKE, "%" + keyword + "%");
             ssc.addOr("accountName", Op.LIKE, "%" + keyword + "%");
             ssc.addOr("accountType", Op.LIKE, "%" + keyword + "%");
-
+            ssc.addOr("uuid", SearchCriteria.Op.LIKE, "%" + keyword + "%");
             sc.addAnd("username", Op.SC, ssc);
         }
 
@@ -758,6 +758,7 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
             ssc.addOr("type", SearchCriteria.Op.LIKE, "%" + keyword + "%");
             ssc.addOr("description", SearchCriteria.Op.LIKE, "%" + keyword + "%");
             ssc.addOr("level", SearchCriteria.Op.LIKE, "%" + keyword + "%");
+            ssc.addOr("uuid", SearchCriteria.Op.LIKE, "%" + keyword + "%");
             sc.addAnd("level", SearchCriteria.Op.SC, ssc);
         }
 
@@ -942,6 +943,7 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
         if (keyword != null) {
             SearchCriteria<InstanceGroupJoinVO> ssc = _vmGroupJoinDao.createSearchCriteria();
             ssc.addOr("name", SearchCriteria.Op.LIKE, "%" + keyword + "%");
+            ssc.addOr("uuid", SearchCriteria.Op.LIKE, "%" + keyword + "%");
             sc.addAnd("name", SearchCriteria.Op.SC, ssc);
         }
 
@@ -1145,6 +1147,7 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
             SearchCriteria<UserVmJoinVO> ssc = _userVmJoinDao.createSearchCriteria();
             ssc.addOr("displayName", SearchCriteria.Op.LIKE, "%" + keyword + "%");
             ssc.addOr("name", SearchCriteria.Op.LIKE, "%" + keyword + "%");
+            ssc.addOr("uuid", SearchCriteria.Op.LIKE, "%" + keyword + "%");
             if (isRootAdmin) {
                 ssc.addOr("instanceName", SearchCriteria.Op.LIKE, "%" + keyword + "%");
             }
@@ -1346,6 +1349,7 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
             SearchCriteria<SecurityGroupJoinVO> ssc = _securityGroupJoinDao.createSearchCriteria();
             ssc.addOr("name", SearchCriteria.Op.LIKE, "%" + keyword + "%");
             ssc.addOr("description", SearchCriteria.Op.LIKE, "%" + keyword + "%");
+            ssc.addOr("uuid", SearchCriteria.Op.LIKE, "%" + keyword + "%");
             sc.addAnd("name", SearchCriteria.Op.SC, ssc);
         }
 
@@ -1503,6 +1507,7 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
             ssc.addOr("networkName", SearchCriteria.Op.LIKE, "%" + keyword + "%");
             ssc.addOr("vpcName", SearchCriteria.Op.LIKE, "%" + keyword + "%");
             ssc.addOr("redundantState", SearchCriteria.Op.LIKE, "%" + keyword + "%");
+            ssc.addOr("uuid", SearchCriteria.Op.LIKE, "%" + keyword + "%");
             sc.addAnd("instanceName", SearchCriteria.Op.SC, ssc);
         }
 
@@ -1721,6 +1726,7 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
             SearchCriteria<ProjectJoinVO> ssc = _projectJoinDao.createSearchCriteria();
             ssc.addOr("name", SearchCriteria.Op.LIKE, "%" + keyword + "%");
             ssc.addOr("displayText", SearchCriteria.Op.LIKE, "%" + keyword + "%");
+            ssc.addOr("uuid", SearchCriteria.Op.LIKE, "%" + keyword + "%");
             sc.addAnd("name", SearchCriteria.Op.SC, ssc);
         }
 
@@ -1959,7 +1965,7 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
             ssc.addOr("name", SearchCriteria.Op.LIKE, "%" + keyword + "%");
             ssc.addOr("status", SearchCriteria.Op.LIKE, "%" + keyword + "%");
             ssc.addOr("type", SearchCriteria.Op.LIKE, "%" + keyword + "%");
-
+            ssc.addOr("uuid", SearchCriteria.Op.LIKE, "%" + keyword + "%");
             sc.addAnd("name", SearchCriteria.Op.SC, ssc);
         }
 
@@ -2286,6 +2292,7 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
         if (keyword != null) {
             SearchCriteria<DomainJoinVO> ssc = _domainJoinDao.createSearchCriteria();
             ssc.addOr("name", SearchCriteria.Op.LIKE, "%" + keyword + "%");
+            ssc.addOr("uuid", SearchCriteria.Op.LIKE, "%" + keyword + "%");
             sc.addAnd("name", SearchCriteria.Op.SC, ssc);
         }
 
@@ -2424,6 +2431,7 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
             SearchCriteria<AccountJoinVO> ssc = _accountJoinDao.createSearchCriteria();
             ssc.addOr("accountName", SearchCriteria.Op.LIKE, "%" + keyword + "%");
             ssc.addOr("state", SearchCriteria.Op.LIKE, "%" + keyword + "%");
+            ssc.addOr("uuid", SearchCriteria.Op.LIKE, "%" + keyword + "%");
             sc.addAnd("accountName", SearchCriteria.Op.SC, ssc);
         }
 
@@ -2610,7 +2618,7 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
             SearchCriteria<StoragePoolJoinVO> ssc = _poolJoinDao.createSearchCriteria();
             ssc.addOr("name", SearchCriteria.Op.LIKE, "%" + keyword + "%");
             ssc.addOr("poolType", SearchCriteria.Op.LIKE, "%" + keyword + "%");
-
+            ssc.addOr("uuid", SearchCriteria.Op.LIKE, "%" + keyword + "%");
             sc.addAnd("name", SearchCriteria.Op.SC, ssc);
         }
 
@@ -2792,6 +2800,7 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
             SearchCriteria<ImageStoreJoinVO> ssc = _imageStoreJoinDao.createSearchCriteria();
             ssc.addOr("name", SearchCriteria.Op.LIKE, "%" + keyword + "%");
             ssc.addOr("providerName", SearchCriteria.Op.LIKE, "%" + keyword + "%");
+            ssc.addOr("uuid", SearchCriteria.Op.LIKE, "%" + keyword + "%");
             sc.addAnd("name", SearchCriteria.Op.SC, ssc);
         }
 
@@ -2874,6 +2883,7 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
             SearchCriteria<ImageStoreJoinVO> ssc = _imageStoreJoinDao.createSearchCriteria();
             ssc.addOr("name", SearchCriteria.Op.LIKE, "%" + keyword + "%");
             ssc.addOr("provider", SearchCriteria.Op.LIKE, "%" + keyword + "%");
+            ssc.addOr("uuid", SearchCriteria.Op.LIKE, "%" + keyword + "%");
             sc.addAnd("name", SearchCriteria.Op.SC, ssc);
         }
 
@@ -2983,7 +2993,7 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
             SearchCriteria<DiskOfferingJoinVO> ssc = _diskOfferingJoinDao.createSearchCriteria();
             ssc.addOr("displayText", SearchCriteria.Op.LIKE, "%" + keyword + "%");
             ssc.addOr("name", SearchCriteria.Op.LIKE, "%" + keyword + "%");
-
+            ssc.addOr("uuid", SearchCriteria.Op.LIKE, "%" + keyword + "%");
             sc.addAnd("name", SearchCriteria.Op.SC, ssc);
         }
 
@@ -3215,7 +3225,7 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
             SearchCriteria<ServiceOfferingJoinVO> ssc = _srvOfferingJoinDao.createSearchCriteria();
             ssc.addOr("displayText", SearchCriteria.Op.LIKE, "%" + keyword + "%");
             ssc.addOr("name", SearchCriteria.Op.LIKE, "%" + keyword + "%");
-
+            ssc.addOr("uuid", SearchCriteria.Op.LIKE, "%" + keyword + "%");
             sc.addAnd("name", SearchCriteria.Op.SC, ssc);
         }
 
@@ -3396,6 +3406,7 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
                 SearchCriteria<DataCenterJoinVO> ssc = _dcJoinDao.createSearchCriteria();
                 ssc.addOr("name", SearchCriteria.Op.LIKE, "%" + keyword + "%");
                 ssc.addOr("description", SearchCriteria.Op.LIKE, "%" + keyword + "%");
+                ssc.addOr("uuid", SearchCriteria.Op.LIKE, "%" + keyword + "%");
                 sc.addAnd("name", SearchCriteria.Op.SC, ssc);
             }
 
@@ -3629,6 +3640,8 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
             Long startIndex, Long zoneId, HypervisorType hyperType, boolean showDomr, boolean onlyReady, List<Account> permittedAccounts, Account caller,
             ListProjectResourcesCriteria listProjectResourcesCriteria, Map<String, String> tags, boolean showRemovedTmpl, List<Long> ids, Long parentTemplateId, Boolean showUnique) {
 
+
+
         // check if zone is configured, if not, just return empty list
         List<HypervisorType> hypers = null;
         if (!isIso) {
@@ -3828,7 +3841,10 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
         // other criteria
 
         if (keyword != null) {
-            sc.addAnd("name", SearchCriteria.Op.LIKE, "%" + keyword + "%");
+            SearchCriteria<TemplateJoinVO> scc = _templateJoinDao.createSearchCriteria();
+            scc.addOr("name", SearchCriteria.Op.LIKE, "%" + keyword + "%");
+            scc.addOr("uuid", SearchCriteria.Op.LIKE, "%" + keyword + "%");
+            sc.addAnd("name", SearchCriteria.Op.SC, scc);
         } else if (name != null) {
             sc.addAnd("name", SearchCriteria.Op.EQ, name);
         }
@@ -4223,7 +4239,7 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
             SearchCriteria<AffinityGroupJoinVO> ssc = _affinityGroupJoinDao.createSearchCriteria();
             ssc.addOr("name", SearchCriteria.Op.LIKE, "%" + keyword + "%");
             ssc.addOr("type", SearchCriteria.Op.LIKE, "%" + keyword + "%");
-
+            ssc.addOr("uuid", SearchCriteria.Op.LIKE, "%" + keyword + "%");
             sc.addAnd("name", SearchCriteria.Op.SC, ssc);
         }
 

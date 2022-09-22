@@ -1202,7 +1202,7 @@ public class VirtualMachineManagerImpl extends ManagerBase implements VirtualMac
                     }
                     StartCommand command = command = new StartCommand(vmTO, dest.getHost(), getExecuteInSequence(vm.getHypervisorType()));
 
-                    if ("ABLESTACK".equals(provider) && krbdpath.length() > 0) {
+                    if (provider != null && !provider.isEmpty() && "ABLESTACK".equals(provider) && krbdpath != null && !krbdpath.isEmpty()) {
                         command.setProvider(provider);
                         command.setKrbdpath(krbdpath);
                     }
@@ -2637,7 +2637,8 @@ public class VirtualMachineManagerImpl extends ManagerBase implements VirtualMac
 
         final VirtualMachineTO to = toVmTO(profile);
         PrepareForMigrationCommand pfmc = new PrepareForMigrationCommand(to);
-        if ("ABLESTACK".equals(provider)) {
+        
+        if (provider != null && !provider.isEmpty() && "ABLESTACK".equals(provider)) {
             pfmc.setProvider(provider);
         }
 
