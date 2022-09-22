@@ -925,7 +925,25 @@ public class ApiConstants {
     public static final String DESKTOP_CLUSTER_TYPE = "clustertype";
     public static final String DESKTOP_CONTROLLER_DC_IP = "dcip";
     public static final String DESKTOP_CONTROLLER_WORKS_IP = "worksip";
-
+    public static final String AUTOMATION_TEMPLATES = "templates";
+    public static final String AUTOMATION_CONTROLLER_VERSION_UPLOADTYPE = "controlleruploadtype";
+    public static final String AUTOMATION_CONTROLLER_VERSION_NAME = "controllerversionname";
+    public static final String AUTOMATION_CONTROLLER_VERSION = "automationcontrollerversion";
+    public static final String OS_TYPE = "ostype";
+    public static final String AUTOMATION_TEMPLATE_ID = "automationtemplateid";
+    public static final String AUTOMATION_TEMPLATE_NAME = "automationtemplatename";
+    public static final String AUTOMATION_CONTROLLER_IP = "automationcontrollerip";
+    public static final String AUTOMATION_USER_VIRTUAL_MACHINES = "automationuservirtualmachines";
+    public static final String AUTOMATION_CONTROLLER_PUBLIC_IP = "automationcontrollerpublicip";
+    public static final String AUTOMATION_CONTROLLER_ID = "controllerid";
+    public static final String AUTOMATION_TEMPLATE_STATE = "templatestate";
+    public static final String DEPLOYED_UNIT_SERVICE_MACHINES = "deployedunitservicemachines";
+    public static final String DEPLOYED_UNIT_SERVICES = "deployedunitservices";
+    public static final String SERVICE_UNIT_NAME = "serviceunitname";
+    public static final String DEPLOYED_GROUP_ID = "deployedgroupid";
+    public static final String DEPLOYED_VM_ID = "deployedvmid";
+    public static final String DEPLOYED_VIRTUAL_MACHINES = "deployedvms";
+    public static final String ACCESS_INFO = "accessinfo";
 
     public static final String BOOT_TYPE = "boottype";
     public static final String BOOT_MODE = "bootmode";

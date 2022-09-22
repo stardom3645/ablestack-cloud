@@ -69,7 +69,7 @@ export default {
     }
   },
   beforeCreate () {
-    this.apiParams = this.$getApiParams('updateDesktopControllerVersion')
+    this.apiParams = this.$getApiParams('UpdateDesktopControllerVersion')
   },
   created () {
     this.states = [

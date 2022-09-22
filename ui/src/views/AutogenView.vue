@@ -518,6 +518,7 @@ export default {
     eventBus.off('async-job-complete')
     eventBus.off('exec-action')
     eventBus.off('desktop-refresh-data')
+    eventBus.off('automation-refresh-data')
   },
   mounted () {
     eventBus.on('exec-action', (args) => {
@@ -536,6 +537,16 @@ export default {
     })
     eventBus.on('desktop-refresh-data', () => {
       if (this.$route.path === '/desktopcluster' || this.$route.path.includes('/desktopcluster/')) {
+        this.fetchData()
+      }
+    })
+    // eventBus.on('automation-refresh-data', () => {
+    //   if (this.$route.path === '/automationtemplate' || this.$route.path.includes('/automationtemplate/')) {
+    //     this.fetchData()
+    //   }
+    // })
+    eventBus.on('automation-controller-refresh-data', () => {
+      if (this.$route.path === '/automationcontroller' || this.$route.path.includes('/automationcontroller/')) {
         this.fetchData()
       }
     })
@@ -846,7 +857,7 @@ export default {
         return ![this.$t('label.state'), this.$t('label.hostname'), this.$t('label.hostid'), this.$t('label.zonename'),
           this.$t('label.zone'), this.$t('label.zoneid'), this.$t('label.ip'), this.$t('label.ipaddress'), this.$t('label.privateip'),
           this.$t('label.linklocalip'), this.$t('label.size'), this.$t('label.sizegb'), this.$t('label.current'),
-          this.$t('label.created'), this.$t('label.order')].includes(column.title)
+          this.$t('label.created'), this.$t('label.order'), this.$t('label.networkname')].includes(column.title)
       })
 
       if (['listTemplates', 'listIsos'].includes(this.apiName) && this.dataView) {

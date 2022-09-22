@@ -108,6 +108,10 @@ public class CapabilitiesResponse extends BaseResponse {
     @Param(description = "Desktop Service Works Portal URL setting")
     private String desktopWorksPortalPort;
 
+    @SerializedName("automationserviceenabled")
+    @Param(description = "true if Automation Service plugin is enabled, false otherwise")
+    private boolean automationServiceEnabled;
+
     @SerializedName("wallportalport")
     @Param(description = "Monitoring Service Wall Portal Port setting")
     private String wallPortalPort;
@@ -206,6 +210,10 @@ public class CapabilitiesResponse extends BaseResponse {
 
     public void setDesktopWorksPortalPort(String desktopWorksPortalPort) {
         this.desktopWorksPortalPort = desktopWorksPortalPort;
+    }
+
+    public void setAutomationServiceEnabled(boolean automationServiceEnabled) {
+        this.automationServiceEnabled = automationServiceEnabled;
     }
 
     public void setWallPortalPort(String wallPortalPort) {
