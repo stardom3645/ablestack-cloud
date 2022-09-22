@@ -161,8 +161,7 @@ public class VMEntityManagerImpl implements VMEntityManager {
         if (MapUtils.isNotEmpty(vmEntityVO.getDetails()) &&
                 vmEntityVO.getDetails().containsKey(VirtualMachineProfile.Param.TpmVersion.getName()) &&
                 (
-                        "V2_0".equalsIgnoreCase(vmEntityVO.getDetails().get(VirtualMachineProfile.Param.TpmVersion.getName())) ||
-                        "V1_2".equalsIgnoreCase(vmEntityVO.getDetails().get(VirtualMachineProfile.Param.TpmVersion.getName()))
+                        "V2_0".equalsIgnoreCase(vmEntityVO.getDetails().get(VirtualMachineProfile.Param.TpmVersion.getName()))
                 ) )
         {
             Map<String, String> details = vmEntityVO.getDetails();

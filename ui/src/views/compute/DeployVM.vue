@@ -1534,7 +1534,6 @@ export default {
     fetchTpm () {
       this.options.tpmVersion = [
         { id: 'NONE', description: 'disabled' },
-        { id: 'V1_2', description: 'TPM v1.2' },
         { id: 'V2_0', description: 'TPM v2.0' }
       ]
     },
