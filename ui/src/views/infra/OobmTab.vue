@@ -66,6 +66,14 @@
           </div>
         </div>
       </a-list-item>
+      <a-list-item v-if="host.outofbandmanagement && host.details.webport">
+        <div>
+          <strong>{{ $t('label.webport') }}</strong>
+          <div>
+            {{ host.details.webport }}
+          </div>
+        </div>
+      </a-list-item>
     </a-list>
   </a-spin>
 </template>

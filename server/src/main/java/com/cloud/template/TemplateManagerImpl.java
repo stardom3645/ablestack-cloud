@@ -383,6 +383,7 @@ public class TemplateManagerImpl extends ManagerBase implements TemplateManager,
             String protocol = VolumeApiService.UseHttpsToUpload.value() ? "https" : "http";
 
             String url = ImageStoreUtil.generatePostUploadUrl(ssvmUrlDomain, firstCommand.getRemoteEndPoint(), firstCommand.getEntityUUID(), protocol);
+            String sig_url = ImageStoreUtil.generatePostUploadUrl(ssvmUrlDomain, firstCommand.getRemoteEndPoint(), firstCommand.getEntityUUID(), "https");
             response.setPostURL(new URL(url));
 
             // set the post url, this is used in the monitoring thread to determine the SSVM
@@ -410,7 +411,7 @@ public class TemplateManagerImpl extends ManagerBase implements TemplateManager,
             /*
              * signature calculated on the url, expiry, metadata.
              */
-            response.setSignature(EncryptionUtil.generateSignature(metadata + url + expires, key));
+            response.setSignature(EncryptionUtil.generateSignature(metadata + sig_url + expires, key));
 
             return response;
         } else {
