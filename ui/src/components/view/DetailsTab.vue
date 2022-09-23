@@ -52,6 +52,9 @@
           <div v-else-if="$route.meta.name === 'mastertemplate' && item === 'templatename'">
             <router-link :to="{ path: '/template/' + dataResource.templateid }">{{ dataResource.templatename }} </router-link>
           </div>
+          <div v-else-if="$route.meta.name === 'deployedresource' && item === 'accessinfo'">
+            <div v-html="dataResource.accessinfo"></div>
+          </div>
           <div v-else-if="$route.meta.name === 'computeoffering' && item === 'rootdisksize'">
             <div>
               {{ dataResource.rootdisksize }} GB
@@ -144,7 +147,6 @@ export default {
       if (this.dataResource.nic && this.dataResource.nic.length > 0) {
         return this.dataResource.nic.filter(e => { return e.ip6address }).map(e => { return e.ip6address }).join(', ')
       }
-
       return null
     },
     ip6routes () {

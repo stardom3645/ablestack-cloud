@@ -4101,6 +4101,7 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
         final boolean kubernetesClusterExperimentalFeaturesEnabled = Boolean.parseBoolean(_configDao.getValue("cloud.kubernetes.cluster.experimental.features.enabled"));
 
         final boolean desktopServiceEnabled = Boolean.parseBoolean(_configDao.getValue("cloud.desktop.service.enabled"));
+        final boolean automationServiceEnabled = Boolean.parseBoolean(_configDao.getValue("cloud.automation.service.enabled"));
         final String desktopWorksPortalPort = _configDao.getValue("cloud.desktop.service.works.portal.port");
         final String wallPortalPort = _configDao.getValue("monitoring.wall.portal.port");
         final String wallPortalVmUri = _configDao.getValue("monitoring.wall.portal.vm.uri");
@@ -4130,6 +4131,7 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
         capabilities.put("kubernetesServiceEnabled", kubernetesServiceEnabled);
         capabilities.put("kubernetesClusterExperimentalFeaturesEnabled", kubernetesClusterExperimentalFeaturesEnabled);
         capabilities.put("desktopServiceEnabled", desktopServiceEnabled);
+        capabilities.put("automationServiceEnabled", automationServiceEnabled);
         capabilities.put("desktopWorksPortalPort", desktopWorksPortalPort);
         capabilities.put("wallPortalPort", wallPortalPort);
         capabilities.put("wallPortalVmUri", wallPortalVmUri);

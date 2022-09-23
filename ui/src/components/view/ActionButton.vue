@@ -35,6 +35,12 @@
       </template>
       <wall-link-url :resource="resource" :size="size" />
     </a-tooltip>
+    <a-tooltip arrowPointAtCenter placement="bottomRight" v-if="resource && resource.id && dataView">
+      <template #title>
+        {{ $t('label.genie.portal.url') }}
+      </template>
+      <genie-url :resource="resource" :size="size" />
+    </a-tooltip>
     <a-tooltip arrowPointAtCenter placement="bottomRight" v-if="resource && resource.id && resource.outofbandmanagement && dataView">
       <template #title>
         {{ $t('label.oobm.portal.url') }}
@@ -101,14 +107,16 @@ import { api } from '@/api'
 import Console from '@/components/widgets/Console'
 import WorksUrl from '@/components/widgets/WorksUrl'
 import WallLinkUrl from '@/components/widgets/WallLinkUrl'
+import GenieUrl from '@/components/widgets/GenieUrl'
 import OobmUrl from '@/components/widgets/OobmUrl'
 
 export default {
   name: 'ActionButton',
   components: {
     Console,
-    WorksUrl,
     WallLinkUrl,
+    GenieUrl,
+    WorksUrl,
     OobmUrl
   },
   data () {

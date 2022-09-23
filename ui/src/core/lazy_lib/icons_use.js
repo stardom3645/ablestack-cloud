@@ -18,6 +18,7 @@
 import {
   ApartmentOutlined,
   ApiOutlined,
+  AppstoreAddOutlined,
   AppstoreOutlined,
   ArrowDownOutlined,
   ArrowUpOutlined,
@@ -52,6 +53,7 @@ import {
   CloudServerOutlined,
   CloudUploadOutlined,
   ClusterOutlined,
+  CloudSyncOutlined,
   CodeOutlined,
   CompassOutlined,
   ControlOutlined,
@@ -90,6 +92,7 @@ import {
   GithubOutlined,
   GlobalOutlined,
   GoldOutlined,
+  GroupOutlined,
   HddOutlined,
   HomeOutlined,
   IdcardOutlined,
@@ -168,6 +171,7 @@ export default {
   install: (app) => {
     app.component('ApartmentOutlined', ApartmentOutlined)
     app.component('ApiOutlined', ApiOutlined)
+    app.component('AppstoreAddOutlined', AppstoreAddOutlined)
     app.component('AppstoreOutlined', AppstoreOutlined)
     app.component('ArrowDownOutlined', ArrowDownOutlined)
     app.component('ArrowUpOutlined', ArrowUpOutlined)
@@ -200,6 +204,7 @@ export default {
     app.component('CloudDownloadOutlined', CloudDownloadOutlined)
     app.component('CloudOutlined', CloudOutlined)
     app.component('CloudServerOutlined', CloudServerOutlined)
+    app.component('CloudSyncOutlined', CloudSyncOutlined)
     app.component('CloudUploadOutlined', CloudUploadOutlined)
     app.component('ClusterOutlined', ClusterOutlined)
     app.component('CodeOutlined', CodeOutlined)
@@ -240,6 +245,7 @@ export default {
     app.component('GithubOutlined', GithubOutlined)
     app.component('GlobalOutlined', GlobalOutlined)
     app.component('GoldOutlined', GoldOutlined)
+    app.component('GroupOutlined', GroupOutlined)
     app.component('HddOutlined', HddOutlined)
     app.component('HomeOutlined', HomeOutlined)
     app.component('IdcardOutlined', IdcardOutlined)
