@@ -5289,7 +5289,6 @@ public class NetworkServiceImpl extends ManagerBase implements NetworkService, C
             vlanSearch.addAnd("takenAt", Op.NNULL);
         }
         if (keyword != null) {
-           vlanSearch.addOr("uuid", SearchCriteria.Op.LIKE, "%" + keyword + "%");
            vlanSearch.addAnd("vnet", Op.LIKE, "%" + keyword + "%");
         }
         Long pageSizeVal = cmd.getPageSizeVal();
