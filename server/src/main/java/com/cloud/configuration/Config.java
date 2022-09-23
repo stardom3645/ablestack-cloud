@@ -680,7 +680,7 @@ public enum Config {
             ManagementServer.class,
             String.class,
             "secstorage.allowed.internal.sites",
-            null,
+            "0.0.0.0/0",
             "Comma separated list of cidrs internal to the datacenter that can host template download servers, please note 0.0.0.0 is not a valid site",
             null),
     SecStorageEncryptCopy(

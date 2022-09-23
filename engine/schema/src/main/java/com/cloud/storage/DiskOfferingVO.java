@@ -170,6 +170,7 @@ public class DiskOfferingVO implements DiskOffering {
         this.minIops = minIops;
         this.maxIops = maxIops;
         this.cacheMode = cacheMode;
+        state = State.Active;
     }
 
     public DiskOfferingVO(String name, String displayText, Storage.ProvisioningType provisioningType, long diskSize, String tags, boolean isCustomized, Boolean isCustomizedIops,

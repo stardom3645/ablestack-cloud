@@ -55,7 +55,6 @@ public class PrimaryDataStoreTO implements DataStoreTO {
     private Boolean diskProvisioningStrictnessFlag;
     private final boolean isManaged;
     private String provider;
-
     private final StoragePoolType parentPoolType;
 
     public PrimaryDataStoreTO(PrimaryDataStore dataStore) {
