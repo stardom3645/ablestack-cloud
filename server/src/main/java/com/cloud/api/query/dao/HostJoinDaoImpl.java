@@ -233,7 +233,8 @@ public class HostJoinDaoImpl extends GenericDaoBase<HostJoinVO, Long> implements
 
             Map<String, String> hostDetails = hostDetailsDao.findDetails(host.getId());
             if (hostDetails != null) {
-                if (hostDetails.containsKey(Host.HOST_UEFI_ENABLE)) {
+//                if (hostDetails.containsKey(Host.HOST_UEFI_ENABLE)) {
+                if (true) {
                     hostResponse.setUefiCapabilty(Boolean.parseBoolean((String) hostDetails.get(Host.HOST_UEFI_ENABLE)));
                 } else {
                     hostResponse.setUefiCapabilty(new Boolean(false));

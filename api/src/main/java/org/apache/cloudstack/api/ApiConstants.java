@@ -967,6 +967,8 @@ public class ApiConstants {
 
     public static final String KRBD_PATH = "krbdpath";
 
+    public static final String KRBD_PATH = "krbdpath";
+
     public enum BootType {
         UEFI, BIOS;
 

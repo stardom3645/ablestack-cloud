@@ -161,7 +161,7 @@
         </a-form-item>
         <div
           v-if="form.protocol === 'nfs' || form.protocol === 'SMB' || form.protocol === 'iscsi' || form.protocol === 'vmfs'|| form.protocol === 'Gluster' || form.protocol === 'Linstor' ||
-            (form.protocol === 'PreSetup' && hypervisorType === 'VMware') || form.protocol === 'datastorecluster'">
+            (form.protocol === 'PreSetup' && hypervisorType === 'VMware') || form.protocol === 'datastorecluster' && form.protocol !== 'Glue'">
           <a-form-item name="server" ref="server">
             <template #label>
               <tooltip-label :title="$t('label.server')" :tooltip="$t('message.server.description')"/>
