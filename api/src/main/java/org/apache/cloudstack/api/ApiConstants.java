@@ -947,6 +947,7 @@ public class ApiConstants {
 
     public static final String BOOT_TYPE = "boottype";
     public static final String BOOT_MODE = "bootmode";
+    public static final String TPM_VERSION = "tpmversion";
     public static final String BOOT_INTO_SETUP = "bootintosetup";
     public static final String DEPLOY_AS_IS = "deployasis";
     public static final String DEPLOY_AS_IS_DETAILS = "deployasisdetails";
@@ -984,6 +985,20 @@ public class ApiConstants {
         @Override
         public String toString() {
             return this.name();
+        }
+    }
+
+    public enum TpmVersion {
+        V2_0, V1_2, TPM, NONE;
+
+
+        @Override
+        public String toString() {
+            if (this.name().equals("V1_2"))
+                return "1.2";
+            else if (this.name().equals("V2_0"))
+                return "2.0";
+            return "NONE";
         }
     }
 

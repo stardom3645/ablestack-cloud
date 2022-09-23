@@ -239,6 +239,11 @@ public class HostJoinDaoImpl extends GenericDaoBase<HostJoinVO, Long> implements
                 } else {
                     hostResponse.setUefiCapabilty(new Boolean(false));
                 }
+                if (hostDetails.containsKey(Host.HOST_TPM_ENABLE)) {
+                    hostResponse.setTpmCapabilty(Boolean.parseBoolean((String) hostDetails.get(Host.HOST_TPM_ENABLE)));
+                } else {
+                    hostResponse.setTpmCapabilty(new Boolean(false));
+                }
             }
             if (details.contains(HostDetails.all) && host.getHypervisorType() == Hypervisor.HypervisorType.KVM) {
                 //only kvm has the requirement to return host details

@@ -123,6 +123,10 @@ public class DeployVMCmd extends BaseAsyncCreateCustomIdCmd implements SecurityG
     @Parameter(name = ApiConstants.BOOT_INTO_SETUP, type = CommandType.BOOLEAN, required = false, description = "Boot into hardware setup or not (ignored if startVm = false, only valid for vmware)", since = "4.15.0.0")
     private Boolean bootIntoSetup;
 
+
+
+    @Parameter(name = ApiConstants.TPM_VERSION, type = CommandType.STRING, required = false, description = "Boot with TPM", since = "4.18.0.0")
+    private String tpmVersion;
     //DataDisk information
     @ACL
     @Parameter(name = ApiConstants.DISK_OFFERING_ID, type = CommandType.UUID, entityType = DiskOfferingResponse.class, description = "the ID of the disk offering for the virtual machine. If the template is of ISO format,"
@@ -292,6 +296,21 @@ public class DeployVMCmd extends BaseAsyncCreateCustomIdCmd implements SecurityG
         return null;
     }
 
+    public ApiConstants.TpmVersion getTpmVersion() {
+        if (StringUtils.isNotBlank(tpmVersion)) {
+            try {
+                String type = tpmVersion.trim().toUpperCase();
+                return ApiConstants.TpmVersion.valueOf(type);
+            } catch (IllegalArgumentException e) {
+                String errMesg = "Invalid TpmVersion " + tpmVersion + "Specified for vm " + getName()
+                        + " Valid values are: " + Arrays.toString(ApiConstants.BootType.values());
+                s_logger.warn(errMesg);
+                throw new InvalidParameterValueException(errMesg);
+            }
+        }
+        return null;
+    }
+
     public Map<String, String> getDetails() {
         Map<String, String> customparameterMap = new HashMap<String, String>();
         if (details != null && details.size() != 0) {
@@ -310,6 +329,18 @@ public class DeployVMCmd extends BaseAsyncCreateCustomIdCmd implements SecurityG
 
         if (rootdisksize != null && !customparameterMap.containsKey("rootdisksize")) {
             customparameterMap.put("rootdisksize", rootdisksize.toString());
+        }
+        for (Map.Entry<String,String> entry: customparameterMap.entrySet()) {
+            customparameterMap.put(entry.getKey(),entry.getValue());
+        }
+        if(customparameterMap.containsKey(ApiConstants.TpmVersion.V2_0.toString())){
+            customparameterMap.put("tpmVersion", customparameterMap.get(ApiConstants.TpmVersion.V2_0.toString()));
+        }else if(customparameterMap.containsKey("tpmVersion")){
+            customparameterMap.put("tpmVersion", customparameterMap.get("tpmVersion"));
+        }else if(getTpmVersion() != null){
+            customparameterMap.put("tpmVersion", getTpmVersion().toString());
+        }else{
+            customparameterMap.put("tpmVersion", "NONE");
         }
 
         return customparameterMap;
@@ -336,6 +367,7 @@ public class DeployVMCmd extends BaseAsyncCreateCustomIdCmd implements SecurityG
         }
         return null;
     }
+
 
     public Map<String, String> getVmProperties() {
         Map<String, String> map = new HashMap<>();

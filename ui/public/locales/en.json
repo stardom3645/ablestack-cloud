@@ -1831,6 +1831,7 @@
 "label.user": "User",
 "label.user.conflict": "Conflict",
 "label.userdata": "Userdata",
+"label.tpm": "TPM version",
 "label.userdatal2": "User data",
 "label.username": "Username",
 "label.users": "Users",

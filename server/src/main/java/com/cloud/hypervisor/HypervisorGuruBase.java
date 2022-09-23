@@ -236,6 +236,12 @@ public abstract class HypervisorGuruBase extends AdapterBase implements Hypervis
                     to.setBootType((String) map.get(VirtualMachineProfile.Param.BootType));
                 }
             }
+
+            if (map.containsKey(VirtualMachineProfile.Param.TpmVersion)){
+                if (StringUtils.isNotBlank((String) map.get(VirtualMachineProfile.Param.TpmVersion))) {
+                    to.setTpmVersion((String) map.get(VirtualMachineProfile.Param.TpmVersion));
+                }
+            }
         }
 
         List<NicProfile> nicProfiles = vmProfile.getNics();

@@ -191,7 +191,8 @@ if __name__ == '__main__':
         sys.exit(0)
 
     # For docs refer https://libvirt.org/hooks.html#qemu
-    logger.debug("Executing qemu hook with args: %s" % sys.argv)
+    logger.info("Executing qemu hook with args: %s" % sys.argv)
+    logger.info("Executing qemu hook with xml: %s" % parse(sys.stdin).toxml())
     action, status = sys.argv[2:4]
 
     if action not in validQemuActions:
