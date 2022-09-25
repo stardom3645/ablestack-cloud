@@ -4061,6 +4061,7 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
             options.put(VmDetailConstants.DATA_DISK_CONTROLLER, Arrays.asList("osdefault", "ide", "scsi", "virtio"));
             options.put(VmDetailConstants.VIDEO_HARDWARE, Arrays.asList("cirrus", "vga", "qxl", "virtio"));
             options.put(VmDetailConstants.VIDEO_RAM, Collections.emptyList());
+            options.put("tpmVersion", Arrays.asList(ApiConstants.TpmVersion.NONE.toString(), ApiConstants.TpmVersion.V2_0.toString()));
         }
 
         if (HypervisorType.VMware.equals(hypervisorType)) {

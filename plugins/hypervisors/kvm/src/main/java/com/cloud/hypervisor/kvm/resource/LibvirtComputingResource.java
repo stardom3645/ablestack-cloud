@@ -149,6 +149,7 @@ import com.cloud.hypervisor.kvm.resource.LibvirtVMDef.RngDef.RngBackendModel;
 import com.cloud.hypervisor.kvm.resource.LibvirtVMDef.SCSIDef;
 import com.cloud.hypervisor.kvm.resource.LibvirtVMDef.SerialDef;
 import com.cloud.hypervisor.kvm.resource.LibvirtVMDef.TermPolicy;
+import com.cloud.hypervisor.kvm.resource.LibvirtVMDef.TPMDef;
 import com.cloud.hypervisor.kvm.resource.LibvirtVMDef.VideoDef;
 import com.cloud.hypervisor.kvm.resource.LibvirtVMDef.WatchDogDef;
 import com.cloud.hypervisor.kvm.resource.LibvirtVMDef.WatchDogDef.WatchDogAction;
@@ -308,6 +309,8 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
     private String _pod;
     private String _clusterId;
     private final Properties _uefiProperties = new Properties();
+    private final Properties _tpmProperties = new Properties();
+
 
     private long _hvVersion;
     private Duration _timeout;
@@ -799,6 +802,11 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
             s_logger.error("uefi properties file not found due to: " + e.getLocalizedMessage());
         }
 
+        try {
+            loadTpmProperties();
+        } catch (FileNotFoundException e) {
+            s_logger.error("tpm properties file not found due to: " + e.getLocalizedMessage());
+        }
         _storage = new JavaStorageLayer();
         _storage.configure("StorageLayer", params);
 
@@ -1440,6 +1448,9 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
         return !_uefiProperties.isEmpty();
     }
 
+    public boolean isTpmPropertiesFileLoaded() {
+        return !_tpmProperties.isEmpty();
+    }
     private void loadUefiProperties() throws FileNotFoundException {
 
         if (isUefiPropertiesFileLoaded()) {
@@ -1458,6 +1469,34 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
             s_logger.info("guest.nvram.template.secure = " + _uefiProperties.getProperty("guest.nvram.template.secure"));
             s_logger.info("guest.loader.secure =" + _uefiProperties.getProperty("guest.loader.secure"));
             s_logger.info("guest.nvram.path = " + _uefiProperties.getProperty("guest.nvram.path"));
+        } catch (final FileNotFoundException ex) {
+            throw new CloudRuntimeException("Cannot find the file: " + file.getAbsolutePath(), ex);
+        } catch (final IOException ex) {
+            throw new CloudRuntimeException("IOException in reading " + file.getAbsolutePath(), ex);
+        }
+    }
+
+
+    private void loadTpmProperties() throws FileNotFoundException {
+
+        if (isTpmPropertiesFileLoaded()) {
+            return;
+        }
+        final File file = PropertiesUtil.findConfigFile("tpm.properties");
+        if (file == null) {
+            throw new FileNotFoundException("Unable to find file tpm.properties.");
+        }
+
+        s_logger.info("tpm.properties file found at " + file.getAbsolutePath());
+        try {
+            PropertiesUtil.loadFromFile(_tpmProperties, file);
+            /*
+            s_logger.info("guest.nvram.template.legacy = " + _uefiProperties.getProperty("guest.nvram.template.legacy"));
+            s_logger.info("guest.loader.legacy = " + _uefiProperties.getProperty("guest.loader.legacy"));
+            s_logger.info("guest.nvram.template.secure = " + _uefiProperties.getProperty("guest.nvram.template.secure"));
+            s_logger.info("guest.loader.secure =" + _uefiProperties.getProperty("guest.loader.secure"));
+            s_logger.info("guest.nvram.path = " + _uefiProperties.getProperty("guest.nvram.path"));
+             */
         } catch (final FileNotFoundException ex) {
             throw new CloudRuntimeException("Cannot find the file: " + file.getAbsolutePath(), ex);
         } catch (final IOException ex) {
@@ -2431,7 +2470,9 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
         Map<String, String> customParams = vmTO.getDetails();
         boolean isUefiEnabled = false;
         boolean isSecureBoot = false;
+        boolean isTpmEnabled = false;
         String bootMode = null;
+        String tpmVersion = null;
 
         if (MapUtils.isNotEmpty(customParams) && customParams.containsKey(GuestDef.BootType.UEFI.toString())) {
             isUefiEnabled = true;
@@ -2443,6 +2484,19 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
             }
 
             bootMode = customParams.get(GuestDef.BootType.UEFI.toString());
+        }
+        if (MapUtils.isNotEmpty(customParams) && (
+                customParams.containsKey(GuestDef.TpmVersion.V2_0.toString()) ||
+                customParams.containsKey(GuestDef.TpmVersion.V1_2.toString())
+        )) {
+            isTpmEnabled = true;
+            s_logger.debug(String.format("Enabled TPM for VM UUID [%s].", uuid));
+
+            if(customParams.containsKey(GuestDef.TpmVersion.V2_0.toString())) {
+                tpmVersion = customParams.get(GuestDef.TpmVersion.V2_0.toString());
+            }else if(customParams.containsKey(GuestDef.TpmVersion.V1_2.toString())) {
+                tpmVersion = customParams.get(GuestDef.TpmVersion.V1_2.toString());
+            }
         }
 
         Map<String, String> extraConfig = vmTO.getExtraConfig();
@@ -2456,8 +2510,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
     /**
      * Configures created VM from specification, adding the necessary components to VM.
      */
-    private void configureVM(VirtualMachineTO vmTO, LibvirtVMDef vm, Map<String, String> customParams, boolean isUefiEnabled, boolean isSecureBoot, String bootMode,
-            Map<String, String> extraConfig, String uuid) {
+    private void configureVM(VirtualMachineTO vmTO, LibvirtVMDef vm, Map<String, String> customParams, boolean isUefiEnabled, boolean isSecureBoot, String bootMode, Map<String, String> extraConfig, String uuid) {
         s_logger.debug(String.format("Configuring VM with UUID [%s].", uuid));
 
         GuestDef guest = createGuestFromSpec(vmTO, vm, uuid, customParams);
@@ -2483,8 +2536,23 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
 
         vm.addComp(createTermPolicy());
         vm.addComp(createClockDef(vmTO));
-        vm.addComp(createDevicesDef(vmTO, guest, vcpus, isUefiEnabled));
 
+
+        boolean isTpmEnabled = false;
+        String tpmVersion = "";
+        if(customParams.containsKey("tpmVersion")) {
+            tpmVersion = customParams.get("tpmVersion");
+
+            if (tpmVersion.equalsIgnoreCase("NONE")){
+                isTpmEnabled = false;
+            }else{
+                isTpmEnabled = true;
+            }
+        }else{
+            tpmVersion = GuestDef.TpmVersion.NONE.toString();
+            isTpmEnabled = false;
+        }
+        vm.addComp(createDevicesDef(vmTO, guest, vcpus, isUefiEnabled, isTpmEnabled, tpmVersion));
         addExtraConfigsToVM(vmTO, vm, extraConfig);
     }
 
@@ -2497,11 +2565,17 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
             addExtraConfigComponent(extraConfig, vm);
         }
     }
+    /**
+     * Adds TPM device component to VM
+     */
+    protected TPMDef createTpmDef(String tpmVersion){
 
+        return new TPMDef(tpmVersion);
+    }
     /**
      * Adds devices components to VM.
      */
-    protected DevicesDef createDevicesDef(VirtualMachineTO vmTO, GuestDef guest, int vcpus, boolean isUefiEnabled) {
+    protected DevicesDef createDevicesDef(VirtualMachineTO vmTO, GuestDef guest, int vcpus, boolean isUefiEnabled, boolean isTpmEnabled, String tpmVersion) {
         DevicesDef devices = new DevicesDef();
         devices.setEmulatorPath(_hypervisorPath);
         devices.setGuestType(guest.getGuestType());
@@ -2521,7 +2595,9 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
         if (isGuestAarch64()) {
             createArm64UsbDef(devices);
         }
-
+        if (!tpmVersion.equalsIgnoreCase("NONE") && isTpmEnabled) {
+            devices.addDevice(createTpmDef(tpmVersion));
+        }
         DiskDef.DiskBus busT = getDiskModelFromVMDetail(vmTO);
         if (busT == null) {
             busT = getGuestDiskModel(vmTO.getPlatformEmulator(), isUefiEnabled);
@@ -2533,6 +2609,8 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
                 devices.addDevice(createSCSIDef(i, i, vcpus));
             }
         }
+
+
         return devices;
     }
 
@@ -2725,6 +2803,16 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
             guest.setMachineType(Q35);
             if (SECURE.equalsIgnoreCase(customParams.get(GuestDef.BootType.UEFI.toString()))) {
                 guest.setBootMode(GuestDef.BootMode.SECURE);
+            }
+        }
+        customParams.forEach((strKey, strValue)->{
+        });
+        if (MapUtils.isNotEmpty(customParams)) {
+            if(customParams.containsKey(GuestDef.TpmVersion.V1_2.toString())){
+                guest.setTPMVersion(GuestDef.TpmVersion.V1_2);
+            }else if (customParams.containsKey(GuestDef.TpmVersion.V2_0.toString())){
+
+                guest.setTPMVersion(GuestDef.TpmVersion.V2_0);
             }
         }
         guest.setUuid(uuid);
@@ -3458,6 +3546,9 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
         cmd.setCluster(_clusterId);
         cmd.setGatewayIpAddress(_localGateway);
         cmd.setIqn(getIqn());
+        if (!cmd.getHostDetails().containsKey("guest.cpu.mode")){
+            cmd.getHostDetails().put("guest.cpu.mode","host-passthrough");
+        }
 
         if (cmd.getHostDetails().containsKey("Host.OS")) {
             _hostDistro = cmd.getHostDetails().get("Host.OS");

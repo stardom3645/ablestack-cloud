@@ -72,6 +72,24 @@ public class LibvirtVMDef {
             }
         }
 
+        enum TpmVersion {
+            V2_0("V2_0"), V1_2("V1_2"), NONE("NONE");
+
+            String _version;
+
+            TpmVersion(String version){
+                _version = version;
+            }
+            @Override
+            public String toString() {
+                if (_version.equals("V1_2"))
+                    return "1.2";
+                else if (_version.equals("V2_0"))
+                    return "2.0";
+                return "NONE";
+            }
+        }
+
         enum BootMode {
             LEGACY("LEGACY"), SECURE("SECURE");
 
@@ -101,6 +119,8 @@ public class LibvirtVMDef {
         private String _machine;
         private String _nvram;
         private String _nvramTemplate;
+
+        private TpmVersion _tpmVersion;
 
         public static final String GUEST_LOADER_SECURE = "guest.loader.secure";
         public static final String GUEST_LOADER_LEGACY = "guest.loader.legacy";
@@ -161,6 +181,14 @@ public class LibvirtVMDef {
 
         public void setBootMode(BootMode bootmode) {
             this._bootmode = bootmode;
+        }
+
+        public TpmVersion getTpmVersion() {
+            return this._tpmVersion;
+        }
+
+        public void setTPMVersion(TpmVersion tpmVersion) {
+            this._tpmVersion = tpmVersion;
         }
 
         @Override
@@ -1876,6 +1904,25 @@ public class LibvirtVMDef {
         }
     }
 
+    public static class TPMDef {
+        private String version = "2.0";
+
+        public TPMDef(String version) {
+            this.version = version;
+        }
+
+        public TPMDef() {
+        }
+
+        @Override
+        public String toString() {
+            StringBuilder tpmBuilder = new StringBuilder();
+            tpmBuilder.append("<tpm model='tpm-tis'>");
+            tpmBuilder.append(String.format("<backend type='emulator' version='%s'/>\n",this.version ) );
+            tpmBuilder.append("</tpm>\n");
+            return tpmBuilder.toString();
+        }
+    }
     public static class InputDef {
         private final String _type; /* tablet, mouse */
         private final String _bus; /* ps2, usb, xen */

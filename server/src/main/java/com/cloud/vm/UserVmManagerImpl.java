@@ -3141,6 +3141,11 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
             addVmUefiBootOptionsToParams(additonalParams, uefiDetail.getName(), uefiDetail.getValue());
         }
 
+
+        UserVmDetailVO tpmDetail = userVmDetailsDao.findDetail(cmd.getId(), ApiConstants.TPM_VERSION);
+        if (tpmDetail != null){
+            additonalParams.put(VirtualMachineProfile.Param.TpmVersion, tpmDetail.getValue());
+        }
         return startVirtualMachine(cmd.getId(), cmd.getPodId(), cmd.getClusterId(), cmd.getHostId(), additonalParams, cmd.getDeploymentPlanner()).first();
     }
 
@@ -4820,6 +4825,10 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
         }
         if (cmd.getBootIntoSetup() != null) {
             additionalParams.put(VirtualMachineProfile.Param.BootIntoSetup, cmd.getBootIntoSetup());
+        }
+        UserVmDetailVO tpmDetail = userVmDetailsDao.findDetail(cmd.getEntityId(), ApiConstants.TPM_VERSION);
+        if (tpmDetail != null){
+            additionalParams.put(VirtualMachineProfile.Param.TpmVersion, tpmDetail.getValue());
         }
         return startVirtualMachine(vmId, podId, clusterId, hostId, diskOfferingMap, additionalParams, cmd.getDeploymentPlanner());
     }
