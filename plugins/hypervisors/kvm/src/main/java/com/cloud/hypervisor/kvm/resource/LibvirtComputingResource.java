@@ -2967,7 +2967,6 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
                             We store the secret under the UUID of the pool, that's why
                             we pass the pool's UUID as the authSecret
                      */
-                    
                     final PrimaryDataStoreTO store = (PrimaryDataStoreTO)data.getDataStore();
                     s_logger.debug(" ============ > " + volume.getType());
                     s_logger.debug(" ============ > " + volume.getPath());
