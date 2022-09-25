@@ -2968,15 +2968,11 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
                             we pass the pool's UUID as the authSecret
                      */
                     final PrimaryDataStoreTO store = (PrimaryDataStoreTO)data.getDataStore();
-                    s_logger.debug(" ============ > " + volume.getType());
-                    s_logger.debug(" ============ > " + volume.getPath());
-                    s_logger.debug(" ============ > " + store.getProvider());
-                    s_logger.debug(" ============ > " + store.getKrbdPath());
                     if(store.getProvider() != null && !store.getProvider().isEmpty() && "ABLESTACK".equals(store.getProvider())){
                         final String device = mapRbdDevice(physicalDisk);
                         if (device != null) {
                             s_logger.debug("RBD device on host is: " + device);
-                            String path = store.getKrbdPath() == null ? "/dev/rbd/" : store.getKrbdPath();
+                            String path = store.getKrbdPath() == null ? "/dev/rbd/" : store.getKrbdPath() + "/";
                             disk.defBlockBasedDisk(path + physicalDisk.getPath(), devId);
                         } else {
                             throw new InternalErrorException("Error while mapping RBD device on host");

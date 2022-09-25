@@ -1371,8 +1371,6 @@ public class KVMStorageProcessor implements StorageProcessor {
         final VolumeObjectTO vol = (VolumeObjectTO)disk.getData();
         final PrimaryDataStoreTO primaryStore = (PrimaryDataStoreTO)vol.getDataStore();
         final String vmName = cmd.getVmName();
-        final String provider = cmd.getProvider();
-        final String krbdpath = cmd.getKrbdpath();
         final String serial = resource.diskUuidToSerial(vol.getUuid());
         try {
             final Connect conn = LibvirtConnection.getConnectionByVmName(vmName);
@@ -1382,23 +1380,11 @@ public class KVMStorageProcessor implements StorageProcessor {
             final KVMPhysicalDisk phyDisk = storagePoolMgr.getPhysicalDisk(primaryStore.getPoolType(), primaryStore.getUuid(), vol.getPath());
             final String volCacheMode = vol.getCacheMode() == null ? null : vol.getCacheMode().toString();
 
-            s_logger.debug(" ============ > " + primaryStore.getProvider());
-            s_logger.debug(" ============ > " + primaryStore.getKrbdPath());
-            s_logger.debug(" ============ > " + primaryStore.getHost());
-            s_logger.debug(" ============ > " + primaryStore.getId());
-            s_logger.debug(" ============ > " + primaryStore.getName());
-            s_logger.debug(" ============ > " + primaryStore.getType());
-            s_logger.debug(" ============ > " + primaryStore.getUrl());
-            s_logger.debug(" ============ > " + primaryStore.getUuid());
-            s_logger.debug(" ============ > " + primaryStore.getDetails());
-            s_logger.debug(" ============ > " + primaryStore.getParentPoolType());
-            s_logger.debug(" ============ > " + primaryStore.getPoolType());
-            s_logger.debug(" ============ > " + primaryStore.getRole());
             attachOrDetachDisk(conn, true, vmName, phyDisk, disk.getDiskSeq().intValue(), serial,
                     vol.getBytesReadRate(), vol.getBytesReadRateMax(), vol.getBytesReadRateMaxLength(),
                     vol.getBytesWriteRate(), vol.getBytesWriteRateMax(), vol.getBytesWriteRateMaxLength(),
                     vol.getIopsReadRate(), vol.getIopsReadRateMax(), vol.getIopsReadRateMaxLength(),
-                    vol.getIopsWriteRate(), vol.getIopsWriteRateMax(), vol.getIopsWriteRateMaxLength(), volCacheMode, provider, krbdpath);
+                    vol.getIopsWriteRate(), vol.getIopsWriteRateMax(), vol.getIopsWriteRateMaxLength(), volCacheMode, primaryStore.getProvider(), primaryStore.getKrbdPath());
 
             return new AttachAnswer(disk);
         } catch (final LibvirtException e) {
@@ -1420,8 +1406,6 @@ public class KVMStorageProcessor implements StorageProcessor {
         final VolumeObjectTO vol = (VolumeObjectTO)disk.getData();
         final PrimaryDataStoreTO primaryStore = (PrimaryDataStoreTO)vol.getDataStore();
         final String vmName = cmd.getVmName();
-        final String provider = cmd.getProvider();
-        final String krbdpath = cmd.getKrbdpath();
         final String serial = resource.diskUuidToSerial(vol.getUuid());
         try {
             final Connect conn = LibvirtConnection.getConnectionByVmName(vmName);
@@ -1433,7 +1417,7 @@ public class KVMStorageProcessor implements StorageProcessor {
                     vol.getBytesReadRate(), vol.getBytesReadRateMax(), vol.getBytesReadRateMaxLength(),
                     vol.getBytesWriteRate(), vol.getBytesWriteRateMax(), vol.getBytesWriteRateMaxLength(),
                     vol.getIopsReadRate(), vol.getIopsReadRateMax(), vol.getIopsReadRateMaxLength(),
-                    vol.getIopsWriteRate(), vol.getIopsWriteRateMax(), vol.getIopsWriteRateMaxLength(), volCacheMode, provider, krbdpath);
+                    vol.getIopsWriteRate(), vol.getIopsWriteRateMax(), vol.getIopsWriteRateMaxLength(), volCacheMode, primaryStore.getProvider(), primaryStore.getKrbdPath());
 
             storagePoolMgr.disconnectPhysicalDisk(primaryStore.getPoolType(), primaryStore.getUuid(), vol.getPath());
 

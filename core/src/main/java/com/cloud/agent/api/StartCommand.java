@@ -29,8 +29,6 @@ public class StartCommand extends Command {
     String hostIp;
     boolean executeInSequence = false;
     String secondaryStorage;
-    String provider;
-    String krbdpath;
 
     public VirtualMachineTO getVirtualMachine() {
         return vm;
@@ -53,22 +51,6 @@ public class StartCommand extends Command {
         this.hostIp = host.getPrivateIpAddress();
         this.executeInSequence = executeInSequence;
         this.secondaryStorage = null;
-    }
-
-    public String getProvider() {
-        return provider;
-    }
-
-    public void setProvider(String provider) {
-        this.provider = provider;
-    }
-
-    public String getKrbdPath() {
-        return this.krbdpath;
-    }
-
-    public void setKrbdpath(String krbdpath) {
-        this.krbdpath = krbdpath;
     }
 
     public String getHostIp() {
