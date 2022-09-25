@@ -55,6 +55,7 @@ public class PrimaryDataStoreTO implements DataStoreTO {
     private Boolean diskProvisioningStrictnessFlag;
     private final boolean isManaged;
     private String provider;
+    private String krbdPath;
     private final StoragePoolType parentPoolType;
 
     public PrimaryDataStoreTO(PrimaryDataStore dataStore) {
@@ -69,6 +70,7 @@ public class PrimaryDataStoreTO implements DataStoreTO {
         this.details = dataStore.getDetails();
         this.isManaged = dataStore.isManaged();
         this.provider = dataStore.getStorageProviderName();
+        this.krbdPath = dataStore.getKrbdPath();
         this.parentPoolType = dataStore.getParentPoolType();
     }
 
@@ -104,6 +106,14 @@ public class PrimaryDataStoreTO implements DataStoreTO {
 
     public String getType() {
         return this.type;
+    }
+
+    public String getKrbdPath() {
+        return krbdPath;
+    }
+
+    public void setKrbdPath(String krbdPath) {
+        this.krbdPath = krbdPath;
     }
 
     @Override

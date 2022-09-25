@@ -1382,6 +1382,18 @@ public class KVMStorageProcessor implements StorageProcessor {
             final KVMPhysicalDisk phyDisk = storagePoolMgr.getPhysicalDisk(primaryStore.getPoolType(), primaryStore.getUuid(), vol.getPath());
             final String volCacheMode = vol.getCacheMode() == null ? null : vol.getCacheMode().toString();
 
+            s_logger.debug(" ============ > " + primaryStore.getProvider());
+            s_logger.debug(" ============ > " + primaryStore.getKrbdPath());
+            s_logger.debug(" ============ > " + primaryStore.getHost());
+            s_logger.debug(" ============ > " + primaryStore.getId());
+            s_logger.debug(" ============ > " + primaryStore.getName());
+            s_logger.debug(" ============ > " + primaryStore.getType());
+            s_logger.debug(" ============ > " + primaryStore.getUrl());
+            s_logger.debug(" ============ > " + primaryStore.getUuid());
+            s_logger.debug(" ============ > " + primaryStore.getDetails());
+            s_logger.debug(" ============ > " + primaryStore.getParentPoolType());
+            s_logger.debug(" ============ > " + primaryStore.getPoolType());
+            s_logger.debug(" ============ > " + primaryStore.getRole());
             attachOrDetachDisk(conn, true, vmName, phyDisk, disk.getDiskSeq().intValue(), serial,
                     vol.getBytesReadRate(), vol.getBytesReadRateMax(), vol.getBytesReadRateMaxLength(),
                     vol.getBytesWriteRate(), vol.getBytesWriteRateMax(), vol.getBytesWriteRateMaxLength(),

@@ -1195,17 +1195,7 @@ public class VirtualMachineManagerImpl extends ManagerBase implements VirtualMac
 
                     final List<VolumeVO> vols = _volsDao.findByInstance(vm.getId());
 
-                    for (final VolumeVO vol : vols) {
-                        final StoragePool sp = (StoragePool)dataStoreMgr.getPrimaryDataStore(vol.getPoolId());
-                        provider = sp.getStorageProviderName();
-                        krbdpath = sp.getKrbdPath();
-                    }
                     StartCommand command = command = new StartCommand(vmTO, dest.getHost(), getExecuteInSequence(vm.getHypervisorType()));
-
-                    if (provider != null && !provider.isEmpty() && "ABLESTACK".equals(provider) && krbdpath != null && !krbdpath.isEmpty()) {
-                        command.setProvider(provider);
-                        command.setKrbdpath(krbdpath);
-                    }
                     cmds.addCommand(command);
 
                     vmGuru.finalizeDeployment(cmds, vmProfile, dest, ctx);
@@ -2629,18 +2619,8 @@ public class VirtualMachineManagerImpl extends ManagerBase implements VirtualMac
         volumeMgr.prepareForMigration(profile, dest);
         profile.setConfigDriveLabel(VmConfigDriveLabel.value());
 
-        final List<VolumeVO> vols = _volsDao.findByInstance(vm.getId());
-        for (final VolumeVO vol : vols) {
-            final StoragePool sp = (StoragePool)dataStoreMgr.getPrimaryDataStore(vol.getPoolId());
-            provider = sp.getStorageProviderName();
-        }
-
         final VirtualMachineTO to = toVmTO(profile);
         PrepareForMigrationCommand pfmc = new PrepareForMigrationCommand(to);
-
-        if (provider != null && !provider.isEmpty() && "ABLESTACK".equals(provider)) {
-            pfmc.setProvider(provider);
-        }
 
         ItWorkVO work = new ItWorkVO(UUID.randomUUID().toString(), _nodeId, State.Migrating, vm.getType(), vm.getId());
         work.setStep(Step.Prepare);

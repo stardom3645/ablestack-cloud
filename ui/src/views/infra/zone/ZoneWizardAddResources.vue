@@ -452,7 +452,7 @@ export default {
           placeHolder: 'message.error.rados.monitor',
           required: false,
           display: {
-            primaryStorageProtocol: ['rbd', 'Glue']
+            primaryStorageProtocol: ['rbd', 'Glue Block']
           }
         },
         {
@@ -461,7 +461,7 @@ export default {
           placeHolder: 'message.error.rados.pool',
           required: false,
           display: {
-            primaryStorageProtocol: ['rbd', 'Glue']
+            primaryStorageProtocol: ['rbd', 'Glue Block']
           }
         },
         {
@@ -470,7 +470,7 @@ export default {
           placeHolder: 'message.error.rados.user',
           required: false,
           display: {
-            primaryStorageProtocol: ['rbd', 'Glue']
+            primaryStorageProtocol: ['rbd', 'Glue Block']
           }
         },
         {
@@ -479,7 +479,7 @@ export default {
           placeHolder: 'message.error.rados.secret',
           required: false,
           display: {
-            primaryStorageProtocol: ['rbd', 'Glue']
+            primaryStorageProtocol: ['rbd', 'Glue Block']
           }
         },
         {
@@ -488,7 +488,7 @@ export default {
           placeHolder: 'message.error.rados.path',
           required: false,
           display: {
-            primaryStorageProtocol: ['rbd', 'Glue']
+            primaryStorageProtocol: ['rbd', 'Glue Block']
           }
         },
         {
