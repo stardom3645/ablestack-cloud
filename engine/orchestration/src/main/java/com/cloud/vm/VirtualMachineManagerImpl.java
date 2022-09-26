@@ -1012,7 +1012,8 @@ public class VirtualMachineManagerImpl extends ManagerBase implements VirtualMac
         final CallContext cctxt = CallContext.current();
         final Account account = cctxt.getCallingAccount();
         final User caller = cctxt.getCallingUser();
-
+        String provider = "";
+        String krbdpath = "";
         VMInstanceVO vm = _vmDao.findByUuid(vmUuid);
 
         final VirtualMachineGuru vmGuru = getVmGuru(vm);
@@ -1021,7 +1022,6 @@ public class VirtualMachineManagerImpl extends ManagerBase implements VirtualMac
         if (start == null) {
             return;
         }
-
         vm = start.first();
         final ReservationContext ctx = start.second();
         ItWorkVO work = start.third();
@@ -1029,7 +1029,6 @@ public class VirtualMachineManagerImpl extends ManagerBase implements VirtualMac
         VMInstanceVO startedVm = null;
         final ServiceOfferingVO offering = _offeringDao.findById(vm.getId(), vm.getServiceOfferingId());
         final VirtualMachineTemplate template = _entityMgr.findByIdIncludingRemoved(VirtualMachineTemplate.class, vm.getTemplateId());
-
         DataCenterDeployment plan = new DataCenterDeployment(vm.getDataCenterId(), vm.getPodIdToDeployIn(), null, null, null, null, ctx);
         if (planToDeploy != null && planToDeploy.getDataCenterId() != 0) {
             if (s_logger.isDebugEnabled()) {
@@ -1048,7 +1047,6 @@ public class VirtualMachineManagerImpl extends ManagerBase implements VirtualMac
         if (VirtualMachine.Type.User.equals(vm.type) && ResourceCountRunningVMsonly.value()) {
             resourceCountIncrement(owner.getAccountId(),new Long(offering.getCpu()), new Long(offering.getRamSize()));
         }
-
         boolean canRetry = true;
         ExcludeList avoids = null;
         try {
@@ -1061,24 +1059,23 @@ public class VirtualMachineManagerImpl extends ManagerBase implements VirtualMac
                 avoids = new ExcludeList();
             }
             if (s_logger.isDebugEnabled()) {
-                s_logger.debug("Deploy avoids pods: " + avoids.getPodsToAvoid() + ", clusters: " + avoids.getClustersToAvoid() + ", hosts: " + avoids.getHostsToAvoid());
+                s_logger.info("Deploy avoids pods: " + avoids.getPodsToAvoid() + ", clusters: " + avoids.getClustersToAvoid() + ", hosts: " + avoids.getHostsToAvoid());
             }
-
             boolean planChangedByVolume = false;
             boolean reuseVolume = true;
             final DataCenterDeployment originalPlan = plan;
-
             int retry = StartRetry.value();
             while (retry-- != 0) {
-                s_logger.debug("VM start attempt #" + (StartRetry.value() - retry));
+                s_logger.info("VM start attempt #" + (StartRetry.value() - retry));
 
                 if (reuseVolume) {
                     final List<VolumeVO> vols = _volsDao.findReadyRootVolumesByInstance(vm.getId());
                     for (final VolumeVO vol : vols) {
+                        s_logger.info("vol :::: " + vol);
                         final Long volTemplateId = vol.getTemplateId();
                         if (volTemplateId != null && volTemplateId != template.getId()) {
                             if (s_logger.isDebugEnabled()) {
-                                s_logger.debug(vol + " of " + vm + " is READY, but template ids don't match, let the planner reassign a new pool");
+                                s_logger.info(vol + " of " + vm + " is READY, but template ids don't match, let the planner reassign a new pool");
                             }
                             continue;
                         }
@@ -1196,7 +1193,19 @@ public class VirtualMachineManagerImpl extends ManagerBase implements VirtualMac
                     final Map<String, String> ipAddressDetails = new HashMap<>(sshAccessDetails);
                     ipAddressDetails.remove(NetworkElementCommand.ROUTER_NAME);
 
-                    StartCommand command = new StartCommand(vmTO, dest.getHost(), getExecuteInSequence(vm.getHypervisorType()));
+                    final List<VolumeVO> vols = _volsDao.findByInstance(vm.getId());
+
+                    for (final VolumeVO vol : vols) {
+                        final StoragePool sp = (StoragePool)dataStoreMgr.getPrimaryDataStore(vol.getPoolId());
+                        provider = sp.getStorageProviderName();
+                        krbdpath = sp.getKrbdPath();
+                    }
+                    StartCommand command = command = new StartCommand(vmTO, dest.getHost(), getExecuteInSequence(vm.getHypervisorType()));
+
+                    if (provider != null && !provider.isEmpty() && "ABLESTACK".equals(provider) && krbdpath != null && !krbdpath.isEmpty()) {
+                        command.setProvider(provider);
+                        command.setKrbdpath(krbdpath);
+                    }
                     cmds.addCommand(command);
 
                     vmGuru.finalizeDeployment(cmds, vmProfile, dest, ctx);
@@ -1395,6 +1404,10 @@ public class VirtualMachineManagerImpl extends ManagerBase implements VirtualMac
             msgBuf.append(String.format("Boot into Setup: %s ", params.get(VirtualMachineProfile.Param.BootIntoSetup)));
             log = true;
         }
+        if (params.get(VirtualMachineProfile.Param.TpmVersion) != null) {
+            msgBuf.append(String.format("TpmVersion: %s ", params.get(VirtualMachineProfile.Param.TpmVersion)));
+            log = true;
+        }
         if (log) {
             s_logger.info(msgBuf.toString());
         }
@@ -1557,8 +1570,7 @@ public class VirtualMachineManagerImpl extends ManagerBase implements VirtualMac
             case LXC:
                 return false;
             case VMware:
-                final Boolean fullClone = HypervisorGuru.VmwareFullClone.value();
-                return fullClone;
+                return StorageManager.shouldExecuteInSequenceOnVmware();
             default:
                 return ExecuteInSequence.value();
         }
@@ -2573,6 +2585,7 @@ public class VirtualMachineManagerImpl extends ManagerBase implements VirtualMac
         s_logger.info("Migrating " + vm + " to " + dest);
         final long dstHostId = dest.getHost().getId();
         final Host fromHost = _hostDao.findById(srcHostId);
+        String provider = "";
         if (fromHost == null) {
             s_logger.info("Unable to find the host to migrate from: " + srcHostId);
             throw new CloudRuntimeException("Unable to find the host to migrate from: " + srcHostId);
@@ -2620,8 +2633,18 @@ public class VirtualMachineManagerImpl extends ManagerBase implements VirtualMac
         volumeMgr.prepareForMigration(profile, dest);
         profile.setConfigDriveLabel(VmConfigDriveLabel.value());
 
+        final List<VolumeVO> vols = _volsDao.findByInstance(vm.getId());
+        for (final VolumeVO vol : vols) {
+            final StoragePool sp = (StoragePool)dataStoreMgr.getPrimaryDataStore(vol.getPoolId());
+            provider = sp.getStorageProviderName();
+        }
+
         final VirtualMachineTO to = toVmTO(profile);
-        final PrepareForMigrationCommand pfmc = new PrepareForMigrationCommand(to);
+        PrepareForMigrationCommand pfmc = new PrepareForMigrationCommand(to);
+        
+        if (provider != null && !provider.isEmpty() && "ABLESTACK".equals(provider)) {
+            pfmc.setProvider(provider);
+        }
 
         ItWorkVO work = new ItWorkVO(UUID.randomUUID().toString(), _nodeId, State.Migrating, vm.getType(), vm.getId());
         work.setStep(Step.Prepare);

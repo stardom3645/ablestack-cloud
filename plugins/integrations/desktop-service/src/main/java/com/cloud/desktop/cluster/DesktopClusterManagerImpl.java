@@ -1056,8 +1056,7 @@ public class DesktopClusterManagerImpl extends ManagerBase implements DesktopClu
     public ConfigKey<?>[] getConfigKeys() {
         return new ConfigKey<?>[] {
                 DesktopServiceEnabled,
-                DesktopWorksAdminPortalPort,
-                DesktopWorksUserPortalPort
+                DesktopWorksPortalPort
         };
     }
 }

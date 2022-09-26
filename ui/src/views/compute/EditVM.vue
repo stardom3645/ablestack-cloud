@@ -175,6 +175,7 @@ export default {
         displayname: this.resource.displayname,
         ostypeid: this.resource.ostypeid,
         isdynamicallyscalable: this.resource.isdynamicallyscalable,
+        haenable: this.resource.haenable,
         group: this.resource.group,
         securitygroupids: this.resource.securitygroup.map(x => x.id)
       })
@@ -254,7 +255,7 @@ export default {
     fetchOsTypes () {
       this.osTypes.loading = true
       this.osTypes.opts = []
-      api('listOsTypes', { listAll: true }).then(json => {
+      api('listOsTypes').then(json => {
         this.osTypes.opts = json.listostypesresponse.ostype || []
       }).catch(error => {
         this.$notifyError(error)

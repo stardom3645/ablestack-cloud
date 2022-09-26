@@ -415,7 +415,7 @@ public class LibvirtComputingResourceTest {
         GuestDef guest = new GuestDef();
         guest.setGuestType(GuestType.KVM);
 
-        DevicesDef devicesDef = libvirtComputingResourceSpy.createDevicesDef(to, guest, to.getCpus() + 1, false);
+        DevicesDef devicesDef = libvirtComputingResourceSpy.createDevicesDef(to, guest, to.getCpus() + 1, false, false,"V2_0");
         verifyDevices(devicesDef, to);
     }
 
@@ -428,7 +428,7 @@ public class LibvirtComputingResourceTest {
         GuestDef guest = new GuestDef();
         guest.setGuestType(GuestType.KVM);
 
-        DevicesDef devicesDef = libvirtComputingResourceSpy.createDevicesDef(to, guest, to.getCpus() + 1, false);
+        DevicesDef devicesDef = libvirtComputingResourceSpy.createDevicesDef(to, guest, to.getCpus() + 1, false, false,"V2_0");
         verifyDevices(devicesDef, to);
 
         Document domainDoc = parse(devicesDef.toString());
@@ -2764,10 +2764,9 @@ public class LibvirtComputingResourceTest {
         final KVMStoragePoolManager storagePoolMgr = Mockito.mock(KVMStoragePoolManager.class);
         final KVMStoragePool kvmStoragePool = Mockito.mock(KVMStoragePool.class);
 
-
         when(libvirtComputingResource.getStoragePoolMgr()).thenReturn(storagePoolMgr);
         when(storagePoolMgr.createStoragePool(command.getPool().getUuid(), command.getPool().getHost(), command.getPool().getPort(), command.getPool().getPath(), command.getPool()
-                .getUserInfo(), command.getPool().getType())).thenReturn(kvmStoragePool);
+                .getUserInfo(), command.getPool().getType(), command.getDetails())).thenReturn(kvmStoragePool);
 
 
         final LibvirtRequestWrapper wrapper = LibvirtRequestWrapper.getInstance();
@@ -2778,7 +2777,7 @@ public class LibvirtComputingResourceTest {
 
         verify(libvirtComputingResource, times(1)).getStoragePoolMgr();
         verify(storagePoolMgr, times(1)).createStoragePool(command.getPool().getUuid(), command.getPool().getHost(), command.getPool().getPort(), command.getPool().getPath(), command.getPool()
-                .getUserInfo(), command.getPool().getType());
+                .getUserInfo(), command.getPool().getType(), command.getDetails());
     }
 
     @Test
@@ -2790,7 +2789,7 @@ public class LibvirtComputingResourceTest {
 
         when(libvirtComputingResource.getStoragePoolMgr()).thenReturn(storagePoolMgr);
         when(storagePoolMgr.createStoragePool(command.getPool().getUuid(), command.getPool().getHost(), command.getPool().getPort(), command.getPool().getPath(), command.getPool()
-                .getUserInfo(), command.getPool().getType())).thenReturn(null);
+                .getUserInfo(), command.getPool().getType(), command.getDetails())).thenReturn(null);
 
 
         final LibvirtRequestWrapper wrapper = LibvirtRequestWrapper.getInstance();
@@ -2801,7 +2800,7 @@ public class LibvirtComputingResourceTest {
 
         verify(libvirtComputingResource, times(1)).getStoragePoolMgr();
         verify(storagePoolMgr, times(1)).createStoragePool(command.getPool().getUuid(), command.getPool().getHost(), command.getPool().getPort(), command.getPool().getPath(), command.getPool()
-                .getUserInfo(), command.getPool().getType());
+                .getUserInfo(), command.getPool().getType(), command.getDetails());
     }
 
     @Test
@@ -5588,11 +5587,18 @@ public class LibvirtComputingResourceTest {
     // private MemoryStatistic[] createMemoryStatisticFreeMemory100() {
     //     virDomainMemoryStats stat = new virDomainMemoryStats();
     //     stat.val = 100;
-
     //     MemoryStatistic[] mem = new MemoryStatistic[2];
     //     mem[0] = new MemoryStatistic(stat);
     //     return mem;
     // }
+
+    @Test
+    public void getMemoryFreeInKBsTestDomainReturningIncompleteArray() throws LibvirtException {
+        if (!System.getProperty("os.name").equals("Linux")) {
+            return;
+        }
+        LibvirtComputingResource libvirtComputingResource = new LibvirtComputingResource();
+    }
 
     // private Domain getDomainConfiguredToReturnMemoryStatistic(MemoryStatistic[] mem) throws LibvirtException {
     //     Domain domainMock = Mockito.mock(Domain.class);

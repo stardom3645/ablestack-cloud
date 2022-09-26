@@ -30,7 +30,9 @@ import {
   USE_BROWSER_TIMEZONE,
   SERVER_MANAGER,
   VUE_VERSION,
-  CUSTOM_COLUMNS
+  CUSTOM_COLUMNS,
+  FAVICON_STATE_INTERVAL,
+  FAVICON_STATE_CAPACITY
 } from '@/store/mutation-types'
 
 const app = {
@@ -50,7 +52,9 @@ const app = {
     metrics: false,
     listAllProjects: false,
     server: '',
-    vueVersion: ''
+    vueVersion: '',
+    faviconStateInterval: '',
+    faviconStateCapacity: ''
   },
   mutations: {
     SET_SIDEBAR_TYPE: (state, type) => {
@@ -121,6 +125,14 @@ const app = {
     SET_CUSTOM_COLUMNS: (state, customColumns) => {
       vueProps.$localStorage.set(CUSTOM_COLUMNS, customColumns)
       state.customColumns = customColumns
+    },
+    SET_FAVICON_STATE_INTERVAL: (state, faviconStateInterval) => {
+      vueProps.$localStorage.set(FAVICON_STATE_INTERVAL, faviconStateInterval)
+      state.faviconStateInterval = faviconStateInterval
+    },
+    SET_FAVICON_STATE_CAPACITY: (state, faviconStateCapacity) => {
+      vueProps.$localStorage.set(FAVICON_STATE_CAPACITY, faviconStateCapacity)
+      state.faviconStateCapacity = faviconStateCapacity
     }
   },
   actions: {
@@ -177,6 +189,12 @@ const app = {
     },
     SetCustomColumns ({ commit }, bool) {
       commit('SET_CUSTOM_COLUMNS', bool)
+    },
+    SetFaviconStateInterval ({ commit }, faviconStateInterval) {
+      commit('SET_FAVICON_STATE_INTERVAL', faviconStateInterval)
+    },
+    SetFaviconStateCapacity ({ commit }, faviconStateCapacity) {
+      commit('SET_FAVICON_STATE_CAPACITY', faviconStateCapacity)
     }
   }
 }

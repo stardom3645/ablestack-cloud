@@ -228,6 +228,7 @@ public class MetricsServiceImpl extends MutualExclusiveIdsManagerBase implements
             SearchCriteria<UserVmVO> ssc = userVmDao.createSearchCriteria();
             ssc.addOr("displayName", SearchCriteria.Op.LIKE, "%" + keyword + "%");
             ssc.addOr("state", SearchCriteria.Op.EQ, keyword);
+            ssc.addOr("uuid", SearchCriteria.Op.LIKE, "%" + keyword + "%");
             sc.addAnd("displayName", SearchCriteria.Op.SC, ssc);
         }
 

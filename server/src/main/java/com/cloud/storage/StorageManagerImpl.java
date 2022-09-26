@@ -813,6 +813,7 @@ public class StorageManagerImpl extends ManagerBase implements StorageManager, C
         params.put("managed", cmd.isManaged());
         params.put("capacityBytes", cmd.getCapacityBytes());
         params.put("capacityIops", cmd.getCapacityIops());
+        params.put("krbdPath", cmd.getKrbdPath());
 
         DataStoreLifeCycle lifeCycle = storeProvider.getDataStoreLifeCycle();
         DataStore store = null;
@@ -913,6 +914,13 @@ public class StorageManagerImpl extends ManagerBase implements StorageManager, C
                 }
             }
             _storagePoolTagsDao.persist(pool.getId(), storagePoolTags);
+        }
+
+        String ipaddress = cmd.getIpaddress();
+        if(StringUtils.isNotBlank(ipaddress)) {
+            s_logger.debug("Updating Storage Pool Ipaddress to: " + ipaddress);
+            pool.setHostAddress(ipaddress);
+            _storagePoolDao.update(pool.getId(), pool);
         }
 
         Long updatedCapacityBytes = null;
@@ -1100,14 +1108,14 @@ public class StorageManagerImpl extends ManagerBase implements StorageManager, C
     }
 
     @Override
-    public void connectHostToSharedPool(long hostId, long poolId) throws StorageUnavailableException, StorageConflictException {
+    public boolean connectHostToSharedPool(long hostId, long poolId) throws StorageUnavailableException, StorageConflictException {
         StoragePool pool = (StoragePool)_dataStoreMgr.getDataStore(poolId, DataStoreRole.Primary);
         assert (pool.isShared()) : "Now, did you actually read the name of this method?";
         s_logger.debug("Adding pool " + pool.getName() + " to  host " + hostId);
 
         DataStoreProvider provider = _dataStoreProviderMgr.getDataStoreProvider(pool.getStorageProviderName());
         HypervisorHostListener listener = hostListeners.get(provider.getName());
-        listener.hostConnect(hostId, pool.getId());
+        return listener.hostConnect(hostId, pool.getId());
     }
 
     @Override
@@ -3374,7 +3382,9 @@ public class StorageManagerImpl extends ManagerBase implements StorageManager, C
                 DiskProvisioningStrictness,
                 PreferredStoragePool,
                 SecStorageVMAutoScaleDown,
-                MountDisabledStoragePool
+                MountDisabledStoragePool,
+                VmwareCreateCloneFull,
+                VmwareAllowParallelExecution
         };
     }
 

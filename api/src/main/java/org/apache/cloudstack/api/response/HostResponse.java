@@ -269,6 +269,7 @@ public class HostResponse extends BaseResponseWithAnnotations {
     @SerializedName("ueficapability")
     @Param(description = "true if the host has capability to support UEFI boot")
     private Boolean uefiCapabilty;
+    private boolean tpmCapabilty;
 
     @Override
     public String getObjectId() {
@@ -717,5 +718,9 @@ public class HostResponse extends BaseResponseWithAnnotations {
 
     public void setUefiCapabilty(Boolean hostCapability) {
         this.uefiCapabilty = hostCapability;
+    }
+
+    public void setTpmCapabilty(Boolean hostCapability) {
+        this.tpmCapabilty = hostCapability;
     }
 }

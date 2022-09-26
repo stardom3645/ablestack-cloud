@@ -902,7 +902,9 @@ public class ApiConstants {
     public static final String DESKTOP_AD_DOMAIN_NAME = "addomainname";
     public static final String DESKTOP_TEMPLATES = "templates";
     public static final String DESKTOP_DC_TEMPLATE = "dctemplate";
+    public static final String DESKTOP_DC_TEMPLATE_STATE = "dctemplatestate";
     public static final String DESKTOP_WORKS_TEMPLATE = "workstemplate";
+    public static final String DESKTOP_WORKS_TEMPLATE_STATE = "workstemplatestate";
     public static final String DESKTOP_DC_TEMPLATE_ID = "dctemplateid";
     public static final String DESKTOP_WORKS_TEMPLATE_ID = "workstemplateid";
     public static final String DESKTOP_TEMPLATE_OS_TYPE = "templateostype";
@@ -945,6 +947,7 @@ public class ApiConstants {
 
     public static final String BOOT_TYPE = "boottype";
     public static final String BOOT_MODE = "bootmode";
+    public static final String TPM_VERSION = "tpmversion";
     public static final String BOOT_INTO_SETUP = "bootintosetup";
     public static final String DEPLOY_AS_IS = "deployasis";
     public static final String DEPLOY_AS_IS_DETAILS = "deployasisdetails";
@@ -960,6 +963,12 @@ public class ApiConstants {
     public static final String LOGIN = "login";
     public static final String LOGOUT = "logout";
     public static final String LIST_IDPS = "listIdps";
+    public static final String INCLUDE_HOST = "includehost";
+    public static final String WEBPORT = "webport";
+
+    public static final String KRBD_PATH = "krbdpath";
+
+    public static final String KRBD_PATH = "krbdpath";
 
     public enum BootType {
         UEFI, BIOS;
@@ -976,6 +985,20 @@ public class ApiConstants {
         @Override
         public String toString() {
             return this.name();
+        }
+    }
+
+    public enum TpmVersion {
+        V2_0, V1_2, TPM, NONE;
+
+
+        @Override
+        public String toString() {
+            if (this.name().equals("V1_2"))
+                return "1.2";
+            else if (this.name().equals("V2_0"))
+                return "2.0";
+            return "NONE";
         }
     }
 

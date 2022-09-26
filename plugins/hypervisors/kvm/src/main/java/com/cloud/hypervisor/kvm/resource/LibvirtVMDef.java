@@ -72,6 +72,24 @@ public class LibvirtVMDef {
             }
         }
 
+        enum TpmVersion {
+            V2_0("V2_0"), V1_2("V1_2"), NONE("NONE");
+
+            String _version;
+
+            TpmVersion(String version){
+                _version = version;
+            }
+            @Override
+            public String toString() {
+                if (_version.equals("V1_2"))
+                    return "1.2";
+                else if (_version.equals("V2_0"))
+                    return "2.0";
+                return "NONE";
+            }
+        }
+
         enum BootMode {
             LEGACY("LEGACY"), SECURE("SECURE");
 
@@ -101,6 +119,8 @@ public class LibvirtVMDef {
         private String _machine;
         private String _nvram;
         private String _nvramTemplate;
+
+        private TpmVersion _tpmVersion;
 
         public static final String GUEST_LOADER_SECURE = "guest.loader.secure";
         public static final String GUEST_LOADER_LEGACY = "guest.loader.legacy";
@@ -161,6 +181,14 @@ public class LibvirtVMDef {
 
         public void setBootMode(BootMode bootmode) {
             this._bootmode = bootmode;
+        }
+
+        public TpmVersion getTpmVersion() {
+            return this._tpmVersion;
+        }
+
+        public void setTPMVersion(TpmVersion tpmVersion) {
+            this._tpmVersion = tpmVersion;
         }
 
         @Override
@@ -866,6 +894,16 @@ public class LibvirtVMDef {
             }
         }
 
+        public void defBlockBasedDisk(String diskName, int devId) {
+            _diskType = DiskType.BLOCK;
+            _deviceType = DeviceType.DISK;
+            _diskFmtType = DiskFmtType.RAW;
+            _diskCacheMode = DiskCacheMode.WRITEBACK;
+            _sourcePath = diskName;
+            _diskLabel = getDevLabel(devId, DiskBus.SCSI, false);
+            _bus = DiskBus.SCSI;
+        }
+
         public void defBlockBasedDisk(String diskName, int devId, DiskBus bus) {
             _diskType = DiskType.BLOCK;
             _deviceType = DeviceType.DISK;
@@ -1192,7 +1230,7 @@ public class LibvirtVMDef {
         private String _ipAddr;
         private String _scriptPath;
         private NicModel _model;
-        private Integer _networkRateKBps;
+        private int _networkRateKBps;
         private String _virtualPortType;
         private String _virtualPortInterfaceId;
         private int _vlanTag = -1;
@@ -1203,9 +1241,25 @@ public class LibvirtVMDef {
         private String _dpdkSourcePort;
         private String _dpdkExtraLines;
         private String _interfaceMode;
+        private String _userIp4Network;
+        private Integer _userIp4Prefix;
 
         public void defBridgeNet(String brName, String targetBrName, String macAddr, NicModel model) {
             defBridgeNet(brName, targetBrName, macAddr, model, 0);
+        }
+
+        public void defUserNet(NicModel model, String macAddr, String ip4Network, Integer ip4Prefix) {
+            _netType = GuestNetType.USER;
+            _macAddr = macAddr;
+            _userIp4Network = ip4Network;
+            _userIp4Prefix = ip4Prefix;
+            _model = model;
+        }
+
+        public void defUserNet(NicModel model, String macAddr) {
+            _netType = GuestNetType.USER;
+            _macAddr = macAddr;
+            _model = model;
         }
 
         public void defBridgeNet(String brName, String targetBrName, String macAddr, NicModel model, Integer networkRateKBps) {
@@ -1389,6 +1443,7 @@ public class LibvirtVMDef {
                 netBuilder.append("<source type='unix' path='"+ _dpdkSourcePath + _dpdkSourcePort +
                         "' mode='" + _interfaceMode + "'/>\n");
             }
+
             if (_networkName != null) {
                 netBuilder.append("<target dev='" + _networkName + "'/>\n");
             }
@@ -1425,13 +1480,18 @@ public class LibvirtVMDef {
                 netBuilder.append(_dpdkExtraLines);
             }
 
-            if (_netType != GuestNetType.VHOSTUSER) {
+            if (_netType != GuestNetType.VHOSTUSER && _netType != GuestNetType.USER) {
                 netBuilder.append("<link state='" + (_linkStateUp ? "up" : "down") +"'/>\n");
             }
 
             if (_slot  != null) {
                 netBuilder.append(String.format("<address type='pci' domain='0x0000' bus='0x00' slot='0x%02x' function='0x0'/>\n", _slot));
             }
+
+            if (StringUtils.isNotBlank(_userIp4Network) && _userIp4Prefix != null) {
+                netBuilder.append(String.format("<ip family='ipv4' address='%s' prefix='%s'/>\n", _userIp4Network, _userIp4Prefix));
+            }
+
             return netBuilder.toString();
         }
 
@@ -1844,6 +1904,25 @@ public class LibvirtVMDef {
         }
     }
 
+    public static class TPMDef {
+        private String version = "2.0";
+
+        public TPMDef(String version) {
+            this.version = version;
+        }
+
+        public TPMDef() {
+        }
+
+        @Override
+        public String toString() {
+            StringBuilder tpmBuilder = new StringBuilder();
+            tpmBuilder.append("<tpm model='tpm-tis'>");
+            tpmBuilder.append(String.format("<backend type='emulator' version='%s'/>\n",this.version ) );
+            tpmBuilder.append("</tpm>\n");
+            return tpmBuilder.toString();
+        }
+    }
     public static class InputDef {
         private final String _type; /* tablet, mouse */
         private final String _bus; /* ps2, usb, xen */

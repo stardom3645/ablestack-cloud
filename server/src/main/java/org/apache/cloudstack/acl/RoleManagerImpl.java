@@ -57,9 +57,17 @@ import com.cloud.utils.Pair;
 import com.cloud.utils.component.ManagerBase;
 import com.cloud.utils.component.PluggableService;
 import com.cloud.utils.db.Filter;
+//import com.cloud.utils.db.SearchBuilder;
+//import com.cloud.utils.db.SearchBuilder;
+import com.cloud.utils.db.SearchCriteria;
+//import com.cloud.utils.db.SearchBuilder;
+//import com.cloud.utils.db.SearchCriteria;
 import com.cloud.utils.db.Transaction;
 import com.cloud.utils.db.TransactionCallback;
 import com.cloud.utils.db.TransactionStatus;
+//import com.cloud.utils.db.SearchCriteria.Op;
+//import com.cloud.utils.db.SearchCriteria.Op;
+//import com.cloud.utils.db.SearchCriteria.Op;
 import com.cloud.utils.exception.CloudRuntimeException;
 
 public class RoleManagerImpl extends ManagerBase implements RoleService, Configurable, PluggableService {
@@ -369,7 +377,27 @@ public class RoleManagerImpl extends ManagerBase implements RoleService, Configu
         }
         return new Pair<List<Role>, Integer>(new ArrayList<Role>(), 0);
     }
-
+    @Override
+    public Pair<List<Role>, Integer> findRolesByKeyword(String keyword, Long startIndex, Long limit) {
+        final Filter searchFilter = new Filter(RoleVO.class, "uuid", false,startIndex,limit );
+        if (StringUtils.isNotBlank(keyword)) {
+            Pair<List<RoleVO>, Integer> data = roleDao.findAllByName(keyword, startIndex, limit);
+            int removed = removeRootAdminRolesIfNeeded(data.first());
+            final SearchCriteria<RoleVO> sc = roleDao.createSearchCriteria();
+        if (keyword != null) {
+                    SearchCriteria<RoleVO> ssc = roleDao.createSearchCriteria();
+                    ssc.addOr("name", SearchCriteria.Op.LIKE, "%" + keyword + "%");
+                    ssc.addOr("uuid", SearchCriteria.Op.LIKE, "%" + keyword + "%");
+                    ssc.addOr("roleType", SearchCriteria.Op.LIKE, "%" + keyword + "%");
+                    ssc.addOr("description", SearchCriteria.Op.LIKE, "%" + keyword + "%");
+                    sc.addAnd("name", SearchCriteria.Op.SC, ssc);
+    }
+        final Pair<List<RoleVO>, Integer> result = roleDao.searchAndCount(sc, searchFilter);
+            return new Pair<List<Role>,Integer>(ListUtils.toListOfInterface(result.first()), Integer.valueOf(result.second() - removed));
+            //return new Pair<List<Role>, Integer>(sc, searchFilter);
+        }
+        return new Pair<List<Role>, Integer>(new ArrayList<Role>(), 0);
+    }
     /**
      *  Removes roles of the given list that have the type '{@link RoleType#Admin}' if the user calling the method is not a 'root admin'.
      *  The actual removal is executed via {@link #removeRootAdminRoles(List)}. Therefore, if the method is called by a 'root admin', we do nothing here.

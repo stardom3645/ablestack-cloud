@@ -13,6 +13,7 @@
   "buildVersion": "",
   "loginFooter": "",
   "logo": "assets/ablestack-logo.png",
+  "minilogo": "assets/mini-ablestack-logo.png",
   "banner": "assets/ablestack-logo.png",
   "error": {
     "403": "assets/403.png",
@@ -22,6 +23,7 @@
   "theme": {
     "@layout-mode": "light",
     "@logo-background-color": "#ffffff",
+    "@mini-logo-background-color": "#ffffff",
     "@navigation-background-color": "#ffffff",
     "@project-nav-background-color": "#001529",
     "@project-nav-text-color": "rgba(255, 255, 255, 0.65)",
@@ -42,8 +44,10 @@
     "@border-color-base": "#d9d9d9",
     "@border-radius-base": "4px",
     "@box-shadow-base": "0 2px 8px rgba(0, 0, 0, 0.15)",
-    "@logo-width": "291px",
-    "@logo-height": "43px",
+    "@logo-width": "280px",
+    "@logo-height": "48px",
+    "@mini-logo-width": "80px",
+    "@mini-logo-height": "48px",
     "@banner-width": "600px",
     "@banner-height": "80px",
     "@error-width": "256px",

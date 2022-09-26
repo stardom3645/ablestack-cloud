@@ -149,7 +149,7 @@ export default {
       show: (record) => {
         return record?.resourcedetails?.resourceHAEnabled === 'false'
       },
-      args: ['clusterid'],
+      args: ['clusterid', 'includehost'],
       mapping: {
         clusterid: {
           value: (record) => { return record.id }
@@ -165,7 +165,7 @@ export default {
       show: (record) => {
         return !(record?.resourcedetails?.resourceHAEnabled === 'false')
       },
-      args: ['clusterid'],
+      args: ['clusterid', 'includehost'],
       mapping: {
         clusterid: {
           value: (record) => { return record.id }

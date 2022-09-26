@@ -16,26 +16,39 @@
 // under the License.
 
 <template>
-  <a
-    v-if="['desktopcluster'].includes($route.meta.name) && 'listDesktopClusters' in $store.getters.apis"
-    :href="'http://'+resource.worksvmip+':'+$store.getters.features.desktopworksuserportalport"
-    target="_blank">
-    <a-button style="margin-left: 5px" shape="circle" type="" :size="size" :disabled="['Stopping', 'Stopped', 'Error', 'Destroyed', 'Destroying'].includes(resource.state)" >
-      <LaptopOutlined />
-    </a-button>
-  </a>
+  <Line
+    :chart-options="chartOptions"
+    :chart-data="chartData"
+    :width="width"
+    :height="height"
+  />
 </template>
+
 <script>
+import { Line } from 'vue-chartjs'
+import { Chart as ChartJS, Title, Tooltip, Legend, LineElement, CategoryScale, TimeScale, LinearScale, PointElement, Filler } from 'chart.js'
+
+ChartJS.register(Title, Tooltip, Legend, LineElement, CategoryScale, TimeScale, LinearScale, PointElement, Filler)
+
 export default {
-  name: 'WorksUserUrl',
+  name: 'LineChart',
+  components: { Line },
   props: {
-    resource: {
+    chartData: {
       type: Object,
       required: true
     },
-    size: {
-      type: String,
-      default: 'small'
+    chartOptions: {
+      type: Object,
+      default: () => {}
+    },
+    width: {
+      type: Number,
+      default: 650
+    },
+    height: {
+      type: Number,
+      default: 250
     }
   }
 }

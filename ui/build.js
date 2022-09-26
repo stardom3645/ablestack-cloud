@@ -13,10 +13,13 @@ const data = JSON.parse(dataJson)
 
 try {
   const version = fs2.readFileSync('/mnt/jenkins-work/versionInfo.txt', 'utf8')
-  console.log(version)
   data.buildVersion = version
 } catch (err) {
-  console.log(err)
+  // console.log(err)
+  const version = 'Bronto-v2.0.1'
+  const m = new Date()
+  const date = m.getFullYear() + ('0' + (m.getMonth() + 1)).slice(-2) + ('0' + m.getDate()).slice(-2)
+  data.buildVersion = version + '-' + date + '-dev'
 }
 
 fs.writeFileSync('./public/config.json', JSON.stringify(data))

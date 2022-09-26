@@ -40,6 +40,9 @@ export default {
     name: 'details',
     component: shallowRef(defineAsyncComponent(() => import('@/components/view/DetailsTab.vue')))
   }, {
+    name: 'outofbandmanagement',
+    component: shallowRef(defineAsyncComponent(() => import('@/views/infra/OobmTab.vue')))
+  }, {
     name: 'comments',
     component: shallowRef(defineAsyncComponent(() => import('@/components/view/AnnotationsTab.vue')))
   }],
@@ -135,7 +138,7 @@ export default {
       message: 'label.outofbandmanagement.configure',
       docHelp: 'adminguide/hosts.html#out-of-band-management',
       dataView: true,
-      args: ['hostid', 'address', 'port', 'username', 'password', 'driver'],
+      args: ['hostid', 'address', 'port', 'username', 'password', 'driver', 'webport'],
       mapping: {
         hostid: {
           value: (record) => { return record.id }

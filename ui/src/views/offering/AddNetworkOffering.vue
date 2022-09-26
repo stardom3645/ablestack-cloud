@@ -237,7 +237,7 @@
             </a-radio-button>
           </a-radio-group>
         </a-form-item>
-        <a-form-item v-if="isVirtualRouterForAtLeastOneService || isVpcVirtualRouterForAtLeastOneService">
+        <a-form-item name="serviceofferingid" ref="serviceofferingid" v-if="isVirtualRouterForAtLeastOneService || isVpcVirtualRouterForAtLeastOneService">
           <template #label>
             <tooltip-label :title="$t('label.serviceofferingid')" :tooltip="apiParams.serviceofferingid.description"/>
           </template>
@@ -614,7 +614,6 @@ export default {
     },
     fetchZoneData () {
       const params = {}
-      params.listAll = true
       params.showicon = true
       this.zoneLoading = true
       api('listZones', params).then(json => {
@@ -649,11 +648,9 @@ export default {
       }
     },
     fetchSupportedServiceData () {
-      const params = {}
-      params.listAll = true
       this.supportedServiceLoading = true
       this.supportedServices = []
-      api('listSupportedNetworkServices', params).then(json => {
+      api('listSupportedNetworkServices').then(json => {
         this.supportedServices = json.listsupportednetworkservicesresponse.networkservice
         for (var i in this.supportedServices) {
           var networkServiceObj = this.supportedServices[i]
@@ -1020,6 +1017,9 @@ export default {
         }
         if (values.enable) {
           params.enable = values.enable
+        }
+        if (values.serviceofferingid) {
+          params.serviceofferingid = values.serviceofferingid
         }
         params.traffictype = 'GUEST' // traffic type dropdown has been removed since it has only one option ('Guest'). Hardcode traffic type value here.
         api('createNetworkOffering', params).then(json => {
