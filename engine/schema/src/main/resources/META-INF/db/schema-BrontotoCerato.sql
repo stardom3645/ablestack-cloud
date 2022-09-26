@@ -140,23 +140,12 @@ BEGIN
 DROP PROCEDURE IF EXISTS addCol;
 
 CREATE DEFINER=`cloud`@`%` PROCEDURE `cloud`.`addCol`(
-    IN tb_name VarChar(200),
-    IN col_name VarChar(200),
-    IN col_type VarChar(1000)
+  IN tb_name VarChar(200),
+  IN col_name VarChar(200),
+  IN col_type VarChar(1000)
 )
 BEGIN
-    IF NOT EXISTS (
-        SELECT * 
-        FROM INFORMATION_SCHEMA.COLUMNS
-        WHERE TABLE_NAME = tb_name 
-        AND TABLE_SCHEMA = 'cloud' 
-        AND COLUMN_NAME = col_name
-    )
-    THEN
-        SET @ddl = CONCAT(' ALTER TABLE ', tb_name,' ADD COLUMN ', col_name, ' ', col_type);
-        PREPARE STMT FROM @ddl;
-        EXECUTE STMT;
-  END IF;
-END
+
+    IF NOT EXISTS ( SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = tb_name AND TABLE_SCHEMA = 'cloud' AND COLUMN_NAME = col_name ) THEN SET @ddl = CONCAT(' ALTER TABLE ', tb_name,' ADD COLUMN ', col_name, ' ', col_type); PREPARE STMT FROM @ddl; EXECUTE STMT; END IF; END
 
 CALL cloud.addCol('storage_pool', 'krbd_path', 'VARCHAR(255) DEFAULT null')
