@@ -1506,24 +1506,31 @@ public class LibvirtStorageAdaptor implements StorageAdaptor {
         if (createPathFolder(path)) {
             s_logger.debug("mkdir path [" + targetPath + "]");
         }
-        String kernelVer = Script.runSimpleBashScript("uname -r | cut -d '-' -f1");
-        String mainVer = kernelVer.split(".")[0];
-        String majorVer = kernelVer.split(".")[1];
-        String nowsync = "";
-        if (Integer.parseInt(mainVer) >= 5 && Integer.parseInt(majorVer) >= 7) {
-            nowsync = ",nowsync";
-        }
-        String cmd = "mount -t ceph ";
-        String user_fsname = userInfo.split(":")[0] + "@." + details.get("gluefsname") + "=/ ";
-        String secret = " -o secret=" + userInfo.split(":")[1];
-        String mon_addr = ",mon_addr=" + host.replaceAll(",", "/");
-        s_logger.debug("mount info ::: " + cmd + user_fsname + targetPath + secret + mon_addr + nowsync);
-        String mount = Script.runSimpleBashScript(cmd + user_fsname + targetPath + secret + mon_addr + nowsync);
+        String kernelVer = Script.runSimpleBashScript("uname -r | cut -d - -f 1 ");
+        s_logger.info("[" + kernelVer + "]" + kernelVer.length());
+        if (kernelVer != null) {
+            String mainVer = Script.runSimpleBashScript("uname -r | cut -d - -f 1 | cut -d . -f 1");
+            String majorVer = Script.runSimpleBashScript("uname -r | cut -d - -f 1 | cut -d . -f 2");
+            s_logger.info(mainVer);
+            s_logger.info(majorVer);
+            String nowsync = "";
+            if (Integer.parseInt(mainVer) >= 5 && Integer.parseInt(majorVer) >= 7) {
+                nowsync = ",nowsync";
+            }
+            String cmd = "mount -t ceph ";
+            String user_fsname = userInfo.split(":")[0] + "@." + details.get("gluefsname") + "=/ ";
+            String secret = " -o secret=" + userInfo.split(":")[1];
+            String mon_addr = ",mon_addr=" + host.replaceAll(",", "/");
+            s_logger.debug("mount info ::: " + cmd + user_fsname + targetPath + secret + mon_addr + nowsync);
+            String mount = Script.runSimpleBashScript(cmd + user_fsname + targetPath + secret + mon_addr + nowsync);
 
-        if (mount == null) {
-            return true;
+            if (mount == null) {
+                return true;
+            } else {
+                return false;
+            }
         } else {
-            return false;
+            throw new CloudRuntimeException("kernel version not found");
         }
     }
 
