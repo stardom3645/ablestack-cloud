@@ -22,6 +22,8 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Field;
+import java.net.InetSocketAddress;
+import java.net.Socket;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -393,7 +395,7 @@ public class AutomationControllerStartWorker extends AutomationControllerResourc
             }
             String publicIpAddressStr = String.valueOf(publicIpAddress.getAddress());
             try {
-               pingCheck(publicIpAddressStr, 300000);
+                addressReachable(publicIpAddressStr, 80, 300000);
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
@@ -411,7 +413,7 @@ public class AutomationControllerStartWorker extends AutomationControllerResourc
         stateTransitTo(automationController.getId(), AutomationController.Event.StartRequested);
         startAutomationControllerVMs();
         try {
-           pingCheck(publicIpAddressStr, 300000);
+            addressReachable(publicIpAddressStr, 80, 300000);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -425,8 +427,19 @@ public class AutomationControllerStartWorker extends AutomationControllerResourc
         return true;
     }
 
-    public boolean pingCheck(String url, int timeout) throws Exception{
-        InetAddress target = InetAddress.getByName(url);
-        return target.isReachable(timeout);
+    private static boolean addressReachable(String address, int port, int timeout) throws IOException {
+        Socket crunchifySocket = new Socket();
+        try {
+            // Connects this socket to the server with a specified timeout value.
+            crunchifySocket.connect(new InetSocketAddress(address, port), timeout);
+            // Return true if connection successful
+            return true;
+        } catch (IOException exception) {
+            exception.printStackTrace();
+            // Return false if connection fails
+            return false;
+        } finally {
+            crunchifySocket.close();
+        }
     }
 }
