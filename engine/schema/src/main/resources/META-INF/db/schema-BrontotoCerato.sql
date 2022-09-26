@@ -137,13 +137,4 @@ BEGIN
 	)
 ;END;
 
-IF NOT EXISTS (
-  SELECT
-    *
-  FROM
-    INFORMATION_SCHEMA.COLUMNS
-  WHERE
-    TABLE_NAME = 'storage_pool' AND COLUMN_NAME = 'krbd_path')
-BEGIN
-  ALTER TABLE `storage_pool` ADD `krbd_path` VARCHAR(255) NULL
-END;
+CALL `cloud`.`IDEMPOTENT_ADD_COLUMN`('cloud.storage_pool','krbd_path', 'VARCHAR(255) DEFAULT null ');
