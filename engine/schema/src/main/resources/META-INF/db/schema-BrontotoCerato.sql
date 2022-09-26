@@ -153,9 +153,9 @@ BEGIN
         AND COLUMN_NAME = col_name
     )
     THEN
-        SET @ddl = CONCAT(' ALTER TABLE ', tb_name  ,' ADD COLUMN ', col_name, ' ', col_type);
+        SET @ddl = CONCAT(' ALTER TABLE ', tb_name,' ADD COLUMN ', col_name, ' ', col_type);
         PREPARE STMT FROM @ddl;
-        EXECUTE STMT;  
+        EXECUTE STMT;
   END IF;
 END
 
