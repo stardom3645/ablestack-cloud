@@ -187,14 +187,14 @@ public class AutomationControllerStartWorker extends AutomationControllerResourc
                     templates.getHypervisorType(), BaseCmd.HTTPMethod.POST, base64UserData, keypairs,
                     null, addrs, null, null, null, customParameterMap, null, null, null, null, true, null, null);
         } else {
-        ipToNetworkMap = new LinkedHashMap<Long, Network.IpAddresses>();
-        Network.IpAddresses addrs = new Network.IpAddresses(null, null, null);
-        Network.IpAddresses controllerAddrs = new Network.IpAddresses(automationControllerIp, null, null);
-        ipToNetworkMap.put(automationController.getNetworkId(), controllerAddrs);
-        genieControlVms = userVmService.createAdvancedVirtualMachine(zone, serviceOffering, templates, networkIds, owner,
-                hostName, hostName, null, null, null,
-                templates.getHypervisorType(), BaseCmd.HTTPMethod.POST, base64UserData, keypairs,
-                ipToNetworkMap, addrs, null, null, null, customParameterMap, null, null, null, null, true, null, null);
+            ipToNetworkMap = new LinkedHashMap<Long, Network.IpAddresses>();
+            Network.IpAddresses addrs = new Network.IpAddresses(null, null, null);
+            Network.IpAddresses controllerAddrs = new Network.IpAddresses(automationControllerIp, null, null);
+            ipToNetworkMap.put(automationController.getNetworkId(), controllerAddrs);
+            genieControlVms = userVmService.createAdvancedVirtualMachine(zone, serviceOffering, templates, networkIds, owner,
+                    hostName, hostName, null, null, null,
+                    templates.getHypervisorType(), BaseCmd.HTTPMethod.POST, base64UserData, keypairs,
+                    ipToNetworkMap, addrs, null, null, null, customParameterMap, null, null, null, null, true, null, null);
         }
         if (LOGGER.isInfoEnabled()) {
             LOGGER.info(String.format("Created Control VM ID : %s, %s in the automation controller : %s", genieControlVms.getUuid(), hostName, automationController.getName()));
@@ -427,7 +427,12 @@ public class AutomationControllerStartWorker extends AutomationControllerResourc
         return true;
     }
 
-    private static boolean addressReachable(String address, int port, int timeout) throws IOException {
+    public boolean pingCheck(String url, int timeout) throws Exception{
+        InetAddress target = InetAddress.getByName(url);
+        return target.isReachable(timeout);
+    }
+
+    public static boolean addressReachable(String address, int port, int timeout) throws IOException {
         Socket crunchifySocket = new Socket();
         try {
             // Connects this socket to the server with a specified timeout value.
