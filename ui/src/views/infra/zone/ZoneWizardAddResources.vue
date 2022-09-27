@@ -488,7 +488,52 @@ export default {
           placeHolder: 'message.error.rados.path',
           required: false,
           display: {
-            primaryStorageProtocol: ['rbd', 'Glue Block']
+            primaryStorageProtocol: ['Glue Block']
+          }
+        },
+        {
+          title: 'label.gluefs.server',
+          key: 'gluefsserver',
+          placeHolder: 'message.error.gluefs.server',
+          required: false,
+          display: {
+            primaryStorageProtocol: ['Glue FileSystem']
+          }
+        },
+        {
+          title: 'label.gluefs.user',
+          key: 'gluefsuser',
+          placeHolder: 'message.error.gluefs.user',
+          required: false,
+          display: {
+            primaryStorageProtocol: ['Glue FileSystem']
+          }
+        },
+        {
+          title: 'label.gluefs.name',
+          key: 'gluefsname',
+          placeHolder: 'message.error.gluefs.name',
+          required: false,
+          display: {
+            primaryStorageProtocol: ['Glue FileSystem']
+          }
+        },
+        {
+          title: 'label.gluefs.path',
+          key: 'gluefstargetpath',
+          placeHolder: 'message.error.gluefs.path',
+          required: false,
+          display: {
+            primaryStorageProtocol: ['Glue FileSystem']
+          }
+        },
+        {
+          title: 'label.gluefs.secret',
+          key: 'gluefssecret',
+          placeHolder: 'message.error.gluefs.secret',
+          required: false,
+          display: {
+            primaryStorageProtocol: ['Glue FileSystem']
           }
         },
         {
