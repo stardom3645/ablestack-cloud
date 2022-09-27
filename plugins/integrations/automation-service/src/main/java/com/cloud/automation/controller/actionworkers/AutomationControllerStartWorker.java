@@ -402,11 +402,11 @@ public class AutomationControllerStartWorker extends AutomationControllerResourc
             }
             try {
                 urlReachable(publicIpAddressStr, 80);
+                stateTransitTo(automationController.getId(), AutomationController.Event.OperationSucceeded);
+                return true;
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
-            stateTransitTo(automationController.getId(), AutomationController.Event.OperationSucceeded);
-            return true;
         }
         return false;
     }
@@ -425,17 +425,18 @@ public class AutomationControllerStartWorker extends AutomationControllerResourc
         }
         try {
             urlReachable(publicIpAddressStr, 80);
+
+            if (LOGGER.isInfoEnabled()) {
+                LOGGER.info(String.format("Starting automation controller : %s", automationController.getName()));
+            }
+            stateTransitTo(automationController.getId(), AutomationController.Event.OperationSucceeded);
+            if (LOGGER.isInfoEnabled()) {
+                LOGGER.info(String.format("Automation Controller : %s successfully started", automationController.getName()));
+            }
+            return true;
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-        if (LOGGER.isInfoEnabled()) {
-            LOGGER.info(String.format("Starting automation controller : %s", automationController.getName()));
-        }
-        stateTransitTo(automationController.getId(), AutomationController.Event.OperationSucceeded);
-        if (LOGGER.isInfoEnabled()) {
-            LOGGER.info(String.format("Automation Controller : %s successfully started", automationController.getName()));
-        }
-        return true;
     }
 
     public boolean pingCheck(String url, int timeout) throws Exception{
