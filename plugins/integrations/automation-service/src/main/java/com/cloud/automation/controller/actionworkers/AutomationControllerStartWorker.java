@@ -477,6 +477,8 @@ public class AutomationControllerStartWorker extends AutomationControllerResourc
         try {
             URL url = new URL("http://"+address+":"+port);
             URLConnection con = url.openConnection();
+            con.setConnectTimeout(30000);
+            con.setReadTimeout(45000);
             HttpURLConnection exitCode = (HttpURLConnection)con;
             if(exitCode.getResponseCode() == 200) {
                 return true;
@@ -484,6 +486,8 @@ public class AutomationControllerStartWorker extends AutomationControllerResourc
             else {
                 return false;
             }
+        } catch (java.net.SocketTimeoutException e) {
+            return false;
         } catch (IOException exception) {
             return false;
         }
