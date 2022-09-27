@@ -1013,8 +1013,12 @@ export default {
           description: 'RBD'
         })
         protocols.push({
-          id: 'Glue',
-          description: 'Glue'
+          id: 'Glue Block',
+          description: 'Glue Block'
+        })
+        protocols.push({
+          id: 'Glue FileSystem',
+          description: 'Glue FileSystem'
         })
         protocols.push({
           id: 'clvm',
