@@ -22,8 +22,9 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Field;
-import java.net.InetSocketAddress;
-import java.net.Socket;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -395,7 +396,12 @@ public class AutomationControllerStartWorker extends AutomationControllerResourc
             }
             String publicIpAddressStr = String.valueOf(publicIpAddress.getAddress());
             try {
-                addressReachable(publicIpAddressStr, 80, 120000);
+                pingCheck(publicIpAddressStr, 300000);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+            try {
+                urlReachable(publicIpAddressStr, 80);
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
@@ -413,7 +419,12 @@ public class AutomationControllerStartWorker extends AutomationControllerResourc
         stateTransitTo(automationController.getId(), AutomationController.Event.StartRequested);
         startAutomationControllerVMs();
         try {
-            addressReachable(publicIpAddressStr, 80, 120000);
+            pingCheck(publicIpAddressStr, 300000);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+        try {
+            urlReachable(publicIpAddressStr, 80);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -432,19 +443,22 @@ public class AutomationControllerStartWorker extends AutomationControllerResourc
         return target.isReachable(timeout);
     }
 
-    public static boolean addressReachable(String address, int port, int timeout) throws IOException {
-        Socket crunchifySocket = new Socket();
+    public static boolean urlReachable(String address, int port) throws IOException {
         try {
-            // Connects this socket to the server with a specified timeout value.
-            crunchifySocket.connect(new InetSocketAddress(address, port), timeout);
-            // Return true if connection successful
-            return true;
+            URL url = new URL(address+':'+port);
+            URLConnection con = url.openConnection();
+            HttpURLConnection exitCode = (HttpURLConnection)con;
+            if(exitCode.getResponseCode() == 200) {
+                return true;
+            }
+            else {
+                return false;
+            }
         } catch (IOException exception) {
-            exception.printStackTrace();
-            // Return false if connection fails
             return false;
-        } finally {
-            crunchifySocket.close();
         }
     }
+
+
+
 }
