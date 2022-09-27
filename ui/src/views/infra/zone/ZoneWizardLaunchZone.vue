@@ -1344,13 +1344,21 @@ export default {
         const rbdid = this.prefillContent?.primaryStorageRADOSUser || ''
         const rbdsecret = this.prefillContent?.primaryStorageRADOSSecret || ''
         url = this.rbdURL(rbdmonitor, rbdpool, rbdid, rbdsecret)
-      } else if (protocol === 'Glue') {
+      } else if (protocol === 'Glue Block') {
         const rbdmonitor = this.prefillContent?.primaryStorageRADOSMonitor || ''
         const rbdpool = this.prefillContent?.primaryStorageRADOSPool || ''
         const rbdid = this.prefillContent?.primaryStorageRADOSUser || ''
         const rbdsecret = this.prefillContent?.primaryStorageRADOSSecret || ''
         url = this.rbdURL(rbdmonitor, rbdpool, rbdid, rbdsecret)
         params.krbdPath = this.prefillContent?.primaryStorageRADOSPath || ''
+      } else if (protocol === 'Glue FileSystem') {
+        const gluefsserver = this.prefillContent?.gluefsserver || ''
+        const gluefstargetpath = this.prefillContent?.gluefstargetpath || ''
+        const gluefsuser = this.prefillContent?.gluefsuser || ''
+        const gluefssecret = this.prefillContent?.gluefssecret || ''
+        url = this.gluefsURL(gluefsserver, gluefstargetpath, gluefsuser, gluefssecret)
+        params['details[0].gluefsname'] = this.prefillContent?.gluefsname || ''
+        params['details[0].provider'] = 'ABLESTACK'
       } else if (protocol === 'Linstor') {
         url = this.linstorURL(server)
         params.provider = 'Linstor'
@@ -2095,6 +2103,23 @@ export default {
       }
       if (server.indexOf('://') === -1) {
         url = 'nfs://' + server + path
+      } else {
+        url = server + path
+      }
+      return url
+    },
+    gluefsURL (server, path, id, secret) {
+      var url
+      if (path.substring(0, 1) !== '/') {
+        path = '/' + path
+      }
+      secret = secret.replace(/\+/g, '-')
+      secret = secret.replace(/\//g, '_')
+      if (id !== null && secret !== null) {
+        server = id + ':' + secret + '@' + server
+      }
+      if (server.indexOf('://') === -1) {
+        url = 'gluefs://' + server + path
       } else {
         url = server + path
       }
