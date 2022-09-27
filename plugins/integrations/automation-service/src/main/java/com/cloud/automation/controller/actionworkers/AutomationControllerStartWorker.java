@@ -400,7 +400,7 @@ public class AutomationControllerStartWorker extends AutomationControllerResourc
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
-            boolean urlReachableResult = false;
+            boolean urlReachableResult;
             try {
                 urlReachableResult = urlReachable(publicIpAddressStr, 80);
                 if (urlReachableResult == true) {
@@ -475,7 +475,7 @@ public class AutomationControllerStartWorker extends AutomationControllerResourc
 
     public static boolean urlReachable(String address, int port) throws IOException {
         try {
-            URL url = new URL(address+':'+port);
+            URL url = new URL("http://"+address+":"+port);
             URLConnection con = url.openConnection();
             HttpURLConnection exitCode = (HttpURLConnection)con;
             if(exitCode.getResponseCode() == 200) {
