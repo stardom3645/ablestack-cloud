@@ -400,10 +400,28 @@ public class AutomationControllerStartWorker extends AutomationControllerResourc
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
+            boolean urlReachableResult = false;
             try {
-                urlReachable(publicIpAddressStr, 80);
-                stateTransitTo(automationController.getId(), AutomationController.Event.OperationSucceeded);
-                return true;
+                urlReachableResult = urlReachable(publicIpAddressStr, 80);
+                if (urlReachableResult == true) {
+                    if (LOGGER.isInfoEnabled()) {
+                        LOGGER.info(String.format("Starting automation controller : %s", automationController.getName()));
+                    }
+                    stateTransitTo(automationController.getId(), AutomationController.Event.OperationSucceeded);
+                    if (LOGGER.isInfoEnabled()) {
+                        LOGGER.info(String.format("Automation Controller : %s successfully started", automationController.getName()));
+                    }
+                    return true;
+                }else {
+                    if (LOGGER.isInfoEnabled()) {
+                        LOGGER.info(String.format("Starting automation controller : %s", automationController.getName()));
+                    }
+                    stateTransitTo(automationController.getId(), AutomationController.Event.OperationFailed);
+                    if (LOGGER.isInfoEnabled()) {
+                        LOGGER.info(String.format("Automation Controller : %s unsuccessfully started", automationController.getName()));
+                    }
+                    return false;
+                }
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
@@ -414,6 +432,7 @@ public class AutomationControllerStartWorker extends AutomationControllerResourc
     public boolean startStoppedAutomationController() throws CloudRuntimeException {
         init();
         IpAddress publicIpAddress = null;
+        boolean urlReachableResult = false;
         publicIpAddress = getAutomationControllerServerIp();
         String publicIpAddressStr = String.valueOf(publicIpAddress.getAddress());
         stateTransitTo(automationController.getId(), AutomationController.Event.StartRequested);
@@ -424,16 +443,26 @@ public class AutomationControllerStartWorker extends AutomationControllerResourc
             throw new RuntimeException(e);
         }
         try {
-            urlReachable(publicIpAddressStr, 80);
-
-            if (LOGGER.isInfoEnabled()) {
-                LOGGER.info(String.format("Starting automation controller : %s", automationController.getName()));
+            urlReachableResult = urlReachable(publicIpAddressStr, 80);
+            if (urlReachableResult == true) {
+                if (LOGGER.isInfoEnabled()) {
+                    LOGGER.info(String.format("Starting automation controller : %s", automationController.getName()));
+                }
+                stateTransitTo(automationController.getId(), AutomationController.Event.OperationSucceeded);
+                if (LOGGER.isInfoEnabled()) {
+                    LOGGER.info(String.format("Automation Controller : %s successfully started", automationController.getName()));
+                }
+                return true;
+            }else {
+                if (LOGGER.isInfoEnabled()) {
+                    LOGGER.info(String.format("Starting automation controller : %s", automationController.getName()));
+                }
+                stateTransitTo(automationController.getId(), AutomationController.Event.OperationFailed);
+                if (LOGGER.isInfoEnabled()) {
+                    LOGGER.info(String.format("Automation Controller : %s unsuccessfully started", automationController.getName()));
+                }
+                return false;
             }
-            stateTransitTo(automationController.getId(), AutomationController.Event.OperationSucceeded);
-            if (LOGGER.isInfoEnabled()) {
-                LOGGER.info(String.format("Automation Controller : %s successfully started", automationController.getName()));
-            }
-            return true;
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
