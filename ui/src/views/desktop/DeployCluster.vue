@@ -361,11 +361,9 @@ export default {
         if (items != null) {
           this.serviceOfferings = items.filter(it => it.iscustomized === false)
         }
-        console.log('this.serviceOfferings :>> ', this.serviceOfferings)
       }).finally(() => {
         this.serviceOfferingLoading = false
         if (this.arrayHasItems(this.serviceOfferings)) {
-          console.log('1234444 :>> ')
           this.form.serviceofferingid = 0
         }
       })
