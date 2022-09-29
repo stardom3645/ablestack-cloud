@@ -22,6 +22,9 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Field;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -185,14 +188,14 @@ public class AutomationControllerStartWorker extends AutomationControllerResourc
                     templates.getHypervisorType(), BaseCmd.HTTPMethod.POST, base64UserData, keypairs,
                     null, addrs, null, null, null, customParameterMap, null, null, null, null, true, null, null);
         } else {
-        ipToNetworkMap = new LinkedHashMap<Long, Network.IpAddresses>();
-        Network.IpAddresses addrs = new Network.IpAddresses(null, null, null);
-        Network.IpAddresses controllerAddrs = new Network.IpAddresses(automationControllerIp, null, null);
-        ipToNetworkMap.put(automationController.getNetworkId(), controllerAddrs);
-        genieControlVms = userVmService.createAdvancedVirtualMachine(zone, serviceOffering, templates, networkIds, owner,
-                hostName, hostName, null, null, null,
-                templates.getHypervisorType(), BaseCmd.HTTPMethod.POST, base64UserData, keypairs,
-                ipToNetworkMap, addrs, null, null, null, customParameterMap, null, null, null, null, true, null, null);
+            ipToNetworkMap = new LinkedHashMap<Long, Network.IpAddresses>();
+            Network.IpAddresses addrs = new Network.IpAddresses(null, null, null);
+            Network.IpAddresses controllerAddrs = new Network.IpAddresses(automationControllerIp, null, null);
+            ipToNetworkMap.put(automationController.getNetworkId(), controllerAddrs);
+            genieControlVms = userVmService.createAdvancedVirtualMachine(zone, serviceOffering, templates, networkIds, owner,
+                    hostName, hostName, null, null, null,
+                    templates.getHypervisorType(), BaseCmd.HTTPMethod.POST, base64UserData, keypairs,
+                    ipToNetworkMap, addrs, null, null, null, customParameterMap, null, null, null, null, true, null, null);
         }
         if (LOGGER.isInfoEnabled()) {
             LOGGER.info(String.format("Created Control VM ID : %s, %s in the automation controller : %s", genieControlVms.getUuid(), hostName, automationController.getName()));
@@ -393,12 +396,35 @@ public class AutomationControllerStartWorker extends AutomationControllerResourc
             }
             String publicIpAddressStr = String.valueOf(publicIpAddress.getAddress());
             try {
-               pingCheck(publicIpAddressStr, 300000);
+                pingCheck(publicIpAddressStr, 300000);
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
-            stateTransitTo(automationController.getId(), AutomationController.Event.OperationSucceeded);
-            return true;
+            boolean urlReachableResult;
+            try {
+                urlReachableResult = urlReachable(publicIpAddressStr, 80);
+                if (urlReachableResult == true) {
+                    if (LOGGER.isInfoEnabled()) {
+                        LOGGER.info(String.format("Starting automation controller : %s", automationController.getName()));
+                    }
+                    stateTransitTo(automationController.getId(), AutomationController.Event.OperationSucceeded);
+                    if (LOGGER.isInfoEnabled()) {
+                        LOGGER.info(String.format("Automation Controller : %s successfully started", automationController.getName()));
+                    }
+                    return true;
+                }else {
+                    if (LOGGER.isInfoEnabled()) {
+                        LOGGER.info(String.format("Starting automation controller : %s", automationController.getName()));
+                    }
+                    stateTransitTo(automationController.getId(), AutomationController.Event.OperationFailed);
+                    if (LOGGER.isInfoEnabled()) {
+                        LOGGER.info(String.format("Automation Controller : %s unsuccessfully started", automationController.getName()));
+                    }
+                    return false;
+                }
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
         }
         return false;
     }
@@ -406,27 +432,67 @@ public class AutomationControllerStartWorker extends AutomationControllerResourc
     public boolean startStoppedAutomationController() throws CloudRuntimeException {
         init();
         IpAddress publicIpAddress = null;
+        boolean urlReachableResult = false;
         publicIpAddress = getAutomationControllerServerIp();
         String publicIpAddressStr = String.valueOf(publicIpAddress.getAddress());
         stateTransitTo(automationController.getId(), AutomationController.Event.StartRequested);
         startAutomationControllerVMs();
         try {
-           pingCheck(publicIpAddressStr, 300000);
+            pingCheck(publicIpAddressStr, 300000);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-        if (LOGGER.isInfoEnabled()) {
-            LOGGER.info(String.format("Starting automation controller : %s", automationController.getName()));
+        try {
+            urlReachableResult = urlReachable(publicIpAddressStr, 80);
+            if (urlReachableResult == true) {
+                if (LOGGER.isInfoEnabled()) {
+                    LOGGER.info(String.format("Starting automation controller : %s", automationController.getName()));
+                }
+                stateTransitTo(automationController.getId(), AutomationController.Event.OperationSucceeded);
+                if (LOGGER.isInfoEnabled()) {
+                    LOGGER.info(String.format("Automation Controller : %s successfully started", automationController.getName()));
+                }
+                return true;
+            }else {
+                if (LOGGER.isInfoEnabled()) {
+                    LOGGER.info(String.format("Starting automation controller : %s", automationController.getName()));
+                }
+                stateTransitTo(automationController.getId(), AutomationController.Event.OperationFailed);
+                if (LOGGER.isInfoEnabled()) {
+                    LOGGER.info(String.format("Automation Controller : %s unsuccessfully started", automationController.getName()));
+                }
+                return false;
+            }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
-        stateTransitTo(automationController.getId(), AutomationController.Event.OperationSucceeded);
-        if (LOGGER.isInfoEnabled()) {
-            LOGGER.info(String.format("Automation Controller : %s successfully started", automationController.getName()));
-        }
-        return true;
     }
 
     public boolean pingCheck(String url, int timeout) throws Exception{
         InetAddress target = InetAddress.getByName(url);
         return target.isReachable(timeout);
     }
+
+    public static boolean urlReachable(String address, int port) throws IOException {
+        try {
+            URL url = new URL("http://"+address+":"+port);
+            URLConnection con = url.openConnection();
+            con.setConnectTimeout(30000);
+            con.setReadTimeout(45000);
+            HttpURLConnection exitCode = (HttpURLConnection)con;
+            if(exitCode.getResponseCode() == 200) {
+                return true;
+            }
+            else {
+                return false;
+            }
+        } catch (java.net.SocketTimeoutException e) {
+            return false;
+        } catch (IOException exception) {
+            return false;
+        }
+    }
+
+
+
 }
