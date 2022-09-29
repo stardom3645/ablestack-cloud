@@ -734,7 +734,7 @@ public class HostResponse extends BaseResponseWithAnnotations {
     public void setTpmCapabilty(Boolean hostCapability) {
         this.tpmCapabilty = hostCapability;
     }
-    
+
     public void setEncryptionSupported(Boolean encryptionSupported) {
         this.encryptionSupported = encryptionSupported;
     }

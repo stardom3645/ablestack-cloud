@@ -316,14 +316,8 @@ public class TaggedResourceManagerImpl extends ManagerBase implements TaggedReso
 
 
     private void informStoragePoolForVmTags(long vmId, String key, String value) {
-        s_logger.info("vmId ::::::::::::::: > " + vmId);
-        s_logger.info("key ::::::::::::::: > " + key);
-        s_logger.info("value ::::::::::::::: > " + value);
         List<VolumeVO> volumeVos = volumeDao.findByInstance(vmId);
-        s_logger.info("volumeVos ::::::::::::::: > " + volumeVos.size());
         for (VolumeVO volume : volumeVos) {
-            s_logger.info("volume ::::::::::::::: > " + volume);
-            s_logger.info("volume ::::::::::::::: > " + volume.getPoolId());
             DataStore dataStore = dataStoreMgr.getDataStore(volume.getPoolId(), DataStoreRole.Primary);
             if (dataStore == null || !(dataStore.getDriver() instanceof PrimaryDataStoreDriver)) {
                 continue;
