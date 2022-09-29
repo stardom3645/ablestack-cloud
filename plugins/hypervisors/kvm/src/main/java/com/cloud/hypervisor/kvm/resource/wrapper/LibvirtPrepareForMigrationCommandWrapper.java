@@ -25,6 +25,7 @@ import java.util.Map;
 
 import org.apache.cloudstack.storage.configdrive.ConfigDrive;
 import org.apache.cloudstack.storage.to.PrimaryDataStoreTO;
+import org.apache.cloudstack.storage.to.VolumeObjectTO;
 import org.apache.commons.collections.MapUtils;
 import org.apache.log4j.Logger;
 import org.libvirt.Connect;
@@ -92,6 +93,7 @@ public final class LibvirtPrepareForMigrationCommandWrapper extends CommandWrapp
             final DiskTO[] volumes = vm.getDisks();
             for (final DiskTO volume : volumes) {
                 final DataTO data = volume.getData();
+
                 if (volume.getType() == Volume.Type.ISO) {
                     if (data != null && data.getPath() != null && data.getPath().startsWith(ConfigDrive.CONFIGDRIVEDIR)) {
                         libvirtComputingResource.getVolumePath(conn, volume, vm.isConfigDriveOnHostCache());
@@ -111,6 +113,22 @@ public final class LibvirtPrepareForMigrationCommandWrapper extends CommandWrapp
                                 throw new InternalErrorException("Error while mapping RBD device on host");
                             }
                         }
+                    }
+                }
+
+                if (data instanceof VolumeObjectTO) {
+                    final VolumeObjectTO volumeObjectTO = (VolumeObjectTO)data;
+
+                    if (volumeObjectTO.requiresEncryption()) {
+                        String secretConsumer = volumeObjectTO.getPath();
+                        if (volume.getDetails() != null && volume.getDetails().containsKey(DiskTO.SECRET_CONSUMER_DETAIL)) {
+                            secretConsumer = volume.getDetails().get(DiskTO.SECRET_CONSUMER_DETAIL);
+                        }
+                        String secretUuid = libvirtComputingResource.createLibvirtVolumeSecret(conn, secretConsumer, volumeObjectTO.getPassphrase());
+                        s_logger.debug(String.format("Created libvirt secret %s for disk %s", secretUuid, volumeObjectTO.getPath()));
+                        volumeObjectTO.clearPassphrase();
+                    } else {
+                        s_logger.debug(String.format("disk %s has no passphrase or encryption", volumeObjectTO));
                     }
                 }
             }
