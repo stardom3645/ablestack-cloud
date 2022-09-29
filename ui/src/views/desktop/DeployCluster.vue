@@ -342,12 +342,12 @@ export default {
         var items = json.listdesktopcontrollerversionsresponse.desktopcontrollerversion
         if (items != null) {
           this.controllerVersions = items.filter(it => it.state === 'Enabled')
-          console.log('this.controllerVersions :>> ', this.controllerVersions)
+          // console.log('this.controllerVersions :>> ', this.controllerVersions)
         }
       }).finally(() => {
         this.controllerVersionLoading = false
         if (this.arrayHasItems(this.controllerVersions)) {
-          console.log('123 :>> ')
+          // console.log('123 :>> ')
           this.form.controllerversionid = 0
         }
       })
@@ -361,11 +361,9 @@ export default {
         if (items != null) {
           this.serviceOfferings = items.filter(it => it.iscustomized === false)
         }
-        console.log('this.serviceOfferings :>> ', this.serviceOfferings)
       }).finally(() => {
         this.serviceOfferingLoading = false
         if (this.arrayHasItems(this.serviceOfferings)) {
-          console.log('1234444 :>> ')
           this.form.serviceofferingid = 0
         }
       })

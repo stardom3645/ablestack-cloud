@@ -1001,6 +1001,14 @@ export default {
       const protocols = []
       if (hypervisor === 'KVM') {
         protocols.push({
+          id: 'Glue Block',
+          description: 'Glue Block'
+        })
+        protocols.push({
+          id: 'Glue FileSystem',
+          description: 'Glue FileSystem'
+        })
+        protocols.push({
           id: 'nfs',
           description: 'nfs'
         })
@@ -1011,10 +1019,6 @@ export default {
         protocols.push({
           id: 'rbd',
           description: 'RBD'
-        })
-        protocols.push({
-          id: 'Glue',
-          description: 'Glue'
         })
         protocols.push({
           id: 'clvm',
