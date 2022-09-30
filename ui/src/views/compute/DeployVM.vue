@@ -1490,7 +1490,7 @@ export default {
         ['name', 'keyboard', 'boottype', 'bootmode', 'userdata', 'tpmversion'].forEach(this.fillValue)
         this.form.boottype = this.defaultBootType ? this.defaultBootType : this.options.bootTypes && this.options.bootTypes.length > 0 ? this.options.bootTypes[0].id : undefined
         this.form.bootmode = this.defaultBootMode ? this.defaultBootMode : this.options.bootModes && this.options.bootModes.length > 0 ? this.options.bootModes[0].id : undefined
-        this.form.tpmversion = this.defaultTPM ? this.defaultTPM : this.options.tpmVersion && this.options.tpmVersion.length > 0 ? this.options.tpmVersion[0].id : undefined
+        this.form.tpmversion = this.defaultTPM ? this.defaultTPM : this.options.tpmVersion && this.options.tpmVersion.length > 0 ? this.options.tpmVersion[0].description : undefined
         this.instanceConfig = toRaw(this.form)
       })
     },
