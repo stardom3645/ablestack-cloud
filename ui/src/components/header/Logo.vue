@@ -28,7 +28,10 @@
     <img
       :style="{
         width: $config.theme['@logo-width'],
-        height: $config.theme['@logo-height']
+        height: $config.theme['@logo-height'],
+        marginLeft: '8px',
+        marginRight: '8px',
+        marginBottom: '-10px'
       }"
       :src="$config.logo" />
   </div>
