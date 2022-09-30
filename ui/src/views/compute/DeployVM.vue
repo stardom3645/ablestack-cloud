@@ -1538,6 +1538,7 @@ export default {
         { id: 'V1_2', description: 'TPM Version 1.2' },
         { id: 'V2_0', description: 'TPM Version 2.0' }
       ]
+      this.defaultTPM = this.options.tpmVersion?.[0]?.id || undefined
     },
     fetchInstaceGroups () {
       this.options.instanceGroups = []
