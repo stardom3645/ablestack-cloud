@@ -1607,6 +1607,7 @@ export default {
           this.defaultBootType = this.template?.details?.UEFI ? 'UEFI' : ''
           this.fetchBootModes(this.defaultBootType)
           this.defaultBootMode = this.template?.details?.UEFI
+          this.defaultTPM = 'Disabled'
         }
       } else if (name === 'isoid') {
         this.templateConfigurations = []
