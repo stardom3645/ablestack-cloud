@@ -1029,6 +1029,13 @@ public class LibvirtStorageAdaptor implements StorageAdaptor {
                     ", RBD error: " + ErrorCode.getErrorMessage(e.getReturnValue()));
                 throw new CloudRuntimeException(e.toString() + " - " + ErrorCode.getErrorMessage(e.getReturnValue()));
             }
+            //Check if rbd image is already mapped
+            String device = Script.runSimpleBashScript("rbd showmapped | grep \"" + pool.getSourceDir()+"[ ]*" + uuid + "\" | grep -o \"[^ ]*[ ]*$\"");
+            if(device != null) {
+                //If not mapped, map and return mapped device
+                Script.runSimpleBashScript("rbd unmap " + device + " --id " + pool.getAuthUserName());
+                device = Script.runSimpleBashScript("rbd showmapped | grep \"" + pool.getSourceDir()+"[ ]*" + uuid +"\" | grep -o \"[^ ]*[ ]*$\"");
+            }
         }
 
         LibvirtStoragePool libvirtPool = (LibvirtStoragePool)pool;
