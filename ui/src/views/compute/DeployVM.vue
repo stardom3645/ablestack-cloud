@@ -546,7 +546,7 @@
                     </div>
                     <a-form-item :label="$t('label.tpm')" name="tpmVersion" ref="tpmVersion">
                       <a-select
-                        v-model:value="form.tpmVersion"
+                        v-model:value="form.tpmversion"
                         showSearch
                         optionFilterProp="label"
                         :filterOption="filterOption">
@@ -809,7 +809,7 @@ export default {
       template: {},
       defaultBootType: '',
       defaultBootMode: '',
-      defaultTPM: 'NONE',
+      defaultTPM: '',
       templateConfigurations: [],
       templateNics: [],
       templateLicenses: [],
@@ -1534,7 +1534,7 @@ export default {
     },
     fetchTpm () {
       this.options.tpmVersion = [
-        { id: 'NONE', description: 'NONE' },
+        { id: 'NONE', description: 'Disabled' },
         { id: 'V2_0', description: 'TPM Version 2.0' }
       ]
       this.defaultTPM = 'NONE'
