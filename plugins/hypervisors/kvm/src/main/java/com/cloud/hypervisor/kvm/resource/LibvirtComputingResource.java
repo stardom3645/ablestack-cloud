@@ -2637,6 +2637,8 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
                 numCoresPerSocket = 6;
             } else if (vcpus % 4 == 0) {
                 numCoresPerSocket = 4;
+            } else {
+                numCoresPerSocket = vcpus;
             }
         }
         return numCoresPerSocket;
