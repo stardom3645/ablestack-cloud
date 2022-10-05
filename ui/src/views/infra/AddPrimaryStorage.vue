@@ -299,20 +299,20 @@
           </a-form-item>
         </div>
         <div v-if="form.protocol === 'Glue Block' && form.provider === 'ABLESTACK'">
-          <a-form-item name="kradosmonitor" ref="kradosmonitor" :label="$t('label.rados.monitor')">
-            <a-input v-model:value="form.kradosmonitor" :placeholder="$t('label.rados.monitor')" />
+          <a-form-item name="kradosmonitor" ref="kradosmonitor" :label="$t('label.glueblock.monitor')">
+            <a-input v-model:value="form.kradosmonitor" :placeholder="$t('label.glueblock.monitor')" />
           </a-form-item>
-          <a-form-item name="kradospool" ref="kradospool" :label="$t('label.rados.pool')">
-            <a-input v-model:value="form.kradospool" :placeholder="$t('label.rados.pool')"/>
+          <a-form-item name="kradospool" ref="kradospool" :label="$t('label.glueblock.pool')">
+            <a-input v-model:value="form.kradospool" :placeholder="$t('label.glueblock.pool')"/>
           </a-form-item>
-          <a-form-item name="kradosuser" ref="kradosuser" :label="$t('label.rados.user')">
-            <a-input v-model:value="form.kradosuser" :placeholder="$t('label.rados.user')" />
+          <a-form-item name="kradosuser" ref="kradosuser" :label="$t('label.glueblock.user')">
+            <a-input v-model:value="form.kradosuser" :placeholder="$t('label.glueblock.user')" />
           </a-form-item>
-          <a-form-item name="kradossecret" ref="kradossecret" :label="$t('label.rados.secret')">
-            <a-input v-model:value="form.kradossecret" :placeholder="$t('label.rados.secret')" />
+          <a-form-item name="kradossecret" ref="kradossecret" :label="$t('label.glueblock.secret')">
+            <a-input v-model:value="form.kradossecret" :placeholder="$t('label.glueblock.secret')" />
           </a-form-item>
-          <a-form-item name="kradospath" ref="kradospath" :label="$t('label.rados.path')">
-            <a-input v-model:value="form.kradospath" :placeholder="$t('label.rados.path')" />
+          <a-form-item name="kradospath" ref="kradospath" :label="$t('label.glueblock.path')">
+            <a-input v-model:value="form.kradospath" :placeholder="$t('label.glueblock.path')" />
           </a-form-item>
         </div>
         <div v-if="form.protocol === 'Glue FileSystem' && form.provider === 'ABLESTACK'">
