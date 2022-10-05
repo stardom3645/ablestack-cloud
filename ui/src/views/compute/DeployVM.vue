@@ -544,6 +544,17 @@
                         </a-select>
                       </a-form-item>
                     </div>
+                    <a-form-item :label="$t('label.tpm')" name="tpmVersion" ref="tpmVersion">
+                      <a-select
+                        v-model:value="form.tpmversion"
+                        showSearch
+                        optionFilterProp="label"
+                        :filterOption="filterOption">
+                        <a-select-option v-for="tpmVersion in options.tpmVersion" :key="tpmVersion.id">
+                          {{ tpmVersion.description }}
+                        </a-select-option>
+                      </a-select>
+                    </a-form-item>
                     <a-form-item
                       :label="$t('label.bootintosetup')"
                       v-if="zoneSelected && ((tabKey === 'isoid' && hypervisor === 'VMware') || (tabKey === 'templateid' && template && template.hypervisor === 'VMware'))"
@@ -567,17 +578,6 @@
                       <a-textarea
                         v-model:value="form.userdata">
                       </a-textarea>
-                    </a-form-item>
-                    <a-form-item :label="$t('label.tpm')" name="tpmVersion" ref="tpmVersion">
-                      <a-select
-                        v-model:value="form.tpmVersion"
-                        showSearch
-                        optionFilterProp="label"
-                        :filterOption="filterOption">
-                        <a-select-option v-for="tpmVersion in options.tpmVersion" :key="tpmVersion.id">
-                          {{ tpmVersion.description }}
-                        </a-select-option>
-                      </a-select>
                     </a-form-item>
                     <a-form-item :label="$t('label.affinity.groups')">
                       <affinity-group-selection
@@ -1535,9 +1535,10 @@ export default {
     },
     fetchTpm () {
       this.options.tpmVersion = [
-        { id: 'NONE', description: 'disabled' },
-        { id: 'V2_0', description: 'TPM v2.0' }
+        { id: 'NONE', description: 'Disabled' },
+        { id: 'V2_0', description: 'TPM Version 2.0' }
       ]
+      this.defaultTPM = 'NONE'
     },
     fetchInstaceGroups () {
       this.options.instanceGroups = []
@@ -1607,6 +1608,7 @@ export default {
           this.defaultBootType = this.template?.details?.UEFI ? 'UEFI' : ''
           this.fetchBootModes(this.defaultBootType)
           this.defaultBootMode = this.template?.details?.UEFI
+          this.defaultTPM = 'NONE'
         }
       } else if (name === 'isoid') {
         this.templateConfigurations = []
