@@ -2867,6 +2867,7 @@
 "label.glueblock.secret": "Glue Block Secret",
 "label.glueblock.user": "Glue Block User",
 "label.glueblock.path": "Glue Block Path",
+"label.rootdisksize":"Root Disk Size(GB)",
 "placeholder.name": "Input Name",
 "placeholder.description": "Input Description",
 "placeholder.addomainname": "Input AD Domain Name",
