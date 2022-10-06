@@ -188,6 +188,7 @@ public class AutomationResourceManagerImpl extends ManagerBase implements Automa
             sc.addAnd("name", SearchCriteria.Op.EQ, name);
         }
         if(keyword != null){
+            sc.addOr("uuid", SearchCriteria.Op.LIKE, "%" + keyword + "%");
             sc.setParameters("keyword", "%" + keyword + "%");
         }
         List <AutomationDeployedResourceVO> resources = automationDeployedResourceDao.search(sc, searchFilter);

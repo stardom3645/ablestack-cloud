@@ -2407,9 +2407,6 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
         if (keyword != null && address == null) {
             sb.and("addressLIKE", sb.entity().getAddress(), SearchCriteria.Op.LIKE);
         }
-        s_logger.info("===============");
-        s_logger.info("keyword :"+keyword + ", Name :"+Name);
-        s_logger.info("===============");
 
         if (tags != null && !tags.isEmpty()) {
             final SearchBuilder<ResourceTagVO> tagSearch = _resourceTagDao.createSearchBuilder();

@@ -322,6 +322,7 @@ public class DesktopClusterManagerImpl extends ManagerBase implements DesktopClu
             sc.setParameters("state", state);
         }
         if (keyword != null){
+            sc.addOr("uuid", SearchCriteria.Op.LIKE, "%" + keyword + "%");
             sc.setParameters("keyword", "%" + keyword + "%");
         }
         if (desktopClusterId != null) {

@@ -666,8 +666,8 @@ public class RemoteAccessVpnManagerImpl extends ManagerBase implements RemoteAcc
         sc.setParameters("state", State.Active, State.Add);
 
         if(keyword != null){
+            sc.addOr("uuid", SearchCriteria.Op.LIKE, "%" + keyword + "%");
             sc.setParameters("keyword", "%" + keyword + "%");
-            sc.setParameters("uuid", "%" + keyword + "%");
         }
 
         if (id != null) {

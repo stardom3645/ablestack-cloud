@@ -3685,7 +3685,6 @@ public class NetworkServiceImpl extends ManagerBase implements NetworkService, C
         }
 
         if (keyword != null) {
-            //ssc.addOr("uuid", SearchCriteria.Op.LIKE, "%" + keyword + "%");
             sc.addAnd("name", SearchCriteria.Op.LIKE, "%" + keyword + "%");
         }
 

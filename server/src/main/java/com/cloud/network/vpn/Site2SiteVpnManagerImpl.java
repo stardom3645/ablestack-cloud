@@ -660,17 +660,10 @@ public class Site2SiteVpnManagerImpl extends ManagerBase implements Site2SiteVpn
         if (id != null) {
             sc.setParameters("id", id);
         }
-        if(keyword != null && !keyword.isEmpty())
-        {
+        if(keyword != null && !keyword.isEmpty()){
             sc.addOr("uuid", SearchCriteria.Op.LIKE, "%" + keyword + "%");
             sc.setParameters("name", "%" + keyword + "%");
         }
-        /*if(keyword !=null){
-            SearchCriteria<Site2SiteCustomerGatewayVO> ssc = sb.create();
-            ssc.addOr("name", SearchCriteria.Op.LIKE, "%" + keyword + "%");
-            ssc.addOr("uuid", SearchCriteria.Op.LIKE, "%" + keyword + "%");
-            sc.setParameters("name", SearchCriteria.Op.SC, ssc);
-        }*/
 
         Pair<List<Site2SiteCustomerGatewayVO>, Integer> result = _customerGatewayDao.searchAndCount(sc, searchFilter);
         return new Pair<List<? extends Site2SiteCustomerGateway>, Integer>(result.first(), result.second());
