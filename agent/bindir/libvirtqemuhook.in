@@ -182,7 +182,7 @@ def unmapStorage():
                 img  = disk.getAttribute("dev")
                 executeProgram("/usr/bin/rbd", ["unmap", img])
 
-        print(domain.toxml())
+        #print(domain.toxml())
     except:
         pass
 
@@ -192,7 +192,7 @@ if __name__ == '__main__':
 
     # For docs refer https://libvirt.org/hooks.html#qemu
     logger.info("Executing qemu hook with args: %s" % sys.argv)
-    logger.info("Executing qemu hook with xml: %s" % parse(sys.stdin).toxml())
+    #logger.info("Executing qemu hook with xml: %s" % parse(sys.stdin).toxml())
     action, status = sys.argv[2:4]
 
     if action not in validQemuActions:
