@@ -160,11 +160,11 @@ def executeProgram(programName, sysArgs):
                 logger.info('return code: %s' % str(process.returncode))
                 raise Exception(error)
             logger.info('Custom program: %s finished successfully; output: \n%s' %
-                        (scriptName, str(output)))
+                        (programName, str(output)))
         finally:
             timer.cancel()
     except (OSError, Exception) as e:
-        logger.exception("Custom script: %s finished with error: \n%s" % (scriptName, e))
+        logger.exception("Custom script: %s finished with error: \n%s" % (programName, e))
 
 
 def terminateProgram(process, programName):
