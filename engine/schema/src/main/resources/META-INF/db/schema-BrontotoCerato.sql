@@ -149,3 +149,8 @@ BEGIN
     IF NOT EXISTS ( SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = tb_name AND TABLE_SCHEMA = 'cloud' AND COLUMN_NAME = col_name ) THEN SET @ddl = CONCAT(' ALTER TABLE ', tb_name,' ADD COLUMN ', col_name, ' ', col_type); PREPARE STMT FROM @ddl; EXECUTE STMT; END IF; END;
 
 CALL `cloud`.`ADD_COL`('storage_pool', 'krbd_path', 'VARCHAR(255) DEFAULT null');
+
+-- Setting values ​​for favicon status
+INSERT IGNORE INTO `cloud`.`configuration` VALUES ('Advanced', 'DEFAULT', 'FaviconState', 'favicon.state.interval', '60', 'Interval (in seconds) to favicon statistics.', '60', null, null, 0);
+INSERT IGNORE INTO `cloud`.`configuration` VALUES ('Advanced', 'DEFAULT', 'FaviconState', 'favicon.stats.red.capacity', '0.40', 'Percentage (as a value between 0 and 1) of the infrastructure.', '0.40', null, null, 0);
+INSERT IGNORE INTO `cloud`.`configuration` VALUES ('Advanced', 'DEFAULT', 'FaviconState', 'favicon.stats.yellow.capacity', '0.70', 'Percentage (as a value between 0 and 1) of the infrastructure.', '0.70', null, null, 0);

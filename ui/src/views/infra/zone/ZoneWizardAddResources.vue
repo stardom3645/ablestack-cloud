@@ -452,7 +452,7 @@ export default {
           placeHolder: 'message.error.rados.monitor',
           required: false,
           display: {
-            primaryStorageProtocol: ['rbd', 'Glue Block']
+            primaryStorageProtocol: ['rbd']
           }
         },
         {
@@ -461,7 +461,7 @@ export default {
           placeHolder: 'message.error.rados.pool',
           required: false,
           display: {
-            primaryStorageProtocol: ['rbd', 'Glue Block']
+            primaryStorageProtocol: ['rbd']
           }
         },
         {
@@ -470,7 +470,7 @@ export default {
           placeHolder: 'message.error.rados.user',
           required: false,
           display: {
-            primaryStorageProtocol: ['rbd', 'Glue Block']
+            primaryStorageProtocol: ['rbd']
           }
         },
         {
@@ -479,11 +479,47 @@ export default {
           placeHolder: 'message.error.rados.secret',
           required: false,
           display: {
-            primaryStorageProtocol: ['rbd', 'Glue Block']
+            primaryStorageProtocol: ['rbd']
           }
         },
         {
-          title: 'label.rados.path',
+          title: 'label.glueblock.monitor',
+          key: 'primaryStorageRADOSMonitor',
+          placeHolder: 'message.error.rados.monitor',
+          required: false,
+          display: {
+            primaryStorageProtocol: ['Glue Block']
+          }
+        },
+        {
+          title: 'label.glueblock.pool',
+          key: 'primaryStorageRADOSPool',
+          placeHolder: 'message.error.rados.pool',
+          required: false,
+          display: {
+            primaryStorageProtocol: ['Glue Block']
+          }
+        },
+        {
+          title: 'label.glueblock.user',
+          key: 'primaryStorageRADOSUser',
+          placeHolder: 'message.error.rados.user',
+          required: false,
+          display: {
+            primaryStorageProtocol: ['Glue Block']
+          }
+        },
+        {
+          title: 'label.glueblock.secret',
+          key: 'primaryStorageRADOSSecret',
+          placeHolder: 'message.error.rados.secret',
+          required: false,
+          display: {
+            primaryStorageProtocol: ['Glue Block']
+          }
+        },
+        {
+          title: 'label.glueblock.path',
           key: 'primaryStorageRADOSPath',
           placeHolder: 'message.error.rados.path',
           required: false,
@@ -1001,6 +1037,14 @@ export default {
       const protocols = []
       if (hypervisor === 'KVM') {
         protocols.push({
+          id: 'Glue Block',
+          description: 'Glue Block'
+        })
+        protocols.push({
+          id: 'Glue FileSystem',
+          description: 'Glue FileSystem'
+        })
+        protocols.push({
           id: 'nfs',
           description: 'nfs'
         })
@@ -1011,10 +1055,6 @@ export default {
         protocols.push({
           id: 'rbd',
           description: 'RBD'
-        })
-        protocols.push({
-          id: 'Glue',
-          description: 'Glue'
         })
         protocols.push({
           id: 'clvm',
