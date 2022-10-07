@@ -113,6 +113,7 @@ public class ListRolesCmd extends BaseListCmd {
         response.setResponseName(getCommandName());
         setResponseObject(response);
     }
+
     @Override
     public void execute() {
         Pair<List<Role>, Integer> roles;

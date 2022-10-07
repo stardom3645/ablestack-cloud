@@ -431,6 +431,7 @@ public class DesktopVersionManagerImpl extends ManagerBase implements DesktopVer
             sc.addAnd("zoneId", SearchCriteria.Op.SC, scc);
         }
         if(keyword != null){
+            sc.addOr("uuid", SearchCriteria.Op.LIKE, "%" + keyword + "%");
             sc.setParameters("keyword", "%" + keyword + "%");
         }
         List <DesktopControllerVersionVO> versions = desktopControllerVersionDao.search(sc, searchFilter);
@@ -499,6 +500,7 @@ public class DesktopVersionManagerImpl extends ManagerBase implements DesktopVer
             sc.addAnd("zoneId", SearchCriteria.Op.SC, scc);
         }
         if(keyword != null){
+            sc.addOr("uuid", SearchCriteria.Op.LIKE, "%" + keyword + "%");
             sc.setParameters("keyword", "%" + keyword + "%");
         }
         List <DesktopMasterVersionVO> versions = desktopMasterVersionDao.search(sc, searchFilter);

@@ -3651,8 +3651,6 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
             Long startIndex, Long zoneId, HypervisorType hyperType, boolean showDomr, boolean onlyReady, List<Account> permittedAccounts, Account caller,
             ListProjectResourcesCriteria listProjectResourcesCriteria, Map<String, String> tags, boolean showRemovedTmpl, List<Long> ids, Long parentTemplateId, Boolean showUnique) {
 
-
-
         // check if zone is configured, if not, just return empty list
         List<HypervisorType> hypers = null;
         if (!isIso) {

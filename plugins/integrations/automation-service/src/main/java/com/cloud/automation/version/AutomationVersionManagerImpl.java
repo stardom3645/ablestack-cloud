@@ -107,6 +107,7 @@ public class AutomationVersionManagerImpl extends ManagerBase implements Automat
             sc.addAnd("zoneId", SearchCriteria.Op.SC, scc);
         }
         if(keyword != null){
+            sc.addOr("uuid", SearchCriteria.Op.LIKE, "%" + keyword + "%");
             sc.setParameters("keyword", "%" + keyword + "%");
         }
         List <AutomationControllerVersionVO> versions = automationControllerVersionDao.search(sc, searchFilter);

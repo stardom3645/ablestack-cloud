@@ -57,17 +57,10 @@ import com.cloud.utils.Pair;
 import com.cloud.utils.component.ManagerBase;
 import com.cloud.utils.component.PluggableService;
 import com.cloud.utils.db.Filter;
-//import com.cloud.utils.db.SearchBuilder;
-//import com.cloud.utils.db.SearchBuilder;
 import com.cloud.utils.db.SearchCriteria;
-//import com.cloud.utils.db.SearchBuilder;
-//import com.cloud.utils.db.SearchCriteria;
 import com.cloud.utils.db.Transaction;
 import com.cloud.utils.db.TransactionCallback;
 import com.cloud.utils.db.TransactionStatus;
-//import com.cloud.utils.db.SearchCriteria.Op;
-//import com.cloud.utils.db.SearchCriteria.Op;
-//import com.cloud.utils.db.SearchCriteria.Op;
 import com.cloud.utils.exception.CloudRuntimeException;
 
 public class RoleManagerImpl extends ManagerBase implements RoleService, Configurable, PluggableService {
@@ -391,10 +384,9 @@ public class RoleManagerImpl extends ManagerBase implements RoleService, Configu
                     ssc.addOr("roleType", SearchCriteria.Op.LIKE, "%" + keyword + "%");
                     ssc.addOr("description", SearchCriteria.Op.LIKE, "%" + keyword + "%");
                     sc.addAnd("name", SearchCriteria.Op.SC, ssc);
-    }
+            }
         final Pair<List<RoleVO>, Integer> result = roleDao.searchAndCount(sc, searchFilter);
             return new Pair<List<Role>,Integer>(ListUtils.toListOfInterface(result.first()), Integer.valueOf(result.second() - removed));
-            //return new Pair<List<Role>, Integer>(sc, searchFilter);
         }
         return new Pair<List<Role>, Integer>(new ArrayList<Role>(), 0);
     }

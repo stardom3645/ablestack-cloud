@@ -140,7 +140,7 @@ public class DataCenterDaoImpl extends GenericDaoBase<DataCenterVO, Long> implem
             ssc.addOr("uuid", SearchCriteria.Op.LIKE, "%" + keyword + "%");
             sc.addAnd("name", SearchCriteria.Op.SC, ssc);
         }
-        //sc.setParameters("domainId", domainId);
+
         return listBy(sc);
     }
 

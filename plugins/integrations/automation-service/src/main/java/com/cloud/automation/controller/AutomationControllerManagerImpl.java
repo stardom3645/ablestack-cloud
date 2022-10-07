@@ -313,6 +313,7 @@ public class AutomationControllerManagerImpl extends ManagerBase implements Auto
             sc.addAnd("zoneId", SearchCriteria.Op.SC, scc);
         }
         if(keyword != null){
+            sc.addOr("uuid", SearchCriteria.Op.LIKE, "%" + keyword + "%");
             sc.setParameters("keyword", "%" + keyword + "%");
         }
         List <AutomationControllerVO> controllers = automationControllerDao.search(sc, searchFilter);

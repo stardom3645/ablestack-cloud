@@ -1251,6 +1251,7 @@ public class KubernetesClusterManagerImpl extends ManagerBase implements Kuberne
             sc.setParameters("state", state);
         }
         if(keyword != null){
+            sc.addOr("uuid", SearchCriteria.Op.LIKE, "%" + keyword + "%");
             sc.setParameters("keyword", "%" + keyword + "%");
         }
         if (clusterId != null) {

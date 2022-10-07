@@ -1931,7 +1931,8 @@ public class AccountManagerImpl extends ManagerBase implements AccountManager, M
                 throw new InvalidParameterValueException("Role with ID '" + roleId.toString() + "' " +
                         "is not found or not available for the account '" + account.getUuid() + "' " +
                         "in the domain '" + domainId + "'.");
-            }            Role role = roleService.findRole(roleId);
+            }
+            Role role = roleService.findRole(roleId);
             isValidRoleChange(account, role);
             acctForUpdate.setRoleId(roleId);
             acctForUpdate.setType(role.getRoleType().getAccountType());
