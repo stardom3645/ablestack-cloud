@@ -46,6 +46,7 @@ import org.apache.cloudstack.engine.subsystem.api.storage.TemplateInfo;
 import org.apache.cloudstack.engine.subsystem.api.storage.VolumeInfo;
 import org.apache.cloudstack.storage.LocalHostEndpoint;
 import org.apache.cloudstack.storage.RemoteHostEndPoint;
+import org.apache.cloudstack.storage.datastore.PrimaryDataStoreProviderManager;
 import org.apache.log4j.Logger;
 import org.springframework.stereotype.Component;
 
@@ -449,6 +450,23 @@ public class DefaultEndPointSelector implements EndPointSelector {
     @Override
     public EndPoint select(DataObject object, StorageAction action) {
         return select(object, action, false);
+    }
+
+    @Override
+    public EndPoint select(DataObject object, StorageAction action, String provider) {
+        if (action == StorageAction.DELETEVOLUME) {
+            VolumeInfo volume = (VolumeInfo)object;
+            if (provider != null && "ABLESTACK".equals(provider) && volume.getHypervisorType() == Hypervisor.HypervisorType.KVM) {
+                VirtualMachine vm = volume.getAttachedVM();
+                if (vm != null) {
+                    Long hostId = vm.getHostId() != null ? vm.getHostId() : vm.getLastHostId();
+                    if (hostId != null) {
+                        return getEndPointFromHostId(hostId);
+                    }
+                }
+            }
+        }
+        return select(object, false);
     }
 
     @Override
