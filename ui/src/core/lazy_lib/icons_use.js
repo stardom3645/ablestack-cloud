@@ -318,5 +318,6 @@ export default {
     app.component('AreaChartOutlined', AreaChartOutlined)
     app.component('SolutionOutlined', SolutionOutlined)
     app.component('renderIcon', renderIcon)
+    app.component('SolutionOutlined', SolutionOutlined)
   }
 }
