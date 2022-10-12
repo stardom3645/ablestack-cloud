@@ -165,6 +165,7 @@ def executeProgram(programName, sysArgs):
             timer.cancel()
     except (OSError, Exception) as e:
         logger.exception("Custom script: %s finished with error: \n%s" % (programName, e))
+        pass
 
 
 def terminateProgram(process, programName):
@@ -183,7 +184,8 @@ def unmapStorage():
                 executeProgram("/usr/bin/rbd", ["unmap", img])
 
         #print(domain.toxml())
-    except:
+    except Exception as e:
+        logger.exception("exception: %s\n"%( e))
         pass
 
 if __name__ == '__main__':
