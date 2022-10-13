@@ -452,6 +452,23 @@ public class DefaultEndPointSelector implements EndPointSelector {
     }
 
     @Override
+    public EndPoint select(DataObject object, StorageAction action, String provider) {
+        if (action == StorageAction.DELETEVOLUME) {
+            VolumeInfo volume = (VolumeInfo)object;
+            if (provider != null && "ABLESTACK".equals(provider) && volume.getHypervisorType() == Hypervisor.HypervisorType.KVM) {
+                VirtualMachine vm = volume.getAttachedVM();
+                if (vm != null) {
+                    Long hostId = vm.getHostId() != null ? vm.getHostId() : vm.getLastHostId();
+                    if (hostId != null) {
+                        return getEndPointFromHostId(hostId);
+                    }
+                }
+            }
+        }
+        return select(object, false);
+    }
+
+    @Override
     public EndPoint select(DataObject object, StorageAction action, boolean encryptionRequired) {
         if (action == StorageAction.TAKESNAPSHOT) {
             SnapshotInfo snapshotInfo = (SnapshotInfo)object;

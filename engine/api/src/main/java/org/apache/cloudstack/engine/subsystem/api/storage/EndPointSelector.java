@@ -37,6 +37,8 @@ public interface EndPointSelector {
 
     EndPoint select(DataObject object, StorageAction action);
 
+    EndPoint select(DataObject object, StorageAction action, String provider);
+
     EndPoint select(DataObject object, StorageAction action, boolean encryptionSupportRequired);
 
     List<EndPoint> selectAll(DataStore store);

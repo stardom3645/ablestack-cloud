@@ -1012,8 +1012,6 @@ public class VirtualMachineManagerImpl extends ManagerBase implements VirtualMac
         final CallContext cctxt = CallContext.current();
         final Account account = cctxt.getCallingAccount();
         final User caller = cctxt.getCallingUser();
-        String provider = "";
-        String krbdpath = "";
         VMInstanceVO vm = _vmDao.findByUuid(vmUuid);
 
         final VirtualMachineGuru vmGuru = getVmGuru(vm);
