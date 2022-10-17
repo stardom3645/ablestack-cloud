@@ -121,7 +121,7 @@ public class LibvirtVMDef {
         private String _nvram;
         private String _nvramTemplate;
 
-        private TpmVersion _tpmVersion;
+        private TpmVersion _tpmversion;
 
         public static final String GUEST_LOADER_SECURE = "guest.loader.secure";
         public static final String GUEST_LOADER_LEGACY = "guest.loader.legacy";
@@ -185,11 +185,11 @@ public class LibvirtVMDef {
         }
 
         public TpmVersion getTpmVersion() {
-            return this._tpmVersion;
+            return this._tpmversion;
         }
 
-        public void setTPMVersion(TpmVersion tpmVersion) {
-            this._tpmVersion = tpmVersion;
+        public void setTPMVersion(TpmVersion tpmversion) {
+            this._tpmversion = tpmversion;
         }
 
         @Override
