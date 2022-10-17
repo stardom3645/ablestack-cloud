@@ -39,7 +39,7 @@ public interface VmDetailConstants {
     // KVM specific (internal)
     String KVM_VNC_PORT = "kvm.vnc.port";
     String KVM_VNC_ADDRESS = "kvm.vnc.address";
-    String TPM_VERSION = "tpmVersion";
+    String TPM_VERSION = "tpmversion";
     // KVM specific, custom virtual GPU hardware
     String VIDEO_HARDWARE = "video.hardware";
     String VIDEO_RAM = "video.ram";

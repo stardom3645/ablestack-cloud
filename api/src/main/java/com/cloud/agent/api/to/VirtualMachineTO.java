@@ -65,7 +65,7 @@ public class VirtualMachineTO {
     String bootMode;
     boolean enterHardwareSetup;
 
-    String tpmVersion;
+    String tpmversion;
     DiskTO[] disks;
     NicTO[] nics;
     GPUDeviceTO gpuDevice;
@@ -404,11 +404,11 @@ public class VirtualMachineTO {
     public void setBootMode(String bootMode) { this.bootMode = bootMode; }
 
     public String getTpmVersion() {
-        return tpmVersion;
+        return tpmversion;
     }
 
-    public void setTpmVersion(String tpmVersion) {
-        this.tpmVersion = tpmVersion;
+    public void setTpmVersion(String tpmversion) {
+        this.tpmversion = tpmversion;
     }
 
     public boolean isEnterHardwareSetup() {
