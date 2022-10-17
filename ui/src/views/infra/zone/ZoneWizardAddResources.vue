@@ -631,28 +631,28 @@ export default {
           key: 'managed',
           checkbox: true,
           hidden: {
-            provider: ['DefaultPrimary', 'PowerFlex', 'Linstor']
+            provider: ['DefaultPrimary', 'PowerFlex', 'Linstor', 'Glue Block', 'Glue FileSystem']
           }
         },
         {
           title: 'label.capacitybytes',
           key: 'capacityBytes',
           hidden: {
-            provider: ['DefaultPrimary', 'PowerFlex', 'Linstor']
+            provider: ['DefaultPrimary', 'PowerFlex', 'Linstor', 'Glue Block', 'Glue FileSystem']
           }
         },
         {
           title: 'label.capacityiops',
           key: 'capacityIops',
           hidden: {
-            provider: ['DefaultPrimary', 'PowerFlex', 'Linstor']
+            provider: ['DefaultPrimary', 'PowerFlex', 'Linstor', 'Glue Block', 'Glue FileSystem']
           }
         },
         {
           title: 'label.url',
           key: 'url',
           hidden: {
-            provider: ['DefaultPrimary', 'PowerFlex', 'Linstor']
+            provider: ['DefaultPrimary', 'PowerFlex', 'Linstor', 'Glue Block', 'Glue FileSystem']
           }
         },
         {

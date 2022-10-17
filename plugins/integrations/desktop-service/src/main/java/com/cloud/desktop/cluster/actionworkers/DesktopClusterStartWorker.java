@@ -179,7 +179,7 @@ public class DesktopClusterStartWorker extends DesktopClusterResourceModifierAct
             Network.IpAddresses addrs = new Network.IpAddresses(null, null, null);
             dcControlVm = userVmService.createAdvancedVirtualMachine(zone, serviceOffering, dcTemplate, networkIds, owner,
                 hostName, hostName, null, null, null,
-                dcTemplate.getHypervisorType(), BaseCmd.HTTPMethod.POST, base64UserData, keypairs,
+                dcTemplate.getHypervisorType(), BaseCmd.HTTPMethod.POST, base64UserData, null, null, keypairs,
                 null, addrs, null, null, null, customParameterMap, null, null, null, null, true, null, null);
         } else {
             ipToNetworkMap = new LinkedHashMap<Long, IpAddresses>();
@@ -188,7 +188,7 @@ public class DesktopClusterStartWorker extends DesktopClusterResourceModifierAct
             ipToNetworkMap.put(desktopCluster.getNetworkId(), dcAddrs);
             dcControlVm = userVmService.createAdvancedVirtualMachine(zone, serviceOffering, dcTemplate, networkIds, owner,
                 hostName, hostName, null, null, null,
-                dcTemplate.getHypervisorType(), BaseCmd.HTTPMethod.POST, base64UserData, keypairs,
+                dcTemplate.getHypervisorType(), BaseCmd.HTTPMethod.POST, base64UserData, null, null, keypairs,
                 ipToNetworkMap, addrs, null, null, null, customParameterMap, null, null, null, null, true, null, null);
         }
         if (LOGGER.isInfoEnabled()) {
@@ -245,7 +245,7 @@ public class DesktopClusterStartWorker extends DesktopClusterResourceModifierAct
             Network.IpAddresses addrs = new Network.IpAddresses(null, null, null);
             worksControlVm = userVmService.createAdvancedVirtualMachine(zone, serviceOffering, worksTemplate, networkIds, owner,
                 hostName, hostName, null, null, null,
-                worksTemplate.getHypervisorType(), BaseCmd.HTTPMethod.POST, base64UserData, keypairs,
+                worksTemplate.getHypervisorType(), BaseCmd.HTTPMethod.POST, base64UserData, null, null, keypairs,
                 null, addrs, null, null, null, customParameterMap, null, null, null, null, true, null, null);
         } else {
             ipToNetworkMap = new LinkedHashMap<Long, IpAddresses>();
@@ -254,7 +254,7 @@ public class DesktopClusterStartWorker extends DesktopClusterResourceModifierAct
             ipToNetworkMap.put(desktopCluster.getNetworkId(), worksAddrs);
             worksControlVm = userVmService.createAdvancedVirtualMachine(zone, serviceOffering, worksTemplate, networkIds, owner,
                 hostName, hostName, null, null, null,
-                worksTemplate.getHypervisorType(), BaseCmd.HTTPMethod.POST, base64UserData, keypairs,
+                worksTemplate.getHypervisorType(), BaseCmd.HTTPMethod.POST, base64UserData, null, null, keypairs,
                 ipToNetworkMap, addrs, null, null, null, customParameterMap, null, null, null, null, true, null, null);
         }
         if (LOGGER.isInfoEnabled()) {

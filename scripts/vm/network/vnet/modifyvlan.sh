@@ -27,7 +27,7 @@ usage() {
 
 addVlan() {
 	local vlanId=$1
-	local pif=$2
+	local pif=$2 | sed 's/[^0-9]//g'
 	local vlanDev=$pif.$vlanId
 	local vlanBr=$3
 
@@ -96,8 +96,8 @@ deleteVlan() {
 	local vlanId=$1
 	local pif=$2
 	local vlanDev=$pif.$vlanId
-  local vlanBr=$3
-  local deleteBr=$4
+	local vlanBr=$3
+	local deleteBr=$4
 
   if [ $deleteBr == "true" ]
   then

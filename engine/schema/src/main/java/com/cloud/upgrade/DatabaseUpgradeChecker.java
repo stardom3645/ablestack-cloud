@@ -371,6 +371,29 @@ public class DatabaseUpgradeChecker implements SystemIntegrityChecker {
                 final CloudStackVersion dbVersion = CloudStackVersion.parse(_dao.getCurrentVersion());
                 final String currentVersionValue = this.getClass().getPackage().getImplementationVersion();
 
+                if (StringUtils.isBlank(currentVersionValue)) {
+                    return;
+                }
+
+                String csVersion = SystemVmTemplateRegistration.parseMetadataFile();
+                final CloudStackVersion sysVmVersion = CloudStackVersion.parse(csVersion);
+                final  CloudStackVersion currentVersion = CloudStackVersion.parse(currentVersionValue);
+                SystemVmTemplateRegistration.CS_MAJOR_VERSION  = String.valueOf(sysVmVersion.getMajorRelease()) + "." + String.valueOf(sysVmVersion.getMinorRelease());
+                SystemVmTemplateRegistration.CS_TINY_VERSION = String.valueOf(sysVmVersion.getPatchRelease());
+
+                s_logger.info("DB version = " + dbVersion + " Code Version = " + currentVersion);
+
+                if (dbVersion.compareTo(currentVersion) > 0) {
+                    throw new CloudRuntimeException("Database version " + dbVersion + " is higher than management software version " + currentVersionValue);
+                }
+
+                if (dbVersion.compareTo(currentVersion) == 0) {
+                    s_logger.info("DB version and code version matches so no upgrade needed.");
+                    return;
+                }
+
+                upgrade(dbVersion, currentVersion);
+
                 //ablestack-allo -> ablestack-bronto db upgrade
                 TransactionLegacy txn = TransactionLegacy.open("Upgrade");
                 txn.start();
@@ -415,29 +438,6 @@ public class DatabaseUpgradeChecker implements SystemIntegrityChecker {
                 } finally {
                     txn.close();
                 }
-
-                if (StringUtils.isBlank(currentVersionValue)) {
-                    return;
-                }
-
-                String csVersion = SystemVmTemplateRegistration.parseMetadataFile();
-                final CloudStackVersion sysVmVersion = CloudStackVersion.parse(csVersion);
-                final  CloudStackVersion currentVersion = CloudStackVersion.parse(currentVersionValue);
-                SystemVmTemplateRegistration.CS_MAJOR_VERSION  = String.valueOf(sysVmVersion.getMajorRelease()) + "." + String.valueOf(sysVmVersion.getMinorRelease());
-                SystemVmTemplateRegistration.CS_TINY_VERSION = String.valueOf(sysVmVersion.getPatchRelease());
-
-                s_logger.info("DB version = " + dbVersion + " Code Version = " + currentVersion);
-
-                if (dbVersion.compareTo(currentVersion) > 0) {
-                    throw new CloudRuntimeException("Database version " + dbVersion + " is higher than management software version " + currentVersionValue);
-                }
-
-                if (dbVersion.compareTo(currentVersion) == 0) {
-                    s_logger.info("DB version and code version matches so no upgrade needed.");
-                    return;
-                }
-
-                upgrade(dbVersion, currentVersion);
             } finally {
                 lock.unlock();
             }

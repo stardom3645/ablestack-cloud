@@ -239,7 +239,7 @@ public class AblestackPrimaryDataStoreDriverImpl implements PrimaryDataStoreDriv
         try {
             EndPoint ep = null;
             if (data.getType() == DataObjectType.VOLUME) {
-                ep = epSelector.select(data, StorageAction.DELETEVOLUME);
+                ep = epSelector.select(data, StorageAction.DELETEVOLUME, "ABLESTACK");
             } else {
                 ep = epSelector.select(data);
             }
