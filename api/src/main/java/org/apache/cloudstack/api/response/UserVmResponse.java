@@ -322,7 +322,7 @@ public class UserVmResponse extends BaseResponseWithTagInformation implements Co
 
     @SerializedName(ApiConstants.TPM_VERSION)
     @Param(description = "Guest vm TPM Type")
-    private String tpmVersion;
+    private String tpmversion;
 
     @SerializedName(ApiConstants.POOL_TYPE)
     @Param(description = "the pool type of the virtual machine", since = "4.16")
@@ -963,9 +963,9 @@ public class UserVmResponse extends BaseResponseWithTagInformation implements Co
     public String getPoolType() { return poolType; }
 
 
-    public String getTpmVersion() { return tpmVersion; }
+    public String getTpmVersion() { return tpmversion; }
 
-    public void setTpmVersion(String tpmVersion) { this.tpmVersion = tpmVersion; }
+    public void setTpmVersion(String tpmversion) { this.tpmversion = tpmversion; }
 
     public void setPoolType(String poolType) { this.poolType = poolType; }
 
