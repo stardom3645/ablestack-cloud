@@ -103,7 +103,8 @@ export default {
         wrapperCol: { span: 12 }
       },
       validStatus: '',
-      validMessage: ''
+      validMessage: '',
+      formModel: {}
     }
   },
   watch: {
@@ -147,6 +148,8 @@ export default {
       this.formModel = toRaw(this.form)
     },
     getPrefilled (key) {
+      console.log('key :>> ', key)
+      console.log('key :>> ', this.prefillContent?.[key] || null)
       return this.prefillContent?.[key] || null
     },
     handleSubmit () {
