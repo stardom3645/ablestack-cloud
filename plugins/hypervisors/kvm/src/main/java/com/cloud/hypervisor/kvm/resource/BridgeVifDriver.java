@@ -281,6 +281,9 @@ public class BridgeVifDriver extends VifDriverBase {
     }
 
     private String generateVnetBrName(String pifName, String vnetId) {
+        if (pifName.length() > 7) {
+            pifName = pifName.replaceAll("[^0-9]","");
+        }
         return "br" + pifName + "-" + vnetId;
     }
 
@@ -314,10 +317,10 @@ public class BridgeVifDriver extends VifDriverBase {
                 script = _modifyVxlanPath;
             }
             final Script command = new Script(script, _timeout, s_logger);
+            command.add("-o", "add");
             command.add("-v", vnetId);
             command.add("-p", pif);
             command.add("-b", brName);
-            command.add("-o", "add");
 
             final String result = command.execute();
             if (result != null) {

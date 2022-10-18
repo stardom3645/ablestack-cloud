@@ -119,7 +119,7 @@ public class FirstFitAllocator extends AdapterBase implements HostAllocator {
         boolean isVMDeployedWithUefi = false;
         boolean isVMDeployedWithTpm = false;
         UserVmDetailVO userVmDetailVO = _userVmDetailsDao.findDetail(vmProfile.getId(), "UEFI");
-        UserVmDetailVO userVmTpmVO = _userVmDetailsDao.findDetail(vmProfile.getId(), "tpmVersion");
+        UserVmDetailVO userVmTpmVO = _userVmDetailsDao.findDetail(vmProfile.getId(), "tpmversion");
         if(userVmDetailVO != null){
             if ("secure".equalsIgnoreCase(userVmDetailVO.getValue()) || "legacy".equalsIgnoreCase(userVmDetailVO.getValue())) {
                 isVMDeployedWithUefi = true;
@@ -128,7 +128,7 @@ public class FirstFitAllocator extends AdapterBase implements HostAllocator {
         s_logger.info(" Guest VM is requested with Custom[UEFI] Boot Type "+ isVMDeployedWithUefi);
         if(userVmTpmVO != null){
 
-            if ("tpmVersion".equalsIgnoreCase(userVmTpmVO.getValue())){
+            if ("tpmversion".equalsIgnoreCase(userVmTpmVO.getValue())){
                 isVMDeployedWithTpm = true;
             }
         }

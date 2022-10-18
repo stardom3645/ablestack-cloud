@@ -185,7 +185,7 @@ public class AutomationControllerStartWorker extends AutomationControllerResourc
             Network.IpAddresses addrs = new Network.IpAddresses(null, null, null);
             genieControlVms = userVmService.createAdvancedVirtualMachine(zone, serviceOffering, templates, networkIds, owner,
                     hostName, hostName, null, null, null,
-                    templates.getHypervisorType(), BaseCmd.HTTPMethod.POST, base64UserData, keypairs,
+                    templates.getHypervisorType(), BaseCmd.HTTPMethod.POST, base64UserData, null, null, keypairs,
                     null, addrs, null, null, null, customParameterMap, null, null, null, null, true, null, null);
         } else {
             ipToNetworkMap = new LinkedHashMap<Long, Network.IpAddresses>();
@@ -194,7 +194,7 @@ public class AutomationControllerStartWorker extends AutomationControllerResourc
             ipToNetworkMap.put(automationController.getNetworkId(), controllerAddrs);
             genieControlVms = userVmService.createAdvancedVirtualMachine(zone, serviceOffering, templates, networkIds, owner,
                     hostName, hostName, null, null, null,
-                    templates.getHypervisorType(), BaseCmd.HTTPMethod.POST, base64UserData, keypairs,
+                    templates.getHypervisorType(), BaseCmd.HTTPMethod.POST, base64UserData, null, null, keypairs,
                     ipToNetworkMap, addrs, null, null, null, customParameterMap, null, null, null, null, true, null, null);
         }
         if (LOGGER.isInfoEnabled()) {

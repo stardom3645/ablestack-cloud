@@ -47,6 +47,7 @@ import org.apache.cloudstack.api.response.ProjectResponse;
 import org.apache.cloudstack.api.response.SecurityGroupResponse;
 import org.apache.cloudstack.api.response.ServiceOfferingResponse;
 import org.apache.cloudstack.api.response.TemplateResponse;
+import org.apache.cloudstack.api.response.UserDataResponse;
 import org.apache.cloudstack.api.response.UserVmResponse;
 import org.apache.cloudstack.api.response.ZoneResponse;
 import org.apache.cloudstack.context.CallContext;
@@ -126,7 +127,7 @@ public class DeployVMCmd extends BaseAsyncCreateCustomIdCmd implements SecurityG
 
 
     @Parameter(name = ApiConstants.TPM_VERSION, type = CommandType.STRING, required = false, description = "Boot with TPM", since = "4.18.0.0")
-    private String tpmVersion;
+    private String tpmversion;
     //DataDisk information
     @ACL
     @Parameter(name = ApiConstants.DISK_OFFERING_ID, type = CommandType.UUID, entityType = DiskOfferingResponse.class, description = "the ID of the disk offering for the virtual machine. If the template is of ISO format,"
@@ -156,6 +157,12 @@ public class DeployVMCmd extends BaseAsyncCreateCustomIdCmd implements SecurityG
             description = "an optional binary data that can be sent to the virtual machine upon a successful deployment. This binary data must be base64 encoded before adding it to the request. Using HTTP GET (via querystring), you can send up to 4KB of data after base64 encoding. Using HTTP POST(via POST body), you can send up to 1MB of data after base64 encoding.",
             length = 1048576)
     private String userData;
+
+    @Parameter(name = ApiConstants.USER_DATA_ID, type = CommandType.UUID, entityType = UserDataResponse.class, description = "the ID of the Userdata", since = "4.18")
+    private Long userdataId;
+
+    @Parameter(name = ApiConstants.USER_DATA_DETAILS, type = CommandType.MAP, description = "used to specify the parameters values for the variables in userdata.", since = "4.18")
+    private Map userdataDetails;
 
     @Deprecated
     @Parameter(name = ApiConstants.SSH_KEYPAIR, type = CommandType.STRING, description = "name of the ssh key pair used to login to the virtual machine")
@@ -297,12 +304,12 @@ public class DeployVMCmd extends BaseAsyncCreateCustomIdCmd implements SecurityG
     }
 
     public ApiConstants.TpmVersion getTpmVersion() {
-        if (StringUtils.isNotBlank(tpmVersion)) {
+        if (StringUtils.isNotBlank(tpmversion)) {
             try {
-                String type = tpmVersion.trim().toUpperCase();
+                String type = tpmversion.trim().toUpperCase();
                 return ApiConstants.TpmVersion.valueOf(type);
             } catch (IllegalArgumentException e) {
-                String errMesg = "Invalid TpmVersion " + tpmVersion + "Specified for vm " + getName()
+                String errMesg = "Invalid TpmVersion " + tpmversion + "Specified for vm " + getName()
                         + " Valid values are: " + Arrays.toString(ApiConstants.BootType.values());
                 s_logger.warn(errMesg);
                 throw new InvalidParameterValueException(errMesg);
@@ -334,13 +341,13 @@ public class DeployVMCmd extends BaseAsyncCreateCustomIdCmd implements SecurityG
             customparameterMap.put(entry.getKey(),entry.getValue());
         }
         if(customparameterMap.containsKey(ApiConstants.TpmVersion.V2_0.toString())){
-            customparameterMap.put("tpmVersion", customparameterMap.get(ApiConstants.TpmVersion.V2_0.toString()));
-        }else if(customparameterMap.containsKey("tpmVersion")){
-            customparameterMap.put("tpmVersion", customparameterMap.get("tpmVersion"));
+            customparameterMap.put("tpmversion", customparameterMap.get(ApiConstants.TpmVersion.V2_0.toString()));
+        }else if(customparameterMap.containsKey("tpmversion")){
+            customparameterMap.put("tpmversion", customparameterMap.get("tpmversion"));
         }else if(getTpmVersion() != null){
-            customparameterMap.put("tpmVersion", getTpmVersion().toString());
+            customparameterMap.put("tpmversion", getTpmVersion().toString());
         }else{
-            customparameterMap.put("tpmVersion", "NONE");
+            customparameterMap.put("tpmversion", "NONE");
         }
 
         return customparameterMap;
@@ -450,6 +457,25 @@ public class DeployVMCmd extends BaseAsyncCreateCustomIdCmd implements SecurityG
 
     public String getUserData() {
         return userData;
+    }
+
+    public Long getUserdataId() {
+        return userdataId;
+    }
+
+    public Map<String, String> getUserdataDetails() {
+        Map<String, String> userdataDetailsMap = new HashMap<String, String>();
+        if (userdataDetails != null && userdataDetails.size() != 0) {
+            Collection parameterCollection = userdataDetails.values();
+            Iterator iter = parameterCollection.iterator();
+            while (iter.hasNext()) {
+                HashMap<String, String> value = (HashMap<String, String>)iter.next();
+                for (Map.Entry<String,String> entry: value.entrySet()) {
+                    userdataDetailsMap.put(entry.getKey(),entry.getValue());
+                }
+            }
+        }
+        return userdataDetailsMap;
     }
 
     public Long getZoneId() {

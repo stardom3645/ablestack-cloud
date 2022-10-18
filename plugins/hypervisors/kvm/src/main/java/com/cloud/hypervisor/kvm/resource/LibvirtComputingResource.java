@@ -2484,7 +2484,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
         boolean isSecureBoot = false;
         boolean isTpmEnabled = false;
         String bootMode = null;
-        String tpmVersion = null;
+        String tpmversion = null;
 
         if (MapUtils.isNotEmpty(customParams) && customParams.containsKey(GuestDef.BootType.UEFI.toString())) {
             isUefiEnabled = true;
@@ -2505,9 +2505,9 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
             s_logger.debug(String.format("Enabled TPM for VM UUID [%s].", uuid));
 
             if(customParams.containsKey(GuestDef.TpmVersion.V2_0.toString())) {
-                tpmVersion = customParams.get(GuestDef.TpmVersion.V2_0.toString());
+                tpmversion = customParams.get(GuestDef.TpmVersion.V2_0.toString());
             }else if(customParams.containsKey(GuestDef.TpmVersion.V1_2.toString())) {
-                tpmVersion = customParams.get(GuestDef.TpmVersion.V1_2.toString());
+                tpmversion = customParams.get(GuestDef.TpmVersion.V1_2.toString());
             }
         }
 
@@ -2551,20 +2551,20 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
 
 
         boolean isTpmEnabled = false;
-        String tpmVersion = "";
-        if(customParams.containsKey("tpmVersion")) {
-            tpmVersion = customParams.get("tpmVersion");
+        String tpmversion = "";
+        if(customParams.containsKey("tpmversion")) {
+            tpmversion = customParams.get("tpmversion");
 
-            if (tpmVersion.equalsIgnoreCase("NONE")){
+            if (tpmversion.equalsIgnoreCase("NONE")){
                 isTpmEnabled = false;
             }else{
                 isTpmEnabled = true;
             }
         }else{
-            tpmVersion = GuestDef.TpmVersion.NONE.toString();
+            tpmversion = GuestDef.TpmVersion.NONE.toString();
             isTpmEnabled = false;
         }
-        vm.addComp(createDevicesDef(vmTO, guest, vcpus, isUefiEnabled, isTpmEnabled, tpmVersion));
+        vm.addComp(createDevicesDef(vmTO, guest, vcpus, isUefiEnabled, isTpmEnabled, tpmversion));
         addExtraConfigsToVM(vmTO, vm, extraConfig);
     }
 
@@ -2580,14 +2580,14 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
     /**
      * Adds TPM device component to VM
      */
-    protected TPMDef createTpmDef(String tpmVersion){
+    protected TPMDef createTpmDef(String tpmversion){
 
-        return new TPMDef(tpmVersion);
+        return new TPMDef(tpmversion);
     }
     /**
      * Adds devices components to VM.
      */
-    protected DevicesDef createDevicesDef(VirtualMachineTO vmTO, GuestDef guest, int vcpus, boolean isUefiEnabled, boolean isTpmEnabled, String tpmVersion) {
+    protected DevicesDef createDevicesDef(VirtualMachineTO vmTO, GuestDef guest, int vcpus, boolean isUefiEnabled, boolean isTpmEnabled, String tpmversion) {
         DevicesDef devices = new DevicesDef();
         devices.setEmulatorPath(_hypervisorPath);
         devices.setGuestType(guest.getGuestType());
@@ -2607,8 +2607,8 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
         if (isGuestAarch64()) {
             createArm64UsbDef(devices);
         }
-        if (!tpmVersion.equalsIgnoreCase("NONE") && isTpmEnabled) {
-            devices.addDevice(createTpmDef(tpmVersion));
+        if (!tpmversion.equalsIgnoreCase("NONE") && isTpmEnabled) {
+            devices.addDevice(createTpmDef(tpmversion));
         }
         DiskDef.DiskBus busT = getDiskModelFromVMDetail(vmTO);
         if (busT == null) {

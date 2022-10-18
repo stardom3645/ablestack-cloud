@@ -74,7 +74,7 @@ def handleMigrateBegin():
                     phyDev = getGuestNetworkDevice()
             else:
                 continue
-            newBrName = "br" + phyDev + "-" + vlanId
+            newBrName = "br" + re.sub(r'[^0-9]', '', phyDev) + "-" + vlanId
             source.setAttribute("bridge", newBrName)
         print(domain.toxml())
     except:
@@ -160,11 +160,12 @@ def executeProgram(programName, sysArgs):
                 logger.info('return code: %s' % str(process.returncode))
                 raise Exception(error)
             logger.info('Custom program: %s finished successfully; output: \n%s' %
-                        (scriptName, str(output)))
+                        (programName, str(output)))
         finally:
             timer.cancel()
     except (OSError, Exception) as e:
-        logger.exception("Custom script: %s finished with error: \n%s" % (scriptName, e))
+        logger.exception("Custom script: %s finished with error: \n%s" % (programName, e))
+        pass
 
 
 def terminateProgram(process, programName):
@@ -182,8 +183,9 @@ def unmapStorage():
                 img  = disk.getAttribute("dev")
                 executeProgram("/usr/bin/rbd", ["unmap", img])
 
-        print(domain.toxml())
-    except:
+        #print(domain.toxml())
+    except Exception as e:
+        logger.exception("exception: %s\n"%( e))
         pass
 
 if __name__ == '__main__':
@@ -192,7 +194,7 @@ if __name__ == '__main__':
 
     # For docs refer https://libvirt.org/hooks.html#qemu
     logger.info("Executing qemu hook with args: %s" % sys.argv)
-    logger.info("Executing qemu hook with xml: %s" % parse(sys.stdin).toxml())
+    #logger.info("Executing qemu hook with xml: %s" % parse(sys.stdin).toxml())
     action, status = sys.argv[2:4]
 
     if action not in validQemuActions:
