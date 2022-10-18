@@ -428,7 +428,7 @@ public class DatabaseUpgradeChecker implements SystemIntegrityChecker {
             if (script == null) {
                 throw new CloudRuntimeException("Unable to find " + scriptFile);
             }
-
+            s_logger.info("Ablestack Upgrade [Method : beforeUpgradeAblestack , version :  " + ablestackVersion + "]");
             InputStream[] scripts = {script};
             if (scripts != null) {
                 for (InputStream scrip : scripts) {
@@ -463,7 +463,7 @@ public class DatabaseUpgradeChecker implements SystemIntegrityChecker {
             if (script == null) {
                 throw new CloudRuntimeException("Unable to find " + scriptFile);
             }
-
+            s_logger.info("Ablestack Upgrade [Method : afterUpgradeAblestack , version :  " + ablestackVersion + "]");
             InputStream[] scripts = {script};
             if (scripts != null) {
                 for (InputStream scrip : scripts) {
