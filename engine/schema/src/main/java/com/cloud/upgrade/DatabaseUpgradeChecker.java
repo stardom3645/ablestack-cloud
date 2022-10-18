@@ -398,12 +398,11 @@ public class DatabaseUpgradeChecker implements SystemIntegrityChecker {
                 }
 
                 upgrade(dbVersion, currentVersion);
-
+            } finally {
                 ///////////////////// Ablestack 업그레이드 //////////////////////////
                 afterUpgradeAblestack("Bronto");
                 afterUpgradeAblestack("Cerato");
                 ///////////////////// Ablestack 업그레이드 //////////////////////////
-            } finally {
                 lock.unlock();
             }
         } finally {
