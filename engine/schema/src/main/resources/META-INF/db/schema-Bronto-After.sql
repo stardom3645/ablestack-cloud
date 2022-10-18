@@ -16,6 +16,5 @@
 -- under the License.
 
 --;
--- Schema upgrade cleanup from ablestack-bronto to ablestack-cerato
+-- Schema upgrade from ablestack-allo to ablestack-bronto
 --;
-

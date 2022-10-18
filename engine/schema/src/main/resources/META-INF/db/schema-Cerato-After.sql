@@ -16,6 +16,6 @@
 -- under the License.
 
 --;
--- Schema upgrade cleanup from ablestack-allo to ablestack-bronto
+-- Schema upgrade from ablestack-bronto to ablestack-cerato
 --;
-
+CALL ADD_GUEST_OS_AND_HYPERVISOR_MAPPING (2, 'Debian GNU/Linux 11 (64-bit)', 'XenServer', '8.2.1', 'Debian Bullseye 11');
