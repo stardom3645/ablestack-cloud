@@ -18,4 +18,4 @@
 --;
 -- Schema upgrade from ablestack-bronto to ablestack-cerato
 --;
-CALL ADD_GUEST_OS_AND_HYPERVISOR_MAPPING (2, 'Debian GNU/Linux 11 (64-bit)', 'XenServer', '8.2.1', 'Debian Bullseye 11');
+CALL ADD_GUEST_OS_AND_HYPERVISOR_MAPPING (6, 'Windows 11 (64-bit)', 'KVM', 'default', 'Windows 11 (64-bit)');
