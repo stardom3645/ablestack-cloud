@@ -18,7 +18,7 @@
 <template>
   <a
     v-if="['host'].includes($route.meta.name) && 'listHostsMetrics' in $store.getters.apis"
-    :href="'http://'+resource.outofbandmanagement.address+':'+resource.details.webport"
+    :href="resource.details.webprotocol+'://'+resource.outofbandmanagement.address+':'+resource.details.webport"
     target="_blank">
     <a-button style="margin-left: 5px" shape="circle" type="" :size="size" :disabled="resource.details.webport == undefined" >
       <LaptopOutlined />

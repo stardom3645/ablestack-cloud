@@ -396,15 +396,26 @@ public class OutOfBandManagementServiceImpl extends ManagerBase implements OutOf
             throw new CloudRuntimeException(String.format("Failed to update out-of-band management config for %s in the database.", host));
         }
 
-        if (options.get(OutOfBandManagement.Option.WEBPORT) != null){
-            if (hostDetailsDao.findDetail(host.getId(), "webport") == null) {
-                DetailVO detail = new DetailVO(host.getId(), "webport", options.get(OutOfBandManagement.Option.WEBPORT));
-                hostDetailsDao.persist(detail);
-            } else {
-                final DetailVO detail = hostDetailsDao.findDetail(host.getId(), "webport");
-                detail.setValue(options.get(OutOfBandManagement.Option.WEBPORT));
-                hostDetailsDao.update(detail.getId(), detail);
-            }
+        String webprotocol = options.get(OutOfBandManagement.Option.WEBPROTOCOL);
+        String webport = options.get(OutOfBandManagement.Option.WEBPORT);
+        if(webprotocol.equals("http")) {
+            webport = (webport == null)?"80":webport;
+        } else {
+            webport = (webport == null)?"443":webport;
+        }
+
+        if (hostDetailsDao.findDetail(host.getId(), "webport") == null) {
+            DetailVO detail = new DetailVO(host.getId(), "webprotocol", webprotocol);
+            hostDetailsDao.persist(detail);
+            detail = new DetailVO(host.getId(), "webport", webport);
+            hostDetailsDao.persist(detail);
+        } else {
+            DetailVO detail = hostDetailsDao.findDetail(host.getId(), "webprotocol");
+            detail.setValue(webprotocol);
+            hostDetailsDao.update(detail.getId(), detail);
+            detail = hostDetailsDao.findDetail(host.getId(), "webport");
+            detail.setValue(webport);
+            hostDetailsDao.update(detail.getId(), detail);
         }
 
         String result = String.format("Out-of-band management successfully configured for %s.", host);
