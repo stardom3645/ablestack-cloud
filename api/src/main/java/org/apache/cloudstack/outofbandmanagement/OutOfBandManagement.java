@@ -65,6 +65,7 @@ public interface OutOfBandManagement extends StateObject<OutOfBandManagement.Pow
         PORT,
         USERNAME,
         PASSWORD,
+        WEBPROTOCOL,
         WEBPORT
     }
 
