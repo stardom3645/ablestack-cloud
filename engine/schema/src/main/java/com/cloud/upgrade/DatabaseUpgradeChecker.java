@@ -371,50 +371,10 @@ public class DatabaseUpgradeChecker implements SystemIntegrityChecker {
                 final CloudStackVersion dbVersion = CloudStackVersion.parse(_dao.getCurrentVersion());
                 final String currentVersionValue = this.getClass().getPackage().getImplementationVersion();
 
-                //ablestack-allo -> ablestack-bronto db upgrade
-                TransactionLegacy txn = TransactionLegacy.open("Upgrade");
-                txn.start();
-                try {
-                    Connection conn;
-                    try {
-                        conn = txn.getConnection();
-                    } catch (SQLException e) {
-                        String errorMessage = "Unable to upgrade the database";
-                        s_logger.error(errorMessage, e);
-                        throw new CloudRuntimeException(errorMessage, e);
-                    }
-                    final String scriptFile = "META-INF/db/schema-AllotoBronto.sql";
-                    final InputStream script = Thread.currentThread().getContextClassLoader().getResourceAsStream(scriptFile);
-                    if (script == null) {
-                        throw new CloudRuntimeException("Unable to find " + scriptFile);
-                    }
-
-                    InputStream[] scripts = {script};
-                    if (scripts != null) {
-                        for (InputStream scrip : scripts) {
-                            runScript(conn, scrip);
-                        }
-                    }
-                    final String scriptFile_cerato = "META-INF/db/schema-BrontotoCerato.sql";
-                    final InputStream script_cerato = Thread.currentThread().getContextClassLoader().getResourceAsStream(scriptFile_cerato);
-                    if (script_cerato == null) {
-                        throw new CloudRuntimeException("Unable to find " + scriptFile_cerato);
-                    }
-
-                    InputStream[] scripts_cerato = {script_cerato};
-                    if (scripts_cerato != null) {
-                        for (InputStream scrip : scripts_cerato) {
-                            runScript(conn, scrip);
-                        }
-                    }
-                    txn.commit();
-                } catch (CloudRuntimeException e) {
-                    String errorMessage = "Unable to upgrade the database ablestack bronto";
-                    s_logger.error(errorMessage, e);
-                    throw new CloudRuntimeException(errorMessage, e);
-                } finally {
-                    txn.close();
-                }
+                ///////////////////// Ablestack 업그레이드 //////////////////////////
+                beforeUpgradeAblestack("Bronto");
+                beforeUpgradeAblestack("Cerato");
+                ///////////////////// Ablestack 업그레이드 //////////////////////////
 
                 if (StringUtils.isBlank(currentVersionValue)) {
                     return;
@@ -439,10 +399,83 @@ public class DatabaseUpgradeChecker implements SystemIntegrityChecker {
 
                 upgrade(dbVersion, currentVersion);
             } finally {
+                ///////////////////// Ablestack 업그레이드 //////////////////////////
+                afterUpgradeAblestack("Bronto");
+                afterUpgradeAblestack("Cerato");
+                ///////////////////// Ablestack 업그레이드 //////////////////////////
                 lock.unlock();
             }
         } finally {
             lock.releaseRef();
+        }
+    }
+    // Cloudstack DB 업데이트 전 Ablestack DB 업데이트 진행
+    public void beforeUpgradeAblestack (String ablestackVersion) {
+        TransactionLegacy txn = TransactionLegacy.open("Upgrade");
+        txn.start();
+        try {
+            Connection conn;
+            try {
+                conn = txn.getConnection();
+            } catch (SQLException e) {
+                String errorMessage = "Unable to upgrade the database [beforeUpgradeAblestack : " + ablestackVersion + "]";
+                s_logger.error(errorMessage, e);
+                throw new CloudRuntimeException(errorMessage, e);
+            }
+            final String scriptFile = "META-INF/db/schema-" + ablestackVersion +"-Before.sql";
+            final InputStream script = Thread.currentThread().getContextClassLoader().getResourceAsStream(scriptFile);
+            if (script == null) {
+                throw new CloudRuntimeException("Unable to find " + scriptFile);
+            }
+            s_logger.info("Ablestack Upgrade [Method : beforeUpgradeAblestack , version :  " + ablestackVersion + "]");
+            InputStream[] scripts = {script};
+            if (scripts != null) {
+                for (InputStream scrip : scripts) {
+                    runScript(conn, scrip);
+                }
+            }
+            txn.commit();
+        } catch (CloudRuntimeException e) {
+            String errorMessage = "Unable to upgrade the database ablestack [beforeUpgradeAblestack : " + ablestackVersion + "]";
+            s_logger.error(errorMessage, e);
+            throw new CloudRuntimeException(errorMessage, e);
+        } finally {
+            txn.close();
+        }
+    }
+
+    // Cloudstack DB 업데이트 후 Ablestack DB 업데이트 진행
+    public void afterUpgradeAblestack (String ablestackVersion) {
+        TransactionLegacy txn = TransactionLegacy.open("Upgrade");
+        txn.start();
+        try {
+            Connection conn;
+            try {
+                conn = txn.getConnection();
+            } catch (SQLException e) {
+                String errorMessage = "Unable to upgrade the database [afterUpgradeAblestack : " + ablestackVersion + "]";
+                s_logger.error(errorMessage, e);
+                throw new CloudRuntimeException(errorMessage, e);
+            }
+            final String scriptFile = "META-INF/db/schema-" + ablestackVersion +"-After.sql";
+            final InputStream script = Thread.currentThread().getContextClassLoader().getResourceAsStream(scriptFile);
+            if (script == null) {
+                throw new CloudRuntimeException("Unable to find " + scriptFile);
+            }
+            s_logger.info("Ablestack Upgrade [Method : afterUpgradeAblestack , version :  " + ablestackVersion + "]");
+            InputStream[] scripts = {script};
+            if (scripts != null) {
+                for (InputStream scrip : scripts) {
+                    runScript(conn, scrip);
+                }
+            }
+            txn.commit();
+        } catch (CloudRuntimeException e) {
+            String errorMessage = "Unable to upgrade the database ablestack [afterUpgradeAblestack : " + ablestackVersion + "]";
+            s_logger.error(errorMessage, e);
+            throw new CloudRuntimeException(errorMessage, e);
+        } finally {
+            txn.close();
         }
     }
 

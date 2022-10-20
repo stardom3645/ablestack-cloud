@@ -49,7 +49,7 @@ public interface VolumeApiService {
     ConfigKey<Boolean> UseHttpsToUpload = new ConfigKey<Boolean>("Advanced",
             Boolean.class,
             "use.https.to.upload",
-            "true",
+            "false",
             "Determines the protocol (HTTPS or HTTP) ACS will use to generate links to upload ISOs, volumes, and templates. When set as 'true', ACS will use protocol HTTPS, otherwise, it will use protocol HTTP. Default value is 'true'.",
             true,
             ConfigKey.Scope.StoragePool);

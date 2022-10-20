@@ -16,6 +16,6 @@
 -- under the License.
 
 --;
--- Schema upgrade cleanup from ablestack-allo to ablestack-bronto
+-- Schema upgrade from ablestack-bronto to ablestack-cerato
 --;
-
+CALL ADD_GUEST_OS_AND_HYPERVISOR_MAPPING (6, 'Windows 11 (64-bit)', 'KVM', 'default', 'Windows 11 (64-bit)');
