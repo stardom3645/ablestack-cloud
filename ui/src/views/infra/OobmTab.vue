@@ -68,7 +68,7 @@
       </a-list-item>
       <a-list-item v-if="host.outofbandmanagement && host.details.webprotocol">
         <div>
-          <strong>{{ $t('label.webprotocol') }}</strong>
+          <strong>{{ $t('label.protocol') }}</strong>
           <div>
             {{ host.details.webprotocol }}
           </div>
@@ -76,7 +76,7 @@
       </a-list-item>
       <a-list-item v-if="host.outofbandmanagement && host.details.webport">
         <div>
-          <strong>{{ $t('label.webport') }}</strong>
+          <strong>{{ $t('label.port') }}</strong>
           <div>
             {{ host.details.webport }}
           </div>
