@@ -2975,7 +2975,5 @@
 "label.accessinfo": "Access information",
 "label.packages": "Packages",
 "label.includehost": "include host",
-"label.webprotocol": "Webprotocol",
-"label.webport": "Webport",
 "label.oobm.portal.url": "OOBM Portal"
 }
