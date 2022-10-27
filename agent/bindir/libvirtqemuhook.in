@@ -74,7 +74,7 @@ def handleMigrateBegin():
                     phyDev = getGuestNetworkDevice()
             else:
                 continue
-            newBrName = "br" + re.sub(r'[^0-9]', '', phyDev) + "-" + vlanId
+            newBrName = "br" + phyDev + "-" + vlanId
             source.setAttribute("bridge", newBrName)
         print(domain.toxml())
     except:
