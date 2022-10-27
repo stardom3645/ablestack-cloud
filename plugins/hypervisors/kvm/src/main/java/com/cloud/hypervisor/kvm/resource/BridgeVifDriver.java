@@ -352,7 +352,8 @@ public class BridgeVifDriver extends VifDriverBase {
                 vNetId = oldStyleBrNameMatcher.group(1);
             } else if (brNameMatcher.find()) {
                 if (brNameMatcher.group(1) != null || !brNameMatcher.group(1).isEmpty()) {
-                    pName = brNameMatcher.group(1);
+                    // pName = brNameMatcher.group(1);
+                    pName = getPif(brName);
                 } else {
                     pName = "undefined";
                 }
