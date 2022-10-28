@@ -200,7 +200,7 @@ public class LibvirtVMDef {
                 guestDef.append("<sysinfo type='smbios'>\n");
                 guestDef.append("<system>\n");
                 guestDef.append("<entry name='manufacturer'>ABLECLOUD CO.LTD</entry>\n");
-                guestDef.append("<entry name='product'>ABLESTACK CELL Hypervisor</entry>\n");
+                guestDef.append("<entry name='product'>CloudStack - ABLESTACK CELL Hypervisor</entry>\n");
                 guestDef.append("<entry name='uuid'>" + _uuid + "</entry>\n");
                 guestDef.append("</system>\n");
                 guestDef.append("</sysinfo>\n");

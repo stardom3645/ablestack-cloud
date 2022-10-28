@@ -281,7 +281,6 @@ public class BridgeVifDriver extends VifDriverBase {
     }
 
     private String generateVnetBrName(String pifName, String vnetId) {
-        pifName = pifName.replaceAll("[^0-9]","");
         return "br" + pifName + "-" + vnetId;
     }
 

@@ -27,7 +27,7 @@ usage() {
 
 addVlan() {
 	local vlanId=$1
-	local pif=$2 | sed 's/[^0-9]//g'
+	local pif=$2
 	local vlanDev=$pif.$vlanId
 	local vlanBr=$3
 
