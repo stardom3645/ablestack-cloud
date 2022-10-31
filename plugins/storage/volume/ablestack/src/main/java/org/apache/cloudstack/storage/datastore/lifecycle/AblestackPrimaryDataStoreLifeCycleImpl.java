@@ -23,10 +23,8 @@ import com.cloud.agent.api.Answer;
 import com.cloud.agent.api.CreateStoragePoolCommand;
 import com.cloud.agent.api.DeleteStoragePoolCommand;
 import com.cloud.agent.api.StoragePoolInfo;
-
 import com.cloud.exception.InvalidParameterValueException;
 import com.cloud.exception.StorageConflictException;
-
 import com.cloud.host.dao.HostDao;
 import com.cloud.host.Host;
 import com.cloud.host.HostVO;
@@ -41,17 +39,8 @@ import com.cloud.storage.StoragePoolAutomation;
 import com.cloud.storage.StoragePoolHostVO;
 import com.cloud.utils.db.DB;
 import com.cloud.utils.UriUtils;
-
 import com.cloud.utils.exception.CloudRuntimeException;
-import java.io.UnsupportedEncodingException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.URLDecoder;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-import javax.inject.Inject;
+
 import org.apache.cloudstack.engine.subsystem.api.storage.ClusterScope;
 import org.apache.cloudstack.engine.subsystem.api.storage.DataStore;
 import org.apache.cloudstack.engine.subsystem.api.storage.DataStoreManager;
@@ -64,6 +53,14 @@ import org.apache.cloudstack.storage.datastore.db.PrimaryDataStoreDao;
 import org.apache.cloudstack.storage.datastore.db.StoragePoolVO;
 import org.apache.cloudstack.storage.volume.datastore.PrimaryDataStoreHelper;
 import org.apache.log4j.Logger;
+
+import javax.inject.Inject;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 
 public class AblestackPrimaryDataStoreLifeCycleImpl implements PrimaryDataStoreLifeCycle {
@@ -89,9 +86,7 @@ public class AblestackPrimaryDataStoreLifeCycleImpl implements PrimaryDataStoreL
     @Inject
     protected HostDao _hostDao;
 
-    public AblestackPrimaryDataStoreLifeCycleImpl() {
-    }
-
+    @SuppressWarnings("unchecked")
     @Override
     public DataStore initialize(Map<String, Object> dsInfos) {
         Long clusterId = (Long) dsInfos.get("clusterId");
@@ -106,31 +101,24 @@ public class AblestackPrimaryDataStoreLifeCycleImpl implements PrimaryDataStoreL
 
         PrimaryDataStoreParameters parameters = new PrimaryDataStoreParameters();
 
-        URI uri = null;
-        boolean multi = false;
-        try {
-            String urlType = url.substring(0, 3);
-            if ((urlType.equals("glu") || urlType.equals("rbd")) && url.contains(",")) {
+        UriUtils.UriInfo uriInfo = UriUtils.getUriInfo(url);
 
-                multi = true;
-                url = url.replaceAll(",", "/");
-            }
-            uri = new URI(UriUtils.encodeURIComponent(url));
-            if (uri.getScheme().equalsIgnoreCase("rbd") || uri.getScheme().equalsIgnoreCase("gluefs")) {
-                String uriHost = uri.getHost();
-                String uriPath = uri.getPath();
-                if (uriPath == null) {
+        String scheme = uriInfo.getScheme();
+        String storageHost = uriInfo.getStorageHost();
+        String storagePath = uriInfo.getStoragePath();
+        try {
+            if (scheme == null) {
+                throw new InvalidParameterValueException("scheme is null " + url + ", add rbd:// (or gluefs://) as a prefix");
+            } else if (scheme.equalsIgnoreCase("rbd")) {
+                if (storagePath == null) {
                     throw new InvalidParameterValueException("host or path is null, should be rbd://hostname/pool");
                 }
-                if (multi) {
-                    String multiHost = uriHost + (uriPath.substring(0, uriPath.lastIndexOf("/")).replaceAll("/", ","));
-                    String[] hostArr = multiHost.split(",");
-                    if (hostArr.length > 5) {
-                        throw new InvalidParameterValueException("RADOS monitor can support up to 5 hosts.");
-                    }
+            } else if (scheme.equalsIgnoreCase("gluefs")) {
+                if (storagePath == null) {
+                    throw new InvalidParameterValueException("host or path is null, should be gluefs://hostname/pool");
                 }
             }
-        } catch (URISyntaxException e) {
+        } catch (Exception e) {
             throw new InvalidParameterValueException(url + " is not a valid uri");
         }
 
@@ -140,32 +128,23 @@ public class AblestackPrimaryDataStoreLifeCycleImpl implements PrimaryDataStoreL
         parameters.setTags(tags);
         parameters.setDetails(details);
 
-        String scheme = uri.getScheme();
-        String storageHost = uri.getHost();
         String hostPath = null;
         try {
-            hostPath = URLDecoder.decode(uri.getPath(), "UTF-8");
+            hostPath = URLDecoder.decode(storagePath, "UTF-8");
         } catch (UnsupportedEncodingException e) {
             s_logger.error("[ignored] we are on a platform not supporting \"UTF-8\"!?!", e);
         }
         if (hostPath == null) { // if decoding fails, use getPath() anyway
-            hostPath = uri.getPath();
+            hostPath = storagePath;
         }
-
-        String userInfo = uri.getUserInfo();
-        int port = uri.getPort();
+        String userInfo = uriInfo.getUserInfo();
+        int port = uriInfo.getPort();
         if (s_logger.isDebugEnabled()) {
-            s_logger.debug("createPool Params @ scheme - " + scheme + " storageHost - " + storageHost + " hostPath - "
-                    + hostPath + " port - " + port);
+            s_logger.debug("createPool Params @ scheme - " + scheme + " storageHost - " + storageHost + " hostPath - " + hostPath + " port - " + port);
         }
-
         if (scheme.equalsIgnoreCase("rbd")) {
             if (port == -1) {
                 port = 0;
-            }
-            if (multi) {
-                storageHost = storageHost + (hostPath.substring(0, hostPath.lastIndexOf("/")).replaceAll("/", ","));
-                hostPath = hostPath.substring(hostPath.lastIndexOf("/") + 1);
             }
             parameters.setType(StoragePoolType.RBD);
             parameters.setHost(storageHost);
@@ -176,10 +155,6 @@ public class AblestackPrimaryDataStoreLifeCycleImpl implements PrimaryDataStoreL
         } else if (scheme.equalsIgnoreCase("gluefs")) {
             if (port == -1) {
                 port = 0;
-            }
-            if (multi) {
-                storageHost = storageHost + (hostPath.substring(0, hostPath.lastIndexOf("/")).replaceAll("/", ","));
-                hostPath = hostPath.substring(hostPath.lastIndexOf("/") + 1);
             }
             parameters.setType(StoragePoolType.SharedMountPoint);
             parameters.setHost(storageHost);
