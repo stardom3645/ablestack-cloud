@@ -200,7 +200,7 @@ public class LibvirtVMDef {
                 guestDef.append("<sysinfo type='smbios'>\n");
                 guestDef.append("<system>\n");
                 guestDef.append("<entry name='manufacturer'>ABLECLOUD CO.LTD</entry>\n");
-                guestDef.append("<entry name='product'>ABLESTACK CELL Hypervisor</entry>\n");
+                guestDef.append("<entry name='product'>CloudStack - ABLESTACK CELL Hypervisor</entry>\n");
                 guestDef.append("<entry name='uuid'>" + _uuid + "</entry>\n");
                 guestDef.append("</system>\n");
                 guestDef.append("</sysinfo>\n");
@@ -1135,13 +1135,15 @@ public class LibvirtVMDef {
                 diskBuilder.append(" protocol='" + _diskProtocol + "'");
                 diskBuilder.append(" name='" + _sourcePath + "'");
                 diskBuilder.append(">\n");
-                diskBuilder.append("<host name='");
-                diskBuilder.append(_sourceHost);
-                if (_sourcePort != 0) {
-                    diskBuilder.append("' port='");
-                    diskBuilder.append(_sourcePort);
+                for (String sourceHost : _sourceHost.split(",")) {
+                    diskBuilder.append("<host name='");
+                    diskBuilder.append(sourceHost.replace("[", "").replace("]", ""));
+                    if (_sourcePort != 0) {
+                        diskBuilder.append("' port='");
+                        diskBuilder.append(_sourcePort);
+                    }
+                    diskBuilder.append("'/>\n");
                 }
-                diskBuilder.append("'/>\n");
                 diskBuilder.append("</source>\n");
                 if (_authUserName != null) {
                     diskBuilder.append("<auth username='" + _authUserName + "'>\n");
