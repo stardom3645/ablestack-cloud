@@ -238,10 +238,6 @@ public class CloudStackPrimaryDataStoreLifeCycleImpl implements PrimaryDataStore
             if (port == -1) {
                 port = 0;
             }
-            if (multi) {
-                storageHost = storageHost + (hostPath.substring(0, hostPath.lastIndexOf("/")).replaceAll("/", ","));
-                hostPath = hostPath.substring(hostPath.lastIndexOf("/") + 1);
-            }
             parameters.setType(StoragePoolType.RBD);
             parameters.setHost(storageHost);
             parameters.setPort(port);

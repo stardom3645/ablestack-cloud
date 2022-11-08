@@ -693,7 +693,7 @@ public class UriUtils {
             if (url == null) {
                 return new UriInfo();
             }
-            if (url.startsWith("rbd://")) {
+            if (url.startsWith("rbd://") || url.startsWith("gluefs://")) {
                 return getRbdUrlInfo(url);
             }
             URI uri = new URI(UriUtils.encodeURIComponent(url));

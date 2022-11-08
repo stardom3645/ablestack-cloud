@@ -13,7 +13,6 @@ $conf = '{  "ADusername": "Administrator",  "ADpassword": "Ablecloud1!",  "ADdom
 echo $conf| Out-File -Encoding ascii "c:\Works-DC\conf.json"
 echo $conf
 echo $conf >> "c:\Works-DC\installed.txt"
-C:\Works-DC\nssm.exe set "Works-DC" start SERVICE_DELAYED_AUTO_START
 C:\Works-DC\nssm.exe restart "Works-DC"
 date >> "c:\Works-DC\installed.txt"
 </powershell>
