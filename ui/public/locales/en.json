@@ -2978,5 +2978,8 @@
 "label.accessinfo": "Access information",
 "label.packages": "Packages",
 "label.includehost": "include host",
-"label.oobm.portal.url": "OOBM Portal"
+"label.oobm.portal.url": "OOBM Portal",
+"label.manageconsoleprotocol": "Management Console Protocol",
+"label.manageconsoleport": "Management Console Port",
+"label.action.edit.template": "Edit template"
 }

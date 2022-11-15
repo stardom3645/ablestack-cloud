@@ -138,7 +138,7 @@ export default {
       message: 'label.outofbandmanagement.configure',
       docHelp: 'adminguide/hosts.html#out-of-band-management',
       dataView: true,
-      args: ['hostid', 'address', 'port', 'username', 'password', 'driver', 'webprotocol', 'webport'],
+      args: ['hostid', 'address', 'port', 'username', 'password', 'driver', 'manageconsoleprotocol', 'manageconsoleport'],
       mapping: {
         hostid: {
           value: (record) => { return record.id }
@@ -146,7 +146,7 @@ export default {
         driver: {
           options: ['ipmitool', 'nestedcloudstack', 'redfish']
         },
-        webprotocol: {
+        manageconsoleprotocol: {
           options: ['http', 'https']
         }
       }

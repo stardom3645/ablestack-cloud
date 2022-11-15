@@ -396,25 +396,25 @@ public class OutOfBandManagementServiceImpl extends ManagerBase implements OutOf
             throw new CloudRuntimeException(String.format("Failed to update out-of-band management config for %s in the database.", host));
         }
 
-        String webprotocol = options.get(OutOfBandManagement.Option.WEBPROTOCOL);
-        String webport = options.get(OutOfBandManagement.Option.WEBPORT);
-        if(webprotocol.equals("http")) {
-            webport = (webport == null)?"80":webport;
+        String mgconsoleprotocol = options.get(OutOfBandManagement.Option.MGCONSOLEPROTOCOL);
+        String mgconsoleport = options.get(OutOfBandManagement.Option.MGCONSOLEPORT);
+        if(mgconsoleprotocol.equals("http")) {
+            mgconsoleport = (mgconsoleport == null)?"80":mgconsoleport;
         } else {
-            webport = (webport == null)?"443":webport;
+            mgconsoleport = (mgconsoleport == null)?"443":mgconsoleport;
         }
 
-        if (hostDetailsDao.findDetail(host.getId(), "webport") == null) {
-            DetailVO detail = new DetailVO(host.getId(), "webprotocol", webprotocol);
+        if (hostDetailsDao.findDetail(host.getId(), "manageconsoleport") == null) {
+            DetailVO detail = new DetailVO(host.getId(), "manageconsoleprotocol", mgconsoleprotocol);
             hostDetailsDao.persist(detail);
-            detail = new DetailVO(host.getId(), "webport", webport);
+            detail = new DetailVO(host.getId(), "manageconsoleport", mgconsoleport);
             hostDetailsDao.persist(detail);
         } else {
-            DetailVO detail = hostDetailsDao.findDetail(host.getId(), "webprotocol");
-            detail.setValue(webprotocol);
+            DetailVO detail = hostDetailsDao.findDetail(host.getId(), "manageconsoleprotocol");
+            detail.setValue(mgconsoleprotocol);
             hostDetailsDao.update(detail.getId(), detail);
-            detail = hostDetailsDao.findDetail(host.getId(), "webport");
-            detail.setValue(webport);
+            detail = hostDetailsDao.findDetail(host.getId(), "manageconsoleport");
+            detail.setValue(mgconsoleport);
             hostDetailsDao.update(detail.getId(), detail);
         }
 
