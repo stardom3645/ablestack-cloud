@@ -18,9 +18,9 @@
 <template>
   <a
     v-if="['host'].includes($route.meta.name) && 'listHostsMetrics' in $store.getters.apis"
-    :href="resource.details.webprotocol+'://'+resource.outofbandmanagement.address+':'+resource.details.webport"
+    :href="resource.details.mgconsoleprotocol+'://'+resource.outofbandmanagement.address+':'+resource.details.mgconsoleport"
     target="_blank">
-    <a-button style="margin-left: 5px" shape="circle" type="" :size="size" :disabled="resource.details.webport == undefined" >
+    <a-button style="margin-left: 5px" shape="circle" type="" :size="size" :disabled="resource.details.mgconsoleport == undefined" >
       <LaptopOutlined />
     </a-button>
   </a>

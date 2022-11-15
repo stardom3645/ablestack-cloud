@@ -72,11 +72,11 @@ public class ConfigureOutOfBandManagementCmd extends BaseCmd {
     @Parameter(name = ApiConstants.PASSWORD, type = CommandType.STRING, required = true, description = "the host management interface password")
     private String password;
 
-    @Parameter(name = ApiConstants.WEBPROTOCOL, type = CommandType.STRING, required = true,  description = "the host management interface web protocol")
-    private String webprotocol;
+    @Parameter(name = ApiConstants.MANAGE_CONSOLE_PROTOCOL, type = CommandType.STRING, required = true,  description = "the host management interface management console protocol")
+    private String mgconsoleprotocol;
 
-    @Parameter(name = ApiConstants.WEBPORT, type = CommandType.STRING, description = "the host management interface web port")
-    private String webport;
+    @Parameter(name = ApiConstants.MANAGE_CONSOLE_PORT, type = CommandType.STRING, description = "the host management interface management console port")
+    private String mgconsoleport;
 
     /////////////////////////////////////////////////////
     /////////////// API Implementation///////////////////
@@ -116,8 +116,8 @@ public class ConfigureOutOfBandManagementCmd extends BaseCmd {
         putOptionIfIsNotEmpty(builder, OutOfBandManagement.Option.PORT, port);
         putOptionIfIsNotEmpty(builder, OutOfBandManagement.Option.USERNAME, username);
         putOptionIfIsNotEmpty(builder, OutOfBandManagement.Option.PASSWORD, password);
-        putOptionIfIsNotEmpty(builder, OutOfBandManagement.Option.WEBPROTOCOL, webprotocol);
-        putOptionIfIsNotEmpty(builder, OutOfBandManagement.Option.WEBPORT, webport);
+        putOptionIfIsNotEmpty(builder, OutOfBandManagement.Option.MGCONSOLEPROTOCOL, mgconsoleprotocol);
+        putOptionIfIsNotEmpty(builder, OutOfBandManagement.Option.MGCONSOLEPORT, mgconsoleport);
         return builder.build();
     }
 

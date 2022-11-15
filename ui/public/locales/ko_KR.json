@@ -2978,5 +2978,7 @@
 "label.accessinfo": "\uc811\uadfc \uc815\ubcf4",
 "label.packages": "\ud328\ud0a4\uc9c0",
 "label.includehost": "\ud638\uc2a4\ud2b8 \ud3ec\ud568",
-"label.oobm.portal.url": "OOBM \ud3ec\ud138 \uc5f0\uacb0"
+"label.oobm.portal.url": "OOBM \ud3ec\ud138 \uc5f0\uacb0",
+"label.mgconsoleprotocol": "\uad00\ub9ac\ucf58\uc194 \ud504\ub85c\ud1a0\ucf5c",
+"label.mgconsoleport": "\uad00\ub9ac\ucf58\uc194 \ud3ec\ud2b8"
 }
