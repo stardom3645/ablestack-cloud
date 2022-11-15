@@ -2980,5 +2980,6 @@
 "label.includehost": "\ud638\uc2a4\ud2b8 \ud3ec\ud568",
 "label.oobm.portal.url": "OOBM \ud3ec\ud138 \uc5f0\uacb0",
 "label.mgconsoleprotocol": "\uad00\ub9ac\ucf58\uc194 \ud504\ub85c\ud1a0\ucf5c",
-"label.mgconsoleport": "\uad00\ub9ac\ucf58\uc194 \ud3ec\ud2b8"
+"label.mgconsoleport": "\uad00\ub9ac\ucf58\uc194 \ud3ec\ud2b8",
+"label.action.edit.template": "\ud15c\ud50c\ub9bf \ud3b8\uc9d1"
 }

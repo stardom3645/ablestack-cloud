@@ -2979,6 +2979,7 @@
 "label.packages": "Packages",
 "label.includehost": "include host",
 "label.oobm.portal.url": "OOBM Portal",
-"label.mgconsoleprotocol": "Management Console Protocol",
-"label.mgconsoleport": "Management Console Port"
+"label.manageconsoleprotocol": "Management Console Protocol",
+"label.manageconsoleport": "Management Console Port",
+"label.action.edit.template": "Edit template"
 }

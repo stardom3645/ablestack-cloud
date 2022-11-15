@@ -66,19 +66,19 @@
           </div>
         </div>
       </a-list-item>
-      <a-list-item v-if="host.outofbandmanagement && host.details.mgconsoleprotocol">
+      <a-list-item v-if="host.outofbandmanagement && host.details.manageconsoleprotocol">
         <div>
-          <strong>{{ $t('label.mgconsoleprotocol') }}</strong>
+          <strong>{{ $t('label.manageconsoleprotocol') }}</strong>
           <div>
-            {{ host.details.mgconsoleprotocol }}
+            {{ host.details.manageconsoleprotocol }}
           </div>
         </div>
       </a-list-item>
-      <a-list-item v-if="host.outofbandmanagement && host.details.mgconsoleport">
+      <a-list-item v-if="host.outofbandmanagement && host.details.manageconsoleport">
         <div>
-          <strong>{{ $t('label.mgconsoleport') }}</strong>
+          <strong>{{ $t('label.manageconsoleport') }}</strong>
           <div>
-            {{ host.details.mgconsoleport }}
+            {{ host.details.manageconsoleport }}
           </div>
         </div>
       </a-list-item>
