@@ -7,7 +7,7 @@
       "apiBase": "/client/api"
     }
   ],
-  "docBase": "http://docs.ablecloud.io",
+  "docBase": "http://docs.ablecloud.io/latest",
   "appTitle": "Mold-ABLESTACK",
   "footer": "Copyright (c) 2021-2022, ABLECLOUD.Co.Ltd",
   "buildVersion": "",
