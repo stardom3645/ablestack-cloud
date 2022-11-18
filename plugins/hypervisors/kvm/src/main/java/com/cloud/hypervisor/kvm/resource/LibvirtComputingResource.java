@@ -3075,7 +3075,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
                         if (device != null) {
                             s_logger.debug("RBD device on host is: " + device);
                             String path = store.getKrbdPath() == null ? "/dev/rbd/" : store.getKrbdPath() + "/";
-                            disk.defBlockBasedDisk(path + physicalDisk.getPath(), devId);
+                            disk.defBlockBasedDisk(path + physicalDisk.getPath(), devId, diskBusTypeData);
                         } else {
                             throw new InternalErrorException("Error while mapping RBD device on host");
                         }
