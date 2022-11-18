@@ -4064,9 +4064,9 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
             return DiskDef.DiskBus.SCSI;
         } else if (platformEmulator.contains("Ubuntu") ||
             StringUtils.startsWithAny(platformEmulator,
-                        "Fedora", "CentOS", "Red Hat Enterprise Linux", "Debian GNU/Linux", "FreeBSD", "Oracle", "Other PV")) {
-            return DiskDef.DiskBus.VIRTIO;
-        } else if (isUefiEnabled && StringUtils.startsWithAny(platformEmulator, "Windows", "Other")) {
+                        "Fedora", "CentOS", "Red Hat Enterprise Linux", "Debian GNU/Linux", "FreeBSD", "Oracle", "Other PV", "Windows")) {
+            return DiskDef.DiskBus.SCSI;
+        } else if (isUefiEnabled && StringUtils.startsWithAny(platformEmulator, "Other")) {
             return DiskDef.DiskBus.SATA;
         } else if (_guestCpuArch != null && _guestCpuArch.equals("aarch64")) {
             return DiskDef.DiskBus.SCSI;
