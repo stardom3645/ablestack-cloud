@@ -3075,12 +3075,22 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
                         if (device != null) {
                             s_logger.debug("RBD device on host is: " + device);
                             String path = store.getKrbdPath() == null ? "/dev/rbd/" : store.getKrbdPath() + "/";
-                            disk.defBlockBasedDisk(path + physicalDisk.getPath(), devId);
+                            if (volume.getType() == Volume.Type.DATADISK) {
+                                disk.defBlockBasedDisk(path + physicalDisk.getPath(), devId, diskBusTypeData);
+                            }
+                            else {
+                                disk.defBlockBasedDisk(path + physicalDisk.getPath(), devId, diskBusType);
+                            }
                         } else {
                             throw new InternalErrorException("Error while mapping RBD device on host");
                         }
                     } else {
-                        disk.defNetworkBasedDisk(physicalDisk.getPath().replace("rbd:", ""), pool.getSourceHost(), pool.getSourcePort(), pool.getAuthUserName(), pool.getUuid(), devId, diskBusType, DiskProtocol.RBD, DiskDef.DiskFmtType.RAW);
+                        if (volume.getType() == Volume.Type.DATADISK) {
+                            disk.defNetworkBasedDisk(physicalDisk.getPath().replace("rbd:", ""), pool.getSourceHost(), pool.getSourcePort(), pool.getAuthUserName(), pool.getUuid(), devId, diskBusTypeData, DiskProtocol.RBD, DiskDef.DiskFmtType.RAW);
+                        }
+                        else {
+                            disk.defNetworkBasedDisk(physicalDisk.getPath().replace("rbd:", ""), pool.getSourceHost(), pool.getSourcePort(), pool.getAuthUserName(), pool.getUuid(), devId, diskBusType, DiskProtocol.RBD, DiskDef.DiskFmtType.RAW);
+                        }
                     }
 
                     // rbd image persistent-cache or image-cache invalidate
@@ -4064,9 +4074,9 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
             return DiskDef.DiskBus.SCSI;
         } else if (platformEmulator.contains("Ubuntu") ||
             StringUtils.startsWithAny(platformEmulator,
-                        "Fedora", "CentOS", "Red Hat Enterprise Linux", "Debian GNU/Linux", "FreeBSD", "Oracle", "Other PV")) {
-            return DiskDef.DiskBus.VIRTIO;
-        } else if (isUefiEnabled && StringUtils.startsWithAny(platformEmulator, "Windows", "Other")) {
+                        "Fedora", "CentOS", "Red Hat Enterprise Linux", "Debian GNU/Linux", "FreeBSD", "Oracle", "Other PV", "Windows")) {
+            return DiskDef.DiskBus.SCSI;
+        } else if (isUefiEnabled && StringUtils.startsWithAny(platformEmulator, "Other")) {
             return DiskDef.DiskBus.SATA;
         } else if (_guestCpuArch != null && _guestCpuArch.equals("aarch64")) {
             return DiskDef.DiskBus.SCSI;
