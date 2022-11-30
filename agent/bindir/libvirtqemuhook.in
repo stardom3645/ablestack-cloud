@@ -36,11 +36,13 @@ customDirPermissions = 0o744
 timeoutSeconds = 10 * 60
 validQemuActions = ['prepare', 'start', 'started', 'stopped', 'release', 'migrate', 'restore', 'reconnect', 'attach']
 
+
 def isOldStyleBridge(brName):
     if brName.find("cloudVirBr") == 0:
         return True
     else:
         return False
+
 
 def isNewStyleBridge(brName):
     if brName.startswith('brvx-'):
@@ -50,12 +52,14 @@ def isNewStyleBridge(brName):
     else:
         return True
 
+
 def getGuestNetworkDevice():
     netlib = networkConfig()
     cfo = configFileOps("/etc/cloudstack/agent/agent.properties")
     guestDev = cfo.getEntry("guest.network.device")
     enslavedDev = netlib.getEnslavedDev(guestDev, 1)
     return enslavedDev.split(".")[0]
+
 
 def handleMigrateBegin():
     try:
@@ -68,7 +72,7 @@ def handleMigrateBegin():
                 phyDev = getGuestNetworkDevice()
             elif isNewStyleBridge(bridge):
                 vlanId = re.sub(r"br(\w+)-", "", bridge)
-                phyDev = re.sub(r"-(\d+)$", "" , re.sub(r"^br", "" ,bridge))
+                phyDev = re.sub(r"-(\d+)$", "", re.sub(r"^br", "", bridge))
                 netlib = networkConfig()
                 if not netlib.isNetworkDev(phyDev):
                     phyDev = getGuestNetworkDevice()
@@ -123,13 +127,16 @@ def executeScript(scriptName, sysArgs):
 
 
 def terminateProcess(process, scriptName):
-    logger.warning('Custom script: %s taking longer than %s second[s]; terminating..' % (scriptName, str(timeoutSeconds)))
+    logger.warning(
+        'Custom script: %s taking longer than %s second[s]; terminating..' % (scriptName, str(timeoutSeconds)))
     process.terminate()
 
 
 def getCustomScriptsFromDirectory():
-    return sorted([fileName for fileName in os.listdir(customDir) if (fileName is not None) & (fileName != "") & ('_' in fileName) &
-                                          (fileName.startswith((action + '_')) | fileName.startswith(('all' + '_')))], key=lambda fileName: substringAfter(fileName, '_'))
+    return sorted([fileName for fileName in os.listdir(customDir) if
+                   (fileName is not None) & (fileName != "") & ('_' in fileName) &
+                   (fileName.startswith((action + '_')) | fileName.startswith(('all' + '_')))],
+                  key=lambda fileName: substringAfter(fileName, '_'))
 
 
 def substringAfter(s, delimiter):
@@ -159,21 +166,23 @@ def executeProgram(programName, sysArgs):
                              % (programName, timeoutSeconds))
                 return ret_code
             if process.returncode != 0:
-                logger.info('return code: %s' % str(process.returncode))
+                logger.debug('return code: %s' % str(process.returncode))
                 raise Exception(error)
             logger.debug('Custom program: %s finished successfully; output: \n%s' %
-                        (programName, str(output)))
+                         (programName, str(output)))
         finally:
             timer.cancel()
     except (OSError, Exception) as e:
-        logger.exception("Custom script: %s finished with error: \n%s" % (programName, e))
+        logger.error("Custom script: %s finished with error: \n%s" % (programName, e))
         pass
     return ret_code
 
 
 def terminateProgram(process, programName):
-    logger.warning('Custom program: %s taking longer than %s second[s]; terminating..' % (programName, str(timeoutSeconds)))
+    logger.warning(
+        'Custom program: %s taking longer than %s second[s]; terminating..' % (programName, str(timeoutSeconds)))
     process.terminate()
+
 
 def unmapStorage():
     try:
@@ -181,37 +190,41 @@ def unmapStorage():
 
         for volume in domain.getElementsByTagName("disk"):
             target = volume.getElementsByTagName("target")[0]
-            if target.getAttribute("bus")=="scsi":
+            if target.getAttribute("bus") == "scsi":
                 disk = volume.getElementsByTagName("source")[0]
-                img  = disk.getAttribute("dev")
-                executeProgram("/usr/bin/rbd", ["unmap", img])
+                img = disk.getAttribute("dev")
+                ret_code = executeProgram("/usr/bin/rbd", ["unmap", img])
+                if ret_code == 22:
+                    logger.error('rbd unmap failed: %s is not rbd image' % img)
 
-        #print(domain.toxml())
+        # print(domain.toxml())
     except Exception as e:
-        logger.exception("exception: %s\n"%( e))
+        logger.exception("exception: %s\n" % (e))
         pass
+
 
 def iscsiDisks():
     disks = []
     try:
         domain = parse(sys.stdin)
-        #logger.info(domain)
+        # logger.info(domain)
         for volume in domain.getElementsByTagName("disk"):
-            #logger.info(volume.toxml())
+            # logger.info(volume.toxml())
             sources = volume.getElementsByTagName("source")
             for source in sources:
                 if str(source.getAttribute("dev")).find("dev"):
                     disk = volume.getElementsByTagName("source")[0]
-                    dev  = disk.getAttribute("dev")
+                    dev = disk.getAttribute("dev")
                     rc = executeProgram("/usr/sbin/lvs", [dev])
                     if rc == 0:
                         disks.append(dev)
 
-        #print(domain.toxml())
+        # print(domain.toxml())
     except Exception as e:
-        logger.exception("exception: %s\n"%( e))
+        logger.exception("exception: %s\n" % (e))
         pass
     return disks
+
 
 def getOwnership():
     disks = iscsiDisks()
@@ -219,6 +232,7 @@ def getOwnership():
     for disk in disks:
         rc = executeProgram("/usr/sbin/lvchange", ["-ay", disk])
         logger.info(rc)
+
 
 def removeOwnership():
     disks = iscsiDisks()
@@ -234,20 +248,20 @@ if __name__ == '__main__':
 
     # For docs refer https://libvirt.org/hooks.html#qemu
     logger.info("Executing qemu hook with args: %s" % sys.argv)
-    #logger.info("Executing qemu hook with xml: %s" % parse(sys.stdin).toxml())
+    # logger.info("Executing qemu hook with xml: %s" % parse(sys.stdin).toxml())
     action, status = sys.argv[2:4]
-    logger.debug('The given action: %s, and status: %s' % (action, status))
+    # logger.debug('The given action: %s, and status: %s' % (action, status))
     if action not in validQemuActions:
         logger.error('The given action: %s, is not a valid libvirt qemu operation.' % action)
         sys.exit(0)
 
-    if action == "prepare" and status == "begin":
-        getOwnership()
+    # if action == "prepare" and status == "begin":
+    #     getOwnership()
 
     if action == "migrate" and status == "begin":
         handleMigrateBegin()
 
     if action == "release" and status == "end":
-       unmapStorage()
+        unmapStorage()
 
     executeCustomScripts(sys.argv[1:])
