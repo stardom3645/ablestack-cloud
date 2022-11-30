@@ -239,8 +239,10 @@ public class LibvirtStorageAdaptor implements StorageAdaptor {
             try {
                 s_logger.warn("Refreshing storage pool " + pool.getName());
                 if (pool.getXMLDesc(0).contains("lvm2")) {
+                    s_logger.warn("pool.getName()" + pool.getName());
+                    s_logger.warn("pool.getInfo()" + pool.getInfo());
                     var outout = Script.runSimpleBashScript("lvchange " + "-ay " + pool.getName() + "/" + volName);
-                    s_logger.warn("llvchange output: " + outout);
+                    s_logger.warn("lvchange output: " + outout);
                 }
 
                 refreshPool(pool);
