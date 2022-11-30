@@ -236,7 +236,7 @@ if __name__ == '__main__':
     logger.info("Executing qemu hook with args: %s" % sys.argv)
     #logger.info("Executing qemu hook with xml: %s" % parse(sys.stdin).toxml())
     action, status = sys.argv[2:4]
-    logger.debug('The given action: %s, is not a valid libvirt qemu operation.' % (action, status))
+    logger.debug('The given action: %s, and status: %s' % (action, status))
     if action not in validQemuActions:
         logger.error('The given action: %s, is not a valid libvirt qemu operation.' % action)
         sys.exit(0)
