@@ -31,12 +31,14 @@ public class KVMHAChecker extends KVMHABase implements Callable<Boolean> {
     private static final Logger s_logger = Logger.getLogger(KVMHAChecker.class);
     private List<NfsStoragePool> nfsStoragePools;
     private List<RbdStoragePool> rbdStoragePools;
+    private List<IscsiStoragePool> iscsiStoragePools;
     private String hostIp;
     private long heartBeatCheckerTimeout = 600000; // 10 minutes
 
-    public KVMHAChecker(List<NfsStoragePool> nfspools, List<RbdStoragePool> rbdpools, String host) {
+    public KVMHAChecker(List<NfsStoragePool> nfspools, List<RbdStoragePool> rbdpools, List<IscsiStoragePool> iscsipools, String host) {
         this.nfsStoragePools = nfspools;
         this.rbdStoragePools = rbdpools;
+        this.iscsiStoragePools = iscsipools;
         this.hostIp = host;
     }
 
@@ -50,7 +52,7 @@ public class KVMHAChecker extends KVMHABase implements Callable<Boolean> {
 
         String hostAndPools = "";
 
-        s_logger.debug(String.format("Checking heart beat with KVMHAChecker for %s", hostAndPools));
+        //s_logger.debug(String.format("Checking heart beat with KVMHAChecker for %s", hostAndPools));
 
         for (NfsStoragePool nfspools : nfsStoragePools) {
             hostAndPools = String.format("host IP [%s] in pools [%s]", hostIp, nfsStoragePools.stream().map(pool -> pool._poolIp).collect(Collectors.joining(", ")));
@@ -113,6 +115,29 @@ public class KVMHAChecker extends KVMHABase implements Callable<Boolean> {
             if (process != null && parsedLine.contains("DEAD")) {
                 s_logger.warn(String.format("Checking heart beat with KVMHAChecker command [%s] returned. [%s]. It may cause a shutdown of host IP [%s].", processBuilder.command().toString(),
                         parsedLine, hostIp));
+            } else {
+                validResult = true;
+            }
+        }
+
+        for (IscsiStoragePool iscsipools : iscsiStoragePools) {
+            hostAndPools = String.format("host IP [%s] in pools [%s]", hostIp, iscsiStoragePools.stream().map(pool -> pool._poolIp).collect(Collectors.joining(", ")));
+            s_logger.debug(String.format("Checking heart beat with KVMHAChecker for %s", hostAndPools));
+
+            Script cmd = new Script(s_heartBeatPathIscsi, heartBeatCheckerTimeout, s_logger);
+            cmd.add("-h", hostIp);
+            cmd.add("-r");
+            cmd.add("-t", String.valueOf(_heartBeatUpdateFreq / 1000));
+            OutputInterpreter.OneLineParser parser = new OutputInterpreter.OneLineParser();
+            String result = cmd.execute(parser);
+            String parsedLine = parser.getLine();
+
+            s_logger.debug(String.format("Checking heart beat with KVMHAChecker [{command=\"%s\", result: \"%s\", log: \"%s\", pool: \"%s\"}].", cmd.toString(), result, parsedLine,
+            iscsipools._poolIp));
+
+            if (result == null && parsedLine.contains("DEAD")) {
+                s_logger.warn(String.format("Checking heart beat with KVMHAChecker command [%s] returned [%s]. [%s]. It may cause a shutdown of host IP [%s].", cmd.toString(),
+                        result, parsedLine, hostIp));
             } else {
                 validResult = true;
             }

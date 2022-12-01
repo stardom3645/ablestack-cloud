@@ -305,8 +305,10 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
     private String _createTmplPath;
     private String _heartBeatPath;
     private String _heartBeatPathRbd;
+    private String _heartBeatPathIscsi;
     private String _vmActivityCheckPath;
     private String _vmActivityCheckPathRbd;
+    private String _vmActivityCheckPathIscsi;
     private String _securityGroupPath;
     private String _ovsPvlanDhcpHostPath;
     private String _ovsPvlanVmPath;
@@ -642,6 +644,10 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
         return _vmActivityCheckPathRbd;
     }
 
+    public String getVmActivityCheckPathIscsi() {
+        return _vmActivityCheckPathIscsi;
+    }
+
     public String getOvsPvlanDhcpHostPath() {
         return _ovsPvlanDhcpHostPath;
     }
@@ -929,6 +935,11 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
             throw new ConfigurationException("Unable to find kvmheartbeat_rbd.py");
         }
 
+        _heartBeatPathIscsi = Script.findScript(kvmScriptsDir, "kvmheartbeat_iscsi.sh");
+        if (_heartBeatPathIscsi == null) {
+            throw new ConfigurationException("Unable to find kvmheartbeat_iscsi.sh");
+        }
+
         _createvmPath = Script.findScript(storageScriptsDir, "createvm.sh");
         if (_createvmPath == null) {
             throw new ConfigurationException("Unable to find the createvm.sh");
@@ -952,6 +963,11 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
         _vmActivityCheckPathRbd = Script.findScript(kvmScriptsDir, "kvmvmactivity_rbd.py");
         if (_vmActivityCheckPathRbd == null) {
             throw new ConfigurationException("Unable to find kvmvmactivity_rbd.py");
+        }
+
+        _vmActivityCheckPathIscsi = Script.findScript(kvmScriptsDir, "kvmvmactivity_iscsi.sh");
+        if (_vmActivityCheckPathIscsi == null) {
+            throw new ConfigurationException("Unable to find kvmvmactivity_iscsi.sh");
         }
 
         _createTmplPath = Script.findScript(storageScriptsDir, "createtmplt.sh");
@@ -1224,7 +1240,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
 
         final String[] info = NetUtils.getNetworkParams(_privateNic);
 
-        _monitor = new KVMHAMonitor(null, null, info[0], _heartBeatPath, _heartBeatPathRbd);
+        _monitor = new KVMHAMonitor(null, null, null, info[0], _heartBeatPath, _heartBeatPathRbd, _heartBeatPathIscsi);
         final Thread ha = new Thread(_monitor);
         ha.start();
 
