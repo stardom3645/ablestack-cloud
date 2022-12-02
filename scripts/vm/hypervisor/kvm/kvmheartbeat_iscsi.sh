@@ -19,6 +19,7 @@
 help() {
   printf "Usage: $0 
                     -h host
+                    -p pool mount source path
                     -r write/read hb log 
                     -c cleanup
                     -t interval between read hb log\n"
@@ -28,16 +29,20 @@ help() {
 PoolName=rbd
 PoolAuthUserName=admin
 HostIP=
+poolPath=
 interval=
 rflag=0
 cflag=0
 
-while getopts 'h:t:rc' OPTION
+while getopts 'h:p:t:rc' OPTION
 do
   case $OPTION in
   h)
      HostIP="$OPTARG"
      ;;
+  p)
+     poolPath="$OPTARG"
+     ;;  
   t)
      interval="$OPTARG"
      ;;
@@ -57,21 +62,11 @@ if [ -z "$PoolName" ]; then
   exit 2
 fi
 
-keyringFile="/etc/ceph/ceph.client.admin.keyring"
-confFile="/etc/ceph/ceph.conf"
-
-get_monhost() {
-  username=$(cat /etc/ceph/ceph.conf | grep v1)
-  mon1=$(echo $username | cut -d ',' -f2 | sed 's/v1://g' | sed 's/:6789\/0]//g')
-  mon2=$(echo $username | cut -d ',' -f4 | sed 's/v1://g' | sed 's/:6789\/0]//g')
-  mon3=$(echo $username | cut -d ',' -f6 | sed 's/v1://g' | sed 's/:6789\/0]//g')
-
-  Monhost=$mon1','$mon2','$mon3
-}
-
 write_hbLog() {
   #write the heart beat log
-  persist=$(sg_persist -ik /dev/mapper/mpatha)
+  poolPath=$(echo $poolPath | cut -d '/' -f2-)
+  path=$(pvs 2>/dev/null | grep $poolPath | awk '{print $1}')
+  persist=$(sg_persist -ik $path)
   if [ $? -eq 0 ]
   then
     timestamp=$(date +%s)

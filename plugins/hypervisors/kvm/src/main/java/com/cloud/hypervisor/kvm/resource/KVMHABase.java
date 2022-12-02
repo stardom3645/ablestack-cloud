@@ -84,11 +84,13 @@ public class KVMHABase {
     public static class IscsiStoragePool {
         String _poolUUID;
         String _poolIp;
+        String _poolMountSourcePath;
         PoolType _type;
 
-        public IscsiStoragePool(String poolUUID, String poolIp, PoolType type) {
+        public IscsiStoragePool(String poolUUID, String poolIp, String poolMountSourcePath, PoolType type) {
             _poolUUID = poolUUID;
             _poolIp = poolIp;
+            _poolMountSourcePath = poolMountSourcePath;
             _type = type;
         }
     }

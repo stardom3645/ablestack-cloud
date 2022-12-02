@@ -60,6 +60,7 @@ public class KVMHAChecker extends KVMHABase implements Callable<Boolean> {
 
             Script cmd = new Script(s_heartBeatPathIscsi, heartBeatCheckerTimeout, s_logger);
             cmd.add("-h", hostIp);
+            cmd.add("-p", iscsipools._poolMountSourcePath);
             cmd.add("-r");
             cmd.add("-t", String.valueOf(_heartBeatUpdateFreq / 1000));
             OutputInterpreter.OneLineParser parser = new OutputInterpreter.OneLineParser();
