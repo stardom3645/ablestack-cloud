@@ -280,6 +280,7 @@ public class KVMHAMonitor extends KVMHABase implements Runnable {
 
     private Script createIscsiHeartBeatCommand(IscsiStoragePool iscsiStoragePool, String hostPrivateIp, boolean hostValidation) {
         Script cmd = new Script(s_heartBeatPathIscsi, _heartBeatUpdateTimeout, s_logger);
+        cmd.add("-p", iscsiStoragePool._poolMountSourcePath);
 
         if (hostValidation) {
             cmd.add("-h", hostPrivateIp);
