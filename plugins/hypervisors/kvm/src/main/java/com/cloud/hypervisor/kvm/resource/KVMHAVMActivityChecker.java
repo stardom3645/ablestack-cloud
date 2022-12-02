@@ -60,7 +60,22 @@ public class KVMHAVMActivityChecker extends KVMHABase implements Callable<Boolea
         LOG.info(String.valueOf(poolType));
         LOG.info("=====================");
 
-        if (poolType == StoragePoolType.NetworkFilesystem) {
+        if (poolType == StoragePoolType.CLVM) {
+            Script cmd = new Script(vmActivityCheckPath, activityScriptTimeout.getStandardSeconds(), LOG);
+            cmd.add("-h", hostIp);
+            cmd.add("-u", volumeUuidList);
+            cmd.add("-t", String.valueOf(String.valueOf(System.currentTimeMillis() / 1000)));
+            cmd.add("-d", String.valueOf(suspectTimeInSeconds));
+
+            OutputInterpreter.OneLineParser parser = new OutputInterpreter.OneLineParser();
+
+            String result = cmd.execute(parser);
+            parsedLine = parser.getLine();
+            command = cmd.toString();
+
+            LOG.debug(String.format("Checking heart beat with KVMHAVMActivityChecker [{command=\"%s\", result: \"%s\", log: \"%s\", pool: \"%s\"}].", cmd.toString(), result, parsedLine, iscsiStoragePool._poolIp));
+
+        } else if (poolType == StoragePoolType.NetworkFilesystem) {
             Script cmd = new Script(vmActivityCheckPath, activityScriptTimeout.getStandardSeconds(), LOG);
             cmd.add("-i", nfsStoragePool._poolIp);
             cmd.add("-p", nfsStoragePool._poolMountSourcePath);
@@ -106,21 +121,6 @@ public class KVMHAVMActivityChecker extends KVMHABase implements Callable<Boolea
             }
 
             LOG.debug(String.format("Checking heart beat with KVMHAVMActivityChecker [{command=\"%s\", log: \"%s\", pool: \"%s\"}].", command, parsedLine, rbdStoragePool._monHost));
-
-        } else if (poolType == StoragePoolType.CLVM) {
-            Script cmd = new Script(vmActivityCheckPath, activityScriptTimeout.getStandardSeconds(), LOG);
-            cmd.add("-h", hostIp);
-            cmd.add("-u", volumeUuidList);
-            cmd.add("-t", String.valueOf(String.valueOf(System.currentTimeMillis() / 1000)));
-            cmd.add("-d", String.valueOf(suspectTimeInSeconds));
-
-            OutputInterpreter.OneLineParser parser = new OutputInterpreter.OneLineParser();
-
-            String result = cmd.execute(parser);
-            parsedLine = parser.getLine();
-            command = cmd.toString();
-
-            LOG.debug(String.format("Checking heart beat with KVMHAVMActivityChecker [{command=\"%s\", result: \"%s\", log: \"%s\", pool: \"%s\"}].", cmd.toString(), result, parsedLine, iscsiStoragePool._poolIp));
 
         }
         if (parsedLine.contains("DEAD")) {
