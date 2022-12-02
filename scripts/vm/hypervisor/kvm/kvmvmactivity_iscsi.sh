@@ -79,7 +79,7 @@ fi
 # Second check: disk activity check
 statusFlag=true
 for UUID in $(echo $UUIDList | sed 's/,/ /g'); do
-    vol_persist=$(sg_persist -ik /dev/vg_iscsi/$vol)
+    vol_persist=$(sg_persist -ik /dev/vg_iscsi/$UUID)
     if [ $? -ne 0 ]
     then
         statusFlag=false
@@ -87,7 +87,7 @@ for UUID in $(echo $UUIDList | sed 's/,/ /g'); do
     fi
 done
 
-if [ statusFlag == "true" ]; then
+if [ statusFlag == "false" ]; then
     echo "=====> ALIVE <====="
 else
     echo "=====> Considering host as DEAD due to [Iscsi] sg_persist does not exists <======"
