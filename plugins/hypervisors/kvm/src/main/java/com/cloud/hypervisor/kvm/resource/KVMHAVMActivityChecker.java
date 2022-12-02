@@ -32,6 +32,7 @@ public class KVMHAVMActivityChecker extends KVMHABase implements Callable<Boolea
 
     final private NfsStoragePool nfsStoragePool;
     final private RbdStoragePool rbdStoragePool;
+    final private IscsiStoragePool iscsiStoragePool;
     final private String hostIp;
     final private String volumeUuidList;
     final private String vmActivityCheckPath;
@@ -39,9 +40,10 @@ public class KVMHAVMActivityChecker extends KVMHABase implements Callable<Boolea
     final private long suspectTimeInSeconds;
     final private StoragePoolType poolType;
 
-    public KVMHAVMActivityChecker(final NfsStoragePool pool, final RbdStoragePool rbdpool, final String host, final String volumeUUIDListString, String vmActivityCheckPath, final long suspectTime, StoragePoolType poolType) {
+    public KVMHAVMActivityChecker(final NfsStoragePool pool, final RbdStoragePool rbdpool, IscsiStoragePool iscsipool, final String host, final String volumeUUIDListString, String vmActivityCheckPath, final long suspectTime, StoragePoolType poolType) {
         this.nfsStoragePool = pool;
         this.rbdStoragePool = rbdpool;
+        this.iscsiStoragePool = iscsipool;
         this.hostIp = host;
         this.volumeUuidList = volumeUUIDListString;
         this.vmActivityCheckPath = vmActivityCheckPath;
@@ -53,7 +55,23 @@ public class KVMHAVMActivityChecker extends KVMHABase implements Callable<Boolea
     public Boolean checkingHeartBeat() {
         String parsedLine = "";
         String command = "";
-        if (poolType == StoragePoolType.NetworkFilesystem) {
+
+        if (poolType == StoragePoolType.CLVM) {
+            Script cmd = new Script(vmActivityCheckPath, activityScriptTimeout.getStandardSeconds(), LOG);
+            cmd.add("-h", hostIp);
+            cmd.add("-u", volumeUuidList);
+            cmd.add("-t", String.valueOf(String.valueOf(System.currentTimeMillis() / 1000)));
+            cmd.add("-d", String.valueOf(suspectTimeInSeconds));
+
+            OutputInterpreter.OneLineParser parser = new OutputInterpreter.OneLineParser();
+
+            String result = cmd.execute(parser);
+            parsedLine = parser.getLine();
+            command = cmd.toString();
+
+            LOG.debug(String.format("Checking heart beat with KVMHAVMActivityChecker [{command=\"%s\", result: \"%s\", log: \"%s\", pool: \"%s\"}].", cmd.toString(), result, parsedLine, iscsiStoragePool._poolIp));
+
+        } else if (poolType == StoragePoolType.NetworkFilesystem) {
             Script cmd = new Script(vmActivityCheckPath, activityScriptTimeout.getStandardSeconds(), LOG);
             cmd.add("-i", nfsStoragePool._poolIp);
             cmd.add("-p", nfsStoragePool._poolMountSourcePath);

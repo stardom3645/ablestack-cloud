@@ -33,6 +33,7 @@ public class KVMHABase {
     private long _timeout = 60000; /* 1 minutes */
     protected static String s_heartBeatPath;
     protected static String s_heartBeatPathRbd;
+    protected static String s_heartBeatPathIscsi;
     protected long _heartBeatUpdateTimeout = 60000;
     protected long _heartBeatUpdateFreq = 60000;
     protected long _heartBeatUpdateMaxTries = 10;
@@ -77,6 +78,20 @@ public class KVMHABase {
             _poolAuthUserName = poolAuthUserName;
             _poolAuthSecret = poolAuthSecret;
             _poolSourceHost = poolSourceHost;
+        }
+    }
+
+    public static class IscsiStoragePool {
+        String _poolUUID;
+        String _poolIp;
+        String _poolMountSourcePath;
+        PoolType _type;
+
+        public IscsiStoragePool(String poolUUID, String poolIp, String poolMountSourcePath, PoolType type) {
+            _poolUUID = poolUUID;
+            _poolIp = poolIp;
+            _poolMountSourcePath = poolMountSourcePath;
+            _type = type;
         }
     }
 

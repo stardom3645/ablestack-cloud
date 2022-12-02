@@ -32,6 +32,7 @@ import com.cloud.agent.api.FenceAnswer;
 import com.cloud.agent.api.FenceCommand;
 import com.cloud.hypervisor.kvm.resource.KVMHABase.NfsStoragePool;
 import com.cloud.hypervisor.kvm.resource.KVMHABase.RbdStoragePool;
+import com.cloud.hypervisor.kvm.resource.KVMHABase.IscsiStoragePool;
 import com.cloud.hypervisor.kvm.resource.KVMHAChecker;
 import com.cloud.hypervisor.kvm.resource.KVMHAMonitor;
 import com.cloud.hypervisor.kvm.resource.LibvirtComputingResource;
@@ -50,6 +51,7 @@ public final class LibvirtFenceCommandWrapper extends CommandWrapper<FenceComman
 
         final List<NfsStoragePool> nfspools = monitor.getStoragePools();
         final List<RbdStoragePool> rbdpools = monitor.getRbdStoragePools();
+        final List<IscsiStoragePool> iscsipools = monitor.getIscsiStoragePools();
 
         /**
          * We can only safely fence off hosts when we use NFS
@@ -64,13 +66,13 @@ public final class LibvirtFenceCommandWrapper extends CommandWrapper<FenceComman
             String logline = String.format("No RBD storage pools found. No way to safely fence %s on host %s", command.getVmName(), command.getHostGuid());
             s_logger.warn(logline);
             return new FenceAnswer(command, false, logline);
-        }else if (rbdpools.size() == 0) {
-            String logline = "No RBD storage pools found. No way to safely fence " + command.getVmName() + " on host " + command.getHostGuid();
+        }else if (iscsipools.size() == 0) {
+            String logline = String.format("No ISCSI storage pools found. No way to safely fence %s on host %s", command.getVmName(), command.getHostGuid());
             s_logger.warn(logline);
             return new FenceAnswer(command, false, logline);
         }
 
-        final KVMHAChecker ha = new KVMHAChecker(nfspools, rbdpools, command.getHostIp());
+        final KVMHAChecker ha = new KVMHAChecker(nfspools, rbdpools, iscsipools, command.getHostIp());
 
         final Future<Boolean> future = executors.submit(ha);
         try {
