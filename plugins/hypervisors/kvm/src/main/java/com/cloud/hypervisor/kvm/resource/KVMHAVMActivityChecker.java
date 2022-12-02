@@ -55,6 +55,11 @@ public class KVMHAVMActivityChecker extends KVMHABase implements Callable<Boolea
     public Boolean checkingHeartBeat() {
         String parsedLine = "";
         String command = "";
+
+        LOG.info("=====================");
+        LOG.info(String.valueOf(poolType));
+        LOG.info("=====================");
+
         if (poolType == StoragePoolType.NetworkFilesystem) {
             Script cmd = new Script(vmActivityCheckPath, activityScriptTimeout.getStandardSeconds(), LOG);
             cmd.add("-i", nfsStoragePool._poolIp);

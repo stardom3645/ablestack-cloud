@@ -77,44 +77,20 @@ if [ -z "$UUIDList" ]; then
 fi
 
 # Second check: disk activity check
-lastestUUIDList=
+statusFlag=true
 for UUID in $(echo $UUIDList | sed 's/,/ /g'); do
-    time=$(rbd info $UUID --id $PoolAuthUserName | grep modify_timestamp)
-    time=${time#*modify_timestamp: }
-    time=$(date -d "$time" +%s)
-    lastestUUIDList+="${time}\n"
+    vol_persist=$(sg_persist -ik /dev/vg_iscsi/$vol)
+    if [ $? -ne 0 ]
+    then
+        statusFlag=false
+        break
+    fi
 done
 
-latestUpdateTime=$(echo -e $lastestUUIDList 2> /dev/null | sort -nr | head -1)
-obj=$(rados -p $PoolName ls --id $PoolAuthUserName | grep ac-$HostIP)
-if [ $? -gt 0 ]; then
-    rados -p $PoolName create ac-$HostIP --id $PoolAuthUserName
-    echo "$SuspectTime:$latestUpdateTime:$MSTime" | rados -p $PoolName put ac-$HostIP - --id $PoolAuthUserName
-    if [[ $latestUpdateTime -gt $SuspectTime ]]; then
-        echo "=====> ALIVE <====="
-    else
-        echo "=====> Considering host as DEAD due to file [RBD pool] does not exists and condition [latestUpdateTime -gt SuspectTime] has not been satisfied. <======"
-    fi
+if [ statusFlag == "true" ]; then
+    echo "=====> ALIVE <====="
 else
-    acTime=$(rados -p $PoolName get ac-$HostIP - --id $PoolAuthUserName)
-    arrTime=(${acTime//:/ })
-    lastSuspectTime=${arrTime[0]}
-    lastUpdateTime=${arrTime[1]}
-    echo "$SuspectTime:$latestUpdateTime:$MSTime" | rados -p $PoolName put ac-$HostIP - --id $PoolAuthUserName
-    suspectTimeDiff=$(expr $SuspectTime - $lastSuspectTime)
-    if [ $suspectTimeDiff -lt 0 ]; then
-        if [[ $latestUpdateTime -gt $SuspectTime ]]; then
-            echo "=====> ALIVE <====="
-        else
-            echo "=====> Considering host as DEAD due to file [RBD pool] exist, condition [suspectTimeDiff -lt 0] was satisfied and [latestUpdateTime -gt SuspectTime] has not been satisfied. <======"
-        fi
-    else
-        if [[ $latestUpdateTime -gt $lastUpdateTime ]]; then
-            echo "=====> ALIVE <====="
-        else
-            echo "=====> Considering host as DEAD due to file [RBD pool] exist and conditions [suspectTimeDiff -lt 0] and [latestUpdateTime -gt SuspectTime] have not been satisfied. <======"
-        fi
-    fi
+    echo "=====> Considering host as DEAD due to [RBD '$PoolName' pool] Image Watcher does not exists <======"
 fi
 
 exit 0

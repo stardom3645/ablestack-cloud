@@ -53,12 +53,6 @@ public class KVMHAChecker extends KVMHABase implements Callable<Boolean> {
 
         String hostAndPools = "";
 
-        s_logger.info("=====================");
-        s_logger.info(nfsStoragePools);
-        s_logger.info(rbdStoragePools);
-        s_logger.info(iscsiStoragePools);
-        s_logger.info("=====================");
-
         for (IscsiStoragePool iscsipools : iscsiStoragePools) {
             storageType = "iscsi";
             hostAndPools = String.format("host IP [%s] in pools [%s]", hostIp, iscsiStoragePools.stream().map(pool -> pool._poolIp).collect(Collectors.joining(", ")));
