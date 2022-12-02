@@ -70,22 +70,22 @@ get_monhost() {
 }
 
 write_hbLog() {
-#write the heart beat log
-persist=$(sg_persist -ik /dev/mapper/mpatha1)
-if [ $? -eq 0 ]
-then
-  timestamp=$(date +%s)
-  obj=$(rados -p $PoolName ls --id $PoolAuthUserName | grep hb-$HostIP)
-  if [ $? -gt 0 ]; then
-     rados -p $PoolName create hb-$HostIP --id $PoolAuthUserName
+  #write the heart beat log
+  persist=$(sg_persist -ik /dev/mapper/mpatha)
+  if [ $? -eq 0 ]
+  then
+    timestamp=$(date +%s)
+    obj=$(rados -p $PoolName ls --id $PoolAuthUserName | grep hb-$HostIP)
+    if [ $? -gt 0 ]; then
+      rados -p $PoolName create hb-$HostIP --id $PoolAuthUserName
+    fi
+    echo $timestamp | rados -p $PoolName put hb-$HostIP - --id $PoolAuthUserName
+    if [ $? -gt 0 ]; then
+      printf "Failed to create rbd file"
+      return 2
+    fi
+    return 0
   fi
-  echo $timestamp | rados -p $PoolName put hb-$HostIP - --id $PoolAuthUserName
-  if [ $? -gt 0 ]; then
-   	printf "Failed to create rbd file"
-    return 2
-  fi
-  return 0
-fi
 }
 
 check_hbLog() {
