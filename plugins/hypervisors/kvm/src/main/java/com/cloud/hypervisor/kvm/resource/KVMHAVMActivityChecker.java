@@ -58,6 +58,7 @@ public class KVMHAVMActivityChecker extends KVMHABase implements Callable<Boolea
 
         if (poolType == StoragePoolType.CLVM) {
             LOG.info("=====================111111111");
+            LOG.info("vmActivityCheckPath"+vmActivityCheckPath);
 
             Script cmd = new Script(vmActivityCheckPath, activityScriptTimeout.getStandardSeconds(), LOG);
             cmd.add("-h", hostIp);
