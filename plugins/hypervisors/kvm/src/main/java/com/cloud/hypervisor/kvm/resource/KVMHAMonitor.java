@@ -187,11 +187,7 @@ public class KVMHAMonitor extends KVMHABase implements Runnable {
         String result = null;
         Process process = null;
         for (int i = 1; i <= _heartBeatUpdateMaxTries; i++) {
-            if (iscsiStoragePool != null) {
-                Script cmd = createIscsiHeartBeatCommand(iscsiStoragePool, hostPrivateIp, true);
-                result = cmd.execute();
-                s_logger.debug(String.format("The command [%s], to the pool [%s], had the result [%s].", cmd.toString(), uuid, result));
-            } else if (nfsStoragePool != null) {
+            if (nfsStoragePool != null) {
                 Script cmd = createHeartBeatCommand(nfsStoragePool, hostPrivateIp, true);
                 result = cmd.execute();
                 s_logger.debug(String.format("The command [%s], to the pool [%s], had the result [%s].", cmd.toString(), uuid, result));
@@ -205,6 +201,10 @@ public class KVMHAMonitor extends KVMHABase implements Runnable {
                     e.printStackTrace();
                 }
                 s_logger.debug(String.format("The command [%s], to the pool [%s], had the result [%s].", processBuilder.command().toString(), uuid, result));
+            } else if (iscsiStoragePool != null) {
+                Script cmd = createIscsiHeartBeatCommand(iscsiStoragePool, hostPrivateIp, true);
+                result = cmd.execute();
+                s_logger.debug(String.format("The command [%s], to the pool [%s], had the result [%s].", cmd.toString(), uuid, result));
             }
             if (result != null) {
                 s_logger.warn(String.format("Write heartbeat for pool [%s] failed: %s; try: %s of %s.", uuid, result, i, _heartBeatUpdateMaxTries));
@@ -221,10 +221,7 @@ public class KVMHAMonitor extends KVMHABase implements Runnable {
 
         if (result != null && rebootHostAndAlertManagementOnHeartbeatTimeout) {
             s_logger.warn(String.format("Write heartbeat for pool [%s] failed: %s; stopping cloudstack-agent.", uuid, result));
-            if (iscsiStoragePool != null) {
-                Script cmd = createIscsiHeartBeatCommand(iscsiStoragePool, null, false);
-                result = cmd.execute();
-            } else if (nfsStoragePool != null) {
+            if (nfsStoragePool != null) {
                 Script cmd = createHeartBeatCommand(nfsStoragePool, null, false);
                 result = cmd.execute();
             } else if (rbdStoragePool != null) {
@@ -236,6 +233,9 @@ public class KVMHAMonitor extends KVMHABase implements Runnable {
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
+            } else if (iscsiStoragePool != null) {
+                Script cmd = createIscsiHeartBeatCommand(iscsiStoragePool, null, false);
+                result = cmd.execute();
             }
         }
     }
