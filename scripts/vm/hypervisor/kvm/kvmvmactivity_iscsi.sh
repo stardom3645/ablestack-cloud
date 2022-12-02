@@ -80,7 +80,7 @@ fi
 statusFlag=true
 for UUID in $(echo $UUIDList | sed 's/,/ /g'); do
     # vol_persist=$(sg_persist -ik /dev/vg_iscsi/$UUID)
-    vol_lvs=$(lvs|grep $UUID)
+    vol_lvs=$(lvs 2>/dev/null|grep $UUID) 
     if [[ $vol_lvs =~ "-wi-ao----" ]]; then
         continue
     else

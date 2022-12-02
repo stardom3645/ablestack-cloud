@@ -57,7 +57,6 @@ public class KVMHAVMActivityChecker extends KVMHABase implements Callable<Boolea
         String command = "";
 
         if (poolType == StoragePoolType.CLVM) {
-            LOG.info("=====================111111111");
             Script cmd = new Script(vmActivityCheckPath, activityScriptTimeout.getStandardSeconds(), LOG);
             cmd.add("-h", hostIp);
             cmd.add("-u", volumeUuidList);
@@ -73,7 +72,6 @@ public class KVMHAVMActivityChecker extends KVMHABase implements Callable<Boolea
             LOG.debug(String.format("Checking heart beat with KVMHAVMActivityChecker [{command=\"%s\", result: \"%s\", log: \"%s\", pool: \"%s\"}].", cmd.toString(), result, parsedLine, iscsiStoragePool._poolIp));
 
         } else if (poolType == StoragePoolType.NetworkFilesystem) {
-            LOG.info("=====================2222222222");
             Script cmd = new Script(vmActivityCheckPath, activityScriptTimeout.getStandardSeconds(), LOG);
             cmd.add("-i", nfsStoragePool._poolIp);
             cmd.add("-p", nfsStoragePool._poolMountSourcePath);
@@ -92,7 +90,6 @@ public class KVMHAVMActivityChecker extends KVMHABase implements Callable<Boolea
             LOG.debug(String.format("Checking heart beat with KVMHAVMActivityChecker [{command=\"%s\", result: \"%s\", log: \"%s\", pool: \"%s\"}].", cmd.toString(), result, parsedLine, nfsStoragePool._poolIp));
 
         } else if (poolType == StoragePoolType.RBD) {
-            LOG.info("=====================333333333333");
             ProcessBuilder processBuilder = new ProcessBuilder();
             processBuilder.command().add("python3");
             processBuilder.command().add(vmActivityCheckPath);
