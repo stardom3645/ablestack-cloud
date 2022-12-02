@@ -67,7 +67,7 @@ public final class LibvirtFenceCommandWrapper extends CommandWrapper<FenceComman
             s_logger.warn(logline);
             return new FenceAnswer(command, false, logline);
         }else if (iscsipools.size() == 0) {
-            String logline = "No ISCSI storage pools found. No way to safely fence " + command.getVmName() + " on host " + command.getHostGuid();
+            String logline = String.format("No ISCSI storage pools found. No way to safely fence %s on host %s", command.getVmName(), command.getHostGuid());
             s_logger.warn(logline);
             return new FenceAnswer(command, false, logline);
         }

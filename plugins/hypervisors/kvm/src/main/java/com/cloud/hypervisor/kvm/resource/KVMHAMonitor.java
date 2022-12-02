@@ -48,7 +48,7 @@ public class KVMHAMonitor extends KVMHABase implements Runnable {
 
     private final String hostPrivateIp;
 
-    public KVMHAMonitor(NfsStoragePool pool, RbdStoragePool rbdpool, IscsiStoragePool iscsipool, String host, String scriptPath, String scriptPathRbd, String scriptPathRbdIscsi) {
+    public KVMHAMonitor(NfsStoragePool pool, RbdStoragePool rbdpool, IscsiStoragePool iscsipool, String host, String scriptPath, String scriptPathRbd, String scriptPathIscsi) {
         if (pool != null) {
             nfsstoragePool.put(pool._poolUUID, pool);
         }else if (rbdpool != null) {
@@ -56,16 +56,16 @@ public class KVMHAMonitor extends KVMHABase implements Runnable {
         }else if (iscsipool != null) {
             iscsistoragePool.put(iscsipool._poolUUID, iscsipool);
         }
-        configureHeartBeatPath(scriptPath, scriptPathRbd, scriptPathRbdIscsi);
+        configureHeartBeatPath(scriptPath, scriptPathRbd, scriptPathIscsi);
         hostPrivateIp = host;
         _heartBeatUpdateTimeout = AgentPropertiesFileHandler.getPropertyValue(AgentProperties.HEARTBEAT_UPDATE_TIMEOUT);
         rebootHostAndAlertManagementOnHeartbeatTimeout = AgentPropertiesFileHandler.getPropertyValue(AgentProperties.REBOOT_HOST_AND_ALERT_MANAGEMENT_ON_HEARTBEAT_TIMEOUT);
     }
 
-    private static synchronized void configureHeartBeatPath(String scriptPath, String scriptPathRbd, String scriptPathRbdIscsi) {
+    private static synchronized void configureHeartBeatPath(String scriptPath, String scriptPathRbd, String scriptPathIscsi) {
         KVMHABase.s_heartBeatPath = scriptPath;
         KVMHABase.s_heartBeatPathRbd = scriptPathRbd;
-        KVMHABase.s_heartBeatPathIscsi = scriptPathRbdIscsi;
+        KVMHABase.s_heartBeatPathIscsi = scriptPathIscsi;
     }
 
     public void addStoragePool(NfsStoragePool pool) {
