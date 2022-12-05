@@ -305,10 +305,10 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
     private String _createTmplPath;
     private String _heartBeatPath;
     private String _heartBeatPathRbd;
-    private String _heartBeatPathClvm;
+    private String _heartBeatPathIscsi;
     private String _vmActivityCheckPath;
     private String _vmActivityCheckPathRbd;
-    private String _vmActivityCheckPathClvm;
+    private String _vmActivityCheckPathIscsi;
     private String _securityGroupPath;
     private String _ovsPvlanDhcpHostPath;
     private String _ovsPvlanVmPath;
@@ -644,8 +644,8 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
         return _vmActivityCheckPathRbd;
     }
 
-    public String getVmActivityCheckPathClvm() {
-        return _vmActivityCheckPathClvm;
+    public String getVmActivityCheckPathIscsi() {
+        return _vmActivityCheckPathIscsi;
     }
 
     public String getOvsPvlanDhcpHostPath() {
@@ -935,9 +935,9 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
             throw new ConfigurationException("Unable to find kvmheartbeat_rbd.py");
         }
 
-        _heartBeatPathClvm = Script.findScript(kvmScriptsDir, "kvmheartbeat_clvm.sh");
-        if (_heartBeatPathClvm == null) {
-            throw new ConfigurationException("Unable to find kvmheartbeat_clvm.sh");
+        _heartBeatPathIscsi = Script.findScript(kvmScriptsDir, "kvmheartbeat_iscsi.sh");
+        if (_heartBeatPathIscsi == null) {
+            throw new ConfigurationException("Unable to find kvmheartbeat_iscsi.sh");
         }
 
         _createvmPath = Script.findScript(storageScriptsDir, "createvm.sh");
@@ -965,9 +965,9 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
             throw new ConfigurationException("Unable to find kvmvmactivity_rbd.py");
         }
 
-        _vmActivityCheckPathClvm = Script.findScript(kvmScriptsDir, "kvmvmactivity_clvm.sh");
-        if (_vmActivityCheckPathClvm == null) {
-            throw new ConfigurationException("Unable to find kvmvmactivity_clvm.sh");
+        _vmActivityCheckPathIscsi = Script.findScript(kvmScriptsDir, "kvmvmactivity_iscsi.sh");
+        if (_vmActivityCheckPathIscsi == null) {
+            throw new ConfigurationException("Unable to find kvmvmactivity_iscsi.sh");
         }
 
         _createTmplPath = Script.findScript(storageScriptsDir, "createtmplt.sh");
@@ -1240,7 +1240,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
 
         final String[] info = NetUtils.getNetworkParams(_privateNic);
 
-        _monitor = new KVMHAMonitor(null, null, null, info[0], _heartBeatPath, _heartBeatPathRbd, _heartBeatPathClvm);
+        _monitor = new KVMHAMonitor(null, null, null, info[0], _heartBeatPath, _heartBeatPathRbd, _heartBeatPathIscsi);
         final Thread ha = new Thread(_monitor);
         ha.start();
 
