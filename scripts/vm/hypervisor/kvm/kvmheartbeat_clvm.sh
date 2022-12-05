@@ -100,11 +100,11 @@ if [ "$rflag" == "1" ]; then
   if [ $diff == 0 ]; then
     echo "=====> ALIVE <====="
   else
-    echo "=====> Considering host as DEAD because last write on [Iscsi] was [$diff] seconds ago, but the max interval is [$interval] <======"
+    echo "=====> Considering host as DEAD because last write on [CLVM] was [$diff] seconds ago, but the max interval is [$interval] <======"
   fi
   exit 0
 elif [ "$cflag" == "1" ]; then
-  /usr/bin/logger -t heartbeat "kvmheartbeat_iscsi.sh will reboot system because it was unable to write the heartbeat to the storage."
+  /usr/bin/logger -t heartbeat "kvmheartbeat_clvm.sh will reboot system because it was unable to write the heartbeat to the storage."
   sync &
   sleep 5
   echo b > /proc/sysrq-trigger

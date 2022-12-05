@@ -40,32 +40,32 @@ public class KVMHAMonitor extends KVMHABase implements Runnable {
     private static final Logger s_logger = Logger.getLogger(KVMHAMonitor.class);
     private final Map<String, NfsStoragePool> nfsstoragePool = new ConcurrentHashMap<>();
     private final Map<String, RbdStoragePool> rbdstoragePool = new ConcurrentHashMap<>();
-    private final Map<String, IscsiStoragePool> iscsistoragePool = new ConcurrentHashMap<>();
+    private final Map<String, ClvmStoragePool> clvmstoragePool = new ConcurrentHashMap<>();
     private final NfsStoragePool nfsStoragePool = null;
     private final RbdStoragePool rbdStoragePool = null;
-    private final IscsiStoragePool iscsiStoragePool = null;
+    private final ClvmStoragePool clvmStoragePool = null;
     private final boolean rebootHostAndAlertManagementOnHeartbeatTimeout;
 
     private final String hostPrivateIp;
 
-    public KVMHAMonitor(NfsStoragePool pool, RbdStoragePool rbdpool, IscsiStoragePool iscsipool, String host, String scriptPath, String scriptPathRbd, String scriptPathIscsi) {
+    public KVMHAMonitor(NfsStoragePool pool, RbdStoragePool rbdpool, ClvmStoragePool clvmpool, String host, String scriptPath, String scriptPathRbd, String scriptPathClvm) {
         if (pool != null) {
             nfsstoragePool.put(pool._poolUUID, pool);
         }else if (rbdpool != null) {
             rbdstoragePool.put(rbdpool._poolUUID, rbdpool);
-        }else if (iscsipool != null) {
-            iscsistoragePool.put(iscsipool._poolUUID, iscsipool);
+        }else if (clvmpool != null) {
+            clvmstoragePool.put(clvmpool._poolUUID, clvmpool);
         }
-        configureHeartBeatPath(scriptPath, scriptPathRbd, scriptPathIscsi);
+        configureHeartBeatPath(scriptPath, scriptPathRbd, scriptPathClvm);
         hostPrivateIp = host;
         _heartBeatUpdateTimeout = AgentPropertiesFileHandler.getPropertyValue(AgentProperties.HEARTBEAT_UPDATE_TIMEOUT);
         rebootHostAndAlertManagementOnHeartbeatTimeout = AgentPropertiesFileHandler.getPropertyValue(AgentProperties.REBOOT_HOST_AND_ALERT_MANAGEMENT_ON_HEARTBEAT_TIMEOUT);
     }
 
-    private static synchronized void configureHeartBeatPath(String scriptPath, String scriptPathRbd, String scriptPathIscsi) {
+    private static synchronized void configureHeartBeatPath(String scriptPath, String scriptPathRbd, String scriptPathClvm) {
         KVMHABase.s_heartBeatPath = scriptPath;
         KVMHABase.s_heartBeatPathRbd = scriptPathRbd;
-        KVMHABase.s_heartBeatPathIscsi = scriptPathIscsi;
+        KVMHABase.s_heartBeatPathClvm = scriptPathClvm;
     }
 
     public void addStoragePool(NfsStoragePool pool) {
@@ -76,8 +76,8 @@ public class KVMHAMonitor extends KVMHABase implements Runnable {
         rbdstoragePool.put(pool._poolUUID, pool);
     }
 
-    public void addStoragePool(IscsiStoragePool pool) {
-        iscsistoragePool.put(pool._poolUUID, pool);
+    public void addStoragePool(ClvmStoragePool pool) {
+        clvmstoragePool.put(pool._poolUUID, pool);
     }
 
     public void removeStoragePool(String uuid) {
@@ -96,10 +96,10 @@ public class KVMHAMonitor extends KVMHABase implements Runnable {
         }
     }
 
-    public void removeIscsiStoragePool(String uuid) {
-        IscsiStoragePool pool = iscsistoragePool.get(uuid);
+    public void removeClvmStoragePool(String uuid) {
+        ClvmStoragePool pool = clvmstoragePool.get(uuid);
         if (pool != null) {
-            iscsistoragePool.remove(uuid);
+            clvmstoragePool.remove(uuid);
         }
     }
 
@@ -111,8 +111,8 @@ public class KVMHAMonitor extends KVMHABase implements Runnable {
         return new ArrayList<>(rbdstoragePool.values());
     }
 
-    public List<IscsiStoragePool> getIscsiStoragePools() {
-        return new ArrayList<>(iscsistoragePool.values());
+    public List<ClvmStoragePool> getClvmStoragePools() {
+        return new ArrayList<>(clvmstoragePool.values());
     }
 
     public NfsStoragePool getStoragePool(String uuid) {
@@ -123,8 +123,8 @@ public class KVMHAMonitor extends KVMHABase implements Runnable {
         return rbdstoragePool.get(uuid);
     }
 
-    public IscsiStoragePool getIscsiStoragePool(String uuid) {
-        return iscsistoragePool.get(uuid);
+    public ClvmStoragePool getClvmStoragePool(String uuid) {
+        return clvmstoragePool.get(uuid);
     }
 
     protected void runHeartBeat() {
@@ -132,21 +132,21 @@ public class KVMHAMonitor extends KVMHABase implements Runnable {
         if (nfsstoragePool != null && !nfsstoragePool.isEmpty()) {
             for (String uuid : nfsstoragePool.keySet()) {
                 NfsStoragePool nfsStoragePool = nfsstoragePool.get(uuid);
-                runHeartbeatToPool(nfsStoragePool, rbdStoragePool, iscsiStoragePool, uuid, removedPools);
+                runHeartbeatToPool(nfsStoragePool, rbdStoragePool, clvmStoragePool, uuid, removedPools);
             }
         }
 
         if (rbdstoragePool != null && !rbdstoragePool.isEmpty()) {
             for (String uuid : rbdstoragePool.keySet()) {
                 RbdStoragePool rbdStoragePool = rbdstoragePool.get(uuid);
-                runHeartbeatToPool(nfsStoragePool, rbdStoragePool, iscsiStoragePool, uuid, removedPools);
+                runHeartbeatToPool(nfsStoragePool, rbdStoragePool, clvmStoragePool, uuid, removedPools);
             }
         }
 
-        if (iscsistoragePool != null && !iscsistoragePool.isEmpty()) {
-            for (String uuid : iscsistoragePool.keySet()) {
-                IscsiStoragePool iscsiStoragePool = iscsistoragePool.get(uuid);
-                runHeartbeatToPool(nfsStoragePool, rbdStoragePool, iscsiStoragePool, uuid, removedPools);
+        if (clvmstoragePool != null && !clvmstoragePool.isEmpty()) {
+            for (String uuid : clvmstoragePool.keySet()) {
+                ClvmStoragePool clvmStoragePool = clvmstoragePool.get(uuid);
+                runHeartbeatToPool(nfsStoragePool, rbdStoragePool, clvmStoragePool, uuid, removedPools);
             }
         }
 
@@ -157,7 +157,7 @@ public class KVMHAMonitor extends KVMHABase implements Runnable {
         }
     }
 
-    private void runHeartbeatToPool(NfsStoragePool nfsStoragePool, RbdStoragePool rbdStoragePool, IscsiStoragePool iscsiStoragePool, String uuid, Set<String> removedPools) {
+    private void runHeartbeatToPool(NfsStoragePool nfsStoragePool, RbdStoragePool rbdStoragePool, ClvmStoragePool clvmStoragePool, String uuid, Set<String> removedPools) {
         StoragePool storage;
         try {
             Connect conn = LibvirtConnection.getConnection();
@@ -201,8 +201,8 @@ public class KVMHAMonitor extends KVMHABase implements Runnable {
                     e.printStackTrace();
                 }
                 s_logger.debug(String.format("The command [%s], to the pool [%s], had the result [%s].", processBuilder.command().toString(), uuid, result));
-            } else if (iscsiStoragePool != null) {
-                Script cmd = createIscsiHeartBeatCommand(iscsiStoragePool, hostPrivateIp, true);
+            } else if (clvmStoragePool != null) {
+                Script cmd = createClvmHeartBeatCommand(clvmStoragePool, hostPrivateIp, true);
                 result = cmd.execute();
                 s_logger.debug(String.format("The command [%s], to the pool [%s], had the result [%s].", cmd.toString(), uuid, result));
             }
@@ -233,8 +233,8 @@ public class KVMHAMonitor extends KVMHABase implements Runnable {
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-            } else if (iscsiStoragePool != null) {
-                Script cmd = createIscsiHeartBeatCommand(iscsiStoragePool, null, false);
+            } else if (clvmStoragePool != null) {
+                Script cmd = createClvmHeartBeatCommand(clvmStoragePool, null, false);
                 result = cmd.execute();
             }
         }
@@ -278,9 +278,9 @@ public class KVMHAMonitor extends KVMHABase implements Runnable {
         return processBuilder;
     }
 
-    private Script createIscsiHeartBeatCommand(IscsiStoragePool iscsiStoragePool, String hostPrivateIp, boolean hostValidation) {
-        Script cmd = new Script(s_heartBeatPathIscsi, _heartBeatUpdateTimeout, s_logger);
-        cmd.add("-p", iscsiStoragePool._poolMountSourcePath);
+    private Script createClvmHeartBeatCommand(ClvmStoragePool clvmStoragePool, String hostPrivateIp, boolean hostValidation) {
+        Script cmd = new Script(s_heartBeatPathClvm, _heartBeatUpdateTimeout, s_logger);
+        cmd.add("-p", clvmStoragePool._poolMountSourcePath);
 
         if (hostValidation) {
             cmd.add("-h", hostPrivateIp);
