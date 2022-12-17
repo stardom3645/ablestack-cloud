@@ -308,6 +308,7 @@
 "label.archive": "\uc544\uce74\uc774\ube0c",
 "label.archive.alerts": "\uc54c\ub9bc \uc544\uce74\uc774\ube0c",
 "label.archive.events": "\uc774\ubca4\ud2b8 \uc544\uce74\uc774\ube0c",
+"label.archive.download": "Archive download",
 "label.as.default": "\uae30\ubcf8\uc73c\ub85c",
 "label.assign": "\ud560\ub2f9",
 "label.assign.instance.another": "\ub2e4\ub978 \uacc4\uc815\uc5d0 \uac00\uc0c1\uba38\uc2e0 \ud560\ub2f9",

@@ -308,6 +308,7 @@
 "label.archive": "Archive",
 "label.archive.alerts": "Archive alerts",
 "label.archive.events": "Archive events",
+"label.archive.download": "Archive download",
 "label.as.default": "as default",
 "label.assign": "Assign",
 "label.assign.instance.another": "Assign instance to another account",
