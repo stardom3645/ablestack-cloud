@@ -4891,10 +4891,10 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
         final DomainVO domain = cmd.getDomainId() == null ? null : _domainDao.findById(cmd.getDomainId());
         final Account account = cmd.getAccountName() == null ? null : _accountService.getActiveAccountByName(cmd.getAccountName(), cmd.getDomainId());
         if (domain  != null && account != null) {
-            if (account.getType() == Account.ACCOUNT_TYPE_PROJECT) {
+            if (account.getType() == Account.Type.PROJECT) {
                 throw new InvalidParameterValueException("Invalid user type: project to clone the VM");
             }
-            if (account.getState() != Account.State.enabled) {
+            if (account.getState() != Account.State.ENABLED) {
                 throw new InvalidParameterValueException("User is not enabled to clone this VM");
             }
         }
@@ -6298,12 +6298,12 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
             Map<String, String> emptyUserOfVmProperties = new HashMap<>();
             if (dataCenter.getNetworkType() == NetworkType.Basic) {
                 vmResult = createBasicSecurityGroupVirtualMachine(dataCenter, serviceOffering, template, securityGroupIdList, curAccount, hostName, displayName, diskOfferingId,
-                        size, group, hypervisorType, cmd.getHttpMethod(), userData, null, ipToNetoworkMap, addr, isDisplayVM, keyboard, affinityGroupIdList,
+                        size, group, hypervisorType, cmd.getHttpMethod(), userData, null, null, null, ipToNetoworkMap, addr, isDisplayVM, keyboard, affinityGroupIdList,
                         curVm.getDetails() == null ? detailMap : curVm.getDetails(), null, new HashMap<>(),
                         null, new HashMap<>(), dynamicScalingEnabled, diskOfferingId);
             } else {
                 vmResult = createAdvancedVirtualMachine(dataCenter, serviceOffering, template, networkIds, curAccount, hostName, displayName, diskOfferingId, size, group,
-                        hypervisorType, cmd.getHttpMethod(), userData, null, ipToNetoworkMap, addr, isDisplayVM, keyboard, affinityGroupIdList, curVm.getDetails() == null ? detailMap : curVm.getDetails(),
+                        hypervisorType, cmd.getHttpMethod(), userData, null, null, null, ipToNetoworkMap, addr, isDisplayVM, keyboard, affinityGroupIdList, curVm.getDetails() == null ? detailMap : curVm.getDetails(),
                         null, new HashMap<>(), null, new HashMap<>(), dynamicScalingEnabled, null, diskOfferingId);
             }
         } catch (CloudRuntimeException e) {
