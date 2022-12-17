@@ -645,9 +645,9 @@ public final class HAManagerImpl extends ManagerBase implements HAManager, Clust
                 LOG.info("cmd = "+cmd);
                 p = Runtime.getRuntime().exec(cmd);
                 BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));
-                StringBuffer sb = new StringBuffer();
+                String sb = "";
                 while ((s = br.readLine()) != null)
-                    sb.append(s);
+                    sb += s;
                 LOG.info("sb = "+sb);
                 vm_pid = sb.toString();
                 p.waitFor();
@@ -660,9 +660,9 @@ public final class HAManagerImpl extends ManagerBase implements HAManager, Clust
                 cmd = "ssh root@"+ hostIp +" cat /proc/"+ vm_pid +"/oom_score";
                 p = Runtime.getRuntime().exec(cmd);
                 br = new BufferedReader(new InputStreamReader(p.getInputStream()));
-                sb = new StringBuffer();
+                sb = "";
                 while ((s = br.readLine()) != null)
-                    sb.append(s);
+                    sb += s;
                 oomScore = Long.parseLong(sb.toString());
                 p.waitFor();
                 p.destroy();
