@@ -995,6 +995,11 @@ public class VolumeApiServiceImpl extends ManagerBase implements VolumeApiServic
         }
     }
 
+    @Override
+    public Volume cloneDataVolume(long vmId, long snapshotId, Volume volume) throws StorageUnavailableException {
+        return createVolumeFromSnapshot((VolumeVO) volume, snapshotId, vmId);
+    }
+
     protected VolumeVO createVolumeFromSnapshot(VolumeVO volume, long snapshotId, Long vmId) throws StorageUnavailableException {
         VolumeInfo createdVolume = null;
         SnapshotVO snapshot = _snapshotDao.findById(snapshotId);
@@ -2211,6 +2216,7 @@ public class VolumeApiServiceImpl extends ManagerBase implements VolumeApiServic
         return newVol;
     }
 
+    @Override
     public Volume attachVolumeToVM(Long vmId, Long volumeId, Long deviceId) {
         Account caller = CallContext.current().getCallingAccount();
 

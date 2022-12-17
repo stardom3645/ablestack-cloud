@@ -163,6 +163,21 @@ export default {
           groupMap: (selection, values) => { return selection.map(x => { return { id: x, forced: values.forced } }) }
         },
         {
+          api: 'cloneVirtualMachine',
+          icon: 'camera',
+          label: 'label.action.clone.vm',
+          message: 'message.action.clone.instance',
+          docHelp: 'adminguide/virtual_machines.html#cloning-vms',
+          dataView: true,
+          show: (record) => { return true },
+          args: ['name', 'virtualmachineid'],
+          mapping: {
+            virtualmachineid: {
+              value: (record, params) => { return record.id }
+            }
+          }
+        },
+        {
           api: 'restoreVirtualMachine',
           icon: 'sync-outlined',
           label: 'label.reinstall.vm',
