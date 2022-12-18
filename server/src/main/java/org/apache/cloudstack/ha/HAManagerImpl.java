@@ -661,25 +661,44 @@ public final class HAManagerImpl extends ManagerBase implements HAManager, Clust
                 String parsedLine = parser.getLine();
                 LOG.info("parsedLine = "+parsedLine);
 */
+/*
+                ProcessBuilder processBuilder = new ProcessBuilder();
+                processBuilder.command().add("python3");
+                processBuilder.command().add("/root/1218_lb_rpm/oomScore.py");
+                processBuilder.command().add("-h");
+                processBuilder.command().add(hostIp);
+                processBuilder.command().add("-n");
+                processBuilder.command().add(instanceName);
+                LOG.info("command = "+processBuilder.command().toString());
+                try {
+                    Process process = processBuilder.start();
+                    BufferedReader bfr = new BufferedReader(new InputStreamReader(process.getInputStream()));
+                    String result = bfr.readLine();
+                    LOG.info("result = " + result);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+*/
 
                 LOG.info("instanceName = "+instanceName);
                 // String cmd = "ps -aux | grep "+ instanceName +" | awk '{print $2}' | head -1";
                 // String cmd = "ssh root@"+ hostIp +" ps -aux | grep "+ instanceName +" | awk '{print $2}' | head -1";
                 // String pid_cmd = "";
-                String[] cmd = { "ssh root@"+hostIp, "ps -aux | grep", instanceName, "| awk '{print $2}' | head -1" };
-                LOG.info("cmd1 = "+cmd);
-                Process p = Runtime.getRuntime().exec(cmd);
-                LOG.info("p1 = "+p);
-
-                String[] cmd2 = { "ssh root@"+hostIp, "-o", "StrictHostKeyChecking=no", "ps -aux | grep", instanceName, "| awk '{print $2}' | head -1" };
-                LOG.info("cmd2 = "+cmd2);
-                p = Runtime.getRuntime().exec(cmd2);
-                LOG.info("p2 = "+p);
 
                 String cmd3 = "ps -aux | grep su | awk '{print $2}' | head -1";
                 LOG.info("cmd3 = "+cmd3);
                 Process p2 = Runtime.getRuntime().exec(cmd3);
                 LOG.info("p3 = "+p2);
+
+                String[] cmd2 = { "ssh root@"+hostIp, "-o", "StrictHostKeyChecking=no", "ps -aux | grep", instanceName, "| awk '{print $2}' | head -1" };
+                LOG.info("cmd2 = "+cmd2);
+                Process p = Runtime.getRuntime().exec(cmd2);
+                LOG.info("p2 = "+p);
+
+                String[] cmd = { "ssh root@"+hostIp, "ps -aux | grep", instanceName, "| awk '{print $2}' | head -1" };
+                LOG.info("cmd1 = "+cmd);
+                p = Runtime.getRuntime().exec(cmd);
+                LOG.info("p1 = "+p);
 
 /*
                 cmd = "ssh root@"+ hostIp +" ps -aux | grep "+ instanceName +" | awk '{print $2}' | head -1 2>/dev/null";
