@@ -1877,8 +1877,9 @@ public class AgentManagerImpl extends ManagerBase implements AgentManager, Handl
     }
 
     @Override
-    public String getOomScore(String HostIp, String VmName) {
-        String cmd = "ps -aux | grep "+ VmName +" | awk '{print $2}' | head -1";
+    public String getOomScore(String hostIp, String vmName) {
+        s_logger.info("hostIp = "+hostIp);
+        String cmd = "ps -aux | grep "+ vmName +" | awk '{print $2}' | head -1";
         String s = "";
         s_logger.info("cmd = "+cmd);
         Process p = Runtime.getRuntime().exec(cmd);
@@ -1894,7 +1895,7 @@ public class AgentManagerImpl extends ManagerBase implements AgentManager, Handl
         String oom_score = sb.toString();
         p.waitFor();
         p.destroy();
-        
+
         return oom_score;
     }
 }
