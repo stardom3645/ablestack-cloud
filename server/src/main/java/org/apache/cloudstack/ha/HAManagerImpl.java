@@ -113,7 +113,6 @@ import org.apache.cloudstack.api.ResponseObject;
 import com.cloud.api.query.vo.UserVmJoinVO;
 import com.cloud.api.query.dao.UserVmJoinDao;
 import com.cloud.user.Account;
-import org.apache.cloudstack.api.ApiConstants.VMDetails;
 import com.cloud.user.AccountService;
 import org.apache.cloudstack.api.ApiConstants;
 
