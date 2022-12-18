@@ -112,8 +112,6 @@ import com.cloud.api.query.vo.UserVmJoinVO;
 import com.cloud.api.query.dao.UserVmJoinDao;
 import com.cloud.user.Account;
 import com.cloud.user.AccountService;
-import com.cloud.vm.VmStats;
-import com.cloud.api.ApiDBUtils;
 
 public final class HAManagerImpl extends ManagerBase implements HAManager, ClusterManagerListener, PluggableService, Configurable, StateListener<HAConfig.HAState, HAConfig.Event, HAConfig> {
     public static final Logger LOG = Logger.getLogger(HAManagerImpl.class);
