@@ -1881,21 +1881,25 @@ public class AgentManagerImpl extends ManagerBase implements AgentManager, Handl
     @Override
     public String getOomScore(String hostIp, String vmName) {
         s_logger.info("hostIp = "+hostIp);
-        String cmd = String.format("ps -aux | grep %s | awk '{print $2}'", vmName);
+        String cmd = String.format("ps -aux | grep %s | grep -Ev 'grep' | awk '{print $2}'", vmName);
         s_logger.info("cmd = "+cmd);
         String vmPid = Script.runSimpleBashScript(cmd);
         s_logger.info("vmPid = "+vmPid);
+        String oomScore = "";
+        if (!StringUtils.isNotBlank(vmPid)) {
+            cmd = String.format("cat /proc/%s/oom_score", vmPid);
+            s_logger.info("cmd = "+cmd);
+            oomScore = Script.runSimpleBashScript(cmd);
+            s_logger.info("oomScore = "+oomScore);
+        }
 
-        cmd = String.format("cat /proc/%s/oom_score", vmPid);
-        s_logger.info("cmd = "+cmd);
-        String oomScore = Script.runSimpleBashScript(cmd);
-        s_logger.info("oomScore = "+oomScore);
 
-
+/*
+        String cmd = String.format("ps -aux | grep %s | grep -Ev 'grep' | awk '{print $2}'", vmName);
         // String[] cmd = new String[]{ "/bin/sh", "-c", "ps -aux | grep "+ vmName, " | awk '{print $2}'", "| head -1" };
         // String s = "";
         // String oom_score = "";
-        /*try {
+        try {
             // ProcessBuilder processBuilder = new ProcessBuilder(cmd);
             // Process p = processBuilder.start();
 
@@ -1914,7 +1918,7 @@ public class AgentManagerImpl extends ManagerBase implements AgentManager, Handl
             // }
             // s_logger.info("sb = "+sb.toString());
             // s_logger.info("sb2 = "+sb2.toString());
-            oom_score = br.readLine();
+            // vm_pid = br.readLine();
 
             // Process p2 = Runtime.getRuntime().exec(cmd2);
             // p2.waitFor();
@@ -1934,8 +1938,8 @@ public class AgentManagerImpl extends ManagerBase implements AgentManager, Handl
             s_logger.debug("Interrupted", e);
         } catch (final IOException e) {
             s_logger.debug("IOException", e);
-        }*/
-
+        }
+*/
         return oomScore;
     }
 }
