@@ -1881,15 +1881,15 @@ public class AgentManagerImpl extends ManagerBase implements AgentManager, Handl
     public String getOomScore(String hostIp, String vmName) {
         s_logger.info("hostIp = "+hostIp);
         // String cmd = "ps -aux | grep "+ vmName +" | awk '{print $2}' | head -1";
-        String[] cmd = new String[]{ "cmd /c ps -aux | grep "+ vmName, " | awk '{print $2}'", "| head -1" };
+        String[] cmd = new String[]{ "ps -aux | grep "+ vmName, " | awk '{print $2}'", "| head -1" };
         String s = "";
         String oom_score = "";
         s_logger.info("cmd = "+cmd);
         try {
-            ProcessBuilder processBuilder = new ProcessBuilder(cmd);
-            Process p = processBuilder.start();
+            // ProcessBuilder processBuilder = new ProcessBuilder(cmd);
+            // Process p = processBuilder.start();
 
-            // Process p = Runtime.getRuntime().exec(cmd);
+            Process p = Runtime.getRuntime().exec(cmd);
             p.waitFor();
             s_logger.info("p = "+p);
             s_logger.info("p.pid() = " + p.pid() +", p.exitValue() = "+p.exitValue());
