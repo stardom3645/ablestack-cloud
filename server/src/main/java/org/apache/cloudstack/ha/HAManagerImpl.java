@@ -20,7 +20,6 @@ package org.apache.cloudstack.ha;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.List;
@@ -108,13 +107,11 @@ import com.google.common.base.Preconditions;
 import org.apache.cloudstack.api.ResponseGenerator;
 import com.cloud.agent.AgentManager;
 import org.apache.cloudstack.api.response.UserVmResponse;
-import com.cloud.api.ApiDBUtils;
 import org.apache.cloudstack.api.ResponseObject;
 import com.cloud.api.query.vo.UserVmJoinVO;
 import com.cloud.api.query.dao.UserVmJoinDao;
 import com.cloud.user.Account;
 import com.cloud.user.AccountService;
-import org.apache.cloudstack.api.ApiConstants;
 
 public final class HAManagerImpl extends ManagerBase implements HAManager, ClusterManagerListener, PluggableService, Configurable, StateListener<HAConfig.HAState, HAConfig.Event, HAConfig> {
     public static final Logger LOG = Logger.getLogger(HAManagerImpl.class);
