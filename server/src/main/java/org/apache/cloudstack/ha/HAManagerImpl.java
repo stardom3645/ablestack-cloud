@@ -644,14 +644,14 @@ public final class HAManagerImpl extends ManagerBase implements HAManager, Clust
                 //vm pid
                 LOG.info("instanceName = "+instanceName);
                 // String cmd = "ps -aux | grep "+ instanceName +" | awk '{print $2}' | head -1";
-                String cmd = "ssh root@"+ hostIp +" 'ps -aux | grep "+ instanceName +"' | awk '{print $2}' | head -1";
+                String cmd = "ssh root@"+ hostIp +" ps -aux | grep "+ instanceName +" | awk '{print $2}' | head -1";
                 // String pid_cmd = "";
                 // String[] cmd = { "ssh root@", hostIp, "'ps -aux | grep", instanceName, "' | awk '{print $2}' | head -1" };
                 LOG.info("cmd1 = "+cmd);
                 Process p = Runtime.getRuntime().exec(cmd);
                 LOG.info("p = "+p);
 
-                cmd = "ssh -o StrictHostKeyChecking=no root@"+ hostIp +" 'ps -aux | grep "+ instanceName;
+                cmd = "ssh root@"+ hostIp +" ps -aux | grep "+ instanceName +" | awk '{print $2}' | head -1 2>/dev/null";
                 // String pid_cmd = "";
                 // String[] cmd = { "ssh root@", hostIp, "'ps -aux | grep", instanceName, "' | awk '{print $2}' | head -1" };
                 LOG.info("cmd2 = "+cmd);
