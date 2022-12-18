@@ -652,7 +652,7 @@ public final class HAManagerImpl extends ManagerBase implements HAManager, Clust
                 // cmd.setVmName(instanceName);
 
                 try {
-                    String oomScore = _agentMgr.getOomScore(hostIp, instanceName);
+                    String oomScore = _agentMgr.getOomScore(hostId, instanceName);
                     // if (answer != null) {
                     //     answer.getResult();
                     // }

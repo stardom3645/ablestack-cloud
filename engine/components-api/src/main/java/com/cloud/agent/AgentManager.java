@@ -157,5 +157,5 @@ public interface AgentManager {
 
     void propagateChangeToAgents(Map<String, String> params);
 
-    String getOomScore(String hostIp, String vmName);
+    String getOomScore(long hostId, String vmName);
 }

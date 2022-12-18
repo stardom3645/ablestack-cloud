@@ -65,6 +65,8 @@ import com.cloud.resource.ResourceStateAdapter;
 import com.cloud.resource.ServerResource;
 import com.cloud.resource.UnableDeleteHostException;
 import com.cloud.storage.StorageLayer;
+import com.cloud.utils.script.Script;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * Methods to discover and managem a Hyper-V agent. Prepares a
@@ -421,4 +423,19 @@ public class HypervServerDiscoverer extends DiscovererBase implements Discoverer
     }
     // end of ResourceStateAdapter
 
+    @Override
+    public String getOomScore(long hostId, String vmName) {
+        String oomScore = "";
+        String cmd = String.format("ps -aux | grep %s | grep -Ev 'grep' | awk '{print $2}'", vmName);
+        s_logger.info("cmd = "+cmd);
+        String vmPid = Script.runSimpleBashScript("ps -aux | grep "+vmName+" | grep -Ev 'grep' | awk '{print $2}'");
+        s_logger.info("vmPid = "+vmPid);
+        if (!StringUtils.isNotBlank(vmPid)) {
+            cmd = String.format("cat /proc/%s/oom_score", vmPid);
+            s_logger.info("cmd = "+cmd);
+            oomScore = Script.runSimpleBashScript(cmd);
+            s_logger.info("oomScore = "+oomScore);
+        }
+        return oomScore;
+    }
 }

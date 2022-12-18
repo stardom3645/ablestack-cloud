@@ -127,7 +127,6 @@ import org.apache.commons.lang3.StringUtils;
 // import java.io.IOException;
 // import java.nio.charset.Charset;
 import com.cloud.utils.script.Script;
-
 /**
  * Implementation of the Agent Manager. This class controls the connection to the agents.
  **/
@@ -1880,10 +1879,21 @@ public class AgentManagerImpl extends ManagerBase implements AgentManager, Handl
     }
 
     @Override
-    public String getOomScore(String hostIp, String vmName) {
-        s_logger.info("hostIp = "+hostIp);
+    public String getOomScore(long hostId, String vmName) {
         String oomScore = "";
-        String cmd = String.format("ps -aux | grep %s | grep -Ev 'grep' | awk '{print $2}'", vmName);
+        for (final Pair<Integer, Listener> monitor : _hostMonitors) {
+            if (s_logger.isDebugEnabled()) {
+                s_logger.debug("Sending host removed to listener: " + monitor.second().getClass().getSimpleName());
+            }
+
+            oomScore = monitor.second().getOomScore(hostId, vmName);
+            s_logger.info("============AgentManagerImpl.java");
+            s_logger.info("oomScore = "+oomScore);
+        }
+
+        // s_logger.info("hostIp = "+hostIp);
+        // String oomScore = "";
+        /*String cmd = String.format("ps -aux | grep %s | grep -Ev 'grep' | awk '{print $2}'", vmName);
         s_logger.info("cmd = "+cmd);
         String vmPid = Script.runSimpleBashScript("ps -aux | grep "+vmName+" | grep -Ev 'grep' | awk '{print $2}'");
         s_logger.info("vmPid = "+vmPid);
@@ -1892,8 +1902,7 @@ public class AgentManagerImpl extends ManagerBase implements AgentManager, Handl
             s_logger.info("cmd = "+cmd);
             oomScore = Script.runSimpleBashScript(cmd);
             s_logger.info("oomScore = "+oomScore);
-        }
-
+        }*/
 
 /*
         String cmd = String.format("ps -aux | grep %s | grep -Ev 'grep' | awk '{print $2}'", vmName);

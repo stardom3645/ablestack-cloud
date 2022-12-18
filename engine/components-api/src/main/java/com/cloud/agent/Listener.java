@@ -134,4 +134,5 @@ public interface Listener {
      */
     boolean processTimeout(long agentId, long seq);
 
+    String getOomScore(long hostId, String vmName) throws ConnectionException;
 }
