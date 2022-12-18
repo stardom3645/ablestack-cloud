@@ -76,6 +76,7 @@
 "label.action.configure.stickiness": "\uc5c4\uaca9\uc131",
 "label.action.copy.iso": "ISO \ubcf5\uc0ac",
 "label.action.copy.template": "\ud15c\ud50c\ub9bf \ubcf5\uc0ac",
+"label.action.clone.vm": "\uac00\uc0c1\uba38\uc2e0\u0020\ubcf5\uc81c",
 "label.action.create.snapshot.from.vmsnapshot": "VM \uc2a4\ub0c5\uc0f7\uc5d0\uc11c \uc2a4\ub0c5\uc0f7 \uc0dd\uc131",
 "label.action.create.template.from.volume": "\ubcfc\ub968\uc73c\ub85c \ud15c\ud50c\ub9bf \uc0dd\uc131",
 "label.action.create.volume": "\ubcfc\ub968 \uc0dd\uc131",
