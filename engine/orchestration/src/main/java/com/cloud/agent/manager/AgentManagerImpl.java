@@ -125,6 +125,7 @@ import org.apache.commons.lang3.StringUtils;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.IOException;
+import java.nio.charset.Charset;
 // import com.cloud.utils.script.Script;
 
 /**
@@ -1907,6 +1908,11 @@ public class AgentManagerImpl extends ManagerBase implements AgentManager, Handl
             s_logger.info("p = "+p);
             p.waitFor();
             s_logger.info("p.pid() = " + p.pid() +", p.exitValue() = "+p.exitValue());
+
+            final BufferedReader stdInput = new BufferedReader(new InputStreamReader(p.getInputStream(), Charset.defaultCharset()));
+            s_logger.info("stdInput = "+stdInput);
+            final BufferedReader stdError = new BufferedReader(new InputStreamReader(p.getErrorStream(), Charset.defaultCharset()));
+            s_logger.info("stdError = "+stdError);
 
             BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));
             s_logger.info("br = "+br.readLine());
