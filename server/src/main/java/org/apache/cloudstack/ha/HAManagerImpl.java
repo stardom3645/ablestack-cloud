@@ -646,7 +646,7 @@ public final class HAManagerImpl extends ManagerBase implements HAManager, Clust
                 //vm pid
                 /*
                 LOG.info("instanceName = "+instanceName);
-                String oomScorePath = Script.findScript("scripts/vm/hypervisor", "oomScore.sh");
+                String oomScorePath = Script.findScript("/root/1218_lb_rpm", "oomScore.sh");
                 long heartBeatCheckerTimeout = 600000; // 10 minutes
                 if (oomScorePath == null) {
                     throw new ConfigurationException("Unable to find oomScore.sh");
@@ -669,7 +669,18 @@ public final class HAManagerImpl extends ManagerBase implements HAManager, Clust
                 String[] cmd = { "ssh root@"+hostIp, "ps -aux | grep", instanceName, "| awk '{print $2}' | head -1" };
                 LOG.info("cmd1 = "+cmd);
                 Process p = Runtime.getRuntime().exec(cmd);
-                LOG.info("p = "+p);
+                LOG.info("p1 = "+p);
+
+                String[] cmd2 = { "ssh root@"+hostIp, "-o", "StrictHostKeyChecking=no", "ps -aux | grep", instanceName, "| awk '{print $2}' | head -1" };
+                LOG.info("cmd2 = "+cmd2);
+                p = Runtime.getRuntime().exec(cmd2);
+                LOG.info("p2 = "+p);
+
+                String cmd3 = "ps -aux | grep su | awk '{print $2}' | head -1";
+                LOG.info("cmd3 = "+cmd3);
+                Process p2 = Runtime.getRuntime().exec(cmd3);
+                LOG.info("p3 = "+p2);
+
 /*
                 cmd = "ssh root@"+ hostIp +" ps -aux | grep "+ instanceName +" | awk '{print $2}' | head -1 2>/dev/null";
                 // String pid_cmd = "";
