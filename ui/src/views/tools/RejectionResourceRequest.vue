@@ -105,7 +105,7 @@ export default {
         this.loading = true
         const params = {
           id: this.resource.id,
-          comment: values.comment
+          comments: values.comment
         }
         api('stateUpdateResourceRequest', params).then(json => {
           this.$message.success(`${this.$t('message.success.rejection.resource.request')}: ${this.resource.name}`)
