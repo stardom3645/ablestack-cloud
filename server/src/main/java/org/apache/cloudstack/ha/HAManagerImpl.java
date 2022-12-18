@@ -565,6 +565,9 @@ public final class HAManagerImpl extends ManagerBase implements HAManager, Clust
     @ActionEvent(eventType = EventTypes.EVENT_HA_RESOURCE_ENABLE, eventDescription = "enabling Balancing for a cluster")
     public boolean disableBalancing(final Cluster cluster) {
         clusterDetailsDao.persist(cluster.getId(), Balancing_ENABLED_DETAIL, String.valueOf(false));
+
+        Thread.currentThread().interrupt();
+
         return true;
     }
 
