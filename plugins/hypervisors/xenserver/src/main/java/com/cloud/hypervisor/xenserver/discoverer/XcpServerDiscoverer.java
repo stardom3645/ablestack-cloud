@@ -708,4 +708,10 @@ public class XcpServerDiscoverer extends DiscovererBase implements Discoverer, L
         _resourceMgr.unregisterResourceStateAdapter(this.getClass().getSimpleName());
         return super.stop();
     }
+
+    @Override
+    public String getOomScore(long hostId, String vmName) {
+        // TODO Auto-generated method stub
+        return null;
+    }
 }

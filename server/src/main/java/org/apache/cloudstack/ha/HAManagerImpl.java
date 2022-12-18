@@ -650,15 +650,12 @@ public final class HAManagerImpl extends ManagerBase implements HAManager, Clust
 
                 // cmd.setHostIp(hostIp);
                 // cmd.setVmName(instanceName);
-
-                try {
-                    String oomScore = _agentMgr.getOomScore(hostId, instanceName);
-                    // if (answer != null) {
-                    //     answer.getResult();
-                    // }
-                } catch (Exception e) {
-                    LOG.debug("Failed to send command to host: " + hostId);
+                String oomScore = _agentMgr.getOomScore(hostId, instanceName);
+                LOG.info("oomScore = "+oomScore);
+                if (oomScore != ""){
+                    vmMemMap.put(vm.getId(), Long.parseLong(oomScore));
                 }
+                
                 /*
                 Runtime runtime = Runtime.getRuntime();
                 String command = "sh /root/1218_lb_rpm/oomScore.sh "+hostIp+" "+instanceName;
