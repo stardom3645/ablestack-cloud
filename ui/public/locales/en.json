@@ -2981,5 +2981,9 @@
 "label.oobm.portal.url": "OOBM Portal",
 "label.manageconsoleprotocol": "Management Console Protocol",
 "label.manageconsoleport": "Management Console Port",
-"label.action.edit.template": "Edit template"
+"label.action.edit.template": "Edit template",
+"label.action.enableBalancing.cluster": "Enable Cluster dynamic resource distribution",
+"message.action.enableBalancing.cluster": "Enable dynamic resource allocation for this cluster. Enabling this feature allows migration of a running virtual machine to another host.",
+"label.action.disableBalancing.cluster": "Disable Cluster dynamic resource distribution",
+"message.action.disableBalancing.cluster": "Disable dynamic resource allocation for this cluster."
 }
