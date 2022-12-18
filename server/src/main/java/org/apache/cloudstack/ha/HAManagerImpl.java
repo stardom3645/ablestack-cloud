@@ -670,6 +670,7 @@ public final class HAManagerImpl extends ManagerBase implements HAManager, Clust
                     oomScore = Long.parseLong(line);
                 }
 */
+/*방금테스트
                 String cmd = "ssh";
                 String url = hostIp;
                 String args = "";
@@ -696,7 +697,41 @@ public final class HAManagerImpl extends ManagerBase implements HAManager, Clust
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
+*/
+                //새코드
+                String[] exec = new String[3];
+                exec[0] = "/bin/sh";
+                exec[1] = "/root/1218_lb_rpm/oomScore.sh";
+                exec[2] = hostIp+" "+instanceName;
+                Runtime r = Runtime.getRuntime();
 
+                InputStream inputStream = null;
+                BufferedReader bufferedReader = null;
+
+                try{
+                    Process process2 = r.exec(exec);//참고사항 : Process 선언 안하고 r.exec() 만 하면 실행되지 않는다.
+
+                    //참고사항 : 이 부분을 안해주면 Shell 구동이 안된다.
+                    process2.getInputStream();
+
+                    inputStream = process2.getInputStream() ;
+                    bufferedReader = new BufferedReader( new InputStreamReader( inputStream ) ) ;
+
+                    while(true) {
+                     String info = bufferedReader.readLine() ;
+                     if( info == null || info.equals( "" ) ){
+                      break ;
+                     }
+                     LOG.info( info ) ;
+                    }
+
+                  } catch (IOException e) {
+                   // TODO Auto-generated catch block
+                   e.printStackTrace();
+                  } finally {
+                   try{if(inputStream!=null)inputStream.close();}catch(Exception e){}
+                   try{if(bufferedReader!=null)bufferedReader.close();}catch(Exception e){}
+                  } 
 
                 // LOG.info("oomScore = "+oomScore);
                 // String cmd = "ps -aux | grep "+ instanceName +" | awk '{print $2}' | head -1";
