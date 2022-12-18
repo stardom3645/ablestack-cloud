@@ -420,4 +420,5 @@ public class HypervServerDiscoverer extends DiscovererBase implements Discoverer
         return super.stop();
     }
     // end of ResourceStateAdapter
+
 }
