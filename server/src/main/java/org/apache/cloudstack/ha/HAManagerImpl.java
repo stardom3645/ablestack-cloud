@@ -512,6 +512,8 @@ public final class HAManagerImpl extends ManagerBase implements HAManager, Clust
         return transitionResourceStateToDisabled(zone);
     }
 
+    Thread thread = new Thread();
+
     @Override
     @ActionEvent(eventType = EventTypes.EVENT_HA_RESOURCE_ENABLE, eventDescription = "enabling Balancing for a cluster")
     public boolean enableBalancing(final Cluster cluster) {
@@ -542,7 +544,7 @@ public final class HAManagerImpl extends ManagerBase implements HAManager, Clust
         // balancingCheck(cluster.getId());
 
         /* Using Runnable Interface */
-        Thread thread = new Thread(new BalancingThread(cluster.getId()));
+        thread = new Thread(new BalancingThread(cluster.getId()));
         thread.start();
 
         return true;
@@ -557,75 +559,7 @@ public final class HAManagerImpl extends ManagerBase implements HAManager, Clust
 
         @Override
         public void run() {
-            // balancingCheck(clusterId);
-            HashMap<Long, Long> hostMemMap = new HashMap<Long, Long>();
-            // List keyList = new ArrayList();
-            // List<? extends HostVO> hosts = hostDao.findByClusterId(clusterId);
-            // LOG.info("Hostsss = "+hosts);
-            for (final HostVO host: hostDao.findByClusterId(clusterId)) {
-            // for (HostVO host : hosts) {
-                HostResponse hostResponse = _responseGenerator.createHostResponse(host);
-                LOG.info(hostResponse.getId());
-                LOG.info(hostResponse.getMemoryUsed()*100/hostResponse.getMemoryTotal());
-
-                // hostMemMap.put(hostResponse.getId(), hostResponse.getMemoryUsed()*100/hostResponse.getMemoryTotal());
-                hostMemMap.put(host.getId(), hostResponse.getMemoryUsed()*100/hostResponse.getMemoryTotal());
-
-                // keyList.add(hostResponse.getMemoryAllocated()*100/hostResponse.getMemoryTotal());
-                // keyList.add(host.getPrivateIpAddress());
-
-                // hostMemMap.put(hostResponse.getId(), keyList);
-                // {hostResponse.getMemoryAllocated()*100/hostResponse.getMemoryTotal(), host.getPrivateIpAddress()};
-            }
-
-            // Comparator 정의
-            Comparator<Entry<Long, Long>> comparator = new Comparator<Entry<Long, Long>>() {
-                @Override
-                public int compare(Entry<Long, Long> e1, Entry<Long, Long> e2) {
-                    return e1.getValue().compareTo(e2.getValue());
-                }
-            };
-
-            // Max Value의 key, value
-            Entry<Long, Long> maxEntry = Collections.max(hostMemMap.entrySet(), comparator);
-
-            // Min Value의 key, value
-            Entry<Long, Long> minEntry = Collections.min(hostMemMap.entrySet(), comparator);
-
-            LOG.info("start======================");
-            LOG.info("maxEntry = " + maxEntry.getValue() + ", minEntry = " + minEntry.getValue());
-            LOG.info("persent = " + (maxEntry.getValue() - minEntry.getValue()));
-            //memory 값이 10% 이상 차이나면 memory작은 호스트로 vm migration
-            if ((maxEntry.getValue() - minEntry.getValue()) > 10 ) {
-                String hostIp = "";
-                for (final HostVO host: hostDao.findByClusterId(clusterId)) {
-                    LOG.info("maxEntry.getKey() = "+maxEntry.getKey());
-                    LOG.info("host.getUuid() = "+host.getUuid());
-                    LOG.info("host.getId() = "+host.getId());
-                    if (host.getId() == minEntry.getKey()) {
-                        hostIp = host.getPrivateIpAddress();
-                    }
-                }
-                balancingMonitor(minEntry.getKey(), maxEntry.getKey());
-            }
-
-            //1분 체크
-            try {
-                Boolean resourceBalancingEnabled= Boolean.parseBoolean(clusterDetailsDao.findDetail(clusterId, "resourceBalancingEnabled").getValue());
-                LOG.info("resourceBalancingEnabled = "+resourceBalancingEnabled);
-                if (!resourceBalancingEnabled) {
-                    Thread.currentThread().interrupt();
-                    Thread.interrupted();
-                }
-
-                Thread.sleep(60000);
-                balancingCheck(clusterId);
-            } catch (InterruptedException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
-
-            LOG.info("end======================");
+            balancingCheck(clusterId);
         }
     }
 
@@ -635,6 +569,7 @@ public final class HAManagerImpl extends ManagerBase implements HAManager, Clust
         clusterDetailsDao.persist(cluster.getId(), Balancing_ENABLED_DETAIL, String.valueOf(false));
 
         // Thread.currentThread().interrupt();
+        thread.interrupt();
 
         return true;
     }
@@ -693,11 +628,11 @@ public final class HAManagerImpl extends ManagerBase implements HAManager, Clust
 
         //1분 체크
         try {
-            Boolean resourceBalancingEnabled= Boolean.parseBoolean(clusterDetailsDao.findDetail(clusterId, "resourceBalancingEnabled").getValue());
-            if (!resourceBalancingEnabled) {
-                Thread.currentThread().interrupt();
-                Thread.interrupted();
-            }
+            // Boolean resourceBalancingEnabled= Boolean.parseBoolean(clusterDetailsDao.findDetail(clusterId, "resourceBalancingEnabled").getValue());
+            // if (!resourceBalancingEnabled) {
+            //     Thread.currentThread().interrupt();
+            //     Thread.interrupted();
+            // }
 
             Thread.sleep(60000);
             balancingCheck(clusterId);
