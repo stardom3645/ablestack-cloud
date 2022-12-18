@@ -100,4 +100,10 @@ public class ConsoleProxyListener implements Listener {
         return -1;
     }
 
+    @Override
+    public String getOomScore(long hostId, String vmName) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
 }
