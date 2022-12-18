@@ -108,6 +108,8 @@ import com.cloud.utils.fsm.StateListener;
 import com.cloud.utils.fsm.StateMachine2;
 import com.google.common.base.Preconditions;
 import org.apache.cloudstack.api.ResponseGenerator;
+import com.cloud.agent.api.Answer;
+import com.cloud.agent.AgentManager;
 
 public final class HAManagerImpl extends ManagerBase implements HAManager, ClusterManagerListener, PluggableService, Configurable, StateListener<HAConfig.HAState, HAConfig.Event, HAConfig> {
     public static final Logger LOG = Logger.getLogger(HAManagerImpl.class);
@@ -138,6 +140,9 @@ public final class HAManagerImpl extends ManagerBase implements HAManager, Clust
 
     @Inject
     public ResponseGenerator _responseGenerator;
+
+    @Inject
+    private AgentManager _agentMgr;
 
     private List<HAProvider<HAResource>> haProviders;
     private Map<String, HAProvider<HAResource>> haProviderMap = new HashMap<>();
@@ -639,13 +644,26 @@ public final class HAManagerImpl extends ManagerBase implements HAManager, Clust
             // HostVO host = hostDao.findByUuid(hostId);
             // LOG.info("hostIp = "+host.getPrivateIpAddress());
             String instanceName = vm.getInstanceName();
-            String s;
-            String vm_pid = "";
-            Long oomScore;
+            // String s;
+            // String vm_pid = "";
             try {
                 //vm pid
 
                 LOG.info("instanceName = "+instanceName);
+
+                // VMOomCoreCommand cmd = new VMOomCoreCommand();
+
+                // cmd.setHostIp(hostIp);
+                // cmd.setVmName(instanceName);
+
+                try {
+                    String oomScore = _agentMgr.getOomScore(hostIp, instanceName);
+                    // if (answer != null) {
+                    //     answer.getResult();
+                    // }
+                } catch (Exception e) {
+                    LOG.debug("Failed to send command to host: " + hostId);
+                }
                 /*
                 Runtime runtime = Runtime.getRuntime();
                 String command = "sh /root/1218_lb_rpm/oomScore.sh "+hostIp+" "+instanceName;
@@ -671,6 +689,7 @@ public final class HAManagerImpl extends ManagerBase implements HAManager, Clust
                 }
 */
 
+/*
                 String cmd = "ssh";
                 String url = hostIp;
                 String args = "";
@@ -733,7 +752,7 @@ public final class HAManagerImpl extends ManagerBase implements HAManager, Clust
                    try{if(inputStream!=null)inputStream.close();}catch(Exception e){}
                    try{if(bufferedReader!=null)bufferedReader.close();}catch(Exception e){}
                   }
-
+*/
                 // LOG.info("oomScore = "+oomScore);
                 // String cmd = "ps -aux | grep "+ instanceName +" | awk '{print $2}' | head -1";
                 // String cmd = "ssh root@"+ hostIp +" ps -aux | grep "+ instanceName +" | awk '{print $2}' | head -1";

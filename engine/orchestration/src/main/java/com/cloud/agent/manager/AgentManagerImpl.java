@@ -122,6 +122,9 @@ import com.cloud.utils.nio.Task;
 import com.cloud.utils.time.InaccurateClock;
 import org.apache.commons.lang3.StringUtils;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+
 /**
  * Implementation of the Agent Manager. This class controls the connection to the agents.
  **/
@@ -1871,5 +1874,27 @@ public class AgentManagerImpl extends ManagerBase implements AgentManager, Handl
             Map<Long, List<Long>> hostsPerZone = getHostsPerZone();
             sendCommandToAgents(hostsPerZone, params);
         }
+    }
+
+    @Override
+    public String getOomScore(String HostIp, String VmName) {
+        String cmd = "ps -aux | grep "+ VmName +" | awk '{print $2}' | head -1";
+        String s = "";
+        s_logger.info("cmd = "+cmd);
+        Process p = Runtime.getRuntime().exec(cmd);
+        p.waitFor();
+        s_logger.info("p = "+p);
+
+        BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));
+        s_logger.info("br = "+br);
+        String sb = "";
+        while ((s = br.readLine()) != null)
+            sb += s;
+        s_logger.info("sb = "+sb.toString());
+        String oom_score = sb.toString();
+        p.waitFor();
+        p.destroy();
+        
+        return oom_score;
     }
 }
