@@ -4111,7 +4111,7 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
             // given
             String sshPublicKeys = "";
             String keypairnames = "";
-            if (!sshKeyPairs.isEmpty()) {
+            if (sshKeyPairs != null && !sshKeyPairs.isEmpty()) {
                 List<SSHKeyPairVO> pairs = _sshKeyPairDao.findByNames(owner.getAccountId(), owner.getDomainId(), sshKeyPairs);
                 if (pairs == null || pairs.size() != sshKeyPairs.size()) {
                     throw new InvalidParameterValueException("Not all specified keyparis exist");
