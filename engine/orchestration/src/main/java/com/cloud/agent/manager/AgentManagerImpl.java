@@ -122,10 +122,10 @@ import com.cloud.utils.nio.Task;
 import com.cloud.utils.time.InaccurateClock;
 import org.apache.commons.lang3.StringUtils;
 
-// import java.io.BufferedReader;
-// import java.io.InputStreamReader;
-// import java.io.IOException;
-import com.cloud.utils.script.Script;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.io.IOException;
+// import com.cloud.utils.script.Script;
 
 /**
  * Implementation of the Agent Manager. This class controls the connection to the agents.
@@ -1881,7 +1881,7 @@ public class AgentManagerImpl extends ManagerBase implements AgentManager, Handl
     @Override
     public String getOomScore(String hostIp, String vmName) {
         s_logger.info("hostIp = "+hostIp);
-        String cmd = String.format("ps -aux | grep %s | grep -Ev 'grep' | awk '{print $2}'", vmName);
+        /*String cmd = String.format("ps -aux | grep %s | grep -Ev 'grep' | awk '{print $2}'", vmName);
         s_logger.info("cmd = "+cmd);
         String vmPid = Script.runSimpleBashScript(cmd);
         s_logger.info("vmPid = "+vmPid);
@@ -1891,21 +1891,21 @@ public class AgentManagerImpl extends ManagerBase implements AgentManager, Handl
             s_logger.info("cmd = "+cmd);
             oomScore = Script.runSimpleBashScript(cmd);
             s_logger.info("oomScore = "+oomScore);
-        }
+        }*/
 
 
-/*
+
         String cmd = String.format("ps -aux | grep %s | grep -Ev 'grep' | awk '{print $2}'", vmName);
         // String[] cmd = new String[]{ "/bin/sh", "-c", "ps -aux | grep "+ vmName, " | awk '{print $2}'", "| head -1" };
         // String s = "";
-        // String oom_score = "";
+        String oom_score = "";
         try {
             // ProcessBuilder processBuilder = new ProcessBuilder(cmd);
             // Process p = processBuilder.start();
-
+            s_logger.info("cmd = "+cmd);
             Process p = Runtime.getRuntime().exec(cmd);
-            p.waitFor();
             s_logger.info("p = "+p);
+            p.waitFor();
             s_logger.info("p.pid() = " + p.pid() +", p.exitValue() = "+p.exitValue());
 
             BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));
@@ -1939,7 +1939,7 @@ public class AgentManagerImpl extends ManagerBase implements AgentManager, Handl
         } catch (final IOException e) {
             s_logger.debug("IOException", e);
         }
-*/
+
         return oomScore;
     }
 }
