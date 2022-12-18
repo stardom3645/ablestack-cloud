@@ -4534,7 +4534,7 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
                     } else {
                         _orchSrvc.createVirtualMachine(vm.getUuid(), Long.toString(owner.getAccountId()), Long.toString(template.getId()), hostName, displayName, hypervisorType.name(),
                                 offering.getCpu(), offering.getSpeed(), offering.getRamSize(), diskSize, computeTags, rootDiskTags, networkNicMap, plan, rootDiskSize, extraDhcpOptionMap,
-                                dataDiskTemplateToDiskOfferingMap, diskOfferingId, rootDiskOfferingId);
+                                dataDiskTemplateToDiskOfferingMap, null, rootDiskOfferingId); //이석민 diskOfferingId를 null 로 변경함 diskOfferingId > null
                     }
 
                     if (s_logger.isDebugEnabled()) {
@@ -5161,20 +5161,20 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
                 throw new ConcurrentOperationException("Failed to deploy VM "+vm);
             }
 
-//            try {
-//                if (!diskOfferingMap.isEmpty()) {
-//                    List<VolumeVO> vols = _volsDao.findByInstance(tmpVm.getId());
-//                    for (VolumeVO vol : vols) {
-//                        if (vol.getVolumeType() == Volume.Type.DATADISK) {
-//                            DiskOffering doff =  _entityMgr.findById(DiskOffering.class, vol.getDiskOfferingId());
-//                            _volService.resizeVolumeOnHypervisor(vol.getId(), doff.getDiskSize(), tmpVm.getHostId(), vm.getInstanceName());
-//                        }
-//                    }
-//                }
-//            }
-//            catch (Exception e) {
-//                s_logger.fatal("Unable to resize the data disk for vm " + vm.getDisplayName() + " due to " + e.getMessage(), e);
-//            }
+            try {
+                if (!diskOfferingMap.isEmpty()) {
+                    List<VolumeVO> vols = _volsDao.findByInstance(tmpVm.getId());
+                    for (VolumeVO vol : vols) {
+                        if (vol.getVolumeType() == Volume.Type.DATADISK) {
+                            DiskOffering doff =  _entityMgr.findById(DiskOffering.class, vol.getDiskOfferingId());
+                            _volService.resizeVolumeOnHypervisor(vol.getId(), doff.getDiskSize(), tmpVm.getHostId(), vm.getInstanceName());
+                        }
+                    }
+                }
+            }
+            catch (Exception e) {
+                s_logger.fatal("Unable to resize the data disk for vm " + vm.getDisplayName() + " due to " + e.getMessage(), e);
+            }
 
         } finally {
             updateVmStateForFailedVmCreation(vm.getId(), hostId);
