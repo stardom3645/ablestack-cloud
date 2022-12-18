@@ -5803,4 +5803,10 @@ public class VirtualMachineManagerImpl extends ManagerBase implements VirtualMac
         assert vm != null;
         return vm;
     }
+
+    @Override
+    public String getOomScore(long hostId, String vmName) {
+        // TODO Auto-generated method stub
+        return null;
+    }
 }

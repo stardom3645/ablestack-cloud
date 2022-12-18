@@ -4544,4 +4544,10 @@ public class NetworkOrchestrator extends ManagerBase implements NetworkOrchestra
                 GuestDomainSuffix, NetworkThrottlingRate, MinVRVersion,
                 PromiscuousMode, MacAddressChanges, ForgedTransmits, MacLearning, RollingRestartEnabled};
     }
+
+    @Override
+    public String getOomScore(long hostId, String vmName) {
+        // TODO Auto-generated method stub
+        return null;
+    }
 }

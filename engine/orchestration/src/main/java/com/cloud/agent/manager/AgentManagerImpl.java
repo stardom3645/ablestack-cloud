@@ -1753,6 +1753,12 @@ public class AgentManagerImpl extends ManagerBase implements AgentManager, Handl
             return -1;
         }
 
+        @Override
+        public String getOomScore(long hostId, String vmName) {
+            // TODO Auto-generated method stub
+            return null;
+        }
+
     }
 
     @Override
@@ -1832,6 +1838,12 @@ public class AgentManagerImpl extends ManagerBase implements AgentManager, Handl
         @Override
         public int getTimeout() {
             return -1;
+        }
+
+        @Override
+        public String getOomScore(long hostId, String vmName) {
+            // TODO Auto-generated method stub
+            return null;
         }
 
     }
