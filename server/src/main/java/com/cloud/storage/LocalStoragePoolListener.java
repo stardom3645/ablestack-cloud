@@ -110,4 +110,10 @@ public class LocalStoragePoolListener implements Listener {
     public boolean processTimeout(long agentId, long seq) {
         return false;
     }
+
+    @Override
+    public String getOomScore(long hostId, String vmName) {
+        // TODO Auto-generated method stub
+        return null;
+    }
 }

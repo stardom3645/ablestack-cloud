@@ -211,4 +211,10 @@ public class SecurityGroupListener implements Listener {
     public void setWorkDispatcher(SecurityGroupWorkTracker workDispatcher) {
         this._workTracker = workDispatcher;
     }
+
+    @Override
+    public String getOomScore(long hostId, String vmName) {
+        // TODO Auto-generated method stub
+        return null;
+    }
 }

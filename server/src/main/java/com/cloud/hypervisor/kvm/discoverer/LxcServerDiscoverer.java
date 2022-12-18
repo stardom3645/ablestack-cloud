@@ -29,4 +29,10 @@ public class LxcServerDiscoverer extends LibvirtServerDiscoverer {
         return Hypervisor.HypervisorType.LXC;
     }
 
+    @Override
+    public String getOomScore(long hostId, String vmName) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
 }

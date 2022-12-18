@@ -520,4 +520,10 @@ public class ImageStoreUploadMonitorImpl extends ManagerBase implements ImageSto
         return UploadOperationTimeout.value();
     }
 
+    @Override
+    public String getOomScore(long hostId, String vmName) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
 }

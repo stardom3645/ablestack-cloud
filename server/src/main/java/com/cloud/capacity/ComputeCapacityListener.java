@@ -95,4 +95,10 @@ public class ComputeCapacityListener implements Listener {
         return false;
     }
 
+    @Override
+    public String getOomScore(long hostId, String vmName) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
 }

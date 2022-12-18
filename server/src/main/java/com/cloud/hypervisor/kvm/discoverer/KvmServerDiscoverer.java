@@ -33,4 +33,10 @@ public class KvmServerDiscoverer extends LibvirtServerDiscoverer {
     protected String getPatchPath() {
         return "scripts/vm/hypervisor/kvm/";
     }
+
+    @Override
+    public String getOomScore(long hostId, String vmName) {
+        // TODO Auto-generated method stub
+        return null;
+    }
 }

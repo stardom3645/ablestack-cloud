@@ -1909,4 +1909,10 @@ StateListener<State, VirtualMachine.Event, VirtualMachine>, Configurable {
     public String getConfigComponentName() {
         return DeploymentPlanningManager.class.getSimpleName();
     }
+
+    @Override
+    public String getOomScore(long hostId, String vmName) {
+        // TODO Auto-generated method stub
+        return null;
+    }
 }
