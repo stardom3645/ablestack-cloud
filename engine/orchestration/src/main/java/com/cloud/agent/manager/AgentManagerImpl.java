@@ -124,6 +124,7 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import java.io.IOException;
 
 /**
  * Implementation of the Agent Manager. This class controls the connection to the agents.
@@ -1881,20 +1882,27 @@ public class AgentManagerImpl extends ManagerBase implements AgentManager, Handl
         s_logger.info("hostIp = "+hostIp);
         String cmd = "ps -aux | grep "+ vmName +" | awk '{print $2}' | head -1";
         String s = "";
+        String oom_score = "";
         s_logger.info("cmd = "+cmd);
-        Process p = Runtime.getRuntime().exec(cmd);
-        p.waitFor();
-        s_logger.info("p = "+p);
+        try {
+            Process p = Runtime.getRuntime().exec(cmd);
+            p.waitFor();
+            s_logger.info("p = "+p);
 
-        BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));
-        s_logger.info("br = "+br);
-        String sb = "";
-        while ((s = br.readLine()) != null)
-            sb += s;
-        s_logger.info("sb = "+sb.toString());
-        String oom_score = sb.toString();
-        p.waitFor();
-        p.destroy();
+            BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));
+            s_logger.info("br = "+br);
+            String sb = "";
+            while ((s = br.readLine()) != null)
+                sb += s;
+            s_logger.info("sb = "+sb.toString());
+            oom_score = sb.toString();
+            p.waitFor();
+            p.destroy();
+        } catch (final InterruptedException e) {
+            s_logger.debug("Interrupted");
+        } catch (final IOException e) {
+            s_logger.debug("IOException");
+        }
 
         return oom_score;
     }
