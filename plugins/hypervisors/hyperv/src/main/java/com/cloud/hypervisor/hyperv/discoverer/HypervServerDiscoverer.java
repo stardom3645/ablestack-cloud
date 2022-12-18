@@ -65,8 +65,6 @@ import com.cloud.resource.ResourceStateAdapter;
 import com.cloud.resource.ServerResource;
 import com.cloud.resource.UnableDeleteHostException;
 import com.cloud.storage.StorageLayer;
-import com.cloud.utils.script.Script;
-import org.apache.commons.lang3.StringUtils;
 
 /**
  * Methods to discover and managem a Hyper-V agent. Prepares a
