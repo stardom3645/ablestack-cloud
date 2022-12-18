@@ -1918,7 +1918,7 @@ public class AgentManagerImpl extends ManagerBase implements AgentManager, Handl
                 s_logger.info("p = "+p);
                 p.waitFor();
                 s_logger.info("p.pid() = " + p.pid() +", p.exitValue() = "+p.exitValue());
-    
+
                 br = new BufferedReader(new InputStreamReader(p.getInputStream()));
                 s_logger.info("br = "+br.readLine());
                 oomScore = br.readLine();
