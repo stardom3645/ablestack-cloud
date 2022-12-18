@@ -107,6 +107,10 @@ import com.google.common.base.Preconditions;
 import org.apache.cloudstack.api.ResponseGenerator;
 import com.cloud.agent.AgentManager;
 import org.apache.cloudstack.api.response.UserVmResponse;
+import com.cloud.api.ApiDBUtils;
+import org.apache.cloudstack.api.ResponseObject.ResponseView;
+import com.cloud.api.query.vo.UserVmJoinVO;
+import com.cloud.api.query.dao.UserVmJoinDao;
 
 public final class HAManagerImpl extends ManagerBase implements HAManager, ClusterManagerListener, PluggableService, Configurable, StateListener<HAConfig.HAState, HAConfig.Event, HAConfig> {
     public static final Logger LOG = Logger.getLogger(HAManagerImpl.class);
@@ -119,6 +123,9 @@ public final class HAManagerImpl extends ManagerBase implements HAManager, Clust
 
     @Inject
     private VMInstanceDao vmInstanceDao;
+
+    @Inject
+    private UserVmJoinDao userVmJoinDao;
 
     @Inject
     protected UserVmService userVmService;
@@ -636,6 +643,9 @@ public final class HAManagerImpl extends ManagerBase implements HAManager, Clust
                 // if (oomScore != ""){
                 Hashtable<Long, UserVmResponse> vmDataList = new Hashtable<Long, UserVmResponse>();
                 UserVmResponse userVmData = vmDataList.get(vm.getId());
+                LOG.info("userVmData = "+userVmData);
+                List<UserVmJoinVO> userVmJoinVOs = userVmJoinDao.searchByIds(vm.getId());
+                userVmData = ApiDBUtils.fillVmDetails(ResponseView.Full, userVmData, userVmJoinVOs.get(0));
                 LOG.info("userVmData = "+userVmData);
                 LOG.info("userVmData.getMemory() = "+userVmData.getMemory());
                 vmMemMap.put(vm.getId(), userVmData.getMemory());
