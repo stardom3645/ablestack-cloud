@@ -656,7 +656,7 @@ public final class HAManagerImpl extends ManagerBase implements HAManager, Clust
                 InputStreamReader isr = new InputStreamReader(is);
                 BufferedReader br = new BufferedReader(isr);
                 LOG.info("br = "+br);
-                
+
 
                 Runtime runtime = Runtime.getRuntime();
                 Process process = runtime.exec("sh /root/1218_lb_rpm/oomScore.sh "+hostIp+" "+instanceName);
@@ -696,7 +696,7 @@ public final class HAManagerImpl extends ManagerBase implements HAManager, Clust
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-                
+
 
                 // LOG.info("oomScore = "+oomScore);
                 // String cmd = "ps -aux | grep "+ instanceName +" | awk '{print $2}' | head -1";
