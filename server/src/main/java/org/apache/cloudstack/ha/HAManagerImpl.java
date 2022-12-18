@@ -519,30 +519,6 @@ public final class HAManagerImpl extends ManagerBase implements HAManager, Clust
     public boolean enableBalancing(final Cluster cluster) {
         clusterDetailsDao.persist(cluster.getId(), Balancing_ENABLED_DETAIL, String.valueOf(true));
 
-        /*
-        LOG.info("======================");
-        Map<String, Integer> hostMemMap = new ConcurrentHashMap<String, Integer>();
-        List<? extends HostVO> hosts = hostDao.findByClusterId(cluster.getId());
-        for (HostVO host : hosts) {
-            LOG.info("Host = "+host);
-            LOG.info("Host id = "+host.getId());
-            LOG.info("Host cap = "+host.getCapabilities());
-            HostResponse hostResponse = _responseGenerator.createHostResponse(host);
-            LOG.info("hostResponse =" + hostResponse);
-            LOG.info(hostResponse.getId());
-            LOG.info(hostResponse.getMemoryAllocated());
-            LOG.info(hostResponse.getMemoryTotal());
-            LOG.info(hostResponse.getMemoryUsed());
-            LOG.info(hostResponse.getMemoryAllocated()*100/hostResponse.getMemoryTotal());
-            LOG.info("======================");
-        }
-        */
-
-        // BalancingRunnable balancingRunnable = new BalancingRunnable();
-        // balancingRunnable.balancingCheck(cluster.getId());
-
-        // balancingCheck(cluster.getId());
-
         /* Using Runnable Interface */
         thread = new Thread(new BalancingThread(cluster.getId()));
         thread.start();
@@ -550,7 +526,6 @@ public final class HAManagerImpl extends ManagerBase implements HAManager, Clust
         return true;
     }
 
-    //내부 클래스 - Runnable 구현
     class BalancingThread implements Runnable{
         private long clusterId;
         public BalancingThread(long clusterid) {
@@ -568,7 +543,7 @@ public final class HAManagerImpl extends ManagerBase implements HAManager, Clust
     public boolean disableBalancing(final Cluster cluster) {
         clusterDetailsDao.persist(cluster.getId(), Balancing_ENABLED_DETAIL, String.valueOf(false));
 
-        // Thread.currentThread().interrupt();
+        // thread 종료
         thread.interrupt();
 
         return true;
@@ -576,26 +551,15 @@ public final class HAManagerImpl extends ManagerBase implements HAManager, Clust
 
     public void balancingCheck (long clusterId) {
         HashMap<Long, Long> hostMemMap = new HashMap<Long, Long>();
-        // List keyList = new ArrayList();
-        // List<? extends HostVO> hosts = hostDao.findByClusterId(clusterId);
-        // LOG.info("Hostsss = "+hosts);
         for (final HostVO host: hostDao.findByClusterId(clusterId)) {
-        // for (HostVO host : hosts) {
             HostResponse hostResponse = _responseGenerator.createHostResponse(host);
             LOG.info(hostResponse.getId());
             LOG.info(hostResponse.getMemoryUsed()*100/hostResponse.getMemoryTotal());
 
-            // hostMemMap.put(hostResponse.getId(), hostResponse.getMemoryUsed()*100/hostResponse.getMemoryTotal());
             hostMemMap.put(host.getId(), hostResponse.getMemoryUsed()*100/hostResponse.getMemoryTotal());
-
-            // keyList.add(hostResponse.getMemoryAllocated()*100/hostResponse.getMemoryTotal());
-            // keyList.add(host.getPrivateIpAddress());
-
-            // hostMemMap.put(hostResponse.getId(), keyList);
-            // {hostResponse.getMemoryAllocated()*100/hostResponse.getMemoryTotal(), host.getPrivateIpAddress()};
         }
 
-        // Comparator 정의
+        // Comparator
         Comparator<Entry<Long, Long>> comparator = new Comparator<Entry<Long, Long>>() {
             @Override
             public int compare(Entry<Long, Long> e1, Entry<Long, Long> e2) {
@@ -628,38 +592,23 @@ public final class HAManagerImpl extends ManagerBase implements HAManager, Clust
 
         //1분 체크
         try {
-            // Boolean resourceBalancingEnabled= Boolean.parseBoolean(clusterDetailsDao.findDetail(clusterId, "resourceBalancingEnabled").getValue());
-            // if (!resourceBalancingEnabled) {
-            //     Thread.currentThread().interrupt();
-            //     Thread.interrupted();
-            // }
-
             Thread.sleep(60000);
             balancingCheck(clusterId);
         } catch (InterruptedException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         }
 
-        LOG.info("end======================");
     }
 
     private void balancingMonitor(Long minHostId, Long maxHostId) {
-        // List<? extends VMInstanceVO> vmList = vmInstanceDao.listByHostId(hostId);
         Map<Long, Integer> vmMemMap = new ConcurrentHashMap<Long, Integer>();
 
         for (final VMInstanceVO vm: vmInstanceDao.listByHostId(maxHostId)) {
-            //host ip 조회
             LOG.info("hostId = "+maxHostId);
-            // String instanceName = vm.getInstanceName();
             try {
                 LOG.info("vm.getId() = "+vm.getId());
-                // String oomScore = _agentMgr.getOomScore(maxHostId, instanceName);
-                // LOG.info("oomScore = "+oomScore);
-                // if (oomScore != ""){
                 Hashtable<Long, UserVmResponse> vmDataList = new Hashtable<Long, UserVmResponse>();
                 String responseName = "virtualmachine";
-                // UserVmResponse userVmData = vmDataList.get(vm.getId());
                 List<UserVmJoinVO> userVmJoinVOs = userVmJoinDao.searchByIds(vm.getId());
                 ResponseObject.ResponseView respView = ResponseObject.ResponseView.Restricted;
                 Account caller = CallContext.current().getCallingAccount();
@@ -682,7 +631,7 @@ public final class HAManagerImpl extends ManagerBase implements HAManager, Clust
             }
         }
 
-        // Comparator 정의
+        // Comparator
         Comparator<Entry<Long, Integer>> comparator = new Comparator<Entry<Long, Integer>>() {
             @Override
             public int compare(Entry<Long, Integer> e1, Entry<Long, Integer> e2) {
@@ -701,7 +650,6 @@ public final class HAManagerImpl extends ManagerBase implements HAManager, Clust
             LOG.info("minEntry.getKey() = "+minEntry.getKey());
             LOG.info("destinationHost = "+destinationHost);
             userVmService.migrateVirtualMachine(minEntry.getKey(), destinationHost);
-            LOG.info("=====migrateVirtualMachine");
         } catch (ResourceUnavailableException ex) {
             LOG.warn("Exception: ", ex);
             throw new ServerApiException(ApiErrorCode.RESOURCE_UNAVAILABLE_ERROR, ex.getMessage());
