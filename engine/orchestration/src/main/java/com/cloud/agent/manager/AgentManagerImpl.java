@@ -1880,23 +1880,30 @@ public class AgentManagerImpl extends ManagerBase implements AgentManager, Handl
     @Override
     public String getOomScore(String hostIp, String vmName) {
         s_logger.info("hostIp = "+hostIp);
-        String cmd = "ps -aux | grep "+ hostIp +" | grep "+ vmName +" | awk '{print $2}' | head -1";
+        // String cmd = "ps -aux | grep "+ vmName +" | awk '{print $2}' | head -1";
+        String cmd = "date";
         String s = "";
         String oom_score = "";
         s_logger.info("cmd = "+cmd);
         try {
             Process p = Runtime.getRuntime().exec(cmd);
-            p.waitFor();
             s_logger.info("p = "+p);
             s_logger.info("p.pid() = " + p.pid() +", p.exitValue() = "+p.exitValue());
 
             BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));
             s_logger.info("br = "+br.readLine());
             String sb = "";
-            while ((s = br.readLine()) != null)
+            StringBuffer sb2 = new StringBuffer();
+            while ((s = br.readLine()) != null){
                 sb += s;
+                sb2.append(s);
+            }
             s_logger.info("sb = "+sb.toString());
+            s_logger.info("sb2 = "+sb2.toString());
             oom_score = sb.toString();
+
+            String rst = br.readLine();
+            s_logger.info("rst = "+rst);
             p.waitFor();
             p.destroy();
         } catch (final InterruptedException e) {
