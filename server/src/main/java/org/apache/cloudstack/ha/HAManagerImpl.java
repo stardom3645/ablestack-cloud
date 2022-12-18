@@ -645,9 +645,33 @@ public final class HAManagerImpl extends ManagerBase implements HAManager, Clust
                 LOG.info("instanceName = "+instanceName);
                 // String cmd = "ps -aux | grep "+ instanceName +" | awk '{print $2}' | head -1";
                 String cmd = "ssh root@"+ hostIp +" 'ps -aux | grep "+ instanceName +"' | awk '{print $2}' | head -1";
-                LOG.info("cmd = "+cmd);
+                // String pid_cmd = "";
+                // String[] cmd = { "ssh root@", hostIp, "'ps -aux | grep", instanceName, "' | awk '{print $2}' | head -1" };
+                LOG.info("cmd1 = "+cmd);
                 Process p = Runtime.getRuntime().exec(cmd);
                 LOG.info("p = "+p);
+
+                cmd = "ssh -o StrictHostKeyChecking=no root@"+ hostIp +" 'ps -aux | grep "+ instanceName;
+                // String pid_cmd = "";
+                // String[] cmd = { "ssh root@", hostIp, "'ps -aux | grep", instanceName, "' | awk '{print $2}' | head -1" };
+                LOG.info("cmd2 = "+cmd);
+                p = Runtime.getRuntime().exec(cmd);
+                LOG.info("p = "+p);
+
+                cmd = "ssh -o StrictHostKeyChecking=no root@"+ hostIp +" 'ps -aux | grep "+ instanceName;
+                // String pid_cmd = "";
+                // String[] cmd = { "ssh root@", hostIp, "'ps -aux | grep", instanceName, "' | awk '{print $2}' | head -1" };
+                LOG.info("cmd3 = "+cmd);
+                p = Runtime.getRuntime().exec(cmd);
+                LOG.info("p = "+p);
+
+                cmd = "ssh -o StrictHostKeyChecking=no root@"+ hostIp +" 'ps -aux | grep "+ instanceName +"' | awk '{print $2}' | head -1";
+                // String pid_cmd = "";
+                // String[] cmd = { "ssh root@", hostIp, "'ps -aux | grep", instanceName, "' | awk '{print $2}' | head -1" };
+                LOG.info("cmd4 = "+cmd);
+                p = Runtime.getRuntime().exec(cmd);
+                LOG.info("p = "+p);
+
                 BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));
                 LOG.info("br = "+br);
                 String sb = "";
@@ -663,6 +687,7 @@ public final class HAManagerImpl extends ManagerBase implements HAManager, Clust
                 //oom_score
                 // cmd = "cat /proc/"+ vm_pid +"/oom_score";
                 cmd = "ssh root@"+ hostIp +" cat /proc/"+ vm_pid +"/oom_score";
+                // cmd = { "ssh", "root@"+hostIp, "cat /proc/"+vm_pid+"/oom_score" };
                 p = Runtime.getRuntime().exec(cmd);
                 br = new BufferedReader(new InputStreamReader(p.getInputStream()));
                 sb = "";
