@@ -6266,8 +6266,10 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
         List<SecurityGroupVO> securityGroupList = _securityGroupMgr.getSecurityGroupsForVm(curVm.getId());
         List<Long> securityGroupIdList = securityGroupList.stream().map(SecurityGroupVO::getId).collect(Collectors.toList());
         String uuidName = _uuidMgr.generateUuid(UserVm.class, null);
-        String hostName = generateHostName(uuidName);
-        String displayName = hostName + "-Clone";
+//        String hostName = generateHostName(uuidName);
+//        String displayName = hostName + "-Clone";
+        String hostName = cmd.getName();
+        String displayName = cmd.getName();
         VolumeVO curVolume = _volsDao.findByInstance(curVm.getId()).get(0);
         Long diskOfferingId = curVolume.getDiskOfferingId();
         Long size = null; // mutual exclusive with disk offering id
