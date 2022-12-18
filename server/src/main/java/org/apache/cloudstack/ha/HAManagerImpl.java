@@ -18,10 +18,9 @@
 package org.apache.cloudstack.ha;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-// import java.io.BufferedReader;
-// import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -648,21 +647,17 @@ public final class HAManagerImpl extends ManagerBase implements HAManager, Clust
 
                 LOG.info("instanceName = "+instanceName);
                 /*
-                String oomScorePath = Script.findScript("/root/1218_lb_rpm", "oomScore.sh");
-                long heartBeatCheckerTimeout = 600000; // 10 minutes
-                if (oomScorePath == null) {
-                    throw new ConfigurationException("Unable to find oomScore.sh");
-                }
-                Script cmd = new Script(oomScorePath, heartBeatCheckerTimeout, LOG);
-                cmd.add(hostIp);
-                cmd.add(instanceName);
-                LOG.info("instanceName = "+instanceName);
-                OutputInterpreter.OneLineParser parser = new OutputInterpreter.OneLineParser();
-                String result = cmd.execute(parser);
-                LOG.info("result = "+result);
-                String parsedLine = parser.getLine();
-                LOG.info("parsedLine = "+parsedLine);
-*/
+                Runtime runtime = Runtime.getRuntime();
+                String command = "sh /root/1218_lb_rpm/oomScore.sh "+hostIp+" "+instanceName;
+                Process process = runtime.exec(command);
+                process.waitFor();
+
+                InputStream is = process.getInputStream();
+                InputStreamReader isr = new InputStreamReader(is);
+                BufferedReader br = new BufferedReader(isr);
+                LOG.info("br = "+br);
+                
+
                 Runtime runtime = Runtime.getRuntime();
                 Process process = runtime.exec("sh /root/1218_lb_rpm/oomScore.sh "+hostIp+" "+instanceName);
                 InputStream is = process.getInputStream();
@@ -674,6 +669,35 @@ public final class HAManagerImpl extends ManagerBase implements HAManager, Clust
                     LOG.info("result = " + line);
                     oomScore = Long.parseLong(line);
                 }
+*/
+                String cmd = "ssh";
+                String url = hostIp;
+                String args = "";
+                String line = "";
+                ProcessBuilder processBuilder = new ProcessBuilder();
+                Process process = null;
+                processBuilder.command().add("ssh");
+                processBuilder.command().add("root@"+hostIp);
+                processBuilder.command().add("ps -aux | grep "+ instanceName);
+                processBuilder.command().add("| awk '{print $2}' | head -1");
+                LOG.info("command = " + processBuilder.command());
+                try {
+                    process = processBuilder.start();
+                    LOG.info("process = " + process);
+                    InputStream is = process.getInputStream();
+                    InputStreamReader isr = new InputStreamReader(is);
+                    BufferedReader br = new BufferedReader(isr);
+                    LOG.info("br = " + br);
+
+                    while ((line = br.readLine()) != null) {
+                        String contents = line + "\n";
+                        LOG.info("contents = " + contents);
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                
+
                 // LOG.info("oomScore = "+oomScore);
                 // String cmd = "ps -aux | grep "+ instanceName +" | awk '{print $2}' | head -1";
                 // String cmd = "ssh root@"+ hostIp +" ps -aux | grep "+ instanceName +" | awk '{print $2}' | head -1";
