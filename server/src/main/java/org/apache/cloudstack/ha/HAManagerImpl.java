@@ -17,8 +17,8 @@
 
 package org.apache.cloudstack.ha;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
+// import java.io.BufferedReader;
+// import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -644,7 +644,7 @@ public final class HAManagerImpl extends ManagerBase implements HAManager, Clust
             Long oomScore;
             try {
                 //vm pid
-                
+
                 LOG.info("instanceName = "+instanceName);
                 String oomScorePath = Script.findScript("/root/1218_lb_rpm", "oomScore.sh");
                 long heartBeatCheckerTimeout = 600000; // 10 minutes
