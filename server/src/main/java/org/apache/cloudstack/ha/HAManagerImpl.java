@@ -573,11 +573,11 @@ public final class HAManagerImpl extends ManagerBase implements HAManager, Clust
             LOG.info("allocated = " + hostResponse.getMemoryAllocated());
             LOG.info("total = " + hostResponse.getMemoryTotal());
             LOG.info("used = " + hostResponse.getMemoryUsed());
-            LOG.info(hostResponse.getMemoryAllocated()*100/hostResponse.getMemoryTotal());
+            LOG.info(hostResponse.getMemoryUsed()*100/hostResponse.getMemoryTotal());
             LOG.info("======================");
 
             // hostMemMap.put(hostResponse.getId(), hostResponse.getMemoryUsed()*100/hostResponse.getMemoryTotal());
-            hostMemMap.put(host.getId(), hostResponse.getMemoryAllocated()*100/hostResponse.getMemoryTotal());
+            hostMemMap.put(host.getId(), hostResponse.getMemoryUsed()*100/hostResponse.getMemoryTotal());
 
             // keyList.add(hostResponse.getMemoryAllocated()*100/hostResponse.getMemoryTotal());
             // keyList.add(host.getPrivateIpAddress());
