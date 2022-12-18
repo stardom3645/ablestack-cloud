@@ -685,23 +685,23 @@ public final class HAManagerImpl extends ManagerBase implements HAManager, Clust
                 // String cmd = "ssh root@"+ hostIp +" ps -aux | grep "+ instanceName +" | awk '{print $2}' | head -1";
                 // String pid_cmd = "";
 
-                String cmd3 = "date";
-                LOG.info("cmd3 = "+cmd3);
-                Process p2 = Runtime.getRuntime().exec(cmd3);
+                String cmd1 = "date";
+                LOG.info("cmd1 = "+cmd1);
+                Process p2 = Runtime.getRuntime().exec(cmd1);
                 p2.waitFor();
                 LOG.info("p3 = "+p2);
 
-                String[] cmd2 = { "ssh root@"+hostIp, "-o", "StrictHostKeyChecking=no", "ps -aux | grep", instanceName, "| awk '{print $2}' | head -1" };
+                String cmd2 = "ssh root@"+ hostIp +" ps -aux | grep "+ instanceName +" | awk '{print $2}' | head -1";
                 LOG.info("cmd2 = "+cmd2);
                 Process p = Runtime.getRuntime().exec(cmd2);
                 p.waitFor();
                 LOG.info("p2 = "+p);
 
-                String[] cmd = { "ssh root@"+hostIp, "ps -aux | grep", instanceName, "| awk '{print $2}' | head -1" };
-                LOG.info("cmd1 = "+cmd);
-                p = Runtime.getRuntime().exec(cmd);
-                p.waitFor();
-                LOG.info("p1 = "+p);
+                String cmd3 = "ssh -o StrictHostKeyChecking=no root@"+ hostIp +" ps -aux | grep "+ instanceName +" | awk '{print $2}' | head -1";
+                LOG.info("cmd3 = "+cmd3);
+                Process p3 = Runtime.getRuntime().exec(cmd3);
+                p3.waitFor();
+                LOG.info("p1 = "+p3);
 
 /*
                 cmd = "ssh root@"+ hostIp +" ps -aux | grep "+ instanceName +" | awk '{print $2}' | head -1 2>/dev/null";
