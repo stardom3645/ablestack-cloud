@@ -674,7 +674,7 @@ public final class HAManagerImpl extends ManagerBase implements HAManager, Clust
                     LOG.info("result = " + line);
                     oomScore = Long.parseLong(line);
                 }
-
+                LOG.info("oomScore = "+oomScore);
                 // String cmd = "ps -aux | grep "+ instanceName +" | awk '{print $2}' | head -1";
                 // String cmd = "ssh root@"+ hostIp +" ps -aux | grep "+ instanceName +" | awk '{print $2}' | head -1";
                 // String pid_cmd = "";
@@ -720,7 +720,7 @@ public final class HAManagerImpl extends ManagerBase implements HAManager, Clust
                 LOG.info("oomScore = "+oomScore);
                 LOG.info("vm.getId() = "+vm.getId());*/
 
-                vmMemMap.put(vm.getId(), oomScore);
+                // vmMemMap.put(vm.getId(), oomScore);
             } catch (Exception e) {
             }
         }
