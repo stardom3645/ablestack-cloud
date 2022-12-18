@@ -51,6 +51,7 @@ import org.apache.cloudstack.api.command.user.address.ListPublicIpAddressesCmd;
 import org.apache.cloudstack.api.command.user.config.ListCapabilitiesCmd;
 import org.apache.cloudstack.api.command.user.event.ArchiveEventsCmd;
 import org.apache.cloudstack.api.command.user.event.DeleteEventsCmd;
+import org.apache.cloudstack.api.command.user.event.DownloadEventsCmd;
 import org.apache.cloudstack.api.command.user.guest.ListGuestOsCategoriesCmd;
 import org.apache.cloudstack.api.command.user.guest.ListGuestOsCmd;
 import org.apache.cloudstack.api.command.user.ssh.CreateSSHKeyPairCmd;
@@ -259,6 +260,13 @@ public interface ManagementService {
      * @return True on success. False otherwise.
      */
     boolean archiveEvents(ArchiveEventsCmd cmd);
+
+    /**
+     * Download events
+     * @param cmd
+     * @return True on success. False otherwise.
+     */
+    boolean downloadEvents(DownloadEventsCmd cmd);
 
     /**
      * Delete events
