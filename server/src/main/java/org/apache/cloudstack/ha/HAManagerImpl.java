@@ -545,16 +545,16 @@ public final class HAManagerImpl extends ManagerBase implements HAManager, Clust
         // balancingCheck(cluster.getId());
 
         /* Using Runnable Interface */
-        Thread th4 = new Thread(new ThirdThread(cluster.getId()));
-        th4.start();
+        Thread thread = new Thread(new BalancingThread(cluster.getId()));
+        thread.start();
 
         return true;
     }
 
     //내부 클래스 - Runnable 구현
-    class ThirdThread implements Runnable{
+    class BalancingThread implements Runnable{
         private long clusterId;
-        public ThirdThread(long clusterid) {
+        public BalancingThread(long clusterid) {
             this.clusterId = clusterid;
         }
 
@@ -660,14 +660,10 @@ public final class HAManagerImpl extends ManagerBase implements HAManager, Clust
                 UserVmJoinVO userVM = userVmJoinDao.findById(vm.getId());
                 UserVmResponse cvmResponse = ApiDBUtils.newUserVmResponse(respView, responseName, userVM, EnumSet.of(ApiConstants.VMDetails.nics), caller);
 
-                LOG.info("userVmData = "+userVmData);
+                LOG.info("cvmResponse = "+cvmResponse);
                 // userVmData = ApiDBUtils.fillVmDetails(ResponseView.Full, userVmData, userVmJoinVOs.get(0));
-                LOG.info("userVmData = "+userVmData);
-                LOG.info("userVmData.getMemory() = "+userVmData.getMemory());
-                vmMemMap.put(vm.getId(), userVmData.getMemory());
-                LOG.info("vm.getId = "+vm.getId());
-                LOG.info("userVmData.getMemory() = "+userVmData.getMemory());
-                // }
+                LOG.info("userVmData.getMemory() = "+cvmResponse.getMemory());
+                vmMemMap.put(vm.getId(), cvmResponse.getMemory());
 
             } catch (Exception e) {
             }
