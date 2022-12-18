@@ -643,7 +643,6 @@ public final class HAManagerImpl extends ManagerBase implements HAManager, Clust
                 // if (oomScore != ""){
                 Hashtable<Long, UserVmResponse> vmDataList = new Hashtable<Long, UserVmResponse>();
                 UserVmResponse userVmData = vmDataList.get(vm.getId());
-                LOG.info("userVmData = "+userVmData);
                 List<UserVmJoinVO> userVmJoinVOs = userVmJoinDao.searchByIds(vm.getId());
                 userVmData = ApiDBUtils.fillVmDetails(ResponseView.Full, userVmData, userVmJoinVOs.get(0));
                 LOG.info("userVmData = "+userVmData);
