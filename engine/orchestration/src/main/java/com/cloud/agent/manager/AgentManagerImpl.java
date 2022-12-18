@@ -1883,10 +1883,17 @@ public class AgentManagerImpl extends ManagerBase implements AgentManager, Handl
         s_logger.info("hostIp = "+hostIp);
         String cmd = String.format("ps -aux | grep %s | awk '{print $2}' | head -1", vmName);
         s_logger.info("cmd = "+cmd);
-        String oom_score = Script.runSimpleBashScript(cmd);
-        s_logger.info("oom_score = "+oom_score);
+        String vmPid = Script.runSimpleBashScript(cmd);
+        s_logger.info("vmPid = "+vmPid);
+
+        cmd = String.format("cat /proc/%s/oom_score", vmPid);
+        s_logger.info("cmd = "+cmd);
+        String oomScore = Script.runSimpleBashScript(cmd);
+        s_logger.info("oomScore = "+oomScore);
+
+
         // String[] cmd = new String[]{ "/bin/sh", "-c", "ps -aux | grep "+ vmName, " | awk '{print $2}'", "| head -1" };
-        String s = "";
+        // String s = "";
         // String oom_score = "";
         /*try {
             // ProcessBuilder processBuilder = new ProcessBuilder(cmd);
@@ -1929,6 +1936,6 @@ public class AgentManagerImpl extends ManagerBase implements AgentManager, Handl
             s_logger.debug("IOException", e);
         }*/
 
-        return oom_score;
+        return oomScore;
     }
 }
