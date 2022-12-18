@@ -164,7 +164,7 @@ export default {
         },
         {
           api: 'cloneVirtualMachine',
-          icon: 'camera',
+          icon: 'copy-outlined',
           label: 'label.action.clone.vm',
           message: 'message.action.clone.instance',
           docHelp: 'adminguide/virtual_machines.html#cloning-vms',
