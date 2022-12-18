@@ -1881,6 +1881,7 @@ public class AgentManagerImpl extends ManagerBase implements AgentManager, Handl
     @Override
     public String getOomScore(String hostIp, String vmName) {
         s_logger.info("hostIp = "+hostIp);
+        String oomScore = "";
         /*String cmd = String.format("ps -aux | grep %s | grep -Ev 'grep' | awk '{print $2}'", vmName);
         s_logger.info("cmd = "+cmd);
         String vmPid = Script.runSimpleBashScript(cmd);
@@ -1898,7 +1899,6 @@ public class AgentManagerImpl extends ManagerBase implements AgentManager, Handl
         String cmd = String.format("ps -aux | grep %s | grep -Ev 'grep' | awk '{print $2}'", vmName);
         // String[] cmd = new String[]{ "/bin/sh", "-c", "ps -aux | grep "+ vmName, " | awk '{print $2}'", "| head -1" };
         // String s = "";
-        String oom_score = "";
         try {
             // ProcessBuilder processBuilder = new ProcessBuilder(cmd);
             // Process p = processBuilder.start();
@@ -1910,6 +1910,20 @@ public class AgentManagerImpl extends ManagerBase implements AgentManager, Handl
 
             BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));
             s_logger.info("br = "+br.readLine());
+            String vmPid = br.readLine();
+
+            if (!StringUtils.isNotBlank(vmPid)) {
+                cmd = String.format("cat /proc/%s/oom_score", vmPid);
+                p = Runtime.getRuntime().exec(cmd);
+                s_logger.info("p = "+p);
+                p.waitFor();
+                s_logger.info("p.pid() = " + p.pid() +", p.exitValue() = "+p.exitValue());
+    
+                br = new BufferedReader(new InputStreamReader(p.getInputStream()));
+                s_logger.info("br = "+br.readLine());
+                oomScore = br.readLine();
+            }
+
             // String sb = "";
             // StringBuffer sb2 = new StringBuffer();
             // while ((s = br.readLine()) != null){
