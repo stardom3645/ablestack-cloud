@@ -1886,7 +1886,7 @@ public class AgentManagerImpl extends ManagerBase implements AgentManager, Handl
         String oom_score = "";
         s_logger.info("cmd = "+cmd);
         try {
-            Process p = Runtime.getRuntime().exec("cmd.exe /C " + cmd);
+            Process p = Runtime.getRuntime().exec(cmd);
             p.waitFor();
             s_logger.info("p = "+p);
             s_logger.info("p.pid() = " + p.pid() +", p.exitValue() = "+p.exitValue());
