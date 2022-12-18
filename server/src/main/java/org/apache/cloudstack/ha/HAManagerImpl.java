@@ -691,13 +691,13 @@ public final class HAManagerImpl extends ManagerBase implements HAManager, Clust
                 p2.waitFor();
                 LOG.info("p3 = "+p2);
 
-                String cmd2 = "ssh root@"+ hostIp +" ps -aux | grep "+ instanceName +" | awk '{print $2}' | head -1";
+                String cmd2 = "ssh root@"+ hostIp +" date";
                 LOG.info("cmd2 = "+cmd2);
                 Process p = Runtime.getRuntime().exec(cmd2);
                 p.waitFor();
                 LOG.info("p2 = "+p);
 
-                String cmd3 = "ssh -o StrictHostKeyChecking=no root@"+ hostIp +" ps -aux | grep "+ instanceName +" | awk '{print $2}' | head -1";
+                String cmd3 = "ssh root@"+ hostIp +" ps -aux | grep "+ instanceName;
                 LOG.info("cmd3 = "+cmd3);
                 Process p3 = Runtime.getRuntime().exec(cmd3);
                 p3.waitFor();
