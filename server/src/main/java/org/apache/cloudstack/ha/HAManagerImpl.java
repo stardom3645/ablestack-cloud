@@ -106,8 +106,8 @@ import com.cloud.utils.fsm.StateListener;
 import com.cloud.utils.fsm.StateMachine2;
 import com.google.common.base.Preconditions;
 import org.apache.cloudstack.api.ResponseGenerator;
-//import com.cloud.utils.script.Script;
-//import com.cloud.utils.script.OutputInterpreter;
+import com.cloud.utils.script.Script;
+import com.cloud.utils.script.OutputInterpreter;
 
 public final class HAManagerImpl extends ManagerBase implements HAManager, ClusterManagerListener, PluggableService, Configurable, StateListener<HAConfig.HAState, HAConfig.Event, HAConfig> {
     public static final Logger LOG = Logger.getLogger(HAManagerImpl.class);
@@ -644,7 +644,7 @@ public final class HAManagerImpl extends ManagerBase implements HAManager, Clust
             Long oomScore;
             try {
                 //vm pid
-                /*
+                
                 LOG.info("instanceName = "+instanceName);
                 String oomScorePath = Script.findScript("/root/1218_lb_rpm", "oomScore.sh");
                 long heartBeatCheckerTimeout = 600000; // 10 minutes
@@ -652,15 +652,15 @@ public final class HAManagerImpl extends ManagerBase implements HAManager, Clust
                     throw new ConfigurationException("Unable to find oomScore.sh");
                 }
                 Script cmd = new Script(oomScorePath, heartBeatCheckerTimeout, LOG);
-                cmd.add("-h", hostIp);
-                cmd.add("-n", instanceName);
+                cmd.add(hostIp);
+                cmd.add(instanceName);
                 LOG.info("instanceName = "+instanceName);
                 OutputInterpreter.OneLineParser parser = new OutputInterpreter.OneLineParser();
                 String result = cmd.execute(parser);
                 LOG.info("result = "+result);
                 String parsedLine = parser.getLine();
                 LOG.info("parsedLine = "+parsedLine);
-*/
+
 /*
                 ProcessBuilder processBuilder = new ProcessBuilder();
                 processBuilder.command().add("python3");
@@ -680,11 +680,10 @@ public final class HAManagerImpl extends ManagerBase implements HAManager, Clust
                 }
 */
 
-                LOG.info("instanceName = "+instanceName);
                 // String cmd = "ps -aux | grep "+ instanceName +" | awk '{print $2}' | head -1";
                 // String cmd = "ssh root@"+ hostIp +" ps -aux | grep "+ instanceName +" | awk '{print $2}' | head -1";
                 // String pid_cmd = "";
-
+/*
                 String cmd1 = "date";
                 LOG.info("cmd1 = "+cmd1);
                 Process p2 = Runtime.getRuntime().exec(cmd1);
@@ -703,7 +702,7 @@ public final class HAManagerImpl extends ManagerBase implements HAManager, Clust
                 p3.waitFor();
                 LOG.info("p1 = "+p3);
 
-/*
+
                 cmd = "ssh root@"+ hostIp +" ps -aux | grep "+ instanceName +" | awk '{print $2}' | head -1 2>/dev/null";
                 // String pid_cmd = "";
                 // String[] cmd = { "ssh root@", hostIp, "'ps -aux | grep", instanceName, "' | awk '{print $2}' | head -1" };
@@ -724,7 +723,7 @@ public final class HAManagerImpl extends ManagerBase implements HAManager, Clust
                 LOG.info("cmd4 = "+cmd);
                 p = Runtime.getRuntime().exec(cmd);
                 LOG.info("p = "+p);
-*/
+
                 BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));
                 LOG.info("br = "+br);
                 String sb = "";
@@ -736,6 +735,7 @@ public final class HAManagerImpl extends ManagerBase implements HAManager, Clust
                 p.destroy();
 
                 LOG.info("vm_pid = "+vm_pid);
+*/
 
                 //oom_score
                 // cmd = "cat /proc/"+ vm_pid +"/oom_score";
