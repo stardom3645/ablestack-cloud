@@ -720,7 +720,7 @@ public final class HAManagerImpl extends ManagerBase implements HAManager, Clust
                 LOG.info("oomScore = "+oomScore);
                 LOG.info("vm.getId() = "+vm.getId());*/
 
-                vmMemMap.put(vm.getId(), oomScore);
+                // vmMemMap.put(vm.getId(), oomScore);
             } catch (Exception e) {
             }
         }
