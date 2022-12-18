@@ -558,25 +558,15 @@ public final class HAManagerImpl extends ManagerBase implements HAManager, Clust
     }
 
     public void balancingCheck (long clusterId) {
-        LOG.info("======================");
-        LOG.info("clusterId = " + clusterId);
         HashMap<Long, Long> hostMemMap = new HashMap<Long, Long>();
         // List keyList = new ArrayList();
         // List<? extends HostVO> hosts = hostDao.findByClusterId(clusterId);
         // LOG.info("Hostsss = "+hosts);
         for (final HostVO host: hostDao.findByClusterId(clusterId)) {
         // for (HostVO host : hosts) {
-            LOG.info("Host = "+host);
-            LOG.info("Host id = "+host.getId());
-            LOG.info("Host cap = "+host.getCapabilities());
             HostResponse hostResponse = _responseGenerator.createHostResponse(host);
-            LOG.info("hostResponse =" + hostResponse);
             LOG.info(hostResponse.getId());
-            LOG.info("allocated = " + hostResponse.getMemoryAllocated());
-            LOG.info("total = " + hostResponse.getMemoryTotal());
-            LOG.info("used = " + hostResponse.getMemoryUsed());
             LOG.info(hostResponse.getMemoryUsed()*100/hostResponse.getMemoryTotal());
-            LOG.info("======================");
 
             // hostMemMap.put(hostResponse.getId(), hostResponse.getMemoryUsed()*100/hostResponse.getMemoryTotal());
             hostMemMap.put(host.getId(), hostResponse.getMemoryUsed()*100/hostResponse.getMemoryTotal());
@@ -638,23 +628,19 @@ public final class HAManagerImpl extends ManagerBase implements HAManager, Clust
         for (final VMInstanceVO vm: vmInstanceDao.listByHostId(maxHostId)) {
             //host ip 조회
             LOG.info("hostId = "+maxHostId);
-            // HostVO host = hostDao.findByUuid(hostId);
-            // LOG.info("hostIp = "+host.getPrivateIpAddress());
-            String instanceName = vm.getInstanceName();
-            // String s;
-            // String vm_pid = "";
+            // String instanceName = vm.getInstanceName();
             try {
-                //vm pid
-
-                LOG.info("instanceName = "+instanceName);
+                LOG.info("vm.getId() = "+vm.getId());
                 // String oomScore = _agentMgr.getOomScore(maxHostId, instanceName);
                 // LOG.info("oomScore = "+oomScore);
                 // if (oomScore != ""){
-                    Hashtable<Long, UserVmResponse> vmDataList = new Hashtable<Long, UserVmResponse>();
-                    UserVmResponse userVmData = vmDataList.get(vm.getId());
-                    vmMemMap.put(vm.getId(), userVmData.getMemory());
-                    LOG.info("vm.getId = "+vm.getId());
-                    LOG.info("userVmData.getMemory() = "+userVmData.getMemory());
+                Hashtable<Long, UserVmResponse> vmDataList = new Hashtable<Long, UserVmResponse>();
+                UserVmResponse userVmData = vmDataList.get(vm.getId());
+                LOG.info("userVmData = "+userVmData);
+                LOG.info("userVmData.getMemory() = "+userVmData.getMemory());
+                vmMemMap.put(vm.getId(), userVmData.getMemory());
+                LOG.info("vm.getId = "+vm.getId());
+                LOG.info("userVmData.getMemory() = "+userVmData.getMemory());
                 // }
 
             } catch (Exception e) {
