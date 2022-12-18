@@ -50,7 +50,7 @@ export default {
     {
       api: 'downloadEvents',
       icon: 'download-outlined',
-      label: 'label.archive.download',
+      label: 'label.download.events',
       message: 'message.confirm.archive.selected.events',
       docHelp: 'adminguide/events.html#deleting-and-archiving-events-and-alerts',
       dataView: true,
