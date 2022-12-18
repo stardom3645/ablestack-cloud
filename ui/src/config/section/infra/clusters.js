@@ -188,8 +188,8 @@ export default {
     {
       api: 'enableBalancingCluster',
       icon: 'control-outlined',
-      label: 'label.action.balancing.cluster',
-      message: 'message.action.balancing.cluster',
+      label: 'label.action.enableBalancing.cluster',
+      message: 'message.action.enableBalancing.cluster',
       dataView: true,
       show: (record) => {
         return record?.resourcedetails?.resourceBalancingEnabled === 'false'

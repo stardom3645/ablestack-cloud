@@ -93,6 +93,7 @@ import com.cloud.host.dao.HostDao;
 import com.cloud.vm.dao.VMInstanceDao;
 import com.cloud.vm.UserVmService;
 import com.cloud.org.Cluster;
+import com.cloud.resource.ResourceService;
 import com.cloud.utils.component.ComponentContext;
 import com.cloud.utils.component.ManagerBase;
 import com.cloud.utils.component.PluggableService;
@@ -120,6 +121,9 @@ public final class HAManagerImpl extends ManagerBase implements HAManager, Clust
 
     @Inject
     protected UserVmService userVmService;
+
+    @Inject
+    protected ResourceService resourceService;
 
     @Inject
     private ClusterDetailsDao clusterDetailsDao;
@@ -636,15 +640,16 @@ public final class HAManagerImpl extends ManagerBase implements HAManager, Clust
             String s;
             String vm_pid = "";
             Long oomScore;
-            Process p;
             try {
                 //vm pid
                 LOG.info("instanceName = "+instanceName);
                 // String cmd = "ps -aux | grep "+ instanceName +" | awk '{print $2}' | head -1";
                 String cmd = "ssh root@"+ hostIp +" 'ps -aux | grep "+ instanceName +"' | awk '{print $2}' | head -1";
                 LOG.info("cmd = "+cmd);
-                p = Runtime.getRuntime().exec(cmd);
+                Process p = Runtime.getRuntime().exec(cmd);
+                LOG.info("p = "+p);
                 BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));
+                LOG.info("br = "+br);
                 String sb = "";
                 while ((s = br.readLine()) != null)
                     sb += s;
@@ -690,7 +695,8 @@ public final class HAManagerImpl extends ManagerBase implements HAManager, Clust
 
         //vm migration
         try {
-            userVmService.migrateVirtualMachine(minEntry.getKey(), null);
+            Host destinationHost = resourceService.getHost(hostId);
+            userVmService.migrateVirtualMachine(minEntry.getKey(), destinationHost);
         } catch (ResourceUnavailableException ex) {
             LOG.warn("Exception: ", ex);
             throw new ServerApiException(ApiErrorCode.RESOURCE_UNAVAILABLE_ERROR, ex.getMessage());
