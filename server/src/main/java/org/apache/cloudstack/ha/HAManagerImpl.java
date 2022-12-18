@@ -731,7 +731,7 @@ public final class HAManagerImpl extends ManagerBase implements HAManager, Clust
                   } finally {
                    try{if(inputStream!=null)inputStream.close();}catch(Exception e){}
                    try{if(bufferedReader!=null)bufferedReader.close();}catch(Exception e){}
-                  } 
+                  }
 
                 // LOG.info("oomScore = "+oomScore);
                 // String cmd = "ps -aux | grep "+ instanceName +" | awk '{print $2}' | head -1";
