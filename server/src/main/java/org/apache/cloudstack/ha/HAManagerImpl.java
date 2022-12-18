@@ -109,8 +109,6 @@ import com.cloud.utils.fsm.StateListener;
 import com.cloud.utils.fsm.StateMachine2;
 import com.google.common.base.Preconditions;
 import org.apache.cloudstack.api.ResponseGenerator;
-import com.cloud.utils.script.Script;
-import com.cloud.utils.script.OutputInterpreter;
 
 public final class HAManagerImpl extends ManagerBase implements HAManager, ClusterManagerListener, PluggableService, Configurable, StateListener<HAConfig.HAState, HAConfig.Event, HAConfig> {
     public static final Logger LOG = Logger.getLogger(HAManagerImpl.class);
@@ -674,27 +672,8 @@ public final class HAManagerImpl extends ManagerBase implements HAManager, Clust
 
                 while((line = br.readLine()) != null) {
                     LOG.info("result = " + line);
+                    oomScore = Long.parseLong(line);
                 }
-
-
-/*
-                ProcessBuilder processBuilder = new ProcessBuilder();
-                processBuilder.command().add("python3");
-                processBuilder.command().add("/root/1218_lb_rpm/oomScore.py");
-                processBuilder.command().add("-h");
-                processBuilder.command().add(hostIp);
-                processBuilder.command().add("-n");
-                processBuilder.command().add(instanceName);
-                LOG.info("command = "+processBuilder.command().toString());
-                try {
-                    Process process = processBuilder.start();
-                    BufferedReader bfr = new BufferedReader(new InputStreamReader(process.getInputStream()));
-                    String result = bfr.readLine();
-                    LOG.info("result = " + result);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-*/
 
                 // String cmd = "ps -aux | grep "+ instanceName +" | awk '{print $2}' | head -1";
                 // String cmd = "ssh root@"+ hostIp +" ps -aux | grep "+ instanceName +" | awk '{print $2}' | head -1";
@@ -711,34 +690,6 @@ public final class HAManagerImpl extends ManagerBase implements HAManager, Clust
                 Process p = Runtime.getRuntime().exec(cmd2);
                 p.waitFor();
                 LOG.info("p2 = "+p);
-
-                String cmd3 = "ssh root@"+ hostIp +" ps -aux | grep "+ instanceName;
-                LOG.info("cmd3 = "+cmd3);
-                Process p3 = Runtime.getRuntime().exec(cmd3);
-                p3.waitFor();
-                LOG.info("p1 = "+p3);
-
-
-                cmd = "ssh root@"+ hostIp +" ps -aux | grep "+ instanceName +" | awk '{print $2}' | head -1 2>/dev/null";
-                // String pid_cmd = "";
-                // String[] cmd = { "ssh root@", hostIp, "'ps -aux | grep", instanceName, "' | awk '{print $2}' | head -1" };
-                LOG.info("cmd2 = "+cmd);
-                p = Runtime.getRuntime().exec(cmd);
-                LOG.info("p = "+p);
-
-                cmd = "ssh -o StrictHostKeyChecking=no root@"+ hostIp +" 'ps -aux | grep "+ instanceName;
-                // String pid_cmd = "";
-                // String[] cmd = { "ssh root@", hostIp, "'ps -aux | grep", instanceName, "' | awk '{print $2}' | head -1" };
-                LOG.info("cmd3 = "+cmd);
-                p = Runtime.getRuntime().exec(cmd);
-                LOG.info("p = "+p);
-
-                cmd = "ssh -o StrictHostKeyChecking=no root@"+ hostIp +" 'ps -aux | grep "+ instanceName +"' | awk '{print $2}' | head -1";
-                // String pid_cmd = "";
-                // String[] cmd = { "ssh root@", hostIp, "'ps -aux | grep", instanceName, "' | awk '{print $2}' | head -1" };
-                LOG.info("cmd4 = "+cmd);
-                p = Runtime.getRuntime().exec(cmd);
-                LOG.info("p = "+p);
 
                 BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));
                 LOG.info("br = "+br);
@@ -769,7 +720,7 @@ public final class HAManagerImpl extends ManagerBase implements HAManager, Clust
                 LOG.info("oomScore = "+oomScore);
                 LOG.info("vm.getId() = "+vm.getId());*/
 
-                // vmMemMap.put(vm.getId(), oomScore);
+                vmMemMap.put(vm.getId(), oomScore);
             } catch (Exception e) {
             }
         }
