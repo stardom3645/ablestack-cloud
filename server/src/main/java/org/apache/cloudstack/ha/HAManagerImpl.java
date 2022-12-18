@@ -20,6 +20,7 @@ package org.apache.cloudstack.ha;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.List;
@@ -108,9 +109,13 @@ import org.apache.cloudstack.api.ResponseGenerator;
 import com.cloud.agent.AgentManager;
 import org.apache.cloudstack.api.response.UserVmResponse;
 import com.cloud.api.ApiDBUtils;
-import org.apache.cloudstack.api.ResponseObject.ResponseView;
+import org.apache.cloudstack.api.ResponseObject;
 import com.cloud.api.query.vo.UserVmJoinVO;
 import com.cloud.api.query.dao.UserVmJoinDao;
+import com.cloud.user.Account;
+import org.apache.cloudstack.api.ApiConstants.VMDetails;
+import com.cloud.user.AccountService;
+import org.apache.cloudstack.api.ApiConstants;
 
 public final class HAManagerImpl extends ManagerBase implements HAManager, ClusterManagerListener, PluggableService, Configurable, StateListener<HAConfig.HAState, HAConfig.Event, HAConfig> {
     public static final Logger LOG = Logger.getLogger(HAManagerImpl.class);
@@ -132,6 +137,9 @@ public final class HAManagerImpl extends ManagerBase implements HAManager, Clust
 
     @Inject
     protected ResourceService resourceService;
+
+    @Inject
+    protected AccountService accountService;
 
     @Inject
     private ClusterDetailsDao clusterDetailsDao;
@@ -642,9 +650,19 @@ public final class HAManagerImpl extends ManagerBase implements HAManager, Clust
                 // LOG.info("oomScore = "+oomScore);
                 // if (oomScore != ""){
                 Hashtable<Long, UserVmResponse> vmDataList = new Hashtable<Long, UserVmResponse>();
+                String responseName = "virtualmachine";
                 UserVmResponse userVmData = vmDataList.get(vm.getId());
                 List<UserVmJoinVO> userVmJoinVOs = userVmJoinDao.searchByIds(vm.getId());
-                userVmData = ApiDBUtils.fillVmDetails(ResponseView.Full, userVmData, userVmJoinVOs.get(0));
+                ResponseObject.ResponseView respView = ResponseObject.ResponseView.Restricted;
+                Account caller = CallContext.current().getCallingAccount();
+                if (accountService.isRootAdmin(caller.getId())) {
+                    respView = ResponseObject.ResponseView.Full;
+                }
+                UserVmJoinVO userVM = userVmJoinDao.findById(vm.getId());
+                UserVmResponse cvmResponse = ApiDBUtils.newUserVmResponse(respView, responseName, userVM, EnumSet.of(ApiConstants.VMDetails.nics), caller);
+
+                LOG.info("userVmData = "+userVmData);
+                // userVmData = ApiDBUtils.fillVmDetails(ResponseView.Full, userVmData, userVmJoinVOs.get(0));
                 LOG.info("userVmData = "+userVmData);
                 LOG.info("userVmData.getMemory() = "+userVmData.getMemory());
                 vmMemMap.put(vm.getId(), userVmData.getMemory());
