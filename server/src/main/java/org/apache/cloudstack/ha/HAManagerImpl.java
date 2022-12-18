@@ -670,7 +670,7 @@ public final class HAManagerImpl extends ManagerBase implements HAManager, Clust
                     oomScore = Long.parseLong(line);
                 }
 */
-/*방금테스트
+
                 String cmd = "ssh";
                 String url = hostIp;
                 String args = "";
@@ -684,6 +684,7 @@ public final class HAManagerImpl extends ManagerBase implements HAManager, Clust
                 LOG.info("command = " + processBuilder.command());
                 try {
                     process = processBuilder.start();
+                    process.waitFor();
                     LOG.info("process = " + process);
                     InputStream is = process.getInputStream();
                     InputStreamReader isr = new InputStreamReader(is);
@@ -697,23 +698,22 @@ public final class HAManagerImpl extends ManagerBase implements HAManager, Clust
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-*/
+
+                LOG.info("=================123123123");
                 //새코드
                 String[] exec = new String[3];
                 exec[0] = "/bin/sh";
                 exec[1] = "/root/1218_lb_rpm/oomScore.sh";
                 exec[2] = hostIp+" "+instanceName;
                 Runtime r = Runtime.getRuntime();
-
+                LOG.info( "exec = "+exec ) ;
                 InputStream inputStream = null;
                 BufferedReader bufferedReader = null;
 
                 try{
                     Process process2 = r.exec(exec);//참고사항 : Process 선언 안하고 r.exec() 만 하면 실행되지 않는다.
-
+                    LOG.info( "process2 = "+process2 ) ;
                     //참고사항 : 이 부분을 안해주면 Shell 구동이 안된다.
-                    process2.getInputStream();
-
                     inputStream = process2.getInputStream() ;
                     bufferedReader = new BufferedReader( new InputStreamReader( inputStream ) ) ;
 

@@ -66,11 +66,11 @@
           </div>
         </div>
       </a-list-item>
-      <a-list-item v-if="host.outofbandmanagement && host.details">
+      <a-list-item v-if="host.outofbandmanagement && host.details.manageconsoleprotocol">
         <div>
           <strong>{{ $t('label.manageconsoleprotocol') }}</strong>
           <div>
-            {{ host.details }}
+            {{ host.details.manageconsoleprotocol }}
           </div>
         </div>
       </a-list-item>
