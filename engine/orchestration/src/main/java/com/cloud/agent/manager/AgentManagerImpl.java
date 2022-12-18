@@ -1881,7 +1881,7 @@ public class AgentManagerImpl extends ManagerBase implements AgentManager, Handl
     public String getOomScore(String hostIp, String vmName) {
         s_logger.info("hostIp = "+hostIp);
         // String cmd = "ps -aux | grep "+ vmName +" | awk '{print $2}' | head -1";
-        String[] cmd = new String[]{ "ps -aux | grep "+ vmName, " | awk '{print $2}'", "| head -1" };
+        String[] cmd = new String[]{ "cmd /c ps -aux | grep "+ vmName, " | awk '{print $2}'", "| head -1" };
         String s = "";
         String oom_score = "";
         s_logger.info("cmd = "+cmd);
@@ -1918,10 +1918,12 @@ public class AgentManagerImpl extends ManagerBase implements AgentManager, Handl
             // s_logger.info("rst = "+rst);
             p.waitFor();
             p.destroy();
+
+            s_logger.info("p.pid()2 = " + p.pid() +", p.exitValue()2 = "+p.exitValue());
         } catch (final InterruptedException e) {
-            s_logger.debug("Interrupted");
+            s_logger.debug("Interrupted", e);
         } catch (final IOException e) {
-            s_logger.debug("IOException");
+            s_logger.debug("IOException", e);
         }
 
         return oom_score;
