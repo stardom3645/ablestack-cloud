@@ -1881,7 +1881,7 @@ public class AgentManagerImpl extends ManagerBase implements AgentManager, Handl
     @Override
     public String getOomScore(String hostIp, String vmName) {
         s_logger.info("hostIp = "+hostIp);
-        String cmd = "ps -aux | grep "+ vmName +" | awk '{print $2}' | head -1";
+        String cmd = String.format("ps -aux | grep %s | awk '{print $2}' | head -1", vmName);
         s_logger.info("cmd = "+cmd);
         String oom_score = Script.runSimpleBashScript(cmd);
         s_logger.info("oom_score = "+oom_score);
