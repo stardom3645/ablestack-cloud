@@ -650,20 +650,24 @@ public final class HAManagerImpl extends ManagerBase implements HAManager, Clust
                 // if (oomScore != ""){
                 Hashtable<Long, UserVmResponse> vmDataList = new Hashtable<Long, UserVmResponse>();
                 String responseName = "virtualmachine";
-                UserVmResponse userVmData = vmDataList.get(vm.getId());
+                // UserVmResponse userVmData = vmDataList.get(vm.getId());
                 List<UserVmJoinVO> userVmJoinVOs = userVmJoinDao.searchByIds(vm.getId());
                 ResponseObject.ResponseView respView = ResponseObject.ResponseView.Restricted;
                 Account caller = CallContext.current().getCallingAccount();
                 if (accountService.isRootAdmin(caller.getId())) {
                     respView = ResponseObject.ResponseView.Full;
                 }
+                LOG.info("respView = "+respView);
                 UserVmJoinVO userVM = userVmJoinDao.findById(vm.getId());
-                UserVmResponse cvmResponse = ApiDBUtils.newUserVmResponse(respView, responseName, userVM, EnumSet.of(ApiConstants.VMDetails.nics), caller);
+                LOG.info("userVM = "+userVM.getId());
+                LOG.info("ramSize = "+userVM.getRamSize());
+                /*UserVmResponse cvmResponse = ApiDBUtils.newUserVmResponse(respView, responseName, userVM, EnumSet.of(ApiConstants.VMDetails.nics), caller);
 
                 LOG.info("cvmResponse = "+cvmResponse);
                 // userVmData = ApiDBUtils.fillVmDetails(ResponseView.Full, userVmData, userVmJoinVOs.get(0));
-                LOG.info("userVmData.getMemory() = "+cvmResponse.getMemory());
-                vmMemMap.put(vm.getId(), cvmResponse.getMemory());
+                LOG.info("cvmResponse.getMemory() = "+cvmResponse.getMemory());
+                LOG.info("cvmResponse.getMemory() = "+cvmResponse.getId());*/
+                vmMemMap.put(vm.getId(), userVM.getRamSize());
 
             } catch (Exception e) {
             }
