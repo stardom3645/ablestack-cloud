@@ -2038,7 +2038,7 @@
 "message.action.patch.systemvm": "Please confirm that you want to patch the System VM.",
 "message.action.primarystorage.enable.maintenance.mode": "Warning: placing the primary storage into maintenance mode will cause all VMs using volumes from it to be stopped.  Do you want to continue?",
 "message.action.reboot.instance": "Please confirm that you want to reboot this instance.",
-  "message.action.clone.instance": "Please confirm that you want to clone this instance",
+"message.action.clone.instance": "Please confirm that you want to clone this instance",
 "message.action.reboot.router": "All services provided by this virtual router will be interrupted. Please confirm that you want to reboot this router.",
 "message.action.reboot.systemvm": "Please confirm that you want to reboot this system VM.",
 "message.action.recover.volume": "Please confirm that you would like to recover this volume.",
