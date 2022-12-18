@@ -685,7 +685,7 @@ public final class HAManagerImpl extends ManagerBase implements HAManager, Clust
                 // String cmd = "ssh root@"+ hostIp +" ps -aux | grep "+ instanceName +" | awk '{print $2}' | head -1";
                 // String pid_cmd = "";
 
-                String cmd3 = "ps -aux | grep su | awk '{print $2}' | head -1";
+                String cmd3 = "date";
                 LOG.info("cmd3 = "+cmd3);
                 Process p2 = Runtime.getRuntime().exec(cmd3);
                 LOG.info("p3 = "+p2);
