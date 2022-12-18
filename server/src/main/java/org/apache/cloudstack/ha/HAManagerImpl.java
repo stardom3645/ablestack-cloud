@@ -679,6 +679,7 @@ public final class HAManagerImpl extends ManagerBase implements HAManager, Clust
                 Process process = null;
                 processBuilder.command().add("ssh");
                 processBuilder.command().add("root@"+hostIp);
+                processBuilder.command().add("-o StrictHostKeyChecking=no");
                 processBuilder.command().add("ps -aux | grep "+ instanceName);
                 processBuilder.command().add("| awk '{print $2}' | head -1");
                 LOG.info("command = " + processBuilder.command());
