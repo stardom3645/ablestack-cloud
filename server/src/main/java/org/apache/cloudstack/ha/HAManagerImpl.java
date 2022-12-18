@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -105,6 +106,7 @@ import com.cloud.utils.fsm.StateMachine2;
 import com.google.common.base.Preconditions;
 import org.apache.cloudstack.api.ResponseGenerator;
 import com.cloud.agent.AgentManager;
+import org.apache.cloudstack.api.response.UserVmResponse;
 
 public final class HAManagerImpl extends ManagerBase implements HAManager, ClusterManagerListener, PluggableService, Configurable, StateListener<HAConfig.HAState, HAConfig.Event, HAConfig> {
     public static final Logger LOG = Logger.getLogger(HAManagerImpl.class);
@@ -631,7 +633,7 @@ public final class HAManagerImpl extends ManagerBase implements HAManager, Clust
 
     private void balancingMonitor(Long minHostId, Long maxHostId) {
         // List<? extends VMInstanceVO> vmList = vmInstanceDao.listByHostId(hostId);
-        Map<Long, Long> vmMemMap = new ConcurrentHashMap<Long, Long>();
+        Map<Long, Integer> vmMemMap = new ConcurrentHashMap<Long, Integer>();
 
         for (final VMInstanceVO vm: vmInstanceDao.listByHostId(maxHostId)) {
             //host ip 조회
@@ -645,167 +647,30 @@ public final class HAManagerImpl extends ManagerBase implements HAManager, Clust
                 //vm pid
 
                 LOG.info("instanceName = "+instanceName);
-
-                // VMOomCoreCommand cmd = new VMOomCoreCommand();
-
-                // cmd.setHostIp(hostIp);
-                // cmd.setVmName(instanceName);
-                String oomScore = _agentMgr.getOomScore(maxHostId, instanceName);
-                LOG.info("oomScore = "+oomScore);
-                if (oomScore != ""){
-                    vmMemMap.put(vm.getId(), Long.parseLong(oomScore));
-                }
-
-                /*
-                Runtime runtime = Runtime.getRuntime();
-                String command = "sh /root/1218_lb_rpm/oomScore.sh "+hostIp+" "+instanceName;
-                Process process = runtime.exec(command);
-                process.waitFor();
-
-                InputStream is = process.getInputStream();
-                InputStreamReader isr = new InputStreamReader(is);
-                BufferedReader br = new BufferedReader(isr);
-                LOG.info("br = "+br);
-
-
-                Runtime runtime = Runtime.getRuntime();
-                Process process = runtime.exec("sh /root/1218_lb_rpm/oomScore.sh "+hostIp+" "+instanceName);
-                InputStream is = process.getInputStream();
-                InputStreamReader isr = new InputStreamReader(is);
-                BufferedReader br = new BufferedReader(isr);
-                String line;
-
-                while((line = br.readLine()) != null) {
-                    LOG.info("result = " + line);
-                    oomScore = Long.parseLong(line);
-                }
-*/
-
-/*
-                String cmd = "ssh";
-                String url = hostIp;
-                String args = "";
-                String line = "";
-                ProcessBuilder processBuilder = new ProcessBuilder();
-                Process process = null;
-                processBuilder.command().add("ssh");
-                processBuilder.command().add("root@"+hostIp);
-                processBuilder.command().add("-o StrictHostKeyChecking=no");
-                processBuilder.command().add("ps -aux | grep "+ instanceName);
-                processBuilder.command().add("| awk '{print $2}' | head -1");
-                LOG.info("command = " + processBuilder.command());
-                try {
-                    process = processBuilder.start();
-                    process.waitFor();
-                    LOG.info("process = " + process);
-                    InputStream is = process.getInputStream();
-                    InputStreamReader isr = new InputStreamReader(is);
-                    BufferedReader br = new BufferedReader(isr);
-                    LOG.info("br = " + br);
-
-                    while ((line = br.readLine()) != null) {
-                        String contents = line + "\n";
-                        LOG.info("contents = " + contents);
-                    }
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-
-                LOG.info("=================123123123");
-                //새코드
-                String[] exec = new String[3];
-                exec[0] = "/bin/sh";
-                exec[1] = "/root/1218_lb_rpm/oomScore.sh";
-                exec[2] = hostIp+" "+instanceName;
-                Runtime r = Runtime.getRuntime();
-                LOG.info( "exec = "+exec ) ;
-                InputStream inputStream = null;
-                BufferedReader bufferedReader = null;
-
-                try{
-                    Process process2 = r.exec(exec);//참고사항 : Process 선언 안하고 r.exec() 만 하면 실행되지 않는다.
-                    LOG.info( "process2 = "+process2 ) ;
-                    //참고사항 : 이 부분을 안해주면 Shell 구동이 안된다.
-                    inputStream = process2.getInputStream() ;
-                    bufferedReader = new BufferedReader( new InputStreamReader( inputStream ) ) ;
-
-                    while(true) {
-                     String info = bufferedReader.readLine() ;
-                     if( info == null || info.equals( "" ) ){
-                      break ;
-                     }
-                     LOG.info( info ) ;
-                    }
-
-                  } catch (IOException e) {
-                   // TODO Auto-generated catch block
-                   e.printStackTrace();
-                  } finally {
-                   try{if(inputStream!=null)inputStream.close();}catch(Exception e){}
-                   try{if(bufferedReader!=null)bufferedReader.close();}catch(Exception e){}
-                  }
-*/
+                // String oomScore = _agentMgr.getOomScore(maxHostId, instanceName);
                 // LOG.info("oomScore = "+oomScore);
-                // String cmd = "ps -aux | grep "+ instanceName +" | awk '{print $2}' | head -1";
-                // String cmd = "ssh root@"+ hostIp +" ps -aux | grep "+ instanceName +" | awk '{print $2}' | head -1";
-                // String pid_cmd = "";
-/*
-                String cmd1 = "date";
-                LOG.info("cmd1 = "+cmd1);
-                Process p2 = Runtime.getRuntime().exec(cmd1);
-                p2.waitFor();
-                LOG.info("p3 = "+p2);
+                // if (oomScore != ""){
+                    Hashtable<Long, UserVmResponse> vmDataList = new Hashtable<Long, UserVmResponse>();
+                    UserVmResponse userVmData = vmDataList.get(vm.getId());
+                    vmMemMap.put(vm.getId(), userVmData.getMemory());
+                    LOG.info("vm.getId = "+vm.getId());
+                    LOG.info("userVmData.getMemory() = "+userVmData.getMemory());
+                // }
 
-                String cmd2 = "ssh root@"+ hostIp +" date";
-                LOG.info("cmd2 = "+cmd2);
-                Process p = Runtime.getRuntime().exec(cmd2);
-                p.waitFor();
-                LOG.info("p2 = "+p);
-
-                BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));
-                LOG.info("br = "+br);
-                String sb = "";
-                while ((s = br.readLine()) != null)
-                    sb += s;
-                LOG.info("sb = "+sb);
-                vm_pid = sb.toString();
-                p.waitFor();
-                p.destroy();
-
-                LOG.info("vm_pid = "+vm_pid);
-*/
-
-                //oom_score
-                // cmd = "cat /proc/"+ vm_pid +"/oom_score";
-/*                cmd = "ssh root@"+ hostIp +" cat /proc/"+ vm_pid +"/oom_score";
-                // cmd = { "ssh", "root@"+hostIp, "cat /proc/"+vm_pid+"/oom_score" };
-                p = Runtime.getRuntime().exec(cmd);
-                br = new BufferedReader(new InputStreamReader(p.getInputStream()));
-                sb = "";
-                while ((s = br.readLine()) != null)
-                    sb += s;
-                oomScore = Long.parseLong(sb.toString());
-                p.waitFor();
-                p.destroy();
-
-                LOG.info("oomScore = "+oomScore);
-                LOG.info("vm.getId() = "+vm.getId());*/
-
-                // vmMemMap.put(vm.getId(), oomScore);
             } catch (Exception e) {
             }
         }
 
         // Comparator 정의
-        Comparator<Entry<Long, Long>> comparator = new Comparator<Entry<Long, Long>>() {
+        Comparator<Entry<Long, Integer>> comparator = new Comparator<Entry<Long, Integer>>() {
             @Override
-            public int compare(Entry<Long, Long> e1, Entry<Long, Long> e2) {
+            public int compare(Entry<Long, Integer> e1, Entry<Long, Integer> e2) {
                 return e1.getValue().compareTo(e2.getValue());
             }
         };
 
         // Min Value의 key, value
-        Entry<Long, Long> minEntry = Collections.min(vmMemMap.entrySet(), comparator);
+        Entry<Long, Integer> minEntry = Collections.min(vmMemMap.entrySet(), comparator);
 
         LOG.info("vm minEntry = "+minEntry.getKey());
 
