@@ -566,7 +566,7 @@ public final class HAManagerImpl extends ManagerBase implements HAManager, Clust
     public boolean disableBalancing(final Cluster cluster) {
         clusterDetailsDao.persist(cluster.getId(), Balancing_ENABLED_DETAIL, String.valueOf(false));
 
-        Thread.currentThread().interrupt();
+        // Thread.currentThread().interrupt();
 
         return true;
     }
@@ -625,6 +625,12 @@ public final class HAManagerImpl extends ManagerBase implements HAManager, Clust
 
         //1분 체크
         try {
+            Boolean resourceBalancingEnabled= Boolean.parseBoolean(clusterDetailsDao.findDetail(clusterId, "resourceBalancingEnabled").getValue());
+            if (!resourceBalancingEnabled) {
+                Thread.currentThread().interrupt();
+                Thread.interrupted();
+            }
+            
             Thread.sleep(60000);
             balancingCheck(clusterId);
         } catch (InterruptedException e) {
