@@ -122,11 +122,11 @@ import com.cloud.utils.nio.Task;
 import com.cloud.utils.time.InaccurateClock;
 import org.apache.commons.lang3.StringUtils;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.io.IOException;
-import java.nio.charset.Charset;
-// import com.cloud.utils.script.Script;
+// import java.io.BufferedReader;
+// import java.io.InputStreamReader;
+// import java.io.IOException;
+// import java.nio.charset.Charset;
+import com.cloud.utils.script.Script;
 
 /**
  * Implementation of the Agent Manager. This class controls the connection to the agents.
@@ -1883,20 +1883,19 @@ public class AgentManagerImpl extends ManagerBase implements AgentManager, Handl
     public String getOomScore(String hostIp, String vmName) {
         s_logger.info("hostIp = "+hostIp);
         String oomScore = "";
-        /*String cmd = String.format("ps -aux | grep %s | grep -Ev 'grep' | awk '{print $2}'", vmName);
+        String cmd = String.format("ps -aux | grep %s | grep -Ev 'grep' | awk '{print $2}'", vmName);
         s_logger.info("cmd = "+cmd);
-        String vmPid = Script.runSimpleBashScript(cmd);
+        String vmPid = Script.runSimpleBashScript("ps -aux | grep "+vmName+" | grep -Ev 'grep' | awk '{print $2}'");
         s_logger.info("vmPid = "+vmPid);
-        String oomScore = "";
         if (!StringUtils.isNotBlank(vmPid)) {
             cmd = String.format("cat /proc/%s/oom_score", vmPid);
             s_logger.info("cmd = "+cmd);
             oomScore = Script.runSimpleBashScript(cmd);
             s_logger.info("oomScore = "+oomScore);
-        }*/
+        }
 
 
-
+/*
         String cmd = String.format("ps -aux | grep %s | grep -Ev 'grep' | awk '{print $2}'", vmName);
         // String[] cmd = new String[]{ "/bin/sh", "-c", "ps -aux | grep "+ vmName, " | awk '{print $2}'", "| head -1" };
         // String s = "";
@@ -1959,7 +1958,7 @@ public class AgentManagerImpl extends ManagerBase implements AgentManager, Handl
         } catch (final IOException e) {
             s_logger.debug("IOException", e);
         }
-
+*/
         return oomScore;
     }
 }
