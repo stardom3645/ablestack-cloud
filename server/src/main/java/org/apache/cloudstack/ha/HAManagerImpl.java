@@ -17,6 +17,9 @@
 
 package org.apache.cloudstack.ha;
 
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 // import java.io.BufferedReader;
 // import java.io.InputStreamReader;
 import java.util.ArrayList;
@@ -646,6 +649,7 @@ public final class HAManagerImpl extends ManagerBase implements HAManager, Clust
                 //vm pid
 
                 LOG.info("instanceName = "+instanceName);
+                /*
                 String oomScorePath = Script.findScript("/root/1218_lb_rpm", "oomScore.sh");
                 long heartBeatCheckerTimeout = 600000; // 10 minutes
                 if (oomScorePath == null) {
@@ -660,6 +664,18 @@ public final class HAManagerImpl extends ManagerBase implements HAManager, Clust
                 LOG.info("result = "+result);
                 String parsedLine = parser.getLine();
                 LOG.info("parsedLine = "+parsedLine);
+*/
+                Runtime runtime = Runtime.getRuntime();
+                Process process = runtime.exec("sh /root/1218_lb_rpm/oomScore.sh "+hostIp+" "+instanceName);
+                InputStream is = process.getInputStream();
+                InputStreamReader isr = new InputStreamReader(is);
+                BufferedReader br = new BufferedReader(isr);
+                String line;
+
+                while((line = br.readLine()) != null) {
+                    LOG.info("result = " + line);
+                }
+
 
 /*
                 ProcessBuilder processBuilder = new ProcessBuilder();
