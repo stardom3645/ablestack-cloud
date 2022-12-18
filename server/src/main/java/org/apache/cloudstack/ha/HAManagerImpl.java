@@ -629,13 +629,13 @@ public final class HAManagerImpl extends ManagerBase implements HAManager, Clust
         LOG.info("end======================");
     }
 
-    private void balancingMonitor(Long min_hostId, Long max_hostId) {
+    private void balancingMonitor(Long minHostId, Long maxHostId) {
         // List<? extends VMInstanceVO> vmList = vmInstanceDao.listByHostId(hostId);
         Map<Long, Long> vmMemMap = new ConcurrentHashMap<Long, Long>();
 
-        for (final VMInstanceVO vm: vmInstanceDao.listByHostId(max_hostId)) {
+        for (final VMInstanceVO vm: vmInstanceDao.listByHostId(maxHostId)) {
             //host ip 조회
-            LOG.info("hostId = "+max_hostId);
+            LOG.info("hostId = "+maxHostId);
             // HostVO host = hostDao.findByUuid(hostId);
             // LOG.info("hostIp = "+host.getPrivateIpAddress());
             String instanceName = vm.getInstanceName();
@@ -650,7 +650,7 @@ public final class HAManagerImpl extends ManagerBase implements HAManager, Clust
 
                 // cmd.setHostIp(hostIp);
                 // cmd.setVmName(instanceName);
-                String oomScore = _agentMgr.getOomScore(max_hostId, instanceName);
+                String oomScore = _agentMgr.getOomScore(maxHostId, instanceName);
                 LOG.info("oomScore = "+oomScore);
                 if (oomScore != ""){
                     vmMemMap.put(vm.getId(), Long.parseLong(oomScore));
@@ -811,7 +811,7 @@ public final class HAManagerImpl extends ManagerBase implements HAManager, Clust
 
         //vm migration
         try {
-            Host destinationHost = resourceService.getHost(min_hostId);
+            Host destinationHost = resourceService.getHost(minHostId);
             userVmService.migrateVirtualMachine(minEntry.getKey(), destinationHost);
         } catch (ResourceUnavailableException ex) {
             LOG.warn("Exception: ", ex);
