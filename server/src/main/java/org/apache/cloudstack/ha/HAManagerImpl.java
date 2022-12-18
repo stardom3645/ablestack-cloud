@@ -688,16 +688,19 @@ public final class HAManagerImpl extends ManagerBase implements HAManager, Clust
                 String cmd3 = "date";
                 LOG.info("cmd3 = "+cmd3);
                 Process p2 = Runtime.getRuntime().exec(cmd3);
+                p2.waitFor();
                 LOG.info("p3 = "+p2);
 
                 String[] cmd2 = { "ssh root@"+hostIp, "-o", "StrictHostKeyChecking=no", "ps -aux | grep", instanceName, "| awk '{print $2}' | head -1" };
                 LOG.info("cmd2 = "+cmd2);
                 Process p = Runtime.getRuntime().exec(cmd2);
+                p.waitFor();
                 LOG.info("p2 = "+p);
 
                 String[] cmd = { "ssh root@"+hostIp, "ps -aux | grep", instanceName, "| awk '{print $2}' | head -1" };
                 LOG.info("cmd1 = "+cmd);
                 p = Runtime.getRuntime().exec(cmd);
+                p.waitFor();
                 LOG.info("p1 = "+p);
 
 /*
