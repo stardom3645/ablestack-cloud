@@ -655,7 +655,7 @@ public final class HAManagerImpl extends ManagerBase implements HAManager, Clust
                 if (oomScore != ""){
                     vmMemMap.put(vm.getId(), Long.parseLong(oomScore));
                 }
-                
+
                 /*
                 Runtime runtime = Runtime.getRuntime();
                 String command = "sh /root/1218_lb_rpm/oomScore.sh "+hostIp+" "+instanceName;
