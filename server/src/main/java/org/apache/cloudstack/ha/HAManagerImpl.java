@@ -630,7 +630,7 @@ public final class HAManagerImpl extends ManagerBase implements HAManager, Clust
                 Thread.currentThread().interrupt();
                 Thread.interrupted();
             }
-            
+
             Thread.sleep(60000);
             balancingCheck(clusterId);
         } catch (InterruptedException e) {
