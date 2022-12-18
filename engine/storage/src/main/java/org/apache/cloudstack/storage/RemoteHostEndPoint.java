@@ -206,12 +206,6 @@ public class RemoteHostEndPoint implements EndPoint {
         protected void runInContext() {
             this.callback.complete(this.answer);
         }
-
-        @Override
-        public String getOomScore(long hostId, String vmName) {
-            // TODO Auto-generated method stub
-            return null;
-        }
     }
 
     @Override

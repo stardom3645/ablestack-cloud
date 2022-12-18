@@ -1258,10 +1258,4 @@ public class CapacityManagerImpl extends ManagerBase implements CapacityManager,
         return new ConfigKey<?>[] {CpuOverprovisioningFactor, MemOverprovisioningFactor, StorageCapacityDisableThreshold, StorageOverprovisioningFactor,
             StorageAllocatedCapacityDisableThreshold, StorageOperationsExcludeCluster, ImageStoreNFSVersion, SecondaryStorageCapacityThreshold};
     }
-
-    @Override
-    public String getOomScore(long hostId, String vmName) {
-        // TODO Auto-generated method stub
-        return null;
-    }
 }

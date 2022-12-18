@@ -156,6 +156,4 @@ public interface AgentManager {
     void notifyMonitorsOfRemovedHost(long hostId, long clusterId);
 
     void propagateChangeToAgents(Map<String, String> params);
-
-    String getOomScore(long hostId, String vmName);
 }

@@ -412,10 +412,4 @@ public class Ovm3Discoverer extends DiscovererBase implements Discoverer,
         return new DeleteHostAnswer(true);
     }
 
-    @Override
-    public String getOomScore(long hostId, String vmName) {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
 }

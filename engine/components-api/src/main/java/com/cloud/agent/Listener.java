@@ -133,6 +133,4 @@ public interface Listener {
      * @return true if processed; false if not.
      */
     boolean processTimeout(long agentId, long seq);
-
-    String getOomScore(long hostId, String vmName);
 }

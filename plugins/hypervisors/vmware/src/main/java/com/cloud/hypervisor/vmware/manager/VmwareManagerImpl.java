@@ -1061,12 +1061,6 @@ public class VmwareManagerImpl extends ManagerBase implements VmwareManager, Vmw
     }
 
     @Override
-    public String getOomScore(long hostId, String vmName) {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
     public Map<String, String> getNexusVSMCredentialsByClusterId(Long clusterId) {
         CiscoNexusVSMDeviceVO nexusVSM = null;
         ClusterVSMMapVO vsmMapVO = null;

@@ -523,12 +523,6 @@ public class NetworkUsageManagerImpl extends ManagerBase implements NetworkUsage
         protected DirectNetworkStatsListener() {
         }
 
-        @Override
-        public String getOomScore(long hostId, String vmName) {
-            // TODO Auto-generated method stub
-            return null;
-        }
-
     }
 
     @Override

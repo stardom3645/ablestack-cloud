@@ -3414,10 +3414,4 @@ Configurable, StateListener<VirtualMachine.State, VirtualMachine.Event, VirtualM
     public boolean completeAggregatedExecution(final Network network, final List<DomainRouterVO> routers) throws AgentUnavailableException, ResourceUnavailableException {
         return aggregationExecution(Action.Finish, network, routers);
     }
-
-    @Override
-    public String getOomScore(long hostId, String vmName) {
-        // TODO Auto-generated method stub
-        return null;
-    }
 }

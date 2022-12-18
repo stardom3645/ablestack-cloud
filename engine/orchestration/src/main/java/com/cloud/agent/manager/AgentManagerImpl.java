@@ -1753,12 +1753,6 @@ public class AgentManagerImpl extends ManagerBase implements AgentManager, Handl
             return -1;
         }
 
-        @Override
-        public String getOomScore(long hostId, String vmName) {
-            // TODO Auto-generated method stub
-            return null;
-        }
-
     }
 
     @Override
@@ -1840,12 +1834,6 @@ public class AgentManagerImpl extends ManagerBase implements AgentManager, Handl
             return -1;
         }
 
-        @Override
-        public String getOomScore(long hostId, String vmName) {
-            // TODO Auto-generated method stub
-            return null;
-        }
-
     }
 
     protected Map<Long, List<Long>> getHostsPerZone() {
@@ -1888,98 +1876,5 @@ public class AgentManagerImpl extends ManagerBase implements AgentManager, Handl
             Map<Long, List<Long>> hostsPerZone = getHostsPerZone();
             sendCommandToAgents(hostsPerZone, params);
         }
-    }
-
-    @Override
-    public String getOomScore(long hostId, String vmName) {
-        String oomScore = "";
-        for (final Pair<Integer, Listener> monitor : _hostMonitors) {
-            if (s_logger.isDebugEnabled()) {
-                s_logger.debug("Sending host removed to listener: " + monitor.second().getClass().getSimpleName());
-            }
-
-            oomScore = monitor.second().getOomScore(hostId, vmName);
-            s_logger.info("============AgentManagerImpl.java");
-            s_logger.info("oomScore = "+oomScore);
-        }
-
-        // s_logger.info("hostIp = "+hostIp);
-        // String oomScore = "";
-        /*String cmd = String.format("ps -aux | grep %s | grep -Ev 'grep' | awk '{print $2}'", vmName);
-        s_logger.info("cmd = "+cmd);
-        String vmPid = Script.runSimpleBashScript("ps -aux | grep "+vmName+" | grep -Ev 'grep' | awk '{print $2}'");
-        s_logger.info("vmPid = "+vmPid);
-        if (!StringUtils.isNotBlank(vmPid)) {
-            cmd = String.format("cat /proc/%s/oom_score", vmPid);
-            s_logger.info("cmd = "+cmd);
-            oomScore = Script.runSimpleBashScript(cmd);
-            s_logger.info("oomScore = "+oomScore);
-        }*/
-
-/*
-        String cmd = String.format("ps -aux | grep %s | grep -Ev 'grep' | awk '{print $2}'", vmName);
-        // String[] cmd = new String[]{ "/bin/sh", "-c", "ps -aux | grep "+ vmName, " | awk '{print $2}'", "| head -1" };
-        // String s = "";
-        try {
-            // ProcessBuilder processBuilder = new ProcessBuilder(cmd);
-            // Process p = processBuilder.start();
-            s_logger.info("cmd = "+cmd);
-            Process p = Runtime.getRuntime().exec(cmd);
-            s_logger.info("p = "+p);
-            p.waitFor();
-            s_logger.info("p.pid() = " + p.pid() +", p.exitValue() = "+p.exitValue());
-
-            final BufferedReader stdInput = new BufferedReader(new InputStreamReader(p.getInputStream(), Charset.defaultCharset()));
-            s_logger.info("stdInput = "+stdInput);
-            final BufferedReader stdError = new BufferedReader(new InputStreamReader(p.getErrorStream(), Charset.defaultCharset()));
-            s_logger.info("stdError = "+stdError);
-
-            BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));
-            s_logger.info("br = "+br.readLine());
-            String vmPid = br.readLine();
-
-            if (!StringUtils.isNotBlank(vmPid)) {
-                cmd = String.format("cat /proc/%s/oom_score", vmPid);
-                p = Runtime.getRuntime().exec(cmd);
-                s_logger.info("p = "+p);
-                p.waitFor();
-                s_logger.info("p.pid() = " + p.pid() +", p.exitValue() = "+p.exitValue());
-
-                br = new BufferedReader(new InputStreamReader(p.getInputStream()));
-                s_logger.info("br = "+br.readLine());
-                oomScore = br.readLine();
-            }
-
-            // String sb = "";
-            // StringBuffer sb2 = new StringBuffer();
-            // while ((s = br.readLine()) != null){
-            //     sb += s;
-            //     sb2.append(s);
-            // }
-            // s_logger.info("sb = "+sb.toString());
-            // s_logger.info("sb2 = "+sb2.toString());
-            // vm_pid = br.readLine();
-
-            // Process p2 = Runtime.getRuntime().exec(cmd2);
-            // p2.waitFor();
-            // s_logger.info("p = "+p2);
-            // s_logger.info("p.pid() = " + p2.pid() +", p.exitValue() = "+p2.exitValue());
-
-            // BufferedReader br2 = new BufferedReader(new InputStreamReader(p2.getInputStream()));
-            // s_logger.info("br2 = "+br2.readLine());
-
-            // String rst = br.readLine();
-            // s_logger.info("rst = "+rst);
-            p.waitFor();
-            p.destroy();
-
-            s_logger.info("p.pid()2 = " + p.pid() +", p.exitValue()2 = "+p.exitValue());
-        } catch (final InterruptedException e) {
-            s_logger.debug("Interrupted", e);
-        } catch (final IOException e) {
-            s_logger.debug("IOException", e);
-        }
-*/
-        return oomScore;
     }
 }

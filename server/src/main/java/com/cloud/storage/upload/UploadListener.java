@@ -489,10 +489,4 @@ public class UploadListener implements Listener {
             listener.processAnswers(id, -1, new Answer[] {answer});
         }
     }
-
-    @Override
-    public String getOomScore(long hostId, String vmName) {
-        // TODO Auto-generated method stub
-        return null;
-    }
 }
