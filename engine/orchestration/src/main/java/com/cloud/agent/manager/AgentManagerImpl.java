@@ -122,9 +122,10 @@ import com.cloud.utils.nio.Task;
 import com.cloud.utils.time.InaccurateClock;
 import org.apache.commons.lang3.StringUtils;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.io.IOException;
+// import java.io.BufferedReader;
+// import java.io.InputStreamReader;
+// import java.io.IOException;
+import com.cloud.utils.script.Script;
 
 /**
  * Implementation of the Agent Manager. This class controls the connection to the agents.
@@ -1880,12 +1881,14 @@ public class AgentManagerImpl extends ManagerBase implements AgentManager, Handl
     @Override
     public String getOomScore(String hostIp, String vmName) {
         s_logger.info("hostIp = "+hostIp);
-        String cmd = "/bin/sh -c ps -aux | grep "+ vmName +" | awk '{print $2}' | head -1";
+        String cmd = "ps -aux | grep "+ vmName +" | awk '{print $2}' | head -1";
+        s_logger.info("cmd = "+cmd);
+        String oom_score = Script.runSimpleBashScript(cmd);
+        s_logger.info("oom_score = "+oom_score);
         // String[] cmd = new String[]{ "/bin/sh", "-c", "ps -aux | grep "+ vmName, " | awk '{print $2}'", "| head -1" };
         String s = "";
-        String oom_score = "";
-        s_logger.info("cmd = "+cmd);
-        try {
+        // String oom_score = "";
+        /*try {
             // ProcessBuilder processBuilder = new ProcessBuilder(cmd);
             // Process p = processBuilder.start();
 
@@ -1924,7 +1927,7 @@ public class AgentManagerImpl extends ManagerBase implements AgentManager, Handl
             s_logger.debug("Interrupted", e);
         } catch (final IOException e) {
             s_logger.debug("IOException", e);
-        }
+        }*/
 
         return oom_score;
     }
