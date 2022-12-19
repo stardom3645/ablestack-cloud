@@ -214,7 +214,8 @@ known_categories = {
     'importVsphereStoragePolicies' : 'vSphere storage policies',
     'listVsphereStoragePolicies' : 'vSphere storage policies',
     'ConsoleEndpoint': 'Console Endpoint',
-    'ResourceRequest' : 'Resource Request Status'
+    'ResourceRequest' : 'Resource Request Status',
+    'Board' : 'Board Service'
 }
 
 

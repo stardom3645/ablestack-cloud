@@ -160,8 +160,7 @@ public class ResourceRequestManagerImpl extends ManagerBase implements ResourceR
         final Long accountId = owner.getAccountId();
         final Long domainId = owner.getDomainId();
 
-        Filter searchFilter = new Filter(ResourceRequestVO.class, "id", true, cmd.getStartIndex(),
-                cmd.getPageSizeVal());
+        Filter searchFilter = new Filter(ResourceRequestVO.class, "created", false, cmd.getStartIndex(), cmd.getPageSizeVal());
         SearchBuilder<ResourceRequestVO> sb = resourceRequestDao.createSearchBuilder();
         sb.and("id", sb.entity().getId(), SearchCriteria.Op.EQ);
         sb.and("accountId", sb.entity().getAccountId(), SearchCriteria.Op.EQ);

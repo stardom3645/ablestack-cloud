@@ -987,6 +987,8 @@ public class ApiConstants {
     public static final String ADMIN_APPROVER= "adminapprover";
     public static final String QUANTITY= "quantity";
     public static final String COMMENT= "comments";
+    public static final String HIT= "hit";
+    public static final String CONTENT= "content";
 
     public enum BootType {
         UEFI, BIOS;

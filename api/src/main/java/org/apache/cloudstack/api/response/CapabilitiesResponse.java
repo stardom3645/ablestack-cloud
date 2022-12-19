@@ -132,6 +132,10 @@ public class CapabilitiesResponse extends BaseResponse {
     @Param(description = "true if resource request plugin is enabled, false otherwise")
     private boolean resourceRequestEnabled;
 
+    @SerializedName("boardenabled")
+    @Param(description = "true if boardEnabled plugin is enabled, false otherwise")
+    private boolean boardEnabled;
+
     public void setSecurityGroupsEnabled(boolean securityGroupsEnabled) {
         this.securityGroupsEnabled = securityGroupsEnabled;
     }
@@ -237,5 +241,9 @@ public class CapabilitiesResponse extends BaseResponse {
 
     public void setResourceRequestEnabled(boolean resourceRequestEnabled) {
         this.resourceRequestEnabled = resourceRequestEnabled;
+    }
+
+    public void setBoardEnabled(boolean boardEnabled) {
+        this.boardEnabled = boardEnabled;
     }
 }

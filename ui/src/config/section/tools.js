@@ -97,7 +97,7 @@ export default {
           label: 'label.resource.request.update',
           dataView: true,
           popup: true,
-          component: shallowRef(defineAsyncComponent(() => import('@/views/tools/UpdateResourceRequest.vue'))),
+          // component: shallowRef(defineAsyncComponent(() => import('@/views/tools/UpdateResourceRequest.vue'))),
           show: (record, store) => {
             return ['Admin', 'DomainAdmin', 'User'].includes(store.userInfo.roletype) && record.item === 'CREATE VM'
           }
@@ -143,6 +143,50 @@ export default {
           dataView: true,
           show: (record, store) => {
             return ['Admin', 'DomainAdmin', 'User'].includes(store.userInfo.roletype)
+          }
+        }
+      ]
+    },
+    {
+      name: 'board',
+      title: 'title.board',
+      icon: 'block-outlined',
+      docHelp: '',
+      permission: ['listBoard'],
+      columns: ['name', 'account', 'type', 'created', 'hit'],
+      details: ['name', 'type', 'hit', 'content'],
+      actions: [
+        {
+          api: 'addBoard',
+          icon: 'plus-outlined',
+          label: 'label.board.add',
+          docHelp: '',
+          listView: true,
+          popup: true,
+          component: shallowRef(defineAsyncComponent(() => import('@/views/tools/AddBoard.vue'))),
+          show: (record, store) => {
+            return ['Admin', 'DomainAdmin'].includes(store.userInfo.roletype)
+          }
+        },
+        {
+          api: 'updateBoard',
+          icon: 'edit-outlined',
+          label: 'label.board.update',
+          dataView: true,
+          popup: true,
+          component: shallowRef(defineAsyncComponent(() => import('@/views/tools/UpdateBoard.vue'))),
+          show: (record, store) => {
+            return ['Admin', 'DomainAdmin'].includes(store.userInfo.roletype)
+          }
+        },
+        {
+          api: 'deleteBoard',
+          icon: 'delete-outlined',
+          label: 'label.board.delete',
+          message: 'message.board.delete',
+          dataView: true,
+          show: (record, store) => {
+            return ['Admin', 'DomainAdmin'].includes(store.userInfo.roletype)
           }
         }
       ]
