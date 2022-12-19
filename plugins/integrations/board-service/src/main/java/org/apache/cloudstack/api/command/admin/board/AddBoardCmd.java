@@ -69,7 +69,7 @@ public class AddBoardCmd extends BaseCmd implements UserCmd {
 
     @Parameter(name = ApiConstants.BASE64_IMAGE, type = CommandType.STRING,
     description = "Base64 string representation of the resource icon/image", length = 2097152)
-    private File file;
+    private String file;
 
     /////////////////////////////////////////////////////
     /////////////////// Accessors ///////////////////////
@@ -91,7 +91,7 @@ public class AddBoardCmd extends BaseCmd implements UserCmd {
         return content;
     }
 
-    public FiStringle getFile() {
+    public String getFile() {
         return file;
     }
 

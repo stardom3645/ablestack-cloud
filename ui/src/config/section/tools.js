@@ -97,7 +97,7 @@ export default {
           label: 'label.resource.request.update',
           dataView: true,
           popup: true,
-          // component: shallowRef(defineAsyncComponent(() => import('@/views/tools/UpdateResourceRequest.vue'))),
+          component: shallowRef(defineAsyncComponent(() => import('@/views/tools/UpdateResourceRequest.vue'))),
           show: (record, store) => {
             return ['Admin', 'DomainAdmin', 'User'].includes(store.userInfo.roletype) && record.item === 'CREATE VM'
           }
