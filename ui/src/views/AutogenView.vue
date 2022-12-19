@@ -518,6 +518,7 @@ export default {
     eventBus.off('async-job-complete')
     eventBus.off('exec-action')
     eventBus.off('desktop-refresh-data')
+    eventBus.off('resource-request-refresh-data')
     eventBus.off('automation-refresh-data')
   },
   mounted () {
@@ -536,6 +537,11 @@ export default {
       }
     })
     eventBus.on('desktop-refresh-data', () => {
+      if (this.$route.path === '/desktopcluster' || this.$route.path.includes('/desktopcluster/')) {
+        this.fetchData()
+      }
+    })
+    eventBus.on('resource-request-refresh-data', () => {
       if (this.$route.path === '/desktopcluster' || this.$route.path.includes('/desktopcluster/')) {
         this.fetchData()
       }

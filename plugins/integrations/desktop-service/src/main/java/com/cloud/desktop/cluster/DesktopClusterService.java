@@ -42,7 +42,7 @@ public interface DesktopClusterService extends PluggableService, Configurable {
             "cloud.desktop.service.works.portal.port",
             "8080",
             "Desktop Service Works Portal Port.(ex:8080)",
-            false);
+            true);
 
     DesktopCluster findById(final Long id);
 
