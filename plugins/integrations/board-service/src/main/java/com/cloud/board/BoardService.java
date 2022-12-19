@@ -35,7 +35,7 @@ public interface BoardService extends PluggableService, Configurable {
     static final ConfigKey<Boolean> BoardEnabled = new ConfigKey<Boolean>("Advanced", Boolean.class,
     "cloud.board.enabled",
     "false",
-    "Indicates whether Resource Request plugin is enabled or not. Management server restart needed on change",
+    "Indicates whether board service plugin is enabled or not. Management server restart needed on change",
     true);
 
     ListResponse<BoardResponse> listBoard(ListBoardCmd cmd);
