@@ -338,7 +338,7 @@ public class SnapshotManagerImpl extends MutualExclusiveIdsManagerBase implement
         boolean result = snapshotStrategy.revertSnapshot(snapshotInfo);
         if (result) {
             // update volume size and primary storage count
-            _resourceLimitMgr.decrementResourceCount(snapshot.getAccountId(), ResourceType.primary_storage, new Long(volume.getSize() - snapshot.getSize()));
+            _resourceLimitMgr.decrementResourceCount(snapshot.getAccountId(), ResourceType.primary_storage, volume.getSize() - snapshot.getSize());
             volume.setSize(snapshot.getSize());
             _volsDao.update(volume.getId(), volume);
             return snapshotInfo;
@@ -504,7 +504,7 @@ public class SnapshotManagerImpl extends MutualExclusiveIdsManagerBase implement
         } catch (Exception e) {
             s_logger.debug("Failed to backup snapshot from vm snapshot", e);
             _resourceLimitMgr.decrementResourceCount(snapshotOwnerId, ResourceType.snapshot);
-            _resourceLimitMgr.decrementResourceCount(snapshotOwnerId, ResourceType.secondary_storage, new Long(volume.getSize()));
+            _resourceLimitMgr.decrementResourceCount(snapshotOwnerId, ResourceType.secondary_storage, volume.getSize());
             throw new CloudRuntimeException("Failed to backup snapshot from vm snapshot", e);
         }
         return snapshotInfo;
@@ -614,8 +614,11 @@ public class SnapshotManagerImpl extends MutualExclusiveIdsManagerBase implement
                 annotationDao.removeByEntityType(AnnotationService.EntityType.SNAPSHOT.name(), snapshotCheck.getUuid());
 
                 if (snapshotCheck.getState() == Snapshot.State.BackedUp) {
-                    UsageEventUtils.publishUsageEvent(EventTypes.EVENT_SNAPSHOT_DELETE, snapshotCheck.getAccountId(), snapshotCheck.getDataCenterId(), snapshotId,
-                            snapshotCheck.getName(), null, null, 0L, snapshotCheck.getClass().getName(), snapshotCheck.getUuid());
+                    SnapshotVO snapVO = _snapshotDao.findById(snapshotId);
+                    if (snapVO == null || snapVO.getSnapshotType() != Type.INTERNAL.ordinal()) {
+                        UsageEventUtils.publishUsageEvent(EventTypes.EVENT_SNAPSHOT_DELETE, snapshotCheck.getAccountId(), snapshotCheck.getDataCenterId(), snapshotId,
+                                snapshotCheck.getName(), null, null, 0L, snapshotCheck.getClass().getName(), snapshotCheck.getUuid());
+                    }
                 }
 
                 if (snapshotCheck.getState() != Snapshot.State.Error && snapshotCheck.getState() != Snapshot.State.Destroyed) {
@@ -624,7 +627,7 @@ public class SnapshotManagerImpl extends MutualExclusiveIdsManagerBase implement
 
                 if (snapshotCheck.getState() == Snapshot.State.BackedUp) {
                     if (snapshotStoreRef != null) {
-                        _resourceLimitMgr.decrementResourceCount(snapshotCheck.getAccountId(), ResourceType.secondary_storage, new Long(snapshotStoreRef.getPhysicalSize()));
+                        _resourceLimitMgr.decrementResourceCount(snapshotCheck.getAccountId(), ResourceType.secondary_storage, snapshotStoreRef.getPhysicalSize());
                     }
                 }
             }
@@ -691,7 +694,7 @@ public class SnapshotManagerImpl extends MutualExclusiveIdsManagerBase implement
         sb.and("snapshotTypeEQ", sb.entity().getSnapshotType(), SearchCriteria.Op.IN);
         sb.and("snapshotTypeNEQ", sb.entity().getSnapshotType(), SearchCriteria.Op.NIN);
         sb.and("dataCenterId", sb.entity().getDataCenterId(), SearchCriteria.Op.EQ);
-
+        sb.and("snapshotTypeInternal", sb.entity().getSnapshotType(), SearchCriteria.Op.NEQ);
         if (tags != null && !tags.isEmpty()) {
             SearchBuilder<ResourceTagVO> tagSearch = _resourceTagDao.createSearchBuilder();
             for (int count = 0; count < tags.size(); count++) {
@@ -764,7 +767,7 @@ public class SnapshotManagerImpl extends MutualExclusiveIdsManagerBase implement
             // Show only MANUAL and RECURRING snapshot types
             sc.setParameters("snapshotTypeNEQ", Snapshot.Type.TEMPLATE.ordinal(), Snapshot.Type.GROUP.ordinal());
         }
-
+        sc.setParameters("snapshotTypeInternal", Type.INTERNAL.ordinal());
         Pair<List<SnapshotVO>, Integer> result = _snapshotDao.searchAndCount(sc, searchFilter);
         return new Pair<List<? extends Snapshot>, Integer>(result.first(), result.second());
     }
@@ -825,7 +828,7 @@ public class SnapshotManagerImpl extends MutualExclusiveIdsManagerBase implement
                     if (Type.MANUAL == snapshot.getRecurringType()) {
                         _resourceLimitMgr.decrementResourceCount(accountId, ResourceType.snapshot);
                         if (snapshotStoreRef != null) {
-                            _resourceLimitMgr.decrementResourceCount(accountId, ResourceType.secondary_storage, new Long(snapshotStoreRef.getPhysicalSize()));
+                            _resourceLimitMgr.decrementResourceCount(accountId, ResourceType.secondary_storage, snapshotStoreRef.getPhysicalSize());
                         }
                     }
 
@@ -1120,7 +1123,13 @@ public class SnapshotManagerImpl extends MutualExclusiveIdsManagerBase implement
     private Type getSnapshotType(Long policyId) {
         if (policyId.equals(Snapshot.MANUAL_POLICY_ID)) {
             return Type.MANUAL;
-        } else {
+        }
+
+        else if (policyId.equals(Snapshot.INTERNAL_POLICY_ID)) {
+            return Type.INTERNAL;
+        }
+
+        else {
             SnapshotPolicyVO spstPolicyVO = _snapshotPolicyDao.findById(policyId);
             IntervalType intvType = DateUtil.getIntervalType(spstPolicyVO.getInterval());
             return getSnapshotType(intvType);
@@ -1269,11 +1278,14 @@ public class SnapshotManagerImpl extends MutualExclusiveIdsManagerBase implement
                 if (snapshotStoreRef == null) {
                     throw new CloudRuntimeException(String.format("Could not find snapshot %s [%s] on [%s]", snapshot.getName(), snapshot.getUuid(), snapshot.getLocationType()));
                 }
-                UsageEventUtils.publishUsageEvent(EventTypes.EVENT_SNAPSHOT_CREATE, snapshot.getAccountId(), snapshot.getDataCenterId(), snapshotId, snapshot.getName(), null, null,
-                        snapshotStoreRef.getPhysicalSize(), volume.getSize(), snapshot.getClass().getName(), snapshot.getUuid());
+                SnapshotVO snapInstance = _snapshotDao.findById(snapshot.getId());
+                if (snapInstance == null || snapInstance.getSnapshotType() != Type.INTERNAL.ordinal()) {
+                    UsageEventUtils.publishUsageEvent(EventTypes.EVENT_SNAPSHOT_CREATE, snapshot.getAccountId(), snapshot.getDataCenterId(), snapshotId, snapshot.getName(), null, null,
+                            snapshotStoreRef.getPhysicalSize(), volume.getSize(), snapshot.getClass().getName(), snapshot.getUuid());
+                }
 
                 // Correct the resource count of snapshot in case of delta snapshots.
-                _resourceLimitMgr.decrementResourceCount(snapshotOwner.getId(), ResourceType.secondary_storage, new Long(volume.getSize() - snapshotStoreRef.getPhysicalSize()));
+                _resourceLimitMgr.decrementResourceCount(snapshotOwner.getId(), ResourceType.secondary_storage, volume.getSize() - snapshotStoreRef.getPhysicalSize());
             } catch (Exception e) {
                 s_logger.debug("post process snapshot failed", e);
             }
@@ -1282,14 +1294,14 @@ public class SnapshotManagerImpl extends MutualExclusiveIdsManagerBase implement
                 s_logger.debug("Failed to create snapshot" + cre.getLocalizedMessage());
             }
             _resourceLimitMgr.decrementResourceCount(snapshotOwner.getId(), ResourceType.snapshot);
-            _resourceLimitMgr.decrementResourceCount(snapshotOwner.getId(), ResourceType.secondary_storage, new Long(volume.getSize()));
+            _resourceLimitMgr.decrementResourceCount(snapshotOwner.getId(), ResourceType.secondary_storage, volume.getSize());
             throw cre;
         } catch (Exception e) {
             if (s_logger.isDebugEnabled()) {
                 s_logger.debug("Failed to create snapshot", e);
             }
             _resourceLimitMgr.decrementResourceCount(snapshotOwner.getId(), ResourceType.snapshot);
-            _resourceLimitMgr.decrementResourceCount(snapshotOwner.getId(), ResourceType.secondary_storage, new Long(volume.getSize()));
+            _resourceLimitMgr.decrementResourceCount(snapshotOwner.getId(), ResourceType.secondary_storage, volume.getSize());
             throw new CloudRuntimeException("Failed to create snapshot", e);
         }
         return snapshot;
@@ -1490,7 +1502,7 @@ public class SnapshotManagerImpl extends MutualExclusiveIdsManagerBase implement
 
         try {
             _resourceLimitMgr.checkResourceLimit(owner, ResourceType.snapshot);
-            _resourceLimitMgr.checkResourceLimit(owner, ResourceType.secondary_storage, new Long(volume.getSize()).longValue());
+            _resourceLimitMgr.checkResourceLimit(owner, ResourceType.secondary_storage, volume.getSize().longValue());
         } catch (ResourceAllocationException e) {
             if (snapshotType != Type.MANUAL) {
                 String msg = "Snapshot resource limit exceeded for account id : " + owner.getId() + ". Failed to create recurring snapshots";
@@ -1541,7 +1553,7 @@ public class SnapshotManagerImpl extends MutualExclusiveIdsManagerBase implement
         }
         CallContext.current().putContextParameter(Snapshot.class, snapshot.getUuid());
         _resourceLimitMgr.incrementResourceCount(volume.getAccountId(), ResourceType.snapshot);
-        _resourceLimitMgr.incrementResourceCount(volume.getAccountId(), ResourceType.secondary_storage, new Long(volume.getSize()));
+        _resourceLimitMgr.incrementResourceCount(volume.getAccountId(), ResourceType.secondary_storage, volume.getSize());
         return snapshot;
     }
 

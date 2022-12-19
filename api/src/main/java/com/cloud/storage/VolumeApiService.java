@@ -21,6 +21,7 @@ package com.cloud.storage;
 import java.net.MalformedURLException;
 import java.util.Map;
 
+import com.cloud.exception.StorageUnavailableException;
 import org.apache.cloudstack.api.command.user.volume.AttachVolumeCmd;
 import org.apache.cloudstack.api.command.user.volume.ChangeOfferingForVolumeCmd;
 import org.apache.cloudstack.api.command.user.volume.CreateVolumeCmd;
@@ -101,6 +102,8 @@ public interface VolumeApiService {
 
     Volume detachVolumeViaDestroyVM(long vmId, long volumeId);
 
+    Volume cloneDataVolume(long vmId, long snapshotId, Volume volume) throws StorageUnavailableException;
+
     Volume detachVolumeFromVM(DetachVolumeCmd cmd);
 
     Snapshot takeSnapshot(Long volumeId, Long policyId, Long snapshotId, Account account, boolean quiescevm, Snapshot.LocationType locationType, boolean asyncBackup, Map<String, String> tags)
@@ -109,6 +112,8 @@ public interface VolumeApiService {
     Snapshot allocSnapshot(Long volumeId, Long policyId, String snapshotName, Snapshot.LocationType locationType) throws ResourceAllocationException;
 
     Volume updateVolume(long volumeId, String path, String state, Long storageId, Boolean displayVolume, String customId, long owner, String chainInfo, String name);
+
+    Volume attachVolumeToVM(Long vmId, Long volumeId, Long deviceId);
 
     /**
      * Extracts the volume to a particular location.

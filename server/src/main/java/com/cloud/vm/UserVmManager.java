@@ -81,9 +81,9 @@ public interface UserVmManager extends UserVmService {
 
     /**
      * Obtains statistics for a list of host or VMs; CPU and network utilization
-     * @param host ID
-     * @param host name
-     * @param list of VM IDs or host id
+     * @param hostId
+     * @param hostName
+     * @param vmIds list of VM IDs or host id
      * @return GetVmStatsAnswer
      */
     HashMap<Long, VmStatsEntry> getVirtualMachineStatistics(long hostId, String hostName, List<Long> vmIds);

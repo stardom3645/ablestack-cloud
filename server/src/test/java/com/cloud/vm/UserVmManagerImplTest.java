@@ -90,6 +90,7 @@ import com.cloud.uservm.UserVm;
 import com.cloud.vm.dao.NicDao;
 import com.cloud.vm.dao.UserVmDao;
 import com.cloud.vm.dao.UserVmDetailsDao;
+import org.apache.cloudstack.api.command.user.vm.CloneVMCmd;
 
 @RunWith(MockitoJUnitRunner.class)
 public class UserVmManagerImplTest {
@@ -153,6 +154,9 @@ public class UserVmManagerImplTest {
 
     @Mock
     private VMTemplateDao templateDao;
+
+    @Mock
+    private CloneVMCmd cloneVMCommand;
 
     @Mock
     private AccountDao accountDao;
@@ -855,5 +859,17 @@ public class UserVmManagerImplTest {
 
         Assert.assertEquals("testUserdata", userVmVO.getUserData());
         Assert.assertEquals(1L, (long)userVmVO.getUserDataId());
+//    @Test
+//    public void validateCloneCondition() {
+//        Mockito.when(cloneVMCommand.getTargetVM()).thenReturn(null);
+//        Mockito.when(cloneVMCommand.getAccountName()).thenReturn(null);
+//        Mockito.when(cloneVMCommand.getDomainId()).thenReturn(null);
+//        Exception err = null;
+//        try {
+//            userVmManagerImpl.validateCloneCondition(cloneVMCommand);
+//        } catch (CloudRuntimeException | ResourceUnavailableException | ResourceAllocationException e) {
+//            err = e;
+//        }
+//        assertTrue(err instanceof CloudRuntimeException);
     }
 }
