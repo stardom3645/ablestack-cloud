@@ -92,7 +92,7 @@ done
 if [ statusFlag == "true" ]; then
     echo "=====> ALIVE <====="
 else
-    echo "=====> Considering host as DEAD due to [Iscsi] sg_persist does not exists <======"
+    echo "=====> Considering host as DEAD due to [CLVM] sg_persist does not exists <======"
 fi
 
 exit 0

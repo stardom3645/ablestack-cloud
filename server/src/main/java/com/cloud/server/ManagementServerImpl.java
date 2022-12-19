@@ -377,6 +377,7 @@ import org.apache.cloudstack.api.command.user.config.ListCapabilitiesCmd;
 import org.apache.cloudstack.api.command.user.consoleproxy.CreateConsoleEndpointCmd;
 import org.apache.cloudstack.api.command.user.event.ArchiveEventsCmd;
 import org.apache.cloudstack.api.command.user.event.DeleteEventsCmd;
+import org.apache.cloudstack.api.command.user.event.DownloadEventsCmd;
 import org.apache.cloudstack.api.command.user.event.ListEventTypesCmd;
 import org.apache.cloudstack.api.command.user.event.ListEventsCmd;
 import org.apache.cloudstack.api.command.user.firewall.CreateEgressFirewallRuleCmd;
@@ -520,6 +521,7 @@ import org.apache.cloudstack.api.command.user.userdata.ListUserDataCmd;
 import org.apache.cloudstack.api.command.user.userdata.RegisterUserDataCmd;
 import org.apache.cloudstack.api.command.user.vm.AddIpToVmNicCmd;
 import org.apache.cloudstack.api.command.user.vm.AddNicToVMCmd;
+import org.apache.cloudstack.api.command.user.vm.CloneVMCmd;
 import org.apache.cloudstack.api.command.user.vm.DeployVMCmd;
 import org.apache.cloudstack.api.command.user.vm.DestroyVMCmd;
 import org.apache.cloudstack.api.command.user.vm.GetVMPasswordCmd;
@@ -1132,6 +1134,33 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
 
     @Override
     public boolean archiveEvents(final ArchiveEventsCmd cmd) {
+        final Account caller = getCaller();
+        final List<Long> ids = cmd.getIds();
+        boolean result = true;
+        List<Long> permittedAccountIds = new ArrayList<Long>();
+
+        if (_accountService.isNormalUser(caller.getId()) || caller.getType() == Account.Type.PROJECT) {
+            permittedAccountIds.add(caller.getId());
+        } else {
+            final DomainVO domain = _domainDao.findById(caller.getDomainId());
+            final List<Long> permittedDomainIds = _domainDao.getDomainChildrenIds(domain.getPath());
+            permittedAccountIds = _accountDao.getAccountIdsForDomains(permittedDomainIds);
+        }
+
+        final List<EventVO> events = _eventDao.listToArchiveOrDeleteEvents(ids, cmd.getType(), cmd.getStartDate(), cmd.getEndDate(), permittedAccountIds);
+        final ControlledEntity[] sameOwnerEvents = events.toArray(new ControlledEntity[events.size()]);
+        _accountMgr.checkAccess(CallContext.current().getCallingAccount(), null, false, sameOwnerEvents);
+
+        if (ids != null && events.size() < ids.size()) {
+            result = false;
+            return result;
+        }
+        _eventDao.archiveEvents(events);
+        return result;
+    }
+
+    @Override
+    public boolean downloadEvents(final DownloadEventsCmd cmd) {
         final Account caller = getCaller();
         final List<Long> ids = cmd.getIds();
         boolean result = true;
@@ -3475,6 +3504,7 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
         cmdList.add(ExpungeVMCmd.class);
         cmdList.add(GetVMPasswordCmd.class);
         cmdList.add(ListVMsCmd.class);
+        cmdList.add(CloneVMCmd.class);
         cmdList.add(ScaleVMCmd.class);
         cmdList.add(RebootVMCmd.class);
         cmdList.add(RemoveNicFromVMCmd.class);
@@ -3543,6 +3573,7 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
         cmdList.add(ArchiveAlertsCmd.class);
         cmdList.add(DeleteAlertsCmd.class);
         cmdList.add(ArchiveEventsCmd.class);
+        cmdList.add(DownloadEventsCmd.class);
         cmdList.add(DeleteEventsCmd.class);
         cmdList.add(CreateGlobalLoadBalancerRuleCmd.class);
         cmdList.add(DeleteGlobalLoadBalancerRuleCmd.class);

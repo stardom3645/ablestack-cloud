@@ -151,236 +151,6 @@
         </a-modal>
       </keep-alive>
       <a-modal
-        v-else-if="currentAction.label === 'label.download.events'"
-        :visible="showAction"
-        :closable="true"
-        :maskClosable="false"
-        :footer="null"
-        style="top: 20px;"
-        :width="modalWidth"
-        :cancel-button-props="getCancelProps()"
-        :confirmLoading="actionLoading"
-        @cancel="closeAction"
-        centered
-      >
-        <template #title>
-          <span v-if="currentAction.label">{{ $t(currentAction.label) }}</span>
-          <a
-            v-if="currentAction.docHelp || $route.meta.docHelp"
-            style="margin-left: 5px"
-            :href="$config.docBase + '/' + (currentAction.docHelp || $route.meta.docHelp)"
-            target="_blank">
-            <question-circle-outlined />
-          </a>
-        </template>
-        <a-spin :spinning="actionLoading" v-ctrl-enter="handleSubmit">
-          <span v-if="currentAction.message">
-            <div v-if="selectedRowKeys.length > 0">
-              <a-alert
-                v-if="['delete-outlined', 'DeleteOutlined', 'poweroff-outlined', 'PoweroffOutlined'].includes(currentAction.icon)"
-                type="error">
-                <template #message>
-                  <exclamation-circle-outlined style="color: red; fontSize: 30px; display: inline-flex" />
-                  <span style="padding-left: 5px" v-html="`<b>${selectedRowKeys.length} ` + $t('label.items.selected') + `. </b>`" />
-                  <span v-html="$t(currentAction.message)" />
-                </template>
-              </a-alert>
-              <a-alert v-else type="warning">
-                <template #message>
-                  <span v-if="selectedRowKeys.length > 0" v-html="`<b>${selectedRowKeys.length} ` + $t('label.items.selected') + `. </b>`" />
-                  <span v-html="$t(currentAction.message)" />
-                </template>
-              </a-alert>
-            </div>
-            <div v-else>
-              <a-alert type="warning">
-                <template #message>
-                  <span v-html="$t(currentAction.message)" />
-                </template>
-              </a-alert>
-            </div>
-            <div v-if="selectedRowKeys.length > 0">
-              <a-divider />
-              <a-table
-                v-if="selectedRowKeys.length > 0"
-                size="middle"
-                :columns="chosenColumns"
-                :dataSource="selectedItems"
-                :rowKey="(record, idx) => record.id || record.name || record.usageType || idx + '-' + Math.random()"
-                :pagination="true"
-                style="overflow-y: auto"
-              >
-              </a-table>
-            </div>
-            <br v-if="currentAction.paramFields.length > 0"/>
-          </span>
-          <a-form
-            :ref="formRef"
-            :model="form"
-            :rules="rules"
-            layout="vertical">
-            <div v-for="(field, fieldIndex) in currentAction.paramFields" :key="fieldIndex">
-              <a-form-item
-                :name="field.name"
-                :ref="field.name"
-                :v-bind="field.name"
-                v-if="!(currentAction.mapping && field.name in currentAction.mapping && currentAction.mapping[field.name].value)"
-              >
-                <template #label>
-                  <tooltip-label :title="$t('label.' + field.name)" :tooltip="field.description"/>
-                </template>
-
-                <a-switch
-                  v-if="field.type==='boolean'"
-                  v-model:checked="form[field.name]"
-                  :placeholder="field.description"
-                  v-focus="fieldIndex === firstIndex"
-                />
-                <a-select
-                  v-else-if="currentAction.mapping && field.name in currentAction.mapping && currentAction.mapping[field.name].options"
-                  :loading="field.loading"
-                  v-model:value="form[field.name]"
-                  :placeholder="field.description"
-                  v-focus="fieldIndex === firstIndex"
-                  showSearch
-                  optionFilterProp="label"
-                  :filterOption="(input, option) => {
-                    return option.children[0].children.toLowerCase().indexOf(input.toLowerCase()) >= 0
-                  }"
-                >
-                  <a-select-option key="" >{{ }}</a-select-option>
-                  <a-select-option v-for="(opt, optIndex) in currentAction.mapping[field.name].options" :key="optIndex">
-                    {{ opt }}
-                  </a-select-option>
-                </a-select>
-                <a-select
-                  v-else-if="field.name==='keypair' ||
-                    (field.name==='account' && !['addAccountToProject', 'createAccount'].includes(currentAction.api))"
-                  showSearch
-                  optionFilterProp="label"
-                  v-model:value="form[field.name]"
-                  :loading="field.loading"
-                  :placeholder="field.description"
-                  :filterOption="(input, option) => {
-                    return option.children[0].children.toLowerCase().indexOf(input.toLowerCase()) >= 0
-                  }"
-                  v-focus="fieldIndex === firstIndex"
-                >
-                  <a-select-option key="">{{ }}</a-select-option>
-                  <a-select-option v-for="(opt, optIndex) in field.opts" :key="optIndex">
-                    {{ opt.name || opt.description || opt.traffictype || opt.publicip }}
-                  </a-select-option>
-                </a-select>
-                <a-select
-                  v-else-if="field.type==='uuid'"
-                  showSearch
-                  optionFilterProp="label"
-                  v-model:value="form[field.name]"
-                  :loading="field.loading"
-                  :placeholder="field.description"
-                  :filterOption="(input, option) => {
-                    return option.label.toLowerCase().indexOf(input.toLowerCase()) >= 0
-                  }"
-                  v-focus="fieldIndex === firstIndex"
-                >
-                  <a-select-option key="" label="">{{ }}</a-select-option>
-                  <a-select-option v-for="opt in field.opts" :key="opt.id" :label="opt.name || opt.description || opt.traffictype || opt.publicip">
-                    <div>
-                      <span v-if="(field.name.startsWith('template') || field.name.startsWith('iso'))">
-                        <span v-if="opt.icon">
-                          <resource-icon :image="opt.icon.base64image" size="1x" style="margin-right: 5px"/>
-                        </span>
-                        <os-logo v-else :osId="opt.ostypeid" :osName="opt.ostypename" size="lg" style="margin-left: -1px" />
-                      </span>
-                      <span v-if="(field.name.startsWith('zone'))">
-                        <span v-if="opt.icon">
-                          <resource-icon :image="opt.icon.base64image" size="1x" style="margin-right: 5px"/>
-                        </span>
-                        <global-outlined v-else style="margin-right: 5px" />
-                      </span>
-                      <span v-if="(field.name.startsWith('project'))">
-                        <span v-if="opt.icon">
-                          <resource-icon :image="opt.icon.base64image" size="1x" style="margin-right: 5px"/>
-                        </span>
-                        <project-outlined v-else style="margin-right: 5px" />
-                      </span>
-                      <span v-if="(field.name.startsWith('account') || field.name.startsWith('user'))">
-                        <span v-if="opt.icon">
-                          <resource-icon :image="opt.icon.base64image" size="1x" style="margin-right: 5px"/>
-                        </span>
-                        <user-outlined v-else style="margin-right: 5px"/>
-                      </span>
-                      <span v-if="(field.name.startsWith('network'))">
-                        <span v-if="opt.icon">
-                          <resource-icon :image="opt.icon.base64image" size="1x" style="margin-right: 5px"/>
-                        </span>
-                        <apartment-outlined v-else style="margin-right: 5px"/>
-                      </span>
-                      <span v-if="(field.name.startsWith('domain'))">
-                        <span v-if="opt.icon">
-                          <resource-icon :image="opt.icon.base64image" size="1x" style="margin-right: 5px"/>
-                        </span>
-                        <block-outlined v-else style="margin-right: 5px"/>
-                      </span>
-                      {{ opt.name || opt.description || opt.traffictype || opt.publicip }}
-                    </div>
-                  </a-select-option>
-                </a-select>
-                <a-select
-                  v-else-if="field.type==='list'"
-                  :loading="field.loading"
-                  mode="multiple"
-                  v-model:value="form[field.name]"
-                  :placeholder="field.description"
-                  v-focus="fieldIndex === firstIndex"
-                  showSearch
-                  optionFilterProp="label"
-                  :filterOption="(input, option) => {
-                    return option.children[0].children.toLowerCase().indexOf(input.toLowerCase()) >= 0
-                  }"
-                >
-                  <a-select-option v-for="(opt, optIndex) in field.opts" :key="optIndex">
-                    {{ opt.name && opt.type ? opt.name + ' (' + opt.type + ')' : opt.name || opt.description }}
-                  </a-select-option>
-                </a-select>
-                <a-input-number
-                  v-else-if="field.type==='long'"
-                  v-focus="fieldIndex === firstIndex"
-                  style="width: 100%;"
-                  v-model:value="form[field.name]"
-                  :placeholder="field.description"
-                />
-                <a-input-password
-                  v-else-if="field.name==='password' || field.name==='currentpassword' || field.name==='confirmpassword'"
-                  v-model:value="form[field.name]"
-                  :placeholder="field.description"
-                  @blur="($event) => handleConfirmBlur($event, field.name)"
-                  v-focus="fieldIndex === firstIndex"
-                />
-                <a-textarea
-                  v-else-if="field.name==='certificate' || field.name==='privatekey' || field.name==='certchain'"
-                  rows="2"
-                  v-model:value="form[field.name]"
-                  :placeholder="field.description"
-                  v-focus="fieldIndex === firstIndex"
-                />
-                <a-input
-                  v-else
-                  v-focus="fieldIndex === firstIndex"
-                  v-model:value="form[field.name]"
-                  :placeholder="field.description" />
-              </a-form-item>
-            </div>
-
-            <div :span="24" class="action-button">
-              <a-button @click="closeAction">{{ $t('label.cancel') }}</a-button>
-              <a-button type="primary" @click="getCsvDownload(currentAction)" ref="submit">{{ $t('label.ok') }}</a-button>
-            </div>
-          </a-form>
-        </a-spin>
-        <br />
-      </a-modal>
-      <a-modal
         v-else
         :visible="showAction"
         :closable="true"
@@ -389,7 +159,6 @@
         style="top: 20px;"
         :width="modalWidth"
         :ok-button-props="getOkProps()"
-        ok-text="111"
         :cancel-button-props="getCancelProps()"
         :confirmLoading="actionLoading"
         @cancel="closeAction"
@@ -749,7 +518,6 @@ export default {
     eventBus.off('async-job-complete')
     eventBus.off('exec-action')
     eventBus.off('desktop-refresh-data')
-    eventBus.off('resource-request-refresh-data')
     eventBus.off('automation-refresh-data')
   },
   mounted () {
@@ -768,11 +536,6 @@ export default {
       }
     })
     eventBus.on('desktop-refresh-data', () => {
-      if (this.$route.path === '/desktopcluster' || this.$route.path.includes('/desktopcluster/')) {
-        this.fetchData()
-      }
-    })
-    eventBus.on('resource-request-refresh-data', () => {
       if (this.$route.path === '/desktopcluster' || this.$route.path.includes('/desktopcluster/')) {
         this.fetchData()
       }
@@ -928,48 +691,6 @@ export default {
       } else {
         return { props: { type: 'primary' } }
       }
-    },
-    getCsvDownload (paramFields) {
-      console.log('123123123')
-      console.log(JSON.stringify(paramFields.resource))
-      var csvFile = 'event.csv'
-      var downloadLink
-      var row = []
-      var fields = paramFields.resource
-      console.log('JSON.stringify(fields)')
-      console.log(JSON.stringify(fields))
-      let csv = 'id,username,type,level,description,account,domainid,resourcetype,created,state,key\n'
-
-      csv += row.join(',')
-      for (var i = 0; i < this.selectedItems.length; i++) {
-        row = []
-        row.push(
-          this.selectedItems[i].id,
-          this.selectedItems[i].username,
-          this.selectedItems[i].type,
-          this.selectedItems[i].level,
-          this.selectedItems[i].description,
-          this.selectedItems[i].account,
-          this.selectedItems[i].domainid,
-          this.selectedItems[i].resourcetype,
-          this.selectedItems[i].created,
-          this.selectedItems[i].state,
-          this.selectedItems[i].key
-        )
-        csv += row.join(',')
-        csv += '\n'
-      }
-
-      const BOM = '\uFEFF'
-      csv = BOM + csv
-
-      csvFile = new Blob([csv], { type: 'text/csv' })
-      downloadLink = document.createElement('a')
-      downloadLink.download = 'event'
-      downloadLink.href = window.URL.createObjectURL(csvFile)
-      downloadLink.style.display = 'none'
-      document.body.appendChild(downloadLink)
-      downloadLink.click()
     },
     getCancelProps () {
       if (this.selectedRowKeys.length > 0 && this.currentAction?.groupAction) {
