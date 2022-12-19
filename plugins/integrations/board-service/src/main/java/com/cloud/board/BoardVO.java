@@ -17,7 +17,6 @@
 
 package com.cloud.board;
 
-import java.sql.Blob;
 import java.util.Date;
 import java.util.UUID;
 
@@ -147,11 +146,11 @@ public class BoardVO implements Board {
         this.hit = hit;
     }
 
-    public Blob getFile() {
+    public String getFile() {
         return file;
     }
 
-    public void setFile(Blob file) {
+    public void setFile(String file) {
         this.file = file;
     }
 

@@ -17,8 +17,6 @@
 
 package org.apache.cloudstack.api.command.admin.board;
 
-import java.io.File;
-
 import javax.inject.Inject;
 
 import org.apache.cloudstack.acl.RoleType;
