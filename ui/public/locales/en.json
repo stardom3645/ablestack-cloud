@@ -3032,4 +3032,8 @@
 "placeholder.rejection.comment": "Please enter a reason for your rejection.",
 "placeholder.disksize": "Please enter the disk size (in GB)",
 "placeholder.content":"Please enter your content."
+"label.action.enableBalancing.cluster": "Enable Cluster dynamic resource distribution",
+"message.action.enableBalancing.cluster": "Enable dynamic resource allocation for this cluster. Enabling this feature allows migration of a running virtual machine to another host.",
+"label.action.disableBalancing.cluster": "Disable Cluster dynamic resource distribution",
+"message.action.disableBalancing.cluster": "Disable dynamic resource allocation for this cluster."
 }
