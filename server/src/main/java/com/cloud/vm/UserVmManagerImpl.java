@@ -4534,7 +4534,7 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
                     } else {
                         _orchSrvc.createVirtualMachine(vm.getUuid(), Long.toString(owner.getAccountId()), Long.toString(template.getId()), hostName, displayName, hypervisorType.name(),
                                 offering.getCpu(), offering.getSpeed(), offering.getRamSize(), diskSize, computeTags, rootDiskTags, networkNicMap, plan, rootDiskSize, extraDhcpOptionMap,
-                                dataDiskTemplateToDiskOfferingMap, null, rootDiskOfferingId); //이석민 diskOfferingId를 null 로 변경함 diskOfferingId > null
+                                dataDiskTemplateToDiskOfferingMap, diskOfferingId, rootDiskOfferingId);
                     }
 
                     if (s_logger.isDebugEnabled()) {
@@ -6302,11 +6302,11 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
                 vmResult = createBasicSecurityGroupVirtualMachine(dataCenter, serviceOffering, template, securityGroupIdList, curAccount, hostName, displayName, diskOfferingId,
                         size, group, hypervisorType, cmd.getHttpMethod(), userData, null, null, null, ipToNetoworkMap, addr, isDisplayVM, keyboard, affinityGroupIdList,
                         curVm.getDetails() == null ? detailMap : curVm.getDetails(), null, new HashMap<>(),
-                        null, new HashMap<>(), dynamicScalingEnabled, diskOfferingId);
+                        null, new HashMap<>(), dynamicScalingEnabled, null); //이석민 diskOfferingId null 처리
             } else {
                 vmResult = createAdvancedVirtualMachine(dataCenter, serviceOffering, template, networkIds, curAccount, hostName, displayName, diskOfferingId, size, group,
                         hypervisorType, cmd.getHttpMethod(), userData, null, null, null, ipToNetoworkMap, addr, isDisplayVM, keyboard, affinityGroupIdList, curVm.getDetails() == null ? detailMap : curVm.getDetails(),
-                        null, new HashMap<>(), null, new HashMap<>(), dynamicScalingEnabled, null, diskOfferingId);
+                        null, new HashMap<>(), null, new HashMap<>(), dynamicScalingEnabled, null, null); //이석민 diskOfferingId null 처리
             }
         } catch (CloudRuntimeException e) {
             _templateMgr.delete(curAccount.getId(), template.getId(), zoneId);
