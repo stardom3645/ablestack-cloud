@@ -1571,7 +1571,7 @@ public class KubernetesClusterManagerImpl extends ManagerBase implements Kuberne
 
         NetworkOfferingVO defaultKubernetesServiceNetworkOffering =
                 new NetworkOfferingVO("쿠버네테스 서비스에 대한 기본 네트워크오퍼링",
-                        "쿠버네테스 서비스에 대한 기본 네트워크오퍼링", Networks.TrafficType.Guest,
+                "쿠버네테스 서비스에 대한 기본 네트워크오퍼링", Networks.TrafficType.Guest,
                         false, false, null, null, true,
                         NetworkOffering.Availability.Required, null, Network.GuestType.Isolated, true,
                         true, false, false, false, false,
@@ -1581,15 +1581,13 @@ public class KubernetesClusterManagerImpl extends ManagerBase implements Kuberne
         defaultKubernetesServiceNetworkOffering.setState(NetworkOffering.State.Enabled);
         defaultKubernetesServiceNetworkOffering = networkOfferingDao.persistDefaultNetworkOffering(defaultKubernetesServiceNetworkOffering);
 
-                            for (Service service : defaultKubernetesServiceNetworkOfferingProviders.keySet()) {
-                                NetworkOfferingServiceMapVO offService =
-                                        new NetworkOfferingServiceMapVO(defaultKubernetesServiceNetworkOffering.getId(), service,
-                                                defaultKubernetesServiceNetworkOfferingProviders.get(service));
-                                networkOfferingServiceMapDao.persist(offService);
-                                LOGGER.trace("Added service for the network offering: " + offService);
-                            }
+        for (Service service : defaultKubernetesServiceNetworkOfferingProviders.keySet()) {
+            NetworkOfferingServiceMapVO offService =
+                    new NetworkOfferingServiceMapVO(defaultKubernetesServiceNetworkOffering.getId(), service,
+                            defaultKubernetesServiceNetworkOfferingProviders.get(service));
+            networkOfferingServiceMapDao.persist(offService);
+            LOGGER.trace("Added service for the network offering: " + offService);
         }
-
 
         _gcExecutor.scheduleWithFixedDelay(new KubernetesClusterGarbageCollector(), 300, 300, TimeUnit.SECONDS);
         _stateScanner.scheduleWithFixedDelay(new KubernetesClusterStatusScanner(), 300, 30, TimeUnit.SECONDS);
