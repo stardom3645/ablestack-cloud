@@ -27,6 +27,9 @@ import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 
+import com.cloud.agent.properties.AgentProperties;
+import com.cloud.agent.properties.AgentPropertiesFileHandler;
+
 public class LibvirtVMDef {
     private static final Logger s_logger = Logger.getLogger(LibvirtVMDef.class);
 
@@ -264,6 +267,7 @@ public class LibvirtVMDef {
         private int vcpu = -1;
         private int maxVcpu = -1;
         private boolean memoryBalloning = false;
+        private int memoryBalloonStatsPeriod = AgentPropertiesFileHandler.getPropertyValue(AgentProperties.VM_MEMBALLOON_STATS_PERIOD);
 
         public void setMemorySize(long mem) {
             this.memory = mem;
@@ -304,11 +308,14 @@ public class LibvirtVMDef {
                 response.append(String.format("<cpu> <numa> <cell id='0' cpus='0-%s' memory='%s' unit='KiB'/> </numa> </cpu>\n", this.maxVcpu - 1, this.currentMemory));
             }
 
+            MemBalloonDef memBalloonDef = new MemBalloonDef();
             if (this.memoryBalloning) {
-                response.append(String.format("<devices>\n<memballoon model='virtio'>\n<stats period='10'/>\n</memballoon>\n</devices>\n"));
+                memBalloonDef.defVirtioMemBalloon(String.valueOf(memoryBalloonStatsPeriod));
             } else {
-                response.append(String.format("<devices>\n<memballoon model='none'/>\n</devices>\n"));
+                memBalloonDef.defNoneMemBalloon();
             }
+            response.append(String.format("<devices>%n%s%n</devices>%n", memBalloonDef.toString()));
+
             response.append(String.format("<vcpu current=\"%s\">%s</vcpu>\n", this.vcpu, this.maxVcpu));
             return response.toString();
         }
@@ -1211,6 +1218,53 @@ public class LibvirtVMDef {
 
             diskBuilder.append("</disk>\n");
             return diskBuilder.toString();
+        }
+    }
+
+    public static class MemBalloonDef {
+        private MemBalloonModel memBalloonModel;
+        private String memBalloonStatsPeriod;
+
+        public enum MemBalloonModel {
+            NONE("none"), VIRTIO("virtio");
+            String model;
+
+            MemBalloonModel(String model) {
+                this.model = model;
+            }
+
+            @Override
+            public String toString() {
+                return model;
+            }
+        }
+
+        public void defNoneMemBalloon() {
+            memBalloonModel = MemBalloonModel.NONE;
+        }
+
+        public void defVirtioMemBalloon(String period) {
+            memBalloonModel = MemBalloonModel.VIRTIO;
+            memBalloonStatsPeriod = period;
+        }
+
+        public MemBalloonModel getMemBalloonModel() {
+            return memBalloonModel;
+        }
+
+        public String getMemBalloonStatsPeriod() {
+            return memBalloonStatsPeriod;
+        }
+
+        @Override
+        public String toString() {
+            StringBuilder memBalloonBuilder = new StringBuilder();
+            memBalloonBuilder.append("<memballoon model='" + memBalloonModel + "'>\n");
+            if (StringUtils.isNotBlank(memBalloonStatsPeriod)) {
+                memBalloonBuilder.append("<stats period='" + memBalloonStatsPeriod +"'/>\n");
+            }
+            memBalloonBuilder.append("</memballoon>");
+            return memBalloonBuilder.toString();
         }
     }
 
