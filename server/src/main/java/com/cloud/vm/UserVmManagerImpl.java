@@ -4534,8 +4534,7 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
                     } else {
                         _orchSrvc.createVirtualMachine(vm.getUuid(), Long.toString(owner.getAccountId()), Long.toString(template.getId()), hostName, displayName, hypervisorType.name(),
                                 offering.getCpu(), offering.getSpeed(), offering.getRamSize(), diskSize, computeTags, rootDiskTags, networkNicMap, plan, rootDiskSize, extraDhcpOptionMap,
-                                dataDiskTemplateToDiskOfferingMap, diskOfferingId, rootDiskOfferingId); //이석민 diskOfferingId 를 null 로 변경함 diskOfferingId > null
-                        //null 에서 다시 diskOfferingId 로 변경 후 테스트 진행 후 주석 제거 예정
+                                dataDiskTemplateToDiskOfferingMap, diskOfferingId, rootDiskOfferingId);
                     }
 
                     if (s_logger.isDebugEnabled()) {
