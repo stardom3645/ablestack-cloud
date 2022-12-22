@@ -22,7 +22,6 @@ import java.util.List;
 
 import javax.inject.Inject;
 
-import org.apache.cloudstack.context.CallContext;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.log4j.Level;
 
@@ -88,7 +87,7 @@ public class DesktopClusterDestroyWorker extends DesktopClusterResourceModifierA
                 }
                 try {
                     UserVm vm = userVmService.destroyVm(vmID, true);
-                    if (!userVmManager.expunge(userVM, CallContext.current().getCallingUserId(), CallContext.current().getCallingAccount())) {
+                    if (!userVmManager.expunge(userVM)) {
                         LOGGER.warn(String.format("Unable to expunge VM %s : %s, destroying desktop cluster will probably fail",
                             vm.getInstanceName() , vm.getUuid()));
                     }
@@ -117,7 +116,7 @@ public class DesktopClusterDestroyWorker extends DesktopClusterResourceModifierA
                             }
                             try {
                                 UserVm deskvm = userVmService.destroyVm(desktopvmID, true);
-                                if (!userVmManager.expunge(userDesktopVM, CallContext.current().getCallingUserId(), CallContext.current().getCallingAccount())) {
+                                if (!userVmManager.expunge(userDesktopVM)) {
                                     LOGGER.warn(String.format("Unable to expunge VM %s : %s, Destroying a desktop virtual machine in a desktop cluster will probably fail",
                                     deskvm.getInstanceName() , deskvm.getUuid()));
                                 }
