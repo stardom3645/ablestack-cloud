@@ -166,6 +166,11 @@ public class VMEntityManagerImpl implements VMEntityManager {
             Map<String, String> details = vmEntityVO.getDetails();
             vmProfile.getParameters().put(VirtualMachineProfile.Param.TpmVersion, details.get(VirtualMachineProfile.Param.TpmVersion.getName()));
         }
+        
+        if (MapUtils.isNotEmpty(vmEntityVO.getDetails()) && vmEntityVO.getDetails().containsKey(VirtualMachineProfile.Param.ConsiderLastHost.getName())) {
+            vmProfile.getParameters().put(VirtualMachineProfile.Param.ConsiderLastHost, vmEntityVO.getDetails().get(VirtualMachineProfile.Param.ConsiderLastHost.getName()));
+        }
+        
         DataCenterDeployment plan = new DataCenterDeployment(vm.getDataCenterId(), vm.getPodIdToDeployIn(), null, null, null, null);
         if (planToDeploy != null && planToDeploy.getDataCenterId() != 0) {
             plan =
@@ -285,7 +290,7 @@ public class VMEntityManagerImpl implements VMEntityManager {
     }
 
     @Override
-    public boolean destroyVirtualMachine(VMEntityVO vmEntityVO, String caller, boolean expunge) throws AgentUnavailableException, OperationTimedoutException, ConcurrentOperationException {
+    public boolean destroyVirtualMachine(VMEntityVO vmEntityVO, boolean expunge) throws AgentUnavailableException, OperationTimedoutException, ConcurrentOperationException {
 
         VMInstanceVO vm = _vmDao.findByUuid(vmEntityVO.getUuid());
         _itMgr.destroy(vm.getUuid(), expunge);

@@ -1569,17 +1569,17 @@ public class KubernetesClusterManagerImpl extends ManagerBase implements Kuberne
         defaultKubernetesServiceNetworkOfferingProviders.put(Service.PortForwarding, Network.Provider.VirtualRouter);
         defaultKubernetesServiceNetworkOfferingProviders.put(Service.Vpn, Network.Provider.VirtualRouter);
 
-        if (networkOfferingDao.findByUniqueName(DEFAULT_NETWORK_OFFERING_FOR_KUBERNETES_SERVICE_NAME) == null && networkOfferingDao.findByUniqueName("쿠버네테스 서비스에 대한 기본 네트워크오퍼링") == null) {
-            NetworkOfferingVO defaultKubernetesServiceNetworkOffering =
-                    new NetworkOfferingVO("쿠버네테스 서비스에 대한 기본 네트워크오퍼링",
-                            "쿠버네테스 서비스에 대한 기본 네트워크오퍼링", Networks.TrafficType.Guest,
-                            false, false, null, null, true,
-                            NetworkOffering.Availability.Required, null, Network.GuestType.Isolated, true,
-                            true, false, false, false, false,
-                            false, false, false, true, true, false,
-                            false, true, false, false);
-                            defaultKubernetesServiceNetworkOffering.setState(NetworkOffering.State.Enabled);
-                            defaultKubernetesServiceNetworkOffering = networkOfferingDao.persistDefaultNetworkOffering(defaultKubernetesServiceNetworkOffering);
+        NetworkOfferingVO defaultKubernetesServiceNetworkOffering =
+                new NetworkOfferingVO("쿠버네테스 서비스에 대한 기본 네트워크오퍼링",
+                        "쿠버네테스 서비스에 대한 기본 네트워크오퍼링", Networks.TrafficType.Guest,
+                        false, false, null, null, true,
+                        NetworkOffering.Availability.Required, null, Network.GuestType.Isolated, true,
+                        true, false, false, false, false,
+                        false, false, false, true, true, false,
+                        false, true, false, false);
+        defaultKubernetesServiceNetworkOffering.setSupportsVmAutoScaling(true);
+        defaultKubernetesServiceNetworkOffering.setState(NetworkOffering.State.Enabled);
+        defaultKubernetesServiceNetworkOffering = networkOfferingDao.persistDefaultNetworkOffering(defaultKubernetesServiceNetworkOffering);
 
                             for (Service service : defaultKubernetesServiceNetworkOfferingProviders.keySet()) {
                                 NetworkOfferingServiceMapVO offService =
