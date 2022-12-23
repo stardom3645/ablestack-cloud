@@ -166,11 +166,9 @@ public class VMEntityManagerImpl implements VMEntityManager {
             Map<String, String> details = vmEntityVO.getDetails();
             vmProfile.getParameters().put(VirtualMachineProfile.Param.TpmVersion, details.get(VirtualMachineProfile.Param.TpmVersion.getName()));
         }
-
         if (MapUtils.isNotEmpty(vmEntityVO.getDetails()) && vmEntityVO.getDetails().containsKey(VirtualMachineProfile.Param.ConsiderLastHost.getName())) {
             vmProfile.getParameters().put(VirtualMachineProfile.Param.ConsiderLastHost, vmEntityVO.getDetails().get(VirtualMachineProfile.Param.ConsiderLastHost.getName()));
         }
-
         DataCenterDeployment plan = new DataCenterDeployment(vm.getDataCenterId(), vm.getPodIdToDeployIn(), null, null, null, null);
         if (planToDeploy != null && planToDeploy.getDataCenterId() != 0) {
             plan =

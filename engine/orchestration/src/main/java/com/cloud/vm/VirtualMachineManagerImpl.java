@@ -1413,7 +1413,6 @@ public class VirtualMachineManagerImpl extends ManagerBase implements VirtualMac
             msgBuf.append(String.format("TpmVersion: %s ", params.get(VirtualMachineProfile.Param.TpmVersion)));
             log = true;
         }
-
         if (params.get(VirtualMachineProfile.Param.ConsiderLastHost) != null) {
             msgBuf.append(String.format("Consider last host: %s ", params.get(VirtualMachineProfile.Param.ConsiderLastHost)));
             log = true;
