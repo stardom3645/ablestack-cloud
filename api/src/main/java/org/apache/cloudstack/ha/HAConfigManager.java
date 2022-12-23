@@ -93,4 +93,18 @@ public interface HAConfigManager {
      * @return returns list of ha provider names
      */
     List<String> listHAProviders(final HAResource.ResourceType resourceType, final HAResource.ResourceSubType entityType);
+
+    /**
+     * Enables Balancing across a zone
+     * @param cluster the cluster
+     * @return returns operation success
+     */
+    boolean enableBalancing(Cluster cluster);
+
+    /**
+     * Disable Balancing across a zone
+     * @param cluster the cluster
+     * @return returns operation success
+     */
+    boolean disableBalancing(Cluster cluster);
 }

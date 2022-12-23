@@ -165,7 +165,8 @@
       <span>{{ ipV6Address(text, record) }}</span>
     </template>
     <template #publicip="{ text, record }">
-      <router-link :to="{ path: $route.path + '/' + record.id }">{{ text }}</router-link>
+      <router-link v-if="['/autoscalevmgroup'].includes($route.path)" :to="{ path: '/publicip' + '/' + record.publicipid }">{{ text }}</router-link>
+      <router-link v-else :to="{ path: $route.path + '/' + record.id }">{{ text }}</router-link>
     </template>
     <template #traffictype="{ text }" href="javascript:;">
       {{ text }}
@@ -519,7 +520,7 @@ export default {
   methods: {
     createPathBasedOnVmType: createPathBasedOnVmType,
     quickViewEnabled () {
-      return new RegExp(['/vm', '/desktop', '/kubernetes', '/ssh', '/userdata', '/vmgroup', '/affinitygroup',
+      return new RegExp(['/vm', '/desktop', '/kubernetes', '/resourcerequest', '/board', '/ssh', '/userdata', '/vmgroup', '/affinitygroup', '/autoscalevmgroup',
         '/volume', '/snapshot', '/vmsnapshot', '/backup',
         '/guestnetwork', '/vpc', '/vpncustomergateway',
         '/template', '/controllertemplate', '/mastertemplate', 'automationtemplate', 'automationcontroller', '/iso',
@@ -529,7 +530,7 @@ export default {
         .test(this.$route.path)
     },
     enableGroupAction () {
-      return ['vm', 'alert', 'vmgroup', 'ssh', 'userdata', 'affinitygroup', 'volume', 'snapshot',
+      return ['vm', 'alert', 'vmgroup', 'ssh', 'userdata', 'affinitygroup', 'autoscalevmgroup', 'volume', 'snapshot',
         'vmsnapshot', 'guestnetwork', 'vpc', 'publicip', 'vpnuser', 'vpncustomergateway',
         'project', 'account', 'systemvm', 'router', 'computeoffering', 'systemoffering',
         'diskoffering', 'backupoffering', 'networkoffering', 'vpcoffering', 'ilbvm', 'kubernetes', 'comment'
@@ -739,6 +740,7 @@ export default {
         case 'VR' : return 'Virtual Router'
         case 'SYSTEM_VM' : return 'System VM'
         case 'KUBERNETES_CLUSTER': return 'Kubernetes Cluster'
+        case 'AUTOSCALE_VM_GROUP': return 'AutoScale VM group'
         default: return record.entitytype.toLowerCase().replace('_', '')
       }
     },
@@ -769,6 +771,7 @@ export default {
         case 'VR' : return 'router'
         case 'SYSTEM_VM' : return 'systemvm'
         case 'KUBERNETES_CLUSTER': return 'kubernetes'
+        case 'AUTOSCALE_VM_GROUP': return 'autoscalevmgroup'
         default: return entitytype.toLowerCase().replace('_', '')
       }
     },

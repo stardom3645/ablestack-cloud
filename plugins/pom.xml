@@ -50,6 +50,8 @@
         <module>affinity-group-processors/explicit-dedication</module>
         <module>affinity-group-processors/host-affinity</module>
         <module>affinity-group-processors/host-anti-affinity</module>
+        <module>affinity-group-processors/non-strict-host-affinity</module>
+        <module>affinity-group-processors/non-strict-host-anti-affinity</module>
 
         <module>alert-handlers/snmp-alerts</module>
         <module>alert-handlers/syslog-alerts</module>
@@ -91,7 +93,8 @@
         <module>integrations/kubernetes-service</module>
         <module>integrations/desktop-service</module>
         <module>integrations/automation-service</module>
-
+        <module>integrations/resource-request</module>
+        <module>integrations/board-service</module>
         <module>metrics</module>
 
         <module>network-elements/bigswitch</module>

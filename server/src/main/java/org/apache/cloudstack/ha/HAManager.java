@@ -66,6 +66,11 @@ public interface HAManager extends HAConfigManager {
             "2500",
             "The number of pending fence operations per management server. This setting determines the size of the size of the FENCE queue.", true);
 
+    ConfigKey<Integer> balancingServiceEnabled = new ConfigKey<>("Advanced", Integer.class,
+            "cloud.balancing.service.enabled",
+            "false",
+            "Indicates whether the dynamic balancing service plugin is enabled. Management server restart required on change", false);
+
     boolean transitionHAState(final HAConfig.Event event, final HAConfig haConfig);
     HAProvider getHAProvider(final String name);
     HAResourceCounter getHACounter(final Long resourceId, final HAResource.ResourceType resourceType);

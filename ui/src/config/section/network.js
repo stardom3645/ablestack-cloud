@@ -92,12 +92,28 @@ export default {
       }],
       actions: [
         {
+          api: 'addResourceRequest',
+          icon: 'plus-outlined',
+          label: 'label.add.network.request',
+          docHelp: 'adminguide/networking_and_traffic.html#configure-guest-traffic-in-an-advanced-zone',
+          listView: true,
+          popup: true,
+          show: (record, store) => {
+            return ['User'].includes(store.userInfo.roletype) &&
+            store.features.resourcerequestenabled
+          },
+          component: shallowRef(defineAsyncComponent(() => import('@/views/network/AddNetResourceRequest.vue')))
+        },
+        {
           api: 'createNetwork',
           icon: 'plus-outlined',
           label: 'label.add.network',
           docHelp: 'adminguide/networking_and_traffic.html#configure-guest-traffic-in-an-advanced-zone',
           listView: true,
           popup: true,
+          show: (record, store) => {
+            return (!['User'].includes(store.userInfo.roletype) && store.features.resourcerequestenabled) || !store.features.resourcerequestenabled
+          },
           component: shallowRef(defineAsyncComponent(() => import('@/views/network/CreateNetwork.vue')))
         },
         {
@@ -149,11 +165,28 @@ export default {
         {
           api: 'deleteNetwork',
           icon: 'delete-outlined',
+          label: 'label.action.delete.network.request',
+          dataView: true,
+          groupAction: true,
+          popup: true,
+          show: (record, store) => {
+            return ['User'].includes(store.userInfo.roletype) &&
+            store.features.resourcerequestenabled
+          },
+          component: shallowRef(defineAsyncComponent(() => import('@/views/network/DeleteNetworkResourceRequest.vue'))),
+          groupMap: (selection) => { return selection.map(x => { return { id: x } }) }
+        },
+        {
+          api: 'deleteNetwork',
+          icon: 'delete-outlined',
           label: 'label.action.delete.network',
           message: 'message.action.delete.network',
           dataView: true,
           groupAction: true,
           popup: true,
+          show: (record, store) => {
+            return (!['User'].includes(store.userInfo.roletype) && store.features.resourcerequestenabled) || !store.features.resourcerequestenabled
+          },
           groupMap: (selection) => { return selection.map(x => { return { id: x } }) }
         }
       ]

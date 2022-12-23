@@ -31,14 +31,14 @@ public class KVMHAChecker extends KVMHABase implements Callable<Boolean> {
     private static final Logger s_logger = Logger.getLogger(KVMHAChecker.class);
     private List<NfsStoragePool> nfsStoragePools;
     private List<RbdStoragePool> rbdStoragePools;
-    private List<IscsiStoragePool> iscsiStoragePools;
+    private List<ClvmStoragePool> clvmStoragePools;
     private String hostIp;
     private long heartBeatCheckerTimeout = 600000; // 10 minutes
 
-    public KVMHAChecker(List<NfsStoragePool> nfspools, List<RbdStoragePool> rbdpools, List<IscsiStoragePool> iscsipools, String host) {
+    public KVMHAChecker(List<NfsStoragePool> nfspools, List<RbdStoragePool> rbdpools, List<ClvmStoragePool> clvmpools, String host) {
         this.nfsStoragePools = nfspools;
         this.rbdStoragePools = rbdpools;
-        this.iscsiStoragePools = iscsipools;
+        this.clvmStoragePools = clvmpools;
         this.hostIp = host;
     }
 
@@ -53,14 +53,14 @@ public class KVMHAChecker extends KVMHABase implements Callable<Boolean> {
 
         String hostAndPools = "";
 
-        for (IscsiStoragePool iscsipools : iscsiStoragePools) {
-            storageType = "iscsi";
-            hostAndPools = String.format("host IP [%s] in pools [%s]", hostIp, iscsiStoragePools.stream().map(pool -> pool._poolIp).collect(Collectors.joining(", ")));
+        for (ClvmStoragePool clvmpools : clvmStoragePools) {
+            storageType = "clvm";
+            hostAndPools = String.format("host IP [%s] in pools [%s]", hostIp, clvmStoragePools.stream().map(pool -> pool._poolIp).collect(Collectors.joining(", ")));
             s_logger.debug(String.format("Checking heart beat with KVMHAChecker for %s", hostAndPools));
 
-            Script cmd = new Script(s_heartBeatPathIscsi, heartBeatCheckerTimeout, s_logger);
+            Script cmd = new Script(s_heartBeatPathClvm, heartBeatCheckerTimeout, s_logger);
             cmd.add("-h", hostIp);
-            cmd.add("-p", iscsipools._poolMountSourcePath);
+            cmd.add("-p", clvmpools._poolMountSourcePath);
             cmd.add("-r");
             cmd.add("-t", String.valueOf(_heartBeatUpdateFreq / 1000));
             OutputInterpreter.OneLineParser parser = new OutputInterpreter.OneLineParser();
@@ -68,7 +68,7 @@ public class KVMHAChecker extends KVMHABase implements Callable<Boolean> {
             String parsedLine = parser.getLine();
 
             s_logger.debug(String.format("Checking heart beat with KVMHAChecker [{command=\"%s\", result: \"%s\", log: \"%s\", pool: \"%s\"}].", cmd.toString(), result, parsedLine,
-            iscsipools._poolIp));
+            clvmpools._poolIp));
 
             if (result == null && parsedLine.contains("DEAD")) {
                 s_logger.warn(String.format("Checking heart beat with KVMHAChecker command [%s] returned [%s]. [%s]. It may cause a shutdown of host IP [%s].", cmd.toString(),

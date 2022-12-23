@@ -110,6 +110,13 @@
           </a-tooltip>
         </div>
         <template #footer>
+          <router-link :to="{ path: '/event/1' }">
+          <a-alert
+              message="공지사항입니다."
+              type="info"
+              closable
+            />
+          </router-link>
           <div class="capacity-dashboard-footer">
             <a-timeline>
               <a-timeline-item

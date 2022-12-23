@@ -82,12 +82,28 @@ export default {
       searchFilters: ['name', 'zoneid', 'domainid', 'account', 'state', 'tags'],
       actions: [
         {
+          api: 'addResourceRequest',
+          icon: 'plus-outlined',
+          docHelp: 'adminguide/storage.html#creating-a-new-volume',
+          label: 'label.action.create.volume.request',
+          listView: true,
+          popup: true,
+          show: (record, store) => {
+            return ['User'].includes(store.userInfo.roletype) &&
+            store.features.resourcerequestenabled
+          },
+          component: shallowRef(defineAsyncComponent(() => import('@/views/storage/AddVolResourceRequest.vue')))
+        },
+        {
           api: 'createVolume',
           icon: 'plus-outlined',
           docHelp: 'adminguide/storage.html#creating-a-new-volume',
           label: 'label.action.create.volume',
           listView: true,
           popup: true,
+          show: (record, store) => {
+            return (!['User'].includes(store.userInfo.roletype) && store.features.resourcerequestenabled) || !store.features.resourcerequestenabled
+          },
           component: shallowRef(defineAsyncComponent(() => import('@/views/storage/CreateVolume.vue')))
         },
         {
@@ -261,9 +277,10 @@ export default {
           message: 'message.action.delete.volume',
           dataView: true,
           show: (record, store) => {
-            return ['Expunging', 'Expunged', 'UploadError'].includes(record.state) ||
+            return ((!['User'].includes(store.userInfo.roletype) && store.features.resourcerequestenabled) || !store.features.resourcerequestenabled) &&
+              (['Expunging', 'Expunged', 'UploadError'].includes(record.state) ||
               ['Allocated', 'Uploaded'].includes(record.state) && record.type !== 'ROOT' && !record.virtualmachineid ||
-              ((['Admin', 'DomainAdmin'].includes(store.userInfo.roletype) || store.features.allowuserexpungerecovervolume) && record.state === 'Destroy')
+              ((['Admin', 'DomainAdmin'].includes(store.userInfo.roletype) || store.features.allowuserexpungerecovervolume) && record.state === 'Destroy'))
           },
           groupAction: true,
           popup: true,
@@ -280,9 +297,22 @@ export default {
               ? ['expunge'] : []
           },
           show: (record, store) => {
-            return !['Destroy', 'Destroyed', 'Expunging', 'Expunged', 'Migrating', 'Uploading', 'UploadError', 'Creating', 'Allocated', 'Uploaded'].includes(record.state) &&
-              record.type !== 'ROOT' && !record.virtualmachineid
+            return ((!['User'].includes(store.userInfo.roletype) && store.features.resourcerequestenabled) || !store.features.resourcerequestenabled) &&
+            !['Destroy', 'Destroyed', 'Expunging', 'Expunged', 'Migrating', 'Uploading', 'UploadError', 'Creating', 'Allocated', 'Uploaded'].includes(record.state) &&
+            record.type !== 'ROOT' &&
+            !record.virtualmachineid
           }
+        },
+        {
+          api: 'addResourceRequest',
+          icon: 'delete-outlined',
+          label: 'label.action.destroy.volume.request',
+          dataView: true,
+          popup: true,
+          show: (record, store) => {
+            return ['User'].includes(store.userInfo.roletype) && store.features.resourcerequestenabled
+          },
+          component: shallowRef(defineAsyncComponent(() => import('@/views/storage/DeleteVolResourceRequest.vue')))
         }
       ]
     },

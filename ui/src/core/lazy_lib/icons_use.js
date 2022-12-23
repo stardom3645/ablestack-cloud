@@ -44,6 +44,7 @@ import {
   CheckCircleTwoTone,
   CheckOutlined,
   CheckSquareOutlined,
+  CloseSquareOutlined,
   ClockCircleOutlined,
   CloseCircleOutlined,
   CloseCircleTwoTone,
@@ -118,6 +119,7 @@ import {
   MoreOutlined,
   NotificationOutlined,
   NumberOutlined,
+  OrderedListOutlined,
   PaperClipOutlined,
   PauseCircleOutlined,
   PictureOutlined,
@@ -197,6 +199,7 @@ export default {
     app.component('CheckCircleTwoTone', CheckCircleTwoTone)
     app.component('CheckOutlined', CheckOutlined)
     app.component('CheckSquareOutlined', CheckSquareOutlined)
+    app.component('CloseSquareOutlined', CloseSquareOutlined)
     app.component('ClockCircleOutlined', ClockCircleOutlined)
     app.component('CloseCircleOutlined', CloseCircleOutlined)
     app.component('CloseCircleTwoTone', CloseCircleTwoTone)
@@ -271,6 +274,7 @@ export default {
     app.component('MoreOutlined', MoreOutlined)
     app.component('NotificationOutlined', NotificationOutlined)
     app.component('NumberOutlined', NumberOutlined)
+    app.component('OrderedListOutlined', OrderedListOutlined)
     app.component('PaperClipOutlined', PaperClipOutlined)
     app.component('PauseCircleOutlined', PauseCircleOutlined)
     app.component('PictureOutlined', PictureOutlined)

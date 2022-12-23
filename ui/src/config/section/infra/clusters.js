@@ -186,6 +186,38 @@ export default {
       }
     },
     {
+      api: 'enableBalancingCluster',
+      icon: 'control-outlined',
+      label: 'label.action.enableBalancing.cluster',
+      message: 'message.action.enableBalancing.cluster',
+      dataView: true,
+      show: (record) => {
+        return !record?.resourcedetails?.resourceBalancingEnabled || record?.resourcedetails?.resourceBalancingEnabled === 'false'
+      },
+      args: ['clusterid'],
+      mapping: {
+        clusterid: {
+          value: (record) => { return record.id }
+        }
+      }
+    },
+    {
+      api: 'disableBalancingCluster',
+      icon: 'control-outlined',
+      label: 'label.action.disableBalancing.cluster',
+      message: 'message.action.disableBalancing.cluster',
+      dataView: true,
+      show: (record) => {
+        return record?.resourcedetails?.resourceBalancingEnabled && !(record?.resourcedetails?.resourceBalancingEnabled === 'false')
+      },
+      args: ['clusterid'],
+      mapping: {
+        clusterid: {
+          value: (record) => { return record.id }
+        }
+      }
+    },
+    {
       api: 'deleteCluster',
       icon: 'delete-outlined',
       label: 'label.action.delete.cluster',

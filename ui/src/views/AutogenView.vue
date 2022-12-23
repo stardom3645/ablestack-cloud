@@ -749,6 +749,7 @@ export default {
     eventBus.off('async-job-complete')
     eventBus.off('exec-action')
     eventBus.off('desktop-refresh-data')
+    eventBus.off('resource-request-refresh-data')
     eventBus.off('automation-refresh-data')
   },
   mounted () {
@@ -767,6 +768,11 @@ export default {
       }
     })
     eventBus.on('desktop-refresh-data', () => {
+      if (this.$route.path === '/desktopcluster' || this.$route.path.includes('/desktopcluster/')) {
+        this.fetchData()
+      }
+    })
+    eventBus.on('resource-request-refresh-data', () => {
       if (this.$route.path === '/desktopcluster' || this.$route.path.includes('/desktopcluster/')) {
         this.fetchData()
       }
@@ -1042,7 +1048,7 @@ export default {
       }
 
       this.projectView = Boolean(store.getters.project && store.getters.project.id)
-      this.hasProjectId = ['vm', 'vmgroup', 'ssh', 'affinitygroup', 'volume', 'snapshot', 'vmsnapshot', 'guestnetwork', 'vpc', 'securitygroups', 'publicip', 'vpncustomergateway', 'template', 'iso', 'event', 'kubernetes'].includes(this.$route.name)
+      this.hasProjectId = ['vm', 'vmgroup', 'ssh', 'affinitygroup', 'volume', 'snapshot', 'vmsnapshot', 'guestnetwork', 'vpc', 'securitygroups', 'publicip', 'vpncustomergateway', 'template', 'iso', 'event', 'kubernetes', 'autoscalevmgroup'].includes(this.$route.name)
 
       if ((this.$route && this.$route.params && this.$route.params.id) || this.$route.query.dataView) {
         this.dataView = true
@@ -1697,6 +1703,17 @@ export default {
             }
             if (action.mapping && key in action.mapping && action.mapping[key].options) {
               params[key] = action.mapping[key].options[input]
+              if (['createAffinityGroup'].includes(action.api) && key === 'type') {
+                if (params[key] === 'host anti-affinity (Strict)') {
+                  params[key] = 'host anti-affinity'
+                } else if (params[key] === 'host affinity (Strict)') {
+                  params[key] = 'host affinity'
+                } else if (params[key] === 'host anti-affinity (Non-Strict)') {
+                  params[key] = 'non-strict host anti-affinity'
+                } else if (params[key] === 'host affinity (Non-Strict)') {
+                  params[key] = 'non-strict host affinity'
+                }
+              }
             } else if (param.type === 'list') {
               params[key] = input.map(e => { return param.opts[e].id }).reduce((str, name) => { return str + ',' + name })
             } else if (param.name === 'account' || param.name === 'keypair') {
