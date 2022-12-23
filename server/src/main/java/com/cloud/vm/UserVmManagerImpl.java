@@ -6856,7 +6856,7 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
 
     private DeployDestination chooseVmMigrationDestination(VMInstanceVO vm, Host srcHost) {
         vm.setLastHostId(null); // Last host does not have higher priority in vm migration
-        final ServiceOfferingVO offering = serviceOfferingDao.findById(vm.getId(), vm.getServiceOfferingId());
+        final ServiceOfferingVO offering = _serviceOfferingDao.findById(vm.getId(), vm.getServiceOfferingId());
         final VirtualMachineProfile profile = new VirtualMachineProfileImpl(vm, null, offering, null, null);
         final Long srcHostId = srcHost.getId();
         final Host host = _hostDao.findById(srcHostId);
