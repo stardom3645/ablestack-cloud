@@ -1131,7 +1131,7 @@
 "label.memoryallocated": "\ud560\ub2f9\ub41c \uba54\ubaa8\ub9ac",
 "label.memoryallocatedgb": "\ud560\ub2f9\ub41c \uba54\ubaa8\ub9ac",
 "label.memorylimit": "\uba54\ubaa8\ub9ac \uc81c\ud55c(MiB)",
-"label.memorymaxdeviation": "Deviation",
+"label.memorymaxdeviation": "\ud3b8\ucc28",
 "label.memorytotal": "\ud560\ub2f9\ub41c \uba54\ubaa8\ub9ac",
 "label.memorytotalgb": "\ucd1d \uba54\ubaa8\ub9ac",
 "label.memoryused": "\uc0ac\uc6a9\ub41c \uba54\ubaa8\ub9ac",
