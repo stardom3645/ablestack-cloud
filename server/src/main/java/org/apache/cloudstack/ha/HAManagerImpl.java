@@ -517,30 +517,48 @@ public final class HAManagerImpl extends ManagerBase implements HAManager, Clust
     @Override
     @ActionEvent(eventType = EventTypes.EVENT_HA_RESOURCE_ENABLE, eventDescription = "enabling Balancing for a cluster")
     public boolean enableBalancing(final Cluster cluster) {
+        if (!balancingServiceEnabled.value()) {
+            throw new CloudRuntimeException("balancing Service plugin is disabled");
+        }
+
         clusterDetailsDao.persist(cluster.getId(), Balancing_ENABLED_DETAIL, String.valueOf(true));
 
         /* Using Runnable Interface */
-        thread = new Thread(new BalancingThread(cluster.getId()));
-        thread.start();
+        Thread.State state = thread.getState();
+        LOG.info("===========state ====> "+state);
+        if (state.equals("TERMINATED")) {
+            thread = new Thread(new BalancingThread(cluster.getId()));
+            thread.start();
+        }
 
         return true;
     }
 
-    class BalancingThread implements Runnable{
+    public final class BalancingThread extends ManagedContextRunnable implements BackgroundPollTask {
         private long clusterId;
         public BalancingThread(long clusterid) {
             this.clusterId = clusterid;
         }
 
         @Override
-        public void run() {
+        public void runInContext() {
             balancingCheck(clusterId);
+        }
+
+        @Override
+        public Long getDelay() {
+            // TODO Auto-generated method stub
+            return null;
         }
     }
 
     @Override
     @ActionEvent(eventType = EventTypes.EVENT_HA_RESOURCE_ENABLE, eventDescription = "enabling Balancing for a cluster")
     public boolean disableBalancing(final Cluster cluster) {
+        if (!balancingServiceEnabled.value()) {
+            throw new CloudRuntimeException("balancing Service plugin is disabled");
+        }
+
         clusterDetailsDao.persist(cluster.getId(), Balancing_ENABLED_DETAIL, String.valueOf(false));
 
         // thread 종료
@@ -852,7 +870,8 @@ public final class HAManagerImpl extends ManagerBase implements HAManager, Clust
                 MaxConcurrentRecoveryOperations,
                 MaxPendingRecoveryOperations,
                 MaxConcurrentFenceOperations,
-                MaxPendingFenceOperations
+                MaxPendingFenceOperations,
+                balancingServiceEnabled
         };
     }
 

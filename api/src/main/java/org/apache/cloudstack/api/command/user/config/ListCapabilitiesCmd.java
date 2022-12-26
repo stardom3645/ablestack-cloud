@@ -72,6 +72,7 @@ public class ListCapabilitiesCmd extends BaseCmd {
         response.setHost((String)capabilities.get("host"));
         response.setResourceRequestEnabled((Boolean)capabilities.get("resourceRequestEnabled"));
         response.setBoardEnabled((Boolean)capabilities.get("boardEnabled"));
+        response.setBalancingServiceEnabled((Boolean)capabilities.get("balancingServiceEnabled"));
 
         if (capabilities.containsKey("apiLimitInterval")) {
             response.setApiLimitInterval((Integer)capabilities.get("apiLimitInterval"));

@@ -22,8 +22,9 @@ import com.cloud.host.Host;
 import com.cloud.host.Status;
 import org.apache.cloudstack.framework.config.ConfigKey;
 import org.apache.cloudstack.ha.provider.HAProvider;
+import org.apache.cloudstack.framework.config.Configurable;
 
-public interface HAManager extends HAConfigManager {
+public interface HAManager extends HAConfigManager, Configurable {
 
     ConfigKey<Integer> MaxConcurrentHealthCheckOperations = new ConfigKey<>("Advanced", Integer.class,
             "ha.max.concurrent.health.check.operations",
@@ -66,7 +67,7 @@ public interface HAManager extends HAConfigManager {
             "2500",
             "The number of pending fence operations per management server. This setting determines the size of the size of the FENCE queue.", true);
 
-    ConfigKey<Integer> balancingServiceEnabled = new ConfigKey<>("Advanced", Integer.class,
+    ConfigKey<Boolean> balancingServiceEnabled = new ConfigKey<>("Advanced", Boolean.class,
             "cloud.balancing.service.enabled",
             "false",
             "Indicates whether the dynamic balancing service plugin is enabled. Management server restart required on change", false);

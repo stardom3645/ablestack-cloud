@@ -136,6 +136,10 @@ public class CapabilitiesResponse extends BaseResponse {
     @Param(description = "true if boardEnabled plugin is enabled, false otherwise")
     private boolean boardEnabled;
 
+    @SerializedName("balancingserviceenabled")
+    @Param(description = "true if Balancing Service plugin is enabled, false otherwise")
+    private boolean balancingServiceEnabled;
+
     public void setSecurityGroupsEnabled(boolean securityGroupsEnabled) {
         this.securityGroupsEnabled = securityGroupsEnabled;
     }
@@ -245,5 +249,9 @@ public class CapabilitiesResponse extends BaseResponse {
 
     public void setBoardEnabled(boolean boardEnabled) {
         this.boardEnabled = boardEnabled;
+    }
+
+    public void setBalancingServiceEnabled(boolean balancingServiceEnabled) {
+        this.balancingServiceEnabled = balancingServiceEnabled;
     }
 }

@@ -83,6 +83,8 @@ import com.cloud.dc.ClusterVO;
 import com.cloud.dc.DataCenterVO;
 import com.cloud.dc.HostPodVO;
 import com.cloud.dc.dao.ClusterDao;
+import com.cloud.dc.ClusterDetailsDao;
+import org.apache.cloudstack.ha.HAConfigManager;
 import com.cloud.dc.dao.DataCenterDao;
 import com.cloud.dc.dao.HostPodDao;
 import com.cloud.exception.AgentUnavailableException;
@@ -158,6 +160,10 @@ public class AgentManagerImpl extends ManagerBase implements AgentManager, Handl
     protected ConfigurationDao _configDao = null;
     @Inject
     protected ClusterDao _clusterDao = null;
+    @Inject
+    private ClusterDetailsDao clusterDetailsDao;
+    @Inject
+    private HAConfigManager haConfigManager;
 
     @Inject
     protected HighAvailabilityManager _haMgr = null;
@@ -471,6 +477,21 @@ public class AgentManagerImpl extends ManagerBase implements AgentManager, Handl
             if (s_logger.isDebugEnabled()) {
                 s_logger.debug("checking if agent (" + hostId + ") is alive");
             }
+
+            // 글로벌설정 값이 true면 실행중이던 thread 실행. false면 cluster_details.resourceBalancingEnabled 값을 false로 변경
+            final boolean balancingServiceEnabled = Boolean.parseBoolean(_configDao.getValue("cloud.balancing.service.enabled"));
+            final List<ClusterVO> clusters = _clusterDao.listByDcHyType(host.getDataCenterId(), host.getHypervisorVersion());
+            if (!clusters.isEmpty()) {
+                for (final ClusterVO cluster : clusters) {
+                    if (balancingServiceEnabled) {
+                        Boolean resourceBalancingEnabled = Boolean.parseBoolean(clusterDetailsDao.findDetail(cluster.getId(), "resourceBalancingEnabled").getValue());
+                        if (resourceBalancingEnabled)  haConfigManager.enableBalancing(cluster);
+                    } else {
+                        clusterDetailsDao.persist(cluster.getId(), "resourceBalancingEnabled", String.valueOf(false));
+                    }
+                }
+            }
+
             final Answer answer = easySend(hostId, new CheckHealthCommand());
             if (answer != null && answer.getResult()) {
                 final Status status = Status.Up;
