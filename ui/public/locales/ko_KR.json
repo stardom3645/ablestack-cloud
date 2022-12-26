@@ -744,7 +744,7 @@
 "label.example": "\uc608",
 "label.example.plugin": "\ud50c\ub7ec\uadf8\uc778 \uc608",
 "label.expunge": "\uc81c\uac70",
-"label.expungevmgraceperiod": "VM \uc720\uc608 \uae30\uac04 \uc0ad\uc81c(\ucd08)",
+"label.expungevmgraceperiod": "VM\uc0ad\uc81c \uc720\uc608\uae30\uac04(\ucd08)",
 "label.expunged": "\uc81c\uac70\ub428",
 "label.expunging": "\uc81c\uac70\ud558\ub294 \uc911...",
 "label.export.rules": "Export \uaddc\uce59",
