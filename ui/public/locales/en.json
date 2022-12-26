@@ -2694,7 +2694,6 @@
 "message.select.security.groups": "Please select security group(s) for your new VM.",
 "message.select.template": "Please select a template for your new virtual instance.",
 "message.select.tier": "Please select a tier.",
-"message.select.end.date.and.time": "Select an end date & time.",
 "message.select.start.date.and.time": "Select a start date & time.",
 "message.select.zone.description": "Select type of zone basic/advanced.",
 "message.select.zone.hint": "This is the type of zone deployment that you want to use. Basic zone: provides a single network where each VM instance is assigned an IP directly from the network. Guest isolation can be provided through layer-3 means such as security groups (IP address source filtering). Advanced zone: For more sophisticated network topologies. This network model provides the most flexibility in defining guest networks and providing custom network offerings such as firewall, VPN, or load balancer support.",
@@ -3075,6 +3074,10 @@
 "label.manageconsoleport": "Management Console Port",
 "label.action.edit.template": "Edit template",
 
+"state.request": "Payment request",
+"state.domain.approval": "Approved by the domain administrator",
+"state.admin.approval": "Admin Approval",
+"state.rejection": "rejection",
 "title.resource.request": "Resource Request Status",
 "title.board":"Notice and archive management",
 "label.title": "title",
