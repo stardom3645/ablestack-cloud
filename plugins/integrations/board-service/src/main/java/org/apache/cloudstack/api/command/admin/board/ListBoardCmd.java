@@ -64,6 +64,11 @@ public class ListBoardCmd extends BaseListCmd {
             description = "the ID of the zone in which Desktop Master Version will be available")
     private Long zoneId;
 
+    @Parameter(name = ApiConstants.TYPE, type = CommandType.STRING,
+        entityType = BoardResponse.class,
+        description = "the ID of the zone in which Desktop Master Version will be available")
+    private String type;
+
     /////////////////////////////////////////////////////
     /////////////////// Accessors ///////////////////////
     /////////////////////////////////////////////////////
@@ -77,6 +82,10 @@ public class ListBoardCmd extends BaseListCmd {
 
     public Long getZoneId() {
         return zoneId;
+    }
+
+    public String getType() {
+        return type;
     }
 
     @Override
