@@ -167,14 +167,12 @@ export default {
           icon: 'delete-outlined',
           label: 'label.action.delete.network.request',
           dataView: true,
-          groupAction: true,
           popup: true,
           show: (record, store) => {
             return ['User'].includes(store.userInfo.roletype) &&
             store.features.resourcerequestenabled
           },
-          component: shallowRef(defineAsyncComponent(() => import('@/views/network/DeleteNetworkResourceRequest.vue'))),
-          groupMap: (selection) => { return selection.map(x => { return { id: x } }) }
+          component: shallowRef(defineAsyncComponent(() => import('@/views/network/DeleteNetworkResourceRequest.vue')))
         },
         {
           api: 'deleteNetwork',

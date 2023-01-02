@@ -43,7 +43,7 @@ import com.cloud.utils.exception.CloudRuntimeException;
         responseObject = ResourceRequestResponse.class,
         responseView = ResponseObject.ResponseView.Full,
         entityType = {ResourceRequest.class},
-        authorized = {RoleType.User})
+        authorized = {RoleType.Admin, RoleType.DomainAdmin, RoleType.ResourceAdmin, RoleType.User})
 public class AddResourceRequestCmd extends BaseCmd implements UserCmd {
     public static final Logger LOGGER = Logger.getLogger(AddResourceRequestCmd.class.getName());
     public static final String APINAME = "addResourceRequest";

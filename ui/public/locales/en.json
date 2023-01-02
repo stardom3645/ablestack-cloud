@@ -3077,6 +3077,8 @@
 
 "title.resource.request": "Resource Request Status",
 "title.board":"Notice and archive management",
+"label.board.news":"News",
+"label.board.fileshare":"File Share",
 "label.title": "title",
 "label.rejection.comment": "Reason for rejection",
 "label.quantity": "Quantity",

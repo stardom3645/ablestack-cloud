@@ -2217,7 +2217,7 @@ public class AutoScaleManagerImplTest {
     @Test
     public void getVmStatsByIdFromHost2() {
         List<Long> vmIds = Mockito.mock(ArrayList.class);
-        VmStatsEntry vmStats = new VmStatsEntry(2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, "vm");
+        VmStatsEntry vmStats = new VmStatsEntry(2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, "vm");
         HashMap<Long, VmStatsEntry> vmStatsById = new HashMap<>();
         vmStatsById.put(virtualMachineId, vmStats);
         when(hostDao.findById(hostId)).thenReturn(hostMock);
@@ -2243,7 +2243,7 @@ public class AutoScaleManagerImplTest {
         Map<Long, VmStatsEntry> vmStatsById = new HashMap<>();
         VmStatsEntry vmStats = new VmStatsEntry(virtualMachineId, memoryKBs, 4, 5,
                 cpuUtilization, 7, 8, 9,
-                10, 11, 12, 13, "vm");
+                10, 11, 12, 13, 14, "vm");
         vmStatsById.put(virtualMachineId, vmStats);
 
         Map<Long, List<CounterTO>> policyCountersMap = new HashMap<>();
