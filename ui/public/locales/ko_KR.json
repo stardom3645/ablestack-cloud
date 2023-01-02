@@ -3079,6 +3079,8 @@
 "state.rejection": "\ubc18\ub824",
 "title.resource.request": "\uc790\uc6d0 \uc2e0\uccad \ud604\ud669",
 "title.board":"\uacf5\uc9c0 \ubc0f \uc790\ub8cc\uc2e4 \uad00\ub9ac",
+"label.board.news":"\uacf5\uc9c0\uc0ac\ud56d",
+"label.board.fileshare":"\uc790\ub8cc\uacf5\uc720",
 "label.title": "\uc81c\ubaa9",
 "label.rejection.comment": "\ubc18\ub824 \uc0ac\uc720",
 "label.quantity": "\uc218\ub7c9",
