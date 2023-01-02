@@ -27,10 +27,6 @@ import org.apache.cloudstack.api.InternalIdentity;
  */
 public interface Board extends InternalIdentity, Identity {
 
-    public enum State {
-        REQUEST, DOMAIN_APPROVAL, ADMIN_APPROVAL, REJECTION
-    }
-
     long getId();
     String getTitle();
     String getContent();
