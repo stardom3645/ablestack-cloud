@@ -21,7 +21,7 @@
 CALL ADD_GUEST_OS_AND_HYPERVISOR_MAPPING (6, 'Windows 11 (64-bit)', 'KVM', 'default', 'Windows 11 (64-bit)');
 
 -- cloud.resource_request_status definition
-CREATE TABLE IF NOT EXISTS cloud.`resource_request_status` (
+CREATE TABLE IF NOT EXISTS `resource_request_status` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,
   `uuid` varchar(40) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
   `title` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL COMMENT '제목',
@@ -47,7 +47,7 @@ CREATE TABLE IF NOT EXISTS cloud.`resource_request_status` (
   CONSTRAINT `resource_request_status_FK` FOREIGN KEY (`domain_id`) REFERENCES `domain` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-CREATE TABLE IF NOT EXISTS cloud.`board` (
+CREATE TABLE IF NOT EXISTS `board` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,
   `uuid` varchar(40) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
   `title` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,

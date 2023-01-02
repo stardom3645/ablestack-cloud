@@ -35,7 +35,6 @@ import com.cloud.user.AccountManager;
 import com.cloud.uservm.UserVm;
 import com.cloud.utils.exception.CloudRuntimeException;
 import com.cloud.vm.UserVmVO;
-import org.apache.cloudstack.context.CallContext;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.log4j.Level;
 
@@ -96,7 +95,7 @@ public class AutomationControllerDestroyWorker extends AutomationControllerActio
                 }
                 try {
                     UserVm vm = userVmService.destroyVm(vmID, true);
-                    if (!userVmManager.expunge(userVM, CallContext.current().getCallingUserId(), CallContext.current().getCallingAccount())) {
+                    if (!userVmManager.expunge(userVM)) {
                         LOGGER.warn(String.format("Unable to expunge VM %s : %s, destroying automation controller will probably fail",
                             vm.getInstanceName() , vm.getUuid()));
                     }

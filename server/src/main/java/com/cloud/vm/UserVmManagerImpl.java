@@ -6300,7 +6300,7 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
         String macAddress = null;
         IpAddresses addr = new IpAddresses(null, ipv6Address, macAddress);
         long serviceOfferingId = curVm.getServiceOfferingId();
-        ServiceOffering serviceOffering = _serviceOfferingDao.findById(curVm.getId(), serviceOfferingId);
+        ServiceOffering serviceOffering = serviceOfferingDao.findById(curVm.getId(), serviceOfferingId);
         List<SecurityGroupVO> securityGroupList = _securityGroupMgr.getSecurityGroupsForVm(curVm.getId());
         List<Long> securityGroupIdList = securityGroupList.stream().map(SecurityGroupVO::getId).collect(Collectors.toList());
         String uuidName = _uuidMgr.generateUuid(UserVm.class, null);

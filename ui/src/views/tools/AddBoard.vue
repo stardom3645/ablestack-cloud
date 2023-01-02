@@ -37,8 +37,8 @@
             <tooltip-label :title="$t('label.type')" :tooltip="$t('placeholder.type')"/>
           </template>
           <a-radio-group v-model:value="form.type" button-style="solid" @change="selected => { changeOption(selected.target.value) }">
-            <a-radio-button value="NEWS">공지사항</a-radio-button>
-            <a-radio-button value="SHARE">자료공유</a-radio-button>
+            <a-radio-button value="NEWS">{{ $t('label.board.news') }}</a-radio-button>
+            <a-radio-button value="SHARE">{{ $t('label.board.fileshare') }}</a-radio-button>
           </a-radio-group>
         </a-form-item>
         <a-form-item ref="content" name="content">

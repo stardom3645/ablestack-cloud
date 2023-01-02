@@ -85,7 +85,6 @@ public class BoardManagerImpl extends ManagerBase implements BoardService {
         final String file = cmd.getFile();
         final Long domainId = owner.getDomainId();
         final Long accountId = owner.getAccountId();
-        ;
 
         BoardVO boardVO = new BoardVO(title, accountId, domainId, type, content, file);
         boardDao.persist(boardVO);
@@ -134,15 +133,20 @@ public class BoardManagerImpl extends ManagerBase implements BoardService {
         final Account owner = accountService.getActiveAccountById(cmd.getEntityOwnerId());
         final Long accountId = owner.getAccountId();
         final Long domainId = owner.getDomainId();
+        final String type = cmd.getType();
 
         Filter searchFilter = new Filter(BoardVO.class, "created", false, cmd.getStartIndex(), cmd.getPageSizeVal());
         SearchBuilder<BoardVO> sb = boardDao.createSearchBuilder();
         sb.and("id", sb.entity().getId(), SearchCriteria.Op.EQ);
+        sb.and("type", sb.entity().getType(), SearchCriteria.Op.EQ);
         sb.and("keyword", sb.entity().getTitle(), SearchCriteria.Op.LIKE);
         SearchCriteria<BoardVO> sc = sb.create();
         String keyword = cmd.getKeyword();
         if (id != null) {
             sc.setParameters("id", id);
+        }
+        if (type != null) {
+            sc.setParameters("type", type);
         }
         if (keyword != null) {
             sc.addOr("uuid", SearchCriteria.Op.LIKE, "%" + keyword + "%");

@@ -1369,8 +1369,35 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
     protected List<Integer> getVmsToSetMemoryBalloonStatsPeriod(Connect conn) {
         List<Integer> vmIdList = new ArrayList<>();
         Integer[] vmIds = null;
+
+        /**
+         * 에이블클라우드 수정 소스 반영
+         * 내용 : conn.listDomains() 메서드에서 가져오는 가상머신 목록에
+         *       scvm, ccvm 두가지 가상머신은 제거 후 반영
+         */
         try {
-            vmIds = ArrayUtils.toObject(conn.listDomains());
+            int[] removedVmIds = conn.listDomains();
+            Domain dm = null;
+            for (int i = 0; i < removedVmIds.length; i++) {
+                try {
+                    dm = conn.domainLookupByID(removedVmIds[i]);
+                    if("ccvm".equals(dm.getName()) || "scvm".equals(dm.getName())) {
+                        removedVmIds = ArrayUtils.removeElement(removedVmIds, removedVmIds[i]);
+                    }
+                } catch (final LibvirtException e) {
+                    s_logger.warn("Unable to get vms(domainLookupByID)", e);
+                } finally {
+                    try {
+                        if (dm != null) {
+                            dm.free();
+                        }
+                    } catch (final LibvirtException e) {
+                        s_logger.trace("Ignoring libvirt error.", e);
+                    }
+                }
+            }
+            s_logger.info("::: (ABLECLOUD) Removed SCVM, CCVM for DomainList :::");
+            vmIds = ArrayUtils.toObject(removedVmIds);
         } catch (final LibvirtException e) {
             s_logger.error("Unable to get the list of Libvirt domains on this host.", e);
             return vmIdList;
