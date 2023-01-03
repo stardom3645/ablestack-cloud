@@ -21,7 +21,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -106,12 +105,8 @@ import com.cloud.utils.fsm.StateMachine2;
 import com.google.common.base.Preconditions;
 import org.apache.cloudstack.api.ResponseGenerator;
 import com.cloud.agent.AgentManager;
-import org.apache.cloudstack.api.response.UserVmResponse;
-import org.apache.cloudstack.api.ResponseObject;
 import com.cloud.api.query.vo.UserVmJoinVO;
 import com.cloud.api.query.dao.UserVmJoinDao;
-import com.cloud.user.Account;
-import com.cloud.user.AccountService;
 
 public final class HAManagerImpl extends ManagerBase implements HAManager, ClusterManagerListener, PluggableService, Configurable, StateListener<HAConfig.HAState, HAConfig.Event, HAConfig> {
     public static final Logger LOG = Logger.getLogger(HAManagerImpl.class);
@@ -133,9 +128,6 @@ public final class HAManagerImpl extends ManagerBase implements HAManager, Clust
 
     @Inject
     protected ResourceService resourceService;
-
-    @Inject
-    protected AccountService accountService;
 
     @Inject
     private ClusterDetailsDao clusterDetailsDao;
@@ -525,8 +517,9 @@ public final class HAManagerImpl extends ManagerBase implements HAManager, Clust
 
         /* Using Runnable Interface */
         Thread.State state = thread.getState();
-        LOG.info("===========state ====> "+state);
-        if (state.equals("TERMINATED")) {
+        LOG.info("===1.cluster balancing===");
+        LOG.info("===cluster balancing thread state : " + state);
+        if (state == Thread.State.NEW) {
             thread = new Thread(new BalancingThread(cluster.getId()));
             thread.start();
         }
@@ -542,6 +535,7 @@ public final class HAManagerImpl extends ManagerBase implements HAManager, Clust
 
         @Override
         public void runInContext() {
+            // run task
             balancingCheck(clusterId);
         }
 
@@ -568,16 +562,32 @@ public final class HAManagerImpl extends ManagerBase implements HAManager, Clust
     }
 
     public void balancingCheck (long clusterId) {
+        LOG.info("===2-1.cluster balancing check===");
+        // 클러스터의 각 호스트 메모리used 조회(mold 재시작시 hostResponse 바로 못가져오는 현상으로 인해 while문 추가)
         HashMap<Long, Long> hostMemMap = new HashMap<Long, Long>();
         for (final HostVO host: hostDao.findByClusterId(clusterId)) {
-            HostResponse hostResponse = _responseGenerator.createHostResponse(host);
-            LOG.info(hostResponse.getId());
-            LOG.info(hostResponse.getMemoryUsed()*100/hostResponse.getMemoryTotal());
+            HostResponse hostResponse = new HostResponse();
+            int retry = 5;
+            while (retry > 0) {
+                hostResponse = _responseGenerator.createHostResponse(host);
+                retry--;
+                LOG.info("retry : " + retry);
+                LOG.info("hostId : " + hostResponse.getId() + ", MemoryUsed : " + hostResponse.getMemoryUsed() + ", MemoryTotal : " + hostResponse.getMemoryTotal());
+                if (hostResponse.getMemoryUsed() != null) {
+                    break;
+                }
+                try {
+                    Thread.sleep(10000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+            LOG.info("hostID : "+hostResponse.getId() + ", hostMemPersent : "+hostResponse.getMemoryUsed()*100/hostResponse.getMemoryTotal());
 
             hostMemMap.put(host.getId(), hostResponse.getMemoryUsed()*100/hostResponse.getMemoryTotal());
         }
 
-        // Comparator
+        // 클러스터의 각 호스트 메모리used 값 비교
         Comparator<Entry<Long, Long>> comparator = new Comparator<Entry<Long, Long>>() {
             @Override
             public int compare(Entry<Long, Long> e1, Entry<Long, Long> e2) {
@@ -587,20 +597,16 @@ public final class HAManagerImpl extends ManagerBase implements HAManager, Clust
 
         // Max Value의 key, value
         Entry<Long, Long> maxEntry = Collections.max(hostMemMap.entrySet(), comparator);
-
         // Min Value의 key, value
         Entry<Long, Long> minEntry = Collections.min(hostMemMap.entrySet(), comparator);
 
-        LOG.info("start======================");
-        LOG.info("maxEntry = " + maxEntry.getValue() + ", minEntry = " + minEntry.getValue());
-        LOG.info("persent = " + (maxEntry.getValue() - minEntry.getValue()));
-        //memory 값이 10% 이상 차이나면 memory작은 호스트로 vm migration
+        LOG.info("===2-2.host max/min memoryUsed===");
+        LOG.info("maxEntry : " + maxEntry.getValue() + ", minEntry : " + minEntry.getValue() + ", persent : " + (maxEntry.getValue() - minEntry.getValue()));
+
+        //메모리used 값이 10% 이상 차이나면 메모리used가 가장 작은 호스트로 vm migration
         if ((maxEntry.getValue() - minEntry.getValue()) > 10 ) {
             String hostIp = "";
             for (final HostVO host: hostDao.findByClusterId(clusterId)) {
-                LOG.info("maxEntry.getKey() = "+maxEntry.getKey());
-                LOG.info("host.getUuid() = "+host.getUuid());
-                LOG.info("host.getId() = "+host.getId());
                 if (host.getId() == minEntry.getKey()) {
                     hostIp = host.getPrivateIpAddress();
                 }
@@ -608,48 +614,46 @@ public final class HAManagerImpl extends ManagerBase implements HAManager, Clust
             balancingMonitor(minEntry.getKey(), maxEntry.getKey());
         }
 
-        //1분 체크
+        // 1분마다 체크
         try {
             Thread.sleep(60000);
             balancingCheck(clusterId);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-
     }
 
     private void balancingMonitor(Long minHostId, Long maxHostId) {
+        LOG.info("===3.cluster balancing monitor===");
+        LOG.info("minHostId : " + minHostId + ", maxHostId : " + maxHostId);
         Map<Long, Integer> vmMemMap = new ConcurrentHashMap<Long, Integer>();
 
+        // 메모리used가 가장 큰 호스트의 vm 조회
         for (final VMInstanceVO vm: vmInstanceDao.listByHostId(maxHostId)) {
-            LOG.info("hostId = "+maxHostId);
-            try {
-                LOG.info("vm.getId() = "+vm.getId());
-                Hashtable<Long, UserVmResponse> vmDataList = new Hashtable<Long, UserVmResponse>();
-                String responseName = "virtualmachine";
-                List<UserVmJoinVO> userVmJoinVOs = userVmJoinDao.searchByIds(vm.getId());
-                ResponseObject.ResponseView respView = ResponseObject.ResponseView.Restricted;
-                Account caller = CallContext.current().getCallingAccount();
-                if (accountService.isRootAdmin(caller.getId())) {
-                    respView = ResponseObject.ResponseView.Full;
-                }
-                LOG.info("respView = "+respView);
+            if (vm.getType().toString() == "User") {
+                LOG.info("vmID : " + vm.getId() + ", vmRamSize : " + userVM.getRamSize());
                 UserVmJoinVO userVM = userVmJoinDao.findById(vm.getId());
-                LOG.info("userVM = "+userVM.getId());
-                LOG.info("ramSize = "+userVM.getRamSize());
-                /*UserVmResponse cvmResponse = ApiDBUtils.newUserVmResponse(respView, responseName, userVM, EnumSet.of(ApiConstants.VMDetails.nics), caller);
-
-                LOG.info("cvmResponse = "+cvmResponse);
-                // userVmData = ApiDBUtils.fillVmDetails(ResponseView.Full, userVmData, userVmJoinVOs.get(0));
-                LOG.info("cvmResponse.getMemory() = "+cvmResponse.getMemory());
-                LOG.info("cvmResponse.getMemory() = "+cvmResponse.getId());*/
                 vmMemMap.put(vm.getId(), userVM.getRamSize());
-
-            } catch (Exception e) {
+            } else {
+                LOG.info("===The virtual machine to migrate does not exist.===");
             }
+            /*Hashtable<Long, UserVmResponse> vmDataList = new Hashtable<Long, UserVmResponse>();
+            String responseName = "virtualmachine";
+            List<UserVmJoinVO> userVmJoinVOs = userVmJoinDao.searchByIds(vm.getId());
+            ResponseObject.ResponseView respView = ResponseObject.ResponseView.Restricted;
+            Account caller = CallContext.current().getCallingAccount();
+            if (accountService.isRootAdmin(caller.getId())) {
+                respView = ResponseObject.ResponseView.Full;
+            }
+            UserVmResponse cvmResponse = ApiDBUtils.newUserVmResponse(respView, responseName, userVM, EnumSet.of(ApiConstants.VMDetails.nics), caller);
+
+            LOG.info("cvmResponse = "+cvmResponse);
+            // userVmData = ApiDBUtils.fillVmDetails(ResponseView.Full, userVmData, userVmJoinVOs.get(0));
+            LOG.info("cvmResponse.getMemory() = "+cvmResponse.getMemory());
+            LOG.info("cvmResponse.getMemory() = "+cvmResponse.getId());*/
         }
 
-        // Comparator
+        // vm의 ramsize 비교
         Comparator<Entry<Long, Integer>> comparator = new Comparator<Entry<Long, Integer>>() {
             @Override
             public int compare(Entry<Long, Integer> e1, Entry<Long, Integer> e2) {
@@ -660,13 +664,11 @@ public final class HAManagerImpl extends ManagerBase implements HAManager, Clust
         // Min Value의 key, value
         Entry<Long, Integer> minEntry = Collections.min(vmMemMap.entrySet(), comparator);
 
-        LOG.info("vm minEntry = "+minEntry.getKey());
-
-        //vm migration
+        //가장 작은 ramsize의 vm을 가장 작은 메모리used의 호스트로 migration
         try {
+            LOG.info("===4.vm migration===");
             Host destinationHost = resourceService.getHost(minHostId);
-            LOG.info("minEntry.getKey() = "+minEntry.getKey());
-            LOG.info("destinationHost = "+destinationHost);
+            LOG.info("minEntry.getKey() : " + minEntry.getKey() + ", destinationHost : " + destinationHost);
             userVmService.migrateVirtualMachine(minEntry.getKey(), destinationHost);
         } catch (ResourceUnavailableException ex) {
             LOG.warn("Exception: ", ex);

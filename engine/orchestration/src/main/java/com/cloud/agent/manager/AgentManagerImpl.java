@@ -83,8 +83,6 @@ import com.cloud.dc.ClusterVO;
 import com.cloud.dc.DataCenterVO;
 import com.cloud.dc.HostPodVO;
 import com.cloud.dc.dao.ClusterDao;
-import com.cloud.dc.ClusterDetailsDao;
-import org.apache.cloudstack.ha.HAConfigManager;
 import com.cloud.dc.dao.DataCenterDao;
 import com.cloud.dc.dao.HostPodDao;
 import com.cloud.exception.AgentUnavailableException;
@@ -160,10 +158,6 @@ public class AgentManagerImpl extends ManagerBase implements AgentManager, Handl
     protected ConfigurationDao _configDao = null;
     @Inject
     protected ClusterDao _clusterDao = null;
-    @Inject
-    private ClusterDetailsDao clusterDetailsDao;
-    @Inject
-    private HAConfigManager haConfigManager;
 
     @Inject
     protected HighAvailabilityManager _haMgr = null;
@@ -337,7 +331,6 @@ public class AgentManagerImpl extends ManagerBase implements AgentManager, Handl
 
     @Override
     public Answer sendTo(final Long dcId, final HypervisorType type, final Command cmd) {
-        s_logger.info("==============sendTo");
         final List<ClusterVO> clusters = _clusterDao.listByDcHyType(dcId, type.toString());
         int retry = 0;
         for (final ClusterVO cluster : clusters) {
@@ -478,21 +471,6 @@ public class AgentManagerImpl extends ManagerBase implements AgentManager, Handl
             if (s_logger.isDebugEnabled()) {
                 s_logger.debug("checking if agent (" + hostId + ") is alive");
             }
-
-            // 글로벌설정 값이 true면 실행중이던 thread 실행. false면 cluster_details.resourceBalancingEnabled 값을 false로 변경
-            final boolean balancingServiceEnabled = Boolean.parseBoolean(_configDao.getValue("cloud.balancing.service.enabled"));
-            final List<ClusterVO> clusters = _clusterDao.listByDcHyType(host.getDataCenterId(), host.getHypervisorVersion());
-            if (!clusters.isEmpty()) {
-                for (final ClusterVO cluster : clusters) {
-                    if (balancingServiceEnabled) {
-                        Boolean resourceBalancingEnabled = Boolean.parseBoolean(clusterDetailsDao.findDetail(cluster.getId(), "resourceBalancingEnabled").getValue());
-                        if (resourceBalancingEnabled)  haConfigManager.enableBalancing(cluster);
-                    } else {
-                        clusterDetailsDao.persist(cluster.getId(), "resourceBalancingEnabled", String.valueOf(false));
-                    }
-                }
-            }
-            s_logger.info("==============investigate");
             final Answer answer = easySend(hostId, new CheckHealthCommand());
             if (answer != null && answer.getResult()) {
                 final Status status = Status.Up;
@@ -612,7 +590,7 @@ public class AgentManagerImpl extends ManagerBase implements AgentManager, Handl
                 }
             }
         }
-        s_logger.info("==============notifyMonitorsOfConnection");
+
         final Long dcId = host.getDataCenterId();
         final ReadyCommand ready = new ReadyCommand(dcId, host.getId(), NumbersUtil.enableHumanReadableSizes);
         final Answer answer = easySend(hostId, ready);
@@ -1164,20 +1142,6 @@ public class AgentManagerImpl extends ManagerBase implements AgentManager, Handl
                 attache = createAttacheForConnect(host, link);
                 attache = notifyMonitorsOfConnection(attache, startup, false);
             }
-
-            // 글로벌설정 값이 true면 실행중이던 thread 실행. false면 cluster_details.resourceBalancingEnabled 값을 false로 변경
-            final boolean balancingServiceEnabled = Boolean.parseBoolean(_configDao.getValue("cloud.balancing.service.enabled"));
-            final List<ClusterVO> clusters = _clusterDao.listByDcHyType(host.getDataCenterId(), host.getHypervisorVersion());
-            if (!clusters.isEmpty()) {
-                for (final ClusterVO cluster : clusters) {
-                    if (balancingServiceEnabled) {
-                        Boolean resourceBalancingEnabled = Boolean.parseBoolean(clusterDetailsDao.findDetail(cluster.getId(), "resourceBalancingEnabled").getValue());
-                        if (resourceBalancingEnabled)  haConfigManager.enableBalancing(cluster);
-                    } else {
-                        clusterDetailsDao.persist(cluster.getId(), "resourceBalancingEnabled", String.valueOf(false));
-                    }
-                }
-            }
         } catch (final Exception e) {
             s_logger.debug("Failed to handle host connection: ", e);
             ready = new ReadyCommand(null);
@@ -1187,7 +1151,7 @@ public class AgentManagerImpl extends ManagerBase implements AgentManager, Handl
                 ready = new ReadyCommand(null);
             }
         }
-        s_logger.info("==============handleConnectedAgent");
+
         try {
             if (attache == null) {
                 final Request readyRequest = new Request(-1, -1, ready, false);
@@ -1888,7 +1852,6 @@ public class AgentManagerImpl extends ManagerBase implements AgentManager, Handl
     }
 
     private void sendCommandToAgents(Map<Long, List<Long>> hostsPerZone, Map<String, String> params) {
-        s_logger.info("==============sendCommandToAgents");
         SetHostParamsCommand cmds = new SetHostParamsCommand(params);
         for (Long zoneId : hostsPerZone.keySet()) {
             List<Long> hostIds = hostsPerZone.get(zoneId);
