@@ -628,7 +628,7 @@ public final class HAManagerImpl extends ManagerBase implements HAManager, Clust
         LOG.info("minHostId : " + minHostId + ", maxHostId : " + maxHostId);
         Map<Long, Integer> vmMemMap = new ConcurrentHashMap<Long, Integer>();
 
-        // 메모리used가 가장 큰 호스트의 vm 조회
+        // 메모리used가 가장 큰 호스트의 vm 조회(ramsize조회를 위해 user_vm_view 테이블을 사용하므로 vm type=user로 지정)
         for (final VMInstanceVO vm: vmInstanceDao.listByHostId(maxHostId)) {
             if (vm.getType().toString() == "User") {
                 LOG.info("vmID : " + vm.getId() + ", vmRamSize : " + userVM.getRamSize());
