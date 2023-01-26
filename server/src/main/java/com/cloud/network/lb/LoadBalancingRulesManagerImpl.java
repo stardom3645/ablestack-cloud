@@ -150,6 +150,7 @@ import com.cloud.user.User;
 import com.cloud.user.dao.AccountDao;
 import com.cloud.user.dao.UserDao;
 import com.cloud.uservm.UserVm;
+import com.cloud.dc.ClusterVO;
 import com.cloud.utils.Pair;
 import com.cloud.utils.Ternary;
 import com.cloud.utils.component.ManagerBase;
@@ -995,6 +996,23 @@ public class LoadBalancingRulesManagerImpl<Type> extends ManagerBase implements 
                 }
             } else {
                 // s_logger.debug("HealthCheck Manager :: LB Provider in the Network DNOT the Healthcheck policy capability ");
+            }
+        }
+
+        // cloud.balancing.service.enabled 글로벌설정 값이 true이며, cluster_details.resourceBalancingEnabled 값이 true면 cluster balancing 실행
+        // cloud.balancing.service.enabled 글로벌설정 값이 false면, cluster_details.resourceBalancingEnabled 값을 false로 변경
+        final boolean balancingServiceEnabled = Boolean.parseBoolean(_configDao.getValue("cloud.balancing.service.enabled"));
+        s_logger.info("===balancingServiceEnabled : " + balancingServiceEnabled + ", dcID : " + networks.get(0).getDataCenterId());
+        final List<ClusterVO> clusters = _clusterDao.listClustersByDcId(networks.get(0).getDataCenterId());
+        if (!clusters.isEmpty()) {
+            for (final ClusterVO cluster : clusters) {
+                if (balancingServiceEnabled) {
+                    Boolean resourceBalancingEnabled = Boolean.parseBoolean(clusterDetailsDao.findDetail(cluster.getId(), "resourceBalancingEnabled").getValue());
+                    s_logger.info("===resourceBalancingEnabled : " + resourceBalancingEnabled);
+                    if (resourceBalancingEnabled)  haConfigManager.enableBalancing(cluster);
+                } else {
+                    clusterDetailsDao.persist(cluster.getId(), "resourceBalancingEnabled", String.valueOf(false));
+                }
             }
         }
     }

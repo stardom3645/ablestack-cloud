@@ -50,6 +50,7 @@ import com.cloud.storage.dao.VMTemplateDao;
 import com.cloud.user.UserData;
 import com.cloud.user.UserDataVO;
 import com.cloud.user.dao.UserDataDao;
+import com.cloud.dc.ClusterDetailsDao;
 import com.cloud.agent.api.Answer;
 import com.cloud.agent.api.Command;
 import com.cloud.agent.api.PatchSystemVmAnswer;
@@ -800,6 +801,7 @@ import com.cloud.vm.dao.SecondaryStorageVmDao;
 import com.cloud.vm.dao.UserVmDao;
 import com.cloud.vm.dao.UserVmDetailsDao;
 import com.cloud.vm.dao.VMInstanceDao;
+import org.apache.cloudstack.ha.HAConfigManager;
 
 import static com.cloud.configuration.ConfigurationManagerImpl.VM_USERDATA_MAX_LENGTH;
 import static com.cloud.vm.UserVmManager.MAX_USER_DATA_LENGTH_BYTES;
@@ -962,6 +964,10 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
     protected VMTemplateDao templateDao;
     @Inject
     protected AnnotationDao annotationDao;
+    @Inject
+    private ClusterDetailsDao clusterDetailsDao;
+    @Inject
+    private HAConfigManager haConfigManager;
 
     private LockControllerListener _lockControllerListener;
     private final ScheduledExecutorService _eventExecutor = Executors.newScheduledThreadPool(1, new NamedThreadFactory("EventChecker"));
@@ -4180,7 +4186,7 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
         final String host = _configDao.getValue("host");
         final boolean resourceRequestEnabled = Boolean.parseBoolean(_configDao.getValue("cloud.resource.request.enabled"));
         final boolean boardEnabled = Boolean.parseBoolean(_configDao.getValue("cloud.board.enabled"));
-
+        final boolean balancingServiceEnabled = Boolean.parseBoolean(_configDao.getValue("cloud.balancing.service.enabled"));
 
         // check if region-wide secondary storage is used
         boolean regionSecondaryEnabled = false;
@@ -4213,6 +4219,7 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
         capabilities.put("host", host);
         capabilities.put("resourceRequestEnabled", resourceRequestEnabled);
         capabilities.put("boardEnabled", boardEnabled);
+        capabilities.put("balancingServiceEnabled", balancingServiceEnabled);
         capabilities.put(ApiServiceConfiguration.DefaultUIPageSize.key(), ApiServiceConfiguration.DefaultUIPageSize.value());
 
         if (apiLimitEnabled) {
