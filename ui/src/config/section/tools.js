@@ -15,7 +15,6 @@
 // specific language governing permissions and limitations
 // under the License.
 import store from '@/store'
-import { shallowRef, defineAsyncComponent } from 'vue'
 
 export default {
   name: 'tools',
@@ -69,127 +68,6 @@ export default {
       resourceType: 'UserVm',
       permission: ['listInfrastructure', 'listUnmanagedInstances'],
       component: () => import('@/views/tools/ManageInstances.vue')
-    },
-    {
-      name: 'resourcerequest',
-      title: 'title.resource.request',
-      icon: 'block-outlined',
-      docHelp: '',
-      permission: ['listResourceRequest'],
-      columns: ['name', 'account', 'item', 'quantity', 'purpose', 'state'],
-      details: ['name', 'account', 'quantity', 'purpose', 'state', 'item', 'domainapprover', 'adminapprover', 'comments', 'cpunumber', 'memory', 'network', 'networkids', 'rootdisksize', 'volumeids'],
-      actions: [
-        {
-          api: 'addResourceRequest',
-          icon: 'plus-outlined',
-          label: 'label.resource.request.add',
-          docHelp: '',
-          listView: true,
-          popup: true,
-          component: shallowRef(defineAsyncComponent(() => import('@/views/tools/AddResourceRequest.vue'))),
-          show: (record, store) => {
-            return ['User'].includes(store.userInfo.roletype)
-          }
-        },
-        {
-          api: 'updateResourceRequest',
-          icon: 'edit-outlined',
-          label: 'label.resource.request.update',
-          dataView: true,
-          popup: true,
-          component: shallowRef(defineAsyncComponent(() => import('@/views/tools/UpdateResourceRequest.vue'))),
-          show: (record, store) => {
-            return ['Admin', 'DomainAdmin', 'User'].includes(store.userInfo.roletype) && record.item === 'CREATE VM'
-          }
-        },
-        {
-          api: 'stateUpdateResourceRequest',
-          icon: 'check-square-outlined',
-          label: 'label.resource.request.domainadmin.approval',
-          message: 'message.resource.request.approval',
-          dataView: true,
-          show: (record, store) => {
-            return ['DomainAdmin'].includes(store.userInfo.roletype) && record.state === 'REQUEST'
-          }
-        },
-        {
-          api: 'stateUpdateResourceRequest',
-          icon: 'check-square-outlined',
-          label: 'label.resource.request.admin.approval',
-          message: 'message.resource.request.approval',
-          dataView: true,
-          show: (record, store) => {
-            return ['Admin'].includes(store.userInfo.roletype) && record.state === 'DOMAIN_APPROVAL'
-          }
-        },
-        {
-          api: 'stateUpdateResourceRequest',
-          icon: 'close-square-outlined',
-          label: 'label.resource.request.rejection',
-          dataView: true,
-          popup: true,
-          args: ['account', 'domainid'],
-          component: shallowRef(defineAsyncComponent(() => import('@/views/tools/RejectionResourceRequest.vue'))),
-          show: (record, store) => {
-            return (['Admin'].includes(store.userInfo.roletype) && record.state === 'DOMAIN_APPROVAL') ||
-            (['DomainAdmin'].includes(store.userInfo.roletype) && record.state === 'REQUEST')
-          }
-        },
-        {
-          api: 'deleteResourceRequest',
-          icon: 'delete-outlined',
-          label: 'label.resource.request.delete',
-          message: 'message.resource.request.delete',
-          dataView: true,
-          show: (record, store) => {
-            return ['Admin', 'DomainAdmin', 'User'].includes(store.userInfo.roletype)
-          }
-        }
-      ]
-    },
-    {
-      name: 'board',
-      title: 'title.board',
-      icon: 'block-outlined',
-      docHelp: '',
-      permission: ['listBoard'],
-      columns: ['name', 'account', 'type', 'created', 'hit'],
-      details: ['name', 'type', 'hit', 'content'],
-      actions: [
-        {
-          api: 'addBoard',
-          icon: 'plus-outlined',
-          label: 'label.board.add',
-          docHelp: '',
-          listView: true,
-          popup: true,
-          component: shallowRef(defineAsyncComponent(() => import('@/views/tools/AddBoard.vue'))),
-          show: (record, store) => {
-            return ['Admin', 'DomainAdmin'].includes(store.userInfo.roletype)
-          }
-        },
-        {
-          api: 'updateBoard',
-          icon: 'edit-outlined',
-          label: 'label.board.update',
-          dataView: true,
-          popup: true,
-          component: shallowRef(defineAsyncComponent(() => import('@/views/tools/UpdateBoard.vue'))),
-          show: (record, store) => {
-            return ['Admin', 'DomainAdmin'].includes(store.userInfo.roletype)
-          }
-        },
-        {
-          api: 'deleteBoard',
-          icon: 'delete-outlined',
-          label: 'label.board.delete',
-          message: 'message.board.delete',
-          dataView: true,
-          show: (record, store) => {
-            return ['Admin', 'DomainAdmin'].includes(store.userInfo.roletype)
-          }
-        }
-      ]
     }
   ]
 }
