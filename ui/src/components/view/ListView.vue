@@ -520,7 +520,7 @@ export default {
   methods: {
     createPathBasedOnVmType: createPathBasedOnVmType,
     quickViewEnabled () {
-      return new RegExp(['/vm', '/desktop', '/kubernetes', '/resourcerequest', '/board', '/ssh', '/userdata', '/vmgroup', '/affinitygroup', '/autoscalevmgroup',
+      return new RegExp(['/vm', '/desktop', '/kubernetes', '/ssh', '/userdata', '/vmgroup', '/affinitygroup', '/autoscalevmgroup',
         '/volume', '/snapshot', '/vmsnapshot', '/backup',
         '/guestnetwork', '/vpc', '/vpncustomergateway',
         '/template', '/controllertemplate', '/mastertemplate', 'automationtemplate', 'automationcontroller', '/iso',

@@ -85,18 +85,6 @@ export default {
           case 'InProgress':
             state = this.$t('state.inprogress')
             break
-          case 'request':
-            state = this.$t('state.request')
-            break
-          case 'domain_approval':
-            state = this.$t('state.domain.approval')
-            break
-          case 'admin_approval':
-            state = this.$t('state.admin.approval')
-            break
-          case 'rejection':
-            state = this.$t('state.rejection')
-            break
         }
         return state.charAt(0).toUpperCase() + state.slice(1)
       }
@@ -160,18 +148,6 @@ export default {
         case 'unsecure':
         case 'warning':
           status = 'warning'
-          break
-        case 'request':
-          status = 'default'
-          break
-        case 'domain_approval':
-          status = 'processing'
-          break
-        case 'admin_approval':
-          status = 'success'
-          break
-        case 'rejection':
-          status = 'error'
           break
       }
       return status

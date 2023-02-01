@@ -110,14 +110,6 @@
           </a-tooltip>
         </div>
         <template #footer>
-          <router-link :to="{ path: '/board/' + boardId }">
-            <a-alert
-                :message="$t('label.board.news')"
-                :description="boardTitle"
-                type="info"
-                closable
-            />
-          </router-link>
           <div class="capacity-dashboard-footer">
             <a-timeline>
               <a-timeline-item
@@ -156,8 +148,6 @@ export default {
       loading: true,
       events: [],
       zones: [],
-      boardId: '',
-      boardTitle: '',
       zoneSelected: {},
       stats: [],
       ts: {
@@ -235,7 +225,6 @@ export default {
     fetchData () {
       this.listZones()
       this.listEvents()
-      this.listBoard()
     },
     listCapacity (zone, latest = false) {
       const params = {
@@ -292,12 +281,6 @@ export default {
     },
     filterZone (input, option) {
       return option.children[0].children.toLowerCase().indexOf(input.toLowerCase()) >= 0
-    },
-    listBoard () {
-      api('listBoard', { page: 1, pagesize: 1, type: 'NEWS' }).then(json => {
-        this.boardId = json.listboardresponse.board[0].id
-        this.boardTitle = json.listboardresponse.board[0].name
-      })
     }
   }
 }

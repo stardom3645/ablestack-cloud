@@ -49,6 +49,7 @@ import org.apache.cloudstack.engine.orchestration.service.NetworkOrchestrationSe
 import org.apache.cloudstack.framework.config.dao.ConfigurationDao;
 import org.apache.cloudstack.lb.ApplicationLoadBalancerRuleVO;
 import org.apache.cloudstack.lb.dao.ApplicationLoadBalancerRuleDao;
+import org.apache.cloudstack.ha.HAConfigManager;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
@@ -150,6 +151,8 @@ import com.cloud.user.User;
 import com.cloud.user.dao.AccountDao;
 import com.cloud.user.dao.UserDao;
 import com.cloud.uservm.UserVm;
+import com.cloud.dc.dao.ClusterDao;
+import com.cloud.dc.ClusterDetailsDao;
 import com.cloud.dc.ClusterVO;
 import com.cloud.utils.Pair;
 import com.cloud.utils.Ternary;
@@ -272,6 +275,12 @@ public class LoadBalancingRulesManagerImpl<Type> extends ManagerBase implements 
     EntityManager _entityMgr;
     @Inject
     LoadBalancerCertMapDao _lbCertMapDao;
+    @Inject
+    ClusterDao _clusterDao;
+    @Inject
+    ClusterDetailsDao clusterDetailsDao;
+    @Inject
+    HAConfigManager haConfigManager;
 
     @Inject
     NicSecondaryIpDao _nicSecondaryIpDao;
