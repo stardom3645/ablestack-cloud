@@ -191,8 +191,8 @@ export default {
       label: 'label.action.enableBalancing.cluster',
       message: 'message.action.enableBalancing.cluster',
       dataView: true,
-      show: (record) => {
-        return !record?.resourcedetails?.resourceBalancingEnabled || record?.resourcedetails?.resourceBalancingEnabled === 'false'
+      show: (record, store) => {
+        return store.features.balancingserviceenabled && (!record?.resourcedetails?.resourceBalancingEnabled || record?.resourcedetails?.resourceBalancingEnabled === 'false')
       },
       args: ['clusterid'],
       mapping: {
@@ -207,8 +207,8 @@ export default {
       label: 'label.action.disableBalancing.cluster',
       message: 'message.action.disableBalancing.cluster',
       dataView: true,
-      show: (record) => {
-        return record?.resourcedetails?.resourceBalancingEnabled && !(record?.resourcedetails?.resourceBalancingEnabled === 'false')
+      show: (record, store) => {
+        return store.features.balancingserviceenabled && (record?.resourcedetails?.resourceBalancingEnabled && !(record?.resourcedetails?.resourceBalancingEnabled === 'false'))
       },
       args: ['clusterid'],
       mapping: {

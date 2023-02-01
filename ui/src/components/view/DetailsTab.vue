@@ -49,11 +49,6 @@
               <router-link :to="{ path: '/template/' + workstemplate.id }">{{ workstemplate.name }}</router-link>
             </div>
           </div>
-          <div v-else-if="$route.meta.name === 'board' && item === 'content'">
-            <div>
-              <a-textarea v-model:value="dataResource.content" :rows="16" disabled="true" style="width: 720px"/>
-            </div>
-          </div>
           <div v-else-if="$route.meta.name === 'mastertemplate' && item === 'templatename'">
             <router-link :to="{ path: '/template/' + dataResource.templateid }">{{ dataResource.templatename }} </router-link>
           </div>
