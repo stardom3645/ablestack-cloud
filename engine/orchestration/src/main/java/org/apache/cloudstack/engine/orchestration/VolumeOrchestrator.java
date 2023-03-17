@@ -41,6 +41,7 @@ import com.cloud.event.ActionEvent;
 import com.cloud.storage.StorageUtil;
 
 import org.apache.cloudstack.api.ApiCommandResourceType;
+import org.apache.cloudstack.api.ApiConstants.IoDriverPolicy;
 import org.apache.cloudstack.context.CallContext;
 import org.apache.cloudstack.secret.dao.PassphraseDao;
 import org.apache.cloudstack.secret.PassphraseVO;
@@ -318,8 +319,7 @@ public class VolumeOrchestrator extends ManagerBase implements VolumeOrchestrati
         newVol.setFormat(oldVol.getFormat());
 
         if (oldVol.getPassphraseId() != null) {
-            PassphraseVO passphrase = passphraseDao.persist(new PassphraseVO());
-            passphrase.clearPassphrase();
+            PassphraseVO passphrase = passphraseDao.persist(new PassphraseVO(true));
             newVol.setPassphraseId(passphrase.getId());
         }
 
@@ -1520,6 +1520,7 @@ public class VolumeOrchestrator extends ManagerBase implements VolumeOrchestrati
             }
         }
 
+        setIoDriverPolicy(details, storagePool, volume);
         ChapInfo chapInfo = volService.getChapInfo(volumeInfo, dataStore);
 
         if (chapInfo != null) {
@@ -1530,6 +1531,23 @@ public class VolumeOrchestrator extends ManagerBase implements VolumeOrchestrati
         }
 
         return details;
+    }
+
+    private void setIoDriverPolicy(Map<String, String> details, StoragePoolVO storagePool, VolumeVO volume) {
+        if (volume.getInstanceId() != null) {
+            UserVmDetailVO ioDriverPolicy = userVmDetailsDao.findDetail(volume.getInstanceId(),
+                    VmDetailConstants.IO_POLICY);
+            if (ioDriverPolicy != null) {
+                if (IoDriverPolicy.STORAGE_SPECIFIC.toString().equals(ioDriverPolicy.getValue())) {
+                    String storageIoPolicyDriver = StorageManager.STORAGE_POOL_IO_POLICY.valueIn(storagePool.getId());
+                    if (storageIoPolicyDriver != null) {
+                        details.put(VmDetailConstants.IO_POLICY, storageIoPolicyDriver);
+                    }
+                } else {
+                    details.put(VmDetailConstants.IO_POLICY, ioDriverPolicy.getValue());
+                }
+            }
+        }
     }
 
     private static enum VolumeTaskType {
@@ -1782,8 +1800,7 @@ public class VolumeOrchestrator extends ManagerBase implements VolumeOrchestrati
         }
         s_logger.debug("Creating passphrase for the volume: " + volume.getName());
         long startTime = System.currentTimeMillis();
-        PassphraseVO passphrase = passphraseDao.persist(new PassphraseVO());
-        passphrase.clearPassphrase();
+        PassphraseVO passphrase = passphraseDao.persist(new PassphraseVO(true));
         volume.setPassphraseId(passphrase.getId());
         long finishTime = System.currentTimeMillis();
         s_logger.debug("Creating and persisting passphrase took: " + (finishTime - startTime) + " ms for the volume: " + volume.toString());
@@ -1917,7 +1934,7 @@ public class VolumeOrchestrator extends ManagerBase implements VolumeOrchestrati
             "Enable/disable storage migration across primary storage", true);
 
     static final ConfigKey<Boolean> VolumeUrlCheck = new ConfigKey<Boolean>("Advanced", Boolean.class, "volume.url.check", "true",
-            "Check the url for a volume before downloading it from the management server. Set to flase when you managment has no internet access.", true);
+            "Check the url for a volume before downloading it from the management server. Set to false when your management has no internet access.", true);
 
     @Override
     public ConfigKey<?>[] getConfigKeys() {

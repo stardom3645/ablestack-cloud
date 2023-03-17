@@ -158,7 +158,7 @@ export default {
 
       this.formRef.value.validate().then(() => {
         const values = toRaw(this.form)
-        if (!this.checkFromTo(values.vlanRangeStart, values.vlanRangeEnd)) {
+        if (!values.vlanRangeStart || (values.vlanRangeEnd && !this.checkFromTo(values.vlanRangeStart, values.vlanRangeEnd))) {
           this.validStatus = 'error'
           this.validMessage = this.$t('message.error.vlan.range')
           return
@@ -187,7 +187,7 @@ export default {
         toVal = value
         fromVal = this.form[rule.compare]
       }
-      if (!this.checkFromTo(fromVal, toVal)) {
+      if (fromVal && toVal && !this.checkFromTo(fromVal, toVal)) {
         this.validStatus = 'error'
         this.validMessage = this.$t('message.error.vlan.range')
       }

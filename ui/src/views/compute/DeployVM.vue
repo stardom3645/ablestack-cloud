@@ -123,6 +123,7 @@
                         :filterOption="filterOption"
                         :options="hostSelectOptions"
                         :loading="loading.hosts"
+                        @change="onSelectHostId"
                       ></a-select>
                     </a-form-item>
                   </div>
@@ -700,6 +701,30 @@
                         @select-affinity-group-item="($event) => updateAffinityGroups($event)"
                         @handle-search-filter="($event) => handleSearchFilter('affinityGroups', $event)"/>
                     </a-form-item>
+                    <a-form-item name="iothreadsenabled" ref="iothreadsenabled" v-if="vm.templateid && ['KVM'].includes(hypervisor)">
+                      <template #label>
+                        <tooltip-label :title="$t('label.iothreadsenabled')" :tooltip="$t('label.iothreadsenabled.tooltip')"/>
+                      </template>
+                      <a-form-item name="iothreadsenabled" ref="iothreadsenabled">
+                        <a-switch
+                          v-model:checked="form.iothreadsenabled"
+                          :checked="iothreadsenabled"
+                          @change="val => { iothreadsenabled = val }"/>
+                      </a-form-item>
+                    </a-form-item>
+                    <a-form-item name="iodriverpolicy" ref="iodriverpolicy" v-if="vm.templateid && ['KVM'].includes(hypervisor)">
+                      <template #label>
+                        <tooltip-label :title="$t('label.iodriverpolicy')" :tooltip="$t('label.iodriverpolicy.tooltip')"/>
+                      </template>
+                      <a-select
+                        v-model:value="form.iodriverpolicy"
+                        optionFilterProp="label"
+                        :filterOption="filterOption">
+                        <a-select-option v-for="iodriverpolicy in options.ioPolicyTypes" :key="iodriverpolicy.id">
+                          {{ iodriverpolicy.description }}
+                        </a-select-option>
+                      </a-select>
+                    </a-form-item>
                   </div>
                 </template>
               </a-step>
@@ -904,6 +929,7 @@ export default {
         bootTypes: [],
         bootModes: [],
         tpmversion: [],
+        ioPolicyTypes: [],
         dynamicScalingVmConfig: false
       },
       rowCount: {},
@@ -1173,7 +1199,7 @@ export default {
       })
       options.unshift({
         label: this.$t('label.default'),
-        value: undefined
+        value: null
       })
       return options
     },
@@ -1186,7 +1212,7 @@ export default {
       })
       options.unshift({
         label: this.$t('label.default'),
-        value: undefined
+        value: null
       })
       return options
     },
@@ -1199,7 +1225,7 @@ export default {
       })
       options.unshift({
         label: this.$t('label.default'),
-        value: undefined
+        value: null
       })
       return options
     },
@@ -1658,8 +1684,9 @@ export default {
       this.fetchBootModes()
       this.fetchTpm()
       this.fetchInstaceGroups()
+      this.fetchIoPolicyTypes()
       nextTick().then(() => {
-        ['name', 'keyboard', 'boottype', 'bootmode', 'userdata', 'tpmversion'].forEach(this.fillValue)
+        ['name', 'keyboard', 'boottype', 'bootmode', 'userdata', 'tpmversion', 'iothreadsenabled', 'iodriverpolicy'].forEach(this.fillValue)
         this.form.boottype = this.defaultBootType ? this.defaultBootType : this.options.bootTypes && this.options.bootTypes.length > 0 ? this.options.bootTypes[0].id : undefined
         this.form.bootmode = this.defaultBootMode ? this.defaultBootMode : this.options.bootModes && this.options.bootModes.length > 0 ? this.options.bootModes[0].id : undefined
         this.form.tpmversion = this.defaultTPM ? this.defaultTPM : this.options.tpmversion && this.options.tpmversion.length > 0 ? this.options.tpmversion[0].id : undefined
@@ -1708,6 +1735,14 @@ export default {
       this.options.tpmversion = [
         { id: 'NONE', description: 'Disabled' },
         { id: 'V2_0', description: 'TPM Version 2.0' }
+      ]
+    },    
+    fetchIoPolicyTypes () {
+      this.options.ioPolicyTypes = [
+        { id: 'native', description: 'native' },
+        { id: 'threads', description: 'threads' },
+        { id: 'io_uring', description: 'io_uring' },
+        { id: 'storage_specific', description: 'storage_specific' }
       ]
     },
     fetchInstaceGroups () {
@@ -1955,6 +1990,8 @@ export default {
         }
         deployVmData.tpmversion = values.tpmversion
         deployVmData.dynamicscalingenabled = values.dynamicscalingenabled
+        deployVmData.iothreadsenabled = values.iothreadsenabled
+        deployVmData.iodriverpolicy = values.iodriverpolicy
         if (values.userdata && values.userdata.length > 0) {
           deployVmData.userdata = encodeURIComponent(btoa(sanitizeReverse(values.userdata)))
         }
@@ -2397,14 +2434,26 @@ export default {
     },
     onSelectPodId (value) {
       this.podId = value
+      if (this.podId === null) {
+        this.form.podid = undefined
+      }
 
       this.fetchOptions(this.params.clusters, 'clusters')
       this.fetchOptions(this.params.hosts, 'hosts')
     },
     onSelectClusterId (value) {
       this.clusterId = value
+      if (this.clusterId === null) {
+        this.form.clusterid = undefined
+      }
 
       this.fetchOptions(this.params.hosts, 'hosts')
+    },
+    onSelectHostId (value) {
+      this.hostId = value
+      if (this.hostId === null) {
+        this.form.hostid = undefined
+      }
     },
     handleSearchFilter (name, options) {
       this.params[name].options = { ...this.params[name].options, ...options }
