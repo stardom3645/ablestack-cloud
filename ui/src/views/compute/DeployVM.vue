@@ -1736,7 +1736,7 @@ export default {
         { id: 'NONE', description: 'Disabled' },
         { id: 'V2_0', description: 'TPM Version 2.0' }
       ]
-    },    
+    },
     fetchIoPolicyTypes () {
       this.options.ioPolicyTypes = [
         { id: 'native', description: 'native' },

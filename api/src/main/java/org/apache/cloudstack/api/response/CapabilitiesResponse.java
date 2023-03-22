@@ -131,7 +131,7 @@ public class CapabilitiesResponse extends BaseResponse {
     @SerializedName("balancingserviceenabled")
     @Param(description = "true if Balancing Service plugin is enabled, false otherwise")
     private boolean balancingServiceEnabled;
-    
+
     @SerializedName(ApiConstants.INSTANCES_STATS_RETENTION_TIME)
     @Param(description = "the retention time for Instances stats", since = "4.18.0")
     private Integer instancesStatsRetentionTime;

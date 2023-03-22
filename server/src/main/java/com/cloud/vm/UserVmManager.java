@@ -82,17 +82,6 @@ public interface UserVmManager extends UserVmService {
      */
     boolean stopVirtualMachine(long userId, long vmId);
 
-    /**
-     * Obtains statistics for a list of host or VMs; CPU and network utilization
-     * @param hostId
-     * @param hostName
-     * @param vmIds list of VM IDs or host id
-     * @return GetVmStatsAnswer
-     */
-    HashMap<Long, VmStatsEntry> getVirtualMachineStatistics(long hostId, String hostName, List<Long> vmIds);
-
-    HashMap<Long, List<VmDiskStatsEntry>> getVmDiskStatistics(long hostId, String hostName, List<Long> vmIds);
-
     HashMap<String, VolumeStatsEntry> getVolumeStatistics(long clusterId, String poolUuid, StoragePoolType poolType, int timeout);
 
     boolean deleteVmGroup(long groupId);
