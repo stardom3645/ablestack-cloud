@@ -2250,7 +2250,6 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
             ssc.addOr("description", SearchCriteria.Op.LIKE, "%" + keyword + "%");
             ssc.addOr("category", SearchCriteria.Op.LIKE, "%" + keyword + "%");
             ssc.addOr("value", SearchCriteria.Op.LIKE, "%" + keyword + "%");
-            ssc.addOr("uuid", SearchCriteria.Op.LIKE, "%" + keyword + "%");
             sc.addAnd("name", SearchCriteria.Op.SC, ssc);
         }
 
