@@ -89,7 +89,6 @@ import org.libvirt.SchedUlongParameter;
 import org.libvirt.StorageVol;
 //import org.libvirt.jna.virDomainMemoryStats;
 import org.libvirt.VcpuInfo;
-import org.libvirt.jna.virDomainMemoryStats;
 import org.mockito.ArgumentCaptor;
 import org.mockito.BDDMockito;
 import org.mockito.Mock;

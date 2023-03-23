@@ -16,11 +16,10 @@ try {
   data.buildVersion = version
 } catch (err) {
   // console.log(err)
-  const version = 'Cerato-v3.0.0'
+  const version = 'Diplo-v4.0.0'
   const m = new Date()
   const date = m.getFullYear() + ('0' + (m.getMonth() + 1)).slice(-2) + ('0' + m.getDate()).slice(-2)
-  data.buildVersion = version + '-' + date
-  // data.buildVersion = version + '-' + date + '-dev'
+  data.buildVersion = version + '-' + date + '-dev'
 }
 
 fs.writeFileSync('./public/config.json', JSON.stringify(data))
