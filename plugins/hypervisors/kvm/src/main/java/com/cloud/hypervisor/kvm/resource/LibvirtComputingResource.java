@@ -324,7 +324,6 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
     private String setupTungstenVrouterPath;
     private String updateTungstenLoadbalancerStatsPath;
     private String updateTungstenLoadbalancerSslPath;
-    private String _host;
 
     private String _dcId;
     private String _clusterId;
@@ -842,6 +841,9 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
         } catch (FileNotFoundException e) {
             s_logger.error("tpm properties file not found due to: " + e.getLocalizedMessage());
         }
+
+        params.putIfAbsent("enable.io.uring", "true");
+        params.putIfAbsent("guest.cpu.mode", "host-passthrough");
 
         _storage = new JavaStorageLayer();
         _storage.configure("StorageLayer", params);
