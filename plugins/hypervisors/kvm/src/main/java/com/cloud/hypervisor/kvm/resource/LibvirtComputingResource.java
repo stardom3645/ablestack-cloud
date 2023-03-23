@@ -842,7 +842,6 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
             s_logger.error("tpm properties file not found due to: " + e.getLocalizedMessage());
         }
 
-        params.putIfAbsent("enable.io.uring", "true");
         params.putIfAbsent("guest.cpu.mode", "host-passthrough");
 
         _storage = new JavaStorageLayer();
