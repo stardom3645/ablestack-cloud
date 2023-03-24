@@ -27,6 +27,10 @@ public class ApiServiceConfiguration implements Configurable {
             "The default pagesize to be used by UI and other clients when making list* API calls", true, ConfigKey.Scope.Global);
     public static final ConfigKey<Boolean> ApiSourceCidrChecksEnabled = new ConfigKey<>("Advanced", Boolean.class, "api.source.cidr.checks.enabled",
             "true", "Are the source checks on API calls enabled (true) or not (false)? See api.allowed.source.cidr.list", true, ConfigKey.Scope.Global);
+    public static final ConfigKey<String> MonitoringWallPortalProtocol = new ConfigKey<String>("Advanced", String.class, "monitoring.wall.portal.protocol",
+            "http", "Monitoring Service Wall Portal Protocol.(ex: http or https)", true);
+    public static final ConfigKey<String> MonitoringWallPortalDomain = new ConfigKey<String>("Advanced", String.class, "monitoring.wall.portal.domain",
+            "", "Monitoring Service Wall Portal Domain.(ex: id or domain)", true);
     public static final ConfigKey<String> ApiAllowedSourceCidrList = new ConfigKey<>(String.class, "api.allowed.source.cidr.list", "Advanced",
             "0.0.0.0/0,::/0", "Comma separated list of IPv4/IPv6 CIDRs from which API calls can be performed. Can be set on Global and Account levels.", true, ConfigKey.Scope.Account, null, null, null, null, null, ConfigKey.Kind.CSV, null);
     public static final ConfigKey<String> MonitoringWallPortalPort = new ConfigKey<String>("Advanced", String.class, "monitoring.wall.portal.port",
@@ -41,7 +45,7 @@ public class ApiServiceConfiguration implements Configurable {
 
     @Override
     public ConfigKey<?>[] getConfigKeys() {
-        return new ConfigKey<?>[] {ManagementServerAddresses, ApiServletPath, DefaultUIPageSize, ApiSourceCidrChecksEnabled, ApiAllowedSourceCidrList, MonitoringWallPortalPort, MonitoringWallPortalVmUri};
+        return new ConfigKey<?>[] {ManagementServerAddresses, ApiServletPath, DefaultUIPageSize, ApiSourceCidrChecksEnabled, ApiAllowedSourceCidrList, MonitoringWallPortalProtocol, MonitoringWallPortalDomain, MonitoringWallPortalPort, MonitoringWallPortalVmUri};
     }
 
 }

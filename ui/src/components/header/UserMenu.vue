@@ -175,8 +175,28 @@ export default {
       this.$notification.destroy()
     },
     wallPortalLink () {
-      const url = 'http://' + this.$store.getters.features.host + ':' + this.$store.getters.features.wallportalport + '/login?orgId=1'
-      window.open(url, '_blank')
+      var uri = ''
+      const host = this.$store.getters.features.host
+      const wallPortalProtocol = this.$store.getters.features.wallportalprotocol
+      const wallPortalDomain = this.$store.getters.features.wallportaldomain
+      const wallPortalPort = this.$store.getters.features.wallportalport
+
+      if (wallPortalProtocol === null || wallPortalProtocol === '') {
+        uri += 'http://'
+      } else {
+        uri += wallPortalProtocol + '://'
+      }
+      if (wallPortalDomain === null || wallPortalDomain === '') {
+        uri += host
+      } else {
+        uri += wallPortalDomain
+      }
+      if (typeof wallPortalPort !== 'undefined') {
+        uri += ':' + wallPortalPort
+      }
+      uri += '/login?orgId=1'
+
+      window.open(uri, '_blank')
     },
     async fetchConfigurationSwitch () {
       await this.fetchFaviconStateInterval()

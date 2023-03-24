@@ -112,6 +112,14 @@ public class CapabilitiesResponse extends BaseResponse {
     @Param(description = "true if Automation Service plugin is enabled, false otherwise")
     private boolean automationServiceEnabled;
 
+    @SerializedName("wallportalprotocol")
+    @Param(description = "Monitoring Service Wall Portal Protocol setting")
+    private String wallPortalProtocol;
+
+    @SerializedName("wallportaldomain")
+    @Param(description = "Monitoring Service Wall Portal Domain setting")
+    private String wallPortalDomain;
+
     @SerializedName("wallportalport")
     @Param(description = "Monitoring Service Wall Portal Port setting")
     private String wallPortalPort;
@@ -234,6 +242,14 @@ public class CapabilitiesResponse extends BaseResponse {
 
     public void setAutomationServiceEnabled(boolean automationServiceEnabled) {
         this.automationServiceEnabled = automationServiceEnabled;
+    }
+
+    public void setWallPortalProtocol(String wallPortalProtocol) {
+        this.wallPortalProtocol = wallPortalProtocol;
+    }
+
+    public void setWallPortalDomain(String wallPortalDomain) {
+        this.wallPortalDomain = wallPortalDomain;
     }
 
     public void setWallPortalPort(String wallPortalPort) {
