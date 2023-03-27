@@ -3327,7 +3327,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
     }
 
     protected String getIoUringCheckCommand() {
-        String[] qemuPaths = { "/usr/bin/qemu-system-x86_64", "/usr/libexec/qemu-kvm", "/usr/bin/qemu-kvm" };
+        String[] qemuPaths = { "/usr/bin/qemu-system-x86_64", "/usr/libexec/qemu-kvm", "/usr/bin/qemu-kvm" , "/usr/local/bin/qemu-system-x86_64"};
         for (String qemuPath : qemuPaths) {
             File file = new File(qemuPath);
             if (file.exists()) {
