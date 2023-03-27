@@ -842,8 +842,6 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
             s_logger.error("tpm properties file not found due to: " + e.getLocalizedMessage());
         }
 
-
-
         _storage = new JavaStorageLayer();
         _storage.configure("StorageLayer", params);
 
@@ -4200,7 +4198,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
             return DiskDef.DiskBus.SCSI;
         } else if (platformEmulator.contains("Ubuntu") ||
             StringUtils.startsWithAny(platformEmulator,
-                        "Fedora", "CentOS", "Red Hat Enterprise Linux", "Debian GNU/Linux", "FreeBSD", "Oracle", "Other PV", "Windows")) {
+                        "Fedora", "CentOS", "Red Hat Enterprise Linux", "Debian GNU/Linux", "FreeBSD", "Oracle", "Other PV", "Windows", "Rocky”, “Alma")) {
             return DiskDef.DiskBus.SCSI;
         } else if (isUefiEnabled && StringUtils.startsWithAny(platformEmulator, "Other")) {
             return DiskDef.DiskBus.SATA;
