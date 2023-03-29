@@ -47,30 +47,7 @@ import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import javax.inject.Inject;
 import javax.naming.ConfigurationException;
-
-import com.cloud.storage.VMTemplateVO;
-import com.cloud.storage.dao.VMTemplateDao;
-import com.cloud.user.UserData;
-import com.cloud.user.UserDataVO;
-import com.cloud.user.dao.UserDataDao;
 import com.cloud.dc.ClusterDetailsDao;
-import com.cloud.agent.api.Answer;
-import com.cloud.agent.api.Command;
-import com.cloud.agent.api.PatchSystemVmAnswer;
-import com.cloud.agent.api.PatchSystemVmCommand;
-import com.cloud.agent.api.proxy.AllowConsoleAccessCommand;
-import com.cloud.agent.api.routing.NetworkElementCommand;
-import com.cloud.agent.manager.Commands;
-import com.cloud.dc.DomainVlanMapVO;
-import com.cloud.dc.dao.DomainVlanMapDao;
-import com.cloud.exception.AgentUnavailableException;
-import com.cloud.network.Networks;
-import com.cloud.utils.db.UUIDManager;
-import com.cloud.utils.fsm.StateMachine2;
-import com.cloud.vm.DomainRouterVO;
-import com.cloud.vm.NicVO;
-import com.cloud.vm.dao.DomainRouterDao;
-import com.cloud.vm.dao.NicDao;
 import org.apache.cloudstack.acl.ControlledEntity;
 import org.apache.cloudstack.acl.SecurityChecker;
 import org.apache.cloudstack.affinity.AffinityGroupProcessor;
@@ -819,6 +796,7 @@ import com.cloud.vm.DomainRouterVO;
 import com.cloud.vm.InstanceGroupVO;
 import com.cloud.vm.NicVO;
 import com.cloud.vm.SecondaryStorageVmVO;
+import com.cloud.vm.UserVmDetailVO;
 import com.cloud.vm.UserVmManager;
 import com.cloud.vm.UserVmVO;
 import com.cloud.vm.VMInstanceVO;
@@ -1430,7 +1408,7 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
             ex.addProxyObject(vm.getUuid(), "vmId");
             throw ex;
         }
-        
+
         //UEFI 라이브 마이그레이션 관련된 주석 처리함. 2022.09.02 이석민 책임
         // UEFI 관련된 주석 시작
 //        UserVmDetailVO userVmDetailVO = _UserVmDetailsDao.findDetail(vm.getId(), ApiConstants.BootType.UEFI.toString());
@@ -2272,7 +2250,6 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
             ssc.addOr("description", SearchCriteria.Op.LIKE, "%" + keyword + "%");
             ssc.addOr("category", SearchCriteria.Op.LIKE, "%" + keyword + "%");
             ssc.addOr("value", SearchCriteria.Op.LIKE, "%" + keyword + "%");
-            ssc.addOr("uuid", SearchCriteria.Op.LIKE, "%" + keyword + "%");
             sc.addAnd("name", SearchCriteria.Op.SC, ssc);
         }
 
@@ -4298,6 +4275,8 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
         final boolean desktopServiceEnabled = Boolean.parseBoolean(_configDao.getValue("cloud.desktop.service.enabled"));
         final boolean automationServiceEnabled = Boolean.parseBoolean(_configDao.getValue("cloud.automation.service.enabled"));
         final String desktopWorksPortalPort = _configDao.getValue("cloud.desktop.service.works.portal.port");
+        final String wallPortalProtocol = _configDao.getValue("monitoring.wall.portal.protocol");
+        final String wallPortalDomain = _configDao.getValue("monitoring.wall.portal.domain");
         final String wallPortalPort = _configDao.getValue("monitoring.wall.portal.port");
         final String wallPortalVmUri = _configDao.getValue("monitoring.wall.portal.vm.uri");
         final String host = _configDao.getValue("host");
@@ -4329,6 +4308,8 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
         capabilities.put("desktopServiceEnabled", desktopServiceEnabled);
         capabilities.put("automationServiceEnabled", automationServiceEnabled);
         capabilities.put("desktopWorksPortalPort", desktopWorksPortalPort);
+        capabilities.put("wallPortalProtocol", wallPortalProtocol);
+        capabilities.put("wallPortalDomain", wallPortalDomain);
         capabilities.put("wallPortalPort", wallPortalPort);
         capabilities.put("wallPortalVmUri", wallPortalVmUri);
         capabilities.put("host", host);

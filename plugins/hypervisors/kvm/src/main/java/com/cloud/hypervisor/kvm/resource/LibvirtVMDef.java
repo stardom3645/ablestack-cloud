@@ -197,7 +197,7 @@ public class LibvirtVMDef {
         public void setTPMVersion(TpmVersion tpmversion) {
             this._tpmversion = tpmversion;
         }
-        
+
         public void setIothreads(boolean iothreads) {
             this.iothreads = iothreads;
         }
