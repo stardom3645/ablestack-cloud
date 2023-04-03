@@ -19,6 +19,7 @@ package org.apache.cloudstack.api.command.user.config;
 import java.util.Map;
 
 import org.apache.cloudstack.api.APICommand;
+import org.apache.cloudstack.api.ApiConstants;
 import org.apache.cloudstack.api.BaseCmd;
 import org.apache.cloudstack.api.response.CapabilitiesResponse;
 import org.apache.cloudstack.config.ApiServiceConfiguration;
@@ -31,12 +32,6 @@ import com.cloud.user.Account;
 public class ListCapabilitiesCmd extends BaseCmd {
     public static final Logger s_logger = Logger.getLogger(ListCapabilitiesCmd.class.getName());
 
-    private static final String s_name = "listcapabilitiesresponse";
-
-    @Override
-    public String getCommandName() {
-        return s_name;
-    }
 
     @Override
     public long getEntityOwnerId() {
@@ -65,11 +60,14 @@ public class ListCapabilitiesCmd extends BaseCmd {
         response.setKubernetesServiceEnabled((Boolean)capabilities.get("kubernetesServiceEnabled"));
         response.setKubernetesClusterExperimentalFeaturesEnabled((Boolean)capabilities.get("kubernetesClusterExperimentalFeaturesEnabled"));
         response.setDesktopServiceEnabled((Boolean)capabilities.get("desktopServiceEnabled"));
-        response.setDesktopWorksAdminPortalPort((String)capabilities.get("desktopWorksAdminPortalPort"));
-        response.setDesktopWorksUserPortalPort((String)capabilities.get("desktopWorksUserPortalPort"));
+        response.setAutomationServiceEnabled((Boolean)capabilities.get("automationServiceEnabled"));
+        response.setDesktopWorksPortalPort((String)capabilities.get("desktopWorksPortalPort"));
+        response.setWallPortalProtocol((String)capabilities.get("wallPortalProtocol"));
+        response.setWallPortalDomain((String)capabilities.get("wallPortalDomain"));
         response.setWallPortalPort((String)capabilities.get("wallPortalPort"));
         response.setWallPortalVmUri((String)capabilities.get("wallPortalVmUri"));
         response.setHost((String)capabilities.get("host"));
+        response.setBalancingServiceEnabled((Boolean)capabilities.get("balancingServiceEnabled"));
 
         if (capabilities.containsKey("apiLimitInterval")) {
             response.setApiLimitInterval((Integer)capabilities.get("apiLimitInterval"));
@@ -78,6 +76,10 @@ public class ListCapabilitiesCmd extends BaseCmd {
             response.setApiLimitMax((Integer)capabilities.get("apiLimitMax"));
         }
         response.setDefaultUiPageSize((Long)capabilities.get(ApiServiceConfiguration.DefaultUIPageSize.key()));
+        response.setInstancesStatsRetentionTime((Integer) capabilities.get(ApiConstants.INSTANCES_STATS_RETENTION_TIME));
+        response.setInstancesStatsUserOnly((Boolean) capabilities.get(ApiConstants.INSTANCES_STATS_USER_ONLY));
+        response.setInstancesDisksStatsRetentionEnabled((Boolean) capabilities.get(ApiConstants.INSTANCES_DISKS_STATS_RETENTION_ENABLED));
+        response.setInstancesDisksStatsRetentionTime((Integer) capabilities.get(ApiConstants.INSTANCES_DISKS_STATS_RETENTION_TIME));
         response.setObjectName("capability");
         response.setResponseName(getCommandName());
         this.setResponseObject(response);

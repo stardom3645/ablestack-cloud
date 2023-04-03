@@ -37,7 +37,6 @@ import com.cloud.user.Account;
             responseHasSensitiveInfo = false)
 public class UpdateHypervisorCapabilitiesCmd extends BaseCmd {
     public static final Logger s_logger = Logger.getLogger(UpdateHypervisorCapabilitiesCmd.class.getName());
-    private static final String s_name = "updatehypervisorcapabilitiesresponse";
 
     /////////////////////////////////////////////////////
     //////////////// API parameters /////////////////////
@@ -51,6 +50,18 @@ public class UpdateHypervisorCapabilitiesCmd extends BaseCmd {
 
     @Parameter(name = ApiConstants.MAX_GUESTS_LIMIT, type = CommandType.LONG, description = "the max number of Guest VMs per host for this hypervisor.")
     private Long maxGuestsLimit;
+
+    @Parameter(name = ApiConstants.MAX_DATA_VOLUMES_LIMIT, type = CommandType.INTEGER, description = "the maximum number of Data Volumes that can be attached to a VM for this hypervisor.", since = "4.16.0")
+    private Integer maxDataVolumesLimit;
+
+    @Parameter(name = ApiConstants.STORAGE_MOTION_ENABLED, type = CommandType.BOOLEAN, description = "set true to enable storage motion support for this hypervisor", since = "4.16.0")
+    private Boolean storageMotionSupported;
+
+    @Parameter(name = ApiConstants.MAX_HOSTS_PER_CLUSTER, type = CommandType.INTEGER, description = "the maximum number of the hypervisor hosts per cluster ", since = "4.16.0")
+    private Integer maxHostsPerClusterLimit;
+
+    @Parameter(name = ApiConstants.VM_SNAPSHOT_ENABELD, type = CommandType.BOOLEAN, description = "set true to enable VM snapshots for this hypervisor", since = "4.16.0")
+    private Boolean vmSnapshotEnabled;
 
     /////////////////////////////////////////////////////
     /////////////////// Accessors ///////////////////////
@@ -68,14 +79,25 @@ public class UpdateHypervisorCapabilitiesCmd extends BaseCmd {
         return maxGuestsLimit;
     }
 
+    public Integer getMaxDataVolumesLimit() {
+        return maxDataVolumesLimit;
+    }
+
+    public Boolean getStorageMotionSupported() {
+        return storageMotionSupported;
+    }
+
+    public Integer getMaxHostsPerClusterLimit() {
+        return maxHostsPerClusterLimit;
+    }
+
+    public Boolean getVmSnapshotEnabled() {
+        return vmSnapshotEnabled;
+    }
+
     /////////////////////////////////////////////////////
     /////////////// API Implementation///////////////////
     /////////////////////////////////////////////////////
-
-    @Override
-    public String getCommandName() {
-        return s_name;
-    }
 
     @Override
     public long getEntityOwnerId() {
@@ -84,7 +106,7 @@ public class UpdateHypervisorCapabilitiesCmd extends BaseCmd {
 
     @Override
     public void execute() {
-        HypervisorCapabilities result = _mgr.updateHypervisorCapabilities(getId(), getMaxGuestsLimit(), getSecurityGroupEnabled());
+        HypervisorCapabilities result = _mgr.updateHypervisorCapabilities(this);
         if (result != null) {
             HypervisorCapabilitiesResponse response = _responseGenerator.createHypervisorCapabilitiesResponse(result);
             response.setResponseName(getCommandName());

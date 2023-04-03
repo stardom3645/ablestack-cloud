@@ -71,10 +71,12 @@ public interface VirtualMachineProfile {
         public static final Param HaTag = new Param("HaTag");
         public static final Param HaOperation = new Param("HaOperation");
         public static final Param UefiFlag = new Param("UefiFlag");
+        public static final Param TpmVersion = new Param("tpmversion");
         public static final Param BootMode = new Param("BootMode");
         public static final Param BootType = new Param("BootType");
         public static final Param BootIntoSetup = new Param("enterHardwareSetup");
         public static final Param PreserveNics = new Param("PreserveNics");
+        public static final Param ConsiderLastHost = new Param("ConsiderLastHost");
 
         private String name;
 

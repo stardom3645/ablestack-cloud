@@ -40,11 +40,10 @@ import org.apache.commons.lang3.StringUtils;
 
 import javax.inject.Inject;
 
-@APICommand(name = ConfigureOutOfBandManagementCmd.APINAME, description = "Configures a host's out-of-band management interface",
+@APICommand(name = "configureOutOfBandManagement", description = "Configures a host's out-of-band management interface",
         responseObject = OutOfBandManagementResponse.class, requestHasSensitiveInfo = true, responseHasSensitiveInfo = false,
         since = "4.9.0", authorized = {RoleType.Admin})
 public class ConfigureOutOfBandManagementCmd extends BaseCmd {
-    public static final String APINAME = "configureOutOfBandManagement";
 
     @Inject
     private OutOfBandManagementService outOfBandManagementService;
@@ -72,6 +71,12 @@ public class ConfigureOutOfBandManagementCmd extends BaseCmd {
     @Parameter(name = ApiConstants.PASSWORD, type = CommandType.STRING, required = true, description = "the host management interface password")
     private String password;
 
+    @Parameter(name = ApiConstants.MANAGE_CONSOLE_PROTOCOL, type = CommandType.STRING, required = true,  description = "the host management interface management console protocol")
+    private String manageConsoleProtocol;
+
+    @Parameter(name = ApiConstants.MANAGE_CONSOLE_PORT, type = CommandType.STRING, description = "the host management interface management console port")
+    private String manageConsolePort;
+
     /////////////////////////////////////////////////////
     /////////////// API Implementation///////////////////
     /////////////////////////////////////////////////////
@@ -90,11 +95,6 @@ public class ConfigureOutOfBandManagementCmd extends BaseCmd {
     }
 
     @Override
-    public String getCommandName() {
-        return APINAME.toLowerCase() + BaseCmd.RESPONSE_SUFFIX;
-    }
-
-    @Override
     public long getEntityOwnerId() {
         return CallContext.current().getCallingAccountId();
     }
@@ -110,6 +110,8 @@ public class ConfigureOutOfBandManagementCmd extends BaseCmd {
         putOptionIfIsNotEmpty(builder, OutOfBandManagement.Option.PORT, port);
         putOptionIfIsNotEmpty(builder, OutOfBandManagement.Option.USERNAME, username);
         putOptionIfIsNotEmpty(builder, OutOfBandManagement.Option.PASSWORD, password);
+        putOptionIfIsNotEmpty(builder, OutOfBandManagement.Option.MGCONSOLEPROTOCOL, manageConsoleProtocol);
+        putOptionIfIsNotEmpty(builder, OutOfBandManagement.Option.MGCONSOLEPORT, manageConsolePort);
         return builder.build();
     }
 

@@ -21,8 +21,13 @@ import com.google.gson.annotations.SerializedName;
 import org.apache.cloudstack.api.ApiConstants;
 
 import com.cloud.serializer.Param;
-import org.apache.cloudstack.api.BaseResponseWithAnnotations;
+import com.cloud.user.SSHKeyPair;
 
+import org.apache.cloudstack.api.BaseResponseWithAnnotations;
+import org.apache.cloudstack.api.EntityReference;
+
+@SuppressWarnings("unused")
+@EntityReference(value = SSHKeyPair.class)
 public class SSHKeyPairResponse extends BaseResponseWithAnnotations {
 
     @SerializedName(ApiConstants.ID)
@@ -41,6 +46,14 @@ public class SSHKeyPairResponse extends BaseResponseWithAnnotations {
 
     @SerializedName(ApiConstants.DOMAIN) @Param(description="the domain name of the keypair owner")
     private String domain;
+
+    @SerializedName(ApiConstants.PROJECT_ID)
+    @Param(description = "the project id of the keypair owner")
+    private String projectId;
+
+    @SerializedName(ApiConstants.PROJECT)
+    @Param(description = "the project name of the keypair owner")
+    private String projectName;
 
     @SerializedName("fingerprint")
     @Param(description = "Fingerprint of the public key")
@@ -101,5 +114,13 @@ public class SSHKeyPairResponse extends BaseResponseWithAnnotations {
 
     public void setId(String id) {
         this.id = id;
+    }
+
+    public void setProjectId(String projectId) {
+        this.projectId = projectId;
+    }
+
+    public void setProjectName(String projectName) {
+        this.projectName = projectName;
     }
 }

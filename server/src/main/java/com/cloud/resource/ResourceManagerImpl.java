@@ -36,6 +36,8 @@ import java.util.Random;
 import javax.inject.Inject;
 import javax.naming.ConfigurationException;
 
+import com.cloud.exception.StorageConflictException;
+import com.cloud.exception.StorageUnavailableException;
 import org.apache.cloudstack.annotation.AnnotationService;
 import org.apache.cloudstack.annotation.dao.AnnotationDao;
 import org.apache.cloudstack.api.ApiConstants;
@@ -165,7 +167,7 @@ import com.cloud.storage.dao.StoragePoolHostDao;
 import com.cloud.storage.dao.VMTemplateDao;
 import com.cloud.user.Account;
 import com.cloud.user.AccountManager;
-import com.cloud.utils.Pair;
+import com.cloud.utils.Ternary;
 import com.cloud.utils.UriUtils;
 import com.cloud.utils.component.Manager;
 import com.cloud.utils.component.ManagerBase;
@@ -578,6 +580,7 @@ public class ResourceManagerImpl extends ManagerBase implements ResourceManager,
                 }
                 s_logger.info("External cluster has been successfully discovered by " + discoverer.getName());
                 success = true;
+                CallContext.current().putContextParameter(Cluster.class, cluster.getUuid());
                 return result;
             }
 
@@ -695,9 +698,16 @@ public class ResourceManagerImpl extends ManagerBase implements ResourceManager,
             throw new InvalidParameterValueException("Can't specify cluster without specifying the pod");
         }
         List<String> skipList = Arrays.asList(HypervisorType.VMware.name().toLowerCase(Locale.ROOT), Type.SecondaryStorage.name().toLowerCase(Locale.ROOT));
-        if (!skipList.contains(hypervisorType.toLowerCase(Locale.ROOT)) &&
-                (StringUtils.isAnyEmpty(username, password))) {
-            throw new InvalidParameterValueException("Username and Password need to be provided.");
+        if (!skipList.contains(hypervisorType.toLowerCase(Locale.ROOT))) {
+            if (HypervisorType.KVM.toString().equalsIgnoreCase(hypervisorType)) {
+                if (StringUtils.isBlank(username)) {
+                    throw new InvalidParameterValueException("Username need to be provided.");
+                }
+            } else {
+                if (StringUtils.isBlank(username) || StringUtils.isBlank(password)) {
+                    throw new InvalidParameterValueException("Username and Password need to be provided.");
+                }
+            }
         }
 
         if (clusterId != null) {
@@ -800,9 +810,18 @@ public class ResourceManagerImpl extends ManagerBase implements ResourceManager,
             try {
                 resources = discoverer.find(dcId, podId, clusterId, uri, username, password, hostTags);
             } catch (final DiscoveryException e) {
-                throw e;
+                String errorMsg = String.format("Could not add host at [%s] with zone [%s], pod [%s] and cluster [%s] due to: [%s].",
+                        uri, dcId, podId, clusterId, e.getMessage());
+                if (s_logger.isDebugEnabled()) {
+                    s_logger.debug(errorMsg, e);
+                }
+                throw new DiscoveryException(errorMsg, e);
             } catch (final Exception e) {
-                s_logger.info("Exception in host discovery process with discoverer: " + discoverer.getName() + ", skip to another discoverer if there is any");
+                String err = "Exception in host discovery process with discoverer: " + discoverer.getName();
+                s_logger.info(err + ", skip to another discoverer if there is any");
+                if (s_logger.isDebugEnabled()) {
+                    s_logger.debug(err + ":" + e.getMessage(), e);
+                }
             }
             processResourceEvent(ResourceListener.EVENT_DISCOVER_AFTER, resources);
 
@@ -856,8 +875,9 @@ public class ResourceManagerImpl extends ManagerBase implements ResourceManager,
             s_logger.warn(msg);
             throw new DiscoveryException(msg);
         }
-        s_logger.warn("Unable to find the server resources at " + url);
-        throw new DiscoveryException("Unable to add the host");
+        String errorMsg = "Cannot find the server resources at " + url;
+        s_logger.warn(errorMsg);
+        throw new DiscoveryException("Unable to add the host: " + errorMsg);
     }
 
     @Override
@@ -1312,7 +1332,7 @@ public class ResourceManagerImpl extends ManagerBase implements ResourceManager,
             throw new CloudRuntimeException(err + e.getMessage());
         }
 
-        ActionEventUtils.onStartedActionEvent(CallContext.current().getCallingUserId(), CallContext.current().getCallingAccountId(), EventTypes.EVENT_MAINTENANCE_PREPARE, "starting maintenance for host " + hostId, true, 0);
+        ActionEventUtils.onStartedActionEvent(CallContext.current().getCallingUserId(), CallContext.current().getCallingAccountId(), EventTypes.EVENT_MAINTENANCE_PREPARE, "starting maintenance for host " + hostId, hostId, null, true, 0);
         _agentMgr.pullAgentToMaintenance(hostId);
 
         /* TODO: move below to listener */
@@ -1633,7 +1653,7 @@ public class ResourceManagerImpl extends ManagerBase implements ResourceManager,
         resourceStateTransitTo(host, ResourceState.Event.InternalEnterMaintenance, _nodeId);
         ActionEventUtils.onCompletedActionEvent(CallContext.current().getCallingUserId(), CallContext.current().getCallingAccountId(),
                 EventVO.LEVEL_INFO, EventTypes.EVENT_MAINTENANCE_PREPARE,
-                "completed maintenance for host " + host.getId(), 0);
+                "completed maintenance for host " + host.getId(), host.getId(), null, 0);
         return true;
     }
 
@@ -1809,6 +1829,9 @@ public class ResourceManagerImpl extends ManagerBase implements ResourceManager,
         }
         final List<String> hostTags = cmd.getHostTags();
         if (hostTags != null) {
+            List<VMInstanceVO> activeVMs =  _vmDao.listByHostId(hostId);
+            s_logger.warn(String.format("The following active VMs [%s] are using the host [%s]. Updating the host tags will not affect them.", activeVMs, host));
+
             if (s_logger.isDebugEnabled()) {
                 s_logger.debug("Updating Host Tags to :" + hostTags);
             }
@@ -1818,6 +1841,11 @@ public class ResourceManagerImpl extends ManagerBase implements ResourceManager,
         final String url = cmd.getUrl();
         if (url != null) {
             _storageMgr.updateSecondaryStorage(cmd.getId(), cmd.getUrl());
+        }
+        try {
+            _storageMgr.enableHost(hostId);
+        } catch (StorageUnavailableException | StorageConflictException e) {
+            s_logger.error(String.format("Failed to setup host %s when enabled", host));
         }
 
         final HostVO updatedHost = _hostDao.findById(hostId);
@@ -2153,7 +2181,7 @@ public class ResourceManagerImpl extends ManagerBase implements ResourceManager,
             final List<String> implicitHostTags = ssCmd.getHostTags();
             if (!implicitHostTags.isEmpty()) {
                 if (hostTags == null) {
-                    hostTags = _hostTagsDao.gethostTags(host.getId());
+                    hostTags = _hostTagsDao.getHostTags(host.getId());
                 }
                 if (hostTags != null) {
                     implicitHostTags.removeAll(hostTags);
@@ -2731,8 +2759,8 @@ public class ResourceManagerImpl extends ManagerBase implements ResourceManager,
         }
         final boolean sshToAgent = Boolean.parseBoolean(_configDao.getValue(KvmSshToAgentEnabled.key()));
         if (sshToAgent) {
-            Pair<String, String> credentials = getHostCredentials(host);
-            connectAndRestartAgentOnHost(host, credentials.first(), credentials.second());
+            Ternary<String, String, String> credentials = getHostCredentials(host);
+            connectAndRestartAgentOnHost(host, credentials.first(), credentials.second(), credentials.third());
         } else {
             throw new CloudRuntimeException("SSH access is disabled, cannot cancel maintenance mode as " +
                     "host agent is not connected");
@@ -2743,22 +2771,23 @@ public class ResourceManagerImpl extends ManagerBase implements ResourceManager,
      * Get host credentials
      * @throws CloudRuntimeException if username or password are not found
      */
-    protected Pair<String, String> getHostCredentials(HostVO host) {
+    protected Ternary<String, String, String> getHostCredentials(HostVO host) {
         _hostDao.loadDetails(host);
         final String password = host.getDetail("password");
         final String username = host.getDetail("username");
-        if (password == null || username == null) {
-            throw new CloudRuntimeException("SSH to agent is enabled, but username/password credentials are not found");
+        final String privateKey = _configDao.getValue("ssh.privatekey");
+        if ((password == null && privateKey == null) || username == null) {
+            throw new CloudRuntimeException("SSH to agent is enabled, but username and password or private key are not found");
         }
-        return new Pair<>(username, password);
+        return new Ternary<>(username, password, privateKey);
     }
 
     /**
      * True if agent is restarted via SSH. Assumes kvm.ssh.to.agent = true and host status is not Up
      */
-    protected void connectAndRestartAgentOnHost(HostVO host, String username, String password) {
+    protected void connectAndRestartAgentOnHost(HostVO host, String username, String password, String privateKey) {
         final com.trilead.ssh2.Connection connection = SSHCmdHelper.acquireAuthorizedConnection(
-                host.getPrivateIpAddress(), 22, username, password);
+                host.getPrivateIpAddress(), 22, username, password, privateKey);
         if (connection == null) {
             throw new CloudRuntimeException(String.format("SSH to agent is enabled, but failed to connect to %s via IP address [%s].", host, host.getPrivateIpAddress()));
         }
@@ -2892,7 +2921,7 @@ public class ResourceManagerImpl extends ManagerBase implements ResourceManager,
                 return result;
             }
         } catch (final AgentUnavailableException e) {
-            s_logger.error("Agent is not availbale!", e);
+            s_logger.error("Agent is not available!", e);
         }
 
         final boolean shouldUpdateHostPasswd = command.getUpdatePasswdOnHost();
@@ -3164,7 +3193,7 @@ public class ResourceManagerImpl extends ManagerBase implements ResourceManager,
 
     @Override
     public String getHostTags(final long hostId) {
-        final List<String> hostTags = _hostTagsDao.gethostTags(hostId);
+        final List<String> hostTags = _hostTagsDao.getHostTags(hostId);
         if (hostTags == null) {
             return null;
         } else {

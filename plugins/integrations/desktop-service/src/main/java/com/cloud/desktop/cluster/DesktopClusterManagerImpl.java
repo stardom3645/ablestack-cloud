@@ -220,7 +220,7 @@ public class DesktopClusterManagerImpl extends ManagerBase implements DesktopClu
         }
 
         Account account = ApiDBUtils.findAccountById(desktop.getAccountId());
-        if (account.getType() == Account.ACCOUNT_TYPE_PROJECT) {
+        if (account.getType() == Account.Type.PROJECT) {
             Project project = ApiDBUtils.findProjectByProjectAccountId(account.getId());
             response.setProjectId(project.getUuid());
             response.setProjectName(project.getName());
@@ -322,6 +322,7 @@ public class DesktopClusterManagerImpl extends ManagerBase implements DesktopClu
             sc.setParameters("state", state);
         }
         if (keyword != null){
+            sc.addOr("uuid", SearchCriteria.Op.LIKE, "%" + keyword + "%");
             sc.setParameters("keyword", "%" + keyword + "%");
         }
         if (desktopClusterId != null) {
@@ -1056,8 +1057,7 @@ public class DesktopClusterManagerImpl extends ManagerBase implements DesktopClu
     public ConfigKey<?>[] getConfigKeys() {
         return new ConfigKey<?>[] {
                 DesktopServiceEnabled,
-                DesktopWorksAdminPortalPort,
-                DesktopWorksUserPortalPort
+                DesktopWorksPortalPort
         };
     }
 }

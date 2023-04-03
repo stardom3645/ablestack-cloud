@@ -21,7 +21,11 @@ import com.cloud.utils.exception.CloudRuntimeException;
 import java.io.InputStream;
 import java.sql.Connection;
 
+import org.apache.log4j.Logger;
+
 public class Upgrade41510to41520 implements DbUpgrade {
+
+    final static Logger LOG = Logger.getLogger(Upgrade41510to41520.class);
 
     @Override
     public String[] getUpgradableVersionRange() {
@@ -51,6 +55,7 @@ public class Upgrade41510to41520 implements DbUpgrade {
 
     @Override
     public void performDataMigration(Connection conn) {
+        // nothing to do
     }
 
     @Override

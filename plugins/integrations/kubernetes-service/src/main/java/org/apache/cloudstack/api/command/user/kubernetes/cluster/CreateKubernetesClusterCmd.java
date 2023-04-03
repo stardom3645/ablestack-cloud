@@ -24,7 +24,7 @@ import org.apache.cloudstack.acl.RoleType;
 import org.apache.cloudstack.acl.SecurityChecker.AccessType;
 import org.apache.cloudstack.api.ACL;
 import org.apache.cloudstack.api.APICommand;
-import org.apache.cloudstack.api.ApiCommandJobType;
+import org.apache.cloudstack.api.ApiCommandResourceType;
 import org.apache.cloudstack.api.ApiConstants;
 import org.apache.cloudstack.api.ApiErrorCode;
 import org.apache.cloudstack.api.BaseAsyncCreateCmd;
@@ -46,7 +46,7 @@ import com.cloud.kubernetes.cluster.KubernetesClusterEventTypes;
 import com.cloud.kubernetes.cluster.KubernetesClusterService;
 import com.cloud.utils.exception.CloudRuntimeException;
 
-@APICommand(name = CreateKubernetesClusterCmd.APINAME,
+@APICommand(name = "createKubernetesCluster",
         description = "Creates a Kubernetes cluster",
         responseObject = KubernetesClusterResponse.class,
         responseView = ResponseView.Restricted,
@@ -56,7 +56,6 @@ import com.cloud.utils.exception.CloudRuntimeException;
         authorized = {RoleType.Admin, RoleType.ResourceAdmin, RoleType.DomainAdmin, RoleType.User})
 public class CreateKubernetesClusterCmd extends BaseAsyncCreateCmd {
     public static final Logger LOGGER = Logger.getLogger(CreateKubernetesClusterCmd.class.getName());
-    public static final String APINAME = "createKubernetesCluster";
     private static final Long DEFAULT_NODE_ROOT_DISK_SIZE = 8L;
 
     @Inject
@@ -140,10 +139,6 @@ public class CreateKubernetesClusterCmd extends BaseAsyncCreateCmd {
             description = "URL for the docker image private registry")
     private String dockerRegistryUrl;
 
-    @Parameter(name = ApiConstants.DOCKER_REGISTRY_EMAIL, type = CommandType.STRING,
-            description = "email of the docker image private registry user")
-    private String dockerRegistryEmail;
-
     @Parameter(name = ApiConstants.NODE_ROOT_DISK_SIZE, type = CommandType.LONG,
             description = "root disk size in GB for each node")
     private Long nodeRootDiskSize;
@@ -226,10 +221,6 @@ public class CreateKubernetesClusterCmd extends BaseAsyncCreateCmd {
         return dockerRegistryUrl;
     }
 
-    public String getDockerRegistryEmail() {
-        return dockerRegistryEmail;
-    }
-
     public Long getNodeRootDiskSize() {
         if (nodeRootDiskSize != null) {
             if (nodeRootDiskSize < DEFAULT_NODE_ROOT_DISK_SIZE) {
@@ -244,11 +235,6 @@ public class CreateKubernetesClusterCmd extends BaseAsyncCreateCmd {
     /////////////////////////////////////////////////////
     /////////////// API Implementation///////////////////
     /////////////////////////////////////////////////////
-
-    @Override
-    public String getCommandName() {
-        return APINAME.toLowerCase() + "response";
-    }
 
     public static String getResultObjectName() {
         return "kubernetescluster";
@@ -285,8 +271,8 @@ public class CreateKubernetesClusterCmd extends BaseAsyncCreateCmd {
     }
 
     @Override
-    public ApiCommandJobType getInstanceType() {
-        return ApiCommandJobType.VirtualMachine;
+    public ApiCommandResourceType getApiResourceType() {
+        return ApiCommandResourceType.VirtualMachine;
     }
 
     @Override

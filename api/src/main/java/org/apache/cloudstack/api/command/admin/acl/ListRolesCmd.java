@@ -34,10 +34,9 @@ import org.apache.commons.lang3.StringUtils;
 import com.cloud.user.Account;
 import com.cloud.utils.Pair;
 
-@APICommand(name = ListRolesCmd.APINAME, description = "Lists dynamic roles in CloudStack", responseObject = RoleResponse.class, requestHasSensitiveInfo = false, responseHasSensitiveInfo = false, since = "4.9.0", authorized = {
+@APICommand(name = "listRoles", description = "Lists dynamic roles in CloudStack", responseObject = RoleResponse.class, requestHasSensitiveInfo = false, responseHasSensitiveInfo = false, since = "4.9.0", authorized = {
         RoleType.Admin, RoleType.ResourceAdmin, RoleType.DomainAdmin })
 public class ListRolesCmd extends BaseListCmd {
-    public static final String APINAME = "listRoles";
 
     /////////////////////////////////////////////////////
     //////////////// API parameters /////////////////////
@@ -52,6 +51,10 @@ public class ListRolesCmd extends BaseListCmd {
     @Parameter(name = ApiConstants.TYPE, type = CommandType.STRING, description = "List role by role type, valid options are: Admin, ResourceAdmin, DomainAdmin, User.")
     private String roleType;
 
+    @Parameter(name = ApiConstants.KEYWORD, type = CommandType.STRING, description = "List role by role keyword.")
+    private String keyword;
+
+
     /////////////////////////////////////////////////////
     /////////////////// Accessors ///////////////////////
     /////////////////////////////////////////////////////
@@ -64,6 +67,10 @@ public class ListRolesCmd extends BaseListCmd {
         return roleName;
     }
 
+    public String getKeyword() {
+        return keyword;
+    }
+
     public RoleType getRoleType() {
         if (StringUtils.isNotEmpty(roleType)) {
             return RoleType.valueOf(roleType);
@@ -74,11 +81,6 @@ public class ListRolesCmd extends BaseListCmd {
     /////////////////////////////////////////////////////
     /////////////// API Implementation///////////////////
     /////////////////////////////////////////////////////
-
-    @Override
-    public String getCommandName() {
-        return APINAME.toLowerCase() + BaseListCmd.RESPONSE_SUFFIX;
-    }
 
     @Override
     public long getEntityOwnerId() {
@@ -115,6 +117,8 @@ public class ListRolesCmd extends BaseListCmd {
             roles = roleService.findRolesByName(getName(), getStartIndex(), getPageSizeVal());
         } else if (getRoleType() != null) {
             roles = roleService.findRolesByType(getRoleType(), getStartIndex(), getPageSizeVal());
+        } else if (StringUtils.isNotBlank(getKeyword())) {
+            roles = roleService.findRolesByKeyword(getKeyword(), getStartIndex(), getPageSizeVal());
         } else {
             roles = roleService.listRoles(getStartIndex(), getPageSizeVal());
         }

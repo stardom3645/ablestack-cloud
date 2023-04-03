@@ -55,14 +55,14 @@ public interface HAConfigManager {
      * @param cluster the cluster
      * @return returns operation success
      */
-    boolean enableHA(final Cluster cluster);
+    boolean enableHA(final Cluster cluster, Boolean includeHost);
 
     /**
      * Disables HA across a cluster
      * @param cluster the cluster
      * @return returns operation success
      */
-    boolean disableHA(final Cluster cluster);
+    boolean disableHA(final Cluster cluster, Boolean includeHost);
 
     /**
      * Enables HA across a zone
@@ -93,4 +93,18 @@ public interface HAConfigManager {
      * @return returns list of ha provider names
      */
     List<String> listHAProviders(final HAResource.ResourceType resourceType, final HAResource.ResourceSubType entityType);
+
+    /**
+     * Enables Balancing across a zone
+     * @param cluster the cluster
+     * @return returns operation success
+     */
+    boolean enableBalancing(Cluster cluster);
+
+    /**
+     * Disable Balancing across a zone
+     * @param cluster the cluster
+     * @return returns operation success
+     */
+    boolean disableBalancing(Cluster cluster);
 }

@@ -18,10 +18,10 @@
 <template>
   <a
     v-if="['vm'].includes($route.meta.name) && 'updateVirtualMachine' in $store.getters.apis"
-    :href="'http://' + $store.getters.features.host + ':' +$store.getters.features.wallportalport + $store.getters.features.wallportalvmuri +'?kiosk&orgId=2&var-vm_uuid='+resource.id"
+    :href="urlAction($store.getters, resource.id)"
     target="_blank" >
     <a-button style="margin-left: 5px" shape="circle" type="" :size="size" :disabled="['Stopped', 'Error', 'Destroyed'].includes(resource.state)" >
-      <a-icon type="area-chart" />
+      <AreaChartOutlined />
     </a-button>
   </a>
 </template>
@@ -36,6 +36,30 @@ export default {
     size: {
       type: String,
       default: 'small'
+    }
+  },
+  methods: {
+    urlAction (storeGetters, resourceId) {
+      var uri = ''
+      const host = storeGetters.features.host
+      const wallPortalProtocol = storeGetters.features.wallportalprotocol
+      const wallPortalDomain = storeGetters.features.wallportaldomain
+      const wallPortalPort = storeGetters.features.wallportalport
+      if (wallPortalProtocol === null || wallPortalProtocol === '') {
+        uri += 'http://'
+      } else {
+        uri += wallPortalProtocol + '://'
+      }
+      if (wallPortalDomain === null || wallPortalDomain === '') {
+        uri += host
+      } else {
+        uri += wallPortalDomain
+      }
+      if (typeof wallPortalPort !== 'undefined') {
+        uri += ':' + wallPortalPort
+      }
+      uri += storeGetters.features.wallportalvmuri + '?kiosk&orgId=2&var-vm_uuid=' + resourceId
+      return uri
     }
   }
 }

@@ -20,8 +20,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import com.cloud.user.UserData;
 import org.apache.cloudstack.api.command.admin.cluster.ListClustersCmd;
+import org.apache.cloudstack.api.command.admin.config.ListCfgGroupsByCmd;
 import org.apache.cloudstack.api.command.admin.config.ListCfgsByCmd;
+import org.apache.cloudstack.api.command.admin.config.UpdateHypervisorCapabilitiesCmd;
 import org.apache.cloudstack.api.command.admin.guest.AddGuestOsCmd;
 import org.apache.cloudstack.api.command.admin.guest.AddGuestOsMappingCmd;
 import org.apache.cloudstack.api.command.admin.guest.ListGuestOsMappingCmd;
@@ -39,6 +42,7 @@ import org.apache.cloudstack.api.command.admin.resource.ListCapacityCmd;
 import org.apache.cloudstack.api.command.admin.resource.UploadCustomCertificateCmd;
 import org.apache.cloudstack.api.command.admin.systemvm.DestroySystemVmCmd;
 import org.apache.cloudstack.api.command.admin.systemvm.ListSystemVMsCmd;
+import org.apache.cloudstack.api.command.admin.systemvm.PatchSystemVMCmd;
 import org.apache.cloudstack.api.command.admin.systemvm.RebootSystemVmCmd;
 import org.apache.cloudstack.api.command.admin.systemvm.ScaleSystemVMCmd;
 import org.apache.cloudstack.api.command.admin.systemvm.StopSystemVmCmd;
@@ -48,15 +52,20 @@ import org.apache.cloudstack.api.command.user.address.ListPublicIpAddressesCmd;
 import org.apache.cloudstack.api.command.user.config.ListCapabilitiesCmd;
 import org.apache.cloudstack.api.command.user.event.ArchiveEventsCmd;
 import org.apache.cloudstack.api.command.user.event.DeleteEventsCmd;
+import org.apache.cloudstack.api.command.user.event.DownloadEventsCmd;
 import org.apache.cloudstack.api.command.user.guest.ListGuestOsCategoriesCmd;
 import org.apache.cloudstack.api.command.user.guest.ListGuestOsCmd;
 import org.apache.cloudstack.api.command.user.ssh.CreateSSHKeyPairCmd;
 import org.apache.cloudstack.api.command.user.ssh.DeleteSSHKeyPairCmd;
 import org.apache.cloudstack.api.command.user.ssh.ListSSHKeyPairsCmd;
 import org.apache.cloudstack.api.command.user.ssh.RegisterSSHKeyPairCmd;
+import org.apache.cloudstack.api.command.user.userdata.DeleteUserDataCmd;
+import org.apache.cloudstack.api.command.user.userdata.ListUserDataCmd;
+import org.apache.cloudstack.api.command.user.userdata.RegisterUserDataCmd;
 import org.apache.cloudstack.api.command.user.vm.GetVMPasswordCmd;
 import org.apache.cloudstack.api.command.user.vmgroup.UpdateVMGroupCmd;
 import org.apache.cloudstack.config.Configuration;
+import org.apache.cloudstack.config.ConfigurationGroup;
 
 import com.cloud.alert.Alert;
 import com.cloud.capacity.Capacity;
@@ -90,11 +99,18 @@ public interface ManagementService {
     static final String Name = "management-server";
 
     /**
-     * returns the a map of the names/values in the configuraton table
+     * returns the a map of the names/values in the configuration table
      *
      * @return map of configuration name/values
      */
     Pair<List<? extends Configuration>, Integer> searchForConfigurations(ListCfgsByCmd c);
+
+    /**
+     * returns the the configuration groups
+     *
+     * @return list of configuration groups
+     */
+    Pair<List<? extends ConfigurationGroup>, Integer> listConfigurationGroups(ListCfgGroupsByCmd cmd);
 
     /**
      * Searches for Clusters by the specified search criteria
@@ -255,6 +271,13 @@ public interface ManagementService {
     boolean archiveEvents(ArchiveEventsCmd cmd);
 
     /**
+     * Download events
+     * @param cmd
+     * @return True on success. False otherwise.
+     */
+    boolean downloadEvents(DownloadEventsCmd cmd);
+
+    /**
      * Delete events
      * @param cmd
      * @return True on success. False otherwise.
@@ -332,6 +355,33 @@ public interface ManagementService {
     String generateRandomPassword();
 
     /**
+     * Search registered userdatas for the logged in user.
+     *
+     * @param cmd
+     *            The api command class.
+     * @return The list of userdatas found.
+     */
+    Pair<List<? extends UserData>, Integer> listUserDatas(ListUserDataCmd cmd);
+
+    /**
+     * Registers a userdata.
+     *
+     * @param cmd
+     *            The api command class.
+     * @return A VO with the registered userdata.
+     */
+    UserData registerUserData(RegisterUserDataCmd cmd);
+
+    /**
+     * Deletes a userdata.
+     *
+     * @param cmd
+     *            The api command class.
+     * @return True on success. False otherwise.
+     */
+    boolean deleteUserData(DeleteUserDataCmd cmd);
+
+    /**
      * Search registered key pairs for the logged in user.
      *
      * @param cmd
@@ -394,7 +444,8 @@ public interface ManagementService {
 
     /**
      * List storage pools for live migrating of a volume. The API returns list of all pools in the cluster to which the
-     * volume can be migrated. Current pool is not included in the list.
+     * volume can be migrated. Current pool is not included in the list. In case of vSphere datastore cluster storage pools,
+     * this method removes the child storage pools and adds the corresponding parent datastore cluster for API response listing
      *
      * @param Long volumeId
      * @return Pair<List<? extends StoragePool>, List<? extends StoragePool>> List of storage pools in cluster and list
@@ -402,12 +453,14 @@ public interface ManagementService {
      */
     Pair<List<? extends StoragePool>, List<? extends StoragePool>> listStoragePoolsForMigrationOfVolume(Long volumeId);
 
+    Pair<List<? extends StoragePool>, List<? extends StoragePool>> listStoragePoolsForSystemMigrationOfVolume(Long volumeId, Long newDiskOfferingId, Long newSize, Long newMinIops, Long newMaxIops, boolean keepSourceStoragePool, boolean bypassStorageTypeCheck);
+
     String[] listEventTypes();
 
     Pair<List<? extends HypervisorCapabilities>, Integer> listHypervisorCapabilities(Long id, HypervisorType hypervisorType, String keyword, Long startIndex,
             Long pageSizeVal);
 
-    HypervisorCapabilities updateHypervisorCapabilities(Long id, Long maxGuestsLimit, Boolean securityGroupEnabled);
+    HypervisorCapabilities updateHypervisorCapabilities(UpdateHypervisorCapabilitiesCmd cmd);
 
     /**
      * list all the top consumed resources across different capacity types
@@ -424,5 +477,6 @@ public interface ManagementService {
 
     void cleanupVMReservations();
 
+    Pair<Boolean, String> patchSystemVM(PatchSystemVMCmd cmd);
 
 }

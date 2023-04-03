@@ -26,6 +26,7 @@ import java.util.Map;
 import javax.inject.Inject;
 import javax.naming.ConfigurationException;
 
+import com.cloud.capacity.CapacityVO;
 import org.apache.cloudstack.engine.subsystem.api.storage.DataStoreManager;
 import org.apache.cloudstack.framework.config.ConfigKey;
 import org.apache.cloudstack.framework.config.Configurable;
@@ -296,7 +297,7 @@ public class FirstFitPlanner extends AdapterBase implements DeploymentClusterPla
     }
 
     private Map<Short, Float> getCapacityThresholdMap() {
-        // Lets build this real time so that the admin wont have to restart MS
+        // Lets build this real time so that the admin won't have to restart MS
         // if anyone changes these values
         Map<Short, Float> disableThresholdMap = new HashMap<Short, Float>();
 
@@ -353,12 +354,16 @@ public class FirstFitPlanner extends AdapterBase implements DeploymentClusterPla
                 return;
             }
 
+            String configurationName = ClusterCPUCapacityDisableThreshold.key();
+            float configurationValue = ClusterCPUCapacityDisableThreshold.value();
             if (capacity == Capacity.CAPACITY_TYPE_CPU) {
                 clustersCrossingThreshold =
                         capacityDao.listClustersCrossingThreshold(capacity, plan.getDataCenterId(), ClusterCPUCapacityDisableThreshold.key(), cpu_requested);
             } else if (capacity == Capacity.CAPACITY_TYPE_MEMORY) {
                 clustersCrossingThreshold =
                         capacityDao.listClustersCrossingThreshold(capacity, plan.getDataCenterId(), ClusterMemoryCapacityDisableThreshold.key(), ram_requested);
+                configurationName = ClusterMemoryCapacityDisableThreshold.key();
+                configurationValue = ClusterMemoryCapacityDisableThreshold.value();
             }
 
             if (clustersCrossingThreshold != null && clustersCrossingThreshold.size() != 0) {
@@ -367,8 +372,11 @@ public class FirstFitPlanner extends AdapterBase implements DeploymentClusterPla
                 // Remove clusters crossing disabled threshold
                 clusterListForVmAllocation.removeAll(clustersCrossingThreshold);
 
-                s_logger.debug("Cannot allocate cluster list " + clustersCrossingThreshold.toString() + " for vm creation since their allocated percentage" +
-                        " crosses the disable capacity threshold defined at each cluster/ at global value for capacity Type : " + capacity + ", skipping these clusters");
+                String warnMessageForClusterReachedCapacityThreshold = String.format(
+                        "Cannot allocate cluster list %s for VM creation since their allocated percentage crosses the disable capacity threshold defined at each cluster at"
+                        + " Global Settings Configuration [name: %s, value: %s] for capacity Type : %s, skipping these clusters", clustersCrossingThreshold.toString(),
+                        configurationName, String.valueOf(configurationValue), CapacityVO.getCapacityName(capacity));
+                s_logger.warn(warnMessageForClusterReachedCapacityThreshold);
             }
 
         }

@@ -43,7 +43,6 @@ import com.cloud.user.Account;
 public class CreateStoragePoolCmd extends BaseCmd {
     public static final Logger s_logger = Logger.getLogger(CreateStoragePoolCmd.class.getName());
 
-    private static final String s_name = "createstoragepoolresponse";
 
     /////////////////////////////////////////////////////
     //////////////// API parameters /////////////////////
@@ -86,10 +85,16 @@ public class CreateStoragePoolCmd extends BaseCmd {
     private Long capacityBytes;
 
     @Parameter(name = ApiConstants.HYPERVISOR,
-               type = CommandType.STRING,
-               required = false,
-               description = "hypervisor type of the hosts in zone that will be attached to this storage pool. KVM, VMware supported as of now.")
+            type = CommandType.STRING,
+            required = false,
+            description = "hypervisor type of the hosts in zone that will be attached to this storage pool. KVM, VMware supported as of now.")
     private String hypervisor;
+
+    @Parameter(name = ApiConstants.KRBD_PATH,
+            type = CommandType.STRING,
+            required = false,
+            description = "the path of Ablestack provider")
+    private String krbdpath;
 
     /////////////////////////////////////////////////////
     /////////////////// Accessors ///////////////////////
@@ -147,10 +152,7 @@ public class CreateStoragePoolCmd extends BaseCmd {
         return hypervisor;
     }
 
-    @Override
-    public String getCommandName() {
-        return s_name;
-    }
+    public String getKrbdPath() { return krbdpath; }
 
     @Override
     public long getEntityOwnerId() {

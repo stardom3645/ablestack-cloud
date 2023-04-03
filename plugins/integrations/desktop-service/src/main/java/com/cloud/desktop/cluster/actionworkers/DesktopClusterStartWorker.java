@@ -174,12 +174,13 @@ public class DesktopClusterStartWorker extends DesktopClusterResourceModifierAct
             logAndThrow(Level.ERROR, "Failed to read Desktop Cluster Userdata configuration file", e);
         }
         String base64UserData = Base64.encodeBase64String(desktopClusterDcConfig.getBytes(StringUtils.getPreferredCharset()));
+        List<String> keypairs = new ArrayList<String>(); // 키페어 파라메타 임시 생성
         if (dcIp == null || network.getGuestType() == Network.GuestType.L2) {
             Network.IpAddresses addrs = new Network.IpAddresses(null, null, null);
             dcControlVm = userVmService.createAdvancedVirtualMachine(zone, serviceOffering, dcTemplate, networkIds, owner,
                 hostName, hostName, null, null, null,
-                dcTemplate.getHypervisorType(), BaseCmd.HTTPMethod.POST, base64UserData, null,
-                null, addrs, null, null, null, customParameterMap, null, null, null, null, true, null);
+                dcTemplate.getHypervisorType(), BaseCmd.HTTPMethod.POST, base64UserData, null, null, keypairs,
+                null, addrs, null, null, null, customParameterMap, null, null, null, null, true, null, null);
         } else {
             ipToNetworkMap = new LinkedHashMap<Long, IpAddresses>();
             Network.IpAddresses addrs = new Network.IpAddresses(null, null, null);
@@ -187,8 +188,8 @@ public class DesktopClusterStartWorker extends DesktopClusterResourceModifierAct
             ipToNetworkMap.put(desktopCluster.getNetworkId(), dcAddrs);
             dcControlVm = userVmService.createAdvancedVirtualMachine(zone, serviceOffering, dcTemplate, networkIds, owner,
                 hostName, hostName, null, null, null,
-                dcTemplate.getHypervisorType(), BaseCmd.HTTPMethod.POST, base64UserData, null,
-                ipToNetworkMap, addrs, null, null, null, customParameterMap, null, null, null, null, true, null);
+                dcTemplate.getHypervisorType(), BaseCmd.HTTPMethod.POST, base64UserData, null, null, keypairs,
+                ipToNetworkMap, addrs, null, null, null, customParameterMap, null, null, null, null, true, null, null);
         }
         if (LOGGER.isInfoEnabled()) {
             LOGGER.info(String.format("Created Control VM ID: %s, %s in the desktop cluster : %s", dcControlVm.getUuid(), hostName, desktopCluster.getName()));
@@ -239,12 +240,13 @@ public class DesktopClusterStartWorker extends DesktopClusterResourceModifierAct
             logAndThrow(Level.ERROR, "Failed to read Desktop Cluster Userdata configuration file", e);
         }
         String base64UserData = Base64.encodeBase64String(desktopClusterWorksConfig.getBytes(StringUtils.getPreferredCharset()));
+        List<String> keypairs = new ArrayList<String>(); // 키페어 파라메타 임시 생성
         if (worksIp == null || network.getGuestType() == Network.GuestType.L2) {
             Network.IpAddresses addrs = new Network.IpAddresses(null, null, null);
             worksControlVm = userVmService.createAdvancedVirtualMachine(zone, serviceOffering, worksTemplate, networkIds, owner,
                 hostName, hostName, null, null, null,
-                worksTemplate.getHypervisorType(), BaseCmd.HTTPMethod.POST, base64UserData, null,
-                null, addrs, null, null, null, customParameterMap, null, null, null, null, true, null);
+                worksTemplate.getHypervisorType(), BaseCmd.HTTPMethod.POST, base64UserData, null, null, keypairs,
+                null, addrs, null, null, null, customParameterMap, null, null, null, null, true, null, null);
         } else {
             ipToNetworkMap = new LinkedHashMap<Long, IpAddresses>();
             Network.IpAddresses addrs = new Network.IpAddresses(null, null, null);
@@ -252,8 +254,8 @@ public class DesktopClusterStartWorker extends DesktopClusterResourceModifierAct
             ipToNetworkMap.put(desktopCluster.getNetworkId(), worksAddrs);
             worksControlVm = userVmService.createAdvancedVirtualMachine(zone, serviceOffering, worksTemplate, networkIds, owner,
                 hostName, hostName, null, null, null,
-                worksTemplate.getHypervisorType(), BaseCmd.HTTPMethod.POST, base64UserData, null,
-                ipToNetworkMap, addrs, null, null, null, customParameterMap, null, null, null, null, true, null);
+                worksTemplate.getHypervisorType(), BaseCmd.HTTPMethod.POST, base64UserData, null, null, keypairs,
+                ipToNetworkMap, addrs, null, null, null, customParameterMap, null, null, null, null, true, null, null);
         }
         if (LOGGER.isInfoEnabled()) {
             LOGGER.info(String.format("Created Control VM ID : %s, %s in the desktop cluster : %s", worksControlVm.getUuid(), hostName, desktopCluster.getName()));
@@ -354,9 +356,9 @@ public class DesktopClusterStartWorker extends DesktopClusterResourceModifierAct
         boolean portForwarding = false;
         // Firewall Egress Network
         try {
-            egress = provisionEgressFirewallRules(network, owner, CLUSTER_USER_PORTAL_PORT, CLUSTER_ADMIN_PORTAL_PORT);
+            egress = provisionEgressFirewallRules(network, owner, CLUSTER_PORTAL_PORT, CLUSTER_LITE_PORT);
             if (LOGGER.isInfoEnabled()) {
-                LOGGER.info(String.format("Provisioned egress firewall rule to open up port %d to %d on %s for Desktop cluster : %s", CLUSTER_USER_PORTAL_PORT, CLUSTER_ADMIN_PORTAL_PORT, publicIp.getAddress().addr(), desktopCluster.getName()));
+                LOGGER.info(String.format("Provisioned egress firewall rule to open up port %d to %d on %s for Desktop cluster : %s", CLUSTER_PORTAL_PORT, CLUSTER_LITE_PORT, publicIp.getAddress().addr(), desktopCluster.getName()));
             }
         } catch (NoSuchFieldException | IllegalAccessException | ResourceUnavailableException | NetworkRuleConflictException e) {
             throw new ManagementServerException(String.format("Failed to provision egress firewall rules for Web access for the Desktop cluster : %s", desktopCluster.getName()), e);
@@ -364,9 +366,9 @@ public class DesktopClusterStartWorker extends DesktopClusterResourceModifierAct
         // Firewall rule fo Web access on WorksVM
         if (egress) {
             try {
-                firewall = provisionFirewallRules(publicIp, owner, CLUSTER_USER_PORTAL_PORT, CLUSTER_API_PORT);
+                firewall = provisionFirewallRules(publicIp, owner, CLUSTER_PORTAL_PORT, CLUSTER_API_PORT);
                 if (LOGGER.isInfoEnabled()) {
-                    LOGGER.info(String.format("Provisioned firewall rule to open up port %d to %d on %s for Desktop cluster : %s", CLUSTER_USER_PORTAL_PORT, CLUSTER_API_PORT, publicIp.getAddress().addr(), desktopCluster.getName()));
+                    LOGGER.info(String.format("Provisioned firewall rule to open up port %d to %d on %s for Desktop cluster : %s", CLUSTER_PORTAL_PORT, CLUSTER_API_PORT, publicIp.getAddress().addr(), desktopCluster.getName()));
                 }
                 firewall2 = provisionFirewallRules(publicIp, owner, CLUSTER_SAMBA_PORT, CLUSTER_SAMBA_PORT);
                 if (LOGGER.isInfoEnabled()) {
@@ -378,7 +380,7 @@ public class DesktopClusterStartWorker extends DesktopClusterResourceModifierAct
             if (firewall && firewall2) {
                 // Port forwarding rule fo Web access on WorksVM
                 try {
-                    portForwarding = provisionPortForwardingRules(publicIp, network, owner, worksVm, CLUSTER_ADMIN_PORTAL_PORT, CLUSTER_USER_PORTAL_PORT, CLUSTER_SAMBA_PORT, CLUSTER_API_PORT);
+                    portForwarding = provisionPortForwardingRules(publicIp, network, owner, worksVm, CLUSTER_LITE_PORT, CLUSTER_PORTAL_PORT, CLUSTER_SAMBA_PORT, CLUSTER_API_PORT);
                 } catch (ResourceUnavailableException | NetworkRuleConflictException e) {
                     throw new ManagementServerException(String.format("Failed to activate Web port forwarding rules for the Desktop cluster : %s", desktopCluster.getName()), e);
                 }

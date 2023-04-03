@@ -37,7 +37,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
-import com.cloud.exception.InvalidParameterValueException;
 import org.apache.cloudstack.api.command.admin.host.CancelHostAsDegradedCmd;
 import org.apache.cloudstack.api.command.admin.host.DeclareHostAsDegradedCmd;
 import org.apache.cloudstack.framework.config.dao.ConfigurationDao;
@@ -48,9 +47,9 @@ import org.junit.runner.RunWith;
 import org.mockito.BDDMockito;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
-import org.mockito.Mockito;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
@@ -60,6 +59,7 @@ import com.cloud.agent.api.GetVncPortAnswer;
 import com.cloud.agent.api.GetVncPortCommand;
 import com.cloud.capacity.dao.CapacityDao;
 import com.cloud.event.ActionEventUtils;
+import com.cloud.exception.InvalidParameterValueException;
 import com.cloud.ha.HighAvailabilityManager;
 import com.cloud.host.Host;
 import com.cloud.host.HostVO;
@@ -67,7 +67,7 @@ import com.cloud.host.Status;
 import com.cloud.host.dao.HostDao;
 import com.cloud.hypervisor.Hypervisor;
 import com.cloud.storage.StorageManager;
-import com.cloud.utils.Pair;
+import com.cloud.utils.Ternary;
 import com.cloud.utils.exception.CloudRuntimeException;
 import com.cloud.utils.fsm.NoTransitionException;
 import com.cloud.utils.ssh.SSHCmdHelper;
@@ -125,6 +125,7 @@ public class ResourceManagerImplTest {
     private static long hostId = 1L;
     private static final String hostUsername = "user";
     private static final String hostPassword = "password";
+    private static final String hostPrivateKey = "privatekey";
     private static final String hostPrivateIp = "192.168.1.10";
 
     private static long vm1Id = 1L;
@@ -148,6 +149,7 @@ public class ResourceManagerImplTest {
         when(hostDao.findById(hostId)).thenReturn(host);
         when(host.getDetail("username")).thenReturn(hostUsername);
         when(host.getDetail("password")).thenReturn(hostPassword);
+        when(configurationDao.getValue("ssh.privatekey")).thenReturn(hostPrivateKey);
         when(host.getStatus()).thenReturn(Status.Up);
         when(host.getPrivateIpAddress()).thenReturn(hostPrivateIp);
         when(vm1.getId()).thenReturn(vm1Id);
@@ -158,7 +160,7 @@ public class ResourceManagerImplTest {
         when(vmInstanceDao.listVmsMigratingFromHost(hostId)).thenReturn(new ArrayList<>());
         when(vmInstanceDao.listNonMigratingVmsByHostEqualsLastHost(hostId)).thenReturn(new ArrayList<>());
         PowerMockito.mockStatic(ActionEventUtils.class);
-        BDDMockito.given(ActionEventUtils.onCompletedActionEvent(anyLong(), anyLong(), anyString(), anyString(), anyString(), anyLong()))
+        BDDMockito.given(ActionEventUtils.onCompletedActionEvent(anyLong(), anyLong(), anyString(), anyString(), anyString(), anyLong(), anyString(), anyLong()))
                 .willReturn(1L);
         when(getVncPortAnswerVm1.getAddress()).thenReturn(vm1VncAddress);
         when(getVncPortAnswerVm1.getPort()).thenReturn(vm1VncPort);
@@ -171,7 +173,7 @@ public class ResourceManagerImplTest {
 
         PowerMockito.mockStatic(SSHCmdHelper.class);
         BDDMockito.given(SSHCmdHelper.acquireAuthorizedConnection(eq(hostPrivateIp), eq(22),
-                eq(hostUsername), eq(hostPassword))).willReturn(sshConnection);
+                eq(hostUsername), eq(hostPassword), eq(hostPrivateKey))).willReturn(sshConnection);
         BDDMockito.given(SSHCmdHelper.sshExecuteCmdOneShot(eq(sshConnection),
                 eq("service cloudstack-agent restart"))).
                 willReturn(new SSHCmdHelper.SSHCmdResult(0,"",""));
@@ -292,34 +294,36 @@ public class ResourceManagerImplTest {
     @Test(expected = CloudRuntimeException.class)
     public void testGetHostCredentialsMissingParameter() {
         when(host.getDetail("password")).thenReturn(null);
+        when(configurationDao.getValue("ssh.privatekey")).thenReturn(null);
         resourceManager.getHostCredentials(host);
     }
 
     @Test
     public void testGetHostCredentials() {
-        Pair<String, String> credentials = resourceManager.getHostCredentials(host);
+        Ternary<String, String, String> credentials = resourceManager.getHostCredentials(host);
         Assert.assertNotNull(credentials);
         Assert.assertEquals(hostUsername, credentials.first());
         Assert.assertEquals(hostPassword, credentials.second());
+        Assert.assertEquals(hostPrivateKey, credentials.third());
     }
 
     @Test(expected = CloudRuntimeException.class)
     public void testConnectAndRestartAgentOnHostCannotConnect() {
         BDDMockito.given(SSHCmdHelper.acquireAuthorizedConnection(eq(hostPrivateIp), eq(22),
-                eq(hostUsername), eq(hostPassword))).willReturn(null);
-        resourceManager.connectAndRestartAgentOnHost(host, hostUsername, hostPassword);
+                eq(hostUsername), eq(hostPassword), eq(hostPrivateKey))).willReturn(null);
+        resourceManager.connectAndRestartAgentOnHost(host, hostUsername, hostPassword, hostPrivateKey);
     }
 
     @Test(expected = CloudRuntimeException.class)
     public void testConnectAndRestartAgentOnHostCannotRestart() throws Exception {
         BDDMockito.given(SSHCmdHelper.sshExecuteCmdOneShot(eq(sshConnection),
                 eq("service cloudstack-agent restart"))).willThrow(new SshException("exception"));
-        resourceManager.connectAndRestartAgentOnHost(host, hostUsername, hostPassword);
+        resourceManager.connectAndRestartAgentOnHost(host, hostUsername, hostPassword, hostPrivateKey);
     }
 
     @Test
     public void testConnectAndRestartAgentOnHost() {
-        resourceManager.connectAndRestartAgentOnHost(host, hostUsername, hostPassword);
+        resourceManager.connectAndRestartAgentOnHost(host, hostUsername, hostPassword, hostPrivateKey);
     }
 
     @Test
@@ -327,7 +331,7 @@ public class ResourceManagerImplTest {
         when(host.getStatus()).thenReturn(Status.Disconnected);
         resourceManager.handleAgentIfNotConnected(host, false);
         verify(resourceManager).getHostCredentials(eq(host));
-        verify(resourceManager).connectAndRestartAgentOnHost(eq(host), eq(hostUsername), eq(hostPassword));
+        verify(resourceManager).connectAndRestartAgentOnHost(eq(host), eq(hostUsername), eq(hostPassword), eq(hostPrivateKey));
     }
 
     @Test
@@ -335,7 +339,7 @@ public class ResourceManagerImplTest {
         when(host.getStatus()).thenReturn(Status.Up);
         resourceManager.handleAgentIfNotConnected(host, false);
         verify(resourceManager, never()).getHostCredentials(eq(host));
-        verify(resourceManager, never()).connectAndRestartAgentOnHost(eq(host), eq(hostUsername), eq(hostPassword));
+        verify(resourceManager, never()).connectAndRestartAgentOnHost(eq(host), eq(hostUsername), eq(hostPassword), eq(hostPrivateKey));
     }
 
     @Test(expected = CloudRuntimeException.class)
@@ -351,14 +355,14 @@ public class ResourceManagerImplTest {
         when(configurationDao.getValue(ResourceManager.KvmSshToAgentEnabled.key())).thenReturn("false");
         resourceManager.handleAgentIfNotConnected(host, false);
         verify(resourceManager, never()).getHostCredentials(eq(host));
-        verify(resourceManager, never()).connectAndRestartAgentOnHost(eq(host), eq(hostUsername), eq(hostPassword));
+        verify(resourceManager, never()).connectAndRestartAgentOnHost(eq(host), eq(hostUsername), eq(hostPassword), eq(hostPrivateKey));
     }
 
     @Test
     public void testHandleAgentVMsMigrating() {
         resourceManager.handleAgentIfNotConnected(host, true);
         verify(resourceManager, never()).getHostCredentials(eq(host));
-        verify(resourceManager, never()).connectAndRestartAgentOnHost(eq(host), eq(hostUsername), eq(hostPassword));
+        verify(resourceManager, never()).connectAndRestartAgentOnHost(eq(host), eq(hostUsername), eq(hostPassword), eq(hostPrivateKey));
     }
 
     private void setupNoPendingMigrationRetries() {

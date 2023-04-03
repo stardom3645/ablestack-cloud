@@ -33,6 +33,9 @@ import java.util.concurrent.TimeUnit;
 import javax.inject.Inject;
 import javax.naming.ConfigurationException;
 
+import com.cloud.storage.Snapshot;
+import com.cloud.storage.SnapshotVO;
+import com.cloud.storage.dao.SnapshotDao;
 import org.apache.cloudstack.quota.QuotaAlertManager;
 import org.apache.cloudstack.quota.QuotaManager;
 import org.apache.cloudstack.quota.QuotaStatement;
@@ -75,7 +78,7 @@ import com.cloud.usage.parser.SecurityGroupUsageParser;
 import com.cloud.usage.parser.StorageUsageParser;
 import com.cloud.usage.parser.BackupUsageParser;
 import com.cloud.usage.parser.VMInstanceUsageParser;
-import com.cloud.usage.parser.VMSanpshotOnPrimaryParser;
+import com.cloud.usage.parser.VMSnapshotOnPrimaryParser;
 import com.cloud.usage.parser.VMSnapshotUsageParser;
 import com.cloud.usage.parser.VPNUserUsageParser;
 import com.cloud.usage.parser.VmDiskUsageParser;
@@ -95,6 +98,7 @@ import com.cloud.utils.db.GlobalLock;
 import com.cloud.utils.db.QueryBuilder;
 import com.cloud.utils.db.SearchCriteria;
 import com.cloud.utils.db.TransactionLegacy;
+import com.cloud.utils.exception.CloudRuntimeException;
 
 import static com.cloud.utils.NumbersUtil.toHumanReadableSize;
 
@@ -162,6 +166,8 @@ public class UsageManagerImpl extends ManagerBase implements UsageManager, Runna
     private QuotaAlertManager _alertManager;
     @Inject
     private QuotaStatement _quotaStatement;
+    @Inject
+    private SnapshotDao _snapshotDao;
 
     private String _version = null;
     private final Calendar _jobExecTime = Calendar.getInstance();
@@ -208,10 +214,17 @@ public class UsageManagerImpl extends ManagerBase implements UsageManager, Runna
             s_logger.info("Implementation Version is " + _version);
         }
 
-        Map<String, String> configs = _configDao.getConfiguration(params);
+        Map<String, String> configs;
+        try {
+            configs = _configDao.getConfiguration(params);
 
-        if (params != null) {
-            mergeConfigs(configs, params);
+            if (params != null) {
+                mergeConfigs(configs, params);
+                s_logger.info("configs = " + configs);
+            }
+        } catch (CloudRuntimeException e) {
+            s_logger.error("Unhandled configuration exception: " + e.getMessage());
+            throw new CloudRuntimeException("Unhandled configuration exception", e);
         }
 
         String execTime = configs.get("usage.stats.job.exec.time");
@@ -958,13 +971,7 @@ public class UsageManagerImpl extends ManagerBase implements UsageManager, Runna
                 s_logger.debug("VM Snapshot usage successfully parsed? " + parsed + " (for account: " + account.getAccountName() + ", id: " + account.getId() + ")");
             }
         }
-        parsed = VMSnapshotUsageParser.parse(account, currentStartDate, currentEndDate);
-        if (s_logger.isDebugEnabled()) {
-            if (!parsed) {
-                s_logger.debug("VM Snapshot usage successfully parsed? " + parsed + " (for account: " + account.getAccountName() + ", id: " + account.getId() + ")");
-            }
-        }
-        parsed = VMSanpshotOnPrimaryParser.parse(account, currentStartDate, currentEndDate);
+        parsed = VMSnapshotOnPrimaryParser.parse(account, currentStartDate, currentEndDate);
         if (s_logger.isDebugEnabled()) {
             if (!parsed) {
                 s_logger.debug("VM Snapshot on primary usage successfully parsed? " + parsed + " (for account: " + account.getAccountName() + ", id: " + account.getId() + ")");
@@ -1464,7 +1471,7 @@ public class UsageManagerImpl extends ManagerBase implements UsageManager, Runna
         if (EventTypes.EVENT_VOLUME_CREATE.equals(event.getType()) || EventTypes.EVENT_VOLUME_RESIZE.equals(event.getType())) {
             SearchCriteria<UsageVolumeVO> sc = _usageVolumeDao.createSearchCriteria();
             sc.addAnd("accountId", SearchCriteria.Op.EQ, event.getAccountId());
-            sc.addAnd("id", SearchCriteria.Op.EQ, volId);
+            sc.addAnd("volumeId", SearchCriteria.Op.EQ, volId);
             sc.addAnd("deleted", SearchCriteria.Op.NULL);
             List<UsageVolumeVO> volumesVOs = _usageVolumeDao.search(sc, null);
             if (volumesVOs.size() > 0) {
@@ -1488,7 +1495,7 @@ public class UsageManagerImpl extends ManagerBase implements UsageManager, Runna
         } else if (EventTypes.EVENT_VOLUME_DELETE.equals(event.getType())) {
             SearchCriteria<UsageVolumeVO> sc = _usageVolumeDao.createSearchCriteria();
             sc.addAnd("accountId", SearchCriteria.Op.EQ, event.getAccountId());
-            sc.addAnd("id", SearchCriteria.Op.EQ, volId);
+            sc.addAnd("volumeId", SearchCriteria.Op.EQ, volId);
             sc.addAnd("deleted", SearchCriteria.Op.NULL);
             List<UsageVolumeVO> volumesVOs = _usageVolumeDao.search(sc, null);
             if (volumesVOs.size() > 1) {
@@ -1633,6 +1640,13 @@ public class UsageManagerImpl extends ManagerBase implements UsageManager, Runna
         long zoneId = -1L;
 
         long snapId = event.getResourceId();
+
+        SnapshotVO snapshotInstance = _snapshotDao.findById(snapId);
+
+        if (snapshotInstance != null && snapshotInstance.getSnapshotType() == Snapshot.Type.INTERNAL.ordinal()) {
+            return;
+        }
+
         if (EventTypes.EVENT_SNAPSHOT_CREATE.equals(event.getType())) {
             if (usageSnapshotSelection){
                 snapSize =  event.getVirtualSize();
@@ -2162,6 +2176,7 @@ public class UsageManagerImpl extends ManagerBase implements UsageManager, Runna
     private class SanityCheck extends ManagedContextRunnable {
         @Override
         protected void runInContext() {
+            s_logger.info("running sanity check");
             UsageSanityChecker usc = new UsageSanityChecker();
             try {
                 String errors = usc.runSanityCheck();

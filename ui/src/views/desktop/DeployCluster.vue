@@ -18,45 +18,35 @@
 <template>
   <div class="form-layout">
     <a-spin :spinning="loading">
-      <a-form :form="form" :loading="loading" @submit="handleSubmit" layout="vertical">
-        <a-form-item>
-          <span slot="label">
-            {{ $t('label.name') }}
-            <a-tooltip :title="$t('label.name')">
-              <a-icon type="info-circle" style="color: rgba(0,0,0,.45)" />
-            </a-tooltip>
-          </span>
+      <a-form
+        :ref="formRef"
+        :model="form"
+        :rules="rules"
+        @submit="handleSubmit"
+        layout="vertical">
+        <a-form-item ref="name" name="name">
+          <template #label>
+            <tooltip-label :title="$t('label.name')" :tooltip="$t('placeholder.name')"/>
+          </template>
           <a-input
-            v-decorator="['name', {
-              rules: [{ required: true, message: $t('message.error.required.input') }]
-            }]"
-            :placeholder="$t('label.name')" />
+            v-model:value="form.name"
+            :placeholder="$t('placeholder.name')"/>
         </a-form-item>
-        <a-form-item>
-          <span slot="label">
-            {{ $t('label.description') }}
-            <a-tooltip :title="$t('label.description')">
-              <a-icon type="info-circle" style="color: rgba(0,0,0,.45)" />
-            </a-tooltip>
-          </span>
+        <a-form-item ref="description" name="description">
+          <template #label>
+            <tooltip-label :title="$t('label.description')" :tooltip="$t('placeholder.description')"/>
+          </template>
           <a-input
-            v-decorator="['description', {
-              rules: [{ required: true, message: $t('message.error.required.input') }]
-            }]"
-            :placeholder="$t('label.description')" />
+            v-model:value="form.description"
+            :placeholder="$t('placeholder.description')"/>
         </a-form-item>
-        <a-form-item>
-          <span slot="label">
-            {{ $t('label.addomainname') }}
-            <a-tooltip :title="$t('label.addomainname')">
-              <a-icon type="info-circle" style="color: rgba(0,0,0,.45)" />
-            </a-tooltip>
-          </span>
+        <a-form-item ref="addomainname" name="addomainname">
+          <template #label>
+            <tooltip-label :title="$t('label.addomainname')" :tooltip="$t('placeholder.addomainname')"/>
+          </template>
           <a-input
-            v-decorator="['addomainname', {
-              rules: [{ required: true, message: $t('message.error.required.input') }]
-            }]"
-            :placeholder="$t('placeholder.addomainname')" />
+            v-model:value="form.addomainname"
+            :placeholder="$t('placeholder.addomainname')"/>
         </a-form-item>
         <!-- <a-row :gutter="12">
           <a-col :md="24" :lg="12">
@@ -93,43 +83,40 @@
             </a-form-item>
           </a-col>
         </a-row> -->
-        <a-form-item>
-          <span slot="label">
-            {{ $t('label.desktop.controller.template.version') }}
-            <a-tooltip :title="$t('placeholder.desktop.controller.template.version')">
-              <a-icon type="info-circle" style="color: rgba(0,0,0,.45)" />
-            </a-tooltip>
-          </span>
+        <a-form-item name="controllerversionid" ref="controllerversionid" >
+          <template #label>
+            <tooltip-label :title="$t('label.desktop.controller.template.version')" :tooltip="$t('placeholder.desktop.controller.template.version')"/>
+          </template>
           <a-select
-            v-decorator="['templateversion', {
-              rules: [{ required: true, message: $t('message.error.required.input') }]
-            }]"
-            :loading="templateVersionLoading"
-            :placeholder="$t('placeholder.desktop.controller.template.version')">
-            <a-select-option v-for="(opt, optIndex) in this.templateVersions" :key="optIndex">
+            v-model:value="form.controllerversionid"
+            showSearch
+            optionFilterProp="label"
+            :filterOption="(input, option) => {
+              return option.children[0].children.toLowerCase().indexOf(input.toLowerCase()) >= 0
+            }"
+            :placeholder="$t('placeholder.desktop.controller.template.version')"
+            :loading="controllerVersionLoading">
+            <a-select-option v-for="(opt, optIndex) in this.controllerVersions" :key="optIndex">
               {{ opt.name }} {{ opt.version }}
             </a-select-option>
           </a-select>
         </a-form-item>
-        <a-form-item>
-          <span slot="label">
-            {{ $t('label.compute.offerings') }}
-            <a-tooltip :title="$t('placeholder.compute.offering')">
-              <a-icon type="info-circle" style="color: rgba(0,0,0,.45)" />
-            </a-tooltip>
-          </span>
+
+        <a-form-item name="serviceofferingid" ref="serviceofferingid">
+          <template #label>
+            <tooltip-label :title="$t('label.serviceofferingid')" :tooltip="$t('placeholder.compute.offering')"/>
+          </template>
           <a-select
-            v-decorator="['serviceofferingid', {
-              rules: [{ required: true, message: $t('message.error.required.input') }]
-            }]"
+            id="offering-selection"
+            v-model:value="form.serviceofferingid"
             showSearch
-            optionFilterProp="children"
+            optionFilterProp="label"
             :filterOption="(input, option) => {
-              return option.componentOptions.children[0].text.toLowerCase().indexOf(input.toLowerCase()) >= 0
+              return option.children[0].children.toLowerCase().indexOf(input.toLowerCase()) >= 0
             }"
             :loading="serviceOfferingLoading"
             :placeholder="$t('placeholder.compute.offering')">
-            <a-select-option v-for="(opt, optIndex) in this.serviceOfferings" :key="optIndex">
+            <a-select-option v-for="(opt, optIndex) in serviceOfferings" :key="optIndex">
               {{ opt.name || opt.description }}
             </a-select-option>
           </a-select>
@@ -159,21 +146,21 @@
             </a-radio-button>
           </a-radio-group>
         </a-form-item> -->
-        <a-form-item>
-          <span slot="label">
-            {{ $t('label.network') }}
-            <a-tooltip :title="$t('placeholder.network')">
-              <a-icon type="info-circle" style="color: rgba(0,0,0,.45)" />
-            </a-tooltip>
-          </span>
+        <a-form-item ref="networkid" name="networkid">
+          <template #label>
+            <tooltip-label :title="$t('label.networkid')" :tooltip="$t('placeholder.network')"/>
+          </template>
           <a-select
-            :loading="networkLoading"
-            v-decorator="['networkid', {
-              initialValue: this.networks,
-              rules: [{ required: true, message: $t('message.error.select') }] }]"
-            :placeholder="$t('placeholder.network')"
+            v-model:value="form.networkid"
             showSearch
+            optionFilterProp="label"
+            :filterOption="(input, option) => {
+              return option.children[0].children.toLowerCase().indexOf(input.toLowerCase()) >= 0
+            }"
+            :placeholder="$t('placeholder.network')"
+            :loading="networkLoading"
             @change="val => { this.handleNetworkChange(this.networks[val]) }">
+            >
             <a-select-option v-for="(opt, optIndex) in this.networks" :key="optIndex">
               <span v-if="opt.type!=='L2'">
                 {{ opt.name || opt.description }} ({{ `${$t('label.cidr')}: ${opt.cidr}` }})
@@ -244,31 +231,21 @@
             </a-form-item>
           </a-col>
         </a-row> -->
-        <a-form-item>
-          <span slot="label">
-            {{ $t('label.worksvmip') }}
-            <a-tooltip :title="$t('placeholder.worksvmip')">
-              <a-icon type="info-circle" style="color: rgba(0,0,0,.45)" />
-            </a-tooltip>
-          </span>
+        <a-form-item ref="worksvmip" name="worksvmip">
+          <template #label>
+            <tooltip-label :title="$t('label.worksvmip')" :tooltip="$t('placeholder.worksvmip')"/>
+          </template>
           <a-input
-            v-decorator="['worksip', {
-              rules: [{ required: true, message: $t('message.error.required.input') }]
-            }]"
-            :placeholder="$t('placeholder.worksvmip')" />
+            v-model:value="form.worksvmip"
+            :placeholder="$t('placeholder.worksvmip')"/>
         </a-form-item>
-        <a-form-item>
-          <span slot="label">
-            {{ $t('label.dcvmip') }}
-            <a-tooltip :title="$t('placeholder.dcvmip')">
-              <a-icon type="info-circle" style="color: rgba(0,0,0,.45)" />
-            </a-tooltip>
-          </span>
+        <a-form-item ref="dcvmip"  name="dcvmip">
+          <template #label>
+            <tooltip-label :title="$t('label.dcvmip')" :tooltip="$t('placeholder.dcvmip')"/>
+          </template>
           <a-input
-            v-decorator="['dcip', {
-              rules: [{ required: true, message: $t('message.error.required.input') }]
-            }]"
-            :placeholder="$t('placeholder.dcvmip')" />
+            v-model:value="form.dcvmip"
+            :placeholder="$t('placeholder.dcvmip')"/>
         </a-form-item>
         <div :span="24" class="action-button">
           <a-button @click="closeAction">{{ $t('label.cancel') }}</a-button>
@@ -279,6 +256,7 @@
   </div>
 </template>
 <script>
+import { ref, reactive, toRaw } from 'vue'
 import { api } from '@/api'
 import store from '@/store'
 import eventBus from '@/config/eventBus'
@@ -297,20 +275,33 @@ export default {
       clusters: [],
       networks: [],
       networkLoading: false,
-      templateVersions: [],
-      templateVersionLoading: false,
+      controllerVersions: [],
+      controllerVersionLoading: false,
       serviceOfferings: [],
       serviceOfferingLoading: false
     }
   },
-  beforeCreate () {
-    this.form = this.$form.createForm(this)
-    this.apiParams = this.$getApiParams('createDesktopCluster')
-  },
   created () {
+    this.initForm()
     this.fetchData()
   },
   methods: {
+    initForm () {
+      this.formRef = ref()
+      this.form = reactive({
+        networkid: this.selectedNetwork
+      })
+      this.rules = reactive({
+        name: [{ required: true, message: this.$t('message.error.required.input') }],
+        description: [{ required: true, message: this.$t('message.error.required.input') }],
+        addomainname: [{ required: true, message: this.$t('message.error.required.input') }],
+        controllerversionid: [{ required: true, message: this.$t('message.error.select') }],
+        serviceofferingid: [{ required: true, message: this.$t('message.error.serviceoffering.for.cluster') }],
+        networkid: [{ required: true, message: this.$t('message.error.select') }],
+        worksvmip: [{ required: true, message: this.$t('message.error.required.input') }],
+        dcvmip: [{ required: true, message: this.$t('message.error.required.input') }]
+      })
+    },
     fetchData () {
       this.fetchClusterData()
       this.fetchTemplateVersionData()
@@ -341,26 +332,23 @@ export default {
     //   } else {
     //     callback()
     //   }
+    //
     // },
     fetchTemplateVersionData () {
-      this.templateVersions = []
+      this.controllerVersions = []
       const params = {}
-      this.templateVersionLoading = true
+      this.controllerVersionLoading = true
       api('listDesktopControllerVersions', params).then(json => {
         var items = json.listdesktopcontrollerversionsresponse.desktopcontrollerversion
         if (items != null) {
-          for (var i = 0; i < items.length; i++) {
-            if (items[i].state === 'Enabled') {
-              this.templateVersions.push(items[i])
-            }
-          }
+          this.controllerVersions = items.filter(it => it.state === 'Enabled')
+          // console.log('this.controllerVersions :>> ', this.controllerVersions)
         }
       }).finally(() => {
-        this.templateVersionLoading = false
-        if (this.arrayHasItems(this.templateVersions)) {
-          this.form.setFieldsValue({
-            templateversion: 0
-          })
+        this.controllerVersionLoading = false
+        if (this.arrayHasItems(this.controllerVersions)) {
+          // console.log('123 :>> ')
+          this.form.controllerversionid = 0
         }
       })
     },
@@ -371,18 +359,12 @@ export default {
       api('listServiceOfferings', params).then(json => {
         var items = json.listserviceofferingsresponse.serviceoffering
         if (items != null) {
-          for (var i = 0; i < items.length; i++) {
-            if (items[i].iscustomized === false) {
-              this.serviceOfferings.push(items[i])
-            }
-          }
+          this.serviceOfferings = items.filter(it => it.iscustomized === false)
         }
       }).finally(() => {
         this.serviceOfferingLoading = false
         if (this.arrayHasItems(this.serviceOfferings)) {
-          this.form.setFieldsValue({
-            serviceofferingid: 0
-          })
+          this.form.serviceofferingid = 0
         }
       })
     },
@@ -412,41 +394,44 @@ export default {
       this.handleNetworkChange(null)
       api('listNetworks', params).then(json => {
         var items = json.listnetworksresponse.network
-        if (items != null) {
-          for (var i = 0; i < items.length; i++) {
-            if (this.accessType === 'internal' && items[i].type === 'L2') {
-              this.networks.push(items[i])
-              this.handleNetworkChange(this.networks[0])
-            }
-            if (this.accessType === 'external' && items[i].type === 'Isolated') {
-              this.networks.push(items[i])
-              if (this.clusters.length !== 0) {
-                for (var j = 0; j < this.clusters[0].length; j++) {
-                  if ([this.clusters[0][j].networkid].includes(items[i].id)) {
-                    this.networks.pop(items[i])
-                  }
-                  this.handleNetworkChange(this.networks[0])
-                }
-              } else {
-                this.handleNetworkChange(this.networks[0])
-              }
-            }
-            if (this.accessType === 'mixed' && items[i].type === 'Shared') {
-              this.networks.push(items[i])
-              this.handleNetworkChange(this.networks[0])
-            }
-          }
+        if (items !== null) {
+          if (this.accessType === 'internal') this.networks = items.filter(it => it.type.includes('L2'))
+          if (this.accessType === 'external') this.networks = items.filter(it => it.type.includes('Isolated'))
+          if (this.accessType === 'mixed') this.networks = items.filter(it => it.type.includes('Shared'))
+
+          // console.log(this.accessType, this.networks)
+          this.handleNetworkChange(this.networks[0])
+
+          // for (var i = 0; i < items.length; i++) {
+          //   if (this.accessType === 'internal' && items[i].type === 'L2') {
+          //     this.networks.push(items[i])
+          //     this.handleNetworkChange(this.networks[0])
+          //   }
+          //   if (this.accessType === 'external' && items[i].type === 'Isolated') {
+          //     this.networks.push(items[i])
+          //     if (this.clusters.length !== 0) {
+          //       for (var j = 0; j < this.clusters[0].length; j++) {
+          //         if ([this.clusters[0][j].networkid].includes(items[i].id)) {
+          //           this.networks.pop(items[i])
+          //         }
+          //         this.handleNetworkChange(this.networks[0])
+          //       }
+          //     } else {
+          //       this.handleNetworkChange(this.networks[0])
+          //     }
+          //   }
+          //   if (this.accessType === 'mixed' && items[i].type === 'Shared') {
+          //     this.networks.push(items[i])
+          //     this.handleNetworkChange(this.networks[0])
+          //   }
+          // }
         }
       }).finally(() => {
         this.networkLoading = false
         if (this.arrayHasItems(this.networks)) {
-          this.form.setFieldsValue({
-            networkid: 0
-          })
+          this.form.networkid = 0
         } else {
-          this.form.setFieldsValue({
-            networkid: null
-          })
+          this.form.networkid = null
         }
       })
     },
@@ -455,41 +440,36 @@ export default {
     },
     handleSubmit (e) {
       e.preventDefault()
-      this.form.validateFields((err, values) => {
-        if (err) {
-          return
-        }
+      if (this.loading) return
+      this.formRef.value.validate().then(() => {
+        const values = toRaw(this.form)
         this.loading = true
         const params = {
           name: values.name,
           description: values.description,
           addomainname: values.addomainname,
           // desktoppassword: values.password,
-          controllerversion: this.templateVersions[values.templateversion].id,
+          controllerversion: this.controllerVersions[values.controllerversionid].id,
           serviceofferingid: this.serviceOfferings[values.serviceofferingid].id,
           networkid: this.selectedNetwork.id,
           clustertype: this.accessType,
-          worksip: values.worksip,
-          dcip: values.dcip
+          worksip: values.worksvmip,
+          dcip: values.dcvmip
         }
-        // if (this.isValidValueForKey(values, 'gateway')) {
-        //   params.gateway = values.gateway
-        // }
-        // if (this.isValidValueForKey(values, 'netmask')) {
-        //   params.netmask = values.netmask
-        // }
-        // if (this.isValidValueForKey(values, 'startip')) {
-        //   params.startip = values.startip
-        // }
-        // if (this.isValidValueForKey(values, 'endip')) {
-        //   params.endip = values.endip
-        // }
-        // if (this.isValidValueForKey(values, 'worksip')) {
-        //   params.worksip = values.worksip
-        // }
-        // if (this.isValidValueForKey(values, 'dcip')) {
-        //   params.dcip = values.dcip
-        // }
+        if (values.masteruploadtype === 'url') {
+          if (values.zoneid === this.$t('label.all.zone')) {
+            delete params.zoneid
+          } else {
+            params.zoneid = values.zoneid
+          }
+          params.hypervisor = this.hyperVisor.opts[values.hypervisor].name
+          params.format = values.format
+          params.masterurl = values.masterurl
+          params.masterostype = values.masterostype
+        } else {
+          params.templateid = values.mastertemplate
+        }
+
         api('createDesktopCluster', params).then(json => {
           const jobId = json.createdesktopclusterresponse.jobid
           this.$pollJob({
@@ -501,12 +481,12 @@ export default {
                 message: this.$t('message.success.create.desktop.cluter'),
                 duration: 0
               })
-              eventBus.$emit('desktop-refresh-data')
+              eventBus.emit('desktop-refresh-data')
             },
             loadingMessage: `${this.$t('label.desktop.cluster.deploy')} ${values.name} ${this.$t('label.in.progress')}`,
             catchMessage: this.$t('error.fetching.async.job.result'),
             catchMethod: () => {
-              eventBus.$emit('desktop-refresh-data')
+              eventBus.emit('desktop-refresh-data')
             },
             action: {
               isFetchData: false
@@ -518,7 +498,28 @@ export default {
         }).finally(() => {
           this.loading = false
         })
+      }).catch(error => {
+        this.formRef.value.scrollToField(error.errorFields[0].name)
       })
+
+      // if (this.isValidValueForKey(values, 'gateway')) {
+      //   params.gateway = values.gateway
+      // }
+      // if (this.isValidValueForKey(values, 'netmask')) {
+      //   params.netmask = values.netmask
+      // }
+      // if (this.isValidValueForKey(values, 'startip')) {
+      //   params.startip = values.startip
+      // }
+      // if (this.isValidValueForKey(values, 'endip')) {
+      //   params.endip = values.endip
+      // }
+      // if (this.isValidValueForKey(values, 'worksip')) {
+      //   params.worksip = values.worksip
+      // }
+      // if (this.isValidValueForKey(values, 'dcip')) {
+      //   params.dcip = values.dcip
+      // }
     },
     closeAction () {
       this.$emit('close-action')

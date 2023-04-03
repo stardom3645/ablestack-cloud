@@ -20,14 +20,17 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 import javax.naming.ConfigurationException;
 import javax.persistence.TableGenerator;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.log4j.Logger;
 import org.springframework.stereotype.Component;
 
+import com.cloud.dc.DataCenter;
 import com.cloud.dc.DataCenterDetailVO;
 import com.cloud.dc.DataCenterIpAddressVO;
 import com.cloud.dc.DataCenterLinkLocalIpAddressVO;
@@ -63,6 +66,7 @@ public class DataCenterDaoImpl extends GenericDaoBase<DataCenterVO, Long> implem
     protected SearchBuilder<DataCenterVO> ChildZonesSearch;
     protected SearchBuilder<DataCenterVO> DisabledZonesSearch;
     protected SearchBuilder<DataCenterVO> TokenSearch;
+    protected SearchBuilder<DataCenterVO> ZoneAllocationAndNotTypeSearch;
 
     @Inject
     protected DataCenterIpAddressDao _ipAllocDao = null;
@@ -110,6 +114,7 @@ public class DataCenterDaoImpl extends GenericDaoBase<DataCenterVO, Long> implem
             SearchCriteria<DataCenterVO> ssc = createSearchCriteria();
             ssc.addOr("name", SearchCriteria.Op.LIKE, "%" + keyword + "%");
             ssc.addOr("description", SearchCriteria.Op.LIKE, "%" + keyword + "%");
+            ssc.addOr("uuid", SearchCriteria.Op.LIKE, "%" + keyword + "%");
             sc.addAnd("name", SearchCriteria.Op.SC, ssc);
         }
         return listBy(sc);
@@ -123,6 +128,7 @@ public class DataCenterDaoImpl extends GenericDaoBase<DataCenterVO, Long> implem
             SearchCriteria<DataCenterVO> ssc = createSearchCriteria();
             ssc.addOr("name", SearchCriteria.Op.LIKE, "%" + keyword + "%");
             ssc.addOr("description", SearchCriteria.Op.LIKE, "%" + keyword + "%");
+            ssc.addOr("uuid", SearchCriteria.Op.LIKE, "%" + keyword + "%");
             sc.addAnd("name", SearchCriteria.Op.SC, ssc);
         }
         return listBy(sc);
@@ -135,9 +141,10 @@ public class DataCenterDaoImpl extends GenericDaoBase<DataCenterVO, Long> implem
             SearchCriteria<DataCenterVO> ssc = createSearchCriteria();
             ssc.addOr("name", SearchCriteria.Op.LIKE, "%" + keyword + "%");
             ssc.addOr("description", SearchCriteria.Op.LIKE, "%" + keyword + "%");
+            ssc.addOr("uuid", SearchCriteria.Op.LIKE, "%" + keyword + "%");
             sc.addAnd("name", SearchCriteria.Op.SC, ssc);
         }
-        //sc.setParameters("domainId", domainId);
+
         return listBy(sc);
     }
 
@@ -146,6 +153,7 @@ public class DataCenterDaoImpl extends GenericDaoBase<DataCenterVO, Long> implem
         SearchCriteria<DataCenterVO> ssc = createSearchCriteria();
         ssc.addOr("name", SearchCriteria.Op.LIKE, "%" + keyword + "%");
         ssc.addOr("description", SearchCriteria.Op.LIKE, "%" + keyword + "%");
+        ssc.addOr("uuid", SearchCriteria.Op.LIKE, "%" + keyword + "%");
         return listBy(ssc);
     }
 
@@ -336,6 +344,11 @@ public class DataCenterDaoImpl extends GenericDaoBase<DataCenterVO, Long> implem
         DisabledZonesSearch.and("allocationState", DisabledZonesSearch.entity().getAllocationState(), SearchCriteria.Op.EQ);
         DisabledZonesSearch.done();
 
+        ZoneAllocationAndNotTypeSearch = createSearchBuilder();
+        ZoneAllocationAndNotTypeSearch.and("allocationState", ZoneAllocationAndNotTypeSearch.entity().getAllocationState(), SearchCriteria.Op.EQ);
+        ZoneAllocationAndNotTypeSearch.and("type", ZoneAllocationAndNotTypeSearch.entity().getType(), SearchCriteria.Op.NLIKE);
+        ZoneAllocationAndNotTypeSearch.done();
+
         TokenSearch = createSearchBuilder();
         TokenSearch.and("zoneToken", TokenSearch.entity().getZoneToken(), SearchCriteria.Op.EQ);
         TokenSearch.done();
@@ -397,6 +410,18 @@ public class DataCenterDaoImpl extends GenericDaoBase<DataCenterVO, Long> implem
         List<DataCenterVO> dcs = listBy(sc);
 
         return dcs;
+    }
+
+    @Override
+    public List<Long> listEnabledNonEdgeZoneIds() {
+        SearchCriteria<DataCenterVO> sc = ZoneAllocationAndNotTypeSearch.create();
+        sc.setParameters("allocationState", Grouping.AllocationState.Enabled);
+        sc.setParameters("type", DataCenter.Type.Edge);
+        List<DataCenterVO> zones = listBy(sc);
+        if (CollectionUtils.isEmpty(zones)) {
+            return new ArrayList<>();
+        }
+        return zones.stream().map(DataCenterVO::getId).collect(Collectors.toList());
     }
 
     @Override

@@ -104,13 +104,21 @@ public class CapabilitiesResponse extends BaseResponse {
     @Param(description = "true if Desktop Service plugin is enabled, false otherwise")
     private boolean desktopServiceEnabled;
 
-    @SerializedName("desktopworksadminportalport")
-    @Param(description = "Desktop Service Works Admin Portal URL setting")
-    private String desktopWorksAdminPortalPort;
+    @SerializedName("desktopworksportalport")
+    @Param(description = "Desktop Service Works Portal URL setting")
+    private String desktopWorksPortalPort;
 
-    @SerializedName("desktopworksuserportalport")
-    @Param(description = "Desktop Service Works User Portal URL setting")
-    private String desktopWorksUserPortalPort;
+    @SerializedName("automationserviceenabled")
+    @Param(description = "true if Automation Service plugin is enabled, false otherwise")
+    private boolean automationServiceEnabled;
+
+    @SerializedName("wallportalprotocol")
+    @Param(description = "Monitoring Service Wall Portal Protocol setting")
+    private String wallPortalProtocol;
+
+    @SerializedName("wallportaldomain")
+    @Param(description = "Monitoring Service Wall Portal Domain setting")
+    private String wallPortalDomain;
 
     @SerializedName("wallportalport")
     @Param(description = "Monitoring Service Wall Portal Port setting")
@@ -127,6 +135,26 @@ public class CapabilitiesResponse extends BaseResponse {
     @SerializedName("defaultuipagesize")
     @Param(description = "default page size in the UI for various views, value set in the configurations", since = "4.15.2")
     private Long defaultUiPageSize;
+
+    @SerializedName("balancingserviceenabled")
+    @Param(description = "true if Balancing Service plugin is enabled, false otherwise")
+    private boolean balancingServiceEnabled;
+
+    @SerializedName(ApiConstants.INSTANCES_STATS_RETENTION_TIME)
+    @Param(description = "the retention time for Instances stats", since = "4.18.0")
+    private Integer instancesStatsRetentionTime;
+
+    @SerializedName(ApiConstants.INSTANCES_STATS_USER_ONLY)
+    @Param(description = "true if stats are collected only for user instances, false if system instance stats are also collected", since = "4.18.0")
+    private Boolean instancesStatsUserOnly;
+
+    @SerializedName(ApiConstants.INSTANCES_DISKS_STATS_RETENTION_ENABLED)
+    @Param(description = "true if stats are retained for instance disks otherwise false", since = "4.18.0")
+    private Boolean instancesDisksStatsRetentionEnabled;
+
+    @SerializedName(ApiConstants.INSTANCES_DISKS_STATS_RETENTION_TIME)
+    @Param(description = "the retention time for Instances disks stats", since = "4.18.0")
+    private Integer instancesDisksStatsRetentionTime;
 
     public void setSecurityGroupsEnabled(boolean securityGroupsEnabled) {
         this.securityGroupsEnabled = securityGroupsEnabled;
@@ -208,12 +236,20 @@ public class CapabilitiesResponse extends BaseResponse {
         this.desktopServiceEnabled = desktopServiceEnabled;
     }
 
-    public void setDesktopWorksAdminPortalPort(String desktopWorksAdminPortalPort) {
-        this.desktopWorksAdminPortalPort = desktopWorksAdminPortalPort;
+    public void setDesktopWorksPortalPort(String desktopWorksPortalPort) {
+        this.desktopWorksPortalPort = desktopWorksPortalPort;
     }
 
-    public void setDesktopWorksUserPortalPort(String desktopWorksUserPortalPort) {
-        this.desktopWorksUserPortalPort = desktopWorksUserPortalPort;
+    public void setAutomationServiceEnabled(boolean automationServiceEnabled) {
+        this.automationServiceEnabled = automationServiceEnabled;
+    }
+
+    public void setWallPortalProtocol(String wallPortalProtocol) {
+        this.wallPortalProtocol = wallPortalProtocol;
+    }
+
+    public void setWallPortalDomain(String wallPortalDomain) {
+        this.wallPortalDomain = wallPortalDomain;
     }
 
     public void setWallPortalPort(String wallPortalPort) {
@@ -229,5 +265,25 @@ public class CapabilitiesResponse extends BaseResponse {
     }
     public void setDefaultUiPageSize(Long defaultUiPageSize) {
         this.defaultUiPageSize = defaultUiPageSize;
+    }
+
+    public void setBalancingServiceEnabled(boolean balancingServiceEnabled) {
+        this.balancingServiceEnabled = balancingServiceEnabled;
+    }
+
+    public void setInstancesStatsRetentionTime(Integer instancesStatsRetentionTime) {
+        this.instancesStatsRetentionTime = instancesStatsRetentionTime;
+    }
+
+    public void setInstancesStatsUserOnly(Boolean instancesStatsUserOnly) {
+        this.instancesStatsUserOnly = instancesStatsUserOnly;
+    }
+
+    public void setInstancesDisksStatsRetentionEnabled(Boolean instancesDisksStatsRetentionEnabled) {
+        this.instancesDisksStatsRetentionEnabled = instancesDisksStatsRetentionEnabled;
+    }
+
+    public void setInstancesDisksStatsRetentionTime(Integer instancesDisksStatsRetentionTime) {
+        this.instancesDisksStatsRetentionTime = instancesDisksStatsRetentionTime;
     }
 }

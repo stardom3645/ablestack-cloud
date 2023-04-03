@@ -18,9 +18,12 @@
 package org.apache.cloudstack.ha;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
@@ -31,6 +34,7 @@ import java.util.concurrent.TimeUnit;
 import javax.inject.Inject;
 import javax.naming.ConfigurationException;
 
+import org.apache.cloudstack.api.ApiCommandResourceType;
 import org.apache.cloudstack.api.ApiErrorCode;
 import org.apache.cloudstack.api.ServerApiException;
 import org.apache.cloudstack.api.command.admin.ha.ConfigureHAForHostCmd;
@@ -38,6 +42,8 @@ import org.apache.cloudstack.api.command.admin.ha.DisableHAForClusterCmd;
 import org.apache.cloudstack.api.command.admin.ha.DisableHAForHostCmd;
 import org.apache.cloudstack.api.command.admin.ha.DisableHAForZoneCmd;
 import org.apache.cloudstack.api.command.admin.ha.EnableHAForClusterCmd;
+import org.apache.cloudstack.api.command.admin.ha.EnableBalancingClusterCmd;
+import org.apache.cloudstack.api.command.admin.ha.DisableBalancingClusterCmd;
 import org.apache.cloudstack.api.command.admin.ha.EnableHAForHostCmd;
 import org.apache.cloudstack.api.command.admin.ha.EnableHAForZoneCmd;
 import org.apache.cloudstack.api.command.admin.ha.ListHostHAProvidersCmd;
@@ -54,13 +60,17 @@ import org.apache.cloudstack.ha.task.HealthCheckTask;
 import org.apache.cloudstack.ha.task.RecoveryTask;
 import org.apache.cloudstack.kernel.Partition;
 import org.apache.cloudstack.managed.context.ManagedContextRunnable;
+import org.apache.cloudstack.management.ManagementServerHost;
 import org.apache.cloudstack.poll.BackgroundPollManager;
 import org.apache.cloudstack.poll.BackgroundPollTask;
 import org.apache.cloudstack.utils.identity.ManagementServerNode;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 
+import com.cloud.host.HostVO;
+import com.cloud.vm.VMInstanceVO;
+import org.apache.cloudstack.api.response.HostResponse;
 import com.cloud.cluster.ClusterManagerListener;
-import org.apache.cloudstack.management.ManagementServerHost;
 import com.cloud.dc.ClusterDetailsDao;
 import com.cloud.dc.ClusterDetailsVO;
 import com.cloud.dc.DataCenter;
@@ -70,11 +80,18 @@ import com.cloud.domain.Domain;
 import com.cloud.event.ActionEvent;
 import com.cloud.event.ActionEventUtils;
 import com.cloud.event.EventTypes;
+import com.cloud.exception.ConcurrentOperationException;
+import com.cloud.exception.ManagementServerException;
+import com.cloud.exception.ResourceUnavailableException;
+import com.cloud.exception.VirtualMachineMigrationException;
 import com.cloud.ha.Investigator;
 import com.cloud.host.Host;
 import com.cloud.host.Status;
 import com.cloud.host.dao.HostDao;
+import com.cloud.vm.dao.VMInstanceDao;
+import com.cloud.vm.UserVmService;
 import com.cloud.org.Cluster;
+import com.cloud.resource.ResourceService;
 import com.cloud.utils.component.ComponentContext;
 import com.cloud.utils.component.ManagerBase;
 import com.cloud.utils.component.PluggableService;
@@ -86,7 +103,10 @@ import com.cloud.utils.fsm.NoTransitionException;
 import com.cloud.utils.fsm.StateListener;
 import com.cloud.utils.fsm.StateMachine2;
 import com.google.common.base.Preconditions;
-import org.apache.commons.lang3.StringUtils;
+import org.apache.cloudstack.api.ResponseGenerator;
+import com.cloud.agent.AgentManager;
+import com.cloud.api.query.vo.UserVmJoinVO;
+import com.cloud.api.query.dao.UserVmJoinDao;
 
 public final class HAManagerImpl extends ManagerBase implements HAManager, ClusterManagerListener, PluggableService, Configurable, StateListener<HAConfig.HAState, HAConfig.Event, HAConfig> {
     public static final Logger LOG = Logger.getLogger(HAManagerImpl.class);
@@ -98,6 +118,18 @@ public final class HAManagerImpl extends ManagerBase implements HAManager, Clust
     private HostDao hostDao;
 
     @Inject
+    private VMInstanceDao vmInstanceDao;
+
+    @Inject
+    private UserVmJoinDao userVmJoinDao;
+
+    @Inject
+    protected UserVmService userVmService;
+
+    @Inject
+    protected ResourceService resourceService;
+
+    @Inject
     private ClusterDetailsDao clusterDetailsDao;
 
     @Inject
@@ -105,6 +137,12 @@ public final class HAManagerImpl extends ManagerBase implements HAManager, Clust
 
     @Inject
     private BackgroundPollManager pollManager;
+
+    @Inject
+    public ResponseGenerator _responseGenerator;
+
+    @Inject
+    private AgentManager _agentMgr;
 
     private List<HAProvider<HAResource>> haProviders;
     private Map<String, HAProvider<HAResource>> haProviderMap = new HashMap<>();
@@ -115,6 +153,7 @@ public final class HAManagerImpl extends ManagerBase implements HAManager, Clust
     private static ExecutorService fenceExecutor;
 
     private static final String HA_ENABLED_DETAIL = "resourceHAEnabled";
+    private static final String Balancing_ENABLED_DETAIL = "resourceBalancingEnabled";
 
     //////////////////////////////////////////////////////
     //////////////// HA Manager methods //////////////////
@@ -160,7 +199,7 @@ public final class HAManagerImpl extends ManagerBase implements HAManager, Clust
 
                 if (nextState == HAConfig.HAState.Recovering || nextState == HAConfig.HAState.Fencing || nextState == HAConfig.HAState.Fenced) {
                     ActionEventUtils.onActionEvent(CallContext.current().getCallingUserId(), CallContext.current().getCallingAccountId(),
-                            Domain.ROOT_DOMAIN, EventTypes.EVENT_HA_STATE_TRANSITION, message);
+                            Domain.ROOT_DOMAIN, EventTypes.EVENT_HA_STATE_TRANSITION, message, haConfig.getResourceId(), ApiCommandResourceType.Host.toString());
                 }
             }
             return result;
@@ -350,6 +389,9 @@ public final class HAManagerImpl extends ManagerBase implements HAManager, Clust
                         haConfig.setEnabled(enable);
                         haConfig.setManagementServerId(ManagementServerNode.getManagementServerId());
                     }
+                    if (haProvider != null && enable != null) {
+                        haConfig.setHastate(HAConfig.HAState.Available);
+                    }
                     haConfig.setResourceId(resourceId);
                     haConfig.setResourceType(resourceType);
                     if (StringUtils.isEmpty(haConfig.getHaProvider())) {
@@ -412,15 +454,39 @@ public final class HAManagerImpl extends ManagerBase implements HAManager, Clust
 
     @Override
     @ActionEvent(eventType = EventTypes.EVENT_HA_RESOURCE_ENABLE, eventDescription = "enabling HA for a cluster")
-    public boolean enableHA(final Cluster cluster) {
+    public boolean enableHA(final Cluster cluster, Boolean includeHost) {
         clusterDetailsDao.persist(cluster.getId(), HA_ENABLED_DETAIL, String.valueOf(true));
+
+        //host enableHA
+        if (includeHost) {
+            List<? extends HAResource> resources = hostDao.findByClusterId(cluster.getId());
+            for (HAResource resource : resources) {
+                final HAConfig haConfig = haConfigDao.findHAResource(resource.getId(), resource.resourceType());
+                if (haConfig == null) {
+                    boolean configureHA = configureHA(resource.getId(), resource.resourceType(), true, "kvmhaprovider");
+                } else {
+                    boolean result = enableHA(resource.getId(), resource.resourceType());
+                }
+            }
+        }
         return true;
     }
 
     @Override
     @ActionEvent(eventType = EventTypes.EVENT_HA_RESOURCE_DISABLE, eventDescription = "disabling HA for a cluster")
-    public boolean disableHA(final Cluster cluster) {
+    public boolean disableHA(final Cluster cluster, Boolean includeHost) {
         clusterDetailsDao.persist(cluster.getId(), HA_ENABLED_DETAIL, String.valueOf(false));
+
+        //host disableHA
+        if (includeHost) {
+            List<? extends HAResource> resources = hostDao.findByClusterId(cluster.getId());
+            for (HAResource resource : resources) {
+                final HAConfig haConfig = haConfigDao.findHAResource(resource.getId(), resource.resourceType());
+                if (haConfig != null && haConfig.isEnabled()) {
+                    boolean result = disableHA(resource.getId(), resource.resourceType());
+                }
+            }
+        }
         return transitionResourceStateToDisabled(cluster);
     }
 
@@ -436,6 +502,181 @@ public final class HAManagerImpl extends ManagerBase implements HAManager, Clust
     public boolean disableHA(final DataCenter zone) {
         dataCenterDetailsDao.persist(zone.getId(), HA_ENABLED_DETAIL, String.valueOf(false));
         return transitionResourceStateToDisabled(zone);
+    }
+
+    Thread thread = new Thread();
+
+    @Override
+    @ActionEvent(eventType = EventTypes.EVENT_HA_RESOURCE_ENABLE, eventDescription = "enabling Balancing for a cluster")
+    public boolean enableBalancing(final Cluster cluster) {
+        if (!balancingServiceEnabled.value()) {
+            throw new CloudRuntimeException("balancing Service plugin is disabled");
+        }
+
+        clusterDetailsDao.persist(cluster.getId(), Balancing_ENABLED_DETAIL, String.valueOf(true));
+
+        /* Using Runnable Interface */
+        Thread.State state = thread.getState();
+        LOG.info("===1.cluster balancing===");
+        LOG.info("===cluster balancing thread state : " + state);
+        if (state == Thread.State.NEW) {
+            thread = new Thread(new BalancingThread(cluster.getId()));
+            thread.start();
+        }
+
+        return true;
+    }
+
+    public final class BalancingThread extends ManagedContextRunnable implements BackgroundPollTask {
+        private long clusterId;
+        public BalancingThread(long clusterid) {
+            this.clusterId = clusterid;
+        }
+
+        @Override
+        public void runInContext() {
+            // run task
+            balancingCheck(clusterId);
+        }
+
+        @Override
+        public Long getDelay() {
+            // TODO Auto-generated method stub
+            return null;
+        }
+    }
+
+    @Override
+    @ActionEvent(eventType = EventTypes.EVENT_HA_RESOURCE_ENABLE, eventDescription = "enabling Balancing for a cluster")
+    public boolean disableBalancing(final Cluster cluster) {
+        if (!balancingServiceEnabled.value()) {
+            throw new CloudRuntimeException("balancing Service plugin is disabled");
+        }
+
+        clusterDetailsDao.persist(cluster.getId(), Balancing_ENABLED_DETAIL, String.valueOf(false));
+
+        // thread 종료
+        thread.interrupt();
+
+        return true;
+    }
+
+    public void balancingCheck (long clusterId) {
+        LOG.info("===2-1.cluster balancing check===");
+        // 클러스터의 각 호스트 메모리used 조회(mold 재시작시 hostResponse 바로 못가져오는 현상으로 인해 while문 추가)
+        HashMap<Long, Long> hostMemMap = new HashMap<Long, Long>();
+        for (final HostVO host: hostDao.findByClusterId(clusterId)) {
+            HostResponse hostResponse = new HostResponse();
+            int retry = 5;
+            while (retry > 0) {
+                hostResponse = _responseGenerator.createHostResponse(host);
+                retry--;
+                LOG.info("retry : " + retry);
+                LOG.info("hostId : " + hostResponse.getId() + ", MemoryUsed : " + hostResponse.getMemoryUsed() + ", MemoryTotal : " + hostResponse.getMemoryTotal());
+                if (hostResponse.getMemoryUsed() != null) {
+                    break;
+                }
+                try {
+                    Thread.sleep(10000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+            LOG.info("hostID : "+hostResponse.getId() + ", hostMemPersent : "+hostResponse.getMemoryUsed()*100/hostResponse.getMemoryTotal());
+
+            hostMemMap.put(host.getId(), hostResponse.getMemoryUsed()*100/hostResponse.getMemoryTotal());
+        }
+
+        // 클러스터의 각 호스트 메모리used 값 비교
+        Comparator<Entry<Long, Long>> comparator = new Comparator<Entry<Long, Long>>() {
+            @Override
+            public int compare(Entry<Long, Long> e1, Entry<Long, Long> e2) {
+                return e1.getValue().compareTo(e2.getValue());
+            }
+        };
+
+        // Max Value의 key, value
+        Entry<Long, Long> maxEntry = Collections.max(hostMemMap.entrySet(), comparator);
+        // Min Value의 key, value
+        Entry<Long, Long> minEntry = Collections.min(hostMemMap.entrySet(), comparator);
+
+        LOG.info("===2-2.host max/min memoryUsed===");
+        LOG.info("maxEntry : " + maxEntry.getValue() + ", minEntry : " + minEntry.getValue() + ", persent : " + (maxEntry.getValue() - minEntry.getValue()));
+
+        //메모리used 값이 10% 이상 차이나면 메모리used가 가장 작은 호스트로 vm migration
+        if ((maxEntry.getValue() - minEntry.getValue()) > 10 ) {
+            String hostIp = "";
+            for (final HostVO host: hostDao.findByClusterId(clusterId)) {
+                if (host.getId() == minEntry.getKey()) {
+                    hostIp = host.getPrivateIpAddress();
+                }
+            }
+            balancingMonitor(minEntry.getKey(), maxEntry.getKey());
+        }
+
+        // 1분마다 체크
+        try {
+            Thread.sleep(60000);
+            balancingCheck(clusterId);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void balancingMonitor(Long minHostId, Long maxHostId) {
+        LOG.info("===3.cluster balancing monitor===");
+        LOG.info("minHostId : " + minHostId + ", maxHostId : " + maxHostId);
+        Map<Long, Integer> vmMemMap = new ConcurrentHashMap<Long, Integer>();
+
+        // 메모리used가 가장 큰 호스트의 vm 조회(ramsize조회를 위해 user_vm_view 테이블을 사용하므로 vm type=user로 지정)
+        for (final VMInstanceVO vm: vmInstanceDao.listByHostId(maxHostId)) {
+            if (vm.getType().toString() == "User") {
+                UserVmJoinVO userVM = userVmJoinDao.findById(vm.getId());
+                LOG.info("vmID : " + vm.getId() + ", vmRamSize : " + userVM.getRamSize());
+                vmMemMap.put(vm.getId(), userVM.getRamSize());
+            } else {
+                LOG.info("===The virtual machine to migrate does not exist.===");
+            }
+            /*Hashtable<Long, UserVmResponse> vmDataList = new Hashtable<Long, UserVmResponse>();
+            String responseName = "virtualmachine";
+            List<UserVmJoinVO> userVmJoinVOs = userVmJoinDao.searchByIds(vm.getId());
+            ResponseObject.ResponseView respView = ResponseObject.ResponseView.Restricted;
+            Account caller = CallContext.current().getCallingAccount();
+            if (accountService.isRootAdmin(caller.getId())) {
+                respView = ResponseObject.ResponseView.Full;
+            }
+            UserVmResponse cvmResponse = ApiDBUtils.newUserVmResponse(respView, responseName, userVM, EnumSet.of(ApiConstants.VMDetails.nics), caller);
+
+            LOG.info("cvmResponse = "+cvmResponse);
+            // userVmData = ApiDBUtils.fillVmDetails(ResponseView.Full, userVmData, userVmJoinVOs.get(0));
+            LOG.info("cvmResponse.getMemory() = "+cvmResponse.getMemory());
+            LOG.info("cvmResponse.getMemory() = "+cvmResponse.getId());*/
+        }
+
+        // vm의 ramsize 비교
+        Comparator<Entry<Long, Integer>> comparator = new Comparator<Entry<Long, Integer>>() {
+            @Override
+            public int compare(Entry<Long, Integer> e1, Entry<Long, Integer> e2) {
+                return e1.getValue().compareTo(e2.getValue());
+            }
+        };
+
+        // Min Value의 key, value
+        Entry<Long, Integer> minEntry = Collections.min(vmMemMap.entrySet(), comparator);
+
+        //가장 작은 ramsize의 vm을 가장 작은 메모리used의 호스트로 migration
+        try {
+            LOG.info("===4.vm migration===");
+            Host destinationHost = resourceService.getHost(minHostId);
+            LOG.info("minEntry.getKey() : " + minEntry.getKey() + ", destinationHost : " + destinationHost);
+            userVmService.migrateVirtualMachine(minEntry.getKey(), destinationHost);
+        } catch (ResourceUnavailableException ex) {
+            LOG.warn("Exception: ", ex);
+            throw new ServerApiException(ApiErrorCode.RESOURCE_UNAVAILABLE_ERROR, ex.getMessage());
+        } catch (VirtualMachineMigrationException | ConcurrentOperationException | ManagementServerException e) {
+            LOG.warn("Exception: ", e);
+            throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, e.getMessage());
+        }
     }
 
     @Override
@@ -464,6 +705,8 @@ public final class HAManagerImpl extends ManagerBase implements HAManager, Clust
         cmdList.add(DisableHAForHostCmd.class);
         cmdList.add(DisableHAForClusterCmd.class);
         cmdList.add(DisableHAForZoneCmd.class);
+        cmdList.add(EnableBalancingClusterCmd.class);
+        cmdList.add(DisableBalancingClusterCmd.class);
         cmdList.add(ListHostHAResourcesCmd.class);
         cmdList.add(ListHostHAProvidersCmd.class);
         return cmdList;
@@ -629,7 +872,8 @@ public final class HAManagerImpl extends ManagerBase implements HAManager, Clust
                 MaxConcurrentRecoveryOperations,
                 MaxPendingRecoveryOperations,
                 MaxConcurrentFenceOperations,
-                MaxPendingFenceOperations
+                MaxPendingFenceOperations,
+                balancingServiceEnabled
         };
     }
 

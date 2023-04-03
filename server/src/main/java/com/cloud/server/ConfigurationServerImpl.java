@@ -82,6 +82,7 @@ import com.cloud.network.guru.DirectPodBasedNetworkGuru;
 import com.cloud.network.guru.PodBasedNetworkGuru;
 import com.cloud.network.guru.PublicNetworkGuru;
 import com.cloud.network.guru.StorageNetworkGuru;
+import com.cloud.offering.DiskOffering.DiskCacheMode;
 import com.cloud.offering.NetworkOffering;
 import com.cloud.offering.NetworkOffering.Availability;
 import com.cloud.offerings.NetworkOfferingServiceMapVO;
@@ -98,6 +99,7 @@ import com.cloud.user.Account;
 import com.cloud.user.AccountVO;
 import com.cloud.user.User;
 import com.cloud.user.dao.AccountDao;
+import com.cloud.utils.Pair;
 import com.cloud.utils.PasswordGenerator;
 import com.cloud.utils.PropertiesUtil;
 import com.cloud.utils.component.ComponentLifecycle;
@@ -161,8 +163,9 @@ public class ConfigurationServerImpl extends ManagerBase implements Configuratio
         try {
             persistDefaultValues();
             _configDepotAdmin.populateConfigurations();
-        } catch (InternalErrorException e) {
-            throw new RuntimeException("Unhandled configuration exception", e);
+        } catch (InternalErrorException | CloudRuntimeException e) {
+            s_logger.error("Unhandled configuration exception: " + e.getMessage());
+            throw new CloudRuntimeException("Unhandled configuration exception", e);
         }
         return true;
     }
@@ -202,6 +205,16 @@ public class ConfigurationServerImpl extends ManagerBase implements Configuratio
                     String description = c.getDescription();
                     ConfigurationVO configVO = new ConfigurationVO(category, instance, component, name, value, description);
                     configVO.setDefaultValue(value);
+                    Pair<Long, Long> configGroupAndSubGroup = _configDepotAdmin.getConfigurationGroupAndSubGroupByName(name);
+                    configVO.setGroupId(configGroupAndSubGroup.first());
+                    configVO.setSubGroupId(configGroupAndSubGroup.second());
+                    if (c.getKind() != null) {
+                        configVO.setKind(c.getKind());
+                    }
+                    if (c.getOptions() != null) {
+                        configVO.setOptions(c.getOptions());
+                    }
+
                     _configDao.persist(configVO);
                 }
             }
@@ -222,14 +235,15 @@ public class ConfigurationServerImpl extends ManagerBase implements Configuratio
             s_logger.debug("Configuration server excluded plaintext authenticator");
 
             // Save default service offerings
-            createServiceOffering(User.UID_SYSTEM, "Small Instance", 1, 512, 500, "Small Instance", ProvisioningType.THIN, false, false, null);
-            createServiceOffering(User.UID_SYSTEM, "Medium Instance", 1, 1024, 1000, "Medium Instance", ProvisioningType.THIN, false, false, null);
+            createServiceOffering(User.UID_SYSTEM, "1C-2GB-RBD-HA", 1, 2048, 500, "1Core 2GB", ProvisioningType.THIN, false, true, null);
+            createServiceOffering(User.UID_SYSTEM, "2C-4GB-RBD-HA", 2, 4096, 2000, "2Core 4GB", ProvisioningType.THIN, false, true, null);
+            createServiceOffering(User.UID_SYSTEM, "4C-8GB-RBD-HA", 4, 8192, 2000, "4Core 8GB", ProvisioningType.THIN, false, true, null);
+            createServiceOffering(User.UID_SYSTEM, "Custom-RBD-HA", 0, 0, 0, "Custom", ProvisioningType.THIN, false, true, null);
             // Save default disk offerings
-            createDefaultDiskOffering("Small", "Small Disk, 5 GB", ProvisioningType.THIN, 5, null, false, false);
-            createDefaultDiskOffering("Medium", "Medium Disk, 20 GB", ProvisioningType.THIN, 20, null, false, false);
-            createDefaultDiskOffering("Large", "Large Disk, 100 GB", ProvisioningType.THIN, 100, null, false, false);
-            createDefaultDiskOffering("Large", "Large Disk, 100 GB", ProvisioningType.THIN, 100, null, false, false);
-            createDefaultDiskOffering("Custom", "Custom Disk", ProvisioningType.THIN, 0, null, true, false);
+            createDefaultDiskOffering("50GB-WB-RBD", "RBD Disk, 50 GB", ProvisioningType.THIN, 50, null, false, false, DiskCacheMode.WRITEBACK);
+            createDefaultDiskOffering("100GB-WB-RBD", "RBD Disk, 100 GB", ProvisioningType.THIN, 100, null, false, false, DiskCacheMode.WRITEBACK);
+            createDefaultDiskOffering("1TB-WB-RBD", "RBD Disk, 1 TB", ProvisioningType.THIN, 1024, null, false, false, DiskCacheMode.WRITEBACK);
+            createDefaultDiskOffering("Custom-WB", "Custom Disk", ProvisioningType.THIN, 0, null, true, false, DiskCacheMode.WRITEBACK);
 
             // Save the mount parent to the configuration table
             String mountParent = getMountParent();
@@ -375,14 +389,14 @@ public class ConfigurationServerImpl extends ManagerBase implements Configuratio
                         pstmt = txn.prepareAutoCloseStatement(sql);
                         rs1 = pstmt.executeQuery();
                         while (rs1.next()) {
-                            String resouce = rs1.getString(1); //resource column
-                            if (resouce == null)
+                            String resource = rs1.getString(1); //resource column
+                            if (resource == null)
                                 continue;
-                            if (resouce.equalsIgnoreCase("com.cloud.hypervisor.xenserver.resource.XenServer56Resource")
-                                    || resouce.equalsIgnoreCase("com.cloud.hypervisor.xenserver.resource.XenServer56FP1Resource")
-                                    || resouce.equalsIgnoreCase("com.cloud.hypervisor.xenserver.resource.XenServer56SP2Resource")
-                                    || resouce.equalsIgnoreCase("com.cloud.hypervisor.xenserver.resource.XenServer600Resource")
-                                    || resouce.equalsIgnoreCase("com.cloud.hypervisor.xenserver.resource.XenServer602Resource")) {
+                            if (resource.equalsIgnoreCase("com.cloud.hypervisor.xenserver.resource.XenServer56Resource")
+                                    || resource.equalsIgnoreCase("com.cloud.hypervisor.xenserver.resource.XenServer56FP1Resource")
+                                    || resource.equalsIgnoreCase("com.cloud.hypervisor.xenserver.resource.XenServer56SP2Resource")
+                                    || resource.equalsIgnoreCase("com.cloud.hypervisor.xenserver.resource.XenServer600Resource")
+                                    || resource.equalsIgnoreCase("com.cloud.hypervisor.xenserver.resource.XenServer602Resource")) {
                                 pvdriverversion = "xenserver56";
                                 break;
                             }
@@ -667,7 +681,6 @@ public class ConfigurationServerImpl extends ManagerBase implements Configuratio
             s_logger.info("Keypairs already in database, updating local copy");
             updateKeyPairsOnDisk(homeDir);
         }
-        s_logger.info("Going to update systemvm iso with generated keypairs if needed");
         try {
             copyPrivateKeyToHosts(pubkeyfile.getAbsolutePath(), privkeyfile.getAbsolutePath());
         } catch (CloudRuntimeException e) {
@@ -742,13 +755,10 @@ public class ConfigurationServerImpl extends ManagerBase implements Configuratio
         s_logger.info("Trying to copy private keys to hosts");
         String injectScript = getInjectScript();
         String scriptPath = Script.findScript("", injectScript);
-        String systemVmIsoPath = Script.findScript("", "vms/systemvm.iso");
         if (scriptPath == null) {
             throw new CloudRuntimeException("Unable to find key inject script " + injectScript);
         }
-        if (systemVmIsoPath == null) {
-            throw new CloudRuntimeException("Unable to find systemvm iso vms/systemvm.iso");
-        }
+
         Script command = null;
         if(isOnWindows()) {
             command = new Script("python", s_logger);
@@ -913,25 +923,33 @@ public class ConfigurationServerImpl extends ManagerBase implements Configuratio
     }
 
     private DiskOfferingVO createDefaultDiskOffering(String name, String description, ProvisioningType provisioningType,
-                                                     int numGibibytes, String tags, boolean isCustomized, boolean isSystemUse) {
+                                                     int numGibibytes, String tags, boolean isCustomized, boolean isSystemUse, DiskCacheMode cacheMode) {
         long diskSize = numGibibytes;
         diskSize = diskSize * 1024 * 1024 * 1024;
         tags = cleanupTags(tags);
 
-        DiskOfferingVO newDiskOffering = new DiskOfferingVO(name, description, provisioningType, diskSize, tags, isCustomized, null, null, null);
+        DiskOfferingVO newDiskOffering = new DiskOfferingVO(name, description, provisioningType, diskSize, tags, isCustomized, null, null, null, cacheMode);
         newDiskOffering.setUniqueName("Cloud.Com-" + name);
-        // leaving the above reference to cloud.com in as it is an identifyer and has no real world relevance
-        newDiskOffering.setSystemUse(isSystemUse);
-        newDiskOffering = _diskOfferingDao.persistDeafultDiskOffering(newDiskOffering);
+        // leaving the above reference to cloud.com in as it is an identifier and has no real world relevance
+        newDiskOffering = _diskOfferingDao.persistDefaultDiskOffering(newDiskOffering);
         return newDiskOffering;
     }
 
     private ServiceOfferingVO createServiceOffering(long userId, String name, int cpu, int ramSize, int speed, String displayText,
             ProvisioningType provisioningType, boolean localStorageRequired, boolean offerHA, String tags) {
         tags = cleanupTags(tags);
+        DiskOfferingVO diskOfferingVO = new DiskOfferingVO(name, displayText, provisioningType, false, tags, false, false, true);
+        diskOfferingVO.setUniqueName("Cloud.Com-" + name);
+        diskOfferingVO = _diskOfferingDao.persistDefaultDiskOffering(diskOfferingVO);
+
         ServiceOfferingVO offering =
-                new ServiceOfferingVO(name, cpu, ramSize, speed, null, null, offerHA, displayText, provisioningType, localStorageRequired, false, tags, false, null, false);
+                new ServiceOfferingVO(name, cpu, ramSize, speed, null, null, offerHA, displayText, false, null, false);
+
+        if(name == "Custom-HA"){
+            offering = new ServiceOfferingVO(name, null, null, null, null, null, offerHA, displayText, false, null, false);
+        }
         offering.setUniqueName("Cloud.Com-" + name);
+        offering.setDiskOfferingId(diskOfferingVO.getId());
         // leaving the above reference to cloud.com in as it is an identifyer and has no real world relevance
         offering = _serviceOfferingDao.persistSystemServiceOffering(offering);
         return offering;
@@ -962,8 +980,10 @@ public class ConfigurationServerImpl extends ManagerBase implements Configuratio
         controlNetworkOffering = _networkOfferingDao.persistDefaultNetworkOffering(controlNetworkOffering);
         NetworkOfferingVO storageNetworkOffering = new NetworkOfferingVO(NetworkOffering.SystemStorageNetwork, TrafficType.Storage, true);
         storageNetworkOffering = _networkOfferingDao.persistDefaultNetworkOffering(storageNetworkOffering);
-        NetworkOfferingVO privateGatewayNetworkOffering = new NetworkOfferingVO(NetworkOffering.SystemPrivateGatewayNetworkOffering, GuestType.Isolated);
+        NetworkOfferingVO privateGatewayNetworkOffering = new NetworkOfferingVO(NetworkOffering.SystemPrivateGatewayNetworkOffering, GuestType.Isolated, true);
         privateGatewayNetworkOffering = _networkOfferingDao.persistDefaultNetworkOffering(privateGatewayNetworkOffering);
+        NetworkOfferingVO privateGatewayNetworkOfferingWithoutVlan = new NetworkOfferingVO(NetworkOffering.SystemPrivateGatewayNetworkOfferingWithoutVlan, GuestType.Isolated, false);
+        privateGatewayNetworkOfferingWithoutVlan = _networkOfferingDao.persistDefaultNetworkOffering(privateGatewayNetworkOfferingWithoutVlan);
 
         //populate providers
         final Map<Network.Service, Network.Provider> defaultSharedNetworkOfferingProviders = new HashMap<Network.Service, Network.Provider>();
@@ -978,6 +998,12 @@ public class ConfigurationServerImpl extends ManagerBase implements Configuratio
         defaultSharedSGNetworkOfferingProviders.put(Service.Dns, Provider.VirtualRouter);
         defaultSharedSGNetworkOfferingProviders.put(Service.UserData, Provider.VirtualRouter);
         defaultSharedSGNetworkOfferingProviders.put(Service.SecurityGroup, Provider.SecurityGroupProvider);
+
+        final Map<Network.Service, Network.Provider> defaultTungstenSharedSGNetworkOfferingProviders = new HashMap<>();
+        defaultTungstenSharedSGNetworkOfferingProviders.put(Service.Connectivity, Provider.Tungsten);
+        defaultTungstenSharedSGNetworkOfferingProviders.put(Service.Dhcp, Provider.Tungsten);
+        defaultTungstenSharedSGNetworkOfferingProviders.put(Service.Dns, Provider.Tungsten);
+        defaultTungstenSharedSGNetworkOfferingProviders.put(Service.SecurityGroup, Provider.Tungsten);
 
         final Map<Network.Service, Network.Provider> defaultIsolatedSourceNatEnabledNetworkOfferingProviders = new HashMap<Network.Service, Network.Provider>();
         defaultIsolatedSourceNatEnabledNetworkOfferingProviders.put(Service.Dhcp, Provider.VirtualRouter);
@@ -1005,7 +1031,7 @@ public class ConfigurationServerImpl extends ManagerBase implements Configuratio
             @Override
             public void doInTransactionWithoutResult(TransactionStatus status) {
                 // Offering #1
-                NetworkOfferingVO defaultSharedSGNetworkOffering =
+                /*NetworkOfferingVO defaultSharedSGNetworkOffering =
                         new NetworkOfferingVO(NetworkOffering.DefaultSharedNetworkOfferingWithSGService, "Offering for Shared Security group enabled networks",
                                 TrafficType.Guest, false, true, null, null, true, Availability.Optional, null, Network.GuestType.Shared, true, true, false, false, false, false);
 
@@ -1017,11 +1043,11 @@ public class ConfigurationServerImpl extends ManagerBase implements Configuratio
                             new NetworkOfferingServiceMapVO(defaultSharedSGNetworkOffering.getId(), service, defaultSharedSGNetworkOfferingProviders.get(service));
                     _ntwkOfferingServiceMapDao.persist(offService);
                     s_logger.trace("Added service for the network offering: " + offService);
-                }
+                }*/
 
                 // Offering #2
                 NetworkOfferingVO defaultSharedNetworkOffering =
-                        new NetworkOfferingVO(NetworkOffering.DefaultSharedNetworkOffering, "Offering for Shared networks", TrafficType.Guest, false, true, null, null, true,
+                        new NetworkOfferingVO("기본 공유 네트워크오퍼링", "기본 공유 네트워크오퍼링", TrafficType.Guest, false, true, null, null, true,
                                 Availability.Optional, null, Network.GuestType.Shared, true, true, false, false, false, false);
 
                 defaultSharedNetworkOffering.setState(NetworkOffering.State.Enabled);
@@ -1034,13 +1060,29 @@ public class ConfigurationServerImpl extends ManagerBase implements Configuratio
                     s_logger.trace("Added service for the network offering: " + offService);
                 }
 
+                NetworkOfferingVO defaultTungstenSharedSGNetworkOffering =
+                        new NetworkOfferingVO(NetworkOffering.DEFAULT_TUNGSTEN_SHARED_NETWORK_OFFERING_WITH_SGSERVICE, "Offering for Tungsten Shared Security group enabled networks",
+                                TrafficType.Guest, false, true, null, null, true, Availability.Optional, null, Network.GuestType.Shared, true, true, false, false, false, false);
+
+                defaultTungstenSharedSGNetworkOffering.setForTungsten(true);
+                defaultTungstenSharedSGNetworkOffering.setState(NetworkOffering.State.Enabled);
+                defaultTungstenSharedSGNetworkOffering = _networkOfferingDao.persistDefaultNetworkOffering(defaultTungstenSharedSGNetworkOffering);
+
+                for (Map.Entry<Network.Service, Network.Provider> service : defaultTungstenSharedSGNetworkOfferingProviders.entrySet()) {
+                    NetworkOfferingServiceMapVO offService =
+                            new NetworkOfferingServiceMapVO(defaultTungstenSharedSGNetworkOffering.getId(), service.getKey(), service.getValue());
+                    _ntwkOfferingServiceMapDao.persist(offService);
+                    s_logger.trace("Added service for the network offering: " + offService);
+                }
+
                 // Offering #3
                 NetworkOfferingVO defaultIsolatedSourceNatEnabledNetworkOffering =
-                        new NetworkOfferingVO(NetworkOffering.DefaultIsolatedNetworkOfferingWithSourceNatService,
-                                "Offering for Isolated networks with Source Nat service enabled", TrafficType.Guest, false, false, null, null, true, Availability.Required, null,
+                        new NetworkOfferingVO("기본 격리 네트워크오퍼링(with SourceNat)",
+                                "기본 격리 네트워크오퍼링(with SourceNat)", TrafficType.Guest, false, false, null, null, true, Availability.Required, null,
                                 Network.GuestType.Isolated, true, false, false, false, true, false);
 
                 defaultIsolatedSourceNatEnabledNetworkOffering.setState(NetworkOffering.State.Enabled);
+                defaultIsolatedSourceNatEnabledNetworkOffering.setSupportsVmAutoScaling(true);
                 defaultIsolatedSourceNatEnabledNetworkOffering = _networkOfferingDao.persistDefaultNetworkOffering(defaultIsolatedSourceNatEnabledNetworkOffering);
 
                 for (Service service : defaultIsolatedSourceNatEnabledNetworkOfferingProviders.keySet()) {
@@ -1052,7 +1094,7 @@ public class ConfigurationServerImpl extends ManagerBase implements Configuratio
                 }
 
                 // Offering #4
-                NetworkOfferingVO defaultIsolatedEnabledNetworkOffering =
+                /*NetworkOfferingVO defaultIsolatedEnabledNetworkOffering =
                         new NetworkOfferingVO(NetworkOffering.DefaultIsolatedNetworkOffering, "Offering for Isolated networks with no Source Nat service", TrafficType.Guest,
                                 false, true, null, null, true, Availability.Optional, null, Network.GuestType.Isolated, true, true, false, false, false, false);
 
@@ -1064,15 +1106,16 @@ public class ConfigurationServerImpl extends ManagerBase implements Configuratio
                             new NetworkOfferingServiceMapVO(defaultIsolatedEnabledNetworkOffering.getId(), service, defaultIsolatedNetworkOfferingProviders.get(service));
                     _ntwkOfferingServiceMapDao.persist(offService);
                     s_logger.trace("Added service for the network offering: " + offService);
-                }
+                }*/
 
                 // Offering #5
-                NetworkOfferingVO defaultNetscalerNetworkOffering =
+                /*NetworkOfferingVO defaultNetscalerNetworkOffering =
                         new NetworkOfferingVO(NetworkOffering.DefaultSharedEIPandELBNetworkOffering,
                                 "Offering for Shared networks with Elastic IP and Elastic LB capabilities", TrafficType.Guest, false, true, null, null, true,
                                 Availability.Optional, null, Network.GuestType.Shared, true, false, false, false, true, true, true, false, false, true, true, false, false, false, false, false);
 
                 defaultNetscalerNetworkOffering.setState(NetworkOffering.State.Enabled);
+                defaultNetscalerNetworkOffering.setSupportsVmAutoScaling(true);
                 defaultNetscalerNetworkOffering = _networkOfferingDao.persistDefaultNetworkOffering(defaultNetscalerNetworkOffering);
 
                 for (Service service : netscalerServiceProviders.keySet()) {
@@ -1080,15 +1123,16 @@ public class ConfigurationServerImpl extends ManagerBase implements Configuratio
                             new NetworkOfferingServiceMapVO(defaultNetscalerNetworkOffering.getId(), service, netscalerServiceProviders.get(service));
                     _ntwkOfferingServiceMapDao.persist(offService);
                     s_logger.trace("Added service for the network offering: " + offService);
-                }
+                }*/
 
                 // Offering #6
                 NetworkOfferingVO defaultNetworkOfferingForVpcNetworks =
-                        new NetworkOfferingVO(NetworkOffering.DefaultIsolatedNetworkOfferingForVpcNetworks,
-                                "Offering for Isolated Vpc networks with Source Nat service enabled", TrafficType.Guest, false, false, null, null, true, Availability.Optional,
+                        new NetworkOfferingVO("VPC 네트워크에 대한 기본 격리 네트워크오퍼링",
+                                "VPC 네트워크에 대한 기본 격리 네트워크오퍼링", TrafficType.Guest, false, false, null, null, true, Availability.Optional,
                                 null, Network.GuestType.Isolated, false, false, false, false, true, true);
 
                 defaultNetworkOfferingForVpcNetworks.setState(NetworkOffering.State.Enabled);
+                defaultNetworkOfferingForVpcNetworks.setSupportsVmAutoScaling(true);
                 defaultNetworkOfferingForVpcNetworks = _networkOfferingDao.persistDefaultNetworkOffering(defaultNetworkOfferingForVpcNetworks);
 
                 Map<Network.Service, Network.Provider> defaultVpcNetworkOfferingProviders = new HashMap<Network.Service, Network.Provider>();
@@ -1111,7 +1155,7 @@ public class ConfigurationServerImpl extends ManagerBase implements Configuratio
                 }
 
                 // Offering #7
-                NetworkOfferingVO defaultNetworkOfferingForVpcNetworksNoLB =
+                /*NetworkOfferingVO defaultNetworkOfferingForVpcNetworksNoLB =
                         new NetworkOfferingVO(NetworkOffering.DefaultIsolatedNetworkOfferingForVpcNetworksNoLB,
                                 "Offering for Isolated Vpc networks with Source Nat service enabled and LB service Disabled", TrafficType.Guest, false, false, null, null, true,
                                 Availability.Optional, null, Network.GuestType.Isolated, false, false, false, false, false, true);
@@ -1135,12 +1179,12 @@ public class ConfigurationServerImpl extends ManagerBase implements Configuratio
                             new NetworkOfferingServiceMapVO(defaultNetworkOfferingForVpcNetworksNoLB.getId(), entry.getKey(), entry.getValue());
                     _ntwkOfferingServiceMapDao.persist(offService);
                     s_logger.trace("Added service for the network offering: " + offService);
-                }
+                }*/
 
                 //offering #8 - network offering with internal lb service
                 NetworkOfferingVO internalLbOff =
-                        new NetworkOfferingVO(NetworkOffering.DefaultIsolatedNetworkOfferingForVpcNetworksWithInternalLB,
-                                "Offering for Isolated Vpc networks with Internal LB support", TrafficType.Guest, false, false, null, null, true, Availability.Optional, null,
+                        new NetworkOfferingVO("VPC 네트워크에 대한 기본 격리 네트워크오퍼링(with 내부 LB)",
+                                "VPC 네트워크에 대한 기본 격리 네트워크오퍼링(with 내부 LB)", TrafficType.Guest, false, false, null, null, true, Availability.Optional, null,
                                 Network.GuestType.Isolated, false, false, false, true, false, true);
 
                 internalLbOff.setState(NetworkOffering.State.Enabled);

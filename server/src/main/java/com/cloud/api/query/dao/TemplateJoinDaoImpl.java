@@ -29,6 +29,7 @@ import javax.inject.Inject;
 import com.cloud.deployasis.DeployAsIsConstants;
 import com.cloud.deployasis.TemplateDeployAsIsDetailVO;
 import com.cloud.deployasis.dao.TemplateDeployAsIsDetailsDao;
+import com.cloud.user.dao.UserDataDao;
 import org.apache.cloudstack.annotation.AnnotationService;
 import org.apache.cloudstack.annotation.dao.AnnotationDao;
 import org.apache.cloudstack.api.ApiConstants;
@@ -90,6 +91,8 @@ public class TemplateJoinDaoImpl extends GenericDaoBaseWithTagInformation<Templa
     private TemplateDeployAsIsDetailsDao templateDeployAsIsDetailsDao;
     @Inject
     private AnnotationDao annotationDao;
+    @Inject
+    private UserDataDao userDataDao;
 
     private final SearchBuilder<TemplateJoinVO> tmpltIdPairSearch;
 
@@ -220,7 +223,7 @@ public class TemplateJoinDaoImpl extends GenericDaoBaseWithTagInformation<Templa
         // If the user is an 'Admin' or 'the owner of template' or template belongs to a project, add the template download status
         if (view == ResponseView.Full ||
                 template.getAccountId() == CallContext.current().getCallingAccount().getId() ||
-                template.getAccountType() == Account.ACCOUNT_TYPE_PROJECT) {
+                template.getAccountType() == Account.Type.PROJECT) {
             String templateStatus = getTemplateStatus(template);
             if (templateStatus != null) {
                 templateResponse.setStatus(templateStatus);
@@ -290,6 +293,12 @@ public class TemplateJoinDaoImpl extends GenericDaoBaseWithTagInformation<Templa
             templateResponse.setChildTemplates(childTemplatesSet);
         }
 
+        if (template.getUserDataId() != null) {
+            templateResponse.setUserDataId(template.getUserDataUUid());
+            templateResponse.setUserDataName(template.getUserDataName());
+            templateResponse.setUserDataParams(template.getUserDataParams());
+            templateResponse.setUserDataPolicy(template.getUserDataPolicy());
+        }
         templateResponse.setObjectName("template");
         return templateResponse;
     }
@@ -336,6 +345,13 @@ public class TemplateJoinDaoImpl extends GenericDaoBaseWithTagInformation<Templa
             Map<String, String> details = new HashMap<>();
             details.put(result.getDetailName(), result.getDetailValue());
             response.setDetails(details);
+        }
+
+        if (result.getUserDataId() != null) {
+            response.setUserDataId(result.getUserDataUUid());
+            response.setUserDataName(result.getUserDataName());
+            response.setUserDataParams(result.getUserDataParams());
+            response.setUserDataPolicy(result.getUserDataPolicy());
         }
 
         // update tag information
@@ -451,6 +467,13 @@ public class TemplateJoinDaoImpl extends GenericDaoBaseWithTagInformation<Templa
             isoResponse.setSize(isoSize);
         }
 
+        if (iso.getUserDataId() != null) {
+            isoResponse.setUserDataId(iso.getUserDataUUid());
+            isoResponse.setUserDataName(iso.getUserDataName());
+            isoResponse.setUserDataParams(iso.getUserDataParams());
+            isoResponse.setUserDataPolicy(iso.getUserDataPolicy());
+        }
+
         // update tag information
         long tag_id = iso.getTagId();
         if (tag_id > 0) {
@@ -561,9 +584,12 @@ public class TemplateJoinDaoImpl extends GenericDaoBaseWithTagInformation<Templa
         if (ids == null || ids.length == 0) {
             return new ArrayList<TemplateJoinVO>();
         }
+
+        Filter searchFilter = new Filter(TemplateJoinVO.class, "sortKey", QueryService.SortKeyAscending.value(), null, null);
+        searchFilter.addOrderBy(TemplateJoinVO.class, "tempZonePair", true);
+
         SearchCriteria<TemplateJoinVO> sc = tmpltIdsSearch.create();
         sc.setParameters("idsIN", ids);
-        return searchIncludingRemoved(sc, null, null, false);
+        return searchIncludingRemoved(sc, searchFilter, null, false);
     }
-
 }

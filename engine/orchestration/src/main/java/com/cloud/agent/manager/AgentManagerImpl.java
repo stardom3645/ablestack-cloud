@@ -42,6 +42,7 @@ import com.cloud.configuration.Config;
 import com.cloud.utils.NumbersUtil;
 import org.apache.cloudstack.agent.lb.IndirectAgentLB;
 import org.apache.cloudstack.ca.CAManager;
+import org.apache.cloudstack.engine.orchestration.service.NetworkOrchestrationService;
 import org.apache.cloudstack.framework.config.ConfigKey;
 import org.apache.cloudstack.framework.config.Configurable;
 import org.apache.cloudstack.framework.config.dao.ConfigurationDao;
@@ -342,10 +343,15 @@ public class AgentManagerImpl extends ManagerBase implements AgentManager, Handl
                 }
                 Answer answer = null;
                 try {
-
-                    final long targetHostId = _hvGuruMgr.getGuruProcessedCommandTargetHost(host.getId(), cmd);
+                    final long targetHostId = _hvGuruMgr.getGuruProcessedCommandTargetHost(host.getId(), cmd, host.getHypervisorType());
                     answer = easySend(targetHostId, cmd);
                 } catch (final Exception e) {
+                    String errorMsg = String.format("Error sending command %s to host %s, due to %s", cmd.getClass().getName(),
+                            host.getUuid(), e.getLocalizedMessage());
+                    s_logger.error(errorMsg);
+                    if (s_logger.isDebugEnabled()) {
+                        s_logger.debug(errorMsg, e);
+                    }
                 }
                 if (answer != null) {
                     return answer;
@@ -595,6 +601,31 @@ public class AgentManagerImpl extends ManagerBase implements AgentManager, Handl
             // return the attache instead of null, even it is disconnectede
             handleDisconnectWithoutInvestigation(attache, Event.AgentDisconnected, true, true);
         }
+        if (answer instanceof ReadyAnswer) {
+            ReadyAnswer readyAnswer = (ReadyAnswer)answer;
+            Map<String, String> detailsMap = readyAnswer.getDetailsMap();
+            if (detailsMap != null) {
+                String uefiEnabled = detailsMap.get(Host.HOST_UEFI_ENABLE);
+                s_logger.debug(String.format("Got HOST_UEFI_ENABLE [%s] for hostId [%s]:", uefiEnabled, host.getUuid()));
+                if (uefiEnabled != null) {
+                    _hostDao.loadDetails(host);
+                    if (!uefiEnabled.equals(host.getDetails().get(Host.HOST_UEFI_ENABLE))) {
+                        host.getDetails().put(Host.HOST_UEFI_ENABLE, uefiEnabled);
+                        _hostDao.saveDetails(host);
+                    }
+                }
+
+                String tpmEnabled = detailsMap.get(Host.HOST_TPM_ENABLE);
+                s_logger.debug(String.format("Got HOST_TPM_ENABLE [%s] for hostId [%s]:", tpmEnabled, host.getUuid()));
+                if (tpmEnabled != null) {
+                    _hostDao.loadDetails(host);
+                    if (!tpmEnabled.equals(host.getDetails().get(Host.HOST_TPM_ENABLE))) {
+                        host.getDetails().put(Host.HOST_TPM_ENABLE, tpmEnabled);
+                        _hostDao.saveDetails(host);
+                    }
+                }
+            }
+        }
 
         agentStatusTransitTo(host, Event.Ready, _nodeId);
         attache.ready();
@@ -635,7 +666,7 @@ public class AgentManagerImpl extends ManagerBase implements AgentManager, Handl
         } catch (final ClassNotFoundException e) {
             s_logger.warn("Unable to find class " + host.getResource(), e);
         } catch (final InstantiationException e) {
-            s_logger.warn("Unablet to instantiate class " + host.getResource(), e);
+            s_logger.warn("Unable to instantiate class " + host.getResource(), e);
         } catch (final IllegalAccessException e) {
             s_logger.warn("Illegal access " + host.getResource(), e);
         } catch (final SecurityException e) {
@@ -870,8 +901,10 @@ public class AgentManagerImpl extends ManagerBase implements AgentManager, Handl
                     agentStatusTransitTo(host, Status.Event.Ping, _nodeId);
                     return false;
                 } else if (determinedState == Status.Disconnected) {
-                    s_logger.warn("Agent is disconnected but the host is still up: " + host.getId() + "-" + host.getName());
-                    if (currentStatus == Status.Disconnected) {
+                    s_logger.warn("Agent is disconnected but the host is still up: " + host.getId() + "-" + host.getName() +
+                            '-' + host.getResourceState());
+                    if (currentStatus == Status.Disconnected ||
+                            (currentStatus == Status.Up && host.getResourceState() == ResourceState.PrepareForMaintenance)) {
                         if ((System.currentTimeMillis() >> 10) - host.getLastPinged() > AlertWait.value()) {
                             s_logger.warn("Host " + host.getId() + " has been disconnected past the wait time it should be disconnected.");
                             event = Status.Event.WaitedTooLong;
@@ -1381,7 +1414,7 @@ public class AgentManagerImpl extends ManagerBase implements AgentManager, Handl
                         s_logger.warn(e.getMessage());
                         // upgradeAgent(task.getLink(), data, e.getReason());
                     } catch (final ClassNotFoundException e) {
-                        final String message = String.format("Exception occured when executing taks! Error '%s'", e.getMessage());
+                        final String message = String.format("Exception occurred when executing tasks! Error '%s'", e.getMessage());
                         s_logger.error(message);
                         throw new TaskExecutionException(message, e);
                     }
@@ -1419,7 +1452,7 @@ public class AgentManagerImpl extends ManagerBase implements AgentManager, Handl
             } else if (action == TapAgentsAction.Contains) {
                 return _loadingAgents.contains(hostId);
             } else {
-                throw new CloudRuntimeException("Unkonwn TapAgentsAction " + action);
+                throw new CloudRuntimeException("Unknown TapAgentsAction " + action);
             }
         }
         return true;
@@ -1442,8 +1475,8 @@ public class AgentManagerImpl extends ManagerBase implements AgentManager, Handl
             try {
                 return _statusStateMachine.transitTo(host, e, host.getId(), _hostDao);
             } catch (final NoTransitionException e1) {
-                s_logger.debug("Cannot transit agent status with event " + e + " for host " + host.getId() + ", name=" + host.getName() + ", mangement server id is " + msId);
-                throw new CloudRuntimeException("Cannot transit agent status with event " + e + " for host " + host.getId() + ", mangement server id is " + msId + "," + e1.getMessage());
+                s_logger.debug("Cannot transit agent status with event " + e + " for host " + host.getId() + ", name=" + host.getName() + ", management server id is " + msId);
+                throw new CloudRuntimeException("Cannot transit agent status with event " + e + " for host " + host.getId() + ", management server id is " + msId + "," + e1.getMessage());
             }
         } finally {
             _agentStatusLock.unlock();
@@ -1761,6 +1794,7 @@ public class AgentManagerImpl extends ManagerBase implements AgentManager, Handl
                     Map<String, String> params = new HashMap<String, String>();
                     params.put(Config.RouterAggregationCommandEachTimeout.toString(), _configDao.getValue(Config.RouterAggregationCommandEachTimeout.toString()));
                     params.put(Config.MigrateWait.toString(), _configDao.getValue(Config.MigrateWait.toString()));
+                    params.put(NetworkOrchestrationService.TUNGSTEN_ENABLED.key(), String.valueOf(NetworkOrchestrationService.TUNGSTEN_ENABLED.valueIn(host.getDataCenterId())));
 
                     try {
                         SetHostParamsCommand cmds = new SetHostParamsCommand(params);

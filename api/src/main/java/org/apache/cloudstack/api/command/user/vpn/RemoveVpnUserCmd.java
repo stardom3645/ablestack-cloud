@@ -39,7 +39,6 @@ import com.cloud.user.Account;
 public class RemoveVpnUserCmd extends BaseAsyncCmd {
     public static final Logger s_logger = Logger.getLogger(RemoveVpnUserCmd.class.getName());
 
-    private static final String s_name = "removevpnuserresponse";
 
     /////////////////////////////////////////////////////
     //////////////// API parameters /////////////////////
@@ -84,11 +83,6 @@ public class RemoveVpnUserCmd extends BaseAsyncCmd {
     /////////////////////////////////////////////////////
 
     @Override
-    public String getCommandName() {
-        return s_name;
-    }
-
-    @Override
     public long getEntityOwnerId() {
         Long accountId = _accountService.finalyzeAccountId(accountName, domainId, projectId, true);
         if (accountId == null) {
@@ -120,9 +114,8 @@ public class RemoveVpnUserCmd extends BaseAsyncCmd {
         }
 
         boolean appliedVpnUsers = false;
-
         try {
-            appliedVpnUsers = _ravService.applyVpnUsers(ownerId, userName);
+            appliedVpnUsers = _ravService.applyVpnUsers(ownerId, userName, true);
         } catch (ResourceUnavailableException ex) {
             String errorMessage = String.format("Failed to refresh VPN user=[%s] due to resource unavailable. VPN owner id=[%s].", userName, ownerId);
             s_logger.error(errorMessage, ex);

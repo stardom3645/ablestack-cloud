@@ -17,9 +17,7 @@
 
 <template>
   <a-layout class="layout" :class="[device]">
-
     <a-affix style="z-index: 200">
-
       <template v-if="isSideMenu()">
         <a-drawer
           v-if="isMobile()"
@@ -65,16 +63,17 @@
         </a-drawer>
       </template>
 
-      <template v-if="isDevelopmentMode">
-        <drawer :visible="showSetting" placement="right">
-          <div slot="handler">
-            <a-button type="primary" size="large">
-              <a-icon :type="showSetting ? 'close' : 'setting'"/>
-            </a-button>
-          </div>
-          <setting slot="drawer" :visible="showSetting" />
-        </drawer>
-      </template>
+      <drawer :visible="showSetting" placement="right" v-if="isAdmin && (isDevelopmentMode || allowSettingTheme)">
+        <template #handler>
+          <a-button type="primary" size="large">
+            <close-outlined v-if="showSetting" />
+            <setting-outlined v-else />
+          </a-button>
+        </template>
+        <template #drawer>
+          <setting :visible="showSetting" />
+        </template>
+      </drawer>
 
     </a-affix>
 
@@ -90,6 +89,13 @@
           @toggle="toggle"
         />
       </a-affix>
+
+      <a-button
+        v-if="showClear"
+        type="default"
+        size="small"
+        class="button-clear-notification"
+        @click="onClearNotification">{{ $t('label.clear.notification') }}</a-button>
 
       <!-- layout content -->
       <a-layout-content class="layout-content" :class="{'is-header-fixed': fixedHeader}">
@@ -111,6 +117,7 @@ import GlobalFooter from '@/components/page/GlobalFooter'
 import { triggerWindowResizeEvent } from '@/utils/util'
 import { mapState, mapActions } from 'vuex'
 import { mixin, mixinDevice } from '@/utils/mixin.js'
+import { isAdmin } from '@/role'
 import Drawer from '@/components/widgets/Drawer'
 import Setting from '@/components/view/Setting.vue'
 
@@ -128,15 +135,22 @@ export default {
     return {
       collapsed: false,
       menus: [],
-      showSetting: false
+      showSetting: false,
+      showClear: false
     }
   },
   computed: {
     ...mapState({
       mainMenu: state => state.permission.addRouters
     }),
+    isAdmin () {
+      return isAdmin()
+    },
     isDevelopmentMode () {
       return process.env.NODE_ENV === 'development'
+    },
+    allowSettingTheme () {
+      return this.$config.allowSettingTheme
     },
     contentPaddingLeft () {
       if (!this.fixSidebar || this.isMobile()) {
@@ -161,6 +175,12 @@ export default {
       } else {
         document.body.classList.remove('dark-mode')
       }
+    },
+    '$store.getters.countNotify' (countNotify) {
+      this.showClear = false
+      if (countNotify && countNotify > 0) {
+        this.showClear = true
+      }
     }
   },
   provide: function () {
@@ -173,7 +193,9 @@ export default {
     this.collapsed = !this.sidebarOpened
   },
   mounted () {
-    if (this.$store.getters.darkMode) {
+    const layoutMode = this.$config.theme['@layout-mode'] || 'light'
+    this.$store.dispatch('SetDarkMode', (layoutMode === 'dark'))
+    if (layoutMode === 'dark') {
       document.body.classList.add('dark-mode')
     }
     const userAgent = navigator.userAgent
@@ -185,8 +207,13 @@ export default {
         }, 16)
       })
     }
+    const countNotify = this.$store.getters.countNotify
+    this.showClear = false
+    if (countNotify && countNotify > 0) {
+      this.showClear = true
+    }
   },
-  beforeDestroy () {
+  beforeUnmount () {
     document.body.classList.remove('dark')
   },
   methods: {
@@ -201,7 +228,7 @@ export default {
       if (this.sidebarOpened) {
         left = this.isDesktop() ? '256px' : '80px'
       } else {
-        left = this.isMobile() && '0' || (this.fixSidebar && '80px' || '0')
+        left = this.isMobile() ? '0' : (this.fixSidebar ? '80px' : '0')
       }
       return left
     },
@@ -212,6 +239,10 @@ export default {
     },
     toggleSetting (showSetting) {
       this.showSetting = showSetting
+    },
+    onClearNotification () {
+      this.$notification.destroy()
+      this.$store.commit('SET_COUNT_NOTIFY', 0)
     }
   }
 }

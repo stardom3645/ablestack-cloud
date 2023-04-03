@@ -40,12 +40,11 @@ import org.apache.cloudstack.ha.HAConfigManager;
 
 import javax.inject.Inject;
 
-@APICommand(name = EnableHAForClusterCmd.APINAME, description = "Enables HA cluster-wide",
+@APICommand(name = "enableHAForCluster", description = "Enables HA cluster-wide",
         responseObject = SuccessResponse.class,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false,
         since = "4.11", authorized = {RoleType.Admin})
 public final class EnableHAForClusterCmd extends BaseAsyncCmd {
-    public static final String APINAME = "enableHAForCluster";
 
     @Inject
     private HAConfigManager haConfigManager;
@@ -58,6 +57,9 @@ public final class EnableHAForClusterCmd extends BaseAsyncCmd {
             description = "ID of the cluster", required = true, validations = {ApiArgValidator.PositiveNumber})
     private Long clusterId;
 
+    @Parameter(name = ApiConstants.INCLUDE_HOST, type = CommandType.BOOLEAN, required = false, description = "Whether the host in the cluster has ha enabled")
+    private Boolean includeHost;
+
     /////////////////////////////////////////////////////
     /////////////////// Accessors ///////////////////////
     /////////////////////////////////////////////////////
@@ -66,14 +68,13 @@ public final class EnableHAForClusterCmd extends BaseAsyncCmd {
         return clusterId;
     }
 
+    public boolean includeHost() {
+        return (includeHost != null) ? includeHost : false;
+    }
+
     /////////////////////////////////////////////////////
     /////////////// API Implementation///////////////////
     /////////////////////////////////////////////////////
-
-    @Override
-    public String getCommandName() {
-        return APINAME.toLowerCase() + BaseCmd.RESPONSE_SUFFIX;
-    }
 
     @Override
     public long getEntityOwnerId() {
@@ -95,7 +96,7 @@ public final class EnableHAForClusterCmd extends BaseAsyncCmd {
             throw new ServerApiException(ApiErrorCode.PARAM_ERROR, "Unable to find cluster by ID: " + getClusterId());
         }
 
-        final boolean result = haConfigManager.enableHA(cluster);
+        final boolean result = haConfigManager.enableHA(cluster, includeHost());
         CallContext.current().setEventDetails("Cluster Id:" + cluster.getId() + " HA enabled: true");
         CallContext.current().putContextParameter(Cluster.class, cluster.getUuid());
 

@@ -20,6 +20,7 @@ import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -33,6 +34,27 @@ import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.naming.ConfigurationException;
 
+import com.cloud.user.UserData;
+import com.cloud.storage.VolumeApiService;
+import com.cloud.storage.DataStoreRole;
+import com.cloud.storage.GuestOSVO;
+import com.cloud.storage.ImageStoreUploadMonitorImpl;
+import com.cloud.storage.LaunchPermissionVO;
+import com.cloud.storage.Snapshot;
+import com.cloud.storage.SnapshotVO;
+import com.cloud.storage.Storage;
+import com.cloud.storage.StorageManager;
+import com.cloud.storage.StoragePool;
+import com.cloud.storage.StoragePoolHostVO;
+import com.cloud.storage.StoragePoolStatus;
+import com.cloud.storage.TemplateProfile;
+import com.cloud.storage.Upload;
+import com.cloud.storage.VMTemplateStoragePoolVO;
+import com.cloud.storage.VMTemplateStorageResourceAssoc;
+import com.cloud.storage.VMTemplateVO;
+import com.cloud.storage.VMTemplateZoneVO;
+import com.cloud.storage.Volume;
+import com.cloud.storage.VolumeVO;
 import org.apache.cloudstack.acl.SecurityChecker.AccessType;
 import org.apache.cloudstack.api.ApiConstants;
 import org.apache.cloudstack.api.BaseListTemplateOrIsoPermissionsCmd;
@@ -54,6 +76,8 @@ import org.apache.cloudstack.api.command.user.template.ListTemplatePermissionsCm
 import org.apache.cloudstack.api.command.user.template.RegisterTemplateCmd;
 import org.apache.cloudstack.api.command.user.template.UpdateTemplateCmd;
 import org.apache.cloudstack.api.command.user.template.UpdateTemplatePermissionsCmd;
+import org.apache.cloudstack.api.command.user.userdata.LinkUserDataToTemplateCmd;
+import org.apache.cloudstack.api.command.user.vm.CloneVMCmd;
 import org.apache.cloudstack.api.response.GetUploadParamsResponse;
 import org.apache.cloudstack.context.CallContext;
 import org.apache.cloudstack.engine.orchestration.service.VolumeOrchestrationService;
@@ -66,7 +90,6 @@ import org.apache.cloudstack.engine.subsystem.api.storage.Scope;
 import org.apache.cloudstack.engine.subsystem.api.storage.SnapshotDataFactory;
 import org.apache.cloudstack.engine.subsystem.api.storage.SnapshotInfo;
 import org.apache.cloudstack.engine.subsystem.api.storage.SnapshotStrategy;
-import org.apache.cloudstack.engine.subsystem.api.storage.SnapshotStrategy.SnapshotOperation;
 import org.apache.cloudstack.engine.subsystem.api.storage.StorageCacheManager;
 import org.apache.cloudstack.engine.subsystem.api.storage.StorageStrategyFactory;
 import org.apache.cloudstack.engine.subsystem.api.storage.TemplateDataFactory;
@@ -114,9 +137,9 @@ import com.cloud.agent.api.to.DiskTO;
 import com.cloud.agent.api.to.NfsTO;
 import com.cloud.agent.api.to.VirtualMachineTO;
 import com.cloud.api.ApiDBUtils;
-import com.cloud.api.ApiResponseHelper;
 import com.cloud.api.query.dao.UserVmJoinDao;
 import com.cloud.api.query.vo.UserVmJoinVO;
+import com.cloud.api.ApiResponseHelper;
 import com.cloud.configuration.Config;
 import com.cloud.configuration.Resource.ResourceType;
 import com.cloud.dc.DataCenter;
@@ -142,28 +165,9 @@ import com.cloud.hypervisor.HypervisorGuru;
 import com.cloud.hypervisor.HypervisorGuruManager;
 import com.cloud.projects.Project;
 import com.cloud.projects.ProjectManager;
-import com.cloud.storage.DataStoreRole;
-import com.cloud.storage.GuestOSVO;
-import com.cloud.storage.ImageStoreUploadMonitorImpl;
-import com.cloud.storage.LaunchPermissionVO;
-import com.cloud.storage.Snapshot;
-import com.cloud.storage.SnapshotVO;
-import com.cloud.storage.Storage;
 import com.cloud.storage.Storage.ImageFormat;
 import com.cloud.storage.Storage.TemplateType;
-import com.cloud.storage.StorageManager;
-import com.cloud.storage.StoragePool;
-import com.cloud.storage.StoragePoolHostVO;
-import com.cloud.storage.StoragePoolStatus;
-import com.cloud.storage.TemplateProfile;
-import com.cloud.storage.Upload;
-import com.cloud.storage.VMTemplateStoragePoolVO;
-import com.cloud.storage.VMTemplateStorageResourceAssoc;
 import com.cloud.storage.VMTemplateStorageResourceAssoc.Status;
-import com.cloud.storage.VMTemplateVO;
-import com.cloud.storage.VMTemplateZoneVO;
-import com.cloud.storage.Volume;
-import com.cloud.storage.VolumeVO;
 import com.cloud.storage.dao.GuestOSDao;
 import com.cloud.storage.dao.LaunchPermissionDao;
 import com.cloud.storage.dao.SnapshotDao;
@@ -208,6 +212,7 @@ import com.cloud.vm.dao.VMInstanceDao;
 import com.google.common.base.Joiner;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import org.apache.cloudstack.snapshot.SnapshotHelper;
 
 public class TemplateManagerImpl extends ManagerBase implements TemplateManager, TemplateApiService, Configurable {
     private final static Logger s_logger = Logger.getLogger(TemplateManagerImpl.class);
@@ -299,6 +304,9 @@ public class TemplateManagerImpl extends ManagerBase implements TemplateManager,
     @Inject
     private EndPointSelector selector;
 
+    @Inject
+    protected SnapshotHelper snapshotHelper;
+
     private TemplateAdapter getAdapter(HypervisorType type) {
         TemplateAdapter adapter = null;
         if (type == HypervisorType.BareMetal) {
@@ -323,6 +331,7 @@ public class TemplateManagerImpl extends ManagerBase implements TemplateManager,
         VMTemplateVO template = adapter.create(profile);
 
         if (template != null) {
+            CallContext.current().putContextParameter(VirtualMachineTemplate.class, template.getUuid());
             return template;
         } else {
             throw new CloudRuntimeException("Failed to create ISO");
@@ -349,6 +358,7 @@ public class TemplateManagerImpl extends ManagerBase implements TemplateManager,
         VMTemplateVO template = adapter.create(profile);
 
         if (template != null) {
+            CallContext.current().putContextParameter(VirtualMachineTemplate.class, template.getUuid());
             return template;
         } else {
             throw new CloudRuntimeException("Failed to create a template");
@@ -375,8 +385,10 @@ public class TemplateManagerImpl extends ManagerBase implements TemplateManager,
             TemplateOrVolumePostUploadCommand firstCommand = payload.get(0);
 
             String ssvmUrlDomain = _configDao.getValue(Config.SecStorageSecureCopyCert.key());
+            String protocol = VolumeApiService.UseHttpsToUpload.value() ? "https" : "http";
 
-            String url = ImageStoreUtil.generatePostUploadUrl(ssvmUrlDomain, firstCommand.getRemoteEndPoint(), firstCommand.getEntityUUID());
+            String url = ImageStoreUtil.generatePostUploadUrl(ssvmUrlDomain, firstCommand.getRemoteEndPoint(), firstCommand.getEntityUUID(), protocol);
+            String sig_url = ImageStoreUtil.generatePostUploadUrl(ssvmUrlDomain, firstCommand.getRemoteEndPoint(), firstCommand.getEntityUUID(), "https");
             response.setPostURL(new URL(url));
 
             // set the post url, this is used in the monitoring thread to determine the SSVM
@@ -404,7 +416,7 @@ public class TemplateManagerImpl extends ManagerBase implements TemplateManager,
             /*
              * signature calculated on the url, expiry, metadata.
              */
-            response.setSignature(EncryptionUtil.generateSignature(metadata + url + expires, key));
+            response.setSignature(EncryptionUtil.generateSignature(metadata + sig_url + expires, key));
 
             return response;
         } else {
@@ -514,9 +526,7 @@ public class TemplateManagerImpl extends ManagerBase implements TemplateManager,
             throw new InvalidParameterValueException("Unable to find " + desc + " with id " + templateId);
         }
 
-        if (template.getTemplateType() == Storage.TemplateType.SYSTEM) {
-            throw new InvalidParameterValueException("Unable to extract the " + desc + " " + template.getName() + " as it is a default System template");
-        } else if (template.getTemplateType() == Storage.TemplateType.PERHOST) {
+        if (template.getTemplateType() == Storage.TemplateType.PERHOST) {
             throw new InvalidParameterValueException("Unable to extract the " + desc + " " + template.getName() + " as it resides on host and not on SSVM");
         }
 
@@ -1481,7 +1491,7 @@ public class TemplateManagerImpl extends ManagerBase implements TemplateManager,
             throw new InvalidParameterValueException("Update template permissions is an invalid operation on template " + template.getName());
         }
 
-        if (owner.getType() == Account.ACCOUNT_TYPE_PROJECT) {
+        if (owner.getType() == Account.Type.PROJECT) {
             // Currently project owned templates cannot be shared outside project but is available to all users within project by default.
             throw new InvalidParameterValueException("Update template permissions is an invalid operation on template " + template.getName() +
                     ". Project owned templates cannot be shared outside template.");
@@ -1612,6 +1622,8 @@ public class TemplateManagerImpl extends ManagerBase implements TemplateManager,
         SnapshotVO snapshot = null;
         VolumeVO volume = null;
         Account caller = CallContext.current().getCallingAccount();
+        boolean kvmSnapshotOnlyInPrimaryStorage = false;
+        SnapshotInfo snapInfo = null;
 
         try {
             TemplateInfo tmplInfo = _tmplFactory.getTemplate(templateId, DataStoreRole.Image);
@@ -1630,26 +1642,12 @@ public class TemplateManagerImpl extends ManagerBase implements TemplateManager,
             AsyncCallFuture<TemplateApiResult> future = null;
 
             if (snapshotId != null) {
-                DataStoreRole dataStoreRole = ApiResponseHelper.getDataStoreRole(snapshot, _snapshotStoreDao, _dataStoreMgr);
+                DataStoreRole dataStoreRole = snapshotHelper.getDataStoreRole(snapshot);
+                kvmSnapshotOnlyInPrimaryStorage = snapshotHelper.isKvmSnapshotOnlyInPrimaryStorage(snapshot, dataStoreRole);
 
-                SnapshotInfo snapInfo = _snapshotFactory.getSnapshot(snapshotId, dataStoreRole);
-
-                if (dataStoreRole == DataStoreRole.Image) {
-                    if (snapInfo == null) {
-                        snapInfo = _snapshotFactory.getSnapshot(snapshotId, DataStoreRole.Primary);
-                        if(snapInfo == null) {
-                            throw new CloudRuntimeException("Cannot find snapshot "+snapshotId);
-                        }
-                        // We need to copy the snapshot onto secondary.
-                        SnapshotStrategy snapshotStrategy = _storageStrategyFactory.getSnapshotStrategy(snapshot, SnapshotOperation.BACKUP);
-                        snapshotStrategy.backupSnapshot(snapInfo);
-
-                        // Attempt to grab it again.
-                        snapInfo = _snapshotFactory.getSnapshot(snapshotId, dataStoreRole);
-                        if(snapInfo == null) {
-                            throw new CloudRuntimeException("Cannot find snapshot " + snapshotId + " on secondary and could not create backup");
-                        }
-                    }
+                snapInfo = _snapshotFactory.getSnapshot(snapshotId, dataStoreRole);
+                if (dataStoreRole == DataStoreRole.Image || kvmSnapshotOnlyInPrimaryStorage) {
+                    snapInfo = snapshotHelper.backupSnapshotToSecondaryStorageIfNotExists(snapInfo, dataStoreRole, snapshot, kvmSnapshotOnlyInPrimaryStorage);
                     _accountMgr.checkAccess(caller, null, true, snapInfo);
                     DataStore snapStore = snapInfo.getDataStore();
 
@@ -1733,6 +1731,10 @@ public class TemplateManagerImpl extends ManagerBase implements TemplateManager,
                 });
 
             }
+
+            if (snapshotId != null) {
+                snapshotHelper.expungeTemporarySnapshot(kvmSnapshotOnlyInPrimaryStorage, snapInfo);
+            }
         }
 
         if (privateTemplate != null) {
@@ -1740,6 +1742,252 @@ public class TemplateManagerImpl extends ManagerBase implements TemplateManager,
         } else {
             throw new CloudRuntimeException("Failed to create a template");
         }
+    }
+
+    @Override
+    @DB
+    @ActionEvent(eventType = EventTypes.EVENT_TEMPLATE_CREATE, eventDescription = "creating actual private template", create = true)
+    public VirtualMachineTemplate createPrivateTemplate(CloneVMCmd cmd, long snapshotId, long templateId) throws CloudRuntimeException {
+        UserVm curVm = cmd.getTargetVM();
+        final Long accountId = curVm.getAccountId();
+        Account caller = CallContext.current().getCallingAccount();
+        List<VolumeVO> volumes = _volumeDao.findByInstanceAndType(cmd.getId(), Volume.Type.ROOT);
+        VolumeVO targetVolume = volumes.get(0);
+        long volumeId = targetVolume.getId();
+        VMTemplateVO finalTmpProduct = null;
+        SnapshotVO snapshot = null;
+        try {
+            TemplateInfo cloneTempalateInfp = _tmplFactory.getTemplate(templateId, DataStoreRole.Image);
+            long zoneId = curVm.getDataCenterId();
+            AsyncCallFuture<TemplateApiResult> future = null;
+            VolumeInfo vInfo = _volFactory.getVolume(volumeId);
+            DataStore store = _dataStoreMgr.getImageStoreWithFreeCapacity(zoneId);
+            snapshot = _snapshotDao.findById(snapshotId);
+            // create template from snapshot
+            DataStoreRole dataStoreRole = ApiResponseHelper.getDataStoreRole(snapshot, _snapshotStoreDao, _dataStoreMgr);
+            SnapshotInfo snapInfo = _snapshotFactory.getSnapshot(snapshotId, dataStoreRole);
+            if (dataStoreRole == DataStoreRole.Image) {
+                if (snapInfo == null) {
+                    snapInfo = _snapshotFactory.getSnapshot(snapshotId, DataStoreRole.Primary);
+                    if(snapInfo == null) {
+                        throw new CloudRuntimeException("Cannot find snapshot "+snapshotId);
+                    }
+                    // We need to copy the snapshot onto secondary.
+                    SnapshotStrategy snapshotStrategy = _storageStrategyFactory.getSnapshotStrategy(snapshot, SnapshotStrategy.SnapshotOperation.BACKUP);
+                    snapshotStrategy.backupSnapshot(snapInfo);
+
+                    // Attempt to grab it again.
+                    snapInfo = _snapshotFactory.getSnapshot(snapshotId, dataStoreRole);
+                    if(snapInfo == null) {
+                        throw new CloudRuntimeException("Cannot find snapshot " + snapshotId + " on secondary and could not create backup");
+                    }
+                }
+                _accountMgr.checkAccess(caller, null, true, snapInfo);
+                DataStore snapStore = snapInfo.getDataStore();
+
+                if (snapStore != null) {
+                    store = snapStore; // pick snapshot image store to create template
+                }
+            }
+            future = _tmpltSvr.createTemplateFromSnapshotAsync(snapInfo, cloneTempalateInfp, store);
+            // wait for the result to converge
+            CommandResult result = null;
+            try {
+                result = future.get();
+
+                if (result.isFailed()) {
+                    finalTmpProduct = null;
+                    s_logger.warn("Failed to create template: " + result.getResult());
+                    throw new CloudRuntimeException("Failed to create template: " + result.getResult());
+                }
+                if (_dataStoreMgr.isRegionStore(store)) {
+                    _tmpltSvr.associateTemplateToZone(templateId, null);
+                } else {
+                    // Already done in the record to db step
+                    VMTemplateZoneVO templateZone = new VMTemplateZoneVO(zoneId, templateId, new Date());
+                    _tmpltZoneDao.persist(templateZone);
+                }
+                s_logger.info("successfully created the template with Id: " + templateId);
+                finalTmpProduct = _tmpltDao.findById(templateId);
+                TemplateDataStoreVO srcTmpltStore = _tmplStoreDao.findByStoreTemplate(store.getId(), templateId);
+                try {
+                    srcTmpltStore.getSize();
+                } catch (NullPointerException e) {
+                    srcTmpltStore.setSize(0L);
+                    _tmplStoreDao.update(srcTmpltStore.getId(), srcTmpltStore);
+                }
+                UsageEventVO usageEvent =
+                        new UsageEventVO(EventTypes.EVENT_TEMPLATE_CREATE, finalTmpProduct.getAccountId(), zoneId, finalTmpProduct.getId(), finalTmpProduct.getName(), null,
+                                finalTmpProduct.getSourceTemplateId(), srcTmpltStore.getPhysicalSize(), finalTmpProduct.getSize());
+                _usageEventDao.persist(usageEvent);
+            } catch (InterruptedException e) {
+                s_logger.debug("Failed to create template for id: " + templateId, e);
+                throw new CloudRuntimeException("Failed to create template" , e);
+            } catch (ExecutionException e) {
+                s_logger.debug("Failed to create template for id: " + templateId, e);
+                throw new CloudRuntimeException("Failed to create template ", e);
+            }
+
+        } finally {
+            finalTmpProduct = _tmpltDao.findById(templateId);
+            if (finalTmpProduct == null) {
+                final VolumeVO volumeFinal = targetVolume;
+                final SnapshotVO snapshotFinal = snapshot;
+                Transaction.execute(new TransactionCallbackNoReturn() {
+                    @Override
+                    public void doInTransactionWithoutResult(TransactionStatus status) {
+                        // template_store_ref entries should have been removed using our
+                        // DataObject.processEvent command in case of failure, but clean
+                        // it up here to avoid
+                        // some leftovers which will cause removing template from
+                        // vm_template table fail.
+                        _tmplStoreDao.deletePrimaryRecordsForTemplate(templateId);
+                        // Remove the template_zone_ref record
+                        _tmpltZoneDao.deletePrimaryRecordsForTemplate(templateId);
+                        // Remove the template record
+                        _tmpltDao.expunge(templateId);
+
+                        // decrement resource count
+                        if (accountId != null) {
+                            _resourceLimitMgr.decrementResourceCount(accountId, ResourceType.template);
+                            _resourceLimitMgr.decrementResourceCount(accountId, ResourceType.secondary_storage, new Long(volumeFinal != null ? volumeFinal.getSize()
+                                    : snapshotFinal.getSize()));
+                        }
+                    }
+                });
+
+            }
+        }
+        return null;
+    }
+
+    @Override
+    public Snapshot createSnapshotFromTemplateOwner(long vmId, UserVm curVm, Account templateOwner, VolumeApiService volumeService) throws ResourceAllocationException {
+        Account caller = CallContext.current().getCallingAccount();
+        _accountMgr.checkAccess(caller, null, true, templateOwner);
+//        UserVm curVm = cmd.getTargetVM();
+        Long nextSnapId = _tmpltDao.getNextInSequence(Long.class, "id");
+        Long volumeId = _volumeDao.findByInstanceAndType(vmId, Volume.Type.ROOT).get(0).getId();
+        VolumeVO volume = _volumeDao.findById(volumeId);
+        if (volume == null) {
+            throw new InvalidParameterValueException("Failed to create private template record, unable to find root volume " + volumeId);
+        }
+
+        // check permissions
+        _accountMgr.checkAccess(caller, null, true, volume);
+        s_logger.info("Creating snapshot for the tempalte creation");
+        SnapshotVO snapshot = (SnapshotVO) volumeService.allocSnapshot(volumeId, Snapshot.INTERNAL_POLICY_ID, curVm.getDisplayName() + "-Clone-" + nextSnapId, null);
+        if (snapshot == null) {
+            throw new CloudRuntimeException("Unable to create a snapshot during the template creation recording");
+        }
+        Snapshot snapshotEntity = volumeService.takeSnapshot(volumeId, Snapshot.INTERNAL_POLICY_ID, snapshot.getId(), caller, false, null, false, new HashMap<>());
+        if (snapshotEntity == null) {
+            throw new CloudRuntimeException("Error when creating the snapshot entity");
+        }
+        if (snapshotEntity.getState() != Snapshot.State.BackedUp) {
+            throw new CloudRuntimeException("Async backup of snapshot happens during the clone for snapshot id: " + snapshot.getId());
+        }
+        return snapshot;
+    }
+    @Override
+    @ActionEvent(eventType = EventTypes.EVENT_TEMPLATE_CREATE, eventDescription = "creating template from clone", create = true)
+    public VMTemplateVO createPrivateTemplateRecord(CloneVMCmd cmd, Account templateOwner, VolumeApiService volumeService, Snapshot snapshot) throws ResourceAllocationException {
+        Account caller = CallContext.current().getCallingAccount();
+        _accountMgr.checkAccess(caller, null, true, templateOwner);
+        String name = cmd.getTemplateName();
+        if (name.length() > 32) {
+
+            name = name.substring(5) + "-QA-Clone";
+        }
+
+        boolean featured = false;
+        boolean isPublic = cmd.isPublic();
+        UserVm curVm = cmd.getTargetVM();
+        long zoneId = curVm.getDataCenterId();
+        Long volumeId = _volumeDao.findByInstanceAndType(cmd.getId(), Volume.Type.ROOT).get(0).getId();
+        HypervisorType hyperType = null;
+        VolumeVO volume = _volumeDao.findById(volumeId);
+        if (volume == null) {
+            throw new InvalidParameterValueException("Failed to create private template record, unable to find root volume " + volumeId);
+        }
+        // check permissions
+        _accountMgr.checkAccess(caller, null, true, volume);
+        hyperType = _volumeDao.getHypervisorType(volumeId);
+        if (HypervisorType.LXC.equals(hyperType)) {
+            throw new InvalidParameterValueException("Template creation is not supported for LXC volume: " + volumeId);
+        }
+
+        _resourceLimitMgr.checkResourceLimit(templateOwner, ResourceType.template);
+        _resourceLimitMgr.checkResourceLimit(templateOwner, ResourceType.secondary_storage, volume.getSize());
+
+        Long guestOSId = cmd.getTargetVM().getGuestOSId();
+        GuestOSVO guestOS = _guestOSDao.findById(guestOSId);
+        if (guestOS == null) {
+            throw new InvalidParameterValueException("GuestOS with ID: " + guestOSId + " does not exist.");
+        }
+        // get snapshot from this step
+        Long nextTemplateId = _tmpltDao.getNextInSequence(Long.class, "id");
+        String description = ""; // TODO: add this to clone parameter in the future
+        boolean isExtractable = false;
+        Long sourceTemplateId = null;
+        if (volume != null) {
+            VMTemplateVO template = ApiDBUtils.findTemplateById(volume.getTemplateId());
+            isExtractable = template != null && template.isExtractable() && template.getTemplateType() != Storage.TemplateType.SYSTEM;
+            if (volume.getIsoId() != null && volume.getIsoId() != 0) {
+                sourceTemplateId = volume.getIsoId();
+            } else if (volume.getTemplateId() != null) {
+                sourceTemplateId = volume.getTemplateId();
+            }
+        }
+
+        VMTemplateVO privateTemplate = null;
+        privateTemplate = new VMTemplateVO(nextTemplateId, name, ImageFormat.RAW, isPublic, featured, isExtractable,
+                TemplateType.USER, null, true, 64, templateOwner.getId(), null, description,
+                false, guestOS.getId(), true, hyperType, null, new HashMap<>(){{put("template to be cleared", "yes");}}, false, false, false, false);
+        List<ImageStoreVO> stores = _imgStoreDao.findRegionImageStores();
+        if (!CollectionUtils.isEmpty(stores)) {
+            privateTemplate.setCrossZones(true);
+        }
+
+        privateTemplate.setSourceTemplateId(sourceTemplateId);
+        VMTemplateVO template = _tmpltDao.persist(privateTemplate);
+        if (template != null) {
+            Map<String, String> details = new HashMap<String, String>();
+
+            if (sourceTemplateId != null) {
+                VMTemplateVO sourceTemplate = _tmpltDao.findById(sourceTemplateId);
+                if (sourceTemplate != null && sourceTemplate.getDetails() != null) {
+                    details.putAll(sourceTemplate.getDetails());
+                }
+            }
+
+            if (volume != null) {
+                Long vmId = volume.getInstanceId();
+                if (vmId != null) {
+                    UserVmVO userVm = _userVmDao.findById(vmId);
+                    if (userVm != null) {
+                        _userVmDao.loadDetails(userVm);
+                        Map<String, String> vmDetails = userVm.getDetails();
+                        vmDetails = vmDetails.entrySet()
+                                .stream()
+                                .filter(map -> map.getValue() != null)
+                                .collect(Collectors.toMap(map -> map.getKey(), map -> map.getValue()));
+                        details.putAll(vmDetails);
+                    }
+                }
+            }
+
+            if (!details.isEmpty()) {
+                privateTemplate.setDetails(details);
+                _tmpltDao.saveDetails(privateTemplate);
+            }
+
+            _resourceLimitMgr.incrementResourceCount(templateOwner.getId(), ResourceType.template);
+            _resourceLimitMgr.incrementResourceCount(templateOwner.getId(), ResourceType.secondary_storage,
+                    ((SnapshotVO) snapshot).getSize());
+        }
+
+        return template;
     }
 
     @Override
@@ -1751,8 +1999,9 @@ public class TemplateManagerImpl extends ManagerBase implements TemplateManager,
         _accountMgr.checkAccess(caller, null, true, templateOwner);
 
         String name = cmd.getTemplateName();
-        if ((name == null) || (name.length() > 32)) {
-            throw new InvalidParameterValueException("Template name cannot be null and should be less than 32 characters");
+        if ((org.apache.commons.lang3.StringUtils.isBlank(name)
+                || (name.length() > VirtualMachineTemplate.MAXIMUM_TEMPLATE_NAME_LENGTH))) {
+            throw new InvalidParameterValueException(String.format("Template name cannot be null and cannot be more %s characters", VirtualMachineTemplate.MAXIMUM_TEMPLATE_NAME_LENGTH));
         }
 
         if (cmd.getTemplateTag() != null) {
@@ -1804,6 +2053,11 @@ public class TemplateManagerImpl extends ManagerBase implements TemplateManager,
             // check permissions
             _accountMgr.checkAccess(caller, null, true, volume);
 
+            // Don't support creating templates from encrypted volumes (yet)
+            if (volume.getPassphraseId() != null) {
+                throw new UnsupportedOperationException("Cannot create templates from encrypted volumes");
+            }
+
             // If private template is created from Volume, check that the volume
             // will not be active when the private template is
             // created
@@ -1826,6 +2080,11 @@ public class TemplateManagerImpl extends ManagerBase implements TemplateManager,
             }
             // Volume could be removed so find including removed to record source template id.
             volume = _volumeDao.findByIdIncludingRemoved(snapshot.getVolumeId());
+
+            // Don't support creating templates from encrypted volumes (yet)
+            if (volume != null && volume.getPassphraseId() != null) {
+                throw new UnsupportedOperationException("Cannot create templates from snapshots of encrypted volumes");
+            }
 
             // check permissions
             _accountMgr.checkAccess(caller, null, true, snapshot);
@@ -1939,6 +2198,7 @@ public class TemplateManagerImpl extends ManagerBase implements TemplateManager,
         }
 
         if (template != null) {
+            CallContext.current().putContextParameter(VirtualMachineTemplate.class, template.getUuid());
             return template;
         } else {
             throw new CloudRuntimeException("Failed to create a template");
@@ -2030,11 +2290,13 @@ public class TemplateManagerImpl extends ManagerBase implements TemplateManager,
     }
 
     @Override
+    @ActionEvent(eventType = EventTypes.EVENT_ISO_UPDATE, eventDescription = "updating iso", async = false)
     public VMTemplateVO updateTemplate(UpdateIsoCmd cmd) {
         return updateTemplateOrIso(cmd);
     }
 
     @Override
+    @ActionEvent(eventType = EventTypes.EVENT_TEMPLATE_UPDATE, eventDescription = "updating template", async = false)
     public VMTemplateVO updateTemplate(UpdateTemplateCmd cmd) {
         return updateTemplateOrIso(cmd);
     }
@@ -2117,7 +2379,7 @@ public class TemplateManagerImpl extends ManagerBase implements TemplateManager,
             return template;
         }
 
-        template = _tmpltDao.createForUpdate(id);
+        template = _tmpltDao.findById(id);
 
         if (name != null) {
             template.setName(name);
@@ -2197,6 +2459,8 @@ public class TemplateManagerImpl extends ManagerBase implements TemplateManager,
             template.setTemplateType(templateType);
         }
 
+        validateDetails(template, details);
+
         if (cleanupDetails) {
             template.setDetails(null);
             _tmpltDetailsDao.removeDetails(id);
@@ -2209,6 +2473,31 @@ public class TemplateManagerImpl extends ManagerBase implements TemplateManager,
         _tmpltDao.update(id, template);
 
         return _tmpltDao.findById(id);
+    }
+
+    void validateDetails(VMTemplateVO template, Map<String, String> details) {
+        if (MapUtils.isEmpty(details)) {
+            return;
+        }
+        String bootMode = details.get(ApiConstants.BootType.UEFI.toString());
+        if (bootMode == null) {
+            return;
+        }
+        if (template.isDeployAsIs()) {
+            String msg = String.format("Deploy-as-is template %s [%s] can not have the UEFI setting. Settings are read directly from the template",
+                template.getName(), template.getUuid());
+            throw new InvalidParameterValueException(msg);
+        }
+        try {
+            String mode = bootMode.trim().toUpperCase();
+            ApiConstants.BootMode.valueOf(mode);
+            details.put(ApiConstants.BootType.UEFI.toString(), mode);
+            return;
+        } catch (IllegalArgumentException e) {
+            String msg = String.format("Invalid %s: %s specified. Valid values are: %s",
+                ApiConstants.BOOT_MODE, bootMode, Arrays.toString(ApiConstants.BootMode.values()));
+            s_logger.error(msg);
+            throw new InvalidParameterValueException(msg);        }
     }
 
     void verifyTemplateId(Long id) {
@@ -2250,4 +2539,41 @@ public class TemplateManagerImpl extends ManagerBase implements TemplateManager,
         return _tmpltSvr.getTemplateDatadisksOnImageStore(templateObject, configurationId);
     }
 
+    @Override
+    public VirtualMachineTemplate linkUserDataToTemplate(LinkUserDataToTemplateCmd cmd) {
+        Long templateId = cmd.getTemplateId();
+        Long isoId = cmd.getIsoId();
+        Long userDataId = cmd.getUserdataId();
+        UserData.UserDataOverridePolicy overridePolicy = cmd.getUserdataPolicy();
+        Account caller = CallContext.current().getCallingAccount();
+
+        if (templateId != null && isoId != null) {
+            throw new InvalidParameterValueException("Both template ID and ISO ID are passed, API accepts only one");
+        }
+        if (templateId == null && isoId == null) {
+            throw new InvalidParameterValueException("Atleast one of template ID or ISO ID needs to be passed");
+        }
+
+        VMTemplateVO template = null;
+        if (templateId != null) {
+            template = _tmpltDao.findById(templateId);
+        } else {
+            template = _tmpltDao.findById(isoId);
+        }
+        if (template == null) {
+            throw new InvalidParameterValueException(String.format("unable to find template/ISO with id %s", templateId == null? isoId : templateId));
+        }
+
+        _accountMgr.checkAccess(caller, AccessType.OperateEntry, true, template);
+
+        template.setUserDataId(userDataId);
+        if (userDataId != null) {
+            template.setUserDataLinkPolicy(overridePolicy);
+        } else {
+            template.setUserDataLinkPolicy(null);
+        }
+        _tmpltDao.update(template.getId(), template);
+
+        return _tmpltDao.findById(template.getId());
+    }
 }

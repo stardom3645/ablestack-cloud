@@ -18,9 +18,8 @@
 <template>
   <div style="width: 100%">
     <a-row :gutter="6">
-      <a-col :md="24" :lg="layout === 'horizontal' ? 12 : 24">
+      <a-col :md="24" :lg="layout === 'horizontal' ? 10 : 24">
         <a-checkbox
-          v-decorator="[checkBoxDecorator, {}]"
           :checked="checked"
           @change="handleCheckChange">
           {{ checkBoxLabel }}
@@ -28,17 +27,16 @@
       </a-col>
       <a-col :md="24" :lg="layout === 'horizontal' ? 12 : 24">
         <a-form-item
-          v-if="reversed != checked"
+          v-if="reversed !== checked"
           :label="selectLabel">
           <a-select
-            v-decorator="[selectDecorator, { initialValue: selectedOption ? selectedOption : getSelectInitialValue()}]"
-            :defaultValue="selectDecorator ? undefined : selectedOption ? selectedOption : getSelectInitialValue()"
+            v-model:value="selectedOption"
             showSearch
-            optionFilterProp="children"
+            optionFilterProp="label"
             :filterOption="(input, option) => {
-              return option.componentOptions.children[0].text.toLowerCase().indexOf(input.toLowerCase()) >= 0
+              return option.children[0].children.toLowerCase().indexOf(input.toLowerCase()) >= 0
             }"
-            @change="val => { this.handleSelectChange(val) }">
+            @change="val => { handleSelectChange(val) }">
             <a-select-option
               v-for="(opt) in selectSource"
               :key="opt.id"
@@ -69,10 +67,6 @@ export default {
       type: String,
       required: true
     },
-    checkBoxDecorator: {
-      type: String,
-      default: ''
-    },
     defaultCheckBoxValue: {
       type: Boolean,
       default: false
@@ -85,10 +79,6 @@ export default {
       type: String,
       default: ''
     },
-    selectDecorator: {
-      type: String,
-      default: ''
-    },
     reversed: {
       type: Boolean,
       default: false
@@ -97,11 +87,20 @@ export default {
   data () {
     return {
       checked: false,
-      selectedOption: null
+      selectedOption: null,
+      selectOptionsTimer: null
     }
   },
   created () {
     this.checked = this.defaultCheckBoxValue
+  },
+  watch: {
+    selectOptions () {
+      clearTimeout(this.selectOptionsTimer)
+      this.selectOptionsTimer = setTimeout(() => {
+        this.handleSelectOptionsUpdated()
+      }, 50)
+    }
   },
   computed: {
     selectSource () {
@@ -118,19 +117,30 @@ export default {
     arrayHasItems (array) {
       return array !== null && array !== undefined && Array.isArray(array) && array.length > 0
     },
-    getSelectInitialValue () {
-      const initialValue = this.selectSource?.filter(x => x.enabled !== false)?.[0]?.id || ''
-      this.handleSelectChange(initialValue)
-      return initialValue
-    },
     handleCheckChange (e) {
       this.checked = e.target.checked
+      if (this.checked && !this.selectedOption) {
+        this.selectedOption = this.selectSource?.filter(x => x.enabled !== false)?.[0]?.id || null
+      }
       this.$emit('handle-checkselectpair-change', this.resourceKey, this.checked, this.selectedOption)
     },
     handleSelectChange (val) {
       this.selectedOption = val
       this.$emit('handle-checkselectpair-change', this.resourceKey, this.checked, this.selectedOption)
+    },
+    handleSelectOptionsUpdated () {
+      if (!this.checked) return
+      var enabledOptions = this.selectSource?.filter(x => x.enabled !== false) || []
+      if (this.selectedOption && !enabledOptions.includes(this.selectedOption)) {
+        this.handleSelectChange(enabledOptions[0]?.id || null)
+      }
     }
   }
 }
 </script>
+
+<style lang="less" scoped>
+.ant-list-split .ant-list-item div {
+  width: 100%;
+}
+</style>

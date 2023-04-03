@@ -33,6 +33,7 @@ import org.apache.cloudstack.api.response.DomainResponse;
 import org.apache.cloudstack.api.response.ServiceOfferingResponse;
 import org.apache.cloudstack.api.response.VsphereStoragePoliciesResponse;
 import org.apache.cloudstack.api.response.ZoneResponse;
+import org.apache.cloudstack.api.response.DiskOfferingResponse;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.collections.CollectionUtils;
@@ -47,7 +48,6 @@ import com.cloud.user.Account;
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class CreateServiceOfferingCmd extends BaseCmd {
     public static final Logger s_logger = Logger.getLogger(CreateServiceOfferingCmd.class.getName());
-    private static final String s_name = "createserviceofferingresponse";
 
     /////////////////////////////////////////////////////
     //////////////// API parameters /////////////////////
@@ -189,7 +189,7 @@ public class CreateServiceOfferingCmd extends BaseCmd {
             since = "4.14")
     private String cacheMode;
 
-    // Introduce 4 new optional paramaters to work custom compute offerings
+    // Introduce 4 new optional parameters to work custom compute offerings
     @Parameter(name = ApiConstants.CUSTOMIZED,
             type = CommandType.BOOLEAN,
             since = "4.13",
@@ -210,13 +210,13 @@ public class CreateServiceOfferingCmd extends BaseCmd {
 
     @Parameter(name = ApiConstants.MAX_MEMORY,
             type = CommandType.INTEGER,
-            description = "The maximum memroy size of the custom service offering in MB",
+            description = "The maximum memory size of the custom service offering in MB",
             since = "4.13")
     private Integer maxMemory;
 
     @Parameter(name = ApiConstants.MIN_MEMORY,
             type = CommandType.INTEGER,
-            description = "The minimum memroy size of the custom service offering in MB",
+            description = "The minimum memory size of the custom service offering in MB",
             since = "4.13")
     private Integer minMemory;
 
@@ -226,6 +226,24 @@ public class CreateServiceOfferingCmd extends BaseCmd {
     @Parameter(name = ApiConstants.DYNAMIC_SCALING_ENABLED, type = CommandType.BOOLEAN, since = "4.16",
             description = "true if virtual machine needs to be dynamically scalable of cpu or memory")
     protected Boolean isDynamicScalingEnabled;
+
+    @Parameter(name = ApiConstants.DISK_OFFERING_ID,
+            required = false,
+            type = CommandType.UUID,
+            entityType = DiskOfferingResponse.class,
+            description = "the ID of the disk offering to which service offering should be mapped",
+            since = "4.17")
+    private Long diskOfferingId;
+
+    @Parameter(name = ApiConstants.DISK_OFFERING_STRICTNESS,
+            type = CommandType.BOOLEAN,
+            description = "True/False to indicate the strictness of the disk offering association with the compute offering. When set to true, override of disk offering is not allowed when VM is deployed and change disk offering is not allowed for the ROOT disk after the VM is deployed",
+            since = "4.17")
+    private Boolean diskOfferingStrictness;
+
+    @Parameter(name = ApiConstants.ENCRYPT_ROOT, type = CommandType.BOOLEAN, description = "VMs using this offering require root volume encryption", since="4.18")
+    private Boolean encryptRoot;
+
 
     /////////////////////////////////////////////////////
     /////////////////// Accessors ///////////////////////
@@ -449,14 +467,24 @@ public class CreateServiceOfferingCmd extends BaseCmd {
         return isDynamicScalingEnabled == null ? true : isDynamicScalingEnabled;
     }
 
+    public Long getDiskOfferingId() {
+        return diskOfferingId;
+    }
+
+    public boolean getDiskOfferingStrictness() {
+        return diskOfferingStrictness == null ? false : diskOfferingStrictness;
+    }
+
+    public boolean getEncryptRoot() {
+        if (encryptRoot != null) {
+            return encryptRoot;
+        }
+        return false;
+    }
+
     /////////////////////////////////////////////////////
     /////////////// API Implementation///////////////////
     /////////////////////////////////////////////////////
-
-    @Override
-    public String getCommandName() {
-        return s_name;
-    }
 
     @Override
     public long getEntityOwnerId() {

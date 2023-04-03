@@ -18,6 +18,7 @@ package org.apache.cloudstack.api.command.admin.storage;
 
 import java.util.List;
 
+import org.apache.cloudstack.api.ApiCommandResourceType;
 import org.apache.log4j.Logger;
 
 import org.apache.cloudstack.api.APICommand;
@@ -36,7 +37,6 @@ import com.cloud.user.Account;
 public class UpdateStoragePoolCmd extends BaseCmd {
     public static final Logger s_logger = Logger.getLogger(UpdateStoragePoolCmd.class.getName());
 
-    private static final String s_name = "updatestoragepoolresponse";
 
     /////////////////////////////////////////////////////
     //////////////// API parameters /////////////////////
@@ -50,6 +50,9 @@ public class UpdateStoragePoolCmd extends BaseCmd {
 
     @Parameter(name = ApiConstants.TAGS, type = CommandType.LIST, collectionType = CommandType.STRING, description = "comma-separated list of tags for the storage pool")
     private List<String> tags;
+
+    @Parameter(name = ApiConstants.IP_ADDRESS, type = CommandType.STRING, entityType = StoragePoolResponse.class, description = "Change the ip of the storage pool")
+    private String ipaddress;
 
     @Parameter(name = ApiConstants.CAPACITY_IOPS, type = CommandType.LONG, required = false, description = "IOPS CloudStack can provision from this storage pool")
     private Long capacityIops;
@@ -77,6 +80,10 @@ public class UpdateStoragePoolCmd extends BaseCmd {
         return tags;
     }
 
+    public String getIpaddress() {
+        return ipaddress;
+    }
+
     public Long getCapacityIops() {
         return capacityIops;
     }
@@ -94,13 +101,18 @@ public class UpdateStoragePoolCmd extends BaseCmd {
     /////////////////////////////////////////////////////
 
     @Override
-    public String getCommandName() {
-        return s_name;
+    public long getEntityOwnerId() {
+        return Account.ACCOUNT_ID_SYSTEM;
     }
 
     @Override
-    public long getEntityOwnerId() {
-        return Account.ACCOUNT_ID_SYSTEM;
+    public Long getApiResourceId() {
+        return getId();
+    }
+
+    @Override
+    public ApiCommandResourceType getApiResourceType() {
+        return ApiCommandResourceType.StoragePool;
     }
 
     @Override

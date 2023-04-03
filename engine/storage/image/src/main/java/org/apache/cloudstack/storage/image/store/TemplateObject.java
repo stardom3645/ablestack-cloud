@@ -23,6 +23,7 @@ import java.util.Map;
 
 import javax.inject.Inject;
 
+import com.cloud.user.UserData;
 import org.apache.log4j.Logger;
 
 import org.apache.cloudstack.engine.subsystem.api.storage.DataObjectInStore;
@@ -139,6 +140,15 @@ public class TemplateObject implements TemplateInfo {
         }
         VMTemplateVO image = imageDao.findById(imageVO.getId());
         return image.getSize();
+    }
+
+    @Override
+    public long getPhysicalSize() {
+        TemplateDataStoreVO templateDataStoreVO = templateStoreDao.findByTemplate(imageVO.getId(), DataStoreRole.Image);
+        if (templateDataStoreVO != null) {
+            return templateDataStoreVO.getPhysicalSize();
+        }
+        return imageVO.getSize();
     }
 
     @Override
@@ -316,6 +326,16 @@ public class TemplateObject implements TemplateInfo {
     @Override
     public String getDeployAsIsConfiguration() {
         return deployAsIsConfiguration;
+    }
+
+    @Override
+    public Long getUserDataId() {
+        return imageVO.getUserDataId();
+    }
+
+    @Override
+    public UserData.UserDataOverridePolicy getUserDataOverridePolicy() {
+        return imageVO.getUserDataOverridePolicy();
     }
 
     @Override

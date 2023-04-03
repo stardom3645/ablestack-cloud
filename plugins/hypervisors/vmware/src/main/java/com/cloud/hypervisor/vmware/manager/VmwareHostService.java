@@ -20,6 +20,7 @@ import com.cloud.agent.api.Command;
 import com.cloud.hypervisor.vmware.mo.DatastoreMO;
 import com.cloud.hypervisor.vmware.mo.VmwareHypervisorHost;
 import com.cloud.hypervisor.vmware.util.VmwareContext;
+import com.cloud.storage.resource.VmwareStorageProcessor;
 
 public interface VmwareHostService {
     VmwareContext getServiceContext(Command cmd);
@@ -29,4 +30,8 @@ public interface VmwareHostService {
     VmwareHypervisorHost getHyperHost(VmwareContext context, Command cmd);
 
     String getWorkerName(VmwareContext context, Command cmd, int workerSequence, DatastoreMO dsMo) throws Exception;
+
+    String createLogMessageException(Throwable e, Command command);
+
+    VmwareStorageProcessor getStorageProcessor();
 }

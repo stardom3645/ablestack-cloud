@@ -18,6 +18,7 @@
 <template>
   <div style="width: auto;">
     <a-steps
+      v-if="steps.length > 1"
       ref="resourceStep"
       progressDot
       :current="currentStep"
@@ -54,7 +55,7 @@
         :isFixError="isFixError"
       />
       <static-inputs-form
-        v-if="(!localstorageenabled || !localstorageenabledforsystemvm) && checkVisibleResource('primaryResource')"
+        v-if="!isEdgeZone && (!localstorageenabled || !localstorageenabledforsystemvm) && checkVisibleResource('primaryResource')"
         @nextPressed="nextPressed"
         @backPressed="handleBack"
         @fieldsChanged="fieldsChanged"
@@ -65,7 +66,7 @@
         :isFixError="isFixError"
       />
       <static-inputs-form
-        v-if="checkVisibleResource('secondaryResource')"
+        v-if="!isEdgeZone && checkVisibleResource('secondaryResource')"
         @nextPressed="nextPressed"
         @backPressed="handleBack"
         @fieldsChanged="fieldsChanged"
@@ -76,7 +77,7 @@
         :isFixError="isFixError"
       />
     </div>
-    <div v-else>
+    <div v-else-if="!isEdgeZone">
       <static-inputs-form
         v-if="checkVisibleResource('primaryResource')"
         @nextPressed="nextPressed"
@@ -103,6 +104,7 @@
   </div>
 </template>
 <script>
+import { nextTick } from 'vue'
 import { api } from '@/api'
 import { mixinDevice } from '@/utils/mixin.js'
 import StaticInputsForm from '@views/infra/zone/StaticInputsForm'
@@ -130,25 +132,33 @@ export default {
   },
   computed: {
     zoneType () {
-      return this.prefillContent.zoneType ? this.prefillContent.zoneType.value : null
+      return this.prefillContent?.zoneType || null
+    },
+    isAdvancedZone () {
+      return this.zoneType === 'Advanced'
     },
     hypervisor () {
-      return this.prefillContent.hypervisor ? this.prefillContent.hypervisor.value : null
+      return this.prefillContent?.hypervisor || null
     },
     localstorageenabled () {
-      return this.prefillContent?.localstorageenabled?.value || false
+      return this.prefillContent?.localstorageenabled || false
     },
     localstorageenabledforsystemvm () {
-      return this.prefillContent?.localstorageenabledforsystemvm?.value || false
+      return this.prefillContent?.localstorageenabledforsystemvm || false
+    },
+    isEdgeZone () {
+      return this.prefillContent?.zoneSuperType === 'Edge' || false
     },
     steps () {
       const steps = []
-      const hypervisor = this.prefillContent.hypervisor ? this.prefillContent.hypervisor.value : null
-      steps.push({
-        title: 'label.cluster',
-        fromKey: 'clusterResource',
-        description: 'message.desc.cluster'
-      })
+      const hypervisor = this.prefillContent.hypervisor ? this.prefillContent.hypervisor : null
+      if (!this.isEdgeZone) {
+        steps.push({
+          title: 'label.cluster',
+          fromKey: 'clusterResource',
+          description: 'message.desc.cluster'
+        })
+      }
       if (hypervisor !== 'VMware') {
         steps.push({
           title: 'label.host',
@@ -156,18 +166,20 @@ export default {
           description: 'message.desc.host'
         })
       }
-      if (!this.localstorageenabled || !this.localstorageenabledforsystemvm) {
+      if (!this.isEdgeZone) {
+        if (!this.localstorageenabled || !this.localstorageenabledforsystemvm) {
+          steps.push({
+            title: 'label.primary.storage',
+            fromKey: 'primaryResource',
+            description: 'message.desc.primary.storage'
+          })
+        }
         steps.push({
-          title: 'label.primary.storage',
-          fromKey: 'primaryResource',
-          description: 'message.desc.primary.storage'
+          title: 'label.secondary.storage',
+          fromKey: 'secondaryResource',
+          description: 'message.desc.secondary.storage'
         })
       }
-      steps.push({
-        title: 'label.secondary.storage',
-        fromKey: 'secondaryResource',
-        description: 'message.desc.secondary.storage'
-      })
 
       return steps
     },
@@ -237,7 +249,7 @@ export default {
         {
           title: 'label.cisco.nexus1000v.ip.address',
           key: 'vsmipaddress',
-          placeHolder: 'message.error.nexus1000v.ipaddess',
+          placeHolder: 'message.error.nexus1000v.ipaddress',
           required: false,
           display: {
             vSwitchEnabled: true
@@ -284,13 +296,41 @@ export default {
           }
         },
         {
+          title: 'label.authentication.method',
+          key: 'authmethod',
+          placeHolder: 'message.error.authmethod',
+          required: false,
+          radioGroup: true,
+          defaultValue: 'password',
+          radioOption: [{
+            label: 'label.password',
+            value: 'password'
+          }, {
+            label: 'label.authentication.sshkey',
+            value: 'sshkey',
+            condition: {
+              hypervisor: ['KVM']
+            }
+          }],
+          display: {
+            hypervisor: ['BareMetal', 'Ovm', 'Hyperv', 'KVM', 'XenServer', 'LXC', 'Simulator']
+          },
+          alert: {
+            message: 'message.add.host.sshkey',
+            display: {
+              authmethod: 'sshkey'
+            }
+          }
+        },
+        {
           title: 'label.password',
           key: 'hostPassword',
           placeHolder: 'message.error.host.password',
           required: true,
           password: true,
           display: {
-            hypervisor: ['VMware', 'BareMetal', 'Ovm', 'Hyperv', 'KVM', 'XenServer', 'LXC', 'Simulator']
+            hypervisor: ['VMware', 'BareMetal', 'Ovm', 'Hyperv', 'KVM', 'XenServer', 'LXC', 'Simulator'],
+            authmethod: 'password'
           }
         },
         {
@@ -381,7 +421,7 @@ export default {
           }
         },
         {
-          title: 'label.LUN.number',
+          title: 'label.lun.number',
           key: 'primaryStorageLUN',
           placeHolder: 'message.error.lun',
           required: true,
@@ -454,9 +494,99 @@ export default {
           }
         },
         {
+          title: 'label.glueblock.monitor',
+          key: 'primaryStorageRADOSMonitor',
+          placeHolder: 'message.error.rados.monitor',
+          required: false,
+          display: {
+            primaryStorageProtocol: ['Glue Block']
+          }
+        },
+        {
+          title: 'label.glueblock.pool',
+          key: 'primaryStorageRADOSPool',
+          placeHolder: 'message.error.rados.pool',
+          required: false,
+          display: {
+            primaryStorageProtocol: ['Glue Block']
+          }
+        },
+        {
+          title: 'label.glueblock.user',
+          key: 'primaryStorageRADOSUser',
+          placeHolder: 'message.error.rados.user',
+          required: false,
+          display: {
+            primaryStorageProtocol: ['Glue Block']
+          }
+        },
+        {
+          title: 'label.glueblock.secret',
+          key: 'primaryStorageRADOSSecret',
+          placeHolder: 'message.error.rados.secret',
+          required: false,
+          display: {
+            primaryStorageProtocol: ['Glue Block']
+          }
+        },
+        {
+          title: 'label.glueblock.path',
+          key: 'primaryStorageRADOSPath',
+          placeHolder: 'message.error.rados.path',
+          required: false,
+          display: {
+            primaryStorageProtocol: ['Glue Block']
+          }
+        },
+        {
+          title: 'label.gluefs.server',
+          key: 'gluefsserver',
+          placeHolder: 'message.error.gluefs.server',
+          required: false,
+          display: {
+            primaryStorageProtocol: ['Glue FileSystem']
+          }
+        },
+        {
+          title: 'label.gluefs.user',
+          key: 'gluefsuser',
+          placeHolder: 'message.error.gluefs.user',
+          required: false,
+          display: {
+            primaryStorageProtocol: ['Glue FileSystem']
+          }
+        },
+        {
+          title: 'label.gluefs.name',
+          key: 'gluefsname',
+          placeHolder: 'message.error.gluefs.name',
+          required: false,
+          display: {
+            primaryStorageProtocol: ['Glue FileSystem']
+          }
+        },
+        {
+          title: 'label.gluefs.path',
+          key: 'gluefstargetpath',
+          placeHolder: 'message.error.gluefs.path',
+          required: false,
+          display: {
+            primaryStorageProtocol: ['Glue FileSystem']
+          }
+        },
+        {
+          title: 'label.gluefs.secret',
+          key: 'gluefssecret',
+          placeHolder: 'message.error.gluefs.secret',
+          required: false,
+          display: {
+            primaryStorageProtocol: ['Glue FileSystem']
+          }
+        },
+        {
           title: 'label.volgroup',
           key: 'primaryStorageVolumeGroup',
-          placeHolder: 'message.error.volumne.group',
+          placeHolder: 'message.error.volume.group',
           required: true,
           display: {
             primaryStorageProtocol: 'clvm'
@@ -465,7 +595,7 @@ export default {
         {
           title: 'label.volume',
           key: 'primaryStorageVolume',
-          placeHolder: 'message.error.volumne',
+          placeHolder: 'message.error.volume',
           required: true,
           display: {
             primaryStorageProtocol: 'gluster'
@@ -496,6 +626,81 @@ export default {
           required: true,
           display: {
             primaryStorageProtocol: 'Linstor'
+          }
+        },
+        {
+          title: 'label.provider',
+          key: 'provider',
+          placeHolder: 'message.error.select',
+          value: 'DefaultPrimary',
+          select: true,
+          required: true,
+          options: this.primaryStorageProviders
+        },
+        {
+          title: 'label.ismanaged',
+          key: 'managed',
+          checkbox: true,
+          hidden: {
+            provider: ['DefaultPrimary', 'PowerFlex', 'Linstor', 'Glue Block', 'Glue FileSystem']
+          }
+        },
+        {
+          title: 'label.capacitybytes',
+          key: 'capacityBytes',
+          hidden: {
+            provider: ['DefaultPrimary', 'PowerFlex', 'Linstor', 'Glue Block', 'Glue FileSystem']
+          }
+        },
+        {
+          title: 'label.capacityiops',
+          key: 'capacityIops',
+          hidden: {
+            provider: ['DefaultPrimary', 'PowerFlex', 'Linstor', 'Glue Block', 'Glue FileSystem']
+          }
+        },
+        {
+          title: 'label.url',
+          key: 'url',
+          hidden: {
+            provider: ['DefaultPrimary', 'PowerFlex', 'Linstor', 'Glue Block', 'Glue FileSystem']
+          }
+        },
+        {
+          title: 'label.powerflex.gateway',
+          key: 'powerflexGateway',
+          required: true,
+          placeHolder: 'message.error.input.value',
+          display: {
+            provider: 'PowerFlex'
+          }
+        },
+        {
+          title: 'label.powerflex.gateway.username',
+          key: 'powerflexGatewayUsername',
+          required: true,
+          placeHolder: 'message.error.input.value',
+          display: {
+            provider: 'PowerFlex'
+          }
+        },
+        {
+          title: 'label.powerflex.gateway.password',
+          key: 'powerflexGatewayPassword',
+          required: true,
+          placeHolder: 'message.error.input.value',
+          password: true,
+          display: {
+            provider: 'PowerFlex'
+          }
+        },
+        {
+          title: 'label.powerflex.storage.pool',
+          key: 'powerflexStoragePool',
+          required: true,
+          placeHolder: 'message.error.input.value',
+          display: {
+            provider: 'PowerFlex'
           }
         },
         {
@@ -570,7 +775,7 @@ export default {
           }
         },
         {
-          title: 'label.s3.access_key',
+          title: 'label.s3.access.key',
           key: 'secondaryStorageAccessKey',
           required: true,
           placeHolder: 'message.error.access.key',
@@ -579,7 +784,7 @@ export default {
           }
         },
         {
-          title: 'label.s3.secret_key',
+          title: 'label.s3.secret.key',
           key: 'secondaryStorageSecretKey',
           required: true,
           placeHolder: 'message.error.secret.key',
@@ -605,7 +810,7 @@ export default {
           }
         },
         {
-          title: 'label.s3.use_https',
+          title: 'label.s3.use.https',
           key: 'secondaryStorageHttps',
           required: false,
           switch: true,
@@ -615,7 +820,7 @@ export default {
           }
         },
         {
-          title: 'label.s3.connection_timeoutt',
+          title: 'label.s3.connection.timeout',
           key: 'secondaryStorageConnectionTimeout',
           required: false,
           display: {
@@ -623,7 +828,7 @@ export default {
           }
         },
         {
-          title: 'label.s3.max_error_retry',
+          title: 'label.s3.max.error.retry',
           key: 'secondaryStorageMaxError',
           required: false,
           display: {
@@ -631,7 +836,7 @@ export default {
           }
         },
         {
-          title: 'label.s3.socket_timeout',
+          title: 'label.s3.socket.timeout',
           key: 'secondaryStorageSocketTimeout',
           required: false,
           display: {
@@ -653,7 +858,8 @@ export default {
           required: true,
           placeHolder: 'message.error.s3nfs.server',
           display: {
-            secondaryStorageProvider: ['S3']
+            secondaryStorageProvider: ['S3'],
+            secondaryStorageNFSStaging: true
           }
         },
         {
@@ -662,7 +868,8 @@ export default {
           required: true,
           placeHolder: 'message.error.s3nfs.path',
           display: {
-            secondaryStorageProvider: ['S3']
+            secondaryStorageProvider: ['S3'],
+            secondaryStorageNFSStaging: true
           }
         },
         {
@@ -677,7 +884,8 @@ export default {
         {
           title: 'label.account',
           key: 'secondaryStorageAccount',
-          required: false,
+          required: true,
+          placeHolder: 'message.error.swift.account',
           display: {
             secondaryStorageProvider: ['Swift']
           }
@@ -685,7 +893,8 @@ export default {
         {
           title: 'label.username',
           key: 'secondaryStorageUsername',
-          required: false,
+          required: true,
+          placeHolder: 'message.error.swift.username',
           display: {
             secondaryStorageProvider: ['Swift']
           }
@@ -693,6 +902,15 @@ export default {
         {
           title: 'label.key',
           key: 'secondaryStorageKey',
+          required: true,
+          placeHolder: 'message.error.swift.key',
+          display: {
+            secondaryStorageProvider: ['Swift']
+          }
+        },
+        {
+          title: 'label.storagepolicy',
+          key: 'secondaryStoragePolicy',
           required: false,
           display: {
             secondaryStorageProvider: ['Swift']
@@ -707,18 +925,19 @@ export default {
       currentHypervisor: null,
       primaryStorageScopes: [],
       primaryStorageProtocols: [],
+      primaryStorageProviders: [],
       storageProviders: [],
       currentStep: null,
-      options: ['primaryStorageScope', 'primaryStorageProtocol', 'provider']
+      options: ['primaryStorageScope', 'primaryStorageProtocol', 'provider', 'primaryStorageProvider']
     }
   },
   created () {
-    this.currentStep = this.prefillContent.resourceStep ? this.prefillContent.resourceStep : 0
+    this.currentStep = this.prefillContent?.resourceStep || 0
     if (this.stepChild && this.stepChild !== '') {
       this.currentStep = this.steps.findIndex(item => item.fromKey === this.stepChild)
     }
     this.scrollToStepActive()
-    if (this.prefillContent.hypervisor.value === 'BareMetal') {
+    if (this.prefillContent.hypervisor === 'BareMetal') {
       this.$emit('nextPressed')
     } else {
       this.fetchConfigurationSwitch()
@@ -727,13 +946,24 @@ export default {
         this.$emit('fieldsChanged', {
           lastHypervisor: this.prefillContent.hypervisor
         })
-      } else if (this.prefillContent.lastHypervisor.value !== this.prefillContent.hypervisor.value) {
+      } else if (this.prefillContent.lastHypervisor !== this.prefillContent.hypervisor) {
         this.$emit('fieldsChanged', {
           lastHypervisor: this.prefillContent.hypervisor,
           primaryStorageProtocol: null,
           primaryStorageScope: null
         })
       }
+    }
+  },
+  watch: {
+    'prefillContent.provider' (newVal, oldVal) {
+      if (['SolidFire', 'PowerFlex'].includes(newVal) && !['SolidFire', 'PowerFlex'].includes(oldVal)) {
+        this.$emit('fieldsChanged', { primaryStorageProtocol: undefined })
+      } else if (!['SolidFire', 'PowerFlex'].includes(newVal) && ['SolidFire', 'PowerFlex'].includes(oldVal)) {
+        this.$emit('fieldsChanged', { primaryStorageProtocol: undefined })
+      }
+
+      this.fetchProtocol()
     }
   },
   methods: {
@@ -747,7 +977,7 @@ export default {
 
       this.scrollToStepActive()
     },
-    handleBack (e) {
+    handleBack () {
       if (this.currentStep === 0) {
         this.$emit('backPressed')
       } else {
@@ -761,7 +991,7 @@ export default {
       if (!this.isMobile()) {
         return
       }
-      this.$nextTick(() => {
+      nextTick().then(() => {
         if (!this.$refs.resourceStep) {
           return
         }
@@ -786,12 +1016,15 @@ export default {
         case 'provider':
           this.fetchProvider()
           break
+        case 'primaryStorageProvider':
+          this.fetchPrimaryStorageProvider()
+          break
         default:
           break
       }
     },
     fetchScope () {
-      const hypervisor = this.prefillContent.hypervisor ? this.prefillContent.hypervisor.value : null
+      const hypervisor = this.prefillContent?.hypervisor || null
       const scope = []
       if (['KVM', 'VMware', 'Hyperv'].includes(hypervisor)) {
         scope.push({
@@ -809,12 +1042,19 @@ export default {
         })
       }
       this.primaryStorageScopes = scope
-      this.$forceUpdate()
     },
     fetchProtocol () {
-      const hypervisor = this.prefillContent.hypervisor ? this.prefillContent.hypervisor.value : null
+      const hypervisor = this.prefillContent?.hypervisor || null
       const protocols = []
       if (hypervisor === 'KVM') {
+        protocols.push({
+          id: 'Glue Block',
+          description: 'Glue Block'
+        })
+        protocols.push({
+          id: 'Glue FileSystem',
+          description: 'Glue FileSystem'
+        })
         protocols.push({
           id: 'nfs',
           description: 'nfs'
@@ -899,13 +1139,13 @@ export default {
         })
       }
 
+      protocols.push({ id: 'custom', description: 'custom' })
       this.primaryStorageProtocols = protocols
-      this.$forceUpdate()
     },
     async fetchConfigurationSwitch () {
-      const hypervisor = this.prefillContent.hypervisor ? this.prefillContent.hypervisor.value : null
-      this.$emit('fieldsChanged', { dvSwitchEnabled: { value: false } })
-      this.$emit('fieldsChanged', { vSwitchEnabled: { value: false } })
+      const hypervisor = this.prefillContent?.hypervisor || null
+      this.$emit('fieldsChanged', { dvSwitchEnabled: false })
+      this.$emit('fieldsChanged', { vSwitchEnabled: false })
       if (hypervisor && hypervisor === 'VMware') {
         await this.fetchNexusSwitchConfig()
         await this.fetchDvSwitchConfig()
@@ -917,7 +1157,7 @@ export default {
         if (json.listconfigurationsresponse.configuration[0].value) {
           vSwitchEnabled = true
         }
-        this.$emit('fieldsChanged', { vSwitchEnabled: { value: vSwitchEnabled } })
+        this.$emit('fieldsChanged', { vSwitchEnabled: vSwitchEnabled })
       })
     },
     fetchDvSwitchConfig () {
@@ -926,7 +1166,7 @@ export default {
         if (json.listconfigurationsresponse.configuration[0].value) {
           dvSwitchEnabled = true
         }
-        this.$emit('fieldsChanged', { dvSwitchEnabled: { value: dvSwitchEnabled } })
+        this.$emit('fieldsChanged', { dvSwitchEnabled: dvSwitchEnabled })
       })
     },
     fetchProvider () {
@@ -942,7 +1182,13 @@ export default {
           storageProviders.push({ id: 'Swift', description: 'Swift' })
         }
         this.storageProviders = storageProviders
-        this.$forceUpdate()
+      })
+    },
+    fetchPrimaryStorageProvider () {
+      this.primaryStorageProviders = []
+      api('listStorageProviders', { type: 'primary' }).then(json => {
+        this.primaryStorageProviders = json.liststorageprovidersresponse.dataStoreProvider || []
+        this.primaryStorageProviders.map((item, idx) => { this.primaryStorageProviders[idx].id = item.name })
       })
     },
     submitLaunchZone () {

@@ -27,6 +27,7 @@ import org.apache.cloudstack.api.BaseListProjectAndAccountResourcesCmd;
 import org.apache.cloudstack.api.Parameter;
 import org.apache.cloudstack.api.response.ListResponse;
 import org.apache.cloudstack.api.response.SSHKeyPairResponse;
+import org.apache.cloudstack.api.response.DomainResponse;
 
 import com.cloud.user.SSHKeyPair;
 import com.cloud.utils.Pair;
@@ -35,28 +36,39 @@ import com.cloud.utils.Pair;
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class ListSSHKeyPairsCmd extends BaseListProjectAndAccountResourcesCmd {
     public static final Logger s_logger = Logger.getLogger(ListSSHKeyPairsCmd.class.getName());
-    private static final String s_name = "listsshkeypairsresponse";
 
     /////////////////////////////////////////////////////
     //////////////// API parameters /////////////////////
     /////////////////////////////////////////////////////
-
     @Parameter(name = ApiConstants.NAME, type = CommandType.STRING, description = "A key pair name to look for")
     private String name;
 
     @Parameter(name = "fingerprint", type = CommandType.STRING, description = "A public key fingerprint to look for")
     private String fingerprint;
 
+    @Parameter(name = ApiConstants.ACCOUNT, type = CommandType.STRING, description = "an optional account for the ssh key. Must be used with domainId.")
+    private String account;
+
+    @Parameter(name = ApiConstants.DOMAIN_ID, type = CommandType.UUID, entityType = DomainResponse.class, description = "an optional domainId for the ssh key. If the account parameter is used, domainId must also be used.")
+    private Long domainId;
+
     /////////////////////////////////////////////////////
     /////////////////// Accessors ///////////////////////
     /////////////////////////////////////////////////////
-
     public String getName() {
         return name;
     }
 
     public String getFingerprint() {
         return fingerprint;
+    }
+
+    public String getAccount() {
+        return account;
+    }
+
+    public Long getDomain() {
+        return domainId;
     }
 
     /////////////////////////////////////////////////////
@@ -79,9 +91,4 @@ public class ListSSHKeyPairsCmd extends BaseListProjectAndAccountResourcesCmd {
         setResponseObject(response);
     }
 
-    @Override
-    public String getCommandName() {
-        return s_name;
     }
-
-}

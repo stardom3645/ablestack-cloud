@@ -552,6 +552,18 @@ class ConfigDriveUtils:
         if exposeHypevisorHostnameGS == 'true' and exposeHypevisorHostnameAcc == 'true':
             vm_files.append("hypervisor-host-name.txt")
 
+        configs = Configurations.list(
+            self.api_client,
+            name="metadata.allow.expose.domain",
+            listall=True
+        )
+
+        exposeDomain = configs[0].value
+
+        if exposeDomain == 'true':
+            vm_files.append("cloud-domain.txt")
+            vm_files.append("cloud-domain-id.txt")
+
         def get_name(vm_file):
             return "{} metadata".format(
                 vm_file.split('.'[-1].replace('-', ' '))
@@ -604,6 +616,18 @@ class ConfigDriveUtils:
                 "on which the VM is spawned"
             )
 
+        if exposeDomain == 'true':
+            self.assertEqual(
+                str(metadata["cloud-domain-id.txt"]),
+                self.domain.id,
+                "Domain name in the metadata file does not match expected"
+            )
+            self.assertEqual(
+                str(metadata["cloud-domain.txt"]),
+                self.domain.name,
+                "Domain name in the metadata file does not match expected"
+            )
+
         return
 
     def _verify_openstack_metadata(self, ssh, mount_path):
@@ -635,7 +659,7 @@ class ConfigDriveUtils:
         """
         ssh.execute("umount -d %s" % mount_path)
         # Give the VM time to unlock the iso device
-        time.sleep(2)
+        time.sleep(0.5)
         # Verify umount
         result = ssh.execute("ls %s" % mount_path)
         self.assertTrue(len(result) == 0,
@@ -1089,10 +1113,8 @@ class ConfigDriveUtils:
 
         vm.details = vm_new_ssh.details
 
-        # reset SSH key also resets the password.
-        self._decrypt_password(vm)
-
-        vm.password_test = ConfigDriveUtils.PasswordTest(vm=vm)
+        # reset SSH key also removes the password (see https://github.com/apache/cloudstack/pull/4819)
+        vm.password_test = ConfigDriveUtils.PasswordTest(expect_pw=False)
         vm.key_pair = self.keypair
 
         if public_ip:
@@ -1119,7 +1141,7 @@ class ConfigDriveUtils:
                     cipher = PKCS1_v1_5.new(key)
                 new_password = cipher.decrypt(b64decode(password_), None)
                 if new_password:
-                    vm.password = new_password
+                    vm.password = new_password.decode()
                 else:
                     self.fail("Failed to decrypt new password")
             except ImportError:
@@ -1511,7 +1533,6 @@ class TestConfigDrive(cloudstackTestCase, ConfigDriveUtils):
         tries = 1 if negative_test else 3
         private_key_file_location = keypair.private_key_file if keypair else None
 
-        @retry(tries=tries)
         def retry_ssh():
             ssh_client = vm.get_ssh_client(
                 ipaddress=public_ip.ipaddress.ipaddress,
@@ -1732,8 +1753,7 @@ class TestConfigDrive(cloudstackTestCase, ConfigDriveUtils):
         self.api_client.restartVPC(cmd)
         self.debug("Restarted VPC with ID - %s" % vpc.id)
 
-    # was tags=["advanced", "isonw"]
-    @attr(tags=["TODO"], required_hardware="true")
+    @attr(tags=["advanced", "isonw"], required_hardware="true")
     def test_configdrive_isolated_network(self):
         """Test Configdrive as provider for isolated Networks
            to provide userdata and password reset functionality
@@ -2445,6 +2465,12 @@ class TestConfigDrive(cloudstackTestCase, ConfigDriveUtils):
                               value="true"
                               )
 
+        # Enable domain in metadata
+        Configurations.update(self.api_client,
+                              name="metadata.allow.expose.domain",
+                              value="true"
+                              )
+
         # Verify that the above mentioned settings are set to true before proceeding
         if not is_config_suitable(
                 apiclient=self.api_client,
@@ -2457,6 +2483,12 @@ class TestConfigDrive(cloudstackTestCase, ConfigDriveUtils):
                 name='account.allow.expose.host.hostname',
                 value='true'):
             self.skipTest('Account level setting account.allow.expose.host.hostname should be true. skipping')
+
+        if not is_config_suitable(
+                apiclient=self.api_client,
+                name='metadata.allow.expose.domain',
+                value='true'):
+            self.skipTest('metadata.allow.expose.domain should be true. skipping')
 
         # =====================================================================
         self.debug("+++ Scenario: "
@@ -2500,6 +2532,7 @@ class TestConfigDrive(cloudstackTestCase, ConfigDriveUtils):
         # =====================================================================
         self.debug("+++ Scenario: "
                    "validate updated userdata after migrate")
+        time.sleep(30)
         host = self.migrate_VM(vm)
         vm.hostname = host.name
         self.then_config_drive_is_as_expected(vm, public_ip_1, metadata=True)
@@ -2513,6 +2546,12 @@ class TestConfigDrive(cloudstackTestCase, ConfigDriveUtils):
         # Update Account level setting
         Configurations.update(self.api_client,
                               name="account.allow.expose.host.hostname",
+                              value="false"
+                              )
+
+        # Disable domain in metadata
+        Configurations.update(self.api_client,
+                              name="metadata.allow.expose.domain",
                               value="false"
                               )
 

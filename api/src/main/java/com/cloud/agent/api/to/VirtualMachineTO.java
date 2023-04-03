@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
 
+import com.cloud.agent.api.LogLevel;
 import com.cloud.network.element.NetworkElement;
 import com.cloud.template.VirtualMachineTemplate.BootloaderType;
 import com.cloud.vm.VirtualMachine;
@@ -57,6 +58,7 @@ public class VirtualMachineTO {
     boolean enableHA;
     boolean limitCpuUse;
     boolean enableDynamicallyScaleVm;
+    @LogLevel(LogLevel.Log4jLevel.Off)
     String vncPassword;
     String vncAddr;
     Map<String, String> params;
@@ -65,6 +67,7 @@ public class VirtualMachineTO {
     String bootMode;
     boolean enterHardwareSetup;
 
+    String tpmversion;
     DiskTO[] disks;
     NicTO[] nics;
     GPUDeviceTO gpuDevice;
@@ -401,6 +404,14 @@ public class VirtualMachineTO {
     public String getBootMode() { return bootMode; }
 
     public void setBootMode(String bootMode) { this.bootMode = bootMode; }
+
+    public String getTpmVersion() {
+        return tpmversion;
+    }
+
+    public void setTpmVersion(String tpmversion) {
+        this.tpmversion = tpmversion;
+    }
 
     public boolean isEnterHardwareSetup() {
         return enterHardwareSetup;
