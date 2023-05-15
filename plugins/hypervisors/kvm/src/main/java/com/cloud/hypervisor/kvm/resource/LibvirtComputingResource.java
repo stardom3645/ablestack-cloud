@@ -1378,11 +1378,12 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
         try {
             int[] removedVmIds = conn.listDomains();
             Domain dm = null;
-            for (int i = 0; i < removedVmIds.length; i++) {
+            for (int dmi: removedVmIds) {
                 try {
-                    dm = conn.domainLookupByID(removedVmIds[i]);
+                    dm = conn.domainLookupByID(dmi);
                     if("ccvm".equals(dm.getName()) || "scvm".equals(dm.getName())) {
-                        removedVmIds = ArrayUtils.removeElement(removedVmIds, removedVmIds[i]);
+                        removedVmIds = ArrayUtils.removeElement(removedVmIds, dmi);
+                        s_logger.info(String.format("Remove [%s]", dm.getName()));
                     }
                 } catch (final LibvirtException e) {
                     s_logger.warn("Unable to get vms(domainLookupByID)", e);
