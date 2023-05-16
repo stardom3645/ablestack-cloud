@@ -27,8 +27,7 @@ public interface SSVDao extends GenericDao<SSVVO, Long>,
         StateDao<SSV.State, SSV.Event, SSV> {
 
     List<SSVVO> listByAccount(long accountId);
-    List<SSVVO> findSSVsToGarbageCollect();
     List<SSVVO> findSSVsInState(SSV.State state);
-    List<SSVVO> listByNetworkId(long networkId);
-    List<SSVVO> listAllByDesktopVersion(long desktopVersionId);
+    // List<SSVVO> listByNetworkId(long networkId);
+    // List<SSVVO> findVmIdBySSVId(long id);
 }

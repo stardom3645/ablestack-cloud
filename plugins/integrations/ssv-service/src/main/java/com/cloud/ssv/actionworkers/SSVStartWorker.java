@@ -20,9 +20,9 @@ package com.cloud.ssv.actionworkers;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
-import java.net.ConnectException;
-import java.net.HttpURLConnection;
-import java.net.URL;
+// import java.net.ConnectException;
+// import java.net.HttpURLConnection;
+// import java.net.URL;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Properties;
@@ -30,11 +30,15 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.HashMap;
 import java.util.Map;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import org.apache.cloudstack.api.BaseCmd;
-import org.apache.cloudstack.config.ApiServiceConfiguration;
+import org.apache.cloudstack.api.command.user.ssv.CreateSSVCmd;
+// import org.apache.cloudstack.config.ApiServiceConfiguration;
 import org.apache.commons.codec.binary.Base64;
-import org.apache.commons.collections.CollectionUtils;
+// import org.apache.commons.collections.CollectionUtils;
 import org.apache.cloudstack.context.CallContext;
 import org.apache.log4j.Level;
 
@@ -43,7 +47,7 @@ import com.cloud.deploy.DeployDestination;
 import com.cloud.exception.ConcurrentOperationException;
 import com.cloud.exception.InsufficientCapacityException;
 import com.cloud.exception.ManagementServerException;
-import com.cloud.exception.NetworkRuleConflictException;
+// import com.cloud.exception.NetworkRuleConflictException;
 import com.cloud.exception.ResourceUnavailableException;
 import com.cloud.network.IpAddress;
 import com.cloud.network.Network.IpAddresses;
@@ -53,25 +57,27 @@ import com.cloud.offering.ServiceOffering;
 import com.cloud.user.Account;
 import com.cloud.user.UserAccount;
 import com.cloud.uservm.UserVm;
+import com.cloud.vm.UserVmVO;
 import com.cloud.utils.StringUtils;
 import com.cloud.utils.exception.CloudRuntimeException;
 import com.cloud.utils.PropertiesUtil;
 import com.cloud.utils.server.ServerProperties;
 import com.cloud.ssv.SSV;
-import com.cloud.ssv.SSVVmMapVO;
 import com.cloud.ssv.SSVManagerImpl;
+import com.cloud.ssv.SSVNetMapVO;
+import com.cloud.ssv.SSVVO;
 import com.cloud.vm.ReservationContext;
 import com.cloud.vm.ReservationContextImpl;
 import com.cloud.vm.VirtualMachine;
-import com.cloud.api.query.vo.UserAccountJoinVO;
+// import com.cloud.api.query.vo.UserAccountJoinVO;
 
 public class SSVStartWorker extends SSVModifierActionWorker {
 
     // private DesktopControllerVersion ssvVersion;
     private static final long GiB_TO_BYTES = 1024 * 1024 * 1024;
 
-    public SSVStartWorker(final SSV ssv, final SSVManagerImpl clusterManager) {
-        super(ssv, clusterManager);
+    public SSVStartWorker(final SSV ssv, final SSVManagerImpl ssvManager) {
+        super(ssv, ssvManager);
     }
 
     // public DesktopControllerVersion getSSVVersion() {
@@ -80,74 +86,82 @@ public class SSVStartWorker extends SSVModifierActionWorker {
     //     }
     //     return ssvVersion;
     // }
-    private String getSSVWorksConfig(final DataCenter zone) throws IOException {
-        String[] keys = getServiceUserKeys(owner);
-        String[] info = getServerProperties();
-        final String managementIp = ApiServiceConfiguration.ManagementServerAddresses.value();
-        String ssvWorksConfig = readResourceFile("/conf/works");
-        final String clusterName = "{{ cluster_name }}";
-        final String domainName = "{{ domain_name }}";
-        final String worksIp = "{{ works_ip }}";
-        final String dcIp = "{{ dc_ip }}";
-        final String zoneUuid = "{{ zone_id }}";
-        final String networkId = "{{ network_id }}";
-        final String accountName = "{{ account_name }}";
-        final String domainUuid = "{{ domain_uuid }}";
-        final String apiKey = "{{ api_key }}";
-        final String secretKey = "{{ secret_key }}";
-        final String moldIp = "{{ mold_ip }}";
-        final String moldPort = "{{ mold_port }}";
-        final String moldProtocol = "{{ mold_protocol }}";
-        List<UserAccountJoinVO> domain = userAccountJoinDao.searchByAccountId(owner.getId());
-        ssvWorksConfig = ssvWorksConfig.replace(clusterName, ssv.getName());
-        ssvWorksConfig = ssvWorksConfig.replace(domainName, ssv.getAdDomainName());
-        ssvWorksConfig = ssvWorksConfig.replace(worksIp, ssv.getWorksIp());
-        ssvWorksConfig = ssvWorksConfig.replace(dcIp, ssv.getDcIp());
-        ssvWorksConfig = ssvWorksConfig.replace(zoneUuid, zone.getUuid());
-        ssvWorksConfig = ssvWorksConfig.replace(networkId, Long.toString(ssv.getNetworkId()));
-        ssvWorksConfig = ssvWorksConfig.replace(accountName, owner.getAccountName());
-        ssvWorksConfig = ssvWorksConfig.replace(domainUuid, domain.get(0).getDomainUuid());
-        ssvWorksConfig = ssvWorksConfig.replace(apiKey, keys[0]);
-        ssvWorksConfig = ssvWorksConfig.replace(secretKey, keys[1]);
-        ssvWorksConfig = ssvWorksConfig.replace(moldIp, managementIp);
-        ssvWorksConfig = ssvWorksConfig.replace(moldPort, info[0]);
-        ssvWorksConfig = ssvWorksConfig.replace(moldProtocol, info[1]);
-        String base64UserData = Base64.encodeBase64String(ssvWorksConfig.getBytes(StringUtils.getPreferredCharset()));
-        String ssvWorksEncodeConfig = readResourceFile("/conf/works.yml");
-        final String worksEncode = "{{ works_encode }}";
-        ssvWorksEncodeConfig = ssvWorksEncodeConfig.replace(worksEncode, base64UserData);
-        return ssvWorksEncodeConfig;
+    private String getSSVConfig(CreateSSVCmd cmd, final DataCenter zone) throws IOException {
+        // String[] keys = getServiceUserKeys(owner);
+        // String[] info = getServerProperties();
+        // String ssvConfig = readResourceFile("/conf/ssv");
+        // Network network = networkService.getNetwork(cmd.getNetworkId());
+        // final String ssvName = "{{ ssv_name }}";
+        // final String ssvType = "{{ ssv_type }}";
+        // final String ssvNetworkIp = "{{ ssv_network_ip }}";
+        // final String ssvNetworkType = "{{ ssv_network_type }}";
+        // final String ssvNetworkGateway = "{{ ssv_network_gateway }}";
+        // final String ssvNetworkNetmask = "{{ ssv_network_netmask }}";
+        // final String ssvNetworkDns = "{{ ssv_network_dns }}";
+
+        // List<UserAccountJoinVO> domain = userAccountJoinDao.searchByAccountId(owner.getId());
+        // ssvConfig = ssvConfig.replace(ssvName, ssv.getName());
+        // ssvConfig = ssvConfig.replace(ssvType, ssv.getSsvType());
+        // ssvConfig = ssvConfig.replace(ssvNetworkIp, cmd.getSsvIp());
+        // ssvConfig = ssvConfig.replace(ssvNetworkType, network.getGuestType().toString());
+        // ssvConfig = ssvConfig.replace(ssvNetworkGateway, cmd.getGateway());
+        // ssvConfig = ssvConfig.replace(ssvNetworkNetmask, cmd.getNetmask());
+        // ssvConfig = ssvConfig.replace(ssvNetworkDns, network.getDns1());
+
+        JSONObject obj = new JSONObject();
+
+        try {
+            JSONArray jArray = new JSONArray();//배열이 필요할때
+            List<SSVNetMapVO> netvo = ssvNetMapDao.listBySSVServiceId(ssv.getId());
+            for(SSVNetMapVO vo : netvo) {
+                Network network = networkDao.findByIdIncludingRemoved(vo.getNetworkId());
+                JSONObject sObject = new JSONObject();//배열 내에 들어갈 json
+                sObject.put("ssv.network.type", network.getGuestType().toString());
+                sObject.put("ssv.network.ip", vo.getNetworkIp());
+                sObject.put("ssv.network.l2.gateway", vo.getNetworkGateway());
+                sObject.put("ssv.network.l2.netmask", vo.getNetworkNetmask());
+                sObject.put("ssv.network.l2.dns", network.getDns1());
+                jArray.put(sObject);
+            }
+            obj.put("ssv.name", ssv.getName());
+            obj.put("ssv.type", ssv.getSsvType());
+            obj.put("ssv.networks", jArray);
+        } catch (JSONException e) {
+            logAndThrow(Level.ERROR, "Failed to create data in json format.", e);
+        }
+        LOGGER.debug("JSON STRING :::::::::: " + obj.toString());
+        String base64UserData = Base64.encodeBase64String(obj.toString().getBytes(StringUtils.getPreferredCharset()));
+        String ssvEncodeConfig = readResourceFile("/conf/ssv.yml");
+        ssvEncodeConfig = ssvEncodeConfig.replace("{{ ssv_encode }}", base64UserData);
+        return ssvEncodeConfig;
     }
 
-    private UserVm provisionSSVWorksControlVm(final Network network) throws
+    private UserVm provisionSSV(CreateSSVCmd cmd, final Network network) throws
             InsufficientCapacityException, ManagementServerException, ResourceUnavailableException {
-        UserVm worksControlVm = null;
-        final String type = "worksvm";
-        worksControlVm = createSSVWorksControlVm(network);
-        addSSVVm(ssv.getId(), worksControlVm.getId(), type);
-        startDesktopVM(worksControlVm);
-        worksControlVm = userVmDao.findById(worksControlVm.getId());
-        if (worksControlVm == null) {
-            throw new ManagementServerException(String.format("Failed to provision Works Control VM for desktop cluster : %s" , ssv.getName()));
+        UserVm vm = null;
+        vm = createSSV(cmd, network);
+        startVM(vm);
+        vm = userVmDao.findById(vm.getId());
+        if (vm == null) {
+            throw new ManagementServerException(String.format("Failed to provision Shared Storage VM"));
         }
         if (LOGGER.isInfoEnabled()) {
-            LOGGER.info(String.format("Provisioned Works Control VM : %s in to the desktop cluster : %s", worksControlVm.getDisplayName(), ssv.getName()));
+            LOGGER.info(String.format("Provisioned Works Control VM : %s in to the Shared Storage VM : %s", vm.getDisplayName(), vm.getName()));
         }
-        return worksControlVm;
+        return vm;
     }
 
 
-    private UserVm createSSVWorksControlVm(final Network network) throws ManagementServerException,
-            ResourceUnavailableException, InsufficientCapacityException {
-        UserVm worksControlVm = null;
+    private UserVm createSSV(CreateSSVCmd cmd, final Network network) throws ManagementServerException,
+        ResourceUnavailableException, InsufficientCapacityException {
+        UserVm vm = null;
         LinkedHashMap<Long, IpAddresses> ipToNetworkMap = null;
         DataCenter zone = dataCenterDao.findById(ssv.getZoneId());
         ServiceOffering serviceOffering = serviceOfferingDao.findById(ssv.getServiceOfferingId());
         List<Long> networkIds = new ArrayList<Long>();
-        networkIds.add(ssv.getNetworkId());
-        String worksIp = ssv.getWorksIp();
+        networkIds.add(cmd.getNetworkId());
         String reName = ssv.getName();
-        String hostName = reName + "-works";
+        String hostName = reName + "-SSV";
         Map<String, String> customParameterMap = new HashMap<String, String>();
         DiskOfferingVO diskOffering = diskOfferingDao.findById(serviceOffering.getId());
         long rootDiskSizeInBytes = diskOffering.getDiskSize();
@@ -155,41 +169,48 @@ public class SSVStartWorker extends SSVModifierActionWorker {
             long rootDiskSizeInGiB = rootDiskSizeInBytes / GiB_TO_BYTES;
             customParameterMap.put("rootdisksize", String.valueOf(rootDiskSizeInGiB));
         }
-        String ssvWorksConfig = null;
+        String ssvConfig = null;
         try {
-            ssvWorksConfig = getSSVWorksConfig(zone);
+            ssvConfig = getSSVConfig(cmd, zone);
         } catch (IOException e) {
-            logAndThrow(Level.ERROR, "Failed to read Desktop Cluster Userdata configuration file", e);
+            logAndThrow(Level.ERROR, "Failed to read Shared Storage VM  Userdata configuration file", e);
         }
-        String base64UserData = Base64.encodeBase64String(ssvWorksConfig.getBytes(StringUtils.getPreferredCharset()));
+        String base64UserData = Base64.encodeBase64String(ssvConfig.getBytes(StringUtils.getPreferredCharset()));
         List<String> keypairs = new ArrayList<String>(); // 키페어 파라메타 임시 생성
-        if (worksIp == null || network.getGuestType() == Network.GuestType.L2) {
+        if (network.getGuestType().equals(Network.GuestType.L2)) {
             Network.IpAddresses addrs = new Network.IpAddresses(null, null, null);
-            worksControlVm = userVmService.createAdvancedVirtualMachine(zone, serviceOffering, worksTemplate, networkIds, owner,
-                hostName, hostName, null, null, null,
-                worksTemplate.getHypervisorType(), BaseCmd.HTTPMethod.POST, base64UserData, null, null, keypairs,
+            vm = userVmService.createAdvancedVirtualMachine(zone, serviceOffering, ssvTemplate, networkIds, owner,
+                hostName, hostName, ssv.getDiskOfferingId(), ssv.getSize(), null,
+                ssvTemplate.getHypervisorType(), BaseCmd.HTTPMethod.POST, base64UserData, null, null, keypairs,
                 null, addrs, null, null, null, customParameterMap, null, null, null, null, true, null, null);
         } else {
             ipToNetworkMap = new LinkedHashMap<Long, IpAddresses>();
             Network.IpAddresses addrs = new Network.IpAddresses(null, null, null);
-            Network.IpAddresses worksAddrs = new Network.IpAddresses(worksIp, null, null);
-            ipToNetworkMap.put(ssv.getNetworkId(), worksAddrs);
-            worksControlVm = userVmService.createAdvancedVirtualMachine(zone, serviceOffering, worksTemplate, networkIds, owner,
-                hostName, hostName, null, null, null,
-                worksTemplate.getHypervisorType(), BaseCmd.HTTPMethod.POST, base64UserData, null, null, keypairs,
+            Network.IpAddresses ssvAddrs = new Network.IpAddresses(cmd.getSsvIp(), null, null);
+            ipToNetworkMap.put(cmd.getNetworkId(), ssvAddrs);
+            vm = userVmService.createAdvancedVirtualMachine(zone, serviceOffering, ssvTemplate, networkIds, owner,
+                hostName, hostName, ssv.getDiskOfferingId(), ssv.getSize(), null,
+                ssvTemplate.getHypervisorType(), BaseCmd.HTTPMethod.POST, base64UserData, null, null, keypairs,
                 ipToNetworkMap, addrs, null, null, null, customParameterMap, null, null, null, null, true, null, null);
         }
-        if (LOGGER.isInfoEnabled()) {
-            LOGGER.info(String.format("Created Control VM ID : %s, %s in the desktop cluster : %s", worksControlVm.getUuid(), hostName, ssv.getName()));
+
+        SSVVO ssvvo = ssvDao.createForUpdate(ssv.getId());
+        ssvvo.setSsvID(vm.getId());
+        if (!ssvDao.update(ssv.getId(), ssvvo)) {
+            throw new CloudRuntimeException(String.format("Failed to update Shared Storage VM ID: %s", ssv.getUuid()));
         }
-        return worksControlVm;
+
+        if (LOGGER.isInfoEnabled()) {
+            LOGGER.info(String.format("Created Control VM ID : %s, %s in the Shared Storage VM  : %s", vm.getUuid(), hostName, ssv.getName()));
+        }
+        return vm;
     }
 
-    private Network startSSVNetwork(final DeployDestination destination) throws ManagementServerException {
+    private Network startSSVNetwork(CreateSSVCmd cmd, final DeployDestination destination) throws ManagementServerException {
         final ReservationContext context = new ReservationContextImpl(null, null, null, owner);
-        Network network = networkDao.findById(ssv.getNetworkId());
+        Network network = networkDao.findById(cmd.getNetworkId());
         if (network == null) {
-            String msg  = String.format("Network for desktop cluster : %s not found", ssv.getName());
+            String msg  = String.format("Network for Shared Storage VM  : %s not found", ssv.getName());
             LOGGER.warn(msg);
             stateTransitTo(ssv.getId(), SSV.Event.CreateFailed);
             throw new ManagementServerException(msg);
@@ -197,10 +218,10 @@ public class SSVStartWorker extends SSVModifierActionWorker {
         try {
             networkMgr.startNetwork(network.getId(), destination, context);
             if (LOGGER.isInfoEnabled()) {
-                LOGGER.info(String.format("Network : %s is started for the desktop cluster : %s", network.getName(), ssv.getName()));
+                LOGGER.info(String.format("Network : %s is started for the Shared Storage VM  : %s", network.getName(), ssv.getName()));
             }
         } catch (ConcurrentOperationException | ResourceUnavailableException |InsufficientCapacityException e) {
-            String msg = String.format("Failed to start desktop cluster : %s as unable to start associated network : %s" , ssv.getName(), network.getName());
+            String msg = String.format("Failed to start Shared Storage VM  : %s as unable to start associated network : %s" , ssv.getName(), network.getName());
             LOGGER.error(msg, e);
             stateTransitTo(ssv.getId(), SSV.Event.CreateFailed);
             throw new ManagementServerException(msg, e);
@@ -208,23 +229,33 @@ public class SSVStartWorker extends SSVModifierActionWorker {
         return network;
     }
 
-    private void startSSVVMs() {
-        List <UserVm> clusterVms = getControlVMs();
-        for (final UserVm vm : clusterVms) {
-            if (vm == null) {
-                logTransitStateAndThrow(Level.ERROR, String.format("Failed to start Control VMs in desktop cluster : %s", ssv.getName()), ssv.getId(), SSV.Event.OperationFailed);
-            }
+    private void startSSV() {
+        UserVm vm = userVmDao.findById(ssv.getSsvId());
+        if (vm == null) {
+            logTransitStateAndThrow(Level.ERROR, String.format("Failed to start VMs in Shared Storage VM  : %s", ssv.getName()), ssv.getId(), SSV.Event.OperationFailed);
+        } else {
             try {
-                startDesktopVM(vm);
+                startVM(vm);
             } catch (ManagementServerException ex) {
-                LOGGER.warn(String.format("Failed to start VM : %s in desktop cluster : %s due to ", vm.getDisplayName(), ssv.getName()) + ex);
+                LOGGER.warn(String.format("Failed to start VM : %s in Shared Storage VM  : %s due to ", vm.getDisplayName(), ssv.getName()) + ex);
                 // dont bail out here. proceed further to stop the reset of the VM's
             }
-        }
-        for (final UserVm userVm : clusterVms) {
-            UserVm vm = userVmDao.findById(userVm.getId());
-            if (vm == null || !vm.getState().equals(VirtualMachine.State.Running)) {
-                logTransitStateAndThrow(Level.ERROR, String.format("Failed to start Control VMs in desktop cluster : %s", ssv.getName()), ssv.getId(), SSV.Event.OperationFailed);
+            int cnt = 10;
+            while (cnt > 0) {
+                vm = userVmDao.findById(ssv.getSsvId());
+                if (vm.getState().equals(VirtualMachine.State.Running)) {
+                    break;
+                } else {
+                    if (cnt == 0) {
+                        logTransitStateAndThrow(Level.ERROR, String.format("Failed to start Control VMs in Shared Storage VM  : %s", ssv.getName()), ssv.getId(), SSV.Event.OperationFailed);
+                    } else {
+                        try {
+                            Thread.sleep(1000);
+                            cnt--;
+                        } catch (InterruptedException e) {
+                        }
+                    }
+                }
             }
         }
     }
@@ -272,128 +303,109 @@ public class SSVStartWorker extends SSVModifierActionWorker {
     }
 
     private boolean setupSSVNetworkRules(Network network, UserVm worksVm, IpAddress publicIp) throws ManagementServerException {
-        boolean egress = false;
-        boolean firewall = false;
-        boolean firewall2 = false;
-        boolean portForwarding = false;
-        // Firewall Egress Network
-        try {
-            egress = provisionEgressFirewallRules(network, owner, CLUSTER_PORTAL_PORT, CLUSTER_LITE_PORT);
-            if (LOGGER.isInfoEnabled()) {
-                LOGGER.info(String.format("Provisioned egress firewall rule to open up port %d to %d on %s for Desktop cluster : %s", CLUSTER_PORTAL_PORT, CLUSTER_LITE_PORT, publicIp.getAddress().addr(), ssv.getName()));
-            }
-        } catch (NoSuchFieldException | IllegalAccessException | ResourceUnavailableException | NetworkRuleConflictException e) {
-            throw new ManagementServerException(String.format("Failed to provision egress firewall rules for Web access for the Desktop cluster : %s", ssv.getName()), e);
-        }
-        // Firewall rule fo Web access on WorksVM
-        if (egress) {
-            try {
-                firewall = provisionFirewallRules(publicIp, owner, CLUSTER_PORTAL_PORT, CLUSTER_API_PORT);
-                if (LOGGER.isInfoEnabled()) {
-                    LOGGER.info(String.format("Provisioned firewall rule to open up port %d to %d on %s for Desktop cluster : %s", CLUSTER_PORTAL_PORT, CLUSTER_API_PORT, publicIp.getAddress().addr(), ssv.getName()));
-                }
-                firewall2 = provisionFirewallRules(publicIp, owner, CLUSTER_SAMBA_PORT, CLUSTER_SAMBA_PORT);
-                if (LOGGER.isInfoEnabled()) {
-                    LOGGER.info(String.format("Provisioned firewall rule to open up port %d to %d on %s for Desktop cluster : %s", CLUSTER_SAMBA_PORT, CLUSTER_SAMBA_PORT, publicIp.getAddress().addr(), ssv.getName()));
-                }
-            } catch (NoSuchFieldException | IllegalAccessException | ResourceUnavailableException | NetworkRuleConflictException e) {
-                throw new ManagementServerException(String.format("Failed to provision firewall rules for Web access for the Desktop cluster : %s", ssv.getName()), e);
-            }
-            if (firewall && firewall2) {
-                // Port forwarding rule fo Web access on WorksVM
-                try {
-                    portForwarding = provisionPortForwardingRules(publicIp, network, owner, worksVm, CLUSTER_LITE_PORT, CLUSTER_PORTAL_PORT, CLUSTER_SAMBA_PORT, CLUSTER_API_PORT);
-                } catch (ResourceUnavailableException | NetworkRuleConflictException e) {
-                    throw new ManagementServerException(String.format("Failed to activate Web port forwarding rules for the Desktop cluster : %s", ssv.getName()), e);
-                }
-                if (portForwarding) {
-                    return true;
-                }
-            }
-        }
+        // boolean egress = false;
+        // boolean firewall = false;
+        // boolean firewall2 = false;
+        // boolean portForwarding = false;
+        // // Firewall Egress Network
+        // try {
+        //     egress = provisionEgressFirewallRules(network, owner, NFS_PORT, CLUSTER_LITE_PORT);
+        //     if (LOGGER.isInfoEnabled()) {
+        //         LOGGER.info(String.format("Provisioned egress firewall rule to open up port %d to %d on %s for Shared Storage VM  : %s", NFS_PORT, CLUSTER_LITE_PORT, publicIp.getAddress().addr(), ssv.getName()));
+        //     }
+        // } catch (NoSuchFieldException | IllegalAccessException | ResourceUnavailableException | NetworkRuleConflictException e) {
+        //     throw new ManagementServerException(String.format("Failed to provision egress firewall rules for Web access for the Shared Storage VM  : %s", ssv.getName()), e);
+        // }
+        // // Firewall rule fo Web access on WorksVM
+        // if (egress) {
+        //     try {
+        //         firewall = provisionFirewallRules(publicIp, owner, NFS_PORT, CLUSTER_API_PORT);
+        //         if (LOGGER.isInfoEnabled()) {
+        //             LOGGER.info(String.format("Provisioned firewall rule to open up port %d to %d on %s for Shared Storage VM  : %s", NFS_PORT, CLUSTER_API_PORT, publicIp.getAddress().addr(), ssv.getName()));
+        //         }
+        //         firewall2 = provisionFirewallRules(publicIp, owner, CLUSTER_SAMBA_PORT, CLUSTER_SAMBA_PORT);
+        //         if (LOGGER.isInfoEnabled()) {
+        //             LOGGER.info(String.format("Provisioned firewall rule to open up port %d to %d on %s for Shared Storage VM  : %s", CLUSTER_SAMBA_PORT, CLUSTER_SAMBA_PORT, publicIp.getAddress().addr(), ssv.getName()));
+        //         }
+        //     } catch (NoSuchFieldException | IllegalAccessException | ResourceUnavailableException | NetworkRuleConflictException e) {
+        //         throw new ManagementServerException(String.format("Failed to provision firewall rules for Web access for the Shared Storage VM  : %s", ssv.getName()), e);
+        //     }
+        //     if (firewall && firewall2) {
+        //         // Port forwarding rule fo Web access on WorksVM
+        //         try {
+        //             portForwarding = provisionPortForwardingRules(publicIp, network, owner, worksVm, CLUSTER_LITE_PORT, NFS_PORT, CLUSTER_SAMBA_PORT, CLUSTER_API_PORT);
+        //         } catch (ResourceUnavailableException | NetworkRuleConflictException e) {
+        //             throw new ManagementServerException(String.format("Failed to activate Web port forwarding rules for the Shared Storage VM  : %s", ssv.getName()), e);
+        //         }
+        //         if (portForwarding) {
+        //             return true;
+        //         }
+        //     }
+        // }
         return false;
     }
 
-    public boolean startSSVOnCreate() {
+    public boolean startSSVOnCreate(CreateSSVCmd cmd) {
         init();
         if (LOGGER.isInfoEnabled()) {
-            LOGGER.info(String.format("Starting Desktop cluster : %s", ssv.getName()));
+            LOGGER.info(String.format("Starting Shared Storage VM  : %s", ssv.getName()));
         }
         stateTransitTo(ssv.getId(), SSV.Event.StartRequested);
         DeployDestination dest = null;
         try {
             dest = plan();
         } catch (InsufficientCapacityException e) {
-            logTransitStateAndThrow(Level.ERROR, String.format("Provisioning the cluster failed due to insufficient capacity in the desktop cluster: %s", ssv.getUuid()), ssv.getId(), SSV.Event.CreateFailed, e);
+            logTransitStateAndThrow(Level.ERROR, String.format("Provisioning the cluster failed due to insufficient capacity in the Shared Storage VM : %s", ssv.getUuid()), ssv.getId(), SSV.Event.CreateFailed, e);
         }
         Network network = null;
         try {
-            network = startSSVNetwork(dest);
+            network = startSSVNetwork(cmd, dest);
         } catch (ManagementServerException e) {
-            logTransitStateAndThrow(Level.ERROR, String.format("Failed to start desktop cluster : %s as its network cannot be started", ssv.getName()), ssv.getId(), SSV.Event.CreateFailed, e);
+            logTransitStateAndThrow(Level.ERROR, String.format("Failed to start Shared Storage VM  : %s as its network cannot be started", ssv.getName()), ssv.getId(), SSV.Event.CreateFailed, e);
         }
         IpAddress publicIpAddress = null;
-        publicIpAddress = getSSVServerIp();
-        if (publicIpAddress == null) {
-            logTransitStateAndThrow(Level.ERROR, String.format("Failed to start Desktop cluster : %s as no public IP found for the cluster" , ssv.getName()), ssv.getId(), SSV.Event.CreateFailed);
+
+        if(network != null && Network.GuestType.Isolated.equals(network.getGuestType())){
+            publicIpAddress = getSSVServerIp(cmd);
+            if (publicIpAddress == null) {
+                logTransitStateAndThrow(Level.ERROR, String.format("Failed to start Shared Storage VM  : %s as no public IP found for the cluster" , ssv.getName()), ssv.getId(), SSV.Event.CreateFailed);
+            }
         }
-        List<UserVm> clusterVMs = new ArrayList<>();
-        UserVm worksVM = null;
+
+        // List<UserVm> clusterVMs = new ArrayList<>();
+        UserVm ssv = null;
         try {
-            worksVM = provisionSSVWorksControlVm(network);
+            ssv = provisionSSV(cmd, network);
+            if (LOGGER.isInfoEnabled()) {
+                LOGGER.info(String.format("Shared Storage VM  : %s VM successfully provisioned", ssv.getName()));
+            }
+            stateTransitTo(ssv.getId(), SSV.Event.OperationSucceeded);
+            return true;
         }  catch (CloudRuntimeException | ManagementServerException | ResourceUnavailableException | InsufficientCapacityException e) {
-            logTransitStateAndThrow(Level.ERROR, String.format("Provisioning the Works Control VM failed in the desktop cluster : %s, %s", ssv.getName(), e), ssv.getId(), SSV.Event.CreateFailed, e);
+            logTransitStateAndThrow(Level.ERROR, String.format("Provisioning the Shared Storage VM failed : %s, %s", ssv.getName(), e), ssv.getId(), SSV.Event.CreateFailed, e);
         }
-        clusterVMs.add(worksVM);
-        if (worksVM.getState().equals(VirtualMachine.State.Running)) {
-            // boolean setup = false;
-            // try {
-            //     setup = setupSSVNetworkRules(network, worksVM, publicIpAddress);
-            // } catch (ManagementServerException e) {
-            //     logTransitStateAndThrow(Level.ERROR, String.format("Failed to setup Desktop cluster : %s, unable to setup network rules", ssv.getName()), ssv.getId(), SSV.Event.CreateFailed, e);
-            // }
-            // if (setup) {
-            //     try {
-            //         if (callApi(publicIpAddress.getAddress().addr())) {
-            //             UserVm dcVM = null;
-            //             try {
-            //                 dcVM = provisionSSVDcControlVm(network);
-            //             } catch (CloudRuntimeException | ManagementServerException | ResourceUnavailableException | InsufficientCapacityException e) {
-            //                 logTransitStateAndThrow(Level.ERROR, String.format("Provisioning the DC Control VM failed in the desktop cluster : %s, %s", ssv.getName(), e), ssv.getId(), SSV.Event.CreateFailed, e);
-            //             }
-            //             clusterVMs.add(dcVM);
-            //             if (LOGGER.isInfoEnabled()) {
-            //                 LOGGER.info(String.format("Desktop cluster : %s Control VMs successfully provisioned", ssv.getName()));
-            //             }
-            //             stateTransitTo(ssv.getId(), SSV.Event.OperationSucceeded);
-            //             return true;
-            //         }
-            //     } catch (IOException | InterruptedException e) {
-            //         logTransitStateAndThrow(Level.ERROR, String.format("Provisioning failed in the desktop cluster : %s, %s", ssv.getName(), e), ssv.getId(), SSV.Event.CreateFailed, e);
-            //     }
-            // }
-        }
+
         return false;
     }
 
     public boolean startStoppedSSV() throws CloudRuntimeException {
         init();
         if (LOGGER.isInfoEnabled()) {
-            LOGGER.info(String.format("Starting desktop cluster : %s", ssv.getName()));
+            LOGGER.info(String.format("Starting Shared Storage VM  : %s", ssv.getName()));
         }
         stateTransitTo(ssv.getId(), SSV.Event.StartRequested);
-        startSSVVMs();
+        startSSV();
         stateTransitTo(ssv.getId(), SSV.Event.OperationSucceeded);
         if (LOGGER.isInfoEnabled()) {
-            LOGGER.info(String.format("Desktop cluster : %s successfully started", ssv.getName()));
+            LOGGER.info(String.format("Shared Storage VM  : %s successfully started", ssv.getName()));
         }
         return true;
     }
 
     public boolean reconcileAlertCluster() {
         init();
-        List<SSVVmMapVO> vmMapVOList = getControlVMMaps();
-        if (CollectionUtils.isEmpty(vmMapVOList)) {
+        UserVmVO vm = userVmDao.findById(ssv.getSsvId());
+        if (vm == null || vm.isRemoved()) {
             return false;
         }
         // mark the cluster to be running
@@ -402,31 +414,31 @@ public class SSVStartWorker extends SSVModifierActionWorker {
         return true;
     }
 
-    public boolean callApi(String sambaIp) throws InterruptedException, IOException {
-        int tryCount = 0;
-        HttpURLConnection conn = null;
-        while (tryCount < 10) {
-            Thread.sleep(60000);
-            try {
-                URL url = new URL("http://"+sambaIp+":9017/api/v1/version");
-                conn = (HttpURLConnection) url.openConnection();
-                conn.setRequestMethod("GET");
-                conn.setRequestProperty("Content-Type", "application/json");
-                conn.setRequestProperty("Connection", "keep-alive");
-                conn.setConnectTimeout(180000);
-                conn.setReadTimeout(180000);
-                conn.setDoOutput(true);
-                int responseCode = conn.getResponseCode();
-                if (responseCode == 200) {
-                    return true;
-                }
-            } catch (ConnectException e) {
-                tryCount++;
-                if (tryCount > 8) {
-                    logTransitStateAndThrow(Level.ERROR, String.format("DC Control VM could not be deployed because Works API call failed. : %s, %s", ssv.getName(), e), ssv.getId(), SSV.Event.CreateFailed, e);
-                }
-            }
-        }
-        return false;
-    }
+    // public boolean callApi(String sambaIp) throws InterruptedException, IOException {
+    //     int tryCount = 0;
+    //     HttpURLConnection conn = null;
+    //     while (tryCount < 10) {
+    //         Thread.sleep(60000);
+    //         try {
+    //             URL url = new URL("http://"+sambaIp+":9017/api/v1/version");
+    //             conn = (HttpURLConnection) url.openConnection();
+    //             conn.setRequestMethod("GET");
+    //             conn.setRequestProperty("Content-Type", "application/json");
+    //             conn.setRequestProperty("Connection", "keep-alive");
+    //             conn.setConnectTimeout(180000);
+    //             conn.setReadTimeout(180000);
+    //             conn.setDoOutput(true);
+    //             int responseCode = conn.getResponseCode();
+    //             if (responseCode == 200) {
+    //                 return true;
+    //             }
+    //         } catch (ConnectException e) {
+    //             tryCount++;
+    //             if (tryCount > 8) {
+    //                 logTransitStateAndThrow(Level.ERROR, String.format("DC Control VM could not be deployed because Works API call failed. : %s, %s", ssv.getName(), e), ssv.getId(), SSV.Event.CreateFailed, e);
+    //             }
+    //         }
+    //     }
+    //     return false;
+    // }
 }

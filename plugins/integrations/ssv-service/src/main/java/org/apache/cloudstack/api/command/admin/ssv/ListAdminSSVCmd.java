@@ -34,7 +34,7 @@ import com.cloud.ssv.SSVService;
 import com.cloud.utils.exception.CloudRuntimeException;
 
 @APICommand(name = ListAdminSSVCmd.APINAME,
-        description = "Lists Desktop Cluster",
+        description = "Lists Shared Storage VM Service",
         responseObject = SSVResponse.class,
         responseView = ResponseView.Restricted,
         requestHasSensitiveInfo = false,
@@ -42,7 +42,7 @@ import com.cloud.utils.exception.CloudRuntimeException;
         authorized = {RoleType.Admin})
 public class ListAdminSSVCmd extends BaseListProjectAndAccountResourcesCmd {
     public static final Logger LOGGER = Logger.getLogger(ListAdminSSVCmd.class.getName());
-    public static final String APINAME = "ListAdminSSV";
+    public static final String APINAME = "listAdminSSV";
 
     @Inject
     public SSVService ssv;

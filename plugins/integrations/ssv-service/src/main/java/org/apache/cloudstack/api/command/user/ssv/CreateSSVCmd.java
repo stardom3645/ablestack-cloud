@@ -29,10 +29,12 @@ import org.apache.cloudstack.api.BaseAsyncCreateCmd;
 import org.apache.cloudstack.api.Parameter;
 import org.apache.cloudstack.api.ResponseObject.ResponseView;
 import org.apache.cloudstack.api.ServerApiException;
+import org.apache.cloudstack.api.response.DiskOfferingResponse;
 import org.apache.cloudstack.api.response.DomainResponse;
 import org.apache.cloudstack.api.response.SSVResponse;
 import org.apache.cloudstack.api.response.NetworkResponse;
-import org.apache.cloudstack.api.response.ProjectResponse;
+import org.apache.cloudstack.api.response.TemplateResponse;
+import org.apache.cloudstack.api.response.ZoneResponse;
 import org.apache.cloudstack.api.response.ServiceOfferingResponse;
 import org.apache.cloudstack.context.CallContext;
 import org.apache.log4j.Logger;
@@ -43,7 +45,7 @@ import com.cloud.ssv.SSVService;
 import com.cloud.utils.exception.CloudRuntimeException;
 
 @APICommand(name = CreateSSVCmd.APINAME,
-        description = "Creates a Desktop cluster",
+        description = "Creates a Shared Storage VM",
         responseObject = SSVResponse.class,
         responseView = ResponseView.Restricted,
         entityType = {SSV.class},
@@ -61,18 +63,14 @@ public class CreateSSVCmd extends BaseAsyncCreateCmd {
     //////////////// API parameters /////////////////////
     /////////////////////////////////////////////////////
 
-    @Parameter(name = ApiConstants.NAME, type = CommandType.STRING, required = true, description = "name for the Desktop cluster")
+    @Parameter(name = ApiConstants.NAME, type = CommandType.STRING, required = true, description = "name for the Shared Storage VM ")
     private String name;
 
-    @Parameter(name = ApiConstants.DESCRIPTION, type = CommandType.STRING, required = true, description = "description for the Desktop cluster")
+    @Parameter(name = ApiConstants.DESCRIPTION, type = CommandType.STRING, required = true, description = "description for the Shared Storage VM ")
     private String description;
 
-    // @Parameter(name = ApiConstants.DESKTOP_PASSWORD, type = CommandType.STRING, required = true, description = "password for the Desktop cluster")
-    // private String password;
-
     @ACL(accessType = AccessType.UseEntry)
-    @Parameter(name = ApiConstants.SERVICE_OFFERING_ID, type = CommandType.UUID, entityType = ServiceOfferingResponse.class,
-            required = true, description = "the ID of the service offering for the virtual machines in the cluster.")
+    @Parameter(name = ApiConstants.SERVICE_OFFERING_ID, type = CommandType.UUID, entityType = ServiceOfferingResponse.class, description = "the ID of the service offering for the virtual machines in the cluster.")
     private Long serviceOfferingId;
 
     @ACL(accessType = AccessType.UseEntry)
@@ -85,47 +83,43 @@ public class CreateSSVCmd extends BaseAsyncCreateCmd {
             description = "an optional domainId for the virtual machine. If the account parameter is used, domainId must also be used.")
     private Long domainId;
 
-    @ACL(accessType = AccessType.UseEntry)
-    @Parameter(name = ApiConstants.PROJECT_ID, type = CommandType.UUID, entityType = ProjectResponse.class,
-            description = "Deploy cluster for the project")
-    private Long projectId;
+    @Parameter(name = ApiConstants.ZONE_ID, type = CommandType.UUID, required = true, entityType = ZoneResponse.class, description = "zone id for the Automation Controller ")
+    private Long zoneId;
+
+    @Parameter(name = ApiConstants.TEMPLATE_ID, type = CommandType.UUID, entityType = TemplateResponse.class, description = "the ID of the template for the virtual machine")
+    private Long templateId;
+
+    @ACL
+    @Parameter(name = ApiConstants.DISK_OFFERING_ID, type = CommandType.UUID, entityType = DiskOfferingResponse.class, description = "the ID of the disk offering for the virtual machine. If the template is of ISO format,"
+            + " the diskOfferingId is for the root disk volume. Otherwise this parameter is used to indicate the "
+            + "offering for the data disk volume. If the templateId parameter passed is from a Template object,"
+            + " the diskOfferingId refers to a DATA Disk Volume created. If the templateId parameter passed is "
+            + "from an ISO object, the diskOfferingId refers to a ROOT Disk Volume created.")
+    private Long diskOfferingId;
+
+    @Parameter(name = ApiConstants.SIZE, type = CommandType.LONG, description = "the arbitrary size for the DATADISK volume. Mutually exclusive with diskOfferingId")
+    private Long size;
 
     @ACL(accessType = AccessType.UseEntry)
     @Parameter(name = ApiConstants.NETWORK_ID, type = CommandType.UUID, entityType = NetworkResponse.class, required = true,
-            description = "Network in which Desktop cluster is to be launched")
+            description = "Network in which Shared Storage VM  is to be launched")
     private Long networkId;
 
-    @Parameter(name = ApiConstants.DESKTOP_AD_DOMAIN_NAME, type = CommandType.STRING, required = true,
-            description = "windows active directory domain name for desktop cluster")
-    private String adDomainName;
-
-    @Parameter(name = ApiConstants.DESKTOP_CLUSTER_TYPE, type = CommandType.STRING, required = true,
-            description = "access type for Desktop cluster")
-    private String accessType;
+    @Parameter(name = ApiConstants.SHARED_STORAGE_VM_TYPE, type = CommandType.STRING, required = true,
+            description = "access type for Shared Storage VM ")
+    private String ssvType;
 
     @Parameter(name = ApiConstants.GATEWAY, type = CommandType.STRING,
-    description = "Gateway for L2 Network of desktop cluster")
+    description = "Gateway for L2 Network of Shared Storage VM ")
     private String gateway;
 
     @Parameter(name = ApiConstants.NETMASK, type = CommandType.STRING,
-    description = "Netmask for L2 Network of desktop cluster")
+    description = "Netmask for L2 Network of Shared Storage VM ")
     private String netmask;
 
-    @Parameter(name = ApiConstants.START_IP, type = CommandType.STRING,
-    description = "Start IP for L2 Network of desktop cluster")
-    private String startIp;
-
-    @Parameter(name = ApiConstants.END_IP, type = CommandType.STRING,
-    description = "End IP for L2 Network of desktop cluster")
-    private String endIp;
-
-    @Parameter(name = ApiConstants.DESKTOP_CONTROLLER_DC_IP, type = CommandType.STRING, required = true,
+    @Parameter(name = ApiConstants.SHARED_STORAGE_VM_IP, type = CommandType.STRING, required = true,
             description = "DC IP for the desktop controller")
-    private String dcIp;
-
-    @Parameter(name = ApiConstants.DESKTOP_CONTROLLER_WORKS_IP, type = CommandType.STRING, required = true,
-            description = "WORKS IP for the desktop controller")
-    private String worksIp;
+    private String ssvIp;
 
 
     /////////////////////////////////////////////////////
@@ -147,15 +141,27 @@ public class CreateSSVCmd extends BaseAsyncCreateCmd {
         return description;
     }
 
-    // public String getPassword() {
-    //     return password;
-    // }
-
     public Long getDomainId() {
         if (domainId == null) {
             return CallContext.current().getCallingAccount().getDomainId();
         }
         return domainId;
+    }
+
+    public Long getZoneId() {
+        return zoneId;
+    }
+
+    public Long getTemplateId() {
+        return templateId;
+    }
+
+    public Long getDiskOfferingId() {
+        return diskOfferingId;
+    }
+
+    public Long getSize() {
+        return size;
     }
 
     public Long getServiceOfferingId() {
@@ -166,12 +172,8 @@ public class CreateSSVCmd extends BaseAsyncCreateCmd {
         return networkId;
     }
 
-    public String getAdDomainName() {
-        return adDomainName;
-    }
-
-    public String getAccessType() {
-        return accessType;
+    public String getSsvType() {
+        return ssvType;
     }
 
     public String getGateway() {
@@ -182,20 +184,8 @@ public class CreateSSVCmd extends BaseAsyncCreateCmd {
         return netmask;
     }
 
-    public String getStartIp() {
-        return startIp;
-    }
-
-    public String getEndIp() {
-        return endIp;
-    }
-
-    public String getDcIp() {
-        return dcIp;
-    }
-
-    public String getWorksIp() {
-        return worksIp;
+    public String getSsvIp() {
+        return ssvIp;
     }
 
     /////////////////////////////////////////////////////
@@ -213,12 +203,7 @@ public class CreateSSVCmd extends BaseAsyncCreateCmd {
 
     @Override
     public long getEntityOwnerId() {
-        Long accountId = _accountService.finalyzeAccountId(accountName, domainId, projectId, true);
-        if (accountId == null) {
-            return CallContext.current().getCallingAccount().getId();
-        }
-
-        return accountId;
+        return CallContext.current().getCallingAccountId();
     }
 
     @Override
@@ -233,12 +218,12 @@ public class CreateSSVCmd extends BaseAsyncCreateCmd {
 
     @Override
     public String getCreateEventDescription() {
-        return "creating Desktop cluster";
+        return "creating Shared Storage VM";
     }
 
     @Override
     public String getEventDescription() {
-        return "Creating Desktop cluster. Cluster Id: " + getEntityId();
+        return "Creating Shared Storage VM. Id: " + getEntityId();
     }
 
     @Override
@@ -249,8 +234,8 @@ public class CreateSSVCmd extends BaseAsyncCreateCmd {
     @Override
     public void execute() {
         try {
-            if (!SSVService.startSSV(getEntityId(), true)) {
-                throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, "Failed to start Desktop cluster");
+            if (!SSVService.startSSV(this, getEntityId(), true)) {
+                throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, "Failed to start Shared Storage VM");
             }
             SSVResponse response = SSVService.createSSVResponse(getEntityId());
             response.setResponseName(getCommandName());
@@ -263,12 +248,12 @@ public class CreateSSVCmd extends BaseAsyncCreateCmd {
     @Override
     public void create() throws CloudRuntimeException {
         try {
-            SSV cluster = SSVService.createSSV(this);
-            if (cluster == null) {
-                throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, "Failed to create Desktop cluster");
+            SSV app = SSVService.createSSV(this);
+            if (app == null) {
+                throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, "Failed to create Shared Storage VM");
             }
-            setEntityId(cluster.getId());
-            setEntityUuid(cluster.getUuid());
+            setEntityId(app.getId());
+            setEntityUuid(app.getUuid());
         } catch (CloudRuntimeException e) {
             throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, e.getMessage());
         }

@@ -23,10 +23,12 @@ package com.cloud.ssv;
  * with a Desktop.
  * A particular VM can be deployed only for a single Desktop.
  */
-public interface SSVVmMap {
+public interface SSVNetMap {
     long getId();
-    long getSsvId();
-    long getVmId();
-    String getType();
+    long getSsvServiceId();
+    String getNetworkIp();
+    String getNetworkGateway();
+    String getNetworkNetmask();
+    long getNetworkId();
 }
 

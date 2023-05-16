@@ -33,16 +33,16 @@ import org.apache.log4j.Logger;
 import com.cloud.ssv.SSVService;
 import com.cloud.utils.exception.CloudRuntimeException;
 
-@APICommand(name = ListSSVCmd.APINAME,
-        description = "Lists Desktop Cluster",
+@APICommand(name = ListUserSSVCmd.APINAME,
+        description = "Lists Shared Storage VM Service",
         responseObject = SSVResponse.class,
         responseView = ResponseView.Restricted,
         requestHasSensitiveInfo = false,
         responseHasSensitiveInfo = true,
-        authorized = {RoleType.Admin, RoleType.ResourceAdmin, RoleType.DomainAdmin, RoleType.User})
-public class ListSSVCmd extends BaseListProjectAndAccountResourcesCmd {
-    public static final Logger LOGGER = Logger.getLogger(ListSSVCmd.class.getName());
-    public static final String APINAME = "listSSV";
+        authorized = { RoleType.User })
+public class ListUserSSVCmd extends BaseListProjectAndAccountResourcesCmd {
+    public static final Logger LOGGER = Logger.getLogger(ListUserSSVCmd.class.getName());
+    public static final String APINAME = "listUserSSV";
 
     @Inject
     public SSVService ssv;
@@ -90,7 +90,7 @@ public class ListSSVCmd extends BaseListProjectAndAccountResourcesCmd {
     @Override
     public void execute() throws ServerApiException {
         try {
-            ListResponse<SSVResponse> response = ssv.listSSV(this);
+            ListResponse<SSVResponse> response = ssv.listUserSSV(this);
             response.setResponseName(getCommandName());
             setResponseObject(response);
         } catch (CloudRuntimeException e) {

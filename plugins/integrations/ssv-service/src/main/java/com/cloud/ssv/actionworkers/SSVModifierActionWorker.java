@@ -29,8 +29,8 @@ import org.apache.cloudstack.api.command.user.vm.StartVMCmd;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.cloudstack.api.command.user.firewall.CreateFirewallRuleCmd;
-import org.apache.cloudstack.api.command.user.firewall.CreateEgressFirewallRuleCmd;
-import org.apache.cloudstack.config.ApiServiceConfiguration;
+// import org.apache.cloudstack.api.command.user.firewall.CreateEgressFirewallRuleCmd;
+// import org.apache.cloudstack.config.ApiServiceConfiguration;
 
 import com.cloud.capacity.CapacityManager;
 import com.cloud.dc.ClusterDetailsDao;
@@ -58,15 +58,18 @@ import com.cloud.network.dao.IPAddressDao;
 import com.cloud.network.firewall.FirewallService;
 import com.cloud.network.lb.LoadBalancingRulesService;
 import com.cloud.network.rules.FirewallRule;
-import com.cloud.network.rules.FirewallRule.TrafficType;
-import com.cloud.network.rules.FirewallRuleVO;
+// import com.cloud.network.rules.FirewallRule.TrafficType;
+// import com.cloud.network.rules.FirewallRuleVO;
 import com.cloud.network.rules.PortForwardingRuleVO;
 import com.cloud.network.rules.RulesService;
 import com.cloud.network.rules.dao.PortForwardingRulesDao;
 import com.cloud.offering.ServiceOffering;
 import com.cloud.resource.ResourceManager;
+import com.cloud.storage.VMTemplateVO;
 import com.cloud.storage.VolumeApiService;
+import com.cloud.storage.dao.VMTemplateDao;
 import com.cloud.storage.dao.VolumeDao;
+import com.cloud.template.TemplateApiService;
 import com.cloud.user.Account;
 import com.cloud.uservm.UserVm;
 import com.cloud.utils.net.Ip;
@@ -120,9 +123,13 @@ public class SSVModifierActionWorker extends SSVActionWorker {
     protected IPAddressDao ipAddressDao;
     @Inject
     protected UserAccountJoinDao userAccountJoinDao;
+    @Inject
+    protected TemplateApiService _templateService;
+    @Inject
+    protected VMTemplateDao _tmpltDao;
 
-    protected SSVModifierActionWorker(final SSV ssv, final SSVManagerImpl clusterManager) {
-        super(ssv, clusterManager);
+    protected SSVModifierActionWorker(final SSV ssv, final SSVManagerImpl ssvManagerImpl) {
+        super(ssv, ssvManagerImpl);
     }
 
     protected void init() {
@@ -143,7 +150,7 @@ public class SSVModifierActionWorker extends SSVActionWorker {
             for (Map.Entry<String, Pair<HostVO, Integer>> hostEntry : hosts_with_resevered_capacity.entrySet()) {
                 Pair<HostVO, Integer> hp = hostEntry.getValue();
                 HostVO h = hp.first();
-                if (!h.getHypervisorType().equals(worksTemplate.getHypervisorType())) {
+                if (!h.getHypervisorType().equals(ssvTemplate.getHypervisorType())) {
                     continue;
                 }
                 hostDao.loadHostTags(h);
@@ -172,7 +179,7 @@ public class SSVModifierActionWorker extends SSVActionWorker {
             if (!suitable_host_found) {
                 if (LOGGER.isInfoEnabled()) {
                     LOGGER.info(String.format("Suitable hosts not found in datacenter : %s for node %d, with offering : %s and hypervisor: %s",
-                        zone.getName(), i, offering.getName(), worksTemplate.getHypervisorType().toString()));
+                        zone.getName(), i, offering.getName(), ssvTemplate.getHypervisorType().toString()));
                 }
                 break;
             }
@@ -183,8 +190,8 @@ public class SSVModifierActionWorker extends SSVActionWorker {
             }
             return new DeployDestination(zone, null, null, null);
         }
-        String msg = String.format("Cannot find enough capacity for desktop cluster(requested cpu=%d memory=%s) with offering : %s and hypervisor: %s",
-                cpu_requested * nodesCount, toHumanReadableSize(ram_requested * nodesCount), offering.getName(), worksTemplate.getHypervisorType().toString());
+        String msg = String.format("Cannot find enough capacity for Shared Storage VM(requested cpu=%d memory=%s) with offering : %s and hypervisor: %s",
+                cpu_requested * nodesCount, toHumanReadableSize(ram_requested * nodesCount), offering.getName(), ssvTemplate.getHypervisorType().toString());
 
         LOGGER.warn(msg);
         throw new InsufficientServerCapacityException(msg, DataCenter.class, zone.getId());
@@ -194,13 +201,13 @@ public class SSVModifierActionWorker extends SSVActionWorker {
         ServiceOffering offering = serviceOfferingDao.findById(ssv.getServiceOfferingId());
         DataCenter zone = dataCenterDao.findById(ssv.getZoneId());
         if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug(String.format("Checking deployment destination for desktop cluster : %s in zone : %s", ssv.getName(), zone.getName()));
+            LOGGER.debug(String.format("Checking deployment destination for Shared Storage VM : %s in zone : %s", ssv.getName(), zone.getName()));
         }
-        final long dest = 2;
+        final long dest = 1;
         return plan(dest, zone, offering);
     }
 
-    protected void startDesktopVM(final UserVm vm) throws ManagementServerException {
+    protected void startVM(final UserVm vm) throws ManagementServerException {
         try {
             StartVMCmd startVm = new StartVMCmd();
             startVm = ComponentContext.inject(startVm);
@@ -209,16 +216,19 @@ public class SSVModifierActionWorker extends SSVActionWorker {
             f.set(startVm, vm.getId());
             userVmService.startVirtualMachine(startVm);
             if (LOGGER.isInfoEnabled()) {
-                LOGGER.info(String.format("Started VM : %s in the desktop cluster : %s", vm.getDisplayName(), ssv.getName()));
+                LOGGER.info(String.format("Started VM : %s in the Shared Storage VM : %s", vm.getDisplayName(), ssv.getName()));
             }
         } catch (IllegalAccessException | NoSuchFieldException | ExecutionException |
                 ResourceUnavailableException | ResourceAllocationException | InsufficientCapacityException ex) {
-            throw new ManagementServerException(String.format("Failed to start VM in the desktop cluster : %s", ssv.getName()), ex);
+            throw new ManagementServerException(String.format("Failed to start VM in the Shared Storage VM : %s", ssv.getName()), ex);
         }
 
         UserVm startVm = userVmDao.findById(vm.getId());
         if (!startVm.getState().equals(VirtualMachine.State.Running)) {
-            throw new ManagementServerException(String.format("Failed to start VM in the desktop cluster : %s", ssv.getName()));
+            throw new ManagementServerException(String.format("Failed to start VM in the Shared Storage VM : %s", ssv.getName()));
+        } else {
+            VMTemplateVO tmplt = _tmpltDao.findByUuid(configurationDao.getValue("cloud.shared.storage.vm.setting.iso.uuid"));
+            _templateService.attachIso(tmplt.getId(), startVm.getId(), true);
         }
     }
 
@@ -236,30 +246,30 @@ public class SSVModifierActionWorker extends SSVActionWorker {
     }
 
     protected void removeFirewallIngressRule(final IpAddress publicIp) {
-        List<FirewallRuleVO> firewallRules = firewallRulesDao.listByIpAndPurposeAndNotRevoked(publicIp.getId(), FirewallRule.Purpose.Firewall);
-        for (FirewallRuleVO firewallRule : firewallRules) {
-            if (firewallRule.getSourcePortStart() != null && firewallRule.getSourcePortEnd() != null) {
-                if (firewallRule.getSourcePortStart() == CLUSTER_PORTAL_PORT &&
-                        firewallRule.getSourcePortEnd() == CLUSTER_API_PORT && firewallRule.getTrafficType() == TrafficType.Ingress) {
-                    firewallService.revokeIngressFwRule(firewallRule.getId(), true);
-                }
-                if (firewallRule.getSourcePortStart() == CLUSTER_SAMBA_PORT &&
-                        firewallRule.getSourcePortEnd() == CLUSTER_SAMBA_PORT && firewallRule.getTrafficType() == TrafficType.Ingress) {
-                    firewallService.revokeIngressFwRule(firewallRule.getId(), true);
-                }
-            }
-        }
+        // List<FirewallRuleVO> firewallRules = firewallRulesDao.listByIpAndPurposeAndNotRevoked(publicIp.getId(), FirewallRule.Purpose.Firewall);
+        // for (FirewallRuleVO firewallRule : firewallRules) {
+        //     if (firewallRule.getSourcePortStart() != null && firewallRule.getSourcePortEnd() != null) {
+        //         if (firewallRule.getSourcePortStart() == CLUSTER_PORTAL_PORT &&
+        //                 firewallRule.getSourcePortEnd() == CLUSTER_API_PORT && firewallRule.getTrafficType() == TrafficType.Ingress) {
+        //             firewallService.revokeIngressFwRule(firewallRule.getId(), true);
+        //         }
+        //         if (firewallRule.getSourcePortStart() == CLUSTER_SAMBA_PORT &&
+        //                 firewallRule.getSourcePortEnd() == CLUSTER_SAMBA_PORT && firewallRule.getTrafficType() == TrafficType.Ingress) {
+        //             firewallService.revokeIngressFwRule(firewallRule.getId(), true);
+        //         }
+        //     }
+        // }
     }
 
     protected void removeFirewallEgressRule(final Network network) {
-        List<FirewallRuleVO> firewallRules = firewallRulesDao.listByNetworkAndPurposeAndNotRevoked(network.getId(), FirewallRule.Purpose.Firewall);
-        for (FirewallRuleVO firewallRule : firewallRules) {
-            if (firewallRule.getSourcePortStart() != null && firewallRule.getSourcePortEnd() != null) {
-                if (firewallRule.getSourcePortStart() == CLUSTER_PORTAL_PORT && firewallRule.getSourcePortEnd() == CLUSTER_LITE_PORT && firewallRule.getTrafficType() == TrafficType.Egress) {
-                    firewallService.revokeIngressFwRule(firewallRule.getId(), true);
-                }
-            }
-        }
+        // List<FirewallRuleVO> firewallRules = firewallRulesDao.listByNetworkAndPurposeAndNotRevoked(network.getId(), FirewallRule.Purpose.Firewall);
+        // for (FirewallRuleVO firewallRule : firewallRules) {
+        //     if (firewallRule.getSourcePortStart() != null && firewallRule.getSourcePortEnd() != null) {
+        //         if (firewallRule.getSourcePortStart() == CLUSTER_PORTAL_PORT && firewallRule.getSourcePortEnd() == CLUSTER_LITE_PORT && firewallRule.getTrafficType() == TrafficType.Egress) {
+        //             firewallService.revokeIngressFwRule(firewallRule.getId(), true);
+        //         }
+        //     }
+        // }
     }
 
     protected void removePortForwardingRules(final IpAddress publicIp, final Network network, final Account account, final List<Long> removedVMIds) throws ResourceUnavailableException {
@@ -312,50 +322,51 @@ public class SSVModifierActionWorker extends SSVActionWorker {
         return sccuess;
     }
 
-    protected boolean provisionEgressFirewallRules(final Network network, final Account account, int startPort, int endPort) throws NoSuchFieldException,
-            IllegalAccessException, ResourceUnavailableException, NetworkRuleConflictException {
-        List<String> sourceCidrList = new ArrayList<String>();
-        String worksVmIp = ssv.getWorksIp();
-        sourceCidrList.add(worksVmIp+"/32");
+    // protected boolean provisionEgressFirewallRules(final Network network, final Account account, int startPort, int endPort) throws NoSuchFieldException,
 
-        List<String> destinationCidrList = new ArrayList<String>();
-        String manageIp = ApiServiceConfiguration.ManagementServerAddresses.value();
-        destinationCidrList.add(manageIp+"/32");
+    //         IllegalAccessException, ResourceUnavailableException, NetworkRuleConflictException {
+    //     // List<String> sourceCidrList = new ArrayList<String>();
+    //     // String worksVmIp = ssv.getSsvIp();
+    //     // sourceCidrList.add(worksVmIp+"/32");
 
-        CreateEgressFirewallRuleCmd rule = new CreateEgressFirewallRuleCmd();
-        rule = ComponentContext.inject(rule);
+    //     // List<String> destinationCidrList = new ArrayList<String>();
+    //     // String manageIp = ApiServiceConfiguration.ManagementServerAddresses.value();
+    //     // destinationCidrList.add(manageIp+"/32");
 
-        Field addressField = rule.getClass().getDeclaredField("networkId");
-        addressField.setAccessible(true);
-        addressField.set(rule, network.getId());
+    //     // CreateEgressFirewallRuleCmd rule = new CreateEgressFirewallRuleCmd();
+    //     // rule = ComponentContext.inject(rule);
 
-        Field protocolField = rule.getClass().getDeclaredField("protocol");
-        protocolField.setAccessible(true);
-        protocolField.set(rule, "TCP");
+    //     // Field addressField = rule.getClass().getDeclaredField("networkId");
+    //     // addressField.setAccessible(true);
+    //     // addressField.set(rule, network.getId());
 
-        Field startPortField = rule.getClass().getDeclaredField("publicStartPort");
-        startPortField.setAccessible(true);
-        startPortField.set(rule, startPort);
+    //     // Field protocolField = rule.getClass().getDeclaredField("protocol");
+    //     // protocolField.setAccessible(true);
+    //     // protocolField.set(rule, "TCP");
 
-        Field endPortField = rule.getClass().getDeclaredField("publicEndPort");
-        endPortField.setAccessible(true);
-        endPortField.set(rule, endPort);
+    //     // Field startPortField = rule.getClass().getDeclaredField("publicStartPort");
+    //     // startPortField.setAccessible(true);
+    //     // startPortField.set(rule, startPort);
 
-        Field cidrField = rule.getClass().getDeclaredField("cidrlist");
-        cidrField.setAccessible(true);
-        cidrField.set(rule, sourceCidrList);
+    //     // Field endPortField = rule.getClass().getDeclaredField("publicEndPort");
+    //     // endPortField.setAccessible(true);
+    //     // endPortField.set(rule, endPort);
 
-        Field destCidrField = rule.getClass().getDeclaredField("destCidrList");
-        destCidrField.setAccessible(true);
-        destCidrField.set(rule, destinationCidrList);
+    //     // Field cidrField = rule.getClass().getDeclaredField("cidrlist");
+    //     // cidrField.setAccessible(true);
+    //     // cidrField.set(rule, sourceCidrList);
 
-        boolean sccuess = false;
-        FirewallRule result = firewallService.createEgressFirewallRule(rule);
-        if (result != null) {
-            sccuess = firewallService.applyEgressFirewallRules(result, account);
-        }
-        return sccuess;
-    }
+    //     // Field destCidrField = rule.getClass().getDeclaredField("destCidrList");
+    //     // destCidrField.setAccessible(true);
+    //     // destCidrField.set(rule, destinationCidrList);
+
+    //     boolean sccuess = false;
+    //     FirewallRule result = firewallService.createEgressFirewallRule(rule);
+    //     if (result != null) {
+    //         sccuess = firewallService.applyEgressFirewallRules(result, account);
+    //     }
+    //     return sccuess;
+    // }
 
     protected boolean provisionPortForwardingRules(IpAddress publicIp, Network network, Account account, UserVm worksVM, int adminPort, int userPort, int sambaPort, int apiPort) throws ResourceUnavailableException, NetworkRuleConflictException {
         boolean result = false;
@@ -381,7 +392,7 @@ public class SSVModifierActionWorker extends SSVActionWorker {
             });
             rulesService.applyPortForwardingRules(publicIp.getId(), account);
             if (LOGGER.isInfoEnabled()) {
-                LOGGER.info(String.format("Provisioned web access port forwarding rule from port %d to 8080 on %s to the VM IP : %s in Desktop cluster : %s", userPort, publicIp.getAddress().addr(), vmIp.toString(), ssv.getName()));
+                LOGGER.info(String.format("Provisioned web access port forwarding rule from port %d to 8080 on %s to the VM IP : %s in Shared Storage VM : %s", userPort, publicIp.getAddress().addr(), vmIp.toString(), ssv.getName()));
             }
             PortForwardingRuleVO pfRule2 = Transaction.execute(new TransactionCallbackWithException<PortForwardingRuleVO, NetworkRuleConflictException>() {
                 @Override
@@ -396,7 +407,7 @@ public class SSVModifierActionWorker extends SSVActionWorker {
             });
             rulesService.applyPortForwardingRules(publicIp.getId(), account);
             if (LOGGER.isInfoEnabled()) {
-                LOGGER.info(String.format("Provisioned web access port forwarding rule from port %d to 8081 on %s to the VM IP : %s in Desktop cluster : %s", adminPort, publicIp.getAddress().addr(), vmIp.toString(), ssv.getName()));
+                LOGGER.info(String.format("Provisioned web access port forwarding rule from port %d to 8081 on %s to the VM IP : %s in Shared Storage VM : %s", adminPort, publicIp.getAddress().addr(), vmIp.toString(), ssv.getName()));
             }
             PortForwardingRuleVO pfRule3 = Transaction.execute(new TransactionCallbackWithException<PortForwardingRuleVO, NetworkRuleConflictException>() {
                 @Override
@@ -411,7 +422,7 @@ public class SSVModifierActionWorker extends SSVActionWorker {
             });
             rulesService.applyPortForwardingRules(publicIp.getId(), account);
             if (LOGGER.isInfoEnabled()) {
-                LOGGER.info(String.format("Provisioned api access port forwarding rule from port %d to 8082 on %s to the VM IP : %s in Desktop cluster : %s", apiPort, publicIp.getAddress().addr(), vmIp.toString(), ssv.getName()));
+                LOGGER.info(String.format("Provisioned api access port forwarding rule from port %d to 8082 on %s to the VM IP : %s in Shared Storage VM : %s", apiPort, publicIp.getAddress().addr(), vmIp.toString(), ssv.getName()));
             }
             PortForwardingRuleVO pfRule4 = Transaction.execute(new TransactionCallbackWithException<PortForwardingRuleVO, NetworkRuleConflictException>() {
                 @Override
@@ -426,7 +437,7 @@ public class SSVModifierActionWorker extends SSVActionWorker {
             });
             rulesService.applyPortForwardingRules(publicIp.getId(), account);
             if (LOGGER.isInfoEnabled()) {
-                LOGGER.info(String.format("Provisioned samba access port forwarding rule from port %d to 9017 on %s to the VM IP : %s in Desktop cluster : %s", sambaPort, publicIp.getAddress().addr(), vmIp.toString(), ssv.getName()));
+                LOGGER.info(String.format("Provisioned samba access port forwarding rule from port %d to 9017 on %s to the VM IP : %s in Shared Storage VM : %s", sambaPort, publicIp.getAddress().addr(), vmIp.toString(), ssv.getName()));
             }
             return true;
         }

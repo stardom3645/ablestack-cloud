@@ -111,19 +111,16 @@ public interface SSV extends ControlledEntity, com.cloud.utils.fsm.StateObject<S
 
     long getId();
     String getName();
-    // String getPassword();
     String getDescription();
     long getZoneId();
-    long getSsvId();
     long getServiceOfferingId();
-    String getAdDomainName();
-    long getNetworkId();
-    String getAccessType();
+    long getTemplateId();
+    long getDiskOfferingId();
+    long getSize();
+    String getSsvType();
     long getDomainId();
     long getAccountId();
-    boolean isCheckForGc();
-    String getDcIp();
-    String getWorksIp();
+    long getSsvId();
     @Override
     State getState();
     Date getCreated();

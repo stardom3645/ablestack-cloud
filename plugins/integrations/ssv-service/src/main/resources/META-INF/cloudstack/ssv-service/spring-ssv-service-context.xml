@@ -28,7 +28,7 @@
                       >
 
     <bean id="SSVDaoImpl" class="com.cloud.ssv.dao.SSVDaoImpl" />
-    <bean id="SSVVmMapDaoImpl" class="com.cloud.ssv.dao.SSVVmMapDaoImpl" />
+    <bean id="SSVNetMapDaoImpl" class="com.cloud.ssv.dao.SSVNetMapDaoImpl" />
     <bean id="SSVManagerImpl" class="com.cloud.ssv.SSVManagerImpl" />
 
 </beans>

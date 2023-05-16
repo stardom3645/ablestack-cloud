@@ -17,8 +17,6 @@
 
 package com.cloud.ssv.actionworkers;
 
-import java.util.List;
-
 import org.apache.log4j.Level;
 
 import com.cloud.exception.ConcurrentOperationException;
@@ -29,33 +27,28 @@ import com.cloud.utils.exception.CloudRuntimeException;
 import com.cloud.vm.VirtualMachine;
 
 public class SSVStopWorker extends SSVActionWorker {
-    public SSVStopWorker(final SSV ssv, final SSVManagerImpl clusterManager) {
-        super(ssv, clusterManager);
+    public SSVStopWorker(final SSV ssv, final SSVManagerImpl appManager) {
+        super(ssv, appManager);
     }
 
     public boolean stop() throws CloudRuntimeException {
-        init();
+        // init();
         if (LOGGER.isInfoEnabled()) {
-            LOGGER.info(String.format("Stopping desktop cluster : %s", ssv.getName()));
+            LOGGER.info(String.format("Stopping Shared Storage VM  : %s", ssv.getName()));
         }
         stateTransitTo(ssv.getId(), SSV.Event.StopRequested);
-        List<UserVm> clusterVMs = getControlVMs();
-        for (UserVm vm : clusterVMs) {
-            if (vm == null) {
-                logTransitStateAndThrow(Level.ERROR, String.format("Failed to find Control VMs in desktop cluster : %s", ssv.getName()), ssv.getId(), SSV.Event.OperationFailed);
-            }
+        UserVm vm = userVmDao.findById(ssv.getSsvId());
+        if (vm == null) {
+            logTransitStateAndThrow(Level.ERROR, String.format("Failed to Stop VMs in Shared Storage VM : %s", ssv.getName()), ssv.getId(), SSV.Event.OperationFailed);
+        } else {
             try {
                 userVmService.stopVirtualMachine(vm.getId(), false);
             } catch (ConcurrentOperationException ex) {
-                LOGGER.warn(String.format("Failed to stop VM : %s in desktop cluster : %s",
-                    vm.getDisplayName(), ssv.getName()), ex);
+                LOGGER.warn(String.format("Failed to Stop VM : %s in Shared Storage VM  : %s due to ", vm.getDisplayName(), ssv.getName()) + ex);
+                // dont bail out here. proceed further to stop the reset of the VM's
             }
-        }
-        for (final UserVm userVm : clusterVMs) {
-            UserVm vm = userVmDao.findById(userVm.getId());
-            if (vm == null || !vm.getState().equals(VirtualMachine.State.Stopped)) {
-                logTransitStateAndThrow(Level.ERROR, String.format("Failed to stop Control VMs in desktop cluster : %s",
-                ssv.getName()), ssv.getId(), SSV.Event.OperationFailed);
+            if (!vm.getState().equals(VirtualMachine.State.Running)) {
+                logTransitStateAndThrow(Level.ERROR, String.format("Failed to Stop Control VMs in Shared Storage VM : %s", ssv.getName()), ssv.getId(), SSV.Event.OperationFailed);
             }
         }
         stateTransitTo(ssv.getId(), SSV.Event.OperationSucceeded);

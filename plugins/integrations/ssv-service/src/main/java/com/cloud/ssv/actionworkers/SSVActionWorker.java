@@ -18,13 +18,12 @@
 package com.cloud.ssv.actionworkers;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Collections;
 import java.util.Objects;
 
 import javax.inject.Inject;
 
+import org.apache.cloudstack.api.command.user.ssv.CreateSSVCmd;
 import org.apache.cloudstack.ca.CAManager;
 import org.apache.cloudstack.engine.orchestration.service.NetworkOrchestrationService;
 import org.apache.cloudstack.framework.config.dao.ConfigurationDao;
@@ -39,8 +38,7 @@ import com.cloud.ssv.SSV;
 import com.cloud.ssv.SSVManagerImpl;
 import com.cloud.ssv.SSVVO;
 import com.cloud.ssv.dao.SSVDao;
-import com.cloud.ssv.dao.SSVVmMapDao;
-import com.cloud.ssv.SSVVmMapVO;
+import com.cloud.ssv.dao.SSVNetMapDao;
 import com.cloud.network.Network;
 import com.cloud.network.IpAddress;
 import com.cloud.network.NetworkModel;
@@ -57,11 +55,7 @@ import com.cloud.template.VirtualMachineTemplate;
 import com.cloud.user.Account;
 import com.cloud.user.AccountService;
 import com.cloud.user.dao.AccountDao;
-import com.cloud.uservm.UserVm;
 import com.cloud.utils.StringUtils;
-import com.cloud.utils.db.Transaction;
-import com.cloud.utils.db.TransactionCallback;
-import com.cloud.utils.db.TransactionStatus;
 import com.cloud.utils.exception.CloudRuntimeException;
 import com.cloud.utils.fsm.NoTransitionException;
 import com.cloud.utils.fsm.StateMachine2;
@@ -70,10 +64,9 @@ import com.cloud.vm.dao.UserVmDao;
 
 public class SSVActionWorker {
 
-    public static final int CLUSTER_PORTAL_PORT = 8080;
-    public static final int CLUSTER_LITE_PORT = 8081;
-    public static final int CLUSTER_API_PORT = 8082;
-    public static final int CLUSTER_SAMBA_PORT = 9017;
+    public static final int NFS_PORT = 8080;
+    public static final int ISCSI_PORT = 8081;
+    public static final int SAMBA_PORT = 8082;
 
     protected static final Logger LOGGER = Logger.getLogger(SSVActionWorker.class);
 
@@ -116,32 +109,24 @@ public class SSVActionWorker {
     @Inject
     protected IPAddressDao ipAddressDao;
 
-    // protected DesktopTemplateMapDao desktopTemplateMapDao;
     protected SSVDao ssvDao;
-    protected SSVVmMapDao ssvVmMapDao;
+    protected SSVNetMapDao ssvNetMapDao;
 
     protected SSV ssv;
     protected Account owner;
-    protected VirtualMachineTemplate dcTemplate;
-    protected VirtualMachineTemplate worksTemplate;
+    protected VirtualMachineTemplate ssvTemplate;
+    protected VirtualMachineTemplate ssvSettingIso;
     protected String publicIpAddress;
 
-    protected SSVActionWorker(final SSV ssv, final SSVManagerImpl clusterManager) {
+    protected SSVActionWorker(final SSV ssv, final SSVManagerImpl ssvManagerImpl) {
         this.ssv = ssv;
-        this.ssvDao = clusterManager.ssvDao;
-        this.ssvVmMapDao = clusterManager.ssvVmMapDao;
-        // this.desktopTemplateMapDao = clusterManager.desktopTemplateMapDao;
+        this.ssvDao = ssvManagerImpl.ssvDao;
+        this.ssvNetMapDao = ssvManagerImpl.ssvNetMapDao;
     }
 
     protected void init() {
-        // final String DC = "dc";
-        // this.owner = accountDao.findById(ssv.getAccountId());
-        // List<DesktopTemplateMapVO> templateList = desktopTemplateMapDao.listByVersionId(ssv.getSSVId());
-        // for (DesktopTemplateMapVO templateMapVO : templateList) {
-        //     if (templateMapVO.getType().equals(DC)) {
-        //         this.dcTemplate = templateDao.findById(templateMapVO.getTemplateId());
-        //     }
-        // }
+        this.owner = accountDao.findById(ssv.getAccountId());
+        this.ssvTemplate = templateDao.findByUuid(configurationDao.getValue("cloud.shared.storage.vm.template.uuid"));
     }
 
     protected String readResourceFile(String resource) throws IOException {
@@ -203,74 +188,44 @@ public class SSVActionWorker {
         logTransitStateAndThrow(logLevel, message, null, null, ex);
     }
 
-    protected SSVVmMapVO addSSVVm(final long ssvId, final long vmId, final String type) {
-        return Transaction.execute(new TransactionCallback<SSVVmMapVO>() {
-            @Override
-            public SSVVmMapVO doInTransaction(TransactionStatus status) {
-                SSVVmMapVO newVmMap = new SSVVmMapVO(ssvId, vmId, type);
-                ssvVmMapDao.persist(newVmMap);
-                return newVmMap;
-            }
-        });
-    }
-
-    protected List<SSVVmMapVO> getControlVMMaps() {
-        List<SSVVmMapVO> clusterVMs = ssvVmMapDao.listBySSVIdAndNotVmType(ssv.getId(), "desktopvm");
-        if (!CollectionUtils.isEmpty(clusterVMs)) {
-            clusterVMs.sort((t1, t2) -> (int)((t1.getId() - t2.getId())/Math.abs(t1.getId() - t2.getId())));
-        }
-        return clusterVMs;
-    }
-
-    protected List<UserVm> getControlVMs() {
-        List<UserVm> vmList = new ArrayList<>();
-        List<SSVVmMapVO> clusterVMs = getControlVMMaps();
-        if (!CollectionUtils.isEmpty(clusterVMs)) {
-            for (SSVVmMapVO vmMap : clusterVMs) {
-                vmList.add(userVmDao.findById(vmMap.getVmId()));
-            }
-        }
-        return vmList;
-    }
-
     protected boolean stateTransitTo(long ssvId, SSV.Event e) {
         SSVVO ssv = ssvDao.findById(ssvId);
         try {
             return _stateMachine.transitTo(ssv, e, null, ssvDao);
         } catch (NoTransitionException nte) {
-            LOGGER.warn(String.format("Failed to transition state of the desktop cluster : %s in state %s on event %s",
+            LOGGER.warn(String.format("Failed to transition state of the Shared Storage VM : %s in state %s on event %s",
             ssv.getName(), ssv.getState().toString(), e.toString()), nte);
             return false;
         }
     }
 
-    private UserVm fetchControlVmIfMissing(final UserVm controlVm) {
-        if (controlVm != null) {
-            return controlVm;
-        }
-        List<SSVVmMapVO> clusterVMs = ssvVmMapDao.listBySSVIdAndNotVmType(ssv.getId(), "desktopvm");
-        if (CollectionUtils.isEmpty(clusterVMs)) {
-            LOGGER.warn(String.format("Unable to retrieve VMs for desktop cluster : %s", ssv.getName()));
-            return null;
-        }
-        List<Long> vmIds = new ArrayList<>();
-        for (SSVVmMapVO vmMap : clusterVMs) {
-            vmIds.add(vmMap.getVmId());
-        }
-        Collections.sort(vmIds);
-        return userVmDao.findById(vmIds.get(0));
-    }
+    // private UserVm fetchControlVmIfMissing(final UserVm controlVm) {
+    //     if (controlVm != null) {
+    //         return controlVm;
+    //     }
+    //     List<SSVVmMapVO> clusterVMs = ssvVmMapDao.listBySSVIdAndNotVmType(ssv.getId(), "desktopvm");
+    //     if (CollectionUtils.isEmpty(clusterVMs)) {
+    //         LOGGER.warn(String.format("Unable to retrieve VMs for Shared Storage VM : %s", ssv.getName()));
+    //         return null;
+    //     }
+    //     List<Long> vmIds = new ArrayList<>();
+    //     for (SSVVmMapVO vmMap : clusterVMs) {
+    //         vmIds.add(vmMap.getVmId());
+    //     }
+    //     Collections.sort(vmIds);
+    //     return userVmDao.findById(vmIds.get(0));
+    // }
 
-    protected IpAddress getSSVServerIp() {
-        Network network = networkDao.findById(ssv.getNetworkId());
+    protected IpAddress getSSVServerIp(CreateSSVCmd cmd) {
+        Network network = networkDao.findById(cmd.getNetworkId());
         if (network == null) {
-            LOGGER.warn(String.format("Network for Desktop cluster : %s cannot be found", ssv.getName()));
+            LOGGER.warn(String.format("Network for Shared Storage VM : %s cannot be found", ssv.getName()));
             return null;
         }
         if (Network.GuestType.Isolated.equals(network.getGuestType())) {
             List<? extends IpAddress> addresses = networkModel.listPublicIpsAssignedToGuestNtwk(network.getId(), true);
             if (CollectionUtils.isEmpty(addresses)) {
-                LOGGER.warn(String.format("No public IP addresses found for network : %s, Desktop cluster : %s", network.getName(), ssv.getName()));
+                LOGGER.warn(String.format("No public IP addresses found for network : %s, Shared Storage VM : %s", network.getName(), ssv.getName()));
                 return null;
             }
             for (IpAddress address : addresses) {
@@ -278,10 +233,10 @@ public class SSVActionWorker {
                     return address;
                 }
             }
-            LOGGER.warn(String.format("No source NAT IP addresses found for network : %s, Desktop cluster : %s", network.getName(), ssv.getName()));
+            LOGGER.warn(String.format("No source NAT IP addresses found for network : %s, Shared Storage VM : %s", network.getName(), ssv.getName()));
             return null;
         }
-        LOGGER.warn(String.format("Unable to retrieve server IP address for Desktop cluster : %s", ssv.getName()));
+        LOGGER.warn(String.format("Unable to retrieve server IP address for Shared Storage VM : %s", ssv.getName()));
         return null;
     }
 

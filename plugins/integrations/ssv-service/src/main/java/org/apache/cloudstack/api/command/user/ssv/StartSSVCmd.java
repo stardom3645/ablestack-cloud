@@ -36,7 +36,7 @@ import com.cloud.ssv.SSVEventTypes;
 import com.cloud.ssv.SSVService;
 import com.cloud.utils.exception.CloudRuntimeException;
 
-@APICommand(name = StartSSVCmd.APINAME, description = "Starts a stopped Desktop cluster",
+@APICommand(name = StartSSVCmd.APINAME, description = "Starts a stopped Shared Storage VM ",
         responseObject = SSVResponse.class,
         responseView = ResponseObject.ResponseView.Restricted,
         entityType = {SSV.class},
@@ -55,7 +55,7 @@ public class StartSSVCmd extends BaseAsyncCmd {
     /////////////////////////////////////////////////////
     @Parameter(name = ApiConstants.ID, type = CommandType.UUID,
             entityType = SSVResponse.class, required = true,
-            description = "the ID of the Desktop cluster")
+            description = "the ID of the Shared Storage VM ")
     private Long id;
 
     /////////////////////////////////////////////////////
@@ -73,7 +73,7 @@ public class StartSSVCmd extends BaseAsyncCmd {
 
     @Override
     public String getEventDescription() {
-        String description = "Starting Desktop cluster";
+        String description = "Starting Shared Storage VM";
         SSV cluster = _entityMgr.findById(SSV.class, getId());
         if (cluster != null) {
             description += String.format(" ID: %s", cluster.getUuid());
@@ -99,11 +99,11 @@ public class StartSSVCmd extends BaseAsyncCmd {
 
     public SSV validateRequest() {
         if (getId() == null || getId() < 1L) {
-            throw new ServerApiException(ApiErrorCode.PARAM_ERROR, "Invalid Desktop cluster ID provided");
+            throw new ServerApiException(ApiErrorCode.PARAM_ERROR, "Invalid Shared Storage VM ID provided");
         }
         final SSV ssv = ssvService.findById(getId());
         if (ssv == null) {
-            throw new ServerApiException(ApiErrorCode.PARAM_ERROR, "Given Desktop cluster was not found");
+            throw new ServerApiException(ApiErrorCode.PARAM_ERROR, "Given Shared Storage VM was not found");
         }
         return ssv;
     }
@@ -112,8 +112,8 @@ public class StartSSVCmd extends BaseAsyncCmd {
     public void execute() throws ServerApiException, ConcurrentOperationException {
         final SSV ssv = validateRequest();
         try {
-            if (!ssvService.startSSV(ssv.getId(), false)) {
-                throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, String.format("Failed to start Desktop cluster ID: %d", getId()));
+            if (!ssvService.startSSV(null, ssv.getId(), false)) {
+                throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, String.format("Failed to start Shared Storage VM ID: %d", getId()));
             }
             final SSVResponse response = ssvService.createSSVResponse(ssv.getId());
             response.setResponseName(getCommandName());

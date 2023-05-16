@@ -16,13 +16,11 @@
 // under the License.
 package com.cloud.ssv.dao;
 
-import com.cloud.ssv.SSVVmMapVO;
+import com.cloud.ssv.SSVNetMapVO;
 import com.cloud.utils.db.GenericDao;
 
 import java.util.List;
 
-public interface SSVVmMapDao extends GenericDao<SSVVmMapVO, Long> {
-    public List<SSVVmMapVO> listBySSVId(long ssvId);
-    public List<SSVVmMapVO> listBySSVIdAndVmType(long ssvId, String type); //search for dekstop vm list
-    public List<SSVVmMapVO> listBySSVIdAndNotVmType(long ssvId, String type); //search for control vm list
+public interface SSVNetMapDao extends GenericDao<SSVNetMapVO, Long> {
+    public List<SSVNetMapVO> listBySSVServiceId(long ssvServiceId);
 }

@@ -18,7 +18,7 @@ package com.cloud.ssv;
 
 import org.apache.cloudstack.api.command.user.ssv.CreateSSVCmd;
 import org.apache.cloudstack.api.command.admin.ssv.ListAdminSSVCmd;
-import org.apache.cloudstack.api.command.user.ssv.ListSSVCmd;
+import org.apache.cloudstack.api.command.user.ssv.ListUserSSVCmd;
 import org.apache.cloudstack.api.response.SSVResponse;
 import org.apache.cloudstack.api.response.ListResponse;
 import org.apache.cloudstack.framework.config.ConfigKey;
@@ -28,21 +28,32 @@ import com.cloud.utils.component.PluggableService;
 import com.cloud.utils.exception.CloudRuntimeException;
 
 public interface SSVService extends PluggableService, Configurable {
-
+    static final String SSV_SERVICE_OFFERING_NAME = "2C-4GB-RBD-HA";
     static final ConfigKey<Boolean> SSVEnabled = new ConfigKey<Boolean>("Advanced", Boolean.class,
             "cloud.shared.storage.vm.service.enabled",
             "false",
-            "Indicates whether Desktop Service plugin is enabled or not. Management server restart needed on change",
+            "Indicates whether Shared Storage VM Service plugin is enabled or not. Management server restart needed on change",
             false);
+
+    static final ConfigKey<String> SSVTemplateUuid = new ConfigKey<String>("Advanced", String.class,
+            "cloud.shared.storage.vm.template.uuid",
+            "",
+            "Template Id used when creating on shared storage vm.",
+            true);
+    static final ConfigKey<String> SSVSettingIsoUuid = new ConfigKey<String>("Advanced", String.class,
+            "cloud.shared.storage.vm.setting.iso.uuid",
+            "",
+            "Setting Script ISO UUID used to create in shared storage VMs.",
+            true);
 
     SSV findById(final Long id);
 
     SSV createSSV(CreateSSVCmd cmd) throws CloudRuntimeException;
-    boolean startSSV(long ssvId, boolean onCreate) throws CloudRuntimeException;
-    boolean stopSSV(long ssvId) throws CloudRuntimeException;
-    boolean deleteSSV(Long ssvId) throws CloudRuntimeException;
+    boolean startSSV(CreateSSVCmd cmd, long id, boolean onCreate) throws CloudRuntimeException;
+    boolean stopSSV(long id) throws CloudRuntimeException;
+    boolean deleteSSV(long id) throws CloudRuntimeException;
     ListResponse<SSVResponse> listAdminSSV(ListAdminSSVCmd cmd);
-    ListResponse<SSVResponse> listSSV(ListSSVCmd cmd);
+    ListResponse<SSVResponse> listUserSSV(ListUserSSVCmd cmd);
 
-    SSVResponse createSSVResponse(long ssvId);
+    SSVResponse createSSVResponse(long id);
 }
