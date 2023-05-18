@@ -26,6 +26,7 @@ import java.io.InputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Properties;
+
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.HashMap;
@@ -66,6 +67,7 @@ import com.cloud.ssv.SSV;
 import com.cloud.ssv.SSVManagerImpl;
 import com.cloud.ssv.SSVNetMapVO;
 import com.cloud.ssv.SSVVO;
+import com.cloud.ssv.SSVVmMapVO;
 import com.cloud.vm.ReservationContext;
 import com.cloud.vm.ReservationContextImpl;
 import com.cloud.vm.VirtualMachine;
@@ -140,7 +142,9 @@ public class SSVStartWorker extends SSVModifierActionWorker {
             InsufficientCapacityException, ManagementServerException, ResourceUnavailableException {
         UserVm vm = null;
         vm = createSSV(cmd, network);
+        LOGGER.info("provisionSSV Done 1111:::::");
         startVM(vm);
+        LOGGER.info("provisionSSV Done22222 :::::");
         vm = userVmDao.findById(vm.getId());
         if (vm == null) {
             throw new ManagementServerException(String.format("Failed to provision Shared Storage VM"));
@@ -154,6 +158,7 @@ public class SSVStartWorker extends SSVModifierActionWorker {
 
     private UserVm createSSV(CreateSSVCmd cmd, final Network network) throws ManagementServerException,
         ResourceUnavailableException, InsufficientCapacityException {
+        LOGGER.info("createSSV Start!!!!!!:::::");
         UserVm vm = null;
         LinkedHashMap<Long, IpAddresses> ipToNetworkMap = null;
         DataCenter zone = dataCenterDao.findById(ssv.getZoneId());
@@ -172,36 +177,46 @@ public class SSVStartWorker extends SSVModifierActionWorker {
         String ssvConfig = null;
         try {
             ssvConfig = getSSVConfig(cmd, zone);
+            LOGGER.info("createSSV ssvConfig!!!!!!:::::" + ssvConfig);
         } catch (IOException e) {
             logAndThrow(Level.ERROR, "Failed to read Shared Storage VM  Userdata configuration file", e);
         }
         String base64UserData = Base64.encodeBase64String(ssvConfig.getBytes(StringUtils.getPreferredCharset()));
         List<String> keypairs = new ArrayList<String>(); // 키페어 파라메타 임시 생성
         if (network.getGuestType().equals(Network.GuestType.L2)) {
+            LOGGER.info("createSSV vm L2!!!!!!:::::");
+            LOGGER.info("createSSV vm L2!!!!!serviceOffering!:::::"+serviceOffering);
+            LOGGER.info("createSSV vm L2!!!!!cmd.getDiskOfferingId()!:::::"+cmd.getDiskOfferingId());
             Network.IpAddresses addrs = new Network.IpAddresses(null, null, null);
             vm = userVmService.createAdvancedVirtualMachine(zone, serviceOffering, ssvTemplate, networkIds, owner,
-                hostName, hostName, ssv.getDiskOfferingId(), ssv.getSize(), null,
+                hostName, hostName, cmd.getDiskOfferingId(), cmd.getSize(), null,
                 ssvTemplate.getHypervisorType(), BaseCmd.HTTPMethod.POST, base64UserData, null, null, keypairs,
                 null, addrs, null, null, null, customParameterMap, null, null, null, null, true, null, null);
+            LOGGER.info("createSSV vm Done!!!!!!:::::" + vm);
         } else {
+            LOGGER.info("createSSV Done L2 NONONO!!!!!!:::::");
             ipToNetworkMap = new LinkedHashMap<Long, IpAddresses>();
             Network.IpAddresses addrs = new Network.IpAddresses(null, null, null);
             Network.IpAddresses ssvAddrs = new Network.IpAddresses(cmd.getSsvIp(), null, null);
             ipToNetworkMap.put(cmd.getNetworkId(), ssvAddrs);
             vm = userVmService.createAdvancedVirtualMachine(zone, serviceOffering, ssvTemplate, networkIds, owner,
-                hostName, hostName, ssv.getDiskOfferingId(), ssv.getSize(), null,
+                hostName, hostName, cmd.getDiskOfferingId(), cmd.getSize(), null,
                 ssvTemplate.getHypervisorType(), BaseCmd.HTTPMethod.POST, base64UserData, null, null, keypairs,
                 ipToNetworkMap, addrs, null, null, null, customParameterMap, null, null, null, null, true, null, null);
         }
+        LOGGER.info("createSSV Done!!!!!!:::::"+ vm.getId());
+        SSVVO ssvvo = ssvDao.findById(ssv.getId());
+        LOGGER.info("ssvvo.getId() :::::" + ssvvo.getId());
 
-        SSVVO ssvvo = ssvDao.createForUpdate(ssv.getId());
-        ssvvo.setSsvID(vm.getId());
-        if (!ssvDao.update(ssv.getId(), ssvvo)) {
-            throw new CloudRuntimeException(String.format("Failed to update Shared Storage VM ID: %s", ssv.getUuid()));
-        }
+        SSVVmMapVO svmv = new SSVVmMapVO(ssv.getId(), vm.getId());
+        ssvVmMapDao.persist(svmv);
 
+        // if (!ssvDao.update(ssv.getId(), ssvvo)) {
+        //     LOGGER.info("createSSV update!!!!!!:::::");
+        //     throw new CloudRuntimeException(String.format("Failed to update Shared Storage VM ID: %s", ssv.getUuid()));
+        // }
         if (LOGGER.isInfoEnabled()) {
-            LOGGER.info(String.format("Created Control VM ID : %s, %s in the Shared Storage VM  : %s", vm.getUuid(), hostName, ssv.getName()));
+            LOGGER.info(String.format("Created VM ID : %s, %s in the Shared Storage VM  : %s", vm.getUuid(), hostName, ssv.getName()));
         }
         return vm;
     }
@@ -230,7 +245,8 @@ public class SSVStartWorker extends SSVModifierActionWorker {
     }
 
     private void startSSV() {
-        UserVm vm = userVmDao.findById(ssv.getSsvId());
+        SSVVmMapVO vo = ssvVmMapDao.listVmBySSVServiceId(ssv.getId());
+        UserVm vm = userVmDao.findById(vo.getVmId());
         if (vm == null) {
             logTransitStateAndThrow(Level.ERROR, String.format("Failed to start VMs in Shared Storage VM  : %s", ssv.getName()), ssv.getId(), SSV.Event.OperationFailed);
         } else {
@@ -242,7 +258,7 @@ public class SSVStartWorker extends SSVModifierActionWorker {
             }
             int cnt = 10;
             while (cnt > 0) {
-                vm = userVmDao.findById(ssv.getSsvId());
+                vm = userVmDao.findById(vo.getVmId());
                 if (vm.getState().equals(VirtualMachine.State.Running)) {
                     break;
                 } else {
@@ -346,6 +362,7 @@ public class SSVStartWorker extends SSVModifierActionWorker {
     }
 
     public boolean startSSVOnCreate(CreateSSVCmd cmd) {
+        LOGGER.info("startSSVOnCreate start :::::");
         init();
         if (LOGGER.isInfoEnabled()) {
             LOGGER.info(String.format("Starting Shared Storage VM  : %s", ssv.getName()));
@@ -372,18 +389,19 @@ public class SSVStartWorker extends SSVModifierActionWorker {
             }
         }
 
-        // List<UserVm> clusterVMs = new ArrayList<>();
-        UserVm ssv = null;
+        UserVm vm = null;
         try {
-            ssv = provisionSSV(cmd, network);
+            LOGGER.info("startSSVOnCreate ssv value :::::" + ssv.getName());
+            vm = provisionSSV(cmd, network);
             if (LOGGER.isInfoEnabled()) {
-                LOGGER.info(String.format("Shared Storage VM  : %s VM successfully provisioned", ssv.getName()));
+                LOGGER.info(String.format("Shared Storage VM  : %s VM successfully provisioned", vm.getName()));
             }
             stateTransitTo(ssv.getId(), SSV.Event.OperationSucceeded);
             return true;
         }  catch (CloudRuntimeException | ManagementServerException | ResourceUnavailableException | InsufficientCapacityException e) {
-            logTransitStateAndThrow(Level.ERROR, String.format("Provisioning the Shared Storage VM failed : %s, %s", ssv.getName(), e), ssv.getId(), SSV.Event.CreateFailed, e);
+            logTransitStateAndThrow(Level.ERROR, String.format("Provisioning the Shared Storage VM failed : %s, %s", vm.getName(), e), ssv.getId(), SSV.Event.CreateFailed, e);
         }
+        LOGGER.info("startSSVOnCreate Done :::::");
 
         return false;
     }
@@ -404,7 +422,8 @@ public class SSVStartWorker extends SSVModifierActionWorker {
 
     public boolean reconcileAlertCluster() {
         init();
-        UserVmVO vm = userVmDao.findById(ssv.getSsvId());
+        SSVVmMapVO vo = ssvVmMapDao.listVmBySSVServiceId(ssv.getId());
+        UserVmVO vm = userVmDao.findById(vo.getVmId());
         if (vm == null || vm.isRemoved()) {
             return false;
         }

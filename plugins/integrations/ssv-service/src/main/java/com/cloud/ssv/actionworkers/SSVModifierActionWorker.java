@@ -209,6 +209,8 @@ public class SSVModifierActionWorker extends SSVActionWorker {
 
     protected void startVM(final UserVm vm) throws ManagementServerException {
         try {
+            LOGGER.info("startVM start :::::");
+
             StartVMCmd startVm = new StartVMCmd();
             startVm = ComponentContext.inject(startVm);
             Field f = startVm.getClass().getDeclaredField("id");
@@ -230,6 +232,7 @@ public class SSVModifierActionWorker extends SSVActionWorker {
             VMTemplateVO tmplt = _tmpltDao.findByUuid(configurationDao.getValue("cloud.shared.storage.vm.setting.iso.uuid"));
             _templateService.attachIso(tmplt.getId(), startVm.getId(), true);
         }
+        LOGGER.info("startVM Done :::::");
     }
 
     protected IpAddress getSourceNatIp(Network network) {

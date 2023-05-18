@@ -19,8 +19,8 @@ package org.apache.cloudstack.api.command.user.ssv;
 import javax.inject.Inject;
 
 import org.apache.cloudstack.acl.RoleType;
-import org.apache.cloudstack.acl.SecurityChecker.AccessType;
-import org.apache.cloudstack.api.ACL;
+// import org.apache.cloudstack.acl.SecurityChecker.AccessType;
+// import org.apache.cloudstack.api.ACL;
 import org.apache.cloudstack.api.APICommand;
 import org.apache.cloudstack.api.ApiCommandResourceType;
 import org.apache.cloudstack.api.ApiConstants;
@@ -30,12 +30,12 @@ import org.apache.cloudstack.api.Parameter;
 import org.apache.cloudstack.api.ResponseObject.ResponseView;
 import org.apache.cloudstack.api.ServerApiException;
 import org.apache.cloudstack.api.response.DiskOfferingResponse;
-import org.apache.cloudstack.api.response.DomainResponse;
+// import org.apache.cloudstack.api.response.DomainResponse;
 import org.apache.cloudstack.api.response.SSVResponse;
 import org.apache.cloudstack.api.response.NetworkResponse;
-import org.apache.cloudstack.api.response.TemplateResponse;
+// import org.apache.cloudstack.api.response.TemplateResponse;
 import org.apache.cloudstack.api.response.ZoneResponse;
-import org.apache.cloudstack.api.response.ServiceOfferingResponse;
+// import org.apache.cloudstack.api.response.ServiceOfferingResponse;
 import org.apache.cloudstack.context.CallContext;
 import org.apache.log4j.Logger;
 
@@ -47,10 +47,8 @@ import com.cloud.utils.exception.CloudRuntimeException;
 @APICommand(name = CreateSSVCmd.APINAME,
         description = "Creates a Shared Storage VM",
         responseObject = SSVResponse.class,
-        responseView = ResponseView.Restricted,
+        responseView = ResponseView.Full,
         entityType = {SSV.class},
-        requestHasSensitiveInfo = false,
-        responseHasSensitiveInfo = true,
         authorized = {RoleType.Admin, RoleType.ResourceAdmin, RoleType.DomainAdmin, RoleType.User})
 public class CreateSSVCmd extends BaseAsyncCreateCmd {
     public static final Logger LOGGER = Logger.getLogger(CreateSSVCmd.class.getName());
@@ -69,56 +67,44 @@ public class CreateSSVCmd extends BaseAsyncCreateCmd {
     @Parameter(name = ApiConstants.DESCRIPTION, type = CommandType.STRING, required = true, description = "description for the Shared Storage VM ")
     private String description;
 
-    @ACL(accessType = AccessType.UseEntry)
-    @Parameter(name = ApiConstants.SERVICE_OFFERING_ID, type = CommandType.UUID, entityType = ServiceOfferingResponse.class, description = "the ID of the service offering for the virtual machines in the cluster.")
-    private Long serviceOfferingId;
+    // @ACL(accessType = AccessType.UseEntry)
+    // @Parameter(name = ApiConstants.SERVICE_OFFERING_ID, type = CommandType.UUID, entityType = ServiceOfferingResponse.class, description = "the ID of the service offering for the virtual machines in the cluster.")
+    // private Long serviceOfferingId;
 
-    @ACL(accessType = AccessType.UseEntry)
-    @Parameter(name = ApiConstants.ACCOUNT, type = CommandType.STRING, description = "an optional account for the" +
-            " virtual machine. Must be used with domainId.")
-    private String accountName;
+    // @ACL(accessType = AccessType.UseEntry)
+    // @Parameter(name = ApiConstants.ACCOUNT, type = CommandType.STRING, description = "an optional account for the virtual machine. Must be used with domainId.")
+    // private String accountName;
 
-    @ACL(accessType = AccessType.UseEntry)
-    @Parameter(name = ApiConstants.DOMAIN_ID, type = CommandType.UUID, entityType = DomainResponse.class,
-            description = "an optional domainId for the virtual machine. If the account parameter is used, domainId must also be used.")
-    private Long domainId;
+    // @ACL(accessType = AccessType.UseEntry)
+    // @Parameter(name = ApiConstants.DOMAIN_ID, type = CommandType.UUID, entityType = DomainResponse.class,
+    //         description = "an optional domainId for the virtual machine. If the account parameter is used, domainId must also be used.")
+    // private Long domainId;
 
-    @Parameter(name = ApiConstants.ZONE_ID, type = CommandType.UUID, required = true, entityType = ZoneResponse.class, description = "zone id for the Automation Controller ")
+    @Parameter(name = ApiConstants.ZONE_ID, type = CommandType.UUID, entityType = ZoneResponse.class, description = "zone id for the Automation Controller ")
     private Long zoneId;
 
-    @Parameter(name = ApiConstants.TEMPLATE_ID, type = CommandType.UUID, entityType = TemplateResponse.class, description = "the ID of the template for the virtual machine")
-    private Long templateId;
+    // @Parameter(name = ApiConstants.TEMPLATE_ID, type = CommandType.UUID, entityType = TemplateResponse.class, description = "the ID of the template for the virtual machine")
+    // private Long templateId;
 
-    @ACL
-    @Parameter(name = ApiConstants.DISK_OFFERING_ID, type = CommandType.UUID, entityType = DiskOfferingResponse.class, description = "the ID of the disk offering for the virtual machine. If the template is of ISO format,"
-            + " the diskOfferingId is for the root disk volume. Otherwise this parameter is used to indicate the "
-            + "offering for the data disk volume. If the templateId parameter passed is from a Template object,"
-            + " the diskOfferingId refers to a DATA Disk Volume created. If the templateId parameter passed is "
-            + "from an ISO object, the diskOfferingId refers to a ROOT Disk Volume created.")
+    @Parameter(name = ApiConstants.DISK_OFFERING_ID, type = CommandType.UUID, entityType = DiskOfferingResponse.class, description = "list volumes by disk offering", since = "4.4")
     private Long diskOfferingId;
 
     @Parameter(name = ApiConstants.SIZE, type = CommandType.LONG, description = "the arbitrary size for the DATADISK volume. Mutually exclusive with diskOfferingId")
     private Long size;
 
-    @ACL(accessType = AccessType.UseEntry)
-    @Parameter(name = ApiConstants.NETWORK_ID, type = CommandType.UUID, entityType = NetworkResponse.class, required = true,
-            description = "Network in which Shared Storage VM  is to be launched")
+    @Parameter(name = ApiConstants.NETWORK_ID, type = CommandType.UUID, entityType = NetworkResponse.class, required = true, description = "Network in which Shared Storage VM  is to be launched")
     private Long networkId;
 
-    @Parameter(name = ApiConstants.SHARED_STORAGE_VM_TYPE, type = CommandType.STRING, required = true,
-            description = "access type for Shared Storage VM ")
+    @Parameter(name = ApiConstants.SHARED_STORAGE_VM_TYPE, type = CommandType.STRING, required = true, description = "access type for Shared Storage VM ")
     private String ssvType;
 
-    @Parameter(name = ApiConstants.GATEWAY, type = CommandType.STRING,
-    description = "Gateway for L2 Network of Shared Storage VM ")
+    @Parameter(name = ApiConstants.GATEWAY, type = CommandType.STRING, description = "Gateway for L2 Network of Shared Storage VM ")
     private String gateway;
 
-    @Parameter(name = ApiConstants.NETMASK, type = CommandType.STRING,
-    description = "Netmask for L2 Network of Shared Storage VM ")
+    @Parameter(name = ApiConstants.NETMASK, type = CommandType.STRING, description = "Netmask for L2 Network of Shared Storage VM ")
     private String netmask;
 
-    @Parameter(name = ApiConstants.SHARED_STORAGE_VM_IP, type = CommandType.STRING, required = true,
-            description = "DC IP for the desktop controller")
+    @Parameter(name = ApiConstants.SHARED_STORAGE_VM_IP, type = CommandType.STRING, description = "DC IP for the desktop controller")
     private String ssvIp;
 
 
@@ -126,12 +112,12 @@ public class CreateSSVCmd extends BaseAsyncCreateCmd {
     /////////////////// Accessors ///////////////////////
     /////////////////////////////////////////////////////
 
-    public String getAccountName() {
-        if (accountName == null) {
-            return CallContext.current().getCallingAccount().getAccountName();
-        }
-        return accountName;
-    }
+    // public String getAccountName() {
+    //     if (accountName == null) {
+    //         return CallContext.current().getCallingAccount().getAccountName();
+    //     }
+    //     return accountName;
+    // }
 
     public String getName() {
         return name;
@@ -141,20 +127,20 @@ public class CreateSSVCmd extends BaseAsyncCreateCmd {
         return description;
     }
 
-    public Long getDomainId() {
-        if (domainId == null) {
-            return CallContext.current().getCallingAccount().getDomainId();
-        }
-        return domainId;
-    }
+    // public Long getDomainId() {
+    //     if (domainId == null) {
+    //         return CallContext.current().getCallingAccount().getDomainId();
+    //     }
+    //     return domainId;
+    // }
 
     public Long getZoneId() {
         return zoneId;
     }
 
-    public Long getTemplateId() {
-        return templateId;
-    }
+    // public Long getTemplateId() {
+    //     return templateId;
+    // }
 
     public Long getDiskOfferingId() {
         return diskOfferingId;
@@ -164,9 +150,9 @@ public class CreateSSVCmd extends BaseAsyncCreateCmd {
         return size;
     }
 
-    public Long getServiceOfferingId() {
-        return serviceOfferingId;
-    }
+    // public Long getServiceOfferingId() {
+    //     return serviceOfferingId;
+    // }
 
     public Long getNetworkId() {
         return networkId;

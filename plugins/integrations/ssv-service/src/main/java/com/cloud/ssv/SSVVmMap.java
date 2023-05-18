@@ -1,4 +1,4 @@
-// Licensed to the Apache Software Foundation (ASF) under onedeskt
+// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
 // regarding copyright ownership.  The ASF licenses this file
@@ -14,18 +14,18 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-package com.cloud.ssv.dao;
+package com.cloud.ssv;
 
-import java.util.List;
-
-import com.cloud.ssv.SSV;
-import com.cloud.ssv.SSVVO;
-import com.cloud.utils.db.GenericDao;
-import com.cloud.utils.fsm.StateDao;
-
-public interface SSVDao extends GenericDao<SSVVO, Long>,
-        StateDao<SSV.State, SSV.Event, SSV> {
-
-    List<SSVVO> listByAccount(long accountId);
-    List<SSVVO> findSSVsInState(SSV.State state);
+/**
+ * DesktopClusterVmMap will describe mapping of ID of DesktopCuster
+ * and ID of its VirtualMachine. A Desktop can have multiple VMs
+ * deployed for it therefore a list of DesktopClusterVmMap are associated
+ * with a Desktop.
+ * A particular VM can be deployed only for a single Desktop.
+ */
+public interface SSVVmMap {
+    long getId();
+    long getSsvServiceId();
+    long getVmId();
 }
+

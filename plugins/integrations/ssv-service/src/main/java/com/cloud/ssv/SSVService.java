@@ -28,7 +28,7 @@ import com.cloud.utils.component.PluggableService;
 import com.cloud.utils.exception.CloudRuntimeException;
 
 public interface SSVService extends PluggableService, Configurable {
-    static final String SSV_SERVICE_OFFERING_NAME = "2C-4GB-RBD-HA";
+    static final String SSV_SERVICE_OFFERING_NAME = "Cloud.Com-2C-4GB-RBD-HA";
     static final ConfigKey<Boolean> SSVEnabled = new ConfigKey<Boolean>("Advanced", Boolean.class,
             "cloud.shared.storage.vm.service.enabled",
             "false",

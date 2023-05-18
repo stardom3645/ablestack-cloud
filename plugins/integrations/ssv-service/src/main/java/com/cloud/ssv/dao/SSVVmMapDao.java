@@ -1,4 +1,4 @@
-// Licensed to the Apache Software Foundation (ASF) under onedeskt
+// Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
 // regarding copyright ownership.  The ASF licenses this file
@@ -16,16 +16,9 @@
 // under the License.
 package com.cloud.ssv.dao;
 
-import java.util.List;
-
-import com.cloud.ssv.SSV;
-import com.cloud.ssv.SSVVO;
+import com.cloud.ssv.SSVVmMapVO;
 import com.cloud.utils.db.GenericDao;
-import com.cloud.utils.fsm.StateDao;
 
-public interface SSVDao extends GenericDao<SSVVO, Long>,
-        StateDao<SSV.State, SSV.Event, SSV> {
-
-    List<SSVVO> listByAccount(long accountId);
-    List<SSVVO> findSSVsInState(SSV.State state);
+public interface SSVVmMapDao extends GenericDao<SSVVmMapVO, Long> {
+    public SSVVmMapVO listVmBySSVServiceId(long ssvServiceId);
 }

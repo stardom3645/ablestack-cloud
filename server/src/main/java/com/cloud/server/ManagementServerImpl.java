@@ -4274,7 +4274,7 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
 
         final boolean desktopServiceEnabled = Boolean.parseBoolean(_configDao.getValue("cloud.desktop.service.enabled"));
         final boolean automationServiceEnabled = Boolean.parseBoolean(_configDao.getValue("cloud.automation.service.enabled"));
-        final boolean ssvEnabled = Boolean.parseBoolean(_configDao.getValue("cloud.sharedstoragevm.service.enabled"));
+        final boolean ssvEnabled = Boolean.parseBoolean(_configDao.getValue("cloud.shared.storage.vm.service.enabled"));
         final String desktopWorksPortalPort = _configDao.getValue("cloud.desktop.service.works.portal.port");
         final String wallPortalProtocol = _configDao.getValue("monitoring.wall.portal.protocol");
         final String wallPortalDomain = _configDao.getValue("monitoring.wall.portal.domain");

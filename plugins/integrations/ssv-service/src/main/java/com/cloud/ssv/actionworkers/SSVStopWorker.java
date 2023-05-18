@@ -22,6 +22,7 @@ import org.apache.log4j.Level;
 import com.cloud.exception.ConcurrentOperationException;
 import com.cloud.ssv.SSV;
 import com.cloud.ssv.SSVManagerImpl;
+import com.cloud.ssv.SSVVmMapVO;
 import com.cloud.uservm.UserVm;
 import com.cloud.utils.exception.CloudRuntimeException;
 import com.cloud.vm.VirtualMachine;
@@ -37,7 +38,8 @@ public class SSVStopWorker extends SSVActionWorker {
             LOGGER.info(String.format("Stopping Shared Storage VM  : %s", ssv.getName()));
         }
         stateTransitTo(ssv.getId(), SSV.Event.StopRequested);
-        UserVm vm = userVmDao.findById(ssv.getSsvId());
+        SSVVmMapVO vo = ssvVmMapDao.listVmBySSVServiceId(ssv.getId());
+        UserVm vm = userVmDao.findById(vo.getVmId());
         if (vm == null) {
             logTransitStateAndThrow(Level.ERROR, String.format("Failed to Stop VMs in Shared Storage VM : %s", ssv.getName()), ssv.getId(), SSV.Event.OperationFailed);
         } else {

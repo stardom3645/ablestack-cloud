@@ -39,6 +39,7 @@ import com.cloud.ssv.SSVManagerImpl;
 import com.cloud.ssv.SSVVO;
 import com.cloud.ssv.dao.SSVDao;
 import com.cloud.ssv.dao.SSVNetMapDao;
+import com.cloud.ssv.dao.SSVVmMapDao;
 import com.cloud.network.Network;
 import com.cloud.network.IpAddress;
 import com.cloud.network.NetworkModel;
@@ -110,6 +111,7 @@ public class SSVActionWorker {
     protected IPAddressDao ipAddressDao;
 
     protected SSVDao ssvDao;
+    protected SSVVmMapDao ssvVmMapDao;
     protected SSVNetMapDao ssvNetMapDao;
 
     protected SSV ssv;
@@ -121,6 +123,7 @@ public class SSVActionWorker {
     protected SSVActionWorker(final SSV ssv, final SSVManagerImpl ssvManagerImpl) {
         this.ssv = ssv;
         this.ssvDao = ssvManagerImpl.ssvDao;
+        this.ssvVmMapDao = ssvManagerImpl.ssvVmMapDao;
         this.ssvNetMapDao = ssvManagerImpl.ssvNetMapDao;
     }
 
@@ -165,10 +168,10 @@ public class SSVActionWorker {
         }
     }
 
-    protected void logTransitStateAndThrow(final Level logLevel, final String message, final Long ssvId, final SSV.Event event, final Exception e) throws CloudRuntimeException {
+    protected void logTransitStateAndThrow(final Level logLevel, final String message, final Long id, final SSV.Event event, final Exception e) throws CloudRuntimeException {
         logMessage(logLevel, message, e);
-        if (ssvId != null && event != null) {
-            stateTransitTo(ssvId, event);
+        if (id != null && event != null) {
+            stateTransitTo(id, event);
         }
         if (e == null) {
             throw new CloudRuntimeException(message);
@@ -176,8 +179,8 @@ public class SSVActionWorker {
         throw new CloudRuntimeException(message, e);
     }
 
-    protected void logTransitStateAndThrow(final Level logLevel, final String message, final Long ssvId, final SSV.Event event) throws CloudRuntimeException {
-        logTransitStateAndThrow(logLevel, message, ssvId, event, null);
+    protected void logTransitStateAndThrow(final Level logLevel, final String message, final Long id, final SSV.Event event) throws CloudRuntimeException {
+        logTransitStateAndThrow(logLevel, message, id, event, null);
     }
 
     protected void logAndThrow(final Level logLevel, final String message) throws CloudRuntimeException {
@@ -188,8 +191,8 @@ public class SSVActionWorker {
         logTransitStateAndThrow(logLevel, message, null, null, ex);
     }
 
-    protected boolean stateTransitTo(long ssvId, SSV.Event e) {
-        SSVVO ssv = ssvDao.findById(ssvId);
+    protected boolean stateTransitTo(long id, SSV.Event e) {
+        SSVVO ssv = ssvDao.findById(id);
         try {
             return _stateMachine.transitTo(ssv, e, null, ssvDao);
         } catch (NoTransitionException nte) {

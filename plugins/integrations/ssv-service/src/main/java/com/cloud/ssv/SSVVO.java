@@ -57,9 +57,6 @@ public class SSVVO implements SSV {
     @Column(name = "account_id")
     private long accountId;
 
-    @Column(name = "shared_storage_vm_id")
-    private long  sharedStorageVmId;
-
     @Column(name = "template_id")
     private long templateId;
 
@@ -68,9 +65,6 @@ public class SSVVO implements SSV {
 
     @Column(name = "disk_offering_id")
     private long diskOfferingId;
-
-    @Column(name = "size")
-    private long size;
 
     @Column(name = "shared_storage_vm_type")
     private String sharedStorageVmType;
@@ -189,16 +183,6 @@ public class SSVVO implements SSV {
         this.state = state;
     }
 
-
-    @Override
-    public long getSsvId() {
-        return sharedStorageVmId;
-    }
-
-    public void setSsvID(long ssvId) {
-        this.sharedStorageVmId = ssvId;
-    }
-
     public long getDiskOfferingId() {
         return diskOfferingId;
     }
@@ -207,28 +191,12 @@ public class SSVVO implements SSV {
         this.diskOfferingId = diskOfferingId;
     }
 
-    public long getSize() {
-        return size;
-    }
-
-    public void setSize(long size) {
-        this.size = size;
-    }
-
     public String getSharedStorageVmType() {
         return sharedStorageVmType;
     }
 
     public void setSharedStorageVmType(String sharedStorageVmType) {
         this.sharedStorageVmType = sharedStorageVmType;
-    }
-
-    public long getSharedStorageVmId() {
-        return sharedStorageVmId;
-    }
-
-    public void setSharedStorageVmId(long sharedStorageVmId) {
-        this.sharedStorageVmId = sharedStorageVmId;
     }
 
     public Date getRemoved() {
@@ -242,21 +210,21 @@ public class SSVVO implements SSV {
         return created;
     }
 
-    public SSVVO() {
-        this.uuid = UUID.randomUUID().toString();
+    public SSVVO(){
     }
 
-    public SSVVO(String name, String description, long zoneId, long serviceOfferingId, long templateId,
-                 String ssvType, long domainId, long accountId, State state) {
+    public SSVVO(String name, String description, long zoneId, long domainId, long accountId,
+                long templateId, long serviceOfferingId, long diskOfferingId, String ssvType, State state) {
         this.uuid = UUID.randomUUID().toString();
         this.name = name;
         this.description = description;
         this.zoneId = zoneId;
-        this.serviceOfferingId = serviceOfferingId;
-        this.templateId = templateId;
-        this.sharedStorageVmType = ssvType;
         this.domainId = domainId;
         this.accountId = accountId;
+        this.templateId = templateId;
+        this.serviceOfferingId = serviceOfferingId;
+        this.diskOfferingId = diskOfferingId;
+        this.sharedStorageVmType = ssvType;
         this.state = state;
     }
 

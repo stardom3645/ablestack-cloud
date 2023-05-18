@@ -63,8 +63,7 @@ import com.cloud.ssv.actionworkers.SSVStartWorker;
 import com.cloud.ssv.actionworkers.SSVStopWorker;
 import com.cloud.ssv.dao.SSVDao;
 import com.cloud.ssv.dao.SSVNetMapDao;
-// import com.cloud.ssv.dao.SSVNetMapDao;
-// import com.cloud.ssv.dao.SSVNetMapDaoImpl;
+import com.cloud.ssv.dao.SSVVmMapDao;
 // import com.cloud.network.IpAddress;
 import com.cloud.network.Network;
 import com.cloud.network.NetworkModel;
@@ -76,6 +75,8 @@ import com.cloud.network.dao.IPAddressDao;
 import com.cloud.service.dao.ServiceOfferingDao;
 import com.cloud.service.ServiceOfferingVO;
 import com.cloud.storage.VMTemplateStorageResourceAssoc;
+import com.cloud.storage.VMTemplateVO;
+import com.cloud.storage.dao.VMTemplateDao;
 // import com.cloud.offering.ServiceOffering;
 import com.cloud.org.Grouping;
 import com.cloud.projects.Project;
@@ -99,9 +100,9 @@ import com.cloud.exception.PermissionDeniedException;
 import com.cloud.utils.fsm.StateMachine2;
 import com.cloud.utils.db.Filter;
 import com.cloud.utils.db.GlobalLock;
-import com.cloud.utils.db.Transaction;
-import com.cloud.utils.db.TransactionCallback;
-import com.cloud.utils.db.TransactionStatus;
+// import com.cloud.utils.db.Transaction;
+// import com.cloud.utils.db.TransactionCallback;
+// import com.cloud.utils.db.TransactionStatus;
 import com.cloud.utils.db.SearchBuilder;
 import com.cloud.utils.db.SearchCriteria;
 import com.cloud.utils.component.ComponentContext;
@@ -124,6 +125,8 @@ public class SSVManagerImpl extends ManagerBase implements SSVService {
     public SSVDao ssvDao;
     @Inject
     public SSVNetMapDao ssvNetMapDao;
+    @Inject
+    public SSVVmMapDao ssvVmMapDao;
     @Inject
     protected AccountManager accountManager;
     @Inject
@@ -148,6 +151,8 @@ public class SSVManagerImpl extends ManagerBase implements SSVService {
     protected ResourceTagDao resourceTagDao;
     @Inject
     protected NetworkModel networkModel;
+    @Inject
+    protected VMTemplateDao templateDao;
 
     private void logMessage(final Level logLevel, final String message, final Exception e) {
         if (logLevel == Level.WARN) {
@@ -189,6 +194,7 @@ public class SSVManagerImpl extends ManagerBase implements SSVService {
         SSVVO ssv = ssvDao.findById(id);
         SSVResponse response = new SSVResponse();
         response.setObjectName(SSV.class.getSimpleName().toLowerCase());
+        LOGGER.info(" ::::::ssv.getUuid()::::: " + ssv.getUuid());
         response.setId(ssv.getUuid());
         response.setName(ssv.getName());
         response.setSharedStorageVmType(ssv.getSharedStorageVmType());
@@ -241,15 +247,18 @@ public class SSVManagerImpl extends ManagerBase implements SSVService {
             respView = ResponseView.Full;
         }
 
-        List<UserVmResponse> vmRes = new ArrayList<UserVmResponse>();
-        String responseName = "sharedstoragevmlist";
-        UserVmJoinVO userVM = userVmJoinDao.findById(ssv.getSsvId());
-        if (userVM != null) {
-            // createUserVmResponse(ResponseView view, String objectName, UserVmJoinVO... userVms)
-            UserVmResponse vmResponse = ApiDBUtils.newUserVmResponse(respView, responseName, userVM, EnumSet.of(VMDetails.all), caller);
-            vmRes.add(vmResponse);
+        SSVVmMapVO vmvo = ssvVmMapDao.listVmBySSVServiceId(ssv.getId());
+        if (vmvo != null) {
+            List<UserVmResponse> vmRes = new ArrayList<UserVmResponse>();
+            String responseName = "sharedstoragevmlist";
+            UserVmJoinVO userVM = userVmJoinDao.findById(vmvo.getVmId());
+            if (userVM != null) {
+                // createUserVmResponse(ResponseView view, String objectName, UserVmJoinVO... userVms)
+                UserVmResponse vmResponse = ApiDBUtils.newUserVmResponse(respView, responseName, userVM, EnumSet.of(VMDetails.all), caller);
+                vmRes.add(vmResponse);
+            }
+            response.setSsv(vmRes);
         }
-        response.setSsv(vmRes);
         return response;
     }
 
@@ -278,6 +287,7 @@ public class SSVManagerImpl extends ManagerBase implements SSVService {
         sb.and("name", sb.entity().getName(), SearchCriteria.Op.EQ);
         sb.and("keyword", sb.entity().getName(), SearchCriteria.Op.LIKE);
         sb.and("state", sb.entity().getState(), SearchCriteria.Op.IN);
+        sb.and("removed", sb.entity().getRemoved(), SearchCriteria.Op.NULL);
         SearchCriteria<SSVVO> sc = sb.create();
         accountManager.buildACLSearchCriteria(sc, domainId, isRecursive, permittedAccounts, listProjectResourcesCriteria);
         if (state != null) {
@@ -294,8 +304,8 @@ public class SSVManagerImpl extends ManagerBase implements SSVService {
             sc.setParameters("name", name);
         }
         List<SSVVO> ssv = ssvDao.search(sc, searchFilter);
-        for (SSVVO vm : ssv) {
-            SSVResponse ssvResponse = createSSVResponse(vm.getId());
+        for (SSVVO vo : ssv) {
+            SSVResponse ssvResponse = createSSVResponse(vo.getId());
             responsesList.add(ssvResponse);
         }
         ListResponse<SSVResponse> response = new ListResponse<SSVResponse>();
@@ -328,6 +338,8 @@ public class SSVManagerImpl extends ManagerBase implements SSVService {
         sb.and("name", sb.entity().getName(), SearchCriteria.Op.EQ);
         sb.and("keyword", sb.entity().getName(), SearchCriteria.Op.LIKE);
         sb.and("state", sb.entity().getState(), SearchCriteria.Op.IN);
+        sb.and("removed", sb.entity().getRemoved(), SearchCriteria.Op.NULL);
+
         SearchCriteria<SSVVO> sc = sb.create();
         accountManager.buildACLSearchCriteria(sc, domainId, isRecursive, permittedAccounts, listProjectResourcesCriteria);
         if (state != null) {
@@ -344,8 +356,9 @@ public class SSVManagerImpl extends ManagerBase implements SSVService {
             sc.setParameters("name", name);
         }
         List<SSVVO> ssv = ssvDao.search(sc, searchFilter);
-        for (SSVVO vm : ssv) {
-            SSVResponse ssvResponse = createSSVResponse(vm.getId());
+        for (SSVVO vo : ssv) {
+            LOGGER.info("ssv :::::::::: " + vo.getId());
+            SSVResponse ssvResponse = createSSVResponse(vo.getId());
             responsesList.add(ssvResponse);
         }
         ListResponse<SSVResponse> response = new ListResponse<SSVResponse>();
@@ -373,30 +386,37 @@ public class SSVManagerImpl extends ManagerBase implements SSVService {
         validateSSVCreateParameters(cmd);
 
         // final ServiceOffering serviceOffering = serviceOfferingDao.findById(cmd.getServiceOfferingId());
-        final ServiceOfferingVO serviceOfferingVo = serviceOfferingDao.findByName(SSV_SERVICE_OFFERING_NAME);
+        final ServiceOfferingVO serviceOfferingVo = serviceOfferingDao.findByNameNotSystemUse(SSV_SERVICE_OFFERING_NAME);
 
         final Account owner = accountService.getActiveAccountById(cmd.getEntityOwnerId());
-        final SSVVO ssv = Transaction.execute(new TransactionCallback<SSVVO>() {
-            @Override
-            public SSVVO doInTransaction(TransactionStatus status) {
-                SSVVO newApp = new SSVVO(cmd.getName(), cmd.getDescription(), cmd.getZoneId(), serviceOfferingVo.getId(), Long.parseLong(SSVTemplateUuid.value()),
-                                            cmd.getSsvType(), owner.getDomainId(), owner.getAccountId(), SSV.State.Created);
-                SSVVO ssv = ssvDao.persist(newApp);
-                // if(cmd.getAccessType().equals(L2Type)){
-                //     addSSVIpRangeInDeployCluster(newCluster, cmd);
-                // }
+        VMTemplateVO template = templateDao.findByUuid(SSVTemplateUuid.value());
+        LOGGER.debug(" ::: SSVTemplateUuid.value() :: " + SSVTemplateUuid.value() + " :: template.getId :: " + template.getId());
+        // final SSVVO ssv = Transaction.execute(new TransactionCallback<SSVVO>() {
+        //     @Override
+        //     public SSVVO doInTransaction(TransactionStatus status) {
+        //         SSVVO newApp = new SSVVO(cmd.getName(), cmd.getDescription(), cmd.getZoneId(), owner.getDomainId(), owner.getAccountId(), template.getId(), serviceOfferingVo.getId(),  cmd.getDiskOfferingId(), cmd.getSsvType(), SSV.State.Created);
+        //         // if(cmd.getAccessType().equals(L2Type)){
+        //         //     addSSVIpRangeInDeployCluster(newCluster, cmd);
+        //         // }
 
-                final SSVNetMapVO netMapVo =  Transaction.execute(new TransactionCallback<SSVNetMapVO>() {
-                    @Override
-                    public SSVNetMapVO doInTransaction(TransactionStatus status) {
-                        SSVNetMapVO newMap = new SSVNetMapVO(ssv.getId(), cmd.getNetworkId(), cmd.getSsvIp(), cmd.getGateway(), cmd.getNetmask());
-                        ssvNetMapDao.persist(newMap);
-                        return newMap;
-                    }
-                });
-                return newApp;
-            }
-        });
+        //         final SSVNetMapVO netMapVo =  Transaction.execute(new TransactionCallback<SSVNetMapVO>() {
+        //             @Override
+        //             public SSVNetMapVO doInTransaction(TransactionStatus status) {
+        //                 SSVNetMapVO newMap = new SSVNetMapVO(ssv.getId(), cmd.getNetworkId(), cmd.getSsvIp(), cmd.getGateway(), cmd.getNetmask());
+        //                 ssvNetMapDao.persist(newMap);
+        //                 return newMap;
+        //             }
+        //         });
+        //         return newApp;
+        //     }
+        // });
+
+        SSVVO newApp = new SSVVO(cmd.getName(), cmd.getDescription(), cmd.getZoneId(), owner.getDomainId(), owner.getAccountId(), template.getId(), serviceOfferingVo.getId(),  cmd.getDiskOfferingId(), cmd.getSsvType(), SSV.State.Created);
+        SSVVO ssv = ssvDao.persist(newApp);
+
+        SSVNetMapVO newMap = new SSVNetMapVO(ssv.getId(), cmd.getNetworkId(), cmd.getSsvIp(), cmd.getGateway(), cmd.getNetmask());
+        ssvNetMapDao.persist(newMap);
+
         if (LOGGER.isInfoEnabled()) {
             LOGGER.info(String.format("Shared Storage VM  name: %s and ID: %s has been created", ssv.getName(), ssv.getUuid()));
         }
@@ -431,14 +451,25 @@ public class SSVManagerImpl extends ManagerBase implements SSVService {
         if (description == null || description.isEmpty()) {
             throw new InvalidParameterValueException("Invalid description for the Shared Storage VM  description:" + description);
         }
-        TemplateDataStoreVO tmpltStoreRef = _tmplStoreDao.findByStoreTemplate(cmd.getZoneId(), Long.parseLong(SSVTemplateUuid.value()));
+
+        VMTemplateVO vmTempIso = templateDao.findByUuid(SSVTemplateUuid.value());
+        if (vmTempIso == null) {
+            throw new InvalidParameterValueException(String.format("Invalid SSV Template associated with version ID: %s",  SSVTemplateUuid.value()));
+        }
+
+        TemplateDataStoreVO tmpltStoreRef = _tmplStoreDao.findByUuid(SSVTemplateUuid.value());
         if (tmpltStoreRef != null) {
             if (tmpltStoreRef.getDownloadState() != VMTemplateStorageResourceAssoc.Status.DOWNLOADED) {
                 throw new InvalidParameterValueException("Unable to deploy Shared Storage VM template " + SSVTemplateUuid.value() + " has not been completely downloaded to zone " + cmd.getZoneId());
             }
         }
 
-        tmpltStoreRef = _tmplStoreDao.findById(Long.parseLong(SSVSettingIsoUuid.value()));
+        vmTempIso = templateDao.findByUuid(SSVSettingIsoUuid.value());
+        if (vmTempIso == null) {
+            throw new InvalidParameterValueException(String.format("Invalid SSV Seting ISO associated with version ID: %s",  SSVSettingIsoUuid.value()));
+        }
+
+        tmpltStoreRef = _tmplStoreDao.findByUuid(SSVSettingIsoUuid.value());
         if (tmpltStoreRef != null) {
             if (tmpltStoreRef.getDownloadState() != VMTemplateStorageResourceAssoc.Status.DOWNLOADED) {
                 throw new InvalidParameterValueException("Unable to deploy Shared Storage VM setting ISO image " + SSVTemplateUuid.value() + " has not been completely downloaded to zone " + cmd.getZoneId());
@@ -460,7 +491,7 @@ public class SSVManagerImpl extends ManagerBase implements SSVService {
         }
 
         // ServiceOffering serviceOffering = serviceOfferingDao.findById(serviceOfferingId);
-        ServiceOfferingVO serviceOffering = serviceOfferingDao.findByName(SSV_SERVICE_OFFERING_NAME);
+        ServiceOfferingVO serviceOffering = serviceOfferingDao.findByNameNotSystemUse(SSV_SERVICE_OFFERING_NAME);
 
         if (serviceOffering == null) {
             throw new InvalidParameterValueException("No service offering with Name: " + SSV_SERVICE_OFFERING_NAME);
@@ -475,10 +506,10 @@ public class SSVManagerImpl extends ManagerBase implements SSVService {
             final String ssvIp = cmd.getSsvIp();
             final String cider = network.getCidr();
 
-            if (ssvIp == null || ssvIp.isEmpty()) {
-                throw new InvalidParameterValueException("Invalid IP for the Shared Storage VM IP:" + ssvIp);
-            }
             if (network.getGuestType().equals(GuestType.L2)){
+                if (ssvIp == null || ssvIp.isEmpty()) {
+                    throw new InvalidParameterValueException("Invalid IP for the Shared Storage VM IP:" + ssvIp);
+                }
                 //L2 일 경우 IP 범위 조회하여 벨리데이션 체크
                 final String gateway = cmd.getGateway();
                 final String netmask = cmd.getNetmask();
@@ -802,8 +833,9 @@ public class SSVManagerImpl extends ManagerBase implements SSVService {
     // checks if Shared Storage VM  is in desired state
     boolean isClusterVMsInDesiredState(SSV ssv, VirtualMachine.State state) {
 
+        SSVVmMapVO vo = ssvVmMapDao.listVmBySSVServiceId(ssv.getId());
         // check if all the VM's are in same state
-        VMInstanceVO vm = vmInstanceDao.findByIdIncludingRemoved(ssv.getSsvId());
+        VMInstanceVO vm = vmInstanceDao.findByIdIncludingRemoved(vo.getVmId());
         if (vm.getState() != state) {
             if (LOGGER.isDebugEnabled()) {
                 LOGGER.debug(String.format("Found VM : %s in the Shared Storage VM  : %s in state: %s while expected to be in state: %s. So moving the cluster to Alert state for reconciliation",

@@ -31,6 +31,7 @@ import com.cloud.exception.ResourceUnavailableException;
 import com.cloud.ssv.SSV;
 import com.cloud.ssv.SSVManagerImpl;
 import com.cloud.ssv.SSVNetMapVO;
+import com.cloud.ssv.SSVVmMapVO;
 import com.cloud.tags.dao.ResourceTagDao;
 // import com.cloud.network.Network;
 // import com.cloud.network.IpAddress;
@@ -55,6 +56,8 @@ public class SSVDestroyWorker extends SSVModifierActionWorker {
 
     private void validateSSVState() {
         if (!(ssv.getState().equals(SSV.State.Running)
+                || ssv.getState().equals(SSV.State.Stopped)
+                || ssv.getState().equals(SSV.State.Alert)
                 || ssv.getState().equals(SSV.State.Stopping)
                 || ssv.getState().equals(SSV.State.Destroying))) {
             String msg = String.format("Cannot perform delete operation on ssv : %s in state: %s", ssv.getName(), ssv.getState());
@@ -66,7 +69,8 @@ public class SSVDestroyWorker extends SSVModifierActionWorker {
     private boolean destroySSV() {
         boolean vmDestroyed = true;
         //shared storage vm removed / ssvnetmap expunged
-        UserVmVO userVM = userVmDao.findById(ssv.getSsvId());
+        SSVVmMapVO vo = ssvVmMapDao.listVmBySSVServiceId(ssv.getId());
+        UserVmVO userVM = userVmDao.findById(vo.getVmId());
         if (userVM != null && !userVM.isRemoved()) {
             try {
                 UserVm vm = userVmService.destroyVm(userVM.getId(), true);
@@ -79,6 +83,9 @@ public class SSVDestroyWorker extends SSVModifierActionWorker {
                         ssvNetMapDao.expunge(ssvNet.getId());
                     }
                 }
+
+                ssvVmMapDao.expunge(vo.getId());
+
                 if (LOGGER.isInfoEnabled()) {
                     LOGGER.info(String.format("Destroyed VM : %s as part of Shared Storage VM : %s cleanup", vm.getDisplayName(), ssv.getName()));
                 }
@@ -128,7 +135,8 @@ public class SSVDestroyWorker extends SSVModifierActionWorker {
             int retryCounter = 0;
             while (retryCounter < maxRetries) {
                 boolean allVMsRemoved = true;
-                    UserVmVO userVM = userVmDao.findById(ssv.getSsvId());
+                    SSVVmMapVO vo = ssvVmMapDao.listVmBySSVServiceId(ssv.getId());
+                    UserVmVO userVM = userVmDao.findById(vo.getVmId());
                     if (userVM != null && !userVM.isRemoved()) {
                         allVMsRemoved = false;
                         break;
@@ -170,9 +178,6 @@ public class SSVDestroyWorker extends SSVModifierActionWorker {
     public boolean destroy() throws CloudRuntimeException {
         init();
         validateSSVState();
-        LOGGER.info(" :::::::::::::::::  " + ssv.getState());
-        LOGGER.info(" :::::::::::::::::  " + ssv.getId());
-        LOGGER.info(" :::::::::::::::::  " + ssvNetMapDao.listBySSVServiceId(2));
         this.ssvNets = ssvNetMapDao.listBySSVServiceId(ssv.getId());
         if (LOGGER.isInfoEnabled()) {
             LOGGER.info(String.format("Destroying Shared Storage VM : %s", ssv.getName()));
