@@ -24,3 +24,8 @@ write_files:
   owner: root:root
   content: |
     {{ ssv_encode }}
+
+runcmd:
+- mkdir /iso
+- mount /dev/cdrom /iso
+- sh /iso/ssv_main.sh

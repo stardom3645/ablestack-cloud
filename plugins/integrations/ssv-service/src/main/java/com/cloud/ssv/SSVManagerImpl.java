@@ -224,10 +224,6 @@ public class SSVManagerImpl extends ManagerBase implements SSVService {
         response.setDomainId(domain.getUuid());
         response.setDomainName(domain.getName());
 
-        // NetworkVO ntwk = networkDao.findByIdIncludingRemoved(ssv.getNetworkId());
-        // response.setNetworkId(ntwk.getUuid());
-        // response.setAssociatedNetworkName(ntwk.getName());
-        // response.setNetworkType(ntwk.getGuestType());
         List<SSVNetResponse> listSSVNetResponse = new ArrayList<SSVNetResponse>();
         List<SSVNetMapVO> netvo = ssvNetMapDao.listBySSVServiceId(ssv.getId());
 

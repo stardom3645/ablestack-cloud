@@ -84,8 +84,6 @@ public class SSVDestroyWorker extends SSVModifierActionWorker {
                     }
                 }
 
-                ssvVmMapDao.expunge(vo.getId());
-
                 if (LOGGER.isInfoEnabled()) {
                     LOGGER.info(String.format("Destroyed VM : %s as part of Shared Storage VM : %s cleanup", vm.getDisplayName(), ssv.getName()));
                 }
@@ -135,13 +133,14 @@ public class SSVDestroyWorker extends SSVModifierActionWorker {
             int retryCounter = 0;
             while (retryCounter < maxRetries) {
                 boolean allVMsRemoved = true;
-                    SSVVmMapVO vo = ssvVmMapDao.listVmBySSVServiceId(ssv.getId());
-                    UserVmVO userVM = userVmDao.findById(vo.getVmId());
-                    if (userVM != null && !userVM.isRemoved()) {
-                        allVMsRemoved = false;
-                        break;
-                    }
+                SSVVmMapVO vo = ssvVmMapDao.listVmBySSVServiceId(ssv.getId());
+                UserVmVO userVM = userVmDao.findById(vo.getVmId());
+                if (userVM != null && !userVM.isRemoved()) {
+                    allVMsRemoved = false;
+                    break;
+                }
                 if (allVMsRemoved) {
+                    ssvVmMapDao.expunge(vo.getId());
                     break;
                 }
                 try {

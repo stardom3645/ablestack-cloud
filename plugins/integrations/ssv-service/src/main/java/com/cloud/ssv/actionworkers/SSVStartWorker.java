@@ -43,6 +43,7 @@ import org.apache.commons.codec.binary.Base64;
 import org.apache.cloudstack.context.CallContext;
 import org.apache.log4j.Level;
 
+import com.cloud.api.ApiDBUtils;
 import com.cloud.dc.DataCenter;
 import com.cloud.deploy.DeployDestination;
 import com.cloud.exception.ConcurrentOperationException;
@@ -53,6 +54,7 @@ import com.cloud.exception.ResourceUnavailableException;
 import com.cloud.network.IpAddress;
 import com.cloud.network.Network.IpAddresses;
 import com.cloud.network.Network;
+import com.cloud.network.NetworkProfile;
 import com.cloud.storage.DiskOfferingVO;
 import com.cloud.offering.ServiceOffering;
 import com.cloud.user.Account;
@@ -117,12 +119,13 @@ public class SSVStartWorker extends SSVModifierActionWorker {
             List<SSVNetMapVO> netvo = ssvNetMapDao.listBySSVServiceId(ssv.getId());
             for(SSVNetMapVO vo : netvo) {
                 Network network = networkDao.findByIdIncludingRemoved(vo.getNetworkId());
+                NetworkProfile profile = ApiDBUtils.getNetworkProfile(network.getId());
                 JSONObject sObject = new JSONObject();//배열 내에 들어갈 json
                 sObject.put("ssv.network.type", network.getGuestType().toString());
                 sObject.put("ssv.network.ip", vo.getNetworkIp());
                 sObject.put("ssv.network.l2.gateway", vo.getNetworkGateway());
                 sObject.put("ssv.network.l2.netmask", vo.getNetworkNetmask());
-                sObject.put("ssv.network.l2.dns", network.getDns1());
+                sObject.put("ssv.network.l2.dns", profile.getDns1());
                 jArray.put(sObject);
             }
             obj.put("ssv.name", ssv.getName());
