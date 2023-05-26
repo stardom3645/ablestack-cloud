@@ -19,6 +19,7 @@ package com.cloud.ssv;
 import org.apache.cloudstack.api.command.user.ssv.CreateSSVCmd;
 import org.apache.cloudstack.api.command.admin.ssv.ListAdminSSVCmd;
 import org.apache.cloudstack.api.command.user.ssv.ListUserSSVCmd;
+import org.apache.cloudstack.api.command.user.ssv.AddVolSSVCmd;
 import org.apache.cloudstack.api.response.SSVResponse;
 import org.apache.cloudstack.api.response.ListResponse;
 import org.apache.cloudstack.framework.config.ConfigKey;
@@ -54,6 +55,7 @@ public interface SSVService extends PluggableService, Configurable {
     boolean deleteSSV(long id) throws CloudRuntimeException;
     ListResponse<SSVResponse> listAdminSSV(ListAdminSSVCmd cmd);
     ListResponse<SSVResponse> listUserSSV(ListUserSSVCmd cmd);
+    boolean addVolSSV(AddVolSSVCmd cmd) throws CloudRuntimeException;
 
     SSVResponse createSSVResponse(long id);
 }

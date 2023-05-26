@@ -24,7 +24,6 @@ import org.apache.cloudstack.api.BaseResponse;
 import org.apache.cloudstack.api.EntityReference;
 
 import com.cloud.ssv.SSV;
-import com.cloud.network.Network.GuestType;
 import com.cloud.serializer.Param;
 import com.google.gson.annotations.SerializedName;
 
@@ -59,25 +58,9 @@ public class SSVResponse extends BaseResponse implements ControlledEntityRespons
     @Param(description = "the TYPE of the service offering of the Shared Storage VM")
     private String sharedStorageVmType;
 
-    @SerializedName(ApiConstants.SHARED_STORAGE_VM_IP)
-    @Param(description = "the IP of the service offering of the Shared Storage VM")
-    private String sharedStorageVmIp;
-
     @SerializedName("serviceofferingname")
     @Param(description = "the name of the service offering of the Shared Storage VM")
     private String serviceOfferingName;
-
-    @SerializedName(ApiConstants.NETWORK_ID)
-    @Param(description = "the ID of the network of the Shared Storage VM")
-    private String networkId;
-
-    @SerializedName(ApiConstants.NETWORK_TYPE)
-    @Param(description = "the ID of the network of the Shared Storage VM")
-    private GuestType networkType;
-
-    @SerializedName(ApiConstants.ASSOCIATED_NETWORK_NAME)
-    @Param(description = "the name of the network of the Shared Storage VM")
-    private String associatedNetworkName;
 
     @SerializedName(ApiConstants.ACCOUNT)
     @Param(description = "the account associated with the Shared Storage VM")
@@ -158,14 +141,6 @@ public class SSVResponse extends BaseResponse implements ControlledEntityRespons
         this.sharedStorageVmType = sharedStorageVmType;
     }
 
-    public String getSharedStorageVmIp() {
-        return sharedStorageVmIp;
-    }
-
-    public void setSharedStorageVmIp(String sharedStorageVmIp) {
-        this.sharedStorageVmIp = sharedStorageVmIp;
-    }
-
     public String getServiceOfferingId() {
         return serviceOfferingId;
     }
@@ -174,21 +149,6 @@ public class SSVResponse extends BaseResponse implements ControlledEntityRespons
         this.serviceOfferingId = serviceOfferingId;
     }
 
-    public String getNetworkId() {
-        return networkId;
-    }
-
-    public void setNetworkId(String networkId) {
-        this.networkId = networkId;
-    }
-
-    public String getAssociatedNetworkName() {
-        return associatedNetworkName;
-    }
-
-    public void setAssociatedNetworkName(String associatedNetworkName) {
-        this.associatedNetworkName = associatedNetworkName;
-    }
 
     public String getProjectId() {
         return projectId;
@@ -249,14 +209,6 @@ public class SSVResponse extends BaseResponse implements ControlledEntityRespons
 
     public void setSsv(List<UserVmResponse> ssv) {
         this.ssv = ssv;
-    }
-
-    public GuestType getNetworkType() {
-        return networkType;
-    }
-
-    public void setNetworkType(GuestType networkType) {
-        this.networkType = networkType;
     }
 
     public void setNetworks(List<SSVNetResponse> networks) {

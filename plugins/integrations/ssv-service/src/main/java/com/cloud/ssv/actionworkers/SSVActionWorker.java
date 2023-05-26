@@ -47,6 +47,7 @@ import com.cloud.network.dao.NetworkDao;
 import com.cloud.network.NetworkService;
 import com.cloud.network.dao.IPAddressDao;
 import com.cloud.service.dao.ServiceOfferingDao;
+import com.cloud.storage.VolumeApiService;
 import com.cloud.storage.dao.DiskOfferingDao;
 import com.cloud.storage.dao.VMTemplateDao;
 import com.cloud.server.ManagementService;
@@ -99,6 +100,8 @@ public class SSVActionWorker {
     protected UserVmDao userVmDao;
     @Inject
     protected UserVmService userVmService;
+    @Inject
+    protected VolumeApiService volumeApiService;
     @Inject
     protected VlanDao vlanDao;
     @Inject

@@ -31,6 +31,7 @@ import javax.naming.ConfigurationException;
 import org.apache.cloudstack.acl.SecurityChecker;
 import org.apache.cloudstack.api.ResponseObject.ResponseView;
 import org.apache.cloudstack.api.command.user.ssv.ListUserSSVCmd;
+import org.apache.cloudstack.api.command.user.ssv.AddVolSSVCmd;
 import org.apache.cloudstack.api.command.user.ssv.CreateSSVCmd;
 import org.apache.cloudstack.api.command.user.ssv.DeleteSSVCmd;
 import org.apache.cloudstack.api.command.user.ssv.StartSSVCmd;
@@ -58,6 +59,7 @@ import com.cloud.dc.DataCenterVO;
 import com.cloud.dc.DataCenter;
 import com.cloud.dc.dao.DataCenterDao;
 import com.cloud.domain.Domain;
+import com.cloud.ssv.actionworkers.SSVAddVolOrNetWorker;
 import com.cloud.ssv.actionworkers.SSVDestroyWorker;
 import com.cloud.ssv.actionworkers.SSVStartWorker;
 import com.cloud.ssv.actionworkers.SSVStopWorker;
@@ -198,7 +200,6 @@ public class SSVManagerImpl extends ManagerBase implements SSVService {
         response.setId(ssv.getUuid());
         response.setName(ssv.getName());
         response.setSharedStorageVmType(ssv.getSharedStorageVmType());
-        // response.setSharedStorageVmIp(ssv.getSharedStorageVmIp());
         response.setDescription(ssv.getDescription());
         response.setState(ssv.getState().toString());
         response.setCreated(ssv.getCreated());
@@ -685,6 +686,21 @@ public class SSVManagerImpl extends ManagerBase implements SSVService {
     }
 
     @Override
+    public boolean addVolSSV(AddVolSSVCmd cmd) throws CloudRuntimeException {
+        if (!SSVEnabled.value()) {
+            logAndThrow(Level.ERROR, "Shared Storage VM Service plugin is disabled");
+        }
+        SSVVO ssv = ssvDao.findById(cmd.getId());
+        if (ssv == null) {
+            throw new InvalidParameterValueException("Invalid Shared Storage VM id specified");
+        }
+        accountManager.checkAccess(CallContext.current().getCallingAccount(), SecurityChecker.AccessType.OperateEntry, false, ssv);
+        SSVAddVolOrNetWorker addVolWorker = new SSVAddVolOrNetWorker(ssv, this);
+        addVolWorker = ComponentContext.inject(addVolWorker);
+        return addVolWorker.addVol(cmd);
+    }
+
+    @Override
     public List<Class<?>> getCommands() {
         List<Class<?>> cmdList = new ArrayList<Class<?>>();
         if (!SSVEnabled.value()) {
@@ -697,6 +713,7 @@ public class SSVManagerImpl extends ManagerBase implements SSVService {
         cmdList.add(StopSSVCmd.class);
         cmdList.add(CreateSSVCmd.class);
         cmdList.add(DeleteSSVCmd.class);
+        cmdList.add(AddVolSSVCmd.class);
         return cmdList;
     }
 
@@ -705,15 +722,6 @@ public class SSVManagerImpl extends ManagerBase implements SSVService {
         return ssvDao.findById(id);
     }
 
-    /* Shared Storage VM  scanner checks if the Shared Storage VM  is in desired state. If it detects Shared Storage VM
-       is not in desired state, it will trigger an event and marks the Shared Storage VM  to be 'Alert' state. For e.g a
-       Shared Storage VM  in 'Running' state should mean all the cluster of controller VM's in the custer should be running
-       and the controller VM's is running. It is possible due to out of band changes by user or hosts going down,
-       we may end up one or more VM's in stopped state. in which case scanner detects these changes and marks the cluster
-       in 'Alert' state. Similarly cluster in 'Stopped' state means all the cluster VM's are in stopped state any mismatch
-       in states should get picked up by Shared Storage VM  and mark the Shared Storage VM  to be 'Alert' state.
-       Through recovery API, or reconciliation clusters in 'Alert' will be brought back to known good state or desired state.
-     */
     public class SSVStatusScanner extends ManagedContextRunnable {
         private boolean firstRun = true;
         @Override
