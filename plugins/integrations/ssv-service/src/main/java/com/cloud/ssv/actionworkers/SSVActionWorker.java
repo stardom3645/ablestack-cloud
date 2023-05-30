@@ -56,7 +56,6 @@ import com.cloud.template.VirtualMachineTemplate;
 
 import com.cloud.user.Account;
 import com.cloud.user.AccountService;
-import com.cloud.user.User;
 import com.cloud.user.dao.AccountDao;
 import com.cloud.utils.StringUtils;
 import com.cloud.utils.exception.CloudRuntimeException;
@@ -64,6 +63,7 @@ import com.cloud.utils.fsm.NoTransitionException;
 import com.cloud.utils.fsm.StateMachine2;
 import com.cloud.vm.UserVmService;
 import com.cloud.vm.dao.UserVmDao;
+import com.cloud.vm.dao.VMInstanceDao;
 
 public class SSVActionWorker {
 
@@ -102,6 +102,8 @@ public class SSVActionWorker {
     @Inject
     protected UserVmService userVmService;
     @Inject
+    protected VMInstanceDao vmInstanceDao;
+    @Inject
     protected VolumeApiService volumeApiService;
     @Inject
     protected VlanDao vlanDao;
@@ -132,7 +134,7 @@ public class SSVActionWorker {
     }
 
     protected void init() {
-        this.owner = accountDao.findById(User.UID_ADMIN);
+        this.owner = accountDao.findById(ssv.getAccountId());
         this.ssvTemplate = templateDao.findByUuid(configurationDao.getValue("cloud.shared.storage.vm.template.uuid"));
     }
 

@@ -325,51 +325,50 @@ public class SSVModifierActionWorker extends SSVActionWorker {
         return sccuess;
     }
 
-    // protected boolean provisionEgressFirewallRules(final Network network, final Account account, int startPort, int endPort) throws NoSuchFieldException,
+    protected boolean provisionEgressFirewallRules(final Network network, final Account account, int startPort, int endPort) throws NoSuchFieldException,
+            IllegalAccessException, ResourceUnavailableException, NetworkRuleConflictException {
+        // List<String> sourceCidrList = new ArrayList<String>();
+        // String worksVmIp = ssv.getSsvIp();
+        // sourceCidrList.add(worksVmIp+"/32");
 
-    //         IllegalAccessException, ResourceUnavailableException, NetworkRuleConflictException {
-    //     // List<String> sourceCidrList = new ArrayList<String>();
-    //     // String worksVmIp = ssv.getSsvIp();
-    //     // sourceCidrList.add(worksVmIp+"/32");
+        // List<String> destinationCidrList = new ArrayList<String>();
+        // String manageIp = ApiServiceConfiguration.ManagementServerAddresses.value();
+        // destinationCidrList.add(manageIp+"/32");
 
-    //     // List<String> destinationCidrList = new ArrayList<String>();
-    //     // String manageIp = ApiServiceConfiguration.ManagementServerAddresses.value();
-    //     // destinationCidrList.add(manageIp+"/32");
+        // CreateEgressFirewallRuleCmd rule = new CreateEgressFirewallRuleCmd();
+        // rule = ComponentContext.inject(rule);
 
-    //     // CreateEgressFirewallRuleCmd rule = new CreateEgressFirewallRuleCmd();
-    //     // rule = ComponentContext.inject(rule);
+        // Field addressField = rule.getClass().getDeclaredField("networkId");
+        // addressField.setAccessible(true);
+        // addressField.set(rule, network.getId());
 
-    //     // Field addressField = rule.getClass().getDeclaredField("networkId");
-    //     // addressField.setAccessible(true);
-    //     // addressField.set(rule, network.getId());
+        // Field protocolField = rule.getClass().getDeclaredField("protocol");
+        // protocolField.setAccessible(true);
+        // protocolField.set(rule, "TCP");
 
-    //     // Field protocolField = rule.getClass().getDeclaredField("protocol");
-    //     // protocolField.setAccessible(true);
-    //     // protocolField.set(rule, "TCP");
+        // Field startPortField = rule.getClass().getDeclaredField("publicStartPort");
+        // startPortField.setAccessible(true);
+        // startPortField.set(rule, startPort);
 
-    //     // Field startPortField = rule.getClass().getDeclaredField("publicStartPort");
-    //     // startPortField.setAccessible(true);
-    //     // startPortField.set(rule, startPort);
+        // Field endPortField = rule.getClass().getDeclaredField("publicEndPort");
+        // endPortField.setAccessible(true);
+        // endPortField.set(rule, endPort);
 
-    //     // Field endPortField = rule.getClass().getDeclaredField("publicEndPort");
-    //     // endPortField.setAccessible(true);
-    //     // endPortField.set(rule, endPort);
+        // Field cidrField = rule.getClass().getDeclaredField("cidrlist");
+        // cidrField.setAccessible(true);
+        // cidrField.set(rule, sourceCidrList);
 
-    //     // Field cidrField = rule.getClass().getDeclaredField("cidrlist");
-    //     // cidrField.setAccessible(true);
-    //     // cidrField.set(rule, sourceCidrList);
+        // Field destCidrField = rule.getClass().getDeclaredField("destCidrList");
+        // destCidrField.setAccessible(true);
+        // destCidrField.set(rule, destinationCidrList);
 
-    //     // Field destCidrField = rule.getClass().getDeclaredField("destCidrList");
-    //     // destCidrField.setAccessible(true);
-    //     // destCidrField.set(rule, destinationCidrList);
-
-    //     boolean sccuess = false;
-    //     FirewallRule result = firewallService.createEgressFirewallRule(rule);
-    //     if (result != null) {
-    //         sccuess = firewallService.applyEgressFirewallRules(result, account);
-    //     }
-    //     return sccuess;
-    // }
+        // boolean sccuess = false;
+        // FirewallRule result = firewallService.createEgressFirewallRule(rule);
+        // if (result != null) {
+        //     sccuess = firewallService.applyEgressFirewallRules(result, account);
+        // }
+        return true;
+    }
 
     protected boolean provisionPortForwardingRules(IpAddress publicIp, Network network, Account account, UserVm worksVM, int adminPort, int userPort, int sambaPort, int apiPort) throws ResourceUnavailableException, NetworkRuleConflictException {
         boolean result = false;

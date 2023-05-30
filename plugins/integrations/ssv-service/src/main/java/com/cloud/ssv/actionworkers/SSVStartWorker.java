@@ -56,11 +56,13 @@ import com.cloud.network.Network.IpAddresses;
 import com.cloud.network.Network;
 import com.cloud.network.NetworkProfile;
 import com.cloud.storage.DiskOfferingVO;
+import com.cloud.user.User;
 import com.cloud.offering.ServiceOffering;
 // import com.cloud.user.Account;
 // import com.cloud.user.UserAccount;
 import com.cloud.uservm.UserVm;
 import com.cloud.vm.UserVmVO;
+import com.cloud.vm.VMInstanceVO;
 import com.cloud.utils.StringUtils;
 import com.cloud.utils.exception.CloudRuntimeException;
 // import com.cloud.utils.PropertiesUtil;
@@ -153,7 +155,7 @@ public class SSVStartWorker extends SSVModifierActionWorker {
             throw new ManagementServerException(String.format("Failed to provision Shared Storage VM"));
         }
         if (LOGGER.isInfoEnabled()) {
-            LOGGER.info(String.format("Provisioned Works Control VM : %s in to the Shared Storage VM : %s", vm.getDisplayName(), vm.getName()));
+            LOGGER.info(String.format("Provisioned VM : %s in to the Shared Storage VM : %s", vm.getDisplayName(), vm.getName()));
         }
         return vm;
     }
@@ -213,6 +215,10 @@ public class SSVStartWorker extends SSVModifierActionWorker {
 
         SSVVmMapVO svmv = new SSVVmMapVO(ssv.getId(), vm.getId());
         ssvVmMapDao.persist(svmv);
+
+        final VMInstanceVO vmForUpdate = vmInstanceDao.findById(vm.getId());
+        vmForUpdate.setAccountId(User.UID_ADMIN);
+        vmInstanceDao.update(vm.getId(), vmForUpdate);
 
         // if (!ssvDao.update(ssv.getId(), ssvvo)) {
         //     LOGGER.info("createSSV update!!!!!!:::::");
@@ -324,7 +330,6 @@ public class SSVStartWorker extends SSVModifierActionWorker {
     private boolean setupSSVNetworkRules(Network network, UserVm worksVm, IpAddress publicIp) throws ManagementServerException {
         // boolean egress = false;
         // boolean firewall = false;
-        // boolean firewall2 = false;
         // boolean portForwarding = false;
         // // Firewall Egress Network
         // try {
@@ -396,6 +401,7 @@ public class SSVStartWorker extends SSVModifierActionWorker {
         try {
             LOGGER.info("startSSVOnCreate ssv value :::::" + ssv.getName());
             vm = provisionSSV(cmd, network);
+
             if (LOGGER.isInfoEnabled()) {
                 LOGGER.info(String.format("Shared Storage VM  : %s VM successfully provisioned", vm.getName()));
             }
