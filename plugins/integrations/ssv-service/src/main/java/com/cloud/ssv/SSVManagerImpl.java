@@ -388,25 +388,6 @@ public class SSVManagerImpl extends ManagerBase implements SSVService {
         final Account owner = accountService.getActiveAccountById(cmd.getEntityOwnerId());
         VMTemplateVO template = templateDao.findByUuid(SSVTemplateUuid.value());
         LOGGER.debug(" ::: SSVTemplateUuid.value() :: " + SSVTemplateUuid.value() + " :: template.getId :: " + template.getId());
-        // final SSVVO ssv = Transaction.execute(new TransactionCallback<SSVVO>() {
-        //     @Override
-        //     public SSVVO doInTransaction(TransactionStatus status) {
-        //         SSVVO newApp = new SSVVO(cmd.getName(), cmd.getDescription(), cmd.getZoneId(), owner.getDomainId(), owner.getAccountId(), template.getId(), serviceOfferingVo.getId(),  cmd.getDiskOfferingId(), cmd.getSsvType(), SSV.State.Created);
-        //         // if(cmd.getAccessType().equals(L2Type)){
-        //         //     addSSVIpRangeInDeployCluster(newCluster, cmd);
-        //         // }
-
-        //         final SSVNetMapVO netMapVo =  Transaction.execute(new TransactionCallback<SSVNetMapVO>() {
-        //             @Override
-        //             public SSVNetMapVO doInTransaction(TransactionStatus status) {
-        //                 SSVNetMapVO newMap = new SSVNetMapVO(ssv.getId(), cmd.getNetworkId(), cmd.getSsvIp(), cmd.getGateway(), cmd.getNetmask());
-        //                 ssvNetMapDao.persist(newMap);
-        //                 return newMap;
-        //             }
-        //         });
-        //         return newApp;
-        //     }
-        // });
 
         SSVVO newApp = new SSVVO(cmd.getName(), cmd.getDescription(), cmd.getZoneId(), owner.getDomainId(), owner.getAccountId(), template.getId(), serviceOfferingVo.getId(),  cmd.getDiskOfferingId(), cmd.getSsvType(), SSV.State.Created);
         SSVVO ssv = ssvDao.persist(newApp);
@@ -423,7 +404,7 @@ public class SSVManagerImpl extends ManagerBase implements SSVService {
     private void validateSSVCreateParameters(final CreateSSVCmd cmd) throws CloudRuntimeException {
         final String name = cmd.getName();
         final String description = cmd.getDescription();
-        // final Long serviceOfferingId = cmd.getServiceOfferingId();
+        final String ssvType = cmd.getSsvType();
         final Long networkId = cmd.getNetworkId();
 
         if (name == null || name.isEmpty()) {
@@ -446,7 +427,11 @@ public class SSVManagerImpl extends ManagerBase implements SSVService {
             // }
         }
         if (description == null || description.isEmpty()) {
-            throw new InvalidParameterValueException("Invalid description for the Shared Storage VM  description:" + description);
+            throw new InvalidParameterValueException("Invalid description for the Shared Storage VM :" + description);
+        }
+
+        if (ssvType == null || ssvType.isEmpty()) {
+            throw new InvalidParameterValueException("Invalid ssvType for the Shared Storage VM :" + ssvType);
         }
 
         VMTemplateVO vmTempIso = templateDao.findByUuid(SSVTemplateUuid.value());

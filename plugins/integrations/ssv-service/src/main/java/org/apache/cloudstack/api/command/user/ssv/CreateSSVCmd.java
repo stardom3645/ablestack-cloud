@@ -19,8 +19,6 @@ package org.apache.cloudstack.api.command.user.ssv;
 import javax.inject.Inject;
 
 import org.apache.cloudstack.acl.RoleType;
-// import org.apache.cloudstack.acl.SecurityChecker.AccessType;
-// import org.apache.cloudstack.api.ACL;
 import org.apache.cloudstack.api.APICommand;
 import org.apache.cloudstack.api.ApiCommandResourceType;
 import org.apache.cloudstack.api.ApiConstants;
@@ -30,18 +28,16 @@ import org.apache.cloudstack.api.Parameter;
 import org.apache.cloudstack.api.ResponseObject.ResponseView;
 import org.apache.cloudstack.api.ServerApiException;
 import org.apache.cloudstack.api.response.DiskOfferingResponse;
-// import org.apache.cloudstack.api.response.DomainResponse;
 import org.apache.cloudstack.api.response.SSVResponse;
 import org.apache.cloudstack.api.response.NetworkResponse;
-// import org.apache.cloudstack.api.response.TemplateResponse;
 import org.apache.cloudstack.api.response.ZoneResponse;
-// import org.apache.cloudstack.api.response.ServiceOfferingResponse;
 import org.apache.cloudstack.context.CallContext;
 import org.apache.log4j.Logger;
 
 import com.cloud.ssv.SSV;
 import com.cloud.ssv.SSVEventTypes;
 import com.cloud.ssv.SSVService;
+// import com.cloud.user.Account;
 import com.cloud.utils.exception.CloudRuntimeException;
 
 @APICommand(name = CreateSSVCmd.APINAME,
@@ -67,24 +63,8 @@ public class CreateSSVCmd extends BaseAsyncCreateCmd {
     @Parameter(name = ApiConstants.DESCRIPTION, type = CommandType.STRING, required = true, description = "description for the Shared Storage VM ")
     private String description;
 
-    // @ACL(accessType = AccessType.UseEntry)
-    // @Parameter(name = ApiConstants.SERVICE_OFFERING_ID, type = CommandType.UUID, entityType = ServiceOfferingResponse.class, description = "the ID of the service offering for the virtual machines in the cluster.")
-    // private Long serviceOfferingId;
-
-    // @ACL(accessType = AccessType.UseEntry)
-    // @Parameter(name = ApiConstants.ACCOUNT, type = CommandType.STRING, description = "an optional account for the virtual machine. Must be used with domainId.")
-    // private String accountName;
-
-    // @ACL(accessType = AccessType.UseEntry)
-    // @Parameter(name = ApiConstants.DOMAIN_ID, type = CommandType.UUID, entityType = DomainResponse.class,
-    //         description = "an optional domainId for the virtual machine. If the account parameter is used, domainId must also be used.")
-    // private Long domainId;
-
     @Parameter(name = ApiConstants.ZONE_ID, type = CommandType.UUID, entityType = ZoneResponse.class, description = "zone id for the Automation Controller ")
     private Long zoneId;
-
-    // @Parameter(name = ApiConstants.TEMPLATE_ID, type = CommandType.UUID, entityType = TemplateResponse.class, description = "the ID of the template for the virtual machine")
-    // private Long templateId;
 
     @Parameter(name = ApiConstants.DISK_OFFERING_ID, type = CommandType.UUID, entityType = DiskOfferingResponse.class, description = "list volumes by disk offering", since = "4.4")
     private Long diskOfferingId;
@@ -112,13 +92,6 @@ public class CreateSSVCmd extends BaseAsyncCreateCmd {
     /////////////////// Accessors ///////////////////////
     /////////////////////////////////////////////////////
 
-    // public String getAccountName() {
-    //     if (accountName == null) {
-    //         return CallContext.current().getCallingAccount().getAccountName();
-    //     }
-    //     return accountName;
-    // }
-
     public String getName() {
         return name;
     }
@@ -127,20 +100,9 @@ public class CreateSSVCmd extends BaseAsyncCreateCmd {
         return description;
     }
 
-    // public Long getDomainId() {
-    //     if (domainId == null) {
-    //         return CallContext.current().getCallingAccount().getDomainId();
-    //     }
-    //     return domainId;
-    // }
-
     public Long getZoneId() {
         return zoneId;
     }
-
-    // public Long getTemplateId() {
-    //     return templateId;
-    // }
 
     public Long getDiskOfferingId() {
         return diskOfferingId;
@@ -149,10 +111,6 @@ public class CreateSSVCmd extends BaseAsyncCreateCmd {
     public Long getSize() {
         return size;
     }
-
-    // public Long getServiceOfferingId() {
-    //     return serviceOfferingId;
-    // }
 
     public Long getNetworkId() {
         return networkId;
@@ -190,6 +148,7 @@ public class CreateSSVCmd extends BaseAsyncCreateCmd {
     @Override
     public long getEntityOwnerId() {
         return CallContext.current().getCallingAccountId();
+        // return Account.ACCOUNT_ID_ADMIN;
     }
 
     @Override

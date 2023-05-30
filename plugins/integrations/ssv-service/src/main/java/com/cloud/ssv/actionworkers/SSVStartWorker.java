@@ -17,15 +17,15 @@
 
 package com.cloud.ssv.actionworkers;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.InputStream;
+// import java.io.File;
+// import java.io.FileInputStream;
+// import java.io.InputStream;
 // import java.net.ConnectException;
 // import java.net.HttpURLConnection;
 // import java.net.URL;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Properties;
+// import java.util.Properties;
 
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -40,7 +40,7 @@ import org.apache.cloudstack.api.command.user.ssv.CreateSSVCmd;
 // import org.apache.cloudstack.config.ApiServiceConfiguration;
 import org.apache.commons.codec.binary.Base64;
 // import org.apache.commons.collections.CollectionUtils;
-import org.apache.cloudstack.context.CallContext;
+// import org.apache.cloudstack.context.CallContext;
 import org.apache.log4j.Level;
 
 import com.cloud.api.ApiDBUtils;
@@ -57,14 +57,14 @@ import com.cloud.network.Network;
 import com.cloud.network.NetworkProfile;
 import com.cloud.storage.DiskOfferingVO;
 import com.cloud.offering.ServiceOffering;
-import com.cloud.user.Account;
-import com.cloud.user.UserAccount;
+// import com.cloud.user.Account;
+// import com.cloud.user.UserAccount;
 import com.cloud.uservm.UserVm;
 import com.cloud.vm.UserVmVO;
 import com.cloud.utils.StringUtils;
 import com.cloud.utils.exception.CloudRuntimeException;
-import com.cloud.utils.PropertiesUtil;
-import com.cloud.utils.server.ServerProperties;
+// import com.cloud.utils.PropertiesUtil;
+// import com.cloud.utils.server.ServerProperties;
 import com.cloud.ssv.SSV;
 import com.cloud.ssv.SSVManagerImpl;
 import com.cloud.ssv.SSVNetMapVO;
@@ -187,7 +187,7 @@ public class SSVStartWorker extends SSVModifierActionWorker {
         String base64UserData = Base64.encodeBase64String(ssvConfig.getBytes(StringUtils.getPreferredCharset()));
         List<String> keypairs = new ArrayList<String>(); // 키페어 파라메타 임시 생성
         if (network.getGuestType().equals(Network.GuestType.L2)) {
-            LOGGER.info("createSSV vm L2!!!!!!:::::");
+            LOGGER.info("createSSV vm L2!!!!!!:::::" + owner.getAccountName());
             LOGGER.info("createSSV vm L2!!!!!serviceOffering!:::::"+serviceOffering);
             LOGGER.info("createSSV vm L2!!!!!cmd.getDiskOfferingId()!:::::"+cmd.getDiskOfferingId());
             Network.IpAddresses addrs = new Network.IpAddresses(null, null, null);
@@ -279,47 +279,47 @@ public class SSVStartWorker extends SSVModifierActionWorker {
         }
     }
 
-    private String[] getServiceUserKeys(Account owner) {
-        if (owner == null) {
-            owner = CallContext.current().getCallingAccount();
-        }
-        String username = owner.getAccountName();
-        UserAccount user = accountService.getActiveUserAccount(username, owner.getDomainId());
-        String[] keys = null;
-        String apiKey = user.getApiKey();
-        String secretKey = user.getSecretKey();
-        if ((apiKey == null || apiKey.length() == 0) || (secretKey == null || secretKey.length() == 0)) {
-            keys = accountService.createApiKeyAndSecretKey(user.getId());
-        } else {
-            keys = new String[]{apiKey, secretKey};
-        }
-        return keys;
-    }
+    // private String[] getServiceUserKeys(Account owner) {
+    //     if (owner == null) {
+    //         owner = CallContext.current().getCallingAccount();
+    //     }
+    //     String username = owner.getAccountName();
+    //     UserAccount user = accountService.getActiveUserAccount(username, owner.getDomainId());
+    //     String[] keys = null;
+    //     String apiKey = user.getApiKey();
+    //     String secretKey = user.getSecretKey();
+    //     if ((apiKey == null || apiKey.length() == 0) || (secretKey == null || secretKey.length() == 0)) {
+    //         keys = accountService.createApiKeyAndSecretKey(user.getId());
+    //     } else {
+    //         keys = new String[]{apiKey, secretKey};
+    //     }
+    //     return keys;
+    // }
 
-    private String[] getServerProperties() {
-        String[] serverInfo = null;
-        final String HTTP_PORT = "http.port";
-        final String HTTPS_ENABLE = "https.enable";
-        final String HTTPS_PORT = "https.port";
-        final File confFile = PropertiesUtil.findConfigFile("server.properties");
-        try {
-            InputStream is = new FileInputStream(confFile);
-            String port = null;
-            String protocol = null;
-            final Properties properties = ServerProperties.getServerProperties(is);
-            if (properties.getProperty(HTTPS_ENABLE).equals("true")){
-                port = properties.getProperty(HTTPS_PORT);
-                protocol = "https://";
-            } else {
-                port = properties.getProperty(HTTP_PORT);
-                protocol = "http://";
-            }
-            serverInfo = new String[]{port, protocol};
-        } catch (final IOException e) {
-            LOGGER.warn("Failed to read configuration from server.properties file", e);
-        }
-        return serverInfo;
-    }
+    // private String[] getServerProperties() {
+    //     String[] serverInfo = null;
+    //     final String HTTP_PORT = "http.port";
+    //     final String HTTPS_ENABLE = "https.enable";
+    //     final String HTTPS_PORT = "https.port";
+    //     final File confFile = PropertiesUtil.findConfigFile("server.properties");
+    //     try {
+    //         InputStream is = new FileInputStream(confFile);
+    //         String port = null;
+    //         String protocol = null;
+    //         final Properties properties = ServerProperties.getServerProperties(is);
+    //         if (properties.getProperty(HTTPS_ENABLE).equals("true")){
+    //             port = properties.getProperty(HTTPS_PORT);
+    //             protocol = "https://";
+    //         } else {
+    //             port = properties.getProperty(HTTP_PORT);
+    //             protocol = "http://";
+    //         }
+    //         serverInfo = new String[]{port, protocol};
+    //     } catch (final IOException e) {
+    //         LOGGER.warn("Failed to read configuration from server.properties file", e);
+    //     }
+    //     return serverInfo;
+    // }
 
     private boolean setupSSVNetworkRules(Network network, UserVm worksVm, IpAddress publicIp) throws ManagementServerException {
         // boolean egress = false;

@@ -56,6 +56,7 @@ import com.cloud.template.VirtualMachineTemplate;
 
 import com.cloud.user.Account;
 import com.cloud.user.AccountService;
+import com.cloud.user.User;
 import com.cloud.user.dao.AccountDao;
 import com.cloud.utils.StringUtils;
 import com.cloud.utils.exception.CloudRuntimeException;
@@ -131,7 +132,7 @@ public class SSVActionWorker {
     }
 
     protected void init() {
-        this.owner = accountDao.findById(ssv.getAccountId());
+        this.owner = accountDao.findById(User.UID_ADMIN);
         this.ssvTemplate = templateDao.findByUuid(configurationDao.getValue("cloud.shared.storage.vm.template.uuid"));
     }
 
