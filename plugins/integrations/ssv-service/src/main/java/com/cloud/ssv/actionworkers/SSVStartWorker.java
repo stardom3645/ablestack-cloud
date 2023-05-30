@@ -56,13 +56,13 @@ import com.cloud.network.Network.IpAddresses;
 import com.cloud.network.Network;
 import com.cloud.network.NetworkProfile;
 import com.cloud.storage.DiskOfferingVO;
-import com.cloud.user.User;
+// import com.cloud.user.User;
 import com.cloud.offering.ServiceOffering;
 // import com.cloud.user.Account;
 // import com.cloud.user.UserAccount;
 import com.cloud.uservm.UserVm;
 import com.cloud.vm.UserVmVO;
-import com.cloud.vm.VMInstanceVO;
+// import com.cloud.vm.VMInstanceVO;
 import com.cloud.utils.StringUtils;
 import com.cloud.utils.exception.CloudRuntimeException;
 // import com.cloud.utils.PropertiesUtil;
@@ -196,7 +196,7 @@ public class SSVStartWorker extends SSVModifierActionWorker {
             vm = userVmService.createAdvancedVirtualMachine(zone, serviceOffering, ssvTemplate, networkIds, owner,
                 hostName, hostName, cmd.getDiskOfferingId(), cmd.getSize(), null,
                 ssvTemplate.getHypervisorType(), BaseCmd.HTTPMethod.POST, base64UserData, null, null, keypairs,
-                null, addrs, null, null, null, customParameterMap, null, null, null, null, true, null, null);
+                null, addrs, false, null, null, customParameterMap, null, null, null, null, true, null, null);
             LOGGER.info("createSSV vm Done!!!!!!:::::" + vm);
         } else {
             LOGGER.info("createSSV Done L2 NONONO!!!!!!:::::");
@@ -207,7 +207,7 @@ public class SSVStartWorker extends SSVModifierActionWorker {
             vm = userVmService.createAdvancedVirtualMachine(zone, serviceOffering, ssvTemplate, networkIds, owner,
                 hostName, hostName, cmd.getDiskOfferingId(), cmd.getSize(), null,
                 ssvTemplate.getHypervisorType(), BaseCmd.HTTPMethod.POST, base64UserData, null, null, keypairs,
-                ipToNetworkMap, addrs, null, null, null, customParameterMap, null, null, null, null, true, null, null);
+                ipToNetworkMap, addrs, false, null, null, customParameterMap, null, null, null, null, true, null, null);
         }
         LOGGER.info("createSSV Done!!!!!!:::::"+ vm.getId());
         SSVVO ssvvo = ssvDao.findById(ssv.getId());
@@ -216,9 +216,9 @@ public class SSVStartWorker extends SSVModifierActionWorker {
         SSVVmMapVO svmv = new SSVVmMapVO(ssv.getId(), vm.getId());
         ssvVmMapDao.persist(svmv);
 
-        final VMInstanceVO vmForUpdate = vmInstanceDao.findById(vm.getId());
-        vmForUpdate.setAccountId(User.UID_ADMIN);
-        vmInstanceDao.update(vm.getId(), vmForUpdate);
+        // final VMInstanceVO vmForUpdate = vmInstanceDao.findById(vm.getId());
+        // vmForUpdate.setAccountId(User.UID_ADMIN);
+        // vmInstanceDao.update(vm.getId(), vmForUpdate);
 
         // if (!ssvDao.update(ssv.getId(), ssvvo)) {
         //     LOGGER.info("createSSV update!!!!!!:::::");
