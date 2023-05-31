@@ -64,21 +64,30 @@ public interface SSV extends ControlledEntity, com.cloud.utils.fsm.StateObject<S
 
         static {
             s_fsm.addTransition(State.Created, Event.StartRequested, State.Starting);
+
             s_fsm.addTransition(State.Starting, Event.OperationSucceeded, State.Running);
             s_fsm.addTransition(State.Starting, Event.OperationFailed, State.Alert);
             s_fsm.addTransition(State.Starting, Event.CreateFailed, State.Error);
             s_fsm.addTransition(State.Starting, Event.StopRequested, State.Stopping);
+
             s_fsm.addTransition(State.Running, Event.StopRequested, State.Stopping);
             s_fsm.addTransition(State.Alert, Event.StopRequested, State.Stopping);
             s_fsm.addTransition(State.Stopping, Event.OperationSucceeded, State.Stopped);
             s_fsm.addTransition(State.Stopping, Event.OperationFailed, State.Alert);
+
             s_fsm.addTransition(State.Stopped, Event.StartRequested, State.Starting);
+
             s_fsm.addTransition(State.Running, Event.FaultsDetected, State.Alert);
+
             s_fsm.addTransition(State.Alert, Event.RecoveryRequested, State.Recovering);
+            s_fsm.addTransition(State.Recovering, Event.OperationSucceeded, State.Running);
+            s_fsm.addTransition(State.Recovering, Event.OperationFailed, State.Alert);
+
             s_fsm.addTransition(State.Running, Event.DestroyRequested, State.Destroying);
             s_fsm.addTransition(State.Stopped, Event.DestroyRequested, State.Destroying);
             s_fsm.addTransition(State.Alert, Event.DestroyRequested, State.Destroying);
             s_fsm.addTransition(State.Error, Event.DestroyRequested, State.Destroying);
+
             s_fsm.addTransition(State.Destroying, Event.OperationSucceeded, State.Destroyed);
 
         }
