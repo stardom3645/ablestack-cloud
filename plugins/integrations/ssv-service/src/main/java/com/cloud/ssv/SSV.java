@@ -53,6 +53,7 @@ public interface SSV extends ControlledEntity, com.cloud.utils.fsm.StateObject<S
         Stopping("Resources for the Shared Storage VM are being destroyed"),
         Stopped("All resources for the Shared Storage VM are destroyed, Shared Storage VM may still have ephemeral resource like persistent volumes provisioned"),
         Alert("State to represent Shared Storage VM which are not in expected desired state (operationally in active control place, stopped cluster VM's etc)."),
+        Recovering("State in which Shared Storage VM is recovering from alert state"),
         Destroyed("End state of Shared Storage VM in which all resources are destroyed, cluster will not be usable further"),
         Destroying("State in which resources for the Shared Storage VM is getting cleaned up or yet to be cleaned up by garbage collector"),
         Error("State of the failed to create Shared Storage VM");
@@ -73,6 +74,7 @@ public interface SSV extends ControlledEntity, com.cloud.utils.fsm.StateObject<S
             s_fsm.addTransition(State.Stopping, Event.OperationFailed, State.Alert);
             s_fsm.addTransition(State.Stopped, Event.StartRequested, State.Starting);
             s_fsm.addTransition(State.Running, Event.FaultsDetected, State.Alert);
+            s_fsm.addTransition(State.Alert, Event.RecoveryRequested, State.Recovering);
             s_fsm.addTransition(State.Running, Event.DestroyRequested, State.Destroying);
             s_fsm.addTransition(State.Stopped, Event.DestroyRequested, State.Destroying);
             s_fsm.addTransition(State.Alert, Event.DestroyRequested, State.Destroying);
