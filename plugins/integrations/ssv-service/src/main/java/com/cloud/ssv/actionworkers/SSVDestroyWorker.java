@@ -58,7 +58,7 @@ public class SSVDestroyWorker extends SSVModifierActionWorker {
         if (!(ssv.getState().equals(SSV.State.Running)
                 || ssv.getState().equals(SSV.State.Stopped)
                 || ssv.getState().equals(SSV.State.Alert)
-                || ssv.getState().equals(SSV.State.Stopping)
+                || ssv.getState().equals(SSV.State.Error)
                 || ssv.getState().equals(SSV.State.Destroying))) {
             String msg = String.format("Cannot perform delete operation on ssv : %s in state: %s", ssv.getName(), ssv.getState());
             LOGGER.warn(msg);
