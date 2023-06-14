@@ -366,7 +366,6 @@ export default {
             'x-expires': this.uploadParams.expires,
             'x-metadata': this.uploadParams.metadata,
             'x-host': this.uploadParams.postURL.split('/')[2]
-            
           },
           onUploadProgress: (progressEvent) => {
             this.uploadPercentage = Number(parseFloat(100 * progressEvent.loaded / progressEvent.total).toFixed(1))
