@@ -160,6 +160,22 @@ export default {
         })
       })
     },
+    handleClickMenu (item) {
+      switch (item.key) {
+        case 'profile':
+          this.$router.push(`/accountuser/${this.$store.getters.userInfo.id}`)
+          break
+        case 'timezone':
+          this.toggleUseBrowserTimezone()
+          break
+        case 'document':
+          window.open(this.$config.docBase, '_blank')
+          break
+        case 'logout':
+          this.handleLogout()
+          break
+      }
+    },
     handleLogout () {
       return this.Logout({}).then(() => {
         this.$router.push('/user/login')

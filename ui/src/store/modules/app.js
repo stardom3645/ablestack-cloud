@@ -133,6 +133,9 @@ const app = {
     SET_FAVICON_STATE_CAPACITY: (state, faviconStateCapacity) => {
       vueProps.$localStorage.set(FAVICON_STATE_CAPACITY, faviconStateCapacity)
       state.faviconStateCapacity = faviconStateCapacity
+    },
+    SET_SHUTDOWN_TRIGGERED: (state, shutdownTriggered) => {
+      state.shutdownTriggered = shutdownTriggered
     }
   },
   actions: {
@@ -195,6 +198,9 @@ const app = {
     },
     SetFaviconStateCapacity ({ commit }, faviconStateCapacity) {
       commit('SET_FAVICON_STATE_CAPACITY', faviconStateCapacity)
+    },
+    SetShutdownTriggered ({ commit }, bool) {
+      commit('SET_SHUTDOWN_TRIGGERED', bool)
     }
   }
 }
