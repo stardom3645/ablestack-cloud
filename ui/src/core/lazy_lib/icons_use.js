@@ -16,6 +16,7 @@
 // under the License.
 
 import {
+  AimOutlined,
   ApartmentOutlined,
   ApiOutlined,
   AppstoreAddOutlined,
@@ -164,6 +165,7 @@ import {
   UserDeleteOutlined,
   UsergroupDeleteOutlined,
   UserOutlined,
+  UserSwitchOutlined,
   UploadOutlined,
   WarningOutlined,
   WifiOutlined,
@@ -176,6 +178,7 @@ import renderIcon from '@/utils/renderIcon'
 
 export default {
   install: (app) => {
+    app.component('AimOutlined', AimOutlined)
     app.component('ApartmentOutlined', ApartmentOutlined)
     app.component('ApiOutlined', ApiOutlined)
     app.component('AppstoreAddOutlined', AppstoreAddOutlined)
@@ -324,6 +327,7 @@ export default {
     app.component('UserDeleteOutlined', UserDeleteOutlined)
     app.component('UsergroupDeleteOutlined', UsergroupDeleteOutlined)
     app.component('UserOutlined', UserOutlined)
+    app.component('UserSwitchOutlined', UserSwitchOutlined)
     app.component('UploadOutlined', UploadOutlined)
     app.component('WarningOutlined', WarningOutlined)
     app.component('WifiOutlined', WifiOutlined)
