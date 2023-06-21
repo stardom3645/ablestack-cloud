@@ -2652,54 +2652,6 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
         Pair<List<StoragePoolJoinVO>, Integer> uniquePoolPair = _poolJoinDao.searchAndCount(id, name, zoneId, path, pod,
                 cluster, address, scopeType, status, keyword, searchFilter);
 
-        SearchCriteria<StoragePoolJoinVO> sc = sb.create();
-
-        if (keyword != null) {
-            SearchCriteria<StoragePoolJoinVO> ssc = _poolJoinDao.createSearchCriteria();
-            ssc.addOr("name", SearchCriteria.Op.LIKE, "%" + keyword + "%");
-            ssc.addOr("poolType", SearchCriteria.Op.LIKE, "%" + keyword + "%");
-            ssc.addOr("uuid", SearchCriteria.Op.LIKE, "%" + keyword + "%");
-            sc.addAnd("name", SearchCriteria.Op.SC, ssc);
-        }
-
-        if (id != null) {
-            sc.setParameters("id", id);
-        }
-
-        if (name != null) {
-            sc.setParameters("name", name);
-        }
-
-        if (path != null) {
-            sc.setParameters("path", path);
-        }
-        if (zoneId != null) {
-            sc.setParameters("dataCenterId", zoneId);
-        }
-        if (pod != null) {
-            SearchCriteria<StoragePoolJoinVO> ssc = _poolJoinDao.createSearchCriteria();
-            ssc.addOr("podId", Op.EQ, pod);
-            ssc.addOr("podId", Op.NULL);
-
-            sc.addAnd("podId", SearchCriteria.Op.SC, ssc);
-        }
-        if (address != null) {
-            sc.setParameters("hostAddress", address);
-        }
-        if (cluster != null) {
-            SearchCriteria<StoragePoolJoinVO> ssc = _poolJoinDao.createSearchCriteria();
-            ssc.addOr("clusterId", Op.EQ, cluster);
-            ssc.addOr("clusterId", Op.NULL);
-
-            sc.addAnd("clusterId", SearchCriteria.Op.SC, ssc);
-        }
-        if (scopeType != null) {
-            sc.setParameters("scope", scopeType.toString());
-        }
-        sc.setParameters("parent", 0);
-
-        // search Pool details by ids
-        Pair<List<StoragePoolJoinVO>, Integer> uniquePoolPair = _poolJoinDao.searchAndCount(sc, searchFilter);
         Integer count = uniquePoolPair.second();
         if (count.intValue() == 0) {
             // empty result
