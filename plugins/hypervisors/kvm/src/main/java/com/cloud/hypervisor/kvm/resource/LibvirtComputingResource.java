@@ -330,6 +330,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
     private final Properties _uefiProperties = new Properties();
     private final Properties _tpmProperties = new Properties();
 
+    private String hostHealthCheckScriptPath;
 
     private long _hvVersion;
     private Duration _timeout;
@@ -736,6 +737,10 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
         NATIVE, OPENVSWITCH, TUNGSTEN
     }
 
+    protected enum HealthCheckResult {
+        SUCCESS, FAILURE, IGNORE
+    }
+
     protected BridgeType _bridgeType;
 
     protected StorageSubsystemCommandHandler storageHandler;
@@ -841,8 +846,6 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
         } catch (FileNotFoundException e) {
             s_logger.error("tpm properties file not found due to: " + e.getLocalizedMessage());
         }
-
-        params.putIfAbsent("guest.cpu.mode", "host-passthrough");
 
         _storage = new JavaStorageLayer();
         _storage.configure("StorageLayer", params);
@@ -988,6 +991,12 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
         _ovsPvlanVmPath = Script.findScript(networkScriptsDir, "ovs-pvlan-kvm-vm.sh");
         if (_ovsPvlanVmPath == null) {
             throw new ConfigurationException("Unable to find the ovs-pvlan-kvm-vm.sh");
+        }
+
+        hostHealthCheckScriptPath = AgentPropertiesFileHandler.getPropertyValue(AgentProperties.HEALTH_CHECK_SCRIPT_PATH);
+        if (StringUtils.isNotBlank(hostHealthCheckScriptPath) && !new File(hostHealthCheckScriptPath).exists()) {
+            s_logger.info(String.format("Unable to find the host health check script at: %s, " +
+                    "discarding it", hostHealthCheckScriptPath));
         }
 
         setupTungstenVrouterPath = Script.findScript(tungstenScriptsDir, "setup_tungsten_vrouter.sh");
@@ -1177,6 +1186,9 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
             }
             params.put("guest.cpu.mode", _guestCpuMode);
             params.put("guest.cpu.model", _guestCpuModel);
+        } else {
+            params.put("guest.cpu.mode", "host-passthrough");
+            _guestCpuMode = "host-passthrough";
         }
 
         final String cpuFeatures = AgentPropertiesFileHandler.getPropertyValue(AgentProperties.GUEST_CPU_FEATURES);
@@ -1310,11 +1322,12 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
         try {
             int[] removedVmIds = conn.listDomains();
             Domain dm = null;
-            for (int i = 0; i < removedVmIds.length; i++) {
+            for (int dmi: removedVmIds) {
                 try {
-                    dm = conn.domainLookupByID(removedVmIds[i]);
+                    dm = conn.domainLookupByID(dmi);
                     if("ccvm".equals(dm.getName()) || "scvm".equals(dm.getName())) {
-                        removedVmIds = ArrayUtils.removeElement(removedVmIds, removedVmIds[i]);
+                        removedVmIds = ArrayUtils.removeElement(removedVmIds, dmi);
+                        s_logger.info(String.format("Remove [%s]", dm.getName()));
                     }
                 } catch (final LibvirtException e) {
                     s_logger.warn("Unable to get vms(domainLookupByID)", e);
@@ -1864,7 +1877,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
     }
 
     public boolean passCmdLine(final String vmName, final String cmdLine) throws InternalErrorException {
-        final Script command = new Script(_patchScriptPath, 300 * 1000, s_logger);
+        final Script command = new Script(_patchScriptPath, 300000, s_logger);
         String result;
         command.add("-n", vmName);
         command.add("-c", cmdLine);
@@ -3022,7 +3035,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
         for (int i = 0; i < nics.length; i++) {
             for (final NicTO nic : vmSpec.getNics()) {
                 if (nic.getDeviceId() == i) {
-                    createVif(vm, nic, nicAdapter, extraConfig);
+                    createVif(vm, vmSpec, nic, nicAdapter, extraConfig);
                 }
             }
         }
@@ -3327,7 +3340,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
     }
 
     protected String getIoUringCheckCommand() {
-        String[] qemuPaths = { "/usr/bin/qemu-system-x86_64", "/usr/libexec/qemu-kvm", "/usr/bin/qemu-kvm" };
+        String[] qemuPaths = { "/usr/local/bin/qemu-system-x86_64" };
         for (String qemuPath : qemuPaths) {
             File file = new File(qemuPath);
             if (file.exists()) {
@@ -3432,12 +3445,16 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
         }
     }
 
-    private void createVif(final LibvirtVMDef vm, final NicTO nic, final String nicAdapter, Map<String, String> extraConfig) throws InternalErrorException, LibvirtException {
+    private void createVif(final LibvirtVMDef vm, final VirtualMachineTO vmSpec, final NicTO nic, final String nicAdapter, Map<String, String> extraConfig) throws InternalErrorException, LibvirtException {
         if (vm.getDevices() == null) {
             s_logger.error("LibvirtVMDef object get devices with null result");
             throw new InternalErrorException("LibvirtVMDef object get devices with null result");
         }
-        vm.getDevices().addDevice(getVifDriver(nic.getType(), nic.getName()).plug(nic, vm.getPlatformEmulator(), nicAdapter, extraConfig));
+        final InterfaceDef interfaceDef = getVifDriver(nic.getType(), nic.getName()).plug(nic, vm.getPlatformEmulator(), nicAdapter, extraConfig);
+        if (vmSpec.getDetails() != null) {
+            setInterfaceDefQueueSettings(vmSpec.getDetails(), vmSpec.getCpus(), interfaceDef);
+        }
+        vm.getDevices().addDevice(interfaceDef);
     }
 
     public boolean cleanupDisk(Map<String, String> volumeToDisconnect) {
@@ -3655,13 +3672,54 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
 
     @Override
     public PingCommand getCurrentStatus(final long id) {
-
+        PingRoutingCommand pingRoutingCommand;
         if (!_canBridgeFirewall) {
-            return new PingRoutingCommand(com.cloud.host.Host.Type.Routing, id, this.getHostVmStateReport());
+            pingRoutingCommand = new PingRoutingCommand(com.cloud.host.Host.Type.Routing, id, this.getHostVmStateReport());
         } else {
             final HashMap<String, Pair<Long, Long>> nwGrpStates = syncNetworkGroups(id);
-            return new PingRoutingWithNwGroupsCommand(getType(), id, this.getHostVmStateReport(), nwGrpStates);
+            pingRoutingCommand = new PingRoutingWithNwGroupsCommand(getType(), id, this.getHostVmStateReport(), nwGrpStates);
         }
+        HealthCheckResult healthCheckResult = getHostHealthCheckResult();
+        if (healthCheckResult != HealthCheckResult.IGNORE) {
+            pingRoutingCommand.setHostHealthCheckResult(healthCheckResult == HealthCheckResult.SUCCESS);
+        }
+        return pingRoutingCommand;
+    }
+
+    /**
+     * The health check result is true, if the script is executed successfully and the exit code is 0
+     * The health check result is false, if the script is executed successfully and the exit code is 1
+     * The health check result is null, if
+     * - Script file is not specified, or
+     * - Script file does not exist, or
+     * - Script file is not accessible by the user of the cloudstack-agent process, or
+     * - Script file is not executable
+     * - There are errors when the script is executed (exit codes other than 0 or 1)
+     */
+    private HealthCheckResult getHostHealthCheckResult() {
+        if (StringUtils.isBlank(hostHealthCheckScriptPath)) {
+            s_logger.debug("Host health check script path is not specified");
+            return HealthCheckResult.IGNORE;
+        }
+        File script = new File(hostHealthCheckScriptPath);
+        if (!script.exists() || !script.isFile() || !script.canExecute()) {
+            s_logger.warn(String.format("The host health check script file set at: %s cannot be executed, " +
+                            "reason: %s", hostHealthCheckScriptPath,
+                    !script.exists() ? "file does not exist" : "please check file permissions to execute this file"));
+            return HealthCheckResult.IGNORE;
+        }
+        int exitCode = executeBashScriptAndRetrieveExitValue(hostHealthCheckScriptPath);
+        if (s_logger.isDebugEnabled()) {
+            s_logger.debug(String.format("Host health check script exit code: %s", exitCode));
+        }
+        return retrieveHealthCheckResultFromExitCode(exitCode);
+    }
+
+    private HealthCheckResult retrieveHealthCheckResultFromExitCode(int exitCode) {
+        if (exitCode != 0 && exitCode != 1) {
+            return HealthCheckResult.IGNORE;
+        }
+        return exitCode == 0 ? HealthCheckResult.SUCCESS : HealthCheckResult.FAILURE;
     }
 
     @Override
@@ -3708,6 +3766,10 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
         }
 
         cmd.getHostDetails().put(HOST_VOLUME_ENCRYPTION, String.valueOf(hostSupportsVolumeEncryption()));
+        HealthCheckResult healthCheckResult = getHostHealthCheckResult();
+        if (healthCheckResult != HealthCheckResult.IGNORE) {
+            cmd.setHostHealthCheckResult(healthCheckResult == HealthCheckResult.SUCCESS);
+        }
 
         if (cmd.getHostDetails().containsKey("Host.OS")) {
             _hostDistro = cmd.getHostDetails().get("Host.OS");
@@ -4197,7 +4259,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
             return DiskDef.DiskBus.SCSI;
         } else if (platformEmulator.contains("Ubuntu") ||
             StringUtils.startsWithAny(platformEmulator,
-                        "Fedora", "CentOS", "Red Hat Enterprise Linux", "Debian GNU/Linux", "FreeBSD", "Oracle", "Other PV", "Windows")) {
+                        "Fedora", "CentOS", "Red Hat Enterprise Linux", "Debian GNU/Linux", "FreeBSD", "Oracle", "Other PV", "Windows", "Rocky”, “Alma")) {
             return DiskDef.DiskBus.SCSI;
         } else if (isUefiEnabled && StringUtils.startsWithAny(platformEmulator, "Other")) {
             return DiskDef.DiskBus.SATA;
@@ -5340,5 +5402,31 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
 
     public static String generateSecretUUIDFromString(String seed) {
         return UUID.nameUUIDFromBytes(seed.getBytes()).toString();
+    }
+
+    public void setInterfaceDefQueueSettings(Map<String, String> details, Integer cpus, InterfaceDef interfaceDef) {
+        String nicMultiqueueNumber = details.get(VmDetailConstants.NIC_MULTIQUEUE_NUMBER);
+        if (nicMultiqueueNumber != null) {
+            try {
+                Integer nicMultiqueueNumberInteger = Integer.valueOf(nicMultiqueueNumber);
+                if (nicMultiqueueNumberInteger == InterfaceDef.MULTI_QUEUE_NUMBER_MEANS_CPU_CORES) {
+                    if (cpus != null) {
+                        interfaceDef.setMultiQueueNumber(cpus);
+                    }
+                } else {
+                    interfaceDef.setMultiQueueNumber(nicMultiqueueNumberInteger);
+                }
+            } catch (NumberFormatException ex) {
+                s_logger.warn(String.format("VM details %s is not a valid integer value %s", VmDetailConstants.NIC_MULTIQUEUE_NUMBER, nicMultiqueueNumber));
+            }
+        }
+        String nicPackedEnabled = details.get(VmDetailConstants.NIC_PACKED_VIRTQUEUES_ENABLED);
+        if (nicPackedEnabled != null) {
+            try {
+                interfaceDef.setPackedVirtQueues(Boolean.valueOf(nicPackedEnabled));
+            } catch (NumberFormatException ex) {
+                s_logger.warn(String.format("VM details %s is not a valid Boolean value %s", VmDetailConstants.NIC_PACKED_VIRTQUEUES_ENABLED, nicPackedEnabled));
+            }
+        }
     }
 }

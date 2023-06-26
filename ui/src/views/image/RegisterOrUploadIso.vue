@@ -50,7 +50,7 @@
           <a-upload-dragger
             :multiple="false"
             :fileList="fileList"
-            :remove="handleRemove"
+            @remove="handleRemove"
             :beforeUpload="beforeUpload"
             v-model:value="form.file">
             <p class="ant-upload-drag-icon">
@@ -131,12 +131,12 @@
                 showSearch
                 optionFilterProp="label"
                 :filterOption="(input, option) => {
-                  return option.children?.[0].children.toLowerCase().indexOf(input.toLowerCase()) >= 0
+                  return option.label.toLowerCase().indexOf(input.toLowerCase()) >= 0
                 }"
                 v-model:value="userdataid"
                 :placeholder="linkUserDataParams.userdataid.description"
                 :loading="userdata.loading">
-                <a-select-option v-for="opt in userdata.opts" :key="opt.id">
+                <a-select-option v-for="opt in userdata.opts" :key="opt.id" :label="opt.name || opt.description">
                   {{ opt.name || opt.description }}
                 </a-select-option>
               </a-select>
@@ -148,13 +148,14 @@
                 <tooltip-label :title="$t('label.userdatapolicy')" :tooltip="$t('label.userdatapolicy.tooltip')"/>
               </template>
               <a-select
+                showSearch
                 v-model:value="userdatapolicy"
                 :placeholder="linkUserDataParams.userdatapolicy.description"
                 optionFilterProp="label"
                 :filterOption="(input, option) => {
-                  return option.children[0].children.toLowerCase().indexOf(input.toLowerCase()) >= 0
+                  return option.label.toLowerCase().indexOf(input.toLowerCase()) >= 0
                 }" >
-                <a-select-option v-for="opt in userdatapolicylist.opts" :key="opt.id">
+                <a-select-option v-for="opt in userdatapolicylist.opts" :key="opt.id" :label="opt.id || opt.description">
                   {{ opt.id || opt.description }}
                 </a-select-option>
               </a-select>
@@ -260,7 +261,6 @@ export default {
         url: [{ required: true, message: this.$t('label.upload.iso.from.local') }],
         file: [{ required: true, message: this.$t('message.error.required.input') }],
         name: [{ required: true, message: this.$t('message.error.required.input') }],
-        displaytext: [{ required: true, message: this.$t('message.error.required.input') }],
         zoneid: [{ required: true, message: this.$t('message.error.select') }],
         ostypeid: [{ required: true, message: this.$t('message.error.select') }]
       })
@@ -364,7 +364,8 @@ export default {
             'content-type': 'multipart/form-data',
             'x-signature': this.uploadParams.signature,
             'x-expires': this.uploadParams.expires,
-            'x-metadata': this.uploadParams.metadata
+            'x-metadata': this.uploadParams.metadata,
+            'x-host': this.uploadParams.postURL.split('/')[2]
           },
           onUploadProgress: (progressEvent) => {
             this.uploadPercentage = Number(parseFloat(100 * progressEvent.loaded / progressEvent.total).toFixed(1))
