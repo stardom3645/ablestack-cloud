@@ -71,6 +71,7 @@ import org.apache.cloudstack.framework.config.dao.ConfigurationDao;
 import org.apache.cloudstack.framework.messagebus.MessageBus;
 import org.apache.cloudstack.framework.messagebus.PublishScope;
 import org.apache.cloudstack.managed.context.ManagedContextRunnable;
+import org.apache.cloudstack.managed.context.ManagedContextTimerTask;
 import org.apache.cloudstack.region.gslb.GlobalLoadBalancerRuleDao;
 import org.apache.cloudstack.resourcedetail.UserDetailVO;
 import org.apache.cloudstack.resourcedetail.dao.UserDetailsDao;
@@ -319,6 +320,7 @@ public class AccountManagerImpl extends ManagerBase implements AccountManager, M
     private PasswordPolicy passwordPolicy;
 
     private final ScheduledExecutorService _executor = Executors.newScheduledThreadPool(1, new NamedThreadFactory("AccountChecker"));
+    private final ScheduledExecutorService _enableExecutor = Executors.newScheduledThreadPool(1, new NamedThreadFactory("enableChecker"));
 
     private int _allowedLoginAttempts;
 
@@ -2678,6 +2680,9 @@ public class AccountManagerImpl extends ManagerBase implements AccountManager, M
             updateLoginAttempts(account.getId(), allowedLoginAttempts, true);
             s_logger.warn("User " + account.getUsername() +
                     " has been disabled due to multiple failed login attempts." + " Please contact admin.");
+            User user = _userDao.getUserByName(account.getUsername(), account.getDomainId());
+            ActionEventUtils.onActionEvent(user.getId(), user.getAccountId(), account.getDomainId(), EventTypes.EVENT_USER_LOGIN, "user has been disabled due to multiple failed login attempts. UserId : " + user.getId(), user.getId(), ApiCommandResourceType.User.toString());
+            _enableExecutor.schedule(new EnableUserTask(user), 300, TimeUnit.SECONDS);
         }
     }
 
@@ -3360,6 +3365,35 @@ public class AccountManagerImpl extends ManagerBase implements AccountManager, M
             throw new CloudRuntimeException(String.format("Failed to find UserTwoFactorAuthenticator by the name: %s.", name));
         }
         return userTwoFactorAuthenticationProvidersMap.get(name.toLowerCase());
+    }
+
+    protected class EnableUserTask extends ManagedContextTimerTask {
+        User _user;
+
+        public EnableUserTask(final User user) {
+            _user = user;
+        }
+
+        @Override
+        protected synchronized void runInContext() {
+            try {
+                Transaction.execute(new TransactionCallbackNoReturn() {
+                    @Override
+                    public void doInTransactionWithoutResult(TransactionStatus status) {
+                        UserAccountVO user = null;
+                        user = _userAccountDao.lockRow(_user.getId(), true);
+                        if (user.getState().equals(State.DISABLED.toString())) {
+                            user.setLoginAttempts(0);
+                            user.setState(State.ENABLED.toString());
+                            _userAccountDao.update(_user.getId(), user);
+                            ActionEventUtils.onActionEvent(user.getId(), user.getAccountId(), user.getDomainId(), EventTypes.EVENT_USER_ENABLE, "Activated automatically after 5 minutes of inactivation. UserId : " + user.getId(), user.getId(), ApiCommandResourceType.User.toString());
+                        }
+                    }
+                });
+            } catch (Exception e) {
+                s_logger.error("Failed to automatically activate a disabled user after 5 minutes. UserId : " + _user.getId());
+            }
+        }
     }
 
 }
