@@ -83,6 +83,33 @@ public interface PasswordPolicy {
             true,
             ConfigKey.Scope.Domain);
 
+    ConfigKey<Boolean> PasswordPolicyAllowUseOfLastUsedPassword = new ConfigKey<>(
+            "Advanced",
+            Boolean.class,
+            "password.policy.allowUseOfLastUsedPassword",
+            "true",
+            "Indicates whether the password used immediately before can be used for the user password. Set 'true' (default) if it is allowed, otherwise set 'false'.",
+            true,
+            ConfigKey.Scope.Domain);
+
+    ConfigKey<Boolean> PasswordPolicyAllowConsecutiveRepetitionsOfSameLettersAndNumbers = new ConfigKey<>(
+            "Advanced",
+            Boolean.class,
+            "password.policy.allowConsecutiveRepetitionsOfSameLettersAndNumbers",
+            "true",
+            "Indicates whether consecutive repetition of the same letter and number can be used in the user password. Set 'true' (default) if it is allowed, otherwise set 'false'.",
+            true,
+            ConfigKey.Scope.Domain);
+
+    ConfigKey<Boolean> PasswordPolicyAllowContinuousLettersAndNumbersInputOnKeyboard = new ConfigKey<>(
+            "Advanced",
+            Boolean.class,
+            "password.policy.allowContinuousLettersAndNumbersInputOnKeyboard",
+            "true",
+            "Indicates whether or not the user's password can contain consecutive letters and numbers on the keypad. Set 'true' (default) if it is allowed, otherwise set 'false'.",
+            true,
+            ConfigKey.Scope.Domain);
+
     /**
      * Checks if a given user's password complies with the configured password policies.
      * If it does not comply, a {@link com.cloud.exception.InvalidParameterValueException} will be thrown.

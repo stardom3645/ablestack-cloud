@@ -17,14 +17,43 @@
 package com.cloud.user;
 
 import com.cloud.exception.InvalidParameterValueException;
+import com.cloud.user.dao.AccountDao;
+import com.cloud.user.dao.UserDao;
+import com.cloud.utils.Pair;
+
+import org.apache.cloudstack.auth.UserAuthenticator;
+import org.apache.cloudstack.auth.UserAuthenticator.ActionOnFailedAuthentication;
 import org.apache.cloudstack.framework.config.ConfigKey;
 import org.apache.cloudstack.framework.config.Configurable;
+import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import javax.inject.Inject;
 
 public class PasswordPolicyImpl implements PasswordPolicy, Configurable {
 
     private Logger logger = Logger.getLogger(PasswordPolicyImpl.class);
+
+    @Inject
+    private UserDao userDao;
+    @Inject
+    private AccountDao accountDao;
+
+    protected List<UserAuthenticator> _userPasswordEncoders;
+
+    public List<UserAuthenticator> getUserPasswordEncoders() {
+        return _userPasswordEncoders;
+    }
+
+    public void setUserPasswordEncoders(List<UserAuthenticator> encoders) {
+        _userPasswordEncoders = encoders;
+    }
 
     public void verifyIfPasswordCompliesWithPasswordPolicies(String password, String username, Long domainId) {
         int numberOfSpecialCharactersInPassword = 0;
@@ -54,6 +83,9 @@ public class PasswordPolicyImpl implements PasswordPolicy, Configurable {
         validateIfPasswordContainsTheMinimumLength(password, username, domainId);
         validateIfPasswordContainsTheUsername(password, username, domainId);
         validateIfPasswordMatchesRegex(password, username, domainId);
+        validateIfPasswordContainsThePreviousPassword(password, username, domainId);
+        validateIfPasswordContainsConsecutiveRepetitionOfTheSameLetterAndNumber(password, username, domainId);
+        validateIfPasswordContainsContinuousLettersAndNumbersInputOnTheKeyboard(password, username, domainId);
     }
 
     protected void validateIfPasswordContainsTheMinimumNumberOfSpecialCharacters(int numberOfSpecialCharactersInPassword, String username, Long domainId) {
@@ -202,6 +234,61 @@ public class PasswordPolicyImpl implements PasswordPolicy, Configurable {
                 PasswordPolicyRegex.key()));
     }
 
+    protected void validateIfPasswordContainsThePreviousPassword(String password, String username, Long domainId) {
+        logger.trace(String.format("Validating if the new password for user [%s] is the last used password.", username));
+
+        if (getPasswordPolicyAllowUseOfLastUsedPassword(domainId)) {
+            logger.trace(String.format("Allow password to contain of last used password is true; therefore, we will not validate if the password contains of last used password of user [%s].", username));
+            return;
+        }
+
+        User user = userDao.getUserByName(username, domainId);
+        if (validateCurrentPassword(user, password)) {
+            logger.error(String.format("User [%s] informed a new password that contains of the last used password; however, the this is not allowed as configured in [%s]. "
+                    + "Refusing the user's new password.", username, PasswordPolicyAllowUseOfLastUsedPassword.key()));
+            throw new InvalidParameterValueException("User password should not contain of the last used password.");
+        }
+
+        logger.trace(String.format("The new password for user [%s] complies with the policy of allowing passwords to contain of last used password.", username,
+                PasswordPolicyAllowUseOfLastUsedPassword.key()));
+    }
+
+    protected void validateIfPasswordContainsConsecutiveRepetitionOfTheSameLetterAndNumber(String password, String username, Long domainId) {
+        logger.trace(String.format("Validating if the new password for user [%s] is the contains more than 4 consecutive repetition of the same letter and number.", username));
+
+        if (getPasswordPolicyAllowConsecutiveRepetitionsOfSameLettersAndNumbers(domainId)) {
+            logger.trace(String.format("Allow password to contain more than 4 consecutive repetition of the same letter and number is true; therefore, we will not validate if the password contains of consecutive repetition of the same letter and number."));
+            return;
+        }
+
+        if (samePassword(password)) {
+            logger.error(String.format("User [%s] informed a new password that contains more than 4 consecutive repetition of the same letter and number; however, the this is not allowed as configured in [%s]. "
+                    + "Refusing the user's new password.", username, PasswordPolicyAllowConsecutiveRepetitionsOfSameLettersAndNumbers.key()));
+            throw new InvalidParameterValueException("User password should not contain more than 4 consecutive digits of the same letter and number.");
+        }
+
+        logger.trace(String.format("The new password for user [%s] complies with the policy of allowing passwords to contain more than 4 consecutive repetition of the same letter and number.", username,
+                PasswordPolicyAllowConsecutiveRepetitionsOfSameLettersAndNumbers.key()));
+    }
+
+    protected void validateIfPasswordContainsContinuousLettersAndNumbersInputOnTheKeyboard(String password, String username, Long domainId) {
+        logger.trace(String.format("Validating if the new password for user [%s] is the contain more than 4 consecutive keyboard letters and numbers.", username));
+
+        if (getPasswordPolicyAllowContinuousStringInputOnKeyboard(domainId)) {
+            logger.trace(String.format("Allow password to more than 4 consecutive keyboard letters and numbers is true; therefore, we will not validate if the password contains of continuous string of characters on the keyboard."));
+            return;
+        }
+
+        if (continuousPassword(password)) {
+            logger.error(String.format("User [%s] informed a new password that contains more than 4 consecutive keyboard letters and numbers.; however, the this is not allowed as configured in [%s]. "
+                    + "Refusing the user's new password.", username, PasswordPolicyAllowContinuousLettersAndNumbersInputOnKeyboard.key()));
+            throw new InvalidParameterValueException("User password should not contain more than 4 consecutive keyboard letters and numbers.");
+        }
+
+        logger.trace(String.format("The new password for user [%s] complies with the policy of allowing passwords to contain more than 4 consecutive keyboard letters and numbers.", username,
+                PasswordPolicyAllowContinuousLettersAndNumbersInputOnKeyboard.key()));
+    }
+
     @Override
     public String getConfigComponentName() {
         return PasswordPolicyImpl.class.getSimpleName();
@@ -210,7 +297,8 @@ public class PasswordPolicyImpl implements PasswordPolicy, Configurable {
     @Override
     public ConfigKey<?>[] getConfigKeys() {
         return new ConfigKey<?>[]{PasswordPolicyMinimumLength, PasswordPolicyMinimumSpecialCharacters, PasswordPolicyMinimumUppercaseLetters, PasswordPolicyMinimumLowercaseLetters,
-                PasswordPolicyMinimumDigits, PasswordPolicyAllowPasswordToContainUsername, PasswordPolicyRegex
+                PasswordPolicyMinimumDigits, PasswordPolicyAllowPasswordToContainUsername, PasswordPolicyRegex, PasswordPolicyAllowUseOfLastUsedPassword, PasswordPolicyAllowConsecutiveRepetitionsOfSameLettersAndNumbers,
+                PasswordPolicyAllowContinuousLettersAndNumbersInputOnKeyboard
         };
     }
 
@@ -240,6 +328,58 @@ public class PasswordPolicyImpl implements PasswordPolicy, Configurable {
 
     public String getPasswordPolicyRegex(Long domainId) {
         return PasswordPolicyRegex.valueIn(domainId);
+    }
+
+    public Boolean getPasswordPolicyAllowUseOfLastUsedPassword(Long domainId) {
+        return PasswordPolicyAllowUseOfLastUsedPassword.valueIn(domainId);
+    }
+
+    public Boolean getPasswordPolicyAllowConsecutiveRepetitionsOfSameLettersAndNumbers(Long domainId) {
+        return PasswordPolicyAllowConsecutiveRepetitionsOfSameLettersAndNumbers.valueIn(domainId);
+    }
+
+    public Boolean getPasswordPolicyAllowContinuousStringInputOnKeyboard(Long domainId) {
+        return PasswordPolicyAllowContinuousLettersAndNumbersInputOnKeyboard.valueIn(domainId);
+    }
+
+    public Boolean samePassword(String password) {
+        Pattern pattern = Pattern.compile("(\\w)\\1\\1\\1");
+        Matcher matcher = pattern.matcher(password);
+        if(matcher.find()) {
+            return true;
+        }
+        return false;
+    }
+
+    public Boolean continuousPassword(String password) {
+        ArrayList<String> keyboard = new ArrayList<>(Arrays.asList("qwertyuiop", "asdfghjkl", "zxcvbnm", "1234567890", "poiuytrewq", "lkjhgfdsa", "mnbvcxz", "0987654321"));
+        for (int i = 0; i < password.length()-3; i++) {
+            String checkItem = password.charAt(i) + "" + password.charAt(i+1) + password.charAt(i+2) + password.charAt(i+3) + "";
+            for (int j = 0; j < keyboard.size(); j++) {
+                if (keyboard.get(j).indexOf(checkItem.toLowerCase()) != -1) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    protected Boolean validateCurrentPassword(User user, String password) {
+        AccountVO userAccount = accountDao.findById(user.getAccountId());
+        boolean currentPasswordMatchesDataBasePassword = false;
+        for (UserAuthenticator userAuthenticator : _userPasswordEncoders) {
+            Pair<Boolean, ActionOnFailedAuthentication> authenticationResult = userAuthenticator.authenticate(user.getUsername(), password, userAccount.getDomainId(), null);
+            if (authenticationResult == null) {
+                logger.trace(String.format("Authenticator [%s] is returning null for the authenticate mehtod.", userAuthenticator.getClass()));
+                continue;
+            }
+            if (BooleanUtils.toBoolean(authenticationResult.first())) {
+                logger.debug(String.format("User [id=%s] re-authenticated [authenticator=%s] during password update.", user.getUuid(), userAuthenticator.getName()));
+                currentPasswordMatchesDataBasePassword = true;
+                break;
+            }
+        }
+        return currentPasswordMatchesDataBasePassword;
     }
 
 }
