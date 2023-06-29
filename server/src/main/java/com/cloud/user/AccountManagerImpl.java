@@ -320,7 +320,7 @@ public class AccountManagerImpl extends ManagerBase implements AccountManager, M
     private PasswordPolicy passwordPolicy;
 
     private final ScheduledExecutorService _executor = Executors.newScheduledThreadPool(1, new NamedThreadFactory("AccountChecker"));
-    private final ScheduledExecutorService _enableExecutor = Executors.newScheduledThreadPool(1, new NamedThreadFactory("enableChecker"));
+    private final ScheduledExecutorService _enableExecutor = Executors.newScheduledThreadPool(1, new NamedThreadFactory("EnableChecker"));
 
     private int _allowedLoginAttempts;
 
