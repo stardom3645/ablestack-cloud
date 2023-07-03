@@ -136,6 +136,14 @@ public enum Config {
             "0.75",
             "Percentage (as a value between 0 and 1) of local storage utilization above which alerts will be sent about low local storage available.",
             null),
+    ManagementServerLocalStorageCapacityThreshold(
+            "Alert",
+            ManagementServer.class,
+            Float.class,
+            "management.server.localStorage.capacity.notificationthreshold",
+            "0.75",
+            "Percentage (as a value between 0 and 1) of management server local storage utilization above which alerts will be sent about low local storage available.",
+            null),
 
     // Storage
 
