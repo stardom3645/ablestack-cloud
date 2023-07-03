@@ -364,6 +364,11 @@ public class AccountManagerImpl extends ManagerBase implements AccountManager, M
             "totp",
             "The default user two factor authentication provider. Eg. totp, staticpin", true, ConfigKey.Scope.Domain);
 
+    static final ConfigKey<Integer> incorrectLoginEnableTime = new ConfigKey<Integer>("Advanced", Integer.class,
+            "incorrect.login.enable.time", "300",
+            "Set the time to automatically activate disabled users due to incorrect login attempts. It should be set to at least 5 minutes.",
+            false);
+
     protected AccountManagerImpl() {
         super();
     }
@@ -2661,6 +2666,7 @@ public class AccountManagerImpl extends ManagerBase implements AccountManager, M
                 }
             } else {
                 s_logger.info("User " + userAccount.getUsername() + " is disabled/locked");
+                throw new CloudAuthenticationException("Failed to authenticate user. User " + userAccount.getUsername() + " is disable/locked. Please contact your administrator or try again later.");
             }
             return null;
         }
@@ -2682,7 +2688,8 @@ public class AccountManagerImpl extends ManagerBase implements AccountManager, M
                     " has been disabled due to multiple failed login attempts." + " Please contact admin.");
             User user = _userDao.getUserByName(account.getUsername(), account.getDomainId());
             ActionEventUtils.onActionEvent(user.getId(), user.getAccountId(), account.getDomainId(), EventTypes.EVENT_USER_LOGIN, "user has been disabled due to multiple failed login attempts. UserId : " + user.getId(), user.getId(), ApiCommandResourceType.User.toString());
-            _enableExecutor.schedule(new EnableUserTask(user), 300, TimeUnit.SECONDS);
+            int enableTime = incorrectLoginEnableTime.value();
+            _enableExecutor.schedule(new EnableUserTask(user), enableTime, TimeUnit.SECONDS);
             throw new CloudAuthenticationException("Failed to authenticate user " + account.getUsername() + " in domain " + account.getDomainId() +
             "; The user has been disabled due to multiple failed login attempts. Your account will be automatically activated after 5 minutes. Please try again in a moment");
         }
@@ -3203,7 +3210,7 @@ public class AccountManagerImpl extends ManagerBase implements AccountManager, M
     @Override
     public ConfigKey<?>[] getConfigKeys() {
         return new ConfigKey<?>[] {UseSecretKeyInResponse, enableUserTwoFactorAuthentication,
-                userTwoFactorAuthenticationDefaultProvider, mandateUserTwoFactorAuthentication, userTwoFactorAuthenticationIssuer};
+                userTwoFactorAuthenticationDefaultProvider, mandateUserTwoFactorAuthentication, userTwoFactorAuthenticationIssuer, incorrectLoginEnableTime};
     }
 
     public List<UserTwoFactorAuthenticator> getUserTwoFactorAuthenticationProviders() {
