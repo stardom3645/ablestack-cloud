@@ -57,6 +57,7 @@ import javax.servlet.http.HttpSession;
 
 import org.apache.cloudstack.acl.APIChecker;
 import org.apache.cloudstack.api.APICommand;
+import org.apache.cloudstack.api.ApiCommandResourceType;
 import org.apache.cloudstack.api.ApiConstants;
 import org.apache.cloudstack.api.ApiErrorCode;
 import org.apache.cloudstack.api.ApiServerService;
@@ -277,11 +278,27 @@ public class ApiServer extends ManagerBase implements HttpRequestHandler, ApiSer
             , false
             , ConfigKey.Scope.Global);
 
-    private static final ConfigKey<Boolean> UseEventAccountInfo = new ConfigKey<Boolean>( "advanced"
+    private static final ConfigKey<Boolean> UseEventAccountInfo = new ConfigKey<Boolean>( "Advanced"
             , Boolean.class
             , "event.accountinfo"
             , "false"
             , "use account info in event logging"
+            , true
+            , ConfigKey.Scope.Global);
+
+    static final ConfigKey<Boolean> AllowConcurrentConnectSession = new ConfigKey<Boolean>( "Advanced"
+            , Boolean.class
+            , "allow.concurrent.connect.session"
+            , "false"
+            , "If set to true, simultaneous access is possible using the same account."
+            , true
+            , ConfigKey.Scope.Global);
+
+    static final ConfigKey<Boolean> BlockConnectedSession = new ConfigKey<Boolean>( "Advanced"
+            , Boolean.class
+            , "block.connected.session"
+            , "false"
+            , "When simultaneous access is not allowed('allow.concurrent.connect.session : false'), existing sessions are blocked if true, and new sessions are blocked if false."
             , true
             , ConfigKey.Scope.Global);
 
@@ -1104,8 +1121,26 @@ public class ApiServer extends ManagerBase implements HttpRequestHandler, ApiSer
         } else {
             domainId = userDomain.getId();
         }
-
         final UserAccount userAcct = accountMgr.authenticateUser(username, password, domainId, loginIpAddress, requestParameters);
+        List<String> sessionIds = ApiSessionListener.listExistSessionIds(username, session.getId());
+
+        if (!ApiServer.AllowConcurrentConnectSession.value() && sessionIds != null && sessionIds.size() > 0) {
+            if (ApiServer.BlockConnectedSession.value()) { //기존 세션 차단
+                ApiSessionListener.deleteSessionIds(sessionIds);
+                ActionEventUtils.onActionEvent(userAcct.getId(), userAcct.getAccountId(), domainId, EventTypes.EVENT_USER_SESSION_BLOCK,
+                                                "Sessions previously connected to account [" + username + "] have been disconnected.", User.UID_SYSTEM, ApiCommandResourceType.User.toString());
+            }else { //신규 세션 차단
+                if (session != null) {
+                    sessionIds.clear();
+                    sessionIds.add(session.getId());
+                    ApiSessionListener.deleteSessionIds(sessionIds);
+                    ActionEventUtils.onActionEvent(userAcct.getId(), userAcct.getAccountId(), domainId, EventTypes.EVENT_USER_SESSION_BLOCK,
+                                                    "A session connected to account [" + username + "] exists. Block new connections.", User.UID_SYSTEM, ApiCommandResourceType.User.toString());
+                    throw new CloudAuthenticationException("You are already connecting with the same account and simultaneous access is not allowed.");
+                }
+            }
+        }
+
         if (userAcct != null) {
             final String timezone = userAcct.getTimezone();
             float offsetInHrs = 0f;
@@ -1213,7 +1248,7 @@ public class ApiServer extends ManagerBase implements HttpRequestHandler, ApiSer
             if (!NetUtils.isIpInCidrList(remoteAddress, accessAllowedCidrs.split(","))) {
                 s_logger.warn("Request by account '" + account.toString() + "' was denied since " + remoteAddress + " does not match " + accessAllowedCidrs);
                 throw new OriginDeniedException("Calls from disallowed origin", account, remoteAddress);
-                }
+            }
         }
 
 
@@ -1496,7 +1531,9 @@ public class ApiServer extends ManagerBase implements HttpRequestHandler, ApiSer
                 ConcurrentSnapshotsThresholdPerHost,
                 EncodeApiResponse,
                 EnableSecureSessionCookie,
-                JSONDefaultContentType
+                JSONDefaultContentType,
+                AllowConcurrentConnectSession,
+                BlockConnectedSession
         };
     }
 }
