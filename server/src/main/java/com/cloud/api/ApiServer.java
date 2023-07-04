@@ -1124,24 +1124,24 @@ public class ApiServer extends ManagerBase implements HttpRequestHandler, ApiSer
         final UserAccount userAcct = accountMgr.authenticateUser(username, password, domainId, loginIpAddress, requestParameters);
         List<String> sessionIds = ApiSessionListener.listExistSessionIds(username, session.getId());
 
-        if (!ApiServer.AllowConcurrentConnectSession.value() && sessionIds != null && sessionIds.size() > 0) {
-            if (ApiServer.BlockConnectedSession.value()) { //기존 세션 차단
-                ApiSessionListener.deleteSessionIds(sessionIds);
-                ActionEventUtils.onActionEvent(userAcct.getId(), userAcct.getAccountId(), domainId, EventTypes.EVENT_USER_SESSION_BLOCK,
-                                                "Sessions previously connected to account [" + username + "] have been disconnected.", User.UID_SYSTEM, ApiCommandResourceType.User.toString());
-            }else { //신규 세션 차단
-                if (session != null) {
-                    sessionIds.clear();
-                    sessionIds.add(session.getId());
+        if (userAcct != null) {
+            if (!ApiServer.AllowConcurrentConnectSession.value() && sessionIds != null && sessionIds.size() > 0) {
+                if (ApiServer.BlockConnectedSession.value()) { //기존 세션 차단
                     ApiSessionListener.deleteSessionIds(sessionIds);
                     ActionEventUtils.onActionEvent(userAcct.getId(), userAcct.getAccountId(), domainId, EventTypes.EVENT_USER_SESSION_BLOCK,
-                                                    "A session connected to account [" + username + "] exists. Block new connections.", User.UID_SYSTEM, ApiCommandResourceType.User.toString());
-                    throw new CloudAuthenticationException("You are already connecting with the same account and simultaneous access is not allowed.");
+                                                    "Sessions previously connected to account [" + username + "] have been disconnected.", User.UID_SYSTEM, ApiCommandResourceType.User.toString());
+                }else { //신규 세션 차단
+                    if (session != null) {
+                        sessionIds.clear();
+                        sessionIds.add(session.getId());
+                        ApiSessionListener.deleteSessionIds(sessionIds);
+                        ActionEventUtils.onActionEvent(userAcct.getId(), userAcct.getAccountId(), domainId, EventTypes.EVENT_USER_SESSION_BLOCK,
+                                                        "A session connected to account [" + username + "] exists. Block new connections.", User.UID_SYSTEM, ApiCommandResourceType.User.toString());
+                        throw new CloudAuthenticationException("You are already connecting with the same account and simultaneous access is not allowed.");
+                    }
                 }
             }
-        }
 
-        if (userAcct != null) {
             final String timezone = userAcct.getTimezone();
             float offsetInHrs = 0f;
             if (timezone != null) {
