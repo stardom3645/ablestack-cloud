@@ -2691,7 +2691,7 @@ public class AccountManagerImpl extends ManagerBase implements AccountManager, M
             int enableTime = incorrectLoginEnableTime.value();
             _enableExecutor.schedule(new EnableUserTask(user), enableTime, TimeUnit.SECONDS);
             throw new CloudAuthenticationException("Failed to authenticate user " + account.getUsername() + " in domain " + account.getDomainId() +
-            "; The user has been disabled due to multiple failed login attempts. Your account will be automatically activated after 5 minutes. Please try again in a moment");
+            "; The user has been disabled due to multiple failed login attempts. Your account will be automatically activated after "+ enableTime +" seconds. Please try again in a moment");
         }
     }
 
