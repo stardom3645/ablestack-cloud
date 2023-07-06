@@ -134,7 +134,6 @@ export default {
       }).catch(error => {
         console.log(error)
       })
-      console.log(this.$store.getters.firstLogin)
     },
     async validateTwoPassword (rule, value) {
       if (!value || value.length === 0) {
