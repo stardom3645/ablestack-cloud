@@ -68,6 +68,7 @@ public class ListCapabilitiesCmd extends BaseCmd {
         response.setWallPortalVmUri((String)capabilities.get("wallPortalVmUri"));
         response.setHost((String)capabilities.get("host"));
         response.setBalancingServiceEnabled((Boolean)capabilities.get("balancingServiceEnabled"));
+        response.setEventDeleteEnabled((Boolean)capabilities.get("eventDeleteEnabled"));
 
         if (capabilities.containsKey("apiLimitInterval")) {
             response.setApiLimitInterval((Integer)capabilities.get("apiLimitInterval"));

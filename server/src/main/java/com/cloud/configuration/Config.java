@@ -1020,6 +1020,7 @@ public enum Config {
             "5",
             "Incorrect login attempts allowed before the user is disabled (when value > 0). If value <=0 users are not disabled after failed login attempts",
             null),
+
     // Ovm
     OvmPublicNetwork("Hidden", ManagementServer.class, String.class, "ovm.public.network.device", null, "Specify the public bridge on host for public network", null),
     OvmPrivateNetwork("Hidden", ManagementServer.class, String.class, "ovm.private.network.device", null, "Specify the private bridge on host for private network", null),
@@ -1813,6 +1814,7 @@ public enum Config {
     PublishResourceStateEvent("Advanced", ManagementServer.class, Boolean.class, "publish.resource.state.events", "true", "enable or disable publishing of alert events on the event bus", null),
     PublishUsageEvent("Advanced", ManagementServer.class, Boolean.class, "publish.usage.events", "true", "enable or disable publishing of usage events on the event bus", null),
     PublishAsynJobEvent("Advanced", ManagementServer.class, Boolean.class, "publish.async.job.events", "true", "enable or disable publishing of usage events on the event bus", null),
+    EventDeleteEnabled("Advanced", ManagementServer.class, Boolean.class, "event.delete.enabled", "true", "If set to true, the delete event button is enabled", null),
 
     // StatsCollector
     StatsOutPutGraphiteHost("Advanced", ManagementServer.class, String.class, "stats.output.uri", "", "URI to additionally send StatsCollector statistics to", null),
