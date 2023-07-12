@@ -50,6 +50,7 @@ import com.cloud.exception.InsufficientCapacityException;
 import com.cloud.exception.NetworkRuleConflictException;
 import com.cloud.exception.ResourceAllocationException;
 import com.cloud.exception.ResourceUnavailableException;
+import com.cloud.network.Ipv6Service;
 import com.cloud.network.NetworkModel;
 import com.cloud.network.NetworkService;
 import com.cloud.network.NetworkUsageService;
@@ -68,6 +69,8 @@ import com.cloud.network.vpn.Site2SiteVpnService;
 import com.cloud.projects.ProjectService;
 import com.cloud.resource.ResourceService;
 import com.cloud.server.ManagementService;
+import com.cloud.server.ResourceIconManager;
+import com.cloud.server.ResourceManagerUtil;
 import com.cloud.server.ResourceMetaDataService;
 import com.cloud.server.TaggedResourceService;
 import com.cloud.storage.DataStoreProviderApiService;
@@ -100,7 +103,7 @@ public abstract class BaseCmd {
         GET, POST, PUT, DELETE
     }
     public static enum CommandType {
-        BOOLEAN, DATE, FLOAT, DOUBLE, INTEGER, SHORT, LIST, LONG, OBJECT, MAP, STRING, TZDATE, UUID
+        BOOLEAN, DATE, FLOAT, DOUBLE, INTEGER, SHORT, LIST, LONG, OBJECT, MAP, STRING, UUID
     }
 
     private Object _responseObject;
@@ -164,6 +167,8 @@ public abstract class BaseCmd {
     @Inject
     public TaggedResourceService _taggedResourceService;
     @Inject
+    public ResourceManagerUtil resourceManagerUtil;
+    @Inject
     public ResourceMetaDataService _resourceMetaDataService;
     @Inject
     public VpcService _vpcService;
@@ -201,6 +206,10 @@ public abstract class BaseCmd {
     public UUIDManager _uuidMgr;
     @Inject
     public AnnotationService annotationService;
+    @Inject
+    public ResourceIconManager resourceIconManager;
+    @Inject
+    public Ipv6Service ipv6Service;
 
     public abstract void execute() throws ResourceUnavailableException, InsufficientCapacityException, ServerApiException, ConcurrentOperationException,
         ResourceAllocationException, NetworkRuleConflictException;
@@ -239,29 +248,35 @@ public abstract class BaseCmd {
     }
 
     /**
-     * For some reason this method does not return the actual command name, but more a name that
-     * is used to create the response. So you can expect for a XCmd a value like xcmdresponse. Anyways
-     * this methods is used in too many places so for now instead of changing it we just create another
-     * method {@link BaseCmd#getActualCommandName()} that returns the value from {@link APICommand#name()}
-     *
-     * @return
-     */
-    public abstract String getCommandName();
-
-
-    /**
      * Gets the CommandName based on the class annotations: the value from {@link APICommand#name()}
      *
      * @return the value from {@link APICommand#name()}
      */
-    public String getActualCommandName() {
+    public static String getCommandNameByClass(Class<?> clazz) {
         String cmdName = null;
-        if (this.getClass().getAnnotation(APICommand.class) != null) {
-            cmdName = this.getClass().getAnnotation(APICommand.class).name();
+        APICommand apiClassAnnotation = clazz.getAnnotation(APICommand.class);
+
+        if (apiClassAnnotation != null && apiClassAnnotation.name() != null) {
+            cmdName = apiClassAnnotation.name();
         } else {
-            cmdName = this.getClass().getName();
+            cmdName = clazz.getName();
         }
-       return cmdName;
+        return cmdName;
+    }
+
+    public String getActualCommandName() {
+        return getCommandNameByClass(this.getClass());
+    }
+
+    public String getCommandName() {
+        return getResponseNameByClass(this.getClass());
+    }
+
+    /**
+     * Retrieves the name defined in {@link APICommand#name()}, in lower case, with the prefix {@link BaseCmd#RESPONSE_SUFFIX}
+     */
+    public static String getResponseNameByClass(Class<?> clazz) {
+        return getCommandNameByClass(clazz).toLowerCase() + BaseCmd.RESPONSE_SUFFIX;
     }
 
     /**
@@ -349,7 +364,7 @@ public abstract class BaseCmd {
             if (roleIsAllowed) {
                 validFields.add(field);
             } else {
-                s_logger.debug("Ignoring paremeter " + parameterAnnotation.name() + " as the caller is not authorized to pass it in");
+                s_logger.debug("Ignoring parameter " + parameterAnnotation.name() + " as the caller is not authorized to pass it in");
             }
         }
 
@@ -372,7 +387,7 @@ public abstract class BaseCmd {
     }
 
     /**
-     * display flag is used to control the display of the resource only to the end user. It doesnt affect Root Admin.
+     * display flag is used to control the display of the resource only to the end user. It doesn't affect Root Admin.
      * @return display flag
      */
     public boolean isDisplay(){
@@ -422,6 +437,23 @@ public abstract class BaseCmd {
         }
 
         return null;
+    }
+
+    /**
+     * Commands that generate action events associated to a resource and
+     * async commands that want to be tracked as part of the listXXX commands
+     * need to provide implementations of the two following methods,
+     * getApiResourceId() and getApiResourceType()
+     *
+     * getApiResourceId() should return the id of the object the async command is executing on
+     * getApiResourceType() should return a type from the ApiCommandResourceType enumeration
+     */
+    public Long getApiResourceId() {
+        return null;
+    }
+
+    public ApiCommandResourceType getApiResourceType() {
+        return ApiCommandResourceType.None;
     }
 
 }

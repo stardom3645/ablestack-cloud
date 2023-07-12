@@ -20,6 +20,7 @@ package org.apache.cloudstack.backup;
 import java.util.List;
 
 import org.apache.cloudstack.api.command.admin.backup.ImportBackupOfferingCmd;
+import org.apache.cloudstack.api.command.admin.backup.UpdateBackupOfferingCmd;
 import org.apache.cloudstack.api.command.user.backup.CreateBackupScheduleCmd;
 import org.apache.cloudstack.api.command.user.backup.ListBackupOfferingsCmd;
 import org.apache.cloudstack.api.command.user.backup.ListBackupsCmd;
@@ -43,12 +44,17 @@ public interface BackupManager extends BackupService, Configurable, PluggableSer
     ConfigKey<String> BackupProviderPlugin = new ConfigKey<>("Advanced", String.class,
             "backup.framework.provider.plugin",
             "dummy",
-            "The backup and recovery provider plugin.", true, ConfigKey.Scope.Zone);
+            "The backup and recovery provider plugin.", true, ConfigKey.Scope.Zone, BackupFrameworkEnabled.key());
 
     ConfigKey<Long> BackupSyncPollingInterval = new ConfigKey<>("Advanced", Long.class,
             "backup.framework.sync.interval",
             "300",
-            "The backup and recovery background sync task polling interval in seconds.", true);
+            "The backup and recovery background sync task polling interval in seconds.", true, BackupFrameworkEnabled.key());
+
+    ConfigKey<Boolean> BackupEnableAttachDetachVolumes = new ConfigKey<>("Advanced", Boolean.class,
+            "backup.enable.attach.detach.of.volumes",
+            "false",
+            "Enable volume attach/detach operations for VMs that are assigned to Backup Offerings.", true);
 
     /**
      * List backup provider offerings
@@ -134,7 +140,11 @@ public interface BackupManager extends BackupService, Configurable, PluggableSer
 
     /**
      * Deletes a backup
+     * @param backupId The Id of Backup to exclude
+     * @param forced Indicates if backup will be force removed or not
      * @return returns operation success
      */
-    boolean deleteBackup(final Long backupId);
+    boolean deleteBackup(final Long backupId, final Boolean forced);
+
+    BackupOffering updateBackupOffering(UpdateBackupOfferingCmd updateBackupOfferingCmd);
 }

@@ -16,14 +16,20 @@
 // under the License.
 
 <template>
-  <div class="form">
+  <div class="form" v-ctrl-enter="handleKeyboardSubmit">
+    <a-alert type="warning">
+      <template #message>
+        <span v-html="$t('message.migrate.instance.to.host')" />
+      </template>
+    </a-alert>
     <a-input-search
+      class="top-spaced"
       :placeholder="$t('label.search')"
-      v-model="searchQuery"
-      style="margin-bottom: 10px;"
+      v-model:value="searchQuery"
       @search="fetchData"
-      autoFocus />
+      v-focus="true" />
     <a-table
+      class="top-spaced"
       size="small"
       style="overflow-y: auto"
       :loading="loading"
@@ -31,41 +37,47 @@
       :dataSource="hosts"
       :pagination="false"
       :rowKey="record => record.id">
-      <div slot="suitability" slot-scope="record">
-        <a-icon
-          class="host-item__suitability-icon"
-          type="check-circle"
-          theme="twoTone"
-          twoToneColor="#52c41a"
-          v-if="record.suitableformigration" />
-        <a-icon
-          class="host-item__suitability-icon"
-          type="close-circle"
-          theme="twoTone"
-          twoToneColor="#f5222d"
-          v-else />
-      </div>
-      <div slot="memused" slot-scope="record">
-        {{ record.memoryused | byteToGigabyte }} GB
-      </div>
-      <div slot="memoryallocatedpercentage" slot-scope="record">
-        {{ record.memoryallocatedpercentage }}
-      </div>
-      <div slot="cluster" slot-scope="record">
-        {{ record.clustername }}
-      </div>
-      <div slot="pod" slot-scope="record">
-        {{ record.podname }}
-      </div>
-      <div slot="requiresstoragemigration" slot-scope="record">
-        {{ record.requiresStorageMotion ? $t('label.yes') : $t('label.no') }}
-      </div>
-      <template slot="select" slot-scope="record">
-        <a-radio
-          class="host-item__radio"
-          @click="selectedHost = record"
-          :checked="record.id === selectedHost.id"
-          :disabled="!record.suitableformigration"></a-radio>
+      <template #bodyCell="{ column, record }">
+        <template v-if="column.key === 'name'">
+          {{ record.name }}
+          <a-tooltip v-if="record.name === $t('label.auto.assign')" :title="$t('message.migrate.instance.host.auto.assign')" placement="top">
+            <info-circle-outlined class="table-tooltip-icon" />
+          </a-tooltip>
+        </template>
+        <template v-if="column.key === 'suitability'">
+          <check-circle-two-tone
+            class="host-item__suitability-icon"
+            twoToneColor="#52c41a"
+            v-if="record.suitableformigration" />
+          <close-circle-two-tone
+            class="host-item__suitability-icon"
+            twoToneColor="#f5222d"
+            v-else />
+        </template>
+        <template v-if="column.key === 'memused'">
+          <span v-if="record.memoryused">
+            {{ $bytesToHumanReadableSize(record.memoryused) }}
+          </span>
+        </template>
+        <template v-if="column.key === 'memoryallocatedpercentage'">
+          {{ record.memoryallocatedpercentage }}
+        </template>
+        <template v-if="column.key === 'cluster'">
+          {{ record.clustername }}
+        </template>
+        <template v-if="column.key === 'pod'">
+          {{ record.podname }}
+        </template>
+        <template v-if="column.key === 'requiresstoragemigration'">
+          {{ record.requiresStorageMotion ? $t('label.yes') : $t('label.no') }}
+        </template>
+        <template v-if="column.key === 'select'">
+          <a-radio
+            class="host-item__radio"
+            @click="handleSelectedHostChange(record)"
+            :checked="record.id === selectedHost.id"
+            :disabled="!record.suitableformigration"></a-radio>
+        </template>
       </template>
     </a-table>
     <a-pagination
@@ -79,25 +91,49 @@
       @change="handleChangePage"
       @showSizeChange="handleChangePageSize"
       showSizeChanger>
-      <template slot="buildOptionText" slot-scope="props">
+      <template #buildOptionText="props">
         <span>{{ props.value }} / {{ $t('label.page') }}</span>
       </template>
     </a-pagination>
 
-    <div style="margin-top: 20px; display: flex; justify-content:flex-end;">
-      <a-button type="primary" :disabled="!selectedHost.id" @click="submitForm">
-        {{ $t('label.ok') }}
-      </a-button>
+    <a-form-item
+      v-if="isUserVm"
+      class="top-spaced">
+      <template #label>
+        <tooltip-label :title="$t('label.migrate.with.storage')" :tooltip="$t('message.migrate.with.storage')"/>
+      </template>
+      <a-switch
+        v-model:checked="migrateWithStorage"
+        :disabled="!selectedHost || !selectedHost.id || selectedHost.id === -1" />
+    </a-form-item>
+    <instance-volumes-storage-pool-select-list-view
+      ref="volumeToPoolSelect"
+      v-if="migrateWithStorage"
+      class="top-spaced"
+      :resource="resource"
+      :clusterId="selectedHost.id ? selectedHost.clusterid : null"
+      @select="handleVolumeToPoolChange" />
+
+    <a-divider />
+
+    <div class="actions">
+      <a-button @click="closeModal">{{ $t('label.cancel') }}</a-button>
+      <a-button type="primary" ref="submit" :disabled="!selectedHost.id" @click="submitForm">{{ $t('label.ok') }}</a-button>
     </div>
   </div>
-
 </template>
 
 <script>
 import { api } from '@/api'
+import TooltipLabel from '@/components/widgets/TooltipLabel'
+import InstanceVolumesStoragePoolSelectListView from '@/components/view/InstanceVolumesStoragePoolSelectListView'
 
 export default {
   name: 'VMMigrateWizard',
+  components: {
+    TooltipLabel,
+    InstanceVolumesStoragePoolSelectListView
+  },
   props: {
     resource: {
       type: Object,
@@ -115,48 +151,65 @@ export default {
       pageSize: 10,
       columns: [
         {
-          title: this.$t('label.name'),
-          dataIndex: 'name'
+          key: 'name',
+          title: this.$t('label.hostid')
         },
         {
-          title: this.$t('label.suitability'),
-          scopedSlots: { customRender: 'suitability' }
+          key: 'suitability',
+          title: this.$t('label.suitability')
         },
         {
           title: this.$t('label.cpuused'),
           dataIndex: 'cpuused'
         },
         {
-          title: this.$t('label.memoryallocated'),
-          scopedSlots: { customRender: 'memoryallocatedpercentage' }
+          key: 'memoryallocatedpercentage',
+          title: this.$t('label.memoryallocated')
         },
         {
-          title: this.$t('label.memused'),
-          scopedSlots: { customRender: 'memused' }
+          key: 'memused',
+          title: this.$t('label.memused')
         },
         {
-          title: this.$t('label.cluster'),
-          scopedSlots: { customRender: 'cluster' }
+          key: 'cluster',
+          title: this.$t('label.cluster')
         },
         {
-          title: this.$t('label.pod'),
-          scopedSlots: { customRender: 'pod' }
+          key: 'pod',
+          title: this.$t('label.pod')
         },
         {
-          title: this.$t('label.storage.migration.required'),
-          scopedSlots: { customRender: 'requiresstoragemigration' }
+          key: 'requiresstoragemigration',
+          title: this.$t('label.storage.migration.required')
         },
         {
-          title: this.$t('label.select'),
-          scopedSlots: { customRender: 'select' }
+          key: 'select',
+          title: this.$t('label.select')
         }
-      ]
+      ],
+      migrateWithStorage: false,
+      volumeToPoolSelection: []
     }
   },
   created () {
     this.fetchData()
   },
+  computed: {
+    isUserVm () {
+      return this.$route.meta.name === 'vm'
+    }
+  },
+  watch: {
+    searchQuery (newValue, oldValue) {
+      if (newValue !== oldValue) {
+        this.page = 1
+      }
+    }
+  },
   methods: {
+    arrayHasItems (array) {
+      return array !== null && array !== undefined && Array.isArray(array) && array.length > 0
+    },
     fetchData () {
       this.loading = true
       api('findHostsForMigration', {
@@ -169,58 +222,15 @@ export default {
         this.hosts.sort((a, b) => {
           return b.suitableformigration - a.suitableformigration
         })
+        for (const key in this.hosts) {
+          if (this.hosts[key].suitableformigration && !this.hosts[key].requiresstoragemigration) {
+            this.hosts.unshift({ id: -1, name: this.$t('label.auto.assign'), suitableformigration: true, requiresstoragemigration: false })
+            break
+          }
+        }
         this.totalCount = response.findhostsformigrationresponse.count
       }).catch(error => {
         this.$message.error(`${this.$t('message.load.host.failed')}: ${error}`)
-      }).finally(() => {
-        this.loading = false
-      })
-    },
-    submitForm () {
-      this.loading = true
-      var isUserVm = true
-      if (this.$route.meta.name !== 'vm') {
-        isUserVm = false
-      }
-      var migrateApi = isUserVm
-        ? this.selectedHost.requiresStorageMotion ? 'migrateVirtualMachineWithVolume' : 'migrateVirtualMachine'
-        : 'migrateSystemVm'
-      api(migrateApi, {
-        hostid: this.selectedHost.id,
-        virtualmachineid: this.resource.id
-      }).then(response => {
-        var migrateResponse = isUserVm
-          ? this.selectedHost.requiresStorageMotion ? response.migratevirtualmachinewithvolumeresponse : response.migratevirtualmachineresponse
-          : response.migratesystemvmresponse
-        this.$store.dispatch('AddAsyncJob', {
-          title: `${this.$t('label.migrating')} ${this.resource.name}`,
-          jobid: migrateResponse.jobid,
-          description: this.resource.name,
-          status: 'progress'
-        })
-        this.$pollJob({
-          jobId: migrateResponse.jobid,
-          successMessage: `${this.$t('message.success.migrating')} ${this.resource.name}`,
-          successMethod: () => {
-            this.$emit('close-action')
-          },
-          errorMessage: this.$t('message.migrating.failed'),
-          errorMethod: () => {
-            this.$emit('close-action')
-          },
-          loadingMessage: `${this.$t('message.migrating.processing')} ${this.resource.name}`,
-          catchMessage: this.$t('error.fetching.async.job.result'),
-          catchMethod: () => {
-            this.$emit('close-action')
-          }
-        })
-        this.$emit('close-action')
-      }).catch(error => {
-        this.$notification.error({
-          message: this.$t('message.request.failed'),
-          description: (error.response && error.response.headers && error.response.headers['x-description']) || error.message,
-          duration: 0
-        })
       }).finally(() => {
         this.loading = false
       })
@@ -234,11 +244,77 @@ export default {
       this.page = currentPage
       this.pageSize = pageSize
       this.fetchData()
-    }
-  },
-  filters: {
-    byteToGigabyte: value => {
-      return (value / Math.pow(10, 9)).toFixed(2)
+    },
+    handleSelectedHostChange (host) {
+      if (host.id === -1) {
+        this.migrateWithStorage = false
+      }
+      this.selectedHost = host
+      this.selectedVolumeForStoragePoolSelection = {}
+      this.volumeToPoolSelection = []
+      if (this.migrateWithStorage) {
+        this.$refs.volumeToPoolSelect.resetSelection()
+      }
+    },
+    handleVolumeToPoolChange (volumeToPool) {
+      this.volumeToPoolSelection = volumeToPool
+    },
+    handleKeyboardSubmit () {
+      if (this.selectedHost.id) {
+        this.submitForm()
+      }
+    },
+    closeModal () {
+      this.$emit('close-action')
+    },
+    submitForm () {
+      if (this.loading) return
+      this.loading = true
+      const migrateApi = this.isUserVm
+        ? (this.selectedHost.requiresStorageMotion || this.volumeToPoolSelection.length > 0)
+          ? 'migrateVirtualMachineWithVolume'
+          : 'migrateVirtualMachine'
+        : 'migrateSystemVm'
+      var params = this.selectedHost.id === -1
+        ? { autoselect: true, virtualmachineid: this.resource.id }
+        : { hostid: this.selectedHost.id, virtualmachineid: this.resource.id }
+      if (this.migrateWithStorage) {
+        for (var i = 0; i < this.volumeToPoolSelection.length; i++) {
+          const mapping = this.volumeToPoolSelection[i]
+          params['migrateto[' + i + '].volume'] = mapping.volume
+          params['migrateto[' + i + '].pool'] = mapping.pool
+        }
+      }
+      api(migrateApi, params).then(response => {
+        const jobId = response[migrateApi.toLowerCase() + 'response'].jobid
+        this.$pollJob({
+          jobId: jobId,
+          title: `${this.$t('label.migrating')} ${this.resource.name}`,
+          description: this.resource.name,
+          successMessage: `${this.$t('message.success.migrating')} ${this.resource.name}`,
+          successMethod: () => {
+            this.closeModal()
+          },
+          errorMessage: this.$t('message.migrating.failed'),
+          errorMethod: () => {
+            this.closeModal()
+          },
+          loadingMessage: `${this.$t('message.migrating.processing')} ${this.resource.name}`,
+          catchMessage: this.$t('error.fetching.async.job.result'),
+          catchMethod: () => {
+            this.closeModal()
+          }
+        })
+        this.closeModal()
+      }).catch(error => {
+        this.$notification.error({
+          message: this.$t('message.request.failed'),
+          description: (error.response?.headers?.['x-description']) || error.message,
+          duration: 0
+        })
+      }).finally(() => {
+        this.loading = false
+      })
     }
   }
 }
@@ -304,7 +380,26 @@ export default {
 
   }
 
+  .top-spaced {
+    margin-top: 20px;
+  }
+
   .pagination {
     margin-top: 20px;
+  }
+
+  .actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 20px;
+
+    button {
+      &:not(:last-child) {
+        margin-right: 10px;
+      }
+    }
+  }
+  .table-tooltip-icon {
+    color: rgba(0,0,0,.45);
   }
 </style>

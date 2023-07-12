@@ -20,7 +20,6 @@ package org.apache.cloudstack.api.command.admin.acl.project;
 import org.apache.cloudstack.acl.ProjectRole;
 import org.apache.cloudstack.acl.RoleType;
 import org.apache.cloudstack.api.APICommand;
-import org.apache.cloudstack.api.ApiArgValidator;
 import org.apache.cloudstack.api.ApiConstants;
 import org.apache.cloudstack.api.ApiErrorCode;
 import org.apache.cloudstack.api.BaseCmd;
@@ -31,18 +30,17 @@ import org.apache.cloudstack.context.CallContext;
 
 import com.cloud.user.Account;
 
-@APICommand(name = CreateProjectRoleCmd.APINAME, description = "Creates a Project role", responseObject = ProjectRoleResponse.class,
+@APICommand(name = "createProjectRole", description = "Creates a Project role", responseObject = ProjectRoleResponse.class,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false,
         authorized = {RoleType.Admin, RoleType.DomainAdmin, RoleType.ResourceAdmin, RoleType.User}, since = "4.15.0")
 public class CreateProjectRoleCmd extends ProjectRoleCmd {
-    public static final String APINAME = "createProjectRole";
 
     /////////////////////////////////////////////////////
     //////////////// API parameters /////////////////////
     /////////////////////////////////////////////////////
 
     @Parameter(name = ApiConstants.NAME, type = BaseCmd.CommandType.STRING, required = true,
-            description = "creates a project role with this unique name", validations = {ApiArgValidator.NotNullOrEmpty})
+            description = "creates a project role with this unique name")
     private String projectRoleName;
 
     /////////////////////////////////////////////////////
@@ -65,11 +63,6 @@ public class CreateProjectRoleCmd extends ProjectRoleCmd {
             throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, "Failed to create project role");
         }
         setupProjectRoleResponse(projectRole);
-    }
-
-    @Override
-    public String getCommandName() {
-        return APINAME.toLowerCase() + BaseCmd.RESPONSE_SUFFIX;
     }
 
     @Override

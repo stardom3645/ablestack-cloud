@@ -47,8 +47,8 @@ public interface Volume extends ControlledEntity, Identity, InternalIdentity, Ba
         RevertSnapshotting("There is a snapshot created on this volume, the volume is being reverting from snapshot"),
         Resizing("The volume is being resized"),
         Expunging("The volume is being expunging"),
-        Expunged("The volume has been expunged"),
-        Destroy("The volume is destroyed, and can't be recovered."),
+        Expunged("The volume has been expunged, and can no longer be recovered"),
+        Destroy("The volume is destroyed, and can be recovered."),
         Destroying("The volume is destroying, and can't be recovered."),
         UploadOp("The volume upload operation is in progress or in short the volume is on secondary storage"),
         Copying("Volume is copying from image store to primary, in case it's an uploaded volume"),
@@ -56,8 +56,9 @@ public interface Volume extends ControlledEntity, Identity, InternalIdentity, Ba
         NotUploaded("The volume entry is just created in DB, not yet uploaded"),
         UploadInProgress("Volume upload is in progress"),
         UploadError("Volume upload encountered some error"),
-        UploadAbandoned("Volume upload is abandoned since the upload was never initiated within a specificed time"),
-        Attaching("The volume is attaching to a VM from Ready state.");
+        UploadAbandoned("Volume upload is abandoned since the upload was never initiated within a specified time"),
+        Attaching("The volume is attaching to a VM from Ready state."),
+        Restoring("The volume is being restored from backup.");
 
         String _description;
 
@@ -133,6 +134,11 @@ public interface Volume extends ControlledEntity, Identity, InternalIdentity, Ba
             s_fsm.addTransition(new StateMachine2.Transition<State, Event>(Attaching, Event.OperationSucceeded, Ready, null));
             s_fsm.addTransition(new StateMachine2.Transition<State, Event>(Attaching, Event.OperationFailed, Ready, null));
             s_fsm.addTransition(new StateMachine2.Transition<State, Event>(Destroy, Event.RecoverRequested, Ready, null));
+            s_fsm.addTransition(new StateMachine2.Transition<State, Event>(Ready, Event.RestoreRequested, Restoring, null));
+            s_fsm.addTransition(new StateMachine2.Transition<State, Event>(Expunged, Event.RestoreRequested, Restoring, null));
+            s_fsm.addTransition(new StateMachine2.Transition<State, Event>(Destroy, Event.RestoreRequested, Restoring, null));
+            s_fsm.addTransition(new StateMachine2.Transition<State, Event>(Restoring, Event.RestoreSucceeded, Ready, null));
+            s_fsm.addTransition(new StateMachine2.Transition<State, Event>(Restoring, Event.RestoreFailed, Ready, null));
         }
     }
 
@@ -156,7 +162,10 @@ public interface Volume extends ControlledEntity, Identity, InternalIdentity, Ba
         ExpungingRequested,
         ResizeRequested,
         AttachRequested,
-        OperationTimeout;
+        OperationTimeout,
+        RestoreRequested,
+        RestoreSucceeded,
+        RestoreFailed;
     }
 
     /**
@@ -243,4 +252,16 @@ public interface Volume extends ControlledEntity, Identity, InternalIdentity, Ba
     boolean isDisplay();
 
     boolean isDeployAsIs();
+
+    String getExternalUuid();
+
+    void setExternalUuid(String externalUuid);
+
+    public Long getPassphraseId();
+
+    public void setPassphraseId(Long id);
+
+    public String getEncryptFormat();
+
+    public void setEncryptFormat(String encryptFormat);
 }

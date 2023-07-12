@@ -21,15 +21,14 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.Date;
 
-import org.apache.commons.codec.binary.Base64;
-import org.apache.log4j.Logger;
-
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-
+import org.apache.cloudstack.consoleproxy.ConsoleAccessManager;
+import org.apache.cloudstack.consoleproxy.ConsoleAccessManagerImpl;
 import org.apache.cloudstack.framework.config.dao.ConfigurationDao;
 import org.apache.cloudstack.framework.security.keys.KeysManager;
 import org.apache.cloudstack.framework.security.keystore.KeystoreManager;
+import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.log4j.Logger;
 
 import com.cloud.agent.AgentManager;
 import com.cloud.agent.api.AgentControlAnswer;
@@ -54,6 +53,8 @@ import com.cloud.servlet.ConsoleProxyServlet;
 import com.cloud.utils.Ternary;
 import com.cloud.vm.VirtualMachine;
 import com.cloud.vm.dao.VMInstanceDao;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
 /**
  * Utility class to manage interactions with agent-based console access
@@ -69,14 +70,17 @@ public abstract class AgentHookBase implements AgentHook {
     AgentManager _agentMgr;
     KeystoreManager _ksMgr;
     KeysManager _keysMgr;
+    ConsoleAccessManager consoleAccessManager;
 
-    public AgentHookBase(VMInstanceDao instanceDao, HostDao hostDao, ConfigurationDao cfgDao, KeystoreManager ksMgr, AgentManager agentMgr, KeysManager keysMgr) {
+    protected AgentHookBase(VMInstanceDao instanceDao, HostDao hostDao, ConfigurationDao cfgDao, KeystoreManager ksMgr,
+                         AgentManager agentMgr, KeysManager keysMgr, ConsoleAccessManager consoleAccessMgr) {
         _instanceDao = instanceDao;
         _hostDao = hostDao;
         _agentMgr = agentMgr;
         _configDao = cfgDao;
         _ksMgr = ksMgr;
         _keysMgr = keysMgr;
+        consoleAccessManager = consoleAccessMgr;
     }
 
     @Override
@@ -84,6 +88,8 @@ public abstract class AgentHookBase implements AgentHook {
         Long vmId = null;
 
         String ticketInUrl = cmd.getTicket();
+        String sessionUuid = cmd.getSessionUuid();
+
         if (ticketInUrl == null) {
             s_logger.error("Access ticket could not be found, you could be running an old version of console proxy. vmId: " + cmd.getVmId());
             return new ConsoleAccessAuthenticationAnswer(cmd, false);
@@ -94,16 +100,23 @@ public abstract class AgentHookBase implements AgentHook {
         }
 
         if (!cmd.isReauthenticating()) {
-            String ticket = ConsoleProxyServlet.genAccessTicket(cmd.getHost(), cmd.getPort(), cmd.getSid(), cmd.getVmId());
+            String ticket = ConsoleAccessManagerImpl.genAccessTicket(cmd.getHost(), cmd.getPort(), cmd.getSid(), cmd.getVmId(), sessionUuid);
             if (s_logger.isDebugEnabled()) {
                 s_logger.debug("Console authentication. Ticket in 1 minute boundary for " + cmd.getHost() + ":" + cmd.getPort() + "-" + cmd.getVmId() + " is " + ticket);
             }
 
+            if (!consoleAccessManager.isSessionAllowed(sessionUuid)) {
+                s_logger.error(String.format("Session [%s] has been already used or does not exist.", sessionUuid));
+                return new ConsoleAccessAuthenticationAnswer(cmd, false);
+            }
+
+            s_logger.debug(String.format("Acquiring session [%s] as it was just used.", sessionUuid));
+            consoleAccessManager.acquireSession(sessionUuid);
+
             if (!ticket.equals(ticketInUrl)) {
                 Date now = new Date();
                 // considering of minute round-up
-                String minuteEarlyTicket =
-                    ConsoleProxyServlet.genAccessTicket(cmd.getHost(), cmd.getPort(), cmd.getSid(), cmd.getVmId(), new Date(now.getTime() - 60 * 1000));
+                String minuteEarlyTicket = ConsoleAccessManagerImpl.genAccessTicket(cmd.getHost(), cmd.getPort(), cmd.getSid(), cmd.getVmId(), new Date(now.getTime() - 60 * 1000), sessionUuid);
 
                 if (s_logger.isDebugEnabled()) {
                     s_logger.debug("Console authentication. Ticket in 2-minute boundary for " + cmd.getHost() + ":" + cmd.getPort() + "-" + cmd.getVmId() + " is " +
@@ -198,12 +211,15 @@ public abstract class AgentHookBase implements AgentHook {
             String storePassword = Base64.encodeBase64String(randomBytes);
 
             byte[] ksBits = null;
+
             String consoleProxyUrlDomain = _configDao.getValue(Config.ConsoleProxyUrlDomain.key());
-            if (consoleProxyUrlDomain == null || consoleProxyUrlDomain.isEmpty()) {
-                s_logger.debug("SSL is disabled for console proxy based on global config, skip loading certificates");
-            } else {
+            String consoleProxySslEnabled = _configDao.getValue("consoleproxy.sslEnabled");
+            if (!StringUtils.isEmpty(consoleProxyUrlDomain) && !StringUtils.isEmpty(consoleProxySslEnabled)
+                    && consoleProxySslEnabled.equalsIgnoreCase("true")) {
                 ksBits = _ksMgr.getKeystoreBits(ConsoleProxyManager.CERTIFICATE_NAME, ConsoleProxyManager.CERTIFICATE_NAME, storePassword);
                 //ks manager raises exception if ksBits are null, hence no need to explicltly handle the condition
+            } else {
+                s_logger.debug("SSL is disabled for console proxy. To enable SSL, please configure consoleproxy.sslEnabled and consoleproxy.url.domain global settings.");
             }
 
             cmd = new StartConsoleProxyAgentHttpHandlerCommand(ksBits, storePassword);

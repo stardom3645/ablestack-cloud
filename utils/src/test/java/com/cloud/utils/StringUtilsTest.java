@@ -141,12 +141,6 @@ public class StringUtilsTest {
     }
 
     @Test
-    public void testJoin() {
-        assertEquals("a-b-c", StringUtils.join("-", "a", "b", "c"));
-        assertEquals("", StringUtils.join("-"));
-    }
-
-    @Test
     public void testCleanSecretkeyFromJsonObjectAtEnd() {
         final String input = "{\"foo\":\"bar\",\"secretkey\":\"test\"}";
         // TODO: It would be nice to clean up the regex in question to not
@@ -257,5 +251,15 @@ public class StringUtilsTest {
         String input = "one,two,three,four,five,six,seven,eight,nine,ten";
         String output = StringUtils.toCSVList(Arrays.asList(input.split(",")));
         assertTrue(input.equals(output));
+    }
+
+    @Test
+    public void testGetKeyValuePairWithSeparator() {
+        String key = "ssh";
+        String value = "ABCD==";
+        String kp = String.format("%s=%s", key, value);
+        Pair<String, String> output = StringUtils.getKeyValuePairWithSeparator(kp, "=");
+        assertEquals(key, output.first());
+        assertEquals(value, output.second());
     }
 }

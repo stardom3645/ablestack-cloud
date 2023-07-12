@@ -23,7 +23,7 @@ import org.apache.log4j.Logger;
 
 import org.apache.cloudstack.acl.RoleType;
 import org.apache.cloudstack.api.APICommand;
-import org.apache.cloudstack.api.ApiCommandJobType;
+import org.apache.cloudstack.api.ApiCommandResourceType;
 import org.apache.cloudstack.api.ApiConstants;
 import org.apache.cloudstack.api.BaseListTaggedResourcesCmd;
 import org.apache.cloudstack.api.Parameter;
@@ -192,8 +192,8 @@ public class ListPublicIpAddressesCmd extends BaseListTaggedResourcesCmd impleme
     @Override
     public void execute() {
         Pair<List<? extends IpAddress>, Integer> result = _mgr.searchForIPAddresses(this);
-        ListResponse<IPAddressResponse> response = new ListResponse<IPAddressResponse>();
-        List<IPAddressResponse> ipAddrResponses = new ArrayList<IPAddressResponse>();
+        ListResponse<IPAddressResponse> response = new ListResponse<>();
+        List<IPAddressResponse> ipAddrResponses = new ArrayList<>();
         for (IpAddress ipAddress : result.first()) {
             IPAddressResponse ipResponse = _responseGenerator.createIPAddressResponse(getResponseView(), ipAddress);
             ipResponse.setObjectName("publicipaddress");
@@ -206,7 +206,7 @@ public class ListPublicIpAddressesCmd extends BaseListTaggedResourcesCmd impleme
     }
 
     @Override
-    public ApiCommandJobType getInstanceType() {
-        return ApiCommandJobType.IpAddress;
+    public ApiCommandResourceType getApiResourceType() {
+        return ApiCommandResourceType.IpAddress;
     }
 }

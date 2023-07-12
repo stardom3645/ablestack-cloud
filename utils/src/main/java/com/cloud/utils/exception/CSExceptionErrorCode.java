@@ -46,6 +46,7 @@ public class CSExceptionErrorCode {
             ExceptionErrorCodeMap.put("com.cloud.exception.AccountLimitException", 4280);
             ExceptionErrorCodeMap.put("com.cloud.exception.AgentUnavailableException", 4285);
             ExceptionErrorCodeMap.put("com.cloud.exception.CloudAuthenticationException", 4290);
+            ExceptionErrorCodeMap.put("com.cloud.exception.CloudTwoFactorAuthenticationException", 4295);
             ExceptionErrorCodeMap.put("com.cloud.exception.ConcurrentOperationException", 4300);
             ExceptionErrorCodeMap.put("com.cloud.exception.ConflictingNetworkSettingsException", 4305);
             ExceptionErrorCodeMap.put("com.cloud.exception.DiscoveredWithErrorException", 4310);
@@ -71,6 +72,7 @@ public class CSExceptionErrorCode {
             ExceptionErrorCodeMap.put("com.cloud.exception.RequestLimitException", 4545);
             ExceptionErrorCodeMap.put("com.cloud.exception.StorageConflictException", 4550);
             ExceptionErrorCodeMap.put("com.cloud.exception.UnavailableCommandException", 4555);
+            ExceptionErrorCodeMap.put("com.cloud.exception.OperationTimedoutException", 4560);
 
             // Have a special error code for ServerApiException when it is
             // thrown in a standalone manner when failing to detect any of the above

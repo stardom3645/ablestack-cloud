@@ -68,7 +68,7 @@ class Services:
                                     "name": 'VPC Network offering',
                                     "displaytext": 'VPC Network off',
                                     "guestiptype": 'Isolated',
-                                    "supportedservices": 'Vpn,Dhcp,Dns,SourceNat,PortForwarding,Lb,UserData,StaticNat,NetworkACL, Connectivity',
+                                    "supportedservices": 'Vpn,Dhcp,Dns,SourceNat,PortForwarding,Lb,UserData,StaticNat,NetworkACL,Connectivity',
                                     "traffictype": 'GUEST',
                                     "availability": 'Optional',
                                     "useVpc": 'on',
@@ -481,7 +481,7 @@ class TestVPCDistributedRouterOffering(cloudstackTestCase):
                                   vpcid=vpc.id
                                   )
 
-        self.debug("Adding NetwrokACl rules to make PF and LB accessible")
+        self.debug("Adding NetworkACl rules to make PF and LB accessible")
         NetworkACL.create(
                 self.apiclient,
                 networkid=network.id,
@@ -535,7 +535,7 @@ class TestVPCDistributedRouterOffering(cloudstackTestCase):
 
         public_ips = PublicIPAddress.list(
                                           self.apiclient,
-                                          networkid=network.id,
+                                          associatednetworkid=network.id,
                                           listall=True,
                                           isstaticnat=True,
                                           account=self.account.name,

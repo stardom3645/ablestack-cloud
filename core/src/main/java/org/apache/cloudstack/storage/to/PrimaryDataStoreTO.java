@@ -52,7 +52,10 @@ public class PrimaryDataStoreTO implements DataStoreTO {
     private Map<String, String> details;
     private static final String pathSeparator = "/";
     private Boolean fullCloneFlag;
+    private Boolean diskProvisioningStrictnessFlag;
     private final boolean isManaged;
+
+    private final StoragePoolType parentPoolType;
 
     public PrimaryDataStoreTO(PrimaryDataStore dataStore) {
         this.uuid = dataStore.getUuid();
@@ -65,6 +68,7 @@ public class PrimaryDataStoreTO implements DataStoreTO {
         this.url = dataStore.getUri();
         this.details = dataStore.getDetails();
         this.isManaged = dataStore.isManaged();
+        this.parentPoolType = dataStore.getParentPoolType();
     }
 
     public long getId() {
@@ -162,5 +166,17 @@ public class PrimaryDataStoreTO implements DataStoreTO {
 
     public boolean isManaged() {
         return isManaged;
+    }
+
+    public Boolean getDiskProvisioningStrictnessFlag() {
+        return diskProvisioningStrictnessFlag;
+    }
+
+    public void setDiskProvisioningStrictnessFlag(Boolean diskProvisioningStrictnessFlag) {
+        this.diskProvisioningStrictnessFlag = diskProvisioningStrictnessFlag;
+    }
+
+    public StoragePoolType getParentPoolType() {
+        return parentPoolType;
     }
 }

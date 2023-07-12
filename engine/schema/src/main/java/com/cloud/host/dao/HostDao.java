@@ -75,6 +75,8 @@ public interface HostDao extends GenericDao<HostVO, Long>, StateDao<Status, Stat
 
     List<HostVO> findHypervisorHostInCluster(long clusterId);
 
+    HostVO findOldestExistentHypervisorHostInCluster(long clusterId);
+
     List<HostVO> listAllUpAndEnabledNonHAHosts(Type type, Long clusterId, Long podId, long dcId, String haTag);
 
     List<HostVO> findByDataCenterId(Long zoneId);
@@ -138,4 +140,21 @@ public interface HostDao extends GenericDao<HostVO, Long>, StateDao<Status, Stat
     List<HostVO> listByClusterAndHypervisorType(long clusterId, HypervisorType hypervisorType);
 
     HostVO findByName(String name);
+
+    List<HostVO> listHostsWithActiveVMs(long offeringId);
+
+    /**
+     * Retrieves the number of hosts/agents this {@see ManagementServer} has responsibility over.
+     * @param msid the id of the {@see ManagementServer}
+     * @return the number of hosts/agents this {@see ManagementServer} has responsibility over
+     */
+    int countByMs(long msid);
+
+    /**
+     * Retrieves the hypervisor versions of the hosts in the datacenter which are in Up state in ascending order
+     * @param datacenterId data center id
+     * @param hypervisorType hypervisor type of the hosts
+     * @return ordered list of hypervisor versions
+     */
+    List<String> listOrderedHostsHypervisorVersionsInDatacenter(long datacenterId, HypervisorType hypervisorType);
 }

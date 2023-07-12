@@ -19,11 +19,19 @@ package org.apache.cloudstack.api.response;
 import com.google.gson.annotations.SerializedName;
 
 import org.apache.cloudstack.api.ApiConstants;
-import org.apache.cloudstack.api.BaseResponse;
 
 import com.cloud.serializer.Param;
+import com.cloud.user.SSHKeyPair;
 
-public class SSHKeyPairResponse extends BaseResponse {
+import org.apache.cloudstack.api.BaseResponseWithAnnotations;
+import org.apache.cloudstack.api.EntityReference;
+
+@EntityReference(value = SSHKeyPair.class)
+public class SSHKeyPairResponse extends BaseResponseWithAnnotations {
+
+    @SerializedName(ApiConstants.ID)
+    @Param(description = "ID of the ssh keypair")
+    private String id;
 
     @SerializedName(ApiConstants.NAME)
     @Param(description = "Name of the keypair")
@@ -38,6 +46,14 @@ public class SSHKeyPairResponse extends BaseResponse {
     @SerializedName(ApiConstants.DOMAIN) @Param(description="the domain name of the keypair owner")
     private String domain;
 
+    @SerializedName(ApiConstants.PROJECT_ID)
+    @Param(description = "the project id of the keypair owner")
+    private String projectId;
+
+    @SerializedName(ApiConstants.PROJECT)
+    @Param(description = "the project name of the keypair owner")
+    private String projectName;
+
     @SerializedName("fingerprint")
     @Param(description = "Fingerprint of the public key")
     private String fingerprint;
@@ -45,7 +61,8 @@ public class SSHKeyPairResponse extends BaseResponse {
     public SSHKeyPairResponse() {
     }
 
-    public SSHKeyPairResponse(String name, String fingerprint) {
+    public SSHKeyPairResponse(String uuid, String name, String fingerprint) {
+        this.id = uuid;
         this.name = name;
         this.fingerprint = fingerprint;
     }
@@ -88,5 +105,21 @@ public class SSHKeyPairResponse extends BaseResponse {
 
     public void setDomainName(String domain) {
         this.domain = domain;
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public void setProjectId(String projectId) {
+        this.projectId = projectId;
+    }
+
+    public void setProjectName(String projectName) {
+        this.projectName = projectName;
     }
 }

@@ -28,8 +28,9 @@ import com.cloud.utils.db.GenericDaoBase;
 import com.cloud.utils.db.GenericSearchBuilder;
 import com.cloud.utils.db.SearchBuilder;
 import com.cloud.utils.db.SearchCriteria;
+import com.cloud.utils.db.SearchCriteria.Func;
 import com.cloud.utils.db.SearchCriteria.Op;
-import com.google.common.base.Strings;
+import org.apache.commons.lang3.StringUtils;
 import com.cloud.utils.db.TransactionLegacy;
 import org.apache.log4j.Logger;
 import org.springframework.stereotype.Component;
@@ -54,9 +55,11 @@ public class AccountDaoImpl extends GenericDaoBase<AccountVO, Long> implements A
     protected final SearchBuilder<AccountVO> NonProjectAccountSearch;
     protected final SearchBuilder<AccountVO> AccountByRoleSearch;
     protected final GenericSearchBuilder<AccountVO, Long> AccountIdsSearch;
+    protected final GenericSearchBuilder<AccountVO, Long> ActiveDomainCount;
 
     public AccountDaoImpl() {
         AllFieldsSearch = createSearchBuilder();
+        AllFieldsSearch.and("id", AllFieldsSearch.entity().getId(), SearchCriteria.Op.EQ);
         AllFieldsSearch.and("accountName", AllFieldsSearch.entity().getAccountName(), SearchCriteria.Op.EQ);
         AllFieldsSearch.and("domainId", AllFieldsSearch.entity().getDomainId(), SearchCriteria.Op.EQ);
         AllFieldsSearch.and("state", AllFieldsSearch.entity().getState(), SearchCriteria.Op.EQ);
@@ -100,6 +103,13 @@ public class AccountDaoImpl extends GenericDaoBase<AccountVO, Long> implements A
         AccountByRoleSearch = createSearchBuilder();
         AccountByRoleSearch.and("roleId", AccountByRoleSearch.entity().getRoleId(), SearchCriteria.Op.EQ);
         AccountByRoleSearch.done();
+
+        ActiveDomainCount = createSearchBuilder(Long.class);
+        ActiveDomainCount.select(null, Func.COUNT, null);
+        ActiveDomainCount.and("domain", ActiveDomainCount.entity().getDomainId(), SearchCriteria.Op.EQ);
+        ActiveDomainCount.and("state", ActiveDomainCount.entity().getState(), SearchCriteria.Op.EQ);
+        ActiveDomainCount.groupBy(ActiveDomainCount.entity().getDomainId());
+        ActiveDomainCount.done();
     }
 
     @Override
@@ -118,7 +128,7 @@ public class AccountDaoImpl extends GenericDaoBase<AccountVO, Long> implements A
     public List<AccountVO> findCleanupsForDisabledAccounts() {
         SearchCriteria<AccountVO> sc = CleanupForDisabledAccountsSearch.create();
         sc.setParameters("cleanup", true);
-        sc.setParameters("state", State.disabled);
+        sc.setParameters("state", State.DISABLED);
 
         return listBy(sc);
     }
@@ -139,14 +149,14 @@ public class AccountDaoImpl extends GenericDaoBase<AccountVO, Long> implements A
                 u.setUsername(rs.getString(2));
                 u.setAccountId(rs.getLong(3));
                 u.setSecretKey(DBEncryptionUtil.decrypt(rs.getString(4)));
-                u.setState(State.valueOf(rs.getString(5)));
+                u.setState(State.getValueOf(rs.getString(5)));
 
                 AccountVO a = new AccountVO(rs.getLong(6));
                 a.setAccountName(rs.getString(7));
-                a.setType(rs.getShort(8));
+                a.setType(Account.Type.getFromValue(rs.getInt(8)));
                 a.setRoleId(rs.getLong(9));
                 a.setDomainId(rs.getLong(10));
-                a.setState(State.valueOf(rs.getString(11)));
+                a.setState(State.getValueOf(rs.getString(11)));
 
                 userAcctPair = new Pair<User, Account>(u, a);
             }
@@ -164,7 +174,7 @@ public class AccountDaoImpl extends GenericDaoBase<AccountVO, Long> implements A
     @Override
     public Pair<List<AccountVO>, Integer> findAccountsLike(String accountName, Filter filter) {
         SearchCriteria<AccountVO> sc = createSearchCriteria();
-        if (!Strings.isNullOrEmpty(accountName)) {
+        if (StringUtils.isNotEmpty(accountName)) {
             sc.addAnd("accountName", SearchCriteria.Op.LIKE, "%" + accountName + "%");
         }
         return searchAndCount(sc, filter);
@@ -174,7 +184,7 @@ public class AccountDaoImpl extends GenericDaoBase<AccountVO, Long> implements A
     public Account findEnabledAccount(String accountName, Long domainId) {
         SearchCriteria<AccountVO> sc = AllFieldsSearch.create("accountName", accountName);
         sc.setParameters("domainId", domainId);
-        sc.setParameters("state", State.enabled);
+        sc.setParameters("state", State.ENABLED);
         return findOneBy(sc);
     }
 
@@ -182,8 +192,8 @@ public class AccountDaoImpl extends GenericDaoBase<AccountVO, Long> implements A
     public Account findEnabledNonProjectAccount(String accountName, Long domainId) {
         SearchCriteria<AccountVO> sc = NonProjectAccountSearch.create("accountName", accountName);
         sc.setParameters("domainId", domainId);
-        sc.setParameters("state", State.enabled);
-        sc.setParameters("type", Account.ACCOUNT_TYPE_PROJECT);
+        sc.setParameters("state", State.ENABLED);
+        sc.setParameters("type", Account.Type.PROJECT);
         return findOneBy(sc);
     }
 
@@ -205,7 +215,7 @@ public class AccountDaoImpl extends GenericDaoBase<AccountVO, Long> implements A
     public Account findActiveNonProjectAccount(String accountName, Long domainId) {
         SearchCriteria<AccountVO> sc = NonProjectAccountSearch.create("accountName", accountName);
         sc.setParameters("domainId", domainId);
-        sc.setParameters("type", Account.ACCOUNT_TYPE_PROJECT);
+        sc.setParameters("type", Account.Type.PROJECT);
         return findOneBy(sc);
     }
 
@@ -220,7 +230,7 @@ public class AccountDaoImpl extends GenericDaoBase<AccountVO, Long> implements A
     public Account findNonProjectAccountIncludingRemoved(String accountName, Long domainId) {
         SearchCriteria<AccountVO> sc = NonProjectAccountSearch.create("accountName", accountName);
         sc.setParameters("domainId", domainId);
-        sc.setParameters("type", Account.ACCOUNT_TYPE_PROJECT);
+        sc.setParameters("type", Account.Type.PROJECT);
         return findOneIncludingRemovedBy(sc);
     }
 
@@ -317,5 +327,10 @@ public class AccountDaoImpl extends GenericDaoBase<AccountVO, Long> implements A
         }
     }
 
-
+    @Override
+    public int getActiveDomains() {
+        SearchCriteria<Long> sc = ActiveDomainCount.create();
+        sc.setParameters("state", "enabled");
+        return customSearch(sc, null).size();
+    }
 }

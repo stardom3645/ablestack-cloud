@@ -22,7 +22,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.cloudstack.api.ApiConstants;
-import org.apache.cloudstack.api.BaseResponse;
+import org.apache.cloudstack.api.BaseResponseWithAnnotations;
 import org.apache.cloudstack.api.EntityReference;
 
 import com.cloud.serializer.Param;
@@ -32,7 +32,7 @@ import com.google.gson.annotations.SerializedName;
 
 @EntityReference(value = VirtualMachine.class)
 @SuppressWarnings("unused")
-public class DomainRouterResponse extends BaseResponse implements ControlledViewEntityResponse {
+public class DomainRouterResponse extends BaseResponseWithAnnotations implements ControlledViewEntityResponse {
     @SerializedName(ApiConstants.ID)
     @Param(description = "the id of the router")
     private String id;
@@ -88,6 +88,10 @@ public class DomainRouterResponse extends BaseResponse implements ControlledView
     @SerializedName("hostname")
     @Param(description = "the hostname for the router")
     private String hostName;
+
+    @SerializedName(ApiConstants.HOST_CONTROL_STATE)
+    @Param(description = "the control state of the host for the router")
+    private String hostControlState;
 
     @SerializedName("hypervisor")
     @Param(description = "the hypervisor on which the template runs")
@@ -233,6 +237,10 @@ public class DomainRouterResponse extends BaseResponse implements ControlledView
     @Param(description = "Last executed health check result for the router", responseObject = RouterHealthCheckResultResponse.class, since = "4.14")
     List<RouterHealthCheckResultResponse> healthCheckResults;
 
+    @SerializedName("softwareversion")
+    @Param(description = "the version of the code / software in the router")
+    private String softwareVersion;
+
     public DomainRouterResponse() {
         nics = new LinkedHashSet<NicResponse>();
     }
@@ -296,6 +304,10 @@ public class DomainRouterResponse extends BaseResponse implements ControlledView
 
     public void setHostName(String hostName) {
         this.hostName = hostName;
+    }
+
+    public void setHostControlState(String hostControlState) {
+        this.hostControlState = hostControlState;
     }
 
     public String getHypervisor() {
@@ -489,5 +501,13 @@ public class DomainRouterResponse extends BaseResponse implements ControlledView
 
     public void setHealthCheckResults(List<RouterHealthCheckResultResponse> healthCheckResults) {
         this.healthCheckResults = healthCheckResults;
+    }
+
+    public String getSoftwareVersion() {
+        return softwareVersion;
+    }
+
+    public void setSoftwareVersion(String softwareVersion) {
+        this.softwareVersion = softwareVersion;
     }
 }

@@ -16,7 +16,6 @@
 // under the License.
 package org.apache.cloudstack.api.command.admin.config;
 
-import com.google.common.base.Strings;
 import org.apache.cloudstack.acl.RoleService;
 import org.apache.cloudstack.api.response.DomainResponse;
 import org.apache.log4j.Logger;
@@ -34,6 +33,7 @@ import org.apache.cloudstack.api.response.ImageStoreResponse;
 import org.apache.cloudstack.api.response.StoragePoolResponse;
 import org.apache.cloudstack.api.response.ZoneResponse;
 import org.apache.cloudstack.config.Configuration;
+import org.apache.commons.lang3.StringUtils;
 
 import com.cloud.user.Account;
 
@@ -41,7 +41,6 @@ import com.cloud.user.Account;
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class UpdateCfgCmd extends BaseCmd {
     public static final Logger s_logger = Logger.getLogger(UpdateCfgCmd.class.getName());
-    private static final String s_name = "updateconfigurationresponse";
 
     /////////////////////////////////////////////////////
     //////////////// API parameters /////////////////////
@@ -50,7 +49,7 @@ public class UpdateCfgCmd extends BaseCmd {
     @Parameter(name = ApiConstants.NAME, type = CommandType.STRING, required = true, description = "the name of the configuration")
     private String cfgName;
 
-    @Parameter(name = ApiConstants.VALUE, type = CommandType.STRING, description = "the value of the configuration", length = 4095)
+    @Parameter(name = ApiConstants.VALUE, type = CommandType.STRING, description = "the value of the configuration", length = 4096)
     private String value;
 
     @Parameter(name = ApiConstants.ZONE_ID,
@@ -135,18 +134,13 @@ public class UpdateCfgCmd extends BaseCmd {
     /////////////////////////////////////////////////////
 
     @Override
-    public String getCommandName() {
-        return s_name;
-    }
-
-    @Override
     public long getEntityOwnerId() {
         return Account.ACCOUNT_ID_SYSTEM;
     }
 
     @Override
     public void execute() {
-        if (Strings.isNullOrEmpty(getCfgName())) {
+        if (StringUtils.isEmpty(getCfgName())) {
             throw new ServerApiException(ApiErrorCode.PARAM_ERROR, "Empty configuration name provided");
         }
         if (getCfgName().equalsIgnoreCase(RoleService.EnableDynamicApiChecker.key())) {

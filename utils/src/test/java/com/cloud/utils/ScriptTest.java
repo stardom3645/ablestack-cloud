@@ -42,7 +42,7 @@ public class ScriptTest {
         script.add("bar");
         OutputInterpreter.AllLinesParser resultParser = new OutputInterpreter.AllLinesParser();
         String result = script.execute(resultParser);
-        // With allLinesParser, result is not comming from the return value
+        // With allLinesParser, result is not coming from the return value
         Assert.assertNull(result);
         Assert.assertEquals("bar\n", resultParser.getLines());
     }
@@ -130,6 +130,6 @@ public class ScriptTest {
     public void testFindScript() {
         Assume.assumeTrue(SystemUtils.IS_OS_LINUX);
         String script = Script.findScript("/bin", "pwd");
-        Assert.assertNotNull("/bin/pwd shoud be there on linux", script);
+        Assert.assertNotNull("/bin/pwd should be there on linux", script);
     }
 }

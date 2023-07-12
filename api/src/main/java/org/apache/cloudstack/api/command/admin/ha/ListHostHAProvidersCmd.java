@@ -26,7 +26,6 @@ import com.cloud.user.Account;
 import com.google.common.base.Enums;
 import org.apache.cloudstack.acl.RoleType;
 import org.apache.cloudstack.api.APICommand;
-import org.apache.cloudstack.api.ApiArgValidator;
 import org.apache.cloudstack.api.ApiConstants;
 import org.apache.cloudstack.api.ApiErrorCode;
 import org.apache.cloudstack.api.BaseCmd;
@@ -43,11 +42,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-@APICommand(name = ListHostHAProvidersCmd.APINAME, description = "Lists HA providers", responseObject = HostHAResponse.class,
+@APICommand(name = "listHostHAProviders", description = "Lists HA providers", responseObject = HostHAResponse.class,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false,
         since = "4.11", authorized = {RoleType.Admin})
 public final class ListHostHAProvidersCmd extends BaseCmd {
-    public static final String APINAME = "listHostHAProviders";
 
     @Inject
     private HAConfigManager haConfigManager;
@@ -57,7 +55,7 @@ public final class ListHostHAProvidersCmd extends BaseCmd {
     /////////////////////////////////////////////////////
 
     @Parameter(name = ApiConstants.HYPERVISOR, type = CommandType.STRING, required = true,
-            description = "Hypervisor type of the resource", validations = {ApiArgValidator.NotNullOrEmpty})
+            description = "Hypervisor type of the resource")
     private String hypervisorType;
 
     /////////////////////////////////////////////////////
@@ -71,11 +69,6 @@ public final class ListHostHAProvidersCmd extends BaseCmd {
     /////////////////////////////////////////////////////
     /////////////// API Implementation///////////////////
     /////////////////////////////////////////////////////
-
-    @Override
-    public String getCommandName() {
-        return APINAME.toLowerCase() + BaseCmd.RESPONSE_SUFFIX;
-    }
 
     @Override
     public long getEntityOwnerId() {

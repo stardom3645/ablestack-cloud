@@ -22,6 +22,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 import javax.naming.ConfigurationException;
@@ -99,6 +100,7 @@ public class TemplateDataStoreDaoImpl extends GenericDaoBase<TemplateDataStoreVO
         templateSearch.and("template_id", templateSearch.entity().getTemplateId(), SearchCriteria.Op.EQ);
         templateSearch.and("download_state", templateSearch.entity().getDownloadState(), SearchCriteria.Op.NEQ);
         templateSearch.and("destroyed", templateSearch.entity().getDestroyed(), SearchCriteria.Op.EQ);
+        templateSearch.and("storeids", templateSearch.entity().getDataStoreId(), Op.IN);
         templateSearch.done();
 
         templateRoleSearch = createSearchBuilder();
@@ -421,11 +423,14 @@ public class TemplateDataStoreDaoImpl extends GenericDaoBase<TemplateDataStoreVO
     }
 
     @Override
-    public List<TemplateDataStoreVO> listByTemplateNotBypassed(long templateId) {
+    public List<TemplateDataStoreVO> listByTemplateNotBypassed(long templateId, Long... storeIds) {
         SearchCriteria<TemplateDataStoreVO> sc = templateSearch.create();
         sc.setParameters("template_id", templateId);
         sc.setParameters("download_state", Status.BYPASSED);
         sc.setParameters("destroyed", false);
+        if (storeIds != null && storeIds.length > 0) {
+            sc.setParameters("storeids", storeIds);
+        }
         return search(sc, null);
     }
 
@@ -589,6 +594,23 @@ public class TemplateDataStoreDaoImpl extends GenericDaoBase<TemplateDataStoreVO
         return templateDataStoreVO;
     }
 
+    /**
+     * Gets one valid record for the bypassed template.
+     * In case of multiple valid records, the one with the greatest size is returned.
+     */
+    protected TemplateDataStoreVO getValidGreaterSizeBypassedTemplate(List<TemplateDataStoreVO> list, long templateId) {
+        if (CollectionUtils.isEmpty(list)) {
+            return null;
+        }
+        List<TemplateDataStoreVO> filteredList = list.stream()
+                .filter(x -> x.getSize() > 0L &&
+                        x.getTemplateId() == templateId && x.getDownloadState() == Status.BYPASSED &&
+                        x.getState() == State.Ready)
+                .sorted((x,y) -> Long.compare(y.getSize(), x.getSize()))
+                .collect(Collectors.toList());
+        return CollectionUtils.isNotEmpty(filteredList) ? filteredList.get(0) : null;
+    }
+
     @Override
     public TemplateDataStoreVO getReadyBypassedTemplate(long templateId) {
         SearchCriteria<TemplateDataStoreVO> sc = directDownloadTemplateSeach.create();
@@ -596,10 +618,7 @@ public class TemplateDataStoreDaoImpl extends GenericDaoBase<TemplateDataStoreVO
         sc.setParameters("download_state", Status.BYPASSED);
         sc.setParameters("state", State.Ready);
         List<TemplateDataStoreVO> list = search(sc, null);
-        if (CollectionUtils.isEmpty(list) || list.size() > 1) {
-            return null;
-        }
-        return list.get(0);
+        return getValidGreaterSizeBypassedTemplate(list, templateId);
     }
 
     @Override

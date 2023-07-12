@@ -18,15 +18,19 @@ package org.apache.cloudstack.api.command.user.vm;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import com.cloud.utils.exception.CloudRuntimeException;
+import org.apache.cloudstack.api.response.UserDataResponse;
 import org.apache.log4j.Logger;
 
 import org.apache.cloudstack.acl.RoleType;
 import org.apache.cloudstack.acl.SecurityChecker.AccessType;
 import org.apache.cloudstack.api.ACL;
 import org.apache.cloudstack.api.APICommand;
+import org.apache.cloudstack.api.ApiCommandResourceType;
 import org.apache.cloudstack.api.ApiConstants;
 import org.apache.cloudstack.api.ApiErrorCode;
 import org.apache.cloudstack.api.BaseCustomIdCmd;
@@ -80,9 +84,20 @@ public class UpdateVMCmd extends BaseCustomIdCmd implements SecurityGroupAction,
 
     @Parameter(name = ApiConstants.USER_DATA,
                type = CommandType.STRING,
-               description = "an optional binary data that can be sent to the virtual machine upon a successful deployment. This binary data must be base64 encoded before adding it to the request. Using HTTP GET (via querystring), you can send up to 2KB of data after base64 encoding. Using HTTP POST(via POST body), you can send up to 32K of data after base64 encoding.",
-               length = 32768)
+               description = "an optional binary data that can be sent to the virtual machine upon a successful deployment. " +
+                       "This binary data must be base64 encoded before adding it to the request. " +
+                       "Using HTTP GET (via querystring), you can send up to 4KB of data after base64 encoding. " +
+                       "Using HTTP POST(via POST body), you can send up to 1MB of data after base64 encoding." +
+                       "You also need to change vm.userdata.max.length value",
+               length = 1048576,
+               since = "4.16.0")
     private String userData;
+
+    @Parameter(name = ApiConstants.USER_DATA_ID, type = CommandType.UUID, entityType = UserDataResponse.class, description = "the ID of the userdata", since = "4.18")
+    private Long userdataId;
+
+    @Parameter(name = ApiConstants.USER_DATA_DETAILS, type = CommandType.MAP, description = "used to specify the parameters values for the variables in userdata.", since = "4.18")
+    private Map userdataDetails;
 
     @Parameter(name = ApiConstants.DISPLAY_VM, type = CommandType.BOOLEAN, description = "an optional field, whether to the display the vm to the end user or not.", authorized = {RoleType.Admin})
     private Boolean displayVm;
@@ -154,6 +169,25 @@ public class UpdateVMCmd extends BaseCustomIdCmd implements SecurityGroupAction,
 
     public String getUserData() {
         return userData;
+    }
+
+    public Long getUserdataId() {
+        return userdataId;
+    }
+
+    public Map<String, String> getUserdataDetails() {
+        Map<String, String> userdataDetailsMap = new HashMap<String, String>();
+        if (userdataDetails != null && userdataDetails.size() != 0) {
+            Collection parameterCollection = userdataDetails.values();
+            Iterator iter = parameterCollection.iterator();
+            while (iter.hasNext()) {
+                HashMap<String, String> value = (HashMap<String, String>)iter.next();
+                for (Map.Entry<String,String> entry: value.entrySet()) {
+                    userdataDetailsMap.put(entry.getKey(),entry.getValue());
+                }
+            }
+        }
+        return userdataDetailsMap;
     }
 
     public Boolean getDisplayVm() {
@@ -258,8 +292,13 @@ public class UpdateVMCmd extends BaseCustomIdCmd implements SecurityGroupAction,
     @Override
     public void execute() throws ResourceUnavailableException, InsufficientCapacityException, ServerApiException {
         CallContext.current().setEventDetails("Vm Id: " + this._uuidMgr.getUuid(VirtualMachine.class, getId()));
-        UserVm result = _userVmService.updateVirtualMachine(this);
-        if (result != null){
+        UserVm result = null;
+        try {
+            result = _userVmService.updateVirtualMachine(this);
+        } catch (CloudRuntimeException e) {
+            throw new CloudRuntimeException(String.format("Failed to update VM, due to: %s", e.getLocalizedMessage()), e);
+        }
+        if (result != null) {
             UserVmResponse response = _responseGenerator.createUserVmResponse(getResponseView(), "virtualmachine", result).get(0);
             response.setResponseName(getCommandName());
             setResponseObject(response);
@@ -274,5 +313,15 @@ public class UpdateVMCmd extends BaseCustomIdCmd implements SecurityGroupAction,
             _uuidMgr.checkUuid(getCustomId(), UserVm.class);
 
         }
+    }
+
+    @Override
+    public Long getApiResourceId() {
+        return id;
+    }
+
+    @Override
+    public ApiCommandResourceType getApiResourceType() {
+        return ApiCommandResourceType.VirtualMachine;
     }
 }

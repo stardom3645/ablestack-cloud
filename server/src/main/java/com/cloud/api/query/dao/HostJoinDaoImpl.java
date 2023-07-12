@@ -23,20 +23,25 @@ import java.util.Date;
 import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import javax.inject.Inject;
 
+import com.cloud.user.AccountManager;
+import org.apache.cloudstack.annotation.AnnotationService;
+import org.apache.cloudstack.annotation.dao.AnnotationDao;
 import org.apache.cloudstack.api.ApiConstants.HostDetails;
 import org.apache.cloudstack.api.response.GpuResponse;
 import org.apache.cloudstack.api.response.HostForMigrationResponse;
 import org.apache.cloudstack.api.response.HostResponse;
 import org.apache.cloudstack.api.response.VgpuResponse;
+import org.apache.cloudstack.context.CallContext;
 import org.apache.cloudstack.framework.config.dao.ConfigurationDao;
 import org.apache.cloudstack.ha.HAResource;
 import org.apache.cloudstack.ha.dao.HAConfigDao;
 import org.apache.cloudstack.outofbandmanagement.dao.OutOfBandManagementDao;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.springframework.stereotype.Component;
 
@@ -69,6 +74,10 @@ public class HostJoinDaoImpl extends GenericDaoBase<HostJoinVO, Long> implements
     private OutOfBandManagementDao outOfBandManagementDao;
     @Inject
     private ManagementServerHostDao managementServerHostDao;
+    @Inject
+    private AnnotationDao annotationDao;
+    @Inject
+    private AccountManager accountManager;
 
     private final SearchBuilder<HostJoinVO> hostSearch;
 
@@ -97,7 +106,7 @@ public class HostJoinDaoImpl extends GenericDaoBase<HostJoinVO, Long> implements
     private boolean containsHostHATag(final String tags) {
         boolean result = false;
         String haTag = ApiDBUtils.getHaTag();
-        if (StringUtils.isNotEmpty(haTag) && StringUtils.isNotEmpty(tags)) {
+        if (StringUtils.isNoneEmpty(haTag, tags)) {
             List<String> tagsList = Arrays.asList(tags.split(","));
             if (tagsList.contains(haTag)) {
                 result = true;
@@ -222,10 +231,18 @@ public class HostJoinDaoImpl extends GenericDaoBase<HostJoinVO, Long> implements
                 }
             }
 
+            Map<String, String> hostDetails = hostDetailsDao.findDetails(host.getId());
+            if (hostDetails != null) {
+                if (hostDetails.containsKey(Host.HOST_UEFI_ENABLE)) {
+                    hostResponse.setUefiCapabilty(Boolean.parseBoolean((String) hostDetails.get(Host.HOST_UEFI_ENABLE)));
+                } else {
+                    hostResponse.setUefiCapabilty(new Boolean(false));
+                }
+            }
             if (details.contains(HostDetails.all) && host.getHypervisorType() == Hypervisor.HypervisorType.KVM) {
                 //only kvm has the requirement to return host details
                 try {
-                    hostResponse.setDetails(hostDetailsDao.findDetails(host.getId()));
+                    hostResponse.setDetails(hostDetails);
                 } catch (Exception e) {
                     s_logger.debug("failed to get host details", e);
                 }
@@ -266,6 +283,8 @@ public class HostJoinDaoImpl extends GenericDaoBase<HostJoinVO, Long> implements
             hostResponse.setJobId(host.getJobUuid());
             hostResponse.setJobStatus(host.getJobStatus());
         }
+        hostResponse.setHasAnnotation(annotationDao.hasAnnotations(host.getUuid(), AnnotationService.EntityType.HOST.name(),
+                accountManager.isRootAdmin(CallContext.current().getCallingAccount().getId())));
         hostResponse.setAnnotation(host.getAnnotation());
         hostResponse.setLastAnnotated(host.getLastAnnotated ());
         hostResponse.setUsername(host.getUsername());

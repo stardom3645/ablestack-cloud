@@ -16,6 +16,7 @@
 // under the License.
 package org.apache.cloudstack.api.command.user.nat;
 
+import org.apache.cloudstack.api.ApiCommandResourceType;
 import org.apache.log4j.Logger;
 
 import org.apache.cloudstack.api.APICommand;
@@ -24,7 +25,6 @@ import org.apache.cloudstack.api.ApiErrorCode;
 import org.apache.cloudstack.api.BaseAsyncCmd;
 import org.apache.cloudstack.api.Parameter;
 import org.apache.cloudstack.api.ServerApiException;
-import org.apache.cloudstack.api.command.user.firewall.DeletePortForwardingRuleCmd;
 import org.apache.cloudstack.api.response.IPAddressResponse;
 import org.apache.cloudstack.api.response.SuccessResponse;
 
@@ -38,8 +38,7 @@ import com.cloud.network.IpAddress;
 @APICommand(name = "disableStaticNat", description = "Disables static rule for given IP address", responseObject = SuccessResponse.class,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class DisableStaticNatCmd extends BaseAsyncCmd {
-    public static final Logger s_logger = Logger.getLogger(DeletePortForwardingRuleCmd.class.getName());
-    private static final String s_name = "disablestaticnatresponse";
+    public static final Logger s_logger = Logger.getLogger(DisableStaticNatCmd.class.getName());
 
     /////////////////////////////////////////////////////
     //////////////// API parameters /////////////////////
@@ -63,11 +62,6 @@ public class DisableStaticNatCmd extends BaseAsyncCmd {
     /////////////////////////////////////////////////////
     /////////////// API Implementation///////////////////
     /////////////////////////////////////////////////////
-    @Override
-    public String getCommandName() {
-        return s_name;
-    }
-
     @Override
     public String getEventType() {
         return EventTypes.EVENT_DISABLE_STATIC_NAT;
@@ -111,5 +105,19 @@ public class DisableStaticNatCmd extends BaseAsyncCmd {
             throw new InvalidParameterValueException("Unable to find IP address by ID " + ipAddressId);
         }
         return ip;
+    }
+
+    @Override
+    public Long getApiResourceId() {
+        IpAddress object = _entityMgr.findById(IpAddress.class, ipAddressId);
+        if (object != null) {
+            object.getAssociatedWithVmId();
+        }
+        return null;
+    }
+
+    @Override
+    public ApiCommandResourceType getApiResourceType() {
+        return ApiCommandResourceType.VirtualMachine;
     }
 }

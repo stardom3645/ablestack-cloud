@@ -38,9 +38,9 @@ import com.cloud.exception.InvalidParameterValueException;
 import com.cloud.kubernetes.version.KubernetesSupportedVersion;
 import com.cloud.kubernetes.version.KubernetesVersionService;
 import com.cloud.utils.exception.CloudRuntimeException;
-import com.google.common.base.Strings;
+import org.apache.commons.lang3.StringUtils;
 
-@APICommand(name = AddKubernetesSupportedVersionCmd.APINAME,
+@APICommand(name = "addKubernetesSupportedVersion",
         description = "Add a supported Kubernetes version",
         responseObject = KubernetesSupportedVersionResponse.class,
         responseView = ResponseObject.ResponseView.Full,
@@ -48,7 +48,6 @@ import com.google.common.base.Strings;
         authorized = {RoleType.Admin})
 public class AddKubernetesSupportedVersionCmd extends BaseCmd implements AdminCmd {
     public static final Logger LOGGER = Logger.getLogger(AddKubernetesSupportedVersionCmd.class.getName());
-    public static final String APINAME = "addKubernetesSupportedVersion";
 
     @Inject
     private KubernetesVersionService kubernetesVersionService;
@@ -95,7 +94,7 @@ public class AddKubernetesSupportedVersionCmd extends BaseCmd implements AdminCm
     }
 
     public String getSemanticVersion() {
-        if(Strings.isNullOrEmpty(semanticVersion)) {
+        if(StringUtils.isEmpty(semanticVersion)) {
             throw new InvalidParameterValueException("Version can not be null");
         }
         if(!semanticVersion.matches("[0-9]+(\\.[0-9]+)*")) {
@@ -122,11 +121,6 @@ public class AddKubernetesSupportedVersionCmd extends BaseCmd implements AdminCm
 
     public Integer getMinimumRamSize() {
         return minimumRamSize;
-    }
-
-    @Override
-    public String getCommandName() {
-        return APINAME.toLowerCase() + "response";
     }
 
     @Override

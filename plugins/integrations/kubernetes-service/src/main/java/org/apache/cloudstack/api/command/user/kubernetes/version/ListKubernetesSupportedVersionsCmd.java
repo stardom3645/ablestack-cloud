@@ -33,16 +33,15 @@ import org.apache.log4j.Logger;
 
 import com.cloud.exception.ConcurrentOperationException;
 import com.cloud.kubernetes.version.KubernetesVersionService;
-import com.google.common.base.Strings;
+import org.apache.commons.lang3.StringUtils;
 
-@APICommand(name = ListKubernetesSupportedVersionsCmd.APINAME,
+@APICommand(name = "listKubernetesSupportedVersions",
         description = "Lists supported Kubernetes version",
         responseObject = KubernetesSupportedVersionResponse.class,
         responseView = ResponseObject.ResponseView.Restricted,
         authorized = {RoleType.Admin, RoleType.ResourceAdmin, RoleType.DomainAdmin, RoleType.User})
 public class ListKubernetesSupportedVersionsCmd extends BaseListCmd {
     public static final Logger LOGGER = Logger.getLogger(ListKubernetesSupportedVersionsCmd.class.getName());
-    public static final String APINAME = "listKubernetesSupportedVersions";
 
     @Inject
     private KubernetesVersionService kubernetesVersionService;
@@ -81,7 +80,7 @@ public class ListKubernetesSupportedVersionsCmd extends BaseListCmd {
     }
 
     public String getMinimumSemanticVersion() {
-        if(!Strings.isNullOrEmpty(minimumSemanticVersion) &&
+        if(StringUtils.isNotEmpty(minimumSemanticVersion) &&
                 !minimumSemanticVersion.matches("[0-9]+(\\.[0-9]+)*")) {
             throw new IllegalArgumentException("Invalid version format");
         }
@@ -90,11 +89,6 @@ public class ListKubernetesSupportedVersionsCmd extends BaseListCmd {
 
     public Long getMinimumKubernetesVersionId() {
         return minimumKubernetesVersionId;
-    }
-
-    @Override
-    public String getCommandName() {
-        return APINAME.toLowerCase() + "response";
     }
 
     /////////////////////////////////////////////////////

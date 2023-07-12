@@ -19,9 +19,11 @@ package org.apache.cloudstack.api.command.user.account;
 import java.util.List;
 
 import org.apache.cloudstack.api.ApiArgValidator;
+import org.apache.cloudstack.api.ApiCommandResourceType;
 import org.apache.cloudstack.api.BaseCmd;
 import org.apache.cloudstack.api.response.ProjectRoleResponse;
 import org.apache.commons.lang3.EnumUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 
 import org.apache.cloudstack.api.APICommand;
@@ -38,14 +40,12 @@ import com.cloud.event.EventTypes;
 import com.cloud.exception.InvalidParameterValueException;
 import com.cloud.projects.Project;
 import com.cloud.projects.ProjectAccount;
-import com.google.common.base.Strings;
 
 @APICommand(name = "addAccountToProject", description = "Adds account to a project", responseObject = SuccessResponse.class, since = "3.0.0",
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class AddAccountToProjectCmd extends BaseAsyncCmd {
     public static final Logger s_logger = Logger.getLogger(AddAccountToProjectCmd.class.getName());
 
-    private static final String s_name = "addaccounttoprojectresponse";
 
     /////////////////////////////////////////////////////
     //////////////// API parameters /////////////////////
@@ -93,7 +93,7 @@ public class AddAccountToProjectCmd extends BaseAsyncCmd {
     }
 
     public ProjectAccount.Role getRoleType() {
-        if (!Strings.isNullOrEmpty(roleType)) {
+        if (StringUtils.isNotEmpty(roleType)) {
             String role = roleType.substring(0, 1).toUpperCase() + roleType.substring(1).toLowerCase();
             if (!EnumUtils.isValidEnum(ProjectAccount.Role.class, role)) {
                 throw new InvalidParameterValueException("Only Admin or Regular project role types are valid");
@@ -101,11 +101,6 @@ public class AddAccountToProjectCmd extends BaseAsyncCmd {
             return Enum.valueOf(ProjectAccount.Role.class, role);
         }
         return null;
-    }
-
-    @Override
-    public String getCommandName() {
-        return s_name;
     }
 
     /////////////////////////////////////////////////////
@@ -158,5 +153,15 @@ public class AddAccountToProjectCmd extends BaseAsyncCmd {
         } else {
             return "Sending invitation to email " + email + " to join project: " + getProjectId();
         }
+    }
+
+    @Override
+    public Long getApiResourceId() {
+        return projectId;
+    }
+
+    @Override
+    public ApiCommandResourceType getApiResourceType() {
+        return ApiCommandResourceType.Project;
     }
 }

@@ -42,7 +42,6 @@ import com.cloud.user.Account;
 public class AddHostCmd extends BaseCmd {
     public static final Logger s_logger = Logger.getLogger(AddHostCmd.class.getName());
 
-    private static final String s_name = "addhostresponse";
 
     /////////////////////////////////////////////////////
     //////////////// API parameters /////////////////////
@@ -54,7 +53,10 @@ public class AddHostCmd extends BaseCmd {
     @Parameter(name = ApiConstants.CLUSTER_NAME, type = CommandType.STRING, description = "the cluster name for the host")
     private String clusterName;
 
-    @Parameter(name = ApiConstants.PASSWORD, type = CommandType.STRING, required = true, description = "the password for the host")
+    @Parameter(name = ApiConstants.USERNAME, type = CommandType.STRING, description = "the username for the host; required to be passed for hypervisors other than VMWare")
+    private String username;
+
+    @Parameter(name = ApiConstants.PASSWORD, type = CommandType.STRING, description = "the password for the host; required to be passed for hypervisors other than VMWare")
     private String password;
 
     @Parameter(name = ApiConstants.POD_ID, type = CommandType.UUID, entityType = PodResponse.class, required = true, description = "the Pod ID for the host")
@@ -62,9 +64,6 @@ public class AddHostCmd extends BaseCmd {
 
     @Parameter(name = ApiConstants.URL, type = CommandType.STRING, required = true, description = "the host URL")
     private String url;
-
-    @Parameter(name = ApiConstants.USERNAME, type = CommandType.STRING, required = true, description = "the username for the host")
-    private String username;
 
     @Parameter(name = ApiConstants.ZONE_ID, type = CommandType.UUID, entityType = ZoneResponse.class, required = true, description = "the Zone ID for the host")
     private Long zoneId;
@@ -125,11 +124,6 @@ public class AddHostCmd extends BaseCmd {
     /////////////////////////////////////////////////////
     /////////////// API Implementation///////////////////
     /////////////////////////////////////////////////////
-
-    @Override
-    public String getCommandName() {
-        return s_name;
-    }
 
     @Override
     public long getEntityOwnerId() {

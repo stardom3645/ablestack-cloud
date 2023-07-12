@@ -22,7 +22,6 @@ package com.cloud.utils;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -52,43 +51,6 @@ public class StringUtils {
 
     protected static Charset getDefaultCharset() {
         return Charset.defaultCharset();
-    }
-
-    public static String join(final Iterable<? extends Object> iterable, final String delim) {
-        final StringBuilder sb = new StringBuilder();
-        if (iterable != null) {
-            final Iterator<? extends Object> iter = iterable.iterator();
-            if (iter.hasNext()) {
-                final Object next = iter.next();
-                sb.append(next.toString());
-            }
-            while (iter.hasNext()) {
-                final Object next = iter.next();
-                sb.append(delim + next.toString());
-            }
-        }
-        return sb.toString();
-    }
-
-    public static String join(final String delimiter, final Object... components) {
-        return org.apache.commons.lang.StringUtils.join(components, delimiter);
-    }
-    /**
-     * @deprecated
-     * Please use org.apache.commons.lang.StringUtils.isBlank() as a replacement
-     */
-    @Deprecated
-    public static boolean isBlank(String str) {
-        return org.apache.commons.lang.StringUtils.isBlank(str);
-    }
-
-    /**
-     * @deprecated
-     * Please use org.apache.commons.lang.StringUtils.isNotBlank() as a replacement
-     */
-    @Deprecated
-    public static boolean isNotBlank(final String str) {
-        return org.apache.commons.lang.StringUtils.isNotBlank(str);
     }
 
     public static String cleanupTags(String tags) {
@@ -218,10 +180,10 @@ public class StringUtils {
         return cleanResult;
     }
 
-    public static String cleanDetails(final String stringToClean, final String detailsIndexSting) {
+    public static String cleanDetails(final String stringToClean, final String detailsIndexString) {
         String cleanResult = stringToClean;
         for (final String log : stringToClean.split("&|%26")) {
-            if (log.contains(detailsIndexSting)) {
+            if (log.contains(detailsIndexString)) {
                 cleanResult = cleanResult.replace(log, "");
             }
         }
@@ -287,16 +249,16 @@ public class StringUtils {
         final boolean applyPagination = startIndex != null && pageSizeVal != null
                 && startIndex <= Integer.MAX_VALUE && startIndex >= 0 && pageSizeVal <= Integer.MAX_VALUE
                 && pageSizeVal > 0;
-                List<T> listWPagination = null;
-                if (applyPagination) {
-                    listWPagination = new ArrayList<>();
-                    final int index = startIndex.intValue() == 0 ? 0 : startIndex.intValue() / pageSizeVal.intValue();
-                    final List<List<T>> partitions = StringUtils.partitionList(originalList, pageSizeVal.intValue());
-                    if (index < partitions.size()) {
-                        listWPagination = partitions.get(index);
-                    }
-                }
-                return listWPagination;
+        List<T> listWPagination = null;
+        if (applyPagination) {
+            listWPagination = new ArrayList<>();
+            final int index = startIndex.intValue() == 0 ? 0 : startIndex.intValue() / pageSizeVal.intValue();
+            final List<List<T>> partitions = StringUtils.partitionList(originalList, pageSizeVal.intValue());
+            if (index < partitions.size()) {
+                listWPagination = partitions.get(index);
+            }
+        }
+        return listWPagination;
     }
 
     private static <T> List<List<T>> partitionList(final List<T> originalList, final int chunkSize) {
@@ -311,6 +273,13 @@ public class StringUtils {
     }
 
     public static String toCSVList(final List<String> csvList) {
-        return join(csvList, ",");
+        return org.apache.commons.lang3.StringUtils.defaultString(org.apache.commons.lang3.StringUtils.join(csvList, ","));
+    }
+
+    public static Pair<String, String> getKeyValuePairWithSeparator(String keyValuePair, String separator) {
+        final int index = keyValuePair.indexOf(separator);
+        final String key = keyValuePair.substring(0, index);
+        final String value = keyValuePair.substring(index + 1);
+        return new Pair<>(key.trim(), value.trim());
     }
 }

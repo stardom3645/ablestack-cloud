@@ -17,7 +17,7 @@
 
 <template>
   <a-spin :spinning="loading" class="form-layout">
-    <a-tabs defaultActiveKey="1" :animated="false" v-if="!loading">
+    <a-tabs v-model:activeKey="defaultNetworkTypeTabKey" :animated="false" v-if="!loading">
       <a-tab-pane :tab="$t('label.isolated')" key="1" v-if="isAdvancedZoneWithoutSGAvailable">
         <CreateIsolatedNetworkForm
           :loading="loading"
@@ -26,7 +26,7 @@
           @refresh-data="refreshParent"
           @refresh="handleRefresh"/>
       </a-tab-pane>
-      <a-tab-pane :tab="$t('label.l2')" key="2">
+      <a-tab-pane :tab="$t('label.l2')" key="3" v-if="isAdvancedZoneWithoutSGAvailable">
         <CreateL2NetworkForm
           :loading="loading"
           :resource="resource"
@@ -34,7 +34,7 @@
           @refresh-data="refreshParent"
           @refresh="handleRefresh"/>
       </a-tab-pane>
-      <a-tab-pane :tab="$t('label.shared')" key="3" v-if="this.isAdmin()">
+      <a-tab-pane :tab="$t('label.shared')" key="2">
         <CreateSharedNetworkForm
           :loading="loading"
           :resource="resource"
@@ -67,39 +67,49 @@ export default {
   },
   data () {
     return {
-      isAdvancedZoneWithoutSGAvailable: true,
+      isAdvancedZoneWithoutSGAvailable: false,
       defaultNetworkTypeTabKey: '1',
       loading: false,
       actionZones: [],
       actionZoneLoading: false
     }
   },
-  created () {
-    const promises = []
-    promises.push(this.fetchActionZoneData())
-    Promise.all(promises).then(() => {
-      for (const i in this.actionZones) {
-        const zone = this.actionZones[i]
-        if (zone.networktype === 'Advanced' && zone.securitygroupsenabled !== true) {
-          this.isAdvancedZoneWithoutSGAvailable = true
-          return
-        }
+  watch: {
+    resource: {
+      deep: true,
+      handler () {
+        this.fetchData()
       }
-      this.isAdvancedZoneWithoutSGAvailable = false
-    })
+    }
+  },
+  created () {
+    this.fetchData()
   },
   methods: {
-    isAdmin () {
-      return ['Admin'].includes(this.$store.getters.userInfo.roletype)
+    fetchData () {
+      const promises = []
+      promises.push(this.fetchActionZoneData())
+      Promise.all(promises).then(() => {
+        this.isAdvancedZoneWithoutSGAvailable = false
+        this.defaultNetworkTypeTabKey = '2'
+
+        for (const i in this.actionZones) {
+          const zone = this.actionZones[i]
+          if (zone.networktype === 'Advanced' && zone.securitygroupsenabled !== true) {
+            this.isAdvancedZoneWithoutSGAvailable = true
+            this.defaultNetworkTypeTabKey = '1'
+            return
+          }
+        }
+      })
     },
     fetchActionZoneData () {
       this.loading = true
       const params = {}
-      if (this.resource && this.resource.zoneid) {
+      if (this.resource.zoneid && this.$route.name === 'deployVirtualMachine') {
         params.id = this.resource.zoneid
       }
-      params.listAll = true
-      this.actionZonesLoading = true
+      this.actionZoneLoading = true
       return api('listZones', params).then(json => {
         this.actionZones = json.listzonesresponse.zone
       }).finally(() => {
@@ -124,14 +134,6 @@ export default {
     width: 80vw;
     @media (min-width: 700px) {
       width: 600px;
-    }
-  }
-
-  .action-button {
-    text-align: right;
-
-    button {
-      margin-right: 5px;
     }
   }
 </style>

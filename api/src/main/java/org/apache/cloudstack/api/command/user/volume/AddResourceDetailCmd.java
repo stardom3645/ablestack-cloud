@@ -34,7 +34,6 @@ import com.cloud.server.ResourceTag;
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class AddResourceDetailCmd extends BaseAsyncCmd {
     public static final Logger s_logger = Logger.getLogger(AddResourceDetailCmd.class.getName());
-    private static final String s_name = "addresourcedetailresponse";
 
     /////////////////////////////////////////////////////
     //////////////// API parameters /////////////////////
@@ -61,7 +60,7 @@ public class AddResourceDetailCmd extends BaseAsyncCmd {
     }
 
     public ResourceTag.ResourceObjectType getResourceType() {
-        return _taggedResourceService.getResourceType(resourceType);
+        return resourceManagerUtil.getResourceType(resourceType);
     }
 
     public String getResourceId() {
@@ -79,11 +78,6 @@ public class AddResourceDetailCmd extends BaseAsyncCmd {
 /////////////////////////////////////////////////////
     /////////////// API Implementation///////////////////
     /////////////////////////////////////////////////////
-
-    @Override
-    public String getCommandName() {
-        return s_name;
-    }
 
     @Override
     public long getEntityOwnerId() {

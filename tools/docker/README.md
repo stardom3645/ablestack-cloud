@@ -11,8 +11,41 @@ Dockerfiles used to build CloudStack images are available on Docker hub.
 CloudStack Simulator is an all in one CloudStack Build including the simulator that mimic Hypervisor. This is useful to test CloudStack API behavior without having to deploy real hypervisor nodes. CloudStack Simulator is used for tests and CI.
 
 ```
-docker pull cloudstack/simulator
-docker run --name simulator -p 8080:8080 -d cloudstack/simulator
+docker pull apache/cloudstack-simulator
+
+or pull it with a particular build tag
+
+docker pull apache/cloudstack-simulator:4.17.2.0
+
+docker run --name simulator -p 8080:5050 -d apache/cloudstack-simulator
+
+or 
+
+docker run --name simulator -p 8080:5050 -d apache/cloudstack-simulator:4.17.2.0
+
+```
+
+Access CloudStack UI
+```
+Open your browser at http://localhost:8080/
+Default login is admin:password
+```
+
+Deploy a datacenter:
+```
+# Advanced zone
+docker exec -it simulator python /root/tools/marvin/marvin/deployDataCenter.py -i /root/setup/dev/advanced.cfg
+
+# Advanced zone with security groups
+docker exec -it simulator python /root/tools/marvin/marvin/deployDataCenter.py -i /root/setup/dev/advancedsg.cfg
+
+# Basic zone
+docker exec -it simulator python /root/tools/marvin/marvin/deployDataCenter.py -i /root/setup/dev/basic.cfg
+```
+
+Log into the simulator:
+```
+docker exec -it simulator bash
 ```
 
 ### CloudStack Management-server 
@@ -40,7 +73,7 @@ Deploy Cloud using marvin:
 docker run -ti --rm --link simulator:8096 cloudstack/marvin python /marvin/marvin/deployDataCenter.py -i /marvin/dev/advanced.cfg
 ```
 
-Perform Smoke tests against CloudStack Simulator containter:
+Perform Smoke tests against CloudStack Simulator container:
 ```
 docker run -ti --rm --link simulator:8096 \
   nosetests-2.7 -v --with-marvin \

@@ -19,10 +19,10 @@
   <div>
     <a-spin :spinning="fetchLoading">
       <a-button
-        icon="plus"
         shape="round"
         style="float: right;margin-bottom: 10px; z-index: 8"
         @click="() => { showCreateForm = true }">
+        <template #icon><plus-outlined /></template>
         {{ $t('label.add.ip.range') }}
       </a-button>
       <br />
@@ -36,18 +36,21 @@
         :rowKey="item => item.id"
         :pagination="false" >
 
-        <template slot="action" slot-scope="text, record">
-          <a-popconfirm
-            :title="$t('message.confirm.remove.ip.range')"
-            @confirm="removeIpRange(record.id)"
-            :okText="$t('label.yes')"
-            :cancelText="$t('label.no')" >
-            <tooltip-button
-              tooltipPlacement="bottom"
-              :tooltip="$t('label.action.delete.ip.range')"
-              type="danger"
-              icon="delete" />
-          </a-popconfirm>
+        <template #bodyCell="{ column, record }">
+          <template v-if="column.key === 'actions'">
+            <a-popconfirm
+              :title="$t('message.confirm.remove.ip.range')"
+              @confirm="removeIpRange(record.id)"
+              :okText="$t('label.yes')"
+              :cancelText="$t('label.no')" >
+              <tooltip-button
+                tooltipPlacement="bottom"
+                :tooltip="$t('label.action.delete.ip.range')"
+                type="primary"
+                :danger="true"
+                icon="delete-outlined" />
+            </a-popconfirm>
+          </template>
         </template>
 
       </a-table>
@@ -63,7 +66,7 @@
         @change="changePage"
         @showSizeChange="changePageSize"
         showSizeChanger>
-        <template slot="buildOptionText" slot-scope="props">
+        <template #buildOptionText="props">
           <span>{{ props.value }} / {{ $t('label.page') }}</span>
         </template>
       </a-pagination>
@@ -73,8 +76,8 @@
       :visible="showCreateForm"
       :title="$t('label.add.ip.range')"
       :maskClosable="false"
+      :closable="true"
       :footer="null"
-      :cancelText="$t('label.cancel')"
       @cancel="() => { showCreateForm = false }"
       centered
       width="auto">
@@ -88,7 +91,7 @@
 <script>
 import { api } from '@/api'
 import CreateVlanIpRange from '@/views/network/CreateVlanIpRange'
-import TooltipButton from '@/components/view/TooltipButton'
+import TooltipButton from '@/components/widgets/TooltipButton'
 export default {
   name: 'GuestIpRanges',
   components: {
@@ -139,8 +142,8 @@ export default {
           dataIndex: 'netmask'
         },
         {
-          title: '',
-          scopedSlots: { customRender: 'action' }
+          key: 'actions',
+          title: ''
         }
       ]
     }
@@ -149,11 +152,14 @@ export default {
     this.fetchData()
   },
   watch: {
-    resource: function (newItem, oldItem) {
-      if (!newItem || !newItem.id) {
-        return
+    resource: {
+      deep: true,
+      handler (newItem) {
+        if (!newItem || !newItem.id) {
+          return
+        }
+        this.fetchData()
       }
-      this.fetchData()
     }
   },
   methods: {
@@ -161,7 +167,6 @@ export default {
       const params = {
         zoneid: this.resource.zoneid,
         networkid: this.resource.id,
-        listall: true,
         page: this.page,
         pagesize: this.pageSize
       }

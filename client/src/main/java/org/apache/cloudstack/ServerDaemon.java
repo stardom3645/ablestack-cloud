@@ -19,12 +19,15 @@
 package org.apache.cloudstack;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.management.ManagementFactory;
 import java.net.URL;
 import java.util.Properties;
 
 import com.cloud.utils.Pair;
+import com.cloud.utils.server.ServerProperties;
 import org.apache.commons.daemon.Daemon;
 import org.apache.commons.daemon.DaemonContext;
 import org.eclipse.jetty.jmx.MBeanContainer;
@@ -42,6 +45,7 @@ import org.eclipse.jetty.server.handler.MovedContextHandler;
 import org.eclipse.jetty.server.handler.RequestLogHandler;
 import org.eclipse.jetty.server.handler.gzip.GzipHandler;
 import org.eclipse.jetty.server.session.SessionHandler;
+import org.eclipse.jetty.util.ssl.KeyStoreScanner;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.eclipse.jetty.util.thread.QueuedThreadPool;
 import org.eclipse.jetty.util.thread.ScheduledExecutorScheduler;
@@ -49,7 +53,7 @@ import org.eclipse.jetty.webapp.WebAppContext;
 import org.apache.log4j.Logger;
 
 import com.cloud.utils.PropertiesUtil;
-import com.google.common.base.Strings;
+import org.apache.commons.lang3.StringUtils;
 
 /***
  * The ServerDaemon class implements the embedded server, it can be started either
@@ -116,7 +120,8 @@ public class ServerDaemon implements Daemon {
         LOG.info("Server configuration file found: " + confFile.getAbsolutePath());
 
         try {
-            final Properties properties = PropertiesUtil.loadFromFile(confFile);
+            InputStream is = new FileInputStream(confFile);
+            final Properties properties = ServerProperties.getServerProperties(is);
             if (properties == null) {
                 return;
             }
@@ -132,7 +137,7 @@ public class ServerDaemon implements Daemon {
             setAccessLogFile(properties.getProperty(ACCESS_LOG, "access.log"));
             setSessionTimeout(Integer.valueOf(properties.getProperty(SESSION_TIMEOUT, "30")));
         } catch (final IOException e) {
-            LOG.warn("Failed to load configuration from server.properties file", e);
+            LOG.warn("Failed to read configuration from server.properties file", e);
         } finally {
             // make sure that at least HTTP is enabled if both of them are set to false (misconfiguration)
             if (!httpEnable && !httpsEnable) {
@@ -217,7 +222,7 @@ public class ServerDaemon implements Daemon {
 
     private void createHttpsConnector(final HttpConfiguration httpConfig) {
         // Configure SSL
-        if (httpsEnable && !Strings.isNullOrEmpty(keystoreFile) && new File(keystoreFile).exists()) {
+        if (httpsEnable && StringUtils.isNotEmpty(keystoreFile) && new File(keystoreFile).exists()) {
             // SSL Context
             final SslContextFactory sslContextFactory = new SslContextFactory.Server();
 
@@ -237,6 +242,14 @@ public class ServerDaemon implements Daemon {
             sslConnector.setPort(httpsPort);
             sslConnector.setHost(bindInterface);
             server.addConnector(sslConnector);
+
+            // add scanner to auto-reload certs
+            try {
+                KeyStoreScanner scanner = new KeyStoreScanner(sslContextFactory);
+                server.addBean(scanner);
+            } catch (Exception ex) {
+                LOG.error("failed to set up keystore scanner, manual refresh of certificates will be required", ex);
+            }
         }
     }
 
@@ -252,7 +265,7 @@ public class ServerDaemon implements Daemon {
         gzipHandler.setCompressionLevel(9);
         gzipHandler.setHandler(webApp);
 
-        if (Strings.isNullOrEmpty(webAppLocation)) {
+        if (StringUtils.isEmpty(webAppLocation)) {
             webApp.setWar(getShadedWarUrl());
         } else {
             webApp.setWar(webAppLocation);

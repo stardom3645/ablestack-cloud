@@ -19,7 +19,6 @@ package org.apache.cloudstack.storage.datastore.util;
 
 import com.cloud.host.Host;
 import com.cloud.host.HostVO;
-import com.cloud.utils.StringUtils;
 import com.cloud.utils.exception.CloudRuntimeException;
 import com.google.common.base.Preconditions;
 import com.google.gson.Gson;
@@ -27,6 +26,7 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 import org.apache.cloudstack.storage.datastore.db.StoragePoolDetailVO;
 import org.apache.cloudstack.storage.datastore.db.StoragePoolDetailsDao;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpRequest;
@@ -64,7 +64,7 @@ public class DateraUtil {
     public static final String DRIVER_VERSION = "4.13.0-v2.0.0";
 
     private static final String HEADER_AUTH_TOKEN = "auth-token";
-    private static final String HEADER_CONTENT_TYPE = "Content-type";
+    private static final String HEADER_CONTENT_TYPE = "content-type";
     private static final String HEADER_VALUE_JSON = "application/json";
 
     public static final String MANAGEMENT_VIP = "mVip";

@@ -32,6 +32,8 @@ import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.persistence.Transient;
 
+import org.apache.cloudstack.utils.reflectiontostringbuilderutils.ReflectionToStringBuilderUtils;
+
 import com.cloud.storage.Storage.ProvisioningType;
 import com.cloud.storage.Storage.StoragePoolType;
 import com.cloud.utils.NumbersUtil;
@@ -159,6 +161,9 @@ public class VolumeVO implements Volume {
     @Column(name = "iso_id")
     private Long isoId;
 
+    @Column(name = "external_uuid")
+    private String externalUuid = null;
+
     @Transient
     // @Column(name="reservation")
     String reservationId;
@@ -168,6 +173,12 @@ public class VolumeVO implements Volume {
 
     @Transient
     private boolean deployAsIs;
+
+    @Column(name = "passphrase_id")
+    private Long passphraseId;
+
+    @Column(name = "encrypt_format")
+    private String encryptFormat;
 
     // Real Constructor
     public VolumeVO(Type type, String name, long dcId, long domainId,
@@ -265,6 +276,7 @@ public class VolumeVO implements Volume {
         provisioningType = that.getProvisioningType();
         uuid = UUID.randomUUID().toString();
         deployAsIs = that.isDeployAsIs();
+        externalUuid = that.getExternalUuid();
     }
 
     @Override
@@ -495,7 +507,7 @@ public class VolumeVO implements Volume {
 
     @Override
     public String toString() {
-        return new StringBuilder("Vol[").append(id).append("|vm=").append(instanceId).append("|").append(volumeType).append("]").toString();
+        return new StringBuilder("Vol[").append(id).append("|name=").append(name).append("|vm=").append(instanceId).append("|").append(volumeType).append("]").toString();
     }
 
     @Override
@@ -643,4 +655,26 @@ public class VolumeVO implements Volume {
     public Class<?> getEntityType() {
         return Volume.class;
     }
+
+    public String getVolumeDescription(){
+        return ReflectionToStringBuilderUtils.reflectOnlySelectedFields(this, "name", "uuid");
+    }
+
+    @Override
+    public String getExternalUuid() {
+        return externalUuid;
+    }
+
+    @Override
+    public void setExternalUuid(String externalUuid) {
+        this.externalUuid = externalUuid;
+    }
+
+    public Long getPassphraseId() { return passphraseId; }
+
+    public void setPassphraseId(Long id) { this.passphraseId = id; }
+
+    public String getEncryptFormat() { return encryptFormat; }
+
+    public void setEncryptFormat(String encryptFormat) { this.encryptFormat = encryptFormat; }
 }

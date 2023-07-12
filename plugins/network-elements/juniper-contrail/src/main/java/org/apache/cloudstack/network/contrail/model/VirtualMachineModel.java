@@ -29,7 +29,7 @@ import net.juniper.contrail.api.types.ServiceInstance;
 import net.juniper.contrail.api.types.VirtualMachine;
 
 import org.apache.cloudstack.network.contrail.management.ContrailManager;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 
 import com.cloud.exception.InternalErrorException;
@@ -95,7 +95,7 @@ public class VirtualMachineModel extends ModelObjectBase {
                  *
                  * In other fix I added the validate UUID method to the UuidUtil classes.
                  */
-                if (UuidUtils.validateUUID(serviceUuid)) {
+                if (UuidUtils.isUuid(serviceUuid)) {
                     /* link the object with the service instance */
                     buildServiceInstance(controller, serviceUuid);
                 } else {

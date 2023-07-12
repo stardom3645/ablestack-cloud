@@ -46,7 +46,7 @@ import org.apache.cloudstack.saml.SAMLPluginConstants;
 import org.apache.cloudstack.saml.SAMLProviderMetadata;
 import org.apache.cloudstack.saml.SAMLTokenVO;
 import org.apache.cloudstack.saml.SAMLUtils;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.opensaml.DefaultBootstrap;
 import org.opensaml.saml2.core.Assertion;
@@ -55,9 +55,10 @@ import org.opensaml.saml2.core.Issuer;
 import org.opensaml.saml2.core.Response;
 import org.opensaml.saml2.core.StatusCode;
 import org.opensaml.saml2.encryption.Decrypter;
+import org.opensaml.saml2.encryption.EncryptedElementTypeEncryptedKeyResolver;
 import org.opensaml.xml.ConfigurationException;
+import org.opensaml.xml.encryption.ChainingEncryptedKeyResolver;
 import org.opensaml.xml.encryption.DecryptionException;
-import org.opensaml.xml.encryption.EncryptedKeyResolver;
 import org.opensaml.xml.encryption.InlineEncryptedKeyResolver;
 import org.opensaml.xml.io.UnmarshallingException;
 import org.opensaml.xml.security.SecurityHelper;
@@ -122,7 +123,7 @@ public class SAML2LoginAPIAuthenticatorCmd extends BaseCmd implements APIAuthent
 
     @Override
     public long getEntityOwnerId() {
-        return Account.ACCOUNT_TYPE_NORMAL;
+        return Account.Type.NORMAL.ordinal();
     }
 
     @Override
@@ -253,7 +254,9 @@ public class SAML2LoginAPIAuthenticatorCmd extends BaseCmd implements APIAuthent
                     Credential credential = SecurityHelper.getSimpleCredential(idpMetadata.getEncryptionCertificate().getPublicKey(),
                             spMetadata.getKeyPair().getPrivate());
                     StaticKeyInfoCredentialResolver keyInfoResolver = new StaticKeyInfoCredentialResolver(credential);
-                    EncryptedKeyResolver keyResolver = new InlineEncryptedKeyResolver();
+                    ChainingEncryptedKeyResolver keyResolver = new ChainingEncryptedKeyResolver();
+                    keyResolver.getResolverChain().add(new InlineEncryptedKeyResolver());
+                    keyResolver.getResolverChain().add(new EncryptedElementTypeEncryptedKeyResolver());
                     Decrypter decrypter = new Decrypter(null, keyInfoResolver, keyResolver);
                     decrypter.setRootInNewDocument(true);
                     List<EncryptedAssertion> encryptedAssertions = processedSAMLResponse.getEncryptedAssertions();
@@ -303,7 +306,7 @@ public class SAML2LoginAPIAuthenticatorCmd extends BaseCmd implements APIAuthent
                     // Log into the first enabled user account
                     // Users can switch to other allowed accounts later
                     for (UserAccountVO possibleUserAccount : possibleUserAccounts) {
-                        if (possibleUserAccount.getAccountState().equals(Account.State.enabled.toString())) {
+                        if (possibleUserAccount.getAccountState().equals(Account.State.ENABLED.toString())) {
                             userAccount = possibleUserAccount;
                             break;
                         }

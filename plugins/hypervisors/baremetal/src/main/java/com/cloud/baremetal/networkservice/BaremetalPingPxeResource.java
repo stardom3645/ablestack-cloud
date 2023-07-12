@@ -28,6 +28,7 @@ import java.util.Map;
 
 import javax.naming.ConfigurationException;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 
 import com.trilead.ssh2.SCPClient;
@@ -69,7 +70,7 @@ public class BaremetalPingPxeResource extends BaremetalPxeResourceBase {
         }
 
         if (_storageServer == null) {
-            throw new ConfigurationException("No stroage server specified");
+            throw new ConfigurationException("No storage server specified");
         }
 
         if (_tftpDir == null) {
@@ -233,7 +234,7 @@ public class BaremetalPingPxeResource extends BaremetalPxeResourceBase {
                 sb.append(contents);
                 sb.append(";");
             }
-            String arg = org.apache.commons.lang.StringUtils.stripEnd(sb.toString(), ";");
+            String arg = StringUtils.stripEnd(sb.toString(), ";");
 
             sshConnection.connect(null, 60000, 60000);
             if (!sshConnection.authenticateWithPassword(_username, _password)) {

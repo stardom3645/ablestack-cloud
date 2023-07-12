@@ -43,7 +43,7 @@ public class ConsoleProxyDaoImpl extends GenericDaoBase<ConsoleProxyVO, Long> im
     private static final Logger s_logger = Logger.getLogger(ConsoleProxyDaoImpl.class);
 
     //
-    // query SQL for returnning console proxy assignment info as following
+    // query SQL for returning console proxy assignment info as following
     //         proxy vm id, count of assignment
     //
     private static final String PROXY_ASSIGNMENT_MATRIX = "SELECT c.id, count(runningVm.id) AS count "
@@ -52,7 +52,7 @@ public class ConsoleProxyDaoImpl extends GenericDaoBase<ConsoleProxyVO, Long> im
         + " AS runningVm ON c.id = runningVm.proxy_id WHERE i.state='Running' " + " GROUP BY c.id";
 
     //
-    // query SQL for returnning running VM count at data center basis
+    // query SQL for returning running VM count at data center basis
     //
     private static final String DATACENTER_VM_MATRIX = "SELECT d.id, d.name, count(v.id) AS count"
         + " FROM data_center AS d LEFT JOIN vm_instance AS v ON v.data_center_id=d.id "
@@ -63,7 +63,7 @@ public class ConsoleProxyDaoImpl extends GenericDaoBase<ConsoleProxyVO, Long> im
         + " WHERE v.type='ConsoleProxy' AND (v.state='Creating' OR v.state='Starting' OR v.state='Running' OR v.state='Migrating')" + " GROUP BY d.id, d.name";
 
     //
-    // query SQL for returnning running console proxy count at data center basis
+    // query SQL for returning running console proxy count at data center basis
     //
     private static final String DATACENTER_PROXY_MATRIX =
         "SELECT d.id, d.name, count(dcid) as count"

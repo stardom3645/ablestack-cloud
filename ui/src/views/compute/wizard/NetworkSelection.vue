@@ -20,9 +20,9 @@
     <a-input-search
       style="width: 25vw; float: right; margin-bottom: 10px; z-index: 8"
       :placeholder="$t('label.search')"
-      v-model="filter"
+      v-model:value="filter"
       @search="handleSearch" />
-    <a-button type="primary" @click="showCreateForm = true" style="float: right; margin-right: 5px; z-index: 8">
+    <a-button type="primary" @click="onCreateNetworkClick" style="float: right; margin-right: 5px; z-index: 8" v-if="showCreateButton">
       {{ $t('label.create.network') }}
     </a-button>
     <a-table
@@ -34,21 +34,34 @@
       :rowSelection="rowSelection"
       :scroll="{ y: 225 }"
     >
-      <a-list
-        slot="expandedRowRender"
-        slot-scope="record"
-        :key="record.id"
-        :dataSource="getDetails(record)"
-        size="small"
-      >
-        <a-list-item slot="renderItem" slot-scope="item" :key="item.id">
-          <a-list-item-meta
-            :description="item.description"
-          >
-            <template v-slot:title>{{ item.title }}</template>
-          </a-list-item-meta>
-        </a-list-item>
-      </a-list>
+      <template #bodyCell="{ column, record }">
+        <template v-if="column.key === 'name'">
+          <resource-icon
+            v-if="record.icon"
+            :image="record.icon.base64image"
+            size="1x"
+            style="margin-right: 5px"/>
+          <apartment-outlined v-else style="margin-right: 5px" />
+          {{ record.name }}
+        </template>
+      </template>
+      <template #expandedRowRender="{ record }">
+        <a-list
+          :key="record.id"
+          :dataSource="getDetails(record)"
+          size="small"
+        >
+          <template #renderItem="{ item }">
+            <a-list-item :key="item.id">
+              <a-list-item-meta
+                :description="item.description"
+              >
+                <template #title>{{ item.title }}</template>
+              </a-list-item-meta>
+            </a-list-item>
+          </template>
+        </a-list>
+      </template>
     </a-table>
 
     <div style="display: block; text-align: right;">
@@ -62,7 +75,7 @@
         @change="onChangePage"
         @showSizeChange="onChangePageSize"
         showSizeChanger>
-        <template slot="buildOptionText" slot-scope="props">
+        <template #buildOptionText="props">
           <span>{{ props.value }} / {{ $t('label.page') }}</span>
         </template>
       </a-pagination>
@@ -74,7 +87,6 @@
       :closable="true"
       :maskClosable="false"
       :footer="null"
-      :cancelText="$t('label.cancel')"
       @cancel="showCreateForm = false"
       centered
       width="auto">
@@ -90,13 +102,16 @@
 <script>
 import _ from 'lodash'
 import { api } from '@/api'
+import { isAdmin } from '@/role'
 import store from '@/store'
 import CreateNetwork from '@/views/network/CreateNetwork'
+import ResourceIcon from '@/components/view/ResourceIcon'
 
 export default {
   name: 'NetworkSelection',
   components: {
-    CreateNetwork
+    CreateNetwork,
+    ResourceIcon
   },
   props: {
     items: {
@@ -119,6 +134,10 @@ export default {
       type: String,
       default: () => ''
     },
+    autoscale: {
+      type: Boolean,
+      default: () => false
+    },
     preFillContent: {
       type: Object,
       default: () => {}
@@ -134,13 +153,15 @@ export default {
         loading: false,
         opts: []
       },
+      showCreateButton: false,
       showCreateForm: false,
       oldZoneId: null,
       options: {
         page: 1,
         pageSize: 10,
         keyword: null
-      }
+      },
+      networksBeforeCreate: null
     }
   },
   computed: {
@@ -154,35 +175,55 @@ export default {
           }
         })
       }
+      const vpcCol = {
+        key: 'vpcName',
+        dataIndex: 'vpcName',
+        title: this.$t('label.vpc'),
+        width: '30%'
+      }
+      if (vpcFilter.length > 0) {
+        vpcCol.filters = vpcFilter
+        vpcCol.filteredValue = _.get(this.filteredInfo, 'id')
+        vpcCol.onFilter = (value, record) => {
+          return record.vpcid === value
+        }
+      }
       return [
         {
+          key: 'name',
           dataIndex: 'name',
           title: this.$t('label.networks'),
           width: '40%'
         },
         {
+          key: 'type',
           dataIndex: 'type',
           title: this.$t('label.guestiptype'),
-          width: '30%'
+          width: '15%'
         },
+        vpcCol,
         {
-          dataIndex: 'vpcName',
-          title: this.$t('label.vpc'),
-          width: '30%',
-          filters: vpcFilter,
-          filteredValue: _.get(this.filteredInfo, 'id'),
-          onFilter: (value, record) => {
-            return record.vpcid === value
-          }
+          key: 'supportsvmautoscaling',
+          dataIndex: 'supportsvmautoscaling',
+          title: this.$t('label.supportsvmautoscaling'),
+          width: '25%'
         }
       ]
     },
     rowSelection () {
-      return {
-        type: 'checkbox',
-        selectedRowKeys: this.selectedRowKeys,
-        onChange: (rows) => {
-          this.$emit('select-network-item', rows)
+      if (this.autoscale) {
+        return {
+          type: 'radio',
+          selectedRowKeys: this.selectedRowKeys,
+          onChange: this.onSelectRow
+        }
+      } else {
+        return {
+          type: 'checkbox',
+          selectedRowKeys: this.selectedRowKeys,
+          onChange: (rows) => {
+            this.$emit('select-network-item', rows)
+          }
         }
       }
     },
@@ -192,6 +233,7 @@ export default {
         return {
           ...network,
           ...{
+            supportsvmautoscaling: network.supportsvmautoscaling ? 'Yes' : 'No',
             vpcName: _.get(vpc, 'displaytext')
           }
         }
@@ -205,6 +247,13 @@ export default {
       }
     },
     loading () {
+      api('listZones', { id: this.zoneId }).then(json => {
+        const zoneResponse = json.listzonesresponse.zone || []
+        this.showCreateButton = false
+        if (zoneResponse && zoneResponse.length > 0 && (!zoneResponse[0].securitygroupsenabled || (isAdmin() && zoneResponse[0].networktype === 'Advanced'))) {
+          this.showCreateButton = true
+        }
+      })
       if (!this.loading) {
         if (this.preFillContent.networkids) {
           this.selectedRowKeys = this.preFillContent.networkids
@@ -223,20 +272,63 @@ export default {
           }
         }
       }
+    },
+    items: {
+      deep: true,
+      handler () {
+        if (this.items && this.items.length > 0 &&
+          this.networksBeforeCreate) {
+          var user = this.$store.getters.userInfo
+          for (var network of this.items) {
+            if (user.account !== network.account ||
+              user.domainid !== network.domainid ||
+              (new Date()).getTime() - Date.parse(network.created) > 30000) {
+              continue
+            }
+            var networkFoundInNewList = false
+            for (var oldNetwork of this.networksBeforeCreate) {
+              if (oldNetwork.id === network.id) {
+                networkFoundInNewList = true
+                break
+              }
+            }
+            if (!networkFoundInNewList) {
+              this.selectedRowKeys.push(network.id)
+              this.$emit('select-network-item', this.selectedRowKeys)
+              break
+            }
+          }
+          this.networksBeforeCreate = null
+        }
+      }
     }
   },
-  beforeCreate () {
-    this.form = this.$form.createForm(this)
-  },
   created () {
+    this.vpcs = []
+    const projectId = store?.getters?.project?.id || null
+    var params = {}
+    if (projectId) {
+      params.projectid = projectId
+    }
     api('listVPCs', {
-      projectid: store.getters.project.id
+      params
     }).then((response) => {
       this.vpcs = _.get(response, 'listvpcsresponse.vpc')
     })
   },
   inject: ['vmFetchNetworks'],
   methods: {
+    fetchVPCs () {
+      const projectId = store?.getters?.project?.id || null
+      if (!projectId) {
+        return false
+      }
+      api('listVPCs', {
+        projectid: store.getters.project.id
+      }).then((response) => {
+        this.vpcs = _.get(response, 'listvpcsresponse.vpc')
+      })
+    },
     getDetails (network) {
       const detail = [
         {
@@ -273,6 +365,10 @@ export default {
       this.options.pageSize = pageSize
       this.$emit('handle-search-filter', this.options)
     },
+    onSelectRow (value) {
+      this.selectedRowKeys = value
+      this.$emit('select-network-item', value[0])
+    },
     listNetworkOfferings () {
       return new Promise((resolve, reject) => {
         const args = {}
@@ -290,6 +386,10 @@ export default {
           resolve(error)
         })
       })
+    },
+    onCreateNetworkClick () {
+      this.networksBeforeCreate = this.items
+      this.showCreateForm = true
     }
   }
 }

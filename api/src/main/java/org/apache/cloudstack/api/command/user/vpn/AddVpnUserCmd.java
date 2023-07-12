@@ -39,7 +39,6 @@ import com.cloud.user.Account;
 public class AddVpnUserCmd extends BaseAsyncCreateCmd {
     public static final Logger s_logger = Logger.getLogger(AddVpnUserCmd.class.getName());
 
-    private static final String s_name = "addvpnuserresponse";
 
     /////////////////////////////////////////////////////
     //////////////// API parameters /////////////////////
@@ -91,11 +90,6 @@ public class AddVpnUserCmd extends BaseAsyncCreateCmd {
     /////////////////////////////////////////////////////
 
     @Override
-    public String getCommandName() {
-        return s_name;
-    }
-
-    @Override
     public long getEntityOwnerId() {
         Long accountId = _accountService.finalyzeAccountId(accountName, domainId, projectId, true);
         if (accountId == null) {
@@ -123,7 +117,7 @@ public class AddVpnUserCmd extends BaseAsyncCreateCmd {
             if (!_ravService.applyVpnUsers(vpnUser.getAccountId(), userName)) {
                 throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, "Failed to add vpn user");
             }
-        }catch (Exception ex) {
+        } catch (Exception ex) {
             throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, ex.getMessage());
         }
 

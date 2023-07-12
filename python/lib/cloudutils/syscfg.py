@@ -14,7 +14,7 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-from .utilities import Distribution, serviceOpsRedhat,serviceOpsUbuntu,serviceOpsRedhat7Later
+from .utilities import Distribution, serviceOpsRedhat,serviceOpsUbuntu,serviceOpsRedhat7Later,serviceOpsSUSE
 from .serviceConfig import *
 class sysConfigFactory:
     @staticmethod
@@ -37,14 +37,16 @@ class sysConfigAgentFactory:
         distribution = glbEnv.distribution.getVersion()
         if distribution == "Ubuntu":
             return sysConfigAgentUbuntu(glbEnv)
-        elif distribution == "Fedora" or distribution == "RHEL6":
-            return sysConfigRedhat6(glbEnv)
         elif distribution == "CentOS" or distribution == "RHEL5":
-            return sysConfigRedhat5(glbEnv)
+            return sysConfigEL5(glbEnv)
+        elif distribution == "Fedora" or distribution == "RHEL6":
+            return sysConfigEL6(glbEnv)
         elif distribution == "RHEL7":
-            return sysConfigRedhat7(glbEnv)
-        elif distribution == "RHEL8":
-            return sysConfigRedhat8(glbEnv)
+            return sysConfigEL7(glbEnv)
+        elif distribution in ["RHEL8", "RHEL9"]:
+            return sysConfigEL(glbEnv)
+        elif distribution == "SUSE":
+            return sysConfigSUSE(glbEnv)
         else:
             print("Can't find the distribution version")
             return sysConfig()
@@ -80,7 +82,7 @@ class sysConfig(object):
             return False
 
         for service in self.services:
-            if not service.configration():
+            if not service.configuration():
                 raise CloudInternalException("Configuration failed for service %s" % service.serviceName)
 
     def restore(self):
@@ -149,64 +151,84 @@ class sysConfigAgentRedhat7Base(sysConfigAgent):
         self.svo = serviceOpsRedhat7Later()
         super(sysConfigAgentRedhat7Base, self).__init__(env)
 
-class sysConfigAgentRedhat8Base(sysConfigAgent):
+class sysConfigAgentELBase(sysConfigAgent):
     def __init__(self, env):
         self.svo = serviceOpsRedhat7Later()
-        super(sysConfigAgentRedhat8Base, self).__init__(env)
+        super(sysConfigAgentELBase, self).__init__(env)
+
+class sysConfigAgentSUSE(sysConfigAgent):
+    def __init__(self, env):
+        self.svo = serviceOpsSUSE()
+        super(sysConfigAgentSUSE, self).__init__(env)
 
 class sysConfigAgentUbuntu(sysConfigAgent):
     def __init__(self, glbEnv):
         super(sysConfigAgentUbuntu, self).__init__(glbEnv)
         self.svo = serviceOpsUbuntu()
 
-        self.services = [securityPolicyConfigUbuntu(self),
+        self.services = [hostConfig(self),
+                         securityPolicyConfigUbuntu(self),
                          networkConfigUbuntu(self),
                          libvirtConfigUbuntu(self),
                          firewallConfigUbuntu(self),
                          nfsConfig(self),
                          cloudAgentConfig(self)]
 
-#it covers RHEL6/Fedora13/Fedora14
-class sysConfigRedhat6(sysConfigAgentRedhatBase):
+#It covers RHEL5/CentOS5, the mainly difference is that there is no cgroup
+class sysConfigEL5(sysConfigAgentRedhatBase):
     def __init__(self, glbEnv):
-        super(sysConfigRedhat6, self).__init__(glbEnv)
-        self.services = [cgroupConfig(self),
+        super(sysConfigEL5, self).__init__(glbEnv)
+        self.services = [hostConfig(self),
+                         securityPolicyConfigRedhat(self),
+                         networkConfigRedhat(self),
+                         libvirtConfigRedhat(self),
+                         firewallConfigAgent(self),
+                         cloudAgentConfig(self)]
+
+#it covers RHEL6/Fedora13/Fedora14
+class sysConfigEL6(sysConfigAgentRedhatBase):
+    def __init__(self, glbEnv):
+        super(sysConfigEL6, self).__init__(glbEnv)
+        self.services = [hostConfig(self),
+                         cgroupConfig(self),
                          securityPolicyConfigRedhat(self),
                          networkConfigRedhat(self),
                          libvirtConfigRedhat(self),
                          firewallConfigAgent(self),
                          nfsConfig(self),
-                         cloudAgentConfig(self)]
-
-#It covers RHEL5/CentOS5, the mainly difference is that there is no cgroup
-class sysConfigRedhat5(sysConfigAgentRedhatBase):
-    def __init__(self, glbEnv):
-        super(sysConfigRedhat5, self).__init__(glbEnv)
-        self.services = [
-                         securityPolicyConfigRedhat(self),
-                         networkConfigRedhat(self),
-                         libvirtConfigRedhat(self),
-                         firewallConfigAgent(self),
                          cloudAgentConfig(self)]
 
 #it covers RHEL7
-class sysConfigRedhat7(sysConfigAgentRedhat7Base):
+class sysConfigEL7(sysConfigAgentRedhat7Base):
     def __init__(self, glbEnv):
-        super(sysConfigRedhat7, self).__init__(glbEnv)
-        self.services = [securityPolicyConfigRedhat(self),
+        super(sysConfigEL7, self).__init__(glbEnv)
+        self.services = [hostConfig(self),
+                         securityPolicyConfigRedhat(self),
                          networkConfigRedhat(self),
                          libvirtConfigRedhat(self),
                          firewallConfigAgent(self),
                          nfsConfig(self),
                          cloudAgentConfig(self)]
 
-#it covers RHEL8
-class sysConfigRedhat8(sysConfigAgentRedhat8Base):
+#it covers RHEL8 and later
+class sysConfigEL(sysConfigAgentELBase):
     def __init__(self, glbEnv):
-        super(sysConfigRedhat8, self).__init__(glbEnv)
-        self.services = [securityPolicyConfigRedhat(self),
+        super(sysConfigEL, self).__init__(glbEnv)
+        self.services = [hostConfig(self),
+                         securityPolicyConfigRedhat(self),
                          networkConfigRedhat(self),
                          libvirtConfigRedhat(self),
+                         firewallConfigAgent(self),
+                         nfsConfig(self),
+                         cloudAgentConfig(self)]
+
+class sysConfigSUSE(sysConfigAgentSUSE):
+    def __init__(self, glbEnv):
+        super(sysConfigSUSE, self).__init__(glbEnv)
+        self.services = [hostConfig(self),
+                         securityPolicyConfigSUSE(self),
+                         networkConfigSUSE(self),
+                         libvirtConfigSUSE(self),
                          firewallConfigAgent(self),
                          nfsConfig(self),
                          cloudAgentConfig(self)]

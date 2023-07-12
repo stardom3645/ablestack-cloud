@@ -64,12 +64,19 @@ public final class LibvirtPlugNicCommandWrapper extends CommandWrapper<PlugNicCo
             }
             final VifDriver vifDriver = libvirtComputingResource.getVifDriver(nic.getType(), nic.getName());
             final InterfaceDef interfaceDef = vifDriver.plug(nic, "Other PV", "", null);
+            if (command.getDetails() != null) {
+                libvirtComputingResource.setInterfaceDefQueueSettings(command.getDetails(), null, interfaceDef);
+            }
             vm.attachDevice(interfaceDef.toString());
 
             // apply default network rules on new nic
             if (vmType == VirtualMachine.Type.User && nic.isSecurityGroupEnabled()) {
                 final Long vmId = Long.valueOf(vmName.split("-")[2]);
                 libvirtComputingResource.applyDefaultNetworkRulesOnNic(conn, vmName, vmId, nic, false, false);
+            }
+
+            if (vmType == VirtualMachine.Type.User) {
+                libvirtComputingResource.detachAndAttachConfigDriveISO(conn, vmName);
             }
 
             return new PlugNicAnswer(command, true, "success");

@@ -18,14 +18,10 @@ package com.cloud.storage.resource;
 
 import java.util.List;
 
-import org.apache.log4j.Logger;
-import org.apache.log4j.NDC;
-
-import com.google.gson.Gson;
-import com.vmware.vim25.ManagedObjectReference;
-
 import org.apache.cloudstack.storage.command.StorageSubSystemCommand;
 import org.apache.cloudstack.storage.resource.SecondaryStorageResourceHandler;
+import org.apache.log4j.Logger;
+import org.apache.log4j.NDC;
 
 import com.cloud.agent.api.Answer;
 import com.cloud.agent.api.BackupSnapshotCommand;
@@ -47,10 +43,13 @@ import com.cloud.hypervisor.vmware.mo.VmwareHostType;
 import com.cloud.hypervisor.vmware.mo.VmwareHypervisorHost;
 import com.cloud.hypervisor.vmware.mo.VmwareHypervisorHostNetworkSummary;
 import com.cloud.hypervisor.vmware.util.VmwareContext;
+import com.cloud.hypervisor.vmware.util.VmwareHelper;
 import com.cloud.serializer.GsonHelper;
 import com.cloud.utils.NumbersUtil;
 import com.cloud.utils.Pair;
 import com.cloud.utils.StringUtils;
+import com.google.gson.Gson;
+import com.vmware.vim25.ManagedObjectReference;
 
 public class VmwareSecondaryStorageResourceHandler implements SecondaryStorageResourceHandler, VmwareHostService, VmwareStorageMount {
     private static final Logger s_logger = Logger.getLogger(VmwareSecondaryStorageResourceHandler.class);
@@ -96,9 +95,7 @@ public class VmwareSecondaryStorageResourceHandler implements SecondaryStorageRe
         try {
             Answer answer;
             NDC.push(getCommandLogTitle(cmd));
-
-            if (s_logger.isDebugEnabled())
-                s_logger.debug("Executing " + _gson.toJson(cmd));
+            logCommand(cmd);
 
             if (cmd instanceof PrimaryStorageDownloadCommand) {
                 answer = execute((PrimaryStorageDownloadCommand)cmd);
@@ -142,6 +139,14 @@ public class VmwareSecondaryStorageResourceHandler implements SecondaryStorageRe
                 s_logger.debug("Done executing " + _gson.toJson(cmd));
             recycleServiceContext();
             NDC.pop();
+        }
+    }
+
+    private void logCommand(Command cmd) {
+        try {
+            s_logger.debug(String.format("Executing command: [%s].", _gson.toJson(cmd)));
+        } catch (Exception e) {
+            s_logger.debug(String.format("Executing command: [%s].", cmd.getClass().getSimpleName()));
         }
     }
 
@@ -310,5 +315,18 @@ public class VmwareSecondaryStorageResourceHandler implements SecondaryStorageRe
     @Override
     public String getMountPoint(String storageUrl, String nfsVersion) {
         return _resource.getRootDir(storageUrl, nfsVersion);
+    }
+
+    @Override
+    public String createLogMessageException(Throwable e, Command command) {
+        String message = String.format("%s failed due to [%s].", command.getClass().getSimpleName(), VmwareHelper.getExceptionMessage(e));
+        s_logger.error(message, e);
+
+        return message;
+    }
+
+    @Override
+    public VmwareStorageProcessor getStorageProcessor() {
+        return null;
     }
 }

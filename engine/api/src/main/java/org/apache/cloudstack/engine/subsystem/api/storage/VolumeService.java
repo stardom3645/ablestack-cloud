@@ -18,6 +18,7 @@
  */
 package org.apache.cloudstack.engine.subsystem.api.storage;
 
+import com.cloud.agent.api.Answer;
 import java.util.Map;
 
 import org.apache.cloudstack.engine.cloud.entity.api.VolumeEntity;
@@ -29,6 +30,8 @@ import com.cloud.exception.StorageAccessException;
 import com.cloud.host.Host;
 import com.cloud.hypervisor.Hypervisor.HypervisorType;
 import com.cloud.offering.DiskOffering;
+import com.cloud.storage.Volume;
+import com.cloud.user.Account;
 import com.cloud.utils.Pair;
 
 public interface VolumeService {
@@ -100,4 +103,13 @@ public interface VolumeService {
     VolumeInfo updateHypervisorSnapshotReserveForVolume(DiskOffering diskOffering, long volumeId, HypervisorType hyperType);
 
     void unmanageVolume(long volumeId);
+
+    /**
+     * After volume migration, copies snapshot policies from the source volume to destination volume; then, it destroys and expunges the source volume.
+     * @return If no exception happens, it will return false, otherwise true.
+     */
+    boolean copyPoliciesBetweenVolumesAndDestroySourceVolumeAfterMigration(ObjectInDataStoreStateMachine.Event destinationEvent, Answer destinationEventAnswer,
+      VolumeInfo sourceVolume, VolumeInfo destinationVolume, boolean retryExpungeVolumeAsync);
+
+    void moveVolumeOnSecondaryStorageToAnotherAccount(Volume volume, Account sourceAccount, Account destAccount);
 }

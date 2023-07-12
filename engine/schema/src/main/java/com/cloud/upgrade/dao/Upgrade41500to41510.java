@@ -64,6 +64,7 @@ public class Upgrade41500to41510 implements DbUpgrade, DbUpgradeSystemVmTemplate
 
     @Override
     public void performDataMigration(Connection conn) {
+        // nothing to do for this upgrade
     }
 
     @Override

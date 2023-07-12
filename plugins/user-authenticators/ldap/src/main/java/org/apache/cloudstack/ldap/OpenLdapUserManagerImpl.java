@@ -35,7 +35,7 @@ import javax.naming.ldap.PagedResultsResponseControl;
 
 import org.apache.cloudstack.ldap.dao.LdapTrustMapDao;
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 
 public class OpenLdapUserManagerImpl implements LdapUserManager {
@@ -83,7 +83,7 @@ public class OpenLdapUserManagerImpl implements LdapUserManager {
         usernameFilter.append("(");
         usernameFilter.append(_ldapConfiguration.getUsernameAttribute(domainId));
         usernameFilter.append("=");
-        usernameFilter.append((username == null ? "*" : username));
+        usernameFilter.append((username == null ? "*" : LdapUtils.escapeLDAPSearchFilter(username)));
         usernameFilter.append(")");
 
         String memberOfAttribute = _ldapConfiguration.getUserMemberOfAttribute(domainId);
@@ -154,7 +154,7 @@ public class OpenLdapUserManagerImpl implements LdapUserManager {
         groupNameFilter.append("(");
         groupNameFilter.append(_ldapConfiguration.getCommonNameAttribute());
         groupNameFilter.append("=");
-        groupNameFilter.append((groupName == null ? "*" : groupName));
+        groupNameFilter.append((groupName == null ? "*" : LdapUtils.escapeLDAPSearchFilter(groupName)));
         groupNameFilter.append(")");
 
         final StringBuilder result = new StringBuilder();
@@ -194,7 +194,7 @@ public class OpenLdapUserManagerImpl implements LdapUserManager {
         usernameFilter.append("(");
         usernameFilter.append(_ldapConfiguration.getUsernameAttribute(domainId));
         usernameFilter.append("=");
-        usernameFilter.append((username == null ? "*" : username));
+        usernameFilter.append((username == null ? "*" : LdapUtils.escapeLDAPSearchFilter(username)));
         usernameFilter.append(")");
 
         final StringBuilder memberOfFilter = new StringBuilder();

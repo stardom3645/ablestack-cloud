@@ -24,59 +24,64 @@
       :rowKey="record => record.id"
       :pagination="false"
       :loading="loading">
-      <div slot="icon" slot-scope="text, record">
-        <label class="interval-icon">
-          <span v-if="record.intervaltype===0">
-            <a-icon type="clock-circle" />
+      <template #bodyCell="{ column, record }">
+        <template v-if="column.key === 'icon'">
+          <label class="interval-icon">
+            <span v-if="record.intervaltype===0">
+              <clock-circle-outlined />
+            </span>
+            <span class="custom-icon icon-daily" v-else-if="record.intervaltype===1">
+              <calendar-outlined />
+            </span>
+            <span class="custom-icon icon-weekly" v-else-if="record.intervaltype===2">
+              <calendar-outlined />
+            </span>
+            <span class="custom-icon icon-monthly" v-else-if="record.intervaltype===3">
+              <calendar-outlined />
+            </span>
+          </label>
+        </template>
+        <template v-if="column.key === 'time'">
+          <label class="interval-content">
+            <span v-if="record.intervaltype===0">{{ record.schedule + $t('label.min.past.hour') }}</span>
+            <span v-else>{{ record.schedule.split(':')[1] + ':' + record.schedule.split(':')[0] }}</span>
+          </label>
+        </template>
+        <template v-if="column.key === 'interval'">
+          <span v-if="record.intervaltype===2">
+            {{ `${$t('label.every')} ${$t(listDayOfWeek[record.schedule.split(':')[2] - 1])}` }}
           </span>
-          <span class="custom-icon icon-daily" v-else-if="record.intervaltype===1">
-            <a-icon type="calendar" />
+          <span v-else-if="record.intervaltype===3">
+            {{ `${$t('label.day')} ${record.schedule.split(':')[2]} ${$t('label.of.month')}` }}
           </span>
-          <span class="custom-icon icon-weekly" v-else-if="record.intervaltype===2">
-            <a-icon type="calendar" />
-          </span>
-          <span class="custom-icon icon-monthly" v-else-if="record.intervaltype===3">
-            <a-icon type="calendar" />
-          </span>
-        </label>
-      </div>
-      <div slot="time" slot-scope="text, record">
-        <label class="interval-content">
-          <span v-if="record.intervaltype===0">{{ record.schedule + $t('label.min.past.hour') }}</span>
-          <span v-else>{{ record.schedule.split(':')[1] + ':' + record.schedule.split(':')[0] }}</span>
-        </label>
-      </div>
-      <div slot="interval" slot-scope="text, record">
-        <span v-if="record.intervaltype===2">
-          {{ `${$t('label.every')} ${$t(listDayOfWeek[record.schedule.split(':')[2] - 1])}` }}
-        </span>
-        <span v-else-if="record.intervaltype===3">
-          {{ `${$t('label.day')} ${record.schedule.split(':')[2]} ${$t('label.of.month')}` }}
-        </span>
-      </div>
-      <div slot="timezone" slot-scope="text, record">
-        <label>{{ getTimeZone(record.timezone) }}</label>
-      </div>
-      <div slot="tags" slot-scope="text, record">
-        <a-tag v-for="(tag, index) in record.tags" :key="index">{{ tag.key + '=' + tag.value }}</a-tag>
-      </div>
-      <div slot="action" class="account-button-action" slot-scope="text, record">
-        <tooltip-button
-          tooltipPlacement="top"
-          :tooltip="$t('label.delete')"
-          type="danger"
-          icon="close"
-          size="small"
-          :loading="actionLoading"
-          @click="handleClickDelete(record)" />
-      </div>
+        </template>
+        <template v-if="column.key === 'timezone'">
+          <label>{{ getTimeZone(record.timezone) }}</label>
+        </template>
+        <template v-if="column.key === 'tags'">
+          <a-tag v-for="(tag, index) in record.tags" :key="index">{{ tag.key + '=' + tag.value }}</a-tag>
+        </template>
+        <template v-if="column.key === 'actions'">
+          <div class="account-button-action">
+            <tooltip-button
+              tooltipPlacement="top"
+              :tooltip="$t('label.delete')"
+              type="primary"
+              :danger="true"
+              icon="close-outlined"
+              size="small"
+              :loading="actionLoading"
+              @onClick="handleClickDelete(record)" />
+          </div>
+        </template>
+      </template>
     </a-table>
   </div>
 </template>
 
 <script>
 import { api } from '@/api'
-import TooltipButton from '@/components/view/TooltipButton'
+import TooltipButton from '@/components/widgets/TooltipButton'
 import { timeZoneName } from '@/utils/timezone'
 
 export default {
@@ -109,41 +114,41 @@ export default {
   created () {
     this.columns = [
       {
+        key: 'icon',
         title: '',
         dataIndex: 'icon',
-        width: 30,
-        scopedSlots: { customRender: 'icon' }
+        width: 30
       },
       {
+        key: 'time',
         title: this.$t('label.time'),
-        dataIndex: 'schedule',
-        scopedSlots: { customRender: 'time' }
+        dataIndex: 'schedule'
       },
       {
+        key: 'interval',
         title: '',
-        dataIndex: 'interval',
-        scopedSlots: { customRender: 'interval' }
+        dataIndex: 'interval'
       },
       {
+        key: 'timezone',
         title: this.$t('label.timezone'),
-        dataIndex: 'timezone',
-        scopedSlots: { customRender: 'timezone' }
+        dataIndex: 'timezone'
       },
       {
+        key: 'keep',
         title: this.$t('label.keep'),
-        dataIndex: 'maxsnaps',
-        scopedSlots: { customRender: 'keep' }
+        dataIndex: 'maxsnaps'
       },
       {
+        key: 'tags',
         title: this.$t('label.tags'),
-        dataIndex: 'tags',
-        scopedSlots: { customRender: 'tags' }
+        dataIndex: 'tags'
       },
       {
-        title: this.$t('label.action'),
-        dataIndex: 'action',
-        width: 50,
-        scopedSlots: { customRender: 'action' }
+        key: 'actions',
+        title: this.$t('label.actions'),
+        dataIndex: 'actions',
+        width: 50
       }
     ]
   },
@@ -151,8 +156,11 @@ export default {
     this.dataSchedules = this.dataSource
   },
   watch: {
-    dataSource (newData, oldData) {
-      this.dataSchedules = newData
+    dataSource: {
+      deep: true,
+      handler (newData) {
+        this.dataSchedules = newData
+      }
     }
   },
   methods: {
@@ -217,7 +225,7 @@ export default {
     }
   }
 
-  /deep/.ant-btn > .anticon {
+  :deep(.ant-btn) > .anticon {
     line-height: 1.8;
   }
 </style>

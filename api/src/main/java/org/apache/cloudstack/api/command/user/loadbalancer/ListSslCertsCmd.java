@@ -39,9 +39,8 @@ import com.cloud.utils.exception.CloudRuntimeException;
 @APICommand(name = "listSslCerts", description = "Lists SSL certificates", responseObject = SslCertResponse.class,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class ListSslCertsCmd extends BaseCmd {
-    public static final Logger s_logger = Logger.getLogger(DeleteSslCertCmd.class.getName());
+    public static final Logger s_logger = Logger.getLogger(ListSslCertsCmd.class.getName());
 
-    private static final String s_name = "listsslcertsresponse";
 
     @Inject
     CertService _certService;
@@ -100,11 +99,6 @@ public class ListSslCertsCmd extends BaseCmd {
         } catch (Exception e) {
             throw new CloudRuntimeException(e);
         }
-    }
-
-    @Override
-    public String getCommandName() {
-        return s_name;
     }
 
     @Override

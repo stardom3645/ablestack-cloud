@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
 
+import com.cloud.agent.api.LogLevel;
 import com.cloud.network.element.NetworkElement;
 import com.cloud.template.VirtualMachineTemplate.BootloaderType;
 import com.cloud.vm.VirtualMachine;
@@ -57,6 +58,7 @@ public class VirtualMachineTO {
     boolean enableHA;
     boolean limitCpuUse;
     boolean enableDynamicallyScaleVm;
+    @LogLevel(LogLevel.Log4jLevel.Off)
     String vncPassword;
     String vncAddr;
     Map<String, String> params;
@@ -144,6 +146,10 @@ public class VirtualMachineTO {
 
     public Type getType() {
         return type;
+    }
+
+    public void setType(Type type) {
+        this.type = type;
     }
 
     public BootloaderType getBootloader() {
@@ -412,5 +418,10 @@ public class VirtualMachineTO {
 
     public void setDeployAsIsInfo(DeployAsIsInfoTO deployAsIsInfo) {
         this.deployAsIsInfo = deployAsIsInfo;
+    }
+
+    @Override
+    public String toString() {
+        return String.format("VM {id: \"%s\", name: \"%s\", uuid: \"%s\", type: \"%s\"}", id, name, uuid, type);
     }
 }

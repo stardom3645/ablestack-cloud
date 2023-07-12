@@ -97,7 +97,8 @@ public class VMTemplateDaoImpl extends GenericDaoBase<VMTemplateVO, Long> implem
     private SearchBuilder<VMTemplateVO> AllFieldsSearch;
     protected SearchBuilder<VMTemplateVO> ParentTemplateIdSearch;
     private SearchBuilder<VMTemplateVO> InactiveUnremovedTmpltSearch;
-
+    private SearchBuilder<VMTemplateVO> LatestTemplateByHypervisorTypeSearch;
+    private SearchBuilder<VMTemplateVO> userDataSearch;
     @Inject
     ResourceTagDao _tagsDao;
 
@@ -105,6 +106,11 @@ public class VMTemplateDaoImpl extends GenericDaoBase<VMTemplateVO, Long> implem
     private String consoleProxyTmpltName;
 
     public VMTemplateDaoImpl() {
+        super();
+        LatestTemplateByHypervisorTypeSearch = createSearchBuilder();
+        LatestTemplateByHypervisorTypeSearch.and("hypervisorType", LatestTemplateByHypervisorTypeSearch.entity().getHypervisorType(), SearchCriteria.Op.EQ);
+        LatestTemplateByHypervisorTypeSearch.and("templateType", LatestTemplateByHypervisorTypeSearch.entity().getTemplateType(), SearchCriteria.Op.EQ);
+        LatestTemplateByHypervisorTypeSearch.and("removed", LatestTemplateByHypervisorTypeSearch.entity().getRemoved(), SearchCriteria.Op.NULL);
     }
 
     @Override
@@ -227,6 +233,20 @@ public class VMTemplateDaoImpl extends GenericDaoBase<VMTemplateVO, Long> implem
         sc.addAnd("ready", SearchCriteria.Op.EQ, true);
         sc.addAnd("format", SearchCriteria.Op.NEQ, Storage.ImageFormat.ISO);
         return listIncludingRemovedBy(sc);
+    }
+
+
+    @Override
+    public VMTemplateVO findLatestTemplateByName(String name) {
+        SearchCriteria<VMTemplateVO> sc = createSearchCriteria();
+        sc.addAnd("name", SearchCriteria.Op.EQ, name);
+        sc.addAnd("removed", SearchCriteria.Op.NULL);
+        Filter filter = new Filter(VMTemplateVO.class, "id", false, null, 1L);
+        List<VMTemplateVO> templates = listBy(sc, filter);
+        if ((templates != null) && !templates.isEmpty()) {
+            return templates.get(0);
+        }
+        return null;
     }
 
     @Override
@@ -401,6 +421,11 @@ public class VMTemplateDaoImpl extends GenericDaoBase<VMTemplateVO, Long> implem
         InactiveUnremovedTmpltSearch.and("state", InactiveUnremovedTmpltSearch.entity().getState(), SearchCriteria.Op.IN);
         InactiveUnremovedTmpltSearch.and("removed", InactiveUnremovedTmpltSearch.entity().getRemoved(), SearchCriteria.Op.NULL);
         InactiveUnremovedTmpltSearch.done();
+
+        userDataSearch = createSearchBuilder();
+        userDataSearch.and("userDataId", userDataSearch.entity().getUserDataId(), SearchCriteria.Op.EQ);
+        userDataSearch.and("state", userDataSearch.entity().getState(), SearchCriteria.Op.EQ);
+        userDataSearch.done();
 
         return result;
     }
@@ -588,6 +613,19 @@ public class VMTemplateDaoImpl extends GenericDaoBase<VMTemplateVO, Long> implem
     }
 
     @Override
+    public VMTemplateVO findLatestTemplateByTypeAndHypervisor(HypervisorType hypervisorType, TemplateType type) {
+        SearchCriteria<VMTemplateVO> sc = LatestTemplateByHypervisorTypeSearch.create();
+        sc.setParameters("hypervisorType", hypervisorType);
+        sc.setParameters("templateType", type);
+        Filter filter = new Filter(VMTemplateVO.class, "id", false, null, 1L);
+        List<VMTemplateVO> templates = listBy(sc, filter);
+        if (templates != null && !templates.isEmpty()) {
+            return templates.get(0);
+        }
+        return null;
+    }
+
+    @Override
     public Long countTemplatesForAccount(long accountId) {
         SearchCriteria<Long> sc = CountTemplatesByAccount.create();
         sc.setParameters("account", accountId);
@@ -596,9 +634,17 @@ public class VMTemplateDaoImpl extends GenericDaoBase<VMTemplateVO, Long> implem
     }
 
     @Override
-     public List<VMTemplateVO> listUnRemovedTemplatesByStates(VirtualMachineTemplate.State ...states) {
+    public List<VMTemplateVO> listUnRemovedTemplatesByStates(VirtualMachineTemplate.State ...states) {
         SearchCriteria<VMTemplateVO> sc = InactiveUnremovedTmpltSearch.create();
         sc.setParameters("state", (Object[]) states);
+        return listBy(sc);
+    }
+
+    @Override
+    public List<VMTemplateVO> findTemplatesLinkedToUserdata(long userdataId) {
+        SearchCriteria<VMTemplateVO> sc = userDataSearch.create();
+        sc.setParameters("userDataId", userdataId);
+        sc.setParameters("state", VirtualMachineTemplate.State.Active.toString());
         return listBy(sc);
     }
 

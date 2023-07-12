@@ -32,11 +32,11 @@ import org.apache.cloudstack.api.ServerApiException;
 import org.apache.cloudstack.api.response.SuccessResponse;
 import org.apache.cloudstack.ca.CAManager;
 import org.apache.cloudstack.context.CallContext;
+import org.apache.commons.lang3.StringUtils;
 
 import com.cloud.event.EventTypes;
-import com.google.common.base.Strings;
 
-@APICommand(name = RevokeCertificateCmd.APINAME,
+@APICommand(name = "revokeCertificate",
         description = "Revokes certificate using configured CA plugin",
         responseObject = SuccessResponse.class,
         requestHasSensitiveInfo = true,
@@ -45,7 +45,6 @@ import com.google.common.base.Strings;
         authorized = {RoleType.Admin})
 public class RevokeCertificateCmd extends BaseAsyncCmd {
 
-    public static final String APINAME = "revokeCertificate";
 
     @Inject
     private CAManager caManager;
@@ -68,7 +67,7 @@ public class RevokeCertificateCmd extends BaseAsyncCmd {
     /////////////////////////////////////////////////////
 
     public BigInteger getSerialBigInteger() {
-        if (Strings.isNullOrEmpty(serial)) {
+        if (StringUtils.isEmpty(serial)) {
             throw new ServerApiException(ApiErrorCode.PARAM_ERROR, "Certificate serial cannot be empty");
         }
         return new BigInteger(serial, 16);
@@ -92,11 +91,6 @@ public class RevokeCertificateCmd extends BaseAsyncCmd {
         SuccessResponse response = new SuccessResponse(getCommandName());
         response.setSuccess(result);
         setResponseObject(response);
-    }
-
-    @Override
-    public String getCommandName() {
-        return APINAME.toLowerCase() + BaseCmd.RESPONSE_SUFFIX;
     }
 
     @Override

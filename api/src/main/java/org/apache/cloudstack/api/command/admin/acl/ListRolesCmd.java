@@ -33,12 +33,10 @@ import org.apache.commons.lang3.StringUtils;
 
 import com.cloud.user.Account;
 import com.cloud.utils.Pair;
-import com.google.common.base.Strings;
 
-@APICommand(name = ListRolesCmd.APINAME, description = "Lists dynamic roles in CloudStack", responseObject = RoleResponse.class, requestHasSensitiveInfo = false, responseHasSensitiveInfo = false, since = "4.9.0", authorized = {
+@APICommand(name = "listRoles", description = "Lists dynamic roles in CloudStack", responseObject = RoleResponse.class, requestHasSensitiveInfo = false, responseHasSensitiveInfo = false, since = "4.9.0", authorized = {
         RoleType.Admin, RoleType.ResourceAdmin, RoleType.DomainAdmin })
 public class ListRolesCmd extends BaseListCmd {
-    public static final String APINAME = "listRoles";
 
     /////////////////////////////////////////////////////
     //////////////// API parameters /////////////////////
@@ -66,7 +64,7 @@ public class ListRolesCmd extends BaseListCmd {
     }
 
     public RoleType getRoleType() {
-        if (!Strings.isNullOrEmpty(roleType)) {
+        if (StringUtils.isNotEmpty(roleType)) {
             return RoleType.valueOf(roleType);
         }
         return null;
@@ -75,11 +73,6 @@ public class ListRolesCmd extends BaseListCmd {
     /////////////////////////////////////////////////////
     /////////////// API Implementation///////////////////
     /////////////////////////////////////////////////////
-
-    @Override
-    public String getCommandName() {
-        return APINAME.toLowerCase() + BaseListCmd.RESPONSE_SUFFIX;
-    }
 
     @Override
     public long getEntityOwnerId() {
@@ -99,6 +92,7 @@ public class ListRolesCmd extends BaseListCmd {
             roleResponse.setRoleType(role.getRoleType());
             roleResponse.setDescription(role.getDescription());
             roleResponse.setIsDefault(role.isDefault());
+            roleResponse.setPublicRole(role.isPublicRole());
             roleResponse.setObjectName("role");
             roleResponses.add(roleResponse);
         }
@@ -111,9 +105,9 @@ public class ListRolesCmd extends BaseListCmd {
     public void execute() {
         Pair<List<Role>, Integer> roles;
         if (getId() != null && getId() > 0L) {
-            roles = new Pair<List<Role>, Integer>(Collections.singletonList(roleService.findRole(getId())), 1);
-        } else if (StringUtils.isNotBlank(getName())) {
-            roles = roleService.findRolesByName(getName(), getStartIndex(), getPageSizeVal());
+            roles = new Pair<>(Collections.singletonList(roleService.findRole(getId(), true)), 1);
+        } else if (StringUtils.isNotBlank(getName()) || StringUtils.isNotBlank(getKeyword())) {
+            roles = roleService.findRolesByName(getName(), getKeyword(), getStartIndex(), getPageSizeVal());
         } else if (getRoleType() != null) {
             roles = roleService.findRolesByType(getRoleType(), getStartIndex(), getPageSizeVal());
         } else {

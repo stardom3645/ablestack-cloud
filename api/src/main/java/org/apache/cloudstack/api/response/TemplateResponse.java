@@ -34,7 +34,7 @@ import com.google.gson.annotations.SerializedName;
 
 @EntityReference(value = VirtualMachineTemplate.class)
 @SuppressWarnings("unused")
-public class TemplateResponse extends BaseResponseWithTagInformation implements ControlledViewEntityResponse {
+public class TemplateResponse extends BaseResponseWithTagInformation implements ControlledViewEntityResponse, SetResourceIconResponse {
     @SerializedName(ApiConstants.ID)
     @Param(description = "the template ID")
     private String id;
@@ -222,6 +222,22 @@ public class TemplateResponse extends BaseResponseWithTagInformation implements 
     @SerializedName(ApiConstants.URL)
     @Param(description = "the URL which the template/iso is registered from")
     private String url;
+
+    @SerializedName(ApiConstants.RESOURCE_ICON)
+    @Param(description = "Base64 string representation of the resource icon", since = "4.16.0.0")
+    ResourceIconResponse icon;
+
+    @SerializedName(ApiConstants.USER_DATA_ID) @Param(description="the id of userdata linked to this template", since = "4.18.0")
+    private String userDataId;
+
+    @SerializedName(ApiConstants.USER_DATA_NAME) @Param(description="the name of userdata linked to this template", since = "4.18.0")
+    private String userDataName;
+
+    @SerializedName(ApiConstants.USER_DATA_POLICY) @Param(description="the userdata override policy with the userdata provided while deploying VM", since = "4.18.0")
+    private String userDataPolicy;
+
+    @SerializedName(ApiConstants.USER_DATA_PARAMS) @Param(description="list of parameters which contains the list of keys or string parameters that are needed to be passed for any variables declared in userdata", since = "4.18.0")
+    private String userDataParams;
 
     public TemplateResponse() {
         tags = new LinkedHashSet<>();
@@ -457,5 +473,42 @@ public class TemplateResponse extends BaseResponseWithTagInformation implements 
 
     public void setUrl(String url) {
         this.url = url;
+    }
+
+    @Override
+    public void setResourceIconResponse(ResourceIconResponse icon) {
+        this.icon = icon;
+    }
+
+    public String getUserDataId() {
+        return userDataId;
+    }
+
+    public void setUserDataId(String userDataId) {
+        this.userDataId = userDataId;
+    }
+
+    public String getUserDataName() {
+        return userDataName;
+    }
+
+    public void setUserDataName(String userDataName) {
+        this.userDataName = userDataName;
+    }
+
+    public String getUserDataPolicy() {
+        return userDataPolicy;
+    }
+
+    public void setUserDataPolicy(String userDataPolicy) {
+        this.userDataPolicy = userDataPolicy;
+    }
+
+    public String getUserDataParams() {
+        return userDataParams;
+    }
+
+    public void setUserDataParams(String userDataParams) {
+        this.userDataParams = userDataParams;
     }
 }

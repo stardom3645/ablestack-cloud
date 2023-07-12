@@ -21,8 +21,21 @@
       <a-spin :spinning="domainsLoading">
         <p class="form__label">{{ $t('label.domain') }}<span class="required">*</span></p>
         <p class="required required-label">{{ $t('label.required') }}</p>
-        <a-select style="width: 100%" @change="handleChangeDomain" v-model="domainId">
-          <a-select-option v-for="(domain, index) in domainsList" :value="domain.id" :key="index">
+        <a-select
+          style="width: 100%"
+          showSearch
+          optionFilterProp="label"
+          :filterOption="(input, option) => {
+            return option.label.toLowerCase().indexOf(input.toLowerCase()) >= 0
+          }"
+          @change="handleChangeDomain"
+          v-focus="true"
+          v-model:value="domainId">
+          <a-select-option
+            v-for="(domain, index) in domainsList"
+            :value="domain.id"
+            :key="index"
+            :label="domain.path || domain.name || domain.description">
             {{ domain.path || domain.name || domain.description }}
           </a-select-option>
         </a-select>
@@ -30,7 +43,14 @@
     </div>
     <div class="form__item" v-if="accountsList">
       <p class="form__label">{{ $t('label.account') }}</p>
-      <a-select style="width: 100%" @change="handleChangeAccount">
+      <a-select
+        style="width: 100%"
+        @change="handleChangeAccount"
+        showSearch
+        optionFilterProp="value"
+        :filterOption="(input, option) => {
+          return option.value.toLowerCase().indexOf(input.toLowerCase()) >= 0
+        }" >
         <a-select-option v-for="(account, index) in accountsList" :value="account.name" :key="index">
           {{ account.name }}
         </a-select-option>

@@ -443,7 +443,7 @@ public class Upgrade410to420 implements DbUpgrade {
     }
 
     private void addIndexForAlert(Connection conn) {
-        //First drop if it exists. (Due to patches shipped to customers some will have the index and some wont.)
+        //First drop if it exists. (Due to patches shipped to customers some will have the index and some won't.)
         List<String> indexList = new ArrayList<String>();
         s_logger.debug("Dropping index i_alert__last_sent if it exists");
         indexList.add("last_sent"); // in 4.1, we created this index that is not in convention.
@@ -719,7 +719,7 @@ public class Upgrade410to420 implements DbUpgrade {
                         dcList = new ArrayList<String>();
                         count = 0L;
                         // Legacy zone term is meant only for VMware
-                        // Legacy zone is a zone with atleast 2 clusters & with multiple DCs or VCs
+                        // Legacy zone is a zone with at least 2 clusters & with multiple DCs or VCs
                         clusters = clustersQuery.executeQuery();
                         if (!clusters.next()) {
                             continue; // Ignore the zone without any clusters
@@ -1884,7 +1884,7 @@ public class Upgrade410to420 implements DbUpgrade {
             //Update all snapshots except KVM snapshots
             int rowCount = snapshotStoreInsert.executeUpdate();
             s_logger.debug("Inserted " + rowCount + " snapshots into snapshot_store_ref");
-            //backsnap_id for KVM snapshots is complate path. CONCAT is not required
+            //backsnap_id for KVM snapshots is complete path. CONCAT is not required
             try(PreparedStatement snapshotStoreInsert_2 =
                     conn.prepareStatement("INSERT INTO `cloud`.`snapshot_store_ref` (store_id,  snapshot_id, created, size, parent_snapshot_id, install_path, volume_id, update_count, ref_cnt, store_role, state) select sechost_id, id, created, size, prev_snap_id, backup_snap_id, volume_id, 0, 0, 'Image', 'Ready' from `cloud`.`snapshots` where status = 'BackedUp' and hypervisor_type = 'KVM' and sechost_id is not null and removed is null");) {
                 rowCount = snapshotStoreInsert_2.executeUpdate();
@@ -2388,19 +2388,32 @@ public class Upgrade410to420 implements DbUpgrade {
                                 conn.prepareStatement("ALTER TABLE `cloud`.`volumes` CHANGE COLUMN `iso_id1` `iso_id` bigint(20) unsigned COMMENT 'The id of the iso from which the volume was created'");) {
                             alter_iso_pstmt.executeUpdate();
                         }catch (SQLException e) {
-                            s_logger.error("migrateDatafromIsoIdInVolumesTable:Exception:"+e.getMessage(),e);
+                            s_logger.info("migrateDatafromIsoIdInVolumesTable: ignoring Exception: " + e.getMessage());
+                            if (s_logger.isTraceEnabled()) {
+                                s_logger.trace("migrateDatafromIsoIdInVolumesTable: ignored Exception",e);
+                            }
                             //implies iso_id1 is not present, so do nothing.
                         }
                     }catch (SQLException e) {
-                        s_logger.error("migrateDatafromIsoIdInVolumesTable:Exception:"+e.getMessage(),e);
+                        s_logger.info("migrateDatafromIsoIdInVolumesTable: ignoring Exception: " + e.getMessage());
+                        if (s_logger.isTraceEnabled()) {
+                            s_logger.trace("migrateDatafromIsoIdInVolumesTable: ignored Exception",e);
+                        }
                         //implies iso_id1 is not present, so do nothing.
                     }
                 }
             }catch (SQLException e) {
-                s_logger.error("migrateDatafromIsoIdInVolumesTable:Exception:"+e.getMessage(),e);
+                s_logger.info("migrateDatafromIsoIdInVolumesTable: ignoring Exception: " + e.getMessage());
+                if (s_logger.isTraceEnabled()) {
+                    s_logger.trace("migrateDatafromIsoIdInVolumesTable: ignored Exception",e);
+                }
                 //implies iso_id1 is not present, so do nothing.
             }
         } catch (SQLException e) {
+          s_logger.info("migrateDatafromIsoIdInVolumesTable: ignoring Exception: " + e.getMessage());
+          if (s_logger.isTraceEnabled()) {
+              s_logger.trace("migrateDatafromIsoIdInVolumesTable: ignored Exception",e);
+          }
             //implies iso_id1 is not present, so do nothing.
         }
     }

@@ -24,49 +24,52 @@
       :rowKey="record => record.virtualmachineid"
       :pagination="false"
       :loading="loading">
-      <div slot="icon" slot-scope="text, record">
-        <label class="interval-icon">
-          <span v-if="record.intervaltype==='HOURLY'">
-            <a-icon type="clock-circle" />
+      <template #bodyCell="{ column, text, record }">
+        <template v-if="column.key === 'icon'" :name="text">
+          <label class="interval-icon">
+            <span v-if="record.intervaltype==='HOURLY'">
+              <clock-circle-outlined />
+            </span>
+            <span class="custom-icon icon-daily" v-else-if="record.intervaltype==='DAILY'">
+              <calendar-outlined />
+            </span>
+            <span class="custom-icon icon-weekly" v-else-if="record.intervaltype==='WEEKLY'">
+              <calendar-outlined />
+            </span>
+            <span class="custom-icon icon-monthly" v-else-if="record.intervaltype==='MONTHLY'">
+              <calendar-outlined />
+            </span>
+          </label>
+        </template>
+        <template v-if="column.key === 'time'" :name="text">
+          <label class="interval-content">
+            <span v-if="record.intervaltype==='HOURLY'">{{ record.schedule + ' ' + $t('label.min.past.hour') }}</span>
+            <span v-else>{{ record.schedule.split(':')[1] + ':' + record.schedule.split(':')[0] }}</span>
+          </label>
+        </template>
+        <template v-if="column.key === 'interval'" :name="text">
+          <span v-if="record.intervaltype==='WEEKLY'">
+            {{ `${$t('label.every')} ${$t(listDayOfWeek[record.schedule.split(':')[2] - 1])}` }}
           </span>
-          <span class="custom-icon icon-daily" v-else-if="record.intervaltype==='DAILY'">
-            <a-icon type="calendar" />
+          <span v-else-if="record.intervaltype==='MONTHLY'">
+            {{ `${$t('label.day')} ${record.schedule.split(':')[2]} ${$t('label.of.month')}` }}
           </span>
-          <span class="custom-icon icon-weekly" v-else-if="record.intervaltype==='WEEKLY'">
-            <a-icon type="calendar" />
-          </span>
-          <span class="custom-icon icon-monthly" v-else-if="record.intervaltype==='MONTHLY'">
-            <a-icon type="calendar" />
-          </span>
-        </label>
-      </div>
-      <div slot="time" slot-scope="text, record">
-        <label class="interval-content">
-          <span v-if="record.intervaltype==='HOURLY'">{{ record.schedule + ' ' + $t('label.min.past.hour') }}</span>
-          <span v-else>{{ record.schedule.split(':')[1] + ':' + record.schedule.split(':')[0] }}</span>
-        </label>
-      </div>
-      <div slot="interval" slot-scope="text, record">
-        <span v-if="record.intervaltype==='WEEKLY'">
-          {{ `${$t('label.every')} ${$t(listDayOfWeek[record.schedule.split(':')[2] - 1])}` }}
-        </span>
-        <span v-else-if="record.intervaltype==='MONTHLY'">
-          {{ `${$t('label.day')} ${record.schedule.split(':')[2]} ${$t('label.of.month')}` }}
-        </span>
-      </div>
-      <div slot="timezone" slot-scope="text, record">
-        <label>{{ getTimeZone(record.timezone) }}</label>
-      </div>
-      <div slot="action" class="account-button-action" slot-scope="text, record">
-        <tooltip-button
-          tooltipPlacement="top"
-          :tooltip="$t('label.delete')"
-          type="danger"
-          icon="close"
-          size="small"
-          :loading="actionLoading"
-          @click="handleClickDelete(record)"/>
-      </div>
+        </template>
+        <template v-if="column.key === 'timezone'" :name="text">
+          <label>{{ getTimeZone(record.timezone) }}</label>
+        </template>
+        <template v-if="column.key === 'actions'" class="account-button-action" :name="text">
+          <tooltip-button
+            tooltipPlacement="top"
+            :tooltip="$t('label.delete')"
+            type="primary"
+            :danger="true"
+            icon="close-outlined"
+            size="small"
+            :loading="actionLoading"
+            @onClick="handleClickDelete(record)"/>
+        </template>
+      </template>
     </a-table>
   </div>
 </template>
@@ -74,7 +77,7 @@
 <script>
 import { api } from '@/api'
 import { timeZoneName } from '@/utils/timezone'
-import TooltipButton from '@/components/view/TooltipButton'
+import TooltipButton from '@/components/widgets/TooltipButton'
 
 export default {
   name: 'BackupSchedule',
@@ -106,31 +109,31 @@ export default {
     columns () {
       return [
         {
+          key: 'icon',
           title: '',
           dataIndex: 'icon',
-          width: 30,
-          scopedSlots: { customRender: 'icon' }
+          width: 30
         },
         {
+          key: 'time',
           title: this.$t('label.time'),
-          dataIndex: 'schedule',
-          scopedSlots: { customRender: 'time' }
+          dataIndex: 'schedule'
         },
         {
+          key: 'interval',
           title: '',
-          dataIndex: 'interval',
-          scopedSlots: { customRender: 'interval' }
+          dataIndex: 'interval'
         },
         {
+          key: 'timezone',
           title: this.$t('label.timezone'),
-          dataIndex: 'timezone',
-          scopedSlots: { customRender: 'timezone' }
+          dataIndex: 'timezone'
         },
         {
-          title: this.$t('label.action'),
-          dataIndex: 'action',
-          width: 50,
-          scopedSlots: { customRender: 'action' }
+          key: 'actions',
+          title: this.$t('label.actions'),
+          dataIndex: 'actions',
+          width: 80
         }
       ]
     }
@@ -143,10 +146,13 @@ export default {
   },
   inject: ['refreshSchedule'],
   watch: {
-    dataSource (newData, oldData) {
-      this.dataSchedules = []
-      if (newData && Object.keys(newData).length > 0) {
-        this.dataSchedules.push(newData)
+    dataSource: {
+      deep: true,
+      handler (newData) {
+        this.dataSchedules = []
+        if (newData && Object.keys(newData).length > 0) {
+          this.dataSchedules.push(newData)
+        }
       }
     }
   },
@@ -211,7 +217,7 @@ export default {
   }
 }
 
-/deep/.ant-btn > .anticon {
+:deep(.ant-btn) > .anticon {
   line-height: 1.8;
 }
 </style>

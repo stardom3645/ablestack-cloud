@@ -16,6 +16,8 @@
 // under the License.
 package com.cloud.network.vpc;
 
+import java.util.Date;
+
 import org.apache.cloudstack.acl.ControlledEntity;
 import org.apache.cloudstack.api.Identity;
 import org.apache.cloudstack.api.InternalIdentity;
@@ -91,4 +93,16 @@ public interface Vpc extends ControlledEntity, Identity, InternalIdentity {
     boolean isRollingRestart();
 
     void setRollingRestart(boolean rollingRestart);
+
+    Date getCreated();
+
+    Integer getPublicMtu();
+
+    String getIp4Dns1();
+
+    String getIp4Dns2();
+
+    String getIp6Dns1();
+
+    String getIp6Dns2();
 }

@@ -47,7 +47,7 @@ import org.apache.commons.httpclient.methods.PutMethod;
 import org.apache.commons.httpclient.methods.StringRequestEntity;
 import org.apache.commons.httpclient.protocol.Protocol;
 import org.apache.commons.httpclient.protocol.ProtocolSocketFactory;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 
 import com.google.gson.Gson;
@@ -57,7 +57,7 @@ public class BigSwitchBcfApi {
     private static final Logger S_LOGGER = Logger.getLogger(BigSwitchBcfApi.class);
     private final static String S_PROTOCOL = "https";
     private final static String S_NS_BASE_URL = "/networkService/v1.1";
-    private final static String CONTENT_TYPE = "Content-type";
+    private final static String CONTENT_TYPE = "content-type";
     private final static String ACCEPT = "Accept";
     private final static String CONTENT_JSON = "application/json";
     private final static String HTTP_HEADER_INSTANCE_ID = "Instance-ID";

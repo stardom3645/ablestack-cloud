@@ -35,7 +35,7 @@ import org.apache.cloudstack.api.command.user.network.UpdateNetworkACLListCmd;
 import org.apache.cloudstack.context.CallContext;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.springframework.stereotype.Component;
 
@@ -608,7 +608,7 @@ public class NetworkACLServiceImpl extends ManagerBase implements NetworkACLServ
         List<String> sourceCidrList = networkACLItemVO.getSourceCidrList();
         if (CollectionUtils.isNotEmpty(sourceCidrList)) {
             for (String cidr : sourceCidrList) {
-                if (!NetUtils.isValidIp4Cidr(cidr)) {
+                if (!NetUtils.isValidIp4Cidr(cidr) && !NetUtils.isValidIp6Cidr(cidr)) {
                     throw new ServerApiException(ApiErrorCode.PARAM_ERROR, "Source cidrs formatting error " + cidr);
                 }
             }
@@ -947,7 +947,7 @@ public class NetworkACLServiceImpl extends ManagerBase implements NetworkACLServ
         String nextAclRuleUuid = moveNetworkAclItemCmd.getNextAclRuleUuid();
         String previousAclRuleUuid = moveNetworkAclItemCmd.getPreviousAclRuleUuid();
 
-        if (StringUtils.isBlank(previousAclRuleUuid) && StringUtils.isBlank(nextAclRuleUuid)) {
+        if (StringUtils.isAllBlank(previousAclRuleUuid, nextAclRuleUuid)) {
             throw new InvalidParameterValueException("Both previous and next ACL rule IDs cannot be blank.");
         }
 
@@ -975,6 +975,15 @@ public class NetworkACLServiceImpl extends ManagerBase implements NetworkACLServ
         } finally {
             _networkACLDao.releaseFromLockTable(ruleBeingMoved.getAclId());
         }
+    }
+
+    @Override
+    public NetworkACLItem moveRuleToTheTopInACLList(NetworkACLItem ruleBeingMoved) {
+        List<NetworkACLItemVO> allRules = getAllAclRulesSortedByNumber(ruleBeingMoved.getAclId());
+        if (allRules.size() == 1) {
+            return ruleBeingMoved;
+        }
+        return moveRuleToTheTop(ruleBeingMoved, allRules);
     }
 
     /**
@@ -1028,7 +1037,7 @@ public class NetworkACLServiceImpl extends ManagerBase implements NetworkACLServ
 
     /**
      * Moves an ACL to the space between to other rules. If there is already enough room to accommodate the ACL rule being moved, we simply get the 'number' field from the previous ACL rule and add one, and then define this new value as the 'number' value for the ACL rule being moved.
-     * Otherwise, we will need to make room. This process is executed via {@link #updateAclRuleToNewPositionAndExecuteShiftIfNecessary(NetworkACLItemVO, int, List, int)}, which will create the space between ACL rules if necessary. This involves shifting ACL rules to accommodate the rule being moved.
+     * Otherwise, we will need to make room. This process is executed via {@link #updateAclRuleToNewPositionAndExecuteShiftIfNecessary(NetworkACLItem, int, List, int)}, which will create the space between ACL rules if necessary. This involves shifting ACL rules to accommodate the rule being moved.
      */
     protected NetworkACLItem moveRuleBetweenAclRules(NetworkACLItemVO ruleBeingMoved, List<NetworkACLItemVO> allAclRules, NetworkACLItemVO previousRule, NetworkACLItemVO nextRule) {
         if (previousRule.getNumber() + 1 != nextRule.getNumber()) {
@@ -1070,7 +1079,7 @@ public class NetworkACLServiceImpl extends ManagerBase implements NetworkACLServ
      *  Move the rule to the top of the ACL rule list. This means that the ACL rule being moved will receive the position '1'.
      *  Also, if necessary other ACL rules will have their 'number' field updated to create room for the new top rule.
      */
-    protected NetworkACLItem moveRuleToTheTop(NetworkACLItemVO ruleBeingMoved, List<NetworkACLItemVO> allAclRules) {
+    protected NetworkACLItem moveRuleToTheTop(NetworkACLItem ruleBeingMoved, List<NetworkACLItemVO> allAclRules) {
         return updateAclRuleToNewPositionAndExecuteShiftIfNecessary(ruleBeingMoved, 1, allAclRules, 0);
     }
 
@@ -1092,9 +1101,8 @@ public class NetworkACLServiceImpl extends ManagerBase implements NetworkACLServ
      *  <li> ACL C - number 4
      * </ul>
      */
-    protected NetworkACLItem updateAclRuleToNewPositionAndExecuteShiftIfNecessary(NetworkACLItemVO ruleBeingMoved, int newNumberFieldValue, List<NetworkACLItemVO> allAclRules,
+    protected NetworkACLItem updateAclRuleToNewPositionAndExecuteShiftIfNecessary(NetworkACLItem ruleBeingMoved, int newNumberFieldValue, List<NetworkACLItemVO> allAclRules,
             int indexToStartProcessing) {
-        ruleBeingMoved.setNumber(newNumberFieldValue);
         for (int i = indexToStartProcessing; i < allAclRules.size(); i++) {
             NetworkACLItemVO networkACLItemVO = allAclRules.get(i);
             if (networkACLItemVO.getId() == ruleBeingMoved.getId()) {
@@ -1145,6 +1153,9 @@ public class NetworkACLServiceImpl extends ManagerBase implements NetworkACLServ
         }
         NetworkACLVO acl = _networkACLDao.findById(aclId);
         Vpc vpc = _entityMgr.findById(Vpc.class, acl.getVpcId());
+        if (vpc == null) {
+            throw new InvalidParameterValueException("Re-ordering rules for a default ACL is prohibited");
+        }
         Account caller = CallContext.current().getCallingAccount();
         _accountMgr.checkAccess(caller, null, true, vpc);
     }

@@ -25,7 +25,7 @@ import java.util.Map;
 import java.util.regex.Pattern;
 
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 
 import com.google.gson.Gson;
@@ -51,6 +51,7 @@ import com.vmware.vim25.HostNetworkSecurityPolicy;
 import com.vmware.vim25.HostNetworkTrafficShapingPolicy;
 import com.vmware.vim25.HostOpaqueNetworkInfo;
 import com.vmware.vim25.HostPortGroup;
+import com.vmware.vim25.HostPortGroupPort;
 import com.vmware.vim25.HostPortGroupSpec;
 import com.vmware.vim25.HostRuntimeInfo;
 import com.vmware.vim25.HostSystemConnectionState;
@@ -68,6 +69,7 @@ import com.vmware.vim25.VirtualMachineConfigSpec;
 import com.vmware.vim25.VirtualNicManagerNetConfig;
 import com.cloud.hypervisor.vmware.util.VmwareContext;
 import com.cloud.hypervisor.vmware.util.VmwareHelper;
+import com.cloud.utils.LogUtils;
 import com.cloud.utils.Pair;
 
 public class HostMO extends BaseMO implements VmwareHypervisorHost {
@@ -128,6 +130,43 @@ public class HostMO extends BaseMO implements VmwareHypervisorHost {
         }
 
         return null;
+    }
+
+    public List<HostPortGroupSpec> getHostPortGroupSpecs() throws Exception {
+        HostNetworkInfo hostNetInfo = getHostNetworkInfo();
+        if (hostNetInfo == null) {
+            return null;
+        }
+
+        List<HostPortGroup> portGroups = hostNetInfo.getPortgroup();
+        if (CollectionUtils.isEmpty(portGroups)) {
+            return null;
+        }
+
+        List<HostPortGroupSpec> portGroupSpecs = new ArrayList<HostPortGroupSpec>();
+        for (HostPortGroup portGroup : portGroups) {
+            if (!isVMKernelPort(portGroup)) {
+                portGroupSpecs.add(portGroup.getSpec());
+            }
+        }
+
+        return portGroupSpecs;
+    }
+
+    private boolean isVMKernelPort(HostPortGroup portGroup) {
+        assert (portGroup != null);
+        List<HostPortGroupPort> ports = portGroup.getPort();
+        if (CollectionUtils.isEmpty(ports)) {
+            return false;
+        }
+
+        for (HostPortGroupPort port : ports) {
+            if (port.getType().equalsIgnoreCase("host")) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     @Override
@@ -579,8 +618,9 @@ public class HostMO extends BaseMO implements VmwareHypervisorHost {
 
                     if (s_logger.isTraceEnabled())
                         s_logger.trace("put " + vmName + " into host cache");
-
-                    _vmCache.put(vmName, new VirtualMachineMO(_context, oc.getObj()));
+                    VirtualMachineMO virtualMachine = new VirtualMachineMO(_context, oc.getObj());
+                    virtualMachine.setInternalCSName(vmName);
+                    _vmCache.put(vmName, virtualMachine);
                 }
             }
         }
@@ -604,6 +644,7 @@ public class HostMO extends BaseMO implements VmwareHypervisorHost {
     @Override
     public boolean createVm(VirtualMachineConfigSpec vmSpec) throws Exception {
         assert (vmSpec != null);
+        s_logger.debug(LogUtils.logGsonWithoutException("Creating VM with configuration: [%s].", vmSpec));
         DatacenterMO dcMo = new DatacenterMO(_context, getHyperHostDatacenter());
         ManagedObjectReference morPool = getHyperHostOwnerResourcePool();
 
@@ -1047,7 +1088,7 @@ public class HostMO extends BaseMO implements VmwareHypervisorHost {
 
         HostListSummaryQuickStats stats = getHostQuickStats();
         if (stats.getOverallCpuUsage() == null || stats.getOverallMemoryUsage() == null)
-            throw new Exception("Unable to get valid overal CPU/Memory usage data, host may be disconnected");
+            throw new Exception("Unable to get valid overall CPU/Memory usage data, host may be disconnected");
 
         resourceSummary.setEffectiveCpu(totalCpu - stats.getOverallCpuUsage());
 
@@ -1153,6 +1194,41 @@ public class HostMO extends BaseMO implements VmwareHypervisorHost {
             }
         }
         return networkName;
+    }
+
+    public void createPortGroup(HostPortGroupSpec spec) throws Exception {
+        if (spec == null) {
+            return;
+        }
+
+        synchronized (_mor.getValue().intern()) {
+            HostNetworkSystemMO hostNetMo = getHostNetworkSystemMO();
+            if (hostNetMo == null) {
+                return;
+            }
+
+            ManagedObjectReference morNetwork = getNetworkMor(spec.getName());
+            if (morNetwork == null) {
+                hostNetMo.addPortGroup(spec);
+            }
+        }
+    }
+
+    public void copyPortGroupsFromHost(HostMO srcHost) throws Exception {
+        if (srcHost == null) {
+            return;
+        }
+
+        List<HostPortGroupSpec> portGroupSpecs = srcHost.getHostPortGroupSpecs();
+        if (CollectionUtils.isEmpty(portGroupSpecs)) {
+            s_logger.debug("No port groups in the host: " + srcHost.getName());
+            return;
+        }
+
+        for (HostPortGroupSpec spec : portGroupSpecs) {
+            s_logger.debug("Creating port group: " + spec.getName() + " in the host: " + getName());
+            createPortGroup(spec);
+        }
     }
 
     public void createPortGroup(HostVirtualSwitch vSwitch, String portGroupName, Integer vlanId,

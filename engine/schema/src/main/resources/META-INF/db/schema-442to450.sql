@@ -272,7 +272,7 @@ CREATE TABLE `cloud`.`external_brocade_vcs_devices` (
   `physical_network_id` bigint unsigned NOT NULL COMMENT 'id of the physical network in to which brocade vcs switch is added',
   `provider_name` varchar(255) NOT NULL COMMENT 'Service Provider name corresponding to this brocade vcs switch',
   `device_name` varchar(255) NOT NULL COMMENT 'name of the brocade vcs switch',
-  `host_id` bigint unsigned NOT NULL COMMENT 'host id coresponding to the external brocade vcs switch',
+  `host_id` bigint unsigned NOT NULL COMMENT 'host id corresponding to the external brocade vcs switch',
   PRIMARY KEY  (`id`),
   CONSTRAINT `fk_external_brocade_vcs_devices__host_id` FOREIGN KEY (`host_id`) REFERENCES `host`(`id`) ON DELETE CASCADE,
   CONSTRAINT `fk_external_brocade_vcs_devices__physical_network_id` FOREIGN KEY (`physical_network_id`) REFERENCES `physical_network`(`id`) ON DELETE CASCADE
@@ -448,7 +448,7 @@ CREATE VIEW `cloud`.`template_view` AS
 
 UPDATE configuration SET value='KVM,XenServer,VMware,BareMetal,Ovm,LXC,Hyperv' WHERE name='hypervisor.list';
 UPDATE `cloud`.`configuration` SET description="If set to true, will set guest VM's name as it appears on the hypervisor, to its hostname. The flag is supported for VMware hypervisor only" WHERE name='vm.instancename.flag';
-INSERT IGNORE INTO `cloud`.`configuration`(category, instance, component, name, value, description, default_value) VALUES ('Advanced', 'DEFAULT', 'management-server', 'implicit.host.tags', 'GPU', 'Tag hosts at the time of host disovery based on the host properties/capabilities ', 'GPU');
+INSERT IGNORE INTO `cloud`.`configuration`(category, instance, component, name, value, description, default_value) VALUES ('Advanced', 'DEFAULT', 'management-server', 'implicit.host.tags', 'GPU', 'Tag hosts at the time of host discovery based on the host properties/capabilities ', 'GPU');
 
 DROP VIEW IF EXISTS `cloud`.`domain_router_view`;
 CREATE VIEW `cloud`.`domain_router_view` AS

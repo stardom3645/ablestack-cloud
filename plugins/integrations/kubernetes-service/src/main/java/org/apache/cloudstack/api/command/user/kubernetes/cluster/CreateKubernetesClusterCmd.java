@@ -16,13 +16,15 @@
 // under the License.
 package org.apache.cloudstack.api.command.user.kubernetes.cluster;
 
+import java.security.InvalidParameterException;
+
 import javax.inject.Inject;
 
 import org.apache.cloudstack.acl.RoleType;
 import org.apache.cloudstack.acl.SecurityChecker.AccessType;
 import org.apache.cloudstack.api.ACL;
 import org.apache.cloudstack.api.APICommand;
-import org.apache.cloudstack.api.ApiCommandJobType;
+import org.apache.cloudstack.api.ApiCommandResourceType;
 import org.apache.cloudstack.api.ApiConstants;
 import org.apache.cloudstack.api.ApiErrorCode;
 import org.apache.cloudstack.api.BaseAsyncCreateCmd;
@@ -37,6 +39,7 @@ import org.apache.cloudstack.api.response.ProjectResponse;
 import org.apache.cloudstack.api.response.ServiceOfferingResponse;
 import org.apache.cloudstack.api.response.ZoneResponse;
 import org.apache.cloudstack.context.CallContext;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 
 import com.cloud.kubernetes.cluster.KubernetesCluster;
@@ -44,7 +47,7 @@ import com.cloud.kubernetes.cluster.KubernetesClusterEventTypes;
 import com.cloud.kubernetes.cluster.KubernetesClusterService;
 import com.cloud.utils.exception.CloudRuntimeException;
 
-@APICommand(name = CreateKubernetesClusterCmd.APINAME,
+@APICommand(name = "createKubernetesCluster",
         description = "Creates a Kubernetes cluster",
         responseObject = KubernetesClusterResponse.class,
         responseView = ResponseView.Restricted,
@@ -54,7 +57,7 @@ import com.cloud.utils.exception.CloudRuntimeException;
         authorized = {RoleType.Admin, RoleType.ResourceAdmin, RoleType.DomainAdmin, RoleType.User})
 public class CreateKubernetesClusterCmd extends BaseAsyncCreateCmd {
     public static final Logger LOGGER = Logger.getLogger(CreateKubernetesClusterCmd.class.getName());
-    public static final String APINAME = "createKubernetesCluster";
+    private static final Long DEFAULT_NODE_ROOT_DISK_SIZE = 8L;
 
     @Inject
     public KubernetesClusterService kubernetesClusterService;
@@ -66,7 +69,7 @@ public class CreateKubernetesClusterCmd extends BaseAsyncCreateCmd {
     @Parameter(name = ApiConstants.NAME, type = CommandType.STRING, required = true, description = "name for the Kubernetes cluster")
     private String name;
 
-    @Parameter(name = ApiConstants.DESCRIPTION, type = CommandType.STRING, required = true, description = "description for the Kubernetes cluster")
+    @Parameter(name = ApiConstants.DESCRIPTION, type = CommandType.STRING, description = "description for the Kubernetes cluster")
     private String description;
 
     @ACL(accessType = AccessType.UseEntry)
@@ -137,12 +140,8 @@ public class CreateKubernetesClusterCmd extends BaseAsyncCreateCmd {
             description = "URL for the docker image private registry")
     private String dockerRegistryUrl;
 
-    @Parameter(name = ApiConstants.DOCKER_REGISTRY_EMAIL, type = CommandType.STRING,
-            description = "email of the docker image private registry user")
-    private String dockerRegistryEmail;
-
     @Parameter(name = ApiConstants.NODE_ROOT_DISK_SIZE, type = CommandType.LONG,
-            description = "root disk size of root disk for each node")
+            description = "root disk size in GB for each node")
     private Long nodeRootDiskSize;
 
     /////////////////////////////////////////////////////
@@ -157,7 +156,7 @@ public class CreateKubernetesClusterCmd extends BaseAsyncCreateCmd {
     }
 
     public String getDisplayName() {
-        return description;
+        return StringUtils.firstNonEmpty(description, name);
     }
 
     public Long getDomainId() {
@@ -223,22 +222,20 @@ public class CreateKubernetesClusterCmd extends BaseAsyncCreateCmd {
         return dockerRegistryUrl;
     }
 
-    public String getDockerRegistryEmail() {
-        return dockerRegistryEmail;
-    }
-
     public Long getNodeRootDiskSize() {
-        return nodeRootDiskSize;
+        if (nodeRootDiskSize != null) {
+            if (nodeRootDiskSize < DEFAULT_NODE_ROOT_DISK_SIZE) {
+                throw new InvalidParameterException("Provided node root disk size is lesser than default size of " + DEFAULT_NODE_ROOT_DISK_SIZE +"GB");
+            }
+            return nodeRootDiskSize;
+        } else {
+            return DEFAULT_NODE_ROOT_DISK_SIZE;
+        }
     }
 
     /////////////////////////////////////////////////////
     /////////////// API Implementation///////////////////
     /////////////////////////////////////////////////////
-
-    @Override
-    public String getCommandName() {
-        return APINAME.toLowerCase() + "response";
-    }
 
     public static String getResultObjectName() {
         return "kubernetescluster";
@@ -275,8 +272,8 @@ public class CreateKubernetesClusterCmd extends BaseAsyncCreateCmd {
     }
 
     @Override
-    public ApiCommandJobType getInstanceType() {
-        return ApiCommandJobType.VirtualMachine;
+    public ApiCommandResourceType getApiResourceType() {
+        return ApiCommandResourceType.VirtualMachine;
     }
 
     @Override

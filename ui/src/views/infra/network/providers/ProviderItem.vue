@@ -103,8 +103,11 @@ export default {
   },
   inject: ['provideSetNsp', 'provideExecuteAction'],
   watch: {
-    nsp () {
-      this.fetchData()
+    nsp: {
+      deep: true,
+      handler () {
+        this.fetchData()
+      }
     }
   },
   created () {
@@ -124,7 +127,7 @@ export default {
         }
       } else {
         this.resource = this.nsp
-        this.$set(this.resource, 'zoneid', this.zoneId)
+        this.resource.zoneid = this.zoneId
       }
       if (this.itemNsp && Object.keys(this.itemNsp).length > 0) {
         this.provider = this.itemNsp
@@ -144,32 +147,32 @@ export default {
       const params = {}
       if (args.mapping) {
         Object.keys(args.mapping).map(key => {
-          params[key] = 'value' in args.mapping[key] ? args.mapping[key].value(this.resource) : null
+          params[key] = args.mapping[key]?.value(this.resource) || null
         })
       }
       params.page = this.page
       params.pageSize = this.pageSize
 
       let length = args.columns.length
-      if (args.columns.includes('action')) {
+      if (args.columns.includes('actions')) {
         length--
       }
       const columns = args.columns.map(col => {
-        if (col === 'action') {
+        if (col === 'actions') {
           return {
+            key: col,
             title: this.$t('label.' + col),
             dataIndex: col,
             width: 80,
-            fixed: 'right',
-            scopedSlots: { customRender: col }
+            fixed: 'right'
           }
         }
         const width = 100 / (length) + '%'
         return {
+          key: col,
           title: this.$t('label.' + col),
           width: width,
-          dataIndex: col,
-          scopedSlots: { customRender: col }
+          dataIndex: col
         }
       })
 
@@ -190,10 +193,9 @@ export default {
         this.listData[args.title].loading = false
         this.$notification.error({
           message: this.$t('message.request.failed'),
-          description: (error.response && error.response.headers && error.response.headers['x-description']) || error.message
+          description: (error.response?.headers?.['x-description']) || error.message
         })
       }
-      this.$forceUpdate()
     },
     executeApi (apiName, params) {
       return new Promise((resolve, reject) => {

@@ -23,12 +23,15 @@ import static org.mockito.Matchers.anyLong;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Vector;
 
+import com.cloud.user.Account;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -81,7 +84,7 @@ public class IpAddressManagerTest {
         ipAddressVO = new IPAddressVO(new Ip("192.0.0.1"), 1L, 1L, 1L,false);
         ipAddressVO.setAllocatedToAccountId(1L);
 
-        account = new AccountVO("admin", 1L, null, (short) 1, 1L, "c65a73d5-ebbd-11e7-8f45-107b44277808");
+        account = new AccountVO("admin", 1L, null, Account.Type.ADMIN, 1L, "c65a73d5-ebbd-11e7-8f45-107b44277808");
         account.setId(1L);
 
         NetworkOfferingVO networkOfferingVO = Mockito.mock(NetworkOfferingVO.class);
@@ -229,4 +232,14 @@ public class IpAddressManagerTest {
         return network;
     }
 
+    @Test
+    public void updateSourceNatIpAddress() throws Exception {
+        IPAddressVO requestedIp = Mockito.mock(IPAddressVO.class);
+        IPAddressVO oldIp = Mockito.mock(IPAddressVO.class);
+        List<IPAddressVO> userIps = new Vector<>();
+        userIps.add(oldIp);
+        ipAddressManager.updateSourceNatIpAddress(requestedIp, userIps);
+        verify(requestedIp).setSourceNat(true);
+        verify(oldIp).setSourceNat(false);
+    }
 }

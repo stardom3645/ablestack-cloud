@@ -19,7 +19,6 @@
 #Import Local Modules
 import marvin
 from marvin.cloudstackTestCase import *
-from marvin.cloudstackAPI import *
 from marvin.lib.utils import *
 from marvin.lib.base import *
 from marvin.lib.common import *
@@ -46,7 +45,7 @@ class TestCreateDiskOffering(cloudstackTestCase):
             raise Exception("Warning: Exception during cleanup : %s" % e)
         return
 
-    @attr(tags=["advanced", "basic", "eip", "sg", "advancedns", "smoke"], required_hardware="false")
+    @attr(tags=["advanced", "basic", "eip", "sg", "advancedns", "smoke", "diskencrypt"], required_hardware="false")
     def test_01_create_disk_offering(self):
         """Test to create disk offering
 
@@ -88,6 +87,11 @@ class TestCreateDiskOffering(cloudstackTestCase):
                             self.services["disk_offering"]["name"],
                             "Check name in createServiceOffering"
                         )
+        self.assertEqual(
+            disk_response.encrypt,
+            False,
+            "Ensure disk encryption is false by default"
+        )
         return
 
     @attr(hypervisor="kvm")
@@ -134,7 +138,7 @@ class TestCreateDiskOffering(cloudstackTestCase):
     @attr(hypervisor="kvm")
     @attr(tags = ["advanced", "basic", "eip", "sg", "advancedns", "simulator", "smoke"])
     def test_04_create_fat_type_disk_offering(self):
-        """Test to create  a sparse type disk offering"""
+        """Test to create a sparse type disk offering"""
 
         # Validate the following:
         # 1. createDiskOfferings should return valid info for new offering
@@ -293,6 +297,49 @@ class TestCreateDiskOffering(cloudstackTestCase):
             )
 
 
+        return
+
+    @attr(tags = ["advanced", "basic", "eip", "sg", "advancedns", "simulator", "smoke", "diskencrypt"])
+    def test_08_create_encrypted_disk_offering(self):
+        """Test to create an encrypted type disk offering"""
+
+        # Validate the following:
+        # 1. createDiskOfferings should return valid info for new offering
+        # 2. The Cloud Database contains the valid information
+
+        disk_offering = DiskOffering.create(
+            self.apiclient,
+            self.services["disk_offering"],
+            name="disk-encrypted",
+            encrypt="true"
+        )
+        self.cleanup.append(disk_offering)
+
+        self.debug("Created Disk offering with ID: %s" % disk_offering.id)
+
+        list_disk_response = list_disk_offering(
+            self.apiclient,
+            id=disk_offering.id
+        )
+
+        self.assertEqual(
+            isinstance(list_disk_response, list),
+            True,
+            "Check list response returns a valid list"
+        )
+
+        self.assertNotEqual(
+            len(list_disk_response),
+            0,
+            "Check Disk offering is created"
+        )
+        disk_response = list_disk_response[0]
+
+        self.assertEqual(
+            disk_response.encrypt,
+            True,
+            "Check if encrypt is set after createServiceOffering"
+        )
         return
 
 class TestDiskOfferings(cloudstackTestCase):

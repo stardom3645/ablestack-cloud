@@ -19,6 +19,7 @@
 
 package com.cloud.utils;
 
+import java.net.InetAddress;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.Set;
@@ -30,6 +31,8 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
+import org.mockito.MockedStatic;
+import org.mockito.Mockito;
 
 import com.google.common.collect.ImmutableSet;
 
@@ -140,12 +143,26 @@ public class UriUtilsParametrizedTest {
     }
 
     @Test
-    public void validateUrl() {
+    public void validateUrl() throws Exception {
+
+        MockedStatic<InetAddress> inetAddressMocked = Mockito.mockStatic(InetAddress.class);
+        InetAddress inetAddressMock = Mockito.mock(InetAddress.class);
+        inetAddressMocked.when(() -> InetAddress.getByName(Mockito.anyString())).thenReturn(inetAddressMock);
+
         if (expectSuccess) {
             UriUtils.validateUrl(format, url);
         } else {
             assertThrows(() -> UriUtils.validateUrl(format, url), IllegalArgumentException.class);
         }
+
+        inetAddressMocked.verify(() -> InetAddress.getByName(Mockito.anyString()));
+
+        Mockito.verify(inetAddressMock).isAnyLocalAddress();
+        Mockito.verify(inetAddressMock).isLinkLocalAddress();
+        Mockito.verify(inetAddressMock).isLoopbackAddress();
+        Mockito.verify(inetAddressMock).isMulticastAddress();
+
+        inetAddressMocked.close();
     }
 
     @Test

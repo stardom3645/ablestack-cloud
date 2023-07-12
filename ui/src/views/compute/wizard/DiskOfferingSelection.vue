@@ -20,7 +20,7 @@
     <a-input-search
       style="width: 25vw;float: right;margin-bottom: 10px; z-index: 8"
       :placeholder="$t('label.search')"
-      v-model="filter"
+      v-model:value="filter"
       @search="handleSearch" />
     <a-table
       :loading="loading"
@@ -32,18 +32,23 @@
       size="middle"
       :scroll="{ y: 225 }"
     >
-      <span slot="diskSizeTitle"><a-icon type="hdd" /> {{ $t('label.disksize') }}</span>
-      <span slot="iopsTitle"><a-icon type="rocket" /> {{ $t('label.minmaxiops') }}</span>
-      <template slot="diskSize" slot-scope="text, record">
-        <div v-if="record.isCustomized">{{ $t('label.iscustomized') }}</div>
-        <div v-else-if="record.diskSize">{{ record.diskSize }} GB</div>
-        <div v-else>-</div>
+      <template #headerCell="{ column }">
+        <template v-if="column.key === 'diskSize'"><hdd-outlined /> {{ $t('label.disksize') }}</template>
+        <template v-if="column.key === 'iops'"><rocket-outlined /> {{ $t('label.minmaxiops') }}</template>
       </template>
-      <template slot="iops" slot-scope="text, record">
-        <span v-if="record.miniops && record.maxiops">{{ record.miniops }} - {{ record.maxiops }}</span>
-        <span v-else-if="record.miniops && !record.maxiops">{{ record.miniops }}</span>
-        <span v-else-if="!record.miniops && record.maxiops">{{ record.maxiops }}</span>
-        <span v-else>-</span>
+
+      <template #bodyCell="{ column, record }">
+        <template v-if="column.key === 'diskSize'">
+          <div v-if="record.isCustomized">{{ $t('label.iscustomized') }}</div>
+          <div v-else-if="record.diskSize">{{ record.diskSize }} GB</div>
+          <div v-else>-</div>
+        </template>
+        <template v-if="column.key === 'iops'">
+          <span v-if="record.miniops && record.maxiops">{{ record.miniops }} - {{ record.maxiops }}</span>
+          <span v-else-if="record.miniops && !record.maxiops">{{ record.miniops }}</span>
+          <span v-else-if="!record.miniops && record.maxiops">{{ record.maxiops }}</span>
+          <span v-else>-</span>
+        </template>
       </template>
     </a-table>
 
@@ -58,7 +63,7 @@
         @change="onChangePage"
         @showSizeChange="onChangePageSize"
         showSizeChanger>
-        <template slot="buildOptionText" slot-scope="props">
+        <template #buildOptionText="props">
           <span>{{ props.value }} / {{ $t('label.page') }}</span>
         </template>
       </a-pagination>
@@ -97,6 +102,10 @@ export default {
     isIsoSelected: {
       type: Boolean,
       default: false
+    },
+    isRootDiskOffering: {
+      type: Boolean,
+      default: false
     }
   },
   data () {
@@ -104,21 +113,20 @@ export default {
       filter: '',
       columns: [
         {
+          key: 'name',
           dataIndex: 'name',
           title: this.$t('label.diskoffering'),
           width: '40%'
         },
         {
+          key: 'diskSize',
           dataIndex: 'disksize',
-          slots: { title: 'diskSizeTitle' },
-          width: '30%',
-          scopedSlots: { customRender: 'diskSize' }
+          width: '30%'
         },
         {
+          key: 'iops',
           dataIndex: 'iops',
-          slots: { title: 'iopsTitle' },
-          width: '30%',
-          scopedSlots: { customRender: 'iops' }
+          width: '30%'
         }
       ],
       selectedRowKeys: ['0'],
@@ -128,7 +136,8 @@ export default {
         page: 1,
         pageSize: 10,
         keyword: null
-      }
+      },
+      diskSelected: {}
     }
   },
   created () {
@@ -162,11 +171,15 @@ export default {
     value (newValue, oldValue) {
       if (newValue && newValue !== oldValue) {
         this.selectedRowKeys = [newValue]
+        this.onSelectRow(this.selectedRowKeys)
       }
     },
-    items (newData, oldData) {
-      this.initDataItem()
-      this.dataItems = this.dataItems.concat(newData)
+    items: {
+      deep: true,
+      handler (newData) {
+        this.initDataItem()
+        this.dataItems = this.dataItems.concat(newData)
+      }
     },
     loading () {
       if (!this.loading) {
@@ -201,7 +214,7 @@ export default {
   methods: {
     initDataItem () {
       this.dataItems = []
-      if (this.options.page === 1 && !this.isIsoSelected) {
+      if (this.options.page === 1 && !this.isIsoSelected && !this.isRootDiskOffering) {
         this.dataItems.push({
           id: '0',
           name: this.$t('label.noselect'),
@@ -213,8 +226,13 @@ export default {
       }
     },
     onSelectRow (value) {
+      const rowSelected = this.items.filter(item => item.id === value[0])
+      if (rowSelected && rowSelected.length > 0) {
+        this.diskSelected = rowSelected[0]
+      }
       this.selectedRowKeys = value
       this.$emit('select-disk-offering-item', value[0])
+      this.$emit('on-selected-disk-size', this.diskSelected)
     },
     handleSearch (value) {
       this.filter = value
@@ -235,11 +253,15 @@ export default {
     },
     onClickRow (record) {
       return {
-        on: {
-          click: () => {
-            this.selectedRowKeys = [record.key]
-            this.$emit('select-disk-offering-item', record.key)
+        onClick: () => {
+          const rowSelected = this.items.filter(item => item.id === record.key)
+          if (rowSelected && rowSelected.length > 0) {
+            this.diskSelected = rowSelected[0]
           }
+          this.selectedRowKeys = [record.key]
+          this.$emit('select-disk-offering-item', record.key)
+          this.$emit('on-selected-disk-size', this.diskSelected)
+          this.$emit('on-selected-root-disk-size', this.diskSelected)
         }
       }
     }
@@ -252,7 +274,7 @@ export default {
     margin: 2rem 0;
   }
 
-  /deep/.ant-table-tbody > tr > td {
+  :deep(.ant-table-tbody) > tr > td {
     cursor: pointer;
   }
 </style>

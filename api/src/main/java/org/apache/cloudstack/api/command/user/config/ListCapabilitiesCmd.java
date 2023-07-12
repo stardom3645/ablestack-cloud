@@ -19,8 +19,10 @@ package org.apache.cloudstack.api.command.user.config;
 import java.util.Map;
 
 import org.apache.cloudstack.api.APICommand;
+import org.apache.cloudstack.api.ApiConstants;
 import org.apache.cloudstack.api.BaseCmd;
 import org.apache.cloudstack.api.response.CapabilitiesResponse;
+import org.apache.cloudstack.config.ApiServiceConfiguration;
 import org.apache.log4j.Logger;
 
 import com.cloud.user.Account;
@@ -30,12 +32,6 @@ import com.cloud.user.Account;
 public class ListCapabilitiesCmd extends BaseCmd {
     public static final Logger s_logger = Logger.getLogger(ListCapabilitiesCmd.class.getName());
 
-    private static final String s_name = "listcapabilitiesresponse";
-
-    @Override
-    public String getCommandName() {
-        return s_name;
-    }
 
     @Override
     public long getEntityOwnerId() {
@@ -69,6 +65,11 @@ public class ListCapabilitiesCmd extends BaseCmd {
         if (capabilities.containsKey("apiLimitMax")) {
             response.setApiLimitMax((Integer)capabilities.get("apiLimitMax"));
         }
+        response.setDefaultUiPageSize((Long)capabilities.get(ApiServiceConfiguration.DefaultUIPageSize.key()));
+        response.setInstancesStatsRetentionTime((Integer) capabilities.get(ApiConstants.INSTANCES_STATS_RETENTION_TIME));
+        response.setInstancesStatsUserOnly((Boolean) capabilities.get(ApiConstants.INSTANCES_STATS_USER_ONLY));
+        response.setInstancesDisksStatsRetentionEnabled((Boolean) capabilities.get(ApiConstants.INSTANCES_DISKS_STATS_RETENTION_ENABLED));
+        response.setInstancesDisksStatsRetentionTime((Integer) capabilities.get(ApiConstants.INSTANCES_DISKS_STATS_RETENTION_TIME));
         response.setObjectName("capability");
         response.setResponseName(getCommandName());
         this.setResponseObject(response);

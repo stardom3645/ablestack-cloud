@@ -98,19 +98,14 @@ const vueConfig = {
 
     const svgRule = config.module.rule('svg')
     svgRule.uses.clear()
+
     svgRule
-      .oneOf('inline')
-      .resourceQuery(/inline/)
-      .use('vue-svg-icon-loader')
-      .loader('vue-svg-icon-loader')
+      .use('vue-loader')
+      .loader('vue-loader')
       .end()
-      .end()
-      .oneOf('external')
-      .use('file-loader')
-      .loader('file-loader')
-      .options({
-        name: 'assets/[name].[hash:8].[ext]'
-      })
+      .use('vue-svg-loader')
+      .loader('vue-svg-loader')
+
     /* svgRule.oneOf('inline')
       .resourceQuery(/inline/)
       .use('vue-svg-loader')
@@ -132,6 +127,7 @@ const vueConfig = {
         modifyVars: {
           // https://ant.design/docs/spec/colors
           // https://vue.ant.design/docs/vue/customize-theme/
+          'root-entry-name': 'default'
         },
         javascriptEnabled: true
       }

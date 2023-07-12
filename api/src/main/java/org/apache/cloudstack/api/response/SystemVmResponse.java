@@ -20,7 +20,7 @@ import java.util.Date;
 import java.util.List;
 
 import org.apache.cloudstack.api.ApiConstants;
-import org.apache.cloudstack.api.BaseResponse;
+import org.apache.cloudstack.api.BaseResponseWithAnnotations;
 import org.apache.cloudstack.api.EntityReference;
 
 import com.cloud.host.Status;
@@ -29,7 +29,7 @@ import com.cloud.vm.VirtualMachine;
 import com.google.gson.annotations.SerializedName;
 
 @EntityReference(value = VirtualMachine.class)
-public class SystemVmResponse extends BaseResponse {
+public class SystemVmResponse extends BaseResponseWithAnnotations {
     @SerializedName("id")
     @Param(description = "the ID of the system VM")
     private String id;
@@ -89,6 +89,10 @@ public class SystemVmResponse extends BaseResponse {
     @SerializedName("hostname")
     @Param(description = "the hostname for the system VM")
     private String hostName;
+
+    @SerializedName(ApiConstants.HOST_CONTROL_STATE)
+    @Param(description = "the control state of the host for the system VM")
+    private String hostControlState;
 
     @SerializedName("hypervisor")
     @Param(description = "the hypervisor on which the template runs")
@@ -281,6 +285,14 @@ public class SystemVmResponse extends BaseResponse {
 
     public void setHostName(String hostName) {
         this.hostName = hostName;
+    }
+
+    public String getHostControlState() {
+        return hostControlState;
+    }
+
+    public void setHostControlState(String hostControlState) {
+        this.hostControlState = hostControlState;
     }
 
     public String getHypervisor() {

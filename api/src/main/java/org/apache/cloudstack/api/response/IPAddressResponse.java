@@ -21,7 +21,7 @@ import java.util.List;
 
 import org.apache.cloudstack.acl.RoleType;
 import org.apache.cloudstack.api.ApiConstants;
-import org.apache.cloudstack.api.BaseResponse;
+import org.apache.cloudstack.api.BaseResponseWithAnnotations;
 import org.apache.cloudstack.api.EntityReference;
 
 import com.cloud.network.IpAddress;
@@ -30,7 +30,7 @@ import com.google.gson.annotations.SerializedName;
 
 @EntityReference(value = IpAddress.class)
 @SuppressWarnings("unused")
-public class IPAddressResponse extends BaseResponse implements ControlledEntityResponse {
+public class IPAddressResponse extends BaseResponseWithAnnotations implements ControlledEntityResponse {
     @SerializedName(ApiConstants.ID)
     @Param(description = "public IP address id")
     private String id;
@@ -96,15 +96,19 @@ public class IPAddressResponse extends BaseResponse implements ControlledEntityR
     private Boolean isSystem;
 
     @SerializedName(ApiConstants.VIRTUAL_MACHINE_ID)
-    @Param(description = "virtual machine id the ip address is assigned to (not null only for static nat Ip)")
+    @Param(description = "virtual machine id the ip address is assigned to")
     private String virtualMachineId;
+
+    @SerializedName(ApiConstants.VIRTUAL_MACHINE_TYPE)
+    @Param(description = "virtual machine type the ip address is assigned to", since = "4.19.0")
+    private String virtualMachineType;
 
     @SerializedName("vmipaddress")
     @Param(description = "virtual machine (dnat) ip address (not null only for static nat Ip)")
     private String virtualMachineIp;
 
     @SerializedName("virtualmachinename")
-    @Param(description = "virtual machine name the ip address is assigned to (not null only for static nat Ip)")
+    @Param(description = "virtual machine name the ip address is assigned to")
     private String virtualMachineName;
 
     @SerializedName("virtualmachinedisplayname")
@@ -159,10 +163,9 @@ public class IPAddressResponse extends BaseResponse implements ControlledEntityR
     @Param(description="the name of the Network where ip belongs to")
     private String networkName;
 
-    /*
-        @SerializedName(ApiConstants.JOB_ID) @Param(description="shows the current pending asynchronous job ID. This tag is not returned if no current pending jobs are acting on the volume")
-        private IdentityProxy jobId = new IdentityProxy("async_job");
-    */
+    @SerializedName(ApiConstants.HAS_RULES)
+    @Param(description="whether the ip address has Firewall/PortForwarding/LoadBalancing rules defined")
+    private boolean hasRules;
 
     public void setIpAddress(String ipAddress) {
         this.ipAddress = ipAddress;
@@ -230,6 +233,10 @@ public class IPAddressResponse extends BaseResponse implements ControlledEntityR
 
     public void setVirtualMachineId(String virtualMachineId) {
         this.virtualMachineId = virtualMachineId;
+    }
+
+    public void setVirtualMachineType(String virtualMachineType) {
+        this.virtualMachineType = virtualMachineType;
     }
 
     public void setVirtualMachineIp(String virtualMachineIp) {
@@ -304,5 +311,9 @@ public class IPAddressResponse extends BaseResponse implements ControlledEntityR
 
     public void setNetworkName(String networkName) {
         this.networkName = networkName;
+    }
+
+    public void setHasRules(final boolean hasRules) {
+        this.hasRules = hasRules;
     }
 }

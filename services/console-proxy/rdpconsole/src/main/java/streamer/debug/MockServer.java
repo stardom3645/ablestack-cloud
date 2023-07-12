@@ -88,7 +88,7 @@ public class MockServer implements Runnable {
                             // Compare actual data with expected data
                             if (actualDataLength != packet.data.length) {
                                 throw new AssertionError("Actual length of client request for packet #" + (i + 1) + " (\"" + packet.id + "\")"
-                                        + " does not match length of expected client request. Actual length: " + actualDataLength + ", expected legnth: " + packet.data.length
+                                        + " does not match length of expected client request. Actual length: " + actualDataLength + ", expected length: " + packet.data.length
                                         + ".");
                             }
 
@@ -198,8 +198,8 @@ public class MockServer implements Runnable {
         return shutdowned;
     }
 
-    public void waitUntilShutdowned(long timeToWaitMiliseconds) throws InterruptedException {
-        long deadline = System.currentTimeMillis() + timeToWaitMiliseconds;
+    public void waitUntilShutdowned(long timeToWaitMilliseconds) throws InterruptedException {
+        long deadline = System.currentTimeMillis() + timeToWaitMilliseconds;
         while (!shutdowned && System.currentTimeMillis() < deadline) {
             Thread.sleep(10);
         }

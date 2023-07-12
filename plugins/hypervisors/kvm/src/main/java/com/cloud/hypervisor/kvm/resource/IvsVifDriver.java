@@ -26,11 +26,13 @@ import java.util.regex.Pattern;
 
 import javax.naming.ConfigurationException;
 
-import com.cloud.utils.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.libvirt.LibvirtException;
 
 import com.cloud.agent.api.to.NicTO;
+import com.cloud.agent.properties.AgentProperties;
+import com.cloud.agent.properties.AgentPropertiesFileHandler;
 import com.cloud.exception.InternalErrorException;
 import com.cloud.hypervisor.kvm.resource.LibvirtVMDef.InterfaceDef;
 import com.cloud.network.Networks;
@@ -52,10 +54,8 @@ public class IvsVifDriver extends VifDriverBase {
     @Override
     public void configure(Map<String, Object> params) throws ConfigurationException {
         super.configure(params);
-        String networkScriptsDir = (String)params.get("network.scripts.dir");
-        if (networkScriptsDir == null) {
-            networkScriptsDir = "scripts/vm/network/vnet";
-        }
+        String networkScriptsDir = AgentPropertiesFileHandler.getPropertyValue(AgentProperties.NETWORK_SCRIPTS_DIR);
+
         String utilScriptsDir = "scripts/util/";
 
         String value = (String)params.get("scripts.timeout");

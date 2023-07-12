@@ -16,15 +16,20 @@
 // under the License.
 
 <template>
-  <div class="list" :loading="loading">
+  <div v-ctrl-enter="handleSubmit" class="list-static-nat">
     <div class="list__header">
       <div class="list__header__col" v-if="tiersSelect">
         <a-select
-          autoFocus
+          v-focus="true"
           @change="handleTierSelect"
-          v-model="vpcTiers"
-          :placeholder="$t('label.select.tier')">
-          <a-select-option v-for="network in networksList" :key="network.id" :value="network.id">
+          v-model:value="vpcTiers"
+          :placeholder="$t('label.select.tier')"
+          showSearch
+          optionFilterProp="label"
+          :filterOption="(input, option) => {
+            return option.label.toLowerCase().indexOf(input.toLowerCase()) >= 0
+          }" >
+          <a-select-option v-for="network in networksList" :key="network.id" :value="network.id" :label="network.name">
             {{ network.name }}
           </a-select-option>
         </a-select>
@@ -33,57 +38,68 @@
       <div class="list__header__col list__header__col--full">
         <a-input-search
           :placeholder="$t('label.search')"
-          v-model="searchQuery"
+          v-model:value="searchQuery"
           @search="fetchData" />
       </div>
     </div>
 
     <a-table
+      :scroll="{ y: 225 }"
+      style="margin-top: 20px"
       size="small"
       :loading="loading"
       :columns="columns"
       :dataSource="vmsList"
       :pagination="false"
       :rowKey="record => record.id || record.account">
-      <template slot="name" slot-scope="record">
-        <div>
-          {{ record.name }}
-        </div>
-        <a-select
-          v-if="nicsList.length && selectedVm && selectedVm === record.id"
-          class="nic-select"
-          :defaultValue="selectedNic.ipaddress">
-          <a-select-option
-            @click="selectedNic = item"
-            v-for="item in nicsList"
-            :key="item.id">
-            {{ item.ipaddress }}
-          </a-select-option>
-        </a-select>
-      </template>
-      <template slot="state" slot-scope="text">
-        <status :text="text ? text : ''" displayText />
-      </template>
-      <template slot="radio" slot-scope="text">
-        <a-radio
-          class="list__radio"
-          :value="text"
-          :checked="selectedVm && selectedVm === text"
-          @change="fetchNics"></a-radio>
+      <template #bodyCell="{ column, text, record }">
+        <template v-if="column.key === 'name'">
+          <div>
+            {{ record.name }}
+          </div>
+          <a-select
+            v-if="nicsList.length && selectedVm && selectedVm === record.id"
+            class="nic-select"
+            :defaultValue="selectedNic.ipaddress"
+            showSearch
+            optionFilterProp="label"
+            :filterOption="(input, option) => {
+              return option.label.toLowerCase().indexOf(input.toLowerCase()) >= 0
+            }">
+            <a-select-option
+              @click="selectedNic = item"
+              v-for="item in nicsList"
+              :key="item.id"
+              :label="item.ipaddress">
+              {{ item.ipaddress }}
+            </a-select-option>
+          </a-select>
+        </template>
+        <template v-if="column.key === 'state'">
+          <status :text="text ? text : ''" displayText />
+        </template>
+        <template v-if="column.key === 'radio'">
+          <a-radio
+            class="list__radio"
+            :value="text"
+            :checked="selectedVm && selectedVm === text"
+            @change="fetchNics"></a-radio>
+        </template>
       </template>
     </a-table>
+
     <a-pagination
       class="row-element pagination"
       size="small"
       :current="page"
       :pageSize="pageSize"
-      :total="vmsList.length"
+      :total="vmCount"
       :showTotal="total => `${$t('label.total')} ${total} ${$t('label.items')}`"
       :pageSizeOptions="['10', '20', '40', '80', '100']"
       @change="changePage"
       @showSizeChange="changePageSize"
       showSizeChanger>
-      <template slot="buildOptionText" slot-scope="props">
+      <template #buildOptionText="props">
         <span>{{ props.value }} / {{ $t('label.page') }}</span>
       </template>
     </a-pagination>
@@ -92,8 +108,8 @@
       <a-button @click="handleClose">{{ $t('label.cancel') }}</a-button>
       <a-button @click="handleSubmit" type="primary" :disabled="!selectedVm || !selectedNic">{{ $t('label.ok') }}</a-button>
     </div>
-
   </div>
+
 </template>
 
 <script>
@@ -121,13 +137,14 @@ export default {
       selectedNic: null,
       columns: [
         {
+          key: 'name',
           title: this.$t('label.name'),
-          scopedSlots: { customRender: 'name' }
+          width: 200
         },
         {
+          key: 'state',
           title: this.$t('label.state'),
-          dataIndex: 'state',
-          scopedSlots: { customRender: 'state' }
+          dataIndex: 'state'
         },
         {
           title: this.$t('label.displayname'),
@@ -142,9 +159,10 @@ export default {
           dataIndex: 'zonename'
         },
         {
+          key: 'radio',
           title: this.$t('label.select'),
           dataIndex: 'id',
-          scopedSlots: { customRender: 'radio' }
+          width: 70
         }
       ],
       tiersSelect: false,
@@ -152,7 +170,8 @@ export default {
       vpcTiers: [],
       selectedVpcTier: null,
       page: 1,
-      pageSize: 10
+      pageSize: 10,
+      vmCount: 0
     }
   },
   created () {
@@ -176,6 +195,7 @@ export default {
         domainid: this.resource.domainid,
         keyword: this.searchQuery
       }).then(response => {
+        this.vmCount = response.listvirtualmachinesresponse.count
         this.vmsList = response.listvirtualmachinesresponse.virtualmachine || []
       }).catch(error => {
         this.$notifyError(error)
@@ -258,7 +278,7 @@ export default {
       })
     },
     handleClose () {
-      this.$parent.$parent.close()
+      this.$emit('close-action')
     },
     handleTiers () {
       this.tiersSelect = true
@@ -283,23 +303,15 @@ export default {
 </script>
 
 <style scoped lang="scss">
-
-  .list {
-    max-height: 95vh;
+  .list-static-nat {
     width: 95vw;
-    overflow-y: scroll;
-    margin: -24px;
 
     @media (min-width: 1000px) {
-      max-height: 70vh;
       width: 900px;
     }
+  }
 
-    &__header,
-    &__footer {
-      padding: 20px;
-    }
-
+  .list {
     &__header {
       display: flex;
 
@@ -376,9 +388,11 @@ export default {
 
     &__radio {
       display: flex;
-      justify-content: flex-end;
     }
 
+    &__content {
+      padding: 0 20px;
+    }
   }
 
   .nic-select {
@@ -389,16 +403,9 @@ export default {
 
   .pagination {
     margin-top: 20px;
-    padding-right: 20px;
-    padding-left: 20px;
   }
 
-  .table {
-    margin-top: 20px;
-    overflow-y: auto;
-  }
-
-  /deep/ .ant-table-small {
+  :deep(.ant-table-small) {
     border: 0
   }
 </style>

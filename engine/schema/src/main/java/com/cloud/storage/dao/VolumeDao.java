@@ -94,11 +94,20 @@ public interface VolumeDao extends GenericDao<VolumeVO, Long>, StateDao<Volume.S
 
     List<VolumeVO> findReadyRootVolumesByInstance(long instanceId);
 
+    List<VolumeVO> findReadyAndAllocatedRootVolumesByInstance(long instanceId);
+
     List<Long> listPoolIdsByVolumeCount(long dcId, Long podId, Long clusterId, long accountId);
 
     List<Long> listZoneWidePoolIdsByVolumeCount(long dcId, long accountId);
 
     List<VolumeVO> findIncludingRemovedByZone(long zoneId);
+
+    /**
+     * Lists all volumes using a given passphrase ID
+     * @param passphraseId
+     * @return list of volumes
+     */
+    List<VolumeVO> listVolumesByPassphraseId(long passphraseId);
 
     /**
      * Gets the Total Primary Storage space allocated for an account
@@ -129,4 +138,13 @@ public interface VolumeDao extends GenericDao<VolumeVO, Long>, StateDao<Volume.S
      *  Updates the disk offering for the given volume.
      */
     void updateDiskOffering(long volumeId, long diskOfferingId);
+
+    /**
+     *  Retrieves volumes that use the disk offering passed as parameter.
+     *
+     * @param diskOfferingId the disk offering ID.
+     * @return the list of volumes that uses that disk offering.
+     */
+    List<VolumeVO> findByDiskOfferingId(long diskOfferingId);
+    VolumeVO getInstanceRootVolume(long instanceId);
 }
