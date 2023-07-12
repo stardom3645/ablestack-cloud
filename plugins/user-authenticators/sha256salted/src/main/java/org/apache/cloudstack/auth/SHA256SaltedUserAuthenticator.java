@@ -97,7 +97,7 @@ public class SHA256SaltedUserAuthenticator extends AdapterBase implements UserAu
         // 1. Generate the salt
         SecureRandom randomGen;
         try {
-            randomGen = SecureRandom.getInstance("SHA1PRNG");
+            randomGen = SecureRandom.getInstance("DRBG");
 
             byte[] salt = new byte[s_saltlen];
             randomGen.nextBytes(salt);

@@ -973,8 +973,8 @@ public class ApiServer extends ManagerBase implements HttpRequestHandler, ApiSer
 
             unsignedRequest = unsignedRequest.toLowerCase();
 
-            final Mac mac = Mac.getInstance("HmacSHA1");
-            final SecretKeySpec keySpec = new SecretKeySpec(secretKey.getBytes(), "HmacSHA1");
+            final Mac mac = Mac.getInstance("HmacSHA256");
+            final SecretKeySpec keySpec = new SecretKeySpec(secretKey.getBytes(), "HmacSHA256");
             mac.init(keySpec);
             mac.update(unsignedRequest.getBytes());
 
