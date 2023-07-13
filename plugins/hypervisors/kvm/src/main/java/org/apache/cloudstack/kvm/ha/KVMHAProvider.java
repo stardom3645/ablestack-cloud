@@ -82,6 +82,7 @@ public final class KVMHAProvider extends HAAbstractHostProvider implements HAPro
                     LOG.warn("OOBM recover operation failed for the host " + r.getName() + " already OFF");
                     return false;
                 }else{
+                    LOG.info("---------------------------recover OFF-------------------------------");
                     final OutOfBandManagementResponse resp = outOfBandManagementService.executePowerOperation(r, PowerOperation.OFF, null);
                     return resp.getSuccess();
                 }
@@ -100,9 +101,12 @@ public final class KVMHAProvider extends HAAbstractHostProvider implements HAPro
         try {
             if (outOfBandManagementService.isOutOfBandManagementEnabled(r)){
                 final OutOfBandManagement oobm = outOfBandManagementDao.findByHost(r.getId());
+                LOG.info("---------------------------fence oobm-------------------------------");
+                LOG.info(oobm.getPowerState());
                 if (oobm.getPowerState() == PowerState.Unknown){
                     return true;
                 } else {
+                    LOG.info("---------------------------fence OFF-------------------------------");
                     final OutOfBandManagementResponse resp = outOfBandManagementService.executePowerOperation(r, PowerOperation.OFF, null);
                     return resp.getSuccess();
                 }
