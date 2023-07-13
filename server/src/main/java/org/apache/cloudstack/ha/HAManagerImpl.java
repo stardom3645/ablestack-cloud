@@ -51,7 +51,6 @@ import org.apache.cloudstack.api.command.admin.ha.ListHostHAResourcesCmd;
 import org.apache.cloudstack.context.CallContext;
 import org.apache.cloudstack.framework.config.ConfigKey;
 import org.apache.cloudstack.framework.config.Configurable;
-import org.apache.cloudstack.ha.HAConfig.HAState;
 import org.apache.cloudstack.ha.dao.HAConfigDao;
 import org.apache.cloudstack.ha.provider.HAProvider;
 import org.apache.cloudstack.ha.provider.HAProvider.HAProviderConfig;
