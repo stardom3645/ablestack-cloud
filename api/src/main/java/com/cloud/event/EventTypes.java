@@ -694,6 +694,9 @@ public class EventTypes {
     // SystemVM
     public static final String EVENT_LIVE_PATCH_SYSTEMVM = "LIVE.PATCH.SYSTEM.VM";
 
+    // Security
+    public static final String EVENT_SECURITY_CHECK = "SECURITY.CHECK";
+
     static {
 
         // TODO: need a way to force author adding event types to declare the entity details as well, with out braking
@@ -1119,6 +1122,9 @@ public class EventTypes {
 
         entityEventDetails.put(EVENT_IMAGE_STORE_DATA_MIGRATE, ImageStore.class);
         entityEventDetails.put(EVENT_LIVE_PATCH_SYSTEMVM, "SystemVMs");
+
+        //Security
+        entityEventDetails.put(EVENT_SECURITY_CHECK, "Security");
     }
 
     public static String getEntityForEvent(String eventName) {
