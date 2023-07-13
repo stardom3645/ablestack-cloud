@@ -90,7 +90,6 @@ export default {
     fetchData () {
       this.loading = true
       api('getSecurityCheck', { managementserverid: this.resource.id }).then(json => {
-        console.log(json)
         this.securityChecks = json.getsecuritycheckresponse.securitychecks.securitychecks
       }).catch(error => {
         this.$notifyError(error)
