@@ -534,7 +534,7 @@ public class HighAvailabilityManagerImpl extends ManagerBase implements Configur
                 } else {
                     s_logger.debug("VM " + vm.getInstanceName() + " is found to be alive by " + investigator.getName());
                     s_logger.info(vm + " is alive and host is up. No need to restart it.");
-                    return null;
+                    // return null;
                     // if (host.getStatus() == Status.Up) {
                     //     s_logger.info(vm + " is alive and host is up. No need to restart it.");
                     //     return null;
