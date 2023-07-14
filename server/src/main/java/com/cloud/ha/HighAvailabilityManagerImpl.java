@@ -423,6 +423,7 @@ public class HighAvailabilityManagerImpl extends ManagerBase implements Configur
         if (s_logger.isInfoEnabled()) {
             s_logger.info("Schedule vm for HA:  " + vm);
         }
+        s_logger.info("mold:HighAvailabilityManagerImpl.java wakeupWorkers()----------------------------");
 
         wakeupWorkers();
 
@@ -910,6 +911,7 @@ public class HighAvailabilityManagerImpl extends ManagerBase implements Configur
         _haDao.releaseWorkItems(_serverId);
 
         _stopped = true;
+        s_logger.info("mold: configure()");
 
         _executor = Executors.newScheduledThreadPool(count, new NamedThreadFactory("HA"));
 
@@ -918,6 +920,7 @@ public class HighAvailabilityManagerImpl extends ManagerBase implements Configur
 
     @Override
     public boolean start() {
+        s_logger.info("mold: start()");
         _stopped = false;
 
         for (final WorkerThread thread : _workers) {
@@ -931,6 +934,7 @@ public class HighAvailabilityManagerImpl extends ManagerBase implements Configur
 
     @Override
     public boolean stop() {
+        s_logger.info("mold: stop()");
         _stopped = true;
 
         wakeupWorkers();
@@ -960,8 +964,11 @@ public class HighAvailabilityManagerImpl extends ManagerBase implements Configur
 
         @Override
         public void run() {
+            s_logger.info("mold: WorkerThread start");
+            s_logger.info("mold: _stopped"+_stopped);
             s_logger.info("Starting work");
             while (!_stopped) {
+                s_logger.info("mold: WorkerThread !_stopped");
                 _managedContext.runWithContext(new Runnable() {
                     @Override
                     public void run() {
