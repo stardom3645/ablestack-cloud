@@ -1568,14 +1568,17 @@ public class AgentManagerImpl extends ManagerBase implements AgentManager, Handl
 
     private void disconnectInternal(final long hostId, final Status.Event event, final boolean invstigate) {
         final AgentAttache attache = findAttache(hostId);
-
+        s_logger.info("mold5:AgentManagerImpl.java disconnectInternal----------------------------");
+        s_logger.info(attache);
         if (attache != null) {
             if (!invstigate) {
+                s_logger.info("mold5:AgentManagerImpl.java disconnectWithoutInvestigation----------------------------");
                 disconnectWithoutInvestigation(attache, event);
             } else {
                 disconnectWithInvestigation(attache, event);
             }
         } else {
+            s_logger.info("mold5:AgentManagerImpl.java tapLoadingAgents----------------------------");
             /* Agent is still in connecting process, don't allow to disconnect right away */
             if (tapLoadingAgents(hostId, TapAgentsAction.Contains)) {
                 s_logger.info("Host " + hostId + " is being loaded so no disconnects needed.");
@@ -1584,6 +1587,7 @@ public class AgentManagerImpl extends ManagerBase implements AgentManager, Handl
 
             final HostVO host = _hostDao.findById(hostId);
             if (host != null && host.getRemoved() == null) {
+                s_logger.info("mold5:AgentManagerImpl.java disconnectAgent----------------------------");
                 disconnectAgent(host, event, _nodeId);
             }
         }

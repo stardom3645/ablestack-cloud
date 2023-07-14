@@ -191,10 +191,12 @@ public final class HAManagerImpl extends ManagerBase implements HAManager, Clust
         final HAConfig.HAState currentHAState = haConfig.getState();
         try {
             final HAConfig.HAState nextState = HAConfig.HAState.getStateMachine().getNextState(currentHAState, event);
-            LOG.info("-------------------transitionHAState-----------------------");
+            LOG.info("mold6: HAManagerImpl.java transitionHAState--------------");
             LOG.info(nextState);
+            LOG.info("mold6: HAManagerImpl.java nextState--------------");
             boolean result = HAConfig.HAState.getStateMachine().transitTo(haConfig, event, null, haConfigDao);
             LOG.info(result);
+            LOG.info("mold6: HAManagerImpl.java result--------------");
             if (result) {
                 final String message = String.format("Transitioned host HA state from:%s to:%s due to event:%s for the host id:%d",
                         currentHAState, nextState, event, haConfig.getResourceId());
@@ -207,8 +209,9 @@ public final class HAManagerImpl extends ManagerBase implements HAManager, Clust
             }
             return result;
         } catch (NoTransitionException e) {
-            LOG.info("-------------------transitionHAState-----------------------");
+            LOG.info("mold6: HAManagerImpl.java transitionHAState e--------------");
             LOG.info(e);
+            LOG.info("mold6: HAManagerImpl.java currentHAState e--------------");
             LOG.info(currentHAState);
             LOG.warn(String.format("Unable to find next HA state for current HA state=[%s] for event=[%s] for host=[%s].", currentHAState, event, haConfig.getResourceId()), e);
         }
@@ -954,10 +957,11 @@ public final class HAManagerImpl extends ManagerBase implements HAManager, Clust
                     }
 
                     if (haConfig.getState() == HAConfig.HAState.Recovered) {
-                        LOG.info("--------------------Recovered----------------------");
+                        LOG.info("mold6:HAManagerImpl.java Recovered");
                         counter.markRecoveryStarted();
                         if (counter.canExitRecovery((Long)(haProvider.getConfigValue(HAProviderConfig.RecoveryWaitTimeout, resource)))) {
                             if (transitionHAState(HAConfig.Event.RecoveryWaitPeriodTimeout, haConfig)) {
+                                LOG.info("mold6:HAManagerImpl.java transitionHAState");
                                 counter.markRecoveryCompleted();
                             }
                         }
