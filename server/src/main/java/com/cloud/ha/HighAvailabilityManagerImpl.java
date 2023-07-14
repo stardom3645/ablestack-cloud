@@ -233,7 +233,7 @@ public class HighAvailabilityManagerImpl extends ManagerBase implements Configur
 
     @Override
     public void scheduleRestartForVmsOnHost(final HostVO host, boolean investigate) {
-        s_logger.info("mold5:HighAvailabilityManagerImpl.java scheduleRestartForVmsOnHost----------------------------");
+        s_logger.info("mold:HighAvailabilityManagerImpl.java scheduleRestartForVmsOnHost----------------------------");
 
         if (host.getType() != Host.Type.Routing) {
             return;
@@ -333,7 +333,7 @@ public class HighAvailabilityManagerImpl extends ManagerBase implements Configur
 
     @Override
     public void scheduleRestart(VMInstanceVO vm, boolean investigate) {
-        s_logger.info("mold5:HighAvailabilityManagerImpl.java scheduleRestart----------------------------");
+        s_logger.info("mold:HighAvailabilityManagerImpl.java scheduleRestart----------------------------");
         Long hostId = vm.getHostId();
         if (hostId == null) {
             try {
@@ -413,8 +413,8 @@ public class HighAvailabilityManagerImpl extends ManagerBase implements Configur
         if (hostId == null) {
             hostId = vm.getLastHostId();
         }
-        s_logger.info("mold5:HighAvailabilityManagerImpl.java timesTried----------------------------");
-        s_logger.info(timesTried);
+        s_logger.info("mold:HighAvailabilityManagerImpl.java timesTried----------------------------");
+        s_logger.info("mold:" +timesTried);
 
         HaWorkVO work = new HaWorkVO(vm.getId(), vm.getType(), WorkType.HA, investigate ? Step.Investigating : Step.Scheduled,
                 hostId != null ? hostId : 0L, vm.getState(), timesTried, vm.getUpdated());
