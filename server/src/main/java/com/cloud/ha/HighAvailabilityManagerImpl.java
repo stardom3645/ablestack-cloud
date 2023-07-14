@@ -594,8 +594,16 @@ public class HighAvailabilityManagerImpl extends ManagerBase implements Configur
             return null; // VM doesn't require HA
         }
 
-        if ((host == null || host.getRemoved() != null || host.getState() != Status.Up)
+        // if ((host == null || host.getRemoved() != null || host.getState() != Status.Up)
+        //          && !volumeMgr.canVmRestartOnAnotherServer(vm.getId())) {
+        //     if (s_logger.isDebugEnabled()) {
+        //         s_logger.debug("VM can not restart on another server.");
+        //     }
+        //     return null;
+        // }
+        if ((host == null || host.getRemoved() != null)
                  && !volumeMgr.canVmRestartOnAnotherServer(vm.getId())) {
+            s_logger.info("mold:HighAvailabilityManagerImpl.java restart VM can not restart on another server");
             if (s_logger.isDebugEnabled()) {
                 s_logger.debug("VM can not restart on another server.");
             }
