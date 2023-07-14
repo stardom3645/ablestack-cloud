@@ -432,6 +432,7 @@ public class HighAvailabilityManagerImpl extends ManagerBase implements Configur
 
     protected Long restart(final HaWorkVO work) {
         List<HaWorkVO> items = _haDao.listFutureHaWorkForVm(work.getInstanceId(), work.getId());
+        s_logger.info("mold:HighAvailabilityManagerImpl.java restart items"+items);
         if (items.size() > 0) {
             StringBuilder str = new StringBuilder("Cancelling this work item because newer ones have been scheduled.  Work Ids = [");
             for (HaWorkVO item : items) {
@@ -443,6 +444,7 @@ public class HighAvailabilityManagerImpl extends ManagerBase implements Configur
         }
 
         items = _haDao.listRunningHaWorkForVm(work.getInstanceId());
+        s_logger.info("mold:HighAvailabilityManagerImpl.java restart items"+items);
         if (items.size() > 0) {
             StringBuilder str = new StringBuilder("Waiting because there's HA work being executed on an item currently.  Work Ids =[");
             for (HaWorkVO item : items) {
@@ -502,6 +504,7 @@ public class HighAvailabilityManagerImpl extends ManagerBase implements Configur
                 Investigator investigator = null;
                 for (Investigator it : investigators) {
                     investigator = it;
+                    s_logger.info("mold:HighAvailabilityManagerImpl.java restart investigator"+investigator);
                     try
                     {
                         alive = investigator.isVmAlive(vm, host);
@@ -513,6 +516,7 @@ public class HighAvailabilityManagerImpl extends ManagerBase implements Configur
                 }
 
                 boolean fenced = false;
+                s_logger.info("mold:HighAvailabilityManagerImpl.java restart alive"+alive);
                 if (alive == null) {
                     s_logger.debug("Fencing off VM that we don't know the state of");
                     for (FenceBuilder fb : fenceBuilders) {
@@ -525,6 +529,7 @@ public class HighAvailabilityManagerImpl extends ManagerBase implements Configur
                     }
 
                 } else if (!alive) {
+                    s_logger.info("mold:HighAvailabilityManagerImpl.java restart !alive");
                     fenced = true;
                 } else {
                     s_logger.debug("VM " + vm.getInstanceName() + " is found to be alive by " + investigator.getName());
@@ -536,6 +541,7 @@ public class HighAvailabilityManagerImpl extends ManagerBase implements Configur
                         return (System.currentTimeMillis() >> 10) + _investigateRetryInterval;
                     }
                 }
+                s_logger.info("mold:HighAvailabilityManagerImpl.java restart fenced :" + fenced);
 
                 if (!fenced) {
                     s_logger.debug("We were unable to fence off the VM " + vm);
@@ -985,6 +991,8 @@ public class HighAvailabilityManagerImpl extends ManagerBase implements Configur
             try {
                 s_logger.trace("Checking the database for work");
                 work = _haDao.take(_serverId);
+                s_logger.info("mold: runWithContext()");
+                s_logger.info("mold: "+work);
                 if (work == null) {
                     try {
                         synchronized (this) {
@@ -998,6 +1006,7 @@ public class HighAvailabilityManagerImpl extends ManagerBase implements Configur
                 }
 
                 NDC.push("work-" + work.getId());
+                s_logger.info("mold: runWithContext()");
                 s_logger.info("Processing work " + work);
                 processWork(work);
             } catch (final Throwable th) {
