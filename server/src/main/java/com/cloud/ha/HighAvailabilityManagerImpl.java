@@ -527,22 +527,20 @@ public class HighAvailabilityManagerImpl extends ManagerBase implements Configur
                             break;
                         }
                     }
-
-                } else if (!alive) {
-                    s_logger.info("mold:HighAvailabilityManagerImpl.java restart !alive");
-                    fenced = true;
                 } else {
-                    s_logger.debug("VM " + vm.getInstanceName() + " is found to be alive by " + investigator.getName());
-                    s_logger.info(vm + " is alive and host is up. No need to restart it.");
-                    // return null;
-                    // if (host.getStatus() == Status.Up) {
-                    //     s_logger.info(vm + " is alive and host is up. No need to restart it.");
-                    //     return null;
-                    // } else {
-                    //     s_logger.debug("Rescheduling because the host is not up but the vm is alive");
-                    //     return (System.currentTimeMillis() >> 10) + _investigateRetryInterval;
-                    // }
+                    fenced = true;
                 }
+                // } else if (!alive) {
+                //     fenced = true;
+                // } else {
+                //     if (host.getStatus() == Status.Up) {
+                //         s_logger.info(vm + " is alive and host is up. No need to restart it.");
+                //         return null;
+                //     } else {
+                //         s_logger.debug("Rescheduling because the host is not up but the vm is alive");
+                //         return (System.currentTimeMillis() >> 10) + _investigateRetryInterval;
+                //     }
+                // }
                 s_logger.info("mold:HighAvailabilityManagerImpl.java restart fenced :" + fenced);
 
                 if (!fenced) {
