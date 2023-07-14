@@ -565,6 +565,7 @@ public class HighAvailabilityManagerImpl extends ManagerBase implements Configur
                     assert false : "How do we hit this when force is true?";
                     throw new CloudRuntimeException("Caught exception even though it should be handled.", e);
                 }
+                s_logger.info("mold:HighAvailabilityManagerImpl.java restart advanceStop out");
 
                 work.setStep(Step.Scheduled);
                 _haDao.update(work.getId(), work);
@@ -588,6 +589,9 @@ public class HighAvailabilityManagerImpl extends ManagerBase implements Configur
         vm = _itMgr.findById(vm.getId());
 
         if (!ForceHA.value() && !vm.isHaEnabled()) {
+            s_logger.info("mold:HighAvailabilityManagerImpl.java restart ForceHA isHaEnabled");
+            s_logger.info("mold:HighAvailabilityManagerImpl.java restart ForceHA: "+ForceHA.value());
+            s_logger.info("mold:HighAvailabilityManagerImpl.java restart vm.isHaEnabled(): "+vm.isHaEnabled());
             if (s_logger.isDebugEnabled()) {
                 s_logger.debug("VM is not HA enabled so we're done.");
             }
@@ -609,6 +613,8 @@ public class HighAvailabilityManagerImpl extends ManagerBase implements Configur
             }
             return null;
         }
+
+        s_logger.info("mold:HighAvailabilityManagerImpl.java restart out");
 
         try {
             HashMap<VirtualMachineProfile.Param, Object> params = new HashMap<VirtualMachineProfile.Param, Object>();
