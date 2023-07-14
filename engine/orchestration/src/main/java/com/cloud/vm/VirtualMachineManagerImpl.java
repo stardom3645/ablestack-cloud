@@ -2035,6 +2035,7 @@ public class VirtualMachineManagerImpl extends ManagerBase implements VirtualMac
 
         try {
             if (!stateTransitTo(vm, Event.StopRequested, vm.getHostId())) {
+                 s_logger.info("mold:VirtualMachineManagerImpl.java advanceStop2 stateTransitTo is being operated on ");
                 throw new ConcurrentOperationException(String.format("%s is being operated on.", vm.toString()));
             }
         } catch (final NoTransitionException e1) {
