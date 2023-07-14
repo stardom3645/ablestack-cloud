@@ -424,6 +424,7 @@ public class HighAvailabilityManagerImpl extends ManagerBase implements Configur
             s_logger.info("Schedule vm for HA:  " + vm);
         }
         s_logger.info("mold:HighAvailabilityManagerImpl.java wakeupWorkers()----------------------------");
+        s_logger.info("mold:HighAvailabilityManagerImpl.java _stopped"+_stopped);
 
         wakeupWorkers();
 
