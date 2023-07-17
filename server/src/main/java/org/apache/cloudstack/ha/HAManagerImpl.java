@@ -191,12 +191,7 @@ public final class HAManagerImpl extends ManagerBase implements HAManager, Clust
         final HAConfig.HAState currentHAState = haConfig.getState();
         try {
             final HAConfig.HAState nextState = HAConfig.HAState.getStateMachine().getNextState(currentHAState, event);
-            LOG.info("mold: HAManagerImpl.java transitionHAState--------------");
-            LOG.info("mold:" +nextState);
-            LOG.info("mold: HAManagerImpl.java nextState--------------");
             boolean result = HAConfig.HAState.getStateMachine().transitTo(haConfig, event, null, haConfigDao);
-            LOG.info("mold:" +result);
-            LOG.info("mold: HAManagerImpl.java result--------------");
             if (result) {
                 final String message = String.format("Transitioned host HA state from:%s to:%s due to event:%s for the host id:%d",
                         currentHAState, nextState, event, haConfig.getResourceId());
@@ -209,10 +204,6 @@ public final class HAManagerImpl extends ManagerBase implements HAManager, Clust
             }
             return result;
         } catch (NoTransitionException e) {
-            LOG.info("mold: HAManagerImpl.java transitionHAState e--------------");
-            LOG.info("mold:" +e);
-            LOG.info("mold: HAManagerImpl.java currentHAState e--------------");
-            LOG.info("mold:" +currentHAState);
             LOG.warn(String.format(" state=[%s] for event=[%s] for host=[%s].", currentHAState, event, haConfig.getResourceId()), e);
         }
         return false;
@@ -957,11 +948,9 @@ public final class HAManagerImpl extends ManagerBase implements HAManager, Clust
                     }
 
                     if (haConfig.getState() == HAConfig.HAState.Recovered) {
-                        LOG.info("mold:HAManagerImpl.java Recovered");
                         counter.markRecoveryStarted();
                         if (counter.canExitRecovery((Long)(haProvider.getConfigValue(HAProviderConfig.RecoveryWaitTimeout, resource)))) {
                             if (transitionHAState(HAConfig.Event.RecoveryWaitPeriodTimeout, haConfig)) {
-                                LOG.info("mold:HAManagerImpl.java transitionHAState");
                                 counter.markRecoveryCompleted();
                             }
                         }
@@ -974,8 +963,6 @@ public final class HAManagerImpl extends ManagerBase implements HAManager, Clust
             } catch (Throwable t) {
                 if (currentHaConfig != null) {
                     LOG.error(String.format("Error trying to perform health checks in HA manager [%s].", currentHaConfig.getHaProvider()), t);
-                    LOG.info("mold:HAManagerImpl.java transitionHAState t");
-                    LOG.info("mold: "+t);
                 } else {
                     LOG.error("Error trying to perform health checks in HA manager.", t);
                 }

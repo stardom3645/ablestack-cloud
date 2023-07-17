@@ -33,7 +33,6 @@ public class FenceTask extends BaseHATask {
 
     @Inject
     private HAManager haManager;
-    private final static Logger LOG = Logger.getLogger(FenceTask.class);
 
     public FenceTask(final HAResource resource, final HAProvider<HAResource> haProvider, final HAConfig haConfig,
                      final HAProvider.HAProviderConfig haProviderConfig, final ExecutorService executor) {
@@ -45,8 +44,6 @@ public class FenceTask extends BaseHATask {
     }
 
     public void processResult(boolean result, Throwable e) {
-        LOG.info("mold:FanceTask processResult----------------------------");
-        LOG.info("mold: "+result);
         final HAConfig haConfig = getHaConfig();
         final HAResourceCounter counter = haManager.getHACounter(haConfig.getResourceId(), haConfig.getResourceType());
         if (result) {

@@ -233,7 +233,6 @@ public class HighAvailabilityManagerImpl extends ManagerBase implements Configur
 
     @Override
     public void scheduleRestartForVmsOnHost(final HostVO host, boolean investigate) {
-        s_logger.info("mold:HighAvailabilityManagerImpl.java scheduleRestartForVmsOnHost----------------------------");
 
         if (host.getType() != Host.Type.Routing) {
             return;
@@ -333,7 +332,6 @@ public class HighAvailabilityManagerImpl extends ManagerBase implements Configur
 
     @Override
     public void scheduleRestart(VMInstanceVO vm, boolean investigate) {
-        s_logger.info("mold:HighAvailabilityManagerImpl.java scheduleRestart----------------------------");
         Long hostId = vm.getHostId();
         if (hostId == null) {
             try {
@@ -413,8 +411,6 @@ public class HighAvailabilityManagerImpl extends ManagerBase implements Configur
         if (hostId == null) {
             hostId = vm.getLastHostId();
         }
-        s_logger.info("mold:HighAvailabilityManagerImpl.java timesTried----------------------------");
-        s_logger.info("mold:" +timesTried);
 
         HaWorkVO work = new HaWorkVO(vm.getId(), vm.getType(), WorkType.HA, investigate ? Step.Investigating : Step.Scheduled,
                 hostId != null ? hostId : 0L, vm.getState(), timesTried, vm.getUpdated());
@@ -423,8 +419,6 @@ public class HighAvailabilityManagerImpl extends ManagerBase implements Configur
         if (s_logger.isInfoEnabled()) {
             s_logger.info("Schedule vm for HA:  " + vm);
         }
-        s_logger.info("mold:HighAvailabilityManagerImpl.java wakeupWorkers()----------------------------");
-        s_logger.info("mold:HighAvailabilityManagerImpl.java _stopped"+_stopped);
 
         wakeupWorkers();
 
@@ -432,7 +426,6 @@ public class HighAvailabilityManagerImpl extends ManagerBase implements Configur
 
     protected Long restart(final HaWorkVO work) {
         List<HaWorkVO> items = _haDao.listFutureHaWorkForVm(work.getInstanceId(), work.getId());
-        s_logger.info("mold:HighAvailabilityManagerImpl.java restart items"+items);
         if (items.size() > 0) {
             StringBuilder str = new StringBuilder("Cancelling this work item because newer ones have been scheduled.  Work Ids = [");
             for (HaWorkVO item : items) {
@@ -444,7 +437,6 @@ public class HighAvailabilityManagerImpl extends ManagerBase implements Configur
         }
 
         items = _haDao.listRunningHaWorkForVm(work.getInstanceId());
-        s_logger.info("mold:HighAvailabilityManagerImpl.java restart items"+items);
         if (items.size() > 0) {
             StringBuilder str = new StringBuilder("Waiting because there's HA work being executed on an item currently.  Work Ids =[");
             for (HaWorkVO item : items) {
@@ -504,7 +496,6 @@ public class HighAvailabilityManagerImpl extends ManagerBase implements Configur
                 Investigator investigator = null;
                 for (Investigator it : investigators) {
                     investigator = it;
-                    s_logger.info("mold:HighAvailabilityManagerImpl.java restart investigator"+investigator);
                     try
                     {
                         alive = investigator.isVmAlive(vm, host);
@@ -516,7 +507,6 @@ public class HighAvailabilityManagerImpl extends ManagerBase implements Configur
                 }
 
                 boolean fenced = false;
-                s_logger.info("mold:HighAvailabilityManagerImpl.java restart alive"+alive);
                 if (alive == null) {
                     s_logger.debug("Fencing off VM that we don't know the state of");
                     for (FenceBuilder fb : fenceBuilders) {
@@ -541,7 +531,6 @@ public class HighAvailabilityManagerImpl extends ManagerBase implements Configur
                 //         return (System.currentTimeMillis() >> 10) + _investigateRetryInterval;
                 //     }
                 // }
-                s_logger.info("mold:HighAvailabilityManagerImpl.java restart fenced :" + fenced);
 
                 if (!fenced) {
                     s_logger.debug("We were unable to fence off the VM " + vm);
@@ -563,7 +552,6 @@ public class HighAvailabilityManagerImpl extends ManagerBase implements Configur
                     assert false : "How do we hit this when force is true?";
                     throw new CloudRuntimeException("Caught exception even though it should be handled.", e);
                 }
-                s_logger.info("mold:HighAvailabilityManagerImpl.java restart advanceStop out");
 
                 work.setStep(Step.Scheduled);
                 _haDao.update(work.getId(), work);
@@ -587,9 +575,6 @@ public class HighAvailabilityManagerImpl extends ManagerBase implements Configur
         vm = _itMgr.findById(vm.getId());
 
         if (!ForceHA.value() && !vm.isHaEnabled()) {
-            s_logger.info("mold:HighAvailabilityManagerImpl.java restart ForceHA isHaEnabled");
-            s_logger.info("mold:HighAvailabilityManagerImpl.java restart ForceHA: "+ForceHA.value());
-            s_logger.info("mold:HighAvailabilityManagerImpl.java restart vm.isHaEnabled(): "+vm.isHaEnabled());
             if (s_logger.isDebugEnabled()) {
                 s_logger.debug("VM is not HA enabled so we're done.");
             }
@@ -605,14 +590,11 @@ public class HighAvailabilityManagerImpl extends ManagerBase implements Configur
         // }
         if ((host == null || host.getRemoved() != null)
                  && !volumeMgr.canVmRestartOnAnotherServer(vm.getId())) {
-            s_logger.info("mold:HighAvailabilityManagerImpl.java restart VM can not restart on another server");
             if (s_logger.isDebugEnabled()) {
                 s_logger.debug("VM can not restart on another server.");
             }
             return null;
         }
-
-        s_logger.info("mold:HighAvailabilityManagerImpl.java restart out");
 
         try {
             HashMap<VirtualMachineProfile.Param, Object> params = new HashMap<VirtualMachineProfile.Param, Object>();
@@ -932,7 +914,6 @@ public class HighAvailabilityManagerImpl extends ManagerBase implements Configur
         _haDao.releaseWorkItems(_serverId);
 
         _stopped = true;
-        s_logger.info("mold: configure()");
 
         _executor = Executors.newScheduledThreadPool(count, new NamedThreadFactory("HA"));
 
@@ -941,7 +922,6 @@ public class HighAvailabilityManagerImpl extends ManagerBase implements Configur
 
     @Override
     public boolean start() {
-        s_logger.info("mold: start()");
         _stopped = false;
 
         for (final WorkerThread thread : _workers) {
@@ -955,7 +935,6 @@ public class HighAvailabilityManagerImpl extends ManagerBase implements Configur
 
     @Override
     public boolean stop() {
-        s_logger.info("mold: stop()");
         _stopped = true;
 
         wakeupWorkers();
@@ -985,11 +964,7 @@ public class HighAvailabilityManagerImpl extends ManagerBase implements Configur
 
         @Override
         public void run() {
-            s_logger.info("mold: WorkerThread start");
-            s_logger.info("mold: _stopped"+_stopped);
-            s_logger.info("Starting work");
             while (!_stopped) {
-                s_logger.info("mold: WorkerThread !_stopped");
                 _managedContext.runWithContext(new Runnable() {
                     @Override
                     public void run() {
@@ -1005,8 +980,6 @@ public class HighAvailabilityManagerImpl extends ManagerBase implements Configur
             try {
                 s_logger.trace("Checking the database for work");
                 work = _haDao.take(_serverId);
-                s_logger.info("mold: runWithContext()");
-                s_logger.info("mold: "+work);
                 if (work == null) {
                     try {
                         synchronized (this) {
@@ -1020,8 +993,6 @@ public class HighAvailabilityManagerImpl extends ManagerBase implements Configur
                 }
 
                 NDC.push("work-" + work.getId());
-                s_logger.info("mold: runWithContext()");
-                s_logger.info("Processing work " + work);
                 processWork(work);
             } catch (final Throwable th) {
                 s_logger.error("Caught this throwable, ", th);

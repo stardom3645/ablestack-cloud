@@ -1885,7 +1885,6 @@ public class VirtualMachineManagerImpl extends ManagerBase implements VirtualMac
 
         final AsyncJobExecutionContext jobContext = AsyncJobExecutionContext.getCurrentExecutionContext();
         if (jobContext.isJobDispatchedBy(VmWorkConstants.VM_WORK_JOB_DISPATCHER)) {
-            s_logger.info("mold: advanceStop VM_WORK_JOB_DISPATCHER");
 
             VmWorkJobVO placeHolder = null;
             final VirtualMachine vm = _vmDao.findByUuid(vmUuid);
@@ -1899,7 +1898,6 @@ public class VirtualMachineManagerImpl extends ManagerBase implements VirtualMac
             }
 
         } else {
-            s_logger.info("mold: advanceStop VM_WORK_JOB_DISPATCHER else");
             final Outcome<VirtualMachine> outcome = stopVmThroughJobQueue(vmUuid, cleanUpEvenIfUnableToStop);
 
             retrieveVmFromJobOutcome(outcome, vmUuid, "stopVm");
@@ -2022,26 +2020,21 @@ public class VirtualMachineManagerImpl extends ManagerBase implements VirtualMac
             }
             return;
         } else {
-            s_logger.info("mold:VirtualMachineManagerImpl.java advanceStop");
             HostVO host = _hostDao.findById(hostId);
             if (!cleanUpEvenIfUnableToStop && vm.getState() == State.Running && host.getResourceState() == ResourceState.PrepareForMaintenance) {
-                s_logger.info("mold:VirtualMachineManagerImpl.java advanceStop host.getResourceState(): "+host.getResourceState());
                 s_logger.debug("Host is in PrepareForMaintenance state - Stop VM operation on the VM id: " + vm.getId() + " is not allowed");
                 throw new CloudRuntimeException("Stop VM operation on the VM id: " + vm.getId() + " is not allowed as host is preparing for maintenance mode");
             }
         }
-        s_logger.info("mold:VirtualMachineManagerImpl.java advanceStop2");
 
         final VirtualMachineGuru vmGuru = getVmGuru(vm);
         final VirtualMachineProfile profile = new VirtualMachineProfileImpl(vm);
 
         try {
             if (!stateTransitTo(vm, Event.StopRequested, vm.getHostId())) {
-                 s_logger.info("mold:VirtualMachineManagerImpl.java advanceStop2 stateTransitTo is being operated on ");
                 throw new ConcurrentOperationException(String.format("%s is being operated on.", vm.toString()));
             }
         } catch (final NoTransitionException e1) {
-            s_logger.info("mold:VirtualMachineManagerImpl.java advanceStop2 e1");
             if (!cleanUpEvenIfUnableToStop) {
                 throw new CloudRuntimeException("We cannot stop " + vm + " when it is in state " + vm.getState());
             }
@@ -2053,22 +2046,18 @@ public class VirtualMachineManagerImpl extends ManagerBase implements VirtualMac
             if (doCleanup) {
                 if (cleanup(vmGuru, new VirtualMachineProfileImpl(vm), work, Event.StopRequested, cleanUpEvenIfUnableToStop)) {
                     try {
-                        s_logger.info("mold:VirtualMachineManagerImpl.java advanceStop2 cleanup Failed to cleanup VM");
                         if (s_logger.isDebugEnabled() && work != null) {
                             s_logger.debug("Updating work item to Done, id:" + work.getId());
                         }
                         if (!changeState(vm, Event.AgentReportStopped, null, work, Step.Done)) {
-                            s_logger.info("mold:VirtualMachineManagerImpl.java advanceStop2 cleanup Unable to stop");
                             throw new CloudRuntimeException("Unable to stop " + vm);
                         }
 
                     } catch (final NoTransitionException e) {
-                        s_logger.info("mold:VirtualMachineManagerImpl.java advanceStop2 cleanup Unable to cleanup");
                         s_logger.warn("Unable to cleanup " + vm);
                         throw new CloudRuntimeException("Unable to stop " + vm, e);
                     }
                 } else {
-                    s_logger.info("mold:VirtualMachineManagerImpl.java advanceStop2 cleanup Failed to cleanup VM");
                     if (s_logger.isDebugEnabled()) {
                         s_logger.debug("Failed to cleanup VM: " + vm);
                     }
@@ -2078,7 +2067,6 @@ public class VirtualMachineManagerImpl extends ManagerBase implements VirtualMac
         }
 
         if (vm.getState() != State.Stopping) {
-            s_logger.info("mold:VirtualMachineManagerImpl.java advanceStop2 cleanup vm.getState(): "+vm.getState());
             throw new CloudRuntimeException("We cannot proceed with stop VM " + vm + " since it is not in 'Stopping' state, current state: " + vm.getState());
         }
 
@@ -2193,7 +2181,6 @@ public class VirtualMachineManagerImpl extends ManagerBase implements VirtualMac
         final VMInstanceVO vm = (VMInstanceVO)vm1;
 
         final State oldState = vm.getState();
-        s_logger.info("mold:VirtualMachineManagerImpl.java stateTransitTo oldState: "+oldState);
         if (oldState == State.Starting) {
             if (e == Event.OperationSucceeded) {
                 vm.setLastHostId(hostId);
