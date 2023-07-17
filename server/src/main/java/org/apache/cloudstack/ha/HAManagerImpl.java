@@ -190,12 +190,16 @@ public final class HAManagerImpl extends ManagerBase implements HAManager, Clust
         }
         final HAConfig.HAState currentHAState = haConfig.getState();
         try {
+            LOG.info("mold: HAManagerImpl.java transitionHAState currentHAState: "+ currentHAState);
+            LOG.info("mold: HAManagerImpl.java transitionHAState event: "+ event);
             final HAConfig.HAState nextState = HAConfig.HAState.getStateMachine().getNextState(currentHAState, event);
+            LOG.info("mold: HAManagerImpl.java transitionHAState nextState: "+ nextState);
             boolean result = HAConfig.HAState.getStateMachine().transitTo(haConfig, event, null, haConfigDao);
             if (result) {
                 final String message = String.format("Transitioned host HA state from:%s to:%s due to event:%s for the host id:%d",
                         currentHAState, nextState, event, haConfig.getResourceId());
                 LOG.debug(message);
+                LOG.info("mold: HAManagerImpl.java transitionHAState message: "+ message);
 
                 if (nextState == HAConfig.HAState.Recovering || nextState == HAConfig.HAState.Fencing || nextState == HAConfig.HAState.Fenced) {
                     ActionEventUtils.onActionEvent(CallContext.current().getCallingUserId(), CallContext.current().getCallingAccountId(),
@@ -204,6 +208,7 @@ public final class HAManagerImpl extends ManagerBase implements HAManager, Clust
             }
             return result;
         } catch (NoTransitionException e) {
+            LOG.info("mold: HAManagerImpl.java transitionHAState NoTransitionException: "+ e);
             LOG.warn(String.format("Unable to find next HA state for current HA state=[%s] for event=[%s] for host=[%s].", currentHAState, event, haConfig.getResourceId()), e);
         }
         return false;
