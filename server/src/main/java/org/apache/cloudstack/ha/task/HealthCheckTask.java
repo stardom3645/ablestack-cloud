@@ -45,7 +45,9 @@ public class HealthCheckTask extends BaseHATask {
     }
 
     public void processResult(boolean result, Throwable e) {
+        LOG.info("mold: HealthCHeckTask.java processResult result: " +result);
         final HAConfig haConfig = getHaConfig();
+        LOG.info("mold: HealthCHeckTask.java processResult haConfig: " +haConfig.getState());
         final HAResourceCounter counter = haManager.getHACounter(haConfig.getResourceId(), haConfig.getResourceType());
         if (result) {
             haManager.transitionHAState(HAConfig.Event.HealthCheckPassed, haConfig);
