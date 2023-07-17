@@ -517,8 +517,18 @@ public class HighAvailabilityManagerImpl extends ManagerBase implements Configur
                             break;
                         }
                     }
+                // } else {
+                //     fenced = true;
+                // }
                 } else {
-                    fenced = true;
+                    s_logger.debug("VM " + vm.getInstanceName() + " is found to be alive by " + investigator.getName());
+                    if (host.getStatus() == Status.Up) {
+                        s_logger.info(vm + " is alive and host is up. No need to restart it.");
+                        return null;
+                    } else {
+                        s_logger.debug("Rescheduling because the host is not up but the vm is alive");
+                        return (System.currentTimeMillis() >> 10) + _investigateRetryInterval;
+                    }
                 }
 
                 if (!fenced) {
@@ -571,7 +581,8 @@ public class HighAvailabilityManagerImpl extends ManagerBase implements Configur
         }
 
 
-        if ((host == null || host.getRemoved() != null)
+        // if ((host == null || host.getRemoved() != null)
+        if ((host == null || host.getRemoved() != null || host.getState() != Status.Up)
                  && !volumeMgr.canVmRestartOnAnotherServer(vm.getId())) {
             if (s_logger.isDebugEnabled()) {
                 s_logger.debug("VM can not restart on another server.");
