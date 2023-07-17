@@ -363,6 +363,7 @@ public final class HAManagerImpl extends ManagerBase implements HAManager, Clust
 
     public Status getHostStatus(final Host host) {
         final HAConfig haConfig = haConfigDao.findHAResource(host.getId(), HAResource.ResourceType.Host);
+        LOG.info("mold: HAManagerImpl.java getHostStatus haConfig: "+ haConfig.getState());
         if (haConfig != null) {
             if (haConfig.getState() == HAConfig.HAState.Fenced) {
                 LOG.debug(String.format("HA: Agent [%s] is available/suspect/checking Up.", host.getId()));
@@ -734,6 +735,8 @@ public final class HAManagerImpl extends ManagerBase implements HAManager, Clust
     }
 
     private boolean processHAStateChange(final HAConfig haConfig, final HAConfig.HAState newState, final boolean status) {
+        LOG.info("mold: HAManagerImpl.java processHAStateChange newState : "+ newState);
+        LOG.info("mold: HAManagerImpl.java processHAStateChange status : "+ status);
         if (!status || !checkHAOwnership(haConfig)) {
             return false;
         }
@@ -770,6 +773,7 @@ public final class HAManagerImpl extends ManagerBase implements HAManager, Clust
 
         // Fencing
         if (newState == HAConfig.HAState.Fencing) {
+            LOG.info("mold: HAManagerImpl.java processHAStateChange newState Fencing");
             final FenceTask task = ComponentContext.inject(new FenceTask(resource, haProvider, haConfig,
                     HAProviderConfig.FenceTimeout, fenceExecutor));
             final Future<Boolean> fenceFuture = fenceExecutor.submit(task);
@@ -780,6 +784,11 @@ public final class HAManagerImpl extends ManagerBase implements HAManager, Clust
 
     @Override
     public boolean preStateTransitionEvent(final HAConfig.HAState oldState, final HAConfig.Event event, final HAConfig.HAState newState, final HAConfig haConfig, final boolean status, final Object opaque) {
+        LOG.info("mold: HAManagerImpl.java preStateTransitionEvent");
+        LOG.info("mold: HAManagerImpl.java preStateTransitionEvent oldState" + oldState);
+        LOG.info("mold: HAManagerImpl.java preStateTransitionEvent event" + event);
+        LOG.info("mold: HAManagerImpl.java preStateTransitionEvent haConfig" + haConfig.getState());
+        LOG.info("mold: HAManagerImpl.java preStateTransitionEvent status" + status);
         if (oldState != newState || newState == HAConfig.HAState.Suspect || newState == HAConfig.HAState.Checking) {
             return false;
         }
@@ -794,6 +803,10 @@ public final class HAManagerImpl extends ManagerBase implements HAManager, Clust
 
     @Override
     public boolean postStateTransitionEvent(final StateMachine2.Transition<HAConfig.HAState, HAConfig.Event> transition, final HAConfig haConfig, final boolean status, final Object opaque) {
+        LOG.info("mold: HAManagerImpl.java postStateTransitionEvent");
+        LOG.info("mold: HAManagerImpl.java preStateTransitionEvent transition" + transition.getToState());
+        LOG.info("mold: HAManagerImpl.java preStateTransitionEvent haConfig" + haConfig.getState());
+        LOG.info("mold: HAManagerImpl.java preStateTransitionEvent status" + status);
         LOG.debug(String.format("HA state post-transition:: new state=[%s], old state=[%s], for resource id=[%s], status=[%s], ha config state=[%s].", transition.getToState(), transition.getCurrentState(),  haConfig.getResourceId(), status, haConfig.getState()));
 
         if (status && haConfig.getState() != transition.getToState()) {
