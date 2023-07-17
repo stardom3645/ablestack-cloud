@@ -520,17 +520,6 @@ public class HighAvailabilityManagerImpl extends ManagerBase implements Configur
                 } else {
                     fenced = true;
                 }
-                // } else if (!alive) {
-                //     fenced = true;
-                // } else {
-                //     if (host.getStatus() == Status.Up) {
-                //         s_logger.info(vm + " is alive and host is up. No need to restart it.");
-                //         return null;
-                //     } else {
-                //         s_logger.debug("Rescheduling because the host is not up but the vm is alive");
-                //         return (System.currentTimeMillis() >> 10) + _investigateRetryInterval;
-                //     }
-                // }
 
                 if (!fenced) {
                     s_logger.debug("We were unable to fence off the VM " + vm);
@@ -581,13 +570,6 @@ public class HighAvailabilityManagerImpl extends ManagerBase implements Configur
             return null; // VM doesn't require HA
         }
 
-        // if ((host == null || host.getRemoved() != null || host.getState() != Status.Up)
-        //          && !volumeMgr.canVmRestartOnAnotherServer(vm.getId())) {
-        //     if (s_logger.isDebugEnabled()) {
-        //         s_logger.debug("VM can not restart on another server.");
-        //     }
-        //     return null;
-        // }
         if ((host == null || host.getRemoved() != null)
                  && !volumeMgr.canVmRestartOnAnotherServer(vm.getId())) {
             if (s_logger.isDebugEnabled()) {
