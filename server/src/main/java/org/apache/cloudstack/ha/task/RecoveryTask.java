@@ -55,6 +55,7 @@ public class RecoveryTask extends BaseHATask {
         if (result) {
             haManager.transitionHAState(HAConfig.Event.Recovered, haConfig);
             getHaProvider().fenceSubResources(getResource());
+            getHaProvider().enableMaintenance(getResource());
         }
         getHaProvider().sendAlert(getResource(), HAConfig.HAState.Recovering);
     }
