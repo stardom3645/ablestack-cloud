@@ -965,13 +965,18 @@ public final class HAManagerImpl extends ManagerBase implements HAManager, Clust
                     }
 
                     if (haConfig.getState() == HAConfig.HAState.Recovered) {
+                        LOG.info("mold: HAManagerImpl.java Recovered");
                         counter.markRecoveryStarted();
                         if (counter.canExitRecovery((Long)(haProvider.getConfigValue(HAProviderConfig.RecoveryWaitTimeout, resource)))) {
+                            LOG.info("mold: HAManagerImpl.java Recovered if");
                             if (transitionHAState(HAConfig.Event.RecoveryWaitPeriodTimeout, haConfig)) {
+                                LOG.info("mold: HAManagerImpl.java Recovered if if");
                                 counter.markRecoveryCompleted();
                             }
                         }
                     }
+                    LOG.info("mold: HAManagerImpl.java haConfig.getState() :"+haConfig.getState());
+                    LOG.info("mold: HAManagerImpl.java counter.canAttemptFencing() :"+counter.canAttemptFencing());
 
                     if (haConfig.getState() == HAConfig.HAState.Fencing && counter.canAttemptFencing()) {
                         transitionHAState(HAConfig.Event.RetryFencing, haConfig);
