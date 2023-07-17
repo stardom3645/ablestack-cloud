@@ -520,6 +520,8 @@ public class HighAvailabilityManagerImpl extends ManagerBase implements Configur
                 // } else {
                 //     fenced = true;
                 // }
+                } else if (!alive) {
+                    fenced = true;
                 } else {
                     s_logger.debug("VM " + vm.getInstanceName() + " is found to be alive by " + investigator.getName());
                     if (host.getStatus() == Status.Up) {
@@ -579,7 +581,6 @@ public class HighAvailabilityManagerImpl extends ManagerBase implements Configur
             }
             return null; // VM doesn't require HA
         }
-
 
         // if ((host == null || host.getRemoved() != null)
         if ((host == null || host.getRemoved() != null || host.getState() != Status.Up)
