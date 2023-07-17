@@ -48,6 +48,9 @@ public class RecoveryTask extends BaseHATask {
         final HAResourceCounter counter = haManager.getHACounter(haConfig.getResourceId(), haConfig.getResourceType());
         counter.incrRecoveryCounter();
         counter.resetActivityCounter();
+        LOG.info("mold: RecoveryTask.java processresult haConfig: " +haConfig.getState());
+        LOG.info("mold: RecoveryTask.java processresult result: " +result);
+        LOG.info("mold: RecoveryTask.java processresult e: " +e);
 
         if (result) {
             haManager.transitionHAState(HAConfig.Event.Recovered, haConfig);
