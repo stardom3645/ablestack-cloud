@@ -517,9 +517,6 @@ public class HighAvailabilityManagerImpl extends ManagerBase implements Configur
                             break;
                         }
                     }
-                // } else {
-                //     fenced = true;
-                // }
                 } else if (!alive) {
                     fenced = true;
                 } else {
@@ -582,7 +579,6 @@ public class HighAvailabilityManagerImpl extends ManagerBase implements Configur
             return null; // VM doesn't require HA
         }
 
-        // if ((host == null || host.getRemoved() != null)
         if ((host == null || host.getRemoved() != null || host.getState() != Status.Up)
                  && !volumeMgr.canVmRestartOnAnotherServer(vm.getId())) {
             if (s_logger.isDebugEnabled()) {
