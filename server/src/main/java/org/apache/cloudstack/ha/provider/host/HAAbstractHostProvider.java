@@ -72,15 +72,12 @@ public abstract class HAAbstractHostProvider extends AdapterBase implements HAPr
 
     @Override
     public void fenceSubResources(final Host r) {
-        LOG.info("mold: HAAbstractHsotProvider.java fenceSubResources r.getState : " + r.getState());
         if (r.getState() != Status.Down) {
             try {
-                LOG.info("mold: HAAbstractHsotProvider.java fenceSubResources");
                 LOG.debug("Trying to disconnect the host without investigation and scheduling HA for the VMs on host id=" + r.getId());
                 agentManager.disconnectWithoutInvestigation(r.getId(), Event.HostDown);
                 oldHighAvailabilityManager.scheduleRestartForVmsOnHost((HostVO)r, true);
             } catch (Exception e) {
-                LOG.info("mold: HAAbstractHsotProvider.java fenceSubResources e: "+e);
                 LOG.error("Failed to disconnect host and schedule HA restart of VMs after fencing the host: ", e);
             }
         }
