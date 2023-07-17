@@ -509,14 +509,18 @@ public class HighAvailabilityManagerImpl extends ManagerBase implements Configur
                 s_logger.info("mold: HighAvailabilityManagerImpl.java restart alive: "+alive);
 
                 boolean fenced = false;
-                s_logger.debug("Fencing off VM that we don't know the state of");
-                for (FenceBuilder fb : fenceBuilders) {
-                    Boolean result = fb.fenceOff(vm, host);
-                    s_logger.info("Fencer " + fb.getName() + " returned " + result);
-                    if (result != null && result) {
-                        fenced = true;
-                        break;
+                if (alive == null) {
+                    s_logger.debug("Fencing off VM that we don't know the state of");
+                    for (FenceBuilder fb : fenceBuilders) {
+                        Boolean result = fb.fenceOff(vm, host);
+                        s_logger.info("Fencer " + fb.getName() + " returned " + result);
+                        if (result != null && result) {
+                            fenced = true;
+                            break;
+                        }
                     }
+                } else {
+                    fenced = true;
                 }
 
                 if (!fenced) {
