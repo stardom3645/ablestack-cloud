@@ -517,6 +517,7 @@ public class HighAvailabilityManagerImpl extends ManagerBase implements Configur
                             break;
                         }
                     }
+
                 } else if (!alive) {
                     fenced = true;
                 } else {
