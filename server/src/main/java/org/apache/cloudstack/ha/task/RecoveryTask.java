@@ -28,13 +28,11 @@ import org.apache.cloudstack.ha.HAResourceCounter;
 import org.apache.cloudstack.ha.provider.HACheckerException;
 import org.apache.cloudstack.ha.provider.HAProvider;
 import org.apache.cloudstack.ha.provider.HARecoveryException;
-import org.apache.log4j.Logger;
 
 public class RecoveryTask extends BaseHATask {
 
     @Inject
     private HAManager haManager;
-    private final static Logger LOG = Logger.getLogger(RecoveryTask.class);
 
     public RecoveryTask(final HAResource resource, final HAProvider<HAResource> haProvider, final HAConfig haConfig,
                         final HAProvider.HAProviderConfig haProviderConfig, final ExecutorService executor) {
@@ -53,8 +51,6 @@ public class RecoveryTask extends BaseHATask {
 
         if (result) {
             haManager.transitionHAState(HAConfig.Event.Recovered, haConfig);
-            LOG.info("mold3:RecoveryTask processResult----------------------------");
-            LOG.info(result);
             getHaProvider().fenceSubResources(getResource());
         }
         getHaProvider().sendAlert(getResource(), HAConfig.HAState.Recovering);

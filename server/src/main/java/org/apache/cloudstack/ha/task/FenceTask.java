@@ -24,7 +24,6 @@ import org.apache.cloudstack.ha.HAResourceCounter;
 import org.apache.cloudstack.ha.provider.HACheckerException;
 import org.apache.cloudstack.ha.provider.HAFenceException;
 import org.apache.cloudstack.ha.provider.HAProvider;
-import org.apache.log4j.Logger;
 
 import javax.inject.Inject;
 import java.util.concurrent.ExecutorService;

@@ -1568,6 +1568,7 @@ public class AgentManagerImpl extends ManagerBase implements AgentManager, Handl
 
     private void disconnectInternal(final long hostId, final Status.Event event, final boolean invstigate) {
         final AgentAttache attache = findAttache(hostId);
+
         if (attache != null) {
             if (!invstigate) {
                 disconnectWithoutInvestigation(attache, event);

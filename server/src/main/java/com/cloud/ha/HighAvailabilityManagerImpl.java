@@ -964,6 +964,7 @@ public class HighAvailabilityManagerImpl extends ManagerBase implements Configur
 
         @Override
         public void run() {
+            s_logger.info("Starting work");
             while (!_stopped) {
                 _managedContext.runWithContext(new Runnable() {
                     @Override
@@ -993,6 +994,7 @@ public class HighAvailabilityManagerImpl extends ManagerBase implements Configur
                 }
 
                 NDC.push("work-" + work.getId());
+                s_logger.info("Processing work " + work);
                 processWork(work);
             } catch (final Throwable th) {
                 s_logger.error("Caught this throwable, ", th);

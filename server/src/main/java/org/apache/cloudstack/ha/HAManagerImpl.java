@@ -204,7 +204,7 @@ public final class HAManagerImpl extends ManagerBase implements HAManager, Clust
             }
             return result;
         } catch (NoTransitionException e) {
-            LOG.warn(String.format(" state=[%s] for event=[%s] for host=[%s].", currentHAState, event, haConfig.getResourceId()), e);
+            LOG.warn(String.format("Unable to find next HA state for current HA state=[%s] for event=[%s] for host=[%s].", currentHAState, event, haConfig.getResourceId()), e);
         }
         return false;
     }
@@ -765,7 +765,6 @@ public final class HAManagerImpl extends ManagerBase implements HAManager, Clust
 
         // Fencing
         if (newState == HAConfig.HAState.Fencing) {
-            LOG.info("HAManagerImpl.java Fencing");
             final FenceTask task = ComponentContext.inject(new FenceTask(resource, haProvider, haConfig,
                     HAProviderConfig.FenceTimeout, fenceExecutor));
             final Future<Boolean> fenceFuture = fenceExecutor.submit(task);
