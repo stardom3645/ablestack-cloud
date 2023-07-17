@@ -217,7 +217,6 @@ public class HighAvailabilityManagerImpl extends ManagerBase implements Configur
         Status hostState = null;
         for (Investigator investigator : investigators) {
             hostState = investigator.isAgentAlive(host);
-            s_logger.info("mold: HighAvailabilityManagerImpl.java investigate hostState: "+ hostState);
             if (hostState != null) {
                 if (s_logger.isDebugEnabled()) {
                     s_logger.debug(investigator.getName() + " was able to determine host " + hostId + " is in " + hostState.toString());
@@ -506,7 +505,6 @@ public class HighAvailabilityManagerImpl extends ManagerBase implements Configur
                         s_logger.info(investigator.getName() + " could not find " + vm);
                     }
                 }
-                s_logger.info("mold: HighAvailabilityManagerImpl.java restart alive: "+alive);
 
                 boolean fenced = false;
                 if (alive == null) {
