@@ -303,6 +303,8 @@ export default {
         this.$router.push({ path: '/verify2FA' }).catch(() => {})
       } else if (store.getters.twoFaEnabled === true && (store.getters.twoFaProvider === '' || store.getters.twoFaProvider === undefined)) {
         this.$router.push({ path: '/setup2FA' }).catch(() => {})
+      } else if (store.getters.firstLogin === true) {
+        this.$router.push({ path: '/firstLogin' }).catch(() => {})
       } else {
         this.$store.commit('SET_LOGIN_FLAG', true)
         this.$router.push({ path: '/dashboard' }).catch(() => {})
