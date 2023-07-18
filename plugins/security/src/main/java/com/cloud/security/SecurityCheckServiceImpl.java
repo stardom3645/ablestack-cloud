@@ -27,14 +27,18 @@ import org.apache.cloudstack.api.command.admin.RunSecurityCheckCmd;
 import org.apache.cloudstack.api.response.GetSecurityCheckResponse;
 import org.apache.cloudstack.framework.config.ConfigKey;
 import org.apache.cloudstack.framework.config.Configurable;
+import org.apache.cloudstack.management.ManagementServerHost;
 import org.apache.log4j.Logger;
 
+import com.cloud.cluster.dao.ManagementServerHostDao;
 import com.cloud.event.ActionEvent;
 import com.cloud.event.EventTypes;
 import com.cloud.security.dao.SecurityCheckDao;
 import com.cloud.utils.Pair;
 import com.cloud.utils.component.ManagerBase;
 import com.cloud.utils.component.PluggableService;
+import com.cloud.utils.exception.CloudRuntimeException;
+import com.cloud.utils.script.Script;
 
 public class SecurityCheckServiceImpl extends ManagerBase implements PluggableService, SecurityCheckService, Configurable {
 
@@ -46,6 +50,8 @@ public class SecurityCheckServiceImpl extends ManagerBase implements PluggableSe
 
     @Inject
     private SecurityCheckDao securityCheckDao;
+    @Inject
+    private ManagementServerHostDao msHostDao;
 
     @Override
     public List<GetSecurityCheckResponse> listSecurityChecks(GetSecurityCheckCmd cmd) {
@@ -69,22 +75,21 @@ public class SecurityCheckServiceImpl extends ManagerBase implements PluggableSe
     public Pair<Boolean, String> runSecurityCheckCommand(final RunSecurityCheckCmd cmd) {
         final Long mshostId = cmd.getMsHostId();
         LOGGER.info("Running security check results for management server " + mshostId);
-        // ManagementServerHost mshost = msHostDao.findById(mshostId);
+        ManagementServerHost mshost = msHostDao.findById(mshostId);
+        LOGGER.info(mshost.getId());
         // String resultDetails = "";
-        // boolean success = true;
-        // String scriptsDir = "scripts/security";
-        // String securityCekScr = Script.findScript(scriptsDir, "securitycheck.sh");
-        // final int timeout = 30000;
-        // Script scr = new Script(securityCekScr, timeout, LOGGER);
-        // OutputInterpreter.OneLineParser parser = new OutputInterpreter.OneLineParser();
-        // String result;
-        // result = scr.execute(parser);
-        // String parsedLine = parser.getLine();
-        // LOGGER.info(parsedLine);
-        // if (scr.getExitValue() != 0) {
-        //     LOGGER.error("Error while executing script " + scr.toString());
-        //     throw new CloudRuntimeException("Error while executing script " + scr.toString());
-        // }
+        // boolean success = false;
+        String scriptsDir = "plugins/security/scripts";
+        String securityCekScr = Script.findScript(scriptsDir, "securitycheck.sh");
+        final int timeout = 30000;
+        Script scr = new Script(securityCekScr, timeout, LOGGER);
+        String result = scr.execute();
+        LOGGER.info(result);
+        LOGGER.info(scr.getExitValue());
+        if (scr.getExitValue() != 0) {
+            LOGGER.error("Error while executing script " + scr.toString());
+            throw new CloudRuntimeException("Error while executing script " + scr.toString());
+        }
         return null;
     }
 
