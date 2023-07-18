@@ -39,7 +39,6 @@ import com.cloud.cluster.dao.ManagementServerHostDao;
 import com.cloud.event.ActionEvent;
 import com.cloud.event.EventTypes;
 import com.cloud.security.dao.SecurityCheckDao;
-import com.cloud.utils.Pair;
 import com.cloud.utils.component.ManagerBase;
 import com.cloud.utils.component.PluggableService;
 import com.cloud.utils.exception.CloudRuntimeException;
@@ -76,7 +75,7 @@ public class SecurityCheckServiceImpl extends ManagerBase implements PluggableSe
 
     @Override
     @ActionEvent(eventType = EventTypes.EVENT_SECURITY_CHECK, eventDescription = "running security check on management server", async = true)
-    public Pair<Boolean, String> runSecurityCheckCommand(final RunSecurityCheckCmd cmd) {
+    public boolean runSecurityCheckCommand(final RunSecurityCheckCmd cmd) {
         final Long mshostId = cmd.getMsHostId();
         ManagementServerHost mshost = msHostDao.findById(mshostId);
         ProcessBuilder processBuilder = new ProcessBuilder();
@@ -103,9 +102,9 @@ public class SecurityCheckServiceImpl extends ManagerBase implements PluggableSe
                 output.append(line).append('\n');
             }
             if (output.toString().contains("false")) {
-                return new Pair<Boolean, String>(false, "failed");
+                return false;
             } else {
-                return new Pair<Boolean, String>(true, "success");
+                return true;
             }
         } catch (IOException e) {
             throw new CloudRuntimeException("Failed to execute security check command for management server: "+mshost.getId() +e);

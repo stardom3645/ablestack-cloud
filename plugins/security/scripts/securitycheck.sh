@@ -40,6 +40,6 @@
 #     echo "management,false"
 # fi
 
-echo "mysql,false"
-echo "firewalld,false"
+echo "mysql,true"
+echo "firewalld,true"
 echo "management,true"

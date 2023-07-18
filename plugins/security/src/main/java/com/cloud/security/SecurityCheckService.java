@@ -19,8 +19,6 @@ package com.cloud.security;
 
 import java.util.List;
 
-import com.cloud.utils.Pair;
-
 import org.apache.cloudstack.api.command.admin.GetSecurityCheckCmd;
 import org.apache.cloudstack.api.command.admin.RunSecurityCheckCmd;
 import org.apache.cloudstack.api.response.GetSecurityCheckResponse;
@@ -30,5 +28,5 @@ public interface SecurityCheckService {
 
     List<GetSecurityCheckResponse> listSecurityChecks(GetSecurityCheckCmd cmd);
 
-    Pair<Boolean, String> runSecurityCheckCommand(RunSecurityCheckCmd runSecurityCheckCmd);
+    boolean runSecurityCheckCommand(RunSecurityCheckCmd runSecurityCheckCmd);
 }

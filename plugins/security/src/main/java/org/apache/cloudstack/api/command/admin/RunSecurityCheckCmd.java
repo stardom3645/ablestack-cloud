@@ -28,18 +28,16 @@ import org.apache.cloudstack.api.Parameter;
 import org.apache.cloudstack.api.ResponseObject;
 import org.apache.cloudstack.api.ServerApiException;
 import org.apache.cloudstack.api.response.ManagementServerResponse;
-import org.apache.cloudstack.api.response.RunSecurityCheckResponse;
+import org.apache.cloudstack.api.response.SuccessResponse;
 import org.apache.log4j.Logger;
 
-import com.cloud.exception.ResourceUnavailableException;
 import com.cloud.user.Account;
-import com.cloud.utils.Pair;
 import com.cloud.security.SecurityCheck;
 import com.cloud.security.SecurityCheckService;
 
 @APICommand(name = RunSecurityCheckCmd.APINAME,
         description = "Execute security check command on management server",
-        responseObject = RunSecurityCheckResponse.class,
+        responseObject = SuccessResponse.class,
         responseView = ResponseObject.ResponseView.Full,
         entityType = {SecurityCheck.class},
         authorized = {RoleType.Admin})
@@ -81,16 +79,16 @@ public class RunSecurityCheckCmd extends BaseCmd {
     }
 
     @Override
-    public void execute() throws ResourceUnavailableException, ServerApiException {
+    public void execute() throws ServerApiException {
         try {
-            Pair<Boolean, String> result = securityService.runSecurityCheckCommand(this);
-            RunSecurityCheckResponse response = new RunSecurityCheckResponse();
-            Boolean success = result.first();
-            String details = result.second();
-            response.setSuccess(success);
-            response.setDetails(details);
-            response.setResponseName(getCommandName());
-            this.setResponseObject(response);
+            boolean result = securityService.runSecurityCheckCommand(this);
+            if(result) {
+                SuccessResponse response = new SuccessResponse(getCommandName());
+                response.setSuccess(result);
+                this.setResponseObject(response);
+            } else {
+                throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, "Failed to security check for management server. Please check the Security Check tab for detailed results.");
+            }
         } catch (final ServerApiException e) {
             throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, e.getMessage());
         }
