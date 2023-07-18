@@ -82,7 +82,7 @@ public final class KVMHAProvider extends HAAbstractHostProvider implements HAPro
                     LOG.warn("OOBM recover operation failed for the host " + r.getName() + " already OFF");
                     return false;
                 }else{
-                    final OutOfBandManagementResponse resp = outOfBandManagementService.executePowerOperation(r, PowerOperation.RESET, null);
+                    final OutOfBandManagementResponse resp = outOfBandManagementService.executePowerOperation(r, PowerOperation.OFF, null);
                     return resp.getSuccess();
                 }
             } else {
