@@ -72,7 +72,7 @@ public class RunSecurityCheckCmd extends BaseCmd {
 
     @Override
     public String getCommandName() {
-        return APINAME.toLowerCase() + BaseCmd.RESPONSE_SUFFIX;
+        return APINAME.toLowerCase() + "response";
     }
 
     @Override
@@ -82,9 +82,9 @@ public class RunSecurityCheckCmd extends BaseCmd {
 
     @Override
     public void execute() throws ResourceUnavailableException, ServerApiException {
-        RunSecurityCheckResponse response = new RunSecurityCheckResponse(null, "");
         try {
             Pair<Boolean, String> result = securityService.runSecurityCheckCommand(this);
+            RunSecurityCheckResponse response = new RunSecurityCheckResponse();
             Boolean success = result.first();
             String details = result.second();
             response.setSuccess(success);

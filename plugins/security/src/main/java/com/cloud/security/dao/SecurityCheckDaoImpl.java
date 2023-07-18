@@ -34,6 +34,7 @@ public class SecurityCheckDaoImpl extends GenericDaoBase<SecurityCheckVO, Long> 
         super();
         SecurityChecksSearchBuilder = createSearchBuilder();
         SecurityChecksSearchBuilder.and("msHostId", SecurityChecksSearchBuilder.entity().getMsHostId(), SearchCriteria.Op.EQ);
+        SecurityChecksSearchBuilder.and("checkName", SecurityChecksSearchBuilder.entity().getCheckName(), SearchCriteria.Op.EQ);
         SecurityChecksSearchBuilder.done();
     }
 
@@ -42,5 +43,14 @@ public class SecurityCheckDaoImpl extends GenericDaoBase<SecurityCheckVO, Long> 
         SearchCriteria<SecurityCheckVO> sc = SecurityChecksSearchBuilder.create();
         sc.setParameters("msHostId", msHostId);
         return listBy(sc);
+    }
+
+    @Override
+    public SecurityCheckVO getSecurityCheckResult(long msHostId, String checkName) {
+        SearchCriteria<SecurityCheckVO> sc = SecurityChecksSearchBuilder.create();
+        sc.setParameters("msHostId", msHostId);
+        sc.setParameters("checkName", checkName);
+        List<SecurityCheckVO> checks = listBy(sc);
+        return checks.isEmpty() ? null : checks.get(0);
     }
 }

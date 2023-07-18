@@ -17,7 +17,11 @@
 
 package com.cloud.security;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import javax.inject.Inject;
@@ -28,6 +32,7 @@ import org.apache.cloudstack.api.response.GetSecurityCheckResponse;
 import org.apache.cloudstack.framework.config.ConfigKey;
 import org.apache.cloudstack.framework.config.Configurable;
 import org.apache.cloudstack.management.ManagementServerHost;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 
 import com.cloud.cluster.dao.ManagementServerHostDao;
@@ -38,7 +43,6 @@ import com.cloud.utils.Pair;
 import com.cloud.utils.component.ManagerBase;
 import com.cloud.utils.component.PluggableService;
 import com.cloud.utils.exception.CloudRuntimeException;
-import com.cloud.utils.script.Script;
 
 public class SecurityCheckServiceImpl extends ManagerBase implements PluggableService, SecurityCheckService, Configurable {
 
@@ -74,23 +78,57 @@ public class SecurityCheckServiceImpl extends ManagerBase implements PluggableSe
     @ActionEvent(eventType = EventTypes.EVENT_SECURITY_CHECK, eventDescription = "running security check on management server", async = true)
     public Pair<Boolean, String> runSecurityCheckCommand(final RunSecurityCheckCmd cmd) {
         final Long mshostId = cmd.getMsHostId();
-        LOGGER.info("Running security check results for management server " + mshostId);
         ManagementServerHost mshost = msHostDao.findById(mshostId);
-        LOGGER.info(mshost.getId());
-        // String resultDetails = "";
-        // boolean success = false;
-        String scriptsDir = "plugins/security/scripts";
-        String securityCekScr = Script.findScript(scriptsDir, "securitycheck.sh");
-        final int timeout = 30000;
-        Script scr = new Script(securityCekScr, timeout, LOGGER);
-        String result = scr.execute();
-        LOGGER.info(result);
-        LOGGER.info(scr.getExitValue());
-        if (scr.getExitValue() != 0) {
-            LOGGER.error("Error while executing script " + scr.toString());
-            throw new CloudRuntimeException("Error while executing script " + scr.toString());
+        ProcessBuilder processBuilder = new ProcessBuilder();
+        processBuilder.command("plugins/security/scripts/securitycheck.sh");
+        Process process = null;
+        try {
+            process = processBuilder.start();
+            StringBuffer output = new StringBuffer();
+            BufferedReader bfr = new BufferedReader(new InputStreamReader(process.getInputStream()));
+            String line;
+            while ((line = bfr.readLine()) != null) {
+                String[] temp = line.split(",");
+                for (int i=0; i<temp.length; i++) {
+                    String checkName = temp[0];
+                    String checkResult = temp[1];
+                    String checkMessage;
+                    if ("false".equals(checkResult)) {
+                        checkMessage = "service down at last check";
+                    } else {
+                        checkMessage = "service is running";
+                    }
+                    updateSecurityCheckResult(mshost.getId(), checkName, Boolean.parseBoolean(checkResult), checkMessage);
+                }
+                output.append(line).append('\n');
+            }
+            if (output.toString().contains("false")) {
+                return new Pair<Boolean, String>(false, "failed");
+            } else {
+                return new Pair<Boolean, String>(true, "success");
+            }
+        } catch (IOException e) {
+            throw new CloudRuntimeException("Failed to execute security check command for management server: "+mshost.getId() +e);
         }
-        return null;
+    }
+
+    private void updateSecurityCheckResult(final long msHostId, String checkName, boolean checkResult, String checkMessage) {
+        boolean newSecurityCheckEntry = false;
+        SecurityCheckVO connectivityVO = securityCheckDao.getSecurityCheckResult(msHostId, checkName);
+        if (connectivityVO == null) {
+            connectivityVO = new SecurityCheckVO(msHostId, checkName);
+            newSecurityCheckEntry = true;
+        }
+        connectivityVO.setCheckResult(checkResult);
+        connectivityVO.setLastUpdateTime(new Date());
+        if (StringUtils.isNotEmpty(checkMessage)) {
+            connectivityVO.setCheckDetails(checkMessage.getBytes(com.cloud.utils.StringUtils.getPreferredCharset()));
+        }
+        if (newSecurityCheckEntry) {
+            securityCheckDao.persist(connectivityVO);
+        } else {
+            securityCheckDao.update(connectivityVO.getId(), connectivityVO);
+        }
     }
 
     @Override

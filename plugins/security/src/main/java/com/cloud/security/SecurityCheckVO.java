@@ -102,8 +102,9 @@ public class SecurityCheckVO implements SecurityCheck {
     protected SecurityCheckVO() {
     }
 
-    public SecurityCheckVO(long mshostId) {
+    public SecurityCheckVO(long mshostId, String checkName) {
         this.msHostId = mshostId;
+        this.checkName = checkName;
     }
 
     @Override

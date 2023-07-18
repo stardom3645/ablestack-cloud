@@ -33,11 +33,6 @@ public class RunSecurityCheckResponse extends BaseResponse {
     @Param(description = "in case of failure, details are displayed")
     private String details;
 
-    public RunSecurityCheckResponse(Boolean success, String details) {
-        this.success = success;
-        this.details = details;
-    }
-
     public Boolean getSuccess() {
         return success;
     }
