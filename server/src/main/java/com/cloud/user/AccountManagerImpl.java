@@ -71,6 +71,7 @@ import org.apache.cloudstack.framework.config.dao.ConfigurationDao;
 import org.apache.cloudstack.framework.messagebus.MessageBus;
 import org.apache.cloudstack.framework.messagebus.PublishScope;
 import org.apache.cloudstack.managed.context.ManagedContextRunnable;
+import org.apache.cloudstack.managed.context.ManagedContextTimerTask;
 import org.apache.cloudstack.region.gslb.GlobalLoadBalancerRuleDao;
 import org.apache.cloudstack.resourcedetail.UserDetailVO;
 import org.apache.cloudstack.resourcedetail.dao.UserDetailsDao;
@@ -319,6 +320,7 @@ public class AccountManagerImpl extends ManagerBase implements AccountManager, M
     private PasswordPolicy passwordPolicy;
 
     private final ScheduledExecutorService _executor = Executors.newScheduledThreadPool(1, new NamedThreadFactory("AccountChecker"));
+    private final ScheduledExecutorService _enableExecutor = Executors.newScheduledThreadPool(1, new NamedThreadFactory("EnableChecker"));
 
     private int _allowedLoginAttempts;
 
@@ -361,6 +363,11 @@ public class AccountManagerImpl extends ManagerBase implements AccountManager, M
             "user.2fa.default.provider",
             "totp",
             "The default user two factor authentication provider. Eg. totp, staticpin", true, ConfigKey.Scope.Domain);
+
+    static final ConfigKey<Integer> incorrectLoginEnableTime = new ConfigKey<Integer>("Advanced", Integer.class,
+            "incorrect.login.enable.time", "300",
+            "Set the time to automatically activate disabled users due to incorrect login attempts. It should be set to at least 5 minutes.",
+            false);
 
     protected AccountManagerImpl() {
         super();
@@ -2659,6 +2666,7 @@ public class AccountManagerImpl extends ManagerBase implements AccountManager, M
                 }
             } else {
                 s_logger.info("User " + userAccount.getUsername() + " is disabled/locked");
+                throw new CloudAuthenticationException("Failed to authenticate user. User " + userAccount.getUsername() + " is disable/locked. Please contact your administrator or try again later.");
             }
             return null;
         }
@@ -2678,6 +2686,12 @@ public class AccountManagerImpl extends ManagerBase implements AccountManager, M
             updateLoginAttempts(account.getId(), allowedLoginAttempts, true);
             s_logger.warn("User " + account.getUsername() +
                     " has been disabled due to multiple failed login attempts." + " Please contact admin.");
+            User user = _userDao.getUserByName(account.getUsername(), account.getDomainId());
+            ActionEventUtils.onActionEvent(user.getId(), user.getAccountId(), account.getDomainId(), EventTypes.EVENT_USER_LOGIN, "user has been disabled due to multiple failed login attempts. UserId : " + user.getId(), user.getId(), ApiCommandResourceType.User.toString());
+            int enableTime = incorrectLoginEnableTime.value();
+            _enableExecutor.schedule(new EnableUserTask(user), enableTime, TimeUnit.SECONDS);
+            throw new CloudAuthenticationException("Failed to authenticate user " + account.getUsername() + " in domain " + account.getDomainId() +
+            "; The user has been disabled due to multiple failed login attempts. Your account will be automatically activated after "+ enableTime +" seconds. Please try again in a moment");
         }
     }
 
@@ -3196,7 +3210,7 @@ public class AccountManagerImpl extends ManagerBase implements AccountManager, M
     @Override
     public ConfigKey<?>[] getConfigKeys() {
         return new ConfigKey<?>[] {UseSecretKeyInResponse, enableUserTwoFactorAuthentication,
-                userTwoFactorAuthenticationDefaultProvider, mandateUserTwoFactorAuthentication, userTwoFactorAuthenticationIssuer};
+                userTwoFactorAuthenticationDefaultProvider, mandateUserTwoFactorAuthentication, userTwoFactorAuthenticationIssuer, incorrectLoginEnableTime};
     }
 
     public List<UserTwoFactorAuthenticator> getUserTwoFactorAuthenticationProviders() {
@@ -3360,6 +3374,35 @@ public class AccountManagerImpl extends ManagerBase implements AccountManager, M
             throw new CloudRuntimeException(String.format("Failed to find UserTwoFactorAuthenticator by the name: %s.", name));
         }
         return userTwoFactorAuthenticationProvidersMap.get(name.toLowerCase());
+    }
+
+    protected class EnableUserTask extends ManagedContextTimerTask {
+        User _user;
+
+        public EnableUserTask(final User user) {
+            _user = user;
+        }
+
+        @Override
+        protected synchronized void runInContext() {
+            try {
+                Transaction.execute(new TransactionCallbackNoReturn() {
+                    @Override
+                    public void doInTransactionWithoutResult(TransactionStatus status) {
+                        UserAccountVO user = null;
+                        user = _userAccountDao.lockRow(_user.getId(), true);
+                        if (user.getState().equals(State.DISABLED.toString())) {
+                            user.setLoginAttempts(0);
+                            user.setState(State.ENABLED.toString());
+                            _userAccountDao.update(_user.getId(), user);
+                            ActionEventUtils.onActionEvent(user.getId(), user.getAccountId(), user.getDomainId(), EventTypes.EVENT_USER_ENABLE, "Activated automatically after 5 minutes of inactivation. UserId : " + user.getId(), user.getId(), ApiCommandResourceType.User.toString());
+                        }
+                    }
+                });
+            } catch (Exception e) {
+                s_logger.error("Failed to automatically activate a disabled user. UserId : " + _user.getId());
+            }
+        }
     }
 
 }

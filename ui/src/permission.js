@@ -59,6 +59,14 @@ router.beforeEach((to, from, next) => {
     if (to.path === '/user/login') {
       next({ path: '/dashboard' })
       NProgress.done()
+    } else if (to.path === '/firstLogin') {
+      const firstLogin = JSON.parse(Cookies.get('firstlogin') || Cookies.get('firstlogin', { path: '/client' }) || false)
+      if (store.getters.firstLogin === true || firstLogin === true) {
+        next()
+      } else {
+        next({ path: '/dashboard' })
+        NProgress.done()
+      }
     } else if (to.path === '/verify2FA' || to.path === '/setup2FA') {
       const isSAML = JSON.parse(Cookies.get('isSAML') || Cookies.get('isSAML', { path: '/client' }) || false)
       const twoFaEnabled = JSON.parse(Cookies.get('twoFaEnabled') || Cookies.get('twoFaEnabled', { path: '/client' }) || false)
@@ -85,6 +93,11 @@ router.beforeEach((to, from, next) => {
           return
         }
         store.commit('SET_LOGIN_FLAG', true)
+      }
+      if (Cookies.get('firstlogin') === 'true' && to.path !== '/firstlogin') {
+        store.dispatch('Logout').then(() => {
+          next({ path: '/user/login', query: { redirect: to.fullPath } })
+        })
       }
       if (Object.keys(store.getters.apis).length === 0) {
         const cachedApis = vueProps.$localStorage.get(APIS, {})
