@@ -35,6 +35,7 @@ import org.apache.cloudstack.management.ManagementServerHost;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 
+import com.cloud.alert.AlertManager;
 import com.cloud.cluster.dao.ManagementServerHostDao;
 import com.cloud.event.ActionEvent;
 import com.cloud.event.EventTypes;
@@ -55,6 +56,8 @@ public class SecurityCheckServiceImpl extends ManagerBase implements PluggableSe
     private SecurityCheckDao securityCheckDao;
     @Inject
     private ManagementServerHostDao msHostDao;
+    @Inject
+    private AlertManager alertManager;
 
     @Override
     public List<GetSecurityCheckResponse> listSecurityChecks(GetSecurityCheckCmd cmd) {
@@ -94,6 +97,7 @@ public class SecurityCheckServiceImpl extends ManagerBase implements PluggableSe
                     String checkMessage;
                     if ("false".equals(checkResult)) {
                         checkMessage = "service down at last check";
+                        alertManager.sendAlert(AlertManager.AlertType.ALERT_TYPE_MANAGMENT_NODE, 0, new Long(0), "Management server node " + mshost.getServiceIP() + " security check failed: "+ checkName + " service down at last check", "");
                     } else {
                         checkMessage = "service is running";
                     }

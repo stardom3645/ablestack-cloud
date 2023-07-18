@@ -40,6 +40,7 @@
 #     echo "management,false"
 # fi
 
+# 테스트 코드
 echo "mysql,true"
 echo "firewalld,true"
-echo "management,true"
+echo "management,false"
