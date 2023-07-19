@@ -114,7 +114,7 @@ public class SecurityCheckServiceImpl extends ManagerBase implements PluggableSe
                     String checkMessage;
                     if ("false".equals(checkResult)) {
                         checkMessage = "service down at last check";
-                        alertManager.sendAlert(AlertManager.AlertType.ALERT_TYPE_MANAGMENT_NODE, 0, new Long(0), "Management server security checker failed: "+ checkName + " service down at last check", "");
+                        alertManager.sendAlert(AlertManager.AlertType.ALERT_TYPE_MANAGMENT_NODE, 0, new Long(0), "Management server node " + msHost.getServiceIP() + " security checker failed: "+ checkName + " service down at last check", "");
                     } else {
                         checkMessage = "service is running";
                     }
