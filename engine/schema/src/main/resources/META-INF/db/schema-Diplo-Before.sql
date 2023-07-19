@@ -20,7 +20,7 @@
 --;
 
 -- Adding security check table
-CREATE TABLE `security_check` (
+CREATE TABLE IF NOT EXISTS `security_check` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,
   `mshost_id` bigint unsigned NOT NULL COMMENT 'the ID of the mshost',
   `check_name` varchar(255) NOT NULL COMMENT 'name of the security check',
