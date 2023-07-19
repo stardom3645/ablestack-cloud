@@ -16,31 +16,28 @@
 # specific language governing permissions and limitations
 # under the License.
 
-# # mysql 서비스 확인
-# systemctl status mysqld | grep -i running &> /dev/null
-# if [[ $? == 0 ]]; then
-#     echo "mysql,true"
-# else
-#     echo "mysql,false"
-# fi
+# Security Check 
+# Management Server의 서비스가 정상적으로 실행 중인지 확인하는 스크립트
+# 항목 : mysql, firewalld, cloudstack-management
+# return : 서비스 명,결과(boolean)
 
-# # firewalld 서비스 확인
-# systemctl status firewalld | grep -i running &> /dev/null
-# if [[ $? == 0 ]]; then
-#     echo "firewalld,true"
-# else
-#     echo "firewalld,false"
-# fi
+systemctl status mysqld | grep -i running &> /dev/null
+if [[ $? == 0 ]]; then
+    echo "mysql,true"
+else
+    echo "mysql,false"
+fi
 
-# # cloudstack-management 서비스 확인
-# systemctl status cloudstack-management | grep -i running &> /dev/null
-# if [[ $? == 0 ]]; then
-#     echo "management,true"
-# else
-#     echo "management,false"
-# fi
+systemctl status firewalld | grep -i running &> /dev/null
+if [[ $? == 0 ]]; then
+    echo "firewalld,true"
+else
+    echo "firewalld,false"
+fi
 
-# 테스트 코드
-echo "mysql,true"
-echo "firewalld,true"
-echo "management,false"
+systemctl status cloudstack-management | grep -i running &> /dev/null
+if [[ $? == 0 ]]; then
+    echo "management,true"
+else
+    echo "management,false"
+fi
