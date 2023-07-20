@@ -18,6 +18,7 @@
 package com.cloud.security;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
@@ -150,8 +151,11 @@ public class SecurityCheckServiceImpl extends ManagerBase implements PluggableSe
     public boolean runSecurityCheckCommand(final RunSecurityCheckCmd cmd) {
         Long mshostId = cmd.getMsHostId();
         ManagementServerHost mshost = msHostDao.findById(mshostId);
-        ProcessBuilder processBuilder = new ProcessBuilder();
-        processBuilder.command("plugins/security/scripts/securitycheck.sh");
+        ProcessBuilder processBuilder = new ProcessBuilder("/bin/bash", "securitycheck.sh");
+        String path = "plugins/security/scripts/";
+        processBuilder.directory(new File(path));
+        String path2 = System.getProperty("user.dir");
+        LOGGER.info("mold: securitycheck path : "+path2);
         Process process = null;
         try {
             process = processBuilder.start();
