@@ -41,6 +41,7 @@ import org.apache.cloudstack.framework.config.Configurable;
 import org.apache.cloudstack.managed.context.ManagedContextRunnable;
 import org.apache.cloudstack.management.ManagementServerHost;
 import org.apache.cloudstack.utils.identity.ManagementServerNode;
+import org.apache.cloudstack.utils.security.KeyStoreUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 
@@ -56,6 +57,7 @@ import com.cloud.utils.component.ManagerBase;
 import com.cloud.utils.component.PluggableService;
 import com.cloud.utils.concurrency.NamedThreadFactory;
 import com.cloud.utils.exception.CloudRuntimeException;
+import com.cloud.utils.script.Script;
 
 public class SecurityCheckServiceImpl extends ManagerBase implements PluggableService, SecurityCheckService, Configurable {
 
@@ -151,11 +153,16 @@ public class SecurityCheckServiceImpl extends ManagerBase implements PluggableSe
     public boolean runSecurityCheckCommand(final RunSecurityCheckCmd cmd) {
         Long mshostId = cmd.getMsHostId();
         ManagementServerHost mshost = msHostDao.findById(mshostId);
-        ProcessBuilder processBuilder = new ProcessBuilder("/bin/bash", "securitycheck.sh");
-        String path = "plugins/security/scripts/";
+        String path3 = Script.findScript("scripts/security/", "securitycheck.sh");
+        LOGGER.info("mold: securitycheck path3 : "+path3);
+        if (path3 == null) {
+            throw new CloudRuntimeException(String.format("Unable to find the securitycheck script"));
+        }
+        String path2 = System.getProperty("user.home");
+        LOGGER.info("mold: securitycheck path2 : "+path2);
+        ProcessBuilder processBuilder = new ProcessBuilder("sh", "securitycheck.sh");
+        String path = "scripts/security";
         processBuilder.directory(new File(path));
-        String path2 = System.getProperty("user.dir");
-        LOGGER.info("mold: securitycheck path : "+path2);
         Process process = null;
         try {
             process = processBuilder.start();
