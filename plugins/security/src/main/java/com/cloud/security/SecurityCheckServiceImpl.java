@@ -102,8 +102,11 @@ public class SecurityCheckServiceImpl extends ManagerBase implements PluggableSe
             ActionEventUtils.onStartedActionEvent(CallContext.current().getCallingUserId(), CallContext.current().getCallingAccountId(), EventTypes.EVENT_SECURITY_CHECK,
                 "running security check on management server", new Long(0), null, true, 0);
             ManagementServerHostVO msHost = msHostDao.findByMsid(ManagementServerNode.getManagementServerId());
-            ProcessBuilder processBuilder = new ProcessBuilder();
-            processBuilder.command("plugins/security/scripts/securitycheck.sh");
+            String path = Script.findScript("scripts/security/", "securitycheck.sh");
+            if (path == null) {
+                LOGGER.error("Unable to find the securitycheck script");
+            }
+            ProcessBuilder processBuilder = new ProcessBuilder("sh", path);
             Process process = null;
             try {
                 process = processBuilder.start();
@@ -152,16 +155,11 @@ public class SecurityCheckServiceImpl extends ManagerBase implements PluggableSe
     public boolean runSecurityCheckCommand(final RunSecurityCheckCmd cmd) {
         Long mshostId = cmd.getMsHostId();
         ManagementServerHost mshost = msHostDao.findById(mshostId);
-        String path3 = Script.findScript("scripts/security/", "securitycheck.sh");
-        LOGGER.info("mold: securitycheck path3 : "+path3);
-        if (path3 == null) {
+        String path = Script.findScript("scripts/security/", "securitycheck.sh");
+        if (path == null) {
             throw new CloudRuntimeException(String.format("Unable to find the securitycheck script"));
         }
-        String path2 = System.getProperty("user.home");
-        LOGGER.info("mold: securitycheck path2 : "+path2);
-        ProcessBuilder processBuilder = new ProcessBuilder("sh", "securitycheck.sh");
-        String path = "scripts/security";
-        processBuilder.directory(new File(path));
+        ProcessBuilder processBuilder = new ProcessBuilder("sh", path);
         Process process = null;
         try {
             process = processBuilder.start();
