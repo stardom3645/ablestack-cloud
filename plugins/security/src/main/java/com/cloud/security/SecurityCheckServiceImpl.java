@@ -55,6 +55,7 @@ import com.cloud.utils.component.ManagerBase;
 import com.cloud.utils.component.PluggableService;
 import com.cloud.utils.concurrency.NamedThreadFactory;
 import com.cloud.utils.exception.CloudRuntimeException;
+import com.cloud.utils.script.Script;
 
 public class SecurityCheckServiceImpl extends ManagerBase implements PluggableService, SecurityCheckService, Configurable {
 
@@ -98,10 +99,13 @@ public class SecurityCheckServiceImpl extends ManagerBase implements PluggableSe
 
         private void securityCheck() {
             ActionEventUtils.onStartedActionEvent(CallContext.current().getCallingUserId(), CallContext.current().getCallingAccountId(), EventTypes.EVENT_SECURITY_CHECK,
-                "running security check on management server", new Long(0), null, true, 0);
+                    "running security check on management server", new Long(0), null, true, 0);
             ManagementServerHostVO msHost = msHostDao.findByMsid(ManagementServerNode.getManagementServerId());
-            ProcessBuilder processBuilder = new ProcessBuilder();
-            processBuilder.command("plugins/security/scripts/securitycheck.sh");
+            String path = Script.findScript("scripts/security/", "securitycheck.sh");
+            if (path == null) {
+                LOGGER.error("Unable to find the securitycheck script");
+            }
+            ProcessBuilder processBuilder = new ProcessBuilder("sh", path);
             Process process = null;
             try {
                 process = processBuilder.start();
@@ -121,7 +125,7 @@ public class SecurityCheckServiceImpl extends ManagerBase implements PluggableSe
                     updateSecurityCheckResult(msHost.getId(), checkName, Boolean.parseBoolean(checkResult), checkMessage);
                 }
                 ActionEventUtils.onCompletedActionEvent(CallContext.current().getCallingUserId(), CallContext.current().getCallingAccountId(), EventVO.LEVEL_INFO,
-                    EventTypes.EVENT_SECURITY_CHECK, "Successfully completed running security check on management server", new Long(0), null, 0);
+                        EventTypes.EVENT_SECURITY_CHECK, "Successfully completed running security check on management server", new Long(0), null, 0);
             } catch (IOException e) {
                 LOGGER.error("Failed to execute security checker for management server: "+e);
             }
@@ -150,8 +154,11 @@ public class SecurityCheckServiceImpl extends ManagerBase implements PluggableSe
     public boolean runSecurityCheckCommand(final RunSecurityCheckCmd cmd) {
         Long mshostId = cmd.getMsHostId();
         ManagementServerHost mshost = msHostDao.findById(mshostId);
-        ProcessBuilder processBuilder = new ProcessBuilder();
-        processBuilder.command("plugins/security/scripts/securitycheck.sh");
+        String path = Script.findScript("scripts/security/", "securitycheck.sh");
+        if (path == null) {
+            throw new CloudRuntimeException(String.format("Unable to find the securitycheck script"));
+        }
+        ProcessBuilder processBuilder = new ProcessBuilder("sh", path);
         Process process = null;
         try {
             process = processBuilder.start();

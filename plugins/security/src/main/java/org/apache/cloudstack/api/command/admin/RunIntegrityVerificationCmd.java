@@ -33,6 +33,7 @@ import org.apache.cloudstack.api.response.SuccessResponse;
 import org.apache.log4j.Logger;
 
 import javax.inject.Inject;
+import java.security.NoSuchAlgorithmException;
 
 @APICommand(name = RunIntegrityVerificationCmd.APINAME,
         description = "Execute security check command on management server",
@@ -86,10 +87,12 @@ public class RunIntegrityVerificationCmd extends BaseCmd {
                 response.setSuccess(result);
                 this.setResponseObject(response);
             } else {
-                throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, "Failed to security check for management server. Please check the Security Check tab for detailed results.");
+                throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, "Failed to Integrity Verification for management server. Please check the Integrity Verification tab for detailed results.");
             }
         } catch (final ServerApiException e) {
             throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, e.getMessage());
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException(e);
         }
     }
 }

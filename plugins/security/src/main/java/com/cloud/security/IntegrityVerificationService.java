@@ -21,6 +21,7 @@ import org.apache.cloudstack.api.command.admin.GetIntegrityVerificationCmd;
 import org.apache.cloudstack.api.command.admin.RunIntegrityVerificationCmd;
 import org.apache.cloudstack.api.response.GetIntegrityVerificationResponse;
 
+import java.security.NoSuchAlgorithmException;
 import java.util.List;
 
 
@@ -28,5 +29,5 @@ public interface IntegrityVerificationService {
 
     List<GetIntegrityVerificationResponse> listIntegrityVerifications(GetIntegrityVerificationCmd cmd);
 
-    boolean runIntegrityVerificationCommand(RunIntegrityVerificationCmd runIntegrityVerificationCmd);
+    boolean runIntegrityVerificationCommand(RunIntegrityVerificationCmd runIntegrityVerificationCmd) throws NoSuchAlgorithmException;
 }

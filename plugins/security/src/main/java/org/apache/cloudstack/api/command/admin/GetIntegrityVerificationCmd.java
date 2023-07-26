@@ -88,7 +88,7 @@ public class GetIntegrityVerificationCmd extends BaseCmd {
             GetIntegrityVerificationListResponse response = new GetIntegrityVerificationListResponse();
             response.setMsHostId(this._uuidMgr.getUuid(ManagementServerHost.class, getMsHostId()));
             response.setIntegrityVerifications(integrityVerifications);
-            response.setObjectName("integrityverifications");
+            response.setObjectName("integrityverificationsresult");
             response.setResponseName(getCommandName());
             setResponseObject(response);
         } catch (CloudRuntimeException ex){

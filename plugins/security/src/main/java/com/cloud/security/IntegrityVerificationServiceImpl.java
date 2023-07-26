@@ -27,7 +27,6 @@ import com.cloud.security.dao.IntegrityVerificationDao;
 import com.cloud.utils.component.ManagerBase;
 import com.cloud.utils.component.PluggableService;
 import com.cloud.utils.concurrency.NamedThreadFactory;
-import com.cloud.utils.exception.CloudRuntimeException;
 import org.apache.cloudstack.api.command.admin.GetIntegrityVerificationCmd;
 import org.apache.cloudstack.api.command.admin.RunIntegrityVerificationCmd;
 import org.apache.cloudstack.api.response.GetIntegrityVerificationResponse;
@@ -42,10 +41,8 @@ import org.apache.log4j.Logger;
 
 import javax.inject.Inject;
 import javax.naming.ConfigurationException;
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.security.DigestInputStream;
@@ -178,42 +175,72 @@ public class IntegrityVerificationServiceImpl extends ManagerBase implements Plu
         return responses;
     }
 
+    private String calculateHash(File file, String algorithm) throws NoSuchAlgorithmException {
+        MessageDigest md = MessageDigest.getInstance(algorithm);
+        try (DigestInputStream dis = new DigestInputStream(new FileInputStream(file), md)) {
+            // Read the file to update the digest
+            while (dis.read() != -1) ;
+        } catch (FileNotFoundException e) {
+            throw new RuntimeException(e);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        byte[] hashBytes = md.digest();
+        StringBuilder hexString = new StringBuilder();
+        for (byte hashByte : hashBytes) {
+            String hex = Integer.toHexString(0xFF & hashByte);
+            if (hex.length() == 1) {
+                hexString.append('0');
+            }
+            hexString.append(hex);
+        }
+        return hexString.toString();
+    }
+
+    public static boolean checkConditions(List<Boolean> conditions) {
+        for (boolean condition : conditions) {
+            if (!condition) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     @Override
     @ActionEvent(eventType = EventTypes.EVENT_INTEGRITY_VERIFICATION, eventDescription = "running integrity verification on management server", async = true)
-    public boolean runIntegrityVerificationCommand(final RunIntegrityVerificationCmd cmd) {
+    public boolean runIntegrityVerificationCommand(final RunIntegrityVerificationCmd cmd) throws NoSuchAlgorithmException {
         Long mshostId = cmd.getMsHostId();
+        List<Boolean> verificationResults = new ArrayList<>();
+        boolean verificationResult;
+        boolean verificationFinalResult;
+        String comparisonHashValue;
         ManagementServerHost msHost = msHostDao.findById(mshostId);
-        ProcessBuilder processBuilder = new ProcessBuilder();
-        processBuilder.command("plugins/security/scripts/integrity_verification.sh");
-        Process process = null;
-        try {
-            process = processBuilder.start();
-            StringBuffer output = new StringBuffer();
-            BufferedReader bfr = new BufferedReader(new InputStreamReader(process.getInputStream()));
-            String line;
-            while ((line = bfr.readLine()) != null) {
-                String[] temp = line.split(",");
-                String filePath = temp[0];
-                String verificationResult = temp[1];
-                String verificationMessage;
-                if ("false".equals(verificationResult)) {
-                    verificationMessage = "The integrity of the file could not be verified. at last verification.";
-                    alertManager.sendAlert(AlertManager.AlertType.ALERT_TYPE_MANAGMENT_NODE, 0, new Long(0), "Management server node " + msHost.getServiceIP() + " integrity verification failed: "+ filePath + " could not be verified. at last verification.", "");
-                } else {
+        List<IntegrityVerification> result = new ArrayList<>(integrityVerificationDao.getIntegrityVerifications(mshostId));
+        for (IntegrityVerification ivResult : result) {
+            String filePath = ivResult.getFilePath();
+            String initialHashValue = ivResult.getInitialHashValue();
+            String verificationMessage;
+            File file = new File(filePath);
+            try {
+                comparisonHashValue = calculateHash(file, "SHA-512");
+                if (initialHashValue.equals(comparisonHashValue)) {
+                    verificationResults.add(true);
+                    verificationResult = true;
                     verificationMessage = "The integrity of the file has been verified.";
+                } else {
+                    verificationResults.add(false);
+                    verificationResult = false;
+                    alertManager.sendAlert(AlertManager.AlertType.ALERT_TYPE_MANAGMENT_NODE, 0, new Long(0), "Management server node " + msHost.getServiceIP() + " integrity verification failed: "+ filePath + " could not be verified. at last verification.", "");
+                    verificationMessage = "The integrity of the file could not be verified. at last verification.";
                 }
-                String comparisonHashValue="ddd";
-                updateIntegrityVerificationResult(msHost.getId(), filePath, comparisonHashValue, Boolean.parseBoolean(verificationResult), verificationMessage);
-                output.append(line).append('\n');
+                updateIntegrityVerificationResult(msHost.getId(), filePath, comparisonHashValue, verificationResult, verificationMessage);
+            } catch (NoSuchAlgorithmException e) {
+                throw new RuntimeException(e);
             }
-            if (output.toString().contains("false")) {
-                return false;
-            } else {
-                return true;
-            }
-        } catch (IOException e) {
-            throw new CloudRuntimeException("Failed to execute integrity verification command for management server: "+msHost.getId() +e);
         }
+        verificationFinalResult = checkConditions(verificationResults);
+        return verificationFinalResult;
     }
 
     private void updateIntegrityVerificationResult(final long msHostId, String filePath, String comparisonHashValue, boolean verificationResult, String verificationMessage) {

@@ -53,7 +53,7 @@ public class GetIntegrityVerificationResponse extends BaseResponse {
         return lastUpdated;
     }
 
-    public String getDetails() {
+    public String getVerificationDetails() {
         return details;
     }
 

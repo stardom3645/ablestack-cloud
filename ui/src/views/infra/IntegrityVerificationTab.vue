@@ -21,9 +21,9 @@
       <a-table
         style="overflow-y: auto"
         :columns="columns"
-        :dataSource="integrityVerification"
+        :dataSource="integrityVerifications"
         :pagination="false"
-        :rowKey="record => record.filePath"
+        :rowKey="record => record.integrityverificationspath"
         size="large">
         <template #bodyCell="{ column, record }">
           <template v-if="column.key === 'status'">
@@ -60,7 +60,7 @@ export default {
       columns: [
         {
           title: this.$t('label.integrity.verification.name'),
-          dataIndex: 'filepath'
+          dataIndex: 'integrityverificationspath'
         },
         {
           key: 'status',
@@ -90,7 +90,7 @@ export default {
     fetchData () {
       this.loading = true
       api('getIntegrityVerification', { managementserverid: this.resource.id }).then(json => {
-        this.integrityVerifications = json.getintegrityverificationresponse.integrityverifications.integrityverifications
+        this.integrityVerifications = json.getintegrityverificationresponse.integrityverificationsresult.integrityverificationsresult
       }).catch(error => {
         this.$notifyError(error)
       }).finally(f => {

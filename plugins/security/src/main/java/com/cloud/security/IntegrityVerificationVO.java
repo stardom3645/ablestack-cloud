@@ -115,6 +115,9 @@ public class IntegrityVerificationVO implements IntegrityVerification {
         this.verificationDetails = verificationDetails;
     }
 
+    protected IntegrityVerificationVO() {
+    }
+
     public IntegrityVerificationVO(long mshostId, String filePath) {
         this.msHostId = mshostId;
         this.filePath = filePath;

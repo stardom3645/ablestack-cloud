@@ -48,7 +48,7 @@ export default {
       component: shallowRef(defineAsyncComponent(() => import('@/views/infra/SecurityCheckTab.vue')))
     },
     {
-      name: 'integrity.check',
+      name: 'integrity.verification',
       component: shallowRef(defineAsyncComponent(() => import('@/views/infra/IntegrityVerificationTab.vue')))
     },
     {
@@ -110,7 +110,7 @@ export default {
     },
     {
       api: 'runIntegrityVerification',
-      icon: 'switcher-outlined',
+      icon: 'OneToOneOutlined',
       label: 'label.integrity.verification',
       message: 'message.confirm.integrity.verification',
       dataView: true,

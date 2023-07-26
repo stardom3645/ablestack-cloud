@@ -28,9 +28,11 @@ import com.cloud.utils.db.SearchCriteria;
 
 @Component
 public class IntegrityVerificationDaoImpl extends GenericDaoBase<IntegrityVerificationVO, Long> implements IntegrityVerificationDao {
-    private final SearchBuilder<IntegrityVerificationVO> IntegrityVerificationsSearchBuilder;
 
-    public IntegrityVerificationDaoImpl() {
+    protected SearchBuilder<IntegrityVerificationVO> IntegrityVerificationsSearchBuilder;
+
+    protected IntegrityVerificationDaoImpl() {
+        super();
         IntegrityVerificationsSearchBuilder = createSearchBuilder();
         IntegrityVerificationsSearchBuilder.and("msHostId", IntegrityVerificationsSearchBuilder.entity().getMsHostId(), SearchCriteria.Op.EQ);
         IntegrityVerificationsSearchBuilder.and("filePath", IntegrityVerificationsSearchBuilder.entity().getFilePath(), SearchCriteria.Op.EQ);
