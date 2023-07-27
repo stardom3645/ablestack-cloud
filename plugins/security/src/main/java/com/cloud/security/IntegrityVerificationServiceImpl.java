@@ -98,42 +98,35 @@ public class IntegrityVerificationServiceImpl extends ManagerBase implements Plu
         private void integrityVerification() {
             ActionEventUtils.onStartedActionEvent(CallContext.current().getCallingUserId(), CallContext.current().getCallingAccountId(), EventTypes.EVENT_INTEGRITY_VERIFICATION,
                     "running integrity verification on management server", new Long(0), null, true, 0);
-
-            String[] filePaths = {
-                    "/Users/hongwookryu/repository/GitHub/stardom3645/ablestack-cloud/INSTALL.md",
-                    "/Users/hongwookryu/repository/GitHub/stardom3645/ablestack-cloud/ISSUE_TEMPLATE.md",
-                    "/Users/hongwookryu/repository/GitHub/stardom3645/ablestack-cloud/LICENSE"
-            };
-            try {
-                extractHashValuesAndStoreInDB(filePaths);
-            } catch (Exception e) {
-                e.printStackTrace();
-                LOGGER.error("Failed to execute integrity verifier for management server: "+e);
-            }
-        }
-        private void extractHashValuesAndStoreInDB(String[] filePaths) throws NoSuchAlgorithmException {
             ManagementServerHostVO msHost = msHostDao.findByMsid(ManagementServerNode.getManagementServerId());
-            try {
-                for (String filePath : filePaths) {
-                    File file = new File(filePath);
-                    String verificationMessage;
-                    if (!file.exists() || file.isDirectory()) {
-                        verificationMessage = "The integrity of the file could not be verified. at last verification.";
-                        System.err.println("Invalid file path: " + filePath);
-                    } else {
-                        String comparisonHashValue = calculateHash(file, "SHA-512"); // Change the algorithm to "SHA-256"
-                        boolean verificationResult = false;
+            List<Boolean> verificationResults = new ArrayList<>();
+            boolean verificationResult;
+            String comparisonHashValue;
+            List<IntegrityVerification> result = new ArrayList<>(integrityVerificationDao.getIntegrityVerifications(msHost.getId()));
+            for (IntegrityVerification ivResult : result) {
+                String filePath = ivResult.getFilePath();
+                String initialHashValue = ivResult.getInitialHashValue();
+                String verificationMessage;
+                File file = new File(filePath);
+                try {
+                    comparisonHashValue = calculateHash(file, "SHA-512");
+                    if (initialHashValue.equals(comparisonHashValue)) {
+                        verificationResults.add(true);
+                        verificationResult = true;
                         verificationMessage = "The integrity of the file has been verified.";
-                        System.out.println("File: " + file.getAbsolutePath() + ", Hash: " + comparisonHashValue);
-
-                        // Save the hash value to the database
-                        updateIntegrityVerificationResult(msHost.getId(), filePath, comparisonHashValue, verificationResult, verificationMessage);
+                    } else {
+                        verificationResults.add(false);
+                        verificationResult = false;
+                        alertManager.sendAlert(AlertManager.AlertType.ALERT_TYPE_MANAGMENT_NODE, 0, new Long(0), "Management server node " + msHost.getServiceIP() + " integrity verification failed: "+ filePath + " could not be verified. at last verification.", "");
+                        verificationMessage = "The integrity of the file could not be verified. at last verification.";
                     }
+                    updateIntegrityVerificationResult(msHost.getId(), filePath, comparisonHashValue, verificationResult, verificationMessage);
+                } catch (NoSuchAlgorithmException e) {
+                    throw new RuntimeException(e);
                 }
-            } catch (NoSuchAlgorithmException e) {
-                throw new RuntimeException(e);
             }
         }
+
         private String calculateHash(File file, String algorithm) throws NoSuchAlgorithmException {
             MessageDigest md = MessageDigest.getInstance(algorithm);
             try (DigestInputStream dis = new DigestInputStream(new FileInputStream(file), md)) {
