@@ -38,6 +38,15 @@ public interface PasswordPolicy {
             true,
             ConfigKey.Scope.Domain);
 
+    ConfigKey<Integer> PasswordPolicyMaximumLength = new ConfigKey<>(
+            "Advanced",
+            Integer.class,
+            "password.policy.maximum.length",
+            "15",
+            "Maximum length that the user's password must have. Password can be set to 15 digits or less",
+            true,
+            ConfigKey.Scope.Domain);
+
     ConfigKey<Integer> PasswordPolicyMinimumUppercaseLetters = new ConfigKey<>(
             "Advanced",
             Integer.class,

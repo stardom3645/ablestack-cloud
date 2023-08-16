@@ -81,6 +81,7 @@ public class PasswordPolicyImpl implements PasswordPolicy, Configurable {
         validateIfPasswordContainsTheMinimumNumberOfLowerCaseLetters(numberOfLowercaseLettersInPassword, username, domainId);
         validateIfPasswordContainsTheMinimumNumberOfDigits(numberOfDigitsInPassword, username, domainId);
         validateIfPasswordContainsTheMinimumLength(password, username, domainId);
+        validateIfPasswordContainsTheMaximumLength(password, username, domainId);
         validateIfPasswordContainsTheUsername(password, username, domainId);
         validateIfPasswordMatchesRegex(password, username, domainId);
         validateIfPasswordContainsThePreviousPassword(password, username, domainId);
@@ -196,6 +197,22 @@ public class PasswordPolicyImpl implements PasswordPolicy, Configurable {
         logger.trace(String.format("The new password for user [%s] complies with the policy of minimum length [%s].", username, PasswordPolicyMinimumLength.key()));
     }
 
+    protected void validateIfPasswordContainsTheMaximumLength(String password, String username, Long domainId) {
+        Integer passwordPolicyMaximumLength = getPasswordPolicyMaximumLength(domainId);
+
+        logger.trace(String.format("Validating if the new password for user [%s] contains the maximum length [%s] defined in the configuration [%s].", username,
+                passwordPolicyMaximumLength, PasswordPolicyMaximumLength.key()));
+
+        Integer passwordLength = password.length();
+        if (passwordLength > passwordPolicyMaximumLength) {
+            logger.error(String.format("User [%s] informed [%d] characters for their new password; however, the maximum password length is [%d]. Refusing the user's new password.",
+                    username, passwordLength, passwordPolicyMaximumLength));
+            throw new InvalidParameterValueException(String.format("User password must be less than [%d] characters.", passwordPolicyMaximumLength));
+        }
+
+        logger.trace(String.format("The new password for user [%s] complies with the policy of maximum length [%s].", username, PasswordPolicyMaximumLength.key()));
+    }
+
     protected void validateIfPasswordContainsTheUsername(String password, String username, Long domainId) {
         logger.trace(String.format("Validating if the new password for user [%s] contains their username.", username));
 
@@ -298,7 +315,7 @@ public class PasswordPolicyImpl implements PasswordPolicy, Configurable {
 
     @Override
     public ConfigKey<?>[] getConfigKeys() {
-        return new ConfigKey<?>[]{PasswordPolicyMinimumLength, PasswordPolicyMinimumSpecialCharacters, PasswordPolicyMinimumUppercaseLetters, PasswordPolicyMinimumLowercaseLetters,
+        return new ConfigKey<?>[]{PasswordPolicyMinimumLength, PasswordPolicyMaximumLength, PasswordPolicyMinimumSpecialCharacters, PasswordPolicyMinimumUppercaseLetters, PasswordPolicyMinimumLowercaseLetters,
                 PasswordPolicyMinimumDigits, PasswordPolicyAllowPasswordToContainUsername, PasswordPolicyRegex, PasswordPolicyAllowUseOfLastUsedPassword, PasswordPolicyAllowConsecutiveRepetitionsOfSameLettersAndNumbers,
                 PasswordPolicyAllowContinuousLettersAndNumbersInputOnKeyboard
         };
@@ -306,6 +323,10 @@ public class PasswordPolicyImpl implements PasswordPolicy, Configurable {
 
     public Integer getPasswordPolicyMinimumLength(Long domainId) {
         return PasswordPolicyMinimumLength.valueIn(domainId);
+    }
+
+    public Integer getPasswordPolicyMaximumLength(Long domainId) {
+        return PasswordPolicyMaximumLength.valueIn(domainId);
     }
 
     public Integer getPasswordPolicyMinimumSpecialCharacters(Long domainId) {
