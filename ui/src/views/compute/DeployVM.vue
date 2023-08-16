@@ -725,7 +725,7 @@
                         :checked="nicpackedvirtqueuesenabled"
                         @change="val => { nicpackedvirtqueuesenabled = val }"/>
                     </a-form-item>
-                    <a-form-item name="iothreadsenabled" ref="iothreadsenabled" v-if="vm.templateid && ['Simulator'].includes(hypervisor)">
+                    <a-form-item name="iothreadsenabled" ref="iothreadsenabled" v-if="vm.templateid && ['KVM'].includes(hypervisor)">
                       <template #label>
                         <tooltip-label :title="$t('label.iothreadsenabled')" :tooltip="$t('label.iothreadsenabled.tooltip')"/>
                       </template>
@@ -736,7 +736,7 @@
                           @change="val => { iothreadsenabled = val }"/>
                       </a-form-item>
                     </a-form-item>
-                    <a-form-item name="iodriverpolicy" ref="iodriverpolicy" v-if="vm.templateid && ['Simulator'].includes(hypervisor)">
+                    <a-form-item name="iodriverpolicy" ref="iodriverpolicy" v-if="vm.templateid && ['KVM'].includes(hypervisor)">
                       <template #label>
                         <tooltip-label :title="$t('label.iodriverpolicy')" :tooltip="$t('label.iodriverpolicy.tooltip')"/>
                       </template>
