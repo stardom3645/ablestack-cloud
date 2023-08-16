@@ -2865,7 +2865,12 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
      */
     protected CpuTuneDef createCpuTuneDef(VirtualMachineTO vmTO) {
         CpuTuneDef ctd = new CpuTuneDef();
-        int shares = vmTO.getCpus() * (vmTO.getMinSpeed() != null ? vmTO.getMinSpeed() : vmTO.getSpeed());
+        int shares = vmTO.getCpus() * (vmTO.getMinSpeed() != null ? vmTO.getMinSpeed() : vmTO.getSpeed()) / 100;
+        if (shares < 2) {
+            shares = 2;
+        } else if (shares > 10000) {
+            shares = 10000;
+        }
         ctd.setShares(shares);
         setQuotaAndPeriod(vmTO, ctd);
         return ctd;
