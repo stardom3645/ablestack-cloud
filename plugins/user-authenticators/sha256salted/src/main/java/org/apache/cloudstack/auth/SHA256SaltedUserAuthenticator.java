@@ -125,7 +125,7 @@ public class SHA256SaltedUserAuthenticator extends AdapterBase implements UserAu
         md.update(hashSource);
         byte[] digest = md.digest();
         for (int a = 0; a < s_rounds; a++) {
-            digest = md.digest(new byte[digest.length + salt.length]);
+            digest = md.digest(digest);
         }
         return new String(Base64.encode(digest));
     }
