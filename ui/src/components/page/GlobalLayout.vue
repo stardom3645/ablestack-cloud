@@ -199,7 +199,7 @@ export default {
   created () {
     this.menus = this.mainMenu.find((item) => item.path === '/').children
     this.collapsed = !this.sidebarOpened
-    setInterval(this.checkShutdown, 5000)
+    this.timer = setInterval(this.checkShutdown, 5000)
   },
   mounted () {
     const layoutMode = this.$config.theme['@layout-mode'] || 'light'
@@ -223,6 +223,7 @@ export default {
     }
   },
   beforeUnmount () {
+    clearInterval(this.timer)
     document.body.classList.remove('dark')
   },
   methods: {

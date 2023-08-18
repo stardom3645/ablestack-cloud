@@ -1040,7 +1040,7 @@ export default {
       tabKey: 'templateid',
       userdataTabKey: 'userdataregistered',
       dataPreFill: {},
-      showDetails: false,
+      showDetails: true,
       showRootDiskSizeChanger: false,
       showOverrideDiskOfferingOption: false,
       securitygroupids: [],
@@ -1710,11 +1710,13 @@ export default {
       this.fetchInstaceGroups()
       this.fetchIoPolicyTypes()
       nextTick().then(() => {
-        ['name', 'keyboard', 'boottype', 'bootmode', 'userdata', 'tpmversion', 'iothreadsenabled', 'iodriverpolicy', 'nicmultiqueuenumber', 'nicpackedvirtqueues'].forEach(this.fillValue)
+        ['name', 'keyboard', 'boottype', 'bootmode', 'userdata', 'tpmversion', 'iothreadsenabled', 'iodriverpolicy', 'nicmultiqueuenumber', 'nicpackedvirtqueues'].z(this.fillValue)
         this.form.boottype = this.defaultBootType ? this.defaultBootType : this.options.bootTypes && this.options.bootTypes.length > 0 ? this.options.bootTypes[0].id : undefined
         this.form.bootmode = this.defaultBootMode ? this.defaultBootMode : this.options.bootModes && this.options.bootModes.length > 0 ? this.options.bootModes[0].id : undefined
         this.form.tpmversion = this.defaultTPM ? this.defaultTPM : this.options.tpmversion && this.options.tpmversion.length > 0 ? this.options.tpmversion[0].id : undefined
         this.instanceConfig = toRaw(this.form)
+        this.form.iothreadsenabled = true
+        this.form.iodriverpolicy = 'storage_specific'
       })
     },
     isDynamicallyScalable () {
