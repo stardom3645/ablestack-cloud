@@ -173,6 +173,8 @@ import com.cloud.user.User;
 import com.cloud.user.UserAccount;
 import com.cloud.user.UserAccountVO;
 import com.cloud.user.UserVO;
+import com.cloud.user.dao.AccountDao;
+import com.cloud.user.dao.UserDao;
 import com.cloud.user.dao.UserAccountDao;
 import com.cloud.utils.ConstantTimeComparator;
 import com.cloud.utils.DateUtil;
@@ -216,6 +218,10 @@ public class ApiServer extends ManagerBase implements HttpRequestHandler, ApiSer
     private DomainManager domainMgr;
     @Inject
     private DomainDao domainDao;
+    @Inject
+    private UserDao userDao;
+    @Inject
+    private AccountDao accountDao;
     @Inject
     private UUIDManager uuidMgr;
     @Inject
