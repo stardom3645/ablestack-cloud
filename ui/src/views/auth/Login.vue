@@ -311,12 +311,13 @@ export default {
       }
     },
     requestFailed (err) {
-      if (err && err.response && err.response.data && err.response.data.loginresponse) {
-        const error = err.response.data.loginresponse.errorcode + ': ' + err.response.data.loginresponse.errortext
-        this.$message.error(`${this.$t('label.error')} ${error}`)
-      } else {
-        this.$message.error(this.$t('message.login.failed'))
-      }
+      // if (err && err.response && err.response.data && err.response.data.loginresponse) {
+      //   const error = err.response.data.loginresponse.errorcode + ': ' + err.response.data.loginresponse.errortext
+      //   this.$message.error(`${this.$t('label.error')} ${error}`)
+      // } else {
+      //   this.$message.error(this.$t('message.login.failed'))
+      // }
+      this.$message.error(this.$t('message.login.failed'))
     },
     onChangeServer (server) {
       const servers = this.$config.servers || []
