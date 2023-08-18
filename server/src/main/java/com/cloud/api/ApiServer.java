@@ -138,6 +138,7 @@ import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.stereotype.Component;
 
+import com.cloud.alert.AlertManager;
 import com.cloud.api.dispatch.DispatchChainFactory;
 import com.cloud.api.dispatch.DispatchTask;
 import com.cloud.api.response.ApiResponseSerializer;
@@ -165,7 +166,9 @@ import com.cloud.user.AccountManagerImpl;
 import com.cloud.user.DomainManager;
 import com.cloud.user.User;
 import com.cloud.user.UserAccount;
+import com.cloud.user.UserAccountVO;
 import com.cloud.user.UserVO;
+import com.cloud.user.dao.UserAccountDao;
 import com.cloud.utils.ConstantTimeComparator;
 import com.cloud.utils.DateUtil;
 import com.cloud.utils.HttpUtils;
@@ -218,6 +221,10 @@ public class ApiServer extends ManagerBase implements HttpRequestHandler, ApiSer
     private APIAuthenticationManager authManager;
     @Inject
     private ProjectDao projectDao;
+    @Inject
+    private UserAccountDao userAccountDao;
+    @Inject
+    private AlertManager alertMgr;
 
     private List<PluggableService> pluggableServices;
 
@@ -1122,21 +1129,37 @@ public class ApiServer extends ManagerBase implements HttpRequestHandler, ApiSer
             domainId = userDomain.getId();
         }
         final UserAccount userAcct = accountMgr.authenticateUser(username, password, domainId, loginIpAddress, requestParameters);
-        List<String> sessionIds = ApiSessionListener.listExistSessionIds(username, session.getId());
 
         if (userAcct != null) {
-            if (!ApiServer.AllowConcurrentConnectSession.value() && sessionIds != null && sessionIds.size() > 0) {
+            List<String> sessionJoined = new ArrayList<>();
+            List<String> sessionIds = new ArrayList<>();
+            s_logger.debug("possibleUserAccounts ::: " + userAcct.getType());
+            //동일 권한을 가진 user 목록조회
+            List<UserAccountVO> possibleUserAccounts = userAccountDao.getAllUsersByAccountType(userAcct.getType());
+            if (!possibleUserAccounts.isEmpty()) {
+                for (int i = 0; i < possibleUserAccounts.size(); i++) {
+                    s_logger.debug("possibleUserAccounts ::: " + possibleUserAccounts.get(i).getUsername());
+                    sessionIds = ApiSessionListener.listExistSessionIds(possibleUserAccounts.get(i).getUsername(), session.getId());
+                    if (!sessionIds.isEmpty()) {
+                        sessionJoined.addAll(sessionIds);
+                    }
+                }
+            }
+
+            if (!ApiServer.AllowConcurrentConnectSession.value() && sessionJoined != null && sessionJoined.size() > 0) {
                 if (ApiServer.BlockConnectedSession.value()) { //기존 세션 차단
-                    ApiSessionListener.deleteSessionIds(sessionIds);
+                    ApiSessionListener.deleteSessionIds(sessionJoined);
                     ActionEventUtils.onActionEvent(userAcct.getId(), userAcct.getAccountId(), domainId, EventTypes.EVENT_USER_SESSION_BLOCK,
                                                     "Sessions previously connected to account [" + username + "] have been disconnected.", User.UID_SYSTEM, ApiCommandResourceType.User.toString());
+                    alertMgr.sendAlert(AlertManager.AlertType.EVENT_USER_SESSION_BLOCK, 0, new Long(0), "Sessions previously connected to account [" + username + "] have been disconnected.", "");
                 }else { //신규 세션 차단
                     if (session != null) {
-                        sessionIds.clear();
-                        sessionIds.add(session.getId());
-                        ApiSessionListener.deleteSessionIds(sessionIds);
+                        sessionJoined.clear();
+                        sessionJoined.add(session.getId());
+                        ApiSessionListener.deleteSessionIds(sessionJoined);
                         ActionEventUtils.onActionEvent(userAcct.getId(), userAcct.getAccountId(), domainId, EventTypes.EVENT_USER_SESSION_BLOCK,
                                                         "A session connected to account [" + username + "] exists. Block new connections.", User.UID_SYSTEM, ApiCommandResourceType.User.toString());
+                        alertMgr.sendAlert(AlertManager.AlertType.EVENT_USER_SESSION_BLOCK, 0, new Long(0), "A session connected to account [" + username + "] exists. Block new connections.", "");
                         throw new CloudAuthenticationException("You are already connecting with the same account and simultaneous access is not allowed.");
                     }
                 }
