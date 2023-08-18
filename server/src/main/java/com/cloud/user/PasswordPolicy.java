@@ -38,6 +38,15 @@ public interface PasswordPolicy {
             true,
             ConfigKey.Scope.Domain);
 
+    ConfigKey<Integer> PasswordPolicyMaximumLength = new ConfigKey<>(
+            "Advanced",
+            Integer.class,
+            "password.policy.maximum.length",
+            "15",
+            "Maximum length that the user's password must have. Password can be set to 15 digits or less",
+            true,
+            ConfigKey.Scope.Domain);
+
     ConfigKey<Integer> PasswordPolicyMinimumUppercaseLetters = new ConfigKey<>(
             "Advanced",
             Integer.class,
@@ -80,6 +89,33 @@ public interface PasswordPolicy {
             "password.policy.regex",
             ".+",
             "A regular expression that the user's password must match. The default expression '.+' will match with any password.",
+            true,
+            ConfigKey.Scope.Domain);
+
+    ConfigKey<Boolean> PasswordPolicyAllowUseOfLastUsedPassword = new ConfigKey<>(
+            "Advanced",
+            Boolean.class,
+            "password.policy.allowUseOfLastUsedPassword",
+            "true",
+            "Indicates whether the password used immediately before can be used for the user password. Set 'true' (default) if it is allowed, otherwise set 'false'.",
+            true,
+            ConfigKey.Scope.Domain);
+
+    ConfigKey<Boolean> PasswordPolicyAllowConsecutiveRepetitionsOfSameLettersAndNumbers = new ConfigKey<>(
+            "Advanced",
+            Boolean.class,
+            "password.policy.allowConsecutiveRepetitionsOfSameLettersAndNumbers",
+            "true",
+            "Indicates whether consecutive repetition of the same letter and number can be used in the user password. Set 'true' (default) if it is allowed, otherwise set 'false'.",
+            true,
+            ConfigKey.Scope.Domain);
+
+    ConfigKey<Boolean> PasswordPolicyAllowContinuousLettersAndNumbersInputOnKeyboard = new ConfigKey<>(
+            "Advanced",
+            Boolean.class,
+            "password.policy.allowContinuousLettersAndNumbersInputOnKeyboard",
+            "true",
+            "Indicates whether or not the user's password can contain consecutive letters and numbers on the keypad. Set 'true' (default) if it is allowed, otherwise set 'false'.",
             true,
             ConfigKey.Scope.Domain);
 

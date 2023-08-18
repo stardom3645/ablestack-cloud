@@ -64,7 +64,8 @@ const user = {
     shutdownTriggered: false,
     twoFaEnabled: false,
     twoFaProvider: '',
-    twoFaIssuer: ''
+    twoFaIssuer: '',
+    firstLogin: ''
   },
 
   mutations: {
@@ -151,6 +152,9 @@ const user = {
     },
     SET_LOGIN_FLAG: (state, flag) => {
       state.loginFlag = flag
+    },
+    SET_FIRST_LOGIN: (state, flag) => {
+      state.firstLogin = flag
     }
   },
 
@@ -170,6 +174,7 @@ const user = {
           Cookies.set('userfullname', result.firstname + ' ' + result.lastname, { expires: 1 })
           Cookies.set('userid', result.userid, { expires: 1 })
           Cookies.set('username', result.username, { expires: 1 })
+          Cookies.set('firstlogin', result.firstlogin)
           vueProps.$localStorage.set(ACCESS_TOKEN, result.sessionkey, 24 * 60 * 60 * 1000)
           commit('SET_TOKEN', result.sessionkey)
           commit('SET_TIMEZONE_OFFSET', result.timezoneoffset)
@@ -195,6 +200,7 @@ const user = {
           commit('SET_2FA_ENABLED', (result.is2faenabled === 'true'))
           commit('SET_2FA_PROVIDER', result.providerfor2fa)
           commit('SET_2FA_ISSUER', result.issuerfor2fa)
+          commit('SET_FIRST_LOGIN', (result.firstlogin === 'true'))
           commit('SET_LOGIN_FLAG', false)
           notification.destroy()
 
@@ -308,29 +314,6 @@ const user = {
           cloudianUrl = state.cloudian.url + 'logout.htm?redirect=' + encodeURIComponent(window.location.href)
         }
 
-        Object.keys(Cookies.get()).forEach(cookieName => {
-          Cookies.remove(cookieName)
-          Cookies.remove(cookieName, { path: '/client' })
-        })
-
-        commit('SET_TOKEN', '')
-        commit('SET_APIS', {})
-        commit('SET_PROJECT', {})
-        commit('SET_HEADER_NOTICES', [])
-        commit('SET_FEATURES', {})
-        commit('SET_LDAP', {})
-        commit('SET_CLOUDIAN', {})
-        commit('RESET_THEME')
-        commit('SET_DOMAIN_STORE', {})
-        commit('SET_LOGOUT_FLAG', true)
-        commit('SET_2FA_ENABLED', false)
-        commit('SET_2FA_PROVIDER', '')
-        commit('SET_2FA_ISSUER', '')
-        commit('SET_LOGIN_FLAG', false)
-        vueProps.$localStorage.remove(CURRENT_PROJECT)
-        vueProps.$localStorage.remove(ACCESS_TOKEN)
-        vueProps.$localStorage.remove(HEADER_NOTICES)
-
         logout(state.token).then(() => {
           message.destroy()
           if (cloudianUrl) {
@@ -340,6 +323,30 @@ const user = {
           }
         }).catch(() => {
           resolve()
+        }).finally(() => {
+          Object.keys(Cookies.get()).forEach(cookieName => {
+            Cookies.remove(cookieName)
+            Cookies.remove(cookieName, { path: '/client' })
+          })
+
+          commit('SET_TOKEN', '')
+          commit('SET_APIS', {})
+          commit('SET_PROJECT', {})
+          commit('SET_HEADER_NOTICES', [])
+          commit('SET_FEATURES', {})
+          commit('SET_LDAP', {})
+          commit('SET_CLOUDIAN', {})
+          commit('RESET_THEME')
+          commit('SET_DOMAIN_STORE', {})
+          commit('SET_LOGOUT_FLAG', true)
+          commit('SET_2FA_ENABLED', false)
+          commit('SET_2FA_PROVIDER', '')
+          commit('SET_2FA_ISSUER', '')
+          commit('SET_LOGIN_FLAG', false)
+          commit('SET_FIRST_LOGIN', '')
+          vueProps.$localStorage.remove(CURRENT_PROJECT)
+          vueProps.$localStorage.remove(ACCESS_TOKEN)
+          vueProps.$localStorage.remove(HEADER_NOTICES)
         })
       })
     },
