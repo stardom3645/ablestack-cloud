@@ -317,6 +317,7 @@ export default {
       // } else {
       //   this.$message.error(this.$t('message.login.failed'))
       // }
+      console.log(err)
       this.$message.error(this.$t('message.login.failed'))
     },
     onChangeServer (server) {
