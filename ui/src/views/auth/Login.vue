@@ -317,8 +317,7 @@ export default {
       // } else {
       //   this.$message.error(this.$t('message.login.failed'))
       // }
-      console.log(err)
-      this.$message.error(this.$t('message.login.failed'))
+      this.$message.error(this.$t('message.login.failed.security'))
     },
     onChangeServer (server) {
       const servers = this.$config.servers || []
