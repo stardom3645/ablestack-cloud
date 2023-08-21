@@ -124,6 +124,7 @@ import {
   NotificationOutlined,
   NumberOutlined,
   OneToOneOutlined,
+  LaptopOutlined,
   OrderedListOutlined,
   PaperClipOutlined,
   PauseCircleOutlined,
@@ -171,7 +172,6 @@ import {
   WarningOutlined,
   WifiOutlined,
   ShopOutlined,
-  LaptopOutlined,
   AreaChartOutlined,
   SolutionOutlined
 } from '@ant-design/icons-vue'
@@ -287,6 +287,7 @@ export default {
     app.component('NotificationOutlined', NotificationOutlined)
     app.component('NumberOutlined', NumberOutlined)
     app.component('OneToOneOutlined', OneToOneOutlined)
+    app.component('LaptopOutlined', LaptopOutlined)
     app.component('OrderedListOutlined', OrderedListOutlined)
     app.component('PaperClipOutlined', PaperClipOutlined)
     app.component('PauseCircleOutlined', PauseCircleOutlined)
