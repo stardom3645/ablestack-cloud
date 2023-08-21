@@ -44,6 +44,14 @@ export default {
       component: shallowRef(defineAsyncComponent(() => import('@/views/infra/AsyncJobsTab.vue')))
     },
     {
+      name: 'security.check',
+      component: shallowRef(defineAsyncComponent(() => import('@/views/infra/SecurityCheckTab.vue')))
+    },
+    {
+      name: 'integrity.verification',
+      component: shallowRef(defineAsyncComponent(() => import('@/views/infra/IntegrityVerificationTab.vue')))
+    },
+    {
       name: 'comments',
       component: shallowRef(defineAsyncComponent(() => import('@/components/view/AnnotationsTab.vue')))
     }
@@ -83,6 +91,34 @@ export default {
       mapping: {
         managementserverid: {
           value: (record, params) => { return record.id }
+        }
+      }
+    },
+    {
+      api: 'runSecurityCheck',
+      icon: 'safety-outlined',
+      label: 'label.security.check',
+      message: 'message.confirm.security.check',
+      dataView: true,
+      popup: true,
+      show: (record, store) => { return record.state === 'Up' && ['Admin'].includes(store.userInfo.roletype) },
+      mapping: {
+        managementserverid: {
+          value: (record) => { return record.id }
+        }
+      }
+    },
+    {
+      api: 'runIntegrityVerification',
+      icon: 'OneToOneOutlined',
+      label: 'label.integrity.verification',
+      message: 'message.confirm.integrity.verification',
+      dataView: true,
+      popup: true,
+      show: (record, store) => { return record.state === 'Up' && ['Admin'].includes(store.userInfo.roletype) },
+      mapping: {
+        managementserverid: {
+          value: (record) => { return record.id }
         }
       }
     }
