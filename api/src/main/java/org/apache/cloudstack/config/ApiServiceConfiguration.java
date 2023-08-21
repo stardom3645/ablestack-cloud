@@ -33,11 +33,15 @@ public class ApiServiceConfiguration implements Configurable {public static fina
     public static final ConfigKey<String> ApiAllowedSourceIp = new ConfigKey<>(String.class, "api.allowed.source.ip", "Advanced",
             "0.0.0.0", "Comma separated list of IPv4/IPv6 CIDRs from which API calls can be performed. Can be set on Global and Account levels.", true, ConfigKey.Scope.Account, null, null, null, null, null, ConfigKey.Kind.CSV, null);
     public static final ConfigKey<String> ApiAllowedSourceCidr = new ConfigKey<String>("Advanced", String.class, "api.allowed.source.cidr",
-            "32", "A cidr setting that allows you to make api calls.", true, ConfigKey.Scope.Account);
+            "0", "A cidr setting that allows you to make api calls.", true, ConfigKey.Scope.Account);
     public static final ConfigKey<String> MonitoringWallPortalPort = new ConfigKey<String>("Advanced", String.class, "monitoring.wall.portal.port",
             "3000", "Monitoring Service Wall Portal Port.(ex:3000)", true);
     public static final ConfigKey<String> MonitoringWallPortalVmUri = new ConfigKey<String>("Advanced", String.class, "monitoring.wall.portal.vm.uri",
             "/d/ldwEyoKnz/gasangmeosin-sangse-hyeonhwang", "Monitoring Service Wall Portal Uri.(ex:/d/ldwEyoKnz/gasangmeosin-sangse-hyeonhwang)", true);
+    public static final ConfigKey<Boolean> EventDeleteEnabled = new ConfigKey<>("Advanced", Boolean.class, "event.delete.enabled",
+            "false", "true if Event Delete Button is enabled, false otherwise)", false);
+    public static final ConfigKey<Boolean> ManagementServerSSHDEnabled = new ConfigKey<>("Advanced", Boolean.class, "management.server.secure.sshdaemon.enabled",
+            "true", "true if Management server sshd service is enabled, false otherwise)", false);
 
     @Override
     public String getConfigComponentName() {
@@ -46,7 +50,7 @@ public class ApiServiceConfiguration implements Configurable {public static fina
 
     @Override
     public ConfigKey<?>[] getConfigKeys() {
-        return new ConfigKey<?>[] {ManagementServerAddresses, ApiServletPath, DefaultUIPageSize, ApiSourceCidrChecksEnabled, ApiAllowedSourceIp, ApiAllowedSourceCidr, MonitoringWallPortalProtocol, MonitoringWallPortalDomain, MonitoringWallPortalPort, MonitoringWallPortalVmUri};
+        return new ConfigKey<?>[] {ManagementServerAddresses, ApiServletPath, DefaultUIPageSize, ApiSourceCidrChecksEnabled, ApiAllowedSourceCidrList, MonitoringWallPortalProtocol, MonitoringWallPortalDomain, MonitoringWallPortalPort, MonitoringWallPortalVmUri, EventDeleteEnabled, ManagementServerSSHDEnabled};
     }
 
 }
