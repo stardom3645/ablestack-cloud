@@ -2537,8 +2537,8 @@ public class AccountManagerImpl extends ManagerBase implements AccountManager, M
 
                 unsignedRequest = unsignedRequestBuffer.toString().toLowerCase().replaceAll("\\+", "%20");
 
-                Mac mac = Mac.getInstance("HmacSHA1");
-                SecretKeySpec keySpec = new SecretKeySpec(key.getBytes(), "HmacSHA1");
+                Mac mac = Mac.getInstance("HmacSHA256");
+                SecretKeySpec keySpec = new SecretKeySpec(key.getBytes(), "HmacSHA256");
                 mac.init(keySpec);
                 mac.update(unsignedRequest.getBytes());
                 byte[] encryptedBytes = mac.doFinal();
@@ -2812,7 +2812,7 @@ public class AccountManagerImpl extends ManagerBase implements AccountManager, M
             int retryLimit = 10;
             do {
                 // FIXME: what algorithm should we use for API keys?
-                KeyGenerator generator = KeyGenerator.getInstance("HmacSHA1");
+                KeyGenerator generator = KeyGenerator.getInstance("HmacSHA256");
                 SecretKey key = generator.generateKey();
                 encodedKey = Base64.encodeBase64URLSafeString(key.getEncoded());
                 userAcct = _accountDao.findUserAccountByApiKey(encodedKey);
@@ -2838,7 +2838,7 @@ public class AccountManagerImpl extends ManagerBase implements AccountManager, M
             int retryLimit = 10;
             UserVO userBySecretKey = null;
             do {
-                KeyGenerator generator = KeyGenerator.getInstance("HmacSHA1");
+                KeyGenerator generator = KeyGenerator.getInstance("HmacSHA256");
                 SecretKey key = generator.generateKey();
                 encodedKey = Base64.encodeBase64URLSafeString(key.getEncoded());
                 userBySecretKey = _userDao.findUserBySecretKey(encodedKey);

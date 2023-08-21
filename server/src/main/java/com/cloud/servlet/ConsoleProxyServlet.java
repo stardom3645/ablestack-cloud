@@ -385,13 +385,13 @@ public class ConsoleProxyServlet extends HttpServlet {
         String params = "host=" + host + "&port=" + port + "&sid=" + sid + "&tag=" + tag;
 
         try {
-            Mac mac = Mac.getInstance("HmacSHA1");
+            Mac mac = Mac.getInstance("HmacSHA256");
 
             long ts = normalizedHashTime.getTime();
             ts = ts / 60000;        // round up to 1 minute
             String secretKey = s_keysMgr.getHashKey();
 
-            SecretKeySpec keySpec = new SecretKeySpec(secretKey.getBytes(), "HmacSHA1");
+            SecretKeySpec keySpec = new SecretKeySpec(secretKey.getBytes(), "HmacSHA256");
             mac.init(keySpec);
             mac.update(params.getBytes());
             mac.update(String.valueOf(ts).getBytes());
@@ -558,8 +558,8 @@ public class ConsoleProxyServlet extends HttpServlet {
 
             unsignedRequest = unsignedRequest.toLowerCase();
 
-            Mac mac = Mac.getInstance("HmacSHA1");
-            SecretKeySpec keySpec = new SecretKeySpec(secretKey.getBytes(), "HmacSHA1");
+            Mac mac = Mac.getInstance("HmacSHA256");
+            SecretKeySpec keySpec = new SecretKeySpec(secretKey.getBytes(), "HmacSHA256");
             mac.init(keySpec);
             mac.update(unsignedRequest.getBytes());
             byte[] encryptedBytes = mac.doFinal();
