@@ -3471,6 +3471,7 @@
 "label.security.check.success" : "Success",
 "label.security.check.last.updated" : "Last updated",
 "message.confirm.security.check" : "Please confirm that you want to proceed with the security check.",
+"message.login.failed.security" : "Login failed. Please contact your administrator or try again.",
 "label.integrity.verification" : "Integrity verification",
 "label.integrity.verification.name" : "Verification path",
 "label.integrity.verification.success" : "Success",
