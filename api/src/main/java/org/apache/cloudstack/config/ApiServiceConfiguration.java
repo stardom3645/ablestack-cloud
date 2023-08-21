@@ -38,6 +38,10 @@ public class ApiServiceConfiguration implements Configurable {public static fina
             "3000", "Monitoring Service Wall Portal Port.(ex:3000)", true);
     public static final ConfigKey<String> MonitoringWallPortalVmUri = new ConfigKey<String>("Advanced", String.class, "monitoring.wall.portal.vm.uri",
             "/d/ldwEyoKnz/gasangmeosin-sangse-hyeonhwang", "Monitoring Service Wall Portal Uri.(ex:/d/ldwEyoKnz/gasangmeosin-sangse-hyeonhwang)", true);
+    public static final ConfigKey<Boolean> EventDeleteEnabled = new ConfigKey<>("Advanced", Boolean.class, "event.delete.enabled",
+            "false", "true if Event Delete Button is enabled, false otherwise)", false);
+    public static final ConfigKey<Boolean> ManagementServerSSHDEnabled = new ConfigKey<>("Advanced", Boolean.class, "management.server.secure.sshdaemon.enabled",
+            "true", "true if Management server sshd service is enabled, false otherwise)", false);
 
     @Override
     public String getConfigComponentName() {
@@ -46,7 +50,7 @@ public class ApiServiceConfiguration implements Configurable {public static fina
 
     @Override
     public ConfigKey<?>[] getConfigKeys() {
-        return new ConfigKey<?>[] {ManagementServerAddresses, ApiServletPath, DefaultUIPageSize, ApiSourceCidrChecksEnabled, ApiAllowedSourceIp, ApiAllowedSourceCidr, MonitoringWallPortalProtocol, MonitoringWallPortalDomain, MonitoringWallPortalPort, MonitoringWallPortalVmUri};
+        return new ConfigKey<?>[] {ManagementServerAddresses, ApiServletPath, DefaultUIPageSize, ApiSourceCidrChecksEnabled, ApiAllowedSourceCidrList, MonitoringWallPortalProtocol, MonitoringWallPortalDomain, MonitoringWallPortalPort, MonitoringWallPortalVmUri, EventDeleteEnabled, ManagementServerSSHDEnabled};
     }
 
 }
