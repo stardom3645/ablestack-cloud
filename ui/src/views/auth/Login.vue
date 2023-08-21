@@ -98,7 +98,7 @@
           </a-input>
         </a-form-item>
       </a-tab-pane>
-      <a-tab-pane key="saml" :disabled="idps.length === 0">
+      <!-- <a-tab-pane key="saml" :disabled="idps.length === 0">
         <template #tab>
           <span>
             <audit-outlined />
@@ -137,7 +137,7 @@
             </a-select-option>
           </a-select>
         </a-form-item>
-      </a-tab-pane>
+      </a-tab-pane> -->
     </a-tabs>
 
     <a-form-item>
@@ -303,6 +303,8 @@ export default {
         this.$router.push({ path: '/verify2FA' }).catch(() => {})
       } else if (store.getters.twoFaEnabled === true && (store.getters.twoFaProvider === '' || store.getters.twoFaProvider === undefined)) {
         this.$router.push({ path: '/setup2FA' }).catch(() => {})
+      } else if (store.getters.firstLogin === true) {
+        this.$router.push({ path: '/firstLogin' }).catch(() => {})
       } else {
         this.$store.commit('SET_LOGIN_FLAG', true)
         this.$router.push({ path: '/dashboard' }).catch(() => {})

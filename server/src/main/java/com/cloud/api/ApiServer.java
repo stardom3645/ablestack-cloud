@@ -57,6 +57,7 @@ import javax.servlet.http.HttpSession;
 
 import org.apache.cloudstack.acl.APIChecker;
 import org.apache.cloudstack.api.APICommand;
+import org.apache.cloudstack.api.ApiCommandResourceType;
 import org.apache.cloudstack.api.ApiConstants;
 import org.apache.cloudstack.api.ApiErrorCode;
 import org.apache.cloudstack.api.ApiServerService;
@@ -91,6 +92,8 @@ import org.apache.cloudstack.api.response.CreateCmdResponse;
 import org.apache.cloudstack.api.response.ExceptionResponse;
 import org.apache.cloudstack.api.response.ListResponse;
 import org.apache.cloudstack.api.response.LoginCmdResponse;
+import org.apache.cloudstack.auth.UserAuthenticator;
+import org.apache.cloudstack.auth.UserAuthenticator.ActionOnFailedAuthentication;
 import org.apache.cloudstack.config.ApiServiceConfiguration;
 import org.apache.cloudstack.context.CallContext;
 import org.apache.cloudstack.framework.config.ConfigKey;
@@ -105,6 +108,7 @@ import org.apache.cloudstack.framework.messagebus.MessageDispatcher;
 import org.apache.cloudstack.framework.messagebus.MessageHandler;
 import org.apache.cloudstack.managed.context.ManagedContextRunnable;
 import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.lang3.BooleanUtils;
 import org.apache.http.ConnectionClosedException;
 import org.apache.http.HttpException;
 import org.apache.http.HttpRequest;
@@ -140,6 +144,7 @@ import org.springframework.stereotype.Component;
 import com.cloud.api.dispatch.DispatchChainFactory;
 import com.cloud.api.dispatch.DispatchTask;
 import com.cloud.api.response.ApiResponseSerializer;
+import com.cloud.dc.DataCenterVO;
 import com.cloud.domain.Domain;
 import com.cloud.domain.DomainVO;
 import com.cloud.domain.dao.DomainDao;
@@ -161,10 +166,13 @@ import com.cloud.storage.VolumeApiService;
 import com.cloud.user.Account;
 import com.cloud.user.AccountManager;
 import com.cloud.user.AccountManagerImpl;
+import com.cloud.user.AccountVO;
 import com.cloud.user.DomainManager;
 import com.cloud.user.User;
 import com.cloud.user.UserAccount;
 import com.cloud.user.UserVO;
+import com.cloud.user.dao.AccountDao;
+import com.cloud.user.dao.UserDao;
 import com.cloud.utils.ConstantTimeComparator;
 import com.cloud.utils.DateUtil;
 import com.cloud.utils.HttpUtils;
@@ -208,6 +216,10 @@ public class ApiServer extends ManagerBase implements HttpRequestHandler, ApiSer
     @Inject
     private DomainDao domainDao;
     @Inject
+    private UserDao userDao;
+    @Inject
+    private AccountDao accountDao;
+    @Inject
     private UUIDManager uuidMgr;
     @Inject
     private AsyncJobManager asyncMgr;
@@ -224,6 +236,8 @@ public class ApiServer extends ManagerBase implements HttpRequestHandler, ApiSer
 
     @Inject
     private ApiAsyncJobDispatcher asyncDispatcher;
+
+    protected List<UserAuthenticator> _userPasswordEncoders;
 
     private static int s_workerCount = 0;
     private static Map<String, List<Class<?>>> s_apiNameCmdClassMap = new HashMap<String, List<Class<?>>>();
@@ -277,11 +291,27 @@ public class ApiServer extends ManagerBase implements HttpRequestHandler, ApiSer
             , false
             , ConfigKey.Scope.Global);
 
-    private static final ConfigKey<Boolean> UseEventAccountInfo = new ConfigKey<Boolean>( "advanced"
+    private static final ConfigKey<Boolean> UseEventAccountInfo = new ConfigKey<Boolean>( "Advanced"
             , Boolean.class
             , "event.accountinfo"
             , "false"
             , "use account info in event logging"
+            , true
+            , ConfigKey.Scope.Global);
+
+    static final ConfigKey<Boolean> AllowConcurrentConnectSession = new ConfigKey<Boolean>( "Advanced"
+            , Boolean.class
+            , "allow.concurrent.connect.session"
+            , "false"
+            , "If set to true, simultaneous access is possible using the same account."
+            , true
+            , ConfigKey.Scope.Global);
+
+    static final ConfigKey<Boolean> BlockConnectedSession = new ConfigKey<Boolean>( "Advanced"
+            , Boolean.class
+            , "block.connected.session"
+            , "false"
+            , "When simultaneous access is not allowed('allow.concurrent.connect.session : false'), existing sessions are blocked if true, and new sessions are blocked if false."
             , true
             , ConfigKey.Scope.Global);
 
@@ -1087,6 +1117,9 @@ public class ApiServer extends ManagerBase implements HttpRequestHandler, ApiSer
                 if (ApiConstants.ISSUER_FOR_2FA.equalsIgnoreCase(attrName)) {
                     response.setIssuerFor2FA(attrObj.toString());
                 }
+                if (ApiConstants.FIRST_LOGIN.equalsIgnoreCase(attrName)) {
+                    response.setFirstLogin(attrObj.toString());
+                }
             }
         }
         response.setResponseName("loginresponse");
@@ -1104,9 +1137,27 @@ public class ApiServer extends ManagerBase implements HttpRequestHandler, ApiSer
         } else {
             domainId = userDomain.getId();
         }
-
         final UserAccount userAcct = accountMgr.authenticateUser(username, password, domainId, loginIpAddress, requestParameters);
+        List<String> sessionIds = ApiSessionListener.listExistSessionIds(username, session.getId());
+
         if (userAcct != null) {
+            if (!ApiServer.AllowConcurrentConnectSession.value() && sessionIds != null && sessionIds.size() > 0) {
+                if (ApiServer.BlockConnectedSession.value()) { //기존 세션 차단
+                    ApiSessionListener.deleteSessionIds(sessionIds);
+                    ActionEventUtils.onActionEvent(userAcct.getId(), userAcct.getAccountId(), domainId, EventTypes.EVENT_USER_SESSION_BLOCK,
+                                                    "Sessions previously connected to account [" + username + "] have been disconnected.", User.UID_SYSTEM, ApiCommandResourceType.User.toString());
+                }else { //신규 세션 차단
+                    if (session != null) {
+                        sessionIds.clear();
+                        sessionIds.add(session.getId());
+                        ApiSessionListener.deleteSessionIds(sessionIds);
+                        ActionEventUtils.onActionEvent(userAcct.getId(), userAcct.getAccountId(), domainId, EventTypes.EVENT_USER_SESSION_BLOCK,
+                                                        "A session connected to account [" + username + "] exists. Block new connections.", User.UID_SYSTEM, ApiCommandResourceType.User.toString());
+                        throw new CloudAuthenticationException("You are already connecting with the same account and simultaneous access is not allowed.");
+                    }
+                }
+            }
+
             final String timezone = userAcct.getTimezone();
             float offsetInHrs = 0f;
             if (timezone != null) {
@@ -1164,6 +1215,15 @@ public class ApiServer extends ManagerBase implements HttpRequestHandler, ApiSer
             session.setAttribute(ApiConstants.PROVIDER_FOR_2FA, userAcct.getUser2faProvider());
             session.setAttribute(ApiConstants.ISSUER_FOR_2FA, issuerFor2FA);
 
+            User _user = userDao.getUserByName(username, domainId);
+            List<DataCenterVO> dcList = new ArrayList<>();
+            dcList = ApiDBUtils.listZones();
+            if (validatePassword(_user, "password") && "admin".equals(username) && (dcList == null || dcList.size() == 0)) {
+                session.setAttribute(ApiConstants.FIRST_LOGIN, true);
+            } else {
+                session.setAttribute(ApiConstants.FIRST_LOGIN, false);
+            }
+
             // (bug 5483) generate a session key that the user must submit on every request to prevent CSRF, add that
             // to the login response so that session-based authenticators know to send the key back
             final SecureRandom sesssionKeyRandom = new SecureRandom();
@@ -1175,6 +1235,24 @@ public class ApiServer extends ManagerBase implements HttpRequestHandler, ApiSer
             return createLoginResponse(session);
         }
         throw new CloudAuthenticationException("Failed to authenticate user " + username + " in domain " + domainId + "; please provide valid credentials");
+    }
+
+    protected boolean validatePassword(User user, String password) {
+        AccountVO userAccount = accountDao.findById(user.getAccountId());
+        boolean passwordMatchesFirstLogin = false;
+        for (UserAuthenticator userAuthenticator : _userPasswordEncoders) {
+            Pair<Boolean, ActionOnFailedAuthentication> authenticationResult = userAuthenticator.authenticate(user.getUsername(), password, userAccount.getDomainId(), null);
+            if (authenticationResult == null) {
+                s_logger.trace(String.format("Authenticator [%s] is returning null for the authenticate mehtod.", userAuthenticator.getClass()));
+                continue;
+            }
+            if (BooleanUtils.toBoolean(authenticationResult.first())) {
+                s_logger.debug(String.format("User [id=%s] re-authenticated [authenticator=%s] during password update.", user.getUuid(), userAuthenticator.getName()));
+                passwordMatchesFirstLogin = true;
+                break;
+            }
+        }
+        return passwordMatchesFirstLogin;
     }
 
     @Override
@@ -1205,15 +1283,16 @@ public class ApiServer extends ManagerBase implements HttpRequestHandler, ApiSer
         }
 
         final Account account = accountMgr.getAccount(user.getAccountId());
-        final String accessAllowedCidrs = ApiServiceConfiguration.ApiAllowedSourceCidrList.valueIn(account.getId()).replaceAll("\\s","");
+        final String ApiAllowedSourceIp = ApiServiceConfiguration.ApiAllowedSourceIp.valueIn(account.getId()).replaceAll("\\s","");
+        final String accessAllowedCidr = ApiServiceConfiguration.ApiAllowedSourceCidr.valueIn(account.getId()).replaceAll("\\s", "");
         final Boolean apiSourceCidrChecksEnabled = ApiServiceConfiguration.ApiSourceCidrChecksEnabled.value();
 
         if (apiSourceCidrChecksEnabled) {
-            s_logger.debug("CIDRs from which account '" + account.toString() + "' is allowed to perform API calls: " + accessAllowedCidrs);
-            if (!NetUtils.isIpInCidrList(remoteAddress, accessAllowedCidrs.split(","))) {
-                s_logger.warn("Request by account '" + account.toString() + "' was denied since " + remoteAddress + " does not match " + accessAllowedCidrs);
+            s_logger.debug("CIDRs from which account '" + account.toString() + "' is allowed to perform API calls: " + ApiAllowedSourceIp  + "/" + accessAllowedCidr);
+            if (!NetUtils.isIpInCidrList(remoteAddress, (ApiAllowedSourceIp + "/" + accessAllowedCidr).split(","))) {
+                s_logger.warn("Request by account '" + account.toString() + "' was denied since " + remoteAddress + " does not match " + ApiAllowedSourceIp  + "/" + accessAllowedCidr);
                 throw new OriginDeniedException("Calls from disallowed origin", account, remoteAddress);
-                }
+            }
         }
 
 
@@ -1484,6 +1563,14 @@ public class ApiServer extends ManagerBase implements HttpRequestHandler, ApiSer
         ApiServer.encodeApiResponse = encodeApiResponse;
     }
 
+    public List<UserAuthenticator> getUserPasswordEncoders() {
+        return _userPasswordEncoders;
+    }
+
+    public void setUserPasswordEncoders(List<UserAuthenticator> encoders) {
+        _userPasswordEncoders = encoders;
+    }
+
     @Override
     public String getConfigComponentName() {
         return ApiServer.class.getSimpleName();
@@ -1496,7 +1583,9 @@ public class ApiServer extends ManagerBase implements HttpRequestHandler, ApiSer
                 ConcurrentSnapshotsThresholdPerHost,
                 EncodeApiResponse,
                 EnableSecureSessionCookie,
-                JSONDefaultContentType
+                JSONDefaultContentType,
+                AllowConcurrentConnectSession,
+                BlockConnectedSession
         };
     }
 }

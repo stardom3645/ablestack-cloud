@@ -334,6 +334,15 @@ export const constantRouterMap = [
     component: () => import('@/views/dashboard/SetupTwoFaAtLogin')
   },
   {
+    path: '/firstLogin',
+    name: 'FirstLogin',
+    meta: {
+      title: 'label.action.change.password',
+      hidden: true
+    },
+    component: () => import('@/views/dashboard/FirstLogin')
+  },
+  {
     path: '/403',
     component: () => import(/* webpackChunkName: "forbidden" */ '@/views/exception/403')
   },

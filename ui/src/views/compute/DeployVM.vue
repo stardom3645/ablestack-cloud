@@ -725,7 +725,7 @@
                         :checked="nicpackedvirtqueuesenabled"
                         @change="val => { nicpackedvirtqueuesenabled = val }"/>
                     </a-form-item>
-                    <a-form-item name="iothreadsenabled" ref="iothreadsenabled" v-if="vm.templateid && ['KVM'].includes(hypervisor)">
+                    <a-form-item name="iothreadsenabled" ref="iothreadsenabled" v-if="vm.templateid && ['Simulator'].includes(hypervisor)">
                       <template #label>
                         <tooltip-label :title="$t('label.iothreadsenabled')" :tooltip="$t('label.iothreadsenabled.tooltip')"/>
                       </template>
@@ -736,7 +736,7 @@
                           @change="val => { iothreadsenabled = val }"/>
                       </a-form-item>
                     </a-form-item>
-                    <a-form-item name="iodriverpolicy" ref="iodriverpolicy" v-if="vm.templateid && ['KVM'].includes(hypervisor)">
+                    <a-form-item name="iodriverpolicy" ref="iodriverpolicy" v-if="vm.templateid && ['Simulator'].includes(hypervisor)">
                       <template #label>
                         <tooltip-label :title="$t('label.iodriverpolicy')" :tooltip="$t('label.iodriverpolicy.tooltip')"/>
                       </template>
@@ -871,7 +871,6 @@ import UserDataSelection from '@views/compute/wizard/UserDataSelection'
 import SecurityGroupSelection from '@views/compute/wizard/SecurityGroupSelection'
 import TooltipLabel from '@/components/widgets/TooltipLabel'
 import InstanceNicsNetworkSelectListView from '@/components/view/InstanceNicsNetworkSelectListView.vue'
-import { sanitizeReverse } from '@/utils/util'
 
 export default {
   name: 'Wizard',
@@ -1040,7 +1039,7 @@ export default {
       tabKey: 'templateid',
       userdataTabKey: 'userdataregistered',
       dataPreFill: {},
-      showDetails: false,
+      showDetails: true,
       showRootDiskSizeChanger: false,
       showOverrideDiskOfferingOption: false,
       securitygroupids: [],
@@ -1715,6 +1714,8 @@ export default {
         this.form.bootmode = this.defaultBootMode ? this.defaultBootMode : this.options.bootModes && this.options.bootModes.length > 0 ? this.options.bootModes[0].id : undefined
         this.form.tpmversion = this.defaultTPM ? this.defaultTPM : this.options.tpmversion && this.options.tpmversion.length > 0 ? this.options.tpmversion[0].id : undefined
         this.instanceConfig = toRaw(this.form)
+        this.form.iothreadsenabled = true
+        this.form.iodriverpolicy = 'storage_specific'
       })
     },
     isDynamicallyScalable () {
@@ -2018,8 +2019,9 @@ export default {
         deployVmData.iodriverpolicy = values.iodriverpolicy
         deployVmData.nicmultiqueuenumber = values.nicmultiqueuenumber
         deployVmData.nicpackedvirtqueuesenabled = values.nicpackedvirtqueuesenabled
-        if (values.userdata && values.userdata.length > 0) {
-          deployVmData.userdata = encodeURIComponent(btoa(sanitizeReverse(values.userdata)))
+        const isUserdataAllowed = !this.userdataDefaultOverridePolicy || (this.userdataDefaultOverridePolicy === 'ALLOWOVERRIDE' && this.doUserdataOverride) || (this.userdataDefaultOverridePolicy === 'APPEND' && this.doUserdataAppend)
+        if (isUserdataAllowed && values.userdata && values.userdata.length > 0) {
+          deployVmData.userdata = this.$toBase64AndURIEncoded(values.userdata)
         }
         // step 2: select template/iso
         if (this.tabKey === 'templateid') {
@@ -2141,7 +2143,9 @@ export default {
         }
         // step 7: select ssh key pair
         deployVmData.keypairs = this.sshKeyPairs.join(',')
-        deployVmData.userdataid = values.userdataid
+        if (isUserdataAllowed) {
+          deployVmData.userdataid = values.userdataid
+        }
 
         if (values.name) {
           deployVmData.name = values.name
@@ -2177,7 +2181,7 @@ export default {
             idx++
           }
         }
-        if (this.userDataValues) {
+        if (isUserdataAllowed && this.userDataValues) {
           for (const [key, value] of Object.entries(this.userDataValues)) {
             deployVmData['userdatadetails[' + idx + '].' + `${key}`] = value
             idx++
