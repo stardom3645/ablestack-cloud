@@ -1103,6 +1103,8 @@ public class ApiConstants {
 
     public static final String INTEGRITY_VERIFICATIONS_PATH = "integrityverificationspath";
     public static final String INTEGRITY_VERIFICATIONS_RESULT = "integrityverificationsresult";
+    public static final String INTEGRITY_VERIFICATIONS_FINAL_RESULT = "integrityverificationsfinalresult";
+    public static final String INTEGRITY_VERIFICATIONS_FAILED_LIST = "integrityverificationsfailedlist";
 
     /**
      * This enum specifies IO Drivers, each option controls specific policies on I/O.

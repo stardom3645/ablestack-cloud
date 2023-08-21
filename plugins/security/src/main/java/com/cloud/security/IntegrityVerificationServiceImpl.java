@@ -23,13 +23,22 @@ import com.cloud.cluster.dao.ManagementServerHostDao;
 import com.cloud.event.ActionEvent;
 import com.cloud.event.ActionEventUtils;
 import com.cloud.event.EventTypes;
+import com.cloud.exception.InvalidParameterValueException;
 import com.cloud.security.dao.IntegrityVerificationDao;
+import com.cloud.security.dao.IntegrityVerificationFinalResultDao;
 import com.cloud.utils.component.ManagerBase;
 import com.cloud.utils.component.PluggableService;
 import com.cloud.utils.concurrency.NamedThreadFactory;
+import com.cloud.utils.db.Filter;
+import com.cloud.utils.db.SearchBuilder;
+import com.cloud.utils.db.SearchCriteria;
 import org.apache.cloudstack.api.command.admin.GetIntegrityVerificationCmd;
+import org.apache.cloudstack.api.command.admin.GetIntegrityVerificationFinalResultCmd;
 import org.apache.cloudstack.api.command.admin.RunIntegrityVerificationCmd;
+import org.apache.cloudstack.api.command.admin.DeleteIntegrityVerificationFinalResultCmd;
+import org.apache.cloudstack.api.response.GetIntegrityVerificationFinalResultListResponse;
 import org.apache.cloudstack.api.response.GetIntegrityVerificationResponse;
+import org.apache.cloudstack.api.response.ListResponse;
 import org.apache.cloudstack.context.CallContext;
 import org.apache.cloudstack.framework.config.ConfigKey;
 import org.apache.cloudstack.framework.config.Configurable;
@@ -49,12 +58,14 @@ import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+import java.util.Date;
 
 public class IntegrityVerificationServiceImpl extends ManagerBase implements PluggableService, IntegrityVerificationService, Configurable {
 
@@ -66,6 +77,8 @@ public class IntegrityVerificationServiceImpl extends ManagerBase implements Plu
 
     @Inject
     private IntegrityVerificationDao integrityVerificationDao;
+    @Inject
+    private IntegrityVerificationFinalResultDao integrityVerificationFinalResultDao;
     @Inject
     private ManagementServerHostDao msHostDao;
     @Inject
@@ -97,11 +110,15 @@ public class IntegrityVerificationServiceImpl extends ManagerBase implements Plu
 
         private void integrityVerification() {
             ActionEventUtils.onStartedActionEvent(CallContext.current().getCallingUserId(), CallContext.current().getCallingAccountId(), EventTypes.EVENT_INTEGRITY_VERIFICATION,
-                    "running integrity verification on management server", new Long(0), null, true, 0);
+                    "running periodic integrity verification on management server", new Long(0), null, true, 0);
             ManagementServerHostVO msHost = msHostDao.findByMsid(ManagementServerNode.getManagementServerId());
+            List<String> verificationFailedList = new ArrayList<>();
             List<Boolean> verificationResults = new ArrayList<>();
             boolean verificationResult;
+            boolean verificationFinalResult;
             String comparisonHashValue;
+            String uuid;
+            String type = "Routine";
             List<IntegrityVerification> result = new ArrayList<>(integrityVerificationDao.getIntegrityVerifications(msHost.getId()));
             for (IntegrityVerification ivResult : result) {
                 String filePath = ivResult.getFilePath();
@@ -119,12 +136,18 @@ public class IntegrityVerificationServiceImpl extends ManagerBase implements Plu
                         verificationResult = false;
                         alertManager.sendAlert(AlertManager.AlertType.ALERT_TYPE_MANAGMENT_NODE, 0, new Long(0), "Management server node " + msHost.getServiceIP() + " integrity verification failed: "+ filePath + " could not be verified. at last verification.", "");
                         verificationMessage = "The integrity of the file could not be verified. at last verification.";
+                        verificationFailedList.add(filePath);
                     }
                     updateIntegrityVerificationResult(msHost.getId(), filePath, comparisonHashValue, verificationResult, verificationMessage);
                 } catch (NoSuchAlgorithmException e) {
                     throw new RuntimeException(e);
                 }
             }
+            uuid = UUID.randomUUID().toString();
+            verificationFinalResult = checkConditions(verificationResults);
+            String verificationFailedListToString = verificationFailedList.stream().collect(Collectors.joining(", "));
+            verificationFailedListToString = verificationFailedListToString.replaceFirst(", $", "");
+            updateIntegrityVerificationFinalResult(msHost.getId(), uuid, verificationFinalResult, verificationFailedListToString, type);
         }
 
         private String calculateHash(File file, String algorithm) throws NoSuchAlgorithmException {
@@ -168,6 +191,47 @@ public class IntegrityVerificationServiceImpl extends ManagerBase implements Plu
         return responses;
     }
 
+    @Override
+    public ListResponse<GetIntegrityVerificationFinalResultListResponse> listIntegrityVerificationFinalResults(final GetIntegrityVerificationFinalResultCmd cmd) {
+        final Long id = cmd.getId();
+        Filter searchFilter = new Filter(IntegrityVerificationFinalResultVO.class, "id", true, cmd.getStartIndex(), cmd.getPageSizeVal());
+        SearchBuilder<IntegrityVerificationFinalResultVO> sb = integrityVerificationFinalResultDao.createSearchBuilder();
+        sb.and("id", sb.entity().getId(), SearchCriteria.Op.EQ);
+        SearchCriteria<IntegrityVerificationFinalResultVO> sc = sb.create();
+        String keyword = cmd.getKeyword();
+        if (id != null) {
+            sc.setParameters("id", id);
+        }
+        if(keyword != null){
+            sc.addOr("uuid", SearchCriteria.Op.LIKE, "%" + keyword + "%");
+            sc.setParameters("keyword", "%" + keyword + "%");
+        }
+        List <IntegrityVerificationFinalResultVO> versions = integrityVerificationFinalResultDao.search(sc, searchFilter);
+        return createAutomationControllerVersionListResponse(versions);
+    }
+
+    private ListResponse<GetIntegrityVerificationFinalResultListResponse> createAutomationControllerVersionListResponse(List<IntegrityVerificationFinalResultVO> versions) {
+        List<GetIntegrityVerificationFinalResultListResponse> responseList = new ArrayList<>();
+        for (IntegrityVerificationFinalResultVO version : versions) {
+            responseList.add(createIntegrityVerificationFinalResultResponse(version));
+        }
+        ListResponse<GetIntegrityVerificationFinalResultListResponse> response = new ListResponse<>();
+        response.setResponses(responseList);
+        return response;
+    }
+
+    private GetIntegrityVerificationFinalResultListResponse createIntegrityVerificationFinalResultResponse(final IntegrityVerificationFinalResult integrityVerificationFinalResult) {
+        GetIntegrityVerificationFinalResultListResponse response = new GetIntegrityVerificationFinalResultListResponse();
+        response.setObjectName("integrityverificationsfinalresults");
+        response.setId(integrityVerificationFinalResult.getId());
+        response.setUuid(integrityVerificationFinalResult.getUuid());
+        response.setVerificationFinalResult(integrityVerificationFinalResult.getVerificationFinalResult());
+        response.setVerificationDate(integrityVerificationFinalResult.getVerificationDate());
+        response.setVerificationFailedList(integrityVerificationFinalResult.getVerificationFailedList());
+        response.setType(integrityVerificationFinalResult.getType());
+        return response;
+    }
+
     private String calculateHash(File file, String algorithm) throws NoSuchAlgorithmException {
         MessageDigest md = MessageDigest.getInstance(algorithm);
         try (DigestInputStream dis = new DigestInputStream(new FileInputStream(file), md)) {
@@ -201,13 +265,16 @@ public class IntegrityVerificationServiceImpl extends ManagerBase implements Plu
     }
 
     @Override
-    @ActionEvent(eventType = EventTypes.EVENT_INTEGRITY_VERIFICATION, eventDescription = "running integrity verification on management server", async = true)
+    @ActionEvent(eventType = EventTypes.EVENT_INTEGRITY_VERIFICATION, eventDescription = "running manual integrity verification on management server", async = true)
     public boolean runIntegrityVerificationCommand(final RunIntegrityVerificationCmd cmd) throws NoSuchAlgorithmException {
         Long mshostId = cmd.getMsHostId();
         List<Boolean> verificationResults = new ArrayList<>();
+        List<String> verificationFailedList = new ArrayList<>();
         boolean verificationResult;
         boolean verificationFinalResult;
         String comparisonHashValue;
+        String uuid;
+        String type = "Manual";
         ManagementServerHost msHost = msHostDao.findById(mshostId);
         List<IntegrityVerification> result = new ArrayList<>(integrityVerificationDao.getIntegrityVerifications(mshostId));
         for (IntegrityVerification ivResult : result) {
@@ -226,13 +293,18 @@ public class IntegrityVerificationServiceImpl extends ManagerBase implements Plu
                     verificationResult = false;
                     alertManager.sendAlert(AlertManager.AlertType.ALERT_TYPE_MANAGMENT_NODE, 0, new Long(0), "Management server node " + msHost.getServiceIP() + " integrity verification failed: "+ filePath + " could not be verified. at last verification.", "");
                     verificationMessage = "The integrity of the file could not be verified. at last verification.";
+                    verificationFailedList.add(filePath);
                 }
                 updateIntegrityVerificationResult(msHost.getId(), filePath, comparisonHashValue, verificationResult, verificationMessage);
             } catch (NoSuchAlgorithmException e) {
                 throw new RuntimeException(e);
             }
         }
+        uuid = UUID.randomUUID().toString();
         verificationFinalResult = checkConditions(verificationResults);
+        String verificationFailedListToString = verificationFailedList.stream().collect(Collectors.joining(", "));
+        verificationFailedListToString = verificationFailedListToString.replaceFirst(", $", "");
+        updateIntegrityVerificationFinalResult(msHost.getId(), uuid, verificationFinalResult, verificationFailedListToString, type);
         return verificationFinalResult;
     }
 
@@ -257,10 +329,31 @@ public class IntegrityVerificationServiceImpl extends ManagerBase implements Plu
     }
 
     @Override
+    public boolean deleteIntegrityVerificationFinalResults(final DeleteIntegrityVerificationFinalResultCmd cmd) {
+        final Long resultId = cmd.getId();
+        IntegrityVerificationFinalResult result = integrityVerificationFinalResultDao.findById(resultId);
+        if (result == null) {
+            throw new InvalidParameterValueException("Invalid integrity verification final result id specified");
+        }
+        return integrityVerificationFinalResultDao.remove(result.getId());
+    }
+
+    private void updateIntegrityVerificationFinalResult(final long msHostId, String uuid, boolean verificationFinalResult, String verificationFailedListToString, String type) {
+        IntegrityVerificationFinalResultVO connectivityVO = new IntegrityVerificationFinalResultVO(msHostId, verificationFinalResult, verificationFailedListToString, type);
+        connectivityVO.setUuid(uuid);
+        connectivityVO.setVerificationFinalResult(verificationFinalResult);
+        connectivityVO.setVerificationFailedList(verificationFailedListToString);
+        connectivityVO.setVerificationDate(new Date());
+        integrityVerificationFinalResultDao.persist(connectivityVO);
+    }
+
+    @Override
     public List<Class<?>> getCommands() {
         List<Class<?>> cmdList = new ArrayList<>();
         cmdList.add(RunIntegrityVerificationCmd.class);
         cmdList.add(GetIntegrityVerificationCmd.class);
+        cmdList.add(GetIntegrityVerificationFinalResultCmd.class);
+        cmdList.add(DeleteIntegrityVerificationFinalResultCmd.class);
         return cmdList;
     }
 

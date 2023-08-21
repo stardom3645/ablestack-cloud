@@ -17,9 +17,14 @@
 
 package com.cloud.security;
 
+import com.cloud.utils.exception.CloudRuntimeException;
+import org.apache.cloudstack.api.command.admin.DeleteIntegrityVerificationFinalResultCmd;
 import org.apache.cloudstack.api.command.admin.GetIntegrityVerificationCmd;
+import org.apache.cloudstack.api.command.admin.GetIntegrityVerificationFinalResultCmd;
 import org.apache.cloudstack.api.command.admin.RunIntegrityVerificationCmd;
+import org.apache.cloudstack.api.response.GetIntegrityVerificationFinalResultListResponse;
 import org.apache.cloudstack.api.response.GetIntegrityVerificationResponse;
+import org.apache.cloudstack.api.response.ListResponse;
 
 import java.security.NoSuchAlgorithmException;
 import java.util.List;
@@ -29,5 +34,9 @@ public interface IntegrityVerificationService {
 
     List<GetIntegrityVerificationResponse> listIntegrityVerifications(GetIntegrityVerificationCmd cmd);
 
+    ListResponse<GetIntegrityVerificationFinalResultListResponse> listIntegrityVerificationFinalResults(GetIntegrityVerificationFinalResultCmd cmd);
+
     boolean runIntegrityVerificationCommand(RunIntegrityVerificationCmd runIntegrityVerificationCmd) throws NoSuchAlgorithmException;
+
+    boolean deleteIntegrityVerificationFinalResults(DeleteIntegrityVerificationFinalResultCmd deleteIntegrityVerificationFinalResultCmd) throws CloudRuntimeException;
 }

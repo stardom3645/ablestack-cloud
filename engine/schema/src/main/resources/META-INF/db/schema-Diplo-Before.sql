@@ -48,3 +48,18 @@ CREATE TABLE IF NOT EXISTS `integrity_verification_initial_hash` (
     KEY `i_integrity_verify__mshost_id` (`mshost_id`),
     CONSTRAINT `fk_integrity_verify__mshost_id` FOREIGN KEY (`mshost_id`) REFERENCES `mshost` (`id`) ON DELETE CASCADE
     ) ENGINE=InnoDB CHARSET=utf8mb3;
+
+-- Adding integrity_verify_initial_hash_final_result table
+CREATE TABLE IF NOT EXISTS `integrity_verification_initial_hash_final_result` (
+    `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+    `uuid` varchar(40) NULL,
+    `mshost_id` bigint unsigned NOT NULL COMMENT 'the ID of the mshost',
+    `verification_final_result` tinyint(1) NOT NULL DEFAULT 1 COMMENT 'check executions success or failure',
+    `verification_date` datetime DEFAULT NULL COMMENT 'the last verification time',
+    `verification_failed_list` mediumtext NULL COMMENT 'the failed verification failed list',
+    `type` varchar(30) NULL,
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `i_integrity_verify__mshost_id__final_result` (`mshost_id`),
+    KEY `i_integrity_verify__mshost_id` (`mshost_id`),
+    CONSTRAINT `i_integrity_verify__mshost_id__file_path_final_result` FOREIGN KEY (`mshost_id`) REFERENCES `mshost` (`id`) ON DELETE CASCADE
+    ) ENGINE=InnoDB CHARSET=utf8mb3;

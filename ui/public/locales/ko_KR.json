@@ -3442,5 +3442,12 @@
 "label.integrity.verification.name" : "\uAC80\uC99D\u0020\uB300\uC0C1",
 "label.integrity.verification.success" : "\uC131\uACF5",
 "label.integrity.verification.last.updated" : "\uB9C8\uC9C0\uB9C9\u0020\uC5C5\uB370\uC774\uD2B8",
-"message.confirm.integrity.verification" : "\uBB34\uACB0\uC131\u0020\uAC80\uC99D\uC744\u0020\uC9C4\uD589\uD560\u0020\uAC83\uC778\uC9C0\u0020\uD655\uC778\uD558\uC2ED\uC2DC\uC624."
+"message.confirm.integrity.verification" : "\uBB34\uACB0\uC131\u0020\uAC80\uC99D\uC744\u0020\uC9C4\uD589\uD560\u0020\uAC83\uC778\uC9C0\u0020\uD655\uC778\uD558\uC2ED\uC2DC\uC624.",
+"label.failed.integrity.verification.list": "\uBB34\uACB0\uC131\u0020\uAC80\uC99D\u0020\uC2E4\uD328\u0020\uBAA9\uB85D",
+"label.verification.type": "\uAC80\uC99D\u0020\uC720\uD615",
+"label.action.bulk.delete.integrity.verification.results": "\uBB34\uACB0\uC131\u0020\uAC80\uC99D\u0020\uACB0\uACFC\u0020\uC77C\uAD04\u0020\uC0AD\uC81C",
+"label.action.delete.result": "\uACB0\uACFC\u0020\uC0AD\uC81C",
+"label.action.delete.integrity.verification.result": "\uBB34\uACB0\uC131\u0020\uAC80\uC99D\u0020\uACB0\uACFC\u0020\uC0AD\uC81C",
+"label.confirm.delete.integrity.verification.results": "\uD604\uC7AC\u0020\uBB34\uACB0\uC131\u0020\uAC80\uC99D\u0020\uACB0\uACFC\uB97C\u0020\uC0AD\uC81C\uD558\uC2DC\uACA0\uC2B5\uB2C8\uAE4C\u003F",
+"message.action.delete.integrity.verification.result": "\uD604\uC7AC\u0020\uBB34\uACB0\uC131\u0020\uAC80\uC99D\u0020\uACB0\uACFC\uB97C\u0020\uC0AD\uC81C\uD558\uC2DC\uACA0\uC2B5\uB2C8\uAE4C\u003F"
 }
