@@ -1,6 +1,9 @@
 // Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
+// Licensed to the Apache Software Foundation (ASF) under one
+// or more contributor license agreements.  See the NOTICE file
+// distributed with this work for additional information
 // regarding copyright ownership.  The ASF licenses this file
 // to you under the Apache License, Version 2.0 (the
 // "License"); you may not use this file except in compliance
@@ -14,22 +17,21 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-package com.cloud.user.dao;
 
-import com.cloud.user.UserAccount;
-import com.cloud.user.UserAccountVO;
-import com.cloud.utils.db.GenericDao;
+package com.cloud.security;
 
-import java.util.List;
+import java.util.Date;
 
-public interface UserAccountDao extends GenericDao<UserAccountVO, Long> {
-    List<UserAccountVO> getAllUsersByNameAndEntity(String username, String entity);
+public interface IntegrityVerificationFinalResult {
+    long getId();
+    String getUuid();
+    long getMsHostId();
 
-    UserAccount getUserAccount(String username, Long domainId);
+    boolean getVerificationFinalResult();
 
-    boolean validateUsernameInDomain(String username, Long domainId);
+    Date getVerificationDate();
 
-    UserAccount getUserByApiKey(String apiKey);
+    String getVerificationFailedList();
 
-    List<UserAccountVO> getAllUsersByAccountType(long type);
+    String getType();
 }

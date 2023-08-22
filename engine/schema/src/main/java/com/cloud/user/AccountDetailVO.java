@@ -41,7 +41,6 @@ public class AccountDetailVO implements InternalIdentity {
     @Column(name = "name")
     private String name;
 
-    @Encrypt
     @Column(name = "value", length=4096)
     private String value;
 

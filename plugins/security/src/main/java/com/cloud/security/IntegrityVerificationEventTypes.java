@@ -14,22 +14,9 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-package com.cloud.user.dao;
 
-import com.cloud.user.UserAccount;
-import com.cloud.user.UserAccountVO;
-import com.cloud.utils.db.GenericDao;
+package com.cloud.security;
 
-import java.util.List;
-
-public interface UserAccountDao extends GenericDao<UserAccountVO, Long> {
-    List<UserAccountVO> getAllUsersByNameAndEntity(String username, String entity);
-
-    UserAccount getUserAccount(String username, Long domainId);
-
-    boolean validateUsernameInDomain(String username, Long domainId);
-
-    UserAccount getUserByApiKey(String apiKey);
-
-    List<UserAccountVO> getAllUsersByAccountType(long type);
+public class IntegrityVerificationEventTypes {
+    public static final String EVENT_INTEGRITY_VERIFICATION_DELETE = "INTEGRITY.VERIFICATION.DELETE";
 }

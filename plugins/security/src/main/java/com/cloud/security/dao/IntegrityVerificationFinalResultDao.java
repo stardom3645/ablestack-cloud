@@ -14,22 +14,24 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-package com.cloud.user.dao;
 
-import com.cloud.user.UserAccount;
-import com.cloud.user.UserAccountVO;
+package com.cloud.security.dao;
+
+import com.cloud.security.IntegrityVerificationFinalResultVO;
 import com.cloud.utils.db.GenericDao;
 
 import java.util.List;
 
-public interface UserAccountDao extends GenericDao<UserAccountVO, Long> {
-    List<UserAccountVO> getAllUsersByNameAndEntity(String username, String entity);
+public interface IntegrityVerificationFinalResultDao extends GenericDao<IntegrityVerificationFinalResultVO, Long> {
+    /**
+     * @param msHostId
+     * @return Returns all the security checks in the database for the given management server id
+     */
+    List<IntegrityVerificationFinalResultVO> getIntegrityVerificationFinalResults(long msHostId);
 
-    UserAccount getUserAccount(String username, Long domainId);
+    IntegrityVerificationFinalResultVO getIntegrityVerificationFinalResult(long id);
 
-    boolean validateUsernameInDomain(String username, Long domainId);
+    List<IntegrityVerificationFinalResultVO> listAllByIntegrityVerificationFinalResult(long id);
 
-    UserAccount getUserByApiKey(String apiKey);
-
-    List<UserAccountVO> getAllUsersByAccountType(long type);
+    public List<IntegrityVerificationFinalResultVO> listByIntegrityVerificationFinalResult(long resultId);
 }

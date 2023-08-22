@@ -280,8 +280,8 @@ export default {
           }
           this.Login(loginParams)
             .then((res) => this.loginSuccess(res))
-            .catch(err => {
-              this.requestFailed(err)
+            .catch(() => {
+              this.requestFailed()
               this.state.loginBtn = false
             })
         } else if (this.customActiveKey === 'saml') {
@@ -310,13 +310,14 @@ export default {
         this.$router.push({ path: '/dashboard' }).catch(() => {})
       }
     },
-    requestFailed (err) {
-      if (err && err.response && err.response.data && err.response.data.loginresponse) {
-        const error = err.response.data.loginresponse.errorcode + ': ' + err.response.data.loginresponse.errortext
-        this.$message.error(`${this.$t('label.error')} ${error}`)
-      } else {
-        this.$message.error(this.$t('message.login.failed'))
-      }
+    requestFailed () {
+      // if (err && err.response && err.response.data && err.response.data.loginresponse) {
+      //   const error = err.response.data.loginresponse.errorcode + ': ' + err.response.data.loginresponse.errortext
+      //   this.$message.error(`${this.$t('label.error')} ${error}`)
+      // } else {
+      //   this.$message.error(this.$t('message.login.failed'))
+      // }
+      this.$message.error(this.$t('message.login.failed.security'))
     },
     onChangeServer (server) {
       const servers = this.$config.servers || []
