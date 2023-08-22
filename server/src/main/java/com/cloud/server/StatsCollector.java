@@ -78,6 +78,7 @@ import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Component;
 
 import com.cloud.agent.AgentManager;
+import com.cloud.alert.AlertManager;
 import com.cloud.agent.api.Answer;
 import com.cloud.agent.api.GetStorageStatsCommand;
 import com.cloud.agent.api.HostStatsEntry;
@@ -96,6 +97,7 @@ import com.cloud.cluster.ManagementServerHostVO;
 import com.cloud.cluster.ManagementServerStatusVO;
 import com.cloud.cluster.dao.ManagementServerHostDao;
 import com.cloud.cluster.dao.ManagementServerStatusDao;
+import com.cloud.configuration.Config;
 import com.cloud.dc.Vlan.VlanType;
 import com.cloud.dc.VlanVO;
 import com.cloud.dc.dao.ClusterDao;
@@ -352,6 +354,8 @@ public class StatsCollector extends ManagerBase implements ComponentMethodInterc
     private ManagementServerStatusDao managementServerStatusDao;
     @Inject
     VirtualMachineManager virtualMachineManager;
+    @Inject
+    AlertManager _alertMgr;
 
     private final ConcurrentHashMap<String, ManagementServerHostStats> managementServerHostStats = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, Object> dbStats = new ConcurrentHashMap<>();
@@ -996,6 +1000,17 @@ public class StatsCollector extends ManagerBase implements ComponentMethodInterc
                 String du = Script.runSimpleBashScript(String.format("du -sh %s | cut -f '1'", fileName));
                 String df = Script.runSimpleBashScript(String.format("df -h %s | grep -v Filesystem | awk '{print \"on disk \" $1 \" mounted on \" $6 \" (\" $5 \" full)\"}'", fileName));
                 logInfoBuilder.append(fileName).append(" using: ").append(du).append('\n').append(df);
+                // Create alert when management server local storage capacity exceeds a set threshold
+                String managementServerLocalStorageCapacityThreshold = (_configDao.getValue(Config.ManagementServerLocalStorageCapacityThreshold.key()).replace(".", ""));
+                int intMngtServerThreshold = Integer.parseInt(managementServerLocalStorageCapacityThreshold);
+                String dfThreshold = (Script.runSimpleBashScript(String.format("df -h %s | grep -v Filesystem | awk '{print $5}'", fileName)).replace("%", ""));
+                int intDfThreshold = Integer.parseInt(dfThreshold);
+                if (intDfThreshold > intMngtServerThreshold) {
+                    if (LOGGER.isDebugEnabled()) {
+                        LOGGER.debug("Management server is low on local storage, Threshold ("+dfThreshold+"%) reached");
+                    }
+                    _alertMgr.sendAlert(AlertManager.AlertType.ALERT_TYPE_MANAGMENT_NODE, 0, new Long(0), "Management server is low on local storage, Threshold ("+dfThreshold+"%) reached", "");
+                }
             }
             newEntry.setLogInfo(logInfoBuilder.toString());
             if (LOGGER.isTraceEnabled()) {
