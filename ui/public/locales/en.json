@@ -3470,5 +3470,18 @@
 "label.security.check.name" : "Check name",
 "label.security.check.success" : "Success",
 "label.security.check.last.updated" : "Last updated",
-"message.confirm.security.check" : "Please confirm that you want to proceed with the security check."
+"message.confirm.security.check" : "Please confirm that you want to proceed with the security check.",
+"message.login.failed.security" : "Login failed. Please contact your administrator or try again.",
+"label.integrity.verification" : "Integrity verification",
+"label.integrity.verification.name" : "Verification path",
+"label.integrity.verification.success" : "Success",
+"label.integrity.verification.last.updated" : "Last updated",
+"message.confirm.integrity.verification" : "Please confirm that you want to proceed with the integrity verification.",
+"label.failed.integrity.verification.list": "Integrity verification failed file list.",
+"label.verification.type": "Verification type",
+"label.action.bulk.delete.integrity.verification.results": "Bulk delete integrity verification results",
+"label.action.delete.result": "Delete result",
+"label.action.delete.integrity.verification.result": "Delete integrity verification result",
+"label.confirm.delete.integrity.verification.results": "Please confirm you wish to delete the selected integrity verification results.",
+"message.action.delete.integrity.verification.result": "Please confirm you wish to delete the selected integrity verification result."
 }
