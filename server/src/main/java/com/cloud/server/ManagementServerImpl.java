@@ -791,6 +791,7 @@ import com.cloud.utils.exception.CloudRuntimeException;
 import com.cloud.utils.fsm.StateMachine2;
 import com.cloud.utils.net.MacAddress;
 import com.cloud.utils.net.NetUtils;
+import com.cloud.utils.script.Script;
 import com.cloud.utils.ssh.SSHKeysHelper;
 import com.cloud.vm.ConsoleProxyVO;
 import com.cloud.vm.DiskProfile;
@@ -1093,6 +1094,8 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
 
         supportedHypervisors.add(HypervisorType.KVM);
         supportedHypervisors.add(HypervisorType.XenServer);
+
+        isSSHDRunning();
 
         return true;
     }
@@ -4289,8 +4292,8 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
             s_logger.info("Key: " + key);
 
             if (key != null && request != null) {
-                final Mac mac = Mac.getInstance("HmacSHA1");
-                final SecretKeySpec keySpec = new SecretKeySpec(key.getBytes(), "HmacSHA1");
+                final Mac mac = Mac.getInstance("HmacSHA256");
+                final SecretKeySpec keySpec = new SecretKeySpec(key.getBytes(), "HmacSHA256");
                 mac.init(keySpec);
                 mac.update(request.getBytes());
                 final byte[] encryptedBytes = mac.doFinal();
@@ -4391,6 +4394,8 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
         final String wallPortalVmUri = _configDao.getValue("monitoring.wall.portal.vm.uri");
         final String host = _configDao.getValue("host");
         final boolean balancingServiceEnabled = Boolean.parseBoolean(_configDao.getValue("cloud.balancing.service.enabled"));
+        final boolean eventDeleteEnabled = Boolean.parseBoolean(_configDao.getValue("event.delete.enabled"));
+        final boolean managementServerSSHDEnabled = Boolean.parseBoolean(_configDao.getValue("management.server.secure.sshdaemon.enabled"));
 
         // check if region-wide secondary storage is used
         boolean regionSecondaryEnabled = false;
@@ -4424,6 +4429,8 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
         capabilities.put("wallPortalVmUri", wallPortalVmUri);
         capabilities.put("host", host);
         capabilities.put("balancingServiceEnabled", balancingServiceEnabled);
+        capabilities.put("eventDeleteEnabled", eventDeleteEnabled);
+        capabilities.put("managementServerSSHDEnabled", managementServerSSHDEnabled);
         capabilities.put(ApiServiceConfiguration.DefaultUIPageSize.key(), ApiServiceConfiguration.DefaultUIPageSize.value());
 
         capabilities.put(ApiConstants.INSTANCES_STATS_RETENTION_TIME, StatsCollector.vmStatsMaxRetentionTime.value());
@@ -5366,6 +5373,26 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
 
     public void setLockControllerListener(final LockControllerListener lockControllerListener) {
         _lockControllerListener = lockControllerListener;
+    }
+
+    /**
+     * Returns whether a management server sshd service is running.
+     * @return true if the service is active.
+     */
+    protected void isSSHDRunning() {
+        boolean sshdEnabled = Boolean.parseBoolean(_configDao.getValue(Config.ManagementServerSSHDEnabled.key()));
+        String sshdStatus = Script.runSimpleBashScript("systemctl status sshd | grep \"  Active:\"");
+
+        if (sshdEnabled) {
+            Script.runSimpleBashScript("systemctl start sshd");
+            s_logger.info("Management server sshd service has started");
+        }else{
+            Script.runSimpleBashScript("systemctl stop sshd");
+            s_logger.info("Management server sshd service has stopped");
+        }
+        if (StringUtils.isNotBlank(sshdStatus)) {
+            s_logger.info("Management server sshd service is running");
+        }
     }
 
 }

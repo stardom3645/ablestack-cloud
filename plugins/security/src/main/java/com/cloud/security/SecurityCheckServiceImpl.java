@@ -99,7 +99,7 @@ public class SecurityCheckServiceImpl extends ManagerBase implements PluggableSe
 
         private void securityCheck() {
             ActionEventUtils.onStartedActionEvent(CallContext.current().getCallingUserId(), CallContext.current().getCallingAccountId(), EventTypes.EVENT_SECURITY_CHECK,
-                "running security check on management server", new Long(0), null, true, 0);
+                    "running security check on management server", new Long(0), null, true, 0);
             ManagementServerHostVO msHost = msHostDao.findByMsid(ManagementServerNode.getManagementServerId());
             String path = Script.findScript("scripts/security/", "securitycheck.sh");
             if (path == null) {
@@ -125,7 +125,7 @@ public class SecurityCheckServiceImpl extends ManagerBase implements PluggableSe
                     updateSecurityCheckResult(msHost.getId(), checkName, Boolean.parseBoolean(checkResult), checkMessage);
                 }
                 ActionEventUtils.onCompletedActionEvent(CallContext.current().getCallingUserId(), CallContext.current().getCallingAccountId(), EventVO.LEVEL_INFO,
-                    EventTypes.EVENT_SECURITY_CHECK, "Successfully completed running security check on management server", new Long(0), null, 0);
+                        EventTypes.EVENT_SECURITY_CHECK, "Successfully completed running security check on management server", new Long(0), null, 0);
             } catch (IOException e) {
                 LOGGER.error("Failed to execute security checker for management server: "+e);
             }

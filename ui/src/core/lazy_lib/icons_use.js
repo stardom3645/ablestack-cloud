@@ -123,6 +123,7 @@ import {
   MoreOutlined,
   NotificationOutlined,
   NumberOutlined,
+  OneToOneOutlined,
   LaptopOutlined,
   OrderedListOutlined,
   PaperClipOutlined,
@@ -285,6 +286,7 @@ export default {
     app.component('MoreOutlined', MoreOutlined)
     app.component('NotificationOutlined', NotificationOutlined)
     app.component('NumberOutlined', NumberOutlined)
+    app.component('OneToOneOutlined', OneToOneOutlined)
     app.component('LaptopOutlined', LaptopOutlined)
     app.component('OrderedListOutlined', OrderedListOutlined)
     app.component('PaperClipOutlined', PaperClipOutlined)
