@@ -4289,8 +4289,8 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
             s_logger.info("Key: " + key);
 
             if (key != null && request != null) {
-                final Mac mac = Mac.getInstance("HmacSHA1");
-                final SecretKeySpec keySpec = new SecretKeySpec(key.getBytes(), "HmacSHA1");
+                final Mac mac = Mac.getInstance("HmacSHA256");
+                final SecretKeySpec keySpec = new SecretKeySpec(key.getBytes(), "HmacSHA256");
                 mac.init(keySpec);
                 mac.update(request.getBytes());
                 final byte[] encryptedBytes = mac.doFinal();

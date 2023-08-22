@@ -858,7 +858,7 @@ public class ConfigurationServerImpl extends ManagerBase implements Configuratio
     private String getPrivateKey() throws NoSuchAlgorithmException {
         String encodedKey = null;
         // Algorithm for generating Key is SHA1, should this be configurable?
-        KeyGenerator generator = KeyGenerator.getInstance("HmacSHA1");
+        KeyGenerator generator = KeyGenerator.getInstance("HmacSHA256");
         SecretKey key = generator.generateKey();
         encodedKey = Base64.encodeBase64URLSafeString(key.getEncoded());
         return encodedKey;
