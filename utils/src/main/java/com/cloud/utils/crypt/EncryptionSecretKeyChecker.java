@@ -36,7 +36,6 @@ import org.apache.log4j.Logger;
 
 import com.cloud.utils.db.DbProperties;
 import com.cloud.utils.exception.CloudRuntimeException;
-import com.cloud.utils.script.Script;
 
 public class EncryptionSecretKeyChecker {
 
@@ -77,7 +76,7 @@ public class EncryptionSecretKeyChecker {
             isEncKey = this.getClass().getClassLoader().getResourceAsStream("key.enc");
             isKek = this.getClass().getClassLoader().getResourceAsStream("kek");
             if (isEncKey != null  && isKek != null) {
-                Script.runSimpleBashScript("openssl enc -d -aria-256-ctr -a -k kek -in key.enc -out key");
+                Runtime.getRuntime().exec("openssl enc -d -aria-256-ctr -a -k kek -in key.enc -out key");
             }
             InputStream is = this.getClass().getClassLoader().getResourceAsStream(s_keyFile);
             if (is == null) {
@@ -99,7 +98,7 @@ public class EncryptionSecretKeyChecker {
             }
             if (isEncKey != null  && isKek != null) {
                 // key 파일 삭제
-                Script.runSimpleBashScript("rm -rf kek key");
+                Runtime.getRuntime().exec("rm -rf kek key");
             }
         } else if (encryptionType.equals("env")) {
             secretKey = System.getenv(s_envKey);
