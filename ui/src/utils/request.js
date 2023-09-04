@@ -168,12 +168,12 @@ const err = (error) => {
         store.commit('SET_COUNT_NOTIFY', countNotify)
       }
     })
-    store.dispatch('Logout').then(() => {
-      const originalPath = router.currentRoute.value.fullPath
-      if (originalPath !== '/user/login') {
+    const originalPath = router.currentRoute.value.fullPath
+    if (originalPath !== '/user/login' && originalPath.includes('/user/login') === false) {
+      store.dispatch('Logout').then(() => {
         router.push({ path: '/user/login', query: { redirect: originalPath } })
-      }
-    })
+      })
+    }
   }
   return Promise.reject(error)
 }
