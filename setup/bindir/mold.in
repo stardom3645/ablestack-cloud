@@ -32,10 +32,19 @@ then
     cd /etc/cloudstack/management
 
     # Create kek
+    rm -rf kek, key
     kek=$(openssl kdf -keylen 16 -kdfopt digest:SHA2-256 -kdfopt pass:$kek_pass -kdfopt salt:$(cat kek.salt) -kdfopt iter:100000 PBKDF2 | base64)
     echo $kek >> kek
-    # echo "kek >> "$kek
 
+    # key.enc 복호화 하여 key 생성 
+    openssl enc -d -aria-256-ctr -a -k kek -in key.enc -out key
+
+    # key 실행권한 변경
+    chmod 777 key
+    
+    # kek 삭제
+    rm -rf kek
+    
 
     /usr/bin/systemctl start cloudstack-management
 else
