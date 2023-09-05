@@ -679,6 +679,7 @@ import { ref, reactive, toRaw } from 'vue'
 import { api } from '@/api'
 import { mixinDevice } from '@/utils/mixin.js'
 import { genericCompare } from '@/utils/sort.js'
+import { sourceToken } from '@/utils/request'
 import store from '@/store'
 import eventBus from '@/config/eventBus'
 
@@ -881,6 +882,9 @@ export default {
     next()
   },
   beforeRouteLeave (to, from, next) {
+    console.log('DEBUG - Due to route change, ignoring results for any on-going API request', this.apiName)
+    sourceToken.cancel()
+    sourceToken.init()
     this.currentPath = this.$route.fullPath
     next()
   },
@@ -1014,8 +1018,10 @@ export default {
       }
       api('listProjects', { id: projectId, listall: true, details: 'min' }).then(json => {
         if (!json || !json.listprojectsresponse || !json.listprojectsresponse.project) return
+        const projects = json.listprojectsresponse.project
         const project = json.listprojectsresponse.project[0]
         this.$store.dispatch('SetProject', project)
+        this.$store.commit('RELOAD_ALL_PROJECTS', projects)
         this.$store.dispatch('ToggleTheme', project.id === undefined ? 'light' : 'dark')
         this.$message.success(`${this.$t('message.switch.to')} "${project.name}"`)
         const query = Object.assign({}, this.$route.query)
@@ -1131,6 +1137,7 @@ export default {
         })
       }
 
+      const customRender = {}
       for (var columnKey of this.columnKeys) {
         let key = columnKey
         let title = columnKey === 'cidr' && this.columnKeys.includes('ip6cidr') ? 'ipv4.cidr' : columnKey
@@ -1138,9 +1145,11 @@ export default {
           if ('customTitle' in columnKey && 'field' in columnKey) {
             key = columnKey.field
             title = columnKey.customTitle
+            customRender[key] = columnKey[key]
           } else {
             key = Object.keys(columnKey)[0]
             title = Object.keys(columnKey)[0]
+            customRender[key] = columnKey[key]
           }
         }
         this.columns.push({
@@ -1173,6 +1182,10 @@ export default {
 
       if (['listTemplates', 'listIsos'].includes(this.apiName) && this.dataView) {
         delete params.showunique
+      }
+
+      if (['listVirtualMachinesMetrics'].includes(this.apiName) && this.dataView) {
+        delete params.details
       }
 
       this.loading = true
@@ -1239,25 +1252,37 @@ export default {
             break
           }
         }
-        this.itemCount = 0
+        var apiItemCount = 0
         for (const key in json[responseName]) {
           if (key === 'count') {
-            this.itemCount = json[responseName].count
+            apiItemCount = json[responseName].count
             continue
           }
           objectName = key
           break
         }
+
+        if ('id' in this.$route.params && this.$route.params.id !== params.id) {
+          console.log('DEBUG - Discarding API response as its `id` does not match the uuid on the browser path')
+          return
+        }
+        if (this.dataView && apiItemCount > 1) {
+          console.log('DEBUG - Discarding API response as got more than one item in data view', this.$route.params, this.items)
+          return
+        }
+
         this.items = json[responseName][objectName]
         if (!this.items || this.items.length === 0) {
           this.items = []
         }
+        this.itemCount = apiItemCount
 
         if (['listTemplates', 'listIsos'].includes(this.apiName) && this.items.length > 1) {
           this.items = [...new Map(this.items.map(x => [x.id, x])).values()]
         }
 
         if (this.apiName === 'listProjects' && this.items.length > 0) {
+          this.$store.commit('RELOAD_ALL_PROJECTS', this.items)
           this.columns.map(col => {
             if (col.title === 'Account') {
               col.title = this.$t('label.project.owner')
@@ -1279,6 +1304,12 @@ export default {
 
         for (let idx = 0; idx < this.items.length; idx++) {
           this.items[idx].key = idx
+          for (const key in customRender) {
+            const func = customRender[key]
+            if (func && typeof func === 'function') {
+              this.items[idx][key] = func(this.items[idx])
+            }
+          }
           if (this.$route.path.startsWith('/ldapsetting')) {
             this.items[idx].id = this.items[idx].hostname
           }
@@ -1294,6 +1325,10 @@ export default {
           }
         }
       }).catch(error => {
+        if (!error || !error.message) {
+          console.log('API request likely got cancelled due to route change:', this.apiName)
+          return
+        }
         if ([401].includes(error.response.status)) {
           return
         }
