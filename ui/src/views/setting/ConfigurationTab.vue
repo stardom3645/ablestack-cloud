@@ -208,7 +208,7 @@ export default {
 
       api('listConfigurations', params).then(response => {
         this.config = []
-        //let config = response.listconfigurationsresponse.configuration || []
+        // let config = response.listconfigurationsresponse.configuration || []
         const configArr = []
         const configAll = response.listconfigurationsresponse.configuration || []
         for (var i = 0; i < configAll.length; i++) {
