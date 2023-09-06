@@ -27,7 +27,7 @@
     <a-dropdown>
       <span class="user-menu-dropdown action">
         <span v-if="image">
-          <resource-icon :image="image" size="2x" style="margin-right: 5px"/>
+          <resource-icon :image="image" size="4x" style="margin-right: 5px; margin-top: -3px"/>
         </span>
         <a-avatar v-else-if="userInitials" class="user-menu-avatar avatar" size="small" :style="{ backgroundColor: $config.theme['@primary-color'], color: 'white' }">
           {{ userInitials }}
@@ -38,30 +38,28 @@
         <span>{{ nickname() }}</span>
       </span>
       <template #overlay>
-        <a-menu class="user-menu-wrapper">
-          <router-link :to="{ path: '/accountuser/' + $store.getters.userInfo.id }">
-            <a-menu-item class="user-menu-item" key="0">
-                <UserOutlined class="user-menu-item-icon" />
-                <span class="user-menu-item-name">{{ $t('label.profilename') }}</span>
-            </a-menu-item>
-          </router-link>
+        <a-menu class="user-menu-wrapper" @click="handleClickMenu">
+          <a-menu-item class="user-menu-item" key="profile">
+            <UserOutlined class="user-menu-item-icon" />
+            <span class="user-menu-item-name">{{ $t('label.profilename') }}</span>
+          </a-menu-item>
+          <a-menu-item class="user-menu-item" key="limits">
+            <ControlOutlined class="user-menu-item-icon" />
+            <span class="user-menu-item-name">{{ $t('label.limits') }}</span>
+          </a-menu-item>
+          <a-menu-item class="user-menu-item" key="timezone">
+            <ClockCircleOutlined class="user-menu-item-icon" />
+            <span class="user-menu-item-name" style="margin-right: 5px">{{ $t('label.use.local.timezone') }}</span>
+            <a-switch :checked="$store.getters.usebrowsertimezone" />
+          </a-menu-item>
+          <a-menu-item class="user-menu-item" key="document">
+            <QuestionCircleOutlined class="user-menu-item-icon" />
+            <span class="user-menu-item-name">{{ $t('label.help') }}</span>
+          </a-menu-item>
           <a v-if="$store.getters.userInfo.roletype === 'Admin'" @click="wallPortalLink" >
             <a-menu-item class="user-menu-item" key="1">
                 <AreaChartOutlined class="user-menu-item-icon" />
                 <span class="user-menu-item-name">{{ $t('label.wall.portal.url') }}</span>
-            </a-menu-item>
-          </a>
-          <a @click="toggleUseBrowserTimezone">
-            <a-menu-item class="user-menu-item" key="2">
-                <ClockCircleOutlined class="user-menu-item-icon" />
-                <span class="user-menu-item-name" style="margin-right: 5px">{{ $t('label.use.local.timezone') }}</span>
-                <a-switch :checked="$store.getters.usebrowsertimezone" />
-            </a-menu-item>
-          </a>
-          <a :href="$config.docBase" target="_blank">
-            <a-menu-item class="user-menu-item" key="3">
-              <QuestionCircleOutlined class="user-menu-item-icon" />
-              <span class="user-menu-item-name">{{ $t('label.help') }}</span>
             </a-menu-item>
           </a>
           <a-menu-divider/>
@@ -164,6 +162,9 @@ export default {
       switch (item.key) {
         case 'profile':
           this.$router.push(`/accountuser/${this.$store.getters.userInfo.id}`)
+          break
+        case 'limits':
+          this.$router.push(`/account/${this.$store.getters.userInfo.accountid}?tab=limits`)
           break
         case 'timezone':
           this.toggleUseBrowserTimezone()

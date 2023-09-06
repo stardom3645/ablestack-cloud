@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+
+oper=$1
+
+if [ -z "$oper" ]
+then
+    echo "Please enter the parameter value (start, stop)"
+    exit 0
+elif [ "$oper" == "start" ]
+then
+    # Enter the password required when creating kek
+    echo "::::: Enter the required password when generating a key encryption key(KEK).(more than 4 characters) :::::"
+
+    while :
+    do
+        echo -n "Password : "
+        read -s kek_pass
+        echo " "
+
+        echo -n "Password Check : "
+        read -s kek_pass_check
+        echo " "
+
+        if [ "$kek_pass" != "$kek_pass_check" ] || [ -z $kek_pass ] || [ ${#kek_pass} -lt 4 ]
+        then
+            echo "Please check your password again.(more than 4 characters)"
+        else
+            break
+        fi
+    done
+
+    cd /etc/cloudstack/management
+
+    # Create kek
+    kek=$(openssl kdf -keylen 16 -kdfopt digest:SHA2-256 -kdfopt pass:$kek_pass -kdfopt salt:$(cat kek.salt) -kdfopt iter:100000 PBKDF2 | base64)
+    echo $kek >> kek
+    # echo "kek >> "$kek
+
+
+    /usr/bin/systemctl start cloudstack-management
+else
+    /usr/bin/systemctl stop cloudstack-management
+fi

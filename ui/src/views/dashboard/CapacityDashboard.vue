@@ -31,7 +31,7 @@
             }" >
             <a-select-option v-for="(zone, index) in zones" :key="index" :label="zone.name">
               <span>
-                <resource-icon v-if="zone.icon && zone.icon.base64image" :image="zone.icon.base64image" size="1x" style="margin-right: 5px"/>
+                <resource-icon v-if="zone.icon && zone.icon.base64image" :image="zone.icon.base64image" size="2x" style="margin-right: 5px"/>
                 <global-outlined v-else style="margin-right: 5px" />
                 {{ zone.name }}
               </span>
@@ -113,13 +113,12 @@
           <div class="capacity-dashboard-footer">
             <a-timeline>
               <a-timeline-item
-                v-for="event in events"
-                :key="event.id"
-                :color="getEventColour(event)">
-                <span :style="{ color: '#999' }"><small>{{ $toLocaleDate(event.created) }}</small></span><br/>
-                <span :style="{ color: '#666' }"><small><router-link :to="{ path: '/event/' + event.id }">{{ event.type }}</router-link></small></span><br/>
-                <resource-label :resourceType="event.resourcetype" :resourceId="event.resourceid" :resourceName="event.resourcename" />
-                <span :style="{ color: '#aaa' }">({{ event.username }}) {{ event.description }}</span>
+                v-for="alert in alerts"
+                :key="alert.id"
+                :color="getAlertColour(alert)">
+                <span :style="{ color: '#999' }"><small>{{ $toLocaleDate(alert.sent) }}</small></span><br/>
+                <span :style="{ color: '#666' }"><small><router-link :to="{ path: '/alert/' + alert.id }">{{ alert.name }}</router-link></small></span><br/>
+                <span :style="{ color: '#aaa' }">{{ alert.description }}</span>
               </a-timeline-item>
             </a-timeline>
           </div>
@@ -147,6 +146,7 @@ export default {
     return {
       loading: true,
       events: [],
+      alerts: [],
       zones: [],
       zoneSelected: {},
       stats: [],
@@ -225,6 +225,7 @@ export default {
     fetchData () {
       this.listZones()
       this.listEvents()
+      this.listAlerts()
     },
     listCapacity (zone, latest = false) {
       const params = {
@@ -255,12 +256,34 @@ export default {
         }
       })
     },
+    listAlerts () {
+      const params = {
+        page: 1,
+        pagesize: 6,
+        listall: true
+      }
+      this.loading = true
+      api('listAlerts', params).then(json => {
+        this.alerts = []
+        this.loading = false
+        if (json && json.listalertsresponse && json.listalertsresponse.alert) {
+          this.alerts = json.listalertsresponse.alert
+        }
+      })
+    },
     getEventColour (event) {
       if (event.level === 'ERROR') {
         return 'red'
       }
       if (event.state === 'Completed') {
         return 'green'
+      }
+      return 'blue'
+    },
+    getAlertColour (alert) {
+      const alertText = alert.description.toLowerCase()
+      if (alertText.includes('fail') || alertText.includes('error')) {
+        return 'red'
       }
       return 'blue'
     },

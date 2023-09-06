@@ -1386,12 +1386,12 @@ where `name` = 'storage.pool.allocators.order' ;
 
 UPDATE `cloud`.`configuration` SET
     `kind` = 'Order',
-    `options` = 'PBKDF2,SHA256SALT,MD5,LDAP,SAML2,PLAINTEXT'
+    `options` = 'SHA256SALT,PBKDF2,MD5,LDAP,SAML2,PLAINTEXT'
 where `name` = 'user.authenticators.order' ;
 
 UPDATE `cloud`.`configuration` SET
     `kind` = 'Order',
-    `options` = 'PBKDF2,SHA256SALT,MD5,LDAP,SAML2,PLAINTEXT'
+    `options` = 'SHA256SALT,PBKDF2,MD5,LDAP,SAML2,PLAINTEXT'
 where `name` = 'user.password.encoders.order' ;
 
 UPDATE `cloud`.`configuration` SET
@@ -1569,3 +1569,5 @@ SET
   usage_type = 22
 WHERE
   usage_type = 24 AND usage_display like '% io write';
+
+CALL `cloud`.`IDEMPOTENT_ADD_COLUMN`('cloud.guest_os', 'display', 'tinyint(1) DEFAULT ''1'' COMMENT ''should this guest_os be shown to the end user'' ');
