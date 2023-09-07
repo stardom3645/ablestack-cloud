@@ -41,9 +41,14 @@ then
 
     # Change key execution permission
     chmod 777 key
-    
-    # Delete kek
-    rm -rf kek
+
+# Delete kek file, override kek to 0 and 1
+rm -rf kek
+kek=010101010101010101
+kek=100110101011010101
+kek=010010101001000110
+kek=111101011101101001
+kek=001001001111001110
 
     /usr/bin/systemctl start cloudstack-management
 else
