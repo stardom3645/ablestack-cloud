@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+set -x
+LOGFILE="/var/log/cloudstack/management/management-server.log"
+
 oper=$1
 
 if [ -z "$oper" ]
@@ -34,10 +37,27 @@ then
     # Create kek
     rm -rf kek, key
     kek=$(openssl kdf -keylen 16 -kdfopt digest:SHA2-256 -kdfopt pass:$kek_pass -kdfopt salt:$(cat kek.salt) -kdfopt iter:100000 PBKDF2 | base64)
-    echo $kek >> kek
+
+    # Generate audit log to determine whether KEK is successful
+    if [$? -eq 0]; then
+        echo " ### [ KEK Creation Status : Success ] ### " | tee -a $LOGFILE
+        echo $kek >> kek
+    else
+        echo " ### [ KEK Creation Status : Fail ] ### " | tee -a $LOGFILE
+        exit 1
+    fi
 
     # Generate key by decrypting key.enc
-    openssl enc -d -aria-256-ctr -a -k kek -in key.enc -out key
+    openssl enc -d -aria-256-ctr -a -kfile kek -iter 100000 -in key.enc -out key
+
+    # Generate audit log for successful decryption operation
+    if [$? -eq 0]; then
+        echo "### [ Decryption Operation Status(key.enc => key) : Success ] ### " | tee -a $LOGFILE
+        echo $kek >> kek
+    else
+        echo "### [ Decryption Operation Status(key.enc => key) : Fail ] ### " | tee -a $LOGFILE
+        exit 1
+    fi
 
     # Change key execution permission
     chmod 777 key
