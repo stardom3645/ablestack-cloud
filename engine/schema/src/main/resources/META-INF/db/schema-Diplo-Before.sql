@@ -40,7 +40,7 @@ CREATE TABLE IF NOT EXISTS `integrity_verification_initial_hash` (
     `file_path` varchar(255) NOT NULL COMMENT 'the file path for integrity verification',
     `initial_hash_value` varchar(255) COMMENT 'the initial hash value of the file',
     `comparison_hash_value` varchar(255) COMMENT 'the hash value for file comparison',
-    `verification_result` tinyint(1) NOT NULL DEFAULT 1 COMMENT 'check executions success or failure',
+    `verification_result` tinyint(1) DEFAULT 1 COMMENT 'check executions success or failure',
     `verification_date` datetime DEFAULT NULL COMMENT 'the last verification time',
     `verification_details` blob COMMENT 'verification result detailed message',
     PRIMARY KEY (`id`),
@@ -59,7 +59,7 @@ CREATE TABLE IF NOT EXISTS `integrity_verification_initial_hash_final_result` (
     `verification_failed_list` mediumtext NULL COMMENT 'the failed verification failed list',
     `type` varchar(30) NULL,
     PRIMARY KEY (`id`),
-    UNIQUE KEY `i_integrity_verify__mshost_id__final_result` (`mshost_id`),
+    UNIQUE KEY `i_integrity_verify__mshost_id__final_result` (`uuid`,`mshost_id`),
     KEY `i_integrity_verify__mshost_id` (`mshost_id`),
     CONSTRAINT `i_integrity_verify__mshost_id__file_path_final_result` FOREIGN KEY (`mshost_id`) REFERENCES `mshost` (`id`) ON DELETE CASCADE
     ) ENGINE=InnoDB CHARSET=utf8mb3;

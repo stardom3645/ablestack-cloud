@@ -5048,7 +5048,7 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
 
         return Optional.of(startVirtualMachine(vmId, podId, clusterId, hostId, diskOfferingMap, additonalParams, null));
     }
-    
+
     @Override
     public String validateUserData(String userData, HTTPMethod httpmethod) {
         byte[] decodedUserData = null;

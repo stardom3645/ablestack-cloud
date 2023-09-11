@@ -19,7 +19,6 @@ package com.cloud.vm;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.ExecutionException;
 
 import org.apache.cloudstack.api.BaseCmd.HTTPMethod;
 import org.apache.cloudstack.api.command.admin.vm.AssignVMCmd;
@@ -62,6 +61,7 @@ import com.cloud.storage.snapshot.SnapshotApiService;
 import com.cloud.template.VirtualMachineTemplate;
 import com.cloud.user.Account;
 import com.cloud.uservm.UserVm;
+import com.cloud.utils.exception.ExecutionException;
 
 public interface UserVmService {
 
