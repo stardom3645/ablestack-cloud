@@ -39,7 +39,7 @@ then
     kek=$(openssl kdf -keylen 16 -kdfopt digest:SHA2-256 -kdfopt pass:$kek_pass -kdfopt salt:$(cat kek.salt) -kdfopt iter:100000 PBKDF2 | base64)
 
     # Generate audit log to determine whether KEK is successful
-    if [$? -eq 0]; then
+    if [[ $? == 0 ]]; then
         echo " ### [ KEK Creation Status : Success ] ### " | tee -a $LOGFILE
         echo $kek >> kek
     else
@@ -51,7 +51,7 @@ then
     openssl enc -d -aria-256-ctr -a -kfile kek -iter 100000 -in key.enc -out key
 
     # Generate audit log for successful decryption operation
-    if [$? -eq 0]; then
+    if [[ $? == 0 ]]; then
         echo "### [ Decryption Operation Status(key.enc => key) : Success ] ### " | tee -a $LOGFILE
     else
         echo "### [ Decryption Operation Status(key.enc => key) : Fail ] ### " | tee -a $LOGFILE
