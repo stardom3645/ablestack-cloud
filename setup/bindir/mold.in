@@ -53,7 +53,6 @@ then
     # Generate audit log for successful decryption operation
     if [$? -eq 0]; then
         echo "### [ Decryption Operation Status(key.enc => key) : Success ] ### " | tee -a $LOGFILE
-        echo $kek >> kek
     else
         echo "### [ Decryption Operation Status(key.enc => key) : Fail ] ### " | tee -a $LOGFILE
         exit 1
