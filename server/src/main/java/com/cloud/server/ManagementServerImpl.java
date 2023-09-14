@@ -1095,8 +1095,6 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
         supportedHypervisors.add(HypervisorType.KVM);
         supportedHypervisors.add(HypervisorType.XenServer);
 
-        isSSHDRunning();
-
         return true;
     }
 
@@ -4383,7 +4381,6 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
         final String host = _configDao.getValue("host");
         final boolean balancingServiceEnabled = Boolean.parseBoolean(_configDao.getValue("cloud.balancing.service.enabled"));
         final boolean eventDeleteEnabled = Boolean.parseBoolean(_configDao.getValue("event.delete.enabled"));
-        final boolean managementServerSSHDEnabled = Boolean.parseBoolean(_configDao.getValue("management.server.secure.sshdaemon.enabled"));
 
         // check if region-wide secondary storage is used
         boolean regionSecondaryEnabled = false;
@@ -4419,7 +4416,6 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
         capabilities.put("host", host);
         capabilities.put("balancingServiceEnabled", balancingServiceEnabled);
         capabilities.put("eventDeleteEnabled", eventDeleteEnabled);
-        capabilities.put("managementServerSSHDEnabled", managementServerSSHDEnabled);
         capabilities.put(ApiServiceConfiguration.DefaultUIPageSize.key(), ApiServiceConfiguration.DefaultUIPageSize.value());
 
         capabilities.put(ApiConstants.INSTANCES_STATS_RETENTION_TIME, StatsCollector.vmStatsMaxRetentionTime.value());
@@ -5363,25 +5359,4 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
     public void setLockControllerListener(final LockControllerListener lockControllerListener) {
         _lockControllerListener = lockControllerListener;
     }
-
-    /**
-     * Returns whether a management server sshd service is running.
-     * @return true if the service is active.
-     */
-    protected void isSSHDRunning() {
-        boolean sshdEnabled = Boolean.parseBoolean(_configDao.getValue(Config.ManagementServerSSHDEnabled.key()));
-        String sshdStatus = Script.runSimpleBashScript("systemctl status sshd | grep \"  Active:\"");
-
-        if (sshdEnabled) {
-            Script.runSimpleBashScript("systemctl start sshd");
-            s_logger.info("Management server sshd service has started");
-        }else{
-            Script.runSimpleBashScript("systemctl stop sshd");
-            s_logger.info("Management server sshd service has stopped");
-        }
-        if (StringUtils.isNotBlank(sshdStatus)) {
-            s_logger.info("Management server sshd service is running");
-        }
-    }
-
 }
