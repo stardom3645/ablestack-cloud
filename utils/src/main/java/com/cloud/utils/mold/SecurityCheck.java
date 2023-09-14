@@ -65,7 +65,7 @@ public class SecurityCheck {
         } else {
             resultMap.put("request", "false");
         }
- 
+
         System.out.printf("%s%n", resultMap);
     }
 }
