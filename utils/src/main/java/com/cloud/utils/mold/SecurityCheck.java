@@ -22,6 +22,8 @@ package com.cloud.utils.mold;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.springframework.mock.web.MockHttpSession;
+
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpSession;
 
@@ -47,6 +49,8 @@ public class SecurityCheck {
         HttpSession session = null;
         final String sessionKeyString = "sessionkey";
         final String sessionKeyValue = "randomUniqueSessionID";
+        session = new MockHttpSession();
+        session.setAttribute(sessionKeyString, sessionKeyValue);
         Map<String, Object[]> params = new HashMap<String, Object[]>();
         Cookie[] cookies = new Cookie[]{new Cookie(sessionKeyString, sessionKeyValue)};
         params.put(sessionKeyString, new String[]{sessionKeyValue});
