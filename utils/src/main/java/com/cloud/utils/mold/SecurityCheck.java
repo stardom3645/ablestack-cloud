@@ -22,12 +22,6 @@ package com.cloud.utils.mold;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.springframework.mock.web.MockHttpSession;
-
-import javax.servlet.http.Cookie;
-import javax.servlet.http.HttpSession;
-
-import com.cloud.utils.HttpUtils;
 import com.cloud.utils.StringUtils;
 import com.cloud.utils.crypt.CloudStackEncryptor;
 import com.cloud.utils.crypt.EncryptionCLI;
@@ -43,21 +37,6 @@ public class SecurityCheck {
             resultMap.put("encrypt", "true");
         } else {
             resultMap.put("encrypt", "false");
-        }
-
-        // Sessionkey (쿠키 및 파라미터에 세션키가 존재하는지 벨리데이션 체크)
-        HttpSession session = null;
-        final String sessionKeyString = "sessionkey";
-        final String sessionKeyValue = "randomUniqueSessionID";
-        session = new MockHttpSession();
-        session.setAttribute(sessionKeyString, sessionKeyValue);
-        Map<String, Object[]> params = new HashMap<String, Object[]>();
-        Cookie[] cookies = new Cookie[]{new Cookie(sessionKeyString, sessionKeyValue)};
-        params.put(sessionKeyString, new String[]{sessionKeyValue});
-        if (HttpUtils.validateSessionKey(session, params, cookies, sessionKeyString) == true) {
-            resultMap.put("sessionkey", "true");
-        } else {
-            resultMap.put("sessionkey", "false");
         }
 
         // Request (Request 및 Response 에 포함된 민감한 문자열을 제거하는지 확인)
