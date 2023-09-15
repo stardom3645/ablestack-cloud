@@ -25,13 +25,15 @@ import java.util.Map;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpSession;
 
+import org.apache.xpath.operations.String;
+
 import com.cloud.utils.HttpUtils;
 import com.cloud.utils.StringUtils;
 import com.cloud.utils.crypt.CloudStackEncryptor;
 import com.cloud.utils.crypt.EncryptionCLI;
 
 public class SecurityCheck {
-    public static void main() {
+    public static void main(String[] args) {
         Map<String, String> resultMap = new HashMap<>();
 
         // Encrypt (보안기능에 적합한 알고리즘으로 암호화된 암호가 정상적으로 복호화되는지 확인)
