@@ -28,7 +28,7 @@ import com.cloud.utils.crypt.EncryptionCLI;
 import com.cloud.utils.crypt.EncryptionException;
 
 public class SecurityCheck {
-    public static void main(String[] args) {
+    public static void main(String[] args) throws EncryptionException{
         Map<String, String> resultMap = new HashMap<>();
         // Encrypt (보안기능에 적합한 알고리즘으로 암호화된 암호가 정상적으로 복호화되는지 확인)
         final String pwd = "managementkey";
