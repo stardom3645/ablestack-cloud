@@ -22,12 +22,11 @@
 # return : 서비스 명, 결과(boolean)
 
 jarfile='/usr/share/cloudstack-common/lib/cloudstack-utils.jar'
-# encrypt=$(java -classpath $jarfile com.cloud.utils.crypt.EncryptionCLI -d -e V2 -p managementkey -i DlTJUG8rWFjOd3aoHtbBGEcQ/piovBzRJ/bnQ1FACLg= -v | grep -i encrypted)
-encrypt=$(java -classpath $jarfile com.cloud.utils.crypt.EncryptionCLI -d -e V2 -p managementkey -i DlTJUG8rWFjOd3aoHtbB -v | grep -i encrypted)
+encrypt=$(java -classpath $jarfile com.cloud.utils.crypt.EncryptionCLI -d -e V2 -p managementkey -i DlTJUG8rWFjOd3aoHtbBGEcQ/piovBzRJ/bnQ1FACLg= -v | grep -i encrypted)
 if [ -n "$encrypt" ] && [[ "$encrypt" =~ "mold" ]]; then
     echo "encrypt,true"
 else
-    echo "encrpt,false"
+    echo "encrypt,false"
 fi
 
 result=$(java -classpath $jarfile com.cloud.utils.mold.SecurityCheck)
