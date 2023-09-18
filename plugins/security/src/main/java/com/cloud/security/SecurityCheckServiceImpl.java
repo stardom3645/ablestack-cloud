@@ -166,7 +166,7 @@ public class SecurityCheckServiceImpl extends ManagerBase implements PluggableSe
             StringBuffer output = new StringBuffer();
             BufferedReader bfr = new BufferedReader(new InputStreamReader(process.getInputStream()));
             String line;
-            while ((line = bfr.readLine()) != null ) {
+            while ((line = bfr.readLine()) != null) {
                 String[] temp = line.split(",");
                 String checkName = temp[0];
                 String checkResult = temp[1];
