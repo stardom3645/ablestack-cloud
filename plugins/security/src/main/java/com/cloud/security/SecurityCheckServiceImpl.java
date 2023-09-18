@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executors;
@@ -99,7 +100,7 @@ public class SecurityCheckServiceImpl extends ManagerBase implements PluggableSe
 
         private void securityCheck() {
             ActionEventUtils.onStartedActionEvent(CallContext.current().getCallingUserId(), CallContext.current().getCallingAccountId(), EventTypes.EVENT_SECURITY_CHECK,
-                    "running security check on management server", new Long(0), null, true, 0);
+                    "running security check schedule on management server", new Long(0), null, true, 0);
             ManagementServerHostVO msHost = msHostDao.findByMsid(ManagementServerNode.getManagementServerId());
             String path = Script.findScript("scripts/security/", "securitycheck.sh");
             if (path == null) {
@@ -125,9 +126,9 @@ public class SecurityCheckServiceImpl extends ManagerBase implements PluggableSe
                     updateSecurityCheckResult(msHost.getId(), checkName, Boolean.parseBoolean(checkResult), checkMessage);
                 }
                 ActionEventUtils.onCompletedActionEvent(CallContext.current().getCallingUserId(), CallContext.current().getCallingAccountId(), EventVO.LEVEL_INFO,
-                        EventTypes.EVENT_SECURITY_CHECK, "Successfully completed running security check on management server", new Long(0), null, 0);
+                        EventTypes.EVENT_SECURITY_CHECK, "Successfully completed running security check schedule on management server", new Long(0), null, 0);
             } catch (IOException e) {
-                LOGGER.error("Failed to execute security checker for management server: "+e);
+                LOGGER.error("Failed to execute security check schedule for management server: "+e);
             }
         }
     }
@@ -154,39 +155,68 @@ public class SecurityCheckServiceImpl extends ManagerBase implements PluggableSe
     public boolean runSecurityCheckCommand(final RunSecurityCheckCmd cmd) {
         Long mshostId = cmd.getMsHostId();
         ManagementServerHost mshost = msHostDao.findById(mshostId);
-        String path = Script.findScript("scripts/security/", "securitycheck.sh");
-        if (path == null) {
-            throw new CloudRuntimeException(String.format("Unable to find the securitycheck script"));
-        }
-        ProcessBuilder processBuilder = new ProcessBuilder("sh", path);
-        Process process = null;
-        try {
-            process = processBuilder.start();
-            StringBuffer output = new StringBuffer();
-            BufferedReader bfr = new BufferedReader(new InputStreamReader(process.getInputStream()));
-            String line;
-            while ((line = bfr.readLine()) != null) {
-                String[] temp = line.split(",");
-                String checkName = temp[0];
-                String checkResult = temp[1];
-                String checkMessage;
-                if ("false".equals(checkResult)) {
-                    checkMessage = "service down at last check";
-                    alertManager.sendAlert(AlertManager.AlertType.ALERT_TYPE_MANAGMENT_NODE, 0, new Long(0), "Management server node " + mshost.getServiceIP() + " security check failed: "+ checkName + " service down at last check", "");
-                } else {
-                    checkMessage = "service is running";
-                }
-                updateSecurityCheckResult(mshost.getId(), checkName, Boolean.parseBoolean(checkResult), checkMessage);
-                output.append(line).append('\n');
-            }
-            if (output.toString().contains("false")) {
-                return false;
+        String result = Script.runSimpleBashScript("java -classpath /usr/share/cloudstack-common/lib/cloudstack-utils.jar com.cloud.utils.mold.SecurityCheck");
+        result.replace("{", "");
+        result.replace("}", "");
+        LOGGER.info("mold:========================");
+        LOGGER.info(result);
+        Map<String, String> resultMap = parseKeyValuePairs(result, ",", "=");
+        String checkMessage = "";
+        for (String keys : resultMap.keySet()) {
+            LOGGER.info("mold:========================");
+            LOGGER.info(keys);
+            String value = (String) resultMap.get(keys);
+            LOGGER.info(value);
+            if (value == "false") {
+                LOGGER.info("mold:false========================");
+                checkMessage = "process does not operate normally.";
+                alertManager.sendAlert(AlertManager.AlertType.ALERT_TYPE_MANAGMENT_NODE, 0, new Long(0), "Management server node " + mshost.getServiceIP() + " security check failed : " + keys, "");
             } else {
-                return true;
+                LOGGER.info("mold:true========================");
+                checkMessage = "process is normal";
             }
-        } catch (IOException e) {
-            throw new CloudRuntimeException("Failed to execute security check command for management server: "+mshost.getId() +e);
+            updateSecurityCheckResult(mshost.getId(), keys, Boolean.parseBoolean(value), checkMessage);
         }
+        if (resultMap.toString().contains("false")) {
+            LOGGER.info("mold:false return========================");
+            return false;
+        } else {
+            LOGGER.info("mold:true return========================");
+            return true;
+        }
+        // String path = Script.findScript("scripts/security/", "securitycheck.sh");
+        // if (path == null) {
+        //     throw new CloudRuntimeException(String.format("Unable to find the securitycheck script"));
+        // }
+        // ProcessBuilder processBuilder = new ProcessBuilder("sh", path);
+        // Process process = null;
+        // try {
+        //     process = processBuilder.start();
+        //     StringBuffer output = new StringBuffer();
+        //     BufferedReader bfr = new BufferedReader(new InputStreamReader(process.getInputStream()));
+        //     String line;
+        //     while ((line = bfr.readLine()) != null) {
+        //         String[] temp = line.split(",");
+        //         String checkName = temp[0];
+        //         String checkResult = temp[1];
+        //         String checkMessage;
+        //         if ("false".equals(checkResult)) {
+        //             checkMessage = "service down at last check";
+        //             alertManager.sendAlert(AlertManager.AlertType.ALERT_TYPE_MANAGMENT_NODE, 0, new Long(0), "Management server node " + mshost.getServiceIP() + " security check failed: "+ checkName + " service down at last check", "");
+        //         } else {
+        //             checkMessage = "service is running";
+        //         }
+        //         updateSecurityCheckResult(mshost.getId(), checkName, Boolean.parseBoolean(checkResult), checkMessage);
+        //         output.append(line).append('\n');
+        //     }
+        //     if (output.toString().contains("false")) {
+        //         return false;
+        //     } else {
+        //         return true;
+        //     }
+        // } catch (IOException e) {
+        //     throw new CloudRuntimeException("Failed to execute security check command for management server: "+mshost.getId() +e);
+        // }
     }
 
     private void updateSecurityCheckResult(final long msHostId, String checkName, boolean checkResult, String checkMessage) {
@@ -206,6 +236,24 @@ public class SecurityCheckServiceImpl extends ManagerBase implements PluggableSe
         } else {
             securityCheckDao.update(connectivityVO.getId(), connectivityVO);
         }
+    }
+
+    public static Map<String, String> parseKeyValuePairs(String input, String pairSeparator, String keyValueSeparator) {
+        if (input == null || pairSeparator == null || keyValueSeparator == null) {
+            return null;
+        }
+        String[] pairs = input.split(pairSeparator);
+        if (pairs.length == 0) {
+            throw new IllegalArgumentException("Invalid input: " + input);
+        }
+        Map<String, String> map = new HashMap<>();
+        for (String pair : pairs) {
+            String[] keyValue = pair.split(keyValueSeparator);
+            if (keyValue.length == 2) {
+                map.put(keyValue[0], keyValue[1]);
+            }
+        }
+        return map;
     }
 
     @Override
