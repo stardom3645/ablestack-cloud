@@ -169,20 +169,16 @@ public class SecurityCheckServiceImpl extends ManagerBase implements PluggableSe
             String checkMessage = "";
             while ((line = bfr.readLine()) != null) {
                 LOGGER.info(line);
-                line.replaceAll("\\{", "");
-                line.replaceAll("\\}", "");
+                line.replace("\\{", "").replace("\\}", "");
                 Map<String, String> resultMap = parseKeyValuePairs(line, ",", "=");
                 for (String keys : resultMap.keySet()) {
-                    LOGGER.info("mold:========================");
                     LOGGER.info(keys);
                     String value = (String) resultMap.get(keys);
                     LOGGER.info(value);
                     if (value == "false") {
-                        LOGGER.info("mold:false========================");
                         checkMessage = "process does not operate normally.";
                         alertManager.sendAlert(AlertManager.AlertType.ALERT_TYPE_MANAGMENT_NODE, 0, new Long(0), "Management server node " + mshost.getServiceIP() + " security check failed : " + keys, "");
                     } else {
-                        LOGGER.info("mold:true========================");
                         checkMessage = "process is normal";
                     }
                     updateSecurityCheckResult(mshost.getId(), keys, Boolean.parseBoolean(value), checkMessage);
