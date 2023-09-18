@@ -166,27 +166,20 @@ public class SecurityCheckServiceImpl extends ManagerBase implements PluggableSe
             StringBuffer output = new StringBuffer();
             BufferedReader bfr = new BufferedReader(new InputStreamReader(process.getInputStream()));
             String line;
-            String result;
-            String checkMessage = "";
-            while ((line = bfr.readLine()) != null) {
-                result = line.replaceAll("\\{", "").replaceAll("\\}", "").replaceAll("\\s","");
-                LOGGER.info(result);
-                Map<String, String> resultMap = parseKeyValuePairs(result, ",", "=");
-                for (String keys : resultMap.keySet()) {
-                    LOGGER.info(keys);
-                    String value = (String) resultMap.get(keys);
-                    LOGGER.info(value);
-                    if (value == "false") {
-                        checkMessage = "process does not operate normally";
-                        alertManager.sendAlert(AlertManager.AlertType.ALERT_TYPE_MANAGMENT_NODE, 0, new Long(0), "Management server node " + mshost.getServiceIP() + " security check failed : " + keys + " " + checkMessage, "");
-                    } else {
-                        checkMessage = "process operates normally";
-                    }
-                    updateSecurityCheckResult(mshost.getId(), keys, Boolean.parseBoolean(value), checkMessage);
+            while ((line = bfr.readLine()) != null ) {
+                String[] temp = line.split(",");
+                String checkName = temp[0];
+                String checkResult = temp[1];
+                String checkMessage;
+                if ("false".equals(checkResult)) {
+                    checkMessage = "process does not operate normally";
+                    alertManager.sendAlert(AlertManager.AlertType.ALERT_TYPE_MANAGMENT_NODE, 0, new Long(0), "Management server node " + mshost.getServiceIP() + " security check failed: "+ checkName + " process does not operate normally", "");
+                } else {
+                    checkMessage = "process operates normally";
                 }
-                output.append(result);
+                updateSecurityCheckResult(mshost.getId(), checkName, Boolean.parseBoolean(checkResult), checkMessage);
+                output.append(line).append('\n');
             }
-            LOGGER.info(output);
             if (output.toString().contains("false")) {
                 return false;
             } else {

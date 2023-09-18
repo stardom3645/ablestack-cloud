@@ -17,10 +17,21 @@
 # under the License.
 
 # Security Check 
-# Management Server의 서비스가 정상적으로 실행 중인지 확인하는 스크립트
-# 항목 : mysql, firewalld, cloudstack-management
-# return : 서비스 명,결과(boolean)
+# 보안 기능 프로세스가 정상적으로 작동하는지 확인하는 스크립트
+# 항목 : encrypt, request
+# return : 서비스 명, 결과(boolean)
 
 jarfile='/usr/share/cloudstack-common/lib/cloudstack-utils.jar'
+encrypt=$(java -classpath $jarfile com.cloud.utils.crypt.EncryptionCLI -d -e V2 -p managementkey -i DlTJUG8rWFjOd3aoHtbBGEcQ/piovBzRJ/bnQ1FACLg= -v | grep -i encrypted)
+if [ -n "$encrypt" ] && [[ "$encrypt" =~ "mold" ]]; then
+    echo "encrypt,true"
+else
+    echo "encrpt,false"
+fi
+
 result=$(java -classpath $jarfile com.cloud.utils.mold.SecurityCheck)
-echo $result
+if [[ "$result" =~ "true" ]]; then
+    echo "request,true"
+else
+    echo "request,false"
+fi
