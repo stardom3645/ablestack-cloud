@@ -170,9 +170,12 @@ public class SecurityCheckServiceImpl extends ManagerBase implements PluggableSe
             String checkMessage = "";
             while ((line = bfr.readLine()) != null) {
                 result = line.replaceAll("\\{", "").replaceAll("\\}", "").replaceAll("\\s","");
+                LOGGER.info(result);
                 Map<String, String> resultMap = parseKeyValuePairs(result, ",", "=");
                 for (String keys : resultMap.keySet()) {
+                    LOGGER.info(keys);
                     String value = (String) resultMap.get(keys);
+                    LOGGER.info(value);
                     if (value == "false") {
                         checkMessage = "process does not operate normally";
                         alertManager.sendAlert(AlertManager.AlertType.ALERT_TYPE_MANAGMENT_NODE, 0, new Long(0), "Management server node " + mshost.getServiceIP() + " security check failed : " + keys + " " + checkMessage, "");
@@ -183,6 +186,7 @@ public class SecurityCheckServiceImpl extends ManagerBase implements PluggableSe
                 }
                 output.append(result);
             }
+            LOGGER.info(output);
             if (output.toString().contains("false")) {
                 return false;
             } else {
