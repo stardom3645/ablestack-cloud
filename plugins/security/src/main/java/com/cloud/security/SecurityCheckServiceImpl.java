@@ -55,7 +55,6 @@ import com.cloud.security.dao.SecurityCheckDao;
 import com.cloud.utils.component.ManagerBase;
 import com.cloud.utils.component.PluggableService;
 import com.cloud.utils.concurrency.NamedThreadFactory;
-import com.cloud.utils.exception.CloudRuntimeException;
 import com.cloud.utils.script.Script;
 
 public class SecurityCheckServiceImpl extends ManagerBase implements PluggableService, SecurityCheckService, Configurable {
