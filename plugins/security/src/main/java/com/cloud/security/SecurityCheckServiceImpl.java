@@ -169,7 +169,7 @@ public class SecurityCheckServiceImpl extends ManagerBase implements PluggableSe
             String result;
             String checkMessage = "";
             while ((line = bfr.readLine()) != null) {
-                result = line.substring(1).substring(0, line.length()-1).trim();
+                result = line.replaceAll("\\{", "").replaceAll("\\}", "").trim();
                 LOGGER.info(result);
                 Map<String, String> resultMap = parseKeyValuePairs(result, ",", "=");
                 for (String keys : resultMap.keySet()) {
