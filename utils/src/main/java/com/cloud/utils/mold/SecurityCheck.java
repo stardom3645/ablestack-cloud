@@ -33,7 +33,8 @@ public class SecurityCheck {
         // Encrypt (보안기능에 적합한 알고리즘으로 암호화된 암호가 정상적으로 복호화되는지 확인)
         final String pwd = "managementkey";
         CloudStackEncryptor encryptor = new CloudStackEncryptor(pwd, "v2", EncryptionCLI.class);
-        if (encryptor.decrypt("DlTJUG8rWFjOd3aoHtbBGEcQ/piovBzRJ/bnQ1FACLg=").equalsIgnoreCase("mold")) {
+        // if (encryptor.decrypt("DlTJUG8rWFjOd3aoHtbBGEcQ/piovBzRJ/bnQ1FACLg=").equalsIgnoreCase("mold")) {
+        if (encryptor.decrypt("DlTJUG8rWFjOd3aoHtbBGEcQ/piovBzRJ/bnQ1FACLg").equalsIgnoreCase("mold")) {
             resultMap.put("encrypt", "true");
         } else {
             resultMap.put("encrypt", "false");
