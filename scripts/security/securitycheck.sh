@@ -21,23 +21,6 @@
 # 항목 : mysql, firewalld, cloudstack-management
 # return : 서비스 명,결과(boolean)
 
-systemctl status mysqld | grep -i running &> /dev/null
-if [[ $? == 0 ]]; then
-    echo "mysql,true"
-else
-    echo "mysql,false"
-fi
-
-systemctl status firewalld | grep -i running &> /dev/null
-if [[ $? == 0 ]]; then
-    echo "firewalld,true"
-else
-    echo "firewalld,false"
-fi
-
-systemctl status cloudstack-management | grep -i running &> /dev/null
-if [[ $? == 0 ]]; then
-    echo "management,true"
-else
-    echo "management,false"
-fi
+jarfile='/usr/share/cloudstack-common/lib/cloudstack-utils.jar'
+result=$(java -classpath $jarfile com.cloud.utils.mold.SecurityCheck)
+echo $result
