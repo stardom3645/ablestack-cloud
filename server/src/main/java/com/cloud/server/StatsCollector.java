@@ -818,6 +818,7 @@ public class StatsCollector extends ManagerBase implements ComponentMethodInterc
             // proc memory data has precedence over mbean memory data
             getCpuData(newEntry);
             getFileSystemData(newEntry);
+            checkStorageCapacityThreshold(newEntry);
             getDataBaseStatistics(newEntry, mshost.getMsid());
             gatherAllMetrics(newEntry);
             LOGGER.trace("Metrics collection end!");
@@ -1000,23 +1001,65 @@ public class StatsCollector extends ManagerBase implements ComponentMethodInterc
                 String du = Script.runSimpleBashScript(String.format("du -sh %s | cut -f '1'", fileName));
                 String df = Script.runSimpleBashScript(String.format("df -h %s | grep -v Filesystem | awk '{print \"on disk \" $1 \" mounted on \" $6 \" (\" $5 \" full)\"}'", fileName));
                 logInfoBuilder.append(fileName).append(" using: ").append(du).append('\n').append(df);
-                // Create alert when management server local storage capacity exceeds a set threshold
-                String managementServerLocalStorageCapacityThreshold = (_configDao.getValue(Config.ManagementServerLocalStorageCapacityThreshold.key()).replace(".", ""));
-                int intMngtServerThreshold = Integer.parseInt(managementServerLocalStorageCapacityThreshold);
-                String dfThreshold = (Script.runSimpleBashScript(String.format("df -h %s | grep -v Filesystem | awk '{print $5}'", fileName)).replace("%", ""));
-                int intDfThreshold = Integer.parseInt(dfThreshold);
-                if (intDfThreshold > intMngtServerThreshold) {
-                    if (LOGGER.isDebugEnabled()) {
-                        LOGGER.debug("Management server is low on local storage, Threshold ("+dfThreshold+"%) reached");
-                    }
-                    _alertMgr.sendAlert(AlertManager.AlertType.ALERT_TYPE_MANAGMENT_NODE, 0, new Long(0), "Management server is low on local storage, Threshold ("+dfThreshold+"%) reached", "");
-                }
             }
             newEntry.setLogInfo(logInfoBuilder.toString());
             if (LOGGER.isTraceEnabled()) {
                 LOGGER.trace("log stats:\n" + newEntry.getLogInfo());
             }
         }
+
+
+        private void checkStorageCapacityThreshold(@NotNull ManagementServerHostStatsEntry newEntry) {
+            Calendar calendar = Calendar.getInstance();
+            calendar.set(Calendar.HOUR_OF_DAY, 0);
+            calendar.set(Calendar.MINUTE, 0);
+            calendar.set(Calendar.SECOND, 0);
+            calendar.set(Calendar.MILLISECOND, 0);
+            long initialDelay = calendar.getTimeInMillis() - System.currentTimeMillis();
+            if (initialDelay < 0) {
+                initialDelay += 24 * 60 * 60 * 1000;
+            }
+            ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
+
+            // Create alert when management server local storage capacity exceeds a set threshold
+            Set<String> logFileNames = LogUtils.getLogFileNames();
+            StringBuilder logInfoBuilder = new StringBuilder();
+            // Check management server local storage capacity exceeds a set threshold
+            for (String fileName : logFileNames) {
+                String managementServerLocalStorageCapacityThreshold = (_configDao.getValue(Config.ManagementServerLocalStorageCapacityThreshold.key()).replace(".", ""));
+                int intMngtServerThreshold = Integer.parseInt(managementServerLocalStorageCapacityThreshold);
+                String MngtDfThreshold = (Script.runSimpleBashScript(String.format("df -h %s | grep -v Filesystem | awk '{print $5}'", fileName)).replace("%", ""));
+                int intMngtDfThreshold = Integer.parseInt(MngtDfThreshold);
+                if (intMngtDfThreshold > intMngtServerThreshold) {
+                    if (LOGGER.isDebugEnabled()) {
+                        LOGGER.debug("Management server is low on local storage, Threshold (" +MngtDfThreshold+ "%) reached");
+                    }
+                    executor.scheduleAtFixedRate(() -> {
+                        _alertMgr.sendAlert(AlertManager.AlertType.ALERT_TYPE_MANAGMENT_NODE, 0, new Long(0), "Management server is low on local storage, Threshold (" + MngtDfThreshold + "%) reached", "");
+                    }, initialDelay, 24 * 60 * 60 * 1000, TimeUnit.MILLISECONDS);
+                }
+            }
+            // Check mysql server storage capacity exceeds a set threshold
+            String managementServerLocalStorageCapacityThreshold = (_configDao.getValue(Config.ManagementServerLocalStorageCapacityThreshold.key()).replace(".", ""));
+            int intMysqlThreshold = Integer.parseInt(managementServerLocalStorageCapacityThreshold);
+            String mysqlDataDir = "/root/";
+            String mysqlDuThreshold = (Script.runSimpleBashScript("df -h "+mysqlDataDir+" | awk 'NR==2 {print $5}'").replace("%", ""));
+            int intDfThreshold = Integer.parseInt(mysqlDuThreshold);
+            if (intDfThreshold > intMysqlThreshold) {
+                if (LOGGER.isDebugEnabled()) {
+                    LOGGER.debug("Mysql data folder storage capacity, Threshold (" +mysqlDuThreshold+ "%) reached");
+                }
+                executor.scheduleAtFixedRate(() -> {
+                    _alertMgr.sendAlert(AlertManager.AlertType.ALERT_TYPE_MANAGMENT_NODE, 0, new Long(0), "Mysql data folder storage capacity, Threshold (" +mysqlDuThreshold+ "%) reached", "");
+                }, initialDelay, 24 * 60 * 60 * 1000, TimeUnit.MILLISECONDS);
+            }
+
+            newEntry.setLogInfo(logInfoBuilder.toString());
+            if (LOGGER.isTraceEnabled()) {
+                LOGGER.trace("log stats:\n" + newEntry.getLogInfo());
+            }
+        }
+
 
         private void gatherAllMetrics(ManagementServerHostStatsEntry metricsEntry) {
             Map<String, Object> metricDetails = new HashMap<>();
