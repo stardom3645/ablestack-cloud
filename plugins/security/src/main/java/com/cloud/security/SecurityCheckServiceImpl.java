@@ -154,7 +154,7 @@ public class SecurityCheckServiceImpl extends ManagerBase implements PluggableSe
     public boolean runSecurityCheckCommand(final RunSecurityCheckCmd cmd) {
         Long mshostId = cmd.getMsHostId();
         ManagementServerHost mshost = msHostDao.findById(mshostId);
-        String result = Script.runSimpleBashScript("java -classpath /usr/share/cloudstack-common/lib/cloudstack-utils.jar com.cloud.utils.mold.SecurityCheck");
+        String result = Script.runSimpleBashScript("java -classpath /usr/share/cloudstack-common/lib/cloudstack-utils.jar com.cloud.utils.mold.SecurityCheck | grep -i request");
         result.replace("{", "");
         result.replace("}", "");
         LOGGER.info("mold:========================");
