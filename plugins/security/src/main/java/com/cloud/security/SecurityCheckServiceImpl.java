@@ -118,10 +118,10 @@ public class SecurityCheckServiceImpl extends ManagerBase implements PluggableSe
                     String checkResult = temp[1];
                     String checkMessage;
                     if ("false".equals(checkResult)) {
-                        checkMessage = "service down at last check";
-                        alertManager.sendAlert(AlertManager.AlertType.ALERT_TYPE_MANAGMENT_NODE, 0, new Long(0), "Management server node " + msHost.getServiceIP() + " security checker failed: "+ checkName + " service down at last check", "");
+                        checkMessage = "process does not operate normally";
+                        alertManager.sendAlert(AlertManager.AlertType.ALERT_TYPE_MANAGMENT_NODE, 0, new Long(0), "Management server node " + msHost.getServiceIP() + " security checker failed : "+ checkName + " process does not operate normally", "");
                     } else {
-                        checkMessage = "service is running";
+                        checkMessage = "process operates normally";
                     }
                     updateSecurityCheckResult(msHost.getId(), checkName, Boolean.parseBoolean(checkResult), checkMessage);
                 }
@@ -173,7 +173,7 @@ public class SecurityCheckServiceImpl extends ManagerBase implements PluggableSe
                 String checkMessage;
                 if ("false".equals(checkResult)) {
                     checkMessage = "process does not operate normally";
-                    alertManager.sendAlert(AlertManager.AlertType.ALERT_TYPE_MANAGMENT_NODE, 0, new Long(0), "Management server node " + mshost.getServiceIP() + " security check failed: "+ checkName + " process does not operate normally", "");
+                    alertManager.sendAlert(AlertManager.AlertType.ALERT_TYPE_MANAGMENT_NODE, 0, new Long(0), "Management server node " + mshost.getServiceIP() + " security check failed : "+ checkName + " process does not operate normally", "");
                 } else {
                     checkMessage = "process operates normally";
                 }
@@ -207,24 +207,6 @@ public class SecurityCheckServiceImpl extends ManagerBase implements PluggableSe
         } else {
             securityCheckDao.update(connectivityVO.getId(), connectivityVO);
         }
-    }
-
-    public static Map<String, String> parseKeyValuePairs(String input, String pairSeparator, String keyValueSeparator) {
-        if (input == null || pairSeparator == null || keyValueSeparator == null) {
-            return null;
-        }
-        String[] pairs = input.split(pairSeparator);
-        if (pairs.length == 0) {
-            throw new IllegalArgumentException("Invalid input: " + input);
-        }
-        Map<String, String> map = new HashMap<>();
-        for (String pair : pairs) {
-            String[] keyValue = pair.split(keyValueSeparator);
-            if (keyValue.length == 2) {
-                map.put(keyValue[0], keyValue[1]);
-            }
-        }
-        return map;
     }
 
     @Override
