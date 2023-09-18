@@ -181,6 +181,7 @@ public class SecurityCheckServiceImpl extends ManagerBase implements PluggableSe
                     }
                     updateSecurityCheckResult(mshost.getId(), keys, Boolean.parseBoolean(value), checkMessage);
                 }
+                output.append(result);
             }
             if (output.toString().contains("false")) {
                 return false;

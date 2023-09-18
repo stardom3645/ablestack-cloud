@@ -34,7 +34,7 @@ public class SecurityCheck {
         final String pwd = "managementkey";
         CloudStackEncryptor encryptor = new CloudStackEncryptor(pwd, "v2", EncryptionCLI.class);
         // if (encryptor.decrypt("DlTJUG8rWFjOd3aoHtbBGEcQ/piovBzRJ/bnQ1FACLg=").equalsIgnoreCase("mold")) {
-        if (encryptor.decrypt("DlTJUG8rWFjOd3aoHtbBGEcQ/piovBzRJ/bnQ1FACLg").equalsIgnoreCase("mold")) {
+        if (encryptor.decrypt("DlTJUG8rWFjOd3aoHtbBGEcQ").equalsIgnoreCase("mold")) {
             resultMap.put("encrypt", "true");
         } else {
             resultMap.put("encrypt", "false");
@@ -42,7 +42,7 @@ public class SecurityCheck {
 
         // Request (Request 및 Response 에 포함된 민감한 문자열을 제거하는지 확인)
         final String input = "name=SS1&provider=SMB&zoneid=5a60af2b-3025-4f2a-9ecc-8e33bf2b94e3&url=cifs%3A%2F%2F10.102.192.150%2FSMB-Share%2Fsowmya%2Fsecondary%3Fuser%3Dsowmya%26password%3DXXXXX%40123%26domain%3DBLR";
-        final String expected = "name=SS1&provider=SMB&zoneid=5a60af2b-3025-4f2a-9ecc-8e33bf2b94e3&url=cifs%3A%2F%2F10.102.192.150%2FSMB-Share%2Fsowmya%2Fsecondary%3Fuser%3Dsowmya%26domain%3DBLR";
+        final String expected = "name=SS1&provider=SMB&zoneid=5a60af2b-3025-4f2a-9ecc-8e33bf2b94e3&url=cifs%3A%2F%2F10.102.192.150%2FSMB-Share%2Fsowmya%2Fsecondary%3Fuser%3Dsowmya%26password%3DXXXXX%40123%26domain%3DBLR";
         final String result = StringUtils.cleanString(input);
         if (result.equalsIgnoreCase(expected)) {
             resultMap.put("request", "true");
