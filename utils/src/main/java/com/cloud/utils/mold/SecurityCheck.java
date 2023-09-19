@@ -19,13 +19,7 @@
 
 package com.cloud.utils.mold;
 
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
-import java.security.SignatureException;
-import java.security.cert.CertificateException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -36,7 +30,7 @@ import com.cloud.utils.crypt.EncryptionException;
 public class SecurityCheck {
     // private static final ExecutorService executor = Executors.newFixedThreadPool(10, new NamedThreadFactory("SecurityCheckTest"));
     // private static final ProcessRunner RUNNER = new ProcessRunner(executor);
-    public static void main(String[] args) throws NoSuchProviderException, NoSuchAlgorithmException, InvalidKeyException, CertificateException, SignatureException, IOException {
+    public static void main(String[] args) throws EncryptionException {
         Map<String, String> resultMap = new HashMap<>();
         // Request (Request 및 Response 에 포함된 민감한 문자열을 제거하는지 확인)
         final String input = "name=SS1&provider=SMB&zoneid=5a60af2b-3025-4f2a-9ecc-8e33bf2b94e3&url=cifs%3A%2F%2F10.102.192.150%2FSMB-Share%2Fsowmya%2Fsecondary%3Fuser%3Dsowmya%26password%3DXXXXX%40123%26domain%3DBLR";
