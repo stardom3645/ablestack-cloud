@@ -29,8 +29,6 @@ import java.security.cert.CertificateException;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.bouncycastle.operator.OperatorCreationException;
-
 import com.cloud.utils.StringUtils;
 import com.cloud.utils.crypt.AeadBase64Encryptor;
 import com.cloud.utils.crypt.EncryptionException;
@@ -38,7 +36,7 @@ import com.cloud.utils.crypt.EncryptionException;
 public class SecurityCheck {
     // private static final ExecutorService executor = Executors.newFixedThreadPool(10, new NamedThreadFactory("SecurityCheckTest"));
     // private static final ProcessRunner RUNNER = new ProcessRunner(executor);
-    public static void main(String[] args) throws NoSuchProviderException, NoSuchAlgorithmException, InvalidKeyException, CertificateException, SignatureException, OperatorCreationException, IOException {
+    public static void main(String[] args) throws NoSuchProviderException, NoSuchAlgorithmException, InvalidKeyException, CertificateException, SignatureException, IOException {
         Map<String, String> resultMap = new HashMap<>();
         // Request (Request 및 Response 에 포함된 민감한 문자열을 제거하는지 확인)
         final String input = "name=SS1&provider=SMB&zoneid=5a60af2b-3025-4f2a-9ecc-8e33bf2b94e3&url=cifs%3A%2F%2F10.102.192.150%2FSMB-Share%2Fsowmya%2Fsecondary%3Fuser%3Dsowmya%26password%3DXXXXX%40123%26domain%3DBLR";
@@ -76,7 +74,8 @@ public class SecurityCheck {
         final String pwd = "managementkey";
         AeadBase64Encryptor encryptor = new AeadBase64Encryptor(pwd.getBytes(StandardCharsets.UTF_8));
         try {
-            final String decrypt = encryptor.decrypt("DlTJUG8rWFjOd3aoHtbBGEcQ/piovBzRJ/bnQ1FACLg=");
+            // final String decrypt = encryptor.decrypt("DlTJUG8rWFjOd3aoHtbBGEcQ/piovBzRJ/bnQ1FACLg=");
+            final String decrypt = encryptor.decrypt("piovBzRJ/bnQ1FACLg=");
             if (decrypt.equalsIgnoreCase("mold")) {
                 resultMap.put("encrypt", "true");
             } else {
