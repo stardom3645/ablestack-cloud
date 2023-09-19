@@ -20,22 +20,13 @@
 package com.cloud.utils.mold;
 
 import java.nio.charset.StandardCharsets;
-import java.security.KeyPair;
-import java.security.KeyPairGenerator;
-import java.security.SecureRandom;
-import java.security.Security;
-import java.security.cert.X509Certificate;
-import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-
-import org.apache.cloudstack.utils.security.CertUtils;
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 import com.cloud.utils.StringUtils;
 import com.cloud.utils.crypt.AeadBase64Encryptor;
 import com.cloud.utils.crypt.EncryptionException;
+import com.cloud.utils.ssh.SSHKeysHelper;
 
 public class SecurityCheck {
     public static void main(String[] args) throws EncryptionException, Exception {
@@ -62,26 +53,28 @@ public class SecurityCheck {
         } catch (EncryptionException e){
             resultMap.put("encrypt", "false");
         }
-        // Certificate (보안기능에 적합한 알고리즘으로 암호화된 인증서를 추가하는 프로세스가 정상적으로 동작하는지 확인)
+        // Sshkey
+        String rsaKey =
+            "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC2D2Cs0XAEqm+ajJpumIPrMpKp0CWtIW+8ZY2/MJCW"
+                + "hge1eY18u9I3PPnkMVJsTOaN0wQojjw4AkKgKjNZXA9wyUq56UyN/stmipu8zifWPgxQGDRkuzzZ6buk"
+                + "ef8q2Awjpo8hv5/0SRPJxQLEafESnUP+Uu/LUwk5VVC7PHzywJRUGFuzDl/uT72+6hqpL2YpC6aTl4/P"
+                + "2eDvUQhCdL9dBmUSFX8ftT53W1jhsaQl7mPElVgSCtWz3IyRkogobMPrpJW/IPKEiojKIuvNoNv4CDR6"
+                + "ybeVjHOJMb9wi62rXo+CzUsW0Y4jPOX/OykAm5vrNOhQhw0aaBcv5XVv8BRX test@testkey";
+        String storedRsaKey =
+            "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC2D2Cs0XAEqm+ajJpumIPrMpKp0CWtIW+8ZY2/MJCW"
+                + "hge1eY18u9I3PPnkMVJsTOaN0wQojjw4AkKgKjNZXA9wyUq56UyN/stmipu8zifWPgxQGDRkuzzZ6buk"
+                + "ef8q2Awjpo8hv5/0SRPJxQLEafESnUP+Uu/LUwk5VVC7PHzywJRUGFuzDl/uT72+6hqpL2YpC6aTl4/P"
+                + "2eDvUQhCdL9dBmUSFX8ftT53W1jhsaQl7mPElVgSCtWz3IyRkogobMPrpJW/IPKEiojKIuvNoNv4CDR6" + "ybeVjHOJMb9wi62rXo+CzUsW0Y4jPOX/OykAm5vrNOhQhw0aaBcv5XVv8BRX";
         try {
-            Security.addProvider(new BouncyCastleProvider());
-            KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA", "BC");
-            keyPairGenerator.initialize(1024, new SecureRandom());
-            KeyPair caKeyPair = keyPairGenerator.generateKeyPair();
-            X509Certificate caCertificate = CertUtils.generateV3Certificate(null, caKeyPair, caKeyPair.getPublic(), "CN=test", "SHA256WithRSAEncryption", 365, null, null);
-            final KeyPair clientKeyPair = CertUtils.generateRandomKeyPair(1024);
-            final List<String> domainNames = Arrays.asList("domain1.com", "www.2.domain2.com", "3.domain3.com");
-            final List<String> addressList = Arrays.asList("1.2.3.4", "192.168.1.1", "2a02:120b:2c16:f6d0:d9df:8ebc:e44a:f181");
-            final X509Certificate clientCert = CertUtils.generateV3Certificate(caCertificate, caKeyPair, clientKeyPair.getPublic(),
-                    "CN=domain.example", "SHA256WithRSAEncryption", 10, domainNames, addressList);
-            clientCert.verify(caKeyPair.getPublic());
-            if (clientCert.getIssuerDN().equals(caCertificate.getIssuerDN()) && clientCert.getSigAlgName().equals("SHA256WITHRSA")) {
-                resultMap.put("certificate", "true");
+            String parsedKey = SSHKeysHelper.getPublicKeyFromKeyMaterial(rsaKey);
+            String fingerprint = SSHKeysHelper.getPublicKeyFingerprint(parsedKey);
+            if (storedRsaKey.equals(parsedKey) && "f6:96:3f:f4:78:f7:80:11:6c:f8:e3:2b:40:20:f1:14".equals(fingerprint)) {
+                resultMap.put("sshkey", "true");
             } else {
-                resultMap.put("certificate", "false");
+                resultMap.put("sshkey", "false");
             }
-        } catch (Exception e) {
-            resultMap.put("certificate", "false");
+        } catch (Exception e){
+            resultMap.put("sshkey", "false");
         }
         System.out.printf("%s%n", resultMap);
     }
