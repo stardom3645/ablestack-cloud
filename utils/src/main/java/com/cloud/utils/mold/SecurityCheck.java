@@ -65,7 +65,7 @@ public class SecurityCheck {
         } catch (EncryptionException e){
             resultMap.put("encrypt", "false");
         }
-        // Sshkey (SSH 키페어에 관련된 프로세스가 정상적으로 동작하는지 확인 )
+        // Sshkey (SSH public key의 Key material 와 fingerprint 관련 프로세스가 정상적으로 동작하는지 확인)
         String rsaKey =
             "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC2D2Cs0XAEqm+ajJpumIPrMpKp0CWtIW+8ZY2/MJCW"
                 + "hge1eY18u9I3PPnkMVJsTOaN0wQojjw4AkKgKjNZXA9wyUq56UyN/stmipu8zifWPgxQGDRkuzzZ6buk"
@@ -79,32 +79,29 @@ public class SecurityCheck {
                 + "2eDvUQhCdL9dBmUSFX8ftT53W1jhsaQl7mPElVgSCtWz3IyRkogobMPrpJW/IPKEiojKIuvNoNv4CDR6" + "ybeVjHOJMb9wi62rXo+CzUsW0Y4jPOX/OykAm5vrNOhQhw0aaBcv5XVv8BRX";
         rsaKey = new String(Base64.decodeBase64(rsaKey.getBytes()));
         String[] key = rsaKey.split(" ");
-        String parsedKey = key[0].concat(" ").concat(key[1]);
-
+        String parsedKey = "";
+        parsedKey = key[0].concat(" ").concat(key[1]);
         String keys[] = parsedKey.split(" ");
-        if (keys.length < 2) {
-            resultMap.put("sshkey", "false");
-        }
         byte[] keyBytes = Base64.decodeBase64(keys[1]);
         MessageDigest md5 = null;
-        try {
-            md5 = MessageDigest.getInstance("MD5");
-        } catch (NoSuchAlgorithmException e) {
-            resultMap.put("sshkey", "false");
-        }
         String fingerprint = "";
         String sumString = "";
-        if (md5 != null) {
-            sumString = toHexString(md5.digest(keyBytes));
-        }
-        for (int i = 2; i <= sumString.length(); i += 2) {
-            fingerprint += sumString.substring(i - 2, i);
-            if (i != sumString.length())
-                fingerprint += ":";
-        }
-        if (storedRsaKey.equals(parsedKey) && "f6:96:3f:f4:78:f7:80:11:6c:f8:e3:2b:40:20:f1:14".equals(fingerprint)) {
-            resultMap.put("sshkey", "true");
-        } else {
+        try {
+            md5 = MessageDigest.getInstance("MD5");
+            if (md5 != null) {
+                sumString = toHexString(md5.digest(keyBytes));
+            }
+            for (int i = 2; i <= sumString.length(); i += 2) {
+                fingerprint += sumString.substring(i - 2, i);
+                if (i != sumString.length())
+                    fingerprint += ":";
+            }
+            if (storedRsaKey.equals(parsedKey) && "f6:96:3f:f4:78:f7:80:11:6c:f8:e3:2b:40:20:f1:14".equals(fingerprint)) {
+                resultMap.put("sshkey", "true");
+            } else {
+                resultMap.put("sshkey", "false");
+            }
+        } catch (NoSuchAlgorithmException e) {
             resultMap.put("sshkey", "false");
         }
         System.out.printf("%s%n", resultMap);
