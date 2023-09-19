@@ -65,7 +65,7 @@ public class SecurityCheck {
         } catch (EncryptionException e){
             resultMap.put("encrypt", "false");
         }
-        // Sshkey (SSH public key의 Key material 와 fingerprint 관련 프로세스가 정상적으로 동작하는지 확인)
+        // Sshkey (SSH 공개키로 fingerprint 검증하는 프로세스가 정상적으로 동작하는지 확인)
         String rsaKey =
             "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC2D2Cs0XAEqm+ajJpumIPrMpKp0CWtIW+8ZY2/MJCW"
                 + "hge1eY18u9I3PPnkMVJsTOaN0wQojjw4AkKgKjNZXA9wyUq56UyN/stmipu8zifWPgxQGDRkuzzZ6buk"
@@ -76,11 +76,13 @@ public class SecurityCheck {
             "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC2D2Cs0XAEqm+ajJpumIPrMpKp0CWtIW+8ZY2/MJCW"
                 + "hge1eY18u9I3PPnkMVJsTOaN0wQojjw4AkKgKjNZXA9wyUq56UyN/stmipu8zifWPgxQGDRkuzzZ6buk"
                 + "ef8q2Awjpo8hv5/0SRPJxQLEafESnUP+Uu/LUwk5VVC7PHzywJRUGFuzDl/uT72+6hqpL2YpC6aTl4/P"
-                + "2eDvUQhCdL9dBmUSFX8ftT53W1jhsaQl7mPElVgSCtWz3IyRkogobMPrpJW/IPKEiojKIuvNoNv4CDR6" + "ybeVjHOJMb9wi62rXo+CzUsW0Y4jPOX/OykAm5vrNOhQhw0aaBcv5XVv8BRX";
+                + "2eDvUQhCdL9dBmUSFX8ftT53W1jhsaQl7mPElVgSCtWz3IyRkogobMPrpJW/IPKEiojKIuvNoNv4CDR6" 
+                + "ybeVjHOJMb9wi62rXo+CzUsW0Y4jPOX/OykAm5vrNOhQhw0aaBcv5XVv8BRX";
         rsaKey = new String(Base64.decodeBase64(rsaKey.getBytes()));
         String[] key = rsaKey.split(" ");
         String parsedKey = "";
         parsedKey = key[0].concat(" ").concat(key[1]);
+        System.out.printf("%s%n", parsedKey);
         String keys[] = parsedKey.split(" ");
         byte[] keyBytes = Base64.decodeBase64(keys[1]);
         MessageDigest md5 = null;
@@ -96,12 +98,16 @@ public class SecurityCheck {
                 if (i != sumString.length())
                     fingerprint += ":";
             }
+            System.out.printf("%s%n", fingerprint);
             if (storedRsaKey.equals(parsedKey) && "f6:96:3f:f4:78:f7:80:11:6c:f8:e3:2b:40:20:f1:14".equals(fingerprint)) {
+                System.out.printf("%s%n", "true");
                 resultMap.put("sshkey", "true");
             } else {
+                System.out.printf("%s%n", "false");
                 resultMap.put("sshkey", "false");
             }
         } catch (NoSuchAlgorithmException e) {
+            System.out.printf("%s%n", "catch");
             resultMap.put("sshkey", "false");
         }
         System.out.printf("%s%n", resultMap);
