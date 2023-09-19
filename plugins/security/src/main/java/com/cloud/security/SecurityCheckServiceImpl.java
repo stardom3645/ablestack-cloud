@@ -55,6 +55,7 @@ import com.cloud.security.dao.SecurityCheckDao;
 import com.cloud.utils.component.ManagerBase;
 import com.cloud.utils.component.PluggableService;
 import com.cloud.utils.concurrency.NamedThreadFactory;
+import com.cloud.utils.exception.CloudRuntimeException;
 import com.cloud.utils.script.Script;
 
 public class SecurityCheckServiceImpl extends ManagerBase implements PluggableService, SecurityCheckService, Configurable {
@@ -111,18 +112,21 @@ public class SecurityCheckServiceImpl extends ManagerBase implements PluggableSe
                 process = processBuilder.start();
                 BufferedReader bfr = new BufferedReader(new InputStreamReader(process.getInputStream()));
                 String line;
+                String result;
+                String checkMessage = "";
                 while ((line = bfr.readLine()) != null) {
-                    String[] temp = line.split(",");
-                    String checkName = temp[0];
-                    String checkResult = temp[1];
-                    String checkMessage;
-                    if ("false".equals(checkResult)) {
-                        checkMessage = "process does not operate normally";
-                        alertManager.sendAlert(AlertManager.AlertType.ALERT_TYPE_MANAGMENT_NODE, 0, new Long(0), "Management server node " + msHost.getServiceIP() + " security checker failed : "+ checkName + " process does not operate normally", "");
-                    } else {
-                        checkMessage = "process operates normally";
+                    result = line.replaceAll("\\{", "").replaceAll("\\}", "").replaceAll("\\s","");
+                    Map<String, String> resultMap = parseKeyValuePairs(result, ",", "=");
+                    for (String keys : resultMap.keySet()) {
+                        String value = (String) resultMap.get(keys);
+                        if (value == "false") {
+                            checkMessage = "process does not operate normally";
+                            alertManager.sendAlert(AlertManager.AlertType.ALERT_TYPE_MANAGMENT_NODE, 0, new Long(0), "Management server node " + msHost.getServiceIP() + " security check schedule failed : " + keys + " " + checkMessage, "");
+                        } else {
+                            checkMessage = "process operates normally";
+                        }
+                        updateSecurityCheckResult(msHost.getId(), keys, Boolean.parseBoolean(value), checkMessage);
                     }
-                    updateSecurityCheckResult(msHost.getId(), checkName, Boolean.parseBoolean(checkResult), checkMessage);
                 }
                 ActionEventUtils.onCompletedActionEvent(CallContext.current().getCallingUserId(), CallContext.current().getCallingAccountId(), EventVO.LEVEL_INFO,
                         EventTypes.EVENT_SECURITY_CHECK, "Successfully completed running security check schedule on management server", new Long(0), null, 0);
@@ -154,64 +158,42 @@ public class SecurityCheckServiceImpl extends ManagerBase implements PluggableSe
     public boolean runSecurityCheckCommand(final RunSecurityCheckCmd cmd) {
         Long mshostId = cmd.getMsHostId();
         ManagementServerHost mshost = msHostDao.findById(mshostId);
-        String result = Script.runSimpleBashScript("java -classpath /usr/share/cloudstack-common/lib/cloudstack-utils.jar com.cloud.utils.mold.SecurityCheck | grep -i request");
-        String resultChar = result.replaceAll("\\{", "").replaceAll("\\}", "").replaceAll("\\s","");
-        LOGGER.info("mold=================================");
-        LOGGER.info(resultChar);
-        LOGGER.info("mold=================================");
-        Map<String, String> resultMap = parseKeyValuePairs(resultChar, ",", "=");
-        String checkMessage = "";
-        for (String keys : resultMap.keySet()) {
-            String value = (String) resultMap.get(keys);
-            if (value == "false") {
-                checkMessage = "process does not operate normally.";
-                alertManager.sendAlert(AlertManager.AlertType.ALERT_TYPE_MANAGMENT_NODE, 0, new Long(0), "Management server node " + mshost.getServiceIP() + " security check failed : " + keys + " " + checkMessage, "");
-            }else {
-                checkMessage = "process operates normally";
+        String path = Script.findScript("scripts/security/", "securitycheck.sh");
+        if (path == null) {
+            throw new CloudRuntimeException(String.format("Unable to find the securitycheck script"));
+        }
+        ProcessBuilder processBuilder = new ProcessBuilder("sh", path);
+        Process process = null;
+        try {
+            process = processBuilder.start();
+            StringBuffer output = new StringBuffer();
+            BufferedReader bfr = new BufferedReader(new InputStreamReader(process.getInputStream()));
+            String line;
+            String result;
+            String checkMessage = "";
+            while ((line = bfr.readLine()) != null) {
+                result = line.replaceAll("\\{", "").replaceAll("\\}", "").replaceAll("\\s","");
+                Map<String, String> resultMap = parseKeyValuePairs(result, ",", "=");
+                for (String keys : resultMap.keySet()) {
+                    String value = (String) resultMap.get(keys);
+                    if (value == "false") {
+                        checkMessage = "process does not operate normally";
+                        alertManager.sendAlert(AlertManager.AlertType.ALERT_TYPE_MANAGMENT_NODE, 0, new Long(0), "Management server node " + mshost.getServiceIP() + " security check failed : " + keys + " " + checkMessage, "");
+                    } else {
+                        checkMessage = "process operates normally";
+                    }
+                    updateSecurityCheckResult(mshost.getId(), keys, Boolean.parseBoolean(value), checkMessage);
+                }
+                output.append(result);
             }
-            updateSecurityCheckResult(mshost.getId(), keys, Boolean.parseBoolean(value), checkMessage);
+            if (output.toString().contains("false")) {
+                return false;
+            } else {
+                return true;
+            }
+        } catch (IOException e) {
+            throw new CloudRuntimeException("Failed to execute security check command for management server: "+mshost.getId() +e);
         }
-        if (resultChar.contains("false")) {
-            return false;
-        } else {
-            return true;
-        }
-        // String path = Script.findScript("scripts/security/", "securitycheck.sh");
-        // if (path == null) {
-        //     throw new CloudRuntimeException(String.format("Unable to find the securitycheck script"));
-        // }
-        // ProcessBuilder processBuilder = new ProcessBuilder("sh", path);
-        // Process process = null;
-        // try {
-        //     process = processBuilder.start();
-        //     StringBuffer output = new StringBuffer();
-        //     BufferedReader bfr = new BufferedReader(new InputStreamReader(process.getInputStream()));
-        //     String line;
-        //     String result;
-        //     String checkMessage = "";
-        //     while ((line = bfr.readLine()) != null) {
-        //         result = line.replaceAll("\\{", "").replaceAll("\\}", "").replaceAll("\\s","");
-        //         Map<String, String> resultMap = parseKeyValuePairs(result, ",", "=");
-        //         for (String keys : resultMap.keySet()) {
-        //             String value = (String) resultMap.get(keys);
-        //             if (value == "false") {
-        //                 checkMessage = "process does not operate normally";
-        //                 alertManager.sendAlert(AlertManager.AlertType.ALERT_TYPE_MANAGMENT_NODE, 0, new Long(0), "Management server node " + mshost.getServiceIP() + " security check failed : " + keys + " " + checkMessage, "");
-        //             } else {
-        //                 checkMessage = "process operates normally";
-        //             }
-        //             updateSecurityCheckResult(mshost.getId(), keys, Boolean.parseBoolean(value), checkMessage);
-        //         }
-        //         output.append(result);
-        //     }
-        //     if (output.toString().contains("false")) {
-        //         return false;
-        //     } else {
-        //         return true;
-        //     }
-        // } catch (IOException e) {
-        //     throw new CloudRuntimeException("Failed to execute security check command for management server: "+mshost.getId() +e);
-        // }
     }
 
     private void updateSecurityCheckResult(final long msHostId, String checkName, boolean checkResult, String checkMessage) {
