@@ -20,13 +20,9 @@
 package com.cloud.utils.mold;
 
 import java.nio.charset.StandardCharsets;
-import java.security.Security;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
-
-import com.cloud.utils.PasswordGenerator;
 import com.cloud.utils.StringUtils;
 import com.cloud.utils.crypt.AeadBase64Encryptor;
 import com.cloud.utils.crypt.EncryptionException;
@@ -55,19 +51,6 @@ public class SecurityCheck {
             }
         } catch (EncryptionException e){
             resultMap.put("encrypt", "false");
-        }
-        // Password (password 정책 관련 프로세스가 정상적으로 동작하는지 확인)
-        BouncyCastleProvider provider = new BouncyCastleProvider();
-        if (Security.getProvider(provider.getName()) == null) {
-            Security.addProvider(provider);
-        }
-        String password = PasswordGenerator.generateRandomPassword(8);
-        for (char c : password.toCharArray()) {
-            if (!Character.isDigit(c) && Character.isLowerCase(c) && Character.isUpperCase(c)) {
-                resultMap.put("password", "true");
-            } else {
-                resultMap.put("password", "false");
-            }
         }
         System.out.printf("%s%n", resultMap);
     }
