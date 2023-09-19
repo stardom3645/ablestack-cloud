@@ -21,6 +21,9 @@ package com.cloud.utils.mold;
 
 import java.nio.charset.StandardCharsets;
 import java.security.KeyPair;
+import java.security.KeyPairGenerator;
+import java.security.SecureRandom;
+import java.security.Security;
 import java.security.cert.X509Certificate;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -28,6 +31,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.cloudstack.utils.security.CertUtils;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 import com.cloud.utils.StringUtils;
 import com.cloud.utils.crypt.AeadBase64Encryptor;
@@ -36,7 +40,7 @@ import com.cloud.utils.crypt.EncryptionException;
 public class SecurityCheck {
     public static void main(String[] args) throws EncryptionException, Exception {
         Map<String, String> resultMap = new HashMap<>();
-        // Request (Request 및 Response 에 포함된 민감한 문자열을 제거하는지 확인)
+        // Request (Request 및 Response에 포함된 민감한 문자열을 제거하는지 확인)
         final String input = "name=SS1&provider=SMB&zoneid=5a60af2b-3025-4f2a-9ecc-8e33bf2b94e3&url=cifs%3A%2F%2F10.102.192.150%2FSMB-Share%2Fsowmya%2Fsecondary%3Fuser%3Dsowmya%26password%3DXXXXX%40123%26domain%3DBLR";
         final String expected = "name=SS1&provider=SMB&zoneid=5a60af2b-3025-4f2a-9ecc-8e33bf2b94e3&url=cifs%3A%2F%2F10.102.192.150%2FSMB-Share%2Fsowmya%2Fsecondary%3Fuser%3Dsowmya%26domain%3DBLR";
         final String result = StringUtils.cleanString(input);
@@ -60,7 +64,10 @@ public class SecurityCheck {
         }
         // Certificate (보안기능에 적합한 알고리즘으로 암호화된 인증서가 정상적으로 생성되는지 확인)
         try {
-            KeyPair caKeyPair = CertUtils.generateRandomKeyPair(1024);
+            Security.addProvider(new BouncyCastleProvider());
+            KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA", "BC");
+            keyPairGenerator.initialize(1024, new SecureRandom());
+            KeyPair caKeyPair = keyPairGenerator.generateKeyPair();
             X509Certificate caCertificate = CertUtils.generateV3Certificate(null, caKeyPair, caKeyPair.getPublic(), "CN=test", "SHA256WithRSAEncryption", 365, null, null);
             final KeyPair clientKeyPair = CertUtils.generateRandomKeyPair(1024);
             final List<String> domainNames = Arrays.asList("domain1.com", "www.2.domain2.com", "3.domain3.com");
