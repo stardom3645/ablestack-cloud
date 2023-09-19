@@ -30,7 +30,6 @@ import java.util.Map;
 import org.apache.cloudstack.utils.security.DigestHelper;
 
 import com.amazonaws.util.StringInputStream;
-import com.cloud.utils.PasswordGenerator;
 import com.cloud.utils.StringUtils;
 import com.cloud.utils.crypt.AeadBase64Encryptor;
 import com.cloud.utils.crypt.EncryptionException;
@@ -60,7 +59,7 @@ public class SecurityCheck {
         } catch (EncryptionException e){
             resultMap.put("encrypt", "false");
         }
-        // digest
+        // checksum
         try {
             final String inputStr = "01234567890123456789012345678901234567890123456789012345678901234567890123456789\n";
             final String sha256Checksum = "{SHA-256}c6ab15af7842d23d3c06c138b53a7d09c5e351a79c4eb3c8ca8d65e5ce8900ab";
