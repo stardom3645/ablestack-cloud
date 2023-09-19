@@ -40,7 +40,7 @@ import com.cloud.utils.crypt.EncryptionException;
 public class SecurityCheck {
     public static void main(String[] args) throws EncryptionException, Exception {
         Map<String, String> resultMap = new HashMap<>();
-        // Request (Request 및 Response에 포함된 민감한 문자열을 제거하는지 확인)
+        // Request (Request 및 Response에 포함된 민감한 문자열을 제거하는 프로세스가 정상적으로 동작하는지 확인)
         final String input = "name=SS1&provider=SMB&zoneid=5a60af2b-3025-4f2a-9ecc-8e33bf2b94e3&url=cifs%3A%2F%2F10.102.192.150%2FSMB-Share%2Fsowmya%2Fsecondary%3Fuser%3Dsowmya%26password%3DXXXXX%40123%26domain%3DBLR";
         final String expected = "name=SS1&provider=SMB&zoneid=5a60af2b-3025-4f2a-9ecc-8e33bf2b94e3&url=cifs%3A%2F%2F10.102.192.150%2FSMB-Share%2Fsowmya%2Fsecondary%3Fuser%3Dsowmya%26domain%3DBLR";
         final String result = StringUtils.cleanString(input);
@@ -49,7 +49,7 @@ public class SecurityCheck {
         } else {
             resultMap.put("request", "false");
         }
-        // Encrypt (보안기능에 적합한 알고리즘으로 암호화된 암호가 정상적으로 복호화되는지 확인)
+        // Encrypt (보안기능에 적합한 알고리즘으로 암호화된 암호를 복호화하는 프로세스가 정상적으로 동작하는지 확인)
         final String pwd = "managementkey";
         AeadBase64Encryptor encryptor = new AeadBase64Encryptor(pwd.getBytes(StandardCharsets.UTF_8));
         try {
@@ -62,7 +62,7 @@ public class SecurityCheck {
         } catch (EncryptionException e){
             resultMap.put("encrypt", "false");
         }
-        // Certificate (보안기능에 적합한 알고리즘으로 암호화된 인증서가 정상적으로 생성되는지 확인)
+        // Certificate (보안기능에 적합한 알고리즘으로 암호화된 인증서를 추가하는 프로세스가 정상적으로 동작하는지 확인)
         try {
             Security.addProvider(new BouncyCastleProvider());
             KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA", "BC");
