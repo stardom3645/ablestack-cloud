@@ -22,5 +22,5 @@
 # return : {이름, 결과}
 
 jarfile='/usr/share/cloudstack-common/lib/cloudstack-utils.jar'
-result=$(java -classpath $jarfile com.cloud.utils.mold.SecurityCheck)
+result=$(java -classpath $jarfile com.cloud.utils.mold.SecurityCheckUtil)
 echo $result

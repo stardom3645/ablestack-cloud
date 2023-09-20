@@ -27,7 +27,7 @@ import com.cloud.utils.StringUtils;
 import com.cloud.utils.crypt.AeadBase64Encryptor;
 import com.cloud.utils.crypt.EncryptionException;
 
-public class SecurityCheck {
+public class SecurityCheckUtil {
     public static void main(String[] args) throws EncryptionException {
         Map<String, String> resultMap = new HashMap<>();
         // Request (Request 및 Response에 포함된 민감한 문자열을 제거하는 프로세스가 정상적으로 동작하는지 확인)
