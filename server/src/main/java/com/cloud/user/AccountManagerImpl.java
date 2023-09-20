@@ -1467,7 +1467,12 @@ public class AccountManagerImpl extends ManagerBase implements AccountManager, M
         boolean isDomainAdmin = isDomainAdmin(callingAccount.getId());
         boolean isAdmin = isDomainAdmin || isRootAdminExecutingPasswordUpdate;
         if (isAdmin) {
+            List<DataCenterVO> dcList = new ArrayList<>();
+            dcList = ApiDBUtils.listZones();
             s_logger.trace(String.format("Admin account [uuid=%s] executing password update for user [%s] ", callingAccount.getUuid(), user.getUuid()));
+            if (validatePassword(user, "password") && "admin".equals(user.getUsername()) && (dcList == null || dcList.size() == 0)) {
+                ActionEventUtils.onActionEvent(user.getId(), user.getAccountId(), getAccount(user.getAccountId()).getDomainId(), EventTypes.EVENT_USER_UPDATE, "The initial default password has been changed", user.getId(), ApiCommandResourceType.User.toString());
+            }
         }
         if (!isAdmin && StringUtils.isBlank(currentPassword)) {
             throw new InvalidParameterValueException("To set a new password the current password must be provided.");
@@ -1481,6 +1486,24 @@ public class AccountManagerImpl extends ManagerBase implements AccountManager, M
         UserAuthenticator userAuthenticator = _userPasswordEncoders.get(0);
         String newPasswordEncoded = userAuthenticator.encode(newPassword);
         user.setPassword(newPasswordEncoded);
+    }
+
+    protected boolean validatePassword(UserVO user, String password) {
+        AccountVO userAccount = _accountDao.findById(user.getAccountId());
+        boolean passwordMatchesFirstLogin = false;
+        for (UserAuthenticator userAuthenticator : _userPasswordEncoders) {
+            Pair<Boolean, ActionOnFailedAuthentication> authenticationResult = userAuthenticator.authenticate(user.getUsername(), password, userAccount.getDomainId(), null);
+            if (authenticationResult == null) {
+                s_logger.trace(String.format("Authenticator [%s] is returning null for the authenticate mehtod.", userAuthenticator.getClass()));
+                continue;
+            }
+            if (BooleanUtils.toBoolean(authenticationResult.first())) {
+                s_logger.debug(String.format("User [id=%s] re-authenticated [authenticator=%s] during password update.", user.getUuid(), userAuthenticator.getName()));
+                passwordMatchesFirstLogin = true;
+                break;
+            }
+        }
+        return passwordMatchesFirstLogin;
     }
 
     /**
