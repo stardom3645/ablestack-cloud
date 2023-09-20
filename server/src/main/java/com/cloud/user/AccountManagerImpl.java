@@ -1471,7 +1471,7 @@ public class AccountManagerImpl extends ManagerBase implements AccountManager, M
             dcList = ApiDBUtils.listZones();
             s_logger.trace(String.format("Admin account [uuid=%s] executing password update for user [%s] ", callingAccount.getUuid(), user.getUuid()));
             if (validatePassword(user, "password") && "admin".equals(user.getUsername()) && (dcList == null || dcList.size() == 0)) {
-                ActionEventUtils.onActionEvent(user.getId(), user.getAccountId(), getAccount(user.getAccountId()).getDomainId(), EventTypes.EVENT_USER_UPDATE, "The initial default password has been changed", user.getId(), ApiCommandResourceType.User.toString());
+                ActionEventUtils.onActionEvent(user.getId(), user.getAccountId(), getAccount(user.getAccountId()).getDomainId(), EventTypes.EVENT_USER_UPDATE, "The initial default password for the administrator account has been changed.", user.getId(), ApiCommandResourceType.User.toString());
             }
         }
         if (!isAdmin && StringUtils.isBlank(currentPassword)) {
