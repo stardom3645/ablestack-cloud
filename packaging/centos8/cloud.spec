@@ -227,6 +227,7 @@ mkdir -p ${RPM_BUILD_ROOT}%{_datadir}/%{name}-common/vms
 mkdir -p ${RPM_BUILD_ROOT}%{_datadir}/%{name}-common/python-site
 mkdir -p ${RPM_BUILD_ROOT}/usr/bin
 cp -r scripts/* ${RPM_BUILD_ROOT}%{_datadir}/%{name}-common/scripts
+cp utils/target/lib/*jar ${RPM_BUILD_ROOT}%{_datadir}/%{name}-common/lib/
 install -D systemvm/dist/* ${RPM_BUILD_ROOT}%{_datadir}/%{name}-common/vms/
 install python/lib/cloud_utils.py ${RPM_BUILD_ROOT}%{_datadir}/%{name}-common/python-site/cloud_utils.py
 cp -r python/lib/cloudutils ${RPM_BUILD_ROOT}%{_datadir}/%{name}-common/python-site/
@@ -234,6 +235,7 @@ python3 -m py_compile ${RPM_BUILD_ROOT}%{_datadir}/%{name}-common/python-site/cl
 python3 -m compileall ${RPM_BUILD_ROOT}%{_datadir}/%{name}-common/python-site/cloudutils
 cp build/gitrev.txt ${RPM_BUILD_ROOT}%{_datadir}/%{name}-common/scripts
 cp packaging/centos8/cloudstack-sccs ${RPM_BUILD_ROOT}/usr/bin
+cp utils/target/dependencies/* ${RPM_BUILD_ROOT}%{_datadir}/%{name}-common/lib/
 
 mkdir -p ${RPM_BUILD_ROOT}%{_datadir}/%{name}-common/scripts/network/cisco
 cp -r plugins/network-elements/cisco-vnmc/src/main/scripts/network/cisco/* ${RPM_BUILD_ROOT}%{_datadir}/%{name}-common/scripts/network/cisco
