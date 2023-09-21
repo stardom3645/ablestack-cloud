@@ -235,13 +235,13 @@ python3 -m py_compile ${RPM_BUILD_ROOT}%{_datadir}/%{name}-common/python-site/cl
 python3 -m compileall ${RPM_BUILD_ROOT}%{_datadir}/%{name}-common/python-site/cloudutils
 cp build/gitrev.txt ${RPM_BUILD_ROOT}%{_datadir}/%{name}-common/scripts
 cp packaging/centos8/cloudstack-sccs ${RPM_BUILD_ROOT}/usr/bin
-cp utils/target/dependencies/junit-4.13.2.jar ${RPM_BUILD_ROOT}%{_datadir}/%{name}-common/lib/
-cp utils/target/dependencies/hamcrest-all-1.3.jar ${RPM_BUILD_ROOT}%{_datadir}/%{name}-common/lib/
-cp utils/target/dependencies/bcprov-jdk15on-1.70.jar ${RPM_BUILD_ROOT}%{_datadir}/%{name}-common/lib/
-cp utils/target/dependencies/javax.servlet-api-4.0.1.jar ${RPM_BUILD_ROOT}%{_datadir}/%{name}-common/lib/
-cp utils/target/dependencies/spring-test-5.3.26.jar ${RPM_BUILD_ROOT}%{_datadir}/%{name}-common/lib/
-cp utils/target/dependencies/commons-logging-1.2.jar ${RPM_BUILD_ROOT}%{_datadir}/%{name}-common/lib/
-cp utils/target/dependencies/jsch-0.1.55.jar ${RPM_BUILD_ROOT}%{_datadir}/%{name}-common/lib/
+cp utils/target/dependencies/junit-*.jar ${RPM_BUILD_ROOT}%{_datadir}/%{name}-common/lib/
+cp utils/target/dependencies/hamcrest-all-*.jar ${RPM_BUILD_ROOT}%{_datadir}/%{name}-common/lib/
+cp utils/target/dependencies/bcprov-jdk15on-*.jar ${RPM_BUILD_ROOT}%{_datadir}/%{name}-common/lib/
+cp utils/target/dependencies/javax.servlet-api-*.jar ${RPM_BUILD_ROOT}%{_datadir}/%{name}-common/lib/
+cp utils/target/dependencies/spring-test-*.jar ${RPM_BUILD_ROOT}%{_datadir}/%{name}-common/lib/
+cp utils/target/dependencies/commons-logging-*.jar ${RPM_BUILD_ROOT}%{_datadir}/%{name}-common/lib/
+cp utils/target/dependencies/jsch-*.jar ${RPM_BUILD_ROOT}%{_datadir}/%{name}-common/lib/
 
 mkdir -p ${RPM_BUILD_ROOT}%{_datadir}/%{name}-common/scripts/network/cisco
 cp -r plugins/network-elements/cisco-vnmc/src/main/scripts/network/cisco/* ${RPM_BUILD_ROOT}%{_datadir}/%{name}-common/scripts/network/cisco
