@@ -290,6 +290,7 @@
                         </goals>
                         <configuration>
                             <outputDirectory>${project.build.directory}/dependencies</outputDirectory>
+                            <includeScope>runtime</includeScope>
                         </configuration>
                     </execution>
                 </executions>
