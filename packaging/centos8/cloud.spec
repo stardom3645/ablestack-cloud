@@ -288,14 +288,13 @@ install python/bindir/cloud-external-ipallocator.py ${RPM_BUILD_ROOT}%{_bindir}/
 install -D client/target/pythonlibs/jasypt-1.9.3.jar ${RPM_BUILD_ROOT}%{_datadir}/%{name}-common/lib/jasypt-1.9.3.jar
 install -D utils/target/cloud-utils-new-%{_maventag}-SHADED.jar ${RPM_BUILD_ROOT}%{_datadir}/%{name}-common/lib/%{name}-utils.jar
 install -D utils/target/cloud-utils-%{_maventag}-tests.jar ${RPM_BUILD_ROOT}%{_datadir}/%{name}-common/lib/%{name}-utils-test.jar
-cp utils/target/dependencies/junit*jar ${RPM_BUILD_ROOT}%{_datadir}/%{name}-common/lib/
-cp utils/target/dependencies/hamcrest-all*jar ${RPM_BUILD_ROOT}%{_datadir}/%{name}-common/lib/
-cp utils/target/dependencies/bcprov-jdk15on*jar ${RPM_BUILD_ROOT}%{_datadir}/%{name}-common/lib/
-cp utils/target/dependencies/javax.servlet-api*jar ${RPM_BUILD_ROOT}%{_datadir}/%{name}-common/lib/
-cp utils/target/dependencies/spring-test*jar ${RPM_BUILD_ROOT}%{_datadir}/%{name}-common/lib/
-cp utils/target/dependencies/spring-core*jar ${RPM_BUILD_ROOT}%{_datadir}/%{name}-common/lib/
-cp utils/target/dependencies/commons-logging*jar ${RPM_BUILD_ROOT}%{_datadir}/%{name}-common/lib/
-cp utils/target/dependencies/jsch*jar ${RPM_BUILD_ROOT}%{_datadir}/%{name}-common/lib/
+cp utils/target/dependencies/junit-4.13.2.jar ${RPM_BUILD_ROOT}%{_datadir}/%{name}-common/lib/
+cp utils/target/dependencies/hamcrest-all-1.3.jar ${RPM_BUILD_ROOT}%{_datadir}/%{name}-common/lib/
+cp utils/target/dependencies/bcprov-jdk15on-1.70.jar ${RPM_BUILD_ROOT}%{_datadir}/%{name}-common/lib/
+cp utils/target/dependencies/javax.servlet-api-4.0.1.jar ${RPM_BUILD_ROOT}%{_datadir}/%{name}-common/lib/
+cp utils/target/dependencies/spring-test-5.3.26.jar ${RPM_BUILD_ROOT}%{_datadir}/%{name}-common/lib/
+cp utils/target/dependencies/commons-logging-1.2.jar ${RPM_BUILD_ROOT}%{_datadir}/%{name}-common/lib/
+cp utils/target/dependencies/jsch-0.1.55.jar ${RPM_BUILD_ROOT}%{_datadir}/%{name}-common/lib/
 
 install -D packaging/centos8/cloud-ipallocator.rc ${RPM_BUILD_ROOT}%{_initrddir}/%{name}-ipallocator
 install -D packaging/centos8/cloud.limits ${RPM_BUILD_ROOT}%{_sysconfdir}/security/limits.d/cloud
