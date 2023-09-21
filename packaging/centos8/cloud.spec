@@ -240,6 +240,7 @@ cp utils/target/dependencies/hamcrest-all-*.jar ${RPM_BUILD_ROOT}%{_datadir}/%{n
 cp utils/target/dependencies/bcprov-jdk15on-*.jar ${RPM_BUILD_ROOT}%{_datadir}/%{name}-common/lib/
 cp utils/target/dependencies/javax.servlet-api-*.jar ${RPM_BUILD_ROOT}%{_datadir}/%{name}-common/lib/
 cp utils/target/dependencies/spring-test-*.jar ${RPM_BUILD_ROOT}%{_datadir}/%{name}-common/lib/
+cp utils/target/dependencies/spring-core-*.jar ${RPM_BUILD_ROOT}%{_datadir}/%{name}-common/lib/
 cp utils/target/dependencies/commons-logging-*.jar ${RPM_BUILD_ROOT}%{_datadir}/%{name}-common/lib/
 cp utils/target/dependencies/jsch-*.jar ${RPM_BUILD_ROOT}%{_datadir}/%{name}-common/lib/
 
