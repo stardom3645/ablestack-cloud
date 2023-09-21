@@ -227,7 +227,6 @@ mkdir -p ${RPM_BUILD_ROOT}%{_datadir}/%{name}-common/vms
 mkdir -p ${RPM_BUILD_ROOT}%{_datadir}/%{name}-common/python-site
 mkdir -p ${RPM_BUILD_ROOT}/usr/bin
 cp -r scripts/* ${RPM_BUILD_ROOT}%{_datadir}/%{name}-common/scripts
-cp utils/target/lib/*jar ${RPM_BUILD_ROOT}%{_datadir}/%{name}-common/lib/
 install -D systemvm/dist/* ${RPM_BUILD_ROOT}%{_datadir}/%{name}-common/vms/
 install python/lib/cloud_utils.py ${RPM_BUILD_ROOT}%{_datadir}/%{name}-common/python-site/cloud_utils.py
 cp -r python/lib/cloudutils ${RPM_BUILD_ROOT}%{_datadir}/%{name}-common/python-site/
@@ -635,9 +634,7 @@ pip install --upgrade /usr/share/cloudstack-marvin/Marvin-*.tar.gz
 %attr(0644,root,root) %{_datadir}/%{name}-common/python-site/cloud_utils.py
 %attr(0644,root,root) %{_datadir}/%{name}-common/python-site/__pycache__/*
 %attr(0644,root,root) %{_datadir}/%{name}-common/python-site/cloudutils/*
-%attr(0644, root, root) %{_datadir}/%{name}-common/lib/jasypt-1.9.3.jar
-%attr(0644, root, root) %{_datadir}/%{name}-common/lib/%{name}-utils.jar
-%attr(0644, root, root) %{_datadir}/%{name}-common/lib/%{name}-utils-test.jar
+%attr(0644, root, root) %{_datadir}/%{name}-common/lib/*.jar
 %{_defaultdocdir}/%{name}-common-%{version}/LICENSE
 %{_defaultdocdir}/%{name}-common-%{version}/NOTICE
 
