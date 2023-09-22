@@ -289,8 +289,56 @@
                             <goal>copy-dependencies</goal>
                         </goals>
                         <configuration>
-                            <outputDirectory>${project.build.directory}/dependencies</outputDirectory>
-                            <includeScope>runtime</includeScope>
+                        <artifactItems>
+                            <artifactItem>
+                                <groupId>junit</groupId>
+                                <artifactId>junit</artifactId>
+                                <version>${cs.junit.version}</version>
+                                <overWrite>false</overWrite>
+                                <outputDirectory>${project.build.directory}/lib</outputDirectory>
+                            </artifactItem>
+                            <artifactItem>
+                                <groupId>hamcrest-all</groupId>
+                                <artifactId>org.hamcrest</artifactId>
+                                <version>${cs.hamcrest.version}</version>
+                                <overWrite>false</overWrite>
+                                <outputDirectory>${project.build.directory}/lib</outputDirectory>
+                            </artifactItem>
+                            <artifactItem>
+                                <groupId>org.bouncycastle</groupId>
+                                <artifactId>bcprov-jdk15on</artifactId>
+                                <overWrite>false</overWrite>
+                                <outputDirectory>${project.build.directory}/lib</outputDirectory>
+                            </artifactItem>
+                            <artifactItem>
+                                <groupId>javax.servlet</groupId>
+                                <artifactId>javax.servlet-api</artifactId>
+                                <version>${cs.servlet.version}</version>
+                                <overWrite>false</overWrite>
+                                <outputDirectory>${project.build.directory}/lib</outputDirectory>
+                            </artifactItem>
+                            <artifactItem>
+                                <groupId>org.springframework</groupId>
+                                <artifactId>spring-context</artifactId>
+                                <version>${org.springframework.version}</version>
+                                <overWrite>false</overWrite>
+                                <outputDirectory>${project.build.directory}/lib</outputDirectory>
+                            </artifactItem>
+                            <artifactItem>
+                                <groupId>commons-logging</groupId>
+                                <artifactId>commons-logging</artifactId>
+                                <version>${cs.commons-logging.version}</version>
+                                <overWrite>false</overWrite>
+                                <outputDirectory>${project.build.directory}/lib</outputDirectory>
+                            </artifactItem>
+                            <artifactItem>
+                                <groupId>com.jcraft</groupId>
+                                <artifactId>jsch</artifactId>
+                                <version>${cs.jsch.version}</version>
+                                <overWrite>false</overWrite>
+                                <outputDirectory>${project.build.directory}/lib</outputDirectory>
+                            </artifactItem>
+                        </artifactItems>
                         </configuration>
                     </execution>
                 </executions>

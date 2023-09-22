@@ -225,6 +225,7 @@ mkdir -p ${RPM_BUILD_ROOT}%{_sysconfdir}/sudoers.d
 mkdir -p ${RPM_BUILD_ROOT}%{_datadir}/%{name}-common/scripts
 mkdir -p ${RPM_BUILD_ROOT}%{_datadir}/%{name}-common/vms
 mkdir -p ${RPM_BUILD_ROOT}%{_datadir}/%{name}-common/python-site
+mkdir -p ${RPM_BUILD_ROOT}%{_datadir}/%{name}-common/lib
 mkdir -p ${RPM_BUILD_ROOT}/usr/bin
 cp -r scripts/* ${RPM_BUILD_ROOT}%{_datadir}/%{name}-common/scripts
 install -D systemvm/dist/* ${RPM_BUILD_ROOT}%{_datadir}/%{name}-common/vms/
@@ -234,6 +235,7 @@ python3 -m py_compile ${RPM_BUILD_ROOT}%{_datadir}/%{name}-common/python-site/cl
 python3 -m compileall ${RPM_BUILD_ROOT}%{_datadir}/%{name}-common/python-site/cloudutils
 cp build/gitrev.txt ${RPM_BUILD_ROOT}%{_datadir}/%{name}-common/scripts
 cp packaging/centos8/cloudstack-sccs ${RPM_BUILD_ROOT}/usr/bin
+cp utils/target/lib/*jar ${RPM_BUILD_ROOT}%{_datadir}/%{name}-common/lib/
 
 mkdir -p ${RPM_BUILD_ROOT}%{_datadir}/%{name}-common/scripts/network/cisco
 cp -r plugins/network-elements/cisco-vnmc/src/main/scripts/network/cisco/* ${RPM_BUILD_ROOT}%{_datadir}/%{name}-common/scripts/network/cisco
@@ -288,7 +290,6 @@ install python/bindir/cloud-external-ipallocator.py ${RPM_BUILD_ROOT}%{_bindir}/
 install -D client/target/pythonlibs/jasypt-1.9.3.jar ${RPM_BUILD_ROOT}%{_datadir}/%{name}-common/lib/jasypt-1.9.3.jar
 install -D utils/target/cloud-utils-new-%{_maventag}-SHADED.jar ${RPM_BUILD_ROOT}%{_datadir}/%{name}-common/lib/%{name}-utils.jar
 install -D utils/target/cloud-utils-%{_maventag}-tests.jar ${RPM_BUILD_ROOT}%{_datadir}/%{name}-common/lib/%{name}-utils-test.jar
-cp utils/target/dependencies/* ${RPM_BUILD_ROOT}%{_datadir}/%{name}-common/lib/
 
 install -D packaging/centos8/cloud-ipallocator.rc ${RPM_BUILD_ROOT}%{_initrddir}/%{name}-ipallocator
 install -D packaging/centos8/cloud.limits ${RPM_BUILD_ROOT}%{_sysconfdir}/security/limits.d/cloud
