@@ -325,6 +325,13 @@
                                     <outputDirectory>${project.build.directory}/lib</outputDirectory>
                                 </artifactItem>
                                 <artifactItem>
+                                    <groupId>org.springframework</groupId>
+                                    <artifactId>spring-core</artifactId>
+                                    <version>${org.springframework.version}</version>
+                                    <overWrite>false</overWrite>
+                                    <outputDirectory>${project.build.directory}/lib</outputDirectory>
+                                </artifactItem>
+                                <artifactItem>
                                     <groupId>commons-logging</groupId>
                                     <artifactId>commons-logging</artifactId>
                                     <version>${cs.commons-logging.version}</version>
