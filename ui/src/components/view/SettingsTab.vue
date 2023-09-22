@@ -158,6 +158,10 @@ export default {
       }
       api('listConfigurations', params).then(response => {
         this.items = response.listconfigurationsresponse.configuration
+        if (this.$store.getters.features.securityfeaturesenabled) {
+          const securityArr = ['api.allowed.source.cidr']
+          this.items = this.items.filter((x) => !securityArr.includes(x.name))
+        }
       }).catch(error => {
         console.error(error)
         this.$message.error(this.$t('message.error.loading.setting'))
