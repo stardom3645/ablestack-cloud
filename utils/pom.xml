@@ -298,8 +298,8 @@
                                     <outputDirectory>${project.build.directory}/lib</outputDirectory>
                                 </artifactItem>
                                 <artifactItem>
-                                    <groupId>hamcrest-all</groupId>
-                                    <artifactId>org.hamcrest</artifactId>
+                                    <groupId>org.hamcrest</groupId>
+                                    <artifactId>hamcrest-all</artifactId>
                                     <version>${cs.hamcrest.version}</version>
                                     <overWrite>false</overWrite>
                                     <outputDirectory>${project.build.directory}/lib</outputDirectory>
