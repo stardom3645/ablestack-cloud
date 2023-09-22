@@ -319,7 +319,7 @@
                                 </artifactItem>
                                 <artifactItem>
                                     <groupId>org.springframework</groupId>
-                                    <artifactId>spring-context</artifactId>
+                                    <artifactId>spring-test</artifactId>
                                     <version>${org.springframework.version}</version>
                                     <overWrite>false</overWrite>
                                     <outputDirectory>${project.build.directory}/lib</outputDirectory>
