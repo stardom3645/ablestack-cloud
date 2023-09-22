@@ -22,7 +22,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executors;
@@ -112,21 +111,18 @@ public class SecurityCheckServiceImpl extends ManagerBase implements PluggableSe
                 process = processBuilder.start();
                 BufferedReader bfr = new BufferedReader(new InputStreamReader(process.getInputStream()));
                 String line;
-                String result;
-                String checkMessage = "";
                 while ((line = bfr.readLine()) != null) {
-                    result = line.replaceAll("\\{", "").replaceAll("\\}", "").replaceAll("\\s","");
-                    Map<String, String> resultMap = parseKeyValuePairs(result, ",", "=");
-                    for (String keys : resultMap.keySet()) {
-                        String value = (String) resultMap.get(keys);
-                        if (value == "false") {
-                            checkMessage = "process does not operate normally";
-                            alertManager.sendAlert(AlertManager.AlertType.ALERT_TYPE_MANAGMENT_NODE, 0, new Long(0), "Management server node " + msHost.getServiceIP() + " security check schedule failed : " + keys + " " + checkMessage, "");
-                        } else {
-                            checkMessage = "process operates normally";
-                        }
-                        updateSecurityCheckResult(msHost.getId(), keys, Boolean.parseBoolean(value), checkMessage);
+                    String[] temp = line.split(",");
+                    String checkName = temp[0];
+                    String checkResult = temp[1];
+                    String checkMessage;
+                    if ("false".equals(checkResult)) {
+                        checkMessage = "process does not operate normally at last check";
+                        alertManager.sendAlert(AlertManager.AlertType.ALERT_TYPE_MANAGMENT_NODE, 0, new Long(0), "Management server node " + msHost.getServiceIP() + " security checke schedule failed : "+ checkName + " " + checkMessage, "");
+                    } else {
+                        checkMessage = "process operates normally";
                     }
+                    updateSecurityCheckResult(msHost.getId(), checkName, Boolean.parseBoolean(checkResult), checkMessage);
                 }
                 ActionEventUtils.onCompletedActionEvent(CallContext.current().getCallingUserId(), CallContext.current().getCallingAccountId(), EventVO.LEVEL_INFO,
                         EventTypes.EVENT_SECURITY_CHECK, "Successfully completed running security check schedule on management server", new Long(0), null, 0);
@@ -169,22 +165,19 @@ public class SecurityCheckServiceImpl extends ManagerBase implements PluggableSe
             StringBuffer output = new StringBuffer();
             BufferedReader bfr = new BufferedReader(new InputStreamReader(process.getInputStream()));
             String line;
-            String result;
-            String checkMessage = "";
             while ((line = bfr.readLine()) != null) {
-                result = line.replaceAll("\\{", "").replaceAll("\\}", "").replaceAll("\\s","");
-                Map<String, String> resultMap = parseKeyValuePairs(result, ",", "=");
-                for (String keys : resultMap.keySet()) {
-                    String value = (String) resultMap.get(keys);
-                    if (value == "false") {
-                        checkMessage = "process does not operate normally";
-                        alertManager.sendAlert(AlertManager.AlertType.ALERT_TYPE_MANAGMENT_NODE, 0, new Long(0), "Management server node " + mshost.getServiceIP() + " security check failed : " + keys + " " + checkMessage, "");
-                    } else {
-                        checkMessage = "process operates normally";
-                    }
-                    updateSecurityCheckResult(mshost.getId(), keys, Boolean.parseBoolean(value), checkMessage);
+                String[] temp = line.split(",");
+                String checkName = temp[0];
+                String checkResult = temp[1];
+                String checkMessage;
+                if ("false".equals(checkResult)) {
+                    checkMessage = "process does not operate normally at last check";
+                    alertManager.sendAlert(AlertManager.AlertType.ALERT_TYPE_MANAGMENT_NODE, 0, new Long(0), "Management server node " + mshost.getServiceIP() + " security check failed: "+ checkName + " " + checkMessage, "");
+                } else {
+                    checkMessage = "process operates normally";
                 }
-                output.append(result);
+                updateSecurityCheckResult(mshost.getId(), checkName, Boolean.parseBoolean(checkResult), checkMessage);
+                output.append(line).append('\n');
             }
             if (output.toString().contains("false")) {
                 return false;
@@ -213,24 +206,6 @@ public class SecurityCheckServiceImpl extends ManagerBase implements PluggableSe
         } else {
             securityCheckDao.update(connectivityVO.getId(), connectivityVO);
         }
-    }
-
-    public static Map<String, String> parseKeyValuePairs(String input, String pairSeparator, String keyValueSeparator) {
-        if (input == null || pairSeparator == null || keyValueSeparator == null) {
-            return null;
-        }
-        String[] pairs = input.split(pairSeparator);
-        if (pairs.length == 0) {
-            throw new IllegalArgumentException("Invalid input: " + input);
-        }
-        Map<String, String> map = new HashMap<>();
-        for (String pair : pairs) {
-            String[] keyValue = pair.split(keyValueSeparator);
-            if (keyValue.length == 2) {
-                map.put(keyValue[0], keyValue[1]);
-            }
-        }
-        return map;
     }
 
     @Override
