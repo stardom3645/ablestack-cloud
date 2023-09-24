@@ -93,7 +93,7 @@ public class SecurityCheckServiceImpl extends ManagerBase implements PluggableSe
             try {
                 securityCheck();
             } catch (Exception e) {
-                LOGGER.error("Exception in Security Checker : "+ e);
+                LOGGER.error("Exception in security check schedule : "+ e);
             }
         }
 
