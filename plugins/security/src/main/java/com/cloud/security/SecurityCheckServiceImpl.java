@@ -108,10 +108,10 @@ public class SecurityCheckServiceImpl extends ManagerBase implements PluggableSe
         private void securityCheck() {
             if (runMode == "first") {
                 ActionEventUtils.onStartedActionEvent(CallContext.current().getCallingUserId(), CallContext.current().getCallingAccountId(), EventTypes.EVENT_SECURITY_CHECK,
-                    "running security check on management server when running the product", new Long(0), null, true, 0);
+                    "security check perform on the management server when running the product", new Long(0), null, true, 0);
             } else {
                 ActionEventUtils.onStartedActionEvent(CallContext.current().getCallingUserId(), CallContext.current().getCallingAccountId(), EventTypes.EVENT_SECURITY_CHECK,
-                    "running security check schedule on management server when operating the product", new Long(0), null, true, 0);
+                    "security check schedule perform on the management server when operating the product", new Long(0), null, true, 0);
             }
             ManagementServerHostVO msHost = msHostDao.findByMsid(ManagementServerNode.getManagementServerId());
             String path = Script.findScript("scripts/security/", "securitycheck.sh");
@@ -143,10 +143,10 @@ public class SecurityCheckServiceImpl extends ManagerBase implements PluggableSe
                 }
                 if (runMode == "first") {
                     ActionEventUtils.onCompletedActionEvent(CallContext.current().getCallingUserId(), CallContext.current().getCallingAccountId(), EventVO.LEVEL_INFO,
-                        EventTypes.EVENT_SECURITY_CHECK, "Successfully completed running security check on management server when running the product", new Long(0), null, 0);
+                        EventTypes.EVENT_SECURITY_CHECK, "Successfully completed security check perform on the management server when running the product", new Long(0), null, 0);
                 } else {
                     ActionEventUtils.onCompletedActionEvent(CallContext.current().getCallingUserId(), CallContext.current().getCallingAccountId(), EventVO.LEVEL_INFO,
-                        EventTypes.EVENT_SECURITY_CHECK, "Successfully completed running security check schedule on management server when operating the product", new Long(0), null, 0);
+                        EventTypes.EVENT_SECURITY_CHECK, "Successfully completed security check schedule perform on the management server, when operating the product", new Long(0), null, 0);
                 }
                 runMode = "";
             } catch (IOException e) {
@@ -174,7 +174,7 @@ public class SecurityCheckServiceImpl extends ManagerBase implements PluggableSe
     }
 
     @Override
-    @ActionEvent(eventType = EventTypes.EVENT_SECURITY_CHECK, eventDescription = "running security check on management server when operating the product", async = true)
+    @ActionEvent(eventType = EventTypes.EVENT_SECURITY_CHECK, eventDescription = "security check perform on the management server when operating the product", async = true)
     public boolean runSecurityCheckCommand(final RunSecurityCheckCmd cmd) {
         Long mshostId = cmd.getMsHostId();
         ManagementServerHost mshost = msHostDao.findById(mshostId);
