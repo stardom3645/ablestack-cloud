@@ -73,7 +73,7 @@ public class IntegrityVerificationServiceImpl extends ManagerBase implements Plu
 
     private static final ConfigKey<Integer> IntegrityVerificationInterval = new ConfigKey<>("Advanced", Integer.class,
             "integrity.verification.interval", "1",
-            "The interval integrity verification background tasks in seconds", false);
+            "The interval integrity verification background tasks in days", false);
 
     @Inject
     private IntegrityVerificationDao integrityVerificationDao;
