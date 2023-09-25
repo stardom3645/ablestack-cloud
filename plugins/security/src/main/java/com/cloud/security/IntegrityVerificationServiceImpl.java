@@ -23,6 +23,7 @@ import com.cloud.cluster.dao.ManagementServerHostDao;
 import com.cloud.event.ActionEvent;
 import com.cloud.event.ActionEventUtils;
 import com.cloud.event.EventTypes;
+import com.cloud.event.EventVO;
 import com.cloud.exception.InvalidParameterValueException;
 import com.cloud.security.dao.IntegrityVerificationDao;
 import com.cloud.security.dao.IntegrityVerificationFinalResultDao;
@@ -110,7 +111,7 @@ public class IntegrityVerificationServiceImpl extends ManagerBase implements Plu
 
         private void integrityVerification() {
             ActionEventUtils.onStartedActionEvent(CallContext.current().getCallingUserId(), CallContext.current().getCallingAccountId(), EventTypes.EVENT_INTEGRITY_VERIFICATION,
-                    "running periodic integrity verification on management server", new Long(0), null, true, 0);
+                    "running periodic integrity verification on management server when running the product.", new Long(0), null, true, 0);
             ManagementServerHostVO msHost = msHostDao.findByMsid(ManagementServerNode.getManagementServerId());
             List<String> verificationFailedList = new ArrayList<>();
             List<Boolean> verificationResults = new ArrayList<>();
@@ -264,7 +265,7 @@ public class IntegrityVerificationServiceImpl extends ManagerBase implements Plu
     }
 
     @Override
-    @ActionEvent(eventType = EventTypes.EVENT_INTEGRITY_VERIFICATION, eventDescription = "running manual integrity verification on management server", async = true)
+    @ActionEvent(eventType = EventTypes.EVENT_INTEGRITY_VERIFICATION, eventDescription = "running manual integrity verification on management server when running the product.", async = true)
     public boolean runIntegrityVerificationCommand(final RunIntegrityVerificationCmd cmd) throws NoSuchAlgorithmException {
         Long mshostId = cmd.getMsHostId();
         List<Boolean> verificationResults = new ArrayList<>();
@@ -339,6 +340,11 @@ public class IntegrityVerificationServiceImpl extends ManagerBase implements Plu
     private void updateIntegrityVerificationFinalResult(final long msHostId, String uuid, boolean verificationFinalResult, String verificationFailedListToString, String type) {
         if (verificationFinalResult == false) {
             alertManager.sendAlert(AlertManager.AlertType.ALERT_TYPE_MANAGMENT_NODE, 0, new Long(0), " integrity verification failed.(uuid:"+uuid+") could not be verified. at last verification.", "");
+            ActionEventUtils.onCompletedActionEvent(CallContext.current().getCallingUserId(), CallContext.current().getCallingAccountId(), EventVO.LEVEL_INFO,
+                    EventTypes.EVENT_INTEGRITY_VERIFICATION, "Failed to execute "+type+" integrity verification on the management server when running the product.", new Long(0), null, 0);
+        }else {
+            ActionEventUtils.onCompletedActionEvent(CallContext.current().getCallingUserId(), CallContext.current().getCallingAccountId(), EventVO.LEVEL_INFO,
+                    EventTypes.EVENT_INTEGRITY_VERIFICATION, "Successfully completed "+type+" integrity verification on the management server when running the product.", new Long(0), null, 0);
         }
         IntegrityVerificationFinalResultVO connectivityVO = new IntegrityVerificationFinalResultVO(msHostId, verificationFinalResult, verificationFailedListToString, type);
         connectivityVO.setUuid(uuid);
