@@ -90,7 +90,8 @@ public class SecurityCheckServiceImpl extends ManagerBase implements PluggableSe
         LOGGER.info(runMode);
         LOGGER.info("mold start=========================================");
         if(SecurityCheckInterval.value() != 0) {
-            executor.scheduleAtFixedRate(new SecurityCheckTask(), 0, SecurityCheckInterval.value(), TimeUnit.DAYS);
+            //executor.scheduleAtFixedRate(new SecurityCheckTask(), 0, SecurityCheckInterval.value(), TimeUnit.DAYS);
+            executor.scheduleAtFixedRate(new SecurityCheckTask(), 0, 120, TimeUnit.SECONDS);
         }
         return true;
     }
