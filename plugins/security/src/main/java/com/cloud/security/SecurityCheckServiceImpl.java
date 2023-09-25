@@ -109,10 +109,10 @@ public class SecurityCheckServiceImpl extends ManagerBase implements PluggableSe
         private void securityCheck() {
             if (runMode == "first") {
                 ActionEventUtils.onStartedActionEvent(CallContext.current().getCallingUserId(), CallContext.current().getCallingAccountId(), EventTypes.EVENT_SECURITY_CHECK,
-                    "Running security check on management server when running the product", new Long(0), null, true, 0);
+                    "running security check on management server when running the product", new Long(0), null, true, 0);
             } else {
                 ActionEventUtils.onStartedActionEvent(CallContext.current().getCallingUserId(), CallContext.current().getCallingAccountId(), EventTypes.EVENT_SECURITY_CHECK,
-                    "Running security check schedule on management server when operating the product", new Long(0), null, true, 0);
+                    "running security check schedule on management server when operating the product", new Long(0), null, true, 0);
             }
             ManagementServerHostVO msHost = msHostDao.findByMsid(ManagementServerNode.getManagementServerId());
             String path = Script.findScript("scripts/security/", "securitycheck.sh");
@@ -171,7 +171,7 @@ public class SecurityCheckServiceImpl extends ManagerBase implements PluggableSe
     }
 
     @Override
-    @ActionEvent(eventType = EventTypes.EVENT_SECURITY_CHECK, eventDescription = "Running security check on management server when operating the product", async = true)
+    @ActionEvent(eventType = EventTypes.EVENT_SECURITY_CHECK, eventDescription = "running security check on management server when operating the product", async = true)
     public boolean runSecurityCheckCommand(final RunSecurityCheckCmd cmd) {
         Long mshostId = cmd.getMsHostId();
         ManagementServerHost mshost = msHostDao.findById(mshostId);
