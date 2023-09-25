@@ -146,7 +146,7 @@ public class SecurityCheckServiceImpl extends ManagerBase implements PluggableSe
                         EventTypes.EVENT_SECURITY_CHECK, "Successfully completed security check perform on the management server when running the product", new Long(0), null, 0);
                 } else {
                     ActionEventUtils.onCompletedActionEvent(CallContext.current().getCallingUserId(), CallContext.current().getCallingAccountId(), EventVO.LEVEL_INFO,
-                        EventTypes.EVENT_SECURITY_CHECK, "Successfully completed security check schedule perform on the management server, when operating the product", new Long(0), null, 0);
+                        EventTypes.EVENT_SECURITY_CHECK, "Successfully completed security check schedule perform on the management server when operating the product", new Long(0), null, 0);
                 }
                 runMode = "";
             } catch (IOException e) {
