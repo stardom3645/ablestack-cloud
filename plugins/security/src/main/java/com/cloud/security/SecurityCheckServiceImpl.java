@@ -132,7 +132,11 @@ public class SecurityCheckServiceImpl extends ManagerBase implements PluggableSe
                     String checkMessage;
                     if ("false".equals(checkResult)) {
                         checkMessage = "process does not operate normally at last check";
-                        alertManager.sendAlert(AlertManager.AlertType.ALERT_TYPE_MANAGMENT_NODE, 0, new Long(0), "Management server node " + msHost.getServiceIP() + " security checke schedule failed : "+ checkName + " " + checkMessage, "");
+                        if (runMode == "first") {
+                            alertManager.sendAlert(AlertManager.AlertType.ALERT_TYPE_MANAGMENT_NODE, 0, new Long(0), "Management server node " + msHost.getServiceIP() + " security checke when running the product failed : "+ checkName + " " + checkMessage, "");
+                        } else {
+                            alertManager.sendAlert(AlertManager.AlertType.ALERT_TYPE_MANAGMENT_NODE, 0, new Long(0), "Management server node " + msHost.getServiceIP() + " security checke schedule failed : "+ checkName + " " + checkMessage, "");
+                        }
                     } else {
                         checkMessage = "process operates normally";
                     }
