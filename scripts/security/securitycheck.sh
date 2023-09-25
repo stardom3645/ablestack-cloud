@@ -65,7 +65,8 @@ else
 fi
 
 # http 유틸리티 
-http_result=$(java -classpath $cmd:${jarfile}javax.servlet-api-4.0.1.jar:${jarfile}spring-test-5.3.26.jar:${jarfile}spring-core-5.3.26.jar:${jarfile}commons-logging-1.2.jar org.junit.runner.JUnitCore com.cloud.utils.HttpUtilsTest | grep -i OK)
+# http_result=$(java -classpath $cmd:${jarfile}javax.servlet-api-4.0.1.jar:${jarfile}spring-test-5.3.26.jar:${jarfile}spring-core-5.3.26.jar:${jarfile}commons-logging-1.2.jar org.junit.runner.JUnitCore com.cloud.utils.HttpUtilsTest | grep -i OK)
+http_result=$(java -classpath $cmd:${jarfile}spring-test-5.3.26.jar:${jarfile}spring-core-5.3.26.jar:${jarfile}commons-logging-1.2.jar org.junit.runner.JUnitCore com.cloud.utils.HttpUtilsTest | grep -i OK)
 if [ -n "$http_result" ]; then
     echo "http,true"
 else
