@@ -3934,7 +3934,7 @@
 "import.vcenter.storage.policies": "vCenter.\uC800\uC7A5\uC18C.\uC815\uCC45.\uAC00\uC838\uC624\uAE30",
 "live.patch.system.vm": "\uC2DC\uC2A4\uD15C.VM.\uB77C\uC774\uBE0C.\uD328\uCE58",
 "security.check": "\uBCF4\uC548.\uC810\uAC80",
-"integrity.verification": "\uBB34\uACB0\uC131.\uD655\uC778",
+"integrity.verification": "\uBB34\uACB0\uC131.\uAC80\uC99D",
 "log.deleted": "\uB85C\uADF8.\uC0AD\uC81C",
 "integrity.verification.delete": "\uBB34\uACB0\uC131.\uAC80\uC99D.\uC0AD\uC81C"
 }
