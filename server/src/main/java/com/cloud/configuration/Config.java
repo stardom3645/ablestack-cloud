@@ -144,6 +144,14 @@ public enum Config {
             "0.75",
             "Percentage (as a value between 0 and 1) of management server local storage utilization above which alerts will be sent about low local storage available.",
             null),
+    ManagementServerDatabaseStorageCapacityThreshold(
+            "Alert",
+            ManagementServer.class,
+            Float.class,
+            "management.server.database.capacity.notificationthreshold",
+            "0.75",
+            "Percentage (as a value between 0 and 1) of management server database storage utilization above which alerts will be sent about low database storage available",
+            null),
 
     // Storage
 
@@ -1814,7 +1822,6 @@ public enum Config {
     PublishUsageEvent("Advanced", ManagementServer.class, Boolean.class, "publish.usage.events", "true", "enable or disable publishing of usage events on the event bus", null),
     PublishAsynJobEvent("Advanced", ManagementServer.class, Boolean.class, "publish.async.job.events", "true", "enable or disable publishing of usage events on the event bus", null),
     EventDeleteEnabled("Advanced", ManagementServer.class, Boolean.class, "event.delete.enabled", "true", "If set to true, the delete event button is enabled", null),
-    ManagementServerSSHDEnabled("Advanced", ManagementServer.class, Boolean.class, "management.server.secure.sshdaemon.enabled", "true", "true if Management server sshd service is enabled, false otherwise", null),
 
     // StatsCollector
     StatsOutPutGraphiteHost("Advanced", ManagementServer.class, String.class, "stats.output.uri", "", "URI to additionally send StatsCollector statistics to", null),
