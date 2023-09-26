@@ -50,7 +50,11 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import javax.inject.Inject;
 
+import com.cloud.event.ActionEventUtils;
+import com.cloud.event.EventTypes;
+import com.cloud.event.EventVO;
 import com.cloud.utils.db.TransactionLegacy;
+import org.apache.cloudstack.context.CallContext;
 import org.apache.cloudstack.engine.subsystem.api.storage.DataStore;
 import org.apache.cloudstack.engine.subsystem.api.storage.DataStoreManager;
 import org.apache.cloudstack.engine.subsystem.api.storage.DataStoreProvider;
@@ -1107,6 +1111,8 @@ public class StatsCollector extends ManagerBase implements ComponentMethodInterc
                         PreparedStatement deleteStmt = conn.prepareStatement(deleteQuery);
                         deleteStmt.executeUpdate();
                         txn.commit();
+                        ActionEventUtils.onCompletedActionEvent(CallContext.current().getCallingUserId(), CallContext.current().getCallingAccountId(), EventVO.LEVEL_INFO,
+                                EventTypes.EVENT_LOG_AUTO_DELETED, "The oldest records in the event table are deleted.", new Long(0), null, 0);
                     } catch (Exception e) {
                         throw new CloudRuntimeException("SQL: Exception:" + e.getMessage(), e);
                     }
