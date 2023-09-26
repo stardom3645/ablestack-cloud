@@ -62,8 +62,9 @@ public class SecurityCheckServiceImpl extends ManagerBase implements PluggableSe
     private static final Logger LOGGER = Logger.getLogger(SecurityCheckServiceImpl.class);
 
     private static final ConfigKey<Integer> SecurityCheckInterval = new ConfigKey<>("Advanced", Integer.class,
-            "security.check.interval", "0",
-            "The interval security check background tasks in seconds", false);
+            "security.check.interval", "1",
+            "The interval security check background tasks in days", false);
+    private static String runMode = "";
 
     @Inject
     private SecurityCheckDao securityCheckDao;
@@ -81,9 +82,16 @@ public class SecurityCheckServiceImpl extends ManagerBase implements PluggableSe
 
     @Override
     public boolean start() {
+        runMode = "first";
         if(SecurityCheckInterval.value() != 0) {
-            executor.scheduleAtFixedRate(new SecurityCheckTask(), 0, SecurityCheckInterval.value(), TimeUnit.SECONDS);
+            executor.scheduleAtFixedRate(new SecurityCheckTask(), 0, SecurityCheckInterval.value(), TimeUnit.DAYS);
         }
+        return true;
+    }
+
+    @Override
+    public boolean stop() {
+        runMode = "";
         return true;
     }
 
@@ -93,13 +101,18 @@ public class SecurityCheckServiceImpl extends ManagerBase implements PluggableSe
             try {
                 securityCheck();
             } catch (Exception e) {
-                LOGGER.error("Exception in Security Checker : "+ e);
+                LOGGER.error("Exception in security check schedule : "+ e);
             }
         }
 
         private void securityCheck() {
-            ActionEventUtils.onStartedActionEvent(CallContext.current().getCallingUserId(), CallContext.current().getCallingAccountId(), EventTypes.EVENT_SECURITY_CHECK,
-                    "running security check on management server", new Long(0), null, true, 0);
+            if (runMode == "first") {
+                ActionEventUtils.onStartedActionEvent(CallContext.current().getCallingUserId(), CallContext.current().getCallingAccountId(), EventTypes.EVENT_SECURITY_CHECK,
+                    "security check perform on the management server when running the product", new Long(0), null, true, 0);
+            } else {
+                ActionEventUtils.onStartedActionEvent(CallContext.current().getCallingUserId(), CallContext.current().getCallingAccountId(), EventTypes.EVENT_SECURITY_CHECK,
+                    "security check schedule perform on the management server when operating the product", new Long(0), null, true, 0);
+            }
             ManagementServerHostVO msHost = msHostDao.findByMsid(ManagementServerNode.getManagementServerId());
             String path = Script.findScript("scripts/security/", "securitycheck.sh");
             if (path == null) {
@@ -117,17 +130,28 @@ public class SecurityCheckServiceImpl extends ManagerBase implements PluggableSe
                     String checkResult = temp[1];
                     String checkMessage;
                     if ("false".equals(checkResult)) {
-                        checkMessage = "service down at last check";
-                        alertManager.sendAlert(AlertManager.AlertType.ALERT_TYPE_MANAGMENT_NODE, 0, new Long(0), "Management server node " + msHost.getServiceIP() + " security checker failed: "+ checkName + " service down at last check", "");
+                        checkMessage = "process does not operate normally at last check";
+                        if (runMode == "first") {
+                            alertManager.sendAlert(AlertManager.AlertType.ALERT_TYPE_MANAGMENT_NODE, 0, new Long(0), "Management server node " + msHost.getServiceIP() + " security check when running the product failed : "+ checkName + " " + checkMessage, "");
+                        } else {
+                            alertManager.sendAlert(AlertManager.AlertType.ALERT_TYPE_MANAGMENT_NODE, 0, new Long(0), "Management server node " + msHost.getServiceIP() + " security check schedule failed : "+ checkName + " " + checkMessage, "");
+                        }
                     } else {
-                        checkMessage = "service is running";
+                        checkMessage = "process operates normally";
                     }
                     updateSecurityCheckResult(msHost.getId(), checkName, Boolean.parseBoolean(checkResult), checkMessage);
                 }
-                ActionEventUtils.onCompletedActionEvent(CallContext.current().getCallingUserId(), CallContext.current().getCallingAccountId(), EventVO.LEVEL_INFO,
-                        EventTypes.EVENT_SECURITY_CHECK, "Successfully completed running security check on management server", new Long(0), null, 0);
+                if (runMode == "first") {
+                    ActionEventUtils.onCompletedActionEvent(CallContext.current().getCallingUserId(), CallContext.current().getCallingAccountId(), EventVO.LEVEL_INFO,
+                        EventTypes.EVENT_SECURITY_CHECK, "Successfully completed security check perform on the management server when running the product", new Long(0), null, 0);
+                } else {
+                    ActionEventUtils.onCompletedActionEvent(CallContext.current().getCallingUserId(), CallContext.current().getCallingAccountId(), EventVO.LEVEL_INFO,
+                        EventTypes.EVENT_SECURITY_CHECK, "Successfully completed security check schedule perform on the management server when operating the product", new Long(0), null, 0);
+                }
+                runMode = "";
             } catch (IOException e) {
-                LOGGER.error("Failed to execute security checker for management server: "+e);
+                runMode = "";
+                LOGGER.error("Failed to execute security check schedule for management server: "+e);
             }
         }
     }
@@ -150,7 +174,7 @@ public class SecurityCheckServiceImpl extends ManagerBase implements PluggableSe
     }
 
     @Override
-    @ActionEvent(eventType = EventTypes.EVENT_SECURITY_CHECK, eventDescription = "running security check on management server", async = true)
+    @ActionEvent(eventType = EventTypes.EVENT_SECURITY_CHECK, eventDescription = "security check perform on the management server when operating the product", async = true)
     public boolean runSecurityCheckCommand(final RunSecurityCheckCmd cmd) {
         Long mshostId = cmd.getMsHostId();
         ManagementServerHost mshost = msHostDao.findById(mshostId);
@@ -171,10 +195,10 @@ public class SecurityCheckServiceImpl extends ManagerBase implements PluggableSe
                 String checkResult = temp[1];
                 String checkMessage;
                 if ("false".equals(checkResult)) {
-                    checkMessage = "service down at last check";
-                    alertManager.sendAlert(AlertManager.AlertType.ALERT_TYPE_MANAGMENT_NODE, 0, new Long(0), "Management server node " + mshost.getServiceIP() + " security check failed: "+ checkName + " service down at last check", "");
+                    checkMessage = "process does not operate normally at last check";
+                    alertManager.sendAlert(AlertManager.AlertType.ALERT_TYPE_MANAGMENT_NODE, 0, new Long(0), "Management server node " + mshost.getServiceIP() + " security check when operating the product failed : "+ checkName + " " + checkMessage, "");
                 } else {
-                    checkMessage = "service is running";
+                    checkMessage = "process operates normally";
                 }
                 updateSecurityCheckResult(mshost.getId(), checkName, Boolean.parseBoolean(checkResult), checkMessage);
                 output.append(line).append('\n');

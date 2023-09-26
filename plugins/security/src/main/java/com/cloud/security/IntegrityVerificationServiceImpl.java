@@ -73,8 +73,8 @@ public class IntegrityVerificationServiceImpl extends ManagerBase implements Plu
     private static final Logger LOGGER = Logger.getLogger(IntegrityVerificationServiceImpl.class);
 
     private static final ConfigKey<Integer> IntegrityVerificationInterval = new ConfigKey<>("Advanced", Integer.class,
-            "integrity.verification.interval", "0",
-            "The interval integrity verification background tasks in seconds", false);
+            "integrity.verification.interval", "1",
+            "The interval integrity verification background tasks in days", false);
 
     @Inject
     private IntegrityVerificationDao integrityVerificationDao;
@@ -95,7 +95,7 @@ public class IntegrityVerificationServiceImpl extends ManagerBase implements Plu
     @Override
     public boolean start() {
         if(IntegrityVerificationInterval.value() != 0) {
-            executor.scheduleAtFixedRate(new IntegrityVerificationTask(), 0, IntegrityVerificationInterval.value(), TimeUnit.SECONDS);
+            executor.scheduleAtFixedRate(new IntegrityVerificationTask(), 0, IntegrityVerificationInterval.value(), TimeUnit.DAYS);
         }
         return true;
     }
