@@ -3935,5 +3935,6 @@
 "live.patch.system.vm": "LIVE.PATCH.SYSTEM.VM",
 "security.check": "SECURITY.CHECK",
 "integrity.verification": "INTEGRITY.VERIFICATION",
-"log.deleted": "LOG.DELETED"
+"log.deleted": "LOG.DELETED",
+"event_integrity_verification_delete": "EVENT_INTEGRITY_VERIFICATION_DELETE"
 }
