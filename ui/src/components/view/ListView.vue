@@ -102,7 +102,7 @@
         <router-link :to="{ path: $route.path + '/' + record.templatetype }">{{ text }}</router-link>
       </template>
       <template v-if="column.key === 'type'">
-        <span v-if="['USER.LOGIN', 'USER.LOGOUT', 'ROUTER.HEALTH.CHECKS', 'FIREWALL.CLOSE', 'ALERT.SERVICE.DOMAINROUTER'].includes(text)">{{ $t(text.toLowerCase()) }}</span>
+        <span v-if="[text].includes(text)">{{ $t(text.toLowerCase()) }}</span>
         <span v-else>{{ text }}</span>
       </template>
 
