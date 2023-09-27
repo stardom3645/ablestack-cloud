@@ -566,6 +566,7 @@ public class ConfigurationManagerImpl extends ManagerBase implements Configurati
         weightBasedParametersForValidation.add(Config.DirectNetworkPublicIpCapacityThreshold.key());
         weightBasedParametersForValidation.add(Config.LocalStorageCapacityThreshold.key());
         weightBasedParametersForValidation.add(Config.ManagementServerLocalStorageCapacityThreshold.key());
+        weightBasedParametersForValidation.add(Config.ManagementServerDatabaseStorageCapacityThreshold.key());
         weightBasedParametersForValidation.add(CapacityManager.StorageAllocatedCapacityDisableThreshold.key());
         weightBasedParametersForValidation.add(CapacityManager.StorageCapacityDisableThreshold.key());
         weightBasedParametersForValidation.add(DeploymentClusterPlanner.ClusterCPUCapacityDisableThreshold.key());

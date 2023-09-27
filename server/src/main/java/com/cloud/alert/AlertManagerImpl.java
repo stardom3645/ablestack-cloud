@@ -133,6 +133,7 @@ public class AlertManagerImpl extends ManagerBase implements AlertManager, Confi
     private double _directNetworkPublicIpCapacityThreshold = 0.75;
     private double _localStorageCapacityThreshold = 0.75;
     private double _managementServerLocalStorageCapacityThreshold = 0.75;
+    private double _managementServerDatabaseStorageCapacityThreshold = 0.75;
     Map<Short, Double> _capacityTypeThresholdMap = new HashMap<Short, Double>();
 
     private final ExecutorService _executor;
@@ -176,6 +177,7 @@ public class AlertManagerImpl extends ManagerBase implements AlertManager, Confi
         String directNetworkPublicIpCapacityThreshold = _configDao.getValue(Config.DirectNetworkPublicIpCapacityThreshold.key());
         String localStorageCapacityThreshold = _configDao.getValue(Config.LocalStorageCapacityThreshold.key());
         String managementServerLocalStorageCapacityThreshold = _configDao.getValue(Config.ManagementServerLocalStorageCapacityThreshold.key());
+        String managementServerDatabaseStorageCapacityThreshold = _configDao.getValue(Config.ManagementServerDatabaseStorageCapacityThreshold.key());
 
         if (publicIPCapacityThreshold != null) {
             _publicIPCapacityThreshold = Double.parseDouble(publicIPCapacityThreshold);
@@ -198,6 +200,9 @@ public class AlertManagerImpl extends ManagerBase implements AlertManager, Confi
         if (managementServerLocalStorageCapacityThreshold != null) {
             _managementServerLocalStorageCapacityThreshold = Double.parseDouble(managementServerLocalStorageCapacityThreshold);
         }
+        if (managementServerDatabaseStorageCapacityThreshold != null) {
+            _managementServerDatabaseStorageCapacityThreshold = Double.parseDouble(managementServerDatabaseStorageCapacityThreshold);
+        }
 
         _capacityTypeThresholdMap.put(Capacity.CAPACITY_TYPE_VIRTUAL_NETWORK_PUBLIC_IP, _publicIPCapacityThreshold);
         _capacityTypeThresholdMap.put(Capacity.CAPACITY_TYPE_PRIVATE_IP, _privateIPCapacityThreshold);
@@ -206,6 +211,7 @@ public class AlertManagerImpl extends ManagerBase implements AlertManager, Confi
         _capacityTypeThresholdMap.put(Capacity.CAPACITY_TYPE_DIRECT_ATTACHED_PUBLIC_IP, _directNetworkPublicIpCapacityThreshold);
         _capacityTypeThresholdMap.put(Capacity.CAPACITY_TYPE_LOCAL_STORAGE, _localStorageCapacityThreshold);
         _capacityTypeThresholdMap.put(Capacity.CAPACITY_TYPE_MANAGEMENT_LOCAL_STORAGE, _managementServerLocalStorageCapacityThreshold);
+        _capacityTypeThresholdMap.put(Capacity.CAPACITY_TYPE_MANAGEMENT_DATABASE_STORAGE, _managementServerDatabaseStorageCapacityThreshold);
         _capacityTypeThresholdMap.put(Capacity.CAPACITY_TYPE_VIRTUAL_NETWORK_IPV6_SUBNET, Ipv6SubnetCapacityThreshold.value());
 
         String capacityCheckPeriodStr = configs.get("capacity.check.period");
