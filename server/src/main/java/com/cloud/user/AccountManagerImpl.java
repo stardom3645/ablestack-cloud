@@ -1467,7 +1467,12 @@ public class AccountManagerImpl extends ManagerBase implements AccountManager, M
         boolean isDomainAdmin = isDomainAdmin(callingAccount.getId());
         boolean isAdmin = isDomainAdmin || isRootAdminExecutingPasswordUpdate;
         if (isAdmin) {
+            List<DataCenterVO> dcList = new ArrayList<>();
+            dcList = ApiDBUtils.listZones();
             s_logger.trace(String.format("Admin account [uuid=%s] executing password update for user [%s] ", callingAccount.getUuid(), user.getUuid()));
+            if (validatePassword(user, "password") && "admin".equals(user.getUsername()) && (dcList == null || dcList.size() == 0)) {
+                ActionEventUtils.onActionEvent(user.getId(), user.getAccountId(), getAccount(user.getAccountId()).getDomainId(), EventTypes.EVENT_USER_UPDATE, "The initial default password for the administrator account has been changed.", user.getId(), ApiCommandResourceType.User.toString());
+            }
         }
         if (!isAdmin && StringUtils.isBlank(currentPassword)) {
             throw new InvalidParameterValueException("To set a new password the current password must be provided.");
@@ -1481,6 +1486,24 @@ public class AccountManagerImpl extends ManagerBase implements AccountManager, M
         UserAuthenticator userAuthenticator = _userPasswordEncoders.get(0);
         String newPasswordEncoded = userAuthenticator.encode(newPassword);
         user.setPassword(newPasswordEncoded);
+    }
+
+    protected boolean validatePassword(UserVO user, String password) {
+        AccountVO userAccount = _accountDao.findById(user.getAccountId());
+        boolean passwordMatchesFirstLogin = false;
+        for (UserAuthenticator userAuthenticator : _userPasswordEncoders) {
+            Pair<Boolean, ActionOnFailedAuthentication> authenticationResult = userAuthenticator.authenticate(user.getUsername(), password, userAccount.getDomainId(), null);
+            if (authenticationResult == null) {
+                s_logger.trace(String.format("Authenticator [%s] is returning null for the authenticate mehtod.", userAuthenticator.getClass()));
+                continue;
+            }
+            if (BooleanUtils.toBoolean(authenticationResult.first())) {
+                s_logger.debug(String.format("User [id=%s] re-authenticated [authenticator=%s] during password update.", user.getUuid(), userAuthenticator.getName()));
+                passwordMatchesFirstLogin = true;
+                break;
+            }
+        }
+        return passwordMatchesFirstLogin;
     }
 
     /**
@@ -1819,15 +1842,37 @@ public class AccountManagerImpl extends ManagerBase implements AccountManager, M
         // If the user is a System user, return an error. We do not allow this
         AccountVO account = _accountDao.findById(accountId);
 
-        if (account == null || account.getRemoved() != null) {
-            if (account != null) {
-                s_logger.info("The account:" + account.getAccountName() + " is already removed");
-            }
+        if (! isDeleteNeeded(account, accountId, caller)) {
             return true;
         }
 
+        // Account that manages project(s) can't be removed
+        List<Long> managedProjectIds = _projectAccountDao.listAdministratedProjectIds(accountId);
+        if (!managedProjectIds.isEmpty()) {
+            StringBuilder projectIds = new StringBuilder();
+            for (Long projectId : managedProjectIds) {
+                projectIds.append(projectId).append(", ");
+            }
+
+            throw new InvalidParameterValueException("The account id=" + accountId + " manages project(s) with ids " + projectIds + "and can't be removed");
+        }
+
+        CallContext.current().putContextParameter(Account.class, account.getUuid());
+
+        return deleteAccount(account, callerUserId, caller);
+    }
+
+    private boolean isDeleteNeeded(AccountVO account, long accountId, Account caller) {
+        if (account == null) {
+            s_logger.info(String.format("The account, identified by id %d, doesn't exist", accountId ));
+            return false;
+        }
+        if (account.getRemoved() != null) {
+            s_logger.info("The account:" + account.getAccountName() + " is already removed");
+            return false;
+        }
         // don't allow removing Project account
-        if (account == null || account.getType() == Account.Type.PROJECT) {
+        if (account.getType() == Account.Type.PROJECT) {
             throw new InvalidParameterValueException("The specified account does not exist in the system");
         }
 
@@ -1837,21 +1882,7 @@ public class AccountManagerImpl extends ManagerBase implements AccountManager, M
         if (account.isDefault()) {
             throw new InvalidParameterValueException("The account is default and can't be removed");
         }
-
-        // Account that manages project(s) can't be removed
-        List<Long> managedProjectIds = _projectAccountDao.listAdministratedProjectIds(accountId);
-        if (!managedProjectIds.isEmpty()) {
-            StringBuilder projectIds = new StringBuilder();
-            for (Long projectId : managedProjectIds) {
-                projectIds.append(projectId + ", ");
-            }
-
-            throw new InvalidParameterValueException("The account id=" + accountId + " manages project(s) with ids " + projectIds + "and can't be removed");
-        }
-
-        CallContext.current().putContextParameter(Account.class, account.getUuid());
-
-        return deleteAccount(account, callerUserId, caller);
+        return true;
     }
 
     @Override
@@ -3261,7 +3292,7 @@ public class AccountManagerImpl extends ManagerBase implements AccountManager, M
                 _userDetailsDao.update(userDetailVO.getId(), userDetailVO);
             }
         } catch (CloudTwoFactorAuthenticationException e) {
-            UserDetailVO userDetailVO = _userDetailsDao.findDetail(userAccountId, "2FAsetupComplete");
+            UserDetailVO userDetailVO = _userDetailsDao.findDetail(userAccountId, UserDetailVO.Setup2FADetail);
             if (userDetailVO != null && userDetailVO.getValue().equals(UserAccountVO.Setup2FAstatus.ENABLED.name())) {
                 disableTwoFactorAuthentication(userAccountId, caller, owner);
             }

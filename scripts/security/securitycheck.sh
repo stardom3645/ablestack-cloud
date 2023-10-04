@@ -17,27 +17,57 @@
 # under the License.
 
 # Security Check 
-# Management Server의 서비스가 정상적으로 실행 중인지 확인하는 스크립트
-# 항목 : mysql, firewalld, cloudstack-management
-# return : 서비스 명,결과(boolean)
+# JAVA로 작성된 Test 코드를 실행하는 Junit.jar 파일을 사용하여 보안 기능과 관련된 Utils 프로세스가 정상적으로 작동하는지 확인하는 스크립트
+# 항목 : string, encrypt(db), encrypt(rsa), password, sshkey, http
+# return : {이름, 결과}
 
-systemctl status mysqld | grep -i running &> /dev/null
-if [[ $? == 0 ]]; then
-    echo "mysql,true"
+jarfile='/usr/share/cloudstack-common/lib/'
+cmd=${jarfile}junit-4.13.2.jar:${jarfile}hamcrest-all-1.3.jar:${jarfile}cloudstack-utils-test.jar:${jarfile}cloudstack-utils.jar
+
+# String 유틸리티 
+string_result=$(java -classpath $cmd org.junit.runner.JUnitCore com.cloud.utils.StringUtilsTest | grep -i OK)
+if [ -n "$string_result" ]; then
+    echo "string,true"
 else
-    echo "mysql,false"
+    echo "string,false"
 fi
 
-systemctl status firewalld | grep -i running &> /dev/null
-if [[ $? == 0 ]]; then
-    echo "firewalld,true"
+# encrypt(db) 유틸리티 
+encrypt_db_result=$(java -classpath $cmd org.junit.runner.JUnitCore com.cloud.utils.crypt.EncryptionSecretKeyCheckerTest | grep -i OK)
+if [ -n "$encrypt_db_result" ]; then
+    echo "encrypt(db),true"
 else
-    echo "firewalld,false"
+    echo "encrypt(db),false"
 fi
 
-systemctl status cloudstack-management | grep -i running &> /dev/null
-if [[ $? == 0 ]]; then
-    echo "management,true"
+# encrypt(ras) 유틸리티 
+encrypt_ras_result=$(java -classpath $cmd:${jarfile}bcprov-jdk15on-1.70.jar org.junit.runner.JUnitCore com.cloud.utils.crypto.RSAHelperTest | grep -i OK)
+if [ -n "$encrypt_ras_result" ]; then
+    echo "encrypt(rsa),true"
 else
-    echo "management,false"
+    echo "encrypt(rsa),false"
+fi
+
+# password 유틸리티 
+password_result=$(java -classpath $cmd:${jarfile}bcprov-jdk15on-1.70.jar org.junit.runner.JUnitCore com.cloud.utils.PasswordGeneratorTest | grep -i OK)
+if [ -n "$password_result" ]; then
+    echo "password,true"
+else
+    echo "password,false"
+fi
+
+# sshkey 유틸리티 
+sshkey_result=$(java -classpath $cmd:${jarfile}jsch-0.1.55.jar org.junit.runner.JUnitCore com.cloud.utils.ssh.SSHKeysHelperTest | grep -i OK)
+if [ -n "$sshkey_result" ]; then
+    echo "sshkey,true"
+else
+    echo "sshkey,false"
+fi
+
+# http 유틸리티 
+http_result=$(java -classpath $cmd:${jarfile}javax.servlet-api-4.0.1.jar:${jarfile}spring-test-5.3.26.jar:${jarfile}spring-core-5.3.26.jar:${jarfile}commons-logging-1.2.jar org.junit.runner.JUnitCore com.cloud.utils.HttpUtilsTest | grep -i OK)
+if [ -n "$http_result" ]; then
+    echo "http,true"
+else
+    echo "http,false"
 fi

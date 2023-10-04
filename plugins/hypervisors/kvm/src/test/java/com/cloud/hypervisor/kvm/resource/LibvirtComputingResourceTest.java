@@ -56,8 +56,6 @@ import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 
-import com.cloud.utils.net.NetUtils;
-
 import org.apache.cloudstack.api.ApiConstants.IoDriverPolicy;
 import org.apache.cloudstack.storage.command.AttachAnswer;
 import org.apache.cloudstack.storage.command.AttachCommand;
@@ -68,8 +66,6 @@ import org.apache.cloudstack.utils.qemu.QemuImg.PhysicalDiskFormat;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.SystemUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
-import org.joda.time.Duration;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -151,76 +147,7 @@ import com.cloud.agent.api.SecurityGroupRulesCmd.IpPortAndProto;
 import com.cloud.agent.api.StartCommand;
 import com.cloud.agent.api.StopCommand;
 import com.cloud.agent.api.UnPlugNicCommand;
-import com.cloud.agent.api.UnsupportedAnswer;
-import com.cloud.agent.api.UpdateHostPasswordCommand;
-import com.cloud.agent.api.UpgradeSnapshotCommand;
-// import com.cloud.agent.api.VmStatsEntry;
-import com.cloud.agent.api.check.CheckSshCommand;
-import com.cloud.agent.api.proxy.CheckConsoleProxyLoadCommand;
-import com.cloud.agent.api.proxy.WatchConsoleProxyLoadCommand;
-import com.cloud.agent.api.storage.CopyVolumeCommand;
-import com.cloud.agent.api.storage.CreateCommand;
-import com.cloud.agent.api.storage.DestroyCommand;
-import com.cloud.agent.api.storage.PrimaryStorageDownloadCommand;
-import com.cloud.agent.api.storage.ResizeVolumeCommand;
-import com.cloud.agent.api.to.DataStoreTO;
-import com.cloud.agent.api.to.DiskTO;
-import com.cloud.agent.api.to.NicTO;
-import com.cloud.agent.api.to.StorageFilerTO;
-import com.cloud.agent.api.to.VirtualMachineTO;
-import com.cloud.agent.api.to.VolumeTO;
-import com.cloud.agent.properties.AgentProperties;
-import com.cloud.agent.properties.AgentPropertiesFileHandler;
-import com.cloud.agent.resource.virtualnetwork.VirtualRoutingResource;
-import com.cloud.exception.InternalErrorException;
-import com.cloud.hypervisor.Hypervisor.HypervisorType;
-import com.cloud.hypervisor.kvm.resource.KVMHABase.NfsStoragePool;
-import com.cloud.hypervisor.kvm.resource.LibvirtVMDef.ChannelDef;
-import com.cloud.hypervisor.kvm.resource.LibvirtVMDef.ClockDef;
-import com.cloud.hypervisor.kvm.resource.LibvirtVMDef.ConsoleDef;
-import com.cloud.hypervisor.kvm.resource.LibvirtVMDef.CpuTuneDef;
-import com.cloud.hypervisor.kvm.resource.LibvirtVMDef.DevicesDef;
-import com.cloud.hypervisor.kvm.resource.LibvirtVMDef.DiskDef;
-import com.cloud.hypervisor.kvm.resource.LibvirtVMDef.FeaturesDef;
-import com.cloud.hypervisor.kvm.resource.LibvirtVMDef.GraphicDef;
-import com.cloud.hypervisor.kvm.resource.LibvirtVMDef.GuestDef;
-import com.cloud.hypervisor.kvm.resource.LibvirtVMDef.GuestDef.GuestType;
-import com.cloud.hypervisor.kvm.resource.LibvirtVMDef.GuestResourceDef;
-import com.cloud.hypervisor.kvm.resource.LibvirtVMDef.InputDef;
-import com.cloud.hypervisor.kvm.resource.LibvirtVMDef.InterfaceDef;
-import com.cloud.hypervisor.kvm.resource.LibvirtVMDef.MemBalloonDef;
-import com.cloud.hypervisor.kvm.resource.LibvirtVMDef.RngDef;
-import com.cloud.hypervisor.kvm.resource.LibvirtVMDef.SCSIDef;
-import com.cloud.hypervisor.kvm.resource.LibvirtVMDef.SerialDef;
-import com.cloud.hypervisor.kvm.resource.LibvirtVMDef.TermPolicy;
-import com.cloud.hypervisor.kvm.resource.LibvirtVMDef.VideoDef;
-import com.cloud.hypervisor.kvm.resource.LibvirtVMDef.WatchDogDef;
-import com.cloud.hypervisor.kvm.resource.wrapper.LibvirtRequestWrapper;
-import com.cloud.hypervisor.kvm.resource.wrapper.LibvirtUtilitiesHelper;
-import com.cloud.hypervisor.kvm.storage.KVMPhysicalDisk;
-import com.cloud.hypervisor.kvm.storage.KVMStoragePool;
-import com.cloud.hypervisor.kvm.storage.KVMStoragePoolManager;
-import com.cloud.network.Networks.TrafficType;
-import com.cloud.network.PhysicalNetworkSetupInfo;
-import com.cloud.storage.Storage.ImageFormat;
-import com.cloud.storage.Storage.StoragePoolType;
-import com.cloud.storage.StorageLayer;
-import com.cloud.storage.StoragePool;
-import com.cloud.storage.Volume;
-import com.cloud.storage.resource.StorageSubsystemCommandHandler;
-import com.cloud.storage.template.Processor;
-import com.cloud.storage.template.Processor.FormatInfo;
-import com.cloud.storage.template.TemplateLocation;
-import com.cloud.template.VirtualMachineTemplate.BootloaderType;
-import com.cloud.utils.Pair;
-import com.cloud.utils.exception.CloudRuntimeException;
-import com.cloud.utils.script.Script;
-import com.cloud.utils.script.OutputInterpreter.OneLineParser;
-import com.cloud.utils.ssh.SshHelper;
-import com.cloud.vm.DiskProfile;
-import com.cloud.vm.VirtualMachine;
-import com.cloud.vm.VirtualMachine.PowerState;
-import com.cloud.vm.VirtualMachine.Type;
+import com.cloud.utils.net.NetUtils;
 
 
 @RunWith(MockitoJUnitRunner.class)
@@ -1751,8 +1678,6 @@ public class LibvirtComputingResourceTest {
         try {
             when(conn.domainLookupByName(vmName)).thenReturn(dm);
 
-            when(dm.getXMLDesc(8)).thenReturn("<domain type='kvm' id='3'>" + "  <devices>" + "    <graphics type='vnc' port='5900' autoport='yes' listen='10.10.10.1'>"
-                    + "      <listen type='address' address='10.10.10.1'/>" + "    </graphics>" + "  </devices>" + "</domain>");
             when(dm.getXMLDesc(1)).thenReturn("<domain type='kvm' id='3'>" + "  <devices>" + "    <graphics type='vnc' port='5900' autoport='yes' listen='10.10.10.1'>"
                     + "      <listen type='address' address='10.10.10.1'/>" + "    </graphics>" + "  </devices>" + "</domain>");
             when(dm.isPersistent()).thenReturn(1);

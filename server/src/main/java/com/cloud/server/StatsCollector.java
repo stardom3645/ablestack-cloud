@@ -23,8 +23,9 @@ import java.lang.management.MemoryMXBean;
 import java.lang.management.RuntimeMXBean;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -39,15 +40,20 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.TimeZone;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 
 import javax.inject.Inject;
 
 import com.cloud.event.ActionEventUtils;
 import com.cloud.event.EventTypes;
+import com.cloud.event.EventVO;
+import com.cloud.utils.db.TransactionLegacy;
 import org.apache.cloudstack.context.CallContext;
 import org.apache.cloudstack.engine.subsystem.api.storage.DataStore;
 import org.apache.cloudstack.engine.subsystem.api.storage.DataStoreManager;
@@ -258,6 +264,10 @@ public class StatsCollector extends ManagerBase implements ComponentMethodInterc
     private static final String INFLUXDB_HOST_MEASUREMENT = "host_stats";
     private static final String INFLUXDB_VM_MEASUREMENT = "vm_stats";
 
+    private static final ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
+    private static final AtomicReference<CompletableFuture<?>> currentTask = new AtomicReference<>(null);
+    private static final AtomicBoolean isTaskCancelled = new AtomicBoolean(false);
+
     public static final ConfigKey<Integer> MANAGEMENT_SERVER_STATUS_COLLECTION_INTERVAL = new ConfigKey<>("Advanced",
             Integer.class, "management.server.stats.interval", "60",
             "Time interval in seconds, for management servers stats collection. Set to <= 0 to disable management servers stats.", false);
@@ -288,7 +298,7 @@ public class StatsCollector extends ManagerBase implements ComponentMethodInterc
                     + "On the other hand, when set to 'false', the VM metrics API will just display the latest metrics collected.", true);
     private static final ConfigKey<Boolean> VM_STATS_INCREMENT_METRICS_IN_MEMORY = new ConfigKey<>("Advanced", Boolean.class, "vm.stats.increment.metrics.in.memory", "true",
             "When set to 'true', VM metrics(NetworkReadKBs, NetworkWriteKBs, DiskWriteKBs, DiskReadKBs, DiskReadIOs and DiskWriteIOs) that are collected from the hypervisor are summed and stored in memory. "
-            + "On the other hand, when set to 'false', the VM metrics API will just display the latest metrics collected.", true);
+                    + "On the other hand, when set to 'false', the VM metrics API will just display the latest metrics collected.", true);
     protected static ConfigKey<Integer> vmStatsMaxRetentionTime = new ConfigKey<>("Advanced", Integer.class, "vm.stats.max.retention.time", "60",
             "The maximum time (in minutes) for keeping VM stats records in the database. The VM stats cleanup process will be disabled if this is set to 0 or less than 0.", true);
 
@@ -597,8 +607,8 @@ public class StatsCollector extends ManagerBase implements ComponentMethodInterc
                     statusCollectionInterval.value(),
                     TimeUnit.SECONDS);
         } else {
-                LOGGER.debug(String.format("%s - %d is 0 or less, so not scheduling the status collector thread",
-                        statusCollectionInterval.key(), statusCollectionInterval.value()));
+            LOGGER.debug(String.format("%s - %d is 0 or less, so not scheduling the status collector thread",
+                    statusCollectionInterval.key(), statusCollectionInterval.value()));
         }
     }
 
@@ -710,48 +720,48 @@ public class StatsCollector extends ManagerBase implements ComponentMethodInterc
         }
     }
 
-     class DbCollector extends AbstractStatsCollector {
-         List<Double> loadHistory = new ArrayList<>();
-         DbCollector() {
-             dbStats.put(loadAvarages, loadHistory);
-         }
-         @Override
-         protected void runInContext() {
-             LOGGER.debug(String.format("%s is running...", this.getClass().getSimpleName()));
+    class DbCollector extends AbstractStatsCollector {
+        List<Double> loadHistory = new ArrayList<>();
+        DbCollector() {
+            dbStats.put(loadAvarages, loadHistory);
+        }
+        @Override
+        protected void runInContext() {
+            LOGGER.debug(String.format("%s is running...", this.getClass().getSimpleName()));
 
-             try {
-                 long lastUptime = (dbStats.containsKey(uptime) ? (Long) dbStats.get(uptime) : 0);
-                 long lastQueries = (dbStats.containsKey(queries) ? (Long) dbStats.get(queries) : 0);
-                 getDynamicDataFromDB();
-                 long interval = (Long) dbStats.get(uptime) - lastUptime;
-                 long activity = (Long) dbStats.get(queries) - lastQueries;
-                 loadHistory.add(0, Double.valueOf(activity / interval));
-                 int maxsize = DATABASE_SERVER_LOAD_HISTORY_RETENTION_NUMBER.value();
-                 while (loadHistory.size() > maxsize) {
-                     loadHistory.remove(maxsize - 1);
-                 }
-             } catch (Throwable e) {
-                 // pokemon catch to make sure the thread stays running
-                 LOGGER.error("db statistics collection failed due to " + e.getLocalizedMessage());
-                 if (LOGGER.isDebugEnabled()) {
-                     LOGGER.debug("db statistics collection failed.", e);
-                 }
-             }
-         }
+            try {
+                long lastUptime = (dbStats.containsKey(uptime) ? (Long) dbStats.get(uptime) : 0);
+                long lastQueries = (dbStats.containsKey(queries) ? (Long) dbStats.get(queries) : 0);
+                getDynamicDataFromDB();
+                long interval = (Long) dbStats.get(uptime) - lastUptime;
+                long activity = (Long) dbStats.get(queries) - lastQueries;
+                loadHistory.add(0, Double.valueOf(activity / interval));
+                int maxsize = DATABASE_SERVER_LOAD_HISTORY_RETENTION_NUMBER.value();
+                while (loadHistory.size() > maxsize) {
+                    loadHistory.remove(maxsize - 1);
+                }
+            } catch (Throwable e) {
+                // pokemon catch to make sure the thread stays running
+                LOGGER.error("db statistics collection failed due to " + e.getLocalizedMessage());
+                if (LOGGER.isDebugEnabled()) {
+                    LOGGER.debug("db statistics collection failed.", e);
+                }
+            }
+        }
 
-         private void getDynamicDataFromDB() {
-             Map<String, String> stats = DbUtil.getDbInfo("STATUS", queries, uptime);
-             dbStats.put(collectionTime, new Date());
-             dbStats.put(queries, (Long.valueOf(stats.get(queries))));
-             dbStats.put(uptime, (Long.valueOf(stats.get(uptime))));
-         }
+        private void getDynamicDataFromDB() {
+            Map<String, String> stats = DbUtil.getDbInfo("STATUS", queries, uptime);
+            dbStats.put(collectionTime, new Date());
+            dbStats.put(queries, (Long.valueOf(stats.get(queries))));
+            dbStats.put(uptime, (Long.valueOf(stats.get(uptime))));
+        }
 
 
-         @Override
-         protected Point createInfluxDbPoint(Object metricsObject) {
-             return null;
-         }
-     }
+        @Override
+        protected Point createInfluxDbPoint(Object metricsObject) {
+            return null;
+        }
+    }
 
     class ManagementServerCollector extends AbstractStatsCollector {
         @Override
@@ -825,6 +835,8 @@ public class StatsCollector extends ManagerBase implements ComponentMethodInterc
             getFileSystemData(newEntry);
             getDataBaseStatistics(newEntry, mshost.getMsid());
             gatherAllMetrics(newEntry);
+            checkMngtServerStorageCapacityThreshold(newEntry);
+            checkDBCapacityThreshold(newEntry);
             LOGGER.trace("Metrics collection end!");
             return newEntry;
         }
@@ -1005,32 +1017,122 @@ public class StatsCollector extends ManagerBase implements ComponentMethodInterc
                 String du = Script.runSimpleBashScript(String.format("du -sh %s | cut -f '1'", fileName));
                 String df = Script.runSimpleBashScript(String.format("df -h %s | grep -v Filesystem | awk '{print \"on disk \" $1 \" mounted on \" $6 \" (\" $5 \" full)\"}'", fileName));
                 logInfoBuilder.append(fileName).append(" using: ").append(du).append('\n').append(df);
-                // Create alert when management server local storage capacity exceeds a set threshold
-                String managementServerLocalStorageCapacityThreshold = (_configDao.getValue(Config.ManagementServerLocalStorageCapacityThreshold.key()).replace(".", ""));
-                int intMngtServerThreshold = Integer.parseInt(managementServerLocalStorageCapacityThreshold);
-                String dfThreshold = (Script.runSimpleBashScript(String.format("df -h %s | grep -v Filesystem | awk '{print $5}'", fileName)).replace("%", ""));
-                int intDfThreshold = Integer.parseInt(dfThreshold);
-                if (intDfThreshold > intMngtServerThreshold) {
-                    if (LOGGER.isDebugEnabled()) {
-                        LOGGER.debug("Management server is low on local storage, Threshold ("+dfThreshold+"%) reached");
-                    }
-                    _alertMgr.sendAlert(AlertManager.AlertType.ALERT_TYPE_MANAGMENT_NODE, 0, new Long(0), "Management server is low on local storage, Threshold ("+dfThreshold+"%) reached", "");
-                    // When local storage capacity reaches the threshold, compressed log files are deleted.
-                    if (fileName.equalsIgnoreCase("vmops.log")) {
-                        Script.runSimpleBashScript("find ./ -name \"*log.*.gz\" -type f -mtime +30 -delete");
-                    }else {
-                        Path path = Paths.get(fileName);
-                        String parentPath = path.getParent().getParent().toString();
-                        Script.runSimpleBashScript("find "+parentPath+ " -name \"*.gz\" -type f -mtime +30 -delete");
-                    }
-                    ActionEventUtils.onStartedActionEvent(CallContext.current().getCallingUserId(), CallContext.current().getCallingAccountId(), EventTypes.EVENT_LOG_AUTO_DELETED,
-                    "The management server is running out of local storage. So, log files that were created more than a month ago were deleted.", new Long(0), null, true, 0);
-                }
             }
-
             newEntry.setLogInfo(logInfoBuilder.toString());
             if (LOGGER.isTraceEnabled()) {
                 LOGGER.trace("log stats:\n" + newEntry.getLogInfo());
+            }
+        }
+        private void checkMngtServerStorageCapacityThreshold(ManagementServerHostStatsEntry newEntry) {
+            Set<String> logFileNames = LogUtils.getLogFileNames();
+            int intMngtServerThreshold = 0;
+            int intMngtDfThreshold = 0;
+            String MngtDfThreshold = "";
+            for (String fileName : logFileNames) {
+                String managementServerLocalStorageCapacityThreshold = (_configDao.getValue(Config.ManagementServerLocalStorageCapacityThreshold.key()).replace(".", ""));
+                intMngtServerThreshold = Integer.parseInt(managementServerLocalStorageCapacityThreshold);
+                MngtDfThreshold = (Script.runSimpleBashScript(String.format("df -h %s | grep -v Filesystem | awk '{print $5}'", fileName)).replace("%", ""));
+                intMngtDfThreshold = Integer.parseInt(MngtDfThreshold);
+            }
+            if (intMngtDfThreshold > intMngtServerThreshold) {
+                // Every 720 minutes(= 12 hours)
+                int intervalMinutes = 720;
+                intervalMinutes = intervalMinutes - 1;
+                // Writing queries to check for duplicate data
+                String selectQuery = "SELECT COUNT(*) FROM alert WHERE subject = 'Management server is low on local storage, Threshold (" + MngtDfThreshold + "%) reached' AND TIMESTAMPDIFF(MINUTE, created, NOW()) <= "+intervalMinutes+";";
+                TransactionLegacy txn = TransactionLegacy.open("getDatabaseValueString");
+                try {
+                    txn.start();
+                    Connection conn = txn.getConnection();
+                    try (
+                        PreparedStatement pstmt = conn.prepareStatement(selectQuery);
+                        ResultSet rs = pstmt.executeQuery();) {
+                        if (rs.next()) {
+                            String isExistCount = rs.getString(1);
+                            if (isExistCount.equalsIgnoreCase("0")) {
+                                _alertMgr.sendAlert(AlertManager.AlertType.ALERT_TYPE_MANAGMENT_NODE, 0, new Long(0), "Management server is low on local storage, Threshold (" + MngtDfThreshold + "%) reached", "");
+                            }
+                        }
+                        txn.commit();
+                    } catch (Exception e) {
+                        throw new CloudRuntimeException("SQL: Exception:" + e.getMessage(), e);
+                    }
+                }catch (Exception e) {
+                    throw new CloudRuntimeException("SQL: Exception:" + e.getMessage(),e);
+                }
+                finally
+                {
+                    try {
+                        if (txn != null) {
+                            txn.close();
+                        }
+                    }catch(Exception e)
+                    {
+                        throw new CloudRuntimeException("SQL: Exception:" + e.getMessage(), e);
+                    }
+                }
+                if (LOGGER.isDebugEnabled()) {
+                    LOGGER.debug("Management server is low on local storage, Threshold (" +MngtDfThreshold+ "%) reached");
+                }
+            }
+        }
+
+        private void checkDBCapacityThreshold(@NotNull ManagementServerHostStatsEntry newEntry) {
+            // Check mysql server storage capacity exceeds a set threshold
+            String managementServerDatabaseStorageCapacityThreshold = (_configDao.getValue(Config.ManagementServerDatabaseStorageCapacityThreshold.key()).replace(".", ""));
+            int intMysqlThreshold = Integer.parseInt(managementServerDatabaseStorageCapacityThreshold);
+            // Percent free of the Filesystem mounted with that path(var: mysqlDataDir).
+            String mysqlDataDir = "/var/lib/mysql/";
+            String mysqlDuThreshold = (Script.runSimpleBashScript("df -h "+mysqlDataDir+" | awk 'NR==2 {print $5}'").replace("%", ""));
+            int intDfThreshold = Integer.parseInt(mysqlDuThreshold);
+            if (intDfThreshold > intMysqlThreshold) {
+                // Every 720 minutes(= 12 hours)
+                int intervalMinutes = 720;
+                intervalMinutes = intervalMinutes - 1;
+                // number of data to delete
+                int deleteCount = 1;
+                // Writing queries to check for duplicate data
+                String selectQuery = "SELECT COUNT(*) FROM alert WHERE subject = 'Database storage capacity, Threshold (" + mysqlDuThreshold + "%) reached. And The oldest records in the event table are deleted every minute until the number falls below the threshold.' AND TIMESTAMPDIFF(MINUTE, created, NOW()) <= "+intervalMinutes+";";
+                String deleteQuery = "DELETE FROM event ORDER BY created ASC LIMIT "+ deleteCount +";";
+                TransactionLegacy txn = TransactionLegacy.open("getDatabaseValueString");
+                try {
+                    txn.start();
+                    Connection conn = txn.getConnection();
+                    try (
+                            PreparedStatement pstmt = conn.prepareStatement(selectQuery);
+                            ResultSet rs = pstmt.executeQuery();) {
+                        if (rs.next()) {
+                            String isExistCount = rs.getString(1);
+                            if (isExistCount.equalsIgnoreCase("0")) {
+                                _alertMgr.sendAlert(AlertManager.AlertType.ALERT_TYPE_MANAGMENT_NODE, 0, new Long(0), "Database storage capacity, Threshold (" + mysqlDuThreshold + "%) reached. And The oldest records in the event table are deleted every minute until the number falls below the threshold.", "");
+                            }
+                        }
+                        // Delete DB Records from event table until storage capacity falls below the threshold
+                        PreparedStatement deleteStmt = conn.prepareStatement(deleteQuery);
+                        deleteStmt.executeUpdate();
+                        txn.commit();
+                        ActionEventUtils.onCompletedActionEvent(CallContext.current().getCallingUserId(), CallContext.current().getCallingAccountId(), EventVO.LEVEL_INFO,
+                                EventTypes.EVENT_LOG_AUTO_DELETED, "The oldest records in the event table are deleted.", new Long(0), null, 0);
+                    } catch (Exception e) {
+                        throw new CloudRuntimeException("SQL: Exception:" + e.getMessage(), e);
+                    }
+                }catch (Exception e) {
+                    throw new CloudRuntimeException("SQL: Exception:" + e.getMessage(),e);
+                }
+                finally
+                {
+                    try {
+                        if (txn != null) {
+                            txn.close();
+                        }
+                    }catch(Exception e)
+                    {
+                        throw new CloudRuntimeException("SQL: Exception:" + e.getMessage(), e);
+                    }
+                }
+                if (LOGGER.isDebugEnabled()) {
+                    LOGGER.debug("Database storage capacity, Threshold (" +mysqlDuThreshold+ "%) reached. And The oldest records in the event table are deleted every minute until the number falls below the threshold.");
+                }
             }
         }
 
@@ -2159,7 +2261,7 @@ public class StatsCollector extends ManagerBase implements ComponentMethodInterc
     @Override
     public ConfigKey<?>[] getConfigKeys() {
         return new ConfigKey<?>[] {vmDiskStatsInterval, vmDiskStatsIntervalMin, vmNetworkStatsInterval, vmNetworkStatsIntervalMin, StatsTimeout, statsOutputUri,
-            vmStatsIncrementMetrics, vmStatsMaxRetentionTime, vmStatsCollectUserVMOnly, vmDiskStatsRetentionEnabled, vmDiskStatsMaxRetentionTime,
+                vmStatsIncrementMetrics, vmStatsMaxRetentionTime, vmStatsCollectUserVMOnly, vmDiskStatsRetentionEnabled, vmDiskStatsMaxRetentionTime,
                 VM_STATS_INCREMENT_METRICS_IN_MEMORY,
                 MANAGEMENT_SERVER_STATUS_COLLECTION_INTERVAL,
                 DATABASE_SERVER_STATUS_COLLECTION_INTERVAL,

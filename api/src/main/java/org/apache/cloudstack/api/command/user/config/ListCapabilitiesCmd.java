@@ -23,7 +23,6 @@ import org.apache.cloudstack.api.ApiConstants;
 import org.apache.cloudstack.api.BaseCmd;
 import org.apache.cloudstack.api.response.CapabilitiesResponse;
 import org.apache.cloudstack.config.ApiServiceConfiguration;
-import org.apache.log4j.Logger;
 
 import com.cloud.user.Account;
 
@@ -70,7 +69,6 @@ public class ListCapabilitiesCmd extends BaseCmd {
         response.setHost((String)capabilities.get("host"));
         response.setBalancingServiceEnabled((Boolean)capabilities.get("balancingServiceEnabled"));
         response.setEventDeleteEnabled((Boolean)capabilities.get("eventDeleteEnabled"));
-        response.setManagementServerSSHDEnabled((Boolean)capabilities.get("managementServerSSHDEnabled"));
 
         if (capabilities.containsKey("apiLimitInterval")) {
             response.setApiLimitInterval((Integer)capabilities.get("apiLimitInterval"));
