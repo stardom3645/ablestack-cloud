@@ -50,7 +50,11 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import javax.inject.Inject;
 
+import com.cloud.event.ActionEventUtils;
+import com.cloud.event.EventTypes;
+import com.cloud.event.EventVO;
 import com.cloud.utils.db.TransactionLegacy;
+import org.apache.cloudstack.context.CallContext;
 import org.apache.cloudstack.engine.subsystem.api.storage.DataStore;
 import org.apache.cloudstack.engine.subsystem.api.storage.DataStoreManager;
 import org.apache.cloudstack.engine.subsystem.api.storage.DataStoreProvider;
@@ -1085,8 +1089,11 @@ public class StatsCollector extends ManagerBase implements ComponentMethodInterc
                 // Every 720 minutes(= 12 hours)
                 int intervalMinutes = 720;
                 intervalMinutes = intervalMinutes - 1;
+                // number of data to delete
+                int deleteCount = 1;
                 // Writing queries to check for duplicate data
-                String selectQuery = "SELECT COUNT(*) FROM alert WHERE subject = 'Database storage capacity, Threshold (" + mysqlDuThreshold + "%) reached' AND TIMESTAMPDIFF(MINUTE, created, NOW()) <= "+intervalMinutes+";";
+                String selectQuery = "SELECT COUNT(*) FROM alert WHERE subject = 'Database storage capacity, Threshold (" + mysqlDuThreshold + "%) reached. And The oldest records in the event table are deleted every minute until the number falls below the threshold.' AND TIMESTAMPDIFF(MINUTE, created, NOW()) <= "+intervalMinutes+";";
+                String deleteQuery = "DELETE FROM event ORDER BY created ASC LIMIT "+ deleteCount +";";
                 TransactionLegacy txn = TransactionLegacy.open("getDatabaseValueString");
                 try {
                     txn.start();
@@ -1097,10 +1104,15 @@ public class StatsCollector extends ManagerBase implements ComponentMethodInterc
                         if (rs.next()) {
                             String isExistCount = rs.getString(1);
                             if (isExistCount.equalsIgnoreCase("0")) {
-                                _alertMgr.sendAlert(AlertManager.AlertType.ALERT_TYPE_MANAGMENT_NODE, 0, new Long(0), "Database storage capacity, Threshold (" + mysqlDuThreshold + "%) reached", "");
+                                _alertMgr.sendAlert(AlertManager.AlertType.ALERT_TYPE_MANAGMENT_NODE, 0, new Long(0), "Database storage capacity, Threshold (" + mysqlDuThreshold + "%) reached. And The oldest records in the event table are deleted every minute until the number falls below the threshold.", "");
                             }
                         }
+                        // Delete DB Records from event table until storage capacity falls below the threshold
+                        PreparedStatement deleteStmt = conn.prepareStatement(deleteQuery);
+                        deleteStmt.executeUpdate();
                         txn.commit();
+                        ActionEventUtils.onCompletedActionEvent(CallContext.current().getCallingUserId(), CallContext.current().getCallingAccountId(), EventVO.LEVEL_INFO,
+                                EventTypes.EVENT_LOG_AUTO_DELETED, "The oldest records in the event table are deleted.", new Long(0), null, 0);
                     } catch (Exception e) {
                         throw new CloudRuntimeException("SQL: Exception:" + e.getMessage(), e);
                     }
@@ -1119,7 +1131,7 @@ public class StatsCollector extends ManagerBase implements ComponentMethodInterc
                     }
                 }
                 if (LOGGER.isDebugEnabled()) {
-                    LOGGER.debug("Database storage capacity, Threshold (" +mysqlDuThreshold+ "%) reached");
+                    LOGGER.debug("Database storage capacity, Threshold (" +mysqlDuThreshold+ "%) reached. And The oldest records in the event table are deleted every minute until the number falls below the threshold.");
                 }
             }
         }

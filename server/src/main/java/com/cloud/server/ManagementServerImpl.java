@@ -42,7 +42,8 @@ import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import javax.inject.Inject;
 import javax.naming.ConfigurationException;
-import com.cloud.dc.ClusterDetailsDao;
+
+import com.cloud.hypervisor.HypervisorGuru;
 import org.apache.cloudstack.acl.ControlledEntity;
 import org.apache.cloudstack.acl.SecurityChecker;
 import org.apache.cloudstack.affinity.AffinityGroupProcessor;
@@ -356,7 +357,6 @@ import org.apache.cloudstack.api.command.user.config.ListCapabilitiesCmd;
 import org.apache.cloudstack.api.command.user.consoleproxy.CreateConsoleEndpointCmd;
 import org.apache.cloudstack.api.command.user.event.ArchiveEventsCmd;
 import org.apache.cloudstack.api.command.user.event.DeleteEventsCmd;
-import org.apache.cloudstack.api.command.user.event.DownloadEventsCmd;
 import org.apache.cloudstack.api.command.user.event.ListEventTypesCmd;
 import org.apache.cloudstack.api.command.user.event.ListEventsCmd;
 import org.apache.cloudstack.api.command.user.firewall.CreateEgressFirewallRuleCmd;
@@ -500,7 +500,6 @@ import org.apache.cloudstack.api.command.user.userdata.ListUserDataCmd;
 import org.apache.cloudstack.api.command.user.userdata.RegisterUserDataCmd;
 import org.apache.cloudstack.api.command.user.vm.AddIpToVmNicCmd;
 import org.apache.cloudstack.api.command.user.vm.AddNicToVMCmd;
-import org.apache.cloudstack.api.command.user.vm.CloneVMCmd;
 import org.apache.cloudstack.api.command.user.vm.DeployVMCmd;
 import org.apache.cloudstack.api.command.user.vm.DestroyVMCmd;
 import org.apache.cloudstack.api.command.user.vm.GetVMPasswordCmd;
@@ -642,8 +641,6 @@ import com.cloud.capacity.CapacityVO;
 import com.cloud.capacity.dao.CapacityDao;
 import com.cloud.capacity.dao.CapacityDaoImpl.SummedCapacity;
 import com.cloud.cluster.ClusterManager;
-import com.cloud.cluster.ManagementServerHostVO;
-import com.cloud.cluster.dao.ManagementServerHostDao;
 import com.cloud.configuration.Config;
 import com.cloud.configuration.ConfigurationManagerImpl;
 import com.cloud.consoleproxy.ConsoleProxyManagementState;
@@ -698,7 +695,6 @@ import com.cloud.host.dao.HostTagsDao;
 import com.cloud.hypervisor.Hypervisor.HypervisorType;
 import com.cloud.hypervisor.HypervisorCapabilities;
 import com.cloud.hypervisor.HypervisorCapabilitiesVO;
-import com.cloud.hypervisor.HypervisorGuru;
 import com.cloud.hypervisor.dao.HypervisorCapabilitiesDao;
 import com.cloud.hypervisor.kvm.dpdk.DpdkHelper;
 import com.cloud.info.ConsoleProxyInfo;
@@ -815,7 +811,6 @@ import com.cloud.vm.dao.SecondaryStorageVmDao;
 import com.cloud.vm.dao.UserVmDao;
 import com.cloud.vm.dao.UserVmDetailsDao;
 import com.cloud.vm.dao.VMInstanceDao;
-import org.apache.cloudstack.ha.HAConfigManager;
 
 public class ManagementServerImpl extends ManagerBase implements ManagementServer, Configurable {
     public static final Logger s_logger = Logger.getLogger(ManagementServerImpl.class.getName());
@@ -977,10 +972,6 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
     protected VMTemplateDao templateDao;
     @Inject
     protected AnnotationDao annotationDao;
-    @Inject
-    private ClusterDetailsDao clusterDetailsDao;
-    @Inject
-    private HAConfigManager haConfigManager;
     @Inject
     UserDataManager userDataManager;
     @Inject
