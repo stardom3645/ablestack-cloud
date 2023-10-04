@@ -42,7 +42,8 @@ import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import javax.inject.Inject;
 import javax.naming.ConfigurationException;
-import com.cloud.dc.ClusterDetailsDao;
+
+import com.cloud.hypervisor.HypervisorGuru;
 import org.apache.cloudstack.acl.ControlledEntity;
 import org.apache.cloudstack.acl.SecurityChecker;
 import org.apache.cloudstack.affinity.AffinityGroupProcessor;
@@ -642,8 +643,8 @@ import com.cloud.capacity.CapacityVO;
 import com.cloud.capacity.dao.CapacityDao;
 import com.cloud.capacity.dao.CapacityDaoImpl.SummedCapacity;
 import com.cloud.cluster.ClusterManager;
-import com.cloud.cluster.ManagementServerHostVO;
 import com.cloud.cluster.dao.ManagementServerHostDao;
+import com.cloud.cluster.ManagementServerHostVO;
 import com.cloud.configuration.Config;
 import com.cloud.configuration.ConfigurationManagerImpl;
 import com.cloud.consoleproxy.ConsoleProxyManagementState;
@@ -698,7 +699,6 @@ import com.cloud.host.dao.HostTagsDao;
 import com.cloud.hypervisor.Hypervisor.HypervisorType;
 import com.cloud.hypervisor.HypervisorCapabilities;
 import com.cloud.hypervisor.HypervisorCapabilitiesVO;
-import com.cloud.hypervisor.HypervisorGuru;
 import com.cloud.hypervisor.dao.HypervisorCapabilitiesDao;
 import com.cloud.hypervisor.kvm.dpdk.DpdkHelper;
 import com.cloud.info.ConsoleProxyInfo;
@@ -815,7 +815,6 @@ import com.cloud.vm.dao.SecondaryStorageVmDao;
 import com.cloud.vm.dao.UserVmDao;
 import com.cloud.vm.dao.UserVmDetailsDao;
 import com.cloud.vm.dao.VMInstanceDao;
-import org.apache.cloudstack.ha.HAConfigManager;
 
 public class ManagementServerImpl extends ManagerBase implements ManagementServer, Configurable {
     public static final Logger s_logger = Logger.getLogger(ManagementServerImpl.class.getName());
@@ -977,10 +976,6 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
     protected VMTemplateDao templateDao;
     @Inject
     protected AnnotationDao annotationDao;
-    @Inject
-    private ClusterDetailsDao clusterDetailsDao;
-    @Inject
-    private HAConfigManager haConfigManager;
     @Inject
     UserDataManager userDataManager;
     @Inject
@@ -3823,7 +3818,6 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
         cmdList.add(StartInternalLBVMCmd.class);
         cmdList.add(ListInternalLBVMsCmd.class);
         cmdList.add(ListNetworkIsolationMethodsCmd.class);
-        cmdList.add(ListNetworkIsolationMethodsCmd.class);
         cmdList.add(CreateNetworkACLListCmd.class);
         cmdList.add(DeleteNetworkACLListCmd.class);
         cmdList.add(ListNetworkACLListsCmd.class);
@@ -4377,6 +4371,7 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
         final String wallPortalDomain = _configDao.getValue("monitoring.wall.portal.domain");
         final String wallPortalPort = _configDao.getValue("monitoring.wall.portal.port");
         final String wallPortalVmUri = _configDao.getValue("monitoring.wall.portal.vm.uri");
+        final boolean securityFeaturesEnabled = Boolean.parseBoolean(_configDao.getValue("security.features.enabled"));
         final String host = _configDao.getValue("host");
         final boolean balancingServiceEnabled = Boolean.parseBoolean(_configDao.getValue("cloud.balancing.service.enabled"));
         final boolean eventDeleteEnabled = Boolean.parseBoolean(_configDao.getValue("event.delete.enabled"));
@@ -4412,6 +4407,7 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
         capabilities.put("wallPortalDomain", wallPortalDomain);
         capabilities.put("wallPortalPort", wallPortalPort);
         capabilities.put("wallPortalVmUri", wallPortalVmUri);
+        capabilities.put("securityFeaturesEnabled", securityFeaturesEnabled);
         capabilities.put("host", host);
         capabilities.put("balancingServiceEnabled", balancingServiceEnabled);
         capabilities.put("eventDeleteEnabled", eventDeleteEnabled);

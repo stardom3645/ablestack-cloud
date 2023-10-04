@@ -586,4 +586,8 @@ public class DatabaseUpgradeChecker implements SystemIntegrityChecker {
             }
         }
     }
+
+    public CloudStackVersion getLatestVersion() {
+        return hierarchy.getLatestVersion();
+    }
 }

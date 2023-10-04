@@ -101,7 +101,7 @@ public class CapabilitiesResponse extends BaseResponse {
     private boolean kubernetesClusterExperimentalFeaturesEnabled;
 
     @SerializedName("customhypervisordisplayname")
-    @Param(description = "Display name for custom hypervisor")
+    @Param(description = "Display name for custom hypervisor", since = "4.19.0")
     private String customHypervisorDisplayName;
 
     @SerializedName("desktopserviceenabled")
@@ -131,6 +131,10 @@ public class CapabilitiesResponse extends BaseResponse {
     @SerializedName("wallportalvmuri")
     @Param(description = "Monitoring Service Wall Portal for VM Uri setting")
     private String wallPortalVmUri;
+
+    @SerializedName("securityfeaturesenabled")
+    @Param(description = "A setting that enables/disables features developed for security features.")
+    private boolean securityFeaturesEnabled;
 
     @SerializedName("host")
     @Param(description = "Management Server Host Ip")
@@ -266,6 +270,10 @@ public class CapabilitiesResponse extends BaseResponse {
 
     public void setWallPortalVmUri(String wallPortalVmUri) {
         this.wallPortalVmUri = wallPortalVmUri;
+    }
+
+    public void setSecurityFeaturesEnabled(boolean securityFeaturesEnabled) {
+        this.securityFeaturesEnabled = securityFeaturesEnabled;
     }
 
     public void setHost(String host) {

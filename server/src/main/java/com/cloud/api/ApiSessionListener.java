@@ -57,6 +57,9 @@ public class ApiSessionListener implements HttpSessionListener {
                 doubleLoginSessionIds.add(key.toString());
             }
         }
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("Sessions count: " + getSessionCount());
+        }
         return doubleLoginSessionIds;
     }
 
@@ -83,8 +86,8 @@ public class ApiSessionListener implements HttpSessionListener {
             HttpSession session = event.getSession();
             sessions.put(session.getId(), event.getSession());
         }
-        if (LOGGER.isTraceEnabled()) {
-            LOGGER.trace("Sessions count: " + getSessionCount());
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("Sessions count: " + getSessionCount());
         }
     }
 
@@ -95,8 +98,8 @@ public class ApiSessionListener implements HttpSessionListener {
         synchronized (this) {
             sessions.remove(event.getSession().getId());
         }
-        if (LOGGER.isTraceEnabled()) {
-            LOGGER.trace("Sessions count: " + getSessionCount());
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("Sessions count: " + getSessionCount());
         }
     }
 }
