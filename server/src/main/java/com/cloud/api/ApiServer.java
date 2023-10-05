@@ -310,7 +310,7 @@ public class ApiServer extends ManagerBase implements HttpRequestHandler, ApiSer
     static final ConfigKey<Boolean> BlockExistConnection = new ConfigKey<Boolean>( "Advanced"
             , Boolean.class
             , "block.exist.connection"
-            , "false"
+            , "true"
             , "When simultaneous access is not allowed('concurrent.connect.enabled : false'), existing sessions are blocked if true, and new sessions are blocked if false."
             , true
             , ConfigKey.Scope.Global);
@@ -1151,14 +1151,11 @@ public class ApiServer extends ManagerBase implements HttpRequestHandler, ApiSer
         List<String> sessionIds = new ArrayList<>();
         if (userAcct != null) {
             if (ApiServer.SecurityFeaturesEnabled.value()) { // 보안기능용 : 하나의 세션만 접속
-                if (ApiSessionListener.getSessionCount() > 1) { // 존재하는 세션이 있으면 신규 세션을 차단
-                    sessionIds.clear();
-                    sessionIds.add(session.getId());
-                    ApiSessionListener.deleteSessionIds(sessionIds);
+                if (ApiSessionListener.getSessionCount() > 1) { // 존재하는 세션이 있으면 기존 세션 차단
+                    ApiSessionListener.deleteAllExistSessionIds(session.getId()); // 접속하려는 세션 제외한 기존의 모든 세션 차단
                     ActionEventUtils.onActionEvent(userAcct.getId(), userAcct.getAccountId(), domainId, EventTypes.EVENT_USER_SESSION_BLOCK,
-                                                    "A session connected to account [" + username + "] exists. Block new connections.", User.UID_SYSTEM, ApiCommandResourceType.User.toString());
-                    alertMgr.sendAlert(AlertManager.AlertType.EVENT_USER_SESSION_BLOCK, 0, new Long(0), "A session connected to account [" + username + "] exists. Block new connections.", "");
-                    throw new CloudAuthenticationException("You are already connecting with the same account and simultaneous access is not allowed.");
+                                                    "All previously connected sessions have been blocked.", User.UID_SYSTEM, ApiCommandResourceType.User.toString());
+                    alertMgr.sendAlert(AlertManager.AlertType.EVENT_USER_SESSION_BLOCK, 0, new Long(0), "All previously connected sessions have been blocked.", "");
                 }
             } else {
                 sessionIds = ApiSessionListener.listExistSessionIds(username, session.getId()); // 기존에 접속된 동일한 사용자의 세션 확인
