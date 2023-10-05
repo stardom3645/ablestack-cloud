@@ -47,7 +47,23 @@ public class ApiSessionListener implements HttpSessionListener {
     }
 
     /**
-     * 먼저 로그인된 세션 ID 목록 생성(중복 로그인 목록)
+     * 접속하려는 세션 제외한 기존의 모든 세션 차단
+     */
+    public static void deleteAllExistSessionIds(String newSessionId) {
+        for (String key : sessions.keySet()) {
+            HttpSession ses = sessions.get(key);
+            if (ses != null && ses.getAttribute("username") != null && !newSessionId.equals(key.toString())) {
+                sessions.get(key.toString()).invalidate();
+                sessions.remove(key.toString());
+            }
+        }
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("Sessions count: " + getSessionCount());
+        }
+    }
+
+    /**
+     * 같은 username으로 먼저 접속된 세션 ID 목록 조회
      */
     public static List<String> listExistSessionIds(String username, String newSessionId) {
         List<String> doubleLoginSessionIds = new ArrayList<String>();
@@ -64,7 +80,7 @@ public class ApiSessionListener implements HttpSessionListener {
     }
 
     /**
-     * 먼저 로그인된 세션 목록 제거
+     * 선택된 세션 차단
      */
     public static void deleteSessionIds(List<String> arr) {
         if (arr.size() > 0) {
