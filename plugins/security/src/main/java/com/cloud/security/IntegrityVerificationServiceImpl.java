@@ -339,7 +339,7 @@ public class IntegrityVerificationServiceImpl extends ManagerBase implements Plu
 
     private void updateIntegrityVerificationFinalResult(final long msHostId, String uuid, boolean verificationFinalResult, String verificationFailedListToString, String type) {
         if (verificationFinalResult == false) {
-            alertManager.sendAlert(AlertManager.AlertType.ALERT_TYPE_MANAGMENT_NODE, 0, new Long(0), " Integrity verification failed.(uuid:"+uuid+") could not be verified. at last verification.", "");
+            alertManager.sendAlert(AlertManager.AlertType.ALERT_TYPE_MANAGMENT_NODE, 0, new Long(0), " integrity verification failed.(uuid:"+uuid+") could not be verified. at last verification.", "");
             ActionEventUtils.onCompletedActionEvent(CallContext.current().getCallingUserId(), CallContext.current().getCallingAccountId(), EventVO.LEVEL_INFO,
                     EventTypes.EVENT_INTEGRITY_VERIFICATION, "Failed to execute "+type+" integrity verification on the management server when running the product.", new Long(0), null, 0);
         }else {
