@@ -3490,6 +3490,7 @@
 "label.action.delete.result": "\uacb0\uacfc \uc0ad\uc81c",
 "label.action.delete.integrity.verification.result": "\ubb34\uacb0\uc131 \uac80\uc99d \uacb0\uacfc \uc0ad\uc81c",
 "label.confirm.delete.integrity.verification.results": "\ud604\uc7ac \ubb34\uacb0\uc131 \uac80\uc99d \uacb0\uacfc\ub97c \uc0ad\uc81c\ud558\uc2dc\uaca0\uc2b5\ub2c8\uae4c?",
+"label.deleting.integrity.verification.results": "\uBB34\uACB0\uC131 \uAC80\uC99D \uACB0\uACFC \uC0AD\uC81C\uD558\uB294 \uC911...",
 "message.action.delete.integrity.verification.result": "\ud604\uc7ac \ubb34\uacb0\uc131 \uac80\uc99d \uacb0\uacfc\ub97c \uc0ad\uc81c\ud558\uc2dc\uaca0\uc2b5\ub2c8\uae4c?",
 "vm.create": "VM.\uc0dd\uc131",
 "vm.destroy": "VM.\uc0ad\uc81c",

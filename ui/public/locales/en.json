@@ -3490,6 +3490,7 @@
 "label.action.delete.result": "Delete result",
 "label.action.delete.integrity.verification.result": "Delete integrity verification result",
 "label.confirm.delete.integrity.verification.results": "Please confirm you wish to delete the selected integrity verification results.",
+"label.deleting.integrity.verification.results": "Deleting integrity verification result",
 "message.action.delete.integrity.verification.result": "Please confirm you wish to delete the selected integrity verification result.",
 "vm.create": "VM.CREATE",
 "vm.destroy": "VM.DESTROY",
