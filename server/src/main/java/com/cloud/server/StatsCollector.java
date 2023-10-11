@@ -1126,10 +1126,11 @@ public class StatsCollector extends ManagerBase implements ComponentMethodInterc
                 }
             }
             // Delete execution threshold (%)
-            int deleteExecutionIntMysqlThreshold = intMysqlThreshold - 5;
-            if (intDfThreshold >= deleteExecutionIntMysqlThreshold || DELETE_EVENT_ACTIVE == false) {
+            int deleteActivationGap = 5;
+            int deleteExecutionIntMysqlThreshold = intMysqlThreshold - deleteActivationGap;
+            if (intDfThreshold >= deleteExecutionIntMysqlThreshold || DELETE_EVENT_ACTIVE == true) {
                 // number of data to delete
-                int deleteCount = 1;
+                int deleteCount = 1000;
                 // Writing queries to check for duplicate data
                 String deleteQuery = "DELETE FROM event ORDER BY created ASC LIMIT "+ deleteCount +";";
                 TransactionLegacy txn = TransactionLegacy.open("getDatabaseValueString");
@@ -1164,7 +1165,7 @@ public class StatsCollector extends ManagerBase implements ComponentMethodInterc
                     LOGGER.debug("Database storage capacity, Threshold (" +mysqlDuThreshold+ "%) reached. And The oldest records in the event table are deleted every minute until the number falls below the threshold.");
                 }
             }
-            if (intDfThreshold == deleteExecutionIntMysqlThreshold){
+            if (intDfThreshold <= deleteExecutionIntMysqlThreshold){
                 DELETE_EVENT_ACTIVE = false;
             }
         }
