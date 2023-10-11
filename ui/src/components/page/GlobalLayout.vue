@@ -222,8 +222,7 @@ export default {
       this.showClear = true
     }
   },
-  beforeUnmount () {
-    clearInterval(this.timer)
+  unmounted () {
     document.body.classList.remove('dark')
   },
   methods: {
@@ -255,9 +254,11 @@ export default {
       this.$store.commit('SET_COUNT_NOTIFY', 0)
     },
     checkShutdown () {
-      api('readyForShutdown', {}).then(json => {
-        this.$store.dispatch('SetShutdownTriggered', json.readyforshutdownresponse.readyforshutdown.shutdowntriggered || false)
-      })
+      if (!this.$store.getters.features.securityfeaturesenabled) {
+        api('readyForShutdown', {}).then(json => {
+          this.$store.dispatch('SetShutdownTriggered', json.readyforshutdownresponse.readyforshutdown.shutdowntriggered || false)
+        })
+      }
     }
   }
 }
