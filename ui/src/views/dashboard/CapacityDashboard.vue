@@ -342,7 +342,6 @@ export default {
       tabKey: 'alerts',
       alerts: [],
       events: [],
-      alerts: [],
       zones: [],
       zoneSelected: {},
       statsMap: {},
@@ -429,7 +428,6 @@ export default {
       this.listZones()
       this.listAlerts()
       this.listEvents()
-      this.listAlerts()
     },
     listCapacity (zone, latest = false, additive = false) {
       this.loading = true
@@ -564,21 +562,6 @@ export default {
         this.loading = false
         if (json && json.listeventsresponse && json.listeventsresponse.event) {
           this.events = json.listeventsresponse.event
-        }
-      })
-    },
-    listAlerts () {
-      const params = {
-        page: 1,
-        pagesize: 6,
-        listall: true
-      }
-      this.loading = true
-      api('listAlerts', params).then(json => {
-        this.alerts = []
-        this.loading = false
-        if (json && json.listalertsresponse && json.listalertsresponse.alert) {
-          this.alerts = json.listalertsresponse.alert
         }
       })
     },
