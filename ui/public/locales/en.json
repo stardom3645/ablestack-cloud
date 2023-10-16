@@ -1,5 +1,6 @@
 {
 "alert.service.domainrouter": "Domain router",
+"authentication.failed": "AUTHENTICATION.FAILED",
 "changed.item.properties": "Changed item properties",
 "confirm.enable.s3": "Please fill in the following information to enable support for S3-backed Secondary Storage",
 "confirm.enable.swift": "Please fill in the following information to enable support for Swift",
