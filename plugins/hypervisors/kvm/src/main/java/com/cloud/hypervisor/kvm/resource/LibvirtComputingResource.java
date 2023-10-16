@@ -22,7 +22,6 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.ObjectInputFilter.Config;
 import java.io.StringReader;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
@@ -76,7 +75,9 @@ import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.BooleanUtils;
 import org.apache.commons.lang.math.NumberUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.log4j.Logger;
 import org.apache.xerces.impl.xpath.regex.Match;
+import org.joda.time.Duration;
 import org.libvirt.Connect;
 import org.libvirt.Domain;
 import org.libvirt.DomainBlockStats;
@@ -133,8 +134,10 @@ import com.cloud.agent.properties.AgentPropertiesFileHandler;
 import com.cloud.agent.resource.virtualnetwork.VRScripts;
 import com.cloud.agent.resource.virtualnetwork.VirtualRouterDeployer;
 import com.cloud.agent.resource.virtualnetwork.VirtualRoutingResource;
+import com.cloud.configuration.Config;
 import com.cloud.dc.Vlan;
 import com.cloud.exception.InternalErrorException;
+import com.cloud.host.Host.Type;
 import com.cloud.hypervisor.Hypervisor.HypervisorType;
 import com.cloud.hypervisor.kvm.dpdk.DpdkHelper;
 import com.cloud.hypervisor.kvm.resource.LibvirtVMDef.ChannelDef;
@@ -151,6 +154,62 @@ import com.cloud.hypervisor.kvm.resource.LibvirtVMDef.FeaturesDef;
 import com.cloud.hypervisor.kvm.resource.LibvirtVMDef.FilesystemDef;
 import com.cloud.hypervisor.kvm.resource.LibvirtVMDef.GraphicDef;
 import com.cloud.hypervisor.kvm.resource.LibvirtVMDef.GuestDef;
+import com.cloud.hypervisor.kvm.resource.LibvirtVMDef.GuestResourceDef;
+import com.cloud.hypervisor.kvm.resource.LibvirtVMDef.InputDef;
+import com.cloud.hypervisor.kvm.resource.LibvirtVMDef.InterfaceDef;
+import com.cloud.hypervisor.kvm.resource.LibvirtVMDef.MemBalloonDef;
+import com.cloud.hypervisor.kvm.resource.LibvirtVMDef.RngDef;
+import com.cloud.hypervisor.kvm.resource.LibvirtVMDef.RngDef.RngBackendModel;
+import com.cloud.hypervisor.kvm.resource.LibvirtVMDef.SCSIDef;
+import com.cloud.hypervisor.kvm.resource.LibvirtVMDef.SerialDef;
+import com.cloud.hypervisor.kvm.resource.LibvirtVMDef.TermPolicy;
+import com.cloud.hypervisor.kvm.resource.LibvirtVMDef.TPMDef;
+import com.cloud.hypervisor.kvm.resource.LibvirtVMDef.VideoDef;
+import com.cloud.hypervisor.kvm.resource.LibvirtVMDef.WatchDogDef;
+import com.cloud.hypervisor.kvm.resource.LibvirtVMDef.WatchDogDef.WatchDogAction;
+import com.cloud.hypervisor.kvm.resource.LibvirtVMDef.WatchDogDef.WatchDogModel;
+import com.cloud.hypervisor.kvm.resource.rolling.maintenance.RollingMaintenanceAgentExecutor;
+import com.cloud.hypervisor.kvm.resource.rolling.maintenance.RollingMaintenanceExecutor;
+import com.cloud.hypervisor.kvm.resource.rolling.maintenance.RollingMaintenanceServiceExecutor;
+import com.cloud.hypervisor.kvm.resource.wrapper.LibvirtRequestWrapper;
+import com.cloud.hypervisor.kvm.resource.wrapper.LibvirtUtilitiesHelper;
+import com.cloud.hypervisor.kvm.storage.IscsiStorageCleanupMonitor;
+import com.cloud.hypervisor.kvm.storage.KVMPhysicalDisk;
+import com.cloud.hypervisor.kvm.storage.KVMStoragePool;
+import com.cloud.hypervisor.kvm.storage.KVMStoragePoolManager;
+import com.cloud.hypervisor.kvm.storage.KVMStorageProcessor;
+import com.cloud.network.Networks.BroadcastDomainType;
+import com.cloud.network.Networks.IsolationType;
+import com.cloud.network.Networks.RouterPrivateIpStrategy;
+import com.cloud.network.Networks.TrafficType;
+import com.cloud.resource.AgentStatusUpdater;
+import com.cloud.resource.ResourceStatusUpdater;
+import com.cloud.resource.RequestWrapper;
+import com.cloud.resource.ServerResource;
+import com.cloud.resource.ServerResourceBase;
+import com.cloud.storage.JavaStorageLayer;
+import com.cloud.storage.Storage;
+import com.cloud.storage.Storage.StoragePoolType;
+import com.cloud.storage.StorageLayer;
+import com.cloud.storage.Volume;
+import com.cloud.storage.resource.StorageSubsystemCommandHandler;
+import com.cloud.storage.resource.StorageSubsystemCommandHandlerBase;
+import com.cloud.utils.ExecutionResult;
+import com.cloud.utils.NumbersUtil;
+import com.cloud.utils.Pair;
+import com.cloud.utils.PropertiesUtil;
+import com.cloud.utils.Ternary;
+import com.cloud.utils.UuidUtils;
+import com.cloud.utils.exception.CloudRuntimeException;
+import com.cloud.utils.net.NetUtils;
+import com.cloud.utils.script.OutputInterpreter;
+import com.cloud.utils.script.OutputInterpreter.AllLinesParser;
+import com.cloud.utils.script.Script;
+import com.cloud.utils.ssh.SshHelper;
+import com.cloud.vm.VirtualMachine;
+import com.cloud.vm.VirtualMachine.PowerState;
+import com.cloud.vm.VmDetailConstants;
+import com.google.gson.Gson;
 
 /**
  * LibvirtComputingResource execute requests on the computing/routing host using
@@ -258,11 +317,11 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
     private String resizeVolumePath;
     private String createTmplPath;
     private String heartBeatPath;
-    private String _heartBeatPathRbd;
-    private String _heartBeatPathClvm;
+    private String heartBeatPathRbd;
+    private String heartBeatPathClvm;
     private String vmActivityCheckPath;
-    private String _vmActivityCheckPathRbd;
-    private String _vmActivityCheckPathClvm;
+    private String vmActivityCheckPathRbd;
+    private String vmActivityCheckPathClvm;
     private String securityGroupPath;
     private String ovsPvlanDhcpHostPath;
     private String ovsPvlanVmPath;
@@ -331,7 +390,6 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
     protected String guestBridgeName;
     protected String privateIp;
     protected String pool;
-    protected String _provider;
     protected String localGateway;
     private boolean canBridgeFirewall;
     protected boolean noMemBalloon = false;
@@ -621,11 +679,11 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
     }
 
     public String getVmActivityCheckPathRbd() {
-        return _vmActivityCheckPathRbd;
+        return vmActivityCheckPathRbd;
     }
 
     public String getVmActivityCheckPathClvm() {
-        return _vmActivityCheckPathClvm;
+        return vmActivityCheckPathClvm;
     }
 
     public String getOvsPvlanDhcpHostPath() {
@@ -879,13 +937,13 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
             throw new ConfigurationException("Unable to find kvmheartbeat.sh");
         }
 
-        _heartBeatPathRbd = Script.findScript(kvmScriptsDir, "kvmheartbeat_rbd.py");
-        if (_heartBeatPathRbd == null) {
+        heartBeatPathRbd = Script.findScript(kvmScriptsDir, "kvmheartbeat_rbd.py");
+        if (heartBeatPathRbd == null) {
             throw new ConfigurationException("Unable to find kvmheartbeat_rbd.py");
         }
 
-        _heartBeatPathClvm = Script.findScript(kvmScriptsDir, "kvmheartbeat_clvm.sh");
-        if (_heartBeatPathClvm == null) {
+        heartBeatPathClvm = Script.findScript(kvmScriptsDir, "kvmheartbeat_clvm.sh");
+        if (heartBeatPathClvm == null) {
             throw new ConfigurationException("Unable to find kvmheartbeat_clvm.sh");
         }
 
@@ -902,21 +960,6 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
         resizeVolumePath = Script.findScript(storageScriptsDir, "resizevolume.sh");
         if (resizeVolumePath == null) {
             throw new ConfigurationException("Unable to find the resizevolume.sh");
-        }
-
-        vmActivityCheckPath = Script.findScript(kvmScriptsDir, "kvmvmactivity.sh");
-        if (vmActivityCheckPath == null) {
-            throw new ConfigurationException("Unable to find kvmvmactivity.sh");
-        }
-
-        _vmActivityCheckPathRbd = Script.findScript(kvmScriptsDir, "kvmvmactivity_rbd.py");
-        if (_vmActivityCheckPathRbd == null) {
-            throw new ConfigurationException("Unable to find kvmvmactivity_rbd.py");
-        }
-
-        _vmActivityCheckPathClvm = Script.findScript(kvmScriptsDir, "kvmvmactivity_clvm.sh");
-        if (_vmActivityCheckPathClvm == null) {
-            throw new ConfigurationException("Unable to find kvmvmactivity_clvm.sh");
         }
 
         createTmplPath = Script.findScript(storageScriptsDir, "createtmplt.sh");
@@ -1161,7 +1204,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
 
         final String[] info = NetUtils.getNetworkParams(privateNic);
 
-        kvmhaMonitor = new KVMHAMonitor(null, null, null, info[0], _heartBeatPath, _heartBeatPathRbd, _heartBeatPathClvm);
+        kvmhaMonitor = new KVMHAMonitor(null, null, null, info[0], heartBeatPath, heartBeatPathRbd, heartBeatPathClvm);
         final Thread ha = new Thread(kvmhaMonitor);
         ha.start();
 

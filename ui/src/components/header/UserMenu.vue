@@ -231,7 +231,9 @@ export default {
       await this.fetchFaviconStateInterval()
       await this.fetchFaviconStateYellowCapacity()
       await this.fetchFaviconStateRedCapacity()
-      await this.fetchHostState()
+      if (!this.$store.getters.features.securityfeaturesenabled) {
+        await this.fetchHostState()
+      }
     },
     fetchFaviconStateInterval () {
       return new Promise((resolve, reject) => {
