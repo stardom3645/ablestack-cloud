@@ -29,6 +29,9 @@ import java.net.URISyntaxException;
 import java.net.URLEncoder;
 import java.security.SecureRandom;
 import java.security.Security;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -952,8 +955,36 @@ public class ApiServer extends ManagerBase implements HttpRequestHandler, ApiSer
 
             // if api/secret key are passed to the parameters
             if ((signature == null) || (apiKey == null)) {
-                ActionEventUtils.onActionEvent(User.UID_SYSTEM, Account.ACCOUNT_ID_SYSTEM, Domain.ROOT_DOMAIN, EventTypes.EVENT_AUTHENTICATION_FAILED,
-                            String.format("Bad request from %s such as session expired, no signature.", remoteAddress.getHostAddress()), User.UID_SYSTEM, ApiCommandResourceType.User.toString());
+                String selectQuery = "SELECT COUNT(*) FROM alert WHERE type = 'AUTHENTICATION.FAILED' and description = 'Bad request from " + remoteAddress.getHostAddress() + "such as session expired, no signature.' AND TIMESTAMPDIFF(MINUTE, created, NOW()) <= 540;";
+                TransactionLegacy txn = TransactionLegacy.open("getDatabaseValueString");
+                try {
+                    txn.start();
+                    Connection conn = txn.getConnection();
+                    try (
+                        PreparedStatement pstmt = conn.prepareStatement(selectQuery);
+                        ResultSet rs = pstmt.executeQuery();) {
+                        if (rs.next()) {
+                            String isExistCount = rs.getString(1);
+                            if (isExistCount.equalsIgnoreCase("0")) {
+                                ActionEventUtils.onActionEvent(User.UID_SYSTEM, Account.ACCOUNT_ID_SYSTEM, Domain.ROOT_DOMAIN, EventTypes.EVENT_AUTHENTICATION_FAILED,
+                                        String.format("Bad request from %s such as session expired, no signature.", remoteAddress.getHostAddress()), User.UID_SYSTEM, ApiCommandResourceType.User.toString());
+                            }
+                        }
+                        txn.commit();
+                    } catch (Exception e) {
+                        throw new CloudRuntimeException("SQL: Exception:" + e.getMessage(), e);
+                    }
+                } catch (Exception e) {
+                    throw new CloudRuntimeException("SQL: Exception:" + e.getMessage(),e);
+                } finally {
+                    try {
+                        if (txn != null) {
+                            txn.close();
+                        }
+                    } catch (Exception e) {
+                        throw new CloudRuntimeException("SQL: Exception:" + e.getMessage(), e);
+                    }
+                }
                 s_logger.debug("Expired session, missing signature, or missing apiKey -- ignoring request. Signature: " + signature + ", apiKey: " + apiKey);
                 return false; // no signature, bad request
             }
