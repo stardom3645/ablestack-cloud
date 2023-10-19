@@ -1041,7 +1041,7 @@ public class StatsCollector extends ManagerBase implements ComponentMethodInterc
                 int intervalMinutes = 720;
                 intervalMinutes = intervalMinutes - 1;
                 // Writing queries to check for duplicate data
-                String selectQuery = "SELECT COUNT(*) FROM alert WHERE subject = 'Management server is low on local storage, Threshold (" + MngtDfThreshold + "%) reached' AND TIMESTAMPDIFF(MINUTE, created, NOW()) <= "+intervalMinutes+";";
+                String selectQuery = "SELECT COUNT(*) FROM alert WHERE subject = 'Management server is low on local storage, Threshold (" + MngtDfThreshold + "%) reached' AND TIMESTAMPDIFF(MINUTE, created, CONVERT_TZ(NOW(), '+00:00', '-09:00')) <= "+intervalMinutes+";";
                 TransactionLegacy txn = TransactionLegacy.open("getDatabaseValueString");
                 try {
                     txn.start();
@@ -1093,7 +1093,7 @@ public class StatsCollector extends ManagerBase implements ComponentMethodInterc
                 int intervalMinutes = 720;
                 intervalMinutes = intervalMinutes - 1;
                 // Writing queries to check for duplicate data
-                String selectQuery = "SELECT COUNT(*) FROM alert WHERE subject = 'Database storage capacity, Threshold (" + mysqlDuThreshold + "%) reached. And The oldest records in the event table are deleted every minute until the number falls below the threshold.' AND TIMESTAMPDIFF(MINUTE, created, NOW()) <= "+intervalMinutes+";";
+                String selectQuery = "SELECT COUNT(*) FROM alert WHERE subject = 'Database storage capacity, Threshold (" + mysqlDuThreshold + "%) reached. And The oldest records in the event table are deleted every minute until the number falls below the threshold.' AND TIMESTAMPDIFF(MINUTE, created, CONVERT_TZ(NOW(), '+00:00', '-09:00')) <= "+intervalMinutes+";";
                 TransactionLegacy txn = TransactionLegacy.open("getDatabaseValueString");
                 try {
                     txn.start();
