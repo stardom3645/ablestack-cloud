@@ -20,6 +20,7 @@ import java.security.InvalidParameterException;
 
 import javax.inject.Inject;
 
+import com.cloud.exception.InvalidParameterValueException;
 import org.apache.cloudstack.acl.RoleType;
 import org.apache.cloudstack.acl.SecurityChecker.AccessType;
 import org.apache.cloudstack.api.ACL;
@@ -40,7 +41,6 @@ import org.apache.cloudstack.api.response.ServiceOfferingResponse;
 import org.apache.cloudstack.api.response.ZoneResponse;
 import org.apache.cloudstack.context.CallContext;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
 
 import com.cloud.kubernetes.cluster.KubernetesCluster;
 import com.cloud.kubernetes.cluster.KubernetesClusterEventTypes;
@@ -56,7 +56,6 @@ import com.cloud.utils.exception.CloudRuntimeException;
         responseHasSensitiveInfo = true,
         authorized = {RoleType.Admin, RoleType.ResourceAdmin, RoleType.DomainAdmin, RoleType.User})
 public class CreateKubernetesClusterCmd extends BaseAsyncCreateCmd {
-    public static final Logger LOGGER = Logger.getLogger(CreateKubernetesClusterCmd.class.getName());
     private static final Long DEFAULT_NODE_ROOT_DISK_SIZE = 8L;
 
     @Inject
@@ -77,13 +76,13 @@ public class CreateKubernetesClusterCmd extends BaseAsyncCreateCmd {
             description = "availability zone in which Kubernetes cluster to be launched")
     private Long zoneId;
 
-    @Parameter(name = ApiConstants.KUBERNETES_VERSION_ID, type = CommandType.UUID, entityType = KubernetesSupportedVersionResponse.class, required = true,
+    @Parameter(name = ApiConstants.KUBERNETES_VERSION_ID, type = CommandType.UUID, entityType = KubernetesSupportedVersionResponse.class,
             description = "Kubernetes version with which cluster to be launched")
     private Long kubernetesVersionId;
 
     @ACL(accessType = AccessType.UseEntry)
     @Parameter(name = ApiConstants.SERVICE_OFFERING_ID, type = CommandType.UUID, entityType = ServiceOfferingResponse.class,
-            required = true, description = "the ID of the service offering for the virtual machines in the cluster.")
+            description = "the ID of the service offering for the virtual machines in the cluster.")
     private Long serviceOfferingId;
 
     @ACL(accessType = AccessType.UseEntry)
@@ -125,7 +124,7 @@ public class CreateKubernetesClusterCmd extends BaseAsyncCreateCmd {
     private String externalLoadBalancerIpAddress;
 
     @Parameter(name=ApiConstants.SIZE, type = CommandType.LONG,
-            required = true, description = "number of Kubernetes cluster worker nodes")
+            description = "number of Kubernetes cluster worker nodes")
     private Long clusterSize;
 
     @Parameter(name = ApiConstants.DOCKER_REGISTRY_USER_NAME, type = CommandType.STRING,
@@ -143,6 +142,9 @@ public class CreateKubernetesClusterCmd extends BaseAsyncCreateCmd {
     @Parameter(name = ApiConstants.NODE_ROOT_DISK_SIZE, type = CommandType.LONG,
             description = "root disk size in GB for each node")
     private Long nodeRootDiskSize;
+
+    @Parameter(name = ApiConstants.CLUSTER_TYPE, type = CommandType.STRING, required = true, description = "type of the cluster: CloudManaged, ExternalManaged", since="4.19.0")
+    private String clusterType;
 
     /////////////////////////////////////////////////////
     /////////////////// Accessors ///////////////////////
@@ -233,6 +235,13 @@ public class CreateKubernetesClusterCmd extends BaseAsyncCreateCmd {
         }
     }
 
+    public String getClusterType() {
+        if (clusterType == null) {
+            return KubernetesCluster.ClusterType.CloudManaged.toString();
+        }
+        return clusterType;
+    }
+
     /////////////////////////////////////////////////////
     /////////////// API Implementation///////////////////
     /////////////////////////////////////////////////////
@@ -279,7 +288,8 @@ public class CreateKubernetesClusterCmd extends BaseAsyncCreateCmd {
     @Override
     public void execute() {
         try {
-            if (!kubernetesClusterService.startKubernetesCluster(getEntityId(), true)) {
+            if (KubernetesCluster.ClusterType.valueOf(getClusterType()) == KubernetesCluster.ClusterType.CloudManaged
+                    && !kubernetesClusterService.startKubernetesCluster(getEntityId(), true)) {
                 throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, "Failed to start Kubernetes cluster");
             }
             KubernetesClusterResponse response = kubernetesClusterService.createKubernetesClusterResponse(getEntityId());
@@ -292,8 +302,20 @@ public class CreateKubernetesClusterCmd extends BaseAsyncCreateCmd {
 
     @Override
     public void create() throws CloudRuntimeException {
+        KubernetesCluster cluster;
+        KubernetesCluster.ClusterType type;
         try {
-            KubernetesCluster cluster = kubernetesClusterService.createKubernetesCluster(this);
+            type = KubernetesCluster.ClusterType.valueOf(getClusterType());
+        } catch (IllegalArgumentException e) {
+            throw new InvalidParameterValueException("Unable to resolve cluster type " + getClusterType() + " to a supported value (CloudManaged, ExternalManaged)");
+        }
+
+        try {
+            if (type == KubernetesCluster.ClusterType.CloudManaged) {
+                cluster = kubernetesClusterService.createManagedKubernetesCluster(this);
+            } else {
+                cluster = kubernetesClusterService.createUnmanagedKubernetesCluster(this);
+            }
             if (cluster == null) {
                 throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, "Failed to create Kubernetes cluster");
             }

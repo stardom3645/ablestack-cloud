@@ -46,20 +46,19 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import org.apache.cloudstack.utils.security.ParserUtils;
 import org.apache.commons.httpclient.Credentials;
 import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.HttpException;
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.httpclient.MultiThreadedHttpConnectionManager;
 import org.apache.commons.httpclient.UsernamePasswordCredentials;
 import org.apache.commons.httpclient.auth.AuthScope;
 import org.apache.commons.httpclient.methods.GetMethod;
-import org.apache.commons.httpclient.methods.HeadMethod;
 import org.apache.commons.httpclient.util.URIUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.client.utils.URLEncodedUtils;
 import org.apache.http.message.BasicNameValuePair;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
@@ -73,7 +72,7 @@ import com.google.common.collect.ImmutableSet;
 
 public class UriUtils {
 
-    public static final Logger s_logger = Logger.getLogger(UriUtils.class.getName());
+    protected static Logger LOGGER = LogManager.getLogger(UriUtils.class);
 
     public static String formNfsUri(String host, String path) {
         try {
@@ -130,7 +129,7 @@ public class UriUtils {
     public static String getCifsUriParametersProblems(URI uri) {
         if (!UriUtils.hostAndPathPresent(uri)) {
             String errMsg = "cifs URI missing host and/or path. Make sure it's of the format cifs://hostname/path";
-            s_logger.warn(errMsg);
+            LOGGER.warn(errMsg);
             return errMsg;
         }
         return null;
@@ -148,10 +147,10 @@ public class UriUtils {
             String name = nvp.getName();
             if (name.equals("user")) {
                 foundUser = true;
-                s_logger.debug("foundUser is" + foundUser);
+                LOGGER.debug("foundUser is" + foundUser);
             } else if (name.equals("password")) {
                 foundPswd = true;
-                s_logger.debug("foundPswd is" + foundPswd);
+                LOGGER.debug("foundPswd is" + foundPswd);
             }
         }
         return (foundUser && foundPswd);
@@ -348,32 +347,10 @@ public class UriUtils {
         return new HttpClient(s_httpClientManager);
     }
 
-    public static List<String> getMetalinkChecksums(String url) {
-        HttpClient httpClient = getHttpClient();
-        GetMethod getMethod = new GetMethod(url);
-        try {
-            if (httpClient.executeMethod(getMethod) == HttpStatus.SC_OK) {
-                InputStream is = getMethod.getResponseBodyAsStream();
-                Map<String, List<String>> checksums = getMultipleValuesFromXML(is, new String[] {"hash"});
-                if (checksums.containsKey("hash")) {
-                    List<String> listChksum = new ArrayList<>();
-                    for (String chk : checksums.get("hash")) {
-                        listChksum.add(chk.replaceAll("\n", "").replaceAll(" ", "").trim());
-                    }
-                    return listChksum;
-                }
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        } finally {
-            getMethod.releaseConnection();
-        }
-        return null;
-    }
     /**
      * Retrieve values from XML documents ordered by ascending priority for each tag name
      */
-    protected static Map<String, List<String>> getMultipleValuesFromXML(InputStream is, String[] tagNames) {
+    public static Map<String, List<String>> getMultipleValuesFromXML(InputStream is, String[] tagNames) {
         Map<String, List<String>> returnValues = new HashMap<String, List<String>>();
         try {
             DocumentBuilderFactory factory = ParserUtils.getSaferDocumentBuilderFactory();
@@ -383,7 +360,7 @@ public class UriUtils {
             for (int i = 0; i < tagNames.length; i++) {
                 NodeList targetNodes = rootElement.getElementsByTagName(tagNames[i]);
                 if (targetNodes.getLength() <= 0) {
-                    s_logger.error("no " + tagNames[i] + " tag in XML response...");
+                    LOGGER.error("no " + tagNames[i] + " tag in XML response...");
                 } else {
                     List<Pair<String, Integer>> priorityList = new ArrayList<>();
                     for (int j = 0; j < targetNodes.getLength(); j++) {
@@ -395,48 +372,9 @@ public class UriUtils {
                 }
             }
         } catch (Exception ex) {
-            s_logger.error(ex);
+            LOGGER.error(ex);
         }
         return returnValues;
-    }
-
-    /**
-     * Check if there is at least one existent URL defined on metalink
-     * @param url metalink url
-     * @return true if at least one existent URL defined on metalink, false if not
-     */
-    protected static boolean checkUrlExistenceMetalink(String url) {
-        HttpClient httpClient = getHttpClient();
-        GetMethod getMethod = new GetMethod(url);
-        try {
-            if (httpClient.executeMethod(getMethod) == HttpStatus.SC_OK) {
-                InputStream is = getMethod.getResponseBodyAsStream();
-                Map<String, List<String>> metalinkUrls = getMultipleValuesFromXML(is, new String[] {"url"});
-                if (metalinkUrls.containsKey("url")) {
-                    List<String> urls = metalinkUrls.get("url");
-                    boolean validUrl = false;
-                    for (String u : urls) {
-                        if (url.endsWith("torrent")) {
-                            continue;
-                        }
-                        try {
-                            UriUtils.checkUrlExistence(u);
-                            validUrl = true;
-                            break;
-                        }
-                        catch (IllegalArgumentException e) {
-                            s_logger.warn(e.getMessage());
-                        }
-                    }
-                    return validUrl;
-                }
-            }
-        } catch (IOException e) {
-            s_logger.warn(e.getMessage());
-        } finally {
-            getMethod.releaseConnection();
-        }
-        return false;
     }
 
     /**
@@ -450,7 +388,7 @@ public class UriUtils {
         try {
             status = httpClient.executeMethod(getMethod);
         } catch (IOException e) {
-            s_logger.error("Error retrieving urls form metalink: " + metalinkUrl);
+            LOGGER.error("Error retrieving urls form metalink: " + metalinkUrl);
             getMethod.releaseConnection();
             return null;
         }
@@ -464,33 +402,11 @@ public class UriUtils {
                 }
             }
         } catch (IOException e) {
-            s_logger.warn(e.getMessage());
+            LOGGER.warn(e.getMessage());
         } finally {
             getMethod.releaseConnection();
         }
         return urls;
-    }
-
-    // use http HEAD method to validate url
-    public static void checkUrlExistence(String url) {
-        if (url.toLowerCase().startsWith("http") || url.toLowerCase().startsWith("https")) {
-            HttpClient httpClient = getHttpClient();
-            HeadMethod httphead = new HeadMethod(url);
-            try {
-                if (httpClient.executeMethod(httphead) != HttpStatus.SC_OK) {
-                    throw new IllegalArgumentException("Invalid URL: " + url);
-                }
-                if (url.endsWith("metalink") && !checkUrlExistenceMetalink(url)) {
-                    throw new IllegalArgumentException("Invalid URLs defined on metalink: " + url);
-                }
-            } catch (HttpException hte) {
-                throw new IllegalArgumentException("Cannot reach URL: " + url + " due to: " + hte.getMessage());
-            } catch (IOException ioe) {
-                throw new IllegalArgumentException("Cannot reach URL: " + url + " due to: " + ioe.getMessage());
-            } finally {
-                httphead.releaseConnection();
-            }
-        }
     }
 
     public static final Set<String> COMMPRESSION_FORMATS = ImmutableSet.of("zip", "bz2", "gz");
@@ -563,20 +479,20 @@ public class UriUtils {
                 httpclient.getParams().setAuthenticationPreemptive(true);
                 Credentials defaultcreds = new UsernamePasswordCredentials(user, password);
                 httpclient.getState().setCredentials(new AuthScope(hostAndPort.first(), hostAndPort.second(), AuthScope.ANY_REALM), defaultcreds);
-                s_logger.info("Added username=" + user + ", password=" + password + "for host " + hostAndPort.first() + ":" + hostAndPort.second());
+                LOGGER.info("Added username=" + user + ", password=" + password + "for host " + hostAndPort.first() + ":" + hostAndPort.second());
             }
             // Execute the method.
             GetMethod method = new GetMethod(url);
             int statusCode = httpclient.executeMethod(method);
 
             if (statusCode != HttpStatus.SC_OK) {
-                s_logger.error("Failed to read from URL: " + url);
+                LOGGER.error("Failed to read from URL: " + url);
                 return null;
             }
 
             return method.getResponseBodyAsStream();
         } catch (Exception ex) {
-            s_logger.error("Failed to read from URL: " + url);
+            LOGGER.error("Failed to read from URL: " + url);
             return null;
         }
     }
@@ -704,21 +620,30 @@ public class UriUtils {
     }
 
     private static UriInfo getRbdUrlInfo(String url) {
-        int secondSlash = StringUtils.ordinalIndexOf(url, "/", 2);
-        int thirdSlash = StringUtils.ordinalIndexOf(url, "/", 3);
+        if (url == null || !url.toLowerCase().startsWith("rbd://")) {
+            throw new CloudRuntimeException("RBD URL must start with \"rbd://\"");
+        }
+        String schema = StringUtils.substring(url, 0, 6);
+        url = StringUtils.substring(url, 6, url.length());
         int firstAt = StringUtils.indexOf(url, "@");
-        int lastColon = StringUtils.lastIndexOf(url,":");
-        int lastSquareBracket = StringUtils.lastIndexOf(url,"]");
-        int startOfHost = Math.max(secondSlash, firstAt) + 1;
-        int endOfHost = lastColon < startOfHost ? (thirdSlash > 0 ? thirdSlash : url.length() + 1) :
+        String credentials = (firstAt == -1) ? null : StringUtils.substring(url, 0, firstAt);
+        String hostInfo = (firstAt == -1) ? url : StringUtils.substring(url, firstAt + 1, url.length());
+
+        int firstSlash = StringUtils.indexOf(hostInfo, "/");
+        int lastColon = StringUtils.lastIndexOf(hostInfo,":");
+        int lastSquareBracket = StringUtils.lastIndexOf(hostInfo,"]");
+        int endOfHost = lastColon == -1 ? (firstSlash > 0 ? firstSlash : hostInfo.length() + 1) :
                 (lastSquareBracket > lastColon ? lastSquareBracket + 1 : lastColon);
-        String storageHosts = StringUtils.substring(url, startOfHost, endOfHost);
+        String storageHosts = StringUtils.substring(hostInfo, 0, endOfHost);
         String firstHost = storageHosts.split(",")[0];
-        String strBeforeHosts = StringUtils.substring(url, 0, startOfHost);
-        String strAfterHosts = StringUtils.substring(url, endOfHost);
+        String strAfterHosts = StringUtils.substring(hostInfo, endOfHost);
         try {
-            URI uri = new URI(UriUtils.encodeURIComponent(strBeforeHosts + firstHost + strAfterHosts));
-            return new UriInfo(uri.getScheme(), storageHosts, uri.getPath(), uri.getUserInfo(), uri.getPort());
+            URI uri = new URI(UriUtils.encodeURIComponent(schema + firstHost + strAfterHosts));
+            if (credentials != null) {
+                credentials = credentials.replace("+", "-");
+                credentials = credentials.replace("/", "_");
+            }
+            return new UriInfo(uri.getScheme(), storageHosts, uri.getPath(), credentials, uri.getPort());
         } catch (URISyntaxException e) {
             throw new CloudRuntimeException(url + " is not a valid uri for RBD");
         }
