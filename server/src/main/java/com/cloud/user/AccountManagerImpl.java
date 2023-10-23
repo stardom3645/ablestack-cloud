@@ -1498,11 +1498,11 @@ public class AccountManagerImpl extends ManagerBase implements AccountManager, M
         for (UserAuthenticator userAuthenticator : _userPasswordEncoders) {
             Pair<Boolean, ActionOnFailedAuthentication> authenticationResult = userAuthenticator.authenticate(user.getUsername(), password, userAccount.getDomainId(), null);
             if (authenticationResult == null) {
-                s_logger.trace(String.format("Authenticator [%s] is returning null for the authenticate mehtod.", userAuthenticator.getClass()));
+                logger.trace(String.format("Authenticator [%s] is returning null for the authenticate mehtod.", userAuthenticator.getClass()));
                 continue;
             }
             if (BooleanUtils.toBoolean(authenticationResult.first())) {
-                s_logger.debug(String.format("User [id=%s] re-authenticated [authenticator=%s] during password update.", user.getUuid(), userAuthenticator.getName()));
+                logger.debug(String.format("User [id=%s] re-authenticated [authenticator=%s] during password update.", user.getUuid(), userAuthenticator.getName()));
                 passwordMatchesFirstLogin = true;
                 break;
             }
@@ -3440,7 +3440,7 @@ public class AccountManagerImpl extends ManagerBase implements AccountManager, M
                     }
                 });
             } catch (Exception e) {
-                s_logger.error("Failed to automatically activate a disabled user. UserId : " + _user.getId());
+                logger.error("Failed to automatically activate a disabled user. UserId : " + _user.getId());
             }
         }
     }

@@ -29,7 +29,6 @@ import org.apache.cloudstack.api.response.SuccessResponse;
 import org.apache.cloudstack.api.response.TemplateResponse;
 import org.apache.cloudstack.api.response.ZoneResponse;
 import org.apache.cloudstack.context.CallContext;
-import org.apache.commons.lang3.BooleanUtils;
 
 import com.cloud.event.EventTypes;
 import com.cloud.template.VirtualMachineTemplate;
