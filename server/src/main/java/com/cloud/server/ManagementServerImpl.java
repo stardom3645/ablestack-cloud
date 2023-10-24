@@ -4366,6 +4366,7 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
 
         final boolean desktopServiceEnabled = Boolean.parseBoolean(_configDao.getValue("cloud.desktop.service.enabled"));
         final boolean automationServiceEnabled = Boolean.parseBoolean(_configDao.getValue("cloud.automation.service.enabled"));
+        final boolean ssvEnabled = Boolean.parseBoolean(_configDao.getValue("cloud.sharedstoragevm.service.enabled"));
         final String desktopWorksPortalPort = _configDao.getValue("cloud.desktop.service.works.portal.port");
         final String wallPortalProtocol = _configDao.getValue("monitoring.wall.portal.protocol");
         final String wallPortalDomain = _configDao.getValue("monitoring.wall.portal.domain");
@@ -4402,6 +4403,7 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
         capabilities.put("customHypervisorDisplayName", HypervisorGuru.HypervisorCustomDisplayName.value());
         capabilities.put("desktopServiceEnabled", desktopServiceEnabled);
         capabilities.put("automationServiceEnabled", automationServiceEnabled);
+        capabilities.put("SSVEnabled", ssvEnabled);
         capabilities.put("desktopWorksPortalPort", desktopWorksPortalPort);
         capabilities.put("wallPortalProtocol", wallPortalProtocol);
         capabilities.put("wallPortalDomain", wallPortalDomain);

@@ -59,6 +59,7 @@ public class ListCapabilitiesCmd extends BaseCmd {
         response.setCustomHypervisorDisplayName((String) capabilities.get("customHypervisorDisplayName"));
         response.setDesktopServiceEnabled((Boolean)capabilities.get("desktopServiceEnabled"));
         response.setAutomationServiceEnabled((Boolean)capabilities.get("automationServiceEnabled"));
+        response.setSSVEnabled((Boolean)capabilities.get("ssvEnabled"));
         response.setDesktopWorksPortalPort((String)capabilities.get("desktopWorksPortalPort"));
         response.setWallPortalProtocol((String)capabilities.get("wallPortalProtocol"));
         response.setWallPortalDomain((String)capabilities.get("wallPortalDomain"));

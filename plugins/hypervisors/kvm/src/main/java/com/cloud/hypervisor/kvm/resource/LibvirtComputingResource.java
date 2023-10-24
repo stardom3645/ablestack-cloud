@@ -1190,7 +1190,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
             params.put("guest.cpu.model", guestCpuModel);
         } else {
             params.put("guest.cpu.mode", "host-passthrough");
-            guestCpuMode = "host-passthrough";
+            guestCpuModel = "host-passthrough";
         }
 
         final String cpuFeatures = AgentPropertiesFileHandler.getPropertyValue(AgentProperties.GUEST_CPU_FEATURES);
