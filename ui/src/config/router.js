@@ -20,7 +20,7 @@ import { UserLayout, BasicLayout, RouteView } from '@/layouts'
 import AutogenView from '@/views/AutogenView.vue'
 import IFramePlugin from '@/views/plugins/IFramePlugin.vue'
 
-import { shallowRef, defineAsyncComponent } from 'vue'
+import { shallowRef } from 'vue'
 import { vueProps } from '@/vue-app'
 
 import compute from '@/config/section/compute'
@@ -203,26 +203,7 @@ export function asyncRouterMap () {
         name: 'dashboard',
         meta: {
           title: 'label.dashboard',
-          icon: 'DashboardOutlined',
-          tabs: [
-            {
-              name: 'dashboard',
-              component: shallowRef(defineAsyncComponent(() => import('@/views/dashboard/UsageDashboardChart')))
-            },
-            {
-              name: 'accounts',
-              show: (record, route, user) => { return record.account === user.account || ['Admin', 'DomainAdmin'].includes(user.roletype) },
-              component: shallowRef(defineAsyncComponent(() => import('@/views/project/AccountsTab')))
-            },
-            {
-              name: 'limits',
-              params: {
-                projectid: 'id'
-              },
-              show: (record, route, user) => { return ['Admin'].includes(user.roletype) },
-              component: shallowRef(defineAsyncComponent(() => import('@/components/view/ResourceLimitTab.vue')))
-            }
-          ]
+          icon: 'DashboardOutlined'
         },
         component: () => import('@/views/dashboard/Dashboard')
       },
@@ -332,6 +313,15 @@ export const constantRouterMap = [
       hidden: true
     },
     component: () => import('@/views/dashboard/SetupTwoFaAtLogin')
+  },
+  {
+    path: '/firstLogin',
+    name: 'FirstLogin',
+    meta: {
+      title: 'label.action.change.password',
+      hidden: true
+    },
+    component: () => import('@/views/dashboard/FirstLogin')
   },
   {
     path: '/403',

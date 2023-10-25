@@ -209,6 +209,31 @@ export default {
       api('listConfigurations', params).then(response => {
         this.config = []
         let config = response.listconfigurationsresponse.configuration || []
+        if (this.$store.getters.features.securityfeaturesenabled) {
+          const securityArr =
+          ['api.source.cidr.checks.enabled',
+            'password.policy.allowUseOfLastUsedPassword',
+            'password.policy.allowContinuousLettersAndNumbersInputOnKeyboard',
+            'password.policy.allowConsecutiveRepetitionsOfSameLettersAndNumbers',
+            'password.policy.allowPasswordToContainUsername',
+            'password.policy.minimum.digits',
+            'password.policy.minimum.lowercase.letters',
+            'password.policy.minimum.special.characters',
+            'password.policy.minimum.uppercase.letters',
+            'password.policy.minimum.length',
+            'password.policy.maximum.length',
+            'incorrect.login.attempts.allowed',
+            'incorrect.login.enable.time',
+            'block.exist.connection',
+            'api.allowed.source.cidr',
+            'concurrent.connect.enabled',
+            'event.delete.enabled',
+            'event.purge.delay',
+            'security.check.interval',
+            'integrity.verification.interval']
+          config = config.filter((x) => !securityArr.includes(x.name))
+          // console.log('config :>> ', config)
+        }
         this.count = response.listconfigurationsresponse.count || 0
         if (this.group.length > 0) {
           config = this.convertConfigToHierarchy(config)

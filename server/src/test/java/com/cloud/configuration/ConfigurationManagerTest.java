@@ -17,61 +17,6 @@
 
 package com.cloud.configuration;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyBoolean;
-import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.nullable;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
-import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
-import java.util.Set;
-import java.util.UUID;
-
-import org.apache.cloudstack.api.command.admin.network.CreateGuestNetworkIpv6PrefixCmd;
-import org.apache.cloudstack.api.command.admin.network.CreateNetworkOfferingCmd;
-import org.apache.cloudstack.api.command.admin.network.DeleteGuestNetworkIpv6PrefixCmd;
-import org.apache.cloudstack.api.command.admin.network.ListGuestNetworkIpv6PrefixesCmd;
-import org.apache.cloudstack.api.command.admin.vlan.CreateVlanIpRangeCmd;
-import org.apache.cloudstack.api.command.admin.vlan.DedicatePublicIpRangeCmd;
-import org.apache.cloudstack.api.command.admin.vlan.ReleasePublicIpRangeCmd;
-import org.apache.cloudstack.api.command.admin.zone.CreateZoneCmd;
-import org.apache.cloudstack.api.command.admin.zone.UpdateZoneCmd;
-import org.apache.cloudstack.api.command.user.network.ListNetworkOfferingsCmd;
-import org.apache.cloudstack.context.CallContext;
-import org.apache.cloudstack.engine.orchestration.service.NetworkOrchestrationService;
-import org.apache.cloudstack.engine.subsystem.api.storage.ZoneScope;
-import org.apache.cloudstack.framework.config.dao.ConfigurationDao;
-import org.apache.cloudstack.framework.messagebus.MessageBusBase;
-import org.apache.cloudstack.storage.datastore.db.ImageStoreDao;
-import org.apache.cloudstack.storage.datastore.db.ImageStoreVO;
-import org.apache.cloudstack.storage.datastore.db.PrimaryDataStoreDao;
-import org.apache.cloudstack.storage.datastore.db.StoragePoolVO;
-import org.apache.log4j.Logger;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.Mockito;
-import org.mockito.MockitoAnnotations;
-import org.mockito.Spy;
-import org.mockito.stubbing.Answer;
-import org.springframework.test.util.ReflectionTestUtils;
-
 import com.cloud.api.query.dao.NetworkOfferingJoinDao;
 import com.cloud.api.query.vo.NetworkOfferingJoinVO;
 import com.cloud.configuration.Resource.ResourceType;
@@ -132,10 +77,65 @@ import com.cloud.utils.net.Ip;
 import com.cloud.utils.net.NetUtils;
 import com.cloud.vm.VMInstanceVO;
 import com.cloud.vm.dao.VMInstanceDao;
+import org.apache.cloudstack.api.command.admin.network.CreateGuestNetworkIpv6PrefixCmd;
+import org.apache.cloudstack.api.command.admin.network.CreateNetworkOfferingCmd;
+import org.apache.cloudstack.api.command.admin.network.DeleteGuestNetworkIpv6PrefixCmd;
+import org.apache.cloudstack.api.command.admin.network.ListGuestNetworkIpv6PrefixesCmd;
+import org.apache.cloudstack.api.command.admin.vlan.CreateVlanIpRangeCmd;
+import org.apache.cloudstack.api.command.admin.vlan.DedicatePublicIpRangeCmd;
+import org.apache.cloudstack.api.command.admin.vlan.ReleasePublicIpRangeCmd;
+import org.apache.cloudstack.api.command.admin.zone.CreateZoneCmd;
+import org.apache.cloudstack.api.command.admin.zone.UpdateZoneCmd;
+import org.apache.cloudstack.api.command.user.network.ListNetworkOfferingsCmd;
+import org.apache.cloudstack.context.CallContext;
+import org.apache.cloudstack.engine.orchestration.service.NetworkOrchestrationService;
+import org.apache.cloudstack.engine.subsystem.api.storage.ZoneScope;
+import org.apache.cloudstack.framework.config.dao.ConfigurationDao;
+import org.apache.cloudstack.framework.messagebus.MessageBusBase;
+import org.apache.cloudstack.storage.datastore.db.ImageStoreDao;
+import org.apache.cloudstack.storage.datastore.db.ImageStoreVO;
+import org.apache.cloudstack.storage.datastore.db.PrimaryDataStoreDao;
+import org.apache.cloudstack.storage.datastore.db.StoragePoolVO;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.MockitoAnnotations;
+import org.mockito.Spy;
+import org.mockito.stubbing.Answer;
+import org.springframework.test.util.ReflectionTestUtils;
+
+import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+import java.util.Set;
+import java.util.UUID;
+
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.nullable;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 public class ConfigurationManagerTest {
 
-    private static final Logger s_logger = Logger.getLogger(ConfigurationManagerTest.class);
+    private Logger logger = LogManager.getLogger(ConfigurationManagerTest.class);
 
     @Spy
     @InjectMocks
@@ -269,7 +269,7 @@ public class ConfigurationManagerTest {
     @Test
     public void testDedicatePublicIpRange() throws Exception {
 
-        s_logger.info("Running tests for DedicatePublicIpRange API");
+        logger.info("Running tests for DedicatePublicIpRange API");
 
         /*
          * TEST 1: given valid parameters DedicatePublicIpRange should succeed
@@ -299,7 +299,7 @@ public class ConfigurationManagerTest {
     @Test
     public void testReleasePublicIpRange() throws Exception {
 
-        s_logger.info("Running tests for DedicatePublicIpRange API");
+        logger.info("Running tests for DedicatePublicIpRange API");
 
         /*
          * TEST 1: given valid parameters and no allocated public ip's in the range ReleasePublicIpRange should succeed
@@ -342,7 +342,7 @@ public class ConfigurationManagerTest {
             Vlan result = configurationMgr.dedicatePublicIpRange(dedicatePublicIpRangesCmd);
             Assert.assertNotNull(result);
         } catch (Exception e) {
-            s_logger.info("exception in testing runDedicatePublicIpRangePostiveTest message: " + e.toString());
+            logger.info("exception in testing runDedicatePublicIpRangePostiveTest message: " + e.toString());
         } finally {
             txn.close("runDedicatePublicIpRangePostiveTest");
         }
@@ -461,7 +461,7 @@ public class ConfigurationManagerTest {
             Boolean result = configurationMgr.releasePublicIpRange(releasePublicIpRangesCmd);
             Assert.assertTrue(result);
         } catch (Exception e) {
-            s_logger.info("exception in testing runReleasePublicIpRangePostiveTest1 message: " + e.toString());
+            logger.info("exception in testing runReleasePublicIpRangePostiveTest1 message: " + e.toString());
         } finally {
             txn.close("runReleasePublicIpRangePostiveTest1");
         }
@@ -495,7 +495,7 @@ public class ConfigurationManagerTest {
             Boolean result = configurationMgr.releasePublicIpRange(releasePublicIpRangesCmd);
             Assert.assertTrue(result);
         } catch (Exception e) {
-            s_logger.info("exception in testing runReleasePublicIpRangePostiveTest2 message: " + e.toString());
+            logger.info("exception in testing runReleasePublicIpRangePostiveTest2 message: " + e.toString());
         } finally {
             txn.close("runReleasePublicIpRangePostiveTest2");
         }

@@ -23,15 +23,12 @@ import org.apache.cloudstack.api.ApiConstants;
 import org.apache.cloudstack.api.BaseCmd;
 import org.apache.cloudstack.api.response.CapabilitiesResponse;
 import org.apache.cloudstack.config.ApiServiceConfiguration;
-import org.apache.log4j.Logger;
 
 import com.cloud.user.Account;
 
 @APICommand(name = "listCapabilities", description = "Lists capabilities", responseObject = CapabilitiesResponse.class,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class ListCapabilitiesCmd extends BaseCmd {
-    public static final Logger s_logger = Logger.getLogger(ListCapabilitiesCmd.class.getName());
-
 
     @Override
     public long getEntityOwnerId() {
@@ -59,6 +56,7 @@ public class ListCapabilitiesCmd extends BaseCmd {
         response.setAllowUserViewAllDomainAccounts((Boolean)capabilities.get("allowUserViewAllDomainAccounts"));
         response.setKubernetesServiceEnabled((Boolean)capabilities.get("kubernetesServiceEnabled"));
         response.setKubernetesClusterExperimentalFeaturesEnabled((Boolean)capabilities.get("kubernetesClusterExperimentalFeaturesEnabled"));
+        response.setCustomHypervisorDisplayName((String) capabilities.get("customHypervisorDisplayName"));
         response.setDesktopServiceEnabled((Boolean)capabilities.get("desktopServiceEnabled"));
         response.setAutomationServiceEnabled((Boolean)capabilities.get("automationServiceEnabled"));
         response.setSSVEnabled((Boolean)capabilities.get("SSVEnabled"));
@@ -67,8 +65,10 @@ public class ListCapabilitiesCmd extends BaseCmd {
         response.setWallPortalDomain((String)capabilities.get("wallPortalDomain"));
         response.setWallPortalPort((String)capabilities.get("wallPortalPort"));
         response.setWallPortalVmUri((String)capabilities.get("wallPortalVmUri"));
+        response.setSecurityFeaturesEnabled((Boolean)capabilities.get("securityFeaturesEnabled"));
         response.setHost((String)capabilities.get("host"));
         response.setBalancingServiceEnabled((Boolean)capabilities.get("balancingServiceEnabled"));
+        response.setEventDeleteEnabled((Boolean)capabilities.get("eventDeleteEnabled"));
 
         if (capabilities.containsKey("apiLimitInterval")) {
             response.setApiLimitInterval((Integer)capabilities.get("apiLimitInterval"));

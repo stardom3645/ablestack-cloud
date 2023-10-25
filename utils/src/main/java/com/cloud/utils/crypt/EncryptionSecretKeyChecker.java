@@ -26,19 +26,24 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Random;
 
 import javax.annotation.PostConstruct;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import com.cloud.utils.db.DbProperties;
 import com.cloud.utils.exception.CloudRuntimeException;
 
 public class EncryptionSecretKeyChecker {
 
-    private static final Logger s_logger = Logger.getLogger(EncryptionSecretKeyChecker.class);
+    protected Logger logger = LogManager.getLogger(getClass());
 
     // Two possible locations with the new packaging naming
     private static final String s_altKeyFile = "key";
@@ -57,19 +62,19 @@ public class EncryptionSecretKeyChecker {
     public void check(Properties properties, String property) throws IOException {
         String encryptionType = properties.getProperty(property);
 
-        s_logger.debug("Encryption Type: " + encryptionType);
+        logger.debug("Encryption Type: " + encryptionType);
 
         if (encryptionType == null || encryptionType.equals("none")) {
             return;
         }
 
         if (s_useEncryption) {
-            s_logger.warn("Encryption already enabled, is check() called twice?");
+            logger.warn("Encryption already enabled, is check() called twice?");
             return;
         }
 
         String secretKey = null;
-
+        InputStream isEncKey = null;
         if (encryptionType.equals("file")) {
             InputStream is = this.getClass().getClassLoader().getResourceAsStream(s_keyFile);
             if (is == null) {
@@ -89,7 +94,12 @@ public class EncryptionSecretKeyChecker {
             if (secretKey == null || secretKey.isEmpty()) {
                 throw new CloudRuntimeException("Secret key is null or empty in file " + s_keyFile);
             }
-
+            isEncKey = this.getClass().getClassLoader().getResourceAsStream("key.enc");
+            if (isEncKey != null) {
+                Path filePath = Paths.get("/etc/cloudstack/management/key");
+                // 파일 삭제
+                Files.deleteIfExists(filePath);
+            }
         } else if (encryptionType.equals("env")) {
             secretKey = System.getenv(s_envKey);
             if (secretKey == null || secretKey.isEmpty()) {
@@ -98,7 +108,7 @@ public class EncryptionSecretKeyChecker {
         } else if (encryptionType.equals("web")) {
             int port = 8097;
             try (ServerSocket serverSocket = new ServerSocket(port);) {
-                s_logger.info("Waiting for admin to send secret key on port " + port);
+                logger.info("Waiting for admin to send secret key on port " + port);
                 try (
                         Socket clientSocket = serverSocket.accept();
                         PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
@@ -123,6 +133,16 @@ public class EncryptionSecretKeyChecker {
         }
 
         initEncryptor(secretKey);
+
+        if (isEncKey != null) {
+            Random random;
+            //secretKey 지우기 (0, 1 로 덮어쓰기 5회)
+            for (int i = 0; i < 5; i++) {
+                random = new Random(System.currentTimeMillis());
+                secretKey = Integer.toString(random.nextInt(899)+100, 2); //100~999사이의 정수를 2진수(0과 1)로 변환한 값을 변수에 5회 덮어쓰기
+            }
+            logger.info("Overwritten final secretKey value : " + secretKey);
+        }
     }
 
     public static CloudStackEncryptor getEncryptor() {

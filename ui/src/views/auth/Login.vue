@@ -98,7 +98,7 @@
           </a-input>
         </a-form-item>
       </a-tab-pane>
-      <a-tab-pane key="saml" :disabled="idps.length === 0">
+      <!-- <a-tab-pane key="saml" :disabled="idps.length === 0">
         <template #tab>
           <span>
             <audit-outlined />
@@ -137,7 +137,7 @@
             </a-select-option>
           </a-select>
         </a-form-item>
-      </a-tab-pane>
+      </a-tab-pane> -->
     </a-tabs>
 
     <a-form-item>
@@ -189,6 +189,9 @@ export default {
     }
     this.initForm()
     if (store.getters.logoutFlag) {
+      if (store.getters.readyForShutdownPollingJob !== '' || store.getters.readyForShutdownPollingJob !== undefined) {
+        clearInterval(store.getters.readyForShutdownPollingJob)
+      }
       sourceToken.init()
       this.fetchData()
     } else {
@@ -280,8 +283,8 @@ export default {
           }
           this.Login(loginParams)
             .then((res) => this.loginSuccess(res))
-            .catch(err => {
-              this.requestFailed(err)
+            .catch(() => {
+              this.requestFailed()
               this.state.loginBtn = false
             })
         } else if (this.customActiveKey === 'saml') {
@@ -303,18 +306,21 @@ export default {
         this.$router.push({ path: '/verify2FA' }).catch(() => {})
       } else if (store.getters.twoFaEnabled === true && (store.getters.twoFaProvider === '' || store.getters.twoFaProvider === undefined)) {
         this.$router.push({ path: '/setup2FA' }).catch(() => {})
+      } else if (store.getters.firstLogin === true) {
+        this.$router.push({ path: '/firstLogin' }).catch(() => {})
       } else {
         this.$store.commit('SET_LOGIN_FLAG', true)
         this.$router.push({ path: '/dashboard' }).catch(() => {})
       }
     },
-    requestFailed (err) {
-      if (err && err.response && err.response.data && err.response.data.loginresponse) {
-        const error = err.response.data.loginresponse.errorcode + ': ' + err.response.data.loginresponse.errortext
-        this.$message.error(`${this.$t('label.error')} ${error}`)
-      } else {
-        this.$message.error(this.$t('message.login.failed'))
-      }
+    requestFailed () {
+      // if (err && err.response && err.response.data && err.response.data.loginresponse) {
+      //   const error = err.response.data.loginresponse.errorcode + ': ' + err.response.data.loginresponse.errortext
+      //   this.$message.error(`${this.$t('label.error')} ${error}`)
+      // } else {
+      //   this.$message.error(this.$t('message.login.failed'))
+      // }
+      this.$message.error(this.$t('message.login.failed.security'))
     },
     onChangeServer (server) {
       const servers = this.$config.servers || []

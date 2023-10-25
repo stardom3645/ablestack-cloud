@@ -47,7 +47,6 @@ import org.apache.cloudstack.framework.config.dao.ConfigurationDao;
 import org.apache.cloudstack.framework.config.impl.ConfigurationVO;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
 
 import com.cloud.configuration.Config;
 import com.cloud.configuration.ConfigurationManager;
@@ -97,7 +96,7 @@ import com.cloud.storage.dao.DiskOfferingDao;
 import com.cloud.test.IPRangeConfig;
 import com.cloud.user.Account;
 import com.cloud.user.AccountVO;
-import com.cloud.user.User;
+// import com.cloud.user.User;
 import com.cloud.user.dao.AccountDao;
 import com.cloud.utils.Pair;
 import com.cloud.utils.PasswordGenerator;
@@ -116,7 +115,6 @@ import com.cloud.utils.net.NetUtils;
 import com.cloud.utils.script.Script;
 
 public class ConfigurationServerImpl extends ManagerBase implements ConfigurationServer {
-    public static final Logger s_logger = Logger.getLogger(ConfigurationServerImpl.class);
 
     @Inject
     private ConfigurationDao _configDao;
@@ -164,7 +162,7 @@ public class ConfigurationServerImpl extends ManagerBase implements Configuratio
             persistDefaultValues();
             _configDepotAdmin.populateConfigurations();
         } catch (InternalErrorException | CloudRuntimeException e) {
-            s_logger.error("Unhandled configuration exception: " + e.getMessage());
+            logger.error("Unhandled configuration exception: " + e.getMessage());
             throw new CloudRuntimeException("Unhandled configuration exception", e);
         }
         return true;
@@ -180,7 +178,7 @@ public class ConfigurationServerImpl extends ManagerBase implements Configuratio
         String init = _configDao.getValue("init");
 
         if (init == null || init.equals("false")) {
-            s_logger.debug("ConfigurationServer is saving default values to the database.");
+            logger.debug("ConfigurationServer is saving default values to the database.");
 
             // Save default Configuration Table values
             List<String> categories = Config.getCategories();
@@ -220,38 +218,38 @@ public class ConfigurationServerImpl extends ManagerBase implements Configuratio
             }
 
             _configDao.update(Config.UseSecondaryStorageVm.key(), Config.UseSecondaryStorageVm.getCategory(), "true");
-            s_logger.debug("ConfigurationServer made secondary storage vm required.");
+            logger.debug("ConfigurationServer made secondary storage vm required.");
 
             _configDao.update(Config.SecStorageEncryptCopy.key(), Config.SecStorageEncryptCopy.getCategory(), "false");
-            s_logger.debug("ConfigurationServer made secondary storage copy encrypt set to false.");
+            logger.debug("ConfigurationServer made secondary storage copy encrypt set to false.");
 
             _configDao.update("secstorage.secure.copy.cert", "realhostip");
-            s_logger.debug("ConfigurationServer made secondary storage copy use realhostip.");
+            logger.debug("ConfigurationServer made secondary storage copy use realhostip.");
 
             _configDao.update("user.password.encoders.exclude", "MD5,LDAP,PLAINTEXT");
-            s_logger.debug("Configuration server excluded insecure encoders");
+            logger.debug("Configuration server excluded insecure encoders");
 
             _configDao.update("user.authenticators.exclude", "PLAINTEXT");
-            s_logger.debug("Configuration server excluded plaintext authenticator");
+            logger.debug("Configuration server excluded plaintext authenticator");
 
             // Save default service offerings
-            createServiceOffering(User.UID_SYSTEM, "1C-2GB-RBD-HA", 1, 2048, 500, "1Core 2GB", ProvisioningType.THIN, false, true, null);
-            createServiceOffering(User.UID_SYSTEM, "2C-4GB-RBD-HA", 2, 4096, 2000, "2Core 4GB", ProvisioningType.THIN, false, true, null);
-            createServiceOffering(User.UID_SYSTEM, "4C-8GB-RBD-HA", 4, 8192, 2000, "4Core 8GB", ProvisioningType.THIN, false, true, null);
-            createServiceOffering(User.UID_SYSTEM, "Custom-RBD-HA", 0, 0, 0, "Custom", ProvisioningType.THIN, false, true, null);
+            // createServiceOffering(User.UID_SYSTEM, "1C-2GB-RBD-HA", 1, 2048, 500, "1Core 2GB", ProvisioningType.THIN, false, true, null);
+            // createServiceOffering(User.UID_SYSTEM, "2C-4GB-RBD-HA", 2, 4096, 2000, "2Core 4GB", ProvisioningType.THIN, false, true, null);
+            // createServiceOffering(User.UID_SYSTEM, "4C-8GB-RBD-HA", 4, 8192, 2000, "4Core 8GB", ProvisioningType.THIN, false, true, null);
+            // createServiceOffering(User.UID_SYSTEM, "Custom-RBD-HA", 0, 0, 0, "Custom", ProvisioningType.THIN, false, true, null);
             // Save default disk offerings
-            createDefaultDiskOffering("50GB-WB-RBD", "RBD Disk, 50 GB", ProvisioningType.THIN, 50, null, false, false, DiskCacheMode.WRITEBACK);
-            createDefaultDiskOffering("100GB-WB-RBD", "RBD Disk, 100 GB", ProvisioningType.THIN, 100, null, false, false, DiskCacheMode.WRITEBACK);
-            createDefaultDiskOffering("1TB-WB-RBD", "RBD Disk, 1 TB", ProvisioningType.THIN, 1024, null, false, false, DiskCacheMode.WRITEBACK);
-            createDefaultDiskOffering("Custom-WB", "Custom Disk", ProvisioningType.THIN, 0, null, true, false, DiskCacheMode.WRITEBACK);
+            // createDefaultDiskOffering("50GB-WB-RBD", "RBD Disk, 50 GB", ProvisioningType.THIN, 50, null, false, false, DiskCacheMode.WRITEBACK);
+            // createDefaultDiskOffering("100GB-WB-RBD", "RBD Disk, 100 GB", ProvisioningType.THIN, 100, null, false, false, DiskCacheMode.WRITEBACK);
+            // createDefaultDiskOffering("1TB-WB-RBD", "RBD Disk, 1 TB", ProvisioningType.THIN, 1024, null, false, false, DiskCacheMode.WRITEBACK);
+            // createDefaultDiskOffering("Custom-WB", "Custom Disk", ProvisioningType.THIN, 0, null, true, false, DiskCacheMode.WRITEBACK);
 
             // Save the mount parent to the configuration table
             String mountParent = getMountParent();
             if (mountParent != null) {
                 _configDao.update(Config.MountParent.key(), Config.MountParent.getCategory(), mountParent);
-                s_logger.debug("ConfigurationServer saved \"" + mountParent + "\" as mount.parent.");
+                logger.debug("ConfigurationServer saved \"" + mountParent + "\" as mount.parent.");
             } else {
-                s_logger.debug("ConfigurationServer could not detect mount.parent.");
+                logger.debug("ConfigurationServer could not detect mount.parent.");
             }
 
             String hostIpAdr = NetUtils.getDefaultHostIp();
@@ -267,7 +265,7 @@ public class ConfigurationServerImpl extends ManagerBase implements Configuratio
 
                 if (needUpdateHostIp) {
                     _configDepot.createOrUpdateConfigObject(ApiServiceConfiguration.class.getSimpleName(), ApiServiceConfiguration.ManagementServerAddresses, hostIpAdr);
-                    s_logger.debug("ConfigurationServer saved \"" + hostIpAdr + "\" as host.");
+                    logger.debug("ConfigurationServer saved \"" + hostIpAdr + "\" as host.");
                 }
             }
 
@@ -368,7 +366,7 @@ public class ConfigurationServerImpl extends ManagerBase implements Configuratio
             }
             txn.commit();
         } catch (Exception e) {
-            s_logger.warn("Unable to init template " + id + " datails: " + name, e);
+            logger.warn("Unable to init template " + id + " datails: " + name, e);
             throw new CloudRuntimeException("Unable to init template " + id + " datails: " + name);
         }
     }
@@ -415,7 +413,7 @@ public class ConfigurationServerImpl extends ManagerBase implements Configuratio
                         }
                     }
                 } catch (Exception e) {
-                    s_logger.debug("initiateXenServerPVDriverVersion failed due to " + e.toString());
+                    logger.debug("initiateXenServerPVDriverVersion failed due to " + e.toString());
                     // ignore
                 }
             }
@@ -437,7 +435,7 @@ public class ConfigurationServerImpl extends ManagerBase implements Configuratio
                 try(final FileInputStream finputstream = new FileInputStream(propsFile);) {
                     props.load(finputstream);
                 }catch (IOException e) {
-                    s_logger.error("getEnvironmentProperty:Exception:" + e.getMessage());
+                    logger.error("getEnvironmentProperty:Exception:" + e.getMessage());
                 }
                 return props.getProperty("mount.parent");
             }
@@ -459,7 +457,7 @@ public class ConfigurationServerImpl extends ManagerBase implements Configuratio
                     PreparedStatement stmt = txn.prepareAutoCloseStatement(insertSql);
                     stmt.executeUpdate();
                 } catch (SQLException ex) {
-                    s_logger.debug("Looks like system account already exists");
+                    logger.debug("Looks like system account already exists");
                 }
                 // insert system user
                 insertSql = "INSERT INTO `cloud`.`user` (id, uuid, username, password, account_id, firstname, lastname, created, user.default)"
@@ -469,7 +467,7 @@ public class ConfigurationServerImpl extends ManagerBase implements Configuratio
                     PreparedStatement stmt = txn.prepareAutoCloseStatement(insertSql);
                     stmt.executeUpdate();
                 } catch (SQLException ex) {
-                    s_logger.debug("Looks like system user already exists");
+                    logger.debug("Looks like system user already exists");
                 }
 
                 // insert admin user, but leave the account disabled until we set a
@@ -486,7 +484,7 @@ public class ConfigurationServerImpl extends ManagerBase implements Configuratio
                     PreparedStatement stmt = txn.prepareAutoCloseStatement(insertSql);
                     stmt.executeUpdate();
                 } catch (SQLException ex) {
-                    s_logger.debug("Looks like admin account already exists");
+                    logger.debug("Looks like admin account already exists");
                 }
 
                 // now insert the user
@@ -497,7 +495,7 @@ public class ConfigurationServerImpl extends ManagerBase implements Configuratio
                     PreparedStatement stmt = txn.prepareAutoCloseStatement(insertSql);
                     stmt.executeUpdate();
                 } catch (SQLException ex) {
-                    s_logger.debug("Looks like admin user already exists");
+                    logger.debug("Looks like admin user already exists");
                 }
 
                 try {
@@ -528,12 +526,12 @@ public class ConfigurationServerImpl extends ManagerBase implements Configuratio
                             stmt = txn.prepareAutoCloseStatement(insertSql);
                             stmt.executeUpdate();
                         } catch (SQLException ex) {
-                            s_logger.warn("Failed to create default security group for default admin account due to ", ex);
+                            logger.warn("Failed to create default security group for default admin account due to ", ex);
                         }
                     }
                     rs.close();
                 } catch (Exception ex) {
-                    s_logger.warn("Failed to create default security group for default admin account due to ", ex);
+                    logger.warn("Failed to create default security group for default admin account due to ", ex);
                 }
             }
         });
@@ -569,9 +567,9 @@ public class ConfigurationServerImpl extends ManagerBase implements Configuratio
                 PreparedStatement stmt = txn.prepareAutoCloseStatement(wSql);
                 stmt.setString(1, DBEncryptionUtil.encrypt(rpassword));
                 stmt.executeUpdate();
-                s_logger.info("Updated systemvm password in database");
+                logger.info("Updated systemvm password in database");
             } catch (SQLException e) {
-                s_logger.error("Cannot retrieve systemvm password", e);
+                logger.error("Cannot retrieve systemvm password", e);
             }
         }
 
@@ -585,7 +583,7 @@ public class ConfigurationServerImpl extends ManagerBase implements Configuratio
         String username = System.getProperty("user.name");
         Boolean devel = Boolean.valueOf(_configDao.getValue("developer"));
         if (!username.equalsIgnoreCase("cloud") && !devel) {
-            s_logger.warn("Systemvm keypairs could not be set. Management server should be run as cloud user, or in development mode.");
+            logger.warn("Systemvm keypairs could not be set. Management server should be run as cloud user, or in development mode.");
             return;
         }
         String already = _configDao.getValue("ssh.privatekey");
@@ -594,12 +592,12 @@ public class ConfigurationServerImpl extends ManagerBase implements Configuratio
             throw new CloudRuntimeException("Cannot get home directory for account: " + username);
         }
 
-        if (s_logger.isInfoEnabled()) {
-            s_logger.info("Processing updateKeyPairs");
+        if (logger.isInfoEnabled()) {
+            logger.info("Processing updateKeyPairs");
         }
 
         if (homeDir != null && homeDir.startsWith("~")) {
-            s_logger.error("No home directory was detected for the user '" + username + "'. Please check the profile of this user.");
+            logger.error("No home directory was detected for the user '" + username + "'. Please check the profile of this user.");
             throw new CloudRuntimeException("No home directory was detected for the user '" + username + "'. Please check the profile of this user.");
         }
 
@@ -615,8 +613,8 @@ public class ConfigurationServerImpl extends ManagerBase implements Configuratio
         }
 
         if (already == null || already.isEmpty()) {
-            if (s_logger.isInfoEnabled()) {
-                s_logger.info("Systemvm keypairs not found in database. Need to store them in the database");
+            if (logger.isInfoEnabled()) {
+                logger.info("Systemvm keypairs not found in database. Need to store them in the database");
             }
             // FIXME: take a global database lock here for safety.
             boolean onWindows = isOnWindows();
@@ -629,13 +627,13 @@ public class ConfigurationServerImpl extends ManagerBase implements Configuratio
             try {
                 privateKey = new String(Files.readAllBytes(privkeyfile.toPath()));
             } catch (IOException e) {
-                s_logger.error("Cannot read the private key file", e);
+                logger.error("Cannot read the private key file", e);
                 throw new CloudRuntimeException("Cannot read the private key file");
             }
             try {
                 publicKey = new String(Files.readAllBytes(pubkeyfile.toPath()));
             } catch (IOException e) {
-                s_logger.error("Cannot read the public key file", e);
+                logger.error("Cannot read the public key file", e);
                 throw new CloudRuntimeException("Cannot read the public key file");
             }
 
@@ -656,29 +654,29 @@ public class ConfigurationServerImpl extends ManagerBase implements Configuratio
                     try {
                         PreparedStatement stmt1 = txn.prepareAutoCloseStatement(insertSql1);
                         stmt1.executeUpdate();
-                        if (s_logger.isDebugEnabled()) {
-                            s_logger.debug("Private key inserted into database");
+                        if (logger.isDebugEnabled()) {
+                            logger.debug("Private key inserted into database");
                         }
                     } catch (SQLException ex) {
-                        s_logger.error("SQL of the private key failed", ex);
+                        logger.error("SQL of the private key failed", ex);
                         throw new CloudRuntimeException("SQL of the private key failed");
                     }
 
                     try {
                         PreparedStatement stmt2 = txn.prepareAutoCloseStatement(insertSql2);
                         stmt2.executeUpdate();
-                        if (s_logger.isDebugEnabled()) {
-                            s_logger.debug("Public key inserted into database");
+                        if (logger.isDebugEnabled()) {
+                            logger.debug("Public key inserted into database");
                         }
                     } catch (SQLException ex) {
-                        s_logger.error("SQL of the public key failed", ex);
+                        logger.error("SQL of the public key failed", ex);
                         throw new CloudRuntimeException("SQL of the public key failed");
                     }
                 }
             });
 
         } else {
-            s_logger.info("Keypairs already in database, updating local copy");
+            logger.info("Keypairs already in database, updating local copy");
             updateKeyPairsOnDisk(homeDir);
         }
         try {
@@ -710,7 +708,7 @@ public class ConfigurationServerImpl extends ManagerBase implements Configuratio
             try {
                 keyfile.createNewFile();
             } catch (IOException e) {
-                s_logger.warn("Failed to create file: " + e.toString());
+                logger.warn("Failed to create file: " + e.toString());
                 throw new CloudRuntimeException("Failed to update keypairs on disk: cannot create  key file " + keyPath);
             }
         }
@@ -721,10 +719,10 @@ public class ConfigurationServerImpl extends ManagerBase implements Configuratio
                     kStream.write(key.getBytes());
                 }
             } catch (FileNotFoundException e) {
-                s_logger.warn("Failed to write  key to " + keyfile.getAbsolutePath(), e);
+                logger.warn("Failed to write  key to " + keyfile.getAbsolutePath(), e);
                 throw new CloudRuntimeException("Failed to update keypairs on disk: cannot find  key file " + keyPath);
             } catch (IOException e) {
-                s_logger.warn("Failed to write  key to " + keyfile.getAbsolutePath(), e);
+                logger.warn("Failed to write  key to " + keyfile.getAbsolutePath(), e);
                 throw new CloudRuntimeException("Failed to update keypairs on disk: cannot write to  key file " + keyPath);
             }
         }
@@ -735,7 +733,7 @@ public class ConfigurationServerImpl extends ManagerBase implements Configuratio
         File keyDir = new File(homeDir + "/.ssh");
         Boolean devel = Boolean.valueOf(_configDao.getValue("developer"));
         if (!keyDir.isDirectory()) {
-            s_logger.warn("Failed to create " + homeDir + "/.ssh for storing the SSH keypars");
+            logger.warn("Failed to create " + homeDir + "/.ssh for storing the SSH keypars");
             keyDir.mkdirs();
         }
         String pubKey = _configDao.getValue("ssh.publickey");
@@ -752,7 +750,7 @@ public class ConfigurationServerImpl extends ManagerBase implements Configuratio
     }
 
     protected void copyPrivateKeyToHosts(String publicKeyPath, String privKeyPath) {
-        s_logger.info("Trying to copy private keys to hosts");
+        logger.info("Trying to copy private keys to hosts");
         String injectScript = getInjectScript();
         String scriptPath = Script.findScript("", injectScript);
         if (scriptPath == null) {
@@ -761,9 +759,9 @@ public class ConfigurationServerImpl extends ManagerBase implements Configuratio
 
         Script command = null;
         if(isOnWindows()) {
-            command = new Script("python", s_logger);
+            command = new Script("python", logger);
         } else {
-            command = new Script("/bin/bash", s_logger);
+            command = new Script("/bin/bash", logger);
         }
         if (isOnWindows()) {
             scriptPath = scriptPath.replaceAll("\\\\" ,"/" );
@@ -773,9 +771,9 @@ public class ConfigurationServerImpl extends ManagerBase implements Configuratio
         command.add(scriptPath);
         command.add(privKeyPath);
         final String result = command.execute();
-        s_logger.info("The script injectkeys.sh was run with result : " + result);
+        logger.info("The script injectkeys.sh was run with result : " + result);
         if (result != null) {
-            s_logger.warn("The script injectkeys.sh failed to run successfully : " + result);
+            logger.warn("The script injectkeys.sh failed to run successfully : " + result);
             throw new CloudRuntimeException("The script injectkeys.sh failed to run successfully : " + result);
         }
     }
@@ -803,7 +801,7 @@ public class ConfigurationServerImpl extends ManagerBase implements Configuratio
 
         if (already == null) {
 
-            s_logger.info("Need to store secondary storage vm copy password in the database");
+            logger.info("Need to store secondary storage vm copy password in the database");
             String password = PasswordGenerator.generateRandomPassword(12);
 
             final String insertSql1 =
@@ -818,9 +816,9 @@ public class ConfigurationServerImpl extends ManagerBase implements Configuratio
                     try {
                         PreparedStatement stmt1 = txn.prepareAutoCloseStatement(insertSql1);
                         stmt1.executeUpdate();
-                        s_logger.debug("secondary storage vm copy password inserted into database");
+                        logger.debug("secondary storage vm copy password inserted into database");
                     } catch (SQLException ex) {
-                        s_logger.warn("Failed to insert secondary storage vm copy password", ex);
+                        logger.warn("Failed to insert secondary storage vm copy password", ex);
                     }
                 }
             });
@@ -831,7 +829,7 @@ public class ConfigurationServerImpl extends ManagerBase implements Configuratio
         try {
             _configDao.update(Config.SSOKey.key(), Config.SSOKey.getCategory(), getPrivateKey());
         } catch (NoSuchAlgorithmException ex) {
-            s_logger.error("error generating sso key", ex);
+            logger.error("error generating sso key", ex);
         }
     }
 
@@ -844,21 +842,21 @@ public class ConfigurationServerImpl extends ManagerBase implements Configuratio
             if(configInDB == null) {
                 ConfigurationVO configVO = new ConfigurationVO(Config.SSVMPSK.getCategory(), "DEFAULT", Config.SSVMPSK.getComponent(), Config.SSVMPSK.key(), getPrivateKey(),
                         Config.SSVMPSK.getDescription());
-                s_logger.info("generating a new SSVM PSK. This goes to SSVM on Start");
+                logger.info("generating a new SSVM PSK. This goes to SSVM on Start");
                 _configDao.persist(configVO);
             } else if (StringUtils.isEmpty(configInDB.getValue())) {
-                s_logger.info("updating the SSVM PSK with new value. This goes to SSVM on Start");
+                logger.info("updating the SSVM PSK with new value. This goes to SSVM on Start");
                 _configDao.update(Config.SSVMPSK.key(), Config.SSVMPSK.getCategory(), getPrivateKey());
             }
         } catch (NoSuchAlgorithmException ex) {
-            s_logger.error("error generating ssvm psk", ex);
+            logger.error("error generating ssvm psk", ex);
         }
     }
 
     private String getPrivateKey() throws NoSuchAlgorithmException {
         String encodedKey = null;
         // Algorithm for generating Key is SHA1, should this be configurable?
-        KeyGenerator generator = KeyGenerator.getInstance("HmacSHA1");
+        KeyGenerator generator = KeyGenerator.getInstance("HmacSHA256");
         SecretKey key = generator.generateKey();
         encodedKey = Base64.encodeBase64URLSafeString(key.getEncoded());
         return encodedKey;
@@ -915,7 +913,7 @@ public class ConfigurationServerImpl extends ManagerBase implements Configuratio
                 }
             });
         } catch (Exception e) {
-            s_logger.error("Unable to create new pod due to " + e.getMessage(), e);
+            logger.error("Unable to create new pod due to " + e.getMessage(), e);
             throw new InternalErrorException("Failed to create new pod. Please contact Cloud Support.");
         }
 
@@ -1042,7 +1040,7 @@ public class ConfigurationServerImpl extends ManagerBase implements Configuratio
                     NetworkOfferingServiceMapVO offService =
                             new NetworkOfferingServiceMapVO(defaultSharedSGNetworkOffering.getId(), service, defaultSharedSGNetworkOfferingProviders.get(service));
                     _ntwkOfferingServiceMapDao.persist(offService);
-                    s_logger.trace("Added service for the network offering: " + offService);
+                    logger.trace("Added service for the network offering: " + offService);
                 }*/
 
                 // Offering #2
@@ -1057,7 +1055,7 @@ public class ConfigurationServerImpl extends ManagerBase implements Configuratio
                     NetworkOfferingServiceMapVO offService =
                             new NetworkOfferingServiceMapVO(defaultSharedNetworkOffering.getId(), service, defaultSharedNetworkOfferingProviders.get(service));
                     _ntwkOfferingServiceMapDao.persist(offService);
-                    s_logger.trace("Added service for the network offering: " + offService);
+                    logger.trace("Added service for the network offering: " + offService);
                 }
 
                 NetworkOfferingVO defaultTungstenSharedSGNetworkOffering =
@@ -1072,7 +1070,7 @@ public class ConfigurationServerImpl extends ManagerBase implements Configuratio
                     NetworkOfferingServiceMapVO offService =
                             new NetworkOfferingServiceMapVO(defaultTungstenSharedSGNetworkOffering.getId(), service.getKey(), service.getValue());
                     _ntwkOfferingServiceMapDao.persist(offService);
-                    s_logger.trace("Added service for the network offering: " + offService);
+                    logger.trace("Added service for the network offering: " + offService);
                 }
 
                 // Offering #3
@@ -1090,7 +1088,7 @@ public class ConfigurationServerImpl extends ManagerBase implements Configuratio
                             new NetworkOfferingServiceMapVO(defaultIsolatedSourceNatEnabledNetworkOffering.getId(), service,
                                     defaultIsolatedSourceNatEnabledNetworkOfferingProviders.get(service));
                     _ntwkOfferingServiceMapDao.persist(offService);
-                    s_logger.trace("Added service for the network offering: " + offService);
+                    logger.trace("Added service for the network offering: " + offService);
                 }
 
                 // Offering #4
@@ -1105,7 +1103,7 @@ public class ConfigurationServerImpl extends ManagerBase implements Configuratio
                     NetworkOfferingServiceMapVO offService =
                             new NetworkOfferingServiceMapVO(defaultIsolatedEnabledNetworkOffering.getId(), service, defaultIsolatedNetworkOfferingProviders.get(service));
                     _ntwkOfferingServiceMapDao.persist(offService);
-                    s_logger.trace("Added service for the network offering: " + offService);
+                    logger.trace("Added service for the network offering: " + offService);
                 }*/
 
                 // Offering #5
@@ -1122,7 +1120,7 @@ public class ConfigurationServerImpl extends ManagerBase implements Configuratio
                     NetworkOfferingServiceMapVO offService =
                             new NetworkOfferingServiceMapVO(defaultNetscalerNetworkOffering.getId(), service, netscalerServiceProviders.get(service));
                     _ntwkOfferingServiceMapDao.persist(offService);
-                    s_logger.trace("Added service for the network offering: " + offService);
+                    logger.trace("Added service for the network offering: " + offService);
                 }*/
 
                 // Offering #6
@@ -1151,7 +1149,7 @@ public class ConfigurationServerImpl extends ManagerBase implements Configuratio
                      NetworkOfferingServiceMapVO offService =
                             new NetworkOfferingServiceMapVO(defaultNetworkOfferingForVpcNetworks.getId(), entry.getKey(), entry.getValue());
                     _ntwkOfferingServiceMapDao.persist(offService);
-                    s_logger.trace("Added service for the network offering: " + offService);
+                    logger.trace("Added service for the network offering: " + offService);
                 }
 
                 // Offering #7
@@ -1178,7 +1176,7 @@ public class ConfigurationServerImpl extends ManagerBase implements Configuratio
                     NetworkOfferingServiceMapVO offService =
                             new NetworkOfferingServiceMapVO(defaultNetworkOfferingForVpcNetworksNoLB.getId(), entry.getKey(), entry.getValue());
                     _ntwkOfferingServiceMapDao.persist(offService);
-                    s_logger.trace("Added service for the network offering: " + offService);
+                    logger.trace("Added service for the network offering: " + offService);
                 }*/
 
                 //offering #8 - network offering with internal lb service
@@ -1202,7 +1200,7 @@ public class ConfigurationServerImpl extends ManagerBase implements Configuratio
                 for (Service service : internalLbOffProviders.keySet()) {
                     NetworkOfferingServiceMapVO offService = new NetworkOfferingServiceMapVO(internalLbOff.getId(), service, internalLbOffProviders.get(service));
                     _ntwkOfferingServiceMapDao.persist(offService);
-                    s_logger.trace("Added service for the network offering: " + offService);
+                    logger.trace("Added service for the network offering: " + offService);
                 }
 
                 _networkOfferingDao.persistDefaultL2NetworkOfferings();
@@ -1321,23 +1319,10 @@ public class ConfigurationServerImpl extends ManagerBase implements Configuratio
         List<ResourceCountVO> domainResourceCount = _resourceCountDao.listResourceCountByOwnerType(ResourceOwnerType.Domain);
         List<ResourceCountVO> accountResourceCount = _resourceCountDao.listResourceCountByOwnerType(ResourceOwnerType.Account);
 
-        final List<ResourceType> accountSupportedResourceTypes = new ArrayList<ResourceType>();
-        final List<ResourceType> domainSupportedResourceTypes = new ArrayList<ResourceType>();
+        final int expectedCount = resourceTypes.length;
 
-        for (ResourceType resourceType : resourceTypes) {
-            if (resourceType.supportsOwner(ResourceOwnerType.Account)) {
-                accountSupportedResourceTypes.add(resourceType);
-            }
-            if (resourceType.supportsOwner(ResourceOwnerType.Domain)) {
-                domainSupportedResourceTypes.add(resourceType);
-            }
-        }
-
-        final int accountExpectedCount = accountSupportedResourceTypes.size();
-        final int domainExpectedCount = domainSupportedResourceTypes.size();
-
-        if ((domainResourceCount.size() < domainExpectedCount * domains.size())) {
-            s_logger.debug("resource_count table has records missing for some domains...going to insert them");
+        if ((domainResourceCount.size() < expectedCount * domains.size())) {
+            logger.debug("resource_count table has records missing for some domains...going to insert them");
             for (final DomainVO domain : domains) {
                 // Lock domain
                 Transaction.execute(new TransactionCallbackNoReturn() {
@@ -1350,11 +1335,11 @@ public class ConfigurationServerImpl extends ManagerBase implements Configuratio
                             domainCountStr.add(domainCount.getType().toString());
                         }
 
-                        if (domainCountStr.size() < domainExpectedCount) {
-                            for (ResourceType resourceType : domainSupportedResourceTypes) {
+                        if (domainCountStr.size() < expectedCount) {
+                            for (ResourceType resourceType : resourceTypes) {
                                 if (!domainCountStr.contains(resourceType.toString())) {
                                     ResourceCountVO resourceCountVO = new ResourceCountVO(resourceType, 0, domain.getId(), ResourceOwnerType.Domain);
-                                    s_logger.debug("Inserting resource count of type " + resourceType + " for domain id=" + domain.getId());
+                                    logger.debug("Inserting resource count of type " + resourceType + " for domain id=" + domain.getId());
                                     _resourceCountDao.persist(resourceCountVO);
                                 }
                             }
@@ -1365,8 +1350,8 @@ public class ConfigurationServerImpl extends ManagerBase implements Configuratio
             }
         }
 
-        if ((accountResourceCount.size() < accountExpectedCount * accounts.size())) {
-            s_logger.debug("resource_count table has records missing for some accounts...going to insert them");
+        if ((accountResourceCount.size() < expectedCount * accounts.size())) {
+            logger.debug("resource_count table has records missing for some accounts...going to insert them");
             for (final AccountVO account : accounts) {
                 // lock account
                 Transaction.execute(new TransactionCallbackNoReturn() {
@@ -1379,11 +1364,11 @@ public class ConfigurationServerImpl extends ManagerBase implements Configuratio
                             accountCountStr.add(accountCount.getType().toString());
                         }
 
-                        if (accountCountStr.size() < accountExpectedCount) {
-                            for (ResourceType resourceType : accountSupportedResourceTypes) {
+                        if (accountCountStr.size() < expectedCount) {
+                            for (ResourceType resourceType : resourceTypes) {
                                 if (!accountCountStr.contains(resourceType.toString())) {
                                     ResourceCountVO resourceCountVO = new ResourceCountVO(resourceType, 0, account.getId(), ResourceOwnerType.Account);
-                                    s_logger.debug("Inserting resource count of type " + resourceType + " for account id=" + account.getId());
+                                    logger.debug("Inserting resource count of type " + resourceType + " for account id=" + account.getId());
                                     _resourceCountDao.persist(resourceCountVO);
                                 }
                             }

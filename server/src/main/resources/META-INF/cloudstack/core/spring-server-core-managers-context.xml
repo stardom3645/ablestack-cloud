@@ -55,7 +55,10 @@
         <property name="userTwoFactorAuthenticationProviders" value="#{userTwoFactorAuthenticatorsRegistry.registered}" />
     </bean>
 
-    <bean id="passwordPolicies" class="com.cloud.user.PasswordPolicyImpl" />
+    <bean id="passwordPolicies" class="com.cloud.user.PasswordPolicyImpl">
+        <property name="userPasswordEncoders"
+            value="#{userPasswordEncodersRegistry.registered}" />
+    </bean>
 
     <bean id="managementServerImpl" class="com.cloud.server.ManagementServerImpl">
         <property name="lockControllerListener" ref="lockControllerListener" />
@@ -346,5 +349,10 @@
           class="com.cloud.tags.ResourceManagerUtilImpl"/>
 
     <bean id="resourceIconManager" class="com.cloud.resourceicon.ResourceIconManagerImpl" />
+
+    <bean id="VMScheduleManagerImpl" class="org.apache.cloudstack.vm.schedule.VMScheduleManagerImpl" />
+    <bean id="VMSchedulerImpl" class="org.apache.cloudstack.vm.schedule.VMSchedulerImpl">
+        <property name="asyncJobDispatcher" ref="ApiAsyncJobDispatcher" />
+    </bean>
 
 </beans>

@@ -33,16 +33,19 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TimeZone;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 
+import com.cloud.hypervisor.Hypervisor;
 import org.apache.cloudstack.acl.ControlledEntity;
 import org.apache.cloudstack.acl.ControlledEntity.ACLType;
 import org.apache.cloudstack.affinity.AffinityGroup;
 import org.apache.cloudstack.affinity.AffinityGroupResponse;
 import org.apache.cloudstack.annotation.AnnotationService;
 import org.apache.cloudstack.annotation.dao.AnnotationDao;
+import org.apache.cloudstack.api.ApiConstants;
 import org.apache.cloudstack.api.ApiConstants.DomainDetails;
 import org.apache.cloudstack.api.ApiConstants.HostDetails;
 import org.apache.cloudstack.api.ApiConstants.VMDetails;
@@ -91,6 +94,8 @@ import org.apache.cloudstack.api.response.GuestVlanResponse;
 import org.apache.cloudstack.api.response.HostForMigrationResponse;
 import org.apache.cloudstack.api.response.HostResponse;
 import org.apache.cloudstack.api.response.HypervisorCapabilitiesResponse;
+import org.apache.cloudstack.api.response.HypervisorGuestOsNamesResponse;
+import org.apache.cloudstack.api.response.HypervisorGuestOsResponse;
 import org.apache.cloudstack.api.response.IPAddressResponse;
 import org.apache.cloudstack.api.response.ImageStoreResponse;
 import org.apache.cloudstack.api.response.InstanceGroupResponse;
@@ -202,7 +207,8 @@ import org.apache.cloudstack.outofbandmanagement.OutOfBandManagement;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import com.cloud.agent.api.VgpuTypesInfo;
 import com.cloud.api.query.ViewResponseHelper;
@@ -368,6 +374,7 @@ import com.cloud.user.User;
 import com.cloud.user.UserAccount;
 import com.cloud.user.UserData;
 import com.cloud.user.UserStatisticsVO;
+import com.cloud.user.dao.UserDataDao;
 import com.cloud.user.dao.UserStatisticsDao;
 import com.cloud.uservm.UserVm;
 import com.cloud.utils.Pair;
@@ -401,7 +408,7 @@ import sun.security.x509.X509CertImpl;
 
 public class ApiResponseHelper implements ResponseGenerator {
 
-    private static final Logger s_logger = Logger.getLogger(ApiResponseHelper.class);
+    protected Logger logger = LogManager.getLogger(ApiResponseHelper.class);
     private static final DecimalFormat s_percentFormat = new DecimalFormat("##.##");
 
     @Inject
@@ -460,6 +467,8 @@ public class ApiResponseHelper implements ResponseGenerator {
     NetworkServiceMapDao ntwkSrvcDao;
     @Inject
     FirewallRulesDao firewallRulesDao;
+    @Inject
+    UserDataDao userDataDao;
 
     @Override
     public UserResponse createUserResponse(User user) {
@@ -670,7 +679,7 @@ public class ApiResponseHelper implements ResponseGenerator {
         }
 
         if (snapshotInfo == null) {
-            s_logger.debug("Unable to find info for image store snapshot with uuid " + snapshot.getUuid());
+            logger.debug("Unable to find info for image store snapshot with uuid " + snapshot.getUuid());
             snapshotResponse.setRevertable(false);
         } else {
         snapshotResponse.setRevertable(snapshotInfo.isRevertable());
@@ -732,7 +741,7 @@ public class ApiResponseHelper implements ResponseGenerator {
         if (vm != null) {
             vmSnapshotResponse.setVirtualMachineId(vm.getUuid());
             vmSnapshotResponse.setVirtualMachineName(StringUtils.isEmpty(vm.getDisplayName()) ? vm.getHostName() : vm.getDisplayName());
-            vmSnapshotResponse.setHypervisor(vm.getHypervisorType());
+            vmSnapshotResponse.setHypervisor(vm.getHypervisorType().getHypervisorDisplayName());
             DataCenterVO datacenter = ApiDBUtils.findZoneById(vm.getDataCenterId());
             if (datacenter != null) {
                 vmSnapshotResponse.setZoneId(datacenter.getUuid());
@@ -911,7 +920,7 @@ public class ApiResponseHelper implements ResponseGenerator {
                     Long networkId = vlan.getNetworkId();
                     if (networkId != null) {
                         Network network = _ntwkModel.getNetwork(networkId);
-                        if (network != null) {
+                        if (network != null && TrafficType.Guest.equals(network.getTrafficType())) {
                             Long accountId = network.getAccountId();
                             populateAccount(vlanResponse, accountId);
                             populateDomain(vlanResponse, ApiDBUtils.findAccountById(accountId).getDomainId());
@@ -1025,13 +1034,9 @@ public class ApiResponseHelper implements ResponseGenerator {
             }
         }
 
-        if (ipAddr.getVpcId() != null) {
-            Vpc vpc = ApiDBUtils.findVpcById(ipAddr.getVpcId());
-            if (vpc != null) {
-                ipResponse.setVpcId(vpc.getUuid());
-                ipResponse.setVpcName(vpc.getName());
-            }
-        }
+
+        setVpcIdInResponse(ipAddr.getVpcId(), ipResponse::setVpcId, ipResponse::setVpcName);
+
 
         // Network id the ip is associated with (if associated networkId is
         // null, try to get this information from vlan)
@@ -1099,6 +1104,22 @@ public class ApiResponseHelper implements ResponseGenerator {
         ipResponse.setHasRules(firewallRulesDao.countRulesByIpId(ipAddr.getId()) > 0);
         ipResponse.setObjectName("ipaddress");
         return ipResponse;
+    }
+
+
+    private void setVpcIdInResponse(Long vpcId, Consumer<String> vpcUuidSetter, Consumer<String> vpcNameSetter) {
+        if (vpcId != null) {
+            Vpc vpc = ApiDBUtils.findVpcById(vpcId);
+            if (vpc != null) {
+                try {
+                    _accountMgr.checkAccess(CallContext.current().getCallingAccount(), null, false, vpc);
+                    vpcUuidSetter.accept(vpc.getUuid());
+                } catch (PermissionDeniedException e) {
+                    logger.debug("Not setting the vpcId to the response because the caller does not have access to the VPC");
+                }
+                vpcNameSetter.accept(vpc.getName());
+            }
+        }
     }
 
     private void showVmInfoForSharedNetworks(boolean forVirtualNetworks, IpAddress ipAddr, IPAddressResponse ipResponse) {
@@ -1430,7 +1451,7 @@ public class ApiResponseHelper implements ResponseGenerator {
             clusterResponse.setZoneId(dc.getUuid());
             clusterResponse.setZoneName(dc.getName());
         }
-        clusterResponse.setHypervisorType(cluster.getHypervisorType().toString());
+        clusterResponse.setHypervisorType(cluster.getHypervisorType().getHypervisorDisplayName());
         clusterResponse.setClusterType(cluster.getClusterType().toString());
         clusterResponse.setAllocationState(cluster.getAllocationState().toString());
         clusterResponse.setManagedState(cluster.getManagedState().toString());
@@ -1626,7 +1647,13 @@ public class ApiResponseHelper implements ResponseGenerator {
                 vmResponse.setTemplateName(template.getName());
             }
             vmResponse.setCreated(vm.getCreated());
-            vmResponse.setHypervisor(vm.getHypervisorType().toString());
+            vmResponse.setHypervisor(vm.getHypervisorType().getHypervisorDisplayName());
+
+            ServiceOffering serviceOffering = ApiDBUtils.findServiceOfferingById(vm.getServiceOfferingId());
+            if (serviceOffering != null) {
+                vmResponse.setServiceOfferingId(serviceOffering.getUuid());
+                vmResponse.setServiceOfferingName(serviceOffering.getName());
+            }
 
             if (vm.getHostId() != null) {
                 Host host = ApiDBUtils.findHostById(vm.getHostId());
@@ -2086,7 +2113,7 @@ public class ApiResponseHelper implements ResponseGenerator {
         for (String accountName : accountNames) {
             Account account = ApiDBUtils.findAccountByNameDomain(accountName, templateOwner.getDomainId());
             if (account == null) {
-                s_logger.error("Missing Account " + accountName + " in domain " + templateOwner.getDomainId());
+                logger.error("Missing Account " + accountName + " in domain " + templateOwner.getDomainId());
                 continue;
             }
 
@@ -2555,6 +2582,10 @@ public class ApiResponseHelper implements ResponseGenerator {
                 Domain domain = ApiDBUtils.findDomainById(domainNetworkDetails.first());
                 if (domain != null) {
                     response.setDomainId(domain.getUuid());
+
+                    StringBuilder domainPath = new StringBuilder("ROOT");
+                    (domainPath.append(domain.getPath())).deleteCharAt(domainPath.length() - 1);
+                    response.setDomainPath(domainPath.toString());
                 }
             }
             response.setSubdomainAccess(domainNetworkDetails.second());
@@ -2571,13 +2602,9 @@ public class ApiResponseHelper implements ResponseGenerator {
         }
 
         response.setSpecifyIpRanges(network.getSpecifyIpRanges());
-        if (network.getVpcId() != null) {
-            Vpc vpc = ApiDBUtils.findVpcById(network.getVpcId());
-            if (vpc != null) {
-                response.setVpcId(vpc.getUuid());
-                response.setVpcName(vpc.getName());
-            }
-        }
+
+
+        setVpcIdInResponse(network.getVpcId(), response::setVpcId, response::setVpcName);
 
         setResponseAssociatedNetworkInformation(response, network.getId());
 
@@ -2789,7 +2816,7 @@ public class ApiResponseHelper implements ResponseGenerator {
     public HypervisorCapabilitiesResponse createHypervisorCapabilitiesResponse(HypervisorCapabilities hpvCapabilities) {
         HypervisorCapabilitiesResponse hpvCapabilitiesResponse = new HypervisorCapabilitiesResponse();
         hpvCapabilitiesResponse.setId(hpvCapabilities.getUuid());
-        hpvCapabilitiesResponse.setHypervisor(hpvCapabilities.getHypervisorType());
+        hpvCapabilitiesResponse.setHypervisor(hpvCapabilities.getHypervisorType().getHypervisorDisplayName());
         hpvCapabilitiesResponse.setHypervisorVersion(hpvCapabilities.getHypervisorVersion());
         hpvCapabilitiesResponse.setIsSecurityGroupEnabled(hpvCapabilities.isSecurityGroupEnabled());
         hpvCapabilitiesResponse.setMaxGuestsLimit(hpvCapabilities.getMaxGuestsLimit());
@@ -2836,7 +2863,7 @@ public class ApiResponseHelper implements ResponseGenerator {
     private void populateAccount(ControlledEntityResponse response, long accountId) {
         Account account = ApiDBUtils.findAccountById(accountId);
         if (account == null) {
-            s_logger.debug("Unable to find account with id: " + accountId);
+            logger.debug("Unable to find account with id: " + accountId);
         } else if (account.getType() == Account.Type.PROJECT) {
             // find the project
             Project project = ApiDBUtils.findProjectByProjectAccountId(account.getId());
@@ -2845,7 +2872,7 @@ public class ApiResponseHelper implements ResponseGenerator {
                 response.setProjectName(project.getName());
                 response.setAccountName(account.getAccountName());
             } else {
-                s_logger.debug("Unable to find project with id: " + account.getId());
+                logger.debug("Unable to find project with id: " + account.getId());
             }
         } else {
             response.setAccountName(account.getAccountName());
@@ -3344,10 +3371,12 @@ public class ApiResponseHelper implements ResponseGenerator {
     }
 
     @Override
-    public PrivateGatewayResponse createPrivateGatewayResponse(PrivateGateway result) {
+    public PrivateGatewayResponse createPrivateGatewayResponse(ResponseView view, PrivateGateway result) {
         PrivateGatewayResponse response = new PrivateGatewayResponse();
         response.setId(result.getUuid());
-        response.setBroadcastUri(result.getBroadcastUri());
+        if (view == ResponseView.Full) {
+            response.setBroadcastUri(result.getBroadcastUri());
+        }
         response.setGateway(result.getGateway());
         response.setNetmask(result.getNetmask());
         if (result.getVpcId() != null) {
@@ -3433,9 +3462,20 @@ public class ApiResponseHelper implements ResponseGenerator {
             VMTemplateVO template = ApiDBUtils.findTemplateById(profile.getTemplateId());
             if (template != null) {
                 response.setTemplateId(template.getUuid());
+                if (template.getUserDataOverridePolicy() != null) {
+                    response.setUserDataPolicy(template.getUserDataOverridePolicy().toString());
+                }
             }
         }
         response.setUserData(profile.getUserData());
+        if (profile.getUserDataId() != null) {
+            UserData userData = userDataDao.findById(profile.getUserDataId());
+            if (userData != null) {
+                response.setUserDataId(userData.getUuid());
+                response.setUserDataName(userData.getName());
+            }
+        }
+        response.setUserDataDetails(profile.getUserDataDetails());
         response.setOtherDeployParams(profile.getOtherDeployParamsList());
         response.setCounterParams(profile.getCounterParams());
         response.setExpungeVmGracePeriod(profile.getExpungeVmGracePeriod());
@@ -3669,12 +3709,15 @@ public class ApiResponseHelper implements ResponseGenerator {
     @Override
     public GuestOSResponse createGuestOSResponse(GuestOS guestOS) {
         GuestOSResponse response = new GuestOSResponse();
+        response.setName(guestOS.getDisplayName());
         response.setDescription(guestOS.getDisplayName());
         response.setId(guestOS.getUuid());
-        response.setIsUserDefined(guestOS.getIsUserDefined());
+        response.setIsUserDefined(String.valueOf(guestOS.getIsUserDefined()));
+        response.setForDisplay(guestOS.getForDisplay());
         GuestOSCategoryVO category = ApiDBUtils.findGuestOsCategoryById(guestOS.getCategoryId());
         if (category != null) {
             response.setOsCategoryId(category.getUuid());
+            response.setOsCategoryName(category.getName());
         }
 
         response.setObjectName("ostype");
@@ -3685,7 +3728,7 @@ public class ApiResponseHelper implements ResponseGenerator {
     public GuestOsMappingResponse createGuestOSMappingResponse(GuestOSHypervisor guestOSHypervisor) {
         GuestOsMappingResponse response = new GuestOsMappingResponse();
         response.setId(guestOSHypervisor.getUuid());
-        response.setHypervisor(guestOSHypervisor.getHypervisorType());
+        response.setHypervisor(Hypervisor.HypervisorType.getType(guestOSHypervisor.getHypervisorType()).getHypervisorDisplayName());
         response.setHypervisorVersion(guestOSHypervisor.getHypervisorVersion());
         response.setOsNameForHypervisor((guestOSHypervisor.getGuestOsName()));
         response.setIsUserDefined(Boolean.valueOf(guestOSHypervisor.getIsUserDefined()).toString());
@@ -3697,6 +3740,28 @@ public class ApiResponseHelper implements ResponseGenerator {
 
         response.setObjectName("guestosmapping");
         return response;
+    }
+
+    @Override
+    public HypervisorGuestOsNamesResponse createHypervisorGuestOSNamesResponse(List<Pair<String, String>> hypervisorGuestOsNames) {
+        HypervisorGuestOsNamesResponse response = new HypervisorGuestOsNamesResponse();
+        List<HypervisorGuestOsResponse> hypervisorGuestOsResponses = new ArrayList<>();
+        for (Pair<String, String> hypervisorGuestOsName : hypervisorGuestOsNames) {
+            HypervisorGuestOsResponse hypervisorGuestOsResponse = createHypervisorGuestOsResponse(hypervisorGuestOsName);
+            hypervisorGuestOsResponses.add(hypervisorGuestOsResponse);
+        }
+        response.setGuestOSList(hypervisorGuestOsResponses);
+        response.setGuestOSCount(hypervisorGuestOsResponses.size());
+        response.setObjectName("hypervisorguestosnames");
+        return response;
+    }
+
+    private HypervisorGuestOsResponse createHypervisorGuestOsResponse(Pair<String, String> hypervisorGuestOsName) {
+        HypervisorGuestOsResponse hypervisorGuestOsResponse = new HypervisorGuestOsResponse();
+        hypervisorGuestOsResponse.setOsStdName(hypervisorGuestOsName.first());
+        hypervisorGuestOsResponse.setOsNameForHypervisor(hypervisorGuestOsName.second());
+        hypervisorGuestOsResponse.setObjectName(ApiConstants.GUEST_OS_LIST);
+        return hypervisorGuestOsResponse;
     }
 
     @Override
@@ -3727,7 +3792,7 @@ public class ApiResponseHelper implements ResponseGenerator {
         try {
             return _resourceTagDao.listTags();
         } catch(Exception ex) {
-            s_logger.warn("Failed to get resource details for Usage data due to exception : ", ex);
+            logger.warn("Failed to get resource details for Usage data due to exception : ", ex);
         }
         return null;
     }
@@ -4898,7 +4963,7 @@ public class ApiResponseHelper implements ResponseGenerator {
                 response.setValidity(String.format("From: [%s] - To: [%s]", certificate.getNotBefore(), certificate.getNotAfter()));
             }
         } catch (CertificateException e) {
-            s_logger.error("Error parsing direct download certificate: " + certStr, e);
+            logger.error("Error parsing direct download certificate: " + certStr, e);
         }
     }
 
@@ -4913,7 +4978,7 @@ public class ApiResponseHelper implements ResponseGenerator {
         response.setId(certificate.getUuid());
         response.setAlias(certificate.getAlias());
         handleCertificateResponse(certificate.getCertificate(), response);
-        response.setHypervisor(certificate.getHypervisorType().name());
+        response.setHypervisor(certificate.getHypervisorType().getHypervisorDisplayName());
         response.setObjectName("directdownloadcertificate");
         return response;
     }

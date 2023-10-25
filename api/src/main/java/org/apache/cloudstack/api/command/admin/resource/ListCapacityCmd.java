@@ -21,7 +21,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
-import org.apache.log4j.Logger;
 
 import org.apache.cloudstack.api.APICommand;
 import org.apache.cloudstack.api.ApiConstants;
@@ -40,7 +39,6 @@ import com.cloud.exception.InvalidParameterValueException;
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class ListCapacityCmd extends BaseListCmd {
 
-    public static final Logger s_logger = Logger.getLogger(ListCapacityCmd.class.getName());
     private static final DecimalFormat s_percentFormat = new DecimalFormat("##.##");
 
 
@@ -67,7 +65,7 @@ public class ListCapacityCmd extends BaseListCmd {
     @Parameter(name = ApiConstants.TYPE, type = CommandType.INTEGER, description = "lists capacity by type" + "* CAPACITY_TYPE_MEMORY = 0" + "* CAPACITY_TYPE_CPU = 1"
         + "* CAPACITY_TYPE_STORAGE = 2" + "* CAPACITY_TYPE_STORAGE_ALLOCATED = 3" + "* CAPACITY_TYPE_VIRTUAL_NETWORK_PUBLIC_IP = 4" + "* CAPACITY_TYPE_PRIVATE_IP = 5"
         + "* CAPACITY_TYPE_SECONDARY_STORAGE = 6" + "* CAPACITY_TYPE_VLAN = 7" + "* CAPACITY_TYPE_DIRECT_ATTACHED_PUBLIC_IP = 8" + "* CAPACITY_TYPE_LOCAL_STORAGE = 9"
-        + "* CAPACITY_TYPE_GPU = 19" + "* CAPACITY_TYPE_CPU_CORE = 90.")
+        + "* CAPACITY_TYPE_MANAGEMENT_LOCAL_STORAGE = 29" + "* CAPACITY_TYPE_MANAGEMENT_DATABASE_STORAGE = 30" + "* CAPACITY_TYPE_GPU = 19" + "* CAPACITY_TYPE_CPU_CORE = 90.")
     private Integer type;
 
     @Parameter(name = ApiConstants.SORT_BY, type = CommandType.STRING, since = "3.0.0", description = "Sort the results. Available values: Usage")
