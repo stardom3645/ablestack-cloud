@@ -116,6 +116,10 @@ public class CapabilitiesResponse extends BaseResponse {
     @Param(description = "true if Automation Service plugin is enabled, false otherwise")
     private boolean automationServiceEnabled;
 
+    @SerializedName("ssvenabled")
+    @Param(description = "true if Automation Service plugin is enabled, false otherwise")
+    private boolean ssvEnabled;
+
     @SerializedName("wallportalprotocol")
     @Param(description = "Monitoring Service Wall Portal Protocol setting")
     private String wallPortalProtocol;
@@ -254,6 +258,10 @@ public class CapabilitiesResponse extends BaseResponse {
 
     public void setAutomationServiceEnabled(boolean automationServiceEnabled) {
         this.automationServiceEnabled = automationServiceEnabled;
+    }
+
+    public void setSSVEnabled(boolean ssvEnabled) {
+        this.ssvEnabled = ssvEnabled;
     }
 
     public void setWallPortalProtocol(String wallPortalProtocol) {
