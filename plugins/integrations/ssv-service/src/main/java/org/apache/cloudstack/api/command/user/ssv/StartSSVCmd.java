@@ -28,7 +28,6 @@ import org.apache.cloudstack.api.ResponseObject;
 import org.apache.cloudstack.api.ServerApiException;
 import org.apache.cloudstack.api.response.SSVResponse;
 import org.apache.cloudstack.context.CallContext;
-import org.apache.log4j.Logger;
 
 import com.cloud.exception.ConcurrentOperationException;
 import com.cloud.ssv.SSV;
@@ -44,7 +43,6 @@ import com.cloud.utils.exception.CloudRuntimeException;
         responseHasSensitiveInfo = true,
         authorized = {RoleType.Admin, RoleType.ResourceAdmin, RoleType.DomainAdmin, RoleType.User})
 public class StartSSVCmd extends BaseAsyncCmd {
-    public static final Logger LOGGER = Logger.getLogger(StartSSVCmd.class.getName());
     public static final String APINAME = "startSSV";
 
     @Inject

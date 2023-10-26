@@ -22,7 +22,7 @@ import java.util.List;
 import javax.inject.Inject;
 
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.log4j.Level;
+import org.apache.logging.log4j.Level;
 
 import com.cloud.exception.ConcurrentOperationException;
 import com.cloud.exception.ManagementServerException;
@@ -62,7 +62,7 @@ public class SSVDestroyWorker extends SSVModifierActionWorker {
                 || ssv.getState().equals(SSV.State.Error)
                 || ssv.getState().equals(SSV.State.Destroying))) {
             String msg = String.format("Cannot perform delete operation on ssv : %s in state: %s", ssv.getName(), ssv.getState());
-            LOGGER.warn(msg);
+            logger.warn(msg);
             throw new PermissionDeniedException(msg);
         }
     }
@@ -76,14 +76,14 @@ public class SSVDestroyWorker extends SSVModifierActionWorker {
                 try {
                     UserVm vm = userVmService.destroyVm(userVM.getId(), true);
                     if (!userVmManager.expunge(userVM)) {
-                        LOGGER.warn(String.format("Unable to expunge VM %s : %s, destroying Shared Storage VM will probably fail",
+                        logger.warn(String.format("Unable to expunge VM %s : %s, destroying Shared Storage VM will probably fail",
                             vm.getInstanceName() , vm.getUuid()));
                     }
-                    if (LOGGER.isInfoEnabled()) {
-                        LOGGER.info(String.format("Destroyed VM : %s as part of Shared Storage VM : %s cleanup", vm.getDisplayName(), ssv.getName()));
+                    if (logger.isInfoEnabled()) {
+                        logger.info(String.format("Destroyed VM : %s as part of Shared Storage VM : %s cleanup", vm.getDisplayName(), ssv.getName()));
                     }
                 } catch (ResourceUnavailableException | ConcurrentOperationException e) {
-                    LOGGER.warn(String.format("Failed to destroy VM : %s part of the Shared Storage VM : %s cleanup. Moving on with destroying remaining resources provisioned for the Shared Storage VM", userVM.getDisplayName(), ssv.getName()), e);
+                    logger.warn(String.format("Failed to destroy VM : %s part of the Shared Storage VM : %s cleanup. Moving on with destroying remaining resources provisioned for the Shared Storage VM", userVM.getDisplayName(), ssv.getName()), e);
                     return false;
                 }
             } else {
@@ -169,8 +169,8 @@ public class SSVDestroyWorker extends SSVModifierActionWorker {
         //             logMessage(Level.WARN, String.format("Failed to delete Shared Storage VM ip range : %s", ssv.getName()), null);
         //             return false;
         //         }
-        //         if (LOGGER.isInfoEnabled()) {
-        //             LOGGER.info(String.format("Shared Storage VM ip range : %s is successfully deleted", ssv.getName()));
+        //         if (logger.isInfoEnabled()) {
+        //             logger.info(String.format("Shared Storage VM ip range : %s is successfully deleted", ssv.getName()));
         //         }
         //     }
         return ipDestroyed;
@@ -181,8 +181,8 @@ public class SSVDestroyWorker extends SSVModifierActionWorker {
         validateSSVState();
         this.ssvVm = ssvVmMapDao.listVmBySSVServiceId(ssv.getId());
         this.ssvNets = ssvNetMapDao.listBySSVServiceId(ssv.getId());
-        if (LOGGER.isInfoEnabled()) {
-            LOGGER.info(String.format("Destroying Shared Storage VM : %s", ssv.getName()));
+        if (logger.isInfoEnabled()) {
+            logger.info(String.format("Destroying Shared Storage VM : %s", ssv.getName()));
         }
         stateTransitTo(ssv.getId(), SSV.Event.DestroyRequested);
         boolean vmDestroyed = destroySSV();
@@ -193,13 +193,13 @@ public class SSVDestroyWorker extends SSVModifierActionWorker {
                 checkForRulesToDelete();
             } catch (ManagementServerException e) {
                 String msg = String.format("Failed to remove network rules of Shared Storage VM : %s", ssv.getName());
-                LOGGER.warn(msg, e);
+                logger.warn(msg, e);
                 // updateSSVEntryForGC();
                 throw new CloudRuntimeException(msg, e);
             }
         } else {
             String msg = String.format("Failed to destroy one or more VMs as part of Shared Storage VM : %s cleanup",ssv.getName());
-            LOGGER.warn(msg);
+            logger.warn(msg);
             // updateSSVEntryForGC();
             throw new CloudRuntimeException(msg);
         }
@@ -214,8 +214,8 @@ public class SSVDestroyWorker extends SSVModifierActionWorker {
             // updateSSVEntryForGC();
             return false;
         }
-        if (LOGGER.isInfoEnabled()) {
-            LOGGER.info(String.format("Shared Storage VM : %s is successfully deleted", ssv.getName()));
+        if (logger.isInfoEnabled()) {
+            logger.info(String.format("Shared Storage VM : %s is successfully deleted", ssv.getName()));
         }
         return true;
     }

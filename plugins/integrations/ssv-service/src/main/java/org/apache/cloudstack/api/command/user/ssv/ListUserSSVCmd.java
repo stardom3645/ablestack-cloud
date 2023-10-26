@@ -28,7 +28,6 @@ import org.apache.cloudstack.api.ResponseObject.ResponseView;
 import org.apache.cloudstack.api.ServerApiException;
 import org.apache.cloudstack.api.response.SSVResponse;
 import org.apache.cloudstack.api.response.ListResponse;
-import org.apache.log4j.Logger;
 
 import com.cloud.ssv.SSVService;
 import com.cloud.utils.exception.CloudRuntimeException;
@@ -41,7 +40,6 @@ import com.cloud.utils.exception.CloudRuntimeException;
         responseHasSensitiveInfo = true,
         authorized = { RoleType.User })
 public class ListUserSSVCmd extends BaseListProjectAndAccountResourcesCmd {
-    public static final Logger LOGGER = Logger.getLogger(ListUserSSVCmd.class.getName());
     public static final String APINAME = "listUserSSV";
 
     @Inject

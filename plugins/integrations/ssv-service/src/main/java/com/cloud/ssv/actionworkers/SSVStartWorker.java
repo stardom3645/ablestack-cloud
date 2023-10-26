@@ -41,7 +41,7 @@ import org.apache.cloudstack.api.command.user.ssv.CreateSSVCmd;
 import org.apache.commons.codec.binary.Base64;
 // import org.apache.commons.collections.CollectionUtils;
 // import org.apache.cloudstack.context.CallContext;
-import org.apache.log4j.Level;
+import org.apache.logging.log4j.Level;
 
 import com.cloud.api.ApiDBUtils;
 import com.cloud.dc.DataCenter;
@@ -136,7 +136,7 @@ public class SSVStartWorker extends SSVModifierActionWorker {
         } catch (JSONException e) {
             logAndThrow(Level.ERROR, "Failed to create data in json format.", e);
         }
-        LOGGER.debug("JSON STRING :::::::::: " + obj.toString());
+        logger.debug("JSON STRING :::::::::: " + obj.toString());
         String base64UserData = Base64.encodeBase64String(obj.toString().getBytes(StringUtils.getPreferredCharset()));
         String ssvEncodeConfig = readResourceFile("/conf/ssv.yml");
         ssvEncodeConfig = ssvEncodeConfig.replace("{{ ssv_encode }}", base64UserData);
@@ -147,15 +147,15 @@ public class SSVStartWorker extends SSVModifierActionWorker {
             InsufficientCapacityException, ManagementServerException, ResourceUnavailableException {
         UserVm vm = null;
         vm = createSSV(cmd, network);
-        LOGGER.info("provisionSSV Done 1111:::::");
+        logger.info("provisionSSV Done 1111:::::");
         startVM(vm);
-        LOGGER.info("provisionSSV Done22222 :::::");
+        logger.info("provisionSSV Done22222 :::::");
         vm = userVmDao.findById(vm.getId());
         if (vm == null) {
             throw new ManagementServerException(String.format("Failed to provision Shared Storage VM"));
         }
-        if (LOGGER.isInfoEnabled()) {
-            LOGGER.info(String.format("Provisioned VM : %s in to the Shared Storage VM : %s", vm.getDisplayName(), vm.getName()));
+        if (logger.isInfoEnabled()) {
+            logger.info(String.format("Provisioned VM : %s in to the Shared Storage VM : %s", vm.getDisplayName(), vm.getName()));
         }
         return vm;
     }
@@ -163,7 +163,7 @@ public class SSVStartWorker extends SSVModifierActionWorker {
 
     private UserVm createSSV(CreateSSVCmd cmd, final Network network) throws ManagementServerException,
         ResourceUnavailableException, InsufficientCapacityException {
-        LOGGER.info("createSSV Start!!!!!!:::::");
+        logger.info("createSSV Start!!!!!!:::::");
         UserVm vm = null;
         LinkedHashMap<Long, IpAddresses> ipToNetworkMap = null;
         DataCenter zone = dataCenterDao.findById(ssv.getZoneId());
@@ -182,24 +182,24 @@ public class SSVStartWorker extends SSVModifierActionWorker {
         String ssvConfig = null;
         try {
             ssvConfig = getSSVConfig(cmd, zone);
-            LOGGER.info("createSSV ssvConfig!!!!!!:::::" + ssvConfig);
+            logger.info("createSSV ssvConfig!!!!!!:::::" + ssvConfig);
         } catch (IOException e) {
             logAndThrow(Level.ERROR, "Failed to read Shared Storage VM  Userdata configuration file", e);
         }
         String base64UserData = Base64.encodeBase64String(ssvConfig.getBytes(StringUtils.getPreferredCharset()));
         List<String> keypairs = new ArrayList<String>(); // 키페어 파라메타 임시 생성
         if (network.getGuestType().equals(Network.GuestType.L2)) {
-            LOGGER.info("createSSV vm L2!!!!!!:::::" + owner.getAccountName());
-            LOGGER.info("createSSV vm L2!!!!!serviceOffering!:::::"+serviceOffering);
-            LOGGER.info("createSSV vm L2!!!!!cmd.getDiskOfferingId()!:::::"+cmd.getDiskOfferingId());
+            logger.info("createSSV vm L2!!!!!!:::::" + owner.getAccountName());
+            logger.info("createSSV vm L2!!!!!serviceOffering!:::::"+serviceOffering);
+            logger.info("createSSV vm L2!!!!!cmd.getDiskOfferingId()!:::::"+cmd.getDiskOfferingId());
             Network.IpAddresses addrs = new Network.IpAddresses(null, null, null);
             vm = userVmService.createAdvancedVirtualMachine(zone, serviceOffering, ssvTemplate, networkIds, owner,
                 hostName, hostName, cmd.getDiskOfferingId(), cmd.getSize(), null,
                 ssvTemplate.getHypervisorType(), BaseCmd.HTTPMethod.POST, base64UserData, null, null, keypairs,
                 null, addrs, false, null, null, customParameterMap, null, null, null, null, true, null, null);
-            LOGGER.info("createSSV vm Done!!!!!!:::::" + vm);
+            logger.info("createSSV vm Done!!!!!!:::::" + vm);
         } else {
-            LOGGER.info("createSSV Done L2 NONONO!!!!!!:::::");
+            logger.info("createSSV Done L2 NONONO!!!!!!:::::");
             ipToNetworkMap = new LinkedHashMap<Long, IpAddresses>();
             Network.IpAddresses addrs = new Network.IpAddresses(null, null, null);
             Network.IpAddresses ssvAddrs = new Network.IpAddresses(cmd.getSsvIp(), null, null);
@@ -209,9 +209,9 @@ public class SSVStartWorker extends SSVModifierActionWorker {
                 ssvTemplate.getHypervisorType(), BaseCmd.HTTPMethod.POST, base64UserData, null, null, keypairs,
                 ipToNetworkMap, addrs, false, null, null, customParameterMap, null, null, null, null, true, null, null);
         }
-        LOGGER.info("createSSV Done!!!!!!:::::"+ vm.getId());
+        logger.info("createSSV Done!!!!!!:::::"+ vm.getId());
         SSVVO ssvvo = ssvDao.findById(ssv.getId());
-        LOGGER.info("ssvvo.getId() :::::" + ssvvo.getId());
+        logger.info("ssvvo.getId() :::::" + ssvvo.getId());
 
         SSVVmMapVO svmv = new SSVVmMapVO(ssv.getId(), vm.getId());
         ssvVmMapDao.persist(svmv);
@@ -221,11 +221,11 @@ public class SSVStartWorker extends SSVModifierActionWorker {
         // vmInstanceDao.update(vm.getId(), vmForUpdate);
 
         // if (!ssvDao.update(ssv.getId(), ssvvo)) {
-        //     LOGGER.info("createSSV update!!!!!!:::::");
+        //     logger.info("createSSV update!!!!!!:::::");
         //     throw new CloudRuntimeException(String.format("Failed to update Shared Storage VM ID: %s", ssv.getUuid()));
         // }
-        if (LOGGER.isInfoEnabled()) {
-            LOGGER.info(String.format("Created VM ID : %s, %s in the Shared Storage VM  : %s", vm.getUuid(), hostName, ssv.getName()));
+        if (logger.isInfoEnabled()) {
+            logger.info(String.format("Created VM ID : %s, %s in the Shared Storage VM  : %s", vm.getUuid(), hostName, ssv.getName()));
         }
         return vm;
     }
@@ -235,18 +235,18 @@ public class SSVStartWorker extends SSVModifierActionWorker {
         Network network = networkDao.findById(cmd.getNetworkId());
         if (network == null) {
             String msg  = String.format("Network for Shared Storage VM  : %s not found", ssv.getName());
-            LOGGER.warn(msg);
+            logger.warn(msg);
             stateTransitTo(ssv.getId(), SSV.Event.CreateFailed);
             throw new ManagementServerException(msg);
         }
         try {
             networkMgr.startNetwork(network.getId(), destination, context);
-            if (LOGGER.isInfoEnabled()) {
-                LOGGER.info(String.format("Network : %s is started for the Shared Storage VM  : %s", network.getName(), ssv.getName()));
+            if (logger.isInfoEnabled()) {
+                logger.info(String.format("Network : %s is started for the Shared Storage VM  : %s", network.getName(), ssv.getName()));
             }
         } catch (ConcurrentOperationException | ResourceUnavailableException |InsufficientCapacityException e) {
             String msg = String.format("Failed to start Shared Storage VM  : %s as unable to start associated network : %s" , ssv.getName(), network.getName());
-            LOGGER.error(msg, e);
+            logger.error(msg, e);
             stateTransitTo(ssv.getId(), SSV.Event.CreateFailed);
             throw new ManagementServerException(msg, e);
         }
@@ -262,7 +262,7 @@ public class SSVStartWorker extends SSVModifierActionWorker {
             try {
                 startVM(vm);
             } catch (ManagementServerException ex) {
-                LOGGER.warn(String.format("Failed to start VM : %s in Shared Storage VM  : %s due to ", vm.getDisplayName(), ssv.getName()) + ex);
+                logger.warn(String.format("Failed to start VM : %s in Shared Storage VM  : %s due to ", vm.getDisplayName(), ssv.getName()) + ex);
                 // dont bail out here. proceed further to stop the reset of the VM's
             }
             int cnt = 10;
@@ -322,7 +322,7 @@ public class SSVStartWorker extends SSVModifierActionWorker {
     //         }
     //         serverInfo = new String[]{port, protocol};
     //     } catch (final IOException e) {
-    //         LOGGER.warn("Failed to read configuration from server.properties file", e);
+    //         logger.warn("Failed to read configuration from server.properties file", e);
     //     }
     //     return serverInfo;
     // }
@@ -334,8 +334,8 @@ public class SSVStartWorker extends SSVModifierActionWorker {
         // // Firewall Egress Network
         // try {
         //     egress = provisionEgressFirewallRules(network, owner, NFS_PORT, CLUSTER_LITE_PORT);
-        //     if (LOGGER.isInfoEnabled()) {
-        //         LOGGER.info(String.format("Provisioned egress firewall rule to open up port %d to %d on %s for Shared Storage VM  : %s", NFS_PORT, CLUSTER_LITE_PORT, publicIp.getAddress().addr(), ssv.getName()));
+        //     if (logger.isInfoEnabled()) {
+        //         logger.info(String.format("Provisioned egress firewall rule to open up port %d to %d on %s for Shared Storage VM  : %s", NFS_PORT, CLUSTER_LITE_PORT, publicIp.getAddress().addr(), ssv.getName()));
         //     }
         // } catch (NoSuchFieldException | IllegalAccessException | ResourceUnavailableException | NetworkRuleConflictException e) {
         //     throw new ManagementServerException(String.format("Failed to provision egress firewall rules for Web access for the Shared Storage VM  : %s", ssv.getName()), e);
@@ -344,12 +344,12 @@ public class SSVStartWorker extends SSVModifierActionWorker {
         // if (egress) {
         //     try {
         //         firewall = provisionFirewallRules(publicIp, owner, NFS_PORT, CLUSTER_API_PORT);
-        //         if (LOGGER.isInfoEnabled()) {
-        //             LOGGER.info(String.format("Provisioned firewall rule to open up port %d to %d on %s for Shared Storage VM  : %s", NFS_PORT, CLUSTER_API_PORT, publicIp.getAddress().addr(), ssv.getName()));
+        //         if (logger.isInfoEnabled()) {
+        //             logger.info(String.format("Provisioned firewall rule to open up port %d to %d on %s for Shared Storage VM  : %s", NFS_PORT, CLUSTER_API_PORT, publicIp.getAddress().addr(), ssv.getName()));
         //         }
         //         firewall2 = provisionFirewallRules(publicIp, owner, CLUSTER_SAMBA_PORT, CLUSTER_SAMBA_PORT);
-        //         if (LOGGER.isInfoEnabled()) {
-        //             LOGGER.info(String.format("Provisioned firewall rule to open up port %d to %d on %s for Shared Storage VM  : %s", CLUSTER_SAMBA_PORT, CLUSTER_SAMBA_PORT, publicIp.getAddress().addr(), ssv.getName()));
+        //         if (logger.isInfoEnabled()) {
+        //             logger.info(String.format("Provisioned firewall rule to open up port %d to %d on %s for Shared Storage VM  : %s", CLUSTER_SAMBA_PORT, CLUSTER_SAMBA_PORT, publicIp.getAddress().addr(), ssv.getName()));
         //         }
         //     } catch (NoSuchFieldException | IllegalAccessException | ResourceUnavailableException | NetworkRuleConflictException e) {
         //         throw new ManagementServerException(String.format("Failed to provision firewall rules for Web access for the Shared Storage VM  : %s", ssv.getName()), e);
@@ -370,10 +370,10 @@ public class SSVStartWorker extends SSVModifierActionWorker {
     }
 
     public boolean startSSVOnCreate(CreateSSVCmd cmd) {
-        LOGGER.info("startSSVOnCreate start :::::");
+        logger.info("startSSVOnCreate start :::::");
         init();
-        if (LOGGER.isInfoEnabled()) {
-            LOGGER.info(String.format("Starting Shared Storage VM  : %s", ssv.getName()));
+        if (logger.isInfoEnabled()) {
+            logger.info(String.format("Starting Shared Storage VM  : %s", ssv.getName()));
         }
         stateTransitTo(ssv.getId(), SSV.Event.StartRequested);
         DeployDestination dest = null;
@@ -399,32 +399,32 @@ public class SSVStartWorker extends SSVModifierActionWorker {
 
         UserVm vm = null;
         try {
-            LOGGER.info("startSSVOnCreate ssv value :::::" + ssv.getName());
+            logger.info("startSSVOnCreate ssv value :::::" + ssv.getName());
             vm = provisionSSV(cmd, network);
 
-            if (LOGGER.isInfoEnabled()) {
-                LOGGER.info(String.format("Shared Storage VM  : %s VM successfully provisioned", vm.getName()));
+            if (logger.isInfoEnabled()) {
+                logger.info(String.format("Shared Storage VM  : %s VM successfully provisioned", vm.getName()));
             }
             stateTransitTo(ssv.getId(), SSV.Event.OperationSucceeded);
             return true;
         }  catch (CloudRuntimeException | ManagementServerException | ResourceUnavailableException | InsufficientCapacityException e) {
             logTransitStateAndThrow(Level.ERROR, String.format("Provisioning the Shared Storage VM failed : %s, %s", vm.getName(), e), ssv.getId(), SSV.Event.CreateFailed, e);
         }
-        LOGGER.info("startSSVOnCreate Done :::::");
+        logger.info("startSSVOnCreate Done :::::");
 
         return false;
     }
 
     public boolean startStoppedSSV() throws CloudRuntimeException {
         init();
-        if (LOGGER.isInfoEnabled()) {
-            LOGGER.info(String.format("Starting Shared Storage VM  : %s", ssv.getName()));
+        if (logger.isInfoEnabled()) {
+            logger.info(String.format("Starting Shared Storage VM  : %s", ssv.getName()));
         }
         stateTransitTo(ssv.getId(), SSV.Event.StartRequested);
         startSSV();
         stateTransitTo(ssv.getId(), SSV.Event.OperationSucceeded);
-        if (LOGGER.isInfoEnabled()) {
-            LOGGER.info(String.format("Shared Storage VM  : %s successfully started", ssv.getName()));
+        if (logger.isInfoEnabled()) {
+            logger.info(String.format("Shared Storage VM  : %s successfully started", ssv.getName()));
         }
         return true;
     }

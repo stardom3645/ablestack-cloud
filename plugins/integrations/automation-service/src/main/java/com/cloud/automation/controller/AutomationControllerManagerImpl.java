@@ -74,9 +74,7 @@ import org.apache.cloudstack.api.response.AutomationControllerResponse;
 import org.apache.cloudstack.api.response.ListResponse;
 import org.apache.cloudstack.api.response.UserVmResponse;
 import org.apache.cloudstack.context.CallContext;
-import org.apache.log4j.Level;
-import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Level;
 
 import com.cloud.api.query.dao.TemplateJoinDao;
 import com.cloud.dc.dao.DataCenterDao;
@@ -94,7 +92,6 @@ import com.cloud.dc.DataCenterVO;
 import static com.cloud.automation.version.AutomationVersionService.AutomationServiceEnabled;
 
 public class AutomationControllerManagerImpl extends ManagerBase implements AutomationControllerService {
-    protected static Logger LOGGER = LogManager.getLogger(AutomationControllerManagerImpl.class.getName());
 
     protected StateMachine2<AutomationController.State, AutomationController.Event, AutomationController> _stateMachine = AutomationController.State.getStateMachine();
 
@@ -139,15 +136,15 @@ public class AutomationControllerManagerImpl extends ManagerBase implements Auto
     private void logMessage(final Level logLevel, final String message, final Exception e) {
         if (logLevel == Level.WARN) {
             if (e != null) {
-                LOGGER.warn(message, e);
+                logger.warn(message, e);
             } else {
-                LOGGER.warn(message);
+                logger.warn(message);
             }
         } else {
             if (e != null) {
-                LOGGER.error(message, e);
+                logger.error(message, e);
             } else {
-                LOGGER.error(message);
+                logger.error(message);
             }
         }
     }
@@ -232,7 +229,7 @@ public class AutomationControllerManagerImpl extends ManagerBase implements Auto
                     }
                 } catch (NullPointerException e) {
                     deleteAutomationController(automationController.getId());
-                    LOGGER.warn(String.format("Failed to run Automation controller Alert state scanner on Automation controller : %s status scanner", automationController.getName()), e);
+                    logger.warn(String.format("Failed to run Automation controller Alert state scanner on Automation controller : %s status scanner", automationController.getName()), e);
                 }
                 response.setHostName(userVM.getHostName());
             }
@@ -254,7 +251,7 @@ public class AutomationControllerManagerImpl extends ManagerBase implements Auto
                     }
                 }
             } catch (Exception e) {
-                LOGGER.warn(String.format("Failed to run Automation controller Alert state scanner on Automation controller : %s status scanner", automationController.getName()), e);
+                logger.warn(String.format("Failed to run Automation controller Alert state scanner on Automation controller : %s status scanner", automationController.getName()), e);
             }
         }
 
@@ -333,7 +330,7 @@ public class AutomationControllerManagerImpl extends ManagerBase implements Auto
         try {
             return _stateMachine.transitTo(automationController, e, null, automationControllerDao);
         } catch (NoTransitionException nte) {
-            LOGGER.warn(String.format("Failed to transition state of the automation automation : %s in state %s on event %s",
+            logger.warn(String.format("Failed to transition state of the automation automation : %s in state %s on event %s",
                     automationController.getName(), automationController.getState().toString(), e.toString()), nte);
             return false;
         }
@@ -361,8 +358,8 @@ public class AutomationControllerManagerImpl extends ManagerBase implements Auto
                 return newController;
             }
         });
-        if (LOGGER.isInfoEnabled()) {
-            LOGGER.info(String.format("Automation controller name: %s and ID: %s has been created", controller.getName(), controller.getUuid()));
+        if (logger.isInfoEnabled()) {
+            logger.info(String.format("Automation controller name: %s and ID: %s has been created", controller.getName(), controller.getUuid()));
         }
         return controller;
 
@@ -417,14 +414,14 @@ public class AutomationControllerManagerImpl extends ManagerBase implements Auto
         }
         accountManager.checkAccess(CallContext.current().getCallingAccount(), SecurityChecker.AccessType.OperateEntry, false, automationController);
         if (automationController.getState().equals(AutomationController.State.Running)) {
-            if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug(String.format("Automation Controller : %s is in running state", automationController.getName()));
+            if (logger.isDebugEnabled()) {
+                logger.debug(String.format("Automation Controller : %s is in running state", automationController.getName()));
             }
             return true;
         }
         if (automationController.getState().equals(AutomationController.State.Starting)) {
-            if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug(String.format("Automation Controller : %s is already in starting state", automationController.getName()));
+            if (logger.isDebugEnabled()) {
+                logger.debug(String.format("Automation Controller : %s is already in starting state", automationController.getName()));
             }
             return true;
         }
@@ -474,14 +471,14 @@ public class AutomationControllerManagerImpl extends ManagerBase implements Auto
         }
         accountManager.checkAccess(CallContext.current().getCallingAccount(), SecurityChecker.AccessType.OperateEntry, false, (ControlledEntity) automationController);
         if (automationController.getState().equals(AutomationController.State.Stopped)) {
-            if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug(String.format("Automation Controller : %s is already stopped", automationController.getName()));
+            if (logger.isDebugEnabled()) {
+                logger.debug(String.format("Automation Controller : %s is already stopped", automationController.getName()));
             }
             return true;
         }
         if (automationController.getState().equals(AutomationController.State.Stopping)) {
-            if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug(String.format("Automation Controller : %s is getting stopped", automationController.getName()));
+            if (logger.isDebugEnabled()) {
+                logger.debug(String.format("Automation Controller : %s is getting stopped", automationController.getName()));
             }
             return true;
         }

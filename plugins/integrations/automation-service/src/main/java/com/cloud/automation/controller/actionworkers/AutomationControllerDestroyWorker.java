@@ -36,7 +36,7 @@ import com.cloud.uservm.UserVm;
 import com.cloud.utils.exception.CloudRuntimeException;
 import com.cloud.vm.UserVmVO;
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.log4j.Level;
+import org.apache.logging.log4j.Level;
 
 import javax.inject.Inject;
 import java.util.ArrayList;
@@ -63,7 +63,7 @@ public class AutomationControllerDestroyWorker extends AutomationControllerActio
                 || automationController.getState().equals(AutomationController.State.Destroying))) {
             String msg = String.format("Cannot perform delete operation on controller : %s in state: %s",
             automationController.getName(), automationController.getState());
-            LOGGER.warn(msg);
+            logger.warn(msg);
             throw new PermissionDeniedException(msg);
         }
     }
@@ -75,7 +75,7 @@ public class AutomationControllerDestroyWorker extends AutomationControllerActio
             if(serviceGroup.getControllerId() == (automationControllerId)){
                 String msg = String.format("Cannot perform delete operation. Packages deployed to that controller should be deleted.",
                         automationController.getName(), automationController.getState());
-                LOGGER.warn(msg);
+                logger.warn(msg);
                 throw new PermissionDeniedException(msg);
             }
         }
@@ -96,15 +96,15 @@ public class AutomationControllerDestroyWorker extends AutomationControllerActio
                 try {
                     UserVm vm = userVmService.destroyVm(vmID, true);
                     if (!userVmManager.expunge(userVM)) {
-                        LOGGER.warn(String.format("Unable to expunge VM %s : %s, destroying automation controller will probably fail",
+                        logger.warn(String.format("Unable to expunge VM %s : %s, destroying automation controller will probably fail",
                             vm.getInstanceName() , vm.getUuid()));
                     }
                     automationControllerVmMapDao.expunge(AutomationControllerVM.getId());
-                    if (LOGGER.isInfoEnabled()) {
-                        LOGGER.info(String.format("Destroyed VM : %s as part of automation controller : %s cleanup", vm.getDisplayName(), automationController.getName()));
+                    if (logger.isInfoEnabled()) {
+                        logger.info(String.format("Destroyed VM : %s as part of automation controller : %s cleanup", vm.getDisplayName(), automationController.getName()));
                     }
                 } catch (ResourceUnavailableException | ConcurrentOperationException e) {
-                    LOGGER.warn(String.format("Failed to destroy VM : %s part of the automation controller : %s cleanup. Moving on with destroying remaining resources provisioned for the automation controller", userVM.getDisplayName(), automationController.getName()), e);
+                    logger.warn(String.format("Failed to destroy VM : %s part of the automation controller : %s cleanup. Moving on with destroying remaining resources provisioned for the automation controller", userVM.getDisplayName(), automationController.getName()), e);
                     return false;
                 }
             }
@@ -178,8 +178,8 @@ public class AutomationControllerDestroyWorker extends AutomationControllerActio
         validateControllerState();
         validateDeployedPackages();
         this.AutomationControllerVMs = automationControllerVmMapDao.listByAutomationControllerId(automationController.getId());
-        if (LOGGER.isInfoEnabled()) {
-            LOGGER.info(String.format("Destroying automation controller : %s", automationController.getName()));
+        if (logger.isInfoEnabled()) {
+            logger.info(String.format("Destroying automation controller : %s", automationController.getName()));
         }
         stateTransitTo(automationController.getId(), AutomationController.Event.DestroyRequested);
         boolean vmsDestroyed = destroyAutomationControllerVMs();
@@ -190,13 +190,13 @@ public class AutomationControllerDestroyWorker extends AutomationControllerActio
                 checkForRulesToDelete();
             } catch (ManagementServerException e) {
                 String msg = String.format("Failed to remove network rules of automation controller : %s", automationController.getName());
-                LOGGER.warn(msg, e);
+                logger.warn(msg, e);
                 updateAutomationControllerEntryForGC();
                 throw new CloudRuntimeException(msg, e);
             }
         } else {
             String msg = String.format("Failed to destroy one or more VMs as part of automation controller : %s cleanup",automationController.getName());
-            LOGGER.warn(msg);
+            logger.warn(msg);
             updateAutomationControllerEntryForGC();
             throw new CloudRuntimeException(msg);
         }
@@ -208,8 +208,8 @@ public class AutomationControllerDestroyWorker extends AutomationControllerActio
             updateAutomationControllerEntryForGC();
             return false;
         }
-        if (LOGGER.isInfoEnabled()) {
-            LOGGER.info(String.format("Automation Controller : %s is successfully deleted", automationController.getName()));
+        if (logger.isInfoEnabled()) {
+            logger.info(String.format("Automation Controller : %s is successfully deleted", automationController.getName()));
         }
         return true;
     }

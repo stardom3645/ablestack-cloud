@@ -32,7 +32,6 @@ import org.apache.cloudstack.api.response.SSVResponse;
 import org.apache.cloudstack.api.response.NetworkResponse;
 import org.apache.cloudstack.api.response.ZoneResponse;
 import org.apache.cloudstack.context.CallContext;
-import org.apache.log4j.Logger;
 
 import com.cloud.ssv.SSV;
 import com.cloud.ssv.SSVEventTypes;
@@ -47,7 +46,6 @@ import com.cloud.utils.exception.CloudRuntimeException;
         entityType = {SSV.class},
         authorized = {RoleType.Admin, RoleType.ResourceAdmin, RoleType.DomainAdmin, RoleType.User})
 public class CreateSSVCmd extends BaseAsyncCreateCmd {
-    public static final Logger LOGGER = Logger.getLogger(CreateSSVCmd.class.getName());
     public static final String APINAME = "createSSV";
 
     @Inject

@@ -17,7 +17,7 @@
 
 package com.cloud.ssv.actionworkers;
 
-import org.apache.log4j.Level;
+import org.apache.logging.log4j.Level;
 
 import com.cloud.exception.ConcurrentOperationException;
 import com.cloud.ssv.SSV;
@@ -34,8 +34,8 @@ public class SSVStopWorker extends SSVActionWorker {
 
     public boolean stop() throws CloudRuntimeException {
         // init();
-        if (LOGGER.isInfoEnabled()) {
-            LOGGER.info(String.format("Stopping Shared Storage VM  : %s", ssv.getName()));
+        if (logger.isInfoEnabled()) {
+            logger.info(String.format("Stopping Shared Storage VM  : %s", ssv.getName()));
         }
         stateTransitTo(ssv.getId(), SSV.Event.StopRequested);
         SSVVmMapVO vo = ssvVmMapDao.listVmBySSVServiceId(ssv.getId());
@@ -46,7 +46,7 @@ public class SSVStopWorker extends SSVActionWorker {
             try {
                 userVmService.stopVirtualMachine(vm.getId(), false);
             } catch (ConcurrentOperationException ex) {
-                LOGGER.warn(String.format("Failed to Stop VM : %s in Shared Storage VM  : %s due to ", vm.getDisplayName(), ssv.getName()) + ex);
+                logger.warn(String.format("Failed to Stop VM : %s in Shared Storage VM  : %s due to ", vm.getDisplayName(), ssv.getName()) + ex);
                 // dont bail out here. proceed further to stop the reset of the VM's
             }
             if (!vm.getState().equals(VirtualMachine.State.Running)) {

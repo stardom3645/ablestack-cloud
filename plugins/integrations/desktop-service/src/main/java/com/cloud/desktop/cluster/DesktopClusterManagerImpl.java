@@ -47,9 +47,7 @@ import org.apache.cloudstack.storage.datastore.db.TemplateDataStoreDao;
 import org.apache.cloudstack.context.CallContext;
 import org.apache.cloudstack.framework.config.ConfigKey;
 import org.apache.cloudstack.managed.context.ManagedContextRunnable;
-import org.apache.log4j.Level;
-import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Level;
 
 import com.cloud.api.ApiDBUtils;
 import org.apache.cloudstack.api.ApiConstants.VMDetails;
@@ -117,8 +115,6 @@ import com.cloud.exception.InvalidParameterValueException;
 
 public class DesktopClusterManagerImpl extends ManagerBase implements DesktopClusterService {
 
-    protected static Logger LOGGER = LogManager.getLogger(DesktopClusterManagerImpl.class);
-
     protected StateMachine2<DesktopCluster.State, DesktopCluster.Event, DesktopCluster> _stateMachine = DesktopCluster.State.getStateMachine();
 
     ScheduledExecutorService _gcExecutor;
@@ -162,15 +158,15 @@ public class DesktopClusterManagerImpl extends ManagerBase implements DesktopClu
     private void logMessage(final Level logLevel, final String message, final Exception e) {
         if (logLevel == Level.WARN) {
             if (e != null) {
-                LOGGER.warn(message, e);
+                logger.warn(message, e);
             } else {
-                LOGGER.warn(message);
+                logger.warn(message);
             }
         } else {
             if (e != null) {
-                LOGGER.error(message, e);
+                logger.error(message, e);
             } else {
-                LOGGER.error(message);
+                logger.error(message);
             }
         }
     }
@@ -474,8 +470,8 @@ public class DesktopClusterManagerImpl extends ManagerBase implements DesktopClu
             }
         });
 
-        if (LOGGER.isInfoEnabled()) {
-            LOGGER.info(String.format("Desktop cluster ID: %s has been created", cluster.getUuid()));
+        if (logger.isInfoEnabled()) {
+            logger.info(String.format("Desktop cluster ID: %s has been created", cluster.getUuid()));
         }
         return cluster;
     }
@@ -500,7 +496,7 @@ public class DesktopClusterManagerImpl extends ManagerBase implements DesktopClu
         try {
             return _stateMachine.transitTo(desktopCluster, e, null, desktopClusterDao);
         } catch (NoTransitionException nte) {
-            LOGGER.warn(String.format("Failed to transition state of the Desktop cluster : %s in state %s on event %s", desktopCluster.getName(), desktopCluster.getState().toString(), e.toString()), nte);
+            logger.warn(String.format("Failed to transition state of the Desktop cluster : %s in state %s on event %s", desktopCluster.getName(), desktopCluster.getState().toString(), e.toString()), nte);
             return false;
         }
     }
@@ -530,8 +526,8 @@ public class DesktopClusterManagerImpl extends ManagerBase implements DesktopClu
                 return newCluster;
             }
         });
-        if (LOGGER.isInfoEnabled()) {
-            LOGGER.info(String.format("Desktop cluster name: %s and ID: %s has been created", cluster.getName(), cluster.getUuid()));
+        if (logger.isInfoEnabled()) {
+            logger.info(String.format("Desktop cluster name: %s and ID: %s has been created", cluster.getName(), cluster.getUuid()));
         }
         return cluster;
     }
@@ -747,14 +743,14 @@ public class DesktopClusterManagerImpl extends ManagerBase implements DesktopClu
         }
         accountManager.checkAccess(CallContext.current().getCallingAccount(), SecurityChecker.AccessType.OperateEntry, false, desktopCluster);
         if (desktopCluster.getState().equals(DesktopCluster.State.Running)) {
-            if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug(String.format("Desktop cluster : %s is in running state", desktopCluster.getName()));
+            if (logger.isDebugEnabled()) {
+                logger.debug(String.format("Desktop cluster : %s is in running state", desktopCluster.getName()));
             }
             return true;
         }
         if (desktopCluster.getState().equals(DesktopCluster.State.Starting)) {
-            if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug(String.format("Desktop cluster : %s is already in starting state", desktopCluster.getName()));
+            if (logger.isDebugEnabled()) {
+                logger.debug(String.format("Desktop cluster : %s is already in starting state", desktopCluster.getName()));
             }
             return true;
         }
@@ -789,14 +785,14 @@ public class DesktopClusterManagerImpl extends ManagerBase implements DesktopClu
         }
         accountManager.checkAccess(CallContext.current().getCallingAccount(), SecurityChecker.AccessType.OperateEntry, false, desktopCluster);
         if (desktopCluster.getState().equals(DesktopCluster.State.Stopped)) {
-            if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug(String.format("Desktop cluster : %s is already stopped", desktopCluster.getName()));
+            if (logger.isDebugEnabled()) {
+                logger.debug(String.format("Desktop cluster : %s is already stopped", desktopCluster.getName()));
             }
             return true;
         }
         if (desktopCluster.getState().equals(DesktopCluster.State.Stopping)) {
-            if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug(String.format("Desktop cluster : %s is getting stopped", desktopCluster.getName()));
+            if (logger.isDebugEnabled()) {
+                logger.debug(String.format("Desktop cluster : %s is getting stopped", desktopCluster.getName()));
             }
             return true;
         }
@@ -866,26 +862,26 @@ public class DesktopClusterManagerImpl extends ManagerBase implements DesktopClu
             try {
                 List<DesktopClusterVO> desktopClusters = desktopClusterDao.findDesktopClustersToGarbageCollect();
                 for (DesktopCluster desktopCluster : desktopClusters) {
-                    if (LOGGER.isInfoEnabled()) {
-                        LOGGER.info(String.format("Running Desktop cluster garbage collector on Desktop cluster : %s", desktopCluster.getName()));
+                    if (logger.isInfoEnabled()) {
+                        logger.info(String.format("Running Desktop cluster garbage collector on Desktop cluster : %s", desktopCluster.getName()));
                     }
                     try {
                         DesktopClusterDestroyWorker destroyWorker = new DesktopClusterDestroyWorker(desktopCluster, DesktopClusterManagerImpl.this);
                         destroyWorker = ComponentContext.inject(destroyWorker);
                         if (destroyWorker.destroy()) {
-                            if (LOGGER.isInfoEnabled()) {
-                                LOGGER.info(String.format("Garbage collection complete for Desktop cluster : %s", desktopCluster.getName()));
+                            if (logger.isInfoEnabled()) {
+                                logger.info(String.format("Garbage collection complete for Desktop cluster : %s", desktopCluster.getName()));
                             }
                         } else {
-                            LOGGER.warn(String.format("Garbage collection failed for Desktop cluster : %s, it will be attempted to garbage collected in next run", desktopCluster.getName()));
+                            logger.warn(String.format("Garbage collection failed for Desktop cluster : %s, it will be attempted to garbage collected in next run", desktopCluster.getName()));
                         }
                     } catch (CloudRuntimeException e) {
-                        LOGGER.warn(String.format("Failed to destroy Desktop cluster : %s during GC", desktopCluster.getName()), e);
+                        logger.warn(String.format("Failed to destroy Desktop cluster : %s during GC", desktopCluster.getName()), e);
                         // proceed further with rest of the Desktop cluster garbage collection
                     }
                 }
             } catch (Exception e) {
-                LOGGER.warn("Caught exception while running Desktop cluster gc: ", e);
+                logger.warn("Caught exception while running Desktop cluster gc: ", e);
             }
         }
     }
@@ -922,38 +918,38 @@ public class DesktopClusterManagerImpl extends ManagerBase implements DesktopClu
                 // run through Desktop clusters in 'Running' state and ensure all the VM's are Running in the cluster
                 List<DesktopClusterVO> runningDesktopClusters = desktopClusterDao.findDesktopClustersInState(DesktopCluster.State.Running);
                 for (DesktopCluster desktopCluster : runningDesktopClusters) {
-                    if (LOGGER.isInfoEnabled()) {
-                        LOGGER.info(String.format("Running Desktop cluster state scanner on Desktop cluster : %s",desktopCluster.getName()));
+                    if (logger.isInfoEnabled()) {
+                        logger.info(String.format("Running Desktop cluster state scanner on Desktop cluster : %s",desktopCluster.getName()));
                     }
                     try {
                         if (!isClusterVMsInDesiredState(desktopCluster, VirtualMachine.State.Running)) {
                             stateTransitTo(desktopCluster.getId(), DesktopCluster.Event.FaultsDetected);
                         }
                     } catch (Exception e) {
-                        LOGGER.warn(String.format("Failed to run Desktop cluster Running state scanner on Desktop cluster : %s status scanner", desktopCluster.getName()), e);
+                        logger.warn(String.format("Failed to run Desktop cluster Running state scanner on Desktop cluster : %s status scanner", desktopCluster.getName()), e);
                     }
                 }
 
                 // run through Desktop clusters in 'Stopped' state and ensure all the VM's are Stopped in the cluster
                 List<DesktopClusterVO> stoppedDesktopClusters = desktopClusterDao.findDesktopClustersInState(DesktopCluster.State.Stopped);
                 for (DesktopCluster desktopCluster : stoppedDesktopClusters) {
-                    if (LOGGER.isInfoEnabled()) {
-                        LOGGER.info(String.format("Running Desktop cluster state scanner on Desktop cluster : %s for state: %s", desktopCluster.getName(), DesktopCluster.State.Stopped.toString()));
+                    if (logger.isInfoEnabled()) {
+                        logger.info(String.format("Running Desktop cluster state scanner on Desktop cluster : %s for state: %s", desktopCluster.getName(), DesktopCluster.State.Stopped.toString()));
                     }
                     try {
                         if (!isClusterVMsInDesiredState(desktopCluster, VirtualMachine.State.Stopped)) {
                             stateTransitTo(desktopCluster.getId(), DesktopCluster.Event.FaultsDetected);
                         }
                     } catch (Exception e) {
-                        LOGGER.warn(String.format("Failed to run Desktop cluster Stopped state scanner on Desktop cluster : %s status scanner", desktopCluster.getName()), e);
+                        logger.warn(String.format("Failed to run Desktop cluster Stopped state scanner on Desktop cluster : %s status scanner", desktopCluster.getName()), e);
                     }
                 }
 
                 // run through Desktop clusters in 'Alert' state and reconcile state as 'Running' if the VM's are running or 'Stopped' if VM's are stopped
                 List<DesktopClusterVO> alertDesktopClusters = desktopClusterDao.findDesktopClustersInState(DesktopCluster.State.Alert);
                 for (DesktopClusterVO desktopCluster : alertDesktopClusters) {
-                    if (LOGGER.isInfoEnabled()) {
-                        LOGGER.info(String.format("Running Desktop cluster state scanner on Desktop cluster : %s for state: %s", desktopCluster.getName(), DesktopCluster.State.Alert.toString()));
+                    if (logger.isInfoEnabled()) {
+                        logger.info(String.format("Running Desktop cluster state scanner on Desktop cluster : %s for state: %s", desktopCluster.getName(), DesktopCluster.State.Alert.toString()));
                     }
                     try {
                         if (isClusterVMsInDesiredState(desktopCluster, VirtualMachine.State.Running)) {
@@ -966,7 +962,7 @@ public class DesktopClusterManagerImpl extends ManagerBase implements DesktopClu
                             stateTransitTo(desktopCluster.getId(), DesktopCluster.Event.OperationSucceeded);
                         }
                     } catch (Exception e) {
-                        LOGGER.warn(String.format("Failed to run Desktop cluster Alert state scanner on Desktop cluster : %s status scanner", desktopCluster.getName()), e);
+                        logger.warn(String.format("Failed to run Desktop cluster Alert state scanner on Desktop cluster : %s status scanner", desktopCluster.getName()), e);
                     }
                 }
 
@@ -978,8 +974,8 @@ public class DesktopClusterManagerImpl extends ManagerBase implements DesktopClu
                         if ((new Date()).getTime() - desktopCluster.getCreated().getTime() < 10*60*1000) {
                             continue;
                         }
-                        if (LOGGER.isInfoEnabled()) {
-                            LOGGER.info(String.format("Running Desktop cluster state scanner on Desktop cluster : %s for state: %s", desktopCluster.getName(), DesktopCluster.State.Starting.toString()));
+                        if (logger.isInfoEnabled()) {
+                            logger.info(String.format("Running Desktop cluster state scanner on Desktop cluster : %s for state: %s", desktopCluster.getName(), DesktopCluster.State.Starting.toString()));
                         }
                         try {
                             if (isClusterVMsInDesiredState(desktopCluster, VirtualMachine.State.Running)) {
@@ -988,25 +984,25 @@ public class DesktopClusterManagerImpl extends ManagerBase implements DesktopClu
                                 stateTransitTo(desktopCluster.getId(), DesktopCluster.Event.OperationFailed);
                             }
                         } catch (Exception e) {
-                            LOGGER.warn(String.format("Failed to run Desktop cluster Starting state scanner on Desktop cluster : %s status scanner", desktopCluster.getName()), e);
+                            logger.warn(String.format("Failed to run Desktop cluster Starting state scanner on Desktop cluster : %s status scanner", desktopCluster.getName()), e);
                         }
                     }
                     List<DesktopClusterVO> destroyingDesktopClusters = desktopClusterDao.findDesktopClustersInState(DesktopCluster.State.Destroying);
                     for (DesktopCluster desktopCluster : destroyingDesktopClusters) {
-                        if (LOGGER.isInfoEnabled()) {
-                            LOGGER.info(String.format("Running Desktop cluster state scanner on Desktop cluster : %s for state: %s", desktopCluster.getName(), DesktopCluster.State.Destroying.toString()));
+                        if (logger.isInfoEnabled()) {
+                            logger.info(String.format("Running Desktop cluster state scanner on Desktop cluster : %s for state: %s", desktopCluster.getName(), DesktopCluster.State.Destroying.toString()));
                         }
                         try {
                             DesktopClusterDestroyWorker destroyWorker = new DesktopClusterDestroyWorker(desktopCluster, DesktopClusterManagerImpl.this);
                             destroyWorker = ComponentContext.inject(destroyWorker);
                             destroyWorker.destroy();
                         } catch (Exception e) {
-                            LOGGER.warn(String.format("Failed to run Desktop cluster Destroying state scanner on Desktop cluster : %s status scanner", desktopCluster.getName()), e);
+                            logger.warn(String.format("Failed to run Desktop cluster Destroying state scanner on Desktop cluster : %s status scanner", desktopCluster.getName()), e);
                         }
                     }
                 }
             } catch (Exception e) {
-                LOGGER.warn("Caught exception while running Desktop cluster state scanner", e);
+                logger.warn("Caught exception while running Desktop cluster state scanner", e);
             }
             firstRun = false;
         }
@@ -1020,8 +1016,8 @@ public class DesktopClusterManagerImpl extends ManagerBase implements DesktopClu
         for (DesktopClusterVmMapVO clusterVm : clusterVMs) {
             VMInstanceVO vm = vmInstanceDao.findByIdIncludingRemoved(clusterVm.getVmId());
             if (vm.getState() != state) {
-                if (LOGGER.isDebugEnabled()) {
-                    LOGGER.debug(String.format("Found VM : %s in the Desktop cluster : %s in state: %s while expected to be in state: %s. So moving the cluster to Alert state for reconciliation",
+                if (logger.isDebugEnabled()) {
+                    logger.debug(String.format("Found VM : %s in the Desktop cluster : %s in state: %s while expected to be in state: %s. So moving the cluster to Alert state for reconciliation",
                             vm.getUuid(), desktopCluster.getName(), vm.getState().toString(), state.toString()));
                 }
                 return false;

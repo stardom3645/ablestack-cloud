@@ -164,12 +164,12 @@ public class SSVModifierActionWorker extends SSVActionWorker {
                 ClusterDetailsVO cluster_detail_ram = clusterDetailsDao.findDetail(cluster.getId(), "memoryOvercommitRatio");
                 Float cpuOvercommitRatio = Float.parseFloat(cluster_detail_cpu.getValue());
                 Float memoryOvercommitRatio = Float.parseFloat(cluster_detail_ram.getValue());
-                if (LOGGER.isDebugEnabled()) {
-                    LOGGER.debug(String.format("Checking host : %s for capacity already reserved %d", h.getName(), reserved));
+                if (logger.isDebugEnabled()) {
+                    logger.debug(String.format("Checking host : %s for capacity already reserved %d", h.getName(), reserved));
                 }
                 if (capacityManager.checkIfHostHasCapacity(h.getId(), cpu_requested * reserved, ram_requested * reserved, false, cpuOvercommitRatio, memoryOvercommitRatio, true)) {
-                    if (LOGGER.isDebugEnabled()) {
-                        LOGGER.debug(String.format("Found host : %s for with enough capacity, CPU=%d RAM=%s", h.getName(), cpu_requested * reserved, toHumanReadableSize(ram_requested * reserved)));
+                    if (logger.isDebugEnabled()) {
+                        logger.debug(String.format("Found host : %s for with enough capacity, CPU=%d RAM=%s", h.getName(), cpu_requested * reserved, toHumanReadableSize(ram_requested * reserved)));
                     }
                     hostEntry.setValue(new Pair<HostVO, Integer>(h, reserved));
                     suitable_host_found = true;
@@ -177,31 +177,31 @@ public class SSVModifierActionWorker extends SSVActionWorker {
                 }
             }
             if (!suitable_host_found) {
-                if (LOGGER.isInfoEnabled()) {
-                    LOGGER.info(String.format("Suitable hosts not found in datacenter : %s for node %d, with offering : %s and hypervisor: %s",
+                if (logger.isInfoEnabled()) {
+                    logger.info(String.format("Suitable hosts not found in datacenter : %s for node %d, with offering : %s and hypervisor: %s",
                         zone.getName(), i, offering.getName(), ssvTemplate.getHypervisorType().toString()));
                 }
                 break;
             }
         }
         if (suitable_host_found) {
-            if (LOGGER.isInfoEnabled()) {
-                LOGGER.info(String.format("Suitable hosts found in datacenter : %s, creating deployment destination", zone.getName()));
+            if (logger.isInfoEnabled()) {
+                logger.info(String.format("Suitable hosts found in datacenter : %s, creating deployment destination", zone.getName()));
             }
             return new DeployDestination(zone, null, null, null);
         }
         String msg = String.format("Cannot find enough capacity for Shared Storage VM(requested cpu=%d memory=%s) with offering : %s and hypervisor: %s",
                 cpu_requested * nodesCount, toHumanReadableSize(ram_requested * nodesCount), offering.getName(), ssvTemplate.getHypervisorType().toString());
 
-        LOGGER.warn(msg);
+        logger.warn(msg);
         throw new InsufficientServerCapacityException(msg, DataCenter.class, zone.getId());
     }
 
     protected DeployDestination plan() throws InsufficientServerCapacityException {
         ServiceOffering offering = serviceOfferingDao.findById(ssv.getServiceOfferingId());
         DataCenter zone = dataCenterDao.findById(ssv.getZoneId());
-        if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug(String.format("Checking deployment destination for Shared Storage VM : %s in zone : %s", ssv.getName(), zone.getName()));
+        if (logger.isDebugEnabled()) {
+            logger.debug(String.format("Checking deployment destination for Shared Storage VM : %s in zone : %s", ssv.getName(), zone.getName()));
         }
         final long dest = 1;
         return plan(dest, zone, offering);
@@ -209,7 +209,7 @@ public class SSVModifierActionWorker extends SSVActionWorker {
 
     protected void startVM(final UserVm vm) throws ManagementServerException {
         try {
-            LOGGER.info("startVM start :::::");
+            logger.info("startVM start :::::");
 
             StartVMCmd startVm = new StartVMCmd();
             startVm = ComponentContext.inject(startVm);
@@ -217,8 +217,8 @@ public class SSVModifierActionWorker extends SSVActionWorker {
             f.setAccessible(true);
             f.set(startVm, vm.getId());
             userVmService.startVirtualMachine(startVm);
-            if (LOGGER.isInfoEnabled()) {
-                LOGGER.info(String.format("Started VM : %s in the Shared Storage VM : %s", vm.getDisplayName(), ssv.getName()));
+            if (logger.isInfoEnabled()) {
+                logger.info(String.format("Started VM : %s in the Shared Storage VM : %s", vm.getDisplayName(), ssv.getName()));
             }
         } catch (IllegalAccessException | NoSuchFieldException | ExecutionException |
                 ResourceUnavailableException | ResourceAllocationException | InsufficientCapacityException ex) {
@@ -232,7 +232,7 @@ public class SSVModifierActionWorker extends SSVActionWorker {
             VMTemplateVO tmplt = _tmpltDao.findByUuid(configurationDao.getValue("cloud.shared.storage.vm.setting.iso.uuid"));
             _templateService.attachIso(tmplt.getId(), startVm.getId(), true);
         }
-        LOGGER.info("startVM Done :::::");
+        logger.info("startVM Done :::::");
     }
 
     protected IpAddress getSourceNatIp(Network network) {
@@ -393,8 +393,8 @@ public class SSVModifierActionWorker extends SSVActionWorker {
                 }
             });
             rulesService.applyPortForwardingRules(publicIp.getId(), account);
-            if (LOGGER.isInfoEnabled()) {
-                LOGGER.info(String.format("Provisioned web access port forwarding rule from port %d to 8080 on %s to the VM IP : %s in Shared Storage VM : %s", userPort, publicIp.getAddress().addr(), vmIp.toString(), ssv.getName()));
+            if (logger.isInfoEnabled()) {
+                logger.info(String.format("Provisioned web access port forwarding rule from port %d to 8080 on %s to the VM IP : %s in Shared Storage VM : %s", userPort, publicIp.getAddress().addr(), vmIp.toString(), ssv.getName()));
             }
             PortForwardingRuleVO pfRule2 = Transaction.execute(new TransactionCallbackWithException<PortForwardingRuleVO, NetworkRuleConflictException>() {
                 @Override
@@ -408,8 +408,8 @@ public class SSVModifierActionWorker extends SSVActionWorker {
                 }
             });
             rulesService.applyPortForwardingRules(publicIp.getId(), account);
-            if (LOGGER.isInfoEnabled()) {
-                LOGGER.info(String.format("Provisioned web access port forwarding rule from port %d to 8081 on %s to the VM IP : %s in Shared Storage VM : %s", adminPort, publicIp.getAddress().addr(), vmIp.toString(), ssv.getName()));
+            if (logger.isInfoEnabled()) {
+                logger.info(String.format("Provisioned web access port forwarding rule from port %d to 8081 on %s to the VM IP : %s in Shared Storage VM : %s", adminPort, publicIp.getAddress().addr(), vmIp.toString(), ssv.getName()));
             }
             PortForwardingRuleVO pfRule3 = Transaction.execute(new TransactionCallbackWithException<PortForwardingRuleVO, NetworkRuleConflictException>() {
                 @Override
@@ -423,8 +423,8 @@ public class SSVModifierActionWorker extends SSVActionWorker {
                 }
             });
             rulesService.applyPortForwardingRules(publicIp.getId(), account);
-            if (LOGGER.isInfoEnabled()) {
-                LOGGER.info(String.format("Provisioned api access port forwarding rule from port %d to 8082 on %s to the VM IP : %s in Shared Storage VM : %s", apiPort, publicIp.getAddress().addr(), vmIp.toString(), ssv.getName()));
+            if (logger.isInfoEnabled()) {
+                logger.info(String.format("Provisioned api access port forwarding rule from port %d to 8082 on %s to the VM IP : %s in Shared Storage VM : %s", apiPort, publicIp.getAddress().addr(), vmIp.toString(), ssv.getName()));
             }
             PortForwardingRuleVO pfRule4 = Transaction.execute(new TransactionCallbackWithException<PortForwardingRuleVO, NetworkRuleConflictException>() {
                 @Override
@@ -438,8 +438,8 @@ public class SSVModifierActionWorker extends SSVActionWorker {
                 }
             });
             rulesService.applyPortForwardingRules(publicIp.getId(), account);
-            if (LOGGER.isInfoEnabled()) {
-                LOGGER.info(String.format("Provisioned samba access port forwarding rule from port %d to 9017 on %s to the VM IP : %s in Shared Storage VM : %s", sambaPort, publicIp.getAddress().addr(), vmIp.toString(), ssv.getName()));
+            if (logger.isInfoEnabled()) {
+                logger.info(String.format("Provisioned samba access port forwarding rule from port %d to 9017 on %s to the VM IP : %s in Shared Storage VM : %s", sambaPort, publicIp.getAddress().addr(), vmIp.toString(), ssv.getName()));
             }
             return true;
         }
