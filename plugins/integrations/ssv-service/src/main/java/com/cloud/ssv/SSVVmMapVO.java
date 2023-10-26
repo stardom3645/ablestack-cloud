@@ -25,7 +25,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 
 @Entity
-@Table(name = "shared_storage_vm_map")
+@Table(name = "ssv_vm_map")
 public class SSVVmMapVO implements SSVVmMap {
 
     @Id
@@ -34,21 +34,18 @@ public class SSVVmMapVO implements SSVVmMap {
     long id;
 
     @Column(name = "ssv_service_id")
-    long ssvId;
+    long ssvServiceId;
 
     @Column(name = "vm_id")
-    long vmId;
+    private long vmId;
 
-    @Column(name = "type")
-    String type;
 
     public SSVVmMapVO() {
     }
 
-    public SSVVmMapVO(long ssvId, long vmId, String type) {
-        this.ssvId = ssvId;
+    public SSVVmMapVO(long ssvServiceId, long vmId) {
+        this.ssvServiceId = ssvServiceId;
         this.vmId = vmId;
-        this.type = type;
     }
 
     @Override
@@ -56,13 +53,12 @@ public class SSVVmMapVO implements SSVVmMap {
         return id;
     }
 
-    @Override
-    public long getSsvId() {
-        return ssvId;
+    public long getSsvServiceId() {
+        return ssvServiceId;
     }
 
-    public void setSsvId(long ssvId) {
-        this.ssvId = ssvId;
+    public void setSsvServiceId(long ssvServiceId) {
+        this.ssvServiceId = ssvServiceId;
     }
 
     @Override
@@ -74,11 +70,4 @@ public class SSVVmMapVO implements SSVVmMap {
         this.vmId = vmId;
     }
 
-    public String getType() {
-        return type;
-    }
-
-    public void setType(String type) {
-        this.type = type;
-    }
 }

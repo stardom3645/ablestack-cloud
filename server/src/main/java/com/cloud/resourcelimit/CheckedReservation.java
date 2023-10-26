@@ -18,21 +18,24 @@
 //
 package com.cloud.resourcelimit;
 
+import org.apache.cloudstack.context.CallContext;
+import org.apache.cloudstack.reservation.ReservationVO;
+import org.apache.cloudstack.reservation.dao.ReservationDao;
+import org.apache.cloudstack.user.ResourceReservation;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.NotNull;
+
 import com.cloud.configuration.Resource.ResourceType;
 import com.cloud.exception.ResourceAllocationException;
 import com.cloud.user.Account;
 import com.cloud.user.ResourceLimitService;
 import com.cloud.utils.db.GlobalLock;
-import org.apache.cloudstack.user.ResourceReservation;
 import com.cloud.utils.exception.CloudRuntimeException;
-import org.apache.cloudstack.reservation.ReservationVO;
-import org.apache.cloudstack.reservation.dao.ReservationDao;
-import org.apache.log4j.Logger;
-import org.jetbrains.annotations.NotNull;
 
 
 public class CheckedReservation  implements AutoCloseable, ResourceReservation {
-    private static final Logger LOG = Logger.getLogger(CheckedReservation.class);
+    protected Logger logger = LogManager.getLogger(getClass());
 
     private static final int TRY_TO_GET_LOCK_TIME = 120;
     private GlobalLock quotaLimitLock;
@@ -41,6 +44,10 @@ public class CheckedReservation  implements AutoCloseable, ResourceReservation {
     private final ResourceType resourceType;
     private Long amount;
     private ResourceReservation reservation;
+
+    private String getContextParameterKey() {
+        return String.format("%s-%s", ResourceReservation.class.getSimpleName(), resourceType.getName());
+    }
 
     /**
      * - check if adding a reservation is allowed
@@ -58,8 +65,8 @@ public class CheckedReservation  implements AutoCloseable, ResourceReservation {
         this.reservation = null;
         setGlobalLock(account, resourceType);
         if (this.amount != null && this.amount <= 0) {
-            if(LOG.isDebugEnabled()){
-                LOG.debug(String.format("not reserving no amount of resources for %s in domain %d, type: %s, %s ", account.getAccountName(), account.getDomainId(), resourceType, amount));
+            if(logger.isDebugEnabled()){
+                logger.debug(String.format("not reserving no amount of resources for %s in domain %d, type: %s, %s ", account.getAccountName(), account.getDomainId(), resourceType, amount));
             }
             this.amount = null;
         }
@@ -70,6 +77,7 @@ public class CheckedReservation  implements AutoCloseable, ResourceReservation {
                     resourceLimitService.checkResourceLimit(account,resourceType,amount);
                     ReservationVO reservationVO = new ReservationVO(account.getAccountId(), account.getDomainId(), resourceType, amount);
                     this.reservation = reservationDao.persist(reservationVO);
+                    CallContext.current().putContextParameter(getContextParameterKey(), reservation.getId());
                 } catch (NullPointerException npe) {
                     throw new CloudRuntimeException("not enough means to check limits", npe);
                 } finally {
@@ -79,8 +87,8 @@ public class CheckedReservation  implements AutoCloseable, ResourceReservation {
                 throw new ResourceAllocationException(String.format("unable to acquire resource reservation \"%s\"", quotaLimitLock.getName()), resourceType);
             }
         } else {
-            if(LOG.isDebugEnabled()){
-                LOG.debug(String.format("not reserving no amount of resources for %s in domain %d, type: %s ", account.getAccountName(), account.getDomainId(), resourceType));
+            if(logger.isDebugEnabled()){
+                logger.debug(String.format("not reserving no amount of resources for %s in domain %d, type: %s ", account.getAccountName(), account.getDomainId(), resourceType));
             }
         }
     }
@@ -97,7 +105,8 @@ public class CheckedReservation  implements AutoCloseable, ResourceReservation {
 
     @Override
     public void close() throws Exception {
-        if (this.reservation != null){
+        if (this.reservation != null) {
+            CallContext.current().removeContextParameter(getContextParameterKey());
             reservationDao.remove(reservation.getId());
             reservation = null;
         }

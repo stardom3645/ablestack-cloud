@@ -17,9 +17,38 @@
 
 package com.cloud.kubernetes.cluster.actionworkers;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import javax.inject.Inject;
+
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.cloudstack.api.ApiConstants;
+import org.apache.cloudstack.ca.CAManager;
+import org.apache.cloudstack.config.ApiServiceConfiguration;
+import org.apache.cloudstack.engine.orchestration.service.NetworkOrchestrationService;
+import org.apache.cloudstack.framework.config.dao.ConfigurationDao;
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
+
 import com.cloud.dc.DataCenterVO;
 import com.cloud.dc.dao.DataCenterDao;
 import com.cloud.dc.dao.VlanDao;
+import com.cloud.exception.InsufficientAddressCapacityException;
+import com.cloud.exception.ResourceAllocationException;
+import com.cloud.exception.ResourceUnavailableException;
 import com.cloud.hypervisor.Hypervisor;
 import com.cloud.kubernetes.cluster.KubernetesCluster;
 import com.cloud.kubernetes.cluster.KubernetesClusterDetailsVO;
@@ -36,7 +65,10 @@ import com.cloud.network.IpAddressManager;
 import com.cloud.network.Network;
 import com.cloud.network.Network.GuestType;
 import com.cloud.network.NetworkModel;
+import com.cloud.network.NetworkService;
+import com.cloud.network.dao.IPAddressDao;
 import com.cloud.network.dao.NetworkDao;
+import com.cloud.network.vpc.VpcService;
 import com.cloud.projects.ProjectService;
 import com.cloud.service.dao.ServiceOfferingDao;
 import com.cloud.storage.Storage;
@@ -64,41 +96,19 @@ import com.cloud.vm.VirtualMachineManager;
 import com.cloud.vm.VmDetailConstants;
 import com.cloud.vm.dao.UserVmDao;
 import com.cloud.vm.dao.UserVmDetailsDao;
-import org.apache.cloudstack.api.ApiConstants;
-import org.apache.cloudstack.ca.CAManager;
-import org.apache.cloudstack.config.ApiServiceConfiguration;
-import org.apache.cloudstack.engine.orchestration.service.NetworkOrchestrationService;
-import org.apache.cloudstack.framework.config.dao.ConfigurationDao;
-import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
-
-import javax.inject.Inject;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 
 public class KubernetesClusterActionWorker {
 
     public static final String CLUSTER_NODE_VM_USER = "cloud";
     public static final int CLUSTER_API_PORT = 6443;
+    public static final int DEFAULT_SSH_PORT = 22;
     public static final int CLUSTER_NODES_DEFAULT_START_SSH_PORT = 2222;
-    public static final int CLUSTER_NODES_DEFAULT_SSH_PORT_SG = 22;
+    public static final int CLUSTER_NODES_DEFAULT_SSH_PORT_SG = DEFAULT_SSH_PORT;
 
     public static final String CKS_CLUSTER_SECURITY_GROUP_NAME = "CKSSecurityGroup";
 
-    protected static final Logger LOGGER = Logger.getLogger(KubernetesClusterActionWorker.class);
+    protected Logger logger = LogManager.getLogger(getClass());
 
     protected StateMachine2<KubernetesCluster.State, KubernetesCluster.Event, KubernetesCluster> _stateMachine = KubernetesCluster.State.getStateMachine();
 
@@ -113,11 +123,15 @@ public class KubernetesClusterActionWorker {
     @Inject
     protected IpAddressManager ipAddressManager;
     @Inject
+    protected IPAddressDao ipAddressDao;
+    @Inject
     protected NetworkOrchestrationService networkMgr;
     @Inject
     protected NetworkDao networkDao;
     @Inject
     protected NetworkModel networkModel;
+    @Inject
+    protected NetworkService networkService;
     @Inject
     protected ServiceOfferingDao serviceOfferingDao;
     @Inject
@@ -140,6 +154,8 @@ public class KubernetesClusterActionWorker {
     protected LaunchPermissionDao launchPermissionDao;
     @Inject
     public ProjectService projectService;
+    @Inject
+    public VpcService vpcService;
 
     protected KubernetesClusterDao kubernetesClusterDao;
     protected KubernetesClusterVmMapDao kubernetesClusterVmMapDao;
@@ -211,32 +227,32 @@ public class KubernetesClusterActionWorker {
 
     protected void logMessage(final Level logLevel, final String message, final Exception e) {
         if (logLevel == Level.INFO) {
-            if (LOGGER.isInfoEnabled()) {
+            if (logger.isInfoEnabled()) {
                 if (e != null) {
-                    LOGGER.info(message, e);
+                    logger.info(message, e);
                 } else {
-                    LOGGER.info(message);
+                    logger.info(message);
                 }
             }
         } else if (logLevel == Level.DEBUG) {
-            if (LOGGER.isDebugEnabled()) {
+            if (logger.isDebugEnabled()) {
                 if (e != null) {
-                    LOGGER.debug(message, e);
+                    logger.debug(message, e);
                 } else {
-                    LOGGER.debug(message);
+                    logger.debug(message);
                 }
             }
         } else if (logLevel == Level.WARN) {
             if (e != null) {
-                LOGGER.warn(message, e);
+                logger.warn(message, e);
             } else {
-                LOGGER.warn(message);
+                logger.warn(message);
             }
         } else {
             if (e != null) {
-                LOGGER.error(message, e);
+                logger.error(message, e);
             } else {
-                LOGGER.error(message);
+                logger.error(message);
             }
         }
     }
@@ -254,7 +270,7 @@ public class KubernetesClusterActionWorker {
 
     protected void deleteTemplateLaunchPermission() {
         if (clusterTemplate != null && owner != null) {
-            LOGGER.info("Revoking launch permission for systemVM template");
+            logger.info("Revoking launch permission for systemVM template");
             launchPermissionDao.removePermissions(clusterTemplate.getId(), Collections.singletonList(owner.getId()));
         }
     }
@@ -309,7 +325,7 @@ public class KubernetesClusterActionWorker {
         }
         List<KubernetesClusterVmMapVO> clusterVMs = kubernetesClusterVmMapDao.listByClusterId(kubernetesCluster.getId());
         if (CollectionUtils.isEmpty(clusterVMs)) {
-            LOGGER.warn(String.format("Unable to retrieve VMs for Kubernetes cluster : %s", kubernetesCluster.getName()));
+            logger.warn(String.format("Unable to retrieve VMs for Kubernetes cluster : %s", kubernetesCluster.getName()));
             return null;
         }
         List<Long> vmIds = new ArrayList<>();
@@ -329,7 +345,79 @@ public class KubernetesClusterActionWorker {
         return ip;
     }
 
-    protected Pair<String, Integer> getKubernetesClusterServerIpSshPort(UserVm controlVm) {
+    protected IpAddress getNetworkSourceNatIp(Network network) {
+        List<? extends IpAddress> addresses = networkModel.listPublicIpsAssignedToGuestNtwk(network.getId(), true);
+        if (CollectionUtils.isNotEmpty(addresses)) {
+            return addresses.get(0);
+        }
+        logger.warn(String.format("No public IP addresses found for network : %s, Kubernetes cluster : %s", network.getName(), kubernetesCluster.getName()));
+        return null;
+    }
+
+    protected IpAddress getVpcTierKubernetesPublicIp(Network network) {
+        KubernetesClusterDetailsVO detailsVO = kubernetesClusterDetailsDao.findDetail(kubernetesCluster.getId(), ApiConstants.PUBLIC_IP_ID);
+        if (detailsVO == null || StringUtils.isEmpty(detailsVO.getValue())) {
+            return null;
+        }
+        IpAddress address = ipAddressDao.findByUuid(detailsVO.getValue());
+        if (address == null || network.getVpcId() != address.getVpcId()) {
+            logger.warn(String.format("Public IP with ID: %s linked to the Kubernetes cluster: %s is not usable", detailsVO.getValue(), kubernetesCluster.getName()));
+            return null;
+        }
+        return address;
+    }
+
+    protected IpAddress acquireVpcTierKubernetesPublicIp(Network network) throws
+            InsufficientAddressCapacityException, ResourceAllocationException, ResourceUnavailableException {
+        IpAddress ip = networkService.allocateIP(owner, kubernetesCluster.getZoneId(), network.getId(), null, null);
+        if (ip == null) {
+            return null;
+        }
+        ip = vpcService.associateIPToVpc(ip.getId(), network.getVpcId());
+        ip = ipAddressManager.associateIPToGuestNetwork(ip.getId(), network.getId(), false);
+        kubernetesClusterDetailsDao.addDetail(kubernetesCluster.getId(), ApiConstants.PUBLIC_IP_ID, ip.getUuid(), false);
+        return ip;
+    }
+
+    protected Pair<String, Integer> getKubernetesClusterServerIpSshPortForIsolatedNetwork(Network network) {
+        String ip = null;
+        IpAddress address = getNetworkSourceNatIp(network);
+        if (address != null) {
+            ip = address.getAddress().addr();
+        }
+        return new Pair<>(ip, CLUSTER_NODES_DEFAULT_START_SSH_PORT);
+    }
+
+    protected Pair<String, Integer> getKubernetesClusterServerIpSshPortForSharedNetwork(UserVm controlVm) {
+        int port = DEFAULT_SSH_PORT;
+        controlVm = fetchControlVmIfMissing(controlVm);
+        if (controlVm == null) {
+            logger.warn(String.format("Unable to retrieve control VM for Kubernetes cluster : %s", kubernetesCluster.getName()));
+            return new Pair<>(null, port);
+        }
+        return new Pair<>(controlVm.getPrivateIpAddress(), port);
+    }
+
+    protected Pair<String, Integer> getKubernetesClusterServerIpSshPortForVpcTier(Network network,
+                                                                                  boolean acquireNewPublicIpForVpcTierIfNeeded) throws
+            InsufficientAddressCapacityException, ResourceAllocationException, ResourceUnavailableException {
+        int port = CLUSTER_NODES_DEFAULT_START_SSH_PORT;
+        IpAddress address = getVpcTierKubernetesPublicIp(network);
+        if (address != null) {
+            return new Pair<>(address.getAddress().addr(), port);
+        }
+        if (acquireNewPublicIpForVpcTierIfNeeded) {
+            address = acquireVpcTierKubernetesPublicIp(network);
+            if (address != null) {
+                return new Pair<>(address.getAddress().addr(), port);
+            }
+        }
+        logger.warn(String.format("No public IP found for the VPC tier: %s, Kubernetes cluster : %s", network, kubernetesCluster.getName()));
+        return new Pair<>(null, port);
+    }
+
+    protected Pair<String, Integer> getKubernetesClusterServerIpSshPort(UserVm controlVm, boolean acquireNewPublicIpForVpcTierIfNeeded) throws
+            InsufficientAddressCapacityException, ResourceAllocationException, ResourceUnavailableException {
         int port = CLUSTER_NODES_DEFAULT_START_SSH_PORT;
         KubernetesClusterDetailsVO detail = kubernetesClusterDetailsDao.findDetail(kubernetesCluster.getId(), ApiConstants.EXTERNAL_LOAD_BALANCER_IP_ADDRESS);
         if (detail != null && StringUtils.isNotEmpty(detail.getValue())) {
@@ -337,33 +425,28 @@ public class KubernetesClusterActionWorker {
         }
         Network network = networkDao.findById(kubernetesCluster.getNetworkId());
         if (network == null) {
-            LOGGER.warn(String.format("Network for Kubernetes cluster : %s cannot be found", kubernetesCluster.getName()));
+            logger.warn(String.format("Network for Kubernetes cluster : %s cannot be found", kubernetesCluster.getName()));
             return new Pair<>(null, port);
+        }
+        if (network.getVpcId() != null) {
+            return getKubernetesClusterServerIpSshPortForVpcTier(network, acquireNewPublicIpForVpcTierIfNeeded);
         }
         if (Network.GuestType.Isolated.equals(network.getGuestType())) {
-            List<? extends IpAddress> addresses = networkModel.listPublicIpsAssignedToGuestNtwk(network.getId(), true);
-            if (CollectionUtils.isEmpty(addresses)) {
-                LOGGER.warn(String.format("No public IP addresses found for network : %s, Kubernetes cluster : %s", network.getName(), kubernetesCluster.getName()));
-                return new Pair<>(null, port);
-            }
-            for (IpAddress address : addresses) {
-                if (address.isSourceNat()) {
-                    return new Pair<>(address.getAddress().addr(), port);
-                }
-            }
-            LOGGER.warn(String.format("No source NAT IP addresses found for network : %s, Kubernetes cluster : %s", network.getName(), kubernetesCluster.getName()));
-            return new Pair<>(null, port);
+            return getKubernetesClusterServerIpSshPortForIsolatedNetwork(network);
         } else if (Network.GuestType.Shared.equals(network.getGuestType())) {
-            port = 22;
-            controlVm = fetchControlVmIfMissing(controlVm);
-            if (controlVm == null) {
-                LOGGER.warn(String.format("Unable to retrieve control VM for Kubernetes cluster : %s", kubernetesCluster.getName()));
-                return new Pair<>(null, port);
-            }
-            return new Pair<>(controlVm.getPrivateIpAddress(), port);
+            return getKubernetesClusterServerIpSshPortForSharedNetwork(controlVm);
         }
-        LOGGER.warn(String.format("Unable to retrieve server IP address for Kubernetes cluster : %s", kubernetesCluster.getName()));
+        logger.warn(String.format("Unable to retrieve server IP address for Kubernetes cluster : %s", kubernetesCluster.getName()));
         return  new Pair<>(null, port);
+    }
+
+    protected Pair<String, Integer> getKubernetesClusterServerIpSshPort(UserVm controlVm) {
+        try {
+            return getKubernetesClusterServerIpSshPort(controlVm, false);
+        } catch (InsufficientAddressCapacityException | ResourceAllocationException | ResourceUnavailableException e) {
+            logger.debug("This exception should not have occurred", e);
+        }
+        return new Pair<>(null, CLUSTER_NODES_DEFAULT_START_SSH_PORT);
     }
 
     protected void attachIsoKubernetesVMs(List<UserVm> clusterVMs, final KubernetesSupportedVersion kubernetesSupportedVersion) throws CloudRuntimeException {
@@ -393,8 +476,8 @@ public class KubernetesClusterActionWorker {
         for (UserVm vm : clusterVMs) {
             try {
                 templateService.attachIso(iso.getId(), vm.getId(), true);
-                if (LOGGER.isInfoEnabled()) {
-                    LOGGER.info(String.format("Attached binaries ISO for VM : %s in cluster: %s", vm.getDisplayName(), kubernetesCluster.getName()));
+                if (logger.isInfoEnabled()) {
+                    logger.info(String.format("Attached binaries ISO for VM : %s in cluster: %s", vm.getDisplayName(), kubernetesCluster.getName()));
                 }
             } catch (CloudRuntimeException ex) {
                 logTransitStateAndThrow(Level.ERROR, String.format("Failed to attach binaries ISO for VM : %s in the Kubernetes cluster name: %s", vm.getDisplayName(), kubernetesCluster.getName()), kubernetesCluster.getId(), failedEvent, ex);
@@ -412,15 +495,15 @@ public class KubernetesClusterActionWorker {
             try {
                 result = templateService.detachIso(vm.getId(), true);
             } catch (CloudRuntimeException ex) {
-                LOGGER.warn(String.format("Failed to detach binaries ISO from VM : %s in the Kubernetes cluster : %s ", vm.getDisplayName(), kubernetesCluster.getName()), ex);
+                logger.warn(String.format("Failed to detach binaries ISO from VM : %s in the Kubernetes cluster : %s ", vm.getDisplayName(), kubernetesCluster.getName()), ex);
             }
             if (result) {
-                if (LOGGER.isInfoEnabled()) {
-                    LOGGER.info(String.format("Detached Kubernetes binaries from VM : %s in the Kubernetes cluster : %s", vm.getDisplayName(), kubernetesCluster.getName()));
+                if (logger.isInfoEnabled()) {
+                    logger.info(String.format("Detached Kubernetes binaries from VM : %s in the Kubernetes cluster : %s", vm.getDisplayName(), kubernetesCluster.getName()));
                 }
                 continue;
             }
-            LOGGER.warn(String.format("Failed to detach binaries ISO from VM : %s in the Kubernetes cluster : %s ", vm.getDisplayName(), kubernetesCluster.getName()));
+            logger.warn(String.format("Failed to detach binaries ISO from VM : %s in the Kubernetes cluster : %s ", vm.getDisplayName(), kubernetesCluster.getName()));
         }
     }
 
@@ -463,7 +546,7 @@ public class KubernetesClusterActionWorker {
         try {
             return _stateMachine.transitTo(kubernetesCluster, e, null, kubernetesClusterDao);
         } catch (NoTransitionException nte) {
-            LOGGER.warn(String.format("Failed to transition state of the Kubernetes cluster : %s in state %s on event %s",
+            logger.warn(String.format("Failed to transition state of the Kubernetes cluster : %s in state %s on event %s",
                 kubernetesCluster.getName(), kubernetesCluster.getState().toString(), e.toString()), nte);
             return false;
         }
@@ -488,7 +571,7 @@ public class KubernetesClusterActionWorker {
             return result.first();
         } catch (Exception e) {
             String msg = String.format("Failed to add cloudstack-secret to Kubernetes cluster: %s", kubernetesCluster.getName());
-            LOGGER.warn(msg, e);
+            logger.warn(msg, e);
         }
         return false;
     }
@@ -502,7 +585,7 @@ public class KubernetesClusterActionWorker {
             writer.write(data);
             writer.close();
         } catch (IOException e) {
-            logAndThrow(Level.ERROR, String.format("Kubernetes Cluster %s : Failed to to fetch script %s",
+            logAndThrow(Level.ERROR, String.format("Kubernetes Cluster %s : Failed to fetch script %s",
                 kubernetesCluster.getName(), filename), e);
         }
         return file;

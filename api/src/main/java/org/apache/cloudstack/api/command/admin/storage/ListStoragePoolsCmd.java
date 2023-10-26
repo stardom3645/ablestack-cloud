@@ -16,7 +16,6 @@
 // under the License.
 package org.apache.cloudstack.api.command.admin.storage;
 
-import org.apache.log4j.Logger;
 
 import org.apache.cloudstack.api.APICommand;
 import org.apache.cloudstack.api.ApiCommandResourceType;
@@ -32,7 +31,6 @@ import org.apache.cloudstack.api.response.ZoneResponse;
 @APICommand(name = "listStoragePools", description = "Lists storage pools.", responseObject = StoragePoolResponse.class,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class ListStoragePoolsCmd extends BaseListCmd {
-    public static final Logger s_logger = Logger.getLogger(ListStoragePoolsCmd.class.getName());
 
 
     /////////////////////////////////////////////////////
@@ -66,6 +64,9 @@ public class ListStoragePoolsCmd extends BaseListCmd {
     @Parameter(name = ApiConstants.SCOPE, type = CommandType.STRING, entityType = StoragePoolResponse.class, description = "the ID of the storage pool")
     private String scope;
 
+    @Parameter(name = ApiConstants.STATUS, type = CommandType.STRING, description = "the status of the storage pool")
+    private String status;
+
     /////////////////////////////////////////////////////
     /////////////////// Accessors ///////////////////////
     /////////////////////////////////////////////////////
@@ -94,6 +95,10 @@ public class ListStoragePoolsCmd extends BaseListCmd {
         return zoneId;
     }
 
+    public String getStatus() {
+        return status;
+    }
+
     public Long getId() {
         return id;
     }
@@ -101,7 +106,7 @@ public class ListStoragePoolsCmd extends BaseListCmd {
     public void setId(Long id) {
         this.id = id;
     }
-/////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////
     /////////////// API Implementation///////////////////
     /////////////////////////////////////////////////////
 

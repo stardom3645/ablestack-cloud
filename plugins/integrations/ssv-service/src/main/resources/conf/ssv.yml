@@ -18,9 +18,14 @@
 
 ---
 write_files:
-- path: /works/works_userdata.json
+- path: /ssv/ssv_userdata.json
   encoding: b64
   permissions: 0755
   owner: root:root
   content: |
-    {{ works_encode }}
+    {{ ssv_encode }}
+
+runcmd:
+- sudo mkdir /iso
+- sudo mount /dev/cdrom /iso
+- sudo sh /iso/ssv_main.sh

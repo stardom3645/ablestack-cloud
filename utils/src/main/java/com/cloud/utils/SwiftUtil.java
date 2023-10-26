@@ -32,16 +32,17 @@ import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 
 import org.apache.commons.codec.binary.Hex;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import com.cloud.utils.exception.CloudRuntimeException;
 import com.cloud.utils.script.OutputInterpreter;
 import com.cloud.utils.script.Script;
 
 public class SwiftUtil {
-    private static Logger logger = Logger.getLogger(SwiftUtil.class);
+    private static Logger LOGGER = LogManager.getLogger(SwiftUtil.class);
     protected static final long SWIFT_MAX_SIZE = 5L * 1024L * 1024L * 1024L;
-    private static final String HMAC_SHA1_ALGORITHM = "HmacSHA1";
+    private static final String HMAC_SHA256_ALGORITHM = "HmacSHA256";
     private static final String CD_SRC = "cd %s;";
     private static final String SWIFT_CMD= "/usr/bin/python %s -A %s -U %s:%s -K %s %s";
     private static final String WITH_STORAGE_POLICY = " --storage-policy \"%s\"";
@@ -63,14 +64,14 @@ public class SwiftUtil {
     private static String getSwiftCLIPath() {
         String swiftCLI = Script.findScript("scripts/storage/secondary", "swift");
         if (swiftCLI == null) {
-            logger.debug("Can't find swift cli at scripts/storage/secondary/swift");
+            LOGGER.debug("Can't find swift cli at scripts/storage/secondary/swift");
             throw new CloudRuntimeException("Can't find swift cli at scripts/storage/secondary/swift");
         }
         return swiftCLI;
     }
 
     public static boolean postMeta(SwiftClientCfg cfg, String container, String object, Map<String, String> metas) {
-        Script command = new Script("/bin/bash", logger);
+        Script command = new Script("/bin/bash", LOGGER);
         command.add("-c");
         command.add(getSwiftObjectCmd(cfg, getSwiftCLIPath(),"post", container, object) + getMeta(metas));
 
@@ -87,7 +88,7 @@ public class SwiftUtil {
             fileName = srcFile.getName();
         }
 
-        Script command = new Script("/bin/bash", logger);
+        Script command = new Script("/bin/bash", LOGGER);
         command.add("-c");
         command.add(String.format(CD_SRC, srcFile.getParent())+getUploadObjectCommand(cfg, getSwiftCLIPath(), container,fileName, srcFile.length()));
 
@@ -118,7 +119,7 @@ public class SwiftUtil {
             swiftCmdBuilder.append(rFilename);
         }
 
-        Script command = new Script("/bin/bash", logger);
+        Script command = new Script("/bin/bash", LOGGER);
         command.add("-c");
         command.add(swiftCmdBuilder.toString());
 
@@ -129,10 +130,10 @@ public class SwiftUtil {
         } else {
             if (result != null) {
                 String errMsg = "swiftList failed , err=" + result;
-                logger.debug("Failed to list " + errMsg);
+                LOGGER.debug("Failed to list " + errMsg);
             } else {
                 String errMsg = "swiftList failed, no lines returns";
-                logger.debug("Failed to list " + errMsg);
+                LOGGER.debug("Failed to list " + errMsg);
             }
         }
         return new String[0];
@@ -149,7 +150,7 @@ public class SwiftUtil {
             destFilePath = destDirectory.getAbsolutePath();
         }
 
-        Script command = new Script("/bin/bash", logger);
+        Script command = new Script("/bin/bash", LOGGER);
         command.add("-c");
         command.add(getSwiftObjectCmd(cfg, getSwiftCLIPath(), "download", container, srcPath)+" -o " + destFilePath);
 
@@ -157,7 +158,7 @@ public class SwiftUtil {
         String result = command.execute(parser);
         if (result != null) {
             String errMsg = "swiftDownload failed  err=" + result;
-            logger.debug(errMsg);
+            LOGGER.debug(errMsg);
             throw new CloudRuntimeException("failed to get object: " + swiftPath);
         }
         if (parser.getLines() != null) {
@@ -165,7 +166,7 @@ public class SwiftUtil {
             for (String line : lines) {
                 if (line.contains("Errno") || line.contains("failed")) {
                     String errMsg = "swiftDownload failed , err=" + Arrays.toString(lines);
-                    logger.debug(errMsg);
+                    LOGGER.debug(errMsg);
                     throw new CloudRuntimeException("Failed to get object: " + swiftPath);
                 }
             }
@@ -175,7 +176,7 @@ public class SwiftUtil {
 
 
     public static boolean deleteObject(SwiftClientCfg cfg, String path) {
-        Script command = new Script("/bin/bash", logger);
+        Script command = new Script("/bin/bash", LOGGER);
         command.add("-c");
 
         String[] paths = splitSwiftPath(path);
@@ -222,7 +223,7 @@ public class SwiftUtil {
             return tempUrl;
 
         } catch (Exception e) {
-            logger.error(e.getMessage());
+            LOGGER.error(e.getMessage());
             throw new CloudRuntimeException(e.getMessage());
         }
 
@@ -231,8 +232,8 @@ public class SwiftUtil {
     static String calculateRFC2104HMAC(String data, String key)
             throws SignatureException, NoSuchAlgorithmException, InvalidKeyException {
 
-        SecretKeySpec signingKey = new SecretKeySpec(key.getBytes(), HMAC_SHA1_ALGORITHM);
-        Mac mac = Mac.getInstance(HMAC_SHA1_ALGORITHM);
+        SecretKeySpec signingKey = new SecretKeySpec(key.getBytes(), HMAC_SHA256_ALGORITHM);
+        Mac mac = Mac.getInstance(HMAC_SHA256_ALGORITHM);
         mac.init(signingKey);
         return toHexString(mac.doFinal(data.getBytes()));
 

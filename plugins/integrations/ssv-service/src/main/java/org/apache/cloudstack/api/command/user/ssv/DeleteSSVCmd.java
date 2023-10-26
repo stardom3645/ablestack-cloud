@@ -28,7 +28,6 @@ import org.apache.cloudstack.api.ServerApiException;
 import org.apache.cloudstack.api.response.SSVResponse;
 import org.apache.cloudstack.api.response.SuccessResponse;
 import org.apache.cloudstack.context.CallContext;
-import org.apache.log4j.Logger;
 
 import com.cloud.exception.ConcurrentOperationException;
 import com.cloud.ssv.SSV;
@@ -37,12 +36,11 @@ import com.cloud.ssv.SSVService;
 import com.cloud.utils.exception.CloudRuntimeException;
 
 @APICommand(name = DeleteSSVCmd.APINAME,
-        description = "Deletes a Desktop cluster",
+        description = "Deletes a Shared Storage VM",
         responseObject = SuccessResponse.class,
         entityType = {SSV.class},
         authorized = {RoleType.Admin, RoleType.ResourceAdmin, RoleType.DomainAdmin, RoleType.User})
 public class DeleteSSVCmd extends BaseAsyncCmd {
-    public static final Logger LOGGER = Logger.getLogger(DeleteSSVCmd.class.getName());
     public static final String APINAME = "deleteSSV";
 
     @Inject
@@ -56,7 +54,7 @@ public class DeleteSSVCmd extends BaseAsyncCmd {
             type = CommandType.UUID,
             entityType = SSVResponse.class,
             required = true,
-            description = "the ID of the Desktop cluster")
+            description = "the ID of the Shared Storage VM")
     private Long id;
 
     /////////////////////////////////////////////////////
@@ -75,7 +73,7 @@ public class DeleteSSVCmd extends BaseAsyncCmd {
     public void execute() throws ServerApiException, ConcurrentOperationException {
         try {
             if (!ssvService.deleteSSV(id)) {
-                throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, String.format("Failed to delete Desktop cluster ID: %d", getId()));
+                throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, String.format("Failed to delete Shared Storage VM ID: %d", getId()));
             }
             SuccessResponse response = new SuccessResponse(getCommandName());
             setResponseObject(response);
@@ -102,10 +100,10 @@ public class DeleteSSVCmd extends BaseAsyncCmd {
 
     @Override
     public String getEventDescription() {
-        String description = "Deleting Desktop cluster";
-        SSV cluster = _entityMgr.findById(SSV.class, getId());
-        if (cluster != null) {
-            description += String.format(" ID: %s", cluster.getUuid());
+        String description = "Deleting Shared Storage VM";
+        SSV ssv = _entityMgr.findById(SSV.class, getId());
+        if (ssv != null) {
+            description += String.format(" ID: %s", ssv.getUuid());
         } else {
             description += String.format(" ID: %d", getId());
         }

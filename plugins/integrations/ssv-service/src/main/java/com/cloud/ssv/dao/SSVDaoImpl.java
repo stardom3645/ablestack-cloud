@@ -31,32 +31,22 @@ import com.cloud.utils.db.TransactionLegacy;
 public class SSVDaoImpl extends GenericDaoBase<SSVVO, Long> implements SSVDao {
 
     private final SearchBuilder<SSVVO> AccountIdSearch;
-    private final SearchBuilder<SSVVO> GarbageCollectedSearch;
     private final SearchBuilder<SSVVO> StateSearch;
-    private final SearchBuilder<SSVVO> SameNetworkSearch;
-    private final SearchBuilder<SSVVO> DesktopVersionSearch;
+    // private final SearchBuilder<SSVVO> SameNetworkSearch;
 
     public SSVDaoImpl() {
         AccountIdSearch = createSearchBuilder();
         AccountIdSearch.and("account", AccountIdSearch.entity().getAccountId(), SearchCriteria.Op.EQ);
         AccountIdSearch.done();
 
-        GarbageCollectedSearch = createSearchBuilder();
-        GarbageCollectedSearch.and("gc", GarbageCollectedSearch.entity().isCheckForGc(), SearchCriteria.Op.EQ);
-        GarbageCollectedSearch.and("state", GarbageCollectedSearch.entity().getState(), SearchCriteria.Op.EQ);
-        GarbageCollectedSearch.done();
-
         StateSearch = createSearchBuilder();
         StateSearch.and("state", StateSearch.entity().getState(), SearchCriteria.Op.EQ);
         StateSearch.done();
 
-        SameNetworkSearch = createSearchBuilder();
-        SameNetworkSearch.and("network_id", SameNetworkSearch.entity().getNetworkId(), SearchCriteria.Op.EQ);
-        SameNetworkSearch.done();
+        // SameNetworkSearch = createSearchBuilder();
+        // SameNetworkSearch.and("network_id", SameNetworkSearch.entity().getNetworkId(), SearchCriteria.Op.EQ);
+        // SameNetworkSearch.done();
 
-        DesktopVersionSearch = createSearchBuilder();
-        DesktopVersionSearch.and("desktopVersionId", DesktopVersionSearch.entity().getSsvId(), SearchCriteria.Op.EQ);
-        DesktopVersionSearch.done();
     }
 
     @Override
@@ -64,14 +54,6 @@ public class SSVDaoImpl extends GenericDaoBase<SSVVO, Long> implements SSVDao {
         SearchCriteria<SSVVO> sc = AccountIdSearch.create();
         sc.setParameters("account", accountId);
         return listBy(sc, null);
-    }
-
-    @Override
-    public List<SSVVO> findSSVsToGarbageCollect() {
-        SearchCriteria<SSVVO> sc = GarbageCollectedSearch.create();
-        sc.setParameters("gc", true);
-        sc.setParameters("state", SSV.State.Destroying);
-        return listBy(sc);
     }
 
     @Override
@@ -88,25 +70,19 @@ public class SSVDaoImpl extends GenericDaoBase<SSVVO, Long> implements SSVDao {
         TransactionLegacy txn = TransactionLegacy.currentTxn();
         txn.start();
 
-        SSVVO ccVo = (SSVVO)vo;
-        ccVo.setState(nextState);
-        super.update(ccVo.getId(), ccVo);
+        SSVVO ssvvo = (SSVVO)vo;
+        ssvvo.setState(nextState);
+        super.update(ssvvo.getId(), ssvvo);
 
         txn.commit();
         return true;
     }
 
-    @Override
-    public List<SSVVO> listByNetworkId(long networkId) {
-        SearchCriteria<SSVVO> sc = SameNetworkSearch.create();
-        sc.setParameters("network_id", networkId);
-        return this.listBy(sc);
-    }
+    // @Override
+    // public List<SSVVO> listByNetworkId(long networkId) {
+    //     SearchCriteria<SSVVO> sc = SameNetworkSearch.create();
+    //     sc.setParameters("network_id", networkId);
+    //     return this.listBy(sc);
+    // }
 
-    @Override
-    public List<SSVVO> listAllByDesktopVersion(long desktopVersionId) {
-        SearchCriteria<SSVVO> sc = DesktopVersionSearch.create();
-        sc.setParameters("desktopVersionId", desktopVersionId);
-        return this.listBy(sc);
-    }
 }

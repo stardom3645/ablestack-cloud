@@ -23,6 +23,9 @@ import java.lang.management.MemoryMXBean;
 import java.lang.management.RuntimeMXBean;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -37,13 +40,21 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.TimeZone;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 
 import javax.inject.Inject;
 
+import com.cloud.event.ActionEventUtils;
+import com.cloud.event.EventTypes;
+import com.cloud.event.EventVO;
+import com.cloud.utils.db.TransactionLegacy;
+import org.apache.cloudstack.context.CallContext;
 import org.apache.cloudstack.engine.subsystem.api.storage.DataStore;
 import org.apache.cloudstack.engine.subsystem.api.storage.DataStoreManager;
 import org.apache.cloudstack.engine.subsystem.api.storage.DataStoreProvider;
@@ -67,7 +78,6 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateUtils;
-import org.apache.log4j.Logger;
 import org.influxdb.BatchOptions;
 import org.influxdb.InfluxDB;
 import org.influxdb.InfluxDBFactory;
@@ -78,6 +88,7 @@ import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Component;
 
 import com.cloud.agent.AgentManager;
+import com.cloud.alert.AlertManager;
 import com.cloud.agent.api.Answer;
 import com.cloud.agent.api.GetStorageStatsCommand;
 import com.cloud.agent.api.HostStatsEntry;
@@ -96,6 +107,7 @@ import com.cloud.cluster.ManagementServerHostVO;
 import com.cloud.cluster.ManagementServerStatusVO;
 import com.cloud.cluster.dao.ManagementServerHostDao;
 import com.cloud.cluster.dao.ManagementServerStatusDao;
+import com.cloud.configuration.Config;
 import com.cloud.dc.Vlan.VlanType;
 import com.cloud.dc.VlanVO;
 import com.cloud.dc.dao.ClusterDao;
@@ -213,7 +225,6 @@ public class StatsCollector extends ManagerBase implements ComponentMethodInterc
         }
     }
 
-    private static final Logger LOGGER = Logger.getLogger(StatsCollector.class);
 
     private static final int UNDEFINED_PORT_VALUE = -1;
 
@@ -251,6 +262,12 @@ public class StatsCollector extends ManagerBase implements ComponentMethodInterc
     private static final String INFLUXDB_HOST_MEASUREMENT = "host_stats";
     private static final String INFLUXDB_VM_MEASUREMENT = "vm_stats";
 
+    private static final ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
+    private static final AtomicReference<CompletableFuture<?>> currentTask = new AtomicReference<>(null);
+    private static final AtomicBoolean isTaskCancelled = new AtomicBoolean(false);
+
+    private static Boolean DELETE_EVENT_ACTIVE = false;
+
     public static final ConfigKey<Integer> MANAGEMENT_SERVER_STATUS_COLLECTION_INTERVAL = new ConfigKey<>("Advanced",
             Integer.class, "management.server.stats.interval", "60",
             "Time interval in seconds, for management servers stats collection. Set to <= 0 to disable management servers stats.", false);
@@ -281,7 +298,7 @@ public class StatsCollector extends ManagerBase implements ComponentMethodInterc
                     + "On the other hand, when set to 'false', the VM metrics API will just display the latest metrics collected.", true);
     private static final ConfigKey<Boolean> VM_STATS_INCREMENT_METRICS_IN_MEMORY = new ConfigKey<>("Advanced", Boolean.class, "vm.stats.increment.metrics.in.memory", "true",
             "When set to 'true', VM metrics(NetworkReadKBs, NetworkWriteKBs, DiskWriteKBs, DiskReadKBs, DiskReadIOs and DiskWriteIOs) that are collected from the hypervisor are summed and stored in memory. "
-            + "On the other hand, when set to 'false', the VM metrics API will just display the latest metrics collected.", true);
+                    + "On the other hand, when set to 'false', the VM metrics API will just display the latest metrics collected.", true);
     protected static ConfigKey<Integer> vmStatsMaxRetentionTime = new ConfigKey<>("Advanced", Integer.class, "vm.stats.max.retention.time", "60",
             "The maximum time (in minutes) for keeping VM stats records in the database. The VM stats cleanup process will be disabled if this is set to 0 or less than 0.", true);
 
@@ -352,6 +369,8 @@ public class StatsCollector extends ManagerBase implements ComponentMethodInterc
     private ManagementServerStatusDao managementServerStatusDao;
     @Inject
     VirtualMachineManager virtualMachineManager;
+    @Inject
+    AlertManager _alertMgr;
 
     private final ConcurrentHashMap<String, ManagementServerHostStats> managementServerHostStats = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, Object> dbStats = new ConcurrentHashMap<>();
@@ -450,7 +469,7 @@ public class StatsCollector extends ManagerBase implements ComponentMethodInterc
                 try {
                     externalStatsType = ExternalStatsProtocol.valueOf(externalStatsScheme.toUpperCase());
                 } catch (IllegalArgumentException e) {
-                    LOGGER.error(externalStatsScheme + " is not a valid protocol for external statistics. No statistics will be send.");
+                    logger.error(externalStatsScheme + " is not a valid protocol for external statistics. No statistics will be send.");
                 }
 
                 if (StringUtils.isNotEmpty(uri.getHost())) {
@@ -473,7 +492,7 @@ public class StatsCollector extends ManagerBase implements ComponentMethodInterc
                 }
 
             } catch (URISyntaxException e) {
-                LOGGER.error("Failed to parse external statistics URI: ", e);
+                logger.error("Failed to parse external statistics URI: ", e);
             }
         }
 
@@ -484,7 +503,7 @@ public class StatsCollector extends ManagerBase implements ComponentMethodInterc
         if (vmStatsInterval > 0) {
             _executor.scheduleWithFixedDelay(new VmStatsCollector(), DEFAULT_INITIAL_DELAY, vmStatsInterval, TimeUnit.MILLISECONDS);
         } else {
-            LOGGER.info("Skipping collect VM stats. The global parameter vm.stats.interval is set to 0 or less than 0.");
+            logger.info("Skipping collect VM stats. The global parameter vm.stats.interval is set to 0 or less than 0.");
         }
 
         _executor.scheduleWithFixedDelay(new VmStatsCleaner(), DEFAULT_INITIAL_DELAY, 60000L, TimeUnit.MILLISECONDS);
@@ -504,26 +523,26 @@ public class StatsCollector extends ManagerBase implements ComponentMethodInterc
 
         if (vmDiskStatsInterval.value() > 0) {
             if (vmDiskStatsInterval.value() < vmDiskStatsIntervalMin.value()) {
-                LOGGER.debug("vm.disk.stats.interval - " + vmDiskStatsInterval.value() + " is smaller than vm.disk.stats.interval.min - " + vmDiskStatsIntervalMin.value()
+                logger.debug("vm.disk.stats.interval - " + vmDiskStatsInterval.value() + " is smaller than vm.disk.stats.interval.min - " + vmDiskStatsIntervalMin.value()
                         + ", so use vm.disk.stats.interval.min");
                 _executor.scheduleAtFixedRate(new VmDiskStatsTask(), vmDiskStatsIntervalMin.value(), vmDiskStatsIntervalMin.value(), TimeUnit.SECONDS);
             } else {
                 _executor.scheduleAtFixedRate(new VmDiskStatsTask(), vmDiskStatsInterval.value(), vmDiskStatsInterval.value(), TimeUnit.SECONDS);
             }
         } else {
-            LOGGER.debug("vm.disk.stats.interval - " + vmDiskStatsInterval.value() + " is 0 or less than 0, so not scheduling the vm disk stats thread");
+            logger.debug("vm.disk.stats.interval - " + vmDiskStatsInterval.value() + " is 0 or less than 0, so not scheduling the vm disk stats thread");
         }
 
         if (vmNetworkStatsInterval.value() > 0) {
             if (vmNetworkStatsInterval.value() < vmNetworkStatsIntervalMin.value()) {
-                LOGGER.debug("vm.network.stats.interval - " + vmNetworkStatsInterval.value() + " is smaller than vm.network.stats.interval.min - "
+                logger.debug("vm.network.stats.interval - " + vmNetworkStatsInterval.value() + " is smaller than vm.network.stats.interval.min - "
                         + vmNetworkStatsIntervalMin.value() + ", so use vm.network.stats.interval.min");
                 _executor.scheduleAtFixedRate(new VmNetworkStatsTask(), vmNetworkStatsIntervalMin.value(), vmNetworkStatsIntervalMin.value(), TimeUnit.SECONDS);
             } else {
                 _executor.scheduleAtFixedRate(new VmNetworkStatsTask(), vmNetworkStatsInterval.value(), vmNetworkStatsInterval.value(), TimeUnit.SECONDS);
             }
         } else {
-            LOGGER.debug("vm.network.stats.interval - " + vmNetworkStatsInterval.value() + " is 0 or less than 0, so not scheduling the vm network stats thread");
+            logger.debug("vm.network.stats.interval - " + vmNetworkStatsInterval.value() + " is 0 or less than 0, so not scheduling the vm network stats thread");
         }
 
         if (volumeStatsInterval > 0) {
@@ -565,7 +584,7 @@ public class StatsCollector extends ManagerBase implements ComponentMethodInterc
             _dailyOrHourly = false;
         }
         if (_usageAggregationRange < UsageUtils.USAGE_AGGREGATION_RANGE_MIN) {
-            LOGGER.warn("Usage stats job aggregation range is to small, using the minimum value of " + UsageUtils.USAGE_AGGREGATION_RANGE_MIN);
+            logger.warn("Usage stats job aggregation range is to small, using the minimum value of " + UsageUtils.USAGE_AGGREGATION_RANGE_MIN);
             _usageAggregationRange = UsageUtils.USAGE_AGGREGATION_RANGE_MIN;
         }
 
@@ -576,7 +595,7 @@ public class StatsCollector extends ManagerBase implements ComponentMethodInterc
         if (mgmtServerVo != null) {
             msId = mgmtServerVo.getId();
         } else {
-            LOGGER.warn(String.format("Cannot find management server with msid [%s]. "
+            logger.warn(String.format("Cannot find management server with msid [%s]. "
                     + "Therefore, VM stats will be recorded with the management server MAC address converted as a long in the mgmt_server_id column.", managementServerNodeId));
         }
     }
@@ -588,8 +607,8 @@ public class StatsCollector extends ManagerBase implements ComponentMethodInterc
                     statusCollectionInterval.value(),
                     TimeUnit.SECONDS);
         } else {
-                LOGGER.debug(String.format("%s - %d is 0 or less, so not scheduling the status collector thread",
-                        statusCollectionInterval.key(), statusCollectionInterval.value()));
+            logger.debug(String.format("%s - %d is 0 or less, so not scheduling the status collector thread",
+                    statusCollectionInterval.key(), statusCollectionInterval.value()));
         }
     }
 
@@ -645,7 +664,7 @@ public class StatsCollector extends ManagerBase implements ComponentMethodInterc
         @Override
         protected void runInContext() {
             try {
-                LOGGER.debug("HostStatsCollector is running...");
+                logger.debug("HostStatsCollector is running...");
 
                 SearchCriteria<HostVO> sc = createSearchCriteriaForHostTypeRoutingStateUpAndNotInMaintenance();
 
@@ -659,7 +678,7 @@ public class StatsCollector extends ManagerBase implements ComponentMethodInterc
                         metrics.put(hostStatsEntry.getHostId(), hostStatsEntry);
                         _hostStats.put(host.getId(), hostStatsEntry);
                     } else {
-                        LOGGER.warn("The Host stats is null for host: " + host.getId());
+                        logger.warn("The Host stats is null for host: " + host.getId());
                     }
                 }
 
@@ -669,7 +688,7 @@ public class StatsCollector extends ManagerBase implements ComponentMethodInterc
 
                 updateGpuEnabledHostsDetails(hosts);
             } catch (Throwable t) {
-                LOGGER.error("Error trying to retrieve host stats", t);
+                logger.error("Error trying to retrieve host stats", t);
             }
         }
 
@@ -701,53 +720,53 @@ public class StatsCollector extends ManagerBase implements ComponentMethodInterc
         }
     }
 
-     class DbCollector extends AbstractStatsCollector {
-         List<Double> loadHistory = new ArrayList<>();
-         DbCollector() {
-             dbStats.put(loadAvarages, loadHistory);
-         }
-         @Override
-         protected void runInContext() {
-             LOGGER.debug(String.format("%s is running...", this.getClass().getSimpleName()));
+    class DbCollector extends AbstractStatsCollector {
+        List<Double> loadHistory = new ArrayList<>();
+        DbCollector() {
+            dbStats.put(loadAvarages, loadHistory);
+        }
+        @Override
+        protected void runInContext() {
+            logger.debug(String.format("%s is running...", this.getClass().getSimpleName()));
 
-             try {
-                 long lastUptime = (dbStats.containsKey(uptime) ? (Long) dbStats.get(uptime) : 0);
-                 long lastQueries = (dbStats.containsKey(queries) ? (Long) dbStats.get(queries) : 0);
-                 getDynamicDataFromDB();
-                 long interval = (Long) dbStats.get(uptime) - lastUptime;
-                 long activity = (Long) dbStats.get(queries) - lastQueries;
-                 loadHistory.add(0, Double.valueOf(activity / interval));
-                 int maxsize = DATABASE_SERVER_LOAD_HISTORY_RETENTION_NUMBER.value();
-                 while (loadHistory.size() > maxsize) {
-                     loadHistory.remove(maxsize - 1);
-                 }
-             } catch (Throwable e) {
-                 // pokemon catch to make sure the thread stays running
-                 LOGGER.error("db statistics collection failed due to " + e.getLocalizedMessage());
-                 if (LOGGER.isDebugEnabled()) {
-                     LOGGER.debug("db statistics collection failed.", e);
-                 }
-             }
-         }
+            try {
+                long lastUptime = (dbStats.containsKey(uptime) ? (Long) dbStats.get(uptime) : 0);
+                long lastQueries = (dbStats.containsKey(queries) ? (Long) dbStats.get(queries) : 0);
+                getDynamicDataFromDB();
+                long interval = (Long) dbStats.get(uptime) - lastUptime;
+                long activity = (Long) dbStats.get(queries) - lastQueries;
+                loadHistory.add(0, Double.valueOf(activity / interval));
+                int maxsize = DATABASE_SERVER_LOAD_HISTORY_RETENTION_NUMBER.value();
+                while (loadHistory.size() > maxsize) {
+                    loadHistory.remove(maxsize - 1);
+                }
+            } catch (Throwable e) {
+                // pokemon catch to make sure the thread stays running
+                logger.error("db statistics collection failed due to " + e.getLocalizedMessage());
+                if (logger.isDebugEnabled()) {
+                    logger.debug("db statistics collection failed.", e);
+                }
+            }
+        }
 
-         private void getDynamicDataFromDB() {
-             Map<String, String> stats = DbUtil.getDbInfo("STATUS", queries, uptime);
-             dbStats.put(collectionTime, new Date());
-             dbStats.put(queries, (Long.valueOf(stats.get(queries))));
-             dbStats.put(uptime, (Long.valueOf(stats.get(uptime))));
-         }
+        private void getDynamicDataFromDB() {
+            Map<String, String> stats = DbUtil.getDbInfo("STATUS", queries, uptime);
+            dbStats.put(collectionTime, new Date());
+            dbStats.put(queries, (Long.valueOf(stats.get(queries))));
+            dbStats.put(uptime, (Long.valueOf(stats.get(uptime))));
+        }
 
 
-         @Override
-         protected Point createInfluxDbPoint(Object metricsObject) {
-             return null;
-         }
-     }
+        @Override
+        protected Point createInfluxDbPoint(Object metricsObject) {
+            return null;
+        }
+    }
 
     class ManagementServerCollector extends AbstractStatsCollector {
         @Override
         protected void runInContext() {
-            LOGGER.debug(String.format("%s is running...", this.getClass().getSimpleName()));
+            logger.debug(String.format("%s is running...", this.getClass().getSimpleName()));
             long msid = ManagementServerNode.getManagementServerId();
             ManagementServerHostVO mshost = null;
             ManagementServerHostStatsEntry hostStatsEntry = null;
@@ -760,14 +779,14 @@ public class StatsCollector extends ManagerBase implements ComponentMethodInterc
                 clusterManager.publishStatus(gson.toJson(hostStatsEntry));
             } catch (Throwable t) {
                 // pokemon catch to make sure the thread stays running
-                LOGGER.error("Error trying to retrieve management server host statistics", t);
+                logger.error("Error trying to retrieve management server host statistics", t);
             }
             try {
                 // send to DB
                 storeStatus(hostStatsEntry, mshost);
             } catch (Throwable t) {
                 // pokemon catch to make sure the thread stays running
-                LOGGER.error("Error trying to store  management server host statistics", t);
+                logger.error("Error trying to store  management server host statistics", t);
             }
         }
 
@@ -777,7 +796,7 @@ public class StatsCollector extends ManagerBase implements ComponentMethodInterc
             }
             ManagementServerStatusVO msStats = managementServerStatusDao.findByMsId(hostStatsEntry.getManagementServerHostUuid());
             if (msStats == null) {
-                LOGGER.info(String.format("creating new status info record for host %s - %s",
+                logger.info(String.format("creating new status info record for host %s - %s",
                         mshost.getName(),
                         hostStatsEntry.getManagementServerHostUuid()));
                 msStats = new ManagementServerStatusVO();
@@ -787,8 +806,8 @@ public class StatsCollector extends ManagerBase implements ComponentMethodInterc
             msStats.setJavaName(hostStatsEntry.getJvmVendor());
             msStats.setJavaVersion(hostStatsEntry.getJvmVersion());
             Date startTime = new Date(hostStatsEntry.getJvmStartTime());
-            if (LOGGER.isTraceEnabled()) {
-                LOGGER.trace(String.format("reporting starttime %s", startTime));
+            if (logger.isTraceEnabled()) {
+                logger.trace(String.format("reporting starttime %s", startTime));
             }
             msStats.setLastJvmStart(startTime);
             msStats.setLastSystemBoot(hostStatsEntry.getSystemBootTime());
@@ -799,14 +818,14 @@ public class StatsCollector extends ManagerBase implements ComponentMethodInterc
         @NotNull
         private ManagementServerHostStatsEntry getDataFrom(ManagementServerHostVO mshost) {
             ManagementServerHostStatsEntry newEntry = new ManagementServerHostStatsEntry();
-            LOGGER.trace("Metrics collection start...");
+            logger.trace("Metrics collection start...");
             newEntry.setManagementServerHostId(mshost.getId());
             newEntry.setManagementServerHostUuid(mshost.getUuid());
             newEntry.setDbLocal(isDbLocal());
             newEntry.setUsageLocal(isUsageLocal());
             retrieveSession(newEntry);
             getJvmDimensions(newEntry);
-            LOGGER.trace("Metrics collection extra...");
+            logger.trace("Metrics collection extra...");
             getRuntimeData(newEntry);
             getMemoryData(newEntry);
             // newEntry must now include a pid!
@@ -816,17 +835,19 @@ public class StatsCollector extends ManagerBase implements ComponentMethodInterc
             getFileSystemData(newEntry);
             getDataBaseStatistics(newEntry, mshost.getMsid());
             gatherAllMetrics(newEntry);
-            LOGGER.trace("Metrics collection end!");
+            checkMngtServerStorageCapacityThreshold(newEntry);
+            checkDBCapacityThreshold(newEntry);
+            logger.trace("Metrics collection end!");
             return newEntry;
         }
 
         private void retrieveSession(ManagementServerHostStatsEntry newEntry) {
             long sessions = ApiSessionListener.getSessionCount();
             newEntry.setSessions(sessions);
-            if (LOGGER.isTraceEnabled()) {
-                LOGGER.trace(String.format("Sessions found in Api %d vs context %d", sessions,ApiSessionListener.getNumberOfSessions()));
+            if (logger.isTraceEnabled()) {
+                logger.trace(String.format("Sessions found in Api %d vs context %d", sessions,ApiSessionListener.getNumberOfSessions()));
             } else {
-                LOGGER.debug("Sessions active: " + sessions);
+                logger.debug("Sessions active: " + sessions);
             }
         }
 
@@ -847,8 +868,8 @@ public class StatsCollector extends ManagerBase implements ComponentMethodInterc
             java.lang.management.OperatingSystemMXBean bean = ManagementFactory.getOperatingSystemMXBean();
             newEntry.setAvailableProcessors(bean.getAvailableProcessors());
             newEntry.setLoadAverage(bean.getSystemLoadAverage());
-            if (LOGGER.isTraceEnabled()) {
-                LOGGER.trace(String.format(
+            if (logger.isTraceEnabled()) {
+                logger.trace(String.format(
                         "Metrics processors - %d , loadavg - %f ",
                         newEntry.getAvailableProcessors(),
                         newEntry.getLoadAverage()));
@@ -865,8 +886,8 @@ public class StatsCollector extends ManagerBase implements ComponentMethodInterc
                 if (newEntry.getSystemMemoryUsed() <= 0) {
                     newEntry.setSystemMemoryUsed(mxBean.getCommittedVirtualMemorySize());
                 }
-                if (LOGGER.isTraceEnabled()) {
-                    LOGGER.trace(String.format("data from 'OperatingSystemMXBean': total mem: %d, free mem: %d, used mem: %d",
+                if (logger.isTraceEnabled()) {
+                    logger.trace(String.format("data from 'OperatingSystemMXBean': total mem: %d, free mem: %d, used mem: %d",
                             newEntry.getSystemMemoryTotal(),
                             newEntry.getSystemMemoryFree(),
                             newEntry.getSystemMemoryUsed()));
@@ -882,8 +903,8 @@ public class StatsCollector extends ManagerBase implements ComponentMethodInterc
             newEntry.setJvmName(mxBean.getName());
             newEntry.setJvmVendor(mxBean.getVmVendor());
             newEntry.setJvmVersion(mxBean.getVmVersion());
-            if (LOGGER.isTraceEnabled()) {
-                LOGGER.trace(String.format(
+            if (logger.isTraceEnabled()) {
+                logger.trace(String.format(
                         "Metrics uptime - %d , starttime - %d",
                         newEntry.getJvmUptime(),
                         newEntry.getJvmStartTime()));
@@ -896,8 +917,8 @@ public class StatsCollector extends ManagerBase implements ComponentMethodInterc
             newEntry.setFreeJvmMemoryBytes(runtime.freeMemory());
             newEntry.setMaxJvmMemoryBytes(runtime.maxMemory());
             //long maxMem = runtime.maxMemory();
-            if (LOGGER.isTraceEnabled()) {
-                LOGGER.trace(String.format(
+            if (logger.isTraceEnabled()) {
+                logger.trace(String.format(
                         "Metrics proc - %d , maxMem - %d , totalMemory - %d , freeMemory - %f ",
                         newEntry.getAvailableProcessors(),
                         newEntry.getMaxJvmMemoryBytes(),
@@ -921,17 +942,17 @@ public class StatsCollector extends ManagerBase implements ComponentMethodInterc
             if (newEntry.getSystemMemoryTotal() == 0) {
                 String mem = Script.runSimpleBashScript("cat /proc/meminfo | grep MemTotal | cut -f 2 -d ':' | tr -d 'a-zA-z '").trim();
                 newEntry.setSystemMemoryTotal(Long.parseLong(mem) * ByteScaleUtils.KiB);
-                LOGGER.info(String.format("system memory from /proc: %d", newEntry.getSystemMemoryTotal()));
+                logger.info(String.format("system memory from /proc: %d", newEntry.getSystemMemoryTotal()));
             }
             if (newEntry.getSystemMemoryFree() == 0) {
                 String free = Script.runSimpleBashScript("cat /proc/meminfo | grep MemFree | cut -f 2 -d ':' | tr -d 'a-zA-z '").trim();
                 newEntry.setSystemMemoryFree(Long.parseLong(free) * ByteScaleUtils.KiB);
-                LOGGER.info(String.format("free memory from /proc: %d", newEntry.getSystemMemoryFree()));
+                logger.info(String.format("free memory from /proc: %d", newEntry.getSystemMemoryFree()));
             }
             if (newEntry.getSystemMemoryUsed() <= 0) {
                 String used = Script.runSimpleBashScript(String.format("ps -o rss= %d", newEntry.getPid()));
                 newEntry.setSystemMemoryUsed(Long.parseLong(used));
-                LOGGER.info(String.format("used memory from /proc: %d", newEntry.getSystemMemoryUsed()));
+                logger.info(String.format("used memory from /proc: %d", newEntry.getSystemMemoryUsed()));
             }
             try {
                 String bootTime = Script.runSimpleBashScript("uptime -s");
@@ -939,7 +960,7 @@ public class StatsCollector extends ManagerBase implements ComponentMethodInterc
                 Date date = formatter.parse(bootTime);
                 newEntry.setSystemBootTime(date);
             } catch (ParseException e) {
-                LOGGER.error("can not retrieve system uptime");
+                logger.error("can not retrieve system uptime");
             }
             String maxuse = Script.runSimpleBashScript(String.format("ps -o vsz= %d", newEntry.getPid()));
             newEntry.setSystemMemoryVirtualSize(Long.parseLong(maxuse) * 1024);
@@ -948,8 +969,8 @@ public class StatsCollector extends ManagerBase implements ComponentMethodInterc
             newEntry.setSystemLoadAverages(getCpuLoads());
 
             newEntry.setSystemCyclesUsage(getSystemCpuUsage());
-            if (LOGGER.isTraceEnabled()) {
-                LOGGER.trace(
+            if (logger.isTraceEnabled()) {
+                logger.trace(
                         String.format("cpu\ncapacities: %f\n     loads: %s ; %s ; %s\n     stats: %d ; %d ; %d",
                                 newEntry.getSystemTotalCpuCycles(),
                                 newEntry.getSystemLoadAverages()[0], newEntry.getSystemLoadAverages()[1], newEntry.getSystemLoadAverages()[2],
@@ -975,8 +996,16 @@ public class StatsCollector extends ManagerBase implements ComponentMethodInterc
         private double getSystemCpuCyclesTotal() {
             String cpucaps = Script.runSimpleBashScript("cat /proc/cpuinfo | grep \"cpu MHz\" | grep \"cpu MHz\" | cut -f 2 -d : | tr -d ' '| tr '\\n' \" \"");
             double totalcpucap = 0;
-            for (String cpucap : cpucaps.split(" ")) {
-                totalcpucap += Double.parseDouble(cpucap);
+            if (StringUtils.isEmpty(cpucaps)) {
+                String totalCpus = Script.runSimpleBashScript("nproc --all| tr '\\n' \" \"");
+                String maxCpuSpeed = Script.runSimpleBashScript("lscpu | egrep 'CPU max MHz' | head -1 | cut -f 2 -d : | tr -d ' '| tr '\\n' \" \"");
+                if (StringUtils.isNotEmpty(totalCpus) && StringUtils.isNotEmpty(maxCpuSpeed)) {
+                    totalcpucap = Double.parseDouble(totalCpus) * Double.parseDouble(maxCpuSpeed);
+                }
+            } else {
+                for (String cpucap : cpucaps.split(" ")) {
+                    totalcpucap += Double.parseDouble(cpucap);
+                }
             }
             return totalcpucap;
         }
@@ -990,8 +1019,152 @@ public class StatsCollector extends ManagerBase implements ComponentMethodInterc
                 logInfoBuilder.append(fileName).append(" using: ").append(du).append('\n').append(df);
             }
             newEntry.setLogInfo(logInfoBuilder.toString());
-            if (LOGGER.isTraceEnabled()) {
-                LOGGER.trace("log stats:\n" + newEntry.getLogInfo());
+            if (logger.isTraceEnabled()) {
+                logger.trace("log stats:\n" + newEntry.getLogInfo());
+            }
+        }
+        private void checkMngtServerStorageCapacityThreshold(ManagementServerHostStatsEntry newEntry) {
+            Set<String> logFileNames = LogUtils.getLogFileNames();
+            int intMngtServerThreshold = 0;
+            int intMngtDfThreshold = 0;
+            String MngtDfThreshold = "";
+            for (String fileName : logFileNames) {
+                String managementServerLocalStorageCapacityThreshold = (_configDao.getValue(Config.ManagementServerLocalStorageCapacityThreshold.key()).replace(".", ""));
+                intMngtServerThreshold = Integer.parseInt(managementServerLocalStorageCapacityThreshold);
+                MngtDfThreshold = (Script.runSimpleBashScript(String.format("df -h %s | grep -v Filesystem | awk '{print $5}'", fileName)).replace("%", ""));
+                intMngtDfThreshold = Integer.parseInt(MngtDfThreshold);
+            }
+            if (intMngtDfThreshold > intMngtServerThreshold) {
+                // Every 720 minutes(= 12 hours)
+                int intervalMinutes = 720;
+                intervalMinutes = intervalMinutes - 1;
+                // Writing queries to check for duplicate data
+                String selectQuery = "SELECT COUNT(*) FROM alert WHERE subject = 'Management server is low on local storage, Threshold (" + MngtDfThreshold + "%) reached' AND TIMESTAMPDIFF(MINUTE, created, CONVERT_TZ(NOW(), '+00:00', '-09:00')) <= "+intervalMinutes+";";
+                TransactionLegacy txn = TransactionLegacy.open("getDatabaseValueString");
+                try {
+                    txn.start();
+                    Connection conn = txn.getConnection();
+                    try (
+                        PreparedStatement pstmt = conn.prepareStatement(selectQuery);
+                        ResultSet rs = pstmt.executeQuery();) {
+                        if (rs.next()) {
+                            String isExistCount = rs.getString(1);
+                            if (isExistCount.equalsIgnoreCase("0")) {
+                                _alertMgr.sendAlert(AlertManager.AlertType.ALERT_TYPE_MANAGMENT_NODE, 0, new Long(0), "Management server is low on local storage, Threshold (" + MngtDfThreshold + "%) reached", "");
+                            }
+                        }
+                        txn.commit();
+                    } catch (Exception e) {
+                        throw new CloudRuntimeException("SQL: Exception:" + e.getMessage(), e);
+                    }
+                }catch (Exception e) {
+                    throw new CloudRuntimeException("SQL: Exception:" + e.getMessage(),e);
+                }
+                finally
+                {
+                    try {
+                        if (txn != null) {
+                            txn.close();
+                        }
+                    }catch(Exception e)
+                    {
+                        throw new CloudRuntimeException("SQL: Exception:" + e.getMessage(), e);
+                    }
+                }
+                if (logger.isDebugEnabled()) {
+                    logger.debug("Management server is low on local storage, Threshold (" +MngtDfThreshold+ "%) reached");
+                }
+            }
+        }
+
+        private void checkDBCapacityThreshold(@NotNull ManagementServerHostStatsEntry newEntry) {
+            // Check mysql server storage capacity exceeds a set threshold
+            String managementServerDatabaseStorageCapacityThreshold = (_configDao.getValue(Config.ManagementServerDatabaseStorageCapacityThreshold.key()).replace(".", ""));
+            int intMysqlThreshold = Integer.parseInt(managementServerDatabaseStorageCapacityThreshold);
+            // Percent free of the Filesystem mounted with that path(var: mysqlDataDir).
+            String mysqlDataDir = "/var/lib/mysql/";
+            String mysqlDuThreshold = (Script.runSimpleBashScript("df -h "+mysqlDataDir+" | awk 'NR==2 {print $5}'").replace("%", ""));
+            int intDfThreshold = Integer.parseInt(mysqlDuThreshold);
+            if (intDfThreshold > intMysqlThreshold) {
+                DELETE_EVENT_ACTIVE = true;
+                // Every 720 minutes(= 12 hours)
+                int intervalMinutes = 720;
+                intervalMinutes = intervalMinutes - 1;
+                // Writing queries to check for duplicate data
+                String selectQuery = "SELECT COUNT(*) FROM alert WHERE subject = 'Database storage capacity, Threshold (" + mysqlDuThreshold + "%) reached. And The oldest records in the event table are deleted every minute until the number falls below the threshold.' AND TIMESTAMPDIFF(MINUTE, created, CONVERT_TZ(NOW(), '+00:00', '-09:00')) <= "+intervalMinutes+";";
+                TransactionLegacy txn = TransactionLegacy.open("getDatabaseValueString");
+                try {
+                    txn.start();
+                    Connection conn = txn.getConnection();
+                    try (
+                            PreparedStatement pstmt = conn.prepareStatement(selectQuery);
+                            ResultSet rs = pstmt.executeQuery();) {
+                        if (rs.next()) {
+                            String isExistCount = rs.getString(1);
+                            if (isExistCount.equalsIgnoreCase("0")) {
+                                _alertMgr.sendAlert(AlertManager.AlertType.ALERT_TYPE_MANAGMENT_NODE, 0, new Long(0), "Database storage capacity, Threshold (" + mysqlDuThreshold + "%) reached. And The oldest records in the event table are deleted every minute until the number falls below the threshold.", "");
+                            }
+                        }
+                    } catch (Exception e) {
+                        throw new CloudRuntimeException("SQL: Exception:" + e.getMessage(), e);
+                    }
+                }catch (Exception e) {
+                    throw new CloudRuntimeException("SQL: Exception:" + e.getMessage(),e);
+                }
+                finally
+                {
+                    try {
+                        if (txn != null) {
+                            txn.close();
+                        }
+                    }catch(Exception e)
+                    {
+                        throw new CloudRuntimeException("SQL: Exception:" + e.getMessage(), e);
+                    }
+                }
+            }
+            // Delete execution threshold (%)
+            int deleteActivationGap = 5;
+            int deleteExecutionIntMysqlThreshold = intMysqlThreshold - deleteActivationGap;
+            if (intDfThreshold >= deleteExecutionIntMysqlThreshold || DELETE_EVENT_ACTIVE == true) {
+                // number of data to delete
+                int deleteCount = 1000;
+                // Writing queries to check for duplicate data
+                String deleteQuery = "DELETE FROM event ORDER BY created ASC LIMIT "+ deleteCount +";";
+                TransactionLegacy txn = TransactionLegacy.open("getDatabaseValueString");
+                try {
+                    txn.start();
+                    Connection conn = txn.getConnection();
+                    try {
+                        // Delete DB Records from event table until storage capacity falls below the threshold
+                        PreparedStatement deleteStmt = conn.prepareStatement(deleteQuery);
+                        deleteStmt.executeUpdate();
+                        txn.commit();
+                        ActionEventUtils.onCompletedActionEvent(CallContext.current().getCallingUserId(), CallContext.current().getCallingAccountId(), EventVO.LEVEL_INFO,
+                                EventTypes.EVENT_LOG_AUTO_DELETED, "The oldest records in the event table are deleted.", new Long(0), null, 0);
+                    } catch (Exception e) {
+                        throw new CloudRuntimeException("SQL: Exception:" + e.getMessage(), e);
+                    }
+                }catch (Exception e) {
+                    throw new CloudRuntimeException("SQL: Exception:" + e.getMessage(),e);
+                }
+                finally
+                {
+                    try {
+                        if (txn != null) {
+                            txn.close();
+                        }
+                    }catch(Exception e)
+                    {
+                        throw new CloudRuntimeException("SQL: Exception:" + e.getMessage(), e);
+                    }
+                }
+                if (logger.isDebugEnabled()) {
+                    logger.debug("Database storage capacity, Threshold (" +mysqlDuThreshold+ "%) reached. And The oldest records in the event table are deleted every minute until the number falls below the threshold.");
+                }
+            }
+            if (intDfThreshold <= deleteExecutionIntMysqlThreshold){
+                DELETE_EVENT_ACTIVE = false;
             }
         }
 
@@ -1000,8 +1173,8 @@ public class StatsCollector extends ManagerBase implements ComponentMethodInterc
             for (String metricName : METRIC_REGISTRY.getGauges().keySet()) {
                 Object value = getMetric(metricName);
                 metricDetails.put(metricName, value);
-                if (LOGGER.isTraceEnabled()) {
-                    LOGGER.trace(String.format("Metrics collection '%s'=%s", metricName, value));
+                if (logger.isTraceEnabled()) {
+                    logger.trace(String.format("Metrics collection '%s'=%s", metricName, value));
                 }
                 // gather what we need from this list
                 extractDetailToField(metricsEntry, metricName, value);
@@ -1045,7 +1218,7 @@ public class StatsCollector extends ManagerBase implements ComponentMethodInterc
                 case "threadsnew.count":
                 case "threadstimed_waiting.count":
                 default:
-                    LOGGER.debug(String.format("not storing detail %s, %s", metricName, value));
+                    logger.debug(String.format("not storing detail %s, %s", metricName, value));
                     /*
                      * 'buffers.direct.capacity'=8192 type=Long
                      * 'buffers.direct.count'=1 type=Long
@@ -1113,7 +1286,7 @@ public class StatsCollector extends ManagerBase implements ComponentMethodInterc
     protected boolean isUsageLocal() {
         boolean local = false;
         String usageInstall = Script.runSimpleBashScript("systemctl status cloudstack-usage | grep \"  Loaded:\"");
-        LOGGER.debug(String.format("usage install: %s", usageInstall));
+        logger.debug(String.format("usage install: %s", usageInstall));
 
         if (StringUtils.isNotBlank(usageInstall)) {
             local = usageInstall.contains("enabled");
@@ -1143,8 +1316,8 @@ public class StatsCollector extends ManagerBase implements ComponentMethodInterc
     protected class ManagementServerStatusAdministrator implements ClusterManager.StatusAdministrator, ClusterManagerListener {
         @Override
         public String newStatus(ClusterServicePdu pdu) {
-            if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug(String.format("StatusUpdate from %s, json: %s", pdu.getSourcePeer(), pdu.getJsonPackage()));
+            if (logger.isDebugEnabled()) {
+                logger.debug(String.format("StatusUpdate from %s, json: %s", pdu.getSourcePeer(), pdu.getJsonPackage()));
             }
 
             ManagementServerHostStatsEntry hostStatsEntry = null;
@@ -1152,9 +1325,9 @@ public class StatsCollector extends ManagerBase implements ComponentMethodInterc
                 hostStatsEntry = gson.fromJson(pdu.getJsonPackage(),new TypeToken<ManagementServerHostStatsEntry>(){}.getType());
                 managementServerHostStats.put(hostStatsEntry.getManagementServerHostUuid(), hostStatsEntry);
             } catch (JsonParseException e) {
-                LOGGER.error("Exception in decoding of other MS hosts status from : " + pdu.getSourcePeer());
-                if (LOGGER.isDebugEnabled()) {
-                    LOGGER.debug("Exception in decoding of other MS hosts status: ", e);
+                logger.error("Exception in decoding of other MS hosts status from : " + pdu.getSourcePeer());
+                if (logger.isDebugEnabled()) {
+                    logger.debug("Exception in decoding of other MS hosts status: ", e);
                 }
             }
             return null;
@@ -1169,14 +1342,14 @@ public class StatsCollector extends ManagerBase implements ComponentMethodInterc
         public void onManagementNodeLeft(List<? extends ManagementServerHost> nodeList, long selfNodeId) {
             // remove the status for those ones
             for (ManagementServerHost node : nodeList) {
-                LOGGER.info(String.format("node %s (%s) at %s (%od) is reported to have left the cluster, invalidating status.",node.getName(), node.getUuid(), node.getServiceIP(), node.getMsid()));
+                logger.info(String.format("node %s (%s) at %s (%od) is reported to have left the cluster, invalidating status.",node.getName(), node.getUuid(), node.getServiceIP(), node.getMsid()));
                 managementServerHostStats.remove(node.getUuid());
             }
         }
 
         @Override
         public void onManagementNodeIsolated() {
-            LOGGER.error(String.format("This management server is reported to be isolated (msid %d", mgmtSrvrId));
+            logger.error(String.format("This management server is reported to be isolated (msid %d", mgmtSrvrId));
             // not sure if anything should be done now.
         }
     }
@@ -1185,7 +1358,7 @@ public class StatsCollector extends ManagerBase implements ComponentMethodInterc
         @Override
         protected void runInContext() {
             try {
-                LOGGER.trace("VmStatsCollector is running...");
+                logger.trace("VmStatsCollector is running...");
 
                 SearchCriteria<HostVO> sc = createSearchCriteriaForHostTypeRoutingStateUpAndNotInMaintenance();
                 List<HostVO> hosts = _hostDao.search(sc, null);
@@ -1226,13 +1399,13 @@ public class StatsCollector extends ManagerBase implements ComponentMethodInterc
                             metrics.clear();
                         }
                     } catch (Exception e) {
-                        LOGGER.debug("Failed to get VM stats for host with ID: " + host.getId());
+                        logger.debug("Failed to get VM stats for host with ID: " + host.getId());
                         continue;
                     }
                 }
 
             } catch (Throwable t) {
-                LOGGER.error("Error trying to retrieve VM stats", t);
+                logger.error("Error trying to retrieve VM stats", t);
             }
         }
 
@@ -1345,7 +1518,7 @@ public class StatsCollector extends ManagerBase implements ComponentMethodInterc
                     //msHost in UP state with min id should run the job
                     ManagementServerHostVO msHost = managementServerHostDao.findOneInUpState(new Filter(ManagementServerHostVO.class, "id", true, 0L, 1L));
                     if (msHost == null || (msHost.getMsid() != mgmtSrvrId)) {
-                        LOGGER.debug("Skipping aggregate disk stats update");
+                        logger.debug("Skipping aggregate disk stats update");
                         scanLock.unlock();
                         return;
                     }
@@ -1365,17 +1538,17 @@ public class StatsCollector extends ManagerBase implements ComponentMethodInterc
                                         _vmDiskStatsDao.update(stat.getId(), stat);
                                     }
                                 }
-                                LOGGER.debug("Successfully updated aggregate vm disk stats");
+                                logger.debug("Successfully updated aggregate vm disk stats");
                             }
                         });
                     } catch (Exception e) {
-                        LOGGER.debug("Failed to update aggregate disk stats", e);
+                        logger.debug("Failed to update aggregate disk stats", e);
                     } finally {
                         scanLock.unlock();
                     }
                 }
             } catch (Exception e) {
-                LOGGER.debug("Exception while trying to acquire disk stats lock", e);
+                logger.debug("Exception while trying to acquire disk stats lock", e);
             } finally {
                 scanLock.releaseRef();
             }
@@ -1383,8 +1556,8 @@ public class StatsCollector extends ManagerBase implements ComponentMethodInterc
     }
 
     private void logLessLatestStatDiscrepancy(String prefix, String hostName, String vmName, long reported, long stored, boolean toHumanReadable) {
-        if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug(String.format("%s that's less than the last one.  Assuming something went wrong and persisting it. Host: %s . VM: %s Reported: %s Stored: %s",
+        if (logger.isDebugEnabled()) {
+            logger.debug(String.format("%s that's less than the last one.  Assuming something went wrong and persisting it. Host: %s . VM: %s Reported: %s Stored: %s",
                     prefix, hostName, vmName, toHumanReadable ? toHumanReadableSize(reported) : reported, toHumanReadable ? toHumanReadableSize(stored) : stored));
         }
     }
@@ -1397,11 +1570,11 @@ public class StatsCollector extends ManagerBase implements ComponentMethodInterc
             ManagementServerHostVO msHost = managementServerHostDao.findOneInUpState(new Filter(ManagementServerHostVO.class, "id", true, 0L, 1L));
             boolean persistVolumeStats = vmDiskStatsRetentionEnabled.value();
             if (msHost == null || (msHost.getMsid() != mgmtSrvrId)) {
-                LOGGER.debug("Skipping collect vm disk stats from hosts");
+                logger.debug("Skipping collect vm disk stats from hosts");
                 return;
             }
             // collect the vm disk statistics(total) from hypervisor. added by weizhou, 2013.03.
-            LOGGER.debug("VmDiskStatsTask is running...");
+            logger.debug("VmDiskStatsTask is running...");
 
             SearchCriteria<HostVO> sc = createSearchCriteriaForHostTypeRoutingStateUpAndNotInMaintenance();
             sc.addAnd("hypervisorType", SearchCriteria.Op.IN, HypervisorType.KVM, HypervisorType.VMware);
@@ -1442,18 +1615,18 @@ public class StatsCollector extends ManagerBase implements ComponentMethodInterc
                                     }
 
                                     if (areAllDiskStatsZero(vmDiskStatEntry)) {
-                                        LOGGER.debug("IO/bytes read and write are all 0. Not updating vm_disk_statistics");
+                                        logger.debug("IO/bytes read and write are all 0. Not updating vm_disk_statistics");
                                         continue;
                                     }
 
                                     if (vmDiskStat_lock == null) {
-                                        LOGGER.warn("unable to find vm disk stats from host for account: " + vm.getAccountId() + " with vmId: " + vm.getId()
+                                        logger.warn("unable to find vm disk stats from host for account: " + vm.getAccountId() + " with vmId: " + vm.getId()
                                                 + " and volumeId:" + volume.getId());
                                         continue;
                                     }
 
                                     if (isCurrentVmDiskStatsDifferentFromPrevious(previousVmDiskStats, vmDiskStat_lock)) {
-                                        LOGGER.debug("vm disk stats changed from the time GetVmDiskStatsCommand was sent. " + "Ignoring current answer. Host: " + host.getName()
+                                        logger.debug("vm disk stats changed from the time GetVmDiskStatsCommand was sent. " + "Ignoring current answer. Host: " + host.getName()
                                                 + " . VM: " + vmDiskStatEntry.getVmName() + " Read(Bytes): " + toHumanReadableSize(vmDiskStatEntry.getBytesRead()) + " write(Bytes): " + toHumanReadableSize(vmDiskStatEntry.getBytesWrite())
                                                 + " Read(IO): " + toHumanReadableSize(vmDiskStatEntry.getIORead()) + " write(IO): " + toHumanReadableSize(vmDiskStatEntry.getIOWrite()));
                                         continue;
@@ -1494,7 +1667,7 @@ public class StatsCollector extends ManagerBase implements ComponentMethodInterc
                         }
                     });
                 } catch (Exception e) {
-                    LOGGER.warn(String.format("Error while collecting vm disk stats from host %s : ", host.getName()), e);
+                    logger.warn(String.format("Error while collecting vm disk stats from host %s : ", host.getName()), e);
                 }
             }
         }
@@ -1507,11 +1680,11 @@ public class StatsCollector extends ManagerBase implements ComponentMethodInterc
             //msHost in UP state with min id should run the job
             ManagementServerHostVO msHost = managementServerHostDao.findOneInUpState(new Filter(ManagementServerHostVO.class, "id", true, 0L, 1L));
             if (msHost == null || (msHost.getMsid() != mgmtSrvrId)) {
-                LOGGER.debug("Skipping collect vm network stats from hosts");
+                logger.debug("Skipping collect vm network stats from hosts");
                 return;
             }
             // collect the vm network statistics(total) from hypervisor
-            LOGGER.debug("VmNetworkStatsTask is running...");
+            logger.debug("VmNetworkStatsTask is running...");
 
             SearchCriteria<HostVO> sc = createSearchCriteriaForHostTypeRoutingStateUpAndNotInMaintenance();
             List<HostVO> hosts = _hostDao.search(sc, null);
@@ -1533,10 +1706,10 @@ public class StatsCollector extends ManagerBase implements ComponentMethodInterc
                                     continue;
                                 UserVmVO userVm = _userVmDao.findById(vmId);
                                 if (userVm == null) {
-                                    LOGGER.debug("Cannot find uservm with id: " + vmId + " , continue");
+                                    logger.debug("Cannot find uservm with id: " + vmId + " , continue");
                                     continue;
                                 }
-                                LOGGER.debug("Now we are updating the user_statistics table for VM: " + userVm.getInstanceName()
+                                logger.debug("Now we are updating the user_statistics table for VM: " + userVm.getInstanceName()
                                         + " after collecting vm network statistics from host: " + host.getName());
                                 for (VmNetworkStats vmNetworkStat : vmNetworkStats) {
                                     VmNetworkStatsEntry vmNetworkStatEntry = (VmNetworkStatsEntry)vmNetworkStat;
@@ -1557,19 +1730,19 @@ public class StatsCollector extends ManagerBase implements ComponentMethodInterc
                                             nic.getIPv4Address(), vmId, "UserVm");
 
                                     if ((vmNetworkStatEntry.getBytesSent() == 0) && (vmNetworkStatEntry.getBytesReceived() == 0)) {
-                                        LOGGER.debug("bytes sent and received are all 0. Not updating user_statistics");
+                                        logger.debug("bytes sent and received are all 0. Not updating user_statistics");
                                         continue;
                                     }
 
                                     if (vmNetworkStat_lock == null) {
-                                        LOGGER.warn("unable to find vm network stats from host for account: " + userVm.getAccountId() + " with vmId: " + userVm.getId()
+                                        logger.warn("unable to find vm network stats from host for account: " + userVm.getAccountId() + " with vmId: " + userVm.getId()
                                                 + " and nicId:" + nic.getId());
                                         continue;
                                     }
 
                                     if (previousvmNetworkStats != null && ((previousvmNetworkStats.getCurrentBytesSent() != vmNetworkStat_lock.getCurrentBytesSent())
                                             || (previousvmNetworkStats.getCurrentBytesReceived() != vmNetworkStat_lock.getCurrentBytesReceived()))) {
-                                        LOGGER.debug("vm network stats changed from the time GetNmNetworkStatsCommand was sent. " + "Ignoring current answer. Host: "
+                                        logger.debug("vm network stats changed from the time GetNmNetworkStatsCommand was sent. " + "Ignoring current answer. Host: "
                                                 + host.getName() + " . VM: " + vmNetworkStatEntry.getVmName() + " Sent(Bytes): " + vmNetworkStatEntry.getBytesSent() + " Received(Bytes): "
                                                 + vmNetworkStatEntry.getBytesReceived());
                                         continue;
@@ -1599,7 +1772,7 @@ public class StatsCollector extends ManagerBase implements ComponentMethodInterc
                         }
                     });
                 } catch (Exception e) {
-                    LOGGER.warn(String.format("Error while collecting vm network stats from host %s : ", host.getName()), e);
+                    logger.warn(String.format("Error while collecting vm network stats from host %s : ", host.getName()), e);
                 }
             }
         }
@@ -1615,7 +1788,7 @@ public class StatsCollector extends ManagerBase implements ComponentMethodInterc
                     List<VolumeVO> volumes = _volsDao.findByPoolId(pool.getId(), null);
                     for (VolumeVO volume : volumes) {
                         if (volume.getFormat() != ImageFormat.QCOW2 && volume.getFormat() != ImageFormat.VHD && volume.getFormat() != ImageFormat.OVA && (volume.getFormat() != ImageFormat.RAW || pool.getPoolType() != Storage.StoragePoolType.PowerFlex)) {
-                            LOGGER.warn("Volume stats not implemented for this format type " + volume.getFormat());
+                            logger.warn("Volume stats not implemented for this format type " + volume.getFormat());
                             break;
                         }
                     }
@@ -1641,12 +1814,12 @@ public class StatsCollector extends ManagerBase implements ComponentMethodInterc
                             }
                         }
                     } catch (Exception e) {
-                        LOGGER.warn("Failed to get volume stats for cluster with ID: " + pool.getClusterId(), e);
+                        logger.warn("Failed to get volume stats for cluster with ID: " + pool.getClusterId(), e);
                         continue;
                     }
                 }
             } catch (Throwable t) {
-                LOGGER.error("Error trying to retrieve volume stats", t);
+                logger.error("Error trying to retrieve volume stats", t);
             }
         }
     }
@@ -1662,8 +1835,8 @@ public class StatsCollector extends ManagerBase implements ComponentMethodInterc
         @Override
         protected void runInContext() {
             try {
-                if (LOGGER.isDebugEnabled()) {
-                    LOGGER.debug("StorageCollector is running...");
+                if (logger.isDebugEnabled()) {
+                    logger.debug("StorageCollector is running...");
                 }
 
                 List<DataStore> stores = _dataStoreMgr.listImageStores();
@@ -1677,14 +1850,14 @@ public class StatsCollector extends ManagerBase implements ComponentMethodInterc
                     GetStorageStatsCommand command = new GetStorageStatsCommand(store.getTO(), nfsVersion);
                     EndPoint ssAhost = _epSelector.select(store);
                     if (ssAhost == null) {
-                        LOGGER.debug("There is no secondary storage VM for secondary storage host " + store.getName());
+                        logger.debug("There is no secondary storage VM for secondary storage host " + store.getName());
                         continue;
                     }
                     long storeId = store.getId();
                     Answer answer = ssAhost.sendMessage(command);
                     if (answer != null && answer.getResult()) {
                         storageStats.put(storeId, (StorageStats)answer);
-                        LOGGER.trace("HostId: " + storeId + " Used: " + toHumanReadableSize(((StorageStats)answer).getByteUsed()) + " Total Available: " + toHumanReadableSize(((StorageStats)answer).getCapacityBytes()));
+                        logger.trace("HostId: " + storeId + " Used: " + toHumanReadableSize(((StorageStats)answer).getByteUsed()) + " Total Available: " + toHumanReadableSize(((StorageStats)answer).getCapacityBytes()));
                     }
                 }
                 _storageStats = storageStats;
@@ -1710,7 +1883,7 @@ public class StatsCollector extends ManagerBase implements ComponentMethodInterc
                                     pool.setCapacityBytes(((StorageStats)answer).getCapacityBytes());
                                     poolNeedsUpdating = true;
                                 } else {
-                                    LOGGER.warn("Not setting capacity bytes, received " + ((StorageStats)answer).getCapacityBytes()  + " capacity for pool ID " + poolId);
+                                    logger.warn("Not setting capacity bytes, received " + ((StorageStats)answer).getCapacityBytes()  + " capacity for pool ID " + poolId);
                                 }
                             }
                             if (pool.getUsedBytes() != ((StorageStats)answer).getByteUsed() && (pool.getStorageProviderName().equalsIgnoreCase(DataStoreProvider.DEFAULT_PRIMARY) || _storageManager.canPoolProvideStorageStats(pool))) {
@@ -1723,14 +1896,14 @@ public class StatsCollector extends ManagerBase implements ComponentMethodInterc
                             }
                         }
                     } catch (StorageUnavailableException e) {
-                        LOGGER.info("Unable to reach " + pool, e);
+                        logger.info("Unable to reach " + pool, e);
                     } catch (Exception e) {
-                        LOGGER.warn("Unable to get stats for " + pool, e);
+                        logger.warn("Unable to get stats for " + pool, e);
                     }
                 }
                 _storagePoolStats = storagePoolStats;
             } catch (Throwable t) {
-                LOGGER.error("Error trying to retrieve storage stats", t);
+                logger.error("Error trying to retrieve storage stats", t);
             }
         }
     }
@@ -1739,20 +1912,20 @@ public class StatsCollector extends ManagerBase implements ComponentMethodInterc
         @Override
         protected void runInContext() {
             try {
-                if (LOGGER.isDebugEnabled()) {
-                    LOGGER.debug("AutoScaling Monitor is running...");
+                if (logger.isDebugEnabled()) {
+                    logger.debug("AutoScaling Monitor is running...");
                 }
                 //msHost in UP state with min id should run the job
                 ManagementServerHostVO msHost = managementServerHostDao.findOneInUpState(new Filter(ManagementServerHostVO.class, "id", true, 0L, 1L));
                 if (msHost == null || (msHost.getMsid() != mgmtSrvrId)) {
-                    LOGGER.debug("Skipping AutoScaling Monitor");
+                    logger.debug("Skipping AutoScaling Monitor");
                     return;
                 }
 
                 _asManager.checkAllAutoScaleVmGroups();
 
             } catch (Throwable t) {
-                LOGGER.error("Error trying to monitor autoscaling", t);
+                logger.error("Error trying to monitor autoscaling", t);
             }
 
         }
@@ -1779,7 +1952,7 @@ public class StatsCollector extends ManagerBase implements ComponentMethodInterc
                 Collection<Object> metricsObjects = metrics.values();
                 List<Point> points = new ArrayList<>();
 
-                LOGGER.debug(String.format("Sending stats to %s host %s:%s", externalStatsType, externalStatsHost, externalStatsPort));
+                logger.debug(String.format("Sending stats to %s host %s:%s", externalStatsType, externalStatsHost, externalStatsPort));
 
                 for (Object metricsObject : metricsObjects) {
                     Point vmPoint = createInfluxDbPoint(metricsObject);
@@ -1806,7 +1979,7 @@ public class StatsCollector extends ManagerBase implements ComponentMethodInterc
         StorageStats imageStoreStats = _storageStats.get(imageStoreId);
 
         if (imageStoreStats == null) {
-            LOGGER.debug(String.format("Stats for image store [%s] not found.", imageStoreId));
+            logger.debug(String.format("Stats for image store [%s] not found.", imageStoreId));
             return false;
         }
 
@@ -1816,13 +1989,13 @@ public class StatsCollector extends ManagerBase implements ComponentMethodInterc
         String readableTotalCapacity = FileUtils.byteCountToDisplaySize((long) totalCapacity);
         String readableUsedCapacity = FileUtils.byteCountToDisplaySize((long) usedCapacity);
 
-        LOGGER.debug(String.format("Verifying image storage [%s]. Capacity: total=[%s], used=[%s], threshold=[%s%%].", imageStoreId, readableTotalCapacity, readableUsedCapacity, threshold * 100));
+        logger.debug(String.format("Verifying image storage [%s]. Capacity: total=[%s], used=[%s], threshold=[%s%%].", imageStoreId, readableTotalCapacity, readableUsedCapacity, threshold * 100));
 
         if (usedCapacity / totalCapacity <= threshold) {
             return true;
         }
 
-        LOGGER.warn(String.format("Image storage [%s] has not enough capacity. Capacity: total=[%s], used=[%s], threshold=[%s%%].", imageStoreId, readableTotalCapacity, readableUsedCapacity, threshold * 100));
+        logger.warn(String.format("Image storage [%s] has not enough capacity. Capacity: total=[%s], used=[%s], threshold=[%s%%].", imageStoreId, readableTotalCapacity, readableUsedCapacity, threshold * 100));
         return false;
     }
 
@@ -1849,12 +2022,12 @@ public class StatsCollector extends ManagerBase implements ComponentMethodInterc
      * Sends VMs metrics to the configured graphite host.
      */
     protected void sendVmMetricsToGraphiteHost(Map<Object, Object> metrics, HostVO host) {
-        LOGGER.debug(String.format("Sending VmStats of host %s to %s host %s:%s", host.getId(), externalStatsType, externalStatsHost, externalStatsPort));
+        logger.debug(String.format("Sending VmStats of host %s to %s host %s:%s", host.getId(), externalStatsType, externalStatsHost, externalStatsPort));
         try {
             GraphiteClient g = new GraphiteClient(externalStatsHost, externalStatsPort);
             g.sendMetrics(metrics);
         } catch (GraphiteException e) {
-            LOGGER.debug("Failed sending VmStats to Graphite host " + externalStatsHost + ":" + externalStatsPort + ": " + e.getMessage());
+            logger.debug("Failed sending VmStats to Graphite host " + externalStatsHost + ":" + externalStatsPort + ": " + e.getMessage());
         }
     }
 
@@ -1893,7 +2066,7 @@ public class StatsCollector extends ManagerBase implements ComponentMethodInterc
                 statsForCurrentIteration.getDiskWriteKBs(), statsForCurrentIteration.getDiskReadIOs(), statsForCurrentIteration.getDiskWriteIOs(),
                 statsForCurrentIteration.getEntityType());
         VmStatsVO vmStatsVO = new VmStatsVO(statsForCurrentIteration.getVmId(), msId, timestamp, gson.toJson(vmStats));
-        LOGGER.trace(String.format("Recording VM stats: [%s].", vmStatsVO.toString()));
+        logger.trace(String.format("Recording VM stats: [%s].", vmStatsVO.toString()));
         vmStatsDao.persist(vmStatsVO);
     }
 
@@ -1924,8 +2097,8 @@ public class StatsCollector extends ManagerBase implements ComponentMethodInterc
      */
     protected void persistVolumeStats(long volumeId, VmDiskStatsEntry statsForCurrentIteration, Hypervisor.HypervisorType hypervisorType, Date timestamp) {
         VolumeStatsVO volumeStatsVO = new VolumeStatsVO(volumeId, msId, timestamp, getVmDiskStatsEntryAsString(statsForCurrentIteration, hypervisorType));
-        if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug(String.format("Recording volume stats: [%s].", volumeStatsVO));
+        if (logger.isDebugEnabled()) {
+            logger.debug(String.format("Recording volume stats: [%s].", volumeStatsVO));
         }
         volumeStatsDao.persist(volumeStatsVO);
     }
@@ -1937,11 +2110,11 @@ public class StatsCollector extends ManagerBase implements ComponentMethodInterc
     protected void cleanUpVirtualMachineStats() {
         Integer maxRetentionTime = vmStatsMaxRetentionTime.value();
         if (maxRetentionTime <= 0) {
-            LOGGER.debug(String.format("Skipping VM stats cleanup. The [%s] parameter [%s] is set to 0 or less than 0.",
+            logger.debug(String.format("Skipping VM stats cleanup. The [%s] parameter [%s] is set to 0 or less than 0.",
                     vmStatsMaxRetentionTime.scope(), vmStatsMaxRetentionTime.toString()));
             return;
         }
-        LOGGER.trace("Removing older VM stats records.");
+        logger.trace("Removing older VM stats records.");
         Date now = new Date();
         Date limit = DateUtils.addMinutes(now, -maxRetentionTime);
         vmStatsDao.removeAllByTimestampLessThan(limit);
@@ -1954,13 +2127,13 @@ public class StatsCollector extends ManagerBase implements ComponentMethodInterc
     protected void cleanUpVolumeStats() {
         Integer maxRetentionTime = vmDiskStatsMaxRetentionTime.value();
         if (maxRetentionTime <= 0) {
-            if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug(String.format("Skipping Volume stats cleanup. The [%s] parameter [%s] is set to 0 or less than 0.",
+            if (logger.isDebugEnabled()) {
+                logger.debug(String.format("Skipping Volume stats cleanup. The [%s] parameter [%s] is set to 0 or less than 0.",
                         vmDiskStatsMaxRetentionTime.scope(), vmDiskStatsMaxRetentionTime.toString()));
             }
             return;
         }
-        LOGGER.trace("Removing older Volume stats records.");
+        logger.trace("Removing older Volume stats records.");
         Date now = new Date();
         Date limit = DateUtils.addMinutes(now, -maxRetentionTime);
         volumeStatsDao.removeAllByTimestampLessThan(limit);
@@ -2120,7 +2293,7 @@ public class StatsCollector extends ManagerBase implements ComponentMethodInterc
     @Override
     public ConfigKey<?>[] getConfigKeys() {
         return new ConfigKey<?>[] {vmDiskStatsInterval, vmDiskStatsIntervalMin, vmNetworkStatsInterval, vmNetworkStatsIntervalMin, StatsTimeout, statsOutputUri,
-            vmStatsIncrementMetrics, vmStatsMaxRetentionTime, vmStatsCollectUserVMOnly, vmDiskStatsRetentionEnabled, vmDiskStatsMaxRetentionTime,
+                vmStatsIncrementMetrics, vmStatsMaxRetentionTime, vmStatsCollectUserVMOnly, vmDiskStatsRetentionEnabled, vmDiskStatsMaxRetentionTime,
                 VM_STATS_INCREMENT_METRICS_IN_MEMORY,
                 MANAGEMENT_SERVER_STATUS_COLLECTION_INTERVAL,
                 DATABASE_SERVER_STATUS_COLLECTION_INTERVAL,

@@ -31,7 +31,7 @@ import javax.persistence.GenerationType;
 import com.cloud.utils.db.GenericDao;
 
 @Entity
-@Table(name = "ssv")
+@Table(name = "ssv_service")
 public class SSVVO implements SSV {
 
     @Id
@@ -48,27 +48,8 @@ public class SSVVO implements SSV {
     @Column(name = "description")
     private String description;
 
-    // @Encrypt
-    // @Column(name = "password")
-    // private String password;
-
     @Column(name = "zone_id")
     private long zoneId;
-
-    @Column(name = "desktop_version_id")
-    private long ssvId;
-
-    @Column(name = "service_offering_id")
-    private long serviceOfferingId;
-
-    @Column(name = "ad_domain_name")
-    private String adDomainName;
-
-    @Column(name = "network_id")
-    private long networkId;
-
-    @Column(name = "access_type")
-    private String accessType;
 
     @Column(name = "domain_id")
     private long domainId;
@@ -76,23 +57,26 @@ public class SSVVO implements SSV {
     @Column(name = "account_id")
     private long accountId;
 
+    @Column(name = "template_id")
+    private long templateId;
+
+    @Column(name = "service_offering_id")
+    private long serviceOfferingId;
+
+    @Column(name = "disk_offering_id")
+    private long diskOfferingId;
+
+    @Column(name = "shared_storage_vm_type")
+    private String sharedStorageVmType;
+
     @Column(name = "state")
     private State  state;
-
-    @Column(name = "dc_ip")
-    private String  dcIp;
-
-    @Column(name = "works_ip")
-    private String  worksIp;
 
     @Column(name = GenericDao.CREATED_COLUMN)
     private Date created;
 
     @Column(name = GenericDao.REMOVED_COLUMN)
     private Date removed;
-
-    @Column(name = "gc")
-    private boolean checkForGc;
 
     @Override
     public long getId() {
@@ -122,6 +106,11 @@ public class SSVVO implements SSV {
     }
 
     @Override
+    public boolean isDisplay() {
+        return true;
+    }
+
+    @Override
     public String getDescription() {
         return description;
     }
@@ -130,15 +119,6 @@ public class SSVVO implements SSV {
         this.description = description;
     }
 
-    // @Override
-    // public String getPassword() {
-    //     return password;
-    // }
-
-    // public void setPassword(String password) {
-    //     this.password = password;
-    // }
-
     @Override
     public long getZoneId() {
         return zoneId;
@@ -146,15 +126,6 @@ public class SSVVO implements SSV {
 
     public void setZoneId(long zoneId) {
         this.zoneId = zoneId;
-    }
-
-    @Override
-    public long getSsvId() {
-        return ssvId;
-    }
-
-    public void setSsvId(long ssvId) {
-        this.ssvId = ssvId;
     }
 
     @Override
@@ -167,30 +138,22 @@ public class SSVVO implements SSV {
     }
 
     @Override
-    public String getAdDomainName() {
-        return adDomainName;
+    public long getTemplateId() {
+        return templateId;
     }
 
-    public void setAdDomainName(String adDomainName) {
-        this.adDomainName = adDomainName;
+    public void setTemplateId(long templateId) {
+        this.templateId = templateId;
     }
 
-    @Override
-    public long getNetworkId() {
-        return networkId;
-    }
-
-    public void setNetworkId(long networkId) {
-        this.networkId = networkId;
-    }
 
     @Override
-    public String getAccessType() {
-        return accessType;
+    public String getSsvType() {
+        return sharedStorageVmType;
     }
 
-    public void setAccessType(String accessType) {
-        this.accessType = accessType;
+    public void setSsvType(String ssvType) {
+        this.sharedStorageVmType = ssvType;
     }
 
     @Override
@@ -220,27 +183,20 @@ public class SSVVO implements SSV {
         this.state = state;
     }
 
-    @Override
-    public String getDcIp() {
-        return dcIp;
+    public long getDiskOfferingId() {
+        return diskOfferingId;
     }
 
-    public void setDcIp(String dcIp) {
-        this.dcIp = dcIp;
+    public void setDiskOfferingId(long diskOfferingId) {
+        this.diskOfferingId = diskOfferingId;
     }
 
-    @Override
-    public String getWorksIp() {
-        return worksIp;
+    public String getSharedStorageVmType() {
+        return sharedStorageVmType;
     }
 
-    public void setWorksIp(String worksIp) {
-        this.worksIp = worksIp;
-    }
-
-    @Override
-    public boolean isDisplay() {
-        return true;
+    public void setSharedStorageVmType(String sharedStorageVmType) {
+        this.sharedStorageVmType = sharedStorageVmType;
     }
 
     public Date getRemoved() {
@@ -250,41 +206,26 @@ public class SSVVO implements SSV {
     }
 
     @Override
-    public boolean isCheckForGc() {
-        return checkForGc;
-    }
-
-    public void setCheckForGc(boolean check) {
-        checkForGc = check;
-    }
-
-    @Override
     public Date getCreated() {
         return created;
     }
 
-    public SSVVO() {
-        this.uuid = UUID.randomUUID().toString();
+    public SSVVO(){
     }
 
-    public SSVVO(String name, String description, long zoneId, long ssvId, long serviceOfferingId,
-                                String adDomainName, long networkId, String accessType, long domainId, long accountId, State state, String dcIp, String worksIp) {
+    public SSVVO(String name, String description, long zoneId, long domainId, long accountId,
+                long templateId, long serviceOfferingId, long diskOfferingId, String ssvType, State state) {
         this.uuid = UUID.randomUUID().toString();
         this.name = name;
         this.description = description;
-        // this.password = password;
         this.zoneId = zoneId;
-        this.ssvId = ssvId;
-        this.serviceOfferingId = serviceOfferingId;
-        this.adDomainName = adDomainName;
-        this.networkId = networkId;
-        this.accessType = accessType;
         this.domainId = domainId;
         this.accountId = accountId;
+        this.templateId = templateId;
+        this.serviceOfferingId = serviceOfferingId;
+        this.diskOfferingId = diskOfferingId;
+        this.sharedStorageVmType = ssvType;
         this.state = state;
-        this.dcIp = dcIp;
-        this.worksIp = worksIp;
-        this.checkForGc = false;
     }
 
     @Override

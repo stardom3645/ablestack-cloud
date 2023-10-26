@@ -29,7 +29,6 @@ import org.apache.cloudstack.api.ServerApiException;
 import org.apache.cloudstack.api.response.SSVResponse;
 import org.apache.cloudstack.api.response.SuccessResponse;
 import org.apache.cloudstack.context.CallContext;
-import org.apache.log4j.Logger;
 
 import com.cloud.exception.ConcurrentOperationException;
 import com.cloud.ssv.SSV;
@@ -37,7 +36,7 @@ import com.cloud.ssv.SSVEventTypes;
 import com.cloud.ssv.SSVService;
 import com.cloud.utils.exception.CloudRuntimeException;
 
-@APICommand(name = StopSSVCmd.APINAME, description = "Stops a running Desktop cluster",
+@APICommand(name = StopSSVCmd.APINAME, description = "Stops a running Shared Storage VM ",
         responseObject = SuccessResponse.class,
         responseView = ResponseObject.ResponseView.Restricted,
         entityType = {SSV.class},
@@ -45,7 +44,6 @@ import com.cloud.utils.exception.CloudRuntimeException;
         responseHasSensitiveInfo = true,
         authorized = {RoleType.Admin, RoleType.ResourceAdmin, RoleType.DomainAdmin, RoleType.User})
 public class StopSSVCmd extends BaseAsyncCmd {
-    public static final Logger LOGGER = Logger.getLogger(StopSSVCmd.class.getName());
     public static final String APINAME = "stopSSV";
 
     @Inject
@@ -56,7 +54,7 @@ public class StopSSVCmd extends BaseAsyncCmd {
     /////////////////////////////////////////////////////
     @Parameter(name = ApiConstants.ID, type = CommandType.UUID,
             entityType = SSVResponse.class, required = true,
-            description = "the ID of the Desktop cluster")
+            description = "the ID of the Shared Storage VM ")
     private Long id;
 
     /////////////////////////////////////////////////////
@@ -74,7 +72,7 @@ public class StopSSVCmd extends BaseAsyncCmd {
 
     @Override
     public String getEventDescription() {
-        String description = "Stopping Desktop cluster";
+        String description = "Stopping Shared Storage VM ";
         SSV cluster = _entityMgr.findById(SSV.class, getId());
         if (cluster != null) {
             description += String.format(" ID: %s", cluster.getUuid());
@@ -102,7 +100,7 @@ public class StopSSVCmd extends BaseAsyncCmd {
     public void execute() throws ServerApiException, ConcurrentOperationException {
         try {
             if (!ssvService.stopSSV(getId())) {
-                throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, String.format("Failed to start Desktop cluster ID: %d", getId()));
+                throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, String.format("Failed to Stop Shared Storage VM  ID: %d", getId()));
             }
             final SuccessResponse response = new SuccessResponse(getCommandName());
             setResponseObject(response);

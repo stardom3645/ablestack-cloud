@@ -19,7 +19,6 @@ package org.apache.cloudstack.api.command.admin.host;
 import com.cloud.host.Host;
 import com.cloud.user.Account;
 import org.apache.cloudstack.acl.RoleType;
-import org.apache.cloudstack.annotation.AnnotationService;
 import org.apache.cloudstack.api.APICommand;
 import org.apache.cloudstack.api.ApiConstants;
 import org.apache.cloudstack.api.ApiErrorCode;
@@ -28,14 +27,12 @@ import org.apache.cloudstack.api.Parameter;
 import org.apache.cloudstack.api.ServerApiException;
 import org.apache.cloudstack.api.response.GuestOSCategoryResponse;
 import org.apache.cloudstack.api.response.HostResponse;
-import org.apache.log4j.Logger;
 
 import java.util.List;
 
 @APICommand(name = "updateHost", description = "Updates a host.", responseObject = HostResponse.class,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class UpdateHostCmd extends BaseCmd {
-    public static final Logger s_logger = Logger.getLogger(UpdateHostCmd.class.getName());
 
     /////////////////////////////////////////////////////
     //////////////// API parameters /////////////////////
@@ -117,14 +114,11 @@ public class UpdateHostCmd extends BaseCmd {
         Host result;
         try {
             result = _resourceService.updateHost(this);
-            if(getAnnotation() != null) {
-                annotationService.addAnnotation(getAnnotation(), AnnotationService.EntityType.HOST, result.getUuid(), true);
-            }
             HostResponse hostResponse = _responseGenerator.createHostResponse(result);
             hostResponse.setResponseName(getCommandName());
             this.setResponseObject(hostResponse);
         } catch (Exception e) {
-            s_logger.debug("Failed to update host:" + getId(), e);
+            logger.debug("Failed to update host:" + getId(), e);
             throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, "Failed to update host:" + getId() + "," + e.getMessage());
         }
     }

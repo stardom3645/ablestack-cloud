@@ -25,8 +25,7 @@ package com.cloud.ssv;
  */
 public interface SSVVmMap {
     long getId();
-    long getSsvId();
+    long getSsvServiceId();
     long getVmId();
-    String getType();
 }
 

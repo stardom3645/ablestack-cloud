@@ -16,8 +16,6 @@
 // under the License.
 package com.cloud.ssv.dao;
 
-import java.util.List;
-
 import org.springframework.stereotype.Component;
 
 import com.cloud.ssv.SSVVmMapVO;
@@ -29,47 +27,18 @@ import com.cloud.utils.db.SearchCriteria;
 @Component
 public class SSVVmMapDaoImpl extends GenericDaoBase<SSVVmMapVO, Long> implements SSVVmMapDao {
 
-    private final SearchBuilder<SSVVmMapVO> ssvIdSearch;
-    private final SearchBuilder<SSVVmMapVO> ssvIdAndVmType;
-    private final SearchBuilder<SSVVmMapVO> ssvIdAndNotVmType;
+    private final SearchBuilder<SSVVmMapVO> ssvVmIdSearch;
 
     public SSVVmMapDaoImpl() {
-        ssvIdSearch = createSearchBuilder();
-        ssvIdSearch.and("desktopClusterId", ssvIdSearch.entity().getSsvId(), SearchCriteria.Op.EQ);
-        ssvIdSearch.done();
-
-        ssvIdAndVmType = createSearchBuilder();
-        ssvIdAndVmType.and("desktopClusterId", ssvIdAndVmType.entity().getSsvId(), SearchCriteria.Op.EQ);
-        ssvIdAndVmType.and("type", ssvIdAndVmType.entity().getType(), SearchCriteria.Op.EQ);
-        ssvIdAndVmType.done();
-
-        ssvIdAndNotVmType = createSearchBuilder();
-        ssvIdAndNotVmType.and("desktopClusterId", ssvIdAndNotVmType.entity().getSsvId(), SearchCriteria.Op.EQ);
-        ssvIdAndNotVmType.and("type", ssvIdAndNotVmType.entity().getType(), SearchCriteria.Op.NEQ);
-        ssvIdAndNotVmType.done();
-
+        ssvVmIdSearch = createSearchBuilder();
+        ssvVmIdSearch.and("ssvServiceId", ssvVmIdSearch.entity().getSsvServiceId(), SearchCriteria.Op.EQ);
+        ssvVmIdSearch.done();
     }
 
     @Override
-    public List<SSVVmMapVO> listBySSVId(long desktopClusterId) {
-        SearchCriteria<SSVVmMapVO> sc = ssvIdSearch.create();
-        sc.setParameters("desktopClusterId", desktopClusterId);
-        return listBy(sc, null);
-    }
-
-    @Override
-    public List<SSVVmMapVO> listBySSVIdAndVmType(long desktopClusterId, String type) {
-        SearchCriteria<SSVVmMapVO> sc = ssvIdAndVmType.create();
-        sc.setParameters("desktopClusterId", desktopClusterId);
-        sc.setParameters("type", type);
-        return listBy(sc);
-    }
-
-    @Override
-    public List<SSVVmMapVO> listBySSVIdAndNotVmType(long desktopClusterId, String type) {
-        SearchCriteria<SSVVmMapVO> sc = ssvIdAndNotVmType.create();
-        sc.setParameters("desktopClusterId", desktopClusterId);
-        sc.setParameters("type", type);
-        return listBy(sc);
+    public SSVVmMapVO listVmBySSVServiceId(long ssvServiceId) {
+        SearchCriteria<SSVVmMapVO> sc = ssvVmIdSearch.create();
+        sc.setParameters("ssvServiceId", ssvServiceId);
+        return findOneBy(sc);
     }
 }

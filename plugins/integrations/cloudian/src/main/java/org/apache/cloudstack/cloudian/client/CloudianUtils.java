@@ -24,15 +24,16 @@ import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 
 import org.apache.commons.codec.binary.Base64;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import com.cloud.utils.HttpUtils;
 import org.apache.commons.lang3.StringUtils;
 
 public class CloudianUtils {
 
-    private static final Logger LOG = Logger.getLogger(CloudianUtils.class);
-    private static final String HMAC_SHA1_ALGORITHM = "HmacSHA1";
+    protected static Logger LOGGER = LogManager.getLogger(CloudianUtils.class);
+    private static final String HMAC_SHA256_ALGORITHM = "HmacSHA256";
 
     /**
      * Generates RFC-2104 compliant HMAC signature
@@ -45,13 +46,13 @@ public class CloudianUtils {
             return null;
         }
         try {
-            final SecretKeySpec signingKey = new SecretKeySpec(key.getBytes(), HMAC_SHA1_ALGORITHM);
-            final Mac mac = Mac.getInstance(HMAC_SHA1_ALGORITHM);
+            final SecretKeySpec signingKey = new SecretKeySpec(key.getBytes(), HMAC_SHA256_ALGORITHM);
+            final Mac mac = Mac.getInstance(HMAC_SHA256_ALGORITHM);
             mac.init(signingKey);
             byte[] rawHmac = mac.doFinal(data.getBytes());
             return Base64.encodeBase64String(rawHmac);
         } catch (final Exception e) {
-            LOG.error("Failed to generate HMAC signature from provided data and key, due to: ", e);
+            LOGGER.error("Failed to generate HMAC signature from provided data and key, due to: ", e);
         }
         return null;
     }

@@ -28,7 +28,7 @@ import java.util.Set;
 import org.apache.cloudstack.api.response.DomainResponse;
 import org.apache.cloudstack.api.response.ZoneResponse;
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.log4j.Logger;
+import org.apache.commons.lang3.StringUtils;
 
 import org.apache.cloudstack.api.APICommand;
 import org.apache.cloudstack.api.ApiConstants;
@@ -47,7 +47,6 @@ import com.cloud.user.Account;
 @APICommand(name = "createVPCOffering", description = "Creates VPC offering", responseObject = VpcOfferingResponse.class,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class CreateVPCOfferingCmd extends BaseAsyncCreateCmd {
-    public static final Logger s_logger = Logger.getLogger(CreateVPCOfferingCmd.class.getName());
 
     /////////////////////////////////////////////////////
     //////////////// API parameters /////////////////////
@@ -56,7 +55,7 @@ public class CreateVPCOfferingCmd extends BaseAsyncCreateCmd {
     @Parameter(name = ApiConstants.NAME, type = CommandType.STRING, required = true, description = "the name of the vpc offering")
     private String vpcOfferingName;
 
-    @Parameter(name = ApiConstants.DISPLAY_TEXT, type = CommandType.STRING, required = true, description = "the display text of " + "the vpc offering")
+    @Parameter(name = ApiConstants.DISPLAY_TEXT, type = CommandType.STRING, description = "the display text of the vpc offering, defaults to the 'name'")
     private String displayText;
 
     @Parameter(name = ApiConstants.SUPPORTED_SERVICES,
@@ -115,7 +114,7 @@ public class CreateVPCOfferingCmd extends BaseAsyncCreateCmd {
     }
 
     public String getDisplayText() {
-        return displayText;
+        return StringUtils.isEmpty(displayText) ? vpcOfferingName : displayText;
     }
 
     public List<String> getSupportedServices() {
@@ -130,8 +129,8 @@ public class CreateVPCOfferingCmd extends BaseAsyncCreateCmd {
             Iterator<? extends Map<String, String>> iter = servicesCollection.iterator();
             while (iter.hasNext()) {
                 Map<String, String> obj = iter.next();
-                if (s_logger.isTraceEnabled()) {
-                    s_logger.trace("service provider entry specified: " + obj);
+                if (logger.isTraceEnabled()) {
+                    logger.trace("service provider entry specified: " + obj);
                 }
                 HashMap<String, String> services = (HashMap<String, String>)obj;
                 String service = services.get("service");

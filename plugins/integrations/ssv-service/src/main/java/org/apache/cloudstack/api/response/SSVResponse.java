@@ -24,7 +24,6 @@ import org.apache.cloudstack.api.BaseResponse;
 import org.apache.cloudstack.api.EntityReference;
 
 import com.cloud.ssv.SSV;
-import com.cloud.network.Network.GuestType;
 import com.cloud.serializer.Param;
 import com.google.gson.annotations.SerializedName;
 
@@ -32,104 +31,68 @@ import com.google.gson.annotations.SerializedName;
 @EntityReference(value = {SSV.class})
 public class SSVResponse extends BaseResponse implements ControlledEntityResponse {
     @SerializedName(ApiConstants.ID)
-    @Param(description = "the id of the Desktop Cluster")
+    @Param(description = "the id of the Shared Storage VM")
     private String id;
 
     @SerializedName(ApiConstants.NAME)
-    @Param(description = "the name of the Desktop Cluster")
+    @Param(description = "the name of the Shared Storage VM")
     private String name;
 
     @SerializedName(ApiConstants.DESCRIPTION)
-    @Param(description = "the description of the Desktop cluster")
+    @Param(description = "the description of the Shared Storage VM")
     private String description;
 
     @SerializedName(ApiConstants.ZONE_ID)
-    @Param(description = "the name of the zone of the Desktop Cluster")
+    @Param(description = "the name of the zone of the Shared Storage VM")
     private String zoneId;
 
     @SerializedName(ApiConstants.ZONE_NAME)
-    @Param(description = "the name of the zone of the Desktop Cluster")
+    @Param(description = "the name of the zone of the Shared Storage VM")
     private String zoneName;
 
     @SerializedName(ApiConstants.SERVICE_OFFERING_ID)
-    @Param(description = "the ID of the service offering of the Desktop Cluster")
+    @Param(description = "the ID of the service offering of the Shared Storage VM")
     private String serviceOfferingId;
 
+    @SerializedName(ApiConstants.SHARED_STORAGE_VM_TYPE)
+    @Param(description = "the TYPE of the service offering of the Shared Storage VM")
+    private String sharedStorageVmType;
+
     @SerializedName("serviceofferingname")
-    @Param(description = "the name of the service offering of the Desktop Cluster")
+    @Param(description = "the name of the service offering of the Shared Storage VM")
     private String serviceOfferingName;
 
-    @SerializedName(ApiConstants.DESKTOP_AD_DOMAIN_NAME)
-    @Param(description = "the ID of the template of the Desktop Cluster")
-    private String adDomainName;
-
-    @SerializedName(ApiConstants.NETWORK_ID)
-    @Param(description = "the ID of the network of the Desktop Cluster")
-    private String networkId;
-
-    @SerializedName(ApiConstants.NETWORK_TYPE)
-    @Param(description = "the ID of the network of the Desktop Cluster")
-    private GuestType networkType;
-
-    @SerializedName(ApiConstants.ASSOCIATED_NETWORK_NAME)
-    @Param(description = "the name of the network of the Desktop Cluster")
-    private String associatedNetworkName;
-
-    @SerializedName(ApiConstants.DESKTOP_CONTROLLER_VERSION)
-    @Param(description = "the Controller version for the Desktop Cluster")
-    private String controllerVersion;
-
-    @SerializedName(ApiConstants.DESKTOP_CONTROLLER_VERSION_NAME)
-    @Param(description = "the name of the Controller version for the Desktop Cluster")
-    private String controllerVersionName;
-
     @SerializedName(ApiConstants.ACCOUNT)
-    @Param(description = "the account associated with the Desktop Cluster")
+    @Param(description = "the account associated with the Shared Storage VM")
     private String accountName;
 
     @SerializedName(ApiConstants.PROJECT_ID)
-    @Param(description = "the project id of the Desktop Cluster")
+    @Param(description = "the project id of the Shared Storage VM")
     private String projectId;
 
     @SerializedName(ApiConstants.PROJECT)
-    @Param(description = "the project name of the Desktop Cluster")
+    @Param(description = "the project name of the Shared Storage VM")
     private String projectName;
 
     @SerializedName(ApiConstants.DOMAIN_ID)
-    @Param(description = "the ID of the domain in which the Desktop Cluster exists")
+    @Param(description = "the ID of the domain in which the Shared Storage VM exists")
     private String domainId;
 
     @SerializedName(ApiConstants.DOMAIN)
-    @Param(description = "the name of the domain in which the Desktop Cluster exists")
+    @Param(description = "the name of the domain in which the Shared Storage VM exists")
     private String domainName;
 
     @SerializedName(ApiConstants.STATE)
-    @Param(description = "the state of the Desktop Cluster")
+    @Param(description = "the state of the Shared Storage VM")
     private String state;
 
-    @SerializedName(ApiConstants.DESKTOP_CONTROL_VIRTUAL_MACHINES)
-    @Param(description = "the list of virtualmachine associated with this Desktop Cluster")
-    private List<UserVmResponse> controlVms;
+    @SerializedName(ApiConstants.SHARED_STORAGE_VM)
+    @Param(description = "the list of virtualmachine associated with this Shared Storage VM")
+    private List<UserVmResponse> ssv;
 
-    @SerializedName(ApiConstants.DESKTOP_USER_VIRTUAL_MACHINES)
-    @Param(description = "the list of virtualmachine associated with this Desktop Cluster")
-    private List<UserVmResponse> desktopVms;
-
-    @SerializedName(ApiConstants.DESKTOP_WORKS_VM_IP)
-    @Param(description = "Public IP Address of the cluster")
-    private String worksVmIp;
-
-    @SerializedName(ApiConstants.DESKTOP_DC_VM_IP)
-    @Param(description = "Public IP Address of the cluster")
-    private String dcVmIp;
-
-    @SerializedName(ApiConstants.IP_ADDRESS)
-    @Param(description = "Public IP Address of the cluster")
-    private String ipAddress;
-
-    @SerializedName(ApiConstants.IP_ADDRESS_ID)
-    @Param(description = "Public IP Address ID of the cluster")
-    private String ipAddressId;
+    @SerializedName(ApiConstants.NETWORK)
+    @Param(description = "the network list of virtualmachine associated with this Shared Storage VM")
+    private List<SSVNetResponse> networks;
 
     @SerializedName(ApiConstants.CREATED)
     @Param(description = "the date this template was created")
@@ -170,6 +133,14 @@ public class SSVResponse extends BaseResponse implements ControlledEntityRespons
         this.zoneName = zoneName;
     }
 
+    public String getSharedStorageVmType() {
+        return sharedStorageVmType;
+    }
+
+    public void setSharedStorageVmType(String sharedStorageVmType) {
+        this.sharedStorageVmType = sharedStorageVmType;
+    }
+
     public String getServiceOfferingId() {
         return serviceOfferingId;
     }
@@ -178,45 +149,6 @@ public class SSVResponse extends BaseResponse implements ControlledEntityRespons
         this.serviceOfferingId = serviceOfferingId;
     }
 
-    public String getAdDomainName() {
-        return adDomainName;
-    }
-
-    public void setAdDomainName(String adDomainName) {
-        this.adDomainName = adDomainName;
-    }
-
-    public String getNetworkId() {
-        return networkId;
-    }
-
-    public void setNetworkId(String networkId) {
-        this.networkId = networkId;
-    }
-
-    public String getAssociatedNetworkName() {
-        return associatedNetworkName;
-    }
-
-    public void setAssociatedNetworkName(String associatedNetworkName) {
-        this.associatedNetworkName = associatedNetworkName;
-    }
-
-    public String getControllerVersion() {
-        return controllerVersion;
-    }
-
-    public void setControllerVersion(String controllerVersion) {
-        this.controllerVersion = controllerVersion;
-    }
-
-    public String getControllerVersionName() {
-        return controllerVersionName;
-    }
-
-    public void setControllerVersionName(String controllerVersionName) {
-        this.controllerVersionName= controllerVersionName;
-    }
 
     public String getProjectId() {
         return projectId;
@@ -271,52 +203,16 @@ public class SSVResponse extends BaseResponse implements ControlledEntityRespons
         this.serviceOfferingName = serviceOfferingName;
     }
 
-    public List<UserVmResponse> getControlVms() {
-        return controlVms;
+    public List<UserVmResponse> getSsv() {
+        return ssv;
     }
 
-    public void setControlVms(List<UserVmResponse> controlVms) {
-        this.controlVms = controlVms;
+    public void setSsv(List<UserVmResponse> ssv) {
+        this.ssv = ssv;
     }
 
-    public List<UserVmResponse> getDesktopVms() {
-        return desktopVms;
-    }
-
-    public void setDesktopVms(List<UserVmResponse> desktopVms) {
-        this.desktopVms = desktopVms;
-    }
-
-    public void setIpAddress(String ipAddress) {
-        this.ipAddress = ipAddress;
-    }
-
-    public void setIpAddressId(String ipAddressId) {
-        this.ipAddressId = ipAddressId;
-    }
-
-    public GuestType getNetworkType() {
-        return networkType;
-    }
-
-    public void setNetworkType(GuestType networkType) {
-        this.networkType = networkType;
-    }
-
-    public String getWorksVmIp() {
-        return worksVmIp;
-    }
-
-    public void setWorksVmIp(String worksVmIp) {
-        this.worksVmIp = worksVmIp;
-    }
-
-    public String getDcVmIp() {
-        return dcVmIp;
-    }
-
-    public void setDcVmIp(String dcVmIp) {
-        this.dcVmIp = dcVmIp;
+    public void setNetworks(List<SSVNetResponse> networks) {
+        this.networks = networks;
     }
 
     public void setCreated(Date created) {

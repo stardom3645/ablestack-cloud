@@ -26,7 +26,6 @@ import javax.persistence.EntityExistsException;
 
 import com.cloud.storage.DiskOfferingVO;
 import com.cloud.storage.dao.DiskOfferingDao;
-import org.apache.log4j.Logger;
 import org.springframework.stereotype.Component;
 
 import com.cloud.event.UsageEventVO;
@@ -44,7 +43,6 @@ import com.cloud.vm.dao.UserVmDetailsDao;
 @Component
 @DB()
 public class ServiceOfferingDaoImpl extends GenericDaoBase<ServiceOfferingVO, Long> implements ServiceOfferingDao {
-    protected static final Logger s_logger = Logger.getLogger(ServiceOfferingDaoImpl.class);
 
     @Inject
     protected ServiceOfferingDetailsDao detailsDao;
@@ -87,6 +85,19 @@ public class ServiceOfferingDaoImpl extends GenericDaoBase<ServiceOfferingVO, Lo
         SearchCriteria<ServiceOfferingVO> sc = UniqueNameSearch.create();
         sc.setParameters("name", name);
         sc.setParameters("system_use", true);
+        List<ServiceOfferingVO> vos = search(sc, null, null, false);
+        if (vos.size() == 0) {
+            return null;
+        }
+
+        return vos.get(0);
+    }
+
+    @Override
+    public ServiceOfferingVO findByNameNotSystemUse(String name) {
+        SearchCriteria<ServiceOfferingVO> sc = UniqueNameSearch.create();
+        sc.setParameters("name", name);
+        sc.setParameters("system_use", false);
         List<ServiceOfferingVO> vos = search(sc, null, null, false);
         if (vos.size() == 0) {
             return null;
@@ -268,7 +279,7 @@ public class ServiceOfferingDaoImpl extends GenericDaoBase<ServiceOfferingVO, Lo
         ServiceOfferingVO serviceOffering = findByName(name);
         if (serviceOffering == null) {
             String message = "System service offering " + name + " not found";
-            s_logger.error(message);
+            logger.error(message);
             throw new CloudRuntimeException(message);
         }
         return serviceOffering;

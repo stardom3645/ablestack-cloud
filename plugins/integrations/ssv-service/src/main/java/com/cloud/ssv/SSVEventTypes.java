@@ -21,4 +21,6 @@ public class SSVEventTypes {
     public static final String EVENT_SSV_DELETE = "SSV.DELETE";
     public static final String EVENT_SSV_START = "SSV.START";
     public static final String EVENT_SSV_STOP = "SSV.STOP";
+    public static final String EVENT_SSV_ADD_VOLUME = "SSV.ADD.VOLUME";
+    public static final String EVENT_SSV_ADD_NETWORK = "SSV.ADD.NETWORK";
 }
