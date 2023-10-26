@@ -29,8 +29,9 @@ import org.apache.cloudstack.engine.orchestration.service.NetworkOrchestrationSe
 import org.apache.cloudstack.framework.config.dao.ConfigurationDao;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.IOUtils;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import com.cloud.dc.dao.DataCenterDao;
 import com.cloud.dc.dao.VlanDao;
@@ -71,7 +72,7 @@ public class SSVActionWorker {
     public static final int ISCSI_PORT = 8081;
     public static final int SAMBA_PORT = 8082;
 
-    protected static final Logger LOGGER = Logger.getLogger(SSVActionWorker.class);
+    protected Logger logger = LogManager.getLogger(getClass());
 
     protected StateMachine2<SSV.State, SSV.Event, SSV> _stateMachine = SSV.State.getStateMachine();
 
@@ -144,32 +145,32 @@ public class SSVActionWorker {
 
     protected void logMessage(final Level logLevel, final String message, final Exception e) {
         if (logLevel == Level.INFO) {
-            if (LOGGER.isInfoEnabled()) {
+            if (logger.isInfoEnabled()) {
                 if (e != null) {
-                    LOGGER.info(message, e);
+                    logger.info(message, e);
                 } else {
-                    LOGGER.info(message);
+                    logger.info(message);
                 }
             }
         } else if (logLevel == Level.DEBUG) {
-            if (LOGGER.isDebugEnabled()) {
+            if (logger.isDebugEnabled()) {
                 if (e != null) {
-                    LOGGER.debug(message, e);
+                    logger.debug(message, e);
                 } else {
-                    LOGGER.debug(message);
+                    logger.debug(message);
                 }
             }
         } else if (logLevel == Level.WARN) {
             if (e != null) {
-                LOGGER.warn(message, e);
+                logger.warn(message, e);
             } else {
-                LOGGER.warn(message);
+                logger.warn(message);
             }
         } else {
             if (e != null) {
-                LOGGER.error(message, e);
+                logger.error(message, e);
             } else {
-                LOGGER.error(message);
+                logger.error(message);
             }
         }
     }
@@ -202,7 +203,7 @@ public class SSVActionWorker {
         try {
             return _stateMachine.transitTo(ssv, e, null, ssvDao);
         } catch (NoTransitionException nte) {
-            LOGGER.warn(String.format("Failed to transition state of the Shared Storage VM : %s in state %s on event %s",
+            logger.warn(String.format("Failed to transition state of the Shared Storage VM : %s in state %s on event %s",
             ssv.getName(), ssv.getState().toString(), e.toString()), nte);
             return false;
         }
@@ -214,7 +215,7 @@ public class SSVActionWorker {
     //     }
     //     List<SSVVmMapVO> clusterVMs = ssvVmMapDao.listBySSVIdAndNotVmType(ssv.getId(), "desktopvm");
     //     if (CollectionUtils.isEmpty(clusterVMs)) {
-    //         LOGGER.warn(String.format("Unable to retrieve VMs for Shared Storage VM : %s", ssv.getName()));
+    //         logger.warn(String.format("Unable to retrieve VMs for Shared Storage VM : %s", ssv.getName()));
     //         return null;
     //     }
     //     List<Long> vmIds = new ArrayList<>();
@@ -228,13 +229,13 @@ public class SSVActionWorker {
     protected IpAddress getSSVServerIp(CreateSSVCmd cmd) {
         Network network = networkDao.findById(cmd.getNetworkId());
         if (network == null) {
-            LOGGER.warn(String.format("Network for Shared Storage VM : %s cannot be found", ssv.getName()));
+            logger.warn(String.format("Network for Shared Storage VM : %s cannot be found", ssv.getName()));
             return null;
         }
         if (Network.GuestType.Isolated.equals(network.getGuestType())) {
             List<? extends IpAddress> addresses = networkModel.listPublicIpsAssignedToGuestNtwk(network.getId(), true);
             if (CollectionUtils.isEmpty(addresses)) {
-                LOGGER.warn(String.format("No public IP addresses found for network : %s, Shared Storage VM : %s", network.getName(), ssv.getName()));
+                logger.warn(String.format("No public IP addresses found for network : %s, Shared Storage VM : %s", network.getName(), ssv.getName()));
                 return null;
             }
             for (IpAddress address : addresses) {
@@ -242,10 +243,10 @@ public class SSVActionWorker {
                     return address;
                 }
             }
-            LOGGER.warn(String.format("No source NAT IP addresses found for network : %s, Shared Storage VM : %s", network.getName(), ssv.getName()));
+            logger.warn(String.format("No source NAT IP addresses found for network : %s, Shared Storage VM : %s", network.getName(), ssv.getName()));
             return null;
         }
-        LOGGER.warn(String.format("Unable to retrieve server IP address for Shared Storage VM : %s", ssv.getName()));
+        logger.warn(String.format("Unable to retrieve server IP address for Shared Storage VM : %s", ssv.getName()));
         return null;
     }
 

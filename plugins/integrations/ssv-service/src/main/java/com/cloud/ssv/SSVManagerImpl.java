@@ -48,8 +48,7 @@ import org.apache.cloudstack.storage.datastore.db.TemplateDataStoreVO;
 import org.apache.cloudstack.context.CallContext;
 import org.apache.cloudstack.framework.config.ConfigKey;
 import org.apache.cloudstack.managed.context.ManagedContextRunnable;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Level;
 
 import com.cloud.api.ApiDBUtils;
 import org.apache.cloudstack.api.ApiConstants.VMDetails;
@@ -115,10 +114,7 @@ import com.cloud.exception.InvalidParameterValueException;
 
 public class SSVManagerImpl extends ManagerBase implements SSVService {
 
-    private static final Logger LOGGER = Logger.getLogger(SSVManagerImpl.class);
-
     protected StateMachine2<SSV.State, SSV.Event, SSV> _stateMachine = SSV.State.getStateMachine();
-
 
     // ScheduledExecutorService _gcExecutor;
     ScheduledExecutorService _stateScanner;
@@ -159,15 +155,15 @@ public class SSVManagerImpl extends ManagerBase implements SSVService {
     private void logMessage(final Level logLevel, final String message, final Exception e) {
         if (logLevel == Level.WARN) {
             if (e != null) {
-                LOGGER.warn(message, e);
+                logger.warn(message, e);
             } else {
-                LOGGER.warn(message);
+                logger.warn(message);
             }
         } else {
             if (e != null) {
-                LOGGER.error(message, e);
+                logger.error(message, e);
             } else {
-                LOGGER.error(message);
+                logger.error(message);
             }
         }
     }
@@ -196,7 +192,6 @@ public class SSVManagerImpl extends ManagerBase implements SSVService {
         SSVVO ssv = ssvDao.findById(id);
         SSVResponse response = new SSVResponse();
         response.setObjectName(SSV.class.getSimpleName().toLowerCase());
-        LOGGER.info(" ::::::ssv.getUuid()::::: " + ssv.getUuid());
         response.setId(ssv.getUuid());
         response.setName(ssv.getName());
         response.setSharedStorageVmType(ssv.getSharedStorageVmType());
@@ -354,7 +349,6 @@ public class SSVManagerImpl extends ManagerBase implements SSVService {
         }
         List<SSVVO> ssv = ssvDao.search(sc, searchFilter);
         for (SSVVO vo : ssv) {
-            LOGGER.info("ssv :::::::::: " + vo.getId());
             SSVResponse ssvResponse = createSSVResponse(vo.getId());
             responsesList.add(ssvResponse);
         }
@@ -369,7 +363,7 @@ public class SSVManagerImpl extends ManagerBase implements SSVService {
         try {
             return _stateMachine.transitTo(ssv, e, null, ssvDao);
         } catch (NoTransitionException nte) {
-            LOGGER.warn(String.format("Failed to transition state of the Shared Storage VM  : %s in state %s on event %s", ssv.getName(), ssv.getState().toString(), e.toString()), nte);
+            logger.warn(String.format("Failed to transition state of the Shared Storage VM  : %s in state %s on event %s", ssv.getName(), ssv.getState().toString(), e.toString()), nte);
             return false;
         }
     }
@@ -387,7 +381,7 @@ public class SSVManagerImpl extends ManagerBase implements SSVService {
 
         final Account owner = accountService.getActiveAccountById(cmd.getEntityOwnerId());
         VMTemplateVO template = templateDao.findByUuid(SSVTemplateUuid.value());
-        LOGGER.debug(" ::: SSVTemplateUuid.value() :: " + SSVTemplateUuid.value() + " :: template.getId :: " + template.getId());
+        // logger.debug(" ::: SSVTemplateUuid.value() :: " + SSVTemplateUuid.value() + " :: template.getId :: " + template.getId());
 
         SSVVO newApp = new SSVVO(cmd.getName(), cmd.getDescription(), cmd.getZoneId(), owner.getDomainId(), owner.getAccountId(), template.getId(), serviceOfferingVo.getId(),  cmd.getDiskOfferingId(), cmd.getSsvType(), SSV.State.Created);
         SSVVO ssv = ssvDao.persist(newApp);
@@ -395,8 +389,8 @@ public class SSVManagerImpl extends ManagerBase implements SSVService {
         SSVNetMapVO newMap = new SSVNetMapVO(ssv.getId(), cmd.getNetworkId(), cmd.getSsvIp(), cmd.getGateway(), cmd.getNetmask());
         ssvNetMapDao.persist(newMap);
 
-        if (LOGGER.isInfoEnabled()) {
-            LOGGER.info(String.format("Shared Storage VM  name: %s and ID: %s has been created", ssv.getName(), ssv.getUuid()));
+        if (logger.isInfoEnabled()) {
+            logger.info(String.format("Shared Storage VM  name: %s and ID: %s has been created", ssv.getName(), ssv.getUuid()));
         }
         return ssv;
     }
@@ -598,14 +592,14 @@ public class SSVManagerImpl extends ManagerBase implements SSVService {
         }
         accountManager.checkAccess(CallContext.current().getCallingAccount(), SecurityChecker.AccessType.OperateEntry, false, ssv);
         if (ssv.getState().equals(SSV.State.Running)) {
-            if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug(String.format("Shared Storage VM  : %s is in running state", ssv.getName()));
+            if (logger.isDebugEnabled()) {
+                logger.debug(String.format("Shared Storage VM  : %s is in running state", ssv.getName()));
             }
             return true;
         }
         if (ssv.getState().equals(SSV.State.Starting)) {
-            if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug(String.format("Shared Storage VM  : %s is already in starting state", ssv.getName()));
+            if (logger.isDebugEnabled()) {
+                logger.debug(String.format("Shared Storage VM  : %s is already in starting state", ssv.getName()));
             }
             return true;
         }
@@ -639,14 +633,14 @@ public class SSVManagerImpl extends ManagerBase implements SSVService {
         }
         accountManager.checkAccess(CallContext.current().getCallingAccount(), SecurityChecker.AccessType.OperateEntry, false, ssv);
         if (ssv.getState().equals(SSV.State.Stopped)) {
-            if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug(String.format("Shared Storage VM  : %s is already stopped", ssv.getName()));
+            if (logger.isDebugEnabled()) {
+                logger.debug(String.format("Shared Storage VM  : %s is already stopped", ssv.getName()));
             }
             return true;
         }
         if (ssv.getState().equals(SSV.State.Stopping)) {
-            if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug(String.format("Shared Storage VM  : %s is getting stopped", ssv.getName()));
+            if (logger.isDebugEnabled()) {
+                logger.debug(String.format("Shared Storage VM  : %s is getting stopped", ssv.getName()));
             }
             return true;
         }
@@ -730,38 +724,38 @@ public class SSVManagerImpl extends ManagerBase implements SSVService {
                 // run through Shared Storage VM s in 'Running' state and ensure all the VM's are Running in the cluster
                 List<SSVVO> runningSSVs = ssvDao.findSSVsInState(SSV.State.Running);
                 for (SSV ssv : runningSSVs) {
-                    if (LOGGER.isInfoEnabled()) {
-                        LOGGER.info(String.format("Running Shared Storage VM  state scanner on Shared Storage VM  : %s",ssv.getName()));
+                    if (logger.isInfoEnabled()) {
+                        logger.info(String.format("Running Shared Storage VM  state scanner on Shared Storage VM  : %s",ssv.getName()));
                     }
                     try {
                         if (!isClusterVMsInDesiredState(ssv, VirtualMachine.State.Running)) {
                             stateTransitTo(ssv.getId(), SSV.Event.FaultsDetected);
                         }
                     } catch (Exception e) {
-                        LOGGER.warn(String.format("Failed to run Shared Storage VM  Running state scanner on Shared Storage VM  : %s status scanner", ssv.getName()), e);
+                        logger.warn(String.format("Failed to run Shared Storage VM  Running state scanner on Shared Storage VM  : %s status scanner", ssv.getName()), e);
                     }
                 }
 
                 // run through Shared Storage VM s in 'Stopped' state and ensure all the VM's are Stopped in the cluster
                 List<SSVVO> stoppedSSVs = ssvDao.findSSVsInState(SSV.State.Stopped);
                 for (SSV ssv : stoppedSSVs) {
-                    if (LOGGER.isInfoEnabled()) {
-                        LOGGER.info(String.format("Running Shared Storage VM  state scanner on Shared Storage VM  : %s for state: %s", ssv.getName(), SSV.State.Stopped.toString()));
+                    if (logger.isInfoEnabled()) {
+                        logger.info(String.format("Running Shared Storage VM  state scanner on Shared Storage VM  : %s for state: %s", ssv.getName(), SSV.State.Stopped.toString()));
                     }
                     try {
                         if (!isClusterVMsInDesiredState(ssv, VirtualMachine.State.Stopped)) {
                             stateTransitTo(ssv.getId(), SSV.Event.FaultsDetected);
                         }
                     } catch (Exception e) {
-                        LOGGER.warn(String.format("Failed to run Shared Storage VM  Stopped state scanner on Shared Storage VM  : %s status scanner", ssv.getName()), e);
+                        logger.warn(String.format("Failed to run Shared Storage VM  Stopped state scanner on Shared Storage VM  : %s status scanner", ssv.getName()), e);
                     }
                 }
 
                 // run through Shared Storage VM s in 'Alert' state and reconcile state as 'Running' if the VM's are running or 'Stopped' if VM's are stopped
                 List<SSVVO> alertSSVs = ssvDao.findSSVsInState(SSV.State.Alert);
                 for (SSVVO ssv : alertSSVs) {
-                    if (LOGGER.isInfoEnabled()) {
-                        LOGGER.info(String.format("Running Shared Storage VM  state scanner on Shared Storage VM  : %s for state: %s", ssv.getName(), SSV.State.Alert.toString()));
+                    if (logger.isInfoEnabled()) {
+                        logger.info(String.format("Running Shared Storage VM  state scanner on Shared Storage VM  : %s for state: %s", ssv.getName(), SSV.State.Alert.toString()));
                     }
                     try {
                         if (isClusterVMsInDesiredState(ssv, VirtualMachine.State.Running)) {
@@ -773,7 +767,7 @@ public class SSVManagerImpl extends ManagerBase implements SSVService {
                             stateTransitTo(ssv.getId(), SSV.Event.OperationSucceeded);
                         }
                     } catch (Exception e) {
-                        LOGGER.warn(String.format("Failed to run Shared Storage VM  Alert state scanner on Shared Storage VM  : %s status scanner", ssv.getName()), e);
+                        logger.warn(String.format("Failed to run Shared Storage VM  Alert state scanner on Shared Storage VM  : %s status scanner", ssv.getName()), e);
                     }
                 }
 
@@ -785,8 +779,8 @@ public class SSVManagerImpl extends ManagerBase implements SSVService {
                         if ((new Date()).getTime() - ssv.getCreated().getTime() < 10*60*1000) {
                             continue;
                         }
-                        if (LOGGER.isInfoEnabled()) {
-                            LOGGER.info(String.format("Running Shared Storage VM  state scanner on Shared Storage VM  : %s for state: %s", ssv.getName(), SSV.State.Starting.toString()));
+                        if (logger.isInfoEnabled()) {
+                            logger.info(String.format("Running Shared Storage VM  state scanner on Shared Storage VM  : %s for state: %s", ssv.getName(), SSV.State.Starting.toString()));
                         }
                         try {
                             if (isClusterVMsInDesiredState(ssv, VirtualMachine.State.Running)) {
@@ -795,25 +789,25 @@ public class SSVManagerImpl extends ManagerBase implements SSVService {
                                 stateTransitTo(ssv.getId(), SSV.Event.OperationFailed);
                             }
                         } catch (Exception e) {
-                            LOGGER.warn(String.format("Failed to run Shared Storage VM  Starting state scanner on Shared Storage VM  : %s status scanner", ssv.getName()), e);
+                            logger.warn(String.format("Failed to run Shared Storage VM  Starting state scanner on Shared Storage VM  : %s status scanner", ssv.getName()), e);
                         }
                     }
                     List<SSVVO> destroyingSSVs = ssvDao.findSSVsInState(SSV.State.Destroying);
                     for (SSV ssv : destroyingSSVs) {
-                        if (LOGGER.isInfoEnabled()) {
-                            LOGGER.info(String.format("Running Shared Storage VM  state scanner on Shared Storage VM  : %s for state: %s", ssv.getName(), SSV.State.Destroying.toString()));
+                        if (logger.isInfoEnabled()) {
+                            logger.info(String.format("Running Shared Storage VM  state scanner on Shared Storage VM  : %s for state: %s", ssv.getName(), SSV.State.Destroying.toString()));
                         }
                         try {
                             SSVDestroyWorker destroyWorker = new SSVDestroyWorker(ssv, SSVManagerImpl.this);
                             destroyWorker = ComponentContext.inject(destroyWorker);
                             destroyWorker.destroy();
                         } catch (Exception e) {
-                            LOGGER.warn(String.format("Failed to run Shared Storage VM  Destroying state scanner on Shared Storage VM  : %s status scanner", ssv.getName()), e);
+                            logger.warn(String.format("Failed to run Shared Storage VM  Destroying state scanner on Shared Storage VM  : %s status scanner", ssv.getName()), e);
                         }
                     }
                 }
             } catch (Exception e) {
-                LOGGER.warn("Caught exception while running Shared Storage VM  state scanner", e);
+                logger.warn("Caught exception while running Shared Storage VM  state scanner", e);
             }
             firstRun = false;
         }
@@ -826,8 +820,8 @@ public class SSVManagerImpl extends ManagerBase implements SSVService {
         // check if all the VM's are in same state
         VMInstanceVO vm = vmInstanceDao.findByIdIncludingRemoved(vo.getVmId());
         if (vm.getState() != state) {
-            if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug(String.format("Found VM : %s in the Shared Storage VM  : %s in state: %s while expected to be in state: %s. So moving the cluster to Alert state for reconciliation",
+            if (logger.isDebugEnabled()) {
+                logger.debug(String.format("Found VM : %s in the Shared Storage VM  : %s in state: %s while expected to be in state: %s. So moving the cluster to Alert state for reconciliation",
                         vm.getUuid(), ssv.getName(), vm.getState().toString(), state.toString()));
             }
             return false;

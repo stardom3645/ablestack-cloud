@@ -23,7 +23,7 @@ import java.util.List;
 import javax.inject.Inject;
 
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.log4j.Level;
+import org.apache.logging.log4j.Level;
 
 import com.cloud.exception.ConcurrentOperationException;
 import com.cloud.exception.ManagementServerException;
@@ -68,7 +68,7 @@ public class DesktopClusterDestroyWorker extends DesktopClusterResourceModifierA
                 || desktopCluster.getState().equals(DesktopCluster.State.Destroying))) {
             String msg = String.format("Cannot perform delete operation on cluster : %s in state: %s",
             desktopCluster.getName(), desktopCluster.getState());
-            LOGGER.warn(msg);
+            logger.warn(msg);
             throw new PermissionDeniedException(msg);
         }
     }
@@ -88,15 +88,15 @@ public class DesktopClusterDestroyWorker extends DesktopClusterResourceModifierA
                 try {
                     UserVm vm = userVmService.destroyVm(vmID, true);
                     if (!userVmManager.expunge(userVM)) {
-                        LOGGER.warn(String.format("Unable to expunge VM %s : %s, destroying desktop cluster will probably fail",
+                        logger.warn(String.format("Unable to expunge VM %s : %s, destroying desktop cluster will probably fail",
                             vm.getInstanceName() , vm.getUuid()));
                     }
                     desktopClusterVmMapDao.expunge(clusterVM.getId());
-                    if (LOGGER.isInfoEnabled()) {
-                        LOGGER.info(String.format("Destroyed VM : %s as part of desktop cluster : %s cleanup", vm.getDisplayName(), desktopCluster.getName()));
+                    if (logger.isInfoEnabled()) {
+                        logger.info(String.format("Destroyed VM : %s as part of desktop cluster : %s cleanup", vm.getDisplayName(), desktopCluster.getName()));
                     }
                 } catch (ResourceUnavailableException | ConcurrentOperationException e) {
-                    LOGGER.warn(String.format("Failed to destroy VM : %s part of the desktop cluster : %s cleanup. Moving on with destroying remaining resources provisioned for the desktop cluster", userVM.getDisplayName(), desktopCluster.getName()), e);
+                    logger.warn(String.format("Failed to destroy VM : %s part of the desktop cluster : %s cleanup. Moving on with destroying remaining resources provisioned for the desktop cluster", userVM.getDisplayName(), desktopCluster.getName()), e);
                     return false;
                 }
             }
@@ -117,14 +117,14 @@ public class DesktopClusterDestroyWorker extends DesktopClusterResourceModifierA
                             try {
                                 UserVm deskvm = userVmService.destroyVm(desktopvmID, true);
                                 if (!userVmManager.expunge(userDesktopVM)) {
-                                    LOGGER.warn(String.format("Unable to expunge VM %s : %s, Destroying a desktop virtual machine in a desktop cluster will probably fail",
+                                    logger.warn(String.format("Unable to expunge VM %s : %s, Destroying a desktop virtual machine in a desktop cluster will probably fail",
                                     deskvm.getInstanceName() , deskvm.getUuid()));
                                 }
-                                if (LOGGER.isInfoEnabled()) {
-                                    LOGGER.info(String.format("Destroyed VM : %s as part of desktop cluster : %s desktop virtual machine cleanup", deskvm.getDisplayName(), desktopCluster.getName()));
+                                if (logger.isInfoEnabled()) {
+                                    logger.info(String.format("Destroyed VM : %s as part of desktop cluster : %s desktop virtual machine cleanup", deskvm.getDisplayName(), desktopCluster.getName()));
                                 }
                             } catch (ResourceUnavailableException | ConcurrentOperationException e) {
-                                LOGGER.warn(String.format("Failed to destroy VM : %s part of the desktop cluster : %s desktop virtual machine cleanup. Moving on with destroying remaining resources provisioned for the desktop cluster", userDesktopVM.getDisplayName(), desktopCluster.getName()), e);
+                                logger.warn(String.format("Failed to destroy VM : %s part of the desktop cluster : %s desktop virtual machine cleanup. Moving on with destroying remaining resources provisioned for the desktop cluster", userDesktopVM.getDisplayName(), desktopCluster.getName()), e);
                                 return false;
                             }
                         }
@@ -205,8 +205,8 @@ public class DesktopClusterDestroyWorker extends DesktopClusterResourceModifierA
                     logMessage(Level.WARN, String.format("Failed to delete desktop cluster ip range : %s", desktopCluster.getName()), null);
                     return false;
                 }
-                if (LOGGER.isInfoEnabled()) {
-                    LOGGER.info(String.format("Desktop cluster ip range : %s is successfully deleted", desktopCluster.getName()));
+                if (logger.isInfoEnabled()) {
+                    logger.info(String.format("Desktop cluster ip range : %s is successfully deleted", desktopCluster.getName()));
                 }
             }
         return ipDestroyed;
@@ -216,8 +216,8 @@ public class DesktopClusterDestroyWorker extends DesktopClusterResourceModifierA
         init();
         validateClusterState();
         this.clusterVMs = desktopClusterVmMapDao.listByDesktopClusterId(desktopCluster.getId());
-        if (LOGGER.isInfoEnabled()) {
-            LOGGER.info(String.format("Destroying desktop cluster : %s", desktopCluster.getName()));
+        if (logger.isInfoEnabled()) {
+            logger.info(String.format("Destroying desktop cluster : %s", desktopCluster.getName()));
         }
         stateTransitTo(desktopCluster.getId(), DesktopCluster.Event.DestroyRequested);
         boolean vmsDestroyed = destroyClusterVMs();
@@ -228,13 +228,13 @@ public class DesktopClusterDestroyWorker extends DesktopClusterResourceModifierA
                 checkForRulesToDelete();
             } catch (ManagementServerException e) {
                 String msg = String.format("Failed to remove network rules of desktop cluster : %s", desktopCluster.getName());
-                LOGGER.warn(msg, e);
+                logger.warn(msg, e);
                 updateDesktopClusterEntryForGC();
                 throw new CloudRuntimeException(msg, e);
             }
         } else {
             String msg = String.format("Failed to destroy one or more VMs as part of desktop cluster : %s cleanup",desktopCluster.getName());
-            LOGGER.warn(msg);
+            logger.warn(msg);
             updateDesktopClusterEntryForGC();
             throw new CloudRuntimeException(msg);
         }
@@ -250,8 +250,8 @@ public class DesktopClusterDestroyWorker extends DesktopClusterResourceModifierA
             updateDesktopClusterEntryForGC();
             return false;
         }
-        if (LOGGER.isInfoEnabled()) {
-            LOGGER.info(String.format("Desktop cluster : %s is successfully deleted", desktopCluster.getName()));
+        if (logger.isInfoEnabled()) {
+            logger.info(String.format("Desktop cluster : %s is successfully deleted", desktopCluster.getName()));
         }
         return true;
     }

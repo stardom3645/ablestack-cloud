@@ -36,7 +36,7 @@ import org.apache.cloudstack.config.ApiServiceConfiguration;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.cloudstack.context.CallContext;
-import org.apache.log4j.Level;
+import org.apache.logging.log4j.Level;
 
 import com.cloud.dc.DataCenter;
 import com.cloud.deploy.DeployDestination;
@@ -143,8 +143,8 @@ public class DesktopClusterStartWorker extends DesktopClusterResourceModifierAct
         if (dcControlVm == null) {
             throw new ManagementServerException(String.format("Failed to provision DC Control VM for desktop cluster : %s" , desktopCluster.getName()));
         }
-        if (LOGGER.isInfoEnabled()) {
-            LOGGER.info(String.format("Provisioned DC Control VM : %s in to the desktop cluster : %s", dcControlVm.getDisplayName(), desktopCluster.getName()));
+        if (logger.isInfoEnabled()) {
+            logger.info(String.format("Provisioned DC Control VM : %s in to the desktop cluster : %s", dcControlVm.getDisplayName(), desktopCluster.getName()));
         }
         return dcControlVm;
     }
@@ -191,8 +191,8 @@ public class DesktopClusterStartWorker extends DesktopClusterResourceModifierAct
                 dcTemplate.getHypervisorType(), BaseCmd.HTTPMethod.POST, base64UserData, null, null, keypairs,
                 ipToNetworkMap, addrs, null, null, null, customParameterMap, null, null, null, null, true, null, null);
         }
-        if (LOGGER.isInfoEnabled()) {
-            LOGGER.info(String.format("Created Control VM ID: %s, %s in the desktop cluster : %s", dcControlVm.getUuid(), hostName, desktopCluster.getName()));
+        if (logger.isInfoEnabled()) {
+            logger.info(String.format("Created Control VM ID: %s, %s in the desktop cluster : %s", dcControlVm.getUuid(), hostName, desktopCluster.getName()));
         }
         return dcControlVm;
     }
@@ -208,8 +208,8 @@ public class DesktopClusterStartWorker extends DesktopClusterResourceModifierAct
         if (worksControlVm == null) {
             throw new ManagementServerException(String.format("Failed to provision Works Control VM for desktop cluster : %s" , desktopCluster.getName()));
         }
-        if (LOGGER.isInfoEnabled()) {
-            LOGGER.info(String.format("Provisioned Works Control VM : %s in to the desktop cluster : %s", worksControlVm.getDisplayName(), desktopCluster.getName()));
+        if (logger.isInfoEnabled()) {
+            logger.info(String.format("Provisioned Works Control VM : %s in to the desktop cluster : %s", worksControlVm.getDisplayName(), desktopCluster.getName()));
         }
         return worksControlVm;
     }
@@ -257,8 +257,8 @@ public class DesktopClusterStartWorker extends DesktopClusterResourceModifierAct
                 worksTemplate.getHypervisorType(), BaseCmd.HTTPMethod.POST, base64UserData, null, null, keypairs,
                 ipToNetworkMap, addrs, null, null, null, customParameterMap, null, null, null, null, true, null, null);
         }
-        if (LOGGER.isInfoEnabled()) {
-            LOGGER.info(String.format("Created Control VM ID : %s, %s in the desktop cluster : %s", worksControlVm.getUuid(), hostName, desktopCluster.getName()));
+        if (logger.isInfoEnabled()) {
+            logger.info(String.format("Created Control VM ID : %s, %s in the desktop cluster : %s", worksControlVm.getUuid(), hostName, desktopCluster.getName()));
         }
         return worksControlVm;
     }
@@ -268,18 +268,18 @@ public class DesktopClusterStartWorker extends DesktopClusterResourceModifierAct
         Network network = networkDao.findById(desktopCluster.getNetworkId());
         if (network == null) {
             String msg  = String.format("Network for desktop cluster : %s not found", desktopCluster.getName());
-            LOGGER.warn(msg);
+            logger.warn(msg);
             stateTransitTo(desktopCluster.getId(), DesktopCluster.Event.CreateFailed);
             throw new ManagementServerException(msg);
         }
         try {
             networkMgr.startNetwork(network.getId(), destination, context);
-            if (LOGGER.isInfoEnabled()) {
-                LOGGER.info(String.format("Network : %s is started for the desktop cluster : %s", network.getName(), desktopCluster.getName()));
+            if (logger.isInfoEnabled()) {
+                logger.info(String.format("Network : %s is started for the desktop cluster : %s", network.getName(), desktopCluster.getName()));
             }
         } catch (ConcurrentOperationException | ResourceUnavailableException |InsufficientCapacityException e) {
             String msg = String.format("Failed to start desktop cluster : %s as unable to start associated network : %s" , desktopCluster.getName(), network.getName());
-            LOGGER.error(msg, e);
+            logger.error(msg, e);
             stateTransitTo(desktopCluster.getId(), DesktopCluster.Event.CreateFailed);
             throw new ManagementServerException(msg, e);
         }
@@ -295,7 +295,7 @@ public class DesktopClusterStartWorker extends DesktopClusterResourceModifierAct
             try {
                 startDesktopVM(vm);
             } catch (ManagementServerException ex) {
-                LOGGER.warn(String.format("Failed to start VM : %s in desktop cluster : %s due to ", vm.getDisplayName(), desktopCluster.getName()) + ex);
+                logger.warn(String.format("Failed to start VM : %s in desktop cluster : %s due to ", vm.getDisplayName(), desktopCluster.getName()) + ex);
                 // dont bail out here. proceed further to stop the reset of the VM's
             }
         }
@@ -344,7 +344,7 @@ public class DesktopClusterStartWorker extends DesktopClusterResourceModifierAct
             }
             serverInfo = new String[]{port, protocol};
         } catch (final IOException e) {
-            LOGGER.warn("Failed to read configuration from server.properties file", e);
+            logger.warn("Failed to read configuration from server.properties file", e);
         }
         return serverInfo;
     }
@@ -357,8 +357,8 @@ public class DesktopClusterStartWorker extends DesktopClusterResourceModifierAct
         // Firewall Egress Network
         try {
             egress = provisionEgressFirewallRules(network, owner, CLUSTER_PORTAL_PORT, CLUSTER_LITE_PORT);
-            if (LOGGER.isInfoEnabled()) {
-                LOGGER.info(String.format("Provisioned egress firewall rule to open up port %d to %d on %s for Desktop cluster : %s", CLUSTER_PORTAL_PORT, CLUSTER_LITE_PORT, publicIp.getAddress().addr(), desktopCluster.getName()));
+            if (logger.isInfoEnabled()) {
+                logger.info(String.format("Provisioned egress firewall rule to open up port %d to %d on %s for Desktop cluster : %s", CLUSTER_PORTAL_PORT, CLUSTER_LITE_PORT, publicIp.getAddress().addr(), desktopCluster.getName()));
             }
         } catch (NoSuchFieldException | IllegalAccessException | ResourceUnavailableException | NetworkRuleConflictException e) {
             throw new ManagementServerException(String.format("Failed to provision egress firewall rules for Web access for the Desktop cluster : %s", desktopCluster.getName()), e);
@@ -367,12 +367,12 @@ public class DesktopClusterStartWorker extends DesktopClusterResourceModifierAct
         if (egress) {
             try {
                 firewall = provisionFirewallRules(publicIp, owner, CLUSTER_PORTAL_PORT, CLUSTER_API_PORT);
-                if (LOGGER.isInfoEnabled()) {
-                    LOGGER.info(String.format("Provisioned firewall rule to open up port %d to %d on %s for Desktop cluster : %s", CLUSTER_PORTAL_PORT, CLUSTER_API_PORT, publicIp.getAddress().addr(), desktopCluster.getName()));
+                if (logger.isInfoEnabled()) {
+                    logger.info(String.format("Provisioned firewall rule to open up port %d to %d on %s for Desktop cluster : %s", CLUSTER_PORTAL_PORT, CLUSTER_API_PORT, publicIp.getAddress().addr(), desktopCluster.getName()));
                 }
                 firewall2 = provisionFirewallRules(publicIp, owner, CLUSTER_SAMBA_PORT, CLUSTER_SAMBA_PORT);
-                if (LOGGER.isInfoEnabled()) {
-                    LOGGER.info(String.format("Provisioned firewall rule to open up port %d to %d on %s for Desktop cluster : %s", CLUSTER_SAMBA_PORT, CLUSTER_SAMBA_PORT, publicIp.getAddress().addr(), desktopCluster.getName()));
+                if (logger.isInfoEnabled()) {
+                    logger.info(String.format("Provisioned firewall rule to open up port %d to %d on %s for Desktop cluster : %s", CLUSTER_SAMBA_PORT, CLUSTER_SAMBA_PORT, publicIp.getAddress().addr(), desktopCluster.getName()));
                 }
             } catch (NoSuchFieldException | IllegalAccessException | ResourceUnavailableException | NetworkRuleConflictException e) {
                 throw new ManagementServerException(String.format("Failed to provision firewall rules for Web access for the Desktop cluster : %s", desktopCluster.getName()), e);
@@ -394,8 +394,8 @@ public class DesktopClusterStartWorker extends DesktopClusterResourceModifierAct
 
     public boolean startDesktopClusterOnCreate() {
         init();
-        if (LOGGER.isInfoEnabled()) {
-            LOGGER.info(String.format("Starting Desktop cluster : %s", desktopCluster.getName()));
+        if (logger.isInfoEnabled()) {
+            logger.info(String.format("Starting Desktop cluster : %s", desktopCluster.getName()));
         }
         stateTransitTo(desktopCluster.getId(), DesktopCluster.Event.StartRequested);
         DeployDestination dest = null;
@@ -440,8 +440,8 @@ public class DesktopClusterStartWorker extends DesktopClusterResourceModifierAct
                             logTransitStateAndThrow(Level.ERROR, String.format("Provisioning the DC Control VM failed in the desktop cluster : %s, %s", desktopCluster.getName(), e), desktopCluster.getId(), DesktopCluster.Event.CreateFailed, e);
                         }
                         clusterVMs.add(dcVM);
-                        if (LOGGER.isInfoEnabled()) {
-                            LOGGER.info(String.format("Desktop cluster : %s Control VMs successfully provisioned", desktopCluster.getName()));
+                        if (logger.isInfoEnabled()) {
+                            logger.info(String.format("Desktop cluster : %s Control VMs successfully provisioned", desktopCluster.getName()));
                         }
                         stateTransitTo(desktopCluster.getId(), DesktopCluster.Event.OperationSucceeded);
                         return true;
@@ -456,14 +456,14 @@ public class DesktopClusterStartWorker extends DesktopClusterResourceModifierAct
 
     public boolean startStoppedDesktopCluster() throws CloudRuntimeException {
         init();
-        if (LOGGER.isInfoEnabled()) {
-            LOGGER.info(String.format("Starting desktop cluster : %s", desktopCluster.getName()));
+        if (logger.isInfoEnabled()) {
+            logger.info(String.format("Starting desktop cluster : %s", desktopCluster.getName()));
         }
         stateTransitTo(desktopCluster.getId(), DesktopCluster.Event.StartRequested);
         startDesktopClusterVMs();
         stateTransitTo(desktopCluster.getId(), DesktopCluster.Event.OperationSucceeded);
-        if (LOGGER.isInfoEnabled()) {
-            LOGGER.info(String.format("Desktop cluster : %s successfully started", desktopCluster.getName()));
+        if (logger.isInfoEnabled()) {
+            logger.info(String.format("Desktop cluster : %s successfully started", desktopCluster.getName()));
         }
         return true;
     }

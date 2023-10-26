@@ -30,7 +30,7 @@ import org.apache.cloudstack.engine.orchestration.service.NetworkOrchestrationSe
 import org.apache.cloudstack.framework.config.dao.ConfigurationDao;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.IOUtils;
-import org.apache.log4j.Level;
+import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 
@@ -80,7 +80,7 @@ public class DesktopClusterActionWorker {
     public static final int CLUSTER_API_PORT = 8082;
     public static final int CLUSTER_SAMBA_PORT = 9017;
 
-    protected static Logger LOGGER = LogManager.getLogger(DesktopClusterActionWorker.class);
+    protected Logger logger = LogManager.getLogger(getClass());
 
     protected StateMachine2<DesktopCluster.State, DesktopCluster.Event, DesktopCluster> _stateMachine = DesktopCluster.State.getStateMachine();
 
@@ -163,32 +163,32 @@ public class DesktopClusterActionWorker {
 
     protected void logMessage(final Level logLevel, final String message, final Exception e) {
         if (logLevel == Level.INFO) {
-            if (LOGGER.isInfoEnabled()) {
+            if (logger.isInfoEnabled()) {
                 if (e != null) {
-                    LOGGER.info(message, e);
+                    logger.info(message, e);
                 } else {
-                    LOGGER.info(message);
+                    logger.info(message);
                 }
             }
         } else if (logLevel == Level.DEBUG) {
-            if (LOGGER.isDebugEnabled()) {
+            if (logger.isDebugEnabled()) {
                 if (e != null) {
-                    LOGGER.debug(message, e);
+                    logger.debug(message, e);
                 } else {
-                    LOGGER.debug(message);
+                    logger.debug(message);
                 }
             }
         } else if (logLevel == Level.WARN) {
             if (e != null) {
-                LOGGER.warn(message, e);
+                logger.warn(message, e);
             } else {
-                LOGGER.warn(message);
+                logger.warn(message);
             }
         } else {
             if (e != null) {
-                LOGGER.error(message, e);
+                logger.error(message, e);
             } else {
-                LOGGER.error(message);
+                logger.error(message);
             }
         }
     }
@@ -251,7 +251,7 @@ public class DesktopClusterActionWorker {
         try {
             return _stateMachine.transitTo(desktopCluster, e, null, desktopClusterDao);
         } catch (NoTransitionException nte) {
-            LOGGER.warn(String.format("Failed to transition state of the desktop cluster : %s in state %s on event %s",
+            logger.warn(String.format("Failed to transition state of the desktop cluster : %s in state %s on event %s",
             desktopCluster.getName(), desktopCluster.getState().toString(), e.toString()), nte);
             return false;
         }
@@ -263,7 +263,7 @@ public class DesktopClusterActionWorker {
         }
         List<DesktopClusterVmMapVO> clusterVMs = desktopClusterVmMapDao.listByDesktopClusterIdAndNotVmType(desktopCluster.getId(), "desktopvm");
         if (CollectionUtils.isEmpty(clusterVMs)) {
-            LOGGER.warn(String.format("Unable to retrieve VMs for desktop cluster : %s", desktopCluster.getName()));
+            logger.warn(String.format("Unable to retrieve VMs for desktop cluster : %s", desktopCluster.getName()));
             return null;
         }
         List<Long> vmIds = new ArrayList<>();
@@ -277,13 +277,13 @@ public class DesktopClusterActionWorker {
     protected IpAddress getDesktopClusterServerIp() {
         Network network = networkDao.findById(desktopCluster.getNetworkId());
         if (network == null) {
-            LOGGER.warn(String.format("Network for Desktop cluster : %s cannot be found", desktopCluster.getName()));
+            logger.warn(String.format("Network for Desktop cluster : %s cannot be found", desktopCluster.getName()));
             return null;
         }
         if (Network.GuestType.Isolated.equals(network.getGuestType())) {
             List<? extends IpAddress> addresses = networkModel.listPublicIpsAssignedToGuestNtwk(network.getId(), true);
             if (CollectionUtils.isEmpty(addresses)) {
-                LOGGER.warn(String.format("No public IP addresses found for network : %s, Desktop cluster : %s", network.getName(), desktopCluster.getName()));
+                logger.warn(String.format("No public IP addresses found for network : %s, Desktop cluster : %s", network.getName(), desktopCluster.getName()));
                 return null;
             }
             for (IpAddress address : addresses) {
@@ -291,10 +291,10 @@ public class DesktopClusterActionWorker {
                     return address;
                 }
             }
-            LOGGER.warn(String.format("No source NAT IP addresses found for network : %s, Desktop cluster : %s", network.getName(), desktopCluster.getName()));
+            logger.warn(String.format("No source NAT IP addresses found for network : %s, Desktop cluster : %s", network.getName(), desktopCluster.getName()));
             return null;
         }
-        LOGGER.warn(String.format("Unable to retrieve server IP address for Desktop cluster : %s", desktopCluster.getName()));
+        logger.warn(String.format("Unable to retrieve server IP address for Desktop cluster : %s", desktopCluster.getName()));
         return null;
     }
 

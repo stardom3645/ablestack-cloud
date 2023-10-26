@@ -83,7 +83,7 @@ import org.apache.cloudstack.engine.orchestration.service.NetworkOrchestrationSe
 import org.apache.cloudstack.framework.config.dao.ConfigurationDao;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.IOUtils;
-import org.apache.log4j.Level;
+import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 
@@ -105,7 +105,7 @@ public class AutomationControllerActionWorker {
     public static final int CLUSTER_SAMBA_PORT = 9017;
     public static final Integer AUTOMATION_CONTROLLER_PORT = null;
 
-    protected static Logger LOGGER = LogManager.getLogger(AutomationControllerActionWorker.class);
+    protected Logger logger = LogManager.getLogger(getClass());
 
     protected StateMachine2<AutomationController.State, AutomationController.Event, AutomationController> _stateMachine = AutomationController.State.getStateMachine();
 
@@ -200,32 +200,32 @@ public class AutomationControllerActionWorker {
 
     protected void logMessage(final Level logLevel, final String message, final Exception e) {
         if (logLevel == Level.INFO) {
-            if (LOGGER.isInfoEnabled()) {
+            if (logger.isInfoEnabled()) {
                 if (e != null) {
-                    LOGGER.info(message, e);
+                    logger.info(message, e);
                 } else {
-                    LOGGER.info(message);
+                    logger.info(message);
                 }
             }
         } else if (logLevel == Level.DEBUG) {
-            if (LOGGER.isDebugEnabled()) {
+            if (logger.isDebugEnabled()) {
                 if (e != null) {
-                    LOGGER.debug(message, e);
+                    logger.debug(message, e);
                 } else {
-                    LOGGER.debug(message);
+                    logger.debug(message);
                 }
             }
         } else if (logLevel == Level.WARN) {
             if (e != null) {
-                LOGGER.warn(message, e);
+                logger.warn(message, e);
             } else {
-                LOGGER.warn(message);
+                logger.warn(message);
             }
         } else {
             if (e != null) {
-                LOGGER.error(message, e);
+                logger.error(message, e);
             } else {
-                LOGGER.error(message);
+                logger.error(message);
             }
         }
     }
@@ -288,7 +288,7 @@ public class AutomationControllerActionWorker {
         try {
             return _stateMachine.transitTo(automationController, e, null, automationControllerDao);
         } catch (NoTransitionException nte) {
-            LOGGER.warn(String.format("Failed to transition state of the automation automation : %s in state %s on event %s",
+            logger.warn(String.format("Failed to transition state of the automation automation : %s in state %s on event %s",
             automationController.getName(), automationController.getState().toString(), e.toString()), nte);
             return false;
         }
@@ -297,13 +297,13 @@ public class AutomationControllerActionWorker {
     protected IpAddress getAutomationControllerServerIp() {
         Network network = networkDao.findById(automationController.getNetworkId());
         if (network == null) {
-            LOGGER.warn(String.format("Network for automation controller : %s cannot be found", automationController.getName()));
+            logger.warn(String.format("Network for automation controller : %s cannot be found", automationController.getName()));
             return null;
         }
         if (Network.GuestType.Isolated.equals(network.getGuestType())) {
             List<? extends IpAddress> addresses = networkModel.listPublicIpsAssignedToGuestNtwk(network.getId(), true);
             if (CollectionUtils.isEmpty(addresses)) {
-                LOGGER.warn(String.format("No public IP addresses found for network : %s, automation controller : %s", network.getName(), automationController.getName()));
+                logger.warn(String.format("No public IP addresses found for network : %s, automation controller : %s", network.getName(), automationController.getName()));
                 return null;
             }
             for (IpAddress address : addresses) {
@@ -311,10 +311,10 @@ public class AutomationControllerActionWorker {
                     return address;
                 }
             }
-            LOGGER.warn(String.format("No source NAT IP addresses found for network : %s, automation controller : %s", network.getName(), automationController.getName()));
+            logger.warn(String.format("No source NAT IP addresses found for network : %s, automation controller : %s", network.getName(), automationController.getName()));
             return null;
         }
-        LOGGER.warn(String.format("Unable to retrieve server IP address for automation controller : %s", automationController.getName()));
+        logger.warn(String.format("Unable to retrieve server IP address for automation controller : %s", automationController.getName()));
         return null;
     }
 
@@ -400,12 +400,12 @@ public class AutomationControllerActionWorker {
                 ClusterDetailsVO cluster_detail_ram = clusterDetailsDao.findDetail(cluster.getId(), "memoryOvercommitRatio");
                 Float cpuOvercommitRatio = Float.parseFloat(cluster_detail_cpu.getValue());
                 Float memoryOvercommitRatio = Float.parseFloat(cluster_detail_ram.getValue());
-                if (LOGGER.isDebugEnabled()) {
-                    LOGGER.debug(String.format("Checking host : %s for capacity already reserved %d", h.getName(), reserved));
+                if (logger.isDebugEnabled()) {
+                    logger.debug(String.format("Checking host : %s for capacity already reserved %d", h.getName(), reserved));
                 }
                 if (capacityManager.checkIfHostHasCapacity(h.getId(), cpu_requested * reserved, ram_requested * reserved, false, cpuOvercommitRatio, memoryOvercommitRatio, true)) {
-                    if (LOGGER.isDebugEnabled()) {
-                        LOGGER.debug(String.format("Found host : %s for with enough capacity, CPU=%d RAM=%s", h.getName(), cpu_requested * reserved, toHumanReadableSize(ram_requested * reserved)));
+                    if (logger.isDebugEnabled()) {
+                        logger.debug(String.format("Found host : %s for with enough capacity, CPU=%d RAM=%s", h.getName(), cpu_requested * reserved, toHumanReadableSize(ram_requested * reserved)));
                     }
                     hostEntry.setValue(new Pair<HostVO, Integer>(h, reserved));
                     suitable_host_found = true;
@@ -414,23 +414,23 @@ public class AutomationControllerActionWorker {
             }
         }
         if (suitable_host_found) {
-            if (LOGGER.isInfoEnabled()) {
-                LOGGER.info(String.format("Suitable hosts found in datacenter : %s, creating deployment destination", zone.getName()));
+            if (logger.isInfoEnabled()) {
+                logger.info(String.format("Suitable hosts found in datacenter : %s, creating deployment destination", zone.getName()));
             }
             return new DeployDestination(zone, null, null, null);
         }
         String msg = String.format("Cannot find enough capacity for automation controller(requested cpu=%d memory=%s) with offering : %s and hypervisor: %s",
                 cpu_requested * nodesCount, toHumanReadableSize(ram_requested * nodesCount), offering.getName());
 
-        LOGGER.warn(msg);
+        logger.warn(msg);
         throw new InsufficientServerCapacityException(msg, DataCenter.class, zone.getId());
     }
 
     protected DeployDestination plan() throws InsufficientServerCapacityException {
         ServiceOffering offering = serviceOfferingDao.findById(automationController.getServiceOfferingId());
         DataCenter zone = dataCenterDao.findById(automationController.getZoneId());
-        if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug(String.format("Checking deployment destination for automation controller : %s in zone : %s", automationController.getName(), zone.getName()));
+        if (logger.isDebugEnabled()) {
+            logger.debug(String.format("Checking deployment destination for automation controller : %s in zone : %s", automationController.getName(), zone.getName()));
         }
         final long dest = 2;
         return plan(dest, zone, offering);

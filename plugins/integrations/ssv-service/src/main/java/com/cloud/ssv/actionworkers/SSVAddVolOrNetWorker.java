@@ -20,7 +20,7 @@ package com.cloud.ssv.actionworkers;
 import org.apache.cloudstack.api.command.user.ssv.AddVolSSVCmd;
 import org.apache.cloudstack.api.command.user.vm.RebootVMCmd;
 import org.apache.cloudstack.api.command.user.volume.CreateVolumeCmd;
-import org.apache.log4j.Level;
+import org.apache.logging.log4j.Level;
 import java.lang.reflect.Field;
 
 import com.cloud.exception.ConcurrentOperationException;
@@ -43,8 +43,8 @@ public class SSVAddVolOrNetWorker extends SSVActionWorker {
 
     public boolean addVol(AddVolSSVCmd cmd) throws CloudRuntimeException {
         // init();
-        if (LOGGER.isInfoEnabled()) {
-            LOGGER.info(String.format("Add Volmue to Shared Storage VM  : %s", ssv.getName()));
+        if (logger.isInfoEnabled()) {
+            logger.info(String.format("Add Volmue to Shared Storage VM  : %s", ssv.getName()));
         }
         // stateTransitTo(ssv.getId(), SSV.Event.AddVolumeRequested);
         SSVVmMapVO vo = ssvVmMapDao.listVmBySSVServiceId(ssv.getId());
@@ -53,14 +53,14 @@ public class SSVAddVolOrNetWorker extends SSVActionWorker {
             logTransitStateAndThrow(Level.ERROR, String.format("Failed to Add Volmue VMs in Shared Storage VM : %s", ssv.getName()), ssv.getId(), SSV.Event.OperationFailed);
         } else {
             try {
-                LOGGER.debug("Create Volume 11111111........................");
+                logger.debug("Create Volume 11111111........................");
                 CreateVolumeCmd createVolume = new CreateVolumeCmd();
                 createVolume = ComponentContext.inject(createVolume);
                 Field diskOfferingId = createVolume.getClass().getDeclaredField("diskOfferingId");
                 diskOfferingId.setAccessible(true);
                 diskOfferingId.set(createVolume, cmd.getDiskOfferingId());
 
-                LOGGER.debug("cmd.getSize() :::::::::" + cmd.getSize());
+                logger.debug("cmd.getSize() :::::::::" + cmd.getSize());
                 if (cmd.getSize() != null && cmd.getSize() > 0 ) {
                     Field size = createVolume.getClass().getDeclaredField("size");
                     size.setAccessible(true);
@@ -72,26 +72,26 @@ public class SSVAddVolOrNetWorker extends SSVActionWorker {
                 zoneId.set(createVolume, cmd.getZoneId());
 
 
-                LOGGER.debug("Create Volume 111111112222222........................");
+                logger.debug("Create Volume 111111112222222........................");
 
                 Volume volume = volumeApiService.allocVolume(createVolume);
 
-                LOGGER.debug("Create Volume ........................");
-                LOGGER.debug("volume id :: " + volume.getId());
+                logger.debug("Create Volume ........................");
+                logger.debug("volume id :: " + volume.getId());
 
                 volumeApiService.attachVolumeToVM(vm.getId(), volume.getId(), null);
-                LOGGER.debug("Attach VolumeTo VM ........................");
+                logger.debug("Attach VolumeTo VM ........................");
                 RebootVMCmd rebootVm = new RebootVMCmd();
                 rebootVm = ComponentContext.inject(rebootVm);
                 Field id = rebootVm.getClass().getDeclaredField("id");
                 id.setAccessible(true);
                 id.set(rebootVm, vm.getId());
 
-                LOGGER.debug("Reboot VM ........................");
+                logger.debug("Reboot VM ........................");
                 userVmService.rebootVirtualMachine(rebootVm);
-                LOGGER.debug("Done ........................");
+                logger.debug("Done ........................");
             } catch (InsufficientCapacityException | ResourceUnavailableException | IllegalAccessException | NoSuchFieldException | ConcurrentOperationException | ResourceAllocationException ex) {
-                LOGGER.warn(String.format("Failed to Add Volmue VM : %s in Shared Storage VM  : %s due to ", vm.getDisplayName(), ssv.getName()) + ex);
+                logger.warn(String.format("Failed to Add Volmue VM : %s in Shared Storage VM  : %s due to ", vm.getDisplayName(), ssv.getName()) + ex);
                 // dont bail out here. proceed further to stop the reset of the VM's
             }
             if (!vm.getState().equals(VirtualMachine.State.Running)) {
