@@ -38,8 +38,8 @@
       </div>
     </template>
     <template #bodyCell="{ column, text, record }">
-      <template v-if="column.key === 'name'">
-        <span v-if="['vm'].includes($route.path.split('/')[1])" style="margin-right: 5px">
+      <template v-if="['name', 'provider'].includes(column.key) ">
+        <span v-if="['vm', 'vnfapp'].includes($route.path.split('/')[1])" style="margin-right: 5px">
           <span v-if="record.icon && record.icon.base64image">
             <resource-icon :image="record.icon.base64image" size="2x"/>
           </span>
@@ -50,12 +50,12 @@
             style="margin-left: 5px"
             :actions="actions"
             :resource="record"
-            :enabled="quickViewEnabled() && actions.length > 0 && columns && columns[0].dataIndex === 'name' "
+            :enabled="quickViewEnabled() && actions.length > 0 && columns && ['name', 'provider'].includes(columns[0].dataIndex)"
             @exec-action="$parent.execAction"/>
           <span v-if="$route.path.startsWith('/project')" style="margin-right: 5px">
             <tooltip-button type="dashed" size="small" icon="LoginOutlined" @onClick="changeProject(record)" />
           </span>
-          <span v-if="$showIcon() && !['vm'].includes($route.path.split('/')[1])" style="margin-right: 5px">
+          <span v-if="$showIcon() && !['vm', 'vnfapp'].includes($route.path.split('/')[1])" style="margin-right: 5px">
             <resource-icon v-if="$showIcon() && record.icon && record.icon.base64image" :image="record.icon.base64image" size="2x"/>
             <os-logo v-else-if="record.ostypename" :osName="record.ostypename" size="2x" />
             <render-icon v-else-if="typeof $route.meta.icon ==='string'" style="font-size: 16px;" :icon="$route.meta.icon"/>
@@ -99,7 +99,7 @@
         <span>{{ text <= 0 ? 'N/A' : text }}</span>
       </template>
       <template v-if="column.key === 'templatetype'">
-        <router-link :to="{ path: $route.path + '/' + record.templatetype }">{{ text }}</router-link>
+        <span>{{ text }}</span>
       </template>
       <template v-if="column.key === 'type'">
         <span v-if="$route.path.startsWith('/event')">{{ $t(text.toLowerCase()) }}</span>
@@ -121,7 +121,7 @@
         <router-link :to="{ path: $route.path + '/' + record.id }">{{ text }}</router-link>
       </template>
       <template v-if="column.key === 'username'">
-        <span v-if="$showIcon() && !['vm'].includes($route.path.split('/')[1])" style="margin-right: 5px">
+        <span v-if="$showIcon() && !['vm', 'vnfapp'].includes($route.path.split('/')[1])" style="margin-right: 5px">
           <resource-icon v-if="$showIcon() && record.icon && record.icon.base64image" :image="record.icon.base64image" size="2x"/>
           <user-outlined v-else style="font-size: 16px;" />
         </span>
@@ -179,7 +179,7 @@
       </template>
       <template v-if="column.key === 'physicalsize'">
         <span v-if="text">
-          {{ parseFloat(parseFloat(text) / 1024.0 / 1024.0 / 1024.0).toFixed(2) }} GiB
+          {{ isNaN(text) ? text : (parseFloat(parseFloat(text) / 1024.0 / 1024.0 / 1024.0).toFixed(2) + ' GiB') }}
         </span>
       </template>
       <template v-if="column.key === 'physicalnetworkname'">
@@ -358,7 +358,7 @@
       <template v-if="['created', 'sent'].includes(column.key)">
         {{ $toLocaleDate(text) }}
       </template>
-      <template v-if="['startdate', 'enddate'].includes(column.key) && ['vm'].includes($route.path.split('/')[1])">
+      <template v-if="['startdate', 'enddate'].includes(column.key) && ['vm', 'vnfapp'].includes($route.path.split('/')[1])">
         {{ getDateAtTimeZone(text, record.timezone) }}
       </template>
       <template v-if="column.key === 'order'">
@@ -471,13 +471,13 @@
 
 <script>
 import { api } from '@/api'
-import OsLogo from '@/components/widgets/OsLogo'
-import Status from '@/components/widgets/Status'
 import QuickView from '@/components/view/QuickView'
-import CopyLabel from '@/components/widgets/CopyLabel'
-import TooltipButton from '@/components/widgets/TooltipButton'
 import ResourceIcon from '@/components/view/ResourceIcon'
+import CopyLabel from '@/components/widgets/CopyLabel'
+import OsLogo from '@/components/widgets/OsLogo'
 import ResourceLabel from '@/components/widgets/ResourceLabel'
+import Status from '@/components/widgets/Status'
+import TooltipButton from '@/components/widgets/TooltipButton'
 import { createPathBasedOnVmType } from '@/utils/plugins'
 import cronstrue from 'cronstrue/i18n'
 import moment from 'moment-timezone'
@@ -584,17 +584,17 @@ export default {
     quickViewEnabled () {
       return new RegExp(['/vm', '/desktop', '/kubernetes', '/ssh', '/userdata', '/vmgroup', '/affinitygroup', '/autoscalevmgroup',
         '/volume', '/snapshot', '/vmsnapshot', '/backup',
-        '/guestnetwork', '/vpc', '/vpncustomergateway',
+        '/guestnetwork', '/vpc', '/vpncustomergateway', '/vnfapp',
         '/template', '/controllertemplate', '/mastertemplate', 'automationtemplate', 'automationcontroller', '/iso',
         '/project', '/account',
         '/zone', '/pod', '/cluster', '/host', '/storagepool', '/imagestore', '/systemvm', '/router', '/ilbvm', '/annotation',
         '/computeoffering', '/systemoffering', '/diskoffering', '/backupoffering', '/networkoffering', '/vpcoffering',
-        '/tungstenfabric', '/guestos', '/guestoshypervisormapping'].join('|'))
+        '/tungstenfabric', '/oauthsetting', '/guestos', '/guestoshypervisormapping'].join('|'))
         .test(this.$route.path)
     },
     enableGroupAction () {
       return ['vm', 'alert', 'vmgroup', 'ssh', 'userdata', 'affinitygroup', 'autoscalevmgroup', 'volume', 'snapshot',
-        'vmsnapshot', 'guestnetwork', 'vpc', 'publicip', 'vpnuser', 'vpncustomergateway',
+        'vmsnapshot', 'guestnetwork', 'vpc', 'publicip', 'vpnuser', 'vpncustomergateway', 'vnfapp',
         'project', 'account', 'systemvm', 'router', 'computeoffering', 'systemoffering',
         'diskoffering', 'backupoffering', 'networkoffering', 'vpcoffering', 'ilbvm', 'kubernetes', 'comment'
       ].includes(this.$route.name)

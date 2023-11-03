@@ -70,6 +70,7 @@ import org.apache.cloudstack.api.command.admin.vm.RecoverVMCmd;
 import org.apache.cloudstack.api.command.user.vm.AddNicToVMCmd;
 import org.apache.cloudstack.api.command.user.vm.CloneVMCmd;
 import org.apache.cloudstack.api.command.user.vm.DeployVMCmd;
+import org.apache.cloudstack.api.command.user.vm.DeployVnfApplianceCmd;
 import org.apache.cloudstack.api.command.user.vm.DestroyVMCmd;
 import org.apache.cloudstack.api.command.user.vm.RebootVMCmd;
 import org.apache.cloudstack.api.command.user.vm.RemoveNicFromVMCmd;
@@ -124,6 +125,7 @@ import org.apache.cloudstack.storage.datastore.db.PrimaryDataStoreDao;
 import org.apache.cloudstack.storage.datastore.db.StoragePoolVO;
 import org.apache.cloudstack.storage.datastore.db.TemplateDataStoreDao;
 import org.apache.cloudstack.storage.datastore.db.TemplateDataStoreVO;
+import org.apache.cloudstack.storage.template.VnfTemplateManager;
 import org.apache.cloudstack.userdata.UserDataManager;
 import org.apache.cloudstack.utils.bytescale.ByteScaleUtils;
 import org.apache.cloudstack.utils.security.ParserUtils;
@@ -136,6 +138,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 import org.apache.log4j.Logger;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.w3c.dom.Document;
@@ -624,6 +627,9 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
 
     @Inject
     private UserDataManager userDataManager;
+
+    @Inject
+    VnfTemplateManager vnfTemplateManager;
 
     private static final ConfigKey<Integer> VmIpFetchWaitInterval = new ConfigKey<Integer>("Advanced", Integer.class, "externaldhcp.vmip.retrieval.interval", "180",
             "Wait Interval (in seconds) for shared network vm dhcp ip addr fetch for next iteration ", true);
@@ -1180,9 +1186,8 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
     private UserVm forceRebootVirtualMachine(long vmId, long hostId, boolean enterSetup) {
         try {
             if (stopVirtualMachine(vmId, false) != null) {
-                Map<VirtualMachineProfile.Param,Object> params = null;
+                Map<VirtualMachineProfile.Param,Object> params = new HashMap<>();
                 if (enterSetup) {
-                    params = new HashMap();
                     params.put(VirtualMachineProfile.Param.BootIntoSetup, Boolean.TRUE);
                 }
                 return startVirtualMachine(vmId, null, null, hostId, params, null, false).first();
@@ -1447,6 +1452,8 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
             }
         }
 
+        setNicAsDefaultIfNeeded(vmInstance, profile);
+
         NicProfile guestNic = null;
         boolean cleanUp = true;
 
@@ -1473,6 +1480,18 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
         CallContext.current().putContextParameter(Nic.class, guestNic.getUuid());
         s_logger.debug(String.format("Successful addition of %s from %s through %s", network, vmInstance, guestNic));
         return _vmDao.findById(vmInstance.getId());
+    }
+
+    /**
+     * Set NIC as default if VM has no default NIC
+     * @param vmInstance VM instance to be checked
+     * @param nicProfile NIC profile to be updated
+     */
+    public void setNicAsDefaultIfNeeded(UserVmVO vmInstance, NicProfile nicProfile) {
+        if (_networkModel.getDefaultNic(vmInstance.getId()) == null) {
+            s_logger.debug(String.format("Setting NIC %s as default as VM %s has no default NIC.", nicProfile.getName(), vmInstance.getName()));
+            nicProfile.setDefaultNic(true);
+        }
     }
 
     /**
@@ -5128,6 +5147,11 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
         if (tpmDetail != null){
             additionalParams.put(VirtualMachineProfile.Param.TpmVersion, tpmDetail.getValue());
         }
+
+        if (StringUtils.isNotBlank(cmd.getPassword())) {
+            additionalParams.put(VirtualMachineProfile.Param.VmPassword, cmd.getPassword());
+        }
+
         return startVirtualMachine(vmId, podId, clusterId, hostId, diskOfferingMap, additionalParams, cmd.getDeploymentPlanner());
     }
 
@@ -5518,21 +5542,21 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
     }
 
     @Override
-    public Pair<UserVmVO, Map<VirtualMachineProfile.Param, Object>> startVirtualMachine(long vmId, Long hostId, Map<VirtualMachineProfile.Param, Object> additionalParams, String deploymentPlannerToUse)
-            throws ConcurrentOperationException, ResourceUnavailableException, InsufficientCapacityException, ResourceAllocationException {
+    public Pair<UserVmVO, Map<VirtualMachineProfile.Param, Object>> startVirtualMachine(long vmId, Long hostId, @NotNull Map<VirtualMachineProfile.Param, Object> additionalParams,
+            String deploymentPlannerToUse) throws ConcurrentOperationException, ResourceUnavailableException, InsufficientCapacityException, ResourceAllocationException {
         return startVirtualMachine(vmId, null, null, hostId, additionalParams, deploymentPlannerToUse);
     }
 
     @Override
     public Pair<UserVmVO, Map<VirtualMachineProfile.Param, Object>> startVirtualMachine(long vmId, Long podId, Long clusterId, Long hostId,
-            Map<VirtualMachineProfile.Param, Object> additionalParams, String deploymentPlannerToUse)
+            @NotNull Map<VirtualMachineProfile.Param, Object> additionalParams, String deploymentPlannerToUse)
             throws ConcurrentOperationException, ResourceUnavailableException, InsufficientCapacityException, ResourceAllocationException {
         return startVirtualMachine(vmId, podId, clusterId, hostId, additionalParams, deploymentPlannerToUse, true);
     }
 
     @Override
     public Pair<UserVmVO, Map<VirtualMachineProfile.Param, Object>> startVirtualMachine(long vmId, Long podId, Long clusterId, Long hostId,
-            Map<VirtualMachineProfile.Param, Object> additionalParams, String deploymentPlannerToUse, boolean isExplicitHost)
+            @NotNull Map<VirtualMachineProfile.Param, Object> additionalParams, String deploymentPlannerToUse, boolean isExplicitHost)
             throws ConcurrentOperationException, ResourceUnavailableException, InsufficientCapacityException, ResourceAllocationException {
         // Input validation
         final Account callerAccount = CallContext.current().getCallingAccount();
@@ -5631,15 +5655,7 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
             // Check that the password was passed in and is valid
             template = _templateDao.findByIdIncludingRemoved(vm.getTemplateId());
 
-            String password = "saved_password";
-            if (template.isEnablePassword()) {
-                if (vm.getDetail("password") != null) {
-                    password = DBEncryptionUtil.decrypt(vm.getDetail("password"));
-                } else {
-                    password = _mgr.generateRandomPassword();
-                    vm.setPassword(password);
-                }
-            }
+            String password = getCurrentVmPasswordOrDefineNewPassword(String.valueOf(additionalParams.getOrDefault(VirtualMachineProfile.Param.VmPassword, "")), vm, template);
 
             if (!validPassword(password)) {
                 throw new InvalidParameterValueException("A valid password for this virtual machine was not provided.");
@@ -5652,7 +5668,7 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
             params = createParameterInParameterMap(params, additionalParams, VirtualMachineProfile.Param.VmPassword, password);
         }
 
-        if(null != additionalParams && additionalParams.containsKey(VirtualMachineProfile.Param.BootIntoSetup)) {
+        if(additionalParams.containsKey(VirtualMachineProfile.Param.BootIntoSetup)) {
             if (! HypervisorType.VMware.equals(vm.getHypervisorType())) {
                 throw new InvalidParameterValueException(ApiConstants.BOOT_INTO_SETUP + " makes no sense for " + vm.getHypervisorType());
             }
@@ -5693,6 +5709,39 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
         }
 
         return vmParamPair;
+    }
+
+    /**
+     * If the template is password enabled and the VM already has a password, returns it.
+     * If the template is password enabled and the VM does not have a password, sets the password to the password defined by the user and returns it. If no password is informed,
+     * sets it to a random password and returns it.
+     * If the template is not password enabled, returns saved_password.
+     * @param newPassword The new password informed by the user in order to set the password of the VM.
+     * @param vm The VM to retrieve the password from.
+     * @param template The template to be checked if the password is enabled or not.
+     * @return The password of the VM or saved_password.
+     */
+    protected String getCurrentVmPasswordOrDefineNewPassword(String newPassword, UserVmVO vm, VMTemplateVO template) {
+        String password = "saved_password";
+
+        if (template.isEnablePassword()) {
+            if (vm.getDetail("password") != null) {
+                s_logger.debug(String.format("Decrypting VM [%s] current password.", vm));
+                password = DBEncryptionUtil.decrypt(vm.getDetail("password"));
+            } else if (StringUtils.isNotBlank(newPassword)) {
+                s_logger.debug(String.format("A password for VM [%s] was informed. Setting VM password to value defined by user.", vm));
+                password = newPassword;
+                vm.setPassword(password);
+            } else {
+                s_logger.debug(String.format("Setting VM [%s] password to a randomly generated password.", vm));
+                password = _mgr.generateRandomPassword();
+                vm.setPassword(password);
+            }
+        } else if (StringUtils.isNotBlank(newPassword)) {
+            s_logger.debug(String.format("A password was informed; however, the template [%s] is not password enabled. Ignoring the parameter.", template));
+        }
+
+        return password;
     }
 
     private Map<VirtualMachineProfile.Param, Object> createParameterInParameterMap(Map<VirtualMachineProfile.Param, Object> params, Map<VirtualMachineProfile.Param, Object> parameterMap, VirtualMachineProfile.Param parameter,
@@ -6107,6 +6156,11 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
         if (template == null) {
             throw new InvalidParameterValueException("Unable to use template " + templateId);
         }
+        if (TemplateType.VNF.equals(template.getTemplateType())) {
+            vnfTemplateManager.validateVnfApplianceNics(template, cmd.getNetworkIds());
+        } else if (cmd instanceof DeployVnfApplianceCmd) {
+            throw new InvalidParameterValueException("Can't deploy VNF appliance from a non-VNF template");
+        }
 
         ServiceOfferingJoinVO svcOffering = serviceOfferingJoinDao.findById(serviceOfferingId);
 
@@ -6188,14 +6242,14 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
             if (networkIds != null) {
                 throw new InvalidParameterValueException("Can't specify network Ids in Basic zone");
             } else {
-                vm = createBasicSecurityGroupVirtualMachine(zone, serviceOffering, template, getSecurityGroupIdList(cmd), owner, name, displayName, diskOfferingId,
+                vm = createBasicSecurityGroupVirtualMachine(zone, serviceOffering, template, getSecurityGroupIdList(cmd, zone, template, owner), owner, name, displayName, diskOfferingId,
                         size , group , cmd.getHypervisor(), cmd.getHttpMethod(), userData, userDataId, userDataDetails, sshKeyPairNames, cmd.getIpToNetworkMap(), addrs, displayVm , keyboard , cmd.getAffinityGroupIdList(),
                         cmd.getDetails(), cmd.getCustomId(), cmd.getDhcpOptionsMap(),
                         dataDiskTemplateToDiskOfferingMap, userVmOVFProperties, dynamicScalingEnabled, overrideDiskOfferingId);
             }
         } else {
             if (zone.isSecurityGroupEnabled())  {
-                vm = createAdvancedSecurityGroupVirtualMachine(zone, serviceOffering, template, networkIds, getSecurityGroupIdList(cmd), owner, name,
+                vm = createAdvancedSecurityGroupVirtualMachine(zone, serviceOffering, template, networkIds, getSecurityGroupIdList(cmd, zone, template, owner), owner, name,
                         displayName, diskOfferingId, size, group, cmd.getHypervisor(), cmd.getHttpMethod(), userData, userDataId, userDataDetails, sshKeyPairNames, cmd.getIpToNetworkMap(), addrs, displayVm, keyboard,
                         cmd.getAffinityGroupIdList(), cmd.getDetails(), cmd.getCustomId(), cmd.getDhcpOptionsMap(),
                         dataDiskTemplateToDiskOfferingMap, userVmOVFProperties, dynamicScalingEnabled, overrideDiskOfferingId, null);
@@ -6207,6 +6261,9 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
                 vm = createAdvancedVirtualMachine(zone, serviceOffering, template, networkIds, owner, name, displayName, diskOfferingId, size, group,
                         cmd.getHypervisor(), cmd.getHttpMethod(), userData, userDataId, userDataDetails, sshKeyPairNames, cmd.getIpToNetworkMap(), addrs, displayVm, keyboard, cmd.getAffinityGroupIdList(), cmd.getDetails(),
                         cmd.getCustomId(), cmd.getDhcpOptionsMap(), dataDiskTemplateToDiskOfferingMap, userVmOVFProperties, dynamicScalingEnabled, null, overrideDiskOfferingId);
+                if (cmd instanceof DeployVnfApplianceCmd) {
+                    vnfTemplateManager.createIsolatedNetworkRulesForVnfAppliance(zone, template, owner, vm, (DeployVnfApplianceCmd) cmd);
+                }
             }
         }
 
@@ -6541,6 +6598,20 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
         } else {
             return cmd.getSecurityGroupIdList();
         }
+    }
+
+    protected List<Long> getSecurityGroupIdList(SecurityGroupAction cmd, DataCenter zone, VirtualMachineTemplate template, Account owner) {
+        List<Long> securityGroupIdList = getSecurityGroupIdList(cmd);
+        if (cmd instanceof DeployVnfApplianceCmd) {
+            SecurityGroup securityGroup = vnfTemplateManager.createSecurityGroupForVnfAppliance(zone, template, owner, (DeployVnfApplianceCmd) cmd);
+            if (securityGroup != null) {
+                if (securityGroupIdList == null) {
+                    securityGroupIdList = new ArrayList<>();
+                }
+                securityGroupIdList.add(securityGroup.getId());
+            }
+        }
+        return securityGroupIdList;
     }
 
     // this is an opportunity to verify that parameters that came in via the Details Map are OK
