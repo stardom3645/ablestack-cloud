@@ -362,15 +362,9 @@ public class KVMStoragePoolManager {
         KVMStoragePool pool = adaptor.createStoragePool(name, host, port, path, userInfo, type, details);
 
         // LibvirtStorageAdaptor-specific statement
-        if (type == StoragePoolType.NetworkFilesystem && primaryStorage) {
-            KVMHABase.NfsStoragePool nfspool = new KVMHABase.NfsStoragePool(pool.getUuid(), host, path, pool.getLocalPath(), PoolType.PrimaryStorage);
-            _haMonitor.addStoragePool(nfspool);
-        } else if (type == StoragePoolType.RBD && primaryStorage) {
-            KVMHABase.RbdStoragePool rbdpool = new KVMHABase.RbdStoragePool(pool.getUuid(), host, path, pool.getLocalPath(), PoolType.PrimaryStorage, pool.getAuthUserName(), pool.getAuthSecret(), pool.getSourceHost());
-            _haMonitor.addStoragePool(rbdpool);
-        } else if (type == StoragePoolType.CLVM && primaryStorage) {
-            KVMHABase.ClvmStoragePool clvmpool = new KVMHABase.ClvmStoragePool(pool.getUuid(), host, path, PoolType.PrimaryStorage);
-            _haMonitor.addStoragePool(clvmpool);
+        if (pool.isPoolSupportHA() && primaryStorage) {
+            KVMHABase.HAStoragePool storagePool = new KVMHABase.HAStoragePool(pool, host, path, PoolType.PrimaryStorage);
+            _haMonitor.addStoragePool(storagePool);
         }
         StoragePoolInformation info = new StoragePoolInformation(name, host, port, path, userInfo, type, details, primaryStorage);
         addStoragePool(pool.getUuid(), info);

@@ -30,9 +30,7 @@ import org.apache.log4j.Logger;
 import com.cloud.agent.api.Answer;
 import com.cloud.agent.api.FenceAnswer;
 import com.cloud.agent.api.FenceCommand;
-import com.cloud.hypervisor.kvm.resource.KVMHABase.NfsStoragePool;
-import com.cloud.hypervisor.kvm.resource.KVMHABase.RbdStoragePool;
-import com.cloud.hypervisor.kvm.resource.KVMHABase.ClvmStoragePool;
+import com.cloud.hypervisor.kvm.resource.KVMHABase.HAStoragePool;
 import com.cloud.hypervisor.kvm.resource.KVMHAChecker;
 import com.cloud.hypervisor.kvm.resource.KVMHAMonitor;
 import com.cloud.hypervisor.kvm.resource.LibvirtComputingResource;
@@ -49,30 +47,20 @@ public final class LibvirtFenceCommandWrapper extends CommandWrapper<FenceComman
         final ExecutorService executors = Executors.newSingleThreadExecutor();
         final KVMHAMonitor monitor = libvirtComputingResource.getMonitor();
 
-        final List<NfsStoragePool> nfspools = monitor.getStoragePools();
-        final List<RbdStoragePool> rbdpools = monitor.getRbdStoragePools();
-        final List<ClvmStoragePool> clvmpools = monitor.getClvmStoragePools();
+        final List<HAStoragePool> pools = monitor.getStoragePools();
 
         /**
          * We can only safely fence off hosts when we use NFS
          * On NFS primary storage pools hosts continuesly write
          * a heartbeat. Disable Fencing Off for hosts without NFS
          */
-        if (nfspools.size() == 0) {
-            String logline = String.format("No NFS storage pools found. No way to safely fence %s on host %s", command.getVmName(), command.getHostGuid());
-            s_logger.warn(logline);
-            return new FenceAnswer(command, false, logline);
-        } else if (rbdpools.size() == 0) {
-            String logline = String.format("No RBD storage pools found. No way to safely fence %s on host %s", command.getVmName(), command.getHostGuid());
-            s_logger.warn(logline);
-            return new FenceAnswer(command, false, logline);
-        }else if (clvmpools.size() == 0) {
-            String logline = String.format("No CLVM storage pools found. No way to safely fence %s on host %s", command.getVmName(), command.getHostGuid());
+        if (pools.size() == 0) {
+            String logline = "No NFS storage pools found. No way to safely fence " + command.getVmName() + " on host " + command.getHostGuid();
             s_logger.warn(logline);
             return new FenceAnswer(command, false, logline);
         }
 
-        final KVMHAChecker ha = new KVMHAChecker(nfspools, rbdpools, clvmpools, command.getHostIp());
+        final KVMHAChecker ha = new KVMHAChecker(pools, command.getHost(), command.isReportCheckFailureIfOneStorageIsDown());
 
         final Future<Boolean> future = executors.submit(ha);
         try {
