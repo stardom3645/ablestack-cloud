@@ -4961,7 +4961,7 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
         Long temporarySnapshotId = null;
         try {
             Account owner = _accountService.getAccount(cmd.getEntityOwnerId());
-            Snapshot snapshot = _tmplService.createSnapshotFromTemplateOwner(cmd.getId(), cmd.getTargetVM(), owner, _volumeService);
+            Snapshot snapshot = _tmplService.createSnapshotFromTemplateOwner(cmd.getId(), cmd.getTargetVM(), owner, _volumeService, cmd.getZoneIds());
             temporarySnapshotId = snapshot.getId();
             VirtualMachineTemplate template = _tmplService.createPrivateTemplateRecord(cmd, owner, _volumeService, snapshot);
             if (template == null) {
@@ -4977,7 +4977,7 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
             cmd.setEntityId(vmRecord.getId());
         } finally {
             if (temporarySnapshotId != null) {
-                _snapshotService.deleteSnapshot(temporarySnapshotId);
+                _snapshotService.deleteSnapshot(temporarySnapshotId, cmd.getTargetVM().getDataCenterId());
                 s_logger.warn("clearing the temporary snapshot: " + temporarySnapshotId);
             }
         }
@@ -5002,12 +5002,12 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
             try {
                 for (VolumeVO dataDisk : dataDisks) {
                     long diskId = dataDisk.getId();
-                    SnapshotVO dataSnapShot = (SnapshotVO) volumeService.allocSnapshot(diskId, Snapshot.INTERNAL_POLICY_ID, "DataDisk-Clone" + dataDisk.getName(), null);
+                    SnapshotVO dataSnapShot = (SnapshotVO) volumeService.allocSnapshot(diskId, Snapshot.INTERNAL_POLICY_ID, "DataDisk-Clone" + dataDisk.getName(), null, cmd.getZoneIds());
                     if (dataSnapShot == null) {
                         throw new CloudRuntimeException("Unable to allocate snapshot of data disk: " + dataDisk.getId() + " name: " + dataDisk.getName());
                     }
                     createdSnapshots.add(dataSnapShot);
-                    SnapshotVO snapshotEntity = (SnapshotVO) volumeService.takeSnapshot(diskId, Snapshot.INTERNAL_POLICY_ID, dataSnapShot.getId(), caller, false, null, false, new HashMap<>());
+                    SnapshotVO snapshotEntity = (SnapshotVO) volumeService.takeSnapshot(diskId, Snapshot.INTERNAL_POLICY_ID, dataSnapShot.getId(), caller, false, null, false, new HashMap<>(), cmd.getZoneIds());
                     if (snapshotEntity == null) {
                         throw new CloudRuntimeException("Error when creating the snapshot entity");
                     }
@@ -5047,7 +5047,7 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
             } finally {
                 // clear the temporary data snapshots
                 for (Snapshot snapshotLeftOver : createdSnapshots) {
-                    snapshotService.deleteSnapshot(snapshotLeftOver.getId());
+                    snapshotService.deleteSnapshot(snapshotLeftOver.getId(), zoneId);
                 }
             }
         }
