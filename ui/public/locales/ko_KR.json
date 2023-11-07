@@ -61,7 +61,7 @@
 "label.acquire.new.ip": "\uc0c8 IP \uc8fc\uc18c \uac00\uc838\uc624\uae30",
 "label.acquire.new.secondary.ip": "\uc0c8 \ubcf4\uc870 IP \uc8fc\uc18c \uac00\uc838\uc624\uae30",
 "label.acquiring.ip": "IP \uac00\uc838\uc624\uae30",
-"label.associated.resource": "Associated resource",
+"label.associated.resource": "\uc5f0\uacb0\ub41c \ub9ac\uc18c\uc2a4",
 "label.action": "\ub3d9\uc791",
 "label.action.attach.disk": "\ub514\uc2a4\ud06c \uc5f0\uacb0",
 "label.action.attach.iso": "ISO \uc5f0\uacb0",
