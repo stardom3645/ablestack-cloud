@@ -40,10 +40,12 @@ import org.apache.cloudstack.api.ServerApiException;
 import org.apache.cloudstack.api.command.user.UserCmd;
 import org.apache.cloudstack.api.response.DomainResponse;
 import org.apache.cloudstack.api.response.UserVmResponse;
+import org.apache.cloudstack.api.response.ZoneResponse;
 import org.apache.cloudstack.context.CallContext;
 import org.apache.log4j.Logger;
 
 import java.util.Optional;
+import java.util.List;
 
 @APICommand(name = "cloneVirtualMachine", responseObject = UserVmResponse.class, description = "clone a virtual VM",
         responseView = ResponseObject.ResponseView.Restricted, requestHasSensitiveInfo = false, responseHasSensitiveInfo = true, entityType = {VirtualMachine.class}, since="4.16.0")
@@ -70,6 +72,15 @@ public class CloneVMCmd extends BaseAsyncCreateCmd implements UserCmd {
     @Parameter(name = ApiConstants.DOMAIN_ID, type = CommandType.UUID, entityType = DomainResponse.class, description = "an optional domainId for the virtual machine. If the account parameter is used, domainId must also be used.")
     private Long domainId;
 
+    @Parameter(name = ApiConstants.ZONE_ID_LIST,
+            type=CommandType.LIST,
+            collectionType = CommandType.UUID,
+            entityType = ZoneResponse.class,
+            description = "A comma-separated list of IDs of the zones in which the snapshot will be made available. " +
+                    "The snapshot will always be made available in the zone in which the volume is present.",
+            since = "4.19.0")
+    protected List<Long> zoneIds;
+
     public String getAccountName() {
         return accountName;
     }
@@ -92,6 +103,10 @@ public class CloneVMCmd extends BaseAsyncCreateCmd implements UserCmd {
     @Override
     public String getEventType() {
         return EventTypes.EVENT_VM_CLONE;
+    }
+
+    public List<Long> getZoneIds() {
+        return zoneIds;
     }
 
     public ApiCommandResourceType getInstanceType() {

@@ -150,8 +150,23 @@ import com.cloud.hypervisor.HypervisorGuru;
 import com.cloud.hypervisor.HypervisorGuruManager;
 import com.cloud.projects.Project;
 import com.cloud.projects.ProjectManager;
+import com.cloud.storage.DataStoreRole;
+import com.cloud.storage.GuestOSVO;
+import com.cloud.storage.ImageStoreUploadMonitorImpl;
+import com.cloud.storage.LaunchPermissionVO;
+import com.cloud.storage.Snapshot;
+import com.cloud.storage.SnapshotVO;
+import com.cloud.storage.Storage;
 import com.cloud.storage.Storage.ImageFormat;
 import com.cloud.storage.Storage.TemplateType;
+import com.cloud.storage.StorageManager;
+import com.cloud.storage.StoragePool;
+import com.cloud.storage.StoragePoolHostVO;
+import com.cloud.storage.StoragePoolStatus;
+import com.cloud.storage.TemplateProfile;
+import com.cloud.storage.Upload;
+import com.cloud.storage.VMTemplateStoragePoolVO;
+import com.cloud.storage.VMTemplateStorageResourceAssoc;
 import com.cloud.storage.VMTemplateStorageResourceAssoc.Status;
 import com.cloud.storage.VMTemplateVO;
 import com.cloud.storage.VMTemplateZoneVO;
@@ -1771,10 +1786,10 @@ public class TemplateManagerImpl extends ManagerBase implements TemplateManager,
             snapshot = _snapshotDao.findById(snapshotId);
             // create template from snapshot
             DataStoreRole dataStoreRole = ApiResponseHelper.getDataStoreRole(snapshot, _snapshotStoreDao, _dataStoreMgr);
-            SnapshotInfo snapInfo = _snapshotFactory.getSnapshot(snapshotId, dataStoreRole);
+            SnapshotInfo snapInfo = _snapshotFactory.getSnapshot(snapshotId, store.getId(), dataStoreRole);
             if (dataStoreRole == DataStoreRole.Image) {
                 if (snapInfo == null) {
-                    snapInfo = _snapshotFactory.getSnapshot(snapshotId, DataStoreRole.Primary);
+                    snapInfo = _snapshotFactory.getSnapshot(snapshotId, store.getId(), DataStoreRole.Primary);
                     if(snapInfo == null) {
                         throw new CloudRuntimeException("Cannot find snapshot "+snapshotId);
                     }
@@ -1783,7 +1798,7 @@ public class TemplateManagerImpl extends ManagerBase implements TemplateManager,
                     snapshotStrategy.backupSnapshot(snapInfo);
 
                     // Attempt to grab it again.
-                    snapInfo = _snapshotFactory.getSnapshot(snapshotId, dataStoreRole);
+                    snapInfo = _snapshotFactory.getSnapshot(snapshotId, store.getId(), dataStoreRole);
                     if(snapInfo == null) {
                         throw new CloudRuntimeException("Cannot find snapshot " + snapshotId + " on secondary and could not create backup");
                     }
@@ -1868,7 +1883,7 @@ public class TemplateManagerImpl extends ManagerBase implements TemplateManager,
     }
 
     @Override
-    public Snapshot createSnapshotFromTemplateOwner(long vmId, UserVm curVm, Account templateOwner, VolumeApiService volumeService) throws ResourceAllocationException {
+    public Snapshot createSnapshotFromTemplateOwner(long vmId, UserVm curVm, Account templateOwner, VolumeApiService volumeService, List<Long> zoneIds) throws ResourceAllocationException {
         Account caller = CallContext.current().getCallingAccount();
         _accountMgr.checkAccess(caller, null, true, templateOwner);
 //        UserVm curVm = cmd.getTargetVM();
@@ -1882,11 +1897,11 @@ public class TemplateManagerImpl extends ManagerBase implements TemplateManager,
         // check permissions
         _accountMgr.checkAccess(caller, null, true, volume);
         s_logger.info("Creating snapshot for the tempalte creation");
-        SnapshotVO snapshot = (SnapshotVO) volumeService.allocSnapshot(volumeId, Snapshot.INTERNAL_POLICY_ID, curVm.getDisplayName() + "-Clone-" + nextSnapId, null);
+        SnapshotVO snapshot = (SnapshotVO) volumeService.allocSnapshot(volumeId, Snapshot.INTERNAL_POLICY_ID, curVm.getDisplayName() + "-Clone-" + nextSnapId, null, zoneIds);
         if (snapshot == null) {
             throw new CloudRuntimeException("Unable to create a snapshot during the template creation recording");
         }
-        Snapshot snapshotEntity = volumeService.takeSnapshot(volumeId, Snapshot.INTERNAL_POLICY_ID, snapshot.getId(), caller, false, null, false, new HashMap<>());
+        Snapshot snapshotEntity = volumeService.takeSnapshot(volumeId, Snapshot.INTERNAL_POLICY_ID, snapshot.getId(), caller, false, null, false, new HashMap<>(), zoneIds);
         if (snapshotEntity == null) {
             throw new CloudRuntimeException("Error when creating the snapshot entity");
         }
