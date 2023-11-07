@@ -52,17 +52,17 @@ import moment from 'moment'
 import 'moment/locale/zh-cn'
 import { loadLanguageAsync } from '@/locales'
 
-moment.locale('en')
+moment.locale('ko_KR')
 
 export default {
   name: 'TranslationMenu',
   data () {
     return {
-      language: 'en'
+      language: 'ko_KR'
     }
   },
   mounted () {
-    this.language = this.$localStorage.get('LOCALE') || 'en'
+    this.language = this.$localStorage.get('LOCALE') || 'ko_KR'
     this.setLocale(this.language)
   },
   methods: {
@@ -70,7 +70,7 @@ export default {
     onClick (e) {
       let localeValue = e.key
       if (!localeValue) {
-        localeValue = 'en'
+        localeValue = 'ko_KR'
       }
       this.setLocale(localeValue)
     },
