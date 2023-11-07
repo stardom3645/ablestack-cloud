@@ -24,10 +24,10 @@
       <a-menu
         :selectedKeys="[language]"
         @click="onClick">
+        <a-menu-item key="ko_KR" value="koKR">한국어</a-menu-item>
         <a-menu-item key="en" value="enUS">English</a-menu-item>
         <a-menu-item key="hi" value="hi">हिन्दी</a-menu-item>
         <a-menu-item key="ja_JP" value="jpJP">日本語</a-menu-item>
-        <a-menu-item key="ko_KR" value="koKR">한국어</a-menu-item>
         <a-menu-item key="zh_CN" value="zhCN">简体中文</a-menu-item>
         <a-menu-item key="ar" value="arEG">Arabic</a-menu-item>
         <a-menu-item key="ca" value="caES">Catalan</a-menu-item>
