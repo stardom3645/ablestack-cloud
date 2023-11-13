@@ -187,7 +187,6 @@ export default {
       loading: false,
       volumeIds: {},
       listVolumes: {},
-      listDiskOfferings: {},
       selectedColumns: [],
       selectedItemsProgress: [],
       showGroupActionModal: false,
@@ -217,20 +216,12 @@ export default {
             loading: true,
             opts: []
           }
-          const task1 = this.callListVolume(vmId)
-          promises.push(task1)
-          if (task1 != null) {
-            const task2 = this.callListDiskOffering(task1.volumes)
-            promises.push(task2)
-          }
+          promises.push(this.callListVolume(vmId))
         })
         Promise.all(promises).then((data) => {
           data.forEach(item => {
             this.listVolumes[item.id].loading = false
             this.listVolumes[item.id].opts = item.volumes || []
-            if (item.diskOffering != null) {
-              this.listDiskOfferings[item.id].opts = item.diskOffering || []
-            }
           })
         })
       }
