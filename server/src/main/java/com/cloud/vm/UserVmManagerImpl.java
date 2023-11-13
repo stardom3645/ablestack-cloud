@@ -8447,15 +8447,10 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
     private void checkForSharedVolumes(long vmId, List<VolumeVO> volumes) {
         for (VolumeVO volume : volumes) {
             DiskOffering offering = _diskOfferingDao.findById(volume.getDiskOfferingId());
-            s_logger.info("==============================");
-            s_logger.info(offering.getShareable());
             if (volume.getVolumeType() == Volume.Type.DATADISK && offering.getShareable()) {
-                s_logger.info("===============in===============");
                 volume.setPath("");
                 _volsDao.update(volume.getId(), volume);
             }
-            s_logger.info("===============out===============");
-            s_logger.info("==============================");
         }
     }
 
