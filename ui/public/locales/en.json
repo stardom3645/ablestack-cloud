@@ -4070,5 +4070,9 @@
 "alert.vr.public.iface.mtu":"VR.PUBLIC.IFACE.MTU",
 "alert.vr.private.iface.mtu":"VR.PRIVATE.IFACE.MTU",
 "alert.login":"LOGIN",
-"label.shareable": "Shareable Volume"
+"label.shareable": "Shareable Volume",
+"label.action.update.volume": "Update Volume",
+"message.success.update.volume": "Successfully updated volume",
+"message.update.volume.failed": "Failed to update volume",
+"message.update.volume.processing": "Updating volume..."
 }

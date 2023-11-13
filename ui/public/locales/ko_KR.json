@@ -4070,5 +4070,9 @@
 "alert.vr.public.iface.mtu":"VR.공인인터페이스.MTU",
 "alert.vr.private.iface.mtu":"VR.사설인터페이스.MTU",
 "alert.login":"로그인",
-"label.shareable": "공유 볼륨"
+"label.shareable": "공유 볼륨",
+"label.action.update.volume": "볼륨 업데이트",
+"message.success.update.volume": "볼륨을 업데이트 했습니다.",
+"message.update.volume.failed": "볼륨 업데이트에 실패하였습니다.",
+"message.update.volume.processing": "볼륨을 업데이트중..."
 }
