@@ -146,7 +146,7 @@ export default {
           icon: 'edit-outlined',
           label: 'label.edit',
           dataView: true,
-          args: ['name'],
+          args: ['name', 'path'],
           mapping: {
             account: {
               value: (record) => { return record.account }

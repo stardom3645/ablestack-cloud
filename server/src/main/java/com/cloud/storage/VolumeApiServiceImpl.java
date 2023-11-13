@@ -2584,6 +2584,22 @@ public class VolumeApiServiceImpl extends ManagerBase implements VolumeApiServic
         _accountMgr.checkAccess(caller, null, true, volume);
 
         if (path != null) {
+            s_logger.info("===============================");
+            DiskOffering offering = _diskOfferingDao.findById(volume.getDiskOfferingId());
+            s_logger.info(offering.getShareable());
+            s_logger.info("===============================");
+            if (offering.getShareable()) {
+                VolumeVO sha_vol = _volsDao.findByPath(path);
+                s_logger.info("===============================");
+                if (sha_vol != null) {
+                    s_logger.info("===============================");
+                    s_logger.info(sha_vol.getPoolId());
+                    s_logger.info(sha_vol.getFormat());
+                    volume.setPoolId(sha_vol.getPoolId());
+                    volume.setFormat(sha_vol.getFormat());
+                    volume.setState(Volume.State.Ready);
+                }
+            } 
             volume.setPath(path);
         }
 
