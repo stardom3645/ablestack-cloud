@@ -624,7 +624,7 @@ public class MetricsServiceImpl extends MutualExclusiveIdsManagerBase implements
             metricsResponse.setDiskIopsTotal(vmResponse.getDiskIORead(), vmResponse.getDiskIOWrite());
             metricsResponse.setLastUpdated(vmResponse.getLastUpdated());
             List<VbmcVO> vbmc = vbmcDao.listByVmId(Long.parseLong(vmResponse.getId()));
-            metricsResponse.setVbmcPort(Integer.parseInt(vbmc.get(0).getPort()));
+            metricsResponse.setVbmcPort(vbmc.get(0).getPort());
             metricsResponses.add(metricsResponse);
         }
         return metricsResponses;
