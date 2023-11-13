@@ -690,6 +690,7 @@ public class VolumeOrchestrator extends ManagerBase implements VolumeOrchestrati
                 setPassphraseForVolumeEncryption(vol);
                 volumeInfo = volFactory.getVolume(volumeInfo.getId());
             }
+            dskCh.setShareable(diskOffering.getShareable());
         }
 
         dskCh.setHyperType(hyperType);
@@ -821,7 +822,7 @@ public class VolumeOrchestrator extends ManagerBase implements VolumeOrchestrati
 
     protected DiskProfile toDiskProfile(Volume vol, DiskOffering offering) {
         return new DiskProfile(vol.getId(), vol.getVolumeType(), vol.getName(), offering.getId(), vol.getSize(), offering.getTagsArray(), offering.isUseLocalStorage(), offering.isRecreatable(),
-                vol.getTemplateId());
+                vol.getTemplateId(), offering.getShareable());
     }
 
     @ActionEvent(eventType = EventTypes.EVENT_VOLUME_CREATE, eventDescription = "creating volume", create = true)
