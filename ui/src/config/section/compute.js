@@ -35,6 +35,7 @@ export default {
         if (store.getters.metrics) {
           params = { details: 'servoff,tmpl,nics,stats' }
         }
+        params.isvnf = false
         return params
       },
       filters: () => {
@@ -164,7 +165,7 @@ export default {
         },
         {
           api: 'cloneVirtualMachine',
-          icon: 'copy-outlined',
+          icon: 'file-add-outlined',
           label: 'label.action.clone.vm',
           message: 'message.action.clone.instance',
           docHelp: 'adminguide/virtual_machines.html#cloning-vms',
@@ -277,7 +278,7 @@ export default {
         {
           api: 'createBackupSchedule',
           icon: 'schedule-outlined',
-          label: 'Configure Backup Schedule',
+          label: 'label.backup.configure.schedule',
           docHelp: 'adminguide/virtual_machines.html#creating-vm-backups',
           dataView: true,
           popup: true,
@@ -390,6 +391,7 @@ export default {
           label: 'label.action.reset.password',
           message: 'message.action.instance.reset.password',
           dataView: true,
+          args: ['password'],
           show: (record) => { return ['Stopped'].includes(record.state) && record.passwordenabled },
           response: (result) => {
             return {
@@ -485,6 +487,77 @@ export default {
             }
           },
           component: shallowRef(defineAsyncComponent(() => import('@/views/compute/DestroyVM.vue')))
+        }
+      ]
+    },
+    {
+      name: 'vmsnapshot',
+      title: 'label.vm.snapshots',
+      icon: 'camera-outlined',
+      docHelp: 'adminguide/storage.html#working-with-volume-snapshots',
+      permission: ['listVMSnapshot'],
+      resourceType: 'VMSnapshot',
+      columns: () => {
+        const fields = ['displayname', 'state', 'name', 'type', 'current', 'parentName', 'created']
+        if (['Admin', 'DomainAdmin'].includes(store.getters.userInfo.roletype)) {
+          fields.push('domain')
+          fields.push('account')
+        }
+        return fields
+      },
+      details: ['name', 'id', 'displayname', 'description', 'type', 'current', 'parentName', 'virtualmachineid', 'account', 'domain', 'created'],
+      searchFilters: ['name', 'domainid', 'account', 'tags'],
+      tabs: [
+        {
+          name: 'details',
+          component: shallowRef(defineAsyncComponent(() => import('@/components/view/DetailsTab.vue')))
+        },
+        {
+          name: 'comments',
+          component: shallowRef(defineAsyncComponent(() => import('@/components/view/AnnotationsTab.vue')))
+        }
+      ],
+      actions: [
+        {
+          api: 'createSnapshotFromVMSnapshot',
+          icon: 'camera-outlined',
+          label: 'label.action.create.snapshot.from.vmsnapshot',
+          message: 'message.action.create.snapshot.from.vmsnapshot',
+          dataView: true,
+          popup: true,
+          show: (record) => { return (record.state === 'Ready' && record.hypervisor === 'KVM') },
+          component: shallowRef(defineAsyncComponent(() => import('@/views/storage/CreateSnapshotFromVMSnapshot.vue')))
+        },
+        {
+          api: 'revertToVMSnapshot',
+          icon: 'sync-outlined',
+          label: 'label.action.vmsnapshot.revert',
+          message: 'label.action.vmsnapshot.revert',
+          dataView: true,
+          show: (record) => { return record.state === 'Ready' },
+          args: ['vmsnapshotid'],
+          mapping: {
+            vmsnapshotid: {
+              value: (record) => { return record.id }
+            }
+          }
+        },
+        {
+          api: 'deleteVMSnapshot',
+          icon: 'delete-outlined',
+          label: 'label.action.vmsnapshot.delete',
+          message: 'message.action.vmsnapshot.delete',
+          dataView: true,
+          show: (record) => { return ['Ready', 'Expunging', 'Error'].includes(record.state) },
+          args: ['vmsnapshotid'],
+          mapping: {
+            vmsnapshotid: {
+              value: (record) => { return record.id }
+            }
+          },
+          groupAction: true,
+          popup: true,
+          groupMap: (selection) => { return selection.map(x => { return { vmsnapshotid: x } }) }
         }
       ]
     },

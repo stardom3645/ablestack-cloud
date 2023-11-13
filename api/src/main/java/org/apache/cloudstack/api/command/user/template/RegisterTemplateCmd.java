@@ -143,6 +143,7 @@ public class RegisterTemplateCmd extends BaseCmd implements UserCmd {
                description = "true if template contains XS/VMWare tools inorder to support dynamic scaling of VM cpu/memory")
     protected Boolean isDynamicallyScalable;
 
+    @Deprecated
     @Parameter(name = ApiConstants.ROUTING, type = CommandType.BOOLEAN, description = "true if the template type is routing i.e., if template is used to deploy router")
     protected Boolean isRoutingType;
 
@@ -170,6 +171,11 @@ public class RegisterTemplateCmd extends BaseCmd implements UserCmd {
 
     @Parameter(name=ApiConstants.DESKTOP_CHECK, type = CommandType.BOOLEAN, required=false, description="Verify that it is a desktop template.")
     protected Boolean isDesktop;
+
+    @Parameter(name = ApiConstants.TEMPLATE_TYPE, type = CommandType.STRING,
+            description = "the type of the template. Valid options are: USER/VNF (for all users) and SYSTEM/ROUTING/BUILTIN (for admins only).",
+            since = "4.19.0")
+    private String templateType;
 
     /////////////////////////////////////////////////////
     /////////////////// Accessors ///////////////////////
@@ -340,6 +346,10 @@ public class RegisterTemplateCmd extends BaseCmd implements UserCmd {
         this.isDesktop = isDesktop;
     }
 
+    public String getTemplateType() {
+        return templateType;
+    }
+
     /////////////////////////////////////////////////////
     /////////////// API Implementation///////////////////
     /////////////////////////////////////////////////////
@@ -370,7 +380,7 @@ public class RegisterTemplateCmd extends BaseCmd implements UserCmd {
 
             VirtualMachineTemplate template = _templateService.registerTemplate(this);
             if (template != null) {
-                ListResponse<TemplateResponse> response = new ListResponse<TemplateResponse>();
+                ListResponse<TemplateResponse> response = new ListResponse<>();
                 List<TemplateResponse> templateResponses = _responseGenerator.createTemplateResponses(getResponseView(),
                         template, getZoneIds(), false);
                 response.setResponses(templateResponses);
