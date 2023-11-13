@@ -2599,7 +2599,7 @@ public class VolumeApiServiceImpl extends ManagerBase implements VolumeApiServic
                     volume.setFormat(sha_vol.getFormat());
                     volume.setState(Volume.State.Ready);
                 }
-            } 
+            }
             volume.setPath(path);
         }
 
