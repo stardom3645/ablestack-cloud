@@ -311,6 +311,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
     public static final String TUNGSTEN_PATH = "scripts/vm/network/tungsten";
 
     private String modifyVlanPath;
+    private String ablestackVbmcPath;
     private String versionStringPath;
     private String patchScriptPath;
     private String createVmPath;
@@ -916,6 +917,11 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
         updateHostPasswdPath = Script.findScript(hypervisorScriptsDir, VRScripts.UPDATE_HOST_PASSWD);
         if (updateHostPasswdPath == null) {
             throw new ConfigurationException("Unable to find update_host_passwd.sh");
+        }
+
+        ablestackVbmcPath = Script.findScript(kvmScriptsDir, "ablestack_vbmc.sh");
+        if (ablestackVbmcPath == null) {
+            throw new ConfigurationException("Unable to find ablestack_vbmc.sh");
         }
 
         modifyVlanPath = Script.findScript(networkScriptsDir, "modifyvlan.sh");
@@ -1877,6 +1883,24 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
         command.add("-c");
         command.add("ovs-vsctl br-exists " + networkName);
         return "0".equals(command.execute(null));
+    }
+
+    public boolean ablestackVbmcCmdLine(final String action, final String domid, final String port) throws InternalErrorException {
+        if (action == null || domid == null || port == null) {
+            return false;
+        }
+
+        final Script command = new Script("/bin/sh", timeout);
+        command.add(ablestackVbmcPath);
+        command.add(action);
+        command.add(domid);
+        command.add(port);
+        s_logger.info(command);
+        String result = command.execute();
+        if (result != null) {
+            return false;
+        }
+        return true;
     }
 
     public boolean passCmdLine(final String vmName, final String cmdLine) throws InternalErrorException {
