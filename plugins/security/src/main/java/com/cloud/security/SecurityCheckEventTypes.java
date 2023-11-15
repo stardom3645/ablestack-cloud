@@ -17,20 +17,6 @@
 
 package com.cloud.security;
 
-import java.util.List;
-
-import org.apache.cloudstack.api.command.admin.GetSecurityCheckCmd;
-import org.apache.cloudstack.api.command.admin.RunSecurityCheckCmd;
-import org.apache.cloudstack.api.command.admin.DeleteSecurityCheckResultCmd;
-import org.apache.cloudstack.api.response.GetSecurityCheckResponse;
-import com.cloud.utils.exception.CloudRuntimeException;
-
-
-public interface SecurityCheckService {
-
-    List<GetSecurityCheckResponse> listSecurityChecks(GetSecurityCheckCmd cmd);
-
-    boolean runSecurityCheckCommand(RunSecurityCheckCmd runSecurityCheckCmd);
-
-    boolean deleteSecurityCheckResults(DeleteSecurityCheckResultCmd deleteSecurityCheckResultCmd) throws CloudRuntimeException;
+public class SecurityCheckEventTypes {
+    public static final String EVENT_SECURITY_CHECK_DELETE = "SECURITY.CHECK.DELETE";
 }

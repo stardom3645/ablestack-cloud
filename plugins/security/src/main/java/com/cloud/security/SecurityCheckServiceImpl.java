@@ -33,6 +33,7 @@ import javax.naming.ConfigurationException;
 
 import org.apache.cloudstack.api.command.admin.GetSecurityCheckCmd;
 import org.apache.cloudstack.api.command.admin.RunSecurityCheckCmd;
+import org.apache.cloudstack.api.command.admin.DeleteSecurityCheckResultCmd;
 import org.apache.cloudstack.api.response.GetSecurityCheckResponse;
 import org.apache.cloudstack.context.CallContext;
 import org.apache.cloudstack.framework.config.ConfigKey;
@@ -49,6 +50,7 @@ import com.cloud.event.ActionEvent;
 import com.cloud.event.ActionEventUtils;
 import com.cloud.event.EventTypes;
 import com.cloud.event.EventVO;
+import com.cloud.exception.InvalidParameterValueException;
 import com.cloud.security.dao.SecurityCheckDao;
 import com.cloud.utils.component.ManagerBase;
 import com.cloud.utils.component.PluggableService;
@@ -244,6 +246,16 @@ public class SecurityCheckServiceImpl extends ManagerBase implements PluggableSe
         }
     }
 
+    @Override
+    public boolean deleteSecurityCheckResults(final DeleteSecurityCheckResultCmd cmd) {
+        final Long resultId = cmd.getId();
+        SecurityCheck result = securityCheckDao.findById(resultId);
+        if (result == null) {
+            throw new InvalidParameterValueException("Invalid security check result id specified");
+        }
+        return securityCheckDao.remove(result.getId());
+    }
+
     private void updateSecurityCheckResult(long msHostId, boolean checkFinalResult, String checkFailedList, String type) {
         boolean newSecurityCheckEntry = false;
         SecurityCheckVO connectivityVO = new SecurityCheckVO(msHostId, checkFinalResult, checkFailedList, type);
@@ -260,6 +272,7 @@ public class SecurityCheckServiceImpl extends ManagerBase implements PluggableSe
         List<Class<?>> cmdList = new ArrayList<>();
         cmdList.add(RunSecurityCheckCmd.class);
         cmdList.add(GetSecurityCheckCmd.class);
+        cmdList.add(DeleteSecurityCheckResultCmd.class);
         return cmdList;
     }
 

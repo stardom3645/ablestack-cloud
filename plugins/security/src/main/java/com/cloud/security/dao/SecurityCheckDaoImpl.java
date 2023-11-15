@@ -43,4 +43,11 @@ public class SecurityCheckDaoImpl extends GenericDaoBase<SecurityCheckVO, Long> 
         sc.setParameters("msHostId", msHostId);
         return listBy(sc);
     }
+
+    @Override
+    public List<SecurityCheckVO> listBySecurityCheckResult(long id) {
+        SearchCriteria<SecurityCheckVO> sc = SecurityChecksSearchBuilder.create();
+        sc.setParameters("id", id);
+        return this.listBy(sc);
+    }
 }
