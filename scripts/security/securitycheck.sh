@@ -31,12 +31,11 @@ utils_class_name=("com.cloud.utils.backoff.impl.ConstantTimeBackoffTest" "com.cl
 for i in  "${utils_class_name[@]}"
 do
     utils_class=$(echo $i)
-    utils_file=$(echo ${i##*.})
     utils_result=$(java -classpath $utils_cmd org.junit.runner.JUnitCore $utils_class | grep -i OK)
     if [ -n "$utils_result" ]; then
-        echo "$utils_file,true"
+        echo "$utils_class,true"
     else
-        echo "$utils_file,false"
+        echo "$utils_class,false"
     fi
 done
 
@@ -48,12 +47,11 @@ api_class_name=("com.cloud.agent.api.storage.OVFHelperTest" "com.cloud.agent.api
 for i in  "${api_class_name[@]}"
 do
     api_class=$(echo $i)
-    api_file=$(echo ${i##*.})
     api_result=$(java -classpath $api_cmd org.junit.runner.JUnitCore $api_class | grep -i OK)
     if [ -n "$api_result" ]; then
-        echo "$api_file,true"
+        echo "$api_class,true"
     else
-        echo "$api_file,false"
+        echo "$api_class,false"
     fi
 done
 
@@ -65,11 +63,10 @@ fw_class_name=("com.cloud.cluster.ClusterServiceServletAdapterTest" "org.apache.
 for i in  "${fw_class_name[@]}"
 do
     fw_class=$(echo $i)
-    fw__file=$(echo ${i##*.})
     fw_result=$(java -classpath $fw_cmd org.junit.runner.JUnitCore $fw_class | grep -i OK)
     if [ -n "$fw_result" ]; then
-        echo "$fw_file,true"
+        echo "$fw_class,true"
     else
-        echo "$fw_file,false"
+        echo "$fw_class,false"
     fi
 done

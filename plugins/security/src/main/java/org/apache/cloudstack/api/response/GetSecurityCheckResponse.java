@@ -26,51 +26,71 @@ import com.cloud.serializer.Param;
 import com.google.gson.annotations.SerializedName;
 
 public class GetSecurityCheckResponse extends BaseResponse {
-    @SerializedName(ApiConstants.SECURITY_CHECK_NAME)
-    @Param(description = "the name of the security check on the mshost")
-    private String checkName;
+    @SerializedName(ApiConstants.ID)
+    @Param(description = "the id of the integrity verification final result")
+    private long id;
+
+    @SerializedName(ApiConstants.MANAGEMENT_SERVER_ID)
+    @Param(description = "the id of the management server")
+    private String msHostId;
 
     @SerializedName(ApiConstants.RESULT)
     @Param(description = "result of the security check")
-    private boolean result;
+    private boolean checkResult;
 
     @SerializedName(ApiConstants.LAST_UPDATED)
     @Param(description = "the date this mshost was updated")
-    private Date lastUpdated;
+    private Date checkDate;
 
     @SerializedName(ApiConstants.DETAILS)
-    @Param(description = "detailed response generated on running security check")
-    private String details;
+    @Param(description = "the security check failed list")
+    private String checkFailedList;
 
-    public String getCheckName() {
-        return checkName;
+    @SerializedName(ApiConstants.TYPE)
+    @Param(description = "the type of the security check")
+    private String type;
+
+    public long getId() {
+        return id;
     }
 
-    public boolean getResult() {
-        return result;
+    public String getMsHostId() {
+        return msHostId;
     }
 
-    public Date getLastUpdated() {
-        return lastUpdated;
+    public boolean getCheckResult() {
+        return checkResult;
     }
 
-    public String getDetails() {
-        return details;
+    public Date getCheckDate() {
+        return checkDate;
     }
 
-    public void setCheckName(String checkName) {
-        this.checkName = checkName;
+    public String getCheckFailedList() {
+        return checkFailedList;
     }
 
-    public void setResult(boolean result) {
-        this.result = result;
+    public void setId(long id) {
+        this.id = id;
     }
 
-    public void setLastUpdated(Date lastUpdated) {
-        this.lastUpdated = lastUpdated;
+    public void setMsHostId(String msHostId) {
+        this.msHostId = msHostId;
     }
 
-    public void setDetails(String details) {
-        this.details = details;
+    public void setCheckResult(boolean checkResult) {
+        this.checkResult = checkResult;
+    }
+
+    public void setCheckDate(Date checkDate) {
+        this.checkDate = checkDate;
+    }
+
+    public void setType(String type) {
+        this.type = type;
+    }
+
+    public void setCheckFailedList(String checkFailedList) {
+        this.checkFailedList = checkFailedList;
     }
 }

@@ -40,7 +40,6 @@ import org.apache.cloudstack.framework.config.Configurable;
 import org.apache.cloudstack.managed.context.ManagedContextRunnable;
 import org.apache.cloudstack.management.ManagementServerHost;
 import org.apache.cloudstack.utils.identity.ManagementServerNode;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 
 import com.cloud.alert.AlertManager;
@@ -56,6 +55,8 @@ import com.cloud.utils.component.PluggableService;
 import com.cloud.utils.concurrency.NamedThreadFactory;
 import com.cloud.utils.exception.CloudRuntimeException;
 import com.cloud.utils.script.Script;
+
+import java.util.stream.Collectors;
 
 public class SecurityCheckServiceImpl extends ManagerBase implements PluggableService, SecurityCheckService, Configurable {
 
@@ -120,6 +121,9 @@ public class SecurityCheckServiceImpl extends ManagerBase implements PluggableSe
             }
             ProcessBuilder processBuilder = new ProcessBuilder("sh", path);
             Process process = null;
+            List<Boolean> checkResults = new ArrayList<>();
+            List<String> checkFailedList = new ArrayList<>();
+            boolean checkFinalResult;
             try {
                 process = processBuilder.start();
                 BufferedReader bfr = new BufferedReader(new InputStreamReader(process.getInputStream()));
@@ -130,24 +134,32 @@ public class SecurityCheckServiceImpl extends ManagerBase implements PluggableSe
                     String checkResult = temp[1];
                     String checkMessage;
                     if ("false".equals(checkResult)) {
-                        checkMessage = "process does not operate normally at last check";
+                        checkResults.add(false);
+                        checkFailedList.add(checkName);
+                        checkMessage = "file does not operate normally";
                         if (runMode == "first") {
                             alertManager.sendAlert(AlertManager.AlertType.ALERT_TYPE_MANAGMENT_NODE, 0, new Long(0), "Management server node " + msHost.getServiceIP() + " security check when running the product failed : "+ checkName + " " + checkMessage, "");
                         } else {
                             alertManager.sendAlert(AlertManager.AlertType.ALERT_TYPE_MANAGMENT_NODE, 0, new Long(0), "Management server node " + msHost.getServiceIP() + " security check schedule failed : "+ checkName + " " + checkMessage, "");
                         }
                     } else {
-                        checkMessage = "process operates normally";
+                        checkResults.add(true);
+                        checkMessage = "file operates normally";
                     }
-                    updateSecurityCheckResult(msHost.getId(), checkName, Boolean.parseBoolean(checkResult), checkMessage);
                 }
+                checkFinalResult = checkConditions(checkResults);
+                String checkFailedListToString = checkFailedList.stream().collect(Collectors.joining(", "));
+                String type = "";
                 if (runMode == "first") {
+                    type = "Initial";
                     ActionEventUtils.onCompletedActionEvent(CallContext.current().getCallingUserId(), CallContext.current().getCallingAccountId(), EventVO.LEVEL_INFO,
                         EventTypes.EVENT_SECURITY_CHECK, "Successfully completed security check perform on the management server when running the product", new Long(0), null, 0);
                 } else {
+                    type = "Routine";
                     ActionEventUtils.onCompletedActionEvent(CallContext.current().getCallingUserId(), CallContext.current().getCallingAccountId(), EventVO.LEVEL_INFO,
                         EventTypes.EVENT_SECURITY_CHECK, "Successfully completed security check schedule perform on the management server when operating the product", new Long(0), null, 0);
                 }
+                updateSecurityCheckResult(msHost.getId(), checkFinalResult, checkFailedListToString, type);
                 runMode = "";
             } catch (IOException e) {
                 runMode = "";
@@ -164,13 +176,23 @@ public class SecurityCheckServiceImpl extends ManagerBase implements PluggableSe
         for (SecurityCheck scResult : result) {
             GetSecurityCheckResponse securityCheckResponse = new GetSecurityCheckResponse();
             securityCheckResponse.setObjectName("securitychecks");
-            securityCheckResponse.setCheckName(scResult.getCheckName());
-            securityCheckResponse.setResult(scResult.getCheckResult());
-            securityCheckResponse.setLastUpdated(scResult.getLastUpdateTime());
-            securityCheckResponse.setDetails(scResult.getParsedCheckDetails());
+            securityCheckResponse.setId(scResult.getId());
+            securityCheckResponse.setCheckResult(scResult.getCheckResult());
+            securityCheckResponse.setCheckDate(scResult.getCheckDate());
+            securityCheckResponse.setCheckFailedList(scResult.getCheckFailedList());
+            securityCheckResponse.setType(scResult.getType());
             responses.add(securityCheckResponse);
         }
         return responses;
+    }
+
+    public static boolean checkConditions(List<Boolean> conditions) {
+        for (boolean condition : conditions) {
+            if (!condition) {
+                return false;
+            }
+        }
+        return true;
     }
 
     @Override
@@ -184,6 +206,9 @@ public class SecurityCheckServiceImpl extends ManagerBase implements PluggableSe
         }
         ProcessBuilder processBuilder = new ProcessBuilder("sh", path);
         Process process = null;
+        List<Boolean> checkResults = new ArrayList<>();
+        List<String> checkFailedList = new ArrayList<>();
+        boolean checkFinalResult;
         try {
             process = processBuilder.start();
             StringBuffer output = new StringBuffer();
@@ -195,14 +220,20 @@ public class SecurityCheckServiceImpl extends ManagerBase implements PluggableSe
                 String checkResult = temp[1];
                 String checkMessage;
                 if ("false".equals(checkResult)) {
-                    checkMessage = "process does not operate normally at last check";
+                    checkResults.add(false);
+                    checkFailedList.add(checkName);
+                    checkMessage = "file does not operate normally at last check";
                     alertManager.sendAlert(AlertManager.AlertType.ALERT_TYPE_MANAGMENT_NODE, 0, new Long(0), "Management server node " + mshost.getServiceIP() + " security check when operating the product failed : "+ checkName + " " + checkMessage, "");
                 } else {
-                    checkMessage = "process operates normally";
+                    checkResults.add(true);
+                    checkMessage = "file operates normally";
                 }
-                updateSecurityCheckResult(mshost.getId(), checkName, Boolean.parseBoolean(checkResult), checkMessage);
                 output.append(line).append('\n');
             }
+            checkFinalResult = checkConditions(checkResults);
+            String checkFailedListToString = checkFailedList.stream().collect(Collectors.joining(", "));
+            String type = "Manual";
+            updateSecurityCheckResult(mshost.getId(), checkFinalResult, checkFailedListToString, type);
             if (output.toString().contains("false")) {
                 return false;
             } else {
@@ -213,23 +244,15 @@ public class SecurityCheckServiceImpl extends ManagerBase implements PluggableSe
         }
     }
 
-    private void updateSecurityCheckResult(final long msHostId, String checkName, boolean checkResult, String checkMessage) {
+    private void updateSecurityCheckResult(long msHostId, boolean checkFinalResult, String checkFailedList, String type) {
         boolean newSecurityCheckEntry = false;
-        SecurityCheckVO connectivityVO = securityCheckDao.getSecurityCheckResult(msHostId, checkName);
-        if (connectivityVO == null) {
-            connectivityVO = new SecurityCheckVO(msHostId, checkName);
-            newSecurityCheckEntry = true;
-        }
-        connectivityVO.setCheckResult(checkResult);
-        connectivityVO.setLastUpdateTime(new Date());
-        if (StringUtils.isNotEmpty(checkMessage)) {
-            connectivityVO.setCheckDetails(checkMessage.getBytes(com.cloud.utils.StringUtils.getPreferredCharset()));
-        }
-        if (newSecurityCheckEntry) {
-            securityCheckDao.persist(connectivityVO);
-        } else {
-            securityCheckDao.update(connectivityVO.getId(), connectivityVO);
-        }
+        SecurityCheckVO connectivityVO = new SecurityCheckVO(msHostId, checkFinalResult, checkFailedList, type);
+        connectivityVO.setMsHostId(msHostId);
+        connectivityVO.setCheckResult(checkFinalResult);
+        connectivityVO.setCheckFailedList(checkFailedList);
+        connectivityVO.setCheckDate(new Date());
+        connectivityVO.setType(type);
+        securityCheckDao.persist(connectivityVO);
     }
 
     @Override

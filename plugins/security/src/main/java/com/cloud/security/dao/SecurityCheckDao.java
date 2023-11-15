@@ -28,11 +28,4 @@ public interface SecurityCheckDao extends GenericDao<SecurityCheckVO, Long> {
      * @return Returns all the security checks in the database for the given management server id
      */
     List<SecurityCheckVO> getSecurityChecks(long msHostId);
-
-     /**
-     * @param msHostId
-     * @param checkName
-     * @return returns the check result for the msHostId, the check name.
-     */
-    SecurityCheckVO getSecurityCheckResult(long msHostId, String checkName);
 }
