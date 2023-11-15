@@ -63,3 +63,5 @@ CREATE TABLE IF NOT EXISTS `integrity_verification_initial_hash_final_result` (
     KEY `i_integrity_verify__mshost_id` (`mshost_id`),
     CONSTRAINT `i_integrity_verify__mshost_id__file_path_final_result` FOREIGN KEY (`mshost_id`) REFERENCES `mshost` (`id`) ON DELETE CASCADE
     ) ENGINE=InnoDB CHARSET=utf8mb3;
+
+CALL `cloud`.`ADD_COL`('disk_offering', 'shareable', 'tinyint(1) unsigned NOT NULL DEFAULT 0');

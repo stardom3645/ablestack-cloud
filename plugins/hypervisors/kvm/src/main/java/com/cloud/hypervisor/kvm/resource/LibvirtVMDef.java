@@ -1232,7 +1232,9 @@ public class LibvirtVMDef {
 
                 diskBuilder.append("</iotune>\n");
             }
-
+            if (_shareable) {
+                diskBuilder.append("<shareable/>");
+            }
             diskBuilder.append("</disk>\n");
             return diskBuilder.toString();
         }

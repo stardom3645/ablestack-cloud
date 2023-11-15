@@ -326,6 +326,12 @@ public class VolumeObject implements VolumeInfo {
     }
 
     @Override
+    public boolean getShareable() {
+        DiskOfferingVO diskOfferingVO = getDiskOfferingVO();
+        return diskOfferingVO.getShareable();
+    }
+
+    @Override
     public MigrationOptions getMigrationOptions() {
         return migrationOptions;
     }
