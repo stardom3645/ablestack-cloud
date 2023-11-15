@@ -51,7 +51,7 @@ do
     api_file=$(echo ${i##*.})
     api_result=$(java -classpath $api_cmd org.junit.runner.JUnitCore $api_class | grep -i OK)
     if [ -n "$api_result" ]; then
-        echo "$api_file,true,"
+        echo "$api_file,true"
     else
         echo "$api_file,false"
     fi
@@ -68,7 +68,7 @@ do
     fw__file=$(echo ${i##*.})
     fw_result=$(java -classpath $fw_cmd org.junit.runner.JUnitCore $fw_class | grep -i OK)
     if [ -n "$fw_result" ]; then
-        echo "$fw_file,true,"
+        echo "$fw_file,true"
     else
         echo "$fw_file,false"
     fi
