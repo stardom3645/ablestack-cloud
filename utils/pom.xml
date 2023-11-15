@@ -535,13 +535,13 @@
                                     <overWrite>false</overWrite>
                                     <outputDirectory>${project.build.directory}/lib</outputDirectory>
                                 </artifactItem>
-                                <!-- <artifactItem>
+                                <artifactItem>
                                     <groupId>com.fasterxml.jackson.core</groupId>
                                     <artifactId>jackson-databind</artifactId>
                                     <version>${cs.jackson.version}</version>
                                     <overWrite>false</overWrite>
                                     <outputDirectory>${project.build.directory}/lib</outputDirectory>
-                                </artifactItem> -->
+                                </artifactItem>
                                 <artifactItem>
                                     <groupId>com.fasterxml.jackson.core</groupId>
                                     <artifactId>jackson-annotations</artifactId>
@@ -549,13 +549,13 @@
                                     <overWrite>false</overWrite>
                                     <outputDirectory>${project.build.directory}/lib</outputDirectory>
                                 </artifactItem>
-                                <!-- <artifactItem>
-                                    <groupId>com.fasterxml.jackson.core</groupId>
+                                <artifactItem>
+                                    <groupId>com.fasterxml.jackson.module</groupId>
                                     <artifactId>jackson-module-jaxb-annotations</artifactId>
                                     <version>${cs.jackson.version}</version>
                                     <overWrite>false</overWrite>
                                     <outputDirectory>${project.build.directory}/lib</outputDirectory>
-                                </artifactItem> -->
+                                </artifactItem>
                                 <artifactItem>
                                     <groupId>com.google.guava</groupId>
                                     <artifactId>guava</artifactId>
@@ -612,13 +612,13 @@
                                     <overWrite>false</overWrite>
                                     <outputDirectory>${project.build.directory}/lib</outputDirectory>
                                 </artifactItem>
-                                <!-- <artifactItem>
+                                <artifactItem>
                                     <groupId>xerces</groupId>
-                                    <artifactId>xercesimpl</artifactId>
+                                    <artifactId>xercesImpl</artifactId>
                                     <version>${cs.xercesImpl.version}</version>
                                     <overWrite>false</overWrite>
                                     <outputDirectory>${project.build.directory}/lib</outputDirectory>
-                                </artifactItem> -->
+                                </artifactItem>
                                 <artifactItem>
                                     <groupId>org.reflections</groupId>
                                     <artifactId>reflections</artifactId>
