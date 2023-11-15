@@ -29,7 +29,8 @@ import javax.xml.parsers.ParserConfigurationException;
 import org.apache.cloudstack.utils.security.ParserUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.cloudstack.utils.qemu.QemuObject;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -49,7 +50,7 @@ import com.cloud.hypervisor.kvm.resource.LibvirtVMDef.WatchDogDef.WatchDogAction
 import com.cloud.hypervisor.kvm.resource.LibvirtVMDef.WatchDogDef.WatchDogModel;
 
 public class LibvirtDomainXMLParser {
-    private static final Logger s_logger = Logger.getLogger(LibvirtDomainXMLParser.class);
+    protected Logger logger = LogManager.getLogger(getClass());
     private final List<InterfaceDef> interfaces = new ArrayList<InterfaceDef>();
     private MemBalloonDef memBalloonDef = new MemBalloonDef();
     private final List<DiskDef> diskDefs = new ArrayList<DiskDef>();
@@ -316,7 +317,7 @@ public class LibvirtDomainXMLParser {
                 String bytes = getAttrValue("rate", "bytes", rng);
                 String period = getAttrValue("rate", "period", rng);
                 if (StringUtils.isAnyEmpty(bytes, period)) {
-                    s_logger.debug(String.format("Bytes and period in the rng section should not be null, please check the VM %s", name));
+                    logger.debug(String.format("Bytes and period in the rng section should not be null, please check the VM %s", name));
                 } else {
                     if (StringUtils.isEmpty(backendModel)) {
                         def = new RngDef(path, Integer.parseInt(bytes), Integer.parseInt(period));
@@ -353,11 +354,11 @@ public class LibvirtDomainXMLParser {
 
             return true;
         } catch (ParserConfigurationException e) {
-            s_logger.debug(e.toString());
+            logger.debug(e.toString());
         } catch (SAXException e) {
-            s_logger.debug(e.toString());
+            logger.debug(e.toString());
         } catch (IOException e) {
-            s_logger.debug(e.toString());
+            logger.debug(e.toString());
         }
         return false;
     }
