@@ -252,7 +252,6 @@ export default {
       this.rules = reactive({})
     },
     showUuid (record, index) {
-      console.log(index)
       this.securityChecksResult = this.securityChecks.filter(item => item.id === index.id) || []
       const failedList = index.details
       this.securityChecksResult = failedList.split(', ').filter(item => item.trim() !== '')
@@ -265,7 +264,6 @@ export default {
       this.fetchLoading = true
       api('getSecurityCheck', { managementserverid: this.resource.id }).then(json => {
         this.securityChecks = json.getsecuritycheckresponse.securitychecks.securitychecks || []
-        console.log(this.securityChecks)
       }).catch(error => {
         this.$notifyError(error)
       }).finally(f => {
