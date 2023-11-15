@@ -78,10 +78,12 @@ import com.cloud.utils.net.Dhcp;
 import com.cloud.vm.UserVmDetailVO;
 import com.cloud.vm.UserVmManager;
 import com.cloud.vm.VirtualMachine.State;
+import com.cloud.vm.VbmcVO;
 import com.cloud.vm.VmStats;
 import com.cloud.vm.dao.NicExtraDhcpOptionDao;
 import com.cloud.vm.dao.NicSecondaryIpVO;
 import com.cloud.vm.dao.UserVmDetailsDao;
+import com.cloud.vm.dao.VbmcDao;
 
 @Component
 public class UserVmJoinDaoImpl extends GenericDaoBaseWithTagInformation<UserVmJoinVO, UserVmResponse> implements UserVmJoinDao {
@@ -107,6 +109,8 @@ public class UserVmJoinDaoImpl extends GenericDaoBaseWithTagInformation<UserVmJo
     VnfTemplateDetailsDao vnfTemplateDetailsDao;
     @Inject
     VnfTemplateNicDao vnfTemplateNicDao;
+    @Inject
+    VbmcDao vbmcDao;
 
     private final SearchBuilder<UserVmJoinVO> VmDetailSearch;
     private final SearchBuilder<UserVmJoinVO> activeVmByIsoSearch;
@@ -430,6 +434,12 @@ public class UserVmJoinDaoImpl extends GenericDaoBaseWithTagInformation<UserVmJo
             userVmResponse.setAutoScaleVmGroupId(userVm.getAutoScaleVmGroupUuid());
         }
 
+        List<VbmcVO> vbmcPortVo = vbmcDao.listByVmId(userVm.getId());
+        if(vbmcPortVo.size() > 0) {
+            userVmResponse.setVbmcPort(Integer.toString(vbmcPortVo.get(0).getPort()));
+        } else {
+            userVmResponse.setVbmcPort("None");
+        }
         if (userVm.getUserDataId() != null) {
             userVmResponse.setUserDataId(userVm.getUserDataUUid());
             userVmResponse.setUserDataName(userVm.getUserDataName());
