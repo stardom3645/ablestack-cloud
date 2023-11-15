@@ -549,13 +549,13 @@
                                     <overWrite>false</overWrite>
                                     <outputDirectory>${project.build.directory}/lib</outputDirectory>
                                 </artifactItem>
-                                <artifactItem>
+                                <!-- <artifactItem>
                                     <groupId>com.fasterxml.jackson.core</groupId>
                                     <artifactId>jackson-module-jaxb-annotations</artifactId>
                                     <version>${cs.jackson.version}</version>
                                     <overWrite>false</overWrite>
                                     <outputDirectory>${project.build.directory}/lib</outputDirectory>
-                                </artifactItem>
+                                </artifactItem> -->
                                 <artifactItem>
                                     <groupId>com.google.guava</groupId>
                                     <artifactId>guava</artifactId>
