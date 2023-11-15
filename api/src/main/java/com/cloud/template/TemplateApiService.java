@@ -106,7 +106,7 @@ public interface TemplateApiService {
 
     boolean updateTemplateOrIsoPermissions(BaseUpdateTemplateOrIsoPermissionsCmd cmd);
 
-    Snapshot createSnapshotFromTemplateOwner(long vmId, UserVm curVm, Account templateOwner, VolumeApiService volumeService) throws ResourceAllocationException;
+    Snapshot createSnapshotFromTemplateOwner(long vmId, UserVm curVm, Account templateOwner, VolumeApiService volumeService, List<Long> zoneIds) throws ResourceAllocationException;
 
     /**
      * create a template record for later usage of creating a real template by createPrivateTemplate
