@@ -128,18 +128,19 @@ public class SecurityCheckServiceImpl extends ManagerBase implements PluggableSe
                     String[] temp = line.split(",");
                     String checkName = temp[0];
                     String checkResult = temp[1];
+                    String checkClassName = temp[2];
                     String checkMessage;
                     if ("false".equals(checkResult)) {
                         checkMessage = "process does not operate normally at last check";
                         if (runMode == "first") {
-                            alertManager.sendAlert(AlertManager.AlertType.ALERT_TYPE_MANAGMENT_NODE, 0, new Long(0), "Management server node " + msHost.getServiceIP() + " security check when running the product failed : "+ checkName + " " + checkMessage, "");
+                            alertManager.sendAlert(AlertManager.AlertType.ALERT_TYPE_MANAGMENT_NODE, 0, new Long(0), "Management server node " + msHost.getServiceIP() + " security check when running the product failed : "+ checkName + " " + checkMessage + " (" + checkClassName + ")", "");
                         } else {
-                            alertManager.sendAlert(AlertManager.AlertType.ALERT_TYPE_MANAGMENT_NODE, 0, new Long(0), "Management server node " + msHost.getServiceIP() + " security check schedule failed : "+ checkName + " " + checkMessage, "");
+                            alertManager.sendAlert(AlertManager.AlertType.ALERT_TYPE_MANAGMENT_NODE, 0, new Long(0), "Management server node " + msHost.getServiceIP() + " security check schedule failed : "+ checkName + " " + checkMessage + " (" + checkClassName + ")", "");
                         }
                     } else {
                         checkMessage = "process operates normally";
                     }
-                    updateSecurityCheckResult(msHost.getId(), checkName, Boolean.parseBoolean(checkResult), checkMessage);
+                    updateSecurityCheckResult(msHost.getId(), checkName, Boolean.parseBoolean(checkResult), checkMessage + " (" + checkClassName + ")");
                 }
                 if (runMode == "first") {
                     ActionEventUtils.onCompletedActionEvent(CallContext.current().getCallingUserId(), CallContext.current().getCallingAccountId(), EventVO.LEVEL_INFO,
@@ -193,14 +194,15 @@ public class SecurityCheckServiceImpl extends ManagerBase implements PluggableSe
                 String[] temp = line.split(",");
                 String checkName = temp[0];
                 String checkResult = temp[1];
+                String checkClassName = temp[2];
                 String checkMessage;
                 if ("false".equals(checkResult)) {
                     checkMessage = "process does not operate normally at last check";
-                    alertManager.sendAlert(AlertManager.AlertType.ALERT_TYPE_MANAGMENT_NODE, 0, new Long(0), "Management server node " + mshost.getServiceIP() + " security check when operating the product failed : "+ checkName + " " + checkMessage, "");
+                    alertManager.sendAlert(AlertManager.AlertType.ALERT_TYPE_MANAGMENT_NODE, 0, new Long(0), "Management server node " + mshost.getServiceIP() + " security check when operating the product failed : "+ checkName + " " + checkMessage + " (" + checkClassName + ")", "");
                 } else {
                     checkMessage = "process operates normally";
                 }
-                updateSecurityCheckResult(mshost.getId(), checkName, Boolean.parseBoolean(checkResult), checkMessage);
+                updateSecurityCheckResult(mshost.getId(), checkName, Boolean.parseBoolean(checkResult), checkMessage + " (" + checkClassName + ")");
                 output.append(line).append('\n');
             }
             if (output.toString().contains("false")) {
