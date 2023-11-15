@@ -40,4 +40,6 @@ public interface ObjectInDataStoreManager {
     DataObjectInStore findObject(long objId, DataObjectType type, long dataStoreId, DataStoreRole role, String deployAsIsConfiguration);
 
     DataObjectInStore findObject(DataObject obj, DataStore store);
+
+    DataStore findStore(long objId, DataObjectType type, DataStoreRole role);
 }

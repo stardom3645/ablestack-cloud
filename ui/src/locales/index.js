@@ -22,8 +22,8 @@ const loadedLanguage = []
 const messages = {}
 
 export const i18n = createI18n({
-  locale: 'ko_KR',
-  fallbackLocale: 'ko_KR',
+  locale: 'en',
+  fallbackLocale: 'en',
   silentTranslationWarn: true,
   messages: messages,
   silentFallbackWarn: true,
@@ -33,7 +33,7 @@ export const i18n = createI18n({
 export function loadLanguageAsync (lang) {
   if (!lang) {
     const locale = vueProps.$localStorage.get('LOCALE')
-    lang = (!locale || typeof locale === 'object') ? 'ko_KR' : locale
+    lang = (!locale || typeof locale === 'object') ? 'en' : locale
   }
   if (loadedLanguage.includes(lang)) {
     return Promise.resolve(setLanguage(lang))

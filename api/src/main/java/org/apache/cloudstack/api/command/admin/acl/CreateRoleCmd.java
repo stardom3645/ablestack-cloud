@@ -48,7 +48,8 @@ public class CreateRoleCmd extends RoleCmd {
             description = "ID of the role to be cloned from. Either roleid or type must be passed in")
     private Long roleId;
 
-    @Parameter(name = ApiConstants.IS_PUBLIC, type = CommandType.BOOLEAN, description = "Indicates whether the role will be visible to all users (public) or only to root admins (private). Default is true.")
+    @Parameter(name = ApiConstants.IS_PUBLIC, type = CommandType.BOOLEAN, description = "Indicates whether the role will be visible to all users (public) or only to root admins (private)." +
+            " If this parameter is not specified during the creation of the role its value will be defaulted to true (public).")
     private boolean publicRole = true;
 
     /////////////////////////////////////////////////////

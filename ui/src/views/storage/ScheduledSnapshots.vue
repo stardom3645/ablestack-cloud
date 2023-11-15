@@ -61,11 +61,6 @@
         <template v-if="column.key === 'tags'">
           <a-tag v-for="(tag, index) in record.tags" :key="index">{{ tag.key + '=' + tag.value }}</a-tag>
         </template>
-        <template v-if="column.key === 'zones'">
-          <div v-for="zone in record.zone" :key="zone.id">
-            <router-link :to="{ path: '/zones/' + zone.id }">{{ zone.name }}</router-link>
-          </div>
-        </template>
         <template v-if="column.key === 'actions'">
           <div class="account-button-action">
             <tooltip-button
@@ -150,11 +145,6 @@ export default {
         dataIndex: 'tags'
       },
       {
-        key: 'zones',
-        title: this.$t('label.zones'),
-        dataIndex: 'zone'
-      },
-      {
         key: 'actions',
         title: this.$t('label.actions'),
         dataIndex: 'actions',
@@ -195,9 +185,6 @@ export default {
     },
     getTimeZone (timeZone) {
       return timeZoneName(timeZone)
-    },
-    getZones (record) {
-
     }
   }
 }

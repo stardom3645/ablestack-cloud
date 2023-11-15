@@ -55,6 +55,4 @@ public interface ManagementServerHostDao extends GenericDao<ManagementServerHost
     List<Long> listOrphanMsids();
 
     ManagementServerHostVO findOneInUpState(Filter filter);
-
-    ManagementServerHostVO findOneByLongestRuntime();
 }

@@ -16,8 +16,6 @@
 // under the License.
 package com.cloud.vm;
 
-import java.util.List;
-
 import com.cloud.storage.Snapshot;
 
 public class VmWorkTakeVolumeSnapshot extends VmWork {
@@ -31,11 +29,8 @@ public class VmWorkTakeVolumeSnapshot extends VmWork {
     private Snapshot.LocationType locationType;
     private boolean asyncBackup;
 
-    private List<Long> zoneIds;
-
     public VmWorkTakeVolumeSnapshot(long userId, long accountId, long vmId, String handlerName,
-            Long volumeId, Long policyId, Long snapshotId, boolean quiesceVm, Snapshot.LocationType locationType,
-            boolean asyncBackup, List<Long> zoneIds) {
+            Long volumeId, Long policyId, Long snapshotId, boolean quiesceVm, Snapshot.LocationType locationType, boolean asyncBackup) {
         super(userId, accountId, vmId, handlerName);
         this.volumeId = volumeId;
         this.policyId = policyId;
@@ -43,7 +38,6 @@ public class VmWorkTakeVolumeSnapshot extends VmWork {
         this.quiesceVm = quiesceVm;
         this.locationType = locationType;
         this.asyncBackup = asyncBackup;
-        this.zoneIds = zoneIds;
     }
 
     public Long getVolumeId() {
@@ -66,9 +60,5 @@ public class VmWorkTakeVolumeSnapshot extends VmWork {
 
     public boolean isAsyncBackup() {
         return asyncBackup;
-    }
-
-    public List<Long> getZoneIds() {
-        return zoneIds;
     }
 }

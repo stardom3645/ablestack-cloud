@@ -168,11 +168,6 @@
         </dependency>
         <dependency>
             <groupId>org.apache.cloudstack</groupId>
-            <artifactId>cloud-plugin-user-authenticator-oauth2</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.cloudstack</groupId>
             <artifactId>cloud-plugin-user-authenticator-pbkdf2</artifactId>
             <version>${project.version}</version>
         </dependency>
@@ -535,16 +530,6 @@
         <dependency>
             <groupId>org.apache.cloudstack</groupId>
             <artifactId>cloud-plugin-network-globodns</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.cloudstack</groupId>
-            <artifactId>cloud-plugin-cluster-drs-balanced</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.cloudstack</groupId>
-            <artifactId>cloud-plugin-cluster-drs-condensed</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>

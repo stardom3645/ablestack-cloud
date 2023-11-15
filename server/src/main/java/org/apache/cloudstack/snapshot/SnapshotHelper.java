@@ -19,6 +19,17 @@
 
 package org.apache.cloudstack.snapshot;
 
+import com.cloud.hypervisor.Hypervisor;
+import com.cloud.hypervisor.Hypervisor.HypervisorType;
+import com.cloud.storage.DataStoreRole;
+import com.cloud.storage.Snapshot;
+import com.cloud.storage.SnapshotVO;
+import com.cloud.storage.VolumeVO;
+import com.cloud.storage.Storage.StoragePoolType;
+import com.cloud.storage.dao.SnapshotDao;
+
+import com.cloud.utils.exception.CloudRuntimeException;
+
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -27,7 +38,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.inject.Inject;
-
 import org.apache.cloudstack.engine.subsystem.api.storage.DataStore;
 import org.apache.cloudstack.engine.subsystem.api.storage.DataStoreCapabilities;
 import org.apache.cloudstack.engine.subsystem.api.storage.DataStoreManager;
@@ -46,16 +56,6 @@ import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 import org.apache.log4j.Logger;
-
-import com.cloud.hypervisor.Hypervisor;
-import com.cloud.hypervisor.Hypervisor.HypervisorType;
-import com.cloud.storage.DataStoreRole;
-import com.cloud.storage.Snapshot;
-import com.cloud.storage.SnapshotVO;
-import com.cloud.storage.Storage.StoragePoolType;
-import com.cloud.storage.VolumeVO;
-import com.cloud.storage.dao.SnapshotDao;
-import com.cloud.utils.exception.CloudRuntimeException;
 
 public class SnapshotHelper {
     private final Logger logger = Logger.getLogger(this.getClass());
@@ -110,13 +110,8 @@ public class SnapshotHelper {
             logger.warn(String.format("Unable to delete the temporary snapshot [%s] on secondary storage due to [%s]. We still will expunge the database reference, consider"
               + " manually deleting the file [%s].", snapInfo.getId(), ex.getMessage(), snapInfo.getPath()), ex);
         }
-        long storeId = snapInfo.getDataStore().getId();
-        if (!DataStoreRole.Image.equals(snapInfo.getDataStore().getRole())) {
-            long zoneId = dataStorageManager.getStoreZoneId(storeId, snapInfo.getDataStore().getRole());
-            SnapshotInfo imageStoreSnapInfo = snapshotFactory.getSnapshotWithRoleAndZone(snapInfo.getId(), DataStoreRole.Image, zoneId);
-            storeId = imageStoreSnapInfo.getDataStore().getId();
-        }
-        snapshotDataStoreDao.expungeReferenceBySnapshotIdAndDataStoreRole(snapInfo.getId(), storeId, DataStoreRole.Image);
+
+        snapshotDataStoreDao.expungeReferenceBySnapshotIdAndDataStoreRole(snapInfo.getId(), DataStoreRole.Image);
     }
 
     /**
@@ -132,12 +127,12 @@ public class SnapshotHelper {
             return snapInfo;
         }
 
-        snapInfo = getSnapshotInfoByIdAndRole(snapshot.getId(), DataStoreRole.Primary, null);
+        snapInfo = getSnapshotInfoByIdAndRole(snapshot.getId(), DataStoreRole.Primary);
 
         SnapshotStrategy snapshotStrategy = storageStrategyFactory.getSnapshotStrategy(snapshot, SnapshotStrategy.SnapshotOperation.BACKUP);
         snapshotStrategy.backupSnapshot(snapInfo);
 
-        return getSnapshotInfoByIdAndRole(snapshot.getId(), kvmSnapshotOnlyInPrimaryStorage ? DataStoreRole.Image : dataStoreRole, dataStorageManager.getStoreZoneId(snapInfo.getDataStore().getId(), snapInfo.getDataStore().getRole()));
+        return getSnapshotInfoByIdAndRole(snapshot.getId(), kvmSnapshotOnlyInPrimaryStorage ? DataStoreRole.Image : dataStoreRole);
     }
 
     /**
@@ -145,13 +140,8 @@ public class SnapshotHelper {
      * @return The snapshot info if it exists, else throws an exception.
      * @throws CloudRuntimeException
      */
-    protected SnapshotInfo getSnapshotInfoByIdAndRole(long snapshotId, DataStoreRole dataStoreRole, Long zoneId) throws CloudRuntimeException {
-        SnapshotInfo snapInfo = null;
-        if (DataStoreRole.Primary.equals(dataStoreRole)) {
-            snapInfo = snapshotFactory.getSnapshotOnPrimaryStore(snapshotId);
-        } else {
-            snapInfo = snapshotFactory.getSnapshotWithRoleAndZone(snapshotId, dataStoreRole, zoneId);
-        }
+    protected SnapshotInfo getSnapshotInfoByIdAndRole(long snapshotId, DataStoreRole dataStoreRole) throws CloudRuntimeException{
+        SnapshotInfo snapInfo = snapshotFactory.getSnapshot(snapshotId, dataStoreRole);
 
         if (snapInfo != null) {
             return snapInfo;
@@ -178,7 +168,7 @@ public class SnapshotHelper {
     }
 
     public DataStoreRole getDataStoreRole(Snapshot snapshot) {
-        SnapshotDataStoreVO snapshotStore = snapshotDataStoreDao.findOneBySnapshotAndDatastoreRole(snapshot.getId(), DataStoreRole.Primary);
+        SnapshotDataStoreVO snapshotStore = snapshotDataStoreDao.findBySnapshot(snapshot.getId(), DataStoreRole.Primary);
 
         if (snapshotStore == null) {
             return DataStoreRole.Image;

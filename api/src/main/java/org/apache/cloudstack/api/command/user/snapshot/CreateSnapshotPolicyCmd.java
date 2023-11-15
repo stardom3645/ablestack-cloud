@@ -18,7 +18,6 @@ package org.apache.cloudstack.api.command.user.snapshot;
 
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import org.apache.cloudstack.acl.RoleType;
@@ -31,7 +30,6 @@ import org.apache.cloudstack.api.Parameter;
 import org.apache.cloudstack.api.ServerApiException;
 import org.apache.cloudstack.api.response.SnapshotPolicyResponse;
 import org.apache.cloudstack.api.response.VolumeResponse;
-import org.apache.cloudstack.api.response.ZoneResponse;
 import org.apache.commons.collections.MapUtils;
 import org.apache.log4j.Logger;
 
@@ -77,14 +75,6 @@ public class CreateSnapshotPolicyCmd extends BaseCmd {
     @Parameter(name = ApiConstants.TAGS, type = CommandType.MAP, description = "Map of tags (key/value pairs)")
     private Map tags;
 
-    @Parameter(name = ApiConstants.ZONE_ID_LIST,
-            type=CommandType.LIST,
-            collectionType = CommandType.UUID,
-            entityType = ZoneResponse.class,
-            description = "A list of IDs of the zones in which the snapshots will be made available." +
-                    "The snapshots will always be made available in the zone in which the volume is present.")
-    protected List<Long> zoneIds;
-
     /////////////////////////////////////////////////////
     /////////////////// Accessors ///////////////////////
     /////////////////////////////////////////////////////
@@ -115,10 +105,6 @@ public class CreateSnapshotPolicyCmd extends BaseCmd {
             return true;
         else
             return display;
-    }
-
-    public List<Long> getZoneIds() {
-        return zoneIds;
     }
 
     /////////////////////////////////////////////////////

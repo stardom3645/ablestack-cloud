@@ -19,7 +19,6 @@
 package com.cloud.storage;
 
 import java.net.MalformedURLException;
-import java.util.List;
 import java.util.Map;
 
 import com.cloud.exception.StorageUnavailableException;
@@ -109,10 +108,10 @@ public interface VolumeApiService {
 
     Volume detachVolumeFromVM(DetachVolumeCmd cmd);
 
-    Snapshot takeSnapshot(Long volumeId, Long policyId, Long snapshotId, Account account, boolean quiescevm, Snapshot.LocationType locationType, boolean asyncBackup, Map<String, String> tags, List<Long> zoneIds)
+    Snapshot takeSnapshot(Long volumeId, Long policyId, Long snapshotId, Account account, boolean quiescevm, Snapshot.LocationType locationType, boolean asyncBackup, Map<String, String> tags)
             throws ResourceAllocationException;
 
-    Snapshot allocSnapshot(Long volumeId, Long policyId, String snapshotName, Snapshot.LocationType locationType, List<Long> zoneIds) throws ResourceAllocationException;
+    Snapshot allocSnapshot(Long volumeId, Long policyId, String snapshotName, Snapshot.LocationType locationType) throws ResourceAllocationException;
 
     Volume updateVolume(long volumeId, String path, String state, Long storageId, Boolean displayVolume, String customId, long owner, String chainInfo, String name);
 

@@ -23,7 +23,7 @@ export default {
   docHelp: 'adminguide/accounts.html#roles',
   permission: ['listRoles', 'listRolePermissions'],
   columns: ['name', 'type', 'description'],
-  details: ['name', 'id', 'type', 'description', 'ispublic'],
+  details: ['name', 'id', 'type', 'description'],
   tabs: [{
     name: 'details',
     component: shallowRef(defineAsyncComponent(() => import('@/components/view/DetailsTab.vue')))
@@ -53,7 +53,7 @@ export default {
       icon: 'edit-outlined',
       label: 'label.edit.role',
       dataView: true,
-      args: ['name', 'description', 'type', 'ispublic'],
+      args: ['name', 'description', 'type'],
       mapping: {
         type: {
           options: ['Admin', 'DomainAdmin', 'User']

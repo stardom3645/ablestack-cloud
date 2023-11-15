@@ -163,10 +163,6 @@ public class NetworkResponse extends BaseResponseWithAssociatedNetwork implement
     @Param(description = "the domain name of the network owner")
     private String domain;
 
-    @SerializedName(ApiConstants.DOMAIN_PATH)
-    @Param(description = "path of the Domain the network belongs to", since = "4.19.0.0")
-    private String domainPath;
-
     @SerializedName("isdefault")
     @Param(description = "true if network is default, false otherwise")
     private Boolean isDefault;
@@ -422,10 +418,6 @@ public class NetworkResponse extends BaseResponseWithAssociatedNetwork implement
     @Override
     public void setDomainName(String domain) {
         this.domain = domain;
-    }
-
-    public void setDomainPath(String domainPath) {
-        this.domainPath = domainPath;
     }
 
     public void setNetworkOfferingAvailability(String networkOfferingAvailability) {

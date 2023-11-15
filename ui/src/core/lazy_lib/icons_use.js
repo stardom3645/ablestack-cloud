@@ -83,7 +83,6 @@ import {
   FileProtectOutlined,
   FilterOutlined,
   FilterTwoTone,
-  FileAddOutlined,
   FireOutlined,
   FlagOutlined,
   FolderAddOutlined,
@@ -243,7 +242,6 @@ export default {
     app.component('ExclamationCircleOutlined', ExclamationCircleOutlined)
     app.component('EyeInvisibleOutlined', EyeInvisibleOutlined)
     app.component('EyeOutlined', EyeOutlined)
-    app.component('FileAddOutlined', FileAddOutlined)
     app.component('FieldTimeOutlined', FieldTimeOutlined)
     app.component('FileProtectOutlined', FileProtectOutlined)
     app.component('FilterOutlined', FilterOutlined)

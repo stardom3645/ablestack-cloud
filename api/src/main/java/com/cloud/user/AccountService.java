@@ -70,8 +70,6 @@ public interface AccountService {
 
     UserAccount getActiveUserAccount(String username, Long domainId);
 
-    List<UserAccount> getActiveUserAccountByEmail(String email, Long domainId);
-
     UserAccount updateUser(UpdateUserCmd updateUserCmd);
 
     Account getActiveAccountById(long accountId);

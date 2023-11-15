@@ -73,8 +73,6 @@ public interface VmDetailConstants {
 
     String CONFIG_DRIVE_LOCATION = "configDriveLocation";
 
-    String SKIP_DRS = "skipFromDRS";
-
     // VM import with nic, disk and custom params for custom compute offering
     String NIC = "nic";
     String NETWORK = "network";

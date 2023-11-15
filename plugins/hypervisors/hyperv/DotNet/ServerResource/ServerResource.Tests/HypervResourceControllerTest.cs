@@ -232,7 +232,7 @@ namespace ServerResource.Tests
         {
             // Arrange
             String sampleVolume = getSampleVolumeObjectTO();
-            String destroyCmd = //"{\"volume\":" + getSampleVolumeObjectTO() + "}";
+            String destoryCmd = //"{\"volume\":" + getSampleVolumeObjectTO() + "}";
                             "{\"volume\":{\"name\":\"" + testSampleVolumeTempUUIDNoExt
                                     + "\",\"storagePoolType\":\"Filesystem\","
                                     + "\"mountPoint\":"
@@ -243,15 +243,15 @@ namespace ServerResource.Tests
                                     + "\"type\":\"ROOT\",\"id\":9,\"size\":0}}";
 
             HypervResourceController rsrcServer = new HypervResourceController();
-            dynamic jsonDestroyCmd = JsonConvert.DeserializeObject(destroyCmd);
+            dynamic jsonDestoryCmd = JsonConvert.DeserializeObject(destoryCmd);
 
             // Act
-            dynamic destroyAns = rsrcServer.DestroyCommand(jsonDestroyCmd);
+            dynamic destoryAns = rsrcServer.DestroyCommand(jsonDestoryCmd);
 
             // Assert
-            JObject ansAsProperty2 = destroyAns[0];
+            JObject ansAsProperty2 = destoryAns[0];
             dynamic ans = ansAsProperty2.GetValue(CloudStackTypes.Answer);
-            String path = jsonDestroyCmd.volume.path;
+            String path = jsonDestoryCmd.volume.path;
             Assert.True((bool)ans.result, "DestroyCommand did not succeed " + ans.details);
             Assert.True(!File.Exists(path), "Failed to delete file " + path);
         }

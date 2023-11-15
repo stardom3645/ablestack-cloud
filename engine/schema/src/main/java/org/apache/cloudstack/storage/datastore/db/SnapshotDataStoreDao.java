@@ -23,7 +23,6 @@ import org.apache.cloudstack.engine.subsystem.api.storage.DataObjectInStore;
 import org.apache.cloudstack.engine.subsystem.api.storage.ObjectInDataStoreStateMachine;
 
 import com.cloud.storage.DataStoreRole;
-import com.cloud.storage.VMTemplateStorageResourceAssoc;
 import com.cloud.utils.db.GenericDao;
 import com.cloud.utils.fsm.StateDao;
 
@@ -34,21 +33,15 @@ StateDao<ObjectInDataStoreStateMachine.State, ObjectInDataStoreStateMachine.Even
 
     List<SnapshotDataStoreVO> listByStoreIdAndState(long id, ObjectInDataStoreStateMachine.State state);
 
-    List<SnapshotDataStoreVO> listBySnapshotIdAndState(long id, ObjectInDataStoreStateMachine.State state);
-
     List<SnapshotDataStoreVO> listActiveOnCache(long id);
 
     void deletePrimaryRecordsForStore(long id, DataStoreRole role);
 
     SnapshotDataStoreVO findByStoreSnapshot(DataStoreRole role, long storeId, long snapshotId);
 
-    void removeBySnapshotStore(long snapshotId, long storeId, DataStoreRole role);
-
     SnapshotDataStoreVO findParent(DataStoreRole role, Long storeId, Long volumeId);
 
-    List<SnapshotDataStoreVO> listBySnapshot(long snapshotId, DataStoreRole role);
-
-    List<SnapshotDataStoreVO> listReadyBySnapshot(long snapshotId, DataStoreRole role);
+    SnapshotDataStoreVO findBySnapshot(long snapshotId, DataStoreRole role);
 
     SnapshotDataStoreVO findBySourceSnapshot(long snapshotId, DataStoreRole role);
 
@@ -73,7 +66,9 @@ StateDao<ObjectInDataStoreStateMachine.State, ObjectInDataStoreStateMachine.Even
 
     void updateVolumeIds(long oldVolId, long newVolId);
 
-    List<SnapshotDataStoreVO> findByVolume(long snapshotId, long volumeId, DataStoreRole role);
+    SnapshotDataStoreVO findByVolume(long volumeId, DataStoreRole role);
+
+    SnapshotDataStoreVO findByVolume(long snapshotId, long volumeId, DataStoreRole role);
 
     /**
      * List all snapshots in 'snapshot_store_ref' by volume and data store role. Therefore, it is possible to list all snapshots that are in the primary storage or in the secondary storage.
@@ -90,20 +85,10 @@ StateDao<ObjectInDataStoreStateMachine.State, ObjectInDataStoreStateMachine.Even
      * Removes the snapshot reference from the database according to its id and data store role.
      * @return true if success, otherwise, false.
      */
-    boolean expungeReferenceBySnapshotIdAndDataStoreRole(long snapshotId, long storeId, DataStoreRole dataStorerole);
+    boolean expungeReferenceBySnapshotIdAndDataStoreRole(long snapshotId, DataStoreRole dataStorerole);
 
     /**
      * List all snapshots in 'snapshot_store_ref' with state 'Ready' by volume ID.
      */
     List<SnapshotDataStoreVO> listReadyByVolumeId(long volumeId);
-
-    List<SnapshotDataStoreVO> listByStoreAndInstallPaths(long storeId, DataStoreRole role, List<String> pathList);
-
-    List<SnapshotDataStoreVO> listByStoreAndSnapshotIds(long storeId, DataStoreRole role, List<Long> snapshotIds);
-
-    List<SnapshotDataStoreVO> listBySnasphotStoreDownloadStatus(long snapshotId, long storeId, VMTemplateStorageResourceAssoc.Status... status);
-
-    SnapshotDataStoreVO findOneBySnapshotAndDatastoreRole(long snapshotId, DataStoreRole role);
-
-    void updateDisplayForSnapshotStoreRole(long snapshotId, long storeId, DataStoreRole role, boolean display);
 }

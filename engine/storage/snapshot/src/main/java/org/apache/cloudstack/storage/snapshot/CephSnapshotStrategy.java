@@ -21,6 +21,7 @@ package org.apache.cloudstack.storage.snapshot;
 import javax.inject.Inject;
 
 import org.apache.cloudstack.engine.subsystem.api.storage.SnapshotInfo;
+import org.apache.cloudstack.engine.subsystem.api.storage.SnapshotStrategy.SnapshotOperation;
 import org.apache.cloudstack.engine.subsystem.api.storage.StrategyPriority;
 import org.apache.cloudstack.engine.subsystem.api.storage.VolumeInfo;
 import org.apache.cloudstack.storage.datastore.db.PrimaryDataStoreDao;
@@ -47,7 +48,7 @@ public class CephSnapshotStrategy extends StorageSystemSnapshotStrategy {
     private static final Logger s_logger = Logger.getLogger(CephSnapshotStrategy.class);
 
     @Override
-    public StrategyPriority canHandle(Snapshot snapshot, Long zoneId, SnapshotOperation op) {
+    public StrategyPriority canHandle(Snapshot snapshot, SnapshotOperation op) {
         long volumeId = snapshot.getVolumeId();
         VolumeVO volumeVO = volumeDao.findByIdIncludingRemoved(volumeId);
         boolean baseVolumeExists = volumeVO.getRemoved() == null;
@@ -55,7 +56,7 @@ public class CephSnapshotStrategy extends StorageSystemSnapshotStrategy {
             return StrategyPriority.CANT_HANDLE;
         }
 
-        if (!isSnapshotStoredOnRbdStoragePoolAndOperationForSameZone(snapshot, zoneId)) {
+        if (!isSnapshotStoredOnRbdStoragePool(snapshot)) {
             return StrategyPriority.CANT_HANDLE;
         }
 
@@ -80,18 +81,12 @@ public class CephSnapshotStrategy extends StorageSystemSnapshotStrategy {
         return true;
     }
 
-    protected boolean isSnapshotStoredOnRbdStoragePoolAndOperationForSameZone(Snapshot snapshot, Long zoneId) {
-        SnapshotDataStoreVO snapshotStore = snapshotStoreDao.findOneBySnapshotAndDatastoreRole(snapshot.getId(), DataStoreRole.Primary);
+    protected boolean isSnapshotStoredOnRbdStoragePool(Snapshot snapshot) {
+        SnapshotDataStoreVO snapshotStore = snapshotStoreDao.findBySnapshot(snapshot.getId(), DataStoreRole.Primary);
         if (snapshotStore == null) {
             return false;
         }
         StoragePoolVO storagePoolVO = primaryDataStoreDao.findById(snapshotStore.getDataStoreId());
-        if (storagePoolVO == null) {
-            return false;
-        }
-        if (zoneId != null && !zoneId.equals(storagePoolVO.getDataCenterId())) {
-            return false;
-        }
-        return storagePoolVO.getPoolType() == StoragePoolType.RBD;
+        return storagePoolVO != null && storagePoolVO.getPoolType() == StoragePoolType.RBD;
     }
 }

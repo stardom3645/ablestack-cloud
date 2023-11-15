@@ -99,7 +99,12 @@ public class SwiftUtilTest {
 
     @Test
     public void testGetSwiftCmd() {
-        SwiftClientCfg cfg = CreateMockSwiftClientCfg(null);
+        SwiftClientCfg cfg = mock(SwiftClientCfg.class);
+        given(cfg.getEndPoint()).willReturn("swift.endpoint");
+        given(cfg.getAccount()).willReturn("cs");
+        given(cfg.getUserName()).willReturn("sec-storage");
+        given(cfg.getKey()).willReturn("mypassword");
+        given(cfg.getStoragePolicy()).willReturn(null);
 
         String cmd = SwiftUtil.getSwiftCmd(cfg, "swift", "stat");
 
@@ -109,7 +114,12 @@ public class SwiftUtilTest {
 
     @Test
     public void testGetSwiftObjectCmd() {
-        SwiftClientCfg cfg = CreateMockSwiftClientCfg(null);
+        SwiftClientCfg cfg = mock(SwiftClientCfg.class);
+        given(cfg.getEndPoint()).willReturn("swift.endpoint");
+        given(cfg.getAccount()).willReturn("cs");
+        given(cfg.getUserName()).willReturn("sec-storage");
+        given(cfg.getKey()).willReturn("mypassword");
+        given(cfg.getStoragePolicy()).willReturn(null);
 
         String objectCmd = SwiftUtil.getSwiftObjectCmd(cfg, "swift", "delete", "T-123", "template.vhd");
 
@@ -119,7 +129,12 @@ public class SwiftUtilTest {
 
     @Test
     public void testGetSwiftContainerCmd() {
-        SwiftClientCfg cfg = CreateMockSwiftClientCfg(null);
+        SwiftClientCfg cfg = mock(SwiftClientCfg.class);
+        given(cfg.getEndPoint()).willReturn("swift.endpoint");
+        given(cfg.getAccount()).willReturn("cs");
+        given(cfg.getUserName()).willReturn("sec-storage");
+        given(cfg.getKey()).willReturn("mypassword");
+        given(cfg.getStoragePolicy()).willReturn(null);
 
         String containerCmd = SwiftUtil.getSwiftContainerCmd(cfg, "swift", "list", "T-123");
 
@@ -129,16 +144,27 @@ public class SwiftUtilTest {
 
     @Test
     public void testGetUploadCmd() {
-        SwiftClientCfg cfg = CreateMockSwiftClientCfg(null);
+        SwiftClientCfg cfg = mock(SwiftClientCfg.class);
+        given(cfg.getEndPoint()).willReturn("swift.endpoint");
+        given(cfg.getAccount()).willReturn("cs");
+        given(cfg.getUserName()).willReturn("sec-storage");
+        given(cfg.getKey()).willReturn("mypassword");
+        given(cfg.getStoragePolicy()).willReturn(null);
 
         String uploadCmd = SwiftUtil.getUploadObjectCommand(cfg, "swift", "T-1", "template.vhd", 1024);
+
         String expected = "/usr/bin/python swift -A swift.endpoint -U cs:sec-storage -K mypassword upload T-1 template.vhd";
         assertThat(uploadCmd, is(equalTo(expected)));
     }
 
     @Test
     public void testGetUploadCmdWithSegmentsBecauseOfSize() {
-        SwiftClientCfg cfg = CreateMockSwiftClientCfg(null);
+        SwiftClientCfg cfg = mock(SwiftClientCfg.class);
+        given(cfg.getEndPoint()).willReturn("swift.endpoint");
+        given(cfg.getAccount()).willReturn("cs");
+        given(cfg.getUserName()).willReturn("sec-storage");
+        given(cfg.getKey()).willReturn("mypassword");
+        given(cfg.getStoragePolicy()).willReturn(null);
 
         String uploadCmd = SwiftUtil.getUploadObjectCommand(cfg, "swift", "T-1", "template.vhd", 5368709121L);
 
@@ -148,7 +174,12 @@ public class SwiftUtilTest {
 
     @Test
     public void testGetUploadCmdWithStoragePolicy() {
-        SwiftClientCfg cfg = CreateMockSwiftClientCfg("policy1");
+        SwiftClientCfg cfg = mock(SwiftClientCfg.class);
+        given(cfg.getEndPoint()).willReturn("swift.endpoint");
+        given(cfg.getAccount()).willReturn("cs");
+        given(cfg.getUserName()).willReturn("sec-storage");
+        given(cfg.getKey()).willReturn("mypassword");
+        given(cfg.getStoragePolicy()).willReturn("policy1");
 
         String uploadCmd = SwiftUtil.getUploadObjectCommand(cfg, "swift", "T-1", "template.vhd", 1024L);
         String expected = "/usr/bin/python swift -A swift.endpoint -U cs:sec-storage -K mypassword upload T-1 template.vhd --storage-policy \"policy1\"";
@@ -157,7 +188,12 @@ public class SwiftUtilTest {
 
     @Test
     public void testGetUploadCmdWithSegmentsAndStoragePolicy() {
-        SwiftClientCfg cfg = CreateMockSwiftClientCfg("policy1");
+        SwiftClientCfg cfg = mock(SwiftClientCfg.class);
+        given(cfg.getEndPoint()).willReturn("swift.endpoint");
+        given(cfg.getAccount()).willReturn("cs");
+        given(cfg.getUserName()).willReturn("sec-storage");
+        given(cfg.getKey()).willReturn("mypassword");
+        given(cfg.getStoragePolicy()).willReturn("policy1");
         String uploadCmd = SwiftUtil.getUploadObjectCommand(cfg, "swift", "T-1", "template.vhd", 5368709121L);
         String expected = "/usr/bin/python swift -A swift.endpoint -U cs:sec-storage -K mypassword upload T-1 template.vhd --storage-policy \"policy1\" -S 5368709120";
         assertThat(uploadCmd, is(equalTo(expected)));
@@ -165,7 +201,12 @@ public class SwiftUtilTest {
 
     @Test
     public void testListContainerCmdWithStoragePolicyButNotSupportedByOperation() {
-        SwiftClientCfg cfg = CreateMockSwiftClientCfg("policy1");
+        SwiftClientCfg cfg = mock(SwiftClientCfg.class);
+        given(cfg.getEndPoint()).willReturn("swift.endpoint");
+        given(cfg.getAccount()).willReturn("cs");
+        given(cfg.getUserName()).willReturn("sec-storage");
+        given(cfg.getKey()).willReturn("mypassword");
+        given(cfg.getStoragePolicy()).willReturn("policy1");
 
         String uploadCmd = SwiftUtil.getSwiftContainerCmd(cfg, "swift", "list", "T-1");
         String expected = "/usr/bin/python swift -A swift.endpoint -U cs:sec-storage -K mypassword list T-1";
@@ -174,20 +215,15 @@ public class SwiftUtilTest {
 
     @Test
     public void testListContainerCmdWithoutStoragePolicy() {
-        SwiftClientCfg cfg = CreateMockSwiftClientCfg(null);
-
-        String uploadCmd = SwiftUtil.getSwiftContainerCmd(cfg, "swift", "list", "T-1");
-        String expected = "/usr/bin/python swift -A swift.endpoint -U cs:sec-storage -K mypassword list T-1";
-        assertThat(uploadCmd, is(equalTo(expected)));
-    }
-
-    private SwiftClientCfg CreateMockSwiftClientCfg(String policy){
         SwiftClientCfg cfg = mock(SwiftClientCfg.class);
         given(cfg.getEndPoint()).willReturn("swift.endpoint");
         given(cfg.getAccount()).willReturn("cs");
         given(cfg.getUserName()).willReturn("sec-storage");
         given(cfg.getKey()).willReturn("mypassword");
-        given(cfg.getStoragePolicy()).willReturn(policy);
-        return cfg;
+        given(cfg.getStoragePolicy()).willReturn(null);
+
+        String uploadCmd = SwiftUtil.getSwiftContainerCmd(cfg, "swift", "list", "T-1");
+        String expected = "/usr/bin/python swift -A swift.endpoint -U cs:sec-storage -K mypassword list T-1";
+        assertThat(uploadCmd, is(equalTo(expected)));
     }
 }

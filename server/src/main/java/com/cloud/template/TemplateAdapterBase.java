@@ -275,8 +275,7 @@ public abstract class TemplateAdapterBase extends AdapterBase implements Templat
         Account owner = _accountMgr.getAccount(cmd.getEntityOwnerId());
         _accountMgr.checkAccess(caller, null, true, owner);
 
-        TemplateType templateType = templateMgr.validateTemplateType(cmd, _accountMgr.isAdmin(caller.getAccountId()),
-                CollectionUtils.isEmpty(cmd.getZoneIds()));
+        boolean isRouting = (cmd.isRoutingType() == null) ? false : cmd.isRoutingType();
 
         List<Long> zoneId = cmd.getZoneIds();
         // ignore passed zoneId if we are using region wide image store
@@ -306,7 +305,7 @@ public abstract class TemplateAdapterBase extends AdapterBase implements Templat
         }
         return prepare(false, CallContext.current().getCallingUserId(), cmd.getTemplateName(), cmd.getDisplayText(), cmd.getBits(), cmd.isPasswordEnabled(), cmd.getRequiresHvm(),
                 cmd.getUrl(), cmd.isPublic(), cmd.isFeatured(), cmd.isExtractable(), cmd.getFormat(), cmd.getOsTypeId(), zoneId, hypervisorType, cmd.getChecksum(), true,
-                cmd.getTemplateTag(), owner, details, cmd.isSshKeyEnabled(), null, cmd.isDynamicallyScalable(), templateType,
+                cmd.getTemplateTag(), owner, details, cmd.isSshKeyEnabled(), null, cmd.isDynamicallyScalable(), isRouting ? TemplateType.ROUTING : TemplateType.USER,
                 cmd.isDirectDownload(), cmd.isDeployAsIs());
 
     }

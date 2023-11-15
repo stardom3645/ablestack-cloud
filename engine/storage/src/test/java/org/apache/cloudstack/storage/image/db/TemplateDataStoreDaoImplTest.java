@@ -16,15 +16,14 @@
 // under the License.
 package org.apache.cloudstack.storage.image.db;
 
-import java.util.Arrays;
-import java.util.List;
-
+import com.cloud.storage.VMTemplateStorageResourceAssoc;
 import org.apache.cloudstack.engine.subsystem.api.storage.ObjectInDataStoreStateMachine;
 import org.apache.cloudstack.storage.datastore.db.TemplateDataStoreVO;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.cloud.storage.VMTemplateStorageResourceAssoc;
+import java.util.Arrays;
+import java.util.List;
 
 public class TemplateDataStoreDaoImplTest {
 

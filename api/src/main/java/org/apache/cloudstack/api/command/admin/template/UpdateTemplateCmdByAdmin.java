@@ -24,5 +24,4 @@ import org.apache.cloudstack.api.response.TemplateResponse;
 
 @APICommand(name = "updateTemplate", description = "Updates attributes of a template.", responseObject = TemplateResponse.class, responseView = ResponseView.Full,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
-public class UpdateTemplateCmdByAdmin extends UpdateTemplateCmd implements AdminCmd {
-}
+public class UpdateTemplateCmdByAdmin extends UpdateTemplateCmd implements AdminCmd {}

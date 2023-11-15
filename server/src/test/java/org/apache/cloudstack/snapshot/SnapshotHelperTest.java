@@ -19,14 +19,12 @@
 
 package org.apache.cloudstack.snapshot;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
-import org.apache.cloudstack.engine.subsystem.api.storage.DataStore;
-import org.apache.cloudstack.engine.subsystem.api.storage.DataStoreManager;
+import com.cloud.hypervisor.Hypervisor;
+import com.cloud.hypervisor.Hypervisor.HypervisorType;
+import com.cloud.storage.DataStoreRole;
+import com.cloud.storage.VolumeVO;
+import com.cloud.storage.dao.SnapshotDao;
+import com.cloud.utils.exception.CloudRuntimeException;
 import org.apache.cloudstack.engine.subsystem.api.storage.SnapshotDataFactory;
 import org.apache.cloudstack.engine.subsystem.api.storage.SnapshotInfo;
 import org.apache.cloudstack.engine.subsystem.api.storage.SnapshotService;
@@ -42,12 +40,11 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
 
-import com.cloud.hypervisor.Hypervisor;
-import com.cloud.hypervisor.Hypervisor.HypervisorType;
-import com.cloud.storage.DataStoreRole;
-import com.cloud.storage.VolumeVO;
-import com.cloud.storage.dao.SnapshotDao;
-import com.cloud.utils.exception.CloudRuntimeException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 @RunWith(MockitoJUnitRunner.class)
 public class SnapshotHelperTest {
@@ -79,9 +76,6 @@ public class SnapshotHelperTest {
     SnapshotDao snapshotDaoMock;
 
     @Mock
-    DataStoreManager dataStoreManager;
-
-    @Mock
     VolumeVO volumeVoMock;
 
     List<DataStoreRole> dataStoreRoles = Arrays.asList(DataStoreRole.values());
@@ -93,7 +87,6 @@ public class SnapshotHelperTest {
         snapshotHelperSpy.snapshotFactory = snapshotDataFactoryMock;
         snapshotHelperSpy.storageStrategyFactory = storageStrategyFactoryMock;
         snapshotHelperSpy.snapshotDao = snapshotDaoMock;
-        snapshotHelperSpy.dataStorageManager = dataStoreManager;
     }
 
     @Test
@@ -104,17 +97,13 @@ public class SnapshotHelperTest {
 
     @Test
     public void validateExpungeTemporarySnapshotKvmSnapshotOnPrimaryStorageExpungesSnapshot() {
-        DataStore store = Mockito.mock(DataStore.class);
-        Mockito.when(store.getRole()).thenReturn(DataStoreRole.Image);
-        Mockito.when(store.getId()).thenReturn(1L);
-        Mockito.when(snapshotInfoMock.getDataStore()).thenReturn(store);
         Mockito.doReturn(true).when(snapshotServiceMock).deleteSnapshot(Mockito.any());
-        Mockito.doReturn(true).when(snapshotDataStoreDaoMock).expungeReferenceBySnapshotIdAndDataStoreRole(Mockito.anyLong(), Mockito.anyLong(), Mockito.any());
+        Mockito.doReturn(true).when(snapshotDataStoreDaoMock).expungeReferenceBySnapshotIdAndDataStoreRole(Mockito.anyLong(), Mockito.any());
 
         snapshotHelperSpy.expungeTemporarySnapshot(true, snapshotInfoMock);
 
         Mockito.verify(snapshotServiceMock).deleteSnapshot(Mockito.any());
-        Mockito.verify(snapshotDataStoreDaoMock).expungeReferenceBySnapshotIdAndDataStoreRole(Mockito.anyLong(), Mockito.anyLong(), Mockito.any());
+        Mockito.verify(snapshotDataStoreDaoMock).expungeReferenceBySnapshotIdAndDataStoreRole(Mockito.anyLong(), Mockito.any());
     }
 
     @Test
@@ -149,25 +138,20 @@ public class SnapshotHelperTest {
 
     @Test
     public void validateGetSnapshotInfoByIdAndRoleSnapInfoFoundReturnIt() {
-        Mockito.doReturn(snapshotInfoMock).when(snapshotDataFactoryMock).getSnapshotOnPrimaryStore(Mockito.anyLong());
-        Mockito.doReturn(snapshotInfoMock).when(snapshotDataFactoryMock).getSnapshotWithRoleAndZone(Mockito.anyLong(), Mockito.any(DataStoreRole.class), Mockito.anyLong());
+        Mockito.doReturn(snapshotInfoMock).when(snapshotDataFactoryMock).getSnapshot(Mockito.anyLong(), Mockito.any(DataStoreRole.class));
 
         dataStoreRoles.forEach(role -> {
-            SnapshotInfo result = snapshotHelperSpy.getSnapshotInfoByIdAndRole(0, role, 1L);
+            SnapshotInfo result = snapshotHelperSpy.getSnapshotInfoByIdAndRole(0, role);
             Assert.assertEquals(snapshotInfoMock, result);
         });
     }
 
-    @Test
+    @Test(expected = CloudRuntimeException.class)
     public void validateGetSnapshotInfoByIdAndRoleSnapInfoNotFoundThrowCloudRuntimeException() {
-        Mockito.doReturn(null).when(snapshotDataFactoryMock).getSnapshotOnPrimaryStore(Mockito.anyLong());
-        Mockito.doReturn(null).when(snapshotDataFactoryMock).getSnapshotWithRoleAndZone(Mockito.anyLong(), Mockito.any(DataStoreRole.class), Mockito.anyLong());
+        Mockito.doReturn(null).when(snapshotDataFactoryMock).getSnapshot(Mockito.anyLong(), Mockito.any(DataStoreRole.class));
 
         dataStoreRoles.forEach(role -> {
-            try {
-                snapshotHelperSpy.getSnapshotInfoByIdAndRole(0, role, 1L);
-                Assert.fail(String.format("Expected a CloudRuntimeException for datastore role: %s", role));
-            } catch (CloudRuntimeException ignored) {}
+            snapshotHelperSpy.getSnapshotInfoByIdAndRole(0, role);
         });
     }
 
@@ -204,7 +188,7 @@ public class SnapshotHelperTest {
     }
 
     @Test
-    public void validateBackupSnapshotToSecondaryStorageIfNotExistsSnapshotIsNotBackupable() {
+    public void validateBackupSnapshotToSecondaryStorageIfNotExistsSnapshotIsNotBackupable(){
         Mockito.doReturn(false).when(snapshotHelperSpy).isSnapshotBackupable(Mockito.any(), Mockito.any(), Mockito.anyBoolean());
         SnapshotInfo result = snapshotHelperSpy.backupSnapshotToSecondaryStorageIfNotExists(snapshotInfoMock, DataStoreRole.Image, snapshotInfoMock, true);
         Assert.assertEquals(snapshotInfoMock, result);
@@ -213,7 +197,7 @@ public class SnapshotHelperTest {
     @Test (expected = CloudRuntimeException.class)
     public void validateBackupSnapshotToSecondaryStorageIfNotExistsGetSnapshotThrowsCloudRuntimeException(){
         Mockito.doReturn(true).when(snapshotHelperSpy).isSnapshotBackupable(Mockito.any(), Mockito.any(), Mockito.anyBoolean());
-        Mockito.when(snapshotDataFactoryMock.getSnapshotOnPrimaryStore(Mockito.anyLong())).thenReturn(null);
+        Mockito.doThrow(CloudRuntimeException.class).when(snapshotHelperSpy).getSnapshotInfoByIdAndRole(Mockito.anyLong(), Mockito.any());
 
         snapshotHelperSpy.backupSnapshotToSecondaryStorageIfNotExists(snapshotInfoMock, DataStoreRole.Image, snapshotInfoMock, true);
     }
@@ -221,9 +205,7 @@ public class SnapshotHelperTest {
     @Test
     public void validateBackupSnapshotToSecondaryStorageIfNotExistsReturnSnapshotInfo(){
         Mockito.doReturn(true).when(snapshotHelperSpy).isSnapshotBackupable(Mockito.any(), Mockito.any(), Mockito.anyBoolean());
-        Mockito.when(snapshotInfoMock.getDataStore()).thenReturn(Mockito.mock(DataStore.class));
-        Mockito.when(snapshotDataFactoryMock.getSnapshotOnPrimaryStore(Mockito.anyLong())).thenReturn(snapshotInfoMock);
-        Mockito.when(snapshotDataFactoryMock.getSnapshotWithRoleAndZone(Mockito.anyLong(), Mockito.any(DataStoreRole.class), Mockito.anyLong())).thenReturn(snapshotInfoMock2);
+        Mockito.doReturn(snapshotInfoMock, snapshotInfoMock2).when(snapshotHelperSpy).getSnapshotInfoByIdAndRole(Mockito.anyLong(), Mockito.any());
         Mockito.doReturn(snapshotStrategyMock).when(storageStrategyFactoryMock).getSnapshotStrategy(Mockito.any(), Mockito.any());
         Mockito.doReturn(null).when(snapshotStrategyMock).backupSnapshot(Mockito.any());
 

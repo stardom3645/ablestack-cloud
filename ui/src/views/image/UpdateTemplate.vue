@@ -205,7 +205,7 @@ export default {
   },
   data () {
     return {
-      templatetypes: ['BUILTIN', 'USER', 'SYSTEM', 'ROUTING', 'VNF'],
+      templatetypes: ['BUILTIN', 'USER', 'SYSTEM', 'ROUTING'],
       rootDisk: {},
       nicAdapterType: {},
       keyboardType: {},

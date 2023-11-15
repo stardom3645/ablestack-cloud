@@ -357,11 +357,8 @@ public class UnmanagedVMsManagerImpl implements UnmanagedVMsManager {
         return additionalNameFilter;
     }
 
-    private List<String> getHostsManagedVms(List<HostVO> hosts) {
-        if (CollectionUtils.isEmpty(hosts)) {
-            return new ArrayList<>();
-        }
-        List<VMInstanceVO> instances = vmDao.listByHostOrLastHostOrHostPod(hosts.stream().map(HostVO::getId).collect(Collectors.toList()), hosts.get(0).getPodId());
+    private List<String> getHostManagedVms(Host host) {
+        List<VMInstanceVO> instances = vmDao.listByHostOrLastHostOrHostPod(host.getId(), host.getPodId());
         List<String> managedVms = instances.stream().map(VMInstanceVO::getInstanceName).collect(Collectors.toList());
         return managedVms;
     }
@@ -1029,24 +1026,6 @@ public class UnmanagedVMsManagerImpl implements UnmanagedVMsManager {
         return userVm;
     }
 
-    private HashMap<String, UnmanagedInstanceTO> getUnmanagedInstancesForHost(HostVO host, String instanceName, List<String> managedVms) {
-        HashMap<String, UnmanagedInstanceTO> unmanagedInstances = new HashMap<>();
-        if (host.isInMaintenanceStates()) {
-            return unmanagedInstances;
-        }
-
-        GetUnmanagedInstancesCommand command = new GetUnmanagedInstancesCommand();
-        command.setInstanceName(instanceName);
-        command.setManagedInstancesNames(managedVms);
-        Answer answer = agentManager.easySend(host.getId(), command);
-        if (!(answer instanceof GetUnmanagedInstancesAnswer)) {
-            return unmanagedInstances;
-        }
-        GetUnmanagedInstancesAnswer unmanagedInstancesAnswer = (GetUnmanagedInstancesAnswer) answer;
-        unmanagedInstances = unmanagedInstancesAnswer.getUnmanagedInstances();
-        return unmanagedInstances;
-    }
-
     private Cluster basicAccessChecks(Long clusterId) {
         final Account caller = CallContext.current().getCallingAccount();
         if (caller.getType() != Account.Type.ADMIN) {
@@ -1076,11 +1055,24 @@ public class UnmanagedVMsManagerImpl implements UnmanagedVMsManager {
         }
         List<HostVO> hosts = resourceManager.listHostsInClusterByStatus(clusterId, Status.Up);
         List<String> additionalNameFilters = getAdditionalNameFilters(cluster);
-        List<String> managedVms = new ArrayList<>(additionalNameFilters);
-        managedVms.addAll(getHostsManagedVms(hosts));
         List<UnmanagedInstanceResponse> responses = new ArrayList<>();
         for (HostVO host : hosts) {
-            HashMap<String, UnmanagedInstanceTO> unmanagedInstances = getUnmanagedInstancesForHost(host, cmd.getName(), managedVms);
+            if (host.isInMaintenanceStates()) {
+                continue;
+            }
+            List<String> managedVms = new ArrayList<>();
+            managedVms.addAll(additionalNameFilters);
+            managedVms.addAll(getHostManagedVms(host));
+
+            GetUnmanagedInstancesCommand command = new GetUnmanagedInstancesCommand();
+            command.setInstanceName(cmd.getName());
+            command.setManagedInstancesNames(managedVms);
+            Answer answer = agentManager.easySend(host.getId(), command);
+            if (!(answer instanceof GetUnmanagedInstancesAnswer)) {
+                continue;
+            }
+            GetUnmanagedInstancesAnswer unmanagedInstancesAnswer = (GetUnmanagedInstancesAnswer) answer;
+            HashMap<String, UnmanagedInstanceTO> unmanagedInstances = new HashMap<>(unmanagedInstancesAnswer.getUnmanagedInstances());
             Set<String> keys = unmanagedInstances.keySet();
             for (String key : keys) {
                 UnmanagedInstanceTO instance = unmanagedInstances.get(key);
@@ -1107,7 +1099,7 @@ public class UnmanagedVMsManagerImpl implements UnmanagedVMsManager {
             throw new InvalidParameterValueException("Instance name cannot be empty");
         }
         if (cmd.getDomainId() != null && StringUtils.isEmpty(cmd.getAccountName())) {
-            throw new InvalidParameterValueException(String.format("%s parameter must be specified with %s parameter", ApiConstants.DOMAIN_ID, ApiConstants.ACCOUNT));
+            throw new InvalidParameterValueException("domainid parameter must be specified with account parameter");
         }
         final Account owner = accountService.getActiveAccountById(cmd.getEntityOwnerId());
         long userId = CallContext.current().getCallingUserId();
@@ -1115,7 +1107,7 @@ public class UnmanagedVMsManagerImpl implements UnmanagedVMsManager {
         if (CollectionUtils.isNotEmpty(userVOs)) {
             userId = userVOs.get(0).getId();
         }
-        VMTemplateVO template;
+        VMTemplateVO template = null;
         final Long templateId = cmd.getTemplateId();
         if (templateId == null) {
             template = templateDao.findByName(VM_IMPORT_DEFAULT_TEMPLATE_NAME);
@@ -1178,49 +1170,59 @@ public class UnmanagedVMsManagerImpl implements UnmanagedVMsManager {
         List<HostVO> hosts = resourceManager.listHostsInClusterByStatus(clusterId, Status.Up);
         UserVm userVm = null;
         List<String> additionalNameFilters = getAdditionalNameFilters(cluster);
-        List<String> managedVms = new ArrayList<>(additionalNameFilters);
-        managedVms.addAll(getHostsManagedVms(hosts));
         for (HostVO host : hosts) {
-            HashMap<String, UnmanagedInstanceTO> unmanagedInstances = getUnmanagedInstancesForHost(host, cmd.getName(), managedVms);
+            if (host.isInMaintenanceStates()) {
+                continue;
+            }
+            List<String> managedVms = new ArrayList<>();
+            managedVms.addAll(additionalNameFilters);
+            managedVms.addAll(getHostManagedVms(host));
+            GetUnmanagedInstancesCommand command = new GetUnmanagedInstancesCommand(instanceName);
+            command.setManagedInstancesNames(managedVms);
+            Answer answer = agentManager.easySend(host.getId(), command);
+            if (!(answer instanceof GetUnmanagedInstancesAnswer)) {
+                continue;
+            }
+            GetUnmanagedInstancesAnswer unmanagedInstancesAnswer = (GetUnmanagedInstancesAnswer) answer;
+            HashMap<String, UnmanagedInstanceTO> unmanagedInstances = unmanagedInstancesAnswer.getUnmanagedInstances();
             if (MapUtils.isEmpty(unmanagedInstances)) {
                 continue;
             }
             Set<String> names = unmanagedInstances.keySet();
             for (String name : names) {
-                if (!instanceName.equals(name)) {
-                    continue;
-                }
-                UnmanagedInstanceTO unmanagedInstance = unmanagedInstances.get(name);
-                if (unmanagedInstance == null) {
-                    throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, String.format("Unable to retrieve details for unmanaged VM: %s", name));
-                }
-                if (template.getName().equals(VM_IMPORT_DEFAULT_TEMPLATE_NAME)) {
-                    String osName = unmanagedInstance.getOperatingSystem();
-                    GuestOS guestOS = null;
-                    if (StringUtils.isNotEmpty(osName)) {
-                        guestOS = guestOSDao.findOneByDisplayName(osName);
+                if (instanceName.equals(name)) {
+                    UnmanagedInstanceTO unmanagedInstance = unmanagedInstances.get(name);
+                    if (unmanagedInstance == null) {
+                        throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, String.format("Unable to retrieve details for unmanaged VM: %s", name));
                     }
-                    GuestOSHypervisor guestOSHypervisor = null;
-                    if (guestOS != null) {
-                        guestOSHypervisor = guestOSHypervisorDao.findByOsIdAndHypervisor(guestOS.getId(), host.getHypervisorType().toString(), host.getHypervisorVersion());
-                    }
-                    if (guestOSHypervisor == null && StringUtils.isNotEmpty(unmanagedInstance.getOperatingSystemId())) {
-                        guestOSHypervisor = guestOSHypervisorDao.findByOsNameAndHypervisor(unmanagedInstance.getOperatingSystemId(), host.getHypervisorType().toString(), host.getHypervisorVersion());
-                    }
-                    if (guestOSHypervisor == null) {
-                        if (guestOS != null) {
-                            throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, String.format("Unable to find hypervisor guest OS ID: %s details for unmanaged VM: %s for hypervisor: %s version: %s. templateid parameter can be used to assign template for VM", guestOS.getUuid(), name, host.getHypervisorType().toString(), host.getHypervisorVersion()));
+                    if (template.getName().equals(VM_IMPORT_DEFAULT_TEMPLATE_NAME)) {
+                        String osName = unmanagedInstance.getOperatingSystem();
+                        GuestOS guestOS = null;
+                        if (StringUtils.isNotEmpty(osName)) {
+                            guestOS = guestOSDao.findOneByDisplayName(osName);
                         }
-                        throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, String.format("Unable to retrieve guest OS details for unmanaged VM: %s with OS name: %s, OS ID: %s for hypervisor: %s version: %s. templateid parameter can be used to assign template for VM", name, osName, unmanagedInstance.getOperatingSystemId(), host.getHypervisorType().toString(), host.getHypervisorVersion()));
+                        GuestOSHypervisor guestOSHypervisor = null;
+                        if (guestOS != null) {
+                            guestOSHypervisor = guestOSHypervisorDao.findByOsIdAndHypervisor(guestOS.getId(), host.getHypervisorType().toString(), host.getHypervisorVersion());
+                        }
+                        if (guestOSHypervisor == null && StringUtils.isNotEmpty(unmanagedInstance.getOperatingSystemId())) {
+                            guestOSHypervisor = guestOSHypervisorDao.findByOsNameAndHypervisor(unmanagedInstance.getOperatingSystemId(), host.getHypervisorType().toString(), host.getHypervisorVersion());
+                        }
+                        if (guestOSHypervisor == null) {
+                            if (guestOS != null) {
+                                throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, String.format("Unable to find hypervisor guest OS ID: %s details for unmanaged VM: %s for hypervisor: %s version: %s. templateid parameter can be used to assign template for VM", guestOS.getUuid(), name, host.getHypervisorType().toString(), host.getHypervisorVersion()));
+                            }
+                            throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, String.format("Unable to retrieve guest OS details for unmanaged VM: %s with OS name: %s, OS ID: %s for hypervisor: %s version: %s. templateid parameter can be used to assign template for VM", name, osName, unmanagedInstance.getOperatingSystemId(), host.getHypervisorType().toString(), host.getHypervisorVersion()));
+                        }
+                        template.setGuestOSId(guestOSHypervisor.getGuestOsId());
                     }
-                    template.setGuestOSId(guestOSHypervisor.getGuestOsId());
+                    userVm = importVirtualMachineInternal(unmanagedInstance, instanceName, zone, cluster, host,
+                            template, displayName, hostName, CallContext.current().getCallingAccount(), owner, userId,
+                            serviceOffering, dataDiskOfferingMap,
+                            nicNetworkMap, nicIpAddressMap,
+                            details, cmd.getMigrateAllowed(), forced);
+                    break;
                 }
-                userVm = importVirtualMachineInternal(unmanagedInstance, instanceName, zone, cluster, host,
-                        template, displayName, hostName, CallContext.current().getCallingAccount(), owner, userId,
-                        serviceOffering, dataDiskOfferingMap,
-                        nicNetworkMap, nicIpAddressMap,
-                        details, cmd.getMigrateAllowed(), forced);
-                break;
             }
             if (userVm != null) {
                 break;

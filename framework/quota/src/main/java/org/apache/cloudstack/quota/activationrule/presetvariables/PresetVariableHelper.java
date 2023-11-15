@@ -556,33 +556,22 @@ public class PresetVariableHelper {
         value.setName(snapshotVo.getName());
         value.setSize(ByteScaleUtils.bytesToMebibytes(snapshotVo.getSize()));
         value.setSnapshotType(Snapshot.Type.values()[snapshotVo.getSnapshotType()]);
-        value.setStorage(getPresetVariableValueStorage(getSnapshotDataStoreId(snapshotId, usageRecord.getZoneId()), usageType));
+        value.setStorage(getPresetVariableValueStorage(getSnapshotDataStoreId(snapshotId), usageType));
         value.setTags(getPresetVariableValueResourceTags(snapshotId, ResourceObjectType.Snapshot));
-    }
-
-    protected SnapshotDataStoreVO getSnapshotImageStoreRef(long snapshotId, long zoneId) {
-        List<SnapshotDataStoreVO> snaps = snapshotDataStoreDao.listReadyBySnapshot(snapshotId, DataStoreRole.Image);
-        for (SnapshotDataStoreVO ref : snaps) {
-            ImageStoreVO store = imageStoreDao.findById(ref.getDataStoreId());
-            if (store != null && zoneId == store.getDataCenterId()) {
-                return ref;
-            }
-        }
-        return null;
     }
 
     /**
      * If {@link SnapshotInfo#BackupSnapshotAfterTakingSnapshot} is enabled, returns the secondary storage's ID where the snapshot is. Otherwise, returns the primary storage's ID
      *  where the snapshot is.
      */
-    protected long getSnapshotDataStoreId(Long snapshotId, long zoneId) {
+    protected long getSnapshotDataStoreId(Long snapshotId) {
         if (backupSnapshotAfterTakingSnapshot) {
-            SnapshotDataStoreVO snapshotStore = getSnapshotImageStoreRef(snapshotId, zoneId);
+            SnapshotDataStoreVO snapshotStore = snapshotDataStoreDao.findBySnapshot(snapshotId, DataStoreRole.Image);
             validateIfObjectIsNull(snapshotStore, snapshotId, "data store for snapshot");
             return snapshotStore.getDataStoreId();
         }
 
-        SnapshotDataStoreVO snapshotStore = snapshotDataStoreDao.findOneBySnapshotAndDatastoreRole(snapshotId, DataStoreRole.Primary);
+        SnapshotDataStoreVO snapshotStore = snapshotDataStoreDao.findBySnapshot(snapshotId, DataStoreRole.Primary);
         validateIfObjectIsNull(snapshotStore, snapshotId, "data store for snapshot");
         return snapshotStore.getDataStoreId();
     }

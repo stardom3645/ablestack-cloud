@@ -36,7 +36,6 @@ import org.mockito.Spy;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
@@ -140,7 +139,7 @@ public class HostAffinityProcessorTest {
     @Test
     public void testGetPreferredHostsFromGroupVMIdsMultipleVMs() {
         List<Long> list = new ArrayList<>(Arrays.asList(GROUP_VM_1_ID, GROUP_VM_2_ID));
-        List<Long> preferredHosts = processor.getPreferredHostsFromGroupVMIds(list, Collections.emptyList());
+        List<Long> preferredHosts = processor.getPreferredHostsFromGroupVMIds(list);
         assertNotNull(preferredHosts);
         assertEquals(1, preferredHosts.size());
         assertEquals(HOST_ID, preferredHosts.get(0));
@@ -149,7 +148,7 @@ public class HostAffinityProcessorTest {
     @Test
     public void testGetPreferredHostsFromGroupVMIdsEmptyVMsList() {
         List<Long> list = new ArrayList<>();
-        List<Long> preferredHosts = processor.getPreferredHostsFromGroupVMIds(list, Collections.emptyList());
+        List<Long> preferredHosts = processor.getPreferredHostsFromGroupVMIds(list);
         assertNotNull(preferredHosts);
         assertTrue(preferredHosts.isEmpty());
     }

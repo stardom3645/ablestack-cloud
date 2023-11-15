@@ -17,9 +17,6 @@
 
 package org.apache.cloudstack.engine.subsystem.api.storage;
 
-import org.apache.cloudstack.framework.async.AsyncCallFuture;
-
-import com.cloud.exception.ResourceUnavailableException;
 import com.cloud.storage.Snapshot.Event;
 
 public interface SnapshotService {
@@ -38,8 +35,4 @@ public interface SnapshotService {
     void processEventOnSnapshotObject(SnapshotInfo snapshot, Event event);
 
     void cleanupOnSnapshotBackupFailure(SnapshotInfo snapshot);
-
-    AsyncCallFuture<SnapshotResult> copySnapshot(SnapshotInfo snapshot, String copyUrl, DataStore dataStore) throws ResourceUnavailableException;
-
-    AsyncCallFuture<CreateCmdResult> queryCopySnapshot(SnapshotInfo snapshot) throws ResourceUnavailableException;
 }

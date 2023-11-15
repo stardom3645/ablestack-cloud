@@ -35,7 +35,7 @@
           v-model:value="form.name"
           :placeholder="apiParams.name.description" />
       </a-form-item>
-      <a-form-item ref="zoneid" name="zoneid" v-if="!createVolumeFromVM">
+      <a-form-item ref="zoneid" name="zoneid" v-if="!createVolumeFromVM && !createVolumeFromSnapshot">
         <template #label>
           <tooltip-label :title="$t('label.zoneid')" :tooltip="apiParams.zoneid.description"/>
         </template>
@@ -143,7 +143,6 @@ export default {
   },
   data () {
     return {
-      snapshotZoneIds: [],
       zones: [],
       offerings: [],
       customDiskOffering: false,
@@ -196,23 +195,10 @@ export default {
       }
     },
     fetchData () {
-      if (this.createVolumeFromSnapshot) {
-        this.fetchSnapshotZones()
-        return
-      }
-      let zoneId = null
-      if (this.createVolumeFromVM) {
-        zoneId = this.resource.zoneid
-      }
-      this.fetchZones(zoneId)
-    },
-    fetchZones (id) {
       this.loading = true
       const params = { showicon: true }
-      if (Array.isArray(id)) {
-        params.ids = id.join()
-      } else if (id !== null) {
-        params.id = id
+      if (this.createVolumeFromVM) {
+        params.id = this.resource.zoneid
       }
       api('listZones', params).then(json => {
         this.zones = json.listzonesresponse.zone || []
@@ -220,26 +206,6 @@ export default {
         this.fetchDiskOfferings(this.form.zoneid)
       }).finally(() => {
         this.loading = false
-      })
-    },
-    fetchSnapshotZones () {
-      this.loading = true
-      this.snapshotZoneIds = []
-      const params = {
-        showunique: false,
-        id: this.resource.id
-      }
-      api('listSnapshots', params).then(json => {
-        const snapshots = json.listsnapshotsresponse.snapshot || []
-        for (const snapshot of snapshots) {
-          if (!this.snapshotZoneIds.includes(snapshot.zoneid)) {
-            this.snapshotZoneIds.push(snapshot.zoneid)
-          }
-        }
-      }).finally(() => {
-        if (this.snapshotZoneIds && this.snapshotZoneIds.length > 0) {
-          this.fetchZones(this.snapshotZoneIds)
-        }
       })
     },
     fetchDiskOfferings (zoneId) {

@@ -105,7 +105,7 @@ def manageAvailability(path, value):
     return
 
 
-def checkVolumeAvailability(path):
+def checkVolumeAvailablility(path):
     try:
         if not isVolumeAvailable(path):
             # The VHD file is not available on XenSever. The volume is probably
@@ -172,7 +172,7 @@ def getParentOfSnapshot(snapshotUuid, primarySRPath, isISCSI):
 
     baseCopyUuid = ''
     if isISCSI:
-        checkVolumeAvailability(snapshotPath)
+        checkVolumeAvailablility(snapshotPath)
         baseCopyUuid = scanParent(snapshotPath)
     else:
         baseCopyUuid = getParent(snapshotPath, isISCSI)

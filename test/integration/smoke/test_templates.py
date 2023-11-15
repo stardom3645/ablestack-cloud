@@ -989,8 +989,6 @@ class TestTemplates(cloudstackTestCase):
                         )
 
         for template in list_template_response:
-            if template.directdownload == True:
-                continue
             self.assertNotEqual(
                         len(template.downloaddetails),
                         0,
@@ -1250,7 +1248,11 @@ class TestCreateTemplateWithDirectDownload(cloudstackTestCase):
 
     @classmethod
     def tearDownClass(cls):
-        super(TestCreateTemplateWithDirectDownload, cls).tearDownClass()
+        try:
+            cleanup_resources(cls.apiclient, cls._cleanup)
+        except Exception as e:
+            raise Exception("Warning: Exception during cleanup : %s" % e)
+        return
 
     def setUp(self):
         self.apiclient = self.testClient.getApiClient()
@@ -1262,7 +1264,13 @@ class TestCreateTemplateWithDirectDownload(cloudstackTestCase):
         return
 
     def tearDown(self):
-        super(TestCreateTemplateWithDirectDownload, self).tearDown()
+        try:
+            #Clean up, terminate the created templates
+            cleanup_resources(self.apiclient, self.cleanup)
+
+        except Exception as e:
+            raise Exception("Warning: Exception during cleanup : %s" % e)
+        return
 
     @attr(tags=["advanced", "smoke"], required_hardware="true")
     def test_01_register_template_direct_download_flag(self):
@@ -1315,11 +1323,10 @@ class TestCreateTemplateWithDirectDownload(cloudstackTestCase):
         """
         Deploy a VM from a Direct Download registered template with wrong checksum
         """
-        self.template["checksum"]="{MD5}" + ("X" * 32)
+        self.template["checksum"]="{MD5}XXXXXXX"
         tmpl = Template.register(self.apiclient, self.template, zoneid=self.zone.id, hypervisor=self.hypervisor, randomize_name=False)
         self.cleanup.append(tmpl)
 
-        failed = False
         try:
             virtual_machine = VirtualMachine.create(
                 self.apiclient,
@@ -1330,19 +1337,8 @@ class TestCreateTemplateWithDirectDownload(cloudstackTestCase):
                 serviceofferingid=self.service_offering.id
             )
             self.cleanup.append(virtual_machine)
-            failed = True
+            self.fail("Expected to fail deployment")
         except Exception as e:
             self.debug("Expected exception")
-            list_virtual_machine_response = VirtualMachine.list(
-                self.apiclient,
-                templateid=tmpl.id,
-                listall=True
-            )
-            if type(list_virtual_machine_response) == list and len(list_virtual_machine_response) > 0:
-                for virtual_machine_response in list_virtual_machine_response:
-                    VirtualMachine.delete(virtual_machine_response, self.apiclient, expunge=True)
-
-        if failed == True:
-            self.fail("Expected to fail VM deployment with wrong checksum template")
 
         return

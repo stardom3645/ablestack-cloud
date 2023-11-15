@@ -306,15 +306,6 @@ export const constantRouterMap = [
     component: () => import('@/views/dashboard/VerifyTwoFa')
   },
   {
-    path: '/verifyOauth',
-    name: 'VerifyOauth',
-    meta: {
-      title: 'label.oauth.verification',
-      hidden: true
-    },
-    component: () => import('@/views/dashboard/VerifyOauth')
-  },
-  {
     path: '/setup2FA',
     name: 'SetupTwoFaAtLogin',
     meta: {

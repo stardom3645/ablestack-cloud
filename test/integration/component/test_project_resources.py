@@ -551,59 +551,66 @@ class TestTemplates(cloudstackTestCase):
         cls.hypervisor = cls.testClient.getHypervisorInfo()
         if cls.hypervisor.lower() in ['lxc']:
             raise unittest.SkipTest("create template from volume is not supported on %s" % cls.hypervisor.lower())
-        cls._cleanup = []
 
         cls.template = get_template(
-            cls.api_client,
-            cls.zone.id,
-            cls.services["ostype"]
-        )
+                            cls.api_client,
+                            cls.zone.id,
+                            cls.services["ostype"]
+                            )
         cls.services["server"]["zoneid"] = cls.zone.id
 
         # Create Domains, Account etc
         cls.domain = Domain.create(
-            cls.api_client,
-            cls.services["domain"]
-        )
-        cls._cleanup.append(cls.domain)
+                                   cls.api_client,
+                                   cls.services["domain"]
+                                   )
 
         cls.account = Account.create(
-            cls.api_client,
-            cls.services["account"],
-            domainid=cls.domain.id
-        )
-        cls._cleanup.append(cls.account)
+                            cls.api_client,
+                            cls.services["account"],
+                            domainid=cls.domain.id
+                            )
         cls.user = Account.create(
-            cls.api_client,
-            cls.services["account"],
-            domainid=cls.domain.id
-        )
-        cls._cleanup.append(cls.user)
+                            cls.api_client,
+                            cls.services["account"],
+                            domainid=cls.domain.id
+                            )
         # Create project as a domain admin
         cls.project = Project.create(
-            cls.api_client,
-            cls.services["project"],
-            account=cls.account.name,
-            domainid=cls.account.domainid
-        )
-        cls._cleanup.append(cls.project)
+                                 cls.api_client,
+                                 cls.services["project"],
+                                 account=cls.account.name,
+                                 domainid=cls.account.domainid
+                                 )
         cls.services["account"] = cls.account.name
 
         # Create Service offering and disk offerings etc
         cls.service_offering = ServiceOffering.create(
-            cls.api_client,
-            cls.services["service_offering"]
-        )
-        cls._cleanup.append(cls.service_offering)
+                                            cls.api_client,
+                                            cls.services["service_offering"]
+                                            )
         cls.userapiclient = cls.testClient.getUserApiClient(
-            UserName=cls.account.name,
-            DomainName=cls.domain.name
-        )
+                                UserName=cls.account.name,
+                                DomainName=cls.domain.name
+				)
+
+        cls._cleanup = [
+                        cls.project,
+                        cls.service_offering,
+                        cls.account,
+                        cls.user,
+                        cls.domain
+                        ]
         return
 
     @classmethod
     def tearDownClass(cls):
-        super(TestTemplates, cls).tearDownClass()
+        try:
+            #Cleanup resources used
+            cleanup_resources(cls.api_client, cls._cleanup)
+        except Exception as e:
+            raise Exception("Warning: Exception during cleanup : %s" % e)
+        return
 
     def setUp(self):
         self.apiclient = self.testClient.getApiClient()
@@ -612,7 +619,12 @@ class TestTemplates(cloudstackTestCase):
         return
 
     def tearDown(self):
-        super(TestTemplates, self).tearDown()
+        try:
+            #Clean up, terminate the created instance, volumes and snapshots
+            cleanup_resources(self.apiclient, self.cleanup)
+        except Exception as e:
+            raise Exception("Warning: Exception during cleanup : %s" % e)
+        return
 
     @attr(tags=["advanced", "basic", "sg", "eip", "advancedns"], required_hardware="false")
     def test_04_public_private_template_use_in_project(self):

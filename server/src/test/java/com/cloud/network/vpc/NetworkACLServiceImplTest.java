@@ -1170,7 +1170,7 @@ public class NetworkACLServiceImplTest {
     }
 
     @Test(expected = InvalidParameterValueException.class)
-    public void moveRuleBetweenAclRulesTestThereIsSpaceBetweenPreviousRuleAndNextRuleToAccommodateTheNewRuleWithOtherRuleColliding() {
+    public void moveRuleBetweenAclRulesTestThereIsSpaceBetweenPreviousRuleAndNextRuleToAccomodateTheNewRuleWithOtherruleColliding() {
         Mockito.when(previousAclRuleMock.getNumber()).thenReturn(10);
         Mockito.when(nextAclRuleMock.getNumber()).thenReturn(15);
 
@@ -1186,7 +1186,7 @@ public class NetworkACLServiceImplTest {
     }
 
     @Test
-    public void moveRuleBetweenAclRulesTestThereIsSpaceBetweenPreviousRuleAndNextRuleToAccommodateTheNewRule() {
+    public void moveRuleBetweenAclRulesTestThereIsSpaceBetweenPreviousRuleAndNextRuleToAccomodateTheNewRule() {
         Mockito.when(previousAclRuleMock.getNumber()).thenReturn(10);
         Mockito.when(nextAclRuleMock.getNumber()).thenReturn(11);
         Mockito.when(aclRuleBeingMovedMock.getId()).thenReturn(1l);
@@ -1218,7 +1218,7 @@ public class NetworkACLServiceImplTest {
     }
 
     @Test
-    public void moveRuleBetweenAclRulesTestThereIsNoSpaceBetweenPreviousRuleAndNextRuleToAccommodateTheNewRule() {
+    public void moveRuleBetweenAclRulesTestThereIsNoSpaceBetweenPreviousRuleAndNextRuleToAccomodateTheNewRule() {
         Mockito.when(previousAclRuleMock.getNumber()).thenReturn(10);
         Mockito.when(nextAclRuleMock.getNumber()).thenReturn(15);
         Mockito.when(aclRuleBeingMovedMock.getNumber()).thenReturn(50);
