@@ -87,6 +87,8 @@ import org.apache.cloudstack.resourcedetail.dao.DiskOfferingDetailsDao;
 import org.apache.cloudstack.resourcedetail.dao.SnapshotPolicyDetailsDao;
 import org.apache.cloudstack.storage.datastore.db.PrimaryDataStoreDao;
 import org.apache.cloudstack.storage.datastore.db.StoragePoolVO;
+import org.apache.cloudstack.outofbandmanagement.dao.OutOfBandManagementDao;
+import org.apache.cloudstack.outofbandmanagement.OutOfBandManagement;
 
 import com.cloud.agent.api.VgpuTypesInfo;
 import com.cloud.api.query.dao.AccountJoinDao;
@@ -356,6 +358,8 @@ public class ApiDBUtils {
     static StorageManager s_storageMgr;
     static VolumeOrchestrationService s_volumeMgr;
     static UserVmManager s_userVmMgr;
+    static NetworkModel s_networkModel;
+    static NetworkOrchestrationService s_networkMgr;
     static TemplateManager s_templateMgr;
     static ConfigurationManager s_configMgr;
 

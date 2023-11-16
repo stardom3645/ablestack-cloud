@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.cloud.exception.StorageUnavailableException;
+import com.cloud.utils.fsm.NoTransitionException;
 import org.apache.cloudstack.api.command.user.volume.AssignVolumeCmd;
 import org.apache.cloudstack.api.command.user.volume.AttachVolumeCmd;
 import org.apache.cloudstack.api.command.user.volume.ChangeOfferingForVolumeCmd;
@@ -38,7 +39,6 @@ import org.apache.cloudstack.framework.config.ConfigKey;
 
 import com.cloud.exception.ResourceAllocationException;
 import com.cloud.user.Account;
-import com.cloud.utils.fsm.NoTransitionException;
 
 public interface VolumeApiService {
 
