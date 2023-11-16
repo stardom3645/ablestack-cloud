@@ -248,6 +248,7 @@ public class SecurityCheckServiceImpl extends ManagerBase implements PluggableSe
     }
 
     @Override
+    @ActionEvent(eventType = SecurityCheckEventTypes.EVENT_SECURITY_CHECK_DELETE, eventDescription = "Deleting Security check result")
     public boolean deleteSecurityCheckResult(final DeleteSecurityCheckResultCmd cmd) {
         final Long resultId = cmd.getId();
         SecurityCheck result = securityCheckDao.findById(resultId);
