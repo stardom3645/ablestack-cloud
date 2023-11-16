@@ -171,7 +171,7 @@ public class RegisterTemplateCmd extends BaseCmd implements UserCmd {
 
     @Parameter(name=ApiConstants.DESKTOP_CHECK, type = CommandType.BOOLEAN, required=false, description="Verify that it is a desktop template.")
     protected Boolean isDesktop;
-    
+
     @Parameter(name = ApiConstants.TEMPLATE_TYPE, type = CommandType.STRING,
             description = "the type of the template. Valid options are: USER/VNF (for all users) and SYSTEM/ROUTING/BUILTIN (for admins only).",
             since = "4.19.0")
@@ -345,7 +345,7 @@ public class RegisterTemplateCmd extends BaseCmd implements UserCmd {
     public void setIsDesktop(Boolean isDesktop) {
         this.isDesktop = isDesktop;
     }
-    
+
     public String getTemplateType() {
         return templateType;
     }
