@@ -82,10 +82,6 @@ public class SecurityCheckVO implements SecurityCheck {
         return type;
     }
 
-    public void setUuid(String uuid) {
-        this.uuid = uuid;
-    }
-
     public void setMsHostId(long msHostId) {
         this.msHostId = msHostId;
     }
