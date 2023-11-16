@@ -190,10 +190,8 @@
       </template>
       <template v-if="column.key === 'hypervisor'">
         <span v-if="$route.name === 'hypervisorcapability'">
-      <template v-if="column.key === 'osname'">
-        <span v-if="$route.name === 'guestos'">
-          <router-link :to="{ path: $route.path + '/' + record.id }">{{ text }}</router-link>
-        </span>
+        <router-link :to="{ path: $route.path + '/' + record.id }">{{ text }}</router-link>
+      </span>
       <span v-else-if="$route.name === 'guestoshypervisormapping'">
         <QuickView
           style="margin-left: 5px"
