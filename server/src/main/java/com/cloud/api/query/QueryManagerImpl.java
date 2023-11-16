@@ -1131,8 +1131,6 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
         StoragePoolVO pool = null;
         Long userId = cmd.getUserId();
         Map<String, String> tags = cmd.getTags();
-        Boolean display = cmd.getDisplay();
-        Object keyPairName = cmd.getKeyPairName();
 
         boolean isAdmin = false;
         boolean isRootAdmin = false;
@@ -1181,163 +1179,6 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
         if (HypervisorType.getType(hypervisor) == HypervisorType.None && hypervisor != null) {
             // invalid hypervisor type input
             throw new InvalidParameterValueException("Invalid HypervisorType " + hypervisor);
-        }
-        
-        Object templateId = cmd.getTemplateId();
-        Object isoId = cmd.getIsoId();
-        Object vpcId = cmd.getVpcId();
-        Object affinityGroupId = cmd.getAffinityGroupId();
-        Object serviceOffId = cmd.getServiceOfferingId();
-        Object securityGroupId = cmd.getSecurityGroupId();
-        Object backupOfferingId = cmd.getBackupOfferingId();
-        Object isHaEnabled = cmd.getHaEnabled();
-        Object autoScaleVmGroupId = cmd.getAutoScaleVmGroupId();
-        Object pod = null;
-        Object clusterId = null;
-        Object hostId = null;
-        Object storageId = null;
-        if (_accountMgr.isRootAdmin(caller.getId())) {
-            pod = getObjectPossibleMethodValue(cmd, "getPodId");
-            clusterId = getObjectPossibleMethodValue(cmd, "getClusterId");
-            hostId = getObjectPossibleMethodValue(cmd, "getHostId");
-            storageId = getObjectPossibleMethodValue(cmd, "getStorageId");
-        }
-
-        sb.and("displayName", sb.entity().getDisplayName(), SearchCriteria.Op.LIKE);
-        sb.and("idIN", sb.entity().getId(), SearchCriteria.Op.IN);
-        sb.and("name", sb.entity().getName(), SearchCriteria.Op.EQ);
-        sb.and("stateEQ", sb.entity().getState(), SearchCriteria.Op.EQ);
-        sb.and("stateNEQ", sb.entity().getState(), SearchCriteria.Op.NEQ);
-        sb.and("stateNIN", sb.entity().getState(), SearchCriteria.Op.NIN);
-        sb.and("dataCenterId", sb.entity().getDataCenterId(), SearchCriteria.Op.EQ);
-        sb.and("podId", sb.entity().getPodId(), SearchCriteria.Op.EQ);
-        sb.and("clusterId", sb.entity().getClusterId(), SearchCriteria.Op.EQ);
-        sb.and("hypervisorType", sb.entity().getHypervisorType(), SearchCriteria.Op.EQ);
-        sb.and("hostIdEQ", sb.entity().getHostId(), SearchCriteria.Op.EQ);
-        sb.and("templateId", sb.entity().getTemplateId(), SearchCriteria.Op.EQ);
-        sb.and("isoId", sb.entity().getIsoId(), SearchCriteria.Op.EQ);
-        sb.and("instanceGroupId", sb.entity().getInstanceGroupId(), SearchCriteria.Op.EQ);
-
-        if (serviceOffId != null) {
-            sb.and("serviceOfferingId", sb.entity().getServiceOfferingId(), SearchCriteria.Op.EQ);
-        }
-
-        if (backupOfferingId != null) {
-            sb.and("backupOfferingId", sb.entity().getBackupOfferingId(), SearchCriteria.Op.EQ);
-        }
-
-        if (display != null) {
-            sb.and("display", sb.entity().isDisplayVm(), SearchCriteria.Op.EQ);
-        }
-
-        if (isHaEnabled != null) {
-            sb.and("haEnabled", sb.entity().isHaEnabled(), SearchCriteria.Op.EQ);
-        }
-
-        if (groupId != null && (Long)groupId != -1) {
-            sb.and("instanceGroupId", sb.entity().getInstanceGroupId(), SearchCriteria.Op.EQ);
-        }
-
-        if (userId != null) {
-            sb.and("userId", sb.entity().getUserId(), SearchCriteria.Op.EQ);
-        }
-
-        if (networkId != null) {
-            sb.and("networkId", sb.entity().getNetworkId(), SearchCriteria.Op.EQ);
-        }
-
-        if (vpcId != null && networkId == null) {
-            sb.and("vpcId", sb.entity().getVpcId(), SearchCriteria.Op.EQ);
-        }
-
-        if (storageId != null) {
-            StoragePoolVO poolVO = _storagePoolDao.findById((Long) storageId);
-            if (poolVO.getPoolType() == Storage.StoragePoolType.DatastoreCluster) {
-                sb.and("poolId", sb.entity().getPoolId(), SearchCriteria.Op.IN);
-            } else {
-                sb.and("poolId", sb.entity().getPoolId(), SearchCriteria.Op.EQ);
-            }
-        }
-
-        if (affinityGroupId != null) {
-            sb.and("affinityGroupId", sb.entity().getAffinityGroupId(), SearchCriteria.Op.EQ);
-        }
-
-        if (keyPairName != null) {
-            sb.and("keypairNames", sb.entity().getKeypairNames(), SearchCriteria.Op.FIND_IN_SET);
-        }
-
-        if (!isRootAdmin) {
-            sb.and("displayVm", sb.entity().isDisplayVm(), SearchCriteria.Op.EQ);
-        }
-
-        if (securityGroupId != null) {
-            sb.and("securityGroupId", sb.entity().getSecurityGroupId(), SearchCriteria.Op.EQ);
-        }
-
-        if (autoScaleVmGroupId != null) {
-            sb.and("autoScaleVmGroupId", sb.entity().getAutoScaleVmGroupId(), SearchCriteria.Op.EQ);
-        }
-
-        // populate the search criteria with the values passed in
-        SearchCriteria<UserVmJoinVO> sc = sb.create();
-
-        // building ACL condition
-        _accountMgr.buildACLViewSearchCriteria(sc, domainId, isRecursive, permittedAccounts, listProjectResourcesCriteria);
-
-        if (tags != null && !tags.isEmpty()) {
-            SearchCriteria<UserVmJoinVO> tagSc = _userVmJoinDao.createSearchCriteria();
-            for (Map.Entry<String, String> entry : tags.entrySet()) {
-                SearchCriteria<UserVmJoinVO> tsc = _userVmJoinDao.createSearchCriteria();
-                tsc.addAnd("tagKey", SearchCriteria.Op.EQ, entry.getKey());
-                tsc.addAnd("tagValue", SearchCriteria.Op.EQ, entry.getValue());
-                tagSc.addOr("tagKey", SearchCriteria.Op.SC, tsc);
-            }
-            sc.addAnd("tagKey", SearchCriteria.Op.SC, tagSc);
-        }
-
-        if (groupId != null && (Long)groupId != -1) {
-            sc.setParameters("instanceGroupId", groupId);
-        }
-
-        if (keyword != null) {
-            SearchCriteria<UserVmJoinVO> ssc = _userVmJoinDao.createSearchCriteria();
-            String likeKeyword = String.format("%%%s%%", keyword);
-            ssc.addOr("displayName", SearchCriteria.Op.LIKE, likeKeyword);
-            ssc.addOr("name", SearchCriteria.Op.LIKE, likeKeyword);
-            ssc.addOr("uuid", SearchCriteria.Op.LIKE, likeKeyword);
-            if (isRootAdmin) {
-                ssc.addOr("instanceName", SearchCriteria.Op.LIKE, likeKeyword);
-            }
-            ssc.addOr("ipAddress", SearchCriteria.Op.LIKE, likeKeyword);
-            ssc.addOr("publicIpAddress", SearchCriteria.Op.LIKE, likeKeyword);
-            ssc.addOr("ip6Address", SearchCriteria.Op.LIKE, likeKeyword);
-            ssc.addOr("state", SearchCriteria.Op.EQ, keyword);
-            sc.addAnd("displayName", SearchCriteria.Op.SC, ssc);
-        }
-
-        if (serviceOffId != null) {
-            sc.setParameters("serviceOfferingId", serviceOffId);
-        }
-
-        if (backupOfferingId != null) {
-            sc.setParameters("backupOfferingId", backupOfferingId);
-        }
-
-        if (securityGroupId != null) {
-            sc.setParameters("securityGroupId", securityGroupId);
-        }
-
-        if (autoScaleVmGroupId != null) {
-            sc.setParameters("autoScaleVmGroupId", autoScaleVmGroupId);
-        }
-
-        if (display != null) {
-            sc.setParameters("display", display);
-        }
-
-        if (isHaEnabled != null) {
-            sc.setParameters("haEnabled", isHaEnabled);
         }
 
         if (ids != null && !ids.isEmpty()) {
@@ -1589,7 +1430,6 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
         }
 
         if (keyPairName != null) {
-            sc.setParameters("keypairNames", keyPairName);
             userVmSearchCriteria.setJoinParameters("userVmToKeyPairJoin", "keyPairName", keyPairName);
         }
 

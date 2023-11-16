@@ -39,7 +39,6 @@ import org.apache.cloudstack.framework.config.ConfigKey;
 
 import com.cloud.exception.ResourceAllocationException;
 import com.cloud.user.Account;
-import com.cloud.utils.fsm.NoTransitionException;
 
 public interface VolumeApiService {
 
