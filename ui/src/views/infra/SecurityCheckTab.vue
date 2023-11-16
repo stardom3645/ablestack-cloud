@@ -362,20 +362,21 @@ export default {
         id: result.id
       }
       this.deleteLoading = true
-      api('deleteSecurityCheckResult', params).then(json => {
+      api('deleteSecurityCheckResults', params).then(json => {
         console.log(json)
-        const jobId = json.deletesecuritycheckresultresponse.jobid
-        if (jobId) {
-          this.$pollJob({
-            jobId,
-            title: this.$t('label.action.delete.security.check.result'),
-            showLoading: !(this.selectedItems.length > 0 && this.showGroupActionModal),
-            loadingMessage: `${this.$t('label.deleting.security.check.results')} ${this.resource.name} ${this.$t('label.in.progress')}`,
-            catchMessage: this.$t('error.fetching.async.job.result'),
-            bulkAction: this.selectedItems.length > 0 && this.showGroupActionModal
-          })
-        }
+        // const jobId = json.deletesecuritycheckresultsresponse.jobid
+        // if (jobId) {
+        //   this.$pollJob({
+        //     jobId,
+        //     title: this.$t('label.action.delete.security.check.result'),
+        //     showLoading: !(this.selectedItems.length > 0 && this.showGroupActionModal),
+        //     loadingMessage: `${this.$t('label.deleting.security.check.results')} ${this.resource.name} ${this.$t('label.in.progress')}`,
+        //     catchMessage: this.$t('error.fetching.async.job.result'),
+        //     bulkAction: this.selectedItems.length > 0 && this.showGroupActionModal
+        //   })
+        // }
       }).catch(error => {
+        console.log(error)
         this.$notifyError(error)
       }).finally(() => {
         this.deleteLoading = false

@@ -42,7 +42,7 @@ import javax.inject.Inject;
         authorized = {RoleType.Admin})
 public class DeleteSecurityCheckResultCmd extends BaseAsyncCmd {
     public static final Logger LOG = Logger.getLogger(DeleteSecurityCheckResultCmd.class);
-    public static final String APINAME = "deleteSecurityCheckResult";
+    public static final String APINAME = "deleteSecurityCheckResults";
 
     @Inject
     private SecurityCheckService securityService;
@@ -63,9 +63,10 @@ public class DeleteSecurityCheckResultCmd extends BaseAsyncCmd {
         return id;
     }
 
-    /////////////////////////////////////////////////////
-    /////////////// API Implementation///////////////////
-    /////////////////////////////////////////////////////
+    @Override
+    public String getCommandName() {
+        return APINAME.toLowerCase() + "response";
+    }
 
     @Override
     public long getEntityOwnerId() {
@@ -84,11 +85,12 @@ public class DeleteSecurityCheckResultCmd extends BaseAsyncCmd {
 
     @Override
     public String getEventDescription() {
-        String description = "Security Check Results";
-        SecurityCheck version = _entityMgr.findById(SecurityCheck.class, getId());
-        description += String.format(" ID: %d", getId());
-        return description;
+        return "Deleting Security check result. result Id: " + getId();
     }
+
+    /////////////////////////////////////////////////////
+    /////////////// API Implementation///////////////////
+    /////////////////////////////////////////////////////
 
     @Override
     public void execute() throws ServerApiException, ConcurrentOperationException {
