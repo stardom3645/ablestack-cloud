@@ -86,7 +86,7 @@ public class InstanceIpModelTest extends TestCase {
         when(vm.getState()).thenReturn(VirtualMachine.State.Running);
         when(vm.getDomainId()).thenReturn(10L);
         when(vm.getAccountId()).thenReturn(42L);
-        UserVmDao VmDao       = mock(UserVmDao.class);
+        UserVmDao VmDao      = mock(UserVmDao.class);
         when(VmDao.findById(anyLong())).thenReturn(null);
         when(controller.getVmDao()).thenReturn(VmDao);
 
