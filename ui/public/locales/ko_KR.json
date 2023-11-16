@@ -4037,6 +4037,7 @@
 "import.vcenter.storage.policies": "vCenter.\uc800\uc7a5\uc18c.\uc815\ucc45.\uac00\uc838\uc624\uae30",
 "live.patch.system.vm": "\uc2dc\uc2a4\ud15c.VM.\ub77c\uc774\ube0c.\ud328\uce58",
 "security.check": "\ubcf4\uc548.\uc810\uac80",
+"security.check.delete": "\ubcf4\uc548.\uc810\uac80.\uc0ad\uc81c",
 "integrity.verification": "\ubb34\uacb0\uc131.\uac80\uc99d",
 "log.deleted": "\ub85c\uadf8.\uc0ad\uc81c",
 "integrity.verification.delete": "\ubb34\uacb0\uc131.\uac80\uc99d.\uc0ad\uc81c",

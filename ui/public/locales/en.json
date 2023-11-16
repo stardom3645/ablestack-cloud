@@ -4037,6 +4037,7 @@
 "import.vcenter.storage.policies": "IMPORT.VCENTER.STORAGE.POLICIES",
 "live.patch.system.vm": "LIVE.PATCH.SYSTEM.VM",
 "security.check": "SECURITY.CHECK",
+"security.check.delete": "SECURITY.CHECK.DELETE",
 "integrity.verification": "INTEGRITY.VERIFICATION",
 "log.deleted": "LOG.DELETED",
 "integrity.verification.delete": "INTEGRITY.VERIFICATION.DELETE",
