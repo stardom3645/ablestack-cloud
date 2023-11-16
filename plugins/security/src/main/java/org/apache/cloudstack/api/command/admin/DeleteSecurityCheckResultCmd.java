@@ -98,6 +98,7 @@ public class DeleteSecurityCheckResultCmd extends BaseAsyncCmd {
                 throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, String.format("Failed to delete security check results due to: ", getId()));
             }
             SuccessResponse response = new SuccessResponse(getCommandName());
+            LOG.info(response);
             setResponseObject(response);
         } catch (CloudRuntimeException ex){
             throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, ex.getMessage());
