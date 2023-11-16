@@ -94,6 +94,7 @@ public class DeleteSecurityCheckResultCmd extends BaseAsyncCmd {
     public void execute() throws ServerApiException, ConcurrentOperationException {
         try {
             if (!securityService.deleteSecurityCheckResults(this)) {
+                LOG.info("!securityService.deleteSecurityCheckResults(this)");
                 throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, String.format("Failed to delete security check results due to: ", getId()));
             }
             SuccessResponse response = new SuccessResponse(getCommandName());

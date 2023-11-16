@@ -250,6 +250,8 @@ public class SecurityCheckServiceImpl extends ManagerBase implements PluggableSe
     public boolean deleteSecurityCheckResults(final DeleteSecurityCheckResultCmd cmd) {
         final Long resultId = cmd.getId();
         SecurityCheck result = securityCheckDao.findById(resultId);
+        LOGGER.info("deleteSecurityCheckResults");
+        LOGGER.info(result);
         if (result == null) {
             throw new InvalidParameterValueException("Invalid security check result id specified");
         }
