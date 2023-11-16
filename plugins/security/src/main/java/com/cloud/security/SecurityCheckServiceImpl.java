@@ -120,6 +120,11 @@ public class SecurityCheckServiceImpl extends ManagerBase implements PluggableSe
             String path = Script.findScript("scripts/security/", "securitycheck.sh");
             if (path == null) {
                 LOGGER.error("Unable to find the securitycheck script");
+                if (runMode == "first") {
+                    alertManager.sendAlert(AlertManager.AlertType.ALERT_TYPE_MANAGMENT_NODE, 0, new Long(0), "Security check when running the product failed : unable to find the securitycheck script", "");
+                } else {
+                    alertManager.sendAlert(AlertManager.AlertType.ALERT_TYPE_MANAGMENT_NODE, 0, new Long(0), "Security check schedule when operating the product failed : unable to find the securitycheck script", "");
+                }
             }
             ProcessBuilder processBuilder = new ProcessBuilder("sh", path);
             Process process = null;
@@ -156,6 +161,11 @@ public class SecurityCheckServiceImpl extends ManagerBase implements PluggableSe
                 updateSecurityCheckResult(msHost.getId(), checkFinalResult, checkFailedListToString, type);
                 runMode = "";
             } catch (IOException e) {
+                if (runMode == "first") {
+                    alertManager.sendAlert(AlertManager.AlertType.ALERT_TYPE_MANAGMENT_NODE, 0, new Long(0), "Security check when running the product failed : " + e, "");
+                } else {
+                    alertManager.sendAlert(AlertManager.AlertType.ALERT_TYPE_MANAGMENT_NODE, 0, new Long(0), "Security check schedule when operating the product failed : " + e, "");
+                }
                 runMode = "";
                 LOGGER.error("Failed to execute security check schedule for management server: "+e);
             }
@@ -196,6 +206,7 @@ public class SecurityCheckServiceImpl extends ManagerBase implements PluggableSe
         ManagementServerHost mshost = msHostDao.findById(mshostId);
         String path = Script.findScript("scripts/security/", "securitycheck.sh");
         if (path == null) {
+            alertManager.sendAlert(AlertManager.AlertType.ALERT_TYPE_MANAGMENT_NODE, 0, new Long(0), "Security check when operating the product failed : Unable to find the securitycheck script", "");
             throw new CloudRuntimeException(String.format("Unable to find the securitycheck script"));
         }
         ProcessBuilder processBuilder = new ProcessBuilder("sh", path);
@@ -230,6 +241,7 @@ public class SecurityCheckServiceImpl extends ManagerBase implements PluggableSe
                 return true;
             }
         } catch (IOException e) {
+            alertManager.sendAlert(AlertManager.AlertType.ALERT_TYPE_MANAGMENT_NODE, 0, new Long(0), "Security check when operating the product failed : " + e, "");
             throw new CloudRuntimeException("Failed to execute security check command for management server: "+mshost.getId() +e);
         }
     }

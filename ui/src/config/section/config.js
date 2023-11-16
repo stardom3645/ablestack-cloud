@@ -15,6 +15,8 @@
 // specific language governing permissions and limitations
 // under the License.
 
+import store from '@/store'
+
 export default {
   name: 'config',
   title: 'label.configuration',
