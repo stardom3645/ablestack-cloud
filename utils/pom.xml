@@ -606,9 +606,9 @@
                                     <outputDirectory>${project.build.directory}/lib</outputDirectory>
                                 </artifactItem>
                                 <artifactItem>
-                                    <groupId>org.jenkins-ci</groupId>
+                                    <groupId>com.trilead</groupId>
                                     <artifactId>trilead-ssh2</artifactId>
-                                    <version>${cs.trilead.version}</version>
+                                    <version>1.0.0-build217</version>
                                     <overWrite>false</overWrite>
                                     <outputDirectory>${project.build.directory}/lib</outputDirectory>
                                 </artifactItem>
