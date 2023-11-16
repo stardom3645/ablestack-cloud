@@ -73,8 +73,6 @@ public interface SnapshotManager extends Configurable {
      */
     boolean deleteSnapshotDirsForAccount(long accountId);
 
-    String getSecondaryStorageURL(SnapshotVO snapshot);
-
     //void deleteSnapshotsDirForVolume(String secondaryStoragePoolUrl, Long dcId, Long accountId, Long volumeId);
 
     boolean canOperateOnVolume(Volume volume);
