@@ -25,6 +25,8 @@ import org.apache.cloudstack.api.BaseResponse;
 import com.cloud.serializer.Param;
 import com.google.gson.annotations.SerializedName;
 
+import javax.persistence.Column;
+
 public class GetSecurityCheckListResponse extends BaseResponse {
     @SerializedName(ApiConstants.ID)
     @Param(description = "the id of the security check result")
