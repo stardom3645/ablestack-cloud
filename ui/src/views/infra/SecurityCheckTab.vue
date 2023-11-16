@@ -43,7 +43,7 @@
         <template v-if="column.key === 'actions'">
           <tooltip-button
             style="margin-right: 5px"
-            :disabled="!('deleteSecurityCheckResult' in $store.getters.apis)"
+            :disabled="!('deleteSecurityCheckResults' in $store.getters.apis)"
             :title="$t('label.action.delete.result')"
             type="primary"
             :danger="true"
