@@ -51,7 +51,7 @@ public class DeleteSecurityCheckResultCmd extends BaseAsyncCmd {
     //////////////// API parameters /////////////////////
     /////////////////////////////////////////////////////
     @Parameter(name = ApiConstants.ID, type = CommandType.UUID,
-            entityType = GetSecurityCheckResultListResponse.class,
+            entityType = GetSecurityCheckResponse.class,
             required = true,
             description = "the ID of the security check result")
     private Long id;
