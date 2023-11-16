@@ -35,7 +35,7 @@ public class SecurityCheckVO implements SecurityCheck {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", updatable = false, nullable = false)
-    private long id;
+    private long id = -1;
 
     @Column(name = "uuid")
     private String uuid;
