@@ -24,7 +24,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -260,9 +259,7 @@ public class SecurityCheckServiceImpl extends ManagerBase implements PluggableSe
 
     private void updateSecurityCheckResult(long msHostId, boolean checkFinalResult, String checkFailedList, String type) {
         boolean newSecurityCheckEntry = false;
-        String uuid = UUID.randomUUID().toString();
         SecurityCheckVO connectivityVO = new SecurityCheckVO(msHostId, checkFinalResult, checkFailedList, type);
-        connectivityVO.setUuid(uuid);
         connectivityVO.setMsHostId(msHostId);
         connectivityVO.setCheckResult(checkFinalResult);
         connectivityVO.setCheckFailedList(checkFailedList);

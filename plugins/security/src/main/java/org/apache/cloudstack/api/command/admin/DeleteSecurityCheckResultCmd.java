@@ -27,7 +27,7 @@ import org.apache.cloudstack.api.ApiConstants;
 import org.apache.cloudstack.api.BaseAsyncCmd;
 import org.apache.cloudstack.api.Parameter;
 import org.apache.cloudstack.api.response.SuccessResponse;
-import org.apache.cloudstack.api.response.GetSecurityCheckListResponse;
+import org.apache.cloudstack.api.response.GetSecurityCheckResultListResponse;
 import org.apache.cloudstack.api.ServerApiException;
 import org.apache.cloudstack.api.ApiErrorCode;
 import org.apache.cloudstack.context.CallContext;
@@ -51,7 +51,7 @@ public class DeleteSecurityCheckResultCmd extends BaseAsyncCmd {
     //////////////// API parameters /////////////////////
     /////////////////////////////////////////////////////
     @Parameter(name = ApiConstants.ID, type = CommandType.UUID,
-            entityType = GetSecurityCheckListResponse.class,
+            entityType = GetSecurityCheckResultListResponse.class,
             required = true,
             description = "the ID of the security check result")
     private Long id;

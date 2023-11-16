@@ -28,13 +28,6 @@ import com.google.gson.annotations.SerializedName;
 import javax.persistence.Column;
 
 public class GetSecurityCheckListResponse extends BaseResponse {
-    @SerializedName(ApiConstants.ID)
-    @Param(description = "the id of the security check result")
-    private long id;
-
-    @Column(name = "uuid")
-    private String uuid;
-
     @SerializedName(ApiConstants.MANAGEMENT_SERVER_ID)
     @Param(description = "the id of the management server")
     private String msHostId;
@@ -43,28 +36,12 @@ public class GetSecurityCheckListResponse extends BaseResponse {
     @Param(description = "security check result")
     private List<GetSecurityCheckResponse> securityChecks;
 
-    public long getId() {
-        return id;
-    }
-
-    public String getUuid() {
-        return uuid;
-    }
-
     public String getMsHostId() {
         return msHostId;
     }
 
     public List<GetSecurityCheckResponse> getSecurityChecks() {
         return securityChecks;
-    }
-
-    public void setId(long id) {
-        this.id = id;
-    }
-
-    public void setUuid(String uuid) {
-        this.uuid = uuid;
     }
 
     public void setMsHostId(String msHostId) {

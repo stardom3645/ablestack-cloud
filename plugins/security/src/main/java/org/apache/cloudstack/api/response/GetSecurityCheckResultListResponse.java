@@ -15,78 +15,67 @@
 // specific language governing permissions and limitations
 // under the License.
 
-package com.cloud.security;
+package org.apache.cloudstack.api.response;
+
+import com.cloud.serializer.Param;
+import com.google.gson.annotations.SerializedName;
+import org.apache.cloudstack.api.ApiConstants;
+import org.apache.cloudstack.api.BaseResponse;
+import org.apache.cloudstack.api.EntityReference;
 
 import java.util.Date;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.Table;
-import javax.persistence.Temporal;
-import javax.persistence.TemporalType;
-
-@Entity
-@Table(name = "security_check")
-public class SecurityCheckVO implements SecurityCheck {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id")
+@EntityReference(value = {SecurityCheck.class})
+public class GetSecurityCheckResultListResponse extends BaseResponse {
+    @SerializedName(ApiConstants.ID)
+    @Param(description = "the id of the security check result")
     private long id;
 
-    @Column(name = "mshost_id")
-    private long msHostId;
+    @SerializedName(ApiConstants.MANAGEMENT_SERVER_ID)
+    @Param(description = "the id of the management server")
+    private String msHostId;
 
-    @Column(name = "check_result")
+    @SerializedName(ApiConstants.RESULT)
+    @Param(description = "result of the security check")
     private boolean checkResult;
 
-    @Temporal(TemporalType.TIMESTAMP)
-    @Column(name = "check_date")
+    @SerializedName(ApiConstants.LAST_UPDATED)
+    @Param(description = "the date this mshost was updated")
     private Date checkDate;
 
-    @Column(name = "check_failed_list")
+    @SerializedName(ApiConstants.DETAILS)
+    @Param(description = "the security check failed list")
     private String checkFailedList;
 
-    @Column(name = "type")
+    @SerializedName(ApiConstants.TYPE)
+    @Param(description = "the type of the security check")
     private String type;
 
-    @Override
     public long getId() {
         return id;
     }
 
-    @Override
-    public long getMsHostId() {
+    public String getMsHostId() {
         return msHostId;
     }
 
-    @Override
     public boolean getCheckResult() {
         return checkResult;
     }
 
-    @Override
     public Date getCheckDate() {
         return checkDate;
     }
 
-    @Override
     public String getCheckFailedList() {
         return checkFailedList;
     }
 
-    @Override
-    public String getType() {
-        return type;
+    public void setId(long id) {
+        this.id = id;
     }
 
-    public void setUuid(String uuid) {
-        this.uuid = uuid;
-    }
-
-    public void setMsHostId(long msHostId) {
+    public void setMsHostId(String msHostId) {
         this.msHostId = msHostId;
     }
 
@@ -98,29 +87,11 @@ public class SecurityCheckVO implements SecurityCheck {
         this.checkDate = checkDate;
     }
 
-    public void setCheckFailedList(String checkFailedList) {
-        this.checkFailedList = checkFailedList;
-    }
-
     public void setType(String type) {
         this.type = type;
     }
 
-    protected SecurityCheckVO() {
-    }
-
-    public SecurityCheckVO(long msHostId, boolean checkResult, String checkFailedList, String type) {
-        this.msHostId = msHostId;
-        this.checkResult = checkResult;
+    public void setCheckFailedList(String checkFailedList) {
         this.checkFailedList = checkFailedList;
-        this.type = type;
-    }
-
-    @Override
-    public String toString() {
-        return super.toString() +
-                ", check result: " + checkResult +
-                ", check date: " + checkDate +
-                ", check failed list: " + checkFailedList;
     }
 }
