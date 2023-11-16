@@ -14,44 +14,51 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-package com.cloud.vm.dao;
+package com.cloud.vm;
 
-import java.util.List;
-import org.springframework.stereotype.Component;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Table;
 
-import com.cloud.vm.VbmcVO;
-import com.cloud.utils.db.GenericDaoBase;
-import com.cloud.utils.db.SearchBuilder;
-import com.cloud.utils.db.SearchCriteria;
+@Entity
+@Table(name = "vbmc_port")
+public class VbmcVO {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id")
+    Long id;
 
-@Component(value = "VbmcDao")
-public class VbmcDaoImpl extends GenericDaoBase<VbmcVO, Long> implements VbmcDao {
+    @Column(name = "vm_id", updatable = true, nullable = false)
+    private Long vmId;
 
-    protected final SearchBuilder<VbmcVO> VbmcSearch;
-    protected final SearchBuilder<VbmcVO> VbmcAblePortSearch;
+    @Column(name = "port", updatable = false, nullable = false)
+    private int port;
 
-    protected VbmcDaoImpl() {
-        super();
-        VbmcSearch = createSearchBuilder();
-        VbmcSearch.and("vmId", VbmcSearch.entity().getVmId(), SearchCriteria.Op.EQ);
-        VbmcSearch.done();
-
-        VbmcAblePortSearch = createSearchBuilder();
-        VbmcAblePortSearch.and("vmId", VbmcAblePortSearch.entity().getVmId(), SearchCriteria.Op.EQ);
-        VbmcAblePortSearch.done();
+    public VbmcVO() {
     }
 
-    @Override
-    public List<VbmcVO> listByVmId(long vmId) {
-        SearchCriteria<VbmcVO> sc = VbmcSearch.create();
-        sc.setParameters("vmId", vmId);
-        return listBy(sc);
+    public VbmcVO(Long vmId, int port) {
+        this.vmId = vmId;
+        this.port = port;
     }
 
-    @Override
-    public List<VbmcVO> findAblePort() {
-        SearchCriteria<VbmcVO> sc = VbmcAblePortSearch.create();
-        sc.setParameters("vmId", 0);
-        return listBy(sc);
+    public Long getId() {
+        return id;
     }
+
+    public Long getVmId() {
+        return vmId;
+    }
+
+    public int getPort() {
+        return port;
+    }
+
+    public void setVmId(long vmId) {
+        this.vmId = vmId;
+    }
+
 }
