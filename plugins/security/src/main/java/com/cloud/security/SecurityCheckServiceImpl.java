@@ -120,11 +120,6 @@ public class SecurityCheckServiceImpl extends ManagerBase implements PluggableSe
             String path = Script.findScript("scripts/security/", "securitycheck.sh");
             if (path == null) {
                 LOGGER.error("Unable to find the securitycheck script");
-                if (runMode == "first") {
-                    alertManager.sendAlert(AlertManager.AlertType.ALERT_TYPE_MANAGMENT_NODE, 0, new Long(0), "Security check when running the product failed : unable to find the securitycheck script", "");
-                } else {
-                    alertManager.sendAlert(AlertManager.AlertType.ALERT_TYPE_MANAGMENT_NODE, 0, new Long(0), "Security check schedule when operating the product failed : unable to find the securitycheck script", "");
-                }
             }
             ProcessBuilder processBuilder = new ProcessBuilder("sh", path);
             Process process = null;
