@@ -246,12 +246,14 @@ public class SecurityCheckServiceImpl extends ManagerBase implements PluggableSe
     }
 
     private void updateSecurityCheckResult(long msHostId, boolean checkFinalResult, String checkFailedList, String type) {
-        if ("Initial".equals(type)) {
-            alertManager.sendAlert(AlertManager.AlertType.ALERT_TYPE_MANAGMENT_NODE, 0, new Long(0), "Security check when running the product failed", "");
-        } else if ("Routine".equals(type)) {
-            alertManager.sendAlert(AlertManager.AlertType.ALERT_TYPE_MANAGMENT_NODE, 0, new Long(0), "Security check schedule when operating the product failed", "");
-        } else if ("Manual".equals(type)) {
-            alertManager.sendAlert(AlertManager.AlertType.ALERT_TYPE_MANAGMENT_NODE, 0, new Long(0), "Security check when operating the product failed", "");
+        if (!checkFinalResult) {
+            if ("Initial".equals(type)) {
+                alertManager.sendAlert(AlertManager.AlertType.ALERT_TYPE_MANAGMENT_NODE, 0, new Long(0), "Security check when running the product failed", "");
+            } else if ("Routine".equals(type)) {
+                alertManager.sendAlert(AlertManager.AlertType.ALERT_TYPE_MANAGMENT_NODE, 0, new Long(0), "Security check schedule when operating the product failed", "");
+            } else if ("Manual".equals(type)) {
+                alertManager.sendAlert(AlertManager.AlertType.ALERT_TYPE_MANAGMENT_NODE, 0, new Long(0), "Security check when operating the product failed", "");
+            }
         }
         SecurityCheckVO connectivityVO = new SecurityCheckVO(msHostId, checkFinalResult, checkFailedList, type);
         connectivityVO.setMsHostId(msHostId);
