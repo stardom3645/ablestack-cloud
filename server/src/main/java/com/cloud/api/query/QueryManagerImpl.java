@@ -1182,7 +1182,7 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
             // invalid hypervisor type input
             throw new InvalidParameterValueException("Invalid HypervisorType " + hypervisor);
         }
-        
+
         Object templateId = cmd.getTemplateId();
         Object isoId = cmd.getIsoId();
         Object vpcId = cmd.getVpcId();
