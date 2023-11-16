@@ -134,19 +134,11 @@ public class SecurityCheckServiceImpl extends ManagerBase implements PluggableSe
                     String[] temp = line.split(",");
                     String checkName = temp[0];
                     String checkResult = temp[1];
-                    String checkMessage;
                     if ("false".equals(checkResult)) {
                         checkResults.add(false);
                         checkFailedList.add(checkName);
-                        checkMessage = "file does not operate normally";
-                        if (runMode == "first") {
-                            alertManager.sendAlert(AlertManager.AlertType.ALERT_TYPE_MANAGMENT_NODE, 0, new Long(0), "Management server node " + msHost.getServiceIP() + " security check when running the product failed : "+ checkName + " " + checkMessage, "");
-                        } else {
-                            alertManager.sendAlert(AlertManager.AlertType.ALERT_TYPE_MANAGMENT_NODE, 0, new Long(0), "Management server node " + msHost.getServiceIP() + " security check schedule failed : "+ checkName + " " + checkMessage, "");
-                        }
                     } else {
                         checkResults.add(true);
-                        checkMessage = "file operates normally";
                     }
                 }
                 checkFinalResult = checkConditions(checkResults);
@@ -220,15 +212,11 @@ public class SecurityCheckServiceImpl extends ManagerBase implements PluggableSe
                 String[] temp = line.split(",");
                 String checkName = temp[0];
                 String checkResult = temp[1];
-                String checkMessage;
                 if ("false".equals(checkResult)) {
                     checkResults.add(false);
                     checkFailedList.add(checkName);
-                    checkMessage = "file does not operate normally at last check";
-                    alertManager.sendAlert(AlertManager.AlertType.ALERT_TYPE_MANAGMENT_NODE, 0, new Long(0), "Management server node " + mshost.getServiceIP() + " security check when operating the product failed : "+ checkName + " " + checkMessage, "");
                 } else {
                     checkResults.add(true);
-                    checkMessage = "file operates normally";
                 }
                 output.append(line).append('\n');
             }
@@ -258,7 +246,13 @@ public class SecurityCheckServiceImpl extends ManagerBase implements PluggableSe
     }
 
     private void updateSecurityCheckResult(long msHostId, boolean checkFinalResult, String checkFailedList, String type) {
-        boolean newSecurityCheckEntry = false;
+        if ("Initial".equals(type)) {
+            alertManager.sendAlert(AlertManager.AlertType.ALERT_TYPE_MANAGMENT_NODE, 0, new Long(0), "Security check when running the product failed", "");
+        } else if ("Routine".equals(type)) {
+            alertManager.sendAlert(AlertManager.AlertType.ALERT_TYPE_MANAGMENT_NODE, 0, new Long(0), "Security check schedule when operating the product failed", "");
+        } else if ("Manual".equals(type)) {
+            alertManager.sendAlert(AlertManager.AlertType.ALERT_TYPE_MANAGMENT_NODE, 0, new Long(0), "Security check when operating the product failed", "");
+        }
         SecurityCheckVO connectivityVO = new SecurityCheckVO(msHostId, checkFinalResult, checkFailedList, type);
         connectivityVO.setMsHostId(msHostId);
         connectivityVO.setCheckResult(checkFinalResult);
