@@ -36,6 +36,9 @@ public class SecurityCheckVO implements SecurityCheck {
     @Column(name = "id", updatable = false, nullable = false)
     private long id;
 
+    @Column(name = "uuid")
+    private String uuid;
+
     @Column(name = "mshost_id", updatable = false, nullable = false)
     private long msHostId;
 
@@ -54,6 +57,11 @@ public class SecurityCheckVO implements SecurityCheck {
 
     public long getId() {
         return id;
+    }
+
+    @Override
+    public String getUuid() {
+        return uuid;
     }
 
     @Override
@@ -81,6 +89,10 @@ public class SecurityCheckVO implements SecurityCheck {
         return type;
     }
 
+    public void setUuid(String uuid) {
+        this.uuid = uuid; 
+    }
+
     public void setMsHostId(long msHostId) {
         this.msHostId = msHostId;
     }
@@ -102,9 +114,11 @@ public class SecurityCheckVO implements SecurityCheck {
     }
 
     protected SecurityCheckVO() {
+        this.uuid = UUID.randomUUID().toString();
     }
 
     public SecurityCheckVO(long msHostId, boolean checkResult, String checkFailedList, String type) {
+        this.uuid = UUID.randomUUID().toString();
         this.msHostId = msHostId;
         this.checkResult = checkResult;
         this.checkFailedList = checkFailedList;

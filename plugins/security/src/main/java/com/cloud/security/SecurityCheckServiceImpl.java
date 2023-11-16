@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -250,8 +251,6 @@ public class SecurityCheckServiceImpl extends ManagerBase implements PluggableSe
     public boolean deleteSecurityCheckResult(final DeleteSecurityCheckResultCmd cmd) {
         final Long resultId = cmd.getId();
         SecurityCheck result = securityCheckDao.findById(resultId);
-        LOGGER.info("deleteSecurityCheckResult");
-        LOGGER.info(result);
         if (result == null) {
             throw new InvalidParameterValueException("Invalid security check result id specified");
         }
@@ -260,7 +259,9 @@ public class SecurityCheckServiceImpl extends ManagerBase implements PluggableSe
 
     private void updateSecurityCheckResult(long msHostId, boolean checkFinalResult, String checkFailedList, String type) {
         boolean newSecurityCheckEntry = false;
+        String uuid = UUID.randomUUID().toString();
         SecurityCheckVO connectivityVO = new SecurityCheckVO(msHostId, checkFinalResult, checkFailedList, type);
+        connectivityVO.setUuid(uuid);
         connectivityVO.setMsHostId(msHostId);
         connectivityVO.setCheckResult(checkFinalResult);
         connectivityVO.setCheckFailedList(checkFailedList);

@@ -25,6 +25,8 @@ import java.util.Date;
 public interface SecurityCheck {
     long getId();
 
+    String getUuid();
+
     long getMsHostId();
 
     boolean getCheckResult();

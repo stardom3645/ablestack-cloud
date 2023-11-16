@@ -22,12 +22,14 @@
 -- Adding security check table
 CREATE TABLE IF NOT EXISTS `security_check` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `uuid` varchar(40) NULL,
   `mshost_id` bigint unsigned NOT NULL COMMENT 'the ID of the mshost',
   `check_result` tinyint(1) NOT NULL COMMENT 'check executions success or failure',
   `check_date` datetime DEFAULT NULL COMMENT 'the last security check time',
   `check_failed_list` mediumtext NULL COMMENT 'the failed security check failed list',
   `type` varchar(30) NULL,
   PRIMARY KEY (`id`),
+  UNIQUE KEY `i_security_checks__mshost_id__uuid` (`uuid`,`mshost_id`),
   KEY `i_security_checks__mshost_id` (`mshost_id`),
   CONSTRAINT `fk_security_checks__mshost_id` FOREIGN KEY (`mshost_id`) REFERENCES `mshost` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB CHARSET=utf8mb3;
