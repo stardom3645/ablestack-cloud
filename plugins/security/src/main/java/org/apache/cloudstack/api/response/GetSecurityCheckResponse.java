@@ -21,10 +21,13 @@ import java.util.Date;
 
 import org.apache.cloudstack.api.ApiConstants;
 import org.apache.cloudstack.api.BaseResponse;
+import org.apache.cloudstack.api.EntityReference;
 
+import com.cloud.security.SecurityCheck;
 import com.cloud.serializer.Param;
 import com.google.gson.annotations.SerializedName;
 
+@EntityReference(value = {SecurityCheck.class})
 public class GetSecurityCheckResponse extends BaseResponse {
     @SerializedName(ApiConstants.ID)
     @Param(description = "the id of the integrity verification final result")
@@ -49,6 +52,9 @@ public class GetSecurityCheckResponse extends BaseResponse {
     @SerializedName(ApiConstants.TYPE)
     @Param(description = "the type of the security check")
     private String type;
+
+    public GetSecurityCheckResponse() {
+    }
 
     public long getId() {
         return id;
