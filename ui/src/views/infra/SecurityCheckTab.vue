@@ -363,6 +363,7 @@ export default {
       }
       this.deleteLoading = true
       api('deleteSecurityCheckResult', params).then(json => {
+        console.log(json)
         const jobId = json.deletesecuritycheckresultresponse.jobid
         if (jobId) {
           this.$pollJob({
