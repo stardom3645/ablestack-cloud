@@ -202,8 +202,8 @@
             @exec-action="$parent.execAction"/>
           <router-link :to="{ path: $route.path + '/' + record.id }">{{ text }}</router-link>
         </span>
-        <span v-else>{{ text }}</span>
       </template>
+<<<<<<< HEAD
       <template v-if="column.key === 'osname'">
         <span v-if="$route.name === 'guestos'">
           <router-link :to="{ path: $route.path + '/' + record.id }">{{ text }}</router-link>
@@ -219,6 +219,8 @@
           @exec-action="$parent.execAction"/>
         <router-link :to="{ path: $route.path + '/' + record.id }">{{ text }}</router-link>
       </span>
+=======
+>>>>>>> parent of 3cc7afaf4b (ui: indent issue in list view (#8184))
       <span v-else>{{ text }}</span>
     </template>
     <template v-if="column.key === 'osname'">
@@ -280,6 +282,7 @@
         <span>
           <span v-if="record[value.disable]" class="alert-disable-threshold">
             {{ text }}
+<<<<<<< HEAD
           </span>
           <span v-else-if="record[value.notification]" class="alert-notification-threshold">
             {{ text }}
@@ -351,8 +354,16 @@
             <span style="padding: 10%;" v-else>
               {{ text }}
             </span>
+=======
+>>>>>>> parent of 3cc7afaf4b (ui: indent issue in list view (#8184))
           </span>
-        </template>
+          <span v-else-if="record[value.notification]" class="alert-notification-threshold">
+            {{ text }}
+          </span>
+          <span style="padding: 10%;" v-else>
+            {{ text }}
+          </span>
+        </span>
       </template>
     </template>
 
