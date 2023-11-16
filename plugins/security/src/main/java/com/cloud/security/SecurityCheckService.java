@@ -32,5 +32,5 @@ public interface SecurityCheckService {
 
     boolean runSecurityCheckCommand(RunSecurityCheckCmd runSecurityCheckCmd);
 
-    boolean deleteSecurityCheckResults(DeleteSecurityCheckResultCmd deleteSecurityCheckResultCmd) throws CloudRuntimeException;
+    boolean deleteSecurityCheckResult(DeleteSecurityCheckResultCmd deleteSecurityCheckResultCmd) throws CloudRuntimeException;
 }
