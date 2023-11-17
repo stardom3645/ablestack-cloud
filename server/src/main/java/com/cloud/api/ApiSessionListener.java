@@ -29,6 +29,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.cloud.user.User;
+import com.cloud.user.Account;
 import com.cloud.event.EventTypes;
 import com.cloud.event.ActionEventUtils;
 
@@ -115,7 +116,7 @@ public class ApiSessionListener implements HttpSessionListener {
     public void sessionDestroyed(HttpSessionEvent event) {
         if (ApiServer.SecurityFeaturesEnabled.value()) {
             String accountName = "admin";
-            Long domainId = 1;
+            Long domainId = 1L;
             Account userAcct = ApiDBUtils.findAccountByNameDomain(accountName, domainId);
             ActionEventUtils.onActionEvent(userAcct.getId(), userAcct.getAccountId(), domainId, EventTypes.EVENT_USER_SESSION_DESTROY,
                 "Session destroyed by Id : " + event.getSession().getId() + " , session: " + event.getSession().toString(), User.UID_SYSTEM, ApiCommandResourceType.User.toString());
