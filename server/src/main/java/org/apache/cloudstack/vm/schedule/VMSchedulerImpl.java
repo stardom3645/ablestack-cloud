@@ -43,6 +43,8 @@ import org.apache.cloudstack.managed.context.ManagedContextTimerTask;
 import org.apache.cloudstack.vm.schedule.dao.VMScheduleDao;
 import org.apache.cloudstack.vm.schedule.dao.VMScheduledJobDao;
 import org.apache.commons.lang.time.DateUtils;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.springframework.scheduling.support.CronExpression;
 
 import javax.inject.Inject;
@@ -59,7 +61,8 @@ import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 
-public class VMSchedulerImpl extends ManagerBase implements VMScheduler {
+public class VMSchedulerImpl extends ManagerBase implements VMScheduler, Configurable {
+    protected static Logger LOGGER = LogManager.getLogger(VMSchedulerImpl.class);
     @Inject
     private VMScheduledJobDao vmScheduledJobDao;
     @Inject
@@ -95,12 +98,12 @@ public class VMSchedulerImpl extends ManagerBase implements VMScheduler {
     @Override
     public void removeScheduledJobs(List<Long> vmScheduleIds) {
         if (vmScheduleIds == null || vmScheduleIds.isEmpty()) {
-            logger.debug("Removed 0 scheduled jobs");
+            LOGGER.debug("Removed 0 scheduled jobs");
             return;
         }
         Date now = new Date();
         int rowsRemoved = vmScheduledJobDao.expungeJobsForSchedules(vmScheduleIds, now);
-        logger.debug(String.format("Removed %s VM scheduled jobs", rowsRemoved));
+        LOGGER.debug(String.format("Removed %s VM scheduled jobs", rowsRemoved));
     }
 
     @Override
@@ -112,7 +115,7 @@ public class VMSchedulerImpl extends ManagerBase implements VMScheduler {
     @Override
     public Date scheduleNextJob(VMScheduleVO vmSchedule, Date timestamp) {
         if (!vmSchedule.getEnabled()) {
-            logger.debug(String.format("VM Schedule [id=%s] for VM [id=%s] is disabled. Not scheduling next job.", vmSchedule.getUuid(), vmSchedule.getVmId()));
+            LOGGER.debug(String.format("VM Schedule [id=%s] for VM [id=%s] is disabled. Not scheduling next job.", vmSchedule.getUuid(), vmSchedule.getVmId()));
             return null;
         }
 
@@ -122,7 +125,7 @@ public class VMSchedulerImpl extends ManagerBase implements VMScheduler {
         VirtualMachine vm = userVmManager.getUserVm(vmSchedule.getVmId());
 
         if (vm == null) {
-            logger.info(String.format("VM [id=%s] is removed. Disabling VM schedule [id=%s].", vmSchedule.getVmId(), vmSchedule.getUuid()));
+            LOGGER.info(String.format("VM [id=%s] is removed. Disabling VM schedule [id=%s].", vmSchedule.getVmId(), vmSchedule.getUuid()));
             vmSchedule.setEnabled(false);
             vmScheduleDao.persist(vmSchedule);
             return null;
@@ -140,7 +143,7 @@ public class VMSchedulerImpl extends ManagerBase implements VMScheduler {
             zonedEndDate = ZonedDateTime.ofInstant(endDate.toInstant(), vmSchedule.getTimeZoneId());
         }
         if (zonedEndDate != null && now.isAfter(zonedEndDate)) {
-            logger.info(String.format("End time is less than current time. Disabling VM schedule [id=%s] for VM [id=%s].", vmSchedule.getUuid(), vmSchedule.getVmId()));
+            LOGGER.info(String.format("End time is less than current time. Disabling VM schedule [id=%s] for VM [id=%s].", vmSchedule.getUuid(), vmSchedule.getVmId()));
             vmSchedule.setEnabled(false);
             vmScheduleDao.persist(vmSchedule);
             return null;
@@ -154,7 +157,7 @@ public class VMSchedulerImpl extends ManagerBase implements VMScheduler {
         }
 
         if (ts == null) {
-            logger.info(String.format("No next schedule found. Disabling VM schedule [id=%s] for VM [id=%s].", vmSchedule.getUuid(), vmSchedule.getVmId()));
+            LOGGER.info(String.format("No next schedule found. Disabling VM schedule [id=%s] for VM [id=%s].", vmSchedule.getUuid(), vmSchedule.getVmId()));
             vmSchedule.setEnabled(false);
             vmScheduleDao.persist(vmSchedule);
             return null;
@@ -168,7 +171,7 @@ public class VMSchedulerImpl extends ManagerBase implements VMScheduler {
                     String.format("Scheduled action (%s) [vmId: %s scheduleId: %s]  at %s", vmSchedule.getAction(), vm.getUuid(), vmSchedule.getUuid(), scheduledDateTime),
                     vm.getId(), ApiCommandResourceType.VirtualMachine.toString(), true, 0);
         } catch (EntityExistsException exception) {
-            logger.debug("Job is already scheduled.");
+            LOGGER.debug("Job is already scheduled.");
         }
         return scheduledDateTime;
     }
@@ -192,7 +195,7 @@ public class VMSchedulerImpl extends ManagerBase implements VMScheduler {
                 try {
                     poll(new Date());
                 } catch (final Throwable t) {
-                    logger.warn("Catch throwable in VM scheduler ", t);
+                    LOGGER.warn("Catch throwable in VM scheduler ", t);
                 }
             }
         };
@@ -206,7 +209,7 @@ public class VMSchedulerImpl extends ManagerBase implements VMScheduler {
     public void poll(Date timestamp) {
         currentTimestamp = DateUtils.round(timestamp, Calendar.MINUTE);
         String displayTime = DateUtil.displayDateInTimezone(DateUtil.GMT_TIMEZONE, currentTimestamp);
-        logger.debug(String.format("VM scheduler.poll is being called at %s", displayTime));
+        LOGGER.debug(String.format("VM scheduler.poll is being called at %s", displayTime));
 
         GlobalLock scanLock = GlobalLock.getInternLock("vmScheduler.poll");
         try {
@@ -237,7 +240,7 @@ public class VMSchedulerImpl extends ManagerBase implements VMScheduler {
         try {
             cleanupVMScheduledJobs();
         } catch (Exception e) {
-            logger.warn("Error in cleaning up vm scheduled jobs", e);
+            LOGGER.warn("Error in cleaning up vm scheduled jobs", e);
         }
     }
 
@@ -246,7 +249,7 @@ public class VMSchedulerImpl extends ManagerBase implements VMScheduler {
             try {
                 scheduleNextJob(schedule, timestamp);
             } catch (Exception e) {
-                logger.warn("Error in scheduling next job for schedule " + schedule.getUuid(), e);
+                LOGGER.warn("Error in scheduling next job for schedule " + schedule.getUuid(), e);
             }
         }
     }
@@ -257,7 +260,7 @@ public class VMSchedulerImpl extends ManagerBase implements VMScheduler {
     private void cleanupVMScheduledJobs() {
         Date deleteBeforeDate = DateUtils.addDays(currentTimestamp, -1 * VMScheduledJobExpireInterval.value());
         int rowsRemoved = vmScheduledJobDao.expungeJobsBefore(deleteBeforeDate);
-        logger.info(String.format("Cleaned up %d VM scheduled job entries", rowsRemoved));
+        LOGGER.info(String.format("Cleaned up %d VM scheduled job entries", rowsRemoved));
     }
 
     void executeJobs(Map<Long, VMScheduledJob> jobsToExecute) {
@@ -269,10 +272,10 @@ public class VMSchedulerImpl extends ManagerBase implements VMScheduler {
 
             VMScheduledJobVO tmpVMScheduleJob = null;
             try {
-                if (logger.isDebugEnabled()) {
+                if (LOGGER.isDebugEnabled()) {
                     final Date scheduledTimestamp = vmScheduledJob.getScheduledTime();
                     displayTime = DateUtil.displayDateInTimezone(DateUtil.GMT_TIMEZONE, scheduledTimestamp);
-                    logger.debug(String.format("Executing %s for VM id %d for schedule id: %d at %s", vmScheduledJob.getAction(), vmScheduledJob.getVmId(), vmScheduledJob.getVmScheduleId(), displayTime));
+                    LOGGER.debug(String.format("Executing %s for VM id %d for schedule id: %d at %s", vmScheduledJob.getAction(), vmScheduledJob.getVmId(), vmScheduledJob.getVmScheduleId(), displayTime));
                 }
 
                 tmpVMScheduleJob = vmScheduledJobDao.acquireInLockTable(vmScheduledJob.getId());
@@ -282,7 +285,7 @@ public class VMSchedulerImpl extends ManagerBase implements VMScheduler {
                     vmScheduledJobDao.update(vmScheduledJob.getId(), tmpVMScheduleJob);
                 }
             } catch (final Exception e) {
-                logger.warn(String.format("Executing scheduled job id: %s failed due to %s", vmScheduledJob.getId(), e));
+                LOGGER.warn(String.format("Executing scheduled job id: %s failed due to %s", vmScheduledJob.getId(), e));
             } finally {
                 if (tmpVMScheduleJob != null) {
                     vmScheduledJobDao.releaseFromLockTable(vmScheduledJob.getId());
@@ -293,7 +296,7 @@ public class VMSchedulerImpl extends ManagerBase implements VMScheduler {
 
     Long processJob(VMScheduledJob vmScheduledJob, VirtualMachine vm) {
         if (!Arrays.asList(VirtualMachine.State.Running, VirtualMachine.State.Stopped).contains(vm.getState())) {
-            logger.info(String.format("Skipping action (%s) for [vmId:%s scheduleId: %s] because VM is invalid state: %s", vmScheduledJob.getAction(), vm.getUuid(), vmScheduledJob.getVmScheduleId(), vm.getState()));
+            LOGGER.info(String.format("Skipping action (%s) for [vmId:%s scheduleId: %s] because VM is invalid state: %s", vmScheduledJob.getAction(), vm.getUuid(), vmScheduledJob.getVmScheduleId(), vm.getState()));
             return null;
         }
 
@@ -317,7 +320,7 @@ public class VMSchedulerImpl extends ManagerBase implements VMScheduler {
             return executeStartVMJob(vm, eventId);
         }
 
-        logger.warn(String.format("Skipping action (%s) for [vmId:%s scheduleId: %s] because VM is in state: %s",
+        LOGGER.warn(String.format("Skipping action (%s) for [vmId:%s scheduleId: %s] because VM is in state: %s",
                 vmScheduledJob.getAction(), vm.getUuid(), vmScheduledJob.getVmScheduleId(), vm.getState()));
         return null;
     }
@@ -329,7 +332,7 @@ public class VMSchedulerImpl extends ManagerBase implements VMScheduler {
             VirtualMachine vm = userVmManager.getUserVm(vmId);
             for (final VMScheduledJob skippedVmScheduledJobVO : skippedVmScheduledJobVOS) {
                 VMScheduledJob scheduledJob = jobsToExecute.get(vmId);
-                logger.info(String.format("Skipping scheduled job [id: %s, vmId: %s] because of conflict with another scheduled job [id: %s]", skippedVmScheduledJobVO.getUuid(), vm.getUuid(), scheduledJob.getUuid()));
+                LOGGER.info(String.format("Skipping scheduled job [id: %s, vmId: %s] because of conflict with another scheduled job [id: %s]", skippedVmScheduledJobVO.getUuid(), vm.getUuid(), scheduledJob.getUuid()));
             }
         }
     }
@@ -341,7 +344,7 @@ public class VMSchedulerImpl extends ManagerBase implements VMScheduler {
         String displayTime = DateUtil.displayDateInTimezone(DateUtil.GMT_TIMEZONE, currentTimestamp);
 
         final List<VMScheduledJobVO> vmScheduledJobs = vmScheduledJobDao.listJobsToStart(currentTimestamp);
-        logger.debug(String.format("Got %d scheduled jobs to be executed at %s", vmScheduledJobs.size(), displayTime));
+        LOGGER.debug(String.format("Got %d scheduled jobs to be executed at %s", vmScheduledJobs.size(), displayTime));
 
         Map<Long, VMScheduledJob> jobsToExecute = new HashMap<>();
         Map<Long, List<VMScheduledJob>> jobsNotToExecute = new HashMap<>();
