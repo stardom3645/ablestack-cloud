@@ -46,6 +46,7 @@ export default {
       label: 'label.add.user',
       listView: true,
       popup: true,
+      show: () => { return (!store.getters.features.securityfeaturesenabled) },
       component: shallowRef(defineAsyncComponent(() => import('@/views/iam/AddUser.vue')))
     },
     {
