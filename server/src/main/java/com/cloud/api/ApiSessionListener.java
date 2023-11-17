@@ -39,6 +39,8 @@ public class ApiSessionListener implements HttpSessionListener {
 
     @Inject
     private AlertManager alertMgr;
+    @Inject
+    private ApiServer apiServer;
 
     /**
      * @return the internal adminstered session count
@@ -116,7 +118,7 @@ public class ApiSessionListener implements HttpSessionListener {
     }
 
     public void sessionDestroyed(HttpSessionEvent event) {
-        if (ApiServer.SecurityFeaturesEnabled.value()) {
+        if (apiServer.SecurityFeaturesEnabled.value()) {
             String accountName = "admin";
             Long domainId = 1;
             Account userAcct = ApiDBUtils.findAccountByNameDomain(accountName, domainId);
