@@ -2643,6 +2643,8 @@ public class AccountManagerImpl extends ManagerBase implements AccountManager, M
                 // Block when is not in the list of allowed IPs
                 if (!NetUtils.isIpInCidrList(loginIpAddress, (ApiAllowedSourceIp + "/" + accessAllowedCidr).split(","))) {
                     s_logger.warn("Request by account '" + account.toString() + "' was denied since " + loginIpAddress.toString().replace("/", "") + " does not match " + ApiAllowedSourceIp  + "/" + accessAllowedCidr);
+                    ActionEventUtils.onActionEvent(user.getId(), user.getAccountId(), user.getDomainId(), EventTypes.EVENT_USER_LOGIN,
+                            "The access IP of the management terminal has been blocked. Blocked IP: " +  loginIpAddress.toString().replace("/", ""), user.getId(), ApiCommandResourceType.User.toString());
                     throw new CloudAuthenticationException("Failed to authenticate user '" + username + "' in domain '" + domain.getPath() + "' from ip "
                             + loginIpAddress.toString().replace("/", "") + "; please provide valid credentials");
                 }
