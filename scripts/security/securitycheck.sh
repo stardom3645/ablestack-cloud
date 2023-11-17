@@ -18,8 +18,7 @@
 
 # Security Check 
 # JAVA로 작성된 Test 코드를 실행하는 Junit.jar 파일을 사용하여 보안 기능과 관련된 Utils, API, Framework 모듈이 정상적으로 작동하는지 확인하는 스크립트
-# 항목 : utils, api, framework
-# return : {항목, 결과, 클래스 명}
+# return : {테스트 파일의 클래스 명, 결과}
 
 jarfile='/usr/share/cloudstack-common/lib/'
 
