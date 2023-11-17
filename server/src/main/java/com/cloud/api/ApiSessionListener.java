@@ -21,13 +21,14 @@ import javax.servlet.http.HttpSession;
 import javax.servlet.http.HttpSessionEvent;
 import javax.servlet.http.HttpSessionListener;
 import org.apache.log4j.Logger;
+import org.apache.cloudstack.api.ApiCommandResourceType;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import com.cloud.alert.AlertManager;
+import com.cloud.user.User;
 import com.cloud.event.EventTypes;
 import com.cloud.event.ActionEventUtils;
 
@@ -35,9 +36,6 @@ import com.cloud.event.ActionEventUtils;
 public class ApiSessionListener implements HttpSessionListener {
     public static final Logger LOGGER = Logger.getLogger(ApiSessionListener.class.getName());
     private static Map<String, HttpSession> sessions = new ConcurrentHashMap<>();
-
-    @Inject
-    private AlertManager alertMgr;
 
     /**
      * @return the internal adminstered session count
