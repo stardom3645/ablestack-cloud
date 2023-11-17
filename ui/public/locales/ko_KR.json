@@ -3742,6 +3742,7 @@
 "user.enable": "\uc0ac\uc6a9\uc790.\ud65c\uc131\ud654",
 "user.lock": "\uc0ac\uc6a9\uc790.\uc7a0\uae08",
 "user.session.block": "\uc0ac\uc6a9\uc790.\uc138\uc158.\ucc28\ub2e8",
+"user.session.destroy": "\uc0ac\uc6a9\uc790.\uc138\uc158.\uc885\ub8cc",
 "register.ssh.keypair": "SSH.\ud0a4.\ud398\uc5b4.\ub4f1\ub85d",
 "register.user.data": "\uc0ac\uc6a9\uc790.\ub370\uc774\ud130.\ub4f1\ub85d",
 "register.user.key": "\uc0ac\uc6a9\uc790.\ud0a4.\ub4f1\ub85d",

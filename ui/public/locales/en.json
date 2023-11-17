@@ -3742,6 +3742,7 @@
 "user.enable": "USER.ENABLE",
 "user.lock": "USER.LOCK",
 "user.session.block": "USER.SESSION.BLOCK",
+"user.session.destroy": "USER.SESSION.DESTROY",
 "register.ssh.keypair": "REGISTER.SSH.KEYPAIR",
 "register.user.data": "REGISTER.USER.DATA",
 "register.user.key": "REGISTER.USER.KEY",
