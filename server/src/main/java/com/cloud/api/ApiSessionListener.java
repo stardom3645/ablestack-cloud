@@ -27,10 +27,18 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import com.cloud.alert.AlertManager;
+import com.cloud.api.ApiServer;
+import com.cloud.event.EventTypes;
+import com.cloud.event.ActionEventUtils;
+
 @WebListener
 public class ApiSessionListener implements HttpSessionListener {
     public static final Logger LOGGER = Logger.getLogger(ApiSessionListener.class.getName());
     private static Map<String, HttpSession> sessions = new ConcurrentHashMap<>();
+
+    @Inject
+    private AlertManager alertMgr;
 
     /**
      * @return the internal adminstered session count
@@ -108,6 +116,13 @@ public class ApiSessionListener implements HttpSessionListener {
     }
 
     public void sessionDestroyed(HttpSessionEvent event) {
+        if (ApiServer.SecurityFeaturesEnabled.value()) {
+            String accountName = "admin";
+            Long domainId = 1;
+            Account userAcct = ApiDBUtils.findAccountByNameDomain(accountName, domainId);
+            ActionEventUtils.onActionEvent(userAcct.getId(), userAcct.getAccountId(), domainId, EventTypes.EVENT_USER_SESSION_DESTROY,
+                "Session destroyed by Id : " + event.getSession().getId() + " , session: " + event.getSession().toString(), User.UID_SYSTEM, ApiCommandResourceType.User.toString());
+        }
         if (LOGGER.isDebugEnabled()) {
             LOGGER.debug("Session destroyed by Id : " + event.getSession().getId() + " , session: " + event.getSession().toString() + " , source: " + event.getSource().toString() + " , event: " + event.toString());
         }
