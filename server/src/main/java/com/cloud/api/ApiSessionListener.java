@@ -28,7 +28,6 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.cloud.alert.AlertManager;
-import com.cloud.api.ApiServer;
 import com.cloud.event.EventTypes;
 import com.cloud.event.ActionEventUtils;
 
@@ -39,8 +38,6 @@ public class ApiSessionListener implements HttpSessionListener {
 
     @Inject
     private AlertManager alertMgr;
-    @Inject
-    private ApiServer apiServer;
 
     /**
      * @return the internal adminstered session count
@@ -118,7 +115,7 @@ public class ApiSessionListener implements HttpSessionListener {
     }
 
     public void sessionDestroyed(HttpSessionEvent event) {
-        if (apiServer.SecurityFeaturesEnabled.value()) {
+        if (ApiServer.SecurityFeaturesEnabled.value()) {
             String accountName = "admin";
             Long domainId = 1;
             Account userAcct = ApiDBUtils.findAccountByNameDomain(accountName, domainId);
