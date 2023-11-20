@@ -21,11 +21,17 @@ import javax.servlet.http.HttpSession;
 import javax.servlet.http.HttpSessionEvent;
 import javax.servlet.http.HttpSessionListener;
 import org.apache.log4j.Logger;
+import org.apache.cloudstack.api.ApiCommandResourceType;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+
+import com.cloud.user.User;
+import com.cloud.user.Account;
+import com.cloud.event.EventTypes;
+import com.cloud.event.ActionEventUtils;
 
 @WebListener
 public class ApiSessionListener implements HttpSessionListener {
@@ -108,6 +114,13 @@ public class ApiSessionListener implements HttpSessionListener {
     }
 
     public void sessionDestroyed(HttpSessionEvent event) {
+        if (ApiServer.SecurityFeaturesEnabled.value()) {
+            String accountName = "admin";
+            Long domainId = 1L;
+            Account userAcct = ApiDBUtils.findAccountByNameDomain(accountName, domainId);
+            ActionEventUtils.onActionEvent(userAcct.getId(), userAcct.getAccountId(), domainId, EventTypes.EVENT_USER_SESSION_DESTROY,
+                "Session destroyed by Id : " + event.getSession().getId(), User.UID_SYSTEM, ApiCommandResourceType.User.toString());
+        }
         if (LOGGER.isDebugEnabled()) {
             LOGGER.debug("Session destroyed by Id : " + event.getSession().getId() + " , session: " + event.getSession().toString() + " , source: " + event.getSource().toString() + " , event: " + event.toString());
         }
