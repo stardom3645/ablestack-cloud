@@ -166,7 +166,7 @@ public class CreateDiskOfferingCmd extends BaseCmd {
     @Parameter(name = ApiConstants.ENCRYPT, type = CommandType.BOOLEAN, required=false, description = "Volumes using this offering should be encrypted", since = "4.18")
     private Boolean encrypt;
 
-    @Parameter(name = ApiConstants.SHAREABLE, type = CommandType.BOOLEAN, required=true, description = "Whether to use it as a shared volume", since = "4.19")
+    @Parameter(name = ApiConstants.SHAREABLE, type = CommandType.BOOLEAN, required=false, description = "Whether to use it as a shared volume", since = "4.19")
     private Boolean shareable;
 
     @Parameter(name = ApiConstants.DETAILS, type = CommandType.MAP, description = "details to specify disk offering parameters", since = "4.16")
@@ -218,7 +218,7 @@ public class CreateDiskOfferingCmd extends BaseCmd {
     }
 
     public boolean getShareable() {
-        return shareable;
+        return shareable == null ? false : shareable;
     }
 
     public List<Long> getDomainIds() {
