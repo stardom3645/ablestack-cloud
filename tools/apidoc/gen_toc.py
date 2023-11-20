@@ -268,7 +268,7 @@ known_categories = {
     'listVsphereStoragePolicies' : 'vSphere storage policies',
     'ConsoleEndpoint': 'Console Endpoint',
     'SecurityCheck': 'Security',
-    'IntegrityVerification': 'Security'
+    'IntegrityVerification': 'Security',
     'listQuarantinedIp': 'IP Quarantine',
     'updateQuarantinedIp': 'IP Quarantine',
     'removeQuarantinedIp': 'IP Quarantine',
