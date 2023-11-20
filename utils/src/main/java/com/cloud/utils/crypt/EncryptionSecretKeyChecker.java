@@ -29,9 +29,9 @@ import java.net.Socket;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.security.SecureRandom;
 import java.util.Map;
 import java.util.Properties;
-import java.util.Random;
 
 import javax.annotation.PostConstruct;
 
@@ -134,10 +134,10 @@ public class EncryptionSecretKeyChecker {
         initEncryptor(secretKey);
 
         if (isEncKey != null) {
-            Random random;
+            SecureRandom random;
             //secretKey 지우기 (0, 1 로 덮어쓰기 5회)
             for (int i = 0; i < 5; i++) {
-                random = new Random(System.currentTimeMillis());
+                random = new SecureRandom();
                 secretKey = Integer.toString(random.nextInt(899)+100, 2); //100~999사이의 정수를 2진수(0과 1)로 변환한 값을 변수에 5회 덮어쓰기
             }
             s_logger.info("Overwritten final secretKey value : " + secretKey);
