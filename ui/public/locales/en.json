@@ -3741,6 +3741,7 @@
 "user.update": "USER.UPDATE",
 "user.enable": "USER.ENABLE",
 "user.lock": "USER.LOCK",
+"user.request": "USER.REQUEST",
 "user.session.block": "USER.SESSION.BLOCK",
 "user.session.destroy": "USER.SESSION.DESTROY",
 "register.ssh.keypair": "REGISTER.SSH.KEYPAIR",
