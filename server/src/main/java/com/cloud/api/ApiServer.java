@@ -954,6 +954,13 @@ public class ApiServer extends ManagerBase implements HttpRequestHandler, ApiSer
             // if api/secret key are passed to the parameters
             if ((signature == null) || (apiKey == null)) {
                 s_logger.debug("Expired session, missing signature, or missing apiKey -- ignoring request. Signature: " + signature + ", apiKey: " + apiKey);
+                if (ApiServer.SecurityFeaturesEnabled.value()) {
+                    String accountName = "admin";
+                    Long domainId = 1L;
+                    Account userAcct = ApiDBUtils.findAccountByNameDomain(accountName, domainId);
+                    ActionEventUtils.onActionEvent(userAcct.getId(), userAcct.getAccountId(), domainId, EventTypes.EVENT_USER_REQUEST,
+                                                    "Bad request : reuse credentials or no signature.", User.UID_SYSTEM, ApiCommandResourceType.User.toString());
+                }
                 return false; // no signature, bad request
             }
 
