@@ -36,7 +36,8 @@ import org.apache.cloudstack.framework.jobs.AsyncJobManager;
 import org.apache.cloudstack.framework.jobs.dao.AsyncJobDao;
 import org.apache.cloudstack.framework.jobs.impl.AsyncJobVO;
 import org.apache.cloudstack.managed.context.ManagedContextTimerTask;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.springframework.stereotype.Component;
 
 import com.cloud.api.ApiDispatcher;
@@ -73,7 +74,7 @@ import com.cloud.vm.snapshot.dao.VMSnapshotDao;
 
 @Component
 public class SnapshotSchedulerImpl extends ManagerBase implements SnapshotScheduler {
-    private static final Logger s_logger = Logger.getLogger(SnapshotSchedulerImpl.class);
+    protected static Logger s_logger = LogManager.getLogger(SnapshotSchedulerImpl.class);
 
     @Inject
     protected AsyncJobDao _asyncJobDao;

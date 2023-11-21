@@ -30,7 +30,8 @@ import com.cloud.utils.script.Script;
 import com.cloud.utils.ssh.SshHelper;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.libvirt.Connect;
 import org.libvirt.Domain;
 import org.libvirt.DomainInfo.DomainState;
@@ -49,7 +50,7 @@ import org.libvirt.LibvirtException;
 @ResourceWrapper(handles =  StopCommand.class)
 public final class LibvirtStopCommandWrapper extends CommandWrapper<StopCommand, Answer, LibvirtComputingResource> {
 
-    private static final Logger s_logger = Logger.getLogger(LibvirtStopCommandWrapper.class);
+    protected static Logger s_logger = LogManager.getLogger(LibvirtStopCommandWrapper.class);
     private static final String CMDLINE_PATH = "/var/cache/cloud/cmdline";
     private static final String CMDLINE_BACKUP_PATH = "/var/cache/cloud/cmdline.backup";
 

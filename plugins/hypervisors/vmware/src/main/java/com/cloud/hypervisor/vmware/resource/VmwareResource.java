@@ -71,7 +71,8 @@ import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.math.NumberUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.apache.log4j.NDC;
 import org.joda.time.Duration;
 
@@ -385,7 +386,7 @@ import com.vmware.vim25.VmwareDistributedVirtualSwitchPvlanSpec;
 import com.vmware.vim25.VmwareDistributedVirtualSwitchVlanIdSpec;
 
 public class VmwareResource extends ServerResourceBase implements StoragePoolResource, ServerResource, VmwareHostService, VirtualRouterDeployer {
-    private static final Logger s_logger = Logger.getLogger(VmwareResource.class);
+    protected static Logger s_logger = LogManager.getLogger(VmwareResource.class);
     public static final String VMDK_EXTENSION = ".vmdk";
     private static final String EXECUTING_RESOURCE_COMMAND = "Executing resource command %s: [%s].";
     public static final String BASEPATH = "/usr/share/cloudstack-common/vms/";

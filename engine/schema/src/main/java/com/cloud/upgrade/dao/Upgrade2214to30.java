@@ -29,7 +29,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import com.cloud.offering.NetworkOffering;
 import com.cloud.utils.crypt.DBEncryptionUtil;
@@ -38,7 +39,7 @@ import com.cloud.utils.db.TransactionLegacy;
 import com.cloud.utils.exception.CloudRuntimeException;
 
 public class Upgrade2214to30 extends Upgrade30xBase implements DbUpgrade {
-    final static Logger s_logger = Logger.getLogger(Upgrade2214to30.class);
+    final static Logger s_logger = LogManager.getLogger(Upgrade2214to30.class);
 
     @Override
     public String[] getUpgradableVersionRange() {

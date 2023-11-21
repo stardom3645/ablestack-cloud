@@ -43,7 +43,8 @@ import org.apache.cloudstack.context.CallContext;
 import org.apache.cloudstack.framework.config.dao.ConfigurationDao;
 import org.apache.cloudstack.region.RegionVO;
 import org.apache.cloudstack.region.dao.RegionDao;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -61,7 +62,7 @@ import static org.mockito.Mockito.when;
 
 public class GlobalLoadBalancingRulesServiceImplTest extends TestCase {
 
-    private static final Logger s_logger = Logger.getLogger(GlobalLoadBalancingRulesServiceImplTest.class);
+    protected static Logger s_logger = LogManager.getLogger(GlobalLoadBalancingRulesServiceImplTest.class);
 
     @Override
     @Before

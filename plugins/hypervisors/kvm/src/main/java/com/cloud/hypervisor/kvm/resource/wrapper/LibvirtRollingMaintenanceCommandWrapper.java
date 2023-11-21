@@ -28,14 +28,15 @@ import com.cloud.resource.CommandWrapper;
 import com.cloud.resource.ResourceWrapper;
 import com.cloud.resource.RollingMaintenanceManager;
 import com.cloud.utils.exception.CloudRuntimeException;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import java.io.File;
 
 @ResourceWrapper(handles =  RollingMaintenanceCommand.class)
 public class LibvirtRollingMaintenanceCommandWrapper extends CommandWrapper<RollingMaintenanceCommand, RollingMaintenanceAnswer, LibvirtComputingResource> {
 
-    private static final Logger s_logger = Logger.getLogger(LibvirtRollingMaintenanceCommandWrapper.class);
+    protected static Logger s_logger = LogManager.getLogger(LibvirtRollingMaintenanceCommandWrapper.class);
 
     @Override
     public RollingMaintenanceAnswer execute(RollingMaintenanceCommand command, LibvirtComputingResource resource) {

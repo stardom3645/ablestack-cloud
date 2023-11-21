@@ -79,7 +79,8 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.EnumUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -256,7 +257,7 @@ import com.cloud.service.ServiceOfferingVO;
  * NetworkServiceImpl implements NetworkService.
  */
 public class NetworkServiceImpl extends ManagerBase implements NetworkService, Configurable {
-    private static final Logger s_logger = Logger.getLogger(NetworkServiceImpl.class);
+    protected static Logger s_logger = LogManager.getLogger(NetworkServiceImpl.class);
 
     private static final ConfigKey<Boolean> AllowDuplicateNetworkName = new ConfigKey<>("Advanced", Boolean.class,
             "allow.duplicate.networkname", "true", "Allow creating networks with same name in account", true, ConfigKey.Scope.Account);

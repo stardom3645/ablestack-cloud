@@ -41,7 +41,8 @@ import org.apache.cloudstack.framework.config.Configurable;
 import org.apache.cloudstack.managed.context.ManagedContextRunnable;
 import org.apache.cloudstack.management.ManagementServerHost;
 import org.apache.cloudstack.utils.identity.ManagementServerNode;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import com.cloud.alert.AlertManager;
 import com.cloud.cluster.ManagementServerHostVO;
@@ -62,7 +63,7 @@ import java.util.stream.Collectors;
 
 public class SecurityCheckServiceImpl extends ManagerBase implements PluggableService, SecurityCheckService, Configurable {
 
-    private static final Logger LOGGER = Logger.getLogger(SecurityCheckServiceImpl.class);
+    protected static Logger LOGGER = LogManager.getLogger(SecurityCheckServiceImpl.class);
 
     private static final ConfigKey<Integer> SecurityCheckInterval = new ConfigKey<>("Advanced", Integer.class,
             "security.check.interval", "1",

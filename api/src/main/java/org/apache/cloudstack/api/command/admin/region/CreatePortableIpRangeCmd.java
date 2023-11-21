@@ -17,7 +17,8 @@
 
 package org.apache.cloudstack.api.command.admin.region;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import org.apache.cloudstack.api.APICommand;
 import org.apache.cloudstack.api.ApiCommandResourceType;
@@ -43,7 +44,7 @@ import com.cloud.user.Account;
             responseHasSensitiveInfo = false)
 public class CreatePortableIpRangeCmd extends BaseAsyncCreateCmd {
 
-    public static final Logger s_logger = Logger.getLogger(CreatePortableIpRangeCmd.class.getName());
+    protected static Logger s_logger = LogManager.getLogger(CreatePortableIpRangeCmd.class.getName());
 
 
     /////////////////////////////////////////////////////

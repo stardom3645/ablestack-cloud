@@ -58,7 +58,8 @@ import org.apache.cloudstack.network.dao.NetworkPermissionDao;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import com.cloud.agent.AgentManager;
 import com.cloud.agent.Listener;
@@ -260,7 +261,7 @@ import com.googlecode.ipv6.IPv6Address;
  * NetworkManagerImpl implements NetworkManager.
  */
 public class NetworkOrchestrator extends ManagerBase implements NetworkOrchestrationService, Listener, Configurable {
-    static final Logger s_logger = Logger.getLogger(NetworkOrchestrator.class);
+    static final Logger s_logger = LogManager.getLogger(NetworkOrchestrator.class);
 
     @Inject
     EntityManager _entityMgr;

@@ -47,7 +47,8 @@ import org.apache.cloudstack.region.RegionManager;
 import org.apache.cloudstack.resourcedetail.dao.DiskOfferingDetailsDao;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.BooleanUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.springframework.stereotype.Component;
 
 import com.cloud.api.query.dao.DiskOfferingJoinDao;
@@ -97,7 +98,7 @@ import org.apache.commons.lang3.StringUtils;
 
 @Component
 public class DomainManagerImpl extends ManagerBase implements DomainManager, DomainService {
-    public static final Logger s_logger = Logger.getLogger(DomainManagerImpl.class);
+    protected static Logger s_logger = LogManager.getLogger(DomainManagerImpl.class);
 
     @Inject
     private DomainDao _domainDao;

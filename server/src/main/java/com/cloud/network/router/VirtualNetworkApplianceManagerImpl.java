@@ -74,7 +74,8 @@ import org.apache.cloudstack.utils.identity.ManagementServerNode;
 import org.apache.cloudstack.utils.usage.UsageUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 
@@ -285,7 +286,7 @@ import com.google.gson.reflect.TypeToken;
  */
 public class VirtualNetworkApplianceManagerImpl extends ManagerBase implements VirtualNetworkApplianceManager, VirtualNetworkApplianceService, VirtualMachineGuru, Listener,
 Configurable, StateListener<VirtualMachine.State, VirtualMachine.Event, VirtualMachine> {
-    private static final Logger s_logger = Logger.getLogger(VirtualNetworkApplianceManagerImpl.class);
+    protected static Logger s_logger = LogManager.getLogger(VirtualNetworkApplianceManagerImpl.class);
     private static final String CONNECTIVITY_TEST = "connectivity.test";
     private static final String FILESYSTEM_WRITABLE_TEST = "filesystem.writable.test";
     private static final String READONLY_FILESYSTEM_ERROR = "Read-only file system";

@@ -29,7 +29,8 @@ import java.util.Map;
 import javax.naming.ConfigurationException;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import com.trilead.ssh2.SCPClient;
 
@@ -46,7 +47,7 @@ import com.cloud.utils.script.Script;
 import com.cloud.utils.ssh.SSHCmdHelper;
 
 public class BaremetalPingPxeResource extends BaremetalPxeResourceBase {
-    private static final Logger s_logger = Logger.getLogger(BaremetalPingPxeResource.class);
+    protected static Logger s_logger = LogManager.getLogger(BaremetalPingPxeResource.class);
     private static final String Name = "BaremetalPingPxeResource";
     String _storageServer;
     String _pingDir;

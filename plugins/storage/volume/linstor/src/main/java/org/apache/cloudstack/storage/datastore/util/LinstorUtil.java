@@ -28,10 +28,11 @@ import java.util.Collections;
 import java.util.List;
 
 import com.cloud.utils.exception.CloudRuntimeException;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 public class LinstorUtil {
-    private static final Logger s_logger = Logger.getLogger(LinstorUtil.class);
+    protected static Logger s_logger = LogManager.getLogger(LinstorUtil.class);
 
     public static final String RSC_PREFIX = "cs-";
     public static final String RSC_GROUP = "resourceGroup";

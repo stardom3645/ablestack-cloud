@@ -54,7 +54,8 @@ import net.juniper.tungsten.api.types.VirtualMachineInterface;
 import net.juniper.tungsten.api.types.VirtualNetwork;
 import org.apache.cloudstack.network.tungsten.model.TungstenLoadBalancerMember;
 import org.apache.cloudstack.network.tungsten.model.TungstenRule;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -71,7 +72,7 @@ import java.util.UUID;
 @RunWith(MockitoJUnitRunner.class)
 public class TungstenApiTest {
 
-    private static final Logger s_logger = Logger.getLogger(TungstenApiTest.class);
+    protected static Logger s_logger = LogManager.getLogger(TungstenApiTest.class);
 
     private final TungstenApi tungstenApi = new TungstenApi();
     private Project project;

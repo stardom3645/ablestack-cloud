@@ -26,10 +26,11 @@ import javax.naming.ldap.InitialLdapContext;
 import javax.naming.ldap.LdapContext;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 public class LdapContextFactory {
-    private static final Logger s_logger = Logger.getLogger(LdapContextFactory.class.getName());
+    protected static Logger s_logger = LogManager.getLogger(LdapContextFactory.class.getName());
 
     @Inject
     private LdapConfiguration _ldapConfiguration;

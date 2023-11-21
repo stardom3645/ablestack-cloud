@@ -31,7 +31,8 @@ import org.apache.cloudstack.annotation.AnnotationService;
 import org.apache.cloudstack.annotation.dao.AnnotationDao;
 import org.apache.cloudstack.api.ApiConstants;
 import org.apache.commons.collections.MapUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.springframework.stereotype.Component;
 import org.apache.cloudstack.api.command.user.vmsnapshot.ListVMSnapshotCmd;
 import org.apache.cloudstack.context.CallContext;
@@ -131,7 +132,7 @@ import com.cloud.vm.snapshot.dao.VMSnapshotDetailsDao;
 
 @Component
 public class VMSnapshotManagerImpl extends MutualExclusiveIdsManagerBase implements VMSnapshotManager, VMSnapshotService, VmWorkJobHandler, Configurable {
-    private static final Logger s_logger = Logger.getLogger(VMSnapshotManagerImpl.class);
+    protected static Logger s_logger = LogManager.getLogger(VMSnapshotManagerImpl.class);
 
     public static final String VM_WORK_JOB_HANDLER = VMSnapshotManagerImpl.class.getSimpleName();
 

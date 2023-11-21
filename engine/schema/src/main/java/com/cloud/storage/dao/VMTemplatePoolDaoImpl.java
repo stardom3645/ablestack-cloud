@@ -31,7 +31,8 @@ import org.apache.cloudstack.engine.subsystem.api.storage.DataStoreManager;
 import org.apache.cloudstack.engine.subsystem.api.storage.ObjectInDataStoreStateMachine;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.springframework.stereotype.Component;
 
 import org.apache.cloudstack.engine.subsystem.api.storage.ObjectInDataStoreStateMachine.Event;
@@ -49,7 +50,7 @@ import com.cloud.utils.db.UpdateBuilder;
 
 @Component
 public class VMTemplatePoolDaoImpl extends GenericDaoBase<VMTemplateStoragePoolVO, Long> implements VMTemplatePoolDao {
-    public static final Logger s_logger = Logger.getLogger(VMTemplatePoolDaoImpl.class.getName());
+    protected static Logger s_logger = LogManager.getLogger(VMTemplatePoolDaoImpl.class.getName());
 
     @Inject
     DataStoreManager dataStoreManager;

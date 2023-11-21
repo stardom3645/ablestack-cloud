@@ -21,7 +21,8 @@ package com.cloud.hypervisor.kvm.resource.wrapper;
 import org.apache.cloudstack.direct.download.DirectDownloadHelper;
 import org.apache.cloudstack.agent.directdownload.CheckUrlAnswer;
 import org.apache.cloudstack.agent.directdownload.CheckUrlCommand;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import com.cloud.hypervisor.kvm.resource.LibvirtComputingResource;
 import com.cloud.resource.CommandWrapper;
@@ -30,7 +31,7 @@ import com.cloud.resource.ResourceWrapper;
 @ResourceWrapper(handles =  CheckUrlCommand.class)
 public class LibvirtCheckUrlCommand extends CommandWrapper<CheckUrlCommand, CheckUrlAnswer, LibvirtComputingResource> {
 
-    private static final Logger s_logger = Logger.getLogger(LibvirtCheckUrlCommand.class);
+    protected static Logger s_logger = LogManager.getLogger(LibvirtCheckUrlCommand.class);
 
     @Override
     public CheckUrlAnswer execute(CheckUrlCommand cmd, LibvirtComputingResource serverResource) {

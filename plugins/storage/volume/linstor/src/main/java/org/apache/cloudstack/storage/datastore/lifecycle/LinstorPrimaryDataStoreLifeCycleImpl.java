@@ -51,10 +51,11 @@ import org.apache.cloudstack.storage.datastore.db.PrimaryDataStoreDao;
 import org.apache.cloudstack.storage.datastore.db.StoragePoolVO;
 import org.apache.cloudstack.storage.datastore.util.LinstorUtil;
 import org.apache.cloudstack.storage.volume.datastore.PrimaryDataStoreHelper;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 public class LinstorPrimaryDataStoreLifeCycleImpl implements PrimaryDataStoreLifeCycle {
-    private static final Logger s_logger = Logger.getLogger(LinstorPrimaryDataStoreLifeCycleImpl.class);
+    protected static Logger s_logger = LogManager.getLogger(LinstorPrimaryDataStoreLifeCycleImpl.class);
 
     @Inject
     private ClusterDao clusterDao;

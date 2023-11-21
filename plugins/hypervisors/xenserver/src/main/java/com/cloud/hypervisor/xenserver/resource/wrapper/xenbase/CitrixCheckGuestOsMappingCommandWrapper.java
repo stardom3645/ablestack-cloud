@@ -22,7 +22,8 @@ package com.cloud.hypervisor.xenserver.resource.wrapper.xenbase;
 import java.util.Set;
 
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import com.cloud.agent.api.Answer;
 import com.cloud.agent.api.CheckGuestOsMappingAnswer;
@@ -36,7 +37,7 @@ import com.xensource.xenapi.VM;
 @ResourceWrapper(handles =  CheckGuestOsMappingCommand.class)
 public final class CitrixCheckGuestOsMappingCommandWrapper extends CommandWrapper<CheckGuestOsMappingCommand, Answer, CitrixResourceBase> {
 
-    private static final Logger s_logger = Logger.getLogger(CitrixCheckGuestOsMappingCommandWrapper.class);
+    protected static Logger s_logger = LogManager.getLogger(CitrixCheckGuestOsMappingCommandWrapper.class);
 
     @Override
     public Answer execute(final CheckGuestOsMappingCommand command, final CitrixResourceBase citrixResourceBase) {

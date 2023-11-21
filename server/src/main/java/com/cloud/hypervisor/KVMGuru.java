@@ -46,7 +46,8 @@ import org.apache.cloudstack.storage.command.CopyCommand;
 import org.apache.cloudstack.storage.command.StorageSubSystemCommand;
 import org.apache.cloudstack.utils.reflectiontostringbuilderutils.ReflectionToStringBuilderUtils;
 import org.apache.commons.collections.MapUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import javax.inject.Inject;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -71,7 +72,7 @@ public class KVMGuru extends HypervisorGuruBase implements HypervisorGuru {
     @Inject
     HypervisorCapabilitiesDao _hypervisorCapabilitiesDao;
 
-    public static final Logger s_logger = Logger.getLogger(KVMGuru.class);
+    protected static Logger s_logger = LogManager.getLogger(KVMGuru.class);
 
     @Override
     public HypervisorType getHypervisorType() {

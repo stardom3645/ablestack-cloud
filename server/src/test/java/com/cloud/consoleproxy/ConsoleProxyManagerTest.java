@@ -31,7 +31,8 @@ import com.cloud.vm.ConsoleProxyVO;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonParseException;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -54,7 +55,7 @@ import static org.mockito.Mockito.when;
 
 public class ConsoleProxyManagerTest {
 
-    private static final Logger s_logger = Logger.getLogger(ConsoleProxyManagerTest.class);
+    protected static Logger s_logger = LogManager.getLogger(ConsoleProxyManagerTest.class);
 
     @Mock
     GlobalLock globalLockMock;

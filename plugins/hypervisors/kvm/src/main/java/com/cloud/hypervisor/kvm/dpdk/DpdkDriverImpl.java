@@ -21,7 +21,8 @@ package com.cloud.hypervisor.kvm.dpdk;
 import com.cloud.utils.component.AdapterBase;
 import com.cloud.utils.script.Script;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import java.util.Map;
 
@@ -31,7 +32,7 @@ public class DpdkDriverImpl extends AdapterBase implements DpdkDriver {
     private final String dpdkPortVhostUserType = "dpdkvhostuser";
     private final String dpdkPortVhostUserClientType = "dpdkvhostuserclient";
 
-    private static final Logger s_logger = Logger.getLogger(DpdkDriver.class);
+    protected static Logger s_logger = LogManager.getLogger(DpdkDriver.class);
 
     public DpdkDriverImpl() {
     }

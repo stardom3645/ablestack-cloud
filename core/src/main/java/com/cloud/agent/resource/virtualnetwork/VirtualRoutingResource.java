@@ -51,7 +51,8 @@ import org.apache.cloudstack.diagnostics.PrepareFilesCommand;
 import org.apache.cloudstack.utils.security.KeyStoreUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.net.util.SubnetUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.joda.time.Duration;
 
 import com.cloud.agent.api.Answer;
@@ -85,7 +86,7 @@ import com.cloud.utils.exception.CloudRuntimeException;
  **/
 public class VirtualRoutingResource {
 
-    private static final Logger s_logger = Logger.getLogger(VirtualRoutingResource.class);
+    protected static Logger s_logger = LogManager.getLogger(VirtualRoutingResource.class);
     private VirtualRouterDeployer _vrDeployer;
     private Map<String, Queue<NetworkElementCommand>> _vrAggregateCommandsSet;
     protected Map<String, Lock> _vrLockMap = new HashMap<String, Lock>();

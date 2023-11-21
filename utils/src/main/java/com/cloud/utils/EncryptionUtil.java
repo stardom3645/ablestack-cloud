@@ -21,7 +21,8 @@ package com.cloud.utils;
 import com.cloud.utils.crypt.CloudStackEncryptor;
 import com.cloud.utils.exception.CloudRuntimeException;
 import org.apache.commons.codec.binary.Base64;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
@@ -30,7 +31,7 @@ import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 
 public class EncryptionUtil {
-    public static final Logger s_logger = Logger.getLogger(EncryptionUtil.class.getName());
+    protected static Logger s_logger = LogManager.getLogger(EncryptionUtil.class.getName());
     private static CloudStackEncryptor encryptor;
 
     private static void initialize(String key) {

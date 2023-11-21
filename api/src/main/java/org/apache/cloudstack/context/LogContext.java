@@ -20,7 +20,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.apache.log4j.MDC;
 
 import org.apache.cloudstack.managed.threadlocal.ManagedThreadLocal;
@@ -37,7 +38,7 @@ import com.cloud.utils.exception.CloudRuntimeException;
  * class must be always be available in all CloudStack code.
  */
 public class LogContext {
-    private static final Logger s_logger = Logger.getLogger(LogContext.class);
+    protected static Logger s_logger = LogManager.getLogger(LogContext.class);
     private static ManagedThreadLocal<LogContext> s_currentContext = new ManagedThreadLocal<LogContext>();
 
     private String logContextId;

@@ -19,7 +19,8 @@ package com.cloud.hypervisor.kvm.resource;
 import com.cloud.agent.properties.AgentProperties;
 import com.cloud.agent.properties.AgentPropertiesFileHandler;
 import com.cloud.utils.script.Script;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.libvirt.Connect;
 import org.libvirt.LibvirtException;
 import org.libvirt.StoragePool;
@@ -37,7 +38,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class KVMHAMonitor extends KVMHABase implements Runnable {
 
-    private static final Logger s_logger = Logger.getLogger(KVMHAMonitor.class);
+    protected static Logger s_logger = LogManager.getLogger(KVMHAMonitor.class);
     private final Map<String, NfsStoragePool> nfsstoragePool = new ConcurrentHashMap<>();
     private final Map<String, RbdStoragePool> rbdstoragePool = new ConcurrentHashMap<>();
     private final Map<String, ClvmStoragePool> clvmstoragePool = new ConcurrentHashMap<>();

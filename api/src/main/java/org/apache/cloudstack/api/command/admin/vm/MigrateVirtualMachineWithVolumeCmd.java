@@ -33,7 +33,8 @@ import org.apache.cloudstack.api.response.HostResponse;
 import org.apache.cloudstack.api.response.SystemVmResponse;
 import org.apache.cloudstack.api.response.UserVmResponse;
 import org.apache.commons.collections.MapUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import com.cloud.event.EventTypes;
 import com.cloud.exception.ConcurrentOperationException;
@@ -52,7 +53,7 @@ import com.cloud.vm.VirtualMachine;
             requestHasSensitiveInfo = false,
             responseHasSensitiveInfo = true)
 public class MigrateVirtualMachineWithVolumeCmd extends BaseAsyncCmd {
-    public static final Logger s_logger = Logger.getLogger(MigrateVirtualMachineWithVolumeCmd.class.getName());
+    protected static Logger s_logger = LogManager.getLogger(MigrateVirtualMachineWithVolumeCmd.class.getName());
 
 
     /////////////////////////////////////////////////////

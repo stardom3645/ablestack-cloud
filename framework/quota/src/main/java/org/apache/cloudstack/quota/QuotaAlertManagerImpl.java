@@ -40,7 +40,8 @@ import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang.text.StrSubstitutor;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.ObjectUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.springframework.stereotype.Component;
 
 import com.cloud.domain.DomainVO;
@@ -64,7 +65,7 @@ import org.apache.commons.lang3.BooleanUtils;
 
 @Component
 public class QuotaAlertManagerImpl extends ManagerBase implements QuotaAlertManager {
-    private static final Logger s_logger = Logger.getLogger(QuotaAlertManagerImpl.class);
+    protected static Logger s_logger = LogManager.getLogger(QuotaAlertManagerImpl.class);
 
     @Inject
     private AccountDao _accountDao;

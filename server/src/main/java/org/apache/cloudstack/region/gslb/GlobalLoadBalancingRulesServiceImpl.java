@@ -35,7 +35,8 @@ import org.apache.cloudstack.context.CallContext;
 import org.apache.cloudstack.framework.config.dao.ConfigurationDao;
 import org.apache.cloudstack.region.Region;
 import org.apache.cloudstack.region.dao.RegionDao;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import com.cloud.agent.AgentManager;
 import com.cloud.agent.api.routing.GlobalLoadBalancerConfigCommand;
@@ -69,7 +70,7 @@ import com.cloud.utils.net.NetUtils;
 
 public class GlobalLoadBalancingRulesServiceImpl implements GlobalLoadBalancingRulesService {
 
-    private static final Logger s_logger = Logger.getLogger(GlobalLoadBalancingRulesServiceImpl.class);
+    protected static Logger s_logger = LogManager.getLogger(GlobalLoadBalancingRulesServiceImpl.class);
 
     @Inject
     AccountManager _accountMgr;

@@ -21,7 +21,8 @@ import com.cloud.utils.exception.CloudRuntimeException;
 import com.cloud.utils.script.OutputInterpreter;
 import com.cloud.utils.script.Script;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import java.io.File;
 import java.io.IOException;
@@ -36,7 +37,7 @@ public class RollingMaintenanceServiceExecutor extends RollingMaintenanceExecuto
     private static final String resultsFileSuffix = "rolling-maintenance-results";
     private static final String outputFileSuffix = "rolling-maintenance-output";
 
-    private static final Logger s_logger = Logger.getLogger(RollingMaintenanceServiceExecutor.class);
+    protected static Logger s_logger = LogManager.getLogger(RollingMaintenanceServiceExecutor.class);
 
     public RollingMaintenanceServiceExecutor(String hooksDir) {
         super(hooksDir);

@@ -41,7 +41,8 @@ import org.apache.cloudstack.api.response.UcsManagerResponse;
 import org.apache.cloudstack.api.response.UcsProfileResponse;
 import org.apache.cloudstack.framework.config.dao.ConfigurationDao;
 import org.apache.cloudstack.managed.context.ManagedContextRunnable;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import com.cloud.configuration.Config;
 import com.cloud.dc.ClusterDetailsDao;
@@ -67,7 +68,7 @@ import com.cloud.utils.xmlobject.XmlObject;
 import com.cloud.utils.xmlobject.XmlObjectParser;
 
 public class UcsManagerImpl implements UcsManager {
-    public static final Logger s_logger = Logger.getLogger(UcsManagerImpl.class);
+    protected static Logger s_logger = LogManager.getLogger(UcsManagerImpl.class);
     public static final Long COOKIE_TTL = TimeUnit.MILLISECONDS.convert(100L, TimeUnit.MINUTES);
     public static final Long COOKIE_REFRESH_TTL = TimeUnit.MILLISECONDS.convert(10L, TimeUnit.MINUTES);
 

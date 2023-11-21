@@ -23,7 +23,8 @@ import com.cloud.network.dao.TungstenProviderDao;
 import com.cloud.network.element.TungstenProviderVO;
 import org.apache.cloudstack.network.tungsten.agent.api.TungstenAnswer;
 import org.apache.cloudstack.network.tungsten.agent.api.TungstenCommand;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.springframework.stereotype.Component;
 
 import javax.inject.Inject;
@@ -31,7 +32,7 @@ import javax.inject.Inject;
 @Component
 public class TungstenFabricUtils {
 
-    private static final Logger s_logger = Logger.getLogger(TungstenFabricUtils.class);
+    protected static Logger s_logger = LogManager.getLogger(TungstenFabricUtils.class);
 
     @Inject
     AgentManager agentMgr;

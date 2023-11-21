@@ -31,7 +31,8 @@ import java.util.Iterator;
 import java.util.Properties;
 
 import org.apache.cloudstack.storage.command.DownloadCommand.ResourceType;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import com.cloud.storage.Storage.ImageFormat;
 import com.cloud.storage.StorageLayer;
@@ -39,7 +40,7 @@ import com.cloud.storage.template.Processor.FormatInfo;
 import com.cloud.utils.NumbersUtil;
 
 public class TemplateLocation {
-    private static final Logger s_logger = Logger.getLogger(TemplateLocation.class);
+    protected static Logger s_logger = LogManager.getLogger(TemplateLocation.class);
     public final static String Filename = "template.properties";
 
     StorageLayer _storage;

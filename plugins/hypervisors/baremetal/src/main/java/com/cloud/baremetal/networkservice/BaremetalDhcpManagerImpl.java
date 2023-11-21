@@ -33,7 +33,6 @@ import javax.naming.ConfigurationException;
 
 import org.apache.cloudstack.api.AddBaremetalDhcpCmd;
 import org.apache.cloudstack.api.ListBaremetalDhcpCmd;
-import org.apache.log4j.Logger;
 
 import com.cloud.agent.AgentManager;
 import com.cloud.agent.api.Answer;
@@ -75,7 +74,6 @@ import com.cloud.vm.dao.NicDao;
 import com.cloud.vm.dao.UserVmDao;
 
 public class BaremetalDhcpManagerImpl extends ManagerBase implements BaremetalDhcpManager, ResourceStateAdapter {
-    private static final org.apache.log4j.Logger s_logger = Logger.getLogger(BaremetalDhcpManagerImpl.class);
     protected String _name;
     @Inject
     DataCenterDao _dcDao;

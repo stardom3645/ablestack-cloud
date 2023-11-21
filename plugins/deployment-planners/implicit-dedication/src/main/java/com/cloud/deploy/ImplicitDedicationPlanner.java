@@ -25,7 +25,8 @@ import java.util.Set;
 import javax.inject.Inject;
 import javax.naming.ConfigurationException;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import com.cloud.configuration.Config;
 import com.cloud.exception.InsufficientServerCapacityException;
@@ -43,7 +44,7 @@ import org.springframework.util.CollectionUtils;
 
 public class ImplicitDedicationPlanner extends FirstFitPlanner implements DeploymentClusterPlanner {
 
-    private static final Logger s_logger = Logger.getLogger(ImplicitDedicationPlanner.class);
+    protected static Logger s_logger = LogManager.getLogger(ImplicitDedicationPlanner.class);
 
     @Inject
     private ServiceOfferingDao serviceOfferingDao;

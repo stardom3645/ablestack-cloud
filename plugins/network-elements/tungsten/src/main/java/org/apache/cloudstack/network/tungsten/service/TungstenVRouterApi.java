@@ -19,12 +19,13 @@ package org.apache.cloudstack.network.tungsten.service;
 import org.apache.cloudstack.network.tungsten.vrouter.Port;
 import org.apache.cloudstack.network.tungsten.vrouter.VRouterApiConnector;
 import org.apache.cloudstack.network.tungsten.vrouter.VRouterApiConnectorFactory;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import java.io.IOException;
 
 public class TungstenVRouterApi {
-    private static final Logger s_logger = Logger.getLogger(TungstenVRouterApi.class);
+    protected static Logger s_logger = LogManager.getLogger(TungstenVRouterApi.class);
 
     private TungstenVRouterApi() {
     }

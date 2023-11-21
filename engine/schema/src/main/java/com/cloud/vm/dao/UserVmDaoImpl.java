@@ -31,7 +31,8 @@ import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import com.cloud.network.Network;
 import com.cloud.network.dao.NetworkDao;
@@ -60,7 +61,7 @@ import com.cloud.vm.dao.UserVmData.NicData;
 import com.cloud.vm.dao.UserVmData.SecurityGroupData;
 
 public class UserVmDaoImpl extends GenericDaoBase<UserVmVO, Long> implements UserVmDao {
-    public static final Logger s_logger = Logger.getLogger(UserVmDaoImpl.class);
+    protected static Logger s_logger = LogManager.getLogger(UserVmDaoImpl.class);
 
     protected SearchBuilder<UserVmVO> AccountPodSearch;
     protected SearchBuilder<UserVmVO> AccountDataCenterSearch;

@@ -52,7 +52,8 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import com.cloud.agent.AgentManager;
 import com.cloud.agent.api.Answer;
@@ -174,7 +175,7 @@ import com.cloud.vm.dao.VMInstanceDao;
 */
 public class SecondaryStorageManagerImpl extends ManagerBase implements SecondaryStorageVmManager, VirtualMachineGuru, SystemVmLoadScanHandler<Long>,
         ResourceStateAdapter, Configurable {
-    private static final Logger s_logger = Logger.getLogger(SecondaryStorageManagerImpl.class);
+    protected static Logger s_logger = LogManager.getLogger(SecondaryStorageManagerImpl.class);
     private static final int ACQUIRE_GLOBAL_LOCK_TIMEOUT_FOR_SYNC_IN_SECONDS = 180;
     private static final int STARTUP_DELAY_IN_MILLISECONDS = 60000;
 

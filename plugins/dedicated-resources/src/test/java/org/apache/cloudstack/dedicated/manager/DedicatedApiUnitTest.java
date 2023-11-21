@@ -32,7 +32,8 @@ import org.apache.cloudstack.context.CallContext;
 import org.apache.cloudstack.dedicated.DedicatedResourceManagerImpl;
 import org.apache.cloudstack.framework.config.dao.ConfigurationDao;
 import org.apache.cloudstack.test.utils.SpringUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -74,7 +75,7 @@ import junit.framework.Assert;
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(loader = AnnotationConfigContextLoader.class)
 public class DedicatedApiUnitTest {
-    public static final Logger s_logger = Logger.getLogger(DedicatedApiUnitTest.class);
+    protected static Logger s_logger = LogManager.getLogger(DedicatedApiUnitTest.class);
     @Inject
     DedicatedResourceManagerImpl _dedicatedService = new DedicatedResourceManagerImpl();
 

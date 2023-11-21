@@ -64,7 +64,8 @@ import org.apache.cloudstack.utils.identity.ManagementServerNode;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import com.amazonaws.util.CollectionUtils;
 import com.cloud.agent.AgentManager;
@@ -171,7 +172,7 @@ import com.vmware.vim25.AboutInfo;
 import com.vmware.vim25.ManagedObjectReference;
 
 public class VmwareManagerImpl extends ManagerBase implements VmwareManager, VmwareStorageMount, Listener, VmwareDatacenterService, Configurable {
-    private static final Logger s_logger = Logger.getLogger(VmwareManagerImpl.class);
+    protected static Logger s_logger = LogManager.getLogger(VmwareManagerImpl.class);
 
     private static final long SECONDS_PER_MINUTE = 60;
     private static final int DEFAULT_PORTS_PER_DV_PORT_GROUP_VSPHERE4_x = 256;

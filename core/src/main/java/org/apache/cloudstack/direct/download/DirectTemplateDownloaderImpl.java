@@ -22,7 +22,8 @@ import com.cloud.utils.UriUtils;
 import com.cloud.utils.exception.CloudRuntimeException;
 import org.apache.cloudstack.utils.security.DigestHelper;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -43,7 +44,7 @@ public abstract class DirectTemplateDownloaderImpl implements DirectTemplateDown
     private boolean redownload = false;
     protected String temporaryDownloadPath;
 
-    public static final Logger s_logger = Logger.getLogger(DirectTemplateDownloaderImpl.class.getName());
+    protected static Logger s_logger = LogManager.getLogger(DirectTemplateDownloaderImpl.class.getName());
 
     protected DirectTemplateDownloaderImpl(final String url, final String destPoolPath, final Long templateId,
                                            final String checksum, final String temporaryDownloadPath) {

@@ -27,14 +27,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import com.cloud.dc.DataCenter.NetworkType;
 import com.cloud.utils.crypt.DBEncryptionUtil;
 import com.cloud.utils.exception.CloudRuntimeException;
 
 public class Upgrade302to40 extends Upgrade30xBase {
-    final static Logger s_logger = Logger.getLogger(Upgrade302to40.class);
+    final static Logger s_logger = LogManager.getLogger(Upgrade302to40.class);
 
     @Override
     public String[] getUpgradableVersionRange() {

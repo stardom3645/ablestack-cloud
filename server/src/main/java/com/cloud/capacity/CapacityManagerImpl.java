@@ -36,7 +36,8 @@ import org.apache.cloudstack.framework.config.dao.ConfigurationDao;
 import org.apache.cloudstack.framework.messagebus.MessageBus;
 import org.apache.cloudstack.framework.messagebus.PublishScope;
 import org.apache.cloudstack.storage.datastore.db.StoragePoolVO;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import com.cloud.agent.AgentManager;
 import com.cloud.agent.Listener;
@@ -100,7 +101,7 @@ import com.cloud.vm.snapshot.dao.VMSnapshotDao;
 
 public class CapacityManagerImpl extends ManagerBase implements CapacityManager, StateListener<State, VirtualMachine.Event, VirtualMachine>, Listener, ResourceListener,
         Configurable {
-    private static final Logger s_logger = Logger.getLogger(CapacityManagerImpl.class);
+    protected static Logger s_logger = LogManager.getLogger(CapacityManagerImpl.class);
     @Inject
     CapacityDao _capacityDao;
     @Inject

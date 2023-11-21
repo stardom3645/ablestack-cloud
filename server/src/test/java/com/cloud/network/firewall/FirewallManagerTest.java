@@ -37,7 +37,8 @@ import com.cloud.user.DomainManager;
 import com.cloud.utils.component.ComponentContext;
 import junit.framework.Assert;
 import org.apache.cloudstack.engine.orchestration.service.NetworkOrchestrationService;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -60,7 +61,7 @@ import static org.mockito.Mockito.when;
 
 @RunWith(MockitoJUnitRunner.class)
 public class FirewallManagerTest {
-    private static final Logger s_logger = Logger.getLogger(FirewallManagerTest.class);
+    protected static Logger s_logger = LogManager.getLogger(FirewallManagerTest.class);
 
 
     @Ignore("Requires database to be set up")

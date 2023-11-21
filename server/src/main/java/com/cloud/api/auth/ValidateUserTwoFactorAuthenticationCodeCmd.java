@@ -38,7 +38,8 @@ import org.apache.cloudstack.api.response.SuccessResponse;
 import org.apache.cloudstack.context.CallContext;
 import org.apache.cloudstack.resourcedetail.UserDetailVO;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
@@ -54,7 +55,7 @@ import java.util.Map;
 public class ValidateUserTwoFactorAuthenticationCodeCmd extends BaseCmd implements APIAuthenticator {
 
     public static final String APINAME = "validateUserTwoFactorAuthenticationCode";
-    public static final Logger s_logger = Logger.getLogger(ValidateUserTwoFactorAuthenticationCodeCmd.class.getName());
+    protected static Logger s_logger = LogManager.getLogger(ValidateUserTwoFactorAuthenticationCodeCmd.class.getName());
 
     @Inject
     private AccountManager accountManager;

@@ -26,7 +26,8 @@ import java.util.TimeZone;
 
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.springframework.stereotype.Component;
 
 import com.cloud.usage.UsageSnapshotOnPrimaryVO;
@@ -36,7 +37,7 @@ import com.cloud.utils.db.TransactionLegacy;
 
 @Component
 public class UsageVMSnapshotOnPrimaryDaoImpl extends GenericDaoBase<UsageSnapshotOnPrimaryVO, Long> implements UsageVMSnapshotOnPrimaryDao {
-    public static final Logger s_logger = Logger.getLogger(UsageVMSnapshotOnPrimaryDaoImpl.class.getName());
+    protected static Logger s_logger = LogManager.getLogger(UsageVMSnapshotOnPrimaryDaoImpl.class.getName());
     protected static final String GET_USAGE_RECORDS_BY_ACCOUNT = "SELECT volume_id, zone_id, account_id, domain_id, vm_id, name, type, physicalsize, virtualsize, created, deleted, vm_snapshot_id "
         + " FROM usage_snapshot_on_primary" + " WHERE account_id = ? " + " AND ( (created < ? AND deleted is NULL)"
         + "     OR ( deleted BETWEEN ? AND ?)) ORDER BY created asc";

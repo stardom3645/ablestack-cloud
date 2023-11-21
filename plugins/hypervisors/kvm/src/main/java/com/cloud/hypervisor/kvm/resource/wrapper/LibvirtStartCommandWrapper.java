@@ -24,7 +24,8 @@ import java.net.URISyntaxException;
 
 import com.cloud.agent.resource.virtualnetwork.VRScripts;
 import com.cloud.utils.FileUtil;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.libvirt.Connect;
 import org.libvirt.DomainInfo.DomainState;
 import org.libvirt.LibvirtException;
@@ -49,7 +50,7 @@ import com.cloud.vm.VirtualMachine;
 @ResourceWrapper(handles =  StartCommand.class)
 public final class LibvirtStartCommandWrapper extends CommandWrapper<StartCommand, Answer, LibvirtComputingResource> {
 
-    private static final Logger s_logger = Logger.getLogger(LibvirtStartCommandWrapper.class);
+    protected static Logger s_logger = LogManager.getLogger(LibvirtStartCommandWrapper.class);
 
     @Override
     public Answer execute(final StartCommand command, final LibvirtComputingResource libvirtComputingResource) {

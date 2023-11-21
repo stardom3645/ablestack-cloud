@@ -41,7 +41,8 @@ import org.apache.commons.dbcp2.PoolingDataSource;
 import org.apache.commons.pool2.ObjectPool;
 import org.apache.commons.pool2.impl.GenericObjectPool;
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import com.cloud.utils.Pair;
 import com.cloud.utils.PropertiesUtil;
@@ -63,10 +64,10 @@ import com.cloud.utils.mgmt.JmxUtil;
  * it is stored with TLS and is one per thread.  Use appropriately.
  */
 public class TransactionLegacy implements Closeable {
-    private static final Logger s_logger = Logger.getLogger(Transaction.class.getName() + "." + "Transaction");
-    private static final Logger s_stmtLogger = Logger.getLogger(Transaction.class.getName() + "." + "Statement");
-    private static final Logger s_lockLogger = Logger.getLogger(Transaction.class.getName() + "." + "Lock");
-    private static final Logger s_connLogger = Logger.getLogger(Transaction.class.getName() + "." + "Connection");
+    protected static Logger s_logger = LogManager.getLogger(Transaction.class.getName() + "." + "Transaction");
+    protected static Logger s_stmtLogger = LogManager.getLogger(Transaction.class.getName() + "." + "Statement");
+    protected static Logger s_lockLogger = LogManager.getLogger(Transaction.class.getName() + "." + "Lock");
+    protected static Logger s_connLogger = LogManager.getLogger(Transaction.class.getName() + "." + "Connection");
 
     private static final ThreadLocal<TransactionLegacy> tls = new ThreadLocal<TransactionLegacy>();
     private static final String START_TXN = "start_txn";

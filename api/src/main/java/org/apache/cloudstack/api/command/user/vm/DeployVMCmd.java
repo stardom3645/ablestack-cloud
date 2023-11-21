@@ -56,7 +56,8 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import com.cloud.agent.api.LogLevel;
 import com.cloud.event.EventTypes;
@@ -80,7 +81,7 @@ import com.cloud.vm.VmDetailConstants;
 @APICommand(name = "deployVirtualMachine", description = "Creates and automatically starts a virtual machine based on a service offering, disk offering, and template.", responseObject = UserVmResponse.class, responseView = ResponseView.Restricted, entityType = {VirtualMachine.class},
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = true)
 public class DeployVMCmd extends BaseAsyncCreateCustomIdCmd implements SecurityGroupAction, UserCmd {
-    public static final Logger s_logger = Logger.getLogger(DeployVMCmd.class.getName());
+    protected static Logger s_logger = LogManager.getLogger(DeployVMCmd.class.getName());
 
     private static final String s_name = "deployvirtualmachineresponse";
 

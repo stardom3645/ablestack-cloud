@@ -27,13 +27,14 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import java.io.IOException;
 import java.util.List;
 
 public class VRouterApiConnectorImpl implements VRouterApiConnector {
-    private static final Logger s_logger = Logger.getLogger(VRouterApiConnectorImpl.class);
+    protected static Logger s_logger = LogManager.getLogger(VRouterApiConnectorImpl.class);
     private final String vrouterUrl;
 
     public VRouterApiConnectorImpl(VRouter vRouter) {

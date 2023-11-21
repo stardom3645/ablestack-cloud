@@ -34,7 +34,8 @@ import org.apache.commons.daemon.DaemonInitException;
 import org.apache.commons.lang.math.NumberUtils;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.apache.log4j.xml.DOMConfigurator;
 
 import javax.naming.ConfigurationException;
@@ -53,7 +54,7 @@ import java.util.Properties;
 import java.util.UUID;
 
 public class AgentShell implements IAgentShell, Daemon {
-    private static final Logger s_logger = Logger.getLogger(AgentShell.class.getName());
+    protected static Logger s_logger = LogManager.getLogger(AgentShell.class.getName());
 
     private final Properties _properties = new Properties();
     private final Map<String, Object> _cmdLineProperties = new HashMap<String, Object>();

@@ -19,7 +19,8 @@ package com.cloud.hypervisor.kvm.resource.wrapper;
 
 import java.util.List;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.libvirt.Connect;
 import org.libvirt.Domain;
 import org.libvirt.LibvirtException;
@@ -38,7 +39,7 @@ import com.cloud.resource.ResourceWrapper;
 @ResourceWrapper(handles =  ReplugNicCommand.class)
 public final class LibvirtReplugNicCommandWrapper extends CommandWrapper<ReplugNicCommand, Answer, LibvirtComputingResource> {
 
-    private static final Logger s_logger = Logger.getLogger(LibvirtReplugNicCommandWrapper.class);
+    protected static Logger s_logger = LogManager.getLogger(LibvirtReplugNicCommandWrapper.class);
     public enum DomainAffect {
         CURRENT(0), LIVE(1), CONFIG(2), BOTH(3);
 

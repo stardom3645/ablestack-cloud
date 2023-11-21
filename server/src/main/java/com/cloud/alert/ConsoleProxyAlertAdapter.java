@@ -22,7 +22,8 @@ import javax.inject.Inject;
 import javax.naming.ConfigurationException;
 
 import org.apache.cloudstack.alert.AlertService;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.springframework.stereotype.Component;
 
 import com.cloud.consoleproxy.ConsoleProxyAlertEventArgs;
@@ -38,7 +39,7 @@ import com.cloud.vm.dao.ConsoleProxyDao;
 @Component
 public class ConsoleProxyAlertAdapter extends AdapterBase implements AlertAdapter {
 
-    private static final Logger s_logger = Logger.getLogger(ConsoleProxyAlertAdapter.class);
+    protected static Logger s_logger = LogManager.getLogger(ConsoleProxyAlertAdapter.class);
 
     @Inject
     private AlertManager _alertMgr;

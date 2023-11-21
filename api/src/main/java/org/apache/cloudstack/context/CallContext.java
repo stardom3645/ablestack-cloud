@@ -23,7 +23,8 @@ import java.util.UUID;
 
 import org.apache.cloudstack.api.ApiCommandResourceType;
 import org.apache.cloudstack.managed.threadlocal.ManagedThreadLocal;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.apache.log4j.NDC;
 
 import com.cloud.exception.CloudAuthenticationException;
@@ -40,7 +41,7 @@ import com.cloud.utils.exception.CloudRuntimeException;
  * entry point must set the context and remove it when the thread finishes.
  */
 public class CallContext {
-    private static final Logger s_logger = Logger.getLogger(CallContext.class);
+    protected static Logger s_logger = LogManager.getLogger(CallContext.class);
     private static ManagedThreadLocal<CallContext> s_currentContext = new ManagedThreadLocal<CallContext>();
     private static ManagedThreadLocal<Stack<CallContext>> s_currentContextStack = new ManagedThreadLocal<Stack<CallContext>>() {
         @Override

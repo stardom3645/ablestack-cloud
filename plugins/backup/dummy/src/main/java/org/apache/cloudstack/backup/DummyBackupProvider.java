@@ -25,7 +25,8 @@ import java.util.Map;
 import javax.inject.Inject;
 
 import org.apache.cloudstack.backup.dao.BackupDao;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import com.cloud.utils.Pair;
 import com.cloud.utils.component.AdapterBase;
@@ -35,7 +36,7 @@ import com.cloud.vm.VirtualMachine;
 
 public class DummyBackupProvider extends AdapterBase implements BackupProvider {
 
-    private static final Logger s_logger = Logger.getLogger(DummyBackupProvider.class);
+    protected static Logger s_logger = LogManager.getLogger(DummyBackupProvider.class);
 
     @Inject
     private BackupDao backupDao;

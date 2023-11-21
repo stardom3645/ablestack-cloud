@@ -19,7 +19,8 @@ package com.cloud.api;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -28,7 +29,7 @@ import com.google.gson.Gson;
 import org.apache.cloudstack.api.ResponseObject;
 
 public class ApiSerializerHelper {
-    public static final Logger s_logger = Logger.getLogger(ApiSerializerHelper.class.getName());
+    protected static Logger s_logger = LogManager.getLogger(ApiSerializerHelper.class.getName());
     private static String token = "/";
 
     public static String toSerializedString(Object result) {

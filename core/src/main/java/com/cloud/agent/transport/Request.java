@@ -33,8 +33,9 @@ import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import com.cloud.agent.api.Answer;
 import com.cloud.agent.api.BadCommand;
@@ -75,7 +76,7 @@ import com.google.gson.stream.JsonReader;
  *
  */
 public class Request {
-    private static final Logger s_logger = Logger.getLogger(Request.class);
+    protected static Logger s_logger = LogManager.getLogger(Request.class);
 
     protected static final Gson s_gson = GsonHelper.getGson();
     protected static final Gson s_gogger = GsonHelper.getGsonLogger();

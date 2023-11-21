@@ -54,7 +54,8 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.springframework.stereotype.Component;
 
 import com.cloud.usage.UsageVO;
@@ -67,7 +68,7 @@ import com.cloud.utils.component.ManagerBase;
 
 @Component
 public class QuotaManagerImpl extends ManagerBase implements QuotaManager {
-    private static final Logger s_logger = Logger.getLogger(QuotaManagerImpl.class.getName());
+    protected static Logger s_logger = LogManager.getLogger(QuotaManagerImpl.class.getName());
 
     @Inject
     private AccountDao _accountDao;

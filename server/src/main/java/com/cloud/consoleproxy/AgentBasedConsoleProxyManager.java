@@ -22,7 +22,8 @@ import javax.inject.Inject;
 import javax.naming.ConfigurationException;
 
 import org.apache.cloudstack.consoleproxy.ConsoleAccessManager;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import org.apache.cloudstack.framework.config.dao.ConfigurationDao;
 import org.apache.cloudstack.framework.security.keys.KeysManager;
@@ -47,7 +48,7 @@ import com.cloud.vm.dao.UserVmDao;
 import com.cloud.vm.dao.VMInstanceDao;
 
 public class AgentBasedConsoleProxyManager extends ManagerBase implements ConsoleProxyManager {
-    private static final Logger s_logger = Logger.getLogger(AgentBasedConsoleProxyManager.class);
+    protected static Logger s_logger = LogManager.getLogger(AgentBasedConsoleProxyManager.class);
 
     @Inject
     protected HostDao _hostDao;

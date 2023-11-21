@@ -26,7 +26,8 @@ import com.cloud.user.UserAccount;
 import org.apache.commons.codec.binary.Base32;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import com.cloud.user.dao.UserAccountDao;
 import com.cloud.utils.component.AdapterBase;
@@ -34,7 +35,7 @@ import com.cloud.utils.component.AdapterBase;
 import java.security.SecureRandom;
 
 public class TotpUserTwoFactorAuthenticator extends AdapterBase implements UserTwoFactorAuthenticator {
-    public static final Logger s_logger = Logger.getLogger(TotpUserTwoFactorAuthenticator.class);
+    protected static Logger s_logger = LogManager.getLogger(TotpUserTwoFactorAuthenticator.class);
 
     @Inject
     private UserAccountDao _userAccountDao;

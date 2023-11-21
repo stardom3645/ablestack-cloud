@@ -33,7 +33,8 @@ import org.apache.cloudstack.api.ServerApiException;
 import org.apache.cloudstack.api.command.user.UserCmd;
 import org.apache.cloudstack.api.response.ServiceOfferingResponse;
 import org.apache.cloudstack.api.response.UserVmResponse;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import com.cloud.event.EventTypes;
 import com.cloud.exception.ConcurrentOperationException;
@@ -49,7 +50,7 @@ import com.cloud.vm.VirtualMachine;
 @APICommand(name = "scaleVirtualMachine", description = "Scales the virtual machine to a new service offering. This command also considers the volume size in the service offering or disk offering linked to the new service offering and apply all characteristics to the root volume.", responseObject = UserVmResponse.class, responseView = ResponseView.Restricted, entityType = {VirtualMachine.class},
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class ScaleVMCmd extends BaseAsyncCmd implements UserCmd {
-    public static final Logger s_logger = Logger.getLogger(ScaleVMCmd.class.getName());
+    protected static Logger s_logger = LogManager.getLogger(ScaleVMCmd.class.getName());
     private static final String s_name = "scalevirtualmachineresponse";
 
     /////////////////////////////////////////////////////

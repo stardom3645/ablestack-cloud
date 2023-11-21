@@ -26,13 +26,14 @@ import org.apache.cloudstack.api.ApiConstants.IoDriverPolicy;
 import org.apache.cloudstack.utils.qemu.QemuObject;
 import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import com.cloud.agent.properties.AgentProperties;
 import com.cloud.agent.properties.AgentPropertiesFileHandler;
 
 public class LibvirtVMDef {
-    private static final Logger s_logger = Logger.getLogger(LibvirtVMDef.class);
+    protected static Logger s_logger = LogManager.getLogger(LibvirtVMDef.class);
 
     private String _hvsType;
     private static long s_libvirtVersion;

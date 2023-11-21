@@ -32,7 +32,8 @@ import org.apache.cloudstack.engine.subsystem.api.storage.ObjectInDataStoreState
 import org.apache.cloudstack.engine.subsystem.api.storage.ObjectInDataStoreStateMachine.Event;
 import org.apache.cloudstack.engine.subsystem.api.storage.ObjectInDataStoreStateMachine.State;
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.springframework.stereotype.Component;
 
 import com.cloud.hypervisor.Hypervisor;
@@ -50,7 +51,7 @@ import com.cloud.utils.db.UpdateBuilder;
 
 @Component
 public class SnapshotDataStoreDaoImpl extends GenericDaoBase<SnapshotDataStoreVO, Long> implements SnapshotDataStoreDao {
-    private static final Logger s_logger = Logger.getLogger(SnapshotDataStoreDaoImpl.class);
+    protected static Logger s_logger = LogManager.getLogger(SnapshotDataStoreDaoImpl.class);
     private static final String STORE_ID = "store_id";
     private static final String STORE_ROLE = "store_role";
     private static final String STATE = "state";

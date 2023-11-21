@@ -26,7 +26,8 @@ import org.apache.cloudstack.api.Parameter;
 import org.apache.cloudstack.api.ServerApiException;
 import org.apache.cloudstack.api.response.PodResponse;
 import org.apache.cloudstack.api.response.SuccessResponse;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import com.cloud.event.EventTypes;
 import com.cloud.exception.ConcurrentOperationException;
@@ -42,7 +43,7 @@ import com.cloud.user.Account;
         authorized = {RoleType.Admin})
 public class UpdatePodManagementNetworkIpRangeCmd extends BaseAsyncCmd {
 
-    public static final Logger s_logger = Logger.getLogger(UpdatePodManagementNetworkIpRangeCmd.class);
+    protected static Logger s_logger = LogManager.getLogger(UpdatePodManagementNetworkIpRangeCmd.class);
 
 
     /////////////////////////////////////////////////////

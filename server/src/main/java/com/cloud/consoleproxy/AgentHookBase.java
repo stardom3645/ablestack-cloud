@@ -28,7 +28,8 @@ import org.apache.cloudstack.framework.security.keys.KeysManager;
 import org.apache.cloudstack.framework.security.keystore.KeystoreManager;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import com.cloud.agent.AgentManager;
 import com.cloud.agent.api.AgentControlAnswer;
@@ -62,7 +63,7 @@ import com.google.gson.GsonBuilder;
  * can reuse
  */
 public abstract class AgentHookBase implements AgentHook {
-    private static final Logger s_logger = Logger.getLogger(AgentHookBase.class);
+    protected static Logger s_logger = LogManager.getLogger(AgentHookBase.class);
 
     VMInstanceDao _instanceDao;
     HostDao _hostDao;

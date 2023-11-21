@@ -18,7 +18,8 @@
  */
 package org.apache.cloudstack.managed.context;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import org.apache.cloudstack.managed.context.impl.DefaultManagedContext;
 
@@ -26,7 +27,7 @@ public abstract class ManagedContextRunnable implements Runnable {
 
     private static final int SLEEP_COUNT = 120;
 
-    private static final Logger log = Logger.getLogger(ManagedContextRunnable.class);
+    protected static Logger log = LogManager.getLogger(ManagedContextRunnable.class);
     private static final ManagedContext DEFAULT_MANAGED_CONTEXT = new DefaultManagedContext();
     private static ManagedContext context;
     private static boolean managedContext = false;

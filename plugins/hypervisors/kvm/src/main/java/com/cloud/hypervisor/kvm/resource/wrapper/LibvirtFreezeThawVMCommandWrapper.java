@@ -20,7 +20,8 @@
 package com.cloud.hypervisor.kvm.resource.wrapper;
 
 import org.apache.cloudstack.utils.qemu.QemuCommand;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.libvirt.Connect;
 import org.libvirt.Domain;
 import org.libvirt.DomainInfo.DomainState;
@@ -37,7 +38,7 @@ import com.google.gson.JsonParser;
 @ResourceWrapper(handles = FreezeThawVMCommand.class)
 public class LibvirtFreezeThawVMCommandWrapper extends CommandWrapper<FreezeThawVMCommand, Answer, LibvirtComputingResource> {
 
-    private static final Logger s_logger = Logger.getLogger(LibvirtFreezeThawVMCommandWrapper.class);
+    protected static Logger s_logger = LogManager.getLogger(LibvirtFreezeThawVMCommandWrapper.class);
 
     @Override
     public Answer execute(FreezeThawVMCommand command, LibvirtComputingResource serverResource) {

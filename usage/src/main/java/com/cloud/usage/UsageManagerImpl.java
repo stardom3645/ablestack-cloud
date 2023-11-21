@@ -41,7 +41,8 @@ import org.apache.cloudstack.quota.QuotaManager;
 import org.apache.cloudstack.quota.QuotaStatement;
 import org.apache.cloudstack.utils.usage.UsageUtils;
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.springframework.stereotype.Component;
 import org.apache.cloudstack.framework.config.dao.ConfigurationDao;
 import org.apache.cloudstack.managed.context.ManagedContextRunnable;
@@ -104,7 +105,7 @@ import static com.cloud.utils.NumbersUtil.toHumanReadableSize;
 
 @Component
 public class UsageManagerImpl extends ManagerBase implements UsageManager, Runnable {
-    public static final Logger s_logger = Logger.getLogger(UsageManagerImpl.class.getName());
+    protected static Logger s_logger = LogManager.getLogger(UsageManagerImpl.class.getName());
 
     protected static final String DAILY = "DAILY";
     protected static final String WEEKLY = "WEEKLY";

@@ -21,14 +21,15 @@ import com.cloud.utils.exception.CloudRuntimeException;
 import com.cloud.utils.script.OutputInterpreter;
 import com.cloud.utils.script.Script;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.joda.time.Duration;
 
 import java.io.File;
 
 public class RollingMaintenanceAgentExecutor extends RollingMaintenanceExecutorBase implements RollingMaintenanceExecutor {
 
-    private static final Logger s_logger = Logger.getLogger(RollingMaintenanceAgentExecutor.class);
+    protected static Logger s_logger = LogManager.getLogger(RollingMaintenanceAgentExecutor.class);
 
     private String output;
     private boolean success;

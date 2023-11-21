@@ -22,7 +22,8 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import com.vmware.vim25.CustomFieldStringValue;
 import com.vmware.vim25.DatacenterConfigInfo;
@@ -42,7 +43,7 @@ import com.cloud.hypervisor.vmware.util.VmwareContext;
 import com.cloud.utils.Pair;
 
 public class DatacenterMO extends BaseMO {
-    private static final Logger s_logger = Logger.getLogger(DatacenterMO.class);
+    protected static Logger s_logger = LogManager.getLogger(DatacenterMO.class);
 
     public DatacenterMO(VmwareContext context, ManagedObjectReference morDc) {
         super(context, morDc);

@@ -24,7 +24,8 @@ import javax.inject.Inject;
 import org.apache.cloudstack.context.CallContext;
 import org.apache.cloudstack.framework.messagebus.MessageBus;
 import org.apache.cloudstack.framework.messagebus.PublishScope;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import com.cloud.event.ActionEvent;
 import com.cloud.event.EventTypes;
@@ -53,7 +54,7 @@ import com.cloud.utils.exception.CloudRuntimeException;
 import com.cloud.utils.net.NetUtils;
 
 public class NetworkACLManagerImpl extends ManagerBase implements NetworkACLManager {
-    private static final Logger s_logger = Logger.getLogger(NetworkACLManagerImpl.class);
+    protected static Logger s_logger = LogManager.getLogger(NetworkACLManagerImpl.class);
 
     @Inject
     private NetworkModel _networkMgr;

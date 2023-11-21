@@ -28,7 +28,8 @@ import com.cloud.utils.script.Script;
 import org.apache.cloudstack.agent.directdownload.SetupDirectDownloadCertificateCommand;
 import org.apache.cloudstack.utils.security.KeyStoreUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -39,7 +40,7 @@ public class LibvirtSetupDirectDownloadCertificateCommandWrapper extends Command
 
     private static final String temporaryCertFilePrefix = "CSCERTIFICATE";
 
-    private static final Logger s_logger = Logger.getLogger(LibvirtSetupDirectDownloadCertificateCommandWrapper.class);
+    protected static Logger s_logger = LogManager.getLogger(LibvirtSetupDirectDownloadCertificateCommandWrapper.class);
 
     /**
      * Retrieve agent.properties file

@@ -33,7 +33,8 @@ import org.apache.cloudstack.api.command.user.ipv6.ListIpv6FirewallRulesCmd;
 import org.apache.cloudstack.context.CallContext;
 import org.apache.cloudstack.engine.orchestration.service.NetworkOrchestrationService;
 import org.apache.cloudstack.framework.config.dao.ConfigurationDao;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.springframework.stereotype.Component;
 
 import com.cloud.configuration.Config;
@@ -101,7 +102,7 @@ import com.cloud.vm.dao.UserVmDao;
 
 @Component
 public class FirewallManagerImpl extends ManagerBase implements FirewallService, FirewallManager, NetworkRuleApplier {
-    private static final Logger s_logger = Logger.getLogger(FirewallManagerImpl.class);
+    protected static Logger s_logger = LogManager.getLogger(FirewallManagerImpl.class);
 
     @Inject
     FirewallRulesDao _firewallDao;

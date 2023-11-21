@@ -30,7 +30,8 @@ import org.apache.cloudstack.engine.subsystem.api.storage.DataStore;
 import org.apache.cloudstack.engine.subsystem.api.storage.DataStoreManager;
 import org.apache.cloudstack.engine.subsystem.api.storage.PrimaryDataStoreDriver;
 import org.apache.commons.collections.MapUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import com.cloud.domain.PartOf;
 import com.cloud.event.ActionEvent;
@@ -69,7 +70,7 @@ import com.cloud.utils.db.TransactionStatus;
 import com.cloud.utils.exception.CloudRuntimeException;
 
 public class TaggedResourceManagerImpl extends ManagerBase implements TaggedResourceService {
-    public static final Logger s_logger = Logger.getLogger(TaggedResourceManagerImpl.class);
+    protected static Logger s_logger = LogManager.getLogger(TaggedResourceManagerImpl.class);
 
     @Inject
     EntityManager _entityMgr;

@@ -73,7 +73,8 @@ import org.apache.cloudstack.storage.to.TemplateObjectTO;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
@@ -109,7 +110,7 @@ import sun.security.x509.X509CertImpl;
 
 public class DirectDownloadManagerImpl extends ManagerBase implements DirectDownloadManager {
 
-    private static final Logger s_logger = Logger.getLogger(DirectDownloadManagerImpl.class);
+    protected static Logger s_logger = LogManager.getLogger(DirectDownloadManagerImpl.class);
     protected static final String httpHeaderDetailKey = "HTTP_HEADER";
     protected static final String BEGIN_CERT = "-----BEGIN CERTIFICATE-----";
     protected static final String END_CERT = "-----END CERTIFICATE-----";

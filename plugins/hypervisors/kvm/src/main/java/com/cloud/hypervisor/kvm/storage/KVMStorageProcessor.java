@@ -72,7 +72,8 @@ import org.apache.cloudstack.utils.qemu.QemuObject;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.io.FileUtils;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.libvirt.Connect;
 import org.libvirt.Domain;
 import org.libvirt.DomainInfo;
@@ -137,7 +138,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 
 public class KVMStorageProcessor implements StorageProcessor {
-    private static final Logger s_logger = Logger.getLogger(KVMStorageProcessor.class);
+    protected static Logger s_logger = LogManager.getLogger(KVMStorageProcessor.class);
     private final KVMStoragePoolManager storagePoolMgr;
     private final LibvirtComputingResource resource;
     private StorageLayer storageLayer;

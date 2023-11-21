@@ -22,7 +22,8 @@ import javax.inject.Inject;
 
 import org.apache.cloudstack.api.ApiConstants;
 import org.apache.cloudstack.engine.orchestration.service.NetworkOrchestrationService;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import com.cloud.dc.DataCenter;
 import com.cloud.dc.Pod;
@@ -59,7 +60,7 @@ import com.cloud.vm.ReservationContext;
 import com.cloud.vm.VirtualMachineProfile;
 
 public class BaremetaNetworkGuru extends DirectPodBasedNetworkGuru {
-    private static final Logger s_logger = Logger.getLogger(BaremetaNetworkGuru.class);
+    protected static Logger s_logger = LogManager.getLogger(BaremetaNetworkGuru.class);
     @Inject
     private HostDao _hostDao;
     @Inject

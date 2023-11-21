@@ -27,8 +27,6 @@ import java.util.UUID;
 import javax.inject.Inject;
 import javax.naming.ConfigurationException;
 
-import org.apache.log4j.Logger;
-
 import org.apache.cloudstack.api.ApiConstants;
 import org.apache.cloudstack.api.response.ExternalLoadBalancerResponse;
 import org.apache.cloudstack.engine.orchestration.service.NetworkOrchestrationService;
@@ -218,7 +216,6 @@ public abstract class ExternalLoadBalancerDeviceManagerImpl extends AdapterBase 
     private LoadBalancingRulesManager lbRulesManager;
 
     private long _defaultLbCapacity;
-    private static final org.apache.log4j.Logger s_logger = Logger.getLogger(ExternalLoadBalancerDeviceManagerImpl.class);
 
     @Override
     @DB

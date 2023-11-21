@@ -35,7 +35,8 @@ import org.apache.cloudstack.engine.orchestration.service.NetworkOrchestrationSe
 import org.apache.cloudstack.framework.config.dao.ConfigurationDao;
 import org.apache.cloudstack.network.ExternalNetworkDeviceManager.NetworkDevice;
 import org.apache.cloudstack.region.gslb.GslbServiceProvider;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -159,7 +160,7 @@ public class NetscalerElement extends ExternalLoadBalancerDeviceManagerImpl
 implements LoadBalancingServiceProvider, NetscalerLoadBalancerElementService, ExternalLoadBalancerDeviceManager,
 IpDeployer, StaticNatServiceProvider, GslbServiceProvider {
 
-    private static final Logger s_logger = Logger.getLogger(NetscalerElement.class);
+    protected static Logger s_logger = LogManager.getLogger(NetscalerElement.class);
 
     @Inject
     NetworkModel _networkManager;

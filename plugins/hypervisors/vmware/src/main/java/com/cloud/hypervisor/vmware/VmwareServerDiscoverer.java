@@ -28,7 +28,8 @@ import javax.inject.Inject;
 import javax.naming.ConfigurationException;
 
 import org.apache.cloudstack.api.ApiConstants;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import com.cloud.agent.api.StartupCommand;
 import com.cloud.agent.api.StartupRoutingCommand;
@@ -78,7 +79,7 @@ import com.cloud.utils.UriUtils;
 import com.vmware.vim25.ManagedObjectReference;
 
 public class VmwareServerDiscoverer extends DiscovererBase implements Discoverer, ResourceStateAdapter {
-    private static final Logger s_logger = Logger.getLogger(VmwareServerDiscoverer.class);
+    protected static Logger s_logger = LogManager.getLogger(VmwareServerDiscoverer.class);
 
     @Inject
     VmwareManager _vmwareMgr;

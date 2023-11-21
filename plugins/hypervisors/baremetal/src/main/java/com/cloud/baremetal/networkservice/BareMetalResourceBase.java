@@ -31,7 +31,8 @@ import javax.naming.ConfigurationException;
 
 import org.apache.cloudstack.api.ApiConstants;
 import org.apache.cloudstack.framework.config.dao.ConfigurationDao;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import com.cloud.agent.IAgentControl;
 import com.cloud.agent.api.Answer;
@@ -83,7 +84,7 @@ import com.cloud.vm.VirtualMachine.PowerState;
 import com.cloud.vm.dao.VMInstanceDao;
 
 public class BareMetalResourceBase extends ManagerBase implements ServerResource {
-    private static final Logger s_logger = Logger.getLogger(BareMetalResourceBase.class);
+    protected static Logger s_logger = LogManager.getLogger(BareMetalResourceBase.class);
     protected String _uuid;
     protected String _zone;
     protected String _pod;

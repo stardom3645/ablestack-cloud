@@ -32,7 +32,8 @@ import javax.persistence.EntityExistsException;
 
 import org.apache.cloudstack.hypervisor.xenserver.XenserverConfigs;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.apache.maven.artifact.versioning.ComparableVersion;
 import org.apache.xmlrpc.XmlRpcException;
 
@@ -105,7 +106,7 @@ import com.xensource.xenapi.Types.XenAPIException;
 
 
 public class XcpServerDiscoverer extends DiscovererBase implements Discoverer, Listener, ResourceStateAdapter {
-    private static final Logger s_logger = Logger.getLogger(XcpServerDiscoverer.class);
+    protected static Logger s_logger = LogManager.getLogger(XcpServerDiscoverer.class);
     private int _wait;
     private XenServerConnectionPool _connPool;
     private boolean _checkHvm;

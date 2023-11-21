@@ -23,7 +23,8 @@ import javax.inject.Inject;
 import org.apache.cloudstack.engine.orchestration.service.NetworkOrchestrationService;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import com.cloud.dc.DataCenter;
 import com.cloud.dc.DataCenter.NetworkType;
@@ -80,7 +81,7 @@ import com.cloud.vm.dao.NicSecondaryIpVO;
 
 
 public class DirectNetworkGuru extends AdapterBase implements NetworkGuru {
-    private static final Logger s_logger = Logger.getLogger(DirectNetworkGuru.class);
+    protected static Logger s_logger = LogManager.getLogger(DirectNetworkGuru.class);
 
     @Inject
     DataCenterDao _dcDao;

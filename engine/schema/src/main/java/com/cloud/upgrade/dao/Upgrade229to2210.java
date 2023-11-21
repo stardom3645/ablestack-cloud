@@ -23,12 +23,13 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.UUID;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import com.cloud.utils.exception.CloudRuntimeException;
 
 public class Upgrade229to2210 implements DbUpgrade {
-    final static Logger s_logger = Logger.getLogger(Upgrade229to2210.class);
+    final static Logger s_logger = LogManager.getLogger(Upgrade229to2210.class);
 
     @Override
     public String[] getUpgradableVersionRange() {

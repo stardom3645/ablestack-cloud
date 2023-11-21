@@ -19,7 +19,8 @@
 
 package com.cloud.hypervisor.kvm.resource.wrapper;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import com.cloud.agent.api.storage.ResizeVolumeAnswer;
 import com.cloud.agent.api.storage.StorPoolResizeVolumeCommand;
@@ -37,7 +38,7 @@ import com.cloud.utils.script.Script;
 @ResourceWrapper(handles = StorPoolResizeVolumeCommand.class)
 public final class StorPoolResizeVolumeCommandWrapper extends CommandWrapper<StorPoolResizeVolumeCommand, ResizeVolumeAnswer, LibvirtComputingResource> {
 
-    private static final Logger s_logger = Logger.getLogger(StorPoolResizeVolumeCommandWrapper.class);
+    protected static Logger s_logger = LogManager.getLogger(StorPoolResizeVolumeCommandWrapper.class);
 
     @Override
     public ResizeVolumeAnswer execute(final StorPoolResizeVolumeCommand command, final LibvirtComputingResource libvirtComputingResource) {

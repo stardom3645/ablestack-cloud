@@ -25,7 +25,6 @@ import javax.inject.Inject;
 import org.apache.cloudstack.network.contrail.model.VirtualNetworkModel;
 import org.apache.cloudstack.network.contrail.model.NetworkPolicyModel;
 
-import org.apache.log4j.Logger;
 import org.springframework.stereotype.Component;
 
 import com.cloud.deploy.DeployDestination;
@@ -46,8 +45,6 @@ import com.cloud.vm.ReservationContext;
 
 @Component
 public class ContrailVpcElementImpl extends ContrailElementImpl implements NetworkACLServiceProvider, VpcProvider {
-    private static final Logger s_logger =
-            Logger.getLogger(ContrailElement.class);
 
     @Inject
     NetworkACLDao _networkACLDao;

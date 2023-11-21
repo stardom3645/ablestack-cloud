@@ -17,7 +17,8 @@
 package com.cloud.consoleproxy.vnc.network;
 
 import com.cloud.utils.exception.CloudRuntimeException;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 public class NioSocketStream {
 
@@ -28,7 +29,7 @@ public class NioSocketStream {
     protected int start;
     protected NioSocket socket;
 
-    private static final Logger s_logger = Logger.getLogger(NioSocketStream.class);
+    protected static Logger s_logger = LogManager.getLogger(NioSocketStream.class);
 
     public NioSocketStream(int bufferSize, NioSocket socket) {
         this.buffer = new byte[bufferSize];

@@ -37,7 +37,8 @@ import org.apache.cloudstack.usage.Usage;
 import org.apache.cloudstack.usage.UsageService;
 import org.apache.cloudstack.usage.UsageTypes;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Component;
 
@@ -83,7 +84,7 @@ import com.cloud.vm.dao.VMInstanceDao;
 
 @Component
 public class UsageServiceImpl extends ManagerBase implements UsageService, Manager {
-    public static final Logger s_logger = Logger.getLogger(UsageServiceImpl.class);
+    protected static Logger s_logger = LogManager.getLogger(UsageServiceImpl.class);
 
     //ToDo: Move implementation to ManagaerImpl
 

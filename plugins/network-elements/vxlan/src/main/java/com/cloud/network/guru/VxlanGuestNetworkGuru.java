@@ -19,7 +19,8 @@ package com.cloud.network.guru;
 
 import org.apache.cloudstack.api.ApiCommandResourceType;
 import org.apache.cloudstack.context.CallContext;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.springframework.stereotype.Component;
 
 import com.cloud.dc.DataCenter;
@@ -47,7 +48,7 @@ import com.cloud.vm.VirtualMachineProfile;
 
 @Component
 public class VxlanGuestNetworkGuru extends GuestNetworkGuru {
-    private static final Logger s_logger = Logger.getLogger(VxlanGuestNetworkGuru.class);
+    protected static Logger s_logger = LogManager.getLogger(VxlanGuestNetworkGuru.class);
 
     public VxlanGuestNetworkGuru() {
         super();

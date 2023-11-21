@@ -25,7 +25,8 @@ import javax.persistence.EntityExistsException;
 
 import org.apache.cloudstack.api.ApiCommandResourceType;
 import org.apache.cloudstack.context.CallContext;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import com.cloud.domain.PartOf;
 import com.cloud.event.ActionEvent;
@@ -64,7 +65,7 @@ import com.cloud.utils.db.TransactionStatus;
 import com.cloud.utils.exception.CloudRuntimeException;
 
 public class ResourceIconManagerImpl extends ManagerBase implements ResourceIconManager {
-    public static final Logger s_logger = Logger.getLogger(ResourceMetaDataManagerImpl.class);
+    protected static Logger s_logger = LogManager.getLogger(ResourceMetaDataManagerImpl.class);
 
     @Inject
     AccountService accountService;

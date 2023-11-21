@@ -24,7 +24,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import com.cloud.agent.api.BumpUpPriorityCommand;
 import com.cloud.agent.api.SetupGuestNetworkCommand;
@@ -62,7 +63,7 @@ import com.google.gson.GsonBuilder;
 
 public abstract class AbstractConfigItemFacade {
 
-    private static final Logger s_logger = Logger.getLogger(AbstractConfigItemFacade.class);
+    protected static Logger s_logger = LogManager.getLogger(AbstractConfigItemFacade.class);
 
     private final static Gson gson;
 

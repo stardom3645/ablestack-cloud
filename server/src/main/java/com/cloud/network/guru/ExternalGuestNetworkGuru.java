@@ -24,7 +24,8 @@ import javax.inject.Inject;
 import org.apache.cloudstack.api.ApiCommandResourceType;
 import org.apache.cloudstack.context.CallContext;
 import org.apache.cloudstack.engine.orchestration.service.NetworkOrchestrationService;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import com.cloud.dc.DataCenter;
 import com.cloud.dc.DataCenter.NetworkType;
@@ -72,7 +73,7 @@ import com.cloud.vm.VirtualMachine;
 import com.cloud.vm.VirtualMachineProfile;
 
 public class ExternalGuestNetworkGuru extends GuestNetworkGuru {
-    private static final Logger s_logger = Logger.getLogger(ExternalGuestNetworkGuru.class);
+    protected static Logger s_logger = LogManager.getLogger(ExternalGuestNetworkGuru.class);
     @Inject
     NetworkOrchestrationService _networkMgr;
     @Inject

@@ -23,7 +23,8 @@ import java.util.Date;
 import java.util.List;
 
 import org.apache.cloudstack.quota.vo.QuotaBalanceVO;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.springframework.stereotype.Component;
 
 import com.cloud.utils.db.Filter;
@@ -37,7 +38,7 @@ import com.cloud.utils.db.TransactionStatus;
 
 @Component
 public class QuotaBalanceDaoImpl extends GenericDaoBase<QuotaBalanceVO, Long> implements QuotaBalanceDao {
-    private static final Logger s_logger = Logger.getLogger(QuotaBalanceDaoImpl.class.getName());
+    protected static Logger s_logger = LogManager.getLogger(QuotaBalanceDaoImpl.class.getName());
 
     @Override
     public QuotaBalanceVO findLastBalanceEntry(final Long accountId, final Long domainId, final Date beforeThis) {

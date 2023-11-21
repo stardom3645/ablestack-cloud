@@ -59,7 +59,8 @@ import org.apache.cloudstack.storage.datastore.db.VolumeDataStoreDao;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.math3.stat.descriptive.moment.Mean;
 import org.apache.commons.math3.stat.descriptive.moment.StandardDeviation;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import com.cloud.capacity.CapacityManager;
 import com.cloud.server.StatsCollector;
@@ -75,7 +76,7 @@ import com.cloud.utils.exception.CloudRuntimeException;
 
 public class StorageOrchestrator extends ManagerBase implements StorageOrchestrationService, Configurable {
 
-    private static final Logger s_logger = Logger.getLogger(StorageOrchestrator.class);
+    protected static Logger s_logger = LogManager.getLogger(StorageOrchestrator.class);
     @Inject
     SnapshotDataStoreDao snapshotDataStoreDao;
     @Inject

@@ -24,7 +24,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import org.apache.cloudstack.network.topology.NetworkTopologyVisitor;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import com.cloud.agent.api.Command;
 import com.cloud.agent.api.NetworkUsageCommand;
@@ -62,7 +63,7 @@ import org.apache.cloudstack.network.topology.NetworkTopologyContext;
 
 public class NicPlugInOutRules extends RuleApplier {
 
-    private static final Logger s_logger = Logger.getLogger(NicPlugInOutRules.class);
+    protected static Logger s_logger = LogManager.getLogger(NicPlugInOutRules.class);
 
     private final List<? extends PublicIpAddress> _ipAddresses;
 

@@ -31,7 +31,8 @@ import org.apache.cloudstack.api.command.user.UserCmd;
 import org.apache.cloudstack.api.response.TemplateResponse;
 import org.apache.cloudstack.api.response.ZoneResponse;
 import org.apache.cloudstack.context.CallContext;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import com.cloud.dc.DataCenter;
 import com.cloud.event.EventTypes;
@@ -43,7 +44,7 @@ import com.cloud.user.Account;
 @APICommand(name = "copyTemplate", description = "Copies a template from one zone to another.", responseObject = TemplateResponse.class, responseView = ResponseView.Restricted,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class CopyTemplateCmd extends BaseAsyncCmd implements UserCmd {
-    public static final Logger s_logger = Logger.getLogger(CopyTemplateCmd.class.getName());
+    protected static Logger s_logger = LogManager.getLogger(CopyTemplateCmd.class.getName());
     private static final String s_name = "copytemplateresponse";
 
     /////////////////////////////////////////////////////

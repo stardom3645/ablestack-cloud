@@ -17,7 +17,8 @@
 package com.cloud.hypervisor.xenserver.resource;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import com.cloud.agent.api.StartupCommand;
 import com.cloud.utils.exception.CloudRuntimeException;
@@ -30,7 +31,7 @@ import com.xensource.xenapi.Types.XenAPIException;
 import com.xensource.xenapi.VLAN;
 
 public class XenServer56Resource extends CitrixResourceBase {
-    private final static Logger s_logger = Logger.getLogger(XenServer56Resource.class);
+    private final static Logger s_logger = LogManager.getLogger(XenServer56Resource.class);
 
     @Override
     protected String getPatchFilePath() {

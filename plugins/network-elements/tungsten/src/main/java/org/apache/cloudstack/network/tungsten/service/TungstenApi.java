@@ -86,7 +86,8 @@ import org.apache.cloudstack.api.ServerApiException;
 import org.apache.cloudstack.network.tungsten.model.TungstenLoadBalancerMember;
 import org.apache.cloudstack.network.tungsten.model.TungstenRule;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
@@ -99,7 +100,7 @@ import java.util.concurrent.TimeUnit;
 
 public class TungstenApi {
 
-    private static final Logger S_LOGGER = Logger.getLogger(TungstenApi.class);
+    protected static Logger S_LOGGER = LogManager.getLogger(TungstenApi.class);
     private static final Status.ErrorHandler errorHandler = S_LOGGER::error;
 
     public static final String TUNGSTEN_DEFAULT_DOMAIN = "default-domain";

@@ -27,7 +27,8 @@ import org.apache.cloudstack.api.Parameter;
 import org.apache.cloudstack.api.ServerApiException;
 import org.apache.cloudstack.api.response.SuccessResponse;
 import org.apache.cloudstack.api.response.VpcResponse;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import com.cloud.event.EventTypes;
 import com.cloud.exception.ConcurrentOperationException;
@@ -39,7 +40,7 @@ import com.cloud.user.Account;
 @APICommand(name = "restartVPC", description = "Restarts a VPC", responseObject = SuccessResponse.class, entityType = {Vpc.class},
 requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class RestartVPCCmd extends BaseAsyncCmd {
-    public static final Logger s_logger = Logger.getLogger(RestartVPCCmd.class.getName());
+    protected static Logger s_logger = LogManager.getLogger(RestartVPCCmd.class.getName());
 
     /////////////////////////////////////////////////////
     //////////////// API parameters /////////////////////

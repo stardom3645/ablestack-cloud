@@ -21,13 +21,14 @@ package com.cloud.utils.crypt;
 
 import java.util.Properties;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import com.cloud.utils.db.DbProperties;
 import com.cloud.utils.exception.CloudRuntimeException;
 
 public class DBEncryptionUtil {
-    public static final Logger s_logger = Logger.getLogger(DBEncryptionUtil.class);
+    protected static Logger s_logger = LogManager.getLogger(DBEncryptionUtil.class);
     private static CloudStackEncryptor s_encryptor = null;
 
     public static String encrypt(String plain) {

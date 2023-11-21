@@ -35,7 +35,8 @@ import org.apache.cloudstack.framework.config.dao.ConfigurationDao;
 import org.apache.cloudstack.managed.context.ManagedContext;
 import org.apache.cloudstack.managed.context.ManagedContextRunnable;
 import org.apache.cloudstack.management.ManagementServerHost;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.apache.log4j.NDC;
 
 import com.cloud.agent.AgentManager;
@@ -106,7 +107,7 @@ public class HighAvailabilityManagerImpl extends ManagerBase implements Configur
 
     private static final int SECONDS_TO_MILLISECONDS_FACTOR = 1000;
 
-    protected static final Logger s_logger = Logger.getLogger(HighAvailabilityManagerImpl.class);
+    protected static final Logger s_logger = LogManager.getLogger(HighAvailabilityManagerImpl.class);
     private ConfigKey<Integer> MigrationMaxRetries = new ConfigKey<>("Advanced", Integer.class,
             "vm.ha.migration.max.retries","5",
             "Total number of attempts for trying migration of a VM.",

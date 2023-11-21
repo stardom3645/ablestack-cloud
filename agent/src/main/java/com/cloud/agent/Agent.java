@@ -55,7 +55,8 @@ import org.apache.cloudstack.utils.security.KeyStoreUtils;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.apache.log4j.MDC;
 
 import com.cloud.agent.api.AgentControlAnswer;
@@ -103,7 +104,7 @@ import com.cloud.utils.script.Script;
  *
  **/
 public class Agent implements HandlerFactory, IAgentControl, AgentStatusUpdater {
-    protected static Logger s_logger = Logger.getLogger(Agent.class);
+    protected static Logger s_logger = LogManager.getLogger(Agent.class);
 
     public enum ExitStatus {
         Normal(0), // Normal status = 0.

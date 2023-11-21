@@ -28,14 +28,15 @@ import com.cloud.resource.CommandWrapper;
 import com.cloud.resource.ResourceWrapper;
 import com.cloud.storage.Storage;
 import com.cloud.utils.exception.CloudRuntimeException;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import java.util.Map;
 
 @ResourceWrapper(handles =  CheckStorageAvailabilityCommand.class)
 public class LibvirtCheckStorageAvailabilityWrapper extends CommandWrapper<CheckStorageAvailabilityCommand, Answer, LibvirtComputingResource> {
 
-    private static final Logger s_logger = Logger.getLogger(LibvirtCheckStorageAvailabilityWrapper.class);
+    protected static Logger s_logger = LogManager.getLogger(LibvirtCheckStorageAvailabilityWrapper.class);
 
     @Override
     public Answer execute(CheckStorageAvailabilityCommand command, LibvirtComputingResource resource) {

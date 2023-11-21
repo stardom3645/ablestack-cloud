@@ -41,7 +41,8 @@ import net.juniper.contrail.api.types.VirtualMachineInterface;
 import net.juniper.contrail.api.types.VirtualNetwork;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.springframework.stereotype.Component;
 
 import org.apache.cloudstack.network.contrail.model.FloatingIpModel;
@@ -118,7 +119,7 @@ public class ServerDBSyncImpl implements ServerDBSync {
         _dbSync = new DBSyncGeneric(this);
     }
 
-    private static final Logger s_logger = Logger.getLogger(ServerDBSync.class);
+    protected static Logger s_logger = LogManager.getLogger(ServerDBSync.class);
 
     /*
      * API for syncing all classes of vnc objects with cloudstack

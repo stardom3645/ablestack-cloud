@@ -60,7 +60,8 @@ import org.apache.cloudstack.jobs.JobInfo.Status;
 import org.apache.cloudstack.managed.context.ManagedContextRunnable;
 import org.apache.cloudstack.management.ManagementServerHost;
 import org.apache.cloudstack.utils.identity.ManagementServerNode;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.apache.log4j.MDC;
 import org.apache.log4j.NDC;
 
@@ -107,7 +108,7 @@ public class AsyncJobManagerImpl extends ManagerBase implements AsyncJobManager,
             "Time in seconds to wait in acquiring lock to submit a vm worker job", false);
     private static final ConfigKey<Boolean> HidePassword = new ConfigKey<Boolean>("Advanced", Boolean.class, "log.hide.password", "true", "If set to true, the password is hidden", true, ConfigKey.Scope.Global);
 
-    private static final Logger s_logger = Logger.getLogger(AsyncJobManagerImpl.class);
+    protected static Logger s_logger = LogManager.getLogger(AsyncJobManagerImpl.class);
 
     private static final int ACQUIRE_GLOBAL_LOCK_TIMEOUT_FOR_COOPERATION = 3;     // 3 seconds
 

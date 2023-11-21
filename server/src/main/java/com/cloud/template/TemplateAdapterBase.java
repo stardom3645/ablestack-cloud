@@ -33,7 +33,8 @@ import org.apache.cloudstack.api.command.user.template.GetUploadParamsForTemplat
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.BooleanUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import org.apache.cloudstack.api.ApiConstants;
 import org.apache.cloudstack.api.command.user.iso.DeleteIsoCmd;
@@ -84,7 +85,7 @@ import com.cloud.vm.UserVmVO;
 import com.cloud.vm.dao.UserVmDao;
 
 public abstract class TemplateAdapterBase extends AdapterBase implements TemplateAdapter {
-    private final static Logger s_logger = Logger.getLogger(TemplateAdapterBase.class);
+    private final static Logger s_logger = LogManager.getLogger(TemplateAdapterBase.class);
     protected @Inject
     DomainDao _domainDao;
     protected @Inject

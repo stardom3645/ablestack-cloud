@@ -31,13 +31,14 @@ import com.cloud.utils.exception.CloudRuntimeException;
 import com.cloud.utils.ssh.SshHelper;
 import com.cloud.utils.validation.ChecksumUtil;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import java.io.File;
 
 @ResourceWrapper(handles = PatchSystemVmCommand.class)
 public class LibvirtPatchSystemVmCommandWrapper extends CommandWrapper<PatchSystemVmCommand, Answer, LibvirtComputingResource> {
-    private static final Logger s_logger = Logger.getLogger(LibvirtPatchSystemVmCommandWrapper.class);
+    protected static Logger s_logger = LogManager.getLogger(LibvirtPatchSystemVmCommandWrapper.class);
     private static int sshPort = Integer.parseInt(LibvirtComputingResource.DEFAULTDOMRSSHPORT);
     private static File pemFile = new File(LibvirtComputingResource.SSHPRVKEYPATH);
 

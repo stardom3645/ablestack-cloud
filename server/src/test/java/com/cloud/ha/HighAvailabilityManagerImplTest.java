@@ -48,7 +48,8 @@ import com.cloud.vm.dao.VMInstanceDao;
 import org.apache.cloudstack.engine.orchestration.service.VolumeOrchestrationService;
 import org.apache.cloudstack.framework.config.dao.ConfigurationDao;
 import org.apache.cloudstack.managed.context.ManagedContext;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -72,7 +73,7 @@ import static org.junit.Assert.assertTrue;
 
 @RunWith(MockitoJUnitRunner.class)
 public class HighAvailabilityManagerImplTest {
-    private static final Logger s_logger = Logger.getLogger(HighAvailabilityManagerImplTest.class);
+    protected static Logger s_logger = LogManager.getLogger(HighAvailabilityManagerImplTest.class);
     @Mock
     HighAvailabilityDao _haDao;
     @Mock

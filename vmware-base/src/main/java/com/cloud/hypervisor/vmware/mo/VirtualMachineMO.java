@@ -46,7 +46,8 @@ import com.vmware.vim25.VirtualMachineTicket;
 import org.apache.cloudstack.utils.reflectiontostringbuilderutils.ReflectionToStringBuilderUtils;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import com.cloud.hypervisor.vmware.mo.SnapshotDescriptor.SnapshotInfo;
 import com.cloud.hypervisor.vmware.util.VmwareContext;
@@ -127,7 +128,7 @@ import com.vmware.vim25.VirtualSCSIController;
 import com.vmware.vim25.VirtualSCSISharing;
 
 public class VirtualMachineMO extends BaseMO {
-    private static final Logger s_logger = Logger.getLogger(VirtualMachineMO.class);
+    protected static Logger s_logger = LogManager.getLogger(VirtualMachineMO.class);
     private static final ExecutorService MonitorServiceExecutor = Executors.newCachedThreadPool(new NamedThreadFactory("VM-Question-Monitor"));
     private static final Gson GSON = new Gson();
 

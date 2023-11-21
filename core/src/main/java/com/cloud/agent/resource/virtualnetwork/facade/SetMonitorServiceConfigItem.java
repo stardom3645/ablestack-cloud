@@ -21,7 +21,8 @@ package com.cloud.agent.resource.virtualnetwork.facade;
 
 import java.util.List;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import com.cloud.agent.api.routing.NetworkElementCommand;
 import com.cloud.agent.api.routing.SetMonitorServiceCommand;
@@ -32,7 +33,7 @@ import com.cloud.agent.resource.virtualnetwork.model.ConfigBase;
 import com.cloud.agent.resource.virtualnetwork.model.MonitorService;
 
 public class SetMonitorServiceConfigItem extends AbstractConfigItemFacade {
-    private static final Logger s_logger = Logger.getLogger(SetMonitorServiceConfigItem.class);
+    protected static Logger s_logger = LogManager.getLogger(SetMonitorServiceConfigItem.class);
 
     @Override
     public List<ConfigItem> generateConfig(final NetworkElementCommand cmd) {

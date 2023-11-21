@@ -21,7 +21,8 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
 
@@ -33,7 +34,7 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
 public class IntrospectApiConnectorImpl implements IntrospectApiConnector {
-    private static final Logger s_logger = Logger.getLogger(IntrospectApiConnectorImpl.class);
+    protected static Logger s_logger = LogManager.getLogger(IntrospectApiConnectorImpl.class);
     private final String vrouterUrl;
 
     public IntrospectApiConnectorImpl(VRouter vRouter) {

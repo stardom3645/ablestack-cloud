@@ -33,7 +33,8 @@ import org.apache.cloudstack.storage.datastore.db.StoragePoolDetailsDao;
 import org.apache.cloudstack.storage.datastore.db.StoragePoolVO;
 import org.apache.cloudstack.storage.datastore.util.DateraObject;
 import org.apache.cloudstack.storage.datastore.util.DateraUtil;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import com.cloud.agent.AgentManager;
 import com.cloud.agent.api.Answer;
@@ -60,7 +61,7 @@ import com.cloud.vm.VMInstanceVO;
 import com.cloud.vm.dao.VMInstanceDao;
 
 public class DateraHostListener implements HypervisorHostListener {
-    private static final Logger s_logger = Logger.getLogger(DateraHostListener.class);
+    protected static Logger s_logger = LogManager.getLogger(DateraHostListener.class);
 
     @Inject private AgentManager _agentMgr;
     @Inject private AlertManager _alertMgr;

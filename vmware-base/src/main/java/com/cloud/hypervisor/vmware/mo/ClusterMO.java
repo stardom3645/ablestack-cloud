@@ -24,7 +24,8 @@ import java.util.List;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import com.google.gson.Gson;
 import com.vmware.vim25.ArrayOfHostIpRouteEntry;
@@ -68,7 +69,7 @@ import com.cloud.utils.exception.CloudRuntimeException;
 // interface. This has changed as ClusterMO no longer works as a special host anymore. Need to refactor accordingly
 //
 public class ClusterMO extends BaseMO implements VmwareHypervisorHost {
-    private static final Logger s_logger = Logger.getLogger(ClusterMO.class);
+    protected static Logger s_logger = LogManager.getLogger(ClusterMO.class);
     protected ManagedObjectReference _environmentBrowser = null;
 
     public ClusterMO(VmwareContext context, ManagedObjectReference morCluster) {

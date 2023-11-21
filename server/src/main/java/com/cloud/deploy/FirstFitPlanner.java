@@ -32,7 +32,8 @@ import org.apache.cloudstack.framework.config.ConfigKey;
 import org.apache.cloudstack.framework.config.Configurable;
 import org.apache.cloudstack.framework.config.dao.ConfigurationDao;
 import org.apache.cloudstack.storage.datastore.db.PrimaryDataStoreDao;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import com.cloud.capacity.Capacity;
 import com.cloud.capacity.CapacityManager;
@@ -72,7 +73,7 @@ import com.cloud.vm.dao.VMInstanceDao;
 import com.cloud.host.dao.HostDetailsDao;
 
 public class FirstFitPlanner extends AdapterBase implements DeploymentClusterPlanner, Configurable, DeploymentPlanner {
-    private static final Logger s_logger = Logger.getLogger(FirstFitPlanner.class);
+    protected static Logger s_logger = LogManager.getLogger(FirstFitPlanner.class);
     @Inject
     protected HostDao hostDao;
     @Inject

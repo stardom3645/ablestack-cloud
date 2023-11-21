@@ -44,7 +44,8 @@ import org.apache.cloudstack.api.response.ApiResponseResponse;
 import org.apache.cloudstack.api.response.ListResponse;
 import org.apache.cloudstack.utils.reflectiontostringbuilderutils.ReflectionToStringBuilderUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.reflections.ReflectionUtils;
 import org.springframework.stereotype.Component;
 
@@ -60,7 +61,7 @@ import com.google.gson.annotations.SerializedName;
 
 @Component
 public class ApiDiscoveryServiceImpl extends ComponentLifecycleBase implements ApiDiscoveryService {
-    private static final Logger s_logger = Logger.getLogger(ApiDiscoveryServiceImpl.class);
+    protected static Logger s_logger = LogManager.getLogger(ApiDiscoveryServiceImpl.class);
 
     List<APIChecker> _apiAccessCheckers = null;
     List<PluggableService> _services = null;

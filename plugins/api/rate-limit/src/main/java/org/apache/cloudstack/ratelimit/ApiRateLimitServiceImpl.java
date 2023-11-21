@@ -28,7 +28,8 @@ import net.sf.ehcache.CacheManager;
 
 import org.apache.cloudstack.acl.Role;
 import org.apache.cloudstack.utils.reflectiontostringbuilderutils.ReflectionToStringBuilderUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.springframework.stereotype.Component;
 
 import org.apache.cloudstack.acl.APIChecker;
@@ -47,7 +48,7 @@ import com.cloud.utils.component.AdapterBase;
 
 @Component
 public class ApiRateLimitServiceImpl extends AdapterBase implements APIChecker, ApiRateLimitService {
-    private static final Logger s_logger = Logger.getLogger(ApiRateLimitServiceImpl.class);
+    protected static Logger s_logger = LogManager.getLogger(ApiRateLimitServiceImpl.class);
 
     /**
      * True if api rate limiting is enabled

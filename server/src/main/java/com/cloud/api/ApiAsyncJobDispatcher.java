@@ -32,7 +32,8 @@ import org.apache.cloudstack.framework.jobs.AsyncJob;
 import org.apache.cloudstack.framework.jobs.AsyncJobDispatcher;
 import org.apache.cloudstack.framework.jobs.AsyncJobManager;
 import org.apache.cloudstack.jobs.JobInfo;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import com.cloud.exception.InvalidParameterValueException;
 import com.cloud.user.Account;
@@ -44,7 +45,7 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
 public class ApiAsyncJobDispatcher extends AdapterBase implements AsyncJobDispatcher {
-    private static final Logger s_logger = Logger.getLogger(ApiAsyncJobDispatcher.class);
+    protected static Logger s_logger = LogManager.getLogger(ApiAsyncJobDispatcher.class);
 
     @Inject
     private ApiDispatcher _dispatcher;

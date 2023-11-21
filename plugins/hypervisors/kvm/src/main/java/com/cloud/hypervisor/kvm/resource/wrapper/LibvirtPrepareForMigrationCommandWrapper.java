@@ -27,7 +27,8 @@ import org.apache.cloudstack.storage.configdrive.ConfigDrive;
 import org.apache.cloudstack.storage.to.PrimaryDataStoreTO;
 import org.apache.cloudstack.storage.to.VolumeObjectTO;
 import org.apache.commons.collections.MapUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.libvirt.Connect;
 import org.libvirt.LibvirtException;
 
@@ -55,7 +56,7 @@ import com.cloud.utils.script.Script;
 @ResourceWrapper(handles =  PrepareForMigrationCommand.class)
 public final class LibvirtPrepareForMigrationCommandWrapper extends CommandWrapper<PrepareForMigrationCommand, Answer, LibvirtComputingResource> {
 
-    private static final Logger s_logger = Logger.getLogger(LibvirtPrepareForMigrationCommandWrapper.class);
+    protected static Logger s_logger = LogManager.getLogger(LibvirtPrepareForMigrationCommandWrapper.class);
 
     @Override
     public Answer execute(final PrepareForMigrationCommand command, final LibvirtComputingResource libvirtComputingResource) {

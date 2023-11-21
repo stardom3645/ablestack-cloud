@@ -25,7 +25,8 @@ import java.util.Map;
 import javax.inject.Inject;
 import javax.naming.ConfigurationException;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import com.cloud.agent.api.Command;
 import com.cloud.configuration.Config;
@@ -53,7 +54,7 @@ import com.cloud.vm.VirtualMachine.State;
 import com.cloud.vm.dao.SecondaryStorageVmDao;
 
 public class PremiumSecondaryStorageManagerImpl extends SecondaryStorageManagerImpl {
-    private static final Logger s_logger = Logger.getLogger(PremiumSecondaryStorageManagerImpl.class);
+    protected static Logger s_logger = LogManager.getLogger(PremiumSecondaryStorageManagerImpl.class);
 
     private int _capacityPerSSVM = SecondaryStorageVmManager.DEFAULT_SS_VM_CAPACITY;
     private int migrateCapPerSSVM = DEFAULT_MIGRATE_SS_VM_CAPACITY;

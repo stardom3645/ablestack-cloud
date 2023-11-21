@@ -23,7 +23,8 @@ import java.util.Map;
 import java.util.HashMap;
 import java.util.Set;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.apache.xmlrpc.XmlRpcException;
 
 import static com.cloud.hypervisor.xenserver.discoverer.XcpServerDiscoverer.isUefiSupported;
@@ -43,7 +44,7 @@ import com.xensource.xenapi.VM;
 @ResourceWrapper(handles =  ReadyCommand.class)
 public final class CitrixReadyCommandWrapper extends CommandWrapper<ReadyCommand, Answer, CitrixResourceBase> {
 
-    private static final Logger s_logger = Logger.getLogger(CitrixReadyCommandWrapper.class);
+    protected static Logger s_logger = LogManager.getLogger(CitrixReadyCommandWrapper.class);
 
     @Override
     public Answer execute(final ReadyCommand command, final CitrixResourceBase citrixResourceBase) {

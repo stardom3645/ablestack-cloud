@@ -35,7 +35,8 @@ import org.apache.cloudstack.utils.qemu.QemuImg;
 import org.apache.cloudstack.utils.qemu.QemuImg.PhysicalDiskFormat;
 import org.apache.cloudstack.utils.qemu.QemuImgFile;
 import org.apache.commons.io.FileUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import com.cloud.agent.api.storage.StorPoolBackupTemplateFromSnapshotCommand;
 import com.cloud.agent.api.to.DataStoreTO;
@@ -58,7 +59,7 @@ import com.cloud.storage.template.TemplateProp;
 @ResourceWrapper(handles = StorPoolBackupTemplateFromSnapshotCommand.class)
 public class StorPoolBackupTemplateFromSnapshotCommandWrapper extends CommandWrapper<StorPoolBackupTemplateFromSnapshotCommand, CopyCmdAnswer, LibvirtComputingResource> {
 
-    private static final Logger s_logger = Logger.getLogger(StorPoolBackupTemplateFromSnapshotCommandWrapper.class);
+    protected static Logger s_logger = LogManager.getLogger(StorPoolBackupTemplateFromSnapshotCommandWrapper.class);
 
     @Override
     public CopyCmdAnswer execute(final StorPoolBackupTemplateFromSnapshotCommand cmd, final LibvirtComputingResource libvirtComputingResource) {

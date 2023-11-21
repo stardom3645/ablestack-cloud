@@ -27,7 +27,8 @@ import java.util.UUID;
 
 import javax.inject.Inject;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.mockito.Matchers;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
@@ -87,7 +88,7 @@ import com.cloud.vm.VirtualMachineManager;
 import com.cloud.vm.dao.UserVmDao;
 
 public class ManagementServerMock {
-    private static final Logger s_logger = Logger.getLogger(ManagementServerMock.class);
+    protected static Logger s_logger = LogManager.getLogger(ManagementServerMock.class);
 
     @Inject
     private AccountManager _accountMgr;

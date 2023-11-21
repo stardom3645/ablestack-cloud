@@ -93,7 +93,8 @@ import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.utils.URLEncodedUtils;
 import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.joda.time.DateTime;
 import org.joda.time.format.ISODateTimeFormat;
 
@@ -194,7 +195,7 @@ import io.netty.handler.logging.LoggingHandler;
 
 public class NfsSecondaryStorageResource extends ServerResourceBase implements SecondaryStorageResource {
 
-    public static final Logger s_logger = Logger.getLogger(NfsSecondaryStorageResource.class);
+    protected static Logger s_logger = LogManager.getLogger(NfsSecondaryStorageResource.class);
 
     private static final String TEMPLATE_ROOT_DIR = "template/tmpl";
     private static final String VOLUME_ROOT_DIR = "volumes";

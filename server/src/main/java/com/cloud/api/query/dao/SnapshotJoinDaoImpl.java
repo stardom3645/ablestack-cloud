@@ -33,7 +33,8 @@ import org.apache.cloudstack.engine.subsystem.api.storage.SnapshotDataFactory;
 import org.apache.cloudstack.engine.subsystem.api.storage.SnapshotInfo;
 import org.apache.cloudstack.framework.config.dao.ConfigurationDao;
 import org.apache.cloudstack.query.QueryService;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import com.cloud.api.ApiResponseHelper;
 import com.cloud.api.query.vo.SnapshotJoinVO;
@@ -48,7 +49,7 @@ import com.cloud.utils.db.SearchCriteria;
 
 public class SnapshotJoinDaoImpl extends GenericDaoBaseWithTagInformation<SnapshotJoinVO, SnapshotResponse> implements SnapshotJoinDao {
 
-    public static final Logger s_logger = Logger.getLogger(SnapshotJoinDaoImpl.class);
+    protected static Logger s_logger = LogManager.getLogger(SnapshotJoinDaoImpl.class);
 
     @Inject
     private AccountService accountService;

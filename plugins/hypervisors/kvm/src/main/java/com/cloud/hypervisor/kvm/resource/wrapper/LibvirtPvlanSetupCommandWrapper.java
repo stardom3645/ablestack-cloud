@@ -19,7 +19,8 @@
 
 package com.cloud.hypervisor.kvm.resource.wrapper;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.joda.time.Duration;
 
 import com.cloud.agent.api.Answer;
@@ -32,7 +33,7 @@ import com.cloud.utils.script.Script;
 @ResourceWrapper(handles = PvlanSetupCommand.class)
 public final class LibvirtPvlanSetupCommandWrapper extends CommandWrapper<PvlanSetupCommand, Answer, LibvirtComputingResource> {
 
-    private static final Logger s_logger = Logger.getLogger(LibvirtPvlanSetupCommandWrapper.class);
+    protected static Logger s_logger = LogManager.getLogger(LibvirtPvlanSetupCommandWrapper.class);
 
     @Override
     public Answer execute(final PvlanSetupCommand command, final LibvirtComputingResource libvirtComputingResource) {

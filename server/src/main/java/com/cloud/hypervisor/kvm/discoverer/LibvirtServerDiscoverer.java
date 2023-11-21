@@ -54,7 +54,8 @@ import org.apache.cloudstack.ca.SetupCertificateCommand;
 import org.apache.cloudstack.direct.download.DirectDownloadManager;
 import org.apache.cloudstack.framework.ca.Certificate;
 import org.apache.cloudstack.utils.security.KeyStoreUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import javax.inject.Inject;
 import javax.naming.ConfigurationException;
@@ -70,7 +71,7 @@ import java.util.UUID;
 import static com.cloud.configuration.ConfigurationManagerImpl.ADD_HOST_ON_SERVICE_RESTART_KVM;
 
 public abstract class LibvirtServerDiscoverer extends DiscovererBase implements Discoverer, Listener, ResourceStateAdapter {
-    private static final Logger s_logger = Logger.getLogger(LibvirtServerDiscoverer.class);
+    protected static Logger s_logger = LogManager.getLogger(LibvirtServerDiscoverer.class);
     private final int _waitTime = 5; /* wait for 5 minutes */
     private String _kvmPrivateNic;
     private String _kvmPublicNic;

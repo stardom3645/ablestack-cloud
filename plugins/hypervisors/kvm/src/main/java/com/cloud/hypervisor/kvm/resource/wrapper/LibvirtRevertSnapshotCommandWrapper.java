@@ -32,7 +32,8 @@ import org.apache.cloudstack.storage.command.RevertSnapshotCommand;
 import org.apache.cloudstack.storage.to.PrimaryDataStoreTO;
 import org.apache.cloudstack.storage.to.SnapshotObjectTO;
 import org.apache.cloudstack.storage.to.VolumeObjectTO;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import com.ceph.rados.IoCTX;
 import com.ceph.rados.Rados;
@@ -58,7 +59,7 @@ import com.cloud.utils.script.Script;
 @ResourceWrapper(handles = RevertSnapshotCommand.class)
 public class LibvirtRevertSnapshotCommandWrapper extends CommandWrapper<RevertSnapshotCommand, Answer, LibvirtComputingResource> {
 
-    private static final Logger s_logger = Logger.getLogger(LibvirtRevertSnapshotCommandWrapper.class);
+    protected static Logger s_logger = LogManager.getLogger(LibvirtRevertSnapshotCommandWrapper.class);
     private static final String MON_HOST = "mon_host";
     private static final String KEY = "key";
     private static final String CLIENT_MOUNT_TIMEOUT = "client_mount_timeout";

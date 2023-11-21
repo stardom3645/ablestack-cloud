@@ -38,7 +38,8 @@ import org.apache.cloudstack.storage.ImageStoreService;
 import org.apache.cloudstack.storage.datastore.db.ImageStoreDao;
 import org.apache.cloudstack.storage.datastore.db.ImageStoreVO;
 import org.apache.commons.lang3.EnumUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import com.cloud.event.ActionEvent;
 import com.cloud.event.EventTypes;
@@ -48,7 +49,7 @@ import com.cloud.utils.exception.CloudRuntimeException;
 
 public class ImageStoreServiceImpl extends ManagerBase implements ImageStoreService {
 
-    private static final Logger s_logger = Logger.getLogger(ImageStoreServiceImpl.class);
+    protected static Logger s_logger = LogManager.getLogger(ImageStoreServiceImpl.class);
     @Inject
     ImageStoreDao imageStoreDao;
     @Inject

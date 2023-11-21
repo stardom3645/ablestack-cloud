@@ -56,7 +56,8 @@ import javax.persistence.Enumerated;
 import javax.persistence.Table;
 import javax.persistence.TableGenerator;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import com.cloud.utils.DateUtil;
 import com.cloud.utils.NumbersUtil;
@@ -118,7 +119,7 @@ import net.sf.ehcache.Element;
  **/
 @DB
 public abstract class GenericDaoBase<T, ID extends Serializable> extends ComponentLifecycleBase implements GenericDao<T, ID>, ComponentMethodInterceptable {
-    private final static Logger s_logger = Logger.getLogger(GenericDaoBase.class);
+    private final static Logger s_logger = LogManager.getLogger(GenericDaoBase.class);
 
     protected final static TimeZone s_gmtTimeZone = TimeZone.getTimeZone("GMT");
 

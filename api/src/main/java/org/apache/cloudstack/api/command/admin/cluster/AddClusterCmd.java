@@ -21,7 +21,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.cloudstack.api.ApiCommandResourceType;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import org.apache.cloudstack.api.APICommand;
 import org.apache.cloudstack.api.ApiConstants;
@@ -42,7 +43,7 @@ import com.cloud.user.Account;
 @APICommand(name = "addCluster", description = "Adds a new cluster", responseObject = ClusterResponse.class,
         requestHasSensitiveInfo = true, responseHasSensitiveInfo = false)
 public class AddClusterCmd extends BaseCmd {
-    public static final Logger s_logger = Logger.getLogger(AddClusterCmd.class.getName());
+    protected static Logger s_logger = LogManager.getLogger(AddClusterCmd.class.getName());
 
 
     @Parameter(name = ApiConstants.CLUSTER_NAME, type = CommandType.STRING, required = true, description = "the cluster name")

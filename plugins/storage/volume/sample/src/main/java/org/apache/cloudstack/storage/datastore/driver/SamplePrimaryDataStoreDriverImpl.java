@@ -20,7 +20,8 @@ import java.util.Map;
 
 import javax.inject.Inject;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import org.apache.cloudstack.engine.subsystem.api.storage.ChapInfo;
 import org.apache.cloudstack.engine.subsystem.api.storage.CopyCommandResult;
@@ -50,7 +51,7 @@ import com.cloud.utils.Pair;
 import com.cloud.utils.exception.CloudRuntimeException;
 
 public class SamplePrimaryDataStoreDriverImpl implements PrimaryDataStoreDriver {
-    private static final Logger s_logger = Logger.getLogger(SamplePrimaryDataStoreDriverImpl.class);
+    protected static Logger s_logger = LogManager.getLogger(SamplePrimaryDataStoreDriverImpl.class);
     @Inject
     EndPointSelector selector;
     @Inject

@@ -16,7 +16,8 @@
 // under the License.
 package com.cloud.consoleproxy.vnc.network;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -33,7 +34,7 @@ public class NioSocket {
     private Selector readSelector;
 
     private static final int CONNECTION_TIMEOUT_MILLIS = 3000;
-    private static final Logger s_logger = Logger.getLogger(NioSocket.class);
+    protected static Logger s_logger = LogManager.getLogger(NioSocket.class);
 
     private void initializeSocket() {
         try {

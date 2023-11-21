@@ -30,7 +30,8 @@ import org.apache.cloudstack.context.CallContext;
 import org.apache.cloudstack.engine.orchestration.service.NetworkOrchestrationService;
 import org.apache.cloudstack.framework.config.dao.ConfigurationDao;
 import org.apache.cloudstack.lb.dao.ApplicationLoadBalancerRuleDao;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import com.cloud.agent.AgentManager;
 import com.cloud.agent.api.Answer;
@@ -95,7 +96,7 @@ import com.cloud.vm.dao.NicDao;
 import com.cloud.vm.dao.VMInstanceDao;
 
 public class NetScalerVMManagerImpl extends ManagerBase implements NetScalerVMManager, VirtualMachineGuru {
-    private static final Logger s_logger = Logger.getLogger(NetScalerVMManagerImpl.class);
+    protected static Logger s_logger = LogManager.getLogger(NetScalerVMManagerImpl.class);
     static final private String NetScalerLbVmNamePrefix = "NS";
 
     @Inject

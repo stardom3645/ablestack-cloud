@@ -23,7 +23,8 @@ import com.cloud.user.AccountManager;
 import junit.framework.TestCase;
 import org.apache.cloudstack.acl.ControlledEntity;
 import org.apache.cloudstack.acl.SecurityChecker.AccessType;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -41,7 +42,7 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 
 public class EventControlsUnitTest extends TestCase {
-    private static final Logger s_logger = Logger.getLogger(EventControlsUnitTest.class);
+    protected static Logger s_logger = LogManager.getLogger(EventControlsUnitTest.class);
 
     @Spy
     ManagementServerImpl _mgmtServer = new ManagementServerImpl();

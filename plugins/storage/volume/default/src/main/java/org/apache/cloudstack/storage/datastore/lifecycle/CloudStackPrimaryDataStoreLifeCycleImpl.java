@@ -64,7 +64,8 @@ import org.apache.cloudstack.engine.subsystem.api.storage.ZoneScope;
 import org.apache.cloudstack.storage.datastore.db.PrimaryDataStoreDao;
 import org.apache.cloudstack.storage.datastore.db.StoragePoolVO;
 import org.apache.cloudstack.storage.volume.datastore.PrimaryDataStoreHelper;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import javax.inject.Inject;
 import java.io.UnsupportedEncodingException;
@@ -77,7 +78,7 @@ import java.util.Map;
 import java.util.UUID;
 
 public class CloudStackPrimaryDataStoreLifeCycleImpl implements PrimaryDataStoreLifeCycle {
-    private static final Logger s_logger = Logger.getLogger(CloudStackPrimaryDataStoreLifeCycleImpl.class);
+    protected static Logger s_logger = LogManager.getLogger(CloudStackPrimaryDataStoreLifeCycleImpl.class);
     @Inject
     protected ResourceManager _resourceMgr;
     @Inject

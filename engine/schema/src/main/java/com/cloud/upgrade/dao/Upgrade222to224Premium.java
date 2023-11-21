@@ -20,12 +20,13 @@ import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import com.cloud.utils.exception.CloudRuntimeException;
 
 public class Upgrade222to224Premium extends Upgrade222to224 {
-    final static Logger s_logger = Logger.getLogger(Upgrade222to224Premium.class);
+    final static Logger s_logger = LogManager.getLogger(Upgrade222to224Premium.class);
 
     @Override
     public InputStream[] getPrepareScripts() {

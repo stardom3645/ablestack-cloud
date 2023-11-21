@@ -37,7 +37,8 @@ import org.apache.cloudstack.api.command.admin.resource.StartRollingMaintenanceC
 import org.apache.cloudstack.context.CallContext;
 import org.apache.cloudstack.framework.config.ConfigKey;
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import com.cloud.agent.AgentManager;
 import com.cloud.agent.api.Answer;
@@ -99,7 +100,7 @@ public class RollingMaintenanceManagerImpl extends ManagerBase implements Rollin
         _affinityProcessors = affinityProcessors;
     }
 
-    public static final Logger s_logger = Logger.getLogger(RollingMaintenanceManagerImpl.class.getName());
+    protected static Logger s_logger = LogManager.getLogger(RollingMaintenanceManagerImpl.class.getName());
 
     private Pair<ResourceType, List<Long>> getResourceTypeAndIdPair(List<Long> podIds, List<Long> clusterIds, List<Long> zoneIds, List<Long> hostIds) {
         Pair<ResourceType, List<Long>> pair = CollectionUtils.isNotEmpty(podIds) ? new Pair<>(ResourceType.Pod, podIds) :

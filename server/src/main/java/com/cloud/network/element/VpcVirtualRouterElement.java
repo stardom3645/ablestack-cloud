@@ -76,13 +76,14 @@ import org.apache.cloudstack.network.router.deployment.RouterDeploymentDefinitio
 import org.apache.cloudstack.network.router.deployment.RouterDeploymentDefinitionBuilder;
 import org.apache.cloudstack.network.topology.NetworkTopology;
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 
 public class VpcVirtualRouterElement extends VirtualRouterElement implements VpcProvider, Site2SiteVpnServiceProvider, NetworkACLServiceProvider {
 
-    private static final Logger s_logger = Logger.getLogger(VpcVirtualRouterElement.class);
+    protected static Logger s_logger = LogManager.getLogger(VpcVirtualRouterElement.class);
 
     private static final Map<Service, Map<Capability, String>> capabilities = setCapabilities();
 

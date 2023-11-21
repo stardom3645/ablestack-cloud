@@ -52,7 +52,8 @@ import org.apache.cloudstack.managed.context.ManagedContextRunnable;
 import org.apache.cloudstack.outofbandmanagement.dao.OutOfBandManagementDao;
 import org.apache.cloudstack.utils.identity.ManagementServerNode;
 import org.apache.commons.lang3.BooleanUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.apache.log4j.MDC;
 
 import com.cloud.agent.AgentManager;
@@ -128,7 +129,7 @@ import org.apache.commons.lang3.StringUtils;
  * Implementation of the Agent Manager. This class controls the connection to the agents.
  **/
 public class AgentManagerImpl extends ManagerBase implements AgentManager, HandlerFactory, Configurable {
-    protected static final Logger s_logger = Logger.getLogger(AgentManagerImpl.class);
+    protected static final Logger s_logger = LogManager.getLogger(AgentManagerImpl.class);
 
     /**
      * _agents is a ConcurrentHashMap, but it is used from within a synchronized block. This will be reported by findbugs as JLM_JSR166_UTILCONCURRENT_MONITORENTER. Maybe a

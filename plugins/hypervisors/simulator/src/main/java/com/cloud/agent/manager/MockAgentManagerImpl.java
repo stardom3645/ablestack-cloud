@@ -61,7 +61,8 @@ import org.apache.cloudstack.ca.SetupKeystoreAnswer;
 import org.apache.cloudstack.context.CallContext;
 import org.apache.cloudstack.diagnostics.DiagnosticsAnswer;
 import org.apache.cloudstack.diagnostics.DiagnosticsCommand;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.springframework.stereotype.Component;
 
 import javax.inject.Inject;
@@ -80,7 +81,7 @@ import java.util.regex.PatternSyntaxException;
 
 @Component
 public class MockAgentManagerImpl extends ManagerBase implements MockAgentManager {
-    private static final Logger s_logger = Logger.getLogger(MockAgentManagerImpl.class);
+    protected static Logger s_logger = LogManager.getLogger(MockAgentManagerImpl.class);
     @Inject
     DataCenterDao dcDao;
     @Inject

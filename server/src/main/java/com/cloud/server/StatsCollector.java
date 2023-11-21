@@ -78,7 +78,8 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.influxdb.BatchOptions;
 import org.influxdb.InfluxDB;
 import org.influxdb.InfluxDBFactory;
@@ -226,7 +227,7 @@ public class StatsCollector extends ManagerBase implements ComponentMethodInterc
         }
     }
 
-    private static final Logger LOGGER = Logger.getLogger(StatsCollector.class);
+    protected static Logger LOGGER = LogManager.getLogger(StatsCollector.class);
 
     private static final int UNDEFINED_PORT_VALUE = -1;
 

@@ -59,7 +59,8 @@ import org.apache.cloudstack.storage.datastore.db.StoragePoolVO;
 import org.apache.cloudstack.utils.identity.ManagementServerNode;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import com.cloud.agent.AgentManager;
 import com.cloud.agent.Listener;
@@ -150,7 +151,7 @@ import com.cloud.vm.dao.VMInstanceDao;
 public class DeploymentPlanningManagerImpl extends ManagerBase implements DeploymentPlanningManager, Manager, Listener,
 StateListener<State, VirtualMachine.Event, VirtualMachine>, Configurable {
 
-    private static final Logger s_logger = Logger.getLogger(DeploymentPlanningManagerImpl.class);
+    protected static Logger s_logger = LogManager.getLogger(DeploymentPlanningManagerImpl.class);
     @Inject
     AgentManager _agentMgr;
     @Inject

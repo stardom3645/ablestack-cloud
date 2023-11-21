@@ -25,7 +25,8 @@ import java.util.UUID;
 
 import javax.inject.Inject;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import org.apache.cloudstack.engine.subsystem.api.storage.ClusterScope;
 import org.apache.cloudstack.engine.subsystem.api.storage.DataStore;
@@ -64,7 +65,7 @@ import com.cloud.utils.exception.CloudRuntimeException;
 import com.google.common.base.Preconditions;
 
 public class SolidFirePrimaryDataStoreLifeCycle implements PrimaryDataStoreLifeCycle {
-    private static final Logger s_logger = Logger.getLogger(SolidFirePrimaryDataStoreLifeCycle.class);
+    protected static Logger s_logger = LogManager.getLogger(SolidFirePrimaryDataStoreLifeCycle.class);
 
     @Inject private CapacityManager _capacityMgr;
     @Inject private ClusterDao _clusterDao;

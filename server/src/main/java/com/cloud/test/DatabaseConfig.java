@@ -39,7 +39,8 @@ import javax.xml.parsers.SAXParserFactory;
 
 import org.apache.cloudstack.utils.security.DigestHelper;
 import org.apache.cloudstack.utils.security.ParserUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.apache.log4j.xml.DOMConfigurator;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
@@ -65,7 +66,7 @@ import com.cloud.utils.db.TransactionStatus;
 import com.cloud.utils.net.NfsUtils;
 
 public class DatabaseConfig {
-    private static final Logger s_logger = Logger.getLogger(DatabaseConfig.class.getName());
+    protected static Logger s_logger = LogManager.getLogger(DatabaseConfig.class.getName());
 
     private String _configFileName = null;
     private String _currentObjectName = null;

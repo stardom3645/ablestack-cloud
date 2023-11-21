@@ -21,7 +21,8 @@ package com.cloud.hypervisor.xenserver.resource.wrapper.xenbase;
 
 import java.util.Map;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import com.cloud.agent.api.Answer;
 import com.cloud.agent.api.DeleteStoragePoolCommand;
@@ -35,7 +36,7 @@ import com.xensource.xenapi.SR;
 
 @ResourceWrapper(handles =  DeleteStoragePoolCommand.class)
 public final class CitrixDeleteStoragePoolCommandWrapper extends CommandWrapper<DeleteStoragePoolCommand, Answer, CitrixResourceBase> {
-    private static final Logger s_logger = Logger.getLogger(CitrixDeleteStoragePoolCommandWrapper.class);
+    protected static Logger s_logger = LogManager.getLogger(CitrixDeleteStoragePoolCommandWrapper.class);
 
     @Override
     public Answer execute(final DeleteStoragePoolCommand command, final CitrixResourceBase citrixResourceBase) {

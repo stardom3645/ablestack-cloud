@@ -20,7 +20,8 @@ import java.util.List;
 
 import org.apache.cloudstack.storage.command.StorageSubSystemCommand;
 import org.apache.cloudstack.storage.resource.SecondaryStorageResourceHandler;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.apache.log4j.NDC;
 
 import com.cloud.agent.api.Answer;
@@ -52,7 +53,7 @@ import com.google.gson.Gson;
 import com.vmware.vim25.ManagedObjectReference;
 
 public class VmwareSecondaryStorageResourceHandler implements SecondaryStorageResourceHandler, VmwareHostService, VmwareStorageMount {
-    private static final Logger s_logger = Logger.getLogger(VmwareSecondaryStorageResourceHandler.class);
+    protected static Logger s_logger = LogManager.getLogger(VmwareSecondaryStorageResourceHandler.class);
 
     private final PremiumSecondaryStorageResource _resource;
     private final VmwareStorageManager _storageMgr;

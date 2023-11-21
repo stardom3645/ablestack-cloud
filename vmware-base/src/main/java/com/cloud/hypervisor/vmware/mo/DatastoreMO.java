@@ -22,7 +22,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.vmware.vim25.FolderFileInfo;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import com.cloud.exception.CloudException;
 import com.cloud.hypervisor.vmware.util.VmwareContext;
@@ -44,7 +45,7 @@ import com.vmware.vim25.SelectionSpec;
 import com.vmware.vim25.TraversalSpec;
 
 public class DatastoreMO extends BaseMO {
-    private static final Logger s_logger = Logger.getLogger(DatastoreMO.class);
+    protected static Logger s_logger = LogManager.getLogger(DatastoreMO.class);
 
     private String _name;
     private Pair<DatacenterMO, String> _ownerDc;

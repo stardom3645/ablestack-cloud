@@ -21,7 +21,6 @@ import javax.inject.Inject;
 
 import org.apache.cloudstack.api.ApiCommandResourceType;
 import org.apache.cloudstack.context.CallContext;
-import org.apache.log4j.Logger;
 import org.springframework.stereotype.Component;
 
 import com.cloud.dc.DataCenter;
@@ -55,8 +54,6 @@ import com.cloud.vm.VirtualMachineProfile;
 
 @Component
 public class OvsGuestNetworkGuru extends GuestNetworkGuru {
-    private static final Logger s_logger = Logger
-        .getLogger(OvsGuestNetworkGuru.class);
 
     @Inject
     OvsTunnelManager _ovsTunnelMgr;

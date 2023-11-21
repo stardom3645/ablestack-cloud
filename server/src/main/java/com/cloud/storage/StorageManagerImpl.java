@@ -119,7 +119,8 @@ import org.apache.cloudstack.storage.to.VolumeObjectTO;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.time.DateUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.springframework.stereotype.Component;
 
 import com.cloud.agent.AgentManager;
@@ -240,7 +241,7 @@ import com.google.common.collect.Sets;
 
 @Component
 public class StorageManagerImpl extends ManagerBase implements StorageManager, ClusterManagerListener, Configurable {
-    private static final Logger s_logger = Logger.getLogger(StorageManagerImpl.class);
+    protected static Logger s_logger = LogManager.getLogger(StorageManagerImpl.class);
 
     protected String _name;
     @Inject

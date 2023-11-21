@@ -25,7 +25,8 @@ import java.util.Set;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import com.cloud.agent.api.Answer;
 import com.cloud.agent.api.GetHypervisorGuestOsNamesAnswer;
@@ -40,7 +41,7 @@ import com.xensource.xenapi.VM;
 @ResourceWrapper(handles =  GetHypervisorGuestOsNamesCommand.class)
 public final class CitrixGetHypervisorGuestOsNamesCommandWrapper extends CommandWrapper<GetHypervisorGuestOsNamesCommand, Answer, CitrixResourceBase> {
 
-    private static final Logger s_logger = Logger.getLogger(CitrixGetHypervisorGuestOsNamesCommandWrapper.class);
+    protected static Logger s_logger = LogManager.getLogger(CitrixGetHypervisorGuestOsNamesCommandWrapper.class);
 
     @Override
     public Answer execute(final GetHypervisorGuestOsNamesCommand command, final CitrixResourceBase citrixResourceBase) {

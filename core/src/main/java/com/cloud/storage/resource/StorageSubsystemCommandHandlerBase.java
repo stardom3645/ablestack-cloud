@@ -35,7 +35,8 @@ import org.apache.cloudstack.storage.command.SnapshotAndCopyCommand;
 import org.apache.cloudstack.storage.command.StorageSubSystemCommand;
 import org.apache.cloudstack.storage.command.SyncVolumePathCommand;
 import org.apache.cloudstack.storage.to.VolumeObjectTO;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import com.cloud.agent.api.Answer;
 import com.cloud.agent.api.Command;
@@ -49,7 +50,7 @@ import com.cloud.storage.Volume;
 import com.google.gson.Gson;
 
 public class StorageSubsystemCommandHandlerBase implements StorageSubsystemCommandHandler {
-    private static final Logger s_logger = Logger.getLogger(StorageSubsystemCommandHandlerBase.class);
+    protected static Logger s_logger = LogManager.getLogger(StorageSubsystemCommandHandlerBase.class);
     protected static final Gson s_gogger = GsonHelper.getGsonLogger();
     protected StorageProcessor processor;
 

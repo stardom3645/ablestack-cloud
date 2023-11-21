@@ -27,10 +27,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 public class SubscriptionMgr {
-    protected final static Logger s_logger = Logger.getLogger(SubscriptionMgr.class);
+    protected final static Logger s_logger = LogManager.getLogger(SubscriptionMgr.class);
 
     private static SubscriptionMgr s_instance = new SubscriptionMgr();
 

@@ -25,7 +25,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import com.cloud.agent.api.Answer;
 import com.cloud.agent.api.FenceAnswer;
@@ -42,7 +43,7 @@ import com.cloud.resource.ResourceWrapper;
 @ResourceWrapper(handles =  FenceCommand.class)
 public final class LibvirtFenceCommandWrapper extends CommandWrapper<FenceCommand, Answer, LibvirtComputingResource> {
 
-    private static final Logger s_logger = Logger.getLogger(LibvirtFenceCommandWrapper.class);
+    protected static Logger s_logger = LogManager.getLogger(LibvirtFenceCommandWrapper.class);
 
     @Override
     public Answer execute(final FenceCommand command, final LibvirtComputingResource libvirtComputingResource) {

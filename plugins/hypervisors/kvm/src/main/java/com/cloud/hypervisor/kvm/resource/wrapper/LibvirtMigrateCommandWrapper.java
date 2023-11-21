@@ -48,7 +48,8 @@ import org.apache.commons.collections.MapUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.libvirt.Connect;
 import org.libvirt.Domain;
 import org.libvirt.DomainInfo.DomainState;
@@ -89,7 +90,7 @@ public final class LibvirtMigrateCommandWrapper extends CommandWrapper<MigrateCo
     private static final String GRAPHICS_ELEM_END = "/graphics>";
     private static final String GRAPHICS_ELEM_START = "<graphics";
     private static final String CONTENTS_WILDCARD = "(?s).*";
-    private static final Logger s_logger = Logger.getLogger(LibvirtMigrateCommandWrapper.class);
+    protected static Logger s_logger = LogManager.getLogger(LibvirtMigrateCommandWrapper.class);
 
     protected String createMigrationURI(final String destinationIp, final LibvirtComputingResource libvirtComputingResource) {
         if (StringUtils.isEmpty(destinationIp)) {

@@ -40,13 +40,14 @@ import org.apache.commons.httpclient.MultiThreadedHttpConnectionManager;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.methods.HeadMethod;
 import org.apache.commons.io.IOUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 public class HttpDirectTemplateDownloader extends DirectTemplateDownloaderImpl {
 
     protected HttpClient client;
     private static final MultiThreadedHttpConnectionManager s_httpClientManager = new MultiThreadedHttpConnectionManager();
-    public static final Logger s_logger = Logger.getLogger(HttpDirectTemplateDownloader.class.getName());
+    protected static Logger s_logger = LogManager.getLogger(HttpDirectTemplateDownloader.class.getName());
     protected GetMethod request;
     protected Map<String, String> reqHeaders = new HashMap<>();
 

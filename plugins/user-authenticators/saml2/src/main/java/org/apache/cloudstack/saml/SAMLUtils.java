@@ -61,7 +61,8 @@ import org.apache.cloudstack.api.response.LoginCmdResponse;
 import org.apache.cloudstack.utils.security.CertUtils;
 import org.apache.cloudstack.utils.security.ParserUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.bouncycastle.operator.OperatorCreationException;
 import org.joda.time.DateTime;
 import org.opensaml.Configuration;
@@ -104,7 +105,7 @@ import org.xml.sax.SAXException;
 import com.cloud.utils.HttpUtils;
 
 public class SAMLUtils {
-    public static final Logger s_logger = Logger.getLogger(SAMLUtils.class);
+    protected static Logger s_logger = LogManager.getLogger(SAMLUtils.class);
 
     static final String charset = "abcdefghijklmnopqrstuvwxyz";
 

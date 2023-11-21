@@ -52,7 +52,8 @@ import org.apache.cloudstack.managed.context.ManagedContextRunnable;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import com.cloud.api.ApiDBUtils;
 import com.cloud.configuration.Resource;
@@ -110,7 +111,7 @@ import com.googlecode.ipv6.IPv6NetworkMask;
 
 public class Ipv6ServiceImpl extends ComponentLifecycleBase implements Ipv6Service {
 
-    public static final Logger s_logger = Logger.getLogger(Ipv6ServiceImpl.class.getName());
+    protected static Logger s_logger = LogManager.getLogger(Ipv6ServiceImpl.class.getName());
     private static final String s_publicNetworkReserver = PublicNetworkGuru.class.getSimpleName();
 
     ScheduledExecutorService _ipv6GuestPrefixSubnetNetworkMapStateScanner;

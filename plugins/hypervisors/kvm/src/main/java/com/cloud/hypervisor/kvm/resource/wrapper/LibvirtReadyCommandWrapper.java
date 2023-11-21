@@ -31,12 +31,13 @@ import com.cloud.resource.CommandWrapper;
 import com.cloud.resource.ResourceWrapper;
 import com.cloud.utils.script.Script;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 @ResourceWrapper(handles =  ReadyCommand.class)
 public final class LibvirtReadyCommandWrapper extends CommandWrapper<ReadyCommand, Answer, LibvirtComputingResource> {
 
-    private static final Logger s_logger = Logger.getLogger(LibvirtReadyCommandWrapper.class);
+    protected static Logger s_logger = LogManager.getLogger(LibvirtReadyCommandWrapper.class);
 
     @Override
     public Answer execute(final ReadyCommand command, final LibvirtComputingResource libvirtComputingResource) {

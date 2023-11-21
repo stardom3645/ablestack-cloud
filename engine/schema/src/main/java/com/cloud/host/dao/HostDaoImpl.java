@@ -32,7 +32,8 @@ import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 import javax.persistence.TableGenerator;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import com.cloud.agent.api.VgpuTypesInfo;
 import com.cloud.cluster.agentlb.HostTransferMapVO;
@@ -75,9 +76,9 @@ import java.util.Arrays;
 @DB
 @TableGenerator(name = "host_req_sq", table = "op_host", pkColumnName = "id", valueColumnName = "sequence", allocationSize = 1)
 public class HostDaoImpl extends GenericDaoBase<HostVO, Long> implements HostDao { //FIXME: , ExternalIdDao {
-    private static final Logger s_logger = Logger.getLogger(HostDaoImpl.class);
-    private static final Logger status_logger = Logger.getLogger(Status.class);
-    private static final Logger state_logger = Logger.getLogger(ResourceState.class);
+    protected static Logger s_logger = LogManager.getLogger(HostDaoImpl.class);
+    protected static Logger status_logger = LogManager.getLogger(Status.class);
+    protected static Logger state_logger = LogManager.getLogger(ResourceState.class);
 
     private static final String LIST_HOST_IDS_BY_COMPUTETAGS = "SELECT filtered.host_id, COUNT(filtered.tag) AS tag_count "
                                                              + "FROM (SELECT host_id, tag FROM host_tags GROUP BY host_id,tag) AS filtered "

@@ -133,7 +133,8 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import com.cloud.agent.AgentManager;
 import com.cloud.alert.AlertManager;
@@ -297,7 +298,7 @@ import com.googlecode.ipv6.IPv6Address;
 import com.googlecode.ipv6.IPv6Network;
 
 public class ConfigurationManagerImpl extends ManagerBase implements ConfigurationManager, ConfigurationService, Configurable {
-    public static final Logger s_logger = Logger.getLogger(ConfigurationManagerImpl.class);
+    protected static Logger s_logger = LogManager.getLogger(ConfigurationManagerImpl.class);
     public static final String PERACCOUNT = "peraccount";
     public static final String PERZONE = "perzone";
 

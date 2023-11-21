@@ -24,12 +24,13 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import com.cloud.utils.exception.CloudRuntimeException;
 
 public class Upgrade2211to2212 implements DbUpgrade {
-    final static Logger s_logger = Logger.getLogger(Upgrade2211to2212.class);
+    final static Logger s_logger = LogManager.getLogger(Upgrade2211to2212.class);
 
     @Override
     public String[] getUpgradableVersionRange() {

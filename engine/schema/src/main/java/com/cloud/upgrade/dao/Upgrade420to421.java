@@ -23,13 +23,14 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import com.cloud.hypervisor.Hypervisor;
 import com.cloud.utils.exception.CloudRuntimeException;
 
 public class Upgrade420to421 implements DbUpgrade {
-    final static Logger s_logger = Logger.getLogger(Upgrade420to421.class);
+    final static Logger s_logger = LogManager.getLogger(Upgrade420to421.class);
 
     @Override
     public String[] getUpgradableVersionRange() {

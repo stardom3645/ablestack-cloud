@@ -34,10 +34,11 @@ import java.util.Set;
 import java.util.UUID;
 
 import javax.naming.ConfigurationException;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 public class JavaStorageLayer implements StorageLayer {
-    private static final Logger s_logger = Logger.getLogger(JavaStorageLayer.class);
+    protected static Logger s_logger = LogManager.getLogger(JavaStorageLayer.class);
     private static final String STD_TMP_DIR_PATH = "/tmp";
     String _name;
     boolean _makeWorldWriteable = true;

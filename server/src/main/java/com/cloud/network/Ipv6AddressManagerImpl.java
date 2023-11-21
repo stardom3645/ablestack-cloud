@@ -23,7 +23,8 @@ import javax.inject.Inject;
 import javax.naming.ConfigurationException;
 
 import org.apache.cloudstack.framework.config.dao.ConfigurationDao;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import com.cloud.configuration.Config;
 import com.cloud.dc.DataCenter;
@@ -52,7 +53,7 @@ import com.cloud.vm.dao.NicSecondaryIpVO;
 import com.googlecode.ipv6.IPv6Address;
 
 public class Ipv6AddressManagerImpl extends ManagerBase implements Ipv6AddressManager {
-    public static final Logger s_logger = Logger.getLogger(Ipv6AddressManagerImpl.class.getName());
+    protected static Logger s_logger = LogManager.getLogger(Ipv6AddressManagerImpl.class.getName());
 
     String _name = null;
     int _ipv6RetryMax = 0;

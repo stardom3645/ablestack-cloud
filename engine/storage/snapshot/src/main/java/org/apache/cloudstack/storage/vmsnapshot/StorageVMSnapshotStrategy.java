@@ -39,7 +39,8 @@ import org.apache.cloudstack.engine.subsystem.api.storage.VolumeInfo;
 import org.apache.cloudstack.storage.datastore.db.PrimaryDataStoreDao;
 import org.apache.cloudstack.storage.to.VolumeObjectTO;
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import com.cloud.agent.api.CreateVMSnapshotAnswer;
 import com.cloud.agent.api.CreateVMSnapshotCommand;
@@ -75,7 +76,7 @@ import com.cloud.vm.snapshot.VMSnapshotVO;
 import com.cloud.vm.snapshot.dao.VMSnapshotDetailsDao;
 
 public class StorageVMSnapshotStrategy extends DefaultVMSnapshotStrategy {
-    private static final Logger s_logger = Logger.getLogger(StorageVMSnapshotStrategy.class);
+    protected static Logger s_logger = LogManager.getLogger(StorageVMSnapshotStrategy.class);
     @Inject
     VolumeApiService volumeService;
     @Inject

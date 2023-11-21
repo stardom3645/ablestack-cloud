@@ -32,7 +32,8 @@ import com.cloud.utils.db.SearchCriteria.Func;
 import com.cloud.utils.db.SearchCriteria.Op;
 import org.apache.commons.lang3.StringUtils;
 import com.cloud.utils.db.TransactionLegacy;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.springframework.stereotype.Component;
 
 import java.sql.PreparedStatement;
@@ -42,7 +43,7 @@ import java.util.List;
 
 @Component
 public class AccountDaoImpl extends GenericDaoBase<AccountVO, Long> implements AccountDao {
-    private static final Logger s_logger = Logger.getLogger(AccountDaoImpl.class);
+    protected static Logger s_logger = LogManager.getLogger(AccountDaoImpl.class);
     private static final String FIND_USER_ACCOUNT_BY_API_KEY = "SELECT u.id, u.username, u.account_id, u.secret_key, u.state, "
         + "a.id, a.account_name, a.type, a.role_id, a.domain_id, a.state " + "FROM `cloud`.`user` u, `cloud`.`account` a "
         + "WHERE u.account_id = a.id AND u.api_key = ? and u.removed IS NULL";

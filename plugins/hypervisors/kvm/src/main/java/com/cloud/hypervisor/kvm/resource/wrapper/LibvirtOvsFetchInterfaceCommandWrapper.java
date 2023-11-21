@@ -20,7 +20,8 @@
 package com.cloud.hypervisor.kvm.resource.wrapper;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import com.cloud.agent.api.Answer;
 import com.cloud.agent.api.OvsFetchInterfaceAnswer;
@@ -33,7 +34,7 @@ import com.cloud.utils.script.Script;
 @ResourceWrapper(handles =  OvsFetchInterfaceCommand.class)
 public final class LibvirtOvsFetchInterfaceCommandWrapper extends CommandWrapper<OvsFetchInterfaceCommand, Answer, LibvirtComputingResource> {
 
-    private static final Logger s_logger = Logger.getLogger(LibvirtOvsFetchInterfaceCommandWrapper.class);
+    protected static Logger s_logger = LogManager.getLogger(LibvirtOvsFetchInterfaceCommandWrapper.class);
 
     @Override
     public Answer execute(final OvsFetchInterfaceCommand command, final LibvirtComputingResource libvirtComputingResource) {

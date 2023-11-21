@@ -27,7 +27,8 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.collections.MapUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import com.cloud.agent.api.Answer;
 import com.cloud.agent.api.StopAnswer;
@@ -50,7 +51,7 @@ import com.xensource.xenapi.VM;
 @ResourceWrapper(handles =  StopCommand.class)
 public final class CitrixStopCommandWrapper extends CommandWrapper<StopCommand, Answer, CitrixResourceBase> {
 
-    private static final Logger s_logger = Logger.getLogger(CitrixStopCommandWrapper.class);
+    protected static Logger s_logger = LogManager.getLogger(CitrixStopCommandWrapper.class);
 
     @Override
     public Answer execute(final StopCommand command, final CitrixResourceBase citrixResourceBase) {

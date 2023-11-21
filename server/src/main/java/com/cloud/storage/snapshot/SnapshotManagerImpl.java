@@ -78,7 +78,8 @@ import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.ReflectionToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.springframework.stereotype.Component;
 
 import com.cloud.agent.api.Answer;
@@ -174,7 +175,7 @@ import com.cloud.vm.snapshot.dao.VMSnapshotDetailsDao;
 
 @Component
 public class SnapshotManagerImpl extends MutualExclusiveIdsManagerBase implements SnapshotManager, SnapshotApiService, Configurable {
-    private static final Logger s_logger = Logger.getLogger(SnapshotManagerImpl.class);
+    protected static Logger s_logger = LogManager.getLogger(SnapshotManagerImpl.class);
     @Inject
     VMTemplateDao _templateDao;
     @Inject

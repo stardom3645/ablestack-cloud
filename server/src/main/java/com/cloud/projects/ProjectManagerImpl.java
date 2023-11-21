@@ -49,7 +49,8 @@ import org.apache.cloudstack.utils.mailing.MailAddress;
 import org.apache.cloudstack.utils.mailing.SMTPMailProperties;
 import org.apache.cloudstack.utils.mailing.SMTPMailSender;
 import org.apache.commons.lang3.BooleanUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.springframework.stereotype.Component;
 
 import com.cloud.api.ApiDBUtils;
@@ -106,7 +107,7 @@ import com.cloud.vm.snapshot.dao.VMSnapshotDao;
 
 @Component
 public class ProjectManagerImpl extends ManagerBase implements ProjectManager, Configurable {
-    public static final Logger s_logger = Logger.getLogger(ProjectManagerImpl.class);
+    protected static Logger s_logger = LogManager.getLogger(ProjectManagerImpl.class);
 
     private static final SecureRandom secureRandom = new SecureRandom();
 

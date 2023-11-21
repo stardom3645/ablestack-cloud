@@ -38,7 +38,8 @@ import javax.xml.datatype.DatatypeFactory;
 import javax.xml.datatype.XMLGregorianCalendar;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import com.cloud.hypervisor.vmware.mo.CustomFieldConstants;
 import com.cloud.hypervisor.vmware.mo.DatastoreMO;
@@ -89,7 +90,7 @@ import com.vmware.vim25.VirtualVmxnet2;
 import com.vmware.vim25.VirtualVmxnet3;
 
 public class VmwareHelper {
-    private static final Logger s_logger = Logger.getLogger(VmwareHelper.class);
+    protected static Logger s_logger = LogManager.getLogger(VmwareHelper.class);
 
     public static final int MAX_SCSI_CONTROLLER_COUNT = 4;
     public static final int MAX_IDE_CONTROLLER_COUNT = 2;

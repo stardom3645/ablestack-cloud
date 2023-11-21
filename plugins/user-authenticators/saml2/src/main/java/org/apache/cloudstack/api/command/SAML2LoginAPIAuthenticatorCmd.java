@@ -47,7 +47,8 @@ import org.apache.cloudstack.saml.SAMLProviderMetadata;
 import org.apache.cloudstack.saml.SAMLTokenVO;
 import org.apache.cloudstack.saml.SAMLUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.opensaml.DefaultBootstrap;
 import org.opensaml.saml2.core.Assertion;
 import org.opensaml.saml2.core.EncryptedAssertion;
@@ -81,7 +82,7 @@ import com.cloud.utils.db.EntityManager;
 
 @APICommand(name = "samlSso", description = "SP initiated SAML Single Sign On", requestHasSensitiveInfo = true, responseObject = LoginCmdResponse.class, entityType = {})
 public class SAML2LoginAPIAuthenticatorCmd extends BaseCmd implements APIAuthenticator, Configurable {
-    public static final Logger s_logger = Logger.getLogger(SAML2LoginAPIAuthenticatorCmd.class.getName());
+    protected static Logger s_logger = LogManager.getLogger(SAML2LoginAPIAuthenticatorCmd.class.getName());
     private static final String s_name = "loginresponse";
 
     /////////////////////////////////////////////////////

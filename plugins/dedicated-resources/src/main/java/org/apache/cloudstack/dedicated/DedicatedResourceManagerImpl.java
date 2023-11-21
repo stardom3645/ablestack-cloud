@@ -44,7 +44,8 @@ import org.apache.cloudstack.api.response.DedicatePodResponse;
 import org.apache.cloudstack.api.response.DedicateZoneResponse;
 import org.apache.cloudstack.context.CallContext;
 import org.apache.cloudstack.framework.config.dao.ConfigurationDao;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.springframework.stereotype.Component;
 
 import com.cloud.configuration.Config;
@@ -84,7 +85,7 @@ import com.cloud.vm.dao.UserVmDao;
 
 @Component
 public class DedicatedResourceManagerImpl implements DedicatedService {
-    private static final Logger s_logger = Logger.getLogger(DedicatedResourceManagerImpl.class);
+    protected static Logger s_logger = LogManager.getLogger(DedicatedResourceManagerImpl.class);
 
     @Inject
     AccountDao _accountDao;

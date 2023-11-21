@@ -52,7 +52,8 @@ import org.apache.cloudstack.engine.subsystem.api.storage.ZoneScope;
 import org.apache.cloudstack.storage.datastore.db.PrimaryDataStoreDao;
 import org.apache.cloudstack.storage.datastore.db.StoragePoolVO;
 import org.apache.cloudstack.storage.volume.datastore.PrimaryDataStoreHelper;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import javax.inject.Inject;
 import java.io.UnsupportedEncodingException;
@@ -64,7 +65,7 @@ import java.util.UUID;
 
 
 public class AblestackPrimaryDataStoreLifeCycleImpl implements PrimaryDataStoreLifeCycle {
-    private static final Logger s_logger = Logger.getLogger(AblestackPrimaryDataStoreLifeCycleImpl.class);
+    protected static Logger s_logger = LogManager.getLogger(AblestackPrimaryDataStoreLifeCycleImpl.class);
     @Inject
     protected ResourceManager _resourceMgr;
     @Inject

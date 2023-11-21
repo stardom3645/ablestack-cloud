@@ -34,7 +34,8 @@ import org.apache.cloudstack.api.command.user.project.CreateProjectCmd;
 import org.apache.cloudstack.api.command.user.project.DeleteProjectCmd;
 import org.apache.cloudstack.context.CallContext;
 import org.apache.cloudstack.utils.identity.ManagementServerNode;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -89,7 +90,7 @@ import net.juniper.contrail.api.types.VnSubnetsType;
  * Exercise the public API.
  */
 public class NetworkProviderTest extends TestCase {
-    private static final Logger s_logger = Logger.getLogger(NetworkProviderTest.class);
+    protected static Logger s_logger = LogManager.getLogger(NetworkProviderTest.class);
 
     @Inject
     public ContrailManager _contrailMgr;

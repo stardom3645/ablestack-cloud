@@ -21,7 +21,8 @@ package com.cloud.agent.manager;
 
 import javax.inject.Inject;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import com.cloud.agent.api.Answer;
 import com.cloud.agent.api.CheckS2SVpnConnectionsCommand;
@@ -64,7 +65,7 @@ import com.cloud.simulator.dao.MockVMDao;
 import com.cloud.utils.component.ManagerBase;
 
 public class MockNetworkManagerImpl extends ManagerBase implements MockNetworkManager {
-    private static final Logger s_logger = Logger.getLogger(MockVmManagerImpl.class);
+    protected static Logger s_logger = LogManager.getLogger(MockVmManagerImpl.class);
 
     @Inject
     MockVMDao _mockVmDao;

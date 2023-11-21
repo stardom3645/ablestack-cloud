@@ -24,12 +24,13 @@ import java.util.Arrays;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import com.cloud.utils.exception.CloudRuntimeException;
 
 public class CloudStackEncryptor {
-    public static final Logger s_logger = Logger.getLogger(CloudStackEncryptor.class);
+    protected static Logger s_logger = LogManager.getLogger(CloudStackEncryptor.class);
     private Base64Encryptor encryptor = null;
     private LegacyBase64Encryptor encryptorV1;
     private AeadBase64Encryptor encryptorV2;

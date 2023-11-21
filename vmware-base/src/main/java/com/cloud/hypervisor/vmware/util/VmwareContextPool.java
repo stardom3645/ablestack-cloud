@@ -18,7 +18,8 @@ package com.cloud.hypervisor.vmware.util;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.cloudstack.managed.context.ManagedContextTimerTask;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.joda.time.Duration;
 
 import java.util.ArrayList;
@@ -32,7 +33,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentMap;
 
 public class VmwareContextPool {
-    private static final Logger s_logger = Logger.getLogger(VmwareContextPool.class);
+    protected static Logger s_logger = LogManager.getLogger(VmwareContextPool.class);
 
     private static final Duration DEFAULT_CHECK_INTERVAL = Duration.millis(10000L);
     private static final int DEFAULT_IDLE_QUEUE_LENGTH = 128;

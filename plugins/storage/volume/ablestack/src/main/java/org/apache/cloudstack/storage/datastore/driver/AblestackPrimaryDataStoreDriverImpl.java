@@ -24,7 +24,8 @@ import java.util.UUID;
 
 import javax.inject.Inject;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import com.cloud.agent.api.to.DiskTO;
 import com.cloud.storage.VolumeVO;
 import org.apache.cloudstack.engine.subsystem.api.storage.ChapInfo;
@@ -86,7 +87,7 @@ import com.cloud.vm.VirtualMachine;
 import com.cloud.vm.dao.VMInstanceDao;
 
 public class AblestackPrimaryDataStoreDriverImpl implements PrimaryDataStoreDriver {
-    private static final Logger s_logger = Logger.getLogger(AblestackPrimaryDataStoreDriverImpl.class);
+    protected static Logger s_logger = LogManager.getLogger(AblestackPrimaryDataStoreDriverImpl.class);
     @Inject
     DiskOfferingDao diskOfferingDao;
     @Inject

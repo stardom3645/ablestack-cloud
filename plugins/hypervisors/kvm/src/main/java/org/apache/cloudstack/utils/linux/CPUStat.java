@@ -21,10 +21,11 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.Scanner;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 public class CPUStat {
-    private static final Logger s_logger = Logger.getLogger(CPUStat.class);
+    protected static Logger s_logger = LogManager.getLogger(CPUStat.class);
 
     private Integer _cores;
     private UptimeStats _lastStats;

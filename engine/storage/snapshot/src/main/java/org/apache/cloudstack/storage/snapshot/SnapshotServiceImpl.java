@@ -55,7 +55,8 @@ import org.apache.cloudstack.storage.datastore.db.SnapshotDataStoreDao;
 import org.apache.cloudstack.storage.datastore.db.SnapshotDataStoreVO;
 import org.apache.cloudstack.storage.image.datastore.ImageStoreEntity;
 import org.apache.cloudstack.storage.to.SnapshotObjectTO;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import com.cloud.agent.api.Answer;
 import com.cloud.configuration.Config;
@@ -77,7 +78,7 @@ import com.cloud.utils.exception.CloudRuntimeException;
 import com.cloud.utils.fsm.NoTransitionException;
 
 public class SnapshotServiceImpl implements SnapshotService {
-    private static final Logger s_logger = Logger.getLogger(SnapshotServiceImpl.class);
+    protected static Logger s_logger = LogManager.getLogger(SnapshotServiceImpl.class);
     @Inject
     protected SnapshotDao _snapshotDao;
     @Inject

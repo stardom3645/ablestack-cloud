@@ -27,13 +27,14 @@ import com.cloud.utils.component.AdapterBase;
 import org.apache.cloudstack.api.ApiConstants;
 import org.apache.cloudstack.auth.UserAuthenticator;
 import org.apache.cloudstack.auth.UserOAuth2Authenticator;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import javax.inject.Inject;
 import java.util.Map;
 
 public class OAuth2UserAuthenticator extends AdapterBase implements UserAuthenticator {
-    public static final Logger s_logger = Logger.getLogger(OAuth2UserAuthenticator.class);
+    protected static Logger s_logger = LogManager.getLogger(OAuth2UserAuthenticator.class);
 
     @Inject
     private UserAccountDao _userAccountDao;

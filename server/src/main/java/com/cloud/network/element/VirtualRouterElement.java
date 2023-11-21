@@ -25,7 +25,8 @@ import java.util.Set;
 import javax.inject.Inject;
 
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 
@@ -121,7 +122,7 @@ import com.cloud.vm.dao.UserVmDao;
 public class VirtualRouterElement extends AdapterBase implements VirtualRouterElementService, DhcpServiceProvider, UserDataServiceProvider, SourceNatServiceProvider,
 StaticNatServiceProvider, FirewallServiceProvider, LoadBalancingServiceProvider, PortForwardingServiceProvider, RemoteAccessVPNServiceProvider, IpDeployer,
 NetworkMigrationResponder, AggregatedCommandExecutor, RedundantResource, DnsServiceProvider{
-    private static final Logger s_logger = Logger.getLogger(VirtualRouterElement.class);
+    protected static Logger s_logger = LogManager.getLogger(VirtualRouterElement.class);
     protected static final Map<Service, Map<Capability, String>> capabilities = setCapabilities();
 
     @Inject

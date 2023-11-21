@@ -21,7 +21,8 @@ package com.cloud.hypervisor.xenserver.resource.wrapper.xenbase;
 
 import java.util.HashMap;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import com.cloud.agent.api.Answer;
 import com.cloud.agent.api.GetVolumeStatsAnswer;
@@ -35,7 +36,7 @@ import com.xensource.xenapi.VDI;
 
 @ResourceWrapper(handles = GetVolumeStatsCommand.class)
 public final class CitrixGetVolumeStatsCommandWrapper extends CommandWrapper<GetVolumeStatsCommand, Answer, CitrixResourceBase> {
-    private static final Logger s_logger = Logger.getLogger(CitrixGetVolumeStatsCommandWrapper.class);
+    protected static Logger s_logger = LogManager.getLogger(CitrixGetVolumeStatsCommandWrapper.class);
 
     @Override
     public Answer execute(final GetVolumeStatsCommand cmd, final CitrixResourceBase citrixResourceBase) {

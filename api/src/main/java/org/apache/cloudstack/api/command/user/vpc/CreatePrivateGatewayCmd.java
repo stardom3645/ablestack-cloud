@@ -16,7 +16,8 @@
 // under the License.
 package org.apache.cloudstack.api.command.user.vpc;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import org.apache.cloudstack.acl.RoleType;
 import org.apache.cloudstack.api.APICommand;
@@ -52,7 +53,7 @@ import com.cloud.network.vpc.VpcGateway;
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false,
         authorized = {RoleType.Admin, RoleType.ResourceAdmin, RoleType.DomainAdmin, RoleType.User})
 public class CreatePrivateGatewayCmd extends BaseAsyncCreateCmd implements UserCmd {
-    public static final Logger s_logger = Logger.getLogger(CreatePrivateGatewayCmd.class.getName());
+    protected static Logger s_logger = LogManager.getLogger(CreatePrivateGatewayCmd.class.getName());
 
     private static final String s_name = "createprivategatewayresponse";
 

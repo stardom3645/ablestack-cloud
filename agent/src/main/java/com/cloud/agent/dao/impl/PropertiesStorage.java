@@ -24,7 +24,8 @@ import java.util.Map;
 import java.util.Properties;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import com.cloud.agent.dao.StorageComponent;
 import com.cloud.utils.PropertiesUtil;
@@ -36,7 +37,7 @@ import com.cloud.utils.PropertiesUtil;
  *         path to the properties _file | String | db/db.properties || * }
  **/
 public class PropertiesStorage implements StorageComponent {
-    private static final Logger s_logger = Logger.getLogger(PropertiesStorage.class);
+    protected static Logger s_logger = LogManager.getLogger(PropertiesStorage.class);
     Properties _properties = new Properties();
     File _file;
     String _name;

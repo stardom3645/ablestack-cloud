@@ -34,7 +34,6 @@ import org.apache.cloudstack.api.AddBaremetalPxeCmd;
 import org.apache.cloudstack.api.AddBaremetalPxePingServerCmd;
 import org.apache.cloudstack.api.ListBaremetalPxeServersCmd;
 import org.apache.cloudstack.framework.config.dao.ConfigurationDao;
-import org.apache.log4j.Logger;
 
 import com.cloud.agent.AgentManager;
 import com.cloud.agent.api.Answer;
@@ -71,7 +70,6 @@ import com.cloud.vm.dao.NicDao;
 import com.cloud.vm.dao.UserVmDao;
 
 public class BaremetalPxeManagerImpl extends ManagerBase implements BaremetalPxeManager, ResourceStateAdapter {
-    private static final org.apache.log4j.Logger s_logger = Logger.getLogger(BaremetalPxeManagerImpl.class);
     @Inject
     DataCenterDao _dcDao;
     @Inject

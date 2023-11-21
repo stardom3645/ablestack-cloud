@@ -83,7 +83,8 @@ import org.apache.cloudstack.storage.datastore.db.VolumeDataStoreVO;
 import org.apache.cloudstack.storage.image.store.TemplateObject;
 import org.apache.cloudstack.storage.to.TemplateObjectTO;
 import org.apache.cloudstack.storage.to.VolumeObjectTO;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.springframework.stereotype.Component;
 
 import com.cloud.agent.AgentManager;
@@ -146,7 +147,7 @@ import org.apache.commons.lang3.StringUtils;
 
 @Component
 public class VolumeServiceImpl implements VolumeService {
-    private static final Logger s_logger = Logger.getLogger(VolumeServiceImpl.class);
+    protected static Logger s_logger = LogManager.getLogger(VolumeServiceImpl.class);
     @Inject
     protected AgentManager agentMgr;
     @Inject

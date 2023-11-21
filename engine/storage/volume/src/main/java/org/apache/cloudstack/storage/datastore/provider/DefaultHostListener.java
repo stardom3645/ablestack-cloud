@@ -50,13 +50,14 @@ import org.apache.cloudstack.storage.datastore.db.StoragePoolDetailVO;
 import org.apache.cloudstack.storage.datastore.db.StoragePoolDetailsDao;
 import org.apache.cloudstack.storage.datastore.db.StoragePoolVO;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import javax.inject.Inject;
 import java.util.List;
 
 public class DefaultHostListener implements HypervisorHostListener {
-    private static final Logger s_logger = Logger.getLogger(DefaultHostListener.class);
+    protected static Logger s_logger = LogManager.getLogger(DefaultHostListener.class);
     @Inject
     AgentManager agentMgr;
     @Inject

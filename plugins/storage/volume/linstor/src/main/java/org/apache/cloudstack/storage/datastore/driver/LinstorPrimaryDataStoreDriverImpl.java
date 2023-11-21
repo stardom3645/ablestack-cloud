@@ -85,10 +85,11 @@ import org.apache.cloudstack.storage.datastore.db.StoragePoolVO;
 import org.apache.cloudstack.storage.datastore.util.LinstorUtil;
 import org.apache.cloudstack.storage.to.SnapshotObjectTO;
 import org.apache.cloudstack.storage.volume.VolumeObject;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 public class LinstorPrimaryDataStoreDriverImpl implements PrimaryDataStoreDriver {
-    private static final Logger s_logger = Logger.getLogger(LinstorPrimaryDataStoreDriverImpl.class);
+    protected static Logger s_logger = LogManager.getLogger(LinstorPrimaryDataStoreDriverImpl.class);
     @Inject private PrimaryDataStoreDao _storagePoolDao;
     @Inject private VolumeDao _volumeDao;
     @Inject private VolumeDetailsDao _volumeDetailsDao;

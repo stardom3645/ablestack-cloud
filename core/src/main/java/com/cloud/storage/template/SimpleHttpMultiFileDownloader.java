@@ -41,12 +41,13 @@ import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.methods.HeadMethod;
 import org.apache.commons.httpclient.params.HttpMethodParams;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import com.cloud.storage.StorageLayer;
 
 public class SimpleHttpMultiFileDownloader extends ManagedContextRunnable implements TemplateDownloader {
-    public static final Logger s_logger = Logger.getLogger(SimpleHttpMultiFileDownloader.class.getName());
+    protected static Logger s_logger = LogManager.getLogger(SimpleHttpMultiFileDownloader.class.getName());
     private static final MultiThreadedHttpConnectionManager s_httpClientManager = new MultiThreadedHttpConnectionManager();
 
     private static final int CHUNK_SIZE = 1024 * 1024; //1M

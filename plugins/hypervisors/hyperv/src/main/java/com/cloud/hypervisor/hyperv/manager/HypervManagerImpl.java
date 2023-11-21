@@ -33,7 +33,8 @@ import org.apache.cloudstack.engine.subsystem.api.storage.DataStore;
 import org.apache.cloudstack.engine.subsystem.api.storage.DataStoreManager;
 import org.apache.cloudstack.framework.config.dao.ConfigurationDao;
 import org.apache.cloudstack.utils.identity.ManagementServerNode;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import com.cloud.configuration.Config;
 import com.cloud.storage.JavaStorageLayer;
@@ -47,7 +48,7 @@ import com.cloud.vm.dao.NicDao;
 import com.cloud.vm.dao.VMInstanceDao;
 
 public class HypervManagerImpl implements HypervManager {
-    public static final Logger s_logger = Logger.getLogger(HypervManagerImpl.class);
+    protected static Logger s_logger = LogManager.getLogger(HypervManagerImpl.class);
 
     private String name;
     private int runLevel;

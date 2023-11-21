@@ -29,7 +29,8 @@ import com.cloud.utils.script.Script;
 import org.apache.cloudstack.agent.directdownload.RevokeDirectDownloadCertificateCommand;
 import org.apache.cloudstack.utils.security.KeyStoreUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -38,7 +39,7 @@ import java.io.IOException;
 @ResourceWrapper(handles =  RevokeDirectDownloadCertificateCommand.class)
 public class LibvirtRevokeDirectDownloadCertificateWrapper extends CommandWrapper<RevokeDirectDownloadCertificateCommand, Answer, LibvirtComputingResource> {
 
-    private static final Logger s_logger = Logger.getLogger(LibvirtRevokeDirectDownloadCertificateWrapper.class);
+    protected static Logger s_logger = LogManager.getLogger(LibvirtRevokeDirectDownloadCertificateWrapper.class);
 
     /**
      * Retrieve agent.properties file

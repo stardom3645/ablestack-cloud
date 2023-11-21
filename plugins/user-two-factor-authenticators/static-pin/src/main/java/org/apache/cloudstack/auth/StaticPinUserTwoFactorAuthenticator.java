@@ -21,7 +21,8 @@ import com.cloud.exception.CloudTwoFactorAuthenticationException;
 import com.cloud.user.UserAccount;
 import com.cloud.utils.exception.CloudRuntimeException;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import com.cloud.user.dao.UserAccountDao;
 import com.cloud.utils.component.AdapterBase;
@@ -29,7 +30,7 @@ import com.cloud.utils.component.AdapterBase;
 import java.security.SecureRandom;
 
 public class StaticPinUserTwoFactorAuthenticator extends AdapterBase implements UserTwoFactorAuthenticator {
-    public static final Logger s_logger = Logger.getLogger(StaticPinUserTwoFactorAuthenticator.class);
+    protected static Logger s_logger = LogManager.getLogger(StaticPinUserTwoFactorAuthenticator.class);
 
     @Inject
     private UserAccountDao _userAccountDao;

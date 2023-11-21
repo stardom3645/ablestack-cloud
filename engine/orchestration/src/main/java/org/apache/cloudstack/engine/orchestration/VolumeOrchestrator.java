@@ -86,7 +86,8 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.jetbrains.annotations.Nullable;
 
 import com.cloud.agent.api.to.DataTO;
@@ -179,7 +180,7 @@ public class VolumeOrchestrator extends ManagerBase implements VolumeOrchestrati
         full, linked
     }
 
-    private static final Logger s_logger = Logger.getLogger(VolumeOrchestrator.class);
+    protected static Logger s_logger = LogManager.getLogger(VolumeOrchestrator.class);
 
     @Inject
     EntityManager _entityMgr;

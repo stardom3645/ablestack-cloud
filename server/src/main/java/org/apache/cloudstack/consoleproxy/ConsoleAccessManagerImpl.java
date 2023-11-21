@@ -34,7 +34,8 @@ import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import com.cloud.agent.AgentManager;
 import com.cloud.agent.api.Answer;
@@ -108,7 +109,7 @@ public class ConsoleAccessManagerImpl extends ManagerBase implements ConsoleAcce
     private static KeysManager secretKeysManager;
     private final Gson gson = new GsonBuilder().create();
 
-    public static final Logger s_logger = Logger.getLogger(ConsoleAccessManagerImpl.class.getName());
+    protected static Logger s_logger = LogManager.getLogger(ConsoleAccessManagerImpl.class.getName());
 
     private static final List<VirtualMachine.State> unsupportedConsoleVMState = Arrays.asList(
             VirtualMachine.State.Stopped, VirtualMachine.State.Error, VirtualMachine.State.Destroyed

@@ -57,7 +57,8 @@ import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.client.utils.URLEncodedUtils;
 import org.apache.http.message.BasicNameValuePair;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
@@ -71,7 +72,7 @@ import com.google.common.collect.ImmutableSet;
 
 public class UriUtils {
 
-    public static final Logger s_logger = Logger.getLogger(UriUtils.class.getName());
+    protected static Logger s_logger = LogManager.getLogger(UriUtils.class.getName());
 
     public static String formNfsUri(String host, String path) {
         try {

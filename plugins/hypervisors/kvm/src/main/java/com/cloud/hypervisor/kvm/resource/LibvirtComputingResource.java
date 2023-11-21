@@ -76,7 +76,8 @@ import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.BooleanUtils;
 import org.apache.commons.lang.math.NumberUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.apache.xerces.impl.xpath.regex.Match;
 import org.joda.time.Duration;
 import org.libvirt.Connect;
@@ -235,7 +236,7 @@ import com.google.gson.Gson;
  *         pool | the parent of the storage pool hierarchy * }
  **/
 public class LibvirtComputingResource extends ServerResourceBase implements ServerResource, VirtualRouterDeployer, ResourceStatusUpdater {
-    protected static Logger s_logger = Logger.getLogger(LibvirtComputingResource.class);
+    protected static Logger s_logger = LogManager.getLogger(LibvirtComputingResource.class);
 
     private static final String CONFIG_VALUES_SEPARATOR = ",";
 

@@ -31,7 +31,8 @@ import org.apache.cloudstack.utils.reflectiontostringbuilderutils.ReflectionToSt
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import com.cloud.agent.api.Command;
 import com.cloud.agent.api.to.DiskTO;
@@ -68,7 +69,7 @@ import com.cloud.vm.dao.UserVmDetailsDao;
 import com.cloud.vm.dao.VMInstanceDao;
 
 public abstract class HypervisorGuruBase extends AdapterBase implements HypervisorGuru, Configurable {
-    public static final Logger s_logger = Logger.getLogger(HypervisorGuruBase.class);
+    protected static Logger s_logger = LogManager.getLogger(HypervisorGuruBase.class);
 
     @Inject
     protected

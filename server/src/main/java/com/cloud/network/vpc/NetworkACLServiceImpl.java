@@ -36,7 +36,8 @@ import org.apache.cloudstack.context.CallContext;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.springframework.stereotype.Component;
 
 import com.cloud.event.ActionEvent;
@@ -74,7 +75,7 @@ import com.cloud.utils.net.NetUtils;
 
 @Component
 public class NetworkACLServiceImpl extends ManagerBase implements NetworkACLService {
-    private static final Logger s_logger = Logger.getLogger(NetworkACLServiceImpl.class);
+    protected static Logger s_logger = LogManager.getLogger(NetworkACLServiceImpl.class);
 
     @Inject
     private AccountManager _accountMgr;

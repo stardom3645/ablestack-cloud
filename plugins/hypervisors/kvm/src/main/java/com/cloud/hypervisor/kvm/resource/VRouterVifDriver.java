@@ -20,7 +20,8 @@ import com.cloud.agent.api.to.NicTO;
 import com.cloud.exception.InternalErrorException;
 import com.cloud.utils.TungstenUtils;
 import com.cloud.utils.script.Script;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.joda.time.Duration;
 import org.libvirt.LibvirtException;
 
@@ -30,7 +31,7 @@ import java.util.Map;
 import javax.naming.ConfigurationException;
 
 public class VRouterVifDriver extends VifDriverBase {
-    private static final Logger s_logger = Logger.getLogger(VRouterVifDriver.class);
+    protected static Logger s_logger = LogManager.getLogger(VRouterVifDriver.class);
     private String createTapDeviceScript;
     private String deleteTapDeviceScript;
 

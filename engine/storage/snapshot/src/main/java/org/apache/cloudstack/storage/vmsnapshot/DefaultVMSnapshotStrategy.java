@@ -32,7 +32,8 @@ import org.apache.cloudstack.framework.config.dao.ConfigurationDao;
 import org.apache.cloudstack.storage.datastore.db.PrimaryDataStoreDao;
 import org.apache.cloudstack.storage.to.VolumeObjectTO;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import com.cloud.agent.AgentManager;
 import com.cloud.agent.api.Answer;
@@ -77,7 +78,7 @@ import com.cloud.vm.snapshot.VMSnapshotVO;
 import com.cloud.vm.snapshot.dao.VMSnapshotDao;
 
 public class DefaultVMSnapshotStrategy extends ManagerBase implements VMSnapshotStrategy {
-    private static final Logger s_logger = Logger.getLogger(DefaultVMSnapshotStrategy.class);
+    protected static Logger s_logger = LogManager.getLogger(DefaultVMSnapshotStrategy.class);
     @Inject
     VMSnapshotHelper vmSnapshotHelper;
     @Inject

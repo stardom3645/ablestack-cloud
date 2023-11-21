@@ -33,7 +33,8 @@ import org.apache.cloudstack.api.ServerApiException;
 import org.apache.cloudstack.api.response.GetUploadParamsResponse;
 import org.apache.cloudstack.api.response.GuestOSResponse;
 import org.apache.cloudstack.context.CallContext;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import com.cloud.exception.ResourceAllocationException;
 
@@ -42,7 +43,7 @@ import com.cloud.exception.ResourceAllocationException;
         authorized = {RoleType.Admin, RoleType.ResourceAdmin, RoleType.DomainAdmin, RoleType.User},
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class GetUploadParamsForTemplateCmd extends AbstractGetUploadParamsCmd {
-    public static final Logger s_logger = Logger.getLogger(GetUploadParamsForTemplateCmd.class.getName());
+    protected static Logger s_logger = LogManager.getLogger(GetUploadParamsForTemplateCmd.class.getName());
 
     private static final String s_name = "postuploadtemplateresponse";
 

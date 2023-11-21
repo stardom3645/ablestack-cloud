@@ -135,7 +135,8 @@ import org.apache.cloudstack.network.tungsten.dao.TungstenFabricLBHealthMonitorV
 import org.apache.cloudstack.network.tungsten.model.TungstenLoadBalancerMember;
 import org.apache.cloudstack.network.tungsten.model.TungstenRule;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -154,7 +155,7 @@ public class TungstenElement extends AdapterBase
     implements StaticNatServiceProvider, IpDeployer, FirewallServiceProvider,
     LoadBalancingServiceProvider, PortForwardingServiceProvider, ResourceStateAdapter, DnsServiceProvider, Listener,
     StateListener<VirtualMachine.State, VirtualMachine.Event, VirtualMachine>, NetworkMigrationResponder {
-    private static final Logger s_logger = Logger.getLogger(TungstenElement.class);
+    protected static Logger s_logger = LogManager.getLogger(TungstenElement.class);
 
     private static final String NETWORK = "network";
 

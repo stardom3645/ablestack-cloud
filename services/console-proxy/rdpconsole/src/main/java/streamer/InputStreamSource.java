@@ -20,7 +20,8 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import streamer.debug.FakeSink;
 
@@ -28,7 +29,7 @@ import streamer.debug.FakeSink;
  * Source element, which reads data from InputStream.
  */
 public class InputStreamSource extends BaseElement {
-    private static final Logger s_logger = Logger.getLogger(InputStreamSource.class);
+    protected static Logger s_logger = LogManager.getLogger(InputStreamSource.class);
 
     protected InputStream is;
     protected SocketWrapperImpl socketWrapper;

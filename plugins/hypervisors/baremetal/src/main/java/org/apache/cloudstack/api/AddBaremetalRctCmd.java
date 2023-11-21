@@ -27,7 +27,8 @@ import com.cloud.exception.ResourceAllocationException;
 import com.cloud.exception.ResourceUnavailableException;
 import org.apache.cloudstack.acl.RoleType;
 import org.apache.cloudstack.context.CallContext;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import javax.inject.Inject;
 
@@ -37,7 +38,7 @@ import javax.inject.Inject;
 @APICommand(name = "addBaremetalRct", description = "adds baremetal rack configuration text", responseObject = BaremetalRctResponse.class,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false, authorized = {RoleType.Admin})
 public class AddBaremetalRctCmd extends BaseAsyncCmd {
-    public static final Logger s_logger = Logger.getLogger(AddBaremetalRctCmd.class);
+    protected static Logger s_logger = LogManager.getLogger(AddBaremetalRctCmd.class);
 
     @Inject
     private BaremetalVlanManager vlanMgr;

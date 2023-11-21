@@ -67,7 +67,8 @@ import org.apache.cloudstack.storage.image.datastore.ImageStoreEntity;
 import org.apache.cloudstack.storage.image.store.TemplateObject;
 import org.apache.cloudstack.storage.to.TemplateObjectTO;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.springframework.stereotype.Component;
 
 import com.cloud.agent.api.Answer;
@@ -114,7 +115,7 @@ import com.cloud.vm.VmDetailConstants;
 
 @Component
 public class TemplateServiceImpl implements TemplateService {
-    private static final Logger s_logger = Logger.getLogger(TemplateServiceImpl.class);
+    protected static Logger s_logger = LogManager.getLogger(TemplateServiceImpl.class);
     @Inject
     ObjectInDataStoreManager _objectInDataStoreMgr;
     @Inject

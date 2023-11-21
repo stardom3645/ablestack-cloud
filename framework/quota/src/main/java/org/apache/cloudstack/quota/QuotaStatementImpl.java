@@ -33,7 +33,8 @@ import org.apache.cloudstack.quota.constant.QuotaConfig;
 import org.apache.cloudstack.quota.dao.QuotaAccountDao;
 import org.apache.cloudstack.quota.dao.QuotaUsageDao;
 import org.apache.cloudstack.quota.vo.QuotaAccountVO;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.springframework.stereotype.Component;
 
 import com.cloud.user.AccountVO;
@@ -42,7 +43,7 @@ import com.cloud.utils.component.ManagerBase;
 
 @Component
 public class QuotaStatementImpl extends ManagerBase implements QuotaStatement {
-    private static final Logger s_logger = Logger.getLogger(QuotaStatementImpl.class);
+    protected static Logger s_logger = LogManager.getLogger(QuotaStatementImpl.class);
 
     @Inject
     private AccountDao _accountDao;

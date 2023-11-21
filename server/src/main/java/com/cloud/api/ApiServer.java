@@ -136,7 +136,8 @@ import org.apache.http.protocol.ResponseConnControl;
 import org.apache.http.protocol.ResponseContent;
 import org.apache.http.protocol.ResponseDate;
 import org.apache.http.protocol.ResponseServer;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.stereotype.Component;
@@ -194,8 +195,8 @@ import com.google.gson.reflect.TypeToken;
 
 @Component
 public class ApiServer extends ManagerBase implements HttpRequestHandler, ApiServerService, Configurable {
-    private static final Logger s_logger = Logger.getLogger(ApiServer.class.getName());
-    private static final Logger s_accessLogger = Logger.getLogger("apiserver." + ApiServer.class.getName());
+    protected static Logger s_logger = LogManager.getLogger(ApiServer.class.getName());
+    protected static Logger s_accessLogger = LogManager.getLogger("apiserver." + ApiServer.class.getName());
 
     private static final String SANITIZATION_REGEX = "[\n\r]";
 

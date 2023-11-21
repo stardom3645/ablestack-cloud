@@ -36,7 +36,8 @@ import org.apache.cloudstack.api.command.user.affinitygroup.CreateAffinityGroupC
 import org.apache.cloudstack.context.CallContext;
 import org.apache.cloudstack.framework.messagebus.MessageBus;
 import org.apache.cloudstack.framework.messagebus.PublishScope;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import com.cloud.domain.DomainVO;
 import com.cloud.domain.dao.DomainDao;
@@ -69,7 +70,7 @@ import com.cloud.vm.dao.UserVmDao;
 
 public class AffinityGroupServiceImpl extends ManagerBase implements AffinityGroupService, Manager, StateListener<State, VirtualMachine.Event, VirtualMachine> {
 
-    public static final Logger s_logger = Logger.getLogger(AffinityGroupServiceImpl.class);
+    protected static Logger s_logger = LogManager.getLogger(AffinityGroupServiceImpl.class);
     private String _name;
 
     @Inject

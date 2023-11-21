@@ -23,7 +23,8 @@ import com.cloud.utils.exception.CloudRuntimeException;
 import org.apache.commons.collections.CollectionUtils;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import java.io.File;
 import java.util.List;
@@ -39,7 +40,7 @@ public class MetalinkDirectTemplateDownloader extends DirectTemplateDownloaderIm
     private Integer connectTimeout;
     private Integer soTimeout;
 
-    private static final Logger s_logger = Logger.getLogger(MetalinkDirectTemplateDownloader.class.getName());
+    protected static Logger s_logger = LogManager.getLogger(MetalinkDirectTemplateDownloader.class.getName());
 
     protected DirectTemplateDownloader createDownloaderForMetalinks(String url, Long templateId,
                                                                     String destPoolPath, String checksum,

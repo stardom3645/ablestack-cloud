@@ -31,7 +31,8 @@ import org.apache.cloudstack.network.contrail.api.response.ServiceInstanceRespon
 import org.apache.cloudstack.network.contrail.model.ServiceInstanceModel;
 import org.apache.cloudstack.network.contrail.model.VirtualMachineModel;
 import org.apache.cloudstack.network.contrail.model.VirtualNetworkModel;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import com.cloud.api.ApiDBUtils;
 import com.cloud.dc.DataCenter;
@@ -63,7 +64,7 @@ import net.juniper.contrail.api.ApiConnector;
 import net.juniper.contrail.api.types.ServiceInstance;
 
 public class ServiceManagerImpl implements ServiceManager {
-    private static final Logger s_logger = Logger.getLogger(ServiceManager.class);
+    protected static Logger s_logger = LogManager.getLogger(ServiceManager.class);
 
     @Inject
     UserDao _userDao;

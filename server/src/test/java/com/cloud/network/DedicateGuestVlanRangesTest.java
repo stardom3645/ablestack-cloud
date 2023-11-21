@@ -36,7 +36,8 @@ import org.apache.cloudstack.api.command.admin.network.DedicateGuestVlanRangeCmd
 import org.apache.cloudstack.api.command.admin.network.ListDedicatedGuestVlanRangesCmd;
 import org.apache.cloudstack.api.command.admin.network.ReleaseDedicatedGuestVlanRangeCmd;
 import org.apache.cloudstack.context.CallContext;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -57,7 +58,7 @@ import static org.mockito.Mockito.when;
 
 public class DedicateGuestVlanRangesTest {
 
-    private static final Logger s_logger = Logger.getLogger(DedicateGuestVlanRangesTest.class);
+    protected static Logger s_logger = LogManager.getLogger(DedicateGuestVlanRangesTest.class);
 
     NetworkServiceImpl networkService = new NetworkServiceImpl();
 

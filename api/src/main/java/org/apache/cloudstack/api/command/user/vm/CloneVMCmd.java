@@ -42,7 +42,8 @@ import org.apache.cloudstack.api.response.DomainResponse;
 import org.apache.cloudstack.api.response.UserVmResponse;
 import org.apache.cloudstack.api.response.ZoneResponse;
 import org.apache.cloudstack.context.CallContext;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import java.util.Optional;
 import java.util.List;
@@ -50,7 +51,7 @@ import java.util.List;
 @APICommand(name = "cloneVirtualMachine", responseObject = UserVmResponse.class, description = "clone a virtual VM",
         responseView = ResponseObject.ResponseView.Restricted, requestHasSensitiveInfo = false, responseHasSensitiveInfo = true, entityType = {VirtualMachine.class}, since="4.16.0")
 public class CloneVMCmd extends BaseAsyncCreateCmd implements UserCmd {
-    public static final Logger s_logger = Logger.getLogger(CloneVMCmd.class.getName());
+    protected static Logger s_logger = LogManager.getLogger(CloneVMCmd.class.getName());
     private static final String s_name = "clonevirtualmachineresponse";
     private static final String CLONE_IDENTIFIER = "Clone";
 

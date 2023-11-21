@@ -37,7 +37,8 @@ import org.apache.cloudstack.storage.datastore.db.TemplateDataStoreDao;
 import org.apache.cloudstack.storage.datastore.db.TemplateDataStoreVO;
 import org.apache.cloudstack.storage.image.store.TemplateObject;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.springframework.stereotype.Component;
 
 import com.cloud.host.HostVO;
@@ -51,7 +52,7 @@ import com.cloud.storage.dao.VMTemplatePoolDao;
 
 @Component
 public class TemplateDataFactoryImpl implements TemplateDataFactory {
-    private static final Logger s_logger = Logger.getLogger(TemplateDataFactoryImpl.class);
+    protected static Logger s_logger = LogManager.getLogger(TemplateDataFactoryImpl.class);
     @Inject
     VMTemplateDao imageDataDao;
     @Inject

@@ -37,7 +37,8 @@ import org.apache.cloudstack.storage.datastore.db.StoragePoolVO;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.cloudstack.utils.reflectiontostringbuilderutils.ReflectionToStringBuilderUtils;
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import com.cloud.utils.Pair;
 import org.apache.cloudstack.engine.subsystem.api.storage.DataStoreManager;
@@ -65,7 +66,7 @@ import com.cloud.vm.DiskProfile;
 import com.cloud.vm.VirtualMachineProfile;
 
 public abstract class AbstractStoragePoolAllocator extends AdapterBase implements StoragePoolAllocator {
-    private static final Logger s_logger = Logger.getLogger(AbstractStoragePoolAllocator.class);
+    protected static Logger s_logger = LogManager.getLogger(AbstractStoragePoolAllocator.class);
 
     protected BigDecimal storageOverprovisioningFactor = new BigDecimal(1);
     protected String allocationAlgorithm = "random";

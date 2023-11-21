@@ -38,7 +38,8 @@ import org.apache.cloudstack.storage.to.VolumeObjectTO;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.apache.xmlrpc.XmlRpcException;
 
 import com.cloud.agent.api.Answer;
@@ -67,7 +68,7 @@ import com.xensource.xenapi.VDI;
 import static com.cloud.utils.NumbersUtil.toHumanReadableSize;
 
 public class Xenserver625StorageProcessor extends XenServerStorageProcessor {
-    private static final Logger s_logger = Logger.getLogger(XenServerStorageProcessor.class);
+    protected static Logger s_logger = LogManager.getLogger(XenServerStorageProcessor.class);
 
     public Xenserver625StorageProcessor(final CitrixResourceBase resource) {
         super(resource);

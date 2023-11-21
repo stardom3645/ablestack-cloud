@@ -30,7 +30,8 @@ import java.util.regex.Pattern;
 
 import javax.naming.ConfigurationException;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import com.cloud.exception.InternalErrorException;
 import com.cloud.storage.Storage.ImageFormat;
@@ -40,7 +41,7 @@ import com.cloud.utils.component.AdapterBase;
 import static com.cloud.utils.NumbersUtil.toHumanReadableSize;
 
 public class VmdkProcessor extends AdapterBase implements Processor {
-    private static final Logger s_logger = Logger.getLogger(VmdkProcessor.class);
+    protected static Logger s_logger = LogManager.getLogger(VmdkProcessor.class);
 
     StorageLayer _storage;
 

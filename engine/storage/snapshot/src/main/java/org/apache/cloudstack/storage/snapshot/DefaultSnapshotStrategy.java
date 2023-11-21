@@ -44,7 +44,8 @@ import org.apache.cloudstack.utils.identity.ManagementServerNode;
 import org.apache.cloudstack.utils.reflectiontostringbuilderutils.ReflectionToStringBuilderUtils;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.BooleanUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import com.cloud.agent.api.to.DataTO;
 import com.cloud.event.EventTypes;
@@ -79,7 +80,7 @@ import com.cloud.utils.fsm.NoTransitionException;
 
 public class DefaultSnapshotStrategy extends SnapshotStrategyBase {
 
-    private static final Logger s_logger = Logger.getLogger(DefaultSnapshotStrategy.class);
+    protected static Logger s_logger = LogManager.getLogger(DefaultSnapshotStrategy.class);
 
     @Inject
     SnapshotService snapshotSvr;

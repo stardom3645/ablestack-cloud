@@ -37,7 +37,8 @@ import org.apache.cloudstack.storage.command.QuerySnapshotZoneCopyCommand;
 import org.apache.cloudstack.storage.to.SnapshotObjectTO;
 import org.apache.cloudstack.storage.to.TemplateObjectTO;
 import org.apache.cloudstack.storage.to.VolumeObjectTO;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import com.cloud.agent.api.Answer;
 import com.cloud.agent.api.to.DataObjectType;
@@ -54,7 +55,7 @@ import com.cloud.utils.NumbersUtil;
 
 public class VmwareStorageSubsystemCommandHandler extends StorageSubsystemCommandHandlerBase {
 
-    private static final Logger s_logger = Logger.getLogger(VmwareStorageSubsystemCommandHandler.class);
+    protected static Logger s_logger = LogManager.getLogger(VmwareStorageSubsystemCommandHandler.class);
     private VmwareStorageManager storageManager;
     private PremiumSecondaryStorageResource storageResource;
     private String _nfsVersion;

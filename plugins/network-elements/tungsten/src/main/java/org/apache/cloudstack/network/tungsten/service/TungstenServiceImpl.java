@@ -215,7 +215,8 @@ import org.apache.cloudstack.network.tungsten.model.TungstenNetworkPolicy;
 import org.apache.cloudstack.network.tungsten.model.TungstenRule;
 import org.apache.cloudstack.network.tungsten.model.TungstenTag;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
@@ -229,7 +230,7 @@ import java.util.concurrent.TimeUnit;
 import javax.inject.Inject;
 
 public class TungstenServiceImpl extends ManagerBase implements TungstenService {
-    private static final Logger s_logger = Logger.getLogger(TungstenServiceImpl.class);
+    protected static Logger s_logger = LogManager.getLogger(TungstenServiceImpl.class);
 
     private static final String NETWORK = "network";
 

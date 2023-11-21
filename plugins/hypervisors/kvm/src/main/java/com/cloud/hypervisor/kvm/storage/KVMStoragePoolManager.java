@@ -30,7 +30,8 @@ import org.apache.cloudstack.storage.to.PrimaryDataStoreTO;
 import org.apache.cloudstack.storage.to.VolumeObjectTO;
 import org.apache.cloudstack.utils.qemu.QemuImg.PhysicalDiskFormat;
 import org.apache.commons.collections.MapUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.reflections.Reflections;
 
 import com.cloud.agent.api.to.DiskTO;
@@ -46,7 +47,7 @@ import com.cloud.utils.exception.CloudRuntimeException;
 import com.cloud.vm.VirtualMachine;
 
 public class KVMStoragePoolManager {
-    private static final Logger s_logger = Logger.getLogger(KVMStoragePoolManager.class);
+    protected static Logger s_logger = LogManager.getLogger(KVMStoragePoolManager.class);
 
     private class StoragePoolInformation {
         String name;

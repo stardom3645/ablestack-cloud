@@ -47,7 +47,8 @@ import org.apache.cloudstack.framework.config.dao.ConfigurationDao;
 import org.apache.cloudstack.framework.config.impl.ConfigurationVO;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import com.cloud.configuration.Config;
 import com.cloud.configuration.ConfigurationManager;
@@ -116,7 +117,7 @@ import com.cloud.utils.net.NetUtils;
 import com.cloud.utils.script.Script;
 
 public class ConfigurationServerImpl extends ManagerBase implements ConfigurationServer {
-    public static final Logger s_logger = Logger.getLogger(ConfigurationServerImpl.class);
+    protected static Logger s_logger = LogManager.getLogger(ConfigurationServerImpl.class);
 
     @Inject
     private ConfigurationDao _configDao;

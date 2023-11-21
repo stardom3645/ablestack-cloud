@@ -74,7 +74,8 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import com.cloud.agent.AgentManager;
 import com.cloud.agent.api.PerformanceMonitorAnswer;
@@ -191,7 +192,7 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
 public class AutoScaleManagerImpl extends ManagerBase implements AutoScaleManager, AutoScaleService, Configurable {
-    private static final Logger s_logger = Logger.getLogger(AutoScaleManagerImpl.class);
+    protected static Logger s_logger = LogManager.getLogger(AutoScaleManagerImpl.class);
 
     @Inject
     protected DispatchChainFactory dispatchChainFactory = null;

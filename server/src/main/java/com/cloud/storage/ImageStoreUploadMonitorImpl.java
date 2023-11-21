@@ -47,7 +47,8 @@ import org.apache.cloudstack.storage.datastore.db.VolumeDataStoreDao;
 import org.apache.cloudstack.storage.datastore.db.VolumeDataStoreVO;
 import org.apache.cloudstack.storage.image.deployasis.DeployAsIsHelper;
 import org.apache.cloudstack.utils.identity.ManagementServerNode;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.springframework.stereotype.Component;
 
 import com.cloud.agent.Listener;
@@ -87,7 +88,7 @@ import com.cloud.utils.fsm.StateMachine2;
 @Component
 public class ImageStoreUploadMonitorImpl extends ManagerBase implements ImageStoreUploadMonitor, Listener, Configurable {
 
-    static final Logger s_logger = Logger.getLogger(ImageStoreUploadMonitorImpl.class);
+    static final Logger s_logger = LogManager.getLogger(ImageStoreUploadMonitorImpl.class);
 
     @Inject
     private VolumeDao _volumeDao;

@@ -63,7 +63,8 @@ import org.apache.cloudstack.managed.context.ManagedContextRunnable;
 import org.apache.cloudstack.query.QueryService;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.ObjectUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.jetbrains.annotations.Nullable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -178,7 +179,7 @@ import com.cloud.vm.dao.DomainRouterDao;
 import com.cloud.vm.dao.NicDao;
 
 public class VpcManagerImpl extends ManagerBase implements VpcManager, VpcProvisioningService, VpcService {
-    private static final Logger s_logger = Logger.getLogger(VpcManagerImpl.class);
+    protected static Logger s_logger = LogManager.getLogger(VpcManagerImpl.class);
 
     public static final String SERVICE = "service";
     public static final String CAPABILITYTYPE = "capabilitytype";

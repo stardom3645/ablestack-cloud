@@ -34,7 +34,8 @@ import java.util.Properties;
 import java.util.TimeZone;
 import java.util.UUID;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import com.cloud.configuration.Resource.ResourceType;
 import com.cloud.event.EventTypes;
@@ -46,7 +47,7 @@ import com.cloud.utils.exception.CloudRuntimeException;
 import com.cloud.utils.net.NetUtils;
 
 public class Upgrade218to22 implements DbUpgrade {
-    final static Logger s_logger = Logger.getLogger(Upgrade218to22.class);
+    final static Logger s_logger = LogManager.getLogger(Upgrade218to22.class);
     boolean _basicZone;
 
     @Override

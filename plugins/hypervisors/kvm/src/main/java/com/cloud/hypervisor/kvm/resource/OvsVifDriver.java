@@ -30,7 +30,8 @@ import com.cloud.hypervisor.kvm.dpdk.DpdkHelper;
 import com.cloud.utils.exception.CloudRuntimeException;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.libvirt.LibvirtException;
 
 import com.cloud.agent.api.to.NicTO;
@@ -45,7 +46,7 @@ import com.cloud.utils.script.OutputInterpreter;
 import com.cloud.utils.script.Script;
 
 public class OvsVifDriver extends VifDriverBase {
-    private static final Logger s_logger = Logger.getLogger(OvsVifDriver.class);
+    protected static Logger s_logger = LogManager.getLogger(OvsVifDriver.class);
     private int _timeout;
     private String _controlCidr = NetUtils.getLinkLocalCIDR();
     private DpdkDriver dpdkDriver;

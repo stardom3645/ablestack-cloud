@@ -19,7 +19,8 @@
 package com.cloud.hypervisor.xenserver.resource;
 
 import org.apache.cloudstack.hypervisor.xenserver.XenServerResourceNewBase;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.apache.xmlrpc.XmlRpcException;
 
 import com.cloud.storage.resource.StorageSubsystemCommandHandler;
@@ -33,7 +34,7 @@ import com.xensource.xenapi.VM;
 
 public class Xenserver625Resource extends XenServerResourceNewBase {
 
-    private static final Logger s_logger = Logger.getLogger(Xenserver625Resource.class);
+    protected static Logger s_logger = LogManager.getLogger(Xenserver625Resource.class);
 
     @Override
     protected String getPatchFilePath() {

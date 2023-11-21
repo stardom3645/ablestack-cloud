@@ -48,7 +48,8 @@ import org.apache.cloudstack.api.response.SAMLMetaDataResponse;
 import org.apache.cloudstack.saml.SAML2AuthManager;
 import org.apache.cloudstack.saml.SAMLProviderMetadata;
 import org.apache.cloudstack.utils.security.ParserUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.opensaml.Configuration;
 import org.opensaml.DefaultBootstrap;
 import org.opensaml.common.xml.SAMLConstants;
@@ -95,7 +96,7 @@ import com.cloud.utils.HttpUtils;
 
 @APICommand(name = "getSPMetadata", description = "Returns SAML2 CloudStack Service Provider MetaData", responseObject = SAMLMetaDataResponse.class, entityType = {})
 public class GetServiceProviderMetaDataCmd extends BaseCmd implements APIAuthenticator {
-    public static final Logger s_logger = Logger.getLogger(GetServiceProviderMetaDataCmd.class.getName());
+    protected static Logger s_logger = LogManager.getLogger(GetServiceProviderMetaDataCmd.class.getName());
     private static final String s_name = "spmetadataresponse";
 
     @Inject

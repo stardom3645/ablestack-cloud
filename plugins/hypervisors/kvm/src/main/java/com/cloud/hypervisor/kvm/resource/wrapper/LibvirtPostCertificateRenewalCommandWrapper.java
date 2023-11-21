@@ -19,7 +19,8 @@ package com.cloud.hypervisor.kvm.resource.wrapper;
 
 import org.apache.cloudstack.ca.PostCertificateRenewalCommand;
 import org.apache.cloudstack.ca.SetupCertificateAnswer;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import com.cloud.agent.api.Answer;
 import com.cloud.hypervisor.kvm.resource.LibvirtComputingResource;
@@ -30,7 +31,7 @@ import com.cloud.utils.script.Script;
 @ResourceWrapper(handles =  PostCertificateRenewalCommand.class)
 public final class LibvirtPostCertificateRenewalCommandWrapper extends CommandWrapper<PostCertificateRenewalCommand, Answer, LibvirtComputingResource> {
 
-    private static final Logger s_logger = Logger.getLogger(LibvirtPostCertificateRenewalCommandWrapper.class);
+    protected static Logger s_logger = LogManager.getLogger(LibvirtPostCertificateRenewalCommandWrapper.class);
 
     @Override
     public Answer execute(final PostCertificateRenewalCommand command, final LibvirtComputingResource serverResource) {

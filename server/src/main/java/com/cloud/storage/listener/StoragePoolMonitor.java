@@ -27,7 +27,8 @@ import org.apache.cloudstack.engine.subsystem.api.storage.HypervisorHostListener
 import org.apache.cloudstack.engine.subsystem.api.storage.PrimaryDataStoreProvider;
 import org.apache.cloudstack.storage.datastore.db.PrimaryDataStoreDao;
 import org.apache.cloudstack.storage.datastore.db.StoragePoolVO;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import com.cloud.agent.Listener;
 import com.cloud.agent.api.AgentControlAnswer;
@@ -47,7 +48,7 @@ import com.cloud.storage.StorageManagerImpl;
 import com.cloud.storage.StoragePoolHostVO;
 
 public class StoragePoolMonitor implements Listener {
-    private static final Logger s_logger = Logger.getLogger(StoragePoolMonitor.class);
+    protected static Logger s_logger = LogManager.getLogger(StoragePoolMonitor.class);
     private final StorageManagerImpl _storageManager;
     private final PrimaryDataStoreDao _poolDao;
     private DataStoreProviderManager _dataStoreProviderMgr;

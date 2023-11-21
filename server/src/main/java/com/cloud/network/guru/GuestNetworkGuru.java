@@ -29,7 +29,8 @@ import org.apache.cloudstack.framework.config.ConfigKey;
 import org.apache.cloudstack.framework.config.Configurable;
 import org.apache.cloudstack.framework.config.dao.ConfigurationDao;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import com.cloud.configuration.Config;
 import com.cloud.dc.DataCenter;
@@ -91,7 +92,7 @@ import com.cloud.vm.dao.DomainRouterDao;
 import com.cloud.vm.dao.NicDao;
 
 public abstract class GuestNetworkGuru extends AdapterBase implements NetworkGuru, Configurable {
-    private static final Logger s_logger = Logger.getLogger(GuestNetworkGuru.class);
+    protected static Logger s_logger = LogManager.getLogger(GuestNetworkGuru.class);
 
     @Inject
     protected VpcDao _vpcDao;

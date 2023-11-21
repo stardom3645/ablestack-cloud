@@ -30,7 +30,8 @@ import org.apache.cloudstack.acl.RoleType;
 import org.apache.cloudstack.api.ApiConstants;
 import org.apache.cloudstack.api.response.DomainResponse;
 import org.apache.cloudstack.context.CallContext;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import org.apache.cloudstack.api.APICommand;
 import org.apache.cloudstack.api.BaseListCmd;
@@ -79,7 +80,7 @@ import com.cloud.user.Account;
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false, authorized = {RoleType.Admin,RoleType.DomainAdmin})
 public class LdapListUsersCmd extends BaseListCmd {
 
-    public static final Logger s_logger = Logger.getLogger(LdapListUsersCmd.class.getName());
+    protected static Logger s_logger = LogManager.getLogger(LdapListUsersCmd.class.getName());
     private static final String s_name = "ldapuserresponse";
     @Inject
     private LdapManager _ldapManager;

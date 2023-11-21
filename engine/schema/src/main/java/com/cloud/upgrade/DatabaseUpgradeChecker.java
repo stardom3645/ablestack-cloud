@@ -33,7 +33,8 @@ import javax.inject.Inject;
 
 import org.apache.cloudstack.utils.CloudStackVersion;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import com.cloud.upgrade.dao.DbUpgrade;
 import com.cloud.upgrade.dao.DbUpgradeSystemVmTemplate;
@@ -121,7 +122,7 @@ import com.cloud.utils.exception.CloudRuntimeException;
 import com.google.common.annotations.VisibleForTesting;
 
 public class DatabaseUpgradeChecker implements SystemIntegrityChecker {
-    private static final Logger s_logger = Logger.getLogger(DatabaseUpgradeChecker.class);
+    protected static Logger s_logger = LogManager.getLogger(DatabaseUpgradeChecker.class);
     private final DatabaseVersionHierarchy hierarchy;
 
     @Inject

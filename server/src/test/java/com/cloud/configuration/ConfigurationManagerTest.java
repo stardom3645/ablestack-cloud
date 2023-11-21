@@ -96,7 +96,8 @@ import org.apache.cloudstack.storage.datastore.db.ImageStoreDao;
 import org.apache.cloudstack.storage.datastore.db.ImageStoreVO;
 import org.apache.cloudstack.storage.datastore.db.PrimaryDataStoreDao;
 import org.apache.cloudstack.storage.datastore.db.StoragePoolVO;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -134,7 +135,7 @@ import static org.mockito.Mockito.when;
 
 public class ConfigurationManagerTest {
 
-    private static final Logger s_logger = Logger.getLogger(ConfigurationManagerTest.class);
+    protected static Logger s_logger = LogManager.getLogger(ConfigurationManagerTest.class);
 
     @Spy
     @InjectMocks

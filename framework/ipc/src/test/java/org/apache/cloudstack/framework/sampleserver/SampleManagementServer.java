@@ -18,10 +18,11 @@
  */
 package org.apache.cloudstack.framework.sampleserver;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 public class SampleManagementServer {
-    private static final Logger s_logger = Logger.getLogger(SampleManagementServer.class);
+    protected static Logger s_logger = LogManager.getLogger(SampleManagementServer.class);
 
     public void mainLoop() {
         while (true) {

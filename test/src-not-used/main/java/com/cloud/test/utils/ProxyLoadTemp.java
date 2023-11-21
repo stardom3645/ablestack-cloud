@@ -20,10 +20,11 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.util.ArrayList;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 public class ProxyLoadTemp {
-    public static final Logger s_logger = Logger.getLogger(ProxyLoadTemp.class.getClass());
+    protected static Logger s_logger = LogManager.getLogger(ProxyLoadTemp.class.getClass());
     public static int numThreads = 0;
     public static ArrayList<ConsoleProxy> proxyList = new ArrayList<ConsoleProxy>();
     public static long begin;

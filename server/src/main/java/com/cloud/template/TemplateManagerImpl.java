@@ -107,7 +107,8 @@ import org.apache.cloudstack.storage.to.TemplateObjectTO;
 import org.apache.cloudstack.utils.imagestore.ImageStoreUtil;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
@@ -220,7 +221,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 public class TemplateManagerImpl extends ManagerBase implements TemplateManager, TemplateApiService, Configurable {
-    private final static Logger s_logger = Logger.getLogger(TemplateManagerImpl.class);
+    private final static Logger s_logger = LogManager.getLogger(TemplateManagerImpl.class);
 
     @Inject
     private VMTemplateDao _tmpltDao;

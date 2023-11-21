@@ -31,7 +31,8 @@ import javax.annotation.Nonnull;
 import org.apache.cloudstack.utils.qemu.QemuImg;
 import org.apache.cloudstack.utils.qemu.QemuImgException;
 import org.apache.cloudstack.utils.qemu.QemuImgFile;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.libvirt.LibvirtException;
 
 import com.cloud.storage.Storage;
@@ -55,7 +56,7 @@ import com.linbit.linstor.api.model.VolumeDefinition;
 
 @StorageAdaptorInfo(storagePoolType=Storage.StoragePoolType.Linstor)
 public class LinstorStorageAdaptor implements StorageAdaptor {
-    private static final Logger s_logger = Logger.getLogger(LinstorStorageAdaptor.class);
+    protected static Logger s_logger = LogManager.getLogger(LinstorStorageAdaptor.class);
     private static final Map<String, KVMStoragePool> MapStorageUuidToStoragePool = new HashMap<>();
     private final String localNodeName;
 

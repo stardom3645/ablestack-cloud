@@ -45,7 +45,8 @@ import org.apache.cloudstack.storage.datastore.db.SnapshotDataStoreDao;
 import org.apache.cloudstack.storage.datastore.db.SnapshotDataStoreVO;
 import org.apache.cloudstack.storage.datastore.db.StoragePoolVO;
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.springframework.stereotype.Component;
 
 import com.cloud.agent.AgentManager;
@@ -91,7 +92,7 @@ import com.google.common.base.Preconditions;
 
 @Component
 public class StorageSystemSnapshotStrategy extends SnapshotStrategyBase {
-    private static final Logger s_logger = Logger.getLogger(StorageSystemSnapshotStrategy.class);
+    protected static Logger s_logger = LogManager.getLogger(StorageSystemSnapshotStrategy.class);
 
     @Inject private AgentManager agentMgr;
     @Inject private ClusterDao clusterDao;

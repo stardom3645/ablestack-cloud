@@ -48,7 +48,8 @@ import junit.framework.Assert;
 import org.apache.cloudstack.acl.ControlledEntity.ACLType;
 import org.apache.cloudstack.context.CallContext;
 import org.apache.cloudstack.engine.orchestration.service.NetworkOrchestrationService;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -69,7 +70,7 @@ import static org.mockito.Mockito.when;
 //@Ignore("Requires database to be set up")
 public class CreatePrivateNetworkTest {
 
-    private static final Logger s_logger = Logger.getLogger(CreatePrivateNetworkTest.class);
+    protected static Logger s_logger = LogManager.getLogger(CreatePrivateNetworkTest.class);
 
     NetworkServiceImpl networkService = new NetworkServiceImpl();
 

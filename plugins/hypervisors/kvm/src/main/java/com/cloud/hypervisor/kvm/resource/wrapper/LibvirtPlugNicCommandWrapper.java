@@ -30,7 +30,8 @@ import com.cloud.hypervisor.kvm.resource.VifDriver;
 import com.cloud.resource.CommandWrapper;
 import com.cloud.resource.ResourceWrapper;
 import com.cloud.vm.VirtualMachine;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.libvirt.Connect;
 import org.libvirt.Domain;
 import org.libvirt.LibvirtException;
@@ -40,7 +41,7 @@ import java.util.List;
 @ResourceWrapper(handles =  PlugNicCommand.class)
 public final class LibvirtPlugNicCommandWrapper extends CommandWrapper<PlugNicCommand, Answer, LibvirtComputingResource> {
 
-    private static final Logger s_logger = Logger.getLogger(LibvirtPlugNicCommandWrapper.class);
+    protected static Logger s_logger = LogManager.getLogger(LibvirtPlugNicCommandWrapper.class);
 
     @Override
     public Answer execute(final PlugNicCommand command, final LibvirtComputingResource libvirtComputingResource) {

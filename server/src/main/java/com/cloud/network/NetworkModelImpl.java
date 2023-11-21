@@ -45,7 +45,8 @@ import org.apache.cloudstack.lb.dao.ApplicationLoadBalancerRuleDao;
 import org.apache.cloudstack.network.NetworkPermissionVO;
 import org.apache.cloudstack.network.dao.NetworkPermissionDao;
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import com.cloud.api.ApiDBUtils;
 import com.cloud.configuration.Config;
@@ -147,7 +148,7 @@ import com.cloud.vm.dao.NicSecondaryIpDao;
 import com.cloud.vm.dao.VMInstanceDao;
 
 public class NetworkModelImpl extends ManagerBase implements NetworkModel, Configurable {
-    static final Logger s_logger = Logger.getLogger(NetworkModelImpl.class);
+    static final Logger s_logger = LogManager.getLogger(NetworkModelImpl.class);
     public static final String UNABLE_TO_USE_NETWORK = "Unable to use network with id= %s, permission denied";
     @Inject
     EntityManager _entityMgr;

@@ -51,7 +51,8 @@ import org.apache.cloudstack.storage.datastore.db.VolumeDataStoreDao;
 import org.apache.cloudstack.storage.datastore.db.VolumeDataStoreVO;
 import org.apache.cloudstack.storage.image.datastore.ImageStoreEntity;
 import org.apache.cloudstack.storage.to.PrimaryDataStoreTO;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.springframework.stereotype.Component;
 
 import com.cloud.agent.api.Answer;
@@ -81,7 +82,7 @@ import com.cloud.vm.VirtualMachineManager;
 
 @Component
 public class AncientDataMotionStrategy implements DataMotionStrategy {
-    private static final Logger s_logger = Logger.getLogger(AncientDataMotionStrategy.class);
+    protected static Logger s_logger = LogManager.getLogger(AncientDataMotionStrategy.class);
     private static final String NO_REMOTE_ENDPOINT_SSVM = "No remote endpoint to send command, check if host or ssvm is down?";
     private static final String NO_REMOTE_ENDPOINT_WITH_ENCRYPTION = "No remote endpoint to send command, unable to find a valid endpoint. Requires encryption support: %s";
 

@@ -25,7 +25,8 @@ import java.util.Map;
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.springframework.stereotype.Component;
 
 import org.apache.cloudstack.usage.UsageTypes;
@@ -40,7 +41,7 @@ import static com.cloud.utils.NumbersUtil.toHumanReadableSize;
 
 @Component
 public class VMSnapshotOnPrimaryParser {
-    public static final Logger s_logger = Logger.getLogger(VMSnapshotOnPrimaryParser.class.getName());
+    protected static Logger s_logger = LogManager.getLogger(VMSnapshotOnPrimaryParser.class.getName());
 
     private static UsageDao s_usageDao;
     private static UsageVMSnapshotOnPrimaryDao s_usageSnapshotOnPrimaryDao;

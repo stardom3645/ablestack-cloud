@@ -70,7 +70,8 @@ import org.apache.commons.collections.MapUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.apache.xmlrpc.XmlRpcException;
 import org.joda.time.Duration;
 import org.w3c.dom.Document;
@@ -230,7 +231,7 @@ public abstract class CitrixResourceBase extends ServerResourceBase implements S
     private static final long mem_128m = 134217728L;
 
     static final Random Rand = new Random(System.currentTimeMillis());
-    private static final Logger s_logger = Logger.getLogger(CitrixResourceBase.class);
+    protected static Logger s_logger = LogManager.getLogger(CitrixResourceBase.class);
     protected static final HashMap<VmPowerState, PowerState> s_powerStatesTable;
 
     public static final String XS_TOOLS_ISO_AFTER_70 = "guest-tools.iso";

@@ -29,13 +29,14 @@ import com.cloud.utils.exception.CloudRuntimeException;
 import com.cloud.utils.validation.ChecksumUtil;
 import com.xensource.xenapi.Connection;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import java.io.File;
 
 @ResourceWrapper(handles = PatchSystemVmCommand.class)
 public class CitrixPatchSystemVmCommandWrapper extends CommandWrapper<PatchSystemVmCommand, Answer, CitrixResourceBase> {
-    private static final Logger s_logger = Logger.getLogger(CitrixPatchSystemVmCommandWrapper.class);
+    protected static Logger s_logger = LogManager.getLogger(CitrixPatchSystemVmCommandWrapper.class);
     private static int sshPort = CitrixResourceBase.DEFAULTDOMRSSHPORT;
     private static File pemFile = new File(CitrixResourceBase.SSHPRVKEYPATH);
 

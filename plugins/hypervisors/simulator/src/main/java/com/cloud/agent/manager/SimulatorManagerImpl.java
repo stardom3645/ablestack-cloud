@@ -34,7 +34,8 @@ import org.apache.cloudstack.storage.command.DownloadCommand;
 import org.apache.cloudstack.storage.command.DownloadProgressCommand;
 import org.apache.cloudstack.storage.command.StorageSubSystemCommand;
 import org.apache.cloudstack.storage.command.UploadStatusCommand;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.springframework.stereotype.Component;
 
 import com.cloud.agent.api.Answer;
@@ -141,7 +142,7 @@ import com.google.gson.stream.JsonReader;
 
 @Component
 public class SimulatorManagerImpl extends ManagerBase implements SimulatorManager, PluggableService {
-    private static final Logger s_logger = Logger.getLogger(SimulatorManagerImpl.class);
+    protected static Logger s_logger = LogManager.getLogger(SimulatorManagerImpl.class);
     private static final Gson s_gson = GsonHelper.getGson();
     @Inject
     MockVmManager _mockVmMgr;

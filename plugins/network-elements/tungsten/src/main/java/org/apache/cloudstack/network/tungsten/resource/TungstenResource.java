@@ -161,7 +161,8 @@ import org.apache.cloudstack.network.tungsten.model.TungstenTag;
 import org.apache.cloudstack.network.tungsten.service.TungstenApi;
 import org.apache.cloudstack.network.tungsten.service.TungstenVRouterApi;
 import org.apache.cloudstack.network.tungsten.vrouter.Port;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import javax.naming.ConfigurationException;
 import java.io.IOException;
@@ -172,7 +173,7 @@ import java.util.Map;
 
 public class TungstenResource implements ServerResource {
 
-    private static final Logger s_logger = Logger.getLogger(TungstenResource.class);
+    protected static Logger s_logger = LogManager.getLogger(TungstenResource.class);
 
     private String name;
     private String guid;

@@ -63,7 +63,8 @@ import org.apache.cloudstack.storage.datastore.db.TemplateDataStoreVO;
 import org.apache.cloudstack.storage.image.datastore.ImageStoreEntity;
 import org.apache.cloudstack.utils.security.DigestHelper;
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import com.cloud.agent.AgentManager;
 import com.cloud.agent.api.Answer;
@@ -105,7 +106,7 @@ import com.cloud.utils.db.TransactionStatus;
 import com.cloud.utils.exception.CloudRuntimeException;
 
 public class HypervisorTemplateAdapter extends TemplateAdapterBase {
-    private final static Logger s_logger = Logger.getLogger(HypervisorTemplateAdapter.class);
+    private final static Logger s_logger = LogManager.getLogger(HypervisorTemplateAdapter.class);
     @Inject
     DownloadMonitor _downloadMonitor;
     @Inject

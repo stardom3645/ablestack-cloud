@@ -47,7 +47,8 @@ import org.apache.cloudstack.api.command.user.consoleproxy.CreateConsoleEndpoint
 import org.apache.cloudstack.context.CallContext;
 import org.apache.cloudstack.managed.context.ManagedContext;
 import org.apache.cloudstack.utils.consoleproxy.ConsoleAccessUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.jetbrains.annotations.Nullable;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.support.SpringBeanAutowiringSupport;
@@ -71,8 +72,8 @@ import com.cloud.utils.net.NetUtils;
 @Component("apiServlet")
 @SuppressWarnings("serial")
 public class ApiServlet extends HttpServlet {
-    public static final Logger s_logger = Logger.getLogger(ApiServlet.class.getName());
-    private static final Logger s_accessLogger = Logger.getLogger("apiserver." + ApiServlet.class.getName());
+    protected static Logger s_logger = LogManager.getLogger(ApiServlet.class.getName());
+    protected static Logger s_accessLogger = LogManager.getLogger("apiserver." + ApiServlet.class.getName());
     private final static List<String> s_clientAddressHeaders = Collections
             .unmodifiableList(Arrays.asList("X-Forwarded-For",
                     "HTTP_CLIENT_IP", "HTTP_X_FORWARDED_FOR", "Remote_Addr"));
