@@ -230,7 +230,10 @@ export default {
             'event.delete.enabled',
             'event.purge.delay',
             'security.check.interval',
-            'integrity.verification.interval']
+            'integrity.verification.interval',
+            'management.server.localStorage.capacity.notificationthreshold',
+            'management.server.database.capacity.notificationthreshold',
+            'management.server.database.capacity.delete.notificationthreshold']
           config = config.filter((x) => !securityArr.includes(x.name))
           // console.log('config :>> ', config)
         }
