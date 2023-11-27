@@ -127,6 +127,7 @@ public class SecurityCheckServiceImpl extends ManagerBase implements PluggableSe
                     ActionEventUtils.onCompletedActionEvent(CallContext.current().getCallingUserId(), CallContext.current().getCallingAccountId(), EventVO.LEVEL_ERROR,
                         EventTypes.EVENT_SECURITY_CHECK, "Failed to execute security check schedule on the management server when operating the product : Unable to find the securitycheck script", new Long(0), null, 0);
                 }
+                updateSecurityCheckResult(msHost.getId(), false, "", type);
                 LOGGER.error("Failed to execute security check schedule for management server:  Unable to find the securitycheck script");
             }
             ProcessBuilder processBuilder = new ProcessBuilder("sh", path);
@@ -163,6 +164,7 @@ public class SecurityCheckServiceImpl extends ManagerBase implements PluggableSe
                     ActionEventUtils.onCompletedActionEvent(CallContext.current().getCallingUserId(), CallContext.current().getCallingAccountId(), EventVO.LEVEL_ERROR,
                         EventTypes.EVENT_SECURITY_CHECK, "Failed to execute security check schedule on the management server when operating the product", new Long(0), null, 0);
                 }
+                updateSecurityCheckResult(msHost.getId(), false, "", type);
                 runMode = "";
                 LOGGER.error("Failed to execute security check schedule for management server: "+e);
             }
@@ -200,11 +202,13 @@ public class SecurityCheckServiceImpl extends ManagerBase implements PluggableSe
     public boolean runSecurityCheckCommand(final RunSecurityCheckCmd cmd) {
         Long mshostId = cmd.getMsHostId();
         ManagementServerHost mshost = msHostDao.findById(mshostId);
+        String type = "Manual";
         String path = Script.findScript("scripts/security/", "securitycheck.sh");
         if (path == null) {
             alertManager.sendAlert(AlertManager.AlertType.ALERT_TYPE_MANAGMENT_NODE, 0, new Long(0), "Failed to execute security check on the management server when operating the product : Unable to find the securitycheck script", "");
             ActionEventUtils.onCompletedActionEvent(CallContext.current().getCallingUserId(), CallContext.current().getCallingAccountId(), EventVO.LEVEL_ERROR,
                 EventTypes.EVENT_SECURITY_CHECK, "Failed to execute security check on the management server when operating the product : Unable to find the securitycheck script", new Long(0), null, 0);
+            updateSecurityCheckResult(mshost.getId(), false, "", type);
             throw new CloudRuntimeException(String.format("Failed to execute security check command for management server: Unable to find the securitycheck script"));
         }
         ProcessBuilder processBuilder = new ProcessBuilder("sh", path);
@@ -231,7 +235,6 @@ public class SecurityCheckServiceImpl extends ManagerBase implements PluggableSe
             }
             checkFinalResult = checkConditions(checkResults);
             String checkFailedListToString = checkFailedList.stream().collect(Collectors.joining(", "));
-            String type = "Manual";
             updateSecurityCheckResult(mshost.getId(), checkFinalResult, checkFailedListToString, type);
             if (output.toString().contains("false")) {
                 return false;
@@ -242,6 +245,7 @@ public class SecurityCheckServiceImpl extends ManagerBase implements PluggableSe
             alertManager.sendAlert(AlertManager.AlertType.ALERT_TYPE_MANAGMENT_NODE, 0, new Long(0), "Failed to execute security check on the management server when operating the product : " + e, "");
             ActionEventUtils.onCompletedActionEvent(CallContext.current().getCallingUserId(), CallContext.current().getCallingAccountId(), EventVO.LEVEL_ERROR,
                 EventTypes.EVENT_SECURITY_CHECK, "Failed to execute security check on the management server when operating the product : " + e, new Long(0), null, 0);
+            updateSecurityCheckResult(mshost.getId(), false, "", type);
             throw new CloudRuntimeException("Failed to execute security check command for management server: "+mshost.getId() +e);
         }
     }
