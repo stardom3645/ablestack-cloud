@@ -199,17 +199,17 @@ public class SecurityCheckServiceImpl extends ManagerBase implements PluggableSe
     public boolean runSecurityCheckCommand(final RunSecurityCheckCmd cmd) {
         Long mshostId = cmd.getMsHostId();
         ManagementServerHost mshost = msHostDao.findById(mshostId);
-        String path = Script.findScript("scripts/security/", "securitycheck.sh");
-        // if (path == null) {
-        //     alertManager.sendAlert(AlertManager.AlertType.ALERT_TYPE_MANAGMENT_NODE, 0, new Long(0), "Security check when operating the product failed : Unable to find the securitycheck script", "");
-        //     throw new CloudRuntimeException(String.format("Unable to find the securitycheck script"));
-        // }
-        ProcessBuilder processBuilder = new ProcessBuilder("sh", path);
-        Process process = null;
-        List<Boolean> checkResults = new ArrayList<>();
-        List<String> checkFailedList = new ArrayList<>();
-        boolean checkFinalResult;
         try {
+            String path = Script.findScript("scripts/security/", "securitycheck.sh");
+            // if (path == null) {
+            //     alertManager.sendAlert(AlertManager.AlertType.ALERT_TYPE_MANAGMENT_NODE, 0, new Long(0), "Security check when operating the product failed : Unable to find the securitycheck script", "");
+            //     throw new CloudRuntimeException(String.format("Unable to find the securitycheck script"));
+            // }
+            ProcessBuilder processBuilder = new ProcessBuilder("sh", path);
+            Process process = null;
+            List<Boolean> checkResults = new ArrayList<>();
+            List<String> checkFailedList = new ArrayList<>();
+            boolean checkFinalResult;
             process = processBuilder.start();
             StringBuffer output = new StringBuffer();
             BufferedReader bfr = new BufferedReader(new InputStreamReader(process.getInputStream()));
