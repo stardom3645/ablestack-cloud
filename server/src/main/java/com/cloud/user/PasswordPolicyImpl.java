@@ -366,7 +366,7 @@ public class PasswordPolicyImpl implements PasswordPolicy, Configurable {
     }
 
     public Boolean samePassword(String password) {
-        Pattern pattern = Pattern.compile("(\\w)\\1\\1\\1");
+        Pattern pattern = Pattern.compile("(\\w)\\1\\1");
         Matcher matcher = pattern.matcher(password);
         if(matcher.find()) {
             return true;
