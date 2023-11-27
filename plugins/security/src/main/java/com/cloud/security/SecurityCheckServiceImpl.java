@@ -118,15 +118,6 @@ public class SecurityCheckServiceImpl extends ManagerBase implements PluggableSe
             ManagementServerHostVO msHost = msHostDao.findByMsid(ManagementServerNode.getManagementServerId());
             String path = Script.findScript("scripts/security/", "securitycheck.sh");
             if (path == null) {
-                if (type == "Execution") {
-                    alertManager.sendAlert(AlertManager.AlertType.ALERT_TYPE_MANAGMENT_NODE, 0, new Long(0), "Failed to execute security check on the management server when running the product : Unable to find the securitycheck script", "");
-                    ActionEventUtils.onCompletedActionEvent(CallContext.current().getCallingUserId(), CallContext.current().getCallingAccountId(), EventVO.LEVEL_ERROR,
-                        EventTypes.EVENT_SECURITY_CHECK, "Failed to execute security check on the management server when running the product : Unable to find the securitycheck script", new Long(0), null, 0);
-                } else {
-                    alertManager.sendAlert(AlertManager.AlertType.ALERT_TYPE_MANAGMENT_NODE, 0, new Long(0), "Failed to execute security check schedule on the management server when operating the product : Unable to find the securitycheck script", "");
-                    ActionEventUtils.onCompletedActionEvent(CallContext.current().getCallingUserId(), CallContext.current().getCallingAccountId(), EventVO.LEVEL_ERROR,
-                        EventTypes.EVENT_SECURITY_CHECK, "Failed to execute security check schedule on the management server when operating the product : Unable to find the securitycheck script", new Long(0), null, 0);
-                }
                 updateSecurityCheckResult(msHost.getId(), false, "", type);
                 LOGGER.error("Failed to execute security check schedule for management server:  Unable to find the securitycheck script");
             }
@@ -155,15 +146,6 @@ public class SecurityCheckServiceImpl extends ManagerBase implements PluggableSe
                 updateSecurityCheckResult(msHost.getId(), checkFinalResult, checkFailedListToString, type);
                 runMode = "";
             } catch (IOException e) {
-                if (type == "Execution") {
-                    alertManager.sendAlert(AlertManager.AlertType.ALERT_TYPE_MANAGMENT_NODE, 0, new Long(0), "Failed to execute security check on the management server when running the product : " + e, "");
-                    ActionEventUtils.onCompletedActionEvent(CallContext.current().getCallingUserId(), CallContext.current().getCallingAccountId(), EventVO.LEVEL_ERROR,
-                        EventTypes.EVENT_SECURITY_CHECK, "Failed to execute security check on the management server when running the product", new Long(0), null, 0);
-                } else {
-                    alertManager.sendAlert(AlertManager.AlertType.ALERT_TYPE_MANAGMENT_NODE, 0, new Long(0), "Failed to execute security check schedule on the management server when operating the product : " + e, "");
-                    ActionEventUtils.onCompletedActionEvent(CallContext.current().getCallingUserId(), CallContext.current().getCallingAccountId(), EventVO.LEVEL_ERROR,
-                        EventTypes.EVENT_SECURITY_CHECK, "Failed to execute security check schedule on the management server when operating the product", new Long(0), null, 0);
-                }
                 updateSecurityCheckResult(msHost.getId(), false, "", type);
                 runMode = "";
                 LOGGER.error("Failed to execute security check schedule for management server: "+e);
@@ -205,9 +187,6 @@ public class SecurityCheckServiceImpl extends ManagerBase implements PluggableSe
         String type = "Manual";
         String path = Script.findScript("scripts/security/", "securitycheck.sh");
         if (path == null) {
-            alertManager.sendAlert(AlertManager.AlertType.ALERT_TYPE_MANAGMENT_NODE, 0, new Long(0), "Failed to execute security check on the management server when operating the product : Unable to find the securitycheck script", "");
-            ActionEventUtils.onCompletedActionEvent(CallContext.current().getCallingUserId(), CallContext.current().getCallingAccountId(), EventVO.LEVEL_ERROR,
-                EventTypes.EVENT_SECURITY_CHECK, "Failed to execute security check on the management server when operating the product : Unable to find the securitycheck script", new Long(0), null, 0);
             updateSecurityCheckResult(mshost.getId(), false, "", type);
             throw new CloudRuntimeException(String.format("Failed to execute security check command for management server: Unable to find the securitycheck script"));
         }
@@ -242,9 +221,6 @@ public class SecurityCheckServiceImpl extends ManagerBase implements PluggableSe
                 return true;
             }
         } catch (IOException e) {
-            alertManager.sendAlert(AlertManager.AlertType.ALERT_TYPE_MANAGMENT_NODE, 0, new Long(0), "Failed to execute security check on the management server when operating the product : " + e, "");
-            ActionEventUtils.onCompletedActionEvent(CallContext.current().getCallingUserId(), CallContext.current().getCallingAccountId(), EventVO.LEVEL_ERROR,
-                EventTypes.EVENT_SECURITY_CHECK, "Failed to execute security check on the management server when operating the product : " + e, new Long(0), null, 0);
             updateSecurityCheckResult(mshost.getId(), false, "", type);
             throw new CloudRuntimeException("Failed to execute security check command for management server: "+mshost.getId() +e);
         }
