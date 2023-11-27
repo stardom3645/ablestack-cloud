@@ -371,9 +371,9 @@ public class StatsCollector extends ManagerBase implements ComponentMethodInterc
     @Inject
     private ManagementServerStatusDao managementServerStatusDao;
     @Inject
-    VirtualMachineManager virtualMachineManager;
+    private VirtualMachineManager virtualMachineManager;
     @Inject
-    AlertManager _alertMgr;
+    private AlertManager _alertMgr;
 
     private final ConcurrentHashMap<String, ManagementServerHostStats> managementServerHostStats = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, Object> dbStats = new ConcurrentHashMap<>();
@@ -1048,8 +1048,8 @@ public class StatsCollector extends ManagerBase implements ComponentMethodInterc
                     txn.start();
                     Connection conn = txn.getConnection();
                     try (
-                        PreparedStatement pstmt = conn.prepareStatement(selectQuery);
-                        ResultSet rs = pstmt.executeQuery();) {
+                            PreparedStatement pstmt = conn.prepareStatement(selectQuery);
+                            ResultSet rs = pstmt.executeQuery();) {
                         if (rs.next()) {
                             String isExistCount = rs.getString(1);
                             if (isExistCount.equalsIgnoreCase("0")) {
@@ -1088,13 +1088,13 @@ public class StatsCollector extends ManagerBase implements ComponentMethodInterc
             String mysqlDataDir = "/var/lib/mysql/";
             String mysqlDuThreshold = (Script.runSimpleBashScript("df -h "+mysqlDataDir+" | awk 'NR==2 {print $5}'").replace("%", ""));
             int intDfThreshold = Integer.parseInt(mysqlDuThreshold);
+            String isExistCount = "";
             if (intDfThreshold > intMysqlThreshold) {
-                DELETE_EVENT_ACTIVE = true;
                 // Every 720 minutes(= 12 hours)
                 int intervalMinutes = 720;
                 intervalMinutes = intervalMinutes - 1;
                 // Writing queries to check for duplicate data
-                String selectQuery = "SELECT COUNT(*) FROM alert WHERE subject = 'Database storage capacity, Threshold (" + mysqlDuThreshold + "%) reached. And The oldest records in the event table are deleted every minute until the number falls below the threshold.' AND TIMESTAMPDIFF(MINUTE, created, NOW()) <= "+intervalMinutes+";";
+                String selectQuery = "SELECT COUNT(*) FROM alert WHERE subject = 'Database storage capacity, Threshold (" + mysqlDuThreshold + "%) reached. And when the saturation threshold is reached, the oldest records in the event table are deleted every minute until that number falls below the threshold.' AND TIMESTAMPDIFF(MINUTE, created, NOW()) <= "+intervalMinutes+";";
                 TransactionLegacy txn = TransactionLegacy.open("getDatabaseValueString");
                 try {
                     txn.start();
@@ -1103,10 +1103,7 @@ public class StatsCollector extends ManagerBase implements ComponentMethodInterc
                             PreparedStatement pstmt = conn.prepareStatement(selectQuery);
                             ResultSet rs = pstmt.executeQuery();) {
                         if (rs.next()) {
-                            String isExistCount = rs.getString(1);
-                            if (isExistCount.equalsIgnoreCase("0")) {
-                                _alertMgr.sendAlert(AlertManager.AlertType.ALERT_TYPE_MANAGMENT_NODE, 0, new Long(0), "Database storage capacity, Threshold (" + mysqlDuThreshold + "%) reached. And The oldest records in the event table are deleted every minute until the number falls below the threshold.", "");
-                            }
+                            isExistCount = rs.getString(1);
                         }
                     } catch (Exception e) {
                         throw new CloudRuntimeException("SQL: Exception:" + e.getMessage(), e);
@@ -1126,11 +1123,59 @@ public class StatsCollector extends ManagerBase implements ComponentMethodInterc
                     }
                 }
             }
+            // Generate threshold reached alert notification
+            if (isExistCount.equalsIgnoreCase("0")) {
+                _alertMgr.sendAlert(AlertManager.AlertType.ALERT_TYPE_MANAGMENT_NODE, 0, new Long(0), "Database storage capacity, Threshold (" + mysqlDuThreshold + "%) reached. And when the saturation threshold is reached, the oldest records in the event table are deleted every minute until that number falls below the threshold.", "");
+            }
+
+            // When the database storage capacity reaches the saturation(excute delete) threshold.
+            String managementServerDatabaseStorageCapacityDeleteThreshold = (_configDao.getValue(Config.ManagementServerDatabaseStorageCapacityThreshold.key()).replace(".", ""));
+            int intMysqlDeleteThreshold = Integer.parseInt(managementServerDatabaseStorageCapacityDeleteThreshold);
+            String isExistDeleteCount = "";
+            if (intDfThreshold > intMysqlDeleteThreshold) {
+                DELETE_EVENT_ACTIVE = true;
+                // Every 60 minutes(= 1 hours)
+                int intervalMinutes = 60;
+                intervalMinutes = intervalMinutes - 1;
+                // Writing queries to check for duplicate data
+                String selectQuery = "SELECT COUNT(*) FROM alert WHERE subject = 'Database storage capacity Delete, Threshold (" + intMysqlDeleteThreshold + "%) reached. And The oldest records in the event table are deleted every minute until the number falls below the threshold.' AND TIMESTAMPDIFF(MINUTE, created, NOW()) <= "+intervalMinutes+";";
+                TransactionLegacy txn = TransactionLegacy.open("getDatabaseValueString");
+                try {
+                    txn.start();
+                    Connection conn = txn.getConnection();
+                    try (
+                            PreparedStatement pstmt = conn.prepareStatement(selectQuery);
+                            ResultSet rs = pstmt.executeQuery();) {
+                        if (rs.next()) {
+                            isExistDeleteCount = rs.getString(1);
+                        }
+                    } catch (Exception e) {
+                        throw new CloudRuntimeException("SQL: Exception:" + e.getMessage(), e);
+                    }
+                }catch (Exception e) {
+                    throw new CloudRuntimeException("SQL: Exception:" + e.getMessage(),e);
+                }
+                finally
+                {
+                    try {
+                        if (txn != null) {
+                            txn.close();
+                        }
+                    }catch(Exception e)
+                    {
+                        throw new CloudRuntimeException("SQL: Exception:" + e.getMessage(), e);
+                    }
+                }
+                // Generate threshold reached alert notification
+                if (isExistDeleteCount.equalsIgnoreCase("0")) {
+                    _alertMgr.sendAlert(AlertManager.AlertType.ALERT_TYPE_MANAGMENT_NODE, 0, new Long(0), "Database storage capacity Delete, Threshold (" + intMysqlDeleteThreshold + "%) reached. And The oldest records in the event table are deleted every minute until the number falls below the threshold.", "");
+                }
+            }
             // Delete execution threshold (%)
             int deleteActivationGap = 5;
             int deleteExecutionIntMysqlThreshold = intMysqlThreshold - deleteActivationGap;
             if (intDfThreshold >= deleteExecutionIntMysqlThreshold || DELETE_EVENT_ACTIVE == true) {
-                // number of data to delete
+                // Number of data to delete in once
                 int deleteCount = 1000;
                 // Writing queries to check for duplicate data
                 String deleteQuery = "DELETE FROM event ORDER BY created ASC LIMIT "+ deleteCount +";";
