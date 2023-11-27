@@ -152,6 +152,14 @@ public enum Config {
             "0.75",
             "Percentage (as a value between 0 and 1) of management server database storage utilization above which alerts will be sent about low database storage available",
             null),
+    ManagementServerDatabaseStorageCapacityDeleteThreshold(
+            "Alert",
+            ManagementServer.class,
+            Float.class,
+            "management.server.database.capacity.delete.notificationthreshold",
+            "0.90",
+            "Management server database storage utilization (value between 0 and 1) at which saturation warnings are sent for data deletion in event tables due to insufficient available database storage.",
+            null),
 
     // Storage
 
