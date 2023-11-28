@@ -285,7 +285,7 @@ public class IntegrityVerificationServiceImpl extends ManagerBase implements Plu
             }
             hexString.append(hex);
         }
-        if ((tempFile.exists())) {
+        if (tempFile != null) {
             tempFile.delete();
         }
         return hexString.toString();
