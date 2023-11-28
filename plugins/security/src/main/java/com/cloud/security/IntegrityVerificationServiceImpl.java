@@ -155,7 +155,7 @@ public class IntegrityVerificationServiceImpl extends ManagerBase implements Plu
                         verificationFailedList.add(filePath);
                     }
                     updateIntegrityVerificationResult(msHost.getId(), filePath, comparisonHashValue, verificationResult, verificationMessage);
-                } catch (NoSuchAlgorithmException e) {
+                } catch (NoSuchAlgorithmException | IOException e) {
                     throw new RuntimeException(e);
                 }
             }
@@ -166,9 +166,14 @@ public class IntegrityVerificationServiceImpl extends ManagerBase implements Plu
             updateIntegrityVerificationFinalResult(msHost.getId(), uuid, verificationFinalResult, verificationFailedListToString, type);
         }
 
-        private String calculateHash(File file, String algorithm) throws NoSuchAlgorithmException {
+        private String calculateHash(File file, String algorithm) throws NoSuchAlgorithmException, IOException {
             ManagementServerHostVO msHost = msHostDao.findByMsid(ManagementServerNode.getManagementServerId());
             MessageDigest md = MessageDigest.getInstance(algorithm);
+            File tempFile = null;
+            if (!(file.exists())) {
+                tempFile = createTempFileWithRandomContent();
+                file = tempFile;
+            }
             try (DigestInputStream dis = new DigestInputStream(new FileInputStream(file), md)) {
                 // Read the file to update the digest
                 while (dis.read() != -1) ;
@@ -177,7 +182,6 @@ public class IntegrityVerificationServiceImpl extends ManagerBase implements Plu
             } catch (IOException e) {
                 throw new CloudRuntimeException(String.format("Failed to execute integrity verification command for management server: "+msHost.getId()+ e));
             }
-
             byte[] hashBytes = md.digest();
             StringBuilder hexString = new StringBuilder();
             for (byte hashByte : hashBytes) {
@@ -186,6 +190,9 @@ public class IntegrityVerificationServiceImpl extends ManagerBase implements Plu
                     hexString.append('0');
                 }
                 hexString.append(hex);
+            }
+            if (tempFile != null) {
+                tempFile.delete();
             }
             return hexString.toString();
         }
