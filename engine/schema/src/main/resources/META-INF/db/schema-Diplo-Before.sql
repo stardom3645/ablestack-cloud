@@ -25,7 +25,7 @@ CREATE TABLE IF NOT EXISTS `security_check` (
   `mshost_id` bigint unsigned NOT NULL COMMENT 'the ID of the mshost',
   `check_result` tinyint(1) NOT NULL COMMENT 'check executions success or failure',
   `check_date` datetime DEFAULT NULL COMMENT 'the last security check time',
-  `check_failed_list` text NULL COMMENT 'the failed security check failed list',
+  `check_failed_list` mediumtext NULL COMMENT 'the failed security check failed list',
   `type` varchar(30) NULL,
   PRIMARY KEY (`id`),
   KEY `i_security_checks__mshost_id` (`mshost_id`),

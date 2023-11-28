@@ -46,7 +46,7 @@ public class SecurityCheckVO implements SecurityCheck {
     @Column(name = "check_date")
     private Date checkDate;
 
-    @Column(name = "check_failed_list", length = 65535)
+    @Column(name = "check_failed_list", length = 16777215)
     private String checkFailedList;
 
     @Column(name = "type")
