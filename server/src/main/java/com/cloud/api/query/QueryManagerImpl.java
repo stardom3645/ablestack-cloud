@@ -3167,6 +3167,8 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
         Long projectId = cmd.getProjectId();
         String accountName = cmd.getAccountName();
         Boolean isRootAdmin = accountMgr.isRootAdmin(account.getAccountId());
+        Long projectId = cmd.getProjectId();
+        String accountName = cmd.getAccountName();
         Boolean isRecursive = cmd.isRecursive();
         Long zoneId = cmd.getZoneId();
         Long volumeId = cmd.getVolumeId();
