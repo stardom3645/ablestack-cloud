@@ -152,7 +152,7 @@
         @click="handleSubmit"
       >{{ $t('label.login') }}</a-button>
     </a-form-item>
-    <translation-menu/>
+    <translation-menu v-if="!securityfeatures"/>
     <div class="content" v-if="socialLogin">
       <p class="or">or</p>
     </div>
