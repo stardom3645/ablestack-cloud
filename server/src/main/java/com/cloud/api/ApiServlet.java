@@ -350,13 +350,22 @@ public class ApiServlet extends HttpServlet {
                 if (session != null) {
                     invalidateHttpSession(session, String.format("request verification failed for %s from %s", userId, remoteAddress.getHostAddress()));
                 }
+                // 보안 기능이 활성화되어 있는 경우 인증 정보가 없어도 security 활성화 여부 확인을 위해 listCapablities API 오픈
+                if (ApiServer.SecurityFeaturesEnabled.value() && command.equalsIgnoreCase("listCapabilities")) {
+                    auditTrailSb.insert(0, "(userId=" + CallContext.current().getCallingUserId() + " accountId=" + CallContext.current().getCallingAccount().getId() +
+                    " sessionId=" + (session != null ? session.getId() : null) + ")");
 
-                auditTrailSb.append(" " + HttpServletResponse.SC_UNAUTHORIZED + " " + "unable to verify user credentials and/or request signature");
-                final String serializedResponse =
-                        apiServer.getSerializedApiError(HttpServletResponse.SC_UNAUTHORIZED, "unable to verify user credentials and/or request signature", params,
-                                responseType);
-                HttpUtils.writeHttpResponse(resp, serializedResponse, HttpServletResponse.SC_UNAUTHORIZED, responseType, ApiServer.JSONcontentType.value());
-
+                    // Add the HTTP method (GET/POST/PUT/DELETE) as well into the params map.
+                    params.put("httpmethod", new String[]{req.getMethod()});
+                    setProjectContext(params);
+                    setClientAddressForConsoleEndpointAccess(command, params, req);
+                    final String response = apiServer.handleRequest(params, responseType, auditTrailSb);
+                    HttpUtils.writeHttpResponse(resp, response != null ? response : "", HttpServletResponse.SC_OK, responseType, ApiServer.JSONcontentType.value());
+                } else {
+                    auditTrailSb.append(" " + HttpServletResponse.SC_UNAUTHORIZED + " " + "unable to verify user credentials and/or request signature");
+                    final String serializedResponse = apiServer.getSerializedApiError(HttpServletResponse.SC_UNAUTHORIZED, "unable to verify user credentials and/or request signature", params, responseType);
+                    HttpUtils.writeHttpResponse(resp, serializedResponse, HttpServletResponse.SC_UNAUTHORIZED, responseType, ApiServer.JSONcontentType.value());
+                }
             }
         } catch (final ServerApiException se) {
             final String serializedResponseText = apiServer.getSerializedApiError(se, params, responseType);
