@@ -93,8 +93,8 @@ const err = (error) => {
       } else {
         notification.error({
           top: '65px',
-          message: i18n.global.t('label.unauthorized'),
-          description: i18n.global.t('message.authorization.failed'),
+          message: i18n.global.t('message.login.failed'),
+          description: i18n.global.t('message.login.failed.security'),
           key: 'http-401',
           duration: 0,
           onClose: () => {
