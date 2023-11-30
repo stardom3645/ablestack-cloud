@@ -1137,6 +1137,9 @@ public class ApiConstants {
 
     public static final String SHAREABLE = "shareable";
     public static final String VBMC_PORT = "vbmcport";
+    public static final String IS_TAG_A_RULE = "istagarule";
+
+    public static final String PARAMETER_DESCRIPTION_IS_TAG_A_RULE = "Whether the informed tag is a JS interpretable rule or not.";
 
     /**
      * This enum specifies IO Drivers, each option controls specific policies on I/O.

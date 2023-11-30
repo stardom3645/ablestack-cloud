@@ -95,6 +95,9 @@ public class CreateStoragePoolCmd extends BaseCmd {
             required = false,
             description = "the path of Ablestack provider")
     private String krbdpath;
+    
+    @Parameter(name = ApiConstants.IS_TAG_A_RULE, type = CommandType.BOOLEAN, description = ApiConstants.PARAMETER_DESCRIPTION_IS_TAG_A_RULE)
+    private Boolean isTagARule;
 
     /////////////////////////////////////////////////////
     /////////////////// Accessors ///////////////////////
@@ -152,7 +155,13 @@ public class CreateStoragePoolCmd extends BaseCmd {
         return hypervisor;
     }
 
-    public String getKrbdPath() { return krbdpath; }
+    public String getKrbdPath() { 
+        return krbdpath; 
+    }
+
+    public Boolean isTagARule() {
+        return this.isTagARule;
+    }
 
     @Override
     public long getEntityOwnerId() {
