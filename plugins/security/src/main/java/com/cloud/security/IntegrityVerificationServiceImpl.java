@@ -168,33 +168,35 @@ public class IntegrityVerificationServiceImpl extends ManagerBase implements Plu
 
         private String calculateHash(File file, String algorithm) throws NoSuchAlgorithmException, IOException {
             ManagementServerHostVO msHost = msHostDao.findByMsid(ManagementServerNode.getManagementServerId());
-            MessageDigest md = MessageDigest.getInstance(algorithm);
+            MessageDigest digest = MessageDigest.getInstance(algorithm);
             File tempFile = null;
             if (!(file.exists())) {
                 tempFile = createTempFileWithRandomContent();
                 file = tempFile;
             }
-            try (DigestInputStream dis = new DigestInputStream(new FileInputStream(file), md)) {
-                // Read the file to update the digest
-                while (dis.read() != -1) ;
+            try (FileInputStream fis = new FileInputStream(file)) {
+                byte[] buffer = new byte[8192]; // Adjust the buffer size as needed
+                int bytesRead;
+                while ((bytesRead = fis.read(buffer)) != -1) {
+                    digest.update(buffer, 0, bytesRead);
+                }
             } catch (FileNotFoundException e) {
                 throw new CloudRuntimeException(String.format("Failed to execute integrity verification command for management server: Unable to find the file"+ e));
             } catch (IOException e) {
                 throw new CloudRuntimeException(String.format("Failed to execute integrity verification command for management server: "+msHost.getId()+ e));
             }
-            byte[] hashBytes = md.digest();
-            StringBuilder hexString = new StringBuilder();
+
+            byte[] hashBytes = digest.digest();
+
+            // Convert the byte array to a hexadecimal string
+            StringBuilder hexStringBuilder = new StringBuilder();
             for (byte hashByte : hashBytes) {
-                String hex = Integer.toHexString(0xFF & hashByte);
-                if (hex.length() == 1) {
-                    hexString.append('0');
-                }
-                hexString.append(hex);
+                hexStringBuilder.append(String.format("%02x", hashByte));
             }
             if (tempFile != null) {
                 tempFile.delete();
             }
-            return hexString.toString();
+            return hexStringBuilder.toString();
         }
     }
 
@@ -267,35 +269,68 @@ public class IntegrityVerificationServiceImpl extends ManagerBase implements Plu
         return tempFile;
     }
 
-    private String calculateHash(File file, String algorithm) throws NoSuchAlgorithmException, IOException {
+//    private String calculateHash(File file, String algorithm) throws NoSuchAlgorithmException, IOException {
+//        ManagementServerHostVO msHost = msHostDao.findByMsid(ManagementServerNode.getManagementServerId());
+//        MessageDigest md = MessageDigest.getInstance(algorithm);
+//        File tempFile = null;
+//        if (!(file.exists())) {
+//            tempFile = createTempFileWithRandomContent();
+//            file = tempFile;
+//        }
+//        try (DigestInputStream dis = new DigestInputStream(new FileInputStream(file), md)) {
+//            // Read the file to update the digest
+//            while (dis.read() != -1) ;
+//        } catch (FileNotFoundException e) {
+//            throw new CloudRuntimeException(String.format("Failed to execute integrity verification command for management server: Unable to find the file"+ e));
+//        } catch (IOException e) {
+//            throw new CloudRuntimeException(String.format("Failed to execute integrity verification command for management server: "+msHost.getId()+ e));
+//        }
+//        byte[] hashBytes = md.digest();
+//        StringBuilder hexString = new StringBuilder();
+//        for (byte hashByte : hashBytes) {
+//            String hex = Integer.toHexString(0xFF & hashByte);
+//            if (hex.length() == 1) {
+//                hexString.append('0');
+//            }
+//            hexString.append(hex);
+//        }
+//        if (tempFile != null) {
+//            tempFile.delete();
+//        }
+//        return hexString.toString();
+//    }
+
+    private String calculateHash(File file, String algorithm) throws IOException, NoSuchAlgorithmException {
         ManagementServerHostVO msHost = msHostDao.findByMsid(ManagementServerNode.getManagementServerId());
-        MessageDigest md = MessageDigest.getInstance(algorithm);
+        MessageDigest digest = MessageDigest.getInstance(algorithm);
         File tempFile = null;
         if (!(file.exists())) {
             tempFile = createTempFileWithRandomContent();
             file = tempFile;
         }
-        try (DigestInputStream dis = new DigestInputStream(new FileInputStream(file), md)) {
-            // Read the file to update the digest
-            while (dis.read() != -1) ;
+        try (FileInputStream fis = new FileInputStream(file)) {
+            byte[] buffer = new byte[8192]; // Adjust the buffer size as needed
+            int bytesRead;
+            while ((bytesRead = fis.read(buffer)) != -1) {
+                digest.update(buffer, 0, bytesRead);
+            }
         } catch (FileNotFoundException e) {
             throw new CloudRuntimeException(String.format("Failed to execute integrity verification command for management server: Unable to find the file"+ e));
         } catch (IOException e) {
             throw new CloudRuntimeException(String.format("Failed to execute integrity verification command for management server: "+msHost.getId()+ e));
         }
-        byte[] hashBytes = md.digest();
-        StringBuilder hexString = new StringBuilder();
+
+        byte[] hashBytes = digest.digest();
+
+        // Convert the byte array to a hexadecimal string
+        StringBuilder hexStringBuilder = new StringBuilder();
         for (byte hashByte : hashBytes) {
-            String hex = Integer.toHexString(0xFF & hashByte);
-            if (hex.length() == 1) {
-                hexString.append('0');
-            }
-            hexString.append(hex);
+            hexStringBuilder.append(String.format("%02x", hashByte));
         }
         if (tempFile != null) {
             tempFile.delete();
         }
-        return hexString.toString();
+        return hexStringBuilder.toString();
     }
 
     public static boolean checkConditions(List<Boolean> conditions) {
