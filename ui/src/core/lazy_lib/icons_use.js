@@ -92,6 +92,7 @@ import {
   FormOutlined,
   ForwardOutlined,
   FullscreenOutlined,
+  FunnelPlotOutlined,
   GatewayOutlined,
   GithubOutlined,
   GlobalOutlined,
@@ -258,6 +259,7 @@ export default {
     app.component('FormOutlined', FormOutlined)
     app.component('ForwardOutlined', ForwardOutlined)
     app.component('FullscreenOutlined', FullscreenOutlined)
+    app.component('FunnelPlotOutlined', FunnelPlotOutlined)
     app.component('GatewayOutlined', GatewayOutlined)
     app.component('GithubOutlined', GithubOutlined)
     app.component('GlobalOutlined', GlobalOutlined)
