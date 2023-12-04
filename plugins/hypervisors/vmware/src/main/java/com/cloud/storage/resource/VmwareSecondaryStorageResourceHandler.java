@@ -22,7 +22,7 @@ import org.apache.cloudstack.storage.command.StorageSubSystemCommand;
 import org.apache.cloudstack.storage.resource.SecondaryStorageResourceHandler;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
-import org.apache.log4j.NDC;
+import org.apache.logging.log4j.ThreadContext;
 
 import com.cloud.agent.api.Answer;
 import com.cloud.agent.api.BackupSnapshotCommand;
@@ -95,7 +95,7 @@ public class VmwareSecondaryStorageResourceHandler implements SecondaryStorageRe
 
         try {
             Answer answer;
-            NDC.push(getCommandLogTitle(cmd));
+            ThreadContext.push(getCommandLogTitle(cmd));
             logCommand(cmd);
 
             if (cmd instanceof PrimaryStorageDownloadCommand) {
@@ -139,7 +139,7 @@ public class VmwareSecondaryStorageResourceHandler implements SecondaryStorageRe
             if (s_logger.isDebugEnabled())
                 s_logger.debug("Done executing " + _gson.toJson(cmd));
             recycleServiceContext();
-            NDC.pop();
+            ThreadContext.pop();
         }
     }
 

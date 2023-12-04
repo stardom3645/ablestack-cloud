@@ -47,8 +47,6 @@ import org.apache.cloudstack.framework.config.ConfigKey;
 import org.apache.cloudstack.framework.config.Configurable;
 import org.apache.cloudstack.managed.context.ManagedContextRunnable;
 import org.apache.cloudstack.utils.identity.ManagementServerNode;
-import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
 
 import com.cloud.cluster.dao.ManagementServerHostDao;
 import com.cloud.cluster.dao.ManagementServerHostPeerDao;
@@ -71,7 +69,6 @@ import com.cloud.utils.mgmt.JmxUtil;
 import com.cloud.utils.net.NetUtils;
 
 public class ClusterManagerImpl extends ManagerBase implements ClusterManager, Configurable {
-    protected static Logger s_logger = LogManager.getLogger(ClusterManagerImpl.class);
 
     private static final int EXECUTOR_SHUTDOWN_TIMEOUT = 1000; // 1 second
     private static final int DEFAULT_OUTGOING_WORKERS = 5;
@@ -694,49 +691,49 @@ public class ClusterManagerImpl extends ManagerBase implements ClusterManager, C
                     while ((msg = getNextNotificationMessage()) != null) {
                         try {
                             switch (msg.getMessageType()) {
-                            case nodeAdded:
-                                if (msg.getNodes() != null && msg.getNodes().size() > 0) {
-                                    final Profiler profiler = new Profiler();
-                                    profiler.start();
+                                case nodeAdded:
+                                    if (msg.getNodes() != null && msg.getNodes().size() > 0) {
+                                        final Profiler profiler = new Profiler();
+                                        profiler.start();
 
-                                    notifyNodeJoined(msg.getNodes());
+                                        notifyNodeJoined(msg.getNodes());
 
-                                    profiler.stop();
-                                    if (profiler.getDurationInMillis() > 1000) {
-                                        if (s_logger.isDebugEnabled()) {
-                                            s_logger.debug("Notifying management server join event took " + profiler.getDurationInMillis() + " ms");
+                                        profiler.stop();
+                                        if (profiler.getDurationInMillis() > 1000) {
+                                            if (s_logger.isDebugEnabled()) {
+                                                s_logger.debug("Notifying management server join event took " + profiler.getDurationInMillis() + " ms");
+                                            }
+                                        } else {
+                                            s_logger.warn("Notifying management server join event took " + profiler.getDurationInMillis() + " ms");
                                         }
-                                    } else {
-                                        s_logger.warn("Notifying management server join event took " + profiler.getDurationInMillis() + " ms");
                                     }
-                                }
-                                break;
+                                    break;
 
-                            case nodeRemoved:
-                                if (msg.getNodes() != null && msg.getNodes().size() > 0) {
-                                    final Profiler profiler = new Profiler();
-                                    profiler.start();
+                                case nodeRemoved:
+                                    if (msg.getNodes() != null && msg.getNodes().size() > 0) {
+                                        final Profiler profiler = new Profiler();
+                                        profiler.start();
 
-                                    notifyNodeLeft(msg.getNodes());
+                                        notifyNodeLeft(msg.getNodes());
 
-                                    profiler.stop();
-                                    if (profiler.getDurationInMillis() > 1000) {
-                                        if (s_logger.isDebugEnabled()) {
-                                            s_logger.debug("Notifying management server leave event took " + profiler.getDurationInMillis() + " ms");
+                                        profiler.stop();
+                                        if (profiler.getDurationInMillis() > 1000) {
+                                            if (s_logger.isDebugEnabled()) {
+                                                s_logger.debug("Notifying management server leave event took " + profiler.getDurationInMillis() + " ms");
+                                            }
+                                        } else {
+                                            s_logger.warn("Notifying management server leave event took " + profiler.getDurationInMillis() + " ms");
                                         }
-                                    } else {
-                                        s_logger.warn("Notifying management server leave event took " + profiler.getDurationInMillis() + " ms");
                                     }
-                                }
-                                break;
+                                    break;
 
-                            case nodeIsolated:
-                                notifyNodeIsolated();
-                                break;
+                                case nodeIsolated:
+                                    notifyNodeIsolated();
+                                    break;
 
-                            default:
-                                assert false;
-                                break;
+                                default:
+                                    assert false;
+                                    break;
                             }
 
                         } catch (final Throwable e) {
@@ -760,28 +757,28 @@ public class ClusterManagerImpl extends ManagerBase implements ClusterManager, C
         }
 
         switch (msg.getMessageType()) {
-        case nodeAdded: {
-            final List<ManagementServerHostVO> l = msg.getNodes();
-            if (l != null && l.size() > 0) {
-                for (final ManagementServerHostVO mshost : l) {
-                    _mshostPeerDao.updatePeerInfo(_mshostId, mshost.getId(), mshost.getRunid(), ManagementServerHost.State.Up);
+            case nodeAdded: {
+                final List<ManagementServerHostVO> l = msg.getNodes();
+                if (l != null && l.size() > 0) {
+                    for (final ManagementServerHostVO mshost : l) {
+                        _mshostPeerDao.updatePeerInfo(_mshostId, mshost.getId(), mshost.getRunid(), ManagementServerHost.State.Up);
+                    }
                 }
             }
-        }
-        break;
-
-        case nodeRemoved: {
-            final List<ManagementServerHostVO> l = msg.getNodes();
-            if (l != null && l.size() > 0) {
-                for (final ManagementServerHostVO mshost : l) {
-                    _mshostPeerDao.updatePeerInfo(_mshostId, mshost.getId(), mshost.getRunid(), ManagementServerHost.State.Down);
-                }
-            }
-        }
-        break;
-
-        default:
             break;
+
+            case nodeRemoved: {
+                final List<ManagementServerHostVO> l = msg.getNodes();
+                if (l != null && l.size() > 0) {
+                    for (final ManagementServerHostVO mshost : l) {
+                        _mshostPeerDao.updatePeerInfo(_mshostId, mshost.getId(), mshost.getRunid(), ManagementServerHost.State.Down);
+                    }
+                }
+            }
+            break;
+
+            default:
+                break;
         }
     }
 
@@ -1241,13 +1238,13 @@ public class ClusterManagerImpl extends ManagerBase implements ClusterManager, C
                     if (pingManagementNode(peer.getMsid())) {
                         final String msg =
                                 "Detected that another management node with the same IP " + peer.getServiceIP() +
-                                " is already running, please check your cluster configuration";
+                                        " is already running, please check your cluster configuration";
                         s_logger.error(msg);
                         throw new ConfigurationException(msg);
                     } else {
                         final String msg =
                                 "Detected that another management node with the same IP " + peer.getServiceIP() +
-                                " is considered as running in DB, however it is not pingable, we will continue cluster initialization with this management server node";
+                                        " is considered as running in DB, however it is not pingable, we will continue cluster initialization with this management server node";
                         s_logger.info(msg);
                     }
                 }

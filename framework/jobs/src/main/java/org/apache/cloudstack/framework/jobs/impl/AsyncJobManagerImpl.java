@@ -62,8 +62,7 @@ import org.apache.cloudstack.management.ManagementServerHost;
 import org.apache.cloudstack.utils.identity.ManagementServerNode;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
-import org.apache.log4j.MDC;
-import org.apache.log4j.NDC;
+import org.apache.logging.log4j.ThreadContext;
 
 import com.cloud.cluster.ClusterManagerListener;
 import com.cloud.storage.Snapshot;
@@ -568,19 +567,19 @@ public class AsyncJobManagerImpl extends ManagerBase implements AsyncJobManager,
                 String related = job.getRelated();
                 String logContext = job.getShortUuid();
                 if (related != null && !related.isEmpty()) {
-                    NDC.push("job-" + related + "/" + "job-" + job.getId());
+                    ThreadContext.push("job-" + related + "/" + "job-" + job.getId());
                     AsyncJob relatedJob = _jobDao.findByIdIncludingRemoved(Long.parseLong(related));
                     if (relatedJob != null) {
                         logContext = relatedJob.getShortUuid();
                     }
                 } else {
-                    NDC.push("job-" + job.getId());
+                    ThreadContext.push("job-" + job.getId());
                 }
-                MDC.put("logcontextid", logContext);
+                ThreadContext.put("logcontextid", logContext);
                 try {
                     super.run();
                 } finally {
-                    NDC.pop();
+                    ThreadContext.pop();
                 }
             }
 
@@ -611,7 +610,7 @@ public class AsyncJobManagerImpl extends ManagerBase implements AsyncJobManager,
                             logContext = relatedJob.getShortUuid();
                         }
                     }
-                    MDC.put("logcontextid", logContext);
+                    ThreadContext.put("logcontextid", logContext);
 
                     // execute the job
                     if (s_logger.isDebugEnabled()) {

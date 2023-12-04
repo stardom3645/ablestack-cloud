@@ -88,7 +88,7 @@ public class RunIntegrityVerificationCmd extends BaseCmd {
                 response.setSuccess(result);
                 this.setResponseObject(response);
             } else {
-                throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, "Failed to Integrity Verification for management server. Please check the Integrity Verification tab for detailed results.");
+                throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, "Failed to execute integrity verification on the management server when running the product");
             }
         } catch (final ServerApiException e) {
             throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, e.getMessage());

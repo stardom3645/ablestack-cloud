@@ -22,7 +22,7 @@ import java.util.UUID;
 
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
-import org.apache.log4j.MDC;
+import org.apache.logging.log4j.ThreadContext;
 
 import org.apache.cloudstack.managed.threadlocal.ManagedThreadLocal;
 
@@ -135,7 +135,7 @@ public class LogContext {
             callingContext = new LogContext(userId, accountId, contextId);
         }
         s_currentContext.set(callingContext);
-        MDC.put("logcontextid", UuidUtils.first(contextId));
+        ThreadContext.put("logcontextid", UuidUtils.first(contextId));
         if (s_logger.isTraceEnabled()) {
             s_logger.trace("Registered for log: " + callingContext);
         }
@@ -211,7 +211,7 @@ public class LogContext {
                 s_logger.trace("Unregistered: " + context);
             }
         }
-        MDC.clear();
+        ThreadContext.clearMap();
     }
 
     public void setStartEventId(long startEventId) {

@@ -44,7 +44,6 @@ import org.apache.commons.httpclient.HttpMethod;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
-import org.apache.log4j.NDC;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -223,7 +222,7 @@ public class TestClientWithAPI {
                                 } else {
                                     username = Math.abs(ran.nextInt()) + "-user";
                                 }
-                                NDC.push(username);
+                                ThreadContext.push(username);
 
                                 s_logger.info("Starting test for the user " + username);
                                 int response = executeDeployment(server, developerServer, username, snapshotTest);
@@ -352,7 +351,7 @@ public class TestClientWithAPI {
                                             + "error executing stop during api test: " + e1.getLocalizedMessage());
                                 }
                             } finally {
-                                NDC.clear();
+                                ThreadContext.clear();
                             }
                         } while (repeat);
                     }

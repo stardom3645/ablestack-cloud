@@ -36,7 +36,7 @@ import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
-import org.apache.log4j.xml.DOMConfigurator;
+import org.apache.logging.log4j.core.config.Configurator;
 
 import javax.naming.ConfigurationException;
 import java.io.File;
@@ -370,7 +370,7 @@ public class AgentShell implements IAgentShell, Daemon {
         }
 
         if (null != file) {
-            DOMConfigurator.configureAndWatch(file.getAbsolutePath());
+            Configurator.initialize(null, file.getAbsolutePath());
 
             s_logger.info("Agent started");
         } else {
