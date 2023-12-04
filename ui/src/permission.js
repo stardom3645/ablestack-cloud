@@ -171,8 +171,12 @@ router.beforeEach((to, from, next) => {
       if (to.path === '/') {
         api('listCapabilities')
       }
-      next({ path: '/user/login', query: { redirect: to.fullPath } })
-      NProgress.done()
+      setTimeout(() => {
+        if (!window.location.href.includes('error.html')) {
+          next({ path: '/user/login', query: { redirect: to.fullPath } })
+          NProgress.done()
+        }
+      }, 300)
     }
   }
 })
