@@ -351,6 +351,18 @@ public class ApiServlet extends HttpServlet {
                 if (session != null) {
                     invalidateHttpSession(session, String.format("request verification failed for %s from %s", userId, remoteAddress.getHostAddress()));
                 }
+                // 인증 정보가 없어도 security 활성화 여부 확인을 위해 listCapablities API 오픈
+                if (command.equalsIgnoreCase("listCapabilities")) {
+                    auditTrailSb.insert(0, "(userId=" + CallContext.current().getCallingUserId() + " accountId=" + CallContext.current().getCallingAccount().getId() +
+                    " sessionId=" + (session != null ? session.getId() : null) + ")");
+
+                    // Add the HTTP method (GET/POST/PUT/DELETE) as well into the params map.
+                    params.put("httpmethod", new String[]{req.getMethod()});
+                    setProjectContext(params);
+                    setClientAddressForConsoleEndpointAccess(command, params, req);
+                    final String response = apiServer.handleRequest(params, responseType, auditTrailSb);
+                    HttpUtils.writeHttpResponse(resp, response != null ? response : "", HttpServletResponse.SC_OK, responseType, ApiServer.JSONcontentType.value());
+                }
                 // 보안 기능이 활성화되어 있는 경우
                 if (ApiServer.SecurityFeaturesEnabled.value()) {
                     // 관리자 단말기 접속 IP 가 다른 경우 에러 처리
@@ -363,18 +375,6 @@ public class ApiServlet extends HttpServlet {
                     if (!NetUtils.isIpInCidrList(remoteAddress, (ApiAllowedSourceIp + "/" + accessAllowedCidr).split(","))) {
                         s_logger.warn("Request by account '" + account.toString() + "' was denied since " + remoteAddress + " does not match " + ApiAllowedSourceIp  + "/" + accessAllowedCidr);
                         throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, "Failed to authenticate user '" + accountName + "' from ip " + remoteAddress.toString().replace("/", ""));
-                    }
-                    // 인증 정보가 없어도 security 활성화 여부 확인을 위해 listCapablities API 오픈
-                    if (command.equalsIgnoreCase("listCapabilities")) {
-                        auditTrailSb.insert(0, "(userId=" + CallContext.current().getCallingUserId() + " accountId=" + CallContext.current().getCallingAccount().getId() +
-                        " sessionId=" + (session != null ? session.getId() : null) + ")");
-
-                        // Add the HTTP method (GET/POST/PUT/DELETE) as well into the params map.
-                        params.put("httpmethod", new String[]{req.getMethod()});
-                        setProjectContext(params);
-                        setClientAddressForConsoleEndpointAccess(command, params, req);
-                        final String response = apiServer.handleRequest(params, responseType, auditTrailSb);
-                        HttpUtils.writeHttpResponse(resp, response != null ? response : "", HttpServletResponse.SC_OK, responseType, ApiServer.JSONcontentType.value());
                     }
                 } else {
                     auditTrailSb.append(" " + HttpServletResponse.SC_UNAUTHORIZED + " " + "unable to verify user credentials and/or request signature");
