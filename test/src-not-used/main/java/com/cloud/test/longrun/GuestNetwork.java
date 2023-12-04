@@ -21,7 +21,6 @@ import java.util.Random;
 
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
-import org.apache.log4j.NDC;
 
 import com.trilead.ssh2.Connection;
 import com.trilead.ssh2.Session;
@@ -48,7 +47,7 @@ public class GuestNetwork implements Runnable {
 
     @Override
     public void run() {
-        NDC.push("Following thread has started" + Thread.currentThread().getName());
+        ThreadContext.push("Following thread has started" + Thread.currentThread().getName());
         int retry = 0;
 
         //Start copying files between machines in the network

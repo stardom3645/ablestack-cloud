@@ -27,7 +27,7 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 import org.apache.cloudstack.framework.config.ConfigKey;
 import org.apache.cloudstack.managed.context.ManagedContextRunnable;
-import org.apache.log4j.MDC;
+import org.apache.logging.log4j.ThreadContext;
 
 import com.cloud.agent.api.Answer;
 import com.cloud.agent.api.Command;
@@ -179,7 +179,7 @@ public class DirectAgentAttache extends AgentAttache {
                     }
 
                     if (cmd.getContextParam("logid") != null) {
-                        MDC.put("logcontextid", cmd.getContextParam("logid"));
+                        ThreadContext.put("logcontextid", cmd.getContextParam("logid"));
                     }
                     if (s_logger.isDebugEnabled()) {
                         s_logger.debug("Ping from " + _id + "(" + _name + ")");
@@ -247,7 +247,7 @@ public class DirectAgentAttache extends AgentAttache {
                     Answer answer = null;
                     Command currentCmd = cmds[i];
                     if (currentCmd.getContextParam("logid") != null) {
-                        MDC.put("logcontextid", currentCmd.getContextParam("logid"));
+                        ThreadContext.put("logcontextid", currentCmd.getContextParam("logid"));
                     }
                     try {
                         if (resource != null) {
@@ -309,7 +309,7 @@ public class DirectAgentAttache extends AgentAttache {
                     Answer answer = null;
                     Command currentCmd = cmds[i];
                     if (currentCmd.getContextParam("logid") != null) {
-                        MDC.put("logcontextid", currentCmd.getContextParam("logid"));
+                        ThreadContext.put("logcontextid", currentCmd.getContextParam("logid"));
                     }
                     try {
                         if (resource != null) {

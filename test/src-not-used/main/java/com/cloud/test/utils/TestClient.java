@@ -27,7 +27,6 @@ import org.apache.commons.httpclient.HttpMethod;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
-import org.apache.log4j.NDC;
 
 import com.trilead.ssh2.ChannelCondition;
 import com.trilead.ssh2.Connection;
@@ -122,7 +121,7 @@ public class TestClient {
                                 } else {
                                     username = Math.abs(ran.nextInt()) + "-user";
                                 }
-                                NDC.push(username);
+                                ThreadContext.push(username);
 
                                 String url = server + "?email=" + username + "&password=" + username + "&command=deploy";
                                 s_logger.info("Launching test for user: " + username + " with url: " + url);
@@ -202,7 +201,7 @@ public class TestClient {
                                             + "error while executing last resort stop attempt: " + e1.getLocalizedMessage());
                                 }
                             } finally {
-                                NDC.clear();
+                                ThreadContext.clear();
                             }
                         } while (repeat);
                     }

@@ -37,7 +37,7 @@ import org.apache.cloudstack.managed.context.ManagedContextRunnable;
 import org.apache.cloudstack.management.ManagementServerHost;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
-import org.apache.log4j.NDC;
+import org.apache.logging.log4j.ThreadContext;
 
 import com.cloud.agent.AgentManager;
 import com.cloud.alert.AlertManager;
@@ -986,14 +986,14 @@ public class HighAvailabilityManagerImpl extends ManagerBase implements Configur
                     }
                 }
 
-                NDC.push("work-" + work.getId());
+                ThreadContext.push("work-" + work.getId());
                 s_logger.info("Processing work " + work);
                 processWork(work);
             } catch (final Throwable th) {
                 s_logger.error("Caught this throwable, ", th);
             } finally {
                 if (work != null) {
-                    NDC.pop();
+                    ThreadContext.pop();
                 }
             }
         }

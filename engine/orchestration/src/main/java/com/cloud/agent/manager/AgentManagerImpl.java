@@ -54,7 +54,7 @@ import org.apache.cloudstack.utils.identity.ManagementServerNode;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
-import org.apache.log4j.MDC;
+import org.apache.logging.log4j.ThreadContext;
 
 import com.cloud.agent.AgentManager;
 import com.cloud.agent.Listener;
@@ -398,7 +398,7 @@ public class AgentManagerImpl extends ManagerBase implements AgentManager, Handl
                 cmd.setContextParam("job", "job-" + job.getId());
             }
         }
-        String logcontextid = (String) MDC.get("logcontextid");
+        String logcontextid = (String) ThreadContext.get("logcontextid");
         if (StringUtils.isNotEmpty(logcontextid)) {
             cmd.setContextParam("logid", logcontextid);
         }

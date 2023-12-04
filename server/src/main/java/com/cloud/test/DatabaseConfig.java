@@ -41,7 +41,7 @@ import org.apache.cloudstack.utils.security.DigestHelper;
 import org.apache.cloudstack.utils.security.ParserUtils;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
-import org.apache.log4j.xml.DOMConfigurator;
+import org.apache.logging.log4j.core.config.Configurator;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -372,7 +372,7 @@ public class DatabaseConfig {
         File file = PropertiesUtil.findConfigFile("log4j-cloud.xml");
         if (file != null) {
             System.out.println("Log4j configuration from : " + file.getAbsolutePath());
-            DOMConfigurator.configureAndWatch(file.getAbsolutePath(), 10000);
+            Configurator.initialize(null, file.getAbsolutePath());
         } else {
             System.out.println("Configure log4j with default properties");
         }
