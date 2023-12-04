@@ -365,7 +365,7 @@ public class ApiServlet extends HttpServlet {
                             s_logger.warn("Request by account '" + account.toString() + "' was denied since " + remoteAddress + " does not match " + ApiAllowedSourceIp  + "/" + accessAllowedCidr);
                             throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, "Failed to authenticate user '" + accountName + "' from ip " + remoteAddress.toString().replace("/", ""));
                         }
-                    } 
+                    }
                     auditTrailSb.insert(0, "(userId=" + CallContext.current().getCallingUserId() + " accountId=" + CallContext.current().getCallingAccount().getId() +
                     " sessionId=" + (session != null ? session.getId() : null) + ")");
 
