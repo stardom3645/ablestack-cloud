@@ -353,6 +353,19 @@ public class ApiServlet extends HttpServlet {
                 }
                 // 인증 정보가 없어도 security 활성화 여부 확인을 위해 listCapablities API 오픈
                 if (command.equalsIgnoreCase("listCapabilities")) {
+                    if (ApiServer.SecurityFeaturesEnabled.value()) {
+                        // 관리자 단말기 접속 IP 가 다른 경우 에러 처리
+                        String accountName = "admin";
+                        Long domainId = 1L;
+                        Account account = ApiDBUtils.findAccountByNameDomain(accountName, domainId);
+                        final String ApiAllowedSourceIp = ApiServiceConfiguration.ApiAllowedSourceIp.valueIn(account.getId()).replaceAll("\\s","");
+                        final String accessAllowedCidr = ApiServiceConfiguration.ApiAllowedSourceCidr.valueIn(account.getId()).replaceAll("\\s", "");
+                        s_logger.debug("CIDRs from which account '" + account.toString() + "' is allowed to perform API calls: " + ApiAllowedSourceIp  + "/" + accessAllowedCidr);
+                        if (!NetUtils.isIpInCidrList(remoteAddress, (ApiAllowedSourceIp + "/" + accessAllowedCidr).split(","))) {
+                            s_logger.warn("Request by account '" + account.toString() + "' was denied since " + remoteAddress + " does not match " + ApiAllowedSourceIp  + "/" + accessAllowedCidr);
+                            throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, "Failed to authenticate user '" + accountName + "' from ip " + remoteAddress.toString().replace("/", ""));
+                        }
+                    } 
                     auditTrailSb.insert(0, "(userId=" + CallContext.current().getCallingUserId() + " accountId=" + CallContext.current().getCallingAccount().getId() +
                     " sessionId=" + (session != null ? session.getId() : null) + ")");
 
@@ -362,20 +375,6 @@ public class ApiServlet extends HttpServlet {
                     setClientAddressForConsoleEndpointAccess(command, params, req);
                     final String response = apiServer.handleRequest(params, responseType, auditTrailSb);
                     HttpUtils.writeHttpResponse(resp, response != null ? response : "", HttpServletResponse.SC_OK, responseType, ApiServer.JSONcontentType.value());
-                }
-                // 보안 기능이 활성화되어 있는 경우
-                if (ApiServer.SecurityFeaturesEnabled.value()) {
-                    // 관리자 단말기 접속 IP 가 다른 경우 에러 처리
-                    String accountName = "admin";
-                    Long domainId = 1L;
-                    Account account = ApiDBUtils.findAccountByNameDomain(accountName, domainId);
-                    final String ApiAllowedSourceIp = ApiServiceConfiguration.ApiAllowedSourceIp.valueIn(account.getId()).replaceAll("\\s","");
-                    final String accessAllowedCidr = ApiServiceConfiguration.ApiAllowedSourceCidr.valueIn(account.getId()).replaceAll("\\s", "");
-                    s_logger.debug("CIDRs from which account '" + account.toString() + "' is allowed to perform API calls: " + ApiAllowedSourceIp  + "/" + accessAllowedCidr);
-                    if (!NetUtils.isIpInCidrList(remoteAddress, (ApiAllowedSourceIp + "/" + accessAllowedCidr).split(","))) {
-                        s_logger.warn("Request by account '" + account.toString() + "' was denied since " + remoteAddress + " does not match " + ApiAllowedSourceIp  + "/" + accessAllowedCidr);
-                        throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, "Failed to authenticate user '" + accountName + "' from ip " + remoteAddress.toString().replace("/", ""));
-                    }
                 } else {
                     auditTrailSb.append(" " + HttpServletResponse.SC_UNAUTHORIZED + " " + "unable to verify user credentials and/or request signature");
                     final String serializedResponse = apiServer.getSerializedApiError(HttpServletResponse.SC_UNAUTHORIZED, "unable to verify user credentials and/or request signature", params, responseType);

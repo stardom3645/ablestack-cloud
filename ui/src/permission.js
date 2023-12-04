@@ -20,6 +20,7 @@ import Cookies from 'js-cookie'
 import { i18n } from './locales'
 import router from './router'
 import store from './store'
+import { api } from '@/api'
 
 import NProgress from 'nprogress' // progress bar
 import 'nprogress/nprogress.css' // progress bar style
@@ -167,6 +168,9 @@ router.beforeEach((to, from, next) => {
     } else if (allowList.includes(to.name)) {
       next()
     } else {
+      if (to.path === '/') {
+        api('listCapabilities')
+      }
       next({ path: '/user/login', query: { redirect: to.fullPath } })
       NProgress.done()
     }
