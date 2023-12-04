@@ -21,8 +21,6 @@ import java.util.Map;
 import javax.inject.Inject;
 import javax.naming.ConfigurationException;
 
-import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
 import org.springframework.stereotype.Component;
 
 import com.cloud.cluster.ClusterManager;
@@ -37,7 +35,6 @@ import com.cloud.utils.events.SubscriptionMgr;
 @Component
 public class ClusterAlertAdapter extends AdapterBase implements AlertAdapter {
 
-    protected static Logger s_logger = LogManager.getLogger(ClusterAlertAdapter.class);
 
     @Inject
     private AlertManager _alertMgr;
@@ -92,7 +89,7 @@ public class ClusterAlertAdapter extends AdapterBase implements AlertAdapter {
                         s_logger.debug("Detected management server node " + mshost.getServiceIP() + " is down, send alert");
                     }
                     _alertMgr.sendAlert(AlertManager.AlertType.ALERT_TYPE_MANAGMENT_NODE, 0, new Long(0), "Management server node " + mshost.getServiceIP() + " is down",
-                        "");
+                            "");
                 } else {
                     if (s_logger.isDebugEnabled()) {
                         s_logger.debug("Detected management server node " + mshost.getServiceIP() + " is down, but alert has already been set");
