@@ -32,7 +32,7 @@ export default {
       resourceType: 'UserVm',
       params: () => {
         var params = { details: 'servoff,tmpl,nics' }
-        if (store.getters.metrics) {
+        if (!store.getters.features.securityfeaturesenabled) {
           params = { details: 'servoff,tmpl,nics,stats' }
         }
         params.isvnf = false
@@ -752,6 +752,7 @@ export default {
       icon: 'key-outlined',
       docHelp: 'adminguide/virtual_machines.html#using-ssh-keys-for-authentication',
       permission: ['listSSHKeyPairs'],
+      show: () => { return (!store.getters.features.securityfeaturesenabled) },
       columns: () => {
         var fields = ['name', 'fingerprint']
         if (['Admin', 'DomainAdmin'].includes(store.getters.userInfo.roletype)) {
@@ -902,6 +903,7 @@ export default {
       icon: 'swap-outlined',
       docHelp: 'adminguide/virtual_machines.html#affinity-groups',
       permission: ['listAffinityGroups'],
+      show: () => { return (!store.getters.features.securityfeaturesenabled) },
       columns: () => {
         var fields = ['name', 'type', 'description']
         if (['Admin', 'DomainAdmin'].includes(store.getters.userInfo.roletype)) {

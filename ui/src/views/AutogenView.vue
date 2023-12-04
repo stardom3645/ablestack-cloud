@@ -37,7 +37,7 @@
                     {{ $t('label.filterby') }}
                   </template>
                   <a-select
-                    v-if="!dataView && filters && filters.length > 0"
+                    v-if="!dataView && filters && filters.length > 0 && !securityfeatures"
                     :placeholder="$t('label.filterby')"
                     :value="filterValue"
                     style="min-width: 100px; margin-left: 10px; margin-bottom: 5px"
@@ -74,7 +74,7 @@
                   :checked="$store.getters.metrics"
                   @change="(checked, event) => { $store.dispatch('SetMetrics', checked) }"/>
                 <a-switch
-                  v-if="!projectView && hasProjectId"
+                  v-if="!projectView && hasProjectId && !securityfeatures"
                   style="margin-left: 8px; min-height: 23px; margin-bottom: 4px"
                   :checked-children="$t('label.projects')"
                   :un-checked-children="$t('label.projects')"
@@ -754,7 +754,8 @@ export default {
       confirmDirty: false,
       firstIndex: 0,
       modalWidth: '30vw',
-      promises: []
+      promises: [],
+      securityfeatures: false
     }
   },
   beforeUnmount () {
@@ -1377,6 +1378,12 @@ export default {
           }
         }
       }
+      api('listCapabilities').then(response => {
+        if (response) {
+          const capability = response.listcapabilitiesresponse.capability || []
+          this.securityfeatures = capability.securityfeaturesenabled
+        }
+      })
     },
     closeAction () {
       this.actionLoading = false

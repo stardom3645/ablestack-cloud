@@ -325,6 +325,7 @@ export default {
       title: 'label.vnf.appliances',
       icon: 'gateway-outlined',
       permission: ['listVirtualMachinesMetrics'],
+      show: () => { return (!store.getters.features.securityfeaturesenabled) },
       params: () => {
         return { details: 'servoff,tmpl,nics', isvnf: true }
       },
@@ -1067,6 +1068,7 @@ export default {
       title: 'label.vpn.users',
       icon: 'user-switch-outlined',
       permission: ['listVpnUsers'],
+      show: () => { return (!store.getters.features.securityfeaturesenabled) },
       columns: ['username', 'state', 'account', 'domain'],
       details: ['username', 'state', 'account', 'domain'],
       actions: [
@@ -1119,6 +1121,7 @@ export default {
       title: 'label.vpncustomergatewayid',
       icon: 'lock-outlined',
       permission: ['listVpnCustomerGateways'],
+      show: () => { return (!store.getters.features.securityfeaturesenabled) },
       columns: ['name', 'gateway', 'cidrlist', 'ipsecpsk', 'account', 'domain'],
       details: ['name', 'id', 'gateway', 'cidrlist', 'ipsecpsk', 'ikepolicy', 'ikelifetime', 'ikeversion', 'esppolicy', 'esplifetime', 'dpd', 'splitconnections', 'forceencap', 'account', 'domain'],
       searchFilters: ['keyword', 'domainid', 'account'],
@@ -1174,6 +1177,7 @@ export default {
       title: 'label.tungsten.fabric',
       icon: shallowRef(tungsten),
       permission: ['listTungstenFabricProviders'],
+      show: () => { return (!store.getters.features.securityfeaturesenabled) },
       columns: [
         {
           field: 'name',
