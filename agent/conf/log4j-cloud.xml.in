@@ -19,7 +19,7 @@ under the License.
 -->
 <Configuration monitorInterval="60">
    <Appenders>
-
+      <Null name="NullAppender"/>
       <!-- ================================= -->
       <!-- Preserve messages in a local file -->
       <!-- ================================= -->
@@ -71,9 +71,10 @@ under the License.
       <!-- Setup the Root category -->
       <!-- ======================= -->
 
-      <Root level="INFO">
+      <Root level="OFF">
          <AppenderRef ref="CONSOLE"/>
          <AppenderRef ref="FILE"/>
+         <AppenderRef ref="NullAppender"/>
       </Root>
 
    </Loggers>

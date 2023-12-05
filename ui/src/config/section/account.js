@@ -32,7 +32,7 @@ export default {
     param: 'account'
   }],
   filters: () => {
-    const filters = ['locked']
+    const filters = ['enabled', 'disabled', 'locked']
     return filters
   },
   tabs: [
