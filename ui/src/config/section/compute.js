@@ -347,7 +347,7 @@ export default {
           docHelp: 'adminguide/virtual_machines.html#change-affinity-group-for-an-existing-vm',
           dataView: true,
           args: ['affinitygroupids'],
-          show: (record) => { return ['Stopped'].includes(record.state) },
+          show: (record) => { return ['Stopped'].includes(record.state) && (!store.getters.features.securityfeaturesenabled) },
           component: shallowRef(defineAsyncComponent(() => import('@/views/compute/ChangeAffinity'))),
           popup: true
         },
@@ -408,7 +408,7 @@ export default {
           message: 'message.desc.reset.ssh.key.pair',
           docHelp: 'adminguide/virtual_machines.html#resetting-ssh-keys',
           dataView: true,
-          show: (record) => { return ['Stopped'].includes(record.state) },
+          show: (record) => { return ['Stopped'].includes(record.state) && (!store.getters.features.securityfeaturesenabled) },
           popup: true,
           component: shallowRef(defineAsyncComponent(() => import('@/views/compute/ResetSshKeyPair')))
         },
@@ -496,6 +496,7 @@ export default {
       icon: ['fa-solid', 'fa-dharmachakra'],
       docHelp: 'plugins/cloudstack-kubernetes-service.html',
       permission: ['listKubernetesClusters'],
+      show: () => { return (!store.getters.features.securityfeaturesenabled) },
       columns: (store) => {
         var fields = ['name', 'state', 'clustertype', 'size', 'cpunumber', 'memory', 'kubernetesversionname']
         if (['Admin', 'DomainAdmin'].includes(store.userInfo.roletype)) {
