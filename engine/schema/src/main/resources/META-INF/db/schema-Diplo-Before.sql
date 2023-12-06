@@ -64,4 +64,4 @@ CREATE TABLE IF NOT EXISTS `integrity_verification_initial_hash_final_result` (
     ) ENGINE=InnoDB CHARSET=utf8mb3;
 
 -- create_show_alert_parameter_on_alert
-ALTER TABLE `cloud`.`alert` ADD COLUMN `show_alert` tinyint(1) NOT NULL DEFAULT '1' COMMENT 'show popup alert';
+ALTER TABLE `cloud`.`alert` ADD COLUMN IF NOT EXISTS `show_alert` tinyint(1) NOT NULL DEFAULT '1' COMMENT 'show popup alert';
