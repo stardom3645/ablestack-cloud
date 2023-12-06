@@ -42,7 +42,7 @@ import com.cloud.utils.exception.CloudRuntimeException;
 @APICommand(name = "deleteCiscoAsa1000vResource", responseObject = SuccessResponse.class, description = "Deletes a Cisco ASA 1000v appliance",
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class DeleteCiscoAsa1000vResourceCmd extends BaseCmd {
-    protected static Logger s_logger = LogManager.getLogger(DeleteCiscoAsa1000vResourceCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(DeleteCiscoAsa1000vResourceCmd.class.getName());
     private static final String s_name = "deleteCiscoAsa1000vResource";
     @Inject
     CiscoAsa1000vService _ciscoAsa1000vService;

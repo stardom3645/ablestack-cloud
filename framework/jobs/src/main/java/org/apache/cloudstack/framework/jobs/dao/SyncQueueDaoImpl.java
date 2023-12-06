@@ -34,7 +34,7 @@ import com.cloud.utils.db.SearchCriteria;
 import com.cloud.utils.db.TransactionLegacy;
 
 public class SyncQueueDaoImpl extends GenericDaoBase<SyncQueueVO, Long> implements SyncQueueDao {
-    protected static Logger s_logger = LogManager.getLogger(SyncQueueDaoImpl.class.getName());
+    protected static Logger logger = LogManager.getLogger(SyncQueueDaoImpl.class.getName());
 
     SearchBuilder<SyncQueueVO> TypeIdSearch = createSearchBuilder();
 
@@ -61,9 +61,9 @@ public class SyncQueueDaoImpl extends GenericDaoBase<SyncQueueVO, Long> implemen
             pstmt.setString(4, DateUtil.getDateDisplayString(TimeZone.getTimeZone("GMT"), dt));
             pstmt.execute();
         } catch (SQLException e) {
-            s_logger.warn("Unable to create sync queue " + syncObjType + "-" + syncObjId + ":" + e.getMessage(), e);
+            logger.warn("Unable to create sync queue " + syncObjType + "-" + syncObjId + ":" + e.getMessage(), e);
         } catch (Throwable e) {
-            s_logger.warn("Unable to create sync queue " + syncObjType + "-" + syncObjId + ":" + e.getMessage(), e);
+            logger.warn("Unable to create sync queue " + syncObjType + "-" + syncObjId + ":" + e.getMessage(), e);
         }
     }
 

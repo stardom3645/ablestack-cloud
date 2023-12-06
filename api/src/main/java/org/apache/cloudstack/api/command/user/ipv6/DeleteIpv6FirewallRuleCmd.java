@@ -42,7 +42,7 @@ import com.cloud.user.Account;
         responseHasSensitiveInfo = false,
         authorized = {RoleType.Admin, RoleType.ResourceAdmin, RoleType.DomainAdmin, RoleType.User})
 public class DeleteIpv6FirewallRuleCmd extends BaseAsyncCmd {
-    protected static Logger s_logger = LogManager.getLogger(DeleteIpv6FirewallRuleCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(DeleteIpv6FirewallRuleCmd.class.getName());
 
     /////////////////////////////////////////////////////
     //////////////// API parameters /////////////////////

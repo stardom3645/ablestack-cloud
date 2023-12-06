@@ -34,7 +34,7 @@ import com.cloud.user.Account;
 @APICommand(name = "deleteCluster", description = "Deletes a cluster.", responseObject = SuccessResponse.class,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class DeleteClusterCmd extends BaseCmd {
-    protected static Logger s_logger = LogManager.getLogger(DeleteClusterCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(DeleteClusterCmd.class.getName());
 
 
     /////////////////////////////////////////////////////

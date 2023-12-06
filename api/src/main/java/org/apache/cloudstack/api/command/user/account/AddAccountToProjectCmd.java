@@ -45,7 +45,7 @@ import com.cloud.projects.ProjectAccount;
 @APICommand(name = "addAccountToProject", description = "Adds account to a project", responseObject = SuccessResponse.class, since = "3.0.0",
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class AddAccountToProjectCmd extends BaseAsyncCmd {
-    protected static Logger s_logger = LogManager.getLogger(AddAccountToProjectCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(AddAccountToProjectCmd.class.getName());
 
 
     /////////////////////////////////////////////////////

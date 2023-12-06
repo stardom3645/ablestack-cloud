@@ -45,7 +45,7 @@ import com.cloud.utils.component.ComponentContext;
 @Component
 public class AlertGenerator {
 
-    protected static Logger s_logger = LogManager.getLogger(AlertGenerator.class);
+    protected static Logger logger = LogManager.getLogger(AlertGenerator.class);
     private static DataCenterDao s_dcDao;
     private static HostPodDao s_podDao;
     protected static EventBus s_eventBus = null;
@@ -110,7 +110,7 @@ public class AlertGenerator {
         try {
             s_eventBus.publish(event);
         } catch (EventBusException e) {
-            s_logger.warn("Failed to publish alert on the event bus.");
+            logger.warn("Failed to publish alert on the event bus.");
         }
     }
 }

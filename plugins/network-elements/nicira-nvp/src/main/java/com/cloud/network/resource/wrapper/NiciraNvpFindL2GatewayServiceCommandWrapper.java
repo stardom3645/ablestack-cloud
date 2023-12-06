@@ -41,7 +41,7 @@ import com.cloud.resource.ResourceWrapper;
 @ResourceWrapper(handles =  FindL2GatewayServiceCommand.class)
 public class NiciraNvpFindL2GatewayServiceCommandWrapper extends CommandWrapper<FindL2GatewayServiceCommand, Answer, NiciraNvpResource> {
 
-    protected static Logger s_logger = LogManager.getLogger(NiciraNvpFindL2GatewayServiceCommandWrapper.class);
+    protected static Logger logger = LogManager.getLogger(NiciraNvpFindL2GatewayServiceCommandWrapper.class);
 
     @Override
     public Answer execute(FindL2GatewayServiceCommand command, NiciraNvpResource niciraNvpResource) {
@@ -50,7 +50,7 @@ public class NiciraNvpFindL2GatewayServiceCommandWrapper extends CommandWrapper<
         final String type = config.getType();
         final NiciraNvpApi niciraNvpApi = niciraNvpResource.getNiciraNvpApi();
 
-        s_logger.info("Looking for L2 Gateway Service " + uuid + " of type " + type);
+        logger.info("Looking for L2 Gateway Service " + uuid + " of type " + type);
 
         try {
             List<L2GatewayServiceConfig> lstGW = niciraNvpApi.findL2GatewayServiceByUuidAndType(uuid, type);
@@ -60,7 +60,7 @@ public class NiciraNvpFindL2GatewayServiceCommandWrapper extends CommandWrapper<
                 return new FindL2GatewayServiceAnswer(command, true, "L2 Gateway Service " + lstGW.get(0).getDisplayName()+ " found", lstGW.get(0).getUuid());
             }
         } catch (NiciraNvpApiException e) {
-            s_logger.error("Error finding Gateway Service due to: " + e.getMessage());
+            logger.error("Error finding Gateway Service due to: " + e.getMessage());
             final CommandRetryUtility retryUtility = niciraNvpResource.getRetryUtility();
             retryUtility.addRetry(command, NUM_RETRIES);
             return retryUtility.retry(command, FindL2GatewayServiceAnswer.class, e);

@@ -230,7 +230,7 @@ import java.util.concurrent.TimeUnit;
 import javax.inject.Inject;
 
 public class TungstenServiceImpl extends ManagerBase implements TungstenService {
-    protected static Logger s_logger = LogManager.getLogger(TungstenServiceImpl.class);
+    protected static Logger logger = LogManager.getLogger(TungstenServiceImpl.class);
 
     private static final String NETWORK = "network";
 
@@ -328,7 +328,7 @@ public class TungstenServiceImpl extends ManagerBase implements TungstenService 
                     try {
                         syncTungstenDbWithCloudstackProjectsAndDomains();
                     } catch (final Exception e) {
-                        s_logger.error(e.getMessage());
+                        logger.error(e.getMessage());
                     }
                 });
     }
@@ -343,7 +343,7 @@ public class TungstenServiceImpl extends ManagerBase implements TungstenService 
                     createTungstenFloatingIp(zoneId, ipAddress);
                 }
             } catch (final Exception e) {
-                s_logger.error(e.getMessage());
+                logger.error(e.getMessage());
             }
         });
 
@@ -358,7 +358,7 @@ public class TungstenServiceImpl extends ManagerBase implements TungstenService 
                     }
                 }
             } catch (final Exception e) {
-                s_logger.error(e.getMessage());
+                logger.error(e.getMessage());
             }
         });
     }
@@ -378,7 +378,7 @@ public class TungstenServiceImpl extends ManagerBase implements TungstenService 
                             network.getDataCenterId());
                 }
             } catch (final Exception e) {
-                s_logger.error(e.getMessage());
+                logger.error(e.getMessage());
             }
         });
     }
@@ -390,7 +390,7 @@ public class TungstenServiceImpl extends ManagerBase implements TungstenService 
                 final VlanVO vlanVO = (VlanVO) args;
                 addPublicNetworkSubnet(vlanVO);
             } catch (final Exception e) {
-                s_logger.error(e.getMessage());
+                logger.error(e.getMessage());
             }
         });
 
@@ -400,7 +400,7 @@ public class TungstenServiceImpl extends ManagerBase implements TungstenService 
                 final VlanVO vlanVO = (VlanVO) args;
                 removePublicNetworkSubnet(vlanVO);
             } catch (final Exception e) {
-                s_logger.error(e.getMessage());
+                logger.error(e.getMessage());
             }
         });
     }
@@ -411,7 +411,7 @@ public class TungstenServiceImpl extends ManagerBase implements TungstenService 
                 final HostPodVO pod = (HostPodVO) args;
                 addManagementNetworkSubnet(pod);
             } catch (final Exception e) {
-                s_logger.error(e.getMessage());
+                logger.error(e.getMessage());
             }
         });
 
@@ -420,7 +420,7 @@ public class TungstenServiceImpl extends ManagerBase implements TungstenService 
                 final HostPodVO pod = (HostPodVO) args;
                 removeManagementNetworkSubnet(pod);
             } catch (final Exception e) {
-                s_logger.error(e.getMessage());
+                logger.error(e.getMessage());
             }
         });
     }
@@ -431,7 +431,7 @@ public class TungstenServiceImpl extends ManagerBase implements TungstenService 
                 final DomainVO domain = (DomainVO) args;
                 createTungstenDomain(domain);
             } catch (final Exception e) {
-                s_logger.error(e.getMessage());
+                logger.error(e.getMessage());
             }
         });
 
@@ -440,7 +440,7 @@ public class TungstenServiceImpl extends ManagerBase implements TungstenService 
                 final DomainVO domain = (DomainVO) args;
                 deleteTungstenDomain(domain);
             } catch (final Exception e) {
-                s_logger.error(e.getMessage());
+                logger.error(e.getMessage());
             }
         });
     }
@@ -451,7 +451,7 @@ public class TungstenServiceImpl extends ManagerBase implements TungstenService 
                 final Project project = (Project) args;
                 createTungstenProject(project);
             } catch (final Exception e) {
-                s_logger.error(e.getMessage());
+                logger.error(e.getMessage());
             }
         });
 
@@ -460,7 +460,7 @@ public class TungstenServiceImpl extends ManagerBase implements TungstenService 
                 final Project project = (Project) args;
                 deleteTungstenProject(project);
             } catch (final Exception e) {
-                s_logger.error(e.getMessage());
+                logger.error(e.getMessage());
             }
         });
     }
@@ -472,7 +472,7 @@ public class TungstenServiceImpl extends ManagerBase implements TungstenService 
                         final SecurityGroup securityGroup = (SecurityGroup) args;
                         createTungstenSecurityGroup(securityGroup);
                     } catch (final Exception e) {
-                        s_logger.error(e.getMessage());
+                        logger.error(e.getMessage());
                     }
                 });
 
@@ -482,7 +482,7 @@ public class TungstenServiceImpl extends ManagerBase implements TungstenService 
                         final SecurityGroup securityGroup = (SecurityGroup) args;
                         deleteTungstenSecurityGroup(securityGroup);
                     } catch (final Exception e) {
-                        s_logger.error(e.getMessage());
+                        logger.error(e.getMessage());
                     }
                 });
 
@@ -492,7 +492,7 @@ public class TungstenServiceImpl extends ManagerBase implements TungstenService 
                 final List<SecurityRule> securityRules = (List<SecurityRule>) args;
                 addTungstenSecurityGroupRule(securityRules);
             } catch (final Exception e) {
-                s_logger.error(e.getMessage());
+                logger.error(e.getMessage());
             }
         });
 
@@ -502,7 +502,7 @@ public class TungstenServiceImpl extends ManagerBase implements TungstenService 
                 final SecurityRule securityRule = (SecurityRule) args;
                 removeTungstenSecurityGroupRule(securityRule);
             } catch (final Exception e) {
-                s_logger.error(e.getMessage());
+                logger.error(e.getMessage());
             }
         });
     }
@@ -513,7 +513,7 @@ public class TungstenServiceImpl extends ManagerBase implements TungstenService 
                 final long id = (long) args;
                 addTungstenNicSecondaryIpAddress(id);
             } catch (final Exception e) {
-                s_logger.error(e.getMessage());
+                logger.error(e.getMessage());
             }
         });
 
@@ -522,7 +522,7 @@ public class TungstenServiceImpl extends ManagerBase implements TungstenService 
                 final NicSecondaryIpVO nicSecondaryIpVO = (NicSecondaryIpVO) args;
                 removeTungstenNicSecondaryIpAddress(nicSecondaryIpVO);
             } catch (final Exception e) {
-                s_logger.error(e.getMessage());
+                logger.error(e.getMessage());
             }
         });
     }
@@ -1206,7 +1206,7 @@ public class TungstenServiceImpl extends ManagerBase implements TungstenService 
                     updateTungstenLoadBalancerListenerCommand, network.getDataCenterId());
                 return updateTungstenLoadBalancerListenerAnswer.getResult();
             } else {
-                s_logger.error("Tungsten-Fabric ssl require user api key");
+                logger.error("Tungsten-Fabric ssl require user api key");
             }
         }
         return true;

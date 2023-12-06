@@ -30,7 +30,7 @@ import org.apache.logging.log4j.LogManager;
 
 @ResourceWrapper(handles =  NetworkElementCommand.class)
 public final class CitrixNetworkElementCommandWrapper extends CommandWrapper<NetworkElementCommand, Answer, CitrixResourceBase> {
-    protected static Logger s_logger = LogManager.getLogger(CitrixNetworkElementCommandWrapper.class);
+    protected static Logger logger = LogManager.getLogger(CitrixNetworkElementCommandWrapper.class);
     @Override
     public Answer execute(final NetworkElementCommand command, final CitrixResourceBase citrixResourceBase) {
         final VirtualRoutingResource routingResource = citrixResourceBase.getVirtualRoutingResource();

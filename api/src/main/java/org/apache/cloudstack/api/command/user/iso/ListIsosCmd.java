@@ -42,7 +42,7 @@ import java.util.List;
 @APICommand(name = "listIsos", description = "Lists all available ISO files.", responseObject = TemplateResponse.class, responseView = ResponseView.Restricted,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class ListIsosCmd extends BaseListTaggedResourcesCmd implements UserCmd {
-    protected static Logger s_logger = LogManager.getLogger(ListIsosCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(ListIsosCmd.class.getName());
 
     private static final String s_name = "listisosresponse";
 

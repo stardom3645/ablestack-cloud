@@ -26,7 +26,7 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 
 public class NetworkProfile implements Network {
-    static final Logger s_logger = LogManager.getLogger(NetworkProfile.class);
+    static final Logger logger = LogManager.getLogger(NetworkProfile.class);
     private final long id;
     private final String uuid;
     private final long dataCenterId;

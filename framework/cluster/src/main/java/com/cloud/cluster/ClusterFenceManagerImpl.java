@@ -31,7 +31,7 @@ import com.cloud.utils.component.ManagerBase;
 
 @Component
 public class ClusterFenceManagerImpl extends ManagerBase implements ClusterFenceManager, ClusterManagerListener {
-    protected static Logger s_logger = LogManager.getLogger(ClusterFenceManagerImpl.class);
+    protected static Logger logger = LogManager.getLogger(ClusterFenceManagerImpl.class);
 
     @Inject
     ClusterManager _clusterMgr;
@@ -52,7 +52,7 @@ public class ClusterFenceManagerImpl extends ManagerBase implements ClusterFence
 
     @Override
     public void onManagementNodeIsolated() {
-        s_logger.error("Received node isolation notification, will perform self-fencing and shut myself down");
+        logger.error("Received node isolation notification, will perform self-fencing and shut myself down");
         System.exit(SELF_FENCING_EXIT_CODE);
     }
 }

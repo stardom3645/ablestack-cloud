@@ -38,7 +38,7 @@ import com.cloud.user.Account;
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class ListPortableIpRangesCmd extends BaseListCmd {
 
-    protected static Logger s_logger = LogManager.getLogger(ListPortableIpRangesCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(ListPortableIpRangesCmd.class.getName());
 
     private static final String s_name = "listportableipresponse";
 

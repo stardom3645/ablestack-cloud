@@ -29,7 +29,7 @@ import com.cloud.utils.db.SearchCriteria;
 
 @Component
 public class RegionDaoImpl extends GenericDaoBase<RegionVO, Integer> implements RegionDao {
-    protected static Logger s_logger = LogManager.getLogger(RegionDaoImpl.class);
+    protected static Logger logger = LogManager.getLogger(RegionDaoImpl.class);
     protected SearchBuilder<RegionVO> NameSearch;
     protected SearchBuilder<RegionVO> AllFieldsSearch;
 

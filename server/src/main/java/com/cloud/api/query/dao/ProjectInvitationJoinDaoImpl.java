@@ -33,7 +33,7 @@ import com.cloud.utils.db.SearchCriteria;
 
 @Component
 public class ProjectInvitationJoinDaoImpl extends GenericDaoBase<ProjectInvitationJoinVO, Long> implements ProjectInvitationJoinDao {
-    protected static Logger s_logger = LogManager.getLogger(ProjectInvitationJoinDaoImpl.class);
+    protected static Logger logger = LogManager.getLogger(ProjectInvitationJoinDaoImpl.class);
 
     private SearchBuilder<ProjectInvitationJoinVO> piIdSearch;
 

@@ -32,7 +32,7 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 
 public class LinstorUtil {
-    protected static Logger s_logger = LogManager.getLogger(LinstorUtil.class);
+    protected static Logger logger = LogManager.getLogger(LinstorUtil.class);
 
     public static final String RSC_PREFIX = "cs-";
     public static final String RSC_GROUP = "resourceGroup";
@@ -59,7 +59,7 @@ public class LinstorUtil {
 
             if (rscGrps.isEmpty()) {
                 final String errMsg = String.format("Linstor: Resource group '%s' not found", rscGroupName);
-                s_logger.error(errMsg);
+                logger.error(errMsg);
                 throw new CloudRuntimeException(errMsg);
             }
 
@@ -75,7 +75,7 @@ public class LinstorUtil {
                 .filter(sp -> sp.getProviderKind() != ProviderKind.DISKLESS)
                 .mapToLong(StoragePool::getTotalCapacity).sum() * 1024;  // linstor uses kiB
         } catch (ApiException apiEx) {
-            s_logger.error(apiEx.getMessage());
+            logger.error(apiEx.getMessage());
             throw new CloudRuntimeException(apiEx);
         }
     }

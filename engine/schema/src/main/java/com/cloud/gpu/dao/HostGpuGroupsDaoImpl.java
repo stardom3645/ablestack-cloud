@@ -31,7 +31,7 @@ import com.cloud.utils.db.SearchCriteria;
 
 @Component
 public class HostGpuGroupsDaoImpl extends GenericDaoBase<HostGpuGroupsVO, Long> implements HostGpuGroupsDao {
-    protected static Logger s_logger = LogManager.getLogger(HostGpuGroupsDaoImpl.class);
+    protected static Logger logger = LogManager.getLogger(HostGpuGroupsDaoImpl.class);
 
     private final SearchBuilder<HostGpuGroupsVO> _hostIdGroupNameSearch;
     private final SearchBuilder<HostGpuGroupsVO> _searchByHostId;

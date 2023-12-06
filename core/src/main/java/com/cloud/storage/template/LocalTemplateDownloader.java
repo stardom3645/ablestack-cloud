@@ -35,7 +35,7 @@ import org.apache.logging.log4j.LogManager;
 import com.cloud.storage.StorageLayer;
 
 public class LocalTemplateDownloader extends TemplateDownloaderBase implements TemplateDownloader {
-    protected static Logger s_logger = LogManager.getLogger(LocalTemplateDownloader.class);
+    protected static Logger logger = LogManager.getLogger(LocalTemplateDownloader.class);
 
     public LocalTemplateDownloader(StorageLayer storageLayer, String downloadUrl, String toDir, long maxTemplateSizeInBytes, DownloadCompleteCallback callback) {
         super(storageLayer, downloadUrl, toDir, maxTemplateSizeInBytes, callback);
@@ -56,7 +56,7 @@ public class LocalTemplateDownloader extends TemplateDownloaderBase implements T
         try {
             src = new File(new URI(_downloadUrl));
         } catch (URISyntaxException e1) {
-            s_logger.warn("Invalid URI " + _downloadUrl);
+            logger.warn("Invalid URI " + _downloadUrl);
             _status = Status.UNRECOVERABLE_ERROR;
             return 0;
         }
@@ -78,7 +78,7 @@ public class LocalTemplateDownloader extends TemplateDownloaderBase implements T
             try {
                 fis = new FileInputStream(src);
             } catch (FileNotFoundException e) {
-                s_logger.warn("Unable to find " + _downloadUrl);
+                logger.warn("Unable to find " + _downloadUrl);
                 _errorString = "Unable to find " + _downloadUrl;
                 return -1;
             }
@@ -86,7 +86,7 @@ public class LocalTemplateDownloader extends TemplateDownloaderBase implements T
             try {
                 fos = new FileOutputStream(dst);
             } catch (FileNotFoundException e) {
-                s_logger.warn("Unable to find " + _toFile);
+                logger.warn("Unable to find " + _toFile);
                 return -1;
             }
             foc = fos.getChannel();
@@ -103,7 +103,7 @@ public class LocalTemplateDownloader extends TemplateDownloaderBase implements T
                     buffer.clear();
                 }
             } catch (IOException e) {
-                s_logger.warn("Unable to download", e);
+                logger.warn("Unable to download", e);
             }
 
             String downloaded = "(incomplete download)";
@@ -124,7 +124,7 @@ public class LocalTemplateDownloader extends TemplateDownloaderBase implements T
                 try {
                     fic.close();
                 } catch (IOException e) {
-                    s_logger.info("[ignore] error while closing file input channel.");
+                    logger.info("[ignore] error while closing file input channel.");
                 }
             }
 
@@ -132,7 +132,7 @@ public class LocalTemplateDownloader extends TemplateDownloaderBase implements T
                 try {
                     foc.close();
                 } catch (IOException e) {
-                    s_logger.info("[ignore] error while closing file output channel.");
+                    logger.info("[ignore] error while closing file output channel.");
                 }
             }
 
@@ -140,7 +140,7 @@ public class LocalTemplateDownloader extends TemplateDownloaderBase implements T
                 try {
                     fis.close();
                 } catch (IOException e) {
-                    s_logger.info("[ignore] error while closing file input stream.");
+                    logger.info("[ignore] error while closing file input stream.");
                 }
             }
 
@@ -148,7 +148,7 @@ public class LocalTemplateDownloader extends TemplateDownloaderBase implements T
                 try {
                     fos.close();
                 } catch (IOException e) {
-                    s_logger.info("[ignore] error while closing file output stream.");
+                    logger.info("[ignore] error while closing file output stream.");
                 }
             }
 

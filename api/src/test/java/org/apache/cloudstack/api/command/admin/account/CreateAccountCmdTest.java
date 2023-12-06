@@ -39,7 +39,7 @@ import com.cloud.user.AccountService;
 import com.cloud.user.User;
 
 public class CreateAccountCmdTest {
-    protected static Logger s_logger = LogManager.getLogger(CreateAccountCmdTest.class.getName());
+    protected static Logger logger = LogManager.getLogger(CreateAccountCmdTest.class.getName());
 
     @Mock
     private AccountService accountService;

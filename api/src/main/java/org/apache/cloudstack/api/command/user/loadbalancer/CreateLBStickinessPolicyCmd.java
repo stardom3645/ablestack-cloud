@@ -45,7 +45,7 @@ import com.cloud.user.Account;
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 @SuppressWarnings("rawtypes")
 public class CreateLBStickinessPolicyCmd extends BaseAsyncCreateCmd {
-    protected static Logger s_logger = LogManager.getLogger(CreateLBStickinessPolicyCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(CreateLBStickinessPolicyCmd.class.getName());
 
     private static final String s_name = "createLBStickinessPolicy";
 
@@ -165,7 +165,7 @@ public class CreateLBStickinessPolicyCmd extends BaseAsyncCreateCmd {
             this.setEntityId(result.getId());
             this.setEntityUuid(result.getUuid());
         } catch (NetworkRuleConflictException e) {
-            s_logger.warn("Exception: ", e);
+            logger.warn("Exception: ", e);
             throw new ServerApiException(ApiErrorCode.NETWORK_RULE_CONFLICT_ERROR, e.getMessage());
         }
     }

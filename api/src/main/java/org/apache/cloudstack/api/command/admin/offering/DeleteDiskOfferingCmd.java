@@ -33,7 +33,7 @@ import com.cloud.user.Account;
 @APICommand(name = "deleteDiskOffering", description = "Updates a disk offering.", responseObject = SuccessResponse.class,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class DeleteDiskOfferingCmd extends BaseCmd {
-    protected static Logger s_logger = LogManager.getLogger(DeleteDiskOfferingCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(DeleteDiskOfferingCmd.class.getName());
 
     /////////////////////////////////////////////////////
     //////////////// API parameters /////////////////////

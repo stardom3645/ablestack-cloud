@@ -33,7 +33,7 @@ import java.util.Arrays;
 
 @APICommand(name = "quotaEmailTemplateUpdate", responseObject = SuccessResponse.class, description = "Updates existing email templates for quota alerts", since = "4.7.0", requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class QuotaEmailTemplateUpdateCmd extends BaseCmd {
-    protected static Logger s_logger = LogManager.getLogger(QuotaEmailTemplateUpdateCmd.class);
+    protected static Logger logger = LogManager.getLogger(QuotaEmailTemplateUpdateCmd.class);
 
     @Inject
     QuotaResponseBuilder _quotaResponseBuilder;

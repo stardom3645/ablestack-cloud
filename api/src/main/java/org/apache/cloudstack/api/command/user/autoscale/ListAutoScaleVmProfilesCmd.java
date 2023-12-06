@@ -38,7 +38,7 @@ import com.cloud.network.as.AutoScaleVmProfile;
 @APICommand(name = "listAutoScaleVmProfiles", description = "Lists autoscale vm profiles.", responseObject = AutoScaleVmProfileResponse.class, entityType = {AutoScaleVmProfile.class},
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class ListAutoScaleVmProfilesCmd extends BaseListProjectAndAccountResourcesCmd {
-    protected static Logger s_logger = LogManager.getLogger(ListAutoScaleVmProfilesCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(ListAutoScaleVmProfilesCmd.class.getName());
 
 
     // ///////////////////////////////////////////////////

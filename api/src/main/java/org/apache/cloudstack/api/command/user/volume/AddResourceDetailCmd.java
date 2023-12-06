@@ -34,7 +34,7 @@ import com.cloud.server.ResourceTag;
 @APICommand(name = "addResourceDetail", description = "Adds detail for the Resource.", responseObject = SuccessResponse.class,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class AddResourceDetailCmd extends BaseAsyncCmd {
-    protected static Logger s_logger = LogManager.getLogger(AddResourceDetailCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(AddResourceDetailCmd.class.getName());
 
     /////////////////////////////////////////////////////
     //////////////// API parameters /////////////////////

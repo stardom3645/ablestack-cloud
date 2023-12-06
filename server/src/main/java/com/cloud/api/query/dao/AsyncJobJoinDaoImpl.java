@@ -37,7 +37,7 @@ import com.cloud.utils.db.SearchCriteria;
 
 @Component
 public class AsyncJobJoinDaoImpl extends GenericDaoBase<AsyncJobJoinVO, Long> implements AsyncJobJoinDao {
-    protected static Logger s_logger = LogManager.getLogger(AsyncJobJoinDaoImpl.class);
+    protected static Logger logger = LogManager.getLogger(AsyncJobJoinDaoImpl.class);
 
     private final SearchBuilder<AsyncJobJoinVO> jobIdSearch;
 

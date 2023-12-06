@@ -43,7 +43,7 @@ import javax.inject.Inject;
     responseObject = TungstenFabricRuleResponse.class, requestHasSensitiveInfo = false, responseHasSensitiveInfo =
     false)
 public class AddTungstenFabricPolicyRuleCmd extends BaseAsyncCmd {
-    protected static Logger s_logger = LogManager.getLogger(AddTungstenFabricPolicyRuleCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(AddTungstenFabricPolicyRuleCmd.class.getName());
     public static final String APINAME = "addTungstenFabricPolicyRule";
 
     @Inject

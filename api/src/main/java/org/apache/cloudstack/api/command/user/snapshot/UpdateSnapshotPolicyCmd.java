@@ -40,7 +40,7 @@ import org.apache.logging.log4j.LogManager;
 @APICommand(name = "updateSnapshotPolicy", description = "Updates the snapshot policy.", responseObject = SnapshotPolicyResponse.class, responseView = ResponseObject.ResponseView.Restricted, entityType = {Volume.class},
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class UpdateSnapshotPolicyCmd extends BaseAsyncCustomIdCmd {
-    protected static Logger s_logger = LogManager.getLogger(UpdateSnapshotPolicyCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(UpdateSnapshotPolicyCmd.class.getName());
 
     /////////////////////////////////////////////////////
     //////////////// API parameters /////////////////////

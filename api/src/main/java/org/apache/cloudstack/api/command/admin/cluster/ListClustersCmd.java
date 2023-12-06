@@ -37,7 +37,7 @@ import com.cloud.utils.Pair;
 @APICommand(name = "listClusters", description = "Lists clusters.", responseObject = ClusterResponse.class,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class ListClustersCmd extends BaseListCmd {
-    protected static Logger s_logger = LogManager.getLogger(ListClustersCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(ListClustersCmd.class.getName());
 
 
     /////////////////////////////////////////////////////

@@ -76,7 +76,7 @@ import com.cloud.vm.dao.VMInstanceDao;
 
 @Component
 public class XenServerStorageMotionStrategy implements DataMotionStrategy {
-    protected static Logger s_logger = LogManager.getLogger(XenServerStorageMotionStrategy.class);
+    protected static Logger logger = LogManager.getLogger(XenServerStorageMotionStrategy.class);
     @Inject
     AgentManager agentMgr;
     @Inject
@@ -127,7 +127,7 @@ public class XenServerStorageMotionStrategy implements DataMotionStrategy {
                 throw new CloudRuntimeException("Unsupported operation requested for moving data.");
             }
         } catch (Exception e) {
-            s_logger.error("copy failed", e);
+            logger.error("copy failed", e);
             errMsg = e.toString();
         }
 
@@ -199,7 +199,7 @@ public class XenServerStorageMotionStrategy implements DataMotionStrategy {
             String errMsg = "Error interacting with host (related to CreateStoragePoolCommand)" +
                     (StringUtils.isNotBlank(answer.getDetails()) ? ": " + answer.getDetails() : "");
 
-            s_logger.error(errMsg);
+            logger.error(errMsg);
 
             throw new CloudRuntimeException(errMsg);
         }
@@ -241,7 +241,7 @@ public class XenServerStorageMotionStrategy implements DataMotionStrategy {
             String errMsg = "Error interacting with host (related to DeleteStoragePoolCommand)" +
                     (StringUtils.isNotBlank(answer.getDetails()) ? ": " + answer.getDetails() : "");
 
-            s_logger.error(errMsg);
+            logger.error(errMsg);
 
             throw new CloudRuntimeException(errMsg);
         }
@@ -284,7 +284,7 @@ public class XenServerStorageMotionStrategy implements DataMotionStrategy {
                     String errMsg = "Error interacting with host (related to handleManagedVolumesAfterFailedMigration)" +
                             (StringUtils.isNotBlank(answer.getDetails()) ? ": " + answer.getDetails() : "");
 
-                    s_logger.error(errMsg);
+                    logger.error(errMsg);
 
                     // no need to throw an exception here as the calling code is responsible for doing so
                     // regardless of the success or lack thereof concerning this method
@@ -343,10 +343,10 @@ public class XenServerStorageMotionStrategy implements DataMotionStrategy {
             MigrateWithStorageReceiveAnswer receiveAnswer = (MigrateWithStorageReceiveAnswer)agentMgr.send(destHost.getId(), receiveCmd);
 
             if (receiveAnswer == null) {
-                s_logger.error("Migration with storage of vm " + vm + " to host " + destHost + " failed.");
+                logger.error("Migration with storage of vm " + vm + " to host " + destHost + " failed.");
                 throw new CloudRuntimeException("Error while migrating the vm " + vm + " to host " + destHost);
             } else if (!receiveAnswer.getResult()) {
-                s_logger.error("Migration with storage of vm " + vm + " failed. Details: " + receiveAnswer.getDetails());
+                logger.error("Migration with storage of vm " + vm + " failed. Details: " + receiveAnswer.getDetails());
                 throw new CloudRuntimeException("Error while migrating the vm " + vm + " to host " + destHost);
             }
 
@@ -357,12 +357,12 @@ public class XenServerStorageMotionStrategy implements DataMotionStrategy {
             if (sendAnswer == null) {
                 handleManagedVolumesAfterFailedMigration(volumeToPool, destHost);
 
-                s_logger.error("Migration with storage of vm " + vm + " to host " + destHost + " failed.");
+                logger.error("Migration with storage of vm " + vm + " to host " + destHost + " failed.");
                 throw new CloudRuntimeException("Error while migrating the vm " + vm + " to host " + destHost);
             } else if (!sendAnswer.getResult()) {
                 handleManagedVolumesAfterFailedMigration(volumeToPool, destHost);
 
-                s_logger.error("Migration with storage of vm " + vm + " failed. Details: " + sendAnswer.getDetails());
+                logger.error("Migration with storage of vm " + vm + " failed. Details: " + sendAnswer.getDetails());
                 throw new CloudRuntimeException("Error while migrating the vm " + vm + " to host " + destHost);
             }
 
@@ -370,10 +370,10 @@ public class XenServerStorageMotionStrategy implements DataMotionStrategy {
             MigrateWithStorageCompleteAnswer answer = (MigrateWithStorageCompleteAnswer)agentMgr.send(destHost.getId(), command);
 
             if (answer == null) {
-                s_logger.error("Migration with storage of vm " + vm + " failed.");
+                logger.error("Migration with storage of vm " + vm + " failed.");
                 throw new CloudRuntimeException("Error while migrating the vm " + vm + " to host " + destHost);
             } else if (!answer.getResult()) {
-                s_logger.error("Migration with storage of vm " + vm + " failed. Details: " + answer.getDetails());
+                logger.error("Migration with storage of vm " + vm + " failed. Details: " + answer.getDetails());
                 throw new CloudRuntimeException("Error while migrating the vm " + vm + " to host " + destHost);
             } else {
                 // Update the volume details after migration.
@@ -382,7 +382,7 @@ public class XenServerStorageMotionStrategy implements DataMotionStrategy {
 
             return answer;
         } catch (OperationTimedoutException e) {
-            s_logger.error("Error while migrating vm " + vm + " to host " + destHost, e);
+            logger.error("Error while migrating vm " + vm + " to host " + destHost, e);
             throw new AgentUnavailableException("Operation timed out on storage motion for " + vm, destHost.getId());
         }
     }
@@ -403,10 +403,10 @@ public class XenServerStorageMotionStrategy implements DataMotionStrategy {
             MigrateWithStorageCommand command = new MigrateWithStorageCommand(to, volumeToFilerto);
             MigrateWithStorageAnswer answer = (MigrateWithStorageAnswer)agentMgr.send(destHost.getId(), command);
             if (answer == null) {
-                s_logger.error("Migration with storage of vm " + vm + " failed.");
+                logger.error("Migration with storage of vm " + vm + " failed.");
                 throw new CloudRuntimeException("Error while migrating the vm " + vm + " to host " + destHost);
             } else if (!answer.getResult()) {
-                s_logger.error("Migration with storage of vm " + vm + " failed. Details: " + answer.getDetails());
+                logger.error("Migration with storage of vm " + vm + " failed. Details: " + answer.getDetails());
                 throw new CloudRuntimeException("Error while migrating the vm " + vm + " to host " + destHost + ". " + answer.getDetails());
             } else {
                 // Update the volume details after migration.
@@ -415,7 +415,7 @@ public class XenServerStorageMotionStrategy implements DataMotionStrategy {
 
             return answer;
         } catch (OperationTimedoutException e) {
-            s_logger.error("Error while migrating vm " + vm + " to host " + destHost, e);
+            logger.error("Error while migrating vm " + vm + " to host " + destHost, e);
             throw new AgentUnavailableException("Operation timed out on storage motion for " + vm, destHost.getId());
         }
     }
@@ -452,7 +452,7 @@ public class XenServerStorageMotionStrategy implements DataMotionStrategy {
             }
 
             if (!updated) {
-                s_logger.error("The volume path wasn't updated for volume '" + volumeInfo + "' after it was migrated.");
+                logger.error("The volume path wasn't updated for volume '" + volumeInfo + "' after it was migrated.");
             }
         }
     }

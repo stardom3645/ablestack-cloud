@@ -35,7 +35,7 @@ import com.cloud.utils.component.AdapterBase;
 import java.security.SecureRandom;
 
 public class TotpUserTwoFactorAuthenticator extends AdapterBase implements UserTwoFactorAuthenticator {
-    protected static Logger s_logger = LogManager.getLogger(TotpUserTwoFactorAuthenticator.class);
+    protected static Logger logger = LogManager.getLogger(TotpUserTwoFactorAuthenticator.class);
 
     @Inject
     private UserAccountDao _userAccountDao;
@@ -54,7 +54,7 @@ public class TotpUserTwoFactorAuthenticator extends AdapterBase implements UserT
     public void check2FA(String code, UserAccount userAccount) throws CloudTwoFactorAuthenticationException {
         String expectedCode = get2FACode(get2FAKey(userAccount));
         if (expectedCode.equals(code)) {
-            s_logger.info("2FA matches user's input");
+            logger.info("2FA matches user's input");
             return;
         }
         throw new CloudTwoFactorAuthenticationException("two-factor authentication code provided is invalid");

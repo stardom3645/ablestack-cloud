@@ -34,7 +34,7 @@ import com.cloud.vm.UserVmCloneSettingVO;
 @Component
 @DB()
 public class UserVmCloneSettingDaoImpl extends GenericDaoBase<UserVmCloneSettingVO, Long> implements UserVmCloneSettingDao {
-    protected static Logger s_logger = LogManager.getLogger(UserVmCloneSettingDaoImpl.class);
+    protected static Logger logger = LogManager.getLogger(UserVmCloneSettingDaoImpl.class);
 
     protected SearchBuilder<UserVmCloneSettingVO> vmIdSearch;
     protected SearchBuilder<UserVmCloneSettingVO> cloneTypeSearch;

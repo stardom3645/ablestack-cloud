@@ -33,7 +33,7 @@ import com.xensource.xenapi.Network;
 
 @ResourceWrapper(handles = CleanupPersistentNetworkResourceCommand.class)
 public class CitrixCleanupPersistentNetworkResourceCommandWrapper extends CommandWrapper<CleanupPersistentNetworkResourceCommand, Answer, CitrixResourceBase> {
-    protected static Logger s_logger = LogManager.getLogger(CitrixCleanupPersistentNetworkResourceCommandWrapper.class);
+    protected static Logger logger = LogManager.getLogger(CitrixCleanupPersistentNetworkResourceCommandWrapper.class);
 
     @Override
     public Answer execute(CleanupPersistentNetworkResourceCommand command, CitrixResourceBase citrixResourceBase) {
@@ -49,7 +49,7 @@ public class CitrixCleanupPersistentNetworkResourceCommandWrapper extends Comman
             return new CleanupPersistentNetworkResourceAnswer(command, true, "Successfully deleted network VLAN on host: "+ host.getIp());
         } catch (final Exception e) {
             final String msg = " Failed to cleanup network VLAN on host: " + host.getIp() + " due to: " + e.toString();
-            s_logger.error(msg, e);
+            logger.error(msg, e);
             return new CleanupPersistentNetworkResourceAnswer(command, false, msg);
         }
     }

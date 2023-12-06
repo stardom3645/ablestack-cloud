@@ -32,7 +32,7 @@ import com.cloud.resource.ResourceWrapper;
 @ResourceWrapper(handles =  CheckOnHostCommand.class)
 public final class XenServer56CheckOnHostCommandWrapper extends CommandWrapper<CheckOnHostCommand, Answer, XenServer56Resource> {
 
-    protected static Logger s_logger = LogManager.getLogger(XenServer56CheckOnHostCommandWrapper.class);
+    protected static Logger logger = LogManager.getLogger(XenServer56CheckOnHostCommandWrapper.class);
 
     @Override
     public Answer execute(final CheckOnHostCommand command, final XenServer56Resource xenServer56) {
@@ -45,7 +45,7 @@ public final class XenServer56CheckOnHostCommandWrapper extends CommandWrapper<C
         } else {
             msg = "Heart beat is gone so dead.";
         }
-        s_logger.debug(msg);
+        logger.debug(msg);
         return new CheckOnHostAnswer(command, alive, msg);
     }
 }

@@ -47,7 +47,7 @@ import com.cloud.vm.VirtualMachine;
             requestHasSensitiveInfo = false,
             responseHasSensitiveInfo = true)
 public class RestoreVMCmd extends BaseAsyncCmd implements UserCmd {
-    protected static Logger s_logger = LogManager.getLogger(RestoreVMCmd.class);
+    protected static Logger logger = LogManager.getLogger(RestoreVMCmd.class);
     private static final String s_name = "restorevmresponse";
 
     @ACL(accessType = AccessType.OperateEntry)

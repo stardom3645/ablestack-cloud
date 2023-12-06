@@ -38,7 +38,7 @@ import javax.inject.Inject;
 @APICommand(name = "addBaremetalRct", description = "adds baremetal rack configuration text", responseObject = BaremetalRctResponse.class,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false, authorized = {RoleType.Admin})
 public class AddBaremetalRctCmd extends BaseAsyncCmd {
-    protected static Logger s_logger = LogManager.getLogger(AddBaremetalRctCmd.class);
+    protected static Logger logger = LogManager.getLogger(AddBaremetalRctCmd.class);
 
     @Inject
     private BaremetalVlanManager vlanMgr;
@@ -69,7 +69,7 @@ public class AddBaremetalRctCmd extends BaseAsyncCmd {
             BaremetalRctResponse rsp = vlanMgr.addRct(this);
             this.setResponseObject(rsp);
         } catch (Exception e) {
-            s_logger.warn(String.format("unable to add baremetal RCT[%s]", getRctUrl()), e);
+            logger.warn(String.format("unable to add baremetal RCT[%s]", getRctUrl()), e);
             throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, e.getMessage());
         }
     }

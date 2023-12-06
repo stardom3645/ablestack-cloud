@@ -28,7 +28,7 @@ import streamer.Event;
 import streamer.Link;
 
 public class AprSocketSink extends BaseElement {
-    protected static Logger s_logger = LogManager.getLogger(AprSocketSink.class);
+    protected static Logger logger = LogManager.getLogger(AprSocketSink.class);
 
     protected AprSocketWrapperImpl socketWrapper;
     protected Long socket;
@@ -120,7 +120,7 @@ public class AprSocketSink extends BaseElement {
         try {
             sendEventToAllPads(Event.STREAM_CLOSE, Direction.IN);
         } catch (Exception e) {
-            s_logger.info("[ignored]"
+            logger.info("[ignored]"
                     + "failing sending sink event to all pads: " + e.getLocalizedMessage());
         }
         socketWrapper.shutdown();

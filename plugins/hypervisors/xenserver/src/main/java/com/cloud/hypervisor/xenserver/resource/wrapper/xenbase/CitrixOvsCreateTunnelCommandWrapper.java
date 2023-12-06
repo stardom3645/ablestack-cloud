@@ -34,7 +34,7 @@ import com.xensource.xenapi.Network;
 @ResourceWrapper(handles =  OvsCreateTunnelCommand.class)
 public final class CitrixOvsCreateTunnelCommandWrapper extends CommandWrapper<OvsCreateTunnelCommand, Answer, CitrixResourceBase> {
 
-    protected static Logger s_logger = LogManager.getLogger(CitrixOvsCreateTunnelCommandWrapper.class);
+    protected static Logger logger = LogManager.getLogger(CitrixOvsCreateTunnelCommandWrapper.class);
 
     @Override
     public Answer execute(final OvsCreateTunnelCommand command, final CitrixResourceBase citrixResourceBase) {
@@ -43,7 +43,7 @@ public final class CitrixOvsCreateTunnelCommandWrapper extends CommandWrapper<Ov
         try {
             final Network nw = citrixResourceBase.findOrCreateTunnelNetwork(conn, command.getNetworkName());
             if (nw == null) {
-                s_logger.debug("Error during bridge setup");
+                logger.debug("Error during bridge setup");
                 return new OvsCreateTunnelAnswer(command, false, "Cannot create network", bridge);
             }
 
@@ -62,8 +62,8 @@ public final class CitrixOvsCreateTunnelCommandWrapper extends CommandWrapper<Ov
                 return new OvsCreateTunnelAnswer(command, false, result, bridge);
             }
         } catch (final Exception e) {
-            s_logger.debug("Error during tunnel setup");
-            s_logger.warn("Caught execption when creating ovs tunnel", e);
+            logger.debug("Error during tunnel setup");
+            logger.warn("Caught execption when creating ovs tunnel", e);
             return new OvsCreateTunnelAnswer(command, false, e.getMessage(), bridge);
         }
     }

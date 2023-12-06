@@ -40,7 +40,7 @@ import com.cloud.network.security.SecurityGroup;
 @APICommand(name = "deleteSecurityGroup", description = "Deletes security group", responseObject = SuccessResponse.class, entityType = {SecurityGroup.class},
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class DeleteSecurityGroupCmd extends BaseCmd {
-    protected static Logger s_logger = LogManager.getLogger(DeleteSecurityGroupCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(DeleteSecurityGroupCmd.class.getName());
 
     /////////////////////////////////////////////////////
     //////////////// API parameters /////////////////////
@@ -125,7 +125,7 @@ public class DeleteSecurityGroupCmd extends BaseCmd {
                 throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, "Failed to delete security group");
             }
         } catch (ResourceInUseException ex) {
-            s_logger.warn("Exception: ", ex);
+            logger.warn("Exception: ", ex);
             throw new ServerApiException(ApiErrorCode.RESOURCE_IN_USE_ERROR, ex.getMessage());
         }
     }

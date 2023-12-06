@@ -37,7 +37,7 @@ import org.apache.logging.log4j.LogManager;
 @APICommand(name = "createVpnGateway", description = "Creates site to site vpn local gateway", responseObject = Site2SiteVpnGatewayResponse.class, entityType = {Site2SiteVpnGateway.class},
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class CreateVpnGatewayCmd extends BaseAsyncCreateCmd {
-    protected static Logger s_logger = LogManager.getLogger(CreateVpnGatewayCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(CreateVpnGatewayCmd.class.getName());
 
 
     /////////////////////////////////////////////////////

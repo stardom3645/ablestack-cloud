@@ -36,7 +36,7 @@ import com.cloud.user.Account;
 @APICommand(name = "cancelHostMaintenance", description = "Cancels host maintenance.", responseObject = HostResponse.class,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class CancelMaintenanceCmd extends BaseAsyncCmd {
-    protected static Logger s_logger = LogManager.getLogger(CancelMaintenanceCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(CancelMaintenanceCmd.class.getName());
 
 
     /////////////////////////////////////////////////////

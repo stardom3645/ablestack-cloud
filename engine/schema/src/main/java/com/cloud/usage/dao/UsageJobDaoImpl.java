@@ -35,7 +35,7 @@ import com.cloud.utils.exception.CloudRuntimeException;
 
 @Component
 public class UsageJobDaoImpl extends GenericDaoBase<UsageJobVO, Long> implements UsageJobDao {
-    protected static Logger s_logger = LogManager.getLogger(UsageJobDaoImpl.class.getName());
+    protected static Logger logger = LogManager.getLogger(UsageJobDaoImpl.class.getName());
 
     private static final String GET_LAST_JOB_SUCCESS_DATE_MILLIS =
         "SELECT end_millis FROM cloud_usage.usage_job WHERE end_millis > 0 and success = 1 ORDER BY end_millis DESC LIMIT 1";
@@ -52,7 +52,7 @@ public class UsageJobDaoImpl extends GenericDaoBase<UsageJobVO, Long> implements
                 return rs.getLong(1);
             }
         } catch (Exception ex) {
-            s_logger.error("error getting last usage job success date", ex);
+            logger.error("error getting last usage job success date", ex);
         } finally {
             txn.close();
         }
@@ -78,7 +78,7 @@ public class UsageJobDaoImpl extends GenericDaoBase<UsageJobVO, Long> implements
             txn.commit();
         } catch (Exception ex) {
             txn.rollback();
-            s_logger.error("error updating job success date", ex);
+            logger.error("error updating job success date", ex);
             throw new CloudRuntimeException(ex.getMessage());
         } finally {
             txn.close();

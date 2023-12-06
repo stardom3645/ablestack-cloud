@@ -29,7 +29,7 @@ import com.cloud.configuration.Resource.ResourceType;
 import com.cloud.utils.exception.CloudRuntimeException;
 
 public class Upgrade30to301 extends LegacyDbUpgrade {
-    final static Logger s_logger = LogManager.getLogger(Upgrade30to301.class);
+    final static Logger logger = LogManager.getLogger(Upgrade30to301.class);
 
     @Override
     public String[] getUpgradableVersionRange() {
@@ -96,7 +96,7 @@ public class Upgrade30to301 extends LegacyDbUpgrade {
                 pstmt.setLong(1, accountId);
                 pstmt.setLong(2, count);
                 pstmt.executeUpdate();
-                s_logger.debug("Updated network resource count for account id=" + accountId + " to be " + count);
+                logger.debug("Updated network resource count for account id=" + accountId + " to be " + count);
             }
         } catch (SQLException e) {
             throw new CloudRuntimeException("Unable to update network resource count for account id=" + accountId, e);

@@ -48,7 +48,7 @@ import javax.inject.Inject;
     responseObject = TungstenFabricFirewallPolicyResponse.class, requestHasSensitiveInfo = false,
     responseHasSensitiveInfo = false)
 public class ListTungstenFabricFirewallPolicyCmd extends BaseListCmd {
-    protected static Logger s_logger = LogManager.getLogger(ListTungstenFabricFirewallPolicyCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(ListTungstenFabricFirewallPolicyCmd.class.getName());
     public static final String APINAME = "listTungstenFabricFirewallPolicy";
 
     @Inject

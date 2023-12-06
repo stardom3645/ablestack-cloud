@@ -31,7 +31,7 @@ import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 
 public class EncryptionUtil {
-    protected static Logger s_logger = LogManager.getLogger(EncryptionUtil.class.getName());
+    protected static Logger logger = LogManager.getLogger(EncryptionUtil.class.getName());
     private static CloudStackEncryptor encryptor;
 
     private static void initialize(String key) {
@@ -61,7 +61,7 @@ public class EncryptionUtil {
             final byte[] encryptedBytes = mac.doFinal();
             return Base64.encodeBase64String(encryptedBytes);
         } catch (NoSuchAlgorithmException | InvalidKeyException | UnsupportedEncodingException e) {
-            s_logger.error("exception occurred which encoding the data." + e.getMessage());
+            logger.error("exception occurred which encoding the data." + e.getMessage());
             throw new CloudRuntimeException("unable to generate signature", e);
         }
     }

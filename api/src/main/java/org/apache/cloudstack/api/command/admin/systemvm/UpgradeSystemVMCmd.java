@@ -42,7 +42,7 @@ import com.cloud.vm.VirtualMachine;
         + "The system vm must be in a \"Stopped\" state for " + "this command to take effect.", entityType = {VirtualMachine.class},
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class UpgradeSystemVMCmd extends BaseCmd {
-    protected static Logger s_logger = LogManager.getLogger(UpgradeSystemVMCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(UpgradeSystemVMCmd.class.getName());
 
     /////////////////////////////////////////////////////
     //////////////// API parameters /////////////////////

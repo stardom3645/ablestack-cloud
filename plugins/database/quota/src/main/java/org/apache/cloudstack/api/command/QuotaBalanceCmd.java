@@ -37,7 +37,7 @@ import org.apache.cloudstack.api.response.QuotaStatementItemResponse;
 @APICommand(name = "quotaBalance", responseObject = QuotaStatementItemResponse.class, description = "Create a quota balance statement", since = "4.7.0", requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class QuotaBalanceCmd extends BaseCmd {
 
-    protected static Logger s_logger = LogManager.getLogger(QuotaBalanceCmd.class);
+    protected static Logger logger = LogManager.getLogger(QuotaBalanceCmd.class);
 
 
     @Parameter(name = ApiConstants.ACCOUNT, type = CommandType.STRING, required = true, description = "Account Id for which statement needs to be generated")

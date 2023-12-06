@@ -36,7 +36,7 @@ import com.xensource.xenapi.Connection;
 @ResourceWrapper(handles =  GetGPUStatsCommand.class)
 public final class XenServer620SP1GetGPUStatsCommandWrapper extends CommandWrapper<GetGPUStatsCommand, Answer, XenServer620SP1Resource> {
 
-    protected static Logger s_logger = LogManager.getLogger(XenServer620SP1GetGPUStatsCommandWrapper.class);
+    protected static Logger logger = LogManager.getLogger(XenServer620SP1GetGPUStatsCommandWrapper.class);
 
     @Override
     public Answer execute(final GetGPUStatsCommand command, final XenServer620SP1Resource xenServer620SP1Resource) {
@@ -46,7 +46,7 @@ public final class XenServer620SP1GetGPUStatsCommandWrapper extends CommandWrapp
             groupDetails = xenServer620SP1Resource.getGPUGroupDetails(conn);
         } catch (final Exception e) {
             final String msg = "Unable to get GPU stats" + e.toString();
-            s_logger.warn(msg, e);
+            logger.warn(msg, e);
             return new GetGPUStatsAnswer(command, false, msg);
         }
         return new GetGPUStatsAnswer(command, groupDetails);

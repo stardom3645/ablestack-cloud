@@ -37,7 +37,7 @@ import com.xensource.xenapi.VDI;
 @ResourceWrapper(handles =  DestroyCommand.class)
 public final class CitrixDestroyCommandWrapper extends CommandWrapper<DestroyCommand, Answer, CitrixResourceBase> {
 
-    protected static Logger s_logger = LogManager.getLogger(CitrixDestroyCommandWrapper.class);
+    protected static Logger logger = LogManager.getLogger(CitrixDestroyCommandWrapper.class);
 
     @Override
     public Answer execute(final DestroyCommand command, final CitrixResourceBase citrixResourceBase) {
@@ -56,7 +56,7 @@ public final class CitrixDestroyCommandWrapper extends CommandWrapper<DestroyCom
             vbds = vdi.getVBDs(conn);
         } catch (final Exception e) {
             final String msg = "VDI getVBDS for " + volumeUUID + " failed due to " + e.toString();
-            s_logger.warn(msg, e);
+            logger.warn(msg, e);
             return new Answer(command, false, msg);
         }
         for (final VBD vbd : vbds) {
@@ -65,7 +65,7 @@ public final class CitrixDestroyCommandWrapper extends CommandWrapper<DestroyCom
                 vbd.destroy(conn);
             } catch (final Exception e) {
                 final String msg = "VM destroy for " + volumeUUID + "  failed due to " + e.toString();
-                s_logger.warn(msg, e);
+                logger.warn(msg, e);
                 return new Answer(command, false, msg);
             }
         }
@@ -77,7 +77,7 @@ public final class CitrixDestroyCommandWrapper extends CommandWrapper<DestroyCom
             vdi.destroy(conn);
         } catch (final Exception e) {
             final String msg = "VDI destroy for " + volumeUUID + " failed due to " + e.toString();
-            s_logger.warn(msg, e);
+            logger.warn(msg, e);
             return new Answer(command, false, msg);
         }
 

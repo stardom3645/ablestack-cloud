@@ -48,7 +48,7 @@ import java.util.Map;
 
 @APICommand(name = "ldapCreateAccount", description = "Creates an account from an LDAP user", responseObject = AccountResponse.class, since = "4.2.0", requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class LdapCreateAccountCmd extends BaseCmd {
-    protected static Logger s_logger = LogManager.getLogger(LdapCreateAccountCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(LdapCreateAccountCmd.class.getName());
     private static final String s_name = "createaccountresponse";
 
     @Inject

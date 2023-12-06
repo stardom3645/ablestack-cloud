@@ -43,7 +43,7 @@ import com.cloud.user.Account;
         authorized = {RoleType.Admin})
 public class UpdatePodManagementNetworkIpRangeCmd extends BaseAsyncCmd {
 
-    protected static Logger s_logger = LogManager.getLogger(UpdatePodManagementNetworkIpRangeCmd.class);
+    protected static Logger logger = LogManager.getLogger(UpdatePodManagementNetworkIpRangeCmd.class);
 
 
     /////////////////////////////////////////////////////
@@ -139,10 +139,10 @@ public class UpdatePodManagementNetworkIpRangeCmd extends BaseAsyncCmd {
             SuccessResponse response = new SuccessResponse(getCommandName());
             this.setResponseObject(response);
         } catch (ConcurrentOperationException ex) {
-            s_logger.warn("Exception: ", ex);
+            logger.warn("Exception: ", ex);
             throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, ex.getMessage());
         } catch (Exception e) {
-            s_logger.warn("Failed to update pod management IP range " + getNewStartIP() + "-" + getNewEndIP() + " of Pod: " + getPodId(), e);
+            logger.warn("Failed to update pod management IP range " + getNewStartIP() + "-" + getNewEndIP() + " of Pod: " + getPodId(), e);
             throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, e.getMessage());
         }
     }

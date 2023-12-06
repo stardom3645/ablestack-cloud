@@ -50,7 +50,7 @@ import javax.servlet.http.HttpSession;
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false,
         authorized = {RoleType.Admin, RoleType.ResourceAdmin, RoleType.DomainAdmin, RoleType.User}, since = "4.19.0")
 public class ListOAuthProvidersCmd extends BaseListCmd implements APIAuthenticator {
-    protected static Logger s_logger = LogManager.getLogger(ListOAuthProvidersCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(ListOAuthProvidersCmd.class.getName());
 
     /////////////////////////////////////////////////////
     //////////////// API parameters /////////////////////
@@ -142,7 +142,7 @@ public class ListOAuthProvidersCmd extends BaseListCmd implements APIAuthenticat
             }
         }
         if (_oauth2mgr == null) {
-            s_logger.error("No suitable Pluggable Authentication Manager found for listing OAuth providers");
+            logger.error("No suitable Pluggable Authentication Manager found for listing OAuth providers");
         }
     }
 }

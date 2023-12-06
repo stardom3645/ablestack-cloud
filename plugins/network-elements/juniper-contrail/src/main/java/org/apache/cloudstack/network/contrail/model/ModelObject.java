@@ -46,7 +46,7 @@ public interface ModelObject {
     public static class ModelReference implements Comparable<ModelReference>, Serializable {
 
         private static final long serialVersionUID = -2019113974956703526L;
-        protected static Logger s_logger = LogManager.getLogger(ModelReference.class);
+        protected static Logger logger = LogManager.getLogger(ModelReference.class);
 
         /*
          * WeakReference class is not serializable by definition. So, we cannot enforce its serialization unless we write the implementation of

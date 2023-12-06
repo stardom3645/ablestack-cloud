@@ -51,7 +51,7 @@ import com.cloud.user.User;
             since = "4.11.0",
             authorized = {RoleType.Admin})
 public class MigrateVPCCmd extends BaseAsyncCmd {
-    protected static Logger s_logger = LogManager.getLogger(MigrateVPCCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(MigrateVPCCmd.class.getName());
 
 
     /////////////////////////////////////////////////////

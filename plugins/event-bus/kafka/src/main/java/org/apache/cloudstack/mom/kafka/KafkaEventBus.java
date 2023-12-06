@@ -51,7 +51,7 @@ public class KafkaEventBus extends ManagerBase implements EventBus {
 
     private String _topic = null;
     private Producer<String,String> _producer;
-    protected static Logger s_logger = LogManager.getLogger(KafkaEventBus.class);
+    protected static Logger logger = LogManager.getLogger(KafkaEventBus.class);
 
     @Override
     public boolean configure(String name, Map<String, Object> params) throws ConfigurationException {

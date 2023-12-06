@@ -57,7 +57,7 @@ public class UserVmStateListener implements StateListener<State, VirtualMachine.
     @Inject protected UserVmDao _userVmDao;
     @Inject protected UserVmManager _userVmMgr;
     @Inject protected ConfigurationDao _configDao;
-    protected static Logger s_logger = LogManager.getLogger(UserVmStateListener.class);
+    protected static Logger logger = LogManager.getLogger(UserVmStateListener.class);
 
     protected static EventBus s_eventBus = null;
 
@@ -153,7 +153,7 @@ public class UserVmStateListener implements StateListener<State, VirtualMachine.
         try {
             s_eventBus.publish(eventMsg);
         } catch (org.apache.cloudstack.framework.events.EventBusException e) {
-            s_logger.warn("Failed to publish state change event on the event bus.");
+            logger.warn("Failed to publish state change event on the event bus.");
         }
 
     }

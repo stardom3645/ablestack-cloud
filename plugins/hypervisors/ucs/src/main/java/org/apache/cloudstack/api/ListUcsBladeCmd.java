@@ -36,7 +36,7 @@ import com.cloud.user.Account;
 @APICommand(name = "listUcsBlades", description = "List ucs blades", responseObject = UcsBladeResponse.class,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class ListUcsBladeCmd extends BaseListCmd {
-    protected static Logger s_logger = LogManager.getLogger(ListUcsBladeCmd.class);
+    protected static Logger logger = LogManager.getLogger(ListUcsBladeCmd.class);
 
     @Inject
     private UcsManager mgr;
@@ -69,7 +69,7 @@ public class ListUcsBladeCmd extends BaseListCmd {
             response.setObjectName("ucsblade");
             this.setResponseObject(response);
         } catch (Exception e) {
-            s_logger.warn(e.getMessage(), e);
+            logger.warn(e.getMessage(), e);
             throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, e.getMessage());
         }
     }

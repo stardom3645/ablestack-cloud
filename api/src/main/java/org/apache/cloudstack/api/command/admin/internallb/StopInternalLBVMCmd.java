@@ -42,7 +42,7 @@ import com.cloud.vm.VirtualMachine;
 @APICommand(name = "stopInternalLoadBalancerVM", description = "Stops an Internal LB vm.", responseObject = DomainRouterResponse.class, entityType = {VirtualMachine.class},
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class StopInternalLBVMCmd extends BaseAsyncCmd {
-    protected static Logger s_logger = LogManager.getLogger(StopInternalLBVMCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(StopInternalLBVMCmd.class.getName());
     private static final String s_name = "stopinternallbvmresponse";
 
     // ///////////////////////////////////////////////////

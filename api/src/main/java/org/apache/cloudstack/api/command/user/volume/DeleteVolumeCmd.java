@@ -38,7 +38,7 @@ import com.cloud.user.Account;
 @APICommand(name = "deleteVolume", description = "Deletes a detached disk volume.", responseObject = SuccessResponse.class, entityType = {Volume.class},
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class DeleteVolumeCmd extends BaseCmd {
-    protected static Logger s_logger = LogManager.getLogger(DeleteVolumeCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(DeleteVolumeCmd.class.getName());
 
     /////////////////////////////////////////////////////
     //////////////// API parameters /////////////////////

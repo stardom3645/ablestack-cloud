@@ -39,7 +39,7 @@ import com.xensource.xenapi.VDI;
 @ResourceWrapper(handles =  PrimaryStorageDownloadCommand.class)
 public final class CitrixPrimaryStorageDownloadCommandWrapper extends CommandWrapper<PrimaryStorageDownloadCommand, Answer, CitrixResourceBase> {
 
-    protected static Logger s_logger = LogManager.getLogger(CitrixPrimaryStorageDownloadCommandWrapper.class);
+    protected static Logger logger = LogManager.getLogger(CitrixPrimaryStorageDownloadCommandWrapper.class);
 
     @Override
     public Answer execute(final PrimaryStorageDownloadCommand command, final CitrixResourceBase citrixResourceBase) {
@@ -54,7 +54,7 @@ public final class CitrixPrimaryStorageDownloadCommandWrapper extends CommandWra
             final Set<SR> srs = SR.getByNameLabel(conn, poolName);
             if (srs.size() != 1) {
                 final String msg = "There are " + srs.size() + " SRs with same name: " + poolName;
-                s_logger.warn(msg);
+                logger.warn(msg);
                 return new PrimaryStorageDownloadAnswer(msg);
             } else {
                 poolsr = srs.iterator().next();
@@ -79,7 +79,7 @@ public final class CitrixPrimaryStorageDownloadCommandWrapper extends CommandWra
         } catch (final Exception e) {
             final String msg = "Catch Exception " + e.getClass().getName() + " on host:" + citrixResourceBase.getHost().getUuid() + " for template: " + tmplturl + " due to "
                     + e.toString();
-            s_logger.warn(msg, e);
+            logger.warn(msg, e);
             return new PrimaryStorageDownloadAnswer(msg);
         }
     }

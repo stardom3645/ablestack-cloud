@@ -41,7 +41,7 @@ import com.cloud.vm.snapshot.VMSnapshot;
 @ResourceWrapper(handles =  RevertToVMSnapshotCommand.class)
 public final class LibvirtRevertToVMSnapshotCommandWrapper extends CommandWrapper<RevertToVMSnapshotCommand, Answer, LibvirtComputingResource> {
 
-    protected static Logger s_logger = LogManager.getLogger(LibvirtRevertToVMSnapshotCommandWrapper.class);
+    protected static Logger logger = LogManager.getLogger(LibvirtRevertToVMSnapshotCommandWrapper.class);
 
     @Override
     public Answer execute(final RevertToVMSnapshotCommand cmd, final LibvirtComputingResource libvirtComputingResource) {
@@ -81,14 +81,14 @@ public final class LibvirtRevertToVMSnapshotCommandWrapper extends CommandWrappe
             return new RevertToVMSnapshotAnswer(cmd, listVolumeTo, vmState);
         } catch (LibvirtException e) {
             String msg = " Revert to VM snapshot failed due to " + e.toString();
-            s_logger.warn(msg, e);
+            logger.warn(msg, e);
             return new RevertToVMSnapshotAnswer(cmd, false, msg);
         } finally {
             if (dm != null) {
                 try {
                     dm.free();
                 } catch (LibvirtException l) {
-                    s_logger.trace("Ignoring libvirt error.", l);
+                    logger.trace("Ignoring libvirt error.", l);
                 };
             }
         }

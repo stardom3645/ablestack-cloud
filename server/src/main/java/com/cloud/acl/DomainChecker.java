@@ -100,7 +100,7 @@ public class DomainChecker extends AdapterBase implements SecurityChecker {
     @Inject
     private AccountService accountService;
 
-    protected static Logger s_logger = LogManager.getLogger(DomainChecker.class.getName());
+    protected static Logger logger = LogManager.getLogger(DomainChecker.class.getName());
     protected DomainChecker() {
         super();
     }

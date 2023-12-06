@@ -39,7 +39,7 @@ import com.cloud.user.Account;
 @APICommand(name = "updateResourceCount", description = "Recalculate and update resource count for an account or domain.", responseObject = ResourceCountResponse.class,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class UpdateResourceCountCmd extends BaseCmd {
-    protected static Logger s_logger = LogManager.getLogger(UpdateResourceCountCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(UpdateResourceCountCmd.class.getName());
 
 
     /////////////////////////////////////////////////////

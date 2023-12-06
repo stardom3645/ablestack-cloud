@@ -49,7 +49,7 @@ import com.cloud.utils.net.Ip;
 @Component
 @DB
 public class IPAddressDaoImpl extends GenericDaoBase<IPAddressVO, Long> implements IPAddressDao {
-    protected static Logger s_logger = LogManager.getLogger(IPAddressDaoImpl.class);
+    protected static Logger logger = LogManager.getLogger(IPAddressDaoImpl.class);
 
     protected SearchBuilder<IPAddressVO> AllFieldsSearch;
     protected SearchBuilder<IPAddressVO> VlanDbIdSearchUnallocated;
@@ -370,7 +370,7 @@ public class IPAddressDaoImpl extends GenericDaoBase<IPAddressVO, Long> implemen
                 ipCount = rs.getInt(1);
             }
         } catch (Exception e) {
-            s_logger.warn("Exception counting IP addresses", e);
+            logger.warn("Exception counting IP addresses", e);
         }
 
         return ipCount;

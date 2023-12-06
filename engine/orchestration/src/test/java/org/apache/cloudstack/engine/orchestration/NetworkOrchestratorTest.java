@@ -91,7 +91,7 @@ import junit.framework.TestCase;
  */
 @RunWith(JUnit4.class)
 public class NetworkOrchestratorTest extends TestCase {
-    static final Logger s_logger = LogManager.getLogger(NetworkOrchestratorTest.class);
+    static final Logger logger = LogManager.getLogger(NetworkOrchestratorTest.class);
 
     NetworkOrchestrator testOrchastrator = Mockito.spy(new NetworkOrchestrator());
 

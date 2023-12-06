@@ -34,7 +34,7 @@ import com.xensource.xenapi.Connection;
 @ResourceWrapper(handles =  GetHostStatsCommand.class)
 public final class CitrixGetHostStatsCommandWrapper extends CommandWrapper<GetHostStatsCommand, Answer, CitrixResourceBase> {
 
-    protected static Logger s_logger = LogManager.getLogger(CitrixGetHostStatsCommandWrapper.class);
+    protected static Logger logger = LogManager.getLogger(CitrixGetHostStatsCommandWrapper.class);
 
     @Override
     public Answer execute(final GetHostStatsCommand command, final CitrixResourceBase citrixResourceBase) {
@@ -44,7 +44,7 @@ public final class CitrixGetHostStatsCommandWrapper extends CommandWrapper<GetHo
             return new GetHostStatsAnswer(command, hostStats);
         } catch (final Exception e) {
             final String msg = "Unable to get Host stats" + e.toString();
-            s_logger.warn(msg, e);
+            logger.warn(msg, e);
             return new GetHostStatsAnswer(command, null);
         }
     }

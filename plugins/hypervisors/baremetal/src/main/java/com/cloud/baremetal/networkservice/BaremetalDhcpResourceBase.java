@@ -45,7 +45,7 @@ import com.cloud.resource.ServerResource;
 import com.cloud.utils.component.ManagerBase;
 
 public class BaremetalDhcpResourceBase extends ManagerBase implements ServerResource {
-    protected static Logger s_logger = LogManager.getLogger(BaremetalDhcpResourceBase.class);
+    protected static Logger logger = LogManager.getLogger(BaremetalDhcpResourceBase.class);
     String _name;
     String _guid;
     String _username;
@@ -130,7 +130,7 @@ public class BaremetalDhcpResourceBase extends ManagerBase implements ServerReso
     }
 
     protected ReadyAnswer execute(ReadyCommand cmd) {
-        s_logger.debug("External DHCP resource " + _name + " is ready");
+        logger.debug("External DHCP resource " + _name + " is ready");
         return new ReadyAnswer(cmd);
     }
 

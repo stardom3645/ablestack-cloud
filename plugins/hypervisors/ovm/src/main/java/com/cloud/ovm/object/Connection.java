@@ -30,7 +30,7 @@ import org.apache.xmlrpc.client.XmlRpcClientConfigImpl;
 import com.cloud.utils.exception.CloudRuntimeException;
 
 public class Connection {
-    protected static Logger s_logger = LogManager.getLogger(Connection.class);
+    protected static Logger logger = LogManager.getLogger(Connection.class);
     private XmlRpcClientConfigImpl _config = new XmlRpcClientConfigImpl();
     XmlRpcClient _client;
     String _username;
@@ -96,7 +96,7 @@ public class Connection {
             /*
              * some parameters including user password should not be printed in log
              */
-            s_logger.debug("Call Ovm agent: " + Coder.toJson(mParams));
+            logger.debug("Call Ovm agent: " + Coder.toJson(mParams));
         }
 
         long startTime = System.currentTimeMillis();
@@ -110,7 +110,7 @@ public class Connection {
         } finally {
             long endTime = System.currentTimeMillis();
             long during = (endTime - startTime) / 1000; // in secs
-            s_logger.debug("Ovm call " + method + " finished in " + String.valueOf(during) + " secs");
+            logger.debug("Ovm call " + method + " finished in " + String.valueOf(during) + " secs");
         }
     }
 

@@ -48,7 +48,7 @@ import com.cloud.vm.VirtualMachine;
         responseHasSensitiveInfo = false,
         since = "4.14.0")
 public class GetRouterHealthCheckResultsCmd extends BaseCmd {
-    protected static Logger s_logger = LogManager.getLogger(GetRouterHealthCheckResultsCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(GetRouterHealthCheckResultsCmd.class.getName());
 
     /////////////////////////////////////////////////////
     //////////////// API parameters /////////////////////

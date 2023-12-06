@@ -42,7 +42,7 @@ import com.cloud.network.IpAddress;
         responseHasSensitiveInfo = false,
         authorized = {RoleType.Admin, RoleType.ResourceAdmin, RoleType.DomainAdmin, RoleType.User})
 public class ReleaseIPAddrCmd extends BaseCmd {
-    protected static Logger s_logger = LogManager.getLogger(ReleaseIPAddrCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(ReleaseIPAddrCmd.class.getName());
 
 
     /////////////////////////////////////////////////////

@@ -93,7 +93,7 @@ import com.cloud.vm.dao.NicDao;
 
 @Component
 public class BrocadeVcsElement extends AdapterBase implements NetworkElement, ResourceStateAdapter, BrocadeVcsElementService {
-    protected static Logger s_logger = LogManager.getLogger(BrocadeVcsElement.class);
+    protected static Logger logger = LogManager.getLogger(BrocadeVcsElement.class);
 
     private static final Map<Service, Map<Capability, String>> capabilities = setCapabilities();
 
@@ -139,18 +139,18 @@ public class BrocadeVcsElement extends AdapterBase implements NetworkElement, Re
     }
 
     protected boolean canHandle(Network network, Service service) {
-        s_logger.debug("Checking if BrocadeVcsElement can handle service " + service.getName() + " on network " + network.getDisplayText());
+        logger.debug("Checking if BrocadeVcsElement can handle service " + service.getName() + " on network " + network.getDisplayText());
         if (network.getBroadcastDomainType() != BroadcastDomainType.Vcs) {
             return false;
         }
 
         if (!_networkModel.isProviderForNetwork(getProvider(), network.getId())) {
-            s_logger.debug("BrocadeVcsElement is not a provider for network " + network.getDisplayText());
+            logger.debug("BrocadeVcsElement is not a provider for network " + network.getDisplayText());
             return false;
         }
 
         if (!_ntwkSrvcDao.canProviderSupportServiceInNetwork(network.getId(), service, Network.Provider.BrocadeVcs)) {
-            s_logger.debug("BrocadeVcsElement can't provide the " + service.getName() + " service on network " + network.getDisplayText());
+            logger.debug("BrocadeVcsElement can't provide the " + service.getName() + " service on network " + network.getDisplayText());
             return false;
         }
 
@@ -167,7 +167,7 @@ public class BrocadeVcsElement extends AdapterBase implements NetworkElement, Re
     @Override
     public boolean implement(Network network, NetworkOffering offering, DeployDestination dest, ReservationContext context) throws ConcurrentOperationException,
             ResourceUnavailableException, InsufficientCapacityException {
-        s_logger.debug("entering BrocadeVcsElement implement function for network " + network.getDisplayText() + " (state " + network.getState() + ")");
+        logger.debug("entering BrocadeVcsElement implement function for network " + network.getDisplayText() + " (state " + network.getState() + ")");
 
         if (!canHandle(network, Service.Connectivity)) {
             return false;
@@ -235,7 +235,7 @@ public class BrocadeVcsElement extends AdapterBase implements NetworkElement, Re
     public boolean verifyServicesCombination(Set<Service> services) {
 
         if (!services.contains(Service.Connectivity)) {
-            s_logger.warn("Unable to provide services without Connectivity service enabled for this element");
+            logger.warn("Unable to provide services without Connectivity service enabled for this element");
             return false;
         }
         return true;

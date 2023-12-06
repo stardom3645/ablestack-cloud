@@ -36,7 +36,7 @@ import com.cloud.user.Account;
 @APICommand(name = "addUcsManager", description = "Adds a Ucs manager", responseObject = UcsManagerResponse.class,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class AddUcsManagerCmd extends BaseCmd {
-    protected static Logger s_logger = LogManager.getLogger(AddUcsManagerCmd.class);
+    protected static Logger logger = LogManager.getLogger(AddUcsManagerCmd.class);
 
     @Inject
     private UcsManager mgr;
@@ -65,7 +65,7 @@ public class AddUcsManagerCmd extends BaseCmd {
             rsp.setResponseName(getCommandName());
             this.setResponseObject(rsp);
         } catch (Exception e) {
-            s_logger.warn("Exception: ", e);
+            logger.warn("Exception: ", e);
             throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, e.getMessage());
         }
     }

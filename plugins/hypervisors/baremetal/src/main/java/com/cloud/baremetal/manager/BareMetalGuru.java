@@ -40,7 +40,7 @@ import com.cloud.vm.VMInstanceVO;
 import com.cloud.vm.VirtualMachineProfile;
 
 public class BareMetalGuru extends HypervisorGuruBase implements HypervisorGuru {
-    protected static Logger s_logger = LogManager.getLogger(BareMetalGuru.class);
+    protected static Logger logger = LogManager.getLogger(BareMetalGuru.class);
     @Inject
     GuestOSDao _guestOsDao;
 

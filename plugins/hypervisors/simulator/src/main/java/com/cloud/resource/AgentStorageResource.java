@@ -41,7 +41,7 @@ import com.cloud.host.Host.Type;
 import com.cloud.vm.SecondaryStorageVm;
 
 public class AgentStorageResource extends AgentResourceBase implements SecondaryStorageResource {
-    protected static Logger s_logger = LogManager.getLogger(AgentStorageResource.class);
+    protected static Logger logger = LogManager.getLogger(AgentStorageResource.class);
 
     final protected String _parent = "/mnt/SecStorage";
     protected String _role;
@@ -102,7 +102,7 @@ public class AgentStorageResource extends AgentResourceBase implements Secondary
     @Override
     public boolean configure(String name, Map<String, Object> params) throws ConfigurationException {
         if (!super.configure(name, params)) {
-            s_logger.warn("Base class was unable to configure");
+            logger.warn("Base class was unable to configure");
             return false;
         }
 

@@ -40,7 +40,7 @@ import com.cloud.resource.ResourceWrapper;
 @ResourceWrapper(handles =  CreateLogicalSwitchPortCommand.class)
 public final class NiciraNvpCreateLogicalSwitchPortCommandWrapper extends CommandWrapper<CreateLogicalSwitchPortCommand, Answer, NiciraNvpResource> {
 
-    protected static Logger s_logger = LogManager.getLogger(NiciraNvpCreateLogicalSwitchPortCommandWrapper.class);
+    protected static Logger logger = LogManager.getLogger(NiciraNvpCreateLogicalSwitchPortCommandWrapper.class);
 
     @Override
     public Answer execute(final CreateLogicalSwitchPortCommand command, final NiciraNvpResource niciraNvpResource) {
@@ -57,7 +57,7 @@ public final class NiciraNvpCreateLogicalSwitchPortCommandWrapper extends Comman
             try {
                 niciraNvpApi.updateLogicalSwitchPortAttachment(command.getLogicalSwitchUuid(), newPort.getUuid(), new VifAttachment(attachmentUuid));
             } catch (final NiciraNvpApiException ex) {
-                s_logger.warn("modifyLogicalSwitchPort failed after switchport was created, removing switchport");
+                logger.warn("modifyLogicalSwitchPort failed after switchport was created, removing switchport");
                 niciraNvpApi.deleteLogicalSwitchPort(command.getLogicalSwitchUuid(), newPort.getUuid());
                 throw ex; // Rethrow the original exception
             }

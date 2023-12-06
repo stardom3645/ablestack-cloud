@@ -37,7 +37,7 @@ import com.cloud.user.Account;
 @APICommand(name = "deleteLdapConfiguration", description = "Remove an Ldap Configuration", responseObject = LdapConfigurationResponse.class, since = "4.2.0",
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class LdapDeleteConfigurationCmd extends BaseCmd {
-    protected static Logger s_logger = LogManager.getLogger(LdapDeleteConfigurationCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(LdapDeleteConfigurationCmd.class.getName());
     private static final String s_name = "ldapconfigurationresponse";
 
     @Inject

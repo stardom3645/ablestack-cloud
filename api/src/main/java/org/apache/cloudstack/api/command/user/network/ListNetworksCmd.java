@@ -47,7 +47,7 @@ import org.apache.commons.lang3.StringUtils;
 @APICommand(name = "listNetworks", description = "Lists all available networks.", responseObject = NetworkResponse.class, responseView = ResponseView.Restricted, entityType = {Network.class},
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class ListNetworksCmd extends BaseListRetrieveOnlyResourceCountCmd implements UserCmd {
-    protected static Logger s_logger = LogManager.getLogger(ListNetworksCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(ListNetworksCmd.class.getName());
     private static final String s_name = "listnetworksresponse";
 
     /////////////////////////////////////////////////////

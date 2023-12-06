@@ -43,7 +43,7 @@ import com.cloud.utils.db.TransactionLegacy;
 
 @DB
 public class SyncQueueItemDaoImpl extends GenericDaoBase<SyncQueueItemVO, Long> implements SyncQueueItemDao {
-    protected static Logger s_logger = LogManager.getLogger(SyncQueueItemDaoImpl.class);
+    protected static Logger logger = LogManager.getLogger(SyncQueueItemDaoImpl.class);
     final GenericSearchBuilder<SyncQueueItemVO, Long> queueIdSearch;
     final GenericSearchBuilder<SyncQueueItemVO, Integer> queueActiveItemSearch;
 
@@ -117,9 +117,9 @@ public class SyncQueueItemDaoImpl extends GenericDaoBase<SyncQueueItemVO, Long> 
                 l.add(item);
             }
         } catch (SQLException e) {
-            s_logger.error("Unexpected sql exception, ", e);
+            logger.error("Unexpected sql exception, ", e);
         } catch (Throwable e) {
-            s_logger.error("Unexpected exception, ", e);
+            logger.error("Unexpected exception, ", e);
         }
         return l;
     }

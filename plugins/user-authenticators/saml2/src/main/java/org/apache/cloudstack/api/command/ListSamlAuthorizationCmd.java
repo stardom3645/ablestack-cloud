@@ -38,7 +38,7 @@ import java.util.List;
 
 @APICommand(name = "listSamlAuthorization", description = "Lists authorized users who can used SAML SSO", responseObject = SamlAuthorizationResponse.class, requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class ListSamlAuthorizationCmd extends BaseListCmd {
-    protected static Logger s_logger = LogManager.getLogger(ListSamlAuthorizationCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(ListSamlAuthorizationCmd.class.getName());
     private static final String s_name = "listsamlauthorizationsresponse";
 
     @Inject

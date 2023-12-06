@@ -47,7 +47,7 @@ public class UsageEventUtils {
     private static UsageEventDao s_usageEventDao;
     private static AccountDao s_accountDao;
     private static DataCenterDao s_dcDao;
-    protected static Logger s_logger = LogManager.getLogger(UsageEventUtils.class);
+    protected static Logger logger = LogManager.getLogger(UsageEventUtils.class);
     protected static EventBus s_eventBus = null;
     protected static ConfigurationDao s_configDao;
 
@@ -241,7 +241,7 @@ public class UsageEventUtils {
         try {
             s_eventBus.publish(event);
         } catch (EventBusException e) {
-            s_logger.warn("Failed to publish usage event on the event bus.");
+            logger.warn("Failed to publish usage event on the event bus.");
         }
     }
 

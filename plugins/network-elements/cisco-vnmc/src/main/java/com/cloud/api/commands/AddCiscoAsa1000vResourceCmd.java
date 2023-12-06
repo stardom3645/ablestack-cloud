@@ -44,7 +44,7 @@ import com.cloud.utils.exception.CloudRuntimeException;
 @APICommand(name = "addCiscoAsa1000vResource", responseObject = CiscoAsa1000vResourceResponse.class, description = "Adds a Cisco Asa 1000v appliance",
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class AddCiscoAsa1000vResourceCmd extends BaseCmd {
-    protected static Logger s_logger = LogManager.getLogger(AddCiscoAsa1000vResourceCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(AddCiscoAsa1000vResourceCmd.class.getName());
     private static final String s_name = "addCiscoAsa1000vResource";
     @Inject
     CiscoAsa1000vService _ciscoAsa1000vService;

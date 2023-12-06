@@ -44,7 +44,7 @@ import streamer.ssl.SSLState;
 import streamer.ssl.TrustAllX509TrustManager;
 
 public class SocketWrapperImpl extends PipelineImpl implements SocketWrapper {
-    protected static Logger s_logger = LogManager.getLogger(SocketWrapperImpl.class);
+    protected static Logger logger = LogManager.getLogger(SocketWrapperImpl.class);
 
     protected InputStreamSource source;
     protected OutputStreamSink sink;
@@ -178,26 +178,26 @@ public class SocketWrapperImpl extends PipelineImpl implements SocketWrapper {
         try {
             handleEvent(Event.STREAM_CLOSE, Direction.IN);
         } catch (Exception e) {
-            s_logger.info("[ignored]"
+            logger.info("[ignored]"
                     + "error sending input close event: " + e.getLocalizedMessage());
         }
         try {
             handleEvent(Event.STREAM_CLOSE, Direction.OUT);
         } catch (Exception e) {
-            s_logger.info("[ignored]"
+            logger.info("[ignored]"
                     + "error sending output close event: " + e.getLocalizedMessage());
         }
         try {
             if (sslSocket != null)
                 sslSocket.close();
         } catch (Exception e) {
-            s_logger.info("[ignored]"
+            logger.info("[ignored]"
                     + "error closing ssl socket: " + e.getLocalizedMessage());
         }
         try {
             socket.close();
         } catch (Exception e) {
-            s_logger.info("[ignored]"
+            logger.info("[ignored]"
                     + "error closing socket: " + e.getLocalizedMessage());
         }
     }

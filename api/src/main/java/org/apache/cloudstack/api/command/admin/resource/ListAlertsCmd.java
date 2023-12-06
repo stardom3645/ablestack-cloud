@@ -35,7 +35,7 @@ import com.cloud.utils.Pair;
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class ListAlertsCmd extends BaseListCmd {
 
-    protected static Logger s_logger = LogManager.getLogger(ListAlertsCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(ListAlertsCmd.class.getName());
 
 
     // ///////////////////////////////////////////////////

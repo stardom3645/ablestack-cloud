@@ -30,7 +30,7 @@ import com.cloud.utils.component.AdapterBase;
 import java.security.SecureRandom;
 
 public class StaticPinUserTwoFactorAuthenticator extends AdapterBase implements UserTwoFactorAuthenticator {
-    protected static Logger s_logger = LogManager.getLogger(StaticPinUserTwoFactorAuthenticator.class);
+    protected static Logger logger = LogManager.getLogger(StaticPinUserTwoFactorAuthenticator.class);
 
     @Inject
     private UserAccountDao _userAccountDao;
@@ -49,7 +49,7 @@ public class StaticPinUserTwoFactorAuthenticator extends AdapterBase implements 
     public void check2FA(String code, UserAccount userAccount) throws CloudTwoFactorAuthenticationException  {
         String expectedCode = getStaticPin(userAccount);
         if (expectedCode.equals(code)) {
-            s_logger.info("2FA matches user's input");
+            logger.info("2FA matches user's input");
             return;
         }
         throw new CloudTwoFactorAuthenticationException("two-factor authentication code provided is invalid");

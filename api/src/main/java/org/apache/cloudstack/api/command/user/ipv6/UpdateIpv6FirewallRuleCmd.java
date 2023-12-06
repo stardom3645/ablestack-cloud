@@ -42,7 +42,7 @@ import com.cloud.user.Account;
         responseHasSensitiveInfo = false,
         authorized = {RoleType.Admin, RoleType.ResourceAdmin, RoleType.DomainAdmin, RoleType.User})
 public class UpdateIpv6FirewallRuleCmd extends BaseAsyncCustomIdCmd {
-    protected static Logger s_logger = LogManager.getLogger(UpdateIpv6FirewallRuleCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(UpdateIpv6FirewallRuleCmd.class.getName());
 
 
     // ///////////////////////////////////////////////////

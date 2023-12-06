@@ -51,7 +51,7 @@ import com.cloud.utils.exception.CloudRuntimeException;
 @APICommand(name = "createSnapshot", description = "Creates an instant snapshot of a volume.", responseObject = SnapshotResponse.class, entityType = {Snapshot.class},
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class CreateSnapshotCmd extends BaseAsyncCreateCmd {
-    protected static Logger s_logger = LogManager.getLogger(CreateSnapshotCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(CreateSnapshotCmd.class.getName());
 
     // ///////////////////////////////////////////////////
     // ////////////// API parameters /////////////////////
@@ -241,7 +241,7 @@ public class CreateSnapshotCmd extends BaseAsyncCreateCmd {
             }
 
             String errorMessage = "Failed to create snapshot due to an internal error creating snapshot for volume " + getVolumeUuid();
-            s_logger.error(errorMessage, e);
+            logger.error(errorMessage, e);
             throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, errorMessage);
         }
     }
@@ -258,7 +258,7 @@ public class CreateSnapshotCmd extends BaseAsyncCreateCmd {
         } catch (IllegalArgumentException e) {
             String errMesg = "Invalid locationType " + locationType + "Specified for volume " + getVolumeId()
                         + " Valid values are: primary,secondary ";
-            s_logger.warn(errMesg);
+            logger.warn(errMesg);
             throw  new CloudRuntimeException(errMesg);
         }
     }

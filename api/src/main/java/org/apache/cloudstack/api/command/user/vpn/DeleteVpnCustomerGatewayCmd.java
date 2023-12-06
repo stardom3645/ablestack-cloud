@@ -38,7 +38,7 @@ import com.cloud.user.Account;
 @APICommand(name = "deleteVpnCustomerGateway", description = "Delete site to site vpn customer gateway", responseObject = SuccessResponse.class, entityType = {Site2SiteCustomerGateway.class},
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class DeleteVpnCustomerGatewayCmd extends BaseAsyncCmd {
-    protected static Logger s_logger = LogManager.getLogger(DeleteVpnCustomerGatewayCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(DeleteVpnCustomerGatewayCmd.class.getName());
 
 
     /////////////////////////////////////////////////////

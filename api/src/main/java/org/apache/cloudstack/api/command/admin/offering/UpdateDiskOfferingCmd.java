@@ -40,7 +40,7 @@ import com.cloud.user.Account;
 @APICommand(name = "updateDiskOffering", description = "Updates a disk offering.", responseObject = DiskOfferingResponse.class,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class UpdateDiskOfferingCmd extends BaseCmd {
-    protected static Logger s_logger = LogManager.getLogger(UpdateDiskOfferingCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(UpdateDiskOfferingCmd.class.getName());
 
     /////////////////////////////////////////////////////
     //////////////// API parameters /////////////////////

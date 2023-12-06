@@ -60,7 +60,7 @@ import com.cloud.vm.dao.SecondaryStorageVmDao;
 
 @Component
 public class StorageNetworkManagerImpl extends ManagerBase implements StorageNetworkManager, StorageNetworkService {
-    protected static Logger s_logger = LogManager.getLogger(StorageNetworkManagerImpl.class);
+    protected static Logger logger = LogManager.getLogger(StorageNetworkManagerImpl.class);
 
     @Inject
     StorageNetworkIpAddressDao _sNwIpDao;
@@ -247,7 +247,7 @@ public class StorageNetworkManagerImpl extends ManagerBase implements StorageNet
                     err.append("endIp=" + endIpFinal);
                     err.append("netmask=" + netmask);
                     err.append("zoneId=" + zoneId);
-                    s_logger.debug(err.toString(), e);
+                    logger.debug(err.toString(), e);
                     throw e;
                 }
 
@@ -287,7 +287,7 @@ public class StorageNetworkManagerImpl extends ManagerBase implements StorageNet
                     range = _sNwIpRangeDao.acquireInLockTable(rangeId);
                     if (range == null) {
                         String msg = "Unable to acquire lock on storage network ip range id=" + rangeId + ", delete failed";
-                        s_logger.warn(msg);
+                        logger.warn(msg);
                         throw new CloudRuntimeException(msg);
                     }
                     /*
@@ -339,7 +339,7 @@ public class StorageNetworkManagerImpl extends ManagerBase implements StorageNet
                 r = _sNwIpRangeDao.acquireInLockTable(rangeId);
                 if (r == null) {
                     String msg = "Unable to acquire lock on storage network ip range id=" + rangeId + ", delete failed";
-                    s_logger.warn(msg);
+                    logger.warn(msg);
                     throw new CloudRuntimeException(msg);
                 }
 

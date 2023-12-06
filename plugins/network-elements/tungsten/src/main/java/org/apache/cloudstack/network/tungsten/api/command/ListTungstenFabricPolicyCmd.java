@@ -49,7 +49,7 @@ import javax.inject.Inject;
 @APICommand(name = ListTungstenFabricPolicyCmd.APINAME, description = "list Tungsten-Fabric policy", responseObject =
     TungstenFabricPolicyResponse.class, requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class ListTungstenFabricPolicyCmd extends BaseListCmd {
-    protected static Logger s_logger = LogManager.getLogger(ListTungstenFabricPolicyCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(ListTungstenFabricPolicyCmd.class.getName());
     public static final String APINAME = "listTungstenFabricPolicy";
 
     @Inject

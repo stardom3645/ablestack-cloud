@@ -38,7 +38,7 @@ import com.cloud.user.Account;
 @APICommand(name = "addVpnUser", description = "Adds vpn users", responseObject = VpnUsersResponse.class, entityType = {VpnUser.class},
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class AddVpnUserCmd extends BaseAsyncCreateCmd {
-    protected static Logger s_logger = LogManager.getLogger(AddVpnUserCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(AddVpnUserCmd.class.getName());
 
 
     /////////////////////////////////////////////////////

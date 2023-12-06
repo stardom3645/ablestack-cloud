@@ -40,7 +40,7 @@ import com.cloud.utils.exception.CloudRuntimeException;
 
 @Component
 public class ConfigurationDaoImpl extends GenericDaoBase<ConfigurationVO, String> implements ConfigurationDao {
-    protected static Logger s_logger = LogManager.getLogger(ConfigurationDaoImpl.class);
+    protected static Logger logger = LogManager.getLogger(ConfigurationDaoImpl.class);
     private Map<String, String> _configs = null;
     private boolean _premium;
 
@@ -146,7 +146,7 @@ public class ConfigurationDaoImpl extends GenericDaoBase<ConfigurationVO, String
             stmt.executeUpdate();
             return true;
         } catch (Exception e) {
-            s_logger.warn("Unable to update Configuration Value", e);
+            logger.warn("Unable to update Configuration Value", e);
         }
         return false;
     }
@@ -163,7 +163,7 @@ public class ConfigurationDaoImpl extends GenericDaoBase<ConfigurationVO, String
                 return true;
             }
         } catch (Exception e) {
-            s_logger.warn("Unable to update Configuration Value", e);
+            logger.warn("Unable to update Configuration Value", e);
         }
         return false;
     }
@@ -197,7 +197,7 @@ public class ConfigurationDaoImpl extends GenericDaoBase<ConfigurationVO, String
             }
             return returnValue;
         } catch (Exception e) {
-            s_logger.warn("Unable to update Configuration Value", e);
+            logger.warn("Unable to update Configuration Value", e);
             throw new CloudRuntimeException("Unable to initialize configuration variable: " + name);
 
         }

@@ -31,7 +31,7 @@ import com.cloud.vm.NicProfile;
 
 public class SspUuidDaoImpl extends GenericDaoBase<SspUuidVO, Long> implements SspUuidDao {
 
-    protected static Logger s_logger = LogManager.getLogger(SspUuidDaoImpl.class);
+    protected static Logger logger = LogManager.getLogger(SspUuidDaoImpl.class);
 
     protected final SearchBuilder<SspUuidVO> native2uuid;
     protected final SearchBuilder<SspUuidVO> uuid2native;

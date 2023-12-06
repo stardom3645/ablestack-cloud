@@ -37,7 +37,7 @@ import com.cloud.user.Account;
 @APICommand(name = "addSwift", description = "Adds Swift.", responseObject = ImageStoreResponse.class, since = "3.0.0",
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class AddSwiftCmd extends BaseCmd {
-    protected static Logger s_logger = LogManager.getLogger(AddSwiftCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(AddSwiftCmd.class.getName());
 
     /////////////////////////////////////////////////////
     //////////////// API parameters /////////////////////
@@ -103,7 +103,7 @@ public class AddSwiftCmd extends BaseCmd {
                 throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, "Failed to add Swift secondary storage");
             }
         } catch (DiscoveryException ex) {
-            s_logger.warn("Exception: ", ex);
+            logger.warn("Exception: ", ex);
             throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, ex.getMessage());
         }
     }

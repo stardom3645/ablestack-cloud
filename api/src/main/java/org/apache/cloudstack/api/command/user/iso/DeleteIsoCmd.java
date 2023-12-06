@@ -38,7 +38,7 @@ import com.cloud.user.Account;
 @APICommand(name = "deleteIso", description = "Deletes an ISO file.", responseObject = SuccessResponse.class,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class DeleteIsoCmd extends BaseAsyncCmd {
-    protected static Logger s_logger = LogManager.getLogger(DeleteIsoCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(DeleteIsoCmd.class.getName());
 
     /////////////////////////////////////////////////////
     //////////////// API parameters /////////////////////

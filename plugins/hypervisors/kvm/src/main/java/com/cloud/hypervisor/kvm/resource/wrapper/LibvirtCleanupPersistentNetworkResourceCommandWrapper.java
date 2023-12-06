@@ -32,7 +32,7 @@ import com.cloud.resource.ResourceWrapper;
 
 @ResourceWrapper(handles = CleanupPersistentNetworkResourceCommand.class)
 public class LibvirtCleanupPersistentNetworkResourceCommandWrapper extends CommandWrapper<CleanupPersistentNetworkResourceCommand, Answer, LibvirtComputingResource> {
-    protected static Logger s_logger = LogManager.getLogger(LibvirtCleanupPersistentNetworkResourceCommandWrapper.class);
+    protected static Logger logger = LogManager.getLogger(LibvirtCleanupPersistentNetworkResourceCommandWrapper.class);
     @Override
     public Answer execute(CleanupPersistentNetworkResourceCommand command, LibvirtComputingResource serverResource) {
         NicTO nic = command.getNicTO();

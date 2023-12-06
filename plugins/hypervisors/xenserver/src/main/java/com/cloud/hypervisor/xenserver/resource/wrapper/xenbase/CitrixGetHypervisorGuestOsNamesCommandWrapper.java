@@ -41,14 +41,14 @@ import com.xensource.xenapi.VM;
 @ResourceWrapper(handles =  GetHypervisorGuestOsNamesCommand.class)
 public final class CitrixGetHypervisorGuestOsNamesCommandWrapper extends CommandWrapper<GetHypervisorGuestOsNamesCommand, Answer, CitrixResourceBase> {
 
-    protected static Logger s_logger = LogManager.getLogger(CitrixGetHypervisorGuestOsNamesCommandWrapper.class);
+    protected static Logger logger = LogManager.getLogger(CitrixGetHypervisorGuestOsNamesCommandWrapper.class);
 
     @Override
     public Answer execute(final GetHypervisorGuestOsNamesCommand command, final CitrixResourceBase citrixResourceBase) {
         final Connection conn = citrixResourceBase.getConnection();
         String keyword = command.getKeyword();
         try {
-            s_logger.info("Getting guest os names in the hypervisor");
+            logger.info("Getting guest os names in the hypervisor");
             final Set<VM> vms = VM.getAll(conn);
             if (CollectionUtils.isEmpty(vms)) {
                 return new GetHypervisorGuestOsNamesAnswer(command, "Guest os names not found in the hypervisor");
@@ -70,7 +70,7 @@ public final class CitrixGetHypervisorGuestOsNamesCommandWrapper extends Command
             }
             return new GetHypervisorGuestOsNamesAnswer(command, hypervisorGuestOsNames);
         } catch (final Exception e) {
-            s_logger.error("Failed to fetch hypervisor guest os names due to: " + e.getLocalizedMessage(), e);
+            logger.error("Failed to fetch hypervisor guest os names due to: " + e.getLocalizedMessage(), e);
             return new GetHypervisorGuestOsNamesAnswer(command, e.getLocalizedMessage());
         }
     }

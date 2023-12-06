@@ -38,7 +38,7 @@ import com.cloud.user.Account;
 @APICommand(name = "updateGlobalLoadBalancerRule", description = "update global load balancer rules.", responseObject = GlobalLoadBalancerResponse.class,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class UpdateGlobalLoadBalancerRuleCmd extends BaseAsyncCmd {
-    protected static Logger s_logger = LogManager.getLogger(UpdateGlobalLoadBalancerRuleCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(UpdateGlobalLoadBalancerRuleCmd.class.getName());
 
 
     // ///////////////////////////////////////////////////

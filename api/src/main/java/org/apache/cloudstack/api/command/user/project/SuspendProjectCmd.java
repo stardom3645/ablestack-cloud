@@ -39,7 +39,7 @@ import com.cloud.projects.Project;
 @APICommand(name = "suspendProject", description = "Suspends a project", responseObject = ProjectResponse.class, since = "3.0.0",
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class SuspendProjectCmd extends BaseAsyncCmd {
-    protected static Logger s_logger = LogManager.getLogger(SuspendProjectCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(SuspendProjectCmd.class.getName());
 
 
     /////////////////////////////////////////////////////

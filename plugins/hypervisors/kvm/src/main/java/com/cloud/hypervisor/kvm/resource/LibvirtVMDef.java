@@ -33,7 +33,7 @@ import com.cloud.agent.properties.AgentProperties;
 import com.cloud.agent.properties.AgentPropertiesFileHandler;
 
 public class LibvirtVMDef {
-    protected static Logger s_logger = LogManager.getLogger(LibvirtVMDef.class);
+    protected static Logger logger = LogManager.getLogger(LibvirtVMDef.class);
 
     private String _hvsType;
     private static long s_libvirtVersion;
@@ -890,7 +890,7 @@ public class LibvirtVMDef {
 
         public void defISODisk(String volPath, Integer devId, String diskLabel) {
             if (devId == null && StringUtils.isBlank(diskLabel)) {
-                s_logger.debug(String.format("No ID or label informed for volume [%s].", volPath));
+                logger.debug(String.format("No ID or label informed for volume [%s].", volPath));
                 defISODisk(volPath);
                 return;
             }
@@ -900,11 +900,11 @@ public class LibvirtVMDef {
             _sourcePath = volPath;
 
             if (StringUtils.isNotBlank(diskLabel)) {
-                s_logger.debug(String.format("Using informed label [%s] for volume [%s].", diskLabel, volPath));
+                logger.debug(String.format("Using informed label [%s] for volume [%s].", diskLabel, volPath));
                 _diskLabel = diskLabel;
             } else {
                 _diskLabel = getDevLabel(devId, DiskBus.IDE, true);
-                s_logger.debug(String.format("Using device ID [%s] to define the label [%s] for volume [%s].", devId, _diskLabel, volPath));
+                logger.debug(String.format("Using device ID [%s] to define the label [%s] for volume [%s].", devId, _diskLabel, volPath));
             }
 
             _diskFmtType = DiskFmtType.RAW;
@@ -2121,7 +2121,7 @@ public class LibvirtVMDef {
                     field = fieldClass.newInstance();
                     customNodes.put(field.getClass().getName(), field);
                 } catch (InstantiationException | IllegalAccessException e) {
-                    s_logger.debug("No default constructor available in class " + fieldClass.getName() + ", ignoring exception", e);
+                    logger.debug("No default constructor available in class " + fieldClass.getName() + ", ignoring exception", e);
                 }
             }
             return field;

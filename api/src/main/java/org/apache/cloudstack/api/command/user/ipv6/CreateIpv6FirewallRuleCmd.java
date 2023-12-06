@@ -51,7 +51,7 @@ import com.cloud.utils.net.NetUtils;
         responseHasSensitiveInfo = false,
         authorized = {RoleType.Admin, RoleType.ResourceAdmin, RoleType.DomainAdmin, RoleType.User})
 public class CreateIpv6FirewallRuleCmd extends BaseAsyncCreateCmd {
-    protected static Logger s_logger = LogManager.getLogger(CreateIpv6FirewallRuleCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(CreateIpv6FirewallRuleCmd.class.getName());
 
 
     // ///////////////////////////////////////////////////
@@ -225,7 +225,7 @@ public class CreateIpv6FirewallRuleCmd extends BaseAsyncCreateCmd {
             setEntityId(result.getId());
             setEntityUuid(result.getUuid());
         } catch (NetworkRuleConflictException e) {
-            s_logger.trace("Network Rule Conflict: ", e);
+            logger.trace("Network Rule Conflict: ", e);
             throw new ServerApiException(ApiErrorCode.NETWORK_RULE_CONFLICT_ERROR, e.getMessage(), e);
         }
     }

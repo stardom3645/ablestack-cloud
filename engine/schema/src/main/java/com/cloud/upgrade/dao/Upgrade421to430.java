@@ -31,7 +31,7 @@ import com.cloud.utils.crypt.DBEncryptionUtil;
 import com.cloud.utils.exception.CloudRuntimeException;
 
 public class Upgrade421to430 implements DbUpgrade {
-    final static Logger s_logger = LogManager.getLogger(Upgrade421to430.class);
+    final static Logger logger = LogManager.getLogger(Upgrade421to430.class);
 
     @Override
     public String[] getUpgradableVersionRange() {
@@ -89,11 +89,11 @@ public class Upgrade421to430 implements DbUpgrade {
         } catch (SQLException e) {
             throw new CloudRuntimeException("Unable to upgrade ram_size of service offering for secondary storage vm. ", e);
         }
-        s_logger.debug("Done upgrading RAM for service offering of Secondary Storage VM to " + newRamSize);
+        logger.debug("Done upgrading RAM for service offering of Secondary Storage VM to " + newRamSize);
     }
 
     private void encryptImageStoreDetails(Connection conn) {
-        s_logger.debug("Encrypting image store details");
+        logger.debug("Encrypting image store details");
         try (
                 PreparedStatement selectPstmt = conn.prepareStatement("select id, value from `cloud`.`image_store_details` where name = 'key' or name = 'secretkey'");
                 ResultSet rs = selectPstmt.executeQuery();
@@ -116,7 +116,7 @@ public class Upgrade421to430 implements DbUpgrade {
         } catch (UnsupportedEncodingException e) {
             throw new CloudRuntimeException("Unable encrypt image_store_details values ", e);
         }
-        s_logger.debug("Done encrypting image_store_details");
+        logger.debug("Done encrypting image_store_details");
     }
 
     @Override

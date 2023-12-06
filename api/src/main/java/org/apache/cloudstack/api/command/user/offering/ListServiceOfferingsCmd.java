@@ -31,7 +31,7 @@ import org.apache.cloudstack.api.response.UserVmResponse;
 @APICommand(name = "listServiceOfferings", description = "Lists all available service offerings.", responseObject = ServiceOfferingResponse.class,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class ListServiceOfferingsCmd extends BaseListDomainResourcesCmd {
-    protected static Logger s_logger = LogManager.getLogger(ListServiceOfferingsCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(ListServiceOfferingsCmd.class.getName());
 
 
     /////////////////////////////////////////////////////

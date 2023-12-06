@@ -47,7 +47,7 @@ import com.cloud.utils.db.SearchCriteria;
 
 @Component
 public class DataCenterJoinDaoImpl extends GenericDaoBase<DataCenterJoinVO, Long> implements DataCenterJoinDao {
-    protected static Logger s_logger = LogManager.getLogger(DataCenterJoinDaoImpl.class);
+    protected static Logger logger = LogManager.getLogger(DataCenterJoinDaoImpl.class);
 
     private SearchBuilder<DataCenterJoinVO> dofIdSearch;
     @Inject

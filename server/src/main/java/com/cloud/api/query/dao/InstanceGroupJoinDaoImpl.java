@@ -40,7 +40,7 @@ import javax.inject.Inject;
 
 @Component
 public class InstanceGroupJoinDaoImpl extends GenericDaoBase<InstanceGroupJoinVO, Long> implements InstanceGroupJoinDao {
-    protected static Logger s_logger = LogManager.getLogger(InstanceGroupJoinDaoImpl.class);
+    protected static Logger logger = LogManager.getLogger(InstanceGroupJoinDaoImpl.class);
 
     private SearchBuilder<InstanceGroupJoinVO> vrIdSearch;
 

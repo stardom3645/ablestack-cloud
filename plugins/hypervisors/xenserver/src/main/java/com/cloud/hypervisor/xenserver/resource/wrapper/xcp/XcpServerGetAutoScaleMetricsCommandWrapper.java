@@ -37,7 +37,7 @@ import java.util.List;
 @ResourceWrapper(handles = GetAutoScaleMetricsCommand.class)
 public final class XcpServerGetAutoScaleMetricsCommandWrapper extends CommandWrapper<GetAutoScaleMetricsCommand, Answer, XcpServerResource> {
 
-    protected static Logger s_logger = LogManager.getLogger(XcpServerGetAutoScaleMetricsCommandWrapper.class);
+    protected static Logger logger = LogManager.getLogger(XcpServerGetAutoScaleMetricsCommandWrapper.class);
 
     @Override
     public Answer execute(final GetAutoScaleMetricsCommand command, final XcpServerResource xcpServer) {
@@ -78,7 +78,7 @@ public final class XcpServerGetAutoScaleMetricsCommandWrapper extends CommandWra
 
             return new GetAutoScaleMetricsAnswer(command, true, values);
         } catch (final Exception ex) {
-            s_logger.warn("Failed to get autoscale metrics due to ", ex);
+            logger.warn("Failed to get autoscale metrics due to ", ex);
             return new GetAutoScaleMetricsAnswer(command, false);
         }
     }

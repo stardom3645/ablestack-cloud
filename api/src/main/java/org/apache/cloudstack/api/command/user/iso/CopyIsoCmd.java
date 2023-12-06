@@ -27,6 +27,6 @@ import org.apache.cloudstack.api.response.TemplateResponse;
 @APICommand(name = "copyIso", description = "Copies an ISO from one zone to another.", responseObject = TemplateResponse.class, responseView = ResponseView.Restricted,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class CopyIsoCmd extends CopyTemplateCmd {
-    protected static Logger s_logger = LogManager.getLogger(CopyIsoCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(CopyIsoCmd.class.getName());
     private static final String s_name = "copyisoresponse";
 }

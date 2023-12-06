@@ -31,7 +31,7 @@ import com.cloud.user.Account;
 @APICommand(name = "listUsageTypes", description = "List Usage Types", responseObject = UsageTypeResponse.class,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class ListUsageTypesCmd extends BaseCmd {
-    protected static Logger s_logger = LogManager.getLogger(ListUsageTypesCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(ListUsageTypesCmd.class.getName());
 
     @Override
     public long getEntityOwnerId() {

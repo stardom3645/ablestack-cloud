@@ -49,7 +49,7 @@ import com.cloud.user.Account;
 @APICommand(name = "createVPCOffering", description = "Creates VPC offering", responseObject = VpcOfferingResponse.class,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class CreateVPCOfferingCmd extends BaseAsyncCreateCmd {
-    protected static Logger s_logger = LogManager.getLogger(CreateVPCOfferingCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(CreateVPCOfferingCmd.class.getName());
 
     /////////////////////////////////////////////////////
     //////////////// API parameters /////////////////////
@@ -132,8 +132,8 @@ public class CreateVPCOfferingCmd extends BaseAsyncCreateCmd {
             Iterator<? extends Map<String, String>> iter = servicesCollection.iterator();
             while (iter.hasNext()) {
                 Map<String, String> obj = iter.next();
-                if (s_logger.isTraceEnabled()) {
-                    s_logger.trace("service provider entry specified: " + obj);
+                if (logger.isTraceEnabled()) {
+                    logger.trace("service provider entry specified: " + obj);
                 }
                 HashMap<String, String> services = (HashMap<String, String>)obj;
                 String service = services.get("service");

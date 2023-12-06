@@ -42,7 +42,7 @@ import com.cloud.network.RemoteAccessVpn;
 @APICommand(name = "createRemoteAccessVpn", description = "Creates a l2tp/ipsec remote access vpn", responseObject = RemoteAccessVpnResponse.class, entityType = {RemoteAccessVpn.class},
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class CreateRemoteAccessVpnCmd extends BaseAsyncCreateCmd {
-    protected static Logger s_logger = LogManager.getLogger(CreateRemoteAccessVpnCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(CreateRemoteAccessVpnCmd.class.getName());
 
 
     /////////////////////////////////////////////////////
@@ -149,8 +149,8 @@ public class CreateRemoteAccessVpnCmd extends BaseAsyncCreateCmd {
                 throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, "Failed to create remote access vpn");
             }
         } catch (NetworkRuleConflictException e) {
-            s_logger.info("Network rule conflict: " + e.getMessage());
-            s_logger.trace("Network Rule Conflict: ", e);
+            logger.info("Network rule conflict: " + e.getMessage());
+            logger.trace("Network Rule Conflict: ", e);
             throw new ServerApiException(ApiErrorCode.NETWORK_RULE_CONFLICT_ERROR, e.getMessage());
         }
     }
@@ -167,7 +167,7 @@ public class CreateRemoteAccessVpnCmd extends BaseAsyncCreateCmd {
                 throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, "Failed to create remote access vpn");
             }
         } catch (ResourceUnavailableException ex) {
-            s_logger.warn("Exception: ", ex);
+            logger.warn("Exception: ", ex);
             throw new ServerApiException(ApiErrorCode.RESOURCE_UNAVAILABLE_ERROR, ex.getMessage());
         }
     }

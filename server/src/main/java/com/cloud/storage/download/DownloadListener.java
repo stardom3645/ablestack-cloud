@@ -96,7 +96,7 @@ public class DownloadListener implements Listener {
         }
     }
 
-    protected static Logger s_logger = LogManager.getLogger(DownloadListener.class.getName());
+    protected static Logger logger = LogManager.getLogger(DownloadListener.class.getName());
     public static final int SMALL_DELAY = 100;
     public static final long STATUS_POLL_INTERVAL = 10000L;
 
@@ -175,7 +175,7 @@ public class DownloadListener implements Listener {
 
     public void sendCommand(RequestType reqType) {
         if (getJobId() != null) {
-            if (s_logger.isTraceEnabled()) {
+            if (logger.isTraceEnabled()) {
                 log("Sending progress command ", Level.TRACE);
             }
             try {
@@ -187,7 +187,7 @@ public class DownloadListener implements Listener {
                 }
                 _ssAgent.sendMessageAsync(dcmd, new UploadListener.Callback(_ssAgent.getId(), this));
             } catch (Exception e) {
-                s_logger.debug("Send command failed", e);
+                logger.debug("Send command failed", e);
                 setDisconnected();
             }
         }
@@ -203,11 +203,11 @@ public class DownloadListener implements Listener {
     }
 
     public void logDisconnect() {
-        s_logger.warn("Unable to monitor download progress of " + object.getType() + ": " + object.getId() + " at host " + _ssAgent.getId());
+        logger.warn("Unable to monitor download progress of " + object.getType() + ": " + object.getId() + " at host " + _ssAgent.getId());
     }
 
     public void log(String message, Level level) {
-        s_logger.log(level, message + ", " + object.getType() + ": " + object.getId() + " at host " + _ssAgent.getId());
+        logger.log(level, message + ", " + object.getType() + ": " + object.getId() + " at host " + _ssAgent.getId());
     }
 
     public DownloadListener(DownloadMonitorImpl monitor) {
@@ -305,7 +305,7 @@ public class DownloadListener implements Listener {
                     _imageSrv.handleTemplateSync(store);
                 }
             }catch (Exception e){
-                s_logger.error("Caught exception while doing template/volume sync ", e);
+                logger.error("Caught exception while doing template/volume sync ", e);
             }
         }
     }
@@ -358,7 +358,7 @@ public class DownloadListener implements Listener {
 
         _timeoutTask = new TimeoutTask(this);
         _timer.schedule(_timeoutTask, delay);
-        if (s_logger.isDebugEnabled()) {
+        if (logger.isDebugEnabled()) {
             log("Scheduling timeout at " + delay + " ms", Level.DEBUG);
         }
     }

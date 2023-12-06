@@ -41,7 +41,7 @@ import com.cloud.utils.Pair;
 @APICommand(name = "listVlanIpRanges", description = "Lists all VLAN IP ranges.", responseObject = VlanIpRangeResponse.class,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class ListVlanIpRangesCmd extends BaseListCmd {
-    protected static Logger s_logger = LogManager.getLogger(ListVlanIpRangesCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(ListVlanIpRangesCmd.class.getName());
 
 
     /////////////////////////////////////////////////////

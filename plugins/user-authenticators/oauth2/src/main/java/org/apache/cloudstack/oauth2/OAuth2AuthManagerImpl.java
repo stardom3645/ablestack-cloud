@@ -45,7 +45,7 @@ import java.util.List;
 import java.util.Map;
 
 public class OAuth2AuthManagerImpl extends ManagerBase implements OAuth2AuthManager, Manager, Configurable {
-    protected static Logger s_logger = LogManager.getLogger(OAuth2AuthManagerImpl.class);
+    protected static Logger logger = LogManager.getLogger(OAuth2AuthManagerImpl.class);
     @Inject
     private UserDao _userDao;
 
@@ -68,10 +68,10 @@ public class OAuth2AuthManagerImpl extends ManagerBase implements OAuth2AuthMana
     @Override
     public boolean start() {
         if (isOAuthPluginEnabled()) {
-            s_logger.info("OAUTH plugin loaded");
+            logger.info("OAUTH plugin loaded");
             initializeUserOAuth2AuthenticationProvidersMap();
         } else {
-            s_logger.info("OAUTH plugin not enabled so not loading");
+            logger.info("OAUTH plugin not enabled so not loading");
         }
         return true;
     }

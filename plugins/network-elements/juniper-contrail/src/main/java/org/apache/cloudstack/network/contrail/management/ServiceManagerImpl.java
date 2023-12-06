@@ -64,7 +64,7 @@ import net.juniper.contrail.api.ApiConnector;
 import net.juniper.contrail.api.types.ServiceInstance;
 
 public class ServiceManagerImpl implements ServiceManager {
-    protected static Logger s_logger = LogManager.getLogger(ServiceManager.class);
+    protected static Logger logger = LogManager.getLogger(ServiceManager.class);
 
     @Inject
     UserDao _userDao;
@@ -141,7 +141,7 @@ public class ServiceManagerImpl implements ServiceManager {
     @Override
     public ServiceVirtualMachine createServiceInstance(DataCenter zone, Account owner, VirtualMachineTemplate template, ServiceOffering serviceOffering, String name,
         Network left, Network right) {
-        s_logger.debug("createServiceInstance by " + owner.getAccountName());
+        logger.debug("createServiceInstance by " + owner.getAccountName());
         // TODO: permission model.
         // service instances need to be able to access the public network.
         if (left.getTrafficType() == TrafficType.Guest) {
@@ -167,7 +167,7 @@ public class ServiceManagerImpl implements ServiceManager {
         try {
             project = _manager.getVncProject(owner.getDomainId(), owner.getAccountId());
         } catch (IOException ex) {
-            s_logger.warn("read project", ex);
+            logger.warn("read project", ex);
             throw new CloudRuntimeException(ex);
         }
 
@@ -177,7 +177,7 @@ public class ServiceManagerImpl implements ServiceManager {
                 throw new InvalidParameterValueException("service-instance " + name + " already exists uuid=" + srvid);
             }
         } catch (IOException ex) {
-            s_logger.warn("service-instance lookup", ex);
+            logger.warn("service-instance lookup", ex);
             throw new CloudRuntimeException(ex);
         }
 
@@ -188,18 +188,18 @@ public class ServiceManagerImpl implements ServiceManager {
         try {
             serviceModel.update(_manager.getModelController());
         } catch (Exception ex) {
-            s_logger.warn("service-instance update", ex);
+            logger.warn("service-instance update", ex);
             throw new CloudRuntimeException(ex);
         }
 
-        s_logger.debug("service-instance object created");
+        logger.debug("service-instance object created");
 
         ServiceInstance siObj;
         try {
             _manager.getDatabase().getServiceInstances().add(serviceModel);
             siObj = serviceModel.getServiceInstance();
         } catch (Exception ex) {
-            s_logger.warn("DB add", ex);
+            logger.warn("DB add", ex);
             throw new CloudRuntimeException(ex);
         }
 
@@ -207,7 +207,7 @@ public class ServiceManagerImpl implements ServiceManager {
         String svmName = name.replace(" ", "_") + "-1";
         ServiceVirtualMachine svm = createServiceVM(zone, owner, template, serviceOffering, svmName, siObj, left, right);
 
-        s_logger.debug("created VMInstance " + svm.getUuid());
+        logger.debug("created VMInstance " + svm.getUuid());
 
         // 3. Create the virtual-machine model and push the update.
         VirtualMachineModel instanceModel = new VirtualMachineModel(svm, svm.getUuid());
@@ -216,7 +216,7 @@ public class ServiceManagerImpl implements ServiceManager {
             instanceModel.setServiceInstance(_manager.getModelController(), svm, serviceModel);
             instanceModel.update(_manager.getModelController());
         } catch (Exception ex) {
-            s_logger.warn("service virtual-machine update", ex);
+            logger.warn("service virtual-machine update", ex);
             throw new CloudRuntimeException(ex);
         }
 
@@ -225,7 +225,7 @@ public class ServiceManagerImpl implements ServiceManager {
 
     @Override
     public void startServiceInstance(long instanceId) {
-        s_logger.debug("start service instance " + instanceId);
+        logger.debug("start service instance " + instanceId);
 
         UserVmVO vm = _vmDao.findById(instanceId);
         _vmManager.start(vm.getUuid(), null);
@@ -233,7 +233,7 @@ public class ServiceManagerImpl implements ServiceManager {
 
     @Override
     public ServiceInstanceResponse createServiceInstanceResponse(long instanceId) {
-        s_logger.debug("ServiceInstance response for id: " + instanceId);
+        logger.debug("ServiceInstance response for id: " + instanceId);
 
         UserVmVO vm = _vmDao.findById(instanceId);
         ServiceInstanceResponse response = new ServiceInstanceResponse();

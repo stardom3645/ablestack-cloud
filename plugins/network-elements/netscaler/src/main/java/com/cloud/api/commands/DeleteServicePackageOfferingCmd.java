@@ -41,7 +41,7 @@ import com.cloud.utils.exception.CloudRuntimeException;
 @APICommand(name = "deleteServicePackageOffering", responseObject = SuccessResponse.class, description = "Delete Service Package")
 public class DeleteServicePackageOfferingCmd extends BaseCmd {
 
-    protected static Logger s_logger = LogManager.getLogger(DeleteServicePackageOfferingCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(DeleteServicePackageOfferingCmd.class.getName());
     private static final String s_name = "deleteServicePackage";
     @Inject
     NetscalerLoadBalancerElementService _netsclarLbService;

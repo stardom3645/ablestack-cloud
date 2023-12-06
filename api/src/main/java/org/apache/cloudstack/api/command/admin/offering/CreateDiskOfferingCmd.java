@@ -48,7 +48,7 @@ import com.cloud.user.Account;
 @APICommand(name = "createDiskOffering", description = "Creates a disk offering.", responseObject = DiskOfferingResponse.class,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class CreateDiskOfferingCmd extends BaseCmd {
-    protected static Logger s_logger = LogManager.getLogger(CreateDiskOfferingCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(CreateDiskOfferingCmd.class.getName());
 
 
     /////////////////////////////////////////////////////

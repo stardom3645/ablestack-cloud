@@ -34,7 +34,7 @@ import com.cloud.utils.script.Script;
 @Component
 public class LocalNfsSecondaryStorageResource extends NfsSecondaryStorageResource {
 
-    protected static Logger s_logger = LogManager.getLogger(LocalNfsSecondaryStorageResource.class);
+    protected static Logger logger = LogManager.getLogger(LocalNfsSecondaryStorageResource.class);
 
     public LocalNfsSecondaryStorageResource() {
         this._dlMgr = new DownloadManagerImpl();
@@ -61,7 +61,7 @@ public class LocalNfsSecondaryStorageResource extends NfsSecondaryStorageResourc
             return _parent + "/" + dir;
         } catch (Exception e) {
             String msg = "GetRootDir for " + secUrl + " failed due to " + e.toString();
-            s_logger.error(msg, e);
+            logger.error(msg, e);
             throw new CloudRuntimeException(msg);
         }
     }
@@ -77,15 +77,15 @@ public class LocalNfsSecondaryStorageResource extends NfsSecondaryStorageResourc
         attemptMount(localRootPath, remoteDevice, uri, nfsVersion);
 
         // Change permissions for the mountpoint - seems to bypass authentication
-        Script script = new Script(true, "chmod", _timeout, s_logger);
+        Script script = new Script(true, "chmod", _timeout, logger);
         script.add("777", localRootPath);
         String result = script.execute();
         if (result != null) {
             String errMsg = "Unable to set permissions for " + localRootPath + " due to " + result;
-            s_logger.error(errMsg);
+            logger.error(errMsg);
             throw new CloudRuntimeException(errMsg);
         }
-        s_logger.debug("Successfully set 777 permission for " + localRootPath);
+        logger.debug("Successfully set 777 permission for " + localRootPath);
 
         // XXX: Adding the check for creation of snapshots dir here. Might have
         // to move it somewhere more logical later.

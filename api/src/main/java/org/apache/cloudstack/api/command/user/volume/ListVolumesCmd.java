@@ -44,7 +44,7 @@ import com.cloud.storage.Volume;
 @APICommand(name = "listVolumes", description = "Lists all volumes.", responseObject = VolumeResponse.class, responseView = ResponseView.Restricted, entityType = {
         Volume.class}, requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class ListVolumesCmd extends BaseListRetrieveOnlyResourceCountCmd implements UserCmd {
-    protected static Logger s_logger = LogManager.getLogger(ListVolumesCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(ListVolumesCmd.class.getName());
 
     private static final String s_name = "listvolumesresponse";
 

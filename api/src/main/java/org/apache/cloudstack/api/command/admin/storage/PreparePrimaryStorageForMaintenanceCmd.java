@@ -38,7 +38,7 @@ import com.cloud.user.Account;
 @APICommand(name = "enableStorageMaintenance", description = "Puts storage pool into maintenance state", responseObject = StoragePoolResponse.class,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class PreparePrimaryStorageForMaintenanceCmd extends BaseAsyncCmd {
-    protected static Logger s_logger = LogManager.getLogger(PreparePrimaryStorageForMaintenanceCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(PreparePrimaryStorageForMaintenanceCmd.class.getName());
     private static final String s_name = "prepareprimarystorageformaintenanceresponse";
 
     /////////////////////////////////////////////////////

@@ -41,7 +41,7 @@ import javax.inject.Inject;
 @APICommand(name = CreateTungstenFabricTagCmd.APINAME, description = "create Tungsten-Fabric tag",
     responseObject = TungstenFabricTagResponse.class, requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class CreateTungstenFabricTagCmd extends BaseAsyncCmd {
-    protected static Logger s_logger = LogManager.getLogger(CreateTungstenFabricTagCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(CreateTungstenFabricTagCmd.class.getName());
     public static final String APINAME = "createTungstenFabricTag";
 
     @Inject

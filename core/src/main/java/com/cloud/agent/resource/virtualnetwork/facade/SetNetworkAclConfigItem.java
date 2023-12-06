@@ -42,7 +42,7 @@ import com.cloud.utils.net.NetUtils;
 
 public class SetNetworkAclConfigItem extends AbstractConfigItemFacade {
 
-    protected static Logger s_logger = LogManager.getLogger(SetNetworkAclConfigItem.class.getName());
+    protected static Logger logger = LogManager.getLogger(SetNetworkAclConfigItem.class.getName());
 
     @Override
     public List<ConfigItem> generateConfig(final NetworkElementCommand cmd) {
@@ -82,7 +82,7 @@ public class SetNetworkAclConfigItem extends AbstractConfigItemFacade {
                 try {
                     aclRule = new ProtocolAclRule(ruleParts[4], "ACCEPT".equals(ruleParts[5]), Integer.parseInt(ruleParts[1]));
                 } catch (final Exception e) {
-                    s_logger.warn("Problem occurred when reading the entries in the ruleParts array. Actual array size is '" + ruleParts.length + "', but trying to read from index 5.");
+                    logger.warn("Problem occurred when reading the entries in the ruleParts array. Actual array size is '" + ruleParts.length + "', but trying to read from index 5.");
                     continue;
                 }
             }

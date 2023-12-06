@@ -37,7 +37,7 @@ import com.cloud.utils.exception.CloudRuntimeException;
 @APICommand(name = "registerNetscalerServicePackage", responseObject = NetScalerServicePackageResponse.class, description = "Registers NCC Service Package")
 public class RegisterServicePackageCmd extends BaseCmd {
 
-    protected static Logger s_logger = LogManager.getLogger(RegisterServicePackageCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(RegisterServicePackageCmd.class.getName());
     private static final String s_name = "registerNetscalerServicePackage";
 
     @Inject

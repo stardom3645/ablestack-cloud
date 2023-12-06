@@ -38,7 +38,7 @@ import com.cloud.network.rules.FirewallRule.TrafficType;
 @APICommand(name = "updateEgressFirewallRule", description = "Updates egress firewall rule ", responseObject = FirewallResponse.class, since = "4.4",
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class UpdateEgressFirewallRuleCmd extends BaseAsyncCustomIdCmd {
-    protected static Logger s_logger = LogManager.getLogger(UpdateEgressFirewallRuleCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(UpdateEgressFirewallRuleCmd.class.getName());
 
 
     // ///////////////////////////////////////////////////

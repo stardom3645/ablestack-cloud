@@ -44,7 +44,7 @@ import com.cloud.utils.exception.CloudRuntimeException;
 @APICommand(name = "addPaloAltoFirewall", responseObject = PaloAltoFirewallResponse.class, description = "Adds a Palo Alto firewall device",
         requestHasSensitiveInfo = true, responseHasSensitiveInfo = false)
 public class AddPaloAltoFirewallCmd extends BaseAsyncCmd {
-    protected static Logger s_logger = LogManager.getLogger(AddPaloAltoFirewallCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(AddPaloAltoFirewallCmd.class.getName());
     @Inject
     PaloAltoFirewallElementService _paFwService;
 

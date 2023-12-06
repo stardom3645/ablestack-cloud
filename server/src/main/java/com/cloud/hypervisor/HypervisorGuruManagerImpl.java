@@ -35,7 +35,7 @@ import com.cloud.utils.component.ManagerBase;
 
 @Component
 public class HypervisorGuruManagerImpl extends ManagerBase implements HypervisorGuruManager {
-    protected static Logger s_logger = LogManager.getLogger(HypervisorGuruManagerImpl.class.getName());
+    protected static Logger logger = LogManager.getLogger(HypervisorGuruManagerImpl.class.getName());
 
     @Inject
     HostDao _hostDao;

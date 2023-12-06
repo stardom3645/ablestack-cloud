@@ -38,7 +38,7 @@ import com.cloud.utils.Ternary;
 @APICommand(name = "findHostsForMigration", description = "Find hosts suitable for migrating a virtual machine.", responseObject = HostForMigrationResponse.class,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class FindHostsForMigrationCmd extends BaseListCmd {
-    protected static Logger s_logger = LogManager.getLogger(FindHostsForMigrationCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(FindHostsForMigrationCmd.class.getName());
 
 
     /////////////////////////////////////////////////////

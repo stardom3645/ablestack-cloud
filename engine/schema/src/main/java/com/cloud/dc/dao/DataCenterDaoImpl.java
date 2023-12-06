@@ -56,7 +56,7 @@ import com.cloud.utils.db.TransactionLegacy;
  **/
 @Component
 public class DataCenterDaoImpl extends GenericDaoBase<DataCenterVO, Long> implements DataCenterDao {
-    protected static Logger s_logger = LogManager.getLogger(DataCenterDaoImpl.class);
+    protected static Logger logger = LogManager.getLogger(DataCenterDaoImpl.class);
 
     protected SearchBuilder<DataCenterVO> NameSearch;
     protected SearchBuilder<DataCenterVO> ListZonesByDomainIdSearch;
@@ -410,7 +410,7 @@ public class DataCenterDaoImpl extends GenericDaoBase<DataCenterVO, Long> implem
                     Long dcId = Long.parseLong(tokenOrIdOrName);
                     return findById(dcId);
                 } catch (NumberFormatException nfe) {
-                    s_logger.debug("Cannot parse " + tokenOrIdOrName + " into long. " + nfe);
+                    logger.debug("Cannot parse " + tokenOrIdOrName + " into long. " + nfe);
                 }
             }
         }

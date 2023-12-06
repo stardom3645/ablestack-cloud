@@ -32,7 +32,7 @@ import com.cloud.utils.db.TransactionLegacy;
 
 @Component
 public class FirewallRulesCidrsDaoImpl extends GenericDaoBase<FirewallRulesCidrsVO, Long> implements FirewallRulesCidrsDao {
-    protected static Logger s_logger = LogManager.getLogger(FirewallRulesCidrsDaoImpl.class);
+    protected static Logger logger = LogManager.getLogger(FirewallRulesCidrsDaoImpl.class);
     protected final SearchBuilder<FirewallRulesCidrsVO> CidrsSearch;
 
     protected FirewallRulesCidrsDaoImpl() {

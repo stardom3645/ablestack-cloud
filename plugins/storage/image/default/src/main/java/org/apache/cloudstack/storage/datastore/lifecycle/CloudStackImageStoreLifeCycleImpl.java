@@ -52,7 +52,7 @@ import com.cloud.utils.UriUtils;
 
 public class CloudStackImageStoreLifeCycleImpl implements ImageStoreLifeCycle {
 
-    protected static Logger s_logger = LogManager.getLogger(CloudStackImageStoreLifeCycleImpl.class);
+    protected static Logger logger = LogManager.getLogger(CloudStackImageStoreLifeCycleImpl.class);
     @Inject
     protected ResourceManager _resourceMgr;
     @Inject
@@ -96,7 +96,7 @@ public class CloudStackImageStoreLifeCycleImpl implements ImageStoreLifeCycle {
         } else {
             logString = StringUtils.cleanString(url);
         }
-        s_logger.info("Trying to add a new data store at " + logString + " to data center " + dcId);
+        logger.info("Trying to add a new data store at " + logString + " to data center " + dcId);
 
         URI uri = null;
         try {

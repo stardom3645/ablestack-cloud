@@ -37,7 +37,7 @@ import com.cloud.user.Account;
             requestHasSensitiveInfo = false,
             responseHasSensitiveInfo = false)
 public class UpdateHypervisorCapabilitiesCmd extends BaseCmd {
-    protected static Logger s_logger = LogManager.getLogger(UpdateHypervisorCapabilitiesCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(UpdateHypervisorCapabilitiesCmd.class.getName());
 
     /////////////////////////////////////////////////////
     //////////////// API parameters /////////////////////

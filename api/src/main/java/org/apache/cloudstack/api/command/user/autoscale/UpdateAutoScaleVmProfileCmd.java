@@ -47,7 +47,7 @@ import com.cloud.user.Account;
 @APICommand(name = "updateAutoScaleVmProfile", description = "Updates an existing autoscale vm profile.", responseObject = AutoScaleVmProfileResponse.class, entityType = {AutoScaleVmProfile.class},
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class UpdateAutoScaleVmProfileCmd extends BaseAsyncCustomIdCmd {
-    protected static Logger s_logger = LogManager.getLogger(UpdateAutoScaleVmProfileCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(UpdateAutoScaleVmProfileCmd.class.getName());
 
 
     // ///////////////////////////////////////////////////

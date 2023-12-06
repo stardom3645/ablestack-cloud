@@ -33,7 +33,7 @@ import com.cloud.utils.db.SearchCriteria;
 
 @Component
 public class ProjectAccountJoinDaoImpl extends GenericDaoBase<ProjectAccountJoinVO, Long> implements ProjectAccountJoinDao {
-    protected static Logger s_logger = LogManager.getLogger(ProjectAccountJoinDaoImpl.class);
+    protected static Logger logger = LogManager.getLogger(ProjectAccountJoinDaoImpl.class);
 
     private SearchBuilder<ProjectAccountJoinVO> paIdSearch;
 

@@ -47,7 +47,7 @@ import java.util.Map;
  */
 public class VhdProcessor extends AdapterBase implements Processor {
 
-    protected static Logger s_logger = LogManager.getLogger(VhdProcessor.class);
+    protected static Logger logger = LogManager.getLogger(VhdProcessor.class);
     StorageLayer _storage;
     private int vhdFooterSize = 512;
     private int vhdCookieOffset = 8;
@@ -65,13 +65,13 @@ public class VhdProcessor extends AdapterBase implements Processor {
     @Override
     public FormatInfo process(String templatePath, ImageFormat format, String templateName, long processTimeout) throws InternalErrorException {
         if (format != null) {
-            s_logger.debug("We currently don't handle conversion from " + format + " to VHD.");
+            logger.debug("We currently don't handle conversion from " + format + " to VHD.");
             return null;
         }
 
         String vhdPath = templatePath + File.separator + templateName + "." + ImageFormat.VHD.getFileExtension();
         if (!_storage.exists(vhdPath)) {
-            s_logger.debug("Unable to find the vhd file: " + vhdPath);
+            logger.debug("Unable to find the vhd file: " + vhdPath);
             return null;
         }
 
@@ -85,7 +85,7 @@ public class VhdProcessor extends AdapterBase implements Processor {
         try {
             info.virtualSize = getTemplateVirtualSize(vhdFile);
         } catch (IOException e) {
-            s_logger.error("Unable to get the virtual size for " + vhdPath);
+            logger.error("Unable to get the virtual size for " + vhdPath);
             throw new InternalErrorException("unable to get virtual size from vhd file");
         }
 
@@ -98,7 +98,7 @@ public class VhdProcessor extends AdapterBase implements Processor {
             long size = getTemplateVirtualSize(file);
             return size;
         } catch (Exception e) {
-            s_logger.info("[ignored]" + "failed to get template virtual size for VHD: " + e.getLocalizedMessage());
+            logger.info("[ignored]" + "failed to get template virtual size for VHD: " + e.getLocalizedMessage());
         }
         return file.length();
     }
@@ -118,7 +118,7 @@ public class VhdProcessor extends AdapterBase implements Processor {
             try {
                 strm = new CompressorStreamFactory().createCompressorInputStream(fileStream);
             } catch (CompressorException e) {
-                s_logger.info("error opening compressed VHD file " + file.getName());
+                logger.info("error opening compressed VHD file " + file.getName());
                 return file.length();
             }
         } try {
@@ -147,7 +147,7 @@ public class VhdProcessor extends AdapterBase implements Processor {
                 throw new IOException("Unexpected end-of-file");
             }
         } catch (IOException e) {
-            s_logger.warn("Error reading virtual size from VHD file " + e.getMessage() + " VHD: " + file.getName());
+            logger.warn("Error reading virtual size from VHD file " + e.getMessage() + " VHD: " + file.getName());
             return file.length();
         } finally {
             if (strm != null) {
@@ -181,11 +181,11 @@ public class VhdProcessor extends AdapterBase implements Processor {
             cin = new CompressorStreamFactory().createCompressorInputStream(bin);
 
         } catch (CompressorException e) {
-            s_logger.warn(e.getMessage());
+            logger.warn(e.getMessage());
             return false;
 
         } catch (FileNotFoundException e) {
-            s_logger.warn(e.getMessage());
+            logger.warn(e.getMessage());
             return false;
         } finally {
             if (cin != null)

@@ -21,7 +21,7 @@ import java.util.List;
 @APICommand(name = "downloadEvents", description = "Download one or more events.", responseObject = SuccessResponse.class, entityType = {Event.class},
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class DownloadEventsCmd extends BaseCmd {
-    protected static Logger s_logger = LogManager.getLogger(DownloadEventsCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(DownloadEventsCmd.class.getName());
 
     private static final String s_name = "downloadeventsresponse";
 

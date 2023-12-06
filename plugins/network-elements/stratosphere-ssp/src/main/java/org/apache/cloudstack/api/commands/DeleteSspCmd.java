@@ -39,7 +39,7 @@ import com.cloud.exception.ResourceUnavailableException;
 @APICommand(name = "deleteStratosphereSsp", responseObject = SuccessResponse.class, description = "Removes stratosphere ssp server",
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class DeleteSspCmd extends BaseCmd {
-    protected static Logger s_logger = LogManager.getLogger(DeleteSspCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(DeleteSspCmd.class.getName());
     @Inject
     SspService _service;
 
@@ -59,7 +59,7 @@ public class DeleteSspCmd extends BaseCmd {
     @Override
     public void execute() throws ResourceUnavailableException, InsufficientCapacityException, ConcurrentOperationException, ResourceAllocationException,
         NetworkRuleConflictException {
-        s_logger.trace("execute");
+        logger.trace("execute");
         SuccessResponse resp = new SuccessResponse();
         resp.setSuccess(_service.deleteSspHost(this));
         this.setResponseObject(resp);

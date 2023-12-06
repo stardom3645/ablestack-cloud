@@ -35,7 +35,7 @@ import com.cloud.utils.exception.CloudRuntimeException;
 @ResourceWrapper(handles =  DestroyCommand.class)
 public final class LibvirtDestroyCommandWrapper extends CommandWrapper<DestroyCommand, Answer, LibvirtComputingResource> {
 
-    protected static Logger s_logger = LogManager.getLogger(LibvirtDestroyCommandWrapper.class);
+    protected static Logger logger = LogManager.getLogger(LibvirtDestroyCommandWrapper.class);
 
     @Override
     public Answer execute(final DestroyCommand command, final LibvirtComputingResource libvirtComputingResource) {
@@ -46,7 +46,7 @@ public final class LibvirtDestroyCommandWrapper extends CommandWrapper<DestroyCo
             pool.deletePhysicalDisk(vol.getPath(), null);
             return new Answer(command, true, "Success");
         } catch (final CloudRuntimeException e) {
-            s_logger.debug("Failed to delete volume: " + e.toString());
+            logger.debug("Failed to delete volume: " + e.toString());
             return new Answer(command, false, e.toString());
         }
     }

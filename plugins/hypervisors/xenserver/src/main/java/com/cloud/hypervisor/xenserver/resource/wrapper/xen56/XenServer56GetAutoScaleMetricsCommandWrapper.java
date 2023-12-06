@@ -37,7 +37,7 @@ import java.util.List;
 @ResourceWrapper(handles = GetAutoScaleMetricsCommand.class)
 public final class XenServer56GetAutoScaleMetricsCommandWrapper extends CommandWrapper<GetAutoScaleMetricsCommand, Answer, XenServer56Resource> {
 
-    protected static Logger s_logger = LogManager.getLogger(XenServer56GetAutoScaleMetricsCommandWrapper.class);
+    protected static Logger logger = LogManager.getLogger(XenServer56GetAutoScaleMetricsCommandWrapper.class);
 
     @Override
     public Answer execute(final GetAutoScaleMetricsCommand command, final XenServer56Resource xenServer56) {
@@ -78,7 +78,7 @@ public final class XenServer56GetAutoScaleMetricsCommandWrapper extends CommandW
 
             return new GetAutoScaleMetricsAnswer(command, true, values);
         } catch (final Exception ex) {
-            s_logger.warn("Failed to get autoscale metrics due to ", ex);
+            logger.warn("Failed to get autoscale metrics due to ", ex);
             return new GetAutoScaleMetricsAnswer(command, false);
         }
     }

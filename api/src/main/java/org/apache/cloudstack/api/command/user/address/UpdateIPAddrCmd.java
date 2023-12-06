@@ -43,7 +43,7 @@ import com.cloud.user.Account;
 @APICommand(name = "updateIpAddress", description = "Updates an IP address", responseObject = IPAddressResponse.class,
  requestHasSensitiveInfo = false, responseHasSensitiveInfo = false, entityType = { IpAddress.class })
 public class UpdateIPAddrCmd extends BaseAsyncCustomIdCmd {
-    protected static Logger s_logger = LogManager.getLogger(UpdateIPAddrCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(UpdateIPAddrCmd.class.getName());
 
     /////////////////////////////////////////////////////
     //////////////// API parameters /////////////////////

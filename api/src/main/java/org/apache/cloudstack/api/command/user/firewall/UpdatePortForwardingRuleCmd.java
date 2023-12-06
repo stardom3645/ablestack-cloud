@@ -39,7 +39,7 @@ import com.cloud.utils.net.Ip;
         description = "Updates a port forwarding rule. Only the private port and the virtual machine can be updated.", entityType = {PortForwardingRule.class},
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class UpdatePortForwardingRuleCmd extends BaseAsyncCustomIdCmd {
-    protected static Logger s_logger = LogManager.getLogger(UpdatePortForwardingRuleCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(UpdatePortForwardingRuleCmd.class.getName());
 
     /////////////////////////////////////////////////////
     //////////////// API parameters /////////////////////

@@ -38,7 +38,7 @@ import com.cloud.utils.Pair;
  *
  */
 public class VmwareStorageLayoutHelper implements Configurable {
-    protected static Logger s_logger = LogManager.getLogger(VmwareStorageLayoutHelper.class);
+    protected static Logger logger = LogManager.getLogger(VmwareStorageLayoutHelper.class);
 
     static final ConfigKey<String> VsphereLinkedCloneExtensions = new ConfigKey<String>("Hidden", String.class,
             "vsphere.linked.clone.extensions", "delta.vmdk,sesparse.vmdk",
@@ -170,7 +170,7 @@ public class VmwareStorageLayoutHelper implements Configurable {
 
         assert (ds != null);
         if (!ds.folderExists(String.format("[%s]", ds.getName()), vmName)) {
-            s_logger.info("VM folder does not exist on target datastore, we will create one. vm: " + vmName + ", datastore: " + ds.getName());
+            logger.info("VM folder does not exist on target datastore, we will create one. vm: " + vmName + ", datastore: " + ds.getName());
 
             ds.makeDirectory(String.format("[%s] %s", ds.getName(), vmName), dcMo.getMor());
         }
@@ -191,7 +191,7 @@ public class VmwareStorageLayoutHelper implements Configurable {
 
         for (int i=1; i<vmdkFullCloneModeLegacyPair.length; i++) {
             if (ds.fileExists(vmdkFullCloneModeLegacyPair[i])) {
-                s_logger.info("sync " + vmdkFullCloneModeLegacyPair[i] + "->" + vmdkFullCloneModePair[i]);
+                logger.info("sync " + vmdkFullCloneModeLegacyPair[i] + "->" + vmdkFullCloneModePair[i]);
 
                 ds.moveDatastoreFile(vmdkFullCloneModeLegacyPair[i], dcMo.getMor(), ds.getMor(), vmdkFullCloneModePair[i], dcMo.getMor(), true);
             }
@@ -199,14 +199,14 @@ public class VmwareStorageLayoutHelper implements Configurable {
 
         for (int i=1; i<vmdkLinkedCloneModeLegacyPair.length; i++) {
             if (ds.fileExists(vmdkLinkedCloneModeLegacyPair[i])) {
-                s_logger.info("sync " + vmdkLinkedCloneModeLegacyPair[i] + "->" + vmdkLinkedCloneModePair[i]);
+                logger.info("sync " + vmdkLinkedCloneModeLegacyPair[i] + "->" + vmdkLinkedCloneModePair[i]);
 
                 ds.moveDatastoreFile(vmdkLinkedCloneModeLegacyPair[i], dcMo.getMor(), ds.getMor(), vmdkLinkedCloneModePair[i], dcMo.getMor(), true);
             }
         }
 
         if (ds.fileExists(vmdkLinkedCloneModeLegacyPair[0])) {
-            s_logger.info("sync " + vmdkLinkedCloneModeLegacyPair[0] + "->" + vmdkLinkedCloneModePair[0]);
+            logger.info("sync " + vmdkLinkedCloneModeLegacyPair[0] + "->" + vmdkLinkedCloneModePair[0]);
             ds.moveDatastoreFile(vmdkLinkedCloneModeLegacyPair[0], dcMo.getMor(), ds.getMor(), vmdkLinkedCloneModePair[0], dcMo.getMor(), true);
         }
 
@@ -238,14 +238,14 @@ public class VmwareStorageLayoutHelper implements Configurable {
             if (ds.fileExists(companionFilePath)) {
                 String targetPath = getDatastorePathBaseFolderFromVmdkFileName(ds, String.format("%s-%s",vmdkName, linkedCloneExtension));
 
-                s_logger.info("Fixup folder-synchronization. move " + companionFilePath + " -> " + targetPath);
+                logger.info("Fixup folder-synchronization. move " + companionFilePath + " -> " + targetPath);
                 ds.moveDatastoreFile(companionFilePath, dcMo.getMor(), ds.getMor(), targetPath, dcMo.getMor(), true);
             }
         }
 
         // move the identity VMDK file the last
         String targetPath = getDatastorePathBaseFolderFromVmdkFileName(ds, vmdkName + ".vmdk");
-        s_logger.info("Fixup folder-synchronization. move " + fileDsFullPath + " -> " + targetPath);
+        logger.info("Fixup folder-synchronization. move " + fileDsFullPath + " -> " + targetPath);
         ds.moveDatastoreFile(fileDsFullPath, dcMo.getMor(), ds.getMor(), targetPath, dcMo.getMor(), true);
 
         try {
@@ -264,9 +264,9 @@ public class VmwareStorageLayoutHelper implements Configurable {
                         + "in specific versions of VMWare. Users using VMFS or VMWare versions greater than 6.7 have not reported this error. If the operation performed is a volume detach, "
                         + "it was successful. If you want to know why this error occurs in VMWare, please contact VMWare's technical support.",
                         vmName, e.getMessage(), link);
-                s_logger.warn(message, e);
+                logger.warn(message, e);
             } else {
-                s_logger.error(String.format("Failed to sync volume [%s] of VM [%s] due to: [%s].", vmdkName, vmName, e.getMessage()), e);
+                logger.error(String.format("Failed to sync volume [%s] of VM [%s] due to: [%s].", vmdkName, vmName, e.getMessage()), e);
                 throw e;
             }
         }
@@ -277,13 +277,13 @@ public class VmwareStorageLayoutHelper implements Configurable {
             for (String fileFullDsPath : detachedDisks) {
                 DatastoreFile file = new DatastoreFile(fileFullDsPath);
 
-                s_logger.info("Check if we need to move " + fileFullDsPath + " to its root location");
+                logger.info("Check if we need to move " + fileFullDsPath + " to its root location");
                 DatastoreMO dsMo = new DatastoreMO(dcMo.getContext(), dcMo.findDatastore(file.getDatastoreName()));
                 if (dsMo.getMor() != null && !dsMo.getDatastoreType().equalsIgnoreCase("VVOL")) {
                     HypervisorHostHelper.createBaseFolderInDatastore(dsMo, dsMo.getDataCenterMor());
                     DatastoreFile targetFile = new DatastoreFile(file.getDatastoreName(), HypervisorHostHelper.VSPHERE_DATASTORE_BASE_FOLDER, file.getFileName());
                     if (!targetFile.getPath().equalsIgnoreCase(file.getPath())) {
-                        s_logger.info("Move " + file.getPath() + " -> " + targetFile.getPath());
+                        logger.info("Move " + file.getPath() + " -> " + targetFile.getPath());
                         dsMo.moveDatastoreFile(file.getPath(), dcMo.getMor(), dsMo.getMor(), targetFile.getPath(), dcMo.getMor(), true);
 
                         List<String> vSphereFileExtensions = new ArrayList<>(Arrays.asList(VsphereLinkedCloneExtensions.value().trim().split("\\s*,\\s*")));
@@ -293,13 +293,13 @@ public class VmwareStorageLayoutHelper implements Configurable {
                             String pairSrcFilePath = file.getCompanionPath(String.format("%s-%s", file.getFileBaseName(), linkedCloneExtension));
                             String pairTargetFilePath = targetFile.getCompanionPath(String.format("%s-%s", file.getFileBaseName(), linkedCloneExtension));
                             if (dsMo.fileExists(pairSrcFilePath)) {
-                                s_logger.info("Move " + pairSrcFilePath + " -> " + pairTargetFilePath);
+                                logger.info("Move " + pairSrcFilePath + " -> " + pairTargetFilePath);
                                 dsMo.moveDatastoreFile(pairSrcFilePath, dcMo.getMor(), dsMo.getMor(), pairTargetFilePath, dcMo.getMor(), true);
                             }
                         }
                     }
                 } else {
-                    s_logger.warn("Datastore for " + fileFullDsPath + " no longer exists, we have to skip");
+                    logger.warn("Datastore for " + fileFullDsPath + " no longer exists, we have to skip");
                 }
             }
         }
@@ -369,7 +369,7 @@ public class VmwareStorageLayoutHelper implements Configurable {
         if (fileFullPath != null) {
             dsMo.deleteFile(fileFullPath, dcMo.getMor(), true, excludeFolders);
         } else {
-            s_logger.warn("Unable to locate VMDK file: " + fileName);
+            logger.warn("Unable to locate VMDK file: " + fileName);
         }
 
         List<String> vSphereFileExtensions = new ArrayList<>(Arrays.asList(VsphereLinkedCloneExtensions.value().trim().split("\\s*,\\s*")));
@@ -381,7 +381,7 @@ public class VmwareStorageLayoutHelper implements Configurable {
             if (fileFullPath != null) {
                 dsMo.deleteFile(fileFullPath, dcMo.getMor(), true, excludeFolders);
             } else {
-                s_logger.warn("Unable to locate VMDK file: " + String.format("%s-%s", volumeName, linkedCloneExtension));
+                logger.warn("Unable to locate VMDK file: " + String.format("%s-%s", volumeName, linkedCloneExtension));
             }
         }
     }

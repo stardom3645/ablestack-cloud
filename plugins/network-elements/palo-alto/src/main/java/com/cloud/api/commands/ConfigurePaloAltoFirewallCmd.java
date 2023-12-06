@@ -44,7 +44,7 @@ import com.cloud.utils.exception.CloudRuntimeException;
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class ConfigurePaloAltoFirewallCmd extends BaseAsyncCmd {
 
-    protected static Logger s_logger = LogManager.getLogger(ConfigurePaloAltoFirewallCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(ConfigurePaloAltoFirewallCmd.class.getName());
     @Inject
     PaloAltoFirewallElementService _paFwService;
 

@@ -57,7 +57,7 @@ import com.cloud.utils.component.ComponentContext;
 import com.cloud.utils.db.EntityManager;
 
 public class ActionEventUtils {
-    protected static Logger s_logger = LogManager.getLogger(ActionEventUtils.class);
+    protected static Logger logger = LogManager.getLogger(ActionEventUtils.class);
 
     private static EventDao s_eventDao;
     private static AccountDao s_accountDao;
@@ -237,7 +237,7 @@ public class ActionEventUtils {
         try {
             s_eventBus.publish(event);
         } catch (EventBusException e) {
-            s_logger.warn("Failed to publish action event on the event bus.");
+            logger.warn("Failed to publish action event on the event bus.");
         }
     }
 
@@ -257,7 +257,7 @@ public class ActionEventUtils {
             try {
                 entityUuid = getEntityUuid(entityClass, param);
             } catch (Exception e){
-                s_logger.debug("Caught exception while finding entityUUID, moving on");
+                logger.debug("Caught exception while finding entityUUID, moving on");
             }
         }
         if (param instanceof Long) {
@@ -345,7 +345,7 @@ public class ActionEventUtils {
             }
             return new Ternary<>(id, ((Identity)objVO).getUuid(), type.toString());
         } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
-            s_logger.debug(String.format("Parent resource for resource ID: %d, type: %s can not be found using method %s", details.first(), type, methodName));
+            logger.debug(String.format("Parent resource for resource ID: %d, type: %s can not be found using method %s", details.first(), type, methodName));
         }
         return details;
     }
@@ -372,7 +372,7 @@ public class ActionEventUtils {
     private static long getDomainId(long accountId) {
         AccountVO account = s_accountDao.findByIdIncludingRemoved(accountId);
         if (account == null) {
-            s_logger.error("Failed to find account(including removed ones) by id '" + accountId + "'");
+            logger.error("Failed to find account(including removed ones) by id '" + accountId + "'");
             return 0;
         }
         return account.getDomainId();
@@ -391,7 +391,7 @@ public class ActionEventUtils {
                     eventDescription.put(ReflectUtil.getEntityName(clz), uuid);
                 }
             } catch (Exception e){
-                s_logger.trace("Caught exception while populating first class entities for event bus, moving on");
+                logger.trace("Caught exception while populating first class entities for event bus, moving on");
             }
         }
 

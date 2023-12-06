@@ -38,7 +38,7 @@ import com.cloud.user.Account;
 @APICommand(name = "replaceNetworkACLList", description = "Replaces ACL associated with a network or private gateway", responseObject = SuccessResponse.class,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class ReplaceNetworkACLListCmd extends BaseAsyncCmd {
-    protected static Logger s_logger = LogManager.getLogger(ReplaceNetworkACLListCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(ReplaceNetworkACLListCmd.class.getName());
 
     /////////////////////////////////////////////////////
     //////////////// API parameters /////////////////////

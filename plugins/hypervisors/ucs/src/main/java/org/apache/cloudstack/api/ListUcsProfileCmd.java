@@ -37,7 +37,7 @@ import com.cloud.user.Account;
 @APICommand(name = "listUcsProfiles", description = "List profile in ucs manager", responseObject = UcsProfileResponse.class,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class ListUcsProfileCmd extends BaseListCmd {
-    protected static Logger s_logger = LogManager.getLogger(ListUcsProfileCmd.class);
+    protected static Logger logger = LogManager.getLogger(ListUcsProfileCmd.class);
 
     @Inject
     UcsManager mgr;
@@ -66,7 +66,7 @@ public class ListUcsProfileCmd extends BaseListCmd {
             response.setObjectName("ucsprofiles");
             this.setResponseObject(response);
         } catch (Exception e) {
-            s_logger.warn("Exception: ", e);
+            logger.warn("Exception: ", e);
             throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, e.getMessage());
         }
     }

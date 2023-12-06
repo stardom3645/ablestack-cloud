@@ -37,7 +37,7 @@ import com.cloud.user.Account;
 @APICommand(name = "dedicatePublicIpRange", description = "Dedicates a Public IP range to an account", responseObject = VlanIpRangeResponse.class,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class DedicatePublicIpRangeCmd extends BaseCmd {
-    protected static Logger s_logger = LogManager.getLogger(DedicatePublicIpRangeCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(DedicatePublicIpRangeCmd.class.getName());
 
 
     /////////////////////////////////////////////////////

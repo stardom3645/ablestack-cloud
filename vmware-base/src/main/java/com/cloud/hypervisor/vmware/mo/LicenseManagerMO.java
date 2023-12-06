@@ -26,7 +26,7 @@ import com.cloud.hypervisor.vmware.util.VmwareContext;
 public class LicenseManagerMO extends BaseMO {
 
     @SuppressWarnings("unused")
-    protected static Logger s_logger = LogManager.getLogger(LicenseManagerMO.class);
+    protected static Logger logger = LogManager.getLogger(LicenseManagerMO.class);
     private ManagedObjectReference _licenseAssignmentManager = null;
 
     public LicenseManagerMO(VmwareContext context, ManagedObjectReference mor) {

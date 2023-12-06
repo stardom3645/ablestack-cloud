@@ -51,7 +51,7 @@ import com.cloud.utils.exception.CloudRuntimeException;
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class ListNiciraNvpDeviceNetworksCmd extends BaseListCmd {
 
-    protected static Logger s_logger = LogManager.getLogger(ListNiciraNvpDeviceNetworksCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(ListNiciraNvpDeviceNetworksCmd.class.getName());
     private static final String s_name = "listniciranvpdevicenetworks";
     @Inject
     protected NiciraNvpElementService niciraNvpElementService;

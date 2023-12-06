@@ -87,7 +87,7 @@ import com.cloud.vm.VirtualMachine;
 import com.cloud.vm.dao.VMInstanceDao;
 
 public class AblestackPrimaryDataStoreDriverImpl implements PrimaryDataStoreDriver {
-    protected static Logger s_logger = LogManager.getLogger(AblestackPrimaryDataStoreDriverImpl.class);
+    protected static Logger logger = LogManager.getLogger(AblestackPrimaryDataStoreDriverImpl.class);
     @Inject
     DiskOfferingDao diskOfferingDao;
     @Inject
@@ -170,8 +170,8 @@ public class AblestackPrimaryDataStoreDriverImpl implements PrimaryDataStoreDriv
 
 
     public Answer createVolume(VolumeInfo volume) throws StorageUnavailableException {
-        if (s_logger.isDebugEnabled()) {
-            s_logger.debug("Creating volume: " + volume);
+        if (logger.isDebugEnabled()) {
+            logger.debug("Creating volume: " + volume);
         }
 
         CreateObjectCommand cmd = new CreateObjectCommand(volume.getTO());
@@ -179,7 +179,7 @@ public class AblestackPrimaryDataStoreDriverImpl implements PrimaryDataStoreDriv
         Answer answer = null;
         if (ep == null) {
             String errMsg = "No remote endpoint to send CreateObjectCommand, check if host or ssvm is down?";
-            s_logger.error(errMsg);
+            logger.error(errMsg);
             answer = new Answer(cmd, false, errMsg);
         } else {
             answer = ep.sendMessage(cmd);
@@ -204,10 +204,10 @@ public class AblestackPrimaryDataStoreDriverImpl implements PrimaryDataStoreDriv
                     result.setAnswer(answer);
                 }
             } catch (StorageUnavailableException e) {
-                s_logger.debug("failed to create volume", e);
+                logger.debug("failed to create volume", e);
                 errMsg = e.toString();
             } catch (Exception e) {
-                s_logger.debug("failed to create volume", e);
+                logger.debug("failed to create volume", e);
                 errMsg = e.toString();
             }
         }
@@ -246,7 +246,7 @@ public class AblestackPrimaryDataStoreDriverImpl implements PrimaryDataStoreDriv
             }
             if (ep == null) {
                 String errMsg = "No remote endpoint to send DeleteCommand, check if host or ssvm is down?";
-                s_logger.error(errMsg);
+                logger.error(errMsg);
                 result.setResult(errMsg);
             } else {
                 Answer answer = ep.sendMessage(cmd);
@@ -255,7 +255,7 @@ public class AblestackPrimaryDataStoreDriverImpl implements PrimaryDataStoreDriv
                 }
             }
         } catch (Exception ex) {
-            s_logger.debug("Unable to destoy volume" + data.getId(), ex);
+            logger.debug("Unable to destoy volume" + data.getId(), ex);
             result.setResult(ex.toString());
         }
         callback.complete(result);
@@ -287,7 +287,7 @@ public class AblestackPrimaryDataStoreDriverImpl implements PrimaryDataStoreDriv
                 Answer answer = null;
                 if (ep == null) {
                     String errMsg = "No remote endpoint to send CopyCommand, check if host or ssvm is down?";
-                    s_logger.error(errMsg);
+                    logger.error(errMsg);
                     answer = new Answer(cmd, false, errMsg);
                 } else {
                     answer = ep.sendMessage(cmd);
@@ -301,7 +301,7 @@ public class AblestackPrimaryDataStoreDriverImpl implements PrimaryDataStoreDriv
                 CopyCmdAnswer answer = null;
                 if (ep == null) {
                     String errMsg = "No remote endpoint to send command, check if host or ssvm is down?";
-                    s_logger.error(errMsg);
+                    logger.error(errMsg);
                     answer = new CopyCmdAnswer(errMsg);
                 } else {
                     answer = (CopyCmdAnswer) ep.sendMessage(cmd);
@@ -359,7 +359,7 @@ public class AblestackPrimaryDataStoreDriverImpl implements PrimaryDataStoreDriv
 
             if (ep == null) {
                 String errMsg = "No remote endpoint to send createObjectCommand, check if host or ssvm is down?";
-                s_logger.error(errMsg);
+                logger.error(errMsg);
                 answer = new Answer(cmd, false, errMsg);
             } else {
                 answer = ep.sendMessage(cmd);
@@ -373,7 +373,7 @@ public class AblestackPrimaryDataStoreDriverImpl implements PrimaryDataStoreDriv
             callback.complete(result);
             return;
         } catch (Exception e) {
-            s_logger.debug("Failed to take snapshot: " + snapshot.getId(), e);
+            logger.debug("Failed to take snapshot: " + snapshot.getId(), e);
             result = new CreateCmdResult(null, null);
             result.setResult(e.toString());
         }
@@ -399,7 +399,7 @@ public class AblestackPrimaryDataStoreDriverImpl implements PrimaryDataStoreDriv
             }
             if ( ep == null ){
                 String errMsg = "No remote endpoint to send RevertSnapshotCommand, check if host or ssvm is down?";
-                s_logger.error(errMsg);
+                logger.error(errMsg);
                 result.setResult(errMsg);
             } else {
                 Answer answer = ep.sendMessage(cmd);
@@ -408,7 +408,7 @@ public class AblestackPrimaryDataStoreDriverImpl implements PrimaryDataStoreDriv
                 }
             }
         } catch (Exception ex) {
-            s_logger.debug("Unable to revert snapshot " + snapshot.getId(), ex);
+            logger.debug("Unable to revert snapshot " + snapshot.getId(), ex);
             result.setResult(ex.toString());
         }
         callback.complete(result);
@@ -431,7 +431,7 @@ public class AblestackPrimaryDataStoreDriverImpl implements PrimaryDataStoreDriv
             ResizeVolumeAnswer answer = (ResizeVolumeAnswer) storageMgr.sendToPool(pool, resizeParameter.hosts, resizeCmd);
             if (answer != null && answer.getResult()) {
                 long finalSize = answer.getNewSize();
-                s_logger.debug("Resize: volume started at size: " + toHumanReadableSize(vol.getSize()) + " and ended at size: " + toHumanReadableSize(finalSize));
+                logger.debug("Resize: volume started at size: " + toHumanReadableSize(vol.getSize()) + " and ended at size: " + toHumanReadableSize(finalSize));
 
                 vol.setSize(finalSize);
                 vol.update();
@@ -440,12 +440,12 @@ public class AblestackPrimaryDataStoreDriverImpl implements PrimaryDataStoreDriv
             } else if (answer != null) {
                 result.setResult(answer.getDetails());
             } else {
-                s_logger.debug("return a null answer, mark it as failed for unknown reason");
+                logger.debug("return a null answer, mark it as failed for unknown reason");
                 result.setResult("return a null answer, mark it as failed for unknown reason");
             }
 
         } catch (Exception e) {
-            s_logger.debug("sending resize command failed", e);
+            logger.debug("sending resize command failed", e);
             result.setResult(e.toString());
         }
 
@@ -460,7 +460,7 @@ public class AblestackPrimaryDataStoreDriverImpl implements PrimaryDataStoreDriv
             if (storagePoolVO != null) {
                 volumeVO.setPoolId(storagePoolVO.getId());
             } else {
-                s_logger.warn(String.format("Unable to find datastore %s while updating the new datastore of the volume %d", datastoreUUID, vol.getId()));
+                logger.warn(String.format("Unable to find datastore %s while updating the new datastore of the volume %d", datastoreUUID, vol.getId()));
             }
         }
 

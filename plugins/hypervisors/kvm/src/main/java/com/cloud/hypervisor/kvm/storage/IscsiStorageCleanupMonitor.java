@@ -34,7 +34,7 @@ import java.util.List;
 import java.util.Map;
 
 public class IscsiStorageCleanupMonitor implements Runnable{
-    protected static Logger s_logger = LogManager.getLogger(IscsiStorageCleanupMonitor.class);
+    protected static Logger logger = LogManager.getLogger(IscsiStorageCleanupMonitor.class);
     private static final int CLEANUP_INTERVAL_SEC = 60; // check every X seconds
     private static final String ISCSI_PATH_PREFIX = "/dev/disk/by-path";
     private static final String KEYWORD_ISCSI = "iscsi";
@@ -47,7 +47,7 @@ public class IscsiStorageCleanupMonitor implements Runnable{
 
     public IscsiStorageCleanupMonitor() {
         diskStatusMap = new HashMap<>();
-        s_logger.debug("Initialize cleanup thread");
+        logger.debug("Initialize cleanup thread");
         iscsiStorageAdaptor = new IscsiAdmStorageAdaptor();
     }
 
@@ -63,7 +63,7 @@ public class IscsiStorageCleanupMonitor implements Runnable{
                 //populate all the iscsi disks currently attached to this host
                 File[] iscsiVolumes = new File(ISCSI_PATH_PREFIX).listFiles();
                 if (iscsiVolumes == null || iscsiVolumes.length == 0) {
-                    s_logger.debug("No iscsi sessions found for cleanup");
+                    logger.debug("No iscsi sessions found for cleanup");
                     return;
                 }
 
@@ -77,7 +77,7 @@ public class IscsiStorageCleanupMonitor implements Runnable{
                 disconnectInactiveSessions();
 
             } catch (LibvirtException e) {
-                s_logger.warn("[ignored] Error trying to cleanup ", e);
+                logger.warn("[ignored] Error trying to cleanup ", e);
             }
         }
 
@@ -93,7 +93,7 @@ public class IscsiStorageCleanupMonitor implements Runnable{
             diskStatusMap.clear();
             for( File v : iscsiVolumes) {
                 if (isIscsiDisk(v.getAbsolutePath())) {
-                    s_logger.debug("found iscsi disk by cleanup thread, marking inactive: " + v.getAbsolutePath());
+                    logger.debug("found iscsi disk by cleanup thread, marking inactive: " + v.getAbsolutePath());
                     diskStatusMap.put(v.getAbsolutePath(), false);
                 }
             }
@@ -106,7 +106,7 @@ public class IscsiStorageCleanupMonitor implements Runnable{
         private void updateDiskStatusMapWithInactiveIscsiSessions(Connect conn){
             try {
                 int[] domains = conn.listDomains();
-                s_logger.debug(String.format("found %d domains", domains.length));
+                logger.debug(String.format("found %d domains", domains.length));
                 for (int domId : domains) {
                     Domain dm = conn.domainLookupByID(domId);
                     final String domXml = dm.getXMLDesc(0);
@@ -118,12 +118,12 @@ public class IscsiStorageCleanupMonitor implements Runnable{
                     for (final LibvirtVMDef.DiskDef disk : disks) {
                         if (diskStatusMap.containsKey(disk.getDiskPath())&&!disk.getDiskPath().matches(REGEX_PART)) {
                             diskStatusMap.put(disk.getDiskPath(), true);
-                            s_logger.debug("active disk found by cleanup thread" + disk.getDiskPath());
+                            logger.debug("active disk found by cleanup thread" + disk.getDiskPath());
                         }
                     }
                 }
             } catch (LibvirtException e) {
-                s_logger.warn("[ignored] Error trying to cleanup ", e);
+                logger.warn("[ignored] Error trying to cleanup ", e);
             }
 
         }
@@ -142,10 +142,10 @@ public class IscsiStorageCleanupMonitor implements Runnable{
                 if (!diskStatusMap.get(diskPath)) {
                     if (Files.exists(Paths.get(diskPath))) {
                         try {
-                            s_logger.info("Cleaning up disk " + diskPath);
+                            logger.info("Cleaning up disk " + diskPath);
                             iscsiStorageAdaptor.disconnectPhysicalDiskByPath(diskPath);
                         } catch (Exception e) {
-                            s_logger.warn("[ignored] Error cleaning up " + diskPath, e);
+                            logger.warn("[ignored] Error cleaning up " + diskPath, e);
                         }
                     }
                 }
@@ -160,7 +160,7 @@ public class IscsiStorageCleanupMonitor implements Runnable{
             try {
                 Thread.sleep(CLEANUP_INTERVAL_SEC * 1000);
             } catch (InterruptedException e) {
-                s_logger.debug("[ignored] interrupted between heartbeats.");
+                logger.debug("[ignored] interrupted between heartbeats.");
             }
 
             Thread monitorThread = new Thread(new Monitor());
@@ -168,7 +168,7 @@ public class IscsiStorageCleanupMonitor implements Runnable{
             try {
                 monitorThread.join();
             } catch (InterruptedException e) {
-                s_logger.debug("[ignored] interrupted joining monitor.");
+                logger.debug("[ignored] interrupted joining monitor.");
             }
         }
     }

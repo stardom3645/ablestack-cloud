@@ -31,6 +31,6 @@ import com.cloud.network.vpc.VpcGateway;
         responseView = ResponseObject.ResponseView.Full,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class ListPrivateGatewaysCmdByAdminCmd extends ListPrivateGatewaysCmd implements AdminCmd {
-    protected static Logger s_logger = LogManager.getLogger(ListPrivateGatewaysCmdByAdminCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(ListPrivateGatewaysCmdByAdminCmd.class.getName());
 
 }

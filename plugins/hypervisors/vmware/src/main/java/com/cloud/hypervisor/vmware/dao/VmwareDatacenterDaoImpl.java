@@ -34,7 +34,7 @@ import com.cloud.utils.db.SearchCriteria.Op;
 @Component
 @DB
 public class VmwareDatacenterDaoImpl extends GenericDaoBase<VmwareDatacenterVO, Long> implements VmwareDatacenterDao {
-    protected static final Logger s_logger = LogManager.getLogger(VmwareDatacenterDaoImpl.class);
+    protected Logger logger = LogManager.getLogger(VmwareDatacenterDaoImpl.class);
 
     final SearchBuilder<VmwareDatacenterVO> nameSearch;
     final SearchBuilder<VmwareDatacenterVO> guidSearch;

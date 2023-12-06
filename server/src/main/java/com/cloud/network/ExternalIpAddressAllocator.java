@@ -40,7 +40,7 @@ import com.cloud.utils.component.AdapterBase;
 import com.cloud.utils.exception.CloudRuntimeException;
 
 public class ExternalIpAddressAllocator extends AdapterBase implements IpAddrAllocator {
-    protected static Logger s_logger = LogManager.getLogger(ExternalIpAddressAllocator.class);
+    protected static Logger logger = LogManager.getLogger(ExternalIpAddressAllocator.class);
     @Inject
     ConfigurationDao _configDao = null;
     @Inject
@@ -56,7 +56,7 @@ public class ExternalIpAddressAllocator extends AdapterBase implements IpAddrAll
             return new IpAddr();
         }
         String urlString = _externalIpAllocatorUrl + "?command=getIpAddr&mac=" + macAddr + "&dc=" + dcId + "&pod=" + podId;
-        s_logger.debug("getIP:" + urlString);
+        logger.debug("getIP:" + urlString);
 
         BufferedReader in = null;
         try {
@@ -67,10 +67,10 @@ public class ExternalIpAddressAllocator extends AdapterBase implements IpAddrAll
             in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
             String inputLine;
             while ((inputLine = in.readLine()) != null) {
-                s_logger.debug(inputLine);
+                logger.debug(inputLine);
                 String[] tokens = inputLine.split(",");
                 if (tokens.length != 3) {
-                    s_logger.debug("the return value should be: mac,netmask,gateway");
+                    logger.debug("the return value should be: mac,netmask,gateway");
                     return new IpAddr();
                 }
                 return new IpAddr(tokens[0], tokens[1], tokens[2]);
@@ -102,7 +102,7 @@ public class ExternalIpAddressAllocator extends AdapterBase implements IpAddrAll
 
         String urlString = _externalIpAllocatorUrl + "?command=releaseIpAddr&ip=" + ip + "&dc=" + dcId + "&pod=" + podId;
 
-        s_logger.debug("releaseIP:" + urlString);
+        logger.debug("releaseIP:" + urlString);
         BufferedReader in = null;
         try {
             URL url = new URL(urlString);

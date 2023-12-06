@@ -49,7 +49,7 @@ import com.cloud.utils.PropertiesUtil;
  */
 @Component
 public class ManagementNetworkGuru extends ContrailGuru {
-    protected static Logger s_logger = LogManager.getLogger(ManagementNetworkGuru.class);
+    protected static Logger logger = LogManager.getLogger(ManagementNetworkGuru.class);
     private static final TrafficType[] TrafficTypes = {TrafficType.Management};
 
     private final String configuration = "contrail.properties";
@@ -72,7 +72,7 @@ public class ManagementNetworkGuru extends ContrailGuru {
             }
             inputFile = new FileInputStream(configFile);
         } catch (FileNotFoundException e) {
-            s_logger.error(e.getMessage());
+            logger.error(e.getMessage());
             throw new ConfigurationException(e.getMessage());
         }
 
@@ -80,14 +80,14 @@ public class ManagementNetworkGuru extends ContrailGuru {
         try {
             configProps.load(inputFile);
         } catch (IOException e) {
-            s_logger.error(e.getMessage());
+            logger.error(e.getMessage());
             throw new ConfigurationException(e.getMessage());
         } finally {
             closeAutoCloseable(inputFile, "error closing config file");
         }
         _mgmtCidr = configProps.getProperty("management.cidr");
         _mgmtGateway = configProps.getProperty("management.gateway");
-        s_logger.info("Management network " + _mgmtCidr + " gateway: " + _mgmtGateway);
+        logger.info("Management network " + _mgmtCidr + " gateway: " + _mgmtGateway);
         return true;
     }
 
@@ -124,7 +124,7 @@ public class ManagementNetworkGuru extends ContrailGuru {
             network.setCidr(_mgmtCidr);
             network.setGateway(_mgmtGateway);
         }
-        s_logger.debug("Allocated network " + userSpecified.getName() + (network.getCidr() == null ? "" : " subnet: " + network.getCidr()));
+        logger.debug("Allocated network " + userSpecified.getName() + (network.getCidr() == null ? "" : " subnet: " + network.getCidr()));
         return network;
     }
 

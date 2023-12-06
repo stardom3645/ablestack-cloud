@@ -47,7 +47,7 @@ import java.util.Map;
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = true, since = "4.18.0")
 public class ResetVMUserDataCmd extends BaseCmd implements UserCmd {
 
-    protected static Logger s_logger = LogManager.getLogger(ResetVMUserDataCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(ResetVMUserDataCmd.class.getName());
 
     private static final String s_name = "resetuserdataforvirtualmachineresponse";
 

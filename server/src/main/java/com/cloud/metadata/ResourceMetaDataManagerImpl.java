@@ -72,7 +72,7 @@ import com.cloud.vm.dao.UserVmDetailsDao;
 
 @Component
 public class ResourceMetaDataManagerImpl extends ManagerBase implements ResourceMetaDataService, ResourceMetaDataManager {
-    protected static Logger s_logger = LogManager.getLogger(ResourceMetaDataManagerImpl.class);
+    protected static Logger logger = LogManager.getLogger(ResourceMetaDataManagerImpl.class);
     @Inject
     VolumeDetailsDao _volumeDetailDao;
     @Inject

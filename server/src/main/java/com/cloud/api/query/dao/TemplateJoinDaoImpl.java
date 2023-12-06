@@ -87,7 +87,7 @@ import com.cloud.utils.db.SearchCriteria;
 @Component
 public class TemplateJoinDaoImpl extends GenericDaoBaseWithTagInformation<TemplateJoinVO, TemplateResponse> implements TemplateJoinDao {
 
-    protected static Logger s_logger = LogManager.getLogger(TemplateJoinDaoImpl.class);
+    protected static Logger logger = LogManager.getLogger(TemplateJoinDaoImpl.class);
 
     @Inject
     private ConfigurationDao  _configDao;

@@ -46,7 +46,7 @@ import javax.inject.Inject;
     responseObject = TungstenFabricLBHealthMonitorResponse.class, requestHasSensitiveInfo = false,
     responseHasSensitiveInfo = false)
 public class UpdateTungstenFabricLBHealthMonitorCmd extends BaseAsyncCreateCmd {
-    protected static Logger s_logger = LogManager.getLogger(UpdateTungstenFabricLBHealthMonitorCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(UpdateTungstenFabricLBHealthMonitorCmd.class.getName());
     public static final String APINAME = "updateTungstenFabricLBHealthMonitor";
 
     @Inject

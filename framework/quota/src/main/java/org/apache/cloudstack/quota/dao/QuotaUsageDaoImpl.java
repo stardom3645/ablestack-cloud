@@ -37,7 +37,7 @@ import com.cloud.utils.db.TransactionStatus;
 
 @Component
 public class QuotaUsageDaoImpl extends GenericDaoBase<QuotaUsageVO, Long> implements QuotaUsageDao {
-    protected static Logger s_logger = LogManager.getLogger(QuotaUsageDaoImpl.class);
+    protected static Logger logger = LogManager.getLogger(QuotaUsageDaoImpl.class);
 
     @Override
     public BigDecimal findTotalQuotaUsage(final Long accountId, final Long domainId, final Integer usageType, final Date startDate, final Date endDate) {

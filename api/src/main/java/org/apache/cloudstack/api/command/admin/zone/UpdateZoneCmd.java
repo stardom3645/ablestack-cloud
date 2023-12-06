@@ -38,7 +38,7 @@ import com.cloud.user.Account;
 @APICommand(name = "updateZone", description = "Updates a Zone.", responseObject = ZoneResponse.class,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class UpdateZoneCmd extends BaseCmd {
-    protected static Logger s_logger = LogManager.getLogger(UpdateZoneCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(UpdateZoneCmd.class.getName());
 
 
     /////////////////////////////////////////////////////

@@ -32,7 +32,7 @@ import com.cloud.resource.ServerResource;
 
 public class CommandRetryUtility {
 
-    protected static Logger s_logger = LogManager.getLogger(CommandRetryUtility.class);
+    protected static Logger logger = LogManager.getLogger(CommandRetryUtility.class);
 
     private static final int ZERO = 0;
     private static CommandRetryUtility instance;
@@ -73,7 +73,7 @@ public class CommandRetryUtility {
             if (numRetries > ZERO) {
                 commandsToRetry.put(command, --numRetries);
 
-                s_logger.warn("Retrying " + command.getClass().getSimpleName() + ". Number of retries remaining: " + numRetries);
+                logger.warn("Retrying " + command.getClass().getSimpleName() + ". Number of retries remaining: " + numRetries);
 
                 return serverResource.executeRequest(command);
             } else {

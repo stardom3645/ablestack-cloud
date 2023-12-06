@@ -37,7 +37,7 @@ import org.apache.logging.log4j.LogManager;
         responseObject = SuccessResponse.class, requestHasSensitiveInfo = false,
         responseHasSensitiveInfo = false, authorized = { RoleType.Admin }, since = "4.17.0")
 public class PatchSystemVMCmd extends BaseAsyncCmd {
-    protected static Logger s_logger = LogManager.getLogger(PatchSystemVMCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(PatchSystemVMCmd.class.getName());
 
     /////////////////////////////////////////////////////
     //////////////// API parameters /////////////////////

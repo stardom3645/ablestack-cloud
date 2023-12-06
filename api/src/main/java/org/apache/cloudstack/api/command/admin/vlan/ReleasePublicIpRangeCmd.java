@@ -33,7 +33,7 @@ import com.cloud.user.Account;
 @APICommand(name = "releasePublicIpRange", description = "Releases a Public IP range back to the system pool", responseObject = SuccessResponse.class,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class ReleasePublicIpRangeCmd extends BaseCmd {
-    protected static Logger s_logger = LogManager.getLogger(ReleasePublicIpRangeCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(ReleasePublicIpRangeCmd.class.getName());
 
 
     /////////////////////////////////////////////////////

@@ -39,7 +39,7 @@ import com.cloud.network.IpAddress;
 @APICommand(name = "disableStaticNat", description = "Disables static rule for given IP address", responseObject = SuccessResponse.class,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class DisableStaticNatCmd extends BaseAsyncCmd {
-    protected static Logger s_logger = LogManager.getLogger(DisableStaticNatCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(DisableStaticNatCmd.class.getName());
 
     /////////////////////////////////////////////////////
     //////////////// API parameters /////////////////////

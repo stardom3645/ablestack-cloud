@@ -29,7 +29,7 @@ import streamer.debug.FakeSink;
  * Source element, which reads data from InputStream.
  */
 public class InputStreamSource extends BaseElement {
-    protected static Logger s_logger = LogManager.getLogger(InputStreamSource.class);
+    protected static Logger logger = LogManager.getLogger(InputStreamSource.class);
 
     protected InputStream is;
     protected SocketWrapperImpl socketWrapper;
@@ -152,13 +152,13 @@ public class InputStreamSource extends BaseElement {
         try {
             is.close();
         } catch (IOException e) {
-            s_logger.info("[ignored]"
+            logger.info("[ignored]"
                     + "io error on input stream: " + e.getLocalizedMessage());
         }
         try {
             sendEventToAllPads(Event.STREAM_CLOSE, Direction.OUT);
         } catch (Exception e) {
-            s_logger.info("[ignored]"
+            logger.info("[ignored]"
                     + "error sending an event to all pods: " + e.getLocalizedMessage());
         }
     }

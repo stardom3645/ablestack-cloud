@@ -38,7 +38,7 @@ import com.cloud.network.Site2SiteCustomerGateway;
 @APICommand(name = "createVpnCustomerGateway", description = "Creates site to site vpn customer gateway", responseObject = Site2SiteCustomerGatewayResponse.class, entityType = {Site2SiteCustomerGateway.class},
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class CreateVpnCustomerGatewayCmd extends BaseAsyncCreateCmd {
-    protected static Logger s_logger = LogManager.getLogger(CreateVpnCustomerGatewayCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(CreateVpnCustomerGatewayCmd.class.getName());
 
 
     /////////////////////////////////////////////////////

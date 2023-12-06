@@ -44,7 +44,7 @@ import com.cloud.utils.exception.CloudRuntimeException;
         requestHasSensitiveInfo = true, responseHasSensitiveInfo = false)
 public class RegisterNetscalerControlCenterCmd extends BaseAsyncCmd {
 
-    protected static Logger s_logger = LogManager.getLogger(RegisterNetscalerControlCenterCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(RegisterNetscalerControlCenterCmd.class.getName());
     @Inject
     NetscalerLoadBalancerElementService _netsclarLbService;
 
@@ -80,7 +80,7 @@ public class RegisterNetscalerControlCenterCmd extends BaseAsyncCmd {
 
 
     public static Logger getsLogger() {
-        return s_logger;
+        return logger;
     }
 
     public NetscalerLoadBalancerElementService get_netsclarLbService() {

@@ -34,5 +34,5 @@ import com.cloud.vm.VirtualMachine;
         requestHasSensitiveInfo = false,
         responseHasSensitiveInfo = true)
 public class UpdateVMAffinityGroupCmdByAdmin extends UpdateVMAffinityGroupCmd implements AdminCmd {
-    protected static Logger s_logger = LogManager.getLogger(UpdateVMAffinityGroupCmdByAdmin.class.getName());
+    protected static Logger logger = LogManager.getLogger(UpdateVMAffinityGroupCmdByAdmin.class.getName());
 }

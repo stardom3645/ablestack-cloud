@@ -34,7 +34,7 @@ import com.cloud.utils.db.SearchCriteria.Op;
 @Component
 @DB
 public class LegacyZoneDaoImpl extends GenericDaoBase<LegacyZoneVO, Long> implements LegacyZoneDao {
-    protected static final Logger s_logger = LogManager.getLogger(LegacyZoneDaoImpl.class);
+    protected Logger logger = LogManager.getLogger(LegacyZoneDaoImpl.class);
 
     final SearchBuilder<LegacyZoneVO> zoneSearch;
     final SearchBuilder<LegacyZoneVO> fullTableSearch;

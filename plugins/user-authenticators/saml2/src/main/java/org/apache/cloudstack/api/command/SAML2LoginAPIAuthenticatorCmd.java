@@ -82,7 +82,7 @@ import com.cloud.utils.db.EntityManager;
 
 @APICommand(name = "samlSso", description = "SP initiated SAML Single Sign On", requestHasSensitiveInfo = true, responseObject = LoginCmdResponse.class, entityType = {})
 public class SAML2LoginAPIAuthenticatorCmd extends BaseCmd implements APIAuthenticator, Configurable {
-    protected static Logger s_logger = LogManager.getLogger(SAML2LoginAPIAuthenticatorCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(SAML2LoginAPIAuthenticatorCmd.class.getName());
     private static final String s_name = "loginresponse";
 
     /////////////////////////////////////////////////////
@@ -140,7 +140,7 @@ public class SAML2LoginAPIAuthenticatorCmd extends BaseCmd implements APIAuthent
             responseObject = SAMLUtils.decodeSAMLResponse(responseMessage);
 
         } catch (ConfigurationException | FactoryConfigurationError | ParserConfigurationException | SAXException | IOException | UnmarshallingException e) {
-            s_logger.error("SAMLResponse processing error: " + e.getMessage());
+            logger.error("SAMLResponse processing error: " + e.getMessage());
         }
         return responseObject;
     }
@@ -184,7 +184,7 @@ public class SAML2LoginAPIAuthenticatorCmd extends BaseCmd implements APIAuthent
                 }
                 String authnId = SAMLUtils.generateSecureRandomId();
                 samlAuthManager.saveToken(authnId, domainPath, idpMetadata.getEntityId());
-                s_logger.debug("Sending SAMLRequest id=" + authnId);
+                logger.debug("Sending SAMLRequest id=" + authnId);
                 String redirectUrl = SAMLUtils.buildAuthnRequestUrl(authnId, spMetadata, idpMetadata, SAML2AuthManager.SAMLSignatureAlgorithm.value());
                 resp.sendRedirect(redirectUrl);
                 return "";
@@ -208,7 +208,7 @@ public class SAML2LoginAPIAuthenticatorCmd extends BaseCmd implements APIAuthent
                 SAMLProviderMetadata idpMetadata = samlAuthManager.getIdPMetadata(issuer.getValue());
 
                 String responseToId = processedSAMLResponse.getInResponseTo();
-                s_logger.debug("Received SAMLResponse in response to id=" + responseToId);
+                logger.debug("Received SAMLResponse in response to id=" + responseToId);
                 SAMLTokenVO token = samlAuthManager.getToken(responseToId);
                 if (token != null) {
                     if (!(token.getEntity().equalsIgnoreCase(issuer.getValue()))) {
@@ -233,7 +233,7 @@ public class SAML2LoginAPIAuthenticatorCmd extends BaseCmd implements APIAuthent
                     try {
                         validator.validate(sig);
                     } catch (ValidationException e) {
-                        s_logger.error("SAML Response's signature failed to be validated by IDP signing key:" + e.getMessage());
+                        logger.error("SAML Response's signature failed to be validated by IDP signing key:" + e.getMessage());
                         throw new ServerApiException(ApiErrorCode.ACCOUNT_ERROR, apiServer.getSerializedApiError(ApiErrorCode.ACCOUNT_ERROR.getHttpCode(),
                                 "SAML Response's signature failed to be validated by IDP signing key",
                                 params, responseType));
@@ -267,7 +267,7 @@ public class SAML2LoginAPIAuthenticatorCmd extends BaseCmd implements APIAuthent
                             try {
                                 assertion = decrypter.decrypt(encryptedAssertion);
                             } catch (DecryptionException e) {
-                                s_logger.warn("SAML EncryptedAssertion error: " + e.toString());
+                                logger.warn("SAML EncryptedAssertion error: " + e.toString());
                             }
                             if (assertion == null) {
                                 continue;
@@ -280,7 +280,7 @@ public class SAML2LoginAPIAuthenticatorCmd extends BaseCmd implements APIAuthent
                                 try {
                                     validator.validate(encSig);
                                 } catch (ValidationException e) {
-                                    s_logger.error("SAML Response's signature failed to be validated by IDP signing key:" + e.getMessage());
+                                    logger.error("SAML Response's signature failed to be validated by IDP signing key:" + e.getMessage());
                                     throw new ServerApiException(ApiErrorCode.ACCOUNT_ERROR, apiServer.getSerializedApiError(ApiErrorCode.ACCOUNT_ERROR.getHttpCode(),
                                             "SAML Response's signature failed to be validated by IDP signing key",
                                             params, responseType));
@@ -325,7 +325,7 @@ public class SAML2LoginAPIAuthenticatorCmd extends BaseCmd implements APIAuthent
                         return ApiResponseSerializer.toSerializedString(loginResponse, responseType);
                     }
                 } catch (CloudAuthenticationException | IOException exception) {
-                    s_logger.debug("SAML Login failed to log in the user due to: " + exception.getMessage());
+                    logger.debug("SAML Login failed to log in the user due to: " + exception.getMessage());
                 }
             }
         } catch (IOException e) {
@@ -368,7 +368,7 @@ public class SAML2LoginAPIAuthenticatorCmd extends BaseCmd implements APIAuthent
             }
         }
         if (samlAuthManager == null) {
-            s_logger.error("No suitable Pluggable Authentication Manager found for SAML2 Login Cmd");
+            logger.error("No suitable Pluggable Authentication Manager found for SAML2 Login Cmd");
         }
     }
 

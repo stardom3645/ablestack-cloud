@@ -153,15 +153,15 @@ public class BaremetalDhcpManagerImpl extends ManagerBase implements BaremetalDh
         try {
             Answer ans = _agentMgr.send(h.getId(), dhcpCommand);
             if (ans.getResult()) {
-                s_logger.debug(String.format("Set dhcp entry on external DHCP %1$s successfully(ip=%2$s, mac=%3$s, vmname=%4$s)", h.getPrivateIpAddress(),
+                logger.debug(String.format("Set dhcp entry on external DHCP %1$s successfully(ip=%2$s, mac=%3$s, vmname=%4$s)", h.getPrivateIpAddress(),
                     nic.getIPv4Address(), nic.getMacAddress(), profile.getVirtualMachine().getHostName()));
                 return true;
             } else {
-                s_logger.debug(errMsg + " " + ans.getDetails());
+                logger.debug(errMsg + " " + ans.getDetails());
                 throw new ResourceUnavailableException(errMsg, DataCenter.class, zoneId);
             }
         } catch (Exception e) {
-            s_logger.debug(errMsg, e);
+            logger.debug(errMsg, e);
             throw new ResourceUnavailableException(errMsg + e.getMessage(), DataCenter.class, zoneId);
         }
     }
@@ -224,7 +224,7 @@ public class BaremetalDhcpManagerImpl extends ManagerBase implements BaremetalDh
         try {
             uri = new URI(cmd.getUrl());
         } catch (Exception e) {
-            s_logger.debug(e);
+            logger.debug(e);
             throw new IllegalArgumentException(e.getMessage());
         }
 
@@ -258,7 +258,7 @@ public class BaremetalDhcpManagerImpl extends ManagerBase implements BaremetalDh
                 throw new CloudRuntimeException("Unsupport DHCP server type: " + cmd.getDhcpType());
             }
         } catch (Exception e) {
-            s_logger.debug(e);
+            logger.debug(e);
             throw new CloudRuntimeException(e.getMessage());
         }
 

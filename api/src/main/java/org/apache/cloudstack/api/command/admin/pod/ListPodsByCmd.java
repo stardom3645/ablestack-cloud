@@ -36,7 +36,7 @@ import com.cloud.utils.Pair;
 @APICommand(name = "listPods", description = "Lists all Pods.", responseObject = PodResponse.class,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class ListPodsByCmd extends BaseListCmd {
-    protected static Logger s_logger = LogManager.getLogger(ListPodsByCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(ListPodsByCmd.class.getName());
 
 
     /////////////////////////////////////////////////////

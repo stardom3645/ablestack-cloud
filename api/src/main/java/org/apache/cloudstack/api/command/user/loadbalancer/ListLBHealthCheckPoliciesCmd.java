@@ -38,7 +38,7 @@ import com.cloud.network.rules.LoadBalancer;
 @APICommand(name = "listLBHealthCheckPolicies", description = "Lists load balancer health check policies.", responseObject = LBHealthCheckResponse.class, since = "4.2.0",
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class ListLBHealthCheckPoliciesCmd extends BaseListCmd {
-    protected static Logger s_logger = LogManager.getLogger(ListLBHealthCheckPoliciesCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(ListLBHealthCheckPoliciesCmd.class.getName());
 
 
     // ///////////////////////////////////////////////////

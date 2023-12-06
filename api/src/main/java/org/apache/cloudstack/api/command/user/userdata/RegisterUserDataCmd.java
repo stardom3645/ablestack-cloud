@@ -53,7 +53,7 @@ import com.cloud.user.UserData;
         authorized = {RoleType.Admin, RoleType.ResourceAdmin, RoleType.DomainAdmin, RoleType.User})
 public class RegisterUserDataCmd extends BaseCmd {
 
-    protected static Logger s_logger = LogManager.getLogger(RegisterUserDataCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(RegisterUserDataCmd.class.getName());
 
     /////////////////////////////////////////////////////
     //////////////// API parameters /////////////////////

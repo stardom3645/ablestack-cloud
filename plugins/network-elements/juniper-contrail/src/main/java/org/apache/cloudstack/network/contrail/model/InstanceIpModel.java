@@ -31,7 +31,7 @@ import org.apache.logging.log4j.LogManager;
 import com.cloud.exception.InternalErrorException;
 
 public class InstanceIpModel extends ModelObjectBase {
-    protected static Logger s_logger = LogManager.getLogger(InstanceIpModel.class);
+    protected static Logger logger = LogManager.getLogger(InstanceIpModel.class);
 
     private String _name;
     private String _uuid;
@@ -48,7 +48,7 @@ public class InstanceIpModel extends ModelObjectBase {
         _vmiModel = vmiModel;
         if (vmiModel != null) {
             vmiModel.addSuccessor(this);
-            s_logger.debug("vmiModel has " + vmiModel.successors().size() + " IP addresses");
+            logger.debug("vmiModel has " + vmiModel.successors().size() + " IP addresses");
         }
     }
 

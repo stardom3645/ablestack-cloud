@@ -45,7 +45,7 @@ import com.cloud.user.Account;
             responseHasSensitiveInfo = false)
 @SuppressWarnings("rawtypes")
 public class CreateLBHealthCheckPolicyCmd extends BaseAsyncCreateCmd {
-    protected static Logger s_logger = LogManager.getLogger(CreateLBHealthCheckPolicyCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(CreateLBHealthCheckPolicyCmd.class.getName());
 
 
     // ///////////////////////////////////////////////////
@@ -182,7 +182,7 @@ public class CreateLBHealthCheckPolicyCmd extends BaseAsyncCreateCmd {
             this.setEntityId(result.getId());
             this.setEntityUuid(result.getUuid());
         } catch (InvalidParameterValueException e) {
-            s_logger.warn("Exception: ", e);
+            logger.warn("Exception: ", e);
             throw new ServerApiException(ApiErrorCode.MALFORMED_PARAMETER_ERROR, e.getMessage());
         }
     }

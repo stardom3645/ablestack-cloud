@@ -51,7 +51,7 @@ import com.cloud.simulator.MockHost;
 import com.cloud.utils.component.ComponentContext;
 
 public class AgentResourceBase implements ServerResource {
-    protected static Logger s_logger = LogManager.getLogger(AgentResourceBase.class);
+    protected static Logger logger = LogManager.getLogger(AgentResourceBase.class);
 
     protected String _name;
     private List<String> _warnings = new LinkedList<String>();
@@ -72,8 +72,8 @@ public class AgentResourceBase implements ServerResource {
     public AgentResourceBase(long instanceId, AgentType agentType, SimulatorManager simMgr, String hostGuid) {
         _instanceId = instanceId;
 
-        if (s_logger.isDebugEnabled()) {
-            s_logger.info("New Routing host instantiated with guid:" + hostGuid);
+        if (logger.isDebugEnabled()) {
+            logger.info("New Routing host instantiated with guid:" + hostGuid);
         }
 
         if (agentType == AgentType.Routing) {
@@ -102,8 +102,8 @@ public class AgentResourceBase implements ServerResource {
     }
 
     public AgentResourceBase() {
-        if (s_logger.isDebugEnabled()) {
-            s_logger.debug("Deserializing simulated agent on reconnect");
+        if (logger.isDebugEnabled()) {
+            logger.debug("Deserializing simulated agent on reconnect");
         }
 
     }
@@ -130,8 +130,8 @@ public class AgentResourceBase implements ServerResource {
     }
 
     private void reconnect(MockHost host) {
-        if (s_logger.isDebugEnabled()) {
-            s_logger.debug("Reconfiguring existing simulated host w/ name: " + host.getName() + " and guid: " + host.getGuid());
+        if (logger.isDebugEnabled()) {
+            logger.debug("Reconfiguring existing simulated host w/ name: " + host.getName() + " and guid: " + host.getGuid());
         }
         this.agentHost = host;
     }
@@ -231,12 +231,12 @@ public class AgentResourceBase implements ServerResource {
     }
 
     protected String findScript(String script) {
-        s_logger.debug("Looking for " + script + " in the classpath");
+        logger.debug("Looking for " + script + " in the classpath");
         URL url = ClassLoader.getSystemResource(script);
         File file = null;
         if (url == null) {
             file = new File("./" + script);
-            s_logger.debug("Looking for " + script + " in " + file.getAbsolutePath());
+            logger.debug("Looking for " + script + " in " + file.getAbsolutePath());
             if (!file.exists()) {
                 return null;
             }

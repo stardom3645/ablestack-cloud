@@ -36,7 +36,7 @@ import com.cloud.user.Account;
 @APICommand(name = "deletePortableIpRange", description = "deletes a range of portable public IP's associated with a region", responseObject = SuccessResponse.class,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class DeletePortableIpRangeCmd extends BaseAsyncCmd {
-    protected static Logger s_logger = LogManager.getLogger(DeletePortableIpRangeCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(DeletePortableIpRangeCmd.class.getName());
 
     private static final String s_name = "deleteportablepublicipresponse";
 

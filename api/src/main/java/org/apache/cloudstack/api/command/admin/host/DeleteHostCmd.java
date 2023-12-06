@@ -33,7 +33,7 @@ import com.cloud.user.Account;
 @APICommand(name = "deleteHost", description = "Deletes a host.", responseObject = SuccessResponse.class,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class DeleteHostCmd extends BaseCmd {
-    protected static Logger s_logger = LogManager.getLogger(DeleteHostCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(DeleteHostCmd.class.getName());
 
 
     // ///////////////////////////////////////////////////

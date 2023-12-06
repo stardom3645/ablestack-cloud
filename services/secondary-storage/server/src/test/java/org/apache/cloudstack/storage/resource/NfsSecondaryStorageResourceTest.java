@@ -92,7 +92,7 @@ public class NfsSecondaryStorageResourceTest {
     public void testCleanupStagingNfs() throws Exception{
 
         NfsSecondaryStorageResource spyResource = spy(resource);
-        spyResource.s_logger = loggerMock;
+        spyResource.logger = loggerMock;
         RuntimeException exception = new RuntimeException();
         doThrow(exception).when(spyResource).execute(any(DeleteCommand.class));
         TemplateObjectTO mockTemplate = Mockito.mock(TemplateObjectTO.class);

@@ -37,7 +37,7 @@ import com.cloud.network.as.Condition;
 @APICommand(name = "listConditions", description = "List Conditions for VM auto scaling", responseObject = ConditionResponse.class,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class ListConditionsCmd extends BaseListProjectAndAccountResourcesCmd {
-    protected static Logger s_logger = LogManager.getLogger(ListConditionsCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(ListConditionsCmd.class.getName());
 
     // ///////////////////////////////////////////////////
     // ////////////// API parameters /////////////////////

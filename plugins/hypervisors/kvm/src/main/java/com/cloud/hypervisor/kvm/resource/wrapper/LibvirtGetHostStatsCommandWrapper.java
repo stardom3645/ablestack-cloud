@@ -35,7 +35,7 @@ import org.apache.logging.log4j.LogManager;
 @ResourceWrapper(handles =  GetHostStatsCommand.class)
 public final class LibvirtGetHostStatsCommandWrapper extends CommandWrapper<GetHostStatsCommand, Answer, LibvirtComputingResource> {
 
-    protected static Logger s_logger = LogManager.getLogger(LibvirtGetHostStatsCommandWrapper.class);
+    protected static Logger logger = LogManager.getLogger(LibvirtGetHostStatsCommandWrapper.class);
 
     @Override
     public Answer execute(final GetHostStatsCommand command, final LibvirtComputingResource libvirtComputingResource) {

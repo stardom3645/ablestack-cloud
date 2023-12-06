@@ -52,7 +52,7 @@ import com.cloud.vm.VirtualMachine;
             requestHasSensitiveInfo = false,
             responseHasSensitiveInfo = false)
 public class AssignToLoadBalancerRuleCmd extends BaseAsyncCmd {
-    protected static Logger s_logger = LogManager.getLogger(AssignToLoadBalancerRuleCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(AssignToLoadBalancerRuleCmd.class.getName());
 
 
     /////////////////////////////////////////////////////

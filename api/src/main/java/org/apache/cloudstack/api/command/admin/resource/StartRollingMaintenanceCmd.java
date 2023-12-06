@@ -56,7 +56,7 @@ public class StartRollingMaintenanceCmd extends BaseAsyncCmd {
     @Inject
     RollingMaintenanceManager manager;
 
-    protected static Logger s_logger = LogManager.getLogger(StartRollingMaintenanceCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(StartRollingMaintenanceCmd.class.getName());
 
 
     /////////////////////////////////////////////////////

@@ -36,7 +36,7 @@ import com.cloud.exception.ResourceUnavailableException;
 @APICommand(name = "acquirePodIpAddress", description = "Allocates IP addresses in respective Pod of a Zone", responseObject = AcquirePodIpCmdResponse.class, requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class AcquirePodIpCmdByAdmin extends BaseCmd {
 
-    protected static Logger s_logger = LogManager.getLogger(AcquirePodIpCmdByAdmin.class.getName());
+    protected static Logger logger = LogManager.getLogger(AcquirePodIpCmdByAdmin.class.getName());
     private static final String s_name = "acquirepodipaddress";
 
     /////////////////////////////////////////////////////

@@ -45,7 +45,7 @@ import com.cloud.utils.Pair;
             requestHasSensitiveInfo = false,
             responseHasSensitiveInfo = false)
 public class ListTrafficTypeImplementorsCmd extends BaseListCmd {
-    protected static Logger s_logger = LogManager.getLogger(ListTrafficTypeImplementorsCmd.class);
+    protected static Logger logger = LogManager.getLogger(ListTrafficTypeImplementorsCmd.class);
 
     /////////////////////////////////////////////////////
     //////////////// API parameters /////////////////////

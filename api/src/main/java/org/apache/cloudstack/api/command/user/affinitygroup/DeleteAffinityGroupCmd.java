@@ -41,7 +41,7 @@ import com.cloud.user.Account;
 @APICommand(name = "deleteAffinityGroup", description = "Deletes affinity group", responseObject = SuccessResponse.class, entityType = {AffinityGroup.class},
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class DeleteAffinityGroupCmd extends BaseAsyncCmd {
-    protected static Logger s_logger = LogManager.getLogger(DeleteAffinityGroupCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(DeleteAffinityGroupCmd.class.getName());
 
     /////////////////////////////////////////////////////
     //////////////// API parameters /////////////////////

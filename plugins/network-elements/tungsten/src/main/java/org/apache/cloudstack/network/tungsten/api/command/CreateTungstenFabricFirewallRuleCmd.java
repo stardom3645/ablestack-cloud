@@ -43,7 +43,7 @@ import javax.inject.Inject;
     responseObject = TungstenFabricFirewallRuleResponse.class, requestHasSensitiveInfo = false,
     responseHasSensitiveInfo = false)
 public class CreateTungstenFabricFirewallRuleCmd extends BaseAsyncCmd {
-    protected static Logger s_logger = LogManager.getLogger(CreateTungstenFabricFirewallRuleCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(CreateTungstenFabricFirewallRuleCmd.class.getName());
     public static final String APINAME = "createTungstenFabricFirewallRule";
 
     @Inject

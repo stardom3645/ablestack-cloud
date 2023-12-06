@@ -42,7 +42,7 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 
 public class EventControlsUnitTest extends TestCase {
-    protected static Logger s_logger = LogManager.getLogger(EventControlsUnitTest.class);
+    protected static Logger logger = LogManager.getLogger(EventControlsUnitTest.class);
 
     @Spy
     ManagementServerImpl _mgmtServer = new ManagementServerImpl();
@@ -69,10 +69,10 @@ public class EventControlsUnitTest extends TestCase {
 
     @Test
     public void testInjected() throws Exception {
-        s_logger.info("Starting test to archive and delete events");
+        logger.info("Starting test to archive and delete events");
         archiveEvents();
         deleteEvents();
-        s_logger.info("archive/delete events: TEST PASSED");
+        logger.info("archive/delete events: TEST PASSED");
     }
 
     protected void archiveEvents() {

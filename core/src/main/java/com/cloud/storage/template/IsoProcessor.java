@@ -32,7 +32,7 @@ import com.cloud.storage.StorageLayer;
 import com.cloud.utils.component.AdapterBase;
 
 public class IsoProcessor extends AdapterBase implements Processor {
-    protected static Logger s_logger = LogManager.getLogger(IsoProcessor.class);
+    protected static Logger logger = LogManager.getLogger(IsoProcessor.class);
 
     StorageLayer _storage;
 
@@ -44,14 +44,14 @@ public class IsoProcessor extends AdapterBase implements Processor {
    @Override
     public FormatInfo process(String templatePath, ImageFormat format, String templateName, long processTimeout) {
         if (format != null) {
-            s_logger.debug("We don't handle conversion from " + format + " to ISO.");
+            logger.debug("We don't handle conversion from " + format + " to ISO.");
             return null;
         }
 
         String isoPath = templatePath + File.separator + templateName + "." + ImageFormat.ISO.getFileExtension();
 
         if (!_storage.exists(isoPath)) {
-            s_logger.debug("Unable to find the iso file: " + isoPath);
+            logger.debug("Unable to find the iso file: " + isoPath);
             return null;
         }
 

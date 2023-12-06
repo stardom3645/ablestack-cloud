@@ -38,7 +38,7 @@ import javax.inject.Inject;
 
 @APICommand(name = "authorizeSamlSso", description = "Allow or disallow a user to use SAML SSO", responseObject = SuccessResponse.class, requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class AuthorizeSAMLSSOCmd extends BaseCmd {
-    protected static Logger s_logger = LogManager.getLogger(AuthorizeSAMLSSOCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(AuthorizeSAMLSSOCmd.class.getName());
 
 
     @Inject

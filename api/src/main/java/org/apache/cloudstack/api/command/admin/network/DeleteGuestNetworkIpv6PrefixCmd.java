@@ -46,7 +46,7 @@ import com.cloud.utils.exception.CloudRuntimeException;
         responseHasSensitiveInfo = false,
         authorized = {RoleType.Admin})
 public class DeleteGuestNetworkIpv6PrefixCmd extends BaseAsyncCmd {
-    protected static Logger s_logger = LogManager.getLogger(DeleteGuestNetworkIpv6PrefixCmd.class);
+    protected static Logger logger = LogManager.getLogger(DeleteGuestNetworkIpv6PrefixCmd.class);
 
     /////////////////////////////////////////////////////
     //////////////// API parameters /////////////////////

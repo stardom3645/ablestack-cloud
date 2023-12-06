@@ -38,7 +38,7 @@ import com.cloud.projects.Project;
 @APICommand(name = "deleteProject", description = "Deletes a project", responseObject = SuccessResponse.class, since = "3.0.0",
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class DeleteProjectCmd extends BaseAsyncCmd {
-    protected static Logger s_logger = LogManager.getLogger(DeleteProjectCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(DeleteProjectCmd.class.getName());
 
 
     /////////////////////////////////////////////////////

@@ -40,7 +40,7 @@ import com.cloud.utils.component.AdapterBase;
 import com.cloud.vm.VirtualMachine;
 
 public class SimulatorFencer extends AdapterBase implements FenceBuilder {
-    protected static Logger s_logger = LogManager.getLogger(SimulatorFencer.class);
+    protected static Logger logger = LogManager.getLogger(SimulatorFencer.class);
 
     @Inject HostDao _hostDao;
     @Inject AgentManager _agentMgr;
@@ -71,7 +71,7 @@ public class SimulatorFencer extends AdapterBase implements FenceBuilder {
     @Override
     public Boolean fenceOff(VirtualMachine vm, Host host) {
         if (host.getHypervisorType() != HypervisorType.Simulator) {
-            s_logger.debug("Don't know how to fence non simulator hosts " + host.getHypervisorType());
+            logger.debug("Don't know how to fence non simulator hosts " + host.getHypervisorType());
             return null;
         }
 
@@ -90,13 +90,13 @@ public class SimulatorFencer extends AdapterBase implements FenceBuilder {
                 try {
                     answer = (FenceAnswer)_agentMgr.send(h.getId(), fence);
                 } catch (AgentUnavailableException e) {
-                    if (s_logger.isDebugEnabled()) {
-                        s_logger.debug("Moving on to the next host because " + h.toString() + " is unavailable", e);
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("Moving on to the next host because " + h.toString() + " is unavailable", e);
                     }
                     continue;
                 } catch (OperationTimedoutException e) {
-                    if (s_logger.isDebugEnabled()) {
-                        s_logger.debug("Moving on to the next host because " + h.toString() + " is unavailable", e);
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("Moving on to the next host because " + h.toString() + " is unavailable", e);
                     }
                     continue;
                 }
@@ -106,8 +106,8 @@ public class SimulatorFencer extends AdapterBase implements FenceBuilder {
             }
         }
 
-        if (s_logger.isDebugEnabled()) {
-            s_logger.debug("Unable to fence off " + vm.toString() + " on " + host.toString());
+        if (logger.isDebugEnabled()) {
+            logger.debug("Unable to fence off " + vm.toString() + " on " + host.toString());
         }
 
         return false;

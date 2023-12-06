@@ -33,7 +33,7 @@ import com.cloud.resource.ResourceWrapper;
 @ResourceWrapper(handles =  NetworkRulesSystemVmCommand.class)
 public final class LibvirtNetworkRulesSystemVmCommandWrapper extends CommandWrapper<NetworkRulesSystemVmCommand, Answer, LibvirtComputingResource> {
 
-    protected static Logger s_logger = LogManager.getLogger(LibvirtOvsVpcRoutingPolicyConfigCommandWrapper.class);
+    protected static Logger logger = LogManager.getLogger(LibvirtOvsVpcRoutingPolicyConfigCommandWrapper.class);
 
     @Override
     public Answer execute(final NetworkRulesSystemVmCommand command, final LibvirtComputingResource libvirtComputingResource) {
@@ -44,7 +44,7 @@ public final class LibvirtNetworkRulesSystemVmCommandWrapper extends CommandWrap
             final Connect conn = libvirtUtilitiesHelper.getConnectionByVmName(command.getVmName());
             success = libvirtComputingResource.configureDefaultNetworkRulesForSystemVm(conn, command.getVmName());
         } catch (final LibvirtException e) {
-            s_logger.trace("Ignoring libvirt error.", e);
+            logger.trace("Ignoring libvirt error.", e);
         }
 
         return new Answer(command, success, "");

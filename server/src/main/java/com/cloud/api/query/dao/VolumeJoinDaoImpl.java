@@ -50,7 +50,7 @@ import com.cloud.utils.db.SearchCriteria;
 
 @Component
 public class VolumeJoinDaoImpl extends GenericDaoBaseWithTagInformation<VolumeJoinVO, VolumeResponse> implements VolumeJoinDao {
-    protected static Logger s_logger = LogManager.getLogger(VolumeJoinDaoImpl.class);
+    protected static Logger logger = LogManager.getLogger(VolumeJoinDaoImpl.class);
 
     @Inject
     private ConfigurationDao  _configDao;

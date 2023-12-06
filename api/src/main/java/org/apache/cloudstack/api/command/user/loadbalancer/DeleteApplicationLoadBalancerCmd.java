@@ -37,7 +37,7 @@ import com.cloud.exception.InvalidParameterValueException;
 @APICommand(name = "deleteLoadBalancer", description = "Deletes an internal load balancer", responseObject = SuccessResponse.class, since = "4.2.0",
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class DeleteApplicationLoadBalancerCmd extends BaseAsyncCmd {
-    protected static Logger s_logger = LogManager.getLogger(DeleteApplicationLoadBalancerCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(DeleteApplicationLoadBalancerCmd.class.getName());
     /////////////////////////////////////////////////////
     //////////////// API parameters /////////////////////
     /////////////////////////////////////////////////////

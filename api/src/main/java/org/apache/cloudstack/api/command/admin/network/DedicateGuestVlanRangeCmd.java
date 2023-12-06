@@ -40,7 +40,7 @@ import com.cloud.user.Account;
 @APICommand(name = "dedicateGuestVlanRange", description = "Dedicates a guest vlan range to an account", responseObject = GuestVlanRangeResponse.class,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class DedicateGuestVlanRangeCmd extends BaseCmd {
-    protected static Logger s_logger = LogManager.getLogger(DedicateGuestVlanRangeCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(DedicateGuestVlanRangeCmd.class.getName());
 
 
     /////////////////////////////////////////////////////

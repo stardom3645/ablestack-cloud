@@ -28,7 +28,7 @@ import streamer.Link;
 import streamer.SyncLink;
 
 public class FakeSource extends BaseElement {
-    protected static Logger s_logger = LogManager.getLogger(FakeSource.class);
+    protected static Logger logger = LogManager.getLogger(FakeSource.class);
 
     /**
      * Delay for null packets in poll method when blocking is requested, in
@@ -70,7 +70,7 @@ public class FakeSource extends BaseElement {
         try {
             Thread.sleep(delay);
         } catch (InterruptedException e) {
-            s_logger.info("[ignored] interrupted while creating latency", e);
+            logger.info("[ignored] interrupted while creating latency", e);
         }
     }
 

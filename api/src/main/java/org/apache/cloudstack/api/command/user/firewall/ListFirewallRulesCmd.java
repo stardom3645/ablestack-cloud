@@ -39,7 +39,7 @@ import com.cloud.utils.Pair;
 @APICommand(name = "listFirewallRules", description = "Lists all firewall rules for an IP address.", responseObject = FirewallResponse.class, entityType = {FirewallRule.class},
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class ListFirewallRulesCmd extends BaseListTaggedResourcesCmd implements IListFirewallRulesCmd {
-    protected static Logger s_logger = LogManager.getLogger(ListFirewallRulesCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(ListFirewallRulesCmd.class.getName());
 
     /////////////////////////////////////////////////////
     //////////////// API parameters /////////////////////

@@ -39,7 +39,7 @@ import org.apache.logging.log4j.LogManager;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 public class RSAHelper {
-    final static Logger s_logger = LogManager.getLogger(RSAHelper.class);
+    final static Logger logger = LogManager.getLogger(RSAHelper.class);
 
     static {
         BouncyCastleProvider provider = new BouncyCastleProvider();
@@ -82,7 +82,7 @@ public class RSAHelper {
             byte[] encrypted = cipher.doFinal(content.getBytes());
             returnString = Base64.encodeBase64String(encrypted);
         } catch (Exception e) {
-            s_logger.info("[ignored]"
+            logger.info("[ignored]"
                     + "error during public key encryption: " + e.getLocalizedMessage());
         }
 

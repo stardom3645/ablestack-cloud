@@ -41,7 +41,7 @@ import com.cloud.user.Account;
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class RemoveCertFromLoadBalancerCmd extends BaseAsyncCmd {
 
-    protected static Logger s_logger = LogManager.getLogger(RemoveCertFromLoadBalancerCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(RemoveCertFromLoadBalancerCmd.class.getName());
 
 
     @Parameter(name = ApiConstants.LBID,

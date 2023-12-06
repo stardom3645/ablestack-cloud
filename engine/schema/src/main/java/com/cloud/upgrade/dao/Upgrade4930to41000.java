@@ -29,7 +29,7 @@ import org.apache.logging.log4j.LogManager;
 import com.cloud.utils.exception.CloudRuntimeException;
 
 public class Upgrade4930to41000 implements DbUpgrade {
-    final static Logger s_logger = LogManager.getLogger(Upgrade4930to41000.class);
+    final static Logger logger = LogManager.getLogger(Upgrade4930to41000.class);
 
     public static class MemoryValues {
         long max;

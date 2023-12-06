@@ -39,7 +39,7 @@ import com.cloud.utils.Pair;
 @APICommand(name = "ldapRemove", description = "(Deprecated , use deleteLdapConfiguration) Remove the LDAP context for this site.", responseObject = LDAPConfigResponse.class, since = "3.0.1",
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class LDAPRemoveCmd extends BaseCmd {
-    protected static Logger s_logger = LogManager.getLogger(LDAPRemoveCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(LDAPRemoveCmd.class.getName());
 
     @Inject
     private LdapManager _ldapManager;

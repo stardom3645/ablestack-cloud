@@ -34,7 +34,7 @@ import com.cloud.utils.db.GenericDao;
 @Entity
 @Table(name = "domain")
 public class DomainVO implements Domain {
-    protected static Logger s_logger = LogManager.getLogger(DomainVO.class.getName());
+    protected static Logger logger = LogManager.getLogger(DomainVO.class.getName());
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

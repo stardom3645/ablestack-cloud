@@ -29,7 +29,7 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 public class Test extends TestCase {
-    protected static Logger s_logger = LogManager.getLogger(Test.class.getName());
+    protected static Logger logger = LogManager.getLogger(Test.class.getName());
 
     public Test() {
         this.setClient();
@@ -65,7 +65,7 @@ public class Test extends TestCase {
         //try all public ports
         for (String portValue : port) {
             try {
-                s_logger.info("public port is " + portValue);
+                logger.info("public port is " + portValue);
                 String url =
                     "http://" + this.getParam().get("hostip") + ":8096/?command=createNetworkRule&publicPort=" + portValue +
                         "&privatePort=22&protocol=tcp&isForward=true&securityGroupId=1&account=admin";
@@ -74,10 +74,10 @@ public class Test extends TestCase {
                 int responseCode = client.executeMethod(method);
                 if (responseCode != 200) {
                     error++;
-                    s_logger.error("Can't create portForwarding network rule for the public port " + portValue + ". Request was sent with url " + url);
+                    logger.error("Can't create portForwarding network rule for the public port " + portValue + ". Request was sent with url " + url);
                 }
             } catch (Exception ex) {
-                s_logger.error(ex);
+                logger.error(ex);
             }
         }
 

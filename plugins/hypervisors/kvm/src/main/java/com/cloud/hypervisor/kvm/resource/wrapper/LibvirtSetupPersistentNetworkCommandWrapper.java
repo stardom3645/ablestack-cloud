@@ -34,7 +34,7 @@ import com.cloud.resource.ResourceWrapper;
 
 @ResourceWrapper(handles = SetupPersistentNetworkCommand.class)
 public class LibvirtSetupPersistentNetworkCommandWrapper extends CommandWrapper<SetupPersistentNetworkCommand, Answer, LibvirtComputingResource> {
-    protected static Logger s_logger = LogManager.getLogger(LibvirtSetupPersistentNetworkCommandWrapper.class);
+    protected static Logger logger = LogManager.getLogger(LibvirtSetupPersistentNetworkCommandWrapper.class);
 
     @Override
     public Answer execute(SetupPersistentNetworkCommand command, LibvirtComputingResource serverResource) {

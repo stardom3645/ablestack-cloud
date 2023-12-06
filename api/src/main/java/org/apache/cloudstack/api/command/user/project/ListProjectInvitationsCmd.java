@@ -35,7 +35,7 @@ import org.apache.cloudstack.api.response.ProjectResponse;
             requestHasSensitiveInfo = false,
             responseHasSensitiveInfo = false)
 public class ListProjectInvitationsCmd extends BaseListAccountResourcesCmd {
-    protected static Logger s_logger = LogManager.getLogger(ListProjectInvitationsCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(ListProjectInvitationsCmd.class.getName());
 
     // ///////////////////////////////////////////////////
     // ////////////// API parameters /////////////////////

@@ -26,7 +26,7 @@ public class Transaction {
     private final static TransactionStatus STATUS = new TransactionStatus() {
     };
 
-    protected static Logger s_logger = LogManager.getLogger(Transaction.class);
+    protected static Logger logger = LogManager.getLogger(Transaction.class);
 
     @SuppressWarnings("deprecation")
     public static <T, E extends Throwable> T execute(TransactionCallbackWithException<T, E> callback) throws E {

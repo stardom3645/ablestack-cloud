@@ -30,7 +30,7 @@ import com.cloud.user.Account;
 @APICommand(name = "queryAsyncJobResult", description = "Retrieves the current status of asynchronous job.", responseObject = AsyncJobResponse.class,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class QueryAsyncJobResultCmd extends BaseCmd {
-    protected static Logger s_logger = LogManager.getLogger(QueryAsyncJobResultCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(QueryAsyncJobResultCmd.class.getName());
 
 
     /////////////////////////////////////////////////////

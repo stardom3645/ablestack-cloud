@@ -41,7 +41,7 @@ import com.cloud.resource.ResourceWrapper;
 @ResourceWrapper(handles =  UnPlugNicCommand.class)
 public final class LibvirtUnPlugNicCommandWrapper extends CommandWrapper<UnPlugNicCommand, Answer, LibvirtComputingResource> {
 
-    protected static Logger s_logger = LogManager.getLogger(LibvirtUnPlugNicCommandWrapper.class);
+    protected static Logger logger = LogManager.getLogger(LibvirtUnPlugNicCommandWrapper.class);
 
     @Override
     public Answer execute(final UnPlugNicCommand command, final LibvirtComputingResource libvirtComputingResource) {
@@ -74,14 +74,14 @@ public final class LibvirtUnPlugNicCommandWrapper extends CommandWrapper<UnPlugN
             return new UnPlugNicAnswer(command, true, "success");
         } catch (final LibvirtException e) {
             final String msg = " Unplug Nic failed due to " + e.toString();
-            s_logger.warn(msg, e);
+            logger.warn(msg, e);
             return new UnPlugNicAnswer(command, false, msg);
         } finally {
             if (vm != null) {
                 try {
                     vm.free();
                 } catch (final LibvirtException l) {
-                    s_logger.trace("Ignoring libvirt error.", l);
+                    logger.trace("Ignoring libvirt error.", l);
                 }
             }
         }

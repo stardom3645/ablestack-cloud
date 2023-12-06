@@ -38,7 +38,7 @@ import com.cloud.resource.ResourceWrapper;
 @ResourceWrapper(handles =  GetVmDiskStatsCommand.class)
 public final class LibvirtGetVmDiskStatsCommandWrapper extends CommandWrapper<GetVmDiskStatsCommand, Answer, LibvirtComputingResource> {
 
-    protected static Logger s_logger = LogManager.getLogger(LibvirtGetVmDiskStatsCommandWrapper.class);
+    protected static Logger logger = LogManager.getLogger(LibvirtGetVmDiskStatsCommandWrapper.class);
 
     @Override
     public Answer execute(final GetVmDiskStatsCommand command, final LibvirtComputingResource libvirtComputingResource) {
@@ -57,12 +57,12 @@ public final class LibvirtGetVmDiskStatsCommandWrapper extends CommandWrapper<Ge
 
                     vmDiskStatsNameMap.put(vmName, statEntry);
                 } catch (LibvirtException e) {
-                    s_logger.warn("Can't get vm disk stats: " + e.toString() + ", continue");
+                    logger.warn("Can't get vm disk stats: " + e.toString() + ", continue");
                 }
             }
             return new GetVmDiskStatsAnswer(command, "", command.getHostName(), vmDiskStatsNameMap);
         } catch (final LibvirtException e) {
-            s_logger.debug("Can't get vm disk stats: " + e.toString());
+            logger.debug("Can't get vm disk stats: " + e.toString());
             return new GetVmDiskStatsAnswer(command, null, null, null);
         }
     }

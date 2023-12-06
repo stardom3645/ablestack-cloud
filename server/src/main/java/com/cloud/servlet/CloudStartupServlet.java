@@ -33,7 +33,7 @@ import com.cloud.utils.component.ComponentContext;
 import com.cloud.utils.db.TransactionLegacy;
 
 public class CloudStartupServlet extends HttpServlet {
-    protected static Logger s_logger = LogManager.getLogger(CloudStartupServlet.class.getName());
+    protected static Logger logger = LogManager.getLogger(CloudStartupServlet.class.getName());
     static final long serialVersionUID = SerialVersionUID.CloudStartupServlet;
 
     Timer _timer = new Timer();

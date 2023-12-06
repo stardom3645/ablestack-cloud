@@ -23,7 +23,7 @@ import org.apache.logging.log4j.LogManager;
 import com.cloud.hypervisor.Hypervisor;
 
 public class LxcServerDiscoverer extends LibvirtServerDiscoverer {
-    protected static Logger s_logger = LogManager.getLogger(LxcServerDiscoverer.class);
+    protected static Logger logger = LogManager.getLogger(LxcServerDiscoverer.class);
 
     @Override
     public Hypervisor.HypervisorType getHypervisorType() {

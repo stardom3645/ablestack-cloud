@@ -42,7 +42,7 @@ import com.cloud.storage.Volume;
 @APICommand(name = "updateVolume", description = "Updates the volume.", responseObject = VolumeResponse.class, responseView = ResponseView.Restricted, entityType = {Volume.class},
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class UpdateVolumeCmd extends BaseAsyncCustomIdCmd implements UserCmd {
-    protected static Logger s_logger = LogManager.getLogger(UpdateVolumeCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(UpdateVolumeCmd.class.getName());
     private static final String s_name = "updatevolumeresponse";
 
     /////////////////////////////////////////////////////

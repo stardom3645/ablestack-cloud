@@ -35,7 +35,7 @@ import org.apache.logging.log4j.LogManager;
 @APICommand(name = "listZones", description = "Lists zones", responseObject = ZoneResponse.class, responseView = ResponseView.Restricted,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class ListZonesCmd extends BaseListCmd implements UserCmd {
-    protected static Logger s_logger = LogManager.getLogger(ListZonesCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(ListZonesCmd.class.getName());
 
     private static final String s_name = "listzonesresponse";
 

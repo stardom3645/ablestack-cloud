@@ -35,7 +35,7 @@ import com.cloud.host.Host;
 @APICommand(name = "listTrafficMonitors", description = "List traffic monitor Hosts.", responseObject = TrafficMonitorResponse.class,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class ListTrafficMonitorsCmd extends BaseListCmd {
-    protected static Logger s_logger = LogManager.getLogger(ListTrafficMonitorsCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(ListTrafficMonitorsCmd.class.getName());
 
     /////////////////////////////////////////////////////
     //////////////// API parameters /////////////////////

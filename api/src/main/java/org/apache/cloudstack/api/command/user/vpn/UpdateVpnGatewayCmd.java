@@ -32,7 +32,7 @@ import com.cloud.user.Account;
 @APICommand(name = "updateVpnGateway", description = "Updates site to site vpn local gateway", responseObject = Site2SiteVpnGatewayResponse.class, since = "4.4",
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class UpdateVpnGatewayCmd extends BaseAsyncCustomIdCmd {
-    protected static Logger s_logger = LogManager.getLogger(UpdateVpnGatewayCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(UpdateVpnGatewayCmd.class.getName());
 
 
     /////////////////////////////////////////////////////

@@ -44,7 +44,7 @@ import com.cloud.utils.Pair;
 @APICommand(name = "listDedicatedHosts", description = "Lists dedicated hosts.", responseObject = DedicateHostResponse.class,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class ListDedicatedHostsCmd extends BaseListCmd {
-    protected static Logger s_logger = LogManager.getLogger(ListDedicatedHostsCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(ListDedicatedHostsCmd.class.getName());
 
     @Inject
     DedicatedService dedicatedService;

@@ -43,7 +43,7 @@ import javax.inject.Inject;
 @APICommand(name = DeleteTungstenFabricLogicalRouterCmd.APINAME, description = "delete Tungsten-Fabric logical router",
     responseObject = SuccessResponse.class, requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class DeleteTungstenFabricLogicalRouterCmd extends BaseAsyncCmd {
-    protected static Logger s_logger = LogManager.getLogger(DeleteTungstenFabricLogicalRouterCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(DeleteTungstenFabricLogicalRouterCmd.class.getName());
     public static final String APINAME = "deleteTungstenFabricLogicalRouter";
 
     @Inject

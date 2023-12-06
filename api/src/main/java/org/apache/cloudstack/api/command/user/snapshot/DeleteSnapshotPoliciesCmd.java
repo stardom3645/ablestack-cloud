@@ -35,7 +35,7 @@ import com.cloud.user.Account;
 @APICommand(name = "deleteSnapshotPolicies", description = "Deletes snapshot policies for the account.", responseObject = SuccessResponse.class,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class DeleteSnapshotPoliciesCmd extends BaseCmd {
-    protected static Logger s_logger = LogManager.getLogger(DeleteSnapshotPoliciesCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(DeleteSnapshotPoliciesCmd.class.getName());
 
 
     /////////////////////////////////////////////////////

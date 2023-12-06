@@ -48,7 +48,7 @@ import com.cloud.utils.exception.CloudRuntimeException;
 public class ListCfgsByCmd extends BaseListCmd {
 
     public static final String APINAME = "listConfigurations";
-    protected static Logger s_logger = LogManager.getLogger(ListCfgsByCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(ListCfgsByCmd.class.getName());
 
 
     // ///////////////////////////////////////////////////

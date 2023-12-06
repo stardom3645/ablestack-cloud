@@ -34,7 +34,7 @@ import org.apache.commons.lang3.StringUtils;
 
 @Component
 public class QuotaEmailTemplatesDaoImpl extends GenericDaoBase<QuotaEmailTemplatesVO, Long> implements QuotaEmailTemplatesDao {
-    protected static Logger s_logger = LogManager.getLogger(QuotaEmailTemplatesDaoImpl.class);
+    protected static Logger logger = LogManager.getLogger(QuotaEmailTemplatesDaoImpl.class);
 
     protected SearchBuilder<QuotaEmailTemplatesVO> QuotaEmailTemplateSearch;
 

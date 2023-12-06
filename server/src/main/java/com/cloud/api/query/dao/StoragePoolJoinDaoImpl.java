@@ -54,7 +54,7 @@ import java.util.List;
 
 @Component
 public class StoragePoolJoinDaoImpl extends GenericDaoBase<StoragePoolJoinVO, Long> implements StoragePoolJoinDao {
-    protected static Logger s_logger = LogManager.getLogger(StoragePoolJoinDaoImpl.class);
+    protected static Logger logger = LogManager.getLogger(StoragePoolJoinDaoImpl.class);
 
     @Inject
     private ConfigurationDao _configDao;

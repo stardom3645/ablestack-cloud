@@ -40,7 +40,7 @@ import com.cloud.user.Account;
 @APICommand(name = "updateNetworkOffering", description = "Updates a network offering.", responseObject = NetworkOfferingResponse.class,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class UpdateNetworkOfferingCmd extends BaseCmd {
-    protected static Logger s_logger = LogManager.getLogger(UpdateNetworkOfferingCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(UpdateNetworkOfferingCmd.class.getName());
 
     /////////////////////////////////////////////////////
     //////////////// API parameters /////////////////////

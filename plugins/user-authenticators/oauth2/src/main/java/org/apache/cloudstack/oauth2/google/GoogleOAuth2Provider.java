@@ -41,7 +41,7 @@ import java.util.Arrays;
 import java.util.List;
 
 public class GoogleOAuth2Provider extends AdapterBase implements UserOAuth2Authenticator {
-    protected static Logger s_logger = LogManager.getLogger(GoogleOAuth2Provider.class);
+    protected static Logger logger = LogManager.getLogger(GoogleOAuth2Provider.class);
 
     protected String accessToken = null;
     protected String refreshToken = null;

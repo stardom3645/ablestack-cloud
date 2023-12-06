@@ -32,7 +32,7 @@ import com.cloud.utils.db.SearchCriteria;
 import com.cloud.utils.net.NetUtils;
 
 public class VpcOfferingJoinDaoImpl extends GenericDaoBase<VpcOfferingJoinVO, Long> implements VpcOfferingJoinDao {
-    protected static Logger s_logger = LogManager.getLogger(VpcOfferingJoinDaoImpl.class);
+    protected static Logger logger = LogManager.getLogger(VpcOfferingJoinDaoImpl.class);
 
     private SearchBuilder<VpcOfferingJoinVO> sofIdSearch;
 

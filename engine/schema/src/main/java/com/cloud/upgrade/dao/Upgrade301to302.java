@@ -32,7 +32,7 @@ import org.apache.logging.log4j.LogManager;
 import com.cloud.utils.exception.CloudRuntimeException;
 
 public class Upgrade301to302 extends LegacyDbUpgrade {
-    final static Logger s_logger = LogManager.getLogger(Upgrade301to302.class);
+    final static Logger logger = LogManager.getLogger(Upgrade301to302.class);
 
     @Override
     public String[] getUpgradableVersionRange() {
@@ -67,7 +67,7 @@ public class Upgrade301to302 extends LegacyDbUpgrade {
         keys.add("i_host__allocation_state");
         uniqueKeys.put("host", keys);
 
-        s_logger.debug("Dropping i_host__allocation_state key in host table");
+        logger.debug("Dropping i_host__allocation_state key in host table");
         for (String tableName : uniqueKeys.keySet()) {
             DbUpgradeUtils.dropKeysIfExist(conn, tableName, uniqueKeys.get(tableName), false);
         }
@@ -130,7 +130,7 @@ public class Upgrade301to302 extends LegacyDbUpgrade {
                 pstmt = conn.prepareStatement("DELETE FROM `cloud`.`ntwk_offering_service_map` WHERE id=?");
                 pstmt.setLong(1, mapId);
                 pstmt.executeUpdate();
-                s_logger.debug("Deleted lb service for network offering id=" + ntwkOffId + " as it doesn't have source nat service enabled");
+                logger.debug("Deleted lb service for network offering id=" + ntwkOffId + " as it doesn't have source nat service enabled");
 
                 //delete lb service for the network
                 pstmt =
@@ -145,7 +145,7 @@ public class Upgrade301to302 extends LegacyDbUpgrade {
                     pstmt = conn.prepareStatement("DELETE FROM `cloud`.`ntwk_service_map` WHERE id=?");
                     pstmt.setLong(1, mapId);
                     pstmt.executeUpdate();
-                    s_logger.debug("Deleted lb service for network id=" + ntwkId + " as it doesn't have source nat service enabled");
+                    logger.debug("Deleted lb service for network id=" + ntwkId + " as it doesn't have source nat service enabled");
                 }
 
             }
@@ -181,14 +181,14 @@ public class Upgrade301to302 extends LegacyDbUpgrade {
     }
 
     private void changeEngine(Connection conn) {
-        s_logger.debug("Fixing engine and row_format for op_lock and op_nwgrp_work tables");
+        logger.debug("Fixing engine and row_format for op_lock and op_nwgrp_work tables");
         String sqlOpLock = "ALTER TABLE `cloud`.`op_lock` ENGINE=MEMORY, ROW_FORMAT = FIXED";
         try (
                 PreparedStatement pstmt = conn.prepareStatement(sqlOpLock);
             ) {
             pstmt.executeUpdate();
         } catch (Exception e) {
-            s_logger.debug("Failed do execute the statement " + sqlOpLock + ", moving on as it's not critical fix");
+            logger.debug("Failed do execute the statement " + sqlOpLock + ", moving on as it's not critical fix");
         }
 
         String sqlOpNwgrpWork = "ALTER TABLE `cloud`.`op_nwgrp_work` ENGINE=MEMORY, ROW_FORMAT = FIXED";
@@ -197,7 +197,7 @@ public class Upgrade301to302 extends LegacyDbUpgrade {
              ) {
             pstmt.executeUpdate();
         } catch (Exception e) {
-            s_logger.debug("Failed do execute the statement " + sqlOpNwgrpWork + ", moving on as it's not critical fix");
+            logger.debug("Failed do execute the statement " + sqlOpNwgrpWork + ", moving on as it's not critical fix");
         }
     }
 

@@ -35,7 +35,7 @@ import com.cloud.user.Account;
             description = "Uploads a custom certificate for the console proxy VMs to use for SSL. Can be used to upload a single certificate signed by a known CA. Can also be used, through multiple calls, to upload a chain of certificates from CA to the custom certificate itself.",
             requestHasSensitiveInfo = true, responseHasSensitiveInfo = false)
 public class UploadCustomCertificateCmd extends BaseAsyncCmd {
-    protected static Logger s_logger = LogManager.getLogger(UploadCustomCertificateCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(UploadCustomCertificateCmd.class.getName());
 
 
     @Parameter(name = ApiConstants.CERTIFICATE, type = CommandType.STRING, required = true, description = "The certificate to be uploaded.", length = 65535)

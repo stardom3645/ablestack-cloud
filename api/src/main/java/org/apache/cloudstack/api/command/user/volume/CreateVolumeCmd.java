@@ -49,7 +49,7 @@ import com.cloud.vm.VirtualMachine;
         Volume.class, VirtualMachine.class},
             requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class CreateVolumeCmd extends BaseAsyncCreateCustomIdCmd implements UserCmd {
-    protected static Logger s_logger = LogManager.getLogger(CreateVolumeCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(CreateVolumeCmd.class.getName());
     private static final String s_name = "createvolumeresponse";
 
     /////////////////////////////////////////////////////

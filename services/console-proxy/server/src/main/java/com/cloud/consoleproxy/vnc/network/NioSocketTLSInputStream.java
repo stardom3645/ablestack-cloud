@@ -27,7 +27,7 @@ public class NioSocketTLSInputStream extends NioSocketInputStream {
 
     private final NioSocketSSLEngineManager sslEngineManager;
 
-    protected static Logger s_logger = LogManager.getLogger(NioSocketTLSInputStream.class);
+    protected static Logger logger = LogManager.getLogger(NioSocketTLSInputStream.class);
 
     public NioSocketTLSInputStream(NioSocketSSLEngineManager sslEngineManager, NioSocket socket) {
         super(sslEngineManager.getSession().getApplicationBufferSize(), socket);
@@ -43,7 +43,7 @@ public class NioSocketTLSInputStream extends NioSocketInputStream {
             }
             return readBytes;
         } catch (IOException e) {
-            s_logger.error(String.format("Error reading from SSL engine manager: %s", e.getMessage()), e);
+            logger.error(String.format("Error reading from SSL engine manager: %s", e.getMessage()), e);
         }
         return 0;
     }

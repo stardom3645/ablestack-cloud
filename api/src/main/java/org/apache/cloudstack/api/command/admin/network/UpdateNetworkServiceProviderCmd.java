@@ -41,7 +41,7 @@ import com.cloud.user.Account;
             requestHasSensitiveInfo = false,
             responseHasSensitiveInfo = false)
 public class UpdateNetworkServiceProviderCmd extends BaseAsyncCmd {
-    protected static Logger s_logger = LogManager.getLogger(UpdateNetworkServiceProviderCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(UpdateNetworkServiceProviderCmd.class.getName());
 
 
     /////////////////////////////////////////////////////

@@ -55,7 +55,7 @@ import com.cloud.utils.exception.CloudRuntimeException;
 @DB
 @TableGenerator(name = "host_req_sq", table = "op_host", pkColumnName = "id", valueColumnName = "sequence", allocationSize = 1)
 public class EngineHostDaoImpl extends GenericDaoBase<EngineHostVO, Long> implements EngineHostDao {
-    protected static Logger s_logger = LogManager.getLogger(EngineHostDaoImpl.class);
+    protected static Logger logger = LogManager.getLogger(EngineHostDaoImpl.class);
 
     private final SearchBuilder<EngineHostVO> TypePodDcStatusSearch;
 
@@ -432,7 +432,7 @@ public class EngineHostDaoImpl extends GenericDaoBase<EngineHostVO, Long> implem
 
         int rows = update(vo, sc);
 
-        if (rows == 0 && s_logger.isDebugEnabled()) {
+        if (rows == 0 && logger.isDebugEnabled()) {
             EngineHostVO dbHost = findByIdIncludingRemoved(vo.getId());
             if (dbHost != null) {
                 StringBuilder str = new StringBuilder("Unable to update ").append(vo.toString());
@@ -454,7 +454,7 @@ public class EngineHostDaoImpl extends GenericDaoBase<EngineHostVO, Long> implem
                     .append("; updatedTime=")
                     .append(oldUpdatedTime);
             } else {
-                s_logger.debug("Unable to update dataCenter: id=" + vo.getId() + ", as there is no such dataCenter exists in the database anymore");
+                logger.debug("Unable to update dataCenter: id=" + vo.getId() + ", as there is no such dataCenter exists in the database anymore");
             }
         }
         return rows > 0;

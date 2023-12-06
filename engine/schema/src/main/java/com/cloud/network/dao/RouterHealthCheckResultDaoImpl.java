@@ -29,7 +29,7 @@ import com.cloud.utils.db.SearchCriteria;
 
 @Component
 public class RouterHealthCheckResultDaoImpl extends GenericDaoBase<RouterHealthCheckResultVO, Long> implements RouterHealthCheckResultDao {
-    private final static Logger s_logger = LogManager.getLogger(RouterHealthCheckResultDaoImpl.class);
+    private final static Logger logger = LogManager.getLogger(RouterHealthCheckResultDaoImpl.class);
 
     private SearchBuilder<RouterHealthCheckResultVO> RouterChecksSearchBuilder;
     private SearchBuilder<RouterHealthCheckResultVO> IsRouterFailingSearchBuilder;
@@ -70,7 +70,7 @@ public class RouterHealthCheckResultDaoImpl extends GenericDaoBase<RouterHealthC
         sc.setParameters("checkType", checkType);
         List<RouterHealthCheckResultVO> checks = listBy(sc);
         if (checks.size() > 1) {
-            s_logger.error("Found multiple entries for router Id: " + routerId + ", check name: " + checkName);
+            logger.error("Found multiple entries for router Id: " + routerId + ", check name: " + checkName);
         }
         return checks.isEmpty() ? null : checks.get(0);
     }

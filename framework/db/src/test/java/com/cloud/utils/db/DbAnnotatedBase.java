@@ -28,7 +28,7 @@ import org.springframework.stereotype.Component;
 @Component
 @DB
 public class DbAnnotatedBase {
-    protected static Logger s_logger = LogManager.getLogger(DbAnnotatedBase.class);
+    protected static Logger logger = LogManager.getLogger(DbAnnotatedBase.class);
 
     @Inject
     DummyComponent _dummy;
@@ -39,7 +39,7 @@ public class DbAnnotatedBase {
     }
 
     public void MethodWithClassDbAnnotated() {
-        s_logger.info("called");
+        logger.info("called");
         _dummy.sayHello();
     }
 }

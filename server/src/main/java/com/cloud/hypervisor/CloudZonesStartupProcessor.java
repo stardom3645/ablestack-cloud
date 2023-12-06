@@ -49,7 +49,7 @@ import com.cloud.utils.net.NetUtils;
  */
 @Component
 public class CloudZonesStartupProcessor extends AdapterBase implements StartupCommandProcessor {
-    protected static Logger s_logger = LogManager.getLogger(CloudZonesStartupProcessor.class);
+    protected static Logger logger = LogManager.getLogger(CloudZonesStartupProcessor.class);
     @Inject
     private DataCenterDao _zoneDao = null;
     @Inject
@@ -114,7 +114,7 @@ public class CloudZonesStartupProcessor extends AdapterBase implements StartupCo
 
         String zoneToken = startup.getDataCenter();
         if (zoneToken == null) {
-            s_logger.warn("No Zone Token passed in, cannot not find zone for the agent");
+            logger.warn("No Zone Token passed in, cannot not find zone for the agent");
             throw new AgentAuthnException("No Zone Token passed in, cannot not find zone for agent");
         }
 
@@ -133,14 +133,14 @@ public class CloudZonesStartupProcessor extends AdapterBase implements StartupCo
                 }
             }
         }
-        if (s_logger.isDebugEnabled()) {
-            s_logger.debug("Successfully loaded the DataCenter from the zone token passed in ");
+        if (logger.isDebugEnabled()) {
+            logger.debug("Successfully loaded the DataCenter from the zone token passed in ");
         }
 
         HostPodVO pod = findPod(startup, zone.getId(), Host.Type.Routing); //yes, routing
         Long podId = null;
         if (pod != null) {
-            s_logger.debug("Found pod " + pod.getName() + " for the secondary storage host " + startup.getName());
+            logger.debug("Found pod " + pod.getName() + " for the secondary storage host " + startup.getName());
             podId = pod.getId();
         }
         host.setDataCenterId(zone.getId());

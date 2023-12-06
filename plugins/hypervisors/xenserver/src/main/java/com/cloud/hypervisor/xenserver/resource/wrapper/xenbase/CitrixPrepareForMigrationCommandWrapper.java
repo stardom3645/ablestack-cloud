@@ -37,7 +37,7 @@ import java.util.List;
 @ResourceWrapper(handles =  PrepareForMigrationCommand.class)
 public final class CitrixPrepareForMigrationCommandWrapper extends CommandWrapper<PrepareForMigrationCommand, Answer, CitrixResourceBase> {
 
-    protected static Logger s_logger = LogManager.getLogger(CitrixPrepareForMigrationCommandWrapper.class);
+    protected static Logger logger = LogManager.getLogger(CitrixPrepareForMigrationCommandWrapper.class);
 
     @Override
     public Answer execute(final PrepareForMigrationCommand command, final CitrixResourceBase citrixResourceBase) {
@@ -51,8 +51,8 @@ public final class CitrixPrepareForMigrationCommandWrapper extends CommandWrappe
             configDriveLabel = "config-2";
         }
 
-        if (s_logger.isDebugEnabled()) {
-            s_logger.debug("Preparing host for migrating " + vm);
+        if (logger.isDebugEnabled()) {
+            logger.debug("Preparing host for migrating " + vm);
         }
 
         final NicTO[] nics = vm.getNics();
@@ -62,11 +62,11 @@ public final class CitrixPrepareForMigrationCommandWrapper extends CommandWrappe
             for (final NicTO nic : nics) {
                 citrixResourceBase.getNetwork(conn, nic);
             }
-            s_logger.debug("4. The VM " + vm.getName() + " is in Migrating state");
+            logger.debug("4. The VM " + vm.getName() + " is in Migrating state");
 
             return new PrepareForMigrationAnswer(command);
         } catch (final Exception e) {
-            s_logger.warn("Catch Exception " + e.getClass().getName() + " prepare for migration failed due to " + e.toString(), e);
+            logger.warn("Catch Exception " + e.getClass().getName() + " prepare for migration failed due to " + e.toString(), e);
             return new PrepareForMigrationAnswer(command, e);
         }
     }

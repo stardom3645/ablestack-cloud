@@ -39,7 +39,7 @@ import com.cloud.user.Account;
 @APICommand(name = "prepareTemplate", responseObject = TemplateResponse.class, description = "load template into primary storage", entityType = {VirtualMachineTemplate.class},
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class PrepareTemplateCmd extends BaseCmd {
-    protected static Logger s_logger = LogManager.getLogger(PrepareTemplateCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(PrepareTemplateCmd.class.getName());
 
 
     /////////////////////////////////////////////////////

@@ -30,7 +30,7 @@ import com.cloud.utils.db.SearchCriteria;
 
 @Component
 public class RemoteAccessVpnDaoImpl extends GenericDaoBase<RemoteAccessVpnVO, Long> implements RemoteAccessVpnDao {
-    protected static Logger s_logger = LogManager.getLogger(RemoteAccessVpnDaoImpl.class);
+    protected static Logger logger = LogManager.getLogger(RemoteAccessVpnDaoImpl.class);
 
     private final SearchBuilder<RemoteAccessVpnVO> AllFieldsSearch;
 

@@ -45,7 +45,7 @@ import javax.inject.Inject;
 
 @Component
 public class DomainJoinDaoImpl extends GenericDaoBase<DomainJoinVO, Long> implements DomainJoinDao {
-    protected static Logger s_logger = LogManager.getLogger(DomainJoinDaoImpl.class);
+    protected static Logger logger = LogManager.getLogger(DomainJoinDaoImpl.class);
 
     private SearchBuilder<DomainJoinVO> domainIdSearch;
 

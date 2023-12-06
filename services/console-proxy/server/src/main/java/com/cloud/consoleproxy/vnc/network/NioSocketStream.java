@@ -29,7 +29,7 @@ public class NioSocketStream {
     protected int start;
     protected NioSocket socket;
 
-    protected static Logger s_logger = LogManager.getLogger(NioSocketStream.class);
+    protected static Logger logger = LogManager.getLogger(NioSocketStream.class);
 
     public NioSocketStream(int bufferSize, NioSocket socket) {
         this.buffer = new byte[bufferSize];
@@ -47,7 +47,7 @@ public class NioSocketStream {
     protected void checkUnsignedIntegerSize(int sizeInBits) {
         if (!isUnsignedIntegerSizeAllowed(sizeInBits)) {
             String msg = "Unsupported size in bits for unsigned integer reading " + sizeInBits;
-            s_logger.error(msg);
+            logger.error(msg);
             throw new CloudRuntimeException(msg);
         }
     }
@@ -83,7 +83,7 @@ public class NioSocketStream {
     protected void checkItemSizeOnBuffer(int itemSize) {
         if (itemSize > buffer.length) {
             String msg = String.format("Item size: %s exceeds the buffer size: %s", itemSize, buffer.length);
-            s_logger.error(msg);
+            logger.error(msg);
             throw new CloudRuntimeException(msg);
         }
     }

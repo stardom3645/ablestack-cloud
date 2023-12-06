@@ -33,7 +33,7 @@ import com.cloud.resource.ResourceWrapper;
 @ResourceWrapper(handles =  CheckSshCommand.class)
 public final class LibvirtCheckSshCommandWrapper extends CommandWrapper<CheckSshCommand, Answer, LibvirtComputingResource> {
 
-    protected static Logger s_logger = LogManager.getLogger(LibvirtOvsVpcRoutingPolicyConfigCommandWrapper.class);
+    protected static Logger logger = LogManager.getLogger(LibvirtOvsVpcRoutingPolicyConfigCommandWrapper.class);
 
     @Override
     public Answer execute(final CheckSshCommand command, final LibvirtComputingResource libvirtComputingResource) {
@@ -41,8 +41,8 @@ public final class LibvirtCheckSshCommandWrapper extends CommandWrapper<CheckSsh
         final String privateIp = command.getIp();
         final int cmdPort = command.getPort();
 
-        if (s_logger.isDebugEnabled()) {
-            s_logger.debug("Ping command port, " + privateIp + ":" + cmdPort);
+        if (logger.isDebugEnabled()) {
+            logger.debug("Ping command port, " + privateIp + ":" + cmdPort);
         }
 
         final VirtualRoutingResource virtRouterResource = libvirtComputingResource.getVirtRouterResource();
@@ -50,8 +50,8 @@ public final class LibvirtCheckSshCommandWrapper extends CommandWrapper<CheckSsh
             return new CheckSshAnswer(command, "Can not ping System vm " + vmName + " because of a connection failure");
         }
 
-        if (s_logger.isDebugEnabled()) {
-            s_logger.debug("Ping command port succeeded for vm " + vmName);
+        if (logger.isDebugEnabled()) {
+            logger.debug("Ping command port succeeded for vm " + vmName);
         }
 
         return new CheckSshAnswer(command);

@@ -54,7 +54,7 @@ import com.cloud.utils.Pair;
         requestHasSensitiveInfo = true, responseHasSensitiveInfo = false)
 
 public class LDAPConfigCmd extends BaseCmd {
-    protected static Logger s_logger = LogManager.getLogger(LDAPConfigCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(LDAPConfigCmd.class.getName());
 
 
     @Inject

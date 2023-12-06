@@ -34,7 +34,7 @@ import com.cloud.user.Account;
 @APICommand(name = "updatePod", description = "Updates a Pod.", responseObject = PodResponse.class,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class UpdatePodCmd extends BaseCmd {
-    protected static Logger s_logger = LogManager.getLogger(UpdatePodCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(UpdatePodCmd.class.getName());
 
 
     /////////////////////////////////////////////////////

@@ -36,7 +36,7 @@ import com.cloud.user.Account;
 @APICommand(name = "updateTemplate", description = "Updates attributes of a template.", responseObject = TemplateResponse.class, responseView = ResponseView.Restricted,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class UpdateTemplateCmd extends BaseUpdateTemplateOrIsoCmd implements UserCmd {
-    protected static Logger s_logger = LogManager.getLogger(UpdateTemplateCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(UpdateTemplateCmd.class.getName());
     private static final String s_name = "updatetemplateresponse";
 
     /////////////////////////////////////////////////////

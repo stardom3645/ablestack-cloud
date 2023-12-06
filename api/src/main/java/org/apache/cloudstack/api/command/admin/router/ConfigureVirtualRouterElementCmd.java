@@ -44,7 +44,7 @@ import com.cloud.user.Account;
 @APICommand(name = "configureVirtualRouterElement", responseObject = VirtualRouterProviderResponse.class, description = "Configures a virtual router element.",
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class ConfigureVirtualRouterElementCmd extends BaseAsyncCmd {
-    protected static Logger s_logger = LogManager.getLogger(ConfigureVirtualRouterElementCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(ConfigureVirtualRouterElementCmd.class.getName());
 
     @Inject
     private List<VirtualRouterElementService> _service;

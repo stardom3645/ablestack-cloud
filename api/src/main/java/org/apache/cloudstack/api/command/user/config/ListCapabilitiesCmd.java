@@ -31,7 +31,7 @@ import com.cloud.user.Account;
 @APICommand(name = "listCapabilities", description = "Lists capabilities", responseObject = CapabilitiesResponse.class,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class ListCapabilitiesCmd extends BaseCmd {
-    protected static Logger s_logger = LogManager.getLogger(ListCapabilitiesCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(ListCapabilitiesCmd.class.getName());
 
     @Override
     public long getEntityOwnerId() {

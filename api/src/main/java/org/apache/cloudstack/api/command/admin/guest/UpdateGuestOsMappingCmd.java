@@ -36,7 +36,7 @@ import com.cloud.user.Account;
 @APICommand(name = "updateGuestOsMapping", description = "Updates the information about Guest OS to Hypervisor specific name mapping", responseObject = GuestOsMappingResponse.class,
         since = "4.4.0", requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class UpdateGuestOsMappingCmd extends BaseAsyncCmd {
-    protected static Logger s_logger = LogManager.getLogger(UpdateGuestOsMappingCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(UpdateGuestOsMappingCmd.class.getName());
 
 
     /////////////////////////////////////////////////////

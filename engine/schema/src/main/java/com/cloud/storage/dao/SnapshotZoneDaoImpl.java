@@ -29,7 +29,7 @@ import com.cloud.utils.db.SearchBuilder;
 import com.cloud.utils.db.SearchCriteria;
 
 public class SnapshotZoneDaoImpl extends GenericDaoBase<SnapshotZoneVO, Long> implements SnapshotZoneDao {
-    protected static Logger s_logger = LogManager.getLogger(SnapshotZoneDaoImpl.class.getName());
+    protected static Logger logger = LogManager.getLogger(SnapshotZoneDaoImpl.class.getName());
     protected final SearchBuilder<SnapshotZoneVO> ZoneSnapshotSearch;
 
     public SnapshotZoneDaoImpl() {

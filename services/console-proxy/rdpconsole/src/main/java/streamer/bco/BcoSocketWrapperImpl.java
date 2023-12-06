@@ -38,7 +38,7 @@ import java.security.Security;
 
 @SuppressWarnings("deprecation")
 public class BcoSocketWrapperImpl extends SocketWrapperImpl {
-    protected static Logger s_logger = LogManager.getLogger(BcoSocketWrapperImpl.class);
+    protected static Logger logger = LogManager.getLogger(BcoSocketWrapperImpl.class);
 
     static {
         Security.addProvider(new BouncyCastleProvider());
@@ -100,26 +100,26 @@ public class BcoSocketWrapperImpl extends SocketWrapperImpl {
         try {
             handleEvent(Event.STREAM_CLOSE, Direction.IN);
         } catch (Exception e) {
-            s_logger.info("[ignored]"
+            logger.info("[ignored]"
                     + "failure handling close event for bso input stream: " + e.getLocalizedMessage());
         }
         try {
             handleEvent(Event.STREAM_CLOSE, Direction.OUT);
         } catch (Exception e) {
-            s_logger.info("[ignored]"
+            logger.info("[ignored]"
                     + "failure handling close event for bso output stream: " + e.getLocalizedMessage());
         }
         try {
             if (bcoSslSocket != null)
                 bcoSslSocket.close();
         } catch (Exception e) {
-            s_logger.info("[ignored]"
+            logger.info("[ignored]"
                     + "failure handling close event for bso socket: " + e.getLocalizedMessage());
         }
         try {
             socket.close();
         } catch (Exception e) {
-            s_logger.info("[ignored]"
+            logger.info("[ignored]"
                     + "failure handling close event for socket: " + e.getLocalizedMessage());
         }
     }

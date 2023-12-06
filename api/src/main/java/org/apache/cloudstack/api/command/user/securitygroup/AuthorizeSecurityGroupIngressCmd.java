@@ -51,7 +51,7 @@ import com.cloud.network.security.SecurityRule;
             responseHasSensitiveInfo = false)
 @SuppressWarnings("rawtypes")
 public class AuthorizeSecurityGroupIngressCmd extends BaseAsyncCmd {
-    protected static Logger s_logger = LogManager.getLogger(AuthorizeSecurityGroupIngressCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(AuthorizeSecurityGroupIngressCmd.class.getName());
 
 
     // ///////////////////////////////////////////////////

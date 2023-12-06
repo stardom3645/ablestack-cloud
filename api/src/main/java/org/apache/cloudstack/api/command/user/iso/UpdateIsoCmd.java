@@ -34,7 +34,7 @@ import com.cloud.user.Account;
 @APICommand(name = "updateIso", description = "Updates an ISO file.", responseObject = TemplateResponse.class, responseView = ResponseView.Restricted,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class UpdateIsoCmd extends BaseUpdateTemplateOrIsoCmd implements UserCmd {
-    protected static Logger s_logger = LogManager.getLogger(UpdateIsoCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(UpdateIsoCmd.class.getName());
     private static final String s_name = "updateisoresponse";
 
     /////////////////////////////////////////////////////

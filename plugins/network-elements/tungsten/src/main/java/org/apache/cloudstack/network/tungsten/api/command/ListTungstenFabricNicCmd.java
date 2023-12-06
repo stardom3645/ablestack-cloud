@@ -47,7 +47,7 @@ import javax.inject.Inject;
 @APICommand(name = ListTungstenFabricNicCmd.APINAME, description = "list Tungsten-Fabric nic", responseObject =
     TungstenFabricNicResponse.class, requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class ListTungstenFabricNicCmd extends BaseListCmd {
-    protected static Logger s_logger = LogManager.getLogger(ListTungstenFabricNicCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(ListTungstenFabricNicCmd.class.getName());
     public static final String APINAME = "listTungstenFabricNic";
 
     @Inject

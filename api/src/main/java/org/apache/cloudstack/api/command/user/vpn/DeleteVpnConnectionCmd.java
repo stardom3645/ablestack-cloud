@@ -36,7 +36,7 @@ import com.cloud.user.Account;
 @APICommand(name = "deleteVpnConnection", description = "Delete site to site vpn connection", responseObject = SuccessResponse.class, entityType = {Site2SiteVpnConnection.class},
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class DeleteVpnConnectionCmd extends BaseAsyncCmd {
-    protected static Logger s_logger = LogManager.getLogger(DeleteVpnConnectionCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(DeleteVpnConnectionCmd.class.getName());
 
 
     /////////////////////////////////////////////////////
@@ -87,7 +87,7 @@ public class DeleteVpnConnectionCmd extends BaseAsyncCmd {
                 throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, "Failed to delete site to site VPN connection");
             }
         } catch (ResourceUnavailableException ex) {
-            s_logger.warn("Exception: ", ex);
+            logger.warn("Exception: ", ex);
             throw new ServerApiException(ApiErrorCode.RESOURCE_UNAVAILABLE_ERROR, ex.getMessage());
         }
     }

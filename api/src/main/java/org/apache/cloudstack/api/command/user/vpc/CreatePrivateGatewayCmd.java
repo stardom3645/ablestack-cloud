@@ -53,7 +53,7 @@ import com.cloud.network.vpc.VpcGateway;
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false,
         authorized = {RoleType.Admin, RoleType.ResourceAdmin, RoleType.DomainAdmin, RoleType.User})
 public class CreatePrivateGatewayCmd extends BaseAsyncCreateCmd implements UserCmd {
-    protected static Logger s_logger = LogManager.getLogger(CreatePrivateGatewayCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(CreatePrivateGatewayCmd.class.getName());
 
     private static final String s_name = "createprivategatewayresponse";
 
@@ -150,11 +150,11 @@ public class CreatePrivateGatewayCmd extends BaseAsyncCreateCmd implements UserC
         try {
             result = _vpcService.createVpcPrivateGateway(this);
         } catch (InsufficientCapacityException ex) {
-            s_logger.info(ex);
-            s_logger.trace(ex);
+            logger.info(ex);
+            logger.trace(ex);
             throw new ServerApiException(ApiErrorCode.INSUFFICIENT_CAPACITY_ERROR, ex.getMessage());
         } catch (ConcurrentOperationException ex) {
-            s_logger.warn("Exception: ", ex);
+            logger.warn("Exception: ", ex);
             throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, ex.getMessage());
         }
 

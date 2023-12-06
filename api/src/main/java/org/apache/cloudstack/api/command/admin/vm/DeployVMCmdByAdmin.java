@@ -35,7 +35,7 @@ import com.cloud.vm.VirtualMachine;
 @APICommand(name = "deployVirtualMachine", description = "Creates and automatically starts a virtual machine based on a service offering, disk offering, and template.", responseObject = UserVmResponse.class, responseView = ResponseView.Full, entityType = {VirtualMachine.class},
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = true)
 public class DeployVMCmdByAdmin extends DeployVMCmd implements AdminCmd {
-    protected static Logger s_logger = LogManager.getLogger(DeployVMCmdByAdmin.class.getName());
+    protected static Logger logger = LogManager.getLogger(DeployVMCmdByAdmin.class.getName());
 
 
     @Parameter(name = ApiConstants.POD_ID, type = CommandType.UUID, entityType = PodResponse.class, description = "destination Pod ID to deploy the VM to - parameter available for root admin only", since = "4.13")

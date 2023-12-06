@@ -33,7 +33,7 @@ import com.cloud.network.security.SecurityGroup;
 @APICommand(name = "listSecurityGroups", description = "Lists security groups", responseObject = SecurityGroupResponse.class, entityType = {SecurityGroup.class},
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class ListSecurityGroupsCmd extends BaseListTaggedResourcesCmd {
-    protected static Logger s_logger = LogManager.getLogger(ListSecurityGroupsCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(ListSecurityGroupsCmd.class.getName());
 
 
     /////////////////////////////////////////////////////

@@ -44,7 +44,7 @@ import com.cloud.user.UserAccount;
 @APICommand(name = "createAccount", description = "Creates an account", responseObject = AccountResponse.class, entityType = {Account.class},
         requestHasSensitiveInfo = true, responseHasSensitiveInfo = true)
 public class CreateAccountCmd extends BaseCmd {
-    protected static Logger s_logger = LogManager.getLogger(CreateAccountCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(CreateAccountCmd.class.getName());
 
 
     /////////////////////////////////////////////////////

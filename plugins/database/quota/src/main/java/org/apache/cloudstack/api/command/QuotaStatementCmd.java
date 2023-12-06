@@ -39,7 +39,7 @@ import com.cloud.user.Account;
 @APICommand(name = "quotaStatement", responseObject = QuotaStatementItemResponse.class, description = "Create a quota statement", since = "4.7.0", requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class QuotaStatementCmd extends BaseCmd {
 
-    protected static Logger s_logger = LogManager.getLogger(QuotaStatementCmd.class);
+    protected static Logger logger = LogManager.getLogger(QuotaStatementCmd.class);
 
 
     @Parameter(name = ApiConstants.ACCOUNT, type = CommandType.STRING, required = true, description = "Optional, Account Id for which statement needs to be generated")

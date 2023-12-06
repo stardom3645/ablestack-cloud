@@ -35,7 +35,7 @@ import java.util.List;
 @APICommand(name = "listUsers", description = "Lists user accounts", responseObject = UserResponse.class,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = true)
 public class ListUsersCmd extends BaseListAccountResourcesCmd {
-    protected static Logger s_logger = LogManager.getLogger(ListUsersCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(ListUsersCmd.class.getName());
 
 
     /////////////////////////////////////////////////////

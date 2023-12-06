@@ -34,7 +34,7 @@ import com.cloud.utils.db.SearchCriteria.Op;
 
 @Component
 public class UserIpv6AddressDaoImpl extends GenericDaoBase<UserIpv6AddressVO, Long> implements UserIpv6AddressDao {
-    protected static Logger s_logger = LogManager.getLogger(IPAddressDaoImpl.class);
+    protected static Logger logger = LogManager.getLogger(IPAddressDaoImpl.class);
 
     protected final SearchBuilder<UserIpv6AddressVO> AllFieldsSearch;
     protected GenericSearchBuilder<UserIpv6AddressVO, Long> CountFreePublicIps;

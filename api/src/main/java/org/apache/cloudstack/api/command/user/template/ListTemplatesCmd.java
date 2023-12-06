@@ -47,7 +47,7 @@ import com.cloud.user.Account;
 @APICommand(name = "listTemplates", description = "List all public, private, and privileged templates.", responseObject = TemplateResponse.class, entityType = {VirtualMachineTemplate.class}, responseView = ResponseView.Restricted,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class ListTemplatesCmd extends BaseListTaggedResourcesCmd implements UserCmd {
-    protected static Logger s_logger = LogManager.getLogger(ListTemplatesCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(ListTemplatesCmd.class.getName());
 
     private static final String s_name = "listtemplatesresponse";
 

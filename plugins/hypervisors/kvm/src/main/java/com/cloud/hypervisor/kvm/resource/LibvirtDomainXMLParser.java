@@ -50,7 +50,7 @@ import com.cloud.hypervisor.kvm.resource.LibvirtVMDef.WatchDogDef.WatchDogAction
 import com.cloud.hypervisor.kvm.resource.LibvirtVMDef.WatchDogDef.WatchDogModel;
 
 public class LibvirtDomainXMLParser {
-    protected static Logger s_logger = LogManager.getLogger(LibvirtDomainXMLParser.class);
+    protected static Logger logger = LogManager.getLogger(LibvirtDomainXMLParser.class);
     private final List<InterfaceDef> interfaces = new ArrayList<InterfaceDef>();
     private MemBalloonDef memBalloonDef = new MemBalloonDef();
     private final List<DiskDef> diskDefs = new ArrayList<DiskDef>();
@@ -347,11 +347,11 @@ public class LibvirtDomainXMLParser {
 
             return true;
         } catch (ParserConfigurationException e) {
-            s_logger.debug(e.toString());
+            logger.debug(e.toString());
         } catch (SAXException e) {
-            s_logger.debug(e.toString());
+            logger.debug(e.toString());
         } catch (IOException e) {
-            s_logger.debug(e.toString());
+            logger.debug(e.toString());
         }
         return false;
     }

@@ -47,7 +47,7 @@ import com.cloud.utils.exception.CloudRuntimeException;
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class ListPaloAltoFirewallsCmd extends BaseListCmd {
 
-    protected static Logger s_logger = LogManager.getLogger(ListPaloAltoFirewallsCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(ListPaloAltoFirewallsCmd.class.getName());
     private static final String s_name = "listpaloaltofirewallresponse";
     @Inject
     PaloAltoFirewallElementService _paFwService;

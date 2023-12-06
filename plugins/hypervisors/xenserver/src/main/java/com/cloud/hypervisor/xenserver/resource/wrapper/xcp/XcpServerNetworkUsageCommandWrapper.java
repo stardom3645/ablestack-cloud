@@ -33,7 +33,7 @@ import com.xensource.xenapi.Connection;
 @ResourceWrapper(handles =  NetworkUsageCommand.class)
 public final class XcpServerNetworkUsageCommandWrapper extends CommandWrapper<NetworkUsageCommand, Answer, XcpServerResource> {
 
-    protected static Logger s_logger = LogManager.getLogger(XcpServerNetworkUsageCommandWrapper.class);
+    protected static Logger logger = LogManager.getLogger(XcpServerNetworkUsageCommandWrapper.class);
 
     @Override
     public Answer execute(final NetworkUsageCommand command, final XcpServerResource xcpServerResource) {
@@ -48,7 +48,7 @@ public final class XcpServerNetworkUsageCommandWrapper extends CommandWrapper<Ne
             final NetworkUsageAnswer answer = new NetworkUsageAnswer(command, "", stats[0], stats[1]);
             return answer;
         } catch (final Exception ex) {
-            s_logger.warn("Failed to get network usage stats due to ", ex);
+            logger.warn("Failed to get network usage stats due to ", ex);
             return new NetworkUsageAnswer(command, ex);
         }
     }

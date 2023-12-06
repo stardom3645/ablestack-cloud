@@ -35,7 +35,7 @@ import com.cloud.utils.Pair;
 @APICommand(name = ListCfgGroupsByCmd.APINAME, description = "Lists all configuration groups (primarily used for UI).", responseObject = ConfigurationGroupResponse.class,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false, since = "4.18.0")
 public class ListCfgGroupsByCmd extends BaseListCmd {
-    protected static Logger s_logger = LogManager.getLogger(ListCfgGroupsByCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(ListCfgGroupsByCmd.class.getName());
 
     public static final String APINAME = "listConfigurationGroups";
 

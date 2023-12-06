@@ -40,7 +40,7 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.when;
 
 public class AlertControlsUnitTest extends TestCase {
-    protected static Logger s_logger = LogManager.getLogger(AlertControlsUnitTest.class);
+    protected static Logger logger = LogManager.getLogger(AlertControlsUnitTest.class);
 
     @Spy
     ManagementServerImpl _mgmtServer = new ManagementServerImpl();
@@ -68,10 +68,10 @@ public class AlertControlsUnitTest extends TestCase {
 
     @Test
     public void testInjected() throws Exception {
-        s_logger.info("Starting test to archive and delete alerts");
+        logger.info("Starting test to archive and delete alerts");
         archiveAlerts();
         deleteAlerts();
-        s_logger.info("archive/delete alerts: TEST PASSED");
+        logger.info("archive/delete alerts: TEST PASSED");
     }
 
     protected void archiveAlerts() {

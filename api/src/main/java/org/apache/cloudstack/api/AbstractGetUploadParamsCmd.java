@@ -30,7 +30,7 @@ import org.apache.logging.log4j.LogManager;
 
 public abstract class AbstractGetUploadParamsCmd extends BaseCmd {
 
-    protected static Logger s_logger = LogManager.getLogger(AbstractGetUploadParamsCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(AbstractGetUploadParamsCmd.class.getName());
 
     @Parameter(name = ApiConstants.NAME, type = CommandType.STRING, required = true, description = "the name of the volume/template/iso")
     private String name;

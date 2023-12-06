@@ -37,7 +37,7 @@ import org.apache.logging.log4j.LogManager;
 @ResourceWrapper(handles =  ReadyCommand.class)
 public final class LibvirtReadyCommandWrapper extends CommandWrapper<ReadyCommand, Answer, LibvirtComputingResource> {
 
-    protected static Logger s_logger = LogManager.getLogger(LibvirtReadyCommandWrapper.class);
+    protected static Logger logger = LogManager.getLogger(LibvirtReadyCommandWrapper.class);
 
     @Override
     public Answer execute(final ReadyCommand command, final LibvirtComputingResource libvirtComputingResource) {
@@ -57,17 +57,17 @@ public final class LibvirtReadyCommandWrapper extends CommandWrapper<ReadyComman
         if (isUbuntuHost) {
             cmd = "dpkg -l ovmf";
         }
-        s_logger.debug("Running command : " + cmd);
+        logger.debug("Running command : " + cmd);
         int result = Script.runSimpleBashScriptForExitValue(cmd);
-        s_logger.debug("Got result : " + result);
+        logger.debug("Got result : " + result);
         return result == 0;
     }
 
     private boolean hostSupportsTpm() {
         String cmd = "rpm -qa | grep -i swtpm";
-        s_logger.debug("Running command : " + cmd);
+        logger.debug("Running command : " + cmd);
         int result = Script.runSimpleBashScriptForExitValue(cmd);
-        s_logger.debug("Got result : " + result);
+        logger.debug("Got result : " + result);
         return result == 0;
     }
 }

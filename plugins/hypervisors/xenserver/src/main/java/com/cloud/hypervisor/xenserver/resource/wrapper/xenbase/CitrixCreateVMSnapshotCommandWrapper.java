@@ -48,7 +48,7 @@ import com.xensource.xenapi.VM;
 @ResourceWrapper(handles =  CreateVMSnapshotCommand.class)
 public final class CitrixCreateVMSnapshotCommandWrapper extends CommandWrapper<CreateVMSnapshotCommand, Answer, CitrixResourceBase> {
 
-    protected static Logger s_logger = LogManager.getLogger(CitrixCreateVMSnapshotCommandWrapper.class);
+    protected static Logger logger = LogManager.getLogger(CitrixCreateVMSnapshotCommandWrapper.class);
 
     @Override
     public Answer execute(final CreateVMSnapshotCommand command, final CitrixResourceBase citrixResourceBase) {
@@ -164,13 +164,13 @@ public final class CitrixCreateVMSnapshotCommandWrapper extends CommandWrapper<C
             } else {
                 msg = e.toString();
             }
-            s_logger.warn("Creating VM Snapshot " + command.getTarget().getSnapshotName() + " failed due to: " + msg, e);
+            logger.warn("Creating VM Snapshot " + command.getTarget().getSnapshotName() + " failed due to: " + msg, e);
             return new CreateVMSnapshotAnswer(command, false, msg);
         } finally {
             try {
                 if (!success) {
                     if (vmSnapshot != null) {
-                        s_logger.debug("Delete existing VM Snapshot " + vmSnapshotName + " after making VolumeTO failed");
+                        logger.debug("Delete existing VM Snapshot " + vmSnapshotName + " after making VolumeTO failed");
                         final Set<VBD> vbds = vmSnapshot.getVBDs(conn);
                         for (final VBD vbd : vbds) {
                             final VBD.Record vbdr = vbd.getRecord(conn);
@@ -188,7 +188,7 @@ public final class CitrixCreateVMSnapshotCommandWrapper extends CommandWrapper<C
                     }
                 }
             } catch (final Exception e2) {
-                s_logger.error("delete snapshot error due to " + e2.getMessage());
+                logger.error("delete snapshot error due to " + e2.getMessage());
             }
         }
     }

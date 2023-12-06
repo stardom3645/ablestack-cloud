@@ -36,7 +36,7 @@ import com.xensource.xenapi.VDI;
 
 @ResourceWrapper(handles = GetVolumeStatsCommand.class)
 public final class CitrixGetVolumeStatsCommandWrapper extends CommandWrapper<GetVolumeStatsCommand, Answer, CitrixResourceBase> {
-    protected static Logger s_logger = LogManager.getLogger(CitrixGetVolumeStatsCommandWrapper.class);
+    protected static Logger logger = LogManager.getLogger(CitrixGetVolumeStatsCommandWrapper.class);
 
     @Override
     public Answer execute(final GetVolumeStatsCommand cmd, final CitrixResourceBase citrixResourceBase) {
@@ -49,11 +49,11 @@ public final class CitrixGetVolumeStatsCommandWrapper extends CommandWrapper<Get
                     VolumeStatsEntry vse = new VolumeStatsEntry(volumeUuid, vdi.getPhysicalUtilisation(conn), vdi.getVirtualSize(conn));
                     statEntry.put(volumeUuid, vse);
                 } catch (Exception e) {
-                    s_logger.warn("Unable to get volume stats", e);
+                    logger.warn("Unable to get volume stats", e);
                     statEntry.put(volumeUuid, new VolumeStatsEntry(volumeUuid, -1, -1));
                 }
             } else {
-                s_logger.warn("VDI not found for path " + volumeUuid);
+                logger.warn("VDI not found for path " + volumeUuid);
                 statEntry.put(volumeUuid, new VolumeStatsEntry(volumeUuid, -1L, -1L));
             }
         }

@@ -22,14 +22,14 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 
 public class SampleManagementServer {
-    protected static Logger s_logger = LogManager.getLogger(SampleManagementServer.class);
+    protected static Logger logger = LogManager.getLogger(SampleManagementServer.class);
 
     public void mainLoop() {
         while (true) {
             try {
                 Thread.sleep(1000);
             } catch (InterruptedException e) {
-                s_logger.debug("[ignored] .");
+                logger.debug("[ignored] .");
             }
         }
     }

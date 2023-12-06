@@ -44,7 +44,7 @@ import com.cloud.network.NetScalerServicePackageVO;
 @APICommand(name = "listRegisteredServicePackages", responseObject = NetScalerServicePackageResponse.class, description = "lists registered service packages", requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class ListRegisteredServicePackageCmd extends BaseListCmd {
 
-    protected static Logger s_logger = LogManager.getLogger(ListRegisteredServicePackageCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(ListRegisteredServicePackageCmd.class.getName());
     private static final String s_name = "listregisteredservicepackage";
     @Inject
     NetscalerLoadBalancerElementService _netsclarLbService;

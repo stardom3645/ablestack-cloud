@@ -40,7 +40,7 @@ import com.cloud.utils.exception.CloudRuntimeException;
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false, since = "4.18.0",
         authorized = {RoleType.Admin, RoleType.ResourceAdmin, RoleType.DomainAdmin, RoleType.User})
 public class LinkUserDataToTemplateCmd extends BaseCmd implements AdminCmd {
-    protected static Logger s_logger = LogManager.getLogger(LinkUserDataToTemplateCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(LinkUserDataToTemplateCmd.class.getName());
 
 
     /////////////////////////////////////////////////////

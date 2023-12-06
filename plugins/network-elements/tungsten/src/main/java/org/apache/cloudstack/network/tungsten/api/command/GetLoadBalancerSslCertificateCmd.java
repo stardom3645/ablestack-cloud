@@ -42,7 +42,7 @@ import javax.inject.Inject;
 @APICommand(name = GetLoadBalancerSslCertificateCmd.APINAME, description = "get load balancer certificate",
     responseObject = TlsDataResponse.class, requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class GetLoadBalancerSslCertificateCmd extends BaseCmd {
-    protected static Logger s_logger = LogManager.getLogger(GetLoadBalancerSslCertificateCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(GetLoadBalancerSslCertificateCmd.class.getName());
     public static final String APINAME = "getLoadBalancerSslCertificate";
 
     @Inject

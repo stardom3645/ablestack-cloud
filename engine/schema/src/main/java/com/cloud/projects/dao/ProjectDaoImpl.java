@@ -37,7 +37,7 @@ import com.cloud.utils.db.SearchCriteria.Func;
 
 @Component
 public class ProjectDaoImpl extends GenericDaoBase<ProjectVO, Long> implements ProjectDao {
-    protected static Logger s_logger = LogManager.getLogger(ProjectDaoImpl.class);
+    protected static Logger logger = LogManager.getLogger(ProjectDaoImpl.class);
     protected final SearchBuilder<ProjectVO> AllFieldsSearch;
     protected GenericSearchBuilder<ProjectVO, Long> CountByDomain;
     protected GenericSearchBuilder<ProjectVO, Long> ProjectAccountSearch;

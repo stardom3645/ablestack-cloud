@@ -45,7 +45,7 @@ import com.cloud.vm.dao.UserVmDetailsDao;
 @Component
 @DB()
 public class ServiceOfferingDaoImpl extends GenericDaoBase<ServiceOfferingVO, Long> implements ServiceOfferingDao {
-    protected static final Logger s_logger = LogManager.getLogger(ServiceOfferingDaoImpl.class);
+    protected Logger logger = LogManager.getLogger(ServiceOfferingDaoImpl.class);
 
     @Inject
     protected ServiceOfferingDetailsDao detailsDao;
@@ -269,7 +269,7 @@ public class ServiceOfferingDaoImpl extends GenericDaoBase<ServiceOfferingVO, Lo
         ServiceOfferingVO serviceOffering = findByName(name);
         if (serviceOffering == null) {
             String message = "System service offering " + name + " not found";
-            s_logger.error(message);
+            logger.error(message);
             throw new CloudRuntimeException(message);
         }
         return serviceOffering;

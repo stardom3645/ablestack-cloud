@@ -40,7 +40,7 @@ import com.cloud.network.as.AutoScaleVmGroup;
 @APICommand(name = "listAutoScaleVmGroups", description = "Lists autoscale vm groups.", responseObject = AutoScaleVmGroupResponse.class, entityType = {AutoScaleVmGroup.class},
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class ListAutoScaleVmGroupsCmd extends BaseListProjectAndAccountResourcesCmd {
-    protected static Logger s_logger = LogManager.getLogger(ListAutoScaleVmGroupsCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(ListAutoScaleVmGroupsCmd.class.getName());
 
 
     // ///////////////////////////////////////////////////

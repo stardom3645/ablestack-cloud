@@ -39,7 +39,7 @@ import com.cloud.utils.Pair;
 @APICommand(name = "listIpForwardingRules", description = "List the IP forwarding rules", responseObject = FirewallRuleResponse.class,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class ListIpForwardingRulesCmd extends BaseListProjectAndAccountResourcesCmd {
-    protected static Logger s_logger = LogManager.getLogger(ListIpForwardingRulesCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(ListIpForwardingRulesCmd.class.getName());
 
 
     /////////////////////////////////////////////////////

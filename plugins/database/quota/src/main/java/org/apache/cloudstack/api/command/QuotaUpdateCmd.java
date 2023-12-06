@@ -34,7 +34,7 @@ import javax.inject.Inject;
 @APICommand(name = "quotaUpdate", responseObject = QuotaUpdateResponse.class, description = "Update quota calculations, alerts and statements", since = "4.7.0", requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class QuotaUpdateCmd extends BaseCmd {
 
-    protected static Logger s_logger = LogManager.getLogger(QuotaUpdateCmd.class);
+    protected static Logger logger = LogManager.getLogger(QuotaUpdateCmd.class);
 
 
     @Inject

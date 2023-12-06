@@ -40,7 +40,7 @@ import com.cloud.utils.Pair;
         since = "4.17.0",
         authorized = {RoleType.Admin})
 public class ListGuestVlansCmd extends BaseListCmd {
-    protected static Logger s_logger = LogManager.getLogger(ListGuestVlansCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(ListGuestVlansCmd.class.getName());
 
 
     /////////////////////////////////////////////////////

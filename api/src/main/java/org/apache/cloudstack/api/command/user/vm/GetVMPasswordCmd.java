@@ -37,7 +37,7 @@ import com.cloud.vm.VirtualMachine;
 @APICommand(name = "getVMPassword", responseObject = GetVMPasswordResponse.class, description = "Returns an encrypted password for the VM", entityType = {VirtualMachine.class},
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class GetVMPasswordCmd extends BaseCmd {
-    protected static Logger s_logger = LogManager.getLogger(GetVMPasswordCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(GetVMPasswordCmd.class.getName());
 
     /////////////////////////////////////////////////////
     //////////////// API parameters /////////////////////

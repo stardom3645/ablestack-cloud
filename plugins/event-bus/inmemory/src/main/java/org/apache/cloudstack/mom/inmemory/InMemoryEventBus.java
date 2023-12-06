@@ -39,7 +39,7 @@ import com.cloud.utils.component.ManagerBase;
 
 public class InMemoryEventBus extends ManagerBase implements EventBus {
 
-    protected static Logger s_logger = LogManager.getLogger(InMemoryEventBus.class);
+    protected static Logger logger = LogManager.getLogger(InMemoryEventBus.class);
 
     private final static Map<UUID, Pair<EventTopic, EventSubscriber>> subscribers;
 

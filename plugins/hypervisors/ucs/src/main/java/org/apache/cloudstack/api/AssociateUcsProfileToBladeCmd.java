@@ -37,7 +37,7 @@ import com.cloud.user.Account;
 @APICommand(name = "associateUcsProfileToBlade", description = "associate a profile to a blade", responseObject = UcsBladeResponse.class,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class AssociateUcsProfileToBladeCmd extends BaseAsyncCmd {
-    protected static Logger s_logger = LogManager.getLogger(AssociateUcsProfileToBladeCmd.class);
+    protected static Logger logger = LogManager.getLogger(AssociateUcsProfileToBladeCmd.class);
 
     @Inject
     private UcsManager mgr;
@@ -57,7 +57,7 @@ public class AssociateUcsProfileToBladeCmd extends BaseAsyncCmd {
             rsp.setResponseName(getCommandName());
             this.setResponseObject(rsp);
         } catch (Exception e) {
-            s_logger.warn("Exception: ", e);
+            logger.warn("Exception: ", e);
             throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, e.getMessage());
         }
     }

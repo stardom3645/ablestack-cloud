@@ -46,7 +46,7 @@ import com.cloud.user.Account;
         responseHasSensitiveInfo = false,
         authorized = {RoleType.Admin})
 public class CreateGuestNetworkIpv6PrefixCmd extends BaseAsyncCmd {
-    protected static Logger s_logger = LogManager.getLogger(CreateGuestNetworkIpv6PrefixCmd.class);
+    protected static Logger logger = LogManager.getLogger(CreateGuestNetworkIpv6PrefixCmd.class);
 
 
     /////////////////////////////////////////////////////

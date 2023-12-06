@@ -31,7 +31,7 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 
 public class MockServer implements Runnable {
-    protected static Logger s_logger = LogManager.getLogger(MockServer.class);
+    protected static Logger logger = LogManager.getLogger(MockServer.class);
 
     private boolean shutdown = false;
     private ServerSocket serverSocket;
@@ -135,19 +135,19 @@ public class MockServer implements Runnable {
                 try {
                     is.close();
                 } catch (Throwable e) {
-                    s_logger.info("[ignored]"
+                    logger.info("[ignored]"
                             + "in stream close failed: " + e.getLocalizedMessage());
                 }
                 try {
                     os.close();
                 } catch (Throwable e) {
-                    s_logger.info("[ignored]"
+                    logger.info("[ignored]"
                             + "out stream close failed: " + e.getLocalizedMessage());
                 }
                 try {
                     serverSocket.close();
                 } catch (Throwable e) {
-                    s_logger.info("[ignored]"
+                    logger.info("[ignored]"
                             + "server socket close failed: " + e.getLocalizedMessage());
                 }
             }

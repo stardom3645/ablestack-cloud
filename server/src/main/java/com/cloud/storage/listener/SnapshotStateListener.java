@@ -53,7 +53,7 @@ public class SnapshotStateListener implements StateListener<State, Event, Snapsh
     @Inject
     private ConfigurationDao configDao;
 
-    protected static Logger s_logger = LogManager.getLogger(SnapshotStateListener.class);
+    protected static Logger logger = LogManager.getLogger(SnapshotStateListener.class);
 
     public SnapshotStateListener() {
 
@@ -107,7 +107,7 @@ public class SnapshotStateListener implements StateListener<State, Event, Snapsh
         try {
             s_eventBus.publish(eventMsg);
         } catch (EventBusException e) {
-            s_logger.warn("Failed to publish state change event on the event bus.");
+            logger.warn("Failed to publish state change event on the event bus.");
         }
     }
 

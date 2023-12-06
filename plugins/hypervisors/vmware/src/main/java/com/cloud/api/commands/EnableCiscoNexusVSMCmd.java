@@ -43,7 +43,7 @@ import com.cloud.user.Account;
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class EnableCiscoNexusVSMCmd extends BaseAsyncCmd {
 
-    protected static Logger s_logger = LogManager.getLogger(EnableCiscoNexusVSMCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(EnableCiscoNexusVSMCmd.class.getName());
     @Inject
     CiscoNexusVSMElementService _ciscoNexusVSMService;
 

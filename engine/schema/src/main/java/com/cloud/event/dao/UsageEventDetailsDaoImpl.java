@@ -32,7 +32,7 @@ import com.cloud.utils.db.TransactionLegacy;
 
 @Component
 public class UsageEventDetailsDaoImpl extends GenericDaoBase<UsageEventDetailsVO, Long> implements UsageEventDetailsDao {
-    protected static Logger s_logger = LogManager.getLogger(UsageEventDetailsDaoImpl.class.getName());
+    protected static Logger logger = LogManager.getLogger(UsageEventDetailsDaoImpl.class.getName());
 
     protected final SearchBuilder<UsageEventDetailsVO> EventDetailsSearch;
     protected final SearchBuilder<UsageEventDetailsVO> DetailSearch;

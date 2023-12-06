@@ -30,7 +30,7 @@ import com.cloud.user.Account;
 @APICommand(name = "updateLBStickinessPolicy", description = "Updates load balancer stickiness policy", responseObject = LBStickinessResponse.class, since = "4.4",
 requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class UpdateLBStickinessPolicyCmd extends BaseAsyncCustomIdCmd{
-    protected static Logger s_logger = LogManager.getLogger(UpdateLBStickinessPolicyCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(UpdateLBStickinessPolicyCmd.class.getName());
 
 
     /////////////////////////////////////////////////////

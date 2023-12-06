@@ -26,7 +26,7 @@ import org.apache.logging.log4j.LogManager;
 import streamer.debug.FakeSource;
 
 public class OutputStreamSink extends BaseElement {
-    protected static Logger s_logger = LogManager.getLogger(OutputStreamSink.class);
+    protected static Logger logger = LogManager.getLogger(OutputStreamSink.class);
 
     protected OutputStream os;
     protected SocketWrapperImpl socketWrapper;
@@ -114,13 +114,13 @@ public class OutputStreamSink extends BaseElement {
         try {
             os.close();
         } catch (IOException e) {
-            s_logger.info("[ignored]"
+            logger.info("[ignored]"
                     + "io error on output: " + e.getLocalizedMessage());
         }
         try {
             sendEventToAllPads(Event.STREAM_CLOSE, Direction.IN);
         } catch (Exception e) {
-            s_logger.info("[ignored]"
+            logger.info("[ignored]"
                     + "error sending output close event: " + e.getLocalizedMessage());
         }
     }

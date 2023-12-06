@@ -50,7 +50,7 @@ import com.cloud.vm.Nic;
 
 @APICommand(name = "updateVmNicIp", description = "Update the default Ip of a VM Nic", responseObject = UserVmResponse.class)
 public class UpdateVmNicIpCmd extends BaseAsyncCmd {
-    protected static Logger s_logger = LogManager.getLogger(UpdateVmNicIpCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(UpdateVmNicIpCmd.class.getName());
 
     /////////////////////////////////////////////////////
     //////////////// API parameters /////////////////////

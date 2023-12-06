@@ -35,7 +35,7 @@ import com.cloud.user.Account;
 @APICommand(name = "getCloudIdentifier", description = "Retrieves a cloud identifier.", responseObject = CloudIdentifierResponse.class,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class GetCloudIdentifierCmd extends BaseCmd {
-    protected static Logger s_logger = LogManager.getLogger(GetCloudIdentifierCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(GetCloudIdentifierCmd.class.getName());
 
     /////////////////////////////////////////////////////
     //////////////// API parameters /////////////////////

@@ -44,7 +44,7 @@ import javax.inject.Inject;
 @APICommand(name = ListTungstenFabricProvidersCmd.APINAME, responseObject = TungstenFabricProviderResponse.class,
     description = "Lists Tungsten-Fabric providers", requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class ListTungstenFabricProvidersCmd extends BaseListCmd {
-    protected static Logger s_logger = LogManager.getLogger(ListTungstenFabricProvidersCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(ListTungstenFabricProvidersCmd.class.getName());
     public static final String APINAME = "listTungstenFabricProviders";
 
     /////////////////////////////////////////////////////

@@ -35,7 +35,7 @@ import com.cloud.utils.Pair;
 @ResourceWrapper(handles =  UpdateHostPasswordCommand.class)
 public final class CitrixUpdateHostPasswordCommandWrapper extends CommandWrapper<UpdateHostPasswordCommand, Answer, CitrixResourceBase> {
 
-    protected static Logger s_logger = LogManager.getLogger(CitrixUpdateHostPasswordCommandWrapper.class);
+    protected static Logger logger = LogManager.getLogger(CitrixUpdateHostPasswordCommandWrapper.class);
 
     @Override
     public Answer execute(final UpdateHostPasswordCommand command, final CitrixResourceBase citrixResourceBase) {
@@ -48,7 +48,7 @@ public final class CitrixUpdateHostPasswordCommandWrapper extends CommandWrapper
 
         Pair<Boolean, String> result;
         try {
-            s_logger.debug("Executing command in Host: " + cmdLine);
+            logger.debug("Executing command in Host: " + cmdLine);
             final String hostPassword = citrixResourceBase.getPwdFromQueue();
             result = xenServerUtilitiesHelper.executeSshWrapper(hostIp, 22, username, null, hostPassword, cmdLine.toString());
         } catch (final Exception e) {

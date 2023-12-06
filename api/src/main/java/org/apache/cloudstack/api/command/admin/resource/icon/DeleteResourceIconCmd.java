@@ -38,7 +38,7 @@ import java.util.List;
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false,
         authorized = {RoleType.Admin, RoleType.DomainAdmin, RoleType.ResourceAdmin, RoleType.User})
 public class DeleteResourceIconCmd extends BaseCmd {
-    protected static Logger s_logger = LogManager.getLogger(DeleteResourceIconCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(DeleteResourceIconCmd.class.getName());
 
     /////////////////////////////////////////////////////
     //////////////// API parameters /////////////////////

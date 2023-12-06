@@ -75,7 +75,7 @@ import com.cloud.vm.dao.NicIpAliasVO;
 @Component
 public class BasicNetworkVisitor extends NetworkTopologyVisitor {
 
-    protected static Logger s_logger = LogManager.getLogger(BasicNetworkVisitor.class);
+    protected static Logger logger = LogManager.getLogger(BasicNetworkVisitor.class);
 
     @Autowired
     @Qualifier("networkHelper")
@@ -158,7 +158,7 @@ public class BasicNetworkVisitor extends NetworkTopologyVisitor {
             return _networkGeneralHelper.sendCommandsToRouter(router, cmds);
 
         }
-        s_logger.warn("Unable to apply rules of purpose: " + rules.get(0).getPurpose());
+        logger.warn("Unable to apply rules of purpose: " + rules.get(0).getPurpose());
 
         return false;
     }

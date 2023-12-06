@@ -46,7 +46,7 @@ import com.cloud.user.Account;
 @APICommand(name = "createIpForwardingRule", description = "Creates an IP forwarding rule", responseObject = FirewallRuleResponse.class,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class CreateIpForwardingRuleCmd extends BaseAsyncCreateCmd implements StaticNatRule {
-    protected static Logger s_logger = LogManager.getLogger(CreateIpForwardingRuleCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(CreateIpForwardingRuleCmd.class.getName());
 
 
     /////////////////////////////////////////////////////
@@ -151,7 +151,7 @@ public class CreateIpForwardingRuleCmd extends BaseAsyncCreateCmd implements Sta
             setEntityId(rule.getId());
             setEntityUuid(rule.getUuid());
         } catch (NetworkRuleConflictException e) {
-            s_logger.info("Unable to create static NAT rule due to ", e);
+            logger.info("Unable to create static NAT rule due to ", e);
             throw new ServerApiException(ApiErrorCode.NETWORK_RULE_CONFLICT_ERROR, e.getMessage());
         }
     }

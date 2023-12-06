@@ -37,7 +37,7 @@ import com.cloud.utils.db.TransactionLegacy;
 
 @Component
 public class UsageLoadBalancerPolicyDaoImpl extends GenericDaoBase<UsageLoadBalancerPolicyVO, Long> implements UsageLoadBalancerPolicyDao {
-    protected static Logger s_logger = LogManager.getLogger(UsageLoadBalancerPolicyDaoImpl.class.getName());
+    protected static Logger logger = LogManager.getLogger(UsageLoadBalancerPolicyDaoImpl.class.getName());
 
     protected static final String REMOVE_BY_USERID_LBID = "DELETE FROM usage_load_balancer_policy WHERE account_id = ? AND lb_id = ?";
     protected static final String UPDATE_DELETED = "UPDATE usage_load_balancer_policy SET deleted = ? WHERE account_id = ? AND lb_id = ? and deleted IS NULL";
@@ -65,7 +65,7 @@ public class UsageLoadBalancerPolicyDaoImpl extends GenericDaoBase<UsageLoadBala
             txn.commit();
         } catch (Exception e) {
             txn.rollback();
-            s_logger.warn("Error removing UsageLoadBalancerPolicyVO", e);
+            logger.warn("Error removing UsageLoadBalancerPolicyVO", e);
         } finally {
             txn.close();
         }
@@ -91,7 +91,7 @@ public class UsageLoadBalancerPolicyDaoImpl extends GenericDaoBase<UsageLoadBala
             txn.commit();
         } catch (Exception e) {
             txn.rollback();
-            s_logger.warn("Error updating UsageLoadBalancerPolicyVO"+e.getMessage(), e);
+            logger.warn("Error updating UsageLoadBalancerPolicyVO"+e.getMessage(), e);
         } finally {
             txn.close();
         }
@@ -160,7 +160,7 @@ public class UsageLoadBalancerPolicyDaoImpl extends GenericDaoBase<UsageLoadBala
             }
         } catch (Exception e) {
             txn.rollback();
-            s_logger.warn("Error getting usage records", e);
+            logger.warn("Error getting usage records", e);
         } finally {
             txn.close();
         }

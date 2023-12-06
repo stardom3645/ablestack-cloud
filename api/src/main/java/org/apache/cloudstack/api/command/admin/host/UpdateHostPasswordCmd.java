@@ -32,7 +32,7 @@ import com.cloud.user.Account;
 @APICommand(name = "updateHostPassword", description = "Update password of a host/pool on management server.", responseObject = SuccessResponse.class,
 requestHasSensitiveInfo = true, responseHasSensitiveInfo = false)
 public class UpdateHostPasswordCmd extends BaseCmd {
-    protected static Logger s_logger = LogManager.getLogger(UpdateHostPasswordCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(UpdateHostPasswordCmd.class.getName());
 
 
     // ///////////////////////////////////////////////////

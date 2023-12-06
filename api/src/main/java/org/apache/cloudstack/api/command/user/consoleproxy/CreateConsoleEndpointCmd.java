@@ -47,7 +47,7 @@ import java.util.Map;
         authorized = {RoleType.Admin, RoleType.ResourceAdmin, RoleType.DomainAdmin, RoleType.User})
 public class CreateConsoleEndpointCmd extends BaseCmd {
 
-    protected static Logger s_logger = LogManager.getLogger(CreateConsoleEndpointCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(CreateConsoleEndpointCmd.class.getName());
 
     @Inject
     private ConsoleAccessManager consoleManager;

@@ -40,7 +40,7 @@ import com.cloud.utils.Pair;
         responseView = ResponseObject.ResponseView.Restricted,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class ListPrivateGatewaysCmd extends BaseListProjectAndAccountResourcesCmd implements UserCmd {
-    protected static Logger s_logger = LogManager.getLogger(ListPrivateGatewaysCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(ListPrivateGatewaysCmd.class.getName());
 
 
     /////////////////////////////////////////////////////

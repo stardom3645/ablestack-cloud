@@ -43,7 +43,7 @@ import com.cloud.user.Account;
 @APICommand(name = "dedicateZone", description = "Dedicates a zones.", responseObject = DedicateZoneResponse.class,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class DedicateZoneCmd extends BaseAsyncCmd {
-    protected static Logger s_logger = LogManager.getLogger(DedicateZoneCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(DedicateZoneCmd.class.getName());
 
     @Inject
     public DedicatedService dedicatedService;

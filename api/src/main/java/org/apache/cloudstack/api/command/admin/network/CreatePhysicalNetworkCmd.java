@@ -41,7 +41,7 @@ import com.cloud.user.Account;
 @APICommand(name = "createPhysicalNetwork", description = "Creates a physical network", responseObject = PhysicalNetworkResponse.class, since = "3.0.0",
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class CreatePhysicalNetworkCmd extends BaseAsyncCreateCmd {
-    protected static Logger s_logger = LogManager.getLogger(CreatePhysicalNetworkCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(CreatePhysicalNetworkCmd.class.getName());
 
 
     /////////////////////////////////////////////////////

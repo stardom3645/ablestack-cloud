@@ -33,7 +33,7 @@ import com.cloud.utils.db.TransactionLegacy;
 
 @Component
 public class MockConfigurationDaoImpl extends GenericDaoBase<MockConfigurationVO, Long> implements MockConfigurationDao {
-    final static Logger s_logger = LogManager.getLogger(MockConfigurationDaoImpl.class);
+    final static Logger logger = LogManager.getLogger(MockConfigurationDaoImpl.class);
     private final SearchBuilder<MockConfigurationVO> _searchByDcIdName;
     private final SearchBuilder<MockConfigurationVO> _searchByDcIDPodIdName;
     private final SearchBuilder<MockConfigurationVO> _searchByDcIDPodIdClusterIdName;
@@ -140,7 +140,7 @@ public class MockConfigurationDaoImpl extends GenericDaoBase<MockConfigurationVO
                 return toEntityBean(rs, false);
             }
         } catch (Exception e) {
-            s_logger.info("[ignored]"
+            logger.info("[ignored]"
                     + "error while executing dynamically build search: " + e.getLocalizedMessage());
         }
         return null;

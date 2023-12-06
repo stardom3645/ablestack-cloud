@@ -38,7 +38,7 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 
 public class JavaStorageLayer implements StorageLayer {
-    protected static Logger s_logger = LogManager.getLogger(JavaStorageLayer.class);
+    protected static Logger logger = LogManager.getLogger(JavaStorageLayer.class);
     private static final String STD_TMP_DIR_PATH = "/tmp";
     String _name;
     boolean _makeWorldWriteable = true;
@@ -199,9 +199,9 @@ public class JavaStorageLayer implements StorageLayer {
             if (dir.exists()) {
                 if (isWorldReadable(dir)) {
                     if (STD_TMP_DIR_PATH.equals(dir.getAbsolutePath())) {
-                        s_logger.warn(String.format("The temp dir is %s", STD_TMP_DIR_PATH));
+                        logger.warn(String.format("The temp dir is %s", STD_TMP_DIR_PATH));
                     } else {
-                        s_logger.warn("The temp dir " + dir.getAbsolutePath() + " is World Readable");
+                        logger.warn("The temp dir " + dir.getAbsolutePath() + " is World Readable");
                     }
                 }
                 String uniqDirName = dir.getAbsolutePath() + File.separator + UUID.randomUUID().toString();

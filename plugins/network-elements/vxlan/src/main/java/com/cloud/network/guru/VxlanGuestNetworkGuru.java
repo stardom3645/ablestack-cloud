@@ -48,7 +48,7 @@ import com.cloud.vm.VirtualMachineProfile;
 
 @Component
 public class VxlanGuestNetworkGuru extends GuestNetworkGuru {
-    protected static Logger s_logger = LogManager.getLogger(VxlanGuestNetworkGuru.class);
+    protected static Logger logger = LogManager.getLogger(VxlanGuestNetworkGuru.class);
 
     public VxlanGuestNetworkGuru() {
         super();
@@ -63,7 +63,7 @@ public class VxlanGuestNetworkGuru extends GuestNetworkGuru {
                 isMyIsolationMethod(physicalNetwork)) {
             return true;
         } else {
-            s_logger.trace("We only take care of Guest networks of type   " + GuestType.Isolated + " or " + GuestType.L2 + " in zone of type " + NetworkType.Advanced);
+            logger.trace("We only take care of Guest networks of type   " + GuestType.Isolated + " or " + GuestType.L2 + " in zone of type " + NetworkType.Advanced);
             return false;
         }
     }
@@ -152,7 +152,7 @@ public class VxlanGuestNetworkGuru extends GuestNetworkGuru {
     public void shutdown(NetworkProfile profile, NetworkOffering offering) {
         NetworkVO networkObject = _networkDao.findById(profile.getId());
         if (networkObject.getBroadcastDomainType() != BroadcastDomainType.Vxlan || networkObject.getBroadcastUri() == null) {
-            s_logger.warn("BroadcastUri is empty or incorrect for guestnetwork " + networkObject.getDisplayText());
+            logger.warn("BroadcastUri is empty or incorrect for guestnetwork " + networkObject.getDisplayText());
             return;
         }
 

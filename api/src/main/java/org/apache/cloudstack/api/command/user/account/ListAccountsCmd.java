@@ -42,7 +42,7 @@ import com.cloud.user.Account;
 @APICommand(name = "listAccounts", description = "Lists accounts and provides detailed account information for listed accounts", responseObject = AccountResponse.class, responseView = ResponseView.Restricted, entityType = {Account.class},
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = true)
 public class ListAccountsCmd extends BaseListDomainResourcesCmd implements UserCmd {
-    protected static Logger s_logger = LogManager.getLogger(ListAccountsCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(ListAccountsCmd.class.getName());
     private static final String s_name = "listaccountsresponse";
 
     /////////////////////////////////////////////////////

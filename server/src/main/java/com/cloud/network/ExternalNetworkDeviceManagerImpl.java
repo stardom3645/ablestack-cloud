@@ -144,7 +144,7 @@ public class ExternalNetworkDeviceManagerImpl extends ManagerBase implements Ext
 //            if (devs.size() == 1) {
 //                res.add(devs.get(0));
 //            } else {
-//                s_logger.debug("List " + type + ": " + devs.size() + " found");
+//                logger.debug("List " + type + ": " + devs.size() + " found");
 //            }
 //        } else {
 //            List<HostVO> devs = _hostDao.listBy(type, zoneId);

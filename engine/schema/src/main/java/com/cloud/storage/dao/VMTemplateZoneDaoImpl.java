@@ -31,7 +31,7 @@ import com.cloud.utils.db.TransactionLegacy;
 
 @Component
 public class VMTemplateZoneDaoImpl extends GenericDaoBase<VMTemplateZoneVO, Long> implements VMTemplateZoneDao {
-    protected static Logger s_logger = LogManager.getLogger(VMTemplateZoneDaoImpl.class.getName());
+    protected static Logger logger = LogManager.getLogger(VMTemplateZoneDaoImpl.class.getName());
 
     protected final SearchBuilder<VMTemplateZoneVO> ZoneSearch;
     protected final SearchBuilder<VMTemplateZoneVO> TemplateSearch;

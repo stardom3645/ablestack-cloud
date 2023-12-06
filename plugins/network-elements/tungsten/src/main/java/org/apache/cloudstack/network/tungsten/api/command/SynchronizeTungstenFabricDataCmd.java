@@ -39,7 +39,7 @@ import javax.inject.Inject;
 @APICommand(name = SynchronizeTungstenFabricDataCmd.APINAME, description = "Synchronize Tungsten-Fabric data",
     responseObject = SuccessResponse.class, requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class SynchronizeTungstenFabricDataCmd extends BaseCmd {
-    protected static Logger s_logger = LogManager.getLogger(SynchronizeTungstenFabricDataCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(SynchronizeTungstenFabricDataCmd.class.getName());
     public static final String APINAME = "synchronizeTungstenFabricData";
 
     @Parameter(name = ApiConstants.ID, type = CommandType.UUID, entityType = TungstenFabricProviderResponse.class,

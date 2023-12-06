@@ -37,7 +37,7 @@ import com.cloud.user.Account;
 @APICommand(name = "deleteCounter", description = "Deletes a counter for VM auto scaling", responseObject = SuccessResponse.class,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class DeleteCounterCmd extends BaseAsyncCmd {
-    protected static Logger s_logger = LogManager.getLogger(DeleteCounterCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(DeleteCounterCmd.class.getName());
 
     // ///////////////////////////////////////////////////
     // ////////////// API parameters /////////////////////
@@ -56,7 +56,7 @@ public class DeleteCounterCmd extends BaseAsyncCmd {
         try {
             result = _autoScaleService.deleteCounter(getId());
         } catch (ResourceInUseException ex) {
-            s_logger.warn("Exception: ", ex);
+            logger.warn("Exception: ", ex);
             throw new ServerApiException(ApiErrorCode.RESOURCE_IN_USE_ERROR, ex.getMessage());
         }
 
@@ -64,7 +64,7 @@ public class DeleteCounterCmd extends BaseAsyncCmd {
             SuccessResponse response = new SuccessResponse(getCommandName());
             this.setResponseObject(response);
         } else {
-            s_logger.warn("Failed to delete counter with Id: " + getId());
+            logger.warn("Failed to delete counter with Id: " + getId());
             throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, "Failed to delete counter.");
         }
     }

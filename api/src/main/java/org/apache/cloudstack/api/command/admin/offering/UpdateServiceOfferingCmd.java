@@ -40,7 +40,7 @@ import com.cloud.user.Account;
 @APICommand(name = "updateServiceOffering", description = "Updates a service offering.", responseObject = ServiceOfferingResponse.class,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class UpdateServiceOfferingCmd extends BaseCmd {
-    protected static Logger s_logger = LogManager.getLogger(UpdateServiceOfferingCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(UpdateServiceOfferingCmd.class.getName());
 
     /////////////////////////////////////////////////////
     //////////////// API parameters /////////////////////

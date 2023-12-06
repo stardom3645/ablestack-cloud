@@ -42,7 +42,7 @@ import javax.inject.Inject;
     responseObject = SuccessResponse.class, requestHasSensitiveInfo = false, responseHasSensitiveInfo =
     false)
 public class CreateTungstenFabricManagementNetworkCmd extends BaseCmd {
-    protected static Logger s_logger = LogManager.getLogger(CreateTungstenFabricManagementNetworkCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(CreateTungstenFabricManagementNetworkCmd.class.getName());
     public static final String APINAME = "createTungstenFabricManagementNetwork";
 
     @Inject

@@ -40,7 +40,7 @@ import com.cloud.vm.VirtualMachine;
 @APICommand(name = "rebootRouter", description = "Starts a router.", responseObject = DomainRouterResponse.class, entityType = {VirtualMachine.class},
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class RebootRouterCmd extends BaseAsyncCmd {
-    protected static Logger s_logger = LogManager.getLogger(RebootRouterCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(RebootRouterCmd.class.getName());
 
     /////////////////////////////////////////////////////
     //////////////// API parameters /////////////////////

@@ -36,7 +36,7 @@ import com.cloud.user.Account;
 @APICommand(name = "releaseHostReservation", description = "Releases host reservation.", responseObject = SuccessResponse.class,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class ReleaseHostReservationCmd extends BaseAsyncCmd {
-    protected static Logger s_logger = LogManager.getLogger(ReleaseHostReservationCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(ReleaseHostReservationCmd.class.getName());
 
 
     /////////////////////////////////////////////////////

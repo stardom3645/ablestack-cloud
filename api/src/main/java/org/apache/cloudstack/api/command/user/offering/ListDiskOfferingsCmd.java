@@ -32,7 +32,7 @@ import org.apache.cloudstack.api.response.ListResponse;
 @APICommand(name = "listDiskOfferings", description = "Lists all available disk offerings.", responseObject = DiskOfferingResponse.class,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class ListDiskOfferingsCmd extends BaseListDomainResourcesCmd {
-    protected static Logger s_logger = LogManager.getLogger(ListDiskOfferingsCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(ListDiskOfferingsCmd.class.getName());
 
 
     /////////////////////////////////////////////////////

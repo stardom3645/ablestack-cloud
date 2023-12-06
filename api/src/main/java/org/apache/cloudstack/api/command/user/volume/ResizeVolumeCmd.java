@@ -45,7 +45,7 @@ import com.cloud.user.Account;
 @APICommand(name = "resizeVolume", description = "Resizes a volume", responseObject = VolumeResponse.class, responseView = ResponseView.Restricted, entityType = {Volume.class},
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class ResizeVolumeCmd extends BaseAsyncCmd implements UserCmd {
-    protected static Logger s_logger = LogManager.getLogger(ResizeVolumeCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(ResizeVolumeCmd.class.getName());
 
     private static final String s_name = "resizevolumeresponse";
 
@@ -196,10 +196,10 @@ public class ResizeVolumeCmd extends BaseAsyncCmd implements UserCmd {
 
             volume = _volumeService.resizeVolume(this);
         } catch (ResourceAllocationException ex) {
-            s_logger.error(ex.getMessage());
+            logger.error(ex.getMessage());
             throw new ServerApiException(ApiErrorCode.RESOURCE_ALLOCATION_ERROR, ex.getMessage());
         } catch (InvalidParameterValueException ex) {
-            s_logger.info(ex.getMessage());
+            logger.info(ex.getMessage());
             throw new ServerApiException(ApiErrorCode.UNSUPPORTED_ACTION_ERROR, ex.getMessage());
         }
 

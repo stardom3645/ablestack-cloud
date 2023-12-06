@@ -42,7 +42,7 @@ import com.cloud.user.Account;
 @APICommand(name = "extractVolume", description = "Extracts volume", responseObject = ExtractResponse.class, entityType = {Volume.class},
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class ExtractVolumeCmd extends BaseAsyncCmd {
-    protected static Logger s_logger = LogManager.getLogger(ExtractVolumeCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(ExtractVolumeCmd.class.getName());
 
 
     /////////////////////////////////////////////////////

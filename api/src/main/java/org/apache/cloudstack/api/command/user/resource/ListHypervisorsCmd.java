@@ -35,7 +35,7 @@ import com.cloud.user.Account;
 @APICommand(name = "listHypervisors", description = "List hypervisors", responseObject = HypervisorResponse.class,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class ListHypervisorsCmd extends BaseCmd {
-    protected static Logger s_logger = LogManager.getLogger(ListHypervisorsCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(ListHypervisorsCmd.class.getName());
 
     // ///////////////////////////////////////////////////
     // ////////////// API parameters /////////////////////

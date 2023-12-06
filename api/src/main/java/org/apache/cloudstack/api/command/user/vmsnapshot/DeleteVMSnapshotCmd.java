@@ -40,7 +40,7 @@ import com.cloud.vm.snapshot.VMSnapshot;
 @APICommand(name = "deleteVMSnapshot", description = "Deletes a vmsnapshot.", responseObject = SuccessResponse.class, since = "4.2.0", entityType = {VMSnapshot.class},
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class DeleteVMSnapshotCmd extends BaseAsyncCmd {
-    protected static Logger s_logger = LogManager.getLogger(DeleteVMSnapshotCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(DeleteVMSnapshotCmd.class.getName());
 
     @ACL(accessType = AccessType.OperateEntry)
     @Parameter(name = ApiConstants.VM_SNAPSHOT_ID,

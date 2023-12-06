@@ -36,7 +36,7 @@ import com.cloud.user.Account;
 @APICommand(name = "updateStoragePool", description = "Updates a storage pool.", responseObject = StoragePoolResponse.class, since = "3.0.0",
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class UpdateStoragePoolCmd extends BaseCmd {
-    protected static Logger s_logger = LogManager.getLogger(UpdateStoragePoolCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(UpdateStoragePoolCmd.class.getName());
 
 
     /////////////////////////////////////////////////////

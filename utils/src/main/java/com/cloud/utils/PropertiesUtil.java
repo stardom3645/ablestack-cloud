@@ -33,7 +33,7 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 
 public class PropertiesUtil {
-    protected static Logger s_logger = LogManager.getLogger(PropertiesUtil.class);
+    protected static Logger logger = LogManager.getLogger(PropertiesUtil.class);
 
     /**
      * Searches the class path and local paths to find the config file.
@@ -130,7 +130,7 @@ public class PropertiesUtil {
         if (stream != null) {
             properties.load(stream);
         } else {
-            s_logger.error("Unable to find properties file: " + configFile);
+            logger.error("Unable to find properties file: " + configFile);
         }
     }
 
@@ -145,7 +145,7 @@ public class PropertiesUtil {
                 try {
                     loadFromFile(preProcessedCommands, commandsFile);
                 } catch (IOException ioe) {
-                    s_logger.error("IO Exception loading properties file", ioe);
+                    logger.error("IO Exception loading properties file", ioe);
                 }
             }
             else {
@@ -153,7 +153,7 @@ public class PropertiesUtil {
                 try {
                     loadFromJar(preProcessedCommands, configFile);
                 } catch (IOException e) {
-                    s_logger.error("IO Exception loading properties file from jar", e);
+                    logger.error("IO Exception loading properties file from jar", e);
                 }
             }
         }

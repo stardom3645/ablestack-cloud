@@ -39,7 +39,7 @@ import com.cloud.network.RemoteAccessVpn;
 @APICommand(name = "deleteRemoteAccessVpn", description = "Destroys a l2tp/ipsec remote access vpn", responseObject = SuccessResponse.class, entityType = {RemoteAccessVpn.class},
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class DeleteRemoteAccessVpnCmd extends BaseAsyncCmd {
-    protected static Logger s_logger = LogManager.getLogger(DeleteRemoteAccessVpnCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(DeleteRemoteAccessVpnCmd.class.getName());
 
 
     /////////////////////////////////////////////////////

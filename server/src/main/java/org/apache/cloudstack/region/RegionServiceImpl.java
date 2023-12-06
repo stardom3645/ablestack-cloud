@@ -49,7 +49,7 @@ import com.cloud.utils.component.ManagerBase;
 
 @Component
 public class RegionServiceImpl extends ManagerBase implements RegionService, Manager {
-    protected static Logger s_logger = LogManager.getLogger(RegionServiceImpl.class);
+    protected static Logger logger = LogManager.getLogger(RegionServiceImpl.class);
 
     @Inject
     private RegionManager _regionMgr;

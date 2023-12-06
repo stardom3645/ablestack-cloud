@@ -36,7 +36,7 @@ import com.cloud.network.as.AutoScalePolicy;
 @APICommand(name = "listAutoScalePolicies", description = "Lists autoscale policies.", responseObject = AutoScalePolicyResponse.class, entityType = {AutoScalePolicy.class},
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class ListAutoScalePoliciesCmd extends BaseListProjectAndAccountResourcesCmd {
-    protected static Logger s_logger = LogManager.getLogger(ListAutoScalePoliciesCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(ListAutoScalePoliciesCmd.class.getName());
 
 
     // ///////////////////////////////////////////////////

@@ -40,7 +40,7 @@ import com.cloud.template.VirtualMachineTemplate;
 import com.cloud.utils.exception.CloudRuntimeException;
 
 public class ServiceInstanceModel extends ModelObjectBase {
-    protected static Logger s_logger = LogManager.getLogger(ServiceInstanceModel.class);
+    protected static Logger logger = LogManager.getLogger(ServiceInstanceModel.class);
 
     private String _uuid;
     private String _fqName;
@@ -126,7 +126,7 @@ public class ServiceInstanceModel extends ModelObjectBase {
                 ServiceTemplate tmpl = (ServiceTemplate)api.findById(ServiceTemplate.class, ref.getUuid());
                 _templateId = tmpl.getUuid();
             } catch (IOException ex) {
-                s_logger.warn("service-template read", ex);
+                logger.warn("service-template read", ex);
             }
         }
     }
@@ -150,7 +150,7 @@ public class ServiceInstanceModel extends ModelObjectBase {
                 ApiConnector api = controller.getApiAccessor();
                 project = (Project)api.findById(Project.class, _projectId);
             } catch (IOException ex) {
-                s_logger.warn("project read", ex);
+                logger.warn("project read", ex);
                 throw new CloudRuntimeException("Unable to create service-instance object", ex);
             }
         }
@@ -166,7 +166,7 @@ public class ServiceInstanceModel extends ModelObjectBase {
             ApiConnector api = controller.getApiAccessor();
             api.create(si_obj);
         } catch (IOException ex) {
-            s_logger.warn("service-instance create", ex);
+            logger.warn("service-instance create", ex);
             throw new CloudRuntimeException("Unable to create service-instance object", ex);
         }
 
@@ -181,13 +181,13 @@ public class ServiceInstanceModel extends ModelObjectBase {
             _policy.delete(controller.getManager().getModelController());
             _policy = null;
         } catch (Exception e) {
-            s_logger.error(e);
+            logger.error(e);
         }
         try {
             _left.update(controller.getManager().getModelController());
             _right.update(controller.getManager().getModelController());
         } catch (Exception ex) {
-            s_logger.error("virtual-network update for policy delete: ", ex);
+            logger.error("virtual-network update for policy delete: ", ex);
         }
     }
 
@@ -201,7 +201,7 @@ public class ServiceInstanceModel extends ModelObjectBase {
         try {
             policyModel.build(controller.getManager().getModelController(), _leftName, _rightName, "in-network", siList, "pass");
         } catch (Exception e) {
-            s_logger.error(e);
+            logger.error(e);
             return null;
         }
         try {
@@ -210,7 +210,7 @@ public class ServiceInstanceModel extends ModelObjectBase {
             }
             controller.getManager().getDatabase().getNetworkPolicys().add(policyModel);
         } catch (Exception ex) {
-            s_logger.error("network-policy update: ", ex);
+            logger.error("network-policy update: ", ex);
         }
         return policyModel;
     }
@@ -242,7 +242,7 @@ public class ServiceInstanceModel extends ModelObjectBase {
             ApiConnector api = controller.getApiAccessor();
             tmpl = (ServiceTemplate)api.findById(ServiceTemplate.class, _templateId);
         } catch (IOException ex) {
-            s_logger.warn("service-template read", ex);
+            logger.warn("service-template read", ex);
             throw new CloudRuntimeException("Unable to create service-template object", ex);
         }
         if (tmpl == null) {

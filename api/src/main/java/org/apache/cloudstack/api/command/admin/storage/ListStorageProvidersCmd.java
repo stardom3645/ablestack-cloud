@@ -41,7 +41,7 @@ import com.cloud.exception.ResourceUnavailableException;
 @APICommand(name = "listStorageProviders", description = "Lists storage providers.", responseObject = StorageProviderResponse.class,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class ListStorageProvidersCmd extends BaseListCmd {
-    protected static Logger s_logger = LogManager.getLogger(ListStorageProvidersCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(ListStorageProvidersCmd.class.getName());
 
     @Parameter(name = ApiConstants.TYPE, type = CommandType.STRING, description = "the type of storage provider: either primary or image", required = true)
     private String type;

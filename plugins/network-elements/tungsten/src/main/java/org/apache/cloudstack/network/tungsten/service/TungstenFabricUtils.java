@@ -32,7 +32,7 @@ import javax.inject.Inject;
 @Component
 public class TungstenFabricUtils {
 
-    protected static Logger s_logger = LogManager.getLogger(TungstenFabricUtils.class);
+    protected static Logger logger = LogManager.getLogger(TungstenFabricUtils.class);
 
     @Inject
     AgentManager agentMgr;
@@ -43,14 +43,14 @@ public class TungstenFabricUtils {
 
         TungstenProviderVO tungstenProviderVO = tungstenProviderDao.findByZoneId(zoneId);
         if (tungstenProviderVO == null) {
-            s_logger.error("No Tungsten-Fabric provider have been found!");
+            logger.error("No Tungsten-Fabric provider have been found!");
             throw new InvalidParameterValueException("Failed to find a Tungsten-Fabric provider");
         }
 
         Answer answer = agentMgr.easySend(tungstenProviderVO.getHostId(), cmd);
 
         if (answer == null || !answer.getResult()) {
-            s_logger.error("Tungsten-Fabric API Command failed");
+            logger.error("Tungsten-Fabric API Command failed");
             throw new InvalidParameterValueException("Failed API call to Tungsten-Fabric Network plugin");
         }
 

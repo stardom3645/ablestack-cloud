@@ -30,7 +30,7 @@ import org.apache.logging.log4j.LogManager;
 import com.cloud.utils.exception.CloudRuntimeException;
 
 public class Upgrade228to229 implements DbUpgrade {
-    final static Logger s_logger = LogManager.getLogger(Upgrade228to229.class);
+    final static Logger logger = LogManager.getLogger(Upgrade228to229.class);
 
     @Override
     public String[] getUpgradableVersionRange() {
@@ -127,7 +127,7 @@ public class Upgrade228to229 implements DbUpgrade {
         foreignKeys.put("network_tags", keys);
 
         // drop all foreign keys first
-        s_logger.debug("Dropping keys that don't exist in 2.2.6 version of the DB...");
+        logger.debug("Dropping keys that don't exist in 2.2.6 version of the DB...");
         for (String tableName : foreignKeys.keySet()) {
             DbUpgradeUtils.dropKeysIfExist(conn, tableName, foreignKeys.get(tableName), true);
         }

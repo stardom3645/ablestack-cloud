@@ -35,7 +35,7 @@ import com.cloud.utils.db.TransactionStatus;
 
 @Component
 public class QuotaAccountDaoImpl extends GenericDaoBase<QuotaAccountVO, Long> implements QuotaAccountDao {
-    protected static Logger s_logger = LogManager.getLogger(QuotaAccountDaoImpl.class);
+    protected static Logger logger = LogManager.getLogger(QuotaAccountDaoImpl.class);
 
     @Override
     public List<QuotaAccountVO> listAllQuotaAccount() {
@@ -45,7 +45,7 @@ public class QuotaAccountDaoImpl extends GenericDaoBase<QuotaAccountVO, Long> im
                 accountsWithQuotaEnabled.add(account);
                 continue;
             }
-            s_logger.trace(String.format("Account [%s] has the quota plugin disabled. Thus, it will not receive quota emails.", account));
+            logger.trace(String.format("Account [%s] has the quota plugin disabled. Thus, it will not receive quota emails.", account));
         }
         return accountsWithQuotaEnabled;
     }

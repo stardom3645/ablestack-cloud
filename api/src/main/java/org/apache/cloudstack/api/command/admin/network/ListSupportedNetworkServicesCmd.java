@@ -41,7 +41,7 @@ import com.cloud.user.Account;
             requestHasSensitiveInfo = false,
             responseHasSensitiveInfo = false)
 public class ListSupportedNetworkServicesCmd extends BaseListCmd {
-    protected static Logger s_logger = LogManager.getLogger(ListSupportedNetworkServicesCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(ListSupportedNetworkServicesCmd.class.getName());
 
     @Parameter(name = ApiConstants.PROVIDER, type = CommandType.STRING, description = "network service provider name")
     private String providerName;

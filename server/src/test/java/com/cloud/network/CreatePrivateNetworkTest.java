@@ -70,7 +70,7 @@ import static org.mockito.Mockito.when;
 //@Ignore("Requires database to be set up")
 public class CreatePrivateNetworkTest {
 
-    protected static Logger s_logger = LogManager.getLogger(CreatePrivateNetworkTest.class);
+    protected static Logger logger = LogManager.getLogger(CreatePrivateNetworkTest.class);
 
     NetworkServiceImpl networkService = new NetworkServiceImpl();
 
@@ -167,13 +167,13 @@ public class CreatePrivateNetworkTest {
             Assert.assertEquals("'bla' should not be accepted as scheme", true, invalid);
             Assert.assertEquals("'mido' should not yet be supported as scheme", true, unsupported);
         } catch (ResourceAllocationException e) {
-            s_logger.error("no resources", e);
+            logger.error("no resources", e);
             fail("no resources");
         } catch (ConcurrentOperationException e) {
-            s_logger.error("another one is in the way", e);
+            logger.error("another one is in the way", e);
             fail("another one is in the way");
         } catch (InsufficientCapacityException e) {
-            s_logger.error("no capacity", e);
+            logger.error("no capacity", e);
             fail("no capacity");
         } finally {
             __txn.close("createInvalidlyHostedPrivateNetworkTest");

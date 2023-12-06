@@ -41,7 +41,7 @@ import com.cloud.network.vpc.StaticRoute;
 @APICommand(name = "deleteStaticRoute", description = "Deletes a static route", responseObject = SuccessResponse.class, entityType = {StaticRoute.class},
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class DeleteStaticRouteCmd extends BaseAsyncCmd {
-    protected static Logger s_logger = LogManager.getLogger(DeleteStaticRouteCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(DeleteStaticRouteCmd.class.getName());
 
     /////////////////////////////////////////////////////
     //////////////// API parameters /////////////////////

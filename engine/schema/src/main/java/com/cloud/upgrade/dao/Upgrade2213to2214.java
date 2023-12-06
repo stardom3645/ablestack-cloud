@@ -29,7 +29,7 @@ import org.apache.logging.log4j.LogManager;
 import com.cloud.utils.exception.CloudRuntimeException;
 
 public class Upgrade2213to2214 implements DbUpgrade {
-    final static Logger s_logger = LogManager.getLogger(Upgrade2213to2214.class);
+    final static Logger logger = LogManager.getLogger(Upgrade2213to2214.class);
 
     @Override
     public String[] getUpgradableVersionRange() {

@@ -34,7 +34,7 @@ import com.cloud.user.Account;
 @APICommand(name = "deleteZone", description = "Deletes a Zone.", responseObject = SuccessResponse.class,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class DeleteZoneCmd extends BaseCmd {
-    protected static Logger s_logger = LogManager.getLogger(DeleteZoneCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(DeleteZoneCmd.class.getName());
 
 
     /////////////////////////////////////////////////////

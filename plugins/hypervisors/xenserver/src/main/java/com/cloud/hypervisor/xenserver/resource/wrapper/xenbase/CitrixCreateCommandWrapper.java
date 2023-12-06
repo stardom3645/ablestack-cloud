@@ -42,7 +42,7 @@ import com.xensource.xenapi.VDI;
 @ResourceWrapper(handles =  CreateCommand.class)
 public final class CitrixCreateCommandWrapper extends CommandWrapper<CreateCommand, Answer, CitrixResourceBase> {
 
-    protected static Logger s_logger = LogManager.getLogger(CitrixCreateCommandWrapper.class);
+    protected static Logger logger = LogManager.getLogger(CitrixCreateCommandWrapper.class);
 
     @Override
     public Answer execute(final CreateCommand command, final CitrixResourceBase citrixResourceBase) {
@@ -73,14 +73,14 @@ public final class CitrixCreateCommandWrapper extends CommandWrapper<CreateComma
             VDI.Record vdir;
             vdir = vdi.getRecord(conn);
 
-            s_logger.debug("Successfully created VDI for " + command + ".  Uuid = " + vdir.uuid);
+            logger.debug("Successfully created VDI for " + command + ".  Uuid = " + vdir.uuid);
 
             final VolumeTO vol =
                     new VolumeTO(command.getVolumeId(), dskch.getType(), pool.getType(), pool.getUuid(), vdir.nameLabel, pool.getPath(), vdir.uuid, vdir.virtualSize, null);
 
             return new CreateAnswer(command, vol);
         } catch (final Exception e) {
-            s_logger.warn("Unable to create volume; Pool=" + pool + "; Disk: " + dskch, e);
+            logger.warn("Unable to create volume; Pool=" + pool + "; Disk: " + dskch, e);
             return new CreateAnswer(command, e);
         }
     }

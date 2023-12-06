@@ -45,7 +45,7 @@ import com.cloud.utils.component.ComponentMethodInterceptor;
 
 @Component
 public class EventUtils {
-    protected static Logger s_logger = LogManager.getLogger(EventUtils.class);
+    protected static Logger logger = LogManager.getLogger(EventUtils.class);
 
     protected static  EventBus s_eventBus = null;
 
@@ -76,14 +76,14 @@ public class EventUtils {
             s_eventBus.publish(event);
         } catch (EventBusException evx) {
             String errMsg = "Failed to publish contrail event.";
-            s_logger.warn(errMsg, evx);
+            logger.warn(errMsg, evx);
         }
 
     }
 
     public static class EventInterceptor implements ComponentMethodInterceptor, MethodInterceptor {
 
-        protected static Logger s_logger = LogManager.getLogger(EventInterceptor.class);
+        protected static Logger logger = LogManager.getLogger(EventInterceptor.class);
 
         public EventInterceptor() {
 
@@ -156,7 +156,7 @@ public class EventUtils {
 
         @Override
         public void interceptException(Method method, Object target, Object event) {
-            s_logger.debug("interceptException");
+            logger.debug("interceptException");
         }
 
         @Override

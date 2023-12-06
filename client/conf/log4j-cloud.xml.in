@@ -124,11 +124,11 @@ under the License.
       <!-- ======================= -->
 
       <Root level="OFF">
-         <!-- <AppenderRef ref="SYSLOG"/> -->
-         <!-- <AppenderRef ref="CONSOLE"/> -->
-         <!-- <AppenderRef ref="FILE"/> -->
-         <!-- <AppenderRef ref="SNMP"/> -->
-         <!-- <AppenderRef ref="ALERTSYSLOG"/> -->
+         <!-- <AppenderRef ref="SYSLOG"/>
+         <AppenderRef ref="CONSOLE"/>
+         <AppenderRef ref="FILE"/>
+         <AppenderRef ref="SNMP"/>
+         <AppenderRef ref="ALERTSYSLOG"/> -->
          <AppenderRef ref="NullAppender"/>
       </Root>
 

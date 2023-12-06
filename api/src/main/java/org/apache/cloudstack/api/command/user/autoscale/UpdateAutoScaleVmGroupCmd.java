@@ -43,7 +43,7 @@ import com.cloud.user.Account;
 @APICommand(name = "updateAutoScaleVmGroup", description = "Updates an existing autoscale vm group.", responseObject = AutoScaleVmGroupResponse.class, entityType = {AutoScaleVmGroup.class},
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class UpdateAutoScaleVmGroupCmd extends BaseAsyncCustomIdCmd {
-    protected static Logger s_logger = LogManager.getLogger(UpdateAutoScaleVmGroupCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(UpdateAutoScaleVmGroupCmd.class.getName());
 
 
     // ///////////////////////////////////////////////////

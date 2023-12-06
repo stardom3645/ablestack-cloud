@@ -40,7 +40,7 @@ import com.cloud.utils.Pair;
             requestHasSensitiveInfo = false,
             responseHasSensitiveInfo = false)
 public class ListHypervisorCapabilitiesCmd extends BaseListCmd {
-    protected static Logger s_logger = LogManager.getLogger(ListHypervisorCapabilitiesCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(ListHypervisorCapabilitiesCmd.class.getName());
 
 
     /////////////////////////////////////////////////////

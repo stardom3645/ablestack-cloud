@@ -43,7 +43,7 @@ import com.cloud.network.element.VirtualRouterElementService;
 @APICommand(name = "listOvsElements", description = "Lists all available ovs elements.", responseObject = OvsProviderResponse.class,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class ListOvsElementsCmd extends BaseListCmd {
-    protected static Logger s_logger = LogManager.getLogger(ListNetworkOfferingsCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(ListNetworkOfferingsCmd.class.getName());
     @Inject
     private List<VirtualRouterElementService> _service;
     // ///////////////////////////////////////////////////

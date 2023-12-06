@@ -37,7 +37,7 @@ import javax.inject.Inject;
 public class SetupUserTwoFactorAuthenticationCmd extends BaseCmd {
 
     public static final String APINAME = "setupUserTwoFactorAuthentication";
-    protected static Logger s_logger = LogManager.getLogger(SetupUserTwoFactorAuthenticationCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(SetupUserTwoFactorAuthenticationCmd.class.getName());
 
     @Inject
     private AccountManager accountManager;

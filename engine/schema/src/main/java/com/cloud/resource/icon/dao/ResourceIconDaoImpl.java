@@ -31,7 +31,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ResourceIconDaoImpl extends GenericDaoBase<ResourceIconVO, Long> implements ResourceIconDao {
-    protected static Logger s_logger = LogManager.getLogger(ResourceIconDaoImpl.class);
+    protected static Logger logger = LogManager.getLogger(ResourceIconDaoImpl.class);
     private final SearchBuilder<ResourceIconVO> AllFieldsSearch;
 
     protected ResourceIconDaoImpl() {

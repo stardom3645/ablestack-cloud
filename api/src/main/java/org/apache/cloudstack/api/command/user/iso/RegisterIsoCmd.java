@@ -44,7 +44,7 @@ import com.cloud.template.VirtualMachineTemplate;
 @APICommand(name = "registerIso", responseObject = TemplateResponse.class, description = "Registers an existing ISO into the CloudStack Cloud.", responseView = ResponseView.Restricted,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class RegisterIsoCmd extends BaseCmd implements UserCmd {
-    protected static Logger s_logger = LogManager.getLogger(RegisterIsoCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(RegisterIsoCmd.class.getName());
 
     private static final String s_name = "registerisoresponse";
 

@@ -43,7 +43,7 @@ import com.cloud.user.Account;
             requestHasSensitiveInfo = false,
             responseHasSensitiveInfo = true)
 public class DestroyVolumeCmd extends BaseAsyncCmd {
-    protected static Logger s_logger = LogManager.getLogger(DestroyVolumeCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(DestroyVolumeCmd.class.getName());
 
     private static final String s_name = "destroyvolumeresponse";
 

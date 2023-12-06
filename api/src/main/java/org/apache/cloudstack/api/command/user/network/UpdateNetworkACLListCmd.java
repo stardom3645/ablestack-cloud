@@ -35,7 +35,7 @@ import com.cloud.user.Account;
 
 @APICommand(name = "updateNetworkACLList", description = "Updates network ACL list", responseObject = SuccessResponse.class, since = "4.4", requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class UpdateNetworkACLListCmd extends BaseAsyncCustomIdCmd {
-    protected static Logger s_logger = LogManager.getLogger(UpdateNetworkACLListCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(UpdateNetworkACLListCmd.class.getName());
 
     /////////////////////////////////////////////////////
     //////////////// API parameters /////////////////////

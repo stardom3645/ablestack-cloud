@@ -42,7 +42,7 @@ import com.cloud.vm.VirtualMachine;
 @APICommand(name = "attachVolume", description = "Attaches a disk volume to a virtual machine.", responseObject = VolumeResponse.class, responseView = ResponseView.Restricted, entityType = {VirtualMachine.class},
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class AttachVolumeCmd extends BaseAsyncCmd implements UserCmd {
-    protected static Logger s_logger = LogManager.getLogger(AttachVolumeCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(AttachVolumeCmd.class.getName());
     private static final String s_name = "attachvolumeresponse";
 
     /////////////////////////////////////////////////////

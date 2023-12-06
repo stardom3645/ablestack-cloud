@@ -31,7 +31,7 @@ import streamer.Link;
  * Source element, which reads data from InputStream.
  */
 public class AprSocketSource extends BaseElement {
-    protected static Logger s_logger = LogManager.getLogger(AprSocketSource.class);
+    protected static Logger logger = LogManager.getLogger(AprSocketSource.class);
 
     protected AprSocketWrapperImpl socketWrapper;
     protected Long socket;
@@ -165,7 +165,7 @@ public class AprSocketSource extends BaseElement {
         try {
             sendEventToAllPads(Event.STREAM_CLOSE, Direction.OUT);
         } catch (Exception e) {
-            s_logger.info("[ignored]"
+            logger.info("[ignored]"
                     + "failing sending source event to all pads: " + e.getLocalizedMessage());
         }
         socketWrapper.shutdown();

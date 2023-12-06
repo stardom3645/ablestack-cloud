@@ -40,7 +40,7 @@ import com.cloud.storage.ScopeType;
 
 @Component
 public class StorageCacheRandomAllocator implements StorageCacheAllocator {
-    protected static Logger s_logger = LogManager.getLogger(StorageCacheRandomAllocator.class);
+    protected static Logger logger = LogManager.getLogger(StorageCacheRandomAllocator.class);
     @Inject
     DataStoreManager dataStoreMgr;
     @Inject
@@ -53,13 +53,13 @@ public class StorageCacheRandomAllocator implements StorageCacheAllocator {
     @Override
     public DataStore getCacheStore(Scope scope) {
         if (scope.getScopeType() != ScopeType.ZONE) {
-            s_logger.debug("Can only support zone wide cache storage");
+            logger.debug("Can only support zone wide cache storage");
             return null;
         }
 
         List<DataStore> cacheStores = dataStoreMgr.getImageCacheStores(scope);
         if ((cacheStores == null) || (cacheStores.size() <= 0)) {
-            s_logger.debug("Can't find staging storage in zone: " + scope.getScopeId());
+            logger.debug("Can't find staging storage in zone: " + scope.getScopeId());
             return null;
         }
 
@@ -69,13 +69,13 @@ public class StorageCacheRandomAllocator implements StorageCacheAllocator {
     @Override
     public DataStore getCacheStore(DataObject data, Scope scope) {
         if (scope.getScopeType() != ScopeType.ZONE) {
-            s_logger.debug("Can only support zone wide cache storage");
+            logger.debug("Can only support zone wide cache storage");
             return null;
         }
 
         List<DataStore> cacheStores = dataStoreMgr.getImageCacheStores(scope);
         if (cacheStores.size() <= 0) {
-            s_logger.debug("Can't find staging storage in zone: " + scope.getScopeId());
+            logger.debug("Can't find staging storage in zone: " + scope.getScopeId());
             return null;
         }
 
@@ -84,7 +84,7 @@ public class StorageCacheRandomAllocator implements StorageCacheAllocator {
             for (DataStore store : cacheStores) {
                 DataObjectInStore obj = objectInStoreMgr.findObject(data, store);
                 if (obj != null && obj.getState() == ObjectInDataStoreStateMachine.State.Ready && statsCollector.imageStoreHasEnoughCapacity(store)) {
-                    s_logger.debug("pick the cache store " + store.getId() + " where data is already there");
+                    logger.debug("pick the cache store " + store.getId() + " where data is already there");
                     return store;
                 }
             }

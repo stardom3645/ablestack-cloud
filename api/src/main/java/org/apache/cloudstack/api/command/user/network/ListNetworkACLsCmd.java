@@ -37,7 +37,7 @@ import com.cloud.utils.Pair;
 @APICommand(name = "listNetworkACLs", description = "Lists all network ACL items", responseObject = NetworkACLItemResponse.class,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class ListNetworkACLsCmd extends BaseListTaggedResourcesCmd {
-    protected static Logger s_logger = LogManager.getLogger(ListNetworkACLsCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(ListNetworkACLsCmd.class.getName());
 
 
     /////////////////////////////////////////////////////

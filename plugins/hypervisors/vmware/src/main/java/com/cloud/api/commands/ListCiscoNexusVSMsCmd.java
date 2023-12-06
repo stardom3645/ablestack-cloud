@@ -57,7 +57,7 @@ public class ListCiscoNexusVSMsCmd extends BaseListCmd {
      * up all the clusters of type vmware in that zone, and prepare a list of VSMs
      * associated with those clusters.
      */
-    protected static Logger s_logger = LogManager.getLogger(ListCiscoNexusVSMsCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(ListCiscoNexusVSMsCmd.class.getName());
     private static final String s_name = "listcisconexusvsmscmdresponse";
     @Inject
     CiscoNexusVSMElementService _ciscoNexusVSMService;

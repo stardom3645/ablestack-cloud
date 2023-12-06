@@ -142,7 +142,7 @@ import com.google.gson.stream.JsonReader;
 
 @Component
 public class SimulatorManagerImpl extends ManagerBase implements SimulatorManager, PluggableService {
-    protected static Logger s_logger = LogManager.getLogger(SimulatorManagerImpl.class);
+    protected static Logger logger = LogManager.getLogger(SimulatorManagerImpl.class);
     private static final Gson s_gson = GsonHelper.getGson();
     @Inject
     MockVmManager _mockVmMgr;
@@ -209,7 +209,7 @@ public class SimulatorManagerImpl extends ManagerBase implements SimulatorManage
     @DB
     @Override
     public Answer simulate(final Command cmd, final String hostGuid) {
-        s_logger.debug("Simulate command " + cmd);
+        logger.debug("Simulate command " + cmd);
         Answer answer = null;
         Exception exception = null;
         TransactionLegacy txn = TransactionLegacy.open(TransactionLegacy.SIMULATOR_DB);
@@ -234,7 +234,7 @@ public class SimulatorManagerImpl extends ManagerBase implements SimulatorManage
                         try {
                             info.setTimeout(Integer.valueOf(entry.getValue()));
                         } catch (final NumberFormatException e) {
-                            s_logger.debug("invalid timeout parameter: " + e.toString());
+                            logger.debug("invalid timeout parameter: " + e.toString());
                         }
                     }
 
@@ -243,9 +243,9 @@ public class SimulatorManagerImpl extends ManagerBase implements SimulatorManage
                             final int wait = Integer.valueOf(entry.getValue());
                             Thread.sleep(wait);
                         } catch (final NumberFormatException e) {
-                            s_logger.debug("invalid wait parameter: " + e.toString());
+                            logger.debug("invalid wait parameter: " + e.toString());
                         } catch (final InterruptedException e) {
-                            s_logger.debug("thread is interrupted: " + e.toString());
+                            logger.debug("thread is interrupted: " + e.toString());
                         }
                     }
 
@@ -451,7 +451,7 @@ public class SimulatorManagerImpl extends ManagerBase implements SimulatorManage
                         || cmd instanceof SecStorageFirewallCfgCommand) {
                     answer = new Answer(cmd);
                 } else {
-                    s_logger.error("Simulator does not implement command of type " + cmd.toString());
+                    logger.error("Simulator does not implement command of type " + cmd.toString());
                     answer = Answer.createUnsupportedCommandAnswer(cmd);
                 }
             }
@@ -463,11 +463,11 @@ public class SimulatorManagerImpl extends ManagerBase implements SimulatorManage
                 }
             }
 
-            s_logger.debug("Finished simulate command " + cmd);
+            logger.debug("Finished simulate command " + cmd);
 
             return answer;
         } catch (final Exception e) {
-            s_logger.error("Failed execute cmd: ", e);
+            logger.error("Failed execute cmd: ", e);
             txn.rollback();
             return new Answer(cmd, false, e.toString());
         } finally {

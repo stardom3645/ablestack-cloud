@@ -38,7 +38,7 @@ import com.cloud.user.UserAccount;
 @APICommand(name = "updateUser", description = "Updates a user account", responseObject = UserResponse.class,
 requestHasSensitiveInfo = true, responseHasSensitiveInfo = true)
 public class UpdateUserCmd extends BaseCmd {
-    protected static Logger s_logger = LogManager.getLogger(UpdateUserCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(UpdateUserCmd.class.getName());
 
 
     /////////////////////////////////////////////////////

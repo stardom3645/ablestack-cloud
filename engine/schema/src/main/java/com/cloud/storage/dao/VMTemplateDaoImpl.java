@@ -63,7 +63,7 @@ import com.cloud.utils.exception.CloudRuntimeException;
 
 @Component
 public class VMTemplateDaoImpl extends GenericDaoBase<VMTemplateVO, Long> implements VMTemplateDao {
-    protected static Logger s_logger = LogManager.getLogger(VMTemplateDaoImpl.class);
+    protected static Logger logger = LogManager.getLogger(VMTemplateDaoImpl.class);
 
     @Inject
     VMTemplateZoneDao _templateZoneDao;
@@ -294,7 +294,7 @@ public class VMTemplateDaoImpl extends GenericDaoBase<VMTemplateVO, Long> implem
 
         routerTmpltName = (String)params.get("routing.uniquename");
 
-        s_logger.debug("Found parameter routing unique name " + routerTmpltName);
+        logger.debug("Found parameter routing unique name " + routerTmpltName);
         if (routerTmpltName == null) {
             routerTmpltName = "routing";
         }
@@ -303,8 +303,8 @@ public class VMTemplateDaoImpl extends GenericDaoBase<VMTemplateVO, Long> implem
         if (consoleProxyTmpltName == null) {
             consoleProxyTmpltName = "routing";
         }
-        if (s_logger.isDebugEnabled()) {
-            s_logger.debug("Use console proxy template : " + consoleProxyTmpltName);
+        if (logger.isDebugEnabled()) {
+            logger.debug("Use console proxy template : " + consoleProxyTmpltName);
         }
 
         UniqueNameSearch = createSearchBuilder();
@@ -711,7 +711,7 @@ public class VMTemplateDaoImpl extends GenericDaoBase<VMTemplateVO, Long> implem
         builder.set(vo, "updated", new Date());
 
         int rows = update((VMTemplateVO)vo, sc);
-        if (rows == 0 && s_logger.isDebugEnabled()) {
+        if (rows == 0 && logger.isDebugEnabled()) {
             VMTemplateVO dbTemplate = findByIdIncludingRemoved(vo.getId());
             if (dbTemplate != null) {
                 StringBuilder str = new StringBuilder("Unable to update ").append(vo.toString());
@@ -744,7 +744,7 @@ public class VMTemplateDaoImpl extends GenericDaoBase<VMTemplateVO, Long> implem
                     .append("; updatedTime=")
                     .append(oldUpdatedTime);
             } else {
-                s_logger.debug("Unable to update template: id=" + vo.getId() + ", as no such template exists in the database anymore");
+                logger.debug("Unable to update template: id=" + vo.getId() + ", as no such template exists in the database anymore");
             }
         }
         return rows > 0;

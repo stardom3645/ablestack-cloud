@@ -46,7 +46,7 @@ import com.cloud.user.Account;
 @APICommand(name = "createSnapshotPolicy", description = "Creates a snapshot policy for the account.", responseObject = SnapshotPolicyResponse.class,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class CreateSnapshotPolicyCmd extends BaseCmd {
-    protected static Logger s_logger = LogManager.getLogger(CreateSnapshotPolicyCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(CreateSnapshotPolicyCmd.class.getName());
 
 
     /////////////////////////////////////////////////////

@@ -30,7 +30,7 @@ import org.apache.logging.log4j.LogManager;
 import com.cloud.utils.exception.CloudRuntimeException;
 
 public class Upgrade2212to2213 implements DbUpgrade {
-    final static Logger s_logger = LogManager.getLogger(Upgrade2212to2213.class);
+    final static Logger logger = LogManager.getLogger(Upgrade2212to2213.class);
 
     @Override
     public String[] getUpgradableVersionRange() {
@@ -75,7 +75,7 @@ public class Upgrade2212to2213 implements DbUpgrade {
         foreignKeys.put("networks", keys);
 
         // drop all foreign keys
-        s_logger.debug("Dropping old key fk_networks__data_center_id...");
+        logger.debug("Dropping old key fk_networks__data_center_id...");
         for (String tableName : foreignKeys.keySet()) {
             DbUpgradeUtils.dropKeysIfExist(conn, tableName, foreignKeys.get(tableName), true);
         }
@@ -96,7 +96,7 @@ public class Upgrade2212to2213 implements DbUpgrade {
         try {
             PreparedStatement pstmt = conn.prepareStatement("drop index network_offering_id on cloud_usage.usage_network_offering");
             pstmt.executeUpdate();
-            s_logger.debug("Dropped usage_network_offering unique key");
+            logger.debug("Dropped usage_network_offering unique key");
         } catch (Exception e) {
             // Ignore error if the usage_network_offering table or the unique key doesn't exist
         }

@@ -37,7 +37,7 @@ public class RollingMaintenanceServiceExecutor extends RollingMaintenanceExecuto
     private static final String resultsFileSuffix = "rolling-maintenance-results";
     private static final String outputFileSuffix = "rolling-maintenance-output";
 
-    protected static Logger s_logger = LogManager.getLogger(RollingMaintenanceServiceExecutor.class);
+    protected static Logger logger = LogManager.getLogger(RollingMaintenanceServiceExecutor.class);
 
     public RollingMaintenanceServiceExecutor(String hooksDir) {
         super(hooksDir);
@@ -56,15 +56,15 @@ public class RollingMaintenanceServiceExecutor extends RollingMaintenanceExecuto
     }
 
     private String invokeService(String action, String stage, String file, String payload) {
-        s_logger.debug("Invoking rolling maintenance service for stage: " + stage + " and file " + file + " with action: " + action);
+        logger.debug("Invoking rolling maintenance service for stage: " + stage + " and file " + file + " with action: " + action);
         final OutputInterpreter.AllLinesParser parser = new OutputInterpreter.AllLinesParser();
-        Script command = new Script("/bin/systemctl", s_logger);
+        Script command = new Script("/bin/systemctl", logger);
         command.add(action);
         String service = servicePrefix + "@" + generateInstanceName(stage, file, payload);
         command.add(service);
         String result = command.execute(parser);
         int exitValue = command.getExitValue();
-        s_logger.trace("Execution: " + command.toString() + " - exit code: " + exitValue +
+        logger.trace("Execution: " + command.toString() + " - exit code: " + exitValue +
                 ": " + result + (StringUtils.isNotBlank(parser.getLines()) ? parser.getLines() : ""));
         return StringUtils.isBlank(result) ? parser.getLines().replace("\n", " ") : result;
     }
@@ -77,7 +77,7 @@ public class RollingMaintenanceServiceExecutor extends RollingMaintenanceExecuto
         if (StringUtils.isNotBlank(result)) {
             throw new CloudRuntimeException("Error starting stage: " + stage + " execution: " + result);
         }
-        s_logger.trace("Stage " + stage + "execution started");
+        logger.trace("Stage " + stage + "execution started");
         return new Pair<>(true, "OK");
     }
 
@@ -112,7 +112,7 @@ public class RollingMaintenanceServiceExecutor extends RollingMaintenanceExecuto
         if (StringUtils.isNotBlank(result) && result.equals("failed")) {
             String status = invokeService("status", stage, scriptFile.getAbsolutePath(), payload);
             String errorMsg = "Stage " + stage + " execution failed, status: " + status;
-            s_logger.error(errorMsg);
+            logger.error(errorMsg);
             throw new CloudRuntimeException(errorMsg);
         }
         return StringUtils.isNotBlank(result) && result.equals("active");

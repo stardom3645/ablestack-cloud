@@ -58,7 +58,7 @@ import com.cloud.utils.exception.CloudRuntimeException;
 
 @Component
 public class PrimaryDataStoreHelper {
-    protected static Logger s_logger = LogManager.getLogger(PrimaryDataStoreHelper.class);
+    protected static Logger logger = LogManager.getLogger(PrimaryDataStoreHelper.class);
     @Inject
     private PrimaryDataStoreDao dataStoreDao;
     @Inject
@@ -110,7 +110,7 @@ public class PrimaryDataStoreHelper {
 
             if (user == null || password == null) {
                 String errMsg = "Missing cifs user and password details. Add them as details parameter.";
-                s_logger.warn(errMsg);
+                logger.warn(errMsg);
                 throw new InvalidParameterValueException(errMsg);
             } else {
                 try {
@@ -263,7 +263,7 @@ public class PrimaryDataStoreHelper {
         this._capacityDao.removeBy(Capacity.CAPACITY_TYPE_STORAGE_ALLOCATED, null, null, null, poolVO.getId());
         txn.commit();
 
-        s_logger.debug("Storage pool id=" + poolVO.getId() + " is removed successfully");
+        logger.debug("Storage pool id=" + poolVO.getId() + " is removed successfully");
         return true;
     }
 

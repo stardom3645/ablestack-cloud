@@ -36,7 +36,7 @@ import com.cloud.vm.InstanceGroup;
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class UpdateVMGroupCmd extends BaseCmd {
 
-    protected static Logger s_logger = LogManager.getLogger(UpdateVMGroupCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(UpdateVMGroupCmd.class.getName());
 
     /////////////////////////////////////////////////////
     //////////////// API parameters /////////////////////

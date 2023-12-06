@@ -40,7 +40,7 @@ import com.cloud.user.Account;
 @APICommand(name = "resetApiLimit", responseObject = SuccessResponse.class, description = "Reset api count",
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class ResetApiLimitCmd extends BaseCmd {
-    protected static Logger s_logger = LogManager.getLogger(ResetApiLimitCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(ResetApiLimitCmd.class.getName());
 
 
     @Inject

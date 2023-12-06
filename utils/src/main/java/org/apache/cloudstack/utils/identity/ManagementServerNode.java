@@ -30,7 +30,7 @@ import com.cloud.utils.exception.CloudRuntimeException;
 import com.cloud.utils.net.MacAddress;
 
 public class ManagementServerNode extends AdapterBase implements SystemIntegrityChecker {
-    protected static Logger s_logger = LogManager.getLogger(ManagementServerNode.class);
+    protected static Logger logger = LogManager.getLogger(ManagementServerNode.class);
 
     private static final long s_nodeId = MacAddress.getMacAddress().toLong();
 
@@ -54,7 +54,7 @@ public class ManagementServerNode extends AdapterBase implements SystemIntegrity
         try {
             check();
         } catch (Exception e) {
-            s_logger.error("System integrity check exception", e);
+            logger.error("System integrity check exception", e);
             System.exit(1);
         }
         return true;

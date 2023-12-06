@@ -39,7 +39,7 @@ import javax.inject.Inject;
 @APICommand(name = "deleteBaremetalRct", description = "deletes baremetal rack configuration text", responseObject = SuccessResponse.class,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false, authorized = {RoleType.Admin})
 public class DeleteBaremetalRctCmd extends BaseAsyncCmd {
-    protected static Logger s_logger = LogManager.getLogger(DeleteBaremetalRctCmd.class);
+    protected static Logger logger = LogManager.getLogger(DeleteBaremetalRctCmd.class);
 
     @Parameter(name = ApiConstants.ID,  type = BaseCmd.CommandType.UUID, description = "RCT id", required = true, entityType = BaremetalRctResponse.class)
     private Long id;
@@ -64,7 +64,7 @@ public class DeleteBaremetalRctCmd extends BaseAsyncCmd {
             SuccessResponse response = new SuccessResponse(getCommandName());
             setResponseObject(response);
         } catch (Exception e) {
-            s_logger.warn(String.format("unable to delete baremetal RCT[%s]", getId()), e);
+            logger.warn(String.format("unable to delete baremetal RCT[%s]", getId()), e);
             throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, e.getMessage(), e);
         }
     }

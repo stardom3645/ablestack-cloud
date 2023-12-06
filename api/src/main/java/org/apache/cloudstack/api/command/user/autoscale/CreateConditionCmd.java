@@ -40,7 +40,7 @@ import com.cloud.network.as.Condition;
 @APICommand(name = "createCondition", description = "Creates a condition for VM auto scaling", responseObject = ConditionResponse.class, entityType = {Condition.class},
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class CreateConditionCmd extends BaseAsyncCreateCmd {
-    protected static Logger s_logger = LogManager.getLogger(CreateConditionCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(CreateConditionCmd.class.getName());
     private static final String s_name = "conditionresponse";
 
     // ///////////////////////////////////////////////////

@@ -63,7 +63,7 @@ import com.cloud.utils.db.SearchCriteria;
 
 @Component
 public class HostJoinDaoImpl extends GenericDaoBase<HostJoinVO, Long> implements HostJoinDao {
-    protected static Logger s_logger = LogManager.getLogger(HostJoinDaoImpl.class);
+    protected static Logger logger = LogManager.getLogger(HostJoinDaoImpl.class);
 
     @Inject
     private ConfigurationDao _configDao;
@@ -255,7 +255,7 @@ public class HostJoinDaoImpl extends GenericDaoBase<HostJoinVO, Long> implements
                 try {
                     hostResponse.setDetails(hostDetails);
                 } catch (Exception e) {
-                    s_logger.debug("failed to get host details", e);
+                    logger.debug("failed to get host details", e);
                 }
             }
 

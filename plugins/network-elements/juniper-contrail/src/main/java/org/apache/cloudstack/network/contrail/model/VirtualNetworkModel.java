@@ -45,7 +45,7 @@ import com.cloud.utils.exception.CloudRuntimeException;
 import com.cloud.utils.net.NetUtils;
 
 public class VirtualNetworkModel extends ModelObjectBase {
-    protected static Logger s_logger = LogManager.getLogger(VirtualNetworkModel.class);
+    protected static Logger logger = LogManager.getLogger(VirtualNetworkModel.class);
 
     private String _uuid;
     private long _id;
@@ -142,7 +142,7 @@ public class VirtualNetworkModel extends ModelObjectBase {
         try {
             api.delete(VirtualNetwork.class, _uuid);
         } catch (IOException ex) {
-            s_logger.warn("virtual-network delete", ex);
+            logger.warn("virtual-network delete", ex);
         }
     }
 
@@ -183,7 +183,7 @@ public class VirtualNetworkModel extends ModelObjectBase {
             try {
                 _uuid = manager.findVirtualNetworkId(network);
             } catch (IOException ex) {
-                s_logger.warn("Unable to read virtual-network", ex);
+                logger.warn("Unable to read virtual-network", ex);
             }
         }
 
@@ -192,7 +192,7 @@ public class VirtualNetworkModel extends ModelObjectBase {
         try {
             _projectId = manager.getProjectId(network.getDomainId(), network.getAccountId());
         } catch (IOException ex) {
-            s_logger.warn("project read", ex);
+            logger.warn("project read", ex);
             throw new CloudRuntimeException(ex);
         }
 
@@ -224,7 +224,7 @@ public class VirtualNetworkModel extends ModelObjectBase {
                     try {
                         project = (Project)api.findById(Project.class, _projectId);
                     } catch (IOException ex) {
-                        s_logger.debug("project read", ex);
+                        logger.debug("project read", ex);
                         throw new CloudRuntimeException("Failed to read project", ex);
                     }
                     vn.setParent(project);
@@ -249,16 +249,16 @@ public class VirtualNetworkModel extends ModelObjectBase {
             try {
                 String ipam_id = api.findByName(NetworkIpam.class, null, "default-network-ipam");
                 if (ipam_id == null) {
-                    s_logger.debug("could not find default-network-ipam");
+                    logger.debug("could not find default-network-ipam");
                     return;
                 }
                 ipam = (NetworkIpam)api.findById(NetworkIpam.class, ipam_id);
                 if (ipam == null) {
-                    s_logger.debug("could not find NetworkIpam with ipam_id: " + ipam_id);
+                    logger.debug("could not find NetworkIpam with ipam_id: " + ipam_id);
                     return;
                 }
             } catch (IOException ex) {
-                s_logger.error(ex);
+                logger.error(ex);
                 return;
             }
             _ipam = ipam;
@@ -288,7 +288,7 @@ public class VirtualNetworkModel extends ModelObjectBase {
             try {
                 api.create(vn);
             } catch (Exception ex) {
-                s_logger.debug("virtual-network create", ex);
+                logger.debug("virtual-network create", ex);
                 throw new CloudRuntimeException("Failed to create virtual-network", ex);
             }
             _vn = vn;
@@ -296,7 +296,7 @@ public class VirtualNetworkModel extends ModelObjectBase {
             try {
                 api.update(vn);
             } catch (IOException ex) {
-                s_logger.warn("virtual-network update", ex);
+                logger.warn("virtual-network update", ex);
                 throw new CloudRuntimeException("Unable to update virtual-network object", ex);
             }
         }
@@ -322,16 +322,16 @@ public class VirtualNetworkModel extends ModelObjectBase {
             try {
                 String ipam_id = api.findByName(NetworkIpam.class, null, "default-network-ipam");
                 if (ipam_id == null) {
-                    s_logger.debug("could not find default-network-ipam");
+                    logger.debug("could not find default-network-ipam");
                     return;
                 }
                 ipam = (NetworkIpam)api.findById(NetworkIpam.class, ipam_id);
                 if (ipam == null) {
-                    s_logger.debug("could not find NetworkIpam with ipam_id: " + ipam_id);
+                    logger.debug("could not find NetworkIpam with ipam_id: " + ipam_id);
                     return;
                 }
             } catch (IOException ex) {
-                s_logger.error(ex);
+                logger.error(ex);
                 return;
             }
             _ipam = ipam;
@@ -416,7 +416,7 @@ public class VirtualNetworkModel extends ModelObjectBase {
     diff.removeAll(vncSubnets);
 
     if (!diff.isEmpty()) {
-        s_logger.debug("Subnets changed, network: " + _name + "; db: " + dbSubnets + ", vnc: " + vncSubnets + ", diff: " + diff);
+        logger.debug("Subnets changed, network: " + _name + "; db: " + dbSubnets + ", vnc: " + vncSubnets + ", diff: " + diff);
         return false;
     }
 
@@ -452,7 +452,7 @@ public class VirtualNetworkModel extends ModelObjectBase {
         try {
             latest = (VirtualNetworkModel)o;
         } catch (ClassCastException ex) {
-            s_logger.warn("Invalid model object is passed to cast to VirtualNetworkModel");
+            logger.warn("Invalid model object is passed to cast to VirtualNetworkModel");
             return false;
         }
 
@@ -470,7 +470,7 @@ public class VirtualNetworkModel extends ModelObjectBase {
         List<String> newSubnets = new ArrayList<String>();
 
         if ((currentIpamRefs == null && newIpamRefs != null) || (currentIpamRefs != null && newIpamRefs == null)) {  //Check for existence only
-            s_logger.debug("ipams differ: current=" + currentIpamRefs + ", new=" + newIpamRefs);
+            logger.debug("ipams differ: current=" + currentIpamRefs + ", new=" + newIpamRefs);
             return false;
         }
         if (currentIpamRefs == null) {
@@ -503,7 +503,7 @@ public class VirtualNetworkModel extends ModelObjectBase {
         diff.removeAll(newSubnets);
 
         if (!diff.isEmpty()) {
-            s_logger.debug("Subnets differ, network: " + _name + "; db: " + currentSubnets + ", vnc: " + newSubnets + ", diff: " + diff);
+            logger.debug("Subnets differ, network: " + _name + "; db: " + currentSubnets + ", vnc: " + newSubnets + ", diff: " + diff);
             return false;
         }
 

@@ -47,7 +47,7 @@ public class CiscoVnmcConnectionImpl implements CiscoVnmcConnection {
     private final String _password;
     private String _cookie;
 
-    protected static Logger s_logger = LogManager.getLogger(CiscoVnmcConnectionImpl.class);
+    protected static Logger logger = LogManager.getLogger(CiscoVnmcConnectionImpl.class);
 
     private enum VnmcXml {
         LOGIN("login.xml", "mgmt-controller"),
@@ -142,7 +142,7 @@ public class CiscoVnmcConnectionImpl implements CiscoVnmcConnection {
 
                 return xml;
             } catch (Exception e) {
-                s_logger.debug(e);
+                logger.debug(e);
                 return null;
             }
         }
@@ -1292,7 +1292,7 @@ public class CiscoVnmcConnectionImpl implements CiscoVnmcConnection {
             doc = ParserUtils.getSaferDocumentBuilderFactory().newDocumentBuilder().parse(xmlSource);
 
         } catch (Exception e) {
-            s_logger.error(e);
+            logger.error(e);
             throw new ExecutionException(e.getMessage());
         }
 

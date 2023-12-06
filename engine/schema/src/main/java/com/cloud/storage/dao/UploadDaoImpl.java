@@ -32,7 +32,7 @@ import com.cloud.utils.db.SearchCriteria;
 
 @Component
 public class UploadDaoImpl extends GenericDaoBase<UploadVO, Long> implements UploadDao {
-    protected static Logger s_logger = LogManager.getLogger(UploadDaoImpl.class.getName());
+    protected static Logger logger = LogManager.getLogger(UploadDaoImpl.class.getName());
     protected final SearchBuilder<UploadVO> typeUploadStatusSearch;
     protected final SearchBuilder<UploadVO> typeHostAndUploadStatusSearch;
     protected final SearchBuilder<UploadVO> typeModeAndStatusSearch;

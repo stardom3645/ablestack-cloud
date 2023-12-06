@@ -43,7 +43,7 @@ public class QuotaCreditsCmd extends BaseCmd {
     @Inject
     QuotaService _quotaService;
 
-    protected static Logger s_logger = LogManager.getLogger(QuotaStatementCmd.class);
+    protected static Logger logger = LogManager.getLogger(QuotaStatementCmd.class);
 
 
     @Parameter(name = ApiConstants.ACCOUNT, type = CommandType.STRING, required = true, description = "Account Id for which quota credits need to be added")

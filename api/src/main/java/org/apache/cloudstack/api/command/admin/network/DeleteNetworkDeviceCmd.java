@@ -41,7 +41,7 @@ import com.cloud.utils.exception.CloudRuntimeException;
 @APICommand(name = "deleteNetworkDevice", description = "Deletes network device.", responseObject = SuccessResponse.class,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class DeleteNetworkDeviceCmd extends BaseCmd {
-    protected static Logger s_logger = LogManager.getLogger(DeleteNetworkDeviceCmd.class);
+    protected static Logger logger = LogManager.getLogger(DeleteNetworkDeviceCmd.class);
 
     @Inject
     ExternalNetworkDeviceManager nwDeviceMgr;

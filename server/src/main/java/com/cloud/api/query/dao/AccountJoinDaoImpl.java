@@ -45,7 +45,7 @@ import com.cloud.utils.db.SearchCriteria;
 
 @Component
 public class AccountJoinDaoImpl extends GenericDaoBase<AccountJoinVO, Long> implements AccountJoinDao {
-    protected static Logger s_logger = LogManager.getLogger(AccountJoinDaoImpl.class);
+    protected static Logger logger = LogManager.getLogger(AccountJoinDaoImpl.class);
 
     private final SearchBuilder<AccountJoinVO> acctIdSearch;
     @Inject

@@ -34,7 +34,7 @@ import com.cloud.user.Account;
 @APICommand(name = "deletePod", description = "Deletes a Pod.", responseObject = SuccessResponse.class,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class DeletePodCmd extends BaseCmd {
-    protected static Logger s_logger = LogManager.getLogger(DeletePodCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(DeletePodCmd.class.getName());
 
 
     /////////////////////////////////////////////////////

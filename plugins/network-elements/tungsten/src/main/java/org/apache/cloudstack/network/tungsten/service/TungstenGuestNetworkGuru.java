@@ -91,7 +91,7 @@ import javax.inject.Inject;
 
 public class TungstenGuestNetworkGuru extends GuestNetworkGuru implements NetworkMigrationResponder {
 
-    protected static Logger s_logger = LogManager.getLogger(TungstenGuestNetworkGuru.class);
+    protected static Logger logger = LogManager.getLogger(TungstenGuestNetworkGuru.class);
 
     @Inject
     NetworkDao networkDao;
@@ -154,7 +154,7 @@ public class TungstenGuestNetworkGuru extends GuestNetworkGuru implements Networ
         DataCenter dc = _dcDao.findById(plan.getDataCenterId());
 
         if (!canHandle(offering, dc.getNetworkType(), physnet)) {
-            s_logger.debug("Refusing to design this network");
+            logger.debug("Refusing to design this network");
             return null;
         }
 

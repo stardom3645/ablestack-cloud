@@ -40,7 +40,7 @@ import com.cloud.utils.Pair;
 @APICommand(name = "listLdapConfigurations", responseObject = LdapConfigurationResponse.class, description = "Lists all LDAP configurations", since = "4.2.0",
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class LdapListConfigurationCmd extends BaseListCmd {
-    protected static Logger s_logger = LogManager.getLogger(LdapListConfigurationCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(LdapListConfigurationCmd.class.getName());
 
     private static final String s_name = "ldapconfigurationresponse";
 

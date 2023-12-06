@@ -51,7 +51,7 @@ import com.cloud.utils.db.UpdateBuilder;
 
 @Component
 public class SnapshotDataStoreDaoImpl extends GenericDaoBase<SnapshotDataStoreVO, Long> implements SnapshotDataStoreDao {
-    protected static Logger s_logger = LogManager.getLogger(SnapshotDataStoreDaoImpl.class);
+    protected static Logger logger = LogManager.getLogger(SnapshotDataStoreDaoImpl.class);
     private static final String STORE_ID = "store_id";
     private static final String STORE_ROLE = "store_role";
     private static final String STATE = "state";
@@ -189,7 +189,7 @@ public class SnapshotDataStoreDaoImpl extends GenericDaoBase<SnapshotDataStoreVO
             message = String.format("Unable to update objectIndatastore: id=%s, as there is no such object exists in the database anymore", dataObj.getId());
         }
 
-        s_logger.debug(message);
+        logger.debug(message);
         return false;
     }
 
@@ -278,7 +278,7 @@ public class SnapshotDataStoreDaoImpl extends GenericDaoBase<SnapshotDataStoreVO
                 }
             }
         } catch (SQLException e) {
-            s_logger.warn(String.format("Failed to find %s snapshot for volume [%s] in %s store due to [%s].", oldest ? "oldest" : "latest", volumeId, role, e.getMessage()), e);
+            logger.warn(String.format("Failed to find %s snapshot for volume [%s] in %s store due to [%s].", oldest ? "oldest" : "latest", volumeId, role, e.getMessage()), e);
         }
         return null;
     }
@@ -287,7 +287,7 @@ public class SnapshotDataStoreDaoImpl extends GenericDaoBase<SnapshotDataStoreVO
     @DB
     public SnapshotDataStoreVO findParent(DataStoreRole role, Long storeId, Long volumeId) {
         if (!isSnapshotChainingRequired(volumeId)) {
-            s_logger.trace(String.format("Snapshot chaining is not required for snapshots of volume [%s]. Returning null as parent.", volumeId));
+            logger.trace(String.format("Snapshot chaining is not required for snapshots of volume [%s]. Returning null as parent.", volumeId));
             return null;
         }
 
@@ -379,21 +379,21 @@ public class SnapshotDataStoreDaoImpl extends GenericDaoBase<SnapshotDataStoreVO
         List<SnapshotDataStoreVO> snapshots = listBy(sc);
 
         if (snapshots == null) {
-            s_logger.debug(String.format("There are no snapshots on cache store to duplicate to region store [%s].", storeId));
+            logger.debug(String.format("There are no snapshots on cache store to duplicate to region store [%s].", storeId));
             return;
         }
 
-        s_logger.info(String.format("Duplicating [%s] snapshot cache store records to region store [%s].", snapshots.size(), storeId));
+        logger.info(String.format("Duplicating [%s] snapshot cache store records to region store [%s].", snapshots.size(), storeId));
 
         for (SnapshotDataStoreVO snap : snapshots) {
             SnapshotDataStoreVO snapStore = findByStoreSnapshot(DataStoreRole.Image, storeId, snap.getSnapshotId());
 
             if (snapStore != null) {
-                s_logger.debug(String.format("There is already an entry for snapshot [%s] on region store [%s].", snap.getSnapshotId(), storeId));
+                logger.debug(String.format("There is already an entry for snapshot [%s] on region store [%s].", snap.getSnapshotId(), storeId));
                 continue;
             }
 
-            s_logger.info(String.format("Persisting an entry for snapshot [%s] on region store [%s].", snap.getSnapshotId(), storeId));
+            logger.info(String.format("Persisting an entry for snapshot [%s] on region store [%s].", snap.getSnapshotId(), storeId));
             SnapshotDataStoreVO ss = new SnapshotDataStoreVO();
             ss.setSnapshotId(snap.getSnapshotId());
             ss.setDataStoreId(storeId);
@@ -435,9 +435,9 @@ public class SnapshotDataStoreDaoImpl extends GenericDaoBase<SnapshotDataStoreVO
         sc.setParameters("destroyed", false);
         List<SnapshotDataStoreVO> snaps = listBy(sc);
         if (snaps != null) {
-            s_logger.info(String.format("Updating role to cache store for [%s] entries in snapshot_store_ref.", snaps.size()));
+            logger.info(String.format("Updating role to cache store for [%s] entries in snapshot_store_ref.", snaps.size()));
             for (SnapshotDataStoreVO snap : snaps) {
-                s_logger.debug(String.format("Updating role to cache store for entry [%s].", snap));
+                logger.debug(String.format("Updating role to cache store for entry [%s].", snap));
                 snap.setRole(DataStoreRole.ImageCache);
                 update(snap.getId(), snap);
             }

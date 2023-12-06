@@ -35,7 +35,7 @@ import com.cloud.user.Account;
 @APICommand(name = "createPod", description = "Creates a new Pod.", responseObject = PodResponse.class,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class CreatePodCmd extends BaseCmd {
-    protected static Logger s_logger = LogManager.getLogger(CreatePodCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(CreatePodCmd.class.getName());
 
 
     /////////////////////////////////////////////////////

@@ -40,7 +40,7 @@ import com.cloud.utils.db.UpdateBuilder;
 import com.cloud.utils.exception.CloudRuntimeException;
 
 public class AsyncJobJoinMapDaoImpl extends GenericDaoBase<AsyncJobJoinMapVO, Long> implements AsyncJobJoinMapDao {
-    protected static Logger s_logger = LogManager.getLogger(AsyncJobJoinMapDaoImpl.class);
+    protected static Logger logger = LogManager.getLogger(AsyncJobJoinMapDaoImpl.class);
 
     private final SearchBuilder<AsyncJobJoinMapVO> RecordSearch;
     private final SearchBuilder<AsyncJobJoinMapVO> RecordSearchByOwner;
@@ -203,7 +203,7 @@ public class AsyncJobJoinMapDaoImpl extends GenericDaoBase<AsyncJobJoinMapVO, Lo
 //
 //            txn.commit();
 //        } catch (SQLException e) {
-//            s_logger.error("Unexpected exception", e);
+//            logger.error("Unexpected exception", e);
 //        }
 //
 //        return standaloneList;

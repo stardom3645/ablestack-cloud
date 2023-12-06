@@ -49,7 +49,7 @@ import com.cloud.storage.dao.VMTemplateDao;
 import com.cloud.storage.dao.VolumeDao;
 
 public class SimulatorImageStoreDriverImpl extends NfsImageStoreDriverImpl {
-    protected static Logger s_logger = LogManager.getLogger(SimulatorImageStoreDriverImpl.class);
+    protected static Logger logger = LogManager.getLogger(SimulatorImageStoreDriverImpl.class);
 
     @Inject
     TemplateDataStoreDao _templateStoreDao;
@@ -115,7 +115,7 @@ public class SimulatorImageStoreDriverImpl extends NfsImageStoreDriverImpl {
         EndPoint ep = _epSelector.select(store);
         if (ep == null) {
             String errMsg = "No remote endpoint to send command, check if host or ssvm is down?";
-            s_logger.error(errMsg);
+            logger.error(errMsg);
             return null;
         }
         // Create Symlink at ssvm

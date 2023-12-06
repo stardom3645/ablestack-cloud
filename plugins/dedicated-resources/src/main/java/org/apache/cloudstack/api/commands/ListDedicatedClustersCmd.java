@@ -44,7 +44,7 @@ import com.cloud.utils.Pair;
 @APICommand(name = "listDedicatedClusters", description = "Lists dedicated clusters.", responseObject = DedicateClusterResponse.class,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class ListDedicatedClustersCmd extends BaseListCmd {
-    protected static Logger s_logger = LogManager.getLogger(ListDedicatedClustersCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(ListDedicatedClustersCmd.class.getName());
 
     @Inject
     DedicatedService dedicatedService;

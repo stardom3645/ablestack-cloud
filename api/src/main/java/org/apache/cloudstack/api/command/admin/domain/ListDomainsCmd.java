@@ -42,7 +42,7 @@ import com.cloud.exception.InvalidParameterValueException;
 @APICommand(name = "listDomains", description = "Lists domains and provides detailed information for listed domains", responseObject = DomainResponse.class, responseView = ResponseView.Restricted, entityType = {Domain.class},
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class ListDomainsCmd extends BaseListCmd implements UserCmd {
-    protected static Logger s_logger = LogManager.getLogger(ListDomainsCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(ListDomainsCmd.class.getName());
 
     private static final String s_name = "listdomainsresponse";
 

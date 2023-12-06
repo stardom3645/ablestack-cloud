@@ -31,14 +31,14 @@ import com.cloud.utils.script.Script;
 @ResourceWrapper(handles =  PostCertificateRenewalCommand.class)
 public final class LibvirtPostCertificateRenewalCommandWrapper extends CommandWrapper<PostCertificateRenewalCommand, Answer, LibvirtComputingResource> {
 
-    protected static Logger s_logger = LogManager.getLogger(LibvirtPostCertificateRenewalCommandWrapper.class);
+    protected static Logger logger = LogManager.getLogger(LibvirtPostCertificateRenewalCommandWrapper.class);
 
     @Override
     public Answer execute(final PostCertificateRenewalCommand command, final LibvirtComputingResource serverResource) {
-        s_logger.info("Restarting libvirt after certificate provisioning/renewal");
+        logger.info("Restarting libvirt after certificate provisioning/renewal");
         if (command != null) {
             final int timeout = 30000;
-            Script script = new Script(true, "service", timeout, s_logger);
+            Script script = new Script(true, "service", timeout, logger);
             script.add("libvirtd");
             script.add("restart");
             script.execute();

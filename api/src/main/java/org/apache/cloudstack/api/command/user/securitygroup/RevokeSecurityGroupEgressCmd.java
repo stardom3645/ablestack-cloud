@@ -39,7 +39,7 @@ import com.cloud.user.Account;
             requestHasSensitiveInfo = false,
             responseHasSensitiveInfo = false)
 public class RevokeSecurityGroupEgressCmd extends BaseAsyncCmd {
-    protected static Logger s_logger = LogManager.getLogger(RevokeSecurityGroupEgressCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(RevokeSecurityGroupEgressCmd.class.getName());
 
 
     // ///////////////////////////////////////////////////

@@ -39,7 +39,7 @@ import java.util.Map;
 
 public abstract class DiscovererBase extends AdapterBase implements Discoverer {
     protected Map<String, String> _params;
-    protected static Logger s_logger = LogManager.getLogger(DiscovererBase.class);
+    protected static Logger logger = LogManager.getLogger(DiscovererBase.class);
     @Inject
     protected ClusterDao _clusterDao;
     @Inject
@@ -91,19 +91,19 @@ public abstract class DiscovererBase extends AdapterBase implements Discoverer {
             Constructor constructor = clazz.getConstructor();
             resource = (ServerResource)constructor.newInstance();
         } catch (ClassNotFoundException e) {
-            s_logger.warn("Unable to find class " + resourceName, e);
+            logger.warn("Unable to find class " + resourceName, e);
         } catch (InstantiationException e) {
-            s_logger.warn("Unable to instantiate class " + resourceName, e);
+            logger.warn("Unable to instantiate class " + resourceName, e);
         } catch (IllegalAccessException e) {
-            s_logger.warn("Illegal access " + resourceName, e);
+            logger.warn("Illegal access " + resourceName, e);
         } catch (SecurityException e) {
-            s_logger.warn("Security error on " + resourceName, e);
+            logger.warn("Security error on " + resourceName, e);
         } catch (NoSuchMethodException e) {
-            s_logger.warn("NoSuchMethodException error on " + resourceName, e);
+            logger.warn("NoSuchMethodException error on " + resourceName, e);
         } catch (IllegalArgumentException e) {
-            s_logger.warn("IllegalArgumentException error on " + resourceName, e);
+            logger.warn("IllegalArgumentException error on " + resourceName, e);
         } catch (InvocationTargetException e) {
-            s_logger.warn("InvocationTargetException error on " + resourceName, e);
+            logger.warn("InvocationTargetException error on " + resourceName, e);
         }
 
         return resource;
@@ -158,11 +158,11 @@ public abstract class DiscovererBase extends AdapterBase implements Discoverer {
             try {
                 resource.configure(host.getName(), params);
             } catch (ConfigurationException e) {
-                s_logger.warn("Unable to configure resource due to " + e.getMessage());
+                logger.warn("Unable to configure resource due to " + e.getMessage());
                 return null;
             }
             if (!resource.start()) {
-                s_logger.warn("Unable to start the resource");
+                logger.warn("Unable to start the resource");
                 return null;
             }
         }

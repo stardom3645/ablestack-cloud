@@ -55,7 +55,7 @@ import static org.apache.cloudstack.oauth2.OAuth2AuthManager.OAuth2IsPluginEnabl
         requestHasSensitiveInfo = true, responseObject = LoginCmdResponse.class, entityType = {}, since = "4.19.0")
 public class OauthLoginAPIAuthenticatorCmd extends BaseCmd implements APIAuthenticator {
 
-    protected static Logger s_logger = LogManager.getLogger(OauthLoginAPIAuthenticatorCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(OauthLoginAPIAuthenticatorCmd.class.getName());
 
     /////////////////////////////////////////////////////
     //////////////// API parameters /////////////////////
@@ -170,8 +170,8 @@ public class OauthLoginAPIAuthenticatorCmd extends BaseCmd implements APIAuthent
                     "failed to authenticate user, check if username/password are correct");
             auditTrailSb.append(" " + ApiErrorCode.ACCOUNT_ERROR + " " + msg);
             serializedResponse = _apiServer.getSerializedApiError(ApiErrorCode.ACCOUNT_ERROR.getHttpCode(), msg, params, responseType);
-            if (s_logger.isTraceEnabled()) {
-                s_logger.trace(msg);
+            if (logger.isTraceEnabled()) {
+                logger.trace(msg);
             }
         }
 
@@ -195,7 +195,7 @@ public class OauthLoginAPIAuthenticatorCmd extends BaseCmd implements APIAuthent
                 }
                 auditTrailSb.append(" domainid=" + domainId);// building the params for POST call
             } catch (final NumberFormatException e) {
-                s_logger.warn("Invalid domain id entered by user");
+                logger.warn("Invalid domain id entered by user");
                 auditTrailSb.append(" " + HttpServletResponse.SC_UNAUTHORIZED + " " + "Invalid domain id entered, please enter a valid one");
                 throw new ServerApiException(ApiErrorCode.UNAUTHORIZED,
                         _apiServer.getSerializedApiError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid domain id entered, please enter a valid one", params,

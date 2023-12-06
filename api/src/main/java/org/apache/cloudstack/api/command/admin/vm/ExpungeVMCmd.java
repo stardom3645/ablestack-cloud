@@ -44,7 +44,7 @@ import com.cloud.vm.VirtualMachine;
 @APICommand(name = "expungeVirtualMachine", description = "Expunge a virtual machine. Once expunged, it cannot be recoverd.", responseObject = SuccessResponse.class, entityType = {VirtualMachine.class},
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class ExpungeVMCmd extends BaseAsyncCmd {
-    protected static Logger s_logger = LogManager.getLogger(ExpungeVMCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(ExpungeVMCmd.class.getName());
 
 
     /////////////////////////////////////////////////////

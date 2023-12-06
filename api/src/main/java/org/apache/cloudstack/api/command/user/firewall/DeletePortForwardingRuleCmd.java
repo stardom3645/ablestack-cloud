@@ -40,7 +40,7 @@ import com.cloud.network.rules.PortForwardingRule;
 @APICommand(name = "deletePortForwardingRule", description = "Deletes a port forwarding rule", responseObject = SuccessResponse.class, entityType = {PortForwardingRule.class},
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class DeletePortForwardingRuleCmd extends BaseAsyncCmd {
-    protected static Logger s_logger = LogManager.getLogger(DeletePortForwardingRuleCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(DeletePortForwardingRuleCmd.class.getName());
 
     /////////////////////////////////////////////////////
     //////////////// API parameters /////////////////////

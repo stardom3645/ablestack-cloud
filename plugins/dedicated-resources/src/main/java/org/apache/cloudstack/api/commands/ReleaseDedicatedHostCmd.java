@@ -37,7 +37,7 @@ import com.cloud.user.Account;
 @APICommand(name = "releaseDedicatedHost", description = "Release the dedication for host", responseObject = SuccessResponse.class,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class ReleaseDedicatedHostCmd extends BaseAsyncCmd {
-    protected static Logger s_logger = LogManager.getLogger(ReleaseDedicatedHostCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(ReleaseDedicatedHostCmd.class.getName());
 
     @Inject
     DedicatedService dedicatedService;

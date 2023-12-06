@@ -39,7 +39,7 @@ import com.cloud.user.Account;
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class LdapUserSearchCmd extends BaseListCmd {
 
-    protected static Logger s_logger = LogManager.getLogger(LdapUserSearchCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(LdapUserSearchCmd.class.getName());
     private static final String s_name = "ldapuserresponse";
     @Inject
     private LdapManager _ldapManager;
@@ -76,7 +76,7 @@ public class LdapUserSearchCmd extends BaseListCmd {
         try {
             users = _ldapManager.searchUsers(query);
         } catch (final NoLdapUserMatchingQueryException e) {
-            s_logger.debug(e.getMessage());
+            logger.debug(e.getMessage());
         }
 
         final List<LdapUserResponse> ldapUserResponses = createLdapUserResponse(users);

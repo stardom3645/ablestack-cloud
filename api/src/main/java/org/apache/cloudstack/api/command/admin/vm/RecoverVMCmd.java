@@ -39,7 +39,7 @@ import com.cloud.vm.VirtualMachine;
 @APICommand(name = "recoverVirtualMachine", description = "Recovers a virtual machine.", responseObject = UserVmResponse.class, entityType = {VirtualMachine.class},
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = true)
 public class RecoverVMCmd extends BaseCmd {
-    protected static Logger s_logger = LogManager.getLogger(RecoverVMCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(RecoverVMCmd.class.getName());
 
 
     /////////////////////////////////////////////////////

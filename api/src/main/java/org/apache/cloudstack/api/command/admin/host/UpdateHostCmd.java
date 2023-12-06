@@ -35,7 +35,7 @@ import java.util.List;
 @APICommand(name = "updateHost", description = "Updates a host.", responseObject = HostResponse.class,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class UpdateHostCmd extends BaseCmd {
-    protected static Logger s_logger = LogManager.getLogger(UpdateHostCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(UpdateHostCmd.class.getName());
 
     /////////////////////////////////////////////////////
     //////////////// API parameters /////////////////////
@@ -121,7 +121,7 @@ public class UpdateHostCmd extends BaseCmd {
             hostResponse.setResponseName(getCommandName());
             this.setResponseObject(hostResponse);
         } catch (Exception e) {
-            s_logger.debug("Failed to update host:" + getId(), e);
+            logger.debug("Failed to update host:" + getId(), e);
             throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, "Failed to update host:" + getId() + "," + e.getMessage());
         }
     }

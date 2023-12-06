@@ -23,7 +23,7 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 
 public class SynchronizationEvent {
-    protected final static Logger s_logger = LogManager.getLogger(SynchronizationEvent.class);
+    protected final static Logger logger = LogManager.getLogger(SynchronizationEvent.class);
 
     private boolean signalled;
 
@@ -59,7 +59,7 @@ public class SynchronizationEvent {
                     assert (signalled);
                     return signalled;
                 } catch (InterruptedException e) {
-                    s_logger.debug("unexpected awaken signal in wait()");
+                    logger.debug("unexpected awaken signal in wait()");
                     throw e;
                 }
             }
@@ -76,7 +76,7 @@ public class SynchronizationEvent {
                 return signalled;
             } catch (InterruptedException e) {
                 // TODO, we don't honor time out semantics when the waiting thread is interrupted
-                s_logger.debug("unexpected awaken signal in wait(...)");
+                logger.debug("unexpected awaken signal in wait(...)");
                 throw e;
             }
         }

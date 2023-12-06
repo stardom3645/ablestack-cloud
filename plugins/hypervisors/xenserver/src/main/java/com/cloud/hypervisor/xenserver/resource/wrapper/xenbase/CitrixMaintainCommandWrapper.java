@@ -39,7 +39,7 @@ import com.xensource.xenapi.Types.XenAPIException;
 @ResourceWrapper(handles =  MaintainCommand.class)
 public final class CitrixMaintainCommandWrapper extends CommandWrapper<MaintainCommand, Answer, CitrixResourceBase> {
 
-    protected static Logger s_logger = LogManager.getLogger(CitrixMaintainCommandWrapper.class);
+    protected static Logger logger = LogManager.getLogger(CitrixMaintainCommandWrapper.class);
 
     @Override
     public Answer execute(final MaintainCommand command, final CitrixResourceBase citrixResourceBase) {
@@ -54,7 +54,7 @@ public final class CitrixMaintainCommandWrapper extends CommandWrapper<MaintainC
 
             // Adding this check because could not get the mock to work. Will push the code and fix it afterwards.
             if (hr == null) {
-                s_logger.warn("Host.Record is null.");
+                logger.warn("Host.Record is null.");
                 return new MaintainAnswer(command, false, "Host.Record is null");
             }
 
@@ -68,10 +68,10 @@ public final class CitrixMaintainCommandWrapper extends CommandWrapper<MaintainC
             host.setTags(conn, hr.tags);
             return new MaintainAnswer(command);
         } catch (final XenAPIException e) {
-            s_logger.warn("Unable to put server in maintainence mode", e);
+            logger.warn("Unable to put server in maintainence mode", e);
             return new MaintainAnswer(command, false, e.getMessage());
         } catch (final XmlRpcException e) {
-            s_logger.warn("Unable to put server in maintainence mode", e);
+            logger.warn("Unable to put server in maintainence mode", e);
             return new MaintainAnswer(command, false, e.getMessage());
         }
     }

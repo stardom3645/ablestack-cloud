@@ -27,7 +27,7 @@ import com.cloud.utils.db.SearchCriteria;
 
 @Component
 public class VpcDistributedRouterSeqNoDaoImpl extends GenericDaoBase<VpcDistributedRouterSeqNoVO, Long> implements VpcDistributedRouterSeqNoDao {
-    protected static final Logger s_logger = LogManager.getLogger(VpcDistributedRouterSeqNoDaoImpl.class);
+    protected Logger logger = LogManager.getLogger(VpcDistributedRouterSeqNoDaoImpl.class);
     private SearchBuilder<VpcDistributedRouterSeqNoVO> VpcIdSearch;
 
     protected VpcDistributedRouterSeqNoDaoImpl() {

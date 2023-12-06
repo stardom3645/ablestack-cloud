@@ -33,7 +33,7 @@ import org.apache.logging.log4j.LogManager;
 @APICommand(name = "listElastistorPool", description = "Lists the pools of elastistor",
         responseObject = ListElastistorPoolResponse.class)
 public class ListElastistorPoolCmd extends BaseCmd {
-    protected static Logger  s_logger = LogManager.getLogger(ListElastistorPoolCmd.class.getName());
+    protected static Logger  logger = LogManager.getLogger(ListElastistorPoolCmd.class.getName());
     private static final String s_name   = "listElastistorPoolResponse";
 
     @Inject

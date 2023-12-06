@@ -36,7 +36,7 @@ import java.util.List;
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false,
         authorized = {RoleType.Admin, RoleType.DomainAdmin, RoleType.ResourceAdmin, RoleType.User})
 public class ListResourceIconCmd extends BaseCmd {
-    protected static Logger s_logger = LogManager.getLogger(ListResourceIconCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(ListResourceIconCmd.class.getName());
 
     /////////////////////////////////////////////////////
     //////////////// API parameters /////////////////////

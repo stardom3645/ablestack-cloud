@@ -36,7 +36,7 @@ import com.cloud.utils.Pair;
 @APICommand(name = "listGuestOsMapping", description = "Lists all available OS mappings for given hypervisor", responseObject = GuestOsMappingResponse.class,
         since = "4.4.0", requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class ListGuestOsMappingCmd extends BaseListCmd {
-    protected static Logger s_logger = LogManager.getLogger(ListGuestOsMappingCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(ListGuestOsMappingCmd.class.getName());
 
 
     /////////////////////////////////////////////////////

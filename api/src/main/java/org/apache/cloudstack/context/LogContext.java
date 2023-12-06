@@ -38,7 +38,7 @@ import com.cloud.utils.exception.CloudRuntimeException;
  * class must be always be available in all CloudStack code.
  */
 public class LogContext {
-    protected static Logger s_logger = LogManager.getLogger(LogContext.class);
+    protected static Logger logger = LogManager.getLogger(LogContext.class);
     private static ManagedThreadLocal<LogContext> s_currentContext = new ManagedThreadLocal<LogContext>();
 
     private String logContextId;
@@ -136,8 +136,8 @@ public class LogContext {
         }
         s_currentContext.set(callingContext);
         ThreadContext.put("logcontextid", UuidUtils.first(contextId));
-        if (s_logger.isTraceEnabled()) {
-            s_logger.trace("Registered for log: " + callingContext);
+        if (logger.isTraceEnabled()) {
+            logger.trace("Registered for log: " + callingContext);
         }
         return callingContext;
     }
@@ -161,7 +161,7 @@ public class LogContext {
             assert context.getCallingUserId() == User.UID_SYSTEM : "You are calling a very specific method that registers a one time system context.  This method is meant for background threads that does processing.";
             return context;
         } catch (Exception e) {
-            s_logger.error("Failed to register the system log context.", e);
+            logger.error("Failed to register the system log context.", e);
             throw new CloudRuntimeException("Failed to register system log context", e);
         }
     }
@@ -207,8 +207,8 @@ public class LogContext {
         LogContext context = s_currentContext.get();
         if (context != null) {
             s_currentContext.remove();
-            if (s_logger.isTraceEnabled()) {
-                s_logger.trace("Unregistered: " + context);
+            if (logger.isTraceEnabled()) {
+                logger.trace("Unregistered: " + context);
             }
         }
         ThreadContext.clearMap();

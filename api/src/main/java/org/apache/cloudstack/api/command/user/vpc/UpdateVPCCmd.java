@@ -43,7 +43,7 @@ import com.cloud.user.Account;
 @APICommand(name = "updateVPC", description = "Updates a VPC", responseObject = VpcResponse.class, responseView = ResponseView.Restricted, entityType = {Vpc.class},
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class UpdateVPCCmd extends BaseAsyncCustomIdCmd implements UserCmd {
-    protected static Logger s_logger = LogManager.getLogger(UpdateVPCCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(UpdateVPCCmd.class.getName());
     private static final String s_name = "updatevpcresponse";
 
     /////////////////////////////////////////////////////
@@ -130,11 +130,11 @@ public class UpdateVPCCmd extends BaseAsyncCustomIdCmd implements UserCmd {
                 throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, "Failed to update VPC");
             }
         } catch (final ResourceUnavailableException ex) {
-            s_logger.warn("Exception: ", ex);
+            logger.warn("Exception: ", ex);
             throw new ServerApiException(ApiErrorCode.RESOURCE_UNAVAILABLE_ERROR, ex.getMessage());
         } catch (final InsufficientCapacityException ex) {
-            s_logger.info(ex);
-            s_logger.trace(ex);
+            logger.info(ex);
+            logger.trace(ex);
             throw new ServerApiException(ApiErrorCode.INSUFFICIENT_CAPACITY_ERROR, ex.getMessage());
         }
     }

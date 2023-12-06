@@ -27,7 +27,7 @@ import com.cloud.hypervisor.vmware.util.VmwareContext;
 
 public class VirtualDiskManagerMO extends BaseMO {
     @SuppressWarnings("unused")
-    protected static Logger s_logger = LogManager.getLogger(VirtualDiskManagerMO.class);
+    protected static Logger logger = LogManager.getLogger(VirtualDiskManagerMO.class);
 
     public VirtualDiskManagerMO(VmwareContext context) {
         super(context, context.getServiceContent().getVirtualDiskManager());

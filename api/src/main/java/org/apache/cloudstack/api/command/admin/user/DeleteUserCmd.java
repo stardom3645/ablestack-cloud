@@ -39,7 +39,7 @@ import com.cloud.user.User;
 @APICommand(name = "deleteUser", description = "Deletes a user for an account", responseObject = SuccessResponse.class,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class DeleteUserCmd extends BaseCmd {
-    protected static Logger s_logger = LogManager.getLogger(DeleteUserCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(DeleteUserCmd.class.getName());
 
 
     /////////////////////////////////////////////////////

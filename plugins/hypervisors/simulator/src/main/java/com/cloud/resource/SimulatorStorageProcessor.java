@@ -58,7 +58,7 @@ import com.cloud.storage.resource.StorageProcessor;
 
 public class SimulatorStorageProcessor implements StorageProcessor {
 
-    protected static Logger s_logger = LogManager.getLogger(SimulatorStorageProcessor.class);
+    protected static Logger logger = LogManager.getLogger(SimulatorStorageProcessor.class);
     protected SimulatorManager hypervisorResource;
 
     public SimulatorStorageProcessor(SimulatorManager resource) {
@@ -67,14 +67,14 @@ public class SimulatorStorageProcessor implements StorageProcessor {
 
     @Override
     public SnapshotAndCopyAnswer snapshotAndCopy(SnapshotAndCopyCommand cmd) {
-        s_logger.info("'SnapshotAndCopyAnswer snapshotAndCopy(SnapshotAndCopyCommand)' not currently used for SimulatorStorageProcessor");
+        logger.info("'SnapshotAndCopyAnswer snapshotAndCopy(SnapshotAndCopyCommand)' not currently used for SimulatorStorageProcessor");
 
         return new SnapshotAndCopyAnswer();
     }
 
     @Override
     public ResignatureAnswer resignature(ResignatureCommand cmd) {
-        s_logger.info("'ResignatureAnswer resignature(ResignatureCommand)' not currently used for SimulatorStorageProcessor");
+        logger.info("'ResignatureAnswer resignature(ResignatureCommand)' not currently used for SimulatorStorageProcessor");
 
         return new ResignatureAnswer();
     }

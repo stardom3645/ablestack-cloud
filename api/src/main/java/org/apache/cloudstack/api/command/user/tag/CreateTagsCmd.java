@@ -39,7 +39,7 @@ import com.cloud.server.ResourceTag.ResourceObjectType;
 @APICommand(name = "createTags", description = "Creates resource tag(s)", responseObject = SuccessResponse.class, since = "4.0.0", entityType = {ResourceTag.class},
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class CreateTagsCmd extends BaseAsyncCmd {
-    protected static Logger s_logger = LogManager.getLogger(CreateTagsCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(CreateTagsCmd.class.getName());
 
 
     // ///////////////////////////////////////////////////

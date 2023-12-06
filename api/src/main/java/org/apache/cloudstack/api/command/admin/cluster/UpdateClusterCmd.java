@@ -35,7 +35,7 @@ import com.cloud.user.Account;
 @APICommand(name = "updateCluster", description = "Updates an existing cluster", responseObject = ClusterResponse.class,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class UpdateClusterCmd extends BaseCmd {
-    protected static Logger s_logger = LogManager.getLogger(AddClusterCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(AddClusterCmd.class.getName());
 
 
     @Parameter(name = ApiConstants.ID, type = CommandType.UUID, entityType = ClusterResponse.class, required = true, description = "the ID of the Cluster")

@@ -51,7 +51,7 @@ import com.cloud.user.Account;
 @APICommand(name = "createNetworkOffering", description = "Creates a network offering.", responseObject = NetworkOfferingResponse.class, since = "3.0.0",
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class CreateNetworkOfferingCmd extends BaseCmd {
-    protected static Logger s_logger = LogManager.getLogger(CreateNetworkOfferingCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(CreateNetworkOfferingCmd.class.getName());
 
     /////////////////////////////////////////////////////
     //////////////// API parameters /////////////////////

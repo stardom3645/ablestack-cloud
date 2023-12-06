@@ -38,7 +38,7 @@ import com.cloud.user.Account;
         since = "4.14.0.0",
         authorized = {RoleType.Admin})
 public class UpdateSecurityGroupCmd extends BaseCustomIdCmd {
-    protected static Logger s_logger = LogManager.getLogger(UpdateSecurityGroupCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(UpdateSecurityGroupCmd.class.getName());
 
     /////////////////////////////////////////////////////
     //////////////// API parameters /////////////////////

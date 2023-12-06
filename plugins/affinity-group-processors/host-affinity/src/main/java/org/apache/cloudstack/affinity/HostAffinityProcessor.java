@@ -43,7 +43,7 @@ import com.cloud.vm.dao.VMInstanceDao;
 
 public class HostAffinityProcessor extends AffinityProcessorBase implements AffinityGroupProcessor {
 
-    protected static Logger s_logger = LogManager.getLogger(HostAffinityProcessor.class);
+    protected static Logger logger = LogManager.getLogger(HostAffinityProcessor.class);
 
     @Inject
     protected VMInstanceDao _vmInstanceDao;
@@ -69,7 +69,7 @@ public class HostAffinityProcessor extends AffinityProcessorBase implements Affi
      */
     protected void processAffinityGroup(AffinityGroupVMMapVO vmGroupMapping, DeploymentPlan plan, VirtualMachine vm, List<VirtualMachine> vmList) {
         AffinityGroupVO group = _affinityGroupDao.findById(vmGroupMapping.getAffinityGroupId());
-        s_logger.debug("Processing affinity group " + group.getName() + " for VM Id: " + vm.getId());
+        logger.debug("Processing affinity group " + group.getName() + " for VM Id: " + vm.getId());
 
         List<Long> groupVMIds = _affinityGroupVMMapDao.listVmIdsByAffinityGroup(group.getId());
         groupVMIds.remove(vm.getId());

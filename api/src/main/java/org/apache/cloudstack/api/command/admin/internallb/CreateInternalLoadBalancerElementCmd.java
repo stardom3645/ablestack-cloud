@@ -46,7 +46,7 @@ import com.cloud.user.Account;
             requestHasSensitiveInfo = false,
             responseHasSensitiveInfo = false)
 public class CreateInternalLoadBalancerElementCmd extends BaseAsyncCreateCmd {
-    protected static Logger s_logger = LogManager.getLogger(CreateInternalLoadBalancerElementCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(CreateInternalLoadBalancerElementCmd.class.getName());
 
     @Inject
     private List<InternalLoadBalancerElementService> _service;

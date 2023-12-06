@@ -36,7 +36,7 @@ import org.apache.cloudstack.region.RegionService;
 @APICommand(name = "listRegions", description = "Lists Regions", responseObject = RegionResponse.class,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class ListRegionsCmd extends BaseListCmd {
-    protected static Logger s_logger = LogManager.getLogger(ListRegionsCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(ListRegionsCmd.class.getName());
 
 
     /////////////////////////////////////////////////////

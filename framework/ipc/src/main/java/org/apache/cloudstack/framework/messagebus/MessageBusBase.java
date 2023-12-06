@@ -42,7 +42,7 @@ public class MessageBusBase implements MessageBus {
     private final SubscriptionNode _subscriberRoot;
     private MessageSerializer _messageSerializer;
 
-    protected static Logger s_logger = LogManager.getLogger(MessageBusBase.class);
+    protected static Logger logger = LogManager.getLogger(MessageBusBase.class);
 
     public MessageBusBase() {
         _gate = new Gate();
@@ -66,8 +66,8 @@ public class MessageBusBase implements MessageBus {
         assert (subject != null);
         assert (subscriber != null);
         if (_gate.enter()) {
-            if (s_logger.isTraceEnabled()) {
-                s_logger.trace("Enter gate in message bus subscribe");
+            if (logger.isTraceEnabled()) {
+                logger.trace("Enter gate in message bus subscribe");
             }
             try {
                 SubscriptionNode current = locate(subject, null, true);
@@ -86,8 +86,8 @@ public class MessageBusBase implements MessageBus {
     @Override
     public void unsubscribe(String subject, MessageSubscriber subscriber) {
         if (_gate.enter()) {
-            if (s_logger.isTraceEnabled()) {
-                s_logger.trace("Enter gate in message bus unsubscribe");
+            if (logger.isTraceEnabled()) {
+                logger.trace("Enter gate in message bus unsubscribe");
             }
             try {
                 if (subject != null) {
@@ -110,8 +110,8 @@ public class MessageBusBase implements MessageBus {
     @Override
     public void clearAll() {
         if (_gate.enter()) {
-            if (s_logger.isTraceEnabled()) {
-                s_logger.trace("Enter gate in message bus clearAll");
+            if (logger.isTraceEnabled()) {
+                logger.trace("Enter gate in message bus clearAll");
             }
             try {
                 _subscriberRoot.clearAll();
@@ -129,8 +129,8 @@ public class MessageBusBase implements MessageBus {
     @Override
     public void prune() {
         if (_gate.enter()) {
-            if (s_logger.isTraceEnabled()) {
-                s_logger.trace("Enter gate in message bus prune");
+            if (logger.isTraceEnabled()) {
+                logger.trace("Enter gate in message bus prune");
             }
             try {
                 doPrune();
@@ -165,11 +165,11 @@ public class MessageBusBase implements MessageBus {
         // publish cannot be in DB transaction, which may hold DB lock too long, and we are guarding this here
         if (!noDbTxn()){
             String errMsg = "NO EVENT PUBLISH CAN BE WRAPPED WITHIN DB TRANSACTION!";
-            s_logger.error(errMsg, new CloudRuntimeException(errMsg));
+            logger.error(errMsg, new CloudRuntimeException(errMsg));
         }
         if (_gate.enter(true)) {
-            if (s_logger.isTraceEnabled()) {
-                s_logger.trace("Enter gate in message bus publish");
+            if (logger.isTraceEnabled()) {
+                logger.trace("Enter gate in message bus publish");
             }
             try {
                 List<SubscriptionNode> chainFromTop = new ArrayList<SubscriptionNode>();
@@ -327,7 +327,7 @@ public class MessageBusBase implements MessageBus {
                             try {
                                 wait();
                             } catch (InterruptedException e) {
-                                s_logger.debug("[ignored] interrupted while guarding re-entrance on message bus.");
+                                logger.debug("[ignored] interrupted while guarding re-entrance on message bus.");
                             }
                         } else {
                             break;
@@ -347,8 +347,8 @@ public class MessageBusBase implements MessageBus {
 
                         onGateOpen();
                     } finally {
-                        if (s_logger.isTraceEnabled()) {
-                            s_logger.trace("Open gate of message bus");
+                        if (logger.isTraceEnabled()) {
+                            logger.trace("Open gate of message bus");
                         }
                         _reentranceCount--;
                         assert (_reentranceCount == 0);

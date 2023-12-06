@@ -41,7 +41,7 @@ import com.cloud.server.ResourceTag.ResourceObjectType;
 @APICommand(name = "deleteTags", description = "Deleting resource tag(s)", responseObject = SuccessResponse.class, since = "4.0.0", entityType = {ResourceTag.class},
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class DeleteTagsCmd extends BaseAsyncCmd {
-    protected static Logger s_logger = LogManager.getLogger(DeleteTagsCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(DeleteTagsCmd.class.getName());
 
 
     // ///////////////////////////////////////////////////

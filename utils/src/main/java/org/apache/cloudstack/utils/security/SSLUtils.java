@@ -30,7 +30,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class SSLUtils {
-    protected static Logger s_logger = LogManager.getLogger(SSLUtils.class);
+    protected static Logger logger = LogManager.getLogger(SSLUtils.class);
 
     public static String[] getSupportedProtocols(String[] protocols) {
         Set<String> set = new HashSet<String>();

@@ -36,7 +36,7 @@ import com.cloud.user.Account;
 @APICommand(name = "updateProjectInvitation", description = "Accepts or declines project invitation", responseObject = SuccessResponse.class, since = "3.0.0",
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class UpdateProjectInvitationCmd extends BaseAsyncCmd {
-    protected static Logger s_logger = LogManager.getLogger(UpdateProjectInvitationCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(UpdateProjectInvitationCmd.class.getName());
 
     // ///////////////////////////////////////////////////
     // ////////////// API parameters /////////////////////

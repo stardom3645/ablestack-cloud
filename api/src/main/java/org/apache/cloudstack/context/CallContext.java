@@ -41,7 +41,7 @@ import com.cloud.utils.exception.CloudRuntimeException;
  * entry point must set the context and remove it when the thread finishes.
  */
 public class CallContext {
-    protected static Logger s_logger = LogManager.getLogger(CallContext.class);
+    protected static Logger logger = LogManager.getLogger(CallContext.class);
     private static ManagedThreadLocal<CallContext> s_currentContext = new ManagedThreadLocal<CallContext>();
     private static ManagedThreadLocal<Stack<CallContext>> s_currentContextStack = new ManagedThreadLocal<Stack<CallContext>>() {
         @Override
@@ -180,8 +180,8 @@ public class CallContext {
         }
         s_currentContext.set(callingContext);
         ThreadContext.push("ctx-" + UuidUtils.first(contextId));
-        if (s_logger.isTraceEnabled()) {
-            s_logger.trace("Registered: " + callingContext);
+        if (logger.isTraceEnabled()) {
+            logger.trace("Registered: " + callingContext);
         }
 
         s_currentContextStack.get().push(callingContext);
@@ -210,7 +210,7 @@ public class CallContext {
             assert context.getCallingUserId() == User.UID_SYSTEM : "You are calling a very specific method that registers a one time system context.  This method is meant for background threads that does processing.";
             return context;
         } catch (Exception e) {
-            s_logger.error("Failed to register the system call context.", e);
+            logger.error("Failed to register the system call context.", e);
             throw new CloudRuntimeException("Failed to register system call context", e);
         }
     }
@@ -279,8 +279,8 @@ public class CallContext {
             return null;
         }
         s_currentContext.remove();
-        if (s_logger.isTraceEnabled()) {
-            s_logger.trace("Unregistered: " + context);
+        if (logger.isTraceEnabled()) {
+            logger.trace("Unregistered: " + context);
         }
         String contextId = context.getContextId();
         String sessionIdOnStack = null;
@@ -289,8 +289,8 @@ public class CallContext {
             if (sessionIdOnStack.isEmpty() || sessionIdPushedToNDC.equals(sessionIdOnStack)) {
                 break;
             }
-            if (s_logger.isTraceEnabled()) {
-                s_logger.trace("Popping from NDC: " + contextId);
+            if (logger.isTraceEnabled()) {
+                logger.trace("Popping from NDC: " + contextId);
             }
         }
 

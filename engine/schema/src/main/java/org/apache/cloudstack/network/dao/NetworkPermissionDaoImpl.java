@@ -32,7 +32,7 @@ import com.cloud.utils.db.SearchCriteria;
 
 @Component
 public class NetworkPermissionDaoImpl extends GenericDaoBase<NetworkPermissionVO, Long> implements NetworkPermissionDao {
-    protected static Logger s_logger = LogManager.getLogger(NetworkPermissionDaoImpl.class);
+    protected static Logger logger = LogManager.getLogger(NetworkPermissionDaoImpl.class);
 
     private SearchBuilder<NetworkPermissionVO> NetworkAndAccountSearch;
     private SearchBuilder<NetworkPermissionVO> NetworkIdSearch;

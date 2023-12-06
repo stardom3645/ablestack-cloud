@@ -44,7 +44,7 @@ import javax.inject.Inject;
 
 @Component
 public class ServiceOfferingJoinDaoImpl extends GenericDaoBase<ServiceOfferingJoinVO, Long> implements ServiceOfferingJoinDao {
-    protected static Logger s_logger = LogManager.getLogger(ServiceOfferingJoinDaoImpl.class);
+    protected static Logger logger = LogManager.getLogger(ServiceOfferingJoinDaoImpl.class);
 
     @Inject
     VsphereStoragePolicyDao _vsphereStoragePolicyDao;

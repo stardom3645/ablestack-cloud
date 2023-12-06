@@ -48,7 +48,7 @@ import com.google.common.collect.ImmutableSet;
 
 public class ReflectUtil {
 
-    protected static Logger s_logger = LogManager.getLogger(ReflectUtil.class);
+    protected static Logger logger = LogManager.getLogger(ReflectUtil.class);
     protected static Logger logger = LogManager.getLogger(Reflections.class);
 
     public static Pair<Class<?>, Field> getAnyField(Class<?> clazz, String fieldName) {
@@ -184,13 +184,13 @@ public class ReflectUtil {
             return unmodifiableList(serializedProperties);
 
         } catch (IntrospectionException e) {
-            s_logger.warn("Ignored IntrospectionException when serializing class " + target.getClass().getCanonicalName(), e);
+            logger.warn("Ignored IntrospectionException when serializing class " + target.getClass().getCanonicalName(), e);
         } catch (IllegalArgumentException e) {
-            s_logger.warn("Ignored IllegalArgumentException when serializing class " + target.getClass().getCanonicalName(), e);
+            logger.warn("Ignored IllegalArgumentException when serializing class " + target.getClass().getCanonicalName(), e);
         } catch (IllegalAccessException e) {
-            s_logger.warn("Ignored IllegalAccessException when serializing class " + target.getClass().getCanonicalName(), e);
+            logger.warn("Ignored IllegalAccessException when serializing class " + target.getClass().getCanonicalName(), e);
         } catch (InvocationTargetException e) {
-            s_logger.warn("Ignored InvocationTargetException when serializing class " + target.getClass().getCanonicalName(), e);
+            logger.warn("Ignored InvocationTargetException when serializing class " + target.getClass().getCanonicalName(), e);
         }
 
         return emptyList();

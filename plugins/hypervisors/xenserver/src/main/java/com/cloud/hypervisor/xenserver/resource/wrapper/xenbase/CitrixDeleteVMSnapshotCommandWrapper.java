@@ -44,7 +44,7 @@ import com.xensource.xenapi.VM;
 @ResourceWrapper(handles =  DeleteVMSnapshotCommand.class)
 public final class CitrixDeleteVMSnapshotCommandWrapper extends CommandWrapper<DeleteVMSnapshotCommand, Answer, CitrixResourceBase> {
 
-    protected static Logger s_logger = LogManager.getLogger(CitrixDeleteVMSnapshotCommandWrapper.class);
+    protected static Logger logger = LogManager.getLogger(CitrixDeleteVMSnapshotCommandWrapper.class);
 
     @Override
     public Answer execute(final DeleteVMSnapshotCommand command, final CitrixResourceBase citrixResourceBase) {
@@ -55,7 +55,7 @@ public final class CitrixDeleteVMSnapshotCommandWrapper extends CommandWrapper<D
             final List<VDI> vdiList = new ArrayList<VDI>();
             final Set<VM> snapshots = VM.getByNameLabel(conn, snapshotName);
             if (snapshots == null || snapshots.size() == 0) {
-                s_logger.warn("VM snapshot with name " + snapshotName + " does not exist, assume it is already deleted");
+                logger.warn("VM snapshot with name " + snapshotName + " does not exist, assume it is already deleted");
                 return new DeleteVMSnapshotAnswer(command, command.getVolumeTOs());
             }
             final VM snapshot = snapshots.iterator().next();
@@ -91,7 +91,7 @@ public final class CitrixDeleteVMSnapshotCommandWrapper extends CommandWrapper<D
 
             return new DeleteVMSnapshotAnswer(command, command.getVolumeTOs());
         } catch (final Exception e) {
-            s_logger.warn("Catch Exception: " + e.getClass().toString() + " due to " + e.toString(), e);
+            logger.warn("Catch Exception: " + e.getClass().toString() + " due to " + e.toString(), e);
             return new DeleteVMSnapshotAnswer(command, false, e.getMessage());
         }
     }

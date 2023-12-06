@@ -49,7 +49,7 @@ import org.apache.logging.log4j.LogManager;
 @Entity
 @Table(name = "networks")
 public class NetworkVO implements Network {
-    static final Logger s_logger = LogManager.getLogger(NetworkVO.class);
+    static final Logger logger = LogManager.getLogger(NetworkVO.class);
     @Id
     @TableGenerator(name = "networks_sq", table = "sequence", pkColumnName = "name", valueColumnName = "value", pkColumnValue = "networks_seq", allocationSize = 1)
     @Column(name = "id")

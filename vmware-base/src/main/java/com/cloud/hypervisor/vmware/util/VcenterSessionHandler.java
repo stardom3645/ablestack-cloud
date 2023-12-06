@@ -33,7 +33,7 @@ import org.w3c.dom.DOMException;
 import com.cloud.utils.exception.CloudRuntimeException;
 
 public class VcenterSessionHandler implements SOAPHandler<SOAPMessageContext> {
-    protected static Logger s_logger = LogManager.getLogger(VcenterSessionHandler.class);
+    protected static Logger logger = LogManager.getLogger(VcenterSessionHandler.class);
     private final String vcSessionCookie;
 
     public VcenterSessionHandler(String vcSessionCookie) {
@@ -51,10 +51,10 @@ public class VcenterSessionHandler implements SOAPHandler<SOAPMessageContext> {
                 vcsessionHeader.setValue(vcSessionCookie);
 
             } catch (DOMException e) {
-                s_logger.debug(e);
+                logger.debug(e);
                 throw new CloudRuntimeException(e);
             } catch (SOAPException e) {
-                s_logger.debug(e);
+                logger.debug(e);
                 throw new CloudRuntimeException(e);
             }
         }

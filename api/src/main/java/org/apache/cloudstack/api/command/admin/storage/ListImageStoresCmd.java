@@ -29,7 +29,7 @@ import org.apache.logging.log4j.LogManager;
 @APICommand(name = "listImageStores", description = "Lists image stores.", responseObject = ImageStoreResponse.class, since = "4.2.0",
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class ListImageStoresCmd extends BaseListCmd {
-    protected static Logger s_logger = LogManager.getLogger(ListImageStoresCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(ListImageStoresCmd.class.getName());
 
 
     /////////////////////////////////////////////////////

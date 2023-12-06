@@ -51,7 +51,7 @@ public class VolumeStateListener implements StateListener<State, Event, Volume> 
     protected ConfigurationDao _configDao;
     protected VMInstanceDao _vmInstanceDao;
 
-    protected static Logger s_logger = LogManager.getLogger(VolumeStateListener.class);
+    protected static Logger logger = LogManager.getLogger(VolumeStateListener.class);
 
     public VolumeStateListener(ConfigurationDao configDao, VMInstanceDao vmInstanceDao) {
         this._configDao = configDao;
@@ -123,7 +123,7 @@ public class VolumeStateListener implements StateListener<State, Event, Volume> 
         try {
             s_eventBus.publish(eventMsg);
         } catch (EventBusException e) {
-            s_logger.warn("Failed to state change event on the event bus.");
+            logger.warn("Failed to state change event on the event bus.");
         }
     }
 

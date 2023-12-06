@@ -109,7 +109,7 @@ import com.cloud.vm.DiskProfile;
 
 @Component
 public class MockStorageManagerImpl extends ManagerBase implements MockStorageManager {
-    protected static Logger s_logger = LogManager.getLogger(MockStorageManagerImpl.class);
+    protected static Logger logger = LogManager.getLogger(MockStorageManagerImpl.class);
     @Inject
     MockStoragePoolDao _mockStoragePoolDao = null;
     @Inject
@@ -1094,7 +1094,7 @@ public class MockStorageManagerImpl extends ManagerBase implements MockStorageMa
                 MessageDigest md = MessageDigest.getInstance("md5");
                 md5 = String.format("%032x", new BigInteger(1, md.digest(cmd.getTemplatePath().getBytes())));
             } catch (NoSuchAlgorithmException e) {
-                s_logger.debug("failed to gernerate md5:" + e.toString());
+                logger.debug("failed to gernerate md5:" + e.toString());
             }
             txn.commit();
             return new Answer(cmd, true, md5);

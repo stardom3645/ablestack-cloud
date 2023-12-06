@@ -44,7 +44,7 @@ import javax.inject.Inject;
 @APICommand(name = ListTungstenFabricLBHealthMonitorCmd.APINAME, description = "list Tungsten-Fabric LB health monitor", responseObject =
     TungstenFabricLBHealthMonitorResponse.class, requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class ListTungstenFabricLBHealthMonitorCmd extends BaseListCmd {
-    protected static Logger s_logger = LogManager.getLogger(ListTungstenFabricLBHealthMonitorCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(ListTungstenFabricLBHealthMonitorCmd.class.getName());
     public static final String APINAME = "listTungstenFabricLBHealthMonitor";
 
     @Inject

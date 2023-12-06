@@ -49,7 +49,7 @@ import com.cloud.vm.dao.UserVmDao;
 
 @Component
 public class SecurityGroupJoinDaoImpl extends GenericDaoBase<SecurityGroupJoinVO, Long> implements SecurityGroupJoinDao {
-    protected static Logger s_logger = LogManager.getLogger(SecurityGroupJoinDaoImpl.class);
+    protected static Logger logger = LogManager.getLogger(SecurityGroupJoinDaoImpl.class);
 
     @Inject
     private ConfigurationDao _configDao;
@@ -131,7 +131,7 @@ public class SecurityGroupJoinDaoImpl extends GenericDaoBase<SecurityGroupJoinVO
         }
 
         List<SecurityGroupVMMapVO> securityGroupVmMap = _securityGroupVMMapDao.listBySecurityGroup(vsg.getId());
-        s_logger.debug("newSecurityGroupResponse() -> virtualmachine count: " + securityGroupVmMap.size());
+        logger.debug("newSecurityGroupResponse() -> virtualmachine count: " + securityGroupVmMap.size());
         sgResponse.setVirtualMachineCount(securityGroupVmMap.size());
 
         for(SecurityGroupVMMapVO securityGroupVMMapVO : securityGroupVmMap) {

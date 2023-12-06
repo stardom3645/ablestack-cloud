@@ -44,7 +44,7 @@ import com.cloud.user.Account;
             responseHasSensitiveInfo = false)
 public class CreatePortableIpRangeCmd extends BaseAsyncCreateCmd {
 
-    protected static Logger s_logger = LogManager.getLogger(CreatePortableIpRangeCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(CreatePortableIpRangeCmd.class.getName());
 
 
     /////////////////////////////////////////////////////
@@ -127,7 +127,7 @@ public class CreatePortableIpRangeCmd extends BaseAsyncCreateCmd {
                 throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, "Failed to create portable public IP range");
             }
         } catch (ConcurrentOperationException ex) {
-            s_logger.warn("Exception: ", ex);
+            logger.warn("Exception: ", ex);
             throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, ex.getMessage());
         }
     }

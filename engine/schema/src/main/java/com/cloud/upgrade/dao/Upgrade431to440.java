@@ -21,7 +21,7 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 
 public class Upgrade431to440 extends Upgrade430to440 implements DbUpgrade {
-    final static Logger s_logger = LogManager.getLogger(Upgrade431to440.class);
+    final static Logger logger = LogManager.getLogger(Upgrade431to440.class);
 
     @Override
     public String[] getUpgradableVersionRange() {

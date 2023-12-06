@@ -39,7 +39,7 @@ import com.cloud.utils.db.SearchCriteria.Op;
 
 @Component
 public class ResourceTagJoinDaoImpl extends GenericDaoBase<ResourceTagJoinVO, Long> implements ResourceTagJoinDao {
-    protected static Logger s_logger = LogManager.getLogger(ResourceTagJoinDaoImpl.class);
+    protected static Logger logger = LogManager.getLogger(ResourceTagJoinDaoImpl.class);
 
     @Inject
     private ConfigurationDao _configDao;

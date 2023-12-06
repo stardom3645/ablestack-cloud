@@ -49,7 +49,7 @@ import com.xensource.xenapi.SR;
 @ResourceWrapper(handles =  MigrateWithStorageReceiveCommand.class)
 public final class XenServer610MigrateWithStorageReceiveCommandWrapper extends CommandWrapper<MigrateWithStorageReceiveCommand, Answer, XenServer610Resource> {
 
-    protected static Logger s_logger = LogManager.getLogger(XenServer610MigrateWithStorageReceiveCommandWrapper.class);
+    protected static Logger logger = LogManager.getLogger(XenServer610MigrateWithStorageReceiveCommandWrapper.class);
 
     @Override
     public Answer execute(final MigrateWithStorageReceiveCommand command, final XenServer610Resource xenServer610Resource) {
@@ -95,10 +95,10 @@ public final class XenServer610MigrateWithStorageReceiveCommandWrapper extends C
 
             return new MigrateWithStorageReceiveAnswer(command, volumeToSr, nicToNetwork, token);
         } catch (final CloudRuntimeException e) {
-            s_logger.error("Migration of vm " + vmSpec.getName() + " with storage failed due to " + e.toString(), e);
+            logger.error("Migration of vm " + vmSpec.getName() + " with storage failed due to " + e.toString(), e);
             return new MigrateWithStorageReceiveAnswer(command, e);
         } catch (final Exception e) {
-            s_logger.error("Migration of vm " + vmSpec.getName() + " with storage failed due to " + e.toString(), e);
+            logger.error("Migration of vm " + vmSpec.getName() + " with storage failed due to " + e.toString(), e);
             return new MigrateWithStorageReceiveAnswer(command, e);
         }
     }

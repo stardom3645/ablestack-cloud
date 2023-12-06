@@ -34,7 +34,7 @@ import com.cloud.utils.db.SearchCriteria;
 
 @Component
 public class HostTagDaoImpl extends GenericDaoBase<HostTagVO, Long> implements HostTagDao {
-    protected static Logger s_logger = LogManager.getLogger(HostTagDaoImpl.class);
+    protected static Logger logger = LogManager.getLogger(HostTagDaoImpl.class);
 
     @Inject
     private ConfigurationDao _configDao;

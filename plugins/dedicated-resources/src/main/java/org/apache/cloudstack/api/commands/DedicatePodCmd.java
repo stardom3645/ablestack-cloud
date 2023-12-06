@@ -43,7 +43,7 @@ import com.cloud.user.Account;
 @APICommand(name = "dedicatePod", description = "Dedicates a Pod.", responseObject = DedicatePodResponse.class,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class DedicatePodCmd extends BaseAsyncCmd {
-    protected static Logger s_logger = LogManager.getLogger(DedicatePodCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(DedicatePodCmd.class.getName());
 
     @Inject
     public DedicatedService dedicatedService;

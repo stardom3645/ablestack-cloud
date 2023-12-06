@@ -38,7 +38,7 @@ import com.cloud.user.Account;
 @APICommand(name = "addTrafficType", description = "Adds traffic type to a physical network", responseObject = TrafficTypeResponse.class, since = "3.0.0",
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class AddTrafficTypeCmd extends BaseAsyncCreateCmd {
-    protected static Logger s_logger = LogManager.getLogger(AddTrafficTypeCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(AddTrafficTypeCmd.class.getName());
 
 
     /////////////////////////////////////////////////////

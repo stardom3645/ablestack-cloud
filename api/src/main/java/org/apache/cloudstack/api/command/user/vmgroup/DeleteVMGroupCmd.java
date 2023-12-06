@@ -36,7 +36,7 @@ import com.cloud.vm.InstanceGroup;
 @APICommand(name = "deleteInstanceGroup", description = "Deletes a vm group", responseObject = SuccessResponse.class, entityType = {InstanceGroup.class},
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class DeleteVMGroupCmd extends BaseCmd {
-    protected static Logger s_logger = LogManager.getLogger(DeleteVMGroupCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(DeleteVMGroupCmd.class.getName());
 
     /////////////////////////////////////////////////////
     //////////////// API parameters /////////////////////

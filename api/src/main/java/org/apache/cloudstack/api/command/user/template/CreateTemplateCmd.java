@@ -58,7 +58,7 @@ import com.cloud.user.Account;
         + "A template created from this command is automatically designated as a private template visible to the account that created it.", responseView = ResponseView.Restricted,
     requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class CreateTemplateCmd extends BaseAsyncCreateCmd implements UserCmd {
-    protected static Logger s_logger = LogManager.getLogger(CreateTemplateCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(CreateTemplateCmd.class.getName());
     private static final String s_name = "createtemplateresponse";
 
     // ///////////////////////////////////////////////////

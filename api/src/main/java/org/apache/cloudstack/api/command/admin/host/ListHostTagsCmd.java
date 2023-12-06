@@ -28,7 +28,7 @@ import org.apache.cloudstack.api.response.HostTagResponse;
 
 @APICommand(name = "listHostTags", description = "Lists host tags", responseObject = HostTagResponse.class, requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class ListHostTagsCmd extends BaseListCmd {
-    protected static Logger s_logger = LogManager.getLogger(ListHostTagsCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(ListHostTagsCmd.class.getName());
 
 
     // ///////////////////////////////////////////////////

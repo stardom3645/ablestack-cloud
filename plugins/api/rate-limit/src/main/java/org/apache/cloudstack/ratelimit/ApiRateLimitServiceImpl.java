@@ -48,7 +48,7 @@ import com.cloud.utils.component.AdapterBase;
 
 @Component
 public class ApiRateLimitServiceImpl extends AdapterBase implements APIChecker, ApiRateLimitService {
-    protected static Logger s_logger = LogManager.getLogger(ApiRateLimitServiceImpl.class);
+    protected static Logger logger = LogManager.getLogger(ApiRateLimitServiceImpl.class);
 
     /**
      * True if api rate limiting is enabled
@@ -101,7 +101,7 @@ public class ApiRateLimitServiceImpl extends AdapterBase implements APIChecker, 
             CacheManager cm = CacheManager.create();
             Cache cache = new Cache("api-limit-cache", maxElements, false, false, timeToLive, timeToLive);
             cm.addCache(cache);
-            s_logger.info("Limit Cache created with timeToLive=" + timeToLive + ", maxAllowed=" + maxAllowed + ", maxElements=" + maxElements);
+            logger.info("Limit Cache created with timeToLive=" + timeToLive + ", maxAllowed=" + maxAllowed + ", maxElements=" + maxElements);
             cacheStore.setCache(cache);
             _store = cacheStore;
 
@@ -159,7 +159,7 @@ public class ApiRateLimitServiceImpl extends AdapterBase implements APIChecker, 
     public void throwExceptionDueToApiRateLimitReached(Long accountId) throws RequestLimitException {
         long expireAfter = _store.get(accountId).getExpireDuration();
         String msg = String.format("The given user has reached his/her account api limit, please retry after [%s] ms.", expireAfter);
-        s_logger.warn(msg);
+        logger.warn(msg);
         throw new RequestLimitException(msg);
     }
 
@@ -177,7 +177,7 @@ public class ApiRateLimitServiceImpl extends AdapterBase implements APIChecker, 
     public boolean checkAccess(Account account, String commandName) {
         Long accountId = account.getAccountId();
         if (_accountService.isRootAdmin(accountId)) {
-            s_logger.info(String.format("Account [%s] is Root Admin, in this case, API limit does not apply.",
+            logger.info(String.format("Account [%s] is Root Admin, in this case, API limit does not apply.",
                     ReflectionToStringBuilderUtils.reflectOnlySelectedFields(account, "accountName", "uuid")));
             return true;
         }
@@ -204,7 +204,7 @@ public class ApiRateLimitServiceImpl extends AdapterBase implements APIChecker, 
         int current = entry.incrementAndGet();
 
         if (current <= maxAllowed) {
-            s_logger.trace(String.format("Account %s has current count [%s].", ReflectionToStringBuilderUtils.reflectOnlySelectedFields(account, "uuid", "accountName"), current));
+            logger.trace(String.format("Account %s has current count [%s].", ReflectionToStringBuilderUtils.reflectOnlySelectedFields(account, "uuid", "accountName"), current));
             return false;
         }
         return true;
@@ -213,7 +213,7 @@ public class ApiRateLimitServiceImpl extends AdapterBase implements APIChecker, 
     @Override
     public boolean isEnabled() {
         if (!enabled) {
-            s_logger.debug("API rate limiting is disabled. We will not use ApiRateLimitService.");
+            logger.debug("API rate limiting is disabled. We will not use ApiRateLimitService.");
         }
         return enabled;
     }

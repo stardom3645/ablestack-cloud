@@ -31,7 +31,7 @@ import com.cloud.resource.ResourceWrapper;
 @ResourceWrapper(handles =  OvsSetupBridgeCommand.class)
 public final class LibvirtOvsSetupBridgeCommandWrapper extends CommandWrapper<OvsSetupBridgeCommand, Answer, LibvirtComputingResource> {
 
-    protected static Logger s_logger = LogManager.getLogger(LibvirtOvsSetupBridgeCommandWrapper.class);
+    protected static Logger logger = LogManager.getLogger(LibvirtOvsSetupBridgeCommandWrapper.class);
 
     @Override
     public Answer execute(final OvsSetupBridgeCommand command, final LibvirtComputingResource libvirtComputingResource) {
@@ -42,7 +42,7 @@ public final class LibvirtOvsSetupBridgeCommandWrapper extends CommandWrapper<Ov
         final boolean finalResult = findResult && configResult;
 
         if (!finalResult) {
-            s_logger.debug("::FAILURE:: OVS Bridge was NOT configured properly!");
+            logger.debug("::FAILURE:: OVS Bridge was NOT configured properly!");
         }
 
         return new Answer(command, finalResult, null);

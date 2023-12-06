@@ -66,7 +66,7 @@ import com.cloud.utils.db.TransactionStatus;
 import com.cloud.utils.net.NfsUtils;
 
 public class DatabaseConfig {
-    protected static Logger s_logger = LogManager.getLogger(DatabaseConfig.class.getName());
+    protected static Logger logger = LogManager.getLogger(DatabaseConfig.class.getName());
 
     private String _configFileName = null;
     private String _currentObjectName = null;
@@ -378,7 +378,7 @@ public class DatabaseConfig {
         }
 
         if (args.length < 1) {
-            s_logger.error("error starting database config, missing initial data file");
+            logger.error("error starting database config, missing initial data file");
         } else {
             try {
                 DatabaseConfig config = ComponentContext.inject(DatabaseConfig.class);
@@ -388,7 +388,7 @@ public class DatabaseConfig {
             } catch (Exception ex) {
                 System.out.print("Error Caught");
                 ex.printStackTrace();
-                s_logger.error("error", ex);
+                logger.error("error", ex);
             }
         }
     }
@@ -454,7 +454,7 @@ public class DatabaseConfig {
             pzc.checkAllPodCidrSubnets();
         } catch (Exception ex) {
             System.out.print("ERROR IS" + ex);
-            s_logger.error("error", ex);
+            logger.error("error", ex);
         }
     }
 
@@ -599,7 +599,7 @@ public class DatabaseConfig {
 
         } catch (SQLException ex) {
             System.out.println("Error creating cluster: " + ex.getMessage());
-            s_logger.error("error creating cluster", ex);
+            logger.error("error creating cluster", ex);
             return;
         }
 
@@ -646,7 +646,7 @@ public class DatabaseConfig {
 
         } catch (SQLException ex) {
             System.out.println("Error creating storage pool: " + ex.getMessage());
-            s_logger.error("error creating storage pool ", ex);
+            logger.error("error creating storage pool ", ex);
             return;
         }
 
@@ -750,7 +750,7 @@ public class DatabaseConfig {
             stmt.executeUpdate();
         } catch (SQLException ex) {
             System.out.println("Error creating physical network service provider: " + ex.getMessage());
-            s_logger.error("error creating physical network service provider", ex);
+            logger.error("error creating physical network service provider", ex);
             return;
         }
 
@@ -775,7 +775,7 @@ public class DatabaseConfig {
             stmt.executeUpdate();
         } catch (SQLException ex) {
             System.out.println("Error creating virtual router provider: " + ex.getMessage());
-            s_logger.error("error creating virtual router provider ", ex);
+            logger.error("error creating virtual router provider ", ex);
             return;
         }
 
@@ -961,7 +961,7 @@ public class DatabaseConfig {
         try {
             DiskOfferinDao.persist(diskOfferingVO);
         } catch (Exception e) {
-            s_logger.error("error creating disk offering", e);
+            logger.error("error creating disk offering", e);
         }
 
         serviceOffering.setDiskOfferingId(diskOfferingVO.getId());
@@ -969,7 +969,7 @@ public class DatabaseConfig {
         try {
             serviceOfferingDao.persist(serviceOffering);
         } catch (Exception e) {
-            s_logger.error("error creating service offering", e);
+            logger.error("error creating service offering", e);
         }
         /*
         String insertSql = "INSERT INTO `cloud`.`service_offering` (id, name, cpu, ram_size, speed, nw_rate, mc_rate, created, ha_enabled, mirrored, display_text, guest_ip_type, use_local_storage) " +
@@ -980,7 +980,7 @@ public class DatabaseConfig {
             PreparedStatement stmt = txn.prepareAutoCloseStatement(insertSql);
             stmt.executeUpdate();
         } catch (SQLException ex) {
-            s_logger.error("error creating service offering", ex);
+            logger.error("error creating service offering", ex);
             return;
         }
          */
@@ -1031,7 +1031,7 @@ public class DatabaseConfig {
         try {
             offering.persist(diskOffering);
         } catch (Exception e) {
-            s_logger.error("error creating disk offering", e);
+            logger.error("error creating disk offering", e);
 
         }
         /*
@@ -1044,7 +1044,7 @@ public class DatabaseConfig {
             stmt.setString(1, tags);
             stmt.executeUpdate();
         } catch (SQLException ex) {
-            s_logger.error("error creating disk offering", ex);
+            logger.error("error creating disk offering", ex);
             return;
         }
          */
@@ -1079,7 +1079,7 @@ public class DatabaseConfig {
             }
 
         } catch (SQLException ex) {
-            s_logger.error("error saving network and multicast throttling rates to all service offerings", ex);
+            logger.error("error saving network and multicast throttling rates to all service offerings", ex);
             return;
         }
     }
@@ -1107,7 +1107,7 @@ public class DatabaseConfig {
             PreparedStatement stmt = txn.prepareAutoCloseStatement(insertSql);
             stmt.executeUpdate();
         } catch (SQLException ex) {
-            s_logger.error("error creating vm template: " + ex);
+            logger.error("error creating vm template: " + ex);
         } finally {
             txn.close();
         }
@@ -1130,7 +1130,7 @@ public class DatabaseConfig {
             PreparedStatement stmt = txn.prepareAutoCloseStatement(insertSql);
             stmt.executeUpdate();
         } catch (SQLException ex) {
-            s_logger.error("error creating vm template: " + ex);
+            logger.error("error creating vm template: " + ex);
         } finally {
             txn.close();
         }
@@ -1146,7 +1146,7 @@ public class DatabaseConfig {
             PreparedStatement stmt = txn.prepareAutoCloseStatement(insertSystemAccount);
             stmt.executeUpdate();
         } catch (SQLException ex) {
-            s_logger.error("error creating system account", ex);
+            logger.error("error creating system account", ex);
         }
 
         // insert system user
@@ -1158,7 +1158,7 @@ public class DatabaseConfig {
             PreparedStatement stmt = txn.prepareAutoCloseStatement(insertSystemUser);
             stmt.executeUpdate();
         } catch (SQLException ex) {
-            s_logger.error("error creating system user", ex);
+            logger.error("error creating system user", ex);
         }
 
         // insert admin user
@@ -1178,7 +1178,7 @@ public class DatabaseConfig {
         try {
             pwDigest = DigestHelper.getPaddedDigest(algorithm, password);
         } catch (NoSuchAlgorithmException e) {
-            s_logger.error("error saving user", e);
+            logger.error("error saving user", e);
             return;
         }
 
@@ -1191,7 +1191,7 @@ public class DatabaseConfig {
             stmt.setString(2, username);
             stmt.executeUpdate();
         } catch (SQLException ex) {
-            s_logger.error("error creating account", ex);
+            logger.error("error creating account", ex);
         }
 
         // now insert the user
@@ -1208,7 +1208,7 @@ public class DatabaseConfig {
             stmt.setString(6, email);
             stmt.executeUpdate();
         } catch (SQLException ex) {
-            s_logger.error("error creating user", ex);
+            logger.error("error creating user", ex);
         }
     }
 
@@ -1276,7 +1276,7 @@ public class DatabaseConfig {
                 stmt.executeUpdate();
             }
         } catch (SQLException ex) {
-            s_logger.error("error creating configuration", ex);
+            logger.error("error creating configuration", ex);
         }
     }
 
@@ -1289,17 +1289,17 @@ public class DatabaseConfig {
         }
 
         if (!IPRangeConfig.validIP(startIP)) {
-            s_logger.error("The private IP address: " + startIP + " is invalid.");
+            logger.error("The private IP address: " + startIP + " is invalid.");
             return false;
         }
 
         if (!IPRangeConfig.validOrBlankIP(endIP)) {
-            s_logger.error("The private IP address: " + endIP + " is invalid.");
+            logger.error("The private IP address: " + endIP + " is invalid.");
             return false;
         }
 
         if (!IPRangeConfig.validIPRange(startIP, endIP)) {
-            s_logger.error("The  IP range " + startIP + " -> " + endIP + " is invalid.");
+            logger.error("The  IP range " + startIP + " -> " + endIP + " is invalid.");
             return false;
         }
 
@@ -1314,7 +1314,7 @@ public class DatabaseConfig {
             PreparedStatement stmt = txn.prepareAutoCloseStatement(insertSql);
             stmt.executeUpdate();
         } catch (SQLException ex) {
-            s_logger.error("error creating ROOT domain", ex);
+            logger.error("error creating ROOT domain", ex);
         }
 
         /*
@@ -1324,7 +1324,7 @@ public class DatabaseConfig {
             PreparedStatement stmt = txn.prepareStatement(updateSql);
             stmt.executeUpdate();
         } catch (SQLException ex) {
-            s_logger.error("error updating admin user", ex);
+            logger.error("error updating admin user", ex);
         } finally {
             txn.close();
         }
@@ -1335,7 +1335,7 @@ public class DatabaseConfig {
             PreparedStatement stmt = txn.prepareStatement(updateSql);
             stmt.executeUpdate();
         } catch (SQLException ex) {
-            s_logger.error("error updating system user", ex);
+            logger.error("error updating system user", ex);
         } finally {
             txn.close();
         }

@@ -32,7 +32,7 @@ import com.cloud.utils.db.SearchCriteria;
 
 @Component
 public class ProjectInvitationDaoImpl extends GenericDaoBase<ProjectInvitationVO, Long> implements ProjectInvitationDao {
-    protected static Logger s_logger = LogManager.getLogger(ProjectInvitationDaoImpl.class);
+    protected static Logger logger = LogManager.getLogger(ProjectInvitationDaoImpl.class);
     protected final SearchBuilder<ProjectInvitationVO> AllFieldsSearch;
     protected final SearchBuilder<ProjectInvitationVO> InactiveSearch;
     protected final SearchBuilder<ProjectInvitationVO> ProjectAccountInviteSearch;
@@ -112,7 +112,7 @@ public class ProjectInvitationDaoImpl extends GenericDaoBase<ProjectInvitationVO
         for (ProjectInvitationVO invitationToExpire : invitationsToExpire) {
             invitationToExpire.setState(State.Expired);
             if (!update(invitationToExpire.getId(), invitationToExpire)) {
-                s_logger.warn("Fail to expire invitation " + invitationToExpire.toString());
+                logger.warn("Fail to expire invitation " + invitationToExpire.toString());
                 success = false;
             }
         }
@@ -134,7 +134,7 @@ public class ProjectInvitationDaoImpl extends GenericDaoBase<ProjectInvitationVO
         sc.setParameters("id", id);
 
         if (findOneBy(sc) == null) {
-            s_logger.warn("Unable to find project invitation by id " + id);
+            logger.warn("Unable to find project invitation by id " + id);
             return false;
         }
 
@@ -186,7 +186,7 @@ public class ProjectInvitationDaoImpl extends GenericDaoBase<ProjectInvitationVO
         sc.setParameters("projectId", projectId);
 
         int numberRemoved = remove(sc);
-        s_logger.debug("Removed " + numberRemoved + " invitations for project id=" + projectId);
+        logger.debug("Removed " + numberRemoved + " invitations for project id=" + projectId);
     }
 
 }

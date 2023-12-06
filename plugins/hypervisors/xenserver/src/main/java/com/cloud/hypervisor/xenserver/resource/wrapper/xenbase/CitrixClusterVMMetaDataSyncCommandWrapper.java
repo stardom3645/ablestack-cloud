@@ -37,7 +37,7 @@ import com.xensource.xenapi.Pool;
 @ResourceWrapper(handles =  ClusterVMMetaDataSyncCommand.class)
 public final class CitrixClusterVMMetaDataSyncCommandWrapper extends CommandWrapper<ClusterVMMetaDataSyncCommand, Answer, CitrixResourceBase> {
 
-    protected static Logger s_logger = LogManager.getLogger(CitrixClusterVMMetaDataSyncCommandWrapper.class);
+    protected static Logger logger = LogManager.getLogger(CitrixClusterVMMetaDataSyncCommandWrapper.class);
 
     @Override
     public Answer execute(final ClusterVMMetaDataSyncCommand command, final CitrixResourceBase citrixResourceBase) {
@@ -51,7 +51,7 @@ public final class CitrixClusterVMMetaDataSyncCommandWrapper extends CommandWrap
                 return new ClusterVMMetaDataSyncAnswer(command.getClusterId(), null);
             }
         } catch (final Throwable e) {
-            s_logger.warn("Check for master failed, failing the Cluster sync VMMetaData command");
+            logger.warn("Check for master failed, failing the Cluster sync VMMetaData command");
             return new ClusterVMMetaDataSyncAnswer(command.getClusterId(), null);
         }
         final HashMap<String, String> vmMetadatum = citrixResourceBase.clusterVMMetaDataSync(conn);

@@ -54,7 +54,7 @@ import com.cloud.user.Account;
             responseHasSensitiveInfo = false)
 public class AssignToGlobalLoadBalancerRuleCmd extends BaseAsyncCmd {
 
-    protected static Logger s_logger = LogManager.getLogger(AssignToGlobalLoadBalancerRuleCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(AssignToGlobalLoadBalancerRuleCmd.class.getName());
 
 
     /////////////////////////////////////////////////////

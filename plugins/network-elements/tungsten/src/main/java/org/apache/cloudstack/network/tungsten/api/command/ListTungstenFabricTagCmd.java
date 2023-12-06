@@ -47,7 +47,7 @@ import javax.inject.Inject;
 @APICommand(name = ListTungstenFabricTagCmd.APINAME, responseObject = TungstenFabricTagResponse.class,
     description = "Lists Tungsten-Fabric tags", requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class ListTungstenFabricTagCmd extends BaseListCmd {
-    protected static Logger s_logger = LogManager.getLogger(ListTungstenFabricTagCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(ListTungstenFabricTagCmd.class.getName());
     public static final String APINAME = "listTungstenFabricTag";
 
     @Inject

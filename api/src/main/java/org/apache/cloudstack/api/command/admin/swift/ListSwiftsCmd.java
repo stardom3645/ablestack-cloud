@@ -32,7 +32,7 @@ import com.cloud.user.Account;
 @APICommand(name = "listSwifts", description = "List Swift.", responseObject = ImageStoreResponse.class, since = "3.0.0",
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class ListSwiftsCmd extends BaseListCmd {
-    protected static Logger s_logger = LogManager.getLogger(ListSwiftsCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(ListSwiftsCmd.class.getName());
 
     /////////////////////////////////////////////////////
     //////////////// API parameters /////////////////////

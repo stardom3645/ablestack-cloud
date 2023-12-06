@@ -35,7 +35,7 @@ import com.cloud.user.Account;
 @APICommand(name = "deleteVPCOffering", description = "Deletes VPC offering", responseObject = SuccessResponse.class,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class DeleteVPCOfferingCmd extends BaseAsyncCmd {
-    protected static Logger s_logger = LogManager.getLogger(DeleteVPCOfferingCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(DeleteVPCOfferingCmd.class.getName());
 
     /////////////////////////////////////////////////////
     //////////////// API parameters /////////////////////

@@ -33,7 +33,7 @@ import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
 public class LibvirtStorageVolumeXMLParser {
-    protected static Logger s_logger = LogManager.getLogger(LibvirtStorageVolumeXMLParser.class);
+    protected static Logger logger = LogManager.getLogger(LibvirtStorageVolumeXMLParser.class);
 
     public LibvirtStorageVolumeDef parseStorageVolumeXML(String volXML) {
         DocumentBuilder builder;
@@ -52,11 +52,11 @@ public class LibvirtStorageVolumeXMLParser {
             Long capacity = Long.parseLong(getTagValue("capacity", rootElement));
             return new LibvirtStorageVolumeDef(VolName, capacity, LibvirtStorageVolumeDef.VolumeFormat.getFormat(format), null, null);
         } catch (ParserConfigurationException e) {
-            s_logger.debug(e.toString());
+            logger.debug(e.toString());
         } catch (SAXException e) {
-            s_logger.debug(e.toString());
+            logger.debug(e.toString());
         } catch (IOException e) {
-            s_logger.debug(e.toString());
+            logger.debug(e.toString());
         }
         return null;
     }

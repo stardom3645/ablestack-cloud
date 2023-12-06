@@ -41,7 +41,7 @@ import com.cloud.vm.VirtualMachine;
 @APICommand(name = "stopRouter", description = "Stops a router.", responseObject = DomainRouterResponse.class, entityType = {VirtualMachine.class},
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class StopRouterCmd extends BaseAsyncCmd {
-    protected static Logger s_logger = LogManager.getLogger(StopRouterCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(StopRouterCmd.class.getName());
 
     // ///////////////////////////////////////////////////
     // ////////////// API parameters /////////////////////

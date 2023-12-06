@@ -32,7 +32,7 @@ import org.apache.cloudstack.api.response.UserVmResponse;
 @APICommand(name = "listAffinityGroups", description = "Lists affinity groups", responseObject = AffinityGroupResponse.class, entityType = {AffinityGroup.class},
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class ListAffinityGroupsCmd extends BaseListProjectAndAccountResourcesCmd {
-    protected static Logger s_logger = LogManager.getLogger(ListAffinityGroupsCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(ListAffinityGroupsCmd.class.getName());
 
 
     /////////////////////////////////////////////////////

@@ -30,7 +30,7 @@ import com.cloud.utils.nio.Link;
  * ConnectedAgentAttache implements a direct connection to this management server.
  */
 public class ConnectedAgentAttache extends AgentAttache {
-    protected static Logger s_logger = LogManager.getLogger(ConnectedAgentAttache.class);
+    protected static Logger logger = LogManager.getLogger(ConnectedAgentAttache.class);
 
     protected Link _link;
 
@@ -56,7 +56,7 @@ public class ConnectedAgentAttache extends AgentAttache {
     @Override
     public void disconnect(final Status state) {
         synchronized (this) {
-            s_logger.debug("Processing Disconnect.");
+            logger.debug("Processing Disconnect.");
             if (_link != null) {
                 _link.close();
                 _link.terminated();
@@ -101,7 +101,7 @@ public class ConnectedAgentAttache extends AgentAttache {
             assert _link == null : "Duh...Says you....Forgot to call disconnect()!";
             synchronized (this) {
                 if (_link != null) {
-                    s_logger.warn("Lost attache " + _id + "(" + _name + ")");
+                    logger.warn("Lost attache " + _id + "(" + _name + ")");
                     disconnect(Status.Alert);
                 }
             }

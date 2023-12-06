@@ -63,7 +63,7 @@ import com.cloud.utils.db.TransactionStatus;
 import com.cloud.utils.exception.CloudRuntimeException;
 
 public class OpenDaylightControllerResourceManagerImpl implements OpenDaylightControllerResourceManager {
-    private final static Logger s_logger = LogManager.getLogger(OpenDaylightControllerResourceManagerImpl.class);
+    private final static Logger logger = LogManager.getLogger(OpenDaylightControllerResourceManagerImpl.class);
 
     @Inject
     HostDao hostDao;

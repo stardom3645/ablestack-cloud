@@ -42,7 +42,7 @@ import org.apache.cloudstack.network.tls.CertService;
 @APICommand(name = "uploadSslCert", description = "Upload a certificate to CloudStack", responseObject = SslCertResponse.class,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class UploadSslCertCmd extends BaseCmd {
-    protected static Logger s_logger = LogManager.getLogger(UploadSslCertCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(UploadSslCertCmd.class.getName());
 
 
     @Inject

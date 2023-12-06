@@ -37,7 +37,7 @@ import org.apache.logging.log4j.LogManager;
 @APICommand(name = "notifyBaremetalProvisionDone", description = "Notify provision has been done on a host. This api is for baremetal virtual router service, not for end user", responseObject = SuccessResponse.class,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class BaremetalProvisionDoneNotificationCmd extends BaseAsyncCmd {
-    protected static Logger s_logger = LogManager.getLogger(BaremetalProvisionDoneNotificationCmd.class);
+    protected static Logger logger = LogManager.getLogger(BaremetalProvisionDoneNotificationCmd.class);
     private static final String s_name = "baremetalprovisiondone";
 
     @Inject
@@ -62,7 +62,7 @@ public class BaremetalProvisionDoneNotificationCmd extends BaseAsyncCmd {
             bmMgr.notifyProvisionDone(this);
             this.setResponseObject(new SuccessResponse(getCommandName()));
         } catch (Exception e) {
-            s_logger.warn(String.format("unable to notify baremetal provision done[mac:%s]", mac), e);
+            logger.warn(String.format("unable to notify baremetal provision done[mac:%s]", mac), e);
             throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, e.getMessage());
         }
     }

@@ -45,7 +45,7 @@ import com.cloud.utils.exception.CloudRuntimeException;
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class ListNetscalerLoadBalancersCmd extends BaseListCmd {
 
-    protected static Logger s_logger = LogManager.getLogger(ListNetscalerLoadBalancersCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(ListNetscalerLoadBalancersCmd.class.getName());
     private static final String s_name = "listnetscalerloadbalancerresponse";
     @Inject
     NetscalerLoadBalancerElementService _netsclarLbService;

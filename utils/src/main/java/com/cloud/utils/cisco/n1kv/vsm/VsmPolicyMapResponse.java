@@ -27,7 +27,7 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 public class VsmPolicyMapResponse extends VsmResponse {
-    protected static Logger s_logger = LogManager.getLogger(VsmPolicyMapResponse.class);
+    protected static Logger logger = LogManager.getLogger(VsmPolicyMapResponse.class);
     private static final String s_policyMapDetails = "__XML__OPT_Cmd_show_policy-map___readonly__";
 
     private PolicyMap _policyMap = new PolicyMap();
@@ -79,7 +79,7 @@ public class VsmPolicyMapResponse extends VsmResponse {
                 }
             }
         } catch (DOMException e) {
-            s_logger.error("Error parsing the response : " + e.toString());
+            logger.error("Error parsing the response : " + e.toString());
         }
     }
 }

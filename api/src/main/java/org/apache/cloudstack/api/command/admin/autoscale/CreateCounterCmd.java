@@ -36,7 +36,7 @@ import com.cloud.user.Account;
 @APICommand(name = "createCounter", description = "Adds metric counter for VM auto scaling", responseObject = CounterResponse.class,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class CreateCounterCmd extends BaseAsyncCreateCmd {
-    protected static Logger s_logger = LogManager.getLogger(CreateCounterCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(CreateCounterCmd.class.getName());
     private static final String s_name = "counterresponse";
 
     // ///////////////////////////////////////////////////

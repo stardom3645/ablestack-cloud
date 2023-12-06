@@ -38,7 +38,7 @@ import com.cloud.utils.db.TransactionLegacy;
  */
 @Component
 public class NetworkACLItemCidrsDaoImpl extends GenericDaoBase<NetworkACLItemCidrsVO, Long> implements NetworkACLItemCidrsDao {
-    protected static Logger s_logger = LogManager.getLogger(NetworkACLItemCidrsDaoImpl.class);
+    protected static Logger logger = LogManager.getLogger(NetworkACLItemCidrsDaoImpl.class);
     protected final SearchBuilder<NetworkACLItemCidrsVO> cidrsSearch;
 
     protected NetworkACLItemCidrsDaoImpl() {

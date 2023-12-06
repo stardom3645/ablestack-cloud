@@ -37,7 +37,7 @@ import com.cloud.utils.exception.CloudRuntimeException;
 
 @Component
 public class HighAvailabilityDaoImpl extends GenericDaoBase<HaWorkVO, Long> implements HighAvailabilityDao {
-    protected static Logger s_logger = LogManager.getLogger(HighAvailabilityDaoImpl.class);
+    protected static Logger logger = LogManager.getLogger(HighAvailabilityDaoImpl.class);
 
     private final SearchBuilder<HaWorkVO> TBASearch;
     private final SearchBuilder<HaWorkVO> PreviousInstanceSearch;

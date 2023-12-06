@@ -32,7 +32,7 @@ import com.cloud.server.ResourceTag;
 @APICommand(name = "removeResourceDetail", description = "Removes detail for the Resource.", responseObject = SuccessResponse.class,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class RemoveResourceDetailCmd extends BaseAsyncCmd {
-    protected static Logger s_logger = LogManager.getLogger(RemoveResourceDetailCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(RemoveResourceDetailCmd.class.getName());
 
     /////////////////////////////////////////////////////
     //////////////// API parameters /////////////////////

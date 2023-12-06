@@ -43,7 +43,7 @@ import java.util.Map;
         since = "4.4.0", requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class UpdateGuestOsCmd extends BaseAsyncCmd {
 
-    protected static Logger s_logger = LogManager.getLogger(UpdateGuestOsCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(UpdateGuestOsCmd.class.getName());
 
 
     /////////////////////////////////////////////////////

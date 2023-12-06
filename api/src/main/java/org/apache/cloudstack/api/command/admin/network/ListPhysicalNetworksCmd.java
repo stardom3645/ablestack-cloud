@@ -39,7 +39,7 @@ import com.cloud.utils.Pair;
 @APICommand(name = "listPhysicalNetworks", description = "Lists physical networks", responseObject = PhysicalNetworkResponse.class, since = "3.0.0",
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class ListPhysicalNetworksCmd extends BaseListCmd {
-    protected static Logger s_logger = LogManager.getLogger(ListPhysicalNetworksCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(ListPhysicalNetworksCmd.class.getName());
 
 
     /////////////////////////////////////////////////////

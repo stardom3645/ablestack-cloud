@@ -42,7 +42,7 @@ import javax.inject.Inject;
     responseObject = TungstenFabricAddressGroupResponse.class, requestHasSensitiveInfo = false,
     responseHasSensitiveInfo = false)
 public class CreateTungstenFabricAddressGroupCmd extends BaseAsyncCmd {
-    protected static Logger s_logger = LogManager.getLogger(CreateTungstenFabricAddressGroupCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(CreateTungstenFabricAddressGroupCmd.class.getName());
     public static final String APINAME = "createTungstenFabricAddressGroup";
 
     @Inject

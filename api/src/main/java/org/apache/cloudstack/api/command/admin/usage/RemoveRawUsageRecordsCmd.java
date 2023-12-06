@@ -34,7 +34,7 @@ import org.apache.logging.log4j.LogManager;
 
 @APICommand(name = "removeRawUsageRecords", description = "Safely removes raw records from cloud_usage table", responseObject = SuccessResponse.class, since = "4.6.0", requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class RemoveRawUsageRecordsCmd extends BaseCmd {
-    protected static Logger s_logger = LogManager.getLogger(RemoveRawUsageRecordsCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(RemoveRawUsageRecordsCmd.class.getName());
 
 
     /////////////////////////////////////////////////////

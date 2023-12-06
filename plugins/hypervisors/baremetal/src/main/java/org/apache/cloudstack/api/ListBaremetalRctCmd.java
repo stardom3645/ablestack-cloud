@@ -37,7 +37,7 @@ import java.util.List;
 @APICommand(name = "listBaremetalRct", description = "list baremetal rack configuration", responseObject = BaremetalRctResponse.class,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false, authorized = {RoleType.Admin})
 public class ListBaremetalRctCmd extends BaseListCmd {
-    protected static Logger s_logger = LogManager.getLogger(ListBaremetalRctCmd.class);
+    protected static Logger logger = LogManager.getLogger(ListBaremetalRctCmd.class);
     @Inject
     BaremetalVlanManager vlanMgr;
 
@@ -56,7 +56,7 @@ public class ListBaremetalRctCmd extends BaseListCmd {
             response.setObjectName("baremetalrcts");
             this.setResponseObject(response);
         } catch (Exception e) {
-            s_logger.debug("Exception happened while executing ListBaremetalRctCmd", e);
+            logger.debug("Exception happened while executing ListBaremetalRctCmd", e);
             throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, e.getMessage());
         }
     }

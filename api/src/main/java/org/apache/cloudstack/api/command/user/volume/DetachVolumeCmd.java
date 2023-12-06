@@ -43,7 +43,7 @@ import com.cloud.vm.VirtualMachine;
 @APICommand(name = "detachVolume", description = "Detaches a disk volume from a virtual machine.", responseObject = VolumeResponse.class, responseView = ResponseView.Restricted, entityType = {VirtualMachine.class},
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class DetachVolumeCmd extends BaseAsyncCmd implements UserCmd {
-    protected static Logger s_logger = LogManager.getLogger(DetachVolumeCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(DetachVolumeCmd.class.getName());
     private static final String s_name = "detachvolumeresponse";
 
     /////////////////////////////////////////////////////

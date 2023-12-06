@@ -44,7 +44,7 @@ import com.cloud.network.Network;
             requestHasSensitiveInfo = false,
             responseHasSensitiveInfo = false)
 public class RestartNetworkCmd extends BaseAsyncCmd {
-    protected static Logger s_logger = LogManager.getLogger(RestartNetworkCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(RestartNetworkCmd.class.getName());
 
     /////////////////////////////////////////////////////
     //////////////// API parameters /////////////////////

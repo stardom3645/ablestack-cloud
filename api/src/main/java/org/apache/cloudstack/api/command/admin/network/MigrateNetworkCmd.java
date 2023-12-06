@@ -49,7 +49,7 @@ import com.cloud.user.User;
             since = "4.11.0",
             authorized = {RoleType.Admin})
 public class MigrateNetworkCmd extends BaseAsyncCmd {
-    protected static Logger s_logger = LogManager.getLogger(MigrateNetworkCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(MigrateNetworkCmd.class.getName());
 
 
     /////////////////////////////////////////////////////

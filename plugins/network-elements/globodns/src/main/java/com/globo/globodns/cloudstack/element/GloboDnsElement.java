@@ -81,7 +81,7 @@ import com.globo.globodns.cloudstack.resource.GloboDnsResource;
 @Component
 public class GloboDnsElement extends AdapterBase implements ResourceStateAdapter, NetworkElement, GloboDnsElementService, Configurable {
 
-    protected static Logger s_logger = LogManager.getLogger(GloboDnsElement.class);
+    protected static Logger logger = LogManager.getLogger(GloboDnsElement.class);
 
     private static final Map<Service, Map<Capability, String>> capabilities = setCapabilities();
 
@@ -133,7 +133,7 @@ public class GloboDnsElement extends AdapterBase implements ResourceStateAdapter
             throws ConcurrentOperationException, ResourceUnavailableException, InsufficientCapacityException {
 
         if (!isTypeSupported(vm.getType())) {
-            s_logger.info("GloboDNS only manages records for VMs of type User, ConsoleProxy and DomainRouter. VM " + vm + " is " + vm.getType());
+            logger.info("GloboDNS only manages records for VMs of type User, ConsoleProxy and DomainRouter. VM " + vm + " is " + vm.getType());
             return false;
         }
 
@@ -163,7 +163,7 @@ public class GloboDnsElement extends AdapterBase implements ResourceStateAdapter
             ResourceUnavailableException {
 
         if (!isTypeSupported(vm.getType())) {
-            s_logger.info("GloboDNS only manages records for VMs of type User, ConsoleProxy and DomainRouter. VM " + vm + " is " + vm.getType());
+            logger.info("GloboDNS only manages records for VMs of type User, ConsoleProxy and DomainRouter. VM " + vm + " is " + vm.getType());
             return false;
         }
 

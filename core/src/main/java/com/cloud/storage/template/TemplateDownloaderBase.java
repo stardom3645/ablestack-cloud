@@ -29,7 +29,7 @@ import org.apache.cloudstack.managed.context.ManagedContextRunnable;
 import com.cloud.storage.StorageLayer;
 
 public abstract class TemplateDownloaderBase extends ManagedContextRunnable implements TemplateDownloader {
-    protected static Logger s_logger = LogManager.getLogger(TemplateDownloaderBase.class);
+    protected static Logger logger = LogManager.getLogger(TemplateDownloaderBase.class);
 
     protected String _downloadUrl;
     protected String _toFile;
@@ -134,7 +134,7 @@ public abstract class TemplateDownloaderBase extends ManagedContextRunnable impl
         try {
             download(_resume, _callback);
         } catch (Exception e) {
-            s_logger.warn("Unable to complete download due to ", e);
+            logger.warn("Unable to complete download due to ", e);
             _errorString = "Failed to install: " + e.getMessage();
             _status = TemplateDownloader.Status.UNRECOVERABLE_ERROR;
         }

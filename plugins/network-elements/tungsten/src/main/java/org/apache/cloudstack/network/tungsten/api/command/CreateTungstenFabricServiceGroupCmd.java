@@ -41,7 +41,7 @@ import javax.inject.Inject;
 @APICommand(name = CreateTungstenFabricServiceGroupCmd.APINAME, description = "create Tungsten-Fabric service group",
     responseObject = TungstenFabricServiceGroupResponse.class, requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class CreateTungstenFabricServiceGroupCmd extends BaseAsyncCmd {
-    protected static Logger s_logger = LogManager.getLogger(CreateTungstenFabricServiceGroupCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(CreateTungstenFabricServiceGroupCmd.class.getName());
 
     public static final String APINAME = "createTungstenFabricServiceGroup";
 

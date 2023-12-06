@@ -51,7 +51,7 @@ public class ListVmwareDcsCmd extends BaseListCmd {
     @Inject
     public VmwareDatacenterService _vmwareDatacenterService;
 
-    protected static Logger s_logger = LogManager.getLogger(ListVmwareDcsCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(ListVmwareDcsCmd.class.getName());
 
 
     /////////////////////////////////////////////////////

@@ -35,7 +35,7 @@ import com.cloud.vm.VirtualMachine;
 @APICommand(name = "changeServiceForRouter", description = "Upgrades domain router to a new service offering", responseObject = DomainRouterResponse.class, entityType = {VirtualMachine.class},
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class UpgradeRouterCmd extends BaseCmd {
-    protected static Logger s_logger = LogManager.getLogger(UpgradeRouterCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(UpgradeRouterCmd.class.getName());
 
     /////////////////////////////////////////////////////
     //////////////// API parameters /////////////////////

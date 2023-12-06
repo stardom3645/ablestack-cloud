@@ -38,7 +38,7 @@ import com.cloud.utils.Pair;
 @APICommand(name = "listPortForwardingRules", description = "Lists all port forwarding rules for an IP address.", responseObject = FirewallRuleResponse.class, entityType = {PortForwardingRule.class},
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class ListPortForwardingRulesCmd extends BaseListTaggedResourcesCmd {
-    protected static Logger s_logger = LogManager.getLogger(ListPortForwardingRulesCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(ListPortForwardingRulesCmd.class.getName());
 
 
     /////////////////////////////////////////////////////

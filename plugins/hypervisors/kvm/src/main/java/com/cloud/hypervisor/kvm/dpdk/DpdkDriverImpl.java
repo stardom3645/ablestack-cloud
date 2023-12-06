@@ -32,7 +32,7 @@ public class DpdkDriverImpl extends AdapterBase implements DpdkDriver {
     private final String dpdkPortVhostUserType = "dpdkvhostuser";
     private final String dpdkPortVhostUserClientType = "dpdkvhostuserclient";
 
-    protected static Logger s_logger = LogManager.getLogger(DpdkDriver.class);
+    protected static Logger logger = LogManager.getLogger(DpdkDriver.class);
 
     public DpdkDriverImpl() {
     }
@@ -49,7 +49,7 @@ public class DpdkDriverImpl extends AdapterBase implements DpdkDriver {
      * Get the latest DPDK port number created on a DPDK enabled host
      */
     public int getDpdkLatestPortNumberUsed() {
-        s_logger.debug("Checking the last DPDK port created");
+        logger.debug("Checking the last DPDK port created");
         String cmd = "ovs-vsctl show | grep Port | grep " + DPDK_PORT_PREFIX + " | " +
                 "awk '{ print $2 }' | sort -rV | head -1";
         String port = Script.runSimpleBashScript(cmd);
@@ -83,7 +83,7 @@ public class DpdkDriverImpl extends AdapterBase implements DpdkDriver {
         }
 
         String cmd = stringBuilder.toString();
-        s_logger.debug("DPDK property enabled, executing: " + cmd);
+        logger.debug("DPDK property enabled, executing: " + cmd);
         Script.runSimpleBashScript(cmd);
     }
 

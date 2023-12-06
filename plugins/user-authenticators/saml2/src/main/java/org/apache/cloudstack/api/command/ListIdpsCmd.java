@@ -44,7 +44,7 @@ import java.util.Map;
 
 @APICommand(name = "listIdps", description = "Returns list of discovered SAML Identity Providers", responseObject = IdpResponse.class, entityType = {})
 public class ListIdpsCmd extends BaseCmd implements APIAuthenticator {
-    protected static Logger s_logger = LogManager.getLogger(ListIdpsCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(ListIdpsCmd.class.getName());
 
     @Inject
     ApiServerService _apiServer;
@@ -103,7 +103,7 @@ public class ListIdpsCmd extends BaseCmd implements APIAuthenticator {
             }
         }
         if (_samlAuthManager == null) {
-            s_logger.error("No suitable Pluggable Authentication Manager found for SAML2 Login Cmd");
+            logger.error("No suitable Pluggable Authentication Manager found for SAML2 Login Cmd");
         }
     }
 }

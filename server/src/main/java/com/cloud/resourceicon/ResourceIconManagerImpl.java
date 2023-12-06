@@ -65,7 +65,7 @@ import com.cloud.utils.db.TransactionStatus;
 import com.cloud.utils.exception.CloudRuntimeException;
 
 public class ResourceIconManagerImpl extends ManagerBase implements ResourceIconManager {
-    protected static Logger s_logger = LogManager.getLogger(ResourceMetaDataManagerImpl.class);
+    protected static Logger logger = LogManager.getLogger(ResourceMetaDataManagerImpl.class);
 
     @Inject
     AccountService accountService;
@@ -212,7 +212,7 @@ public class ResourceIconManagerImpl extends ManagerBase implements ResourceIcon
         Account caller = CallContext.current().getCallingAccount();
         List<? extends ResourceIcon> resourceIcons = searchResourceIcons(resourceIds, resourceType);
         if (resourceIcons.isEmpty()) {
-            s_logger.debug("No resource Icon(s) uploaded for the specified resources");
+            logger.debug("No resource Icon(s) uploaded for the specified resources");
             return false;
         }
         Transaction.execute(new TransactionCallbackNoReturn() {
@@ -227,7 +227,7 @@ public class ResourceIconManagerImpl extends ManagerBase implements ResourceIcon
                     Long accountId = accountDomainPair.first();
                     resourceManagerUtil.checkResourceAccessible(accountId, domainId, String.format("Account ' %s ' doesn't have permissions to upload icon for resource ' %s ", caller, id));
                     resourceIconDao.remove(resourceIcon.getId());
-                    s_logger.debug("Removed icon for resources (" +
+                    logger.debug("Removed icon for resources (" +
                             String.join(", ", resourceIds) + ")");
                 }
             }

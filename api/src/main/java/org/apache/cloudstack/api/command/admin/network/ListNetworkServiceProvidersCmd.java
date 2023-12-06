@@ -41,7 +41,7 @@ import com.cloud.utils.Pair;
             requestHasSensitiveInfo = false,
             responseHasSensitiveInfo = false)
 public class ListNetworkServiceProvidersCmd extends BaseListCmd {
-    protected static Logger s_logger = LogManager.getLogger(ListNetworkServiceProvidersCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(ListNetworkServiceProvidersCmd.class.getName());
 
     /////////////////////////////////////////////////////
     //////////////// API parameters /////////////////////

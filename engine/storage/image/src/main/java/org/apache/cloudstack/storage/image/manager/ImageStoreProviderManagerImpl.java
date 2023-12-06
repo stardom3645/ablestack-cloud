@@ -52,7 +52,7 @@ import com.cloud.storage.dao.VMTemplateDao;
 
 @Component
 public class ImageStoreProviderManagerImpl implements ImageStoreProviderManager, Configurable {
-    protected static Logger s_logger = LogManager.getLogger(ImageStoreProviderManagerImpl.class);
+    protected static Logger logger = LogManager.getLogger(ImageStoreProviderManagerImpl.class);
     @Inject
     ImageStoreDao dataStoreDao;
     @Inject
@@ -159,7 +159,7 @@ public class ImageStoreProviderManagerImpl implements ImageStoreProviderManager,
     @Override
     public List<DataStore> listImageCacheStores(Scope scope) {
         if (scope.getScopeType() != ScopeType.ZONE) {
-            s_logger.debug("only support zone wide image cache stores");
+            logger.debug("only support zone wide image cache stores");
             return null;
         }
         List<ImageStoreVO> stores = dataStoreDao.findImageCacheByScope(new ZoneScope(scope.getScopeId()));
@@ -201,7 +201,7 @@ public class ImageStoreProviderManagerImpl implements ImageStoreProviderManager,
         }
 
         // No store with space found
-        s_logger.error(String.format("Can't find an image storage in zone with less than %d usage",
+        logger.error(String.format("Can't find an image storage in zone with less than %d usage",
                 Math.round(_statsCollector.getImageStoreCapacityThreshold()*100)));
         return null;
     }
@@ -243,7 +243,7 @@ public class ImageStoreProviderManagerImpl implements ImageStoreProviderManager,
 
         // No store with space found
         if (stores.isEmpty()) {
-            s_logger.error(String.format("Can't find image storage in zone with less than %d usage",
+            logger.error(String.format("Can't find image storage in zone with less than %d usage",
                     Math.round(_statsCollector.getImageStoreCapacityThreshold() * 100)));
         }
         return stores;

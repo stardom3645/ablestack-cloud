@@ -39,7 +39,7 @@ import com.cloud.utils.Pair;
 @APICommand(name = "listLoadBalancers", description = "Lists internal load balancers", responseObject = ApplicationLoadBalancerResponse.class, since = "4.2.0",
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class ListApplicationLoadBalancersCmd extends BaseListTaggedResourcesCmd {
-    protected static Logger s_logger = LogManager.getLogger(ListApplicationLoadBalancersCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(ListApplicationLoadBalancersCmd.class.getName());
 
 
     // ///////////////////////////////////////////////////

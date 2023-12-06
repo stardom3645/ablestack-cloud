@@ -37,7 +37,7 @@ import javax.inject.Inject;
 
 @APICommand(name = "quotaSummary", responseObject = QuotaSummaryResponse.class, description = "Lists balance and quota usage for all accounts", since = "4.7.0", requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class QuotaSummaryCmd extends BaseListCmd {
-    protected static Logger s_logger = LogManager.getLogger(QuotaSummaryCmd.class);
+    protected static Logger logger = LogManager.getLogger(QuotaSummaryCmd.class);
 
     @Parameter(name = ApiConstants.ACCOUNT, type = CommandType.STRING, required = false, description = "Optional, Account Id for which statement needs to be generated")
     private String accountName;

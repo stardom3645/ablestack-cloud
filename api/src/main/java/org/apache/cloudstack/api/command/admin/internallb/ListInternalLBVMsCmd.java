@@ -40,7 +40,7 @@ import com.cloud.vm.VirtualMachine;
 @APICommand(name = "listInternalLoadBalancerVMs", description = "List internal LB VMs.", responseObject = DomainRouterResponse.class, entityType = {VirtualMachine.class},
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class ListInternalLBVMsCmd extends BaseListProjectAndAccountResourcesCmd {
-    protected static Logger s_logger = LogManager.getLogger(ListInternalLBVMsCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(ListInternalLBVMsCmd.class.getName());
 
     private static final String s_name = "listinternallbvmsresponse";
 

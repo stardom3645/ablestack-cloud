@@ -26,7 +26,7 @@ import java.util.List;
 import java.util.Map;
 
 public class SkipHeuresticsPlanner extends FirstFitPlanner implements HAPlanner {
-    protected static Logger s_logger = LogManager.getLogger(SkipHeuresticsPlanner.class);
+    protected static Logger logger = LogManager.getLogger(SkipHeuresticsPlanner.class);
 
 
     /**
@@ -38,8 +38,8 @@ public class SkipHeuresticsPlanner extends FirstFitPlanner implements HAPlanner 
     @Override
     protected void removeClustersCrossingThreshold(List<Long> clusterListForVmAllocation, ExcludeList avoid,
                                                    VirtualMachineProfile vmProfile, DeploymentPlan plan){
-        if (s_logger.isDebugEnabled()) {
-            s_logger.debug("Deploying vm during HA process, so skipping disable threshold check");
+        if (logger.isDebugEnabled()) {
+            logger.debug("Deploying vm during HA process, so skipping disable threshold check");
         }
         return;
     }

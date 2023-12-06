@@ -33,7 +33,7 @@ import com.cloud.user.Account;
 @APICommand(name = "deleteImageStore", description = "Deletes an image store or Secondary Storage.", responseObject = SuccessResponse.class, since = "4.2.0",
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class DeleteImageStoreCmd extends BaseCmd {
-    protected static Logger s_logger = LogManager.getLogger(DeleteImageStoreCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(DeleteImageStoreCmd.class.getName());
 
 
     // ///////////////////////////////////////////////////

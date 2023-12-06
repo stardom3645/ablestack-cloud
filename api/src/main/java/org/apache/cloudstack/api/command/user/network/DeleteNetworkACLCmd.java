@@ -37,7 +37,7 @@ import com.cloud.user.Account;
 @APICommand(name = "deleteNetworkACL", description = "Deletes a network ACL", responseObject = SuccessResponse.class,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class DeleteNetworkACLCmd extends BaseAsyncCmd {
-    protected static Logger s_logger = LogManager.getLogger(DeleteNetworkACLCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(DeleteNetworkACLCmd.class.getName());
 
     /////////////////////////////////////////////////////
     //////////////// API parameters /////////////////////

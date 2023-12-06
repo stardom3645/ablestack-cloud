@@ -38,7 +38,7 @@ import com.cloud.network.rules.FirewallRule;
 @APICommand(name = "deleteIpForwardingRule", description = "Deletes an IP forwarding rule", responseObject = SuccessResponse.class,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class DeleteIpForwardingRuleCmd extends BaseAsyncCmd {
-    protected static Logger s_logger = LogManager.getLogger(DeleteIpForwardingRuleCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(DeleteIpForwardingRuleCmd.class.getName());
 
 
     /////////////////////////////////////////////////////

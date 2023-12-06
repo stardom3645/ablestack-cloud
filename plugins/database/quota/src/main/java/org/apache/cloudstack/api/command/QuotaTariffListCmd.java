@@ -39,7 +39,7 @@ import java.util.List;
 
 @APICommand(name = "quotaTariffList", responseObject = QuotaTariffResponse.class, description = "Lists all quota tariff plans", since = "4.7.0", requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class QuotaTariffListCmd extends BaseListCmd {
-    protected static Logger s_logger = LogManager.getLogger(QuotaTariffListCmd.class);
+    protected static Logger logger = LogManager.getLogger(QuotaTariffListCmd.class);
 
     @Inject
     QuotaResponseBuilder _responseBuilder;
@@ -72,7 +72,7 @@ public class QuotaTariffListCmd extends BaseListCmd {
 
         final List<QuotaTariffResponse> responses = new ArrayList<>();
 
-        s_logger.trace(String.format("Adding quota tariffs [%s] to response of API quotaTariffList.", ReflectionToStringBuilderUtils.reflectCollection(responses)));
+        logger.trace(String.format("Adding quota tariffs [%s] to response of API quotaTariffList.", ReflectionToStringBuilderUtils.reflectCollection(responses)));
 
         for (final QuotaTariffVO resource : result.first()) {
             responses.add(_responseBuilder.createQuotaTariffResponse(resource));

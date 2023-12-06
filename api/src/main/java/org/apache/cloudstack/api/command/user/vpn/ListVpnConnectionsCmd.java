@@ -37,7 +37,7 @@ import com.cloud.utils.Pair;
 @APICommand(name = "listVpnConnections", description = "Lists site to site vpn connection gateways", responseObject = Site2SiteVpnConnectionResponse.class, entityType = {Site2SiteVpnConnection.class},
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class ListVpnConnectionsCmd extends BaseListProjectAndAccountResourcesCmd {
-    protected static Logger s_logger = LogManager.getLogger(ListVpnConnectionsCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(ListVpnConnectionsCmd.class.getName());
 
 
     /////////////////////////////////////////////////////

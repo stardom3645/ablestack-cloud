@@ -40,7 +40,7 @@ import com.cloud.utils.net.NetUtils;
         authorized = {RoleType.Admin})
 public class UpdateVlanIpRangeCmd extends BaseCmd {
 
-    protected static Logger s_logger = LogManager.getLogger(UpdateVlanIpRangeCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(UpdateVlanIpRangeCmd.class.getName());
 
     /////////////////////////////////////////////////////
     //////////////// API parameters /////////////////////
@@ -150,7 +150,7 @@ public class UpdateVlanIpRangeCmd extends BaseCmd {
                 throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, "Failed to Update vlan ip range");
             }
         } catch (ConcurrentOperationException ex) {
-            s_logger.warn("Exception: ", ex);
+            logger.warn("Exception: ", ex);
             throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, ex.getMessage());
         }
     }

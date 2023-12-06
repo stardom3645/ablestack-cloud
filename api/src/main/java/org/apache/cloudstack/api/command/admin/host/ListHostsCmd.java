@@ -47,7 +47,7 @@ import com.cloud.utils.Ternary;
 @APICommand(name = "listHosts", description = "Lists hosts.", responseObject = HostResponse.class,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class ListHostsCmd extends BaseListCmd {
-    protected static Logger s_logger = LogManager.getLogger(ListHostsCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(ListHostsCmd.class.getName());
 
 
     /////////////////////////////////////////////////////

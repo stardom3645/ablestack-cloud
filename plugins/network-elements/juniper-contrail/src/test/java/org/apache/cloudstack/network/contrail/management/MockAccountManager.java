@@ -74,7 +74,7 @@ import com.cloud.utils.db.TransactionCallbackNoReturn;
 import com.cloud.utils.db.TransactionStatus;
 
 public class MockAccountManager extends ManagerBase implements AccountManager {
-    protected static Logger s_logger = LogManager.getLogger(MockAccountManager.class);
+    protected static Logger logger = LogManager.getLogger(MockAccountManager.class);
 
     @Inject
     AccountDao _accountDao;
@@ -99,7 +99,7 @@ public class MockAccountManager extends ManagerBase implements AccountManager {
             throw new ConfigurationException("Unable to find the system user using " + User.UID_SYSTEM);
         }
         CallContext.register(_systemUser, _systemAccount);
-        s_logger.info("MockAccountManager initialization successful");
+        logger.info("MockAccountManager initialization successful");
         return true;
     }
 

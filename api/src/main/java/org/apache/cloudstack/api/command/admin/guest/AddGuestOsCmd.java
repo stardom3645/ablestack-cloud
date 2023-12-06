@@ -44,7 +44,7 @@ import java.util.Map;
 @APICommand(name = "addGuestOs", description = "Add a new guest OS type", responseObject = GuestOSResponse.class,
         since = "4.4.0", requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class AddGuestOsCmd extends BaseAsyncCreateCmd {
-    protected static Logger s_logger = LogManager.getLogger(AddGuestOsCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(AddGuestOsCmd.class.getName());
 
 
     /////////////////////////////////////////////////////

@@ -36,7 +36,7 @@ import com.cloud.user.Account;
 @APICommand(name = "createZone", description = "Creates a Zone.", responseObject = ZoneResponse.class,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class CreateZoneCmd extends BaseCmd {
-    protected static Logger s_logger = LogManager.getLogger(CreateZoneCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(CreateZoneCmd.class.getName());
 
 
     /////////////////////////////////////////////////////

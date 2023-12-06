@@ -47,7 +47,7 @@ import com.cloud.vm.VirtualMachine.Event;
 import com.cloud.vm.VirtualMachine.State;
 
 public class BaremetalManagerImpl extends ManagerBase implements BaremetalManager, StateListener<State, VirtualMachine.Event, VirtualMachine> {
-    protected static Logger s_logger = LogManager.getLogger(BaremetalManagerImpl.class);
+    protected static Logger logger = LogManager.getLogger(BaremetalManagerImpl.class);
 
     @Inject
     protected HostDao _hostDao;
@@ -94,17 +94,17 @@ public class BaremetalManagerImpl extends ManagerBase implements BaremetalManage
 
       HostVO host = _hostDao.findById(vo.getHostId());
       if (host == null) {
-        s_logger.debug("Skip oldState " + oldState + " to " + "newState " + newState + " transimtion");
+        logger.debug("Skip oldState " + oldState + " to " + "newState " + newState + " transimtion");
         return true;
       }
       _hostDao.loadDetails(host);
 
       if (newState == State.Starting) {
         host.setDetail("vmName", vo.getInstanceName());
-        s_logger.debug("Add vmName " + host.getDetail("vmName") + " to host " + host.getId() + " details");
+        logger.debug("Add vmName " + host.getDetail("vmName") + " to host " + host.getId() + " details");
       } else {
         if (host.getDetail("vmName") != null && host.getDetail("vmName").equalsIgnoreCase(vo.getInstanceName())) {
-          s_logger.debug("Remove vmName " + host.getDetail("vmName") + " from host " + host.getId() + " details");
+          logger.debug("Remove vmName " + host.getDetail("vmName") + " from host " + host.getId() + " details");
           host.getDetails().remove("vmName");
         }
       }
@@ -151,7 +151,7 @@ public class BaremetalManagerImpl extends ManagerBase implements BaremetalManage
         vm.setState(State.Running);
         vm.setLastHostId(vm.getHostId());
         vmDao.update(vm.getId(), vm);
-        s_logger.debug(String.format("received baremetal provision done notification for vm[id:%s name:%s] running on host[mac:%s, ip:%s]",
+        logger.debug(String.format("received baremetal provision done notification for vm[id:%s name:%s] running on host[mac:%s, ip:%s]",
                 vm.getId(), vm.getInstanceName(), host.getPrivateMacAddress(), host.getPrivateIpAddress()));
     }
 }

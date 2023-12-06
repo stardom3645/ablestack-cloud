@@ -46,7 +46,7 @@ import com.cloud.vm.VirtualMachine;
         "support this feature for this command to take effect. [async]", responseView = ResponseView.Restricted, entityType = {VirtualMachine.class},
     requestHasSensitiveInfo = false, responseHasSensitiveInfo = true)
 public class ResetVMPasswordCmd extends BaseAsyncCmd implements UserCmd {
-    protected static Logger s_logger = LogManager.getLogger(ResetVMPasswordCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(ResetVMPasswordCmd.class.getName());
 
     private static final String s_name = "resetpasswordforvirtualmachineresponse";
 
@@ -123,9 +123,9 @@ public class ResetVMPasswordCmd extends BaseAsyncCmd implements UserCmd {
         UserVm vm = _responseGenerator.findUserVmById(getId());
         if (StringUtils.isBlank(password)) {
             password = _mgr.generateRandomPassword();
-            s_logger.debug(String.format("Resetting VM [%s] password to a randomly generated password.", vm.getUuid()));
+            logger.debug(String.format("Resetting VM [%s] password to a randomly generated password.", vm.getUuid()));
         } else {
-            s_logger.debug(String.format("Resetting VM [%s] password to password defined by user.", vm.getUuid()));
+            logger.debug(String.format("Resetting VM [%s] password to password defined by user.", vm.getUuid()));
         }
         CallContext.current().setEventDetails("Vm Id: " + getId());
         UserVm result = _userVmService.resetVMPassword(this, password);

@@ -48,7 +48,7 @@ import javax.inject.Inject;
     + "policy set", responseObject = TungstenFabricApplicationPolicySetResponse.class, requestHasSensitiveInfo =
     false, responseHasSensitiveInfo = false)
 public class ListTungstenFabricApplictionPolicySetCmd extends BaseListCmd {
-    protected static Logger s_logger = LogManager.getLogger(ListTungstenFabricApplictionPolicySetCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(ListTungstenFabricApplictionPolicySetCmd.class.getName());
     public static final String APINAME = "listTungstenFabricApplicationPolicySet";
 
     @Inject

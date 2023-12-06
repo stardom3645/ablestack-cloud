@@ -36,7 +36,7 @@ import com.cloud.storage.Snapshot;
 @APICommand(name = "listSnapshots", description = "Lists all available snapshots for the account.", responseObject = SnapshotResponse.class, entityType = {
         Snapshot.class }, responseView = ResponseObject.ResponseView.Restricted, requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class ListSnapshotsCmd extends BaseListTaggedResourcesCmd {
-    protected static Logger s_logger = LogManager.getLogger(ListSnapshotsCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(ListSnapshotsCmd.class.getName());
 
 
     /////////////////////////////////////////////////////

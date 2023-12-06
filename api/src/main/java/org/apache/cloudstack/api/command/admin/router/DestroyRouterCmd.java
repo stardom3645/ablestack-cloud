@@ -39,7 +39,7 @@ import com.cloud.vm.VirtualMachine;
 @APICommand(name = "destroyRouter", description = "Destroys a router.", responseObject = DomainRouterResponse.class, entityType = {VirtualMachine.class},
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class DestroyRouterCmd extends BaseAsyncCmd {
-    protected static Logger s_logger = LogManager.getLogger(DestroyRouterCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(DestroyRouterCmd.class.getName());
 
     // ///////////////////////////////////////////////////
     // ////////////// API parameters /////////////////////

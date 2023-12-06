@@ -32,7 +32,7 @@ import com.cloud.event.Event;
 @APICommand(name = "listEvents", description = "A command to list events.", responseObject = EventResponse.class, entityType = {Event.class},
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class ListEventsCmd extends BaseListProjectAndAccountResourcesCmd {
-    protected static Logger s_logger = LogManager.getLogger(ListEventsCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(ListEventsCmd.class.getName());
 
 
     /////////////////////////////////////////////////////

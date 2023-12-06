@@ -38,7 +38,7 @@ import com.cloud.user.Account;
         since = "4.11.0",
         authorized = {RoleType.Admin})
 public class UpdateSiocInfoCmd extends BaseCmd {
-    protected static Logger s_logger = LogManager.getLogger(UpdateSiocInfoCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(UpdateSiocInfoCmd.class.getName());
 
 
     /////////////////////////////////////////////////////
@@ -79,7 +79,7 @@ public class UpdateSiocInfoCmd extends BaseCmd {
 
     @Override
     public void execute() {
-        s_logger.info("'UpdateSiocInfoCmd.execute' method invoked");
+        logger.info("'UpdateSiocInfoCmd.execute' method invoked");
 
         String msg = "Success";
 

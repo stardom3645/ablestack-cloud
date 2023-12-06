@@ -27,7 +27,7 @@ import org.apache.cloudstack.api.ServerApiException;
 
 public class ParamUnpackWorker implements DispatchWorker {
 
-    protected static Logger s_logger = LogManager.getLogger(ParamUnpackWorker.class);
+    protected static Logger logger = LogManager.getLogger(ParamUnpackWorker.class);
 
     @SuppressWarnings({"unchecked", "rawtypes"})
     @Override
@@ -77,7 +77,7 @@ public class ParamUnpackWorker implements DispatchWorker {
                         parsedIndex = true;
                     }
                 } catch (final NumberFormatException nfe) {
-                    s_logger.warn("Invalid parameter " + key + " received, unable to parse object array, returning an error.");
+                    logger.warn("Invalid parameter " + key + " received, unable to parse object array, returning an error.");
                 }
 
                 if (!parsedIndex) {

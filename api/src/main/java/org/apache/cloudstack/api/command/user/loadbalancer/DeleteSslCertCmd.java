@@ -41,7 +41,7 @@ import com.cloud.utils.exception.CloudRuntimeException;
 @APICommand(name = "deleteSslCert", description = "Delete a certificate to CloudStack", responseObject = SuccessResponse.class,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class DeleteSslCertCmd extends BaseCmd {
-    protected static Logger s_logger = LogManager.getLogger(DeleteSslCertCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(DeleteSslCertCmd.class.getName());
 
 
     @Inject

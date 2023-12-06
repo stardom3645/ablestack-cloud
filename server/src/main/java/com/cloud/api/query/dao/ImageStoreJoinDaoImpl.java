@@ -43,7 +43,7 @@ import com.cloud.utils.db.SearchCriteria;
 
 @Component
 public class ImageStoreJoinDaoImpl extends GenericDaoBase<ImageStoreJoinVO, Long> implements ImageStoreJoinDao {
-    protected static Logger s_logger = LogManager.getLogger(ImageStoreJoinDaoImpl.class);
+    protected static Logger logger = LogManager.getLogger(ImageStoreJoinDaoImpl.class);
 
     @Inject
     private ConfigurationDao _configDao;

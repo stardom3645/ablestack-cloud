@@ -31,14 +31,14 @@ import com.cloud.resource.ResourceWrapper;
 @ResourceWrapper(handles =  OvsDestroyBridgeCommand.class)
 public final class LibvirtOvsDestroyBridgeCommandWrapper extends CommandWrapper<OvsDestroyBridgeCommand, Answer, LibvirtComputingResource> {
 
-    protected static Logger s_logger = LogManager.getLogger(LibvirtOvsDestroyBridgeCommandWrapper.class);
+    protected static Logger logger = LogManager.getLogger(LibvirtOvsDestroyBridgeCommandWrapper.class);
 
     @Override
     public Answer execute(final OvsDestroyBridgeCommand command, final LibvirtComputingResource libvirtComputingResource) {
         final boolean result = libvirtComputingResource.destroyTunnelNetwork(command.getBridgeName());
 
         if (!result) {
-            s_logger.debug("Error trying to destroy OVS Bridge!");
+            logger.debug("Error trying to destroy OVS Bridge!");
         }
 
         return new Answer(command, result, null);

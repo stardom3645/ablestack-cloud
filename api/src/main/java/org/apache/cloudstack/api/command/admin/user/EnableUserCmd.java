@@ -38,7 +38,7 @@ import com.cloud.user.UserAccount;
 @APICommand(name = "enableUser", description = "Enables a user account", responseObject = UserResponse.class,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = true)
 public class EnableUserCmd extends BaseCmd {
-    protected static Logger s_logger = LogManager.getLogger(EnableUserCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(EnableUserCmd.class.getName());
 
     /////////////////////////////////////////////////////
     //////////////// API parameters /////////////////////

@@ -25,7 +25,7 @@ import java.util.Collection;
 import java.util.Map;
 
 public abstract class BaseUpdateTemplateOrIsoCmd extends BaseCmd {
-    protected static Logger s_logger = LogManager.getLogger(BaseUpdateTemplateOrIsoCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(BaseUpdateTemplateOrIsoCmd.class.getName());
 
     /////////////////////////////////////////////////////
     //////////////// API parameters /////////////////////

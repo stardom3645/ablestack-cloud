@@ -54,7 +54,7 @@ import java.util.UUID;
 public class LocalNfsSecondaryStorageResourceTest extends TestCase {
     private static Map<String, Object> testParams;
 
-    protected static Logger s_logger = LogManager.getLogger(LocalNfsSecondaryStorageResourceTest.class.getName());
+    protected static Logger logger = LogManager.getLogger(LocalNfsSecondaryStorageResourceTest.class.getName());
 
     LocalNfsSecondaryStorageResource resource;
 
@@ -128,7 +128,7 @@ public class LocalNfsSecondaryStorageResourceTest extends TestCase {
             throw new ConfigurationException("Unable to find agent.properties.");
         }
 
-        s_logger.info("agent.properties found at " + file.getAbsolutePath());
+        logger.info("agent.properties found at " + file.getAbsolutePath());
 
         try(FileInputStream fs = new FileInputStream(file);) {
             properties.load(fs);

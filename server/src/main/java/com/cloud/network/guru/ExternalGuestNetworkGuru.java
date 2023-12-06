@@ -73,7 +73,7 @@ import com.cloud.vm.VirtualMachine;
 import com.cloud.vm.VirtualMachineProfile;
 
 public class ExternalGuestNetworkGuru extends GuestNetworkGuru {
-    protected static Logger s_logger = LogManager.getLogger(ExternalGuestNetworkGuru.class);
+    protected static Logger logger = LogManager.getLogger(ExternalGuestNetworkGuru.class);
     @Inject
     NetworkOrchestrationService _networkMgr;
     @Inject
@@ -105,7 +105,7 @@ public class ExternalGuestNetworkGuru extends GuestNetworkGuru {
                 && isMyIsolationMethod(physicalNetwork) && !offering.isSystemOnly()) {
             return true;
         } else {
-            s_logger.trace("We only take care of Guest networks of type   " + GuestType.Isolated + " in zone of type " + NetworkType.Advanced);
+            logger.trace("We only take care of Guest networks of type   " + GuestType.Isolated + " in zone of type " + NetworkType.Advanced);
             return false;
         }
     }
@@ -274,7 +274,7 @@ public class ExternalGuestNetworkGuru extends GuestNetworkGuru {
             if (!isPublicNetwork) {
                 Nic placeholderNic = _networkModel.getPlaceholderNicForRouter(config, null);
                 if (placeholderNic == null) {
-                    s_logger.debug("Saving placeholder nic with ip4 address " + profile.getIPv4Address() +
+                    logger.debug("Saving placeholder nic with ip4 address " + profile.getIPv4Address() +
                             " and ipv6 address " + profile.getIPv6Address() + " for the network " + config);
                     _networkMgr.savePlaceholderNic(config, profile.getIPv4Address(), profile.getIPv6Address(), VirtualMachine.Type.DomainRouter);
                 }

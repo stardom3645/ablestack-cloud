@@ -48,7 +48,7 @@ import javax.inject.Inject;
     responseObject = TungstenFabricAddressGroupResponse.class, requestHasSensitiveInfo = false,
     responseHasSensitiveInfo = false)
 public class ListTungstenFabricAddressGroupCmd extends BaseListCmd {
-    protected static Logger s_logger = LogManager.getLogger(ListTungstenFabricAddressGroupCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(ListTungstenFabricAddressGroupCmd.class.getName());
     public static final String APINAME = "listTungstenFabricAddressGroup";
 
     @Inject

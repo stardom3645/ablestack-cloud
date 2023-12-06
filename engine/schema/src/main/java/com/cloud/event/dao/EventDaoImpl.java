@@ -35,7 +35,7 @@ import com.cloud.utils.db.TransactionLegacy;
 
 @Component
 public class EventDaoImpl extends GenericDaoBase<EventVO, Long> implements EventDao {
-    protected static Logger s_logger = LogManager.getLogger(EventDaoImpl.class.getName());
+    protected static Logger logger = LogManager.getLogger(EventDaoImpl.class.getName());
     protected final SearchBuilder<EventVO> CompletedEventSearch;
     protected final SearchBuilder<EventVO> ToArchiveOrDeleteEventSearch;
 

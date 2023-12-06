@@ -37,7 +37,7 @@ import com.vmware.vim25.VMwareDVSPvlanMapEntry;
 
 public class DistributedVirtualSwitchMO extends BaseMO {
     @SuppressWarnings("unused")
-    protected static Logger s_logger = LogManager.getLogger(DistributedVirtualSwitchMO.class);
+    protected static Logger logger = LogManager.getLogger(DistributedVirtualSwitchMO.class);
     private static ConcurrentHashMap<String, List<String>> s_dvPortGroupCacheMap = null;
 
     public DistributedVirtualSwitchMO(VmwareContext context, ManagedObjectReference morDvs) {
@@ -83,11 +83,11 @@ public class DistributedVirtualSwitchMO extends BaseMO {
                         s_dvPortGroupCacheMap.put(dvSwitchInstance, dvPortGroupList);
                     }
                 }
-                if (s_logger.isTraceEnabled()) {
-                    s_logger.trace("Created dvPortGroup. dvPortGroup cache is :" + s_dvPortGroupCacheMap);
+                if (logger.isTraceEnabled()) {
+                    logger.trace("Created dvPortGroup. dvPortGroup cache is :" + s_dvPortGroupCacheMap);
                 }
-            } else if (s_logger.isDebugEnabled()) {
-                s_logger.debug("Detected dvPortGroup [" + dvPortGroupName + "] already present. Not attempting to create again.");
+            } else if (logger.isDebugEnabled()) {
+                logger.debug("Detected dvPortGroup [" + dvPortGroupName + "] already present. Not attempting to create again.");
             }
         }
     }

@@ -47,7 +47,7 @@ import com.cloud.network.vpc.Vpc;
 @APICommand(name = "createVPC", description = "Creates a VPC", responseObject = VpcResponse.class, responseView = ResponseView.Restricted, entityType = {Vpc.class},
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class CreateVPCCmd extends BaseAsyncCreateCmd implements UserCmd {
-    protected static Logger s_logger = LogManager.getLogger(CreateVPCCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(CreateVPCCmd.class.getName());
     private static final String s_name = "createvpcresponse";
 
     // ///////////////////////////////////////////////////
@@ -214,18 +214,18 @@ public class CreateVPCCmd extends BaseAsyncCreateCmd implements UserCmd {
             if (isStart()) {
                 _vpcService.startVpc(getEntityId(), true);
             } else {
-                s_logger.debug("Not starting VPC as " + ApiConstants.START + "=false was passed to the API");
+                logger.debug("Not starting VPC as " + ApiConstants.START + "=false was passed to the API");
              }
             vpc = _entityMgr.findById(Vpc.class, getEntityId());
         } catch (ResourceUnavailableException ex) {
-            s_logger.warn("Exception: ", ex);
+            logger.warn("Exception: ", ex);
             throw new ServerApiException(ApiErrorCode.RESOURCE_UNAVAILABLE_ERROR, ex.getMessage());
         } catch (ConcurrentOperationException ex) {
-            s_logger.warn("Exception: ", ex);
+            logger.warn("Exception: ", ex);
             throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, ex.getMessage());
         } catch (InsufficientCapacityException ex) {
-            s_logger.info(ex);
-            s_logger.trace(ex);
+            logger.info(ex);
+            logger.trace(ex);
             throw new ServerApiException(ApiErrorCode.INSUFFICIENT_CAPACITY_ERROR, ex.getMessage());
         }
 

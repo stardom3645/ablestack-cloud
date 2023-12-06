@@ -30,7 +30,7 @@ import org.apache.cloudstack.api.response.ZoneResponse;
 @APICommand(name = "listSecondaryStagingStores", description = "Lists secondary staging stores.", responseObject = ImageStoreResponse.class, since = "4.2.0",
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class ListSecondaryStagingStoresCmd extends BaseListCmd {
-    protected static Logger s_logger = LogManager.getLogger(ListSecondaryStagingStoresCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(ListSecondaryStagingStoresCmd.class.getName());
 
     private static final String s_name = "listsecondarystagingstoreresponse";
 

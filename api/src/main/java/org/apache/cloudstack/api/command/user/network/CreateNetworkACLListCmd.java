@@ -39,7 +39,7 @@ import com.cloud.user.Account;
 @APICommand(name = "createNetworkACLList", description = "Creates a network ACL for the given VPC", responseObject = NetworkACLResponse.class,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class CreateNetworkACLListCmd extends BaseAsyncCreateCmd {
-    protected static Logger s_logger = LogManager.getLogger(CreateNetworkACLListCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(CreateNetworkACLListCmd.class.getName());
 
 
     // ///////////////////////////////////////////////////

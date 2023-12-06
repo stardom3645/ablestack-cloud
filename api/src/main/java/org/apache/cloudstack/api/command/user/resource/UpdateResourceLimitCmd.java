@@ -34,7 +34,7 @@ import com.cloud.configuration.ResourceLimit;
 @APICommand(name = "updateResourceLimit", description = "Updates resource limits for an account or domain.", responseObject = ResourceLimitResponse.class,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class UpdateResourceLimitCmd extends BaseCmd {
-    protected static Logger s_logger = LogManager.getLogger(UpdateResourceLimitCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(UpdateResourceLimitCmd.class.getName());
 
 
     /////////////////////////////////////////////////////

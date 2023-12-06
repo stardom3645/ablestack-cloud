@@ -31,7 +31,7 @@ public class Site2SiteVpnGatewayDaoImpl extends GenericDaoBase<Site2SiteVpnGatew
     @Inject
     protected IPAddressDao _addrDao;
 
-    protected static Logger s_logger = LogManager.getLogger(Site2SiteVpnGatewayDaoImpl.class);
+    protected static Logger logger = LogManager.getLogger(Site2SiteVpnGatewayDaoImpl.class);
 
     private final SearchBuilder<Site2SiteVpnGatewayVO> AllFieldsSearch;
 

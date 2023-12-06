@@ -37,7 +37,7 @@ import com.cloud.storage.Volume;
             requestHasSensitiveInfo = false,
             responseHasSensitiveInfo = true)
 public class RecoverVolumeCmdByAdmin extends RecoverVolumeCmd implements AdminCmd {
-    protected static Logger s_logger = LogManager.getLogger(RecoverVolumeCmdByAdmin.class.getName());
+    protected static Logger logger = LogManager.getLogger(RecoverVolumeCmdByAdmin.class.getName());
 
     @Override
     public void execute() {

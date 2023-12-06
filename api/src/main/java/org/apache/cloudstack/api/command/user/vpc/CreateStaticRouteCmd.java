@@ -43,7 +43,7 @@ import com.cloud.network.vpc.VpcGateway;
 @APICommand(name = "createStaticRoute", description = "Creates a static route", responseObject = StaticRouteResponse.class, entityType = {StaticRoute.class},
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class CreateStaticRouteCmd extends BaseAsyncCreateCmd {
-    protected static Logger s_logger = LogManager.getLogger(CreateStaticRouteCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(CreateStaticRouteCmd.class.getName());
 
     @Parameter(name = ApiConstants.GATEWAY_ID,
                type = CommandType.UUID,
@@ -76,8 +76,8 @@ public class CreateStaticRouteCmd extends BaseAsyncCreateCmd {
             setEntityId(result.getId());
             setEntityUuid(result.getUuid());
         } catch (NetworkRuleConflictException ex) {
-            s_logger.info("Network rule conflict: " + ex.getMessage());
-            s_logger.trace("Network rule conflict: ", ex);
+            logger.info("Network rule conflict: " + ex.getMessage());
+            logger.trace("Network rule conflict: ", ex);
             throw new ServerApiException(ApiErrorCode.NETWORK_RULE_CONFLICT_ERROR, ex.getMessage());
         }
     }

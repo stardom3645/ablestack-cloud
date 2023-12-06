@@ -24,7 +24,7 @@ import org.apache.logging.log4j.LogManager;
 import com.cloud.utils.exception.CloudRuntimeException;
 
 public class Upgrade2211to2212Premium extends Upgrade2211to2212 {
-    final static Logger s_logger = LogManager.getLogger(Upgrade2211to2212Premium.class);
+    final static Logger logger = LogManager.getLogger(Upgrade2211to2212Premium.class);
 
     @Override
     public InputStream[] getPrepareScripts() {

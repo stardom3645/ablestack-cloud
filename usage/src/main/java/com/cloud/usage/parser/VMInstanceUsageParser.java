@@ -40,7 +40,7 @@ import com.cloud.utils.Pair;
 
 @Component
 public class VMInstanceUsageParser {
-    protected static Logger s_logger = LogManager.getLogger(VMInstanceUsageParser.class.getName());
+    protected static Logger logger = LogManager.getLogger(VMInstanceUsageParser.class.getName());
 
     private static UsageDao s_usageDao;
     private static UsageVMInstanceDao s_usageInstanceDao;
@@ -57,8 +57,8 @@ public class VMInstanceUsageParser {
     }
 
     public static boolean parse(AccountVO account, Date startDate, Date endDate) {
-        if (s_logger.isDebugEnabled()) {
-            s_logger.debug("Parsing all VMInstance usage events for account: " + account.getId());
+        if (logger.isDebugEnabled()) {
+            logger.debug("Parsing all VMInstance usage events for account: " + account.getId());
         }
         if ((endDate == null) || endDate.after(new Date())) {
             endDate = new Date();
@@ -164,8 +164,8 @@ public class VMInstanceUsageParser {
     private static void createUsageRecord(int type, long runningTime, Date startDate, Date endDate, AccountVO account, long vmId, String vmName, long zoneId,
         long serviceOfferingId, long templateId, String hypervisorType, Long cpuCores, Long cpuSpeed, Long memory) {
         // Our smallest increment is hourly for now
-        if (s_logger.isDebugEnabled()) {
-            s_logger.debug("Total running time " + runningTime + "ms");
+        if (logger.isDebugEnabled()) {
+            logger.debug("Total running time " + runningTime + "ms");
         }
 
         float usage = runningTime / 1000f / 60f / 60f;
@@ -173,8 +173,8 @@ public class VMInstanceUsageParser {
         DecimalFormat dFormat = new DecimalFormat("#.######");
         String usageDisplay = dFormat.format(usage);
 
-        if (s_logger.isDebugEnabled()) {
-            s_logger.debug("Creating VM usage record for vm: " + vmName + ", type: " + type + ", usage: " + usageDisplay + ", startDate: " + startDate + ", endDate: " +
+        if (logger.isDebugEnabled()) {
+            logger.debug("Creating VM usage record for vm: " + vmName + ", type: " + type + ", usage: " + usageDisplay + ", startDate: " + startDate + ", endDate: " +
                 endDate + ", for account: " + account.getId());
         }
 

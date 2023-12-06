@@ -46,7 +46,7 @@ import com.cloud.vm.Nic;
 @APICommand(name = "listNics", description = "list the vm nics  IP to NIC", responseObject = NicResponse.class,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class ListNicsCmd extends BaseListCmd {
-    protected static Logger s_logger = LogManager.getLogger(ListNicsCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(ListNicsCmd.class.getName());
 
     /////////////////////////////////////////////////////
     //////////////// API parameters /////////////////////
@@ -158,7 +158,7 @@ public class ListNicsCmd extends BaseListCmd {
                 this.setResponseObject(response);
             }
         } catch (Exception e) {
-            s_logger.warn("Failed to list secondary ip address per nic ");
+            logger.warn("Failed to list secondary ip address per nic ");
             throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, e.getMessage());
         }
     }

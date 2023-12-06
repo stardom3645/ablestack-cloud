@@ -38,7 +38,7 @@ import com.cloud.user.Account;
 @APICommand(name = "deleteLBStickinessPolicy", description = "Deletes a load balancer stickiness policy.", responseObject = SuccessResponse.class, since = "3.0.0",
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class DeleteLBStickinessPolicyCmd extends BaseAsyncCmd {
-    protected static Logger s_logger = LogManager.getLogger(DeleteLBStickinessPolicyCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(DeleteLBStickinessPolicyCmd.class.getName());
     private static final String s_name = "deleteLBstickinessrruleresponse";
     // ///////////////////////////////////////////////////
     // ////////////// API parameters /////////////////////

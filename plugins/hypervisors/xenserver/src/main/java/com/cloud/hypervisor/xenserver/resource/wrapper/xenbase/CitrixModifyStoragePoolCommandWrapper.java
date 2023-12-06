@@ -42,7 +42,7 @@ import com.xensource.xenapi.Types.XenAPIException;
 @ResourceWrapper(handles =  ModifyStoragePoolCommand.class)
 public final class CitrixModifyStoragePoolCommandWrapper extends CommandWrapper<ModifyStoragePoolCommand, Answer, CitrixResourceBase> {
 
-    protected static Logger s_logger = LogManager.getLogger(CitrixModifyStoragePoolCommandWrapper.class);
+    protected static Logger logger = LogManager.getLogger(CitrixModifyStoragePoolCommandWrapper.class);
 
     @Override
     public Answer execute(final ModifyStoragePoolCommand command, final CitrixResourceBase citrixResourceBase) {
@@ -61,7 +61,7 @@ public final class CitrixModifyStoragePoolCommandWrapper extends CommandWrapper<
                 final long available = capacity - sr.getPhysicalUtilisation(conn);
                 if (capacity == -1) {
                     final String msg = "Pool capacity is -1! pool: " + pool.getHost() + pool.getPath();
-                    s_logger.warn(msg);
+                    logger.warn(msg);
                     return new Answer(command, false, msg);
                 }
                 final Map<String, TemplateProp> tInfo = new HashMap<String, TemplateProp>();
@@ -70,12 +70,12 @@ public final class CitrixModifyStoragePoolCommandWrapper extends CommandWrapper<
             } catch (final XenAPIException e) {
                 final String msg = "ModifyStoragePoolCommand add XenAPIException:" + e.toString() + " host:" + citrixResourceBase.getHost().getUuid() + " pool: " + pool.getHost()
                         + pool.getPath();
-                s_logger.warn(msg, e);
+                logger.warn(msg, e);
                 return new Answer(command, false, msg);
             } catch (final Exception e) {
                 final String msg = "ModifyStoragePoolCommand add XenAPIException:" + e.getMessage() + " host:" + citrixResourceBase.getHost().getUuid() + " pool: "
                         + pool.getHost() + pool.getPath();
-                s_logger.warn(msg, e);
+                logger.warn(msg, e);
                 return new Answer(command, false, msg);
             }
         } else {
@@ -92,12 +92,12 @@ public final class CitrixModifyStoragePoolCommandWrapper extends CommandWrapper<
             } catch (final XenAPIException e) {
                 final String msg = "ModifyStoragePoolCommand remove XenAPIException:" + e.toString() + " host:" + citrixResourceBase.getHost().getUuid() + " pool: "
                         + pool.getHost() + pool.getPath();
-                s_logger.warn(msg, e);
+                logger.warn(msg, e);
                 return new Answer(command, false, msg);
             } catch (final Exception e) {
                 final String msg = "ModifyStoragePoolCommand remove XenAPIException:" + e.getMessage() + " host:" + citrixResourceBase.getHost().getUuid() + " pool: "
                         + pool.getHost() + pool.getPath();
-                s_logger.warn(msg, e);
+                logger.warn(msg, e);
                 return new Answer(command, false, msg);
             }
         }

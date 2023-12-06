@@ -32,7 +32,7 @@ import com.cloud.user.Account;
 @APICommand(name = "listAffinityGroupTypes", description = "Lists affinity group types available", responseObject = AffinityGroupTypeResponse.class,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class ListAffinityGroupTypesCmd extends BaseListCmd {
-    protected static Logger s_logger = LogManager.getLogger(ListAffinityGroupTypesCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(ListAffinityGroupTypesCmd.class.getName());
 
 
     /////////////////////////////////////////////////////

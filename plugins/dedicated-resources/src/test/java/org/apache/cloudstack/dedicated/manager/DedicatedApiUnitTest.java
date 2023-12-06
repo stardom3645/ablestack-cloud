@@ -75,7 +75,7 @@ import junit.framework.Assert;
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(loader = AnnotationConfigContextLoader.class)
 public class DedicatedApiUnitTest {
-    protected static Logger s_logger = LogManager.getLogger(DedicatedApiUnitTest.class);
+    protected static Logger logger = LogManager.getLogger(DedicatedApiUnitTest.class);
     @Inject
     DedicatedResourceManagerImpl _dedicatedService = new DedicatedResourceManagerImpl();
 
@@ -163,7 +163,7 @@ public class DedicatedApiUnitTest {
                 List<DedicatedResourceVO> result = _dedicatedService.dedicateZone(10L, domainId, accountName);
                 Assert.assertNotNull(result);
             } catch (Exception e) {
-                s_logger.info("exception in testing dedication of zone "
+                logger.info("exception in testing dedication of zone "
                         + e.toString());
             }
         }
@@ -177,7 +177,7 @@ public class DedicatedApiUnitTest {
                 List<DedicatedResourceVO> result = _dedicatedService.dedicatePod(10L, domainId, accountName);
                 Assert.assertNotNull(result);
             } catch (Exception e) {
-                s_logger.info("exception in testing dedication of pod "
+                logger.info("exception in testing dedication of pod "
                         + e.toString());
             }
         }
@@ -190,7 +190,7 @@ public class DedicatedApiUnitTest {
                 List<DedicatedResourceVO> result = _dedicatedService.dedicateCluster(10L, domainId, accountName);
                 Assert.assertNotNull(result);
             } catch (Exception e) {
-                s_logger.info("exception in testing dedication of cluster "
+                logger.info("exception in testing dedication of cluster "
                         + e.toString());
             }
         }
@@ -206,7 +206,7 @@ public class DedicatedApiUnitTest {
                 List<DedicatedResourceVO> result = _dedicatedService.dedicateHost(10L, domainId, accountName);
                 Assert.assertNotNull(result);
             } catch (Exception e) {
-                s_logger.info("exception in testing dedication of host "
+                logger.info("exception in testing dedication of host "
                         + e.toString());
             }
         }

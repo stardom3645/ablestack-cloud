@@ -48,7 +48,7 @@ import com.cloud.utils.fsm.StateObject;
 @Entity
 @Table(name = "template_store_ref")
 public class TemplateDataStoreVO implements StateObject<ObjectInDataStoreStateMachine.State>, DataObjectInStore {
-    protected static Logger s_logger = LogManager.getLogger(TemplateDataStoreVO.class);
+    protected static Logger logger = LogManager.getLogger(TemplateDataStoreVO.class);
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -383,7 +383,7 @@ public class TemplateDataStoreVO implements StateObject<ObjectInDataStoreStateMa
             refCnt--;
         }
         else{
-            s_logger.warn("We should not try to decrement a zero reference count even though our code has guarded");
+            logger.warn("We should not try to decrement a zero reference count even though our code has guarded");
         }
     }
 

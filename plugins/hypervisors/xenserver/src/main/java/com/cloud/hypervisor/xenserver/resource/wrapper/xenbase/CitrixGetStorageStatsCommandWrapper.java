@@ -38,7 +38,7 @@ import com.xensource.xenapi.Types.XenAPIException;
 @ResourceWrapper(handles =  GetStorageStatsCommand.class)
 public final class CitrixGetStorageStatsCommandWrapper extends CommandWrapper<GetStorageStatsCommand, Answer, CitrixResourceBase> {
 
-    protected static Logger s_logger = LogManager.getLogger(CitrixGetStorageStatsCommandWrapper.class);
+    protected static Logger logger = LogManager.getLogger(CitrixGetStorageStatsCommandWrapper.class);
 
     @Override
     public Answer execute(final GetStorageStatsCommand command, final CitrixResourceBase citrixResourceBase) {
@@ -47,7 +47,7 @@ public final class CitrixGetStorageStatsCommandWrapper extends CommandWrapper<Ge
             final Set<SR> srs = SR.getByNameLabel(conn, command.getStorageId());
             if (srs.size() != 1) {
                 final String msg = "There are " + srs.size() + " storageid: " + command.getStorageId();
-                s_logger.warn(msg);
+                logger.warn(msg);
                 return new GetStorageStatsAnswer(command, msg);
             }
             final SR sr = srs.iterator().next();
@@ -57,15 +57,15 @@ public final class CitrixGetStorageStatsCommandWrapper extends CommandWrapper<Ge
             return new GetStorageStatsAnswer(command, capacity, used);
         } catch (final XenAPIException e) {
             final String msg = "GetStorageStats Exception:" + e.toString() + "host:" + citrixResourceBase.getHost().getUuid() + "storageid: " + command.getStorageId();
-            s_logger.warn(msg);
+            logger.warn(msg);
             return new GetStorageStatsAnswer(command, msg);
         } catch (final XmlRpcException e) {
             final String msg = "GetStorageStats Exception:" + e.getMessage() + "host:" + citrixResourceBase.getHost().getUuid() + "storageid: " + command.getStorageId();
-            s_logger.warn(msg);
+            logger.warn(msg);
             return new GetStorageStatsAnswer(command, msg);
         }  catch (final Exception e) {
             final String msg = "GetStorageStats Exception:" + e.getMessage() + "host:" + citrixResourceBase.getHost().getUuid() + "storageid: " + command.getStorageId();
-            s_logger.warn(msg);
+            logger.warn(msg);
             return new GetStorageStatsAnswer(command, msg);
         }
     }

@@ -72,8 +72,8 @@ under the License.
       <!-- ======================= -->
 
       <Root level="OFF">
-         <AppenderRef ref="CONSOLE"/>
-         <AppenderRef ref="FILE"/>
+      <!-- <AppenderRef ref="CONSOLE"/> -->
+      <!-- <AppenderRef ref="FILE"/> -->
          <AppenderRef ref="NullAppender"/>
       </Root>
 

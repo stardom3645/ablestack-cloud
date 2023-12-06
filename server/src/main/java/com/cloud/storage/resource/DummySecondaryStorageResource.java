@@ -55,7 +55,7 @@ import com.cloud.storage.template.TemplateConstants;
 import com.cloud.storage.template.TemplateProp;
 
 public class DummySecondaryStorageResource extends ServerResourceBase implements ServerResource {
-    protected static Logger s_logger = LogManager.getLogger(DummySecondaryStorageResource.class);
+    protected static Logger logger = LogManager.getLogger(DummySecondaryStorageResource.class);
 
     String _dc;
     String _pod;

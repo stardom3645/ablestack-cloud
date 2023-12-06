@@ -37,7 +37,7 @@ import com.cloud.resource.ServerResource;
 
 public abstract class LibvirtConsoleProxyLoadCommandWrapper<T extends Command, A extends Answer, R extends ServerResource> extends CommandWrapper<Command, Answer, ServerResource> {
 
-    protected static Logger s_logger = LogManager.getLogger(LibvirtConsoleProxyLoadCommandWrapper.class);
+    protected static Logger logger = LogManager.getLogger(LibvirtConsoleProxyLoadCommandWrapper.class);
 
     public Answer executeProxyLoadScan(final Command cmd, final long proxyVmId, final String proxyVmName, final String proxyManagementIp, final int cmdPort) {
         String result = null;
@@ -65,12 +65,12 @@ public abstract class LibvirtConsoleProxyLoadCommandWrapper<T extends Command, A
                 try {
                     is.close();
                 } catch (final IOException e) {
-                    s_logger.warn("Exception when closing , console proxy address : " + proxyManagementIp);
+                    logger.warn("Exception when closing , console proxy address : " + proxyManagementIp);
                     success = false;
                 }
             }
         } catch (final IOException e) {
-            s_logger.warn("Unable to open console proxy command port url, console proxy address : " + proxyManagementIp);
+            logger.warn("Unable to open console proxy command port url, console proxy address : " + proxyManagementIp);
             success = false;
         }
 

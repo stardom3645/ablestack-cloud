@@ -45,7 +45,7 @@ import com.cloud.utils.exception.CloudRuntimeException;
             responseObject = NetworkDeviceResponse.class,
             requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class AddNetworkDeviceCmd extends BaseCmd {
-    protected static Logger s_logger = LogManager.getLogger(AddNetworkDeviceCmd.class);
+    protected static Logger logger = LogManager.getLogger(AddNetworkDeviceCmd.class);
 
     // ///////////////////////////////////////////////////
     // ////////////// API parameters /////////////////////

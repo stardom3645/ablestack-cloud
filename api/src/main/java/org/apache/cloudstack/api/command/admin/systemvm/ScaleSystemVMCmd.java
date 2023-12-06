@@ -47,7 +47,7 @@ import com.cloud.vm.VirtualMachine;
         + "The system vm must be in a \"Stopped\" state for " + "this command to take effect.", entityType = {VirtualMachine.class},
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class ScaleSystemVMCmd extends BaseAsyncCmd {
-    protected static Logger s_logger = LogManager.getLogger(ScaleSystemVMCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(ScaleSystemVMCmd.class.getName());
     private static final String s_name = "changeserviceforsystemvmresponse";
 
     /////////////////////////////////////////////////////
@@ -112,16 +112,16 @@ public class ScaleSystemVMCmd extends BaseAsyncCmd {
         try {
             result = _mgr.upgradeSystemVM(this);
         } catch (ResourceUnavailableException ex) {
-            s_logger.warn("Exception: ", ex);
+            logger.warn("Exception: ", ex);
             throw new ServerApiException(ApiErrorCode.RESOURCE_UNAVAILABLE_ERROR, ex.getMessage());
         } catch (ConcurrentOperationException ex) {
-            s_logger.warn("Exception: ", ex);
+            logger.warn("Exception: ", ex);
             throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, ex.getMessage());
         } catch (ManagementServerException ex) {
-            s_logger.warn("Exception: ", ex);
+            logger.warn("Exception: ", ex);
             throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, ex.getMessage());
         } catch (VirtualMachineMigrationException ex) {
-            s_logger.warn("Exception: ", ex);
+            logger.warn("Exception: ", ex);
             throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, ex.getMessage());
         }
         if (result != null) {

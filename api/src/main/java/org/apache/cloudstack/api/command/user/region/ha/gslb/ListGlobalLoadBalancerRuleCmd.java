@@ -39,7 +39,7 @@ import com.cloud.region.ha.GlobalLoadBalancingRulesService;
 @APICommand(name = "listGlobalLoadBalancerRules", description = "Lists load balancer rules.", responseObject = GlobalLoadBalancerResponse.class,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class ListGlobalLoadBalancerRuleCmd extends BaseListTaggedResourcesCmd {
-    protected static Logger s_logger = LogManager.getLogger(ListGlobalLoadBalancerRuleCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(ListGlobalLoadBalancerRuleCmd.class.getName());
 
 
     // ///////////////////////////////////////////////////

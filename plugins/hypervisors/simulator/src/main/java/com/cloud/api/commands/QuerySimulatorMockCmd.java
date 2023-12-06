@@ -39,7 +39,7 @@ import javax.inject.Inject;
 
 @APICommand(name = "querySimulatorMock", description="query simulator mock", responseObject=MockResponse.class)
 public class QuerySimulatorMockCmd extends BaseCmd {
-    protected static Logger s_logger = LogManager.getLogger(QuerySimulatorMockCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(QuerySimulatorMockCmd.class.getName());
     private static final String s_name = "querysimulatormockresponse";
 
     @Inject SimulatorManager _simMgr;

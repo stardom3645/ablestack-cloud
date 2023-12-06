@@ -38,7 +38,7 @@ import com.cloud.utils.Pair;
 @APICommand(name = "listRemoteAccessVpns", description = "Lists remote access vpns", responseObject = RemoteAccessVpnResponse.class, entityType = {RemoteAccessVpn.class},
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class ListRemoteAccessVpnsCmd extends BaseListProjectAndAccountResourcesCmd {
-    protected static Logger s_logger = LogManager.getLogger(ListRemoteAccessVpnsCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(ListRemoteAccessVpnsCmd.class.getName());
 
 
     /////////////////////////////////////////////////////

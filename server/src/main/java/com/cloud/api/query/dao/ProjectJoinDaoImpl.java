@@ -53,7 +53,7 @@ import com.cloud.utils.db.SearchCriteria;
 
 @Component
 public class ProjectJoinDaoImpl extends GenericDaoBase<ProjectJoinVO, Long> implements ProjectJoinDao {
-    protected static Logger s_logger = LogManager.getLogger(ProjectJoinDaoImpl.class);
+    protected static Logger logger = LogManager.getLogger(ProjectJoinDaoImpl.class);
 
     @Inject
     private ConfigurationDao _configDao;

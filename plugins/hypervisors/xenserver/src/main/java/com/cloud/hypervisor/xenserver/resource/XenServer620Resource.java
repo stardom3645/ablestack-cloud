@@ -30,7 +30,7 @@ import com.xensource.xenapi.PoolPatch;
 
 public class XenServer620Resource extends XenServer610Resource {
 
-    protected static Logger s_logger = LogManager.getLogger(XenServer620Resource.class);
+    protected static Logger logger = LogManager.getLogger(XenServer620Resource.class);
 
     protected boolean hostHasHotFix(final Connection conn, final String hotFixUuid) {
         try {
@@ -45,7 +45,7 @@ public class XenServer620Resource extends XenServer610Resource {
                 }
             }
         } catch (final Exception e) {
-            s_logger.debug("can't get patches information for hotFix: " + hotFixUuid);
+            logger.debug("can't get patches information for hotFix: " + hotFixUuid);
         }
         return false;
     }

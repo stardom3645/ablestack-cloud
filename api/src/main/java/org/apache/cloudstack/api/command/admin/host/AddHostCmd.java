@@ -41,7 +41,7 @@ import com.cloud.user.Account;
 @APICommand(name = "addHost", description = "Adds a new host.", responseObject = HostResponse.class,
         requestHasSensitiveInfo = true, responseHasSensitiveInfo = false)
 public class AddHostCmd extends BaseCmd {
-    protected static Logger s_logger = LogManager.getLogger(AddHostCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(AddHostCmd.class.getName());
 
 
     /////////////////////////////////////////////////////
@@ -151,7 +151,7 @@ public class AddHostCmd extends BaseCmd {
 
             this.setResponseObject(response);
         } catch (DiscoveryException ex) {
-            s_logger.warn("Exception: ", ex);
+            logger.warn("Exception: ", ex);
             throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, ex.getMessage());
         }
     }

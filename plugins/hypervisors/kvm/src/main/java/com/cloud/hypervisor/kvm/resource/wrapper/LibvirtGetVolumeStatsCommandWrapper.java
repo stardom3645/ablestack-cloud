@@ -41,7 +41,7 @@ import com.cloud.agent.api.VolumeStatsEntry;
 
 @ResourceWrapper(handles = GetVolumeStatsCommand.class)
 public final class LibvirtGetVolumeStatsCommandWrapper extends CommandWrapper<GetVolumeStatsCommand, Answer, LibvirtComputingResource> {
-    protected static Logger s_logger = LogManager.getLogger(LibvirtGetVmDiskStatsCommandWrapper.class);
+    protected static Logger logger = LogManager.getLogger(LibvirtGetVmDiskStatsCommandWrapper.class);
 
     @Override
     public Answer execute(final GetVolumeStatsCommand cmd, final LibvirtComputingResource libvirtComputingResource) {

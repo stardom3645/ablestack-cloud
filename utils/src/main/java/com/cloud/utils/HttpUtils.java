@@ -30,7 +30,7 @@ import java.util.Map;
 
 public class HttpUtils {
 
-    protected static Logger s_logger = LogManager.getLogger(HttpUtils.class);
+    protected static Logger logger = LogManager.getLogger(HttpUtils.class);
 
     public static final String UTF_8 = "UTF-8";
     public static final String RESPONSE_TYPE_JSON = "json";
@@ -82,12 +82,12 @@ public class HttpUtils {
             addSecurityHeaders(resp);
             resp.getWriter().print(response);
         } catch (final IOException ioex) {
-            if (s_logger.isTraceEnabled()) {
-                s_logger.trace("Exception writing http response: " + ioex);
+            if (logger.isTraceEnabled()) {
+                logger.trace("Exception writing http response: " + ioex);
             }
         } catch (final Exception ex) {
             if (!(ex instanceof IllegalStateException)) {
-                s_logger.error("Unknown exception writing http response", ex);
+                logger.error("Unknown exception writing http response", ex);
             }
         }
     }

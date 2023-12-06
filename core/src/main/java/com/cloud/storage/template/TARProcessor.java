@@ -30,7 +30,7 @@ import java.io.File;
 import java.util.Map;
 
 public class TARProcessor extends AdapterBase implements Processor {
-    protected static Logger s_logger = LogManager.getLogger(TARProcessor.class);
+    protected static Logger logger = LogManager.getLogger(TARProcessor.class);
 
     private StorageLayer _storage;
 
@@ -42,14 +42,14 @@ public class TARProcessor extends AdapterBase implements Processor {
     @Override
     public FormatInfo process(String templatePath, ImageFormat format, String templateName, long processTimeout) {
         if (format != null) {
-            s_logger.debug("We currently don't handle conversion from " + format + " to TAR.");
+            logger.debug("We currently don't handle conversion from " + format + " to TAR.");
             return null;
         }
 
         String tarPath = templatePath + File.separator + templateName + "." + ImageFormat.TAR.getFileExtension();
 
         if (!_storage.exists(tarPath)) {
-            s_logger.debug("Unable to find the tar file: " + tarPath);
+            logger.debug("Unable to find the tar file: " + tarPath);
             return null;
         }
 

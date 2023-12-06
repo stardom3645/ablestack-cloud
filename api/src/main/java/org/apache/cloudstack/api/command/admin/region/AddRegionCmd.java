@@ -36,7 +36,7 @@ import com.cloud.user.Account;
 @APICommand(name = "addRegion", description = "Adds a Region", responseObject = RegionResponse.class,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class AddRegionCmd extends BaseCmd {
-    protected static Logger s_logger = LogManager.getLogger(AddRegionCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(AddRegionCmd.class.getName());
 
 
     /////////////////////////////////////////////////////

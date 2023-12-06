@@ -37,7 +37,7 @@ import com.cloud.vm.DiskProfile;
 import com.cloud.vm.VirtualMachineProfile;
 
 public class GarbageCollectingStoragePoolAllocator extends AbstractStoragePoolAllocator {
-    protected static Logger s_logger = LogManager.getLogger(GarbageCollectingStoragePoolAllocator.class);
+    protected static Logger logger = LogManager.getLogger(GarbageCollectingStoragePoolAllocator.class);
 
     StoragePoolAllocator _firstFitStoragePoolAllocator;
     StoragePoolAllocator _localStoragePoolAllocator;
@@ -51,7 +51,7 @@ public class GarbageCollectingStoragePoolAllocator extends AbstractStoragePoolAl
     public List<StoragePool> select(DiskProfile dskCh, VirtualMachineProfile vmProfile, DeploymentPlan plan, ExcludeList avoid, int returnUpTo, boolean bypassStorageTypeCheck) {
         logStartOfSearch(dskCh, vmProfile, plan, returnUpTo, bypassStorageTypeCheck);
         if (!_storagePoolCleanupEnabled) {
-            s_logger.debug("Storage pool cleanup is not enabled, so GarbageCollectingStoragePoolAllocator is being skipped.");
+            logger.debug("Storage pool cleanup is not enabled, so GarbageCollectingStoragePoolAllocator is being skipped.");
             return null;
         }
 

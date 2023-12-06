@@ -38,7 +38,7 @@ import java.io.File;
 
 @ResourceWrapper(handles = PatchSystemVmCommand.class)
 public class LibvirtPatchSystemVmCommandWrapper extends CommandWrapper<PatchSystemVmCommand, Answer, LibvirtComputingResource> {
-    protected static Logger s_logger = LogManager.getLogger(LibvirtPatchSystemVmCommandWrapper.class);
+    protected static Logger logger = LogManager.getLogger(LibvirtPatchSystemVmCommandWrapper.class);
     private static int sshPort = Integer.parseInt(LibvirtComputingResource.DEFAULTDOMRSSHPORT);
     private static File pemFile = new File(LibvirtComputingResource.SSHPRVKEYPATH);
 
@@ -64,7 +64,7 @@ public class LibvirtPatchSystemVmCommandWrapper extends CommandWrapper<PatchSyst
 
         if (!StringUtils.isEmpty(checksum) && checksum.equals(scriptChecksum) && !cmd.isForced()) {
             String msg = String.format("No change in the scripts checksum, not patching systemVM %s", sysVMName);
-            s_logger.info(msg);
+            logger.info(msg);
             return new PatchSystemVmAnswer(cmd, msg, lines[0], lines[1]);
         }
 
@@ -83,7 +83,7 @@ public class LibvirtPatchSystemVmCommandWrapper extends CommandWrapper<PatchSyst
                 String res = patchResult.second().replace("\n", " ");
                 String[] output = res.split(":");
                 if (output.length != 2) {
-                    s_logger.warn("Failed to get the latest script version");
+                    logger.warn("Failed to get the latest script version");
                 } else {
                     scriptVersion = output[1].split(" ")[0];
                 }
@@ -99,12 +99,12 @@ public class LibvirtPatchSystemVmCommandWrapper extends CommandWrapper<PatchSyst
             result = serverResource.executeInVR(controlIp, VRScripts.VERSION, null);
             if (!result.isSuccess()) {
                 String errMsg = String.format("GetSystemVMVersionCmd on %s failed, message %s", controlIp, result.getDetails());
-                s_logger.error(errMsg);
+                logger.error(errMsg);
                 throw new CloudRuntimeException(errMsg);
             }
         } catch (final Exception e) {
             final String msg = "GetSystemVMVersionCmd failed due to " + e;
-            s_logger.error(msg, e);
+            logger.error(msg, e);
             throw new CloudRuntimeException(msg, e);
         }
         return result;

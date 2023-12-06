@@ -55,7 +55,7 @@ import com.cloud.vm.VirtualMachine;
         "Therefore, stop the VM manually before issuing this call.", responseObject = UserVmResponse.class, responseView = ResponseView.Restricted, entityType = {VirtualMachine.class},
     requestHasSensitiveInfo = false, responseHasSensitiveInfo = true)
 public class UpdateVMCmd extends BaseCustomIdCmd implements SecurityGroupAction, UserCmd {
-    protected static Logger s_logger = LogManager.getLogger(UpdateVMCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(UpdateVMCmd.class.getName());
     private static final String s_name = "updatevirtualmachineresponse";
 
     /////////////////////////////////////////////////////

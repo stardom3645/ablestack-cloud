@@ -51,7 +51,7 @@ public abstract class OutputInterpreter {
     };
 
     public static class TimedOutLogger extends OutputInterpreter {
-        protected static Logger s_logger = LogManager.getLogger(TimedOutLogger.class);
+        protected static Logger logger = LogManager.getLogger(TimedOutLogger.class);
         Process _process;
 
         public TimedOutLogger(Process process) {
@@ -78,7 +78,7 @@ public abstract class OutputInterpreter {
                     buff.append(reader.readLine());
                 }
             } catch (IOException e) {
-                s_logger.info("[ignored] can not append line to buffer",e);
+                logger.info("[ignored] can not append line to buffer",e);
             }
 
             return buff.toString();

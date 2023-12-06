@@ -53,7 +53,7 @@ import java.util.Date;
 import java.util.List;
 
 public class BareMetalTemplateAdapter extends TemplateAdapterBase implements TemplateAdapter {
-    private final static Logger s_logger = LogManager.getLogger(BareMetalTemplateAdapter.class);
+    private final static Logger logger = LogManager.getLogger(BareMetalTemplateAdapter.class);
     @Inject
     HostDao _hostDao;
     @Inject
@@ -142,7 +142,7 @@ public class BareMetalTemplateAdapter extends TemplateAdapterBase implements Tem
             zoneName = "all zones";
         }
 
-        s_logger.debug("Attempting to mark template host refs for template: " + template.getName() + " as destroyed in zone: " + zoneName);
+        logger.debug("Attempting to mark template host refs for template: " + template.getName() + " as destroyed in zone: " + zoneName);
         Account account = _accountDao.findByIdIncludingRemoved(template.getAccountId());
         String eventType = EventTypes.EVENT_TEMPLATE_DELETE;
         List<TemplateDataStoreVO> templateHostVOs = this._tmpltStoreDao.listByTemplate(templateId);
@@ -152,7 +152,7 @@ public class BareMetalTemplateAdapter extends TemplateAdapterBase implements Tem
             try {
                 lock = _tmpltStoreDao.acquireInLockTable(vo.getId());
                 if (lock == null) {
-                    s_logger.debug("Failed to acquire lock when deleting templateDataStoreVO with ID: " + vo.getId());
+                    logger.debug("Failed to acquire lock when deleting templateDataStoreVO with ID: " + vo.getId());
                     success = false;
                     break;
                 }
@@ -185,7 +185,7 @@ public class BareMetalTemplateAdapter extends TemplateAdapterBase implements Tem
             }
         }
 
-        s_logger.debug("Successfully marked template host refs for template: " + template.getName() + " as destroyed in zone: " + zoneName);
+        logger.debug("Successfully marked template host refs for template: " + template.getName() + " as destroyed in zone: " + zoneName);
 
         // If there are no more non-destroyed template host entries for this template, delete it
         if (success && (_tmpltStoreDao.listByTemplate(templateId).size() == 0)) {
@@ -195,7 +195,7 @@ public class BareMetalTemplateAdapter extends TemplateAdapterBase implements Tem
 
             try {
                 if (lock == null) {
-                    s_logger.debug("Failed to acquire lock when deleting template with ID: " + templateId);
+                    logger.debug("Failed to acquire lock when deleting template with ID: " + templateId);
                     success = false;
                 } else if (_tmpltDao.remove(templateId)) {
                     // Decrement the number of templates and total secondary storage space used by the account.
@@ -208,7 +208,7 @@ public class BareMetalTemplateAdapter extends TemplateAdapterBase implements Tem
                     _tmpltDao.releaseFromLockTable(lock.getId());
                 }
             }
-            s_logger.debug("Removed template: " + template.getName() + " because all of its template host refs were marked as destroyed.");
+            logger.debug("Removed template: " + template.getName() + " because all of its template host refs were marked as destroyed.");
         }
 
         return success;

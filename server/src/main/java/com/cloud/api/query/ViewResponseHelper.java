@@ -101,7 +101,7 @@ import com.cloud.user.Account;
  */
 public class ViewResponseHelper {
 
-    protected static Logger s_logger = LogManager.getLogger(ViewResponseHelper.class);
+    protected static Logger logger = LogManager.getLogger(ViewResponseHelper.class);
 
     public static List<UserResponse> createUserResponse(UserAccountJoinVO... users) {
         return createUserResponse(null, users);

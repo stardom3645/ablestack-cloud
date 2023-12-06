@@ -40,7 +40,7 @@ import com.cloud.user.Account;
 @APICommand(name = "restartVPC", description = "Restarts a VPC", responseObject = SuccessResponse.class, entityType = {Vpc.class},
 requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class RestartVPCCmd extends BaseAsyncCmd {
-    protected static Logger s_logger = LogManager.getLogger(RestartVPCCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(RestartVPCCmd.class.getName());
 
     /////////////////////////////////////////////////////
     //////////////// API parameters /////////////////////
@@ -102,14 +102,14 @@ public class RestartVPCCmd extends BaseAsyncCmd {
                 throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, "Failed to restart VPC");
             }
         } catch (final ResourceUnavailableException ex) {
-            s_logger.warn("Exception: ", ex);
+            logger.warn("Exception: ", ex);
             throw new ServerApiException(ApiErrorCode.RESOURCE_UNAVAILABLE_ERROR, ex.getMessage());
         } catch (final ConcurrentOperationException ex) {
-            s_logger.warn("Exception: ", ex);
+            logger.warn("Exception: ", ex);
             throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, ex.getMessage());
         } catch (final InsufficientCapacityException ex) {
-            s_logger.info(ex);
-            s_logger.trace(ex);
+            logger.info(ex);
+            logger.trace(ex);
             throw new ServerApiException(ApiErrorCode.INSUFFICIENT_CAPACITY_ERROR, ex.getMessage());
         }
     }

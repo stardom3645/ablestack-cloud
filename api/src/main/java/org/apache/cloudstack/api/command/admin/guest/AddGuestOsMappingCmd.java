@@ -37,7 +37,7 @@ import com.cloud.user.Account;
 @APICommand(name = "addGuestOsMapping", description = "Adds a guest OS name to hypervisor OS name mapping", responseObject = GuestOsMappingResponse.class,
         since = "4.4.0", requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class AddGuestOsMappingCmd extends BaseAsyncCreateCmd {
-    protected static Logger s_logger = LogManager.getLogger(AddGuestOsMappingCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(AddGuestOsMappingCmd.class.getName());
 
 
     /////////////////////////////////////////////////////

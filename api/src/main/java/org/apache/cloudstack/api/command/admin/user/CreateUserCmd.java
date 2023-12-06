@@ -36,7 +36,7 @@ import com.cloud.user.User;
 @APICommand(name = "createUser", description = "Creates a user for an account that already exists", responseObject = UserResponse.class,
         requestHasSensitiveInfo = true, responseHasSensitiveInfo = true)
 public class CreateUserCmd extends BaseCmd {
-    protected static Logger s_logger = LogManager.getLogger(CreateUserCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(CreateUserCmd.class.getName());
 
 
     /////////////////////////////////////////////////////

@@ -38,7 +38,7 @@ import com.cloud.network.vpc.VpcGateway;
         since = "4.17.0",
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class CreatePrivateGatewayByAdminCmd extends CreatePrivateGatewayCmd implements AdminCmd {
-    protected static Logger s_logger = LogManager.getLogger(CreatePrivateGatewayByAdminCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(CreatePrivateGatewayByAdminCmd.class.getName());
 
     /////////////////////////////////////////////////////
     //////////////// API parameters /////////////////////

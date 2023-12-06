@@ -40,7 +40,7 @@ import com.cloud.user.Account;
 @APICommand(name = "addImageStore", description = "Adds backup image store.", responseObject = ImageStoreResponse.class, since = "4.2.0",
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class AddImageStoreCmd extends BaseCmd {
-    protected static Logger s_logger = LogManager.getLogger(AddImageStoreCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(AddImageStoreCmd.class.getName());
 
     /////////////////////////////////////////////////////
     //////////////// API parameters /////////////////////
@@ -138,7 +138,7 @@ public class AddImageStoreCmd extends BaseCmd {
                 throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, "Failed to add secondary storage");
             }
         } catch (DiscoveryException ex) {
-            s_logger.warn("Exception: ", ex);
+            logger.warn("Exception: ", ex);
             throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, ex.getMessage());
         }
     }

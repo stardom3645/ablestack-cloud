@@ -40,7 +40,7 @@ import com.cloud.uservm.UserVm;
 @APICommand(name = "attachIso", description = "Attaches an ISO to a virtual machine.", responseObject = UserVmResponse.class, responseView = ResponseView.Restricted,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = true)
 public class AttachIsoCmd extends BaseAsyncCmd implements UserCmd {
-    protected static Logger s_logger = LogManager.getLogger(AttachIsoCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(AttachIsoCmd.class.getName());
 
     private static final String s_name = "attachisoresponse";
 

@@ -44,7 +44,7 @@ import net.juniper.contrail.api.ApiConnector;
 import net.juniper.contrail.api.ApiConnectorMock;
 
 public class InstanceIpModelTest extends TestCase {
-    protected static Logger s_logger =
+    protected static Logger logger =
         LogManager.getLogger(InstanceIpModelTest.class);
 
     @Test

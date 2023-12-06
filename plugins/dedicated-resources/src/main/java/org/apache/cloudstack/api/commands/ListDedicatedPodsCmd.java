@@ -44,7 +44,7 @@ import com.cloud.utils.Pair;
 @APICommand(name = "listDedicatedPods", description = "Lists dedicated pods.", responseObject = DedicatePodResponse.class,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class ListDedicatedPodsCmd extends BaseListCmd {
-    protected static Logger s_logger = LogManager.getLogger(ListDedicatedPodsCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(ListDedicatedPodsCmd.class.getName());
 
     @Inject
     DedicatedService dedicatedService;

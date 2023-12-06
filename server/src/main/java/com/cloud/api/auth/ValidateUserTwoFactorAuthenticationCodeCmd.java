@@ -55,7 +55,7 @@ import java.util.Map;
 public class ValidateUserTwoFactorAuthenticationCodeCmd extends BaseCmd implements APIAuthenticator {
 
     public static final String APINAME = "validateUserTwoFactorAuthenticationCode";
-    protected static Logger s_logger = LogManager.getLogger(ValidateUserTwoFactorAuthenticationCodeCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(ValidateUserTwoFactorAuthenticationCodeCmd.class.getName());
 
     @Inject
     private AccountManager accountManager;
@@ -126,8 +126,8 @@ public class ValidateUserTwoFactorAuthenticationCodeCmd extends BaseCmd implemen
                     "failed to authenticate user, check if two factor authentication code is correct");
             auditTrailSb.append(" " + ApiErrorCode.UNAUTHORIZED2FA + " " + msg);
             serializedResponse = _apiServer.getSerializedApiError(ApiErrorCode.UNAUTHORIZED2FA.getHttpCode(), msg, params, responseType);
-            if (s_logger.isTraceEnabled()) {
-                s_logger.trace(msg);
+            if (logger.isTraceEnabled()) {
+                logger.trace(msg);
             }
         }
         ServerApiException exception = new ServerApiException(ApiErrorCode.UNAUTHORIZED2FA, serializedResponse);

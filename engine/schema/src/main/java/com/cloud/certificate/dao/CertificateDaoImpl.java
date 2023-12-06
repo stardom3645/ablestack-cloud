@@ -29,7 +29,7 @@ import com.cloud.utils.db.GenericDaoBase;
 @DB
 public class CertificateDaoImpl extends GenericDaoBase<CertificateVO, Long> implements CertificateDao {
 
-    protected static Logger s_logger = LogManager.getLogger(CertificateDaoImpl.class);
+    protected static Logger logger = LogManager.getLogger(CertificateDaoImpl.class);
 
     public CertificateDaoImpl() {
 
@@ -43,7 +43,7 @@ public class CertificateDaoImpl extends GenericDaoBase<CertificateVO, Long> impl
             update(cert.getId(), cert);
             return cert.getId();
         } catch (Exception e) {
-            s_logger.warn("Unable to read the certificate: " + e);
+            logger.warn("Unable to read the certificate: " + e);
             return new Long(0);
         }
     }

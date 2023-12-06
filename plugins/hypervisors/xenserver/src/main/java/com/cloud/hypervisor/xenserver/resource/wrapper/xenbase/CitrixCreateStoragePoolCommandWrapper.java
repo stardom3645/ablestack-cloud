@@ -36,7 +36,7 @@ import com.xensource.xenapi.Connection;
 @ResourceWrapper(handles =  CreateStoragePoolCommand.class)
 public final class CitrixCreateStoragePoolCommandWrapper extends CommandWrapper<CreateStoragePoolCommand, Answer, CitrixResourceBase> {
 
-    protected static Logger s_logger = LogManager.getLogger(CitrixCreateStoragePoolCommandWrapper.class);
+    protected static Logger logger = LogManager.getLogger(CitrixCreateStoragePoolCommandWrapper.class);
 
     @Override
     public Answer execute(final CreateStoragePoolCommand command, final CitrixResourceBase citrixResourceBase) {
@@ -69,7 +69,7 @@ public final class CitrixCreateStoragePoolCommandWrapper extends CommandWrapper<
             final String msg = "Catch Exception " + e.getClass().getName() + ", create StoragePool failed due to " + e.toString() + " on host:"
                     + citrixResourceBase.getHost().getUuid() + " pool: " + pool.getHost() + pool.getPath();
 
-            s_logger.warn(msg, e);
+            logger.warn(msg, e);
 
             return new Answer(command, false, msg);
         }

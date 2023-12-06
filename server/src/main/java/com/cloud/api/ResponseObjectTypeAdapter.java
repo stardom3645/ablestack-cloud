@@ -32,7 +32,7 @@ import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
 
 public class ResponseObjectTypeAdapter implements JsonSerializer<ResponseObject> {
-    protected static Logger s_logger = LogManager.getLogger(ResponseObjectTypeAdapter.class.getName());
+    protected static Logger logger = LogManager.getLogger(ResponseObjectTypeAdapter.class.getName());
 
     @Override
     public JsonElement serialize(ResponseObject responseObj, Type typeOfResponseObj, JsonSerializationContext ctx) {
@@ -60,10 +60,10 @@ public class ResponseObjectTypeAdapter implements JsonSerializer<ResponseObject>
         try {
             method = o.getClass().getMethod(methodName);
         } catch (SecurityException e1) {
-            s_logger.error("Security exception in getting ResponseObject " + o.getClass().getName() + " get method for property: " + propName);
+            logger.error("Security exception in getting ResponseObject " + o.getClass().getName() + " get method for property: " + propName);
         } catch (NoSuchMethodException e1) {
-            if (s_logger.isTraceEnabled()) {
-                s_logger.trace("ResponseObject " + o.getClass().getName() + " does not have " + methodName + "() method for property: " + propName +
+            if (logger.isTraceEnabled()) {
+                logger.trace("ResponseObject " + o.getClass().getName() + " does not have " + methodName + "() method for property: " + propName +
                     ", will check is-prefixed method to see if it is boolean property");
             }
         }
@@ -75,9 +75,9 @@ public class ResponseObjectTypeAdapter implements JsonSerializer<ResponseObject>
         try {
             method = o.getClass().getMethod(methodName);
         } catch (SecurityException e1) {
-            s_logger.error("Security exception in getting ResponseObject " + o.getClass().getName() + " get method for property: " + propName);
+            logger.error("Security exception in getting ResponseObject " + o.getClass().getName() + " get method for property: " + propName);
         } catch (NoSuchMethodException e1) {
-            s_logger.warn("ResponseObject " + o.getClass().getName() + " does not have " + methodName + "() method for property: " + propName);
+            logger.warn("ResponseObject " + o.getClass().getName() + " does not have " + methodName + "() method for property: " + propName);
         }
         return method;
     }

@@ -38,7 +38,7 @@ import com.cloud.utils.Pair;
 @APICommand(name = "listTrafficTypes", description = "Lists traffic types of a given physical network.", responseObject = ProviderResponse.class, since = "3.0.0",
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class ListTrafficTypesCmd extends BaseListCmd {
-    protected static Logger s_logger = LogManager.getLogger(ListTrafficTypesCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(ListTrafficTypesCmd.class.getName());
 
     /////////////////////////////////////////////////////
     //////////////// API parameters /////////////////////

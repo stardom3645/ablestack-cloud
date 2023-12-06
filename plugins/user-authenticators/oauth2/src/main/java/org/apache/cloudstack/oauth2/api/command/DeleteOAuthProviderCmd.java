@@ -36,7 +36,7 @@ import javax.inject.Inject;
 @APICommand(name = "deleteOauthProvider", description = "Deletes the registered OAuth provider", responseObject = SuccessResponse.class,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false, since = "4.19.0")
 public class DeleteOAuthProviderCmd extends BaseCmd {
-    protected static Logger s_logger = LogManager.getLogger(DeleteOAuthProviderCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(DeleteOAuthProviderCmd.class.getName());
 
 
     /////////////////////////////////////////////////////

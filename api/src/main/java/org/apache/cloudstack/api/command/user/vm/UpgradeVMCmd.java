@@ -48,7 +48,7 @@ import com.cloud.vm.VirtualMachine;
         "this command to take effect.", responseView = ResponseView.Restricted, entityType = {VirtualMachine.class},
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = true)
 public class UpgradeVMCmd extends BaseCmd implements UserCmd {
-    protected static Logger s_logger = LogManager.getLogger(UpgradeVMCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(UpgradeVMCmd.class.getName());
     private static final String s_name = "changeserviceforvirtualmachineresponse";
 
     /////////////////////////////////////////////////////

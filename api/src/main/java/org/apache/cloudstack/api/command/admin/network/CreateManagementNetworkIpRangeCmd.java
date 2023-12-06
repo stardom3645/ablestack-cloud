@@ -45,7 +45,7 @@ import com.cloud.user.Account;
         responseHasSensitiveInfo = false,
         authorized = {RoleType.Admin})
 public class CreateManagementNetworkIpRangeCmd extends BaseAsyncCmd {
-    protected static Logger s_logger = LogManager.getLogger(CreateManagementNetworkIpRangeCmd.class);
+    protected static Logger logger = LogManager.getLogger(CreateManagementNetworkIpRangeCmd.class);
 
 
     /////////////////////////////////////////////////////

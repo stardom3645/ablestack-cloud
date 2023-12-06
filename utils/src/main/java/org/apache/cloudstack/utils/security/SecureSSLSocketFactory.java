@@ -37,7 +37,7 @@ import java.security.SecureRandom;
 
 public class SecureSSLSocketFactory extends SSLSocketFactory {
 
-    protected static Logger s_logger = LogManager.getLogger(SecureSSLSocketFactory.class);
+    protected static Logger logger = LogManager.getLogger(SecureSSLSocketFactory.class);
     private SSLContext _sslContext;
 
     public SecureSSLSocketFactory() throws NoSuchAlgorithmException {
@@ -68,7 +68,7 @@ public class SecureSSLSocketFactory extends SSLSocketFactory {
         try {
             ciphers = SSLUtils.getSupportedCiphers();
         } catch (NoSuchAlgorithmException e) {
-            s_logger.error("SecureSSLSocketFactory::getDefaultCipherSuites found no cipher suites");
+            logger.error("SecureSSLSocketFactory::getDefaultCipherSuites found no cipher suites");
         }
         return ciphers;
     }

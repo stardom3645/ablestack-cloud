@@ -21,7 +21,7 @@ import org.apache.logging.log4j.LogManager;
 
 public abstract class LegacyDbUpgrade implements DbUpgrade{
 
-    final static Logger s_logger = LogManager.getLogger(LegacyDbUpgrade.class);
+    final static Logger logger = LogManager.getLogger(LegacyDbUpgrade.class);
 
     public LegacyDbUpgrade() {
         super();
@@ -35,7 +35,7 @@ public abstract class LegacyDbUpgrade implements DbUpgrade{
             try {
                 closable.close();
             } catch (Exception e) {
-                s_logger.info("[ignored]",e);
+                logger.info("[ignored]",e);
             }
         }
     }

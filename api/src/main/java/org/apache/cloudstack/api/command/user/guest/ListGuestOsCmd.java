@@ -38,7 +38,7 @@ import com.cloud.utils.Pair;
 @APICommand(name = "listOsTypes", description = "Lists all supported OS types for this cloud.", responseObject = GuestOSResponse.class,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class ListGuestOsCmd extends BaseListCmd {
-    protected static Logger s_logger = LogManager.getLogger(ListGuestOsCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(ListGuestOsCmd.class.getName());
 
 
     /////////////////////////////////////////////////////

@@ -33,7 +33,7 @@ import com.cloud.user.Account;
 @APICommand(name = "deleteSecondaryStagingStore", description = "Deletes a secondary staging store .", responseObject = SuccessResponse.class, since = "4.2.0",
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class DeleteSecondaryStagingStoreCmd extends BaseCmd {
-    protected static Logger s_logger = LogManager.getLogger(DeleteSecondaryStagingStoreCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(DeleteSecondaryStagingStoreCmd.class.getName());
 
 
     // ///////////////////////////////////////////////////

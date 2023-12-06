@@ -30,7 +30,7 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 
 public class Decoder {
-    protected static Logger s_logger = LogManager.getLogger(Decoder.class);
+    protected static Logger logger = LogManager.getLogger(Decoder.class);
 
     private static Map<String, String> getParameters(URI uri) {
         String parameters = uri.getQuery();
@@ -57,7 +57,7 @@ public class Decoder {
         try {
             size = Long.parseLong(params.get(EncodingType.SIZE.toString()));
         } catch (NumberFormatException e) {
-            s_logger.info("[ignored] number not recognised",e);
+            logger.info("[ignored] number not recognised",e);
         }
         DecodedDataObject obj =
             new DecodedDataObject(params.get(EncodingType.OBJTYPE.toString()), size, params.get(EncodingType.NAME.toString()), params.get(EncodingType.PATH.toString()),

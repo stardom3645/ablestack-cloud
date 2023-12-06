@@ -61,7 +61,7 @@ import static org.mockito.Mockito.when;
 
 @RunWith(MockitoJUnitRunner.class)
 public class FirewallManagerTest {
-    protected static Logger s_logger = LogManager.getLogger(FirewallManagerTest.class);
+    protected static Logger logger = LogManager.getLogger(FirewallManagerTest.class);
 
 
     @Ignore("Requires database to be set up")
@@ -90,7 +90,7 @@ public class FirewallManagerTest {
 //        Assert.assertTrue(firewallMgr._staticNatElements.get("VirtualRouter") instanceof StaticNatServiceProvider);
 //        Assert.assertTrue(firewallMgr._networkAclElements.get("VpcVirtualRouter") instanceof NetworkACLServiceProvider);
 
-        s_logger.info("Done testing injection of service elements into firewall manager");
+        logger.info("Done testing injection of service elements into firewall manager");
 
     }
 

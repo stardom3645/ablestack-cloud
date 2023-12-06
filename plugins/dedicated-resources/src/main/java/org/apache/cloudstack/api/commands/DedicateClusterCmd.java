@@ -43,7 +43,7 @@ import com.cloud.user.Account;
 @APICommand(name = "dedicateCluster", description = "Dedicate an existing cluster", responseObject = DedicateClusterResponse.class,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class DedicateClusterCmd extends BaseAsyncCmd {
-    protected static Logger s_logger = LogManager.getLogger(DedicateClusterCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(DedicateClusterCmd.class.getName());
 
     @Inject
     DedicatedService dedicatedService;

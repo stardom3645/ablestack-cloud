@@ -72,7 +72,7 @@ import com.cloud.utils.exception.CloudRuntimeException;
  *     validation class to validate the value the admin input for the key.
  */
 public class ConfigDepotImpl implements ConfigDepot, ConfigDepotAdmin {
-    private final static Logger s_logger = LogManager.getLogger(ConfigDepotImpl.class);
+    private final static Logger logger = LogManager.getLogger(ConfigDepotImpl.class);
     @Inject
     ConfigurationDao _configDao;
     @Inject
@@ -126,7 +126,7 @@ public class ConfigDepotImpl implements ConfigDepot, ConfigDepotAdmin {
         if (_configured.contains(configurable))
             return;
 
-        s_logger.debug("Retrieving keys from " + configurable.getClass().getSimpleName());
+        logger.debug("Retrieving keys from " + configurable.getClass().getSimpleName());
 
         for (ConfigKey<?> key : configurable.getConfigKeys()) {
             Pair<String, ConfigKey<?>> previous = _allKeys.get(key.key());

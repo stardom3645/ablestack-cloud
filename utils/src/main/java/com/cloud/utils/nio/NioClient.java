@@ -34,7 +34,7 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 
 public class NioClient extends NioConnection {
-    protected static Logger s_logger = LogManager.getLogger(NioClient.class);
+    protected static Logger logger = LogManager.getLogger(NioClient.class);
 
     protected String _host;
     protected SocketChannel _clientConnection;
@@ -52,7 +52,7 @@ public class NioClient extends NioConnection {
         try {
             _clientConnection = SocketChannel.open();
 
-            s_logger.info("Connecting to " + _host + ":" + _port);
+            logger.info("Connecting to " + _host + ":" + _port);
             final InetSocketAddress peerAddr = new InetSocketAddress(_host, _port);
             _clientConnection.connect(peerAddr);
             _clientConnection.configureBlocking(false);
@@ -63,12 +63,12 @@ public class NioClient extends NioConnection {
             sslEngine.setEnabledProtocols(SSLUtils.getSupportedProtocols(sslEngine.getEnabledProtocols()));
             sslEngine.beginHandshake();
             if (!Link.doHandshake(_clientConnection, sslEngine)) {
-                s_logger.error("SSL Handshake failed while connecting to host: " + _host + " port: " + _port);
+                logger.error("SSL Handshake failed while connecting to host: " + _host + " port: " + _port);
                 _selector.close();
                 throw new IOException("SSL Handshake failed while connecting to host: " + _host + " port: " + _port);
             }
-            s_logger.info("SSL: Handshake done");
-            s_logger.info("Connected to " + _host + ":" + _port);
+            logger.info("SSL: Handshake done");
+            logger.info("Connected to " + _host + ":" + _port);
 
             final Link link = new Link(peerAddr, this);
             link.setSSLEngine(sslEngine);
@@ -104,6 +104,6 @@ public class NioClient extends NioConnection {
         if (_clientConnection != null) {
             _clientConnection.close();
         }
-        s_logger.info("NioClient connection closed");
+        logger.info("NioClient connection closed");
     }
 }

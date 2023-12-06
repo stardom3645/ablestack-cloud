@@ -37,7 +37,7 @@ import com.cloud.utils.exception.CloudRuntimeException;
 
 @APICommand(name = "reconnectHost", description = "Reconnects a host.", responseObject = HostResponse.class, requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class ReconnectHostCmd extends BaseAsyncCmd {
-    protected static Logger s_logger = LogManager.getLogger(ReconnectHostCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(ReconnectHostCmd.class.getName());
 
 
     /////////////////////////////////////////////////////

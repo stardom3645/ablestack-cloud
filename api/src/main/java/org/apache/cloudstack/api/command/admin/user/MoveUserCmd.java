@@ -47,7 +47,7 @@ import com.google.common.base.Preconditions;
         since = "4.11",
         authorized = {RoleType.Admin})
 public class MoveUserCmd extends BaseCmd {
-    protected static Logger s_logger = LogManager.getLogger(MoveUserCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(MoveUserCmd.class.getName());
 
 
     /////////////////////////////////////////////////////

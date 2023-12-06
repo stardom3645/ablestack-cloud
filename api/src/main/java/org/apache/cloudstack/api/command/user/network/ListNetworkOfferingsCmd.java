@@ -37,7 +37,7 @@ import com.cloud.utils.Pair;
 @APICommand(name = "listNetworkOfferings", description = "Lists all available network offerings.", responseObject = NetworkOfferingResponse.class,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class ListNetworkOfferingsCmd extends BaseListCmd {
-    protected static Logger s_logger = LogManager.getLogger(ListNetworkOfferingsCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(ListNetworkOfferingsCmd.class.getName());
 
     /////////////////////////////////////////////////////
     //////////////// API parameters /////////////////////

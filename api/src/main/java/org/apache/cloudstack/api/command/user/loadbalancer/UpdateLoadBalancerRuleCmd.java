@@ -39,7 +39,7 @@ import com.cloud.user.Account;
 @APICommand(name = "updateLoadBalancerRule", description = "Updates load balancer", responseObject = LoadBalancerResponse.class,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class UpdateLoadBalancerRuleCmd extends BaseAsyncCustomIdCmd {
-    protected static Logger s_logger = LogManager.getLogger(UpdateLoadBalancerRuleCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(UpdateLoadBalancerRuleCmd.class.getName());
 
     /////////////////////////////////////////////////////
     //////////////// API parameters /////////////////////

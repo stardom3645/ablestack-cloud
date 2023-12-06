@@ -44,7 +44,7 @@ import com.cloud.utils.Pair;
 @APICommand(name = "listPublicIpAddresses", description = "Lists all public IP addresses", responseObject = IPAddressResponse.class, responseView = ResponseView.Restricted,
  requestHasSensitiveInfo = false, responseHasSensitiveInfo = false, entityType = { IpAddress.class })
 public class ListPublicIpAddressesCmd extends BaseListRetrieveOnlyResourceCountCmd implements UserCmd {
-    protected static Logger s_logger = LogManager.getLogger(ListPublicIpAddressesCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(ListPublicIpAddressesCmd.class.getName());
 
     private static final String s_name = "listpublicipaddressesresponse";
 

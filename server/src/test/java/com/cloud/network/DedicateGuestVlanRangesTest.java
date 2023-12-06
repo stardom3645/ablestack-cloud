@@ -58,7 +58,7 @@ import static org.mockito.Mockito.when;
 
 public class DedicateGuestVlanRangesTest {
 
-    protected static Logger s_logger = LogManager.getLogger(DedicateGuestVlanRangesTest.class);
+    protected static Logger logger = LogManager.getLogger(DedicateGuestVlanRangesTest.class);
 
     NetworkServiceImpl networkService = new NetworkServiceImpl();
 
@@ -131,7 +131,7 @@ public class DedicateGuestVlanRangesTest {
 
     @Test
     public void testDedicateGuestVlanRange() throws Exception {
-        s_logger.info("Running tests for DedicateGuestVlanRange API");
+        logger.info("Running tests for DedicateGuestVlanRange API");
 
         /*
          * TEST 1: given valid parameters DedicateGuestVlanRange should succeed
@@ -167,7 +167,7 @@ public class DedicateGuestVlanRangesTest {
     @Test
     public void testReleaseDedicatedGuestVlanRange() throws Exception {
 
-        s_logger.info("Running tests for ReleaseDedicatedGuestVlanRange API");
+        logger.info("Running tests for ReleaseDedicatedGuestVlanRange API");
 
         /*
          * TEST 1: given valid parameters ReleaseDedicatedGuestVlanRange should succeed
@@ -210,7 +210,7 @@ public class DedicateGuestVlanRangesTest {
             GuestVlanRange result = networkService.dedicateGuestVlanRange(dedicateGuestVlanRangesCmd);
             Assert.assertNotNull(result);
         } catch (Exception e) {
-            s_logger.info("exception in testing runDedicateGuestVlanRangePostiveTest message: " + e.toString());
+            logger.info("exception in testing runDedicateGuestVlanRangePostiveTest message: " + e.toString());
         } finally {
             txn.close("runDedicateGuestRangePostiveTest");
         }
@@ -355,7 +355,7 @@ public class DedicateGuestVlanRangesTest {
             Boolean result = networkService.releaseDedicatedGuestVlanRange(releaseDedicatedGuestVlanRangesCmd.getId());
             Assert.assertTrue(result);
         } catch (Exception e) {
-            s_logger.info("exception in testing runReleaseGuestVlanRangePostiveTest1 message: " + e.toString());
+            logger.info("exception in testing runReleaseGuestVlanRangePostiveTest1 message: " + e.toString());
         } finally {
             txn.close("runReleaseDedicatedGuestVlanRangePostiveTest");
         }

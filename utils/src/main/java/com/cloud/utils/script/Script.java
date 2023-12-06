@@ -47,7 +47,7 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 public class Script implements Callable<String> {
-    protected static Logger s_logger = LogManager.getLogger(Script.class);
+    protected static Logger logger = LogManager.getLogger(Script.class);
 
     private final Logger _logger;
 
@@ -88,7 +88,7 @@ public class Script implements Callable<String> {
             _timeout = _defaultTimeout;
         }
         _process = null;
-        _logger = logger != null ? logger : s_logger;
+        _logger = logger != null ? logger : logger;
     }
 
     public Script(boolean runWithSudo, String command, Duration timeout, Logger logger) {
@@ -108,16 +108,16 @@ public class Script implements Callable<String> {
     }
 
     public Script(String command) {
-        this(command, 0, s_logger);
+        this(command, 0, logger);
     }
 
     public Script(String command, Duration timeout) {
-        this(command, timeout.getMillis(), s_logger);
+        this(command, timeout.getMillis(), logger);
     }
 
     @Deprecated
     public Script(String command, long timeout) {
-        this(command, timeout, s_logger);
+        this(command, timeout, logger);
     }
 
     public void add(String... params) {
@@ -378,19 +378,19 @@ public class Script implements Callable<String> {
     }
 
     public static String findScript(String path, String script) {
-        s_logger.debug("Looking for " + script + " in the classpath");
+        logger.debug("Looking for " + script + " in the classpath");
 
         URL url = ClassLoader.getSystemResource(script);
-        s_logger.debug("System resource: " + url);
+        logger.debug("System resource: " + url);
         File file = null;
         if (url != null) {
             file = new File(url.getFile());
-            s_logger.debug("Absolute path =  " + file.getAbsolutePath());
+            logger.debug("Absolute path =  " + file.getAbsolutePath());
             return file.getAbsolutePath();
         }
 
         if (path == null) {
-            s_logger.warn("No search path specified, unable to look for " + script);
+            logger.warn("No search path specified, unable to look for " + script);
             return null;
         }
         path = path.replace("/", File.separator);
@@ -404,14 +404,14 @@ public class Script implements Callable<String> {
         } else {
             url = Script.class.getClassLoader().getResource(path + File.separator + script);
         }
-        s_logger.debug("Classpath resource: " + url);
+        logger.debug("Classpath resource: " + url);
         if (url != null) {
             try {
                 file = new File(new URI(url.toString()).getPath());
-                s_logger.debug("Absolute path =  " + file.getAbsolutePath());
+                logger.debug("Absolute path =  " + file.getAbsolutePath());
                 return file.getAbsolutePath();
             } catch (URISyntaxException e) {
-                s_logger.warn("Unable to convert " + url.toString() + " to a URI");
+                logger.warn("Unable to convert " + url.toString() + " to a URI");
             }
         }
 
@@ -425,7 +425,7 @@ public class Script implements Callable<String> {
             return file.exists() ? file.getAbsolutePath() : null;
         }
 
-        s_logger.debug("Looking for " + script);
+        logger.debug("Looking for " + script);
         String search = null;
         for (int i = 0; i < 3; i++) {
             if (i == 0) {
@@ -445,25 +445,25 @@ public class Script implements Callable<String> {
                 else
                     cp = cp.substring(begin, end);
 
-                s_logger.debug("Current binaries reside at " + cp);
+                logger.debug("Current binaries reside at " + cp);
                 search = cp;
             } else if (i == 1) {
-                s_logger.debug("Searching in environment.properties");
+                logger.debug("Searching in environment.properties");
                 try {
                     final File propsFile = PropertiesUtil.findConfigFile("environment.properties");
                     if (propsFile == null) {
-                        s_logger.debug("environment.properties could not be opened");
+                        logger.debug("environment.properties could not be opened");
                     } else {
                         final Properties props = PropertiesUtil.loadFromFile(propsFile);
                         search = props.getProperty("paths.script");
                     }
                 } catch (IOException e) {
-                    s_logger.debug("environment.properties could not be opened");
+                    logger.debug("environment.properties could not be opened");
                     continue;
                 }
-                s_logger.debug("environment.properties says scripts should be in " + search);
+                logger.debug("environment.properties says scripts should be in " + search);
             } else {
-                s_logger.debug("Searching in the current directory");
+                logger.debug("Searching in the current directory");
                 search = ".";
             }
 
@@ -471,7 +471,7 @@ public class Script implements Callable<String> {
             do {
                 search = search.substring(0, search.lastIndexOf(File.separator));
                 file = new File(search + File.separator + script);
-                s_logger.debug("Looking for " + script + " in " + file.getAbsolutePath());
+                logger.debug("Looking for " + script + " in " + file.getAbsolutePath());
             } while (!file.exists() && search.lastIndexOf(File.separator) != -1);
 
             if (file.exists()) {
@@ -486,14 +486,14 @@ public class Script implements Callable<String> {
         do {
             search = search.substring(0, search.lastIndexOf(File.separator));
             file = new File(search + File.separator + script);
-            s_logger.debug("Looking for " + script + " in " + file.getAbsolutePath());
+            logger.debug("Looking for " + script + " in " + file.getAbsolutePath());
         } while (!file.exists() && search.lastIndexOf(File.separator) != -1);
 
         if (file.exists()) {
             return file.getAbsolutePath();
         }
 
-        s_logger.warn("Unable to find script " + script);
+        logger.warn("Unable to find script " + script);
         return null;
     }
 

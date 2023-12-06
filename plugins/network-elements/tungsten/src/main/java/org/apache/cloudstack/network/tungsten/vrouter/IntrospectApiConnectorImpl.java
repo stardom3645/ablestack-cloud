@@ -34,7 +34,7 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
 public class IntrospectApiConnectorImpl implements IntrospectApiConnector {
-    protected static Logger s_logger = LogManager.getLogger(IntrospectApiConnectorImpl.class);
+    protected static Logger logger = LogManager.getLogger(IntrospectApiConnectorImpl.class);
     private final String vrouterUrl;
 
     public IntrospectApiConnectorImpl(VRouter vRouter) {
@@ -47,13 +47,13 @@ public class IntrospectApiConnectorImpl implements IntrospectApiConnector {
             CloseableHttpResponse httpResponse = httpClient.execute(request)) {
             return getResponse(httpResponse);
         } catch (IOException ex) {
-            s_logger.error("Failed to connect host : " + ex.getMessage());
+            logger.error("Failed to connect host : " + ex.getMessage());
             return null;
         } catch (ParserConfigurationException ex) {
-            s_logger.error("Failed to parse xml configuration : " + ex.getMessage());
+            logger.error("Failed to parse xml configuration : " + ex.getMessage());
             return null;
         } catch (SAXException ex) {
-            s_logger.error("Failed to get xml data : " + ex.getMessage());
+            logger.error("Failed to get xml data : " + ex.getMessage());
             return null;
         }
     }

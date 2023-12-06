@@ -41,7 +41,7 @@ import com.cloud.user.Account;
 requestHasSensitiveInfo = false, responseHasSensitiveInfo = false, authorized = {
         RoleType.Admin, RoleType.DomainAdmin })
 public class DeleteDomainCmd extends BaseAsyncCmd {
-    protected static Logger s_logger = LogManager.getLogger(DeleteDomainCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(DeleteDomainCmd.class.getName());
 
     /////////////////////////////////////////////////////
     //////////////// API parameters /////////////////////

@@ -56,7 +56,7 @@ import com.cloud.utils.script.Script;
 @ResourceWrapper(handles =  PrepareForMigrationCommand.class)
 public final class LibvirtPrepareForMigrationCommandWrapper extends CommandWrapper<PrepareForMigrationCommand, Answer, LibvirtComputingResource> {
 
-    protected static Logger s_logger = LogManager.getLogger(LibvirtPrepareForMigrationCommandWrapper.class);
+    protected static Logger logger = LogManager.getLogger(LibvirtPrepareForMigrationCommandWrapper.class);
 
     @Override
     public Answer execute(final PrepareForMigrationCommand command, final LibvirtComputingResource libvirtComputingResource) {
@@ -66,8 +66,8 @@ public final class LibvirtPrepareForMigrationCommandWrapper extends CommandWrapp
             return handleRollback(command, libvirtComputingResource);
         }
 
-        if (s_logger.isDebugEnabled()) {
-            s_logger.debug("Preparing host for migrating " + vm);
+        if (logger.isDebugEnabled()) {
+            logger.debug("Preparing host for migrating " + vm);
         }
 
         final NicTO[] nics = vm.getNics();
@@ -112,7 +112,7 @@ public final class LibvirtPrepareForMigrationCommandWrapper extends CommandWrapp
                         if(store.getProvider() != null && !store.getProvider().isEmpty() && "ABLESTACK".equals(store.getProvider())){
                             String device = libvirtComputingResource.mapRbdDevice(physicalDisk);
                             if (device != null) {
-                                s_logger.debug("RBD device on host is: " + device);
+                                logger.debug("RBD device on host is: " + device);
                             } else {
                                 throw new InternalErrorException("Error while mapping RBD device on host");
                             }
@@ -129,10 +129,10 @@ public final class LibvirtPrepareForMigrationCommandWrapper extends CommandWrapp
                             secretConsumer = volume.getDetails().get(DiskTO.SECRET_CONSUMER_DETAIL);
                         }
                         String secretUuid = libvirtComputingResource.createLibvirtVolumeSecret(conn, secretConsumer, volumeObjectTO.getPassphrase());
-                        s_logger.debug(String.format("Created libvirt secret %s for disk %s", secretUuid, volumeObjectTO.getPath()));
+                        logger.debug(String.format("Created libvirt secret %s for disk %s", secretUuid, volumeObjectTO.getPath()));
                         volumeObjectTO.clearPassphrase();
                     } else {
-                        s_logger.debug(String.format("disk %s has no passphrase or encryption", volumeObjectTO));
+                        logger.debug(String.format("disk %s has no passphrase or encryption", volumeObjectTO));
                     }
                 }
             }
@@ -152,7 +152,7 @@ public final class LibvirtPrepareForMigrationCommandWrapper extends CommandWrapp
             if (MapUtils.isNotEmpty(dpdkInterfaceMapping)) {
                 for (DpdkTO to : dpdkInterfaceMapping.values()) {
                     String cmd = String.format("ovs-vsctl del-port %s", to.getPort());
-                    s_logger.debug("Removing DPDK port: " + to.getPort());
+                    logger.debug("Removing DPDK port: " + to.getPort());
                     Script.runSimpleBashScript(cmd);
                 }
             }

@@ -44,7 +44,7 @@ import com.cloud.user.Account;
 @APICommand(name = "disableAccount", description = "Disables an account", responseObject = AccountResponse.class, entityType = {Account.class},
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = true)
 public class DisableAccountCmd extends BaseAsyncCmd {
-    protected static Logger s_logger = LogManager.getLogger(DisableAccountCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(DisableAccountCmd.class.getName());
 
     /////////////////////////////////////////////////////
     //////////////// API parameters /////////////////////

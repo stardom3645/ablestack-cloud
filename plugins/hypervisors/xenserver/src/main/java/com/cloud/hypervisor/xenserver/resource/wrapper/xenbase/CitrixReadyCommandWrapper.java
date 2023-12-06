@@ -44,7 +44,7 @@ import com.xensource.xenapi.VM;
 @ResourceWrapper(handles =  ReadyCommand.class)
 public final class CitrixReadyCommandWrapper extends CommandWrapper<ReadyCommand, Answer, CitrixResourceBase> {
 
-    protected static Logger s_logger = LogManager.getLogger(CitrixReadyCommandWrapper.class);
+    protected static Logger logger = LogManager.getLogger(CitrixReadyCommandWrapper.class);
 
     @Override
     public Answer execute(final ReadyCommand command, final CitrixResourceBase citrixResourceBase) {
@@ -75,10 +75,10 @@ public final class CitrixReadyCommandWrapper extends CommandWrapper<ReadyCommand
                 return new ReadyAnswer(command, "Unable to cleanup halted vms");
             }
         } catch (final XenAPIException e) {
-            s_logger.warn("Unable to cleanup halted vms", e);
+            logger.warn("Unable to cleanup halted vms", e);
             return new ReadyAnswer(command, "Unable to cleanup halted vms");
         } catch (final XmlRpcException e) {
-            s_logger.warn("Unable to cleanup halted vms", e);
+            logger.warn("Unable to cleanup halted vms", e);
             return new ReadyAnswer(command, "Unable to cleanup halted vms");
         }
 

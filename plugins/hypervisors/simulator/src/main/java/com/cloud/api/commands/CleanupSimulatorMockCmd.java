@@ -38,7 +38,7 @@ import javax.inject.Inject;
 
 @APICommand(name = "cleanupSimulatorMock", description="cleanup simulator mock", responseObject=SuccessResponse.class)
 public class CleanupSimulatorMockCmd extends BaseCmd {
-    protected static Logger s_logger = LogManager.getLogger(CleanupSimulatorMockCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(CleanupSimulatorMockCmd.class.getName());
     private static final String s_name = "cleanupsimulatormockresponse";
 
     @Inject SimulatorManager _simMgr;

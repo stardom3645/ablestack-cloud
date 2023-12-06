@@ -48,7 +48,7 @@ import com.cloud.user.Account;
             requestHasSensitiveInfo = false,
             responseHasSensitiveInfo = false)
 public class RemoveFromGlobalLoadBalancerRuleCmd extends BaseAsyncCmd {
-    protected static Logger s_logger = LogManager.getLogger(RemoveFromGlobalLoadBalancerRuleCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(RemoveFromGlobalLoadBalancerRuleCmd.class.getName());
 
     private static final String s_name = "removefromloadbalancerruleresponse";
 

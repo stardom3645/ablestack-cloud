@@ -33,7 +33,7 @@ import com.cloud.user.Account;
 @APICommand(name = "moveNetworkAclItem", description = "Move an ACL rule to a position bettwen two other ACL rules of the same ACL network list", responseObject = NetworkACLItemResponse.class, requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class MoveNetworkAclItemCmd extends BaseAsyncCustomIdCmd {
 
-    protected static Logger s_logger = LogManager.getLogger(MoveNetworkAclItemCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(MoveNetworkAclItemCmd.class.getName());
     private static final String s_name = "moveNetworkAclItemResponse";
 
     @Parameter(name = ApiConstants.ID, type = CommandType.STRING, required = true, description = "The ID of the network ACL rule that is being moved to a new position.")

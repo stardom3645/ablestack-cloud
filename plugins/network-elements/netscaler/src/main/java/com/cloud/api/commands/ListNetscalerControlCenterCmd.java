@@ -43,7 +43,7 @@ import com.cloud.utils.exception.CloudRuntimeException;
 @APICommand(name = "listNetscalerControlCenter", responseObject = NetscalerControlCenterResponse.class, description = "list control center", requestHasSensitiveInfo = true, responseHasSensitiveInfo = false)
 public class ListNetscalerControlCenterCmd extends BaseListCmd {
 
-    protected static Logger s_logger = LogManager.getLogger(ListNetscalerControlCenterCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(ListNetscalerControlCenterCmd.class.getName());
     private static final String s_name = "listNetscalerControlCenter";
 
     @Inject

@@ -28,7 +28,7 @@ import com.cloud.utils.db.DbProperties;
 import com.cloud.utils.exception.CloudRuntimeException;
 
 public class DBEncryptionUtil {
-    protected static Logger s_logger = LogManager.getLogger(DBEncryptionUtil.class);
+    protected static Logger logger = LogManager.getLogger(DBEncryptionUtil.class);
     private static CloudStackEncryptor s_encryptor = null;
 
     public static String encrypt(String plain) {
@@ -53,7 +53,7 @@ public class DBEncryptionUtil {
     }
 
     protected static void initialize() {
-        s_logger.debug("Calling to initialize");
+        logger.debug("Calling to initialize");
         final Properties dbProps = DbProperties.getDbProperties();
 
         if (EncryptionSecretKeyChecker.useEncryption()) {
@@ -67,6 +67,6 @@ public class DBEncryptionUtil {
         } else {
             throw new CloudRuntimeException("Trying to encrypt db values when encryption is not enabled");
         }
-        s_logger.debug("initialized");
+        logger.debug("initialized");
     }
 }

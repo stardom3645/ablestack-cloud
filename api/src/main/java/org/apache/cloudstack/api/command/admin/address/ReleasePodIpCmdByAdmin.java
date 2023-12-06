@@ -32,7 +32,7 @@ import com.cloud.user.Account;
 
 @APICommand(name = "releasePodIpAddress", description = "Releases a Pod IP back to the Pod", responseObject = SuccessResponse.class, requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class ReleasePodIpCmdByAdmin extends BaseCmd {
-    protected static Logger s_logger = LogManager.getLogger(ReleasePodIpCmdByAdmin.class.getName());
+    protected static Logger logger = LogManager.getLogger(ReleasePodIpCmdByAdmin.class.getName());
 
     private static final String s_name = "releasepodipresponse";
 

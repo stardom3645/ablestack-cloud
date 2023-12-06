@@ -49,7 +49,7 @@ import com.cloud.utils.db.SearchCriteria;
 
 public class SnapshotJoinDaoImpl extends GenericDaoBaseWithTagInformation<SnapshotJoinVO, SnapshotResponse> implements SnapshotJoinDao {
 
-    protected static Logger s_logger = LogManager.getLogger(SnapshotJoinDaoImpl.class);
+    protected static Logger logger = LogManager.getLogger(SnapshotJoinDaoImpl.class);
 
     @Inject
     private AccountService accountService;
@@ -87,7 +87,7 @@ public class SnapshotJoinDaoImpl extends GenericDaoBaseWithTagInformation<Snapsh
         SnapshotInfo snapshotInfo = null;
         snapshotInfo = snapshotDataFactory.getSnapshotWithRoleAndZone(snapshot.getId(), snapshot.getStoreRole(), snapshot.getDataCenterId());
         if (snapshotInfo == null) {
-            s_logger.debug("Unable to find info for image store snapshot with uuid " + snapshot.getUuid());
+            logger.debug("Unable to find info for image store snapshot with uuid " + snapshot.getUuid());
             snapshotResponse.setRevertable(false);
         } else {
             snapshotResponse.setRevertable(snapshotInfo.isRevertable());

@@ -27,7 +27,7 @@ import com.cloud.hypervisor.vmware.util.VmwareContext;
 
 public class HostNetworkSystemMO extends BaseMO {
     @SuppressWarnings("unused")
-    protected static Logger s_logger = LogManager.getLogger(HostNetworkSystemMO.class);
+    protected static Logger logger = LogManager.getLogger(HostNetworkSystemMO.class);
 
     public HostNetworkSystemMO(VmwareContext context, ManagedObjectReference morNetworkSystem) {
         super(context, morNetworkSystem);

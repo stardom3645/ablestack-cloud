@@ -33,7 +33,7 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 
 public class ElementCollectionTest extends TestCase {
-    static final Logger s_logger = LogManager.getLogger(ElementCollectionTest.class);
+    static final Logger logger = LogManager.getLogger(ElementCollectionTest.class);
     ArrayList<String> ar = null;
     List<String> lst = null;
     Collection<String> coll = null;

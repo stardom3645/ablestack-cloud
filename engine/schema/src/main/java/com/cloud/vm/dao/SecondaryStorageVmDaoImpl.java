@@ -39,7 +39,7 @@ import com.cloud.vm.VirtualMachine.State;
 
 @Component
 public class SecondaryStorageVmDaoImpl extends GenericDaoBase<SecondaryStorageVmVO, Long> implements SecondaryStorageVmDao {
-    protected static Logger s_logger = LogManager.getLogger(SecondaryStorageVmDaoImpl.class);
+    protected static Logger logger = LogManager.getLogger(SecondaryStorageVmDaoImpl.class);
 
     protected SearchBuilder<SecondaryStorageVmVO> DataCenterStatusSearch;
     protected SearchBuilder<SecondaryStorageVmVO> StateSearch;
@@ -194,7 +194,7 @@ public class SecondaryStorageVmDaoImpl extends GenericDaoBase<SecondaryStorageVm
                 l.add(rs.getLong(1));
             }
         } catch (SQLException e) {
-            s_logger.debug("Caught SQLException: ", e);
+            logger.debug("Caught SQLException: ", e);
         }
         return l;
     }
@@ -264,7 +264,7 @@ public class SecondaryStorageVmDaoImpl extends GenericDaoBase<SecondaryStorageVm
                 l.add(rs.getLong(1));
             }
         } catch (SQLException e) {
-            s_logger.error("Unexpected exception ", e);
+            logger.error("Unexpected exception ", e);
         }
 
         return l;

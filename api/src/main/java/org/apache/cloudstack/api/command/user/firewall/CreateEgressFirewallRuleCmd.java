@@ -49,7 +49,7 @@ import com.cloud.utils.net.NetUtils;
 @APICommand(name = "createEgressFirewallRule", description = "Creates a egress firewall rule for a given network ", responseObject = FirewallResponse.class, entityType = {FirewallRule.class},
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class CreateEgressFirewallRuleCmd extends BaseAsyncCreateCmd implements FirewallRule {
-    protected static Logger s_logger = LogManager.getLogger(CreateEgressFirewallRuleCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(CreateEgressFirewallRuleCmd.class.getName());
 
 
     // ///////////////////////////////////////////////////
@@ -258,10 +258,10 @@ public class CreateEgressFirewallRuleCmd extends BaseAsyncCreateCmd implements F
             }
         } catch (NetworkRuleConflictException ex) {
             String message = "Network rule conflict: ";
-            if (!s_logger.isTraceEnabled()) {
-                s_logger.info(message + ex.getMessage());
+            if (!logger.isTraceEnabled()) {
+                logger.info(message + ex.getMessage());
             } else {
-                s_logger.trace(message, ex);
+                logger.trace(message, ex);
             }
             throw new ServerApiException(ApiErrorCode.NETWORK_RULE_CONFLICT_ERROR, ex.getMessage());
         }

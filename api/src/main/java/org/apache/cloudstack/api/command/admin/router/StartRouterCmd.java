@@ -42,7 +42,7 @@ import com.cloud.vm.VirtualMachine;
 @APICommand(name = "startRouter", responseObject = DomainRouterResponse.class, description = "Starts a router.", entityType = {VirtualMachine.class},
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class StartRouterCmd extends BaseAsyncCmd {
-    protected static Logger s_logger = LogManager.getLogger(StartRouterCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(StartRouterCmd.class.getName());
 
     /////////////////////////////////////////////////////
     //////////////// API parameters /////////////////////

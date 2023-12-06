@@ -105,7 +105,7 @@ public class MockNetworkManagerImpl extends ManagerBase implements NetworkOrches
     List<NetworkElement> _networkElements;
 
     private static HashMap<String, String> s_providerToNetworkElementMap = new HashMap<String, String>();
-    protected static Logger s_logger = LogManager.getLogger(MockNetworkManagerImpl.class);
+    protected static Logger logger = LogManager.getLogger(MockNetworkManagerImpl.class);
 
     /* (non-Javadoc)
      * @see com.cloud.utils.component.Manager#start()
@@ -116,7 +116,7 @@ public class MockNetworkManagerImpl extends ManagerBase implements NetworkOrches
             Provider implementedProvider = element.getProvider();
             if (implementedProvider != null) {
                 if (s_providerToNetworkElementMap.containsKey(implementedProvider.getName())) {
-                    s_logger.error("Cannot start MapNetworkManager: Provider <-> NetworkElement must be a one-to-one map, " +
+                    logger.error("Cannot start MapNetworkManager: Provider <-> NetworkElement must be a one-to-one map, " +
                         "multiple NetworkElements found for Provider: " + implementedProvider.getName());
                     return false;
                 }

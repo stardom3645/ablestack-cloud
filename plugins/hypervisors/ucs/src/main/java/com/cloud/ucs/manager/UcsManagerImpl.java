@@ -68,7 +68,7 @@ import com.cloud.utils.xmlobject.XmlObject;
 import com.cloud.utils.xmlobject.XmlObjectParser;
 
 public class UcsManagerImpl implements UcsManager {
-    protected static Logger s_logger = LogManager.getLogger(UcsManagerImpl.class);
+    protected static Logger logger = LogManager.getLogger(UcsManagerImpl.class);
     public static final Long COOKIE_TTL = TimeUnit.MILLISECONDS.convert(100L, TimeUnit.MINUTES);
     public static final Long COOKIE_REFRESH_TTL = TimeUnit.MILLISECONDS.convert(10L, TimeUnit.MINUTES);
 
@@ -111,7 +111,7 @@ public class UcsManagerImpl implements UcsManager {
                 vo.setUcsManagerId(mgr.getId());
                 vo.setUuid(UUID.randomUUID().toString());
                 bladeDao.persist(vo);
-                s_logger.debug(String.format("discovered a new UCS blade[dn:%s] during sync", nc.getDn()));
+                logger.debug(String.format("discovered a new UCS blade[dn:%s] during sync", nc.getDn()));
             }
         }
 
@@ -124,7 +124,7 @@ public class UcsManagerImpl implements UcsManager {
 
                 UcsBladeVO vo = e.getValue();
                 bladeDao.remove(vo.getId());
-                s_logger.debug(String.format("decommission faded blade[dn:%s] during sync", vo.getDn()));
+                logger.debug(String.format("decommission faded blade[dn:%s] during sync", vo.getDn()));
             }
         }
 
@@ -159,7 +159,7 @@ public class UcsManagerImpl implements UcsManager {
                     syncBlades(mgr);
                 }
             } catch (Throwable t) {
-                s_logger.warn(t.getMessage(), t);
+                logger.warn(t.getMessage(), t);
             }
         }
 
@@ -322,7 +322,7 @@ public class UcsManagerImpl implements UcsManager {
         String cmd = UcsCommands.configResolveDn(cookie, dn);
         String res = client.call(cmd);
         XmlObject xo = XmlObjectParser.parseFromString(res);
-        s_logger.debug(String.format("association response is %s", res));
+        logger.debug(String.format("association response is %s", res));
 
         if (xo.get("outConfig.computeBlade.association").equals("none")) {
             throw new CloudRuntimeException(String.format("cannot associated a profile to blade[dn:%s]. please check your UCS manasger for detailed error information",
@@ -377,7 +377,7 @@ public class UcsManagerImpl implements UcsManager {
 
         UcsBladeResponse rsp = bladeVOToResponse(bvo);
 
-        s_logger.debug(String.format("successfully associated profile[%s] to blade[%s]", pdn, bvo.getDn()));
+        logger.debug(String.format("successfully associated profile[%s] to blade[%s]", pdn, bvo.getDn()));
         return rsp;
     }
 

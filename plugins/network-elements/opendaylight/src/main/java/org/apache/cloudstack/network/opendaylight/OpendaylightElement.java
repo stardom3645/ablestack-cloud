@@ -60,7 +60,7 @@ import com.cloud.vm.VirtualMachineProfile;
 @Component
 public class OpendaylightElement extends AdapterBase implements ConnectivityProvider, ResourceStateAdapter {
 
-    protected static Logger s_logger = LogManager.getLogger(OpendaylightElement.class);
+    protected static Logger logger = LogManager.getLogger(OpendaylightElement.class);
     private static final Map<Service, Map<Capability, String>> s_capabilities = setCapabilities();
 
     @Inject

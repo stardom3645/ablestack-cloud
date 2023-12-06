@@ -48,7 +48,7 @@ import com.cloud.user.Account;
 @APICommand(name = "createServiceOffering", description = "Creates a service offering.", responseObject = ServiceOfferingResponse.class,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class CreateServiceOfferingCmd extends BaseCmd {
-    protected static Logger s_logger = LogManager.getLogger(CreateServiceOfferingCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(CreateServiceOfferingCmd.class.getName());
 
     /////////////////////////////////////////////////////
     //////////////// API parameters /////////////////////

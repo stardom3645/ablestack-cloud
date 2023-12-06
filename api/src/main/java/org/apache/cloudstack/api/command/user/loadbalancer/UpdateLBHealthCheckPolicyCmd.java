@@ -31,7 +31,7 @@ import com.cloud.user.Account;
 @APICommand(name = "updateLBHealthCheckPolicy", description = "Updates load balancer health check policy", responseObject = LBHealthCheckResponse.class, since = "4.4",
 requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class UpdateLBHealthCheckPolicyCmd extends BaseAsyncCustomIdCmd{
-    protected static Logger s_logger = LogManager.getLogger(UpdateLBHealthCheckPolicyCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(UpdateLBHealthCheckPolicyCmd.class.getName());
 
 
     /////////////////////////////////////////////////////

@@ -44,7 +44,7 @@ import com.cloud.user.Account;
 @APICommand(name = "updateAccount", description = "Updates account information for the authenticated user", responseObject = AccountResponse.class, entityType = {Account.class},
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = true)
 public class UpdateAccountCmd extends BaseCmd {
-    protected static Logger s_logger = LogManager.getLogger(UpdateAccountCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(UpdateAccountCmd.class.getName());
 
     /////////////////////////////////////////////////////
     //////////////// API parameters /////////////////////

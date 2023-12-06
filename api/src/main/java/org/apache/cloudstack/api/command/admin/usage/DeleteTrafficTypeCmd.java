@@ -35,7 +35,7 @@ import com.cloud.user.Account;
 @APICommand(name = "deleteTrafficType", description = "Deletes traffic type of a physical network", responseObject = SuccessResponse.class, since = "3.0.0",
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class DeleteTrafficTypeCmd extends BaseAsyncCmd {
-    protected static Logger s_logger = LogManager.getLogger(DeleteTrafficTypeCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(DeleteTrafficTypeCmd.class.getName());
 
 
     /////////////////////////////////////////////////////

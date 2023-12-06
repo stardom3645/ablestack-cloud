@@ -28,7 +28,7 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 
 public class ComponentLifecycleBase implements ComponentLifecycle {
-    protected static Logger s_logger = LogManager.getLogger(ComponentLifecycleBase.class);
+    protected Logger logger = LogManager.getLogger(getClass());
 
     protected String _name;
     protected int _runLevel;

@@ -34,7 +34,7 @@ import com.xensource.xenapi.Network;
 @ResourceWrapper(handles = SetupPersistentNetworkCommand.class)
 public class CitrixSetupPersistentNetworkCommandWrapper extends CommandWrapper<SetupPersistentNetworkCommand, Answer, CitrixResourceBase> {
 
-    protected static Logger s_logger = LogManager.getLogger(CitrixSetupPersistentNetworkCommandWrapper.class);
+    protected static Logger logger = LogManager.getLogger(CitrixSetupPersistentNetworkCommandWrapper.class);
 
     @Override
     public Answer execute(SetupPersistentNetworkCommand command, CitrixResourceBase citrixResourceBase) {
@@ -48,7 +48,7 @@ public class CitrixSetupPersistentNetworkCommandWrapper extends CommandWrapper<S
             return new SetupPersistentNetworkAnswer(command, true, "Successfully setup network on host: "+ host.getIp());
         } catch (final Exception e) {
             final String msg = " Failed to setup network on host: " + host.getIp() + " due to: " + e.toString();
-            s_logger.error(msg, e);
+            logger.error(msg, e);
             return new SetupPersistentNetworkAnswer(command, false, msg);
         }
     }

@@ -33,7 +33,7 @@ import com.cloud.network.Network;
 @APICommand(name = "createNetwork", description = "Creates a network", responseObject = NetworkResponse.class, responseView = ResponseView.Full, entityType = {Network.class},
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class CreateNetworkCmdByAdmin extends CreateNetworkCmd implements AdminCmd {
-    protected static Logger s_logger = LogManager.getLogger(CreateNetworkCmdByAdmin.class.getName());
+    protected static Logger logger = LogManager.getLogger(CreateNetworkCmdByAdmin.class.getName());
 
     @Parameter(name=ApiConstants.VLAN, type=CommandType.STRING, description="the ID or VID of the network")
     private String vlan;

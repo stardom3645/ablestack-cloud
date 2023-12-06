@@ -33,7 +33,7 @@ import com.xensource.xenapi.Connection;
 @ResourceWrapper(handles =  CheckSshCommand.class)
 public final class CitrixCheckSshCommandWrapper extends CommandWrapper<CheckSshCommand, Answer, CitrixResourceBase> {
 
-    protected static Logger s_logger = LogManager.getLogger(CitrixCheckSshCommandWrapper.class);
+    protected static Logger logger = LogManager.getLogger(CitrixCheckSshCommandWrapper.class);
 
     @Override
     public Answer execute(final CheckSshCommand command, final CitrixResourceBase citrixResourceBase) {
@@ -42,8 +42,8 @@ public final class CitrixCheckSshCommandWrapper extends CommandWrapper<CheckSshC
         final String privateIp = command.getIp();
         final int cmdPort = command.getPort();
 
-        if (s_logger.isDebugEnabled()) {
-            s_logger.debug("Ping command port, " + privateIp + ":" + cmdPort);
+        if (logger.isDebugEnabled()) {
+            logger.debug("Ping command port, " + privateIp + ":" + cmdPort);
         }
 
         try {
@@ -57,8 +57,8 @@ public final class CitrixCheckSshCommandWrapper extends CommandWrapper<CheckSshC
             return new CheckSshAnswer(command, e);
         }
 
-        if (s_logger.isDebugEnabled()) {
-            s_logger.debug("Ping command port succeeded for vm " + vmName);
+        if (logger.isDebugEnabled()) {
+            logger.debug("Ping command port succeeded for vm " + vmName);
         }
 
         return new CheckSshAnswer(command);

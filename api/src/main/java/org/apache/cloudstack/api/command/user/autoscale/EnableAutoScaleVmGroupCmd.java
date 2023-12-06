@@ -38,7 +38,7 @@ import com.cloud.user.Account;
 @APICommand(name = "enableAutoScaleVmGroup", description = "Enables an AutoScale Vm Group", responseObject = AutoScaleVmGroupResponse.class, entityType = {AutoScaleVmGroup.class},
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class EnableAutoScaleVmGroupCmd extends BaseAsyncCmd {
-    protected static Logger s_logger = LogManager.getLogger(EnableAutoScaleVmGroupCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(EnableAutoScaleVmGroupCmd.class.getName());
     private static final String s_name = "enableautoscalevmGroupresponse";
 
     // ///////////////////////////////////////////////////

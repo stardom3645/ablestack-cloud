@@ -43,7 +43,7 @@ import com.cloud.hypervisor.vmware.util.VmwareContext;
 import com.cloud.utils.Pair;
 
 public class DatacenterMO extends BaseMO {
-    protected static Logger s_logger = LogManager.getLogger(DatacenterMO.class);
+    protected static Logger logger = LogManager.getLogger(DatacenterMO.class);
 
     public DatacenterMO(VmwareContext context, ManagedObjectReference morDc) {
         super(context, morDc);
@@ -58,7 +58,7 @@ public class DatacenterMO extends BaseMO {
 
         _mor = _context.getVimClient().getDecendentMoRef(_context.getRootFolder(), "Datacenter", dcName);
         if (_mor == null) {
-            s_logger.error("Unable to locate DC " + dcName);
+            logger.error("Unable to locate DC " + dcName);
         }
     }
 
@@ -87,7 +87,7 @@ public class DatacenterMO extends BaseMO {
     public VirtualMachineMO findVm(String vmName) throws Exception {
         int key = getCustomFieldKey("VirtualMachine", CustomFieldConstants.CLOUD_VM_INTERNAL_NAME);
         if (key == 0) {
-            s_logger.warn("Custom field " + CustomFieldConstants.CLOUD_VM_INTERNAL_NAME + " is not registered ?!");
+            logger.warn("Custom field " + CustomFieldConstants.CLOUD_VM_INTERNAL_NAME + " is not registered ?!");
         }
         String instanceNameCustomField = "value[" + key + "]";
         List<ObjectContent> ocs = getVmPropertiesOnDatacenterVmFolder(new String[] {"name", instanceNameCustomField});
@@ -131,7 +131,7 @@ public class DatacenterMO extends BaseMO {
     public VirtualMachineMO checkIfVmAlreadyExistsInVcenter(String vmNameOnVcenter, String vmNameInCS) throws Exception {
         int key = getCustomFieldKey("VirtualMachine", CustomFieldConstants.CLOUD_VM_INTERNAL_NAME);
         if (key == 0) {
-            s_logger.warn("Custom field " + CustomFieldConstants.CLOUD_VM_INTERNAL_NAME + " is not registered ?!");
+            logger.warn("Custom field " + CustomFieldConstants.CLOUD_VM_INTERNAL_NAME + " is not registered ?!");
         }
 
         List<ObjectContent> ocs = getVmPropertiesOnDatacenterVmFolder(new String[] {"name", String.format("value[%d]", key)});

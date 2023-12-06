@@ -36,7 +36,7 @@ import com.cloud.event.EventTypes;
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class GenerateAlertCmd extends BaseAsyncCmd {
 
-    protected static Logger s_logger = LogManager.getLogger(GenerateAlertCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(GenerateAlertCmd.class.getName());
 
 
     // ///////////////////////////////////////////////////

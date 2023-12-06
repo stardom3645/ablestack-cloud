@@ -53,7 +53,7 @@ import com.cloud.vm.VirtualMachine;
         requestHasSensitiveInfo = true, responseHasSensitiveInfo = false)
 public class DeployNetscalerVpxCmd extends BaseAsyncCmd {
 
-    protected static Logger s_logger = LogManager.getLogger(DeployNetscalerVpxCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(DeployNetscalerVpxCmd.class.getName());
     private static final String s_name = "deployNetscalerVpx";
     @Inject
     NetscalerLoadBalancerElementService _netsclarLbService;

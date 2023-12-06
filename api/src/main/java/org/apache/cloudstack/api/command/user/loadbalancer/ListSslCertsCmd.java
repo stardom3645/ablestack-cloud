@@ -40,7 +40,7 @@ import com.cloud.utils.exception.CloudRuntimeException;
 @APICommand(name = "listSslCerts", description = "Lists SSL certificates", responseObject = SslCertResponse.class,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class ListSslCertsCmd extends BaseCmd {
-    protected static Logger s_logger = LogManager.getLogger(ListSslCertsCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(ListSslCertsCmd.class.getName());
 
 
     @Inject

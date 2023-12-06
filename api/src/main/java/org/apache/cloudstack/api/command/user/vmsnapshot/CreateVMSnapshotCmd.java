@@ -43,7 +43,7 @@ import com.cloud.vm.snapshot.VMSnapshot;
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class CreateVMSnapshotCmd extends BaseAsyncCreateCmd {
 
-    protected static Logger s_logger = LogManager.getLogger(CreateVMSnapshotCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(CreateVMSnapshotCmd.class.getName());
 
     @ACL(accessType = AccessType.OperateEntry)
     @Parameter(name = ApiConstants.VIRTUAL_MACHINE_ID, type = CommandType.UUID, required = true, entityType = UserVmResponse.class, description = "The ID of the vm")

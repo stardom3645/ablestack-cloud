@@ -42,7 +42,7 @@ import com.cloud.utils.exception.CloudRuntimeException;
 
 @Component
 public class VGPUTypesDaoImpl extends GenericDaoBase<VGPUTypesVO, Long> implements VGPUTypesDao {
-    protected static Logger s_logger = LogManager.getLogger(VGPUTypesDaoImpl.class);
+    protected static Logger logger = LogManager.getLogger(VGPUTypesDaoImpl.class);
 
     private final SearchBuilder<VGPUTypesVO> _searchByGroupId;
     private final SearchBuilder<VGPUTypesVO> _searchByGroupIdVGPUType;

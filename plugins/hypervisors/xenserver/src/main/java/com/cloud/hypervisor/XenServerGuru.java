@@ -185,8 +185,8 @@ public class XenServerGuru extends HypervisorGuruBase implements HypervisorGuru,
         }
         // only now can we decide, now we now we're only deciding for ourselves
         if (cmd instanceof StorageSubSystemCommand) {
-            if (s_logger.isTraceEnabled()) {
-                s_logger.trace(String.format("XenServer StrorageSubSystemCommand re always executed in sequence (command of type %s to host %l).", cmd.getClass(), hostId));
+            if (logger.isTraceEnabled()) {
+                logger.trace(String.format("XenServer StrorageSubSystemCommand re always executed in sequence (command of type %s to host %l).", cmd.getClass(), hostId));
             }
             StorageSubSystemCommand c = (StorageSubSystemCommand)cmd;
             c.setExecuteInSequence(true);

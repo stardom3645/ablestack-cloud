@@ -27,7 +27,7 @@ import com.cloud.utils.StringUtils;
 
 public class TestVmwareContextFactory {
 
-    protected static Logger s_logger = LogManager.getLogger(TestVmwareContextFactory.class);
+    protected static Logger logger = LogManager.getLogger(TestVmwareContextFactory.class);
 
     private static volatile int s_seq = 1;
     private static VmwareContextPool s_pool;
@@ -45,8 +45,8 @@ public class TestVmwareContextFactory {
 
         String serviceUrl = "https://" + vCenterAddress + "/sdk/vimService";
 
-        if (s_logger.isDebugEnabled())
-            s_logger.debug("initialize VmwareContext. url: " + serviceUrl + ", username: " + vCenterUserName + ", password: " +
+        if (logger.isDebugEnabled())
+            logger.debug("initialize VmwareContext. url: " + serviceUrl + ", username: " + vCenterUserName + ", password: " +
                 StringUtils.getMaskedPasswordForDisplay(vCenterPassword));
 
         VmwareClient vimClient = new VmwareClient(vCenterAddress + "-" + s_seq++);

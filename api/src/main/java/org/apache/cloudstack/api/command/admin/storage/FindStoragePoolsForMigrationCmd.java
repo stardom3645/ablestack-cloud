@@ -39,7 +39,7 @@ import com.cloud.utils.Pair;
 @APICommand(name = "findStoragePoolsForMigration", description = "Lists storage pools available for migration of a volume.", responseObject = StoragePoolResponse.class,
 requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class FindStoragePoolsForMigrationCmd extends BaseListCmd {
-    protected static Logger s_logger = LogManager.getLogger(FindStoragePoolsForMigrationCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(FindStoragePoolsForMigrationCmd.class.getName());
 
 
     /////////////////////////////////////////////////////

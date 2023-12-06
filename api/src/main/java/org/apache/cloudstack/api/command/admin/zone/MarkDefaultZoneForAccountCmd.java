@@ -38,7 +38,7 @@ import com.cloud.user.Account;
 @APICommand(name = "markDefaultZoneForAccount", description = "Marks a default zone for this account", responseObject = AccountResponse.class, since = "4.0",
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = true)
 public class MarkDefaultZoneForAccountCmd extends BaseAsyncCmd {
-    protected static Logger s_logger = LogManager.getLogger(MarkDefaultZoneForAccountCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(MarkDefaultZoneForAccountCmd.class.getName());
 
 
     /////////////////////////////////////////////////////

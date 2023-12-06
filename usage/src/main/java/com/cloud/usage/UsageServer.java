@@ -27,7 +27,7 @@ import com.cloud.utils.LogUtils;
 import com.cloud.utils.component.ComponentContext;
 
 public class UsageServer implements Daemon {
-    protected static Logger s_logger = LogManager.getLogger(UsageServer.class.getName());
+    protected static Logger logger = LogManager.getLogger(UsageServer.class.getName());
     public static final String Name = "usage-server";
 
     private UsageManager mgr;
@@ -57,8 +57,8 @@ public class UsageServer implements Daemon {
         mgr = appContext.getBean(UsageManager.class);
 
         if (mgr != null) {
-            if (s_logger.isInfoEnabled()) {
-                s_logger.info("UsageServer ready...");
+            if (logger.isInfoEnabled()) {
+                logger.info("UsageServer ready...");
             }
         }
     }

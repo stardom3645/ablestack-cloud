@@ -35,7 +35,7 @@ import com.cloud.utils.Pair;
 @APICommand(name = "listVpnUsers", description = "Lists vpn users", responseObject = VpnUsersResponse.class, entityType = {VpnUser.class},
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class ListVpnUsersCmd extends BaseListProjectAndAccountResourcesCmd {
-    protected static Logger s_logger = LogManager.getLogger(ListVpnUsersCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(ListVpnUsersCmd.class.getName());
 
 
     /////////////////////////////////////////////////////

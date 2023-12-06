@@ -40,7 +40,7 @@ import org.springframework.beans.factory.config.InstantiationAwareBeanPostProces
 import com.cloud.utils.Pair;
 
 public class ComponentInstantiationPostProcessor implements InstantiationAwareBeanPostProcessor {
-    protected static Logger s_logger = LogManager.getLogger(ComponentInstantiationPostProcessor.class);
+    protected static Logger logger = LogManager.getLogger(ComponentInstantiationPostProcessor.class);
 
     private List<ComponentMethodInterceptor> _interceptors = new ArrayList<ComponentMethodInterceptor>();
     private Callback[] _callbacks;

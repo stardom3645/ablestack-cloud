@@ -43,7 +43,7 @@ import com.cloud.region.ha.GlobalLoadBalancingRulesService;
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class CreateGlobalLoadBalancerRuleCmd extends BaseAsyncCreateCmd {
 
-    protected static Logger s_logger = LogManager.getLogger(CreateGlobalLoadBalancerRuleCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(CreateGlobalLoadBalancerRuleCmd.class.getName());
 
 
     /////////////////////////////////////////////////////
@@ -158,7 +158,7 @@ public class CreateGlobalLoadBalancerRuleCmd extends BaseAsyncCreateCmd {
             this.setEntityUuid(gslbRule.getUuid());
             CallContext.current().setEventDetails("Rule Id: " + getEntityId());
         } catch (Exception ex) {
-            s_logger.warn("Exception: ", ex);
+            logger.warn("Exception: ", ex);
             throw new ServerApiException(ApiErrorCode.PARAM_ERROR, ex.getMessage());
         } finally {
 

@@ -42,7 +42,7 @@ import com.cloud.utils.exception.CloudRuntimeException;
 @APICommand(name = "deleteCiscoVnmcResource", responseObject = SuccessResponse.class, description = "Deletes a Cisco Vnmc controller",
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class DeleteCiscoVnmcResourceCmd extends BaseCmd {
-    protected static Logger s_logger = LogManager.getLogger(DeleteCiscoVnmcResourceCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(DeleteCiscoVnmcResourceCmd.class.getName());
     private static final String s_name = "deleteCiscoVnmcResource";
     @Inject
     CiscoVnmcElementService _ciscoVnmcElementService;

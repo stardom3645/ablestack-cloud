@@ -35,7 +35,7 @@ import com.cloud.user.Account;
 @APICommand(name = "deleteProjectInvitation", description = "Deletes project invitation", responseObject = SuccessResponse.class, since = "3.0.0",
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class DeleteProjectInvitationCmd extends BaseAsyncCmd {
-    protected static Logger s_logger = LogManager.getLogger(DeleteProjectInvitationCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(DeleteProjectInvitationCmd.class.getName());
 
     // ///////////////////////////////////////////////////
     // ////////////// API parameters /////////////////////

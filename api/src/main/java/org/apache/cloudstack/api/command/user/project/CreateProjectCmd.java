@@ -40,7 +40,7 @@ import com.cloud.user.Account;
 @APICommand(name = "createProject", description = "Creates a project", responseObject = ProjectResponse.class, since = "3.0.0",
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class CreateProjectCmd extends BaseAsyncCreateCmd {
-    protected static Logger s_logger = LogManager.getLogger(CreateProjectCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(CreateProjectCmd.class.getName());
 
 
     // ///////////////////////////////////////////////////

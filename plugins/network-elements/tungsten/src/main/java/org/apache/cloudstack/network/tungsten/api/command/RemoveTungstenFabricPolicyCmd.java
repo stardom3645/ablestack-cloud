@@ -42,7 +42,7 @@ import javax.inject.Inject;
     responseObject = TungstenFabricPolicyResponse.class, requestHasSensitiveInfo = false, responseHasSensitiveInfo =
     false)
 public class RemoveTungstenFabricPolicyCmd extends BaseAsyncCmd {
-    protected static Logger s_logger = LogManager.getLogger(RemoveTungstenFabricPolicyCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(RemoveTungstenFabricPolicyCmd.class.getName());
     public static final String APINAME = "removeTungstenFabricPolicy";
 
     @Inject

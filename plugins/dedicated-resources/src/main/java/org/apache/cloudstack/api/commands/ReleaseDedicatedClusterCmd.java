@@ -37,7 +37,7 @@ import com.cloud.user.Account;
 @APICommand(name = "releaseDedicatedCluster", description = "Release the dedication for cluster", responseObject = SuccessResponse.class,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class ReleaseDedicatedClusterCmd extends BaseAsyncCmd {
-    protected static Logger s_logger = LogManager.getLogger(ReleaseDedicatedClusterCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(ReleaseDedicatedClusterCmd.class.getName());
 
     @Inject
     DedicatedService dedicatedService;

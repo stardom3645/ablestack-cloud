@@ -49,7 +49,7 @@ import com.cloud.utils.db.EntityManager;
 import com.cloud.utils.exception.CloudRuntimeException;
 
 public class ApiDispatcher {
-    protected static Logger s_logger = LogManager.getLogger(ApiDispatcher.class.getName());
+    protected static Logger logger = LogManager.getLogger(ApiDispatcher.class.getName());
 
     Long _createSnapshotQueueSizeLimit;
     Long migrateQueueSizeLimit;
@@ -158,7 +158,7 @@ public class ApiDispatcher {
                         return;
                     }
                 } else {
-                    s_logger.trace("The queue size is unlimited, skipping the synchronizing");
+                    logger.trace("The queue size is unlimited, skipping the synchronizing");
                 }
             }
         }

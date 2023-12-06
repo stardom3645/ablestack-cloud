@@ -33,7 +33,7 @@ import org.apache.cloudstack.api.response.ZoneResponse;
 @APICommand(name = "listStoragePools", description = "Lists storage pools.", responseObject = StoragePoolResponse.class,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class ListStoragePoolsCmd extends BaseListCmd {
-    protected static Logger s_logger = LogManager.getLogger(ListStoragePoolsCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(ListStoragePoolsCmd.class.getName());
 
 
     /////////////////////////////////////////////////////

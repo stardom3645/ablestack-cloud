@@ -37,7 +37,7 @@ import com.cloud.utils.Pair;
 @APICommand(name = "listSnapshotPolicies", description = "Lists snapshot policies.", responseObject = SnapshotPolicyResponse.class,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class ListSnapshotPoliciesCmd extends BaseListCmd {
-    protected static Logger s_logger = LogManager.getLogger(ListSnapshotPoliciesCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(ListSnapshotPoliciesCmd.class.getName());
 
 
     /////////////////////////////////////////////////////

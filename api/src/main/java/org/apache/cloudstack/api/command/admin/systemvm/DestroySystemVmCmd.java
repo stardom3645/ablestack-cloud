@@ -38,7 +38,7 @@ import com.cloud.vm.VirtualMachine;
 @APICommand(name = "destroySystemVm", responseObject = SystemVmResponse.class, description = "Destroys a system virtual machine.", entityType = {VirtualMachine.class},
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class DestroySystemVmCmd extends BaseAsyncCmd {
-    protected static Logger s_logger = LogManager.getLogger(DestroySystemVmCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(DestroySystemVmCmd.class.getName());
 
 
     @ACL(accessType = AccessType.OperateEntry)

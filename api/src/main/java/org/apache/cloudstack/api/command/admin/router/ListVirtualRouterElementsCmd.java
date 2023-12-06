@@ -43,7 +43,7 @@ import com.cloud.network.element.VirtualRouterElementService;
 @APICommand(name = "listVirtualRouterElements", description = "Lists all available virtual router elements.", responseObject = VirtualRouterProviderResponse.class,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class ListVirtualRouterElementsCmd extends BaseListCmd {
-    protected static Logger s_logger = LogManager.getLogger(ListVirtualRouterElementsCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(ListVirtualRouterElementsCmd.class.getName());
 
     // TODO, VirtualRouterElementServer is not singleton in system!
     @Inject

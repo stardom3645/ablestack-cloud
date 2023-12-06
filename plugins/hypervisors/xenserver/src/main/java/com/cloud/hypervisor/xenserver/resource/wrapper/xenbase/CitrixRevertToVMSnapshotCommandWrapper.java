@@ -45,7 +45,7 @@ import com.xensource.xenapi.VM;
 @ResourceWrapper(handles =  RevertToVMSnapshotCommand.class)
 public final class CitrixRevertToVMSnapshotCommandWrapper extends CommandWrapper<RevertToVMSnapshotCommand, Answer, CitrixResourceBase> {
 
-    protected static Logger s_logger = LogManager.getLogger(CitrixRevertToVMSnapshotCommandWrapper.class);
+    protected static Logger logger = LogManager.getLogger(CitrixRevertToVMSnapshotCommandWrapper.class);
 
     @Override
     public Answer execute(final RevertToVMSnapshotCommand command, final CitrixResourceBase citrixResourceBase) {
@@ -106,7 +106,7 @@ public final class CitrixRevertToVMSnapshotCommandWrapper extends CommandWrapper
 
             return new RevertToVMSnapshotAnswer(command, listVolumeTo, vmState);
         } catch (final Exception e) {
-            s_logger.error("revert vm " + vmName + " to snapshot " + command.getTarget().getSnapshotName() + " failed due to " + e.getMessage());
+            logger.error("revert vm " + vmName + " to snapshot " + command.getTarget().getSnapshotName() + " failed due to " + e.getMessage());
             return new RevertToVMSnapshotAnswer(command, false, e.getMessage());
         }
     }

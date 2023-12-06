@@ -57,7 +57,7 @@ import com.xensource.xenapi.VM;
 @ResourceWrapper(handles =  MigrateWithStorageCommand.class)
 public final class XenServer610MigrateWithStorageCommandWrapper extends CommandWrapper<MigrateWithStorageCommand, Answer, XenServer610Resource> {
 
-    protected static Logger s_logger = LogManager.getLogger(XenServer610MigrateWithStorageCommandWrapper.class);
+    protected static Logger logger = LogManager.getLogger(XenServer610MigrateWithStorageCommandWrapper.class);
 
     @Override
     public Answer execute(final MigrateWithStorageCommand command, final XenServer610Resource xenServer610Resource) {
@@ -109,7 +109,7 @@ public final class XenServer610MigrateWithStorageCommandWrapper extends CommandW
                 xenServer610Resource.waitForTask(connection, task, 1000, timeout);
                 xenServer610Resource.checkForSuccess(connection, task);
             } catch (final Types.HandleInvalid e) {
-                s_logger.error("Error while checking if vm " + vmName + " can be migrated to the destination host " + host, e);
+                logger.error("Error while checking if vm " + vmName + " can be migrated to the destination host " + host, e);
                 throw new CloudRuntimeException("Error while checking if vm " + vmName + " can be migrated to the " + "destination host " + host, e);
             }
 
@@ -121,7 +121,7 @@ public final class XenServer610MigrateWithStorageCommandWrapper extends CommandW
                 xenServer610Resource.waitForTask(connection, task, 1000, timeout);
                 xenServer610Resource.checkForSuccess(connection, task);
             } catch (final Types.HandleInvalid e) {
-                s_logger.error("Error while migrating vm " + vmName + " to the destination host " + host, e);
+                logger.error("Error while migrating vm " + vmName + " to the destination host " + host, e);
                 throw new CloudRuntimeException("Error while migrating vm " + vmName + " to the destination host " + host, e);
             }
 
@@ -130,14 +130,14 @@ public final class XenServer610MigrateWithStorageCommandWrapper extends CommandW
             vmToMigrate.setAffinity(connection, host);
             return new MigrateWithStorageAnswer(command, volumeToList);
         } catch (final Exception e) {
-            s_logger.warn("Catch Exception " + e.getClass().getName() + ". Storage motion failed due to " + e.toString(), e);
+            logger.warn("Catch Exception " + e.getClass().getName() + ". Storage motion failed due to " + e.toString(), e);
             return new MigrateWithStorageAnswer(command, e);
         } finally {
             if (task != null) {
                 try {
                     task.destroy(connection);
                 } catch (final Exception e) {
-                    s_logger.debug("Unable to destroy task " + task.toString() + " on host " + uuid + " due to " + e.toString());
+                    logger.debug("Unable to destroy task " + task.toString() + " on host " + uuid + " due to " + e.toString());
                 }
             }
         }

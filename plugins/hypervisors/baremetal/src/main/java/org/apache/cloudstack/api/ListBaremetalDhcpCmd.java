@@ -36,7 +36,7 @@ import java.util.List;
 @APICommand(name = "listBaremetalDhcp", description = "list baremetal dhcp servers", responseObject = BaremetalDhcpResponse.class,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class ListBaremetalDhcpCmd extends BaseListCmd {
-    protected static Logger s_logger = LogManager.getLogger(ListBaremetalDhcpCmd.class);
+    protected static Logger logger = LogManager.getLogger(ListBaremetalDhcpCmd.class);
     @Inject
     BaremetalDhcpManager _dhcpMgr;
 
@@ -91,7 +91,7 @@ public class ListBaremetalDhcpCmd extends BaseListCmd {
             response.setObjectName("baremetaldhcps");
             this.setResponseObject(response);
         } catch (Exception e) {
-            s_logger.debug("Exception happend while executing ListBaremetalDhcpCmd");
+            logger.debug("Exception happend while executing ListBaremetalDhcpCmd");
             throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, e.getMessage());
         }
 

@@ -38,7 +38,7 @@ import com.cloud.vm.dao.NicDao;
 
 public class VpcIpAssociationRules extends RuleApplier {
 
-    protected static Logger s_logger = LogManager.getLogger(VpcIpAssociationRules.class);
+    protected static Logger logger = LogManager.getLogger(VpcIpAssociationRules.class);
 
     private final List<? extends PublicIpAddress> _ipAddresses;
 
@@ -68,7 +68,7 @@ public class VpcIpAssociationRules extends RuleApplier {
                 if (ipAddr.getState() != IpAddress.State.Releasing) {
                     throw new CloudRuntimeException("Unable to find the nic in network " + ipAddr.getNetworkId() + "  to apply the ip address " + ipAddr + " for");
                 }
-                s_logger.debug("Not sending release for ip address " + ipAddr + " as its nic is already gone from VPC router " + _router);
+                logger.debug("Not sending release for ip address " + ipAddr + " as its nic is already gone from VPC router " + _router);
             } else {
                 macAddress = nic.getMacAddress();
                 _vlanMacAddress.put(BroadcastDomainType.getValue(BroadcastDomainType.fromString(ipAddr.getVlanTag())), macAddress);

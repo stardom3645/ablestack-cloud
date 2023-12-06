@@ -45,7 +45,7 @@ public class AddVmwareDcCmd extends BaseCmd {
     @Inject
     public VmwareDatacenterService _vmwareDatacenterService;
 
-    protected static Logger s_logger = LogManager.getLogger(AddVmwareDcCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(AddVmwareDcCmd.class.getName());
 
 
     @Parameter(name = ApiConstants.NAME, type = CommandType.STRING, required = true, description = "Name of VMware datacenter to be added to specified zone.")
@@ -106,10 +106,10 @@ public class AddVmwareDcCmd extends BaseCmd {
             }
             this.setResponseObject(response);
         } catch (DiscoveryException ex) {
-            s_logger.warn("Exception: ", ex);
+            logger.warn("Exception: ", ex);
             throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, ex.getMessage());
         } catch (ResourceInUseException ex) {
-            s_logger.warn("Exception: ", ex);
+            logger.warn("Exception: ", ex);
             ServerApiException e = new ServerApiException(ApiErrorCode.INTERNAL_ERROR, ex.getMessage());
             for (String proxyObj : ex.getIdProxyList()) {
                 e.addProxyObject(proxyObj);

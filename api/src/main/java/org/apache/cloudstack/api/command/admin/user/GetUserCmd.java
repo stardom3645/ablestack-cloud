@@ -31,7 +31,7 @@ import com.cloud.user.UserAccount;
 @APICommand(name = "getUser", description = "Find user account by API key", responseObject = UserResponse.class,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = true)
 public class GetUserCmd extends BaseCmd {
-    protected static Logger s_logger = LogManager.getLogger(GetUserCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(GetUserCmd.class.getName());
 
 
     /////////////////////////////////////////////////////

@@ -48,7 +48,7 @@ import javax.inject.Inject;
     description =
     "Lists " + "Tungsten-Fabric tags", requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class ListTungstenFabricTagTypeCmd extends BaseListCmd {
-    protected static Logger s_logger = LogManager.getLogger(ListTungstenFabricTagTypeCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(ListTungstenFabricTagTypeCmd.class.getName());
     public static final String APINAME = "listTungstenFabricTagType";
 
     @Inject

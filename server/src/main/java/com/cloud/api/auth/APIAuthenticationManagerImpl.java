@@ -35,7 +35,7 @@ import com.cloud.utils.component.ManagerBase;
 
 @SuppressWarnings("unchecked")
 public class APIAuthenticationManagerImpl extends ManagerBase implements APIAuthenticationManager {
-    protected static Logger s_logger = LogManager.getLogger(APIAuthenticationManagerImpl.class.getName());
+    protected static Logger logger = LogManager.getLogger(APIAuthenticationManagerImpl.class.getName());
 
     private List<PluggableAPIAuthenticator> _apiAuthenticators;
 
@@ -88,7 +88,7 @@ public class APIAuthenticationManagerImpl extends ManagerBase implements APIAuth
             if (commands != null) {
                 cmdList.addAll(commands);
             } else {
-                s_logger.warn("API Authenticator returned null api commands:" + apiAuthenticator.getName());
+                logger.warn("API Authenticator returned null api commands:" + apiAuthenticator.getName());
             }
         }
         return cmdList;
@@ -104,8 +104,8 @@ public class APIAuthenticationManagerImpl extends ManagerBase implements APIAuth
                 apiAuthenticator = ComponentContext.inject(apiAuthenticator);
                 apiAuthenticator.setAuthenticators(_apiAuthenticators);
             } catch (InstantiationException | IllegalAccessException e) {
-                if (s_logger.isDebugEnabled()) {
-                    s_logger.debug("APIAuthenticationManagerImpl::getAPIAuthenticator failed: " + e.getMessage());
+                if (logger.isDebugEnabled()) {
+                    logger.debug("APIAuthenticationManagerImpl::getAPIAuthenticator failed: " + e.getMessage());
                 }
             }
         }

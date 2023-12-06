@@ -35,7 +35,7 @@ import org.apache.cloudstack.framework.rpc.RpcServiceHandler;
 
 @Component
 public class SampleManagerComponent2 {
-    protected static Logger s_logger = LogManager.getLogger(SampleManagerComponent2.class);
+    protected static Logger logger = LogManager.getLogger(SampleManagerComponent2.class);
 
     @Inject
     private MessageBus _eventBus;
@@ -56,10 +56,10 @@ public class SampleManagerComponent2 {
 
     @RpcServiceHandler(command = "StoragePrepare")
     void onStartCommand(RpcServerCall call) {
-        s_logger.info("Reevieved StoragePrpare call");
+        logger.info("Reevieved StoragePrpare call");
         SampleStoragePrepareCommand cmd = call.getCommandArgument();
 
-        s_logger.info("StoragePrepare command arg. pool: " + cmd.getStoragePool() + ", vol: " + cmd.getVolumeId());
+        logger.info("StoragePrepare command arg. pool: " + cmd.getStoragePool() + ", vol: " + cmd.getVolumeId());
         SampleStoragePrepareAnswer answer = new SampleStoragePrepareAnswer();
         answer.setResult("Successfully executed StoragePrepare command");
 

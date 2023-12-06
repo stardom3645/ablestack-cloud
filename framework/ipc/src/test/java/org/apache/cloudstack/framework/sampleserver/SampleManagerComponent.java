@@ -40,7 +40,7 @@ import org.apache.cloudstack.framework.rpc.RpcServiceHandler;
 
 @Component
 public class SampleManagerComponent {
-    protected static Logger s_logger = LogManager.getLogger(SampleManagerComponent.class);
+    protected static Logger logger = LogManager.getLogger(SampleManagerComponent.class);
 
     @Inject
     private MessageBus _eventBus;
@@ -89,12 +89,12 @@ public class SampleManagerComponent {
             .addCallbackListener(new RpcCallbackListener<SampleStoragePrepareAnswer>() {
                 @Override
                 public void onSuccess(SampleStoragePrepareAnswer result) {
-                    s_logger.info("StoragePrepare return result: " + result.getResult());
+                    logger.info("StoragePrepare return result: " + result.getResult());
                 }
 
                 @Override
                 public void onFailure(RpcException e) {
-                    s_logger.info("StoragePrepare failed");
+                    logger.info("StoragePrepare failed");
                 }
             })
             .apply();

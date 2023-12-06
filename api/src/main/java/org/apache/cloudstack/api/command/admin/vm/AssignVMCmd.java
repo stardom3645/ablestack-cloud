@@ -47,7 +47,7 @@ import com.cloud.vm.VirtualMachine;
             requestHasSensitiveInfo = false,
             responseHasSensitiveInfo = true)
 public class AssignVMCmd extends BaseCmd  {
-    protected static Logger s_logger = LogManager.getLogger(AssignVMCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(AssignVMCmd.class.getName());
 
 
     /////////////////////////////////////////////////////
@@ -134,7 +134,7 @@ public class AssignVMCmd extends BaseCmd  {
             e.printStackTrace();
             throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, e.getMessage());
         } catch (Exception e) {
-            s_logger.error("Failed to move vm due to: " + e.getStackTrace());
+            logger.error("Failed to move vm due to: " + e.getStackTrace());
             if (e.getMessage() != null) {
                 throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, "Failed to move vm due to " + e.getMessage());
             } else if (e.getCause() != null) {

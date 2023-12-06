@@ -51,7 +51,7 @@ import com.cloud.vm.VirtualMachine;
         requestHasSensitiveInfo = false,
         responseHasSensitiveInfo = true)
 public class MigrateVMCmd extends BaseAsyncCmd {
-    protected static Logger s_logger = LogManager.getLogger(MigrateVMCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(MigrateVMCmd.class.getName());
 
 
     /////////////////////////////////////////////////////
@@ -185,10 +185,10 @@ public class MigrateVMCmd extends BaseAsyncCmd {
                 throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, "Failed to migrate vm");
             }
         } catch (ResourceUnavailableException ex) {
-            s_logger.warn("Exception: ", ex);
+            logger.warn("Exception: ", ex);
             throw new ServerApiException(ApiErrorCode.RESOURCE_UNAVAILABLE_ERROR, ex.getMessage());
         } catch (VirtualMachineMigrationException | ConcurrentOperationException | ManagementServerException e) {
-            s_logger.warn("Exception: ", e);
+            logger.warn("Exception: ", e);
             throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, e.getMessage());
         }
     }

@@ -31,7 +31,7 @@ import org.apache.logging.log4j.LogManager;
 import com.cloud.utils.concurrency.NamedThreadFactory;
 
 public class DhcpProtocolParserServer extends Thread {
-    protected static Logger s_logger = LogManager.getLogger(DhcpProtocolParserServer.class);;
+    protected static Logger logger = LogManager.getLogger(DhcpProtocolParserServer.class);;
     protected ExecutorService _executor;
     private int dhcpServerPort = 67;
     private int bufferSize = 300;
@@ -55,7 +55,7 @@ public class DhcpProtocolParserServer extends Thread {
                     dhcpSocket.receive(dgp);
                 }
             } catch (IOException e) {
-                s_logger.debug(e.getMessage());
+                logger.debug(e.getMessage());
             }
         }
     }

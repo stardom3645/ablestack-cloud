@@ -36,7 +36,7 @@ import com.cloud.user.Account;
 @APICommand(name = "getApiLimit", responseObject = ApiLimitResponse.class, description = "Get API limit count for the caller",
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class GetApiLimitCmd extends BaseCmd {
-    protected static Logger s_logger = LogManager.getLogger(GetApiLimitCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(GetApiLimitCmd.class.getName());
 
 
     @Inject

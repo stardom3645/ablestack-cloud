@@ -24,14 +24,14 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.cloudstack.managed.context.ManagedContextRunnable;
 
 public abstract class UsageParser extends ManagedContextRunnable {
-    protected static Logger s_logger = LogManager.getLogger(UsageParser.class.getName());
+    protected static Logger logger = LogManager.getLogger(UsageParser.class.getName());
 
     @Override
     protected void runInContext() {
         try {
             parse(null);
         } catch (Exception e) {
-            s_logger.warn("Error while parsing usage events", e);
+            logger.warn("Error while parsing usage events", e);
         }
     }
 

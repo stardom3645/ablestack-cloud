@@ -31,7 +31,7 @@ import com.cloud.vm.InstanceGroup;
 @APICommand(name = "listInstanceGroups", description = "Lists vm groups", responseObject = InstanceGroupResponse.class, entityType = {InstanceGroup.class},
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class ListVMGroupsCmd extends BaseListProjectAndAccountResourcesCmd {
-    protected static Logger s_logger = LogManager.getLogger(ListVMGroupsCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(ListVMGroupsCmd.class.getName());
 
 
     /////////////////////////////////////////////////////

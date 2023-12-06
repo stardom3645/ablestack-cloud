@@ -42,7 +42,7 @@ import com.cloud.user.Account;
             requestHasSensitiveInfo = false,
             responseHasSensitiveInfo = false)
 public class UpdateStorageNetworkIpRangeCmd extends BaseAsyncCmd {
-    protected static Logger s_logger = LogManager.getLogger(UpdateStorageNetworkIpRangeCmd.class);
+    protected static Logger logger = LogManager.getLogger(UpdateStorageNetworkIpRangeCmd.class);
 
     /////////////////////////////////////////////////////
     //////////////// API parameters /////////////////////
@@ -108,7 +108,7 @@ public class UpdateStorageNetworkIpRangeCmd extends BaseAsyncCmd {
             response.setResponseName(getCommandName());
             this.setResponseObject(response);
         } catch (Exception e) {
-            s_logger.warn("Update storage network IP range failed", e);
+            logger.warn("Update storage network IP range failed", e);
             throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, e.getMessage());
         }
 

@@ -40,7 +40,7 @@ import com.cloud.utils.Pair;
 @APICommand(name = "listEgressFirewallRules", description = "Lists all egress firewall rules for network ID.", responseObject = FirewallResponse.class, entityType = {FirewallRule.class},
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class ListEgressFirewallRulesCmd extends BaseListTaggedResourcesCmd implements IListFirewallRulesCmd {
-    protected static Logger s_logger = LogManager.getLogger(ListEgressFirewallRulesCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(ListEgressFirewallRulesCmd.class.getName());
 
     /////////////////////////////////////////////////////
     //////////////// API parameters /////////////////////

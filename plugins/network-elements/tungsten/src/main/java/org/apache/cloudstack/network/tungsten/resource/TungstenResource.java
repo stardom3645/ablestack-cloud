@@ -173,7 +173,7 @@ import java.util.Map;
 
 public class TungstenResource implements ServerResource {
 
-    protected static Logger s_logger = LogManager.getLogger(TungstenResource.class);
+    protected static Logger logger = LogManager.getLogger(TungstenResource.class);
 
     private String name;
     private String guid;
@@ -258,7 +258,7 @@ public class TungstenResource implements ServerResource {
         try {
             tungstenApi.checkTungstenProviderConnection();
         } catch (ServerApiException e) {
-            s_logger.error("Check Tungsten-Fabric provider connection failed", e);
+            logger.error("Check Tungsten-Fabric provider connection failed", e);
             return null;
         }
         return new PingCommand(Host.Type.L2Networking, id);
@@ -494,7 +494,7 @@ public class TungstenResource implements ServerResource {
             return executeRequest((CreateTungstenDefaultProjectCommand) cmd);
         }
 
-        s_logger.debug("Received unsupported command " + cmd.toString());
+        logger.debug("Received unsupported command " + cmd.toString());
         return Answer.createUnsupportedCommandAnswer(cmd);
     }
 
@@ -2303,7 +2303,7 @@ public class TungstenResource implements ServerResource {
     }
 
     private Answer retry(Command cmd, int numRetries) {
-        s_logger.warn("Retrying " + cmd.getClass().getSimpleName() + ". Number of retries remaining: " + numRetries);
+        logger.warn("Retrying " + cmd.getClass().getSimpleName() + ". Number of retries remaining: " + numRetries);
         return executeRequestGroup1(cmd, numRetries);
     }
 

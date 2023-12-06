@@ -55,7 +55,7 @@ import com.cloud.vm.VirtualMachine;
         VirtualMachine.class, IpAddress.class},
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class CreatePortForwardingRuleCmd extends BaseAsyncCreateCmd implements PortForwardingRule {
-    protected static Logger s_logger = LogManager.getLogger(CreatePortForwardingRuleCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(CreatePortForwardingRuleCmd.class.getName());
 
 
     // ///////////////////////////////////////////////////
@@ -353,7 +353,7 @@ public class CreatePortForwardingRuleCmd extends BaseAsyncCreateCmd implements P
             setEntityId(result.getId());
             setEntityUuid(result.getUuid());
         } catch (NetworkRuleConflictException ex) {
-            s_logger.trace("Network Rule Conflict: ", ex);
+            logger.trace("Network Rule Conflict: ", ex);
             throw new ServerApiException(ApiErrorCode.NETWORK_RULE_CONFLICT_ERROR, ex.getMessage(), ex);
         }
     }

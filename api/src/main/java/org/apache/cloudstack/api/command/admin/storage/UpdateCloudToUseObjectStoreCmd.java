@@ -39,7 +39,7 @@ import com.cloud.user.Account;
 @APICommand(name = "updateCloudToUseObjectStore", description = "Migrate current NFS secondary storages to use object store.", responseObject = ImageStoreResponse.class, since = "4.3.0",
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class UpdateCloudToUseObjectStoreCmd extends BaseCmd {
-    protected static Logger s_logger = LogManager.getLogger(UpdateCloudToUseObjectStoreCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(UpdateCloudToUseObjectStoreCmd.class.getName());
 
     /////////////////////////////////////////////////////
     //////////////// API parameters /////////////////////
@@ -131,7 +131,7 @@ public class UpdateCloudToUseObjectStoreCmd extends BaseCmd {
                 throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, "Failed to add secondary storage");
             }
         } catch (DiscoveryException ex) {
-            s_logger.warn("Exception: ", ex);
+            logger.warn("Exception: ", ex);
             throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, ex.getMessage());
         }
     }

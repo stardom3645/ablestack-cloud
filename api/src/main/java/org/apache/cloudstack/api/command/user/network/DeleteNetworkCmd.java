@@ -38,7 +38,7 @@ import com.cloud.network.Network;
 @APICommand(name = "deleteNetwork", description = "Deletes a network", responseObject = SuccessResponse.class, entityType = {Network.class},
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class DeleteNetworkCmd extends BaseAsyncCmd {
-    protected static Logger s_logger = LogManager.getLogger(DeleteNetworkCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(DeleteNetworkCmd.class.getName());
 
     /////////////////////////////////////////////////////
     //////////////// API parameters /////////////////////

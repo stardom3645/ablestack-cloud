@@ -36,7 +36,7 @@ import com.cloud.utils.exception.CloudRuntimeException;
             requestHasSensitiveInfo = false,
             responseHasSensitiveInfo = true)
 public class LockAccountCmd extends BaseCmd {
-    protected static Logger s_logger = LogManager.getLogger(LockAccountCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(LockAccountCmd.class.getName());
 
 
     /////////////////////////////////////////////////////

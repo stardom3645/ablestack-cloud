@@ -36,7 +36,7 @@ import com.xensource.xenapi.SR;
 
 @ResourceWrapper(handles =  DeleteStoragePoolCommand.class)
 public final class CitrixDeleteStoragePoolCommandWrapper extends CommandWrapper<DeleteStoragePoolCommand, Answer, CitrixResourceBase> {
-    protected static Logger s_logger = LogManager.getLogger(CitrixDeleteStoragePoolCommandWrapper.class);
+    protected static Logger logger = LogManager.getLogger(CitrixDeleteStoragePoolCommandWrapper.class);
 
     @Override
     public Answer execute(final DeleteStoragePoolCommand command, final CitrixResourceBase citrixResourceBase) {
@@ -68,7 +68,7 @@ public final class CitrixDeleteStoragePoolCommandWrapper extends CommandWrapper<
             final String msg = "DeleteStoragePoolCommand XenAPIException:" + e.getMessage() + " host:" + citrixResourceBase.getHost().getUuid() +
                     " pool: " + poolTO.getHost() + poolTO.getPath();
 
-            s_logger.error(msg, e);
+            logger.error(msg, e);
 
             return new Answer(command, false, msg);
         }

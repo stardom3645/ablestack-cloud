@@ -35,7 +35,7 @@ import com.cloud.utils.db.SearchCriteria;
 @Component
 @DB
 public class HostTransferMapDaoImpl extends GenericDaoBase<HostTransferMapVO, Long> implements HostTransferMapDao {
-    protected static Logger s_logger = LogManager.getLogger(HostTransferMapDaoImpl.class);
+    protected static Logger logger = LogManager.getLogger(HostTransferMapDaoImpl.class);
 
     protected SearchBuilder<HostTransferMapVO> AllFieldsSearch;
     protected SearchBuilder<HostTransferMapVO> IntermediateStateSearch;

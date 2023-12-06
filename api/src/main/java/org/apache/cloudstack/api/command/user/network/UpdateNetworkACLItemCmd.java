@@ -36,7 +36,7 @@ import com.cloud.user.Account;
 
 @APICommand(name = "updateNetworkACLItem", description = "Updates ACL item with specified ID", responseObject = NetworkACLItemResponse.class, requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class UpdateNetworkACLItemCmd extends BaseAsyncCustomIdCmd {
-    protected static Logger s_logger = LogManager.getLogger(UpdateNetworkACLItemCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(UpdateNetworkACLItemCmd.class.getName());
 
     private static final String s_name = "createnetworkaclresponse";
 

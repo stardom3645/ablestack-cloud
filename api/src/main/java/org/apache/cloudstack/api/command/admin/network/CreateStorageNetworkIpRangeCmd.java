@@ -43,7 +43,7 @@ import com.cloud.user.Account;
             requestHasSensitiveInfo = false,
             responseHasSensitiveInfo = false)
 public class CreateStorageNetworkIpRangeCmd extends BaseAsyncCmd {
-    protected static Logger s_logger = LogManager.getLogger(CreateStorageNetworkIpRangeCmd.class);
+    protected static Logger logger = LogManager.getLogger(CreateStorageNetworkIpRangeCmd.class);
 
 
     /////////////////////////////////////////////////////
@@ -120,7 +120,7 @@ public class CreateStorageNetworkIpRangeCmd extends BaseAsyncCmd {
             response.setResponseName(getCommandName());
             this.setResponseObject(response);
         } catch (Exception e) {
-            s_logger.warn("Create storage network IP range failed", e);
+            logger.warn("Create storage network IP range failed", e);
             throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, e.getMessage());
         }
     }

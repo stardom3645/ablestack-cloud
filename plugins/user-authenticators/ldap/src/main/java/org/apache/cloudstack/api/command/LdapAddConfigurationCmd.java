@@ -37,7 +37,7 @@ import com.cloud.user.Account;
 @APICommand(name = "addLdapConfiguration", description = "Add a new Ldap Configuration", responseObject = LdapConfigurationResponse.class, since = "4.2.0",
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class LdapAddConfigurationCmd extends BaseCmd {
-    protected static Logger s_logger = LogManager.getLogger(LdapAddConfigurationCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(LdapAddConfigurationCmd.class.getName());
     private static final String s_name = "ldapconfigurationresponse";
 
     @Inject

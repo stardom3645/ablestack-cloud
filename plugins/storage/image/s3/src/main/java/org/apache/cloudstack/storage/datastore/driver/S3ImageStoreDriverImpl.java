@@ -43,7 +43,7 @@ import com.cloud.utils.NumbersUtil;
 import com.cloud.utils.storage.S3.S3Utils;
 
 public class S3ImageStoreDriverImpl extends BaseImageStoreDriverImpl {
-    protected static Logger s_logger = LogManager.getLogger(S3ImageStoreDriverImpl.class);
+    protected static Logger logger = LogManager.getLogger(S3ImageStoreDriverImpl.class);
 
     @Inject
     ImageStoreDetailsDao _imageStoreDetailsDao;
@@ -89,8 +89,8 @@ public class S3ImageStoreDriverImpl extends BaseImageStoreDriverImpl {
          */
         S3TO s3 = (S3TO)getStoreTO(store);
 
-        if(s_logger.isDebugEnabled()) {
-            s_logger.debug("Generating pre-signed s3 entity extraction URL for object: " + key);
+        if(logger.isDebugEnabled()) {
+            logger.debug("Generating pre-signed s3 entity extraction URL for object: " + key);
         }
         Date expiration = new Date();
         long milliSeconds = expiration.getTime();
@@ -104,7 +104,7 @@ public class S3ImageStoreDriverImpl extends BaseImageStoreDriverImpl {
 
         URL s3url = S3Utils.generatePresignedUrl(s3, s3.getBucketName(), key, expiration);
 
-        s_logger.info("Pre-Signed URL = " + s3url.toString());
+        logger.info("Pre-Signed URL = " + s3url.toString());
 
         return s3url.toString();
     }

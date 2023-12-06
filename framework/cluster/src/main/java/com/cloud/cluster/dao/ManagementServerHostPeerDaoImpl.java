@@ -31,7 +31,7 @@ import com.cloud.utils.db.SearchCriteria;
 import com.cloud.utils.db.TransactionLegacy;
 
 public class ManagementServerHostPeerDaoImpl extends GenericDaoBase<ManagementServerHostPeerVO, Long> implements ManagementServerHostPeerDao {
-    protected static Logger s_logger = LogManager.getLogger(ManagementServerHostPeerDaoImpl.class);
+    protected static Logger logger = LogManager.getLogger(ManagementServerHostPeerDaoImpl.class);
 
     private final SearchBuilder<ManagementServerHostPeerVO> ClearPeerSearch;
     private final SearchBuilder<ManagementServerHostPeerVO> FindForUpdateSearch;
@@ -86,7 +86,7 @@ public class ManagementServerHostPeerDaoImpl extends GenericDaoBase<ManagementSe
             }
             txn.commit();
         } catch (Exception e) {
-            s_logger.warn("Unexpected exception, ", e);
+            logger.warn("Unexpected exception, ", e);
             txn.rollback();
         }
     }

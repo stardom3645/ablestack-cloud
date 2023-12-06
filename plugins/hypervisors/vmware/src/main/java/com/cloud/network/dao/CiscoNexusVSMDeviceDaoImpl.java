@@ -33,7 +33,7 @@ import com.cloud.utils.db.SearchCriteria.Op;
 @Component
 @DB
 public class CiscoNexusVSMDeviceDaoImpl extends GenericDaoBase<CiscoNexusVSMDeviceVO, Long> implements CiscoNexusVSMDeviceDao {
-    protected static final Logger s_logger = LogManager.getLogger(CiscoNexusVSMDeviceDaoImpl.class);
+    protected Logger logger = LogManager.getLogger(CiscoNexusVSMDeviceDaoImpl.class);
     final SearchBuilder<CiscoNexusVSMDeviceVO> mgmtVlanIdSearch;
     final SearchBuilder<CiscoNexusVSMDeviceVO> domainIdSearch;
     final SearchBuilder<CiscoNexusVSMDeviceVO> nameSearch;

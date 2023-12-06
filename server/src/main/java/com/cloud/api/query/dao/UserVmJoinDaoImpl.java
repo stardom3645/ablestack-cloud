@@ -86,7 +86,7 @@ import com.cloud.vm.dao.UserVmDetailsDao;
 
 @Component
 public class UserVmJoinDaoImpl extends GenericDaoBaseWithTagInformation<UserVmJoinVO, UserVmResponse> implements UserVmJoinDao {
-    protected static Logger s_logger = LogManager.getLogger(UserVmJoinDaoImpl.class);
+    protected static Logger logger = LogManager.getLogger(UserVmJoinDaoImpl.class);
 
     @Inject
     private ConfigurationDao _configDao;

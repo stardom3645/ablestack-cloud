@@ -49,7 +49,7 @@ import com.cloud.utils.exception.CloudRuntimeException;
 @APICommand(name = "listBrocadeVcsDeviceNetworks", responseObject = NetworkResponse.class, description = "lists network that are using a brocade vcs switch", requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class ListBrocadeVcsDeviceNetworksCmd extends BaseListCmd {
 
-    protected static Logger s_logger = LogManager.getLogger(ListBrocadeVcsDeviceNetworksCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(ListBrocadeVcsDeviceNetworksCmd.class.getName());
     private static final String s_name = "listbrocadevcsdevicenetworks";
     @Inject
     protected BrocadeVcsElementService brocadeVcsElementService;

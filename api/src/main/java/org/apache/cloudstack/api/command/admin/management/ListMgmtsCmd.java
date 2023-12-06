@@ -29,7 +29,7 @@ import org.apache.logging.log4j.LogManager;
 @APICommand(name = "listManagementServers", description = "Lists management servers.", responseObject = ManagementServerResponse.class,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class ListMgmtsCmd extends BaseListCmd {
-    protected static Logger s_logger = LogManager.getLogger(ListMgmtsCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(ListMgmtsCmd.class.getName());
 
 
     /////////////////////////////////////////////////////

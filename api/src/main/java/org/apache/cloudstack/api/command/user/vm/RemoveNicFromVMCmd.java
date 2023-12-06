@@ -46,7 +46,7 @@ import com.cloud.vm.VirtualMachine;
 @APICommand(name = "removeNicFromVirtualMachine", description = "Removes VM from specified network by deleting a NIC", responseObject = UserVmResponse.class, responseView = ResponseView.Restricted, entityType = {VirtualMachine.class},
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = true)
 public class RemoveNicFromVMCmd extends BaseAsyncCmd implements UserCmd {
-    protected static Logger s_logger = LogManager.getLogger(RemoveNicFromVMCmd.class);
+    protected static Logger logger = LogManager.getLogger(RemoveNicFromVMCmd.class);
     private static final String s_name = "removenicfromvirtualmachineresponse";
 
     /////////////////////////////////////////////////////

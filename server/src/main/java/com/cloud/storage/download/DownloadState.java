@@ -29,7 +29,7 @@ public abstract class DownloadState {
         DOWNLOAD_ANSWER, ABANDON_DOWNLOAD, TIMEOUT_CHECK, DISCONNECT
     };
 
-    protected static final Logger s_logger = LogManager.getLogger(DownloadState.class.getName());
+    protected Logger logger = LogManager.getLogger(DownloadState.class.getName());
 
     private DownloadListener dl;
 
@@ -42,7 +42,7 @@ public abstract class DownloadState {
     }
 
     public String handleEvent(DownloadEvent event, Object eventObj) {
-        if (s_logger.isTraceEnabled()) {
+        if (logger.isTraceEnabled()) {
             getDownloadListener().log("handleEvent, event type=" + event + ", curr state=" + getName(), Level.TRACE);
         }
         switch (event) {
@@ -62,7 +62,7 @@ public abstract class DownloadState {
     }
 
     public void onEntry(String prevState, DownloadEvent event, Object evtObj) {
-        if (s_logger.isTraceEnabled()) {
+        if (logger.isTraceEnabled()) {
             getDownloadListener().log("onEntry, event type=" + event + ", curr state=" + getName(), Level.TRACE);
         }
         if (event == DownloadEvent.DOWNLOAD_ANSWER) {

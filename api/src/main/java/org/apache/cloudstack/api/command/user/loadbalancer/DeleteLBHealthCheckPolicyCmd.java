@@ -38,7 +38,7 @@ import com.cloud.user.Account;
 @APICommand(name = "deleteLBHealthCheckPolicy", description = "Deletes a load balancer health check policy.", responseObject = SuccessResponse.class, since = "4.2.0",
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class DeleteLBHealthCheckPolicyCmd extends BaseAsyncCmd {
-    protected static Logger s_logger = LogManager.getLogger(DeleteLBHealthCheckPolicyCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(DeleteLBHealthCheckPolicyCmd.class.getName());
     // ///////////////////////////////////////////////////
     // ////////////// API parameters /////////////////////
     // ///////////////////////////////////////////////////

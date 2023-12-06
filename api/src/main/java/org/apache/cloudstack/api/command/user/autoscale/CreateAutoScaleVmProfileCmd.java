@@ -52,7 +52,7 @@ import com.cloud.network.as.AutoScaleVmProfile;
             responseHasSensitiveInfo = false)
 @SuppressWarnings("rawtypes")
 public class CreateAutoScaleVmProfileCmd extends BaseAsyncCreateCmd {
-    protected static Logger s_logger = LogManager.getLogger(CreateAutoScaleVmProfileCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(CreateAutoScaleVmProfileCmd.class.getName());
 
     private static final String s_name = "autoscalevmprofileresponse";
 

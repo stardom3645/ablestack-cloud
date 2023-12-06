@@ -35,7 +35,7 @@ import com.cloud.consoleproxy.vnc.FrameBufferCanvas;
  *
  */
 public abstract class ConsoleProxyClientBase implements ConsoleProxyClient, ConsoleProxyClientListener {
-    protected static Logger s_logger = LogManager.getLogger(ConsoleProxyClientBase.class);
+    protected static Logger logger = LogManager.getLogger(ConsoleProxyClientBase.class);
 
     private static int s_nextClientId = 0;
     protected int clientId = getNextClientId();
@@ -158,8 +158,8 @@ public abstract class ConsoleProxyClientBase implements ConsoleProxyClient, Cons
 
     @Override
     public void onFramebufferUpdate(int x, int y, int w, int h) {
-        if (s_logger.isTraceEnabled())
-            s_logger.trace("Frame buffer update {" + x + "," + y + "," + w + "," + h + "}");
+        if (logger.isTraceEnabled())
+            logger.trace("Frame buffer update {" + x + "," + y + "," + w + "," + h + "}");
         tracker.invalidate(new Rectangle(x, y, w, h));
 
         signalTileDirtyEvent();
@@ -191,10 +191,10 @@ public abstract class ConsoleProxyClientBase implements ConsoleProxyClient, Cons
             imgBits = getTilesMergedJpeg(tiles, tracker.getTileWidth(), tracker.getTileHeight());
 
         if (imgBits == null) {
-            s_logger.warn("Unable to generate jpeg image");
+            logger.warn("Unable to generate jpeg image");
         } else {
-            if (s_logger.isTraceEnabled())
-                s_logger.trace("Generated jpeg image size: " + imgBits.length);
+            if (logger.isTraceEnabled())
+                logger.trace("Generated jpeg image size: " + imgBits.length);
         }
 
         int key = ajaxImageCache.putImage(imgBits);
@@ -232,7 +232,7 @@ public abstract class ConsoleProxyClientBase implements ConsoleProxyClient, Cons
             try {
                 Thread.sleep(100);
             } catch (InterruptedException e) {
-                s_logger.debug("[ignored] Console proxy was interrupted while waiting for viewer to become ready.");
+                logger.debug("[ignored] Console proxy was interrupted while waiting for viewer to become ready.");
             }
         }
         return false;
@@ -260,8 +260,8 @@ public abstract class ConsoleProxyClientBase implements ConsoleProxyClient, Cons
         int width = tracker.getTrackWidth();
         int height = tracker.getTrackHeight();
 
-        if (s_logger.isTraceEnabled())
-            s_logger.trace("Ajax client start, frame buffer w: " + width + ", " + height);
+        if (logger.isTraceEnabled())
+            logger.trace("Ajax client start, frame buffer w: " + width + ", " + height);
 
         List<TileInfo> tiles = tracker.scan(true);
         String imgUrl = prepareAjaxImage(tiles, true);
@@ -345,7 +345,7 @@ public abstract class ConsoleProxyClientBase implements ConsoleProxyClient, Cons
                 try {
                     tileDirtyEvent.wait(3000);
                 } catch (InterruptedException e) {
-                    s_logger.debug("[ignored] Console proxy ajax update was interrupted while waiting for viewer to become ready.");
+                    logger.debug("[ignored] Console proxy ajax update was interrupted while waiting for viewer to become ready.");
                 }
             }
         }

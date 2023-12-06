@@ -51,7 +51,7 @@ import com.cloud.resource.ResourceWrapper;
 @ResourceWrapper(handles =  CreateLogicalRouterCommand.class)
 public final class NiciraNvpCreateLogicalRouterCommandWrapper extends CommandWrapper<CreateLogicalRouterCommand, Answer, NiciraNvpResource> {
 
-    protected static Logger s_logger = LogManager.getLogger(NiciraNvpCreateLogicalRouterCommandWrapper.class);
+    protected static Logger logger = LogManager.getLogger(NiciraNvpCreateLogicalRouterCommandWrapper.class);
 
     @Override
     public Answer execute(final CreateLogicalRouterCommand command, final NiciraNvpResource niciraNvpResource) {
@@ -66,7 +66,7 @@ public final class NiciraNvpCreateLogicalRouterCommandWrapper extends CommandWra
         final String publicNetworkIpAddress = command.getPublicIpCidr();
         final String internalNetworkAddress = command.getInternalIpCidr();
 
-        s_logger.debug("Creating a logical router with external ip " + publicNetworkIpAddress + " and internal ip " + internalNetworkAddress + "on gateway service " +
+        logger.debug("Creating a logical router with external ip " + publicNetworkIpAddress + " and internal ip " + internalNetworkAddress + "on gateway service " +
                 gatewayServiceUuid);
 
         final NiciraNvpApi niciraNvpApi = niciraNvpResource.getNiciraNvpApi();

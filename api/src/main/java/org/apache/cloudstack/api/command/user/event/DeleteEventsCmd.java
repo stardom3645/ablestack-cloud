@@ -40,7 +40,7 @@ import com.cloud.user.Account;
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class DeleteEventsCmd extends BaseCmd {
 
-    protected static Logger s_logger = LogManager.getLogger(DeleteEventsCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(DeleteEventsCmd.class.getName());
 
 
     // ///////////////////////////////////////////////////

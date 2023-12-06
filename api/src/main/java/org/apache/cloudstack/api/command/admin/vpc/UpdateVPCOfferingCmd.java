@@ -41,7 +41,7 @@ import com.cloud.user.Account;
 @APICommand(name = "updateVPCOffering", description = "Updates VPC offering", responseObject = VpcOfferingResponse.class,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class UpdateVPCOfferingCmd extends BaseAsyncCmd {
-    protected static Logger s_logger = LogManager.getLogger(UpdateVPCOfferingCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(UpdateVPCOfferingCmd.class.getName());
 
     /////////////////////////////////////////////////////
     //////////////// API parameters /////////////////////

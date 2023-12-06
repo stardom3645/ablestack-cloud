@@ -34,7 +34,7 @@ import com.cloud.user.UserAccount;
 @APICommand(name = "lockUser", description = "Locks a user account", responseObject = UserResponse.class,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = true)
 public class LockUserCmd extends BaseCmd {
-    protected static Logger s_logger = LogManager.getLogger(LockUserCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(LockUserCmd.class.getName());
 
 
     /////////////////////////////////////////////////////

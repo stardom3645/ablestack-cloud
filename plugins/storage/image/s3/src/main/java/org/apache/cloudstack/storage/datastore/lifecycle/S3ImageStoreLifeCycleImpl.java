@@ -45,7 +45,7 @@ import com.cloud.storage.ScopeType;
 
 public class S3ImageStoreLifeCycleImpl implements ImageStoreLifeCycle {
 
-    protected static Logger s_logger = LogManager.getLogger(S3ImageStoreLifeCycleImpl.class);
+    protected static Logger logger = LogManager.getLogger(S3ImageStoreLifeCycleImpl.class);
     @Inject
     protected ResourceManager _resourceMgr;
     @Inject
@@ -79,7 +79,7 @@ public class S3ImageStoreLifeCycleImpl implements ImageStoreLifeCycle {
         DataStoreRole role = (DataStoreRole)dsInfos.get("role");
         Map<String, String> details = (Map<String, String>)dsInfos.get("details");
 
-        s_logger.info("Trying to add a S3 store with endpoint: " + details.get(ApiConstants.S3_END_POINT));
+        logger.info("Trying to add a S3 store with endpoint: " + details.get(ApiConstants.S3_END_POINT));
 
         Map<String, Object> imageStoreParameters = new HashMap();
         imageStoreParameters.put("name", name);

@@ -40,7 +40,7 @@ import com.cloud.vm.DiskProfile;
 @ResourceWrapper(handles =  CreateCommand.class)
 public final class LibvirtCreateCommandWrapper extends CommandWrapper<CreateCommand, Answer, LibvirtComputingResource> {
 
-    protected static Logger s_logger = LogManager.getLogger(LibvirtCreateCommandWrapper.class);
+    protected static Logger logger = LogManager.getLogger(LibvirtCreateCommandWrapper.class);
 
     @Override
     public Answer execute(final CreateCommand command, final LibvirtComputingResource libvirtComputingResource) {
@@ -81,7 +81,7 @@ public final class LibvirtCreateCommandWrapper extends CommandWrapper<CreateComm
             volume.setCacheMode(dskch.getCacheMode());
             return new CreateAnswer(command, volume);
         } catch (final CloudRuntimeException e) {
-            s_logger.debug("Failed to create volume: " + e.toString());
+            logger.debug("Failed to create volume: " + e.toString());
             return new CreateAnswer(command, e);
         }
     }

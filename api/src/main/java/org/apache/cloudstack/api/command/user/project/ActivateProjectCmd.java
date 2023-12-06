@@ -37,7 +37,7 @@ import com.cloud.projects.Project;
 @APICommand(name = "activateProject", description = "Activates a project", responseObject = ProjectResponse.class, since = "3.0.0",
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class ActivateProjectCmd extends BaseAsyncCmd {
-    protected static Logger s_logger = LogManager.getLogger(ActivateProjectCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(ActivateProjectCmd.class.getName());
 
     private static final String s_name = "activaterojectresponse";
 

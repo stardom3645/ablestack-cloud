@@ -38,7 +38,7 @@ import com.cloud.user.Account;
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class ArchiveAlertsCmd extends BaseCmd {
 
-    protected static Logger s_logger = LogManager.getLogger(ArchiveAlertsCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(ArchiveAlertsCmd.class.getName());
 
 
     // ///////////////////////////////////////////////////

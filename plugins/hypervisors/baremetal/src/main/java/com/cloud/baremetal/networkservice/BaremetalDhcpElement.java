@@ -57,7 +57,7 @@ import com.cloud.vm.VirtualMachineProfile;
 import com.cloud.vm.dao.NicDao;
 
 public class BaremetalDhcpElement extends AdapterBase implements DhcpServiceProvider {
-    protected static Logger s_logger = LogManager.getLogger(BaremetalDhcpElement.class);
+    protected static Logger logger = LogManager.getLogger(BaremetalDhcpElement.class);
     private static final Map<Service, Map<Capability, String>> capabilities;
 
     @Inject
@@ -99,7 +99,7 @@ public class BaremetalDhcpElement extends AdapterBase implements DhcpServiceProv
     public boolean implement(Network network, NetworkOffering offering, DeployDestination dest, ReservationContext context) throws ConcurrentOperationException,
         ResourceUnavailableException, InsufficientCapacityException {
         if (offering.isSystemOnly() || !canHandle(dest, offering.getTrafficType(), network.getGuestType())) {
-            s_logger.debug("BaremetalDhcpElement can not handle networkoffering: " + offering.getName());
+            logger.debug("BaremetalDhcpElement can not handle networkoffering: " + offering.getName());
             return false;
         }
         return true;

@@ -38,7 +38,7 @@ import java.util.Date;
 @APICommand(name = "quotaTariffUpdate", responseObject = QuotaTariffResponse.class, description = "Update the tariff plan for a resource", since = "4.7.0",
 requestHasSensitiveInfo = false, responseHasSensitiveInfo = false, authorized = {RoleType.Admin})
 public class QuotaTariffUpdateCmd extends BaseCmd {
-    protected static Logger s_logger = LogManager.getLogger(QuotaTariffUpdateCmd.class);
+    protected static Logger logger = LogManager.getLogger(QuotaTariffUpdateCmd.class);
 
     @Inject
     QuotaResponseBuilder _responseBuilder;

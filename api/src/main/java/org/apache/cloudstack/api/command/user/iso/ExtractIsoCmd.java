@@ -39,7 +39,7 @@ import com.cloud.user.Account;
 @APICommand(name = "extractIso", description = "Extracts an ISO", responseObject = ExtractResponse.class,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class ExtractIsoCmd extends BaseAsyncCmd {
-    protected static Logger s_logger = LogManager.getLogger(ExtractIsoCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(ExtractIsoCmd.class.getName());
 
 
     /////////////////////////////////////////////////////
@@ -131,7 +131,7 @@ public class ExtractIsoCmd extends BaseAsyncCmd {
                 throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, "Failed to extract ISO");
             }
         } catch (InternalErrorException ex) {
-            s_logger.warn("Exception: ", ex);
+            logger.warn("Exception: ", ex);
             throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, ex.getMessage());
         }
     }

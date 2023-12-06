@@ -50,7 +50,7 @@ import com.cloud.utils.db.DbProperties;
 
 @Component
 public class RegionManagerImpl extends ManagerBase implements RegionManager, Manager {
-    protected static Logger s_logger = LogManager.getLogger(RegionManagerImpl.class);
+    protected static Logger logger = LogManager.getLogger(RegionManagerImpl.class);
 
     @Inject
     RegionDao _regionDao;

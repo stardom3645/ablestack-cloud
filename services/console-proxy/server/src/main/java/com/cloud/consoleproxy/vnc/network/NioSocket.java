@@ -34,7 +34,7 @@ public class NioSocket {
     private Selector readSelector;
 
     private static final int CONNECTION_TIMEOUT_MILLIS = 3000;
-    protected static Logger s_logger = LogManager.getLogger(NioSocket.class);
+    protected static Logger logger = LogManager.getLogger(NioSocket.class);
 
     private void initializeSocket() {
         try {
@@ -46,14 +46,14 @@ public class NioSocket {
             socketChannel.register(writeSelector, SelectionKey.OP_WRITE);
             socketChannel.register(readSelector, SelectionKey.OP_READ);
         } catch (IOException e) {
-            s_logger.error("Could not initialize NioSocket: " + e.getMessage(), e);
+            logger.error("Could not initialize NioSocket: " + e.getMessage(), e);
         }
     }
 
     private void waitForSocketSelectorConnected(Selector selector) {
         try {
             while (selector.select(CONNECTION_TIMEOUT_MILLIS) <= 0) {
-                s_logger.debug("Waiting for ready operations to connect to the socket");
+                logger.debug("Waiting for ready operations to connect to the socket");
             }
             Set<SelectionKey> keys = selector.selectedKeys();
             for (SelectionKey selectionKey: keys) {
@@ -61,12 +61,12 @@ public class NioSocket {
                     if (socketChannel.isConnectionPending()) {
                         socketChannel.finishConnect();
                     }
-                    s_logger.debug("Connected to the socket");
+                    logger.debug("Connected to the socket");
                     break;
                 }
             }
         } catch (IOException e) {
-            s_logger.error(String.format("Error waiting for socket selector ready: %s", e.getMessage()), e);
+            logger.error(String.format("Error waiting for socket selector ready: %s", e.getMessage()), e);
         }
     }
 
@@ -79,7 +79,7 @@ public class NioSocket {
             waitForSocketSelectorConnected(selector);
             socketChannel.socket().setTcpNoDelay(false);
         } catch (IOException e) {
-            s_logger.error(String.format("Error creating NioSocket to %s:%s: %s", host, port, e.getMessage()), e);
+            logger.error(String.format("Error creating NioSocket to %s:%s: %s", host, port, e.getMessage()), e);
         }
     }
 
@@ -94,7 +94,7 @@ public class NioSocket {
             selector.selectedKeys().clear();
             return timeout == null ? selector.select() : selector.selectNow();
         } catch (IOException e) {
-            s_logger.error(String.format("Error obtaining %s select: %s", read ? "read" : "write", e.getMessage()), e);
+            logger.error(String.format("Error obtaining %s select: %s", read ? "read" : "write", e.getMessage()), e);
             return -1;
         }
     }
@@ -106,7 +106,7 @@ public class NioSocket {
             readBuffer.position(position + readBytes);
             return Math.max(readBytes, 0);
         } catch (Exception e) {
-            s_logger.error("Error reading from socket channel: " + e.getMessage(), e);
+            logger.error("Error reading from socket channel: " + e.getMessage(), e);
             return 0;
         }
     }
@@ -117,7 +117,7 @@ public class NioSocket {
             buf.position(buf.position() + writtenBytes);
             return writtenBytes;
         } catch (java.io.IOException e) {
-            s_logger.error("Error writing bytes to socket channel: " + e.getMessage(), e);
+            logger.error("Error writing bytes to socket channel: " + e.getMessage(), e);
             return 0;
         }
     }

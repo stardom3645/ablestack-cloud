@@ -38,7 +38,7 @@ import com.cloud.uservm.UserVm;
 @APICommand(name = "detachIso", description = "Detaches any ISO file (if any) currently attached to a virtual machine.", responseObject = UserVmResponse.class, responseView = ResponseView.Restricted,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = true)
 public class DetachIsoCmd extends BaseAsyncCmd implements UserCmd {
-    protected static Logger s_logger = LogManager.getLogger(DetachIsoCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(DetachIsoCmd.class.getName());
 
     private static final String s_name = "detachisoresponse";
 

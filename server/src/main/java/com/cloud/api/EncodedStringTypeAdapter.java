@@ -29,7 +29,7 @@ import com.google.gson.JsonSerializer;
 import com.cloud.utils.encoding.URLEncoder;
 
 public class EncodedStringTypeAdapter implements JsonSerializer<String> {
-    protected static Logger s_logger = LogManager.getLogger(EncodedStringTypeAdapter.class.getName());
+    protected static Logger logger = LogManager.getLogger(EncodedStringTypeAdapter.class.getName());
 
     @Override
     public JsonElement serialize(String src, Type typeOfResponseObj, JsonSerializationContext ctx) {
@@ -44,7 +44,7 @@ public class EncodedStringTypeAdapter implements JsonSerializer<String> {
         try {
             return new URLEncoder().encode(value).replaceAll("\\+", "%20");
         } catch (Exception e) {
-            s_logger.warn("Unable to encode: " + value, e);
+            logger.warn("Unable to encode: " + value, e);
         }
         return value;
     }

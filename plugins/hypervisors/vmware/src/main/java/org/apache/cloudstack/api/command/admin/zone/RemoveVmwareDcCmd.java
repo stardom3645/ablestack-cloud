@@ -43,7 +43,7 @@ public class RemoveVmwareDcCmd extends BaseCmd {
     @Inject
     public VmwareDatacenterService _vmwareDatacenterService;
 
-    protected static Logger s_logger = LogManager.getLogger(RemoveVmwareDcCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(RemoveVmwareDcCmd.class.getName());
 
 
     @Parameter(name = ApiConstants.ZONE_ID,
@@ -69,7 +69,7 @@ public class RemoveVmwareDcCmd extends BaseCmd {
                 throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, "Failed to remove VMware datacenter from zone");
             }
         } catch (ResourceInUseException ex) {
-            s_logger.warn("The zone has one or more resources (like cluster), hence not able to remove VMware datacenter from zone."
+            logger.warn("The zone has one or more resources (like cluster), hence not able to remove VMware datacenter from zone."
                 + " Please remove all resource from zone, and retry. Exception: ", ex);
             ServerApiException e = new ServerApiException(ApiErrorCode.INTERNAL_ERROR, ex.getMessage());
             for (String proxyObj : ex.getIdProxyList()) {

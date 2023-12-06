@@ -46,7 +46,7 @@ import com.cloud.resource.ResourceWrapper;
 @ResourceWrapper(handles = StorPoolCopyVolumeToSecondaryCommand.class)
 public final class StorPoolCopyVolumeToSecondaryCommandWrapper extends CommandWrapper<StorPoolCopyVolumeToSecondaryCommand, CopyCmdAnswer, LibvirtComputingResource> {
 
-    protected static Logger s_logger = LogManager.getLogger(StorPoolCopyVolumeToSecondaryCommandWrapper.class);
+    protected static Logger logger = LogManager.getLogger(StorPoolCopyVolumeToSecondaryCommandWrapper.class);
 
     @Override
     public CopyCmdAnswer execute(final StorPoolCopyVolumeToSecondaryCommand cmd, final LibvirtComputingResource libvirtComputingResource) {
@@ -105,7 +105,7 @@ public final class StorPoolCopyVolumeToSecondaryCommandWrapper extends CommandWr
             return new CopyCmdAnswer(dst);
         } catch (final Exception e) {
             final String error = "Failed to copy volume to secondary storage: " + e.getMessage();
-            s_logger.debug(error);
+            logger.debug(error);
             return new CopyCmdAnswer(error);
         } finally {
             if (srcPath != null) {
@@ -117,7 +117,7 @@ public final class StorPoolCopyVolumeToSecondaryCommandWrapper extends CommandWr
                     SP_LOG("StorpoolCopyVolumeToSecondaryCommandWrapper.execute: secondaryPool=%s " , secondaryPool);
                     secondaryPool.delete();
                 } catch (final Exception e) {
-                    s_logger.debug("Failed to delete secondary storage", e);
+                    logger.debug("Failed to delete secondary storage", e);
                 }
             }
         }

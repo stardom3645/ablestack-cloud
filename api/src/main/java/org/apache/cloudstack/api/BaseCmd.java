@@ -95,7 +95,7 @@ import com.cloud.vm.UserVmService;
 import com.cloud.vm.snapshot.VMSnapshotService;
 
 public abstract class BaseCmd {
-    protected static Logger s_logger = LogManager.getLogger(BaseCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(BaseCmd.class.getName());
     public static final String RESPONSE_SUFFIX = "response";
     public static final String RESPONSE_TYPE_XML = HttpUtils.RESPONSE_TYPE_XML;
     public static final String RESPONSE_TYPE_JSON = HttpUtils.RESPONSE_TYPE_JSON;
@@ -371,7 +371,7 @@ public abstract class BaseCmd {
             if (roleIsAllowed) {
                 validFields.add(field);
             } else {
-                s_logger.debug("Ignoring parameter " + parameterAnnotation.name() + " as the caller is not authorized to pass it in");
+                logger.debug("Ignoring parameter " + parameterAnnotation.name() + " as the caller is not authorized to pass it in");
             }
         }
 
@@ -416,7 +416,7 @@ public abstract class BaseCmd {
                 if(!isDisplay)
                     break;
             } catch (Exception e){
-                s_logger.trace("Caught exception while checking first class entities for display property, continuing on", e);
+                logger.trace("Caught exception while checking first class entities for display property, continuing on", e);
             }
         }
 

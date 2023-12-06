@@ -52,7 +52,7 @@ import com.cloud.utils.net.NetUtils;
 @APICommand(name = "createNetwork", description = "Creates a network", responseObject = NetworkResponse.class, responseView = ResponseView.Restricted, entityType = {Network.class},
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class CreateNetworkCmd extends BaseCmd implements UserCmd {
-    protected static Logger s_logger = LogManager.getLogger(CreateNetworkCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(CreateNetworkCmd.class.getName());
 
     private static final String s_name = "createnetworkresponse";
 

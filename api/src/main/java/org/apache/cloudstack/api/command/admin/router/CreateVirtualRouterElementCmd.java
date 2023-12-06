@@ -44,7 +44,7 @@ import com.cloud.user.Account;
 @APICommand(name = "createVirtualRouterElement", responseObject = VirtualRouterProviderResponse.class, description = "Create a virtual router element.",
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class CreateVirtualRouterElementCmd extends BaseAsyncCreateCmd {
-    protected static Logger s_logger = LogManager.getLogger(CreateVirtualRouterElementCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(CreateVirtualRouterElementCmd.class.getName());
 
     @Inject
     private List<VirtualRouterElementService> _service;

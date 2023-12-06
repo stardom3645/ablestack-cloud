@@ -38,7 +38,7 @@ import com.cloud.user.Account;
 @APICommand(name = "updateDomain", description = "Updates a domain with a new name", responseObject = DomainResponse.class,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class UpdateDomainCmd extends BaseCmd {
-    protected static Logger s_logger = LogManager.getLogger(UpdateDomainCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(UpdateDomainCmd.class.getName());
 
     /////////////////////////////////////////////////////
     //////////////// API parameters /////////////////////

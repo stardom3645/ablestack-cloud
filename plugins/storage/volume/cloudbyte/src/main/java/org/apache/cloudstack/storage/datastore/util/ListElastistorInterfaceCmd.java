@@ -30,7 +30,7 @@ import org.apache.logging.log4j.LogManager;
 
 @APICommand(name = "listElastistorInterface", description = "Lists the network Interfaces of elastistor", responseObject = ListElastistorVolumeResponse.class)
 public class ListElastistorInterfaceCmd extends BaseCmd {
-    protected static Logger s_logger = LogManager.getLogger(ListElastistorInterfaceCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(ListElastistorInterfaceCmd.class.getName());
     private static final String s_name = "listElastistorInterfaceResponse";
 
     @Inject

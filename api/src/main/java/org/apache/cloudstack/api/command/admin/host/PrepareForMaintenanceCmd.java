@@ -36,7 +36,7 @@ import com.cloud.utils.exception.CloudRuntimeException;
 @APICommand(name = "prepareHostForMaintenance", description = "Prepares a host for maintenance.", responseObject = HostResponse.class,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class PrepareForMaintenanceCmd extends BaseAsyncCmd {
-    protected static Logger s_logger = LogManager.getLogger(PrepareForMaintenanceCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(PrepareForMaintenanceCmd.class.getName());
 
 
     /////////////////////////////////////////////////////

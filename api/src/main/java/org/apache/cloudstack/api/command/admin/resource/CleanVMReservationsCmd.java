@@ -32,7 +32,7 @@ import com.cloud.user.Account;
 @APICommand(name = "cleanVMReservations", description = "Cleanups VM reservations in the database.", responseObject = SuccessResponse.class,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class CleanVMReservationsCmd extends BaseAsyncCmd {
-    protected static Logger s_logger = LogManager.getLogger(CleanVMReservationsCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(CleanVMReservationsCmd.class.getName());
 
     private static final String s_name = "cleanvmreservationresponse";
 

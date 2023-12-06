@@ -37,7 +37,7 @@ import com.cloud.utils.db.TransactionLegacy;
 
 @Component
 public class VmDiskStatisticsDaoImpl extends GenericDaoBase<VmDiskStatisticsVO, Long> implements VmDiskStatisticsDao {
-    protected static Logger s_logger = LogManager.getLogger(VmDiskStatisticsDaoImpl.class);
+    protected static Logger logger = LogManager.getLogger(VmDiskStatisticsDaoImpl.class);
     private static final String ACTIVE_AND_RECENTLY_DELETED_SEARCH =
         "SELECT bcf.id, bcf.data_center_id, bcf.account_id, bcf.vm_id, bcf.volume_id, bcf.agg_io_read, bcf.agg_io_write, bcf.agg_bytes_read, bcf.agg_bytes_write "
             + "FROM vm_disk_statistics bcf, account a " + "WHERE bcf.account_id = a.id AND (a.removed IS NULL OR a.removed >= ?) " + "ORDER BY bcf.id";
@@ -105,7 +105,7 @@ public class VmDiskStatisticsDaoImpl extends GenericDaoBase<VmDiskStatisticsVO, 
                 vmDiskStats.add(toEntityBean(rs, false));
             }
         } catch (Exception ex) {
-            s_logger.error("error saving vm disk stats to cloud_usage db", ex);
+            logger.error("error saving vm disk stats to cloud_usage db", ex);
         }
         return vmDiskStats;
     }
@@ -123,7 +123,7 @@ public class VmDiskStatisticsDaoImpl extends GenericDaoBase<VmDiskStatisticsVO, 
                 vmDiskStats.add(toEntityBean(rs, false));
             }
         } catch (Exception ex) {
-            s_logger.error("error lisitng updated vm disk stats", ex);
+            logger.error("error lisitng updated vm disk stats", ex);
         }
         return vmDiskStats;
     }

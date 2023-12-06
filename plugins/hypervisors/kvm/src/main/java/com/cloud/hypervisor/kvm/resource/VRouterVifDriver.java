@@ -31,7 +31,7 @@ import java.util.Map;
 import javax.naming.ConfigurationException;
 
 public class VRouterVifDriver extends VifDriverBase {
-    protected static Logger s_logger = LogManager.getLogger(VRouterVifDriver.class);
+    protected static Logger logger = LogManager.getLogger(VRouterVifDriver.class);
     private String createTapDeviceScript;
     private String deleteTapDeviceScript;
 
@@ -62,7 +62,7 @@ public class VRouterVifDriver extends VifDriverBase {
         final String tapDeviceName = TungstenUtils.getTapName(nic.getMac());
         final String script = createTapDeviceScript;
 
-        final Script command = new Script(script, Duration.standardSeconds(300), s_logger);
+        final Script command = new Script(script, Duration.standardSeconds(300), logger);
         command.add(tapDeviceName);
 
         final String result = command.execute();
@@ -81,12 +81,12 @@ public class VRouterVifDriver extends VifDriverBase {
         final String tapDeviceName = TungstenUtils.getTapName(iface.getMacAddress());
         final String script = deleteTapDeviceScript;
 
-        final Script command = new Script(script, Duration.standardSeconds(300), s_logger);
+        final Script command = new Script(script, Duration.standardSeconds(300), logger);
         command.add(tapDeviceName);
 
         final String result = command.execute();
         if (result != null) {
-            s_logger.error("Failed to delete tap device " + tapDeviceName + ": " + result);
+            logger.error("Failed to delete tap device " + tapDeviceName + ": " + result);
         }
     }
 

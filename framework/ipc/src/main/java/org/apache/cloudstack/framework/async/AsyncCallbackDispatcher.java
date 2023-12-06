@@ -34,7 +34,7 @@ import org.apache.logging.log4j.LogManager;
 
 @SuppressWarnings("rawtypes")
 public class AsyncCallbackDispatcher<T, R> implements AsyncCompletionCallback {
-    protected static Logger s_logger = LogManager.getLogger(AsyncCallbackDispatcher.class);
+    protected static Logger logger = LogManager.getLogger(AsyncCallbackDispatcher.class);
 
     private Method _callbackMethod;
     private final T _targetObject;
@@ -101,7 +101,7 @@ public class AsyncCallbackDispatcher<T, R> implements AsyncCompletionCallback {
             });
             return t;
         } catch (Throwable e) {
-            s_logger.error("Unexpected exception", e);
+            logger.error("Unexpected exception", e);
         }
 
         return null;

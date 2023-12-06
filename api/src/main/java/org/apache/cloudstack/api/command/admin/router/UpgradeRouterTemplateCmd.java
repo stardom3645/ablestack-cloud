@@ -44,7 +44,7 @@ import com.cloud.user.Account;
 @APICommand(name = "upgradeRouterTemplate", description = "Upgrades router to use newer template", responseObject = BaseResponse.class,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class UpgradeRouterTemplateCmd extends org.apache.cloudstack.api.BaseCmd {
-    protected static Logger s_logger = LogManager.getLogger(UpgradeRouterTemplateCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(UpgradeRouterTemplateCmd.class.getName());
 
     /////////////////////////////////////////////////////
     //////////////// API parameters /////////////////////

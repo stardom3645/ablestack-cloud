@@ -43,7 +43,7 @@ import com.cloud.user.Account;
 @APICommand(name = "configureSimulator", description = "configure simulator", responseObject = MockResponse.class,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class ConfigureSimulatorCmd extends BaseCmd {
-    protected static Logger s_logger = LogManager.getLogger(ConfigureSimulatorCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(ConfigureSimulatorCmd.class.getName());
     private static final String s_name = "configuresimulatorresponse";
 
     @Inject

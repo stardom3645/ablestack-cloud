@@ -43,7 +43,7 @@ import com.cloud.user.Account;
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class AssignCertToLoadBalancerCmd extends BaseAsyncCmd {
 
-    protected static Logger s_logger = LogManager.getLogger(AssignCertToLoadBalancerCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(AssignCertToLoadBalancerCmd.class.getName());
 
 
     @Parameter(name = ApiConstants.LBID,

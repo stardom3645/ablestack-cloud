@@ -33,7 +33,7 @@ import com.cloud.user.Account;
 @APICommand(name = "deleteVlanIpRange", description = "Creates a VLAN IP range.", responseObject = SuccessResponse.class,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class DeleteVlanIpRangeCmd extends BaseCmd {
-    protected static Logger s_logger = LogManager.getLogger(DeleteVlanIpRangeCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(DeleteVlanIpRangeCmd.class.getName());
 
 
     /////////////////////////////////////////////////////

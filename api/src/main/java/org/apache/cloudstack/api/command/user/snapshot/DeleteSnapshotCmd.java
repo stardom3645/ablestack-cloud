@@ -40,7 +40,7 @@ import com.cloud.user.Account;
 @APICommand(name = "deleteSnapshot", description = "Deletes a snapshot of a disk volume.", responseObject = SuccessResponse.class, entityType = {Snapshot.class},
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class DeleteSnapshotCmd extends BaseAsyncCmd {
-    protected static Logger s_logger = LogManager.getLogger(DeleteSnapshotCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(DeleteSnapshotCmd.class.getName());
 
     /////////////////////////////////////////////////////
     //////////////// API parameters /////////////////////

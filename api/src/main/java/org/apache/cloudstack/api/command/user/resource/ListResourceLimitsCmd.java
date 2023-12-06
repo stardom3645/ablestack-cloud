@@ -35,7 +35,7 @@ import com.cloud.configuration.ResourceLimit;
 @APICommand(name = "listResourceLimits", description = "Lists resource limits.", responseObject = ResourceLimitResponse.class,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class ListResourceLimitsCmd extends BaseListProjectAndAccountResourcesCmd {
-    protected static Logger s_logger = LogManager.getLogger(ListResourceLimitsCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(ListResourceLimitsCmd.class.getName());
 
 
     /////////////////////////////////////////////////////

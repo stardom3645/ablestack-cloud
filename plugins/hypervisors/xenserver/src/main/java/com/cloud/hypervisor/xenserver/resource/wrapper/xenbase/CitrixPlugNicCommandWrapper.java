@@ -38,7 +38,7 @@ import com.xensource.xenapi.VM;
 @ResourceWrapper(handles =  PlugNicCommand.class)
 public final class CitrixPlugNicCommandWrapper extends CommandWrapper<PlugNicCommand, Answer, CitrixResourceBase> {
 
-    protected static Logger s_logger = LogManager.getLogger(CitrixPlugNicCommandWrapper.class);
+    protected static Logger logger = LogManager.getLogger(CitrixPlugNicCommandWrapper.class);
 
     @Override
     public Answer execute(final PlugNicCommand command, final CitrixResourceBase citrixResourceBase) {
@@ -68,7 +68,7 @@ public final class CitrixPlugNicCommandWrapper extends CommandWrapper<PlugNicCom
             // redundant.
             if (counter > 2) {
                 final String msg = " Plug Nic failed due to a VIF with the same mac " + nic.getMac() + " exists in more than 2 routers.";
-                s_logger.error(msg);
+                logger.error(msg);
                 return new PlugNicAnswer(command, false, msg);
             }
 
@@ -76,7 +76,7 @@ public final class CitrixPlugNicCommandWrapper extends CommandWrapper<PlugNicCom
             // VIF vif = getVifByMac(conn, vm, nic.getMac());
             // if (vif != null) {
             // final String msg = " Plug Nic failed due to a VIF with the same mac " + nic.getMac() + " exists";
-            // s_logger.warn(msg);
+            // logger.warn(msg);
             // return new PlugNicAnswer(cmd, false, msg);
             // }
 
@@ -88,7 +88,7 @@ public final class CitrixPlugNicCommandWrapper extends CommandWrapper<PlugNicCom
             return new PlugNicAnswer(command, true, "success");
         } catch (final Exception e) {
             final String msg = " Plug Nic failed due to " + e.toString();
-            s_logger.error(msg, e);
+            logger.error(msg, e);
             return new PlugNicAnswer(command, false, msg);
         }
     }

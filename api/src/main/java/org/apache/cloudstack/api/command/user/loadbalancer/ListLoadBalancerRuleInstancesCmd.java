@@ -42,7 +42,7 @@ import com.cloud.utils.Pair;
             requestHasSensitiveInfo = false,
             responseHasSensitiveInfo = true)
 public class ListLoadBalancerRuleInstancesCmd extends BaseListCmd implements UserCmd {
-    protected static Logger s_logger = LogManager.getLogger(ListLoadBalancerRuleInstancesCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(ListLoadBalancerRuleInstancesCmd.class.getName());
 
     private static final String s_name = "listloadbalancerruleinstancesresponse";
 

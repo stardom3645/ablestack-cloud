@@ -41,7 +41,7 @@ import com.cloud.projects.ProjectAccount;
 @APICommand(name = "updateProject", description = "Updates a project", responseObject = ProjectResponse.class, since = "3.0.0",
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class UpdateProjectCmd extends BaseAsyncCmd {
-    protected static Logger s_logger = LogManager.getLogger(UpdateProjectCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(UpdateProjectCmd.class.getName());
 
 
     /////////////////////////////////////////////////////

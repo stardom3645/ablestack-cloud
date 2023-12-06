@@ -36,7 +36,7 @@ import com.xensource.xenapi.VM;
 @ResourceWrapper(handles =  GetVncPortCommand.class)
 public final class CitrixGetVncPortCommandWrapper extends CommandWrapper<GetVncPortCommand, Answer, CitrixResourceBase> {
 
-    protected static Logger s_logger = LogManager.getLogger(CitrixGetVncPortCommandWrapper.class);
+    protected static Logger logger = LogManager.getLogger(CitrixGetVncPortCommandWrapper.class);
 
     @Override
     public Answer execute(final GetVncPortCommand command, final CitrixResourceBase citrixResourceBase) {
@@ -52,7 +52,7 @@ public final class CitrixGetVncPortCommandWrapper extends CommandWrapper<GetVncP
             }
         } catch (final Exception e) {
             final String msg = "Unable to get vnc port due to " + e.toString();
-            s_logger.warn(msg, e);
+            logger.warn(msg, e);
             return new GetVncPortAnswer(command, msg);
         }
     }

@@ -25,7 +25,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.cloudstack.utils.CloudStackVersion;
 
 public class NiciraNvpApiVersion {
-    protected static Logger s_logger = LogManager.getLogger(NiciraNvpApiVersion.class);
+    protected static Logger logger = LogManager.getLogger(NiciraNvpApiVersion.class);
 
     private static String niciraApiVersion;
 
@@ -43,7 +43,7 @@ public class NiciraNvpApiVersion {
 
     public static synchronized void logNiciraApiVersion() {
         if (niciraApiVersion != null) {
-            s_logger.info(String.format("NSX API VERSION: %s", niciraApiVersion));
+            logger.info(String.format("NSX API VERSION: %s", niciraApiVersion));
         }
     }
 

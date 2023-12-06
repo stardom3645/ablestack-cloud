@@ -35,7 +35,7 @@ import com.cloud.user.Account;
 @APICommand(name = "updatePhysicalNetwork", description = "Updates a physical network", responseObject = PhysicalNetworkResponse.class, since = "3.0.0",
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class UpdatePhysicalNetworkCmd extends BaseAsyncCmd {
-    protected static Logger s_logger = LogManager.getLogger(UpdatePhysicalNetworkCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(UpdatePhysicalNetworkCmd.class.getName());
 
 
     /////////////////////////////////////////////////////

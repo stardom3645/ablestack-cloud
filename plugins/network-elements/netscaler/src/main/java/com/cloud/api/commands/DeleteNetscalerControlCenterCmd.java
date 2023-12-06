@@ -40,7 +40,7 @@ import com.cloud.utils.exception.CloudRuntimeException;
 @APICommand(name = "deleteNetscalerControlCenter", responseObject = SuccessResponse.class, description = "Delete Netscaler Control Center")
 public class DeleteNetscalerControlCenterCmd extends BaseCmd {
 
-    protected static Logger s_logger = LogManager.getLogger(DeleteNetscalerControlCenterCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(DeleteNetscalerControlCenterCmd.class.getName());
     private static final String s_name = "deleteNetscalerControlCenter";
     @Inject
     NetscalerLoadBalancerElementService _netsclarLbService;

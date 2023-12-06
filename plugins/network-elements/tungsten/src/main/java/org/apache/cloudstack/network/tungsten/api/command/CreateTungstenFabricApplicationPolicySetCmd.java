@@ -41,7 +41,7 @@ import javax.inject.Inject;
 @APICommand(name = CreateTungstenFabricApplicationPolicySetCmd.APINAME, description = "create Tungsten-Fabric application policy set",
     responseObject = TungstenFabricApplicationPolicySetResponse.class, requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class CreateTungstenFabricApplicationPolicySetCmd extends BaseAsyncCmd {
-    protected static Logger s_logger = LogManager.getLogger(CreateTungstenFabricApplicationPolicySetCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(CreateTungstenFabricApplicationPolicySetCmd.class.getName());
     public static final String APINAME = "createTungstenFabricApplicationPolicySet";
 
     @Inject

@@ -44,7 +44,7 @@ import com.cloud.utils.db.SearchCriteria.Op;
 import com.cloud.utils.exception.CloudRuntimeException;
 
 public class NetworkPolicyModel extends ModelObjectBase {
-    protected static Logger s_logger = LogManager.getLogger(NetworkPolicyModel.class);
+    protected static Logger logger = LogManager.getLogger(NetworkPolicyModel.class);
 
     private String _uuid;
     private String _fqName;
@@ -83,7 +83,7 @@ public class NetworkPolicyModel extends ModelObjectBase {
             return null;
         }
         if (dbNets.size() > 1) {
-            s_logger.warn("more than one network found with cidr: " + cidr);
+            logger.warn("more than one network found with cidr: " + cidr);
         }
         return dbNets.get(0);
     }
@@ -236,7 +236,7 @@ public class NetworkPolicyModel extends ModelObjectBase {
     public void update(ModelController controller) throws InternalErrorException, IOException {
         ApiConnector api = controller.getApiAccessor();
         if (_project == null) {
-            s_logger.debug("Project is null for the policy: " + _name);
+            logger.debug("Project is null for the policy: " + _name);
             throw new IOException("Project is null for the policy: " + _name);
         }
 
@@ -255,7 +255,7 @@ public class NetworkPolicyModel extends ModelObjectBase {
                     policy.setParent(_project);
                 }
             } catch (IOException ex) {
-                s_logger.warn("network-policy read", ex);
+                logger.warn("network-policy read", ex);
                 return;
             }
         }
@@ -265,7 +265,7 @@ public class NetworkPolicyModel extends ModelObjectBase {
             try {
                 api.create(policy);
             } catch (Exception ex) {
-                s_logger.debug("network policy create", ex);
+                logger.debug("network policy create", ex);
                 throw new CloudRuntimeException("Failed to create network policy", ex);
             }
             _policy = policy;
@@ -273,7 +273,7 @@ public class NetworkPolicyModel extends ModelObjectBase {
             try {
                 api.update(policy);
             } catch (IOException ex) {
-                s_logger.warn("network policy update", ex);
+                logger.warn("network policy update", ex);
                 throw new CloudRuntimeException("Unable to update network policy", ex);
             }
         }

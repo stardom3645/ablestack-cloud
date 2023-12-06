@@ -48,7 +48,7 @@ import com.cloud.network.dao.NetworkVO;
 
 public class VirtualNetworkModelTest extends TestCase {
 
-    protected static Logger s_logger = LogManager.getLogger(VirtualNetworkModelTest.class);
+    protected static Logger logger = LogManager.getLogger(VirtualNetworkModelTest.class);
 
     private ModelController controller;
 
@@ -166,8 +166,8 @@ public class VirtualNetworkModelTest extends TestCase {
         db.getVirtualNetworks().add(guestModel1);
         VirtualNetworkModel guestModel2 = new VirtualNetworkModel(network, UUID.randomUUID().toString(), "test", TrafficType.Guest);
         db.getVirtualNetworks().add(guestModel2);
-        s_logger.debug("networks: " + db.getVirtualNetworks().size());
-        s_logger.debug("No of Vitual Networks added to database : " + db.getVirtualNetworks().size());
+        logger.debug("networks: " + db.getVirtualNetworks().size());
+        logger.debug("No of Vitual Networks added to database : " + db.getVirtualNetworks().size());
         assertEquals(4, db.getVirtualNetworks().size());
         assertSame(storageModel, db.lookupVirtualNetwork(null, storageModel.getName(), TrafficType.Storage));
         assertSame(mgmtModel, db.lookupVirtualNetwork(null, mgmtModel.getName(), TrafficType.Management));

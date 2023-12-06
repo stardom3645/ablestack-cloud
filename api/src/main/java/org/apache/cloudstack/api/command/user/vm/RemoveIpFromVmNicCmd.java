@@ -42,7 +42,7 @@ import com.cloud.vm.NicSecondaryIp;
 @APICommand(name = "removeIpFromNic", description = "Removes secondary IP from the NIC.", responseObject = SuccessResponse.class,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class RemoveIpFromVmNicCmd extends BaseAsyncCmd {
-    protected static Logger s_logger = LogManager.getLogger(RemoveIpFromVmNicCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(RemoveIpFromVmNicCmd.class.getName());
 
     /////////////////////////////////////////////////////
     //////////////// API parameters /////////////////////

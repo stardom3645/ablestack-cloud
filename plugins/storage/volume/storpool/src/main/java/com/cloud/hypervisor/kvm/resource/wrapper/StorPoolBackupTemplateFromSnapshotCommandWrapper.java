@@ -59,7 +59,7 @@ import com.cloud.storage.template.TemplateProp;
 @ResourceWrapper(handles = StorPoolBackupTemplateFromSnapshotCommand.class)
 public class StorPoolBackupTemplateFromSnapshotCommandWrapper extends CommandWrapper<StorPoolBackupTemplateFromSnapshotCommand, CopyCmdAnswer, LibvirtComputingResource> {
 
-    protected static Logger s_logger = LogManager.getLogger(StorPoolBackupTemplateFromSnapshotCommandWrapper.class);
+    protected static Logger logger = LogManager.getLogger(StorPoolBackupTemplateFromSnapshotCommandWrapper.class);
 
     @Override
     public CopyCmdAnswer execute(final StorPoolBackupTemplateFromSnapshotCommand cmd, final LibvirtComputingResource libvirtComputingResource) {
@@ -143,7 +143,7 @@ public class StorPoolBackupTemplateFromSnapshotCommandWrapper extends CommandWra
         } catch (final Exception e) {
             final String error = "failed to backup snapshot: " + e.getMessage();
             SP_LOG(error);
-            s_logger.debug(error);
+            logger.debug(error);
             return new CopyCmdAnswer(cmd, e);
         } finally {
             if (srcPath != null) {
@@ -154,7 +154,7 @@ public class StorPoolBackupTemplateFromSnapshotCommandWrapper extends CommandWra
                 try {
                     secondaryPool.delete();
                 } catch (final Exception e) {
-                    s_logger.debug("Failed to delete secondary storage", e);
+                    logger.debug("Failed to delete secondary storage", e);
                 }
             }
         }

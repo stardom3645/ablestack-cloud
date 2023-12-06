@@ -271,7 +271,7 @@ public class LibvirtComputingResourceTest {
     public void setup() throws Exception {
         libvirtComputingResourceSpy.qemuSocketsPath = new File("/var/run/qemu");
         libvirtComputingResourceSpy.parser = parserMock;
-        LibvirtComputingResource.s_logger = loggerMock;
+        LibvirtComputingResource.logger = loggerMock;
     }
 
     /**

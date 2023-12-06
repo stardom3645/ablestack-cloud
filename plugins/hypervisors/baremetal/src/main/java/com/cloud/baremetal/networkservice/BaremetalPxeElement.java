@@ -60,7 +60,7 @@ import java.util.Map;
 import java.util.Set;
 
 public class BaremetalPxeElement extends AdapterBase implements NetworkElement {
-    protected static Logger s_logger = LogManager.getLogger(BaremetalPxeElement.class);
+    protected static Logger logger = LogManager.getLogger(BaremetalPxeElement.class);
     private static final Map<Service, Map<Capability, String>> capabilities;
 
     @Inject
@@ -111,7 +111,7 @@ public class BaremetalPxeElement extends AdapterBase implements NetworkElement {
         }
 
         if (offering.isSystemOnly() || !canHandle(dest, offering.getTrafficType(), network.getGuestType())) {
-            s_logger.debug("BaremetalPxeElement can not handle network offering: " + offering.getName());
+            logger.debug("BaremetalPxeElement can not handle network offering: " + offering.getName());
             return false;
         }
         return true;

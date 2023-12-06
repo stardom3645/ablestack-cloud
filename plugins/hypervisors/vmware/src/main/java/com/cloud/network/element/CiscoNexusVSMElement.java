@@ -70,7 +70,7 @@ import com.cloud.vm.VirtualMachineProfile;
 
 public class CiscoNexusVSMElement extends CiscoNexusVSMDeviceManagerImpl implements CiscoNexusVSMElementService, NetworkElement, Manager {
 
-    protected static Logger s_logger = LogManager.getLogger(CiscoNexusVSMElement.class);
+    protected static Logger logger = LogManager.getLogger(CiscoNexusVSMElement.class);
 
     @Inject
     CiscoNexusVSMDeviceDao _vsmDao;
@@ -147,7 +147,7 @@ public class CiscoNexusVSMElement extends CiscoNexusVSMDeviceManagerImpl impleme
         try {
             result = deleteCiscoNexusVSM(cmd.getCiscoNexusVSMDeviceId());
         } catch (ResourceInUseException e) {
-            s_logger.info("VSM could not be deleted");
+            logger.info("VSM could not be deleted");
             // TODO: Throw a better exception here.
             throw new CloudRuntimeException("Failed to delete specified VSM");
         }
@@ -266,7 +266,7 @@ public class CiscoNexusVSMElement extends CiscoNexusVSMDeviceManagerImpl impleme
                 netconfClient.disconnect();
             } catch (CloudRuntimeException e) {
                 String msg = "Invalid credentials supplied for user " + vsmUser + " for Cisco Nexus 1000v VSM at " + vsmIp;
-                s_logger.error(msg);
+                logger.error(msg);
                 _clusterDao.remove(clusterId);
                 throw new CloudRuntimeException(msg);
             }
@@ -276,7 +276,7 @@ public class CiscoNexusVSMElement extends CiscoNexusVSMDeviceManagerImpl impleme
             if (vsm != null) {
                 List<ClusterVSMMapVO> clusterList = _clusterVSMDao.listByVSMId(vsm.getId());
                 if (clusterList != null && !clusterList.isEmpty()) {
-                    s_logger.error("Failed to add cluster: specified Nexus VSM is already associated with another cluster");
+                    logger.error("Failed to add cluster: specified Nexus VSM is already associated with another cluster");
                     ResourceInUseException ex =
                         new ResourceInUseException("Failed to add cluster: specified Nexus VSM is already associated with another cluster with specified Id");
                     // get clusterUuid to report error
@@ -321,7 +321,7 @@ public class CiscoNexusVSMElement extends CiscoNexusVSMDeviceManagerImpl impleme
                     msg += "vsmpassword: Password of user account with admin privileges over Cisco Nexus 1000v dvSwitch. ";
                 }
             }
-            s_logger.error(msg);
+            logger.error(msg);
             // Cleaning up the cluster record as addCluster operation failed because of invalid credentials of Nexus dvSwitch.
             _clusterDao.remove(clusterId);
             throw new CloudRuntimeException(msg);

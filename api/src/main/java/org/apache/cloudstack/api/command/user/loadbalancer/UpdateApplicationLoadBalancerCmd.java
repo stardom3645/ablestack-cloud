@@ -35,7 +35,7 @@ import com.cloud.network.rules.FirewallRule;
 @APICommand(name = "updateLoadBalancer", description = "Updates an internal load balancer", responseObject = ApplicationLoadBalancerResponse.class, since = "4.4.0",
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class UpdateApplicationLoadBalancerCmd extends BaseAsyncCustomIdCmd {
-    protected static Logger s_logger = LogManager.getLogger(UpdateApplicationLoadBalancerCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(UpdateApplicationLoadBalancerCmd.class.getName());
 
 
     /////////////////////////////////////////////////////

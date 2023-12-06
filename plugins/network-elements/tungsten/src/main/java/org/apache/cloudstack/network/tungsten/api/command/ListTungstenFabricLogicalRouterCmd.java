@@ -48,7 +48,7 @@ import javax.inject.Inject;
     responseObject = TungstenFabricLogicalRouterResponse.class, requestHasSensitiveInfo = false,
     responseHasSensitiveInfo = false)
 public class ListTungstenFabricLogicalRouterCmd extends BaseListCmd {
-    protected static Logger s_logger = LogManager.getLogger(ListTungstenFabricLogicalRouterCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(ListTungstenFabricLogicalRouterCmd.class.getName());
     public static final String APINAME = "listTungstenFabricLogicalRouter";
 
     @Inject

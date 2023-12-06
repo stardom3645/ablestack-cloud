@@ -43,7 +43,7 @@ import com.cloud.utils.exception.CloudRuntimeException;
 @APICommand(name = "deletePaloAltoFirewall", responseObject = SuccessResponse.class, description = " delete a Palo Alto firewall device",
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class DeletePaloAltoFirewallCmd extends BaseAsyncCmd {
-    protected static Logger s_logger = LogManager.getLogger(DeletePaloAltoFirewallCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(DeletePaloAltoFirewallCmd.class.getName());
     @Inject
     PaloAltoFirewallElementService _paElementService;
 

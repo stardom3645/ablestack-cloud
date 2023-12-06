@@ -33,7 +33,7 @@ import com.xensource.xenapi.Network;
 @ResourceWrapper(handles =  OvsDestroyTunnelCommand.class)
 public final class CitrixOvsDestroyTunnelCommandWrapper extends CommandWrapper<OvsDestroyTunnelCommand, Answer, CitrixResourceBase> {
 
-    protected static Logger s_logger = LogManager.getLogger(CitrixOvsDestroyTunnelCommandWrapper.class);
+    protected static Logger logger = LogManager.getLogger(CitrixOvsDestroyTunnelCommandWrapper.class);
 
     @Override
     public Answer execute(final OvsDestroyTunnelCommand command, final CitrixResourceBase citrixResourceBase) {
@@ -41,7 +41,7 @@ public final class CitrixOvsDestroyTunnelCommandWrapper extends CommandWrapper<O
         try {
             final Network nw = citrixResourceBase.findOrCreateTunnelNetwork(conn, command.getBridgeName());
             if (nw == null) {
-                s_logger.warn("Unable to find tunnel network for GRE key:" + command.getBridgeName());
+                logger.warn("Unable to find tunnel network for GRE key:" + command.getBridgeName());
                 return new Answer(command, false, "No network found");
             }
 
@@ -54,7 +54,7 @@ public final class CitrixOvsDestroyTunnelCommandWrapper extends CommandWrapper<O
                 return new Answer(command, false, result);
             }
         } catch (final Exception e) {
-            s_logger.warn("caught execption when destroy ovs tunnel", e);
+            logger.warn("caught execption when destroy ovs tunnel", e);
             return new Answer(command, false, e.getMessage());
         }
     }

@@ -40,7 +40,7 @@ import com.cloud.user.Account;
 @APICommand(name = "revertSnapshot", description = "This is supposed to revert a volume snapshot. This command is only supported with KVM so far", responseObject = SnapshotResponse.class, entityType = {Snapshot.class},
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class RevertSnapshotCmd extends BaseAsyncCmd {
-    protected static Logger s_logger = LogManager.getLogger(RevertSnapshotCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(RevertSnapshotCmd.class.getName());
 
     /////////////////////////////////////////////////////
     //////////////// API parameters /////////////////////

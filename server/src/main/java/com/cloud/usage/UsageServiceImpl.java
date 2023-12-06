@@ -84,7 +84,7 @@ import com.cloud.vm.dao.VMInstanceDao;
 
 @Component
 public class UsageServiceImpl extends ManagerBase implements UsageService, Manager {
-    protected static Logger s_logger = LogManager.getLogger(UsageServiceImpl.class);
+    protected static Logger logger = LogManager.getLogger(UsageServiceImpl.class);
 
     //ToDo: Move implementation to ManagaerImpl
 
@@ -195,7 +195,7 @@ public class UsageServiceImpl extends ManagerBase implements UsageService, Manag
             //List records for all the accounts if the caller account is of type admin.
             //If account_id or account_name is explicitly mentioned, list records for the specified account only even if the caller is of type admin
             ignoreAccountId = _accountService.isRootAdmin(caller.getId());
-            s_logger.debug("Account details not available. Using userContext accountId: " + accountId);
+            logger.debug("Account details not available. Using userContext accountId: " + accountId);
         }
 
         // Check if a domain admin is allowed to access the requested domain id
@@ -214,8 +214,8 @@ public class UsageServiceImpl extends ManagerBase implements UsageService, Manag
         Date adjustedStartDate = computeAdjustedTime(startDate, usageTZ);
         Date adjustedEndDate = computeAdjustedTime(endDate, usageTZ);
 
-        if (s_logger.isDebugEnabled()) {
-            s_logger.debug("getting usage records for account: " + accountId + ", domainId: " + domainId + ", between " + adjustedStartDate + " and " + adjustedEndDate +
+        if (logger.isDebugEnabled()) {
+            logger.debug("getting usage records for account: " + accountId + ", domainId: " + domainId + ", between " + adjustedStartDate + " and " + adjustedEndDate +
                 ", using pageSize: " + cmd.getPageSizeVal() + " and startIndex: " + cmd.getStartIndex());
         }
 
@@ -407,8 +407,8 @@ public class UsageServiceImpl extends ManagerBase implements UsageService, Manag
             throw new InvalidParameterValueException("Unable to find project by id " + projectId);
         }
         final long projectAccountId = project.getProjectAccountId();
-        if (s_logger.isInfoEnabled()) {
-            s_logger.info(String.format("Using projectAccountId %d for project %s [%s] as account id", projectAccountId, project.getName(), project.getUuid()));
+        if (logger.isInfoEnabled()) {
+            logger.info(String.format("Using projectAccountId %d for project %s [%s] as account id", projectAccountId, project.getName(), project.getUuid()));
         }
         accountId = projectAccountId;
         return accountId;
@@ -480,7 +480,7 @@ public class UsageServiceImpl extends ManagerBase implements UsageService, Manag
                     cal.set(Calendar.SECOND, 0);
                     cal.set(Calendar.MILLISECOND, 0);
                     long execTS = cal.getTimeInMillis();
-                    s_logger.debug("Trying to remove old raw cloud_usage records older than " + interval + " day(s), current time=" + curTS + " next job execution time=" + execTS);
+                    logger.debug("Trying to remove old raw cloud_usage records older than " + interval + " day(s), current time=" + curTS + " next job execution time=" + execTS);
                     // Let's avoid cleanup when job runs and around a 15 min interval
                     if (Math.abs(curTS - execTS) < 15 * 60 * 1000) {
                         return false;

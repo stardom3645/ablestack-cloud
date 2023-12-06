@@ -35,7 +35,7 @@ import com.cloud.utils.db.SearchBuilder;
 import com.cloud.utils.db.SearchCriteria;
 
 public class AffinityGroupJoinDaoImpl extends GenericDaoBase<AffinityGroupJoinVO, Long> implements AffinityGroupJoinDao {
-    protected static Logger s_logger = LogManager.getLogger(AffinityGroupJoinDaoImpl.class);
+    protected static Logger logger = LogManager.getLogger(AffinityGroupJoinDaoImpl.class);
 
     @Inject
     private ConfigurationDao _configDao;

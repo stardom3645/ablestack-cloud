@@ -45,7 +45,7 @@ import com.cloud.vm.VirtualMachine;
 @APICommand(name = "stopNetScalerVpx", description = "Stops a NetScalervm.", responseObject = DomainRouterResponse.class, entityType = {VirtualMachine.class},
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class StopNetScalerVMCmd extends BaseAsyncCmd {
-    protected static Logger s_logger = LogManager.getLogger(StopNetScalerVMCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(StopNetScalerVMCmd.class.getName());
     private static final String s_name = "stopNetScalerVmresponse";
 
     @Inject

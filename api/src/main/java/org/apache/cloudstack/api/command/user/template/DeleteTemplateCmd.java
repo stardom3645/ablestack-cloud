@@ -40,7 +40,7 @@ import com.cloud.user.Account;
             description = "Deletes a template from the system. All virtual machines using the deleted template will not be affected.",
             requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class DeleteTemplateCmd extends BaseAsyncCmd {
-    protected static Logger s_logger = LogManager.getLogger(DeleteTemplateCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(DeleteTemplateCmd.class.getName());
 
     /////////////////////////////////////////////////////
     //////////////// API parameters /////////////////////

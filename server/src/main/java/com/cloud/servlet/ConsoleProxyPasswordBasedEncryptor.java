@@ -28,7 +28,7 @@ import com.cloud.utils.crypt.Base64Encryptor;
 
 // To maintain independency of console proxy project, we duplicate this class from console proxy project
 public class ConsoleProxyPasswordBasedEncryptor {
-    protected static Logger s_logger = LogManager.getLogger(ConsoleProxyPasswordBasedEncryptor.class);
+    protected static Logger logger = LogManager.getLogger(ConsoleProxyPasswordBasedEncryptor.class);
 
     private Gson gson;
 

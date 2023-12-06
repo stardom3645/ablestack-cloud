@@ -35,7 +35,7 @@ import com.cloud.user.Account;
 @APICommand(name = "removeRegion", description = "Removes specified region", responseObject = SuccessResponse.class,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class RemoveRegionCmd extends BaseCmd {
-    protected static Logger s_logger = LogManager.getLogger(RemoveRegionCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(RemoveRegionCmd.class.getName());
 
     /////////////////////////////////////////////////////
     //////////////// API parameters /////////////////////

@@ -37,7 +37,7 @@ import com.cloud.user.Account;
 @APICommand(name = "releaseDedicatedPod", description = "Release the dedication for the pod", responseObject = SuccessResponse.class,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class ReleaseDedicatedPodCmd extends BaseAsyncCmd {
-    protected static Logger s_logger = LogManager.getLogger(ReleaseDedicatedPodCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(ReleaseDedicatedPodCmd.class.getName());
 
     @Inject
     DedicatedService dedicatedService;

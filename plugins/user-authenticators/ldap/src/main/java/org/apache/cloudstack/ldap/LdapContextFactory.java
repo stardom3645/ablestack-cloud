@@ -30,7 +30,7 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 
 public class LdapContextFactory {
-    protected static Logger s_logger = LogManager.getLogger(LdapContextFactory.class.getName());
+    protected static Logger logger = LogManager.getLogger(LdapContextFactory.class.getName());
 
     @Inject
     private LdapConfiguration _ldapConfiguration;
@@ -59,7 +59,7 @@ public class LdapContextFactory {
     private LdapContext createInitialDirContext(final String principal, final String password, final String providerUrl, final boolean isSystemContext, Long domainId)
         throws NamingException, IOException {
         Hashtable<String, String> environment = getEnvironment(principal, password, providerUrl, isSystemContext, domainId);
-        s_logger.debug("initializing ldap with provider url: " + environment.get(Context.PROVIDER_URL));
+        logger.debug("initializing ldap with provider url: " + environment.get(Context.PROVIDER_URL));
         return new InitialLdapContext(environment, null);
     }
 
@@ -71,7 +71,7 @@ public class LdapContextFactory {
         final boolean sslStatus = _ldapConfiguration.getSSLStatus(domainId);
 
         if (sslStatus) {
-            s_logger.info("LDAP SSL enabled.");
+            logger.info("LDAP SSL enabled.");
             environment.put(Context.SECURITY_PROTOCOL, "ssl");
             System.setProperty("javax.net.ssl.trustStore", _ldapConfiguration.getTrustStore(domainId));
             System.setProperty("javax.net.ssl.trustStorePassword", _ldapConfiguration.getTrustStorePassword(domainId));

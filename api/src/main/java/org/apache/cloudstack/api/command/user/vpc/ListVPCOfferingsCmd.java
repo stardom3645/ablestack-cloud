@@ -36,7 +36,7 @@ import com.cloud.utils.Pair;
 @APICommand(name = "listVPCOfferings", description = "Lists VPC offerings", responseObject = VpcOfferingResponse.class,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class ListVPCOfferingsCmd extends BaseListCmd {
-    protected static Logger s_logger = LogManager.getLogger(ListVPCOfferingsCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(ListVPCOfferingsCmd.class.getName());
 
     /////////////////////////////////////////////////////
     //////////////// API parameters /////////////////////

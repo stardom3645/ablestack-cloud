@@ -38,7 +38,7 @@ import com.cloud.utils.db.TransactionLegacy;
 @Component
 public class VMEntityDaoImpl extends GenericDaoBase<VMEntityVO, Long> implements VMEntityDao {
 
-    protected static Logger s_logger = LogManager.getLogger(VMEntityDaoImpl.class);
+    protected static Logger logger = LogManager.getLogger(VMEntityDaoImpl.class);
 
     @Inject
     protected VMReservationDao _vmReservationDao;

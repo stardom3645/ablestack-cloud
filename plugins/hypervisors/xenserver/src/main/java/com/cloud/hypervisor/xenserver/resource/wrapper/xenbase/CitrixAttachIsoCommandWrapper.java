@@ -41,7 +41,7 @@ import com.xensource.xenapi.VM;
 @ResourceWrapper(handles =  AttachIsoCommand.class)
 public final class CitrixAttachIsoCommandWrapper extends CommandWrapper<AttachIsoCommand, Answer, CitrixResourceBase> {
 
-    protected static Logger s_logger = LogManager.getLogger(CitrixAttachIsoCommandWrapper.class);
+    protected static Logger logger = LogManager.getLogger(CitrixAttachIsoCommandWrapper.class);
 
     @Override
     public Answer execute(final AttachIsoCommand command, final CitrixResourceBase citrixResourceBase) {
@@ -127,10 +127,10 @@ public final class CitrixAttachIsoCommandWrapper extends CommandWrapper<AttachIs
                 return new Answer(command);
             }
         } catch (final XenAPIException e) {
-            s_logger.warn(errorMsg + ": " + e.toString(), e);
+            logger.warn(errorMsg + ": " + e.toString(), e);
             return new Answer(command, false, e.toString());
         } catch (final Exception e) {
-            s_logger.warn(errorMsg + ": " + e.toString(), e);
+            logger.warn(errorMsg + ": " + e.toString(), e);
             return new Answer(command, false, e.getMessage());
         }
     }

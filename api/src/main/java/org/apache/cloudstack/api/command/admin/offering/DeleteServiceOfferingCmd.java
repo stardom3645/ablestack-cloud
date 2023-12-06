@@ -33,7 +33,7 @@ import com.cloud.user.Account;
 @APICommand(name = "deleteServiceOffering", description = "Deletes a service offering.", responseObject = SuccessResponse.class,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class DeleteServiceOfferingCmd extends BaseCmd {
-    protected static Logger s_logger = LogManager.getLogger(DeleteServiceOfferingCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(DeleteServiceOfferingCmd.class.getName());
 
     /////////////////////////////////////////////////////
     //////////////// API parameters /////////////////////

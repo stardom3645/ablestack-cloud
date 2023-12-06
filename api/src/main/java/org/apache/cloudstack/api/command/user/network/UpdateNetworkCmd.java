@@ -44,7 +44,7 @@ import com.cloud.offering.NetworkOffering;
 @APICommand(name = "updateNetwork", description = "Updates a network", responseObject = NetworkResponse.class, responseView = ResponseView.Restricted, entityType = {Network.class},
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class UpdateNetworkCmd extends BaseAsyncCustomIdCmd implements UserCmd {
-    protected static Logger s_logger = LogManager.getLogger(UpdateNetworkCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(UpdateNetworkCmd.class.getName());
 
     private static final String s_name = "updatenetworkresponse";
 

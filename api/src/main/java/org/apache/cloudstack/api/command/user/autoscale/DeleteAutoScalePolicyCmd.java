@@ -39,7 +39,7 @@ import com.cloud.user.Account;
 @APICommand(name = "deleteAutoScalePolicy", description = "Deletes a autoscale policy.", responseObject = SuccessResponse.class, entityType = {AutoScalePolicy.class},
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class DeleteAutoScalePolicyCmd extends BaseAsyncCmd {
-    protected static Logger s_logger = LogManager.getLogger(DeleteAutoScalePolicyCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(DeleteAutoScalePolicyCmd.class.getName());
     // ///////////////////////////////////////////////////
     // ////////////// API parameters /////////////////////
     // ///////////////////////////////////////////////////
@@ -94,7 +94,7 @@ public class DeleteAutoScalePolicyCmd extends BaseAsyncCmd {
             SuccessResponse response = new SuccessResponse(getCommandName());
             setResponseObject(response);
         } else {
-            s_logger.warn("Failed to delete autoscale policy " + getId());
+            logger.warn("Failed to delete autoscale policy " + getId());
             throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, "Failed to delete AutoScale Policy");
         }
     }

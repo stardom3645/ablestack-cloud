@@ -42,7 +42,7 @@ import com.cloud.user.Account;
 @APICommand(name = "updateConfiguration", description = "Updates a configuration.", responseObject = ConfigurationResponse.class,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class UpdateCfgCmd extends BaseCmd {
-    protected static Logger s_logger = LogManager.getLogger(UpdateCfgCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(UpdateCfgCmd.class.getName());
 
     /////////////////////////////////////////////////////
     //////////////// API parameters /////////////////////

@@ -39,7 +39,7 @@ import java.util.List;
 @APICommand(name = "updateOauthProvider", description = "Updates the registered OAuth provider details", responseObject = OauthProviderResponse.class,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false, since = "4.19.0")
 public final class UpdateOAuthProviderCmd extends BaseCmd {
-    protected static Logger s_logger = LogManager.getLogger(UpdateOAuthProviderCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(UpdateOAuthProviderCmd.class.getName());
 
 
     /////////////////////////////////////////////////////

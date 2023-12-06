@@ -39,7 +39,7 @@ import com.cloud.utils.Pair;
 
 public class VsmCommand {
 
-    protected static Logger s_logger = LogManager.getLogger(VsmCommand.class);
+    protected static Logger logger = LogManager.getLogger(VsmCommand.class);
     private static final String s_namespace = "urn:ietf:params:xml:ns:netconf:base:1.0";
     private static final String s_ciscons = "http://www.cisco.com/nxos:1.0:ppm";
     private static final String s_configuremode = "__XML__MODE__exec_configure";
@@ -89,10 +89,10 @@ public class VsmCommand {
 
             return serialize(domImpl, doc);
         } catch (ParserConfigurationException e) {
-            s_logger.error("Error while creating add port profile message : " + e.getMessage());
+            logger.error("Error while creating add port profile message : " + e.getMessage());
             return null;
         } catch (DOMException e) {
-            s_logger.error("Error while creating add port profile message : " + e.getMessage());
+            logger.error("Error while creating add port profile message : " + e.getMessage());
             return null;
         }
     }
@@ -122,10 +122,10 @@ public class VsmCommand {
 
             return serialize(domImpl, doc);
         } catch (ParserConfigurationException e) {
-            s_logger.error("Error while creating add port profile message : " + e.getMessage());
+            logger.error("Error while creating add port profile message : " + e.getMessage());
             return null;
         } catch (DOMException e) {
-            s_logger.error("Error while creating add port profile message : " + e.getMessage());
+            logger.error("Error while creating add port profile message : " + e.getMessage());
             return null;
         }
     }
@@ -155,10 +155,10 @@ public class VsmCommand {
 
             return serialize(domImpl, doc);
         } catch (ParserConfigurationException e) {
-            s_logger.error("Error while creating update port profile message : " + e.getMessage());
+            logger.error("Error while creating update port profile message : " + e.getMessage());
             return null;
         } catch (DOMException e) {
-            s_logger.error("Error while creating update port profile message : " + e.getMessage());
+            logger.error("Error while creating update port profile message : " + e.getMessage());
             return null;
         }
     }
@@ -188,10 +188,10 @@ public class VsmCommand {
 
             return serialize(domImpl, doc);
         } catch (ParserConfigurationException e) {
-            s_logger.error("Error while creating delete port profile message : " + e.getMessage());
+            logger.error("Error while creating delete port profile message : " + e.getMessage());
             return null;
         } catch (DOMException e) {
-            s_logger.error("Error while creating delete port profile message : " + e.getMessage());
+            logger.error("Error while creating delete port profile message : " + e.getMessage());
             return null;
         }
     }
@@ -221,10 +221,10 @@ public class VsmCommand {
 
             return serialize(domImpl, doc);
         } catch (ParserConfigurationException e) {
-            s_logger.error("Error while creating policy map message : " + e.getMessage());
+            logger.error("Error while creating policy map message : " + e.getMessage());
             return null;
         } catch (DOMException e) {
-            s_logger.error("Error while creating policy map message : " + e.getMessage());
+            logger.error("Error while creating policy map message : " + e.getMessage());
             return null;
         }
     }
@@ -254,10 +254,10 @@ public class VsmCommand {
 
             return serialize(domImpl, doc);
         } catch (ParserConfigurationException e) {
-            s_logger.error("Error while creating delete policy map message : " + e.getMessage());
+            logger.error("Error while creating delete policy map message : " + e.getMessage());
             return null;
         } catch (DOMException e) {
-            s_logger.error("Error while creating delete policy map message : " + e.getMessage());
+            logger.error("Error while creating delete policy map message : " + e.getMessage());
             return null;
         }
     }
@@ -287,10 +287,10 @@ public class VsmCommand {
 
             return serialize(domImpl, doc);
         } catch (ParserConfigurationException e) {
-            s_logger.error("Error while creating attach/detach service policy message : " + e.getMessage());
+            logger.error("Error while creating attach/detach service policy message : " + e.getMessage());
             return null;
         } catch (DOMException e) {
-            s_logger.error("Error while creating attach/detach service policy message : " + e.getMessage());
+            logger.error("Error while creating attach/detach service policy message : " + e.getMessage());
             return null;
         }
     }
@@ -324,10 +324,10 @@ public class VsmCommand {
 
             return serialize(domImpl, doc);
         } catch (ParserConfigurationException e) {
-            s_logger.error("Error while creating the message to get port profile details: " + e.getMessage());
+            logger.error("Error while creating the message to get port profile details: " + e.getMessage());
             return null;
         } catch (DOMException e) {
-            s_logger.error("Error while creating the message to get port profile details: " + e.getMessage());
+            logger.error("Error while creating the message to get port profile details: " + e.getMessage());
             return null;
         }
     }
@@ -357,10 +357,10 @@ public class VsmCommand {
 
             return serialize(domImpl, doc);
         } catch (ParserConfigurationException e) {
-            s_logger.error("Error while creating the message to get policy map details : " + e.getMessage());
+            logger.error("Error while creating the message to get policy map details : " + e.getMessage());
             return null;
         } catch (DOMException e) {
-            s_logger.error("Error while creating the message to get policy map details : " + e.getMessage());
+            logger.error("Error while creating the message to get policy map details : " + e.getMessage());
             return null;
         }
     }
@@ -384,10 +384,10 @@ public class VsmCommand {
 
             return serialize(domImpl, doc);
         } catch (ParserConfigurationException e) {
-            s_logger.error("Error while creating hello message : " + e.getMessage());
+            logger.error("Error while creating hello message : " + e.getMessage());
             return null;
         } catch (DOMException e) {
-            s_logger.error("Error while creating hello message : " + e.getMessage());
+            logger.error("Error while creating hello message : " + e.getMessage());
             return null;
         }
     }
@@ -417,10 +417,10 @@ public class VsmCommand {
 
             return serialize(domImpl, doc);
         } catch (ParserConfigurationException e) {
-            s_logger.error("Error while adding vservice node for vlan " + vlanId + ", " + e.getMessage());
+            logger.error("Error while adding vservice node for vlan " + vlanId + ", " + e.getMessage());
             return null;
         } catch (DOMException e) {
-            s_logger.error("Error while adding vservice node for vlan " + vlanId + ", " + e.getMessage());
+            logger.error("Error while adding vservice node for vlan " + vlanId + ", " + e.getMessage());
             return null;
         }
     }

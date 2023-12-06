@@ -39,7 +39,7 @@ import com.cloud.user.Account;
 @APICommand(name = "extractTemplate", description = "Extracts a template", responseObject = ExtractResponse.class,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class ExtractTemplateCmd extends BaseAsyncCmd {
-    protected static Logger s_logger = LogManager.getLogger(ExtractTemplateCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(ExtractTemplateCmd.class.getName());
 
 
     /////////////////////////////////////////////////////
@@ -130,7 +130,7 @@ public class ExtractTemplateCmd extends BaseAsyncCmd {
                 throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, "Failed to extract template");
             }
         } catch (InternalErrorException ex) {
-            s_logger.warn("Exception: ", ex);
+            logger.warn("Exception: ", ex);
             throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, ex.getMessage());
         }
     }

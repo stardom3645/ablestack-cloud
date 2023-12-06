@@ -36,7 +36,7 @@ import com.cloud.utils.exception.CloudRuntimeException;
 @APICommand(name = "addTrafficMonitor", description = "Adds Traffic Monitor Host for Direct Network Usage", responseObject = TrafficMonitorResponse.class,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class AddTrafficMonitorCmd extends BaseCmd {
-    protected static Logger s_logger = LogManager.getLogger(AddTrafficMonitorCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(AddTrafficMonitorCmd.class.getName());
 
     /////////////////////////////////////////////////////
     //////////////// API parameters /////////////////////

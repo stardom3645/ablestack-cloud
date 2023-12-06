@@ -47,7 +47,7 @@ import com.cloud.network.VirtualRouterProvider;
             requestHasSensitiveInfo = false,
             responseHasSensitiveInfo = false)
 public class ListInternalLoadBalancerElementsCmd extends BaseListCmd {
-    protected static Logger s_logger = LogManager.getLogger(ListInternalLoadBalancerElementsCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(ListInternalLoadBalancerElementsCmd.class.getName());
 
     @Inject
     private InternalLoadBalancerElementService _service;

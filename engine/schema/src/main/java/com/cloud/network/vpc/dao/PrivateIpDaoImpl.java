@@ -37,7 +37,7 @@ import com.cloud.utils.db.TransactionLegacy;
 @Component
 @DB()
 public class PrivateIpDaoImpl extends GenericDaoBase<PrivateIpVO, Long> implements PrivateIpDao {
-    protected static Logger s_logger = LogManager.getLogger(PrivateIpDaoImpl.class);
+    protected static Logger logger = LogManager.getLogger(PrivateIpDaoImpl.class);
 
     private final SearchBuilder<PrivateIpVO> AllFieldsSearch;
     private final GenericSearchBuilder<PrivateIpVO, Integer> CountAllocatedByNetworkId;
@@ -91,8 +91,8 @@ public class PrivateIpDaoImpl extends GenericDaoBase<PrivateIpVO, Long> implemen
 
     @Override
     public void releaseIpAddress(String ipAddress, long networkId) {
-        if (s_logger.isDebugEnabled()) {
-            s_logger.debug("Releasing private ip address: " + ipAddress + " network id " + networkId);
+        if (logger.isDebugEnabled()) {
+            logger.debug("Releasing private ip address: " + ipAddress + " network id " + networkId);
         }
         SearchCriteria<PrivateIpVO> sc = AllFieldsSearch.create();
         sc.setParameters("ip", ipAddress);

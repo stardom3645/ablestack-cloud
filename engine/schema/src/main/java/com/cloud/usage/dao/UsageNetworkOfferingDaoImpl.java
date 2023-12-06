@@ -37,7 +37,7 @@ import com.cloud.utils.db.TransactionLegacy;
 
 @Component
 public class UsageNetworkOfferingDaoImpl extends GenericDaoBase<UsageNetworkOfferingVO, Long> implements UsageNetworkOfferingDao {
-    protected static Logger s_logger = LogManager.getLogger(UsageNetworkOfferingDaoImpl.class.getName());
+    protected static Logger logger = LogManager.getLogger(UsageNetworkOfferingDaoImpl.class.getName());
 
     protected static final String UPDATE_DELETED =
         "UPDATE usage_network_offering SET deleted = ? WHERE account_id = ? AND vm_instance_id = ? AND network_offering_id = ? and deleted IS NULL";
@@ -75,7 +75,7 @@ public class UsageNetworkOfferingDaoImpl extends GenericDaoBase<UsageNetworkOffe
             txn.commit();
         } catch (Exception e) {
             txn.rollback();
-            s_logger.warn("Error updating UsageNetworkOfferingVO:"+e.getMessage(), e);
+            logger.warn("Error updating UsageNetworkOfferingVO:"+e.getMessage(), e);
         } finally {
             txn.close();
         }
@@ -147,7 +147,7 @@ public class UsageNetworkOfferingDaoImpl extends GenericDaoBase<UsageNetworkOffe
             }
         } catch (Exception e) {
             txn.rollback();
-            s_logger.warn("Error getting usage records", e);
+            logger.warn("Error getting usage records", e);
         } finally {
             txn.close();
         }

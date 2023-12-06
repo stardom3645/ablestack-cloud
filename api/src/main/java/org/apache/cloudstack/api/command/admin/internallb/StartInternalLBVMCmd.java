@@ -43,7 +43,7 @@ import com.cloud.vm.VirtualMachine;
 @APICommand(name = "startInternalLoadBalancerVM", responseObject = DomainRouterResponse.class, description = "Starts an existing internal lb vm.", entityType = {VirtualMachine.class},
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class StartInternalLBVMCmd extends BaseAsyncCmd {
-    protected static Logger s_logger = LogManager.getLogger(StartInternalLBVMCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(StartInternalLBVMCmd.class.getName());
     private static final String s_name = "startinternallbvmresponse";
 
     /////////////////////////////////////////////////////

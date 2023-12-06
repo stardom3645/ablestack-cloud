@@ -37,7 +37,7 @@ import com.cloud.resource.ResourceWrapper;
 @ResourceWrapper(handles =  DeleteLogicalRouterPortCommand.class)
 public class NiciraNvpDeleteLogicalRouterPortCommandWrapper extends CommandWrapper<DeleteLogicalRouterPortCommand, Answer, NiciraNvpResource> {
 
-    protected static Logger s_logger = LogManager.getLogger(NiciraNvpDeleteLogicalRouterPortCommandWrapper.class);
+    protected static Logger logger = LogManager.getLogger(NiciraNvpDeleteLogicalRouterPortCommandWrapper.class);
 
     @Override
     public Answer execute(DeleteLogicalRouterPortCommand command, NiciraNvpResource niciraNvpResource) {
@@ -45,7 +45,7 @@ public class NiciraNvpDeleteLogicalRouterPortCommandWrapper extends CommandWrapp
         final String logicalRouterPortUuid = command.getLogicalRouterPortUuid();
         final NiciraNvpApi niciraNvpApi = niciraNvpResource.getNiciraNvpApi();
 
-        s_logger.debug("Deleting Logical Router Port " + logicalRouterPortUuid + " in Logical Router " + logicalRouterUuid);
+        logger.debug("Deleting Logical Router Port " + logicalRouterPortUuid + " in Logical Router " + logicalRouterUuid);
         try {
             niciraNvpApi.deleteLogicalRouterPort(logicalRouterUuid, logicalRouterPortUuid);
             return new DeleteLogicalRouterPortAnswer(command, true, "Logical Router Port " + logicalRouterPortUuid + " deleted");

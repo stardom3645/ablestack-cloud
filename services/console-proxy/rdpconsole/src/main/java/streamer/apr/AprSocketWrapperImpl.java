@@ -48,7 +48,7 @@ import streamer.ssl.SSLState;
 import sun.security.x509.X509CertImpl;
 
 public class AprSocketWrapperImpl extends PipelineImpl implements SocketWrapper {
-    protected static Logger s_logger = LogManager.getLogger(AprSocketWrapperImpl.class);
+    protected static Logger logger = LogManager.getLogger(AprSocketWrapperImpl.class);
 
     static {
         try {
@@ -201,13 +201,13 @@ public class AprSocketWrapperImpl extends PipelineImpl implements SocketWrapper 
         try {
             handleEvent(Event.STREAM_CLOSE, Direction.IN);
         } catch (Exception e) {
-            s_logger.info("[ignored]"
+            logger.info("[ignored]"
                     + "handling stream close event failed on input: " + e.getLocalizedMessage());
         }
         try {
             handleEvent(Event.STREAM_CLOSE, Direction.OUT);
         } catch (Exception e) {
-            s_logger.info("[ignored]"
+            logger.info("[ignored]"
                     + "handling event close event failed on output: " + e.getLocalizedMessage());
         }
     }
@@ -223,7 +223,7 @@ public class AprSocketWrapperImpl extends PipelineImpl implements SocketWrapper 
             // Socket.shutdown(socket, Socket.APR_SHUTDOWN_READWRITE);
             Pool.destroy(pool);
         } catch (Exception e) {
-            s_logger.info("[ignored]"
+            logger.info("[ignored]"
                     + "failure during network cleanup: " + e.getLocalizedMessage());
         }
 

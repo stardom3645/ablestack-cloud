@@ -40,7 +40,7 @@ import javax.inject.Inject;
 @APICommand(name = CreateTungstenFabricProviderCmd.APINAME, description = "Create Tungsten-Fabric provider in cloudstack",
     responseObject = TungstenFabricProviderResponse.class, requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class CreateTungstenFabricProviderCmd extends BaseCmd {
-    protected static Logger s_logger = LogManager.getLogger(CreateTungstenFabricProviderCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(CreateTungstenFabricProviderCmd.class.getName());
     public static final String APINAME = "createTungstenFabricProvider";
 
     @Parameter(name = ApiConstants.ZONE_ID, type = CommandType.UUID, entityType = ZoneResponse.class, required = true

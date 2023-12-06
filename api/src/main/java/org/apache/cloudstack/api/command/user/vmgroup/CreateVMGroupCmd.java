@@ -35,7 +35,7 @@ import com.cloud.vm.InstanceGroup;
 @APICommand(name = "createInstanceGroup", description = "Creates a vm group", responseObject = InstanceGroupResponse.class, entityType = {InstanceGroup.class},
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class CreateVMGroupCmd extends BaseCmd {
-    protected static Logger s_logger = LogManager.getLogger(CreateVMGroupCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(CreateVMGroupCmd.class.getName());
 
 
     // ///////////////////////////////////////////////////

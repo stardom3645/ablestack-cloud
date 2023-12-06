@@ -45,7 +45,7 @@ import com.cloud.exception.InvalidParameterValueException;
             requestHasSensitiveInfo = false,
             responseHasSensitiveInfo = false)
 public class ListProjectsCmd extends BaseListAccountResourcesCmd {
-    protected static Logger s_logger = LogManager.getLogger(ListProjectsCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(ListProjectsCmd.class.getName());
 
     /////////////////////////////////////////////////////
     //////////////// API parameters /////////////////////

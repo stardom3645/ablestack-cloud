@@ -43,7 +43,7 @@ import com.cloud.user.Account;
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class DeleteCiscoNexusVSMCmd extends BaseAsyncCmd {
 
-    protected static Logger s_logger = LogManager.getLogger(DeleteCiscoNexusVSMCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(DeleteCiscoNexusVSMCmd.class.getName());
     @Inject
     CiscoNexusVSMElementService _ciscoNexusVSMService;
 

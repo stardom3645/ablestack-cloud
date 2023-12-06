@@ -37,7 +37,7 @@ import com.cloud.utils.exception.CloudRuntimeException;
 @Component
 @DB()
 public class PortProfileDaoImpl extends GenericDaoBase<PortProfileVO, Long> implements PortProfileDao {
-    protected static final Logger s_logger = LogManager.getLogger(PortProfileDaoImpl.class);
+    protected Logger logger = LogManager.getLogger(PortProfileDaoImpl.class);
 
     final SearchBuilder<PortProfileVO> nameSearch;
     final SearchBuilder<PortProfileVO> accessVlanSearch;

@@ -37,7 +37,7 @@ import com.cloud.resource.ResourceManager;
 import com.cloud.utils.component.AdapterBase;
 
 public class HypervInvestigator extends AdapterBase implements Investigator {
-    private final static Logger s_logger = LogManager.getLogger(HypervInvestigator.class);
+    private final static Logger logger = LogManager.getLogger(HypervInvestigator.class);
     @Inject HostDao _hostDao;
     @Inject AgentManager _agentMgr;
     @Inject ResourceManager _resourceMgr;
@@ -69,7 +69,7 @@ public class HypervInvestigator extends AdapterBase implements Investigator {
                     return answer.getResult() ? Status.Down : Status.Up;
                 }
             } catch (Exception e) {
-                s_logger.debug("Failed to send command to host: " + neighbor.getId(), e);
+                logger.debug("Failed to send command to host: " + neighbor.getId(), e);
             }
         }
 

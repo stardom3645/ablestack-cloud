@@ -38,7 +38,7 @@ import com.cloud.utils.Pair;
 @APICommand(name = "listDomainChildren", description = "Lists all children domains belonging to a specified domain", responseObject = DomainResponse.class,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class ListDomainChildrenCmd extends BaseListCmd {
-    protected static Logger s_logger = LogManager.getLogger(ListDomainChildrenCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(ListDomainChildrenCmd.class.getName());
 
 
     /////////////////////////////////////////////////////

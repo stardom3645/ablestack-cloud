@@ -40,7 +40,7 @@ public class ProjectAccountDaoImpl extends GenericDaoBase<ProjectAccountVO, Long
     final GenericSearchBuilder<ProjectAccountVO, Long> ProjectAccountsSearch;
     final GenericSearchBuilder<ProjectAccountVO, Long> CountByRoleSearch;
 
-    protected static Logger s_logger = LogManager.getLogger(ProjectAccountDaoImpl.class.getName());
+    protected static Logger logger = LogManager.getLogger(ProjectAccountDaoImpl.class.getName());
 
     protected ProjectAccountDaoImpl() {
         AllFieldsSearch = createSearchBuilder();
@@ -191,7 +191,7 @@ public class ProjectAccountDaoImpl extends GenericDaoBase<ProjectAccountVO, Long
 
         int rowsRemoved = remove(sc);
         if (rowsRemoved > 0) {
-            s_logger.debug("Removed account id=" + accountId + " from " + rowsRemoved + " projects");
+            logger.debug("Removed account id=" + accountId + " from " + rowsRemoved + " projects");
         }
     }
 

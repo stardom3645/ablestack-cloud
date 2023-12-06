@@ -38,7 +38,7 @@ import com.cloud.storage.Volume;
             responseHasSensitiveInfo = true)
 public class DestroyVolumeCmdByAdmin extends DestroyVolumeCmd implements AdminCmd {
 
-    protected static Logger s_logger = LogManager.getLogger(DestroyVolumeCmdByAdmin.class.getName());
+    protected static Logger logger = LogManager.getLogger(DestroyVolumeCmdByAdmin.class.getName());
 
     @Override
     public void execute() {

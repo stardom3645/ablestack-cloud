@@ -40,7 +40,7 @@ import com.cloud.utils.Pair;
 @APICommand(name = "listLoadBalancerRules", description = "Lists load balancer rules.", responseObject = LoadBalancerResponse.class,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class ListLoadBalancerRulesCmd extends BaseListTaggedResourcesCmd {
-    protected static Logger s_logger = LogManager.getLogger(ListLoadBalancerRulesCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(ListLoadBalancerRulesCmd.class.getName());
 
 
     // ///////////////////////////////////////////////////

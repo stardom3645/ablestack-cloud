@@ -51,7 +51,7 @@ import java.util.List;
     requestHasSensitiveInfo = false, responseHasSensitiveInfo = true)
 public class ResetVMSSHKeyCmd extends BaseAsyncCmd implements UserCmd {
 
-    protected static Logger s_logger = LogManager.getLogger(ResetVMSSHKeyCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(ResetVMSSHKeyCmd.class.getName());
 
     private static final String s_name = "resetSSHKeyforvirtualmachineresponse";
 

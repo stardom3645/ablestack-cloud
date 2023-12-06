@@ -51,7 +51,7 @@ import com.cloud.utils.db.SearchCriteria;
  *
  */
 public class KeysManagerImpl implements KeysManager, Configurable {
-    protected static Logger s_logger = LogManager.getLogger(KeysManagerImpl.class);
+    protected static Logger logger = LogManager.getLogger(KeysManagerImpl.class);
 
     @Inject
     ConfigurationDao _configDao;
@@ -96,7 +96,7 @@ public class KeysManagerImpl implements KeysManager, Configurable {
             random.nextBytes(keyBytes);
             return Base64.encodeBase64URLSafeString(keyBytes);
         } catch (NoSuchAlgorithmException e) {
-            s_logger.error("Unhandled exception: ", e);
+            logger.error("Unhandled exception: ", e);
         }
         return null;
     }

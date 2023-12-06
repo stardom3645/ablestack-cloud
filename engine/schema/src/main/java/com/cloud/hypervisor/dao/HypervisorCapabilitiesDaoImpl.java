@@ -34,7 +34,7 @@ import com.cloud.utils.db.SearchCriteria;
 @Component
 public class HypervisorCapabilitiesDaoImpl extends GenericDaoBase<HypervisorCapabilitiesVO, Long> implements HypervisorCapabilitiesDao {
 
-    protected static Logger s_logger = LogManager.getLogger(HypervisorCapabilitiesDaoImpl.class);
+    protected static Logger logger = LogManager.getLogger(HypervisorCapabilitiesDaoImpl.class);
 
     protected final SearchBuilder<HypervisorCapabilitiesVO> HypervisorTypeSearch;
     protected final SearchBuilder<HypervisorCapabilitiesVO> HypervisorTypeAndVersionSearch;

@@ -32,7 +32,7 @@ import com.cloud.utils.db.SearchCriteria;
 import com.cloud.utils.net.NetUtils;
 
 public class NetworkOfferingJoinDaoImpl extends GenericDaoBase<NetworkOfferingJoinVO, Long> implements NetworkOfferingJoinDao {
-    protected static Logger s_logger = LogManager.getLogger(NetworkOfferingJoinDaoImpl.class);
+    protected static Logger logger = LogManager.getLogger(NetworkOfferingJoinDaoImpl.class);
 
     private final SearchBuilder<NetworkOfferingJoinVO> nofIdSearch;
 

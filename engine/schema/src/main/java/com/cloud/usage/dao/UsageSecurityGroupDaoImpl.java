@@ -37,7 +37,7 @@ import com.cloud.utils.db.TransactionLegacy;
 
 @Component
 public class UsageSecurityGroupDaoImpl extends GenericDaoBase<UsageSecurityGroupVO, Long> implements UsageSecurityGroupDao {
-    protected static Logger s_logger = LogManager.getLogger(UsageSecurityGroupDaoImpl.class.getName());
+    protected static Logger logger = LogManager.getLogger(UsageSecurityGroupDaoImpl.class.getName());
 
     protected static final String UPDATE_DELETED =
         "UPDATE usage_security_group SET deleted = ? WHERE account_id = ? AND vm_instance_id = ? AND security_group_id = ? and deleted IS NULL";
@@ -75,7 +75,7 @@ public class UsageSecurityGroupDaoImpl extends GenericDaoBase<UsageSecurityGroup
             txn.commit();
         } catch (Exception e) {
             txn.rollback();
-            s_logger.warn("Error updating UsageSecurityGroupVO:"+e.getMessage(), e);
+            logger.warn("Error updating UsageSecurityGroupVO:"+e.getMessage(), e);
         } finally {
             txn.close();
         }
@@ -143,7 +143,7 @@ public class UsageSecurityGroupDaoImpl extends GenericDaoBase<UsageSecurityGroup
             }
         } catch (Exception e) {
             txn.rollback();
-            s_logger.warn("Error getting usage records:"+e.getMessage(), e);
+            logger.warn("Error getting usage records:"+e.getMessage(), e);
         } finally {
             txn.close();
         }

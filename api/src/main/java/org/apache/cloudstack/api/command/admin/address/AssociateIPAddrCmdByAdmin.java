@@ -28,5 +28,5 @@ import org.apache.cloudstack.api.response.IPAddressResponse;
 @APICommand(name = "associateIpAddress", description = "Acquires and associates a public IP to an account.", responseObject = IPAddressResponse.class, responseView = ResponseView.Full,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class AssociateIPAddrCmdByAdmin extends AssociateIPAddrCmd implements AdminCmd {
-    protected static Logger s_logger = LogManager.getLogger(AssociateIPAddrCmdByAdmin.class.getName());
+    protected static Logger logger = LogManager.getLogger(AssociateIPAddrCmdByAdmin.class.getName());
 }

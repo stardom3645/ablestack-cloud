@@ -43,7 +43,7 @@ import com.cloud.utils.Pair;
 @APICommand(name = "listVPCs", description = "Lists VPCs", responseObject = VpcResponse.class, responseView = ResponseView.Restricted, entityType = {Vpc.class},
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class ListVPCsCmd extends BaseListTaggedResourcesCmd implements UserCmd {
-    protected static Logger s_logger = LogManager.getLogger(ListVPCsCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(ListVPCsCmd.class.getName());
     private static final String s_name = "listvpcsresponse";
 
     /////////////////////////////////////////////////////

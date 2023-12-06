@@ -33,7 +33,7 @@ import com.cloud.uservm.UserVm;
 @APICommand(name = "getVirtualMachineUserData", description = "Returns user data associated with the VM", responseObject = VMUserDataResponse.class, since = "4.4",
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class GetVMUserDataCmd extends BaseCmd {
-    protected static Logger s_logger = LogManager.getLogger(GetVMUserDataCmd.class);
+    protected static Logger logger = LogManager.getLogger(GetVMUserDataCmd.class);
 
     /////////////////////////////////////////////////////
     //////////////// API parameters /////////////////////

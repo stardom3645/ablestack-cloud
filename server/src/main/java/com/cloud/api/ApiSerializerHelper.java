@@ -29,7 +29,7 @@ import com.google.gson.Gson;
 import org.apache.cloudstack.api.ResponseObject;
 
 public class ApiSerializerHelper {
-    protected static Logger s_logger = LogManager.getLogger(ApiSerializerHelper.class.getName());
+    protected static Logger logger = LogManager.getLogger(ApiSerializerHelper.class.getName());
     private static String token = "/";
 
     public static String toSerializedString(Object result) {
@@ -81,7 +81,7 @@ public class ApiSerializerHelper {
             }
             return null;
         } catch (RuntimeException e) {
-            s_logger.error("Caught runtime exception when doing GSON deserialization on: " + result);
+            logger.error("Caught runtime exception when doing GSON deserialization on: " + result);
             throw e;
         }
     }
@@ -102,7 +102,7 @@ public class ApiSerializerHelper {
                 }
             }
         } catch (RuntimeException | JsonProcessingException e) {
-            s_logger.error("Caught runtime exception when doing GSON deserialization to map on: " + result, e);
+            logger.error("Caught runtime exception when doing GSON deserialization to map on: " + result, e);
         }
 
         return objParams;

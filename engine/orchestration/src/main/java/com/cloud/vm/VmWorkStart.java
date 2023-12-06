@@ -34,7 +34,7 @@ import com.cloud.utils.Journal;
 public class VmWorkStart extends VmWork {
     private static final long serialVersionUID = 9038937399817468894L;
 
-    protected static Logger s_logger = LogManager.getLogger(VmWorkStart.class);
+    protected static Logger logger = LogManager.getLogger(VmWorkStart.class);
 
     long dcId;
     Long podId;
@@ -66,7 +66,7 @@ public class VmWorkStart extends VmWork {
             // this has to be refactored together with migrating legacy code into the new way
             ReservationContext context = null;
             if (reservationId != null) {
-                Journal journal = new Journal.LogJournal("VmWorkStart", s_logger);
+                Journal journal = new Journal.LogJournal("VmWorkStart", logger);
                 context = new ReservationContextImpl(reservationId, journal,
                         CallContext.current().getCallingUser(),
                         CallContext.current().getCallingAccount());

@@ -39,7 +39,7 @@ import com.cloud.user.Account;
 @APICommand(name = "deleteAutoScaleVmGroup", description = "Deletes a autoscale vm group.", responseObject = SuccessResponse.class, entityType = {AutoScaleVmGroup.class},
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class DeleteAutoScaleVmGroupCmd extends BaseAsyncCmd {
-    protected static Logger s_logger = LogManager.getLogger(DeleteAutoScaleVmGroupCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(DeleteAutoScaleVmGroupCmd.class.getName());
     // ///////////////////////////////////////////////////
     // ////////////// API parameters /////////////////////
     // ///////////////////////////////////////////////////
@@ -104,7 +104,7 @@ public class DeleteAutoScaleVmGroupCmd extends BaseAsyncCmd {
             SuccessResponse response = new SuccessResponse(getCommandName());
             setResponseObject(response);
         } else {
-            s_logger.warn("Failed to delete autoscale vm group " + getId());
+            logger.warn("Failed to delete autoscale vm group " + getId());
             throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, "Failed to delete autoscale vm group");
         }
     }

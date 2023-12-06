@@ -36,7 +36,7 @@ import com.cloud.user.Account;
 @APICommand(name = "listCounters", description = "List the counters for VM auto scaling", responseObject = CounterResponse.class,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class ListCountersCmd extends BaseListCmd {
-    protected static Logger s_logger = LogManager.getLogger(ListCountersCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(ListCountersCmd.class.getName());
     private static final String s_name = "counterresponse";
 
     // ///////////////////////////////////////////////////

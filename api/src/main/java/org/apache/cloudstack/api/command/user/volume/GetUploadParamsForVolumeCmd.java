@@ -36,7 +36,7 @@ import org.apache.logging.log4j.LogManager;
 @APICommand(name = "getUploadParamsForVolume", description = "Upload a data disk to the cloudstack cloud.", responseObject = GetUploadParamsResponse.class, since = "4.6.0",
     requestHasSensitiveInfo= false, responseHasSensitiveInfo = false)
 public class GetUploadParamsForVolumeCmd extends AbstractGetUploadParamsCmd {
-    protected static Logger s_logger = LogManager.getLogger(GetUploadParamsForVolumeCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(GetUploadParamsForVolumeCmd.class.getName());
 
     private static final String s_name = "postuploadvolumeresponse";
 
@@ -63,7 +63,7 @@ public class GetUploadParamsForVolumeCmd extends AbstractGetUploadParamsCmd {
             response.setResponseName(getCommandName());
             setResponseObject(response);
         } catch (MalformedURLException | ResourceAllocationException e) {
-            s_logger.error("exception while uploading volume", e);
+            logger.error("exception while uploading volume", e);
             throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, "exception while uploading a volume: " + e.getMessage());
         }
     }

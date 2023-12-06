@@ -41,7 +41,7 @@ import com.cloud.network.rules.FirewallRule;
 @APICommand(name = "deleteFirewallRule", description = "Deletes a firewall rule", responseObject = SuccessResponse.class, entityType = {FirewallRule.class},
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class DeleteFirewallRuleCmd extends BaseAsyncCmd {
-    protected static Logger s_logger = LogManager.getLogger(DeleteFirewallRuleCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(DeleteFirewallRuleCmd.class.getName());
 
     /////////////////////////////////////////////////////
     //////////////// API parameters /////////////////////

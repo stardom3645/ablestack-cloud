@@ -60,7 +60,7 @@ public class DatabaseAccessObjectTest {
 
     @Before
     public void setup() {
-        ReflectionTestUtils.setField(dao, "s_logger", loggerMock);
+        ReflectionTestUtils.setField(dao, "logger", loggerMock);
 
     }
 

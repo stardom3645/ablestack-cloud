@@ -41,7 +41,7 @@ import com.cloud.uservm.UserVm;
 @APICommand(name = "enableStaticNat", description = "Enables static NAT for given IP address", responseObject = SuccessResponse.class,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class EnableStaticNatCmd extends BaseCmd {
-    protected static Logger s_logger = LogManager.getLogger(EnableStaticNatCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(EnableStaticNatCmd.class.getName());
 
 
     /////////////////////////////////////////////////////
@@ -134,8 +134,8 @@ public class EnableStaticNatCmd extends BaseCmd {
                 throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, "Failed to enable static NAT");
             }
         } catch (NetworkRuleConflictException ex) {
-            s_logger.info("Network rule conflict: " + ex.getMessage());
-            s_logger.trace("Network Rule Conflict: ", ex);
+            logger.info("Network rule conflict: " + ex.getMessage());
+            logger.trace("Network Rule Conflict: ", ex);
             throw new ServerApiException(ApiErrorCode.NETWORK_RULE_CONFLICT_ERROR, ex.getMessage());
         }
     }

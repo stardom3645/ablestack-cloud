@@ -40,7 +40,7 @@ import com.cloud.user.Account;
             requestHasSensitiveInfo = false,
             responseHasSensitiveInfo = true)
 public class RecoverVolumeCmd extends BaseCmd {
-    protected static Logger s_logger = LogManager.getLogger(RecoverVolumeCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(RecoverVolumeCmd.class.getName());
 
     private static final String s_name = "recovervolumeresponse";
 

@@ -27,7 +27,7 @@ import com.cloud.utils.crypt.AeadBase64Encryptor;
 import com.cloud.utils.crypt.Base64Encryptor;
 
 public class ConsoleProxyPasswordBasedEncryptor {
-    protected static Logger s_logger = LogManager.getLogger(ConsoleProxyPasswordBasedEncryptor.class);
+    protected static Logger logger = LogManager.getLogger(ConsoleProxyPasswordBasedEncryptor.class);
 
     private Gson gson;
 

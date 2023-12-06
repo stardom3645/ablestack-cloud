@@ -44,7 +44,7 @@ import com.cloud.user.Account;
             requestHasSensitiveInfo = false,
             responseHasSensitiveInfo = false)
 public class CreateAutoScalePolicyCmd extends BaseAsyncCreateCmd {
-    protected static Logger s_logger = LogManager.getLogger(CreateAutoScalePolicyCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(CreateAutoScalePolicyCmd.class.getName());
 
     private static final String s_name = "autoscalepolicyresponse";
 

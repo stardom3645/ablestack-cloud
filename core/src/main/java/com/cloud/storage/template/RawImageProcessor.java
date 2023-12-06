@@ -33,7 +33,7 @@ import com.cloud.storage.StorageLayer;
 import com.cloud.utils.component.AdapterBase;
 
 public class RawImageProcessor extends AdapterBase implements Processor {
-    protected static Logger s_logger = LogManager.getLogger(RawImageProcessor.class);
+    protected static Logger logger = LogManager.getLogger(RawImageProcessor.class);
     StorageLayer _storage;
 
     @Override
@@ -54,13 +54,13 @@ public class RawImageProcessor extends AdapterBase implements Processor {
     @Override
     public FormatInfo process(String templatePath, ImageFormat format, String templateName, long processTimeout) throws InternalErrorException {
         if (format != null) {
-            s_logger.debug("We currently don't handle conversion from " + format + " to raw image.");
+            logger.debug("We currently don't handle conversion from " + format + " to raw image.");
             return null;
         }
 
         String imgPath = templatePath + File.separator + templateName + "." + ImageFormat.RAW.getFileExtension();
         if (!_storage.exists(imgPath)) {
-            s_logger.debug("Unable to find raw image:" + imgPath);
+            logger.debug("Unable to find raw image:" + imgPath);
             return null;
         }
         FormatInfo info = new FormatInfo();
@@ -68,7 +68,7 @@ public class RawImageProcessor extends AdapterBase implements Processor {
         info.filename = templateName + "." + ImageFormat.RAW.getFileExtension();
         info.size = _storage.getSize(imgPath);
         info.virtualSize = info.size;
-        s_logger.debug("Process raw image " + info.filename + " successfully");
+        logger.debug("Process raw image " + info.filename + " successfully");
         return info;
     }
 

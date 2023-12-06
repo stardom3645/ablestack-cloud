@@ -60,7 +60,7 @@ import com.cloud.storage.ImageStore;
 @APICommand(name = "addImageStoreS3", description = "Adds S3 Image Store", responseObject = ImageStoreResponse.class, since = "4.7.0",
         requestHasSensitiveInfo = true, responseHasSensitiveInfo = false)
 public final class AddImageStoreS3CMD extends BaseCmd implements ClientOptions {
-    protected static Logger s_logger = LogManager.getLogger(AddImageStoreS3CMD.class.getName());
+    protected static Logger logger = LogManager.getLogger(AddImageStoreS3CMD.class.getName());
 
     private static final String s_name = "addImageStoreS3Response";
 
@@ -142,7 +142,7 @@ public final class AddImageStoreS3CMD extends BaseCmd implements ClientOptions {
                 throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, "Failed to add S3 Image Store.");
             }
         } catch (DiscoveryException ex) {
-            s_logger.warn("Exception: ", ex);
+            logger.warn("Exception: ", ex);
             throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, ex.getMessage());
         }
     }

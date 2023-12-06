@@ -38,7 +38,7 @@ import com.cloud.user.Account;
 @APICommand(name = "createAffinityGroup", responseObject = AffinityGroupResponse.class, description = "Creates an affinity/anti-affinity group", entityType = {AffinityGroup.class},
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class CreateAffinityGroupCmd extends BaseAsyncCreateCmd {
-    protected static Logger s_logger = LogManager.getLogger(CreateAffinityGroupCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(CreateAffinityGroupCmd.class.getName());
 
 
     // ///////////////////////////////////////////////////

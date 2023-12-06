@@ -33,7 +33,7 @@ import com.cloud.user.SSHKeyPair;
 @APICommand(name = "registerSSHKeyPair", description = "Register a public key in a keypair under a certain name", responseObject = SSHKeyPairResponse.class, entityType = {SSHKeyPair.class},
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class RegisterSSHKeyPairCmd extends BaseCmd {
-    protected static Logger s_logger = LogManager.getLogger(RegisterSSHKeyPairCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(RegisterSSHKeyPairCmd.class.getName());
 
     /////////////////////////////////////////////////////
     //////////////// API parameters /////////////////////

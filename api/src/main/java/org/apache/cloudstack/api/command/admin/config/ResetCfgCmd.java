@@ -42,7 +42,7 @@ import com.cloud.utils.Pair;
 @APICommand(name = "resetConfiguration", description = "Resets a configuration. The configuration will be set to default value for global setting, and removed from account_details or domain_details for Account/Domain settings", responseObject = ConfigurationResponse.class,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false, since = "4.16.0")
 public class ResetCfgCmd extends BaseCmd {
-    protected static Logger s_logger = LogManager.getLogger(ResetCfgCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(ResetCfgCmd.class.getName());
 
     /////////////////////////////////////////////////////
     //////////////// API parameters /////////////////////

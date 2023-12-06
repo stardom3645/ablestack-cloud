@@ -52,7 +52,7 @@ import com.cloud.vm.VirtualMachine;
 @APICommand(name = "addNicToVirtualMachine", description = "Adds VM to specified network by creating a NIC", responseObject = UserVmResponse.class, responseView = ResponseView.Restricted, entityType = {VirtualMachine.class},
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = true)
 public class AddNicToVMCmd extends BaseAsyncCmd implements UserCmd {
-    protected static Logger s_logger = LogManager.getLogger(AddNicToVMCmd.class);
+    protected static Logger logger = LogManager.getLogger(AddNicToVMCmd.class);
     private static final String s_name = "addnictovirtualmachineresponse";
 
     /////////////////////////////////////////////////////

@@ -52,7 +52,7 @@ import com.cloud.user.Account;
         responseHasSensitiveInfo = false,
         authorized = {RoleType.Admin, RoleType.ResourceAdmin, RoleType.DomainAdmin, RoleType.User})
 public class ReserveIPAddrCmd extends BaseCmd implements UserCmd {
-    protected static Logger s_logger = LogManager.getLogger(ReserveIPAddrCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(ReserveIPAddrCmd.class.getName());
 
     /////////////////////////////////////////////////////
     //////////////// API parameters /////////////////////

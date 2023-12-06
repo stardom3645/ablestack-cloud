@@ -43,7 +43,7 @@ import com.cloud.user.User;
             responseHasSensitiveInfo = false, authorized = {RoleType.Admin, RoleType.ResourceAdmin, RoleType.DomainAdmin, RoleType.User})
 public class ListApisCmd extends BaseCmd {
 
-    protected static Logger s_logger = LogManager.getLogger(ListApisCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(ListApisCmd.class.getName());
 
     @Inject
     ApiDiscoveryService _apiDiscoveryService;

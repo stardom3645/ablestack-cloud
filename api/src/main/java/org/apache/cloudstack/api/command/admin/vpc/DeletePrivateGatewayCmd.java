@@ -42,7 +42,7 @@ import com.cloud.user.Account;
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false,
         authorized = {RoleType.Admin, RoleType.ResourceAdmin, RoleType.DomainAdmin, RoleType.User})
 public class DeletePrivateGatewayCmd extends BaseAsyncCmd {
-    protected static Logger s_logger = LogManager.getLogger(DeletePrivateGatewayCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(DeletePrivateGatewayCmd.class.getName());
 
     /////////////////////////////////////////////////////
     //////////////// API parameters /////////////////////

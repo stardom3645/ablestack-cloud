@@ -33,7 +33,7 @@ import com.cloud.network.RemoteAccessVpn;
 @APICommand(name = "updateRemoteAccessVpn", description = "Updates remote access vpn", responseObject = RemoteAccessVpnResponse.class, since = "4.4",
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class UpdateRemoteAccessVpnCmd extends BaseAsyncCustomIdCmd {
-    protected static Logger s_logger = LogManager.getLogger(UpdateRemoteAccessVpnCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(UpdateRemoteAccessVpnCmd.class.getName());
 
 
     /////////////////////////////////////////////////////

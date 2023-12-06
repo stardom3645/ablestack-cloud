@@ -42,7 +42,7 @@ import com.cloud.resource.ServerResource;
 import com.cloud.utils.component.ManagerBase;
 
 public class BaremetalPxeResourceBase extends ManagerBase implements ServerResource {
-    protected static Logger s_logger = LogManager.getLogger(BaremetalPxeResourceBase.class);
+    protected static Logger logger = LogManager.getLogger(BaremetalPxeResourceBase.class);
     String _name;
     String _guid;
     String _username;
@@ -85,7 +85,7 @@ public class BaremetalPxeResourceBase extends ManagerBase implements ServerResou
     }
 
     protected ReadyAnswer execute(ReadyCommand cmd) {
-        s_logger.debug("Pxe resource " + _name + " is ready");
+        logger.debug("Pxe resource " + _name + " is ready");
         return new ReadyAnswer(cmd);
     }
 

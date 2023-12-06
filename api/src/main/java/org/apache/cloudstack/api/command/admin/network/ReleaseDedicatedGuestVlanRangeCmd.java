@@ -37,7 +37,7 @@ import com.cloud.user.Account;
 @APICommand(name = "releaseDedicatedGuestVlanRange", description = "Releases a dedicated guest vlan range to the system", responseObject = SuccessResponse.class,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class ReleaseDedicatedGuestVlanRangeCmd extends BaseAsyncCmd {
-    protected static Logger s_logger = LogManager.getLogger(ReleaseDedicatedGuestVlanRangeCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(ReleaseDedicatedGuestVlanRangeCmd.class.getName());
 
     // ///////////////////////////////////////////////////
     // ////////////// API parameters /////////////////////

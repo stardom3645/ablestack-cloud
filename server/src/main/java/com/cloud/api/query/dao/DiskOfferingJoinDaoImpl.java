@@ -45,7 +45,7 @@ import com.cloud.utils.db.SearchCriteria;
 
 @Component
 public class DiskOfferingJoinDaoImpl extends GenericDaoBase<DiskOfferingJoinVO, Long> implements DiskOfferingJoinDao {
-    protected static Logger s_logger = LogManager.getLogger(DiskOfferingJoinDaoImpl.class);
+    protected static Logger logger = LogManager.getLogger(DiskOfferingJoinDaoImpl.class);
 
     @Inject
     VsphereStoragePolicyDao _vsphereStoragePolicyDao;

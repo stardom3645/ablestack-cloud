@@ -31,7 +31,7 @@ import com.cloud.user.Account;
 @APICommand(name = "listEventTypes", description = "List Event Types", responseObject = EventTypeResponse.class,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class ListEventTypesCmd extends BaseCmd {
-    protected static Logger s_logger = LogManager.getLogger(ListEventTypesCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(ListEventTypesCmd.class.getName());
 
     @Override
     public long getEntityOwnerId() {

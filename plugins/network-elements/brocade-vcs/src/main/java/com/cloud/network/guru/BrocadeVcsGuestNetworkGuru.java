@@ -63,7 +63,7 @@ import javax.inject.Inject;
 import java.util.List;
 
 public class BrocadeVcsGuestNetworkGuru extends GuestNetworkGuru {
-    protected static Logger s_logger = LogManager.getLogger(BrocadeVcsGuestNetworkGuru.class);
+    protected static Logger logger = LogManager.getLogger(BrocadeVcsGuestNetworkGuru.class);
 
     @Inject
     NetworkOfferingServiceMapDao _ntwkOfferingSrvcDao;
@@ -92,7 +92,7 @@ public class BrocadeVcsGuestNetworkGuru extends GuestNetworkGuru {
                 && isMyIsolationMethod(physicalNetwork) && _ntwkOfferingSrvcDao.areServicesSupportedByNetworkOffering(offering.getId(), Service.Connectivity)) {
             return true;
         } else {
-            s_logger.trace("We only take care of Guest networks of type   " + GuestType.Isolated + " in zone of type " + NetworkType.Advanced);
+            logger.trace("We only take care of Guest networks of type   " + GuestType.Isolated + " in zone of type " + NetworkType.Advanced);
             return false;
         }
     }
@@ -103,10 +103,10 @@ public class BrocadeVcsGuestNetworkGuru extends GuestNetworkGuru {
         PhysicalNetworkVO physnet = _physicalNetworkDao.findById(plan.getPhysicalNetworkId());
         DataCenter dc = _dcDao.findById(plan.getDataCenterId());
         if (!canHandle(offering, dc.getNetworkType(), physnet)) {
-            s_logger.debug("Refusing to design this network");
+            logger.debug("Refusing to design this network");
             return null;
         }
-        s_logger.debug("Physical isolation type is VCS, asking GuestNetworkGuru to design this network");
+        logger.debug("Physical isolation type is VCS, asking GuestNetworkGuru to design this network");
         NetworkVO networkObject = (NetworkVO)super.design(offering, plan, userSpecified, owner);
         if (networkObject == null) {
             return null;
@@ -131,7 +131,7 @@ public class BrocadeVcsGuestNetworkGuru extends GuestNetworkGuru {
 
         List<BrocadeVcsDeviceVO> devices = _brocadeVcsDao.listByPhysicalNetwork(physicalNetworkId);
         if (devices.isEmpty()) {
-            s_logger.error("No Brocade VCS Switch on physical network " + physicalNetworkId);
+            logger.error("No Brocade VCS Switch on physical network " + physicalNetworkId);
             return null;
         }
 
@@ -143,8 +143,8 @@ public class BrocadeVcsGuestNetworkGuru extends GuestNetworkGuru {
             CreateNetworkAnswer answer = (CreateNetworkAnswer)_agentMgr.easySend(brocadeVcsHost.getId(), cmd);
 
             if (answer == null || !answer.getResult()) {
-                s_logger.error("CreateNetworkCommand failed");
-                s_logger.error("Unable to create network " + network.getId());
+                logger.error("CreateNetworkCommand failed");
+                logger.error("Unable to create network " + network.getId());
                 return null;
             }
 
@@ -168,7 +168,7 @@ public class BrocadeVcsGuestNetworkGuru extends GuestNetworkGuru {
 
         List<BrocadeVcsDeviceVO> devices = _brocadeVcsDao.listByPhysicalNetwork(network.getPhysicalNetworkId());
         if (devices.isEmpty()) {
-            s_logger.error("No Brocade VCS Switch on physical network " + network.getPhysicalNetworkId());
+            logger.error("No Brocade VCS Switch on physical network " + network.getPhysicalNetworkId());
             return;
         }
         for (BrocadeVcsDeviceVO brocadeVcsDevice : devices) {
@@ -180,7 +180,7 @@ public class BrocadeVcsGuestNetworkGuru extends GuestNetworkGuru {
             AssociateMacToNetworkAnswer answer = (AssociateMacToNetworkAnswer)_agentMgr.easySend(brocadeVcsHost.getId(), cmd);
 
             if (answer == null || !answer.getResult()) {
-                s_logger.error("AssociateMacToNetworkCommand failed");
+                logger.error("AssociateMacToNetworkCommand failed");
                 throw new InsufficientVirtualNetworkCapacityException("Unable to associate mac " + interfaceMac + " to network " + network.getId(), DataCenter.class, dc.getId());
             }
         }
@@ -194,7 +194,7 @@ public class BrocadeVcsGuestNetworkGuru extends GuestNetworkGuru {
 
         List<BrocadeVcsDeviceVO> devices = _brocadeVcsDao.listByPhysicalNetwork(network.getPhysicalNetworkId());
         if (devices.isEmpty()) {
-            s_logger.error("No Brocade VCS Switch on physical network " + network.getPhysicalNetworkId());
+            logger.error("No Brocade VCS Switch on physical network " + network.getPhysicalNetworkId());
             return;
         }
         for (BrocadeVcsDeviceVO brocadeVcsDevice : devices) {
@@ -205,8 +205,8 @@ public class BrocadeVcsGuestNetworkGuru extends GuestNetworkGuru {
             DisassociateMacFromNetworkAnswer answer = (DisassociateMacFromNetworkAnswer)_agentMgr.easySend(brocadeVcsHost.getId(), cmd);
 
             if (answer == null || !answer.getResult()) {
-                s_logger.error("DisassociateMacFromNetworkCommand failed");
-                s_logger.error("Unable to disassociate mac " + interfaceMac + " from network " + network.getId());
+                logger.error("DisassociateMacFromNetworkCommand failed");
+                logger.error("Unable to disassociate mac " + interfaceMac + " from network " + network.getId());
                 return;
             }
         }
@@ -234,13 +234,13 @@ public class BrocadeVcsGuestNetworkGuru extends GuestNetworkGuru {
         if (brocadeVcsNetworkVlanMapping != null) {
             vlanTag = brocadeVcsNetworkVlanMapping.getVlanId();
         } else {
-            s_logger.error("Not able to find vlanId for network " + network.getId());
+            logger.error("Not able to find vlanId for network " + network.getId());
             return false;
         }
 
         List<BrocadeVcsDeviceVO> devices = _brocadeVcsDao.listByPhysicalNetwork(network.getPhysicalNetworkId());
         if (devices.isEmpty()) {
-            s_logger.error("No Brocade VCS Switch on physical network " + network.getPhysicalNetworkId());
+            logger.error("No Brocade VCS Switch on physical network " + network.getPhysicalNetworkId());
             return false;
         }
         for (BrocadeVcsDeviceVO brocadeVcsDevice : devices) {
@@ -251,8 +251,8 @@ public class BrocadeVcsGuestNetworkGuru extends GuestNetworkGuru {
             DeleteNetworkAnswer answer = (DeleteNetworkAnswer)_agentMgr.easySend(brocadeVcsHost.getId(), cmd);
 
             if (answer == null || !answer.getResult()) {
-                s_logger.error("DeleteNetworkCommand failed");
-                s_logger.error("Unable to delete network " + network.getId());
+                logger.error("DeleteNetworkCommand failed");
+                logger.error("Unable to delete network " + network.getId());
                 return false;
             }
         }

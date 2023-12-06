@@ -42,7 +42,7 @@ import com.cloud.utils.Pair;
         responseHasSensitiveInfo = false,
         authorized = {RoleType.Admin, RoleType.ResourceAdmin, RoleType.DomainAdmin, RoleType.User})
 public class ListIpv6FirewallRulesCmd extends BaseListTaggedResourcesCmd implements IListFirewallRulesCmd {
-    protected static Logger s_logger = LogManager.getLogger(ListIpv6FirewallRulesCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(ListIpv6FirewallRulesCmd.class.getName());
 
 
     /////////////////////////////////////////////////////

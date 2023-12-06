@@ -31,7 +31,7 @@ import org.apache.logging.log4j.LogManager;
 
 @APICommand(name = "listElastistorVolume", description = "Lists the volumes of elastistor", responseObject = ListElastistorVolumeResponse.class)
 public class ListElastistorVolumeCmd extends BaseCmd {
-    protected static Logger s_logger = LogManager.getLogger(ListElastistorVolumeCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(ListElastistorVolumeCmd.class.getName());
     private static final String s_name = "listElastistorVolumeResponse";
 
     @Inject

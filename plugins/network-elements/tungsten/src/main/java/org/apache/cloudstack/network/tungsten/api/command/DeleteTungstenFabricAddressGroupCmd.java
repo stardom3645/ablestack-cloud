@@ -41,7 +41,7 @@ import javax.inject.Inject;
 @APICommand(name = DeleteTungstenFabricAddressGroupCmd.APINAME, description = "delete Tungsten-Fabric address group",
     responseObject = SuccessResponse.class, requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class DeleteTungstenFabricAddressGroupCmd extends BaseAsyncCmd {
-    protected static Logger s_logger = LogManager.getLogger(DeleteTungstenFabricAddressGroupCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(DeleteTungstenFabricAddressGroupCmd.class.getName());
     public static final String APINAME = "deleteTungstenFabricAddressGroup";
 
     @Inject

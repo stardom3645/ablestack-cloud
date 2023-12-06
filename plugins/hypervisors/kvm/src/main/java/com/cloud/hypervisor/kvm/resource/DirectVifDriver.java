@@ -32,7 +32,7 @@ import java.util.Map;
 
 public class DirectVifDriver extends VifDriverBase {
 
-    protected static Logger s_logger = LogManager.getLogger(DirectVifDriver.class);
+    protected static Logger logger = LogManager.getLogger(DirectVifDriver.class);
 
     /**
      * Experimental driver to configure direct networking in libvirt. This should only

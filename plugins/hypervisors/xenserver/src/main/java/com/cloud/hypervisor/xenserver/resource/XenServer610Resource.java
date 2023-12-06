@@ -40,7 +40,7 @@ import com.xensource.xenapi.VM;
 
 public class XenServer610Resource extends XenServer600Resource {
 
-    protected static Logger s_logger = LogManager.getLogger(XenServer610Resource.class);
+    protected static Logger logger = LogManager.getLogger(XenServer610Resource.class);
 
     public List<VolumeObjectTO> getUpdatedVolumePathsOfMigratedVm(final Connection connection, final VM migratedVm, final DiskTO[] volumes) throws CloudRuntimeException {
         final List<VolumeObjectTO> volumeToList = new ArrayList<VolumeObjectTO>();
@@ -70,7 +70,7 @@ public class XenServer610Resource extends XenServer600Resource {
                 }
             }
         } catch (final Exception e) {
-            s_logger.error("Unable to get the updated VDI paths of the migrated vm " + e.toString(), e);
+            logger.error("Unable to get the updated VDI paths of the migrated vm " + e.toString(), e);
             throw new CloudRuntimeException("Unable to get the updated VDI paths of the migrated vm " + e.toString(), e);
         }
 

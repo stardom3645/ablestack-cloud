@@ -35,7 +35,7 @@ import com.cloud.utils.db.DbProperties;
 
 public class ClusterServiceServletAdapter extends AdapterBase implements ClusterServiceAdapter {
 
-    protected static Logger s_logger = LogManager.getLogger(ClusterServiceServletAdapter.class);
+    protected static Logger logger = LogManager.getLogger(ClusterServiceServletAdapter.class);
     private static final int DEFAULT_SERVICE_PORT = 9090;
     private static final int DEFAULT_REQUEST_TIMEOUT = 300;            // 300 seconds
 
@@ -60,7 +60,7 @@ public class ClusterServiceServletAdapter extends AdapterBase implements Cluster
         try {
             init();
         } catch (ConfigurationException e) {
-            s_logger.error("Unable to init ClusterServiceServletAdapter");
+            logger.error("Unable to init ClusterServiceServletAdapter");
             throw new RemoteException("Unable to init ClusterServiceServletAdapter");
         }
 
@@ -76,7 +76,7 @@ public class ClusterServiceServletAdapter extends AdapterBase implements Cluster
         try {
             init();
         } catch (ConfigurationException e) {
-            s_logger.error("Unable to init ClusterServiceServletAdapter");
+            logger.error("Unable to init ClusterServiceServletAdapter");
             return null;
         }
 
@@ -127,7 +127,7 @@ public class ClusterServiceServletAdapter extends AdapterBase implements Cluster
         Properties dbProps = DbProperties.getDbProperties();
 
         _clusterServicePort = NumbersUtil.parseInt(dbProps.getProperty("cluster.servlet.port"), DEFAULT_SERVICE_PORT);
-        if (s_logger.isInfoEnabled())
-            s_logger.info("Cluster servlet port : " + _clusterServicePort);
+        if (logger.isInfoEnabled())
+            logger.info("Cluster servlet port : " + _clusterServicePort);
     }
 }

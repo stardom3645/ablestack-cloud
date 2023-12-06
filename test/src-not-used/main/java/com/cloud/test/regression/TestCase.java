@@ -35,7 +35,7 @@ import org.w3c.dom.Document;
 
 public abstract class TestCase {
 
-    public static Logger s_logger = LogManager.getLogger(TestCase.class.getName());
+    public static Logger logger = LogManager.getLogger(TestCase.class.getName());
     private Connection conn;
     private ArrayList<Document> inputFile = new ArrayList<Document>();
     private HttpClient client;
@@ -58,7 +58,7 @@ public abstract class TestCase {
     public void setCommands() {
         File asyncCommands = null;
         if (param.get("apicommands") == null) {
-            s_logger.info("Unable to get the list of commands, exiting");
+            logger.info("Unable to get the list of commands, exiting");
             System.exit(1);
         } else {
             asyncCommands = new File(param.get("apicommands"));
@@ -73,7 +73,7 @@ public abstract class TestCase {
                 commands.put(key, pro.getProperty(key));
             }
         } catch (Exception ex) {
-            s_logger.info("Unable to find the file " + param.get("apicommands") + " due to following exception " + ex);
+            logger.info("Unable to find the file " + param.get("apicommands") + " due to following exception " + ex);
         }
 
     }
@@ -88,11 +88,11 @@ public abstract class TestCase {
             Class.forName("com.mysql.jdbc.Driver");
             this.conn = DriverManager.getConnection("jdbc:mysql://" + param.get("db") + "/cloud", "root", dbPassword);
             if (!this.conn.isValid(0)) {
-                s_logger.error("Connection to DB failed to establish");
+                logger.error("Connection to DB failed to establish");
             }
 
         } catch (Exception ex) {
-            s_logger.error(ex);
+            logger.error(ex);
         }
     }
 
@@ -106,7 +106,7 @@ public abstract class TestCase {
                 doc = builder.parse(file);
                 doc.getDocumentElement().normalize();
             } catch (Exception ex) {
-                s_logger.error("Unable to load " + fileName + " due to ", ex);
+                logger.error("Unable to load " + fileName + " due to ", ex);
             }
             this.inputFile.add(doc);
         }

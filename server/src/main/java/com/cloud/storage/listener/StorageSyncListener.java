@@ -29,7 +29,7 @@ import com.cloud.host.Host;
 import com.cloud.host.Status;
 
 public class StorageSyncListener implements Listener {
-    protected static Logger s_logger = LogManager.getLogger(StorageSyncListener.class);
+    protected static Logger logger = LogManager.getLogger(StorageSyncListener.class);
 
     public StorageSyncListener() {
     }
@@ -43,9 +43,9 @@ public class StorageSyncListener implements Listener {
     public boolean processAnswers(long agentId, long seq, Answer[] answers) {
         for (Answer answer : answers) {
             if (answer.getResult() == false) {
-                s_logger.warn("Unable to execute sync command: " + answer.toString());
+                logger.warn("Unable to execute sync command: " + answer.toString());
             } else {
-                s_logger.debug("Sync command executed: " + answer.toString());
+                logger.debug("Sync command executed: " + answer.toString());
             }
         }
         return true;
@@ -61,7 +61,7 @@ public class StorageSyncListener implements Listener {
 
     @Override
     public boolean processDisconnect(long agentId, Status state) {
-        s_logger.debug("Disconnecting");
+        logger.debug("Disconnecting");
         return true;
     }
 

@@ -29,7 +29,7 @@ import com.cloud.agent.api.Command;
 import com.cloud.utils.db.DB;
 
 public class MockRpcCallBack implements Runnable {
-    protected static Logger s_logger = LogManager.getLogger(MockRpcCallBack.class);
+    protected static Logger logger = LogManager.getLogger(MockRpcCallBack.class);
     @Inject
     AgentManager agentMgr;
     private Command cmd;
@@ -55,7 +55,7 @@ public class MockRpcCallBack implements Runnable {
             Answer answer = agentMgr.send(hostId, cmd);
             callback.complete(answer);
         } catch (Throwable e) {
-            s_logger.debug("send command failed:", e);
+            logger.debug("send command failed:", e);
         }
     }
 

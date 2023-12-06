@@ -27,7 +27,7 @@ import com.cloud.hypervisor.vmware.util.VmwareContext;
 
 public class HostFirewallSystemMO extends BaseMO {
     @SuppressWarnings("unused")
-    protected static Logger s_logger = LogManager.getLogger(HostFirewallSystemMO.class);
+    protected static Logger logger = LogManager.getLogger(HostFirewallSystemMO.class);
 
     public HostFirewallSystemMO(VmwareContext context, ManagedObjectReference morFirewallSystem) {
         super(context, morFirewallSystem);

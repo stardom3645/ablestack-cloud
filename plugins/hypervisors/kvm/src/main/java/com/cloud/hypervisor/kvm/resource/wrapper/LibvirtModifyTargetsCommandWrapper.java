@@ -39,7 +39,7 @@ import com.cloud.utils.exception.CloudRuntimeException;
 
 @ResourceWrapper(handles =  ModifyTargetsCommand.class)
 public final class LibvirtModifyTargetsCommandWrapper extends CommandWrapper<ModifyTargetsCommand, Answer, LibvirtComputingResource> {
-    protected static Logger s_logger = LogManager.getLogger(LibvirtModifyTargetsCommandWrapper.class);
+    protected static Logger logger = LogManager.getLogger(LibvirtModifyTargetsCommandWrapper.class);
 
     @Override
     public Answer execute(final ModifyTargetsCommand command, final LibvirtComputingResource libvirtComputingResource) {

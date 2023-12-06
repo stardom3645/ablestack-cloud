@@ -52,7 +52,7 @@ import com.cloud.utils.db.SearchCriteria;
 
 @Component
 public class DomainRouterJoinDaoImpl extends GenericDaoBase<DomainRouterJoinVO, Long> implements DomainRouterJoinDao {
-    protected static Logger s_logger = LogManager.getLogger(DomainRouterJoinDaoImpl.class);
+    protected static Logger logger = LogManager.getLogger(DomainRouterJoinDaoImpl.class);
 
     @Inject
     private ConfigurationDao _configDao;

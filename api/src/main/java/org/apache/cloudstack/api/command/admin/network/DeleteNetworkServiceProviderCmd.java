@@ -37,7 +37,7 @@ import com.cloud.user.Account;
 @APICommand(name = "deleteNetworkServiceProvider", description = "Deletes a Network Service Provider.", responseObject = SuccessResponse.class, since = "3.0.0",
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class DeleteNetworkServiceProviderCmd extends BaseAsyncCmd {
-    protected static Logger s_logger = LogManager.getLogger(DeleteNetworkServiceProviderCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(DeleteNetworkServiceProviderCmd.class.getName());
 
 
     /////////////////////////////////////////////////////
@@ -79,10 +79,10 @@ public class DeleteNetworkServiceProviderCmd extends BaseAsyncCmd {
                 throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, "Failed to delete network service provider");
             }
         } catch (ResourceUnavailableException ex) {
-            s_logger.warn("Exception: ", ex);
+            logger.warn("Exception: ", ex);
             throw new ServerApiException(ApiErrorCode.RESOURCE_UNAVAILABLE_ERROR, ex.getMessage());
         } catch (ConcurrentOperationException ex) {
-            s_logger.warn("Exception: ", ex);
+            logger.warn("Exception: ", ex);
             throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, ex.getMessage());
         }
     }

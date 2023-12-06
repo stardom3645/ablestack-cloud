@@ -36,7 +36,7 @@ import com.cloud.user.Account;
  requestHasSensitiveInfo = false, responseHasSensitiveInfo = false, authorized = {
         RoleType.Admin, RoleType.DomainAdmin })
 public class CreateDomainCmd extends BaseCmd {
-    protected static Logger s_logger = LogManager.getLogger(CreateDomainCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(CreateDomainCmd.class.getName());
 
 
     /////////////////////////////////////////////////////

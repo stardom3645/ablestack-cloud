@@ -36,7 +36,7 @@ import com.cloud.user.Account;
 @APICommand(name = "createSecurityGroup", responseObject = SecurityGroupResponse.class, description = "Creates a security group", entityType = {SecurityGroup.class},
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class CreateSecurityGroupCmd extends BaseCmd {
-    protected static Logger s_logger = LogManager.getLogger(CreateSecurityGroupCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(CreateSecurityGroupCmd.class.getName());
 
 
     // ///////////////////////////////////////////////////

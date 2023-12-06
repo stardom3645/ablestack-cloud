@@ -39,7 +39,7 @@ import com.cloud.utils.db.TransactionLegacy;
 
 @Component
 public class HostPodDaoImpl extends GenericDaoBase<HostPodVO, Long> implements HostPodDao {
-    protected static Logger s_logger = LogManager.getLogger(HostPodDaoImpl.class);
+    protected static Logger logger = LogManager.getLogger(HostPodDaoImpl.class);
 
     protected SearchBuilder<HostPodVO> DataCenterAndNameSearch;
     protected SearchBuilder<HostPodVO> DataCenterIdSearch;
@@ -101,7 +101,7 @@ public class HostPodDaoImpl extends GenericDaoBase<HostPodVO, Long> implements H
                 currentPodCidrSubnets.put(podId, cidrPair);
             }
         } catch (SQLException ex) {
-            s_logger.warn("DB exception " + ex.getMessage(), ex);
+            logger.warn("DB exception " + ex.getMessage(), ex);
             return null;
         }
 

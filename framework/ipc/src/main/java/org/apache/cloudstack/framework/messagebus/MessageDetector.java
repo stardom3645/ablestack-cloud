@@ -22,7 +22,7 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 
 public class MessageDetector implements MessageSubscriber {
-    protected static Logger s_logger = LogManager.getLogger(MessageDetector.class);
+    protected static Logger logger = LogManager.getLogger(MessageDetector.class);
 
     private MessageBus _messageBus;
     private String[] _subjects;
@@ -34,7 +34,7 @@ public class MessageDetector implements MessageSubscriber {
 
     public void waitAny(long timeoutInMilliseconds) {
         if (timeoutInMilliseconds < 100) {
-            s_logger.warn("waitAny is passed with a too short time-out interval. " + timeoutInMilliseconds + "ms");
+            logger.warn("waitAny is passed with a too short time-out interval. " + timeoutInMilliseconds + "ms");
             timeoutInMilliseconds = 100;
         }
 
@@ -42,7 +42,7 @@ public class MessageDetector implements MessageSubscriber {
             try {
                 wait(timeoutInMilliseconds);
             } catch (InterruptedException e) {
-                s_logger.debug("[ignored] interrupted while waiting on any message.");
+                logger.debug("[ignored] interrupted while waiting on any message.");
             }
         }
     }

@@ -42,7 +42,7 @@ import com.cloud.network.rules.FirewallRule;
 @APICommand(name = "deleteEgressFirewallRule", description = "Deletes an egress firewall rule", responseObject = SuccessResponse.class, entityType = {FirewallRule.class},
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class DeleteEgressFirewallRuleCmd extends BaseAsyncCmd {
-    protected static Logger s_logger = LogManager.getLogger(DeleteEgressFirewallRuleCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(DeleteEgressFirewallRuleCmd.class.getName());
 
     /////////////////////////////////////////////////////
     //////////////// API parameters /////////////////////

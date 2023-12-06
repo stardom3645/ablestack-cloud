@@ -43,7 +43,7 @@ import com.cloud.utils.db.SearchCriteria;
 
 @Component
 public class EventJoinDaoImpl extends GenericDaoBase<EventJoinVO, Long> implements EventJoinDao {
-    protected static Logger s_logger = LogManager.getLogger(EventJoinDaoImpl.class);
+    protected static Logger logger = LogManager.getLogger(EventJoinDaoImpl.class);
 
     private SearchBuilder<EventJoinVO> vrSearch;
 

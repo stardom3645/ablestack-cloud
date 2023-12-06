@@ -31,7 +31,7 @@ import javax.inject.Inject;
 @APICommand(name = "quotaIsEnabled", responseObject = QuotaEnabledResponse.class, description = "Return true if the plugin is enabled", since = "4.7.0", requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class QuotaEnabledCmd extends BaseCmd {
 
-    protected static Logger s_logger = LogManager.getLogger(QuotaEnabledCmd.class);
+    protected static Logger logger = LogManager.getLogger(QuotaEnabledCmd.class);
 
 
     @Inject

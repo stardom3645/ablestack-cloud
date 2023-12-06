@@ -34,7 +34,7 @@ import com.cloud.utils.component.AdapterBase;
 
 @Component
 public class DummyHostDiscoverer extends AdapterBase implements Discoverer {
-    protected static Logger s_logger = LogManager.getLogger(DummyHostDiscoverer.class);
+    protected static Logger logger = LogManager.getLogger(DummyHostDiscoverer.class);
 
     @Override
     public Map<ServerResource, Map<String, String>> find(long dcId, Long podId, Long clusterId, URI url, String username, String password, List<String> hostTags) {
@@ -61,7 +61,7 @@ public class DummyHostDiscoverer extends AdapterBase implements Discoverer {
         try {
             resource.configure("Dummy Host Server", params);
         } catch (ConfigurationException e) {
-            s_logger.warn("Unable to instantiate dummy host server resource");
+            logger.warn("Unable to instantiate dummy host server resource");
         }
         resource.start();
         resources.put(resource, details);

@@ -41,7 +41,7 @@ import com.cloud.vm.VirtualMachine;
 @APICommand(name = "listRouters", description = "List routers.", responseObject = DomainRouterResponse.class, entityType = {VirtualMachine.class},
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class ListRoutersCmd extends BaseListProjectAndAccountResourcesCmd {
-    protected static Logger s_logger = LogManager.getLogger(ListRoutersCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(ListRoutersCmd.class.getName());
 
 
     /////////////////////////////////////////////////////

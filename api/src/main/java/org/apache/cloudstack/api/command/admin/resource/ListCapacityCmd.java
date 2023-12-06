@@ -41,7 +41,7 @@ import com.cloud.exception.InvalidParameterValueException;
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class ListCapacityCmd extends BaseListCmd {
 
-    protected static Logger s_logger = LogManager.getLogger(ListCapacityCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(ListCapacityCmd.class.getName());
     private static final DecimalFormat s_percentFormat = new DecimalFormat("##.##");
 
 

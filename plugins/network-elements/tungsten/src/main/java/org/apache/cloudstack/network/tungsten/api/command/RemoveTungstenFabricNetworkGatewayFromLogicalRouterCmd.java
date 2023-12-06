@@ -44,7 +44,7 @@ import javax.inject.Inject;
 @APICommand(name = RemoveTungstenFabricNetworkGatewayFromLogicalRouterCmd.APINAME, description = "remove Tungsten-Fabric network gateway from logical router",
     responseObject = TungstenFabricLogicalRouterResponse.class, requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class RemoveTungstenFabricNetworkGatewayFromLogicalRouterCmd extends BaseAsyncCmd {
-    protected static Logger s_logger = LogManager.getLogger(RemoveTungstenFabricNetworkGatewayFromLogicalRouterCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(RemoveTungstenFabricNetworkGatewayFromLogicalRouterCmd.class.getName());
     public static final String APINAME = "removeTungstenFabricNetworkGatewayFromLogicalRouter";
 
     @Inject

@@ -44,7 +44,7 @@ import javax.inject.Inject;
 @APICommand(name = AddTungstenFabricNetworkGatewayToLogicalRouterCmd.APINAME, description = "add Tungsten-Fabric network gateway to logical router",
     responseObject = TungstenFabricLogicalRouterResponse.class, requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class AddTungstenFabricNetworkGatewayToLogicalRouterCmd extends BaseAsyncCmd {
-    protected static Logger s_logger = LogManager.getLogger(AddTungstenFabricNetworkGatewayToLogicalRouterCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(AddTungstenFabricNetworkGatewayToLogicalRouterCmd.class.getName());
     public static final String APINAME = "addTungstenFabricNetworkGatewayToLogicalRouter";
 
     @Inject

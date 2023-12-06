@@ -41,7 +41,7 @@ import com.cloud.host.Host;
 @APICommand(name = "addStratosphereSsp", responseObject = SspResponse.class, description = "Adds stratosphere ssp server",
         requestHasSensitiveInfo = true, responseHasSensitiveInfo = false)
 public class AddSspCmd extends BaseCmd {
-    protected static Logger s_logger = LogManager.getLogger(AddSspCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(AddSspCmd.class.getName());
     @Inject
     SspService _service;
     @Inject
@@ -78,7 +78,7 @@ public class AddSspCmd extends BaseCmd {
     @Override
     public void execute() throws ResourceUnavailableException, InsufficientCapacityException, ConcurrentOperationException, ResourceAllocationException,
         NetworkRuleConflictException {
-        s_logger.trace("execute");
+        logger.trace("execute");
         Host host = _service.addSspHost(this);
         SspResponse response = new SspResponse();
         response.setResponseName(getCommandName());

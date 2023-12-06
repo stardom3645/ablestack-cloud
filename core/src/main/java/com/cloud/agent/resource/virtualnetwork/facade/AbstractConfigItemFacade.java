@@ -63,7 +63,7 @@ import com.google.gson.GsonBuilder;
 
 public abstract class AbstractConfigItemFacade {
 
-    protected static Logger s_logger = LogManager.getLogger(AbstractConfigItemFacade.class);
+    protected static Logger logger = LogManager.getLogger(AbstractConfigItemFacade.class);
 
     private final static Gson gson;
 
@@ -124,8 +124,8 @@ public abstract class AbstractConfigItemFacade {
         final List<ConfigItem> cfg = new LinkedList<>();
 
         final String remoteFilename = appendUuidToJsonFiles(destinationFile);
-        if (s_logger.isDebugEnabled()) {
-            s_logger.debug("Transformed filename: " + destinationFile + " to: " + remoteFilename);
+        if (logger.isDebugEnabled()) {
+            logger.debug("Transformed filename: " + destinationFile + " to: " + remoteFilename);
         }
 
         final ConfigItem configFile = new FileConfigItem(VRScripts.CONFIG_PERSIST_LOCATION, remoteFilename, gson.toJson(configuration));

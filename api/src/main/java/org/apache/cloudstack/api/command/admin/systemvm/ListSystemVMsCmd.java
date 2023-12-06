@@ -40,7 +40,7 @@ import com.cloud.vm.VirtualMachine;
 @APICommand(name = "listSystemVms", description = "List system virtual machines.", responseObject = SystemVmResponse.class, entityType = {VirtualMachine.class},
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class ListSystemVMsCmd extends BaseListCmd {
-    protected static Logger s_logger = LogManager.getLogger(ListSystemVMsCmd.class.getName());
+    protected static Logger logger = LogManager.getLogger(ListSystemVMsCmd.class.getName());
 
 
     /////////////////////////////////////////////////////

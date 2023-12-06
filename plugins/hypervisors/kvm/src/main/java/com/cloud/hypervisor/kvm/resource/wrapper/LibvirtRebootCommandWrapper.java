@@ -35,7 +35,7 @@ import com.cloud.resource.ResourceWrapper;
 @ResourceWrapper(handles =  RebootCommand.class)
 public final class LibvirtRebootCommandWrapper extends CommandWrapper<RebootCommand, Answer, LibvirtComputingResource> {
 
-    protected static Logger s_logger = LogManager.getLogger(LibvirtRebootCommandWrapper.class);
+    protected static Logger logger = LogManager.getLogger(LibvirtRebootCommandWrapper.class);
 
     @Override
     public Answer execute(final RebootCommand command, final LibvirtComputingResource libvirtComputingResource) {
@@ -50,7 +50,7 @@ public final class LibvirtRebootCommandWrapper extends CommandWrapper<RebootComm
                 try {
                     vncPort = libvirtComputingResource.getVncPort(conn, command.getVmName());
                 } catch (final LibvirtException e) {
-                    s_logger.trace("Ignoring libvirt error.", e);
+                    logger.trace("Ignoring libvirt error.", e);
                 }
                 if (vmSpec != null) {
                     libvirtComputingResource.applyDefaultNetworkRules(conn, vmSpec, false);

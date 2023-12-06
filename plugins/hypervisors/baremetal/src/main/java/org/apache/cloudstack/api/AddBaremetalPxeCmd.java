@@ -39,7 +39,7 @@ import com.cloud.exception.ResourceUnavailableException;
 
 public class AddBaremetalPxeCmd extends BaseAsyncCmd {
     private static final String s_name = "addbaremetalpxeresponse";
-    protected static Logger s_logger = LogManager.getLogger(AddBaremetalPxeCmd.class);
+    protected static Logger logger = LogManager.getLogger(AddBaremetalPxeCmd.class);
 
     @Inject
     BaremetalPxeManager pxeMgr;
@@ -87,7 +87,7 @@ public class AddBaremetalPxeCmd extends BaseAsyncCmd {
             rsp.setResponseName(getCommandName());
             this.setResponseObject(rsp);
         } catch (Exception e) {
-            s_logger.warn("Unable to add external pxe server with url: " + getUrl(), e);
+            logger.warn("Unable to add external pxe server with url: " + getUrl(), e);
             throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, e.getMessage());
         }
     }

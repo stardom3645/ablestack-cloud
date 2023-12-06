@@ -29,7 +29,7 @@ public class NioSocketHandlerImpl implements NioSocketHandler {
 
     private static final int DEFAULT_BUF_SIZE = 16384;
 
-    protected static Logger s_logger = LogManager.getLogger(NioSocketHandlerImpl.class);
+    protected static Logger logger = LogManager.getLogger(NioSocketHandlerImpl.class);
 
     public NioSocketHandlerImpl(NioSocket socket) {
         this.inputStream = new NioSocketInputStream(DEFAULT_BUF_SIZE, socket);
@@ -54,7 +54,7 @@ public class NioSocketHandlerImpl implements NioSocketHandler {
     @Override
     public void waitForBytesAvailableForReading(int bytes) {
         while (!inputStream.checkForSizeWithoutWait(bytes)) {
-            s_logger.trace("Waiting for inStream to be ready");
+            logger.trace("Waiting for inStream to be ready");
         }
     }
 

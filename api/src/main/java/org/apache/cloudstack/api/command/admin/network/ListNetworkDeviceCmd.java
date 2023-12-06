@@ -46,7 +46,7 @@ import com.cloud.utils.exception.CloudRuntimeException;
 @APICommand(name = "listNetworkDevice", description = "List network devices", responseObject = NetworkDeviceResponse.class,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class ListNetworkDeviceCmd extends BaseListCmd {
-    protected static Logger s_logger = LogManager.getLogger(ListNetworkDeviceCmd.class);
+    protected static Logger logger = LogManager.getLogger(ListNetworkDeviceCmd.class);
     private static final String s_name = "listnetworkdevice";
 
     @Inject

@@ -65,7 +65,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 public class ApiXmlDocWriter {
-    protected static Logger s_logger = LogManager.getLogger(ApiXmlDocWriter.class.getName());
+    protected static Logger logger = LogManager.getLogger(ApiXmlDocWriter.class.getName());
 
     private static String s_dirName = "";
     private static Map<String, Class<?>> s_apiNameCmdClassMap = new HashMap<String, Class<?>>();
@@ -234,7 +234,7 @@ public class ApiXmlDocWriter {
 
             out.writeObject(apiCommand);
         } else {
-            s_logger.debug("Command " + command + " is not exposed in api doc");
+            logger.debug("Command " + command + " is not exposed in api doc");
         }
     }
 
@@ -389,7 +389,7 @@ public class ApiXmlDocWriter {
                 out.closeEntry();
             }catch(IOException ex)
             {
-                s_logger.error("addDir:Exception:"+ ex.getMessage(),ex);
+                logger.error("addDir:Exception:"+ ex.getMessage(),ex);
             }
         }
     }
@@ -418,9 +418,9 @@ public class ApiXmlDocWriter {
                 }
             }
         } catch (IOException e) {
-            s_logger.error("Failed to create output stream to write an alert types ", e);
+            logger.error("Failed to create output stream to write an alert types ", e);
         } catch (IllegalAccessException e) {
-            s_logger.error("Failed to read alert fields ", e);
+            logger.error("Failed to read alert fields ", e);
         }
     }
 

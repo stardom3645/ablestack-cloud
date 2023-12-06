@@ -35,7 +35,7 @@ import com.cloud.vm.VirtualMachine;
 @APICommand(name = "listVirtualMachines", description = "List the virtual machines owned by the account.", responseObject = UserVmResponse.class, responseView = ResponseView.Full, entityType = {VirtualMachine.class},
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = true)
 public class ListVMsCmdByAdmin extends ListVMsCmd implements AdminCmd {
-    protected static Logger s_logger = LogManager.getLogger(ListVMsCmdByAdmin.class.getName());
+    protected static Logger logger = LogManager.getLogger(ListVMsCmdByAdmin.class.getName());
 
     /////////////////////////////////////////////////////
     //////////////// API parameters /////////////////////
