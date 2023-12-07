@@ -90,7 +90,7 @@ public class MockAlertManagerImpl extends ManagerBase implements AlertManager {
     }
 
     @Override
-    public boolean updateAlert(string id, boolean showAlert) {
+    public boolean updateAlert(String id, Boolean showAlert) {
         // TODO Auto-generated method stub
         return false;
     }
