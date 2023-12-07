@@ -22,7 +22,7 @@
         type="primary"
         style="width: 100%; margin-bottom: 15px"
         @click="handleSubmit()">
-        다시 보지 않기
+        {{ $t('label.alert.show') }}
       </a-button>
     <a-table
       size="middle"
