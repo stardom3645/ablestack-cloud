@@ -22,6 +22,7 @@ import org.apache.cloudstack.api.ApiErrorCode;
 import org.apache.cloudstack.api.BaseCmd;
 import org.apache.cloudstack.api.Parameter;
 import org.apache.cloudstack.api.ServerApiException;
+import org.apache.cloudstack.api.response.AlertResponse;
 import org.apache.cloudstack.api.response.SuccessResponse;
 
 @APICommand(name = "updateAlert", description = "update an alert.",
@@ -29,7 +30,7 @@ import org.apache.cloudstack.api.response.SuccessResponse;
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class UpdateAlertCmd extends BaseCmd {
 
-    @Parameter(name = ApiConstants.ID, type = CommandType.UUID, required = true,
+    @Parameter(name = ApiConstants.ID, type = CommandType.UUID, required = true, entityType = AlertResponse.class,
             description = "the id of the alert")
     private Long id;
 
