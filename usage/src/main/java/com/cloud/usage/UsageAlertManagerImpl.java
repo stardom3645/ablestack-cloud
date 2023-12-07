@@ -155,8 +155,9 @@ public class UsageAlertManagerImpl extends ManagerBase implements AlertManager {
         try {
             AlertVO alert = _alertDao.findById(id);
             if (alert != null) {
-                alert.setShowAlert(showAlert);
-                _alertDao.update(alert.getId(), alert);
+                AlertVO updatedAlert = _alertDao.createForUpdate();
+                updatedAlert.setShowAlert(showAlert);
+                _alertDao.update(alert.getId(), updatedAlert);
             }
             return true;
         } catch (Exception ex) {
