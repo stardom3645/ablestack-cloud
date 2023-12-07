@@ -151,13 +151,12 @@ public class UsageAlertManagerImpl extends ManagerBase implements AlertManager {
     }
 
     @Override
-    public boolean updateAlert(String id, Boolean showAlert) {
+    public boolean updateAlert(Long id, Boolean showAlert) {
         try {
-            AlertVO alert = _alertDao.findByUuid(id);
+            AlertVO alert = _alertDao.findById(id);
             if (alert != null) {
-                AlertVO updatedAlert = _alertDao.createForUpdate();
-                updatedAlert.setShowAlert(showAlert);
-                _alertDao.update(alert.getId(), updatedAlert);
+                alert.setShowAlert(showAlert);
+                _alertDao.update(alert.getId(), alert);
             }
             return true;
         } catch (Exception ex) {
