@@ -64,4 +64,13 @@ CREATE TABLE IF NOT EXISTS `integrity_verification_initial_hash_final_result` (
     ) ENGINE=InnoDB CHARSET=utf8mb3;
 
 -- create_show_alert_parameter_on_alert
-ALTER TABLE `cloud`.`alert` ADD COLUMN IF NOT EXISTS `show_alert` tinyint(1) NOT NULL DEFAULT '1' COMMENT 'show popup alert';
+DROP PROCEDURE IF EXISTS `cloud`.`IDEMPOTENT_ADD_COLUMN`;
+CREATE PROCEDURE `cloud`.`IDEMPOTENT_ADD_COLUMN` (
+    IN in_table_name VARCHAR(200),
+    IN in_column_name VARCHAR(200),
+    IN in_column_definition VARCHAR(1000)
+)
+BEGIN
+    DECLARE CONTINUE HANDLER FOR 1060 BEGIN END; SET @ddl = CONCAT('ALTER TABLE ', in_table_name); SET @ddl = CONCAT(@ddl, ' ', 'ADD COLUMN') ; SET @ddl = CONCAT(@ddl, ' ', in_column_name); SET @ddl = CONCAT(@ddl, ' ', in_column_definition); PREPARE stmt FROM @ddl; EXECUTE stmt; DEALLOCATE PREPARE stmt; END;
+
+CALL `cloud`.`IDEMPOTENT_ADD_COLUMN`('cloud.alert', 'show_alert', 'tinyint(1) NOT NULL DEFAULT 1 COMMENT "show popup alert" ');
