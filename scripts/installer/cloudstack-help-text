@@ -16,7 +16,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
-ACS_VERSION=4.19.0.0-ABLESTACK.Mold
+ACS_VERSION=
 ACL_MINOR_VERSION=$(echo $ACS_VERSION | cut -d'-' -f1)
 
 case $1 in
