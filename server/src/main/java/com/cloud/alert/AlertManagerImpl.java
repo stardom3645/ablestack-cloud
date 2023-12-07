@@ -828,7 +828,7 @@ public class AlertManagerImpl extends ManagerBase implements AlertManager, Confi
     }
 
     @Override
-    public boolean updateAlert(long id, boolean showAlert) {
+    public boolean updateAlert(string id, boolean showAlert) {
         try {
             AlertVO alert = _alertDao.findByUuid(id);
             if (alert != null) {
