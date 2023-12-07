@@ -17,15 +17,6 @@
 
 <template>
   <div>
-    <a-button
-      v-if="(this.selectedRowKeys.length > 0)"
-      type="primary"
-      danger
-      style="width: 100%; margin-bottom: 15px"
-      @click="bulkActionConfirmation()">
-      <template #icon><delete-outlined /></template>
-      {{ $t('label.action.delete.result') }}
-    </a-button>
     <a-table
       size="small"
       style="overflow-y: auto"
@@ -40,16 +31,6 @@
         <template v-if="column.key === 'status'">
           <status class="status" :text="record.success === true ? 'True' : 'False'" displayText />
         </template>
-        <template v-if="column.key === 'actions'">
-          <tooltip-button
-            style="margin-right: 5px"
-            :disabled="!('deleteSecurityCheckResults' in $store.getters.apis)"
-            :title="$t('label.action.delete.result')"
-            type="primary"
-            :danger="true"
-            icon="delete-outlined"
-            @onClick="onShowDeleteModal(record)"/>
-        </template>
       </template>
       <template #expandedRowRender="{ record } ">
         <a-table
@@ -61,65 +42,7 @@
           :rowKey="record.id">
         </a-table>
       </template>
-      <template #action="{ record }">
-        <tooltip-button
-            style="margin-right: 5px"
-            :dataSource="securityChecks"
-            :title="$t('label.action.delete.security.check.result')"
-            type="primary"
-            :danger="true"
-            icon="delete-outlined"
-            @onClick="onShowDeleteModal(record)"/>
-      </template>
     </a-table>
-    <a-modal
-        :title="selectedItems.length > 0 && showTable ? $t(message.title) : $t('label.action.delete.security.check.result')"
-        :visible="showDeleteResult"
-        :closable="true"
-        :maskClosable="false"
-        :footer="null"
-        :width="showTable ? modalWidth : '30vw'"
-        @ok="selectedItems.length > 0 ? deleteResults() : deleteResult(currentRecord)"
-        @cancel="onCloseModal"
-        :ok-button-props="getOkProps()"
-        :cancel-button-props="getCancelProps()"
-        :confirmLoading="deleteLoading"
-        centered>
-      <div v-ctrl-enter="deleteResult">
-        <div v-if="selectedRowKeys.length > 0">
-          <a-alert type="error">
-            <template #message>
-              <exclamation-circle-outlined style="color: red; fontSize: 30px; display: inline-flex" />
-              <span style="padding-left: 5px" v-html="`<b>${selectedRowKeys.length} ` + $t('label.items.selected') + `. </b>`" />
-              <span v-html="$t(message.confirmMessage)" />
-            </template>
-          </a-alert>
-        </div>
-        <a-alert v-else :message="$t('message.action.delete.security.check.result')" type="warning" />
-        <br />
-        <a-table
-            v-if="selectedRowKeys.length > 0 && showTable"
-            size="middle"
-            :columns="selectedColumns"
-            :dataSource="selectedItems"
-            :rowKey="record => record.id"
-            :pagination="true"
-            style="overflow-y: auto">
-        </a-table>
-        <a-spin :spinning="deleteLoading">
-          <div :span="24" class="action-button">
-            <a-button @click="onCloseModal">{{ $t('label.cancel') }}</a-button>
-            <a-button type="primary" ref="submit" @click="deleteResult">{{ $t('label.ok') }}</a-button>
-          </div>
-        </a-spin>
-      </div>
-    </a-modal>
-    <bulk-action-progress
-      :showGroupActionModal="showGroupActionModal"
-      :selectedItems="selectedItems"
-      :selectedColumns="selectedColumns"
-      :message="message"
-      @handle-cancel="handleCancel" />
   </div>
 </template>
 
@@ -231,12 +154,6 @@ export default {
         title: this.$t('label.failed.security.check.list')
       }
     ]
-    this.columns.push({
-      key: 'actions',
-      title: '',
-      dataIndex: 'actions',
-      width: 100
-    })
   },
   watch: {
     loading (newData, oldData) {
