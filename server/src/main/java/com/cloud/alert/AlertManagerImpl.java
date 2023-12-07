@@ -832,4 +832,20 @@ public class AlertManagerImpl extends ManagerBase implements AlertManager, Confi
             return false;
         }
     }
+
+    @Override
+    public boolean updateAlert(long id, boolean showAlert) {
+        try {
+            AlertVO alert = _alertDao.findById(id);
+            if (alert != null) {
+                AlertVO updatedAlert = _alertDao.createForUpdate();
+                updatedAlert.setShowAlert(showAlert);
+                _alertDao.update(alert.getId(), updatedAlert);
+            }
+            return true;
+        } catch (Exception ex) {
+            logger.warn("Failed to update an alert : " + ex);
+            return false;
+        }
+    }
 }

@@ -214,7 +214,7 @@ export default {
       githubredirecturi: '',
       googleclientid: '',
       githubclientid: '',
-      securityfeatures: false,
+      securityfeatures: true,
       loginType: 0,
       state: {
         time: 60,
