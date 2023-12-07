@@ -361,9 +361,9 @@ public class ApiServlet extends HttpServlet {
                         Account account = ApiDBUtils.findAccountByNameDomain(accountName, domainId);
                         final String ApiAllowedSourceIp = ApiServiceConfiguration.ApiAllowedSourceIp.valueIn(account.getId()).replaceAll("\\s","");
                         final String accessAllowedCidr = ApiServiceConfiguration.ApiAllowedSourceCidr.valueIn(account.getId()).replaceAll("\\s", "");
-                        s_logger.debug("CIDRs from which account '" + account.toString() + "' is allowed to perform API calls: " + ApiAllowedSourceIp  + "/" + accessAllowedCidr);
+                        logger.debug("CIDRs from which account '" + account.toString() + "' is allowed to perform API calls: " + ApiAllowedSourceIp  + "/" + accessAllowedCidr);
                         if (!NetUtils.isIpInCidrList(remoteAddress, (ApiAllowedSourceIp + "/" + accessAllowedCidr).split(","))) {
-                            s_logger.warn("Request by account '" + account.toString() + "' was denied since " + remoteAddress + " does not match " + ApiAllowedSourceIp  + "/" + accessAllowedCidr);
+                            logger.warn("Request by account '" + account.toString() + "' was denied since " + remoteAddress + " does not match " + ApiAllowedSourceIp  + "/" + accessAllowedCidr);
                             throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, "Failed to authenticate user '" + accountName + "' from ip " + remoteAddress.toString().replace("/", ""));
                         }
                     }

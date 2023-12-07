@@ -140,7 +140,6 @@ import com.cloud.user.UserStatisticsVO;
 import com.cloud.user.VmDiskStatisticsVO;
 import com.cloud.user.dao.UserStatisticsDao;
 import com.cloud.user.dao.VmDiskStatisticsDao;
-import com.cloud.utils.LogUtils;
 import com.cloud.utils.NumbersUtil;
 import com.cloud.utils.component.ComponentMethodInterceptable;
 import com.cloud.utils.component.ManagerBase;
@@ -1005,16 +1004,21 @@ public class StatsCollector extends ManagerBase implements ComponentMethodInterc
             }
             return totalcpucap;
         }
-
+        // 보안 기능 이슈로 로그파일 정보 및 root 용량 체크 로직 변경
         private void getFileSystemData(@NotNull ManagementServerHostStatsEntry newEntry) {
-            Set<String> logFileNames = LogUtils.getLogFileNames();
+//            Set<String> logFileNames = LogUtils.getLogFileNames();
+//            for (String fileName : logFileNames) {
+//                String du = Script.runSimpleBashScript(String.format("du -sh %s | cut -f '1'", fileName));
+//                String df = Script.runSimpleBashScript(String.format("df -h %s | grep -v Filesystem | awk '{print \"on disk \" $1 \" mounted on \" $6 \" (\" $5 \" full)\"}'", fileName));
+//                logInfoBuilder.append(fileName).append(" using: ").append(du).append('\n').append(df);
+//            }
             StringBuilder logInfoBuilder = new StringBuilder();
-            for (String fileName : logFileNames) {
-                String du = Script.runSimpleBashScript(String.format("du -sh %s | cut -f '1'", fileName));
-                String df = Script.runSimpleBashScript(String.format("df -h %s | grep -v Filesystem | awk '{print \"on disk \" $1 \" mounted on \" $6 \" (\" $5 \" full)\"}'", fileName));
-                logInfoBuilder.append(fileName).append(" using: ").append(du).append('\n').append(df);
-            }
-            newEntry.setLogInfo(logInfoBuilder.toString());
+            String du = "-";
+            String fileName = "NOT USED";
+            String rootPath = "/";
+            String df = (Script.runSimpleBashScript("df -h "+rootPath+" | awk 'NR==2 {print $5}'").replace("%", ""));
+                    newEntry.setLogInfo(logInfoBuilder.toString());
+            logInfoBuilder.append(fileName).append(" using: ").append(du).append('\n').append(df);
             if (logger.isTraceEnabled()) {
                 logger.trace("log stats:\n" + newEntry.getLogInfo());
             }
