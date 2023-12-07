@@ -31,13 +31,13 @@ public class UpdateAlertCmd extends BaseCmd {
 
     @Parameter(name = ApiConstants.ID, type = CommandType.UUID, required = true,
             description = "the id of the alert")
-    private String id;
+    private Long id;
 
     @Parameter(name = ApiConstants.SHOW_ALERT, type = CommandType.BOOLEAN, required = true,
             description = "the alert show popup")
     private Boolean showAlert;
 
-    public String getId() {
+    public Long getId() {
         return id;
     }
 
