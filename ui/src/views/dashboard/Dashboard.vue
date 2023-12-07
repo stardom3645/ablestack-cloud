@@ -35,7 +35,7 @@
       @cancel="closeModal"
       centered
       style="top: 20px;"
-      width="auto">
+      width="80vw">
       <popup-alert
         @close-action="closeModal"
       />
