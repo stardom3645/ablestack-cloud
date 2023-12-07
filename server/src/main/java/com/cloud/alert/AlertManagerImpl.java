@@ -832,9 +832,8 @@ public class AlertManagerImpl extends ManagerBase implements AlertManager, Confi
         try {
             AlertVO alert = _alertDao.findById(id);
             if (alert != null) {
-                AlertVO updatedAlert = _alertDao.createForUpdate();
-                updatedAlert.setShowAlert(showAlert);
-                _alertDao.update(alert.getId(), updatedAlert);
+                alert.setShowAlert(showAlert);
+                _alertDao.update(alert.getId(), alert);
             }
             return true;
         } catch (Exception ex) {
