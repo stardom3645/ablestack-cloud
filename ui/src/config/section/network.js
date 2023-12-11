@@ -76,7 +76,7 @@ export default {
       }, {
         name: 'vnf.appliances',
         component: shallowRef(defineAsyncComponent(() => import('@/views/network/VnfAppliancesTab.vue'))),
-        show: () => { return 'deployVnfAppliance' in store.getters.apis }
+        show: () => { return ('deployVnfAppliance' in store.getters.apis) && (!store.getters.features.securityfeaturesenabled) }
       }, {
         name: 'guest.ip.range',
         component: shallowRef(defineAsyncComponent(() => import('@/views/network/GuestIpRanges.vue'))),
@@ -756,7 +756,7 @@ export default {
       }, {
         name: 'vpn',
         component: shallowRef(defineAsyncComponent(() => import('@/views/network/VpnDetails.vue'))),
-        show: (record) => { return record.issourcenat }
+        show: (record) => { return (record.issourcenat) && (!store.getters.features.securityfeaturesenabled) }
       },
       {
         name: 'events',

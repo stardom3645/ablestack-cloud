@@ -163,6 +163,7 @@ public class IntegrityVerificationServiceImpl extends ManagerBase implements Plu
             String verificationFailedListToString = verificationFailedList.stream().collect(Collectors.joining(", "));
             verificationFailedListToString = verificationFailedListToString.replaceFirst(", $", "");
             updateIntegrityVerificationFinalResult(msHost.getId(), uuid, verificationFinalResult, verificationFailedListToString, type);
+            runMode = "";
         }
 
         private String calculateHash(File file, String algorithm) throws NoSuchAlgorithmException, IOException {

@@ -37,7 +37,7 @@
                     {{ $t('label.filterby') }}
                   </template>
                   <a-select
-                    v-if="!dataView && filters && filters.length > 0 && !securityfeatures"
+                    v-if="!dataView && filters && filters.length > 0 && !(['event'].includes($route.name) || !securityfeatures)"
                     :placeholder="$t('label.filterby')"
                     :value="filterValue"
                     style="min-width: 100px; margin-left: 10px; margin-bottom: 5px"
@@ -74,7 +74,7 @@
                   :checked="$store.getters.metrics"
                   @change="(checked, event) => { $store.dispatch('SetMetrics', checked) }"/>
                 <a-switch
-                  v-if="!projectView && hasProjectId && !securityfeatures"
+                  v-if="!projectView && hasProjectId && !(['event'].includes($route.name) || !securityfeatures)"
                   style="margin-left: 8px; min-height: 23px; margin-bottom: 4px"
                   :checked-children="$t('label.projects')"
                   :un-checked-children="$t('label.projects')"
@@ -1306,7 +1306,16 @@ export default {
             }
           })
         }
-
+        // 보안 기능 활성 시, 관련없는 api 응답 값 숨김 처리
+        const securityfeatures = this.$store.getters.features.securityfeaturesenabled
+        if (securityfeatures) {
+          if (this.apiName === 'listAccounts') {
+            this.items = this.items.filter((row) => row.name !== 'baremetal-system-account')
+          }
+          if (this.apiName === 'listNetworkOfferings') {
+            this.items = this.items.filter((row) => !row.name.includes('쿠버네테스'))
+          }
+        }
         for (let idx = 0; idx < this.items.length; idx++) {
           this.items[idx].key = idx
           for (const key in customRender) {
