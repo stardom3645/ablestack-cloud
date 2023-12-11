@@ -569,7 +569,7 @@ public class VirtualMachineManagerImpl extends ManagerBase implements VirtualMac
         allocate(vmInstanceName, template, serviceOffering, new DiskOfferingInfo(diskOffering), new ArrayList<>(), networks, plan, hyperType, null, null);
     }
 
-    private VirtualMachineGuru getVmGuru(final VirtualMachine vm) {
+    VirtualMachineGuru getVmGuru(final VirtualMachine vm) {
         if(vm != null) {
             return _vmGurus.get(vm.getType());
         }
@@ -1441,6 +1441,7 @@ public class VirtualMachineManagerImpl extends ManagerBase implements VirtualMac
                 }
                 if (canRetry) {
                     try {
+                        conditionallySetPodToDeployIn(vm);
                         changeState(vm, Event.OperationFailed, null, work, Step.Done);
                     } catch (final NoTransitionException e) {
                         throw new ConcurrentOperationException(e.getMessage());
@@ -1456,6 +1457,24 @@ public class VirtualMachineManagerImpl extends ManagerBase implements VirtualMac
         if (startedVm == null) {
             throw new CloudRuntimeException("Unable to start instance '" + vm.getHostName() + "' (" + vm.getUuid() + "), see management server log for details");
         }
+    }
+
+    /**
+     * Setting pod id to null can result in migration of Volumes across pods. This is not desirable for VMs which
+     * have a volume in Ready state (happens when a VM is shutdown and started again).
+     * So, we set it to null only when
+     * migration of VM across cluster is enabled
+     * Or, volumes are still in allocated state for that VM (happens when VM is Starting/deployed for the first time)
+     */
+    private void conditionallySetPodToDeployIn(VMInstanceVO vm) {
+        if (MIGRATE_VM_ACROSS_CLUSTERS.valueIn(vm.getDataCenterId()) || areAllVolumesAllocated(vm.getId())) {
+            vm.setPodIdToDeployIn(null);
+        }
+    }
+
+    boolean areAllVolumesAllocated(long vmId) {
+        final List<VolumeVO> vols = _volsDao.findByInstance(vmId);
+        return CollectionUtils.isEmpty(vols) || vols.stream().allMatch(v -> Volume.State.Allocated.equals(v.getState()));
     }
 
     private void logBootModeParameters(Map<VirtualMachineProfile.Param, Object> params) {
@@ -2941,6 +2960,7 @@ public class VirtualMachineManagerImpl extends ManagerBase implements VirtualMac
      *  <ul>
      *      <li> If the current storage pool of the volume is not a managed storage, we do not need to validate anything here.
      *      <li> If the current storage pool is a managed storage and the target storage pool ID is different from the current one, we throw an exception.
+     *      <li> If the current storage pool is a managed storage and explicitly declared its capable of migration to alternate storage pools
      *  </ul>
      */
     protected void executeManagedStorageChecksWhenTargetStoragePoolProvided(StoragePoolVO currentPool, VolumeVO volume, StoragePoolVO targetPool) {
@@ -2948,6 +2968,11 @@ public class VirtualMachineManagerImpl extends ManagerBase implements VirtualMac
             return;
         }
         if (currentPool.getId() == targetPool.getId()) {
+            return;
+        }
+
+        Map<String, String> details = _storagePoolDao.getDetails(currentPool.getId());
+        if (details != null && Boolean.parseBoolean(details.get(Storage.Capability.ALLOW_MIGRATE_OTHER_POOLS.toString()))) {
             return;
         }
         throw new CloudRuntimeException(String.format("Currently, a volume on managed storage can only be 'migrated' to itself " + "[volumeId=%s, currentStoragePoolId=%s, targetStoragePoolId=%s].",

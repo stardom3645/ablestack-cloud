@@ -311,6 +311,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
     public static final String TUNGSTEN_PATH = "scripts/vm/network/tungsten";
 
     private String modifyVlanPath;
+    private String ablestackVbmcPath;
     private String versionStringPath;
     private String patchScriptPath;
     private String createVmPath;
@@ -760,6 +761,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
 
     protected StorageSubsystemCommandHandler storageHandler;
 
+    private boolean convertInstanceVerboseMode = false;
     protected boolean dpdkSupport = false;
     protected String dpdkOvsPath;
     protected String directDownloadTemporaryDownloadPath;
@@ -818,6 +820,10 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
 
     protected String getNetworkDirectDevice() {
         return networkDirectDevice;
+    }
+
+    public boolean isConvertInstanceVerboseModeEnabled() {
+        return convertInstanceVerboseMode;
     }
 
     /**
@@ -916,6 +922,11 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
         updateHostPasswdPath = Script.findScript(hypervisorScriptsDir, VRScripts.UPDATE_HOST_PASSWD);
         if (updateHostPasswdPath == null) {
             throw new ConfigurationException("Unable to find update_host_passwd.sh");
+        }
+
+        ablestackVbmcPath = Script.findScript(kvmScriptsDir, "ablestack_vbmc.sh");
+        if (ablestackVbmcPath == null) {
+            throw new ConfigurationException("Unable to find ablestack_vbmc.sh");
         }
 
         modifyVlanPath = Script.findScript(networkScriptsDir, "modifyvlan.sh");
@@ -1019,6 +1030,8 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
             params.putAll(getDeveloperProperties());
         }
 
+        convertInstanceVerboseMode = BooleanUtils.isTrue(AgentPropertiesFileHandler.getPropertyValue(AgentProperties.VIRTV2V_VERBOSE_ENABLED));
+
         pool = (String)params.get("pool");
         if (pool == null) {
             pool = "/root";
@@ -1032,10 +1045,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
         rollingMaintenanceExecutor = BooleanUtils.isTrue(AgentPropertiesFileHandler.getPropertyValue(AgentProperties.ROLLING_MAINTENANCE_SERVICE_EXECUTOR_DISABLED)) ? new RollingMaintenanceAgentExecutor(hooksDir) :
                 new RollingMaintenanceServiceExecutor(hooksDir);
 
-        hypervisorURI = AgentPropertiesFileHandler.getPropertyValue(AgentProperties.HYPERVISOR_URI);
-        if (hypervisorURI == null) {
-            hypervisorURI = LibvirtConnection.getHypervisorURI(hypervisorType.toString());
-        }
+        hypervisorURI = LibvirtConnection.getHypervisorURI(hypervisorType.toString());
 
         networkDirectSourceMode = AgentPropertiesFileHandler.getPropertyValue(AgentProperties.NETWORK_DIRECT_SOURCE_MODE);
         networkDirectDevice = AgentPropertiesFileHandler.getPropertyValue(AgentProperties.NETWORK_DIRECT_DEVICE);
@@ -1068,7 +1078,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
             }
         }
 
-        enableSSLForKvmAgent(params);
+        enableSSLForKvmAgent();
         configureLocalStorage();
 
         /* Directory to use for Qemu sockets like for the Qemu Guest Agent */
@@ -1408,13 +1418,13 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
         }
     }
 
-    private void enableSSLForKvmAgent(final Map<String, Object> params) {
+    private void enableSSLForKvmAgent() {
         final File keyStoreFile = PropertiesUtil.findConfigFile(KeyStoreUtils.KS_FILENAME);
         if (keyStoreFile == null) {
             s_logger.info("Failed to find keystore file: " + KeyStoreUtils.KS_FILENAME);
             return;
         }
-        String keystorePass = (String)params.get(KeyStoreUtils.KS_PASSPHRASE_PROPERTY);
+        String keystorePass = AgentPropertiesFileHandler.getPropertyValue(AgentProperties.KEYSTORE_PASSPHRASE);
         if (StringUtils.isBlank(keystorePass)) {
             s_logger.info("Failed to find passphrase for keystore: " + KeyStoreUtils.KS_FILENAME);
             return;
@@ -1877,6 +1887,24 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
         command.add("-c");
         command.add("ovs-vsctl br-exists " + networkName);
         return "0".equals(command.execute(null));
+    }
+
+    public boolean ablestackVbmcCmdLine(final String action, final String domid, final String port) throws InternalErrorException {
+        if (action == null || domid == null || port == null) {
+            return false;
+        }
+
+        final Script command = new Script("/bin/sh", timeout);
+        command.add(ablestackVbmcPath);
+        command.add(action);
+        command.add(domid);
+        command.add(port);
+        s_logger.info(command);
+        String result = command.execute();
+        if (result != null) {
+            return false;
+        }
+        return true;
     }
 
     public boolean passCmdLine(final String vmName, final String cmdLine) throws InternalErrorException {

@@ -118,6 +118,16 @@
         </dependency>
         <dependency>
             <groupId>org.apache.cloudstack</groupId>
+            <artifactId>cloud-plugin-storage-volume-primera</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.cloudstack</groupId>
+            <artifactId>cloud-plugin-storage-volume-flasharray</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.cloudstack</groupId>
             <artifactId>cloud-server</artifactId>
             <version>${project.version}</version>
         </dependency>
@@ -597,6 +607,21 @@
             <artifactId>cloud-plugin-security</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.apache.cloudstack</groupId>
+            <artifactId>cloud-engine-storage-object</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.cloudstack</groupId>
+            <artifactId>cloud-plugin-storage-object-minio</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.cloudstack</groupId>
+            <artifactId>cloud-plugin-storage-object-simulator</artifactId>
+            <version>${project.version}</version>
+        </dependency>
     </dependencies>
     <build>
         <plugins>
@@ -858,6 +883,12 @@
                                     <outputDirectory>${project.build.directory}/lib</outputDirectory>
                                 </artifactItem>
                                 <artifactItem>
+                                    <groupId>com.linbit.linstor.api</groupId>
+                                    <artifactId>java-linstor</artifactId>
+                                    <overWrite>false</overWrite>
+                                    <outputDirectory>${project.build.directory}/lib</outputDirectory>
+                                </artifactItem>
+                                <artifactItem>
                                     <groupId>org.bouncycastle</groupId>
                                     <artifactId>bctls-jdk15on</artifactId>
                                     <overWrite>false</overWrite>
@@ -900,6 +931,7 @@
                                     <exclude>mysql:mysql-connector-java</exclude>
                                     <exclude>org.apache.cloudstack:cloud-plugin-storage-volume-storpool</exclude>
                                     <exclude>org.apache.cloudstack:cloud-plugin-storage-volume-linstor</exclude>
+                                    <exclude>com.linbit.linstor.api:java-linstor</exclude>
                                 </excludes>
                             </artifactSet>
                             <transformers>

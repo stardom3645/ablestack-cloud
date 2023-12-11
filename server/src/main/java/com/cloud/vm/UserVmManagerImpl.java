@@ -68,12 +68,14 @@ import org.apache.cloudstack.api.command.admin.vm.AssignVMCmd;
 import org.apache.cloudstack.api.command.admin.vm.DeployVMCmdByAdmin;
 import org.apache.cloudstack.api.command.admin.vm.RecoverVMCmd;
 import org.apache.cloudstack.api.command.user.vm.AddNicToVMCmd;
+import org.apache.cloudstack.api.command.user.vm.AllocateVbmcToVMCmd;
 import org.apache.cloudstack.api.command.user.vm.CloneVMCmd;
 import org.apache.cloudstack.api.command.user.vm.DeployVMCmd;
 import org.apache.cloudstack.api.command.user.vm.DeployVnfApplianceCmd;
 import org.apache.cloudstack.api.command.user.vm.DestroyVMCmd;
 import org.apache.cloudstack.api.command.user.vm.RebootVMCmd;
 import org.apache.cloudstack.api.command.user.vm.RemoveNicFromVMCmd;
+import org.apache.cloudstack.api.command.user.vm.RemoveVbmcToVMCmd;
 import org.apache.cloudstack.api.command.user.vm.ResetVMPasswordCmd;
 import org.apache.cloudstack.api.command.user.vm.ResetVMSSHKeyCmd;
 import org.apache.cloudstack.api.command.user.vm.ResetVMUserDataCmd;
@@ -161,6 +163,7 @@ import com.cloud.agent.api.PvlanSetupCommand;
 import com.cloud.agent.api.RestoreVMSnapshotAnswer;
 import com.cloud.agent.api.RestoreVMSnapshotCommand;
 import com.cloud.agent.api.StartAnswer;
+import com.cloud.agent.api.VbmcCommand;
 import com.cloud.agent.api.VmDiskStatsEntry;
 import com.cloud.agent.api.VmNetworkStatsEntry;
 import com.cloud.agent.api.VolumeStatsEntry;
@@ -375,6 +378,7 @@ import com.cloud.vm.dao.NicExtraDhcpOptionDao;
 import com.cloud.vm.dao.UserVmDao;
 import com.cloud.vm.dao.UserVmDetailsDao;
 import com.cloud.vm.dao.VMInstanceDao;
+import com.cloud.vm.dao.VbmcDao;
 import com.cloud.vm.dao.VmStatsDao;
 import com.cloud.vm.snapshot.VMSnapshotManager;
 import com.cloud.vm.snapshot.VMSnapshotVO;
@@ -630,6 +634,9 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
 
     @Inject
     VnfTemplateManager vnfTemplateManager;
+
+    @Inject
+    VbmcDao vbmcDao;
 
     private static final ConfigKey<Integer> VmIpFetchWaitInterval = new ConfigKey<Integer>("Advanced", Integer.class, "externaldhcp.vmip.retrieval.interval", "180",
             "Wait Interval (in seconds) for shared network vm dhcp ip addr fetch for next iteration ", true);
@@ -3314,6 +3321,8 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
 
         List<VolumeVO> volumesToBeDeleted = getVolumesFromIds(cmd);
 
+        // check if Shared Disk
+        checkForSharedVolumes(vmId, volumesToBeDeleted);
         checkForUnattachedVolumes(vmId, volumesToBeDeleted);
         validateVolumes(volumesToBeDeleted);
 
@@ -3676,8 +3685,8 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
                     isSecurityGroupEnabledNetworkUsed = true;
                 }
 
-                if (!(network.getTrafficType() == TrafficType.Guest && network.getGuestType() == Network.GuestType.Shared)) {
-                    throw new InvalidParameterValueException("Can specify only Shared Guest networks when" + " deploy vm in Advance Security Group enabled zone");
+                if (network.getTrafficType() != TrafficType.Guest || !Arrays.asList(GuestType.Shared, GuestType.L2).contains(network.getGuestType())) {
+                    throw new InvalidParameterValueException("Can specify only Shared or L2 Guest networks when deploy vm in Advance Security Group enabled zone");
                 }
 
                 _accountMgr.checkAccess(owner, AccessType.UseEntry, false, network);
@@ -4501,17 +4510,7 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
             vm.setDisplayVm(true);
         }
 
-        if (isImport) {
-            vm.setDataCenterId(zone.getId());
-            vm.setHostId(host.getId());
-            if (lastHost != null) {
-                vm.setLastHostId(lastHost.getId());
-            }
-            vm.setPowerState(powerState);
-            if (powerState == VirtualMachine.PowerState.PowerOn) {
-                vm.setState(State.Running);
-            }
-        }
+        setVmRequiredFieldsForImport(isImport, vm, zone, hypervisorType, host, lastHost, powerState);
 
         vm.setUserVmType(vmType);
         _vmDao.persist(vm);
@@ -4597,6 +4596,23 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
             resourceCountIncrement(accountId, isDisplayVm, new Long(offering.getCpu()), new Long(offering.getRamSize()));
         }
         return vm;
+    }
+
+    protected void setVmRequiredFieldsForImport(boolean isImport, UserVmVO vm, DataCenter zone, HypervisorType hypervisorType,
+                                                Host host, Host lastHost, VirtualMachine.PowerState powerState) {
+        if (isImport) {
+            vm.setDataCenterId(zone.getId());
+            if (hypervisorType == HypervisorType.VMware) {
+                vm.setHostId(host.getId());
+            }
+            if (lastHost != null) {
+                vm.setLastHostId(lastHost.getId());
+            }
+            vm.setPowerState(powerState);
+            if (powerState == VirtualMachine.PowerState.PowerOn) {
+                vm.setState(State.Running);
+            }
+        }
     }
 
     private void updateVMDiskController(UserVmVO vm, Map<String, String> customParameters, GuestOSVO guestOS) {
@@ -8442,6 +8458,16 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
         return false;
     }
 
+    private void checkForSharedVolumes(long vmId, List<VolumeVO> volumes) {
+        for (VolumeVO volume : volumes) {
+            DiskOffering offering = _diskOfferingDao.findById(volume.getDiskOfferingId());
+            if (volume.getVolumeType() == Volume.Type.DATADISK && offering.getShareable()) {
+                volume.setPath("");
+                _volsDao.update(volume.getId(), volume);
+            }
+        }
+    }
+
     private void checkForUnattachedVolumes(long vmId, List<VolumeVO> volumes) {
 
         StringBuilder sb = new StringBuilder();
@@ -8524,7 +8550,7 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
         if (zone == null) {
             throw new InvalidParameterValueException("Unable to import virtual machine with invalid zone");
         }
-        if (host == null) {
+        if (host == null && hypervisorType == HypervisorType.VMware) {
             throw new InvalidParameterValueException("Unable to import virtual machine with invalid host");
         }
 
@@ -8739,5 +8765,93 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
 
     public Boolean getDestroyRootVolumeOnVmDestruction(Long domainId){
         return DestroyRootVolumeOnVmDestruction.valueIn(domainId);
+    }
+
+    @Override
+    @ActionEvent(eventType = EventTypes.EVENT_VM_VBMC_ALLOCATE, eventDescription = "ALLOCATE VBMC PORT TO VM", async = true)
+    public UserVm allocateVbmcToVM(AllocateVbmcToVMCmd cmd) {
+        // Input validation
+        Account caller = CallContext.current().getCallingAccount();
+
+        long vmId = cmd.getVmId();
+        UserVmVO vm = _vmDao.findById(vmId);
+        if (vm == null) {
+            InvalidParameterValueException ex = new InvalidParameterValueException("Cannot find VM with ID " + vmId);
+            ex.addProxyObject(String.valueOf(vmId), "vmId");
+            throw ex;
+        }
+
+        _accountMgr.checkAccess(caller, null, true, vm);
+
+        List<VbmcVO> vbmcAblePortList = vbmcDao.findAblePort();
+        s_logger.info("::::::::::allocateVbmcToVM::::::::vbmcAblePortList.size():::::: " + vbmcAblePortList.size());
+
+        if(vbmcAblePortList.size() > 0) {
+            s_logger.info("::::::::::allocateVbmcToVM::::::::vbmcAblePortList.get(0).getId()::: " + vbmcAblePortList.get(0).getId());
+            s_logger.info("::::::::::::allocateVbmcToVM::::::vbmcAblePortList.get(0).getPort():::::::: " + vbmcAblePortList.get(0).getPort());
+
+            VbmcVO vbmcVo = vbmcDao.findById(vbmcAblePortList.get(0).getId());
+            vbmcVo.setVmId(vmId);
+            vbmcDao.update(vbmcVo.getId(), vbmcVo);
+            s_logger.info("::::::::Integer.toString(vbmcVo.getPort()):::::::::::::::: " + Integer.toString(vbmcVo.getPort()));
+
+            Long hostId = vm.getHostId() != null ? vm.getHostId() : vm.getLastHostId();
+            s_logger.info("::::::::hostId:::::::::::::::: " + hostId);
+
+            VbmcCommand vbmcCmd = new VbmcCommand("start", vm.getInstanceName(), Integer.toString(vbmcVo.getPort()));
+            try {
+                Answer answer = _agentMgr.send(hostId, vbmcCmd);
+                if (answer == null || !answer.getResult()) {
+                    vbmcVo.setVmId(0);
+                    vbmcDao.update(vbmcVo.getId(), vbmcVo);
+                    throw new InvalidParameterValueException(String.format("Failed to release vbmc port : %s", caller.getUuid()));
+                }
+            } catch (Exception ex) {
+                vbmcVo.setVmId(0);
+                vbmcDao.update(vbmcVo.getId(), vbmcVo);
+                throw new CloudRuntimeException(ex.getMessage());
+            }
+        } else {
+            throw new InvalidParameterValueException(String.format("There are not enough vbmc ports to allocate.: %s", caller.getUuid()));
+        }
+        return vm;
+    }
+
+    @Override
+    @ActionEvent(eventType = EventTypes.EVENT_VM_VBMC_REMOVE, eventDescription = "REMOVE VBMC PORT TO VM", async = true)
+    public UserVm removeVbmcToVM(RemoveVbmcToVMCmd cmd) {
+        // Input validation
+        Account caller = CallContext.current().getCallingAccount();
+
+        long vmId = cmd.getVmId();
+        UserVmVO vm = _vmDao.findById(vmId);
+        if (vm == null) {
+            InvalidParameterValueException ex = new InvalidParameterValueException("Cannot find VM with ID " + vmId);
+            ex.addProxyObject(String.valueOf(vmId), "vmId");
+            throw ex;
+        }
+        _accountMgr.checkAccess(caller, null, true, vm);
+
+        List<VbmcVO> vbmcVo = vbmcDao.listByVmId(vmId);
+
+        if (vbmcVo.size() > 0) {
+            VbmcVO vo = vbmcDao.findById(vbmcVo.get(0).getId());
+            vo.setVmId(0);
+            vbmcDao.update(vbmcVo.get(0).getId(), vo);
+            s_logger.info("::::::::::::removeVbmcToVM ::::Integer.toString(vo.getPort())::::::::" + Integer.toString(vo.getPort()));
+
+            Long hostId = vm.getHostId() != null ? vm.getHostId() : vm.getLastHostId();
+            s_logger.info("::::::::hostId:::::::::::::::: " + hostId);
+            VbmcCommand vbmcCmd = new VbmcCommand("delete", vm.getInstanceName(), Integer.toString(vo.getPort()));
+            try {
+                Answer answer = _agentMgr.send(hostId, vbmcCmd);
+                if (answer == null || !answer.getResult()) {
+                    throw new InvalidParameterValueException(String.format("Failed to release vbmc port : %s", caller.getUuid()));
+                }
+            } catch (Exception ex) {
+                throw new CloudRuntimeException(ex.getMessage());
+            }
+        }
+        return vm;
     }
 }
