@@ -3302,10 +3302,10 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
 
             if (data instanceof VolumeObjectTO) {
                 final VolumeObjectTO volumeObjectTO = (VolumeObjectTO)data;
-                String serialType = volumeObjectTO.getUuid(); 
+                String serialType = volumeObjectTO.getUuid();
                 if(volumeObjectTO.getShareable()) {
                     serialType = volumeObjectTO.getPath();
-                } 
+                }
                 disk.setSerial(diskUuidToSerial(serialType));
 
                 setBurstProperties(volumeObjectTO, disk);

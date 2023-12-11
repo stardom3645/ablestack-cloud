@@ -1526,7 +1526,7 @@ public class KVMStorageProcessor implements StorageProcessor {
         final VolumeObjectTO vol = (VolumeObjectTO)disk.getData();
         final PrimaryDataStoreTO primaryStore = (PrimaryDataStoreTO)vol.getDataStore();
         final String vmName = cmd.getVmName();
-        String serialType = vol.getUuid(); 
+        String serialType = vol.getUuid();
         if(vol.getShareable()) {
             serialType = vol.getPath();
         }
@@ -1576,7 +1576,7 @@ public class KVMStorageProcessor implements StorageProcessor {
         final VolumeObjectTO vol = (VolumeObjectTO)disk.getData();
         final PrimaryDataStoreTO primaryStore = (PrimaryDataStoreTO)vol.getDataStore();
         final String vmName = cmd.getVmName();
-        String serialType = vol.getUuid(); 
+        String serialType = vol.getUuid();
         if(vol.getShareable()) {
             serialType = vol.getPath();
         }
