@@ -281,8 +281,8 @@ public class PrimaryDataStoreParameters {
         this.usedBytes = usedBytes;
     }
 
-    public String getKrbdPath() { 
-        return krbdPath; 
+    public String getKrbdPath() {
+        return krbdPath;
     }
 
     public void setKrbdPath(String krbdPath) { 
