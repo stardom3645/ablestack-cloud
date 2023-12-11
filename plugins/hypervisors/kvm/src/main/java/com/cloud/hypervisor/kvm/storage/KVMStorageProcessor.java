@@ -290,12 +290,9 @@ public class KVMStorageProcessor implements StorageProcessor {
                 final TemplateObjectTO newTemplate = new TemplateObjectTO();
                 newTemplate.setPath(primaryVol.getName());
                 newTemplate.setSize(primaryVol.getSize());
-
-                if(List.of(
-                    StoragePoolType.RBD,
-                    StoragePoolType.PowerFlex,
-                    StoragePoolType.Linstor,
-                    StoragePoolType.FiberChannel).contains(primaryPool.getType())) {
+                if (primaryPool.getType() == StoragePoolType.RBD ||
+                    primaryPool.getType() == StoragePoolType.PowerFlex ||
+                    primaryPool.getType() == StoragePoolType.Linstor) {
                     newTemplate.setFormat(ImageFormat.RAW);
                 } else {
                     newTemplate.setFormat(ImageFormat.QCOW2);
@@ -587,9 +584,7 @@ public class KVMStorageProcessor implements StorageProcessor {
     public Answer createTemplateFromVolume(final CopyCommand cmd) {
         Map<String, String> details = cmd.getOptions();
 
-        // handle cases where the managed storage driver had to make a temporary volume from
-        // the snapshot in order to support the copy
-        if (details != null && (details.get(DiskTO.IQN) != null || details.get(DiskTO.PATH) != null)) {
+        if (details != null && details.get(DiskTO.IQN) != null) {
             // use the managed-storage approach
             return createTemplateFromVolumeOrSnapshot(cmd);
         }
@@ -717,7 +712,7 @@ public class KVMStorageProcessor implements StorageProcessor {
     public Answer createTemplateFromSnapshot(CopyCommand cmd) {
         Map<String, String> details = cmd.getOptions();
 
-        if (details != null && (details.get(DiskTO.IQN) != null || details.get(DiskTO.PATH) != null)) {
+        if (details != null && details.get(DiskTO.IQN) != null) {
             // use the managed-storage approach
             return createTemplateFromVolumeOrSnapshot(cmd);
         }
@@ -755,15 +750,12 @@ public class KVMStorageProcessor implements StorageProcessor {
         KVMStoragePool secondaryStorage = null;
 
         try {
-            // look for options indicating an overridden path or IQN.  Used when snapshots have to be
-            // temporarily copied on the manaaged storage device before the actual copy to target object
             Map<String, String> details = cmd.getOptions();
-            String path = details != null ? details.get(DiskTO.PATH) : null;
+
+            String path = details != null ? details.get(DiskTO.IQN) : null;
+
             if (path == null) {
-                path = details != null ? details.get(DiskTO.IQN) : null;
-                if (path == null) {
-                    new CloudRuntimeException("The 'path' or 'iqn' field must be specified.");
-                }
+                new CloudRuntimeException("The 'path' field must be specified.");
             }
 
             storagePoolMgr.connectPhysicalDisk(primaryStore.getPoolType(), primaryStore.getUuid(), path, details);
@@ -2235,16 +2227,7 @@ public class KVMStorageProcessor implements StorageProcessor {
 
         Map<String, String> details = cmd.getOptions2();
 
-        String path = cmd.getDestTO().getPath();
-        if (path == null) {
-            path = details != null ? details.get(DiskTO.PATH) : null;
-            if (path == null) {
-                path = details != null ? details.get(DiskTO.IQN) : null;
-                if (path == null) {
-                    new CloudRuntimeException("The 'path' or 'iqn' field must be specified.");
-                }
-            }
-        }
+        String path = details != null ? details.get(DiskTO.IQN) : null;
 
         storagePoolMgr.connectPhysicalDisk(pool.getPoolType(), pool.getUuid(), path, details);
 

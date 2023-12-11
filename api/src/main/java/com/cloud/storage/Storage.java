@@ -77,17 +77,12 @@ public class Storage {
     }
 
     public static enum Capability {
-        HARDWARE_ACCELERATION("HARDWARE_ACCELERATION"),
-        ALLOW_MIGRATE_OTHER_POOLS("ALLOW_MIGRATE_OTHER_POOLS");
+        HARDWARE_ACCELERATION("HARDWARE_ACCELERATION");
 
         private final String capability;
 
         private Capability(String capability) {
             this.capability = capability;
-        }
-
-        public String toString() {
-            return this.capability;
         }
     }
 
@@ -155,8 +150,7 @@ public class Storage {
         ManagedNFS(true, false, false),
         Linstor(true, true, false),
         DatastoreCluster(true, true, false), // for VMware, to abstract pool of clusters
-        StorPool(true, true, true),
-        FiberChannel(true, true, false); // Fiber Channel Pool for KVM hypervisors is used to find the volume by WWN value (/dev/disk/by-id/wwn-<wwnvalue>)
+        StorPool(true, true, true);
 
         private final boolean shared;
         private final boolean overprovisioning;

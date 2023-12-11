@@ -92,9 +92,7 @@ public class ParamGenericValidationWorker implements DispatchWorker {
                     break;
                 }
             }
-            if (!matchedCurrentParam && !((String)actualParamName).equalsIgnoreCase("expires") &&
-                !((String)actualParamName).equalsIgnoreCase("signatureversion") &&
-                !((String)actualParamName).equalsIgnoreCase("projectid")) {
+            if (!matchedCurrentParam && !((String)actualParamName).equalsIgnoreCase("expires") && !((String)actualParamName).equalsIgnoreCase("signatureversion")) {
                 errorMsg.append(" ").append(actualParamName);
                 foundUnknownParam= true;
             }
