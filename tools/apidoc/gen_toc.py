@@ -269,10 +269,20 @@ known_categories = {
     'ConsoleEndpoint': 'Console Endpoint',
     'SecurityCheck': 'Security',
     'IntegrityVerification': 'Security',
+    'Shutdown': 'Shutdown',
+    'importVm': 'Virtual Machine',
     'listQuarantinedIp': 'IP Quarantine',
     'updateQuarantinedIp': 'IP Quarantine',
     'removeQuarantinedIp': 'IP Quarantine',
-    'Shutdown': 'Shutdown'
+    'Shutdown': 'Shutdown',
+    'addObjectStoragePool': 'Object Store',
+    'listObjectStoragePools': 'Object Store',
+    'deleteObjectStoragePool': 'Object Store',
+    'updateObjectStoragePool': 'Object Store',
+    'createBucket': 'Object Store',
+    'updateBucket': 'Object Store',
+    'deleteBucket': 'Object Store',
+    'listBuckets': 'Object Store'
 }
 
 

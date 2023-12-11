@@ -29,6 +29,8 @@ import org.apache.cloudstack.api.response.PodResponse;
 import org.apache.cloudstack.api.response.ZoneResponse;
 import org.apache.cloudstack.config.Configuration;
 import org.apache.cloudstack.ha.HAConfig;
+import org.apache.cloudstack.storage.object.Bucket;
+import org.apache.cloudstack.storage.object.ObjectStore;
 import org.apache.cloudstack.usage.Usage;
 import org.apache.cloudstack.vm.schedule.VMSchedule;
 
@@ -322,6 +324,7 @@ public class EventTypes {
     public static final String EVENT_DOMAIN_CREATE = "DOMAIN.CREATE";
     public static final String EVENT_DOMAIN_DELETE = "DOMAIN.DELETE";
     public static final String EVENT_DOMAIN_UPDATE = "DOMAIN.UPDATE";
+    public static final String EVENT_DOMAIN_MOVE = "DOMAIN.MOVE";
 
     // Snapshots
     public static final String EVENT_SNAPSHOT_COPY = "SNAPSHOT.COPY";
@@ -722,6 +725,16 @@ public class EventTypes {
     public static final String EVENT_SECURITY_CHECK = "SECURITY.CHECK";
     public static final String EVENT_INTEGRITY_VERIFICATION = "INTEGRITY.VERIFICATION";
     public static final String EVENT_LOG_AUTO_DELETED = "LOG.DELETED";
+    
+    // OBJECT STORE
+    public static final String EVENT_OBJECT_STORE_CREATE = "OBJECT.STORE.CREATE";
+    public static final String EVENT_OBJECT_STORE_DELETE = "OBJECT.STORE.DELETE";
+    public static final String EVENT_OBJECT_STORE_UPDATE = "OBJECT.STORE.UPDATE";
+
+    // BUCKETS
+    public static final String EVENT_BUCKET_CREATE = "BUCKET.CREATE";
+    public static final String EVENT_BUCKET_DELETE = "BUCKET.DELETE";
+    public static final String EVENT_BUCKET_UPDATE = "BUCKET.UPDATE";
 
     static {
 
@@ -876,6 +889,7 @@ public class EventTypes {
         entityEventDetails.put(EVENT_DOMAIN_CREATE, Domain.class);
         entityEventDetails.put(EVENT_DOMAIN_DELETE, Domain.class);
         entityEventDetails.put(EVENT_DOMAIN_UPDATE, Domain.class);
+        entityEventDetails.put(EVENT_DOMAIN_MOVE, Domain.class);
 
         // Snapshots
         entityEventDetails.put(EVENT_SNAPSHOT_CREATE, Snapshot.class);
@@ -1164,6 +1178,16 @@ public class EventTypes {
 
         //Security
         entityEventDetails.put(EVENT_SECURITY_CHECK, "Security");
+        
+        //Object Store
+        entityEventDetails.put(EVENT_OBJECT_STORE_CREATE, ObjectStore.class);
+        entityEventDetails.put(EVENT_OBJECT_STORE_UPDATE, ObjectStore.class);
+        entityEventDetails.put(EVENT_OBJECT_STORE_DELETE, ObjectStore.class);
+
+        //Buckets
+        entityEventDetails.put(EVENT_BUCKET_CREATE, Bucket.class);
+        entityEventDetails.put(EVENT_BUCKET_UPDATE, Bucket.class);
+        entityEventDetails.put(EVENT_BUCKET_DELETE, Bucket.class);
     }
 
     public static String getEntityForEvent(String eventName) {
