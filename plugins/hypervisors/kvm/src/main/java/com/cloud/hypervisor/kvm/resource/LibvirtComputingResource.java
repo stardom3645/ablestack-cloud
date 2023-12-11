@@ -3302,15 +3302,16 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
 
             if (data instanceof VolumeObjectTO) {
                 final VolumeObjectTO volumeObjectTO = (VolumeObjectTO)data;
-                disk.setSerial(diskUuidToSerial(volumeObjectTO.getUuid()));
+                String serialType = volumeObjectTO.getUuid(); 
+                if(volumeObjectTO.getShareable()) {
+                    serialType = volumeObjectTO.getPath();
+                } 
+                disk.setSerial(diskUuidToSerial(serialType));
+
                 setBurstProperties(volumeObjectTO, disk);
 
                 if (volumeObjectTO.getCacheMode() != null) {
                     disk.setCacheMode(DiskDef.DiskCacheMode.valueOf(volumeObjectTO.getCacheMode().toString().toUpperCase()));
-                }
-
-                if(volumeObjectTO.getShareable()) {
-                    disk.setSharable();
                 }
 
                 if (volumeObjectTO.requiresEncryption()) {

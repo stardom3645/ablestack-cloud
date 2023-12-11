@@ -1534,7 +1534,11 @@ public class KVMStorageProcessor implements StorageProcessor {
         final VolumeObjectTO vol = (VolumeObjectTO)disk.getData();
         final PrimaryDataStoreTO primaryStore = (PrimaryDataStoreTO)vol.getDataStore();
         final String vmName = cmd.getVmName();
-        final String serial = resource.diskUuidToSerial(vol.getUuid());
+        String serialType = vol.getUuid(); 
+        if(vol.getShareable()) {
+            serialType = vol.getPath();
+        }
+        final String serial = resource.diskUuidToSerial(serialType);
 
         try {
             final Connect conn = LibvirtConnection.getConnectionByVmName(vmName);
@@ -1580,7 +1584,11 @@ public class KVMStorageProcessor implements StorageProcessor {
         final VolumeObjectTO vol = (VolumeObjectTO)disk.getData();
         final PrimaryDataStoreTO primaryStore = (PrimaryDataStoreTO)vol.getDataStore();
         final String vmName = cmd.getVmName();
-        final String serial = resource.diskUuidToSerial(vol.getUuid());
+        String serialType = vol.getUuid(); 
+        if(vol.getShareable()) {
+            serialType = vol.getPath();
+        }
+        final String serial = resource.diskUuidToSerial(serialType);
         long waitDetachDevice = cmd.getWaitDetachDevice();
         try {
             final Connect conn = LibvirtConnection.getConnectionByVmName(vmName);
