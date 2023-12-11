@@ -285,10 +285,10 @@ public class PrimaryDataStoreParameters {
         return krbdPath;
     }
 
-    public void setKrbdPath(String krbdPath) { 
-        this.krbdPath = krbdPath; 
+    public void setKrbdPath(String krbdPath) {
+        this.krbdPath = krbdPath;
     }
-    
+
     public Boolean isTagARule() {
         return isTagARule;
     }
