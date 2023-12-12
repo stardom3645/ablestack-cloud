@@ -94,6 +94,7 @@ import org.libvirt.SchedParameter;
 import org.libvirt.SchedUlongParameter;
 import org.libvirt.Secret;
 import org.libvirt.VcpuInfo;
+import org.libvirt.event.LifecycleListener;
 import org.libvirt.event.DomainEvent;
 import org.libvirt.event.DomainEventDetail;
 import org.libvirt.event.StoppedDetail;
@@ -3870,46 +3871,49 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
             }
         });
 
+        LifecycleListener listener = new LifecycleListener() {
+            @Override
+            public int onDomainLifecycleChange(Domain domain, DomainEvent domainEvent) {
+                try {
+                    s_logger.debug(String.format("Got event lifecycle change on Domain %s, event %s", domain.getName(), domainEvent));
+                    if (domainEvent != null) {
+                        switch (domainEvent.getType()) {
+                            case STOPPED:
+                                /* libvirt-destroyed VMs have detail StoppedDetail.DESTROYED, self shutdown guests are StoppedDetail.SHUTDOWN
+                                 * Checking for this helps us differentiate between events where cloudstack or admin stopped the VM vs guest
+                                 * initiated, and avoid pushing extra updates for actions we are initiating without a need for extra tracking */
+                                DomainEventDetail detail = domainEvent.getDetail();
+                                if (StoppedDetail.SHUTDOWN.equals(detail) || StoppedDetail.CRASHED.equals(detail)) {
+                                    s_logger.info("Triggering out of band status update due to completed self-shutdown or crash of VM");
+                                    _agentStatusUpdater.triggerUpdate();
+                                } else {
+                                    s_logger.debug("Event detail: " + detail);
+                                }
+                                break;
+                            default:
+                                s_logger.debug(String.format("No handling for event %s", domainEvent));
+                        }
+                    }
+                } catch (LibvirtException e) {
+                    s_logger.error("Libvirt exception while processing lifecycle event", e);
+                } catch (Throwable e) {
+                    s_logger.error("Error during lifecycle", e);
+                }
+                return 0;
+            }
+        }
+
         try {
             libvirtListenerThread.setDaemon(true);
             libvirtListenerThread.start();
 
             Connect conn = LibvirtConnection.getConnection();
-            conn.addLifecycleListener(this::onDomainLifecycleChange);
+            conn.addLifecycleListener(listener);
 
             s_logger.debug("Set up the libvirt domain event lifecycle listener");
         } catch (LibvirtException e) {
             s_logger.error("Failed to get libvirt connection for domain event lifecycle", e);
         }
-    }
-
-    private int onDomainLifecycleChange(Domain domain, DomainEvent domainEvent) {
-        try {
-            s_logger.debug(String.format("Got event lifecycle change on Domain %s, event %s", domain.getName(), domainEvent));
-            if (domainEvent != null) {
-                switch (domainEvent.getType()) {
-                    case STOPPED:
-                        /* libvirt-destroyed VMs have detail StoppedDetail.DESTROYED, self shutdown guests are StoppedDetail.SHUTDOWN
-                         * Checking for this helps us differentiate between events where cloudstack or admin stopped the VM vs guest
-                         * initiated, and avoid pushing extra updates for actions we are initiating without a need for extra tracking */
-                        DomainEventDetail detail = domainEvent.getDetail();
-                        if (StoppedDetail.SHUTDOWN.equals(detail) || StoppedDetail.CRASHED.equals(detail)) {
-                            s_logger.info("Triggering out of band status update due to completed self-shutdown or crash of VM");
-                            _agentStatusUpdater.triggerUpdate();
-                        } else {
-                            s_logger.debug("Event detail: " + detail);
-                        }
-                        break;
-                    default:
-                        s_logger.debug(String.format("No handling for event %s", domainEvent));
-                }
-            }
-        } catch (LibvirtException e) {
-            s_logger.error("Libvirt exception while processing lifecycle event", e);
-        } catch (Throwable e) {
-            s_logger.error("Error during lifecycle", e);
-        }
-        return 0;
     }
 
     public String diskUuidToSerial(String uuid) {
