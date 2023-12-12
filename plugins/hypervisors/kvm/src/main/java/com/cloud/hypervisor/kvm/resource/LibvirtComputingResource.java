@@ -3902,7 +3902,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
                 }
                 return 0;
             }
-        }
+        };
 
         try {
             libvirtListenerThread.setDaemon(true);
