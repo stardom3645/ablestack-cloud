@@ -83,7 +83,8 @@ import org.apache.cloudstack.api.command.user.network.UpdateNetworkCmd;
 import org.apache.cloudstack.api.command.user.vm.ListNicsCmd;
 import org.apache.cloudstack.api.response.AcquirePodIpCmdResponse;
 import org.apache.cloudstack.engine.orchestration.service.NetworkOrchestrationService;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.springframework.stereotype.Component;
 
 import javax.inject.Inject;
@@ -104,7 +105,7 @@ public class MockNetworkManagerImpl extends ManagerBase implements NetworkOrches
     List<NetworkElement> _networkElements;
 
     private static HashMap<String, String> s_providerToNetworkElementMap = new HashMap<String, String>();
-    private static final Logger s_logger = Logger.getLogger(MockNetworkManagerImpl.class);
+    protected static Logger logger = LogManager.getLogger(MockNetworkManagerImpl.class);
 
     /* (non-Javadoc)
      * @see com.cloud.utils.component.Manager#start()
@@ -115,7 +116,7 @@ public class MockNetworkManagerImpl extends ManagerBase implements NetworkOrches
             Provider implementedProvider = element.getProvider();
             if (implementedProvider != null) {
                 if (s_providerToNetworkElementMap.containsKey(implementedProvider.getName())) {
-                    s_logger.error("Cannot start MapNetworkManager: Provider <-> NetworkElement must be a one-to-one map, " +
+                    logger.error("Cannot start MapNetworkManager: Provider <-> NetworkElement must be a one-to-one map, " +
                         "multiple NetworkElements found for Provider: " + implementedProvider.getName());
                     return false;
                 }
