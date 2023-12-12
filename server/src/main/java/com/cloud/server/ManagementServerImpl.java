@@ -3980,7 +3980,7 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
         //vbmc for vm APIs
         cmdList.add(AllocateVbmcToVMCmd.class);
         cmdList.add(RemoveVbmcToVMCmd.class);
-        
+
         //object store APIs
         cmdList.add(AddObjectStoragePoolCmd.class);
         cmdList.add(ListObjectStoragePoolsCmd.class);
