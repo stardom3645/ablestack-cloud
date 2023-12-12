@@ -430,7 +430,7 @@ export default {
           dataView: true,
           component: shallowRef(defineAsyncComponent(() => import('@/views/compute/AssignInstance'))),
           popup: true,
-          show: (record) => { return ['Stopped'].includes(record.state) }
+          show: (record) => { return ['Stopped'].includes(record.state) && (!store.getters.features.securityfeaturesenabled) }
         },
         {
           api: 'recoverVirtualMachine',
