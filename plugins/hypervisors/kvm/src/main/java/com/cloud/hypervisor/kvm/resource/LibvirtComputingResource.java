@@ -3873,7 +3873,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
 
         LifecycleListener listener = new LifecycleListener() {
             @Override
-            public int onDomainLifecycleChange(Domain domain, DomainEvent domainEvent) {
+            public int onLifecycleChange(Domain domain, DomainEvent domainEvent) {
                 try {
                     s_logger.debug(String.format("Got event lifecycle change on Domain %s, event %s", domain.getName(), domainEvent));
                     if (domainEvent != null) {
