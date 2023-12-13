@@ -3831,9 +3831,8 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
 
     @Override
     public StartupCommand[] initialize() {
-
         final KVMHostInfo info = new KVMHostInfo(dom0MinMem, dom0OvercommitMem, manualCpuSpeed, dom0MinCpuCores);
-        calculateHostCpuMaxCapacity(info.getCpus(), info.getCpuSpeed());
+        calculateHostCpuMaxCapacity(info.getAllocatableCpus(), info.getCpuSpeed());
 
         String capabilities = String.join(",", info.getCapabilities());
         if (dpdkSupport) {

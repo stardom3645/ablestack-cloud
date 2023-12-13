@@ -6271,12 +6271,13 @@ public class LibvirtComputingResourceTest {
         int expectedShares = 5000;
 
         String hostCgroupVersion = LibvirtComputingResource.CGROUP_V2;
-        PowerMockito.mockStatic(Script.class);
-        Mockito.when(Script.runSimpleBashScript(Mockito.anyString())).thenReturn(hostCgroupVersion);
+        try (MockedStatic<Script> ignored = Mockito.mockStatic(Script.class)) {
+            Mockito.when(Script.runSimpleBashScript(Mockito.anyString())).thenReturn(hostCgroupVersion);
 
-        libvirtComputingResourceSpy.calculateHostCpuMaxCapacity(cpuCores, cpuSpeed);
+            libvirtComputingResourceSpy.calculateHostCpuMaxCapacity(cpuCores, cpuSpeed);
 
-        Assert.assertEquals(expectedShares, libvirtComputingResourceSpy.getHostCpuMaxCapacity());
+            Assert.assertEquals(expectedShares, libvirtComputingResourceSpy.getHostCpuMaxCapacity());
+        }
     }
 
     @Test
@@ -6286,11 +6287,12 @@ public class LibvirtComputingResourceTest {
         int expectedShares = 0;
 
         String hostCgroupVersion = "tmpfs";
-        PowerMockito.mockStatic(Script.class);
-        Mockito.when(Script.runSimpleBashScript(Mockito.anyString())).thenReturn(hostCgroupVersion);
+        try (MockedStatic<Script> ignored = Mockito.mockStatic(Script.class)) {
+            Mockito.when(Script.runSimpleBashScript(Mockito.anyString())).thenReturn(hostCgroupVersion);
 
-        libvirtComputingResourceSpy.calculateHostCpuMaxCapacity(cpuCores, cpuSpeed);
+            libvirtComputingResourceSpy.calculateHostCpuMaxCapacity(cpuCores, cpuSpeed);
 
-        Assert.assertEquals(expectedShares, libvirtComputingResourceSpy.getHostCpuMaxCapacity());
+            Assert.assertEquals(expectedShares, libvirtComputingResourceSpy.getHostCpuMaxCapacity());
+        }
     }
 }
