@@ -75,4 +75,4 @@ BEGIN
 
 CALL `cloud`.`IDEMPOTENT_ADD_COLUMN`('cloud.alert', 'show_alert', 'tinyint(1) NOT NULL DEFAULT 1 COMMENT "show popup alert" ');
 
-UPDATE IGNORE `cloud`.`configuration` SET `value`="PLAINTEXT.oauth2" WHERE `name`="user.authenticators.exclude";
+UPDATE IGNORE `cloud`.`configuration` SET `value`="PLAINTEXT,oauth2" WHERE `name`="user.authenticators.exclude";
