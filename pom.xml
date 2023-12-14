@@ -123,7 +123,7 @@
         <cs.assertj.version>3.23.1</cs.assertj.version>
 
         <!-- Dependencies versions -->
-        <cs.amqp-client.version>5.17.0</cs.amqp-client.version>
+        <cs.amqp-client.version>5.20.0</cs.amqp-client.version>
         <cs.apache-cloudstack-java-client.version>1.0.9</cs.apache-cloudstack-java-client.version>
         <cs.aspectjrt.version>1.9.19</cs.aspectjrt.version>
         <cs.aws.sdk.version>1.12.439</cs.aws.sdk.version>
@@ -153,8 +153,8 @@
         <cs.jaxb.version>2.3.0</cs.jaxb.version>
         <cs.jaxws.version>2.3.2-1</cs.jaxws.version>
         <cs.jersey-client.version>2.26</cs.jersey-client.version>
-        <cs.jetty.version>9.4.51.v20230217</cs.jetty.version>
-        <cs.jetty-maven-plugin.version>9.4.27.v20200227</cs.jetty-maven-plugin.version>
+        <cs.jetty.version>9.4.53.v20231009</cs.jetty.version>
+        <cs.jetty-maven-plugin.version>9.4.53.v20231009</cs.jetty-maven-plugin.version>
         <cs.jna.version>5.5.0</cs.jna.version>
         <cs.joda-time.version>2.12.5</cs.joda-time.version>
         <cs.jpa.version>2.2.1</cs.jpa.version>

@@ -65,6 +65,7 @@ import org.apache.cloudstack.api.command.admin.address.ListPublicIpAddressesCmdB
 import org.apache.cloudstack.api.command.admin.address.ReleasePodIpCmdByAdmin;
 import org.apache.cloudstack.api.command.admin.affinitygroup.UpdateVMAffinityGroupCmdByAdmin;
 import org.apache.cloudstack.api.command.admin.alert.GenerateAlertCmd;
+import org.apache.cloudstack.api.command.admin.alert.UpdateAlertCmd;
 import org.apache.cloudstack.api.command.admin.autoscale.CreateCounterCmd;
 import org.apache.cloudstack.api.command.admin.autoscale.DeleteCounterCmd;
 import org.apache.cloudstack.api.command.admin.cluster.AddClusterCmd;
@@ -3834,6 +3835,7 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
         cmdList.add(AssignCertToLoadBalancerCmd.class);
         cmdList.add(RemoveCertFromLoadBalancerCmd.class);
         cmdList.add(GenerateAlertCmd.class);
+        cmdList.add(UpdateAlertCmd.class);
         cmdList.add(ListOvsElementsCmd.class);
         cmdList.add(ConfigureOvsElementCmd.class);
         cmdList.add(GetVMUserDataCmd.class);

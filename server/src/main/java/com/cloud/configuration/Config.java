@@ -523,7 +523,7 @@ public enum Config {
             "The time interval in seconds when the management server polls for snapshots to be scheduled.",
             null),
     SnapshotDeltaMax("Snapshots", SnapshotManager.class, Integer.class, "snapshot.delta.max", "16", "max delta snapshots between two full snapshots.", null),
-    KVMSnapshotEnabled("Hidden", SnapshotManager.class, Boolean.class, "kvm.snapshot.enabled", "false", "whether snapshot is enabled for KVM hosts", null),
+    KVMSnapshotEnabled("Hidden", SnapshotManager.class, Boolean.class, "kvm.snapshot.enabled", "true", "whether snapshot is enabled for KVM hosts", null),
 
     // Advanced
     EventPurgeInterval(
