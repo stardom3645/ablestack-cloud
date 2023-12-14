@@ -111,4 +111,6 @@ public interface AlertService {
 
     boolean generateAlert(AlertType alertType, long dataCenterId, Long podId, String msg);
 
+    boolean updateAlert(Long id, Boolean showAlert);
+
 }

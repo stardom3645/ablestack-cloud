@@ -82,6 +82,7 @@ public class ListAlertsCmd extends BaseListCmd {
             alertResponse.setDescription(alert.getSubject());
             alertResponse.setLastSent(alert.getLastSent());
             alertResponse.setName(alert.getName());
+            alertResponse.setShowAlert(alert.getShowAlert());
 
             alertResponse.setObjectName("alert");
             alertResponseList.add(alertResponse);

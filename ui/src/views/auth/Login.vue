@@ -85,7 +85,7 @@
             </template>
           </a-input-password>
         </a-form-item>
-        <a-form-item ref="domain" name="domain">
+        <a-form-item ref="domain" name="domain" v-if="!securityfeatures">
           <a-input
             size="large"
             type="text"
@@ -152,7 +152,7 @@
         @click="handleSubmit"
       >{{ $t('label.login') }}</a-button>
     </a-form-item>
-    <translation-menu/>
+    <translation-menu v-if="!securityfeatures"/>
     <div class="content" v-if="socialLogin">
       <p class="or">or</p>
     </div>
@@ -214,6 +214,7 @@ export default {
       githubredirecturi: '',
       googleclientid: '',
       githubclientid: '',
+      securityfeatures: true,
       loginType: 0,
       state: {
         time: 60,
@@ -301,6 +302,12 @@ export default {
               this.githubredirecturi = item.redirecturi
             }
           })
+        }
+      })
+      api('listCapabilities').then(response => {
+        if (response) {
+          const capability = response.listcapabilitiesresponse.capability || []
+          this.securityfeatures = capability.securityfeaturesenabled
         }
       })
     },
