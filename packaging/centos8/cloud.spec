@@ -605,7 +605,7 @@ pip install --upgrade /usr/share/cloudstack-marvin/Marvin-*.tar.gz
 %config(noreplace) %attr(0640,root,cloud) %{_sysconfdir}/%{name}/management/server.properties
 %config(noreplace) %attr(0640,root,cloud) %{_sysconfdir}/%{name}/management/config.json
 %config(noreplace) %{_sysconfdir}/%{name}/management/log4j-cloud.xml
-%config(noreplace) %{_sysconfdir}/%{name}/management/log4j2.xml
+%config(noreplace) %{_sysconfdir}/%{name}/management/log4j.xml
 %config(noreplace) %{_sysconfdir}/%{name}/management/environment.properties
 %config(noreplace) %{_sysconfdir}/%{name}/management/java.security.ciphers
 %attr(0644,root,root) %{_unitdir}/%{name}-management.service

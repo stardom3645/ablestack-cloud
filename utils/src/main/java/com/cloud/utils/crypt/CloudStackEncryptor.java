@@ -20,7 +20,6 @@
 package com.cloud.utils.crypt;
 
 import java.nio.charset.StandardCharsets;
-import java.security.SecureRandom;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 
@@ -144,12 +143,6 @@ public class CloudStackEncryptor {
             encryptorV1 = new LegacyBase64Encryptor(password);
             encryptorV2 = new AeadBase64Encryptor(password.getBytes(StandardCharsets.UTF_8));
             logger.debug("Initialized with all possible encryptors");
-        }
-        SecureRandom random;
-        //secretKey 지우기 (0, 1 로 덮어쓰기 5회)
-        for (int i = 0; i < 5; i++) {
-            random = new SecureRandom();
-            password = Integer.toString(random.nextInt(899)+100, 2); //100~999사이의 정수를 2진수(0과 1)로 변환한 값을 변수에 5회 덮어쓰기
         }
     }
 }
