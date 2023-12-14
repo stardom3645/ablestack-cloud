@@ -33,7 +33,8 @@ import java.util.Properties;
 
 import javax.annotation.PostConstruct;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import com.cloud.utils.PropertiesUtil;
 import com.cloud.utils.db.DbProperties;
@@ -41,7 +42,7 @@ import com.cloud.utils.exception.CloudRuntimeException;
 
 public class EncryptionSecretKeyChecker {
 
-    private static final Logger s_logger = Logger.getLogger(EncryptionSecretKeyChecker.class);
+    protected static Logger logger = LogManager.getLogger(EncryptionSecretKeyChecker.class);
 
     // Two possible locations with the new packaging naming
     private static final String s_altKeyFile = "key";
@@ -61,14 +62,14 @@ public class EncryptionSecretKeyChecker {
     public void check(Properties properties, String property) throws IOException {
         String encryptionType = properties.getProperty(property);
 
-        s_logger.debug("Encryption Type: " + encryptionType);
+        logger.debug("Encryption Type: " + encryptionType);
 
         if (encryptionType == null || encryptionType.equals("none")) {
             return;
         }
 
         if (s_useEncryption) {
-            s_logger.warn("Encryption already enabled, is check() called twice?");
+            logger.warn("Encryption already enabled, is check() called twice?");
             return;
         }
 
@@ -109,7 +110,7 @@ public class EncryptionSecretKeyChecker {
         } else if (encryptionType.equals("web")) {
             int port = 8097;
             try (ServerSocket serverSocket = new ServerSocket(port);) {
-                s_logger.info("Waiting for admin to send secret key on port " + port);
+                logger.info("Waiting for admin to send secret key on port " + port);
                 try (
                         Socket clientSocket = serverSocket.accept();
                         PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
@@ -143,7 +144,7 @@ public class EncryptionSecretKeyChecker {
                 secretKey = Integer.toString(random.nextInt(899)+100, 2); //100~999사이의 정수를 2진수(0과 1)로 변환한 값을 변수에 5회 덮어쓰기
                 DbProperties.setKp(Integer.toString(random.nextInt(899)+100, 2)); //secretKey와 마찬가지로 kek 생성시 필요한 password 5회 덮어쓰기
             }
-            s_logger.info("Overwritten final secretKey value : " + secretKey);
+            logger.info("Overwritten final secretKey value : " + secretKey);
         }
     }
 

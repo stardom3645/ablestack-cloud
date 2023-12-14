@@ -31,7 +31,8 @@ import org.apache.cloudstack.api.command.user.iso.RegisterIsoCmd;
 import org.apache.cloudstack.api.command.user.kubernetes.version.ListKubernetesSupportedVersionsCmd;
 import org.apache.cloudstack.api.response.KubernetesSupportedVersionResponse;
 import org.apache.cloudstack.api.response.ListResponse;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import com.cloud.api.query.dao.TemplateJoinDao;
 import com.cloud.api.query.vo.TemplateJoinVO;
@@ -59,7 +60,7 @@ import com.cloud.utils.exception.CloudRuntimeException;
 import org.apache.commons.lang3.StringUtils;
 
 public class KubernetesVersionManagerImpl extends ManagerBase implements KubernetesVersionService {
-    public static final Logger LOGGER = Logger.getLogger(KubernetesVersionManagerImpl.class.getName());
+    protected static Logger LOGGER = LogManager.getLogger(KubernetesVersionManagerImpl.class.getName());
 
     @Inject
     private KubernetesSupportedVersionDao kubernetesSupportedVersionDao;

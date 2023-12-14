@@ -27,7 +27,8 @@ import org.apache.cloudstack.framework.config.ConfigKey;
 import org.apache.cloudstack.framework.config.Configurable;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -38,7 +39,7 @@ import javax.inject.Inject;
 
 public class PasswordPolicyImpl implements PasswordPolicy, Configurable {
 
-    private Logger logger = Logger.getLogger(PasswordPolicyImpl.class);
+    private Logger logger = LogManager.getLogger(PasswordPolicyImpl.class);
 
     @Inject
     private UserDao userDao;

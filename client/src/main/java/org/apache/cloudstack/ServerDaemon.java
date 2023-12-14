@@ -50,7 +50,8 @@ import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.eclipse.jetty.util.thread.QueuedThreadPool;
 import org.eclipse.jetty.util.thread.ScheduledExecutorScheduler;
 import org.eclipse.jetty.webapp.WebAppContext;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import com.cloud.utils.PropertiesUtil;
 import com.cloud.utils.db.DbProperties;
@@ -62,7 +63,7 @@ import org.apache.commons.lang3.StringUtils;
  * Configuration parameters are read from server.properties file available on the classpath.
  */
 public class ServerDaemon implements Daemon {
-    private static final Logger LOG = Logger.getLogger(ServerDaemon.class);
+    protected static Logger LOG = LogManager.getLogger(ServerDaemon.class);
     private static final String WEB_XML = "META-INF/webapp/WEB-INF/web.xml";
 
     /////////////////////////////////////////////////////
