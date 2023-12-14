@@ -31,7 +31,8 @@ import org.apache.cloudstack.api.response.GetSecurityCheckResponse;
 import org.apache.cloudstack.api.ServerApiException;
 import org.apache.cloudstack.api.ApiErrorCode;
 import org.apache.cloudstack.context.CallContext;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import javax.inject.Inject;
 
@@ -41,7 +42,7 @@ import javax.inject.Inject;
         entityType = {SecurityCheck.class},
         authorized = {RoleType.Admin})
 public class DeleteSecurityCheckResultCmd extends BaseAsyncCmd {
-    public static final Logger LOG = Logger.getLogger(DeleteSecurityCheckResultCmd.class);
+    protected static Logger LOG = LogManager.getLogger(DeleteSecurityCheckResultCmd.class);
     public static final String APINAME = "deleteSecurityCheckResults";
 
     @Inject

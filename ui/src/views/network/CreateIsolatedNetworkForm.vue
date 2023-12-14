@@ -349,6 +349,7 @@ import { isAdmin, isAdminOrDomainAdmin } from '@/role'
 import { mixinForm } from '@/utils/mixin'
 import ResourceIcon from '@/components/view/ResourceIcon'
 import TooltipLabel from '@/components/widgets/TooltipLabel'
+import store from '@/store'
 
 export default {
   name: 'CreateIsolatedNetworkForm',
@@ -573,6 +574,9 @@ export default {
       this.selectedNetworkOffering = {}
       api('listNetworkOfferings', params).then(json => {
         this.networkOfferings = json.listnetworkofferingsresponse.networkoffering
+        if (store.getters.features.securityfeaturesenabled) {
+          this.networkOfferings = this.networkOfferings.filter(option => !(option.name.includes('쿠버네테스') || option.name.includes('kubernetes')))
+        }
       }).catch(error => {
         this.$notifyError(error)
       }).finally(() => {

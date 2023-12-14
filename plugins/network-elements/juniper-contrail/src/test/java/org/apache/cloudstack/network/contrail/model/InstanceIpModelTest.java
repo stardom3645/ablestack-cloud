@@ -26,7 +26,8 @@ import java.io.IOException;
 import java.util.UUID;
 
 import org.apache.cloudstack.network.contrail.management.ContrailManagerImpl;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.junit.Test;
 
 import com.cloud.network.Network;
@@ -43,8 +44,8 @@ import net.juniper.contrail.api.ApiConnector;
 import net.juniper.contrail.api.ApiConnectorMock;
 
 public class InstanceIpModelTest extends TestCase {
-    private static final Logger s_logger =
-        Logger.getLogger(InstanceIpModelTest.class);
+    protected static Logger logger =
+        LogManager.getLogger(InstanceIpModelTest.class);
 
     @Test
     public void testCreateInstanceIp() throws IOException {

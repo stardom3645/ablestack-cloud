@@ -50,9 +50,11 @@ import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.eclipse.jetty.util.thread.QueuedThreadPool;
 import org.eclipse.jetty.util.thread.ScheduledExecutorScheduler;
 import org.eclipse.jetty.webapp.WebAppContext;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import com.cloud.utils.PropertiesUtil;
+import com.cloud.utils.db.DbProperties;
 import org.apache.commons.lang3.StringUtils;
 
 /***
@@ -61,7 +63,7 @@ import org.apache.commons.lang3.StringUtils;
  * Configuration parameters are read from server.properties file available on the classpath.
  */
 public class ServerDaemon implements Daemon {
-    private static final Logger LOG = Logger.getLogger(ServerDaemon.class);
+    protected static Logger LOG = LogManager.getLogger(ServerDaemon.class);
     private static final String WEB_XML = "META-INF/webapp/WEB-INF/web.xml";
 
     /////////////////////////////////////////////////////
@@ -79,6 +81,8 @@ public class ServerDaemon implements Daemon {
     private static final String KEYSTORE_PASSWORD = "https.keystore.password";
     private static final String WEBAPP_DIR = "webapp.dir";
     private static final String ACCESS_LOG = "access.log";
+    private static final String serverProperties = "server.properties";
+    private static final String serverPropertiesEnc = "server.properties.enc";
 
     ////////////////////////////////////////////////////////
     /////////////// Server Configuration ///////////////////
@@ -97,12 +101,15 @@ public class ServerDaemon implements Daemon {
     private String keystoreFile;
     private String keystorePassword;
     private String webAppLocation;
-
     //////////////////////////////////////////////////
     /////////////// Public methods ///////////////////
     //////////////////////////////////////////////////
 
     public static void main(final String... anArgs) throws Exception {
+        if (anArgs.length > 0) {
+            LOG.info(" ::::::::::KEK PASSWORD :::: " + anArgs[0]);
+            DbProperties.setKp(anArgs[0]);
+        }
         final ServerDaemon daemon = new ServerDaemon();
         daemon.init(null);
         daemon.start();
@@ -110,18 +117,25 @@ public class ServerDaemon implements Daemon {
 
     @Override
     public void init(final DaemonContext context) {
-        final File confFile = PropertiesUtil.findConfigFile("server.properties");
-        if (confFile == null) {
-            LOG.warn(String.format("Server configuration file not found. Initializing server daemon on %s, with http.enable=%s, http.port=%s, https.enable=%s, https.port=%s, context.path=%s",
-                    bindInterface, httpEnable, httpPort, httpsEnable, httpsPort, contextPath));
-            return;
-        }
-
-        LOG.info("Server configuration file found: " + confFile.getAbsolutePath());
-
+        final File confFileEnc = PropertiesUtil.findConfigFile(serverPropertiesEnc);
+        final File confFile = PropertiesUtil.findConfigFile(serverProperties);
         try {
-            InputStream is = new FileInputStream(confFile);
+            if (confFile == null && confFileEnc == null) {
+                LOG.warn(String.format("Server configuration file not found. Initializing server daemon on %s, with http.enable=%s, http.port=%s, https.enable=%s, https.port=%s, context.path=%s",
+                        bindInterface, httpEnable, httpPort, httpsEnable, httpsPort, contextPath));
+                LOG.info("Server configuration file found");
+                return;
+            }
+            InputStream is = null;
+            if (confFileEnc != null) {
+                Process process = Runtime.getRuntime().exec("openssl enc -aria-256-cbc -a -d -pbkdf2 -k " + DbProperties.getKp() + " -saltlen 16 -md sha2-256 -iter 100000 -in " + confFileEnc.getAbsoluteFile());
+                is = process.getInputStream();
+                process.onExit();
+            } else {
+                is = new FileInputStream(confFile);
+            }
             final Properties properties = ServerProperties.getServerProperties(is);
+            LOG.info(":::::::serverProps::::::::" + properties);
             if (properties == null) {
                 return;
             }
