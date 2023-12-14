@@ -37,6 +37,17 @@ public class DbProperties {
     private static Properties properties = new Properties();
     private static boolean loaded = false;
     public static final String dbEncryptionType = "db.cloud.encryption.type";
+    public static final String dbProperties = "db.properties";
+    public static final String dbPropertiesEnc = "db.properties.enc";
+    public static String kp;
+
+    public static String getKp() {
+        return kp;
+    }
+
+    public static void setKp(String val) {
+        kp = val;
+    }
 
     protected static Properties wrapEncryption(Properties dbProps) throws IOException {
         EncryptionSecretKeyChecker checker = new EncryptionSecretKeyChecker();
@@ -57,13 +68,18 @@ public class DbProperties {
             Properties dbProps = new Properties();
             InputStream is = null;
             try {
-                File props = PropertiesUtil.findConfigFile("db.properties");
-                if (props != null && props.exists()) {
+                final File propsEnc = PropertiesUtil.findConfigFile(dbPropertiesEnc);
+                final File props = PropertiesUtil.findConfigFile(dbProperties);
+                if (propsEnc != null && propsEnc.exists()) {
+                    Process process = Runtime.getRuntime().exec("openssl enc -aria-256-cbc -a -d -pbkdf2 -k " + DbProperties.getKp() + " -saltlen 16 -md sha2-256 -iter 100000 -in " + propsEnc.getAbsoluteFile());
+                    is = process.getInputStream();
+                    process.onExit();
+                } else {
                     is = new FileInputStream(props);
                 }
 
                 if (is == null) {
-                    is = PropertiesUtil.openStreamFromURL("db.properties");
+                    is = PropertiesUtil.openStreamFromURL(dbProperties);
                 }
 
                 if (is == null) {
@@ -74,7 +90,7 @@ public class DbProperties {
                 if (is != null) {
                     dbProps.load(is);
                 }
-
+                log.info(":::::::db Properties::::::::" + dbProps);
                 EncryptionSecretKeyChecker checker = new EncryptionSecretKeyChecker();
                 checker.check(dbProps, dbEncryptionType);
 
