@@ -93,7 +93,6 @@ public class EncryptionSecretKeyChecker {
 
             try (BufferedReader in = new BufferedReader(new InputStreamReader(is));) {
                 secretKey = in.readLine();
-                s_logger.debug("secretKey :::::::::: " + secretKey);
                 //Check for null or empty secret key
             } catch (IOException e) {
                 throw new CloudRuntimeException("Error while reading secret key from: " + s_keyFile, e);
@@ -144,7 +143,6 @@ public class EncryptionSecretKeyChecker {
                 secretKey = Integer.toString(random.nextInt(899)+100, 2); //100~999사이의 정수를 2진수(0과 1)로 변환한 값을 변수에 5회 덮어쓰기
                 DbProperties.setKp(Integer.toString(random.nextInt(899)+100, 2)); //secretKey와 마찬가지로 kek 생성시 필요한 password 5회 덮어쓰기
             }
-            logger.info("Overwritten final secretKey value : " + secretKey);
         }
     }
 
