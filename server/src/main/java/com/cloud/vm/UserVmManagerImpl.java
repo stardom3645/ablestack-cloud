@@ -8787,19 +8787,13 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
         _accountMgr.checkAccess(caller, null, true, vm);
 
         List<VbmcVO> vbmcAblePortList = vbmcDao.findAblePort();
-        s_logger.info("::::::::::allocateVbmcToVM::::::::vbmcAblePortList.size():::::: " + vbmcAblePortList.size());
 
         if(vbmcAblePortList.size() > 0) {
-            s_logger.info("::::::::::allocateVbmcToVM::::::::vbmcAblePortList.get(0).getId()::: " + vbmcAblePortList.get(0).getId());
-            s_logger.info("::::::::::::allocateVbmcToVM::::::vbmcAblePortList.get(0).getPort():::::::: " + vbmcAblePortList.get(0).getPort());
-
             VbmcVO vbmcVo = vbmcDao.findById(vbmcAblePortList.get(0).getId());
             vbmcVo.setVmId(vmId);
             vbmcDao.update(vbmcVo.getId(), vbmcVo);
-            s_logger.info("::::::::Integer.toString(vbmcVo.getPort()):::::::::::::::: " + Integer.toString(vbmcVo.getPort()));
 
             Long hostId = vm.getHostId() != null ? vm.getHostId() : vm.getLastHostId();
-            s_logger.info("::::::::hostId:::::::::::::::: " + hostId);
 
             VbmcCommand vbmcCmd = new VbmcCommand("start", vm.getInstanceName(), Integer.toString(vbmcVo.getPort()));
             try {
@@ -8825,7 +8819,6 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
     public UserVm removeVbmcToVM(RemoveVbmcToVMCmd cmd) {
         // Input validation
         Account caller = CallContext.current().getCallingAccount();
-
         long vmId = cmd.getVmId();
         UserVmVO vm = _vmDao.findById(vmId);
         if (vm == null) {
@@ -8834,17 +8827,13 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
             throw ex;
         }
         _accountMgr.checkAccess(caller, null, true, vm);
-
         List<VbmcVO> vbmcVo = vbmcDao.listByVmId(vmId);
-
         if (vbmcVo.size() > 0) {
             VbmcVO vo = vbmcDao.findById(vbmcVo.get(0).getId());
             vo.setVmId(0);
             vbmcDao.update(vbmcVo.get(0).getId(), vo);
-            s_logger.info("::::::::::::removeVbmcToVM ::::Integer.toString(vo.getPort())::::::::" + Integer.toString(vo.getPort()));
 
             Long hostId = vm.getHostId() != null ? vm.getHostId() : vm.getLastHostId();
-            s_logger.info("::::::::hostId:::::::::::::::: " + hostId);
             VbmcCommand vbmcCmd = new VbmcCommand("delete", vm.getInstanceName(), Integer.toString(vo.getPort()));
             try {
                 Answer answer = _agentMgr.send(hostId, vbmcCmd);
@@ -8857,7 +8846,7 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
         }
         return vm;
     }
-    
+
     private void setVncPasswordForKvmIfAvailable(Map<String, String> customParameters, UserVmVO vm){
         if (customParameters.containsKey(VmDetailConstants.KVM_VNC_PASSWORD)
                 && StringUtils.isNotEmpty(customParameters.get(VmDetailConstants.KVM_VNC_PASSWORD))) {

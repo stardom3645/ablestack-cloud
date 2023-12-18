@@ -1139,7 +1139,7 @@ public class ApiConstants {
     public static final String INTEGRITY_VERIFICATIONS_RESULT = "integrityverificationsresult";
     public static final String INTEGRITY_VERIFICATIONS_FINAL_RESULT = "integrityverificationsfinalresult";
     public static final String INTEGRITY_VERIFICATIONS_FAILED_LIST = "integrityverificationsfailedlist";
-    
+
     public static final String HEURISTIC_RULE = "heuristicrule";
     public static final String HEURISTIC_TYPE_VALID_OPTIONS = "Valid options are: ISO, SNAPSHOT, TEMPLATE and VOLUME.";
 

@@ -725,7 +725,7 @@ public class EventTypes {
     public static final String EVENT_SECURITY_CHECK = "SECURITY.CHECK";
     public static final String EVENT_INTEGRITY_VERIFICATION = "INTEGRITY.VERIFICATION";
     public static final String EVENT_LOG_AUTO_DELETED = "LOG.DELETED";
-    
+
     // OBJECT STORE
     public static final String EVENT_OBJECT_STORE_CREATE = "OBJECT.STORE.CREATE";
     public static final String EVENT_OBJECT_STORE_DELETE = "OBJECT.STORE.DELETE";
@@ -1178,7 +1178,7 @@ public class EventTypes {
 
         //Security
         entityEventDetails.put(EVENT_SECURITY_CHECK, "Security");
-        
+
         //Object Store
         entityEventDetails.put(EVENT_OBJECT_STORE_CREATE, ObjectStore.class);
         entityEventDetails.put(EVENT_OBJECT_STORE_UPDATE, ObjectStore.class);

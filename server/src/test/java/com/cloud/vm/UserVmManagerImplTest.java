@@ -1222,7 +1222,7 @@ public class UserVmManagerImplTest {
     public void testSetVmRequiredFieldsForImportNotImport() {
         userVmManagerImpl.setVmRequiredFieldsForImport(false, userVmVoMock, _dcMock,
                 Hypervisor.HypervisorType.VMware, Mockito.mock(HostVO.class), Mockito.mock(HostVO.class), VirtualMachine.PowerState.PowerOn);
-        Mockito.verify(userVmVoMock, never()).setDataCenterId(anyLong());
+        Mockito.verify(userVmVoMock, Mockito.never()).setDataCenterId(anyLong());
     }
 
     @Test
