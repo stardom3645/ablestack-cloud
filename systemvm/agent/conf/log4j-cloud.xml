@@ -19,7 +19,7 @@ under the License.
 -->
 <Configuration monitorInterval="60">
     <Appenders>
-
+        <Null name="NullAppender"/>
         <!-- ================================= -->
         <!-- Preserve messages in a local file -->
         <!-- ================================= -->
@@ -94,11 +94,12 @@ under the License.
         <!-- Setup the Root category -->
         <!-- ======================= -->
 
-        <Root level="INFO">
-            <AppenderRef ref="CONSOLE"/>
+        <Root level="OFF">
+            <!-- <AppenderRef ref="CONSOLE"/>
             <AppenderRef ref="cloudLog"/>
             <AppenderRef ref="cloudOut"/>
-            <AppenderRef ref="cloudSystemvmLog"/>
+            <AppenderRef ref="cloudSystemvmLog"/> -->
+            <AppenderRef ref="NullAppender"/>
         </Root>
 
     </Loggers>

@@ -111,10 +111,10 @@ under the License.
       <!-- ======================= -->
 
       <Root level="OFF">
-         <AppenderRef ref="SYSLOG"/>
+         <!-- <AppenderRef ref="SYSLOG"/>
          <AppenderRef ref="CONSOLE"/>
          <AppenderRef ref="FILE"/>
-         <AppenderRef ref="INFO-FILE"/>
+         <AppenderRef ref="INFO-FILE"/> -->
          <AppenderRef ref="NullAppender"/>
       </Root>
 
