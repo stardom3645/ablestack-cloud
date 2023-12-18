@@ -38,6 +38,7 @@ import javax.servlet.http.HttpSession;
 import org.apache.cloudstack.api.ApiConstants;
 import org.apache.cloudstack.api.ApiErrorCode;
 import org.apache.cloudstack.api.ApiServerService;
+import org.apache.cloudstack.api.ApiCommandResourceType;
 import org.apache.cloudstack.api.BaseCmd;
 import org.apache.cloudstack.api.ServerApiException;
 import org.apache.cloudstack.api.auth.APIAuthenticationManager;
@@ -57,6 +58,8 @@ import org.springframework.web.context.support.SpringBeanAutowiringSupport;
 import com.cloud.api.auth.ListUserTwoFactorAuthenticatorProvidersCmd;
 import com.cloud.api.auth.SetupUserTwoFactorAuthenticationCmd;
 import com.cloud.api.auth.ValidateUserTwoFactorAuthenticationCodeCmd;
+import com.cloud.event.ActionEventUtils;
+import com.cloud.event.EventTypes;
 import com.cloud.projects.Project;
 import com.cloud.projects.dao.ProjectDao;
 import com.cloud.user.Account;
@@ -364,6 +367,8 @@ public class ApiServlet extends HttpServlet {
                         logger.debug("CIDRs from which account '" + account.toString() + "' is allowed to perform API calls: " + ApiAllowedSourceIp  + "/" + accessAllowedCidr);
                         if (!NetUtils.isIpInCidrList(remoteAddress, (ApiAllowedSourceIp + "/" + accessAllowedCidr).split(","))) {
                             logger.warn("Request by account '" + account.toString() + "' was denied since " + remoteAddress + " does not match " + ApiAllowedSourceIp  + "/" + accessAllowedCidr);
+                            ActionEventUtils.onActionEvent(account.getId(), account.getAccountId(), account.getDomainId(), EventTypes.EVENT_USER_LOGIN,
+                                "The access IP of the management terminal has been blocked. Blocked IP: " +  remoteAddress.toString().replace("/", ""), account.getId(), ApiCommandResourceType.User.toString());
                             throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, "Failed to authenticate user '" + accountName + "' from ip " + remoteAddress.toString().replace("/", ""));
                         }
                     }
