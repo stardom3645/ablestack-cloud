@@ -25,7 +25,7 @@ CREATE TABLE IF NOT EXISTS `vbmc_port` (
   `vm_id` bigint unsigned NOT NULL DEFAULT '0' COMMENT 'vbmc port assigned vm id',
   `port` int NOT NULL COMMENT 'vbmc port number',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=24 DEFAULT CHARSET=utf8mb3;
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb3;
 
 INSERT IGNORE INTO `cloud`.`vbmc_port` (id, port) VALUES (1, 6230);
 INSERT IGNORE INTO `cloud`.`vbmc_port` (id, port) VALUES (2, 6231);

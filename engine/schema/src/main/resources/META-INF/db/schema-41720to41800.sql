@@ -340,7 +340,6 @@ SELECT
     `disk_offering`.`cache_mode` AS `cache_mode`,
     `disk_offering`.`disk_size` AS `root_disk_size`,
     `disk_offering`.`encrypt` AS `encrypt_root`,
-    `disk_offering`.`shareable` AS `shareable`,
     `service_offering`.`cpu` AS `cpu`,
     `service_offering`.`speed` AS `speed`,
     `service_offering`.`ram_size` AS `ram_size`,
