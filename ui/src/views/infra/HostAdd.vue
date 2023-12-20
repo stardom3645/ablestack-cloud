@@ -125,7 +125,7 @@
               <a-radio-button value="password">
                 {{ $t('label.password') }}
               </a-radio-button>
-              <a-radio-button value="sshkey" v-if="selectedClusterHyperVisorType === 'KVM'">
+              <a-radio-button value="sshkey" v-if="selectedClusterHyperVisorType === 'KVM' && !$store.getters.features.securityfeaturesenabled">
                 {{ $t('label.authentication.sshkey') }}
               </a-radio-button>
             </a-radio-group>
