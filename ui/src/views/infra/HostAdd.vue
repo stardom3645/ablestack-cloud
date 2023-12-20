@@ -217,7 +217,7 @@
               <a-select-option v-for="tag in hostTagsList" :key="tag.name">{{ tag.name }}</a-select-option>
             </a-select>
           </a-form-item>
-          <a-form-item name="isdedicated" ref="isdedicated">
+          <a-form-item name="isdedicated" ref="isdedicated" v-if="!$store.getters.features.securityfeaturesenabled">
             <template #label>
               <tooltip-label :title="$t('label.isdedicated')"/>
             </template>
