@@ -3408,6 +3408,7 @@
 "state.stopped": "\uc815\uc9c0\ub41c \uc0c1\ud0dc",
 "state.stopping": "\uc815\uc9c0\uc911",
 "state.suspended": "\uc77c\uc2dc\uc815\uc9c0",
+"state.destroyed" : "\ud30c\uae30\ub41c \uc0c1\ud0dc",
 "user.login": "\ub85c\uadf8\uc778",
 "user.logout": "\ub85c\uadf8\uc544\uc6c3",
 
