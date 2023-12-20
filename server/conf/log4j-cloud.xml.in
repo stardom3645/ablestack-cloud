@@ -84,9 +84,9 @@ under the License.
 
       <Logger name="net" level="INFO"/>
 
-      <Logger name="apiserver.com.cloud"  level="DEBUG"/>
+      <Logger name="apiserver.com.cloud"  level="OFF"/>
 
-      <Logger name="apiserver.com.cloud" level="DEBUG" additivity="false">
+      <Logger name="apiserver.com.cloud" level="OFF" additivity="false">
          <AppenderRef ref="APISERVER"/>
       </Logger>
 
