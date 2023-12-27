@@ -904,7 +904,6 @@ public class StorageManagerImpl extends ManagerBase implements StorageManager, C
         params.put("capacityBytes", cmd.getCapacityBytes());
         params.put("capacityIops", cmd.getCapacityIops());
         params.put("krbdPath", cmd.getKrbdPath());
-        
         if (MapUtils.isNotEmpty(uriParams)) {
             params.putAll(uriParams);
         }
