@@ -1174,6 +1174,7 @@ public class ApiServer extends ManagerBase implements HttpRequestHandler, ApiSer
         } catch (NoSuchPaddingException | NoSuchAlgorithmException | InvalidKeyException | BadPaddingException | IllegalBlockSizeException | UnsupportedEncodingException e) {
             throw new CloudAuthenticationException("Unable to decrypt RSA, Exception : "+ e);
         }
+        session.removeAttribute(RSAHelper.PRIVATE_KEY);
         final UserAccount userAcct = accountMgr.authenticateUser(username, decPassword, domainId, loginIpAddress, requestParameters);
         List<String> sessionIds = new ArrayList<>();
         if (userAcct != null) {
