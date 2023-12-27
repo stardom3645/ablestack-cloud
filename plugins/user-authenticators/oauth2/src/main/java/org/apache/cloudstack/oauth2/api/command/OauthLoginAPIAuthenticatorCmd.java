@@ -137,10 +137,10 @@ public class OauthLoginAPIAuthenticatorCmd extends BaseCmd implements APIAuthent
         final String[] domainName = (String[])params.get(ApiConstants.DOMAIN);
         String domain = getDomainName(auditTrailSb, domainName);
 
-        return doOauthAuthentication(session, domainId, domain, email, params, remoteAddress, responseType, auditTrailSb);
+        return doOauthAuthentication(session, domainId, domain, email, params, remoteAddress, responseType, auditTrailSb, req, resp);
     }
 
-    private String doOauthAuthentication(HttpSession session, Long domainId, String domain, String email, Map<String, Object[]> params, InetAddress remoteAddress, String responseType, StringBuilder auditTrailSb) {
+    private String doOauthAuthentication(HttpSession session, Long domainId, String domain, String email, Map<String, Object[]> params, InetAddress remoteAddress, String responseType, StringBuilder auditTrailSb, HttpServletRequest req, HttpServletResponse resp) {
         String serializedResponse = null;
 
         try {
