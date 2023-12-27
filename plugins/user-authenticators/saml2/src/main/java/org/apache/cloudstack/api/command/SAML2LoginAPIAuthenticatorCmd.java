@@ -319,7 +319,7 @@ public class SAML2LoginAPIAuthenticatorCmd extends BaseCmd implements APIAuthent
                 try {
                     if (apiServer.verifyUser(userAccount.getId())) {
                         LoginCmdResponse loginResponse = (LoginCmdResponse) apiServer.loginUser(session, userAccount.getUsername(), userAccount.getUsername() + userAccount.getSource().toString(),
-                                userAccount.getDomainId(), null, remoteAddress, params);
+                                userAccount.getDomainId(), null, remoteAddress, params, req, resp);
                         SAMLUtils.setupSamlUserCookies(loginResponse, resp);
                         resp.sendRedirect(SAML2AuthManager.SAMLCloudStackRedirectionUrl.value());
                         return ApiResponseSerializer.toSerializedString(loginResponse, responseType);
