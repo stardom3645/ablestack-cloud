@@ -19,6 +19,7 @@ package com.cloud.api;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InterruptedIOException;
+import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Type;
 import java.net.InetAddress;
@@ -30,6 +31,8 @@ import java.net.URLEncoder;
 import java.security.SecureRandom;
 import java.security.Security;
 import java.security.PrivateKey;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -51,6 +54,9 @@ import java.util.regex.Pattern;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
 import javax.inject.Inject;
 import javax.naming.ConfigurationException;
 import javax.servlet.http.HttpServletResponse;
@@ -1162,7 +1168,11 @@ public class ApiServer extends ManagerBase implements HttpRequestHandler, ApiSer
         if (pk == null) {
             throw new CloudAuthenticationException("Unable to find the privatekey, bad credentials.");
         }
-        String decPassword = RSAHelper.decryptRSA(password, pk);
+        try {
+            String decPassword = RSAHelper.decryptRSA(password, pk);
+        } catch (NoSuchPaddingException | NoSuchAlgorithmException | InvalidKeyException | BadPaddingException | IllegalBlockSizeException | UnsupportedEncodingException e) {
+            throw new CloudAuthenticationException("Unable to decrypt RSA, Exception : "+ e);
+        }
         final UserAccount userAcct = accountMgr.authenticateUser(username, decPassword, domainId, loginIpAddress, requestParameters);
         List<String> sessionIds = new ArrayList<>();
         if (userAcct != null) {
