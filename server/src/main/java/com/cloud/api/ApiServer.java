@@ -29,6 +29,7 @@ import java.net.URISyntaxException;
 import java.net.URLEncoder;
 import java.security.SecureRandom;
 import java.security.Security;
+import java.security.PrivateKey;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -185,6 +186,7 @@ import com.cloud.utils.component.ComponentContext;
 import com.cloud.utils.component.ManagerBase;
 import com.cloud.utils.component.PluggableService;
 import com.cloud.utils.concurrency.NamedThreadFactory;
+import com.cloud.utils.crypt.RSAHelper;
 import com.cloud.utils.db.EntityManager;
 import com.cloud.utils.db.TransactionLegacy;
 import com.cloud.utils.db.UUIDManager;
@@ -1155,7 +1157,13 @@ public class ApiServer extends ManagerBase implements HttpRequestHandler, ApiSer
         } else {
             domainId = userDomain.getId();
         }
-        final UserAccount userAcct = accountMgr.authenticateUser(username, password, domainId, loginIpAddress, requestParameters);
+        // decrypt RSA password
+        PrivateKey pk = (PrivateKey)session.getAttribute(RSAHelper.PRIVATE_KEY);
+        if (pk == null) {
+            throw new CloudAuthenticationException("Unable to find the privatekey, bad credentials.");
+        }
+        String decPassword = RSAHelper.decryptRSA(password, pk);
+        final UserAccount userAcct = accountMgr.authenticateUser(username, decPassword, domainId, loginIpAddress, requestParameters);
         List<String> sessionIds = new ArrayList<>();
         if (userAcct != null) {
             if (ApiServer.SecurityFeaturesEnabled.value()) { // 보안기능용 : 하나의 세션만 접속
