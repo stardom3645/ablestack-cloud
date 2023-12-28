@@ -128,7 +128,7 @@ public class ListAndSwitchSAMLAccountCmdTest extends TestCase {
 
         // invalid session test
         try {
-            cmd.authenticate("command", params, null, null, HttpUtils.RESPONSE_TYPE_JSON, new StringBuilder(), null, null);
+            cmd.authenticate("command", params, null, null, HttpUtils.RESPONSE_TYPE_JSON, new StringBuilder(), req, resp);
         } catch (ServerApiException exception) {
             assertEquals(exception.getErrorCode(), ApiErrorCode.UNAUTHORIZED);
         } finally {
@@ -139,7 +139,7 @@ public class ListAndSwitchSAMLAccountCmdTest extends TestCase {
         params.put(ApiConstants.SESSIONKEY, new String[]{"someOtherValue"});
         try {
             Mockito.when(session.isNew()).thenReturn(false);
-            cmd.authenticate("command", params, session, null, HttpUtils.RESPONSE_TYPE_JSON, new StringBuilder(), null, null);
+            cmd.authenticate("command", params, session, null, HttpUtils.RESPONSE_TYPE_JSON, new StringBuilder(), req, resp);
         } catch (ServerApiException exception) {
             assertEquals(exception.getErrorCode(), ApiErrorCode.UNAUTHORIZED);
         } finally {
@@ -149,7 +149,7 @@ public class ListAndSwitchSAMLAccountCmdTest extends TestCase {
         // valid sessionkey value test
         params.put(ApiConstants.SESSIONKEY, new String[]{sessionKeyValue});
         try {
-            cmd.authenticate("command", params, session, null, HttpUtils.RESPONSE_TYPE_JSON, new StringBuilder(), null, null);
+            cmd.authenticate("command", params, session, null, HttpUtils.RESPONSE_TYPE_JSON, new StringBuilder(), req, resp);
         } catch (ServerApiException exception) {
             assertEquals(exception.getErrorCode(), ApiErrorCode.ACCOUNT_ERROR);
         } finally {
@@ -166,7 +166,7 @@ public class ListAndSwitchSAMLAccountCmdTest extends TestCase {
         mockedUserAccount.setSource(User.Source.UNKNOWN);
         Mockito.when(accountService.getUserAccountById(Mockito.anyLong())).thenReturn(mockedUserAccount);
         try {
-            cmd.authenticate("command", params, session, null, HttpUtils.RESPONSE_TYPE_JSON, new StringBuilder(), null, null);
+            cmd.authenticate("command", params, session, null, HttpUtils.RESPONSE_TYPE_JSON, new StringBuilder(), req, resp);
         } catch (ServerApiException exception) {
             assertEquals(exception.getErrorCode(), ApiErrorCode.ACCOUNT_ERROR);
         } finally {
@@ -189,7 +189,7 @@ public class ListAndSwitchSAMLAccountCmdTest extends TestCase {
         loginCmdResponse.setSessionKey("newSessionKeyString");
         loginCmdResponse.set2FAenabled("false");
         Mockito.when(apiServer.loginUser(nullable(HttpSession.class), nullable(String.class), nullable(String.class),
-                nullable(Long.class), nullable(String.class), nullable(InetAddress.class), nullable(Map.class), nullable(HttpServletRequest.class), nullable(HttpServletResponse.class))).thenReturn(loginCmdResponse);
+                nullable(Long.class), nullable(String.class), nullable(InetAddress.class), nullable(Map.class)), nullable(HttpServletRequest.class), nullable(HttpServletResponse.class)).thenReturn(loginCmdResponse);
         Mockito.doNothing().when(resp).sendRedirect(nullable(String.class));
         try {
             cmd.authenticate("command", params, session, null, HttpUtils.RESPONSE_TYPE_JSON, new StringBuilder(), req, resp);
