@@ -1164,11 +1164,6 @@ public class ApiServer extends ManagerBase implements HttpRequestHandler, ApiSer
             domainId = userDomain.getId();
         }
         // decrypt RSA password
-        logger.info("------ApiServer.java-------");
-        logger.info(session.getAttribute(RSAHelper.PRIVATE_KEY));
-        logger.info(session.getAttribute(RSAHelper.PUBLIC_KEY_MODULUS));
-        logger.info(session.getAttribute(RSAHelper.PUBLIC_KEY_EXPONENT));
-        logger.info("------ApiServer.java-------");
         PrivateKey pk = (PrivateKey)session.getAttribute(RSAHelper.PRIVATE_KEY);
         if (pk == null) {
             throw new CloudAuthenticationException("Unable to find the privatekey, bad credentials.");

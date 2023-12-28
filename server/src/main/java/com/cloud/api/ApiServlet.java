@@ -366,11 +366,6 @@ public class ApiServlet extends HttpServlet {
                     Map<String, String> spec = RSAHelper.getKeySpec(keys.getPublic());
                     session.setAttribute(RSAHelper.PUBLIC_KEY_MODULUS, spec.get(RSAHelper.PUBLIC_KEY_MODULUS));
                     session.setAttribute(RSAHelper.PUBLIC_KEY_EXPONENT, spec.get(RSAHelper.PUBLIC_KEY_EXPONENT));
-                    logger.info("------ApiServlet.java-------");
-                    logger.info(session.getAttribute(RSAHelper.PRIVATE_KEY));
-                    logger.info(session.getAttribute(RSAHelper.PUBLIC_KEY_MODULUS));
-                    logger.info(session.getAttribute(RSAHelper.PUBLIC_KEY_EXPONENT));
-                    logger.info("------ApiServlet.java-------");
                     if (ApiServer.SecurityFeaturesEnabled.value()) {
                         // 관리자 단말기 접속 IP 가 다른 경우 에러 처리
                         String accountName = "admin";
