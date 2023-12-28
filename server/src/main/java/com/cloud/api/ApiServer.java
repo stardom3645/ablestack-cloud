@@ -61,7 +61,6 @@ import javax.inject.Inject;
 import javax.naming.ConfigurationException;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
-import javax.servlet.http.HttpServletRequest;
 
 import org.apache.cloudstack.acl.APIChecker;
 import org.apache.cloudstack.api.APICommand;
@@ -1154,8 +1153,8 @@ public class ApiServer extends ManagerBase implements HttpRequestHandler, ApiSer
     }
 
     @Override
-    public ResponseObject loginUser(HttpSession session, final String username, final String password, Long domainId, final String domainPath, final InetAddress loginIpAddress,
-            final Map<String, Object[]> requestParameters, final HttpServletRequest req, final HttpServletResponse resp) throws CloudAuthenticationException {
+    public ResponseObject loginUser(final HttpSession session, final String username, final String password, Long domainId, final String domainPath, final InetAddress loginIpAddress,
+            final Map<String, Object[]> requestParameters) throws CloudAuthenticationException {
         // We will always use domainId first. If that does not exist, we will use domain name. If THAT doesn't exist
         // we will default to ROOT
         final Domain userDomain = domainMgr.findDomainByIdOrPath(domainId, domainPath);
@@ -1182,17 +1181,6 @@ public class ApiServer extends ManagerBase implements HttpRequestHandler, ApiSer
         }
         session.removeAttribute(RSAHelper.PRIVATE_KEY);
         final UserAccount userAcct = accountMgr.authenticateUser(username, decPassword, domainId, loginIpAddress, requestParameters);
-        // session kill/create
-        if (session != null) {
-            ApiServlet.invalidateHttpSession(session, "invalidating session for login call");
-        }
-        session = req.getSession(true);
-        if (ApiServer.EnableSecureSessionCookie.value()) {
-            resp.setHeader("SET-COOKIE", String.format("JSESSIONID=%s;Secure;HttpOnly;Path=/client", session.getId()));
-            if (logger.isDebugEnabled()) {
-                logger.debug("Session cookie is marked secure!");
-            }
-        }
         List<String> sessionIds = new ArrayList<>();
         if (userAcct != null) {
             if (ApiServer.SecurityFeaturesEnabled.value()) { // 보안기능용 : 하나의 세션만 접속

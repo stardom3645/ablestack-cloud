@@ -161,7 +161,7 @@ public class OauthLoginAPIAuthenticatorCmd extends BaseCmd implements APIAuthent
             if (userAccount != null && User.Source.SAML2 == userAccount.getSource()) {
                 throw new CloudAuthenticationException("User is not allowed CloudStack login");
             }
-            return ApiResponseSerializer.toSerializedString(_apiServer.loginUser(session, userAccount.getUsername(), null, domainId, domain, remoteAddress, params, req, resp),
+            return ApiResponseSerializer.toSerializedString(_apiServer.loginUser(session, userAccount.getUsername(), null, domainId, domain, remoteAddress, params),
                     responseType);
         } catch (final CloudAuthenticationException ex) {
             ApiServlet.invalidateHttpSession(session, "fall through to API key,");

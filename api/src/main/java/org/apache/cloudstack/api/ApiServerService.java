@@ -20,8 +20,6 @@ import java.net.InetAddress;
 import java.util.Map;
 
 import javax.servlet.http.HttpSession;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 import com.cloud.exception.CloudAuthenticationException;
 
@@ -31,7 +29,7 @@ public interface ApiServerService {
     public Long fetchDomainId(String domainUUID);
 
     public ResponseObject loginUser(HttpSession session, String username, String password, Long domainId, String domainPath, InetAddress loginIpAddress,
-            Map<String, Object[]> requestParameters, HttpServletRequest req, HttpServletResponse resp) throws CloudAuthenticationException;
+            Map<String, Object[]> requestParameters) throws CloudAuthenticationException;
 
     public void logoutUser(long userId);
 

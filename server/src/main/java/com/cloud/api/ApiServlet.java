@@ -242,19 +242,19 @@ public class ApiServlet extends HttpServlet {
                     int httpResponseCode = HttpServletResponse.SC_OK;
                     String responseString = null;
 
-                    // if (apiAuthenticator.getAPIType() == APIAuthenticationType.LOGIN_API) {
-                    //     if (session != null) {
-                    //         invalidateHttpSession(session, "invalidating session for login call");
-                    //     }
-                    //     session = req.getSession(true);
+                    if (apiAuthenticator.getAPIType() == APIAuthenticationType.LOGIN_API) {
+                        if (session != null) {
+                            invalidateHttpSession(session, "invalidating session for login call");
+                        }
+                        session = req.getSession(true);
 
-                    //     if (ApiServer.EnableSecureSessionCookie.value()) {
-                    //         resp.setHeader("SET-COOKIE", String.format("JSESSIONID=%s;Secure;HttpOnly;Path=/client", session.getId()));
-                    //         if (logger.isDebugEnabled()) {
-                    //             logger.debug("Session cookie is marked secure!");
-                    //         }
-                    //     }
-                    // }
+                        if (ApiServer.EnableSecureSessionCookie.value()) {
+                            resp.setHeader("SET-COOKIE", String.format("JSESSIONID=%s;Secure;HttpOnly;Path=/client", session.getId()));
+                            if (logger.isDebugEnabled()) {
+                                logger.debug("Session cookie is marked secure!");
+                            }
+                        }
+                    }
 
                     try {
                         if (logger.isTraceEnabled()) {
