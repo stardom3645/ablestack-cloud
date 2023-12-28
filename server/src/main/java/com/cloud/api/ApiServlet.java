@@ -25,7 +25,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.security.KeyPair;
 
 import javax.inject.Inject;
 import javax.servlet.ServletConfig;
@@ -71,7 +70,6 @@ import com.cloud.user.UserAccount;
 
 import com.cloud.utils.HttpUtils;
 import com.cloud.utils.StringUtils;
-import com.cloud.utils.crypt.RSAHelper;
 import com.cloud.utils.db.EntityManager;
 import com.cloud.utils.net.NetUtils;
 
@@ -359,13 +357,6 @@ public class ApiServlet extends HttpServlet {
                 }
                 // 인증 정보가 없어도 security 활성화 여부 확인을 위해 listCapablities API 오픈
                 if (command.equalsIgnoreCase("listCapabilities")) {
-                    session = req.getSession(true);
-                    session.removeAttribute(RSAHelper.PRIVATE_KEY);
-                    KeyPair keys = RSAHelper.genKey();
-                    session.setAttribute(RSAHelper.PRIVATE_KEY, keys.getPrivate());
-                    Map<String, String> spec = RSAHelper.getKeySpec(keys.getPublic());
-                    session.setAttribute(RSAHelper.PUBLIC_KEY_MODULUS, spec.get(RSAHelper.PUBLIC_KEY_MODULUS));
-                    session.setAttribute(RSAHelper.PUBLIC_KEY_EXPONENT, spec.get(RSAHelper.PUBLIC_KEY_EXPONENT));
                     if (ApiServer.SecurityFeaturesEnabled.value()) {
                         // 관리자 단말기 접속 IP 가 다른 경우 에러 처리
                         String accountName = "admin";
