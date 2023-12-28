@@ -1168,9 +1168,8 @@ public class ApiServer extends ManagerBase implements HttpRequestHandler, ApiSer
         if (pk == null) {
             throw new CloudAuthenticationException("Unable to find the privatekey, bad credentials.");
         }
-        String decPassword = "";
         try {
-            decPassword = RSAHelper.decryptRSA(password, pk);
+            String decPassword = RSAHelper.decryptRSA(password, pk);
         } catch (NoSuchPaddingException | NoSuchAlgorithmException | InvalidKeyException | BadPaddingException | IllegalBlockSizeException | UnsupportedEncodingException e) {
             throw new CloudAuthenticationException("Unable to decrypt RSA, Exception : "+ e);
         }
