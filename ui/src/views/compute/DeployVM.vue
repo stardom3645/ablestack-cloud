@@ -770,7 +770,7 @@
                         :filterOption="filterOption"
                         :options="options.instanceGroups" />
                     </a-form-item>
-                    <a-form-item :label="$t('label.keyboard')" name="keyboard" ref="keyboard">
+                    <a-form-item :label="$t('label.keyboard')" name="keyboard" ref="keyboard" v-if="!$store.getters.features.securityfeaturesenabled">
                       <a-select
                         v-model:value="form.keyboard"
                         :options="keyboardSelectOptions"

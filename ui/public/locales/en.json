@@ -3408,6 +3408,7 @@
 "state.stopped": "Stopped",
 "state.stopping": "Stopping",
 "state.suspended": "Suspended",
+"state.destroyed" : "Destroyed",
 "user.login": "Login",
 "user.logout": "Logout",
 

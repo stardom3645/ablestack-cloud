@@ -94,12 +94,11 @@ under the License.
         <!-- Setup the Root category -->
         <!-- ======================= -->
 
-        <Root level="OFF">
-            <!-- <AppenderRef ref="CONSOLE"/>
+        <Root level="INFO">
+            <AppenderRef ref="CONSOLE"/>
             <AppenderRef ref="cloudLog"/>
             <AppenderRef ref="cloudOut"/>
-            <AppenderRef ref="cloudSystemvmLog"/> -->
-            <AppenderRef ref="NullAppender"/>
+            <AppenderRef ref="cloudSystemvmLog"/>
         </Root>
 
     </Loggers>
