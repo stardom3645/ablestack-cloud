@@ -37,7 +37,6 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
-// import java.security.KeyPair;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
@@ -783,7 +782,6 @@ import com.cloud.utils.component.ComponentLifecycle;
 import com.cloud.utils.component.ManagerBase;
 import com.cloud.utils.concurrency.NamedThreadFactory;
 import com.cloud.utils.crypt.DBEncryptionUtil;
-// import com.cloud.utils.crypt.RSAHelper;
 import com.cloud.utils.db.DB;
 import com.cloud.utils.db.Filter;
 import com.cloud.utils.db.GlobalLock;
@@ -4392,12 +4390,6 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
         if (imgStores != null && imgStores.size() > 0) {
             regionSecondaryEnabled = true;
         }
-
-        // RSA 키페어 생성
-        // KeyPair keys = RSAHelper.genKey();
-        // Map<String, String> spec = RSAHelper.getKeySpec(keys.getPublic());
-        // capabilities.put("publicKeyModulus", spec.get(RSAHelper.PUBLIC_KEY_MODULUS));
-        // capabilities.put("publicKeyExponent", spec.get(RSAHelper.PUBLIC_KEY_EXPONENT));
 
         capabilities.put("securityGroupsEnabled", securityGroupsEnabled);
         capabilities.put("userPublicTemplateEnabled", userPublicTemplateEnabled);
