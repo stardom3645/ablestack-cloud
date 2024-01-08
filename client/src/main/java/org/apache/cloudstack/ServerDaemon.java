@@ -95,7 +95,7 @@ public class ServerDaemon implements Daemon {
     private int httpsPort = 8443;
     private int sessionTimeout = 10;
     private boolean httpsEnable = false;
-    private String accessLogFile = "access.log";
+    private String accessLogFile = null;
     private String bindInterface = null;
     private String contextPath = "/client";
     private String keystoreFile;
@@ -148,7 +148,7 @@ public class ServerDaemon implements Daemon {
             setKeystoreFile(properties.getProperty(KEYSTORE_FILE));
             setKeystorePassword(properties.getProperty(KEYSTORE_PASSWORD));
             setWebAppLocation(properties.getProperty(WEBAPP_DIR));
-            setAccessLogFile(properties.getProperty(ACCESS_LOG, "access.log"));
+            setAccessLogFile(properties.getProperty(ACCESS_LOG, null));
             setSessionTimeout(Integer.valueOf(properties.getProperty(SESSION_TIMEOUT, "10")));
         } catch (final IOException e) {
             LOG.warn("Failed to read configuration from server.properties file", e);
