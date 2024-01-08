@@ -23,15 +23,27 @@ import java.io.ByteArrayInputStream;
 import java.io.DataInput;
 import java.io.DataInputStream;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.util.Map;
+import java.util.HashMap;
 import java.math.BigInteger;
+import java.security.InvalidKeyException;
 import java.security.KeyFactory;
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
+import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.Security;
+import java.security.PrivateKey;
+import java.security.PublicKey;
 import java.security.interfaces.RSAPublicKey;
 import java.security.spec.KeySpec;
 import java.security.spec.RSAPublicKeySpec;
 
 import javax.crypto.Cipher;
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.logging.log4j.Logger;
@@ -40,6 +52,11 @@ import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 public class RSAHelper {
     final static Logger logger = LogManager.getLogger(RSAHelper.class);
+
+    public final static String PRIVATE_KEY = "privateKey" ;
+    public final static String PUBLIC_KEY = "publicKey" ;
+    public final static String PUBLIC_KEY_MODULUS = "publicKeyModulus" ;
+    public final static String PUBLIC_KEY_EXPONENT = "publicKeyExponent";
 
     static {
         BouncyCastleProvider provider = new BouncyCastleProvider();
@@ -87,5 +104,56 @@ public class RSAHelper {
         }
 
         return returnString;
+    }
+
+    public static KeyPair genKey() throws NoSuchAlgorithmException {
+        SecureRandom secureRandom = new SecureRandom();
+        KeyPairGenerator gen;
+        gen = KeyPairGenerator.getInstance("RSA");
+        gen.initialize(4096, secureRandom);
+        KeyPair keyPair = gen.genKeyPair();
+        return keyPair;
+    }
+
+    public static String decryptRSA(String encrypted, PrivateKey privateKey) throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException, BadPaddingException, IllegalBlockSizeException, UnsupportedEncodingException {
+        if (privateKey == null) {
+            logger.error("no private key");
+        }
+        String decrypted = "";
+        try {
+            Cipher cipher = Cipher.getInstance("RSA");
+            byte[] encryptedBytes = hexToByteArray(encrypted);
+            cipher.init(Cipher.DECRYPT_MODE, privateKey);
+            byte[] decryptedBytes = cipher.doFinal(encryptedBytes);
+            decrypted = new String(decryptedBytes, "utf-8");
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+        }
+        return decrypted;
+    }
+
+    public static byte[] hexToByteArray(String hex) {
+        if (hex == null || hex.length() % 2 != 0) {
+            return new byte[]{};
+        }
+        byte[] bytes = new byte[hex.length() / 2];
+        for (int i = 0; i < hex.length(); i += 2) {
+            byte value = (byte)Integer.parseInt(hex.substring(i, i + 2), 16);
+            bytes[(int) Math.floor(i / 2)] = value;
+        }
+        return bytes;
+    }
+
+    public static Map<String, String> getKeySpec(PublicKey publicKey) {
+        Map<String, String> spec = new HashMap<String, String>();
+        try {
+            KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+            RSAPublicKeySpec publicSpec = (RSAPublicKeySpec) keyFactory.getKeySpec(publicKey, RSAPublicKeySpec.class);
+            spec.put(RSAHelper.PUBLIC_KEY_MODULUS, publicSpec.getModulus().toString(16));
+            spec.put(RSAHelper.PUBLIC_KEY_EXPONENT, publicSpec.getPublicExponent().toString(16));
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+        }
+        return spec;
     }
 }

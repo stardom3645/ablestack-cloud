@@ -241,15 +241,17 @@ public class ApiServlet extends HttpServlet {
                     String responseString = null;
 
                     if (apiAuthenticator.getAPIType() == APIAuthenticationType.LOGIN_API) {
-                        if (session != null) {
-                            invalidateHttpSession(session, "invalidating session for login call");
-                        }
-                        session = req.getSession(true);
+                        if (!ApiServer.SecurityFeaturesEnabled.value()) {
+                            if (session != null) {
+                                invalidateHttpSession(session, "invalidating session for login call");
+                            }
+                            session = req.getSession(true);
 
-                        if (ApiServer.EnableSecureSessionCookie.value()) {
-                            resp.setHeader("SET-COOKIE", String.format("JSESSIONID=%s;Secure;HttpOnly;Path=/client", session.getId()));
-                            if (logger.isDebugEnabled()) {
-                                logger.debug("Session cookie is marked secure!");
+                            if (ApiServer.EnableSecureSessionCookie.value()) {
+                                resp.setHeader("SET-COOKIE", String.format("JSESSIONID=%s;Secure;HttpOnly;Path=/client", session.getId()));
+                                if (logger.isDebugEnabled()) {
+                                    logger.debug("Session cookie is marked secure!");
+                                }
                             }
                         }
                     }
@@ -357,7 +359,16 @@ public class ApiServlet extends HttpServlet {
                 }
                 // 인증 정보가 없어도 security 활성화 여부 확인을 위해 listCapablities API 오픈
                 if (command.equalsIgnoreCase("listCapabilities")) {
+                    // 세션 생성 (로그인 전)
                     if (ApiServer.SecurityFeaturesEnabled.value()) {
+                        session = req.getSession(true);
+                        if (ApiServer.EnableSecureSessionCookie.value()) {
+                            resp.setHeader("SET-COOKIE", String.format("JSESSIONID=%s;Secure;HttpOnly;Path=/client", session.getId()));
+                            if (logger.isDebugEnabled()) {
+                                logger.debug("Session cookie is marked secure!");
+                            }
+                        }
+                        // 키 생성
                         // 관리자 단말기 접속 IP 가 다른 경우 에러 처리
                         String accountName = "admin";
                         Long domainId = 1L;
@@ -380,6 +391,7 @@ public class ApiServlet extends HttpServlet {
                     setProjectContext(params);
                     setClientAddressForConsoleEndpointAccess(command, params, req);
                     final String response = apiServer.handleRequest(params, responseType, auditTrailSb);
+                    logger.info(response);
                     HttpUtils.writeHttpResponse(resp, response != null ? response : "", HttpServletResponse.SC_OK, responseType, ApiServer.JSONcontentType.value());
                 } else {
                     auditTrailSb.append(" " + HttpServletResponse.SC_UNAUTHORIZED + " " + "unable to verify user credentials and/or request signature");
