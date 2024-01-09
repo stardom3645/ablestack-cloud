@@ -221,7 +221,7 @@ public class ApiServlet extends HttpServlet {
             }
 
             final Object[] commandObj = params.get(ApiConstants.COMMAND);
-            final String command = commandObj == null ? null : (String) commandObj[0];
+            String command = commandObj == null ? null : (String) commandObj[0];
             final Object[] userObj = params.get(ApiConstants.USERNAME);
             String username = userObj == null ? null : (String)userObj[0];
             if (logger.isTraceEnabled()) {
