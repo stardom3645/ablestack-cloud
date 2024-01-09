@@ -99,6 +99,7 @@ under the License.
             <AppenderRef ref="cloudLog"/>
             <AppenderRef ref="cloudOut"/>
             <AppenderRef ref="cloudSystemvmLog"/>
+<!--            <AppenderRef ref="NullAppender"/>-->
         </Root>
 
     </Loggers>
