@@ -193,6 +193,7 @@ import { SERVER_MANAGER } from '@/store/mutation-types'
 import { sourceToken } from '@/utils/request'
 import { reactive, ref, toRaw } from 'vue'
 import { mapActions } from 'vuex'
+import RSAKey from '@/utils/rsa'
 
 export default {
   components: {
@@ -307,7 +308,12 @@ export default {
       api('listCapabilities').then(response => {
         if (response) {
           const capability = response.listcapabilitiesresponse.capability || []
+          console.log(capability)
           this.securityfeatures = capability.securityfeaturesenabled
+          this.publickeymodulus = capability.setpublickeymodulus
+          this.publickeyexponent = capability.setpublickeyexponent
+          console.log(this.publickeymodulus)
+          console.log(this.publickeyexponent)
         }
       })
     },
@@ -392,6 +398,12 @@ export default {
           loginParams.domain = values.domain
           if (!loginParams.domain) {
             loginParams.domain = '/'
+          }
+          if (this.securityfeaturesenabled) {
+            const rsa = new RSAKey()
+            rsa.setPublic(this.publickeymodulus, this.publickeyexponent)
+            loginParams.password = rsa.encrypt(loginParams.password)
+            console.log(loginParams.password)
           }
           this.Login(loginParams)
             .then((res) => this.loginSuccess(res))

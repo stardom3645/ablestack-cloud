@@ -19,6 +19,7 @@ package com.cloud.api;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InterruptedIOException;
+import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Type;
 import java.net.InetAddress;
@@ -29,6 +30,9 @@ import java.net.URISyntaxException;
 import java.net.URLEncoder;
 import java.security.SecureRandom;
 import java.security.Security;
+import java.security.PrivateKey;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -50,6 +54,9 @@ import java.util.regex.Pattern;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
 import javax.inject.Inject;
 import javax.naming.ConfigurationException;
 import javax.servlet.http.HttpServletResponse;
@@ -185,6 +192,7 @@ import com.cloud.utils.component.ComponentContext;
 import com.cloud.utils.component.ManagerBase;
 import com.cloud.utils.component.PluggableService;
 import com.cloud.utils.concurrency.NamedThreadFactory;
+import com.cloud.utils.crypt.RSAHelper;
 import com.cloud.utils.db.EntityManager;
 import com.cloud.utils.db.TransactionLegacy;
 import com.cloud.utils.db.UUIDManager;
@@ -1155,10 +1163,27 @@ public class ApiServer extends ManagerBase implements HttpRequestHandler, ApiSer
         } else {
             domainId = userDomain.getId();
         }
-        final UserAccount userAcct = accountMgr.authenticateUser(username, password, domainId, loginIpAddress, requestParameters);
+        UserAccount userAcct = null;
+        if (ApiServer.SecurityFeaturesEnabled.value()) {
+            // decrypt RSA password
+            PrivateKey pk = (PrivateKey)session.getAttribute(RSAHelper.PRIVATE_KEY);
+            if (pk == null) {
+                throw new CloudAuthenticationException("Unable to find the privatekey, bad credentials.");
+            }
+            String decPassword = "";
+            try {
+                decPassword = RSAHelper.decryptRSA(password, pk);
+            } catch (NoSuchPaddingException | NoSuchAlgorithmException | InvalidKeyException | BadPaddingException | IllegalBlockSizeException | UnsupportedEncodingException e) {
+                throw new CloudAuthenticationException("Unable to decrypt RSA, Exception : " + e);
+            }
+            userAcct = accountMgr.authenticateUser(username, decPassword, domainId, loginIpAddress, requestParameters);
+        } else {
+            userAcct = accountMgr.authenticateUser(username, password, domainId, loginIpAddress, requestParameters);
+        }
         List<String> sessionIds = new ArrayList<>();
         if (userAcct != null) {
             if (ApiServer.SecurityFeaturesEnabled.value()) { // 보안기능용 : 하나의 세션만 접속
+                session.removeAttribute(RSAHelper.PRIVATE_KEY);
                 if (ApiSessionListener.getSessionCount() > 1) { // 존재하는 세션이 있으면 기존 세션 차단
                     ApiSessionListener.deleteAllExistSessionIds(session.getId()); // 접속하려는 세션 제외한 기존의 모든 세션 차단
                     ActionEventUtils.onActionEvent(userAcct.getId(), userAcct.getAccountId(), domainId, EventTypes.EVENT_USER_SESSION_BLOCK,

@@ -25,6 +25,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.security.KeyPair;
 
 import javax.inject.Inject;
 import javax.servlet.ServletConfig;
@@ -70,6 +71,7 @@ import com.cloud.user.UserAccount;
 
 import com.cloud.utils.HttpUtils;
 import com.cloud.utils.StringUtils;
+import com.cloud.utils.crypt.RSAHelper;
 import com.cloud.utils.db.EntityManager;
 import com.cloud.utils.net.NetUtils;
 
@@ -241,15 +243,17 @@ public class ApiServlet extends HttpServlet {
                     String responseString = null;
 
                     if (apiAuthenticator.getAPIType() == APIAuthenticationType.LOGIN_API) {
-                        if (session != null) {
-                            invalidateHttpSession(session, "invalidating session for login call");
-                        }
-                        session = req.getSession(true);
+                        if (!ApiServer.SecurityFeaturesEnabled.value()) {
+                            if (session != null) {
+                                invalidateHttpSession(session, "invalidating session for login call");
+                            }
+                            session = req.getSession(true);
 
-                        if (ApiServer.EnableSecureSessionCookie.value()) {
-                            resp.setHeader("SET-COOKIE", String.format("JSESSIONID=%s;Secure;HttpOnly;Path=/client", session.getId()));
-                            if (logger.isDebugEnabled()) {
-                                logger.debug("Session cookie is marked secure!");
+                            if (ApiServer.EnableSecureSessionCookie.value()) {
+                                resp.setHeader("SET-COOKIE", String.format("JSESSIONID=%s;Secure;HttpOnly;Path=/client", session.getId()));
+                                if (logger.isDebugEnabled()) {
+                                    logger.debug("Session cookie is marked secure!");
+                                }
                             }
                         }
                     }
@@ -358,6 +362,25 @@ public class ApiServlet extends HttpServlet {
                 // 인증 정보가 없어도 security 활성화 여부 확인을 위해 listCapablities API 오픈
                 if (command.equalsIgnoreCase("listCapabilities")) {
                     if (ApiServer.SecurityFeaturesEnabled.value()) {
+                        logger.info("ApiServlet==================================listCapabilities");
+                        session = req.getSession(true);
+                        logger.info("ApiServlet==================================session");
+                        logger.info(session);
+                        session.removeAttribute(RSAHelper.PRIVATE_KEY);
+                        KeyPair keys = RSAHelper.genKey();
+                        session.setAttribute(RSAHelper.PRIVATE_KEY, keys.getPrivate());
+                        Map<String, String> spec = RSAHelper.getKeySpec(keys.getPublic());
+                        logger.info("ApiServlet==================================spec");
+                        logger.info(spec.get(RSAHelper.PUBLIC_KEY_MODULUS));
+                        logger.info(spec.get(RSAHelper.PUBLIC_KEY_EXPONENT));
+                        params.put(RSAHelper.PUBLIC_KEY_MODULUS, new String[]{spec.get(RSAHelper.PUBLIC_KEY_MODULUS)});
+                        params.put(RSAHelper.PUBLIC_KEY_EXPONENT, new String[]{spec.get(RSAHelper.PUBLIC_KEY_EXPONENT)});
+                        if (ApiServer.EnableSecureSessionCookie.value()) {
+                            resp.setHeader("SET-COOKIE", String.format("JSESSIONID=%s;Secure;HttpOnly;Path=/client", session.getId()));
+                            if (logger.isDebugEnabled()) {
+                                logger.debug("Session cookie is marked secure!");
+                            }
+                        }
                         // 관리자 단말기 접속 IP 가 다른 경우 에러 처리
                         String accountName = "admin";
                         Long domainId = 1L;
@@ -378,6 +401,12 @@ public class ApiServlet extends HttpServlet {
                     // Add the HTTP method (GET/POST/PUT/DELETE) as well into the params map.
                     params.put("httpmethod", new String[]{req.getMethod()});
                     setProjectContext(params);
+                    logger.info("ApiServlet==================================params");
+                    logger.info(params);
+                    logger.info("ApiServlet==================================command");
+                    logger.info(command);
+                    logger.info("ApiServlet==================================req");
+                    logger.info(req);
                     setClientAddressForConsoleEndpointAccess(command, params, req);
                     final String response = apiServer.handleRequest(params, responseType, auditTrailSb);
                     HttpUtils.writeHttpResponse(resp, response != null ? response : "", HttpServletResponse.SC_OK, responseType, ApiServer.JSONcontentType.value());
