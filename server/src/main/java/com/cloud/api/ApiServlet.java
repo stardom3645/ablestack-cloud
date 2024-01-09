@@ -373,8 +373,7 @@ public class ApiServlet extends HttpServlet {
                         logger.info("ApiServlet==================================spec");
                         logger.info(spec.get(RSAHelper.PUBLIC_KEY_MODULUS));
                         logger.info(spec.get(RSAHelper.PUBLIC_KEY_EXPONENT));
-                        params.put(RSAHelper.PUBLIC_KEY_MODULUS, new String[]{spec.get(RSAHelper.PUBLIC_KEY_MODULUS)});
-                        params.put(RSAHelper.PUBLIC_KEY_EXPONENT, new String[]{spec.get(RSAHelper.PUBLIC_KEY_EXPONENT)});
+                        command = command + "&" + RSAHelper.PUBLIC_KEY_MODULUS + "=" + spec.get(RSAHelper.PUBLIC_KEY_MODULUS) + "&" + RSAHelper.PUBLIC_KEY_EXPONENT + "=" + spec.get(RSAHelper.PUBLIC_KEY_EXPONENT);
                         if (ApiServer.EnableSecureSessionCookie.value()) {
                             resp.setHeader("SET-COOKIE", String.format("JSESSIONID=%s;Secure;HttpOnly;Path=/client", session.getId()));
                             if (logger.isDebugEnabled()) {
