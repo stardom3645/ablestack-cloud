@@ -315,7 +315,7 @@ public class ApiServer extends ManagerBase implements HttpRequestHandler, ApiSer
             , "When simultaneous access is not allowed('concurrent.connect.enabled : false'), existing sessions are blocked if true, and new sessions are blocked if false."
             , true
             , ConfigKey.Scope.Global);
-    public static final ConfigKey<Boolean> SecurityFeaturesEnabled = new ConfigKey<Boolean>( "Advanced"
+    static final ConfigKey<Boolean> SecurityFeaturesEnabled = new ConfigKey<Boolean>( "Advanced"
             , Boolean.class
             , "security.features.enabled"
             , "true"
