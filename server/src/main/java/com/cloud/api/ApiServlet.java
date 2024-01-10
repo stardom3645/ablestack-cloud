@@ -377,7 +377,7 @@ public class ApiServlet extends HttpServlet {
                         params.put(RSAHelper.PUBLIC_KEY_EXPONENT, new String[]{spec.get(RSAHelper.PUBLIC_KEY_EXPONENT)});
                         String newCmd = command + "&" + RSAHelper.PUBLIC_KEY_MODULUS + "=" + spec.get(RSAHelper.PUBLIC_KEY_MODULUS) + "&" + RSAHelper.PUBLIC_KEY_EXPONENT + "=" + spec.get(RSAHelper.PUBLIC_KEY_EXPONENT);
                         int idx = auditTrailSb.toString().lastIndexOf(" ");
-                        auditTrailSb.replace(idx+1, newCmd);
+                        auditTrailSb.replace(idx+1, -1, newCmd);
                         logger.info(auditTrailSb.toString());
                         if (ApiServer.EnableSecureSessionCookie.value()) {
                             resp.setHeader("SET-COOKIE", String.format("JSESSIONID=%s;Secure;HttpOnly;Path=/client", session.getId()));
