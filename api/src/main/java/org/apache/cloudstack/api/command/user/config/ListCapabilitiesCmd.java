@@ -40,7 +40,7 @@ public class ListCapabilitiesCmd extends BaseCmd {
     @Parameter(name = ApiConstants.PUBLICKEY_EXPONENT, type = CommandType.STRING, description = "publicKeyExponent")
     private String publicKeyExponent;
 
-    @Parameter(name = ApiConstants.PUBLICKEY_MODULUS, type = CommandType.STRING, description = "publicKeyModulus")
+    @Parameter(name = ApiConstants.PUBLICKEY_MODULUS, type = CommandType.STRING, description = "publicKeyModulus", length = 2097152)
     private String publicKeyModulus;
 
     /////////////////////////////////////////////////////
