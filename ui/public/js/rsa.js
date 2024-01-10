@@ -107,7 +107,6 @@ RSAKey.prototype.encrypt = RSAEncrypt
 return RSAKey
 })()
 
-console.log('rsa', rsa)
 if (typeof module === 'object' && module.exports) {
 module.exports = rsa
 }

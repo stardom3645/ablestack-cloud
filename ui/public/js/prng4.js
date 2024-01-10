@@ -45,7 +45,6 @@ function prng_newstate () {
 return prng_newstate()
 })()
 
-console.log('Arcfour', Arcfour)
 if (typeof module === 'object' && module.exports) {
 module.exports = Arcfour
 }

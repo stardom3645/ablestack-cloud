@@ -529,7 +529,6 @@ BigInteger.ONE = nbv(1)
 return BigInteger
 })()
 
-console.log('BigInteger', BigInteger)
 if (typeof module === 'object' && module.exports) {
 module.exports = BigInteger
 }

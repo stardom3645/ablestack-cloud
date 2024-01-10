@@ -69,7 +69,6 @@ SecureRandom.prototype.nextBytes = rng_get_bytes
 return SecureRandom
 })()
 
-console.log('SecureRandom', SecureRandom)
 if (typeof module === 'object' && module.exports) {
 module.exports = SecureRandom
 }

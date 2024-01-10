@@ -1171,7 +1171,6 @@ public class ApiServer extends ManagerBase implements HttpRequestHandler, ApiSer
         }
         UserAccount userAcct = null;
         if (ApiServer.SecurityFeaturesEnabled.value()) {
-            logger.info("ApiServer=====================================");
             // decrypt RSA password
             PrivateKey pk = (PrivateKey)session.getAttribute(RSAHelper.PRIVATE_KEY);
             if (pk == null) {
@@ -1192,7 +1191,6 @@ public class ApiServer extends ManagerBase implements HttpRequestHandler, ApiSer
         List<String> sessionIds = new ArrayList<>();
         if (userAcct != null) {
             if (ApiServer.SecurityFeaturesEnabled.value()) { // 보안기능용 : 하나의 세션만 접속
-                session.removeAttribute(RSAHelper.PRIVATE_KEY);
                 if (ApiSessionListener.getSessionCount() > 1) { // 존재하는 세션이 있으면 기존 세션 차단
                     ApiSessionListener.deleteAllExistSessionIds(session.getId()); // 접속하려는 세션 제외한 기존의 모든 세션 차단
                     ActionEventUtils.onActionEvent(userAcct.getId(), userAcct.getAccountId(), domainId, EventTypes.EVENT_USER_SESSION_BLOCK,
@@ -1285,6 +1283,9 @@ public class ApiServer extends ManagerBase implements HttpRequestHandler, ApiSer
                 session.setAttribute(ApiConstants.FIRST_LOGIN, true);
             } else {
                 session.setAttribute(ApiConstants.FIRST_LOGIN, false);
+            }
+            if (ApiServer.SecurityFeaturesEnabled.value()) {
+                session.removeAttribute(RSAHelper.PRIVATE_KEY);
             }
 
             // (bug 5483) generate a session key that the user must submit on every request to prevent CSRF, add that
