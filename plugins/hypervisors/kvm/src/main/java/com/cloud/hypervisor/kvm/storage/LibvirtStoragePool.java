@@ -464,7 +464,7 @@ public class LibvirtStoragePool implements KVMStoragePool {
         s_logger.debug(String.format("Checking heart beat with KVMHAVMActivityChecker [{command=\"%s\", log: \"%s\", pool: \"%s\"}].", command, parsedLine, pool.getMonHost()));
 
         if (parsedLine.contains("DEAD")) {
-            s_logger.warn(String.format("Checking heart beat with KVMHAVMActivityChecker command [%s] returned [%s]. It is [%s]. It may cause a shutdown of host IP [%s].", processBuilder.command().toString(), result, parsedLine, host.getPrivateNetwork().getIp()));
+            s_logger.warn(String.format("Checking heart beat with KVMHAVMActivityChecker command [%s]. It is [%s]. It may cause a shutdown of host IP [%s].", processBuilder.command().toString(), parsedLine, host.getPrivateNetwork().getIp()));
             return false;
         } else {
             return true;
