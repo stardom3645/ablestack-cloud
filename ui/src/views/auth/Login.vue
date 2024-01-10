@@ -193,7 +193,7 @@ import { SERVER_MANAGER } from '@/store/mutation-types'
 import { sourceToken } from '@/utils/request'
 import { reactive, ref, toRaw } from 'vue'
 import { mapActions } from 'vuex'
-import RSAKey from '@/utils/rsa'
+import RSAKey from '../../../public/js/rsa'
 
 export default {
   components: {
@@ -216,6 +216,8 @@ export default {
       googleclientid: '',
       githubclientid: '',
       securityfeatures: true,
+      publickeymodulus: '',
+      publickeyexponent: '',
       loginType: 0,
       state: {
         time: 60,
@@ -308,12 +310,9 @@ export default {
       api('listCapabilities').then(response => {
         if (response) {
           const capability = response.listcapabilitiesresponse.capability || []
-          console.log(capability)
           this.securityfeatures = capability.securityfeaturesenabled
           this.publickeymodulus = capability.setpublickeymodulus
           this.publickeyexponent = capability.setpublickeyexponent
-          console.log(this.publickeymodulus)
-          console.log(this.publickeyexponent)
         }
       })
     },
@@ -399,11 +398,10 @@ export default {
           if (!loginParams.domain) {
             loginParams.domain = '/'
           }
-          if (this.securityfeaturesenabled) {
+          if (this.securityfeatures) {
             const rsa = new RSAKey()
             rsa.setPublic(this.publickeymodulus, this.publickeyexponent)
             loginParams.password = rsa.encrypt(loginParams.password)
-            console.log(loginParams.password)
           }
           this.Login(loginParams)
             .then((res) => this.loginSuccess(res))

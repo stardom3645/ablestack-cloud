@@ -1171,6 +1171,7 @@ public class ApiServer extends ManagerBase implements HttpRequestHandler, ApiSer
         }
         UserAccount userAcct = null;
         if (ApiServer.SecurityFeaturesEnabled.value()) {
+            logger.info("ApiServer=====================================");
             // decrypt RSA password
             PrivateKey pk = (PrivateKey)session.getAttribute(RSAHelper.PRIVATE_KEY);
             if (pk == null) {
@@ -1179,6 +1180,8 @@ public class ApiServer extends ManagerBase implements HttpRequestHandler, ApiSer
             String decPassword = "";
             try {
                 decPassword = RSAHelper.decryptRSA(password, pk);
+                logger.info("ApiServer=====================================decPassword");
+                logger.info(decPassword);
             } catch (NoSuchPaddingException | NoSuchAlgorithmException | InvalidKeyException | BadPaddingException | IllegalBlockSizeException | UnsupportedEncodingException e) {
                 throw new CloudAuthenticationException("Unable to decrypt RSA, Exception : " + e);
             }
