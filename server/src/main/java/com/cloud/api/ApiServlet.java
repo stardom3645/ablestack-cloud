@@ -197,12 +197,8 @@ public class ApiServlet extends HttpServlet {
         Map<String, String[]> reqParams = req.getParameterMap();
         checkSingleQueryParameterValue(reqParams);
         params.putAll(reqParams);
-        logger.info("ApiServlet===============================params");
-        logger.info(params.toString());
 
         utf8Fixup(req, params);
-        logger.info("ApiServlet===============================params");
-        logger.info(params.toString());
 
         // logging the request start and end in management log for easy debugging
         String reqStr = "";
@@ -377,8 +373,8 @@ public class ApiServlet extends HttpServlet {
                         logger.info("ApiServlet==================================spec");
                         logger.info(spec.get(RSAHelper.PUBLIC_KEY_MODULUS));
                         logger.info(spec.get(RSAHelper.PUBLIC_KEY_EXPONENT));
-                        String newCmd = command + "&" + RSAHelper.PUBLIC_KEY_MODULUS + "=" + spec.get(RSAHelper.PUBLIC_KEY_MODULUS) + "&" + RSAHelper.PUBLIC_KEY_EXPONENT + "=" + spec.get(RSAHelper.PUBLIC_KEY_EXPONENT);
-                        params.put("command", new String[]{newCmd});
+                        params.put(RSAHelper.PUBLIC_KEY_MODULUS, new String[]{spec.get(RSAHelper.PUBLIC_KEY_MODULUS)});
+                        params.put(RSAHelper.PUBLIC_KEY_EXPONENT, new String[]{spec.get(RSAHelper.PUBLIC_KEY_EXPONENT)});
                         if (ApiServer.EnableSecureSessionCookie.value()) {
                             resp.setHeader("SET-COOKIE", String.format("JSESSIONID=%s;Secure;HttpOnly;Path=/client", session.getId()));
                             if (logger.isDebugEnabled()) {
@@ -410,7 +406,9 @@ public class ApiServlet extends HttpServlet {
                     logger.info("ApiServlet==================================command");
                     logger.info(command);
                     logger.info("ApiServlet==================================req");
-                    logger.info(req);
+                    logger.info(req.toString());
+                    logger.info("ApiServlet==================================auditTrailSb");
+                    logger.info(auditTrailSb.toString());
                     setClientAddressForConsoleEndpointAccess(command, params, req);
                     final String response = apiServer.handleRequest(params, responseType, auditTrailSb);
                     HttpUtils.writeHttpResponse(resp, response != null ? response : "", HttpServletResponse.SC_OK, responseType, ApiServer.JSONcontentType.value());
