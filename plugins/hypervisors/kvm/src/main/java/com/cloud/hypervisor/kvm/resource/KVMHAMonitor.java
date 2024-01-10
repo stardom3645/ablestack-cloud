@@ -62,118 +62,92 @@ public class KVMHAMonitor extends KVMHABase implements Runnable {
         KVMHABase.s_heartBeatPathClvm = scriptPathClvm;
     }
     public void addStoragePool(HAStoragePool pool) {
-        synchronized (storagePool) {
-            storagePool.put(pool.getPoolUUID(), pool);
-        }
+        storagePool.put(pool.getPoolUUID(), pool);
     }
 
     public void addRbdStoragePool(HAStoragePool pool) {
-        synchronized (storageRbdPool) {
-            storageRbdPool.put(pool.getPoolUUID(), pool);
-        }
+        storageRbdPool.put(pool.getPoolUUID(), pool);
     }
 
     public void addClvmStoragePool(HAStoragePool pool) {
-        synchronized (storageClvmPool) {
-            storageClvmPool.put(pool.getPoolUUID(), pool);
-        }
+        storageClvmPool.put(pool.getPoolUUID(), pool);
     }
 
     public void removeStoragePool(String uuid) {
-        synchronized (storagePool) {
-            HAStoragePool pool = storagePool.get(uuid);
-            if (pool != null) {
-                Script.runSimpleBashScript("umount " + pool.getMountDestPath());
-                storagePool.remove(uuid);
-            }
+        HAStoragePool pool = storagePool.get(uuid);
+        if (pool != null) {
+            Script.runSimpleBashScript("umount " + pool.getMountDestPath());
+            storagePool.remove(uuid);
         }
+
     }
 
     public void removeRbdStoragePool(String uuid) {
-        synchronized (storageRbdPool) {
-            HAStoragePool pool = storageRbdPool.get(uuid);
-            if (pool != null) {
-                Script.runSimpleBashScript("umount " + pool.getMountDestPath());
-                storageRbdPool.remove(uuid);
-            }
+        HAStoragePool pool = storageRbdPool.get(uuid);
+        if (pool != null) {
+            Script.runSimpleBashScript("umount " + pool.getMountDestPath());
+            storageRbdPool.remove(uuid);
         }
     }
 
     public void removeClvmStoragePool(String uuid) {
-        synchronized (storageClvmPool) {
-            HAStoragePool pool = storageClvmPool.get(uuid);
-            if (pool != null) {
-                storageClvmPool.remove(uuid);
-            }
+        HAStoragePool pool = storageClvmPool.get(uuid);
+        if (pool != null) {
+            storageClvmPool.remove(uuid);
         }
     }
 
     public List<HAStoragePool> getStoragePools() {
-        synchronized (storagePool) {
-            return new ArrayList<>(storagePool.values());
-        }
+        return new ArrayList<>(storagePool.values());
     }
 
     public List<HAStoragePool> getRbdStoragePools() {
-        synchronized (storageRbdPool) {
-            return new ArrayList<>(storageRbdPool.values());
-        }
+        return new ArrayList<>(storageRbdPool.values());
     }
 
     public List<HAStoragePool> getClvmStoragePools() {
-        synchronized (storageClvmPool) {
-            return new ArrayList<>(storageClvmPool.values());
-        }
+        return new ArrayList<>(storageClvmPool.values());
     }
 
     public HAStoragePool getStoragePool(String uuid) {
-        synchronized (storagePool) {
-            return storagePool.get(uuid);
-        }
+        return storagePool.get(uuid);
     }
 
     public HAStoragePool getRbdStoragePool(String uuid) {
-        synchronized (storageRbdPool) {
-            return storageRbdPool.get(uuid);
-        }
+        return storageRbdPool.get(uuid);
     }
 
     public HAStoragePool getClvmStoragePool(String uuid) {
-        synchronized (storageClvmPool) {
-            return storageClvmPool.get(uuid);
-        }
+        return storageClvmPool.get(uuid);
     }
 
-
     protected void runHeartBeat(Map<String, HAStoragePool> storagePool) {
-        synchronized (storagePool) {
-            Set<String> removedPools = new HashSet<>();
-            for (String uuid : storagePool.keySet()) {
-                HAStoragePool primaryStoragePool = storagePool.get(uuid);
-                if (primaryStoragePool.getPool().getType() == StoragePoolType.NetworkFilesystem || primaryStoragePool.getPool().getType() == StoragePoolType.RBD || primaryStoragePool.getPool().getType() == StoragePoolType.CLVM) {
-                    checkForNotExistingPools(removedPools, uuid);
-                    if (removedPools.contains(uuid)) {
-                        continue;
-                    }
-                }
-                String result = null;
-                result = executePoolHeartBeatCommand(uuid, primaryStoragePool, result);
-
-                if (result != null && rebootHostAndAlertManagementOnHeartbeatTimeout) {
-                    s_logger.warn(String.format("Write heartbeat for pool [%s] failed: %s; stopping cloudstack-agent.", uuid, result));
-                    if (primaryStoragePool.getPool().getType() == StoragePoolType.NetworkFilesystem) {
-                        primaryStoragePool.getPool().createHeartBeatCommand(primaryStoragePool, null, false);
-                    } else if (primaryStoragePool.getPool().getType() == StoragePoolType.RBD) {
-                        primaryStoragePool.getPool().createRbdHeartBeatCommand(primaryStoragePool, hostPrivateIp, true, s_heartBeatPathClvm);
-                    } else if (primaryStoragePool.getPool().getType() == StoragePoolType.CLVM) {
-                        primaryStoragePool.getPool().createClvmHeartBeatCommand(primaryStoragePool, hostPrivateIp, true, s_heartBeatPathClvm, _heartBeatUpdateTimeout);
-                    }
+        Set<String> removedPools = new HashSet<>();
+        for (String uuid : storagePool.keySet()) {
+            HAStoragePool primaryStoragePool = storagePool.get(uuid);
+            if (primaryStoragePool.getPool().getType() == StoragePoolType.NetworkFilesystem || primaryStoragePool.getPool().getType() == StoragePoolType.RBD || primaryStoragePool.getPool().getType() == StoragePoolType.CLVM) {
+                checkForNotExistingPools(removedPools, uuid);
+                if (removedPools.contains(uuid)) {
+                    continue;
                 }
             }
-            if (!removedPools.isEmpty()) {
-                for (String uuid : removedPools) {
-                    removeStoragePool(uuid);
+            String result = null;
+            result = executePoolHeartBeatCommand(uuid, primaryStoragePool, result);
+
+            if (result != null && rebootHostAndAlertManagementOnHeartbeatTimeout) {
+                s_logger.warn(String.format("Write heartbeat for pool [%s] failed: %s; stopping cloudstack-agent.", uuid, result));
+                if (primaryStoragePool.getPool().getType() == StoragePoolType.NetworkFilesystem) {
+                    primaryStoragePool.getPool().createHeartBeatCommand(primaryStoragePool, null, false);
+                } else if (primaryStoragePool.getPool().getType() == StoragePoolType.RBD) {
+                    primaryStoragePool.getPool().createRbdHeartBeatCommand(primaryStoragePool, hostPrivateIp, true, s_heartBeatPathClvm);
+                } else if (primaryStoragePool.getPool().getType() == StoragePoolType.CLVM) {
+                    primaryStoragePool.getPool().createClvmHeartBeatCommand(primaryStoragePool, hostPrivateIp, true, s_heartBeatPathClvm, _heartBeatUpdateTimeout);
                 }
+            }
+        }
+        if (!removedPools.isEmpty()) {
+            for (String uuid : removedPools) {
+                removeStoragePool(uuid);
             }
         }
     }
