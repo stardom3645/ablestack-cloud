@@ -366,6 +366,8 @@ public class ApiServlet extends HttpServlet {
                         session.removeAttribute(RSAHelper.PRIVATE_KEY);
                         KeyPair keys = RSAHelper.genKey();
                         session.setAttribute(RSAHelper.PRIVATE_KEY, keys.getPrivate());
+                        console.log("ApiServlet==========================================session");
+                        console.log(session.getId());
                         Map<String, String> spec = RSAHelper.getKeySpec(keys.getPublic());
                         params.put(RSAHelper.PUBLIC_KEY_MODULUS, new String[]{spec.get(RSAHelper.PUBLIC_KEY_MODULUS)});
                         params.put(RSAHelper.PUBLIC_KEY_EXPONENT, new String[]{spec.get(RSAHelper.PUBLIC_KEY_EXPONENT)});
@@ -399,14 +401,6 @@ public class ApiServlet extends HttpServlet {
                     // Add the HTTP method (GET/POST/PUT/DELETE) as well into the params map.
                     params.put("httpmethod", new String[]{req.getMethod()});
                     setProjectContext(params);
-                    logger.info("ApiServlet==================================params");
-                    logger.info(params);
-                    logger.info("ApiServlet==================================command");
-                    logger.info(command);
-                    logger.info("ApiServlet==================================req");
-                    logger.info(req.toString());
-                    logger.info("ApiServlet==================================auditTrailSb");
-                    logger.info(auditTrailSb.toString());
                     setClientAddressForConsoleEndpointAccess(command, params, req);
                     final String response = apiServer.handleRequest(params, responseType, auditTrailSb);
                     HttpUtils.writeHttpResponse(resp, response != null ? response : "", HttpServletResponse.SC_OK, responseType, ApiServer.JSONcontentType.value());

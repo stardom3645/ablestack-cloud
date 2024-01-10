@@ -1179,8 +1179,8 @@ public class ApiServer extends ManagerBase implements HttpRequestHandler, ApiSer
             String decPassword = "";
             try {
                 decPassword = RSAHelper.decryptRSA(password, pk);
-                logger.info("ApiServer=====================================decPassword");
-                logger.info(decPassword);
+                logger.info("ApiServer=================================session");
+                logger.info(session.getId());
             } catch (NoSuchPaddingException | NoSuchAlgorithmException | InvalidKeyException | BadPaddingException | IllegalBlockSizeException | UnsupportedEncodingException e) {
                 throw new CloudAuthenticationException("Unable to decrypt RSA, Exception : " + e);
             }
@@ -1233,7 +1233,8 @@ public class ApiServer extends ManagerBase implements HttpRequestHandler, ApiSer
             }
 
             final Account account = accountMgr.getAccount(userAcct.getAccountId());
-
+            logger.info("ApiServer=================================session2");
+            logger.info(session.getId());
             // set the userId and account object for everyone
             session.setAttribute("userid", userAcct.getId());
             final UserVO user = (UserVO)accountMgr.getActiveUser(userAcct.getId());
