@@ -127,7 +127,6 @@ const err = (error) => {
       router.push({ path: '/exception/404' })
     }
     if (response.status === 530) {
-      console.log(response)
       for (const key in response.data) {
         if (response.data[key].errortext.includes("Failed to authenticate user 'admin' from ip")) {
           // var url = window.location.origin
