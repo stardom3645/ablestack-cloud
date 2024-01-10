@@ -25,6 +25,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.security.KeyPair;
 
 import javax.inject.Inject;
 import javax.servlet.ServletConfig;
@@ -70,6 +71,7 @@ import com.cloud.user.UserAccount;
 
 import com.cloud.utils.HttpUtils;
 import com.cloud.utils.StringUtils;
+import com.cloud.utils.crypt.RSAHelper;
 import com.cloud.utils.db.EntityManager;
 import com.cloud.utils.net.NetUtils;
 
@@ -241,15 +243,17 @@ public class ApiServlet extends HttpServlet {
                     String responseString = null;
 
                     if (apiAuthenticator.getAPIType() == APIAuthenticationType.LOGIN_API) {
-                        if (session != null) {
-                            invalidateHttpSession(session, "invalidating session for login call");
-                        }
-                        session = req.getSession(true);
+                        if (!ApiServer.SecurityFeaturesEnabled.value()) {
+                            if (session != null) {
+                                invalidateHttpSession(session, "invalidating session for login call");
+                            }
+                            session = req.getSession(true);
 
-                        if (ApiServer.EnableSecureSessionCookie.value()) {
-                            resp.setHeader("SET-COOKIE", String.format("JSESSIONID=%s;Secure;HttpOnly;Path=/client", session.getId()));
-                            if (logger.isDebugEnabled()) {
-                                logger.debug("Session cookie is marked secure!");
+                            if (ApiServer.EnableSecureSessionCookie.value()) {
+                                resp.setHeader("SET-COOKIE", String.format("JSESSIONID=%s;Secure;HttpOnly;Path=/client", session.getId()));
+                                if (logger.isDebugEnabled()) {
+                                    logger.debug("Session cookie is marked secure!");
+                                }
                             }
                         }
                     }
@@ -358,6 +362,25 @@ public class ApiServlet extends HttpServlet {
                 // 인증 정보가 없어도 security 활성화 여부 확인을 위해 listCapablities API 오픈
                 if (command.equalsIgnoreCase("listCapabilities")) {
                     if (ApiServer.SecurityFeaturesEnabled.value()) {
+                        session = req.getSession(true);
+                        session.removeAttribute(RSAHelper.PRIVATE_KEY);
+                        KeyPair keys = RSAHelper.genKey();
+                        session.setAttribute(RSAHelper.PRIVATE_KEY, keys.getPrivate());
+                        logger.info("ApiServlet==========================================session");
+                        logger.info(session.getId());
+                        Map<String, String> spec = RSAHelper.getKeySpec(keys.getPublic());
+                        params.put(RSAHelper.PUBLIC_KEY_MODULUS, new String[]{spec.get(RSAHelper.PUBLIC_KEY_MODULUS)});
+                        params.put(RSAHelper.PUBLIC_KEY_EXPONENT, new String[]{spec.get(RSAHelper.PUBLIC_KEY_EXPONENT)});
+                        String newCmd = command + "&" + RSAHelper.PUBLIC_KEY_MODULUS + "=" + spec.get(RSAHelper.PUBLIC_KEY_MODULUS) + "&" + RSAHelper.PUBLIC_KEY_EXPONENT + "=" + spec.get(RSAHelper.PUBLIC_KEY_EXPONENT) + "&response=json";
+                        int idx1 = auditTrailSb.toString().lastIndexOf(" ");
+                        int idx2 = auditTrailSb.toString().length();
+                        auditTrailSb.replace(idx1+1, idx2-1, newCmd);
+                        if (ApiServer.EnableSecureSessionCookie.value()) {
+                            resp.setHeader("SET-COOKIE", String.format("JSESSIONID=%s;Secure;HttpOnly;Path=/client", session.getId()));
+                            if (logger.isDebugEnabled()) {
+                                logger.debug("Session cookie is marked secure!");
+                            }
+                        }
                         // 관리자 단말기 접속 IP 가 다른 경우 에러 처리
                         String accountName = "admin";
                         Long domainId = 1L;

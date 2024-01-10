@@ -129,8 +129,8 @@ const err = (error) => {
     if (response.status === 530) {
       for (const key in response.data) {
         if (response.data[key].errortext.includes("Failed to authenticate user 'admin' from ip")) {
-          var url = window.location.origin
-          window.location.href = url + '/error.html'
+          // var url = window.location.origin
+          // window.location.href = url + '/error.html'
         }
       }
     }
