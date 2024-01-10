@@ -221,7 +221,7 @@ public class ApiServlet extends HttpServlet {
             }
 
             final Object[] commandObj = params.get(ApiConstants.COMMAND);
-            String command = commandObj == null ? null : (String) commandObj[0];
+            final String command = commandObj == null ? null : (String) commandObj[0];
             final Object[] userObj = params.get(ApiConstants.USERNAME);
             String username = userObj == null ? null : (String)userObj[0];
             if (logger.isTraceEnabled()) {
@@ -373,8 +373,8 @@ public class ApiServlet extends HttpServlet {
                         logger.info("ApiServlet==================================spec");
                         logger.info(spec.get(RSAHelper.PUBLIC_KEY_MODULUS));
                         logger.info(spec.get(RSAHelper.PUBLIC_KEY_EXPONENT));
-                        command = command + "&" + RSAHelper.PUBLIC_KEY_MODULUS + "=" + spec.get(RSAHelper.PUBLIC_KEY_MODULUS) + "&" + RSAHelper.PUBLIC_KEY_EXPONENT + "=" + spec.get(RSAHelper.PUBLIC_KEY_EXPONENT);
-                        params.put("command", new String[]{command});
+                        String newCmd = command + "&" + RSAHelper.PUBLIC_KEY_MODULUS + "=" + spec.get(RSAHelper.PUBLIC_KEY_MODULUS) + "&" + RSAHelper.PUBLIC_KEY_EXPONENT + "=" + spec.get(RSAHelper.PUBLIC_KEY_EXPONENT);
+                        params.put("command", new String[]{newCmd});
                         if (ApiServer.EnableSecureSessionCookie.value()) {
                             resp.setHeader("SET-COOKIE", String.format("JSESSIONID=%s;Secure;HttpOnly;Path=/client", session.getId()));
                             if (logger.isDebugEnabled()) {
