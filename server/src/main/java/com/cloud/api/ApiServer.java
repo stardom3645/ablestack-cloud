@@ -647,12 +647,6 @@ public class ApiServer extends ManagerBase implements HttpRequestHandler, ApiSer
                     // This is where the command is either serialized, or directly dispatched
                     StringBuilder log = new StringBuilder();
                     response = queueCommand(cmdObj, paramMap, log);
-                    logger.info("ApiServer=========================paramMap");
-                    logger.info(paramMap.toString());
-                    logger.info("ApiServer=========================cmdObj");
-                    logger.info(cmdObj.toString());
-                    logger.info("ApiServer=========================response");
-                    logger.info(response.toString());
                     buildAuditTrail(auditTrailSb, command[0], log.toString());
                 } else {
                     final String errorString = "Unknown API command: " + command[0];
