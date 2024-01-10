@@ -367,7 +367,7 @@ public class ApiServlet extends HttpServlet {
                         KeyPair keys = RSAHelper.genKey();
                         session.setAttribute(RSAHelper.PRIVATE_KEY, keys.getPrivate());
                         logger.iofo("ApiServlet==========================================session");
-                        logger.iofog(session.getId());
+                        logger.iofo(session.getId());
                         Map<String, String> spec = RSAHelper.getKeySpec(keys.getPublic());
                         params.put(RSAHelper.PUBLIC_KEY_MODULUS, new String[]{spec.get(RSAHelper.PUBLIC_KEY_MODULUS)});
                         params.put(RSAHelper.PUBLIC_KEY_EXPONENT, new String[]{spec.get(RSAHelper.PUBLIC_KEY_EXPONENT)});
