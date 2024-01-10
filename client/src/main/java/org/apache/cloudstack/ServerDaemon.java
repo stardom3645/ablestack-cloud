@@ -26,7 +26,6 @@ import java.lang.management.ManagementFactory;
 import java.net.URL;
 import java.util.Properties;
 
-import com.cloud.api.ApiServer;
 import com.cloud.utils.Pair;
 import com.cloud.utils.server.ServerProperties;
 import org.apache.commons.daemon.Daemon;
@@ -51,11 +50,9 @@ import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.eclipse.jetty.util.thread.QueuedThreadPool;
 import org.eclipse.jetty.util.thread.ScheduledExecutorScheduler;
 import org.eclipse.jetty.webapp.WebAppContext;
-import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
+import org.apache.log4j.Logger;
 
 import com.cloud.utils.PropertiesUtil;
-import com.cloud.utils.db.DbProperties;
 import org.apache.commons.lang3.StringUtils;
 
 /***
@@ -64,7 +61,7 @@ import org.apache.commons.lang3.StringUtils;
  * Configuration parameters are read from server.properties file available on the classpath.
  */
 public class ServerDaemon implements Daemon {
-    protected static Logger LOG = LogManager.getLogger(ServerDaemon.class);
+    private static final Logger LOG = Logger.getLogger(ServerDaemon.class);
     private static final String WEB_XML = "META-INF/webapp/WEB-INF/web.xml";
 
     /////////////////////////////////////////////////////
@@ -81,9 +78,7 @@ public class ServerDaemon implements Daemon {
     private static final String KEYSTORE_FILE = "https.keystore";
     private static final String KEYSTORE_PASSWORD = "https.keystore.password";
     private static final String WEBAPP_DIR = "webapp.dir";
-    private static String ACCESS_LOG = "access.log";
-    private static final String serverProperties = "server.properties";
-    private static final String serverPropertiesEnc = "server.properties.enc";
+    private static final String ACCESS_LOG = "access.log";
 
     ////////////////////////////////////////////////////////
     /////////////// Server Configuration ///////////////////
@@ -102,15 +97,12 @@ public class ServerDaemon implements Daemon {
     private String keystoreFile;
     private String keystorePassword;
     private String webAppLocation;
+
     //////////////////////////////////////////////////
     /////////////// Public methods ///////////////////
     //////////////////////////////////////////////////
 
     public static void main(final String... anArgs) throws Exception {
-        if (anArgs.length > 0) {
-            LOG.info(" ::::::::::KEK PASSWORD :::: " + anArgs[0]);
-            DbProperties.setKp(anArgs[0]);
-        }
         final ServerDaemon daemon = new ServerDaemon();
         daemon.init(null);
         daemon.start();
@@ -118,30 +110,18 @@ public class ServerDaemon implements Daemon {
 
     @Override
     public void init(final DaemonContext context) {
-        final File confFileEnc = PropertiesUtil.findConfigFile(serverPropertiesEnc);
-        final File confFile = PropertiesUtil.findConfigFile(serverProperties);
-        // security 기능 활성화 여부에 따라 access log 활성/비활성
-        if (ApiServer.SecurityFeaturesEnabled.value().booleanValue()) {
-            accessLogFile = null;
-            ACCESS_LOG = null;
+        final File confFile = PropertiesUtil.findConfigFile("server.properties");
+        if (confFile == null) {
+            LOG.warn(String.format("Server configuration file not found. Initializing server daemon on %s, with http.enable=%s, http.port=%s, https.enable=%s, https.port=%s, context.path=%s",
+                    bindInterface, httpEnable, httpPort, httpsEnable, httpsPort, contextPath));
+            return;
         }
+
+        LOG.info("Server configuration file found: " + confFile.getAbsolutePath());
+
         try {
-            if (confFile == null && confFileEnc == null) {
-                LOG.warn(String.format("Server configuration file not found. Initializing server daemon on %s, with http.enable=%s, http.port=%s, https.enable=%s, https.port=%s, context.path=%s",
-                        bindInterface, httpEnable, httpPort, httpsEnable, httpsPort, contextPath));
-                LOG.info("Server configuration file found");
-                return;
-            }
-            InputStream is = null;
-            if (confFileEnc != null) {
-                Process process = Runtime.getRuntime().exec("openssl enc -aria-256-cbc -a -d -pbkdf2 -k " + DbProperties.getKp() + " -saltlen 16 -md sha2-256 -iter 100000 -in " + confFileEnc.getAbsoluteFile());
-                is = process.getInputStream();
-                process.onExit();
-            } else {
-                is = new FileInputStream(confFile);
-            }
+            InputStream is = new FileInputStream(confFile);
             final Properties properties = ServerProperties.getServerProperties(is);
-            LOG.info(":::::::serverProps::::::::" + properties);
             if (properties == null) {
                 return;
             }
@@ -154,12 +134,7 @@ public class ServerDaemon implements Daemon {
             setKeystoreFile(properties.getProperty(KEYSTORE_FILE));
             setKeystorePassword(properties.getProperty(KEYSTORE_PASSWORD));
             setWebAppLocation(properties.getProperty(WEBAPP_DIR));
-            // security 기능 활성화 여부에 따라 access log 활성/비활성
-            if (ApiServer.SecurityFeaturesEnabled.value().booleanValue()) {
-                setAccessLogFile(properties.getProperty(ACCESS_LOG, null));
-            }else {
-                setAccessLogFile(properties.getProperty(ACCESS_LOG, "access.log"));
-            }
+            setAccessLogFile(properties.getProperty(ACCESS_LOG, "access.log"));
             setSessionTimeout(Integer.valueOf(properties.getProperty(SESSION_TIMEOUT, "10")));
         } catch (final IOException e) {
             LOG.warn("Failed to read configuration from server.properties file", e);
