@@ -362,24 +362,17 @@ public class ApiServlet extends HttpServlet {
                 // 인증 정보가 없어도 security 활성화 여부 확인을 위해 listCapablities API 오픈
                 if (command.equalsIgnoreCase("listCapabilities")) {
                     if (ApiServer.SecurityFeaturesEnabled.value()) {
-                        logger.info("ApiServlet==================================listCapabilities");
                         session = req.getSession(true);
-                        logger.info("ApiServlet==================================session");
-                        logger.info(session);
                         session.removeAttribute(RSAHelper.PRIVATE_KEY);
                         KeyPair keys = RSAHelper.genKey();
                         session.setAttribute(RSAHelper.PRIVATE_KEY, keys.getPrivate());
                         Map<String, String> spec = RSAHelper.getKeySpec(keys.getPublic());
-                        logger.info("ApiServlet==================================spec");
-                        logger.info(spec.get(RSAHelper.PUBLIC_KEY_MODULUS));
-                        logger.info(spec.get(RSAHelper.PUBLIC_KEY_EXPONENT));
                         params.put(RSAHelper.PUBLIC_KEY_MODULUS, new String[]{spec.get(RSAHelper.PUBLIC_KEY_MODULUS)});
                         params.put(RSAHelper.PUBLIC_KEY_EXPONENT, new String[]{spec.get(RSAHelper.PUBLIC_KEY_EXPONENT)});
-                        String newCmd = command + "&" + RSAHelper.PUBLIC_KEY_MODULUS + "=" + spec.get(RSAHelper.PUBLIC_KEY_MODULUS) + "&" + RSAHelper.PUBLIC_KEY_EXPONENT + "=" + spec.get(RSAHelper.PUBLIC_KEY_EXPONENT);
+                        String newCmd = command + "&" + RSAHelper.PUBLIC_KEY_MODULUS + "=" + spec.get(RSAHelper.PUBLIC_KEY_MODULUS) + "&" + RSAHelper.PUBLIC_KEY_EXPONENT + "=" + spec.get(RSAHelper.PUBLIC_KEY_EXPONENT) + "&response=json";
                         int idx1 = auditTrailSb.toString().lastIndexOf(" ");
                         int idx2 = auditTrailSb.toString().length();
                         auditTrailSb.replace(idx1+1, idx2-1, newCmd);
-                        logger.info(auditTrailSb.toString());
                         if (ApiServer.EnableSecureSessionCookie.value()) {
                             resp.setHeader("SET-COOKIE", String.format("JSESSIONID=%s;Secure;HttpOnly;Path=/client", session.getId()));
                             if (logger.isDebugEnabled()) {
