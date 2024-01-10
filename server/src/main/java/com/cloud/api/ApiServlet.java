@@ -193,14 +193,16 @@ public class ApiServlet extends HttpServlet {
         auditTrailSb.append(" -- ").append(req.getMethod()).append(' ');
         // get the response format since we'll need it in a couple of places
         String responseType = HttpUtils.RESPONSE_TYPE_XML;
-        final Map<String, Object[]> params = new HashMap<String, Object[]>();
-        logger.info("ApiServlet===============================params");
-        logger.info(params.toString());
+        final Map<String, Object[]>params  = new HashMap<String, Object[]>();
         Map<String, String[]> reqParams = req.getParameterMap();
         checkSingleQueryParameterValue(reqParams);
         params.putAll(reqParams);
+        logger.info("ApiServlet===============================params");
+        logger.info(params.toString());
 
         utf8Fixup(req, params);
+        logger.info("ApiServlet===============================params");
+        logger.info(params.toString());
 
         // logging the request start and end in management log for easy debugging
         String reqStr = "";
