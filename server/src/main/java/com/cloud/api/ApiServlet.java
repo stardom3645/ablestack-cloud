@@ -194,6 +194,8 @@ public class ApiServlet extends HttpServlet {
         // get the response format since we'll need it in a couple of places
         String responseType = HttpUtils.RESPONSE_TYPE_XML;
         final Map<String, Object[]> params = new HashMap<String, Object[]>();
+        logger.info("ApiServlet===============================params");
+        logger.info(params.toString());
         Map<String, String[]> reqParams = req.getParameterMap();
         checkSingleQueryParameterValue(reqParams);
         params.putAll(reqParams);
