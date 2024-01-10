@@ -215,6 +215,16 @@ public class LinstorStoragePool implements KVMStoragePool {
     }
 
     @Override
+    public String createRbdHeartBeatCommand(HAStoragePool primaryStoragePool, String hostPrivateIp, boolean hostValidation, String heartBeatPathRbd) {
+        return null;
+    }
+
+    @Override
+    public String createClvmHeartBeatCommand(HAStoragePool primaryStoragePool, String hostPrivateIp, boolean hostValidation, String heartBeatPathClvm, long heartBeatUpdateTimeout) {
+        return null;
+    }
+
+    @Override
     public String getStorageNodeId() {
         return null;
     }
@@ -228,4 +238,15 @@ public class LinstorStoragePool implements KVMStoragePool {
     public Boolean vmActivityCheck(HAStoragePool pool, HostTO host, Duration activityScriptTimeout, String volumeUUIDListString, String vmActivityCheckPath, long duration) {
         return null;
     }
+
+    @Override
+    public Boolean vmActivityRbdCheck(HAStoragePool pool, HostTO host, Duration activityScriptTimeout, String volumeUUIDListString, String vmActivityCheckPath, long duration) {
+        return null;
+    }
+
+    @Override
+    public Boolean vmActivityClvmCheck(HAStoragePool pool, HostTO host, Duration activityScriptTimeout, String volumeUUIDListString, String vmActivityCheckPath, long duration) {
+        return null;
+    }
+
 }
