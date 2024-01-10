@@ -16,7 +16,10 @@
 // under the License.
 package com.cloud.hypervisor.kvm.storage;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.List;
 import java.util.Map;
 
@@ -325,6 +328,48 @@ public class LibvirtStoragePool implements KVMStoragePool {
         return cmd.execute();
     }
 
+    public String createRbdHeartBeatCommand(HAStoragePool primaryStoragePool, String hostPrivateIp, boolean hostValidation, String heartBeatPathRbd) {
+        ProcessBuilder processBuilder = new ProcessBuilder();
+        processBuilder.command().add("python3");
+        processBuilder.command().add(heartBeatPathRbd);
+        processBuilder.command().add("-i");
+        processBuilder.command().add(primaryStoragePool.getPoolSourceHost());
+        processBuilder.command().add("-p");
+        processBuilder.command().add(primaryStoragePool.getPoolMountSourcePath());
+        processBuilder.command().add("-n");
+        processBuilder.command().add(primaryStoragePool.getPoolAuthUserName());
+        processBuilder.command().add("-s");
+        processBuilder.command().add(primaryStoragePool.getPoolAuthSecret());
+
+        if (hostValidation) {
+            processBuilder.command().add("-v");
+            processBuilder.command().add(hostPrivateIp);
+        }
+        Process process = null;
+        try {
+            process = processBuilder.start();
+            BufferedReader bfr = new BufferedReader(new InputStreamReader(process.getInputStream()));
+            return bfr.readLine();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public String createClvmHeartBeatCommand(HAStoragePool clvmStoragePool, String hostPrivateIp, boolean hostValidation, String heartBeatPathClvm, long heartBeatUpdateTimeout) {
+        Script cmd = new Script(heartBeatPathClvm, heartBeatUpdateTimeout, s_logger);
+        cmd.add("-p", clvmStoragePool.getPoolMountSourcePath());
+
+        if (hostValidation) {
+            cmd.add("-h", hostPrivateIp);
+        }
+
+        if (!hostValidation) {
+            cmd.add("-c");
+        }
+        return cmd.execute();
+    }
+
     @Override
     public String toString() {
         return new ToStringBuilder(this, ToStringStyle.JSON_STYLE).append("uuid", getUuid()).append("path", getLocalPath()).toString();
@@ -379,6 +424,68 @@ public class LibvirtStoragePool implements KVMStoragePool {
 
         s_logger.debug(String.format("Checking heart beat with KVMHAVMActivityChecker [{command=\"%s\", result: \"%s\", log: \"%s\", pool: \"%s\"}].", cmd.toString(), result, parsedLine, pool.getPoolIp()));
 
+        if (result == null && parsedLine.contains("DEAD")) {
+            s_logger.warn(String.format("Checking heart beat with KVMHAVMActivityChecker command [%s] returned [%s]. It is [%s]. It may cause a shutdown of host IP [%s].", cmd.toString(), result, parsedLine, host.getPrivateNetwork().getIp()));
+            return false;
+        } else {
+            return true;
+        }
+    }
+
+    @Override
+    public Boolean vmActivityRbdCheck(HAStoragePool pool, HostTO host, Duration activityScriptTimeout, String volumeUUIDListString, String vmActivityCheckPath, long duration) {
+        String parsedLine = "";
+        String command = "";
+        ProcessBuilder processBuilder = new ProcessBuilder();
+        processBuilder.command().add("python3");
+        processBuilder.command().add(vmActivityCheckPath);
+        processBuilder.command().add("-i");
+        processBuilder.command().add(pool.getPoolSourceHost());
+        processBuilder.command().add("-p");
+        processBuilder.command().add(pool.getPoolMountSourcePath());
+        processBuilder.command().add("-n");
+        processBuilder.command().add(pool.getPoolAuthUserName());
+        processBuilder.command().add("-s");
+        processBuilder.command().add(pool.getPoolAuthSecret());
+        processBuilder.command().add("-v");
+        processBuilder.command().add(host.getPrivateNetwork().getIp());
+        processBuilder.command().add("-u");
+        processBuilder.command().add(volumeUUIDListString);
+
+        command = processBuilder.command().toString();
+        Process process = null;
+        try {
+            process = processBuilder.start();
+            BufferedReader bfr = new BufferedReader(new InputStreamReader(process.getInputStream()));
+            parsedLine = bfr.readLine();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        s_logger.debug(String.format("Checking heart beat with KVMHAVMActivityChecker [{command=\"%s\", log: \"%s\", pool: \"%s\"}].", command, parsedLine, pool.getMonHost()));
+
+        if (parsedLine.contains("DEAD")) {
+            s_logger.warn(String.format("Checking heart beat with KVMHAVMActivityChecker command [%s] returned [%s]. It is [%s]. It may cause a shutdown of host IP [%s].", processBuilder.command().toString(), result, parsedLine, host.getPrivateNetwork().getIp()));
+            return false;
+        } else {
+            return true;
+        }
+    }
+
+    @Override
+    public Boolean vmActivityClvmCheck(HAStoragePool pool, HostTO host, Duration activityScriptTimeout, String volumeUUIDListString, String vmActivityCheckPath, long duration) {
+        String parsedLine = "";
+        Script cmd = new Script(vmActivityCheckPath, activityScriptTimeout.getStandardSeconds(), s_logger);
+        cmd.add("-h", host.getPublicNetwork().getIp());
+        cmd.add("-u", volumeUUIDListString);
+        cmd.add("-t", String.valueOf(String.valueOf(System.currentTimeMillis() / 1000)));
+        cmd.add("-d", String.valueOf(duration));
+
+        OutputInterpreter.OneLineParser parser = new OutputInterpreter.OneLineParser();
+
+        String result = cmd.execute(parser);
+        parsedLine = parser.getLine();
+
+        s_logger.debug(String.format("Checking heart beat with KVMHAVMActivityChecker [{command=\"%s\", result: \"%s\", log: \"%s\", pool: \"%s\"}].", cmd.toString(), result, parsedLine, pool.getPoolIp()));
         if (result == null && parsedLine.contains("DEAD")) {
             s_logger.warn(String.format("Checking heart beat with KVMHAVMActivityChecker command [%s] returned [%s]. It is [%s]. It may cause a shutdown of host IP [%s].", cmd.toString(), result, parsedLine, host.getPrivateNetwork().getIp()));
             return false;

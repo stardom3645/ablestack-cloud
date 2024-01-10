@@ -528,7 +528,7 @@ public class AblestackPrimaryDataStoreDriverImpl implements PrimaryDataStoreDriv
 
     @Override
     public boolean isStorageSupportHA(StoragePoolType type) {
-        return false;
+        return StoragePoolType.RBD == type;
     }
 
     @Override

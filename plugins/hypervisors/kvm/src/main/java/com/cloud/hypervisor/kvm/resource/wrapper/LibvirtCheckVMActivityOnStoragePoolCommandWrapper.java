@@ -30,6 +30,7 @@ import com.cloud.hypervisor.kvm.resource.KVMHAVMActivityChecker;
 import com.cloud.hypervisor.kvm.resource.LibvirtComputingResource;
 import com.cloud.resource.CommandWrapper;
 import com.cloud.resource.ResourceWrapper;
+import com.cloud.storage.Storage;
 
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -48,9 +49,11 @@ public final class LibvirtCheckVMActivityOnStoragePoolCommandWrapper extends Com
 
         KVMStoragePool primaryPool = storagePoolMgr.getStoragePool(pool.getType(), pool.getUuid());
 
-        if (primaryPool.isPoolSupportHA()){
+        if (primaryPool.isPoolSupportHA() || Storage.StoragePoolType.RBD == pool.getType() || Storage.StoragePoolType.CLVM == pool.getType()){
             final HAStoragePool nfspool = monitor.getStoragePool(pool.getUuid());
-            final KVMHAVMActivityChecker ha = new KVMHAVMActivityChecker(nfspool, command.getHost(), command.getVolumeList(), libvirtComputingResource.getVmActivityCheckPath(), command.getSuspectTimeInSeconds());
+            final HAStoragePool rbdpool = monitor.getRbdStoragePool(pool.getUuid());
+            final HAStoragePool clvmpool = monitor.getClvmStoragePool(pool.getUuid());
+            final KVMHAVMActivityChecker ha = new KVMHAVMActivityChecker(nfspool, rbdpool, clvmpool, command.getHost(), command.getVolumeList(), libvirtComputingResource.getVmActivityCheckPath(), command.getSuspectTimeInSeconds());
             final Future<Boolean> future = executors.submit(ha);
             try {
                 final Boolean result = future.get();

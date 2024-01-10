@@ -365,6 +365,12 @@ public class KVMStoragePoolManager {
         if (pool.isPoolSupportHA() && primaryStorage) {
             KVMHABase.HAStoragePool storagePool = new KVMHABase.HAStoragePool(pool, host, path, PoolType.PrimaryStorage);
             _haMonitor.addStoragePool(storagePool);
+        } else if (type == StoragePoolType.RBD && primaryStorage) {
+            KVMHABase.HAStoragePool rbdpool = new KVMHABase.HAStoragePool(pool, host, path, pool.getLocalPath(), PoolType.PrimaryStorage, pool.getAuthUserName(), pool.getAuthSecret(), pool.getSourceHost());
+            _haMonitor.addRbdStoragePool(rbdpool);
+        } else if (type == StoragePoolType.CLVM && primaryStorage) {
+            KVMHABase.HAStoragePool clvmpool = new KVMHABase.HAStoragePool(pool, host, path, PoolType.PrimaryStorage);
+            _haMonitor.addClvmStoragePool(clvmpool);
         }
         StoragePoolInformation info = new StoragePoolInformation(name, host, port, path, userInfo, type, details, primaryStorage);
         addStoragePool(pool.getUuid(), info);
