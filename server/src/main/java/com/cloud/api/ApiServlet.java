@@ -188,7 +188,7 @@ public class ApiServlet extends HttpServlet {
             return;
         }
 
-        StringBuilder auditTrailSb = new StringBuilder(128);
+        final StringBuilder auditTrailSb = new StringBuilder(128);
         auditTrailSb.append(" ").append(remoteAddress.getHostAddress());
         auditTrailSb.append(" -- ").append(req.getMethod()).append(' ');
         // get the response format since we'll need it in a couple of places
@@ -376,7 +376,9 @@ public class ApiServlet extends HttpServlet {
                         params.put(RSAHelper.PUBLIC_KEY_MODULUS, new String[]{spec.get(RSAHelper.PUBLIC_KEY_MODULUS)});
                         params.put(RSAHelper.PUBLIC_KEY_EXPONENT, new String[]{spec.get(RSAHelper.PUBLIC_KEY_EXPONENT)});
                         String newCmd = command + "&" + RSAHelper.PUBLIC_KEY_MODULUS + "=" + spec.get(RSAHelper.PUBLIC_KEY_MODULUS) + "&" + RSAHelper.PUBLIC_KEY_EXPONENT + "=" + spec.get(RSAHelper.PUBLIC_KEY_EXPONENT);
-                        auditTrailSb = auditTrailSb.toString().replace(command, newCmd);
+                        int idx = auditTrailSb.toString().lastIndexOf(" ");
+                        auditTrailSb.replace(idx+1, newCmd);
+                        logger.info(auditTrailSb.toString());
                         if (ApiServer.EnableSecureSessionCookie.value()) {
                             resp.setHeader("SET-COOKIE", String.format("JSESSIONID=%s;Secure;HttpOnly;Path=/client", session.getId()));
                             if (logger.isDebugEnabled()) {
