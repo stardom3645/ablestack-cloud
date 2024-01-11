@@ -29,16 +29,12 @@ import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-// import java.time.LocalDateTime;
-// import java.time.ZoneId;
-// import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
-// import java.util.Locale;
 import java.util.Map;
 
 import javax.naming.ConfigurationException;
@@ -47,13 +43,11 @@ import org.apache.cloudstack.storage.command.browser.ListDataStoreObjectsAnswer;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
-// import org.apache.xalan.templates.AbsPathChecker;
 
 import com.cloud.agent.IAgentControl;
 import com.cloud.agent.api.Answer;
 import com.cloud.agent.api.Command;
 import com.cloud.agent.api.StartupCommand;
-// import com.cloud.storage.Storage.StoragePoolType;
 import com.cloud.utils.net.NetUtils;
 import com.cloud.utils.script.Script;
 
