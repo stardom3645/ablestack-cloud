@@ -26,6 +26,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.security.KeyPair;
+import java.security.PrivateKey;
 
 import javax.inject.Inject;
 import javax.servlet.ServletConfig;
@@ -275,17 +276,34 @@ public class ApiServlet extends HttpServlet {
 
                     if (apiAuthenticator.getAPIType() == APIAuthenticationType.LOGOUT_API) {
                         if (session != null) {
-                            final Long userId = (Long) session.getAttribute("userid");
-                            final Account account = (Account) session.getAttribute("accountobj");
-                            Long accountId = null;
-                            if (account != null) {
-                                accountId = account.getId();
+                            if (!ApiServer.SecurityFeaturesEnabled.value()) {
+                                final Long userId = (Long) session.getAttribute("userid");
+                                final Account account = (Account) session.getAttribute("accountobj");
+                                Long accountId = null;
+                                if (account != null) {
+                                    accountId = account.getId();
+                                }
+                                auditTrailSb.insert(0, "(userId=" + userId + " accountId=" + accountId + " sessionId=" + session.getId() + ")");
+                                if (userId != null) {
+                                    apiServer.logoutUser(userId);
+                                }
+                                invalidateHttpSession(session, "invalidating session after logout call");
+                            } else {
+                                final PrivateKey privateKey = (PrivateKey) session.getAttribute(RSAHelper.PRIVATE_KEY);
+                                if (privateKey == null) {
+                                    Long userId = (Long) session.getAttribute("userid");
+                                    final Account account = (Account) session.getAttribute("accountobj");
+                                    Long accountId = null;
+                                    if (account != null) {
+                                        accountId = account.getId();
+                                    }
+                                    auditTrailSb.insert(0, "(userId=" + userId + " accountId=" + accountId + " sessionId=" + session.getId() + ")");
+                                    if (userId != null) {
+                                        apiServer.logoutUser(userId);
+                                    }
+                                    invalidateHttpSession(session, "invalidating session after logout call");
+                                }
                             }
-                            auditTrailSb.insert(0, "(userId=" + userId + " accountId=" + accountId + " sessionId=" + session.getId() + ")");
-                            if (userId != null) {
-                                apiServer.logoutUser(userId);
-                            }
-                            invalidateHttpSession(session, "invalidating session after logout call");
                         }
                         final Cookie[] cookies = req.getCookies();
                         if (cookies != null) {
