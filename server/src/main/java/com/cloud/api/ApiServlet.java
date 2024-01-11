@@ -264,6 +264,8 @@ public class ApiServlet extends HttpServlet {
                                     saveLogString(command), params.size(), session.getId(), remoteAddress.getHostAddress(), saveLogString(responseType), "auditTrailSb", "req", "resp"));
                         }
                         responseString = apiAuthenticator.authenticate(command, params, session, remoteAddress, responseType, auditTrailSb, req, resp);
+                        logger.info("ApiServlet=====================================responseString");
+                        logger.info(responseString);
                         if (session != null && session.getAttribute(ApiConstants.SESSIONKEY) != null) {
                             resp.addHeader("SET-COOKIE", String.format("%s=%s;HttpOnly", ApiConstants.SESSIONKEY, session.getAttribute(ApiConstants.SESSIONKEY)));
                         }
@@ -271,6 +273,7 @@ public class ApiServlet extends HttpServlet {
                         httpResponseCode = e.getErrorCode().getHttpCode();
                         responseString = e.getMessage();
                         logger.debug("Authentication failure: " + e.getMessage());
+                        logger.info("ApiServlet=====================================httpResponseCode");
                     }
 
                     if (apiAuthenticator.getAPIType() == APIAuthenticationType.LOGOUT_API) {
@@ -310,6 +313,8 @@ public class ApiServlet extends HttpServlet {
             // if a API key exists
 
             if (isNew && logger.isTraceEnabled()) {
+                logger.info("ApiServlet=====================================isNew");
+                logger.info(isNew);
                 logger.trace(String.format("new session: %s", session));
             }
 
