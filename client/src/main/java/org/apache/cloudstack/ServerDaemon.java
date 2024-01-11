@@ -129,8 +129,9 @@ public class ServerDaemon implements Daemon {
         final File confFile = PropertiesUtil.findConfigFile(serverProperties);
         // security 기능 활성화 여부에 따라 access log 활성/비활성
         if (securityFeaturesEnabled) {
-            accessLogFile = null;
-            ACCESS_LOG = null;
+//            accessLogFile = null;
+//            ACCESS_LOG = null;
+            System.out.println("sdfsdfsdfsdfsdfsdf");
         }
         try {
             if (confFile == null && confFileEnc == null) {
@@ -162,11 +163,12 @@ public class ServerDaemon implements Daemon {
             setKeystorePassword(properties.getProperty(KEYSTORE_PASSWORD));
             setWebAppLocation(properties.getProperty(WEBAPP_DIR));
             // security 기능 활성화 여부에 따라 access log 활성/비활성
-            if (securityFeaturesEnabled) {
-                setAccessLogFile(properties.getProperty(ACCESS_LOG, null));
-            }else {
-                setAccessLogFile(properties.getProperty(ACCESS_LOG, "access.log"));
-            }
+//            if (securityFeaturesEnabled) {
+//                setAccessLogFile(properties.getProperty(ACCESS_LOG, null));
+//            }else {
+//                setAccessLogFile(properties.getProperty(ACCESS_LOG, "access.log"));
+//            }
+            setAccessLogFile(properties.getProperty(ACCESS_LOG, "access.log"));
             setSessionTimeout(Integer.valueOf(properties.getProperty(SESSION_TIMEOUT, "10")));
         } catch (final IOException e) {
             LOG.warn("Failed to read configuration from server.properties file", e);
