@@ -3042,6 +3042,7 @@
 "message.installwizard.tooltip.tungsten.provider.name": "Tungsten provider name is required",
 "message.installwizard.tooltip.tungsten.provider.port": "Tungsten provider port is required",
 "message.installwizard.tooltip.tungsten.provider.vrouterport": "Tungsten provider vrouter port is required",
+"message.instances.migrate.vmware": "Instances that can be migrated from VMware.",
 "message.interloadbalance.not.return.elementid": "error: listInternalLoadBalancerElements API doesn't return internal LB element ID.",
 "message.ip.address.changes.effect.after.vm.restart": "IP address changes takes effect only after Instance restart.",
 "message.ip.v6.prefix.delete": "IPv6 prefix deleted",
