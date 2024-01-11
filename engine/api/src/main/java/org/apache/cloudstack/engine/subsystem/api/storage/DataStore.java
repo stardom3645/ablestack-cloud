@@ -34,8 +34,6 @@ public interface DataStore {
 
     String getName();
 
-    String getType();
-
     DataObject create(DataObject obj);
 
     boolean delete(DataObject obj);

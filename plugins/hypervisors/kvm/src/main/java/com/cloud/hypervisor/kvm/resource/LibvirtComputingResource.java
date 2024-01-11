@@ -142,6 +142,8 @@ import com.cloud.exception.InternalErrorException;
 import com.cloud.host.Host.Type;
 import com.cloud.hypervisor.Hypervisor.HypervisorType;
 import com.cloud.hypervisor.kvm.dpdk.DpdkHelper;
+// import com.cloud.hypervisor.kvm.resource.KVMHABase.PoolType;
+// import com.cloud.hypervisor.kvm.resource.KVMHABase.PoolType;
 import com.cloud.hypervisor.kvm.resource.LibvirtVMDef.ChannelDef;
 import com.cloud.hypervisor.kvm.resource.LibvirtVMDef.ClockDef;
 import com.cloud.hypervisor.kvm.resource.LibvirtVMDef.ConsoleDef;
@@ -4625,16 +4627,15 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
         final String path = disk.getDiskPath();
         if (path != null) {
             final String[] token = path.split("/");
-            return token[token.length - 1];
-            // if (DiskProtocol.RBD.equals(disk.getDiskProtocol())) {
-            //     // for example, path = <RBD pool>/<disk path>
-            //     if (token.length > 1) {
-            //         return token[1];
-            //     }
-            // } else if (token.length > 3) {
-            //     // for example, path = /mnt/pool_uuid/disk_path/
-            //     return token[3];
-            // }
+            if (DiskProtocol.RBD.equals(disk.getDiskProtocol())) {
+                // for example, path = <RBD pool>/<disk path>
+                if (token.length > 1) {
+                    return token[1];
+                }
+            } else if (token.length > 3) {
+                // for example, path = /mnt/pool_uuid/disk_path/
+                return token[3];
+            }
         }
         return null;
     }
@@ -5046,11 +5047,15 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
         }
         return true;
     }
-
     public Answer listFilesAtPath(ListDataStoreObjectsCommand command) {
         DataStoreTO store = command.getStore();
-        KVMStoragePool storagePool = storagePoolManager.getStoragePool(StoragePoolType.NetworkFilesystem, store.getUuid());
-        return listFilesAtPath(storagePool.getLocalPath(), command.getPath(), command.getStartIndex(), command.getPageSize());
+        storagePoolManager.getStoragePool(StoragePoolType.RBD, store.getUuid());
+        if("RBD".equals(command.getPoolType())) {
+            return listRbdFilesAtPath(command.getStartIndex(), command.getPageSize());
+        } else {
+            KVMStoragePool storagePool = storagePoolManager.getStoragePool(StoragePoolType.NetworkFilesystem, store.getUuid());
+            return listFilesAtPath(storagePool.getLocalPath(), command.getPath(), command.getStartIndex(), command.getPageSize());
+        }
     }
 
     public boolean addNetworkRules(final String vmName, final String vmId, final String guestIP, final String guestIP6, final String sig, final String seq, final String mac, final String rules, final String vif, final String brname,
