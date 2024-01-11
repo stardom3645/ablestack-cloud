@@ -764,6 +764,7 @@ public class AlertManagerImpl extends ManagerBase implements AlertManager, Confi
             newAlert.setSentCount(1);
             newAlert.setLastSent(new Date());
             newAlert.setName(alertType.getName());
+            newAlert.setShowAlert(true);
             _alertDao.persist(newAlert);
         } else {
             logger.debug("Have already sent: " + alert.getSentCount() + " emails for alert type '" + alertType + "' -- skipping send email");

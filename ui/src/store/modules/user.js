@@ -171,6 +171,9 @@ const user = {
     },
     SET_OAUTH_PROVIDER_USED_TO_LOGIN: (state, provider) => {
       vueProps.$localStorage.set(OAUTH_PROVIDER, provider)
+    },
+    SET_SHOW_ALERT (state, flag) {
+      state.showAlert = flag
     }
   },
 
@@ -218,6 +221,7 @@ const user = {
           commit('SET_2FA_ISSUER', result.issuerfor2fa)
           commit('SET_FIRST_LOGIN', (result.firstlogin === 'true'))
           commit('SET_LOGIN_FLAG', false)
+          commit('SET_SHOW_ALERT', true)
           notification.destroy()
 
           resolve()
@@ -264,7 +268,9 @@ const user = {
           commit('SET_2FA_ENABLED', (result.is2faenabled === 'true'))
           commit('SET_2FA_PROVIDER', result.providerfor2fa)
           commit('SET_2FA_ISSUER', result.issuerfor2fa)
+          commit('SET_FIRST_LOGIN', (result.firstlogin === 'true'))
           commit('SET_LOGIN_FLAG', false)
+          commit('SET_SHOW_ALERT', true)
           notification.destroy()
 
           resolve()
@@ -410,6 +416,7 @@ const user = {
           commit('SET_2FA_ISSUER', '')
           commit('SET_LOGIN_FLAG', false)
           commit('SET_FIRST_LOGIN', '')
+          commit('SET_SHOW_ALERT', false)
           vueProps.$localStorage.remove(CURRENT_PROJECT)
           vueProps.$localStorage.remove(ACCESS_TOKEN)
           vueProps.$localStorage.remove(HEADER_NOTICES)

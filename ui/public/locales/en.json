@@ -334,6 +334,7 @@
 "label.agree": "Agree",
 "label.alert": "Alert",
 "label.alert.details": "Alert details",
+"label.alert.show": "Don't see it again",
 "label.alerts": "Alerts",
 "label.algorithm": "Algorithm",
 "label.all": "All",
@@ -3407,6 +3408,7 @@
 "state.stopped": "Stopped",
 "state.stopping": "Stopping",
 "state.suspended": "Suspended",
+"state.destroyed" : "Destroyed",
 "user.login": "Login",
 "user.logout": "Logout",
 

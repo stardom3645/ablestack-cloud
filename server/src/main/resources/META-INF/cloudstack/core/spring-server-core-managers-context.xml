@@ -55,7 +55,10 @@
         <property name="userTwoFactorAuthenticationProviders" value="#{userTwoFactorAuthenticatorsRegistry.registered}" />
     </bean>
 
-    <bean id="passwordPolicies" class="com.cloud.user.PasswordPolicyImpl" />
+    <bean id="passwordPolicies" class="com.cloud.user.PasswordPolicyImpl">
+        <property name="userPasswordEncoders"
+            value="#{userPasswordEncodersRegistry.registered}" />
+    </bean>
 
     <bean id="managementServerImpl" class="com.cloud.server.ManagementServerImpl">
         <property name="lockControllerListener" ref="lockControllerListener" />

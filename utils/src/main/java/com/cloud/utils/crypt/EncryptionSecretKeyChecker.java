@@ -20,15 +20,13 @@
 package com.cloud.utils.crypt;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.security.SecureRandom;
 import java.util.Map;
 import java.util.Properties;
@@ -38,6 +36,7 @@ import javax.annotation.PostConstruct;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 
+import com.cloud.utils.PropertiesUtil;
 import com.cloud.utils.db.DbProperties;
 import com.cloud.utils.exception.CloudRuntimeException;
 
@@ -48,6 +47,7 @@ public class EncryptionSecretKeyChecker {
     // Two possible locations with the new packaging naming
     private static final String s_altKeyFile = "key";
     private static final String s_keyFile = "key";
+    private static final String s_keyFileEnc = "key.enc";
     private static final String s_envKey = "CLOUD_SECRET_KEY";
     private static CloudStackEncryptor s_encryptor = null;
     private static boolean s_useEncryption = false;
@@ -73,12 +73,19 @@ public class EncryptionSecretKeyChecker {
             return;
         }
 
+        InputStream is = null;
         String secretKey = null;
-        InputStream isEncKey = null;
+        final File isKeyEnc = PropertiesUtil.findConfigFile(s_keyFileEnc);
         if (encryptionType.equals("file")) {
-            InputStream is = this.getClass().getClassLoader().getResourceAsStream(s_keyFile);
-            if (is == null) {
-              is = this.getClass().getClassLoader().getResourceAsStream(s_altKeyFile);
+            if (isKeyEnc != null){
+                Process process = Runtime.getRuntime().exec("openssl enc -aria-256-cbc -a -d -pbkdf2 -k " + DbProperties.getKp() + " -saltlen 16 -md sha2-256 -iter 100000 -in " + isKeyEnc.getAbsoluteFile());
+                is = process.getInputStream();
+                process.onExit();
+            } else {
+                is = this.getClass().getClassLoader().getResourceAsStream(s_keyFile);
+                if (is == null) {
+                    is = this.getClass().getClassLoader().getResourceAsStream(s_altKeyFile);
+                }
             }
             if(is == null) {  //This is means we are not able to load key file from the classpath.
               throw new CloudRuntimeException(s_keyFile + " File containing secret key not found in the classpath: ");
@@ -93,12 +100,6 @@ public class EncryptionSecretKeyChecker {
 
             if (secretKey == null || secretKey.isEmpty()) {
                 throw new CloudRuntimeException("Secret key is null or empty in file " + s_keyFile);
-            }
-            isEncKey = this.getClass().getClassLoader().getResourceAsStream("key.enc");
-            if (isEncKey != null) {
-                Path filePath = Paths.get("/etc/cloudstack/management/key");
-                // 파일 삭제
-                Files.deleteIfExists(filePath);
             }
         } else if (encryptionType.equals("env")) {
             secretKey = System.getenv(s_envKey);
@@ -134,14 +135,14 @@ public class EncryptionSecretKeyChecker {
 
         initEncryptor(secretKey);
 
-        if (isEncKey != null) {
+        if (isKeyEnc != null) {
             SecureRandom random;
             //secretKey 지우기 (0, 1 로 덮어쓰기 5회)
             for (int i = 0; i < 5; i++) {
                 random = new SecureRandom();
                 secretKey = Integer.toString(random.nextInt(899)+100, 2); //100~999사이의 정수를 2진수(0과 1)로 변환한 값을 변수에 5회 덮어쓰기
+                DbProperties.setKp(Integer.toString(random.nextInt(899)+100, 2)); //secretKey와 마찬가지로 kek 생성시 필요한 password 5회 덮어쓰기
             }
-            logger.info("Overwritten final secretKey value : " + secretKey);
         }
     }
 

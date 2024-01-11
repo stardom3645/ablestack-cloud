@@ -2659,7 +2659,7 @@ public class NetworkModelImpl extends ManagerBase implements NetworkModel, Confi
             if (isWindows) {
                 MessageDigest md5 = null;
                 try {
-                    md5 = MessageDigest.getInstance("MD5");
+                    md5 = MessageDigest.getInstance("SHA-256");
                 } catch (NoSuchAlgorithmException e) {
                     logger.error("Unexpected exception " + e.getMessage(), e);
                     throw new CloudRuntimeException("Unable to get MD5 MessageDigest", e);

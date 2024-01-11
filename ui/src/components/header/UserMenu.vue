@@ -133,6 +133,9 @@ export default {
     )
     this.faviconSetting()
     this.securityfeatures = this.$store.getters.features.securityfeaturesenabled
+    if (this.securityfeatures) {
+      this.$localStorage.set('LOCALE', 'ko_KR')
+    }
   },
   watch: {
     image () {
