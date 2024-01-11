@@ -57,8 +57,6 @@ import com.cloud.utils.PropertiesUtil;
 import com.cloud.utils.db.DbProperties;
 import org.apache.commons.lang3.StringUtils;
 
-import javax.inject.Inject;
-
 /***
  * The ServerDaemon class implements the embedded server, it can be started either
  * using JSVC or directly from the JAR along with additional jars not shaded in the uber-jar.
