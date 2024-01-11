@@ -28,7 +28,6 @@ import java.util.Properties;
 
 import com.cloud.utils.Pair;
 import com.cloud.utils.server.ServerProperties;
-import org.apache.cloudstack.framework.config.dao.ConfigurationDao;
 import org.apache.commons.daemon.Daemon;
 import org.apache.commons.daemon.DaemonContext;
 import org.eclipse.jetty.jmx.MBeanContainer;
