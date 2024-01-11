@@ -20,10 +20,11 @@ import com.cloud.api.ApiServlet;
 import com.cloud.domain.Domain;
 import com.cloud.user.User;
 import com.cloud.user.UserAccount;
-import org.apache.cloudstack.api.ApiServerService;
+import com.cloud.utils.crypt.RSAHelper;
 import com.cloud.api.response.ApiResponseSerializer;
 import com.cloud.exception.CloudAuthenticationException;
 import com.cloud.user.Account;
+import org.apache.cloudstack.api.ApiServerService;
 import org.apache.cloudstack.api.APICommand;
 import org.apache.cloudstack.api.ApiConstants;
 import org.apache.cloudstack.api.ApiErrorCode;
@@ -34,11 +35,13 @@ import org.apache.cloudstack.api.auth.APIAuthenticationType;
 import org.apache.cloudstack.api.auth.APIAuthenticator;
 import org.apache.cloudstack.api.auth.PluggableAPIAuthenticator;
 import org.apache.cloudstack.api.response.LoginCmdResponse;
+import org.apache.cloudstack.framework.config.dao.ConfigurationDao;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 import org.jetbrains.annotations.Nullable;
 
 import javax.inject.Inject;
+import java.security.PrivateKey;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
@@ -68,6 +71,9 @@ public class DefaultLoginAPIAuthenticatorCmd extends BaseCmd implements APIAuthe
 
     @Inject
     ApiServerService _apiServer;
+
+    @Inject
+    private ConfigurationDao _configDao;
 
     /////////////////////////////////////////////////////
     /////////////////// Accessors ///////////////////////
@@ -157,7 +163,17 @@ public class DefaultLoginAPIAuthenticatorCmd extends BaseCmd implements APIAuthe
                 return ApiResponseSerializer.toSerializedString(_apiServer.loginUser(session, username[0], pwd, domainId, domain, remoteAddress, params),
                         responseType);
             } catch (final CloudAuthenticationException ex) {
-                ApiServlet.invalidateHttpSession(session, "fall through to API key,");
+                logger.info("DefaultLoginAPIAuthenticatorCmd.java==================================================");
+                String value = _configDao.getValue("security.features.enabled");
+                boolean SecurityFeaturesEnabled = Boolean.parseBoolean(value);
+                if (SecurityFeaturesEnabled) {
+                    final PrivateKey privateKey = (PrivateKey) session.getAttribute(RSAHelper.PRIVATE_KEY);
+                    if (privateKey == null) {
+                        ApiServlet.invalidateHttpSession(session, "fall through to API key,");
+                    }
+                } else {
+                    ApiServlet.invalidateHttpSession(session, "fall through to API key,");
+                }
                 // TODO: fall through to API key, or just fail here w/ auth error? (HTTP 401)
                 String msg = String.format("%s", ex.getMessage() != null ?
                         ex.getMessage() :
