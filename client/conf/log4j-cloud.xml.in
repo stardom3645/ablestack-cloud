@@ -19,7 +19,7 @@ under the License.
 -->
 <Configuration monitorInterval="60" packages="org.apache.cloudstack.alert.snmp,org.apache.cloudstack.syslog">
    <Appenders>
-      <Null name="NullAppender"/>
+<!--      <Null name="NullAppender"/>-->
       <properties>
         <property name="filters">net.sf.cglib.proxy</property>
       </properties>
@@ -123,13 +123,13 @@ under the License.
       <!-- Setup the Root category -->
       <!-- ======================= -->
 
-      <Root level="OFF">
-         <!-- <AppenderRef ref="SYSLOG"/>
+      <Root level="DEBUG">
+         <AppenderRef ref="SYSLOG"/>
          <AppenderRef ref="CONSOLE"/>
          <AppenderRef ref="FILE"/>
          <AppenderRef ref="SNMP"/>
-         <AppenderRef ref="ALERTSYSLOG"/> -->
-         <AppenderRef ref="NullAppender"/>
+         <AppenderRef ref="ALERTSYSLOG"/>
+<!--         <AppenderRef ref="NullAppender"/>-->
       </Root>
 
    </Loggers>

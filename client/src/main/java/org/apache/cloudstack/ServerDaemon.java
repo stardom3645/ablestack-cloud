@@ -109,7 +109,7 @@ public class ServerDaemon implements Daemon {
     private String keystorePassword;
     private String webAppLocation;
 
-    final boolean securityFeaturesEnabled = Boolean.parseBoolean(_configDao.getValue("security.features.enabled"));
+    private boolean securityFeaturesEnabled = Boolean.parseBoolean(_configDao.getValue("security.features.enabled"));
     //////////////////////////////////////////////////
     /////////////// Public methods ///////////////////
     //////////////////////////////////////////////////
