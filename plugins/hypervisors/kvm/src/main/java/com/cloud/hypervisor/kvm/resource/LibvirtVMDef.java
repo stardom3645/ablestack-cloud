@@ -637,7 +637,7 @@ public class LibvirtVMDef {
             }
         }
 
-        enum DiskType {
+        public enum DiskType {
             FILE("file"), BLOCK("block"), DIRECTROY("dir"), NETWORK("network");
             String _diskType;
 
@@ -1109,6 +1109,18 @@ public class LibvirtVMDef {
         public void setLibvirtDiskEncryptDetails(LibvirtDiskEncryptDetails details) { this.encryptDetails = details; }
 
         public LibvirtDiskEncryptDetails getLibvirtDiskEncryptDetails() { return this.encryptDetails; }
+
+        public String getSourceHost() {
+            return _sourceHost;
+        }
+
+        public int getSourceHostPort() {
+            return _sourcePort;
+        }
+
+        public String getSourcePath() {
+            return _sourcePath;
+        }
 
         @Override
         public String toString() {
@@ -1777,6 +1789,10 @@ public class LibvirtVMDef {
             modeBuilder.append("</cpu>");
             return modeBuilder.toString();
         }
+
+        public int getCoresPerSocket() {
+            return _coresPerSocket;
+        }
     }
 
     public static class SerialDef {
@@ -1833,7 +1849,7 @@ public class LibvirtVMDef {
 
     public final static class ChannelDef {
         enum ChannelType {
-            UNIX("unix"), SERIAL("serial");
+            UNIX("unix"), SERIAL("serial"), SPICEVMC("spicevmc");
             String type;
 
             ChannelType(String type) {
@@ -2172,14 +2188,14 @@ public class LibvirtVMDef {
         private String path = "/dev/random";
         private RngModel rngModel = RngModel.VIRTIO;
         private RngBackendModel rngBackendModel = RngBackendModel.RANDOM;
-        private int rngRateBytes = 2048;
-        private int rngRatePeriod = 1000;
+        private Integer rngRateBytes = 2048;
+        private Integer rngRatePeriod = 1000;
 
         public RngDef(String path) {
             this.path = path;
         }
 
-        public RngDef(String path, int rngRateBytes, int rngRatePeriod) {
+        public RngDef(String path, Integer rngRateBytes, Integer rngRatePeriod) {
             this.path = path;
             this.rngRateBytes = rngRateBytes;
             this.rngRatePeriod = rngRatePeriod;
@@ -2198,7 +2214,7 @@ public class LibvirtVMDef {
             this.rngBackendModel = rngBackendModel;
         }
 
-        public RngDef(String path, RngBackendModel rngBackendModel, int rngRateBytes, int rngRatePeriod) {
+        public RngDef(String path, RngBackendModel rngBackendModel, Integer rngRateBytes, Integer rngRatePeriod) {
             this.path = path;
             this.rngBackendModel = rngBackendModel;
             this.rngRateBytes = rngRateBytes;
@@ -2223,11 +2239,11 @@ public class LibvirtVMDef {
         }
 
         public int getRngRateBytes() {
-            return rngRateBytes;
+            return rngRateBytes != null ? rngRateBytes : 0;
         }
 
         public int getRngRatePeriod() {
-            return rngRatePeriod;
+            return rngRatePeriod != null ? rngRatePeriod : 0;
         }
 
         @Override
