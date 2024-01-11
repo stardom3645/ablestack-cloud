@@ -26,9 +26,9 @@ import java.lang.management.ManagementFactory;
 import java.net.URL;
 import java.util.Properties;
 
-import com.cloud.api.ApiServer;
 import com.cloud.utils.Pair;
 import com.cloud.utils.server.ServerProperties;
+import org.apache.cloudstack.framework.config.dao.ConfigurationDao;
 import org.apache.commons.daemon.Daemon;
 import org.apache.commons.daemon.DaemonContext;
 import org.eclipse.jetty.jmx.MBeanContainer;
@@ -58,6 +58,8 @@ import com.cloud.utils.PropertiesUtil;
 import com.cloud.utils.db.DbProperties;
 import org.apache.commons.lang3.StringUtils;
 
+import javax.inject.Inject;
+
 /***
  * The ServerDaemon class implements the embedded server, it can be started either
  * using JSVC or directly from the JAR along with additional jars not shaded in the uber-jar.
@@ -66,6 +68,9 @@ import org.apache.commons.lang3.StringUtils;
 public class ServerDaemon implements Daemon {
     protected static Logger LOG = LogManager.getLogger(ServerDaemon.class);
     private static final String WEB_XML = "META-INF/webapp/WEB-INF/web.xml";
+
+    @Inject
+    private ConfigurationDao _configDao;
 
     /////////////////////////////////////////////////////
     /////////////// Server Properties ///////////////////
@@ -85,6 +90,7 @@ public class ServerDaemon implements Daemon {
     private static final String serverProperties = "server.properties";
     private static final String serverPropertiesEnc = "server.properties.enc";
 
+
     ////////////////////////////////////////////////////////
     /////////////// Server Configuration ///////////////////
     ////////////////////////////////////////////////////////
@@ -102,6 +108,8 @@ public class ServerDaemon implements Daemon {
     private String keystoreFile;
     private String keystorePassword;
     private String webAppLocation;
+
+    final boolean securityFeaturesEnabled = Boolean.parseBoolean(_configDao.getValue("security.features.enabled"));
     //////////////////////////////////////////////////
     /////////////// Public methods ///////////////////
     //////////////////////////////////////////////////
@@ -121,7 +129,7 @@ public class ServerDaemon implements Daemon {
         final File confFileEnc = PropertiesUtil.findConfigFile(serverPropertiesEnc);
         final File confFile = PropertiesUtil.findConfigFile(serverProperties);
         // security 기능 활성화 여부에 따라 access log 활성/비활성
-        if (ApiServer.SecurityFeaturesEnabled.value().booleanValue()) {
+        if (securityFeaturesEnabled) {
             accessLogFile = null;
             ACCESS_LOG = null;
         }
@@ -155,7 +163,7 @@ public class ServerDaemon implements Daemon {
             setKeystorePassword(properties.getProperty(KEYSTORE_PASSWORD));
             setWebAppLocation(properties.getProperty(WEBAPP_DIR));
             // security 기능 활성화 여부에 따라 access log 활성/비활성
-            if (ApiServer.SecurityFeaturesEnabled.value().booleanValue()) {
+            if (securityFeaturesEnabled) {
                 setAccessLogFile(properties.getProperty(ACCESS_LOG, null));
             }else {
                 setAccessLogFile(properties.getProperty(ACCESS_LOG, "access.log"));
