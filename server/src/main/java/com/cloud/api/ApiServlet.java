@@ -301,6 +301,7 @@ public class ApiServlet extends HttpServlet {
                                     if (userId != null) {
                                         apiServer.logoutUser(userId);
                                     }
+                                    logger.info("sessionDestroy1======================================================");
                                     invalidateHttpSession(session, "invalidating session after logout call");
                                 }
                             }
@@ -321,8 +322,11 @@ public class ApiServlet extends HttpServlet {
                 logger.trace("no command available");
             }
             auditTrailSb.append(cleanQueryString);
+            logger.info("isNew1======================================================");
+            logger.info(session);
             final boolean isNew = ((session == null) ? true : session.isNew());
-
+            logger.info("isNew2======================================================");
+            logger.info(session);
             // Initialize an empty context and we will update it after we have verified the request below,
             // we no longer rely on web-session here, verifyRequest will populate user/account information
             // if a API key exists
@@ -348,6 +352,7 @@ public class ApiServlet extends HttpServlet {
                 final String account = (String) session.getAttribute("account");
                 final Object accountObj = session.getAttribute("accountobj");
                 if (account != null) {
+                    logger.info("sessionDestroy2======================================================");
                     if (invalidateHttpSessionIfNeeded(req, resp, auditTrailSb, responseType, params, session, account)) return;
                 } else {
                     if (logger.isDebugEnabled()) {
@@ -423,6 +428,7 @@ public class ApiServlet extends HttpServlet {
                     HttpUtils.writeHttpResponse(resp, response != null ? response : "", HttpServletResponse.SC_OK, responseType, ApiServer.JSONcontentType.value());
                 } else {
                     if (session != null) {
+                        logger.info("sessionDestroy3======================================================");
                         invalidateHttpSession(session, String.format("request verification failed for %s from %s", userId, remoteAddress.getHostAddress()));
                     }
                     auditTrailSb.append(" " + HttpServletResponse.SC_UNAUTHORIZED + " " + "unable to verify user credentials and/or request signature");
