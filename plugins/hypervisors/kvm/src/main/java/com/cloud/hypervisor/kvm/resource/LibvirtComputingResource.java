@@ -5049,7 +5049,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
         DataStoreTO store = command.getStore();
         storagePoolManager.getStoragePool(StoragePoolType.RBD, store.getUuid());
         if("RBD".equals(command.getPoolType())) {
-            return listRbdFilesAtPath(command.getStartIndex(), command.getPageSize());
+            return listRbdFilesAtPath(command.getStartIndex(), command.getPageSize(), command.getPoolPath());
         } else {
             KVMStoragePool storagePool = storagePoolManager.getStoragePool(StoragePoolType.NetworkFilesystem, store.getUuid());
             return listFilesAtPath(storagePool.getLocalPath(), command.getPath(), command.getStartIndex(), command.getPageSize());

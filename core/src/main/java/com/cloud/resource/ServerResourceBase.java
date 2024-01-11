@@ -157,7 +157,7 @@ public abstract class ServerResourceBase implements ServerResource {
         return true;
     }
 
-    protected Answer listRbdFilesAtPath(int startIndex, int pageSize) {
+    protected Answer listRbdFilesAtPath(int startIndex, int pageSize, String poolPath) {
        int count = 0;
        List<String> names = new ArrayList<>();
        List<String> paths = new ArrayList<>();
@@ -167,7 +167,7 @@ public abstract class ServerResourceBase implements ServerResource {
        List<Long> modifiedList = new ArrayList<>();
 
        try {
-           Process listProcess = Runtime.getRuntime().exec("rbd ls");
+           Process listProcess = Runtime.getRuntime().exec("rbd -p "+poolPath+" ls");
            BufferedReader listReader = new BufferedReader(new InputStreamReader(listProcess.getInputStream()));
            String imageName;
            while ((imageName = listReader.readLine()) != null) {
@@ -179,7 +179,7 @@ public abstract class ServerResourceBase implements ServerResource {
                     paths.add(imageName);
                     isDirs.add(false);
                     absPaths.add("/");
-                    Process infoProcess = Runtime.getRuntime().exec("rbd info " + imageName.trim());
+                    Process infoProcess = Runtime.getRuntime().exec("rbd -p "+poolPath+" info " + imageName.trim());
                     BufferedReader infoReader = new BufferedReader(new InputStreamReader(infoProcess.getInputStream()));
                     String infoLine;
                     while ((infoLine = infoReader.readLine()) != null) {

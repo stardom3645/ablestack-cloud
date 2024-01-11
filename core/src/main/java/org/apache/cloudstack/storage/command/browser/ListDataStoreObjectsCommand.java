@@ -34,6 +34,8 @@ public class ListDataStoreObjectsCommand extends StorageCommand {
 
     private String poolType;
 
+    private String poolPath;
+
     public ListDataStoreObjectsCommand() {
     }
 
@@ -54,6 +56,10 @@ public class ListDataStoreObjectsCommand extends StorageCommand {
         return path;
     }
 
+    public String getPoolPath() {
+        return poolPath;
+    }
+
     public DataStoreTO getStore() {
         return store;
     }
@@ -72,5 +78,9 @@ public class ListDataStoreObjectsCommand extends StorageCommand {
 
     public void setPoolType(String poolType) {
         this.poolType = poolType;
+    }
+
+    public void setPoolPath(String poolPath) {
+        this.poolPath = poolPath;
     }
 }

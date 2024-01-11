@@ -192,6 +192,7 @@ public class StorageBrowserImpl extends MutualExclusiveIdsManagerBase implements
 
         if (dataStore.getRole() == DataStoreRole.Primary) {
             listDSCmd.setPoolType(primaryDataStoreDao.findById(dataStore.getId()).getPoolType().toString());
+            listDSCmd.setPoolPath(primaryDataStoreDao.findById(dataStore.getId()).getPath().toString());
         }
         Answer answer = null;
         try {
