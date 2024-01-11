@@ -27,6 +27,8 @@ import org.libvirt.StoragePoolInfo.StoragePoolState;
 import com.cloud.utils.script.OutputInterpreter;
 import com.cloud.utils.script.OutputInterpreter.AllLinesParser;
 import com.cloud.utils.script.Script;
+import com.cloud.agent.properties.AgentProperties;
+import com.cloud.agent.properties.AgentPropertiesFileHandler;
 
 public class KVMHABase {
     private static final Logger s_logger = Logger.getLogger(KVMHABase.class);
@@ -34,10 +36,10 @@ public class KVMHABase {
     protected static String s_heartBeatPath;
     protected static String s_heartBeatPathRbd;
     protected static String s_heartBeatPathClvm;
-    protected long _heartBeatUpdateTimeout = 60000;
-    protected long _heartBeatUpdateFreq = 60000;
-    protected long _heartBeatUpdateMaxTries = 10;
-    protected long _heartBeatUpdateRetrySleep = 10000;
+    protected long _heartBeatUpdateTimeout = AgentPropertiesFileHandler.getPropertyValue(AgentProperties.HEARTBEAT_UPDATE_TIMEOUT);
+    protected long _heartBeatUpdateFreq = AgentPropertiesFileHandler.getPropertyValue(AgentProperties.KVM_HEARTBEAT_UPDATE_FREQUENCY);
+    protected long _heartBeatUpdateMaxTries = AgentPropertiesFileHandler.getPropertyValue(AgentProperties.KVM_HEARTBEAT_UPDATE_MAX_TRIES);
+    protected long _heartBeatUpdateRetrySleep = AgentPropertiesFileHandler.getPropertyValue(AgentProperties.KVM_HEARTBEAT_UPDATE_RETRY_SLEEP);
 
     public static enum PoolType {
         PrimaryStorage, SecondaryStorage

@@ -1217,4 +1217,24 @@ public class UserVmManagerImplTest {
         Assert.assertEquals(expected, result);
         Assert.assertEquals(expected, userVmVoMock.getPassword());
     }
+
+    @Test
+    public void testSetVmRequiredFieldsForImportNotImport() {
+        userVmManagerImpl.setVmRequiredFieldsForImport(false, userVmVoMock, _dcMock,
+                Hypervisor.HypervisorType.VMware, Mockito.mock(HostVO.class), Mockito.mock(HostVO.class), VirtualMachine.PowerState.PowerOn);
+        Mockito.verify(userVmVoMock, Mockito.never()).setDataCenterId(anyLong());
+    }
+
+    @Test
+    public void testSetVmRequiredFieldsForImportFromLastHost() {
+        HostVO lastHost = Mockito.mock(HostVO.class);
+        HostVO host = Mockito.mock(HostVO.class);
+        Mockito.when(_dcMock.getId()).thenReturn(1L);
+        Mockito.when(host.getId()).thenReturn(1L);
+        Mockito.when(lastHost.getId()).thenReturn(2L);
+        userVmManagerImpl.setVmRequiredFieldsForImport(true, userVmVoMock, _dcMock,
+                Hypervisor.HypervisorType.VMware, host, lastHost, VirtualMachine.PowerState.PowerOn);
+        Mockito.verify(userVmVoMock).setLastHostId(2L);
+        Mockito.verify(userVmVoMock).setState(VirtualMachine.State.Running);
+    }
 }
