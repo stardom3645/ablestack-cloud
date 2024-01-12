@@ -19,6 +19,7 @@ under the License.
 -->
 <Configuration monitorInterval="60">
     <Appenders>
+        <Null name="NullAppender"/>
         <!-- ================================= -->
         <!-- Preserve messages in a local file -->
         <!-- ================================= -->
