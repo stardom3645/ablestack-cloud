@@ -1168,7 +1168,7 @@ public class ApiServer extends ManagerBase implements HttpRequestHandler, ApiSer
             // decrypt RSA password
             PrivateKey pk = (PrivateKey)session.getAttribute(RSAHelper.PRIVATE_KEY);
             if (pk == null) {
-                throw new CloudAuthenticationException("Unable to find the privatekey, bad credentials.");
+                throw new CloudAuthenticationException("Unable to find the session attribute privatekey.");
             }
             String decPassword = "";
             try {
@@ -1225,6 +1225,7 @@ public class ApiServer extends ManagerBase implements HttpRequestHandler, ApiSer
             }
 
             final Account account = accountMgr.getAccount(userAcct.getAccountId());
+
             // set the userId and account object for everyone
             session.setAttribute("userid", userAcct.getId());
             final UserVO user = (UserVO)accountMgr.getActiveUser(userAcct.getId());
