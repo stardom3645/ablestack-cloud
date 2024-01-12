@@ -20,10 +20,10 @@ import com.cloud.api.ApiServlet;
 import com.cloud.domain.Domain;
 import com.cloud.user.User;
 import com.cloud.user.UserAccount;
+import org.apache.cloudstack.api.ApiServerService;
 import com.cloud.api.response.ApiResponseSerializer;
 import com.cloud.exception.CloudAuthenticationException;
 import com.cloud.user.Account;
-import org.apache.cloudstack.api.ApiServerService;
 import org.apache.cloudstack.api.APICommand;
 import org.apache.cloudstack.api.ApiConstants;
 import org.apache.cloudstack.api.ApiErrorCode;
@@ -34,7 +34,6 @@ import org.apache.cloudstack.api.auth.APIAuthenticationType;
 import org.apache.cloudstack.api.auth.APIAuthenticator;
 import org.apache.cloudstack.api.auth.PluggableAPIAuthenticator;
 import org.apache.cloudstack.api.response.LoginCmdResponse;
-import org.apache.cloudstack.framework.config.dao.ConfigurationDao;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 import org.jetbrains.annotations.Nullable;
@@ -69,9 +68,6 @@ public class DefaultLoginAPIAuthenticatorCmd extends BaseCmd implements APIAuthe
 
     @Inject
     ApiServerService _apiServer;
-
-    @Inject
-    private ConfigurationDao _configDao;
 
     /////////////////////////////////////////////////////
     /////////////////// Accessors ///////////////////////

@@ -322,6 +322,7 @@ public class ApiServlet extends HttpServlet {
             }
             auditTrailSb.append(cleanQueryString);
             final boolean isNew = ((session == null) ? true : session.isNew());
+
             // Initialize an empty context and we will update it after we have verified the request below,
             // we no longer rely on web-session here, verifyRequest will populate user/account information
             // if a API key exists
