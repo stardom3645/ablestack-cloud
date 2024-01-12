@@ -80,7 +80,7 @@ public class ServerDaemon implements Daemon {
     private static final String KEYSTORE_FILE = "https.keystore";
     private static final String KEYSTORE_PASSWORD = "https.keystore.password";
     private static final String WEBAPP_DIR = "webapp.dir";
-//    private static final String ACCESS_LOG = "access.log";
+    private static final String ACCESS_LOG = "access.log";
     private static final String serverProperties = "server.properties";
     private static final String serverPropertiesEnc = "server.properties.enc";
 
@@ -149,7 +149,7 @@ public class ServerDaemon implements Daemon {
             setKeystoreFile(properties.getProperty(KEYSTORE_FILE));
             setKeystorePassword(properties.getProperty(KEYSTORE_PASSWORD));
             setWebAppLocation(properties.getProperty(WEBAPP_DIR));
-//            setAccessLogFile(properties.getProperty(ACCESS_LOG, null));
+            setAccessLogFile(properties.getProperty(ACCESS_LOG, null));
             setSessionTimeout(Integer.valueOf(properties.getProperty(SESSION_TIMEOUT, "10")));
         } catch (final IOException e) {
             LOG.warn("Failed to read configuration from server.properties file", e);
@@ -301,6 +301,11 @@ public class ServerDaemon implements Daemon {
     }
 
     private RequestLog createRequestLog() {
+        if (accessLogFile == null) {
+            // Return null to completely disable the log
+            return null;
+        }
+
         final NCSARequestLog log = new NCSARequestLog();
         final File logPath = new File(accessLogFile);
         final File parentFile = logPath.getParentFile();
@@ -359,9 +364,9 @@ public class ServerDaemon implements Daemon {
         this.keystorePassword = keystorePassword;
     }
 
-//    public void setAccessLogFile(String accessLogFile) {
-//        this.accessLogFile = accessLogFile;
-//    }
+    public void setAccessLogFile(String accessLogFile) {
+        this.accessLogFile = accessLogFile;
+    }
 
     public void setWebAppLocation(String webAppLocation) {
         this.webAppLocation = webAppLocation;
