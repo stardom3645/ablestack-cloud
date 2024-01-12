@@ -301,11 +301,6 @@ public class ServerDaemon implements Daemon {
     }
 
     private RequestLog createRequestLog() {
-        if (accessLogFile == null) {
-            // Return null to completely disable the log
-            return null;
-        }
-
         final NCSARequestLog log = new NCSARequestLog();
         final File logPath = new File(accessLogFile);
         final File parentFile = logPath.getParentFile();
@@ -316,7 +311,7 @@ public class ServerDaemon implements Daemon {
         log.setAppend(true);
         log.setLogTimeZone("GMT");
         log.setLogLatency(true);
-        return log;
+        return null;
     }
 
     private URL getResource(String aResource) {
