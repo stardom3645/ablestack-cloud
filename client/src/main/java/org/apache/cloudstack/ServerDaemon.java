@@ -80,7 +80,7 @@ public class ServerDaemon implements Daemon {
     private static final String KEYSTORE_FILE = "https.keystore";
     private static final String KEYSTORE_PASSWORD = "https.keystore.password";
     private static final String WEBAPP_DIR = "webapp.dir";
-    private static String ACCESS_LOG = null;
+    private static final String ACCESS_LOG = null;
     private static final String serverProperties = "server.properties";
     private static final String serverPropertiesEnc = "server.properties.enc";
 
