@@ -163,17 +163,18 @@ public class DefaultLoginAPIAuthenticatorCmd extends BaseCmd implements APIAuthe
                 return ApiResponseSerializer.toSerializedString(_apiServer.loginUser(session, username[0], pwd, domainId, domain, remoteAddress, params),
                         responseType);
             } catch (final CloudAuthenticationException ex) {
-                logger.info("DefaultLoginAPIAuthenticatorCmd.java==================================================");
-                String value = _configDao.getValue("security.features.enabled");
-                boolean SecurityFeaturesEnabled = Boolean.parseBoolean(value);
-                if (SecurityFeaturesEnabled) {
-                    final PrivateKey privateKey = (PrivateKey) session.getAttribute(RSAHelper.PRIVATE_KEY);
-                    if (privateKey == null) {
-                        ApiServlet.invalidateHttpSession(session, "fall through to API key,");
-                    }
-                } else {
-                    ApiServlet.invalidateHttpSession(session, "fall through to API key,");
-                }
+                // logger.info("DefaultLoginAPIAuthenticatorCmd.java==================================================");
+                // String value = _configDao.getValue("security.features.enabled");
+                // boolean SecurityFeaturesEnabled = Boolean.parseBoolean(value);
+                // if (SecurityFeaturesEnabled) {
+                //     final PrivateKey privateKey = (PrivateKey) session.getAttribute(RSAHelper.PRIVATE_KEY);
+                //     if (privateKey == null) {
+                //         ApiServlet.invalidateHttpSession(session, "fall through to API key,");
+                //     }
+                // } else {
+                //     ApiServlet.invalidateHttpSession(session, "fall through to API key,");
+                // }
+                ApiServlet.invalidateHttpSession(session, "fall through to API key,");
                 // TODO: fall through to API key, or just fail here w/ auth error? (HTTP 401)
                 String msg = String.format("%s", ex.getMessage() != null ?
                         ex.getMessage() :

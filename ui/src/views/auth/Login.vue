@@ -307,14 +307,7 @@ export default {
           })
         }
       })
-      api('listCapabilities').then(response => {
-        if (response) {
-          const capability = response.listcapabilitiesresponse.capability || []
-          this.securityfeatures = capability.securityfeaturesenabled
-          this.publickeymodulus = capability.setpublickeymodulus
-          this.publickeyexponent = capability.setpublickeyexponent
-        }
-      })
+      getCapabilities()
     },
     // handler
     async handleUsernameOrEmail (rule, value) {
@@ -378,6 +371,16 @@ export default {
 
       return `${rootUrl}?${qs.toString()}`
     },
+    getCapabilities () {
+      api('listCapabilities').then(response => {
+        if (response) {
+          const capability = response.listcapabilitiesresponse.capability || []
+          this.securityfeatures = capability.securityfeaturesenabled
+          this.publickeymodulus = capability.setpublickeymodulus
+          this.publickeyexponent = capability.setpublickeyexponent
+        }
+      })
+    },
     handleSubmit (e) {
       e.preventDefault()
       if (this.state.loginBtn) return
@@ -406,6 +409,9 @@ export default {
           this.Login(loginParams)
             .then((res) => this.loginSuccess(res))
             .catch(() => {
+              if (this.securityfeatures) {
+                getCapabilities()
+              }
               this.requestFailed()
               this.state.loginBtn = false
             })
