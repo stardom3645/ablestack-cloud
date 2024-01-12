@@ -108,7 +108,6 @@ public class ServerDaemon implements Daemon {
     private String keystoreFile;
     private String keystorePassword;
     private String webAppLocation;
-    private boolean securityFeaturesEnabled = Boolean.parseBoolean(_configDao.getValue("security.features.enabled"));
     //////////////////////////////////////////////////
     /////////////// Public methods ///////////////////
     //////////////////////////////////////////////////
@@ -127,11 +126,11 @@ public class ServerDaemon implements Daemon {
     public void init(final DaemonContext context) {
         final File confFileEnc = PropertiesUtil.findConfigFile(serverPropertiesEnc);
         final File confFile = PropertiesUtil.findConfigFile(serverProperties);
+        boolean securityFeaturesEnabled = Boolean.parseBoolean(_configDao.getValue("security.features.enabled"));
         // security 기능 활성화 여부에 따라 access log 활성/비활성
         if (securityFeaturesEnabled) {
-//            accessLogFile = null;
-//            ACCESS_LOG = null;
-            System.out.println("sdfsdfsdfsdfsdfsdf");
+            accessLogFile = null;
+            ACCESS_LOG = null;
         }
         try {
             if (confFile == null && confFileEnc == null) {
@@ -163,11 +162,11 @@ public class ServerDaemon implements Daemon {
             setKeystorePassword(properties.getProperty(KEYSTORE_PASSWORD));
             setWebAppLocation(properties.getProperty(WEBAPP_DIR));
             // security 기능 활성화 여부에 따라 access log 활성/비활성
-//            if (securityFeaturesEnabled) {
-//                setAccessLogFile(properties.getProperty(ACCESS_LOG, null));
-//            }else {
-//                setAccessLogFile(properties.getProperty(ACCESS_LOG, "access.log"));
-//            }
+            if (securityFeaturesEnabled) {
+                setAccessLogFile(properties.getProperty(ACCESS_LOG, null));
+            }else {
+                setAccessLogFile(properties.getProperty(ACCESS_LOG, "access.log"));
+            }
             setAccessLogFile(properties.getProperty(ACCESS_LOG, "access.log"));
             setSessionTimeout(Integer.valueOf(properties.getProperty(SESSION_TIMEOUT, "10")));
         } catch (final IOException e) {
