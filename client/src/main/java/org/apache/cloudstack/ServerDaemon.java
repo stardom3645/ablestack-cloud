@@ -162,7 +162,6 @@ public class ServerDaemon implements Daemon {
             }else {
                 setAccessLogFile(properties.getProperty(ACCESS_LOG, "access.log"));
             }
-            setAccessLogFile(properties.getProperty(ACCESS_LOG, "access.log"));
             setSessionTimeout(Integer.valueOf(properties.getProperty(SESSION_TIMEOUT, "10")));
         } catch (final IOException e) {
             LOG.warn("Failed to read configuration from server.properties file", e);
