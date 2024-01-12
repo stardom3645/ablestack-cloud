@@ -75,6 +75,7 @@ public class KVMInvestigator extends AdapterBase implements Investigator {
 
     @Override
     public Status isAgentAlive(Host agent) {
+        s_logger.info(":::reportFailureIfOneStorageIsDown:::: 11111");
         if (agent.getHypervisorType() != Hypervisor.HypervisorType.KVM && agent.getHypervisorType() != Hypervisor.HypervisorType.LXC) {
             return null;
         }
@@ -98,10 +99,13 @@ public class KVMInvestigator extends AdapterBase implements Investigator {
         Status hostStatus = null;
         Status neighbourStatus = null;
         boolean reportFailureIfOneStorageIsDown = HighAvailabilityManager.KvmHAFenceHostIfHeartbeatFailsOnStorage.value();
+        s_logger.info(":::reportFailureIfOneStorageIsDown:::: " + reportFailureIfOneStorageIsDown);
+
         CheckOnHostCommand cmd = new CheckOnHostCommand(agent, reportFailureIfOneStorageIsDown);
 
         try {
             Answer answer = _agentMgr.easySend(agent.getId(), cmd);
+            s_logger.debug(":::answer.getResult:::: " + answer.getResult());
             if (answer != null) {
                 hostStatus = answer.getResult() ? Status.Down : Status.Up;
             }
@@ -113,7 +117,10 @@ public class KVMInvestigator extends AdapterBase implements Investigator {
         }
 
         List<HostVO> neighbors = _resourceMgr.listHostsInClusterByStatus(agent.getClusterId(), Status.Up);
+
         for (HostVO neighbor : neighbors) {
+            s_logger.debug(":::neighbor.getId():::: " + neighbor.getId());
+
             if (neighbor.getId() == agent.getId()
                     || (neighbor.getHypervisorType() != Hypervisor.HypervisorType.KVM && neighbor.getHypervisorType() != Hypervisor.HypervisorType.LXC)) {
                 continue;

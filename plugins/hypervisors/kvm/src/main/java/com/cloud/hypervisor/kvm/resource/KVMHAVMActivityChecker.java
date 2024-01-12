@@ -46,12 +46,12 @@ public class KVMHAVMActivityChecker extends KVMHABase implements Callable<Boolea
 
     @Override
     public Boolean checkingHeartBeat() {
-         if (storagePool.getPool().getType() == StoragePoolType.NetworkFilesystem) {
+        if (storagePool.getPool().getType() == StoragePoolType.NetworkFilesystem) {
             return this.storagePool.getPool().vmActivityCheck(storagePool, host, activityScriptTimeout, volumeUuidList, vmActivityCheckPath, suspectTimeInSeconds);
-        } else if (storagePool.getPool().getType() == StoragePoolType.RBD) {
-            return this.storagePool.getPool().vmActivityRbdCheck(storagePool, host, activityScriptTimeout, volumeUuidList, vmActivityCheckPath, suspectTimeInSeconds);
-        } else if (storagePool.getPool().getType() == StoragePoolType.CLVM) {
-            return this.storagePool.getPool().vmActivityClvmCheck(storagePool, host, activityScriptTimeout, volumeUuidList, vmActivityCheckPath, suspectTimeInSeconds);
+        } else if (rbdStoragePool.getPool().getType() == StoragePoolType.RBD) {
+            return this.rbdStoragePool.getPool().vmActivityRbdCheck(rbdStoragePool, host, activityScriptTimeout, volumeUuidList, vmActivityCheckPath, suspectTimeInSeconds);
+        } else if (clvmStoragePool.getPool().getType() == StoragePoolType.CLVM) {
+            return this.clvmStoragePool.getPool().vmActivityClvmCheck(clvmStoragePool, host, activityScriptTimeout, volumeUuidList, vmActivityCheckPath, suspectTimeInSeconds);
         }
         return false;
     }
