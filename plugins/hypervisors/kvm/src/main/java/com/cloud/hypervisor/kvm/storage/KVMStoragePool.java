@@ -36,7 +36,7 @@ public interface KVMStoragePool {
     public static final long HeartBeatUpdateMaxTries = AgentPropertiesFileHandler.getPropertyValue(AgentProperties.KVM_HEARTBEAT_UPDATE_MAX_TRIES);
     public static final long HeartBeatUpdateRetrySleep = AgentPropertiesFileHandler.getPropertyValue(AgentProperties.KVM_HEARTBEAT_UPDATE_RETRY_SLEEP);
     public static final long HeartBeatCheckerTimeout = AgentPropertiesFileHandler.getPropertyValue(AgentProperties.KVM_HEARTBEAT_CHECKER_TIMEOUT);
-
+    public static final String kvmScriptsDir = AgentPropertiesFileHandler.getPropertyValue(AgentProperties.KVM_SCRIPTS_DIR);
 
     public KVMPhysicalDisk createPhysicalDisk(String volumeUuid, PhysicalDiskFormat format, Storage.ProvisioningType provisioningType, long size, byte[] passphrase);
 
@@ -101,6 +101,10 @@ public interface KVMStoragePool {
     public String getStorageNodeId();
 
     public Boolean checkingHeartBeat(HAStoragePool pool, HostTO host);
+
+    public Boolean checkingRbdHeartBeat(HAStoragePool pool, HostTO host);
+
+    public Boolean checkingClvmHeartBeat(HAStoragePool pool, HostTO host);
 
     public Boolean vmActivityCheck(HAStoragePool pool, HostTO host, Duration activityScriptTimeout, String volumeUUIDListString, String vmActivityCheckPath, long duration);
 

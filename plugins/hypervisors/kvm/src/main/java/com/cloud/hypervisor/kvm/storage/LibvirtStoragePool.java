@@ -32,8 +32,6 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 
 import com.cloud.agent.api.to.HostTO;
-import com.cloud.agent.properties.AgentProperties;
-import com.cloud.agent.properties.AgentPropertiesFileHandler;
 import com.cloud.hypervisor.kvm.resource.KVMHABase.HAStoragePool;
 import com.cloud.storage.Storage;
 import com.cloud.storage.Storage.StoragePoolType;
@@ -304,12 +302,24 @@ public class LibvirtStoragePool implements KVMStoragePool {
 
     public String getHearthBeatPath() {
         if (type == StoragePoolType.NetworkFilesystem) {
-            String kvmScriptsDir = AgentPropertiesFileHandler.getPropertyValue(AgentProperties.KVM_SCRIPTS_DIR);
             return Script.findScript(kvmScriptsDir, "kvmheartbeat.sh");
         }
         return null;
     }
 
+    public String getRbdHearthBeatPath() {
+        if (type == StoragePoolType.RBD) {
+            return Script.findScript(kvmScriptsDir, "kvmheartbeat_rbd.sh");
+        }
+        return null;
+    }
+
+    public String getClvmHearthBeatPath() {
+        if (type == StoragePoolType.CLVM) {
+            return Script.findScript(kvmScriptsDir, "kvmheartbeat_clvm.sh");
+        }
+        return null;
+    }
 
     public String createHeartBeatCommand(HAStoragePool primaryStoragePool, String hostPrivateIp, boolean hostValidation) {
         Script cmd = new Script(primaryStoragePool.getPool().getHearthBeatPath(), HeartBeatUpdateTimeout, s_logger);
@@ -408,6 +418,63 @@ public class LibvirtStoragePool implements KVMStoragePool {
     }
 
     @Override
+    public Boolean checkingRbdHeartBeat(HAStoragePool rbdpool, HostTO host) {
+        boolean validResult = false;
+        String hostIp = host.getPrivateNetwork().getIp();
+        Script cmd = new Script(getRbdHearthBeatPath(), HeartBeatCheckerTimeout, s_logger);
+        cmd.add("-i", rbdpool.getPoolSourceHost());
+        cmd.add("-p", rbdpool.getPoolMountSourcePath());
+        cmd.add("-n", rbdpool.getPoolAuthUserName());
+        cmd.add("-s", rbdpool.getPoolAuthSecret());
+        cmd.add("-v", hostIp);
+        cmd.add("-r", "r");
+
+        OutputInterpreter.OneLineParser parser = new OutputInterpreter.OneLineParser();
+
+        String result = cmd.execute(parser);
+        String parsedLine = parser.getLine();
+
+        s_logger.debug(String.format("Checking heart beat with KVMHAChecker RBD [{command=\"%s\", result: \"%s\", log: \"%s\", pool: \"%s\"}].", cmd.toString(), result, parsedLine,
+                rbdpool.getPoolIp()));
+
+        if (result == null && parsedLine.contains("DEAD")) {
+            s_logger.warn(String.format("Checking heart beat with KVMHAChecker RBD command [%s] returned [%s]. [%s]. It may cause a shutdown of host IP [%s].", cmd.toString(),
+                    result, parsedLine, hostIp));
+        } else {
+            validResult = true;
+        }
+        return validResult;
+    }
+
+    @Override
+    public Boolean checkingClvmHeartBeat(HAStoragePool clvmpool, HostTO host) {
+        boolean validResult = false;
+        String hostIp = host.getPrivateNetwork().getIp();
+        Script cmd = new Script(getClvmHearthBeatPath(), KVMStoragePool.HeartBeatCheckerTimeout, s_logger);
+        cmd.add("-h", host.getPrivateNetwork().getIp());
+        cmd.add("-p", clvmpool.getPoolMountSourcePath());
+        cmd.add("-r");
+        cmd.add("-t", String.valueOf(HeartBeatUpdateFreq / 1000));
+
+        OutputInterpreter.OneLineParser parser = new OutputInterpreter.OneLineParser();
+
+        String result = cmd.execute(parser);
+        String parsedLine = parser.getLine();
+
+        s_logger.debug(String.format("Checking heart beat with KVMHAChecker CLVM [{command=\"%s\", result: \"%s\", log: \"%s\", pool: \"%s\"}].", cmd.toString(), result, parsedLine,
+        clvmpool.getPoolIp()));
+
+        if (result == null && parsedLine.contains("DEAD")) {
+            s_logger.warn(String.format("Checking heart beat with KVMHAChecker CLVM command [%s] returned [%s]. [%s]. It may cause a shutdown of host IP [%s].", cmd.toString(),
+                    result, parsedLine, hostIp));
+        } else {
+            validResult = true;
+        }
+        return validResult;
+    }
+
+
+    @Override
     public Boolean vmActivityCheck(HAStoragePool pool, HostTO host, Duration activityScriptTimeout, String volumeUUIDListString, String vmActivityCheckPath, long duration) {
         Script cmd = new Script(vmActivityCheckPath, activityScriptTimeout.getStandardSeconds(), s_logger);
         cmd.add("-i", pool.getPoolIp());
@@ -434,37 +501,22 @@ public class LibvirtStoragePool implements KVMStoragePool {
 
     @Override
     public Boolean vmActivityRbdCheck(HAStoragePool pool, HostTO host, Duration activityScriptTimeout, String volumeUUIDListString, String vmActivityCheckPath, long duration) {
-        String parsedLine = "";
-        String command = "";
-        ProcessBuilder processBuilder = new ProcessBuilder();
-        processBuilder.command().add("python3");
-        processBuilder.command().add(vmActivityCheckPath);
-        processBuilder.command().add("-i");
-        processBuilder.command().add(pool.getPoolSourceHost());
-        processBuilder.command().add("-p");
-        processBuilder.command().add(pool.getPoolMountSourcePath());
-        processBuilder.command().add("-n");
-        processBuilder.command().add(pool.getPoolAuthUserName());
-        processBuilder.command().add("-s");
-        processBuilder.command().add(pool.getPoolAuthSecret());
-        processBuilder.command().add("-v");
-        processBuilder.command().add(host.getPrivateNetwork().getIp());
-        processBuilder.command().add("-u");
-        processBuilder.command().add(volumeUUIDListString);
+        Script cmd = new Script(vmActivityCheckPath, activityScriptTimeout.getStandardSeconds(), s_logger);
+        cmd.add("-i", pool.getPoolSourceHost());
+        cmd.add("-p", pool.getPoolMountSourcePath());
+        cmd.add("-n", pool.getPoolAuthUserName());
+        cmd.add("-s", pool.getPoolAuthSecret());
+        cmd.add("-v", host.getPrivateNetwork().getIp());
+        cmd.add("-u", volumeUUIDListString);
 
-        command = processBuilder.command().toString();
-        Process process = null;
-        try {
-            process = processBuilder.start();
-            BufferedReader bfr = new BufferedReader(new InputStreamReader(process.getInputStream()));
-            parsedLine = bfr.readLine();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        s_logger.debug(String.format("Checking heart beat with KVMHAVMActivityChecker [{command=\"%s\", log: \"%s\", pool: \"%s\"}].", command, parsedLine, pool.getMonHost()));
+        OutputInterpreter.OneLineParser parser = new OutputInterpreter.OneLineParser();
 
-        if (parsedLine.contains("DEAD")) {
-            s_logger.warn(String.format("Checking heart beat with KVMHAVMActivityChecker command [%s]. It is [%s]. It may cause a shutdown of host IP [%s].", processBuilder.command().toString(), parsedLine, host.getPrivateNetwork().getIp()));
+        String result = cmd.execute(parser);
+        String parsedLine  = parser.getLine();
+
+        s_logger.debug(String.format("Checking heart beat with KVMHAVMActivityChecker RBD [{command=\"%s\", result: \"%s\", log: \"%s\", pool: \"%s\"}].", cmd.toString(), result, parsedLine, pool.getMonHost()));
+        if (result == null && parsedLine.contains("DEAD")) {
+            s_logger.warn(String.format("Checking heart beat with KVMHAVMActivityRbdChecker RBD command [%s] returned [%s]. It is [%s]. It may cause a shutdown of host IP [%s].", cmd.toString(), result, parsedLine, host.getPrivateNetwork().getIp()));
             return false;
         } else {
             return true;

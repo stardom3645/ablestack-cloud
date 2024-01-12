@@ -16,9 +16,6 @@
 // under the License.
 package com.cloud.hypervisor.kvm.resource;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
@@ -26,9 +23,6 @@ import java.util.stream.Collectors;
 import org.apache.log4j.Logger;
 
 import com.cloud.agent.api.to.HostTO;
-import com.cloud.hypervisor.kvm.storage.KVMStoragePool;
-import com.cloud.utils.script.OutputInterpreter;
-import com.cloud.utils.script.Script;
 
 public class KVMHAChecker extends KVMHABase implements Callable<Boolean> {
     private static final Logger s_logger = Logger.getLogger(KVMHAChecker.class);
@@ -53,83 +47,33 @@ public class KVMHAChecker extends KVMHABase implements Callable<Boolean> {
     @Override
     public Boolean checkingHeartBeat() {
         boolean validResult = false;
-
         String hostAndPools = String.format("host IP [%s] in pools [%s]", host.getPrivateNetwork().getIp(), storagePools.stream().map(pool -> pool.getPoolUUID()).collect(Collectors.joining(", ")));
-
-        s_logger.debug(String.format("Checking heart beat with KVMHAChecker for %s", hostAndPools));
-
+        s_logger.debug(String.format("Checking heart beat with KVMHAChecker NFS for %s", hostAndPools));
         for (HAStoragePool pool : storagePools) {
             validResult = pool.getPool().checkingHeartBeat(pool, host);
             if (reportFailureIfOneStorageIsDown && !validResult) {
                 break;
             }
         }
+        hostAndPools = String.format("host IP [%s] in RBD pools [%s]", host.getPrivateNetwork().getIp(), rbdStoragePools.stream().map(pool -> pool.monHost).collect(Collectors.joining(", ")));
+        s_logger.debug(String.format("Checking heart beat with KVMHAChecker RBD for %s", hostAndPools));
         for (HAStoragePool rbdpools : rbdStoragePools) {
-            hostAndPools = String.format("host IP [%s] in pools [%s]", host.getPrivateNetwork().getIp(), rbdStoragePools.stream().map(pool -> pool.monHost).collect(Collectors.joining(", ")));
-            s_logger.debug(String.format("Checking heart beat with KVMHAChecker for %s", hostAndPools));
-
-            ProcessBuilder processBuilder = new ProcessBuilder();
-            processBuilder.command().add("python3");
-            processBuilder.command().add(s_heartBeatPathRbd);
-            processBuilder.command().add("-i");
-            processBuilder.command().add(rbdpools.poolSourceHost);
-            processBuilder.command().add("-p");
-            processBuilder.command().add(rbdpools.poolMountSourcePath);
-            processBuilder.command().add("-n");
-            processBuilder.command().add(rbdpools.poolAuthUserName);
-            processBuilder.command().add("-s");
-            processBuilder.command().add(rbdpools.poolAuthSecret);
-            processBuilder.command().add("-v");
-            processBuilder.command().add(host.getPrivateNetwork().getIp());
-            processBuilder.command().add("-r");
-            processBuilder.command().add("r");
-            Process process = null;
-            String parsedLine = "";
-            try {
-                process = processBuilder.start();
-                BufferedReader bfr = new BufferedReader(new InputStreamReader(process.getInputStream()));
-                parsedLine = bfr.readLine();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-
-            s_logger.debug(String.format("Checking heart beat with KVMHAChecker [{command=\"%s\", log: \"%s\", pool: \"%s\"}].", processBuilder.command().toString(), parsedLine, rbdpools.monHost));
-
-            if (process != null && parsedLine.contains("DEAD")) {
-                s_logger.warn(String.format("Checking heart beat with KVMHAChecker command [%s] returned. [%s]. It may cause a shutdown of host IP [%s].", processBuilder.command().toString(),
-                        parsedLine, host.getPrivateNetwork().getIp()));
-            } else {
-                validResult = true;
+            validResult = rbdpools.getPool().checkingRbdHeartBeat(rbdpools, host);
+            if (reportFailureIfOneStorageIsDown && !validResult) {
+                break;
             }
         }
+        hostAndPools = String.format("host IP [%s] in CLVM pools [%s]", host.getPrivateNetwork().getIp(), clvmStoragePools.stream().map(pool -> pool.poolIp).collect(Collectors.joining(", ")));
+        s_logger.debug(String.format("Checking heart beat with KVMHAChecker CLVM for %s", hostAndPools));
         for (HAStoragePool clvmpools : clvmStoragePools) {
-            hostAndPools = String.format("host IP [%s] in pools [%s]", host.getPrivateNetwork().getIp(), clvmStoragePools.stream().map(pool -> pool.poolIp).collect(Collectors.joining(", ")));
-            s_logger.debug(String.format("Checking heart beat with KVMHAChecker for %s", hostAndPools));
-
-            Script cmd = new Script(s_heartBeatPathClvm, KVMStoragePool.HeartBeatCheckerTimeout, s_logger);
-            cmd.add("-h", host.getPrivateNetwork().getIp());
-            cmd.add("-p", clvmpools.poolMountSourcePath);
-            cmd.add("-r");
-            cmd.add("-t", String.valueOf(_heartBeatUpdateFreq / 1000));
-            OutputInterpreter.OneLineParser parser = new OutputInterpreter.OneLineParser();
-            String result = cmd.execute(parser);
-            String parsedLine = parser.getLine();
-
-            s_logger.debug(String.format("Checking heart beat with KVMHAChecker [{command=\"%s\", result: \"%s\", log: \"%s\", pool: \"%s\"}].", cmd.toString(), result, parsedLine,
-            clvmpools.poolIp));
-
-            if (result == null && parsedLine.contains("DEAD")) {
-                s_logger.warn(String.format("Checking heart beat with KVMHAChecker command [%s] returned [%s]. [%s]. It may cause a shutdown of host IP [%s].", cmd.toString(),
-                        result, parsedLine, host.getPrivateNetwork().getIp()));
-            } else {
-                validResult = true;
+            validResult = clvmpools.getPool().checkingClvmHeartBeat(clvmpools, host);
+            if (reportFailureIfOneStorageIsDown && !validResult) {
+                break;
             }
         }
-
         if (!validResult) {
             s_logger.warn(String.format("All checks with KVMHAChecker for %s considered it as dead. It may cause a shutdown of the host.", hostAndPools));
         }
-
         return validResult;
     }
 

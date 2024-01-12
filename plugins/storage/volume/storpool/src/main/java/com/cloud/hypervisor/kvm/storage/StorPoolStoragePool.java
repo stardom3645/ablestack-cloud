@@ -276,6 +276,16 @@ public class StorPoolStoragePool implements KVMStoragePool {
         return isNodeWorking;
     }
 
+    @Override
+    public Boolean checkingRbdHeartBeat(HAStoragePool pool, HostTO host) {
+        return null;
+    }
+
+    @Override
+    public Boolean checkingClvmHeartBeat(HAStoragePool pool, HostTO host) {
+        return null;
+    }
+
     private boolean checkIfNodeIsRunning(String response, Integer hostStorageNodeId) {
         boolean isNodeWorking = false;
         JsonParser jsonParser = new JsonParser();

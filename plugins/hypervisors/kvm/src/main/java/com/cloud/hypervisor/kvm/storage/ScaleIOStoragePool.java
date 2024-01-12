@@ -246,6 +246,16 @@ public class ScaleIOStoragePool implements KVMStoragePool {
     }
 
     @Override
+    public Boolean checkingRbdHeartBeat(HAStoragePool pool, HostTO host) {
+        return null;
+    }
+
+    @Override
+    public Boolean checkingClvmHeartBeat(HAStoragePool pool, HostTO host) {
+        return null;
+    }
+
+    @Override
     public Boolean vmActivityCheck(HAStoragePool pool, HostTO host, Duration activityScriptTimeout, String volumeUUIDListString, String vmActivityCheckPath, long duration) {
         return null;
     }
