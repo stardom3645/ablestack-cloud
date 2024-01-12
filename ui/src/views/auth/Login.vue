@@ -307,7 +307,7 @@ export default {
           })
         }
       })
-      getCapabilities()
+      this.getCapabilities()
     },
     // handler
     async handleUsernameOrEmail (rule, value) {
@@ -410,7 +410,7 @@ export default {
             .then((res) => this.loginSuccess(res))
             .catch(() => {
               if (this.securityfeatures) {
-                getCapabilities()
+                this.getCapabilities()
               }
               this.requestFailed()
               this.state.loginBtn = false
