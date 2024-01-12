@@ -80,7 +80,7 @@ public class ServerDaemon implements Daemon {
     private static final String KEYSTORE_FILE = "https.keystore";
     private static final String KEYSTORE_PASSWORD = "https.keystore.password";
     private static final String WEBAPP_DIR = "webapp.dir";
-    private static String ACCESS_LOG = "access.log";
+    private static String ACCESS_LOG = null;
     private static final String serverProperties = "server.properties";
     private static final String serverPropertiesEnc = "server.properties.enc";
 
@@ -96,7 +96,7 @@ public class ServerDaemon implements Daemon {
     private int httpsPort = 8443;
     private int sessionTimeout = 10;
     private boolean httpsEnable = false;
-    private String accessLogFile = "access.log";
+    private String accessLogFile = null;
     private String bindInterface = null;
     private String contextPath = "/client";
     private String keystoreFile;
@@ -120,13 +120,6 @@ public class ServerDaemon implements Daemon {
     public void init(final DaemonContext context) {
         final File confFileEnc = PropertiesUtil.findConfigFile(serverPropertiesEnc);
         final File confFile = PropertiesUtil.findConfigFile(serverProperties);
-//        boolean securityFeaturesEnabled = Boolean.parseBoolean(_configDao.getValue("security.features.enabled"));
-        boolean securityFeaturesEnabled = true;
-        // security 기능 활성화 여부에 따라 access log 활성/비활성
-        if (securityFeaturesEnabled) {
-            accessLogFile = null;
-            ACCESS_LOG = null;
-        }
         try {
             if (confFile == null && confFileEnc == null) {
                 LOG.warn(String.format("Server configuration file not found. Initializing server daemon on %s, with http.enable=%s, http.port=%s, https.enable=%s, https.port=%s, context.path=%s",
@@ -156,12 +149,7 @@ public class ServerDaemon implements Daemon {
             setKeystoreFile(properties.getProperty(KEYSTORE_FILE));
             setKeystorePassword(properties.getProperty(KEYSTORE_PASSWORD));
             setWebAppLocation(properties.getProperty(WEBAPP_DIR));
-            // security 기능 활성화 여부에 따라 access log 활성/비활성
-            if (securityFeaturesEnabled) {
-                setAccessLogFile(properties.getProperty(ACCESS_LOG, null));
-            }else {
-                setAccessLogFile(properties.getProperty(ACCESS_LOG, "access.log"));
-            }
+            setAccessLogFile(properties.getProperty(ACCESS_LOG, null));
             setSessionTimeout(Integer.valueOf(properties.getProperty(SESSION_TIMEOUT, "10")));
         } catch (final IOException e) {
             LOG.warn("Failed to read configuration from server.properties file", e);
