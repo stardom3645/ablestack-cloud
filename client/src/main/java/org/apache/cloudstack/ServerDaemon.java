@@ -126,7 +126,8 @@ public class ServerDaemon implements Daemon {
     public void init(final DaemonContext context) {
         final File confFileEnc = PropertiesUtil.findConfigFile(serverPropertiesEnc);
         final File confFile = PropertiesUtil.findConfigFile(serverProperties);
-        boolean securityFeaturesEnabled = Boolean.parseBoolean(_configDao.getValue("security.features.enabled"));
+//        boolean securityFeaturesEnabled = Boolean.parseBoolean(_configDao.getValue("security.features.enabled"));
+        boolean securityFeaturesEnabled = true;
         // security 기능 활성화 여부에 따라 access log 활성/비활성
         if (securityFeaturesEnabled) {
             accessLogFile = null;
