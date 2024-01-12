@@ -307,7 +307,14 @@ export default {
           })
         }
       })
-      this.getCapabilities()
+      api('listCapabilities').then(response => {
+        if (response) {
+          const capability = response.listcapabilitiesresponse.capability || []
+          this.securityfeatures = capability.securityfeaturesenabled
+          this.publickeymodulus = capability.setpublickeymodulus
+          this.publickeyexponent = capability.setpublickeyexponent
+        }
+      })
     },
     // handler
     async handleUsernameOrEmail (rule, value) {
@@ -371,7 +378,7 @@ export default {
 
       return `${rootUrl}?${qs.toString()}`
     },
-    getCapabilities () {
+    async getCapabilities () {
       api('listCapabilities').then(response => {
         if (response) {
           const capability = response.listcapabilitiesresponse.capability || []
@@ -380,6 +387,7 @@ export default {
           this.publickeyexponent = capability.setpublickeyexponent
         }
       })
+      return Promise.resolve()
     },
     handleSubmit (e) {
       e.preventDefault()
