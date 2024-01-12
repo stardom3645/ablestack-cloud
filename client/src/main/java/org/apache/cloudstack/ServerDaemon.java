@@ -28,7 +28,6 @@ import java.util.Properties;
 
 import com.cloud.utils.Pair;
 import com.cloud.utils.server.ServerProperties;
-import org.apache.cloudstack.framework.config.dao.ConfigurationDao;
 import org.apache.commons.daemon.Daemon;
 import org.apache.commons.daemon.DaemonContext;
 import org.eclipse.jetty.jmx.MBeanContainer;
@@ -58,8 +57,6 @@ import com.cloud.utils.PropertiesUtil;
 import com.cloud.utils.db.DbProperties;
 import org.apache.commons.lang3.StringUtils;
 
-import javax.inject.Inject;
-
 /***
  * The ServerDaemon class implements the embedded server, it can be started either
  * using JSVC or directly from the JAR along with additional jars not shaded in the uber-jar.
@@ -68,9 +65,6 @@ import javax.inject.Inject;
 public class ServerDaemon implements Daemon {
     protected static Logger LOG = LogManager.getLogger(ServerDaemon.class);
     private static final String WEB_XML = "META-INF/webapp/WEB-INF/web.xml";
-
-    @Inject
-    private ConfigurationDao _configDao;
 
     /////////////////////////////////////////////////////
     /////////////// Server Properties ///////////////////
