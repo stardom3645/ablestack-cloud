@@ -123,13 +123,13 @@ under the License.
       <!-- Setup the Root category -->
       <!-- ======================= -->
 
-      <Root level="DEBUG">
-         <AppenderRef ref="SYSLOG"/>
+      <Root level="OFF">
+         <!-- <AppenderRef ref="SYSLOG"/>
          <AppenderRef ref="CONSOLE"/>
          <AppenderRef ref="FILE"/>
          <AppenderRef ref="SNMP"/>
-         <AppenderRef ref="ALERTSYSLOG"/>
-<!--         <AppenderRef ref="NullAppender"/>-->
+         <AppenderRef ref="ALERTSYSLOG"/> -->
+         <AppenderRef ref="NullAppender"/>
       </Root>
 
    </Loggers>
