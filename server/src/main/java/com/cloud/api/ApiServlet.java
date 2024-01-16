@@ -245,6 +245,7 @@ public class ApiServlet extends HttpServlet {
                             invalidateHttpSession(session, "invalidating session for login call");
                         }
                         session = req.getSession(true);
+
                         if (ApiServer.EnableSecureSessionCookie.value()) {
                             resp.setHeader("SET-COOKIE", String.format("JSESSIONID=%s;Secure;HttpOnly;Path=/client", session.getId()));
                             if (logger.isDebugEnabled()) {
