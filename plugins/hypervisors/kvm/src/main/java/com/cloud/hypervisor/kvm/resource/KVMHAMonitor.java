@@ -43,13 +43,9 @@ public class KVMHAMonitor extends KVMHABase implements Runnable {
 
     private final String hostPrivateIp;
 
-    public KVMHAMonitor(HAStoragePool pool, HAStoragePool rbdpool, HAStoragePool clvmpool, String host, String scriptPath, String scriptPathRbd, String scriptPathClvm) {
+    public KVMHAMonitor(HAStoragePool pool, String host, String scriptPath, String scriptPathRbd, String scriptPathClvm) {
         if (pool != null) {
             storagePool.put(pool.getPoolUUID(), pool);
-        } else if (rbdpool != null) {
-            storageRbdPool.put(rbdpool.getPoolUUID(), rbdpool);
-        } else if (clvmpool != null) {
-            storageClvmPool.put(clvmpool.getPoolUUID(), clvmpool);
         }
         hostPrivateIp = host;
         configureHeartBeatPath(scriptPath, scriptPathRbd, scriptPathClvm);
@@ -133,15 +129,12 @@ public class KVMHAMonitor extends KVMHABase implements Runnable {
             }
             String result = null;
             result = executePoolHeartBeatCommand(uuid, primaryStoragePool, result);
-
             if (result != null && rebootHostAndAlertManagementOnHeartbeatTimeout) {
                 s_logger.warn(String.format("Write heartbeat for pool [%s] failed: %s; stopping cloudstack-agent.", uuid, result));
-                if (primaryStoragePool.getPool().getType() == StoragePoolType.NetworkFilesystem) {
+                if (primaryStoragePool.getPool().getType() == StoragePoolType.NetworkFilesystem ||
+                    primaryStoragePool.getPool().getType() == StoragePoolType.RBD ||
+                    primaryStoragePool.getPool().getType() == StoragePoolType.CLVM) {
                     primaryStoragePool.getPool().createHeartBeatCommand(primaryStoragePool, null, false);
-                } else if (primaryStoragePool.getPool().getType() == StoragePoolType.RBD) {
-                    primaryStoragePool.getPool().createRbdHeartBeatCommand(primaryStoragePool, hostPrivateIp, true, s_heartBeatPathClvm);
-                } else if (primaryStoragePool.getPool().getType() == StoragePoolType.CLVM) {
-                    primaryStoragePool.getPool().createClvmHeartBeatCommand(primaryStoragePool, hostPrivateIp, true, s_heartBeatPathClvm, _heartBeatUpdateTimeout);
                 }
             }
         }
@@ -154,14 +147,11 @@ public class KVMHAMonitor extends KVMHABase implements Runnable {
 
     private String executePoolHeartBeatCommand(String uuid, HAStoragePool primaryStoragePool, String result) {
         for (int i = 1; i <= _heartBeatUpdateMaxTries; i++) {
-            if (primaryStoragePool.getPool().getType() == StoragePoolType.NetworkFilesystem) {
+            if (primaryStoragePool.getPool().getType() == StoragePoolType.NetworkFilesystem ||
+                primaryStoragePool.getPool().getType() == StoragePoolType.RBD ||
+                primaryStoragePool.getPool().getType() == StoragePoolType.CLVM) {
                 result = primaryStoragePool.getPool().createHeartBeatCommand(primaryStoragePool, hostPrivateIp, true);
-            } else if (primaryStoragePool.getPool().getType() == StoragePoolType.RBD) {
-                result = primaryStoragePool.getPool().createRbdHeartBeatCommand(primaryStoragePool, hostPrivateIp, true, s_heartBeatPathClvm);
-            } else if (primaryStoragePool.getPool().getType() == StoragePoolType.CLVM) {
-                result = primaryStoragePool.getPool().createClvmHeartBeatCommand(primaryStoragePool, hostPrivateIp, true, s_heartBeatPathClvm, _heartBeatUpdateTimeout);
             }
-
             if (result != null) {
                 s_logger.warn(String.format("Write heartbeat for pool [%s] failed: %s; try: %s of %s.", uuid, result, i, _heartBeatUpdateMaxTries));
                 try {
@@ -172,7 +162,6 @@ public class KVMHAMonitor extends KVMHABase implements Runnable {
             } else {
                 break;
             }
-
         }
         return result;
     }
@@ -191,7 +180,7 @@ public class KVMHAMonitor extends KVMHABase implements Runnable {
                 removedPools.add(uuid);
             }
 
-            s_logger.debug(String.format("Found NFS storage pool [%s] in libvirt, continuing.", uuid));
+            s_logger.debug(String.format("Found storage pool [%s] in libvirt, continuing.", uuid));
 
         } catch (LibvirtException e) {
             s_logger.debug(String.format("Failed to lookup libvirt storage pool [%s].", uuid), e);

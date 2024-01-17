@@ -69,6 +69,7 @@ public class KVMHABase {
         }
 
         public HAStoragePool(KVMStoragePool pool, String monHost, String poolSourcePath, String mountDestPath, PoolType type, String poolAuthUserName, String poolAuthSecret, String poolSourceHost) {
+            this.pool = pool;
             this.poolUuid = pool.getUuid();
             this.monHost = monHost;
             this.poolMountSourcePath = poolSourcePath;

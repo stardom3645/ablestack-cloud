@@ -48,20 +48,21 @@ public final class LibvirtCheckVMActivityOnStoragePoolCommandWrapper extends Com
         final KVMStoragePoolManager storagePoolMgr = libvirtComputingResource.getStoragePoolMgr();
 
         KVMStoragePool primaryPool = storagePoolMgr.getStoragePool(pool.getType(), pool.getUuid());
-
-        if (primaryPool.isPoolSupportHA() || Storage.StoragePoolType.RBD == pool.getType() || Storage.StoragePoolType.CLVM == pool.getType()){
-            final HAStoragePool nfspool = monitor.getStoragePool(pool.getUuid());
-            final HAStoragePool rbdpool = monitor.getRbdStoragePool(pool.getUuid());
-            final HAStoragePool clvmpool = monitor.getClvmStoragePool(pool.getUuid());
+        if (primaryPool.isPoolSupportHA()){
+            HAStoragePool haStoragePool = null;
             String vmActivityCheckPath = "";
-            if (Storage.StoragePoolType.CLVM == pool.getType()) {
-                vmActivityCheckPath = libvirtComputingResource.getVmActivityCheckPathClvm();
-            } else if (Storage.StoragePoolType.NetworkFilesystem == pool.getType()) {
+            if (Storage.StoragePoolType.NetworkFilesystem == pool.getType()) {
+                haStoragePool = monitor.getStoragePool(pool.getUuid());
                 vmActivityCheckPath = libvirtComputingResource.getVmActivityCheckPath();
             } else if (Storage.StoragePoolType.RBD == pool.getType()) {
+                haStoragePool = monitor.getRbdStoragePool(pool.getUuid());
                 vmActivityCheckPath = libvirtComputingResource.getVmActivityCheckPathRbd();
+            } else if (Storage.StoragePoolType.CLVM == pool.getType()) {
+                haStoragePool = monitor.getClvmStoragePool(pool.getUuid());
+                vmActivityCheckPath = libvirtComputingResource.getVmActivityCheckPathClvm();
             }
-            final KVMHAVMActivityChecker ha = new KVMHAVMActivityChecker(nfspool, rbdpool, clvmpool, command.getHost(), command.getVolumeList(), vmActivityCheckPath, command.getSuspectTimeInSeconds());
+
+            final KVMHAVMActivityChecker ha = new KVMHAVMActivityChecker(haStoragePool, command.getHost(), command.getVolumeList(), vmActivityCheckPath, command.getSuspectTimeInSeconds());
             final Future<Boolean> future = executors.submit(ha);
             try {
                 final Boolean result = future.get();

@@ -1252,8 +1252,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
 
         final String[] info = NetUtils.getNetworkParams(privateNic);
 
-        s_logger.info("KVMHAMonitor start!!!!!!!!!!!!!!!!");
-        kvmhaMonitor = new KVMHAMonitor(null, null, null, info[0], heartBeatPath, heartBeatPathRbd, heartBeatPathClvm);
+        kvmhaMonitor = new KVMHAMonitor(null, info[0], heartBeatPath, heartBeatPathRbd, heartBeatPathClvm);
 
         final Thread ha = new Thread(kvmhaMonitor);
         ha.start();

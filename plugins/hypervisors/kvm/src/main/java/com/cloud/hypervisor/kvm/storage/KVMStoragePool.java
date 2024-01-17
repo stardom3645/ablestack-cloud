@@ -94,22 +94,10 @@ public interface KVMStoragePool {
 
     public String createHeartBeatCommand(HAStoragePool primaryStoragePool, String hostPrivateIp, boolean hostValidation);
 
-    public String createRbdHeartBeatCommand(HAStoragePool primaryStoragePool, String hostPrivateIp, boolean hostValidation, String heartBeatPathRbd);
-
-    public String createClvmHeartBeatCommand(HAStoragePool primaryStoragePool, String hostPrivateIp, boolean hostValidation, String heartBeatPathClvm, long heartBeatUpdateTimeout);
-
     public String getStorageNodeId();
 
     public Boolean checkingHeartBeat(HAStoragePool pool, HostTO host);
 
-    public Boolean checkingRbdHeartBeat(HAStoragePool pool, HostTO host);
-
-    public Boolean checkingClvmHeartBeat(HAStoragePool pool, HostTO host);
-
     public Boolean vmActivityCheck(HAStoragePool pool, HostTO host, Duration activityScriptTimeout, String volumeUUIDListString, String vmActivityCheckPath, long duration);
-
-    public Boolean vmActivityRbdCheck(HAStoragePool pool, HostTO host, Duration activityScriptTimeout, String volumeUUIDListString, String vmActivityCheckPath, long duration);
-
-    public Boolean vmActivityClvmCheck(HAStoragePool pool, HostTO host, Duration activityScriptTimeout, String volumeUUIDListString, String vmActivityCheckPath, long duration);
 }
 

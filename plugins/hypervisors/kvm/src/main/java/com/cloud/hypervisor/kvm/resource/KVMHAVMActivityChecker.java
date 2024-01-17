@@ -17,27 +17,24 @@
 package com.cloud.hypervisor.kvm.resource;
 
 import com.cloud.agent.api.to.HostTO;
-import com.cloud.storage.Storage.StoragePoolType;
 
+import org.apache.log4j.Logger;
 import org.joda.time.Duration;
 
 import java.util.concurrent.Callable;
 
 public class KVMHAVMActivityChecker extends KVMHABase implements Callable<Boolean> {
+    private static final Logger s_logger = Logger.getLogger(KVMHAVMActivityChecker.class);
 
     private final HAStoragePool storagePool;
-    private final HAStoragePool rbdStoragePool;
-    private final HAStoragePool clvmStoragePool;
     private final String volumeUuidList;
     private final String vmActivityCheckPath;
     private final Duration activityScriptTimeout = Duration.standardSeconds(3600L);
     private final long suspectTimeInSeconds;
     private final HostTO host;
 
-    public KVMHAVMActivityChecker(final HAStoragePool pool, final HAStoragePool rbdpool, final HAStoragePool clvmpool, final HostTO host, final String volumeUUIDListString, String vmActivityCheckPath, final long suspectTime) {
+    public KVMHAVMActivityChecker(final HAStoragePool pool, final HostTO host, final String volumeUUIDListString, String vmActivityCheckPath, final long suspectTime) {
         this.storagePool = pool;
-        this.rbdStoragePool = rbdpool;
-        this.clvmStoragePool = clvmpool;
         this.volumeUuidList = volumeUUIDListString;
         this.vmActivityCheckPath = vmActivityCheckPath;
         this.suspectTimeInSeconds = suspectTime;
@@ -46,12 +43,8 @@ public class KVMHAVMActivityChecker extends KVMHABase implements Callable<Boolea
 
     @Override
     public Boolean checkingHeartBeat() {
-        if (storagePool.getPool().getType() == StoragePoolType.NetworkFilesystem) {
+        if (storagePool.getPool().isPoolSupportHA()) {
             return this.storagePool.getPool().vmActivityCheck(storagePool, host, activityScriptTimeout, volumeUuidList, vmActivityCheckPath, suspectTimeInSeconds);
-        } else if (rbdStoragePool.getPool().getType() == StoragePoolType.RBD) {
-            return this.rbdStoragePool.getPool().vmActivityRbdCheck(rbdStoragePool, host, activityScriptTimeout, volumeUuidList, vmActivityCheckPath, suspectTimeInSeconds);
-        } else if (clvmStoragePool.getPool().getType() == StoragePoolType.CLVM) {
-            return this.clvmStoragePool.getPool().vmActivityClvmCheck(clvmStoragePool, host, activityScriptTimeout, volumeUuidList, vmActivityCheckPath, suspectTimeInSeconds);
         }
         return false;
     }
