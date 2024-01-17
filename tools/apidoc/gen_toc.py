@@ -277,6 +277,7 @@ known_categories = {
     'Shutdown': 'Shutdown',
     'addObjectStoragePool': 'Object Store',
     'listObjectStoragePools': 'Object Store',
+    'createRbdImage': 'Object Store',
     'deleteObjectStoragePool': 'Object Store',
     'updateObjectStoragePool': 'Object Store',
     'createBucket': 'Object Store',

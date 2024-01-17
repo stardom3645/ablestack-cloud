@@ -74,7 +74,7 @@ public class CreateRbdImageCmd extends BaseListCmd {
 
     @Override
     public void execute() {
-        ListResponse<DataStoreObjectResponse> response = storageBrowser.CreateRbdImageObjects (this);
+        ListResponse<DataStoreObjectResponse> response = storageBrowser.createRbdImageObjects (this);
         response.setResponseName(getCommandName());
         response.setObjectName(getCommandName());
         this.setResponseObject(response);

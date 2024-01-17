@@ -39,6 +39,7 @@ import java.util.Map;
 
 import javax.naming.ConfigurationException;
 
+import org.apache.cloudstack.storage.command.browser.CreateRbdObjectsAnswer;
 import org.apache.cloudstack.storage.command.browser.ListDataStoreObjectsAnswer;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -155,6 +156,39 @@ public abstract class ServerResourceBase implements ServerResource {
         }
 
         return true;
+    }
+
+    protected Answer createImageRbd(String names, long sizes, String poolPath) {
+        sizes = (sizes * 1024 * 1024 * 1024);
+        String cmdout = Script.runSimpleBashScript("rbd -p " + poolPath + " create -s " + sizes + " " + names);
+        if (cmdout == null) {
+            s_logger.debug(cmdout);
+        }
+        // try {
+
+        //     // // String command = "rbd -p " + poolPath + " create -s " + sizes + " " + names;
+        //     // Process createProcess = Runtime.getRuntime().exec(command);
+        //     // int exitCode = createProcess.waitFor();
+
+        //     // if (exitCode == 0) {
+        //     //     BufferedReader createReader = new BufferedReader(new InputStreamReader(createProcess.getInputStream()));
+        //     //     String line;
+        //     //     while ((line = createReader.readLine()) != null) {
+        //     //     }
+        //     //     return new CreateRbdObjectsAnswer(true);
+        //     // } else {
+        //     //     BufferedReader errorReader = new BufferedReader(new InputStreamReader(createProcess.getErrorStream()));
+        //     //     String errorLine;
+        //     //     while ((errorLine = errorReader.readLine()) != null) {
+        //     //         System.err.println(errorLine);
+        //     //     }
+        //     //     throw new RuntimeException("RBD 생성에 실패했습니다." + exitCode);
+        //     // }
+        // } catch (IOException | InterruptedException e) {
+        //     e.printStackTrace();
+        //     throw new RuntimeException("실행 중 오류 발생", e);
+        // }
+        return new CreateRbdObjectsAnswer(true);
     }
 
     protected Answer listRbdFilesAtPath(int startIndex, int pageSize, String poolPath) {

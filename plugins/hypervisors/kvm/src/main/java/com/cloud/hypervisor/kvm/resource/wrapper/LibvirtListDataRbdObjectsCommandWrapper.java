@@ -24,14 +24,14 @@ import com.cloud.hypervisor.kvm.resource.LibvirtComputingResource;
 import com.cloud.resource.CommandWrapper;
 import com.cloud.resource.ResourceWrapper;
 
-import org.apache.cloudstack.storage.command.browser.ListDataRbdObjectsCommand;
+import org.apache.cloudstack.storage.command.browser.CreateRbdObjectsCommand;
 
 
-@ResourceWrapper(handles = ListDataRbdObjectsCommand.class)
-public final class LibvirtListDataRbdObjectsCommandWrapper extends CommandWrapper<ListDataRbdObjectsCommand, Answer, LibvirtComputingResource> {
+@ResourceWrapper(handles = CreateRbdObjectsCommand.class)
+public final class LibvirtListDataRbdObjectsCommandWrapper extends CommandWrapper<CreateRbdObjectsCommand, Answer, LibvirtComputingResource> {
     @Override
-    public Answer execute(final ListDataRbdObjectsCommand command,
+    public Answer execute(final CreateRbdObjectsCommand command,
             final LibvirtComputingResource libvirtComputingResource) {
-        return libvirtComputingResource.CreateImageRbd(command);
+        return libvirtComputingResource.createImageRbd(command);
     }
 }

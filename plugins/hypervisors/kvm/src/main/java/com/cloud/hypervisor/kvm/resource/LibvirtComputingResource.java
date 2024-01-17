@@ -51,6 +51,7 @@ import javax.xml.parsers.ParserConfigurationException;
 
 import org.apache.cloudstack.api.ApiConstants.IoDriverPolicy;
 import org.apache.cloudstack.engine.orchestration.service.NetworkOrchestrationService;
+import org.apache.cloudstack.storage.command.browser.CreateRbdObjectsCommand;
 import org.apache.cloudstack.storage.command.browser.ListDataStoreObjectsCommand;
 import org.apache.cloudstack.storage.configdrive.ConfigDrive;
 import org.apache.cloudstack.storage.datastore.db.PrimaryDataStoreDao;
@@ -5053,6 +5054,13 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
             KVMStoragePool storagePool = storagePoolManager.getStoragePool(StoragePoolType.NetworkFilesystem, store.getUuid());
             return listFilesAtPath(storagePool.getLocalPath(), command.getPath(), command.getStartIndex(), command.getPageSize());
         }
+    }
+
+    public Answer createImageRbd(CreateRbdObjectsCommand command) {
+        if(command.getPoolType().equals("RBD")) {
+            return createImageRbd(command.getNames(), command.getSizes(), command.getPoolPath());
+        }
+        return null;
     }
 
     public boolean addNetworkRules(final String vmName, final String vmId, final String guestIP, final String guestIP6, final String sig, final String seq, final String mac, final String rules, final String vif, final String brname,
