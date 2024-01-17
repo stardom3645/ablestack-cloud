@@ -18,7 +18,7 @@
 
 import sys
 from cloudutils.syscfg import sysConfigFactory
-from cloudutils.utilities import initLoging, UnknownSystemException
+from cloudutils.utilities import UnknownSystemException
 from cloudutils.cloudException import CloudRuntimeException, CloudInternalException
 from cloudutils.globalEnv import globalEnv
 from cloudutils.serviceConfigServer import cloudManagementConfig
