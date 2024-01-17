@@ -362,7 +362,7 @@ public class KVMStoragePoolManager {
         KVMStoragePool pool = adaptor.createStoragePool(name, host, port, path, userInfo, type, details);
 
         // LibvirtStorageAdaptor-specific statement
-        if (pool.isPoolSupportHA() && primaryStorage) {
+        if (type == StoragePoolType.NetworkFilesystem && primaryStorage) {
             KVMHABase.HAStoragePool storagePool = new KVMHABase.HAStoragePool(pool, host, path, PoolType.PrimaryStorage);
             _haMonitor.addStoragePool(storagePool);
         } else if (type == StoragePoolType.RBD && primaryStorage) {

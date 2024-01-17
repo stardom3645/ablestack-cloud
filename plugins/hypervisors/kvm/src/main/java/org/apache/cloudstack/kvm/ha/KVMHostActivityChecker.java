@@ -96,7 +96,6 @@ public class KVMHostActivityChecker extends AdapterBase implements ActivityCheck
         }
         Status hostStatus = Status.Unknown;
         Status neighbourStatus = Status.Unknown;
-        LOG.info(":::reportFailureIfOneStorageIsDown:::22222: " + HighAvailabilityManager.KvmHAFenceHostIfHeartbeatFailsOnStorage.value());
 
         final CheckOnHostCommand cmd = new CheckOnHostCommand(agent, HighAvailabilityManager.KvmHAFenceHostIfHeartbeatFailsOnStorage.value());
         try {

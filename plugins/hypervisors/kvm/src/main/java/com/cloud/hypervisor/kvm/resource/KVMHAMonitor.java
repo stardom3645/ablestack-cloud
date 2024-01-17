@@ -131,9 +131,7 @@ public class KVMHAMonitor extends KVMHABase implements Runnable {
             result = executePoolHeartBeatCommand(uuid, primaryStoragePool, result);
             if (result != null && rebootHostAndAlertManagementOnHeartbeatTimeout) {
                 s_logger.warn(String.format("Write heartbeat for pool [%s] failed: %s; stopping cloudstack-agent.", uuid, result));
-                if (primaryStoragePool.getPool().getType() == StoragePoolType.NetworkFilesystem ||
-                    primaryStoragePool.getPool().getType() == StoragePoolType.RBD ||
-                    primaryStoragePool.getPool().getType() == StoragePoolType.CLVM) {
+                if (primaryStoragePool.getPool().isPoolSupportHA()) {
                     primaryStoragePool.getPool().createHeartBeatCommand(primaryStoragePool, null, false);
                 }
             }
@@ -147,9 +145,7 @@ public class KVMHAMonitor extends KVMHABase implements Runnable {
 
     private String executePoolHeartBeatCommand(String uuid, HAStoragePool primaryStoragePool, String result) {
         for (int i = 1; i <= _heartBeatUpdateMaxTries; i++) {
-            if (primaryStoragePool.getPool().getType() == StoragePoolType.NetworkFilesystem ||
-                primaryStoragePool.getPool().getType() == StoragePoolType.RBD ||
-                primaryStoragePool.getPool().getType() == StoragePoolType.CLVM) {
+            if (primaryStoragePool.getPool().isPoolSupportHA()) {
                 result = primaryStoragePool.getPool().createHeartBeatCommand(primaryStoragePool, hostPrivateIp, true);
             }
             if (result != null) {

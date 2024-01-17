@@ -294,7 +294,7 @@ public class LibvirtStoragePool implements KVMStoragePool {
 
     @Override
     public boolean isPoolSupportHA() {
-        return type == StoragePoolType.NetworkFilesystem || type == StoragePoolType.NetworkFilesystem || type == StoragePoolType.CLVM;
+        return type == StoragePoolType.NetworkFilesystem || type == StoragePoolType.RBD || type == StoragePoolType.CLVM;
     }
 
     @Override
@@ -409,14 +409,6 @@ public class LibvirtStoragePool implements KVMStoragePool {
             cmd.add("-t", String.valueOf(String.valueOf(System.currentTimeMillis() / 1000)));
             cmd.add("-d", String.valueOf(duration));
         } else if (pool.getPool().getType() == StoragePoolType.RBD) {
-            s_logger.info("::::::getPoolSourceHost:::::::::" + pool.getPoolSourceHost());
-            s_logger.info(":::::getPoolMountSourcePath::::::::::" + pool.getPoolMountSourcePath());
-            s_logger.info("::::::getPoolAuthUserName:::::::::" + pool.getPoolAuthUserName());
-            s_logger.info(":::::::::getPoolAuthSecret::::::" + pool.getPoolAuthSecret());
-            s_logger.info("::::::::getPrivateNetwork().getIp:::::::" + host.getPrivateNetwork().getIp());
-            s_logger.info("::::::::vmActivityCheckPath:::::::" + vmActivityCheckPath);
-            s_logger.info("::::::::volumeUUIDListString:::::::" + volumeUUIDListString);
-            s_logger.info("::::::::duration:::::::" + duration);
             cmd.add("-i", pool.getPoolSourceHost());
             cmd.add("-p", pool.getPoolMountSourcePath());
             cmd.add("-n", pool.getPoolAuthUserName());

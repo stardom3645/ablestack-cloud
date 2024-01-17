@@ -34,11 +34,11 @@ PoolAuthUserName=
 PoolAuthSecret=
 HostIP=
 SourceHostIP=
-interval=
+interval=0
 rflag=0
 cflag=0
 
-while getopts 'p:n:s:h:i:t:rc' OPTION
+while getopts 'p:n:s:h:i:t:r:c:' OPTION
 do
   case $OPTION in
   p)
@@ -57,13 +57,13 @@ do
      SourceHostIP="$OPTARG"
      ;;
   t)
-     Interval="$OPTARG"
+     interval="$OPTARG"
      ;;
   r)
-     Rflag=1 
+     rflag=1 
      ;;
   c)
-    Cflag=1
+     cflag=1
      ;;
   *)
      help
@@ -95,8 +95,9 @@ write_hbLog() {
 
 #check the heart beat log
 check_hbLog() {
+  now=$(date +%s)
   getHbTime=$(rbd -p $PoolName --id $PoolAuthUserName image-meta get MOLD-HB $HostIP)
-  diff=$(expr $(date +%s) - $getHbTime)
+  diff=$(expr $now - $getHbTime)
 
   if [ $diff -gt $interval ]; then
     return $diff
@@ -104,7 +105,7 @@ check_hbLog() {
   return 0
 }
 
-if [ "$Rflag" == "1" ]; then
+if [ "$rflag" == "1" ]; then
   check_hbLog
   diff=$?
   if [ $diff == 0 ]; then
