@@ -654,6 +654,16 @@ public class ResourceManagerImpl extends ManagerBase implements ResourceManager,
             }
         }
 
+        if (Boolean.parseBoolean(_configDao.getValue("security.features.enabled"))) {
+            Integer passwordLength = password.length();
+            if (passwordLength < 6 || passwordLength > 15) {
+                throw new InvalidParameterValueException(String.format("host password should contain at least 6 characters or less than 15 characters."));
+            }
+            if (StringUtils.containsIgnoreCase(password, username)) {
+                throw new InvalidParameterValueException("host password should not contain their username.");
+            }
+        }
+
         String hypervisorType = cmd.getHypervisor().equalsIgnoreCase(HypervisorGuru.HypervisorCustomDisplayName.value()) ?
                 "Custom" : cmd.getHypervisor();
         return discoverHostsFull(dcId, podId, clusterId, clusterName, url, username, password, hypervisorType, hostTags, cmd.getFullUrlParams(), false);
