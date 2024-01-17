@@ -29,8 +29,6 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 
 import com.cloud.agent.api.to.HostTO;
-import com.cloud.agent.properties.AgentProperties;
-import com.cloud.agent.properties.AgentPropertiesFileHandler;
 import com.cloud.hypervisor.kvm.resource.KVMHABase.HAStoragePool;
 import com.cloud.storage.Storage;
 import com.cloud.storage.Storage.StoragePoolType;
@@ -296,32 +294,54 @@ public class LibvirtStoragePool implements KVMStoragePool {
 
     @Override
     public boolean isPoolSupportHA() {
-        return type == StoragePoolType.NetworkFilesystem;
+        return type == StoragePoolType.NetworkFilesystem || type == StoragePoolType.RBD || type == StoragePoolType.CLVM;
     }
 
+    @Override
     public String getHearthBeatPath() {
         if (type == StoragePoolType.NetworkFilesystem) {
-            String kvmScriptsDir = AgentPropertiesFileHandler.getPropertyValue(AgentProperties.KVM_SCRIPTS_DIR);
             return Script.findScript(kvmScriptsDir, "kvmheartbeat.sh");
+        }
+        if (type == StoragePoolType.RBD) {
+            return Script.findScript(kvmScriptsDir, "kvmheartbeat_rbd.sh");
+        }
+        if (type == StoragePoolType.CLVM) {
+            return Script.findScript(kvmScriptsDir, "kvmheartbeat_clvm.sh");
         }
         return null;
     }
 
-
     public String createHeartBeatCommand(HAStoragePool primaryStoragePool, String hostPrivateIp, boolean hostValidation) {
-        Script cmd = new Script(primaryStoragePool.getPool().getHearthBeatPath(), HeartBeatUpdateTimeout, s_logger);
-        cmd.add("-i", primaryStoragePool.getPoolIp());
-        cmd.add("-p", primaryStoragePool.getPoolMountSourcePath());
-        cmd.add("-m", primaryStoragePool.getMountDestPath());
-
-        if (hostValidation) {
+        Script cmd = new Script(getHearthBeatPath(), HeartBeatUpdateTimeout, s_logger);
+        if (primaryStoragePool.getPool().getType() == StoragePoolType.NetworkFilesystem) {
+            cmd = new Script(getHearthBeatPath(), HeartBeatUpdateTimeout, s_logger);
+            cmd.add("-i", primaryStoragePool.getPoolIp());
+            cmd.add("-p", primaryStoragePool.getPoolMountSourcePath());
+            cmd.add("-m", primaryStoragePool.getMountDestPath());
+            if (hostValidation) {
+                cmd.add("-h", hostPrivateIp);
+            }
+            if (!hostValidation) {
+                cmd.add("-c");
+            }
+        } else if (primaryStoragePool.getPool().getType() == StoragePoolType.RBD) {
+            cmd.add("-i", primaryStoragePool.getPoolSourceHost());
+            cmd.add("-p", primaryStoragePool.getPoolMountSourcePath());
+            cmd.add("-n", primaryStoragePool.getPoolAuthUserName());
+            cmd.add("-s", primaryStoragePool.getPoolAuthSecret());
             cmd.add("-h", hostPrivateIp);
+            if (!hostValidation) {
+                cmd.add("-c");
+            }
+        } else if (primaryStoragePool.getPool().getType() == StoragePoolType.CLVM) {
+            cmd.add("-p", primaryStoragePool.getPoolMountSourcePath());
+            if (hostValidation) {
+                cmd.add("-h", hostPrivateIp);
+            }
+            if (!hostValidation) {
+                cmd.add("-c");
+            }
         }
-
-        if (!hostValidation) {
-            cmd.add("-c");
-        }
-
         return cmd.execute();
     }
 
@@ -338,14 +358,29 @@ public class LibvirtStoragePool implements KVMStoragePool {
     @Override
     public Boolean checkingHeartBeat(HAStoragePool pool, HostTO host) {
         boolean validResult = false;
-        String hostIp = host.getPrivateNetwork().getIp();
         Script cmd = new Script(getHearthBeatPath(), HeartBeatCheckerTimeout, s_logger);
-        cmd.add("-i", pool.getPoolIp());
-        cmd.add("-p", pool.getPoolMountSourcePath());
-        cmd.add("-m", pool.getMountDestPath());
-        cmd.add("-h", hostIp);
-        cmd.add("-r");
-        cmd.add("-t", String.valueOf(HeartBeatUpdateFreq / 1000));
+        if (pool.getPool().getType() == StoragePoolType.NetworkFilesystem) {
+            cmd.add("-i", pool.getPoolIp());
+            cmd.add("-p", pool.getPoolMountSourcePath());
+            cmd.add("-m", pool.getMountDestPath());
+            cmd.add("-h", host.getPrivateNetwork().getIp());
+            cmd.add("-r");
+            cmd.add("-t", String.valueOf(HeartBeatUpdateFreq / 1000));
+        } else if (pool.getPool().getType() == StoragePoolType.RBD) {
+            cmd.add("-i", pool.getPoolSourceHost());
+            cmd.add("-p", pool.getPoolMountSourcePath());
+            cmd.add("-n", pool.getPoolAuthUserName());
+            cmd.add("-s", pool.getPoolAuthSecret());
+            cmd.add("-h", host.getPrivateNetwork().getIp());
+            cmd.add("-r", "r");
+            cmd.add("-t", String.valueOf(HeartBeatUpdateFreq / 1000));
+        } else if (pool.getPool().getType() == StoragePoolType.CLVM) {
+            cmd.add("-h", host.getPrivateNetwork().getIp());
+            cmd.add("-p", pool.getPoolMountSourcePath());
+            cmd.add("-r");
+            cmd.add("-t", String.valueOf(HeartBeatUpdateFreq / 1000));
+        }
+
         OutputInterpreter.OneLineParser parser = new OutputInterpreter.OneLineParser();
         String result = cmd.execute(parser);
         String parsedLine = parser.getLine();
@@ -355,7 +390,7 @@ public class LibvirtStoragePool implements KVMStoragePool {
 
         if (result == null && parsedLine.contains("DEAD")) {
             s_logger.warn(String.format("Checking heart beat with KVMHAChecker command [%s] returned [%s]. [%s]. It may cause a shutdown of host IP [%s].", cmd.toString(),
-                    result, parsedLine, hostIp));
+                    result, parsedLine, host.getPrivateNetwork().getIp()));
         } else {
             validResult = true;
         }
@@ -365,15 +400,31 @@ public class LibvirtStoragePool implements KVMStoragePool {
     @Override
     public Boolean vmActivityCheck(HAStoragePool pool, HostTO host, Duration activityScriptTimeout, String volumeUUIDListString, String vmActivityCheckPath, long duration) {
         Script cmd = new Script(vmActivityCheckPath, activityScriptTimeout.getStandardSeconds(), s_logger);
-        cmd.add("-i", pool.getPoolIp());
-        cmd.add("-p", pool.getPoolMountSourcePath());
-        cmd.add("-m", pool.getMountDestPath());
-        cmd.add("-h", host.getPrivateNetwork().getIp());
-        cmd.add("-u", volumeUUIDListString);
-        cmd.add("-t", String.valueOf(String.valueOf(System.currentTimeMillis() / 1000)));
-        cmd.add("-d", String.valueOf(duration));
-        OutputInterpreter.OneLineParser parser = new OutputInterpreter.OneLineParser();
+        if (pool.getPool().getType() == StoragePoolType.NetworkFilesystem) {
+            cmd.add("-i", pool.getPoolIp());
+            cmd.add("-p", pool.getPoolMountSourcePath());
+            cmd.add("-m", pool.getMountDestPath());
+            cmd.add("-h", host.getPrivateNetwork().getIp());
+            cmd.add("-u", volumeUUIDListString);
+            cmd.add("-t", String.valueOf(String.valueOf(System.currentTimeMillis() / 1000)));
+            cmd.add("-d", String.valueOf(duration));
+        } else if (pool.getPool().getType() == StoragePoolType.RBD) {
+            cmd.add("-i", pool.getPoolSourceHost());
+            cmd.add("-p", pool.getPoolMountSourcePath());
+            cmd.add("-n", pool.getPoolAuthUserName());
+            cmd.add("-s", pool.getPoolAuthSecret());
+            cmd.add("-h", host.getPrivateNetwork().getIp());
+            cmd.add("-u", volumeUUIDListString);
+            cmd.add("-t", String.valueOf(String.valueOf(System.currentTimeMillis() / 1000)));
+            cmd.add("-d", String.valueOf(duration));
+        } else if (pool.getPool().getType() == StoragePoolType.CLVM) {
+            cmd.add("-h", host.getPublicNetwork().getIp());
+            cmd.add("-u", volumeUUIDListString);
+            cmd.add("-t", String.valueOf(String.valueOf(System.currentTimeMillis() / 1000)));
+            cmd.add("-d", String.valueOf(duration));
+        }
 
+        OutputInterpreter.OneLineParser parser = new OutputInterpreter.OneLineParser();
         String result = cmd.execute(parser);
         String parsedLine = parser.getLine();
 

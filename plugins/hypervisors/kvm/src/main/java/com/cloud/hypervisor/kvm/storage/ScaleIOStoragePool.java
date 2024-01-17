@@ -239,4 +239,5 @@ public class ScaleIOStoragePool implements KVMStoragePool {
     public Boolean vmActivityCheck(HAStoragePool pool, HostTO host, Duration activityScriptTimeout, String volumeUUIDListString, String vmActivityCheckPath, long duration) {
         return null;
     }
+
 }

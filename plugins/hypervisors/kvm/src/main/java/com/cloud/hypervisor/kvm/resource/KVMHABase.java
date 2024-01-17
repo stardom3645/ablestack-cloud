@@ -54,6 +54,11 @@ public class KVMHABase {
         PoolType poolType;
         KVMStoragePool pool;
 
+        String monHost;
+        String poolAuthUserName;
+        String poolAuthSecret;
+        String poolSourceHost;
+
         public HAStoragePool(KVMStoragePool pool, String host, String path, PoolType type) {
             this.pool = pool;
             this.poolUuid = pool.getUuid();
@@ -61,6 +66,18 @@ public class KVMHABase {
             this.poolIp = host;
             this.poolMountSourcePath = path;
             this.poolType = type;
+        }
+
+        public HAStoragePool(KVMStoragePool pool, String monHost, String poolSourcePath, String mountDestPath, PoolType type, String poolAuthUserName, String poolAuthSecret, String poolSourceHost) {
+            this.pool = pool;
+            this.poolUuid = pool.getUuid();
+            this.monHost = monHost;
+            this.poolMountSourcePath = poolSourcePath;
+            this.mountDestPath = mountDestPath;
+            this.poolType = type;
+            this.poolAuthUserName = poolAuthUserName;
+            this.poolAuthSecret = poolAuthSecret;
+            this.poolSourceHost = poolSourceHost;
         }
 
         public String getPoolUUID() {
@@ -110,6 +127,39 @@ public class KVMHABase {
         public void setPool(KVMStoragePool pool) {
             this.pool = pool;
         }
+
+        public String getMonHost() {
+            return monHost;
+        }
+
+        public void setMonHost(String monHost) {
+            this.monHost = monHost;
+        }
+
+        public String getPoolAuthUserName() {
+            return poolAuthUserName;
+        }
+
+        public void setPoolAuthUserName(String poolAuthUserName) {
+            this.poolAuthUserName = poolAuthUserName;
+        }
+
+        public String getPoolAuthSecret() {
+            return poolAuthSecret;
+        }
+
+        public void setPoolAuthSecret(String poolAuthSecret) {
+            this.poolAuthSecret = poolAuthSecret;
+        }
+
+        public String getPoolSourceHost() {
+            return poolSourceHost;
+        }
+
+        public void setPoolSourceHost(String poolSourceHost) {
+            this.poolSourceHost = poolSourceHost;
+        }
+
     }
 
     protected String checkingMountPoint(HAStoragePool pool, String poolName) {

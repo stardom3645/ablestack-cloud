@@ -30,6 +30,7 @@ import com.cloud.hypervisor.kvm.resource.KVMHAVMActivityChecker;
 import com.cloud.hypervisor.kvm.resource.LibvirtComputingResource;
 import com.cloud.resource.CommandWrapper;
 import com.cloud.resource.ResourceWrapper;
+import com.cloud.storage.Storage;
 
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -47,10 +48,21 @@ public final class LibvirtCheckVMActivityOnStoragePoolCommandWrapper extends Com
         final KVMStoragePoolManager storagePoolMgr = libvirtComputingResource.getStoragePoolMgr();
 
         KVMStoragePool primaryPool = storagePoolMgr.getStoragePool(pool.getType(), pool.getUuid());
-
         if (primaryPool.isPoolSupportHA()){
-            final HAStoragePool nfspool = monitor.getStoragePool(pool.getUuid());
-            final KVMHAVMActivityChecker ha = new KVMHAVMActivityChecker(nfspool, command.getHost(), command.getVolumeList(), libvirtComputingResource.getVmActivityCheckPath(), command.getSuspectTimeInSeconds());
+            HAStoragePool haStoragePool = null;
+            String vmActivityCheckPath = "";
+            if (Storage.StoragePoolType.NetworkFilesystem == pool.getType()) {
+                haStoragePool = monitor.getStoragePool(pool.getUuid());
+                vmActivityCheckPath = libvirtComputingResource.getVmActivityCheckPath();
+            } else if (Storage.StoragePoolType.RBD == pool.getType()) {
+                haStoragePool = monitor.getRbdStoragePool(pool.getUuid());
+                vmActivityCheckPath = libvirtComputingResource.getVmActivityCheckPathRbd();
+            } else if (Storage.StoragePoolType.CLVM == pool.getType()) {
+                haStoragePool = monitor.getClvmStoragePool(pool.getUuid());
+                vmActivityCheckPath = libvirtComputingResource.getVmActivityCheckPathClvm();
+            }
+
+            final KVMHAVMActivityChecker ha = new KVMHAVMActivityChecker(haStoragePool, command.getHost(), command.getVolumeList(), vmActivityCheckPath, command.getSuspectTimeInSeconds());
             final Future<Boolean> future = executors.submit(ha);
             try {
                 final Boolean result = future.get();

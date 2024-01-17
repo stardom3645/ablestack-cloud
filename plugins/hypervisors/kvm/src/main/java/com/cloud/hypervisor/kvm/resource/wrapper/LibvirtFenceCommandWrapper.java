@@ -48,6 +48,8 @@ public final class LibvirtFenceCommandWrapper extends CommandWrapper<FenceComman
         final KVMHAMonitor monitor = libvirtComputingResource.getMonitor();
 
         final List<HAStoragePool> pools = monitor.getStoragePools();
+        final List<HAStoragePool> rbdpools = monitor.getRbdStoragePools();
+        final List<HAStoragePool> clvmpools = monitor.getClvmStoragePools();
 
         /**
          * We can only safely fence off hosts when we use NFS
@@ -55,12 +57,20 @@ public final class LibvirtFenceCommandWrapper extends CommandWrapper<FenceComman
          * a heartbeat. Disable Fencing Off for hosts without NFS
          */
         if (pools.size() == 0) {
-            String logline = "No NFS storage pools found. No way to safely fence " + command.getVmName() + " on host " + command.getHostGuid();
+            String logline = String.format("No NFS storage pools found. No way to safely fence %s on host %s", command.getVmName(), command.getHostGuid());
+            s_logger.warn(logline);
+            return new FenceAnswer(command, false, logline);
+        } else if (rbdpools.size() == 0) {
+            String logline = String.format("No RBD storage pools found. No way to safely fence %s on host %s", command.getVmName(), command.getHostGuid());
+            s_logger.warn(logline);
+            return new FenceAnswer(command, false, logline);
+        }else if (clvmpools.size() == 0) {
+            String logline = String.format("No CLVM storage pools found. No way to safely fence %s on host %s", command.getVmName(), command.getHostGuid());
             s_logger.warn(logline);
             return new FenceAnswer(command, false, logline);
         }
 
-        final KVMHAChecker ha = new KVMHAChecker(pools, command.getHost(), command.isReportCheckFailureIfOneStorageIsDown());
+        final KVMHAChecker ha = new KVMHAChecker(pools, rbdpools, clvmpools, command.getHost(), command.isReportCheckFailureIfOneStorageIsDown());
 
         final Future<Boolean> future = executors.submit(ha);
         try {

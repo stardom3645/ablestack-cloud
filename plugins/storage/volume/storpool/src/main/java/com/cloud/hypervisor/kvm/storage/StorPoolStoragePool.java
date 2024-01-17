@@ -266,6 +266,7 @@ public class StorPoolStoragePool implements KVMStoragePool {
         return isNodeWorking;
     }
 
+
     private boolean checkIfNodeIsRunning(String response, Integer hostStorageNodeId) {
         boolean isNodeWorking = false;
         JsonParser jsonParser = new JsonParser();
@@ -301,4 +302,5 @@ public class StorPoolStoragePool implements KVMStoragePool {
     public Boolean vmActivityCheck(HAStoragePool pool, HostTO host, Duration activityScriptTimeout, String volumeUuidListString, String vmActivityCheckPath, long duration) {
         return checkingHeartBeat(pool, host);
     }
+
 }

@@ -98,6 +98,7 @@ public class KVMInvestigator extends AdapterBase implements Investigator {
         Status hostStatus = null;
         Status neighbourStatus = null;
         boolean reportFailureIfOneStorageIsDown = HighAvailabilityManager.KvmHAFenceHostIfHeartbeatFailsOnStorage.value();
+
         CheckOnHostCommand cmd = new CheckOnHostCommand(agent, reportFailureIfOneStorageIsDown);
 
         try {
@@ -113,6 +114,7 @@ public class KVMInvestigator extends AdapterBase implements Investigator {
         }
 
         List<HostVO> neighbors = _resourceMgr.listHostsInClusterByStatus(agent.getClusterId(), Status.Up);
+
         for (HostVO neighbor : neighbors) {
             if (neighbor.getId() == agent.getId()
                     || (neighbor.getHypervisorType() != Hypervisor.HypervisorType.KVM && neighbor.getHypervisorType() != Hypervisor.HypervisorType.LXC)) {
