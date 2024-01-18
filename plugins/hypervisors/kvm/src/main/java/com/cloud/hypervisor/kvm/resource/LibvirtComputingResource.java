@@ -971,9 +971,9 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
             throw new ConfigurationException("Unable to find kvmheartbeat.sh");
         }
 
-        heartBeatPathRbd = Script.findScript(kvmScriptsDir, "kvmheartbeat_rbd.py");
+        heartBeatPathRbd = Script.findScript(kvmScriptsDir, "kvmheartbeat_rbd.sh");
         if (heartBeatPathRbd == null) {
-            throw new ConfigurationException("Unable to find kvmheartbeat_rbd.py");
+            throw new ConfigurationException("Unable to find kvmheartbeat_rbd.sh");
         }
 
         heartBeatPathClvm = Script.findScript(kvmScriptsDir, "kvmheartbeat_clvm.sh");
@@ -994,6 +994,21 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
         resizeVolumePath = Script.findScript(storageScriptsDir, "resizevolume.sh");
         if (resizeVolumePath == null) {
             throw new ConfigurationException("Unable to find the resizevolume.sh");
+        }
+
+        vmActivityCheckPath = Script.findScript(kvmScriptsDir, "kvmvmactivity.sh");
+        if (vmActivityCheckPath == null) {
+            throw new ConfigurationException("Unable to find kvmvmactivity.sh");
+        }
+
+        vmActivityCheckPathRbd = Script.findScript(kvmScriptsDir, "kvmvmactivity_rbd.sh");
+        if (vmActivityCheckPathRbd == null) {
+            throw new ConfigurationException("Unable to find kvmvmactivity_rbd.sh");
+        }
+
+        vmActivityCheckPathClvm = Script.findScript(kvmScriptsDir, "kvmvmactivity_clvm.sh");
+        if (vmActivityCheckPathClvm == null) {
+            throw new ConfigurationException("Unable to find kvmvmactivity_clvm.sh");
         }
 
         createTmplPath = Script.findScript(storageScriptsDir, "createtmplt.sh");
@@ -1237,7 +1252,8 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
 
         final String[] info = NetUtils.getNetworkParams(privateNic);
 
-        kvmhaMonitor = new KVMHAMonitor(null, null, null, info[0], heartBeatPath, heartBeatPathRbd, heartBeatPathClvm);
+        kvmhaMonitor = new KVMHAMonitor(null, info[0], heartBeatPath, heartBeatPathRbd, heartBeatPathClvm);
+
         final Thread ha = new Thread(kvmhaMonitor);
         ha.start();
 
