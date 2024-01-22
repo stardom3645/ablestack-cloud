@@ -4391,6 +4391,10 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
             regionSecondaryEnabled = true;
         }
 
+        if (securityFeaturesEnabled) {
+            capabilities.put("publicKeyExponent", cmd.getPublicKeyExponent());
+            capabilities.put("publicKeyModulus", cmd.getPublicKeyModulus());
+        }
         capabilities.put("securityGroupsEnabled", securityGroupsEnabled);
         capabilities.put("userPublicTemplateEnabled", userPublicTemplateEnabled);
         capabilities.put("cloudStackVersion", getVersion());
