@@ -129,7 +129,7 @@ public class ServerDaemon implements Daemon {
             }
             InputStream is = null;
             if (confFileEnc != null) {
-                Process process = Runtime.getRuntime().exec("openssl enc -aria-256-cbc -a -d -pbkdf2 -k " + DbProperties.getKp() + " -saltlen 16 -md sha256 -iter 100000 -in " + confFileEnc.getAbsoluteFile());
+                Process process = Runtime.getRuntime().exec("openssl enc -aes-256-cbc -d -K " + DbProperties.getHexKey() + " -pass pass:" + DbProperties.getKp() + " -saltlen 16 -md sha256 -iter 100000 -in " + confFileEnc.getAbsoluteFile());
                 is = process.getInputStream();
                 process.onExit();
             } else {
@@ -301,16 +301,20 @@ public class ServerDaemon implements Daemon {
     }
 
     private RequestLog createRequestLog() {
-        final NCSARequestLog log = new NCSARequestLog();
-        final File logPath = new File(accessLogFile);
-        final File parentFile = logPath.getParentFile();
-        if (parentFile != null) {
-            parentFile.mkdirs();
+        try {
+            final NCSARequestLog log = new NCSARequestLog();
+            final File logPath = new File(accessLogFile);
+            final File parentFile = logPath.getParentFile();
+            if (parentFile != null) {
+                parentFile.mkdirs();
+            }
+            log.setFilename(logPath.getPath());
+            log.setAppend(true);
+            log.setLogTimeZone("GMT");
+            log.setLogLatency(true);
+        } catch (Exception e) {
+            return null;
         }
-        log.setFilename(logPath.getPath());
-        log.setAppend(true);
-        log.setLogTimeZone("GMT");
-        log.setLogLatency(true);
         return null;
     }
 

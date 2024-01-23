@@ -41,6 +41,7 @@ public class DbProperties {
     public static final String dbProperties = "db.properties";
     public static final String dbPropertiesEnc = "db.properties.enc";
     public static String kp;
+    public static String hk;
 
     public static String getKp() {
         return kp;
@@ -48,6 +49,14 @@ public class DbProperties {
 
     public static void setKp(String val) {
         kp = val;
+    }
+
+    public static String getHexKey(){
+        return hk;
+    }
+
+    public static void setHexKey(String hex) {
+        hk = hex;
     }
 
     protected static Properties wrapEncryption(Properties dbProps) throws IOException {
@@ -72,7 +81,7 @@ public class DbProperties {
                 final File propsEnc = PropertiesUtil.findConfigFile(dbPropertiesEnc);
                 final File props = PropertiesUtil.findConfigFile(dbProperties);
                 if (propsEnc != null && propsEnc.exists()) {
-                    Process process = Runtime.getRuntime().exec("openssl enc -aria-256-cbc -a -d -pbkdf2 -k " + DbProperties.getKp() + " -saltlen 16 -md sha256 -iter 100000 -in " + propsEnc.getAbsoluteFile());
+                    Process process = Runtime.getRuntime().exec("openssl enc -aes-256-cbc -d -K " + DbProperties.getHexKey() + " -pass pass:" + DbProperties.getKp() + " -saltlen 16 -md sha256 -iter 100000 -in " + propsEnc.getAbsoluteFile());
                     is = process.getInputStream();
                     process.onExit();
                 } else {
