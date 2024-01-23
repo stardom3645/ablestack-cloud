@@ -300,17 +300,6 @@
               :placeholder="apiParams.sourcenatipaddress?.description"/>
           </a-form-item>
           <a-form-item
-            ref="networkdomain"
-            name="networkdomain"
-            v-if="!isObjectEmpty(selectedNetworkOffering) && !selectedNetworkOffering.forvpc">
-            <template #label>
-              <tooltip-label :title="$t('label.networkdomain')" :tooltip="apiParams.networkdomain.description"/>
-            </template>
-            <a-input
-             v-model:value="form.networkdomain"
-              :placeholder="apiParams.networkdomain.description"/>
-          </a-form-item>
-          <a-form-item
             ref="account"
             name="account"
             v-if="accountVisible">

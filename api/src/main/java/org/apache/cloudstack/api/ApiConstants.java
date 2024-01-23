@@ -1132,6 +1132,8 @@ public class ApiConstants {
     public static final String REDIRECT_URI = "redirecturi";
 
     public static final String SHOW_ALERT = "showalert";
+    public static final String PUBLICKEY_EXPONENT = "publickeyexponent";
+    public static final String PUBLICKEY_MODULUS = "publickeymodulus";
 
     /**
      * This enum specifies IO Drivers, each option controls specific policies on I/O.

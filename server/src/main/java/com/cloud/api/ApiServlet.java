@@ -25,6 +25,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.security.KeyPair;
+import java.security.PrivateKey;
 
 import javax.inject.Inject;
 import javax.servlet.ServletConfig;
@@ -38,6 +40,7 @@ import javax.servlet.http.HttpSession;
 import org.apache.cloudstack.api.ApiConstants;
 import org.apache.cloudstack.api.ApiErrorCode;
 import org.apache.cloudstack.api.ApiServerService;
+import org.apache.cloudstack.api.ApiCommandResourceType;
 import org.apache.cloudstack.api.BaseCmd;
 import org.apache.cloudstack.api.ServerApiException;
 import org.apache.cloudstack.api.auth.APIAuthenticationManager;
@@ -57,6 +60,8 @@ import org.springframework.web.context.support.SpringBeanAutowiringSupport;
 import com.cloud.api.auth.ListUserTwoFactorAuthenticatorProvidersCmd;
 import com.cloud.api.auth.SetupUserTwoFactorAuthenticationCmd;
 import com.cloud.api.auth.ValidateUserTwoFactorAuthenticationCodeCmd;
+import com.cloud.event.ActionEventUtils;
+import com.cloud.event.EventTypes;
 import com.cloud.projects.Project;
 import com.cloud.projects.dao.ProjectDao;
 import com.cloud.user.Account;
@@ -67,6 +72,7 @@ import com.cloud.user.UserAccount;
 
 import com.cloud.utils.HttpUtils;
 import com.cloud.utils.StringUtils;
+import com.cloud.utils.crypt.RSAHelper;
 import com.cloud.utils.db.EntityManager;
 import com.cloud.utils.net.NetUtils;
 
@@ -238,15 +244,16 @@ public class ApiServlet extends HttpServlet {
                     String responseString = null;
 
                     if (apiAuthenticator.getAPIType() == APIAuthenticationType.LOGIN_API) {
-                        if (session != null) {
-                            invalidateHttpSession(session, "invalidating session for login call");
-                        }
-                        session = req.getSession(true);
-
-                        if (ApiServer.EnableSecureSessionCookie.value()) {
-                            resp.setHeader("SET-COOKIE", String.format("JSESSIONID=%s;Secure;HttpOnly;Path=/client", session.getId()));
-                            if (logger.isDebugEnabled()) {
-                                logger.debug("Session cookie is marked secure!");
+                        if (!ApiServer.SecurityFeaturesEnabled.value()) {
+                            if (session != null) {
+                                invalidateHttpSession(session, "invalidating session for login call");
+                            }
+                            session = req.getSession(true);
+                            if (ApiServer.EnableSecureSessionCookie.value()) {
+                                resp.setHeader("SET-COOKIE", String.format("JSESSIONID=%s;Secure;HttpOnly;Path=/client", session.getId()));
+                                if (logger.isDebugEnabled()) {
+                                    logger.debug("Session cookie is marked secure!");
+                                }
                             }
                         }
                     }
@@ -267,7 +274,7 @@ public class ApiServlet extends HttpServlet {
                     }
 
                     if (apiAuthenticator.getAPIType() == APIAuthenticationType.LOGOUT_API) {
-                        if (session != null) {
+                        if (!ApiServer.SecurityFeaturesEnabled.value()) {
                             final Long userId = (Long) session.getAttribute("userid");
                             final Account account = (Account) session.getAttribute("accountobj");
                             Long accountId = null;
@@ -279,6 +286,21 @@ public class ApiServlet extends HttpServlet {
                                 apiServer.logoutUser(userId);
                             }
                             invalidateHttpSession(session, "invalidating session after logout call");
+                        } else {
+                            final PrivateKey privateKey = (PrivateKey) session.getAttribute(RSAHelper.PRIVATE_KEY);
+                            if (privateKey == null) {
+                                Long userId = (Long) session.getAttribute("userid");
+                                final Account account = (Account) session.getAttribute("accountobj");
+                                Long accountId = null;
+                                if (account != null) {
+                                    accountId = account.getId();
+                                }
+                                auditTrailSb.insert(0, "(userId=" + userId + " accountId=" + accountId + " sessionId=" + session.getId() + ")");
+                                if (userId != null) {
+                                    apiServer.logoutUser(userId);
+                                }
+                                invalidateHttpSession(session, "invalidating session after logout call");
+                            }
                         }
                         final Cookie[] cookies = req.getCookies();
                         if (cookies != null) {
@@ -349,12 +371,26 @@ public class ApiServlet extends HttpServlet {
                 final String response = apiServer.handleRequest(params, responseType, auditTrailSb);
                 HttpUtils.writeHttpResponse(resp, response != null ? response : "", HttpServletResponse.SC_OK, responseType, ApiServer.JSONcontentType.value());
             } else {
-                if (session != null) {
-                    invalidateHttpSession(session, String.format("request verification failed for %s from %s", userId, remoteAddress.getHostAddress()));
-                }
                 // 인증 정보가 없어도 security 활성화 여부 확인을 위해 listCapablities API 오픈
                 if (command.equalsIgnoreCase("listCapabilities")) {
                     if (ApiServer.SecurityFeaturesEnabled.value()) {
+                        session = req.getSession(true);
+                        session.removeAttribute(RSAHelper.PRIVATE_KEY);
+                        KeyPair keys = RSAHelper.genKey();
+                        session.setAttribute(RSAHelper.PRIVATE_KEY, keys.getPrivate());
+                        Map<String, String> spec = RSAHelper.getKeySpec(keys.getPublic());
+                        params.put(RSAHelper.PUBLIC_KEY_MODULUS, new String[]{spec.get(RSAHelper.PUBLIC_KEY_MODULUS)});
+                        params.put(RSAHelper.PUBLIC_KEY_EXPONENT, new String[]{spec.get(RSAHelper.PUBLIC_KEY_EXPONENT)});
+                        String newCmd = command + "&" + RSAHelper.PUBLIC_KEY_MODULUS + "=" + spec.get(RSAHelper.PUBLIC_KEY_MODULUS) + "&" + RSAHelper.PUBLIC_KEY_EXPONENT + "=" + spec.get(RSAHelper.PUBLIC_KEY_EXPONENT) + "&response=json";
+                        int idx1 = auditTrailSb.toString().lastIndexOf(" ");
+                        int idx2 = auditTrailSb.toString().length();
+                        auditTrailSb.replace(idx1+1, idx2-1, newCmd);
+                        if (ApiServer.EnableSecureSessionCookie.value()) {
+                            resp.setHeader("SET-COOKIE", String.format("JSESSIONID=%s;Secure;HttpOnly;Path=/client", session.getId()));
+                            if (logger.isDebugEnabled()) {
+                                logger.debug("Session cookie is marked secure!");
+                            }
+                        }
                         // 관리자 단말기 접속 IP 가 다른 경우 에러 처리
                         String accountName = "admin";
                         Long domainId = 1L;
@@ -364,6 +400,8 @@ public class ApiServlet extends HttpServlet {
                         logger.debug("CIDRs from which account '" + account.toString() + "' is allowed to perform API calls: " + ApiAllowedSourceIp  + "/" + accessAllowedCidr);
                         if (!NetUtils.isIpInCidrList(remoteAddress, (ApiAllowedSourceIp + "/" + accessAllowedCidr).split(","))) {
                             logger.warn("Request by account '" + account.toString() + "' was denied since " + remoteAddress + " does not match " + ApiAllowedSourceIp  + "/" + accessAllowedCidr);
+                            ActionEventUtils.onActionEvent(account.getId(), account.getAccountId(), account.getDomainId(), EventTypes.EVENT_USER_LOGIN,
+                                "The access IP of the management terminal has been blocked. Blocked IP: " +  remoteAddress.toString().replace("/", ""), account.getId(), ApiCommandResourceType.User.toString());
                             throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, "Failed to authenticate user '" + accountName + "' from ip " + remoteAddress.toString().replace("/", ""));
                         }
                     }
@@ -377,6 +415,9 @@ public class ApiServlet extends HttpServlet {
                     final String response = apiServer.handleRequest(params, responseType, auditTrailSb);
                     HttpUtils.writeHttpResponse(resp, response != null ? response : "", HttpServletResponse.SC_OK, responseType, ApiServer.JSONcontentType.value());
                 } else {
+                    if (session != null) {
+                        invalidateHttpSession(session, String.format("request verification failed for %s from %s", userId, remoteAddress.getHostAddress()));
+                    }
                     auditTrailSb.append(" " + HttpServletResponse.SC_UNAUTHORIZED + " " + "unable to verify user credentials and/or request signature");
                     final String serializedResponse = apiServer.getSerializedApiError(HttpServletResponse.SC_UNAUTHORIZED, "unable to verify user credentials and/or request signature", params, responseType);
                     HttpUtils.writeHttpResponse(resp, serializedResponse, HttpServletResponse.SC_UNAUTHORIZED, responseType, ApiServer.JSONcontentType.value());

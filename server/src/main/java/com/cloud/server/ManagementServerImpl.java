@@ -4391,6 +4391,10 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
             regionSecondaryEnabled = true;
         }
 
+        if (securityFeaturesEnabled) {
+            capabilities.put("publicKeyExponent", cmd.getPublicKeyExponent());
+            capabilities.put("publicKeyModulus", cmd.getPublicKeyModulus());
+        }
         capabilities.put("securityGroupsEnabled", securityGroupsEnabled);
         capabilities.put("userPublicTemplateEnabled", userPublicTemplateEnabled);
         capabilities.put("cloudStackVersion", getVersion());
@@ -4947,6 +4951,18 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
             throw new InvalidParameterValueException("Username should be non empty string");
         }
 
+        final String username = command.getUsername();
+        final String password = command.getPassword();
+        if (Boolean.parseBoolean(_configDao.getValue("security.features.enabled"))) {
+            Integer passwordLength = password.length();
+            if (passwordLength < 6 || passwordLength > 15) {
+                throw new InvalidParameterValueException(String.format("host password should contain at least 6 characters or less than 15 characters."));
+            }
+            if (StringUtils.containsIgnoreCase(password, username)) {
+                throw new InvalidParameterValueException("host password should not contain their username.");
+            }
+        }
+
         Transaction.execute(new TransactionCallbackNoReturn() {
             @Override
             public void doInTransactionWithoutResult(final TransactionStatus status) {
@@ -5013,6 +5029,18 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
         String userNameWithoutSpaces = StringUtils.deleteWhitespace(cmd.getUsername());
         if (StringUtils.isBlank(userNameWithoutSpaces)) {
             throw new InvalidParameterValueException("Username should be non empty string");
+        }
+
+        final String username = cmd.getUsername();
+        final String password = cmd.getPassword();
+        if (Boolean.parseBoolean(_configDao.getValue("security.features.enabled"))) {
+            Integer passwordLength = password.length();
+            if (passwordLength < 6 || passwordLength > 15) {
+                throw new InvalidParameterValueException(String.format("host password should contain at least 6 characters or less than 15 characters."));
+            }
+            if (StringUtils.containsIgnoreCase(password, username)) {
+                throw new InvalidParameterValueException("host password should not contain their username.");
+            }
         }
 
         Transaction.execute(new TransactionCallbackNoReturn() {
