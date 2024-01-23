@@ -107,6 +107,16 @@ public class DbProperties {
 
             properties = dbProps;
             loaded = true;
+
+            if (dbProps != null) {
+                //dbProps 지우기 (0, 1 로 덮어쓰기 5회)
+                for (int i = 0; i < 5; i++) {
+                    dbProps.clear(); //프로퍼티 파일 내용 삭제
+                    dbProps.put("0101", "0101");//key, value 값에 0101로 5회 덮어쓰기
+                }
+            }
+
+
         } else {
             log.debug("DB properties were already loaded");
         }
