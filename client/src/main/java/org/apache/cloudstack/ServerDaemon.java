@@ -96,7 +96,7 @@ public class ServerDaemon implements Daemon {
     private int httpsPort = 8443;
     private int sessionTimeout = 10;
     private boolean httpsEnable = false;
-    private String accessLogFile = null;
+    private String accessLogFile = "";
     private String bindInterface = null;
     private String contextPath = "/client";
     private String keystoreFile;
