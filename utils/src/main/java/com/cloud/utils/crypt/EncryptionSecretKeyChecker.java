@@ -193,15 +193,12 @@ public class EncryptionSecretKeyChecker {
 
     public static String convertStringToHex(String str) {
         StringBuilder stringBuilder = new StringBuilder();
-    
         char[] charArray = str.toCharArray();
-    
         for (char c : charArray) {
             String charToHex = Integer.toHexString(c);
             stringBuilder.append(charToHex);
         }
         logger.info(stringBuilder.toString());
-    
         return stringBuilder.toString();
     }
 }
