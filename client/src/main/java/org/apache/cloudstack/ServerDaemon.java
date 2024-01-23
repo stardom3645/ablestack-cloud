@@ -96,7 +96,7 @@ public class ServerDaemon implements Daemon {
     private int httpsPort = 8443;
     private int sessionTimeout = 10;
     private boolean httpsEnable = false;
-    private String accessLogFile = "";
+    private String accessLogFile = null;
     private String bindInterface = null;
     private String contextPath = "/client";
     private String keystoreFile;
@@ -288,7 +288,7 @@ public class ServerDaemon implements Daemon {
 
         // Request log handler
         final RequestLogHandler log = new RequestLogHandler();
-        log.setRequestLog(createRequestLog());
+        // log.setRequestLog(createRequestLog());
 
         // Redirect root context handler_war
         MovedContextHandler rootRedirect = new MovedContextHandler();
