@@ -128,7 +128,7 @@ public class ServerDaemon implements Daemon {
             Process process = Runtime.getRuntime().exec("openssl enc -aria-256-cbc -a -d -pbkdf2 -k " + DbProperties.getKp() + " -saltlen 16 -md sha256 -iter 100000 -in " + isKeyEnc.getAbsoluteFile());
             is = process.getInputStream();
             process.onExit();
-        } 
+        }
         if (is == null) {  //This is means we are not able to load key file from the classpath.
             throw new CloudRuntimeException(s_keyFile + " File containing secret key not found in the classpath: ");
         }
