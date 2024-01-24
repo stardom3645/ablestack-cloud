@@ -26,11 +26,29 @@ public class CreateRbdObjectsAnswer extends Answer {
 
     private boolean successMessage;
 
-    public CreateRbdObjectsAnswer(boolean successMessage) {
+    private String message;
+
+    private String names;
+
+    private Long sizes;
+
+    public CreateRbdObjectsAnswer(boolean successMessage, String message, String names, Long sizes) {
         super();
         this.successMessage = successMessage;
+        this.names = names;
+        this.sizes = sizes;
+        this.message = message;
     }
     public boolean successMessage() {
         return successMessage;
+    }
+    public String getMessage() {
+        return message;
+    }
+    public String names() {
+        return names;
+    }
+    public Long sizes() {
+        return sizes;
     }
 }

@@ -22,8 +22,14 @@ import org.apache.cloudstack.api.BaseListCmd;
 import org.apache.cloudstack.api.Parameter;
 import org.apache.cloudstack.api.response.ListResponse;
 import org.apache.cloudstack.api.response.StoragePoolResponse;
+import org.apache.cloudstack.api.response.ZoneResponse;
 import org.apache.cloudstack.storage.browser.DataStoreObjectResponse;
 import org.apache.cloudstack.storage.browser.StorageBrowser;
+import org.apache.commons.collections.CollectionUtils;
+
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
 
 import javax.inject.Inject;
 
@@ -52,6 +58,10 @@ public class CreateRbdImageCmd extends BaseListCmd {
     @Parameter(name = ApiConstants.SIZE, type = CommandType.LONG, required = true, description = "path to list on storage pool")
     private long RbdSize;
 
+    @Parameter(name = ApiConstants.ZONE_ID, type = CommandType.LIST, collectionType = CommandType.UUID,
+            entityType = ZoneResponse.class, description = "the ID of the containing zone(s), null for public offerings", since = "4.13")
+    private List<Long> zoneIds;
+
     /////////////////////////////////////////////////////
     /////////////////// Accessors ///////////////////////
     /////////////////////////////////////////////////////
@@ -66,6 +76,15 @@ public class CreateRbdImageCmd extends BaseListCmd {
 
     public long getRbdSize() {
         return RbdSize;
+    }
+
+    public List<Long> getZoneIds() {
+        if (CollectionUtils.isNotEmpty(zoneIds)) {
+            Set<Long> set = new LinkedHashSet<>(zoneIds);
+            zoneIds.clear();
+            zoneIds.addAll(set);
+        }
+        return zoneIds;
     }
 
     /////////////////////////////////////////////////////

@@ -31,6 +31,7 @@ public class CreateRbdObjectsCommand extends StorageCommand {
 
    private String poolPath;
 
+   private String keyword;
 
     public CreateRbdObjectsCommand(String names, long sizes) {
         super();
@@ -57,6 +58,10 @@ public class CreateRbdObjectsCommand extends StorageCommand {
 
     public String getPoolType() {
         return poolType;
+    }
+
+    public String getKeyword() {
+        return keyword;
     }
 
     public void setPoolType(String poolType) {
