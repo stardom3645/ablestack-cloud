@@ -32,6 +32,7 @@ import com.cloud.utils.Pair;
 import com.cloud.utils.server.ServerProperties;
 import org.apache.commons.daemon.Daemon;
 import org.apache.commons.daemon.DaemonContext;
+import org.apache.commons.io.IOUtils;
 import org.eclipse.jetty.jmx.MBeanContainer;
 import org.eclipse.jetty.server.ForwardedRequestCustomizer;
 import org.eclipse.jetty.server.HttpConfiguration;
@@ -121,7 +122,7 @@ public class ServerDaemon implements Daemon {
     }
 
     @Override
-    public void init(final DaemonContext context) {
+    public void init(final DaemonContext context) throws IOException {
         InputStream is = null;
         String secretKey = null;
         String hexKey = null;
@@ -135,8 +136,10 @@ public class ServerDaemon implements Daemon {
                 hexKey = convertStringToHex(secretKey);
                 DbProperties.setHexKey(hexKey);
                 //Check for null or empty secret key
-            } catch (IOException e) {
-                LOG.error(e);
+            } catch (IOException ex) {
+                throw new IllegalStateException("Failed to load key.enc", ex);
+            } finally {
+                IOUtils.closeQuietly(is);
             }
         }
         is = null;
