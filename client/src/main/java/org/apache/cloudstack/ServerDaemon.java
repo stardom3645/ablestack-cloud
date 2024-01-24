@@ -83,6 +83,8 @@ public class ServerDaemon implements Daemon {
     private static final String ACCESS_LOG = "access.log";
     private static final String serverProperties = "server.properties";
     private static final String serverPropertiesEnc = "server.properties.enc";
+    private static final String s_keyFileEnc = "key.enc";
+    private static final String s_keyFile = "key";
 
 
     ////////////////////////////////////////////////////////
@@ -118,6 +120,30 @@ public class ServerDaemon implements Daemon {
 
     @Override
     public void init(final DaemonContext context) {
+        InputStream is = null;
+        String secretKey = null;
+        String hexKey = null;
+        final File isKeyEnc = PropertiesUtil.findConfigFile(s_keyFileEnc);
+        if (isKeyEnc != null){
+            Process process = Runtime.getRuntime().exec("openssl enc -aria-256-cbc -a -d -pbkdf2 -k " + DbProperties.getKp() + " -saltlen 16 -md sha256 -iter 100000 -in " + isKeyEnc.getAbsoluteFile());
+            is = process.getInputStream();
+            process.onExit();
+        } 
+        if (is == null) {  //This is means we are not able to load key file from the classpath.
+            throw new CloudRuntimeException(s_keyFile + " File containing secret key not found in the classpath: ");
+        }
+        try (BufferedReader in = new BufferedReader(new InputStreamReader(is));) {
+            secretKey = in.readLine();
+            hexKey = convertStringToHex(secretKey);
+            DbProperties.setHexKey(hexKey);
+            //Check for null or empty secret key
+        } catch (IOException e) {
+            throw new CloudRuntimeException("Error while reading secret key from: " + s_keyFile, e);
+        }
+        if (secretKey == null || secretKey.isEmpty()) {
+            throw new CloudRuntimeException("Secret key is null or empty in file " + s_keyFile);
+        }
+        is = null;
         final File confFileEnc = PropertiesUtil.findConfigFile(serverPropertiesEnc);
         final File confFile = PropertiesUtil.findConfigFile(serverProperties);
         try {
@@ -127,7 +153,6 @@ public class ServerDaemon implements Daemon {
                 LOG.info("Server configuration file found");
                 return;
             }
-            InputStream is = null;
             if (confFileEnc != null) {
                 LOG.info("ServerDaemon.java DbProperties.getHexKey()======================================");
                 LOG.info(DbProperties.getHexKey());
@@ -221,6 +246,24 @@ public class ServerDaemon implements Daemon {
     @Override
     public void destroy() {
         server.destroy();
+    }
+
+    public static String convertStringToHex(String str) {
+        String hex = "";
+        StringBuilder stringBuilder = new StringBuilder();
+        char[] charArray = str.toCharArray();
+        for (char c : charArray) {
+            String charToHex = Integer.toHexString(c);
+            stringBuilder.append(charToHex);
+            if (stringBuilder.toString().length() > 30) {
+                hex = stringBuilder.toString().substring(0, 31);
+            } else {
+                hex = stringBuilder.toString();
+            }
+        }
+        LOG.info("convertStringToHex=======================");
+        LOG.info(hex);
+        return hex;
     }
 
     ///////////////////////////////////////////////////
