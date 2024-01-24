@@ -88,13 +88,14 @@ public class EncryptionSecretKeyChecker {
                     is = this.getClass().getClassLoader().getResourceAsStream(s_altKeyFile);
                 }
             }
-            if(is == null) {  //This is means we are not able to load key file from the classpath.
+            if (is == null) {  //This is means we are not able to load key file from the classpath.
               throw new CloudRuntimeException(s_keyFile + " File containing secret key not found in the classpath: ");
             }
 
             try (BufferedReader in = new BufferedReader(new InputStreamReader(is));) {
                 secretKey = in.readLine();
                 hexKey = convertStringToHex(secretKey);
+                logger.info("hexkey=============================convert");
                 DbProperties.setHexKey(hexKey);
                 //Check for null or empty secret key
             } catch (IOException e) {
