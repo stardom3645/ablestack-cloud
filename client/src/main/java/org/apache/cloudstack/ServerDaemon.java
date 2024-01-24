@@ -130,14 +130,14 @@ public class ServerDaemon implements Daemon {
             Process process = Runtime.getRuntime().exec("openssl enc -aria-256-cbc -a -d -pbkdf2 -k " + DbProperties.getKp() + " -saltlen 16 -md sha256 -iter 100000 -in " + isKeyEnc.getAbsoluteFile());
             is = process.getInputStream();
             process.onExit();
-        }
-        try (BufferedReader in = new BufferedReader(new InputStreamReader(is));) {
-            secretKey = in.readLine();
-            hexKey = convertStringToHex(secretKey);
-            DbProperties.setHexKey(hexKey);
-            //Check for null or empty secret key
-        } catch (IOException e) {
-            LOG.error(e);
+            try (BufferedReader in = new BufferedReader(new InputStreamReader(is));) {
+                secretKey = in.readLine();
+                hexKey = convertStringToHex(secretKey);
+                DbProperties.setHexKey(hexKey);
+                //Check for null or empty secret key
+            } catch (IOException e) {
+                LOG.error(e);
+            }
         }
         is = null;
         final File confFileEnc = PropertiesUtil.findConfigFile(serverPropertiesEnc);
