@@ -18,10 +18,12 @@
 //
 package org.apache.cloudstack;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.lang.management.ManagementFactory;
 import java.net.URL;
 import java.util.Properties;
@@ -129,19 +131,13 @@ public class ServerDaemon implements Daemon {
             is = process.getInputStream();
             process.onExit();
         }
-        if (is == null) {  //This is means we are not able to load key file from the classpath.
-            throw new CloudRuntimeException(s_keyFile + " File containing secret key not found in the classpath: ");
-        }
         try (BufferedReader in = new BufferedReader(new InputStreamReader(is));) {
             secretKey = in.readLine();
             hexKey = convertStringToHex(secretKey);
             DbProperties.setHexKey(hexKey);
             //Check for null or empty secret key
         } catch (IOException e) {
-            throw new CloudRuntimeException("Error while reading secret key from: " + s_keyFile, e);
-        }
-        if (secretKey == null || secretKey.isEmpty()) {
-            throw new CloudRuntimeException("Secret key is null or empty in file " + s_keyFile);
+            LOG.error(e);
         }
         is = null;
         final File confFileEnc = PropertiesUtil.findConfigFile(serverPropertiesEnc);
