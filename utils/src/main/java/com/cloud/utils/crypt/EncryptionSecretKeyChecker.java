@@ -94,9 +94,6 @@ public class EncryptionSecretKeyChecker {
 
             try (BufferedReader in = new BufferedReader(new InputStreamReader(is));) {
                 secretKey = in.readLine();
-                hexKey = convertStringToHex(secretKey);
-                logger.info("hexkey=============================convert");
-                DbProperties.setHexKey(hexKey);
                 //Check for null or empty secret key
             } catch (IOException e) {
                 throw new CloudRuntimeException("Error while reading secret key from: " + s_keyFile, e);

@@ -124,6 +124,7 @@ public class ServerDaemon implements Daemon {
     @Override
     public void init(final DaemonContext context) throws IOException {
         InputStream is = null;
+        InputStream is2 = null;
         String secretKey = null;
         String hexKey = null;
         final File isKeyEnc = PropertiesUtil.findConfigFile(s_keyFileEnc);
@@ -133,7 +134,11 @@ public class ServerDaemon implements Daemon {
             process.onExit();
             try (BufferedReader in = new BufferedReader(new InputStreamReader(is));) {
                 secretKey = in.readLine();
-                hexKey = convertStringToHex(secretKey);
+                Process process2 = Runtime.getRuntime().exec("echo `echo $(od -x " + secretKey +")` | tr -d ' ' | cut -c -30");
+                is = process2.getInputStream();
+                process2.onExit();
+                BufferedReader in2 = new BufferedReader(new InputStreamReader(is2));
+                hexKey = in2.readLine();
                 DbProperties.setHexKey(hexKey);
                 //Check for null or empty secret key
             } catch (IOException ex) {
@@ -245,24 +250,6 @@ public class ServerDaemon implements Daemon {
     @Override
     public void destroy() {
         server.destroy();
-    }
-
-    public static String convertStringToHex(String str) {
-        String hex = "";
-        StringBuilder stringBuilder = new StringBuilder();
-        char[] charArray = str.toCharArray();
-        for (char c : charArray) {
-            String charToHex = Integer.toHexString(c);
-            stringBuilder.append(charToHex);
-            if (stringBuilder.toString().length() > 30) {
-                hex = stringBuilder.toString().substring(0, 31);
-            } else {
-                hex = stringBuilder.toString();
-            }
-        }
-        LOG.info("convertStringToHex=======================");
-        LOG.info(hex);
-        return hex;
     }
 
     ///////////////////////////////////////////////////
