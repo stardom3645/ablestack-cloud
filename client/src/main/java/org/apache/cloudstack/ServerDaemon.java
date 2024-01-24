@@ -129,8 +129,8 @@ public class ServerDaemon implements Daemon {
             }
             InputStream is = null;
             if (confFileEnc != null) {
-                logger.info("ServerDaemon.java DbProperties.getHexKey()======================================");
-                logger.info(DbProperties.getHexKey());
+                LOG.info("ServerDaemon.java DbProperties.getHexKey()======================================");
+                LOG.info(DbProperties.getHexKey());
                 Process process = Runtime.getRuntime().exec("openssl enc -aes-256-cbc -d -K " + DbProperties.getHexKey() + " -pass pass:" + DbProperties.getKp() + " -saltlen 16 -md sha256 -iter 100000 -in " + confFileEnc.getAbsoluteFile());
                 is = process.getInputStream();
                 process.onExit();
