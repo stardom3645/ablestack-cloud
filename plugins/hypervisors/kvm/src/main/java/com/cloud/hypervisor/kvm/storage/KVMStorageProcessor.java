@@ -1757,7 +1757,7 @@ public class KVMStorageProcessor implements StorageProcessor {
         final SnapshotObjectTO snapshotTO = (SnapshotObjectTO)cmd.getData();
         final PrimaryDataStoreTO primaryStore = (PrimaryDataStoreTO)snapshotTO.getDataStore();
         final VolumeObjectTO volume = snapshotTO.getVolume();
-        final String snapshotName = UUID.randomUUID().toString();
+        final String snapshotName = snapshotTO.getVmSnapshotName();
         final String vmName = volume.getVmName();
 
         try {
