@@ -111,7 +111,7 @@ public class ServerDaemon implements Daemon {
     /////////////// Public methods ///////////////////
     //////////////////////////////////////////////////
 
-    public static void main(final String... anArgs) throws Exception {
+    public static void main(final String... anArgs) throws Exception, IOException {
         if (anArgs.length > 0) {
             LOG.info(" ::::::::::KEK PASSWORD :::: " + anArgs[0]);
             DbProperties.setKp(anArgs[0]);
