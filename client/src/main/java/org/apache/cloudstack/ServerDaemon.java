@@ -18,12 +18,10 @@
 //
 package org.apache.cloudstack;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.lang.management.ManagementFactory;
 import java.net.URL;
 import java.util.Properties;
@@ -32,7 +30,6 @@ import com.cloud.utils.Pair;
 import com.cloud.utils.server.ServerProperties;
 import org.apache.commons.daemon.Daemon;
 import org.apache.commons.daemon.DaemonContext;
-import org.apache.commons.io.IOUtils;
 import org.eclipse.jetty.jmx.MBeanContainer;
 import org.eclipse.jetty.server.ForwardedRequestCustomizer;
 import org.eclipse.jetty.server.HttpConfiguration;
@@ -86,8 +83,6 @@ public class ServerDaemon implements Daemon {
     private static final String ACCESS_LOG = "access.log";
     private static final String serverProperties = "server.properties";
     private static final String serverPropertiesEnc = "server.properties.enc";
-    private static final String s_keyFileEnc = "key.enc";
-    private static final String s_keyFile = "key";
 
 
     ////////////////////////////////////////////////////////
@@ -125,7 +120,6 @@ public class ServerDaemon implements Daemon {
 
     @Override
     public void init(final DaemonContext context) {
-        InputStream is = null;
         final File confFileEnc = PropertiesUtil.findConfigFile(serverPropertiesEnc);
         final File confFile = PropertiesUtil.findConfigFile(serverProperties);
         try {
@@ -135,6 +129,7 @@ public class ServerDaemon implements Daemon {
                 LOG.info("Server configuration file found");
                 return;
             }
+            InputStream is = null;
             if (confFileEnc != null) {
                 Process process = Runtime.getRuntime().exec("openssl enc -aes-256-cbc -d -K " + DbProperties.getHexKey() + " -pass pass:" + DbProperties.getKp() + " -saltlen 16 -md sha256 -iter 100000 -in " + confFileEnc.getAbsoluteFile());
                 is = process.getInputStream();
