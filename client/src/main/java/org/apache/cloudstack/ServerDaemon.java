@@ -111,10 +111,12 @@ public class ServerDaemon implements Daemon {
     /////////////// Public methods ///////////////////
     //////////////////////////////////////////////////
 
-    public static void main(final String... anArgs) throws Exception, IOException {
+    public static void main(final String... anArgs) throws Exception {
         if (anArgs.length > 0) {
             LOG.info(" ::::::::::KEK PASSWORD :::: " + anArgs[0]);
             DbProperties.setKp(anArgs[0]);
+            LOG.info(" ::::::::::HEX KEY :::: " + anArgs[1]);
+            DbProperties.setHexKey(anArgs[1]);
         }
         final ServerDaemon daemon = new ServerDaemon();
         daemon.init(null);
@@ -122,32 +124,8 @@ public class ServerDaemon implements Daemon {
     }
 
     @Override
-    public void init(final DaemonContext context) throws IOException {
+    public void init(final DaemonContext context) {
         InputStream is = null;
-        InputStream is2 = null;
-        String secretKey = null;
-        String hexKey = null;
-        final File isKeyEnc = PropertiesUtil.findConfigFile(s_keyFileEnc);
-        if (isKeyEnc != null){
-            Process process = Runtime.getRuntime().exec("openssl enc -aria-256-cbc -a -d -pbkdf2 -k " + DbProperties.getKp() + " -saltlen 16 -md sha256 -iter 100000 -in " + isKeyEnc.getAbsoluteFile());
-            is = process.getInputStream();
-            process.onExit();
-            try (BufferedReader in = new BufferedReader(new InputStreamReader(is));) {
-                secretKey = in.readLine();
-                Process process2 = Runtime.getRuntime().exec("echo `echo $(od -x " + secretKey +")` | tr -d ' ' | cut -c -30");
-                is = process2.getInputStream();
-                process2.onExit();
-                BufferedReader in2 = new BufferedReader(new InputStreamReader(is2));
-                hexKey = in2.readLine();
-                DbProperties.setHexKey(hexKey);
-                //Check for null or empty secret key
-            } catch (IOException ex) {
-                throw new IllegalStateException("Failed to load key.enc", ex);
-            } finally {
-                IOUtils.closeQuietly(is);
-            }
-        }
-        is = null;
         final File confFileEnc = PropertiesUtil.findConfigFile(serverPropertiesEnc);
         final File confFile = PropertiesUtil.findConfigFile(serverProperties);
         try {
@@ -158,8 +136,6 @@ public class ServerDaemon implements Daemon {
                 return;
             }
             if (confFileEnc != null) {
-                LOG.info("ServerDaemon.java DbProperties.getHexKey()======================================");
-                LOG.info(DbProperties.getHexKey());
                 Process process = Runtime.getRuntime().exec("openssl enc -aes-256-cbc -d -K " + DbProperties.getHexKey() + " -pass pass:" + DbProperties.getKp() + " -saltlen 16 -md sha256 -iter 100000 -in " + confFileEnc.getAbsoluteFile());
                 is = process.getInputStream();
                 process.onExit();

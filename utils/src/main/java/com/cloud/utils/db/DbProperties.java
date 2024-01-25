@@ -80,8 +80,6 @@ public class DbProperties {
             try {
                 final File propsEnc = PropertiesUtil.findConfigFile(dbPropertiesEnc);
                 final File props = PropertiesUtil.findConfigFile(dbProperties);
-                log.info("DbProperties.java DbProperties.getHexKey()======================================");
-                log.info(DbProperties.getHexKey());
                 if (propsEnc != null && propsEnc.exists()) {
                     Process process = Runtime.getRuntime().exec("openssl enc -aes-256-cbc -d -K " + DbProperties.getHexKey() + " -pass pass:" + DbProperties.getKp() + " -saltlen 16 -md sha256 -iter 100000 -in " + propsEnc.getAbsoluteFile());
                     is = process.getInputStream();
