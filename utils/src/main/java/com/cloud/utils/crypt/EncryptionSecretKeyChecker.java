@@ -187,5 +187,4 @@ public class EncryptionSecretKeyChecker {
             properties.replace(entry.getKey(), decryptPropertyIfNeeded(value));
         }
     }
-
 }
