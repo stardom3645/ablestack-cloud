@@ -30,7 +30,7 @@ function beforeStart()
         fi
     done
 
-    hexkey=$(openssl enc -aria-256-cbc -a -d -pbkdf2 -k $kek_pass -saltlen 16 -md sha256 -iter 100000 -in hex_key.enc)
+    hexkey=$(openssl enc -aria-256-cbc -a -d -pbkdf2 -k $kek_pass -saltlen 16 -md sha256 -iter 100000 -in /etc/cloudstack/management/hex_key.enc)
 
     # secretkey=$(openssl enc -aria-256-cbc -a -d -pbkdf2 -k $kek_pass -saltlen 16 -md sha2-256 -iter 100000 -in key.enc)
     # encPassword=$(java -classpath $jarfile com.cloud.utils.crypt.EncryptionCLI -i $kek_pass -p $secretkey | sed 's/\//\\\//g')
