@@ -23,13 +23,15 @@ import com.cloud.agent.api.Answer;
 import com.cloud.hypervisor.kvm.resource.LibvirtComputingResource;
 import com.cloud.resource.CommandWrapper;
 import com.cloud.resource.ResourceWrapper;
-import org.apache.cloudstack.storage.command.browser.ListDataStoreObjectsCommand;
 
-@ResourceWrapper(handles = ListDataStoreObjectsCommand.class)
-public final class LibvirtListDataSearchRbdCommandWrapper extends CommandWrapper<ListDataStoreObjectsCommand, Answer, LibvirtComputingResource> {
+import org.apache.cloudstack.storage.command.browser.DeleteRbdObjectsCommand;
+
+
+@ResourceWrapper(handles = DeleteRbdObjectsCommand.class)
+public final class LibvirtDeleteRbdObjectsCommandWrapper extends CommandWrapper<DeleteRbdObjectsCommand, Answer, LibvirtComputingResource> {
     @Override
-    public Answer execute(final ListDataStoreObjectsCommand command,
+    public Answer execute(final DeleteRbdObjectsCommand command,
             final LibvirtComputingResource libvirtComputingResource) {
-        return libvirtComputingResource.SearchRbdImage(command);
+        return libvirtComputingResource.deleteImageRbd(command);
     }
 }

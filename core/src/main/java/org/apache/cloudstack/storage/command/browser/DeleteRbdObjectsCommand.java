@@ -19,22 +19,43 @@
 
 package org.apache.cloudstack.storage.command.browser;
 
-import com.cloud.agent.api.Answer;
+import com.cloud.agent.api.storage.StorageCommand;
 
-public class SearchRbdDataAnswer extends Answer {
+public class DeleteRbdObjectsCommand extends StorageCommand {
 
-    private boolean keywords;
+   private String name;
 
-    public SearchRbdDataAnswer() {
+   private String poolType;
+
+   private String poolPath;
+
+    public DeleteRbdObjectsCommand(String name) {
         super();
+        this.name = name;
     }
 
-    public SearchRbdDataAnswer(boolean keywords) {
-        super();
-        this.keywords = keywords;
+    @Override
+    public boolean executeInSequence() {
+        return false;
     }
 
-    public boolean isKeyword() {
-        return keywords;
+    public String getNames() {
+        return name;
+    }
+
+    public String getPoolPath() {
+        return poolPath;
+    }
+
+    public String getPoolType() {
+        return poolType;
+    }
+
+    public void setPoolType(String poolType) {
+        this.poolType = poolType;
+    }
+
+    public void setPoolPath(String poolPath) {
+        this.poolPath = poolPath;
     }
 }

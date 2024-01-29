@@ -22,7 +22,7 @@ package org.apache.cloudstack.storage.command.browser;
 import com.cloud.agent.api.Answer;
 
 
-public class CreateRbdObjectsAnswer extends Answer {
+public class ListRbdObjectsAnswer extends Answer {
 
     private boolean successMessage;
 
@@ -30,13 +30,13 @@ public class CreateRbdObjectsAnswer extends Answer {
 
     private String names;
 
-    private Long sizes;
+    // private Long sizes;
 
-    public CreateRbdObjectsAnswer(boolean successMessage, String message, String names, Long sizes) {
+    public ListRbdObjectsAnswer(boolean successMessage, String message, String names) {
         super();
         this.successMessage = successMessage;
         this.names = names;
-        this.sizes = sizes;
+        // this.sizes = sizes;
         this.message = message;
     }
     public boolean successMessage() {
@@ -48,7 +48,7 @@ public class CreateRbdObjectsAnswer extends Answer {
     public String names() {
         return names;
     }
-    public Long sizes() {
-        return sizes;
-    }
+    // public Long sizes() {
+    //     return sizes;
+    // }
 }
