@@ -1195,7 +1195,7 @@ public class ApiServer extends ManagerBase implements HttpRequestHandler, ApiSer
                     if (ApiServer.BlockExistConnection.value()) { //기존 세션 차단
                         ApiSessionListener.deleteSessionIds(sessionIds);
                         ActionEventUtils.onActionEvent(userAcct.getId(), userAcct.getAccountId(), domainId, EventTypes.EVENT_USER_SESSION_BLOCK,
-                                                        "Sessions previously connected to account [" + username + "] have been disconnected.", User.UID_SYSTEM, ApiCommandResourceType.User.toString());
+                                                        "Sessions previously connected to account [" + username + "] have been disconnected.", new Long(0), null);
                         alertMgr.sendAlert(AlertManager.AlertType.EVENT_USER_SESSION_BLOCK, 0, new Long(0), "Sessions previously connected to account [" + username + "] have been disconnected.", "");
                     } else { //신규 세션 차단
                         if (session != null) {
@@ -1203,7 +1203,7 @@ public class ApiServer extends ManagerBase implements HttpRequestHandler, ApiSer
                             sessionIds.add(session.getId());
                             ApiSessionListener.deleteSessionIds(sessionIds);
                             ActionEventUtils.onActionEvent(userAcct.getId(), userAcct.getAccountId(), domainId, EventTypes.EVENT_USER_SESSION_BLOCK,
-                                                            "A session connected to account [" + username + "] exists. Block new connections.", User.UID_SYSTEM, ApiCommandResourceType.User.toString());
+                                                            "A session connected to account [" + username + "] exists. Block new connections.", new Long(0), null);
                             alertMgr.sendAlert(AlertManager.AlertType.EVENT_USER_SESSION_BLOCK, 0, new Long(0), "A session connected to account [" + username + "] exists. Block new connections.", "");
                             throw new CloudAuthenticationException("You are already connecting with the same account and simultaneous access is not allowed.");
                         }
