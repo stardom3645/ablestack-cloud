@@ -26,6 +26,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.security.KeyPair;
+import java.security.PrivateKey;
 
 import javax.inject.Inject;
 import javax.servlet.ServletConfig;
@@ -248,7 +249,6 @@ public class ApiServlet extends HttpServlet {
                                 invalidateHttpSession(session, "invalidating session for login call");
                             }
                             session = req.getSession(true);
-
                             if (ApiServer.EnableSecureSessionCookie.value()) {
                                 resp.setHeader("SET-COOKIE", String.format("JSESSIONID=%s;Secure;HttpOnly;Path=/client", session.getId()));
                                 if (logger.isDebugEnabled()) {
@@ -274,7 +274,7 @@ public class ApiServlet extends HttpServlet {
                     }
 
                     if (apiAuthenticator.getAPIType() == APIAuthenticationType.LOGOUT_API) {
-                        if (session != null) {
+                        if (!ApiServer.SecurityFeaturesEnabled.value()) {
                             final Long userId = (Long) session.getAttribute("userid");
                             final Account account = (Account) session.getAttribute("accountobj");
                             Long accountId = null;
@@ -286,6 +286,21 @@ public class ApiServlet extends HttpServlet {
                                 apiServer.logoutUser(userId);
                             }
                             invalidateHttpSession(session, "invalidating session after logout call");
+                        } else {
+                            final PrivateKey privateKey = (PrivateKey) session.getAttribute(RSAHelper.PRIVATE_KEY);
+                            if (privateKey == null) {
+                                Long userId = (Long) session.getAttribute("userid");
+                                final Account account = (Account) session.getAttribute("accountobj");
+                                Long accountId = null;
+                                if (account != null) {
+                                    accountId = account.getId();
+                                }
+                                auditTrailSb.insert(0, "(userId=" + userId + " accountId=" + accountId + " sessionId=" + session.getId() + ")");
+                                if (userId != null) {
+                                    apiServer.logoutUser(userId);
+                                }
+                                invalidateHttpSession(session, "invalidating session after logout call");
+                            }
                         }
                         final Cookie[] cookies = req.getCookies();
                         if (cookies != null) {
@@ -356,9 +371,6 @@ public class ApiServlet extends HttpServlet {
                 final String response = apiServer.handleRequest(params, responseType, auditTrailSb);
                 HttpUtils.writeHttpResponse(resp, response != null ? response : "", HttpServletResponse.SC_OK, responseType, ApiServer.JSONcontentType.value());
             } else {
-                if (session != null) {
-                    invalidateHttpSession(session, String.format("request verification failed for %s from %s", userId, remoteAddress.getHostAddress()));
-                }
                 // 인증 정보가 없어도 security 활성화 여부 확인을 위해 listCapablities API 오픈
                 if (command.equalsIgnoreCase("listCapabilities")) {
                     if (ApiServer.SecurityFeaturesEnabled.value()) {
@@ -366,8 +378,6 @@ public class ApiServlet extends HttpServlet {
                         session.removeAttribute(RSAHelper.PRIVATE_KEY);
                         KeyPair keys = RSAHelper.genKey();
                         session.setAttribute(RSAHelper.PRIVATE_KEY, keys.getPrivate());
-                        logger.info("ApiServlet==========================================session");
-                        logger.info(session.getId());
                         Map<String, String> spec = RSAHelper.getKeySpec(keys.getPublic());
                         params.put(RSAHelper.PUBLIC_KEY_MODULUS, new String[]{spec.get(RSAHelper.PUBLIC_KEY_MODULUS)});
                         params.put(RSAHelper.PUBLIC_KEY_EXPONENT, new String[]{spec.get(RSAHelper.PUBLIC_KEY_EXPONENT)});
@@ -405,6 +415,9 @@ public class ApiServlet extends HttpServlet {
                     final String response = apiServer.handleRequest(params, responseType, auditTrailSb);
                     HttpUtils.writeHttpResponse(resp, response != null ? response : "", HttpServletResponse.SC_OK, responseType, ApiServer.JSONcontentType.value());
                 } else {
+                    if (session != null) {
+                        invalidateHttpSession(session, String.format("request verification failed for %s from %s", userId, remoteAddress.getHostAddress()));
+                    }
                     auditTrailSb.append(" " + HttpServletResponse.SC_UNAUTHORIZED + " " + "unable to verify user credentials and/or request signature");
                     final String serializedResponse = apiServer.getSerializedApiError(HttpServletResponse.SC_UNAUTHORIZED, "unable to verify user credentials and/or request signature", params, responseType);
                     HttpUtils.writeHttpResponse(resp, serializedResponse, HttpServletResponse.SC_UNAUTHORIZED, responseType, ApiServer.JSONcontentType.value());

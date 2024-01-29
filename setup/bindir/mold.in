@@ -2,6 +2,13 @@
 
 oper=$1
 jarfile='/usr/share/cloudstack-common/lib/cloudstack-utils.jar'
+process='/etc/default/cloudstack-management'
+
+function afterStarted()
+{
+    sed -i "/BOOTSTRAP_CLASS=org.apache.cloudstack.ServerDaemon/d" $process
+    echo "BOOTSTRAP_CLASS=org.apache.cloudstack.ServerDaemon" >> $process
+}
 
 function beforeStart()
 {
@@ -25,16 +32,11 @@ function beforeStart()
 
     # secretkey=$(openssl enc -aria-256-cbc -a -d -pbkdf2 -k $kek_pass -saltlen 16 -md sha2-256 -iter 100000 -in key.enc)
     # encPassword=$(java -classpath $jarfile com.cloud.utils.crypt.EncryptionCLI -i $kek_pass -p $secretkey | sed 's/\//\\\//g')
-    # echo "BOOTSTRAP_CLASS=org.apache.cloudstack.ServerDaemon "$encPassword $secretkey >> /etc/default/cloudstack-management
+    # echo "BOOTSTRAP_CLASS=org.apache.cloudstack.ServerDaemon "$encPassword $secretkey >> $process
 
-    echo "BOOTSTRAP_CLASS=org.apache.cloudstack.ServerDaemon "$kek_pass >> /etc/default/cloudstack-management
+    echo "BOOTSTRAP_CLASS=org.apache.cloudstack.ServerDaemon "$kek_pass >> $process
 }
 
-function afterStarted()
-{
-    sed -i "/BOOTSTRAP_CLASS=org.apache.cloudstack.ServerDaemon/d" /etc/default/cloudstack-management
-    echo "BOOTSTRAP_CLASS=org.apache.cloudstack.ServerDaemon" >> /etc/default/cloudstack-management
-}
 
 if [ "$oper" == "start" ]; then
     beforeStart
@@ -52,9 +54,8 @@ else
 fi
 
 
-
 # override variable to 0 and 1
-for var in {1..5} 
+for var in {1..5}
 do 
   kek_pass=01010101
 done

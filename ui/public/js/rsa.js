@@ -52,7 +52,6 @@ while(i + n < s.length) {
 }
 return ret + s.substring(i,s.length);
 }
-
 function byte2Hex(b) {
 if(b < 0x10)
     return "0" + b.toString(16);

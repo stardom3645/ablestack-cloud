@@ -129,7 +129,7 @@ public class ServerDaemon implements Daemon {
             }
             InputStream is = null;
             if (confFileEnc != null) {
-                Process process = Runtime.getRuntime().exec("openssl enc -aria-256-cbc -a -d -pbkdf2 -k " + DbProperties.getKp() + " -saltlen 16 -md sha2-256 -iter 100000 -in " + confFileEnc.getAbsoluteFile());
+                Process process = Runtime.getRuntime().exec("openssl enc -aria-256-cbc -a -d -pbkdf2 -k " + DbProperties.getKp() + " -saltlen 16 -md sha256 -iter 100000 -in " + confFileEnc.getAbsoluteFile());
                 is = process.getInputStream();
                 process.onExit();
             } else {

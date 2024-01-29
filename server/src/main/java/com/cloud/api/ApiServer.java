@@ -1168,13 +1168,11 @@ public class ApiServer extends ManagerBase implements HttpRequestHandler, ApiSer
             // decrypt RSA password
             PrivateKey pk = (PrivateKey)session.getAttribute(RSAHelper.PRIVATE_KEY);
             if (pk == null) {
-                throw new CloudAuthenticationException("Unable to find the privatekey, bad credentials.");
+                throw new CloudAuthenticationException("Unable to find the session attribute privatekey.");
             }
             String decPassword = "";
             try {
                 decPassword = RSAHelper.decryptRSA(password, pk);
-                logger.info("ApiServer=================================session1");
-                logger.info(session);
             } catch (NoSuchPaddingException | NoSuchAlgorithmException | InvalidKeyException | BadPaddingException | IllegalBlockSizeException | UnsupportedEncodingException e) {
                 throw new CloudAuthenticationException("Unable to decrypt RSA, Exception : " + e);
             }
@@ -1186,8 +1184,6 @@ public class ApiServer extends ManagerBase implements HttpRequestHandler, ApiSer
         if (userAcct != null) {
             if (ApiServer.SecurityFeaturesEnabled.value()) { // 보안기능용 : 하나의 세션만 접속
                 if (ApiSessionListener.getSessionCount() > 1) { // 존재하는 세션이 있으면 기존 세션 차단
-                    logger.info("ApiServer=================================session2");
-                    logger.info(session);
                     ApiSessionListener.deleteAllExistSessionIds(session.getId()); // 접속하려는 세션 제외한 기존의 모든 세션 차단
                     ActionEventUtils.onActionEvent(userAcct.getId(), userAcct.getAccountId(), domainId, EventTypes.EVENT_USER_SESSION_BLOCK,
                                                     "All previously connected sessions have been blocked.", User.UID_SYSTEM, ApiCommandResourceType.User.toString());
@@ -1229,8 +1225,7 @@ public class ApiServer extends ManagerBase implements HttpRequestHandler, ApiSer
             }
 
             final Account account = accountMgr.getAccount(userAcct.getAccountId());
-            logger.info("ApiServer=================================session3");
-            logger.info(session);
+
             // set the userId and account object for everyone
             session.setAttribute("userid", userAcct.getId());
             final UserVO user = (UserVO)accountMgr.getActiveUser(userAcct.getId());
