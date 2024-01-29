@@ -967,7 +967,7 @@ public class ApiServer extends ManagerBase implements HttpRequestHandler, ApiSer
                     Long domainId = 1L;
                     Account userAcct = ApiDBUtils.findAccountByNameDomain(accountName, domainId);
                     ActionEventUtils.onActionEvent(userAcct.getId(), userAcct.getAccountId(), domainId, EventTypes.EVENT_USER_REQUEST,
-                                                    "Bad request : reuse credentials or no signature.", User.UID_SYSTEM, ApiCommandResourceType.User.toString());
+                                                    "Bad request : reuse credentials or no signature.", new Long(0), null);
                 }
                 return false; // no signature, bad request
             }
@@ -1186,7 +1186,7 @@ public class ApiServer extends ManagerBase implements HttpRequestHandler, ApiSer
                 if (ApiSessionListener.getSessionCount() > 1) { // 존재하는 세션이 있으면 기존 세션 차단
                     ApiSessionListener.deleteAllExistSessionIds(session.getId()); // 접속하려는 세션 제외한 기존의 모든 세션 차단
                     ActionEventUtils.onActionEvent(userAcct.getId(), userAcct.getAccountId(), domainId, EventTypes.EVENT_USER_SESSION_BLOCK,
-                                                    "All previously connected sessions have been blocked.", User.UID_SYSTEM, ApiCommandResourceType.User.toString());
+                                                    "All previously connected sessions have been blocked.", new Long(0), null);
                     alertMgr.sendAlert(AlertManager.AlertType.EVENT_USER_SESSION_BLOCK, 0, new Long(0), "All previously connected sessions have been blocked.", "");
                 }
             } else {
