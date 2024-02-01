@@ -1273,7 +1273,7 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
                 if ((cpuSpeed == null) || (NumbersUtil.parseInt(cpuSpeed, -1) <= 0)) {
                     throw new InvalidParameterValueException("Invalid cpu speed value, specify a value between 1 and " + Integer.MAX_VALUE);
                 }
-            } else if (!serviceOffering.isCustomCpuSpeedSupported() && customParameters.containsKey(UsageEventVO.DynamicParameters.cpuSpeed.name())) {
+            } else if (!serviceOffering.isCustomized() && customParameters.containsKey(UsageEventVO.DynamicParameters.cpuSpeed.name())) {
                 throw new InvalidParameterValueException("The cpu speed of this offering id:" + serviceOffering.getUuid()
                 + " is not customizable. This is predefined in the template.");
             }
@@ -5019,8 +5019,9 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
             VolumeVO newDatadisk = null;
             try {
                 for (VolumeVO dataDisk : dataDisks) {
+                    s_logger.info(" dataDisk.getname() :::::" + dataDisk.getName());
                     long diskId = dataDisk.getId();
-                    SnapshotVO dataSnapShot = (SnapshotVO) volumeService.allocSnapshot(diskId, Snapshot.INTERNAL_POLICY_ID, "DataDisk-Clone" + dataDisk.getName(), null, cmd.getZoneIds());
+                    SnapshotVO dataSnapShot = (SnapshotVO) volumeService.allocSnapshot(diskId, Snapshot.INTERNAL_POLICY_ID, dataDisk.getName(), null, cmd.getZoneIds());
                     if (dataSnapShot == null) {
                         throw new CloudRuntimeException("Unable to allocate snapshot of data disk: " + dataDisk.getId() + " name: " + dataDisk.getName());
                     }
@@ -5039,7 +5040,7 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
                     Long size = snapshotEntity.getSize();
                     Storage.ProvisioningType provisioningType = diskOffering.getProvisioningType();
                     DataCenterVO dataCenter = _dcDao.findById(zoneId);
-                    String volumeName = snapshotEntity.getName() + "-DataDisk-Volume";
+                    String volumeName = snapshotEntity.getName() + "-Clone";
                     VolumeVO parentVolume = _volsDao.findByIdIncludingRemoved(snapshotEntity.getVolumeId());
                     newDatadisk = saveDataDiskVolumeFromSnapShot(curVmAccount, true, zoneId,
                             diskOfferingId, provisioningType, size, minIops, maxIops, parentVolume, volumeName, _uuidMgr.generateUuid(Volume.class, null), new HashMap<>());
@@ -6327,8 +6328,8 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
         getDestinationHost(hostId, true, false);
         Long zoneId = curVm.getDataCenterId();
         DataCenter dataCenter = _entityMgr.findById(DataCenter.class, zoneId);
-        Map<String, String> vmProperties = curVm.getDetails() != null ? curVm.getDetails() : new HashMap<>();
-        String keyboard = vmProperties.get(VmDetailConstants.KEYBOARD);
+        Map<String, String> details = userVmDetailsDao.listDetailsKeyPairs(curVm.getId());
+        String keyboard = details.get(VmDetailConstants.KEYBOARD);
         HypervisorType hypervisorType = curVm.getHypervisorType();
         Account curAccount = _accountDao.findById(curVm.getAccountId());
         String ipv6Address = null;
@@ -6341,7 +6342,7 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
         String uuidName = _uuidMgr.generateUuid(UserVm.class, null);
 //        String hostName = generateHostName(uuidName);
 //        String displayName = hostName + "-Clone";
-        String hostName = cmd.getName();
+        String name = cmd.getName();
         String displayName = cmd.getName();
         VolumeVO curVolume = _volsDao.findByInstance(curVm.getId()).get(0);
         Long diskOfferingId = curVolume.getDiskOfferingId();
@@ -6368,17 +6369,14 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
                                         boxed().
                                         collect(Collectors.toList());
         try {
-            Map<String, String> detailMap = new HashMap<>();
-            Map<String, Map<Integer, String>> dhcpMap = new HashMap<>();
-            Map<String, String> emptyUserOfVmProperties = new HashMap<>();
             if (dataCenter.getNetworkType() == NetworkType.Basic) {
-                vmResult = createBasicSecurityGroupVirtualMachine(dataCenter, serviceOffering, template, securityGroupIdList, curAccount, hostName, displayName, diskOfferingId,
+                vmResult = createBasicSecurityGroupVirtualMachine(dataCenter, serviceOffering, template, securityGroupIdList, curAccount, name, displayName, null,
                         size, group, hypervisorType, cmd.getHttpMethod(), userData, null, null, null, ipToNetoworkMap, addr, isDisplayVM, keyboard, affinityGroupIdList,
-                        curVm.getDetails() == null ? detailMap : curVm.getDetails(), null, new HashMap<>(),
+                        details, null, new HashMap<>(),
                         null, new HashMap<>(), dynamicScalingEnabled, null); //이석민 diskOfferingId null 처리
             } else {
-                vmResult = createAdvancedVirtualMachine(dataCenter, serviceOffering, template, networkIds, curAccount, hostName, displayName, diskOfferingId, size, group,
-                        hypervisorType, cmd.getHttpMethod(), userData, null, null, null, ipToNetoworkMap, addr, isDisplayVM, keyboard, affinityGroupIdList, curVm.getDetails() == null ? detailMap : curVm.getDetails(),
+                vmResult = createAdvancedVirtualMachine(dataCenter, serviceOffering, template, networkIds, curAccount, name, displayName, null, size, group,
+                        hypervisorType, cmd.getHttpMethod(), userData, null, null, null, ipToNetoworkMap, addr, isDisplayVM, keyboard, affinityGroupIdList, details,
                         null, new HashMap<>(), null, new HashMap<>(), dynamicScalingEnabled, null, null); //이석민 diskOfferingId null 처리
             }
         } catch (CloudRuntimeException e) {
