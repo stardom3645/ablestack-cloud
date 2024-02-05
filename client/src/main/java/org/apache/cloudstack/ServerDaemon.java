@@ -336,11 +336,12 @@ public class ServerDaemon implements Daemon {
     private String getHexKey() {
         InputStream is = null;
         String key = null;
-        final File isHexKeyFileEnc = PropertiesUtil.findConfigFile(hexKeyFileEnc);
-        Process process = Runtime.getRuntime().exec("openssl enc -aria-256-cbc -a -d -pbkdf2 -k " + DbProperties.getKp() + " -saltlen 16 -md sha256 -iter 100000 -in " + isHexKeyFileEnc.getAbsoluteFile());
-        is = process.getInputStream();
-        process.onExit();
-        try (BufferedReader in = new BufferedReader(new InputStreamReader(is));) {
+        try {
+            final File isHexKeyFileEnc = PropertiesUtil.findConfigFile(hexKeyFileEnc);
+            Process process = Runtime.getRuntime().exec("openssl enc -aria-256-cbc -a -d -pbkdf2 -k " + DbProperties.getKp() + " -saltlen 16 -md sha256 -iter 100000 -in " + isHexKeyFileEnc.getAbsoluteFile());
+            is = process.getInputStream();
+            process.onExit();
+            BufferedReader in = new BufferedReader(new InputStreamReader(is));
             key = in.readLine();
             LOG.info("::::::::::::::getHexKey:::::::::::::::::");
             LOG.info(key);
