@@ -343,9 +343,6 @@ public class ServerDaemon implements Daemon {
             process.onExit();
             BufferedReader in = new BufferedReader(new InputStreamReader(is));
             key = in.readLine();
-            LOG.info("::::::::::::::getHexKey:::::::::::::::::");
-            LOG.info(key);
-            //Check for null or empty secret key
         } catch (IOException e) {
             LOG.error("Error while reading hex key", e);
         }
