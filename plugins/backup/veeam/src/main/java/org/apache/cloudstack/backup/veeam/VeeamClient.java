@@ -677,17 +677,6 @@ public class VeeamClient {
         return result != null && result.first();
     }
 
-    public boolean syncBackupRepository() {
-        LOG.debug("Trying to sync backup repository.");
-        Pair<Boolean, String> result = executePowerShellCommands(Arrays.asList(
-                "$repo = Get-VBRBackupRepository",
-                "$Syncs = Sync-VBRBackupRepository -Repository $repo",
-                "while ((Get-VBRSession -ID $Syncs.ID).Result -ne 'Success') { Start-Sleep -Seconds 10 }"
-        ));
-        LOG.debug("Done syncing backup repository.");
-        return result != null && result.first();
-    }
-
     public Map<String, Backup.Metric> getBackupMetrics() {
         if (isLegacyServer()) {
             return getBackupMetricsLegacy();
