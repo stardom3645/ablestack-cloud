@@ -18,10 +18,12 @@
 //
 package org.apache.cloudstack;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.lang.management.ManagementFactory;
 import java.net.URL;
 import java.util.Properties;
@@ -83,6 +85,7 @@ public class ServerDaemon implements Daemon {
     private static final String ACCESS_LOG = "access.log";
     private static final String serverProperties = "server.properties";
     private static final String serverPropertiesEnc = "server.properties.enc";
+    private static final String hexKeyFileEnc = "hex_key.enc";
 
 
     ////////////////////////////////////////////////////////
@@ -110,8 +113,6 @@ public class ServerDaemon implements Daemon {
         if (anArgs.length > 0) {
             LOG.info(" ::::::::::KEK PASSWORD :::: " + anArgs[0]);
             DbProperties.setKp(anArgs[0]);
-            LOG.info(" ::::::::::HEX KEY :::: " + anArgs[1]);
-            DbProperties.setHexKey(anArgs[1]);
         }
         final ServerDaemon daemon = new ServerDaemon();
         daemon.init(null);
@@ -131,6 +132,9 @@ public class ServerDaemon implements Daemon {
             }
             InputStream is = null;
             if (confFileEnc != null) {
+                final String hexKey = getHexKey(); 
+                DbProperties.setHexKey(hexKey);
+                LOG.info(":::::::hexKey::::::::" + hexKey);
                 Process process = Runtime.getRuntime().exec("openssl enc -aes-256-cbc -d -K " + DbProperties.getHexKey() + " -pass pass:" + DbProperties.getKp() + " -saltlen 16 -md sha256 -iter 100000 -in " + confFileEnc.getAbsoluteFile());
                 is = process.getInputStream();
                 process.onExit();
@@ -327,6 +331,24 @@ public class ServerDaemon implements Daemon {
     private String getShadedWarUrl() {
         final String urlStr = getResource(WEB_XML).toString();
         return urlStr.substring(0, urlStr.length() - 15);
+    }
+
+    private String getHexKey() {
+        InputStream is = null;
+        String key = null;
+        final File isHexKeyFileEnc = PropertiesUtil.findConfigFile(hexKeyFileEnc);
+        Process process = Runtime.getRuntime().exec("openssl enc -aria-256-cbc -a -d -pbkdf2 -k " + DbProperties.getKp() + " -saltlen 16 -md sha256 -iter 100000 -in " + isHexKeyFileEnc.getAbsoluteFile());
+        is = process.getInputStream();
+        process.onExit();
+        try (BufferedReader in = new BufferedReader(new InputStreamReader(is));) {
+            key = in.readLine();
+            LOG.info("::::::::::::::getHexKey:::::::::::::::::");
+            LOG.info(key);
+            //Check for null or empty secret key
+        } catch (IOException e) {
+            LOG.error("Error while reading hex key", e);
+        }
+        return key;
     }
 
     ///////////////////////////////////////////
