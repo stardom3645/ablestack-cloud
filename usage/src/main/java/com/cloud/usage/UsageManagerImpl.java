@@ -1691,12 +1691,6 @@ public class UsageManagerImpl extends ManagerBase implements UsageManager, Runna
 
         long snapId = event.getResourceId();
 
-        SnapshotVO snapshotInstance = _snapshotDao.findById(snapId);
-
-        if (snapshotInstance != null && snapshotInstance.getSnapshotType() == Snapshot.Type.INTERNAL.ordinal()) {
-            return;
-        }
-
         if (EventTypes.EVENT_SNAPSHOT_CREATE.equals(event.getType())) {
             if (usageSnapshotSelection){
                 snapSize =  event.getVirtualSize();
