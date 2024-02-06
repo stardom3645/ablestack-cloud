@@ -20,6 +20,7 @@
 package org.apache.cloudstack.storage.browser;
 
 import com.cloud.agent.api.Answer;
+
 import com.cloud.api.query.MutualExclusiveIdsManagerBase;
 import com.cloud.api.query.dao.ImageStoreJoinDao;
 import com.cloud.api.query.vo.ImageStoreJoinVO;
@@ -38,6 +39,7 @@ import com.cloud.storage.dao.VolumeDao;
 import com.cloud.utils.exception.CloudRuntimeException;
 
 import org.apache.cloudstack.api.command.admin.storage.CreateRbdImageCmd;
+import org.apache.cloudstack.api.command.admin.storage.DeleteRbdImageCmd;
 import org.apache.cloudstack.api.command.admin.storage.DownloadImageStoreObjectCmd;
 import org.apache.cloudstack.api.command.admin.storage.ListImageStoreObjectsCmd;
 import org.apache.cloudstack.api.command.admin.storage.ListStoragePoolObjectsCmd;
@@ -50,8 +52,9 @@ import org.apache.cloudstack.engine.subsystem.api.storage.DataStore;
 import org.apache.cloudstack.engine.subsystem.api.storage.DataStoreManager;
 import org.apache.cloudstack.engine.subsystem.api.storage.EndPoint;
 import org.apache.cloudstack.engine.subsystem.api.storage.EndPointSelector;
-import org.apache.cloudstack.storage.command.browser.CreateRbdObjectsAnswer;
+import org.apache.cloudstack.storage.command.browser.ListRbdObjectsAnswer;
 import org.apache.cloudstack.storage.command.browser.CreateRbdObjectsCommand;
+import org.apache.cloudstack.storage.command.browser.DeleteRbdObjectsCommand;
 import org.apache.cloudstack.storage.command.browser.ListDataStoreObjectsAnswer;
 import org.apache.cloudstack.storage.command.browser.ListDataStoreObjectsCommand;
 import org.apache.cloudstack.storage.datastore.db.ImageStoreObjectDownloadDao;
@@ -120,6 +123,7 @@ public class StorageBrowserImpl extends MutualExclusiveIdsManagerBase implements
     @Inject
     PrimaryDataStoreDao primaryDataStoreDao;
 
+
     @Override
     public List<Class<?>> getCommands() {
         List<Class<?>> cmdList = new ArrayList<>();
@@ -127,6 +131,7 @@ public class StorageBrowserImpl extends MutualExclusiveIdsManagerBase implements
         cmdList.add(ListStoragePoolObjectsCmd.class);
         cmdList.add(DownloadImageStoreObjectCmd.class);
         cmdList.add(CreateRbdImageCmd.class);
+        cmdList.add(DeleteRbdImageCmd.class);
         return cmdList;
     }
 
@@ -137,9 +142,39 @@ public class StorageBrowserImpl extends MutualExclusiveIdsManagerBase implements
 
         ImageStoreJoinVO imageStore = imageStoreJoinDao.findById(imageStoreId);
         DataStore dataStore = dataStoreMgr.getDataStore(imageStoreId, imageStore.getRole());
-        ListDataStoreObjectsAnswer answer = listObjectsInStore(dataStore, path, cmd.getStartIndex().intValue(), cmd.getPageSizeVal().intValue());
+        ListDataStoreObjectsAnswer answer = listObjectsInStore(dataStore, path, cmd.getStartIndex().intValue(), cmd.getPageSizeVal().intValue(), cmd.getKeyword());
 
         return getResponse(dataStore, answer);
+    }
+
+    ListDataStoreObjectsAnswer listObjectsInStore(DataStore dataStore,String path, int startIndex, int pageSize) {
+        EndPoint ep = endPointSelector.select(dataStore);
+
+        if (ep == null) {
+            throw new CloudRuntimeException("No remote endpoint to send command");
+        }
+        ListDataStoreObjectsCommand searchRICmd = new ListDataStoreObjectsCommand(dataStore.getTO(), path, startIndex, pageSize);
+        searchRICmd.setWait(15);
+        if (dataStore.getRole() == DataStoreRole.Primary) {
+            searchRICmd.setPoolType(primaryDataStoreDao.findById(dataStore.getId()).getPoolType().toString());
+            searchRICmd.setPoolPath(primaryDataStoreDao.findById(dataStore.getId()).getPath().toString());
+        }
+        Answer answer = null;
+        try {
+            answer = ep.sendMessage(searchRICmd);
+        } catch (Exception e) {
+            throw new CloudRuntimeException("Failed to list datastore objects", e);
+        }
+
+        if (answer == null || !answer.getResult() || !(answer instanceof ListDataStoreObjectsAnswer)) {
+            throw new CloudRuntimeException("Failed to list datastore objects");
+        }
+
+        ListDataStoreObjectsAnswer dsAnswer = (ListDataStoreObjectsAnswer) answer;
+        if (!dsAnswer.isPathExists()) {
+            throw new IllegalArgumentException("Path " + path + " doesn't exist in store: " + dataStore.getUuid());
+        }
+        return dsAnswer;
     }
 
     @Override
@@ -148,7 +183,7 @@ public class StorageBrowserImpl extends MutualExclusiveIdsManagerBase implements
         String path = cmd.getPath();
 
         DataStore dataStore = dataStoreMgr.getDataStore(storeId, DataStoreRole.Primary);
-        ListDataStoreObjectsAnswer answer = listObjectsInStore(dataStore, path, cmd.getStartIndex().intValue(), cmd.getPageSizeVal().intValue());
+        ListDataStoreObjectsAnswer answer = listObjectsInStore(dataStore, path, cmd.getStartIndex().intValue(), cmd.getPageSizeVal().intValue(), cmd.getkeyword());
 
         return getResponse(dataStore, answer);
     }
@@ -159,23 +194,47 @@ public class StorageBrowserImpl extends MutualExclusiveIdsManagerBase implements
         Long RbdSize = cmd.getRbdSize();
 
         DataStore dataStore = dataStoreMgr.getDataStore(storeId, DataStoreRole.Primary);
-        CreateRbdObjectsAnswer answer = createRbdObjectsInStore(dataStore, RbdSize, cmd.getRbdName());
+        ListRbdObjectsAnswer answer = createRbdObjectsInStore(dataStore, RbdSize, cmd.getRbdName());
 
         return getResponses(dataStore, answer);
     }
 
-    private ListResponse<DataStoreObjectResponse> getResponses(DataStore dataStore, CreateRbdObjectsAnswer answer) {
+    private ListResponse<DataStoreObjectResponse> getResponses(DataStore dataStore, ListRbdObjectsAnswer answer) {
         List<DataStoreObjectResponse> responses = new ArrayList<>();
         ListResponse<DataStoreObjectResponse> listResponse = new ListResponse<>();
         if (answer == null || !answer.getResult() || !answer.successMessage()) {
             s_logger.error("Failed to list or create RBD objects");
-            throw new CloudRuntimeException("RBD 생성에 실패했습니다.");
+            throw new CloudRuntimeException("Failed to list or create RBD objects.");
         }
         DataStoreObjectResponse response = new DataStoreObjectResponse();
         responses.add(response);
         listResponse.setResponses(responses);
         return listResponse;
     }
+
+    @Override
+    public ListResponse<DataStoreObjectResponse> deleteRbdImageObjects(DeleteRbdImageCmd cmd) {
+        Long storeId = cmd.getStoreId();
+
+        DataStore dataStore = dataStoreMgr.getDataStore(storeId, DataStoreRole.Primary);
+        ListRbdObjectsAnswer answer = deleteRbdObjectsInStore(dataStore, cmd.getRbdName());
+
+        return getResponsess(dataStore, answer);
+    }
+
+    private ListResponse<DataStoreObjectResponse> getResponsess(DataStore dataStore, ListRbdObjectsAnswer answer) {
+        List<DataStoreObjectResponse> responsess = new ArrayList<>();
+        ListResponse<DataStoreObjectResponse> listResponses = new ListResponse<>();
+        if (answer == null || !answer.getResult() || !answer.successMessage()) {
+            s_logger.error("Failed to list or delete RBD objects");
+            throw new CloudRuntimeException("Failed to list or delete RBD objects.");
+        }
+        DataStoreObjectResponse responsed = new DataStoreObjectResponse();
+        responsess.add(responsed);
+        listResponses.setResponses(responsess);
+        return listResponses;
+    }
+
 
     @Override
     public ExtractResponse downloadImageStoreObject(DownloadImageStoreObjectCmd cmd) {
@@ -212,21 +271,22 @@ public class StorageBrowserImpl extends MutualExclusiveIdsManagerBase implements
         return response;
     }
 
-    ListDataStoreObjectsAnswer listObjectsInStore(DataStore dataStore, String path, int startIndex, int pageSize) {
+    ListDataStoreObjectsAnswer listObjectsInStore(DataStore dataStore, String path, int startIndex, int pageSize, String keyword) {
         EndPoint ep = endPointSelector.select(dataStore);
 
         if (ep == null) {
             throw new CloudRuntimeException("No remote endpoint to send command");
         }
-        ListDataStoreObjectsCommand listDSCmd = new ListDataStoreObjectsCommand(dataStore.getTO(), path, startIndex, pageSize);
-        listDSCmd.setWait(15);
+        ListDataStoreObjectsCommand searchRICmd = new ListDataStoreObjectsCommand(dataStore.getTO(), path, startIndex, pageSize, keyword);
+        searchRICmd.setWait(15);
         if (dataStore.getRole() == DataStoreRole.Primary) {
-            listDSCmd.setPoolType(primaryDataStoreDao.findById(dataStore.getId()).getPoolType().toString());
-            listDSCmd.setPoolPath(primaryDataStoreDao.findById(dataStore.getId()).getPath().toString());
+            searchRICmd.setPoolType(primaryDataStoreDao.findById(dataStore.getId()).getPoolType().toString());
+            searchRICmd.setPoolPath(primaryDataStoreDao.findById(dataStore.getId()).getPath().toString());
+            searchRICmd.setKeyword(keyword);
         }
         Answer answer = null;
         try {
-            answer = ep.sendMessage(listDSCmd);
+            answer = ep.sendMessage(searchRICmd);
         } catch (Exception e) {
             throw new CloudRuntimeException("Failed to list datastore objects", e);
         }
@@ -242,40 +302,69 @@ public class StorageBrowserImpl extends MutualExclusiveIdsManagerBase implements
         return dsAnswer;
     }
 
-    CreateRbdObjectsAnswer createRbdObjectsInStore(DataStore dataStore, long sizes, String names) {
+    ListRbdObjectsAnswer deleteRbdObjectsInStore(DataStore dataStore, String name) {
         EndPoint ep = endPointSelector.select(dataStore);
 
         if (ep == null) {
             throw new CloudRuntimeException("No remote endpoint to send command");
         }
-        s_logger.info("::::::::17::"+names);
-        s_logger.info("::::::::120::"+sizes);
-        CreateRbdObjectsCommand listDSCmd = new CreateRbdObjectsCommand(names, sizes);
-        listDSCmd.setWait(15);
+        DeleteRbdObjectsCommand deleteRICmd = new DeleteRbdObjectsCommand(name);
+        deleteRICmd.setWait(15);
 
         if (dataStore.getRole() == DataStoreRole.Primary) {
-            s_logger.info("::::::::15::"+dataStore.getRole());
-            listDSCmd.setPoolType(primaryDataStoreDao.findById(dataStore.getId()).getPoolType().toString());
-            listDSCmd.setPoolPath(primaryDataStoreDao.findById(dataStore.getId()).getPath().toString());
+            deleteRICmd.setPoolType(primaryDataStoreDao.findById(dataStore.getId()).getPoolType().toString());
+            deleteRICmd.setPoolPath(primaryDataStoreDao.findById(dataStore.getId()).getPath().toString());
+            deleteRICmd.setName(name);
         }
         Answer answer = null;
         try {
-            answer = ep.sendMessage(listDSCmd);
+            answer = ep.sendMessage(deleteRICmd);
+        } catch (Exception e) {
+            throw new CloudRuntimeException("Failed to delete datastore objects", e);
+        }
+
+        if (answer == null || !answer.getResult() || !(answer instanceof ListRbdObjectsAnswer)) {
+            throw new CloudRuntimeException("Failed to delete datastore objects");
+        }
+
+        ListRbdObjectsAnswer dsAnswer = (ListRbdObjectsAnswer) answer;
+        if (!dsAnswer.successMessage()) {
+            throw new IllegalArgumentException("RBD failed to delete");
+        }
+        return dsAnswer;
+    }
+
+    ListRbdObjectsAnswer createRbdObjectsInStore(DataStore dataStore, long sizes, String names) {
+        EndPoint ep = endPointSelector.select(dataStore);
+
+        if (ep == null) {
+            throw new CloudRuntimeException("No remote endpoint to send command");
+        }
+        CreateRbdObjectsCommand createRICmd = new CreateRbdObjectsCommand(names, sizes);
+        createRICmd.setWait(15);
+
+        if (dataStore.getRole() == DataStoreRole.Primary) {
+            createRICmd.setPoolType(primaryDataStoreDao.findById(dataStore.getId()).getPoolType().toString());
+            createRICmd.setPoolPath(primaryDataStoreDao.findById(dataStore.getId()).getPath().toString());
+        }
+        Answer answer = null;
+        try {
+            answer = ep.sendMessage(createRICmd);
         } catch (Exception e) {
             throw new CloudRuntimeException("Failed to list datastore objects", e);
         }
 
-        if (answer == null || !answer.getResult() || !(answer instanceof CreateRbdObjectsAnswer)) {
+        if (answer == null || !answer.getResult() || !(answer instanceof ListRbdObjectsAnswer)) {
             throw new CloudRuntimeException("Failed to list datastore objects");
         }
 
-        CreateRbdObjectsAnswer dsAnswer = (CreateRbdObjectsAnswer) answer;
+        ListRbdObjectsAnswer dsAnswer = (ListRbdObjectsAnswer) answer;
         if (!dsAnswer.successMessage()) {
             throw new IllegalArgumentException("RBD failed to create");
         }
-        s_logger.info("::::::1::::"+dsAnswer);
         return dsAnswer;
     }
+
 
     ListResponse<DataStoreObjectResponse> getResponse(DataStore dataStore, ListDataStoreObjectsAnswer answer) {
         List<DataStoreObjectResponse> responses = new ArrayList<>();
@@ -485,4 +574,5 @@ public class StorageBrowserImpl extends MutualExclusiveIdsManagerBase implements
         }
         return volumePathMap;
     }
+
 }

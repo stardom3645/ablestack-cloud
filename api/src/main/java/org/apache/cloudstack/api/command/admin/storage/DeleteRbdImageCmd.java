@@ -40,6 +40,10 @@ public class DeleteRbdImageCmd extends BaseListCmd {
     //////////////// API parameters /////////////////////
     /////////////////////////////////////////////////////
 
+    @Parameter(name = ApiConstants.ID, type = CommandType.UUID, entityType = StoragePoolResponse.class, required = true,
+    description = "id of the storage pool")
+    private Long storeId;
+
     @Parameter(name = ApiConstants.NAME, type = CommandType.STRING, entityType = StoragePoolResponse.class, required = true,
                description = "id of the storage pool")
     private String RbdName;
@@ -47,6 +51,11 @@ public class DeleteRbdImageCmd extends BaseListCmd {
     /////////////////////////////////////////////////////
     /////////////////// Accessors ///////////////////////
     /////////////////////////////////////////////////////
+
+
+    public Long getStoreId() {
+        return storeId;
+    }
 
     public String getRbdName() {
         return RbdName;

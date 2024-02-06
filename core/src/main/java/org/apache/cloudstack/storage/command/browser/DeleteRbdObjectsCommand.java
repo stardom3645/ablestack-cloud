@@ -39,7 +39,7 @@ public class DeleteRbdObjectsCommand extends StorageCommand {
         return false;
     }
 
-    public String getNames() {
+    public String getName() {
         return name;
     }
 
@@ -57,5 +57,9 @@ public class DeleteRbdObjectsCommand extends StorageCommand {
 
     public void setPoolPath(String poolPath) {
         this.poolPath = poolPath;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 }

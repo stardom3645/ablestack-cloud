@@ -50,6 +50,15 @@ public class ListDataStoreObjectsCommand extends StorageCommand {
         this.keyword = keyword;
     }
 
+    public ListDataStoreObjectsCommand(DataStoreTO store, String path, int startIndex, int pageSize) {
+        super();
+        this.store = store;
+        this.path = path;
+        this.startIndex = startIndex;
+        this.pageSize = pageSize;
+    }
+
+
     @Override
     public boolean executeInSequence() {
         return false;
@@ -89,5 +98,9 @@ public class ListDataStoreObjectsCommand extends StorageCommand {
 
     public String getKeyword() {
         return keyword;
+    }
+
+    public void setKeyword(String keyword) {
+        this.keyword = keyword;
     }
 }

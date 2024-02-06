@@ -69,6 +69,7 @@ import org.apache.cloudstack.storage.command.UploadStatusAnswer;
 import org.apache.cloudstack.storage.command.UploadStatusAnswer.UploadStatus;
 import org.apache.cloudstack.storage.command.UploadStatusCommand;
 import org.apache.cloudstack.storage.command.browser.CreateRbdObjectsCommand;
+import org.apache.cloudstack.storage.command.browser.DeleteRbdObjectsCommand;
 import org.apache.cloudstack.storage.command.browser.ListDataStoreObjectsCommand;
 import org.apache.cloudstack.storage.configdrive.ConfigDrive;
 import org.apache.cloudstack.storage.configdrive.ConfigDriveBuilder;
@@ -331,6 +332,8 @@ public class NfsSecondaryStorageResource extends ServerResourceBase implements S
             return execute((ListDataStoreObjectsCommand)cmd);
         } else if (cmd instanceof CreateRbdObjectsCommand) {
             return execute((CreateRbdObjectsCommand)cmd);
+        } else if (cmd instanceof DeleteRbdObjectsCommand) {
+            return execute((DeleteRbdObjectsCommand)cmd);
         } else if (cmd instanceof QuerySnapshotZoneCopyCommand) {
             return execute((QuerySnapshotZoneCopyCommand)cmd);
         } else {
@@ -346,6 +349,9 @@ public class NfsSecondaryStorageResource extends ServerResourceBase implements S
         return createImageRbd(cmd.getNames(), cmd.getSizes(), cmd.getPoolPath());
     }
 
+    private Answer execute(DeleteRbdObjectsCommand cmd) {
+        return deleteImageRbd(cmd.getName(), cmd.getPoolPath());
+    }
     private Answer execute(HandleConfigDriveIsoCommand cmd) {
         if (cmd.isCreate()) {
             if (cmd.getIsoData() == null) {
