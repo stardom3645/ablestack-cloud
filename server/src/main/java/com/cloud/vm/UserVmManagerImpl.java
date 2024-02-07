@@ -16,6 +16,7 @@
 // under the License.
 package com.cloud.vm;
 
+import static com.cloud.configuration.ConfigurationManager.VM_USERDATA_MAX_LENGTH;
 import static com.cloud.configuration.ConfigurationManagerImpl.VM_USERDATA_MAX_LENGTH;
 import static com.cloud.utils.NumbersUtil.toHumanReadableSize;
 
@@ -4899,6 +4900,12 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
         DataCenter zone = _entityMgr.findById(DataCenter.class, zoneId);
         if (zone == null) {
             throw new InvalidParameterValueException("Unable to find a zone in the current VM by zone id=" + zoneId);
+        }
+        if (cmd.getName() != null && cmd.getName().length() > 0) {
+            VMInstanceVO vmByHostName = _vmInstanceDao.findVMByHostNameInZone(cmd.getName(), curVm.getDataCenterId());
+            if (vmByHostName != null && vmByHostName.getState() != State.Expunging) {
+                throw new InvalidParameterValueException("There already exists a VM by the name: " + cmd.getName() + ".");
+            }
         }
         // service offering check
         long serviceOfferingId = curVm.getServiceOfferingId();
