@@ -310,16 +310,10 @@ export default {
         console.log(conditions)
         console.log(condition)
         console.log(fieldVal)
-        if (condition === 'sshkey') {
-          console.log('1')
-          if (store.getters.features.securityfeaturesenabled && (fieldVal === 'password' || fieldVal === 'sshkey')) {
-            console.log('2')
-            isShow = false
-          }
+        if (fieldVal === 'security' && store.getters.features.securityfeaturesenabled) {
+          isShow = false
         }
       })
-      console.log('3')
-      console.log(isShow)
       return isShow
     }
   }
