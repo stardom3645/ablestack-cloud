@@ -1054,7 +1054,7 @@ public class StatsCollector extends ManagerBase implements ComponentMethodInterc
                         if (rs.next()) {
                             String isExistCount = rs.getString(1);
                             if (isExistCount.equalsIgnoreCase("0")) {
-                                _alertMgr.sendAlert(AlertManager.AlertType.ALERT_TYPE_MANAGMENT_NODE, 0, new Long(0), "Management server is low on local storage, Threshold (" + MngtDfThreshold + "%) reached", "");
+                                _alertMgr.sendAlert(AlertManager.AlertType.ALERT_TYPE_MANAGEMENT_NODE, 0, new Long(0), "Management server is low on local storage, Threshold (" + MngtDfThreshold + "%) reached", "");
                             }
                         }
                         txn.commit();
@@ -1106,7 +1106,7 @@ public class StatsCollector extends ManagerBase implements ComponentMethodInterc
                         if (rs.next()) {
                             String isExistCount = rs.getString(1);
                             if (isExistCount.equalsIgnoreCase("0")) {
-                                _alertMgr.sendAlert(AlertManager.AlertType.ALERT_TYPE_MANAGMENT_NODE, 0, new Long(0), "Database storage capacity, Threshold (" + mysqlDuThreshold + "%) reached. And The oldest records in the event table are deleted every minute until the number falls below the threshold.", "");
+                                _alertMgr.sendAlert(AlertManager.AlertType.ALERT_TYPE_MANAGEMENT_NODE, 0, new Long(0), "Database storage capacity, Threshold (" + mysqlDuThreshold + "%) reached. And The oldest records in the event table are deleted every minute until the number falls below the threshold.", "");
                             }
                         }
                     } catch (Exception e) {

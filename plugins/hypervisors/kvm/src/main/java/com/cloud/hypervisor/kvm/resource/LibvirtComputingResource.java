@@ -4642,15 +4642,6 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
         if (path != null) {
             final String[] token = path.split("/");
             return token[token.length - 1];
-            // if (DiskProtocol.RBD.equals(disk.getDiskProtocol())) {
-            //     // for example, path = <RBD pool>/<disk path>
-            //     if (token.length > 1) {
-            //         return token[1];
-            //     }
-            // } else if (token.length > 3) {
-            //     // for example, path = /mnt/pool_uuid/disk_path/
-            //     return token[3];
-            // }
         }
         return null;
     }

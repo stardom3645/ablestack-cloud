@@ -189,8 +189,6 @@ public class UserVmManagerImplTest {
     @Mock
     private VMTemplateDao templateDao;
 
-    @Mock
-    private CloneVMCmd cloneVMCommand;
 
     @Mock
     private AccountDao accountDao;
@@ -934,18 +932,6 @@ public class UserVmManagerImplTest {
 
         Assert.assertEquals("testUserdata", userVmVO.getUserData());
         Assert.assertEquals(1L, (long)userVmVO.getUserDataId());
-//    @Test
-//    public void validateCloneCondition() {
-//        Mockito.when(cloneVMCommand.getTargetVM()).thenReturn(null);
-//        Mockito.when(cloneVMCommand.getAccountName()).thenReturn(null);
-//        Mockito.when(cloneVMCommand.getDomainId()).thenReturn(null);
-//        Exception err = null;
-//        try {
-//            userVmManagerImpl.validateCloneCondition(cloneVMCommand);
-//        } catch (CloudRuntimeException | ResourceUnavailableException | ResourceAllocationException e) {
-//            err = e;
-//        }
-//        assertTrue(err instanceof CloudRuntimeException);
     }
 
     @Test
@@ -1222,7 +1208,7 @@ public class UserVmManagerImplTest {
     public void testSetVmRequiredFieldsForImportNotImport() {
         userVmManagerImpl.setVmRequiredFieldsForImport(false, userVmVoMock, _dcMock,
                 Hypervisor.HypervisorType.VMware, Mockito.mock(HostVO.class), Mockito.mock(HostVO.class), VirtualMachine.PowerState.PowerOn);
-        Mockito.verify(userVmVoMock, Mockito.never()).setDataCenterId(anyLong());
+        Mockito.verify(userVmVoMock, never()).setDataCenterId(anyLong());
     }
 
     @Test
