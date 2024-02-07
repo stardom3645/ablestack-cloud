@@ -290,6 +290,8 @@ export default {
       return true
     },
     isDisplayItem (conditions) {
+      console.log(store.getters.features.securityfeaturesenabled)
+      console.log(conditions)
       if (!conditions || Object.keys(conditions).length === 0) {
         return true
       }
@@ -306,6 +308,8 @@ export default {
         } else if (!Array.isArray(condition) && fieldVal !== condition) {
           isShow = false
         }
+        console.log(condition)
+        console.log(fieldVal)
       })
 
       return isShow
