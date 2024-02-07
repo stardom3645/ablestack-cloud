@@ -16,9 +16,6 @@
 // under the License.
 package com.cloud.usage;
 
-import com.cloud.storage.Snapshot;
-import com.cloud.storage.SnapshotVO;
-import com.cloud.storage.dao.SnapshotDao;
 import com.cloud.alert.AlertManager;
 import com.cloud.event.EventTypes;
 import com.cloud.event.UsageEventDetailsVO;
@@ -166,8 +163,6 @@ public class UsageManagerImpl extends ManagerBase implements UsageManager, Runna
     private QuotaAlertManager _alertManager;
     @Inject
     private QuotaStatement _quotaStatement;
-    @Inject
-    private SnapshotDao _snapshotDao;
 
     @Inject
     private BucketStatisticsDao _bucketStatisticsDao;
@@ -1690,12 +1685,6 @@ public class UsageManagerImpl extends ManagerBase implements UsageManager, Runna
         long zoneId = -1L;
 
         long snapId = event.getResourceId();
-
-        SnapshotVO snapshotInstance = _snapshotDao.findById(snapId);
-
-        if (snapshotInstance != null && snapshotInstance.getSnapshotType() == Snapshot.Type.INTERNAL.ordinal()) {
-            return;
-        }
 
         if (EventTypes.EVENT_SNAPSHOT_CREATE.equals(event.getType())) {
             if (usageSnapshotSelection){
