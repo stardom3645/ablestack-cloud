@@ -310,8 +310,7 @@ export default {
             label: 'label.authentication.sshkey',
             value: 'sshkey',
             condition: {
-              hypervisor: ['KVM'],
-              features: ['security']
+              hypervisor: ['KVM']
             }
           }],
           display: {
