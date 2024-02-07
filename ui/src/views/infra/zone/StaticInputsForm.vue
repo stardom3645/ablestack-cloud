@@ -307,8 +307,15 @@ export default {
         } else if (!Array.isArray(condition) && fieldVal !== condition) {
           isShow = false
         }
-        if (condition === 'sshkey' && fieldVal === 'password' && store.getters.features.securityfeaturesenabled) {
-          isShow = false
+        console.log(conditions);
+        console.log(condition);
+        console.log(fieldVal);
+        if (condition === 'sshkey' && fieldVal === 'password') {
+          console.log('1')
+          if (store.getters.features.securityfeaturesenabled) {
+            console.log('2')
+            isShow = false
+          }
         }
       })
 
