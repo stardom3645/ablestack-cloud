@@ -117,6 +117,7 @@
 
 <script>
 import { ref, reactive, toRaw } from 'vue'
+import store from '@/store'
 
 export default {
   props: {
