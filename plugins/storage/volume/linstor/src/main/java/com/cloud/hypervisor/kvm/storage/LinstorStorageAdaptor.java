@@ -366,8 +366,7 @@ public class LinstorStorageAdaptor implements StorageAdaptor {
                     ResourceDefinitionModify rdm = new ResourceDefinitionModify();
                     rdm.deleteProps(Collections.singletonList("DrbdOptions/Net/allow-two-primaries"));
                     ApiCallRcList answers = api.resourceDefinitionModify(rsc.get().getName(), rdm);
-                    if (answers.hasError())
-                    {
+                    if (answers.hasError()) {
                         logger.error(
                                 String.format("Failed to remove 'allow-two-primaries' on %s: %s",
                                         rsc.get().getName(), LinstorUtil.getBestErrorMessage(answers)));
