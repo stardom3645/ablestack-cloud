@@ -27,13 +27,11 @@ import com.cloud.utils.component.AdapterBase;
 import org.apache.cloudstack.api.ApiConstants;
 import org.apache.cloudstack.auth.UserAuthenticator;
 import org.apache.cloudstack.auth.UserOAuth2Authenticator;
-import org.apache.log4j.Logger;
 
 import javax.inject.Inject;
 import java.util.Map;
 
 public class OAuth2UserAuthenticator extends AdapterBase implements UserAuthenticator {
-    public static final Logger s_logger = Logger.getLogger(OAuth2UserAuthenticator.class);
 
     @Inject
     private UserAccountDao _userAccountDao;
@@ -50,7 +48,7 @@ public class OAuth2UserAuthenticator extends AdapterBase implements UserAuthenti
         }
 
         final UserAccount userAccount = _userAccountDao.getUserAccount(username, domainId);
-        if (userAccount == null || requestParameters == null) {
+        if (userAccount == null) {
             s_logger.debug("Unable to find user with " + username + " in domain " + domainId + ", or user source is not OAUTH2");
             return new Pair<Boolean, ActionOnFailedAuthentication>(false, null);
         } else {

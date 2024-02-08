@@ -27,7 +27,6 @@ import javax.naming.ConfigurationException;
 
 import com.cloud.utils.exception.CloudRuntimeException;
 import org.apache.cloudstack.framework.config.dao.ConfigurationDao;
-import org.apache.log4j.Logger;
 import org.springframework.stereotype.Component;
 
 import com.cloud.agent.manager.allocator.HostAllocator;
@@ -70,7 +69,6 @@ import com.cloud.vm.dao.VMInstanceDao;
  */
 @Component
 public class FirstFitAllocator extends AdapterBase implements HostAllocator {
-    private static final Logger s_logger = Logger.getLogger(FirstFitAllocator.class);
     @Inject
     protected HostDao _hostDao = null;
     @Inject
