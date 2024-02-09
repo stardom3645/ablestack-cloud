@@ -264,6 +264,9 @@ install -D client/target/utilities/bin/cloud-sysvmadm ${RPM_BUILD_ROOT}%{_bindir
 install -D client/target/utilities/bin/cloud-update-xenserver-licenses ${RPM_BUILD_ROOT}%{_bindir}/%{name}-update-xenserver-licenses
 install -D client/target/utilities/bin/mold ${RPM_BUILD_ROOT}%{_bindir}/mold
 install -D client/target/utilities/bin/mold-update-dbpassword ${RPM_BUILD_ROOT}%{_bindir}/mold-update-dbpassword
+# Bundle cmk in cloudstack-management
+wget https://github.com/apache/cloudstack-cloudmonkey/releases/download/6.3.0/cmk.linux.x86-64 -O ${RPM_BUILD_ROOT}%{_bindir}/cmk
+chmod +x ${RPM_BUILD_ROOT}%{_bindir}/cmk
 
 cp -r client/target/utilities/scripts/db/* ${RPM_BUILD_ROOT}%{_datadir}/%{name}-management/setup
 
@@ -596,6 +599,7 @@ pip install --upgrade /usr/share/cloudstack-marvin/Marvin-*.tar.gz
 %attr(0755,root,root) %{_bindir}/%{name}-setup-encryption
 %attr(0755,root,root) %{_bindir}/mold
 %attr(0755,root,root) %{_bindir}/mold-update-dbpassword
+%attr(0755,root,root) %{_bindir}/cmk
 %{_datadir}/%{name}-management/setup/*.sql
 %{_datadir}/%{name}-management/setup/*.sh
 %{_datadir}/%{name}-management/setup/server-setup.xml
