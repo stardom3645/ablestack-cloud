@@ -178,7 +178,7 @@ public class Storage {
 
         private final String name;
         private final boolean shared;
-        private final boolean overprovisioning;
+        private final boolean overProvisioning;
         private final boolean encryption;
 
         /**
@@ -202,7 +202,7 @@ public class Storage {
         public StoragePoolType(String name, boolean shared, boolean overprovisioning, boolean encryption) {
             this.name = name;
             this.shared = shared;
-            this.overprovisioning = overprovisioning;
+            this.overProvisioning = overProvisioning;
             this.encryption = encryption;
             addStoragePoolType(this);
         }
@@ -212,10 +212,12 @@ public class Storage {
         }
 
         public boolean supportsOverProvisioning() {
-            return overprovisioning;
+            return overProvisioning;
         }
 
-        public boolean supportsEncryption() { return encryption; }
+        public boolean supportsEncryption() {
+             return encryption; 
+        }
 
         private static void addStoragePoolType(StoragePoolType storagePoolType) {
             map.putIfAbsent(storagePoolType.name, storagePoolType);
@@ -261,7 +263,7 @@ public class Storage {
     }
 
     public static List<StoragePoolType> getNonSharedStoragePoolTypes() {
-        List<StoragePoolType> nonSharedStoragePoolTypes = new ArrayList<StoragePoolType>();
+        List<StoragePoolType> nonSharedStoragePoolTypes = new ArrayList<>();
         for (StoragePoolType storagePoolType : StoragePoolType.values()) {
             if (!storagePoolType.isShared()) {
                 nonSharedStoragePoolTypes.add(storagePoolType);
