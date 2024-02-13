@@ -161,7 +161,7 @@ public class Storage {
         public static final StoragePoolType LVM = new StoragePoolType("LVM", false, false, false);
         public static final StoragePoolType CLVM = new StoragePoolType("CLVM", true, false, false);
         public static final StoragePoolType RBD = new StoragePoolType("RBD", true, true, false);
-        public static final StoragePoolType SharedMountPoint = new StoragePoolType("SharedMountPoint", true, false, true);
+        public static final StoragePoolType SharedMountPoint = new StoragePoolType("SharedMountPoint", true, true, true);
         public static final StoragePoolType VMFS = new StoragePoolType("VMFS", true, true, false);
         public static final StoragePoolType PreSetup = new StoragePoolType("PreSetup", true, true, false);
         public static final StoragePoolType EXT = new StoragePoolType("EXT", false, true, false);
@@ -188,7 +188,7 @@ public class Storage {
         public StoragePoolType(String name) {
             this.name = name;
             this.shared = false;
-            this.overprovisioning = false;
+            this.overProvisioning = false;
             this.encryption = false;
         }
 
@@ -196,10 +196,10 @@ public class Storage {
          * Define a new StoragePoolType, and register it into the map of pool types known to the management server.
          * @param name Simple unique name of the StoragePoolType.
          * @param shared Storage pool is shared/accessible to multiple hypervisors
-         * @param overprovisioning Storage pool supports overprovisioning
+         * @param overProvisioning Storage pool supports overProvisioning
          * @param encryption Storage pool supports encrypted volumes
          */
-        public StoragePoolType(String name, boolean shared, boolean overprovisioning, boolean encryption) {
+        public StoragePoolType(String name, boolean shared, boolean overProvisioning, boolean encryption) {
             this.name = name;
             this.shared = shared;
             this.overProvisioning = overProvisioning;
@@ -216,7 +216,7 @@ public class Storage {
         }
 
         public boolean supportsEncryption() {
-             return encryption; 
+            return encryption;
         }
 
         private static void addStoragePoolType(StoragePoolType storagePoolType) {
