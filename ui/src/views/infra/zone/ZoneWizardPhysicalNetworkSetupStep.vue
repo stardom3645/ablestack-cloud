@@ -66,92 +66,93 @@
             <a-select-option value="VSP"> VSP </a-select-option>
             <a-select-option value="VCS"> VCS </a-select-option>
             <a-select-option value="TF"> TF </a-select-option>
-
-          <template #suffixIcon>
-            <a-tooltip
-              v-if="tungstenNetworkIndex > -1 && tungstenNetworkIndex !== index"
-              :title="$t('message.no.support.tungsten.fabric')">
-              <warning-outlined style="color: #f5222d" />
-            </a-tooltip>
-          </template>
-        </a-select>
-      </template>
-      <template #traffics="{ record, index }">
-        <div v-for="traffic in record.traffics" :key="traffic.type">
-          <a-tooltip :title="traffic.type.toUpperCase() + ' (' + traffic.label + ')'">
-            <a-tag
-              :color="trafficColors[traffic.type]"
-              style="margin:2px"
-            >
-            {{ (traffic.type.toUpperCase() + ' (' + traffic.label + ')').slice(0, 20) }}
-            {{ (traffic.type.toUpperCase() + ' (' + traffic.label + ')').length > 20 ? '...' : '' }}
-            <edit-outlined class="traffic-type-action" @click="editTraffic(record.key, traffic, $event)"/>
-            <delete-outlined class="traffic-type-action" @click="deleteTraffic(record.key, traffic, $event)"/>
-          </a-tag>
-          </a-tooltip>
-        </div>
-        <div v-if="isShowAddTraffic(record.traffics, index)">
-          <div class="traffic-select-item" v-if="addingTrafficForKey === record.key">
-            <a-select
-              :defaultValue="trafficLabelSelected"
-              @change="val => { trafficLabelSelected = val }"
-              style="min-width: 120px;"
-              showSearch
-              optionFilterProp="label"
-              :filterOption="(input, option) => {
-                return option.children[0].children.toLowerCase().indexOf(input.toLowerCase()) >= 0
-              }" >
-              <a-select-option
-                v-for="(traffic, idx) in availableTrafficToAdd"
-                :value="traffic"
-                :key="idx"
-                :disabled="isDisabledTraffic(record.traffics, traffic)"
+            <template #suffixIcon>
+              <a-tooltip
+                v-if="tungstenNetworkIndex > -1 && tungstenNetworkIndex !== index"
+                :title="$t('message.no.support.tungsten.fabric')">
+                <warning-outlined style="color: #f5222d" />
+              </a-tooltip>
+            </template>
+          </a-select>
+        </template>
+        <template v-if="column.key === 'traffics'">
+          <div v-for="traffic in record.traffics" :key="traffic.type">
+            <a-tooltip :title="traffic.type.toUpperCase() + ' (' + traffic.label + ')'">
+              <a-tag
+                :color="trafficColors[traffic.type]"
+                style="margin:2px"
               >
-                {{ traffic.toUpperCase() }}
-              </a-select-option>
-            </a-select>
-            <tooltip-button
-              :tooltip="$t('label.add')"
-              buttonClass="icon-button"
-              icon="plus-outlined"
-              size="small"
-              @onClick="trafficAdded" />
-            <tooltip-button
-              :tooltip="$t('label.cancel')"
-              buttonClass="icon-button"
-              type="primary"
-              :danger="true"
-              icon="close-outlined"
-              size="small"
-              @onClick="() => { addingTrafficForKey = null }" />
+
+                {{ (traffic.type.toUpperCase() + ' (' + traffic.label + ')').slice(0, 20) }}
+                {{ (traffic.type.toUpperCase() + ' (' + traffic.label + ')').length > 20 ? '...' : '' }}
+                <edit-outlined class="traffic-type-action" @click="editTraffic(record.key, traffic, $event)"/>
+                <delete-outlined class="traffic-type-action" @click="deleteTraffic(record.key, traffic, $event)"/>
+              </a-tag>
+            </a-tooltip>
           </div>
-          <a-tag
-            key="addingTraffic"
-            style="margin:2px;"
-            v-else
-          >
-            <a @click="addingTraffic(record.key, record.traffics)">
-              <plus-outlined />
-              {{ $t('label.add.traffic') }}
-            </a>
-          </a-tag>
-        </div>
-      </template>
-      <template #tags="{ text, record, index }">
-        <a-input
+          <div v-if="isShowAddTraffic(record.traffics, index)">
+            <div class="traffic-select-item" v-if="addingTrafficForKey === record.key">
+              <a-select
+                :defaultValue="trafficLabelSelected"
+                @change="val => { trafficLabelSelected = val }"
+                style="min-width: 120px;"
+                showSearch
+                optionFilterProp="value"
+                :filterOption="(input, option) => {
+                  return option.value.toLowerCase().indexOf(input.toLowerCase()) >= 0
+                }" >
+                <a-select-option
+                  v-for="(traffic, index) in availableTrafficToAdd"
+                  :value="traffic"
+                  :key="index"
+                  :disabled="isDisabledTraffic(record.traffics, traffic)"
+                >
+                  {{ traffic.toUpperCase() }}
+                </a-select-option>
+              </a-select>
+              <tooltip-button
+                :tooltip="$t('label.add')"
+                buttonClass="icon-button"
+                icon="plus-outlined"
+                size="small"
+                @onClick="trafficAdded" />
+              <tooltip-button
+                :tooltip="$t('label.cancel')"
+                buttonClass="icon-button"
+                type="primary"
+                :danger="true"
+                icon="close-outlined"
+                size="small"
+                @onClick="() => { addingTrafficForKey = null }" />
+            </div>
+            <a-tag
+              key="addingTraffic"
+              style="margin:2px;"
+              v-else
+            >
+              <a @click="addingTraffic(record.key, record.traffics)">
+                <plus-outlined />
+                {{ $t('label.add.traffic') }}
+              </a>
+            </a-tag>
+          </div>
+        </template>
+        <template v-if="column.key === 'actions'">
+          <tooltip-button
+            :tooltip="$t('label.delete')"
+            v-if="tungstenNetworkIndex === -1 ? index > 0 : tungstenNetworkIndex !== index"
+            type="primary"
+            :danger="true"
+            icon="delete-outlined"
+            @onClick="onDelete(record)" />
+        </template>
+        <template v-if="column.key === 'tags'">
+          <a-input
           :disabled="tungstenNetworkIndex > -1 && tungstenNetworkIndex !== index"
           :value="text"
           @change="e => onCellChange(record.key, 'tags', e.target.value)"
            />
       </template>
-      <template #actions="{ record, index }">
-        <tooltip-button
-          :tooltip="$t('label.delete')"
-          v-if="tungstenNetworkIndex === -1 ? index > 0 : tungstenNetworkIndex !== index"
-          type="primary"
-          :danger="true"
-          icon="delete-outlined"
-          @onClick="onDelete(record)" />
       </template>
       <template #footer v-if="isAdvancedZone">
         <a-button
@@ -325,8 +326,7 @@ export default {
         key: 'isolationMethod',
         title: this.$t('label.isolation.method'),
         dataIndex: 'isolationMethod',
-        width: 125,
-        slots: { customRender: 'isolationMethod' }
+        width: 125
       })
       columns.push({
         key: 'traffics',
@@ -338,8 +338,7 @@ export default {
         title: this.$t('label.tags'),
         key: 'tags',
         dataIndex: 'tags',
-        width: 175,
-        slots: { customRender: 'tags' }
+        width: 175
       })
       if (this.isAdvancedZone) {
         columns.push({
