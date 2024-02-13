@@ -132,9 +132,8 @@ public class ServerDaemon implements Daemon {
             }
             InputStream is = null;
             if (confFileEnc != null) {
-                final String key = getKey();
-                DbProperties.setKey(key);
-                LOG.info(":::::::Key::::::::" + key);
+                final String decKey = getKey();
+                DbProperties.setKey(decKey);
                 Process process = Runtime.getRuntime().exec("openssl enc -aes-256-cbc -d -K " + DbProperties.getKey() + " -pass pass:" + DbProperties.getKp() + " -saltlen 16 -md sha256 -iter 100000 -in " + confFileEnc.getAbsoluteFile());
                 is = process.getInputStream();
                 process.onExit();
@@ -343,6 +342,7 @@ public class ServerDaemon implements Daemon {
             process.onExit();
             BufferedReader in = new BufferedReader(new InputStreamReader(is));
             key = in.readLine();
+            LOG.info(":::::::Key::::::::" + key);
         } catch (IOException e) {
             LOG.error("Error while reading hex key", e);
         }
