@@ -31,9 +31,9 @@ export default {
       permission: ['listVirtualMachinesMetrics'],
       resourceType: 'UserVm',
       params: () => {
-        var params = { details: 'servoff,tmpl,nics,backoff' }
+        var params = { details: 'servoff,tmpl,nics,backoff,iso' }
         if (store.getters.metrics) {
-          params = { details: 'servoff,tmpl,nics,backoff,stats' }
+          params = { details: 'servoff,tmpl,nics,backoff,stats,iso' }
         }
         params.isvnf = false
         return params
