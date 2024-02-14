@@ -4081,5 +4081,6 @@
 "alert.vr.public.iface.mtu":"VR.\uacf5\uc778\uc778\ud130\ud398\uc774\uc2a4.MTU",
 "alert.vr.private.iface.mtu":"VR.\uc0ac\uc124\uc778\ud130\ud398\uc774\uc2a4.MTU",
 "alert.login":"\ub85c\uadf8\uc778",
-"threshold.reached": "\uC784\uACC4\uCE58\u0020\uB3C4\uB2EC"
+"threshold.reached": "\uC784\uACC4\uCE58\u0020\uB3C4\uB2EC",
+"encryption.check": "\uc554\ud638.\ubaa8\ub4c8.\uc810\uac80"
 }
