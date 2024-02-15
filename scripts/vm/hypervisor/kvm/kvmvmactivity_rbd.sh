@@ -33,6 +33,11 @@ HostIP=
 SourceHostIP=
 UUIDList=
 
+if [[ $# -eq 0 ]];then
+        help
+        exit 0
+fi
+
 while getopts 'p:n:s:h:i:u:d:' OPTION
 do
   case $OPTION in
