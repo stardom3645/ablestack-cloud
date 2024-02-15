@@ -75,7 +75,8 @@ public class DbProperties {
 
     public synchronized static Properties getDbProperties() {
         if (!loaded) {
-
+            Properties dbProps = new Properties();
+            InputStream is = null;
             try {
                 final File propsEnc = PropertiesUtil.findConfigFile(dbPropertiesEnc);
                 final File props = PropertiesUtil.findConfigFile(dbProperties);
