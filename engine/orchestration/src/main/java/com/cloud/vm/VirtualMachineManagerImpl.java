@@ -1158,7 +1158,7 @@ public class VirtualMachineManagerImpl extends ManagerBase implements VirtualMac
                 if (reuseVolume) {
                     final List<VolumeVO> vols = _volsDao.findReadyRootVolumesByInstance(vm.getId());
                     for (final VolumeVO vol : vols) {
-                        s_logger.info("vol :::: " + vol);
+
                         final Long volTemplateId = vol.getTemplateId();
                         if (volTemplateId != null && volTemplateId != template.getId()) {
                             if (s_logger.isDebugEnabled()) {
@@ -2984,6 +2984,7 @@ public class VirtualMachineManagerImpl extends ManagerBase implements VirtualMac
      *  <ul>
      *      <li> If the current storage pool of the volume is not a managed storage, we do not need to validate anything here.
      *      <li> If the current storage pool is a managed storage and the target storage pool ID is different from the current one, we throw an exception.
+     *      <li> If the current storage pool is a managed storage and explicitly declared its capable of migration to alternate storage pools
      *  </ul>
      */
     protected void executeManagedStorageChecksWhenTargetStoragePoolProvided(StoragePoolVO currentPool, VolumeVO volume, StoragePoolVO targetPool) {
@@ -2991,6 +2992,11 @@ public class VirtualMachineManagerImpl extends ManagerBase implements VirtualMac
             return;
         }
         if (currentPool.getId() == targetPool.getId()) {
+            return;
+        }
+
+        Map<String, String> details = _storagePoolDao.getDetails(currentPool.getId());
+        if (details != null && Boolean.parseBoolean(details.get(Storage.Capability.ALLOW_MIGRATE_OTHER_POOLS.toString()))) {
             return;
         }
         throw new CloudRuntimeException(String.format("Currently, a volume on managed storage can only be 'migrated' to itself " + "[volumeId=%s, currentStoragePoolId=%s, targetStoragePoolId=%s].",

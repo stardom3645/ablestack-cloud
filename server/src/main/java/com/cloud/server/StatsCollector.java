@@ -127,6 +127,9 @@ import com.cloud.org.Cluster;
 import com.cloud.resource.ResourceManager;
 import com.cloud.resource.ResourceState;
 import com.cloud.serializer.GsonHelper;
+import com.cloud.server.StatsCollector.AbstractStatsCollector;
+import com.cloud.server.StatsCollector.AutoScaleMonitor;
+import com.cloud.server.StatsCollector.StorageCollector;
 import com.cloud.storage.ImageStoreDetailsUtil;
 import com.cloud.storage.ScopeType;
 import com.cloud.storage.Storage;
@@ -1051,7 +1054,7 @@ public class StatsCollector extends ManagerBase implements ComponentMethodInterc
                         if (rs.next()) {
                             String isExistCount = rs.getString(1);
                             if (isExistCount.equalsIgnoreCase("0")) {
-                                _alertMgr.sendAlert(AlertManager.AlertType.ALERT_TYPE_MANAGMENT_NODE, 0, new Long(0), "Management server is low on local storage, Threshold (" + MngtDfThreshold + "%) reached", "");
+                                _alertMgr.sendAlert(AlertManager.AlertType.ALERT_TYPE_MANAGEMENT_NODE, 0, new Long(0), "Management server is low on local storage, Threshold (" + MngtDfThreshold + "%) reached", "");
                             }
                         }
                         txn.commit();
@@ -1103,7 +1106,7 @@ public class StatsCollector extends ManagerBase implements ComponentMethodInterc
                         if (rs.next()) {
                             String isExistCount = rs.getString(1);
                             if (isExistCount.equalsIgnoreCase("0")) {
-                                _alertMgr.sendAlert(AlertManager.AlertType.ALERT_TYPE_MANAGMENT_NODE, 0, new Long(0), "Database storage capacity, Threshold (" + mysqlDuThreshold + "%) reached. And The oldest records in the event table are deleted every minute until the number falls below the threshold.", "");
+                                _alertMgr.sendAlert(AlertManager.AlertType.ALERT_TYPE_MANAGEMENT_NODE, 0, new Long(0), "Database storage capacity, Threshold (" + mysqlDuThreshold + "%) reached. And The oldest records in the event table are deleted every minute until the number falls below the threshold.", "");
                             }
                         }
                     } catch (Exception e) {
@@ -1787,7 +1790,8 @@ public class StatsCollector extends ManagerBase implements ComponentMethodInterc
                 for (StoragePoolVO pool : pools) {
                     List<VolumeVO> volumes = _volsDao.findByPoolId(pool.getId(), null);
                     for (VolumeVO volume : volumes) {
-                        if (volume.getFormat() != ImageFormat.QCOW2 && volume.getFormat() != ImageFormat.VHD && volume.getFormat() != ImageFormat.OVA && (volume.getFormat() != ImageFormat.RAW || pool.getPoolType() != Storage.StoragePoolType.PowerFlex)) {
+                        if (!List.of(ImageFormat.QCOW2, ImageFormat.VHD, ImageFormat.OVA, ImageFormat.RAW).contains(volume.getFormat()) &&
+                            !List.of(Storage.StoragePoolType.PowerFlex, Storage.StoragePoolType.FiberChannel).contains(pool.getPoolType())) {
                             LOGGER.warn("Volume stats not implemented for this format type " + volume.getFormat());
                             break;
                         }

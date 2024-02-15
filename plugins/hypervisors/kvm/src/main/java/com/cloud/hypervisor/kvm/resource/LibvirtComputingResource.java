@@ -51,6 +51,8 @@ import javax.xml.parsers.ParserConfigurationException;
 
 import org.apache.cloudstack.api.ApiConstants.IoDriverPolicy;
 import org.apache.cloudstack.engine.orchestration.service.NetworkOrchestrationService;
+import org.apache.cloudstack.storage.command.browser.CreateRbdObjectsCommand;
+import org.apache.cloudstack.storage.command.browser.DeleteRbdObjectsCommand;
 import org.apache.cloudstack.storage.command.browser.ListDataStoreObjectsCommand;
 import org.apache.cloudstack.storage.configdrive.ConfigDrive;
 import org.apache.cloudstack.storage.datastore.db.PrimaryDataStoreDao;
@@ -87,7 +89,6 @@ import org.libvirt.DomainInfo;
 import org.libvirt.DomainInfo.DomainState;
 import org.libvirt.DomainInterfaceStats;
 import org.libvirt.DomainSnapshot;
-import org.libvirt.Library;
 import org.libvirt.LibvirtException;
 import org.libvirt.MemoryStatistic;
 import org.libvirt.Network;
@@ -970,9 +971,9 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
             throw new ConfigurationException("Unable to find kvmheartbeat.sh");
         }
 
-        heartBeatPathRbd = Script.findScript(kvmScriptsDir, "kvmheartbeat_rbd.py");
+        heartBeatPathRbd = Script.findScript(kvmScriptsDir, "kvmheartbeat_rbd.sh");
         if (heartBeatPathRbd == null) {
-            throw new ConfigurationException("Unable to find kvmheartbeat_rbd.py");
+            throw new ConfigurationException("Unable to find kvmheartbeat_rbd.sh");
         }
 
         heartBeatPathClvm = Script.findScript(kvmScriptsDir, "kvmheartbeat_clvm.sh");
@@ -993,6 +994,21 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
         resizeVolumePath = Script.findScript(storageScriptsDir, "resizevolume.sh");
         if (resizeVolumePath == null) {
             throw new ConfigurationException("Unable to find the resizevolume.sh");
+        }
+
+        vmActivityCheckPath = Script.findScript(kvmScriptsDir, "kvmvmactivity.sh");
+        if (vmActivityCheckPath == null) {
+            throw new ConfigurationException("Unable to find kvmvmactivity.sh");
+        }
+
+        vmActivityCheckPathRbd = Script.findScript(kvmScriptsDir, "kvmvmactivity_rbd.sh");
+        if (vmActivityCheckPathRbd == null) {
+            throw new ConfigurationException("Unable to find kvmvmactivity_rbd.sh");
+        }
+
+        vmActivityCheckPathClvm = Script.findScript(kvmScriptsDir, "kvmvmactivity_clvm.sh");
+        if (vmActivityCheckPathClvm == null) {
+            throw new ConfigurationException("Unable to find kvmvmactivity_clvm.sh");
         }
 
         createTmplPath = Script.findScript(storageScriptsDir, "createtmplt.sh");
@@ -1236,7 +1252,8 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
 
         final String[] info = NetUtils.getNetworkParams(privateNic);
 
-        kvmhaMonitor = new KVMHAMonitor(null, null, null, info[0], heartBeatPath, heartBeatPathRbd, heartBeatPathClvm);
+        kvmhaMonitor = new KVMHAMonitor(null, info[0], heartBeatPath, heartBeatPathRbd, heartBeatPathClvm);
+
         final Thread ha = new Thread(kvmhaMonitor);
         ha.start();
 
@@ -3932,20 +3949,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
     }
 
     private void setupLibvirtEventListener() {
-        final Thread libvirtListenerThread = new Thread(() -> {
-            try {
-                Library.runEventLoop();
-            } catch (LibvirtException e) {
-                s_logger.error("LibvirtException was thrown in event loop: ", e);
-            } catch (InterruptedException e) {
-                s_logger.error("Libvirt event loop was interrupted: ", e);
-            }
-        });
-
         try {
-            libvirtListenerThread.setDaemon(true);
-            libvirtListenerThread.start();
-
             Connect conn = LibvirtConnection.getConnection();
             conn.addLifecycleListener(this::onDomainLifecycleChange);
 
@@ -3965,7 +3969,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
                          * Checking for this helps us differentiate between events where cloudstack or admin stopped the VM vs guest
                          * initiated, and avoid pushing extra updates for actions we are initiating without a need for extra tracking */
                         DomainEventDetail detail = domainEvent.getDetail();
-                        if (StoppedDetail.SHUTDOWN.equals(detail) || StoppedDetail.CRASHED.equals(detail)) {
+                        if (StoppedDetail.SHUTDOWN.equals(detail) || StoppedDetail.CRASHED.equals(detail) || StoppedDetail.FAILED.equals(detail)) {
                             s_logger.info("Triggering out of band status update due to completed self-shutdown or crash of VM");
                             _agentStatusUpdater.triggerUpdate();
                         } else {
@@ -4626,15 +4630,6 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
         if (path != null) {
             final String[] token = path.split("/");
             return token[token.length - 1];
-            // if (DiskProtocol.RBD.equals(disk.getDiskProtocol())) {
-            //     // for example, path = <RBD pool>/<disk path>
-            //     if (token.length > 1) {
-            //         return token[1];
-            //     }
-            // } else if (token.length > 3) {
-            //     // for example, path = /mnt/pool_uuid/disk_path/
-            //     return token[3];
-            // }
         }
         return null;
     }
@@ -5046,11 +5041,28 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
         }
         return true;
     }
-
     public Answer listFilesAtPath(ListDataStoreObjectsCommand command) {
         DataStoreTO store = command.getStore();
-        KVMStoragePool storagePool = storagePoolManager.getStoragePool(StoragePoolType.NetworkFilesystem, store.getUuid());
-        return listFilesAtPath(storagePool.getLocalPath(), command.getPath(), command.getStartIndex(), command.getPageSize());
+        if(command.getPoolType().equals("RBD")) {
+            return listRbdFilesAtPath(command.getStartIndex(), command.getPageSize(), command.getPoolPath(), command.getKeyword());
+        } else {
+            KVMStoragePool storagePool = storagePoolManager.getStoragePool(StoragePoolType.NetworkFilesystem, store.getUuid());
+            return listFilesAtPath(storagePool.getLocalPath(), command.getPath(), command.getStartIndex(), command.getPageSize());
+        }
+    }
+
+    public Answer createImageRbd(CreateRbdObjectsCommand command) {
+        if(command.getPoolType().equals("RBD")) {
+            return createImageRbd(command.getNames(), command.getSizes(), command.getPoolPath());
+        }
+        return null;
+    }
+
+    public Answer deleteImageRbd(DeleteRbdObjectsCommand command) {
+        if(command.getPoolType().equals("RBD")) {
+            return deleteImageRbd(command.getName(), command.getPoolPath());
+        }
+        return null;
     }
 
     public boolean addNetworkRules(final String vmName, final String vmId, final String guestIP, final String guestIP6, final String sig, final String seq, final String mac, final String rules, final String vif, final String brname,

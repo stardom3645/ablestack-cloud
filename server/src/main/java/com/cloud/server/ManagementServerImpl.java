@@ -447,6 +447,7 @@ import org.apache.cloudstack.api.command.user.network.ListNetworkACLListsCmd;
 import org.apache.cloudstack.api.command.user.network.ListNetworkACLsCmd;
 import org.apache.cloudstack.api.command.user.network.ListNetworkOfferingsCmd;
 import org.apache.cloudstack.api.command.user.network.ListNetworkPermissionsCmd;
+import org.apache.cloudstack.api.command.user.network.ListNetworkProtocolsCmd;
 import org.apache.cloudstack.api.command.user.network.ListNetworksCmd;
 import org.apache.cloudstack.api.command.user.network.MoveNetworkAclItemCmd;
 import org.apache.cloudstack.api.command.user.network.RemoveNetworkPermissionsCmd;
@@ -1146,7 +1147,7 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
             if (s_logger.isDebugEnabled()) {
                 s_logger.debug("Detected management server node " + msHost.getServiceIP() + " is down, send alert");
             }
-            _alertMgr.sendAlert(AlertManager.AlertType.ALERT_TYPE_MANAGMENT_NODE, 0, new Long(0), "Management server node " + msHost.getServiceIP() + " is down",
+            _alertMgr.sendAlert(AlertManager.AlertType.ALERT_TYPE_MANAGEMENT_NODE, 0, new Long(0), "Management server node " + msHost.getServiceIP() + " is down",
                 "");
         }
         return true;
@@ -3669,6 +3670,7 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
         cmdList.add(DeleteNetworkCmd.class);
         cmdList.add(ListNetworkACLsCmd.class);
         cmdList.add(ListNetworkOfferingsCmd.class);
+        cmdList.add(ListNetworkProtocolsCmd.class);
         cmdList.add(ListNetworksCmd.class);
         cmdList.add(RestartNetworkCmd.class);
         cmdList.add(UpdateNetworkCmd.class);

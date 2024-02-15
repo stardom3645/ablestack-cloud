@@ -32,7 +32,22 @@ public class ListDataStoreObjectsCommand extends StorageCommand {
 
     private int pageSize;
 
+    private String poolType;
+
+    private String poolPath;
+
+    private String keyword;
+
     public ListDataStoreObjectsCommand() {
+    }
+
+    public ListDataStoreObjectsCommand(DataStoreTO store, String path, int startIndex, int pageSize, String keyword) {
+        super();
+        this.store = store;
+        this.path = path;
+        this.startIndex = startIndex;
+        this.pageSize = pageSize;
+        this.keyword = keyword;
     }
 
     public ListDataStoreObjectsCommand(DataStoreTO store, String path, int startIndex, int pageSize) {
@@ -43,6 +58,7 @@ public class ListDataStoreObjectsCommand extends StorageCommand {
         this.pageSize = pageSize;
     }
 
+
     @Override
     public boolean executeInSequence() {
         return false;
@@ -50,6 +66,10 @@ public class ListDataStoreObjectsCommand extends StorageCommand {
 
     public String getPath() {
         return path;
+    }
+
+    public String getPoolPath() {
+        return poolPath;
     }
 
     public DataStoreTO getStore() {
@@ -62,5 +82,25 @@ public class ListDataStoreObjectsCommand extends StorageCommand {
 
     public int getPageSize() {
         return pageSize;
+    }
+
+    public String getPoolType() {
+        return poolType;
+    }
+
+    public void setPoolType(String poolType) {
+        this.poolType = poolType;
+    }
+
+    public void setPoolPath(String poolPath) {
+        this.poolPath = poolPath;
+    }
+
+    public String getKeyword() {
+        return keyword;
+    }
+
+    public void setKeyword(String keyword) {
+        this.keyword = keyword;
     }
 }
