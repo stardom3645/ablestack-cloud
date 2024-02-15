@@ -4081,5 +4081,6 @@
 "alert.vr.public.iface.mtu":"VR.PUBLIC.IFACE.MTU",
 "alert.vr.private.iface.mtu":"VR.PRIVATE.IFACE.MTU",
 "alert.login":"LOGIN",
-"threshold.reached": "THRESHOLD.REACHED"
+"threshold.reached": "THRESHOLD.REACHED",
+"encryption.check": "ENCRYPTION.CHECK"
 }

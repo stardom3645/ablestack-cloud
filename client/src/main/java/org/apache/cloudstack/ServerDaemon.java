@@ -18,10 +18,12 @@
 //
 package org.apache.cloudstack;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.lang.management.ManagementFactory;
 import java.net.URL;
 import java.util.Properties;
@@ -83,6 +85,7 @@ public class ServerDaemon implements Daemon {
     private static final String ACCESS_LOG = "access.log";
     private static final String serverProperties = "server.properties";
     private static final String serverPropertiesEnc = "server.properties.enc";
+    private static final String keyFileEnc = "key.enc";
 
 
     ////////////////////////////////////////////////////////
@@ -129,7 +132,9 @@ public class ServerDaemon implements Daemon {
             }
             InputStream is = null;
             if (confFileEnc != null) {
-                Process process = Runtime.getRuntime().exec("openssl enc -aria-256-cbc -a -d -pbkdf2 -k " + DbProperties.getKp() + " -saltlen 16 -md sha256 -iter 100000 -in " + confFileEnc.getAbsoluteFile());
+                final String decKey = getKey();
+                DbProperties.setKey(decKey);
+                Process process = Runtime.getRuntime().exec("openssl enc -aes-256-cbc -d -K " + DbProperties.getKey() + " -pass pass:" + DbProperties.getKp() + " -saltlen 16 -md sha256 -iter 100000 -in " + confFileEnc.getAbsoluteFile());
                 is = process.getInputStream();
                 process.onExit();
             } else {
@@ -301,16 +306,20 @@ public class ServerDaemon implements Daemon {
     }
 
     private RequestLog createRequestLog() {
-        final NCSARequestLog log = new NCSARequestLog();
-        final File logPath = new File(accessLogFile);
-        final File parentFile = logPath.getParentFile();
-        if (parentFile != null) {
-            parentFile.mkdirs();
+        try {
+            final NCSARequestLog log = new NCSARequestLog();
+            final File logPath = new File(accessLogFile);
+            final File parentFile = logPath.getParentFile();
+            if (parentFile != null) {
+                parentFile.mkdirs();
+            }
+            log.setFilename(logPath.getPath());
+            log.setAppend(true);
+            log.setLogTimeZone("GMT");
+            log.setLogLatency(true);
+        } catch (Exception e) {
+            return null;
         }
-        log.setFilename(logPath.getPath());
-        log.setAppend(true);
-        log.setLogTimeZone("GMT");
-        log.setLogLatency(true);
         return null;
     }
 
@@ -321,6 +330,23 @@ public class ServerDaemon implements Daemon {
     private String getShadedWarUrl() {
         final String urlStr = getResource(WEB_XML).toString();
         return urlStr.substring(0, urlStr.length() - 15);
+    }
+
+    private String getKey() {
+        InputStream is = null;
+        String key = null;
+        try {
+            final File isKeyFileEnc = PropertiesUtil.findConfigFile(keyFileEnc);
+            Process process = Runtime.getRuntime().exec("openssl enc -aria-256-cbc -a -d -pbkdf2 -k " + DbProperties.getKp() + " -saltlen 16 -md sha256 -iter 100000 -in " + isKeyFileEnc.getAbsoluteFile());
+            is = process.getInputStream();
+            process.onExit();
+            BufferedReader in = new BufferedReader(new InputStreamReader(is));
+            key = in.readLine();
+            LOG.info(":::::::Key::::::::" + key);
+        } catch (IOException e) {
+            LOG.error("Error while reading hex key", e);
+        }
+        return key;
     }
 
     ///////////////////////////////////////////
