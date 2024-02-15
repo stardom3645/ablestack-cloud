@@ -49,7 +49,7 @@ under the License.
       <!-- Append warnings+ to the syslog if it is listening on UDP port -->
       <!-- ============================== -->
 
-      <Syslog name="SYSLOG" host="localhost" port="8080" facility="LOCAL6">
+      <Syslog name="SYSLOG" host="localhost" facility="LOCAL6">
          <ThresholdFilter level="WARN" onMatch="ACCEPT" onMismatch="DENY"/>
          <PatternLayout pattern="%d{ISO8601} %-5p [%c{1.}] (%t:%x) (logid:%X{logcontextid}) %m%ex{filters(${filters})}%n"/>
       </Syslog>
