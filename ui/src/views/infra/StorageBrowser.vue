@@ -35,22 +35,56 @@
             </template>
           </a-breadcrumb>
           </a-col>
+          <a-divider/>
+          <template v-if="resourceType === 'PrimaryStorage'">
+          <a-col flex="75%">
+            <a-input-search
+              allowClear
+              size="medium"
+              v-model:value="keyword"
+              :placeholder="$t('label.objectstore.search')"
+              :loading="loading"
+              @search="fetchData()"
+              :enter-button="$t('label.search')"/>
+          </a-col>
+        </template>
           <a-col>
           <a-tooltip placement="bottom">
             <template #title>{{ $t('label.refresh') }}</template>
             <a-button
-              style="margin-top: 4px"
+              style="margin-top: 1px; left: 10px;"
               :loading="loading"
               shape="round"
-              size="small"
+              size="medium"
               @click="fetchData()"
             >
             <template #icon><ReloadOutlined /></template>
             {{ $t('label.refresh') }}
           </a-button>
           </a-tooltip>
+          <template v-if="resourceType === 'PrimaryStorage'">
+          <a-button
+          type="primary"
+          style="width: auto%; margin-top: 1px; left: 20px;"
+          shape="round"
+          @click="showAddVolModal"
+          :loading="loading"
+          :disabled="('CreateRbdImage' in $store.getters.apis)">
+          <template #icon><plus-outlined /></template> {{ $t('label.crate.rbd.image') }}
+        </a-button>
+      </template>
         </a-col>
-      </a-row>
+        </a-row>
+    <a-modal
+    :visible="showAddVolumeModal"
+    :title="$t('label.crate.rbd.image')"
+    :maskClosable="false"
+    :closable="true"
+    :footer="null"
+    @click="fetchData()"
+    @cancel="closeModals">
+    <CreateRbdImage :resource="resource" @close-action="closeModals" />
+  </a-modal>
     </a-card>
 
     <a-modal
@@ -155,6 +189,17 @@
               :copyResource="String(resource.id)"
               @onClick="openMigrationModal(record)" />
             </template>
+            <template v-else-if="column.key == 'deleteactions' && (record.templateid || record.volumeid) == null">
+              <a-col flex="auto">
+                <tooltip-button
+                  type="primary"
+                  size="medium"
+                  icon="delete-outlined"
+                  :tooltip="$t('label.delete')"
+                  :danger="true"
+                  @onClick="deleteRbdImage(record.name)"/>
+              </a-col>
+            </template>
         </template>
       </a-table>
     </div>
@@ -167,13 +212,15 @@ import { api } from '@/api'
 import InfoCard from '@/components/view/InfoCard'
 import TooltipButton from '@/components/widgets/TooltipButton'
 import MigrateImageStoreResource from '@/views/storage/MigrateImageStoreResource'
+import CreateRbdImage from '@/views/storage/CreateRbdImage'
 
 export default {
   name: 'StorageBrowser',
   components: {
     InfoCard,
     MigrateImageStoreResource,
-    TooltipButton
+    TooltipButton,
+    CreateRbdImage
   },
   props: {
     resource: {
@@ -210,6 +257,12 @@ export default {
         title: this.$t('label.actions')
       })
     }
+    if (this.resourceType === 'PrimaryStorage') {
+      columns.push({
+        key: 'deleteactions',
+        title: this.$t('label.delete')
+      })
+    }
     return {
       loading: false,
       dataSource: [],
@@ -221,7 +274,9 @@ export default {
       migrateModalLoading: false,
       showMigrateModal: false,
       templateIdsToMigrate: [],
-      snapshotIdsToMigrate: []
+      snapshotIdsToMigrate: [],
+      showAddVolumeModal: false,
+      keyword: ''
     }
   },
   created () {
@@ -240,6 +295,18 @@ export default {
       this.page = pagination.current
       this.pageSize = pagination.pageSize
       this.fetchData()
+    },
+    deleteRbdImage (selectedName) {
+      api('deleteRbdImage', {
+        name: selectedName,
+        id: this.resource.id
+      }).then(json => {
+        this.dataSource = json.liststoragepoolobjectsresponse.datastoreobject
+        this.total = json.liststoragepoolobjectsresponse.count
+      }).finally(() => {
+        this.fetchData()
+        this.loading = false
+      })
     },
     fetchImageStoreObjects () {
       this.loading = true
@@ -261,13 +328,21 @@ export default {
         path: this.browserPath,
         id: this.resource.id,
         page: this.page,
-        pagesize: this.pageSize
+        pagesize: this.pageSize,
+        keyword: this.keyword
       }).then(json => {
         this.dataSource = json.liststoragepoolobjectsresponse.datastoreobject
         this.total = json.liststoragepoolobjectsresponse.count
       }).finally(() => {
         this.loading = false
       })
+    },
+    showAddVolModal () {
+      this.showAddVolumeModal = true
+    },
+    closeModals () {
+      this.showAddVolumeModal = false
+      this.fetchData()
     },
     fetchData () {
       this.dataSource = []

@@ -22,17 +22,22 @@ import org.apache.cloudstack.api.BaseListCmd;
 import org.apache.cloudstack.api.Parameter;
 import org.apache.cloudstack.api.response.ListResponse;
 import org.apache.cloudstack.api.response.StoragePoolResponse;
+import org.apache.cloudstack.api.response.ZoneResponse;
 import org.apache.cloudstack.storage.browser.DataStoreObjectResponse;
 import org.apache.cloudstack.storage.browser.StorageBrowser;
+import org.apache.commons.collections.CollectionUtils;
+
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
 
 import javax.inject.Inject;
-import java.nio.file.Path;
 
 
-@APICommand(name = "listStoragePoolObjects", description = "Lists objects at specified path on a storage pool.",
+@APICommand(name = "createRbdImage", description = "Lists objects at specified path on a storage pool.",
             responseObject = DataStoreObjectResponse.class, since = "4.19.0", requestHasSensitiveInfo = false,
             responseHasSensitiveInfo = false)
-public class ListStoragePoolObjectsCmd extends BaseListCmd {
+public class CreateRbdImageCmd extends BaseListCmd {
 
     @Inject
     StorageBrowser storageBrowser;
@@ -42,14 +47,20 @@ public class ListStoragePoolObjectsCmd extends BaseListCmd {
     /////////////////////////////////////////////////////
 
     @Parameter(name = ApiConstants.ID, type = CommandType.UUID, entityType = StoragePoolResponse.class, required = true,
-               description = "id of the storage pool")
+                 description = "id of the storage pool")
     private Long storeId;
 
-    @Parameter(name = ApiConstants.PATH, type = CommandType.STRING, description = "path to list on storage pool")
-    private String path;
 
-    @Parameter(name = ApiConstants.KEYWORD, type = CommandType.STRING, description = "keyword to list on storage pool")
-    private String keyword;
+    @Parameter(name = ApiConstants.NAME, type = CommandType.STRING, entityType = StoragePoolResponse.class, required = true,
+               description = "id of the storage pool")
+    private String RbdName;
+
+    @Parameter(name = ApiConstants.SIZE, type = CommandType.LONG, required = true, description = "path to list on storage pool")
+    private long RbdSize;
+
+    @Parameter(name = ApiConstants.ZONE_ID, type = CommandType.LIST, collectionType = CommandType.UUID,
+            entityType = ZoneResponse.class, description = "the ID of the containing zone(s), null for public offerings", since = "4.13")
+    private List<Long> zoneIds;
 
     /////////////////////////////////////////////////////
     /////////////////// Accessors ///////////////////////
@@ -59,16 +70,21 @@ public class ListStoragePoolObjectsCmd extends BaseListCmd {
         return storeId;
     }
 
-    public String getPath() {
-        if (path == null) {
-            path = "/";
-        }
-        // We prepend "/" to path and normalize to prevent path traversal attacks
-        return Path.of(String.format("/%s", path)).normalize().toString().substring(1);
+    public String getRbdName() {
+        return RbdName;
     }
 
-    public String getkeyword() {
-        return keyword;
+    public long getRbdSize() {
+        return RbdSize;
+    }
+
+    public List<Long> getZoneIds() {
+        if (CollectionUtils.isNotEmpty(zoneIds)) {
+            Set<Long> set = new LinkedHashSet<>(zoneIds);
+            zoneIds.clear();
+            zoneIds.addAll(set);
+        }
+        return zoneIds;
     }
 
     /////////////////////////////////////////////////////
@@ -77,7 +93,7 @@ public class ListStoragePoolObjectsCmd extends BaseListCmd {
 
     @Override
     public void execute() {
-        ListResponse<DataStoreObjectResponse> response = storageBrowser.listPrimaryStoreObjects(this);
+        ListResponse<DataStoreObjectResponse> response = storageBrowser.createRbdImageObjects (this);
         response.setResponseName(getCommandName());
         response.setObjectName(getCommandName());
         this.setResponseObject(response);

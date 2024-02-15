@@ -23,6 +23,8 @@ import com.cloud.utils.component.PluggableService;
 import org.apache.cloudstack.api.command.admin.storage.DownloadImageStoreObjectCmd;
 import org.apache.cloudstack.api.command.admin.storage.ListImageStoreObjectsCmd;
 import org.apache.cloudstack.api.command.admin.storage.ListStoragePoolObjectsCmd;
+import org.apache.cloudstack.api.command.admin.storage.CreateRbdImageCmd;
+import org.apache.cloudstack.api.command.admin.storage.DeleteRbdImageCmd;
 import org.apache.cloudstack.api.response.ExtractResponse;
 import org.apache.cloudstack.api.response.ListResponse;
 
@@ -30,6 +32,10 @@ public interface StorageBrowser extends PluggableService {
     ListResponse<DataStoreObjectResponse> listImageStoreObjects(ListImageStoreObjectsCmd cmd);
 
     ListResponse<DataStoreObjectResponse> listPrimaryStoreObjects(ListStoragePoolObjectsCmd cmd);
+
+    ListResponse<DataStoreObjectResponse> createRbdImageObjects(CreateRbdImageCmd cmd);
+
+    ListResponse<DataStoreObjectResponse> deleteRbdImageObjects(DeleteRbdImageCmd cmd);
 
     ExtractResponse downloadImageStoreObject(DownloadImageStoreObjectCmd cmd);
 }

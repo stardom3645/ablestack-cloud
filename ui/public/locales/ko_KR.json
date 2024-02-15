@@ -21,7 +21,7 @@
 "error.password.not.match": "\ube44\ubc00\ubc88\ud638\uac00 \uc77c\uce58\ud558\uc9c0 \uc54a\uc2b5\ub2c8\ub2e4.",
 "error.release.dedicate.cluster": "\uc804\uc6a9 \ud074\ub7ec\uc2a4\ud130\ub97c \ud574\uc81c\ud558\uc9c0 \ubabb\ud588\uc2b5\ub2c8\ub2e4.",
 "error.release.dedicate.host": "\uc804\uc6a9 \ud638\uc2a4\ud2b8\ub97c \ud574\uc81c\ud558\uc9c0 \ubabb\ud588\uc2b5\ub2c8\ub2e4.",
-"error.release.dedicate.pod": "\uc804\uc6a9 Pod\uc744 \ud5741\uc81c\ud558\uc9c0 \ubabb\ud588\uc2b5\ub2c8\ub2e4.",
+"error.release.dedicate.pod": "\uc804\uc6a9 Pod\uc744 \ud5741\uc81c\ud558gg\uc9c0 \ubabb\ud588\uc2b5\ub2c8\ub2e4.",
 "error.release.dedicate.zone": "\uc804\uc6a9 Zone\uc744 \ud574\uc81c\ud558\uc9c0 \ubabb\ud588\uc2b5\ub2c8\ub2e4.",
 "error.unable.to.proceed": "\uacc4\uc18d \uc9c4\ud589\ud560 \uc218 \uc5c6\uc2b5\ub2c8\ub2e4. \uad00\ub9ac\uc790\uc5d0\uac8c \ubb38\uc758\ud558\uc2ed\uc2dc\uc624.",
 "firewall.close": "\ubc29\ud654\ubcbd",
@@ -4171,5 +4171,8 @@
 "label.vbmcport.allocate": "VBMC \ud3ec\ud2b8 \ud560\ub2f9",
 "message.action.vbmcport.allocate.instance": "\ud574\ub2f9 \uac00\uc0c1\uba38\uc2e0\uc5d0 VBMC \ud3ec\ud2b8\ub97c \ud560\ub2f9\ud558\uc2dc\uaca0\uc2b5\ub2c8\uae4c?",
 "label.vbmcport.remove": "VBMC \ud3ec\ud2b8 \ud560\ub2f9 \ud574\uc81c",
-"message.action.vbmcport.remove.instance": "\ud574\ub2f9 \uac00\uc0c1\uba38\uc2e0\uc5d0 VBMC \ud3ec\ud2b8\ub97c \ud574\uc81c\ud558\uc2dc\uaca0\uc2b5\ub2c8\uae4c?"
+"message.action.vbmcport.remove.instance": "\ud574\ub2f9 \uac00\uc0c1\uba38\uc2e0\uc5d0 VBMC \ud3ec\ud2b8\ub97c \ud574\uc81c\ud558\uc2dc\uaca0\uc2b5\ub2c8\uae4c?",
+"label.crate.rbd.image": "RBD \uc0dd\uc131",
+"message.rbd.name": "Enter RBD name",
+"message.rbd.size": "Enter RBD size"
 }

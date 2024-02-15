@@ -26,13 +26,12 @@ import org.apache.cloudstack.storage.browser.DataStoreObjectResponse;
 import org.apache.cloudstack.storage.browser.StorageBrowser;
 
 import javax.inject.Inject;
-import java.nio.file.Path;
 
 
-@APICommand(name = "listStoragePoolObjects", description = "Lists objects at specified path on a storage pool.",
+@APICommand(name = "deleteRbdImage", description = "Lists objects at specified path on a storage pool.",
             responseObject = DataStoreObjectResponse.class, since = "4.19.0", requestHasSensitiveInfo = false,
             responseHasSensitiveInfo = false)
-public class ListStoragePoolObjectsCmd extends BaseListCmd {
+public class DeleteRbdImageCmd extends BaseListCmd {
 
     @Inject
     StorageBrowser storageBrowser;
@@ -42,33 +41,24 @@ public class ListStoragePoolObjectsCmd extends BaseListCmd {
     /////////////////////////////////////////////////////
 
     @Parameter(name = ApiConstants.ID, type = CommandType.UUID, entityType = StoragePoolResponse.class, required = true,
-               description = "id of the storage pool")
+    description = "id of the storage pool")
     private Long storeId;
 
-    @Parameter(name = ApiConstants.PATH, type = CommandType.STRING, description = "path to list on storage pool")
-    private String path;
-
-    @Parameter(name = ApiConstants.KEYWORD, type = CommandType.STRING, description = "keyword to list on storage pool")
-    private String keyword;
+    @Parameter(name = ApiConstants.NAME, type = CommandType.STRING, entityType = StoragePoolResponse.class, required = true,
+               description = "id of the storage pool")
+    private String RbdName;
 
     /////////////////////////////////////////////////////
     /////////////////// Accessors ///////////////////////
     /////////////////////////////////////////////////////
 
+
     public Long getStoreId() {
         return storeId;
     }
 
-    public String getPath() {
-        if (path == null) {
-            path = "/";
-        }
-        // We prepend "/" to path and normalize to prevent path traversal attacks
-        return Path.of(String.format("/%s", path)).normalize().toString().substring(1);
-    }
-
-    public String getkeyword() {
-        return keyword;
+    public String getRbdName() {
+        return RbdName;
     }
 
     /////////////////////////////////////////////////////
@@ -77,7 +67,7 @@ public class ListStoragePoolObjectsCmd extends BaseListCmd {
 
     @Override
     public void execute() {
-        ListResponse<DataStoreObjectResponse> response = storageBrowser.listPrimaryStoreObjects(this);
+        ListResponse<DataStoreObjectResponse> response = storageBrowser.deleteRbdImageObjects (this);
         response.setResponseName(getCommandName());
         response.setObjectName(getCommandName());
         this.setResponseObject(response);

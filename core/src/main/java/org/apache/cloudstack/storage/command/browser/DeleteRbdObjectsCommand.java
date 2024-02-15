@@ -20,68 +20,31 @@
 package org.apache.cloudstack.storage.command.browser;
 
 import com.cloud.agent.api.storage.StorageCommand;
-import com.cloud.agent.api.to.DataStoreTO;
 
-public class ListDataStoreObjectsCommand extends StorageCommand {
+public class DeleteRbdObjectsCommand extends StorageCommand {
 
-    private DataStoreTO store;
+   private String name;
 
-    private String path;
+   private String poolType;
 
-    private int startIndex;
+   private String poolPath;
 
-    private int pageSize;
-
-    private String poolType;
-
-    private String poolPath;
-
-    private String keyword;
-
-    public ListDataStoreObjectsCommand() {
-    }
-
-    public ListDataStoreObjectsCommand(DataStoreTO store, String path, int startIndex, int pageSize, String keyword) {
+    public DeleteRbdObjectsCommand(String name) {
         super();
-        this.store = store;
-        this.path = path;
-        this.startIndex = startIndex;
-        this.pageSize = pageSize;
-        this.keyword = keyword;
+        this.name = name;
     }
-
-    public ListDataStoreObjectsCommand(DataStoreTO store, String path, int startIndex, int pageSize) {
-        super();
-        this.store = store;
-        this.path = path;
-        this.startIndex = startIndex;
-        this.pageSize = pageSize;
-    }
-
 
     @Override
     public boolean executeInSequence() {
         return false;
     }
 
-    public String getPath() {
-        return path;
+    public String getName() {
+        return name;
     }
 
     public String getPoolPath() {
         return poolPath;
-    }
-
-    public DataStoreTO getStore() {
-        return store;
-    }
-
-    public int getStartIndex() {
-        return startIndex;
-    }
-
-    public int getPageSize() {
-        return pageSize;
     }
 
     public String getPoolType() {
@@ -96,11 +59,7 @@ public class ListDataStoreObjectsCommand extends StorageCommand {
         this.poolPath = poolPath;
     }
 
-    public String getKeyword() {
-        return keyword;
-    }
-
-    public void setKeyword(String keyword) {
-        this.keyword = keyword;
+    public void setName(String name) {
+        this.name = name;
     }
 }
