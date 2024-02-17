@@ -2774,7 +2774,7 @@ Configurable, StateListener<VirtualMachine.State, VirtualMachine.Event, VirtualM
     public void finalizeExpunge(final VirtualMachine vm) {
         if (Boolean.FALSE.equals(RemoveControlIpOnStop.valueIn(vm.getDataCenterId()))) {
             final DomainRouterVO domR = _routerDao.findById(vm.getId());
-            s_logger.info(String.format("removing nics for VR [%s]", vm));
+            logger.info(String.format("removing nics for VR [%s]", vm));
             removeNics(vm, domR);
         }
     }
@@ -2798,7 +2798,7 @@ Configurable, StateListener<VirtualMachine.State, VirtualMachine.Event, VirtualM
             try {
                 networkTopology.setupDhcpForPvlan(false, domR, domR.getHostId(), nicProfile);
             } catch (final ResourceUnavailableException e) {
-                s_logger.debug("ERROR in finalizeStop: ", e);
+                logger.debug("ERROR in finalizeStop: ", e);
             }
         }
     }
