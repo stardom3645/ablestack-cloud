@@ -4166,7 +4166,8 @@
 "message.action.vbmcport.allocate.instance": "\ud574\ub2f9 \uac00\uc0c1\uba38\uc2e0\uc5d0 VBMC \ud3ec\ud2b8\ub97c \ud560\ub2f9\ud558\uc2dc\uaca0\uc2b5\ub2c8\uae4c?",
 "label.vbmcport.remove": "VBMC \ud3ec\ud2b8 \ud560\ub2f9 \ud574\uc81c",
 "message.action.vbmcport.remove.instance": "\ud574\ub2f9 \uac00\uc0c1\uba38\uc2e0\uc5d0 VBMC \ud3ec\ud2b8\ub97c \ud574\uc81c\ud558\uc2dc\uaca0\uc2b5\ub2c8\uae4c?",
-"label.crate.rbd.image": "RBD \uc0dd\uc131",
-"message.rbd.name": "Enter RBD name",
-"message.rbd.size": "Enter RBD size"
+"label.create.rbd.image": "RBD \uc0dd\uc131",
+"message.rbd.name": "RBD \uc774\ub984\uc744 \uc785\ub825\ud574\uc8fc\uc138\uc694.",
+"message.rbd.size": "RBD \uc0ac\uc774\uc988\ub97c \uc785\ub825\ud574\uc8fc\uc138\uc694.",
+"label.delete.rbd.image": "\uc774\ubbf8\uc9c0\ub97c \uc0ad\uc81c\ud558\uc2dc\uaca0\uc2b5\ub2c8\uae4c"
 }

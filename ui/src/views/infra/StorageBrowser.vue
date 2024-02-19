@@ -70,14 +70,14 @@
           @click="showAddVolModal"
           :loading="loading"
           :disabled="('CreateRbdImage' in $store.getters.apis)">
-          <template #icon><plus-outlined /></template> {{ $t('label.crate.rbd.image') }}
+          <template #icon><plus-outlined /></template> {{ $t('label.create.rbd.image') }}
         </a-button>
       </template>
         </a-col>
         </a-row>
     <a-modal
     :visible="showAddVolumeModal"
-    :title="$t('label.crate.rbd.image')"
+    :title="$t('label.create.rbd.image')"
     :maskClosable="false"
     :closable="true"
     :footer="null"
@@ -191,13 +191,21 @@
             </template>
             <template v-else-if="column.key == 'deleteactions' && (record.templateid || record.volumeid) == null">
               <a-col flex="auto">
+                <a-popconfirm
+                :title="`${$t('label.delete.rbd.image')}?`"
+                @confirm="deleteRbdImage(record.name)"
+                :okText="$t('label.yes')"
+                :cancelText="$t('label.no')"
+                placement="left">
                 <tooltip-button
+                  tooltipPlacement="bottom"
                   type="primary"
                   size="medium"
                   icon="delete-outlined"
                   :tooltip="$t('label.delete')"
                   :danger="true"
-                  @onClick="deleteRbdImage(record.name)"/>
+                />
+                  </a-popconfirm>
               </a-col>
             </template>
         </template>
@@ -296,9 +304,10 @@ export default {
       this.pageSize = pagination.pageSize
       this.fetchData()
     },
-    deleteRbdImage (selectedName) {
+
+    deleteRbdImage (name) {
       api('deleteRbdImage', {
-        name: selectedName,
+        name: name,
         id: this.resource.id
       }).then(json => {
         this.dataSource = json.liststoragepoolobjectsresponse.datastoreobject
@@ -336,6 +345,10 @@ export default {
       }).finally(() => {
         this.loading = false
       })
+    },
+    deleteDetail (index) {
+      this.details.splice(index, 1)
+      this.runApi()
     },
     showAddVolModal () {
       this.showAddVolumeModal = true
