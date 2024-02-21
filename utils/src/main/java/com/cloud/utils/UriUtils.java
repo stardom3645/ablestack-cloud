@@ -608,8 +608,11 @@ public class UriUtils {
             if (url == null) {
                 return new UriInfo();
             }
-            if (url.startsWith("rbd://") || url.startsWith("gluefs://")) {
+            if (url.startsWith("rbd://")) {
                 return getRbdUrlInfo(url);
+            }
+            if (url.startsWith("gluefs://")) {
+                return getGlueFSUrlInfo(url);
             }
             URI uri = new URI(UriUtils.encodeURIComponent(url));
             return new UriInfo(uri.getScheme(), uri.getHost(), uri.getPath(), uri.getUserInfo(), uri.getPort());
@@ -645,6 +648,36 @@ public class UriUtils {
             return new UriInfo(uri.getScheme(), storageHosts, uri.getPath(), credentials, uri.getPort());
         } catch (URISyntaxException e) {
             throw new CloudRuntimeException(url + " is not a valid uri for RBD");
+        }
+    }
+
+    private static UriInfo getGlueFSUrlInfo(String url) {
+        if (url == null || !url.toLowerCase().startsWith("gluefs://")) {
+            throw new CloudRuntimeException("GlueFS URL must start with \"gluefs://\"");
+        }
+        String schema = StringUtils.substring(url, 0, 9);
+        url = StringUtils.substring(url, 9, url.length());
+        int firstAt = StringUtils.indexOf(url, "@");
+        String credentials = (firstAt == -1) ? null : StringUtils.substring(url, 0, firstAt);
+        String hostInfo = (firstAt == -1) ? url : StringUtils.substring(url, firstAt + 1, url.length());
+
+        int firstSlash = StringUtils.indexOf(hostInfo, "/");
+        int lastColon = StringUtils.lastIndexOf(hostInfo,":");
+        int lastSquareBracket = StringUtils.lastIndexOf(hostInfo,"]");
+        int endOfHost = lastColon == -1 ? (firstSlash > 0 ? firstSlash : hostInfo.length() + 1) :
+                (lastSquareBracket > lastColon ? lastSquareBracket + 1 : lastColon);
+        String storageHosts = StringUtils.substring(hostInfo, 0, endOfHost);
+        String firstHost = storageHosts.split(",")[0];
+        String strAfterHosts = StringUtils.substring(hostInfo, endOfHost);
+        try {
+            URI uri = new URI(UriUtils.encodeURIComponent(schema + firstHost + strAfterHosts));
+            if (credentials != null) {
+                credentials = credentials.replace("+", "-");
+                credentials = credentials.replace("/", "_");
+            }
+            return new UriInfo(uri.getScheme(), storageHosts, uri.getPath(), credentials, uri.getPort());
+        } catch (URISyntaxException e) {
+            throw new CloudRuntimeException(url + " is not a valid uri for GlueFS");
         }
     }
 
