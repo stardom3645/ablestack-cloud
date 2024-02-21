@@ -679,10 +679,7 @@ export default {
     gluefsURL (server, path, id, secret) {
       var url
       if (path.substring(0, 1) !== '/') {
-        if (path.length() == 1) {
-        } else {
-          path = '/' + path
-        }
+        path = '/' + path
       }
       secret = secret.replace(/\+/g, '-')
       secret = secret.replace(/\//g, '_')
