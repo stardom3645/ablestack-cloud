@@ -27,7 +27,6 @@ import org.apache.cloudstack.storage.configdrive.ConfigDrive;
 import org.apache.cloudstack.storage.to.PrimaryDataStoreTO;
 import org.apache.cloudstack.storage.to.VolumeObjectTO;
 import org.apache.commons.collections.MapUtils;
-import org.apache.log4j.Logger;
 import org.libvirt.Connect;
 import org.libvirt.LibvirtException;
 
@@ -55,7 +54,6 @@ import com.cloud.utils.script.Script;
 @ResourceWrapper(handles =  PrepareForMigrationCommand.class)
 public final class LibvirtPrepareForMigrationCommandWrapper extends CommandWrapper<PrepareForMigrationCommand, Answer, LibvirtComputingResource> {
 
-    private static final Logger s_logger = Logger.getLogger(LibvirtPrepareForMigrationCommandWrapper.class);
 
     @Override
     public Answer execute(final PrepareForMigrationCommand command, final LibvirtComputingResource libvirtComputingResource) {
@@ -65,8 +63,8 @@ public final class LibvirtPrepareForMigrationCommandWrapper extends CommandWrapp
             return handleRollback(command, libvirtComputingResource);
         }
 
-        if (s_logger.isDebugEnabled()) {
-            s_logger.debug("Preparing host for migrating " + vm);
+        if (logger.isDebugEnabled()) {
+            logger.debug("Preparing host for migrating " + vm);
         }
 
         final NicTO[] nics = vm.getNics();
@@ -128,10 +126,10 @@ public final class LibvirtPrepareForMigrationCommandWrapper extends CommandWrapp
                             secretConsumer = volume.getDetails().get(DiskTO.SECRET_CONSUMER_DETAIL);
                         }
                         String secretUuid = libvirtComputingResource.createLibvirtVolumeSecret(conn, secretConsumer, volumeObjectTO.getPassphrase());
-                        s_logger.debug(String.format("Created libvirt secret %s for disk %s", secretUuid, volumeObjectTO.getPath()));
+                        logger.debug(String.format("Created libvirt secret %s for disk %s", secretUuid, volumeObjectTO.getPath()));
                         volumeObjectTO.clearPassphrase();
                     } else {
-                        s_logger.debug(String.format("disk %s has no passphrase or encryption", volumeObjectTO));
+                        logger.debug(String.format("disk %s has no passphrase or encryption", volumeObjectTO));
                     }
                 }
             }
@@ -147,7 +145,7 @@ public final class LibvirtPrepareForMigrationCommandWrapper extends CommandWrapp
             if (MapUtils.isNotEmpty(dpdkInterfaceMapping)) {
                 for (DpdkTO to : dpdkInterfaceMapping.values()) {
                     String cmd = String.format("ovs-vsctl del-port %s", to.getPort());
-                    s_logger.debug("Removing DPDK port: " + to.getPort());
+                    logger.debug("Removing DPDK port: " + to.getPort());
                     Script.runSimpleBashScript(cmd);
                 }
             }
@@ -164,12 +162,12 @@ public final class LibvirtPrepareForMigrationCommandWrapper extends CommandWrapp
         PrepareForMigrationAnswer answer = new PrepareForMigrationAnswer(command);
 
         if (MapUtils.isNotEmpty(dpdkInterfaceMapping)) {
-            s_logger.debug(String.format("Setting DPDK interface for the migration of VM [%s].", vm));
+            logger.debug(String.format("Setting DPDK interface for the migration of VM [%s].", vm));
             answer.setDpdkInterfaceMapping(dpdkInterfaceMapping);
         }
 
         int newCpuShares = libvirtComputingResource.calculateCpuShares(vm);
-        s_logger.debug(String.format("Setting CPU shares to [%s] for the migration of VM [%s].", newCpuShares, vm));
+        logger.debug(String.format("Setting CPU shares to [%s] for the migration of VM [%s].", newCpuShares, vm));
         answer.setNewVmCpuShares(newCpuShares);
 
         return answer;

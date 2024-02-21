@@ -19,7 +19,6 @@
 
 package com.cloud.hypervisor.kvm.resource.wrapper;
 
-import org.apache.log4j.Logger;
 
 import com.cloud.agent.api.Answer;
 import com.cloud.agent.api.storage.CreateAnswer;
@@ -39,7 +38,6 @@ import com.cloud.vm.DiskProfile;
 @ResourceWrapper(handles =  CreateCommand.class)
 public final class LibvirtCreateCommandWrapper extends CommandWrapper<CreateCommand, Answer, LibvirtComputingResource> {
 
-    private static final Logger s_logger = Logger.getLogger(LibvirtCreateCommandWrapper.class);
 
     @Override
     public Answer execute(final CreateCommand command, final LibvirtComputingResource libvirtComputingResource) {
@@ -81,7 +79,7 @@ public final class LibvirtCreateCommandWrapper extends CommandWrapper<CreateComm
             volume.setShareable(dskch.getShareable());
             return new CreateAnswer(command, volume);
         } catch (final CloudRuntimeException e) {
-            s_logger.debug("Failed to create volume: " + e.toString());
+            logger.debug("Failed to create volume: " + e.toString());
             return new CreateAnswer(command, e);
         }
     }

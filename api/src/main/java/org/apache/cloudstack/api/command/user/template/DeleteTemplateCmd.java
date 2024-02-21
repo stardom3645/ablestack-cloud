@@ -16,6 +16,8 @@
 // under the License.
 package org.apache.cloudstack.api.command.user.template;
 
+import org.apache.commons.lang3.BooleanUtils;
+
 import org.apache.cloudstack.api.APICommand;
 import org.apache.cloudstack.api.ApiCommandResourceType;
 import org.apache.cloudstack.api.ApiConstants;
@@ -39,7 +41,6 @@ import com.cloud.user.Account;
             description = "Deletes a template from the system. All virtual machines using the deleted template will not be affected.",
             requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class DeleteTemplateCmd extends BaseAsyncCmd {
-    public static final Logger s_logger = Logger.getLogger(DeleteTemplateCmd.class.getName());
 
     /////////////////////////////////////////////////////
     //////////////// API parameters /////////////////////

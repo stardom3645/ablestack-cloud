@@ -82,7 +82,6 @@ import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 import com.cloud.alert.AlertManager;
@@ -203,7 +202,6 @@ import com.cloud.vm.snapshot.VMSnapshotVO;
 import com.cloud.vm.snapshot.dao.VMSnapshotDao;
 
 public class AccountManagerImpl extends ManagerBase implements AccountManager, Manager {
-    public static final Logger s_logger = Logger.getLogger(AccountManagerImpl.class);
 
     @Inject
     private AccountDao _accountDao;
