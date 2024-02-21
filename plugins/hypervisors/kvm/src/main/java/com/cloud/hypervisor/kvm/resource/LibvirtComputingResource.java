@@ -51,6 +51,8 @@ import javax.xml.parsers.ParserConfigurationException;
 
 import org.apache.cloudstack.api.ApiConstants.IoDriverPolicy;
 import org.apache.cloudstack.engine.orchestration.service.NetworkOrchestrationService;
+import org.apache.cloudstack.storage.command.browser.CreateRbdObjectsCommand;
+import org.apache.cloudstack.storage.command.browser.DeleteRbdObjectsCommand;
 import org.apache.cloudstack.storage.command.browser.ListDataStoreObjectsCommand;
 import org.apache.cloudstack.storage.configdrive.ConfigDrive;
 import org.apache.cloudstack.storage.datastore.db.PrimaryDataStoreDao;
@@ -77,7 +79,8 @@ import org.apache.commons.lang.BooleanUtils;
 import org.apache.commons.lang.math.NumberUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.apache.xerces.impl.xpath.regex.Match;
 import org.joda.time.Duration;
 import org.libvirt.Connect;
@@ -87,7 +90,6 @@ import org.libvirt.DomainInfo;
 import org.libvirt.DomainInfo.DomainState;
 import org.libvirt.DomainInterfaceStats;
 import org.libvirt.DomainSnapshot;
-import org.libvirt.Library;
 import org.libvirt.LibvirtException;
 import org.libvirt.MemoryStatistic;
 import org.libvirt.Network;
@@ -236,8 +238,8 @@ import com.google.gson.Gson;
  *         pool | the parent of the storage pool hierarchy * }
  **/
 public class LibvirtComputingResource extends ServerResourceBase implements ServerResource, VirtualRouterDeployer, ResourceStatusUpdater {
-    protected static Logger s_logger = Logger.getLogger(LibvirtComputingResource.class);
 
+    protected static Logger s_logger = LogManager.getLogger(LibvirtComputingResource.class);
     private static final String CONFIG_VALUES_SEPARATOR = ",";
 
 
@@ -1042,7 +1044,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
 
         hostHealthCheckScriptPath = AgentPropertiesFileHandler.getPropertyValue(AgentProperties.HEALTH_CHECK_SCRIPT_PATH);
         if (StringUtils.isNotBlank(hostHealthCheckScriptPath) && !new File(hostHealthCheckScriptPath).exists()) {
-            s_logger.info(String.format("Unable to find the host health check script at: %s, " +
+            logger.info(String.format("Unable to find the host health check script at: %s, " +
                     "discarding it", hostHealthCheckScriptPath));
         }
 
@@ -2689,7 +2691,8 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
     /**
      * Configures created VM from specification, adding the necessary components to VM.
      */
-    private void configureVM(VirtualMachineTO vmTO, LibvirtVMDef vm, Map<String, String> customParams, boolean isUefiEnabled, boolean isSecureBoot, String bootMode, Map<String, String> extraConfig, String uuid) {
+    private void configureVM(VirtualMachineTO vmTO, LibvirtVMDef vm, Map<String, String> customParams, boolean isUefiEnabled, boolean isSecureBoot, String bootMode,
+            Map<String, String> extraConfig, String uuid) {
         s_logger.debug(String.format("Configuring VM with UUID [%s].", uuid));
 
         GuestDef guest = createGuestFromSpec(vmTO, vm, uuid, customParams);
@@ -2959,11 +2962,11 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
 
         if (hostCpuMaxCapacity > 0) {
             int updatedCpuShares = (int) Math.ceil((requestedCpuShares * CGROUP_V2_UPPER_LIMIT) / (double) hostCpuMaxCapacity);
-            s_logger.debug(String.format("This host utilizes cgroupv2 (as the max shares value is [%s]), thus, the VM requested shares of [%s] will be converted to " +
+            logger.debug(String.format("This host utilizes cgroupv2 (as the max shares value is [%s]), thus, the VM requested shares of [%s] will be converted to " +
                     "consider the host limits; the new CPU shares value is [%s].", hostCpuMaxCapacity, requestedCpuShares, updatedCpuShares));
             return updatedCpuShares;
         }
-        s_logger.debug(String.format("This host does not have a maximum CPU shares set; therefore, this host utilizes cgroupv1 and the VM requested CPU shares [%s] will not be " +
+        logger.debug(String.format("This host does not have a maximum CPU shares set; therefore, this host utilizes cgroupv1 and the VM requested CPU shares [%s] will not be " +
                 "converted.", requestedCpuShares));
         return requestedCpuShares;
     }
@@ -3102,7 +3105,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
             s_logger.warn(String.format("Setting System VM's [%s] current memory as max memory [%s].", vmTO.toString(), maxRam));
         } else {
             long minRam = ByteScaleUtils.bytesToKibibytes(vmTO.getMinRam());
-            s_logger.debug(String.format("Setting VM's [%s] current memory as min memory [%s] due to memory ballooning is enabled.", vmTO.toString(), minRam));
+            logger.debug(String.format("Setting VM's [%s] current memory as min memory [%s] due to memory ballooning is enabled.", vmTO.toString(), minRam));
             retVal = minRam;
         }
         return retVal;
@@ -3466,7 +3469,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
      * (ii) Libvirt >= 6.3.0
      */
     public void setDiskIoDriver(DiskDef disk, IoDriverPolicy ioDriver) {
-        s_logger.debug(String.format("Disk IO driver policy [%s]. The host supports the io_uring policy [%s]", ioDriver, enableIoUring));
+        logger.debug(String.format("Disk IO driver policy [%s]. The host supports the io_uring policy [%s]", ioDriver, enableIoUring));
         if (ioDriver != null) {
             if (IoDriverPolicy.IO_URING != ioDriver) {
                 disk.setIoDriver(ioDriver);
@@ -3805,19 +3808,19 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
      */
     private HealthCheckResult getHostHealthCheckResult() {
         if (StringUtils.isBlank(hostHealthCheckScriptPath)) {
-            s_logger.debug("Host health check script path is not specified");
+            logger.debug("Host health check script path is not specified");
             return HealthCheckResult.IGNORE;
         }
         File script = new File(hostHealthCheckScriptPath);
         if (!script.exists() || !script.isFile() || !script.canExecute()) {
-            s_logger.warn(String.format("The host health check script file set at: %s cannot be executed, " +
+            logger.warn(String.format("The host health check script file set at: %s cannot be executed, " +
                             "reason: %s", hostHealthCheckScriptPath,
                     !script.exists() ? "file does not exist" : "please check file permissions to execute this file"));
             return HealthCheckResult.IGNORE;
         }
         int exitCode = executeBashScriptAndRetrieveExitValue(hostHealthCheckScriptPath);
-        if (s_logger.isDebugEnabled()) {
-            s_logger.debug(String.format("Host health check script exit code: %s", exitCode));
+        if (logger.isDebugEnabled()) {
+            logger.debug(String.format("Host health check script exit code: %s", exitCode));
         }
         return retrieveHealthCheckResultFromExitCode(exitCode);
     }
@@ -3914,17 +3917,17 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
      */
     protected void calculateHostCpuMaxCapacity(int cpuCores, Long cpuSpeed) {
         String output = Script.runSimpleBashScript(COMMAND_GET_CGROUP_HOST_VERSION);
-        s_logger.info(String.format("Host uses control group [%s].", output));
+        logger.info(String.format("Host uses control group [%s].", output));
 
         if (!CGROUP_V2.equals(output)) {
-            s_logger.info(String.format("Setting host CPU max capacity to 0, as it uses cgroup v1.", getHostCpuMaxCapacity()));
+            logger.info(String.format("Setting host CPU max capacity to 0, as it uses cgroup v1.", getHostCpuMaxCapacity()));
             setHostCpuMaxCapacity(0);
             return;
         }
 
-        s_logger.info(String.format("Calculating the max shares of the host."));
+        logger.info(String.format("Calculating the max shares of the host."));
         setHostCpuMaxCapacity(cpuCores * cpuSpeed.intValue());
-        s_logger.info(String.format("The max shares of the host is [%d].", getHostCpuMaxCapacity()));
+        logger.info(String.format("The max shares of the host is [%d].", getHostCpuMaxCapacity()));
     }
 
     private StartupStorageCommand createLocalStoragePool(String localStoragePath, String localStorageUUID, StartupRoutingCommand cmd) {
@@ -3948,32 +3951,19 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
     }
 
     private void setupLibvirtEventListener() {
-        final Thread libvirtListenerThread = new Thread(() -> {
-            try {
-                Library.runEventLoop();
-            } catch (LibvirtException e) {
-                s_logger.error("LibvirtException was thrown in event loop: ", e);
-            } catch (InterruptedException e) {
-                s_logger.error("Libvirt event loop was interrupted: ", e);
-            }
-        });
-
         try {
-            libvirtListenerThread.setDaemon(true);
-            libvirtListenerThread.start();
-
             Connect conn = LibvirtConnection.getConnection();
             conn.addLifecycleListener(this::onDomainLifecycleChange);
 
-            s_logger.debug("Set up the libvirt domain event lifecycle listener");
+            logger.debug("Set up the libvirt domain event lifecycle listener");
         } catch (LibvirtException e) {
-            s_logger.error("Failed to get libvirt connection for domain event lifecycle", e);
+            logger.error("Failed to get libvirt connection for domain event lifecycle", e);
         }
     }
 
     private int onDomainLifecycleChange(Domain domain, DomainEvent domainEvent) {
         try {
-            s_logger.debug(String.format("Got event lifecycle change on Domain %s, event %s", domain.getName(), domainEvent));
+            logger.debug(String.format("Got event lifecycle change on Domain %s, event %s", domain.getName(), domainEvent));
             if (domainEvent != null) {
                 switch (domainEvent.getType()) {
                     case STOPPED:
@@ -3981,21 +3971,21 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
                          * Checking for this helps us differentiate between events where cloudstack or admin stopped the VM vs guest
                          * initiated, and avoid pushing extra updates for actions we are initiating without a need for extra tracking */
                         DomainEventDetail detail = domainEvent.getDetail();
-                        if (StoppedDetail.SHUTDOWN.equals(detail) || StoppedDetail.CRASHED.equals(detail)) {
-                            s_logger.info("Triggering out of band status update due to completed self-shutdown or crash of VM");
+                        if (StoppedDetail.SHUTDOWN.equals(detail) || StoppedDetail.CRASHED.equals(detail) || StoppedDetail.FAILED.equals(detail)) {
+                            logger.info("Triggering out of band status update due to completed self-shutdown or crash of VM");
                             _agentStatusUpdater.triggerUpdate();
                         } else {
-                            s_logger.debug("Event detail: " + detail);
+                            logger.debug("Event detail: " + detail);
                         }
                         break;
                     default:
-                        s_logger.debug(String.format("No handling for event %s", domainEvent));
+                        logger.debug(String.format("No handling for event %s", domainEvent));
                 }
             }
         } catch (LibvirtException e) {
-            s_logger.error("Libvirt exception while processing lifecycle event", e);
+            logger.error("Libvirt exception while processing lifecycle event", e);
         } catch (Throwable e) {
-            s_logger.error("Error during lifecycle", e);
+            logger.error("Error during lifecycle", e);
         }
         return 0;
     }
@@ -4041,7 +4031,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
         String sourcePath = null;
         try {
             String mountResult = Script.runSimpleBashScript("mount | grep \"" + diskPath + "\"");
-            s_logger.debug("Got mount result for " + diskPath + "\n\n" + mountResult);
+            logger.debug("Got mount result for " + diskPath + "\n\n" + mountResult);
             if (StringUtils.isNotEmpty(mountResult)) {
                 String[] res = mountResult.strip().split(" ");
                 if (res[0].contains(":")) {
@@ -4058,7 +4048,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
                 return new Pair<>(sourceHostIp, sourcePath);
             }
         } catch (Exception ex) {
-            s_logger.warn("Failed to list source host and IP for " + diskPath + ex.toString());
+            logger.warn("Failed to list source host and IP for " + diskPath + ex.toString());
         }
         return null;
     }
@@ -4642,15 +4632,6 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
         if (path != null) {
             final String[] token = path.split("/");
             return token[token.length - 1];
-            // if (DiskProtocol.RBD.equals(disk.getDiskProtocol())) {
-            //     // for example, path = <RBD pool>/<disk path>
-            //     if (token.length > 1) {
-            //         return token[1];
-            //     }
-            // } else if (token.length > 3) {
-            //     // for example, path = /mnt/pool_uuid/disk_path/
-            //     return token[3];
-            // }
         }
         return null;
     }
@@ -5065,11 +5046,25 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
     public Answer listFilesAtPath(ListDataStoreObjectsCommand command) {
         DataStoreTO store = command.getStore();
         if(command.getPoolType().equals("RBD")) {
-            return listRbdFilesAtPath(command.getStartIndex(), command.getPageSize(), command.getPoolPath());
+            return listRbdFilesAtPath(command.getStartIndex(), command.getPageSize(), command.getPoolPath(), command.getKeyword());
         } else {
             KVMStoragePool storagePool = storagePoolManager.getStoragePool(StoragePoolType.NetworkFilesystem, store.getUuid());
             return listFilesAtPath(storagePool.getLocalPath(), command.getPath(), command.getStartIndex(), command.getPageSize());
         }
+    }
+
+    public Answer createImageRbd(CreateRbdObjectsCommand command) {
+        if(command.getPoolType().equals("RBD")) {
+            return createImageRbd(command.getNames(), command.getSizes(), command.getPoolPath());
+        }
+        return null;
+    }
+
+    public Answer deleteImageRbd(DeleteRbdObjectsCommand command) {
+        if(command.getPoolType().equals("RBD")) {
+            return deleteImageRbd(command.getName(), command.getPoolPath());
+        }
+        return null;
     }
 
     public boolean addNetworkRules(final String vmName, final String vmId, final String guestIP, final String guestIP6, final String sig, final String seq, final String mac, final String rules, final String vif, final String brname,
@@ -5125,7 +5120,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
 
     public boolean setupTungstenVRouter(final String oper, final String inf, final String subnet, final String route,
         final String vrf) {
-        final Script cmd = new Script(setupTungstenVrouterPath, timeout, s_logger);
+        final Script cmd = new Script(setupTungstenVrouterPath, timeout, logger);
         cmd.add(oper);
         cmd.add(inf);
         cmd.add(subnet);
@@ -5138,7 +5133,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
 
     public boolean updateTungstenLoadbalancerStats(final String lbUuid, final String lbStatsPort,
         final String lbStatsUri, final String lbStatsAuth) {
-        final Script cmd = new Script(updateTungstenLoadbalancerStatsPath, timeout, s_logger);
+        final Script cmd = new Script(updateTungstenLoadbalancerStatsPath, timeout, logger);
         cmd.add(lbUuid);
         cmd.add(lbStatsPort);
         cmd.add(lbStatsUri);
@@ -5150,7 +5145,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
 
     public boolean updateTungstenLoadbalancerSsl(final String lbUuid, final String sslCertName,
         final String certificateKey, final String privateKey, final String privateIp, final String port) {
-        final Script cmd = new Script(updateTungstenLoadbalancerSslPath, timeout, s_logger);
+        final Script cmd = new Script(updateTungstenLoadbalancerSslPath, timeout, logger);
         cmd.add(lbUuid);
         cmd.add(sslCertName);
         cmd.add(certificateKey);
@@ -5163,7 +5158,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
     }
 
     public boolean setupTfRoute(final String privateIpAddress, final String fromNetwork, final String toNetwork) {
-        final Script setupTfRouteScript = new Script(routerProxyPath, timeout, s_logger);
+        final Script setupTfRouteScript = new Script(routerProxyPath, timeout, logger);
         setupTfRouteScript.add("setup_tf_route.py");
         setupTfRouteScript.add(privateIpAddress);
         setupTfRouteScript.add(fromNetwork);
@@ -5172,7 +5167,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
         final OutputInterpreter.OneLineParser setupTfRouteParser = new OutputInterpreter.OneLineParser();
         final String result = setupTfRouteScript.execute(setupTfRouteParser);
         if (result != null) {
-            s_logger.debug("Failed to execute setup TF Route:" + result);
+            logger.debug("Failed to execute setup TF Route:" + result);
             return false;
         }
         return true;
@@ -5236,7 +5231,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
         return new Pair<Double, Double>(readDouble(nicName, "rx_bytes"), readDouble(nicName, "tx_bytes"));
     }
 
-    static double readDouble(final String nicName, final String fileName) {
+    double readDouble(final String nicName, final String fileName) {
         final String path = "/sys/class/net/" + nicName + "/statistics/" + fileName;
         try {
             return Double.parseDouble(FileUtils.readFileToString(new File(path)));
@@ -5646,7 +5641,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
                     interfaceDef.setMultiQueueNumber(nicMultiqueueNumberInteger);
                 }
             } catch (NumberFormatException ex) {
-                s_logger.warn(String.format("VM details %s is not a valid integer value %s", VmDetailConstants.NIC_MULTIQUEUE_NUMBER, nicMultiqueueNumber));
+                logger.warn(String.format("VM details %s is not a valid integer value %s", VmDetailConstants.NIC_MULTIQUEUE_NUMBER, nicMultiqueueNumber));
             }
         }
         String nicPackedEnabled = details.get(VmDetailConstants.NIC_PACKED_VIRTQUEUES_ENABLED);
@@ -5654,7 +5649,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
             try {
                 interfaceDef.setPackedVirtQueues(Boolean.valueOf(nicPackedEnabled));
             } catch (NumberFormatException ex) {
-                s_logger.warn(String.format("VM details %s is not a valid Boolean value %s", VmDetailConstants.NIC_PACKED_VIRTQUEUES_ENABLED, nicPackedEnabled));
+                logger.warn(String.format("VM details %s is not a valid Boolean value %s", VmDetailConstants.NIC_PACKED_VIRTQUEUES_ENABLED, nicPackedEnabled));
             }
         }
     }
@@ -5669,11 +5664,11 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
             command.append(remoteFile);
             command.append(" "+tmpPath);
             command.append(outputFile);
-            s_logger.debug("Converting remoteFile: "+remoteFile);
+            logger.debug("Converting remoteFile: "+remoteFile);
             SshHelper.sshExecute(srcIp, 22, username, null, password, command.toString());
-            s_logger.debug("Copying remoteFile to: "+localDir);
+            logger.debug("Copying remoteFile to: "+localDir);
             SshHelper.scpFrom(srcIp, 22, username, null, password, localDir, tmpPath+outputFile);
-            s_logger.debug("Successfully copyied remoteFile to: "+localDir+"/"+outputFile);
+            logger.debug("Successfully copyied remoteFile to: "+localDir+"/"+outputFile);
             return outputFile;
         } catch (Exception e) {
             throw new RuntimeException(e);

@@ -47,7 +47,6 @@ import org.apache.cloudstack.framework.config.dao.ConfigurationDao;
 import org.apache.cloudstack.framework.config.impl.ConfigurationVO;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
 
 import com.cloud.configuration.Config;
 import com.cloud.configuration.ConfigurationManager;
@@ -116,7 +115,6 @@ import com.cloud.utils.net.NetUtils;
 import com.cloud.utils.script.Script;
 
 public class ConfigurationServerImpl extends ManagerBase implements ConfigurationServer {
-    public static final Logger s_logger = Logger.getLogger(ConfigurationServerImpl.class);
 
     @Inject
     private ConfigurationDao _configDao;
@@ -621,7 +619,7 @@ public class ConfigurationServerImpl extends ManagerBase implements Configuratio
             // FIXME: take a global database lock here for safety.
             boolean onWindows = isOnWindows();
             if(!onWindows) {
-                Script.runSimpleBashScript("if [ -f " + privkeyfile + " ]; then rm -f " + privkeyfile + "; fi; ssh-keygen -t rsa -m PEM -N '' -f " + privkeyfile + " -q 2>/dev/null || ssh-keygen -t rsa -N '' -f " + privkeyfile + " -q");
+                Script.runSimpleBashScript("if [ -f " + privkeyfile + " ]; then rm -f " + privkeyfile + "; fi; ssh-keygen -t ed25519 -m PEM -N '' -f " + privkeyfile + " -q 2>/dev/null || ssh-keygen -t ed25519 -N '' -f " + privkeyfile + " -q");
             }
 
             final String privateKey;

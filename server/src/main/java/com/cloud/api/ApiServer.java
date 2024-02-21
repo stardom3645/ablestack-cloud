@@ -136,7 +136,8 @@ import org.apache.http.protocol.ResponseConnControl;
 import org.apache.http.protocol.ResponseContent;
 import org.apache.http.protocol.ResponseDate;
 import org.apache.http.protocol.ResponseServer;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.stereotype.Component;
@@ -194,8 +195,6 @@ import com.google.gson.reflect.TypeToken;
 
 @Component
 public class ApiServer extends ManagerBase implements HttpRequestHandler, ApiServerService, Configurable {
-    private static final Logger s_logger = Logger.getLogger(ApiServer.class.getName());
-    private static final Logger s_accessLogger = Logger.getLogger("apiserver." + ApiServer.class.getName());
 
     private static final String SANITIZATION_REGEX = "[\n\r]";
 
@@ -557,7 +556,7 @@ public class ApiServer extends ManagerBase implements HttpRequestHandler, ApiSer
                 throw e;
             }
         } finally {
-            s_accessLogger.info(sb.toString());
+            s_logger.info(sb.toString());
             CallContext.unregister();
         }
     }
@@ -1387,6 +1386,8 @@ public class ApiServer extends ManagerBase implements HttpRequestHandler, ApiSer
     // modify the
     // code to be very specific to our needs
     static class ListenerThread extends Thread {
+
+        private static Logger LOGGER = LogManager.getLogger(ListenerThread.class);
         private HttpService _httpService = null;
         private ServerSocket _serverSocket = null;
         private HttpParams _params = null;
@@ -1395,7 +1396,7 @@ public class ApiServer extends ManagerBase implements HttpRequestHandler, ApiSer
             try {
                 _serverSocket = new ServerSocket(port);
             } catch (final IOException ioex) {
-                s_logger.error("error initializing api server", ioex);
+                LOGGER.error("error initializing api server", ioex);
                 return;
             }
 
@@ -1425,7 +1426,7 @@ public class ApiServer extends ManagerBase implements HttpRequestHandler, ApiSer
 
         @Override
         public void run() {
-            s_logger.info("ApiServer listening on port " + _serverSocket.getLocalPort());
+            LOGGER.info("ApiServer listening on port " + _serverSocket.getLocalPort());
             while (!Thread.interrupted()) {
                 try {
                     // Set up HTTP connection
@@ -1438,7 +1439,7 @@ public class ApiServer extends ManagerBase implements HttpRequestHandler, ApiSer
                 } catch (final InterruptedIOException ex) {
                     break;
                 } catch (final IOException e) {
-                    s_logger.error("I/O error initializing connection thread", e);
+                    LOGGER.error("I/O error initializing connection thread", e);
                     break;
                 }
             }
