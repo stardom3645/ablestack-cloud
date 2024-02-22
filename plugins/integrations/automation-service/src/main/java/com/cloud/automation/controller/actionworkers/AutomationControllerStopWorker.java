@@ -25,7 +25,7 @@ import com.cloud.utils.StringUtils;
 import com.cloud.utils.exception.CloudRuntimeException;
 import com.cloud.vm.VirtualMachine;
 import org.apache.commons.io.IOUtils;
-import org.apache.log4j.Level;
+import org.apache.logging.log4j.Level;
 
 import java.io.IOException;
 import java.util.List;
@@ -43,8 +43,8 @@ public class AutomationControllerStopWorker extends AutomationControllerActionWo
 
     public boolean stop() throws CloudRuntimeException {
         init();
-        if (LOGGER.isInfoEnabled()) {
-            LOGGER.info(String.format("Stopping automation controller : %s", automationController.getName()));
+        if (logger.isInfoEnabled()) {
+            logger.info(String.format("Stopping automation controller : %s", automationController.getName()));
         }
         stateTransitTo(automationController.getId(), AutomationController.Event.StopRequested);
         List<UserVm> automationControllerVMs = getAutomationControllerVMs();
@@ -55,7 +55,7 @@ public class AutomationControllerStopWorker extends AutomationControllerActionWo
             try {
                 userVmService.stopVirtualMachine(vm.getId(), false);
             } catch (ConcurrentOperationException ex) {
-                LOGGER.warn(String.format("Failed to stop VM : %s in automation controller : %s",
+                logger.warn(String.format("Failed to stop VM : %s in automation controller : %s",
                     vm.getDisplayName(), automationController.getName()), ex);
             }
         }

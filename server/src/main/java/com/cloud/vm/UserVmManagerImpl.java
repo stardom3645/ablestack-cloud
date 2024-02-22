@@ -5065,7 +5065,7 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
             if (template == null) {
                 throw new CloudRuntimeException("failed to create a template to db");
             }
-            s_logger.info("The template id recorded is: " + template.getId());
+            logger.info("The template id recorded is: " + template.getId());
             _tmplService.createPrivateTemplate(cmd, snapshot.getId(), template.getId());
             UserVm vmRecord = recordVirtualMachineToDB(cmd, template.getId());
             if (vmRecord == null) {
@@ -5076,7 +5076,7 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
         } finally {
             if (temporarySnapshotId != null) {
                 _snapshotService.deleteSnapshot(temporarySnapshotId, cmd.getTargetVM().getDataCenterId());
-                s_logger.warn("clearing the temporary snapshot: " + temporarySnapshotId);
+                logger.warn("clearing the temporary snapshot: " + temporarySnapshotId);
             }
         }
     }
@@ -5094,12 +5094,12 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
         List<Snapshot> createdSnapshots = new ArrayList<>();
         List<VolumeVO> createdVolumes = new ArrayList<>();
         long zoneId = cmd.getTargetVM().getDataCenterId();
-        s_logger.info("Trying to attach data disk before starting the VM...");
+        logger.info("Trying to attach data disk before starting the VM...");
         if (dataDisks.size() > 0) {
             VolumeVO newDatadisk = null;
             try {
                 for (VolumeVO dataDisk : dataDisks) {
-                    s_logger.info(" dataDisk.getname() :::::" + dataDisk.getName());
+                    logger.info(" dataDisk.getname() :::::" + dataDisk.getName());
                     long diskId = dataDisk.getId();
                     SnapshotVO dataSnapShot = (SnapshotVO) volumeService.allocSnapshot(diskId, Snapshot.INTERNAL_POLICY_ID, dataDisk.getName(), null, cmd.getZoneIds());
                     if (dataSnapShot == null) {
@@ -5133,7 +5133,7 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
                     volumeService.attachVolumeToVM(cmd.getEntityId(), createdVol.getId(), createdVol.getDeviceId());
                 }
             } catch (CloudRuntimeException e){
-                s_logger.warn("data disk process failed during clone, clearing the temporary resources...");
+                logger.warn("data disk process failed during clone, clearing the temporary resources...");
                 for (VolumeVO dataDiskToClear : createdVolumes) {
                     volumeService.destroyVolume(dataDiskToClear.getId(), caller, true, false);
                 }

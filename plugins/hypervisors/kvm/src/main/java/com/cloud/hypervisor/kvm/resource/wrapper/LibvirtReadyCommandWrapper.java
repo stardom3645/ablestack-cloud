@@ -37,7 +37,6 @@ import com.cloud.utils.script.Script;
 @ResourceWrapper(handles =  ReadyCommand.class)
 public final class LibvirtReadyCommandWrapper extends CommandWrapper<ReadyCommand, Answer, LibvirtComputingResource> {
 
-
     @Override
     public Answer execute(final ReadyCommand command, final LibvirtComputingResource libvirtComputingResource) {
         Map<String, String> hostDetails = new HashMap<String, String>();
@@ -65,9 +64,9 @@ public final class LibvirtReadyCommandWrapper extends CommandWrapper<ReadyComman
 
     private boolean hostSupportsTpm() {
         String cmd = "rpm -qa | grep -i swtpm";
-        s_logger.debug("Running command : " + cmd);
+        logger.debug("Running command : " + cmd);
         int result = Script.runSimpleBashScriptForExitValue(cmd);
-        s_logger.debug("Got result : " + result);
+        logger.debug("Got result : " + result);
         return result == 0;
     }
 }

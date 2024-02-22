@@ -27,22 +27,20 @@ import com.cloud.hypervisor.kvm.resource.LibvirtComputingResource;
 import com.cloud.resource.ResourceWrapper;
 
 import com.cloud.resource.CommandWrapper;
-import org.apache.log4j.Logger;
 
 @ResourceWrapper(handles =  VbmcCommand.class)
 public final class VbmcCommandWrapper extends CommandWrapper<VbmcCommand, Answer, LibvirtComputingResource> {
 
-    private static final Logger s_logger = Logger.getLogger(LibvirtRebootCommandWrapper.class);
 
     @Override
     public Answer execute(final VbmcCommand command, final LibvirtComputingResource libvirtComputingResource) {
         try {
-            s_logger.info("VbmcCommand Action Call [ instanceName : " +command.getVmName()+ ", Port : " + command.getPort() + " ]");
+            logger.info("VbmcCommand Action Call [ instanceName : " +command.getVmName()+ ", Port : " + command.getPort() + " ]");
             if (libvirtComputingResource.ablestackVbmcCmdLine(command.getAction(), command.getVmName(), command.getPort())) {
-                s_logger.info("VbmcCommand Action >>> Success");
+                logger.info("VbmcCommand Action >>> Success");
                 return new VbmcAnswer(command, "", true);
             } else {
-                s_logger.info("VbmcCommand Action >>> Fail");
+                logger.info("VbmcCommand Action >>> Fail");
                 return new VbmcAnswer(command, "", false);
             }
         } catch (InternalErrorException e) {
