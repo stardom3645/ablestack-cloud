@@ -49,42 +49,42 @@
           </a-col>
         </template>
           <a-col>
-          <a-tooltip placement="bottom">
-            <template #title>{{ $t('label.refresh') }}</template>
-            <a-button
-              style="margin-top: 1px; left: 10px;"
-              :loading="loading"
-              shape="round"
-              size="medium"
-              @click="fetchData()"
-            >
-            <template #icon><ReloadOutlined /></template>
-            {{ $t('label.refresh') }}
-          </a-button>
-          </a-tooltip>
-          <template v-if="resourceType === 'PrimaryStorage'">
-          <a-button
-          type="primary"
-          style="width: auto%; margin-top: 1px; left: 20px;"
-          shape="round"
-          @click="showAddVolModal"
-          :loading="loading"
-          :disabled="('CreateRbdImage' in $store.getters.apis)">
-          <template #icon><plus-outlined /></template> {{ $t('label.create.rbd.image') }}
-        </a-button>
-      </template>
-        </a-col>
-        </a-row>
-    <a-modal
-    :visible="showAddVolumeModal"
-    :title="$t('label.create.rbd.image')"
-    :maskClosable="false"
-    :closable="true"
-    :footer="null"
-    @click="fetchData()"
-    @cancel="closeModals">
-    <CreateRbdImage :resource="resource" @close-action="closeModals" />
-  </a-modal>
+            <a-tooltip placement="bottom">
+              <template #title>{{ $t('label.refresh') }}</template>
+              <a-button
+                style="margin-top: 1px; left: 10px;"
+                :loading="loading"
+                shape="round"
+                size="medium"
+                @click="fetchData()"
+              >
+                <template #icon><ReloadOutlined /></template>
+                {{ $t('label.refresh') }}
+              </a-button>
+            </a-tooltip>
+            <template v-if="resource.type === 'RBD'">
+              <a-button
+                type="primary"
+                style="width: auto%; margin-top: 1px; left: 20px;"
+                shape="round"
+                @click="showAddVolModal"
+                :loading="loading"
+                :disabled="('CreateRbdImage' in $store.getters.apis)">
+                <template #icon><plus-outlined /></template> {{ $t('label.create.rbd.image') }}
+              </a-button>
+            </template>
+          </a-col>
+      </a-row>
+      <a-modal
+        :visible="showAddVolumeModal"
+        :title="$t('label.create.rbd.image')"
+        :maskClosable="false"
+        :closable="true"
+        :footer="null"
+        @click="fetchData()"
+        @cancel="closeModals">
+          <CreateRbdImage :resource="resource" @close-action="closeModals" />
+      </a-modal>
     </a-card>
 
     <a-modal
@@ -189,7 +189,7 @@
               :copyResource="String(resource.id)"
               @onClick="openMigrationModal(record)" />
             </template>
-            <template v-else-if="column.key == 'deleteactions' && (record.templateid || record.volumeid) == null">
+            <template v-else-if="column.key == 'deleteactions' && (record.templateid || record.volumeid) == null && !['MOLD-AC', 'MOLD-HB','ccvm'].some(forbiddenName => record.name.includes(forbiddenName))">
               <a-col flex="auto">
                 <a-popconfirm
                 :title="`${$t('label.delete.rbd.image')}?`"
@@ -207,8 +207,8 @@
                 />
                   </a-popconfirm>
               </a-col>
-            </template>
-        </template>
+              </template>
+              </template>
       </a-table>
     </div>
   </div>
@@ -265,7 +265,7 @@ export default {
         title: this.$t('label.actions')
       })
     }
-    if (this.resourceType === 'PrimaryStorage') {
+    if (this.resourceType === 'PrimaryStorage' && this.resource.type === 'RBD') {
       columns.push({
         key: 'deleteactions',
         title: this.$t('label.delete')

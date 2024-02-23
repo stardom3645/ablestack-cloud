@@ -166,7 +166,7 @@ public abstract class ServerResourceBase implements ServerResource {
             s_logger.debug(cmdout);
         }else{
         }
-        return new ListRbdObjectsAnswer(true,"RBD가 생성되었습니다.", names);
+        return new ListRbdObjectsAnswer(true,"이미지가 생성되었습니다.", names);
     }
 
     protected Answer deleteImageRbd(String name, String poolPath) {
@@ -176,39 +176,38 @@ public abstract class ServerResourceBase implements ServerResource {
             s_logger.debug(cmdout);
         }else{
         }
-        return new ListRbdObjectsAnswer(true,"RBD가 삭제되었습니다.", name);
+        return new ListRbdObjectsAnswer(true,"이미지가 삭제되었습니다.", name);
     }
 
-protected Answer listRbdFilesAtPath(int startIndex, int pageSize, String poolPath, String keyword) {
-    int count = 0;
-    List<String> names = new ArrayList<>();
-    List<String> paths = new ArrayList<>();
-    List<String> absPaths = new ArrayList<>();
-    List<Boolean> isDirs = new ArrayList<>();
-    List<Long> sizes = new ArrayList<>();
-    List<Long> modifiedList = new ArrayList<>();
+    protected Answer listRbdFilesAtPath(String poolPath, String keyword) {
+        int count = 0;
+        List<String> names = new ArrayList<>();
+        List<String> paths = new ArrayList<>();
+        List<String> absPaths = new ArrayList<>();
+        List<Boolean> isDirs = new ArrayList<>();
+        List<Long> sizes = new ArrayList<>();
+        List<Long> modifiedList = new ArrayList<>();
 
-    Script listCommand = new Script("/bin/bash", s_logger);
-    listCommand.add("-c");
+        Script listCommand = new Script("/bin/bash", s_logger);
+        listCommand.add("-c");
 
-    if (keyword != null && !keyword.isEmpty()) {
-        listCommand.add("rbd -p " + poolPath + " ls | grep " + keyword );
-    } else {
-        listCommand.add("rbd -p " + poolPath + " ls");
-    }
-    OutputInterpreter.AllLinesParser listParser = new OutputInterpreter.AllLinesParser();
-    String listResult = listCommand.execute(listParser);
-    if (listResult == null && listParser.getLines() != null) {
-        String[] imageNames = listParser.getLines().split("\\n");
+        if (keyword != null && !keyword.isEmpty()) {
+            listCommand.add("rbd -p " + poolPath + " ls | grep " + keyword );
+        } else {
+            listCommand.add("rbd -p " + poolPath + " ls");
+        }
+        OutputInterpreter.AllLinesParser listParser = new OutputInterpreter.AllLinesParser();
+        String listResult = listCommand.execute(listParser);
+        if (listResult == null && listParser.getLines() != null) {
+            String[] imageNames = listParser.getLines().split("\\n");
 
-        for (String imageName : imageNames) {
-            if (count >= startIndex && count < startIndex + pageSize) {
-                Long imageSize = 0L;
-                Long lastModified = 0L;
-                names.add(imageName.trim());
-                paths.add(imageName);
-                isDirs.add(false);
-                absPaths.add("/");
+            for (String imageName : imageNames) {
+                    Long imageSize = 0L;
+                    Long lastModified = 0L;
+                    names.add(imageName.trim());
+                    paths.add(imageName);
+                    isDirs.add(false);
+                    absPaths.add("/");
 
                 Script infoCommand = new Script("rbd");
                 infoCommand.add("-p", poolPath);
@@ -239,7 +238,6 @@ protected Answer listRbdFilesAtPath(int startIndex, int pageSize, String poolPat
                         }
                     }
                 }
-            }
             count++;
         }
     }
@@ -247,6 +245,48 @@ protected Answer listRbdFilesAtPath(int startIndex, int pageSize, String poolPat
     return new ListDataStoreObjectsAnswer(true, count, names, paths, absPaths, isDirs, sizes, modifiedList);
 }
 
+protected Answer listFilesAtPath(String nfsMountPoint, String relativePath, int startIndex, int pageSize, String keyword) {
+    int count = 0;
+    File file = new File(nfsMountPoint, relativePath);
+    List<String> names = new ArrayList<>();
+    List<String> paths = new ArrayList<>();
+    List<String> absPaths = new ArrayList<>();
+    List<Boolean> isDirs = new ArrayList<>();
+    List<Long> sizes = new ArrayList<>();
+    List<Long> modifiedList = new ArrayList<>();
+    if (file.isFile()) {
+        count = 1;
+        names.add(file.getName());
+        paths.add(file.getPath().replace(nfsMountPoint, ""));
+        absPaths.add(file.getPath());
+        isDirs.add(file.isDirectory());
+        sizes.add(file.length());
+        modifiedList.add(file.lastModified());
+    } else if (file.isDirectory()) {
+        String[] files = file.list();
+        List<String> filteredFiles = new ArrayList<>();
+        if (keyword != null && !"".equals(keyword)) {
+            for (String fileName : files) {
+                if (fileName.contains(keyword)) {
+                    filteredFiles.add(fileName);
+                }
+            }
+        } else {
+            filteredFiles.addAll(Arrays.asList(files));
+        }
+        count = filteredFiles.size();
+        for (int i = startIndex; i < startIndex + pageSize && i < count; i++) {
+            File f = new File(nfsMountPoint, relativePath + '/' + filteredFiles.get(i));
+            names.add(f.getName());
+            paths.add(f.getPath().replace(nfsMountPoint, ""));
+            absPaths.add(f.getPath());
+            isDirs.add(f.isDirectory());
+            sizes.add(f.length());
+            modifiedList.add(f.lastModified());
+        }
+    }
+    return new ListDataStoreObjectsAnswer(file.exists(), count, names, paths, absPaths, isDirs, sizes, modifiedList);
+}
     protected Answer listFilesAtPath(String nfsMountPoint, String relativePath, int startIndex, int pageSize) {
         int count = 0;
         File file = new File(nfsMountPoint, relativePath);
@@ -277,7 +317,7 @@ protected Answer listRbdFilesAtPath(int startIndex, int pageSize, String poolPat
                 modifiedList.add(f.lastModified());
             }
         }
-         return new ListDataStoreObjectsAnswer(file.exists(), count, names, paths, absPaths, isDirs, sizes, modifiedList);
+        return new ListDataStoreObjectsAnswer(file.exists(), count, names, paths, absPaths, isDirs, sizes, modifiedList);
     }
     protected void fillNetworkInformation(final StartupCommand cmd) {
         String[] info = null;
