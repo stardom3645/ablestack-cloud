@@ -164,7 +164,7 @@ public abstract class ServerResourceBase implements ServerResource {
         sizes = (sizes * 1024);
         String cmdout = Script.runSimpleBashScript("rbd -p " + poolPath + " create -s " + sizes + " " + names);
         if (cmdout == null) {
-            s_logger.debug(cmdout);
+            logger.debug(cmdout);
         }else{
         }
         return new ListRbdObjectsAnswer(true,"RBD가 생성되었습니다.", names);
@@ -174,7 +174,7 @@ public abstract class ServerResourceBase implements ServerResource {
 
         String cmdout = Script.runSimpleBashScript("rbd -p " + poolPath + " rm " + name);
         if (cmdout == null) {
-            s_logger.debug(cmdout);
+            logger.debug(cmdout);
         }else{
         }
         return new ListRbdObjectsAnswer(true,"RBD가 삭제되었습니다.", name);
@@ -189,7 +189,7 @@ protected Answer listRbdFilesAtPath(int startIndex, int pageSize, String poolPat
     List<Long> sizes = new ArrayList<>();
     List<Long> modifiedList = new ArrayList<>();
 
-    Script listCommand = new Script("/bin/bash", s_logger);
+    Script listCommand = new Script("/bin/bash", logger);
     listCommand.add("-c");
 
     if (keyword != null && !keyword.isEmpty()) {

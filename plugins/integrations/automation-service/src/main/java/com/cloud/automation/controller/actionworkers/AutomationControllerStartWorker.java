@@ -64,7 +64,7 @@ import org.apache.cloudstack.config.ApiServiceConfiguration;
 import org.apache.cloudstack.context.CallContext;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.IOUtils;
-import org.apache.log4j.Level;
+import org.apache.logging.log4j.Level;
 
 import com.cloud.uservm.UserVm;
 import com.cloud.utils.StringUtils;
@@ -98,7 +98,7 @@ public class AutomationControllerStartWorker extends AutomationControllerResourc
             try {
                 startAutomationVM(vm);
             } catch (ManagementServerException ex) {
-                LOGGER.warn(String.format("Failed to start VM : %s in automation controller : %s due to ", vm.getDisplayName(), automationController.getName()) + ex);
+                logger.warn(String.format("Failed to start VM : %s in automation controller : %s due to ", vm.getDisplayName(), automationController.getName()) + ex);
                 // dont bail out here. proceed further to stop the reset of the VM's
             }
         }
@@ -118,8 +118,8 @@ public class AutomationControllerStartWorker extends AutomationControllerResourc
             f.setAccessible(true);
             f.set(startVm, vm.getId());
             userVmService.startVirtualMachine(startVm);
-            if (LOGGER.isInfoEnabled()) {
-                LOGGER.info(String.format("Started VM : %s in the automation controller : %s", vm.getDisplayName(), automationController.getName()));
+            if (logger.isInfoEnabled()) {
+                logger.info(String.format("Started VM : %s in the automation controller : %s", vm.getDisplayName(), automationController.getName()));
             }
         } catch (IllegalAccessException | NoSuchFieldException | ExecutionException |
                  ResourceUnavailableException | ResourceAllocationException | InsufficientCapacityException ex) {
@@ -137,18 +137,18 @@ public class AutomationControllerStartWorker extends AutomationControllerResourc
         Network network = networkDao.findById(automationController.getNetworkId());
         if (network == null) {
             String msg  = String.format("Network for automation controller : %s not found", automationController.getName());
-            LOGGER.warn(msg);
+            logger.warn(msg);
             stateTransitTo(automationController.getId(), AutomationController.Event.CreateFailed);
             throw new ManagementServerException(msg);
         }
         try {
             networkMgr.startNetwork(network.getId(), destination, context);
-            if (LOGGER.isInfoEnabled()) {
-                LOGGER.info(String.format("Network : %s is started for the automation controller : %s", network.getName(), automationController.getName()));
+            if (logger.isInfoEnabled()) {
+                logger.info(String.format("Network : %s is started for the automation controller : %s", network.getName(), automationController.getName()));
             }
         } catch (ConcurrentOperationException | ResourceUnavailableException | InsufficientCapacityException e) {
             String msg = String.format("Failed to start automation controller : %s as unable to start associated network : %s" , automationController.getName(), network.getName());
-            LOGGER.error(msg, e);
+            logger.error(msg, e);
             stateTransitTo(automationController.getId(), AutomationController.Event.CreateFailed);
             throw new ManagementServerException(msg, e);
         }
@@ -197,8 +197,8 @@ public class AutomationControllerStartWorker extends AutomationControllerResourc
                     templates.getHypervisorType(), BaseCmd.HTTPMethod.POST, base64UserData, null, null, keypairs,
                     ipToNetworkMap, addrs, null, null, null, customParameterMap, null, null, null, null, true, null, null);
         }
-        if (LOGGER.isInfoEnabled()) {
-            LOGGER.info(String.format("Created Control VM ID : %s, %s in the automation controller : %s", genieControlVms.getUuid(), hostName, automationController.getName()));
+        if (logger.isInfoEnabled()) {
+            logger.info(String.format("Created Control VM ID : %s, %s in the automation controller : %s", genieControlVms.getUuid(), hostName, automationController.getName()));
         }
         return genieControlVms;
     }
@@ -240,7 +240,7 @@ public class AutomationControllerStartWorker extends AutomationControllerResourc
             }
             serverInfo = new String[]{port, protocol};
         } catch (final IOException e) {
-            LOGGER.warn("Failed to read configuration from server.properties file", e);
+            logger.warn("Failed to read configuration from server.properties file", e);
         }
         return serverInfo;
     }
@@ -304,8 +304,8 @@ public class AutomationControllerStartWorker extends AutomationControllerResourc
         if (genieControlVms == null) {
             throw new ManagementServerException(String.format("Failed to provision VM for automation controller : %s" , automationController.getName()));
         }
-        if (LOGGER.isInfoEnabled()) {
-            LOGGER.info(String.format("Provisioned Genie Automation Control VM : %s in to the automation controller : %s", genieControlVms.getDisplayName(), automationController.getName()));
+        if (logger.isInfoEnabled()) {
+            logger.info(String.format("Provisioned Genie Automation Control VM : %s in to the automation controller : %s", genieControlVms.getDisplayName(), automationController.getName()));
         }
         return genieControlVms;
     }
@@ -318,8 +318,8 @@ public class AutomationControllerStartWorker extends AutomationControllerResourc
         // Firewall Egress Network
         try {
             provisionEgressFirewallRules(network, owner, AUTOMATION_CONTROLLER_PORT, AUTOMATION_CONTROLLER_PORT);
-//            if (LOGGER.isInfoEnabled()) {
-//                LOGGER.info(String.format("Provisioned egress firewall rule to open up port %d to %d on %s for Automation controller : %s", publicIp.getAddress(), automationController.getName()));
+//            if (logger.isInfoEnabled()) {
+//                logger.info(String.format("Provisioned egress firewall rule to open up port %d to %d on %s for Automation controller : %s", publicIp.getAddress(), automationController.getName()));
 //            }
         } catch (NoSuchFieldException | IllegalAccessException | ResourceUnavailableException |
                  NetworkRuleConflictException e) {
@@ -329,12 +329,12 @@ public class AutomationControllerStartWorker extends AutomationControllerResourc
 //        if (egress) {
 //            try {
 //                firewall = provisionFirewallRules(publicIp, owner, AUTOMATION_CONTROLLER_PORT, AUTOMATION_CONTROLLER_PORT);
-//                if (LOGGER.isInfoEnabled()) {
-//                    LOGGER.info(String.format("Provisioned firewall rule to open up port %d to %d on %s for Automation controller : %s", AUTOMATION_CONTROLLER_PORT, publicIp.getAddress().addr(), automationController.getName()));
+//                if (logger.isInfoEnabled()) {
+//                    logger.info(String.format("Provisioned firewall rule to open up port %d to %d on %s for Automation controller : %s", AUTOMATION_CONTROLLER_PORT, publicIp.getAddress().addr(), automationController.getName()));
 //                }
 ////                firewall2 = provisionFirewallRules(publicIp, owner, CLUSTER_SAMBA_PORT, CLUSTER_SAMBA_PORT);
-////                if (LOGGER.isInfoEnabled()) {
-////                    LOGGER.info(String.format("Provisioned firewall rule to open up port %d to %d on %s for Automation controller : %s", publicIp.getAddress().addr(), automationController.getName()));
+////                if (logger.isInfoEnabled()) {
+////                    logger.info(String.format("Provisioned firewall rule to open up port %d to %d on %s for Automation controller : %s", publicIp.getAddress().addr(), automationController.getName()));
 ////                }
 //            } catch (NoSuchFieldException | IllegalAccessException | ResourceUnavailableException | NetworkRuleConflictException e) {
 //                throw new ManagementServerException(String.format("Failed to provision firewall rules for Web access for the Automation controller : %s", automationController.getName()), e);
@@ -356,8 +356,8 @@ public class AutomationControllerStartWorker extends AutomationControllerResourc
 
     public boolean startAutomationControllerOnCreate() {
         init();
-        if (LOGGER.isInfoEnabled()) {
-            LOGGER.info(String.format("Starting Automation Controller : %s", automationController.getName()));
+        if (logger.isInfoEnabled()) {
+            logger.info(String.format("Starting Automation Controller : %s", automationController.getName()));
         }
         stateTransitTo(automationController.getId(), AutomationController.Event.StartRequested);
         DeployDestination dest = null;
@@ -391,8 +391,8 @@ public class AutomationControllerStartWorker extends AutomationControllerResourc
             } catch (ManagementServerException e) {
                 logTransitStateAndThrow(Level.ERROR, String.format("Failed to setup Automation Controller : %s, unable to setup network rules", automationController.getName()), automationController.getId(), AutomationController.Event.CreateFailed, e);
             }
-            if (LOGGER.isInfoEnabled()) {
-                LOGGER.info(String.format("automation controller : %s automation controller VMs successfully provisioned", automationController.getName()));
+            if (logger.isInfoEnabled()) {
+                logger.info(String.format("automation controller : %s automation controller VMs successfully provisioned", automationController.getName()));
             }
             String publicIpAddressStr = String.valueOf(publicIpAddress.getAddress());
             try {
@@ -404,21 +404,21 @@ public class AutomationControllerStartWorker extends AutomationControllerResourc
             try {
                 urlReachableResult = urlReachable(publicIpAddressStr, 80);
                 if (urlReachableResult == true) {
-                    if (LOGGER.isInfoEnabled()) {
-                        LOGGER.info(String.format("Starting automation controller : %s", automationController.getName()));
+                    if (logger.isInfoEnabled()) {
+                        logger.info(String.format("Starting automation controller : %s", automationController.getName()));
                     }
                     stateTransitTo(automationController.getId(), AutomationController.Event.OperationSucceeded);
-                    if (LOGGER.isInfoEnabled()) {
-                        LOGGER.info(String.format("Automation Controller : %s successfully started", automationController.getName()));
+                    if (logger.isInfoEnabled()) {
+                        logger.info(String.format("Automation Controller : %s successfully started", automationController.getName()));
                     }
                     return true;
                 }else {
-                    if (LOGGER.isInfoEnabled()) {
-                        LOGGER.info(String.format("Starting automation controller : %s", automationController.getName()));
+                    if (logger.isInfoEnabled()) {
+                        logger.info(String.format("Starting automation controller : %s", automationController.getName()));
                     }
                     stateTransitTo(automationController.getId(), AutomationController.Event.OperationFailed);
-                    if (LOGGER.isInfoEnabled()) {
-                        LOGGER.info(String.format("Automation Controller : %s unsuccessfully started", automationController.getName()));
+                    if (logger.isInfoEnabled()) {
+                        logger.info(String.format("Automation Controller : %s unsuccessfully started", automationController.getName()));
                     }
                     return false;
                 }
@@ -445,21 +445,21 @@ public class AutomationControllerStartWorker extends AutomationControllerResourc
         try {
             urlReachableResult = urlReachable(publicIpAddressStr, 80);
             if (urlReachableResult == true) {
-                if (LOGGER.isInfoEnabled()) {
-                    LOGGER.info(String.format("Starting automation controller : %s", automationController.getName()));
+                if (logger.isInfoEnabled()) {
+                    logger.info(String.format("Starting automation controller : %s", automationController.getName()));
                 }
                 stateTransitTo(automationController.getId(), AutomationController.Event.OperationSucceeded);
-                if (LOGGER.isInfoEnabled()) {
-                    LOGGER.info(String.format("Automation Controller : %s successfully started", automationController.getName()));
+                if (logger.isInfoEnabled()) {
+                    logger.info(String.format("Automation Controller : %s successfully started", automationController.getName()));
                 }
                 return true;
             }else {
-                if (LOGGER.isInfoEnabled()) {
-                    LOGGER.info(String.format("Starting automation controller : %s", automationController.getName()));
+                if (logger.isInfoEnabled()) {
+                    logger.info(String.format("Starting automation controller : %s", automationController.getName()));
                 }
                 stateTransitTo(automationController.getId(), AutomationController.Event.OperationFailed);
-                if (LOGGER.isInfoEnabled()) {
-                    LOGGER.info(String.format("Automation Controller : %s unsuccessfully started", automationController.getName()));
+                if (logger.isInfoEnabled()) {
+                    logger.info(String.format("Automation Controller : %s unsuccessfully started", automationController.getName()));
                 }
                 return false;
             }

@@ -18,13 +18,11 @@ package com.cloud.hypervisor.kvm.resource;
 
 import com.cloud.agent.api.to.HostTO;
 
-import org.apache.log4j.Logger;
 import org.joda.time.Duration;
 
 import java.util.concurrent.Callable;
 
 public class KVMHAVMActivityChecker extends KVMHABase implements Callable<Boolean> {
-    private static final Logger s_logger = Logger.getLogger(KVMHAVMActivityChecker.class);
 
     private final HAStoragePool storagePool;
     private final String volumeUuidList;

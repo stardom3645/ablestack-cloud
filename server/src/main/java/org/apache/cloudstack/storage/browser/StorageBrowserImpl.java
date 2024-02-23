@@ -81,11 +81,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import org.apache.log4j.Logger;
 
 @Component
 public class StorageBrowserImpl extends MutualExclusiveIdsManagerBase implements StorageBrowser {
-    protected static Logger s_logger = Logger.getLogger(StorageBrowserImpl.class);
 
     @Inject
     ImageStoreJoinDao imageStoreJoinDao;
@@ -203,7 +201,7 @@ public class StorageBrowserImpl extends MutualExclusiveIdsManagerBase implements
         List<DataStoreObjectResponse> responses = new ArrayList<>();
         ListResponse<DataStoreObjectResponse> listResponse = new ListResponse<>();
         if (answer == null || !answer.getResult() || !answer.successMessage()) {
-            s_logger.error("Failed to list or create RBD objects");
+            logger.error("Failed to list or create RBD objects");
             throw new CloudRuntimeException("Failed to list or create RBD objects.");
         }
         DataStoreObjectResponse response = new DataStoreObjectResponse();
@@ -226,7 +224,7 @@ public class StorageBrowserImpl extends MutualExclusiveIdsManagerBase implements
         List<DataStoreObjectResponse> responsess = new ArrayList<>();
         ListResponse<DataStoreObjectResponse> listResponses = new ListResponse<>();
         if (answer == null || !answer.getResult() || !answer.successMessage()) {
-            s_logger.error("Failed to list or delete RBD objects");
+            logger.error("Failed to list or delete RBD objects");
             throw new CloudRuntimeException("Failed to list or delete RBD objects.");
         }
         DataStoreObjectResponse responsed = new DataStoreObjectResponse();

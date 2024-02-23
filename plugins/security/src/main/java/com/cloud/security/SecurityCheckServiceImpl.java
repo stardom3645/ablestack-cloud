@@ -41,7 +41,6 @@ import org.apache.cloudstack.managed.context.ManagedContextRunnable;
 import org.apache.cloudstack.management.ManagementServerHost;
 import org.apache.cloudstack.utils.identity.ManagementServerNode;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
 
 import com.cloud.alert.AlertManager;
 import com.cloud.cluster.ManagementServerHostVO;
@@ -58,8 +57,6 @@ import com.cloud.utils.exception.CloudRuntimeException;
 import com.cloud.utils.script.Script;
 
 public class SecurityCheckServiceImpl extends ManagerBase implements PluggableService, SecurityCheckService, Configurable {
-
-    private static final Logger LOGGER = Logger.getLogger(SecurityCheckServiceImpl.class);
 
     private static final ConfigKey<Integer> SecurityCheckInterval = new ConfigKey<>("Advanced", Integer.class,
             "security.check.interval", "1",
@@ -101,7 +98,7 @@ public class SecurityCheckServiceImpl extends ManagerBase implements PluggableSe
             try {
                 securityCheck();
             } catch (Exception e) {
-                LOGGER.error("Exception in security check schedule : "+ e);
+                logger.error("Exception in security check schedule : "+ e);
             }
         }
 
@@ -116,7 +113,7 @@ public class SecurityCheckServiceImpl extends ManagerBase implements PluggableSe
             ManagementServerHostVO msHost = msHostDao.findByMsid(ManagementServerNode.getManagementServerId());
             String path = Script.findScript("scripts/security/", "securitycheck.sh");
             if (path == null) {
-                LOGGER.error("Unable to find the securitycheck script");
+                logger.error("Unable to find the securitycheck script");
             }
             ProcessBuilder processBuilder = new ProcessBuilder("sh", path);
             Process process = null;
@@ -151,7 +148,7 @@ public class SecurityCheckServiceImpl extends ManagerBase implements PluggableSe
                 runMode = "";
             } catch (IOException e) {
                 runMode = "";
-                LOGGER.error("Failed to execute security check schedule for management server: "+e);
+                logger.error("Failed to execute security check schedule for management server: "+e);
             }
         }
     }

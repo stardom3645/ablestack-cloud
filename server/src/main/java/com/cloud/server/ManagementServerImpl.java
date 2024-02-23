@@ -1145,11 +1145,11 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
 
     @Override
     public boolean stop() {
-        s_logger.info("Shutdown CloudStack management server...");
+        logger.info("Shutdown CloudStack management server...");
         ManagementServerHostVO msHost = _msHostDao.findByMsid(ManagementServerNode.getManagementServerId());
         if (_msHostDao.increaseAlertCount(msHost.getId()) > 0) {
-            if (s_logger.isDebugEnabled()) {
-                s_logger.debug("Detected management server node " + msHost.getServiceIP() + " is down, send alert");
+            if (logger.isDebugEnabled()) {
+                logger.debug("Detected management server node " + msHost.getServiceIP() + " is down, send alert");
             }
             _alertMgr.sendAlert(AlertManager.AlertType.ALERT_TYPE_MANAGEMENT_NODE, 0, new Long(0), "Management server node " + msHost.getServiceIP() + " is down",
                 "");
