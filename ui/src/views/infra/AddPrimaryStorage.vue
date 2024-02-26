@@ -385,10 +385,7 @@
           </a-form-item>
         </div>
         <div v-if="form.protocol === 'Glue FileSystem' && form.provider === 'ABLESTACK'">
-          <a-form-item name="gluefsserver" ref="gluefsserver">
-            <template #label>
-              <tooltip-label :title="$t('label.gluefs.server')" :tooltip="$t('label.gluefs.server')"/>
-            </template>
+          <a-form-item name="gluefsserver" ref="gluefsserver" :label="$t('label.gluefs.server')">
             <a-input v-model:value="form.gluefsserver" :placeholder="$t('label.gluefs.server')" />
           </a-form-item>
           <a-form-item name="gluefsuser" ref="gluefsuser" :label="$t('label.gluefs.user')">
@@ -397,14 +394,14 @@
           <a-form-item name="gluefsname" ref="gluefsname" :label="$t('label.gluefs.name')">
             <a-input v-model:value="form.gluefsname" :placeholder="$t('label.gluefs.name')" />
           </a-form-item>
-          <a-form-item name="gluefstargetpath" ref="gluefstargetpath">
-            <template #label>
-              <tooltip-label :title="$t('label.gluefs.path')" :tooltip="$t('label.gluefs.path')"/>
-            </template>
-            <a-input v-model:value="form.gluefstargetpath" :placeholder="$t('label.gluefs.path')"/>
-          </a-form-item>
           <a-form-item name="gluefssecret" ref="gluefssecret" :label="$t('label.gluefs.secret')">
             <a-input v-model:value="form.gluefssecret" :placeholder="$t('label.gluefs.secret')" />
+          </a-form-item>
+          <a-form-item name="gluefstargetpath" ref="gluefstargetpath">
+            <template #label>
+              <tooltip-label :title="$t('label.gluefs.path')" :tooltip="$t('label.gluefs.path.tooltip')"/>
+            </template>
+            <a-input v-model:value="form.gluefstargetpath" :placeholder="$t('label.gluefs.path.tooltip')"/>
           </a-form-item>
         </div>
         <div v-if="form.protocol === 'CLVM'">
