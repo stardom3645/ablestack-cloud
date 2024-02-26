@@ -188,7 +188,7 @@ public abstract class ServerResourceBase implements ServerResource {
         List<Boolean> isDirs = new ArrayList<>();
         List<Long> sizes = new ArrayList<>();
         List<Long> modifiedList = new ArrayList<>();
-    
+
         Script listCommand = new Script("/bin/bash", logger);
         listCommand.add("-c");
 
