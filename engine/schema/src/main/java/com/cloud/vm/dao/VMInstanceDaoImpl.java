@@ -933,7 +933,7 @@ public class VMInstanceDaoImpl extends GenericDaoBase<VMInstanceVO, Long> implem
         State instanceState = instance.getState();
         if ((powerState == VirtualMachine.PowerState.PowerOff && instanceState == State.Running)
                 || (powerState == VirtualMachine.PowerState.PowerOn && instanceState == State.Stopped)) {
-            s_logger.debug(String.format("VM id: %d on host id: %d and power host id: %d is in %s state, but power state is %s",
+            logger.debug(String.format("VM id: %d on host id: %d and power host id: %d is in %s state, but power state is %s",
                     instance.getId(), instance.getHostId(), powerHostId, instanceState, powerState));
             return false;
         }
