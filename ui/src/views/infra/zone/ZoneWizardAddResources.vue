@@ -567,18 +567,18 @@ export default {
           }
         },
         {
-          title: 'label.gluefs.path',
-          key: 'gluefstargetpath',
-          placeHolder: 'message.error.gluefs.path',
+          title: 'label.gluefs.secret',
+          key: 'gluefssecret',
+          placeHolder: 'message.error.gluefs.secret',
           required: false,
           display: {
             primaryStorageProtocol: ['Glue FileSystem']
           }
         },
         {
-          title: 'label.gluefs.secret',
-          key: 'gluefssecret',
-          placeHolder: 'message.error.gluefs.secret',
+          title: 'label.gluefs.path',
+          key: 'gluefstargetpath',
+          placeHolder: 'message.error.gluefs.path',
           required: false,
           display: {
             primaryStorageProtocol: ['Glue FileSystem']

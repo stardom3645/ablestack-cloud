@@ -264,6 +264,9 @@ install -D client/target/utilities/bin/cloud-sysvmadm ${RPM_BUILD_ROOT}%{_bindir
 install -D client/target/utilities/bin/cloud-update-xenserver-licenses ${RPM_BUILD_ROOT}%{_bindir}/%{name}-update-xenserver-licenses
 install -D client/target/utilities/bin/mold ${RPM_BUILD_ROOT}%{_bindir}/mold
 install -D client/target/utilities/bin/mold-update-dbpassword ${RPM_BUILD_ROOT}%{_bindir}/mold-update-dbpassword
+# Bundle cmk in cloudstack-management
+wget https://github.com/apache/cloudstack-cloudmonkey/releases/download/6.3.0/cmk.linux.x86-64 -O ${RPM_BUILD_ROOT}%{_bindir}/cmk
+chmod +x ${RPM_BUILD_ROOT}%{_bindir}/cmk
 
 cp -r client/target/utilities/scripts/db/* ${RPM_BUILD_ROOT}%{_datadir}/%{name}-management/setup
 
@@ -285,7 +288,7 @@ do
   cp client/target/conf/$name ${RPM_BUILD_ROOT}%{_sysconfdir}/%{name}/management/$name
 done
 
-ln -sf log4j-cloud.xml  ${RPM_BUILD_ROOT}%{_sysconfdir}/%{name}/management/log4j.xml
+ln -sf log4j-cloud.xml  ${RPM_BUILD_ROOT}%{_sysconfdir}/%{name}/management/log4j2.xml
 
 install python/bindir/cloud-external-ipallocator.py ${RPM_BUILD_ROOT}%{_bindir}/%{name}-external-ipallocator.py
 install -D client/target/pythonlibs/jasypt-1.9.3.jar ${RPM_BUILD_ROOT}%{_datadir}/%{name}-common/lib/jasypt-1.9.3.jar
@@ -308,6 +311,7 @@ rm -rf ${RPM_BUILD_ROOT}%{_datadir}/%{name}-management/templates/systemvm/md5sum
 # UI
 mkdir -p ${RPM_BUILD_ROOT}%{_sysconfdir}/%{name}/ui
 mkdir -p ${RPM_BUILD_ROOT}%{_datadir}/%{name}-ui/
+cp -r client/target/classes/META-INF/webapp/WEB-INF ${RPM_BUILD_ROOT}%{_datadir}/%{name}-ui
 cp ui/dist/config.json ${RPM_BUILD_ROOT}%{_sysconfdir}/%{name}/ui/
 cp -r ui/dist/* ${RPM_BUILD_ROOT}%{_datadir}/%{name}-ui/
 rm -f ${RPM_BUILD_ROOT}%{_datadir}/%{name}-ui/config.json
@@ -576,7 +580,7 @@ pip install --upgrade /usr/share/cloudstack-marvin/Marvin-*.tar.gz
 %config(noreplace) %attr(0640,root,cloud) %{_sysconfdir}/%{name}/management/server.properties
 %config(noreplace) %attr(0640,root,cloud) %{_sysconfdir}/%{name}/management/config.json
 %config(noreplace) %{_sysconfdir}/%{name}/management/log4j-cloud.xml
-%config(noreplace) %{_sysconfdir}/%{name}/management/log4j.xml
+%config(noreplace) %{_sysconfdir}/%{name}/management/log4j2.xml
 %config(noreplace) %{_sysconfdir}/%{name}/management/environment.properties
 %config(noreplace) %{_sysconfdir}/%{name}/management/java.security.ciphers
 %attr(0644,root,root) %{_unitdir}/%{name}-management.service
@@ -595,6 +599,7 @@ pip install --upgrade /usr/share/cloudstack-marvin/Marvin-*.tar.gz
 %attr(0755,root,root) %{_bindir}/%{name}-setup-encryption
 %attr(0755,root,root) %{_bindir}/mold
 %attr(0755,root,root) %{_bindir}/mold-update-dbpassword
+%attr(0755,root,root) %{_bindir}/cmk
 %{_datadir}/%{name}-management/setup/*.sql
 %{_datadir}/%{name}-management/setup/*.sh
 %{_datadir}/%{name}-management/setup/server-setup.xml
@@ -643,7 +648,7 @@ pip install --upgrade /usr/share/cloudstack-marvin/Marvin-*.tar.gz
 
 %files ui
 %config(noreplace) %attr(0640,root,cloud) %{_sysconfdir}/%{name}/ui/config.json
-%attr(0644,root,root) %{_datadir}/%{name}-ui/*
+%{_datadir}/%{name}-ui/*
 %{_defaultdocdir}/%{name}-ui-%{version}/LICENSE
 %{_defaultdocdir}/%{name}-ui-%{version}/NOTICE
 
