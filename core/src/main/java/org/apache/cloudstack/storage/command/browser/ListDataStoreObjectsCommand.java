@@ -50,6 +50,11 @@ public class ListDataStoreObjectsCommand extends StorageCommand {
         this.keyword = keyword;
     }
 
+    public ListDataStoreObjectsCommand(DataStoreTO store, String path) {
+        super();
+        this.store = store;
+        this.path = path;
+    }
     public ListDataStoreObjectsCommand(DataStoreTO store, String path, int startIndex, int pageSize) {
         super();
         this.store = store;
@@ -57,7 +62,6 @@ public class ListDataStoreObjectsCommand extends StorageCommand {
         this.startIndex = startIndex;
         this.pageSize = pageSize;
     }
-
 
     @Override
     public boolean executeInSequence() {
