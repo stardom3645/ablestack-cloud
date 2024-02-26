@@ -157,12 +157,12 @@ public class DesktopClusterResourceModifierActionWorker extends DesktopClusterAc
                 ClusterDetailsVO cluster_detail_ram = clusterDetailsDao.findDetail(cluster.getId(), "memoryOvercommitRatio");
                 Float cpuOvercommitRatio = Float.parseFloat(cluster_detail_cpu.getValue());
                 Float memoryOvercommitRatio = Float.parseFloat(cluster_detail_ram.getValue());
-                if (LOGGER.isDebugEnabled()) {
-                    LOGGER.debug(String.format("Checking host : %s for capacity already reserved %d", h.getName(), reserved));
+                if (logger.isDebugEnabled()) {
+                    logger.debug(String.format("Checking host : %s for capacity already reserved %d", h.getName(), reserved));
                 }
                 if (capacityManager.checkIfHostHasCapacity(h.getId(), cpu_requested * reserved, ram_requested * reserved, false, cpuOvercommitRatio, memoryOvercommitRatio, true)) {
-                    if (LOGGER.isDebugEnabled()) {
-                        LOGGER.debug(String.format("Found host : %s for with enough capacity, CPU=%d RAM=%s", h.getName(), cpu_requested * reserved, toHumanReadableSize(ram_requested * reserved)));
+                    if (logger.isDebugEnabled()) {
+                        logger.debug(String.format("Found host : %s for with enough capacity, CPU=%d RAM=%s", h.getName(), cpu_requested * reserved, toHumanReadableSize(ram_requested * reserved)));
                     }
                     hostEntry.setValue(new Pair<HostVO, Integer>(h, reserved));
                     suitable_host_found = true;
@@ -170,31 +170,31 @@ public class DesktopClusterResourceModifierActionWorker extends DesktopClusterAc
                 }
             }
             if (!suitable_host_found) {
-                if (LOGGER.isInfoEnabled()) {
-                    LOGGER.info(String.format("Suitable hosts not found in datacenter : %s for node %d, with offering : %s and hypervisor: %s",
+                if (logger.isInfoEnabled()) {
+                    logger.info(String.format("Suitable hosts not found in datacenter : %s for node %d, with offering : %s and hypervisor: %s",
                         zone.getName(), i, offering.getName(), worksTemplate.getHypervisorType().toString()));
                 }
                 break;
             }
         }
         if (suitable_host_found) {
-            if (LOGGER.isInfoEnabled()) {
-                LOGGER.info(String.format("Suitable hosts found in datacenter : %s, creating deployment destination", zone.getName()));
+            if (logger.isInfoEnabled()) {
+                logger.info(String.format("Suitable hosts found in datacenter : %s, creating deployment destination", zone.getName()));
             }
             return new DeployDestination(zone, null, null, null);
         }
         String msg = String.format("Cannot find enough capacity for desktop cluster(requested cpu=%d memory=%s) with offering : %s and hypervisor: %s",
                 cpu_requested * nodesCount, toHumanReadableSize(ram_requested * nodesCount), offering.getName(), worksTemplate.getHypervisorType().toString());
 
-        LOGGER.warn(msg);
+        logger.warn(msg);
         throw new InsufficientServerCapacityException(msg, DataCenter.class, zone.getId());
     }
 
     protected DeployDestination plan() throws InsufficientServerCapacityException {
         ServiceOffering offering = serviceOfferingDao.findById(desktopCluster.getServiceOfferingId());
         DataCenter zone = dataCenterDao.findById(desktopCluster.getZoneId());
-        if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug(String.format("Checking deployment destination for desktop cluster : %s in zone : %s", desktopCluster.getName(), zone.getName()));
+        if (logger.isDebugEnabled()) {
+            logger.debug(String.format("Checking deployment destination for desktop cluster : %s in zone : %s", desktopCluster.getName(), zone.getName()));
         }
         final long dest = 2;
         return plan(dest, zone, offering);
@@ -208,8 +208,8 @@ public class DesktopClusterResourceModifierActionWorker extends DesktopClusterAc
             f.setAccessible(true);
             f.set(startVm, vm.getId());
             userVmService.startVirtualMachine(startVm);
-            if (LOGGER.isInfoEnabled()) {
-                LOGGER.info(String.format("Started VM : %s in the desktop cluster : %s", vm.getDisplayName(), desktopCluster.getName()));
+            if (logger.isInfoEnabled()) {
+                logger.info(String.format("Started VM : %s in the desktop cluster : %s", vm.getDisplayName(), desktopCluster.getName()));
             }
         } catch (IllegalAccessException | NoSuchFieldException | ExecutionException |
                 ResourceUnavailableException | ResourceAllocationException | InsufficientCapacityException ex) {
@@ -380,8 +380,8 @@ public class DesktopClusterResourceModifierActionWorker extends DesktopClusterAc
                 }
             });
             rulesService.applyPortForwardingRules(publicIp.getId(), account);
-            if (LOGGER.isInfoEnabled()) {
-                LOGGER.info(String.format("Provisioned web access port forwarding rule from port %d to 8080 on %s to the VM IP : %s in Desktop cluster : %s", userPort, publicIp.getAddress().addr(), vmIp.toString(), desktopCluster.getName()));
+            if (logger.isInfoEnabled()) {
+                logger.info(String.format("Provisioned web access port forwarding rule from port %d to 8080 on %s to the VM IP : %s in Desktop cluster : %s", userPort, publicIp.getAddress().addr(), vmIp.toString(), desktopCluster.getName()));
             }
             PortForwardingRuleVO pfRule2 = Transaction.execute(new TransactionCallbackWithException<PortForwardingRuleVO, NetworkRuleConflictException>() {
                 @Override
@@ -395,8 +395,8 @@ public class DesktopClusterResourceModifierActionWorker extends DesktopClusterAc
                 }
             });
             rulesService.applyPortForwardingRules(publicIp.getId(), account);
-            if (LOGGER.isInfoEnabled()) {
-                LOGGER.info(String.format("Provisioned web access port forwarding rule from port %d to 8081 on %s to the VM IP : %s in Desktop cluster : %s", adminPort, publicIp.getAddress().addr(), vmIp.toString(), desktopCluster.getName()));
+            if (logger.isInfoEnabled()) {
+                logger.info(String.format("Provisioned web access port forwarding rule from port %d to 8081 on %s to the VM IP : %s in Desktop cluster : %s", adminPort, publicIp.getAddress().addr(), vmIp.toString(), desktopCluster.getName()));
             }
             PortForwardingRuleVO pfRule3 = Transaction.execute(new TransactionCallbackWithException<PortForwardingRuleVO, NetworkRuleConflictException>() {
                 @Override
@@ -410,8 +410,8 @@ public class DesktopClusterResourceModifierActionWorker extends DesktopClusterAc
                 }
             });
             rulesService.applyPortForwardingRules(publicIp.getId(), account);
-            if (LOGGER.isInfoEnabled()) {
-                LOGGER.info(String.format("Provisioned api access port forwarding rule from port %d to 8082 on %s to the VM IP : %s in Desktop cluster : %s", apiPort, publicIp.getAddress().addr(), vmIp.toString(), desktopCluster.getName()));
+            if (logger.isInfoEnabled()) {
+                logger.info(String.format("Provisioned api access port forwarding rule from port %d to 8082 on %s to the VM IP : %s in Desktop cluster : %s", apiPort, publicIp.getAddress().addr(), vmIp.toString(), desktopCluster.getName()));
             }
             PortForwardingRuleVO pfRule4 = Transaction.execute(new TransactionCallbackWithException<PortForwardingRuleVO, NetworkRuleConflictException>() {
                 @Override
@@ -425,8 +425,8 @@ public class DesktopClusterResourceModifierActionWorker extends DesktopClusterAc
                 }
             });
             rulesService.applyPortForwardingRules(publicIp.getId(), account);
-            if (LOGGER.isInfoEnabled()) {
-                LOGGER.info(String.format("Provisioned samba access port forwarding rule from port %d to 9017 on %s to the VM IP : %s in Desktop cluster : %s", sambaPort, publicIp.getAddress().addr(), vmIp.toString(), desktopCluster.getName()));
+            if (logger.isInfoEnabled()) {
+                logger.info(String.format("Provisioned samba access port forwarding rule from port %d to 9017 on %s to the VM IP : %s in Desktop cluster : %s", sambaPort, publicIp.getAddress().addr(), vmIp.toString(), desktopCluster.getName()));
             }
             return true;
         }

@@ -19,7 +19,7 @@ package com.cloud.desktop.cluster.actionworkers;
 
 import java.util.List;
 
-import org.apache.log4j.Level;
+import org.apache.logging.log4j.Level;
 
 import com.cloud.exception.ConcurrentOperationException;
 import com.cloud.desktop.cluster.DesktopCluster;
@@ -35,8 +35,8 @@ public class DesktopClusterStopWorker extends DesktopClusterActionWorker {
 
     public boolean stop() throws CloudRuntimeException {
         init();
-        if (LOGGER.isInfoEnabled()) {
-            LOGGER.info(String.format("Stopping desktop cluster : %s", desktopCluster.getName()));
+        if (logger.isInfoEnabled()) {
+            logger.info(String.format("Stopping desktop cluster : %s", desktopCluster.getName()));
         }
         stateTransitTo(desktopCluster.getId(), DesktopCluster.Event.StopRequested);
         List<UserVm> clusterVMs = getControlVMs();
@@ -47,7 +47,7 @@ public class DesktopClusterStopWorker extends DesktopClusterActionWorker {
             try {
                 userVmService.stopVirtualMachine(vm.getId(), false);
             } catch (ConcurrentOperationException ex) {
-                LOGGER.warn(String.format("Failed to stop VM : %s in desktop cluster : %s",
+                logger.warn(String.format("Failed to stop VM : %s in desktop cluster : %s",
                     vm.getDisplayName(), desktopCluster.getName()), ex);
             }
         }

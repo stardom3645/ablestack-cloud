@@ -32,7 +32,7 @@ import org.apache.commons.lang3.StringUtils;
 
 public class CloudianUtils {
 
-    private static final Logger s_logger = Logger.getLogger(CloudianUtils.class);
+    protected static Logger LOGGER = LogManager.getLogger(CloudianUtils.class);
     private static final String HMAC_SHA256_ALGORITHM = "HmacSHA256";
 
     /**
@@ -52,7 +52,7 @@ public class CloudianUtils {
             byte[] rawHmac = mac.doFinal(data.getBytes());
             return Base64.encodeBase64String(rawHmac);
         } catch (final Exception e) {
-            s_logger.error("Failed to generate HMAC signature from provided data and key, due to: ", e);
+            LOGGER.error("Failed to generate HMAC signature from provided data and key, due to: ", e);
         }
         return null;
     }

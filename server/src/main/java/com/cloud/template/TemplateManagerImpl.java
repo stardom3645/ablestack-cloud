@@ -1828,7 +1828,7 @@ public class TemplateManagerImpl extends ManagerBase implements TemplateManager,
 
                 if (result.isFailed()) {
                     finalTmpProduct = null;
-                    s_logger.warn("Failed to create template: " + result.getResult());
+                    logger.warn("Failed to create template: " + result.getResult());
                     throw new CloudRuntimeException("Failed to create template: " + result.getResult());
                 }
                 if (_dataStoreMgr.isRegionStore(store)) {
@@ -1838,7 +1838,7 @@ public class TemplateManagerImpl extends ManagerBase implements TemplateManager,
                     VMTemplateZoneVO templateZone = new VMTemplateZoneVO(zoneId, templateId, new Date());
                     _tmpltZoneDao.persist(templateZone);
                 }
-                s_logger.info("successfully created the template with Id: " + templateId);
+                logger.info("successfully created the template with Id: " + templateId);
                 finalTmpProduct = _tmpltDao.findById(templateId);
                 TemplateDataStoreVO srcTmpltStore = _tmplStoreDao.findByStoreTemplate(store.getId(), templateId);
                 try {
@@ -1852,7 +1852,7 @@ public class TemplateManagerImpl extends ManagerBase implements TemplateManager,
                                 finalTmpProduct.getSourceTemplateId(), srcTmpltStore.getPhysicalSize(), finalTmpProduct.getSize());
                 _usageEventDao.persist(usageEvent);
             } catch (InterruptedException | ExecutionException e) {
-                s_logger.debug("Failed to create template for id: " + templateId, e);
+                logger.debug("Failed to create template for id: " + templateId, e);
                 throw new CloudRuntimeException("Failed to create template" , e);
             }
 
@@ -1903,7 +1903,7 @@ public class TemplateManagerImpl extends ManagerBase implements TemplateManager,
 
         // check permissions
         _accountMgr.checkAccess(caller, null, true, volume);
-        s_logger.info("Creating snapshot for the tempalte creation");
+        logger.info("Creating snapshot for the tempalte creation");
         SnapshotVO snapshot = (SnapshotVO) volumeService.allocSnapshot(volumeId, Snapshot.INTERNAL_POLICY_ID, curVm.getDisplayName() + "-Clone-" + nextSnapId, null, zoneIds);
         if (snapshot == null) {
             throw new CloudRuntimeException("Unable to create a snapshot during the template creation recording");
@@ -2381,6 +2381,7 @@ public class TemplateManagerImpl extends ManagerBase implements TemplateManager,
 
         // update template type
         TemplateType templateType = null;
+        String templateTag = null;
         if (cmd instanceof UpdateTemplateCmd) {
             boolean isAdmin = _accountMgr.isAdmin(account.getId());
             templateType = validateTemplateType(cmd, isAdmin, template.isCrossZones());
@@ -2388,6 +2389,7 @@ public class TemplateManagerImpl extends ManagerBase implements TemplateManager,
                 VnfTemplateUtils.validateApiCommandParams(cmd, template);
                 vnfTemplateManager.updateVnfTemplate(template.getId(), (UpdateVnfTemplateCmd) cmd);
             }
+            templateTag = ((UpdateTemplateCmd)cmd).getTemplateTag();
         }
 
         // update is needed if any of the fields below got filled by the user
@@ -2404,6 +2406,7 @@ public class TemplateManagerImpl extends ManagerBase implements TemplateManager,
                   isDynamicallyScalable == null &&
                   isRoutingTemplate == null &&
                   templateType == null &&
+                  templateTag == null &&
                   (! cleanupDetails && details == null) //update details in every case except this one
                   );
         if (!updateNeeded) {
@@ -2488,6 +2491,9 @@ public class TemplateManagerImpl extends ManagerBase implements TemplateManager,
             }
         } else if (templateType != null) {
             template.setTemplateType(templateType);
+        }
+        if (templateTag != null) {
+            template.setTemplateTag(org.apache.commons.lang3.StringUtils.trimToNull(templateTag));
         }
 
         validateDetails(template, details);

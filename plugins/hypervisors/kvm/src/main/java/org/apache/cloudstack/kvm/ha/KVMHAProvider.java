@@ -1,21 +1,21 @@
 /*
- * Licensed to the Apache Software Foundation (ASF) under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership.  The ASF licenses this file
- * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied.  See the License for the
- * specific language governing permissions and limitations
- * under the License.
- */
+* Licensed to the Apache Software Foundation (ASF) under one
+* or more contributor license agreements.  See the NOTICE file
+* distributed with this work for additional information
+* regarding copyright ownership.  The ASF licenses this file
+* to you under the Apache License, Version 2.0 (the
+* "License"); you may not use this file except in compliance
+* with the License.  You may obtain a copy of the License at
+*
+*   http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing,
+* software distributed under the License is distributed on an
+* "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+* KIND, either express or implied.  See the License for the
+* specific language governing permissions and limitations
+* under the License.
+*/
 
 package org.apache.cloudstack.kvm.ha;
 
@@ -36,7 +36,6 @@ import org.apache.cloudstack.outofbandmanagement.OutOfBandManagementService;
 import org.apache.cloudstack.outofbandmanagement.OutOfBandManagement.PowerState;
 import org.apache.cloudstack.outofbandmanagement.dao.OutOfBandManagementDao;
 import org.apache.cloudstack.outofbandmanagement.OutOfBandManagement;
-import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 
 import javax.inject.Inject;
@@ -53,7 +52,7 @@ public final class KVMHAProvider extends HAAbstractHostProvider implements HAPro
 
     @Override
     public boolean isEligible(final Host host) {
-       if (outOfBandManagementService.isOutOfBandManagementEnabled(host)){
+        if (outOfBandManagementService.isOutOfBandManagementEnabled(host)){
             return !isInMaintenanceMode(host) && !isDisabled(host) &&
                     hostActivityChecker.getNeighbors(host).length > 0 &&
                     (Hypervisor.HypervisorType.KVM.equals(host.getHypervisorType()) ||
@@ -76,14 +75,14 @@ public final class KVMHAProvider extends HAAbstractHostProvider implements HAPro
     public boolean recover(Host r) throws HARecoveryException {
         try {
             if (outOfBandManagementService.isOutOfBandManagementEnabled(r)){
-                s_logger.warn("OOBM recover operation skiped for the host " + r.getName());
+                logger.warn("OOBM recover operation skiped for the host " + r.getName());
                 return false;
             } else {
-                s_logger.warn("OOBM recover operation failed for the host " + r.getName());
+                logger.warn("OOBM recover operation failed for the host " + r.getName());
                 return false;
             }
         } catch (Exception e){
-            s_logger.warn("OOBM service is not configured or enabled for this host " + r.getName() + " error is " + e.getMessage());
+            logger.warn("OOBM service is not configured or enabled for this host " + r.getName() + " error is " + e.getMessage());
             throw new HARecoveryException(" OOBM service is not configured or enabled for this host " + r.getName(), e);
         }
     }
@@ -101,11 +100,11 @@ public final class KVMHAProvider extends HAAbstractHostProvider implements HAPro
                     return resp.getSuccess();
                 }
             } else {
-                s_logger.warn("OOBM fence operation failed for this host " + r.getName());
+                logger.warn("OOBM fence operation failed for this host " + r.getName());
                 return false;
             }
         } catch (Exception e){
-            s_logger.warn("OOBM service is not configured or enabled for this host " + r.getName() + " error is " + e.getMessage());
+            logger.warn("OOBM service is not configured or enabled for this host " + r.getName() + " error is " + e.getMessage());
             throw new HAFenceException("OBM service is not configured or enabled for this host " + r.getName() , e);
         }
     }
