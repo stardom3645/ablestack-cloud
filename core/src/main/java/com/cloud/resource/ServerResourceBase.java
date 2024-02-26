@@ -187,7 +187,7 @@ public abstract class ServerResourceBase implements ServerResource {
         List<String> absPaths = new ArrayList<>();
         List<Boolean> isDirs = new ArrayList<>();
         List<Long> sizes = new ArrayList<>();
-        List<Long> modifiedList = new ArrayList<>()
+        List<Long> modifiedList = new ArrayList<>();
     
         Script listCommand = new Script("/bin/bash", logger);
         listCommand.add("-c");
