@@ -157,7 +157,7 @@ public interface VolumeDao extends GenericDao<VolumeVO, Long>, StateDao<Volume.S
     List<VolumeVO> listByIds(List<Long> ids);
 
     VolumeVO findByPath(String path);
-    
+
     List<VolumeVO> listAllocatedVolumesForAccountDiskOfferingIdsAndNotForVms(long accountId, List<Long> diskOfferingIds, List<Long> vmIds);
 
 }
