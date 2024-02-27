@@ -140,6 +140,11 @@ public class ConsoleProxyNoVncClient implements ConsoleProxyClient {
                                 connectionAlive = false;
                             }
                         }
+                        try {
+                            Thread.sleep(1);
+                        } catch (InterruptedException e) {
+                            s_logger.error("Error on sleep for vnc sessions", e);
+                        }
                     }
                     logger.info(String.format("Connection with client [%s] is dead.", clientId));
                 } catch (IOException e) {
