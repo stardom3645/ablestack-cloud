@@ -4174,5 +4174,6 @@
 "label.create.rbd.image": "Create RBD",
 "message.rbd.name": "Enter RBD name",
 "message.rbd.size": "Enter RBD size",
-"label.delete.rbd.image": "Are you sure you want to delete the image"
+"label.delete.rbd.image": "Are you sure you want to delete the image",
+"label.no .matching.rbd.image": "No matching images found"
 }
