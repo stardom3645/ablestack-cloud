@@ -1030,7 +1030,7 @@ public class ConfigurationServerImpl extends ManagerBase implements Configuratio
             public void doInTransactionWithoutResult(TransactionStatus status) {
                 // Offering #1
                 NetworkOfferingVO defaultSharedSGNetworkOffering =
-                        new NetworkOfferingVO(NetworkOffering.DefaultSharedNetworkOfferingWithSGService, "기본 공유 보안그룹 네트워크오퍼링",
+                        new NetworkOfferingVO("기본 공유 보안그룹 네트워크오퍼링", "기본 공유 보안그룹 네트워크오퍼링",
                                 TrafficType.Guest, false, true, null, null, true, Availability.Optional, null, Network.GuestType.Shared, true, true, false, false, false, false);
 
                 defaultSharedSGNetworkOffering.setState(NetworkOffering.State.Enabled);
