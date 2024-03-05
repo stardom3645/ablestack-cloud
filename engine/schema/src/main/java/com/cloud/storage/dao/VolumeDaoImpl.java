@@ -846,7 +846,7 @@ public class VolumeDaoImpl extends GenericDaoBase<VolumeVO, Long> implements Vol
         sc.setParameters("path", path);
         return findOneBy(sc);
     }
-    
+
     public List<VolumeVO> listAllocatedVolumesForAccountDiskOfferingIdsAndNotForVms(long accountId, List<Long> diskOfferingIds, List<Long> vmIds) {
         SearchBuilder<VolumeVO> sb = createSearchBuilder();
         sb.and("account", sb.entity().getAccountId(), SearchCriteria.Op.EQ);

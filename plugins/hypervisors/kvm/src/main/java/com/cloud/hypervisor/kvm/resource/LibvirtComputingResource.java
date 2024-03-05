@@ -5046,10 +5046,10 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
     public Answer listFilesAtPath(ListDataStoreObjectsCommand command) {
         DataStoreTO store = command.getStore();
         if(command.getPoolType().equals("RBD")) {
-            return listRbdFilesAtPath(command.getStartIndex(), command.getPageSize(), command.getPoolPath(), command.getKeyword());
+            return listRbdFilesAtPath(command.getPoolPath(), command.getKeyword());
         } else {
             KVMStoragePool storagePool = storagePoolManager.getStoragePool(StoragePoolType.NetworkFilesystem, store.getUuid());
-            return listFilesAtPath(storagePool.getLocalPath(), command.getPath(), command.getStartIndex(), command.getPageSize());
+            return listFilesAtPath(storagePool.getLocalPath(), command.getPath(), command.getStartIndex(), command.getPageSize(),command.getKeyword());
         }
     }
 
