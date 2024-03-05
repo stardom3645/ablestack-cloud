@@ -831,6 +831,14 @@ public class VolumeDaoImpl extends GenericDaoBase<VolumeVO, Long> implements Vol
     }
 
     @Override
+    public List<VolumeVO> findBySharedVolume(long id, String path) {
+        SearchCriteria<VolumeVO> sc = storeAndInstallPathSearch.create();
+        sc.setParameters("poolId", id);
+        sc.setParameters("path", path);
+        return listBy(sc);
+    }
+
+    @Override
     public List<VolumeVO> listByIds(List<Long> ids) {
         if (CollectionUtils.isEmpty(ids)) {
             return Collections.emptyList();
