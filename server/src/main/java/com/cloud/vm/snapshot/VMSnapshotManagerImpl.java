@@ -165,7 +165,7 @@ public class VMSnapshotManagerImpl extends MutualExclusiveIdsManagerBase impleme
     protected UserVmManager _userVmManager;
     @Inject
     protected ServiceOfferingDao _serviceOfferingDao;
-    @Inject 
+    @Inject
     protected DiskOfferingDao _diskOfferingDao;
     @Inject
     protected UserVmDetailsDao _userVmDetailsDao;
