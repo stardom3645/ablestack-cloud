@@ -485,6 +485,7 @@ public class NetworkOrchestrator extends ManagerBase implements NetworkOrchestra
         defaultIsolatedNetworkOfferingProviders.put(Service.PortForwarding, defaultProviders);
         defaultIsolatedNetworkOfferingProviders.put(Service.Vpn, defaultProviders);
 
+        defaultSGProviders.add(Network.Provider.VirtualRouter);
         final Map<Network.Service, Set<Network.Provider>> defaultSharedSGEnabledNetworkOfferingProviders = new HashMap<Network.Service, Set<Network.Provider>>();
         defaultSharedSGEnabledNetworkOfferingProviders.put(Service.Dhcp, defaultSGProviders);
         defaultSharedSGEnabledNetworkOfferingProviders.put(Service.Dns, defaultSGProviders);
