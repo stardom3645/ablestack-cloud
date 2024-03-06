@@ -813,7 +813,7 @@ public class SnapshotManagerImpl extends MutualExclusiveIdsManagerBase implement
             List<VolumeVO> sharedList = _volsDao.findBySharedVolume(vol.getPoolId(), vol.getPath());
             for (VolumeVO shared : sharedList) {
                 if (shared.getId() != volumeId) {
-                    List<SnapshotVO> snapshotList = listByVolumeId(shared.getId());
+                    List<SnapshotVO> snapshotList = _snapshotDao.listByVolumeId(shared.getId());
                     for (SnapshotVO snaps : snapshotList) {
                         if (!Snapshot.State.Destroyed.equals(snaps.getState())) {
                             sc.addOr("volumeId", SearchCriteria.Op.EQ, shared.getId());
