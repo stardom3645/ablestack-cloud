@@ -290,7 +290,7 @@ import com.cloud.storage.VolumeApiServiceImpl;
 import com.cloud.storage.VolumeVO;
 import com.cloud.storage.dao.BucketDao;
 import com.cloud.storage.dao.DiskOfferingDao;
-import com.cloud.storage.dao.SnapshotDao;
+// import com.cloud.storage.dao.SnapshotDao;
 import com.cloud.storage.dao.StoragePoolTagsDao;
 import com.cloud.storage.dao.VMTemplateDao;
 import com.cloud.tags.ResourceTagVO;
@@ -512,8 +512,8 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
     @Inject
     private SnapshotDataStoreDao snapshotDataStoreDao;
 
-    @Inject
-    private SnapshotDao snapshotDao;
+    // @Inject
+    // private SnapshotDao snapshotDao;
 
     @Inject
     private UserDao userDao;
@@ -5075,7 +5075,7 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
         if (volumeId != null) {
             VolumeVO vol = volumeDao.findById(volumeId);
             List<VolumeVO> sharedList = volumeDao.findBySharedVolume(vol.getPoolId(), vol.getPath());
-            for (VolumeVO shared : sharedList) { 
+            for (VolumeVO shared : sharedList) {
                 sc.setJoinParameters("snapshotSb", "volumeId", shared.getId());
                 sc.setJoinParameters("snapshotSb", "statusNEQ", Snapshot.State.Destroyed);
             }
