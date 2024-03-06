@@ -307,6 +307,7 @@ public class EventTypes {
     public static final String EVENT_VOLUME_CREATE = "VOLUME.CREATE";
     public static final String EVENT_VOLUME_DELETE = "VOLUME.DELETE";
     public static final String EVENT_VOLUME_ATTACH = "VOLUME.ATTACH";
+    public static final String EVENT_VOLUME_CHECK = "VOLUME.CHECK";
     public static final String EVENT_VOLUME_DETACH = "VOLUME.DETACH";
     public static final String EVENT_VOLUME_EXTRACT = "VOLUME.EXTRACT";
     public static final String EVENT_VOLUME_UPLOAD = "VOLUME.UPLOAD";
@@ -404,6 +405,7 @@ public class EventTypes {
     public static final String EVENT_IMAGE_STORE_DATA_MIGRATE = "IMAGE.STORE.MIGRATE.DATA";
     public static final String EVENT_IMAGE_STORE_RESOURCES_MIGRATE = "IMAGE.STORE.MIGRATE.RESOURCES";
     public static final String EVENT_IMAGE_STORE_OBJECT_DOWNLOAD = "IMAGE.STORE.OBJECT.DOWNLOAD";
+    public static final String EVENT_UPDATE_IMAGE_STORE_ACCESS_STATE = "IMAGE.STORE.ACCESS.UPDATED";
 
     // Configuration Table
     public static final String EVENT_CONFIGURATION_VALUE_EDIT = "CONFIGURATION.VALUE.EDIT";
@@ -1174,6 +1176,7 @@ public class EventTypes {
 
         entityEventDetails.put(EVENT_IMAGE_STORE_DATA_MIGRATE, ImageStore.class);
         entityEventDetails.put(EVENT_IMAGE_STORE_OBJECT_DOWNLOAD, ImageStore.class);
+        entityEventDetails.put(EVENT_UPDATE_IMAGE_STORE_ACCESS_STATE, ImageStore.class);
         entityEventDetails.put(EVENT_LIVE_PATCH_SYSTEMVM, "SystemVMs");
 
         //Security

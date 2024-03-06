@@ -107,7 +107,7 @@ public interface StorageManager extends StorageService {
     ConfigKey<Boolean> KvmAutoConvergence = new ConfigKey<>(Boolean.class,
             "kvm.auto.convergence",
             "Storage",
-            "false",
+            "true",
             "Setting this to 'true' allows KVM to use auto convergence to complete VM migration (libvirt version 1.2.3+ and QEMU version 1.6+)",
             true,
             ConfigKey.Scope.Global,
@@ -277,6 +277,8 @@ public interface StorageManager extends StorageService {
 
     CapacityVO getStoragePoolUsedStats(Long poolId, Long clusterId, Long podId, Long zoneId);
 
+    CapacityVO getStoragePoolUsedStats(Long zoneId, Long podId, Long clusterId, List<Long> poolIds);
+
     List<StoragePoolVO> ListByDataCenterHypervisor(long datacenterId, HypervisorType type);
 
     List<VMInstanceVO> listByStoragePool(long storagePoolId);
@@ -302,6 +304,9 @@ public interface StorageManager extends StorageService {
     HypervisorType getHypervisorTypeFromFormat(ImageFormat format);
 
     boolean storagePoolHasEnoughIops(List<Pair<Volume, DiskProfile>> volumeDiskProfilePairs, StoragePool pool);
+
+    boolean storagePoolHasEnoughIops(Long requestedIops, StoragePool pool);
+    boolean storagePoolHasEnoughSpace(Long size, StoragePool pool);
 
     boolean storagePoolHasEnoughSpace(List<Pair<Volume, DiskProfile>> volumeDiskProfilePairs, StoragePool pool);
 
@@ -334,6 +339,8 @@ public interface StorageManager extends StorageService {
     boolean storagePoolCompatibleWithVolumePool(StoragePool pool, Volume volume);
 
     boolean isStoragePoolCompliantWithStoragePolicy(List<Pair<Volume, DiskProfile>> volumes, StoragePool pool) throws StorageUnavailableException;
+
+    boolean isStoragePoolCompliantWithStoragePolicy(long diskOfferingId, StoragePool pool) throws StorageUnavailableException;
 
     boolean registerHostListener(String providerUuid, HypervisorHostListener listener);
 
