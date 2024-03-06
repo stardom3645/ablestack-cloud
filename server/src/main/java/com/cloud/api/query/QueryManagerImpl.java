@@ -5067,7 +5067,7 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
             VolumeVO vol = volumeDao.findById(volumeId);
             List<VolumeVO> sharedList = volumeDao.findBySharedVolume(vol.getPoolId(), vol.getPath());
             for (VolumeVO shared : sharedList) {
-                if (shared.getId() != volumeId) {
+                if (shared.getId() != volumeId && !Snapshot.State.Destroyed.equals(shared.getState())) {
                     sc.addOr("volumeId", SearchCriteria.Op.EQ, shared.getId());
                 }
             }
