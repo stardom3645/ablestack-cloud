@@ -393,7 +393,7 @@
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.apache.cloudstack</groupId>
+           <groupId>org.apache.cloudstack</groupId>
             <artifactId>cloud-plugin-planner-implicit-dedication</artifactId>
             <version>${project.version}</version>
         </dependency>
@@ -655,6 +655,11 @@
        <dependency>
             <groupId>org.apache.cloudstack</groupId>
             <artifactId>cloud-plugin-security</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.cloudstack</groupId>
+            <artifactId>cloud-plugin-dr</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
