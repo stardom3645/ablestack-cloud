@@ -5050,6 +5050,8 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
         SearchCriteria<SnapshotJoinVO> sc = sb.create();
         accountMgr.buildACLSearchCriteria(sc, domainId, isRecursive, permittedAccountIds, listProjectResourcesCriteria);
 
+        sc.setParameters("statusNEQ", Snapshot.State.Destroyed);
+
         if (imageStoreId != null) {
             sc.setParameters("imageStoreId", imageStoreId);
             locationType = Snapshot.LocationType.SECONDARY;
@@ -5065,13 +5067,11 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
             VolumeVO vol = volumeDao.findById(volumeId);
             List<VolumeVO> sharedList = volumeDao.findBySharedVolume(vol.getPoolId(), vol.getPath());
             for (VolumeVO shared : sharedList) {
-                if (shared.getId() != volumeId) {
+                if (shared.getId() != volumeId && !Snapshot.State.Destroyed.equals(shared.getState())) {
                     sc.addOr("volumeId", SearchCriteria.Op.EQ, shared.getId());
                 }
             }
         }
-
-        sc.setParameters("statusNEQ", Snapshot.State.Destroyed);
 
         if (tags != null && !tags.isEmpty()) {
             int count = 0;
