@@ -64,6 +64,7 @@ public class VolumeDaoImpl extends GenericDaoBase<VolumeVO, Long> implements Vol
     protected final SearchBuilder<VolumeVO> diskOfferingSearch;
     protected final SearchBuilder<VolumeVO> RootDiskStateSearch;
     private final SearchBuilder<VolumeVO> storeAndInstallPathSearch;
+    private final SearchBuilder<VolumeVO> sharedVolumeSearch;
     private final SearchBuilder<VolumeVO> volumeIdSearch;
     protected GenericSearchBuilder<VolumeVO, Long> CountByAccount;
     protected GenericSearchBuilder<VolumeVO, SumCount> primaryStorageSearch;
@@ -483,6 +484,11 @@ public class VolumeDaoImpl extends GenericDaoBase<VolumeVO, Long> implements Vol
         storeAndInstallPathSearch.and("pathIN", storeAndInstallPathSearch.entity().getPath(), Op.IN);
         storeAndInstallPathSearch.done();
 
+        sharedVolumeSearch = createSearchBuilder();
+        sharedVolumeSearch.and("poolId", sharedVolumeSearch.entity().getPoolId(), Op.EQ);
+        sharedVolumeSearch.and("path", sharedVolumeSearch.entity().getPath(), Op.EQ);
+        sharedVolumeSearch.done();
+
         volumeIdSearch = createSearchBuilder();
         volumeIdSearch.and("idIN", volumeIdSearch.entity().getId(), Op.IN);
         volumeIdSearch.done();
@@ -832,7 +838,7 @@ public class VolumeDaoImpl extends GenericDaoBase<VolumeVO, Long> implements Vol
 
     @Override
     public List<VolumeVO> findBySharedVolume(long id, String path) {
-        SearchCriteria<VolumeVO> sc = storeAndInstallPathSearch.create();
+        SearchCriteria<VolumeVO> sc = sharedVolumeSearch.create();
         sc.setParameters("poolId", id);
         sc.setParameters("path", path);
         return listBy(sc);
