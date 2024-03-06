@@ -811,7 +811,9 @@ public class SnapshotManagerImpl extends MutualExclusiveIdsManagerBase implement
             logger.info("::::::::::::::::::::SnapshotManagerImpl.java");
             VolumeVO vol = _volsDao.findById(volumeId);
             List<VolumeVO> sharedList = _volsDao.findBySharedVolume(vol.getPoolId(), vol.getPath());
-            sc.setParameters("volumeId", sharedList);
+            for (SnapshotVO shared : sharedList) {
+                sc.setParameters("volumeId", shared.getId());
+            }
         }
 
         if (tags != null && !tags.isEmpty()) {

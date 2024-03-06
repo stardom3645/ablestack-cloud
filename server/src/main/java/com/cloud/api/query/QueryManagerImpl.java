@@ -5066,7 +5066,9 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
             logger.info("::::::::::::::::::::QueryManagerImpl.java");
             VolumeVO vol = volumeDao.findById(volumeId);
             List<VolumeVO> sharedList = volumeDao.findBySharedVolume(vol.getPoolId(), vol.getPath());
-            sc.setParameters("volumeId", sharedList);
+            for (SnapshotVO shared : sharedList) {
+                sc.setParameters("volumeId", shared.getId());
+            }
         }
 
         if (tags != null && !tags.isEmpty()) {
