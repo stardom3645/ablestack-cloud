@@ -5050,6 +5050,13 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
             sb.join("storagePoolSb", storagePoolSb, sb.entity().getId(), storagePoolSb.entity().getSnapshotId(), JoinBuilder.JoinType.INNER);
         }
 
+        if (volumeId != null) {
+            SearchCriteria<SnapshotJoinVO> snapshotSb = snapshotJoinDao.createSearchCriteria();
+            snapshotSb.and("volumeId", snapshotSb.entity().getVolumId(), SearchCriteria.Op.EQ);
+            snapshotSb.and("statusNEQ", snapshotSb.entity().getStatus(), SearchCriteria.Op.NEQ);
+            sb.join("snapshotSb", snapshotSb, sb.entity().getId(), snapshotSb.entity().getVolumeId(), JoinBuilder.JoinType.INNER);
+        }
+
         SearchCriteria<SnapshotJoinVO> sc = sb.create();
         accountMgr.buildACLSearchCriteria(sc, domainId, isRecursive, permittedAccountIds, listProjectResourcesCriteria);
 
@@ -5067,10 +5074,6 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
 
         if (volumeId != null) {
             VolumeVO vol = volumeDao.findById(volumeId);
-            SearchCriteria<SnapshotJoinVO> snapshotSb = snapshotJoinDao.createSearchCriteria();
-            snapshotSb.and("volumeId", snapshotSb.entity().getVolumId(), SearchCriteria.Op.EQ);
-            snapshotSb.and("statusNEQ", snapshotSb.entity().getStatus(), SearchCriteria.Op.NEQ);
-            sb.join("snapshotSb", snapshotSb, sb.entity().getId(), snapshotSb.entity().getVolumeId(), JoinBuilder.JoinType.INNER);
             List<VolumeVO> sharedList = volumeDao.findBySharedVolume(vol.getPoolId(), vol.getPath());
             for (VolumeVO shared : sharedList) { 
                 sc.setJoinParameters("snapshotSb", "volumeId", shared.getId());
