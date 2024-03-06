@@ -4185,5 +4185,15 @@
 "label.create.rbd.image": "Create Image",
 "message.rbd.name ": "Please enter image name",
 "message.rbd.size": "Please enter image size",
-"label.delete.rbd.image": "Are you sure you want to delete the image"
+"label.delete.rbd.image": "Are you sure you want to delete the image",
+"label.disaster.recovery.cluster": "Disaster recovery cluster",
+"label.add.disaster.recovery.cluster": "Add disaster recovery cluster",
+"label.disaster.recovery.clusters": "Disaster recovery clusters",
+"label.disaster.recovery.cluster.type": "Create disaster recovery cluster",
+"label.cluster.status": "Cluster status",
+"label.disaster.recovery.cluster.mirroring.agent.status": "Create disaster recovery cluster",
+"message.add.disaster.recovery.cluster": "\nWe are adding a disaster recovery cluster to connect with the current cluster. Once the addition is complete, the disaster recovery cluster will be automatically registered in the menu list of the counterpart disaster recovery cluster.",
+"message.disaster.recovery.cluster.connection.test.title": "Test cluster connectivity",
+"message.disaster.recovery.cluster.connection.test.description": "Perform a connection test with the cluster you want to add.",
+"label.disaster.recovery.cluster.start.connection.test.description": "Connectivity test"
 }

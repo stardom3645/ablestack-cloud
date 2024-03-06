@@ -320,7 +320,13 @@ public class ApiServer extends ManagerBase implements HttpRequestHandler, ApiSer
             , "A setting that enables/disables features developed for security features."
             , false
             , ConfigKey.Scope.Global);
-
+    static final ConfigKey<Boolean> DisasterRecoveryFeaturesEnabled = new ConfigKey<Boolean>( "Advanced"
+            , Boolean.class
+            , "disaster.recovery.features.enabled"
+            , "true"
+            , "A setting that enables/disables features developed for disaster recovery."
+            , false
+            , ConfigKey.Scope.Global);
     @Override
     public boolean configure(final String name, final Map<String, Object> params) throws ConfigurationException {
         messageBus.subscribe(AsyncJob.Topics.JOB_EVENT_PUBLISH, MessageDispatcher.getDispatcher(this));
@@ -1608,7 +1614,8 @@ public class ApiServer extends ManagerBase implements HttpRequestHandler, ApiSer
                 JSONDefaultContentType,
                 ConcurrentConnectEnabled,
                 BlockExistConnection,
-                SecurityFeaturesEnabled
+                SecurityFeaturesEnabled,
+                DisasterRecoveryFeaturesEnabled
         };
     }
 }

@@ -136,6 +136,10 @@ public class CapabilitiesResponse extends BaseResponse {
     @Param(description = "A setting that enables/disables features developed for security features.")
     private boolean securityFeaturesEnabled;
 
+    @SerializedName("disasterrecoveryfeaturesenabled")
+    @Param(description = "A setting that enables/disables features developed for disaster recovery features.")
+    private boolean disasterRecoveryFeaturesEnabled;
+
     @SerializedName("host")
     @Param(description = "Management Server Host Ip")
     private String host;
@@ -274,6 +278,10 @@ public class CapabilitiesResponse extends BaseResponse {
 
     public void setSecurityFeaturesEnabled(boolean securityFeaturesEnabled) {
         this.securityFeaturesEnabled = securityFeaturesEnabled;
+    }
+
+    public void setDisasterRecoveryFeaturesEnabled(boolean disasterRecoveryFeaturesEnabled) {
+        this.disasterRecoveryFeaturesEnabled = disasterRecoveryFeaturesEnabled;
     }
 
     public void setHost(String host) {

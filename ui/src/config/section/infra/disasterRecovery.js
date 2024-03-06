@@ -1,0 +1,124 @@
+// Licensed to the Apache Software Foundation (ASF) under one
+// or more contributor license agreements.  See the NOTICE file
+// distributed with this work for additional information
+// regarding copyright ownership.  The ASF licenses this file
+// to you under the Apache License, Version 2.0 (the
+// "License"); you may not use this file except in compliance
+// with the License.  You may obtain a copy of the License at
+//
+//   http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing,
+// software distributed under the License is distributed on an
+// "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+// KIND, either express or implied.  See the License for the
+// specific language governing permissions and limitations
+// under the License.
+
+import { shallowRef, defineAsyncComponent } from 'vue'
+
+export default {
+  name: 'disasterRecovery',
+  title: 'label.disaster.recovery.clusters',
+  icon: 'SubnodeOutlined',
+  permission: ['listManagementServersMetrics'],
+  columns: ['name', 'state', 'version'],
+  details: ['collectiontime', 'usageislocal', 'dbislocal', 'lastserverstart', 'lastserverstop', 'lastboottime', 'version', 'loginfo', 'systemtotalcpucycles', 'systemloadaverages', 'systemcycleusage', 'systemmemorytotal', 'systemmemoryfree', 'systemmemoryvirtualsize', 'availableprocessors', 'javadistribution', 'javaversion', 'osdistribution', 'kernelversion', 'agentcount', 'sessions', 'heapmemoryused', 'heapmemorytotal', 'threadsblockedcount', 'threadsdeamoncount', 'threadsnewcount', 'threadsrunnablecount', 'threadsterminatedcount', 'threadstotalcount', 'threadswaitingcount'],
+  tabs: [
+    {
+      name: 'details',
+      component: shallowRef(defineAsyncComponent(() => import('@/components/view/DetailsTab.vue')))
+    },
+    {
+      name: 'pending.jobs',
+      component: shallowRef(defineAsyncComponent(() => import('@/views/infra/AsyncJobsTab.vue')))
+    },
+    {
+      name: 'security.check',
+      component: shallowRef(defineAsyncComponent(() => import('@/views/infra/SecurityCheckTab.vue')))
+    },
+    {
+      name: 'integrity.verification',
+      component: shallowRef(defineAsyncComponent(() => import('@/views/infra/IntegrityVerificationTab.vue')))
+    },
+    {
+      name: 'comments',
+      component: shallowRef(defineAsyncComponent(() => import('@/components/view/AnnotationsTab.vue')))
+    }
+  ],
+  actions: [
+    {
+      api: 'createPod',
+      icon: 'plus-outlined',
+      label: 'label.add.disaster.recovery.cluster',
+      listView: true,
+      popup: true,
+      component: shallowRef(defineAsyncComponent(() => import('@/views/infra/DisasterRecoveryClusterAdd.vue')))
+    },
+    {
+      api: 'prepareForShutdown',
+      icon: 'exclamation-circle-outlined',
+      label: 'label.prepare.for.shutdown',
+      message: 'message.prepare.for.shutdown',
+      dataView: true,
+      popup: true,
+      confirmationText: 'SHUTDOWN',
+      show: (record, store) => { return record.state === 'Up' },
+      component: shallowRef(defineAsyncComponent(() => import('@/views/infra/Confirmation.vue')))
+    },
+    {
+      api: 'triggerShutdown',
+      icon: 'poweroff-outlined',
+      label: 'label.trigger.shutdown',
+      message: 'message.trigger.shutdown',
+      dataView: true,
+      popup: true,
+      confirmationText: 'SHUTDOWN',
+      show: (record, store) => { return ['Up', 'PreparingToShutDown', 'ReadyToShutDown'].includes(record.state) },
+      component: shallowRef(defineAsyncComponent(() => import('@/views/infra/Confirmation.vue')))
+    },
+    {
+      api: 'cancelShutdown',
+      icon: 'close-circle-outlined',
+      label: 'label.cancel.shutdown',
+      message: 'message.cancel.shutdown',
+      docHelp: 'installguide/configuration.html#adding-a-zone',
+      dataView: true,
+      popup: true,
+      show: (record, store) => { return ['PreparingToShutDown', 'ReadyToShutDown', 'ShuttingDown'].includes(record.state) },
+      mapping: {
+        managementserverid: {
+          value: (record, params) => { return record.id }
+        }
+      }
+    },
+    {
+      api: 'runSecurityCheck',
+      icon: 'safety-outlined',
+      label: 'label.security.check',
+      message: 'message.confirm.security.check',
+      dataView: true,
+      popup: true,
+      show: (record, store) => { return record.state === 'Up' && ['Admin'].includes(store.userInfo.roletype) },
+      mapping: {
+        managementserverid: {
+          value: (record) => { return record.id }
+        }
+      }
+    },
+    {
+      api: 'runIntegrityVerification',
+      icon: 'OneToOneOutlined',
+      label: 'label.integrity.verification',
+      message: 'message.confirm.integrity.verification',
+      dataView: true,
+      popup: true,
+      show: (record, store) => { return record.state === 'Up' && ['Admin'].includes(store.userInfo.roletype) },
+      mapping: {
+        managementserverid: {
+          value: (record) => { return record.id }
+        }
+      }
+    }
+  ]
+}

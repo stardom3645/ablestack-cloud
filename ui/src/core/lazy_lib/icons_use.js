@@ -158,6 +158,7 @@ import {
   ShareAltOutlined,
   ShoppingOutlined,
   StopOutlined,
+  SubnodeOutlined,
   SwapOutlined,
   SyncOutlined,
   TagOutlined,
@@ -351,5 +352,6 @@ export default {
     app.component('RocketFilled', RocketFilled)
     app.component('HeartFilled', HeartFilled)
     app.component('renderIcon', renderIcon)
+    app.component('SubnodeOutlined', SubnodeOutlined)
   }
 }
