@@ -5051,7 +5051,7 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
         }
 
         if (volumeId != null) {
-            SearchCriteria<VolumeVO> volumetSb = volumeDao.createSearchCriteria();
+            SearchBuilder<VolumeVO> volumetSb = volumeDao.createSearchCriteria();
             volumetSb.and("volumeId", volumetSb.entity().getVolumId(), SearchCriteria.Op.EQ);
             sb.join("volumetSb", volumetSb, sb.entity().getId(), volumetSb.entity().getId(), JoinBuilder.JoinType.INNER);
         }
