@@ -808,7 +808,6 @@ public class SnapshotManagerImpl extends MutualExclusiveIdsManagerBase implement
         sc.setParameters("statusNEQ", Snapshot.State.Destroyed);
 
         if (volumeId != null) {
-            logger.info("::::::::::::::::::::SnapshotManagerImpl.java");
             VolumeVO vol = _volsDao.findById(volumeId);
             List<VolumeVO> sharedList = _volsDao.findBySharedVolume(vol.getPoolId(), vol.getPath());
             List<Long> sharedVolume = new ArrayList<Long>();
