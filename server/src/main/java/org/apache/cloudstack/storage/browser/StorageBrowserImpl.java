@@ -412,7 +412,6 @@ public class StorageBrowserImpl extends MutualExclusiveIdsManagerBase implements
         return dsAnswer;
     }
 
-
     ListResponse<DataStoreObjectResponse> getResponse(DataStore dataStore, ListDataStoreObjectsAnswer answer) {
         List<DataStoreObjectResponse> responses = new ArrayList<>();
 
