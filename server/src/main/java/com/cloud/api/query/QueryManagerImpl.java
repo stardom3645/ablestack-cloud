@@ -5022,7 +5022,6 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
         }
         accountMgr.buildACLSearchBuilder(sb, domainId, isRecursive, permittedAccountIds, listProjectResourcesCriteria);
         sb.and("statusNEQ", sb.entity().getStatus(), SearchCriteria.Op.NEQ); //exclude those Destroyed snapshot, not showing on UI
-        sb.and("volumeId", sb.entity().getVolumeId(), SearchCriteria.Op.EQ);
         sb.and("name", sb.entity().getName(), SearchCriteria.Op.EQ);
         sb.and("id", sb.entity().getId(), SearchCriteria.Op.EQ);
         sb.and("idIN", sb.entity().getId(), SearchCriteria.Op.IN);
@@ -5067,25 +5066,15 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
         }
 
         if (volumeId != null) {
-            sc.setParameters("volumeId", volumeId);
-            logger.info("::::::::::::::::::::QueryManagerImpl.java");
             VolumeVO vol = volumeDao.findById(volumeId);
+            SearchCriteria<SnapshotJoinVO> snapshotSb = snapshotJoinDao.createSearchCriteria();
+            snapshotSb.and("volumeId", snapshotSb.entity().getVolumId(), SearchCriteria.Op.EQ);
+            snapshotSb.and("statusNEQ", snapshotSb.entity().getStatus(), SearchCriteria.Op.NEQ);
+            sb.join("snapshotSb", snapshotSb, sb.entity().getId(), snapshotSb.entity().getVolumeId(), JoinBuilder.JoinType.INNER);
             List<VolumeVO> sharedList = volumeDao.findBySharedVolume(vol.getPoolId(), vol.getPath());
-            for (VolumeVO shared : sharedList) {
-                if (shared.getId() != volumeId) {
-                    logger.info("::::::::::::::::::::shared.getId()");
-                    logger.info(shared.getId());
-                    List<SnapshotVO> snapshotList = snapshotDao.listByVolumeId(shared.getId());
-                    for (SnapshotVO snaps : snapshotList) {
-                        logger.info("::::::::::::::::::::snaps.getState()");
-                        logger.info(snaps.getState());
-                        if (!Snapshot.State.Destroyed.equals(snaps.getState())) {
-                            logger.info("::::::::::::::::::::if");
-                            sc.addOr("volumeId", SearchCriteria.Op.EQ, shared.getId());
-                            sc.addOr("statusNEQ", SearchCriteria.Op.NEQ, Snapshot.State.Destroyed);
-                        }
-                    }
-                }
+            for (VolumeVO shared : sharedList) { 
+                sc.setJoinParameters("snapshotSb", "volumeId", shared.getId());
+                sc.setJoinParameters("snapshotSb", "statusNEQ", Snapshot.State.Destroyed);
             }
         }
 
