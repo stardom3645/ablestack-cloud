@@ -5051,10 +5051,9 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
         }
 
         if (volumeId != null) {
-            SearchCriteria<SnapshotJoinVO> snapshotSb = snapshotJoinDao.createSearchCriteria();
-            snapshotSb.and("volumeId", snapshotSb.entity().getVolumId(), SearchCriteria.Op.EQ);
-            snapshotSb.and("statusNEQ", snapshotSb.entity().getStatus(), SearchCriteria.Op.NEQ);
-            sb.join("snapshotSb", snapshotSb, sb.entity().getId(), snapshotSb.entity().getVolumeId(), JoinBuilder.JoinType.INNER);
+            SearchCriteria<VolumeVO> volumetSb = volumeDao.createSearchCriteria();
+            volumetSb.and("volumeId", volumetSb.entity().getVolumId(), SearchCriteria.Op.EQ);
+            sb.join("volumetSb", volumetSb, sb.entity().getId(), volumetSb.entity().getVolumeId(), JoinBuilder.JoinType.INNER);
         }
 
         SearchCriteria<SnapshotJoinVO> sc = sb.create();
@@ -5076,8 +5075,7 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
             VolumeVO vol = volumeDao.findById(volumeId);
             List<VolumeVO> sharedList = volumeDao.findBySharedVolume(vol.getPoolId(), vol.getPath());
             for (VolumeVO shared : sharedList) {
-                sc.setJoinParameters("snapshotSb", "volumeId", shared.getId());
-                sc.setJoinParameters("snapshotSb", "statusNEQ", Snapshot.State.Destroyed);
+                sc.setJoinParameters("volumetSb", "volumeId", shared.getId());
             }
         }
 
