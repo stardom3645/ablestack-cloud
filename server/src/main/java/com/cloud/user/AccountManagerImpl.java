@@ -336,6 +336,7 @@ public class AccountManagerImpl extends ManagerBase implements AccountManager, M
     private List<SecurityChecker> _securityCheckers;
     private int _cleanupInterval;
     private List<String> apiNameList;
+    private static final String OAUTH2_PROVIDER_NAME = "oauth2";
 
     protected static Map<String, UserTwoFactorAuthenticator> userTwoFactorAuthenticationProvidersMap = new HashMap<>();
 
@@ -2094,13 +2095,20 @@ public class AccountManagerImpl extends ManagerBase implements AccountManager, M
     @Override
     @ActionEvent(eventType = EventTypes.EVENT_USER_DELETE, eventDescription = "deleting User")
     public boolean deleteUser(DeleteUserCmd deleteUserCmd) {
-        UserVO user = getValidUserVO(deleteUserCmd.getId());
-
+        final Long id = deleteUserCmd.getId();
+        User caller = CallContext.current().getCallingUser();
+        UserVO user = getValidUserVO(id);
         Account account = _accountDao.findById(user.getAccountId());
+
+        if (caller.getId() == id) {
+            Domain domain = _domainDao.findById(account.getDomainId());
+            throw new InvalidParameterValueException(String.format("The caller is requesting to delete itself. As a security measure, ACS will not allow this operation." +
+                    " To delete user %s (ID: %s, Domain: %s), request to another user with permission to execute the operation.", user.getUsername(), user.getUuid(), domain.getUuid()));
+        }
 
         // don't allow to delete the user from the account of type Project
         checkAccountAndAccess(user, account);
-        return _userDao.remove(deleteUserCmd.getId());
+        return _userDao.remove(id);
     }
 
     @Override
@@ -2175,7 +2183,7 @@ public class AccountManagerImpl extends ManagerBase implements AccountManager, M
         }
     }
 
-    private void checkAccountAndAccess(UserVO user, Account account) {
+    protected void checkAccountAndAccess(UserVO user, Account account) {
         // don't allow to delete the user from the account of type Project
         if (account.getType() == Account.Type.PROJECT) {
             throw new InvalidParameterValueException("Project users cannot be deleted or moved.");
@@ -2185,7 +2193,7 @@ public class AccountManagerImpl extends ManagerBase implements AccountManager, M
         CallContext.current().putContextParameter(User.class, user.getUuid());
     }
 
-    private UserVO getValidUserVO(long id) {
+    protected UserVO getValidUserVO(long id) {
         UserVO user = _userDao.findById(id);
 
         if (user == null || user.getRemoved() != null) {
@@ -2679,7 +2687,8 @@ public class AccountManagerImpl extends ManagerBase implements AccountManager, M
                     continue;
                 }
             }
-            if (secretCode != null && !authenticator.getName().equals("oauth2")) {
+            if ((secretCode != null && !authenticator.getName().equals(OAUTH2_PROVIDER_NAME))
+                    || (secretCode == null && authenticator.getName().equals(OAUTH2_PROVIDER_NAME))) {
                 continue;
             }
             Pair<Boolean, ActionOnFailedAuthentication> result = authenticator.authenticate(username, password, domainId, requestParameters);
