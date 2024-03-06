@@ -5073,7 +5073,8 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
                 logger.info(":::::::::::::::::::::::shared.getId()");
                 logger.info(shared.getId());
                 if (shared.getId() != volumeId) {
-                    sc.addAnd("volumeId", SearchCriteria.Op.EQ, shared.getId());
+                    logger.info(":::::::::::::::::::::::if");
+                    sc.addOr("volumeId", SearchCriteria.Op.EQ, shared.getId());
                 }
             }
         }
