@@ -5082,6 +5082,7 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
                         if (!Snapshot.State.Destroyed.equals(snaps.getState())) {
                             logger.info("::::::::::::::::::::if");
                             sc.addOr("volumeId", SearchCriteria.Op.EQ, shared.getId());
+                            sc.addOr("statusNEQ", SearchCriteria.Op.NEQ, Snapshot.State.Destroyed);
                         }
                     }
                 }
