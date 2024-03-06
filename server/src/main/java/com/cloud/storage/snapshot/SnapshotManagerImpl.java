@@ -782,7 +782,7 @@ public class SnapshotManagerImpl extends MutualExclusiveIdsManagerBase implement
         _accountMgr.buildACLSearchBuilder(sb, domainId, isRecursive, permittedAccounts, listProjectResourcesCriteria);
 
         sb.and("statusNEQ", sb.entity().getState(), SearchCriteria.Op.NEQ); //exclude those Destroyed snapshot, not showing on UI
-        sb.and("volumeId", sb.entity().getVolumeId(), SearchCriteria.Op.EQ);
+        sb.and("volumeId", sb.entity().getVolumeId(), SearchCriteria.Op.IN);
         sb.and("name", sb.entity().getName(), SearchCriteria.Op.EQ);
         sb.and("id", sb.entity().getId(), SearchCriteria.Op.EQ);
         sb.and("idIN", sb.entity().getId(), SearchCriteria.Op.IN);
@@ -808,21 +808,10 @@ public class SnapshotManagerImpl extends MutualExclusiveIdsManagerBase implement
         sc.setParameters("statusNEQ", Snapshot.State.Destroyed);
 
         if (volumeId != null) {
-            sc.setParameters("volumeId", volumeId);
             logger.info("::::::::::::::::::::SnapshotManagerImpl.java");
             VolumeVO vol = _volsDao.findById(volumeId);
             List<VolumeVO> sharedList = _volsDao.findBySharedVolume(vol.getPoolId(), vol.getPath());
-            for (VolumeVO shared : sharedList) {
-                if (shared.getId() != volumeId) {
-                    List<SnapshotVO> snapshotList = _snapshotDao.listByVolumeId(shared.getId());
-                    for (SnapshotVO snaps : snapshotList) {
-                        if (!Snapshot.State.Destroyed.equals(snaps.getState())) {
-                            sc.addOr("volumeId", SearchCriteria.Op.EQ, shared.getId());
-                            sc.addOr("statusNEQ", SearchCriteria.Op.NEQ, Snapshot.State.Destroyed);
-                        }
-                    }
-                }
-            }
+            sc.setParameters("volumeId", sharedList);
         }
 
         if (tags != null && !tags.isEmpty()) {

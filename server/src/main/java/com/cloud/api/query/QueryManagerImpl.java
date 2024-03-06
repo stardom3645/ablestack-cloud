@@ -290,7 +290,6 @@ import com.cloud.storage.VolumeApiServiceImpl;
 import com.cloud.storage.VolumeVO;
 import com.cloud.storage.dao.BucketDao;
 import com.cloud.storage.dao.DiskOfferingDao;
-// import com.cloud.storage.dao.SnapshotDao;
 import com.cloud.storage.dao.StoragePoolTagsDao;
 import com.cloud.storage.dao.VMTemplateDao;
 import com.cloud.tags.ResourceTagVO;
@@ -511,9 +510,6 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
 
     @Inject
     private SnapshotDataStoreDao snapshotDataStoreDao;
-
-    // @Inject
-    // private SnapshotDao snapshotDao;
 
     @Inject
     private UserDao userDao;
@@ -5022,6 +5018,7 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
         }
         accountMgr.buildACLSearchBuilder(sb, domainId, isRecursive, permittedAccountIds, listProjectResourcesCriteria);
         sb.and("statusNEQ", sb.entity().getStatus(), SearchCriteria.Op.NEQ); //exclude those Destroyed snapshot, not showing on UI
+        sb.and("volumeId", sb.entity().getVolumeId(), SearchCriteria.Op.IN);
         sb.and("name", sb.entity().getName(), SearchCriteria.Op.EQ);
         sb.and("id", sb.entity().getId(), SearchCriteria.Op.EQ);
         sb.and("idIN", sb.entity().getId(), SearchCriteria.Op.IN);
@@ -5050,12 +5047,6 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
             sb.join("storagePoolSb", storagePoolSb, sb.entity().getId(), storagePoolSb.entity().getSnapshotId(), JoinBuilder.JoinType.INNER);
         }
 
-        if (volumeId != null) {
-            SearchBuilder<VolumeVO> volumetSb = volumeDao.createSearchBuilder();
-            volumetSb.and("volumeId", volumetSb.entity().getId(), SearchCriteria.Op.EQ);
-            sb.join("volumetSb", volumetSb, sb.entity().getId(), volumetSb.entity().getId(), JoinBuilder.JoinType.INNER);
-        }
-
         SearchCriteria<SnapshotJoinVO> sc = sb.create();
         accountMgr.buildACLSearchCriteria(sc, domainId, isRecursive, permittedAccountIds, listProjectResourcesCriteria);
 
@@ -5072,11 +5063,10 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
         }
 
         if (volumeId != null) {
+            logger.info("::::::::::::::::::::QueryManagerImpl.java");
             VolumeVO vol = volumeDao.findById(volumeId);
-            List<VolumeVO> sharedList = volumeDao.findBySharedVolume(vol.getPoolId(), vol.getPath());
-            for (VolumeVO shared : sharedList) {
-                sc.setJoinParameters("volumetSb", "volumeId", shared.getId());
-            }
+            List<VolumeVO> sharedList = _volsDao.findBySharedVolume(vol.getPoolId(), vol.getPath());
+            sc.setParameters("volumeId", sharedList);
         }
 
         if (tags != null && !tags.isEmpty()) {
