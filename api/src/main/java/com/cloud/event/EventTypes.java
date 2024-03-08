@@ -738,6 +738,7 @@ public class EventTypes {
     public static final String EVENT_BUCKET_CREATE = "BUCKET.CREATE";
     public static final String EVENT_BUCKET_DELETE = "BUCKET.DELETE";
     public static final String EVENT_BUCKET_UPDATE = "BUCKET.UPDATE";
+    
     // Quota
     public static final String EVENT_QUOTA_TARIFF_CREATE = "QUOTA.TARIFF.CREATE";
     public static final String EVENT_QUOTA_TARIFF_DELETE = "QUOTA.TARIFF.DELETE";
@@ -1196,6 +1197,7 @@ public class EventTypes {
         entityEventDetails.put(EVENT_BUCKET_CREATE, Bucket.class);
         entityEventDetails.put(EVENT_BUCKET_UPDATE, Bucket.class);
         entityEventDetails.put(EVENT_BUCKET_DELETE, Bucket.class);
+
         // Quota
         entityEventDetails.put(EVENT_QUOTA_TARIFF_CREATE, QuotaTariff.class);
         entityEventDetails.put(EVENT_QUOTA_TARIFF_DELETE, QuotaTariff.class);
