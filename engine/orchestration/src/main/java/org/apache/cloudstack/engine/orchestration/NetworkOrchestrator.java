@@ -555,13 +555,13 @@ public class NetworkOrchestrator extends ManagerBase implements NetworkOrchestra
                             null, true, false, false, null, null, true, null);
                 }
 
-                if (_networkOfferingDao.findByUniqueName(NetworkOffering.DEFAULT_TUNGSTEN_SHARED_NETWORK_OFFERING_WITH_SGSERVICE) == null) {
-                    offering = _configMgr.createNetworkOffering(NetworkOffering.DEFAULT_TUNGSTEN_SHARED_NETWORK_OFFERING_WITH_SGSERVICE, "Offering for Tungsten Shared Security group enabled networks",
-                            TrafficType.Guest, null, true, Availability.Optional, null, defaultTungstenSharedSGEnabledNetworkOfferingProviders, true, Network.GuestType.Shared, false, null, true,
-                            null, true, false, null, false, null, true, false, true,null, null, true, null);
-                    offering.setState(NetworkOffering.State.Enabled);
-                    _networkOfferingDao.update(offering.getId(), offering);
-                }
+                // if (_networkOfferingDao.findByUniqueName(NetworkOffering.DEFAULT_TUNGSTEN_SHARED_NETWORK_OFFERING_WITH_SGSERVICE) == null) {
+                //     offering = _configMgr.createNetworkOffering(NetworkOffering.DEFAULT_TUNGSTEN_SHARED_NETWORK_OFFERING_WITH_SGSERVICE, "Offering for Tungsten Shared Security group enabled networks",
+                //             TrafficType.Guest, null, true, Availability.Optional, null, defaultTungstenSharedSGEnabledNetworkOfferingProviders, true, Network.GuestType.Shared, false, null, true,
+                //             null, true, false, null, false, null, true, false, true,null, null, true, null);
+                //     offering.setState(NetworkOffering.State.Enabled);
+                //     _networkOfferingDao.update(offering.getId(), offering);
+                // }
 
                 //#4 - default isolated offering with Source nat service
                 if (_networkOfferingDao.findByUniqueName(NetworkOffering.DefaultIsolatedNetworkOfferingWithSourceNatService) == null && _networkOfferingDao.findByUniqueName("기본 격리 네트워크오퍼링(with SourceNat)") == null) {

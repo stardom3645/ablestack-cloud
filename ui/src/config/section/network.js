@@ -1207,6 +1207,7 @@ export default {
       name: 'tungstenfabric',
       title: 'label.tungsten.fabric',
       icon: shallowRef(tungsten),
+      hidden: true,
       permission: ['listTungstenFabricProviders'],
       columns: [
         {
