@@ -30,14 +30,17 @@
       :dataSource="tableSource"
       :rowSelection="rowSelection"
       :pagination="false"
+      :filteredRbdImages="filteredRbdImages"
       size="middle"
       :scroll="{ y: 225 }">
       <template #headerCell="{ column }">
-        <template v-if="column.key === 'rbdSize'"><IdcardOutlined /> {{ $t('label.size') }}</template>
+        <template v-if="column.key === 'size'"><IdcardOutlined /> {{ $t('label.size') }}</template>
         </template>
         <template #bodyCell="{ column, record }">
         <template v-if="column.key === 'name'">{{ record.name }}</template>
-        <template v-else-if="column.key === 'rbdSize'">{{ record.size }} GB</template>
+        <template v-else-if="column.key === 'size'">
+          {{ record.id === 0 ? null : (record.size / 1024 / 1024 / 1024) + ' GB' }}
+        </template>
       </template>
     </a-table>
     <div style="display: block; text-align: right;">
@@ -103,8 +106,9 @@ export default {
           width: '50%'
         },
         {
-          key: 'rbdSize',
-          dataIndex: 'rbdSize',
+          key: 'size',
+          dataIndex: 'size',
+          title: this.$t('label.size'),
           width: '50%'
         }
       ],
@@ -131,7 +135,7 @@ export default {
         return {
           key: item.id,
           name: item.name,
-          rbdSize: item.rbdsize
+          size: item.size
         }
       })
     },
@@ -157,21 +161,6 @@ export default {
         this.dataItems = this.dataItems.concat(newData)
       }
     },
-    // loading () {
-    //   if (!this.loading) {
-    //     if (this.preFillContent.rbdImageId) {
-    //       this.selectedRowKeys = [this.preFillContent.rbdImageId]
-    //       this.$emit('select-rbd-image-item', this.preFillContent.rbdImageid)
-    //     } else {
-    //       if (this.oldZoneId === this.zoneId) {
-    //         return
-    //       }
-    //       this.oldZoneId = this.zoneId
-    //       this.selectedRowKeys = ['0']
-    //       this.$emit('select-rbd-image-item', '0')
-    //     }
-    //   }
-    // },
     isIsoSelected () {
       if (this.isIsoSelected) {
         this.dataItems = this.dataItems.filter(item => item.id !== '0')
@@ -179,7 +168,7 @@ export default {
         this.dataItems.unshift({
           id: '0',
           name: this.$t('label.noselect'),
-          rbdSize: undefined
+          size: undefined
         })
       }
     }
@@ -191,7 +180,7 @@ export default {
         this.dataItems.push({
           id: '0',
           name: this.$t('label.noselect'),
-          rbdSize: undefined
+          size: undefined
         })
       }
     },
@@ -229,6 +218,7 @@ export default {
             this.rbdSelected = rowSelected[0]
           }
           this.selectedRowKeys = [record.key]
+          this.$emit('select-rbd-offering-item', record.key)
           this.$emit('on-selected-rbd-size', this.rbdSelected)
         }
       }

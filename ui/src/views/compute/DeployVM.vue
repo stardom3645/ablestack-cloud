@@ -192,14 +192,17 @@
                       <div v-else-if="tabKey === 'rbdImageId'">
                         {{ $t('message.rbd.desc') }}
                         <StorageRbdImageSelection
+                          input-decorator="rbdImageId"
                           :items="options.rbdimages"
                           :selected="tabKey"
                           :zoneId="zoneId"
                           :row-count="rowCount.rbdimages"
                           :loading="loading.rbdimages"
                           :preFillContent="dataPreFill"
+                          :isIsoSelected="tabKey==='rbdImageId'"
                           @handle-search-filter="($event) => fetchAllRbdImage($event)"
-                          @select-rbd-image-item="($event) => updateRbdImageOffering($event)"
+                          @select-rbd-offering-item="($event) => updateRbdImageOffering($event)"
+                          @on-selected-rbd-size="onSelectRbdSize"
                           @update-rbd-images="updateFieldValue" />
                       </div>
                     </a-card>
@@ -1877,13 +1880,6 @@ export default {
       }
       this.form.diskofferingid = id
     },
-    updateRbdimageOffering (id) {
-      if (id === '0') {
-        this.form.rbdimagesid = undefined
-        return
-      }
-      this.form.rbdimagesid = id
-    },
     updateOverrideDiskOffering (id) {
       if (id === '0') {
         this.form.overridediskofferingid = undefined
@@ -2404,27 +2400,19 @@ export default {
       })
     },
     fetchRbdImage (params) {
-      api('listStoragePoolsMetrics', {
-        path: 'rbd'
-      }).then(response => {
-        const pool = response.liststoragepoolsmetricsresponse.storagepool || []
-        const args = Object.assign({}, params)
-        if (args.keyword) {
-          args.page = 1
-          args.pageSize = args.pageSize || 10
-        }
-        args.zoneid = _.get(this.zone, 'id')
-        args.id = pool[0].id
-        args.keyword = ''
-        args.page = 1
-        args.pageSize = 10
-        return new Promise((resolve, reject) => {
-          api('listStoragePoolObjects', args).then((response) => {
-            resolve(response)
-          }).catch((reason) => {
-            // ToDo: Handle errors
-            reject(reason)
-          })
+      this.paramsFilter = {}
+      this.paramsFilter['tags[0].key'] = 'able'
+      this.paramsFilter['tags[0].value'] = 'true'
+      const args = Object.assign(this.paramsFilter, params)
+      args.zoneid = _.get(this.zone, 'id')
+      args.page = args.page || 1
+      args.pageSize = args.pageSize || 10
+      return new Promise((resolve, reject) => {
+        api('listVolumes', args).then((response) => {
+          resolve(response)
+        }).catch((reason) => {
+          // ToDo: Handle errors
+          reject(reason)
         })
       })
     },
@@ -2472,13 +2460,12 @@ export default {
       const promises = []
       const rbdimages = {}
       this.loading.rbdimages = true
-      rbdimages[0] = { count: 0, rbdimages: [] }
       promises.push(this.fetchRbdImage(params))
       this.options.rbdimages = rbdimages
       Promise.all(promises).then((response) => {
         response.forEach((resItem, idx) => {
-          rbdimages[this.rbdimages[idx]] = _.isEmpty(resItem.liststoragepoolobjectsresponse) ? { count: 0, rbdimages: [] } : resItem.liststoragepoolobjectsresponse
-          this.options.rbdimages = { ...rbdimages }
+          this.options.rbdimages = resItem.listvolumesresponse.volume
+          this.rowCount.rbdimages = resItem.listvolumesresponse.count
         })
       }).catch((reason) => {
         console.log(reason)
