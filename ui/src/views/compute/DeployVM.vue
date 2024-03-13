@@ -201,7 +201,6 @@
                           :preFillContent="dataPreFill"
                           :isIsoSelected="tabKey==='rbdImageId'"
                           @handle-search-filter="($event) => fetchAllRbdImage($event)"
-                          @select-rbd-offering-item="($event) => updateRbdImageOffering($event)"
                           @on-selected-rbd-size="onSelectRbdSize"
                           @update-rbd-images="updateFieldValue" />
                       </div>

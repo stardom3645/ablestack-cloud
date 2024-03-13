@@ -18,18 +18,18 @@
 <template>
   <div>
     <a-input-search
-      style="width: 25vw; float: right; margin-bottom: 10px; z-index: 8"
+    class="search-input"
       :placeholder="$t('label.search')"
-      v-model:value="filter"
-      @search="handleSearch" />
+      @search="handleSearch">
+      </a-input-search>
     <a-table
       :animated="false"
-      tabPosition="top"
       :loading="loading"
       :columns="columns"
       :dataSource="tableSource"
       :rowSelection="rowSelection"
       :pagination="false"
+      :customRow="onClickRow"
       :filteredRbdImages="filteredRbdImages"
       size="middle"
       :scroll="{ y: 225 }">
@@ -37,9 +37,9 @@
         <template v-if="column.key === 'size'"><IdcardOutlined /> {{ $t('label.size') }}</template>
         </template>
         <template #bodyCell="{ column, record }">
-        <template v-if="column.key === 'name'">{{ record.name }}</template>
-        <template v-else-if="column.key === 'size'">
-          {{ record.id === 0 ? null : (record.size / 1024 / 1024 / 1024) + ' GB' }}
+          <template v-if="column.key === 'name'">{{ record.name }}</template>
+          <template v-if="column.key === 'size'">
+            {{ record.key === "0" ? null : (record.size / 1024 / 1024 / 1024) + ' GB' }}
         </template>
       </template>
     </a-table>
@@ -160,17 +160,6 @@ export default {
         this.initDataItem()
         this.dataItems = this.dataItems.concat(newData)
       }
-    },
-    isIsoSelected () {
-      if (this.isIsoSelected) {
-        this.dataItems = this.dataItems.filter(item => item.id !== '0')
-      } else {
-        this.dataItems.unshift({
-          id: '0',
-          name: this.$t('label.noselect'),
-          size: undefined
-        })
-      }
     }
   },
   methods: {
@@ -218,7 +207,7 @@ export default {
             this.rbdSelected = rowSelected[0]
           }
           this.selectedRowKeys = [record.key]
-          this.$emit('select-rbd-offering-item', record.key)
+          this.$emit('select-rbd-image-item', record.key)
           this.$emit('on-selected-rbd-size', this.rbdSelected)
         }
       }
@@ -230,6 +219,20 @@ export default {
 <style lang="less" scoped>
   .ant-table-wrapper {
     margin: 2rem 0;
+  }
+  .search-input {
+    width: 25vw;
+    z-index: 8;
+    position: absolute;
+    top: 11px;
+    right: 10px;
+
+    @media (max-width: 600px) {
+      position: relative;
+      width: 100%;
+      top: 0;
+      right: 0;
+    }
   }
 
   :deep(.ant-table-tbody) > tr > td {
