@@ -216,7 +216,7 @@ public class LinstorPrimaryDataStoreDriverImpl implements PrimaryDataStoreDriver
                 }
                 throw new CloudRuntimeException("Linstor: Unable to delete resource definition: " + rscDefName);
             }
-            s_logger.info(String.format("Linstor: Deleted resource %s", rscDefName));
+            logger.info(String.format("Linstor: Deleted resource %s", rscDefName));
         } catch (ApiException apiEx)
         {
             logger.error("Linstor: ApiEx - " + apiEx.getMessage());
@@ -903,7 +903,7 @@ public class LinstorPrimaryDataStoreDriverImpl implements PrimaryDataStoreDriver
                 }
             }
         }
-        s_logger.error("Linstor: No diskfull host found.");
+        logger.error("Linstor: No diskfull host found.");
         return Optional.empty();
     }
 

@@ -744,6 +744,11 @@ public class EventTypes {
     public static final String EVENT_QUOTA_TARIFF_DELETE = "QUOTA.TARIFF.DELETE";
     public static final String EVENT_QUOTA_TARIFF_UPDATE = "QUOTA.TARIFF.UPDATE";
 
+    // Quota
+    public static final String EVENT_QUOTA_TARIFF_CREATE = "QUOTA.TARIFF.CREATE";
+    public static final String EVENT_QUOTA_TARIFF_DELETE = "QUOTA.TARIFF.DELETE";
+    public static final String EVENT_QUOTA_TARIFF_UPDATE = "QUOTA.TARIFF.UPDATE";
+
     static {
 
         // TODO: need a way to force author adding event types to declare the entity details as well, with out braking
