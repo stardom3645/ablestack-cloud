@@ -36,6 +36,7 @@ import org.apache.cloudstack.api.ApiConstants;
 import org.apache.cloudstack.api.response.ServiceOfferingResponse;
 import org.apache.cloudstack.context.CallContext;
 import org.apache.cloudstack.framework.config.dao.ConfigurationDao;
+
 import org.springframework.stereotype.Component;
 
 import com.cloud.api.ApiDBUtils;
@@ -195,7 +196,7 @@ public class ServiceOfferingJoinDaoImpl extends GenericDaoBase<ServiceOfferingJo
 
     @Override
     public Map<Long, List<String>> listDomainsOfServiceOfferingsUsedByDomainPath(String domainPath) {
-        logger.debug(String.format("Retrieving the domains of the service offerings used by domain with path [%s].", domainPath));
+        logger.debug("Retrieving the domains of the service offerings used by domain with path [{}].", domainPath);
 
         TransactionLegacy txn = TransactionLegacy.currentTxn();
         try (PreparedStatement pstmt = txn.prepareStatement(LIST_DOMAINS_OF_SERVICE_OFFERINGS_USED_BY_DOMAIN_PATH)) {

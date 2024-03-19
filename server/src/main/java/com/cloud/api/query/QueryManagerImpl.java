@@ -3516,6 +3516,16 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
             sc.setJoinParameters("domainDetailsSearch", "domainIdIN", domainIds.toArray());
         }
 
+        if (vmId != null) {
+            UserVmVO vm = userVmDao.findById(vmId);
+            if (vm == null) {
+                throw new InvalidParameterValueException("Unable to find the VM instance with the specified ID");
+            }
+            if (!isRootAdmin) {
+                accountMgr.checkAccess(account, null, false, vm);
+            }
+        }
+
         Pair<List<DiskOfferingVO>, Integer> uniquePairs = _diskOfferingDao.searchAndCount(sc, searchFilter);
         String[] requiredTagsArray = new String[0];
         if (CollectionUtils.isNotEmpty(uniquePairs.first()) && VolumeApiServiceImpl.MatchStoragePoolTagsWithDiskOffering.valueIn(zoneId)) {

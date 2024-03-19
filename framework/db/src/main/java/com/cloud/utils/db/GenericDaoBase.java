@@ -1631,6 +1631,7 @@ public abstract class GenericDaoBase<T, ID extends Serializable> extends Compone
             }
         }
         
+
         if (attr.getValue() != null && attr.getValue() instanceof String) {
             pstmt.setString(j, (String)attr.getValue());
         } else if (attr.getValue() != null && attr.getValue() instanceof Long) {
@@ -1650,7 +1651,7 @@ public abstract class GenericDaoBase<T, ID extends Serializable> extends Compone
                 // This happens when we pass in an integer, long or any other object which can't be cast to String.
                 // Converting to string in case of integer or long can result in different results. Required specifically for details tables.
                 // So, we set the value for the object directly.
-                s_logger.debug("ClassCastException when casting value to String. Setting the value of the object directly.");
+                logger.debug("ClassCastException when casting value to String. Setting the value of the object directly.");
                 pstmt.setObject(j, value);
                 return;
             }
