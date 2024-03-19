@@ -21,26 +21,29 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
 import javax.inject.Inject;
 import javax.naming.ConfigurationException;
 
-import org.apache.cloudstack.api.command.admin.GetDisasterRecoveryCmd;
-import org.apache.cloudstack.api.command.admin.RunDisasterRecoveryCmd;
-import org.apache.cloudstack.api.response.GetDisasterRecoveryResponse;
+import com.cloud.exception.InvalidParameterValueException;
+import com.cloud.utils.db.Filter;
+import com.cloud.utils.db.SearchBuilder;
+import com.cloud.utils.db.SearchCriteria;
+import org.apache.cloudstack.api.ApiConstants;
+import org.apache.cloudstack.api.command.admin.GetDisasterRecoveryClusterListCmd;
+import org.apache.cloudstack.api.command.admin.RunDisasterRecoveryClusterCmd;
+import org.apache.cloudstack.api.command.admin.UpdateDisasterRecoveryClusterCmd;
+import org.apache.cloudstack.api.response.GetDisasterRecoveryClusterListResponse;
+import org.apache.cloudstack.api.response.ListResponse;
 import org.apache.cloudstack.context.CallContext;
 import org.apache.cloudstack.framework.config.ConfigKey;
-import org.apache.cloudstack.framework.config.Configurable;
 import org.apache.cloudstack.managed.context.ManagedContextRunnable;
 import org.apache.cloudstack.management.ManagementServerHost;
 import org.apache.cloudstack.utils.identity.ManagementServerNode;
-import org.apache.commons.lang3.StringUtils;
 
 import com.cloud.alert.AlertManager;
 import com.cloud.cluster.ManagementServerHostVO;
@@ -49,22 +52,18 @@ import com.cloud.event.ActionEvent;
 import com.cloud.event.ActionEventUtils;
 import com.cloud.event.EventTypes;
 import com.cloud.event.EventVO;
-import com.cloud.security.dao.DisasterRecoveryDao;
+import com.cloud.dr.dao.DisasterRecoveryClusterDao;
 import com.cloud.utils.component.ManagerBase;
-import com.cloud.utils.component.PluggableService;
 import com.cloud.utils.concurrency.NamedThreadFactory;
 import com.cloud.utils.exception.CloudRuntimeException;
 import com.cloud.utils.script.Script;
 
-public class DisasterRecoveryServiceImpl extends ManagerBase implements PluggableService, DisasterRecoveryService, Configurable {
+public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements DisasterRecoveryClusterService {
 
-    private static final ConfigKey<Integer> DisasterRecoveryInterval = new ConfigKey<>("Advanced", Integer.class,
-            "security.check.interval", "1",
-            "The interval disaster recovery background tasks in days", false);
     private static String runMode = "";
 
     @Inject
-    private DisasterRecoveryDao securityCheckDao;
+    private DisasterRecoveryClusterDao disasterRecoveryClusterDao;
     @Inject
     private ManagementServerHostDao msHostDao;
     @Inject
@@ -74,15 +73,6 @@ public class DisasterRecoveryServiceImpl extends ManagerBase implements Pluggabl
     @Override
     public boolean configure(String name, Map<String, Object> params) throws ConfigurationException {
         executor = Executors.newScheduledThreadPool(1, new NamedThreadFactory("DisasterRecoveryer"));
-        return true;
-    }
-
-    @Override
-    public boolean start() {
-        runMode = "first";
-        if(DisasterRecoveryInterval.value() != 0) {
-            executor.scheduleAtFixedRate(new DisasterRecoveryTask(), 0, DisasterRecoveryInterval.value(), TimeUnit.DAYS);
-        }
         return true;
     }
 
@@ -136,7 +126,7 @@ public class DisasterRecoveryServiceImpl extends ManagerBase implements Pluggabl
                     } else {
                         checkMessage = "process operates normally";
                     }
-                    updateDisasterRecoveryResult(msHost.getId(), checkName, Boolean.parseBoolean(checkResult), checkMessage);
+//                    updateDisasterRecoveryResult(msHost.getId(), checkName, Boolean.parseBoolean(checkResult), checkMessage);
                 }
                 if (runMode == "first") {
                     ActionEventUtils.onCompletedActionEvent(CallContext.current().getCallingUserId(), CallContext.current().getCallingAccountId(), EventVO.LEVEL_INFO,
@@ -154,25 +144,91 @@ public class DisasterRecoveryServiceImpl extends ManagerBase implements Pluggabl
     }
 
     @Override
-    public List<GetDisasterRecoveryResponse> listDisasterRecoverys(GetDisasterRecoveryCmd cmd) {
-        long mshostId = cmd.getMsHostId();
-        List<DisasterRecovery> result = new ArrayList<>(securityCheckDao.getDisasterRecoverys(mshostId));
-        List<GetDisasterRecoveryResponse> responses = new ArrayList<>(result.size());
-        for (DisasterRecovery scResult : result) {
-            GetDisasterRecoveryResponse securityCheckResponse = new GetDisasterRecoveryResponse();
-            securityCheckResponse.setObjectName("securitychecks");
-            securityCheckResponse.setCheckName(scResult.getCheckName());
-            securityCheckResponse.setResult(scResult.getCheckResult());
-            securityCheckResponse.setLastUpdated(scResult.getLastUpdateTime());
-            securityCheckResponse.setDetails(scResult.getParsedCheckDetails());
-            responses.add(securityCheckResponse);
+    public ListResponse<GetDisasterRecoveryClusterListResponse> listDisasterRecoveryClusterResponse(GetDisasterRecoveryClusterListCmd cmd) {
+        Long id = cmd.getId();
+        String name = cmd.getName();
+        List<GetDisasterRecoveryClusterListResponse> responsesList = new ArrayList<>();
+        Filter searchFilter = new Filter(DisasterRecoveryClusterVO.class, "id", true, cmd.getStartIndex(), cmd.getPageSizeVal());
+        SearchBuilder<DisasterRecoveryClusterVO> sb = this.disasterRecoveryClusterDao.createSearchBuilder();
+
+        sb.and("id", sb.entity().getId(), SearchCriteria.Op.EQ);
+        sb.and("name", sb.entity().getName(), SearchCriteria.Op.EQ);
+        sb.and("keyword", sb.entity().getName(), SearchCriteria.Op.LIKE);
+        SearchCriteria<DisasterRecoveryClusterVO> sc = sb.create();
+        String keyword = cmd.getKeyword();
+        if (keyword != null){
+            sc.setParameters("keyword", "%" + keyword + "%");
         }
-        return responses;
+        if (id != null) {
+            sc.setParameters("id", id);
+        }
+        if (name != null) {
+            sc.setParameters("name", name);
+        }
+        if(keyword != null){
+            sc.addOr("uuid", SearchCriteria.Op.LIKE, "%" + keyword + "%");
+            sc.setParameters("keyword", "%" + keyword + "%");
+        }
+        List <DisasterRecoveryClusterVO> results = disasterRecoveryClusterDao.search(sc, searchFilter);
+        for (DisasterRecoveryClusterVO result : results) {
+            GetDisasterRecoveryClusterListResponse automationControllerResponse = setDisasterRecoveryListResultResponse(result.getId());
+            responsesList.add(automationControllerResponse);
+        }
+        ListResponse<GetDisasterRecoveryClusterListResponse> response = new ListResponse<>();
+        response.setResponses(responsesList);
+        return response;
+    }
+
+    public GetDisasterRecoveryClusterListResponse setDisasterRecoveryListResultResponse(long clusterId) {
+        DisasterRecoveryClusterVO drcluster = disasterRecoveryClusterDao.findById(clusterId);
+        GetDisasterRecoveryClusterListResponse response = new GetDisasterRecoveryClusterListResponse();
+        response.setObjectName("disasterrecoverycluster");
+        response.setId(drcluster.getUuid());
+        response.setName(drcluster.getName());
+        response.setDrClusterUuid(drcluster.getDrClusterUuid());
+        response.setDrClusterIp(drcluster.getDrClusterIp());
+        response.setDrClusterPort(drcluster.getDrClusterPort());
+        response.setDrClusterType(drcluster.getDrClusterType());
+        response.setDrClusterStatus(drcluster.getDrClusterStatus());
+        response.setMirroringAgentStatus(drcluster.getMirroringAgentStatus());
+        response.setApiKey(drcluster.getApiKey());
+        response.setSecretKey(drcluster.getSecretKey());
+        response.setCreated(drcluster.getCreated());
+        return response;
+    }
+
+    @Override
+    public GetDisasterRecoveryClusterListResponse updateDisasterRecoveryCluster(UpdateDisasterRecoveryClusterCmd cmd) throws CloudRuntimeException {
+        if (!DisasterRecoveryClusterService.DisasterRecoveryFeatureEnabled.value()) {
+            throw new CloudRuntimeException("Disaster Recovery plugin is disabled");
+        }
+        final Long drClusterId = cmd.getId();
+        DisasterRecoveryCluster.DrClusterStatus drClusterStatus = null;
+        DisasterRecoveryCluster.MirroringAgentStatus mirroringAgentStatus = null;
+        DisasterRecoveryClusterVO drcluster = disasterRecoveryClusterDao.findById(drClusterId);
+        if (drcluster == null) {
+            throw new InvalidParameterValueException("Invalid Disaster Recovery id specified");
+        }
+        try {
+            drClusterStatus = DisasterRecoveryCluster.DrClusterStatus.valueOf(cmd.getDrClusterStatus());
+            mirroringAgentStatus = DisasterRecoveryCluster.MirroringAgentStatus.valueOf(cmd.getMirroringAgentStatus());
+        } catch (IllegalArgumentException iae) {
+            throw new InvalidParameterValueException(String.format("Invalid value for %s parameter", ApiConstants.STATE));
+        }
+        if (!drClusterStatus.equals(drcluster.getDrClusterStatus()) && !mirroringAgentStatus.equals(drcluster.getMirroringAgentStatus())) {
+            drcluster = disasterRecoveryClusterDao.createForUpdate(drcluster.getId());
+            drcluster.setDrClusterStatus(String.valueOf(drcluster));
+            if (!disasterRecoveryClusterDao.update(drcluster.getId(), drcluster)) {
+                throw new CloudRuntimeException(String.format("Failed to update Disaster Recovery ID: %s", drcluster.getUuid()));
+            }
+            drcluster = disasterRecoveryClusterDao.findById(drClusterId);
+        }
+        return setDisasterRecoveryListResultResponse(drcluster.getId());
     }
 
     @Override
     @ActionEvent(eventType = EventTypes.EVENT_SECURITY_CHECK, eventDescription = "disaster recovery perform on the management server when operating the product", async = true)
-    public boolean runDisasterRecoveryCommand(final RunDisasterRecoveryCmd cmd) {
+    public boolean runDisasterRecoveryCommand(final RunDisasterRecoveryClusterCmd cmd) {
         Long mshostId = cmd.getMsHostId();
         ManagementServerHost mshost = msHostDao.findById(mshostId);
         String path = Script.findScript("scripts/security/", "securitycheck.sh");
@@ -197,7 +253,7 @@ public class DisasterRecoveryServiceImpl extends ManagerBase implements Pluggabl
                 } else {
                     checkMessage = "process operates normally";
                 }
-                updateDisasterRecoveryResult(mshost.getId(), checkName, Boolean.parseBoolean(checkResult), checkMessage);
+//                updateDisasterRecoveryResult(mshost.getId(), checkName, Boolean.parseBoolean(checkResult), checkMessage);
                 output.append(line).append('\n');
             }
             if (output.toString().contains("false")) {
@@ -210,42 +266,30 @@ public class DisasterRecoveryServiceImpl extends ManagerBase implements Pluggabl
         }
     }
 
-    private void updateDisasterRecoveryResult(final long msHostId, String checkName, boolean checkResult, String checkMessage) {
-        boolean newDisasterRecoveryEntry = false;
-        DisasterRecoveryVO connectivityVO = securityCheckDao.getDisasterRecoveryResult(msHostId, checkName);
-        if (connectivityVO == null) {
-            connectivityVO = new DisasterRecoveryVO(msHostId, checkName);
-            newDisasterRecoveryEntry = true;
-        }
-        connectivityVO.setCheckResult(checkResult);
-        connectivityVO.setLastUpdateTime(new Date());
-        if (StringUtils.isNotEmpty(checkMessage)) {
-            connectivityVO.setCheckDetails(checkMessage.getBytes(com.cloud.utils.StringUtils.getPreferredCharset()));
-        }
-        if (newDisasterRecoveryEntry) {
-            securityCheckDao.persist(connectivityVO);
-        } else {
-            securityCheckDao.update(connectivityVO.getId(), connectivityVO);
-        }
-    }
-
     @Override
     public List<Class<?>> getCommands() {
         List<Class<?>> cmdList = new ArrayList<>();
-        cmdList.add(RunDisasterRecoveryCmd.class);
-        cmdList.add(GetDisasterRecoveryCmd.class);
+//        cmdList.add(RunDisasterRecoveryCmd.class);
+        cmdList.add(GetDisasterRecoveryClusterListCmd.class);
+        cmdList.add(UpdateDisasterRecoveryClusterCmd.class);
         return cmdList;
     }
 
     @Override
+    public DisasterRecoveryCluster findById(final Long id) {
+        return disasterRecoveryClusterDao.findById(id);
+    }
+
+    @Override
     public String getConfigComponentName() {
-        return DisasterRecoveryServiceImpl.class.getSimpleName();
+        return DisasterRecoveryClusterService.class.getSimpleName();
     }
 
     @Override
     public ConfigKey<?>[] getConfigKeys() {
-        return new ConfigKey<?>[]{
-                DisasterRecoveryInterval
+        return new ConfigKey<?>[] {
+                DisasterRecoveryFeatureEnabled
         };
     }
+
 }

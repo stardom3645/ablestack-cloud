@@ -31,20 +31,20 @@ import org.apache.cloudstack.api.response.ManagementServerResponse;
 import org.apache.cloudstack.api.response.SuccessResponse;
 
 import com.cloud.user.Account;
-import com.cloud.dr.DisasterRecovery;
-import com.cloud.dr.DisasterRecoveryService;
+import com.cloud.dr.DisasterRecoveryCluster;
+import com.cloud.dr.DisasterRecoveryClusterService;
 
-@APICommand(name = RunDisasterRecoveryCmd.APINAME,
+@APICommand(name = RunDisasterRecoveryClusterCmd.APINAME,
         description = "Execute disaster recovery command on management server",
         responseObject = SuccessResponse.class,
         responseView = ResponseObject.ResponseView.Full,
-        entityType = {DisasterRecovery.class},
+        entityType = {DisasterRecoveryCluster.class},
         authorized = {RoleType.Admin})
-public class RunDisasterRecoveryCmd extends BaseCmd {
+public class RunDisasterRecoveryClusterCmd extends BaseCmd {
     public static final String APINAME = "runDisasterRecovery";
 
     @Inject
-    private DisasterRecoveryService disasterRecovery;
+    private DisasterRecoveryClusterService disasterRecovery;
 
     /////////////////////////////////////////////////////
     //////////////// API parameters /////////////////////

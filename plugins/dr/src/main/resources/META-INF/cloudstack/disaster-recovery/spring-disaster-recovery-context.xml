@@ -27,6 +27,6 @@
                       http://www.springframework.org/schema/context/spring-context-3.0.xsd"
                       >
 
-    <bean id="disasterRecoveryDaoImpl" class="com.cloud.dr.dao.DisasterRecoveryDaoImpl"/>
-    <bean id="disasterRecoveryServiceImpl" class="com.cloud.dr.DisasterRecoveryServiceImpl" />
+    <bean id="disasterRecoveryClusterDaoImpl" class="com.cloud.dr.dao.DisasterRecoveryClusterDaoImpl"/>
+    <bean id="disasterRecoveryClusterServiceImpl" class="com.cloud.dr.DisasterRecoveryClusterServiceImpl" />
 </beans>

@@ -19,20 +19,20 @@ package com.cloud.dr.dao;
 
 import java.util.List;
 
-import com.cloud.security.DisasterRecoveryVO;
+import com.cloud.dr.DisasterRecoveryClusterVO;
 import com.cloud.utils.db.GenericDao;
 
-public interface DisasterRecoveryDao extends GenericDao<DisasterRecoveryVO, Long> {
+public interface DisasterRecoveryClusterDao extends GenericDao<DisasterRecoveryClusterVO, Long> {
     /**
-     * @param msHostId
+     * @param id
      * @return Returns all the security checks in the database for the given management server id
      */
-    List<DisasterRecoveryVO> getDisasterRecoverys(long msHostId);
+    List<DisasterRecoveryClusterVO> getDisasterRecoveryClusterList(long id);
 
      /**
      * @param msHostId
      * @param checkName
      * @return returns the check result for the msHostId, the check name.
      */
-    DisasterRecoveryVO getDisasterRecoveryResult(long msHostId, String checkName);
+    DisasterRecoveryClusterVO getDisasterRecoveryResult(long msHostId, String checkName);
 }

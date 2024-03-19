@@ -20,17 +20,47 @@
 
 package com.cloud.dr;
 
+import org.apache.cloudstack.api.Identity;
+import org.apache.cloudstack.api.InternalIdentity;
+
 import java.util.Date;
 
-public interface DisasterRecovery {
+public interface DisasterRecoveryCluster extends InternalIdentity, Identity {
+
+    public enum DrClusterStatus {
+        Disabled, Enabled
+    }
+
+    public enum MirroringAgentStatus {
+        Disabled, Enabled
+    }
+
+    long getId();
+
+    String getUuid();
+
     long getMsHostId();
 
-    String getCheckName();
+    String getName();
 
-    boolean getCheckResult();
+    String getDrClusterUuid();
 
-    Date getLastUpdateTime();
+    String getDrClusterIp();
 
-    String getParsedCheckDetails();
+    String getDrClusterPort();
+
+    String getDrClusterType();
+
+    String getDrClusterStatus();
+
+    String getMirroringAgentStatus();
+
+    String getApiKey();
+
+    String getSecretKey();
+
+    Date getCreated();
+
+    Date getRemoved();
 
 }

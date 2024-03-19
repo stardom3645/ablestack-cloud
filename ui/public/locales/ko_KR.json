@@ -4191,5 +4191,13 @@
 "message.add.disaster.recovery.cluster": "\uD604\uC7AC \uD074\uB7EC\uC2A4\uD130\uC640 \uC5F0\uACB0\uD560 \uC7AC\uB09C \uBCF5\uAD6C \uD074\uB7EC\uC2A4\uD130\uB97C \uCD94\uAC00\uD569\uB2C8\uB2E4. \uCD94\uAC00 \uC644\uB8CC\uB418\uBA74 \uC0C1\uB300 \uD074\uB7EC\uC2A4\uD130 \uC7AC\uB09C \uBCF5\uAD6C \uD074\uB7EC\uC2A4\uD130 \uBA54\uB274 \uB9AC\uC2A4\uD2B8\uC5D0 \uC790\uB3D9\uC73C\uB85C \uB4F1\uB85D\uB429\uB2C8\uB2E4.",
 "message.disaster.recovery.cluster.connection.test.title": "\uD074\uB7EC\uC2A4\uD130 \uC5F0\uACB0 \uD14C\uC2A4\uD2B8",
 "message.disaster.recovery.cluster.connection.test.description": "\uCD94\uAC00\uD558\uB824\uB294 \uD074\uB7EC\uC2A4\uD130\uC640 \uC5F0\uACB0\uD14C\uC2A4\uD2B8\uB97C \uC9C4\uD589\uD569\uB2C8\uB2E4.",
-"label.disaster.recovery.cluster.start.connection.test.description": "\uC5F0\uACB0 \uD14C\uC2A4\uD2B8"
+"label.disaster.recovery.cluster.start.connection.test.description": "\uC5F0\uACB0 \uD14C\uC2A4\uD2B8",
+"label.drclustername": "\uC774\uB984",
+"label.drclustertype": "\uD074\uB7EC\uC2A4\uD130 \uD0C0\uC785",
+"label.drclusterip": "IP",
+"label.drclusterport": "\uD3EC\uD2B8",
+"label.drclusterstatus": "\uD074\uB7EC\uC2A4\uD130 \uC0C1\uD0DC",
+"label.mirroringagentstatus": "\uBBF8\uB7EC\uB9C1 \uC5D0\uC774\uC804\uD2B8 \uC0C1\uD0DC",
+"label.add.disaster.recovery.cluster": "\uC7AC\uB09C \uBCF5\uAD6C \uD074\uB7EC\uC2A4\uD130 \uCD94\uAC00",
+"label.edit.disaster.recovery.cluster": "\uC7AC\uB09C \uBCF5\uAD6C \uD074\uB7EC\uC2A4\uD130 \uD3B8\uC9D1"
 }

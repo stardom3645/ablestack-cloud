@@ -18,79 +18,34 @@
 import { shallowRef, defineAsyncComponent } from 'vue'
 
 export default {
-  name: 'disasterRecovery',
+  name: 'disasterrecoverycluster',
   title: 'label.disaster.recovery.clusters',
   icon: 'SubnodeOutlined',
-  permission: ['listManagementServersMetrics'],
-  columns: ['name', 'state', 'version'],
-  details: ['collectiontime', 'usageislocal', 'dbislocal', 'lastserverstart', 'lastserverstop', 'lastboottime', 'version', 'loginfo', 'systemtotalcpucycles', 'systemloadaverages', 'systemcycleusage', 'systemmemorytotal', 'systemmemoryfree', 'systemmemoryvirtualsize', 'availableprocessors', 'javadistribution', 'javaversion', 'osdistribution', 'kernelversion', 'agentcount', 'sessions', 'heapmemoryused', 'heapmemorytotal', 'threadsblockedcount', 'threadsdeamoncount', 'threadsnewcount', 'threadsrunnablecount', 'threadsterminatedcount', 'threadstotalcount', 'threadswaitingcount'],
+  permission: ['getDisasterRecoveryClusterList'],
+  columns: ['name', 'drclustertype', 'drclusterip', 'drclusterstatus', 'mirroringagentstatus'],
+  details: ['name', 'id', 'drclustertype', 'drclusterip', 'drclusterport', 'drclusterstatus', 'mirroringagentstatus'],
   tabs: [
     {
-      name: 'details',
-      component: shallowRef(defineAsyncComponent(() => import('@/components/view/DetailsTab.vue')))
-    },
-    {
-      name: 'pending.jobs',
-      component: shallowRef(defineAsyncComponent(() => import('@/views/infra/AsyncJobsTab.vue')))
-    },
-    {
-      name: 'security.check',
-      component: shallowRef(defineAsyncComponent(() => import('@/views/infra/SecurityCheckTab.vue')))
-    },
-    {
-      name: 'integrity.verification',
-      component: shallowRef(defineAsyncComponent(() => import('@/views/infra/IntegrityVerificationTab.vue')))
-    },
-    {
-      name: 'comments',
-      component: shallowRef(defineAsyncComponent(() => import('@/components/view/AnnotationsTab.vue')))
+      component: shallowRef(defineAsyncComponent(() => import('@/views/infra/DisasterRecoveryClusterTab.vue')))
     }
   ],
   actions: [
     {
-      api: 'createPod',
+      api: 'addImageStore',
       icon: 'plus-outlined',
+      docHelp: '',
       label: 'label.add.disaster.recovery.cluster',
       listView: true,
       popup: true,
-      component: shallowRef(defineAsyncComponent(() => import('@/views/infra/DisasterRecoveryClusterAdd.vue')))
+      component: shallowRef(defineAsyncComponent(() => import('@/views/infra/AddSecondaryStorage.vue')))
     },
     {
-      api: 'prepareForShutdown',
-      icon: 'exclamation-circle-outlined',
-      label: 'label.prepare.for.shutdown',
-      message: 'message.prepare.for.shutdown',
+      api: 'updateDisasterRecoveryCluster',
+      icon: 'edit-outlined',
+      label: 'label.disaster.recovery.cluster.edit',
       dataView: true,
       popup: true,
-      confirmationText: 'SHUTDOWN',
-      show: (record, store) => { return record.state === 'Up' },
-      component: shallowRef(defineAsyncComponent(() => import('@/views/infra/Confirmation.vue')))
-    },
-    {
-      api: 'triggerShutdown',
-      icon: 'poweroff-outlined',
-      label: 'label.trigger.shutdown',
-      message: 'message.trigger.shutdown',
-      dataView: true,
-      popup: true,
-      confirmationText: 'SHUTDOWN',
-      show: (record, store) => { return ['Up', 'PreparingToShutDown', 'ReadyToShutDown'].includes(record.state) },
-      component: shallowRef(defineAsyncComponent(() => import('@/views/infra/Confirmation.vue')))
-    },
-    {
-      api: 'cancelShutdown',
-      icon: 'close-circle-outlined',
-      label: 'label.cancel.shutdown',
-      message: 'message.cancel.shutdown',
-      docHelp: 'installguide/configuration.html#adding-a-zone',
-      dataView: true,
-      popup: true,
-      show: (record, store) => { return ['PreparingToShutDown', 'ReadyToShutDown', 'ShuttingDown'].includes(record.state) },
-      mapping: {
-        managementserverid: {
-          value: (record, params) => { return record.id }
-        }
-      }
+      component: shallowRef(defineAsyncComponent(() => import('@/views/infra/UpdateDisasterRecoveryCluster.vue')))
     },
     {
       api: 'runSecurityCheck',
