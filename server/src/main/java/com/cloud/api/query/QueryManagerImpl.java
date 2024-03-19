@@ -5018,7 +5018,7 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
         }
         accountMgr.buildACLSearchBuilder(sb, domainId, isRecursive, permittedAccountIds, listProjectResourcesCriteria);
         sb.and("statusNEQ", sb.entity().getStatus(), SearchCriteria.Op.NEQ); //exclude those Destroyed snapshot, not showing on UI
-        sb.and("volumeId", sb.entity().getVolumeId(), SearchCriteria.Op.EQ);
+        sb.and("volumeId", sb.entity().getVolumeId(), SearchCriteria.Op.IN);
         sb.and("name", sb.entity().getName(), SearchCriteria.Op.EQ);
         sb.and("id", sb.entity().getId(), SearchCriteria.Op.EQ);
         sb.and("idIN", sb.entity().getId(), SearchCriteria.Op.IN);
@@ -5063,7 +5063,15 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
         }
 
         if (volumeId != null) {
-            sc.setParameters("volumeId", volumeId);
+            VolumeVO vol = volumeDao.findById(volumeId);
+            List<VolumeVO> sharedList = volumeDao.findBySharedVolume(vol.getPoolId(), vol.getPath());
+            List<Long> sharedVolume = new ArrayList<Long>();
+            for (VolumeVO shared : sharedList) {
+                sharedVolume.add(shared.getId());
+            }
+            if (!sharedVolume.isEmpty()) {
+                sc.setParameters("volumeId", sharedVolume.toArray());
+            }
         }
 
         if (tags != null && !tags.isEmpty()) {
