@@ -32,6 +32,7 @@ public class ListRbdVolumesCmd extends ListVolumesCmd implements UserCmd {
     @Parameter(name = ApiConstants.CUSTOMIMAGES, type = CommandType.STRING, description = "state of the volume. Possible values are: Ready, Allocated, Destroy, Expunging, Expunged.")
     private Boolean customImages;
 
+
     public Boolean getCustomImages() {
         return customImages;
     }
