@@ -23,8 +23,7 @@ import org.apache.log4j.Logger;
 import java.io.InputStream;
 import java.sql.Connection;
 
-public class Upgrade41900to41910 implements DbUpgrade, DbUpgradeSystemVmTemplate {
-    final static Logger LOG = Logger.getLogger(Upgrade41900to41910.class);
+public class Upgrade41900to41910 extends DbUpgradeAbstractImpl implements DbUpgrade, DbUpgradeSystemVmTemplate {
     private SystemVmTemplateRegistration systemVmTemplateRegistration;
 
     @Override
@@ -75,7 +74,7 @@ public class Upgrade41900to41910 implements DbUpgrade, DbUpgradeSystemVmTemplate
 
     @Override
     public void updateSystemVmTemplates(Connection conn) {
-        LOG.debug("Updating System Vm template IDs");
+        logger.debug("Updating System Vm template IDs");
         initSystemVmTemplateRegistration();
         try {
             systemVmTemplateRegistration.updateSystemVmTemplates(conn);
