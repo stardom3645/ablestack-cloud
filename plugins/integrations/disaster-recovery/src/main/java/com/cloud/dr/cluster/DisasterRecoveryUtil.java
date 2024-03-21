@@ -77,7 +77,7 @@ public class DisasterRecoveryUtil {
             connection.setDoOutput(true);
             connection.setRequestMethod(method);
             connection.setConnectTimeout(30000);
-            connection.setReadTimeout(45000);
+            connection.setReadTimeout(600000);
             connection.setRequestProperty("Accept", "application/json");
             connection.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
             if (connection.getResponseCode() == 200) {
@@ -126,7 +126,7 @@ public class DisasterRecoveryUtil {
             connection.setDoOutput(true);
             connection.setRequestMethod(method);
             connection.setConnectTimeout(30000);
-            connection.setReadTimeout(45000);
+            connection.setReadTimeout(600000);
             connection.setRequestProperty("Accept", "application/json");
             connection.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
             if (connection.getResponseCode() == 200) {
@@ -174,7 +174,7 @@ public class DisasterRecoveryUtil {
             connection.setDoOutput(true);
             connection.setRequestMethod(method);
             connection.setConnectTimeout(30000);
-            connection.setReadTimeout(45000);
+            connection.setReadTimeout(600000);
             connection.setRequestProperty("Accept", "application/json");
             connection.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
             // parameter 추가 시 사용 예정
@@ -221,7 +221,7 @@ public class DisasterRecoveryUtil {
             connection.setDoOutput(true);
             connection.setRequestMethod(method);
             connection.setConnectTimeout(30000);
-            connection.setReadTimeout(45000);
+            connection.setReadTimeout(600000);
             connection.setRequestProperty("Accept", "application/json");
             connection.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
             // parameter 추가 시 사용 예정
@@ -269,7 +269,7 @@ public class DisasterRecoveryUtil {
             connection.setDoOutput(true);
             connection.setRequestMethod(method);
             connection.setConnectTimeout(30000);
-            connection.setReadTimeout(45000);
+            connection.setReadTimeout(600000);
             connection.setRequestProperty("Accept", "application/json");
             connection.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
             if (connection.getResponseCode() == 200) {
@@ -317,7 +317,7 @@ public class DisasterRecoveryUtil {
             connection.setDoOutput(true);
             connection.setRequestMethod(method);
             connection.setConnectTimeout(30000);
-            connection.setReadTimeout(45000);
+            connection.setReadTimeout(600000);
             connection.setRequestProperty("Accept", "application/json");
             connection.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
             // parameter 추가 시 사용 예정
@@ -362,7 +362,7 @@ public class DisasterRecoveryUtil {
             connection.setDoOutput(true);
             connection.setRequestMethod(method);
             connection.setConnectTimeout(30000);
-            connection.setReadTimeout(45000);
+            connection.setReadTimeout(600000);
             connection.setRequestProperty("Accept", "application/json");
             connection.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
             if (connection.getResponseCode() == 200) {
@@ -401,7 +401,7 @@ public class DisasterRecoveryUtil {
             connection.setDoOutput(true);
             connection.setRequestMethod(method);
             connection.setConnectTimeout(30000);
-            connection.setReadTimeout(45000);
+            connection.setReadTimeout(600000);
             connection.setRequestProperty("Accept", "application/json");
             connection.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
             if (connection.getResponseCode() == 200) {
@@ -444,11 +444,11 @@ public class DisasterRecoveryUtil {
     }
 
     /**
-     * Mold API 요청 (파라미터가 없는 경우)
+     * Mold listScvmIpAddress API 요청
      * @param region
      *  <protocol>://<ip>:<port>/client/api/
      * @param command
-     *  listStoragePools
+     *  listScvmIpAddress
      * @param method
      *  GET
      * @param apiKey
@@ -457,7 +457,7 @@ public class DisasterRecoveryUtil {
      *  mold Secret Key
      * @return true = 200, 이외 코드는 false 처리
      */
-    protected static String moldNoParamAPICall(String region, String command, String method, String apiKey, String secretKey) {
+    protected static String moldListScvmIpAddressAPI(String region, String command, String method, String apiKey, String secretKey) {
         try {
             String readLine = null;
             StringBuffer sb = null;
@@ -472,8 +472,8 @@ public class DisasterRecoveryUtil {
                 connection.setSSLSocketFactory(sslContext.getSocketFactory());
                 connection.setDoOutput(true);
                 connection.setRequestMethod(method);
-                connection.setConnectTimeout(30000); //30초
-                connection.setReadTimeout(600000); //3분
+                connection.setConnectTimeout(30000);
+                connection.setReadTimeout(600000);
                 connection.setRequestProperty("Accept", "application/json");
                 connection.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
                 if (connection.getResponseCode() == 200) {
@@ -492,7 +492,7 @@ public class DisasterRecoveryUtil {
                 connection.setDoOutput(true);
                 connection.setRequestMethod(method);
                 connection.setConnectTimeout(30000);
-                connection.setReadTimeout(45000);
+                connection.setReadTimeout(600000);
                 connection.setRequestProperty("Accept", "application/json");
                 connection.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
                 if (connection.getResponseCode() == 200) {
@@ -508,13 +508,9 @@ public class DisasterRecoveryUtil {
                 }
             }
             JSONObject jObject = XML.toJSONObject(sb.toString());
-            if (command == "listScvmIpAddress") {
-                JSONObject response = (JSONObject) jObject.get("listscvmipaddressresponse");
-                JSONObject ipaddress = (JSONObject) response.get("scvmipaddress");
-                return ipaddress.get("ipaddress").toString();
-            } else {
-                return jObject.toString();
-            }
+            JSONObject response = (JSONObject) jObject.get("listscvmipaddressresponse");
+            JSONObject ipaddress = (JSONObject) response.get("scvmipaddress");
+            return ipaddress.get("ipaddress").toString();
         } catch (Exception e) {
             LOGGER.error(String.format("Mold API endpoint not available"), e);
             return null;

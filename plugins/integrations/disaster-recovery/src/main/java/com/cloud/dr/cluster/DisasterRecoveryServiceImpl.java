@@ -60,7 +60,7 @@ public class DisasterRecoveryServiceImpl extends ManagerBase implements Disaster
         String moldCommand = "listScvmIpAddress";
         String moldMethod = "GET";
 
-        String response = DisasterRecoveryUtil.moldNoParamAPICall(moldUrl, moldCommand, moldMethod, apiKey, secretKey);
+        String response = DisasterRecoveryUtil.moldListScvmIpAddressAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey);
         if (response != null || response != "") {
             String[] array = response.split(",");
             for(int i=0; i < array.length; i++) {
