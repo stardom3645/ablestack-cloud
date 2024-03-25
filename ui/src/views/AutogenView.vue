@@ -1273,7 +1273,7 @@ export default {
           break
         }
 
-        if ('id' in this.$route.params && this.$route.params.id !== params.id) {
+        if ('id' in this.$route.params && this.$route.params.id !== params.id && !['listSSHKeyPairs'].includes(this.apiName)) {
           console.log('DEBUG - Discarding API response as its `id` does not match the uuid on the browser path')
           return
         }
