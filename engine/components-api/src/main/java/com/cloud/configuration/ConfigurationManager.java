@@ -209,9 +209,9 @@ public interface ConfigurationManager {
      * @param type
      * @param systemOnly
      * @param serviceOfferingId
-     * @param conserveMode       ;
+     * @param conserveMode
      * @param specifyIpRanges
-     * @param isPersistent       ;
+     * @param isPersistent
      * @param details
      * @param forVpc
      * @param forTungsten

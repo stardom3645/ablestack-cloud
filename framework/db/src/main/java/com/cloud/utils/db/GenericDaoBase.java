@@ -1630,7 +1630,6 @@ public abstract class GenericDaoBase<T, ID extends Serializable> extends Compone
                 return;
             }
         }
-        
 
         if (attr.getValue() != null && attr.getValue() instanceof String) {
             pstmt.setString(j, (String)attr.getValue());

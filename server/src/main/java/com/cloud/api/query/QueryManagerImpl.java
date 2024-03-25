@@ -4071,11 +4071,9 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
                 }
             }
 
-            List<String> hostTags = com.cloud.utils.StringUtils.csvTagsToList(currentVmOffering.getHostTag());
-            if (!hostTags.isEmpty()) {
-                for(String tag : hostTags) {
-                    sc.setParameters(tag, tag);
-                }
+            List<String> offeringHostTags = com.cloud.utils.StringUtils.csvTagsToList(currentVmOffering.getHostTag());
+            if (!offeringHostTags.isEmpty()) {
+                hostTags.addAll(offeringHostTags);
             }
         }
         if (CollectionUtils.isNotEmpty(hostTags)) {
