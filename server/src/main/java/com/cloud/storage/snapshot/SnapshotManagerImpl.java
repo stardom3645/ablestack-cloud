@@ -782,7 +782,7 @@ public class SnapshotManagerImpl extends MutualExclusiveIdsManagerBase implement
         _accountMgr.buildACLSearchBuilder(sb, domainId, isRecursive, permittedAccounts, listProjectResourcesCriteria);
 
         sb.and("statusNEQ", sb.entity().getState(), SearchCriteria.Op.NEQ); //exclude those Destroyed snapshot, not showing on UI
-        sb.and("volumeId", sb.entity().getVolumeId(), SearchCriteria.Op.EQ);
+        sb.and("volumeId", sb.entity().getVolumeId(), SearchCriteria.Op.IN);
         sb.and("name", sb.entity().getName(), SearchCriteria.Op.EQ);
         sb.and("id", sb.entity().getId(), SearchCriteria.Op.EQ);
         sb.and("idIN", sb.entity().getId(), SearchCriteria.Op.IN);
@@ -808,7 +808,15 @@ public class SnapshotManagerImpl extends MutualExclusiveIdsManagerBase implement
         sc.setParameters("statusNEQ", Snapshot.State.Destroyed);
 
         if (volumeId != null) {
-            sc.setParameters("volumeId", volumeId);
+            VolumeVO vol = _volsDao.findById(volumeId);
+            List<VolumeVO> sharedList = _volsDao.findBySharedVolume(vol.getPoolId(), vol.getPath());
+            List<Long> sharedVolume = new ArrayList<Long>();
+            for (VolumeVO shared : sharedList) {
+                sharedVolume.add(shared.getId());
+            }
+            if (!sharedVolume.isEmpty()) {
+                sc.setParameters("volumeId", sharedVolume.toArray());
+            }
         }
 
         if (tags != null && !tags.isEmpty()) {

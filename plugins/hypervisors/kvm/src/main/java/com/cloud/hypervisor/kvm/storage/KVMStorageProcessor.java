@@ -1510,6 +1510,8 @@ public class KVMStorageProcessor implements StorageProcessor {
                 if (ioDriver != null) {
                     resource.setDiskIoDriver(diskdef, resource.getIoDriverForTheStorage(ioDriver.toUpperCase()));
                 }
+                diskdef.setPhysicalBlockIOSize(attachingPool.getSupportedPhysicalBlockSize());
+                diskdef.setLogicalBlockIOSize(attachingPool.getSupportedLogicalBlockSize());
             }
 
             attachOrDetachDevice(conn, attach, vmName, diskdef, waitDetachDevice);
