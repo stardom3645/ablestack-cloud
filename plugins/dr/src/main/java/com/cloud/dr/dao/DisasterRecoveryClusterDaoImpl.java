@@ -34,7 +34,9 @@ public class DisasterRecoveryClusterDaoImpl extends GenericDaoBase<DisasterRecov
         super();
         DisasterRecoveryClusterListSearchBuilder = createSearchBuilder();
         DisasterRecoveryClusterListSearchBuilder.and("msHostId", DisasterRecoveryClusterListSearchBuilder.entity().getMsHostId(), SearchCriteria.Op.EQ);
-        DisasterRecoveryClusterListSearchBuilder.and("name", DisasterRecoveryClusterListSearchBuilder.entity().getName(), SearchCriteria.Op.EQ);
+        DisasterRecoveryClusterListSearchBuilder.and("name", DisasterRecoveryClusterListSearchBuilder.entity().getName(), SearchCriteria.Op.LIKE);
+        DisasterRecoveryClusterListSearchBuilder.and("drClusterIp", DisasterRecoveryClusterListSearchBuilder.entity().getDrClusterIp(), SearchCriteria.Op.LIKE);
+        DisasterRecoveryClusterListSearchBuilder.and("drClusterPort", DisasterRecoveryClusterListSearchBuilder.entity().getDrClusterPort(), SearchCriteria.Op.EQ);
         DisasterRecoveryClusterListSearchBuilder.and("id", DisasterRecoveryClusterListSearchBuilder.entity().getId(), SearchCriteria.Op.EQ);
         DisasterRecoveryClusterListSearchBuilder.done();
     }

@@ -16,17 +16,38 @@
 // under the License.
 
 import { shallowRef, defineAsyncComponent } from 'vue'
+import store from '@/store'
 
 export default {
   name: 'disasterrecoverycluster',
   title: 'label.disaster.recovery.clusters',
+  resourceType: 'DisasterRecoveryCluster',
   icon: 'SubnodeOutlined',
   permission: ['getDisasterRecoveryClusterList'],
   columns: ['name', 'drclustertype', 'drclusterip', 'drclusterstatus', 'mirroringagentstatus'],
   details: ['name', 'id', 'drclustertype', 'drclusterip', 'drclusterport', 'drclusterstatus', 'mirroringagentstatus'],
   tabs: [
     {
+      name: 'details',
+      component: shallowRef(defineAsyncComponent(() => import('@/components/view/DetailsTab.vue')))
+    },
+    {
+      name: 'instance',
       component: shallowRef(defineAsyncComponent(() => import('@/views/infra/DisasterRecoveryClusterTab.vue')))
+    },
+    {
+      name: 'settings',
+      component: shallowRef(defineAsyncComponent(() => import('@/components/view/DetailSettings.vue')))
+    },
+    {
+      name: 'events',
+      resourceType: 'DisasterRecoveryCluster',
+      component: shallowRef(defineAsyncComponent(() => import('@/components/view/EventsTab.vue'))),
+      show: () => { return 'listEvents' in store.getters.apis }
+    },
+    {
+      name: 'comments',
+      component: shallowRef(defineAsyncComponent(() => import('@/components/view/AnnotationsTab.vue')))
     }
   ],
   actions: [
@@ -37,43 +58,68 @@ export default {
       label: 'label.add.disaster.recovery.cluster',
       listView: true,
       popup: true,
-      component: shallowRef(defineAsyncComponent(() => import('@/views/infra/AddSecondaryStorage.vue')))
+      component: shallowRef(defineAsyncComponent(() => import('@/views/infra/DisasterRecoveryClusterAdd.vue')))
     },
     {
       api: 'updateDisasterRecoveryCluster',
       icon: 'edit-outlined',
-      label: 'label.disaster.recovery.cluster.edit',
+      label: 'label.edit.disaster.recovery.cluster',
       dataView: true,
       popup: true,
       component: shallowRef(defineAsyncComponent(() => import('@/views/infra/UpdateDisasterRecoveryCluster.vue')))
     },
     {
-      api: 'runSecurityCheck',
-      icon: 'safety-outlined',
-      label: 'label.security.check',
-      message: 'message.confirm.security.check',
+      api: 'updateDisasterRecoveryCluster',
+      icon: 'play-circle-outlined',
+      label: 'label.action.enable.disaster.recovery.cluster',
       dataView: true,
       popup: true,
-      show: (record, store) => { return record.state === 'Up' && ['Admin'].includes(store.userInfo.roletype) },
+      show: (record) => { return record.drclusterstatus === 'Disabled' },
+      args: ['drclusterstatus'],
       mapping: {
-        managementserverid: {
-          value: (record) => { return record.id }
+        drclusterstatus: {
+          value: (record) => 'Enabled'
         }
       }
     },
     {
-      api: 'runIntegrityVerification',
-      icon: 'OneToOneOutlined',
-      label: 'label.integrity.verification',
-      message: 'message.confirm.integrity.verification',
+      api: 'updateDisasterRecoveryCluster',
+      icon: 'pause-circle-outlined',
+      label: 'label.action.disable.disaster.recovery.cluster',
       dataView: true,
       popup: true,
-      show: (record, store) => { return record.state === 'Up' && ['Admin'].includes(store.userInfo.roletype) },
+      show: (record) => { return record.drclusterstatus === 'Enabled' },
+      args: ['drclusterstatus'],
       mapping: {
-        managementserverid: {
-          value: (record) => { return record.id }
+        drclusterstatus: {
+          value: (record) => 'Disabled'
         }
       }
+    },
+    {
+      api: 'updateDisasterRecoveryCluster',
+      icon: 'UpSquareOutlined',
+      label: 'label.action.promote.disaster.recovery.cluster',
+      message: 'promote',
+      dataView: true,
+      popup: true,
+      show: (record) => { return record.drclustertype === 'secondary' }
+    },
+    {
+      api: 'updateDisasterRecoveryCluster',
+      icon: 'DownSquareOutlined',
+      label: 'label.action.demote.disaster.recovery.cluster',
+      message: 'demote',
+      dataView: true,
+      popup: true,
+      show: (record) => { return record.drclustertype === 'primary' }
+    },
+    {
+      api: 'deletePod',
+      icon: 'delete-outlined',
+      label: 'label.action.delete.disaster.recovery.cluster',
+      message: 'message.action.delete.pod',
+      dataView: true
     }
   ]
 }

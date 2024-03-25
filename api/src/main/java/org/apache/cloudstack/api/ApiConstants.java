@@ -1181,7 +1181,7 @@ public class ApiConstants {
     public static final String DR_CLUSTER_STATUS = "drclusterstatus";
     public static final String MIRRORING_AGENT_STATUS = "mirroringagentstatus";
 
-    public static final String DISASTER_RECOVERY_LIST = "disasterrecoverylist";
+    public static final String DISASTER_RECOVERY_CLUSTER_VM_LIST = "disasterrecoveryclustervmlist";
 
 
     /**

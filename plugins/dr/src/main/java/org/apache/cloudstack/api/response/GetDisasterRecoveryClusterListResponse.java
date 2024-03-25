@@ -18,6 +18,7 @@
 package org.apache.cloudstack.api.response;
 
 import java.util.Date;
+import java.util.List;
 
 import com.cloud.dr.DisasterRecoveryCluster;
 import org.apache.cloudstack.api.ApiConstants;
@@ -31,53 +32,56 @@ import org.apache.cloudstack.api.EntityReference;
 @EntityReference(value = {DisasterRecoveryCluster.class})
 public class GetDisasterRecoveryClusterListResponse extends BaseResponse {
     @SerializedName(ApiConstants.ID)
-    @Param(description = "the id of the disaster recovery")
+    @Param(description = "the id of the disaster recovery cluster")
     private String id;
 
     @SerializedName(ApiConstants.NAME)
-    @Param(description = "the name of the disaster recovery on the cluster name")
+    @Param(description = "the name of the disaster recovery cluster")
     private String name;
 
     @SerializedName(ApiConstants.DR_CLUSTER_UUID)
-    @Param(description = "the name of the disaster recovery on the cluster uuid")
+    @Param(description = "the uuid of the disaster recovery cluster")
     private String drClusterUuid;
 
     @SerializedName(ApiConstants.DR_CLUSTER_IP)
-    @Param(description = "the name of the disaster recovery on the cluster ip")
+    @Param(description = "the ip of the disaster recovery cluster")
     private String drClusterIp;
 
     @SerializedName(ApiConstants.DR_CLUSTER_PORT)
-    @Param(description = "the name of the disaster recovery on the mshost")
+    @Param(description = "the port of the disaster recovery cluster")
     private String drClusterPort;
 
     @SerializedName(ApiConstants.DR_CLUSTER_TYPE)
-    @Param(description = "the name of the disaster recovery on the mshost")
+    @Param(description = "the cluster type of the disaster recovery cluster")
     private String drClusterType;
 
     @SerializedName(ApiConstants.DR_CLUSTER_STATUS)
-    @Param(description = "the name of the disaster recovery on the mshost")
+    @Param(description = "the dr cluster status of the disaster recovery cluster")
     private String drClusterStatus;
 
     @SerializedName(ApiConstants.MIRRORING_AGENT_STATUS)
-    @Param(description = "the name of the disaster recovery on the mshost")
+    @Param(description = "the mirroring agent status of the disaster recovery cluster on the mshost")
     private String mirroringAgentStatus;
 
     @SerializedName(ApiConstants.API_KEY)
-    @Param(description = "the name of the disaster recovery on the mshost")
+    @Param(description = "the api key of the disaster recovery cluster on the mshost")
     private String apiKey;
 
     @SerializedName(ApiConstants.SECRET_KEY)
-    @Param(description = "the name of the disaster recovery on the mshost")
+    @Param(description = "the secret key of the disaster recovery cluster on the mshost")
     private String secretKey;
 
     @SerializedName(ApiConstants.CREATED)
-    @Param(description = "result of the disaster recovery")
+    @Param(description = "the creation date of the disaster recovery cluster")
     private Date created;
 
     @SerializedName(ApiConstants.REMOVED)
-    @Param(description = "the date this mshost was updated")
+    @Param(description = "the remove date of the disaster recovery cluster")
     private Date removed;
 
+    @SerializedName(ApiConstants.DISASTER_RECOVERY_CLUSTER_VM_LIST)
+    @Param(description = "the list of virtualmachine associated with this disaster recovery cluster")
+    private List<UserVmResponse> disasterRecoveryClusterVms;
 
     public String getId() {
         return id;
@@ -173,5 +177,13 @@ public class GetDisasterRecoveryClusterListResponse extends BaseResponse {
 
     public void setRemoved(Date removed) {
         this.removed = removed;
+    }
+
+    public List<UserVmResponse> getDisasterRecoveryClusterVms() {
+        return this.disasterRecoveryClusterVms;
+    }
+
+    public void setDisasterRecoveryClusterVms(final List<UserVmResponse> disasterRecoveryClusterVms) {
+        this.disasterRecoveryClusterVms = disasterRecoveryClusterVms;
     }
 }

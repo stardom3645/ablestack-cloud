@@ -23,22 +23,58 @@
         :model="form"
         :rules="rules"
         layout="vertical">
-        <a-form-item ref="state" name="state" :label="$t('label.state')">
+        <a-form-item name="name" ref="name" :label="$t('label.name')">
+          <a-input
+            :placeholder="'temp'"
+            v-model:value="form.name"
+          />
+        </a-form-item>
+        <a-form-item name="displaytext" ref="displaytext" :label="$t('label.displaytext')">
+          <a-input
+            v-model:value="form.displaytext"
+            :placeholder="'temp'"
+          />
+        </a-form-item>
+        <a-form-item name="protocol" ref="protocol" :label="$t('label.protocol')">
           <a-select
-            id="state-selection"
-            v-model:value="form.state"
+            v-model:value="form.zoneid"
+            v-focus="true"
             showSearch
             optionFilterProp="label"
             :filterOption="(input, option) => {
-              return option.children[0].children.toLowerCase().indexOf(input.toLowerCase()) >= 0
-            }"
-            :loading="stateLoading"
-            :placeholder="$t('placeholder.state')"
-            v-focus="true" >
-            <a-select-option v-for="(opt, optIndex) in states" :key="optIndex">
-              {{ opt.name || opt.description }}
+            return option.label.toLowerCase().indexOf(input.toLowerCase()) >= 0
+          }" >
+            <a-select-option
+              v-for="zone in zonesList"
+              :value="zone.id"
+              :key="zone.id"
+              :label="zone.name">
             </a-select-option>
           </a-select>
+        </a-form-item>
+        <a-form-item name="ip" ref="ip" :label="$t('label.ip')">
+          <a-input
+            :placeholder="temp"
+            v-model:value="form.name"
+          />
+        </a-form-item>
+        <a-form-item name="port" ref="port" :label="$t('label.port')">
+          <a-input
+            :placeholder="temp"
+            v-model:value="form.gateway"
+          />
+        </a-form-item>
+        <a-form-item name="apikey" ref="apikey" :label="$t('label.apikey')">
+          <a-input
+            :placeholder="temp"
+            v-model:value="form.netmask"
+          />
+        </a-form-item>
+        <a-form-item name="secretkey" ref="secretkey" :label="$t('label.secret.key')">
+          <a-input
+            :placeholder="temp"
+            v-model:value="form.startip"
+          />
         </a-form-item>
 
         <div :span="24" class="action-button">
@@ -90,7 +126,8 @@ export default {
       this.formRef = ref()
       this.form = reactive({})
       this.rules = reactive({
-        state: [{ required: true, message: this.$t('message.error.required.input') }]
+        name: [{ required: true, message: this.$t('message.error.required.input') }],
+        displaytext: [{ required: true, message: this.$t('message.error.required.input') }]
       })
     },
     fetchData () {

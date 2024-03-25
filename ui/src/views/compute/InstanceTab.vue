@@ -385,6 +385,7 @@ export default {
     const self = this
     this.dataResource = this.resource
     this.vm = this.dataResource
+    console.log(this.vm)
     this.fetchData()
     window.addEventListener('popstate', function () {
       self.setCurrentTab()

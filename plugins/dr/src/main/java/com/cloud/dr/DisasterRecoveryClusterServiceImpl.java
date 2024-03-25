@@ -21,6 +21,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executors;
@@ -29,16 +30,24 @@ import java.util.concurrent.ScheduledExecutorService;
 import javax.inject.Inject;
 import javax.naming.ConfigurationException;
 
+import com.cloud.api.ApiDBUtils;
+import com.cloud.api.query.dao.UserVmJoinDao;
+import com.cloud.api.query.vo.UserVmJoinVO;
+import com.cloud.dr.dao.DisasterRecoveryClusterVmMapDao;
 import com.cloud.exception.InvalidParameterValueException;
+import com.cloud.user.Account;
+import com.cloud.user.AccountService;
 import com.cloud.utils.db.Filter;
 import com.cloud.utils.db.SearchBuilder;
 import com.cloud.utils.db.SearchCriteria;
 import org.apache.cloudstack.api.ApiConstants;
+import org.apache.cloudstack.api.ResponseObject;
 import org.apache.cloudstack.api.command.admin.GetDisasterRecoveryClusterListCmd;
 import org.apache.cloudstack.api.command.admin.RunDisasterRecoveryClusterCmd;
 import org.apache.cloudstack.api.command.admin.UpdateDisasterRecoveryClusterCmd;
 import org.apache.cloudstack.api.response.GetDisasterRecoveryClusterListResponse;
 import org.apache.cloudstack.api.response.ListResponse;
+import org.apache.cloudstack.api.response.UserVmResponse;
 import org.apache.cloudstack.context.CallContext;
 import org.apache.cloudstack.framework.config.ConfigKey;
 import org.apache.cloudstack.managed.context.ManagedContextRunnable;
@@ -63,11 +72,17 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
     private static String runMode = "";
 
     @Inject
-    private DisasterRecoveryClusterDao disasterRecoveryClusterDao;
+    public DisasterRecoveryClusterDao disasterRecoveryClusterDao;
     @Inject
-    private ManagementServerHostDao msHostDao;
+    public DisasterRecoveryClusterVmMapDao disasterRecoveryClusterVmMapDao;
     @Inject
-    private AlertManager alertManager;
+    public ManagementServerHostDao msHostDao;
+    @Inject
+    protected UserVmJoinDao userVmJoinDao;
+    @Inject
+    protected AccountService accountService;
+    @Inject
+    public AlertManager alertManager;
     ScheduledExecutorService executor;
 
     @Override
@@ -166,12 +181,14 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
             sc.setParameters("name", name);
         }
         if(keyword != null){
+            sc.addOr("name", SearchCriteria.Op.LIKE, "%" + keyword + "%");
+            sc.addOr("name", SearchCriteria.Op.LIKE, "%" + keyword + "%");
             sc.addOr("uuid", SearchCriteria.Op.LIKE, "%" + keyword + "%");
             sc.setParameters("keyword", "%" + keyword + "%");
         }
         List <DisasterRecoveryClusterVO> results = disasterRecoveryClusterDao.search(sc, searchFilter);
         for (DisasterRecoveryClusterVO result : results) {
-            GetDisasterRecoveryClusterListResponse automationControllerResponse = setDisasterRecoveryListResultResponse(result.getId());
+            GetDisasterRecoveryClusterListResponse automationControllerResponse = setDisasterRecoveryClusterListResultResponse(result.getId());
             responsesList.add(automationControllerResponse);
         }
         ListResponse<GetDisasterRecoveryClusterListResponse> response = new ListResponse<>();
@@ -179,7 +196,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         return response;
     }
 
-    public GetDisasterRecoveryClusterListResponse setDisasterRecoveryListResultResponse(long clusterId) {
+    public GetDisasterRecoveryClusterListResponse setDisasterRecoveryClusterListResultResponse(long clusterId) {
         DisasterRecoveryClusterVO drcluster = disasterRecoveryClusterDao.findById(clusterId);
         GetDisasterRecoveryClusterListResponse response = new GetDisasterRecoveryClusterListResponse();
         response.setObjectName("disasterrecoverycluster");
@@ -194,6 +211,57 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         response.setApiKey(drcluster.getApiKey());
         response.setSecretKey(drcluster.getSecretKey());
         response.setCreated(drcluster.getCreated());
+
+        List<UserVmResponse> disasterRecoveryClusterVmResponses = new ArrayList<UserVmResponse>();
+        List<DisasterRecoveryClusterVmMapVO> drClusterVmList = disasterRecoveryClusterVmMapDao.listByDisasterRecoveryClusterId(drcluster.getId());
+        ResponseObject.ResponseView respView = ResponseObject.ResponseView.Restricted;
+        Account caller = CallContext.current().getCallingAccount();
+        if (accountService.isRootAdmin(caller.getId())) {
+            respView = ResponseObject.ResponseView.Full;
+        }
+        String responseName = "drclustervmlist";
+        if (drClusterVmList != null && !drClusterVmList.isEmpty()) {
+            for (DisasterRecoveryClusterVmMapVO vmMapVO : drClusterVmList) {
+                UserVmJoinVO userVM = userVmJoinDao.findById(vmMapVO.getVmId());
+                if (userVM != null) {
+                    UserVmResponse cvmResponse = ApiDBUtils.newUserVmResponse(respView, responseName, userVM, EnumSet.of(ApiConstants.VMDetails.nics), caller);
+                    disasterRecoveryClusterVmResponses.add(cvmResponse);
+                }
+//                try {
+//                    GuestOS guestOS = ApiDBUtils.findGuestOSById(userVM.getGuestOsId());
+//                    if (guestOS != null) {
+//                        response.setOsDisplayName(guestOS.getDisplayName());
+//                    }
+//                } catch (NullPointerException e) {
+////                    deleteAutomationController(automationController.getId());
+//                    logger.warn(String.format("Failed to run Automation controller Alert state scanner on Automation controller : %s status scanner", automationController.getName()), e);
+//                }
+//                response.setHostName(userVM.getHostName());
+            }
+
+//            String automationControllerState = String.valueOf(automationController.getState());
+//            String automationControllerVmState = automationControllerVmResponses.get(0).getState();
+//            try {
+//                if (automationControllerState != "Starting") {
+//                    if (automationControllerVmState == "Stopped" && automationControllerState != "Stopped") {
+//                        stateTransitTo(automationController.getId(), AutomationController.Event.StopRequested);
+//                        stateTransitTo(automationController.getId(), AutomationController.Event.OperationSucceeded);
+//                    }
+//                }
+//                if (automationControllerState != "Destroyed" || automationControllerState != "Expunging") {
+//                    if (automationControllerVmState == "Destroyed" ) {
+//                        stopAutomationController(automationController.getId());
+//                    }else if (automationControllerVmState == "Expunging") {
+//                        deleteAutomationController(automationController.getId());
+//                    }
+//                }
+//            } catch (Exception e) {
+//                logger.warn(String.format("Failed to run Automation controller Alert state scanner on Automation controller : %s status scanner", automationController.getName()), e);
+//            }
+//        }
+        }
+        response.setDisasterRecoveryClusterVms(disasterRecoveryClusterVmResponses);
+
         return response;
     }
 
@@ -223,7 +291,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
             }
             drcluster = disasterRecoveryClusterDao.findById(drClusterId);
         }
-        return setDisasterRecoveryListResultResponse(drcluster.getId());
+        return setDisasterRecoveryClusterListResultResponse(drcluster.getId());
     }
 
     @Override

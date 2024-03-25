@@ -39,9 +39,10 @@ public interface DisasterRecoveryClusterService extends PluggableService, Config
 
     DisasterRecoveryCluster findById(final Long id);
 
-    GetDisasterRecoveryClusterListResponse setDisasterRecoveryListResultResponse(long id);
 
     ListResponse<GetDisasterRecoveryClusterListResponse> listDisasterRecoveryClusterResponse(GetDisasterRecoveryClusterListCmd cmd);
+
+    GetDisasterRecoveryClusterListResponse setDisasterRecoveryClusterListResultResponse(long id);
 
     GetDisasterRecoveryClusterListResponse updateDisasterRecoveryCluster(UpdateDisasterRecoveryClusterCmd cmd) throws CloudRuntimeException;
 

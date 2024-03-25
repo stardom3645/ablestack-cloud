@@ -17,20 +17,22 @@
 
 <template>
   <a-spin :spinning="loading">
-    <a-tabs
-      :activeKey="currentTab"
-      :tabPosition="device === 'mobile' ? 'top' : 'left'"
-      :animated="false"
-      @change="handleChangeTab">
-      <a-tab-pane :tab="$t('label.details')" key="details">
-        <DetailsTab :resource="resource" :loading="loading" />
-      </a-tab-pane>
-      <a-tab-pane :tab="$t('label.instance')" key="instances">
+    <div class="container">
+      <div class="search-container">
+        <a-input-search
+          v-if="showSearch"
+          style="width: 25vw;float: right;margin-bottom: 10px; z-index: 8;"
+          :placeholder="$t('label.search')"
+          v-model:value="filter"
+          @search="handleSearch"
+          v-focus="true" />
+      </div>
+      <div class="tables-container">
         <a-table
           class="table"
           size="small"
-          :columns="controlVmColumns"
-          :dataSource="this.disasterrecovery"
+          :columns="firshDrVmColumns"
+          :dataSource="this.disasterrecoveryclustervmlist"
           :rowKey="item => item.id"
           :pagination="false"
         >
@@ -40,29 +42,45 @@
           <template #state="{text}">
             <status :text="text ? text : ''" displayText />
           </template>
-          <template #instancename="{text}">
-            <status :text="text ? text : ''" />{{ text }}
+        </a-table>
+        <a-table
+          class="table"
+          size="small"
+          :columns="secDrVmColumns"
+          :dataSource="this.disasterrecoveryclustervmlist"
+          :rowKey="item => item.id"
+          :pagination="false"
+        >
+          <template #name="{record}">
+            <router-link :to="{ path: '/vm/' + record.id }">{{ record.name }}</router-link>
           </template>
-          <template #hostname="{record}">
-            <router-link :to="{ path: '/host/' + record.hostid }">{{ record.hostname }}</router-link>
+          <template #state="{text}">
+            <status :text="text ? text : ''" displayText />
           </template>
         </a-table>
-      </a-tab-pane>
-      <a-tab-pane :tab="$t('label.settings')" key="settings">
-        <DetailSettings :resource="dataResource" :loading="loading" />
-      </a-tab-pane>
-      <a-tab-pane :tab="$t('label.annotations')" key="comments" v-if="'listAnnotations' in $store.getters.apis">
-        <AnnotationsTab
-            :resource="resource"
-            :items="annotations">
-        </AnnotationsTab>
-      </a-tab-pane>
-    </a-tabs>
+      </div>
+    </div>
+    <div v-if="!defaultPagination" style="display: block; text-align: right; margin-top: 10px;">
+      <a-pagination
+        size="small"
+        :current="options.page"
+        :pageSize="options.pageSize"
+        :total="itemCount"
+        :showTotal="total => `${$t('label.showing')} ${Math.min(total, 1+((options.page-1)*options.pageSize))}-${Math.min(options.page*options.pageSize, total)} ${$t('label.of')} ${total} ${$t('label.items')}`"
+        :pagination="{showSizeChanger: true, total: total}"
+        :pageSizeOptions="['10', '20', '40', '80', '100']"
+        @change="handleTableChange"
+        @showSizeChange="handlePageSizeChange"
+        showSizeChanger>
+        <template #buildOptionText="props">
+          <span>{{ props.value }} / {{ $t('label.page') }}</span>
+        </template>
+      </a-pagination>
+    </div>
   </a-spin>
 </template>
 
 <script>
-import { ref } from 'vue'
 import { api } from '@/api'
 import { mixinDevice } from '@/utils/mixin.js'
 import ResourceLayout from '@/layouts/ResourceLayout'
@@ -72,10 +90,12 @@ import DesktopNicsTable from '@/views/network/DesktopNicsTable'
 import ListResourceTable from '@/components/view/ListResourceTable'
 import TooltipButton from '@/components/widgets/TooltipButton'
 import AnnotationsTab from '@/components/view/AnnotationsTab.vue'
+import EventsTab from '@/components/view/EventsTab.vue'
 
 export default {
   name: 'DisasterRecoveryTab',
   components: {
+    EventsTab,
     AnnotationsTab,
     ResourceLayout,
     DetailsTab,
@@ -88,26 +108,70 @@ export default {
   props: {
     resource: {
       type: Object,
+      default: () => {}
+    },
+    apiName: {
+      type: String,
+      default: ''
+    },
+    routerlinks: {
+      type: Function,
+      default: () => { return {} }
+    },
+    params: {
+      type: Object,
+      default: () => {}
+    },
+    columns: {
+      type: Array,
       required: true
     },
-    loading: {
+    showSearch: {
       type: Boolean,
-      default: false
+      default: true
+    },
+    items: {
+      type: Array,
+      default: () => []
     }
   },
   inject: ['parentFetchData'],
   data () {
     return {
-      vm: ref({}),
-      disasterrecoverytab: [],
+      loading: false,
+      vm: {},
+      disasterrecoveryclustervmlist: [],
+      disasterrecoveryclustervmlistsecond: [],
       annotations: [],
       instances: [],
       totalStorage: 0,
+      itemCount: 0,
       currentTab: 'details',
       showAddIpModal: false,
       loadingNic: false,
-      selectedNicId: '',
-      controlVmColumns: [
+      filter: '',
+      defaultPagination: false,
+      options: {
+        page: 1,
+        pageSize: 10,
+        keyword: null
+      },
+      min: '',
+      max: '',
+      dataResource: {},
+      firshDrVmColumns: [
+        {
+          title: this.$t('label.name'),
+          dataIndex: 'name',
+          slots: { customRender: 'name' }
+        },
+        {
+          title: this.$t('label.state'),
+          dataIndex: 'state',
+          slots: { customRender: 'state' }
+        }
+      ],
+      secDrVmColumns: [
         {
           title: this.$t('label.name'),
           dataIndex: 'name',
@@ -119,20 +183,11 @@ export default {
           slots: { customRender: 'state' }
         },
         {
-          title: this.$t('label.instancename'),
-          dataIndex: 'instancename'
-        },
-        {
-          title: this.$t('label.ip'),
-          dataIndex: 'ipaddress'
-        },
-        {
-          title: this.$t('label.hostid'),
-          dataIndex: 'hostname',
-          slots: { customRender: 'hostname' }
+          title: this.$t('label.state'),
+          dataIndex: 'state',
+          slots: { customRender: 'state' }
         }
-      ],
-      editNicResource: {}
+      ]
     }
   },
   beforeCreate () {
@@ -140,23 +195,49 @@ export default {
     // this.apiParams = this.$getApiParams('addDesktopClusterIpRanges')
   },
   created () {
-    const userInfo = this.$store.getters.userInfo
-    if (!['Admin'].includes(userInfo.roletype) &&
-      (userInfo.account !== this.resource.account || userInfo.domain !== this.resource.domain)) {
-      this.controlVmColumns = this.controlVmColumns.filter(col => { return col.dataIndex !== 'hostname' })
-      this.controlVmColumns = this.controlVmColumns.filter(col => { return col.dataIndex !== 'instancename' })
-    }
-    this.vm = this.resource
+    // const userInfo = this.$store.getters.userInfo
+    // if (!['Admin'].includes(userInfo.roletype) &&
+    //   (userInfo.account !== this.resource.account || userInfo.domain !== this.resource.domain)) {
+    //   this.controlVmColumns = this.controlVmColumns.filter(col => { return col.dataIndex !== 'hostname' })
+    //   this.controlVmColumns = this.controlVmColumns.filter(col => { return col.dataIndex !== 'instancename' })
+    // }
+    // this.vm = this.resource
+    const self = this
+    this.dataResource = this.resource
+    this.vm = this.dataResource
     this.fetchData()
+    window.addEventListener('popstate', function () {
+      self.setCurrentTab()
+    })
   },
   watch: {
-    resource: function (newItem, oldItem) {
-      this.vm = newItem
-      this.fetchData()
+    resource: {
+      deep: true,
+      handler (newData, oldData) {
+        if (newData !== oldData) {
+          this.dataResource = newData
+          this.vm = this.resource
+          this.fetchData()
+        }
+      }
+    },
+    items: {
+      deep: true,
+      handler (newItem) {
+        if (newItem) {
+          this.dataSource = newItem
+        }
+      }
+    },
+    '$i18n.global.locale' (to, from) {
+      if (to !== from) {
+        this.fetchData()
+      }
     },
     $route: function (newItem, oldItem) {
       this.setCurrentTab()
     }
+
   },
   mounted () {
     this.setCurrentTab()
@@ -179,40 +260,27 @@ export default {
         }).join('&')
       )
     },
-    handleFetchData () {
-      switch (this.currentTab) {
-        case 'pgw':
-          this.fetchPrivateGateways()
-          break
-        case 'vpngw':
-          this.fetchVpnGateways()
-          break
-        case 'vpnc':
-          this.fetchVpnConnections()
-          break
-        case 'acl':
-          this.fetchAclList()
-          break
-        case 'comments':
-          this.fetchComments()
-          break
-      }
-    },
     fetchData () {
-      this.disasterrecovery = this.resource.disasterrecovery || []
-      this.disasterrecovery.map(x => { x.ipaddress = x.nic[0].ipaddress })
-      this.controlvms = this.resource.controlvms || []
-      this.controlvms.map(x => { x.ipaddress = x.nic[0].ipaddress })
-      if (!this.vm || !this.vm.id) {
+      this.itemCount = 0
+      if (this.items && this.items.length > 0) {
+        this.dataSource = this.items
+        this.defaultPagination = {
+          showSizeChanger: true,
+          pageSizeOptions: this.mixinDevice === 'desktop' ? ['20', '50', '100', '200'] : ['10', '20', '50', '100', '200']
+        }
         return
       }
-      api('listNetworks', { id: this.resource.networkid }).then(json => {
-        this.genienetworks = json.listnetworksresponse.network
-        if (this.genienetworks) {
-          this.genienetworks.sort((a, b) => { return a.deviceid - b.deviceid })
-        }
-      }).finally(() => {
-      })
+      this.disasterrecoveryclustervmlist = this.resource.disasterrecoveryclustervmlist || []
+      const keyword = this.options.keyword
+      if (keyword) {
+        this.disasterrecoveryclustervmlist = this.disasterrecoveryclustervmlist.filter(entry => {
+          return entry.name.includes(keyword)
+        })
+      }
+      this.itemCount = this.disasterrecoveryclustervmlist.length
+      this.min = (Math.min(this.itemCount, 1 + ((this.options.page - 1) * this.options.pageSize)) - 1)
+      this.max = Math.min(this.options.page * this.options.pageSize, this.itemCount)
+      this.disasterrecoveryclustervmlist = this.disasterrecoveryclustervmlist.slice(this.min, this.max)
     },
     fetchComments () {
       this.fetchLoading = true
@@ -235,6 +303,28 @@ export default {
         endip: []
       })
     },
+    handleSearch (value) {
+      this.filter = value
+      this.options.page = 1
+      this.options.pageSize = 10
+      this.options.keyword = this.filter
+      this.fetchData()
+    },
+    handleTableChange (page, pagesize) {
+      this.options.page = page
+      this.options.pageSize = pagesize
+      this.fetchData()
+    },
+    handlePageSizeChange (page, pagesize) {
+      this.options.page = 1
+      this.options.pageSize = pagesize
+      this.fetchData()
+    },
+    filteredData () {
+      return this.jsonData.filter(entry => {
+        return entry.name.includes(this.filter)
+      })
+    },
     closeModals () {
       this.showAddIpModal = false
     }
@@ -243,124 +333,124 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-  .page-header-wrapper-grid-content-main {
-    width: 100%;
-    height: 100%;
-    min-height: 100%;
-    transition: 0.3s;
-    .vm-detail {
-      .svg-inline--fa {
-        margin-left: -1px;
-        margin-right: 8px;
-      }
-      span {
-        margin-left: 10px;
-      }
-      margin-bottom: 8px;
+.page-header-wrapper-grid-content-main {
+  width: 100%;
+  height: 100%;
+  min-height: 100%;
+  transition: 0.3s;
+  .vm-detail {
+    .svg-inline--fa {
+      margin-left: -1px;
+      margin-right: 8px;
     }
-  }
-
-  .list {
-    margin-top: 20px;
-
-    &__item {
-      display: flex;
-      flex-direction: column;
-      align-items: flex-start;
-
-      @media (min-width: 760px) {
-        flex-direction: row;
-        align-items: center;
-      }
+    span {
+      margin-left: 10px;
     }
+    margin-bottom: 8px;
   }
+}
 
-  .modal-form {
+.list {
+  margin-top: 20px;
+
+  &__item {
     display: flex;
     flex-direction: column;
+    align-items: flex-start;
 
-    &__label {
-      margin-top: 20px;
-      margin-bottom: 5px;
-      font-weight: bold;
-
-      &--no-margin {
-        margin-top: 0;
-      }
+    @media (min-width: 760px) {
+      flex-direction: row;
+      align-items: center;
     }
   }
+}
 
-  .actions {
-    display: flex;
-    flex-wrap: wrap;
+.modal-form {
+  display: flex;
+  flex-direction: column;
 
-    button {
-      padding: 5px;
-      height: auto;
-      margin-bottom: 10px;
-      align-self: flex-start;
-
-      &:not(:last-child) {
-        margin-right: 10px;
-      }
-    }
-
-  }
-
-  .label {
+  &__label {
+    margin-top: 20px;
+    margin-bottom: 5px;
     font-weight: bold;
+
+    &--no-margin {
+      margin-top: 0;
+    }
+  }
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+
+  button {
+    padding: 5px;
+    height: auto;
+    margin-bottom: 10px;
+    align-self: flex-start;
+
+    &:not(:last-child) {
+      margin-right: 10px;
+    }
   }
 
-  .attribute {
+}
+
+.label {
+  font-weight: bold;
+}
+
+.attribute {
+  margin-bottom: 10px;
+}
+
+.ant-tag {
+  padding: 4px 10px;
+  height: auto;
+}
+
+.title {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+
+  a {
+    margin-right: 30px;
     margin-bottom: 10px;
   }
 
   .ant-tag {
-    padding: 4px 10px;
-    height: auto;
+    margin-bottom: 10px;
   }
 
-  .title {
+  &__details {
     display: flex;
-    flex-wrap: wrap;
-    justify-content: space-between;
-    align-items: center;
-
-    a {
-      margin-right: 30px;
-      margin-bottom: 10px;
-    }
-
-    .ant-tag {
-      margin-bottom: 10px;
-    }
-
-    &__details {
-      display: flex;
-    }
-
-    .tags {
-      margin-left: 10px;
-    }
-
   }
 
-  .ant-list-item-meta-title {
-    margin-bottom: -10px;
+  .tags {
+    margin-left: 10px;
   }
 
-  .divider-small {
-    margin-top: 20px;
-    margin-bottom: 20px;
+}
+
+.ant-list-item-meta-title {
+  margin-bottom: -10px;
+}
+
+.divider-small {
+  margin-top: 20px;
+  margin-bottom: 20px;
+}
+
+.list-item {
+
+  &:not(:first-child) {
+    padding-top: 25px;
   }
 
-  .list-item {
-
-    &:not(:first-child) {
-      padding-top: 25px;
-    }
-
-  }
+}
 </style>
 
 <style scoped>
@@ -372,4 +462,22 @@ export default {
   padding-top: 12px;
   padding-bottom: 12px;
 }
+
+.container {
+  display: flex;
+  flex-direction: column;
+}
+.search-container {
+  float: right;
+}
+.tables-container {
+  display: flex; /* Use flexbox */
+  justify-content: space-between; /* Items are evenly distributed */
+  flex-wrap: wrap;
+}
+.table {
+  width: calc(50% - 10px); /* Adjust the width of each table */
+  margin-bottom: 10px; /* Adjust the vertical spacing between tables */
+}
+
 </style>

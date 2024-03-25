@@ -279,7 +279,7 @@ export default {
         if (item === 'groupid' && !('listInstanceGroups' in this.$store.getters.apis)) {
           return true
         }
-        if (['zoneid', 'domainid', 'imagestoreid', 'storageid', 'state', 'level', 'clusterid', 'podid', 'groupid', 'entitytype', 'type'].includes(item)) {
+        if (['zoneid', 'domainid', 'imagestoreid', 'storageid', 'state', 'level', 'clusterid', 'podid', 'groupid', 'entitytype', 'type', 'drclustertype'].includes(item)) {
           type = 'list'
         } else if (item === 'tags') {
           type = 'tag'
@@ -353,6 +353,7 @@ export default {
       let podIndex = -1
       let clusterIndex = -1
       let groupIndex = -1
+      let drClusterTypeIndex = -1
 
       if (arrayField.includes('zoneid')) {
         zoneIndex = this.fields.findIndex(item => item.name === 'zoneid')
@@ -394,6 +395,12 @@ export default {
         groupIndex = this.fields.findIndex(item => item.name === 'groupid')
         this.fields[groupIndex].loading = true
         promises.push(await this.fetchInstanceGroups(searchKeyword))
+      }
+
+      if (arrayField.includes('drclustertype')) {
+        drClusterTypeIndex = this.fields.findIndex(item => item.name === 'drclustertype')
+        this.fields[drClusterTypeIndex].loading = true
+        promises.push(await this.fetchDrClusterTypes(searchKeyword))
       }
 
       Promise.all(promises).then(response => {
@@ -578,6 +585,19 @@ export default {
           resolve({
             type: 'groupid',
             data: instancegroups
+          })
+        }).catch(error => {
+          reject(error.response.headers['x-description'])
+        })
+      })
+    },
+    fetchDrClusterTypes (searchKeyword) {
+      return new Promise((resolve, reject) => {
+        api('getDisasterRecoveryClusterList', { listAll: true, showicon: true, keyword: searchKeyword }).then(json => {
+          const drCluster = json.getdisasterrecoveryclusterlistresponse.disasterrecoverycluster
+          resolve({
+            type: 'drclustertype',
+            data: drCluster
           })
         }).catch(error => {
           reject(error.response.headers['x-description'])
