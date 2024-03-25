@@ -4110,7 +4110,13 @@ public class NetworkServiceImpl extends ManagerBase implements NetworkService, C
 
                     // Add the config drive provider
                     addConfigDriveToPhysicalNetwork(pNetwork.getId());
-                    addNSXProviderToPhysicalNetwork(pNetwork.getId());
+
+                    // Add NSX provider
+                    try {
+                        addNSXProviderToPhysicalNetwork(pNetwork.getId());
+                    } catch (Exception ex) {
+                        logger.warn("Failed to add NSX provider to physical network due to:", ex.getMessage());
+                    }
 
                     CallContext.current().putContextParameter(PhysicalNetwork.class, pNetwork.getUuid());
 
@@ -5511,7 +5517,7 @@ public class NetworkServiceImpl extends ManagerBase implements NetworkService, C
         DataCenterVO dvo = _dcDao.findById(pvo.getDataCenterId());
         if (dvo.getNetworkType() == NetworkType.Advanced) {
 
-            Provider provider = Network.Provider.getProvider("Nsx");
+            Provider provider = Network.Provider.getProvider(Provider.Nsx.getName());
             if (provider == null) {
                 return null;
             }
