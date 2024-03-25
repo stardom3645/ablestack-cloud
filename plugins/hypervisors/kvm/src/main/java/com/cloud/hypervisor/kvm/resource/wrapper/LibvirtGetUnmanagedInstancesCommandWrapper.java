@@ -122,7 +122,11 @@ public final class LibvirtGetUnmanagedInstancesCommandWrapper extends CommandWra
             instance.setName(domain.getName());
 
             instance.setCpuCores((int) LibvirtComputingResource.countDomainRunningVcpus(domain));
-            instance.setCpuSpeed(parser.getCpuTuneDef().getShares()/instance.getCpuCores());
+            if (parser.getCpuTuneDef() !=null) {
+                instance.setCpuSpeed(parser.getCpuTuneDef().getShares()/instance.getCpuCores());
+            } else {
+                instance.setCpuSpeed(200);
+            }
 
             if (parser.getCpuModeDef() != null) {
                 instance.setCpuCoresPerSocket(parser.getCpuModeDef().getCoresPerSocket());
