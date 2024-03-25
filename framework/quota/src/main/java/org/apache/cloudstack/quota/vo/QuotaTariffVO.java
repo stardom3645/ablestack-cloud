@@ -17,7 +17,6 @@
 package org.apache.cloudstack.quota.vo;
 
 import com.cloud.utils.DateUtil;
-import org.apache.cloudstack.api.InternalIdentity;
 import org.apache.cloudstack.quota.QuotaTariff;
 import org.apache.cloudstack.quota.constant.QuotaTypes;
 import org.apache.cloudstack.utils.reflectiontostringbuilderutils.ReflectionToStringBuilderUtils;
