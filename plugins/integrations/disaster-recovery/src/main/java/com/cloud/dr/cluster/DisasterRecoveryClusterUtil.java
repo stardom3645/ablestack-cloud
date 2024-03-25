@@ -48,9 +48,9 @@ import com.cloud.utils.nio.TrustAllManager;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonObject;
 
-public class DisasterRecoveryUtil {
+public class DisasterRecoveryClusterUtil {
 
-    protected static Logger LOGGER = LogManager.getLogger(DisasterRecoveryUtil.class);
+    protected static Logger LOGGER = LogManager.getLogger(DisasterRecoveryClusterUtil.class);
 
     /**
      * Glue 상태 조회

@@ -17,17 +17,20 @@
 package com.cloud.dr.cluster;
 
 
-import org.apache.cloudstack.api.command.admin.dr.ConnectivityTestsDisasterRecoveryCmd;
+import org.apache.cloudstack.api.command.admin.dr.ConnectivityTestsDisasterRecoveryClusterCmd;
+import org.apache.cloudstack.api.command.admin.dr.GetDisasterRecoveryClusterListCmd;
+import org.apache.cloudstack.api.command.admin.dr.UpdateDisasterRecoveryClusterCmd;
 import org.apache.cloudstack.api.command.admin.glue.ListScvmIpAddressCmd;
 import org.apache.cloudstack.api.response.ListResponse;
 import org.apache.cloudstack.api.response.ScvmIpAddressResponse;
+import org.apache.cloudstack.api.response.dr.cluster.GetDisasterRecoveryClusterListResponse;
 import org.apache.cloudstack.framework.config.ConfigKey;
 import org.apache.cloudstack.framework.config.Configurable;
 
 import com.cloud.utils.component.PluggableService;
 import com.cloud.utils.exception.CloudRuntimeException;
 
-public interface DisasterRecoveryService extends PluggableService, Configurable {
+public interface DisasterRecoveryClusterService extends PluggableService, Configurable {
 
     static final ConfigKey<Boolean> DisasterRecoveryServiceEnabled = new ConfigKey<Boolean>("Advanced", Boolean.class,
             "cloud.dr.service.enabled",
@@ -35,7 +38,11 @@ public interface DisasterRecoveryService extends PluggableService, Configurable 
             "Indicates whether Disaster Recovery Service plugin is enabled or not. Management server restart needed on change",
             true);
 
-    boolean connectivityTestsDisasterRecovery(ConnectivityTestsDisasterRecoveryCmd cmd) throws CloudRuntimeException;
+    boolean connectivityTestsDisasterRecovery(ConnectivityTestsDisasterRecoveryClusterCmd cmd) throws CloudRuntimeException;
     ListResponse<ScvmIpAddressResponse> listScvmIpAddress(ListScvmIpAddressCmd cmd);
+    ListResponse<GetDisasterRecoveryClusterListResponse> listDisasterRecoveryClusterResponse(GetDisasterRecoveryClusterListCmd cmd);
 
+    GetDisasterRecoveryClusterListResponse setDisasterRecoveryClusterListResultResponse(long id);
+
+    GetDisasterRecoveryClusterListResponse updateDisasterRecoveryCluster(UpdateDisasterRecoveryClusterCmd cmd) throws CloudRuntimeException;
 }

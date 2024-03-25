@@ -17,78 +17,67 @@
 
 package org.apache.cloudstack.api.command.admin.dr;
 
-import javax.inject.Inject;
-
+import com.cloud.dr.cluster.DisasterRecoveryCluster;
+import com.cloud.dr.cluster.DisasterRecoveryClusterService;
+import com.cloud.exception.ConcurrentOperationException;
+import com.cloud.utils.exception.CloudRuntimeException;
 import org.apache.cloudstack.acl.RoleType;
 import org.apache.cloudstack.api.APICommand;
 import org.apache.cloudstack.api.ApiConstants;
 import org.apache.cloudstack.api.ApiErrorCode;
 import org.apache.cloudstack.api.BaseCmd;
 import org.apache.cloudstack.api.Parameter;
-import org.apache.cloudstack.api.response.SuccessResponse;
+import org.apache.cloudstack.api.ResponseObject;
 import org.apache.cloudstack.api.ServerApiException;
 import org.apache.cloudstack.api.command.admin.AdminCmd;
-import org.apache.cloudstack.context.CallContext;
+import org.apache.cloudstack.api.response.dr.cluster.GetDisasterRecoveryClusterListResponse;
 
-import com.cloud.exception.ConcurrentOperationException;
-import com.cloud.dr.cluster.DisasterRecoveryService;
-import com.cloud.utils.exception.CloudRuntimeException;
+import javax.inject.Inject;
 
-
-@APICommand(name = ConnectivityTestsDisasterRecoveryCmd.APINAME,
-        description = "Connectivity Tests Disaster Recovery",
-        responseObject = SuccessResponse.class,
+@APICommand(name = UpdateDisasterRecoveryClusterCmd.APINAME,
+        description = "Update a disaster recovery",
+        responseObject = GetDisasterRecoveryClusterListResponse.class,
+        responseView = ResponseObject.ResponseView.Full,
+        entityType = {DisasterRecoveryCluster.class},
         authorized = {RoleType.Admin})
-public class ConnectivityTestsDisasterRecoveryCmd extends BaseCmd implements AdminCmd {
-    public static final String APINAME = "connectivityTestsDisasterRecovery";
+public class UpdateDisasterRecoveryClusterCmd extends BaseCmd implements AdminCmd {
+    public static final String APINAME = "updateDisasterRecoveryCluster";
 
     @Inject
-    private DisasterRecoveryService disasterRecoveryService;
+    private DisasterRecoveryClusterService disasterRecoveryClusterService;
 
     /////////////////////////////////////////////////////
     //////////////// API parameters /////////////////////
     /////////////////////////////////////////////////////
-    @Parameter(name = ApiConstants.PROTOCOL, type = CommandType.STRING, required = true,
-            description = "dr cluster mold protocol")
-    private String protocol;
+    @Parameter(name = ApiConstants.ID, type = CommandType.UUID,
+            entityType = GetDisasterRecoveryClusterListResponse.class,
+            description = "the ID of the disaster recovery",
+            required = true)
+    private Long id;
 
-    @Parameter(name = ApiConstants.IP_ADDRESS, type = CommandType.STRING, required = true,
-            description = "dr cluster mold ip")
-    private String ipAddress;
+    @Parameter(name = ApiConstants.DR_CLUSTER_STATUS, type = CommandType.STRING,
+            description = "the enabled or disabled dr cluster state of the disaster recovery",
+            required = true)
+    private String drClusterStatus;
 
-    @Parameter(name = ApiConstants.PORT, type = CommandType.STRING, required = true,
-            description = "dr cluster mold port")
-    private String port;
-
-    @Parameter(name = ApiConstants.API_KEY, type = CommandType.STRING, required = true,
-            description = "dr cluster mold api key")
-    private String apiKey;
-
-    @Parameter(name = ApiConstants.SECRET_KEY, type = CommandType.STRING, required = true,
-            description = "dr cluster mold secret key")
-    private String secretKey;
+    @Parameter(name = ApiConstants.MIRRORING_AGENT_STATUS, type = CommandType.STRING,
+            description = "the enabled or disabled mirroring agent state of the disaster recovery",
+            required = true)
+    private String mirroringAgentStatus;
 
     /////////////////////////////////////////////////////
     /////////////////// Accessors ///////////////////////
     /////////////////////////////////////////////////////
-    public String getProtocol() {
-        return protocol;
+    public Long getId() {
+        return id;
     }
 
-    public String getIpAddress() {
-        return ipAddress;
+    public String getDrClusterStatus() {
+        return drClusterStatus;
     }
 
-    public String getPort() {
-        return port;
-    }
-
-    public String getApiKey() {
-        return apiKey;
-    }
-
-    public String getSecretKey() {
-        return secretKey;
+    public String getMirroringAgentStatus() {
+        return mirroringAgentStatus;
     }
 
     @Override
@@ -98,7 +87,7 @@ public class ConnectivityTestsDisasterRecoveryCmd extends BaseCmd implements Adm
 
     @Override
     public long getEntityOwnerId() {
-        return CallContext.current().getCallingAccountId();
+        return 0;
     }
 
     /////////////////////////////////////////////////////
@@ -107,10 +96,11 @@ public class ConnectivityTestsDisasterRecoveryCmd extends BaseCmd implements Adm
     @Override
     public void execute() throws ServerApiException, ConcurrentOperationException {
         try {
-            if (!disasterRecoveryService.connectivityTestsDisasterRecovery(this)) {
-                throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, String.format("Failed to connectivity tests disaster recovery."));
+            GetDisasterRecoveryClusterListResponse response = disasterRecoveryClusterService.updateDisasterRecoveryCluster(this);
+            if (response == null) {
+                throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, "Failed to update disaster recovery");
             }
-            SuccessResponse response = new SuccessResponse(getCommandName());
+            response.setResponseName(getCommandName());
             setResponseObject(response);
         } catch (CloudRuntimeException ex) {
             throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, ex.getMessage());

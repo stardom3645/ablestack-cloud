@@ -19,13 +19,12 @@ package org.apache.cloudstack.api.command.admin.glue;
 
 import javax.inject.Inject;
 
+import com.cloud.dr.cluster.DisasterRecoveryClusterService;
 import org.apache.cloudstack.api.APICommand;
 import org.apache.cloudstack.api.BaseListCmd;
 import org.apache.cloudstack.api.response.ScvmIpAddressResponse;
 import org.apache.cloudstack.api.response.ListResponse;
 import org.apache.cloudstack.context.CallContext;
-
-import com.cloud.dr.cluster.DisasterRecoveryService;
 
 
 @APICommand(name = ListScvmIpAddressCmd.APINAME,
@@ -36,7 +35,7 @@ public class ListScvmIpAddressCmd extends BaseListCmd {
     public static final String APINAME = "listScvmIpAddress";
 
     @Inject
-    private DisasterRecoveryService disasterRecoveryService;
+    private DisasterRecoveryClusterService disasterRecoveryClusterService;
 
     @Override
     public String getCommandName() {
@@ -53,7 +52,7 @@ public class ListScvmIpAddressCmd extends BaseListCmd {
     /////////////////////////////////////////////////////
     @Override
     public void execute() {
-        ListResponse<ScvmIpAddressResponse> response = disasterRecoveryService.listScvmIpAddress(this);
+        ListResponse<ScvmIpAddressResponse> response = disasterRecoveryClusterService.listScvmIpAddress(this);
         response.setResponseName(getCommandName());
         this.setResponseObject(response);
     }

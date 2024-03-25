@@ -16,6 +16,16 @@
 // under the License.
 package com.cloud.dr.cluster;
 
-public class DisasterRecoveryEventTypes {
-    public static final String EVENT_DR_TEST_CONNECT = "DR.TEST.CONNECT";
+/**
+ * AutomationControllerVmMap will describe mapping of ID of Automation Controller
+ * and ID of its VirtualMachine. A Automation Controller can have multiple VMs
+ * deployed for it therefore a list of AutomationControllerVmMap are associated
+ * with a Desktop.
+ * A particular VM can be deployed only for a single Desktop.
+ */
+public interface DisasterRecoveryClusterVmMap {
+    long getId();
+    long getDisasterRecoveryClusterId();
+    long getVmId();
 }
+

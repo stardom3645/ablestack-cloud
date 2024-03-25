@@ -264,6 +264,7 @@ known_categories = {
     'updateDeployedResourceGroup' : 'Automation Service',
     'listScvmIpAddress': 'Disaster Recovery',
     'connectivityTestsDisasterRecovery': 'Disaster Recovery',
+    'DisasterRecovery': 'dr',
     'UnmanagedInstance': 'Virtual Machine',
     'Rolling': 'Rolling Maintenance',
     'importVsphereStoragePolicies' : 'vSphere storage policies',
