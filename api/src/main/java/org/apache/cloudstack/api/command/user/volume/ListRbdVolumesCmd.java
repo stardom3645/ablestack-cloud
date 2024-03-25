@@ -33,6 +33,6 @@ public class ListRbdVolumesCmd extends ListVolumesCmd implements UserCmd {
     private Boolean customImages;
 
     public Boolean getCustomImages() {
-        return customImages;
+    return customImages;
     }
 }
