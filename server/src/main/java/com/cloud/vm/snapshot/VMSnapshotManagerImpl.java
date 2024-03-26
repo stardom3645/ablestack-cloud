@@ -71,11 +71,13 @@ import com.cloud.exception.VirtualMachineMigrationException;
 import com.cloud.gpu.GPU;
 import com.cloud.hypervisor.Hypervisor.HypervisorType;
 import com.cloud.hypervisor.dao.HypervisorCapabilitiesDao;
+import com.cloud.offering.DiskOffering;
 import com.cloud.projects.Project.ListProjectResourcesCriteria;
 import com.cloud.server.ResourceTag;
 import com.cloud.service.ServiceOfferingVO;
 import com.cloud.service.dao.ServiceOfferingDao;
 import com.cloud.service.dao.ServiceOfferingDetailsDao;
+import com.cloud.storage.dao.DiskOfferingDao;
 import com.cloud.storage.GuestOSVO;
 import com.cloud.storage.Snapshot;
 import com.cloud.storage.SnapshotVO;
@@ -163,6 +165,8 @@ public class VMSnapshotManagerImpl extends MutualExclusiveIdsManagerBase impleme
     protected UserVmManager _userVmManager;
     @Inject
     protected ServiceOfferingDao _serviceOfferingDao;
+    @Inject
+    protected DiskOfferingDao _diskOfferingDao;
     @Inject
     protected UserVmDetailsDao _userVmDetailsDao;
     @Inject
@@ -410,6 +414,10 @@ public class VMSnapshotManagerImpl extends MutualExclusiveIdsManagerBase impleme
                 _snapshotDao.listByInstanceId(volume.getInstanceId(), Snapshot.State.Creating, Snapshot.State.CreatedOnPrimary, Snapshot.State.BackingUp);
             if (activeSnapshots.size() > 0) {
                 throw new CloudRuntimeException("There is other active volume snapshot tasks on the instance to which the volume is attached, please try again later.");
+            }
+            DiskOffering offering = _diskOfferingDao.findById(volume.getDiskOfferingId());
+            if (volume.getVolumeType() == Volume.Type.DATADISK && offering.getShareable()) {
+                throw new CloudRuntimeException("If it is a shared volume, you cannot create a VM snapshot.");
             }
         }
 
