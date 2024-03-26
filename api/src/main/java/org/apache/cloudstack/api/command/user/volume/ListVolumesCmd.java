@@ -95,7 +95,7 @@ public class ListVolumesCmd extends BaseListRetrieveOnlyResourceCountCmd impleme
     private String state;
 
     @Parameter(name = ApiConstants.CUSTOMIMAGES, type = CommandType.BOOLEAN, description = "state of the volume. Possible values are: Ready, Allocated, Destroy, Expunging, Expunged.")
-    private Boolean customImages;
+    private Boolean customimages;
 
 
     /////////////////////////////////////////////////////
@@ -156,7 +156,7 @@ public class ListVolumesCmd extends BaseListRetrieveOnlyResourceCountCmd impleme
     }
 
     public Boolean getCustomImages() {
-        return customImages;
+        return BooleanUtils.toBooleanDefaultIfNull(customimages, false);
     }
     /////////////////////////////////////////////////////
     /////////////// API Implementation///////////////////

@@ -31,6 +31,10 @@
       :pagination="false"
       :customRow="onClickRow"
       :filteredRbdImages="filteredRbdImages"
+      :input-decorator="inputDecorator"
+      :selected="checkedValue"
+      :preFillContent="preFillContent"
+      @handle-search-filter="($event) => eventPagination($event)"
       size="middle"
       :scroll="{ y: 225 }">
       <template #headerCell="{ column }">
@@ -71,6 +75,10 @@ export default {
       type: Array,
       default: () => []
     },
+    inputDecorator: {
+      type: String,
+      default: ''
+    },
     rowCount: {
       type: Number,
       default: () => 0
@@ -91,7 +99,7 @@ export default {
       type: String,
       default: () => ''
     },
-    isIsoSelected: {
+    isRbdSelected: {
       type: Boolean,
       default: false
     }
@@ -122,6 +130,9 @@ export default {
       },
       rbdSelected: {}
     }
+  },
+  mounted () {
+    this.fillValue()
   },
   created () {
     this.initDataItem()
@@ -162,7 +173,25 @@ export default {
       }
     }
   },
+  isRbdSelected () {
+    if (this.isRbdSelected) {
+      this.dataItems = this.dataItems.filter(item => item.id !== '0')
+    } else {
+      this.dataItems.unshift({
+        id: '0',
+        name: this.$t('label.noselect'),
+        size: undefined
+      })
+    }
+  },
   methods: {
+    fillValue () {
+      this.$emit('update-rbd-images', this.inputDecorator, this.inputValue)
+    },
+    updateRbdImages (name, id) {
+      this.checkedValue = id
+      this.$emit('update-rbd-images', name, id)
+    },
     initDataItem () {
       this.dataItems = []
       if (this.options.page === 1) {
@@ -179,7 +208,7 @@ export default {
         this.rbdSelected = rowSelected[0]
       }
       this.selectedRowKeys = value
-      this.$emit('select-rbd-image-item', value[0])
+      this.$emit('select-rbd-images-item', value[0])
       this.$emit('on-selected-rbd-size', this.rbdSelected)
     },
     handleSearch (value) {
@@ -207,7 +236,7 @@ export default {
             this.rbdSelected = rowSelected[0]
           }
           this.selectedRowKeys = [record.key]
-          this.$emit('select-rbd-image-item', record.key)
+          this.$emit('select-rbd-images-item', record.key)
           this.$emit('on-selected-rbd-size', this.rbdSelected)
         }
       }

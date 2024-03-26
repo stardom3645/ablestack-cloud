@@ -181,7 +181,7 @@
               {{ $t('label.unknown') }}
             </template>
           </template>
-          <template v-else-if="column.key === 'actions' && (record.templateid || record.snapshotid)">
+            <template v-else-if="column.key === 'actions' && (record.templateid || record.snapshotid)">
               <tooltip-button
               tooltipPlacement="top"
               :tooltip="$t('label.migrate.data.from.image.store')"
@@ -191,6 +191,20 @@
             </template>
             <template v-else-if="column.key == 'deleteactions' && (record.templateid || record.volumeid) == null && !['MOLD-AC', 'MOLD-HB','ccvm'].some(forbiddenName => record.name.includes(forbiddenName))">
               <a-col flex="auto">
+                <a-popconfirm
+                :title="`${$t('label.create.rbd.image')}?`"
+                @confirm="createVolume(record.name, record.size)"
+                :okText="$t('label.yes')"
+                :cancelText="$t('label.no')"
+                placement="left">
+                <tooltip-button
+                  tooltipPlacement="bottom"
+                  type="primary"
+                  size="medium"
+                  icon="plus-outlined"
+                  :tooltip="$t('label.create')"
+                />
+                  </a-popconfirm>
                 <a-popconfirm
                 :title="`${$t('label.delete.rbd.image')}?`"
                 @confirm="deleteRbdImage(record.name)"
@@ -217,6 +231,7 @@
 
 <script>
 import { api } from '@/api'
+// import { toRaw } from 'vue'
 import InfoCard from '@/components/view/InfoCard'
 import TooltipButton from '@/components/widgets/TooltipButton'
 import MigrateImageStoreResource from '@/views/storage/MigrateImageStoreResource'
@@ -268,7 +283,7 @@ export default {
     if (this.resourceType === 'PrimaryStorage' && this.resource.type === 'RBD') {
       columns.push({
         key: 'deleteactions',
-        title: this.$t('label.delete')
+        title: this.$t('label.create.delete')
       })
     }
     return {
@@ -304,7 +319,46 @@ export default {
       this.pageSize = pagination.pageSize
       this.fetchData()
     },
-
+    createVolume (name, size) {
+      api('listDiskOfferings', { listall: true }).then(json => {
+        this.offerings = json.listdiskofferingsresponse.diskoffering || []
+        this.customDiskOffering = this.offerings.filter(x => x.iscustomized === true)
+        api('createVolume', {
+          diskofferingid: this.customDiskOffering[0].id,
+          size: size / (1024 * 1024 * 1024),
+          name: name,
+          zoneid: this.resource.zoneid
+        }).then(response => {
+          this.$pollJob({
+            jobId: response.createvolumeresponse.jobid,
+            title: this.$t('message.success.create.volume'),
+            successMessage: this.$t('message.success.create.volume'),
+            successMethod: (result) => {
+              api('updateVolume', {
+                id: result.jobresult.volume.id,
+                path: name,
+                storageid: this.resource.id,
+                state: 'Ready',
+                type: 'ROOT'
+              }).then(json => {
+              }).catch(error => {
+                this.$notifyError(error)
+              }).finally(() => {
+                this.fetchData()
+                this.loading = false
+              })
+            },
+            errorMessage: this.$t('message.create.volume.failed'),
+            loadingMessage: this.$t('message.create.volume.processing'),
+            catchMessage: this.$t('error.fetching.async.job.result')
+          })
+        }).catch(error => {
+          this.$notifyError(error)
+        })
+      }).catch(error => {
+        this.$notifyError(error)
+      })
+    },
     deleteRbdImage (name) {
       api('deleteRbdImage', {
         name: name,

@@ -131,7 +131,7 @@
                 </template>
               </a-step>
               <a-step
-                :title="$t('label.templateiso')"
+                :title="$t('label.template.iso.rbdimage')"
                 :status="zoneSelected ? 'process' : 'wait'">
                 <template #description>
                   <div v-if="zoneSelected" style="margin-top: 15px">
@@ -199,10 +199,10 @@
                           :row-count="rowCount.rbdimages"
                           :loading="loading.rbdimages"
                           :preFillContent="dataPreFill"
-                          :isIsoSelected="tabKey==='rbdImageId'"
                           @handle-search-filter="($event) => fetchAllRbdImage($event)"
                           @on-selected-rbd-size="onSelectRbdSize"
-                          @update-rbd-images="updateFieldValue" />
+                          @update-rbd-images="updateFieldValue"
+                          @select-rbd-images-item="($event) => updateRbdImages($event)" />
                       </div>
                     </a-card>
                     <a-form-item class="form-item-hidden">
@@ -1422,7 +1422,6 @@ export default {
         } else if (!iso && this.diskSelected) {
           this.diskOffering = _.find(this.options.diskOfferings, (option) => option.id === instanceConfig.diskofferingid)
         }
-
         this.zone = _.find(this.options.zones, (option) => option.id === instanceConfig.zoneid)
         this.affinityGroups = _.filter(this.options.affinityGroups, (option) => _.includes(instanceConfig.affinitygroupids, option.id))
         this.networks = this.getSelectedNetworksWithExistingConfig(_.filter(this.options.networks, (option) => _.includes(instanceConfig.networkids, option.id)))
@@ -1485,6 +1484,13 @@ export default {
           this.vm.ostypename = this.iso.ostypename
           if (this.hypervisor) {
             this.vm.hypervisor = this.hypervisor
+          }
+
+          if (this.rbdimages) {
+            this.vm.rbdImageId = this.rbdimages.id
+            this.vm.rbdimagesname = this.rbdimages.displaytext
+            this.vm.ostypeid = this.rbdimages.ostypeid
+            this.vm.ostypename = this.rbdimages.ostypename
           }
         }
 
@@ -1788,6 +1794,7 @@ export default {
         this.tabKey = 'templateid'
         this.form.templateid = value
         this.form.isoid = null
+        this.form.rbdImageId = null
         this.resetFromTemplateConfiguration()
         let template = ''
         for (const key in this.options.templates) {
@@ -1824,14 +1831,15 @@ export default {
         }
       } else if (name === 'isoid') {
         this.templateConfigurations = []
-        this.selectedTemplateConfiguration = {}
         this.templateNics = []
+        this.selectedTemplateConfiguration = {}
         this.templateLicenses = []
         this.templateProperties = {}
         this.tabKey = 'isoid'
         this.resetFromTemplateConfiguration()
         this.form.isoid = value
         this.form.templateid = null
+        this.form.rbdImageId = null
         this.updateTemplateLinkedUserData(this.iso.userdataid)
         this.userdataDefaultOverridePolicy = this.iso.userdatapolicy
       } else if (name === 'rbdImageId') {
@@ -1844,6 +1852,7 @@ export default {
         this.resetFromTemplateConfiguration()
         this.form.rbdImageId = value
         this.form.templateid = null
+        this.form.isoid = null
       } else if (['cpuspeed', 'cpunumber', 'memory'].includes(name)) {
         this.vm[name] = value
         this.form[name] = value
@@ -1863,6 +1872,13 @@ export default {
         return
       }
       this.form.diskofferingid = id
+    },
+    updateRbdImages (id, name, value) {
+      if (id === '0') {
+        this.form.rbdImageId = undefined
+        return
+      }
+      this.form.rbdImageId = id
     },
     updateOverrideDiskOffering (id) {
       if (id === '0') {
@@ -1960,6 +1976,7 @@ export default {
       if (this.loading.deploy) return
       this.formRef.value.validate().then(async () => {
         const values = toRaw(this.form)
+
         if (!values.templateid && !values.isoid) {
           this.$notification.error({
             message: this.$t('message.request.failed'),
@@ -2017,8 +2034,10 @@ export default {
         if (this.tabKey === 'templateid') {
           deployVmData.templateid = values.templateid
           values.hypervisor = null
-        } else {
-          deployVmData.templateid = values.isoid
+        } else if (this.tabKey === 'isoid') {
+          deployVmData.isoid = values.isoid
+        } else if (this.tabKey === 'rbdImageId') {
+          deployVmData.rbdImageId = values.rbdImageId
         }
 
         if (this.showRootDiskSizeChanger && values.rootdisksize && values.rootdisksize > 0) {
@@ -2384,12 +2403,11 @@ export default {
     },
     fetchRbdImage (params) {
       this.paramsFilter = {}
-      this.paramsFilter['tags[0].key'] = 'able'
-      this.paramsFilter['tags[0].value'] = 'true'
       const args = Object.assign(this.paramsFilter, params)
       args.zoneid = _.get(this.zone, 'id')
       args.page = args.page || 1
       args.pageSize = args.pageSize || 10
+      args.customimages = 'true'
       return new Promise((resolve, reject) => {
         api('listVolumes', args).then((response) => {
           resolve(response)
@@ -2477,6 +2495,8 @@ export default {
       this.tabKey = 'templateid'
       if (this.isoId) {
         this.tabKey = 'isoid'
+      } else if (this.rbdImageId) {
+        this.tabKey = 'rbdImageId'
       }
       _.each(this.params, (param, name) => {
         if (this.networkId && name === 'networks') {
@@ -2640,7 +2660,7 @@ export default {
       }
     },
     resetFromTemplateConfiguration () {
-      this.deleteFrom(this.params.serviceOfferings.options, ['templateid', 'cpuspeed', 'cpunumber', 'memory'])
+      this.deleteFrom(this.params.serviceOfferings.options, ['templateid', 'isoid', 'rbdImageId', 'cpuspeed', 'cpunumber', 'memory'])
       this.deleteFrom(this.dataPreFill, ['cpuspeed', 'cpunumber', 'memory'])
       this.handleSearchFilter('serviceOfferings', {
         page: 1,

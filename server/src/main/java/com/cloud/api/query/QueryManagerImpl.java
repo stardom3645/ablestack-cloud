@@ -2417,6 +2417,7 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
         Boolean display = cmd.getDisplay();
         String state = cmd.getState();
         boolean shouldListSystemVms = shouldListSystemVms(cmd, caller.getId());
+        boolean customimages = cmd.getCustomImages();
 
         Long zoneId = cmd.getZoneId();
         Long podId = cmd.getPodId();
@@ -2475,6 +2476,9 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
         volumeSearchBuilder.and("state", volumeSearchBuilder.entity().getState(), SearchCriteria.Op.EQ);
         volumeSearchBuilder.and("stateNEQ", volumeSearchBuilder.entity().getState(), SearchCriteria.Op.NEQ);
 
+        if (Boolean.TRUE.equals(customimages)) {
+            volumeSearchBuilder.and("instanceId", volumeSearchBuilder.entity().getInstanceId(), SearchCriteria.Op.NULL);
+        }
         // Need to test thoroughly
         if (!shouldListSystemVms) {
             SearchBuilder<VMInstanceVO> vmSearch = _vmInstanceDao.createSearchBuilder();

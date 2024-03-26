@@ -2731,7 +2731,7 @@ public class VolumeApiServiceImpl extends ManagerBase implements VolumeApiServic
     @Override
     @ActionEvent(eventType = EventTypes.EVENT_VOLUME_UPDATE, eventDescription = "updating volume", async = true)
     public Volume updateVolume(long volumeId, String path, String state, Long storageId, Boolean displayVolume,
-                               String customId, long entityOwnerId, String chainInfo, String name) {
+                               String customId, long entityOwnerId, String chainInfo, String name, String type) {
 
         Account caller = CallContext.current().getCallingAccount();
         if (!_accountMgr.isRootAdmin(caller.getId())) {
@@ -2797,6 +2797,19 @@ public class VolumeApiServiceImpl extends ManagerBase implements VolumeApiServic
 
         if (name != null) {
             volume.setName(name);
+        }
+
+        // if (type != null) {
+        //     volume.setVolumeType(null);
+        // }
+
+        if (type != null) {
+            try {
+                Volume.Type volumeType = Volume.Type.valueOf(state);
+                volume.setVolumeType(volumeType);
+            } catch (IllegalArgumentException ex) {
+                throw new InvalidParameterValueException("Invalid volume state specified");
+            }
         }
 
         updateDisplay(volume, displayVolume);
