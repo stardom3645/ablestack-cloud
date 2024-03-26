@@ -68,21 +68,25 @@
           </a-col>
           <a-col :md="12" :lg="12">
             <a-form-item name="protocol" ref="protocol" :label="$t('label.protocol')">
-              <a-select
+<!--              <a-select-->
+<!--                v-model:value="form.protocol"-->
+<!--                v-focus="true"-->
+<!--                showSearch-->
+<!--                optionFilterProp="label"-->
+<!--                :filterOption="(input, option) => {-->
+<!--                return option.label.toLowerCase().indexOf(input.toLowerCase()) >= 0-->
+<!--              }" >-->
+<!--                <a-select-option-->
+<!--                  v-for="zone in zonesList"-->
+<!--                  :value="zone.id"-->
+<!--                  :key="zone.id"-->
+<!--                  :label="zone.name">-->
+<!--                </a-select-option>-->
+<!--              </a-select>-->
+              <a-input
+                :placeholder="'temp'"
                 v-model:value="form.protocol"
-                v-focus="true"
-                showSearch
-                optionFilterProp="label"
-                :filterOption="(input, option) => {
-                return option.label.toLowerCase().indexOf(input.toLowerCase()) >= 0
-              }" >
-                <a-select-option
-                  v-for="zone in zonesList"
-                  :value="zone.id"
-                  :key="zone.id"
-                  :label="zone.name">
-                </a-select-option>
-              </a-select>
+              />
             </a-form-item>
           </a-col>
         </a-row>
@@ -90,7 +94,7 @@
           <a-col :md="12" :lg="12">
             <a-form-item name="ip" ref="ip" :label="$t('label.ip')">
               <a-input
-                :placeholder="temp"
+                :placeholder="'temp'"
                 v-model:value="form.ip"
               />
             </a-form-item>
@@ -98,7 +102,7 @@
           <a-col :md="12" :lg="12">
             <a-form-item name="port" ref="port" :label="$t('label.port')">
               <a-input
-                :placeholder="temp"
+                :placeholder="'temp'"
                 v-model:value="form.port"
               />
             </a-form-item>
@@ -114,13 +118,13 @@
 <!--            <br/>-->
 <!--          </span>-->
           <a-input
-            :placeholder="temp"
+            :placeholder="'temp'"
             v-model:value="form.apikey"
           />
         </a-form-item>
         <a-form-item name="secretkey" ref="secretkey" :label="$t('label.secret.key')">
           <a-input
-            :placeholder="temp"
+            :placeholder="'temp'"
             v-model:value="form.secretkey"
           />
         </a-form-item>
@@ -152,7 +156,7 @@
       </a-spin>
       <div class="spin-state" style="margin-top: 16px">
         <tooltip-label :title="$t('label.disaster.recovery.cluster.start.connection.test.description')"/>
-        <a-switch v-model:checked="spinning" style="margin-left: 10px"/>
+        <a-switch v-model:checked="spinning" @change="testCommunication" style="margin-left: 10px"/>
       </div>
 
       <div :span="24" class="action-button">
@@ -208,12 +212,16 @@ export default {
       params: [],
       placeholder: {
         name: null,
-        gateway: null,
-        netmask: null,
-        startip: null,
-        endip: null
+        drclustertype: null,
+        protocol: null,
+        ip: null,
+        port: null,
+        apikey: null,
+        secretkey: null,
+        file: null
       },
-      fileList: []
+      fileList: [],
+      communicationStatus: null
     }
   },
   created () {
@@ -234,6 +242,40 @@ export default {
         secretkey: [{ required: true, message: this.$t('label.required') }],
         file: [{ required: true, message: this.$t('message.error.required.input') }]
       })
+    },
+    // API로 백엔드에서 응답코드 200 받아야 추가 가능하도록 개발 필요.
+    async testCommunication () {
+      const values = toRaw(this.form)
+      const params = {
+        name: values.name,
+        description: values.description,
+        drclustertype: values.drclustertype,
+        protocol: values.protocol,
+        ip: values.ip,
+        port: values.port,
+        apikey: values.apikey,
+        secretkey: values.secretkey,
+        file: values.file
+      }
+      console.log(params)
+      // if (this.spinning) {
+      //   try {
+      //     console.log(params)
+      //     const testUrl = 'https://www.naver.com'
+      //     const response = await axios.get(testUrl)
+      //     if (response.status === 200) {
+      //       this.communicationStatus = true
+      //     } else {
+      //       this.communicationStatus = false
+      //     }
+      //   } catch (error) {
+      //     console.error('Error:', error)
+      //     this.communicationStatus = false
+      //   }
+      //   console.log(this.communicationStatus)
+      // } else {
+      //   this.communicationStatus = null
+      // }
     },
     fetchData () {
       this.fetchZones()
