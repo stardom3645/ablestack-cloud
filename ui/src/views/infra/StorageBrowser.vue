@@ -338,8 +338,7 @@ export default {
                 id: result.jobresult.volume.id,
                 path: name,
                 storageid: this.resource.id,
-                state: 'Ready',
-                type: 'ROOT'
+                state: 'Ready'
               }).then(json => {
               }).catch(error => {
                 this.$notifyError(error)
