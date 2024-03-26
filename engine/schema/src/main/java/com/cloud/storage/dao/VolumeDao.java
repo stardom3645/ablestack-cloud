@@ -154,6 +154,8 @@ public interface VolumeDao extends GenericDao<VolumeVO, Long>, StateDao<Volume.S
 
     VolumeVO findByPoolIdAndPath(long id, String path);
 
+    List<VolumeVO> findBySharedVolume(long id, String path);
+
     List<VolumeVO> listByIds(List<Long> ids);
 
     VolumeVO findByPath(String path);
