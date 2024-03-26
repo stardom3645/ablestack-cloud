@@ -65,10 +65,10 @@
                         @change="selected => { onSelectHypervisor(selected.target.value) }"
                         buttonStyle="solid">
                         <a-radio-button value="vmware" style="width: 50%; text-align: center">
-                          VMware
+                          {{ $t('label.vmware') }}
                         </a-radio-button>
                         <a-radio-button value="kvm" style="width: 50%; text-align: center">
-                          KVM
+                          ABLESTACK
                         </a-radio-button>
                       </a-radio-group>
                     </a-form-item>
@@ -156,7 +156,7 @@
             <!-- ------------ -->
             <a-card class="source-dest-card">
               <template #title>
-                Destination
+                {{ $t('label.destination') }}
               </template>
               <a-col :md="24" :lg="48">
                 <a-form
@@ -558,7 +558,7 @@ export default {
       },
       {
         name: 'vmware',
-        label: 'Migrate existing instances to KVM',
+        label: 'Migrate existing instances to ABLESTACK',
         sourceDestHypervisors: {
           vmware: 'kvm'
         },
