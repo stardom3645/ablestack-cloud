@@ -65,3 +65,46 @@ CREATE TABLE IF NOT EXISTS `integrity_verification_initial_hash_final_result` (
     ) ENGINE=InnoDB CHARSET=utf8mb3;
 
 CALL `cloud`.`ADD_COL`('disk_offering', 'shareable', 'tinyint(1) unsigned NOT NULL DEFAULT 0');
+
+
+-- Adding DISASTER_RECOVERY_CLUSTER Table
+CREATE TABLE DISASTER_RECOVERY_CLUSTER
+(
+    id                     bigint unsigned auto_increment primary key,
+    uuid                   varchar(40)     NULL,
+    mshost_id              bigint unsigned NOT NULL,
+    name                   varchar(255)    NOT NULL,
+    dr_cluster_uuid        varchar(40)     NULL,
+    dr_cluster_ip          char(40)        NOT NULL,
+    dr_cluster_port        int             NOT NULL,
+    dr_cluster_type        varchar(32)     NOT NULL,
+    dr_cluster_status      varchar(32)     NOT NULL,
+    mirroring_agent_status varchar(32)     NOT NULL,
+    api_key                varchar(255)    NOT NULL,
+    secret_key             varchar(255)    NOT NULL,
+    created                datetime        NOT NULL comment 'date created',
+    removed                datetime        NULL comment 'date removed',
+    CONSTRAINT i_disaster_recovery_cluster__mshost_id__file_path_final_result
+    FOREIGN KEY (mshost_id) REFERENCES mshost (id)
+    ON DELETE CASCADE
+)
+    charset = utf8mb3;
+
+CREATE INDEX i_disaster_recovery__mshost_id
+ON disaster_recovery_cluster (mshost_id);
+
+
+-- Adding DISASTER_RECOVERY_CLUSTER_VM_MAP Table
+CREATE TABLE DISASTER_RECOVERY_CLUSTER_VM_MAP
+(
+    id                           bigint unsigned auto_increment PRIMARY KEY,
+    disaster_recovery_cluster_id bigint unsigned NOT NULL comment 'the ID of the Disaster Recovery Cluster',
+    vm_id                        bigint unsigned NOT NULL comment 'the ID of the VM',
+    CONSTRAINT fk_disaster_recovery_cluster_vm_map_disaster_recovery_cluster_id
+    FOREIGN KEY (disaster_recovery_cluster_id) REFERENCES disaster_recovery_cluster (id)
+    ON DELETE CASCADE,
+    CONSTRAINT fk_disaster_recovery_cluster_vm_map_vm_instance_id
+    FOREIGN KEY (vm_id) REFERENCES vm_instance (id)
+)
+    charset = utf8mb3;
+
