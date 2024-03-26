@@ -36,6 +36,7 @@ public class LibvirtCheckUrlCommand extends CommandWrapper<CheckUrlCommand, Chec
         final Integer connectTimeout = cmd.getConnectTimeout();
         final Integer connectionRequestTimeout = cmd.getConnectionRequestTimeout();
         final Integer socketTimeout = cmd.getSocketTimeout();
+        final boolean followRedirects = cmd.isFollowRedirects();
 
         logger.info(String.format("Checking URL: %s, with connect timeout: %d, connect request timeout: %d, socket timeout: %d", url, connectTimeout, connectionRequestTimeout, socketTimeout));
         Long remoteSize = null;

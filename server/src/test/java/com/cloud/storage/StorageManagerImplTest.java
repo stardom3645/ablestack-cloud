@@ -198,7 +198,38 @@ public class StorageManagerImplTest {
         PrimaryDataStoreDao storagePoolDao = Mockito.mock(PrimaryDataStoreDao.class);
         storageManagerImpl._storagePoolDao = storagePoolDao;
         Assert.assertTrue(storageManagerImpl.storagePoolCompatibleWithVolumePool(storagePool, volume));
+    }
 
+    @Test
+    public void testEnableDefaultDatastoreDownloadRedirectionForExistingInstallationsNoChange() {
+        Mockito.when(configDepot.isNewConfig(StorageManager.DataStoreDownloadFollowRedirects))
+                .thenReturn(false);
+        storageManagerImpl.enableDefaultDatastoreDownloadRedirectionForExistingInstallations();
+        Mockito.verify(configurationDao, Mockito.never()).update(Mockito.anyString(), Mockito.anyString());
+    }
+
+    @Test
+    public void testEnableDefaultDatastoreDownloadRedirectionForExistingInstallationsOldInstall() {
+        Mockito.when(configDepot.isNewConfig(StorageManager.DataStoreDownloadFollowRedirects))
+                .thenReturn(true);
+        Mockito.when(dataCenterDao.listAll(Mockito.any()))
+                .thenReturn(List.of(Mockito.mock(DataCenterVO.class)));
+        Mockito.doReturn(true).when(configurationDao).update(Mockito.anyString(), Mockito.anyString());
+        storageManagerImpl.enableDefaultDatastoreDownloadRedirectionForExistingInstallations();
+        Mockito.verify(configurationDao, Mockito.times(1))
+                .update(StorageManager.DataStoreDownloadFollowRedirects.key(), "true");
+    }
+
+    @Test
+    public void testEnableDefaultDatastoreDownloadRedirectionForExistingInstallationsNewInstall() {
+        Mockito.when(configDepot.isNewConfig(StorageManager.DataStoreDownloadFollowRedirects))
+                .thenReturn(true);
+        Mockito.when(dataCenterDao.listAll(Mockito.any()))
+                .thenReturn(new ArrayList<>()); //new installation
+        storageManagerImpl.enableDefaultDatastoreDownloadRedirectionForExistingInstallations();
+        Mockito.verify(configurationDao, Mockito.never())
+                .update(StorageManager.DataStoreDownloadFollowRedirects.key(),
+                        StorageManager.DataStoreDownloadFollowRedirects.defaultValue());
     }
 
     @Test
