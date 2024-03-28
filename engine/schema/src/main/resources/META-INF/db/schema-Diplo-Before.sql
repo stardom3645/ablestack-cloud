@@ -90,10 +90,6 @@ CREATE TABLE IF NOT EXISTS `disaster_recovery_cluster`
 )
     charset = utf8mb3;
 
-CREATE INDEX i_disaster_recovery-cluster__mshost_id
-ON disaster_recovery_cluster (mshost_id);
-
-
 -- Adding DISASTER_RECOVERY_CLUSTER_VM_MAP Table
 CREATE TABLE IF NOT EXISTS `disaster_recovery_cluster_vm_map`
 (
