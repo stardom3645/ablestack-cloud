@@ -90,7 +90,7 @@ CREATE TABLE IF NOT EXISTS `disaster_recovery_cluster`
 )
     charset = utf8mb3;
 
-CREATE INDEX i_disaster_recovery__mshost_id
+CREATE INDEX i_disaster_recovery-cluster__mshost_id
 ON disaster_recovery_cluster (mshost_id);
 
 
