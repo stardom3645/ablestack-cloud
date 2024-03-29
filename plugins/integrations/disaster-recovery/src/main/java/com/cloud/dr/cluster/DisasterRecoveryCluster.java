@@ -28,39 +28,27 @@ import java.util.Date;
 public interface DisasterRecoveryCluster extends InternalIdentity, Identity {
 
     public enum DrClusterStatus {
-        Disabled, Enabled
+        Disabled, Enabled, Error
     }
 
     public enum MirroringAgentStatus {
-        Disabled, Enabled
+        Disabled, Enabled, Error
     }
 
     long getId();
-
     String getUuid();
-
     long getMsHostId();
-
     String getName();
-
     String getDrClusterUuid();
-
     String getDrClusterIp();
-
     String getDrClusterPort();
-
+    String getDrClusterProtocol();
     String getDrClusterType();
-
     String getDrClusterStatus();
-
     String getMirroringAgentStatus();
-
     String getApiKey();
-
     String getSecretKey();
-
     Date getCreated();
-
     Date getRemoved();
 
 }

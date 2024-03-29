@@ -48,39 +48,39 @@ public class ConnectivityTestsDisasterRecoveryClusterCmd extends BaseCmd impleme
     /////////////////////////////////////////////////////
     //////////////// API parameters /////////////////////
     /////////////////////////////////////////////////////
-    @Parameter(name = ApiConstants.PROTOCOL, type = CommandType.STRING, required = true,
-            description = "dr cluster mold protocol")
-    private String protocol;
+    @Parameter(name = ApiConstants.DR_CLUSTER_PROTOCOL, type = CommandType.STRING, required = true,
+            description = "dr cluster protocol")
+    private String drClusterProtocol;
 
-    @Parameter(name = ApiConstants.IP_ADDRESS, type = CommandType.STRING, required = true,
-            description = "dr cluster mold ip")
-    private String ipAddress;
+    @Parameter(name = ApiConstants.DR_CLUSTER_IP, type = CommandType.STRING, required = true,
+            description = "dr cluster ip")
+    private String drClusterIp;
 
-    @Parameter(name = ApiConstants.PORT, type = CommandType.STRING, required = true,
-            description = "dr cluster mold port")
-    private String port;
+    @Parameter(name = ApiConstants.DR_CLUSTER_PORT, type = CommandType.STRING, required = true,
+            description = "dr cluster port")
+    private String drClusterPort;
 
-    @Parameter(name = ApiConstants.API_KEY, type = CommandType.STRING, required = true,
-            description = "dr cluster mold api key")
+    @Parameter(name = ApiConstants.DR_CLUSTER_API_KEY, type = CommandType.STRING, required = true,
+            description = "dr cluster api key")
     private String apiKey;
 
-    @Parameter(name = ApiConstants.SECRET_KEY, type = CommandType.STRING, required = true,
-            description = "dr cluster mold secret key")
+    @Parameter(name = ApiConstants.DR_CLUSTER_SECRET_KEY, type = CommandType.STRING, required = true,
+            description = "dr cluster secret key")
     private String secretKey;
 
     /////////////////////////////////////////////////////
     /////////////////// Accessors ///////////////////////
     /////////////////////////////////////////////////////
-    public String getProtocol() {
-        return protocol;
+    public String getDrClusterProtocol() {
+        return drClusterProtocol;
     }
 
-    public String getIpAddress() {
-        return ipAddress;
+    public String getDrClusterIp() {
+        return drClusterIp;
     }
 
-    public String getPort() {
-        return port;
+    public String getDrClusterPort() {
+        return drClusterPort;
     }
 
     public String getApiKey() {

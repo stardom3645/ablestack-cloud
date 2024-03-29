@@ -39,10 +39,11 @@ public interface DisasterRecoveryClusterService extends PluggableService, Config
             true);
 
     boolean connectivityTestsDisasterRecovery(ConnectivityTestsDisasterRecoveryClusterCmd cmd) throws CloudRuntimeException;
-    ListResponse<ScvmIpAddressResponse> listScvmIpAddress(ListScvmIpAddressCmd cmd);
+
+    ListResponse<ScvmIpAddressResponse> listScvmIpAddressResponse(ListScvmIpAddressCmd cmd);
+
     ListResponse<GetDisasterRecoveryClusterListResponse> listDisasterRecoveryClusterResponse(GetDisasterRecoveryClusterListCmd cmd);
 
-    GetDisasterRecoveryClusterListResponse setDisasterRecoveryClusterListResultResponse(long id);
-
     GetDisasterRecoveryClusterListResponse updateDisasterRecoveryCluster(UpdateDisasterRecoveryClusterCmd cmd) throws CloudRuntimeException;
+
 }

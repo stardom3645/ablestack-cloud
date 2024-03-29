@@ -1198,7 +1198,10 @@ public class ApiConstants {
     public static final String DR_CLUSTER_STATUS = "drclusterstatus";
     public static final String MIRRORING_AGENT_STATUS = "mirroringagentstatus";
     public static final String DISASTER_RECOVERY_CLUSTER_VM_LIST = "disasterrecoveryclustervmlist";
-
+    public static final String DR_CLUSTER_API_KEY = "drclusterapikey";
+    public static final String DR_CLUSTER_SECRET_KEY = "drclustersecretkey";
+    public static final String DR_CLUSTER_PROTOCOL = "drclusterprotocol";
+    public static final String DR_CLUSTER_PRIVATE_KEY = "drclusterprivatekey";
     /**
      * This enum specifies IO Drivers, each option controls specific policies on I/O.
      * Qemu guests support "threads" and "native" options Since 0.8.8 ; "io_uring" is supported Since 6.3.0 (QEMU 5.0).
