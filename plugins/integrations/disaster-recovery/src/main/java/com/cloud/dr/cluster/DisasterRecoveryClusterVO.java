@@ -43,6 +43,9 @@ public class DisasterRecoveryClusterVO implements DisasterRecoveryCluster {
     @Column(name = "name")
     private String name;
 
+    @Column(name = "description")
+    private String description;
+
     @Column(name = "dr_cluster_uuid")
     private String drClusterUuid;
 
@@ -93,6 +96,11 @@ public class DisasterRecoveryClusterVO implements DisasterRecoveryCluster {
     @Override
     public String getName() {
         return name;
+    }
+
+    @Override
+    public String getDescription() {
+        return description;
     }
 
     @Override
@@ -210,11 +218,12 @@ public class DisasterRecoveryClusterVO implements DisasterRecoveryCluster {
         this.removed = removed;
     }
 
-    public DisasterRecoveryClusterVO(long mshostId, String name, String drClusterType, String drClusterProtocol, String drClusterIp,
+    public DisasterRecoveryClusterVO(long mshostId, String name, String description, String drClusterType, String drClusterProtocol, String drClusterIp,
                                 String drClusterPort, String apiKey, String secretKey, String drClusterStatus, String mirroringAgentStatus) {
         this.uuid = UUID.randomUUID().toString();
         this.msHostId = mshostId;
         this.name = name;
+        this.description = description;
         this.drClusterType = drClusterType;
         this.drClusterProtocol = drClusterProtocol;
         this.drClusterIp = drClusterIp;
