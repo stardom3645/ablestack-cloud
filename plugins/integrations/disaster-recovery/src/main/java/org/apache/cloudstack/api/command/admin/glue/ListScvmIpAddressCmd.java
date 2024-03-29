@@ -52,7 +52,7 @@ public class ListScvmIpAddressCmd extends BaseListCmd {
     /////////////////////////////////////////////////////
     @Override
     public void execute() {
-        ListResponse<ScvmIpAddressResponse> response = disasterRecoveryClusterService.listScvmIpAddress(this);
+        ListResponse<ScvmIpAddressResponse> response = disasterRecoveryClusterService.listScvmIpAddressResponse(this);
         response.setResponseName(getCommandName());
         this.setResponseObject(response);
     }

@@ -20,6 +20,7 @@ package org.apache.cloudstack.api.command.admin.dr;
 import com.cloud.dr.cluster.DisasterRecoveryClusterService;
 import com.cloud.exception.ConcurrentOperationException;
 import com.cloud.user.Account;
+
 import org.apache.cloudstack.acl.RoleType;
 import org.apache.cloudstack.api.APICommand;
 import org.apache.cloudstack.api.ApiConstants;
@@ -33,7 +34,7 @@ import org.apache.cloudstack.api.response.ListResponse;
 import javax.inject.Inject;
 
 @APICommand(name = GetDisasterRecoveryClusterListCmd.APINAME,
-        description = "disaster recovery results",
+        description = "list disaster recovery cluster",
         responseObject = GetDisasterRecoveryClusterListResponse.class,
         responseView = ResponseObject.ResponseView.Full,
         authorized = {RoleType.Admin})
@@ -49,11 +50,10 @@ public class GetDisasterRecoveryClusterListCmd extends BaseListCmd {
     /////////////////////////////////////////////////////
     @Parameter(name = ApiConstants.ID, type = CommandType.UUID,
             entityType = GetDisasterRecoveryClusterListResponse.class,
-            description = "the ID of the integrity verification final result")
+            description = "the ID of the disaster recovery cluster")
     private Long id;
 
-    @Parameter(name = ApiConstants.NAME, type = CommandType.STRING, description = "name of the Automation Controller" +
-            " (a substring match is made against the parameter value, data for all matching Automation Controller will be returned)")
+    @Parameter(name = ApiConstants.NAME, type = CommandType.STRING, description = "name of disaster recovery cluster")
     private String name;
 
 

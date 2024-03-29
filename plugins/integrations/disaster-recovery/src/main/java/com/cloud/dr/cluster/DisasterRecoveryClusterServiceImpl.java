@@ -25,12 +25,20 @@ import javax.inject.Inject;
 import com.cloud.api.ApiDBUtils;
 import com.cloud.api.query.dao.UserVmJoinDao;
 import com.cloud.api.query.vo.UserVmJoinVO;
+import com.cloud.cluster.dao.ManagementServerHostDao;
+import com.cloud.dr.cluster.dao.DisasterRecoveryClusterDao;
+import com.cloud.dr.cluster.dao.DisasterRecoveryClusterVmMapDao;
+import com.cloud.event.ActionEvent;
 import com.cloud.exception.InvalidParameterValueException;
 import com.cloud.user.Account;
 import com.cloud.user.AccountService;
 import com.cloud.utils.db.Filter;
 import com.cloud.utils.db.SearchBuilder;
 import com.cloud.utils.db.SearchCriteria;
+import com.cloud.utils.script.Script;
+import com.cloud.utils.component.ManagerBase;
+import com.cloud.utils.exception.CloudRuntimeException;
+
 import org.apache.cloudstack.api.ApiConstants;
 import org.apache.cloudstack.api.ResponseObject;
 import org.apache.cloudstack.api.command.admin.dr.GetDisasterRecoveryClusterListCmd;
@@ -43,18 +51,8 @@ import org.apache.cloudstack.api.response.UserVmResponse;
 import org.apache.cloudstack.api.response.dr.cluster.GetDisasterRecoveryClusterListResponse;
 import org.apache.cloudstack.context.CallContext;
 import org.apache.cloudstack.framework.config.ConfigKey;
-import org.apache.cloudstack.utils.identity.ManagementServerNode;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
-
-import com.cloud.cluster.ManagementServerHostVO;
-import com.cloud.cluster.dao.ManagementServerHostDao;
-import com.cloud.dr.cluster.dao.DisasterRecoveryClusterDao;
-import com.cloud.dr.cluster.dao.DisasterRecoveryClusterVmMapDao;
-import com.cloud.event.ActionEvent;
-import com.cloud.utils.script.Script;
-import com.cloud.utils.component.ManagerBase;
-import com.cloud.utils.exception.CloudRuntimeException;
 
 public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements DisasterRecoveryClusterService {
 
@@ -76,9 +74,9 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         if (!DisasterRecoveryServiceEnabled.value()) {
             throw new CloudRuntimeException("Disaster Recovery Service plugin is disabled");
         }
-        String moldProtocol = cmd.getProtocol();
-        String moldIp = cmd.getIpAddress();
-        String moldPort = cmd.getPort();
+        String moldProtocol = cmd.getDrClusterProtocol();
+        String moldIp = cmd.getDrClusterIp();
+        String moldPort = cmd.getDrClusterPort();
         String apiKey = cmd.getApiKey();
         String secretKey = cmd.getSecretKey();
 
@@ -87,7 +85,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         String moldMethod = "GET";
 
         String response = DisasterRecoveryClusterUtil.moldListScvmIpAddressAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey);
-        if (response != null || response != "") {
+        if (response != null) {
             String[] array = response.split(",");
             for(int i=0; i < array.length; i++) {
                 String glueIp = array[i];
@@ -106,10 +104,9 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
     }
 
     @Override
-    public ListResponse<ScvmIpAddressResponse> listScvmIpAddress(ListScvmIpAddressCmd cmd) {
+    public ListResponse<ScvmIpAddressResponse> listScvmIpAddressResponse(ListScvmIpAddressCmd cmd) {
         List<ScvmIpAddressResponse> responses = new ArrayList<>();
         ScvmIpAddressResponse response = new ScvmIpAddressResponse();
-        ManagementServerHostVO msHost = msHostDao.findByMsid(ManagementServerNode.getManagementServerId());
         String ipList = Script.runSimpleBashScript("cat /etc/hosts | grep -E 'scvm1-mngt|scvm2-mngt|scvm3-mngt' | awk '{print $1}' | tr '\n' ','");
         ipList = ipList.replaceAll(",$", "");
         response.setObjectName("scvmipaddress");
@@ -168,13 +165,45 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         response.setDrClusterUuid(drcluster.getDrClusterUuid());
         response.setDrClusterIp(drcluster.getDrClusterIp());
         response.setDrClusterPort(drcluster.getDrClusterPort());
+        response.setDrClusterPort(drcluster.getDrClusterProtocol());
         response.setDrClusterType(drcluster.getDrClusterType());
         response.setDrClusterStatus(drcluster.getDrClusterStatus());
-        response.setMirroringAgentStatus(drcluster.getMirroringAgentStatus());
         response.setApiKey(drcluster.getApiKey());
         response.setSecretKey(drcluster.getSecretKey());
         response.setCreated(drcluster.getCreated());
 
+        String moldUrl = drcluster.getDrClusterProtocol() + "://" + drcluster.getDrClusterIp() + ":" + drcluster.getDrClusterPort() + "/client/api/";
+        String moldCommand = "listScvmIpAddress";
+        String moldMethod = "GET";
+
+        String ScvmResponse = DisasterRecoveryClusterUtil.moldListScvmIpAddressAPI(moldUrl, moldCommand, moldMethod, drcluster.getApiKey(), drcluster.getSecretKey());
+        if (ScvmResponse != null) {
+            String[] array = ScvmResponse.split(",");
+            for(int i=0; i < array.length; i++) {
+                String glueIp = array[i];
+                String glueUrl = "https://" + glueIp + ":8080/api/v1"; // glue-api 프로토콜과 포트 확정 시 변경 예정
+                String glueCommand = "/mirror";
+                String glueMethod = "GET";
+                String daemonHealth = DisasterRecoveryClusterUtil.glueMirrorStatusAPI(glueUrl, glueCommand, glueMethod);
+                if (daemonHealth != null) {
+                    if (daemonHealth.contains("OK")) {
+                        response.setMirroringAgentStatus(DisasterRecoveryCluster.MirroringAgentStatus.Enabled.toString());
+                        break;
+                    } else if (daemonHealth.contains("WARNING")){
+                        response.setMirroringAgentStatus(DisasterRecoveryCluster.MirroringAgentStatus.Disabled.toString());
+                        break;
+                    } else {
+                        response.setMirroringAgentStatus(DisasterRecoveryCluster.MirroringAgentStatus.Error.toString());
+                        break;
+                    }
+                } else {
+                    response.setMirroringAgentStatus(DisasterRecoveryCluster.MirroringAgentStatus.Error.toString());
+                    break;
+                }
+            }
+        } else {
+            response.setMirroringAgentStatus(DisasterRecoveryCluster.MirroringAgentStatus.Error.toString());
+        }
         List<UserVmResponse> disasterRecoveryClusterVmResponses = new ArrayList<UserVmResponse>();
         List<DisasterRecoveryClusterVmMapVO> drClusterVmList = disasterRecoveryClusterVmMapDao.listByDisasterRecoveryClusterId(drcluster.getId());
         ResponseObject.ResponseView respView = ResponseObject.ResponseView.Restricted;

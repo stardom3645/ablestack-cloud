@@ -51,6 +51,10 @@ public class GetDisasterRecoveryClusterListResponse extends BaseResponse {
     @Param(description = "the port of the disaster recovery cluster")
     private String drClusterPort;
 
+    @SerializedName(ApiConstants.DR_CLUSTER_PROTOCOL)
+    @Param(description = "the protocol of the disaster recovery cluster")
+    private String drClusterProtocol;
+
     @SerializedName(ApiConstants.DR_CLUSTER_TYPE)
     @Param(description = "the cluster type of the disaster recovery cluster")
     private String drClusterType;
@@ -103,6 +107,10 @@ public class GetDisasterRecoveryClusterListResponse extends BaseResponse {
         return drClusterPort;
     }
 
+    public String getDrClusterProtocol() {
+        return drClusterProtocol;
+    }
+
     public String getDrClusterType() {
         return drClusterType;
     }
@@ -149,6 +157,10 @@ public class GetDisasterRecoveryClusterListResponse extends BaseResponse {
 
     public void setDrClusterPort(String drClusterPort) {
         this.drClusterPort = drClusterPort;
+    }
+
+    public void setDrClusterProtocol(String drClusterProtocol) {
+        this.drClusterProtocol = drClusterProtocol;
     }
 
     public void setDrClusterType(String drClusterType) {

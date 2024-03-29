@@ -32,6 +32,9 @@ import java.security.SecureRandom;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManager;
 
 import org.apache.cloudstack.utils.security.SSLUtils;
 import org.apache.commons.codec.binary.Base64;
@@ -39,10 +42,6 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 import org.json.XML;
 import org.json.JSONObject;
-
-import javax.net.ssl.HttpsURLConnection;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.TrustManager;
 
 import com.cloud.utils.nio.TrustAllManager;
 import com.google.gson.JsonParser;
@@ -137,7 +136,8 @@ public class DisasterRecoveryClusterUtil {
                 }
                 JsonParser jParser = new JsonParser();
                 JsonObject jObject = (JsonObject)jParser.parse(sb.toString());
-                return jObject.toString();
+                String daemonHealth = jObject.get("daemon_health").toString();
+                return daemonHealth;
             } else {
                 String msg = "Failed to request glue mirror status API. response code : " + connection.getResponseCode();
                 LOGGER.error(msg);
@@ -472,7 +472,7 @@ public class DisasterRecoveryClusterUtil {
                 connection.setSSLSocketFactory(sslContext.getSocketFactory());
                 connection.setDoOutput(true);
                 connection.setRequestMethod(method);
-                connection.setConnectTimeout(30000);
+                connection.setConnectTimeout(5000);
                 connection.setReadTimeout(600000);
                 connection.setRequestProperty("Accept", "application/json");
                 connection.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
@@ -491,7 +491,7 @@ public class DisasterRecoveryClusterUtil {
                 HttpURLConnection connection = (HttpURLConnection)url.openConnection();
                 connection.setDoOutput(true);
                 connection.setRequestMethod(method);
-                connection.setConnectTimeout(30000);
+                connection.setConnectTimeout(5000);
                 connection.setReadTimeout(600000);
                 connection.setRequestProperty("Accept", "application/json");
                 connection.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
@@ -516,7 +516,6 @@ public class DisasterRecoveryClusterUtil {
             return null;
         }
     }
-
 
     /**
      * @param command
@@ -603,5 +602,4 @@ public class DisasterRecoveryClusterUtil {
             return null;
         }
     }
-
 }
