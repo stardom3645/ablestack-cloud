@@ -162,6 +162,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         response.setObjectName("disasterrecoverycluster");
         response.setId(drcluster.getUuid());
         response.setName(drcluster.getName());
+        response.setDescription(drcluster.getDescription());
         response.setDrClusterUuid(drcluster.getDrClusterUuid());
         response.setDrClusterIp(drcluster.getDrClusterIp());
         response.setDrClusterPort(drcluster.getDrClusterPort());

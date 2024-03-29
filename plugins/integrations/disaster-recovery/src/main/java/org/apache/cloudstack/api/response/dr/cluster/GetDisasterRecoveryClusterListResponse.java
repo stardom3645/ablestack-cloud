@@ -39,6 +39,10 @@ public class GetDisasterRecoveryClusterListResponse extends BaseResponse {
     @Param(description = "the name of the disaster recovery cluster")
     private String name;
 
+    @SerializedName(ApiConstants.DESCRIPTION)
+    @Param(description = "the description of the disaster recovery cluster")
+    private String description;
+
     @SerializedName(ApiConstants.DR_CLUSTER_UUID)
     @Param(description = "the uuid of the disaster recovery cluster")
     private String drClusterUuid;
@@ -95,6 +99,10 @@ public class GetDisasterRecoveryClusterListResponse extends BaseResponse {
         return name;
     }
 
+    public String getDescription() {
+        return description;
+    }
+
     public String getDrClusterUuid() {
         return drClusterUuid;
     }
@@ -145,6 +153,10 @@ public class GetDisasterRecoveryClusterListResponse extends BaseResponse {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
     }
 
     public void setDrClusterUuid(String drClusterUuid) {
