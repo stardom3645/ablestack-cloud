@@ -77,7 +77,6 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         String url = cmd.getDrClusterUrl();
         String apiKey = cmd.getApiKey();
         String secretKey = cmd.getSecretKey();
-
         String moldUrl = url + "/client/api/";
         String moldCommand = "listScvmIpAddress";
         String moldMethod = "GET";
@@ -171,7 +170,6 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         String moldUrl = drcluster.getDrClusterUrl() + "/client/api/";
         String moldCommand = "listScvmIpAddress";
         String moldMethod = "GET";
-
         String ScvmResponse = DisasterRecoveryClusterUtil.moldListScvmIpAddressAPI(moldUrl, moldCommand, moldMethod, drcluster.getApiKey(), drcluster.getSecretKey());
         if (ScvmResponse != null) {
             String[] array = ScvmResponse.split(",");
@@ -183,23 +181,25 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                 String daemonHealth = DisasterRecoveryClusterUtil.glueMirrorStatusAPI(glueUrl, glueCommand, glueMethod);
                 if (daemonHealth != null) {
                     if (daemonHealth.contains("OK")) {
-                        response.setMirroringAgentStatus(DisasterRecoveryCluster.MirroringAgentStatus.Enabled.toString());
+                        drcluster.setMirroringAgentStatus(DisasterRecoveryCluster.MirroringAgentStatus.Enabled.toString());
                         break;
                     } else if (daemonHealth.contains("WARNING")){
-                        response.setMirroringAgentStatus(DisasterRecoveryCluster.MirroringAgentStatus.Disabled.toString());
+                        drcluster.setMirroringAgentStatus(DisasterRecoveryCluster.MirroringAgentStatus.Disabled.toString());
                         break;
                     } else {
-                        response.setMirroringAgentStatus(DisasterRecoveryCluster.MirroringAgentStatus.Error.toString());
+                        drcluster.setMirroringAgentStatus(DisasterRecoveryCluster.MirroringAgentStatus.Error.toString());
                         break;
                     }
                 } else {
-                    response.setMirroringAgentStatus(DisasterRecoveryCluster.MirroringAgentStatus.Error.toString());
+                    drcluster.setMirroringAgentStatus(DisasterRecoveryCluster.MirroringAgentStatus.Error.toString());
                     break;
                 }
             }
         } else {
-            response.setMirroringAgentStatus(DisasterRecoveryCluster.MirroringAgentStatus.Error.toString());
+            drcluster.setMirroringAgentStatus(DisasterRecoveryCluster.MirroringAgentStatus.Error.toString());
         }
+        disasterRecoveryClusterDao.update(drcluster.getId(), drcluster);
+        response.setMirroringAgentStatus(drcluster.getMirroringAgentStatus());
         List<UserVmResponse> disasterRecoveryClusterVmResponses = new ArrayList<UserVmResponse>();
         List<DisasterRecoveryClusterVmMapVO> drClusterVmList = disasterRecoveryClusterVmMapDao.listByDisasterRecoveryClusterId(drcluster.getId());
         ResponseObject.ResponseView respView = ResponseObject.ResponseView.Restricted;
