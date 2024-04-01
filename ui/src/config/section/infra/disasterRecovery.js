@@ -24,8 +24,8 @@ export default {
   resourceType: 'DisasterRecoveryCluster',
   icon: 'SubnodeOutlined',
   permission: ['getDisasterRecoveryClusterList'],
-  columns: ['name', 'drclustertype', 'drclusterip', 'drclusterstatus', 'mirroringagentstatus'],
-  details: ['name', 'id', 'drclustertype', 'drclusterip', 'drclusterport', 'drclusterstatus', 'mirroringagentstatus'],
+  columns: ['name', 'drclustertype', 'drclusterurl', 'drclusterstatus', 'mirroringagentstatus'],
+  details: ['name', 'id', 'drclustertype', 'drclusterurl', 'drclusterstatus', 'mirroringagentstatus'],
   tabs: [
     {
       name: 'details',

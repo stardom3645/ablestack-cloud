@@ -74,13 +74,11 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         if (!DisasterRecoveryServiceEnabled.value()) {
             throw new CloudRuntimeException("Disaster Recovery Service plugin is disabled");
         }
-        String moldProtocol = cmd.getDrClusterProtocol();
-        String moldIp = cmd.getDrClusterIp();
-        String moldPort = cmd.getDrClusterPort();
+        String url = cmd.getDrClusterUrl();
         String apiKey = cmd.getApiKey();
         String secretKey = cmd.getSecretKey();
 
-        String moldUrl = moldProtocol + "://" + moldIp + ":" + moldPort + "/client/api/";
+        String moldUrl = url + "/client/api/";
         String moldCommand = "listScvmIpAddress";
         String moldMethod = "GET";
 
@@ -163,17 +161,14 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         response.setId(drcluster.getUuid());
         response.setName(drcluster.getName());
         response.setDescription(drcluster.getDescription());
-        response.setDrClusterUuid(drcluster.getDrClusterUuid());
-        response.setDrClusterIp(drcluster.getDrClusterIp());
-        response.setDrClusterPort(drcluster.getDrClusterPort());
-        response.setDrClusterPort(drcluster.getDrClusterProtocol());
+        response.setDrClusterUrl(drcluster.getDrClusterUrl());
         response.setDrClusterType(drcluster.getDrClusterType());
         response.setDrClusterStatus(drcluster.getDrClusterStatus());
         response.setApiKey(drcluster.getApiKey());
         response.setSecretKey(drcluster.getSecretKey());
         response.setCreated(drcluster.getCreated());
 
-        String moldUrl = drcluster.getDrClusterProtocol() + "://" + drcluster.getDrClusterIp() + ":" + drcluster.getDrClusterPort() + "/client/api/";
+        String moldUrl = drcluster.getDrClusterUrl() + "/client/api/";
         String moldCommand = "listScvmIpAddress";
         String moldMethod = "GET";
 
