@@ -16,10 +16,12 @@
 // under the License.
 package com.cloud.dr.cluster;
 
+import java.io.File;
 
 import org.apache.cloudstack.api.command.admin.dr.ConnectivityTestsDisasterRecoveryClusterCmd;
 import org.apache.cloudstack.api.command.admin.dr.GetDisasterRecoveryClusterListCmd;
 import org.apache.cloudstack.api.command.admin.dr.UpdateDisasterRecoveryClusterCmd;
+import org.apache.cloudstack.api.command.admin.dr.CreateDisasterRecoveryClusterCmd;
 import org.apache.cloudstack.api.command.admin.glue.ListScvmIpAddressCmd;
 import org.apache.cloudstack.api.response.ListResponse;
 import org.apache.cloudstack.api.response.ScvmIpAddressResponse;
@@ -45,5 +47,11 @@ public interface DisasterRecoveryClusterService extends PluggableService, Config
     ListResponse<GetDisasterRecoveryClusterListResponse> listDisasterRecoveryClusterResponse(GetDisasterRecoveryClusterListCmd cmd);
 
     GetDisasterRecoveryClusterListResponse updateDisasterRecoveryCluster(UpdateDisasterRecoveryClusterCmd cmd) throws CloudRuntimeException;
+
+    DisasterRecoveryCluster createDisasterRecoveryCluster(CreateDisasterRecoveryClusterCmd cmd) throws CloudRuntimeException;
+
+    boolean setupDisasterRecoveryCluster(long clusterId, File privateKey) throws CloudRuntimeException;
+
+    GetDisasterRecoveryClusterListResponse createDisasterRecoveryClusterResponse(long clusterId);
 
 }

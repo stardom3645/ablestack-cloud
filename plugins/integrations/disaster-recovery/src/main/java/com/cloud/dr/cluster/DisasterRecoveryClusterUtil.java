@@ -17,9 +17,14 @@
 package com.cloud.dr.cluster;
 
 import java.io.BufferedReader;
+import java.io.DataOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.InputStreamReader;
-// import java.io.OutputStream;
+import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
+import java.io.PrintWriter;
+import java.io.OutputStreamWriter;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.net.HttpURLConnection;
@@ -79,6 +84,8 @@ public class DisasterRecoveryClusterUtil {
             connection.setReadTimeout(600000);
             connection.setRequestProperty("Accept", "application/json");
             connection.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
+            LOGGER.info("connection.getResponseCode():::::::::::::::::::::::::::::::");
+            LOGGER.info(connection.getResponseCode());
             if (connection.getResponseCode() == 200) {
                 BufferedReader br = new BufferedReader(new InputStreamReader(connection.getInputStream(), "UTF-8"));
                 sb = new StringBuffer();
@@ -158,12 +165,16 @@ public class DisasterRecoveryClusterUtil {
      * @param method
      *  POST
      * @param parameter
-     *  localClusterName(string), remoteClusterName(string), host(string), privateKeyFile(file), mirrorPool(string)
+     *  localClusterName("local"), remoteClusterName("remote"), host(<scvmIP>), privateKeyFile(<scvmKey>), mirrorPool("rbd")
      * @return true = 200, 이외 코드는 false 처리
      */
-    protected static boolean glueMirrorSetupAPI(String region, String subUrl, String method, Map<String, String> params) {
+    protected static boolean glueMirrorSetupAPI(String region, String subUrl, String method, Map<String, String> params, File privateKey) {
         try {
             String readLine = null;
+            OutputStream outputStream;
+            PrintWriter writer;
+            String boundary = Long.toHexString(System.currentTimeMillis());
+            String CRLF = "\r\n";
             StringBuffer sb = null;
             // SSL 인증서 에러 우회 처리
             final SSLContext sslContext = SSLUtils.getSSLContext();
@@ -176,13 +187,48 @@ public class DisasterRecoveryClusterUtil {
             connection.setConnectTimeout(30000);
             connection.setReadTimeout(600000);
             connection.setRequestProperty("Accept", "application/json");
-            connection.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
+            connection.setRequestProperty("Connection","Keep-Alive");
+            connection.setRequestProperty("Content-type", "multipart/form-data;boundary=" + boundary);
             // parameter 추가 시 사용 예정
-            // String apiParams = buildParamsGlues(params);
-            // OutputStream os = connection.getOutputStream();
-            // os.write(apiParams.getBytes("UTF-8"));
-            // os.flush();
-            // os.close();
+            outputStream = connection.getOutputStream();
+            writer = new PrintWriter(new OutputStreamWriter(outputStream, "UTF-8"), true);
+            for(Map.Entry<String, String> param : params.entrySet()){
+                String key = param.getKey();
+                String value = param.getValue();
+                // if (key.equalsIgnoreCase("localClusterName")) {
+                //     writer.writeBytes("--" + boundary + CRLF);
+                //     writer.writeBytes("Content-Disposition: form-data; name=\"localClusterName\"" + CRLF + CRLF + value);
+                // } else if (key.equalsIgnoreCase("remoteClusterName")) {
+                //     writer.writeBytes(CRLF + "--" + boundary + CRLF);
+                //     writer.writeBytes("Content-Disposition: form-data; name=\"remoteClusterName\"" + CRLF + CRLF + value);
+                // } else if (key.equalsIgnoreCase("host")) {
+                //     writer.writeBytes(CRLF + "--" + boundary + CRLF);
+                //     writer.writeBytes("Content-Disposition: form-data; name=\"host\"" + CRLF + CRLF + value);
+                // } else if (key.equalsIgnoreCase("mirrorPool")) {
+                //     writer.writeBytes(CRLF + "--" + boundary + CRLF);
+                //     writer.writeBytes("Content-Disposition: form-data; name=\"host\"" + CRLF + CRLF + value);
+                // }
+            }
+            // writer.writeBytes(CRLF + "--" + boundary + CRLF);
+            // writer.writeBytes("Content-Disposition: form-data; name=\"privateKeyFile\"; filename="+ privateKey.getOriginalFilename() + "\r\n");
+            // writer.writeBytes("Content-Type: application/octet-stream\r\n\r\n");
+            FileInputStream fileInputStream = new FileInputStream(privateKey.getPath());
+            int bytesAvailable = fileInputStream.available();
+            int maxBufferSize = 4096;
+            int bufferSize = Math.min(bytesAvailable, maxBufferSize);
+            byte[] buffer = new byte[bufferSize];
+
+            int bytesRead = fileInputStream.read(buffer, 0, bufferSize);
+            while (bytesRead > 0) {
+                DataOutputStream dataWrite = new DataOutputStream(connection.getOutputStream());
+                dataWrite.write(buffer, 0, bufferSize);
+                bytesAvailable = fileInputStream.available();
+                bufferSize = Math.min(bytesAvailable, maxBufferSize);
+                bytesRead = fileInputStream.read(buffer, 0, bufferSize);
+            }
+            fileInputStream.close();
+            // writer.writeBytes(CRLF + "--" + boundary + "--" + CRLF);
+            // writer.flush();
             if (connection.getResponseCode() == 200) {
                 return true;
             } else {
@@ -446,7 +492,7 @@ public class DisasterRecoveryClusterUtil {
     /**
      * Mold listScvmIpAddress API 요청
      * @param region
-     *  <protocol>://<ip>:<port>/client/api/
+     *  <url>/client/api/
      * @param command
      *  listScvmIpAddress
      * @param method
@@ -483,7 +529,7 @@ public class DisasterRecoveryClusterUtil {
                         sb.append(readLine);
                     }
                 } else {
-                    String msg = "Failed to request mold API. response code : " + connection.getResponseCode();
+                    String msg = "Failed to request mold API. response code : " + connection.getResponseCode() + " , request command : " + command;
                     LOGGER.error(msg);
                     return null;
                 }
@@ -502,7 +548,7 @@ public class DisasterRecoveryClusterUtil {
                         sb.append(readLine);
                     }
                 } else {
-                    String msg = "Failed to request mold API. response code : " + connection.getResponseCode();
+                    String msg = "Failed to request mold API. response code : " + connection.getResponseCode() + " , request command : " + command;
                     LOGGER.error(msg);
                     return null;
                 }
@@ -516,6 +562,90 @@ public class DisasterRecoveryClusterUtil {
             return null;
         }
     }
+
+    /**
+     * Mold createDisasterRecoveryCluster API 요청
+     * @param region
+     *  <url>/client/api/
+     * @param command
+     *  createDisasterRecoveryCluster
+     * @param method
+     *  POST
+     * @param name
+     *  primary cluster name
+     * @param drClusterType
+     *  primary
+     * @param drClusterIp
+     *  primary cluster ip
+     * @param drClusterPort
+     *  primary cluster port
+     * @param drClusterProtocol
+     *  primary cluster protocol
+     * @param drClusterApikey
+     *  primary cluster api key
+     * @param drClusterSecretKey
+     *  primary cluster secret key
+     * @return true = 200, 이외 코드는 false 처리
+     */
+    protected static String moldCreateDisasterRecoveryClusterAPI(String region, String command, String method, String apiKey, String secretKey, Map<String, String> params) {
+        try {
+            String readLine = null;
+            StringBuffer sb = null;
+            String apiParams = buildParamsMold(command, params);
+            String urlFinal = buildUrl(apiParams, region, apiKey, secretKey);
+            URL url = new URL(urlFinal);
+            if (region.contains("https")) {
+                // SSL 인증서 에러 우회 처리
+                final SSLContext sslContext = SSLUtils.getSSLContext();
+                sslContext.init(null, new TrustManager[]{new TrustAllManager()}, new SecureRandom());
+                HttpsURLConnection connection = (HttpsURLConnection)url.openConnection();
+                connection.setSSLSocketFactory(sslContext.getSocketFactory());
+                connection.setDoOutput(true);
+                connection.setRequestMethod(method);
+                connection.setConnectTimeout(30000);
+                connection.setReadTimeout(600000);
+                connection.setRequestProperty("Accept", "application/json");
+                connection.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
+                if (connection.getResponseCode() == 200) {
+                    BufferedReader br = new BufferedReader(new InputStreamReader(connection.getInputStream(), "UTF-8"));
+                    sb = new StringBuffer();
+                    while ((readLine = br.readLine()) != null) {
+                        sb.append(readLine);
+                    }
+                } else {
+                    String msg = "Failed to request mold API. response code : " + connection.getResponseCode();
+                    LOGGER.error(msg);
+                    return null;
+                }
+            } else {
+                HttpURLConnection connection = (HttpURLConnection)url.openConnection();
+                connection.setDoOutput(true);
+                connection.setRequestMethod(method);
+                connection.setConnectTimeout(30000);
+                connection.setReadTimeout(600000);
+                connection.setRequestProperty("Accept", "application/json");
+                connection.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
+                if (connection.getResponseCode() == 200) {
+                    BufferedReader br = new BufferedReader(new InputStreamReader(connection.getInputStream(), "UTF-8"));
+                    sb = new StringBuffer();
+                    while ((readLine = br.readLine()) != null) {
+                        sb.append(readLine);
+                    }
+                } else {
+                    String msg = "Failed to request mold API. response code : " + connection.getResponseCode();
+                    LOGGER.error(msg);
+                    return null;
+                }
+            }
+            JSONObject jObject = XML.toJSONObject(sb.toString());
+            JSONObject response = (JSONObject) jObject.get("createdisasterrecoveryclusterresponse");
+            return response.get("disasterrecoverycluster").toString();
+        } catch (Exception e) {
+            LOGGER.error(String.format("Mold API endpoint not available"), e);
+            return null;
+        }
+    }
+
 
     /**
      * @param command

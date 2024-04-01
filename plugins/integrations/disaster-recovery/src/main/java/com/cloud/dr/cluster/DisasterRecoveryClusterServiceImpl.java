@@ -19,6 +19,13 @@ package com.cloud.dr.cluster;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Properties;
+import java.util.HashMap;
+import java.util.Map;
+import java.io.InputStream;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.File;
 
 import javax.inject.Inject;
 
@@ -26,16 +33,23 @@ import com.cloud.api.ApiDBUtils;
 import com.cloud.api.query.dao.UserVmJoinDao;
 import com.cloud.api.query.vo.UserVmJoinVO;
 import com.cloud.cluster.dao.ManagementServerHostDao;
+import com.cloud.cluster.ManagementServerHostVO;
 import com.cloud.dr.cluster.dao.DisasterRecoveryClusterDao;
 import com.cloud.dr.cluster.dao.DisasterRecoveryClusterVmMapDao;
 import com.cloud.event.ActionEvent;
 import com.cloud.exception.InvalidParameterValueException;
 import com.cloud.user.Account;
 import com.cloud.user.AccountService;
+import com.cloud.user.UserAccount;
 import com.cloud.utils.db.Filter;
 import com.cloud.utils.db.SearchBuilder;
 import com.cloud.utils.db.SearchCriteria;
+import com.cloud.utils.db.TransactionCallback;
+import com.cloud.utils.db.TransactionStatus;
+import com.cloud.utils.db.Transaction;
+import com.cloud.utils.PropertiesUtil;
 import com.cloud.utils.script.Script;
+import com.cloud.utils.server.ServerProperties;
 import com.cloud.utils.component.ManagerBase;
 import com.cloud.utils.exception.CloudRuntimeException;
 
@@ -46,9 +60,11 @@ import org.apache.cloudstack.api.command.admin.dr.UpdateDisasterRecoveryClusterC
 import org.apache.cloudstack.api.response.ListResponse;
 import org.apache.cloudstack.api.response.ScvmIpAddressResponse;
 import org.apache.cloudstack.api.command.admin.dr.ConnectivityTestsDisasterRecoveryClusterCmd;
+import org.apache.cloudstack.api.command.admin.dr.CreateDisasterRecoveryClusterCmd;
 import org.apache.cloudstack.api.command.admin.glue.ListScvmIpAddressCmd;
 import org.apache.cloudstack.api.response.UserVmResponse;
 import org.apache.cloudstack.api.response.dr.cluster.GetDisasterRecoveryClusterListResponse;
+import org.apache.cloudstack.utils.identity.ManagementServerNode;
 import org.apache.cloudstack.context.CallContext;
 import org.apache.cloudstack.framework.config.ConfigKey;
 import org.apache.logging.log4j.Logger;
@@ -251,6 +267,163 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
     }
 
     @Override
+    public DisasterRecoveryCluster createDisasterRecoveryCluster(CreateDisasterRecoveryClusterCmd cmd) throws CloudRuntimeException {
+        if (!DisasterRecoveryServiceEnabled.value()) {
+            throw new CloudRuntimeException("Disaster Recovery Service plugin is disabled");
+        }
+        validateDisasterRecoveryClusterCreateParameters(cmd);
+        ManagementServerHostVO msHost = msHostDao.findByMsid(ManagementServerNode.getManagementServerId());
+        DisasterRecoveryClusterVO cluster = Transaction.execute(new TransactionCallback<DisasterRecoveryClusterVO>() {
+            @Override
+            public DisasterRecoveryClusterVO doInTransaction(TransactionStatus status) {
+                DisasterRecoveryClusterVO newCluster = new DisasterRecoveryClusterVO(msHost.getId(), cmd.getName(), cmd.getDescription(), cmd.getDrClusterType(), cmd.getDrClusterUrl(),
+                        cmd.getApiKey(), cmd.getSecretKey(), DisasterRecoveryCluster.DrClusterStatus.Enabled.toString(), DisasterRecoveryCluster.MirroringAgentStatus.Enabled.toString());
+                disasterRecoveryClusterDao.persist(newCluster);
+                return newCluster;
+            }
+        });
+        if (LOGGER.isInfoEnabled()) {
+            LOGGER.info(String.format("Disaster recovery cluster name: %s and ID: %s has been created", cluster.getName(), cluster.getUuid()));
+        }
+        return cluster;
+    }
+
+    private void validateDisasterRecoveryClusterCreateParameters(final CreateDisasterRecoveryClusterCmd cmd) throws CloudRuntimeException {
+        final String name = cmd.getName();
+        final String type = cmd.getDrClusterType();
+        final String url = cmd.getDrClusterUrl();
+        final String apiKey = cmd.getApiKey();
+        final String secretKey = cmd.getSecretKey();
+        final File privateKey = cmd.getPrivateKey();
+
+        if (name == null || name.isEmpty()) {
+            throw new InvalidParameterValueException("Invalid name for the disaster recovery cluster name:" + name);
+        }
+        if (type.equalsIgnoreCase("secondary")) {
+            if (!privateKey.exists()) {
+                throw new InvalidParameterValueException("Invalid private key for the disaster recovery cluster private key:" + privateKey);
+            }
+        }
+        if (url == null || url.isEmpty()) {
+            throw new InvalidParameterValueException("Invalid url for the disaster recovery cluster url:" + url);
+        }
+        if (apiKey == null || apiKey.isEmpty()) {
+            throw new InvalidParameterValueException("Invalid api key for the disaster recovery cluster api key:" + apiKey);
+        }
+        if (secretKey == null || secretKey.isEmpty()) {
+            throw new InvalidParameterValueException("Invalid secret key for the disaster recovery cluster secret key:" + secretKey);
+        }
+    }
+
+    private String[] getServerProperties() {
+        String[] serverInfo = null;
+        final String HTTP_PORT = "http.port";
+        final String HTTPS_ENABLE = "https.enable";
+        final String HTTPS_PORT = "https.port";
+        final File confFile = PropertiesUtil.findConfigFile("server.properties");
+        try {
+            InputStream is = new FileInputStream(confFile);
+            String port = null;
+            String protocol = null;
+            final Properties properties = ServerProperties.getServerProperties(is);
+            if (properties.getProperty(HTTPS_ENABLE).equals("true")){
+                port = properties.getProperty(HTTPS_PORT);
+                protocol = "https://";
+            } else {
+                port = properties.getProperty(HTTP_PORT);
+                protocol = "http://";
+            }
+            serverInfo = new String[]{port, protocol};
+        } catch (final IOException e) {
+            LOGGER.debug("Failed to read configuration from server.properties file", e);
+        }
+        return serverInfo;
+    }
+
+    public boolean setupDisasterRecoveryCluster(long clusterId, File privateKey) {
+        // secondary cluster info
+        DisasterRecoveryClusterVO drCluster = disasterRecoveryClusterDao.findById(clusterId);
+        String drName = drCluster.getName();
+        String drDescription = drCluster.getDescription();
+        String drClusterType = drCluster.getDrClusterType();
+        String url = drCluster.getDrClusterUrl();
+        String secApiKey = drCluster.getApiKey();
+        String secSecretKey = drCluster.getSecretKey();
+        // primary cluster info
+        String[] properties = getServerProperties();
+        ManagementServerHostVO msHost = msHostDao.findByMsid(ManagementServerNode.getManagementServerId());
+        String priUrl = properties[1] + "://" + msHost.getServiceIP() + ":" + properties[0];
+        UserAccount user = accountService.getActiveUserAccount("admin", 1L);
+        String priApiKey = user.getApiKey();
+        String priSecretKey = user.getSecretKey();
+        // secondary cluster createDisasterRecoveryClusterAPI request prepare
+        Map<String, String> secParams = new HashMap<>();
+        secParams.put("name", drName);
+        secParams.put("description", drDescription);
+        secParams.put("drClusterType", "primary");
+        secParams.put("drClusterUrl", priUrl);
+        secParams.put("apiKey", priApiKey);
+        secParams.put("secretKey", priSecretKey);
+        // primary cluster : glue-api mirror setup, primary cluster db update, mold-api secondary dr cluster create
+        String secUrl = url + "/client/api/";
+        String secCommand = "listScvmIpAddress";
+        String secMethod = "GET";
+        String secResponse = DisasterRecoveryClusterUtil.moldListScvmIpAddressAPI(secUrl, secCommand, secMethod, secApiKey, secSecretKey);
+        LOGGER.info("secResponse::::::::::::::::::::::::::::::");
+        LOGGER.info(secResponse);
+        String[] array = secResponse.split(",");
+        for (int i=0; i < array.length; i++) {
+            String glueIp = array[i];
+            String glueUrl = "https://" + glueIp + ":8080/api/v1"; // glue-api 프로토콜과 포트 확정 시 변경 예정
+            String glueCommand = "/mirror";
+            String glueMethod = "POST";
+            Map<String, String> glueParams = new HashMap<>();
+            glueParams.put("localClusterName", "local");
+            glueParams.put("remoteClusterName", "remote");
+            glueParams.put("mirrorPool", "rbd");
+            glueParams.put("host", glueIp);
+            boolean result = DisasterRecoveryClusterUtil.glueMirrorSetupAPI(glueUrl, glueCommand, glueMethod, glueParams, privateKey);
+            LOGGER.info("result::::::::::::::::::::::::::::::");
+            LOGGER.info(result);
+            // mirror setup 성공
+            if (result) {
+                // secondary cluster createDisasterRecoveryCluster API 요청
+                secCommand = "createDisasterRecoveryCluster";
+                secMethod = "POST";
+                secResponse = DisasterRecoveryClusterUtil.moldCreateDisasterRecoveryClusterAPI(secUrl, secCommand, secMethod, secApiKey, secSecretKey, secParams);
+                // priResponse가 null 인 경우 예외처리 필요 (secondary cluster의 db에 dr 정보가 업데이트 되지 않은 경우)
+                LOGGER.info("secResponse::::::::::::::::::::::::::::::");
+                LOGGER.info(secResponse);
+                return true;
+            }
+        }
+        // 에러
+        drCluster.setDrClusterStatus(DisasterRecoveryCluster.DrClusterStatus.Error.toString());
+        drCluster.setMirroringAgentStatus(DisasterRecoveryCluster.MirroringAgentStatus.Error.toString());
+        disasterRecoveryClusterDao.update(drCluster.getId(), drCluster);
+        return false;
+    }
+
+    @Override
+    public GetDisasterRecoveryClusterListResponse createDisasterRecoveryClusterResponse(long clusterId) {
+        DisasterRecoveryClusterVO drcluster = disasterRecoveryClusterDao.findById(clusterId);
+        GetDisasterRecoveryClusterListResponse response = new GetDisasterRecoveryClusterListResponse();
+        response.setObjectName("disasterrecoverycluster");
+        response.setId(drcluster.getUuid());
+        response.setName(drcluster.getName());
+        response.setDescription(drcluster.getDescription());
+        response.setDrClusterUrl(drcluster.getDrClusterUrl());
+        response.setDrClusterType(drcluster.getDrClusterType());
+        response.setDrClusterStatus(drcluster.getDrClusterStatus());
+        response.setMirroringAgentStatus(drcluster.getMirroringAgentStatus());
+        response.setApiKey(drcluster.getApiKey());
+        response.setSecretKey(drcluster.getSecretKey());
+        response.setCreated(drcluster.getCreated());
+        return response;
+    }
+
+
+    @Override
     public List<Class<?>> getCommands() {
         List<Class<?>> cmdList = new ArrayList<Class<?>>();
         if (!DisasterRecoveryServiceEnabled.value()) {
@@ -260,6 +433,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         cmdList.add(ConnectivityTestsDisasterRecoveryClusterCmd.class);
         cmdList.add(GetDisasterRecoveryClusterListCmd.class);
         cmdList.add(UpdateDisasterRecoveryClusterCmd.class);
+        cmdList.add(CreateDisasterRecoveryClusterCmd.class);
         return cmdList;
     }
 
