@@ -46,17 +46,8 @@ public class DisasterRecoveryClusterVO implements DisasterRecoveryCluster {
     @Column(name = "description")
     private String description;
 
-    @Column(name = "dr_cluster_uuid")
-    private String drClusterUuid;
-
-    @Column(name = "dr_cluster_ip")
-    private String drClusterIp;
-
-    @Column(name = "dr_cluster_port")
-    private String drClusterPort;
-
-    @Column(name = "dr_cluster_protocol")
-    private String drClusterProtocol;
+    @Column(name = "dr_cluster_url")
+    private String drClusterUrl;
 
     @Column(name = "dr_cluster_type")
     private String drClusterType;
@@ -104,23 +95,8 @@ public class DisasterRecoveryClusterVO implements DisasterRecoveryCluster {
     }
 
     @Override
-    public String getDrClusterUuid() {
-        return drClusterUuid;
-    }
-
-    @Override
-    public String getDrClusterIp() {
-        return drClusterIp;
-    }
-
-    @Override
-    public String getDrClusterPort() {
-        return drClusterPort;
-    }
-
-    @Override
-    public String getDrClusterProtocol() {
-        return drClusterProtocol;
+    public String getDrClusterUrl() {
+        return drClusterUrl;
     }
 
     @Override
@@ -174,20 +150,8 @@ public class DisasterRecoveryClusterVO implements DisasterRecoveryCluster {
         this.name = name;
     }
 
-    public void setDrClusterUuid(String drClusterUuid) {
-        this.drClusterUuid = drClusterUuid;
-    }
-
-    public void setDrClusterIp(String drClusterIp) {
-        this.drClusterIp = drClusterIp;
-    }
-
-    public void setDrClusterPort(String drClusterPort) {
-        this.drClusterPort = drClusterPort;
-    }
-
-    public void setDrClusterProtocol(String drClusterProtocol) {
-        this.drClusterProtocol = drClusterProtocol;
+    public void setDrClusterUrl(String drClusterUrl) {
+        this.drClusterUrl = drClusterUrl;
     }
 
     public void setDrClusterType(String drClusterType) {
@@ -218,18 +182,16 @@ public class DisasterRecoveryClusterVO implements DisasterRecoveryCluster {
         this.removed = removed;
     }
 
-    public DisasterRecoveryClusterVO(long mshostId, String name, String description, String drClusterType, String drClusterProtocol, String drClusterIp,
-                                String drClusterPort, String apiKey, String secretKey, String drClusterStatus, String mirroringAgentStatus) {
+    public DisasterRecoveryClusterVO(long mshostId, String name, String description, String apiKey, String secretKey,
+                                String drClusterUrl, String drClusterType, String drClusterStatus, String mirroringAgentStatus) {
         this.uuid = UUID.randomUUID().toString();
         this.msHostId = mshostId;
         this.name = name;
         this.description = description;
-        this.drClusterType = drClusterType;
-        this.drClusterProtocol = drClusterProtocol;
-        this.drClusterIp = drClusterIp;
-        this.drClusterPort = drClusterPort;
         this.apiKey = apiKey;
         this.secretKey = secretKey;
+        this.drClusterUrl = drClusterUrl;
+        this.drClusterType = drClusterType;
         this.drClusterStatus = drClusterStatus;
         this.mirroringAgentStatus = mirroringAgentStatus;
     }

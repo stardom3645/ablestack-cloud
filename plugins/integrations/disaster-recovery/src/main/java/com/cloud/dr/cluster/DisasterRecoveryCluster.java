@@ -40,10 +40,7 @@ public interface DisasterRecoveryCluster extends InternalIdentity, Identity {
     long getMsHostId();
     String getName();
     String getDescription();
-    String getDrClusterUuid();
-    String getDrClusterIp();
-    String getDrClusterPort();
-    String getDrClusterProtocol();
+    String getDrClusterUrl();
     String getDrClusterType();
     String getDrClusterStatus();
     String getMirroringAgentStatus();

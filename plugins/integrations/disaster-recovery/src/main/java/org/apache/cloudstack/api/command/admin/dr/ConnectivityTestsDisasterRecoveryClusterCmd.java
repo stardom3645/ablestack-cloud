@@ -48,39 +48,23 @@ public class ConnectivityTestsDisasterRecoveryClusterCmd extends BaseCmd impleme
     /////////////////////////////////////////////////////
     //////////////// API parameters /////////////////////
     /////////////////////////////////////////////////////
-    @Parameter(name = ApiConstants.DR_CLUSTER_PROTOCOL, type = CommandType.STRING, required = true,
-            description = "dr cluster protocol")
-    private String drClusterProtocol;
+    @Parameter(name = ApiConstants.DR_CLUSTER_URL, type = CommandType.STRING, required = true,
+            description = "dr cluster url")
+    private String drClusterUrl;
 
-    @Parameter(name = ApiConstants.DR_CLUSTER_IP, type = CommandType.STRING, required = true,
-            description = "dr cluster ip")
-    private String drClusterIp;
-
-    @Parameter(name = ApiConstants.DR_CLUSTER_PORT, type = CommandType.STRING, required = true,
-            description = "dr cluster port")
-    private String drClusterPort;
-
-    @Parameter(name = ApiConstants.DR_CLUSTER_API_KEY, type = CommandType.STRING, required = true,
+    @Parameter(name = ApiConstants.API_KEY, type = CommandType.STRING, required = true,
             description = "dr cluster api key")
     private String apiKey;
 
-    @Parameter(name = ApiConstants.DR_CLUSTER_SECRET_KEY, type = CommandType.STRING, required = true,
+    @Parameter(name = ApiConstants.SECRET_KEY, type = CommandType.STRING, required = true,
             description = "dr cluster secret key")
     private String secretKey;
 
     /////////////////////////////////////////////////////
     /////////////////// Accessors ///////////////////////
     /////////////////////////////////////////////////////
-    public String getDrClusterProtocol() {
-        return drClusterProtocol;
-    }
-
-    public String getDrClusterIp() {
-        return drClusterIp;
-    }
-
-    public String getDrClusterPort() {
-        return drClusterPort;
+    public String getDrClusterUrl() {
+        return drClusterUrl;
     }
 
     public String getApiKey() {
