@@ -46,64 +46,12 @@
       </a-form-item>
 
       <a-card size="small" :title="$t('label.add.disaster.recovery.cluster.info')" style="margin-top: 15px">
-        <a-row :gutter="12">
-          <a-col :md="12" :lg="12">
-            <a-form-item name="drclustertype" ref="drclustertype" :label="$t('label.disaster.recovery.cluster.type')">
-              <a-select
-                v-model:value="form.drclustertype"
-                v-focus="true"
-                showSearch
-                optionFilterProp="label"
-                :filterOption="(input, option) => {
-                return option.label.toLowerCase().indexOf(input.toLowerCase()) >= 0
-              }" >
-                <a-select-option
-                  v-for="zone in zonesList"
-                  :value="zone.id"
-                  :key="zone.id"
-                  :label="zone.name">
-                </a-select-option>
-              </a-select>
-            </a-form-item>
-          </a-col>
-          <a-col :md="12" :lg="12">
-            <a-form-item name="protocol" ref="protocol" :label="$t('label.protocol')">
-              <a-select
-                v-model:value="form.protocol"
-                v-focus="true"
-                showSearch
-                optionFilterProp="label"
-                :filterOption="(input, option) => {
-                return option.label.toLowerCase().indexOf(input.toLowerCase()) >= 0
-              }" >
-                <a-select-option
-                  v-for="zone in zonesList"
-                  :value="zone.id"
-                  :key="zone.id"
-                  :label="zone.name">
-                </a-select-option>
-              </a-select>
-            </a-form-item>
-          </a-col>
-        </a-row>
-        <a-row :gutter="12">
-          <a-col :md="12" :lg="12">
-            <a-form-item name="ip" ref="ip" :label="$t('label.ip')">
-              <a-input
-                :placeholder="temp"
-                v-model:value="form.ip"
-              />
-            </a-form-item>
-          </a-col>
-          <a-col :md="12" :lg="12">
-            <a-form-item name="port" ref="port" :label="$t('label.port')">
-              <a-input
-                :placeholder="temp"
-                v-model:value="form.port"
-              />
-            </a-form-item>
-          </a-col>
-        </a-row>
+        <a-form-item name="url" ref="url" :label="$t('label.url')">
+          <a-input
+            :placeholder="temp"
+            v-model:value="form.url"
+          />
+        </a-form-item>
         <a-form-item name="apikey" ref="apikey" :label="$t('label.apikey')">
 <!--          <span>-->
 <!--            <a-alert type="warning">-->
@@ -226,10 +174,7 @@ export default {
       this.form = reactive({})
       this.rules = reactive({
         name: [{ required: true, message: this.$t('label.required') }],
-        drclustertype: [{ required: true, message: this.$t('label.required') }],
-        protocol: [{ required: true, message: this.$t('label.required') }],
-        ip: [{ required: true, message: this.$t('label.required') }],
-        port: [{ required: true, message: this.$t('label.required') }],
+        url: [{ required: true, message: this.$t('label.required') }],
         apikey: [{ required: true, message: this.$t('label.required') }],
         secretkey: [{ required: true, message: this.$t('label.required') }],
         file: [{ required: true, message: this.$t('message.error.required.input') }]
