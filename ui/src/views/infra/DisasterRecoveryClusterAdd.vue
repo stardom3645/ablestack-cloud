@@ -48,7 +48,7 @@
       <a-card size="small" :title="$t('label.add.disaster.recovery.cluster.info')" style="margin-top: 15px">
         <a-form-item name="url" ref="url" :label="$t('label.url')">
           <a-input
-            :placeholder="temp"
+            :placeholder="'http://10.10.1.10:8080'"
             v-model:value="form.url"
           />
         </a-form-item>
