@@ -43,21 +43,9 @@ public class GetDisasterRecoveryClusterListResponse extends BaseResponse {
     @Param(description = "the description of the disaster recovery cluster")
     private String description;
 
-    @SerializedName(ApiConstants.DR_CLUSTER_UUID)
-    @Param(description = "the uuid of the disaster recovery cluster")
-    private String drClusterUuid;
-
-    @SerializedName(ApiConstants.DR_CLUSTER_IP)
-    @Param(description = "the ip of the disaster recovery cluster")
-    private String drClusterIp;
-
-    @SerializedName(ApiConstants.DR_CLUSTER_PORT)
-    @Param(description = "the port of the disaster recovery cluster")
-    private String drClusterPort;
-
-    @SerializedName(ApiConstants.DR_CLUSTER_PROTOCOL)
-    @Param(description = "the protocol of the disaster recovery cluster")
-    private String drClusterProtocol;
+    @SerializedName(ApiConstants.DR_CLUSTER_URL)
+    @Param(description = "the url of the disaster recovery cluster")
+    private String drClusterUrl;
 
     @SerializedName(ApiConstants.DR_CLUSTER_TYPE)
     @Param(description = "the cluster type of the disaster recovery cluster")
@@ -103,20 +91,8 @@ public class GetDisasterRecoveryClusterListResponse extends BaseResponse {
         return description;
     }
 
-    public String getDrClusterUuid() {
-        return drClusterUuid;
-    }
-
-    public String getDrClusterIp() {
-        return drClusterIp;
-    }
-
-    public String getDrClusterPort() {
-        return drClusterPort;
-    }
-
-    public String getDrClusterProtocol() {
-        return drClusterProtocol;
+    public String getDrClusterUrl() {
+        return drClusterUrl;
     }
 
     public String getDrClusterType() {
@@ -159,20 +135,8 @@ public class GetDisasterRecoveryClusterListResponse extends BaseResponse {
         this.description = description;
     }
 
-    public void setDrClusterUuid(String drClusterUuid) {
-        this.drClusterUuid = drClusterUuid;
-    }
-
-    public void setDrClusterIp(String drClusterIp) {
-        this.drClusterIp = drClusterIp;
-    }
-
-    public void setDrClusterPort(String drClusterPort) {
-        this.drClusterPort = drClusterPort;
-    }
-
-    public void setDrClusterProtocol(String drClusterProtocol) {
-        this.drClusterProtocol = drClusterProtocol;
+    public void setDrClusterUrl(String drClusterUrl) {
+        this.drClusterUrl = drClusterUrl;
     }
 
     public void setDrClusterType(String drClusterType) {
