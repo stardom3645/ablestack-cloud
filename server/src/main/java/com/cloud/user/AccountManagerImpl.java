@@ -2759,10 +2759,10 @@ public class AccountManagerImpl extends ManagerBase implements AccountManager, M
             User user = _userDao.getUserByName(account.getUsername(), account.getDomainId());
             ActionEventUtils.onActionEvent(user.getId(), user.getAccountId(), account.getDomainId(), EventTypes.EVENT_USER_LOGIN, "user has been disabled due to multiple failed login attempts. UserId : " + user.getId(), user.getId(), ApiCommandResourceType.User.toString());
             int enableTime = incorrectLoginEnableTime.value();
-            _alertMgr.sendAlert(AlertManager.AlertType.ALERT_TYPE_LOGIN, 0, new Long(0), "user has been disabled due to multiple failed login attempts. UserId : " + user.getId(), "");
+            _alertMgr.sendAlert(AlertManager.AlertType.ALERT_TYPE_LOGIN, 0, new Long(0), "user has been disabled due to multiple failed login attempts. UserId : " + user.getId(), "User has been disabled due to multiple failed login attempts. Your account will be automatically activated after "+ enableTime +" seconds.");
             _enableExecutor.schedule(new EnableUserTask(user), enableTime, TimeUnit.SECONDS);
             throw new CloudAuthenticationException("Failed to authenticate user " + account.getUsername() + " in domain " + account.getDomainId() +
-            "; The user has been disabled due to multiple failed login attempts. Your account will be automatically activated after "+ enableTime +" seconds. Please try again in a moment");
+            "; The user has been disabled due to multiple failed login attempts. Your account will be automatically activated after "+ enableTime +" seconds. Please try again in a moment.");
         }
     }
 

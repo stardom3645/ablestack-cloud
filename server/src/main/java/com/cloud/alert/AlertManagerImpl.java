@@ -749,7 +749,8 @@ public class AlertManagerImpl extends ManagerBase implements AlertManager, Confi
                 && (alertType != AlertManager.AlertType.ALERT_TYPE_MANAGMENT_NODE) && (alertType != AlertManager.AlertType.ALERT_TYPE_RESOURCE_LIMIT_EXCEEDED)
                 && (alertType != AlertManager.AlertType.ALERT_TYPE_UPLOAD_FAILED) && (alertType != AlertManager.AlertType.ALERT_TYPE_OOBM_AUTH_ERROR)
                 && (alertType != AlertManager.AlertType.ALERT_TYPE_HA_ACTION) && (alertType != AlertManager.AlertType.ALERT_TYPE_CA_CERT)
-                && (alertType != AlertManager.AlertType.EVENT_USER_SESSION_BLOCK) && (alertType != AlertManager.AlertType.EVENT_USER_SESSION_DESTROY)) {
+                && (alertType != AlertManager.AlertType.EVENT_USER_SESSION_BLOCK) && (alertType != AlertManager.AlertType.EVENT_USER_SESSION_DESTROY)
+                && (alertType != AlertManager.AlertType.ALERT_TYPE_LOGIN)) {
             alert = _alertDao.getLastAlert(alertType.getType(), dataCenterId, podId, clusterId);
         }
 
