@@ -372,6 +372,11 @@ public class PasswordPolicyImpl implements PasswordPolicy, Configurable {
         if(matcher.find()) {
             return true;
         }
+        Pattern pattern_sign = Pattern.compile("[^a-zA-Z0-9\\s]{3,}");
+        Matcher matcher_sign = pattern_sign.matcher(password);
+        if(matcher_sign.find()) {
+            return true;
+        }
         return false;
     }
 
