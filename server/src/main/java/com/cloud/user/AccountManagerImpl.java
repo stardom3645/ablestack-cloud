@@ -2752,6 +2752,7 @@ public class AccountManagerImpl extends ManagerBase implements AccountManager, M
             updateLoginAttempts(account.getId(), attemptsMade, false);
             logger.warn("Login attempt failed. You have " +
                     (allowedLoginAttempts - attemptsMade) + " attempt(s) remaining");
+            ActionEventUtils.onActionEvent(user.getId(), user.getAccountId(), account.getDomainId(), EventTypes.EVENT_USER_LOGIN, "Login attempt failed. UserId : " + user.getId(), user.getId(), ApiCommandResourceType.User.toString());
         } else {
             updateLoginAttempts(account.getId(), allowedLoginAttempts, true);
             logger.warn("User " + account.getUsername() +
