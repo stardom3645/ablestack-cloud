@@ -335,7 +335,7 @@ public class SimpleHttpMultiFileDownloader extends ManagedContextRunnable implem
                     && !followRedirects) {
                 errorString = String.format("Failed to download %s due to redirection, response code: %d",
                         downloadUrl, responseCode);
-                s_logger.error(errorString);
+                logger.error(errorString);
             }
             return true; //FIXME: retry?
         }

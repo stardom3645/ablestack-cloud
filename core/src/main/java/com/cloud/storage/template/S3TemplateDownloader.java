@@ -129,7 +129,6 @@ public class S3TemplateDownloader extends ManagedContextRunnable implements Temp
         if (!HTTPUtils.verifyResponseCode(responseCode) || failedDueToRedirection) {
             errorString = "Response code for GetMethod of " + downloadUrl + " is incorrect, responseCode: " + responseCode;
             logger.warn(errorString);
-
             status = Status.UNRECOVERABLE_ERROR;
             return 0;
         }

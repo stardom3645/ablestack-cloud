@@ -587,14 +587,14 @@ public class ApiServlet extends HttpServlet {
                     header = header.trim();
                     ip = getCorrectIPAddress(request.getHeader(header));
                     if (StringUtils.isNotBlank(ip)) {
-                        s_logger.debug(String.format("found ip %s in header %s ", ip, header));
+                        LOGGER.debug(String.format("found ip %s in header %s ", ip, header));
                         break;
                     }
                 } // no address found in header so ip is blank and use remote addr
             } // else not an allowed proxy address, ip is blank and use remote addr
         }
         if (StringUtils.isBlank(ip)) {
-            s_logger.trace(String.format("no ip found in headers, returning remote address %s.", pretender.getHostAddress()));
+            LOGGER.trace(String.format("no ip found in headers, returning remote address %s.", pretender.getHostAddress()));
             return pretender;
         }
 

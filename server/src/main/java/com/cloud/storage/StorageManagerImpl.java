@@ -449,16 +449,14 @@ public class StorageManagerImpl extends ManagerBase implements StorageManager, C
 
     protected void enableDefaultDatastoreDownloadRedirectionForExistingInstallations() {
         if (!configDepot.isNewConfig(DataStoreDownloadFollowRedirects)) {
-            if (s_logger.isTraceEnabled()) {
-                s_logger.trace(String.format("%s is not a new configuration, skipping updating its value",
-                        DataStoreDownloadFollowRedirects.key()));
-            }
+            logger.trace("{} is not a new configuration, skipping updating its value",
+                    DataStoreDownloadFollowRedirects.key());
             return;
         }
         List<DataCenterVO> zones =
                 _dcDao.listAll(new Filter(1));
         if (CollectionUtils.isNotEmpty(zones)) {
-            s_logger.debug(String.format("Updating value for configuration: %s to true",
+            logger.debug(String.format("Updating value for configuration: %s to true",
                 DataStoreDownloadFollowRedirects.key()));
             configurationDao.update(DataStoreDownloadFollowRedirects.key(), "true");
         }
