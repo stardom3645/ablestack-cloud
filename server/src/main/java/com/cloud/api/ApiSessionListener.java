@@ -116,7 +116,7 @@ public class ApiSessionListener implements HttpSessionListener {
             HttpSession session = event.getSession();
             sessions.put(session.getId(), event.getSession());
             if (ApiServer.SecurityFeaturesEnabled.value()) {
-                _sessionExecutor.scheduleAtFixedRate(new SessionCheckTask(event), 600, 10, TimeUnit.SECONDS);
+                _sessionExecutor.scheduleAtFixedRate(new SessionCheckTask(session), 600, 10, TimeUnit.SECONDS);
             }
         }
         if (LOGGER.isDebugEnabled()) {
@@ -129,8 +129,10 @@ public class ApiSessionListener implements HttpSessionListener {
             String accountName = "admin";
             Long domainId = 1L;
             Account userAcct = ApiDBUtils.findAccountByNameDomain(accountName, domainId);
+            Date acsTime = new Date(session.getLastAccessedTime());
+            SimpleDateFormat date = new SimpleDateFormat("dd MMM yyyy HH:mm:ss");
             ActionEventUtils.onActionEvent(userAcct.getId(), userAcct.getAccountId(), domainId, EventTypes.EVENT_USER_SESSION_DESTROY,
-                "Session destroyed by Id : " + event.getSession().getId(), new Long(0), null);
+                "Session destroyed by Id : " + event.getSession().getId() + ", last accessed time : " + date.format(acsTime), new Long(0), null);
         }
         if (LOGGER.isDebugEnabled()) {
             LOGGER.debug("Session destroyed by Id : " + event.getSession().getId() + " , session: " + event.getSession().toString() + " , source: " + event.getSource().toString() + " , event: " + event.toString());
@@ -144,37 +146,26 @@ public class ApiSessionListener implements HttpSessionListener {
     }
 
     protected class SessionCheckTask extends ManagedContextRunnable {
-        HttpSessionEvent _event;
+        HttpSession _session;
 
-        public SessionCheckTask(HttpSessionEvent event) {
-            _event = event;
+        public SessionCheckTask(HttpSession session) {
+            _session = session;
         }
 
         @Override
         protected void runInContext() {
-            HttpSession session = _event.getSession();
             try {
-                if (session != null) {
+                if (_session != null) {
                     Date acsTime = new Date(session.getLastAccessedTime());
                     Date curTime = new Date();
-                    LOGGER.info("acsTime : " + acsTime);
-                    LOGGER.info("curTime : " + curTime);
                     long difTime = (curTime.getTime() - acsTime.getTime())/1000;
-                    LOGGER.info("difTime : " + difTime);
                     if (difTime > 600) {
-                        LOGGER.info("sessionDestroyed :::::::::::::::::::::::::::::::::::::::::::::::: ");
-                        String accountName = "admin";
-                        Long domainId = 1L;
-                        Account userAcct = ApiDBUtils.findAccountByNameDomain(accountName, domainId);
-                        SimpleDateFormat date = new SimpleDateFormat("dd MMM yyyy HH:mm:ss");
-                        ActionEventUtils.onActionEvent(userAcct.getId(), userAcct.getAccountId(), domainId, EventTypes.EVENT_USER_SESSION_DESTROY,
-                            "Session destroyed by Id : " + session.getId() + ", last accessed time : " + date.format(acsTime), new Long(0), null);
                         sessions.get(session.getId()).invalidate();
                         sessions.remove(session.getId());
                     }
                 }
             } catch (Exception e) {
-                LOGGER.error("Failed to session timeout check session Id : " + session.getId());
+                LOGGER.error("Failed to session timeout check session Id : " + session.getId() + ", e :" + e.toString());
             }
         }
     }
