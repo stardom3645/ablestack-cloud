@@ -27,6 +27,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.Date;
 import java.text.SimpleDateFormat;
 
@@ -38,6 +41,7 @@ import com.cloud.event.ActionEventUtils;
 public class ApiSessionListener implements HttpSessionListener {
     protected static Logger LOGGER = LogManager.getLogger(ApiSessionListener.class.getName());
     private static Map<String, HttpSession> sessions = new ConcurrentHashMap<>();
+    private final ScheduledExecutorService _sessionExecutor = Executors.newScheduledThreadPool(1, new NamedThreadFactory("SessionChecker"));
 
     /**
      * @return the internal adminstered session count
@@ -108,6 +112,7 @@ public class ApiSessionListener implements HttpSessionListener {
         synchronized (this) {
             HttpSession session = event.getSession();
             sessions.put(session.getId(), event.getSession());
+            _sessionExecutor.schedule(new SessionCheckTask(event), "10", TimeUnit.SECONDS);
         }
         if (LOGGER.isDebugEnabled()) {
             LOGGER.debug("Sessions count: " + getSessionCount());
@@ -132,6 +137,32 @@ public class ApiSessionListener implements HttpSessionListener {
         }
         if (LOGGER.isDebugEnabled()) {
             LOGGER.debug("Sessions count: " + getSessionCount());
+        }
+    }
+
+    protected class SessionCheckTask extends ManagedContextTimerTask {
+        HttpSessionEvent _event;
+
+        public SessionCheckTask(final HttpSessionEvent event) {
+            _event = event;
+        }
+
+        @Override
+        protected synchronized void runInContext() {
+            try {
+                Date acsTime = new Date(event.getSession().getLastAccessedTime());
+                Date curTime = new Date();
+                LOGGER.info("acsTime : " + acsTime);
+                LOGGER.info("curTime : " + curTime);
+                long difTime = (curTime.getTime() - acsTime.getTime())/1000;
+                LOGGER.info("difTime : " + difTime);
+                if (difTime > 600) {
+                    LOGGER.info("sessionDestroyed :::::::::::::::::::::::::::::::::::::::::::::::: ");
+                    sessionDestroyed(event);
+                }
+            } catch (Exception e) {
+                logger.error("Failed to session timeout check session Id : " + event.getSession().getId());
+            }
         }
     }
 }
