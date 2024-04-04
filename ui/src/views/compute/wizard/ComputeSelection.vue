@@ -270,7 +270,7 @@ export default {
 
       if (!this.checkValidRange(value, min, max)) {
         this.errors[input].status = 'error'
-        this.errors[input].message = `${this.$t('message.please.enter.value')} ${this.$t('label.from')} ${min} ${this.$t('label.to')} ${max})`
+        this.errors[input].message = this.$localStorage.get('LOCALE') === 'ko_KR' ? `${this.$t('message.please.enter.value')}(${min}${this.$t('label.from')} ${max}${this.$t('label.to')})` : `${this.$t('message.please.enter.value')} (${this.$t('label.from')} ${min} ${this.$t('label.to')} ${max})`
         return false
       }
 

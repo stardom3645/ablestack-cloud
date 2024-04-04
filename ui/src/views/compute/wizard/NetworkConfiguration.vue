@@ -265,7 +265,7 @@ export default {
         return Promise.reject(this.$t('message.error.ipv4.address'))
       } else if (rule.networkType !== 'L2' && !this.isIp4InCidr(value, rule.cidr)) {
         const rangeIps = this.calculateCidrRange(rule.cidr)
-        const message = `${this.$t('message.error.ip.range')} ${this.$t('label.from')} ${rangeIps[0]} ${this.$t('label.to')} ${rangeIps[1]}`
+        const message = this.$localStorage.get('LOCALE') === 'ko_KR' ? `${this.$t('message.error.ip.range')} ${rangeIps[0]}${this.$t('label.from')} ${rangeIps[1]}${this.$t('label.to')}` : `${this.$t('message.error.ip.range')} ${this.$t('label.from')} ${rangeIps[0]} ${this.$t('label.to')} ${rangeIps[1]}`
         return Promise.reject(message)
       } else {
         return Promise.resolve()
