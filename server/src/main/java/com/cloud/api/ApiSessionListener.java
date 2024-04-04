@@ -155,7 +155,7 @@ public class ApiSessionListener implements HttpSessionListener {
         @Override
         protected void runInContext() {
             try {
-                if (_session != null) {
+                if (_session.getCurrentSession() != null) {
                     Date acsTime = new Date(_session.getLastAccessedTime());
                     Date curTime = new Date();
                     long difTime = (curTime.getTime() - acsTime.getTime())/1000;
