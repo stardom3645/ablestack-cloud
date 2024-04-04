@@ -5168,7 +5168,6 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
                 }
 
                 for (VolumeVO createdVol : createdVolumes) {
-//                    volumeService.attachVolumeToVm(cmd, createdVol.getId(), createdVol.getDeviceId());
                     volumeService.attachVolumeToVM(cmd.getEntityId(), createdVol.getId(), createdVol.getDeviceId());
                 }
             } catch (CloudRuntimeException e){
@@ -5188,6 +5187,10 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
                     snapshotService.deleteSnapshot(snapshotLeftOver.getId(), zoneId);
                 }
             }
+        }
+
+        if (!cmd.getStartVm()) {
+            return Optional.of(getUserVm(vmId));
         }
 
         // start the VM if successfull
