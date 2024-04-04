@@ -156,7 +156,6 @@ public class ApiSessionListener implements HttpSessionListener {
         protected void runInContext() {
             try {
                 if (_session.getAttribute("username") != null) {
-                    LOGGER.info("session::::::::::::::::::::::::::::::");
                     Date acsTime = new Date(_session.getLastAccessedTime());
                     Date curTime = new Date();
                     long difTime = (curTime.getTime() - acsTime.getTime())/1000;
@@ -165,7 +164,6 @@ public class ApiSessionListener implements HttpSessionListener {
                         sessions.remove(_session.getId());
                     }
                 }
-                LOGGER.info("session null::::::::::::::::::::::::::::::");
             } catch (IllegalStateException e) {
                 if (LOGGER.isTraceEnabled()) {
                     LOGGER.trace(String.format("Failed to session timeout check session Id : ", _session.getId()));
