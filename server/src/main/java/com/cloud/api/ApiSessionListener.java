@@ -129,7 +129,7 @@ public class ApiSessionListener implements HttpSessionListener {
             String accountName = "admin";
             Long domainId = 1L;
             Account userAcct = ApiDBUtils.findAccountByNameDomain(accountName, domainId);
-            Date acsTime = new Date(session.getLastAccessedTime());
+            Date acsTime = new Date(event.getSession().getLastAccessedTime());
             SimpleDateFormat date = new SimpleDateFormat("dd MMM yyyy HH:mm:ss");
             ActionEventUtils.onActionEvent(userAcct.getId(), userAcct.getAccountId(), domainId, EventTypes.EVENT_USER_SESSION_DESTROY,
                 "Session destroyed by Id : " + event.getSession().getId() + ", last accessed time : " + date.format(acsTime), new Long(0), null);
