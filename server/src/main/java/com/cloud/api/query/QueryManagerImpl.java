@@ -3342,6 +3342,7 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
         Boolean encrypt = cmd.getEncrypt();
         String storageType = cmd.getStorageType();
         final Long vmId = cmd.getVirtualMachineId();
+        DiskOffering.State state = cmd.getState();
 
         Filter searchFilter = new Filter(DiskOfferingVO.class, "sortKey", SortKeyAscending.value(), cmd.getStartIndex(), cmd.getPageSizeVal());
         searchFilter.addOrderBy(DiskOfferingVO.class, "id", true);
@@ -3349,7 +3350,10 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
         diskOfferingSearch.select(null, Func.DISTINCT, diskOfferingSearch.entity().getId()); // select distinct
 
         diskOfferingSearch.and("computeOnly", diskOfferingSearch.entity().isComputeOnly(), Op.EQ);
-        diskOfferingSearch.and("activeState", diskOfferingSearch.entity().getState(), Op.EQ);
+
+        if (state != null) {
+            diskOfferingSearch.and("state", diskOfferingSearch.entity().getState(), Op.EQ);
+        }
 
         // Keeping this logic consistent with domain specific zones
         // if a domainId is provided, we just return the disk offering
@@ -3462,7 +3466,10 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
         SearchCriteria<DiskOfferingVO> sc = diskOfferingSearch.create();
 
         sc.setParameters("computeOnly", false);
-        sc.setParameters("activeState", DiskOffering.State.Active);
+
+        if (state != null) {
+            sc.setParameters("state", state);
+        }
 
         if (keyword != null) {
             sc.setParameters("keywordDisplayText", "%" + keyword + "%");
@@ -3634,6 +3641,7 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
         Boolean encryptRoot = cmd.getEncryptRoot();
         String storageType = cmd.getStorageType();
         final Long templateId = cmd.getTemplateId();
+        ServiceOffering.State state = cmd.getState();
 
         final Account owner = accountMgr.finalizeOwner(caller, accountName, domainId, projectId);
 
@@ -3668,7 +3676,10 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
 
         SearchBuilder<ServiceOfferingVO> serviceOfferingSearch = _srvOfferingDao.createSearchBuilder();
         serviceOfferingSearch.select(null, Func.DISTINCT, serviceOfferingSearch.entity().getId()); // select distinct
-        serviceOfferingSearch.and("activeState", serviceOfferingSearch.entity().getState(), Op.EQ);
+
+        if (state != null) {
+            serviceOfferingSearch.and("state", serviceOfferingSearch.entity().getState(), Op.EQ);
+        }
 
         if (vmId != null) {
             currentVmOffering = _srvOfferingDao.findByIdIncludingRemoved(vmInstance.getId(), vmInstance.getServiceOfferingId());
@@ -3947,7 +3958,9 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
         }
 
         SearchCriteria<ServiceOfferingVO> sc = serviceOfferingSearch.create();
-        sc.setParameters("activeState", ServiceOffering.State.Active);
+        if (state != null) {
+            sc.setParameters("state", state);
+        }
 
         if (vmId != null) {
             if (!currentVmOffering.isDynamic()) {
