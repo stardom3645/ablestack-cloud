@@ -23,7 +23,7 @@ import javax.servlet.http.HttpSessionListener;
 
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
-import org.apache.cloudstack.managed.context.ManagedContextTimerTask;
+import org.apache.cloudstack.managed.context.ManagedContextRunnable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -38,6 +38,7 @@ import java.text.SimpleDateFormat;
 import com.cloud.user.Account;
 import com.cloud.event.EventTypes;
 import com.cloud.event.ActionEventUtils;
+import com.cloud.utils.concurrency.NamedThreadFactory;
 
 @WebListener
 public class ApiSessionListener implements HttpSessionListener {
@@ -114,7 +115,9 @@ public class ApiSessionListener implements HttpSessionListener {
         synchronized (this) {
             HttpSession session = event.getSession();
             sessions.put(session.getId(), event.getSession());
-            _sessionExecutor.schedule(new SessionCheckTask(event), "10", TimeUnit.SECONDS);
+            if (ApiServer.SecurityFeaturesEnabled.value()) {
+                _sessionExecutor.scheduleAtFixedRate(new SessionCheckTask(event), 600, 10, TimeUnit.SECONDS);
+            }
         }
         if (LOGGER.isDebugEnabled()) {
             LOGGER.debug("Sessions count: " + getSessionCount());
@@ -126,10 +129,8 @@ public class ApiSessionListener implements HttpSessionListener {
             String accountName = "admin";
             Long domainId = 1L;
             Account userAcct = ApiDBUtils.findAccountByNameDomain(accountName, domainId);
-            SimpleDateFormat date = new SimpleDateFormat("dd MMM yyyy HH:mm:ss");
-            Date time = new Date(event.getSession().getLastAccessedTime());
             ActionEventUtils.onActionEvent(userAcct.getId(), userAcct.getAccountId(), domainId, EventTypes.EVENT_USER_SESSION_DESTROY,
-                "Session destroyed by Id : " + event.getSession().getId() + ", last accessed time : " + date.format(time), new Long(0), null);
+                "Session destroyed by Id : " + event.getSession().getId(), new Long(0), null);
         }
         if (LOGGER.isDebugEnabled()) {
             LOGGER.debug("Session destroyed by Id : " + event.getSession().getId() + " , session: " + event.getSession().toString() + " , source: " + event.getSource().toString() + " , event: " + event.toString());
@@ -142,17 +143,18 @@ public class ApiSessionListener implements HttpSessionListener {
         }
     }
 
-    protected class SessionCheckTask extends ManagedContextTimerTask {
+    protected class SessionCheckTask extends ManagedContextRunnable {
         HttpSessionEvent _event;
 
-        public SessionCheckTask(final HttpSessionEvent event) {
+        public SessionCheckTask(HttpSessionEvent event) {
             _event = event;
         }
 
         @Override
-        protected synchronized void runInContext() {
+        protected void runInContext() {
+            HttpSession session = _event.getSession();
             try {
-                Date acsTime = new Date(event.getSession().getLastAccessedTime());
+                Date acsTime = new Date(session.getLastAccessedTime());
                 Date curTime = new Date();
                 LOGGER.info("acsTime : " + acsTime);
                 LOGGER.info("curTime : " + curTime);
@@ -160,10 +162,18 @@ public class ApiSessionListener implements HttpSessionListener {
                 LOGGER.info("difTime : " + difTime);
                 if (difTime > 600) {
                     LOGGER.info("sessionDestroyed :::::::::::::::::::::::::::::::::::::::::::::::: ");
-                    sessionDestroyed(event);
+                    String accountName = "admin";
+                    Long domainId = 1L;
+                    Account userAcct = ApiDBUtils.findAccountByNameDomain(accountName, domainId);
+                    SimpleDateFormat date = new SimpleDateFormat("dd MMM yyyy HH:mm:ss");
+                    ActionEventUtils.onActionEvent(userAcct.getId(), userAcct.getAccountId(), domainId, EventTypes.EVENT_USER_SESSION_DESTROY,
+                        "Session destroyed by Id : " + session.getId() + ", last accessed time : " + date.format(acsTime), new Long(0), null);
+                    synchronized (this) {
+                        sessions.remove(session.getId());
+                    }
                 }
             } catch (Exception e) {
-                logger.error("Failed to session timeout check session Id : " + event.getSession().getId());
+                LOGGER.error("Failed to session timeout check session Id : " + session.getId());
             }
         }
     }
