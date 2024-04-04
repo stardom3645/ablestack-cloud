@@ -274,20 +274,20 @@ public class PasswordPolicyImpl implements PasswordPolicy, Configurable {
     }
 
     protected void validateIfPasswordContainsConsecutiveRepetitionOfTheSameLetterAndNumber(String password, String username, Long domainId) {
-        logger.trace(String.format("Validating if the new password for user [%s] is the contains more than 3 consecutive repetition of the same letter and number.", username));
+        logger.trace(String.format("Validating if the new password for user [%s] is the contains more than 3 consecutive repetition of the same letter and number, special character.", username));
 
         if (getPasswordPolicyAllowConsecutiveRepetitionsOfSameLettersAndNumbers(domainId)) {
-            logger.trace(String.format("Allow password to contain more than 3 consecutive repetition of the same letter and number is true; therefore, we will not validate if the password contains of consecutive repetition of the same letter and number."));
+            logger.trace(String.format("Allow password to contain more than 3 consecutive repetition of the same letter and number is true; therefore, we will not validate if the password contains of consecutive repetition of the same letter and number, special character."));
             return;
         }
 
         if (samePassword(password)) {
-            logger.error(String.format("User [%s] informed a new password that contains more than 3 consecutive repetition of the same letter and number; however, the this is not allowed as configured in [%s]. "
+            logger.error(String.format("User [%s] informed a new password that contains more than 3 consecutive repetition of the same letter and number, special character.; however, the this is not allowed as configured in [%s]. "
                     + "Refusing the user's new password.", username, PasswordPolicyAllowConsecutiveRepetitionsOfSameLettersAndNumbers.key()));
-            throw new InvalidParameterValueException("User password should not contain more than 3 consecutive digits of the same letter and number.");
+            throw new InvalidParameterValueException("User password should not contain more than 3 consecutive digits of the same letter and number, special character.");
         }
 
-        logger.trace(String.format("The new password for user [%s] complies with the policy of allowing passwords to contain more than 3 consecutive repetition of the same letter and number.", username,
+        logger.trace(String.format("The new password for user [%s] complies with the policy of allowing passwords to contain more than 3 consecutive repetition of the same letter and number, special character.", username,
                 PasswordPolicyAllowConsecutiveRepetitionsOfSameLettersAndNumbers.key()));
     }
 
@@ -370,6 +370,11 @@ public class PasswordPolicyImpl implements PasswordPolicy, Configurable {
         Pattern pattern = Pattern.compile("(\\w)\\1\\1");
         Matcher matcher = pattern.matcher(password);
         if(matcher.find()) {
+            return true;
+        }
+        Pattern pattern_sign = Pattern.compile("[^a-zA-Z0-9\\s]{3,}");
+        Matcher matcher_sign = pattern_sign.matcher(password);
+        if(matcher_sign.find()) {
             return true;
         }
         return false;
