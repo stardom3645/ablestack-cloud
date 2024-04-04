@@ -2408,6 +2408,7 @@ export default {
       args.page = args.page || 1
       args.pageSize = args.pageSize || 10
       args.customimages = 'true'
+      args.type = 'ROOT'
       return new Promise((resolve, reject) => {
         api('listVolumes', args).then((response) => {
           resolve(response)

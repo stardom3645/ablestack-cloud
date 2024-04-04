@@ -151,7 +151,7 @@ public class StorageBrowserImpl extends MutualExclusiveIdsManagerBase implements
         if (ep == null) {
             throw new CloudRuntimeException("No remote endpoint to send command");
         }
-        ListDataStoreObjectsCommand searchRICmd = new ListDataStoreObjectsCommand(dataStore.getTO(), path, startIndex, pageSize);
+        ListDataStoreObjectsCommand searchRICmd = new ListDataStoreObjectsCommand(dataStore.getTO(), path);
         searchRICmd.setWait(15);
         if (dataStore.getRole() == DataStoreRole.Primary) {
             searchRICmd.setPoolType(primaryDataStoreDao.findById(dataStore.getId()).getPoolType().toString());
@@ -203,9 +203,6 @@ public class StorageBrowserImpl extends MutualExclusiveIdsManagerBase implements
         if (answer == null || !answer.getResult() || !answer.successMessage()) {
             logger.error("Failed to list or create RBD objects");
             throw new CloudRuntimeException("Failed to list or create RBD objects.");
-        } else {
-            // cmd.getRbdName()
-            // 볼륨생성 로직 추가
         }
         DataStoreObjectResponse response = new DataStoreObjectResponse();
         responses.add(response);
@@ -333,55 +330,6 @@ public class StorageBrowserImpl extends MutualExclusiveIdsManagerBase implements
             throw new IllegalArgumentException("RBD failed to delete");
         }
         return dsAnswer;
-    }
-
-    ListResponse<DataStoreObjectResponse> getResponse(DataStore dataStore, ListDataStoreObjectsAnswer answer, int startIndex, int pageSize) {
-        List<DataStoreObjectResponse> responses = new ArrayList<>();
-
-        List<String> paths = getFormattedPaths(answer.getPaths());
-        List<String> absPaths = answer.getAbsPaths();
-
-        Map<String, SnapshotVO> pathSnapshotMap;
-
-        Map<String, VMTemplateVO> pathTemplateMap;
-
-        Map<String, VolumeVO> pathVolumeMap;
-
-        if (dataStore.getRole() != DataStoreRole.Primary) {
-            pathTemplateMap = getPathTemplateMapForSecondaryDS(dataStore.getId(), paths);
-            pathSnapshotMap = getPathSnapshotMapForSecondaryDS(dataStore.getId(), paths);
-            pathVolumeMap = getPathVolumeMapForSecondaryDS(dataStore.getId(), paths);
-        } else {
-            pathTemplateMap = getPathTemplateMapForPrimaryDS(dataStore.getId(), paths);
-            pathSnapshotMap = getPathSnapshotMapForPrimaryDS(dataStore.getId(), paths, absPaths);
-            pathVolumeMap = getPathVolumeMapForPrimaryDS(dataStore.getId(), paths);
-        }
-        int endIndex = Math.min(startIndex + pageSize, paths.size());
-
-        for (int i = startIndex; i < endIndex; i++) {
-            DataStoreObjectResponse response = new DataStoreObjectResponse(
-                    answer.getNames().get(i),
-                    answer.getIsDirs().get(i),
-                    answer.getSizes().get(i),
-                    new Date(answer.getLastModified().get(i)));
-
-            String filePath = paths.get(i);
-            if (pathTemplateMap.get(filePath) != null) {
-                response.setTemplateId(pathTemplateMap.get(filePath).getUuid());
-                response.setFormat(pathTemplateMap.get(filePath).getFormat().toString());
-            }
-            if (pathSnapshotMap.get(filePath) != null) {
-                response.setSnapshotId(pathSnapshotMap.get(filePath).getUuid());
-            }
-            if (pathVolumeMap.get(filePath) != null) {
-                response.setVolumeId(pathVolumeMap.get(filePath).getUuid());
-            }
-            responses.add(response);
-        }
-
-        ListResponse<DataStoreObjectResponse> listResponse = new ListResponse<>();
-        listResponse.setResponses(responses, answer.getCount());
-        return listResponse;
     }
 
     ListRbdObjectsAnswer createRbdObjectsInStore(DataStore dataStore, long sizes, String names) {

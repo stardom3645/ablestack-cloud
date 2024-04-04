@@ -75,7 +75,7 @@ public class UpdateVolumeCmd extends BaseAsyncCustomIdCmd implements UserCmd {
     private Boolean displayVolume;
 
     @Parameter(name = ApiConstants.TYPE, type = CommandType.STRING, description = "The state of the volume", since = "4.3")
-    private String type;
+    private String VolumeType;
 
     @Parameter(name = ApiConstants.NAME, type = CommandType.STRING, description = "new name of the volume", since = "4.16")
     private String name;
@@ -100,8 +100,8 @@ public class UpdateVolumeCmd extends BaseAsyncCustomIdCmd implements UserCmd {
         return state;
     }
 
-    public String getType() {
-        return type;
+    public String getVolumeType() {
+        return VolumeType;
     }
 
     public Boolean getDisplayVolume() {
@@ -168,8 +168,8 @@ public class UpdateVolumeCmd extends BaseAsyncCustomIdCmd implements UserCmd {
             desc.append(", name " + getName());
         }
 
-        if (getType() != null) {
-            desc.append(", type " + getType());
+        if (getVolumeType() != null) {
+            desc.append(", volumeType " + getVolumeType());
         }
 
         return desc.toString();
@@ -179,7 +179,7 @@ public class UpdateVolumeCmd extends BaseAsyncCustomIdCmd implements UserCmd {
     public void execute() {
         CallContext.current().setEventDetails("Volume Id: " + this._uuidMgr.getUuid(Volume.class, getId()));
         Volume result = _volumeService.updateVolume(getId(), getPath(), getState(), getStorageId(), getDisplayVolume(),
-                getCustomId(), getEntityOwnerId(), getChainInfo(), getName(), getType());
+                getCustomId(), getEntityOwnerId(), getChainInfo(), getName(), getVolumeType());
         if (result != null) {
             VolumeResponse response = _responseGenerator.createVolumeResponse(getResponseView(), result);
             response.setResponseName(getCommandName());
