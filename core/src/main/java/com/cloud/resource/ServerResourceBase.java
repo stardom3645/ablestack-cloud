@@ -160,7 +160,7 @@ public abstract class ServerResourceBase implements ServerResource {
         return true;
     }
 
-    protected Answer createImageRbd(String names, long sizes, String poolPath ) {
+    protected Answer createImageRbd(String names, long sizes, String poolPath) {
         sizes = (sizes * 1024);
         String cmdout = Script.runSimpleBashScript("rbd -p " + poolPath + " create -s " + sizes + " " + names);
         if (cmdout == null) {
@@ -180,7 +180,7 @@ public abstract class ServerResourceBase implements ServerResource {
         return new ListRbdObjectsAnswer(true,"이미지가 삭제되었습니다.", name);
     }
 
-    protected Answer listRbdFilesAtPath(String poolPath, String keyword) {
+    protected Answer listRbdFilesAtPath(int startIndex, int pageSize, String poolPath, String keyword) {
         int count = 0;
         List<String> names = new ArrayList<>();
         List<String> paths = new ArrayList<>();
@@ -203,6 +203,7 @@ public abstract class ServerResourceBase implements ServerResource {
             String[] imageNames = listParser.getLines().split("\\n");
 
             for (String imageName : imageNames) {
+                if (count >= startIndex && count < startIndex + pageSize) {
                     Long imageSize = 0L;
                     Long lastModified = 0L;
                     names.add(imageName.trim());
@@ -210,41 +211,42 @@ public abstract class ServerResourceBase implements ServerResource {
                     isDirs.add(false);
                     absPaths.add("/");
 
-                Script infoCommand = new Script("rbd");
-                infoCommand.add("-p", poolPath);
-                infoCommand.add("info", imageName.trim());
-                OutputInterpreter.AllLinesParser infoParser = new OutputInterpreter.AllLinesParser();
-                String infoResult = infoCommand.execute(infoParser);
-                if (infoResult == null && infoParser.getLines() != null) {
-                    String[] infoLines = infoParser.getLines().split("\\n");
-                    for (String infoLine : infoLines) {
-                        if (infoLine.contains("size")) {
-                            String[] part = infoLine.split(" ");
-                            String numberString = part[1];
-                            double number = Double.parseDouble(numberString);
-                            imageSize = (long) (number * 1024 * 1024 * 1024);
-                            sizes.add(imageSize);
-                        }
-                        if (infoLine.contains("modify_timestamp")) {
-                            String[] parts = infoLine.split(": ");
-                            try {
-                                String modifyTimestamp = parts[1].trim();
-                                SimpleDateFormat inputDateFormat = new SimpleDateFormat("EEE MMM dd HH:mm:ss yyyy", Locale.US);
-                                Date modifyDate = inputDateFormat.parse(modifyTimestamp);
-                                lastModified = modifyDate.getTime();
-                                modifiedList.add(lastModified);
-                            } catch (ParseException e) {
-                                e.printStackTrace();
+                    Script infoCommand = new Script("rbd");
+                    infoCommand.add("-p", poolPath);
+                    infoCommand.add("info", imageName.trim());
+                    OutputInterpreter.AllLinesParser infoParser = new OutputInterpreter.AllLinesParser();
+                    String infoResult = infoCommand.execute(infoParser);
+                    if (infoResult == null && infoParser.getLines() != null) {
+                        String[] infoLines = infoParser.getLines().split("\\n");
+                        for (String infoLine : infoLines) {
+                            if (infoLine.contains("size")) {
+                                String[] part = infoLine.split(" ");
+                                String numberString = part[1];
+                                double number = Double.parseDouble(numberString);
+                                imageSize = (long) (number * 1024 * 1024 * 1024);
+                                sizes.add(imageSize);
+                            }
+                            if (infoLine.contains("modify_timestamp")) {
+                                String[] parts = infoLine.split(": ");
+                                try {
+                                    String modifyTimestamp = parts[1].trim();
+                                    SimpleDateFormat inputDateFormat = new SimpleDateFormat("EEE MMM dd HH:mm:ss yyyy", Locale.US);
+                                    Date modifyDate = inputDateFormat.parse(modifyTimestamp);
+                                    lastModified = modifyDate.getTime();
+                                    modifiedList.add(lastModified);
+                                } catch (ParseException e) {
+                                    e.printStackTrace();
+                                }
                             }
                         }
                     }
                 }
-            count++;
+                count++;
+            }
         }
+        return new ListDataStoreObjectsAnswer(true, count, names, paths, absPaths, isDirs, sizes, modifiedList);
     }
 
-    return new ListDataStoreObjectsAnswer(true, count, names, paths, absPaths, isDirs, sizes, modifiedList);
-}
 
 protected Answer listFilesAtPath(String nfsMountPoint, String relativePath, int startIndex, int pageSize, String keyword) {
     int count = 0;
