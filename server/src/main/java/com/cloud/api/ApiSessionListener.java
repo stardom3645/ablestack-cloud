@@ -156,16 +156,16 @@ public class ApiSessionListener implements HttpSessionListener {
         protected void runInContext() {
             try {
                 if (_session != null) {
-                    Date acsTime = new Date(session.getLastAccessedTime());
+                    Date acsTime = new Date(_session.getLastAccessedTime());
                     Date curTime = new Date();
                     long difTime = (curTime.getTime() - acsTime.getTime())/1000;
                     if (difTime > 600) {
-                        sessions.get(session.getId()).invalidate();
-                        sessions.remove(session.getId());
+                        sessions.get(_session.getId()).invalidate();
+                        sessions.remove(_session.getId());
                     }
                 }
             } catch (Exception e) {
-                LOGGER.error("Failed to session timeout check session Id : " + session.getId() + ", e :" + e.toString());
+                LOGGER.error("Failed to session timeout check session Id : " + _session.getId() + ", e :" + e.toString());
             }
         }
     }
