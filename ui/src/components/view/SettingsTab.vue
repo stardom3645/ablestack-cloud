@@ -101,6 +101,7 @@ export default {
       scopeKey: '',
       editableValueKey: null,
       editableValue: '',
+      editableValueSplit: '',
       tabLoading: false,
       filter: '',
       warningMessages: {
@@ -173,8 +174,9 @@ export default {
     },
     updateData (item) {
       if (item.name === 'api.allowed.source.ip') {
+        this.editableValueSplit = this.editableValue.split('.')
         if (!/^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/.test(this.editableValue) ||
-        this.editableValue === '0.0.0.0' || this.editableValue === '255.255.255.255') {
+        this.editableValueSplit[3] === '0' || this.editableValueSplit[3] === '255' || this.editableValue === '0.0.0.0' || this.editableValue === '255.255.255.255' || this.editableValue === '127.0.0.1') {
           this.$message.error(this.$t('message.error.save.setting'))
           this.$notification.error({
             message: this.$t('label.error'),
