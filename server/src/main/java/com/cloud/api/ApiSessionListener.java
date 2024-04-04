@@ -27,6 +27,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.Date;
+import java.text.SimpleDateFormat;
 
 import com.cloud.user.Account;
 import com.cloud.event.EventTypes;
@@ -117,8 +119,10 @@ public class ApiSessionListener implements HttpSessionListener {
             String accountName = "admin";
             Long domainId = 1L;
             Account userAcct = ApiDBUtils.findAccountByNameDomain(accountName, domainId);
+            SimpleDateFormat date = new SimpleDateFormat("dd MMM yyyy HH:mm:ss");
+            Date time = new Date(event.getSession().getLastAccessedTime());
             ActionEventUtils.onActionEvent(userAcct.getId(), userAcct.getAccountId(), domainId, EventTypes.EVENT_USER_SESSION_DESTROY,
-                "Session destroyed by Id : " + event.getSession().getId(), new Long(0), null);
+                "Session destroyed by Id : " + event.getSession().getId() + ", last accessed time : " + date.format(time), new Long(0), null);
         }
         if (LOGGER.isDebugEnabled()) {
             LOGGER.debug("Session destroyed by Id : " + event.getSession().getId() + " , session: " + event.getSession().toString() + " , source: " + event.getSource().toString() + " , event: " + event.toString());
