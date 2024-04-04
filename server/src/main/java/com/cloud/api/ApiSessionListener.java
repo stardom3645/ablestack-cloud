@@ -154,22 +154,24 @@ public class ApiSessionListener implements HttpSessionListener {
         protected void runInContext() {
             HttpSession session = _event.getSession();
             try {
-                Date acsTime = new Date(session.getLastAccessedTime());
-                Date curTime = new Date();
-                LOGGER.info("acsTime : " + acsTime);
-                LOGGER.info("curTime : " + curTime);
-                long difTime = (curTime.getTime() - acsTime.getTime())/1000;
-                LOGGER.info("difTime : " + difTime);
-                if (difTime > 600) {
-                    LOGGER.info("sessionDestroyed :::::::::::::::::::::::::::::::::::::::::::::::: ");
-                    String accountName = "admin";
-                    Long domainId = 1L;
-                    Account userAcct = ApiDBUtils.findAccountByNameDomain(accountName, domainId);
-                    SimpleDateFormat date = new SimpleDateFormat("dd MMM yyyy HH:mm:ss");
-                    ActionEventUtils.onActionEvent(userAcct.getId(), userAcct.getAccountId(), domainId, EventTypes.EVENT_USER_SESSION_DESTROY,
-                        "Session destroyed by Id : " + session.getId() + ", last accessed time : " + date.format(acsTime), new Long(0), null);
-                    synchronized (this) {
-                        sessions.remove(session.getId());
+                if (session != null) {
+                    Date acsTime = new Date(session.getLastAccessedTime());
+                    Date curTime = new Date();
+                    LOGGER.info("acsTime : " + acsTime);
+                    LOGGER.info("curTime : " + curTime);
+                    long difTime = (curTime.getTime() - acsTime.getTime())/1000;
+                    LOGGER.info("difTime : " + difTime);
+                    if (difTime > 600) {
+                        LOGGER.info("sessionDestroyed :::::::::::::::::::::::::::::::::::::::::::::::: ");
+                        String accountName = "admin";
+                        Long domainId = 1L;
+                        Account userAcct = ApiDBUtils.findAccountByNameDomain(accountName, domainId);
+                        SimpleDateFormat date = new SimpleDateFormat("dd MMM yyyy HH:mm:ss");
+                        ActionEventUtils.onActionEvent(userAcct.getId(), userAcct.getAccountId(), domainId, EventTypes.EVENT_USER_SESSION_DESTROY,
+                            "Session destroyed by Id : " + session.getId() + ", last accessed time : " + date.format(acsTime), new Long(0), null);
+                        synchronized (this) {
+                            sessions.remove(session.getId());
+                        }
                     }
                 }
             } catch (Exception e) {
