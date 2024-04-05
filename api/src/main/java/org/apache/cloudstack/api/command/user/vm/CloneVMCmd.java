@@ -115,7 +115,7 @@ public class CloneVMCmd extends BaseAsyncCreateCmd implements UserCmd {
     }
 
     public boolean getStartVm() {
-        return startVm == null ? true : startVm;
+        return startVm == null ? false : startVm;
     }
 
     @Override
