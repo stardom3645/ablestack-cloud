@@ -116,7 +116,7 @@ public class ApiSessionListener implements HttpSessionListener {
             HttpSession session = event.getSession();
             sessions.put(session.getId(), event.getSession());
             if (ApiServer.SecurityFeaturesEnabled.value()) {
-                _sessionExecutor.scheduleAtFixedRate(new SessionCheckTask(session), 600, 10, TimeUnit.SECONDS);
+                _sessionExecutor.scheduleAtFixedRate(new SessionCheckTask(session), 580, 10, TimeUnit.SECONDS);
             }
         }
         if (LOGGER.isDebugEnabled()) {
