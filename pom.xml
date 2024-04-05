@@ -81,7 +81,7 @@
         <cs.clover-maven-plugin.version>4.4.1</cs.clover-maven-plugin.version>
 
         <!-- Logging versions -->
-        <cs.log4j.version>2.22.0</cs.log4j.version>
+        <cs.log4j.version>2.23.0</cs.log4j.version>
         <cs.log4j.extras.version>1.2.17</cs.log4j.extras.version>
         <cs.reload4j.version>1.2.25</cs.reload4j.version>
 
@@ -153,8 +153,8 @@
         <cs.jaxb.version>2.3.0</cs.jaxb.version>
         <cs.jaxws.version>2.3.2-1</cs.jaxws.version>
         <cs.jersey-client.version>2.26</cs.jersey-client.version>
-        <cs.jetty.version>9.4.53.v20231009</cs.jetty.version>
-        <cs.jetty-maven-plugin.version>9.4.53.v20231009</cs.jetty-maven-plugin.version>
+        <cs.jetty.version>9.4.54.v20240208</cs.jetty.version>
+        <cs.jetty-maven-plugin.version>9.4.54.v20240208</cs.jetty-maven-plugin.version>
         <cs.jna.version>5.5.0</cs.jna.version>
         <cs.joda-time.version>2.12.5</cs.joda-time.version>
         <cs.jpa.version>2.2.1</cs.jpa.version>
@@ -173,7 +173,7 @@
         <cs.reflections.version>0.10.2</cs.reflections.version>
         <cs.servicemix.version>3.4.4_1</cs.servicemix.version>
         <cs.servlet.version>4.0.1</cs.servlet.version>
-        <cs.tink.version>1.7.0</cs.tink.version>
+        <cs.tink.version>1.12.0</cs.tink.version>
         <cs.tomcat-embed-core.version>10.0.22</cs.tomcat-embed-core.version>
         <cs.trilead.version>build-217-jenkins-27</cs.trilead.version>
         <cs.vmware.api.version>8.0</cs.vmware.api.version>
