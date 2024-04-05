@@ -126,9 +126,16 @@ public class ApiSessionListener implements HttpSessionListener {
 
     public void sessionDestroyed(HttpSessionEvent event) {
         if (ApiServer.SecurityFeaturesEnabled.value()) {
-            String accountName = "admin";
-            Long domainId = 1L;
-            Account userAcct = ApiDBUtils.findAccountByNameDomain(accountName, domainId);
+            Account userAcct;
+            Long domainId;
+            if (event.getSession().getAttribute("account") != null && event.getSession().getAttribute("domainid") != null) {
+                domainId = Long.valueOf(String.valueOf(event.getSession().getAttribute("domainid").toString()));
+                userAcct = ApiDBUtils.findAccountByNameDomain(event.getSession().getAttribute("account").toString(), domainId);
+            } else {
+                String accountName = "system";
+                domainId = 1L;
+                userAcct = ApiDBUtils.findAccountByNameDomain(accountName, domainId);
+            }
             Date acsTime = new Date(event.getSession().getLastAccessedTime());
             SimpleDateFormat date = new SimpleDateFormat("dd MMM yyyy HH:mm:ss");
             ActionEventUtils.onActionEvent(userAcct.getId(), userAcct.getAccountId(), domainId, EventTypes.EVENT_USER_SESSION_DESTROY,
