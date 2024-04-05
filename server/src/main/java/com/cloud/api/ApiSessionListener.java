@@ -166,7 +166,7 @@ public class ApiSessionListener implements HttpSessionListener {
                     Date acsTime = new Date(_session.getLastAccessedTime());
                     Date curTime = new Date();
                     long difTime = (curTime.getTime() - acsTime.getTime())/1000;
-                    if (difTime > 600) {
+                    if (difTime >= 600) {
                         sessions.get(_session.getId()).invalidate();
                         sessions.remove(_session.getId());
                     }
