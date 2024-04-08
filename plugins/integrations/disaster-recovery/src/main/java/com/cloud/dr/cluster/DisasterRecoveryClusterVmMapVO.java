@@ -38,13 +38,24 @@ public class DisasterRecoveryClusterVmMapVO implements DisasterRecoveryClusterVm
     @Column(name = "vm_id")
     long vmId;
 
+    @Column(name = "mirrored_vm_id")
+    long mirroredVmId;
+
+    @Column(name = "mirrored_vm_name")
+    String mirroredVmName;
+
+    @Column(name = "mirrored_vm_status")
+    String mirroredVmStatus;
+
+    @Column(name = "mirrored_vm_volume_status")
+    String mirroredVmVolumeStatus;
+
     public DisasterRecoveryClusterVmMapVO() {
     }
 
     public DisasterRecoveryClusterVmMapVO(long disasterRecoveryClusterId, long vmId) {
         this.disasterRecoveryClusterId = disasterRecoveryClusterId;
         this.vmId = vmId;
-
     }
 
     @Override

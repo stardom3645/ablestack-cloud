@@ -27,37 +27,53 @@
           @search="handleSearch"
           v-focus="true" />
       </div>
-      <div class="tables-container">
-        <a-table
-          class="table"
-          size="small"
-          :columns="firshDrVmColumns"
-          :dataSource="this.disasterrecoveryclustervmlist"
-          :rowKey="item => item.id"
-          :pagination="false"
-        >
-          <template #name="{record}">
-            <router-link :to="{ path: '/vm/' + record.id }">{{ record.name }}</router-link>
+      <div class="table-container">
+        <a-card class="card">
+          <template #title>
+            {{ cardTitleA }}
+            <a-tooltip :title="tooltipTitleA">
+              <info-circle-outlined />
+            </a-tooltip>
           </template>
-          <template #state="{text}">
-            <status :text="text ? text : ''" displayText />
+          <a-table
+              class="table"
+              size="small"
+              :columns="firshDrVmColumns"
+              :dataSource="this.disasterrecoveryclustervmlist"
+              :rowKey="item => item.id"
+              :pagination="false"
+          >
+            <template #name="{record}">
+              <router-link :to="{ path: '/vm/' + record.id }">{{ record.name }}</router-link>
+            </template>
+            <template #state="{text}">
+              <status :text="text ? text : ''" displayText />
+            </template>
+          </a-table>
+        </a-card>
+        <a-card class="card">
+          <template #title>
+            {{ cardTitleB }}
+            <a-tooltip :title="tooltipTitleB">
+              <info-circle-outlined />
+            </a-tooltip>
           </template>
-        </a-table>
-        <a-table
-          class="table"
-          size="small"
-          :columns="secDrVmColumns"
-          :dataSource="this.disasterrecoveryclustervmlist"
-          :rowKey="item => item.id"
-          :pagination="false"
-        >
-          <template #name="{record}">
-            <router-link :to="{ path: '/vm/' + record.id }">{{ record.name }}</router-link>
-          </template>
-          <template #state="{text}">
-            <status :text="text ? text : ''" displayText />
-          </template>
-        </a-table>
+          <a-table
+              class="table"
+              size="small"
+              :columns="secDrVmColumns"
+              :dataSource="this.disasterrecoveryclustervmlistsecond"
+              :rowKey="item => item.id"
+              :pagination="false"
+          >
+            <template #name="{record}">
+              <router-link :to="{ path: '/vm/' + record.id }">{{ record.name }}</router-link>
+            </template>
+            <template #state="{text}">
+              <status :text="text ? text : ''" displayText />
+            </template>
+          </a-table>
+        </a-card>
       </div>
     </div>
     <div v-if="!defaultPagination" style="display: block; text-align: right; margin-top: 10px;">
@@ -142,6 +158,10 @@ export default {
       vm: {},
       disasterrecoveryclustervmlist: [],
       disasterrecoveryclustervmlistsecond: [],
+      cardTitleA: '',
+      cardTitleB: '',
+      tooltipTitleA: '',
+      tooltipTitleB: '',
       annotations: [],
       instances: [],
       totalStorage: 0,
@@ -183,7 +203,7 @@ export default {
           slots: { customRender: 'state' }
         },
         {
-          title: this.$t('label.state'),
+          title: this.$t('label.dr.volume.status'),
           dataIndex: 'state',
           slots: { customRender: 'state' }
         }
@@ -241,10 +261,26 @@ export default {
   },
   mounted () {
     this.setCurrentTab()
+    this.updateCardTitle(true)
   },
   methods: {
     setCurrentTab () {
       this.currentTab = this.$route.query.tab ? this.$route.query.tab : 'details'
+    },
+    updateCardTitle (condition) {
+      const clusterType = this.resource.drclustertype
+      // 클러스터 타입에 따라 테이블 타이틀 변경, primary일 경우 secondary 클러스터에서 사용자가 보는 경우이기때문에 secondary를 왼쪽으로 위치 변경.
+      if (clusterType === 'primary') {
+        this.cardTitleA = this.$t('label.secondary.cluster.vm') // Change title based on condition
+        this.cardTitleB = this.$t('label.primary.cluster.vm') // Change title based on condition
+        this.tooltipTitleA = this.$t('message.secondary.cluster.vm')
+        this.tooltipTitleB = this.$t('message.primary.cluster.vm')
+      } else {
+        this.cardTitleA = this.$t('label.primary.cluster.vm') // Reset title to default value
+        this.cardTitleB = this.$t('label.secondary.cluster.vm') // Reset title to default value
+        this.tooltipTitleA = this.$t('message.primary.cluster.vm')
+        this.tooltipTitleB = this.$t('message.secondary.cluster.vm')
+      }
     },
     handleChangeTab (e) {
       this.currentTab = e
@@ -281,6 +317,8 @@ export default {
       this.min = (Math.min(this.itemCount, 1 + ((this.options.page - 1) * this.options.pageSize)) - 1)
       this.max = Math.min(this.options.page * this.options.pageSize, this.itemCount)
       this.disasterrecoveryclustervmlist = this.disasterrecoveryclustervmlist.slice(this.min, this.max)
+      // 임시 코드
+      this.disasterrecoveryclustervmlistsecond = this.disasterrecoveryclustervmlist
     },
     fetchComments () {
       this.fetchLoading = true
@@ -470,14 +508,41 @@ export default {
 .search-container {
   float: right;
 }
-.tables-container {
-  display: flex; /* Use flexbox */
-  justify-content: space-between; /* Items are evenly distributed */
-  flex-wrap: wrap;
+.table-container {
+  display: flex;
+  justify-content: space-between; /* Adjust as needed */
 }
 .table {
-  width: calc(50% - 10px); /* Adjust the width of each table */
-  margin-bottom: 10px; /* Adjust the vertical spacing between tables */
+  overflow-y: auto;
+}
+.card {
+  width: calc(50% - 5px);
+}
+
+.edge-bordered-table {
+    border-collapse: collapse;
+}
+
+.edge-bordered-table td,
+.edge-bordered-table th {
+    border: 1px solid #e8e8e8; /* Adjust the color and width of the border as needed */
+}
+
+.edge-bordered-table tr:first-child td,
+.edge-bordered-table tr:first-child th,
+.edge-bordered-table tr:last-child td,
+.edge-bordered-table tr:last-child th {
+    border-top: none;
+}
+
+.edge-bordered-table tr td:first-child,
+.edge-bordered-table tr th:first-child {
+    border-left: none;
+}
+
+.edge-bordered-table tr td:last-child,
+.edge-bordered-table tr th:last-child {
+    border-right: none;
 }
 
 </style>

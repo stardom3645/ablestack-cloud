@@ -490,6 +490,22 @@ export default {
           }
         },
         {
+          api: 'allocateVbmcToVM',
+          icon: 'subnode-outlined',
+          label: 'label.add.dr.mirroring.vm',
+          message: 'message.action.vbmcport.allocate.instance',
+          dataView: true,
+          popup: true,
+          args: ['virtualmachineid'],
+          show: (record) => { return record.vbmcport === 'None' },
+          mapping: {
+            virtualmachineid: {
+              value: (record, params) => { return record.id }
+            }
+          },
+          component: shallowRef(defineAsyncComponent(() => import('@/views/compute/dr/DRMirroringVMAdd.vue')))
+        },
+        {
           api: 'destroyVirtualMachine',
           icon: 'delete-outlined',
           label: 'label.action.destroy.instance',

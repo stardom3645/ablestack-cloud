@@ -34,48 +34,60 @@
             v-model:value="form.displaytext"
             :placeholder="'temp'"
           />
-        </a-form-item>
-        <a-form-item name="protocol" ref="protocol" :label="$t('label.protocol')">
-          <a-select
-            v-model:value="form.zoneid"
-            v-focus="true"
-            showSearch
-            optionFilterProp="label"
-            :filterOption="(input, option) => {
-            return option.label.toLowerCase().indexOf(input.toLowerCase()) >= 0
-          }" >
-            <a-select-option
-              v-for="zone in zonesList"
-              :value="zone.id"
-              :key="zone.id"
-              :label="zone.name">
-            </a-select-option>
-          </a-select>
-        </a-form-item>
-        <a-form-item name="ip" ref="ip" :label="$t('label.ip')">
+      </a-form-item>
+        <a-form-item name="url" ref="url" :label="$t('label.url')">
           <a-input
-            :placeholder="temp"
-            v-model:value="form.name"
-          />
-        </a-form-item>
-        <a-form-item name="port" ref="port" :label="$t('label.port')">
-          <a-input
-            :placeholder="temp"
-            v-model:value="form.gateway"
+            :placeholder="'http://10.10.1.10:8080'"
+            v-model:value="form.url"
           />
         </a-form-item>
         <a-form-item name="apikey" ref="apikey" :label="$t('label.apikey')">
+          <!--          <span>-->
+          <!--            <a-alert type="warning">-->
+          <!--              <template #message>-->
+          <!--                <span v-html="ipv6NetworkOfferingEnabled ? $t('message.offering.internet.protocol.warning') : $t('message.offering.ipv6.warning')" />-->
+          <!--              </template>-->
+          <!--            </a-alert>-->
+          <!--            <br/>-->
+          <!--          </span>-->
           <a-input
             :placeholder="temp"
-            v-model:value="form.netmask"
+            v-model:value="form.apikey"
           />
         </a-form-item>
         <a-form-item name="secretkey" ref="secretkey" :label="$t('label.secret.key')">
           <a-input
             :placeholder="temp"
-            v-model:value="form.startip"
+            v-model:value="form.secretkey"
           />
         </a-form-item>
+
+        <a-form-item name="file" ref="file" :label="$t('label.add.disaster.recovery.cluster.info.glue.pri.key')">
+          <a-upload-dragger
+            :multiple="false"
+            :fileList="fileList"
+            @remove="handleRemove"
+            :beforeUpload="beforeUpload"
+            v-model:value="form.file">
+            <p class="ant-upload-drag-icon">
+              <cloud-upload-outlined />
+            </p>
+            <p class="ant-upload-text" v-if="fileList.length === 0">
+              {{ $t('label.volume.volumefileupload.description') }}
+            </p>
+          </a-upload-dragger>
+        </a-form-item>
+
+        <a-divider />
+
+        <a-spin :spinning="spinning">
+          <a-alert :message="$t('message.disaster.recovery.cluster.connection.test.title')" :description="$t('message.disaster.recovery.cluster.connection.test.description')">
+          </a-alert>
+        </a-spin>
+        <div class="spin-state" style="margin-top: 16px">
+          <tooltip-label :title="$t('label.disaster.recovery.cluster.start.connection.test.description')"/>
+          <a-switch v-model:checked="spinning" style="margin-left: 10px"/>
+        </div>
 
         <div :span="24" class="action-button">
           <a-button @click="closeAction">{{ $t('label.cancel') }}</a-button>
@@ -88,20 +100,33 @@
 <script>
 import { ref, reactive, toRaw } from 'vue'
 import { api } from '@/api'
+import TooltipLabel from '@/components/widgets/TooltipLabel.vue'
 
 export default {
   name: 'updateAutomationControllerVersion',
+  components: { TooltipLabel },
   props: {
     resource: {
       type: Object,
       required: true
     }
   },
+  setup () {
+    const spinning = ref(false)
+    const changeSpinning = () => {
+      spinning.value = !spinning.value
+    }
+    return {
+      spinning,
+      changeSpinning
+    }
+  },
   data () {
     return {
       states: [],
       stateLoading: false,
-      loading: false
+      loading: false,
+      fileList: []
     }
   },
   beforeCreate () {
@@ -125,10 +150,6 @@ export default {
     initForm () {
       this.formRef = ref()
       this.form = reactive({})
-      this.rules = reactive({
-        name: [{ required: true, message: this.$t('message.error.required.input') }],
-        displaytext: [{ required: true, message: this.$t('message.error.required.input') }]
-      })
     },
     fetchData () {
       var selectedState = 0
@@ -150,6 +171,18 @@ export default {
     },
     isObjectEmpty (obj) {
       return !(obj !== null && obj !== undefined && Object.keys(obj).length > 0 && obj.constructor === Object)
+    },
+    beforeUpload (file) {
+      this.fileList = [file]
+      this.form.file = file
+      return false
+    },
+    handleRemove (file) {
+      const index = this.fileList.indexOf(file)
+      const newFileList = this.fileList.slice()
+      newFileList.splice(index, 1)
+      this.fileList = newFileList
+      this.form.file = undefined
     },
     handleSubmit (e) {
       e.preventDefault()

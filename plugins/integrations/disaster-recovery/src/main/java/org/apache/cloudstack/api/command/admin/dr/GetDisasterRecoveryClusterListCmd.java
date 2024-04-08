@@ -34,7 +34,7 @@ import org.apache.cloudstack.api.response.ListResponse;
 import javax.inject.Inject;
 
 @APICommand(name = GetDisasterRecoveryClusterListCmd.APINAME,
-        description = "list disaster recovery cluster",
+        description = "list disastser recovery cluster",
         responseObject = GetDisasterRecoveryClusterListResponse.class,
         responseView = ResponseObject.ResponseView.Full,
         authorized = {RoleType.Admin})

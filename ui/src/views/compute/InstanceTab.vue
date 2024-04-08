@@ -108,6 +108,32 @@
           :columns="['displayname', 'state', 'type', 'created']"
           :routerlinks="(record) => { return { displayname: '/vmsnapshot/' + record.id } }"/>
       </a-tab-pane>
+      <a-tab-pane :tab="$t('label.dr')" key="disasterrecoverycluster">
+        <DRTable :resource="vm" :loading="loading">
+          <template #actions="record">
+            <tooltip-button
+                tooltipPlacement="bottom"
+                :tooltip="$t('label.dr.simulation.test')"
+                icon="ExperimentOutlined"
+                :disabled="!('updateVmNicIp' in $store.getters.apis)"
+                @onClick="DrSimulationTest(record)" />
+            <a-popconfirm
+                :title="$t('message.network.removenic')"
+                @confirm="removeNIC(record.nic)"
+                :okText="$t('label.yes')"
+                :cancelText="$t('label.no')"
+            >
+              <tooltip-button
+                  tooltipPlacement="bottom"
+                  :tooltip="'미러링 해제'"
+                  :disabled="!('removeNicFromVirtualMachine' in $store.getters.apis)"
+                  type="primary"
+                  :danger="true"
+                  icon="delete-outlined" />
+            </a-popconfirm>
+          </template>
+        </DRTable>
+      </a-tab-pane>
       <a-tab-pane :tab="$t('label.backup')" key="backups" v-if="'listBackups' in $store.getters.apis">
         <ListResourceTable
           apiName="listBackups"
@@ -299,6 +325,18 @@
         </a-list-item>
       </a-list>
     </a-modal>
+    <a-modal
+        :visible="showDrSimulationTestModal"
+        :title="$t('label.dr.simulation.test')"
+        :maskClosable="false"
+        :closable="true"
+        :footer="null"
+        width="850px"
+        @cancel="closeModals"
+    >
+      <DRsimulationTestModal>
+      </DRsimulationTestModal>
+    </a-modal>
 
   </a-spin>
 </template>
@@ -320,6 +358,8 @@ import TooltipButton from '@/components/widgets/TooltipButton'
 import ResourceIcon from '@/components/view/ResourceIcon'
 import AnnotationsTab from '@/components/view/AnnotationsTab'
 import VolumesTab from '@/components/view/VolumesTab.vue'
+import DRTable from '@/views/compute/dr/DRTable.vue'
+import DRsimulationTestModal from '@/views/compute/dr/DRsimulationTestModal.vue'
 
 export default {
   name: 'InstanceTab',
@@ -331,6 +371,8 @@ export default {
     DetailSettings,
     CreateVolume,
     NicsTable,
+    DRTable,
+    DRsimulationTestModal,
     InstanceSchedules,
     ListResourceTable,
     TooltipButton,
@@ -359,6 +401,7 @@ export default {
       showAddNetworkModal: false,
       showUpdateIpModal: false,
       showSecondaryIpModal: false,
+      showDrSimulationTestModal: false,
       diskOfferings: [],
       addNetworkData: {
         allNetworks: [],
@@ -506,6 +549,7 @@ export default {
       this.showAddNetworkModal = false
       this.showUpdateIpModal = false
       this.showSecondaryIpModal = false
+      this.showDrSimulationTestModal = false
       this.addNetworkData.network = ''
       this.addNetworkData.ip = ''
       this.editIpAddressValue = ''
@@ -730,6 +774,9 @@ export default {
         this.loadingNic = false
         this.fetchSecondaryIPs(this.selectedNicId)
       })
+    },
+    DrSimulationTest (record) {
+      this.showDrSimulationTestModal = true
     }
   }
 }
@@ -837,6 +884,9 @@ export default {
       margin-left: 10px;
     }
 
+  }
+  .dr-simulation-modal {
+    width: 100%;
   }
 
   .ant-list-item-meta-title {

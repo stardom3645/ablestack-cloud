@@ -28,78 +28,72 @@
     >
       <a-alert style="margin-bottom: 5px" type="warning" show-icon>
         <template #message>
-          <span v-html="$t('message.add.disaster.recovery.cluster')" />
+          <span v-html="$t('message.add.dr.mirroring.vm')" />
         </template>
       </a-alert>
-      <a-form-item name="name" ref="name" :label="$t('label.name')">
-        <a-input
-          :placeholder="'temp'"
-          v-model:value="form.name"
-        />
+      <a-form-item
+          ref="drCluster"
+          name="drCluster"
+          :label="$t('label.cluster')">
+        <a-select
+            v-model:value="form.drCluster"
+            showSearch
+            optionFilterProp="label"
+            :filterOption="(input, option) => {
+              return option.children[0].children.toLowerCase().indexOf(input.toLowerCase()) >= 0
+            }"
+            :placeholder="'클러스터 선택'"
+            >
+          <a-select-option v-for="(opt, optIndex) in this.drCluster" :key="optIndex">
+            {{ opt.name }} {{ opt.version }}
+          </a-select-option>
+        </a-select>
       </a-form-item>
 
-      <a-form-item name="displaytext" ref="displaytext" :label="$t('label.displaytext')">
-        <a-input
-          v-model:value="form.displaytext"
-          :placeholder="'temp'"
-        />
+      <a-form-item
+          ref="drCluster"
+          name="drCluster"
+          :label="$t('label.compute.offerings')">
+        <a-select
+            v-model:value="form.drCluster"
+            showSearch
+            optionFilterProp="label"
+            :filterOption="(input, option) => {
+              return option.children[0].children.toLowerCase().indexOf(input.toLowerCase()) >= 0
+            }"
+            :placeholder="'컴퓨트 오퍼링 선택'"
+        >
+          <a-select-option v-for="(opt, optIndex) in this.fakeOfferings" :key="optIndex">
+            {{ opt.name }} {{ opt.version }}
+          </a-select-option>
+        </a-select>
       </a-form-item>
 
-      <a-card size="small" :title="$t('label.add.disaster.recovery.cluster.info')" style="margin-top: 15px">
-        <a-form-item name="url" ref="url" :label="$t('label.url')">
-          <a-input
-            :placeholder="'http://10.10.1.10:8080'"
-            v-model:value="form.url"
-          />
-        </a-form-item>
-        <a-form-item name="apikey" ref="apikey" :label="$t('label.apikey')">
-<!--          <span>-->
-<!--            <a-alert type="warning">-->
-<!--              <template #message>-->
-<!--                <span v-html="ipv6NetworkOfferingEnabled ? $t('message.offering.internet.protocol.warning') : $t('message.offering.ipv6.warning')" />-->
-<!--              </template>-->
-<!--            </a-alert>-->
-<!--            <br/>-->
-<!--          </span>-->
-          <a-input
-            :placeholder="temp"
-            v-model:value="form.apikey"
-          />
-        </a-form-item>
-        <a-form-item name="secretkey" ref="secretkey" :label="$t('label.secret.key')">
-          <a-input
-            :placeholder="temp"
-            v-model:value="form.secretkey"
-          />
-        </a-form-item>
+      <a-form-item
+          ref="drCluster"
+          name="drCluster"
+          :label="$t('label.network.name')">
+        <a-select
+            v-model:value="form.drCluster"
+            showSearch
+            optionFilterProp="label"
+            :filterOption="(input, option) => {
+              return option.children[0].children.toLowerCase().indexOf(input.toLowerCase()) >= 0
+            }"
+            :placeholder="'네트워크 선택'"
+        >
+          <a-select-option v-for="(opt, optIndex) in this.fakeNetworks" :key="optIndex">
+            {{ opt.name }} {{ opt.version }}
+          </a-select-option>
+        </a-select>
+      </a-form-item>
 
-        <a-form-item name="file" ref="file" :label="$t('label.add.disaster.recovery.cluster.info.glue.pri.key')">
-          <a-upload-dragger
-            :multiple="false"
-            :fileList="fileList"
-            @remove="handleRemove"
-            :beforeUpload="beforeUpload"
-            v-model:value="form.file">
-            <p class="ant-upload-drag-icon">
-              <cloud-upload-outlined />
-            </p>
-            <p class="ant-upload-text" v-if="fileList.length === 0">
-              {{ $t('label.volume.volumefileupload.description') }}
-            </p>
-          </a-upload-dragger>
-        </a-form-item>
-      </a-card>
-
-      <a-divider />
-
-      <a-spin :spinning="spinning">
-        <a-alert :message="$t('message.disaster.recovery.cluster.connection.test.title')" :description="$t('message.disaster.recovery.cluster.connection.test.description')">
-        </a-alert>
-      </a-spin>
-      <div class="spin-state" style="margin-top: 16px">
-        <tooltip-label :title="$t('label.disaster.recovery.cluster.start.connection.test.description')"/>
-        <a-switch v-model:checked="spinning" style="margin-left: 10px"/>
-      </div>
+      <a-form-item name="haenable" ref="haenable">
+        <template #label>
+          <tooltip-label :title="'사전 볼륨 미러링'" :tooltip="'가상머신 생성전에 먼저 볼륨 미러링을 실행합니다.'"/>
+        </template>
+        <a-switch v-model:checked="form.haenable" />
+      </a-form-item>
 
       <div :span="24" class="action-button">
         <a-button @click="() => $emit('close-action')">{{ $t('label.cancel') }}</a-button>
@@ -113,8 +107,8 @@
 <script>
 import { ref, reactive, toRaw } from 'vue'
 import { api } from '@/api'
-import DedicateDomain from '../../components/view/DedicateDomain'
-import ResourceIcon from '@/components/view/ResourceIcon'
+import DedicateDomain from '@comp/view/DedicateDomain.vue'
+import ResourceIcon from '@/components/view/ResourceIcon.vue'
 import TooltipLabel from '@/components/widgets/TooltipLabel.vue'
 import { axios } from '@/utils/request'
 import store from '@/store'
@@ -159,7 +153,18 @@ export default {
         startip: null,
         endip: null
       },
-      fileList: []
+      fileList: [],
+      drCluster: [],
+      fakeOfferings: [
+        { id: 1, name: 'Offering 1', price: 10 },
+        { id: 2, name: 'Offering 2', price: 20 },
+        { id: 3, name: 'Offering 3', price: 30 }
+      ],
+      fakeNetworks: [
+        { id: 1, name: 'Network 1', price: 10 },
+        { id: 2, name: 'Network 2', price: 20 },
+        { id: 3, name: 'Network 3', price: 30 }
+      ]
     }
   },
   created () {
@@ -180,6 +185,14 @@ export default {
     },
     fetchData () {
       this.fetchZones()
+      this.fetchDRClusterList()
+    },
+    fetchDRClusterList () {
+      api('getDisasterRecoveryClusterList', { name: 'test-sec-cluster-01' }).then(json => {
+        this.drCluster = json.getdisasterrecoveryclusterlistresponse.disasterrecoverycluster || []
+        console.log(this.drCluster)
+      }).finally(() => {
+      })
     },
     fetchZones () {
       this.loading = true
@@ -262,46 +275,6 @@ export default {
           accountid: store.getters.project && store.getters.project.id ? null : store.getters.userInfo.accountid
         }
         console.log(params)
-        // api('addAutomationController', params).then(json => {
-        //   const jobId = json.addautomationcontrollerresponse.jobid
-        //   this.$pollJob({
-        //     jobId,
-        //     title: this.$t('label.automation.controller.deploy'),
-        //     description: values.name,
-        //     successMethod: () => {
-        //       this.$notification.success({
-        //         message: this.$t('message.success.create.automation.controller'),
-        //         duration: 0
-        //       })
-        //       eventBus.emit('automation-controller-refresh-data')
-        //     },
-        //     loadingMessage: `${this.$t('label.automation.controller.deploy')} ${values.name} ${this.$t('label.in.progress')}`,
-        //     catchMessage: this.$t('error.fetching.async.job.result'),
-        //     catchMethod: () => {
-        //       eventBus.emit('automation-controller-refresh-data')
-        //     },
-        //     action: {
-        //       isFetchData: false
-        //     }
-        //   })
-        //   this.closeAction()
-        // }).catch(error => {
-        //   this.$notifyError(error)
-        // }).finally(() => {
-        //   this.loading = false
-        // })
-        this.handleUpload()
-        // api('getUploadParamsForTemplate', params).then(json => {
-        //   this.uploadParams = (json.postuploadtemplateresponse && json.postuploadtemplateresponse.getuploadparams) ? json.postuploadtemplateresponse.getuploadparams : ''
-        //   this.handleUpload()
-        //   if (this.userdataid !== null) {
-        //     this.linkUserdataToTemplate(this.userdataid, json.postuploadtemplateresponse.template[0].id)
-        //   }
-        // }).catch(error => {
-        //   this.$notifyError(error)
-        // }).finally(() => {
-        //   this.loading = false
-        // })
         this.loading = false
       }).catch(error => {
         this.formRef.value.scrollToField(error.errorFields[0].name)
@@ -322,7 +295,7 @@ export default {
   width: 80vw;
 
   @media (min-width: 700px) {
-    width: 550px;
+    width: 450px;
   }
 }
 
