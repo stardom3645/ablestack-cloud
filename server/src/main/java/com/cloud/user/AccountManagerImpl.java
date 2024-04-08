@@ -1453,19 +1453,19 @@ public class AccountManagerImpl extends ManagerBase implements AccountManager, M
         _userDao.update(user.getId(), user);
         StringBuilder msg = new StringBuilder("User update: ");
         msg.append("id = " + user.getId());
-        if (beforeUsername != user.getUsername()) {
+        if (!beforeUsername.equalsIgnoreCase(user.getUsername())) {
             msg.append("; username from '" + beforeUsername + "' to '" + user.getUsername()+ "'");
         }
-        if (beforeEmail != user.getEmail()) {
+        if (!beforeEmail.equalsIgnoreCase(user.getEmail())) {
             msg.append("; email from '" + beforeEmail + "' to '" + user.getEmail()+ "'");
         }
-        if (beforeFirstname != user.getFirstname()) {
+        if (!beforeFirstname.equalsIgnoreCase(user.getFirstname())) {
             msg.append("; firstname from '" + beforeFirstname + "' to '" + user.getFirstname()+ "'");
         }
-        if (beforeLastname != user.getLastname()) {
+        if (!beforeLastname.equalsIgnoreCase(user.getLastname())) {
             msg.append("; lastname from '" + beforeLastname + "' to '" + user.getLastname()+ "'");
         }
-        if (beforeTimezone != user.getTimezone()) {
+        if (!beforeTimezone.equalsIgnoreCase(user.getTimezone())) {
             msg.append("; timezone from '" + beforeTimezone + "' to '" + user.getTimezone()+ "'");
         }
         if (StringUtils.isNotBlank(updateUserCmd.getPassword())) {
