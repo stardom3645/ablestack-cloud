@@ -4082,5 +4082,11 @@
 "alert.vr.private.iface.mtu":"VR.\uc0ac\uc124\uc778\ud130\ud398\uc774\uc2a4.MTU",
 "alert.login":"\ub85c\uadf8\uc778",
 "threshold.reached": "\uC784\uACC4\uCE58\u0020\uB3C4\uB2EC",
-"encryption.check": "\uc554\ud638.\ubaa8\ub4c8.\uc810\uac80"
+"encryption.check": "\uc554\ud638.\ubaa8\ub4c8.\uc810\uac80",
+"host.add": "\ud638\uc2a4\ud2b8.\ucd94\uac00",
+"host.update": "\ud638\uc2a4\ud2b8.\ud3b8\uc9d1",
+"host.delete": "\ud638\uc2a4\ud2b8.\uc0ad\uc81c",
+"cluster.add": "\ud074\ub7ec\uc2a4\ud130.\ucd94\uac00",
+"cluster.update": "\ud074\ub7ec\uc2a4\ud130.\ud3b8\uc9d1",
+"cluster.delete": "\ud074\ub7ec\uc2a4\ud130.\uc0ad\uc81c"
 }

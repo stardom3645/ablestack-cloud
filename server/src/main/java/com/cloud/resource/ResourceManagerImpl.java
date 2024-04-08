@@ -420,7 +420,7 @@ public class ResourceManagerImpl extends ManagerBase implements ResourceManager,
 
     @DB
     @Override
-    @ActionEvent(eventType = EventTypes.EVENT_CLUSTER_ADD, eventDescription = "adding cluster", create = true)
+    @ActionEvent(eventType = EventTypes.EVENT_CLUSTER_ADD, eventDescription = "adding cluster")
     public List<? extends Cluster> discoverCluster(final AddClusterCmd cmd) throws IllegalArgumentException, DiscoveryException, ResourceInUseException {
         final long dcId = cmd.getZoneId();
         final long podId = cmd.getPodId();
@@ -619,7 +619,7 @@ public class ResourceManagerImpl extends ManagerBase implements ResourceManager,
     }
 
     @Override
-    @ActionEvent(eventType = EventTypes.EVENT_HOST_ADD, eventDescription = "adding host", create = true)
+    @ActionEvent(eventType = EventTypes.EVENT_HOST_ADD, eventDescription = "adding host")
     public List<? extends Host> discoverHosts(final AddHostCmd cmd) throws IllegalArgumentException, DiscoveryException, InvalidParameterValueException {
         Long dcId = cmd.getZoneId();
         final Long podId = cmd.getPodId();

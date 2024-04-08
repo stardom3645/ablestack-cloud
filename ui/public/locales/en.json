@@ -4082,5 +4082,11 @@
 "alert.vr.private.iface.mtu":"VR.PRIVATE.IFACE.MTU",
 "alert.login":"LOGIN",
 "threshold.reached": "THRESHOLD.REACHED",
-"encryption.check": "ENCRYPTION.CHECK"
+"encryption.check": "ENCRYPTION.CHECK",
+"host.add": "HOST.ADD",
+"host.update": "HOST.UPDATE",
+"host.delete": "HOST.DELETE",
+"cluster.add": "CLUSTER.ADD",
+"cluster.update": "CLUSTER.UPDATE",
+"cluster.delete": "CLUSTER.DELETE"
 }
