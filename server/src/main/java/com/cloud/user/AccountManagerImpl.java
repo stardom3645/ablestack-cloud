@@ -1453,20 +1453,20 @@ public class AccountManagerImpl extends ManagerBase implements AccountManager, M
         _userDao.update(user.getId(), user);
         StringBuilder msg = new StringBuilder("User update: ");
         msg.append("id = " + user.getId());
-        if (StringUtils.isNotBlank(updateUserCmd.getUsername())) {
-            msg.append("; username = from " + beforeUsername + " to " + user.getUsername());
+        if (beforeUsername != updateUserCmd.getUsername()) {
+            msg.append("; username from '" + beforeUsername + "' to '" + user.getUsername()+ "'");
         }
-        if (StringUtils.isNotBlank(updateUserCmd.getEmail())) {
-            msg.append("; email = from " + beforeEmail + " to " + user.getEmail());
+        if (beforeEmail != updateUserCmd.getEmail()) {
+            msg.append("; email from '" + beforeEmail + "' to '" + user.getEmail()+ "'");
         }
-        if (StringUtils.isNotBlank(updateUserCmd.getFirstname())) {
-            msg.append("; firstname = from " + beforeFirstname + " to " + user.getFirstname());
+        if (beforeFirstname != updateUserCmd.getFirstname()) {
+            msg.append("; firstname from '" + beforeFirstname + "' to '" + user.getFirstname()+ "'");
         }
-        if (StringUtils.isNotBlank(updateUserCmd.getLastname())) {
-            msg.append("; lastname = from " + beforeLastname + " to " + user.getLastname());
+        if (beforeLastname != updateUserCmd.getLastname()) {
+            msg.append("; lastname from '" + beforeLastname + "' to '" + user.getLastname()+ "'");
         }
-        if (StringUtils.isNotBlank(updateUserCmd.getTimezone())) {
-            msg.append("; timezone = from " + beforeTimezone + " to " + user.getTimezone());
+        if (beforeTimezone != updateUserCmd.getTimezone()) {
+            msg.append("; timezone from '" + beforeTimezone + "' to '" + user.getTimezone()+ "'");
         }
         if (StringUtils.isNotBlank(updateUserCmd.getPassword())) {
             msg.append("; password for the account has been changed");
