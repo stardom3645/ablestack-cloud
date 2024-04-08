@@ -420,7 +420,7 @@ public class ResourceManagerImpl extends ManagerBase implements ResourceManager,
 
     @DB
     @Override
-    @ActionEvent(eventType = EventTypes.EVENT_CLUSTER_ADD, eventDescription = "adding cluster")
+    @ActionEvent(eventType = EventTypes.EVENT_CLUSTER_ADD, eventDescription = "adding cluster", async = false)
     public List<? extends Cluster> discoverCluster(final AddClusterCmd cmd) throws IllegalArgumentException, DiscoveryException, ResourceInUseException {
         final long dcId = cmd.getZoneId();
         final long podId = cmd.getPodId();
@@ -619,7 +619,7 @@ public class ResourceManagerImpl extends ManagerBase implements ResourceManager,
     }
 
     @Override
-    @ActionEvent(eventType = EventTypes.EVENT_HOST_ADD, eventDescription = "adding host")
+    @ActionEvent(eventType = EventTypes.EVENT_HOST_ADD, eventDescription = "adding host", async = false)
     public List<? extends Host> discoverHosts(final AddHostCmd cmd) throws IllegalArgumentException, DiscoveryException, InvalidParameterValueException {
         Long dcId = cmd.getZoneId();
         final Long podId = cmd.getPodId();
@@ -1069,7 +1069,7 @@ public class ResourceManagerImpl extends ManagerBase implements ResourceManager,
     }
 
     @Override
-    @ActionEvent(eventType = EventTypes.EVENT_HOST_DELETE, eventDescription = "deleting host")
+    @ActionEvent(eventType = EventTypes.EVENT_HOST_DELETE, eventDescription = "deleting host", async = false)
     public boolean deleteHost(final long hostId, final boolean isForced, final boolean isForceDeleteStorage) {
         try {
             final Boolean result = propagateResourceEvent(hostId, ResourceState.Event.DeleteHost);
@@ -1085,7 +1085,7 @@ public class ResourceManagerImpl extends ManagerBase implements ResourceManager,
 
     @Override
     @DB
-    @ActionEvent(eventType = EventTypes.EVENT_CLUSTER_DELETE, eventDescription = "deleting cluster")
+    @ActionEvent(eventType = EventTypes.EVENT_CLUSTER_DELETE, eventDescription = "deleting cluster", async = false)
     public boolean deleteCluster(final DeleteClusterCmd cmd) {
         try {
             Transaction.execute(new TransactionCallbackNoReturn() {
@@ -1149,7 +1149,7 @@ public class ResourceManagerImpl extends ManagerBase implements ResourceManager,
 
     @Override
     @DB
-    @ActionEvent(eventType = EventTypes.EVENT_CLUSTER_UPDATE, eventDescription = "updating cluster")
+    @ActionEvent(eventType = EventTypes.EVENT_CLUSTER_UPDATE, eventDescription = "updating cluster", async = false)
     public Cluster updateCluster(UpdateClusterCmd cmd) {
         ClusterVO cluster = (ClusterVO) getCluster(cmd.getId());
         String clusterType = cmd.getClusterType();
@@ -1937,6 +1937,7 @@ public class ResourceManagerImpl extends ManagerBase implements ResourceManager,
     }
 
     @Override
+    @ActionEvent(eventType = EventTypes.EVENT_HOST_UPDATE, eventDescription = "updating host", async = false)
     public Host updateHost(final UpdateHostCmd cmd) throws NoTransitionException {
         return updateHost(cmd.getId(), cmd.getName(), cmd.getOsCategoryId(),
                 cmd.getAllocationState(), cmd.getUrl(), cmd.getHostTags(), cmd.getAnnotation(), false);
