@@ -420,6 +420,7 @@ public class ResourceManagerImpl extends ManagerBase implements ResourceManager,
 
     @DB
     @Override
+    @ActionEvent(eventType = EventTypes.EVENT_CLUSTER_ADD, eventDescription = "adding cluster", create = true)
     public List<? extends Cluster> discoverCluster(final AddClusterCmd cmd) throws IllegalArgumentException, DiscoveryException, ResourceInUseException {
         final long dcId = cmd.getZoneId();
         final long podId = cmd.getPodId();
@@ -618,6 +619,7 @@ public class ResourceManagerImpl extends ManagerBase implements ResourceManager,
     }
 
     @Override
+    @ActionEvent(eventType = EventTypes.EVENT_HOST_ADD, eventDescription = "adding host", create = true)
     public List<? extends Host> discoverHosts(final AddHostCmd cmd) throws IllegalArgumentException, DiscoveryException, InvalidParameterValueException {
         Long dcId = cmd.getZoneId();
         final Long podId = cmd.getPodId();
@@ -1067,6 +1069,7 @@ public class ResourceManagerImpl extends ManagerBase implements ResourceManager,
     }
 
     @Override
+    @ActionEvent(eventType = EventTypes.EVENT_HOST_DELETE, eventDescription = "deleting host")
     public boolean deleteHost(final long hostId, final boolean isForced, final boolean isForceDeleteStorage) {
         try {
             final Boolean result = propagateResourceEvent(hostId, ResourceState.Event.DeleteHost);
@@ -1082,6 +1085,7 @@ public class ResourceManagerImpl extends ManagerBase implements ResourceManager,
 
     @Override
     @DB
+    @ActionEvent(eventType = EventTypes.EVENT_CLUSTER_DELETE, eventDescription = "deleting cluster")
     public boolean deleteCluster(final DeleteClusterCmd cmd) {
         try {
             Transaction.execute(new TransactionCallbackNoReturn() {
@@ -1145,6 +1149,7 @@ public class ResourceManagerImpl extends ManagerBase implements ResourceManager,
 
     @Override
     @DB
+    @ActionEvent(eventType = EventTypes.EVENT_CLUSTER_UPDATE, eventDescription = "updating cluster")
     public Cluster updateCluster(UpdateClusterCmd cmd) {
         ClusterVO cluster = (ClusterVO) getCluster(cmd.getId());
         String clusterType = cmd.getClusterType();
