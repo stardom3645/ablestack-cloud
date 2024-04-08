@@ -550,7 +550,7 @@ public class VpcVirtualNetworkApplianceManagerImpl extends VirtualNetworkApplian
         final List<LoadBalancerVO> lbs = loadBalancerDao.listByVpcIdAndScheme(domainRouterVO.getVpcId(), Scheme.Public);
         final List<LoadBalancingRule> lbRules = new ArrayList<>();
         createLoadBalancingRulesList(lbRules, lbs);
-        s_logger.debug("Found " + lbRules.size() + " load balancing rule(s) to apply as a part of VPC VR " + domainRouterVO + " start.");
+        logger.debug("Found " + lbRules.size() + " load balancing rule(s) to apply as a part of VPC VR " + domainRouterVO + " start.");
         if (!lbRules.isEmpty()) {
             for (final Pair<Nic, Network> nicNtwk : guestNics) {
                 final Nic guestNic = nicNtwk.first();

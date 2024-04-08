@@ -2582,7 +2582,7 @@ Configurable, StateListener<VirtualMachine.State, VirtualMachine.Event, VirtualM
             createLoadBalancingRulesList(lbRules, lbs);
         }
 
-        s_logger.debug("Found " + lbRules.size() + " load balancing rule(s) to apply as a part of domR " + router + " start.");
+        logger.debug("Found " + lbRules.size() + " load balancing rule(s) to apply as a part of domR " + router + " start.");
         if (!lbRules.isEmpty()) {
             _commandSetupHelper.createApplyLoadBalancingRulesCommands(lbRules, router, cmds, guestNetworkId);
         }
