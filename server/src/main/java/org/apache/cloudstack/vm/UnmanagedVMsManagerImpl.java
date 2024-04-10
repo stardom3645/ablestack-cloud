@@ -2271,7 +2271,7 @@ public class UnmanagedVMsManagerImpl implements UnmanagedVMsManager {
             cleanupFailedImportVM(userVm);
             throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, String.format("Failed to import NICs while importing vm: %s. %s", instanceName, StringUtils.defaultString(e.getMessage())));
         }
-        publishVMUsageUpdateResourceCount(userVm, serviceOffering, template);
+        publishVMUsageUpdateResourceCount(userVm, dummyOffering, template);
         return userVm;
     }
 
@@ -2402,7 +2402,7 @@ public class UnmanagedVMsManagerImpl implements UnmanagedVMsManager {
             throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, String.format("Failed to import volumes while importing vm: %s. %s", instanceName, StringUtils.defaultString(e.getMessage())));
         }
         networkOrchestrationService.importNic(macAddress, 0, network, true, userVm, requestedIpPair, zone, true);
-        publishVMUsageUpdateResourceCount(userVm, serviceOffering, template);
+        publishVMUsageUpdateResourceCount(userVm, dummyOffering, template);
         return userVm;
     }
 
