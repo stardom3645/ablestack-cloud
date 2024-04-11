@@ -4088,5 +4088,6 @@
 "host.delete": "HOST.DELETE",
 "cluster.add": "CLUSTER.ADD",
 "cluster.update": "CLUSTER.UPDATE",
-"cluster.delete": "CLUSTER.DELETE"
+"cluster.delete": "CLUSTER.DELETE",
+"label.clientip": "IP Address"
 }

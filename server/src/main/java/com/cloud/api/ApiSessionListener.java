@@ -22,6 +22,7 @@ import javax.servlet.http.HttpSessionEvent;
 import javax.servlet.http.HttpSessionListener;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
+import org.apache.cloudstack.context.CallContext;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -114,11 +115,19 @@ public class ApiSessionListener implements HttpSessionListener {
 
     public void sessionDestroyed(HttpSessionEvent event) {
         if (ApiServer.SecurityFeaturesEnabled.value()) {
-            String accountName = "admin";
+            Long userId = CallContext.current().getCallingUserId();
             Long domainId = 1L;
-            Account userAcct = ApiDBUtils.findAccountByNameDomain(accountName, domainId);
-            ActionEventUtils.onActionEvent(userAcct.getId(), userAcct.getAccountId(), domainId, EventTypes.EVENT_USER_SESSION_DESTROY,
-                "Session destroyed by Id : " + event.getSession().getId(), new Long(0), null);
+            if (userId == null) {
+                String accountName = "system";
+                Account userAcct = ApiDBUtils.findAccountByNameDomain(accountName, domainId);
+                ActionEventUtils.onActionEvent(userAcct.getId(), userAcct.getAccountId(), domainId, EventTypes.EVENT_USER_SESSION_DESTROY,
+                    "Session destroyed by Id : " + event.getSession().getId(), new Long(0), null);
+            } else {
+                String accountName = "admin";
+                Account userAcct = ApiDBUtils.findAccountByNameDomain(accountName, domainId);
+                ActionEventUtils.onActionEvent(userAcct.getId(), userAcct.getAccountId(), userAcct.getDomainId(), EventTypes.EVENT_USER_SESSION_DESTROY,
+                    "Session destroyed by Id : " + event.getSession().getId(), userAcct.getId(), null);
+            }
         }
         if (LOGGER.isDebugEnabled()) {
             LOGGER.debug("Session destroyed by Id : " + event.getSession().getId() + " , session: " + event.getSession().toString() + " , source: " + event.getSource().toString() + " , event: " + event.toString());

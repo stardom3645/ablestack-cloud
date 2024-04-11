@@ -4088,5 +4088,6 @@
 "host.delete": "\ud638\uc2a4\ud2b8.\uc0ad\uc81c",
 "cluster.add": "\ud074\ub7ec\uc2a4\ud130.\ucd94\uac00",
 "cluster.update": "\ud074\ub7ec\uc2a4\ud130.\ud3b8\uc9d1",
-"cluster.delete": "\ud074\ub7ec\uc2a4\ud130.\uc0ad\uc81c"
+"cluster.delete": "\ud074\ub7ec\uc2a4\ud130.\uc0ad\uc81c",
+"label.clientip": "IP \uc8fc\uc18c"
 }
