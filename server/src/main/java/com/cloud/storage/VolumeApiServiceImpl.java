@@ -1478,7 +1478,7 @@ public class VolumeApiServiceImpl extends ManagerBase implements VolumeApiServic
             }
         }
 
-        ResizeVolumePayload payload = new ResizeVolumePayload(newSize, newMinIops, newMaxIops, newHypervisorSnapshotReserve, shrinkOk, instanceName, hosts, isManaged);
+        ResizeVolumePayload payload = new ResizeVolumePayload(newSize, newMinIops, newMaxIops, newDiskOfferingId, newHypervisorSnapshotReserve, shrinkOk, instanceName, hosts, isManaged);
 
         try {
             VolumeInfo vol = volFactory.getVolume(volume.getId());
@@ -1517,6 +1517,15 @@ public class VolumeApiServiceImpl extends ManagerBase implements VolumeApiServic
 
             if (newDiskOfferingId != null) {
                 volume.setDiskOfferingId(newDiskOfferingId);
+                _volumeMgr.saveVolumeDetails(newDiskOfferingId, volume.getId());
+            }
+
+            if (newMinIops != null) {
+                volume.setMinIops(newMinIops);
+            }
+
+            if (newMaxIops != null) {
+                volume.setMaxIops(newMaxIops);
             }
 
             // Update size if volume has same size as before, else it is already updated
@@ -2043,6 +2052,7 @@ public class VolumeApiServiceImpl extends ManagerBase implements VolumeApiServic
 
             if (newDiskOffering != null) {
                 volume.setDiskOfferingId(newDiskOfferingId);
+                _volumeMgr.saveVolumeDetails(newDiskOfferingId, volume.getId());
             }
 
             _volsDao.update(volume.getId(), volume);
