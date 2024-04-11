@@ -82,7 +82,7 @@ export default {
   inject: ['parentFetchData'],
   data () {
     return {
-      providers: ['MinIO', 'Ceph', 'Simulator'],
+      providers: ['MinIO', 'Glue', 'Simulator'],
       zones: [],
       loading: false
     }

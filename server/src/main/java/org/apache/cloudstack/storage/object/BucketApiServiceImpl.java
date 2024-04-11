@@ -135,9 +135,9 @@ public class BucketApiServiceImpl extends ManagerBase implements BucketApiServic
     @ActionEvent(eventType = EventTypes.EVENT_BUCKET_CREATE, eventDescription = "creating bucket", async = true)
     public Bucket createBucket(CreateBucketCmd cmd) {
         ObjectStoreVO objectStoreVO = _objectStoreDao.findById(cmd.getObjectStoragePoolId());
-        ObjectStoreEntity  objectStore = (ObjectStoreEntity)_dataStoreMgr.getDataStore(objectStoreVO.getId(), DataStoreRole.Object);
+        ObjectStoreEntity objectStore = (ObjectStoreEntity)_dataStoreMgr.getDataStore(objectStoreVO.getId(), DataStoreRole.Object);
         BucketVO bucket = _bucketDao.findById(cmd.getEntityId());
-        BucketTO bucketTO = new BucketTO(bucket);
+        BucketTO bucketTO = null;
         boolean objectLock = false;
         boolean bucketCreated = false;
         if(cmd.isObjectLocking()) {
@@ -147,6 +147,8 @@ public class BucketApiServiceImpl extends ManagerBase implements BucketApiServic
             objectStore.createBucket(bucket, objectLock);
             bucketCreated = true;
 
+            bucket = _bucketDao.findById(cmd.getEntityId());
+            bucketTO = new BucketTO(bucket);
             if (cmd.isVersioning()) {
                 objectStore.setBucketVersioning(bucketTO);
             }

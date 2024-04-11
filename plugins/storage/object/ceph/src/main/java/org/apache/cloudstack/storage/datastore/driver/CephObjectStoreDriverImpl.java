@@ -18,46 +18,51 @@
  */
 package org.apache.cloudstack.storage.datastore.driver;
 
+import com.amazonaws.AmazonServiceException;
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.client.builder.AwsClientBuilder;
+import com.amazonaws.SdkClientException;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
-import com.amazonaws.services.s3.model.AmazonS3Exception;
 import com.amazonaws.services.s3.model.AccessControlList;
+import com.amazonaws.services.s3.model.AmazonS3Exception;
+import com.amazonaws.services.s3.model.BucketCrossOriginConfiguration;
 import com.amazonaws.services.s3.model.BucketPolicy;
 import com.amazonaws.services.s3.model.BucketVersioningConfiguration;
+import com.amazonaws.services.s3.model.CORSRule;
 import com.amazonaws.services.s3.model.DeleteBucketPolicyRequest;
-import com.amazonaws.services.s3.model.SetBucketPolicyRequest;
 import com.amazonaws.services.s3.model.GetBucketPolicyRequest;
+import com.amazonaws.services.s3.model.SetBucketPolicyRequest;
 import com.amazonaws.services.s3.model.SetBucketVersioningConfigurationRequest;
+
 import com.cloud.agent.api.to.BucketTO;
 import com.cloud.agent.api.to.DataStoreTO;
-import org.apache.cloudstack.storage.object.Bucket;
 import com.cloud.storage.BucketVO;
 import com.cloud.storage.dao.BucketDao;
 import com.cloud.user.Account;
 import com.cloud.user.AccountDetailsDao;
 import com.cloud.user.dao.AccountDao;
 import com.cloud.utils.exception.CloudRuntimeException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import javax.inject.Inject;
 import org.apache.cloudstack.engine.subsystem.api.storage.DataStore;
 import org.apache.cloudstack.storage.datastore.db.ObjectStoreDao;
 import org.apache.cloudstack.storage.datastore.db.ObjectStoreDetailsDao;
 import org.apache.cloudstack.storage.datastore.db.ObjectStoreVO;
 import org.apache.cloudstack.storage.object.BaseObjectStoreDriverImpl;
+import org.apache.cloudstack.storage.object.Bucket;
 import org.apache.cloudstack.storage.object.BucketObject;
-import org.twonote.rgwadmin4j.RgwAdmin;
-import org.twonote.rgwadmin4j.RgwAdminBuilder;
 import org.twonote.rgwadmin4j.model.BucketInfo;
 import org.twonote.rgwadmin4j.model.S3Credential;
 import org.twonote.rgwadmin4j.model.User;
-
-import javax.inject.Inject;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Optional;
-import java.util.Map;
-import java.util.HashMap;
+import org.twonote.rgwadmin4j.RgwAdmin;
+import org.twonote.rgwadmin4j.RgwAdminBuilder;
 
 public class CephObjectStoreDriverImpl extends BaseObjectStoreDriverImpl {
     @Inject
@@ -114,6 +119,49 @@ public class CephObjectStoreDriverImpl extends BaseObjectStoreDriverImpl {
             bucketVO.setSecretKey(secretKey);
             bucketVO.setBucketURL(store.getUrl() + "/" + bucketName);
             _bucketDao.update(bucket.getId(), bucketVO);
+
+            // Create two CORS rules.
+            List<CORSRule.AllowedMethods> ruleAM = new ArrayList<CORSRule.AllowedMethods>();
+            ruleAM.add(CORSRule.AllowedMethods.GET);
+            ruleAM.add(CORSRule.AllowedMethods.PUT);
+            ruleAM.add(CORSRule.AllowedMethods.POST);
+            ruleAM.add(CORSRule.AllowedMethods.HEAD);
+            ruleAM.add(CORSRule.AllowedMethods.DELETE);
+            CORSRule rule = new CORSRule().withId("CORSRule")
+                    .withAllowedMethods(ruleAM)
+                    .withAllowedHeaders(Arrays.asList("*"))
+                    .withAllowedOrigins(Arrays.asList("*"))
+                    .withMaxAgeSeconds(3000)
+                    .withExposedHeaders(Arrays.asList("x-amz-server-side-encryption", "x-amz-request-id", "x-amz-id-2"));
+
+                    List<CORSRule> rules = new ArrayList<CORSRule>();
+            rules.add(rule);
+
+            // Add the rules to a new CORS configuration.
+            BucketCrossOriginConfiguration configuration = new BucketCrossOriginConfiguration();
+            configuration.setRules(rules);
+
+            try {
+                // Add the configuration to the bucket.
+                s3client.setBucketCrossOriginConfiguration(bucketName, configuration);
+                configuration = s3client.getBucketCrossOriginConfiguration(bucketName);
+                logger.debug("Configuration has " + configuration.getRules().size() + " rules\n");
+
+                for (CORSRule r : configuration.getRules()) {
+                    logger.debug("Rule ID: " + r.getId());
+                    logger.debug("MaxAgeSeconds: " + r.getMaxAgeSeconds());
+                    logger.debug("AllowedMethod: " + r.getAllowedMethods());
+                    logger.debug("AllowedOrigins: " + r.getAllowedOrigins());
+                    logger.debug("AllowedHeaders: " + r.getAllowedHeaders());
+                    logger.debug("ExposeHeader: " + r.getExposedHeaders());
+                }
+
+            } catch (AmazonServiceException e) {
+                throw new CloudRuntimeException(e);
+            } catch (SdkClientException e) {
+                throw new CloudRuntimeException(e);
+            }
+
             return bucket;
         } catch (Exception e) {
             throw new CloudRuntimeException(e);
@@ -192,19 +240,19 @@ public class CephObjectStoreDriverImpl extends BaseObjectStoreDriverImpl {
             policyConfig = "{\"Version\":\"2012-10-17\",\"Statement\":[]}";
         }
 
-        AmazonS3 client = getS3Client(getStoreURL(storeId), bucket.getAccessKey(), bucket.getAccessKey());
+        AmazonS3 client = getS3Client(getStoreURL(storeId), bucket.getAccessKey(), bucket.getSecretKey());
         client.setBucketPolicy(new SetBucketPolicyRequest(bucket.getName(), policyConfig));
     }
 
     @Override
     public BucketPolicy getBucketPolicy(BucketTO bucket, long storeId) {
-        AmazonS3 client = getS3Client(getStoreURL(storeId), bucket.getAccessKey(), bucket.getAccessKey());
+        AmazonS3 client = getS3Client(getStoreURL(storeId), bucket.getAccessKey(), bucket.getSecretKey());
         return client.getBucketPolicy(new GetBucketPolicyRequest(bucket.getName()));
     }
 
     @Override
     public void deleteBucketPolicy(BucketTO bucket, long storeId) {
-        AmazonS3 client = getS3Client(getStoreURL(storeId), bucket.getAccessKey(), bucket.getAccessKey());
+        AmazonS3 client = getS3Client(getStoreURL(storeId), bucket.getAccessKey(), bucket.getSecretKey());
         client.deleteBucketPolicy(new DeleteBucketPolicyRequest(bucket.getName()));
     }
 
@@ -252,7 +300,7 @@ public class CephObjectStoreDriverImpl extends BaseObjectStoreDriverImpl {
 
     @Override
     public boolean setBucketVersioning(BucketTO bucket, long storeId) {
-        AmazonS3 client = getS3Client(getStoreURL(storeId), bucket.getAccessKey(), bucket.getAccessKey());
+        AmazonS3 client = getS3Client(getStoreURL(storeId), bucket.getAccessKey(), bucket.getSecretKey());
         try {
             BucketVersioningConfiguration configuration =
                     new BucketVersioningConfiguration().withStatus("Enabled");
@@ -269,7 +317,7 @@ public class CephObjectStoreDriverImpl extends BaseObjectStoreDriverImpl {
 
     @Override
     public boolean deleteBucketVersioning(BucketTO bucket, long storeId) {
-        AmazonS3 client = getS3Client(getStoreURL(storeId), bucket.getAccessKey(), bucket.getAccessKey());
+        AmazonS3 client = getS3Client(getStoreURL(storeId), bucket.getAccessKey(), bucket.getSecretKey());
         try {
             BucketVersioningConfiguration configuration =
                     new BucketVersioningConfiguration().withStatus("Suspended");
