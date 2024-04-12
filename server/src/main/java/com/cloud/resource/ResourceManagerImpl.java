@@ -32,6 +32,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Random;
+import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 import javax.naming.ConfigurationException;
@@ -1962,16 +1963,15 @@ public class ResourceManagerImpl extends ManagerBase implements ResourceManager,
             throw new InvalidParameterValueException("Host with id " + hostId + " doesn't exist");
         }
         String beforeHostname = host.getName();
-        List <String> beforeHostTag = host.getHostTags();
-        Map<String, String> details = host.getDetails();
+        List <String> beforeHostTag = _hostTagsDao.getHostTags(hostId);
+        DetailVO hostDetail = _hostDetailsDao.findDetail(hostId, "guest.os.category.id");
         Long beforeGuestOs = null;
-        if (details != null) {
-            String guestOs = host.getDetails().get("guest.os.category.id");
+        if (hostDetail != null) {
+            String guestOs = hostDetail.getValue();
             if (guestOs != null) {
                 beforeGuestOs = Long.parseLong(guestOs);
             }
         }
-
         boolean isUpdateHostAllocation = false;
         if (StringUtils.isNotBlank(allocationState)) {
             isUpdateHostAllocation = updateHostAllocationState(host, allocationState, isUpdateFromHostHealthCheck);
@@ -1996,12 +1996,14 @@ public class ResourceManagerImpl extends ManagerBase implements ResourceManager,
         if (!beforeHostname.equalsIgnoreCase(name)) {
             msg.append("; hostname = from '" + beforeHostname + "' to '" + name+ "'");
         }
-        if (beforeGuestOs != null && !beforeGuestOs.equals(guestOSCategoryId)) {
+        if (beforeGuestOs != null && guestOSCategoryId == null) {
+            msg.append("; guest os category id = from '" + Long.toString(beforeGuestOs) + "' to ''");
+        } else if (beforeGuestOs != null && !beforeGuestOs.equals(guestOSCategoryId)) {
             msg.append("; guest os category id = from '" + Long.toString(beforeGuestOs) + "' to '" + Long.toString(guestOSCategoryId) + "'");
         } else if (beforeGuestOs == null && guestOSCategoryId != null) {
             msg.append("; guest os category id = '" + Long.toString(guestOSCategoryId) + "'");
         }
-        if (beforeHostTag != null && !beforeHostTag.equals(hostTags)) {
+        if (beforeHostTag != null && !beforeHostTag.stream().sorted().collect(Collectors.toList()).equals(hostTags.stream().sorted().collect(Collectors.toList()))) {
             msg.append("; host tag = from '" + String.join(",",beforeHostTag) + "' to '" + String.join(",",hostTags) + "'");
         } else if ((beforeHostTag == null || (beforeHostTag != null && beforeHostTag.isEmpty())) && hostTags != null) {
             msg.append("; host tag = '" + String.join(",",hostTags) + "'");
