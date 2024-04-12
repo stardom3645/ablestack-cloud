@@ -123,7 +123,7 @@ public class LibvirtConnection {
      */
     private static synchronized void setupEventListener() throws LibvirtException {
         if (!AgentPropertiesFileHandler.getPropertyValue(AgentProperties.LIBVIRT_EVENTS_ENABLED)) {
-            s_logger.debug("Libvirt event listening is disabled, not setting up event loop");
+            LOGGER.debug("Libvirt event listening is disabled, not setting up event loop");
             return;
         }
 

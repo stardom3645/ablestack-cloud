@@ -812,7 +812,7 @@ public class ScaleIOPrimaryDataStoreDriver implements PrimaryDataStoreDriver {
                 setVolumeLimitsOnSDC(volume, host, destData.getDataStore(), 0L, 0L);
                 answer = ep.sendMessage(cmd);
             } catch (Exception e) {
-                LOGGER.error("Failed to copy template to volume due to: " + e.getMessage(), e);
+                logger.error("Failed to copy template to volume due to: " + e.getMessage(), e);
                 answer = new Answer(cmd, false, e.getMessage());
             }
         }

@@ -519,17 +519,17 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
             try {
                 Connect conn = LibvirtConnection.getConnection();
                 if (libvirtDomainListener != null) {
-                    s_logger.debug("Clearing old domain listener");
+                    LOGGER.debug("Clearing old domain listener");
                     conn.removeLifecycleListener(libvirtDomainListener);
                 }
                 libvirtDomainListener = new LibvirtDomainListener(updater);
                 conn.addLifecycleListener(libvirtDomainListener);
-                s_logger.debug("Set up the libvirt domain event lifecycle listener");
+                LOGGER.debug("Set up the libvirt domain event lifecycle listener");
             } catch (LibvirtException e) {
-                s_logger.error("Failed to get libvirt connection for domain event lifecycle", e);
+                LOGGER.error("Failed to get libvirt connection for domain event lifecycle", e);
             }
         } else {
-            s_logger.debug("Libvirt event listening is disabled, not registering status updater");
+            LOGGER.debug("Libvirt event listening is disabled, not registering status updater");
         }
     }
     @Inject
@@ -2028,7 +2028,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
         try {
             final Connect conn = LibvirtConnection.getConnection();
             if (AgentPropertiesFileHandler.getPropertyValue(AgentProperties.LIBVIRT_EVENTS_ENABLED) && libvirtDomainListener != null) {
-                s_logger.debug("Clearing old domain listener");
+                LOGGER.debug("Clearing old domain listener");
                 conn.removeLifecycleListener(libvirtDomainListener);
             }
             conn.close();
