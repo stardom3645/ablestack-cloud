@@ -321,6 +321,27 @@ public class ApiServer extends ManagerBase implements HttpRequestHandler, ApiSer
             , "a list of cidrs for which \"proxy.header.names\" are honoured if the \"Remote_Addr\" is in this list."
             , true
             , ConfigKey.Scope.Global);
+    static final ConfigKey<Boolean> ConcurrentConnectEnabled = new ConfigKey<Boolean>( "Advanced"
+            , Boolean.class
+            , "concurrent.connect.enabled"
+            , "false"
+            , "If set to true, simultaneous access is possible using the same account."
+            , true
+            , ConfigKey.Scope.Global);
+    static final ConfigKey<Boolean> BlockExistConnection = new ConfigKey<Boolean>( "Advanced"
+            , Boolean.class
+            , "block.exist.connection"
+            , "true"
+            , "When simultaneous access is not allowed('concurrent.connect.enabled : false'), existing sessions are blocked if true, and new sessions are blocked if false."
+            , true
+            , ConfigKey.Scope.Global);
+    static final ConfigKey<Boolean> SecurityFeaturesEnabled = new ConfigKey<Boolean>( "Advanced"
+            , Boolean.class
+            , "security.features.enabled"
+            , "true"
+            , "A setting that enables/disables features developed for security features."
+            , false
+            , ConfigKey.Scope.Global);
 
     @Override
     public boolean configure(final String name, final Map<String, Object> params) throws ConfigurationException {

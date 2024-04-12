@@ -32,8 +32,6 @@ import org.apache.commons.lang3.StringUtils;
 
 import com.cloud.offering.ServiceOffering.State;
 
-import static com.cloud.offering.ServiceOffering.State.Active;
-
 @APICommand(name = "listServiceOfferings", description = "Lists all available service offerings.", responseObject = ServiceOfferingResponse.class,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class ListServiceOfferingsCmd extends BaseListProjectAndAccountResourcesCmd {
@@ -171,17 +169,6 @@ public class ListServiceOfferingsCmd extends BaseListProjectAndAccountResourcesC
 
     public Long getTemplateId() {
         return templateId;
-    }
-    
-    public State getState() {
-        if (StringUtils.isBlank(serviceOfferingState)) {
-            return Active;
-        }
-        State state = EnumUtils.getEnumIgnoreCase(State.class, serviceOfferingState);
-        if (!serviceOfferingState.equalsIgnoreCase("all") && state == null) {
-            throw new IllegalArgumentException("Invalid state value: " + serviceOfferingState);
-        }
-        return state;
     }
 
     /////////////////////////////////////////////////////
