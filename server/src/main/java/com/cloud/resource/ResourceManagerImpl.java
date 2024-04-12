@@ -47,6 +47,7 @@ import org.apache.cloudstack.alert.AlertService;
 import org.apache.cloudstack.annotation.AnnotationService;
 import org.apache.cloudstack.annotation.dao.AnnotationDao;
 import org.apache.cloudstack.api.ApiConstants;
+import org.apache.cloudstack.api.ApiCommandResourceType;
 import org.apache.cloudstack.api.command.admin.cluster.AddClusterCmd;
 import org.apache.cloudstack.api.command.admin.cluster.DeleteClusterCmd;
 import org.apache.cloudstack.api.command.admin.cluster.UpdateClusterCmd;
@@ -115,6 +116,8 @@ import com.cloud.dc.dao.DataCenterDao;
 import com.cloud.dc.dao.DataCenterIpAddressDao;
 import com.cloud.dc.dao.DedicatedResourceDao;
 import com.cloud.dc.dao.HostPodDao;
+import com.cloud.domain.Domain;
+import com.cloud.domain.dao.DomainDao;
 import com.cloud.deploy.DataCenterDeployment;
 import com.cloud.deploy.DeployDestination;
 import com.cloud.deploy.DeploymentPlanner;
@@ -275,6 +278,8 @@ public class ResourceManagerImpl extends ManagerBase implements ResourceManager,
     private ServiceOfferingDetailsDao _serviceOfferingDetailsDao;
     @Inject
     private UserVmManager userVmManager;
+    @Inject
+    private DomainDao _domainDao;
 
     private List<? extends Discoverer> _discoverers;
 
@@ -1149,7 +1154,6 @@ public class ResourceManagerImpl extends ManagerBase implements ResourceManager,
 
     @Override
     @DB
-    @ActionEvent(eventType = EventTypes.EVENT_CLUSTER_UPDATE, eventDescription = "updating cluster", async = false)
     public Cluster updateCluster(UpdateClusterCmd cmd) {
         ClusterVO cluster = (ClusterVO) getCluster(cmd.getId());
         String clusterType = cmd.getClusterType();
@@ -1157,6 +1161,7 @@ public class ResourceManagerImpl extends ManagerBase implements ResourceManager,
         String allocationState = cmd.getAllocationState();
         String managedstate = cmd.getManagedstate();
         String name = cmd.getClusterName();
+        String beforeClusterName = cluster.getName();
 
         // Verify cluster information and update the cluster if needed
         boolean doUpdate = false;
@@ -1231,6 +1236,13 @@ public class ResourceManagerImpl extends ManagerBase implements ResourceManager,
 
         if (doUpdate) {
             _clusterDao.update(cluster.getId(), cluster);
+            if (StringUtils.isNotBlank(name)) {
+                final Account caller = CallContext.current().getCallingAccount();
+                final Domain domain = _domainDao.findById(caller.getDomainId());
+                String accountName = "admin";
+                String msg = "Cluster update: id = " + cluster.getId() + "; cluster name = from '" + beforeClusterName + "' to '" + name + "'";
+                ActionEventUtils.onActionEvent(caller.getId(), caller.getAccountId(), domain.getId(), EventTypes.EVENT_CLUSTER_UPDATE, msg, cluster.getId(), ApiCommandResourceType.Cluster.toString());
+            }
         }
 
         if (newManagedState != null && !newManagedState.equals(oldManagedState)) {
@@ -1937,7 +1949,6 @@ public class ResourceManagerImpl extends ManagerBase implements ResourceManager,
     }
 
     @Override
-    @ActionEvent(eventType = EventTypes.EVENT_HOST_UPDATE, eventDescription = "updating host", async = false)
     public Host updateHost(final UpdateHostCmd cmd) throws NoTransitionException {
         return updateHost(cmd.getId(), cmd.getName(), cmd.getOsCategoryId(),
                 cmd.getAllocationState(), cmd.getUrl(), cmd.getHostTags(), cmd.getAnnotation(), false);
@@ -1949,6 +1960,16 @@ public class ResourceManagerImpl extends ManagerBase implements ResourceManager,
         final HostVO host = _hostDao.findById(hostId);
         if (host == null) {
             throw new InvalidParameterValueException("Host with id " + hostId + " doesn't exist");
+        }
+        String beforeHostname = host.getName();
+        List <String> beforeHostTag = host.getHostTags();
+        Map<String, String> details = host.getDetails();
+        Long beforeGuestOs = null;
+        if (details != null) {
+            String guestOs = host.getDetails().get("guest.os.category.id");
+            if (guestOs != null) {
+                beforeGuestOs = Long.parseLong(guestOs);
+            }
         }
 
         boolean isUpdateHostAllocation = false;
@@ -1967,6 +1988,25 @@ public class ResourceManagerImpl extends ManagerBase implements ResourceManager,
         if (hostTags != null) {
             updateHostTags(host, hostId, hostTags);
         }
+
+        final Account caller = CallContext.current().getCallingAccount();
+        final Domain domain = _domainDao.findById(caller.getDomainId());
+        StringBuilder msg = new StringBuilder("Host update: ");
+        msg.append("id = " + host.getId());
+        if (!beforeHostname.equalsIgnoreCase(name)) {
+            msg.append("; hostname = from '" + beforeHostname + "' to '" + name+ "'");
+        }
+        if (beforeGuestOs != null && !beforeGuestOs.equals(guestOSCategoryId)) {
+            msg.append("; guest os category id = from '" + Long.toString(beforeGuestOs) + "' to '" + Long.toString(guestOSCategoryId) + "'");
+        } else if (beforeGuestOs == null && guestOSCategoryId != null) {
+            msg.append("; guest os category id = '" + Long.toString(guestOSCategoryId) + "'");
+        }
+        if (beforeHostTag != null && !beforeHostTag.equals(hostTags)) {
+            msg.append("; host tag = from '" + String.join(",",beforeHostTag) + "' to '" + String.join(",",hostTags) + "'");
+        } else if ((beforeHostTag == null || (beforeHostTag != null && beforeHostTag.isEmpty())) && hostTags != null) {
+            msg.append("; host tag = '" + String.join(",",hostTags) + "'");
+        }
+        ActionEventUtils.onActionEvent(caller.getId(), caller.getAccountId(), domain.getId(), EventTypes.EVENT_HOST_UPDATE, msg.toString(), host.getId(), ApiCommandResourceType.Host.toString());
 
         if (url != null) {
             _storageMgr.updateSecondaryStorage(hostId, url);
