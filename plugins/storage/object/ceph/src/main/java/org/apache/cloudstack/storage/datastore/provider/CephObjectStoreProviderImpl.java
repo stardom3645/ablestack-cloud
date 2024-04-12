@@ -44,7 +44,7 @@ public class CephObjectStoreProviderImpl implements ObjectStoreProvider {
     @Inject
     ObjectStoreHelper helper;
 
-    private final String providerName = "Ceph";
+    private final String providerName = "Glue";
     protected ObjectStoreLifeCycle lifeCycle;
     protected ObjectStoreDriver driver;
 
