@@ -34,6 +34,7 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 
 import com.cloud.utils.NumbersUtil;
+import com.cloud.utils.UriUtils;
 
 public final class QCOW2Utils {
     protected static Logger LOGGER = LogManager.getLogger(QCOW2Utils.class);

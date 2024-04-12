@@ -3343,7 +3343,6 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
         String storageType = cmd.getStorageType();
         DiskOffering.State state = cmd.getState();
         final Long vmId = cmd.getVirtualMachineId();
-        DiskOffering.State state = cmd.getState();
 
         Filter searchFilter = new Filter(DiskOfferingVO.class, "sortKey", SortKeyAscending.value(), cmd.getStartIndex(), cmd.getPageSizeVal());
         searchFilter.addOrderBy(DiskOfferingVO.class, "id", true);
@@ -3643,7 +3642,6 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
         String storageType = cmd.getStorageType();
         ServiceOffering.State state = cmd.getState();
         final Long templateId = cmd.getTemplateId();
-        ServiceOffering.State state = cmd.getState();
 
         final Account owner = accountMgr.finalizeOwner(caller, accountName, domainId, projectId);
 

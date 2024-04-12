@@ -33,8 +33,6 @@ import org.apache.commons.lang3.StringUtils;
 
 import com.cloud.offering.DiskOffering.State;
 
-import static com.cloud.offering.DiskOffering.State.Active;
-
 @APICommand(name = "listDiskOfferings", description = "Lists all available disk offerings.", responseObject = DiskOfferingResponse.class,
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class ListDiskOfferingsCmd extends BaseListProjectAndAccountResourcesCmd {
@@ -83,11 +81,6 @@ public class ListDiskOfferingsCmd extends BaseListProjectAndAccountResourcesCmd 
             description = "The ID of a virtual machine. Pass this in if you want to see the suitable disk offering that can be used to create and add a disk to the virtual machine. Suitability is returned with suitableforvirtualmachine flag in the response",
             since = "4.20.0")
     private Long virtualMachineId;
-    
-    @Parameter(name = ApiConstants.STATE, type = CommandType.STRING,
-               description = "Filter by state of the disk offering. Defaults to 'Active'. If set to 'all' shows both Active & Inactive offerings.",
-               since = "4.19")
-    private String diskOfferingState;
 
     /////////////////////////////////////////////////////
     /////////////////// Accessors ///////////////////////
@@ -130,17 +123,6 @@ public class ListDiskOfferingsCmd extends BaseListProjectAndAccountResourcesCmd 
 
     public Long getVirtualMachineId() {
         return virtualMachineId;
-    }
-    
-    public State getState() {
-        if (StringUtils.isBlank(diskOfferingState)) {
-            return Active;
-        }
-        State state = EnumUtils.getEnumIgnoreCase(State.class, diskOfferingState);
-        if (!diskOfferingState.equalsIgnoreCase("all") && state == null) {
-            throw new IllegalArgumentException("Invalid state value: " + diskOfferingState);
-        }
-        return state;
     }
 
     /////////////////////////////////////////////////////
