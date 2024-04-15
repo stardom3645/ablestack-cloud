@@ -118,6 +118,6 @@ CREATE VIEW `cloud`.`event_view` AS
             LEFT JOIN
         `cloud`.`projects` ON projects.project_account_id = event.account_id
             LEFT JOIN
-        `cloud`.`event` ON event.start_id = eve.id;
+        `cloud`.`event` eve ON event.start_id = eve.id;
 
 UPDATE IGNORE `cloud`.`configuration` SET `value`="PLAINTEXT,oauth2" WHERE `name`="user.authenticators.exclude";
