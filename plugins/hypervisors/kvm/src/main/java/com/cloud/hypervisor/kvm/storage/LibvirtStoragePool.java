@@ -366,7 +366,7 @@ public class LibvirtStoragePool implements KVMStoragePool {
             cmd.add("-m", pool.getMountDestPath());
             cmd.add("-h", host.getPrivateNetwork().getIp());
             cmd.add("-r");
-            cmd.add("-t", String.valueOf(HeartBeatUpdateFreq / 1000));
+            cmd.add("-t", String.valueOf(HeartBeatCheckerFreq / 1000));
         } else if (pool.getPool().getType() == StoragePoolType.RBD) {
             cmd.add("-i", pool.getPoolSourceHost());
             cmd.add("-p", pool.getPoolMountSourcePath());
@@ -374,12 +374,12 @@ public class LibvirtStoragePool implements KVMStoragePool {
             cmd.add("-s", pool.getPoolAuthSecret());
             cmd.add("-h", host.getPrivateNetwork().getIp());
             cmd.add("-r", "r");
-            cmd.add("-t", String.valueOf(HeartBeatUpdateFreq / 1000));
+            cmd.add("-t", String.valueOf(HeartBeatCheckerFreq / 1000));
         } else if (pool.getPool().getType() == StoragePoolType.CLVM) {
             cmd.add("-h", host.getPrivateNetwork().getIp());
             cmd.add("-p", pool.getPoolMountSourcePath());
             cmd.add("-r");
-            cmd.add("-t", String.valueOf(HeartBeatUpdateFreq / 1000));
+            cmd.add("-t", String.valueOf(HeartBeatCheckerFreq / 1000));
         }
 
         OutputInterpreter.OneLineParser parser = new OutputInterpreter.OneLineParser();
