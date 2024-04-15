@@ -82,7 +82,7 @@ fi
 getHbTime=$(rbd -p $PoolName --id $PoolAuthUserName image-meta get MOLD-HB $HostIP)
 diff=$(expr $(date +%s) - $getHbTime)
 
-if [ $diff -lt 61 ]; then
+if [ $diff -le 90 ]; then
     echo "=====> ALIVE <====="
     exit 0
 fi
