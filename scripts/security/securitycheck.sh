@@ -93,14 +93,17 @@ do
 done
 
 # process check
-systemctl restart mold-monitoring.service
-result=$?
-if [ "$result" -ne "0" ]; then
-    echo "mold process,false"
-else 
-    systemctl status mold-monitoring.service | grep -i running $> /dev/null
-    if [[ $? == 0 ]]; then
-        echo "mold process,true"
-    else
+File=/etc/cloudstack/management/key.enc
+if [ -e "$File" ]; then  
+    systemctl restart mold-monitoring.service
+    result=$?
+    if [ "$result" -ne "0" ]; then
         echo "mold process,false"
+    else 
+        systemctl status mold-monitoring.service | grep -i running $> /dev/null
+        if [[ $? == 0 ]]; then
+            echo "mold process,true"
+        else
+            echo "mold process,false"
+    fi  
 fi
