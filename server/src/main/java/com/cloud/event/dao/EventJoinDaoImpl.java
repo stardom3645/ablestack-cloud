@@ -25,6 +25,7 @@ import javax.inject.Inject;
 import org.apache.cloudstack.api.ApiCommandResourceType;
 import org.apache.cloudstack.api.Identity;
 import org.apache.cloudstack.api.response.EventResponse;
+import org.apache.cloudstack.framework.config.dao.ConfigurationDao;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
@@ -53,6 +54,8 @@ public class EventJoinDaoImpl extends GenericDaoBase<EventJoinVO, Long> implemen
 
     @Inject
     EntityManager entityMgr;
+    @Inject
+    ConfigurationDao configDao;
 
     private String getResourceName(Object obj) {
         String[] possibleMethods = {"getDisplayName", "getDisplayText", "getHostName", "getName", "getAccountName", "getUsername"};
@@ -129,6 +132,10 @@ public class EventJoinDaoImpl extends GenericDaoBase<EventJoinVO, Long> implemen
         }
         ApiResponseHelper.populateOwner(responseEvent, event);
         responseEvent.setObjectName("event");
+        final boolean securityFeaturesEnabled = Boolean.parseBoolean(configDao.getValue("security.features.enabled"));
+        if (securityFeaturesEnabled) {
+            responseEvent.setClientIp(event.getClientIp());
+        }
         return responseEvent;
     }
 
