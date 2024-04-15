@@ -85,6 +85,9 @@ public class EventVO implements Event {
     @Column(name = "display", updatable = true, nullable = false)
     protected boolean display = true;
 
+    @Column(name = "client_ip")
+    private String clientIp;
+
     @Transient
     private int totalSize;
 
@@ -242,6 +245,15 @@ public class EventVO implements Event {
 
     public void setDisplay(boolean display) {
         this.display = display;
+    }
+
+    @Override
+    public String getClientIp() {
+        return clientIp;
+    }
+
+    public void setClientIp(String clientIp) {
+        this.clientIp = clientIp;
     }
 
     @Override

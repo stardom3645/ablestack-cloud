@@ -38,6 +38,7 @@ import com.cloud.dc.Pod;
 import com.cloud.dc.StorageNetworkIpRange;
 import com.cloud.dc.Vlan;
 import com.cloud.domain.Domain;
+import com.cloud.org.Cluster;
 import com.cloud.host.Host;
 import com.cloud.network.GuestVlan;
 import com.cloud.network.IpAddress;
@@ -416,8 +417,16 @@ public class EventTypes {
     public static final String EVENT_SECURITY_GROUP_REMOVE = "SG.REMOVE";
     public static final String EVENT_SECURITY_GROUP_UPDATE = "SG.UPDATE";
 
+    // Cluster
+    public static final String EVENT_CLUSTER_ADD = "CLUSTER.ADD";
+    public static final String EVENT_CLUSTER_UPDATE = "CLUSTER.UPDATE";
+    public static final String EVENT_CLUSTER_DELETE = "CLUSTER.DELETE";
+
     // Host
     public static final String EVENT_HOST_RECONNECT = "HOST.RECONNECT";
+    public static final String EVENT_HOST_ADD = "HOST.ADD";
+    public static final String EVENT_HOST_UPDATE = "HOST.UPDATE";
+    public static final String EVENT_HOST_DELETE = "HOST.DELETE";
 
     // Host on Degraded ResourceState
     public static final String EVENT_DECLARE_HOST_DEGRADED = "HOST.DECLARE.DEGRADED";
@@ -924,6 +933,11 @@ public class EventTypes {
         entityEventDetails.put(EVENT_NETWORK_OFFERING_REMOVE, NetworkOffering.class);
         entityEventDetails.put(EVENT_NETWORK_OFFERING_DELETE, NetworkOffering.class);
 
+        // Cluster
+        entityEventDetails.put(EVENT_CLUSTER_ADD, Cluster.class);
+        entityEventDetails.put(EVENT_CLUSTER_UPDATE, Cluster.class);
+        entityEventDetails.put(EVENT_CLUSTER_DELETE, Cluster.class);
+
         // Pods
         entityEventDetails.put(EVENT_POD_CREATE, Pod.class);
         entityEventDetails.put(EVENT_POD_EDIT, Pod.class);
@@ -965,6 +979,9 @@ public class EventTypes {
 
         // Host
         entityEventDetails.put(EVENT_HOST_RECONNECT, Host.class);
+        entityEventDetails.put(EVENT_HOST_ADD, Host.class);
+        entityEventDetails.put(EVENT_HOST_UPDATE, Host.class);
+        entityEventDetails.put(EVENT_HOST_DELETE, Host.class);
 
         // Host Out-of-band management
         entityEventDetails.put(EVENT_HOST_OUTOFBAND_MANAGEMENT_ENABLE, Host.class);

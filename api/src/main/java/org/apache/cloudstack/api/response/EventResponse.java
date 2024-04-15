@@ -97,6 +97,10 @@ public class EventResponse extends BaseResponse implements ControlledViewEntityR
     @Param(description = "whether the event has been archived or not")
     private Boolean archived;
 
+    @SerializedName(ApiConstants.CLIENT_IP)
+    @Param(description = "request client ip address")
+    private String clientIp;
+
     public void setId(String id) {
         this.id = id;
     }
@@ -180,5 +184,9 @@ public class EventResponse extends BaseResponse implements ControlledViewEntityR
 
     public void setArchived(Boolean archived) {
         this.archived = archived;
+    }
+
+    public void setClientIp(String clientIp) {
+        this.clientIp = clientIp;
     }
 }
