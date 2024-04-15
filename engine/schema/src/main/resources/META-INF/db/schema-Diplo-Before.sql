@@ -76,48 +76,4 @@ BEGIN
 CALL `cloud`.`IDEMPOTENT_ADD_COLUMN`('cloud.alert', 'show_alert', 'tinyint(1) NOT NULL DEFAULT 1 COMMENT "show popup alert" ');
 CALL `cloud`.`IDEMPOTENT_ADD_COLUMN`('cloud.event', 'client_ip', 'varchar(32) DEFAULT NULL COMMENT "If the security features is enabled, set the client address of the request" ');
 
-DROP VIEW IF EXISTS `cloud`.`event_view`;
-CREATE VIEW `cloud`.`event_view` AS
-    SELECT
-        event.id,
-        event.uuid,
-        event.type,
-        event.state,
-        event.description,
-        event.resource_id,
-        event.resource_type,
-        event.created,
-        event.level,
-        event.parameters,
-        event.start_id,
-        eve.uuid start_uuid,
-        event.user_id,
-        event.archived,
-        event.display,
-        event.client_ip,
-        user.username user_name,
-        account.id account_id,
-        account.uuid account_uuid,
-        account.account_name account_name,
-        account.type account_type,
-        domain.id domain_id,
-        domain.uuid domain_uuid,
-        domain.name domain_name,
-        domain.path domain_path,
-        projects.id project_id,
-        projects.uuid project_uuid,
-        projects.name project_name
-    FROM
-        `cloud`.`event`
-            INNER JOIN
-        `cloud`.`account` ON event.account_id = account.id
-            INNER JOIN
-        `cloud`.`domain` ON event.domain_id = domain.id
-            INNER JOIN
-        `cloud`.`user` ON event.user_id = user.id
-            LEFT JOIN
-        `cloud`.`projects` ON projects.project_account_id = event.account_id
-            LEFT JOIN
-        `cloud`.`event` eve ON event.start_id = eve.id;
-
 UPDATE IGNORE `cloud`.`configuration` SET `value`="PLAINTEXT,oauth2" WHERE `name`="user.authenticators.exclude";
