@@ -45,6 +45,7 @@ import org.apache.cloudstack.api.AddBaremetalRctCmd;
 import org.apache.cloudstack.api.DeleteBaremetalRctCmd;
 import org.apache.cloudstack.api.ListBaremetalRctCmd;
 import org.apache.cloudstack.utils.baremetal.BaremetalUtils;
+import org.apache.cloudstack.framework.config.dao.ConfigurationDao;
 import org.springframework.web.client.RestTemplate;
 
 import javax.inject.Inject;
@@ -71,6 +72,8 @@ public class BaremetalVlanManagerImpl extends ManagerBase implements BaremetalVl
     private UserDao userDao;
     @Inject
     private AccountManager acntMgr;
+    @Inject
+    private ConfigurationDao configDao;
 
     private Map<String, BaremetalSwitchBackend> backends;
 
@@ -243,30 +246,33 @@ public class BaremetalVlanManagerImpl extends ManagerBase implements BaremetalVl
             return true;
         }
 
-        acnt = new AccountVO();
-        acnt.setAccountName(BaremetalUtils.BAREMETAL_SYSTEM_ACCOUNT_NAME);
-        acnt.setUuid(UUID.randomUUID().toString());
-        acnt.setState(Account.State.ENABLED);
-        acnt.setDomainId(1);
-        acnt.setType(RoleType.User.getAccountType());
-        acnt.setRoleId(RoleType.User.getId());
-        acnt = acntDao.persist(acnt);
+        final boolean securityFeaturesEnabled = Boolean.parseBoolean(configDao.getValue("security.features.enabled"));
+        if (!securityFeaturesEnabled) {
+            acnt = new AccountVO();
+            acnt.setAccountName(BaremetalUtils.BAREMETAL_SYSTEM_ACCOUNT_NAME);
+            acnt.setUuid(UUID.randomUUID().toString());
+            acnt.setState(Account.State.ENABLED);
+            acnt.setDomainId(1);
+            acnt.setType(RoleType.User.getAccountType());
+            acnt.setRoleId(RoleType.User.getId());
+            acnt = acntDao.persist(acnt);
 
-        UserVO user = new UserVO();
-        user.setState(Account.State.ENABLED);
-        user.setUuid(UUID.randomUUID().toString());
-        user.setAccountId(acnt.getAccountId());
-        user.setUsername(BaremetalUtils.BAREMETAL_SYSTEM_ACCOUNT_NAME);
-        user.setFirstname(BaremetalUtils.BAREMETAL_SYSTEM_ACCOUNT_NAME);
-        user.setLastname(BaremetalUtils.BAREMETAL_SYSTEM_ACCOUNT_NAME);
-        user.setPassword(UUID.randomUUID().toString());
-        user.setSource(User.Source.UNKNOWN);
-        user = userDao.persist(user);
+            UserVO user = new UserVO();
+            user.setState(Account.State.ENABLED);
+            user.setUuid(UUID.randomUUID().toString());
+            user.setAccountId(acnt.getAccountId());
+            user.setUsername(BaremetalUtils.BAREMETAL_SYSTEM_ACCOUNT_NAME);
+            user.setFirstname(BaremetalUtils.BAREMETAL_SYSTEM_ACCOUNT_NAME);
+            user.setLastname(BaremetalUtils.BAREMETAL_SYSTEM_ACCOUNT_NAME);
+            user.setPassword(UUID.randomUUID().toString());
+            user.setSource(User.Source.UNKNOWN);
+            user = userDao.persist(user);
 
-        String[] keys = acntMgr.createApiKeyAndSecretKey(user.getId());
-        user.setApiKey(keys[0]);
-        user.setSecretKey(keys[1]);
-        userDao.update(user.getId(), user);
+            String[] keys = acntMgr.createApiKeyAndSecretKey(user.getId());
+            user.setApiKey(keys[0]);
+            user.setSecretKey(keys[1]);
+            userDao.update(user.getId(), user);
+        }
         return true;
     }
 }

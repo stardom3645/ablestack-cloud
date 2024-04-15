@@ -23,7 +23,13 @@ export default {
   icon: 'ScheduleOutlined',
   docHelp: 'adminguide/events.html',
   permission: ['listEvents'],
-  columns: ['level', 'type', 'state', 'description', 'resource', 'username', 'account', 'domain', 'created'],
+  columns: () => {
+    const fields = ['level', 'type', 'state', 'description', 'resource', 'username', 'account', 'domain', 'created']
+    if (store.getters.features.securityfeaturesenabled) {
+      fields.push('clientip')
+    }
+    return fields
+  },
   details: ['username', 'id', 'description', 'resourcetype', 'resourceid', 'state', 'level', 'type', 'account', 'domain', 'created'],
   searchFilters: ['level', 'domainid', 'account', 'keyword', 'resourcetype'],
   related: [{

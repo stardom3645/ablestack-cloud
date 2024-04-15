@@ -962,11 +962,18 @@ public class ApiServer extends ManagerBase implements HttpRequestHandler, ApiSer
             if ((signature == null) || (apiKey == null)) {
                 logger.debug("Expired session, missing signature, or missing apiKey -- ignoring request. Signature: " + signature + ", apiKey: " + apiKey);
                 if (ApiServer.SecurityFeaturesEnabled.value()) {
-                    String accountName = "admin";
                     Long domainId = 1L;
-                    Account userAcct = ApiDBUtils.findAccountByNameDomain(accountName, domainId);
-                    ActionEventUtils.onActionEvent(userAcct.getId(), userAcct.getAccountId(), domainId, EventTypes.EVENT_USER_REQUEST,
-                                                    "Bad request : reuse credentials or no signature.", new Long(0), null);
+                    if (userId == null) {
+                        String accountName = "system";
+                        Account userAcct = ApiDBUtils.findAccountByNameDomain(accountName, domainId);
+                        ActionEventUtils.onActionEvent(userAcct.getId(), userAcct.getAccountId(), domainId, EventTypes.EVENT_USER_REQUEST,
+                            "Bad request : reuse credentials or no signature.", new Long(0), null);
+                    } else {
+                        String accountName = "admin";
+                        Account userAcct = ApiDBUtils.findAccountByNameDomain(accountName, domainId);
+                        ActionEventUtils.onActionEvent(userAcct.getId(), userAcct.getAccountId(), domainId, EventTypes.EVENT_USER_REQUEST,
+                            "Bad request : reuse credentials or no signature.", userAcct.getId(), null);
+                    }
                 }
                 return false; // no signature, bad request
             }
@@ -1182,7 +1189,7 @@ public class ApiServer extends ManagerBase implements HttpRequestHandler, ApiSer
                 if (ApiSessionListener.getSessionCount() > 1) { // 존재하는 세션이 있으면 기존 세션 차단
                     ApiSessionListener.deleteAllExistSessionIds(session.getId()); // 접속하려는 세션 제외한 기존의 모든 세션 차단
                     ActionEventUtils.onActionEvent(userAcct.getId(), userAcct.getAccountId(), domainId, EventTypes.EVENT_USER_SESSION_BLOCK,
-                                                    "All previously connected sessions have been blocked.", new Long(0), null);
+                                                    "All previously connected sessions have been blocked.", userAcct.getId(), null);
                     alertMgr.sendAlert(AlertManager.AlertType.EVENT_USER_SESSION_BLOCK, 0, new Long(0), "All previously connected sessions have been blocked.", "");
                 }
             } else {

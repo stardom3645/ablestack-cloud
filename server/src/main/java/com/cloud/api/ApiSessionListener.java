@@ -20,22 +20,32 @@ import javax.servlet.annotation.WebListener;
 import javax.servlet.http.HttpSession;
 import javax.servlet.http.HttpSessionEvent;
 import javax.servlet.http.HttpSessionListener;
+
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
+import org.apache.cloudstack.managed.context.ManagedContextRunnable;
+import org.apache.cloudstack.context.CallContext;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.Date;
+import java.text.SimpleDateFormat;
 
 import com.cloud.user.Account;
 import com.cloud.event.EventTypes;
 import com.cloud.event.ActionEventUtils;
+import com.cloud.utils.concurrency.NamedThreadFactory;
 
 @WebListener
 public class ApiSessionListener implements HttpSessionListener {
     protected static Logger LOGGER = LogManager.getLogger(ApiSessionListener.class.getName());
     private static Map<String, HttpSession> sessions = new ConcurrentHashMap<>();
+    private final ScheduledExecutorService _sessionExecutor = Executors.newScheduledThreadPool(1, new NamedThreadFactory("SessionChecker"));
 
     /**
      * @return the internal adminstered session count
@@ -106,6 +116,9 @@ public class ApiSessionListener implements HttpSessionListener {
         synchronized (this) {
             HttpSession session = event.getSession();
             sessions.put(session.getId(), event.getSession());
+            if (ApiServer.SecurityFeaturesEnabled.value()) {
+                _sessionExecutor.scheduleAtFixedRate(new SessionCheckTask(session), 580, 10, TimeUnit.SECONDS);
+            }
         }
         if (LOGGER.isDebugEnabled()) {
             LOGGER.debug("Sessions count: " + getSessionCount());
@@ -114,11 +127,21 @@ public class ApiSessionListener implements HttpSessionListener {
 
     public void sessionDestroyed(HttpSessionEvent event) {
         if (ApiServer.SecurityFeaturesEnabled.value()) {
-            String accountName = "admin";
+            Long userId = CallContext.current().getCallingUserId();
             Long domainId = 1L;
-            Account userAcct = ApiDBUtils.findAccountByNameDomain(accountName, domainId);
-            ActionEventUtils.onActionEvent(userAcct.getId(), userAcct.getAccountId(), domainId, EventTypes.EVENT_USER_SESSION_DESTROY,
-                "Session destroyed by Id : " + event.getSession().getId(), new Long(0), null);
+            Date acsTime = new Date(event.getSession().getLastAccessedTime());
+            SimpleDateFormat date = new SimpleDateFormat("dd MMM yyyy HH:mm:ss");
+            if (userId == null) {
+                String accountName = "system";
+                Account userAcct = ApiDBUtils.findAccountByNameDomain(accountName, domainId);
+                ActionEventUtils.onActionEvent(userAcct.getId(), userAcct.getAccountId(), domainId, EventTypes.EVENT_USER_SESSION_DESTROY,
+                    "Session destroyed by Id : " + event.getSession().getId() + ", last accessed time : " + date.format(acsTime), new Long(0), null);
+            } else {
+                String accountName = "admin";
+                Account userAcct = ApiDBUtils.findAccountByNameDomain(accountName, domainId);
+                ActionEventUtils.onActionEvent(userAcct.getId(), userAcct.getAccountId(), userAcct.getDomainId(), EventTypes.EVENT_USER_SESSION_DESTROY,
+                    "Session destroyed by Id : " + event.getSession().getId() + ", last accessed time : " + date.format(acsTime), userAcct.getId(), null);
+            }
         }
         if (LOGGER.isDebugEnabled()) {
             LOGGER.debug("Session destroyed by Id : " + event.getSession().getId() + " , session: " + event.getSession().toString() + " , source: " + event.getSource().toString() + " , event: " + event.toString());
@@ -128,6 +151,33 @@ public class ApiSessionListener implements HttpSessionListener {
         }
         if (LOGGER.isDebugEnabled()) {
             LOGGER.debug("Sessions count: " + getSessionCount());
+        }
+    }
+
+    protected class SessionCheckTask extends ManagedContextRunnable {
+        HttpSession _session;
+
+        public SessionCheckTask(HttpSession session) {
+            _session = session;
+        }
+
+        @Override
+        protected void runInContext() {
+            try {
+                if (_session.getAttribute("username") != null) {
+                    Date acsTime = new Date(_session.getLastAccessedTime());
+                    Date curTime = new Date();
+                    long difTime = (curTime.getTime() - acsTime.getTime())/1000;
+                    if (difTime >= 600) {
+                        sessions.get(_session.getId()).invalidate();
+                        sessions.remove(_session.getId());
+                    }
+                }
+            } catch (IllegalStateException e) {
+                if (LOGGER.isTraceEnabled()) {
+                    LOGGER.trace(String.format("Failed to session timeout check session Id : ", _session.getId()));
+                }
+            }
         }
     }
 }
