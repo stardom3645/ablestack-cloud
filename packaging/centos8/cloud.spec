@@ -323,6 +323,7 @@ install -D framework/spring/module/target/cloud-framework-spring-module-%{_maven
 
 install -D packaging/centos8/cloud-ipallocator.rc ${RPM_BUILD_ROOT}%{_initrddir}/%{name}-ipallocator
 install -D packaging/centos8/cloud.limits ${RPM_BUILD_ROOT}%{_sysconfdir}/security/limits.d/cloud
+install -D packaging/systemd/mold-monitoring.service ${RPM_BUILD_ROOT}%{_unitdir}/mold-monitoring.service
 install -D packaging/systemd/cloudstack-management.service ${RPM_BUILD_ROOT}%{_unitdir}/%{name}-management.service
 install -D packaging/systemd/cloudstack-management.default ${RPM_BUILD_ROOT}%{_sysconfdir}/default/%{name}-management
 install -D server/target/conf/cloudstack-sudoers ${RPM_BUILD_ROOT}%{_sysconfdir}/sudoers.d/%{name}-management

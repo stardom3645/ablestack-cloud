@@ -1,0 +1,11 @@
+[Unit]
+Description=Mold Monitoring Service
+After=syslog.target network.target cloudstack-management.service mariadb.service  mysqld.service mysql.service
+Wants=cloudstack-management.service mariadb.service mysqld.service mysql.service
+
+[Service]
+Type=simple
+ExecStart=/usr/share/cloudstack-common/scripts/security/moldmonitoring.sh
+
+[Install]
+WantedBy=multi-user.target
