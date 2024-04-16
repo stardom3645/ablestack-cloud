@@ -1459,8 +1459,10 @@ public class AccountManagerImpl extends ManagerBase implements AccountManager, M
             if (!beforeUsername.equalsIgnoreCase(user.getUsername())) {
                 msg.append("; username = from '" + beforeUsername + "' to '" + user.getUsername()+ "'");
             }
-            if (beforeEmail.equalsIgnoreCase(user.getEmail())) {
+            if (beforeEmail != null && beforeEmail.equalsIgnoreCase(user.getEmail())) {
                 msg.append("; email = from '" + beforeEmail + "' to '" + user.getEmail()+ "'");
+            } else if (beforeEmail == null && user.getEmail() != null) {
+                msg.append("; email = '" + user.getEmail()+ "'");
             }
             if (!beforeFirstname.equalsIgnoreCase(user.getFirstname())) {
                 msg.append("; firstname = from '" + beforeFirstname + "' to '" + user.getFirstname()+ "'");
@@ -1468,8 +1470,10 @@ public class AccountManagerImpl extends ManagerBase implements AccountManager, M
             if (!beforeLastname.equalsIgnoreCase(user.getLastname())) {
                 msg.append("; lastname = from '" + beforeLastname + "' to '" + user.getLastname()+ "'");
             }
-            if (!beforeTimezone.equalsIgnoreCase(user.getTimezone())) {
+            if (beforeTimezone != null && !beforeTimezone.equalsIgnoreCase(user.getTimezone())) {
                 msg.append("; timezone = from '" + beforeTimezone + "' to '" + user.getTimezone()+ "'");
+            } else if (beforeTimezone == null && user.getTimezone() != null) {
+                msg.append("; timezone = '" + user.getTimezone()+ "'");
             }
         }
         ActionEventUtils.onActionEvent(user.getId(), user.getAccountId(), getAccount(user.getAccountId()).getDomainId(), EventTypes.EVENT_USER_UPDATE, msg.toString(), user.getId(), ApiCommandResourceType.User.toString());
