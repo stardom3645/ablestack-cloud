@@ -1461,7 +1461,7 @@ public class AccountManagerImpl extends ManagerBase implements AccountManager, M
             }
             if (beforeEmail.equalsIgnoreCase(user.getEmail())) {
                 msg.append("; email = from '" + beforeEmail + "' to '" + user.getEmail()+ "'");
-            } 
+            }
             if (!beforeFirstname.equalsIgnoreCase(user.getFirstname())) {
                 msg.append("; firstname = from '" + beforeFirstname + "' to '" + user.getFirstname()+ "'");
             }
