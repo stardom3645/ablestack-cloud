@@ -172,8 +172,8 @@ export default {
     showUuid (record, index) {
       const filteredItem = this.securityChecks.find(item => item.id === index.id)
       const key = String(index.id)
-      if (filteredItem && filteredItem.checkfailedlist) {
-        const failedList = filteredItem.checkfailedlist
+      if (filteredItem && filteredItem.details) {
+        const failedList = filteredItem.details
         const updatedValues = failedList.split(', ').filter(item => item.trim() !== '')
         // index.id를 문자열로 변환하여 사용
         this.securityChecksResultMap[key] = updatedValues
