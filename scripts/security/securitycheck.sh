@@ -100,10 +100,11 @@ if [ -e "$File" ]; then
     if [ "$result" -ne "0" ]; then
         echo "mold process,false"
     else 
-        systemctl status mold-monitoring.service | grep -i running $> /dev/null
+        systemctl status mold-monitoring.service | grep FAILURE $> /dev/null
         if [[ $? == 0 ]]; then
-            echo "mold process,true"
-        else
             echo "mold process,false"
+        else
+            echo "mold process,true"
+        fi
     fi  
 fi
