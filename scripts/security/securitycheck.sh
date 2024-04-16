@@ -28,13 +28,13 @@ if [ -e "$File" ]; then
     systemctl restart mold-monitoring.service
     result=$?
     if [ "$result" -ne "0" ]; then
-        echo "mold service,false"
+        echo "mold.service,false"
     else 
         systemctl status mold-monitoring.service | grep FAILURE
         if [[ $? == 0 ]]; then
-            echo "mold service,false"
+            echo "mold.service,false"
         else
-            echo "mold service,true"
+            echo "mold.service,true"
         fi
     fi  
 fi
