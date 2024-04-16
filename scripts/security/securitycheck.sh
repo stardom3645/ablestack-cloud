@@ -22,7 +22,6 @@
 
 jarfile='/usr/share/cloudstack-common/lib/'
 
-
 # utils 55 count
 utils_cmd=${jarfile}junit-4.13.2.jar:${jarfile}hamcrest-all-1.3.jar:${jarfile}cloudstack-utils-test.jar:${jarfile}cloudstack-utils.jar:${jarfile}commons-lang-2.6.jar:${jarfile}commons-io-2.8.0.jar:${jarfile}bcprov-jdk15on-1.70.jar:${jarfile}guava-testlib-18.0.jar:${jarfile}guava-31.1-jre.jar:${jarfile}httpcore-4.4.16.jar:${jarfile}httpclient-4.5.14.jar:${jarfile}mockito-core-3.12.4.jar:${jarfile}byte-buddy-1.10.5.jar:${jarfile}byte-buddy-agent-1.10.5.jar:${jarfile}commons-validator-1.6.jar:${jarfile}commons-net-3.7.2.jar:${jarfile}commons-lang3-3.11.jar:${jarfile}java-ipv6-0.17.jar:${jarfile}objenesis-3.2.jar:${jarfile}commons-collections4-4.4.jar:${jarfile}commons-collections-3.2.2.jar:${jarfile}spring-core-5.3.26.jar:${jarfile}commons-logging-1.2.jar:${jarfile}gson-1.7.2.jar:${jarfile}jackson-core-2.13.3.jar:${jarfile}jackson-databind-2.13.3.jar:${jarfile}jackson-annotations-2.13.3.jar:${jarfile}trilead-ssh2-1.0.0-build217.jar:${jarfile}joda-time-2.12.5.jar:${jarfile}jsch-0.1.55.jar:${jarfile}commons-compress-1.21.jar:${jarfile}reflections-0.10.2.jar:${jarfile}commons-httpclient-3.1.jar:${jarfile}xercesImpl-2.12.2.jar:${jarfile}nashorn-core-15.3.jar:${jarfile}activation-1.1.1.jar:${jarfile}mail-1.5.0-b01.jar:${jarfile}bcpkix-jdk15on-1.70.jar:${jarfile}bctls-jdk15on-1.70.jar:${jarfile}bcutil-jdk15on-1.70.jar:${jarfile}aws-java-sdk-core-1.12.439.jar:${jarfile}junit-dataprovider-1.13.1.jar:${jarfile}javax.servlet-api-4.0.1.jar:${jarfile}spring-test-5.3.26.jar
 
@@ -92,3 +91,20 @@ do
     esac
 
 done
+
+# process check
+File=/etc/cloudstack/management/key.enc
+if [ -e "$File" ]; then  
+    systemctl restart mold-monitoring.service
+    result=$?
+    if [ "$result" -ne "0" ]; then
+        echo "mold process,false"
+    else 
+        systemctl status mold-monitoring.service | grep FAILURE $> /dev/null
+        if [[ $? == 0 ]]; then
+            echo "mold process,false"
+        else
+            echo "mold process,true"
+        fi
+    fi  
+fi

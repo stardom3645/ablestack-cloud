@@ -906,6 +906,7 @@ CREATE VIEW `cloud`.`event_view` AS
         event.user_id,
         event.archived,
         event.display,
+        event.client_ip,
         user.username user_name,
         account.id account_id,
         account.uuid account_uuid,

@@ -1453,23 +1453,24 @@ public class AccountManagerImpl extends ManagerBase implements AccountManager, M
         _userDao.update(user.getId(), user);
         StringBuilder msg = new StringBuilder("User update: ");
         msg.append("id = " + user.getId());
-        if (!beforeUsername.equalsIgnoreCase(user.getUsername())) {
-            msg.append("; username = from '" + beforeUsername + "' to '" + user.getUsername()+ "'");
-        }
-        if (!beforeEmail.equalsIgnoreCase(user.getEmail())) {
-            msg.append("; email = from '" + beforeEmail + "' to '" + user.getEmail()+ "'");
-        }
-        if (!beforeFirstname.equalsIgnoreCase(user.getFirstname())) {
-            msg.append("; firstname = from '" + beforeFirstname + "' to '" + user.getFirstname()+ "'");
-        }
-        if (!beforeLastname.equalsIgnoreCase(user.getLastname())) {
-            msg.append("; lastname = from '" + beforeLastname + "' to '" + user.getLastname()+ "'");
-        }
-        if (!beforeTimezone.equalsIgnoreCase(user.getTimezone())) {
-            msg.append("; timezone = from '" + beforeTimezone + "' to '" + user.getTimezone()+ "'");
-        }
         if (StringUtils.isNotBlank(updateUserCmd.getPassword())) {
             msg.append("; password for the account has been changed");
+        } else {
+            if (!beforeUsername.equalsIgnoreCase(user.getUsername())) {
+                msg.append("; username = from '" + beforeUsername + "' to '" + user.getUsername()+ "'");
+            }
+            if (beforeEmail.equalsIgnoreCase(user.getEmail())) {
+                msg.append("; email = from '" + beforeEmail + "' to '" + user.getEmail()+ "'");
+            }
+            if (!beforeFirstname.equalsIgnoreCase(user.getFirstname())) {
+                msg.append("; firstname = from '" + beforeFirstname + "' to '" + user.getFirstname()+ "'");
+            }
+            if (!beforeLastname.equalsIgnoreCase(user.getLastname())) {
+                msg.append("; lastname = from '" + beforeLastname + "' to '" + user.getLastname()+ "'");
+            }
+            if (!beforeTimezone.equalsIgnoreCase(user.getTimezone())) {
+                msg.append("; timezone = from '" + beforeTimezone + "' to '" + user.getTimezone()+ "'");
+            }
         }
         ActionEventUtils.onActionEvent(user.getId(), user.getAccountId(), getAccount(user.getAccountId()).getDomainId(), EventTypes.EVENT_USER_UPDATE, msg.toString(), user.getId(), ApiCommandResourceType.User.toString());
         return _userAccountDao.findById(user.getId());
