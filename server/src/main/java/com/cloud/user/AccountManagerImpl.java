@@ -1471,9 +1471,6 @@ public class AccountManagerImpl extends ManagerBase implements AccountManager, M
             if (!beforeTimezone.equalsIgnoreCase(user.getTimezone())) {
                 msg.append("; timezone = from '" + beforeTimezone + "' to '" + user.getTimezone()+ "'");
             }
-            if (StringUtils.isNotBlank(updateUserCmd.getPassword())) {
-                msg.append("; password for the account has been changed");
-            }
         }
         ActionEventUtils.onActionEvent(user.getId(), user.getAccountId(), getAccount(user.getAccountId()).getDomainId(), EventTypes.EVENT_USER_UPDATE, msg.toString(), user.getId(), ApiCommandResourceType.User.toString());
         return _userAccountDao.findById(user.getId());
