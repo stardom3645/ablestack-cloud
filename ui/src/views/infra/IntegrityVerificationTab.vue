@@ -255,15 +255,15 @@ export default {
     },
     showUuid (record, index) {
       const filteredItem = this.integrityVerificationFinalResult.find(item => item.id === index.id)
+      const key = String(index.id)
       if (filteredItem && filteredItem.integrityverificationsfailedlist) {
         const failedList = filteredItem.integrityverificationsfailedlist
         const updatedValues = failedList.split(', ').filter(item => item.trim() !== '')
         // index.id를 문자열로 변환하여 사용
-        const key = String(index.id)
         this.integrityVerificationFinalResultTwoMap[key] = updatedValues
       } else {
         // 해당 인덱스의 아이템을 찾지 못한 경우 빈 배열 설정
-        this.$set(this.integrityVerificationFinalResultTwoMap, record.id, [])
+        this.integrityVerificationFinalResultTwoMap[key] = []
       }
     },
     fetchData () {
