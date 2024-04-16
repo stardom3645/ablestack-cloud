@@ -32,10 +32,8 @@ PoolName=
 PoolAuthUserName=
 PoolAuthSecret=
 HostIP=
-SourceHostIP=
 UUIDList=
-MSTime=
-SuspectTime=
+interval=
 
 while getopts 'p:n:s:h:i:u:t:d:' OPTION
 do
@@ -52,17 +50,11 @@ do
   h)
      HostIP="$OPTARG"
      ;;
-  i)
-     SourceHostIP="$OPTARG"
-     ;;
   u)
      UUIDList="$OPTARG"
      ;;
   t)
-     MSTime="$OPTARG"
-     ;;
-  d)
-     SuspectTime="$OPTARG"
+     interval="$OPTARG"
      ;;
   *)
      help
@@ -74,63 +66,34 @@ if [ -z "$PoolName" ]; then
   exit 2
 fi
 
-if [ -z "$SuspectTime" ]; then
-  exit 2
-fi
+# if [ -z "$SuspectTime" ]; then
+#   exit 2
+# fi
 
 # First check: heartbeat file
-getHbTime=$(rbd -p $PoolName --id $PoolAuthUserName image-meta get MOLD-HB $HostIP)
-diff=$(expr $(date +%s) - $getHbTime)
+# getHbTime=$(rbd -p $PoolName --id $PoolAuthUserName image-meta get MOLD-HB $HostIP)
+# diff=$(expr $(date +%s) - $getHbTime)
 
-if [ $diff -le 90 ]; then
-    echo "=====> ALIVE <====="
-    exit 0
-fi
+# if [ $diff -le $interval ]; then
+#     echo "### [HOST STATE : ALIVE] ###"
+#     exit 0
+# fi
 
 if [ -z "$UUIDList" ]; then
-    echo "=====> Considering host as DEAD due to empty UUIDList <======"
+    echo " ### [HOST STATE : DEAD] Volume UUID list is empty => Considered host down ###"
     exit 0
 fi
 
 # Second check: disk activity check
-lastestUUIDList=
-for UUID in $(echo $UUIDList | sed 's/,/ /g'); do
-    time=$(rbd -p $PoolName info $UUID --id $PoolAuthUserName | grep modify_timestamp)
-    time=${time#*modify_timestamp: }
-    time=$(date -d "$time" +%s)
-    lastestUUIDList+="${time}\n"
+for uuid in $(echo $UUIDList | sed 's/,/ /g'); do
+    echo $uuid
+    acTime=$(rbd -p $PoolName --id $PoolAuthUserName image-meta get MOLD-AC $uuid)
+    if [ $? -gt 0 ] && [ -z "$acTime" ]; then
+        echo "### [HOST STATE : DEAD] Unable to confirm normal activity of volume image list => Considered host down###"
+        exit 2
+    fi
 done
 
-latestUpdateTime=$(echo -e $lastestUUIDList 2> /dev/null | sort -nr | head -1)
-obj=$(rbd -p $PoolName ls --id $PoolAuthUserName | grep MOLD-AC)
-if [ $? -gt 0 ]; then
-    rbd -p $PoolName create --size 1 --id $PoolAuthUserName MOLD-AC
-    rbd -p $PoolName --id $PoolAuthUserName image-meta set MOLD-AC $HostIP $SuspectTime:$latestUpdateTime:$MSTime
-    if [[ $latestUpdateTime -gt $SuspectTime ]]; then
-        echo "=====> ALIVE <====="
-    else
-        echo "=====> Considering host as DEAD due to file [RBD pool] does not exists and condition [latestUpdateTime -gt SuspectTime] has not been satisfied. <======"
-    fi
-else
-    acTime=$(rbd -p $PoolName --id $PoolAuthUserName image-meta get MOLD-AC $HostIP)
-    arrTime=(${acTime//:/ })
-    lastSuspectTime=${arrTime[0]}
-    lastUpdateTime=${arrTime[1]}
-    rbd -p $PoolName --id $PoolAuthUserName image-meta set MOLD-AC $HostIP $SuspectTime:$latestUpdateTime:$MSTime
-    suspectTimeDiff=$(expr $SuspectTime - $lastSuspectTime)
-    if [ $suspectTimeDiff -lt 0 ]; then
-        if [[ $latestUpdateTime -gt $SuspectTime ]]; then
-            echo "=====> ALIVE <====="
-        else
-            echo "=====> Considering host as DEAD due to file [RBD pool] exist, condition [suspectTimeDiff -lt 0] was satisfied and [latestUpdateTime -gt SuspectTime] has not been satisfied. <======"
-        fi
-    else
-        if [[ $latestUpdateTime -gt $lastUpdateTime ]]; then
-            echo "=====> ALIVE <====="
-        else
-            echo "=====> Considering host as DEAD due to file [RBD pool] exist and conditions [suspectTimeDiff -lt 0] and [latestUpdateTime -gt SuspectTime] have not been satisfied. <======"
-        fi
-    fi
-fi
+echo "=====> ALIVE <====="
 
 exit 0

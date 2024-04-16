@@ -94,8 +94,13 @@ public class KVMHostActivityChecker extends AdapterBase implements ActivityCheck
         }
         Status hostStatus = Status.Unknown;
         Status neighbourStatus = Status.Unknown;
+        CheckOnHostCommand cmd = null;
+        HashMap<StoragePool, List<Volume>> poolVolMap = getVolumeUuidOnHost(agent);
+        for (StoragePool pool : poolVolMap.keySet()) {
+            List<Volume> volume_list = poolVolMap.get(pool);
+            cmd = new CheckOnHostCommand(agent, HighAvailabilityManager.KvmHAFenceHostIfHeartbeatFailsOnStorage.value(), volume_list);
+        }
 
-        final CheckOnHostCommand cmd = new CheckOnHostCommand(agent, HighAvailabilityManager.KvmHAFenceHostIfHeartbeatFailsOnStorage.value());
         try {
             logger.debug(String.format("Checking %s status...", agent.toString()));
             Answer answer = agentMgr.easySend(agent.getId(), cmd);
