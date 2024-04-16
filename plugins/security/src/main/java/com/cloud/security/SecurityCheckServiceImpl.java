@@ -116,12 +116,8 @@ public class SecurityCheckServiceImpl extends ManagerBase implements PluggableSe
             } else {
                 type = "Routine";
             }
-            LOGGER.info("::::::::::::;1::::::::::::::");
-            LOGGER.info(type);
             ManagementServerHostVO msHost = msHostDao.findByMsid(ManagementServerNode.getManagementServerId());
             String path = Script.findScript("scripts/security/", "securitycheck.sh");
-            LOGGER.info("::::::::::::;2::::::::::::::");
-            LOGGER.info(path);
             if (path == null) {
                 updateSecurityCheckResult(msHost.getId(), false, "", type);
                 LOGGER.error("Failed to execute security check schedule for management server:  Unable to find the securitycheck script");
@@ -139,9 +135,6 @@ public class SecurityCheckServiceImpl extends ManagerBase implements PluggableSe
                     String[] temp = line.split(",");
                     String checkName = temp[0];
                     String checkResult = temp[1];
-                    LOGGER.info("::::::::::::;3::::::::::::::");
-                    LOGGER.info(checkName);
-                    LOGGER.info(checkResult);
                     if ("false".equals(checkResult)) {
                         checkResults.add(false);
                         checkFailedList.add(checkName);
@@ -150,18 +143,10 @@ public class SecurityCheckServiceImpl extends ManagerBase implements PluggableSe
                     }
                 }
                 checkFinalResult = checkConditions(checkResults);
-                LOGGER.info("::::::::::::;4::::::::::::::");
-                LOGGER.info(checkFinalResult);
                 String checkFailedListToString = checkFailedList.stream().collect(Collectors.joining(", "));
-                LOGGER.info("::::::::::::;5::::::::::::::");
-                LOGGER.info(checkFailedListToString);
-                LOGGER.info("::::::::::::;6::::::::::::::");
-                LOGGER.info(msHost.getId());
                 updateSecurityCheckResult(msHost.getId(), checkFinalResult, checkFailedListToString, type);
                 runMode = "";
             } catch (IOException e) {
-                LOGGER.info("::::::::::::;7::::::::::::::");
-                LOGGER.info(e.toString());
                 updateSecurityCheckResult(msHost.getId(), false, "", type);
                 runMode = "";
                 LOGGER.error("Failed to execute security check schedule for management server: "+e);
@@ -266,22 +251,17 @@ public class SecurityCheckServiceImpl extends ManagerBase implements PluggableSe
                     EventTypes.EVENT_SECURITY_CHECK, "Successfully completed security check perform on the management server when operating the product", new Long(0), null, 0);
             }
         } else {
-            LOGGER.info("::::::::::::;7::::::::::::::");
             if ("Execution".equals(type)) {
-                LOGGER.info("::::::::::::;8::::::::::::::");
-                LOGGER.info(CallContext.current().getCallingUserId());
-                LOGGER.info(CallContext.current().getCallingAccountId());
                 ActionEventUtils.onCompletedActionEvent(CallContext.current().getCallingUserId(), CallContext.current().getCallingAccountId(), EventVO.LEVEL_ERROR,
-                    EventTypes.EVENT_SECURITY_CHECK, "Failed to execute security check on the management server when running the product", new Long(0), null, 0);
-                LOGGER.info("::::::::::::;9::::::::::::::");
+                    EventTypes.EVENT_SECURITY_CHECK, "Failed to execute security check on the management server when running the product", msHostId, new Long(0), null, 0);
                     alertManager.sendAlert(AlertManager.AlertType.ALERT_TYPE_MANAGMENT_NODE, 0, new Long(0), "Failed to execute security check on the management server when running the product", "");
             } else if ("Routine".equals(type)) {
                 ActionEventUtils.onCompletedActionEvent(CallContext.current().getCallingUserId(), CallContext.current().getCallingAccountId(), EventVO.LEVEL_ERROR,
-                    EventTypes.EVENT_SECURITY_CHECK, "Failed to execute security check schedule on the management server when operating the product", new Long(0), null, 0);
+                    EventTypes.EVENT_SECURITY_CHECK, "Failed to execute security check schedule on the management server when operating the product", msHostId, new Long(0), null, 0);
                 alertManager.sendAlert(AlertManager.AlertType.ALERT_TYPE_MANAGMENT_NODE, 0, new Long(0), "Failed to execute security check schedule on the management server when operating the product", "");
             } else if ("Manual".equals(type)) {
                 ActionEventUtils.onCompletedActionEvent(CallContext.current().getCallingUserId(), CallContext.current().getCallingAccountId(), EventVO.LEVEL_ERROR,
-                    EventTypes.EVENT_SECURITY_CHECK, "Failed to execute security check on the management server when operating the product", new Long(0), null, 0);
+                    EventTypes.EVENT_SECURITY_CHECK, "Failed to execute security check on the management server when operating the product", msHostId, new Long(0), null, 0);
                 alertManager.sendAlert(AlertManager.AlertType.ALERT_TYPE_MANAGMENT_NODE, 0, new Long(0), "Failed to execute security check on the management server when operating the product", "");
             }
         }
