@@ -116,8 +116,12 @@ public class SecurityCheckServiceImpl extends ManagerBase implements PluggableSe
             } else {
                 type = "Routine";
             }
+            LOGGER.info("::::::::::::;1::::::::::::::");
+            LOGGER.info(type);
             ManagementServerHostVO msHost = msHostDao.findByMsid(ManagementServerNode.getManagementServerId());
             String path = Script.findScript("scripts/security/", "securitycheck.sh");
+            LOGGER.info("::::::::::::;2::::::::::::::");
+            LOGGER.info(path);
             if (path == null) {
                 updateSecurityCheckResult(msHost.getId(), false, "", type);
                 LOGGER.error("Failed to execute security check schedule for management server:  Unable to find the securitycheck script");
@@ -135,6 +139,9 @@ public class SecurityCheckServiceImpl extends ManagerBase implements PluggableSe
                     String[] temp = line.split(",");
                     String checkName = temp[0];
                     String checkResult = temp[1];
+                    LOGGER.info("::::::::::::;3::::::::::::::");
+                    LOGGER.info(checkName);
+                    LOGGER.info(checkResult);
                     if ("false".equals(checkResult)) {
                         checkResults.add(false);
                         checkFailedList.add(checkName);
@@ -143,10 +150,16 @@ public class SecurityCheckServiceImpl extends ManagerBase implements PluggableSe
                     }
                 }
                 checkFinalResult = checkConditions(checkResults);
+                LOGGER.info("::::::::::::;4::::::::::::::");
+                LOGGER.info(checkFinalResult);
                 String checkFailedListToString = checkFailedList.stream().collect(Collectors.joining(", "));
+                LOGGER.info("::::::::::::;5::::::::::::::");
+                LOGGER.info(checkFailedListToString);
                 updateSecurityCheckResult(msHost.getId(), checkFinalResult, checkFailedListToString, type);
                 runMode = "";
             } catch (IOException e) {
+                LOGGER.info("::::::::::::;6::::::::::::::");
+                LOGGER.info(e.toString());
                 updateSecurityCheckResult(msHost.getId(), false, "", type);
                 runMode = "";
                 LOGGER.error("Failed to execute security check schedule for management server: "+e);
