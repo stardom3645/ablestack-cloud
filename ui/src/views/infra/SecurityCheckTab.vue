@@ -36,7 +36,7 @@
         <a-table
           style="margin: 10px 0;"
           :columns="innerColumns"
-          :dataSource="securityChecksResult"
+          :dataSource="securityChecksResultMap[record.id] || []"
           :pagination="false"
           :bordered="true"
           :rowKey="record.id">
@@ -84,6 +84,7 @@ export default {
       total: 0,
       securityChecks: [],
       securityChecksResult: [],
+      securityChecksResultMap: {},
       listValue: [],
       defaultPagination: false,
       columns: [],
@@ -172,6 +173,18 @@ export default {
       this.securityChecksResult = this.securityChecks.filter(item => item.id === index.id) || []
       const failedList = index.details
       this.securityChecksResult = failedList.split(', ').filter(item => item.trim() !== '')
+
+      const filteredItem = this.securityChecks.find(item => item.id === index.id)
+      if (filteredItem && filteredItem.checkfailedlist) {
+        const failedList = filteredItem.checkfailedlist
+        const updatedValues = failedList.split(', ').filter(item => item.trim() !== '')
+        // index.id를 문자열로 변환하여 사용
+        const key = String(index.id)
+        this.securityChecksResultMap[key] = updatedValues
+      } else {
+        // 해당 인덱스의 아이템을 찾지 못한 경우 빈 배열 설정
+        this.$set(this.securityChecksResultMap, record.id, [])
+      }
     },
     fetchData () {
       const params = {}
