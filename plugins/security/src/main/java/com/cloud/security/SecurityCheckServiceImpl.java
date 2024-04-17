@@ -127,7 +127,10 @@ public class SecurityCheckServiceImpl extends ManagerBase implements PluggableSe
             }
             boolean securityFeaturesEnabled = Boolean.parseBoolean(configDao.getValue("security.features.enabled"));
             if (securityFeaturesEnabled && !type.equalsIgnoreCase("Execution")) {
-                Script.runSimpleBashScript("systemctl restart mold-monitoring");
+                int result = Script.runSimpleBashScriptForExitValue("systemctl restart mold-monitoring");
+                if (result != 0) {
+                    LOGGER.error("Failed to execute command systemctl restart mold-monitoring");
+                }
             }
             ProcessBuilder processBuilder = new ProcessBuilder("sh", path);
             Process process = null;
@@ -200,7 +203,10 @@ public class SecurityCheckServiceImpl extends ManagerBase implements PluggableSe
         }
         boolean securityFeaturesEnabled = Boolean.parseBoolean(configDao.getValue("security.features.enabled"));
         if (securityFeaturesEnabled) {
-            Script.runSimpleBashScript("systemctl restart mold-monitoring");
+            int result = Script.runSimpleBashScriptForExitValue("systemctl restart mold-monitoring");
+            if (result != 0) {
+                LOGGER.error("Failed to execute command systemctl restart mold-monitoring");
+            }
         }
         ProcessBuilder processBuilder = new ProcessBuilder("sh", path);
         Process process = null;
