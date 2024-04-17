@@ -29,7 +29,6 @@ import com.cloud.cluster.ClusterNodeLeftEventArgs;
 import com.cloud.cluster.ManagementServerHostVO;
 import com.cloud.cluster.dao.ManagementServerHostDao;
 import com.cloud.utils.component.AdapterBase;
-import com.cloud.utils.script.Script;
 import com.cloud.utils.events.EventArgs;
 import com.cloud.utils.events.SubscriptionMgr;
 
