@@ -42,7 +42,7 @@
             :filterOption="(input, option) => {
               return option.children[0].children.toLowerCase().indexOf(input.toLowerCase()) >= 0
             }"
-            :placeholder="'클러스터 선택'"
+            :placeholder="$t('placeholder.dr.cluster.cluster.selection')"
             >
           <a-select-option v-for="(opt, optIndex) in this.drCluster" :key="optIndex">
             {{ opt.name }} {{ opt.version }}
@@ -61,7 +61,7 @@
             :filterOption="(input, option) => {
               return option.children[0].children.toLowerCase().indexOf(input.toLowerCase()) >= 0
             }"
-            :placeholder="'컴퓨트 오퍼링 선택'"
+            :placeholder="$t('placeholder.dr.cluster.compute.offering.selection')"
         >
           <a-select-option v-for="(opt, optIndex) in this.fakeOfferings" :key="optIndex">
             {{ opt.name }} {{ opt.version }}
@@ -80,7 +80,7 @@
             :filterOption="(input, option) => {
               return option.children[0].children.toLowerCase().indexOf(input.toLowerCase()) >= 0
             }"
-            :placeholder="'네트워크 선택'"
+            :placeholder="$t('placeholder.dr.cluster.network.selection')"
         >
           <a-select-option v-for="(opt, optIndex) in this.fakeNetworks" :key="optIndex">
             {{ opt.name }} {{ opt.version }}
@@ -88,15 +88,8 @@
         </a-select>
       </a-form-item>
 
-      <a-form-item name="haenable" ref="haenable">
-        <template #label>
-          <tooltip-label :title="'사전 볼륨 미러링'" :tooltip="'가상머신 생성전에 먼저 볼륨 미러링을 실행합니다.'"/>
-        </template>
-        <a-switch v-model:checked="form.haenable" />
-      </a-form-item>
-
       <div :span="24" class="action-button">
-        <a-button @click="() => $emit('close-action')">{{ $t('label.cancel') }}</a-button>
+        <a-button @click="cancel">{{ $t('label.cancel') }}</a-button>
         <a-button @click="handleSubmit" ref="submit" type="primary">{{ $t('label.ok') }}</a-button>
       </div>
 
@@ -253,6 +246,9 @@ export default {
         })
       })
     },
+    cancel () {
+      this.$emit('cancel')
+    },
     handleRemove (file) {
       const index = this.fileList.indexOf(file)
       const newFileList = this.fileList.slice()
@@ -290,14 +286,6 @@ export default {
 </script>
 
 <style scoped lang="scss">
-.form {
-
-  width: 80vw;
-
-  @media (min-width: 700px) {
-    width: 450px;
-  }
-}
 
 .required {
   color: #ff0000;

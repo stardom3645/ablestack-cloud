@@ -16,6 +16,11 @@
 // under the License.
 
 <template>
+  <a-alert v-if="drTestSteps[currentStep].name === 'start'" style="margin-bottom: 5px" type="warning" show-icon>
+    <template #message>
+      <span v-html="$t('message.warning.dr.mirroring.test.vm.step.start')" />
+    </template>
+  </a-alert>
   <div class="form">
     <a-steps
       ref="zoneStep"
@@ -23,7 +28,7 @@
       size="small"
       :current="currentStep">
       <a-step
-        v-for="(item, index) in zoneSteps"
+        v-for="(item, index) in drTestSteps"
         :key="item.title"
         :title="$t(item.title)"
         :ref="`step${index}`">
@@ -31,13 +36,13 @@
     </a-steps>
     <div>
       <dr-wizard-start-step
-          v-if="zoneSteps[currentStep].name === 'type'"
+          v-if="drTestSteps[currentStep].name === 'start'"
           @nextPressed="nextPressed"
           @fieldsChanged="onFieldsChanged"
           :prefillContent="zoneConfig"
       />
       <dr-wizard-running-step
-        v-else-if="zoneSteps[currentStep].name === 'coreType'"
+        v-else-if="drTestSteps[currentStep].name === 'coreType'"
         @nextPressed="nextPressed"
         @backPressed="backPressed"
         @fieldsChanged="onFieldsChanged"
@@ -63,24 +68,12 @@ import { mixinDevice } from '@/utils/mixin.js'
 import DrWizardLaunch from '@/views/compute/dr/DrWizardLaunch.vue'
 import DrWizardStartStep from '@/views/compute/dr/DrWizardStartStep.vue'
 import DrWizardRunningStep from '@/views/compute/dr/DrWizardRunningStep.vue'
-import ZoneWizardZoneTypeStep from '@/views/infra/zone/ZoneWizardZoneTypeStep.vue'
-import ZoneWizardCoreZoneTypeStep from '@/views/infra/zone/ZoneWizardCoreZoneTypeStep.vue'
-import ZoneWizardZoneDetailsStep from '@/views/infra/zone/ZoneWizardZoneDetailsStep.vue'
-import ZoneWizardNetworkSetupStep from '@/views/infra/zone/ZoneWizardNetworkSetupStep.vue'
-import ZoneWizardAddResources from '@/views/infra/zone/ZoneWizardAddResources.vue'
-import ZoneWizardLaunchZone from '@/views/infra/zone/ZoneWizardLaunchZone.vue'
 
 export default {
   components: {
     DrWizardStartStep,
     DrWizardLaunch,
-    DrWizardRunningStep,
-    ZoneWizardZoneTypeStep,
-    ZoneWizardCoreZoneTypeStep,
-    ZoneWizardZoneDetailsStep,
-    ZoneWizardNetworkSetupStep,
-    ZoneWizardAddResources,
-    ZoneWizardLaunchZone
+    DrWizardRunningStep
   },
   mixins: [mixinDevice],
   data () {
@@ -99,7 +92,7 @@ export default {
       },
       steps: [
         {
-          name: 'type',
+          name: 'start',
           title: 'label.start',
           step: [],
           description: this.$t('message.select.zone.description'),
@@ -117,7 +110,7 @@ export default {
     }
   },
   computed: {
-    zoneSteps () {
+    drTestSteps () {
       var steps = [...this.steps]
       steps.splice(1, 0, this.coreTypeStep)
       return steps
@@ -165,7 +158,7 @@ export default {
       this.onCloseAction()
     },
     onStepError (step, launchData) {
-      this.currentStep = this.zoneSteps.findIndex(item => item.step.includes(step))
+      this.currentStep = this.drTestSteps.findIndex(item => item.step.includes(step))
       this.stepChild = step
       this.launchData = launchData
       this.launchZone = false
@@ -174,7 +167,7 @@ export default {
     onLaunchZone () {
       this.stepFixError = false
       this.launchZone = true
-      this.currentStep = this.zoneSteps.findIndex(item => item.step.includes('launchZone'))
+      this.currentStep = this.drTestSteps.findIndex(item => item.step.includes('launchZone'))
     }
   }
 }
@@ -227,6 +220,11 @@ export default {
     vertical-align: center;
     padding: 8px;
     padding-top: 16px;
+  }
+
+  .ant-alert-warning {
+    border: 1px solid #ffe58f;
+    background-color: #fffbe6;
   }
 
   .steps-action {

@@ -53,14 +53,6 @@
           />
         </a-form-item>
         <a-form-item name="apikey" ref="apikey" :label="$t('label.apikey')">
-<!--          <span>-->
-<!--            <a-alert type="warning">-->
-<!--              <template #message>-->
-<!--                <span v-html="ipv6NetworkOfferingEnabled ? $t('message.offering.internet.protocol.warning') : $t('message.offering.ipv6.warning')" />-->
-<!--              </template>-->
-<!--            </a-alert>-->
-<!--            <br/>-->
-<!--          </span>-->
           <a-input
             :placeholder="temp"
             v-model:value="form.apikey"
@@ -90,20 +82,25 @@
         </a-form-item>
       </a-card>
 
-      <a-divider />
+      <a-divider v-if="showCode" />
 
-      <a-spin :spinning="spinning">
-        <a-alert :message="$t('message.disaster.recovery.cluster.connection.test.title')" :description="$t('message.disaster.recovery.cluster.connection.test.description')">
-        </a-alert>
-      </a-spin>
-      <div class="spin-state" style="margin-top: 16px">
-        <tooltip-label :title="$t('label.disaster.recovery.cluster.start.connection.test.description')"/>
-        <a-switch v-model:checked="spinning" style="margin-left: 10px"/>
+      <div v-if="showCode">
+        <template v-if="!spinTemplate">
+          <a-spin :tip="loading">
+            <a-alert :message="$t('message.disaster.recovery.cluster.connection.test.title')" :description="alertDescription" :type="info">
+            </a-alert>
+          </a-spin>
+        </template>
+        <template v-else>
+          <a-alert :message="$t('message.disaster.recovery.cluster.connection.test.title')" :description="alertDescription" :type="info">
+          </a-alert>
+        </template>
       </div>
 
       <div :span="24" class="action-button">
         <a-button @click="() => $emit('close-action')">{{ $t('label.cancel') }}</a-button>
-        <a-button @click="handleSubmit" ref="submit" type="primary">{{ $t('label.ok') }}</a-button>
+        <a-button @click="testConnCode" :disabled="buttonDisabled" type="primary">{{ $t('label.disaster.recovery.cluster.start.connection.test.description') }}</a-button>
+<!--        <a-button @click="handleSubmit" :disabled="!buttonDisabled" v-if="showCode" ref="submit" type="primary">{{ $t('label.ok') }}</a-button>-->
       </div>
 
     </a-form>
@@ -118,13 +115,16 @@ import ResourceIcon from '@/components/view/ResourceIcon'
 import TooltipLabel from '@/components/widgets/TooltipLabel.vue'
 import { axios } from '@/utils/request'
 import store from '@/store'
+import { Spin, Alert } from 'ant-design-vue'
 
 export default {
   name: 'ClusterAdd',
   components: {
     TooltipLabel,
     DedicateDomain,
-    ResourceIcon
+    ResourceIcon,
+    Spin,
+    Alert
   },
   props: {
     resource: {
@@ -146,6 +146,8 @@ export default {
   data () {
     return {
       loading: false,
+      spinTemplate: false,
+      showCode: false,
       zonesList: [],
       showDedicated: false,
       dedicatedDomainId: null,
@@ -159,7 +161,14 @@ export default {
         startip: null,
         endip: null
       },
-      fileList: []
+      fileList: [],
+      buttonDisabled: false,
+      alertDescription: this.$t('message.disaster.recovery.cluster.connection.test.description')
+    }
+  },
+  computed: {
+    testDescText () {
+      return this.showCode ? 'Disappear Code' : 'Show Code'
     }
   },
   created () {
@@ -247,6 +256,18 @@ export default {
       this.fileList = newFileList
       this.form.file = undefined
     },
+    testConnCode () {
+      this.showCode = !this.showCode
+      this.buttonDisabled = true
+    },
+    handleKeyPress (event) {
+      // Check if the button is disabled and if a keyboard key is pressed
+      if (this.buttonDisabled && event.key !== 'Tab') {
+        this.buttonDisabled = false
+        this.alertDescription = this.testDescText === 'Disappear Code' ? this.$t('message.waiting.dr.simulation.test') : this.$t('message.disaster.recovery.cluster.connection.test.description')
+        this.spinTemplate = true
+      }
+    },
     handleSubmit (e) {
       e.preventDefault()
       if (this.loading) return
@@ -262,6 +283,11 @@ export default {
           accountid: store.getters.project && store.getters.project.id ? null : store.getters.userInfo.accountid
         }
         console.log(params)
+        this.buttonDisabled = false
+        setTimeout(() => {
+          alert('sdfsdfd')
+          this.showCode = false
+        }, 3000)
         // api('addAutomationController', params).then(json => {
         //   const jobId = json.addautomationcontrollerresponse.jobid
         //   this.$pollJob({
@@ -312,6 +338,12 @@ export default {
         if (i.name === field) this.placeholder[field] = i.description
       })
     }
+  },
+  mounted () {
+    document.body.addEventListener('keydown', this.handleKeyPress)
+  },
+  beforeUnmount () {
+    document.body.removeEventListener('keydown', this.handleKeyPress)
   }
 }
 </script>
@@ -342,5 +374,11 @@ export default {
 .ant-alert-warning {
   border: 1px solid #ffe58f;
   background-color: #fffbe6;
+}
+
+.test-con-content {
+  padding: 50px;
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 4px;
 }
 </style>

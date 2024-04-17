@@ -25,8 +25,8 @@
     :rowKey="item => item.id"
     :pagination="false"
   >
+<!--    펼쳐졌을 때 정보-->
     <template #expandedRowRender="{ record, text }">
-      <slot name="actions" :nic="record" />
       <a-descriptions style="margin-top: 10px" layout="vertical" :column="1" :bordered="false" size="small">
         <a-descriptions-item :label="$t('label.id')">
           {{ record.id }}
@@ -44,6 +44,9 @@
     <template #bodyCell="{ column, text }">
       <template v-if="column.key === 'state'">
         <status :text="text ? text : ''" displayText />
+      </template>
+      <template v-if="column.key === 'actions'">
+      <slot name="actions"/>
       </template>
     </template>
   </a-table>
@@ -88,6 +91,11 @@ export default {
           key: 'name',
           title: this.$t('label.dr.mirrored.cluster.name'),
           dataIndex: 'name'
+        },
+        {
+          key: 'actions',
+          title: '',
+          width: 100
         }
       ],
       drCluster: [],

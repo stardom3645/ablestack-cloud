@@ -186,14 +186,12 @@ export default {
     },
     async handleSubmit () {
       this.processStatus = STATUS_PROCESS
-      console.log('11111')
       if (!this.stepData.stepMove) {
         this.stepData.stepMove = []
       }
       await this.stepTestDr()
     },
     async stepTestDr () {
-      console.log('22222')
       this.addStep('message.dr.simulation.test.step1', 'stepTestDr')
       try {
         if (!this.stepData.stepMove.includes('createZone')) {

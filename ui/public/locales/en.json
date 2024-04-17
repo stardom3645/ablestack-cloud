@@ -4234,8 +4234,6 @@
 "label.edit.disaster.recovery.cluster": "Edit Disaster recovery cluster",
 "placeholder.disaster.recovery.cluster.ip": "Select a Disaster recovery cluster IP",
 "placeholder.disaster.recovery.cluster.port": "Select a Disaster recovery cluster Port",
-"placeholder.disaster.recovery.cluster.aip": "Select a Disaster recovery cluster IP",
-"placeholder.disaster.recovery.cluster.bip": "Select a Disaster recovery cluster IP",
 "label.action.enable.disaster.recovery.cluster": "Enable dr cluster",
 "label.action.disable.disaster.recovery.cluster": "Disable dr cluster",
 "label.action.delete.disaster.recovery.cluster": "Delete dr cluster",

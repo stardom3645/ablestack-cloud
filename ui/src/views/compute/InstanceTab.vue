@@ -109,27 +109,35 @@
           :routerlinks="(record) => { return { displayname: '/vmsnapshot/' + record.id } }"/>
       </a-tab-pane>
       <a-tab-pane :tab="$t('label.dr')" key="disasterrecoverycluster">
+        <a-button
+          type="primary"
+          style="width: 100%; margin-bottom: 10px"
+          @click="showAddMirVMModal"
+          :loading="loadingNic"
+          :disabled="!('addNicToVirtualMachine' in $store.getters.apis)">
+          <template #icon><plus-outlined /></template> {{ $t('label.add.dr.mirroring.vm') }}
+        </a-button>
         <DRTable :resource="vm" :loading="loading">
           <template #actions="record">
             <tooltip-button
-                tooltipPlacement="bottom"
-                :tooltip="$t('label.dr.simulation.test')"
-                icon="ExperimentOutlined"
-                :disabled="!('updateVmNicIp' in $store.getters.apis)"
-                @onClick="DrSimulationTest(record)" />
+              tooltipPlacement="bottom"
+              :tooltip="$t('label.dr.simulation.test')"
+              icon="ExperimentOutlined"
+              :disabled="!('updateVmNicIp' in $store.getters.apis)"
+              @onClick="DrSimulationTest(record)" />
             <a-popconfirm
-                :title="$t('message.network.removenic')"
-                @confirm="removeNIC(record.nic)"
-                :okText="$t('label.yes')"
-                :cancelText="$t('label.no')"
+              :title="$t('message.network.removenic')"
+              @confirm="removeNIC(record.nic)"
+              :okText="$t('label.yes')"
+              :cancelText="$t('label.no')"
             >
               <tooltip-button
-                  tooltipPlacement="bottom"
-                  :tooltip="'미러링 해제'"
-                  :disabled="!('removeNicFromVirtualMachine' in $store.getters.apis)"
-                  type="primary"
-                  :danger="true"
-                  icon="delete-outlined" />
+                tooltipPlacement="bottom"
+                :tooltip="'미러링 해제'"
+                :disabled="!('removeNicFromVirtualMachine' in $store.getters.apis)"
+                type="primary"
+                :danger="true"
+                icon="delete-outlined" />
             </a-popconfirm>
           </template>
         </DRTable>
@@ -220,6 +228,17 @@
           <a-button type="primary" ref="submit" @click="submitAddNetwork">{{ $t('label.ok') }}</a-button>
         </div>
       </a-form>
+    </a-modal>
+
+    <a-modal
+      v-model="showAddMirrorVMModal"
+      :visible="showAddMirrorVMModal"
+      :title="$t('label.add.dr.mirroring.vm')"
+      :maskClosable="false"
+      :closable="true"
+      :footer="null"
+      @cancel="closeModals">
+      <ShowAddMirVMModal @cancel = "closeModals" />
     </a-modal>
 
     <a-modal
@@ -360,6 +379,7 @@ import AnnotationsTab from '@/components/view/AnnotationsTab'
 import VolumesTab from '@/components/view/VolumesTab.vue'
 import DRTable from '@/views/compute/dr/DRTable.vue'
 import DRsimulationTestModal from '@/views/compute/dr/DRsimulationTestModal.vue'
+import ShowAddMirVMModal from '@/views/compute/dr/DRMirroringVMAdd.vue'
 
 export default {
   name: 'InstanceTab',
@@ -373,6 +393,7 @@ export default {
     NicsTable,
     DRTable,
     DRsimulationTestModal,
+    ShowAddMirVMModal,
     InstanceSchedules,
     ListResourceTable,
     TooltipButton,
@@ -399,6 +420,7 @@ export default {
       currentTab: 'details',
       showAddVolumeModal: false,
       showAddNetworkModal: false,
+      showAddMirrorVMModal: false,
       showUpdateIpModal: false,
       showSecondaryIpModal: false,
       showDrSimulationTestModal: false,
@@ -488,6 +510,16 @@ export default {
         this.diskOfferings = response.listdiskofferingsresponse.diskoffering
       })
     },
+    listMirroredVMs () {
+      api('listNetworks', {
+        listAll: 'true',
+        showicon: true,
+        zoneid: this.vm.zoneid
+      }).then(response => {
+        this.addNetworkData.allNetworks = response.listnetworksresponse.network.filter(network => !this.vm.nic.map(nic => nic.networkid).includes(network.id))
+        this.addNetworkData.network = this.addNetworkData.allNetworks[0].id
+      })
+    },
     listNetworks () {
       api('listNetworks', {
         listAll: 'true',
@@ -544,9 +576,14 @@ export default {
       this.showAddNetworkModal = true
       this.listNetworks()
     },
+    showAddMirVMModal () {
+      this.showAddMirrorVMModal = true
+      this.listMirroredVMs()
+    },
     closeModals () {
       this.showAddVolumeModal = false
       this.showAddNetworkModal = false
+      this.showAddMirrorVMModal = false
       this.showUpdateIpModal = false
       this.showSecondaryIpModal = false
       this.showDrSimulationTestModal = false
