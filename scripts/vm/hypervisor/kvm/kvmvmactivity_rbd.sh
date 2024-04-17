@@ -71,13 +71,13 @@ fi
 # fi
 
 # First check: heartbeat file
-# getHbTime=$(rbd -p $PoolName --id $PoolAuthUserName image-meta get MOLD-HB $HostIP)
-# diff=$(expr $(date +%s) - $getHbTime)
+getHbTime=$(rbd -p $PoolName --id $PoolAuthUserName image-meta get MOLD-HB $HostIP)
+diff=$(expr $(date +%s) - $getHbTime)
 
-# if [ $diff -le $interval ]; then
-#     echo "### [HOST STATE : ALIVE] ###"
-#     exit 0
-# fi
+if [ $diff -le $interval ]; then
+    echo "### [HOST STATE : ALIVE] ###"
+    exit 0
+fi
 
 if [ -z "$UUIDList" ]; then
     echo " ### [HOST STATE : DEAD] Volume UUID list is empty => Considered host down ###"
@@ -87,7 +87,7 @@ fi
 # Second check: disk activity check
 for uuid in $(echo $UUIDList | sed 's/,/ /g'); do
     echo $uuid
-    acTime=$(rbd -p $PoolName --id $PoolAuthUserName image-meta get MOLD-AC $uuid)
+    acTime=$(rbd -p $PoolName --id $PoolAuthUserName image-meta get MOLD-AC $HostIP:$uuid)
     if [ $? -gt 0 ] && [ -z "$acTime" ]; then
         echo "### [HOST STATE : DEAD] Unable to confirm normal activity of volume image list => Considered host down###"
         exit 2

@@ -400,7 +400,7 @@ public class LibvirtStoragePool implements KVMStoragePool {
             cmd.add("-n", pool.getPoolAuthUserName());
             cmd.add("-s", pool.getPoolAuthSecret());
             cmd.add("-h", host.getPrivateNetwork().getIp());
-            cmd.add("-u", volumeList);
+            cmd.add("-u", volumeList.length() > 0 ? volumeList : "");
             cmd.add("-r", "r");
             cmd.add("-t", String.valueOf(HeartBeatCheckerFreq / 1000));
         }

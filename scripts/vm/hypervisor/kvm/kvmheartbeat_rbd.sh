@@ -86,6 +86,8 @@ if [ $? -gt 0 ]; then
   rbd -p $PoolName create --size 1 --id $PoolAuthUserName MOLD-AC
 fi
 
+timestamp=$(date +%s)
+
 if [ -n "$UUIDList" ]; then
     for uuid in $(echo $UUIDList | sed 's/,/ /g'); do
       objId=$(rbd -p $PoolName info $uuid --id $PoolAuthUserName | grep id)
@@ -93,7 +95,7 @@ if [ -n "$UUIDList" ]; then
       res=$(timeout 3s bash -c "rados -p $PoolName touch rbd_object_map.$objId")
     if [ $? -eq 0 ]; then
       # 정상적인 touch 상태면 image meta에 key: uuid / value : timestamp 입력
-      rbd -p $PoolName --id $PoolAuthUserName image-meta set MOLD-AC $uuid $(date +%s)
+      rbd -p $PoolName --id $PoolAuthUserName image-meta set MOLD-AC $HostIP:$uuid $timestamp
     else
       # 정상적으로 touch 상태가 아니면 image meta에 key : uuid 삭제
       rbd -p $PoolName --id $PoolAuthUserName image-meta rm MOLD-AC $uuid
