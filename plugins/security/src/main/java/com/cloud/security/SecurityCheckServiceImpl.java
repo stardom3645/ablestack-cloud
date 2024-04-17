@@ -108,7 +108,7 @@ public class SecurityCheckServiceImpl extends ManagerBase implements PluggableSe
             try {
                 securityCheck();
             } catch (Exception e) {
-                LOGGER.error("Exception in security check schedule : "+ e.getMessage());
+                LOGGER.error("Exception in security check schedule : "+ e);
             }
         }
 
@@ -259,27 +259,27 @@ public class SecurityCheckServiceImpl extends ManagerBase implements PluggableSe
         if (checkFinalResult) {
             if ("Execution".equals(type)) {
                 ActionEventUtils.onCompletedActionEvent(CallContext.current().getCallingUserId(), CallContext.current().getCallingAccountId(), EventVO.LEVEL_INFO,
-                    EventTypes.EVENT_SECURITY_CHECK, "Successfully completed security check perform on the management server when running the product", Long.valueOf(0), null, 0);
+                    EventTypes.EVENT_SECURITY_CHECK, "Successfully completed security check perform on the management server when running the product", new Long(0), null, 0);
             } else if ("Routine".equals(type)) {
                 ActionEventUtils.onCompletedActionEvent(CallContext.current().getCallingUserId(), CallContext.current().getCallingAccountId(), EventVO.LEVEL_INFO,
-                    EventTypes.EVENT_SECURITY_CHECK, "Successfully completed security check schedule perform on the management server when operating the product", Long.valueOf(0), null, 0);
+                    EventTypes.EVENT_SECURITY_CHECK, "Successfully completed security check schedule perform on the management server when operating the product", new Long(0), null, 0);
             } else if ("Manual".equals(type)) {
                 ActionEventUtils.onCompletedActionEvent(CallContext.current().getCallingUserId(), CallContext.current().getCallingAccountId(), EventVO.LEVEL_INFO,
-                    EventTypes.EVENT_SECURITY_CHECK, "Successfully completed security check perform on the management server when operating the product", Long.valueOf(0), null, 0);
+                    EventTypes.EVENT_SECURITY_CHECK, "Successfully completed security check perform on the management server when operating the product", new Long(0)), null, 0);
             }
         } else {
             if ("Execution".equals(type)) {
                 ActionEventUtils.onCompletedActionEvent(CallContext.current().getCallingUserId(), CallContext.current().getCallingAccountId(), EventVO.LEVEL_ERROR,
-                    EventTypes.EVENT_SECURITY_CHECK, "Failed to execute security check on the management server when running the product", Long.valueOf(0), null, 0);
-                alertManager.sendAlert(AlertManager.AlertType.ALERT_TYPE_MANAGMENT_NODE, 0, Long.valueOf(0), "Failed to execute security check on the management server when running the product", "");
+                    EventTypes.EVENT_SECURITY_CHECK, "Failed to execute security check on the management server when running the product", new Long(0), null, 0);
+                alertManager.sendAlert(AlertManager.AlertType.ALERT_TYPE_MANAGMENT_NODE, 0, new Long(0), "Failed to execute security check on the management server when running the product", "");
             } else if ("Routine".equals(type)) {
                 ActionEventUtils.onCompletedActionEvent(CallContext.current().getCallingUserId(), CallContext.current().getCallingAccountId(), EventVO.LEVEL_ERROR,
-                    EventTypes.EVENT_SECURITY_CHECK, "Failed to execute security check schedule on the management server when operating the product", Long.valueOf(0), null, 0);
-                alertManager.sendAlert(AlertManager.AlertType.ALERT_TYPE_MANAGMENT_NODE, 0, Long.valueOf(0), "Failed to execute security check schedule on the management server when operating the product", "");
+                    EventTypes.EVENT_SECURITY_CHECK, "Failed to execute security check schedule on the management server when operating the product", new Long(0), null, 0);
+                alertManager.sendAlert(AlertManager.AlertType.ALERT_TYPE_MANAGMENT_NODE, 0, new Long(0), "Failed to execute security check schedule on the management server when operating the product", "");
             } else if ("Manual".equals(type)) {
                 ActionEventUtils.onCompletedActionEvent(CallContext.current().getCallingUserId(), CallContext.current().getCallingAccountId(), EventVO.LEVEL_ERROR,
-                    EventTypes.EVENT_SECURITY_CHECK, "Failed to execute security check on the management server when operating the product", Long.valueOf(0), null, 0);
-                alertManager.sendAlert(AlertManager.AlertType.ALERT_TYPE_MANAGMENT_NODE, 0, Long.valueOf(0), "Failed to execute security check on the management server when operating the product", "");
+                    EventTypes.EVENT_SECURITY_CHECK, "Failed to execute security check on the management server when operating the product", new Long(0), null, 0);
+                alertManager.sendAlert(AlertManager.AlertType.ALERT_TYPE_MANAGMENT_NODE, 0, new Long(0), "Failed to execute security check on the management server when operating the product", "");
             }
         }
         SecurityCheckVO connectivityVO = new SecurityCheckVO(msHostId, checkFinalResult, checkFailedList, type);
