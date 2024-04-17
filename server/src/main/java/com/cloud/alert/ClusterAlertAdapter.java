@@ -22,7 +22,6 @@ import javax.inject.Inject;
 import javax.naming.ConfigurationException;
 
 import org.springframework.stereotype.Component;
-import org.apache.cloudstack.framework.config.dao.ConfigurationDao;
 
 import com.cloud.cluster.ClusterManager;
 import com.cloud.cluster.ClusterNodeJoinEventArgs;
@@ -42,8 +41,6 @@ public class ClusterAlertAdapter extends AdapterBase implements AlertAdapter {
     private AlertManager _alertMgr;
     @Inject
     private ManagementServerHostDao _mshostDao;
-    @Inject
-    private ConfigurationDao _configDao;
 
     public void onClusterAlert(Object sender, EventArgs args) {
         if (logger.isDebugEnabled()) {
@@ -68,13 +65,6 @@ public class ClusterAlertAdapter extends AdapterBase implements AlertAdapter {
 
         for (ManagementServerHostVO mshost : args.getJoinedNodes()) {
             if (mshost.getId() == args.getSelf().longValue()) {
-                final boolean securityFeaturesEnabled = Boolean.parseBoolean(_configDao.getValue("security.features.enabled"));
-                if (securityFeaturesEnabled) {
-                    int result = Script.runSimpleBashScriptForExitValue("systemctl restart mold-monitoring");
-                    if (result != 0) {
-                        logger.error("Failed to execute command systemctl restart mold-monitoring");
-                    }
-                }
                 if (logger.isDebugEnabled()) {
                     logger.debug("Management server node " + mshost.getServiceIP() + " is up, send alert");
                 }

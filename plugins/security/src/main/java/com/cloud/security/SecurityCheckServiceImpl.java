@@ -38,7 +38,6 @@ import org.apache.cloudstack.api.response.GetSecurityCheckResponse;
 import org.apache.cloudstack.context.CallContext;
 import org.apache.cloudstack.framework.config.ConfigKey;
 import org.apache.cloudstack.framework.config.Configurable;
-import org.apache.cloudstack.framework.config.dao.ConfigurationDao;
 import org.apache.cloudstack.managed.context.ManagedContextRunnable;
 import org.apache.cloudstack.management.ManagementServerHost;
 import org.apache.cloudstack.utils.identity.ManagementServerNode;
@@ -75,8 +74,6 @@ public class SecurityCheckServiceImpl extends ManagerBase implements PluggableSe
     private SecurityCheckDao securityCheckDao;
     @Inject
     private ManagementServerHostDao msHostDao;
-    @Inject
-    private ConfigurationDao configDao;
     @Inject
     private AlertManager alertManager;
     ScheduledExecutorService executor;
@@ -124,13 +121,6 @@ public class SecurityCheckServiceImpl extends ManagerBase implements PluggableSe
             if (path == null) {
                 updateSecurityCheckResult(msHost.getId(), false, "", type);
                 LOGGER.error("Failed to execute security check schedule for management server:  Unable to find the securitycheck script");
-            }
-            boolean securityFeaturesEnabled = Boolean.parseBoolean(configDao.getValue("security.features.enabled"));
-            if (securityFeaturesEnabled && !type.equalsIgnoreCase("Execution")) {
-                int result = Script.runSimpleBashScriptForExitValue("systemctl restart mold-monitoring");
-                if (result != 0) {
-                    LOGGER.error("Failed to execute command systemctl restart mold-monitoring");
-                }
             }
             ProcessBuilder processBuilder = new ProcessBuilder("sh", path);
             Process process = null;
@@ -200,13 +190,6 @@ public class SecurityCheckServiceImpl extends ManagerBase implements PluggableSe
         if (path == null) {
             updateSecurityCheckResult(mshost.getId(), false, "", type);
             throw new CloudRuntimeException(String.format("Failed to execute security check command for management server: Unable to find the securitycheck script"));
-        }
-        boolean securityFeaturesEnabled = Boolean.parseBoolean(configDao.getValue("security.features.enabled"));
-        if (securityFeaturesEnabled) {
-            int result = Script.runSimpleBashScriptForExitValue("systemctl restart mold-monitoring");
-            if (result != 0) {
-                LOGGER.error("Failed to execute command systemctl restart mold-monitoring");
-            }
         }
         ProcessBuilder processBuilder = new ProcessBuilder("sh", path);
         Process process = null;
