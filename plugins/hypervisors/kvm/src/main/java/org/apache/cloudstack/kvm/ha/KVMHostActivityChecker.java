@@ -134,6 +134,7 @@ public class KVMHostActivityChecker extends AdapterBase implements ActivityCheck
                 continue;
             }
 
+            cmd = new CheckOnHostCommand(agent, HighAvailabilityManager.KvmHAFenceHostIfHeartbeatFailsOnStorage.value());
             try {
                 logger.debug(String.format("Investigating %s via neighbouring %s.", agent.toString(), neighbor.toString()));
 

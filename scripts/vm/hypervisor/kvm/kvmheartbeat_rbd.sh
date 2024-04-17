@@ -81,7 +81,7 @@ if [ -z "$PoolName" ]; then
 fi
 
 # rados object touch action for vol list
-rbd -p $PoolName ls --id $PoolAuthUserName | grep MOLD-AC
+res=$(rbd -p $PoolName ls --id $PoolAuthUserName | grep MOLD-AC)
 if [ $? -gt 0 ]; then
   rbd -p $PoolName create --size 1 --id $PoolAuthUserName MOLD-AC
 fi
@@ -90,7 +90,7 @@ timestamp=$(date +%s)
 
 if [ -n "$UUIDList" ]; then
     for uuid in $(echo $UUIDList | sed 's/,/ /g'); do
-      objId=$(rbd -p $PoolName info $uuid --id $PoolAuthUserName | grep id)
+      objId=$(rbd -p $PoolName info $uuid --id $PoolAuthUserName | grep 'id:')
       objId=${objId#*id: }
       res=$(timeout 3s bash -c "rados -p $PoolName touch rbd_object_map.$objId")
     if [ $? -eq 0 ]; then

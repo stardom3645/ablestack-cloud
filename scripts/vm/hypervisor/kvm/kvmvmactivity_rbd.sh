@@ -16,15 +16,14 @@
 # specific language governing permissions and limitations
 # under the License.
 help() {
-  printf "Usage: $0 
+  printf "Usage: $0
                     -p rbd pool name
                     -n pool auth username
                     -s pool auth secret
                     -h host
                     -i source host ip
                     -u volume uuid list
-                    -t time on ms
-                    -d suspect time\n"
+                    -t time on ms\n"
   exit 1
 }
 #set -x
@@ -33,9 +32,9 @@ PoolAuthUserName=
 PoolAuthSecret=
 HostIP=
 UUIDList=
-interval=
+interval=0
 
-while getopts 'p:n:s:h:i:u:t:d:' OPTION
+while getopts 'p:n:s:h:u:t:' OPTION
 do
   case $OPTION in
   p)
@@ -70,9 +69,15 @@ fi
 #   exit 2
 # fi
 
-# First check: heartbeat file
+# First check: heartbeat filei
+
+now=$(date +%s)
 getHbTime=$(rbd -p $PoolName --id $PoolAuthUserName image-meta get MOLD-HB $HostIP)
-diff=$(expr $(date +%s) - $getHbTime)
+if [ $? -eq 0 ]; then
+   diff=$(expr $now - $getHbTime)
+else
+   diff=100
+fi
 
 if [ $diff -le $interval ]; then
     echo "### [HOST STATE : ALIVE] ###"
@@ -86,14 +91,13 @@ fi
 
 # Second check: disk activity check
 for uuid in $(echo $UUIDList | sed 's/,/ /g'); do
-    echo $uuid
     acTime=$(rbd -p $PoolName --id $PoolAuthUserName image-meta get MOLD-AC $HostIP:$uuid)
-    if [ $? -gt 0 ] && [ -z "$acTime" ]; then
-        echo "### [HOST STATE : DEAD] Unable to confirm normal activity of volume image list => Considered host down###"
-        exit 2
+    if [ $? -gt 0 ] || [ -z "$acTime" ] || [ $(expr $now - $acTime) > $interval ]; then
+        echo "### [HOST STATE : DEAD] Unable to confirm normal activity of volume image list => Considered host down ### "
+        exit 0
     fi
 done
 
-echo "=====> ALIVE <====="
+echo "### [HOST STATE : ALIVE] ###"
 
 exit 0
