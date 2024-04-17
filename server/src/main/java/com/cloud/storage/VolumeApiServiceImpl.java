@@ -1905,7 +1905,8 @@ public class VolumeApiServiceImpl extends ManagerBase implements VolumeApiServic
                 } else if (jobResult instanceof ResourceAllocationException) {
                     throw (ResourceAllocationException)jobResult;
                 } else if (jobResult instanceof Throwable) {
-                    throw new RuntimeException("Unexpected exception", (Throwable)jobResult);
+                    Throwable throwable = (Throwable) jobResult;
+                    throw new RuntimeException(String.format("Unexpected exception: %s", throwable.getMessage()), throwable);
                 }
             }
 
