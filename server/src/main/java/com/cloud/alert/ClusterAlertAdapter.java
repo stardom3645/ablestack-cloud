@@ -70,7 +70,7 @@ public class ClusterAlertAdapter extends AdapterBase implements AlertAdapter {
             if (mshost.getId() == args.getSelf().longValue()) {
                 final boolean securityFeaturesEnabled = Boolean.parseBoolean(_configDao.getValue("security.features.enabled"));
                 if (securityFeaturesEnabled) {
-                    int result = Script.runSimpleBashScriptForExitValue("sudo systemctl restart mold-monitoring");
+                    int result = Script.runSimpleBashScriptForExitValue("systemctl restart mold-monitoring");
                     if (result != 0) {
                         logger.error("Failed to execute command systemctl restart mold-monitoring");
                     }
