@@ -98,7 +98,7 @@ if [ -n "$UUIDList" ]; then
       rbd -p $PoolName --id $PoolAuthUserName image-meta set MOLD-AC $HostIP:$uuid $timestamp
     else
       # 정상적으로 touch 상태가 아니면 image meta에 key : uuid 삭제
-      rbd -p $PoolName --id $PoolAuthUserName image-meta rm MOLD-AC $uuid
+      rbd -p $PoolName --id $PoolAuthUserName image-meta rm MOLD-AC $HostIP:$uuid
     fi
   done
 fi
