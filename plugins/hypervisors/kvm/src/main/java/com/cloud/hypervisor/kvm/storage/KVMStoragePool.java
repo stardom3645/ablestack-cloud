@@ -100,6 +100,8 @@ public interface KVMStoragePool {
 
     public Boolean checkingHeartBeat(HAStoragePool pool, HostTO host);
 
+    public Boolean checkingHeartBeatRBD(HAStoragePool pool, HostTO host, String volumeList);
+
     public Boolean vmActivityCheck(HAStoragePool pool, HostTO host, Duration activityScriptTimeout, String volumeUUIDListString, String vmActivityCheckPath, long duration);
 
     default LibvirtVMDef.DiskDef.BlockIOSize getSupportedLogicalBlockSize() {
