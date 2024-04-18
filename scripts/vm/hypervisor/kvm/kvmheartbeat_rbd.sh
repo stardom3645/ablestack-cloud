@@ -124,6 +124,10 @@ write_hbLog() {
 check_hbLog() {
   now=$(date +%s)
   getHbTime=$(rbd -p $PoolName --id $PoolAuthUserName image-meta get MOLD-HB $HostIP)
+  if [ $? -gt 0 ] || [ -z "$getHbTime" ]; then
+    return 1
+  fi
+
   diff=$(expr $now - $getHbTime)
 
   if [ $diff -gt $interval ]; then
