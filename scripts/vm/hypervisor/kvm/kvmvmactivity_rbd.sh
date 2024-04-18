@@ -92,7 +92,7 @@ fi
 # Second check: disk activity check
 for uuid in $(echo $UUIDList | sed 's/,/ /g'); do
    acTime=$(rbd -p $PoolName --id $PoolAuthUserName image-meta get MOLD-AC $uuid)
-   if [ $? -gt 0 ] || [ -z "$acTime" ] || [ $(expr $now - $acTime) > $interval ]; then
+   if [ $? -gt 0 ] || [ -z "$acTime" ]; then
       echo "### [HOST STATE : DEAD] Unable to confirm normal activity of volume image list => Considered host down ### "
       exit 0
    fi
