@@ -551,12 +551,12 @@ public class NetworkOrchestrator extends ManagerBase implements NetworkOrchestra
                             false, null, false, null, true, false, false, false, null, null, null, true, null);
                 }*/
 
-                //#2 - SG enabled network offering
-                if (_networkOfferingDao.findByUniqueName(NetworkOffering.DefaultSharedNetworkOfferingWithSGService) == null && _networkOfferingDao.findByUniqueName("기본 공유 보안그룹 네트워크오퍼링") == null) {
-                    offering = _configMgr.createNetworkOffering("기본 공유 보안그룹 네트워크오퍼링", "기본 공유 보안그룹 네트워크오퍼링",
-                            TrafficType.Guest, null, true, Availability.Optional, null, defaultSharedNetworkOfferingProviders, true, Network.GuestType.Shared, false, null, true,
-                            null, true, false, null, false, null, true, false, false, false, null, null, null, true, null);
-                }
+                // #2 - SG enabled network offering
+                // if (_networkOfferingDao.findByUniqueName(NetworkOffering.DefaultSharedNetworkOfferingWithSGService) == null && _networkOfferingDao.findByUniqueName("기본 공유 보안그룹 네트워크오퍼링") == null) {
+                //     offering = _configMgr.createNetworkOffering("기본 공유 보안그룹 네트워크오퍼링", "기본 공유 보안그룹 네트워크오퍼링",
+                //             TrafficType.Guest, null, true, Availability.Optional, null, defaultSharedNetworkOfferingProviders, true, Network.GuestType.Shared, false, null, true,
+                //             null, true, false, null, false, null, true, false, false, false, null, null, null, true, null);
+                // }
 
                 //#3 - shared network offering with no SG service
                 if (_networkOfferingDao.findByUniqueName(NetworkOffering.DefaultSharedNetworkOffering) == null && _networkOfferingDao.findByUniqueName("기본 공유 네트워크오퍼링") == null) {

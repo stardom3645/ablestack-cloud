@@ -1029,19 +1029,19 @@ public class ConfigurationServerImpl extends ManagerBase implements Configuratio
             @Override
             public void doInTransactionWithoutResult(TransactionStatus status) {
                 // Offering #1
-                NetworkOfferingVO defaultSharedSGNetworkOffering =
-                        new NetworkOfferingVO("기본 공유 보안그룹 네트워크오퍼링", "기본 공유 보안그룹 네트워크오퍼링",
-                                TrafficType.Guest, false, true, null, null, true, Availability.Optional, null, Network.GuestType.Shared, true, true, false, false, false, false);
+                // NetworkOfferingVO defaultSharedSGNetworkOffering =
+                //         new NetworkOfferingVO("기본 공유 보안그룹 네트워크오퍼링", "기본 공유 보안그룹 네트워크오퍼링",
+                //                 TrafficType.Guest, false, true, null, null, true, Availability.Optional, null, Network.GuestType.Shared, true, true, false, false, false, false);
 
-                defaultSharedSGNetworkOffering.setState(NetworkOffering.State.Enabled);
-                defaultSharedSGNetworkOffering = _networkOfferingDao.persistDefaultNetworkOffering(defaultSharedSGNetworkOffering);
+                // defaultSharedSGNetworkOffering.setState(NetworkOffering.State.Enabled);
+                // defaultSharedSGNetworkOffering = _networkOfferingDao.persistDefaultNetworkOffering(defaultSharedSGNetworkOffering);
 
-                for (Service service : defaultSharedSGNetworkOfferingProviders.keySet()) {
-                    NetworkOfferingServiceMapVO offService =
-                            new NetworkOfferingServiceMapVO(defaultSharedSGNetworkOffering.getId(), service, defaultSharedSGNetworkOfferingProviders.get(service));
-                    _ntwkOfferingServiceMapDao.persist(offService);
-                    logger.trace("Added service for the network offering: " + offService);
-                }
+                // for (Service service : defaultSharedSGNetworkOfferingProviders.keySet()) {
+                //     NetworkOfferingServiceMapVO offService =
+                //             new NetworkOfferingServiceMapVO(defaultSharedSGNetworkOffering.getId(), service, defaultSharedSGNetworkOfferingProviders.get(service));
+                //     _ntwkOfferingServiceMapDao.persist(offService);
+                //     logger.trace("Added service for the network offering: " + offService);
+                // }
 
                 // Offering #2
                 NetworkOfferingVO defaultSharedNetworkOffering =
