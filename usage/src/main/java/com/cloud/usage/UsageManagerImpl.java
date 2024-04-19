@@ -2248,7 +2248,7 @@ public class UsageManagerImpl extends ManagerBase implements UsageManager, Runna
     private class AbandonJob extends Thread {
         @Override
         public void run() {
-            s_logger.info("exitting Usage Manager");
+            logger.info("exitting Usage Manager");
             deleteOpenjob();
         }
         private void deleteOpenjob() {
