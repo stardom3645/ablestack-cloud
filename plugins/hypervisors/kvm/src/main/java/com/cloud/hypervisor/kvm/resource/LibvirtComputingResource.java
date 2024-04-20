@@ -4790,17 +4790,12 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
                                     continue;
                                 } else {
                                     nicAddrMap.put(nicMac.getAsString(), nicAddrIp.getAsString());
-
-                                    logger.debug("nicName ::::::"+nicName.getAsString());
-                                    logger.debug("nicMac :::::" +  nicMac.getAsString());
-                                    logger.debug("nicAddrIp :::::" +  nicAddrIp.getAsString());
                                 }
                             }
                         }
                     }
                 }
             }
-            logger.info("nicAddrMap :::::: " + nicAddrMap);
             stats.setNicAddrMap(nicAddrMap);
 
             /* save to Hashmap */
