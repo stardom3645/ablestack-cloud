@@ -1331,6 +1331,7 @@
 "label.memory": "Memory",
 "label.memory.free": "Memory free",
 "label.memory.maximum.mb": "Max memory (in MB)",
+"label.memory.gb": "Memory (in GB)",
 "label.memory.mb": "Memory (in MB)",
 "label.memory.usage.info": "Memory usage information",
 "label.memory.total": "Memory total",

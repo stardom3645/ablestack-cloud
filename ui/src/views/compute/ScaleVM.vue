@@ -181,7 +181,7 @@ export default {
       if (this.resource.state === 'Running') {
         return this.resource.memory
       }
-      return this.selectedOffering?.serviceofferingdetails?.minmemory * 1 || 32
+      return this.selectedOffering?.serviceofferingdetails?.minmemory * 1 || 512
     },
     getCPUSpeed () {
       // We can only scale up while a VM is running
