@@ -24,6 +24,7 @@ import javax.servlet.http.HttpSessionListener;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 import org.apache.cloudstack.managed.context.ManagedContextRunnable;
+import org.apache.cloudstack.context.CallContext;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -126,20 +127,21 @@ public class ApiSessionListener implements HttpSessionListener {
 
     public void sessionDestroyed(HttpSessionEvent event) {
         if (ApiServer.SecurityFeaturesEnabled.value()) {
-            Account userAcct;
-            Long domainId;
-            if (event.getSession().getAttribute("account") != null && event.getSession().getAttribute("domainid") != null) {
-                domainId = Long.valueOf(String.valueOf(event.getSession().getAttribute("domainid").toString()));
-                userAcct = ApiDBUtils.findAccountByNameDomain(event.getSession().getAttribute("account").toString(), domainId);
-            } else {
-                String accountName = "system";
-                domainId = 1L;
-                userAcct = ApiDBUtils.findAccountByNameDomain(accountName, domainId);
-            }
+            Long userId = CallContext.current().getCallingUserId();
+            Long domainId = 1L;
             Date acsTime = new Date(event.getSession().getLastAccessedTime());
             SimpleDateFormat date = new SimpleDateFormat("dd MMM yyyy HH:mm:ss");
-            ActionEventUtils.onActionEvent(userAcct.getId(), userAcct.getAccountId(), domainId, EventTypes.EVENT_USER_SESSION_DESTROY,
-                "Session destroyed by Id : " + event.getSession().getId() + ", last accessed time : " + date.format(acsTime), new Long(0), null);
+            if (userId == null) {
+                String accountName = "system";
+                Account userAcct = ApiDBUtils.findAccountByNameDomain(accountName, domainId);
+                ActionEventUtils.onActionEvent(userAcct.getId(), userAcct.getAccountId(), domainId, EventTypes.EVENT_USER_SESSION_DESTROY,
+                    "Session destroyed by Id : " + event.getSession().getId() + ", last accessed time : " + date.format(acsTime), new Long(0), null);
+            } else {
+                String accountName = "admin";
+                Account userAcct = ApiDBUtils.findAccountByNameDomain(accountName, domainId);
+                ActionEventUtils.onActionEvent(userAcct.getId(), userAcct.getAccountId(), userAcct.getDomainId(), EventTypes.EVENT_USER_SESSION_DESTROY,
+                    "Session destroyed by Id : " + event.getSession().getId() + ", last accessed time : " + date.format(acsTime), userAcct.getId(), null);
+            }
         }
         if (LOGGER.isDebugEnabled()) {
             LOGGER.debug("Session destroyed by Id : " + event.getSession().getId() + " , session: " + event.getSession().toString() + " , source: " + event.getSource().toString() + " , event: " + event.toString());
