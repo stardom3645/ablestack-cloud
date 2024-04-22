@@ -332,6 +332,9 @@ public class UserVmJoinVO extends BaseViewWithTagInformationVO implements Contro
     @Column(name = "isolation_uri")
     private URI isolationUri;
 
+    @Column(name = "link_state")
+    private boolean linkState;
+
     @Column(name = "network_id")
     private long networkId;
 
@@ -955,5 +958,9 @@ public class UserVmJoinVO extends BaseViewWithTagInformationVO implements Contro
 
     public String getUserDataDetails() {
         return userDataDetails;
+    }
+
+    public boolean getLinkState() {
+        return linkState;
     }
 }
