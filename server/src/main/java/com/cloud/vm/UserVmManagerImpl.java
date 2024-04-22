@@ -9111,9 +9111,6 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
             Long hostId = vmInstance.getHostId() != null ? vmInstance.getHostId() : vmInstance.getLastHostId();
             NicLinkStateCommand nlscmd = new NicLinkStateCommand(nicTO, vmInstance.getInstanceName(), cmd.getLinkState());
 
-            nic.setLinkState(cmd.getLinkState());
-            _nicDao.update(nicId, nic);
-
             try {
                 Answer answer = _agentMgr.send(hostId, nlscmd);
                 if (answer == null || !answer.getResult()) {
@@ -9122,8 +9119,9 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
                     nic.setLinkState(cmd.getLinkState());
                     _nicDao.update(nicId, nic);
                 }
-
             } catch (Exception ex) {
+                nic.setLinkState(!cmd.getLinkState());
+                _nicDao.update(nicId, nic);
                 throw new CloudRuntimeException(ex.getMessage());
             }
         }

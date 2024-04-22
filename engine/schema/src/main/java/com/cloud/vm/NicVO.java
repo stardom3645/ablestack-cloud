@@ -132,7 +132,7 @@ public class NicVO implements Nic {
     Integer mtu;
 
     @Column(name = "link_state")
-    private boolean linkState;
+    private boolean linkState = true;
 
     @Transient
     transient String nsxLogicalSwitchUuid;

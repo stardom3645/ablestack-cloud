@@ -98,7 +98,7 @@
                 icon="delete-outlined" />
             </a-popconfirm>
             <a-popconfirm
-              :title="`${record.nic.linkstate ? $t('label.action.nic.linkstate.down') : $t('label.action.nic.linkstate.up')}?`"
+              :title="`${record.nic.linkstate ? $t('label.action.nic.linkstate.down') : $t('label.action.nic.linkstate.up')}`"
               @confirm="onChangeNicLinkState(record)"
               :okText="$t('label.yes')"
               :cancelText="$t('label.no')"

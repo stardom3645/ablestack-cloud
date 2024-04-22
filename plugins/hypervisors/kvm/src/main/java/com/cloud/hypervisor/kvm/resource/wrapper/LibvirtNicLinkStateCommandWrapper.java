@@ -74,22 +74,21 @@ public final class LibvirtNicLinkStateCommandWrapper extends CommandWrapper<NicL
             oldPluggedNic.setSlot(null);
 
             vm.detachDevice(oldPluggedNic.toString());
-            logger.debug("ReplugNic: Attaching interface" + interfaceDef);
+            logger.debug("Update Nic Link State: Attaching interface" + interfaceDef);
             vm.attachDevice(interfaceDef.toString());
 
 
-            logger.debug("ReplugNic: Updating interface" + interfaceDef);
-            vm.updateDeviceFlags(interfaceDef.toString(), DomainAffect.LIVE.getValue());
-
+            logger.debug("Update Nic Link State: Updating interface" + interfaceDef);
+            // vm.updateDeviceFlags(interfaceDef.toString(), DomainAffect.CURRENT.getValue());
             // We don't know which "traffic type" is associated with
             // each interface at this point, so inform all vif drivers
-            for (final VifDriver vifDriver : libvirtComputingResource.getAllVifDrivers()) {
-                vifDriver.unplug(oldPluggedNic, true);
-            }
+            // for (final VifDriver vifDriver : libvirtComputingResource.getAllVifDrivers()) {
+            //     vifDriver.unplug(oldPluggedNic, true);
+            // }
 
             return new Answer(command, true, "success");
         } catch (final LibvirtException | InternalErrorException e) {
-            final String msg = " Plug Nic failed due to " + e.toString();
+            final String msg = " Update Nic Link State failed due to " + e.toString();
             logger.warn(msg, e);
             return new Answer(command, false, msg);
         } finally {
