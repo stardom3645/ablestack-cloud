@@ -363,10 +363,10 @@
               <a-input v-model:value="form.domain" :maxlength="20"/>
             </a-form-item>
             <a-form-item name="length" ref="length" :label="$t('label.sticky.length')" v-show="stickinessPolicyMethod === 'AppCookie'">
-              <a-input v-model:value="form.length" type="number" :maxlength="20" />
+              <a-input v-model:value="form.length" type="number" :maxlength="10" />
             </a-form-item>
             <a-form-item name="holdtime" ref="holdtime" :label="$t('label.sticky.holdtime')" v-show="stickinessPolicyMethod === 'AppCookie'">
-              <a-input v-model:value="form.holdtime" type="number" :maxlength="20" />
+              <a-input v-model:value="form.holdtime" type="number" :maxlength="10" />
             </a-form-item>
             <a-form-item name="requestLearn" ref="requestLearn" :label="$t('label.sticky.request-learn')" v-show="stickinessPolicyMethod === 'AppCookie'">
               <a-checkbox v-model:checked="form.requestLearn"></a-checkbox>

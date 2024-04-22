@@ -25,7 +25,7 @@
           <a-input-number
             v-focus="true"
             v-model:value="inputValue"
-            :maxlength="20"
+            :maxlength="10"
             @change="($event) => updateDiskSize($event)"
           />
           <span style="padding-top: 6px; margin-left: 5px">GB</span>
@@ -35,13 +35,13 @@
     </a-col>
     <a-col :span="8" v-if="isCustomizedDiskIOps || isCustomizedIOps">
       <a-form-item :label="$t('label.diskiopsmin')">
-        <a-input-number v-model:value="minIOps" @change="updateDiskIOps" :maxlength="20"/>
+        <a-input-number v-model:value="minIOps" @change="updateDiskIOps" :maxlength="10"/>
         <p v-if="errorMinIOps" style="color: red"> {{ $t(errorMinIOps) }} </p>
       </a-form-item>
     </a-col>
     <a-col :span="8" v-if="isCustomizedDiskIOps || isCustomizedIOps">
       <a-form-item :label="$t('label.diskiopsmax')">
-        <a-input-number v-model:value="maxIOps" @change="updateDiskIOps" :maxlength="20"/>
+        <a-input-number v-model:value="maxIOps" @change="updateDiskIOps" :maxlength="10"/>
         <p v-if="errorMaxIOps" style="color: red"> {{ $t(errorMaxIOps) }} </p>
       </a-form-item>
     </a-col>

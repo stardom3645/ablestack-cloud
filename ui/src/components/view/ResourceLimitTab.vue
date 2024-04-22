@@ -36,6 +36,7 @@
             :disabled="!('updateResourceLimit' in $store.getters.apis)"
             style="width: 100%;"
             v-model:value="form[item.resourcetype]"
+            :maxlength="10"
             v-focus="index === 0"
           />
         </a-form-item>

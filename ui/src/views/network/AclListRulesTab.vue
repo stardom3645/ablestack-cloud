@@ -171,7 +171,7 @@
         v-ctrl-enter="handleRuleModalForm"
        >
         <a-form-item :label="$t('label.number')" ref="number" name="number">
-          <a-input-number v-focus="true" style="width: 100%" v-model:value="form.number" :maxlength="20"/>
+          <a-input-number v-focus="true" style="width: 100%" v-model:value="form.number" :maxlength="10"/>
         </a-form-item>
         <a-form-item :label="$t('label.cidrlist')" ref="cidrlist" name="cidrlist">
           <a-input v-model:value="form.cidrlist" :maxlength="20" />
@@ -223,10 +223,10 @@
 
         <div v-show="['tcp', 'udp', 'protocolnumber'].includes(form.protocol)">
           <a-form-item :label="$t('label.startport')" ref="startport" name="startport">
-            <a-input-number style="width: 100%" v-model:value="form.startport" :maxlength="20"/>
+            <a-input-number style="width: 100%" v-model:value="form.startport" :maxlength="10"/>
           </a-form-item>
           <a-form-item :label="$t('label.endport')" ref="endport" name="endport">
-            <a-input-number style="width: 100%" v-model:value="form.endport" :maxlength="20"/>
+            <a-input-number style="width: 100%" v-model:value="form.endport" :maxlength="10"/>
           </a-form-item>
         </div>
 

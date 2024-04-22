@@ -60,7 +60,7 @@
                   v-model:value="form.publicmtu"
                   :defaultValue="resource.publicmtu"
                   :placeholder="apiParams.publicmtu.description"
-                  :maxlength="20"
+                  :maxlength="10"
                   @change="updateMtu(true)"/>
                 <div style="color: red" v-if="errorPublicMtu" v-html="errorPublicMtu"></div>
               </a-form-item>
@@ -77,7 +77,7 @@
                   style="width: 100%;"
                   :defaultValue="resource.privatemtu"
                   :placeholder="apiParams.privatemtu.description"
-                  :maxlength="20"
+                  :maxlength="10"
                   @change="updateMtu(false)"/>
                 <div style="color: red" v-if="errorPrivateMtu"  v-html="errorPrivateMtu"></div>
               </a-form-item>

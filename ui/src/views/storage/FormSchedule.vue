@@ -120,7 +120,7 @@
                     style="width: 100%"
                     v-model:value="form.maxsnaps"
                     :min="1"
-                    :maxlength="20" />
+                    :maxlength="10" />
                 </a-tooltip>
               </a-form-item>
             </a-col>
