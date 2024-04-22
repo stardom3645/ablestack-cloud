@@ -32,6 +32,7 @@
           <a-input
             v-focus="true"
             v-model:value="form.name"
+            :maxlength="20"
             :placeholder="apiParams.name.description"/>
         </a-form-item>
         <a-form-item name="displaytext" ref="displaytext">
@@ -40,6 +41,7 @@
           </template>
           <a-input
             v-model:value="form.displaytext"
+            :maxlength="100"
             :placeholder="apiParams.displaytext.description"/>
         </a-form-item>
         <a-form-item name="storagetype" ref="storagetype">
@@ -99,6 +101,7 @@
           </template>
           <a-input
             v-model:value="form.disksize"
+            :maxlength="20"
             :placeholder="apiParams.disksize.description"/>
         </a-form-item>
         <a-form-item name="qostype" ref="qostype" :label="$t('label.qostype')">
@@ -122,6 +125,7 @@
           </template>
           <a-input
             v-model:value="form.diskbytesreadrate"
+            :maxlength="20"
             :placeholder="apiParams.bytesreadrate.description"/>
         </a-form-item>
         <a-form-item v-if="form.qostype === 'hypervisor'" name="diskbyteswriterate" ref="diskbyteswriterate">
@@ -130,6 +134,7 @@
           </template>
           <a-input
             v-model:value="form.diskbyteswriterate"
+            :maxlength="20"
             :placeholder="apiParams.byteswriterate.description"/>
         </a-form-item>
         <a-form-item v-if="form.qostype === 'hypervisor'" name="diskiopsreadrate" ref="diskiopsreadrate">
@@ -138,6 +143,7 @@
           </template>
           <a-input
             v-model:value="form.diskiopsreadrate"
+            :maxlength="20"
             :placeholder="apiParams.iopsreadrate.description"/>
         </a-form-item>
         <a-form-item v-if="form.qostype === 'hypervisor'" name="diskiopswriterate" ref="diskiopswriterate">
@@ -146,6 +152,7 @@
           </template>
           <a-input
             v-model:value="form.diskiopswriterate"
+            :maxlength="20"
             :placeholder="apiParams.iopswriterate.description"/>
         </a-form-item>
         <a-form-item v-if="form.qostype === 'storage'" name="iscustomizeddiskiops" ref="iscustomizeddiskiops">
@@ -160,6 +167,7 @@
           </template>
           <a-input
             v-model:value="form.diskiopsmin"
+            :maxlength="20"
             :placeholder="apiParams.miniops.description"/>
         </a-form-item>
         <a-form-item v-if="form.qostype === 'storage' && !form.iscustomizeddiskiops" name="diskiopsmax" ref="diskiopsmax">
@@ -168,6 +176,7 @@
           </template>
           <a-input
             v-model:value="form.diskiopsmax"
+            :maxlength="20"
             :placeholder="apiParams.maxiops.description"/>
         </a-form-item>
         <a-form-item v-if="form.qostype === 'storage'" name="hypervisorsnapshotreserve" ref="hypervisorsnapshotreserve">
@@ -176,6 +185,7 @@
           </template>
           <a-input
             v-model:value="form.hypervisorsnapshotreserve"
+            :maxlength="20"
             :placeholder="apiParams.hypervisorsnapshotreserve.description"/>
         </a-form-item>
         <a-form-item name="writecachetype" ref="writecachetype">

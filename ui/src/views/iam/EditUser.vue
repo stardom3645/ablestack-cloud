@@ -32,6 +32,7 @@
           <a-input
             v-model:value="form.username"
             :placeholder="apiParams.username.description"
+            :maxlength="20"
             v-focus="true" />
         </a-form-item>
         <a-form-item name="email" ref="email">
@@ -40,7 +41,8 @@
           </template>
           <a-input
             v-model:value="form.email"
-            :placeholder="apiParams.email.description" />
+            :placeholder="apiParams.email.description"
+            :maxlength="50" />
         </a-form-item>
         <a-row :gutter="12">
           <a-col :md="24" :lg="12">
@@ -50,7 +52,8 @@
               </template>
               <a-input
                 v-model:value="form.firstname"
-                :placeholder="apiParams.firstname.description" />
+                :placeholder="apiParams.firstname.description"
+                :maxlength="20" />
             </a-form-item>
           </a-col>
           <a-col :md="24" :lg="12">
@@ -60,7 +63,8 @@
               </template>
               <a-input
                 v-model:value="form.lastname"
-                :placeholder="apiParams.lastname.description" />
+                :placeholder="apiParams.lastname.description"
+                :maxlength="20" />
             </a-form-item>
           </a-col>
         </a-row>

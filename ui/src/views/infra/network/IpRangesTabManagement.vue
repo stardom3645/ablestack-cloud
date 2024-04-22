@@ -98,20 +98,20 @@
           </a-select>
         </a-form-item>
         <a-form-item name="gateway" ref="gateway" :label="$t('label.gateway')" class="form__item">
-          <a-input v-model:value="form.gateway" />
+          <a-input v-model:value="form.gateway" :maxlength="20" />
         </a-form-item>
         <a-form-item name="netmask" ref="netmask" :label="$t('label.netmask')" class="form__item">
-          <a-input v-model:value="form.netmask" />
+          <a-input v-model:value="form.netmask" :maxlength="20" />
         </a-form-item>
         <a-form-item name="vlan" ref="vlan" :label="$t('label.vlan')" class="form__item">
-          <a-input v-model:value="form.vlan" />
+          <a-input v-model:value="form.vlan" :maxlength="20" />
         </a-form-item>
         <a-form-item name="startip" ref="startip" :label="$t('label.startip')" class="form__item">
-          <a-input v-model:value="form.startip" />
+          <a-input v-model:value="form.startip" :maxlength="20" />
         </a-form-item>
         <a-form-item name="endip" ref="endip" :label="$t('label.endip')" class="form__item">
           <a-input
-            v-model:value="form.endip">
+            v-model:value="form.endip" :maxlength="20">
           </a-input>
         </a-form-item>
         <a-form-item name="vms" ref="vms" :label="$t('label.system.vms')" class="form__item">

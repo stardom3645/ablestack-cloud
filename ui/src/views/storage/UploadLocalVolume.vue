@@ -50,6 +50,7 @@
           </template>
           <a-input
             v-model:value="form.name"
+            :max-length="20"
             :placeholder="$t('label.volumename')"
             v-focus="true" />
         </a-form-item>
@@ -117,6 +118,7 @@
           </template>
           <a-input
             v-model:value="form.checksum"
+            :max-length="500"
             :placeholder="$t('label.volumechecksum.description')"
           />
         </a-form-item>

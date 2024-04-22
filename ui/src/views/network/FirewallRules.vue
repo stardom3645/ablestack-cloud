@@ -21,7 +21,7 @@
       <div class="form" v-ctrl-enter="addRule">
         <div class="form__item">
           <div class="form__label">{{ $t('label.sourcecidr') }}</div>
-          <a-input v-focus="true" v-model:value="newRule.cidrlist"></a-input>
+          <a-input v-focus="true" v-model:value="newRule.cidrlist" :maxlength="20"></a-input>
         </div>
         <div class="form__item">
           <div class="form__label">{{ $t('label.protocol') }}</div>
@@ -41,19 +41,19 @@
         </div>
         <div v-show="newRule.protocol === 'tcp' || newRule.protocol === 'udp'" class="form__item">
           <div class="form__label">{{ $t('label.startport') }}</div>
-          <a-input v-model:value="newRule.startport"></a-input>
+          <a-input v-model:value="newRule.startport" :maxlength="20"></a-input>
         </div>
         <div v-show="newRule.protocol === 'tcp' || newRule.protocol === 'udp'" class="form__item">
           <div class="form__label">{{ $t('label.endport') }}</div>
-          <a-input v-model:value="newRule.endport"></a-input>
+          <a-input v-model:value="newRule.endport" :maxlength="20"></a-input>
         </div>
         <div v-show="newRule.protocol === 'icmp'" class="form__item">
           <div class="form__label">{{ $t('label.icmptype') }}</div>
-          <a-input v-model:value="newRule.icmptype"></a-input>
+          <a-input v-model:value="newRule.icmptype" :maxlength="20"></a-input>
         </div>
         <div v-show="newRule.protocol === 'icmp'" class="form__item">
           <div class="form__label">{{ $t('label.icmpcode') }}</div>
-          <a-input v-model:value="newRule.icmpcode"></a-input>
+          <a-input v-model:value="newRule.icmpcode" :maxlength="20"></a-input>
         </div>
         <div class="form__item" style="margin-left: auto;">
           <a-button :disabled="!('createFirewallRule' in $store.getters.apis)" type="primary" ref="submit" @click="addRule">{{ $t('label.add') }}</a-button>
@@ -143,13 +143,15 @@
             <a-form-item name="key" ref="key">
               <a-input
                 v-focus="true"
-                v-model:value="form.key" />
+                v-model:value="form.key"
+                :maxlength="100" />
             </a-form-item>
           </div>
           <div class="add-tags__input">
             <p class="add-tags__label">{{ $t('label.value') }}</p>
             <a-form-item name="value" ref="value">
-              <a-input v-model:value="form.value" />
+              <a-input v-model:value="form.value"
+              :maxlength="500"/>
             </a-form-item>
           </div>
           <a-button

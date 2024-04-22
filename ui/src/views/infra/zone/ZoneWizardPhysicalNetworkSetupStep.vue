@@ -34,6 +34,7 @@
           <a-input
             :disabled="tungstenNetworkIndex > -1 && tungstenNetworkIndex !== index"
             :value="text"
+            :maxlength="20"
             @change="e => onCellChange(record.key, 'name', e.target.value)"
             v-focus="true">
             <template #suffix>
@@ -206,14 +207,14 @@
           v-bind="formItemLayout"
           style="margin-top:16px;"
           :label="$t('label.traffic.label')">
-          <a-input v-model:value="form.trafficLabel" />
+          <a-input v-model:value="form.trafficLabel" :maxlength="20"/>
         </a-form-item>
         <span v-else>
           <a-form-item :label="$t('label.vswitch.name')" name="vSwitchName" ref="vSwitchName">
-            <a-input v-model:value="form.vSwitchName" />
+            <a-input v-model:value="form.vSwitchName" :maxlength="20"/>
           </a-form-item>
           <a-form-item :label="$t('label.vlanid')" name="vlanId" ref="vlanId">
-            <a-input v-model:value="form.vlanId" />
+            <a-input v-model:value="form.vlanId" :maxlength="20"/>
           </a-form-item>
           <a-form-item v-if="isAdvancedZone" :label="$t('label.vswitch.type')" name="vSwitchType" ref="vSwitchType">
             <a-select

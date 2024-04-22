@@ -83,7 +83,7 @@
           layout="vertical"
          >
           <a-form-item name="range" ref="range" :label="$t('label.vlanrange')">
-            <a-input v-model:value="form.range" v-focus="true" />
+            <a-input v-model:value="form.range" v-focus="true" :maxlength="20" />
           </a-form-item>
 
           <a-form-item name="scope" ref="scope" :label="$t('label.scope')">

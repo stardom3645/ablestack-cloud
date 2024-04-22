@@ -401,6 +401,7 @@
           v-if="editableValueKey === record.key"
           v-focus="true"
           :defaultValue="record.value"
+          :maxlength="500"
           :disabled="!('updateConfiguration' in $store.getters.apis)"
           v-model:value="editableValue"
           @keydown.esc="editableValueKey = null"

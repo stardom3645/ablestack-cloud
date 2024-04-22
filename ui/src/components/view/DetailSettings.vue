@@ -43,6 +43,7 @@
             v-model:value="newKey"
             :options="detailKeys"
             :placeholder="$t('label.name')"
+            :maxlength="100"
             @change="e => onAddInputChange(e, 'newKey')" />
           <a-input
             class="tag-disabled-input"
@@ -55,6 +56,7 @@
             v-model:value="newValue"
             :options="detailValues"
             :placeholder="$t('label.value')"
+            :maxlength="500"
             @change="e => onAddInputChange(e, 'newValue')" />
           <tooltip-button :tooltip="$t('label.add.setting')" :shape="null" icon="check-outlined" @onClick="addDetail" buttonClass="detail-button" />
           <tooltip-button :tooltip="$t('label.cancel')" :shape="null" icon="close-outlined" @onClick="closeDetail" buttonClass="detail-button" />
@@ -74,6 +76,7 @@
                 style="width: 100%"
                 v-model:value="item.value"
                 :options="getDetailOptions(detailOptions[item.name])"
+                :maxlength="500"
                 @change="val => handleInputChange(val, index)"
                 @pressEnter="e => updateDetail(index)" />
               <tooltip-button

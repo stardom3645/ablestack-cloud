@@ -52,7 +52,8 @@
           </template>
           <a-input
             v-model:value="form.kvmnetworklabel"
-            :placeholder="apiParams.kvmnetworklabel.description" />
+            :placeholder="apiParams.kvmnetworklabel.description"
+            :maxlength="20" />
         </a-form-item>
         <a-form-item name="vmwarenetworklabel" ref="vmwarenetworklabel">
           <template #label>
@@ -60,7 +61,8 @@
           </template>
           <a-input
             v-model:value="form.vmwarenetworklabel"
-            :placeholder="apiParams.vmwarenetworklabel.description" />
+            :placeholder="apiParams.vmwarenetworklabel.description"
+            :maxlength="20" />
         </a-form-item>
         <a-form-item name="xennetworklabel" ref="xennetworklabel">
           <template #label>
@@ -68,7 +70,8 @@
           </template>
           <a-input
             v-model:value="form.xennetworklabel"
-            :placeholder="apiParams.xennetworklabel.description" />
+            :placeholder="apiParams.xennetworklabel.description"
+            :maxlength="20" />
         </a-form-item>
         <a-form-item name="hypervnetworklabel" ref="hypervnetworklabel">
           <template #label>
@@ -76,7 +79,8 @@
           </template>
           <a-input
             v-model:value="form.hypervnetworklabel"
-            :placeholder="apiParams.hypervnetworklabel.description" />
+            :placeholder="apiParams.hypervnetworklabel.description"
+            :maxlength="20" />
         </a-form-item>
         <a-form-item name="ovm3networklabel" ref="ovm3networklabel">
           <template #label>
@@ -84,7 +88,8 @@
           </template>
           <a-input
             v-model:value="form.ovm3networklabel"
-            :placeholder="apiParams.ovm3networklabel.description" />
+            :placeholder="apiParams.ovm3networklabel.description"
+            :maxlength="20" />
         </a-form-item>
         <div :span="24" class="action-button">
           <a-button @click="closeAction">{{ $t('label.cancel') }}</a-button>

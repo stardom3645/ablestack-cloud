@@ -186,7 +186,7 @@
             </a-select-option>
           </a-select>
           <p class="modal-form__label">{{ $t('label.publicip') }}:</p>
-          <a-input v-model:value="addNetworkData.ip"></a-input>
+          <a-input v-model:value="addNetworkData.ip" :maxlength="20"></a-input>
         </div>
 
         <div :span="24" class="action-button">
@@ -226,6 +226,7 @@
           <a-input
             v-else
             v-model:value="editIpAddressValue"
+            :maxlength="20"
             v-focus="editNicResource.type!=='Shared'"></a-input>
         </div>
 
@@ -270,6 +271,7 @@
             v-else
             :placeholder="$t('label.new.secondaryip.description')"
             v-model:value="newSecondaryIp"
+            :maxlength="20"
             v-focus="editNicResource.type!=='Shared'"></a-input>
         </div>
 

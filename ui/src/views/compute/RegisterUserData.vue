@@ -32,6 +32,7 @@
           </template>
           <a-input
             v-model:value="form.name"
+            :maxlength="20"
             :placeholder="apiParams.name.description"
             v-focus="true" />
         </a-form-item>
@@ -41,6 +42,7 @@
           </template>
           <a-textarea
             v-model:value="form.userdata"
+            :maxlength="10000"
             :placeholder="apiParams.userdata.description"/>
         </a-form-item>
         <a-form-item name="params" ref="params">
@@ -90,6 +92,7 @@
           </template>
           <a-input
             v-model:value="form.account"
+            :maxlength="500"
             :placeholder="apiParams.account.description"/>
         </a-form-item>
 

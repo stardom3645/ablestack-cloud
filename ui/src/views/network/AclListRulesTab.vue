@@ -128,13 +128,15 @@
             <a-form-item ref="key" name="key">
               <a-input
                 v-focus="true"
-                v-model:value="form.key" />
+                v-model:value="form.key"
+                :maxlength="100" />
             </a-form-item>
           </div>
           <div class="add-tags__input">
             <p class="add-tags__label">{{ $t('label.value') }}</p>
             <a-form-item  ref="value" name="value">
-              <a-input v-model:value="form.value" />
+              <a-input v-model:value="form.value"
+              :maxlength="500" />
             </a-form-item>
           </div>
           <a-button ref="submit" type="primary" :disabled="!(form.key && form.value)" @click="handleAddTag">{{ $t('label.add') }}</a-button>
@@ -173,7 +175,7 @@
           <a-input-number v-focus="true" style="width: 100%" v-model:value="form.number" />
         </a-form-item>
         <a-form-item :label="$t('label.cidrlist')" ref="cidrlist" name="cidrlist">
-          <a-input v-model:value="form.cidrlist" />
+          <a-input v-model:value="form.cidrlist" :maxlength="20" />
         </a-form-item>
         <a-form-item :label="$t('label.action')" ref="action" name="action">
           <a-select
@@ -208,15 +210,15 @@
           :label="$t('label.protocolnumber')"
           ref="protocolnumber"
           name="protocolnumber">
-          <a-input v-model:value="form.protocolnumber" />
+          <a-input v-model:value="form.protocolnumber" :maxlength="20"/>
         </a-form-item>
 
         <div v-if="['icmp', 'protocolnumber'].includes(form.protocol)">
           <a-form-item :label="$t('label.icmptype')" ref="icmptype" name="icmptype">
-            <a-input v-model:value="form.icmptype" :placeholder="$t('icmp.type.desc')" />
+            <a-input v-model:value="form.icmptype" :placeholder="$t('icmp.type.desc')" :maxlength="20" />
           </a-form-item>
           <a-form-item :label="$t('label.icmpcode')" ref="icmpcode" name="icmpcode">
-            <a-input v-model:value="form.icmpcode" :placeholder="$t('icmp.code.desc')" />
+            <a-input v-model:value="form.icmpcode" :placeholder="$t('icmp.code.desc')" :maxlength="20" />
           </a-form-item>
         </div>
 
@@ -245,6 +247,7 @@
           <a-textarea
             v-model:value="form.reason"
             :autoSize="{ minRows: 2 }"
+            :maxlength="100"
             :placeholder="$t('label.acl.reason.description')" />
         </a-form-item>
 

@@ -30,6 +30,7 @@
           <a-input
             v-model:value="form.name"
             :placeholder="apiParams.name.description"
+            :maxlength="20"
             v-focus="true"/>
         </a-form-item>
         <a-form-item name="displaytext" ref="displaytext">
@@ -38,6 +39,7 @@
           </template>
           <a-input
             v-model:value="form.displaytext"
+            :maxlength="100"
             :placeholder="apiParams.displaytext.description"/>
         </a-form-item>
         <a-form-item name="zoneid" ref="zoneid">
@@ -68,6 +70,7 @@
           </template>
           <a-input
             v-model:value="form.cidr"
+            :maxlength="20"
             :placeholder="apiParams.cidr.description"/>
         </a-form-item>
         <a-form-item name="networkdomain" ref="networkdomain">
@@ -76,6 +79,7 @@
           </template>
           <a-input
             v-model:value="form.networkdomain"
+            :maxlength="20"
             :placeholder="apiParams.networkdomain.description"/>
         </a-form-item>
         <a-form-item name="vpcofferingid" ref="vpcofferingid">
@@ -119,6 +123,7 @@
               </template>
               <a-input
                 v-model:value="form.dns1"
+                :maxlength="20"
                 :placeholder="apiParams.dns1.description"/>
             </a-form-item>
           </a-col>
@@ -129,6 +134,7 @@
               </template>
               <a-input
                 v-model:value="form.dns2"
+                :maxlength="20"
                 :placeholder="apiParams.dns2.description"/>
             </a-form-item>
           </a-col>
@@ -141,6 +147,7 @@
               </template>
               <a-input
                 v-model:value="form.ip6dns1"
+                :maxlength="20"
                 :placeholder="apiParams.ip6dns1.description"/>
             </a-form-item>
           </a-col>
@@ -151,6 +158,7 @@
               </template>
               <a-input
                 v-model:value="form.ip6dns2"
+                :maxlength="20"
                 :placeholder="apiParams.ip6dns2.description"/>
             </a-form-item>
           </a-col>
@@ -161,6 +169,7 @@
           </template>
           <a-input
             v-model:value="form.sourcenatipaddress"
+            :maxlength="20"
             :placeholder="apiParams.sourcenatipaddress?.description"/>
         </a-form-item>
         <a-form-item name="start" ref="start">

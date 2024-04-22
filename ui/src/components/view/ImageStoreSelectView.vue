@@ -21,6 +21,7 @@
       class="top-spaced"
       :placeholder="$t('label.search')"
       v-model:value="searchQuery"
+      :maxlength="20"
       style="margin-bottom: 10px;"
       @search="fetchImageStores"
       v-focus="true" />

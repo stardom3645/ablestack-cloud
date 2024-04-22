@@ -127,7 +127,7 @@
         class="form"
       >
         <a-form-item name="prefix" ref="prefix" :label="$t('label.prefix')" class="form__item">
-          <a-input v-model:value="form.prefix" />
+          <a-input v-model:value="form.prefix" :maxlength="20" />
         </a-form-item>
 
         <div :span="24" class="action-button">

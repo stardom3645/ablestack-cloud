@@ -65,6 +65,7 @@
             type="text"
             v-focus="true"
             :placeholder="$t('label.username')"
+            :maxlength="20"
             v-model:value="form.username"
           >
             <template #prefix>
@@ -76,6 +77,7 @@
           <a-input-password
             size="large"
             type="password"
+            :maxlength="15"
             autocomplete="false"
             :placeholder="$t('label.password')"
             v-model:value="form.password"

@@ -33,6 +33,7 @@
             <a-input
               v-model:value="form.name"
               :placeholder="apiParams.name.description"
+              :maxlength="20"
               v-focus="true"/>
           </a-form-item>
           <a-form-item name="displaytext" ref="displaytext">
@@ -41,7 +42,8 @@
             </template>
             <a-input
               v-model:value="form.displaytext"
-              :placeholder="apiParams.displaytext.description"/>
+              :placeholder="apiParams.displaytext.description"
+              :maxlength="100"/>
           </a-form-item>
           <a-form-item name="zoneid" ref="zoneid">
             <template #label>
@@ -136,7 +138,8 @@
             </template>
             <a-input
               v-model:value="form.vlanid"
-              :placeholder="apiParams.vlan ? apiParams.vlan.description : $t('label.vlanid')"/>
+              :placeholder="apiParams.vlan ? apiParams.vlan.description : $t('label.vlanid')"
+              :maxlength="20"/>
           </a-form-item>
           <a-form-item
             v-if="!isObjectEmpty(selectedNetworkOffering) && selectedNetworkOffering.specifyvlan"
@@ -181,7 +184,8 @@
             </template>
             <a-input
               v-model:value="form.isolatedpvlan"
-              :placeholder="apiParams.isolatedpvlan.description"/>
+              :placeholder="apiParams.isolatedpvlan.description"
+              :maxlength="20"/>
           </a-form-item>
           <div :span="24" class="action-button">
             <a-button

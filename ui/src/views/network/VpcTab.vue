@@ -89,10 +89,11 @@
             <a-form-item :label="$t('label.add.list.name')" ref="name" name="name">
               <a-input
                 v-model:value="form.name"
+                :maxlength="20"
                 v-focus="true"></a-input>
             </a-form-item>
             <a-form-item :label="$t('label.description')"  ref="description" name="description">
-              <a-input v-model:value="form.description" />
+              <a-input v-model:value="form.description" :maxlength="100" />
             </a-form-item>
 
             <div :span="24" class="action-button">
@@ -177,6 +178,7 @@
               <a-form-item :label="$t('label.vlan')" ref="vlan" name="vlan" v-if="this.isAdmin()">
                 <a-input
                   :placeholder="placeholders.vlan"
+                  :maxlength="20"
                   v-model:value="form.vlan"
                 ></a-input>
               </a-form-item>

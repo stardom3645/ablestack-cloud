@@ -99,6 +99,7 @@
               :rows="4"
               @change="handleNoteChange"
               v-model:value="annotation"
+              :maxlength="100"
               :placeholder="$t('label.add.note')" />
             <a-checkbox @change="toggleNoteVisibility" v-if="['Admin'].includes($store.getters.userInfo.roletype)" style="margin-top: 10px">
               {{ $t('label.adminsonly') }}

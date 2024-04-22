@@ -33,6 +33,7 @@
         <a-input
           v-focus="true"
           v-model:value="form.name"
+          :maxlength="20"
           :placeholder="apiParams.name.description" />
       </a-form-item>
       <a-form-item ref="zoneid" name="zoneid" v-if="!createVolumeFromVM">
@@ -92,6 +93,7 @@
           </template>
           <a-input
             v-model:value="form.size"
+            :maxlength="20"
             :placeholder="apiParams.size.description"/>
         </a-form-item>
       </span>
@@ -102,6 +104,7 @@
           </template>
           <a-input
             v-model:value="form.miniops"
+            :maxlength="20"
             :placeholder="apiParams.miniops.description"/>
         </a-form-item>
         <a-form-item ref="maxiops" name="maxiops">
@@ -110,6 +113,7 @@
           </template>
           <a-input
             v-model:value="form.maxiops"
+            :maxlength="20"
             :placeholder="apiParams.maxiops.description"/>
         </a-form-item>
       </span>

@@ -153,6 +153,7 @@
             :defaultValue="actualValue"
             :disabled="(!('updateConfiguration' in $store.getters.apis) || configDisabled)"
             v-model:value="editableValue"
+            :maxlength="500"
             @keydown.esc="editableValueKey = null"
             @pressEnter="updateConfigurationValue(configrecord)"
             @change="value => setConfigurationEditable(configrecord, value)"
