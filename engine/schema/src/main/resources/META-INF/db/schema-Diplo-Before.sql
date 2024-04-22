@@ -74,5 +74,6 @@ BEGIN
     DECLARE CONTINUE HANDLER FOR 1060 BEGIN END; SET @ddl = CONCAT('ALTER TABLE ', in_table_name); SET @ddl = CONCAT(@ddl, ' ', 'ADD COLUMN') ; SET @ddl = CONCAT(@ddl, ' ', in_column_name); SET @ddl = CONCAT(@ddl, ' ', in_column_definition); PREPARE stmt FROM @ddl; EXECUTE stmt; DEALLOCATE PREPARE stmt; END;
 
 CALL `cloud`.`IDEMPOTENT_ADD_COLUMN`('cloud.alert', 'show_alert', 'tinyint(1) NOT NULL DEFAULT 1 COMMENT "show popup alert" ');
+CALL `cloud`.`IDEMPOTENT_ADD_COLUMN`('cloud.event', 'client_ip', 'varchar(32) DEFAULT NULL COMMENT "If the security features is enabled, set the client address of the request" ');
 
 UPDATE IGNORE `cloud`.`configuration` SET `value`="PLAINTEXT,oauth2" WHERE `name`="user.authenticators.exclude";

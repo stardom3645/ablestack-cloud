@@ -50,4 +50,6 @@ public interface Event extends ControlledEntity, Identity, InternalIdentity {
     String getParameters();
 
     boolean getArchived();
+
+    String getClientIp();
 }

@@ -31,9 +31,11 @@ import org.apache.cloudstack.api.ApiCommandResourceType;
 import org.apache.cloudstack.api.Identity;
 import org.apache.cloudstack.api.InternalIdentity;
 import org.apache.cloudstack.context.CallContext;
+import org.apache.cloudstack.config.ApiServiceConfiguration;
 import org.apache.cloudstack.framework.config.dao.ConfigurationDao;
 import org.apache.cloudstack.framework.events.EventBus;
 import org.apache.cloudstack.framework.events.EventBusException;
+import org.apache.cloudstack.utils.identity.ManagementServerNode;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
@@ -41,6 +43,8 @@ import org.apache.logging.log4j.LogManager;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 
 import com.cloud.configuration.Config;
+import com.cloud.cluster.dao.ManagementServerHostDao;
+import com.cloud.cluster.ManagementServerHostVO;
 import com.cloud.event.dao.EventDao;
 import com.cloud.projects.Project;
 import com.cloud.projects.dao.ProjectDao;
@@ -66,6 +70,7 @@ public class ActionEventUtils {
     protected static EventBus s_eventBus = null;
     protected static EntityManager s_entityMgr;
     protected static ConfigurationDao s_configDao;
+    protected static ManagementServerHostDao s_msHostDao;
 
     public static final String EventDetails = "event_details";
     public static final String EventId = "event_id";
@@ -85,6 +90,8 @@ public class ActionEventUtils {
     EntityManager entityMgr;
     @Inject
     ConfigurationDao configDao;
+    @Inject
+    ManagementServerHostDao msHostDao;
 
     public ActionEventUtils() {
     }
@@ -188,6 +195,19 @@ public class ActionEventUtils {
         }
         if (startEventId != null) {
             event.setStartId(startEventId);
+        }
+        final boolean securityFeaturesEnabled = Boolean.parseBoolean(s_configDao.getValue("security.features.enabled"));
+        if (securityFeaturesEnabled) {
+            User user = s_userDao.findById(userId);
+            if (user.getUsername().equalsIgnoreCase("admin")) {
+                String ApiAllowedSourceIp = ApiServiceConfiguration.ApiAllowedSourceIp.valueIn(accountId).replaceAll("\\s", "");
+                event.setClientIp(ApiAllowedSourceIp);
+            } else {
+                ManagementServerHostVO msHost = s_msHostDao.findByMsid(ManagementServerNode.getManagementServerId());
+                if (msHost != null) {
+                    event.setClientIp(msHost.getServiceIP());
+                }
+            }
         }
         event = s_eventDao.persist(event);
         return event;

@@ -1420,9 +1420,14 @@ public class AccountManagerImpl extends ManagerBase implements AccountManager, M
     }
 
     @Override
-    @ActionEvent(eventType = EventTypes.EVENT_USER_UPDATE, eventDescription = "Updating User")
+    // @ActionEvent(eventType = EventTypes.EVENT_USER_UPDATE, eventDescription = "Updating User")
     public UserAccount updateUser(UpdateUserCmd updateUserCmd) {
         UserVO user = retrieveAndValidateUser(updateUserCmd);
+        String beforeEmail = user.getEmail();
+        String beforeTimezone = user.getTimezone();
+        String beforeUsername = user.getUsername();
+        String beforeFirstname = user.getFirstname();
+        String beforeLastname = user.getLastname();
         logger.debug("Updating user with Id: " + user.getUuid());
 
         validateAndUpdateApiAndSecretKeyIfNeeded(updateUserCmd, user);
@@ -1446,6 +1451,32 @@ public class AccountManagerImpl extends ManagerBase implements AccountManager, M
             user.setUser2faEnabled(true);
         }
         _userDao.update(user.getId(), user);
+        StringBuilder msg = new StringBuilder("User update: ");
+        msg.append("id = " + user.getId());
+        if (StringUtils.isNotBlank(updateUserCmd.getPassword())) {
+            msg.append("; password for the account has been changed");
+        } else {
+            if (!beforeUsername.equalsIgnoreCase(user.getUsername())) {
+                msg.append("; username = from '" + beforeUsername + "' to '" + user.getUsername()+ "'");
+            }
+            if (beforeEmail != null && beforeEmail.equalsIgnoreCase(user.getEmail())) {
+                msg.append("; email = from '" + beforeEmail + "' to '" + user.getEmail()+ "'");
+            } else if (beforeEmail == null && user.getEmail() != null) {
+                msg.append("; email = '" + user.getEmail()+ "'");
+            }
+            if (!beforeFirstname.equalsIgnoreCase(user.getFirstname())) {
+                msg.append("; firstname = from '" + beforeFirstname + "' to '" + user.getFirstname()+ "'");
+            }
+            if (!beforeLastname.equalsIgnoreCase(user.getLastname())) {
+                msg.append("; lastname = from '" + beforeLastname + "' to '" + user.getLastname()+ "'");
+            }
+            if (beforeTimezone != null && !beforeTimezone.equalsIgnoreCase(user.getTimezone())) {
+                msg.append("; timezone = from '" + beforeTimezone + "' to '" + user.getTimezone()+ "'");
+            } else if (beforeTimezone == null && user.getTimezone() != null) {
+                msg.append("; timezone = '" + user.getTimezone()+ "'");
+            }
+        }
+        ActionEventUtils.onActionEvent(user.getId(), user.getAccountId(), getAccount(user.getAccountId()).getDomainId(), EventTypes.EVENT_USER_UPDATE, msg.toString(), user.getId(), ApiCommandResourceType.User.toString());
         return _userAccountDao.findById(user.getId());
     }
 
@@ -2759,9 +2790,9 @@ public class AccountManagerImpl extends ManagerBase implements AccountManager, M
             logger.warn("User " + account.getUsername() +
                     " has been disabled due to multiple failed login attempts." + " Please contact admin.");
             User user = _userDao.getUserByName(account.getUsername(), account.getDomainId());
-            ActionEventUtils.onActionEvent(user.getId(), user.getAccountId(), account.getDomainId(), EventTypes.EVENT_USER_LOGIN, "user has been disabled due to multiple failed login attempts. UserId : " + user.getId(), user.getId(), ApiCommandResourceType.User.toString());
             int enableTime = incorrectLoginEnableTime.value();
-            _alertMgr.sendAlert(AlertManager.AlertType.ALERT_TYPE_LOGIN, 0, new Long(0), "user has been disabled due to multiple failed login attempts. UserId : " + user.getId(), "User has been disabled due to multiple failed login attempts. Your account will be automatically activated after "+ enableTime +" seconds.");
+            _alertMgr.sendAlert(AlertManager.AlertType.ALERT_TYPE_LOGIN, 0, new Long(0), "User has been disabled due to multiple failed login attempts. UserId : " + user.getId(), "User has been disabled due to multiple failed login attempts. Your account will be automatically activated after " + enableTime + " seconds.");
+            ActionEventUtils.onActionEvent(user.getId(), user.getAccountId(), account.getDomainId(), EventTypes.EVENT_USER_LOGIN, "User has been disabled due to multiple failed login attempts. your account will be automatically activated after " + enableTime + " seconds and an email has been sent.", user.getId(), ApiCommandResourceType.User.toString());
             _enableExecutor.schedule(new EnableUserTask(user), enableTime, TimeUnit.SECONDS);
             throw new CloudAuthenticationException("Failed to authenticate user " + account.getUsername() + " in domain " + account.getDomainId() +
             "; The user has been disabled due to multiple failed login attempts. Your account will be automatically activated after "+ enableTime +" seconds. Please try again in a moment.");

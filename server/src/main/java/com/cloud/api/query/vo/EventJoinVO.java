@@ -118,6 +118,9 @@ public class EventJoinVO extends BaseViewVO implements ControlledViewEntity {
     @Column(name = "display")
     protected boolean display = true;
 
+    @Column(name = "client_ip")
+    private String clientIp;
+
     public EventJoinVO() {
     }
 
@@ -239,6 +242,10 @@ public class EventJoinVO extends BaseViewVO implements ControlledViewEntity {
 
     public boolean getDisplay() {
         return display;
+    }
+
+    public String getClientIp() {
+        return clientIp;
     }
 
     @Override
