@@ -29,6 +29,7 @@
           v-model:value="maxMigrations"
           :addonBefore="$t('label.max.migrations')"
           :min="1"
+          :maxlength="20"
           :step="1"
         />
         &nbsp;&nbsp;

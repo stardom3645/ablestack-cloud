@@ -149,6 +149,7 @@
                 style="width: 100%;"
                 v-model:value="form.publicmtu"
                   :placeholder="apiParams.publicmtu.description"
+                  :maxlength="20"
                   @change="updateMtu(true)"/>
                 <div style="color: red" v-if="errorPublicMtu" v-html="errorPublicMtu"></div>
               </a-form-item>
@@ -164,6 +165,7 @@
                 style="width: 100%;"
                 v-model:value="form.privatemtu"
                   :placeholder="apiParams.privatemtu.description"
+                  :maxlength="20"
                   @change="updateMtu(false)"/>
                 <div style="color: red" v-if="errorPrivateMtu"  v-html="errorPrivateMtu"></div>
               </a-form-item>

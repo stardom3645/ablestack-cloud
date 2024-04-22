@@ -43,6 +43,7 @@
           :style="{ display: 'inline-block', width: 'calc(50% - 12px)' }">
           <a-input-number
             v-model:value="form.vlanRangeStart"
+            :maxlength="20"
             style="width: 100%;"
             v-focus="true"
           />
@@ -57,6 +58,7 @@
           :style="{ display: 'inline-block', width: 'calc(50% - 12px)' }">
           <a-input-number
             v-model:value="form.vlanRangeEnd"
+            :maxlength="20"
             style="width: 100%;"
           />
         </a-form-item>

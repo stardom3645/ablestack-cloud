@@ -64,6 +64,7 @@
           v-model:value="form.deviceid"
           style="width: 100%;"
           :min="0"
+          :maxlength="20"
           :placeholder="$t('label.deviceid')"
         />
       </a-form-item>

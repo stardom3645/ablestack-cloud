@@ -211,6 +211,7 @@
               style="width: 100%;"
               v-model:value="form.privatemtu"
               :placeholder="$t('label.privatemtu')"
+              :maxlength="20"
               @change="updateMtu()"/>
               <div style="color: red" v-if="errorPrivateMtu" v-html="errorPrivateMtu.replace('%x', privateMtuMax)"></div>
           </a-form-item>

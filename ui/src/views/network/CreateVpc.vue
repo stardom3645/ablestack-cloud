@@ -111,6 +111,7 @@
               style="width: 100%;"
               v-model:value="form.publicmtu"
               :placeholder="apiParams.publicmtu.description"
+              :maxlength="20"
               @change="updateMtu()"/>
               <div style="color: red" v-if="errorPublicMtu" v-html="errorPublicMtu"></div>
           </a-form-item>

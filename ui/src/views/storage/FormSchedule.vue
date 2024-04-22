@@ -63,6 +63,7 @@
                     v-model:value="form.time"
                     :min="1"
                     :max="59"
+                    :maxlength="2"
                     v-focus="true" />
                 </a-tooltip>
               </a-form-item>
@@ -118,7 +119,8 @@
                   <a-input-number
                     style="width: 100%"
                     v-model:value="form.maxsnaps"
-                    :min="1" />
+                    :min="1"
+                    :maxlength="20" />
                 </a-tooltip>
               </a-form-item>
             </a-col>
