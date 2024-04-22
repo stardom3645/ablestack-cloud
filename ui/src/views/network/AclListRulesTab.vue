@@ -135,8 +135,7 @@
           <div class="add-tags__input">
             <p class="add-tags__label">{{ $t('label.value') }}</p>
             <a-form-item  ref="value" name="value">
-              <a-input v-model:value="form.value"
-              :maxlength="500" />
+              <a-input v-model:value="form.value" :maxlength="500" />
             </a-form-item>
           </div>
           <a-button ref="submit" type="primary" :disabled="!(form.key && form.value)" @click="handleAddTag">{{ $t('label.add') }}</a-button>

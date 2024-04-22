@@ -185,13 +185,24 @@
                 @blur="handleInputConfirm"
                 @keyup.enter="handleInputConfirm"
                 compact>
-                <a-input ref="input" :value="inputKey" @change="handleKeyChange" style="width: 100px; text-align: center" :placeholder="$t('label.key')" :maxlength="100"/>
+                <a-input
+                  ref="input"
+                  :value="inputKey"
+                  @change="handleKeyChange"
+                  style="width: 100px; text-align: center"
+                  :placeholder="$t('label.key')"
+                  :maxlength="100"/>
                 <a-input
                   class="tag-disabled-input"
                   style=" width: 30px; border-left: 0; pointer-events: none; text-align: center"
                   placeholder="="
                   disabled />
-                <a-input :value="inputValue" @change="handleValueChange" style="width: 100px; text-align: center; border-left: 0" :placeholder="$t('label.value')" :maxlength="500"/>
+                <a-input
+                  :value="inputValue"
+                  @change="handleValueChange"
+                  style="width: 100px; text-align: center; border-left: 0"
+                  :placeholder="$t('label.value')"
+                  :maxlength="500"/>
                 <tooltip-button :tooltip="$t('label.ok')" icon="check-outlined" size="small" @onClick="handleInputConfirm" />
                 <tooltip-button :tooltip="$t('label.cancel')" icon="close-outlined" size="small" @onClick="inputVisible=false" />
               </a-input-group>

@@ -139,7 +139,7 @@
           <template #label>
             <tooltip-label :title="$t('label.name')" :tooltip="apiParams.name.description"/>
           </template>
-          <a-input v-model:value="form.name" :maxlength="20" :placeholder="apiParams.name.description" :maxlength="20"/>
+          <a-input v-model:value="form.name" :maxlength="20" :placeholder="apiParams.name.description"/>
         </a-form-item>
         <a-form-item name="protocol" ref="protocol" v-if="form.scope === 'zone' || form.scope === 'cluster' || form.scope === 'host'">
           <template #label>
@@ -166,7 +166,7 @@
             <template #label>
               <tooltip-label :title="$t('label.server')" :tooltip="$t('message.server.description')"/>
             </template>
-            <a-input v-model:value="form.server" :placeholder="$t('message.server.description')" />
+            <a-input v-model:value="form.server" :placeholder="$t('message.server.description')" :maxlength="100"/>
           </a-form-item>
         </div>
         <div v-if="form.protocol === 'nfs' || form.protocol === 'SMB' || form.protocol === 'ocfs2' || (form.protocol === 'PreSetup' && hypervisorType !== 'VMware') || form.protocol === 'SharedMountPoint'">
@@ -174,26 +174,26 @@
             <template #label>
               <tooltip-label :title="$t('label.path')" :tooltip="$t('message.path.description')"/>
             </template>
-            <a-input v-model:value="form.path" :placeholder="$t('message.path.description')"/>
+            <a-input v-model:value="form.path" :placeholder="$t('message.path.description')" :maxlength="100"/>
           </a-form-item>
         </div>
         <div v-if="form.protocol === 'SMB'">
           <a-form-item :label="$t('label.smbusername')" name="smbUsername" ref="smbUsername">
-            <a-input v-model:value="form.smbUsername"/>
+            <a-input v-model:value="form.smbUsername" :maxlength="100"/>
           </a-form-item>
           <a-form-item :label="$t('label.smbpassword')" name="smbPassword" ref="smbPassword">
-            <a-input-password v-model:value="form.smbPassword"/>
+            <a-input-password v-model:value="form.smbPassword" :maxlength="100"/>
           </a-form-item>
           <a-form-item :label="$t('label.smbdomain')" name="smbDomain" ref="smbDomain">
-            <a-input v-model:value="form.smbDomain"/>
+            <a-input v-model:value="form.smbDomain" :maxlength="100"/>
           </a-form-item>
         </div>
         <div v-if="form.protocol === 'iscsi'">
           <a-form-item :label="$t('label.iqn')" name="iqn" ref="iqn">
-            <a-input v-model:value="form.iqn"/>
+            <a-input v-model:value="form.iqn" :maxlength="100"/>
           </a-form-item>
           <a-form-item :label="$t('label.lun')" name="lun" ref="lun">
-            <a-input v-model:value="form.lun"/>
+            <a-input v-model:value="form.lun" :maxlength="100"/>
           </a-form-item>
         </div>
         <div v-if="form.protocol === 'vmfs' || (form.protocol === 'PreSetup' && hypervisorType === 'VMware') || form.protocol === 'datastorecluster'">
@@ -201,13 +201,13 @@
             <template #label>
               <tooltip-label :title="$t('label.vcenterdatacenter')" :tooltip="$t('message.datacenter.description')"/>
             </template>
-            <a-input v-model:value="form.vCenterDataCenter" :placeholder="$t('message.datacenter.description')"/>
+            <a-input v-model:value="form.vCenterDataCenter" :placeholder="$t('message.datacenter.description')" :maxlength="100"/>
           </a-form-item>
           <a-form-item name="vCenterDataStore" ref="vCenterDataStore">
             <template #label>
               <tooltip-label :title="$t('label.vcenterdatastore')" :tooltip="$t('message.datastore.description')"/>
             </template>
-            <a-input v-model:value="form.vCenterDataStore" :placeholder="$t('message.datastore.description')"/>
+            <a-input v-model:value="form.vCenterDataStore" :placeholder="$t('message.datastore.description')" :maxlength="100"/>
           </a-form-item>
         </div>
         <div v-if="form.protocol !== 'Linstor'">
@@ -243,19 +243,19 @@
             <template #label>
               <tooltip-label :title="$t('label.capacitybytes')" :tooltip="apiParams.capacitybytes.description"/>
             </template>
-            <a-input v-model:value="form.capacityBytes" :placeholder="apiParams.capacitybytes.description" />
+            <a-input v-model:value="form.capacityBytes" :placeholder="apiParams.capacitybytes.description" :maxlength="100"/>
           </a-form-item>
           <a-form-item name="capacityIops" ref="capacityIops">
             <template #label>
               <tooltip-label :title="$t('label.capacityiops')" :tooltip="apiParams.capacityiops.description"/>
             </template>
-            <a-input v-model:value="form.capacityIops" :placeholder="apiParams.capacityiops.description" />
+            <a-input v-model:value="form.capacityIops" :placeholder="apiParams.capacityiops.description" :maxlength="100"/>
           </a-form-item>
           <a-form-item name="url" ref="url">
             <template #label>
               <tooltip-label :title="$t('label.url')" :tooltip="apiParams.url.description"/>
             </template>
-            <a-input v-model:value="form.url" :placeholder="apiParams.url.description" />
+            <a-input v-model:value="form.url" :placeholder="apiParams.url.description" :maxlength="500"/>
           </a-form-item>
         </div>
         <div v-if="form.provider === 'PowerFlex'">
@@ -263,25 +263,25 @@
             <template #label>
               <tooltip-label :title="$t('label.powerflex.gateway')" :tooltip="$t('label.powerflex.gateway')"/>
             </template>
-            <a-input v-model:value="form.powerflexGateway" :placeholder="$t('label.powerflex.gateway')"/>
+            <a-input v-model:value="form.powerflexGateway" :placeholder="$t('label.powerflex.gateway')" :maxlength="100"/>
           </a-form-item>
           <a-form-item name="powerflexGatewayUsername" ref="powerflexGatewayUsername">
             <template #label>
               <tooltip-label :title="$t('label.powerflex.gateway.username')" :tooltip="$t('label.powerflex.gateway.username')"/>
             </template>
-            <a-input v-model:value="form.powerflexGatewayUsername" :placeholder="$t('label.powerflex.gateway.username')"/>
+            <a-input v-model:value="form.powerflexGatewayUsername" :placeholder="$t('label.powerflex.gateway.username')" :maxlength="100"/>
           </a-form-item>
           <a-form-item name="powerflexGatewayPassword" ref="powerflexGatewayPassword">
             <template #label>
               <tooltip-label :title="$t('label.powerflex.gateway.password')" :tooltip="$t('label.powerflex.gateway.password')"/>
             </template>
-            <a-input-password v-model:value="form.powerflexGatewayPassword" :placeholder="$t('label.powerflex.gateway.password')"/>
+            <a-input-password v-model:value="form.powerflexGatewayPassword" :placeholder="$t('label.powerflex.gateway.password')" :maxlength="100"/>
           </a-form-item>
           <a-form-item name="powerflexStoragePool" ref="powerflexStoragePool">
             <template #label>
               <tooltip-label :title="$t('label.powerflex.storage.pool')" :tooltip="$t('label.powerflex.storage.pool')"/>
             </template>
-            <a-input v-model:value="form.powerflexStoragePool" :placeholder="$t('label.powerflex.storage.pool')"/>
+            <a-input v-model:value="form.powerflexStoragePool" :placeholder="$t('label.powerflex.storage.pool')" :maxlength="100"/>
           </a-form-item>
         </div>
         <div v-if="form.protocol === 'RBD'">
@@ -289,30 +289,30 @@
             <template #label>
               <tooltip-label :title="$t('label.rados.monitor')" :tooltip="$t('label.rados.monitor.description')"/>
             </template>
-            <a-input v-model:value="form.radosmonitor" :placeholder="$t('label.rados.monitor')" />
+            <a-input v-model:value="form.radosmonitor" :placeholder="$t('label.rados.monitor')" :maxlength="100" />
           </a-form-item>
           <a-form-item name="radospool" ref="radospool" :label="$t('label.rados.pool')">
-            <a-input v-model:value="form.radospool" :placeholder="$t('label.rados.pool')"/>
+            <a-input v-model:value="form.radospool" :placeholder="$t('label.rados.pool')" :maxlength="100"/>
           </a-form-item>
           <a-form-item name="radosuser" ref="radosuser" :label="$t('label.rados.user')">
-            <a-input v-model:value="form.radosuser" :placeholder="$t('label.rados.user')" />
+            <a-input v-model:value="form.radosuser" :placeholder="$t('label.rados.user')" :maxlength="100"/>
           </a-form-item>
           <a-form-item name="radossecret" ref="radossecret" :label="$t('label.rados.secret')">
-            <a-input v-model:value="form.radossecret" :placeholder="$t('label.rados.secret')" />
+            <a-input v-model:value="form.radossecret" :placeholder="$t('label.rados.secret')" :maxlength="100"/>
           </a-form-item>
         </div>
         <div v-if="form.protocol === 'Glue Block' && form.provider === 'ABLESTACK'">
           <a-form-item name="kradosmonitor" ref="kradosmonitor" :label="$t('label.glueblock.monitor')">
-            <a-input v-model:value="form.kradosmonitor" :placeholder="$t('label.glueblock.monitor')" />
+            <a-input v-model:value="form.kradosmonitor" :placeholder="$t('label.glueblock.monitor')" :maxlength="100" />
           </a-form-item>
           <a-form-item name="kradospool" ref="kradospool" :label="$t('label.glueblock.pool')">
-            <a-input v-model:value="form.kradospool" :placeholder="$t('label.glueblock.pool')"/>
+            <a-input v-model:value="form.kradospool" :placeholder="$t('label.glueblock.pool')" :maxlength="100"/>
           </a-form-item>
           <a-form-item name="kradosuser" ref="kradosuser" :label="$t('label.glueblock.user')">
-            <a-input v-model:value="form.kradosuser" :placeholder="$t('label.glueblock.user')" />
+            <a-input v-model:value="form.kradosuser" :placeholder="$t('label.glueblock.user')" :maxlength="100" />
           </a-form-item>
           <a-form-item name="kradossecret" ref="kradossecret" :label="$t('label.glueblock.secret')">
-            <a-input v-model:value="form.kradossecret" :placeholder="$t('label.glueblock.secret')" />
+            <a-input v-model:value="form.kradossecret" :placeholder="$t('label.glueblock.secret')" :maxlength="100" />
           </a-form-item>
           <a-form-item name="kradospath" ref="kradospath" :label="$t('label.glueblock.path')">
             <a-input v-model:value="form.kradospath" :placeholder="$t('label.glueblock.path')" />
@@ -323,32 +323,32 @@
             <template #label>
               <tooltip-label :title="$t('label.gluefs.server')" :tooltip="$t('label.gluefs.server')"/>
             </template>
-            <a-input v-model:value="form.gluefsserver" :placeholder="$t('label.gluefs.server')" />
+            <a-input v-model:value="form.gluefsserver" :placeholder="$t('label.gluefs.server')" :maxlength="100" />
           </a-form-item>
           <a-form-item name="gluefsuser" ref="gluefsuser" :label="$t('label.gluefs.user')">
-            <a-input v-model:value="form.gluefsuser" :placeholder="$t('label.gluefs.user')" />
+            <a-input v-model:value="form.gluefsuser" :placeholder="$t('label.gluefs.user')" :maxlength="100" />
           </a-form-item>
           <a-form-item name="gluefsname" ref="gluefsname" :label="$t('label.gluefs.name')">
-            <a-input v-model:value="form.gluefsname" :placeholder="$t('label.gluefs.name')" />
+            <a-input v-model:value="form.gluefsname" :placeholder="$t('label.gluefs.name')" :maxlength="100" />
           </a-form-item>
           <a-form-item name="gluefstargetpath" ref="gluefstargetpath">
             <template #label>
               <tooltip-label :title="$t('label.gluefs.path')" :tooltip="$t('label.gluefs.path')"/>
             </template>
-            <a-input v-model:value="form.gluefstargetpath" :placeholder="$t('label.gluefs.path')"/>
+            <a-input v-model:value="form.gluefstargetpath" :placeholder="$t('label.gluefs.path')" :maxlength="100"/>
           </a-form-item>
           <a-form-item name="gluefssecret" ref="gluefssecret" :label="$t('label.gluefs.secret')">
-            <a-input v-model:value="form.gluefssecret" :placeholder="$t('label.gluefs.secret')" />
+            <a-input v-model:value="form.gluefssecret" :placeholder="$t('label.gluefs.secret')" :maxlength="100" />
           </a-form-item>
         </div>
         <div v-if="form.protocol === 'CLVM'">
           <a-form-item name="volumegroup" ref="volumegroup" :label="$t('label.volumegroup')">
-            <a-input v-model:value="form.volumegroup" :placeholder="$t('label.volumegroup')" />
+            <a-input v-model:value="form.volumegroup" :placeholder="$t('label.volumegroup')" :maxlength="100" />
           </a-form-item>
         </div>
         <div v-if="form.protocol === 'Gluster'">
           <a-form-item name="volume" ref="volume" :label="$t('label.volume')">
-            <a-input v-model:value="form.volume" :placeholder="$t('label.volume')"/>
+            <a-input v-model:value="form.volume" :placeholder="$t('label.volume')" :maxlength="100"/>
           </a-form-item>
         </div>
         <div v-if="form.protocol === 'Linstor'">
@@ -356,13 +356,13 @@
             <template #label>
               <tooltip-label :title="$t('label.capacityiops')" :tooltip="apiParams.capacityiops.description"/>
             </template>
-            <a-input v-model:value="form.capacityIops" :placeholder="apiParams.capacityiops.description" />
+            <a-input v-model:value="form.capacityIops" :placeholder="apiParams.capacityiops.description" :maxlength="100" />
           </a-form-item>
           <a-form-item name="resourcegroup" ref="resourcegroup">
             <template #label>
               <tooltip-label :title="$t('label.resourcegroup')" :tooltip="$t('message.linstor.resourcegroup.description')"/>
             </template>
-            <a-input v-model:value="form.resourcegroup" :placeholder="$t('message.linstor.resourcegroup.description')" />
+            <a-input v-model:value="form.resourcegroup" :placeholder="$t('message.linstor.resourcegroup.description')" :maxlength="100" />
           </a-form-item>
         </div>
         <a-form-item name="selectedTags" ref="selectedTags">

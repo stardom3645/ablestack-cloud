@@ -110,9 +110,7 @@
           <a-input v-model:value="form.startip" :maxlength="20" />
         </a-form-item>
         <a-form-item name="endip" ref="endip" :label="$t('label.endip')" class="form__item">
-          <a-input
-            v-model:value="form.endip" :maxlength="20">
-          </a-input>
+          <a-input v-model:value="form.endip" :maxlength="20" />
         </a-form-item>
         <a-form-item name="vms" ref="vms" :label="$t('label.system.vms')" class="form__item">
           <a-checkbox v-model:checked="form.vms"></a-checkbox>

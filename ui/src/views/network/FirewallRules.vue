@@ -150,8 +150,7 @@
           <div class="add-tags__input">
             <p class="add-tags__label">{{ $t('label.value') }}</p>
             <a-form-item name="value" ref="value">
-              <a-input v-model:value="form.value"
-              :maxlength="500"/>
+              <a-input v-model:value="form.value" :maxlength="500"/>
             </a-form-item>
           </div>
           <a-button
