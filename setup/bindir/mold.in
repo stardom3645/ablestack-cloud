@@ -41,13 +41,16 @@ function beforeStart()
 if [ "$oper" == "start" ]; then
     beforeStart
     systemctl start cloudstack-management
+    systemctl start mold-monitoring
     afterStarted
 elif [ "$oper" == "restart" ]; then
     beforeStart
     systemctl restart cloudstack-management
+    systemctl restart mold-monitoring
     afterStarted
 elif [ "$oper" == "stop" ]; then
     systemctl stop cloudstack-management
+    systemctl stop mold-monitoring
 else
     echo "Please enter the parameter value (start, stop, restart)"
     exit 0
