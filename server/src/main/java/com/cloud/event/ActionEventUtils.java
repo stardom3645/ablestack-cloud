@@ -59,6 +59,7 @@ import com.cloud.utils.ReflectUtil;
 import com.cloud.utils.Ternary;
 import com.cloud.utils.component.ComponentContext;
 import com.cloud.utils.db.EntityManager;
+import com.cloud.utils.script.Script;
 
 public class ActionEventUtils {
     protected static Logger logger = LogManager.getLogger(ActionEventUtils.class);
@@ -104,6 +105,7 @@ public class ActionEventUtils {
         s_projectDao = projectDao;
         s_entityMgr = entityMgr;
         s_configDao = configDao;
+        s_msHostDao = msHostDao;
     }
 
     public static Long onActionEvent(Long userId, Long accountId, Long domainId, String type, String description, Long resourceId, String resourceType) {
@@ -206,6 +208,9 @@ public class ActionEventUtils {
                 ManagementServerHostVO msHost = s_msHostDao.findByMsid(ManagementServerNode.getManagementServerId());
                 if (msHost != null) {
                     event.setClientIp(msHost.getServiceIP());
+                } else {
+                    String hostIp = Script.runSimpleBashScript("hostname -i");
+                    event.setClientIp(hostIp);
                 }
             }
         }
