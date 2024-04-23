@@ -55,7 +55,7 @@
         <a-table
           style="margin: 10px 0;"
           :columns="innerColumns"
-          :dataSource="integrityVerificationFinalResultTwo"
+          :dataSource="integrityVerificationFinalResultTwoMap[record.id] || []"
           :pagination="false"
           :bordered="true"
           :rowKey="record.id">
@@ -63,28 +63,28 @@
       </template>
       <template #action="{ record }">
         <tooltip-button
-            style="margin-right: 5px"
-            :dataSource="integrityVerificationFinalResult"
-            :title="$t('label.action.delete.integrity.verification.results')"
-            type="primary"
-            :danger="true"
-            icon="delete-outlined"
-            @onClick="onShowDeleteModal(record)"/>
+          style="margin-right: 5px"
+          :dataSource="integrityVerificationFinalResult"
+          :title="$t('label.action.delete.integrity.verification.results')"
+          type="primary"
+          :danger="true"
+          icon="delete-outlined"
+          @onClick="onShowDeleteModal(record)"/>
       </template>
     </a-table>
     <a-modal
-        :title="selectedItems.length > 0 && showTable ? $t(message.title) : $t('label.action.delete.integrity.verification.result')"
-        :visible="showDeleteResult"
-        :closable="true"
-        :maskClosable="false"
-        :footer="null"
-        :width="showTable ? modalWidth : '30vw'"
-        @ok="selectedItems.length > 0 ? deleteResults() : deleteResult(currentRecord)"
-        @cancel="onCloseModal"
-        :ok-button-props="getOkProps()"
-        :cancel-button-props="getCancelProps()"
-        :confirmLoading="deleteLoading"
-        centered>
+      :title="selectedItems.length > 0 && showTable ? $t(message.title) : $t('label.action.delete.integrity.verification.result')"
+      :visible="showDeleteResult"
+      :closable="true"
+      :maskClosable="false"
+      :footer="null"
+      :width="showTable ? modalWidth : '30vw'"
+      @ok="selectedItems.length > 0 ? deleteResults() : deleteResult(currentRecord)"
+      @cancel="onCloseModal"
+      :ok-button-props="getOkProps()"
+      :cancel-button-props="getCancelProps()"
+      :confirmLoading="deleteLoading"
+      centered>
       <div v-ctrl-enter="deleteResult">
         <div v-if="selectedRowKeys.length > 0">
           <a-alert type="error">
@@ -98,13 +98,13 @@
         <a-alert v-else :message="$t('message.action.delete.integrity.verification.result')" type="warning" />
         <br />
         <a-table
-            v-if="selectedRowKeys.length > 0 && showTable"
-            size="middle"
-            :columns="selectedColumns"
-            :dataSource="selectedItems"
-            :rowKey="record => record.id"
-            :pagination="true"
-            style="overflow-y: auto">
+          v-if="selectedRowKeys.length > 0 && showTable"
+          size="middle"
+          :columns="selectedColumns"
+          :dataSource="selectedItems"
+          :rowKey="record => record.id"
+          :pagination="true"
+          style="overflow-y: auto">
         </a-table>
         <a-spin :spinning="deleteLoading">
           <div :span="24" class="action-button">
@@ -162,6 +162,7 @@ export default {
       integrityVerification: [],
       integrityVerificationFinalResult: [],
       integrityVerificationFinalResultTwo: [],
+      integrityVerificationFinalResultTwoMap: {},
       listValue: [],
       defaultPagination: false,
       columns: [],
@@ -232,12 +233,12 @@ export default {
         title: this.$t('label.failed.integrity.verification.list')
       }
     ]
-    // this.columns.push({
-    //   key: 'actions',
-    //   title: '',
-    //   dataIndex: 'actions',
-    //   width: 100
-    // })
+    this.columns.push({
+      key: 'actions',
+      title: '',
+      dataIndex: 'actions',
+      width: 100
+    })
   },
   watch: {
     loading (newData, oldData) {
@@ -253,9 +254,17 @@ export default {
       this.rules = reactive({})
     },
     showUuid (record, index) {
-      this.integrityVerificationFinalResultTwo = this.integrityVerificationFinalResult.filter(item => item.id === index.id) || []
-      const failedList = index.integrityverificationsfailedlist
-      this.integrityVerificationFinalResultTwo = failedList.split(', ').filter(item => item.trim() !== '')
+      const filteredItem = this.integrityVerificationFinalResult.find(item => item.id === index.id)
+      const key = String(index.id)
+      if (filteredItem && filteredItem.integrityverificationsfailedlist) {
+        const failedList = filteredItem.integrityverificationsfailedlist
+        const updatedValues = failedList.split(', ').filter(item => item.trim() !== '')
+        // index.id를 문자열로 변환하여 사용
+        this.integrityVerificationFinalResultTwoMap[key] = updatedValues
+      } else {
+        // 해당 인덱스의 아이템을 찾지 못한 경우 빈 배열 설정
+        this.integrityVerificationFinalResultTwoMap[key] = []
+      }
     },
     fetchData () {
       const params = {}
