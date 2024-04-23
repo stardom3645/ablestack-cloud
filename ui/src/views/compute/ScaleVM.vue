@@ -18,14 +18,6 @@
 <template>
   <a-form class="form" v-ctrl-enter="handleSubmit">
     <p v-html="getMessage()"></p>
-    <a-alert
-      :message="$t('message.change.offering.warning')"
-      :description="$t('message.change.offering.warning.desc')"
-      type="warning"
-      show-icon
-    />
-    <br />
-
     <div v-if="loading" class="loading">
       <loading-outlined style="color: #1890ff;" />
     </div>
@@ -181,7 +173,7 @@ export default {
       if (this.resource.state === 'Running') {
         return this.resource.memory
       }
-      return this.selectedOffering?.serviceofferingdetails?.minmemory * 1 || 32
+      return this.selectedOffering?.serviceofferingdetails?.minmemory * 1 || 512
     },
     getCPUSpeed () {
       // We can only scale up while a VM is running
