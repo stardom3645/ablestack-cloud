@@ -2062,7 +2062,6 @@ public class NetworkOrchestrator extends ManagerBase implements NetworkOrchestra
 
             final NetworkVO network = implemented.second();
             final NicProfile profile = prepareNic(vmProfile, dest, context, nic.getId(), network);
-            logger.info("prepare profile.getLinkState() ::::::::::::::::::::::::::" + profile.getLinkState());
             if (vmProfile.getType() == Type.DomainRouter) {
                 Pair<NetworkVO, VpcVO> networks = getGuestNetworkRouterAndVpcDetails(vmProfile.getId());
                 setMtuInVRNicProfile(networks, network.getTrafficType(), profile);
