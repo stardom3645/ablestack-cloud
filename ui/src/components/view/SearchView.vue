@@ -21,6 +21,7 @@
       <a-input-search
         v-model:value="searchQuery"
         :placeholder="$t('label.search')"
+        :maxlength="20"
         allowClear
         @search="onSearch"
       />
@@ -33,6 +34,7 @@
         allowClear
         class="input-search"
         :placeholder="$t('label.search')"
+        :maxlength="20"
         v-model:value="searchQuery"
         @search="onSearch">
         <template #addonBefore>
@@ -91,25 +93,27 @@
                   </a-select>
                   <a-input
                     v-else-if="field.type==='input'"
+                    :maxlength="20"
                     v-model:value="form[field.name]" />
                   <div v-else-if="field.type==='tag'">
                     <a-input-group
                       type="text"
                       size="small"
                       compact>
-                      <a-input ref="input" v-model:value="inputKey" style="width: 50px; text-align: center" :placeholder="$t('label.key')" />
+                      <a-input ref="input" v-model:value="inputKey" style="width: 50px; text-align: center" :maxlength="100" :placeholder="$t('label.key')" />
                       <a-input
                         class="tag-disabled-input"
                         style=" width: 20px; border-left: 0; pointer-events: none; text-align: center"
                         placeholder="="
                         disabled />
-                      <a-input v-model:value="inputValue" style="width: 50px; text-align: center; border-left: 0" :placeholder="$t('label.value')" />
+                      <a-input v-model:value="inputValue" style="width: 50px; text-align: center; border-left: 0" :maxlength="500" :placeholder="$t('label.value')" />
                       <tooltip-button :tooltip="$t('label.clear')" icon="close-outlined" size="small" @onClick="inputKey = inputValue = ''" />
                     </a-input-group>
                   </div>
                   <a-auto-complete
                     v-else-if="field.type==='autocomplete'"
                     v-model:value="form[field.name]"
+                    :maxlength="500"
                     :placeholder="$t('message.error.input.value')"
                     :options="field.opts"
                     :filterOption="(inputValue, option) => {

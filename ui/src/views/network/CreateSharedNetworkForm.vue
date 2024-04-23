@@ -33,6 +33,7 @@
             <a-input
               v-model:value="form.name"
               :placeholder="apiParams.name.description"
+              :maxlength="20"
               v-focus="true" />
           </a-form-item>
           <a-form-item name="displaytext" ref="displaytext">
@@ -41,7 +42,8 @@
             </template>
             <a-input
               v-model:value="form.displaytext"
-              :placeholder="apiParams.displaytext.description"/>
+              :placeholder="apiParams.displaytext.description"
+              :maxlength="100"/>
           </a-form-item>
           <a-form-item v-if="isObjectEmpty(zone)" name="zoneid" ref="zoneid">
             <template #label>
@@ -91,7 +93,8 @@
             </template>
             <a-input
               v-model:value="form.vlan"
-              :placeholder="apiParams.vlan.description"/>
+              :placeholder="apiParams.vlan.description"
+              :maxlength="20"/>
           </a-form-item>
           <a-form-item name="bypassvlanoverlapcheck" ref="bypassvlanoverlapcheck" v-if="isAdmin()">
             <template #label>
@@ -129,7 +132,8 @@
             </template>
             <a-input
               v-model:value="form.isolatedpvlan"
-              :placeholder="apiParams.isolatedpvlan.description"/>
+              :placeholder="apiParams.isolatedpvlan.description"
+              :maxlength="20"/>
           </a-form-item>
           <a-form-item :label="$t('label.scope')" name="scope" ref="scope">
             <a-radio-group
@@ -255,6 +259,7 @@
                 style="width: 100%;"
                 v-model:value="form.publicmtu"
                   :placeholder="apiParams.publicmtu.description"
+                  :maxlength="10"
                   @change="updateMtu(true)"/>
                 <div style="color: red" v-if="errorPublicMtu" v-html="errorPublicMtu"></div>
               </a-form-item>
@@ -270,6 +275,7 @@
                 style="width: 100%;"
                 v-model:value="form.privatemtu"
                   :placeholder="apiParams.privatemtu.description"
+                  :maxlength="10"
                   @change="updateMtu(false)"/>
                 <div style="color: red" v-if="errorPrivateMtu"  v-html="errorPrivateMtu"></div>
               </a-form-item>
@@ -306,7 +312,8 @@
                   </template>
                   <a-input
                     v-model:value="form.gateway"
-                    :placeholder="apiParams.gateway.description"/>
+                    :placeholder="apiParams.gateway.description"
+                    :maxlength="20"/>
                 </a-form-item>
               </a-col>
               <a-col :md="12" :lg="12">
@@ -316,7 +323,8 @@
                   </template>
                   <a-input
                     v-model:value="form.netmask"
-                    :placeholder="apiParams.netmask.description"/>
+                    :placeholder="apiParams.netmask.description"
+                    :maxlength="20"/>
                 </a-form-item>
               </a-col>
             </a-row>
@@ -328,7 +336,8 @@
                   </template>
                   <a-input
                     v-model:value="form.startip"
-                    :placeholder="apiParams.startip.description"/>
+                    :placeholder="apiParams.startip.description"
+                    :maxlength="20"/>
                 </a-form-item>
               </a-col>
               <a-col :md="12" :lg="12">
@@ -338,7 +347,8 @@
                   </template>
                   <a-input
                     v-model:value="form.endip"
-                    :placeholder="apiParams.endip.description"/>
+                    :placeholder="apiParams.endip.description"
+                    :maxlength="20"/>
                 </a-form-item>
               </a-col>
             </a-row>
@@ -348,7 +358,8 @@
               </template>
               <a-input
                 v-model:value="form.routerip"
-                :placeholder="apiParams.routerip.description"/>
+                :placeholder="apiParams.routerip.description"
+                :maxlength="20"/>
             </a-form-item>
             <a-row :gutter="12" v-if="selectedNetworkOfferingSupportsDns">
               <a-col :md="12" :lg="12">
@@ -358,7 +369,8 @@
                   </template>
                   <a-input
                     v-model:value="form.dns1"
-                    :placeholder="apiParams.dns1.description"/>
+                    :placeholder="apiParams.dns1.description"
+                    :maxlength="20"/>
                 </a-form-item>
               </a-col>
               <a-col :md="12" :lg="12">
@@ -368,7 +380,8 @@
                   </template>
                   <a-input
                     v-model:value="form.dns2"
-                    :placeholder="apiParams.dns2.description"/>
+                    :placeholder="apiParams.dns2.description"
+                    :maxlength="20"/>
                 </a-form-item>
               </a-col>
             </a-row>
@@ -392,7 +405,8 @@
                   </template>
                   <a-input
                     v-model:value="form.ip6cidr"
-                    :placeholder="apiParams.ip6cidr.description"/>
+                    :placeholder="apiParams.ip6cidr.description"
+                    :maxlength="20"/>
                 </a-form-item>
               </a-col>
             </a-row>
@@ -404,7 +418,8 @@
                   </template>
                   <a-input
                     v-model:value="form.startipv6"
-                    :placeholder="apiParams.startipv6.description"/>
+                    :placeholder="apiParams.startipv6.description"
+                    :maxlength="20"/>
                 </a-form-item>
               </a-col>
               <a-col :md="12" :lg="12">
@@ -414,7 +429,8 @@
                   </template>
                   <a-input
                     v-model:value="form.endipv6"
-                    :placeholder="apiParams.endipv6.description"/>
+                    :placeholder="apiParams.endipv6.description"
+                    :maxlength="20"/>
                 </a-form-item>
               </a-col>
             </a-row>
@@ -424,7 +440,8 @@
               </template>
               <a-input
                 v-model:value="form.routeripv6"
-                :placeholder="apiParams.routeripv6.description"/>
+                :placeholder="apiParams.routeripv6.description"
+                :maxlength="20"/>
             </a-form-item>
             <a-row :gutter="12" v-if="selectedNetworkOfferingSupportsDns">
               <a-col :md="12" :lg="12">
@@ -434,7 +451,8 @@
                   </template>
                   <a-input
                     v-model:value="form.ip6dns1"
-                    :placeholder="apiParams.ip6dns1.description"/>
+                    :placeholder="apiParams.ip6dns1.description"
+                    :maxlength="20"/>
                 </a-form-item>
               </a-col>
               <a-col :md="12" :lg="12">
@@ -444,7 +462,8 @@
                   </template>
                   <a-input
                     v-model:value="form.ip6dns2"
-                    :placeholder="apiParams.ip6dns2.description"/>
+                    :placeholder="apiParams.ip6dns2.description"
+                    :maxlength="20"/>
                 </a-form-item>
               </a-col>
             </a-row>
@@ -455,7 +474,8 @@
             </template>
             <a-input
               v-model:value="form.networkdomain"
-              :placeholder="apiParams.networkdomain.description"/>
+              :placeholder="apiParams.networkdomain.description"
+              :maxlength="20"/>
           </a-form-item>
           <a-form-item name="hideipaddressusage" ref="hideipaddressusage">
             <template #label>

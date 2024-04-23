@@ -26,7 +26,7 @@
         @finish="handleSubmit"
        >
         <a-form-item name="name" ref="name" :label="$t('label.name')">
-          <a-input v-model:value="form.name" v-focus="true" />
+          <a-input v-model:value="form.name" v-focus="true" :maxlength="20"/>
         </a-form-item>
         <a-form-item name="provider" ref="provider" :label="$t('label.providername')">
           <a-select
@@ -67,38 +67,38 @@
             </a-select>
           </a-form-item>
           <a-form-item name="server" ref="server" :label="$t('label.server')">
-            <a-input v-model:value="form.server" />
+            <a-input v-model:value="form.server" :maxlength="100"/>
           </a-form-item>
           <a-form-item name="path" ref="path" :label="$t('label.path')">
-            <a-input v-model:value="form.path" />
+            <a-input v-model:value="form.path" :maxlength="100"/>
           </a-form-item>
         </div>
         <div v-if="form.provider === 'SMB/CIFS'">
           <a-form-item name="smbUsername" ref="smbUsername" :label="$t('label.smbusername')">
-            <a-input v-model:value="form.smbUsername" />
+            <a-input v-model:value="form.smbUsername" :maxlength="100"/>
           </a-form-item>
           <a-form-item name="smbPassword" ref="smbPassword" :label="$t('label.smbpassword')">
-            <a-input-password v-model:value="form.smbPassword" />
+            <a-input-password v-model:value="form.smbPassword" :maxlength="100"/>
           </a-form-item>
           <a-form-item name="smbDomain" ref="smbDomain" :label="$t('label.smbdomain')">
-            <a-input v-model:value="form.smbDomain" />
+            <a-input v-model:value="form.smbDomain" :maxlength="100"/>
           </a-form-item>
         </div>
         <div v-if="form.provider === 'Swift'">
           <a-form-item name="url" ref="url" :label="$t('label.url')">
-            <a-input v-model:value="form.url" />
+            <a-input v-model:value="form.url" :maxlength="500"/>
           </a-form-item>
           <a-form-item name="account" ref="account" :label="$t('label.account')">
-            <a-input v-model:value="form.account" />
+            <a-input v-model:value="form.account" :maxlength="100"/>
           </a-form-item>
           <a-form-item name="username" ref="username" :label="$t('label.username')">
-            <a-input v-model:value="form.username" />
+            <a-input v-model:value="form.username" :maxlength="100"/>
           </a-form-item>
           <a-form-item name="key" ref="key" :label="$t('label.key')">
-            <a-input v-model:value="form.key" />
+            <a-input v-model:value="form.key" :maxlength="100"/>
           </a-form-item>
           <a-form-item name="storagepolicy" ref="storagepolicy" :label="$t('label.storagepolicy')">
-            <a-input v-model:value="form.storagepolicy" />
+            <a-input v-model:value="form.storagepolicy" :maxlength="100"/>
           </a-form-item>
         </div>
         <div v-if="form.provider === 'S3'">
@@ -124,28 +124,28 @@
             </a-select>
           </a-form-item>
           <a-form-item name="secondaryStorageAccessKey" ref="secondaryStorageAccessKey" :label="$t('label.s3.access.key')">
-            <a-input v-model:value="form.secondaryStorageAccessKey" />
+            <a-input v-model:value="form.secondaryStorageAccessKey" :maxlength="100"/>
           </a-form-item>
           <a-form-item name="secondaryStorageSecretKey" ref="secondaryStorageSecretKey" :label="$t('label.s3.secret.key')">
-            <a-input v-model:value="form.secondaryStorageSecretKey" />
+            <a-input v-model:value="form.secondaryStorageSecretKey" :maxlength="100" />
           </a-form-item>
           <a-form-item name="secondaryStorageBucket" ref="secondaryStorageBucket" :label="$t('label.s3.bucket')">
-            <a-input v-model:value="form.secondaryStorageBucket"/>
+            <a-input v-model:value="form.secondaryStorageBucket" :maxlength="100"/>
           </a-form-item>
           <a-form-item name="secondaryStorageEndpoint" ref="secondaryStorageEndpoint" :label="$t('label.s3.endpoint')">
-            <a-input v-model:value="form.secondaryStorageEndpoint"/>
+            <a-input v-model:value="form.secondaryStorageEndpoint" :maxlength="100"/>
           </a-form-item>
           <a-form-item name="secondaryStorageHttps" ref="secondaryStorageHttps" :label="$t('label.s3.use.https')">
-            <a-switch v-model:checked="form.secondaryStorageHttps" />
+            <a-switch v-model:checked="form.secondaryStorageHttps" :maxlength="100"/>
           </a-form-item>
           <a-form-item name="secondaryStorageConnectionTimeout" ref="secondaryStorageConnectionTimeout" :label="$t('label.s3.connection.timeout')">
-            <a-input v-model:value="form.secondaryStorageConnectionTimeout"/>
+            <a-input v-model:value="form.secondaryStorageConnectionTimeout" :maxlength="100"/>
           </a-form-item>
           <a-form-item name="secondaryStorageMaxError" ref="secondaryStorageMaxError" :label="$t('label.s3.max.error.retry')">
-            <a-input v-model:value="form.secondaryStorageMaxError"/>
+            <a-input v-model:value="form.secondaryStorageMaxError" :maxlength="100"/>
           </a-form-item>
           <a-form-item name="secondaryStorageSocketTimeout" ref="secondaryStorageSocketTimeout" :label="$t('label.s3.socket.timeout')">
-            <a-input v-model:value="form.secondaryStorageSocketTimeout"/>
+            <a-input v-model:value="form.secondaryStorageSocketTimeout" :maxlength="100"/>
           </a-form-item>
           <a-form-item name="secondaryStorageNFSStaging" ref="secondaryStorageNFSStaging" :label="$t('label.create.nfs.secondary.staging.storage')">
             <a-switch v-model:checked="form.secondaryStorageNFSStaging" @change="val => secondaryStorageNFSStaging = val" />
@@ -153,10 +153,10 @@
         </div>
         <div v-if="secondaryStorageNFSStaging">
           <a-form-item name="secondaryStorageNFSServer" ref="secondaryStorageNFSServer" :label="$t('label.s3.nfs.server')">
-            <a-input v-model:value="form.secondaryStorageNFSServer" />
+            <a-input v-model:value="form.secondaryStorageNFSServer" :maxlength="100" />
           </a-form-item>
           <a-form-item name="secondaryStorageNFSPath" ref="secondaryStorageNFSPath" :label="$t('label.s3.nfs.path')">
-            <a-input v-model:value="form.secondaryStorageNFSPath"/>
+            <a-input v-model:value="form.secondaryStorageNFSPath" :maxlength="100"/>
           </a-form-item>
         </div>
         <div :span="24" class="action-button">

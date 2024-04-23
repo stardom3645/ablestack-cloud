@@ -39,6 +39,7 @@
         <a-input-search
           :placeholder="$t('label.search')"
           v-model:value="searchQuery"
+          :maxlength="20"
           @search="fetchData" />
       </div>
     </div>

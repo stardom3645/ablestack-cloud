@@ -224,6 +224,7 @@
                 :name="field.name"
                 :ref="field.name"
                 :v-bind="field.name"
+                :maxlength="20"
                 v-if="!(currentAction.mapping && field.name in currentAction.mapping && currentAction.mapping[field.name].value)"
               >
                 <template #label>
@@ -349,11 +350,13 @@
                   style="width: 100%;"
                   v-model:value="form[field.name]"
                   :placeholder="field.description"
+                  :maxlength="10"
                 />
                 <a-input-password
                   v-else-if="field.name==='password' || field.name==='currentpassword' || field.name==='confirmpassword'"
                   v-model:value="form[field.name]"
                   :placeholder="field.description"
+                  :maxlength="15"
                   @blur="($event) => handleConfirmBlur($event, field.name)"
                   v-focus="fieldIndex === firstIndex"
                 />
@@ -362,12 +365,14 @@
                   rows="2"
                   v-model:value="form[field.name]"
                   :placeholder="field.description"
+                  :maxlength="10000"
                   v-focus="fieldIndex === firstIndex"
                 />
                 <a-input
                   v-else
                   v-focus="fieldIndex === firstIndex"
                   v-model:value="form[field.name]"
+                  :maxlength="500"
                   :placeholder="field.description" />
               </a-form-item>
             </div>
@@ -457,6 +462,7 @@
                 :name="field.name"
                 :ref="field.name"
                 :v-bind="field.name"
+                :maxlength="20"
                 v-if="!(currentAction.mapping && field.name in currentAction.mapping && currentAction.mapping[field.name].value)"
               >
                 <template #label>
@@ -590,6 +596,7 @@
                   v-focus="fieldIndex === firstIndex"
                   style="width: 100%;"
                   v-model:value="form[field.name]"
+                  :maxlength="10"
                   :placeholder="field.description"
                 />
                 <a-input-password
@@ -597,6 +604,7 @@
                   v-model:value="form[field.name]"
                   :placeholder="field.description"
                   @blur="($event) => handleConfirmBlur($event, field.name)"
+                  :maxlength="20"
                   v-focus="fieldIndex === firstIndex"
                 />
                 <a-textarea
@@ -604,12 +612,14 @@
                   rows="2"
                   v-model:value="form[field.name]"
                   :placeholder="field.description"
+                  :maxlength="10000"
                   v-focus="fieldIndex === firstIndex"
                 />
                 <a-input
                   v-else
                   v-focus="fieldIndex === firstIndex"
                   v-model:value="form[field.name]"
+                  :maxlength="500"
                   :placeholder="field.description" />
               </a-form-item>
             </div>

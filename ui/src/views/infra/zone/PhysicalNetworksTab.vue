@@ -94,7 +94,7 @@
           <template #label>
             <tooltip-label :title="$t('label.name')" :tooltip="apiParams.name.description"/>
           </template>
-          <a-input v-model:value="form.name" :placeholder="apiParams.name.description" />
+          <a-input v-model:value="form.name" :placeholder="apiParams.name.description" :maxlength="20" />
         </a-form-item>
         <a-form-item name="isolationmethods" ref="isolationmethods">
           <template #label>
@@ -116,7 +116,7 @@
           <template #label>
             <tooltip-label :title="$t('label.vlan')" :tooltip="apiParams.vlan.description"/>
           </template>
-          <a-input v-model:value="form.vlan" :placeholder="apiParams.vlan.description" />
+          <a-input v-model:value="form.vlan" :placeholder="apiParams.vlan.description" :maxlength="20" />
         </a-form-item>
         <a-form-item name="tags" ref="tags">
           <template #label>
@@ -132,13 +132,13 @@
           <template #label>
             <tooltip-label :title="$t('label.networkspeed')" :tooltip="apiParams.networkspeed.description"/>
           </template>
-          <a-input v-model:value="form.networkspeed" :placeholder="apiParams.networkspeed.description" />
+          <a-input v-model:value="form.networkspeed" :placeholder="apiParams.networkspeed.description" :maxlength="20" />
         </a-form-item>
         <a-form-item name="broadcastdomainrange" ref="broadcastdomainrange">
           <template #label>
             <tooltip-label :title="$t('label.broadcastdomainrange')" :tooltip="apiParams.broadcastdomainrange.description"/>
           </template>
-          <a-input v-model:value="form.broadcastdomainrange" :placeholder="apiParams.broadcastdomainrange.description" />
+          <a-input v-model:value="form.broadcastdomainrange" :placeholder="apiParams.broadcastdomainrange.description" :maxlength="20" />
         </a-form-item>
 
         <div :span="24" class="action-button">

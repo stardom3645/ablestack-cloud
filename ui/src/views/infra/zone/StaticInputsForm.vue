@@ -70,6 +70,7 @@
           <a-input
             v-else-if="field.password"
             type="password"
+            :maxlength="20"
             v-model:value="form[field.key]"
             v-focus="index === 0"
           />
@@ -96,6 +97,7 @@
           <a-input
             v-else
             v-model:value="form[field.key]"
+            :maxlength="100"
             v-focus="index === 0"
           />
         </a-form-item>

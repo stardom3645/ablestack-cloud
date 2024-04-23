@@ -33,6 +33,7 @@
             <a-input
              v-model:value="form.name"
               :placeholder="apiParams.name.description"
+              :maxlength="20"
               v-focus="true"/>
           </a-form-item>
           <a-form-item ref="displaytext" name="displaytext">
@@ -41,7 +42,8 @@
             </template>
             <a-input
              v-model:value="form.displaytext"
-              :placeholder="apiParams.displaytext.description"/>
+              :placeholder="apiParams.displaytext.description"
+              :maxlength="100"/>
           </a-form-item>
           <a-form-item ref="zoneid" name="zoneid">
             <template #label>
@@ -113,7 +115,8 @@
             </template>
             <a-input
              v-model:value="form.networkdomain"
-              :placeholder="apiParams.networkdomain.description"/>
+              :placeholder="apiParams.networkdomain.description"
+              :maxlength="20"/>
           </a-form-item>
           <a-form-item ref="networkofferingid" name="networkofferingid">
             <template #label>
@@ -146,6 +149,7 @@
                 style="width: 100%;"
                 v-model:value="form.publicmtu"
                   :placeholder="apiParams.publicmtu.description"
+                  :maxlength="10"
                   @change="updateMtu(true)"/>
                 <div style="color: red" v-if="errorPublicMtu" v-html="errorPublicMtu"></div>
               </a-form-item>
@@ -161,6 +165,7 @@
                 style="width: 100%;"
                 v-model:value="form.privatemtu"
                   :placeholder="apiParams.privatemtu.description"
+                  :maxlength="10"
                   @change="updateMtu(false)"/>
                 <div style="color: red" v-if="errorPrivateMtu"  v-html="errorPrivateMtu"></div>
               </a-form-item>
@@ -175,7 +180,8 @@
             </template>
             <a-input
              v-model:value="form.vlan"
-              :placeholder="apiParams.vlan.description"/>
+              :placeholder="apiParams.vlan.description"
+              :maxlength="20"/>
           </a-form-item>
           <a-form-item
             ref="vpcid"
@@ -207,7 +213,8 @@
             </template>
             <a-input
              v-model:value="form.externalid"
-              :placeholder="apiParams.externalid.description"/>
+              :placeholder="apiParams.externalid.description"
+              :maxlength="20"/>
           </a-form-item>
           <a-form-item
             ref="gateway"
@@ -217,7 +224,8 @@
             </template>
             <a-input
              v-model:value="form.gateway"
-              :placeholder="apiParams.gateway.description"/>
+              :placeholder="apiParams.gateway.description"
+              :maxlength="20"/>
           </a-form-item>
           <a-form-item
             ref="netmask"
@@ -227,7 +235,8 @@
             </template>
             <a-input
              v-model:value="form.netmask"
-              :placeholder="apiParams.netmask.description"/>
+              :placeholder="apiParams.netmask.description"
+              :maxlength="20"/>
           </a-form-item>
           <a-form-item v-if="selectedNetworkOffering && selectedNetworkOffering.specifyipranges" name="startip" ref="startip">
             <template #label>
@@ -235,7 +244,8 @@
             </template>
             <a-input
               v-model:value="form.startip"
-              :placeholder="apiParams.startip.description"/>
+              :placeholder="apiParams.startip.description"
+              :maxlength="20"/>
           </a-form-item>
           <a-form-item v-if="selectedNetworkOffering && selectedNetworkOffering.specifyipranges" name="endip" ref="endip">
             <template #label>
@@ -243,7 +253,8 @@
             </template>
             <a-input
               v-model:value="form.endip"
-              :placeholder="apiParams.endip.description"/>
+              :placeholder="apiParams.endip.description"
+              :maxlength="20"/>
           </a-form-item>
           <div v-if="selectedNetworkOfferingSupportsDns">
             <a-row :gutter="12">
@@ -254,7 +265,8 @@
                   </template>
                   <a-input
                     v-model:value="form.dns1"
-                    :placeholder="apiParams.dns1.description"/>
+                    :placeholder="apiParams.dns1.description"
+                    :maxlength="20"/>
                 </a-form-item>
               </a-col>
               <a-col :md="12" :lg="12">
@@ -264,7 +276,8 @@
                   </template>
                   <a-input
                     v-model:value="form.dns2"
-                    :placeholder="apiParams.dns2.description"/>
+                    :placeholder="apiParams.dns2.description"
+                    :maxlength="20"/>
                 </a-form-item>
               </a-col>
             </a-row>
@@ -276,7 +289,8 @@
                   </template>
                   <a-input
                     v-model:value="form.ip6dns1"
-                    :placeholder="apiParams.ip6dns1.description"/>
+                    :placeholder="apiParams.ip6dns1.description"
+                    :maxlength="20"/>
                 </a-form-item>
               </a-col>
               <a-col :md="12" :lg="12">
@@ -286,7 +300,8 @@
                   </template>
                   <a-input
                     v-model:value="form.ip6dns2"
-                    :placeholder="apiParams.ip6dns2.description"/>
+                    :placeholder="apiParams.ip6dns2.description"
+                    :maxlength="20"/>
                 </a-form-item>
               </a-col>
             </a-row>
@@ -297,7 +312,8 @@
             </template>
             <a-input
               v-model:value="form.sourcenatipaddress"
-              :placeholder="apiParams.sourcenatipaddress?.description"/>
+              :placeholder="apiParams.sourcenatipaddress?.description"
+              :maxlength="20"/>
           </a-form-item>
           <a-form-item
             ref="account"
@@ -308,7 +324,8 @@
             </template>
             <a-input
              v-model:value="form.account"
-              :placeholder="apiParams.account.description"/>
+              :placeholder="apiParams.account.description"
+              :maxlength="20"/>
           </a-form-item>
           <div :span="24" class="action-button">
             <a-button

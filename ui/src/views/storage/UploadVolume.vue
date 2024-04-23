@@ -32,6 +32,7 @@
         <a-form-item name="url" ref="url" :label="$t('label.url')">
           <a-input
             v-model:value="form.url"
+            :maxlength="500"
             :placeholder="apiParams.url.description"/>
         </a-form-item>
         <a-form-item name="name" ref="name">
@@ -40,6 +41,7 @@
           </template>
           <a-input
             v-model:value="form.name"
+            :maxlength="20"
             :placeholder="$t('label.volumename')"
             v-focus="true" />
         </a-form-item>
@@ -107,6 +109,7 @@
           </template>
           <a-input
             v-model:value="form.checksum"
+            :maxlength="500"
             :placeholder="$t('label.volumechecksum.description')"
           />
         </a-form-item>

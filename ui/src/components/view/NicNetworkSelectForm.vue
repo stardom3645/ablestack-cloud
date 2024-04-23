@@ -21,6 +21,7 @@
       <a-input-search
         class="top-spaced"
         :placeholder="$t('label.search')"
+        :maxlength="20"
         v-model:value="searchQuery"
         style="margin-bottom: 10px;"
         @search="fetchNetworks"

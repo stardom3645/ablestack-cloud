@@ -32,6 +32,7 @@
           <a-input
             v-focus="true"
             v-model:value="form.name"
+            :maxlength="20"
             :placeholder="$t('label.name')"/>
         </a-form-item>
         <a-form-item name="displaytext" ref="displaytext">
@@ -40,6 +41,7 @@
           </template>
           <a-input
             v-model:value="form.displaytext"
+            :maxlength="100"
             :placeholder="$t('label.displaytext')"/>
         </a-form-item>
         <a-form-item name="systemvmtype" ref="systemvmtype" v-if="isSystem">
@@ -83,6 +85,7 @@
               </template>
               <a-input
                 v-model:value="form.cpunumber"
+                :maxlength="20"
                 :placeholder="apiParams.cpunumber.description"/>
             </a-form-item>
           </a-col>
@@ -93,6 +96,7 @@
               </template>
               <a-input
                 v-model:value="form.cpuspeed"
+                :maxlength="20"
                 :placeholder="apiParams.cpuspeed.description"/>
             </a-form-item>
           </a-col>
@@ -103,6 +107,7 @@
               </template>
               <a-input
                 v-model:value="form.memory"
+                :maxlength="20"
                 :placeholder="apiParams.memory.description"/>
             </a-form-item>
           </a-col>
@@ -115,6 +120,7 @@
               </template>
               <a-input
                 v-model:value="form.mincpunumber"
+                :maxlength="20"
                 :placeholder="apiParams.mincpunumber.description"/>
             </a-form-item>
           </a-col>
@@ -125,6 +131,7 @@
               </template>
               <a-input
                 v-model:value="form.maxcpunumber"
+                :maxlength="20"
                 :placeholder="apiParams.maxcpunumber.description"/>
             </a-form-item>
           </a-col>
@@ -137,6 +144,7 @@
               </template>
               <a-input
                 v-model:value="form.minmemory"
+                :maxlength="20"
                 :placeholder="apiParams.minmemory.description"/>
             </a-form-item>
           </a-col>
@@ -147,6 +155,7 @@
               </template>
               <a-input
                 v-model:value="form.maxmemory"
+                :maxlength="20"
                 :placeholder="apiParams.maxmemory.description"/>
             </a-form-item>
           </a-col>
@@ -159,6 +168,7 @@
               </template>
               <a-input
                 v-model:value="form.hosttags"
+                :maxlength="20"
                 :placeholder="apiParams.hosttags.description"/>
             </a-form-item>
           </a-col>
@@ -169,6 +179,7 @@
               </template>
               <a-input
                 v-model:value="form.networkrate"
+                :maxlength="20"
                 :placeholder="apiParams.networkrate.description"/>
             </a-form-item>
           </a-col>
@@ -429,6 +440,7 @@
                   </template>
                   <a-input
                     v-model:value="form.diskbytesreadrate"
+                    :maxlength="20"
                     :placeholder="apiParams.bytesreadrate.description"/>
                 </a-form-item>
               </a-col>
@@ -439,6 +451,7 @@
                   </template>
                   <a-input
                     v-model:value="form.diskbyteswriterate"
+                    :maxlength="20"
                     :placeholder="apiParams.byteswriterate.description"/>
                 </a-form-item>
               </a-col>
@@ -451,6 +464,7 @@
                   </template>
                   <a-input
                     v-model:value="form.diskiopsreadrate"
+                    :maxlength="20"
                     :placeholder="apiParams.iopsreadrate.description"/>
                 </a-form-item>
               </a-col>
@@ -461,6 +475,7 @@
                   </template>
                   <a-input
                     v-model:value="form.diskiopswriterate"
+                    :maxlength="20"
                     :placeholder="apiParams.iopswriterate.description"/>
                 </a-form-item>
               </a-col>
@@ -479,6 +494,7 @@
                   </template>
                   <a-input
                     v-model:value="form.diskiopsmin"
+                    :maxlength="20"
                     :placeholder="apiParams.miniops.description"/>
                 </a-form-item>
               </a-col>
@@ -489,6 +505,7 @@
                   </template>
                   <a-input
                     v-model:value="form.diskiopsmax"
+                    :maxlength="20"
                     :placeholder="apiParams.maxiops.description"/>
                 </a-form-item>
               </a-col>
@@ -499,6 +516,7 @@
               </template>
               <a-input
                 v-model:value="form.hypervisorsnapshotreserve"
+                :maxlength="20"
                 :placeholder="apiParams.hypervisorsnapshotreserve.description"/>
             </a-form-item>
             <a-row :gutter="12">
@@ -509,6 +527,7 @@
                   </template>
                   <a-input
                     v-model:value="form.rootdisksize"
+                    :maxlength="20"
                     :placeholder="apiParams.rootdisksize.description"/>
                 </a-form-item>
               </a-col>

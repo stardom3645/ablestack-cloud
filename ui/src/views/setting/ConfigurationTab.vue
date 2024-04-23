@@ -35,6 +35,7 @@
           <a-input-search
           style="width: 25vw; float: right; margin-bottom: 10px; z-index: 8; display: flex"
           :placeholder="$t('label.search')"
+          :maxlength="20"
           v-model:value="filter"
           @search="changePage()"
           v-focus="true" />

@@ -78,6 +78,7 @@
             <a-input
               v-model:value="form.accounts"
               :placeholder="apiParams.accounts.description"
+              :maxlength="20"
               v-focus="true" />
           </a-form-item>
           <div :span="24" class="action-button">

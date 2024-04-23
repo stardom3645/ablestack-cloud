@@ -84,28 +84,28 @@
       <div class="form__item">
         <div class="form__label"><span class="required">* </span>{{ $t('label.clusternamelabel') }}</div>
         <span class="required required-label" ref="requiredCluster">{{ $t('label.required') }}</span>
-        <a-input :placeholder="placeholder.clustername" v-model:value="clustername"></a-input>
+        <a-input :placeholder="placeholder.clustername" v-model:value="clustername" :maxlength="20"></a-input>
       </div>
 
       <template v-if="hypervisor === 'VMware'">
         <div class="form__item">
           <div class="form__label">{{ $t('label.vcenter.host') }}</div>
-          <a-input v-model:value="host"></a-input>
+          <a-input v-model:value="host" :maxlength="20"></a-input>
         </div>
 
         <div class="form__item">
           <div class="form__label">{{ $t('label.vcenterusername') }}</div>
-          <a-input v-model:value="username"></a-input>
+          <a-input v-model:value="username" :maxlength="20"></a-input>
         </div>
 
         <div class="form__item">
           <div class="form__label">{{ $t('label.vcenterpassword') }}</div>
-          <a-input type="password" v-model:value="password"></a-input>
+          <a-input type="password" v-model:value="password" :maxlength="20"></a-input>
         </div>
 
         <div class="form__item">
           <div class="form__label">{{ $t('label.vcenterdatacenter') }}</div>
-          <a-input v-model:value="dataCenter"></a-input>
+          <a-input v-model:value="dataCenter" :maxlength="20"></a-input>
         </div>
       </template>
 

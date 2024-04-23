@@ -74,6 +74,7 @@
           <tooltip-label :title="$t('label.description')" :tooltip="apiParams.description.description"/>
         </template>
         <a-input
+          :maxlength="100"
           v-model:value="form.description"
           v-focus="true" />
       </a-form-item>
@@ -114,6 +115,7 @@
         <a-input
           :addonBefore="$t('label.cron')"
           v-model:value="form.schedule"
+          :maxlength="20"
           :disabled="!form.useCronFormat"
           v-focus="true" />
       </a-form-item>

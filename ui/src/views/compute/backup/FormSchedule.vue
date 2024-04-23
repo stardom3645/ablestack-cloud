@@ -58,6 +58,7 @@
                   :placeholder="$t('label.minute.past.hour')"
                   :min="1"
                   :max="59"
+                  :maxlength="2"
                   v-focus="true" />
               </a-form-item>
             </a-col>

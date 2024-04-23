@@ -20,6 +20,7 @@
     <a-input-search
       style="width: 25vw;float: right;margin-bottom: 10px; z-index: 8;"
       :placeholder="$t('label.search')"
+      :maxlength="20"
       v-model:value="filter"
       @search="handleSearch" />
 
@@ -35,6 +36,7 @@
             v-focus="editableValueKey === index"
             v-if="editableValueKey === index"
             class="editable-value value"
+            :maxlength="500"
             :defaultValue="item.value"
             v-model:value="editableValue"
             @keydown.esc="editableValueKey = null"

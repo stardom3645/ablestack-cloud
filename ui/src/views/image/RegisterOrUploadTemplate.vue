@@ -39,7 +39,8 @@
             <a-input
               v-focus="currentForm === 'Create'"
               v-model:value="form.url"
-              :placeholder="apiParams.url.description" />
+              :placeholder="apiParams.url.description"
+              :maxlength="500" />
           </a-form-item>
         </div>
         <div v-if="currentForm === 'Upload'">
@@ -66,6 +67,7 @@
           <a-input
             v-model:value="form.name"
             :placeholder="apiParams.name.description"
+            :maxlength="20"
             v-focus="currentForm !== 'Create'"/>
         </a-form-item>
         <a-form-item ref="displaytext" name="displaytext">
@@ -74,7 +76,8 @@
           </template>
           <a-input
             v-model:value="form.displaytext"
-            :placeholder="apiParams.displaytext.description" />
+            :placeholder="apiParams.displaytext.description"
+            :maxlength="100" />
         </a-form-item>
         <div v-if="currentForm === 'Create'">
           <a-form-item

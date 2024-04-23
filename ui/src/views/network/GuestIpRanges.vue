@@ -109,16 +109,16 @@
       >
         <div>
           <a-form-item name="startip" ref="startip" :label="$t('label.startip')" class="form__item">
-            <a-input v-focus="true" v-model:value="formUpdRange.startip"></a-input>
+            <a-input v-focus="true" v-model:value="formUpdRange.startip" :maxlength="20"></a-input>
           </a-form-item>
           <a-form-item name="endip" ref="endip" :label="$t('label.endip')" class="form__item">
-            <a-input v-model:value="formUpdRange.endip"></a-input>
+            <a-input v-model:value="formUpdRange.endip" :maxlength="20"></a-input>
           </a-form-item>
           <a-form-item name="gateway" ref="gateway" :label="$t('label.gateway')" class="form__item">
-            <a-input v-model:value="formUpdRange.gateway"></a-input>
+            <a-input v-model:value="formUpdRange.gateway" :maxlength="20"></a-input>
           </a-form-item>
           <a-form-item name="netmask" ref="netmask" :label="$t('label.netmask')" class="form__item">
-            <a-input v-model:value="formUpdRange.netmask"></a-input>
+            <a-input v-model:value="formUpdRange.netmask" :maxlength="20"></a-input>
           </a-form-item>
         </div>
 

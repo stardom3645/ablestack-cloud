@@ -27,17 +27,20 @@
       <a-form-item name="size" ref="size" :label="$t('label.sizegb')">
         <a-input
           v-model:value="form.size"
+          :maxlength="20"
           :placeholder="$t('label.disksize')"/>
       </a-form-item>
       <div v-if="customDiskOfferingIops">
         <a-form-item name="miniops" ref="miniops" :label="$t('label.miniops')">
           <a-input
             v-model:value="form.miniops"
+            :maxlength="20"
             :placeholder="$t('label.miniops')"/>
         </a-form-item>
         <a-form-item name="maxiops" ref="maxiops" :label="$t('label.maxiops')">
           <a-input
             v-model:value="form.maxiops"
+            :maxlength="20"
             :placeholder="$t('label.maxiops')"/>
         </a-form-item>
       </div>

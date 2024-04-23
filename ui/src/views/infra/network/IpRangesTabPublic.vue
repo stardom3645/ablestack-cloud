@@ -145,7 +145,7 @@
       <a-spin :spinning="domainsLoading" v-ctrl-enter="handleAddAccount">
         <div style="margin-bottom: 10px;">
           <div class="list__label">{{ $t('label.account') }}:</div>
-          <a-input v-model:value="addAccount.account" v-focus="true"></a-input>
+          <a-input v-model:value="addAccount.account" v-focus="true" :maxlength="20"></a-input>
         </div>
         <div>
           <div class="list__label">{{ $t('label.domain') }}:</div>
@@ -215,28 +215,28 @@
           </a-select>
         </a-form-item>
         <a-form-item name="vlan" ref="vlan" :label="$t('label.vlan')" class="form__item" v-if="!basicGuestNetwork">
-          <a-input v-model:value="form.vlan" />
+          <a-input v-model:value="form.vlan" :maxlength="20" />
         </a-form-item>
         <div v-if="form.iptype==='ip6'">
           <a-form-item name="ip6gateway" ref="ip6gateway" :label="$t('label.gateway')" class="form__item">
-            <a-input v-model:value="form.ip6gateway" />
+            <a-input v-model:value="form.ip6gateway" :maxlength="20" />
           </a-form-item>
           <a-form-item name="ip6cidr" ref="ip6cidr" :label="$t('label.cidr')" class="form__item">
-            <a-input v-model:value="form.ip6cidr" />
+            <a-input v-model:value="form.ip6cidr" :maxlength="20" />
           </a-form-item>
         </div>
         <div v-else>
           <a-form-item name="gateway" ref="gateway" :label="$t('label.gateway')" class="form__item">
-            <a-input v-model:value="form.gateway" />
+            <a-input v-model:value="form.gateway" :maxlength="20" />
           </a-form-item>
           <a-form-item name="netmask" ref="netmask" :label="$t('label.netmask')" class="form__item">
-            <a-input v-model:value="form.netmask" />
+            <a-input v-model:value="form.netmask" :maxlength="20" />
           </a-form-item>
           <a-form-item name="startip" ref="startip" :label="$t('label.startip')" class="form__item">
-            <a-input v-model:value="form.startip" />
+            <a-input v-model:value="form.startip" :maxlength="20" />
           </a-form-item>
           <a-form-item name="endip" ref="endip" :label="$t('label.endip')" class="form__item">
-            <a-input v-model:value="form.endip" />
+            <a-input v-model:value="form.endip" :maxlength="20" />
           </a-form-item>
         </div>
         <div class="form__item" v-if="!basicGuestNetwork && form.iptype != 'ip6'">
@@ -250,7 +250,7 @@
           </a-form-item>
           <a-spin :spinning="domainsLoading">
             <a-form-item name="account" ref="account" :label="$t('label.account')" class="form__item">
-              <a-input v-model:value="form.account"></a-input>
+              <a-input v-model:value="form.account" :maxlength="20"></a-input>
             </a-form-item>
             <a-form-item name="domain" ref="domain" :label="$t('label.domain')" class="form__item">
               <a-select
@@ -297,24 +297,24 @@
       >
         <div v-if="selectedItem.ip6gateway && !selectedItem.gateway">
           <a-form-item name="ip6gateway" ref="ip6gateway" :label="$t('label.gateway')" class="form__item">
-            <a-input v-model:value="formUpdRange.ip6gateway" />
+            <a-input v-model:value="formUpdRange.ip6gateway" :maxlength="20" />
           </a-form-item>
           <a-form-item name="ip6cidr" ref="ip6cidr" :label="$t('label.cidr')" class="form__item">
-            <a-input v-model:value="formUpdRange.ip6cidr" />
+            <a-input v-model:value="formUpdRange.ip6cidr" :maxlength="20" />
           </a-form-item>
         </div>
         <div v-else>
           <a-form-item name="startip" ref="startip" :label="$t('label.startip')" class="form__item">
-            <a-input v-focus="true" v-model:value="formUpdRange.startip"></a-input>
+            <a-input v-focus="true" v-model:value="formUpdRange.startip" :maxlength="20"></a-input>
           </a-form-item>
           <a-form-item name="endip" ref="endip" :label="$t('label.endip')" class="form__item">
-            <a-input v-model:value="formUpdRange.endip"></a-input>
+            <a-input v-model:value="formUpdRange.endip" :maxlength="20"></a-input>
           </a-form-item>
           <a-form-item name="gateway" ref="gateway" :label="$t('label.gateway')" class="form__item">
-            <a-input v-model:value="formUpdRange.gateway"></a-input>
+            <a-input v-model:value="formUpdRange.gateway" :maxlength="20"></a-input>
           </a-form-item>
           <a-form-item name="netmask" ref="netmask" :label="$t('label.netmask')" class="form__item">
-            <a-input v-model:value="formUpdRange.netmask"></a-input>
+            <a-input v-model:value="formUpdRange.netmask" :maxlength="20"></a-input>
           </a-form-item>
           <a-form-item name="forsystemvms" ref="forsystemvms" :label="$t('label.system.vms')" class="form__item">
             <a-switch v-model:checked="formUpdRange.forsystemvms"></a-switch>

@@ -57,6 +57,7 @@
                 type="password"
                 autocomplete="false"
                 :placeholder="$t('label.password')"
+                :maxlength="15"
                 v-model:value="form.password"
               >
                 <template #prefix>
@@ -70,6 +71,7 @@
                 type="password"
                 autocomplete="false"
                 :placeholder="$t('label.confirmpassword.description')"
+                :maxlength="15"
                 v-model:value="form.confirmpassword"
               >
                 <template #prefix>

@@ -43,7 +43,7 @@
               :rowKey="record => record.key">
               <template #bodyCell="{ column, record }">
                 <template v-if="column.key === 'value'">
-                  <a-input v-model:value="templateUserDataValues[record.key]" />
+                  <a-input v-model:value="templateUserDataValues[record.key]" :maxlength="500"/>
                 </template>
               </template>
             </a-table>
@@ -91,7 +91,7 @@
                               :rowKey="record => record.key">
                               <template #bodyCell="{ column, record }">
                                 <template v-if="column.key === 'value'">
-                                  <a-input v-model:value="userDataValues[record.key]" />
+                                  <a-input v-model:value="userDataValues[record.key]" :maxlength="500" />
                                 </template>
                               </template>
                             </a-table>
@@ -105,6 +105,7 @@
                   <a-form-item name="userdata" ref="userdata" >
                     <a-textarea
                       placeholder="Userdata"
+                      :maxlength="10000"
                       v-model:value="form.userdata">
                     </a-textarea>
                   </a-form-item>

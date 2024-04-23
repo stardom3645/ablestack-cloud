@@ -66,6 +66,7 @@
                   :placeholder="apiParams.name.description"
                   v-focus="true"
                   name="rootCert"
+                  :maxlength="10000"
                   v-model:value="form.root"
                 ></a-textarea>
               </a-form-item>
@@ -85,6 +86,7 @@
                     rows="2"
                     :placeholder="$t('label.intermediate.certificate') + ` ${index + 1}`"
                     :name="`intermediateCert${index}`"
+                    :maxlength="10000"
                     v-model:value="form[`intermediate${index + 1}`]"
                   ></a-textarea>
                 </a-form-item>
@@ -106,6 +108,7 @@
                   rows="2"
                   :placeholder="apiParams.certificate.description"
                   name="serverCert"
+                  :maxlength="10000"
                   v-model:value="form.server"
                 ></a-textarea>
               </a-form-item>
@@ -119,6 +122,7 @@
                   rows="2"
                   :placeholder="apiParams.privatekey.description"
                   name="pkcsKey"
+                  :maxlength="10000"
                   v-model:value="form.pkcs"
                 ></a-textarea>
               </a-form-item>
@@ -131,6 +135,7 @@
                   id="dnsSuffix"
                   :placeholder="apiParams.domainsuffix.description"
                   name="dnsSuffix"
+                  :maxlength="10000"
                   v-model:value="form.dns"
                 ></a-input>
               </a-form-item>
