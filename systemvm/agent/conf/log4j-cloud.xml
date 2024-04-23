@@ -93,7 +93,7 @@ under the License.
         <!-- Setup the Root category -->
         <!-- ======================= -->
 
-        <Root level="DEBUG">
+        <Root level="INFO">
             <AppenderRef ref="CONSOLE"/>
             <AppenderRef ref="cloudLog"/>
             <AppenderRef ref="cloudOut"/>
