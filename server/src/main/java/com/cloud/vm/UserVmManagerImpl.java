@@ -4305,7 +4305,6 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
                     } else if (defaultIps.getMacAddress() != null) {
                         profile = new NicProfile(null, null, defaultIps.getMacAddress());
                     }
-
                     profile.setDefaultNic(true);
                     if (!_networkModel.areServicesSupportedInNetwork(network.getId(), new Service[]{Service.UserData})) {
                         if ((userData != null) && (!userData.isEmpty())) {
@@ -4321,7 +4320,7 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
                         }
                     }
                 }
-
+                profile.setLinkState(requestedIpPair.getLinkState());
                 if (_networkModel.isSecurityGroupSupportedInNetwork(network)) {
                     securityGroupEnabled = true;
                 }
@@ -9111,13 +9110,13 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
             Long hostId = vmInstance.getHostId() != null ? vmInstance.getHostId() : vmInstance.getLastHostId();
             NicLinkStateCommand nlscmd = new NicLinkStateCommand(nicTO, vmInstance.getInstanceName(), cmd.getLinkState());
 
+            nic.setLinkState(cmd.getLinkState());
+            _nicDao.update(nicId, nic);
+
             try {
                 Answer answer = _agentMgr.send(hostId, nlscmd);
                 if (answer == null || !answer.getResult()) {
                     throw new InvalidParameterValueException(String.format("Failed to Update Nic Link State : %s", caller.getUuid()));
-                } else {
-                    nic.setLinkState(cmd.getLinkState());
-                    _nicDao.update(nicId, nic);
                 }
             } catch (Exception ex) {
                 nic.setLinkState(!cmd.getLinkState());

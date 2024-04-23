@@ -415,6 +415,7 @@ public class NicVO implements Nic {
         this.mtu = mtu;
     }
 
+    @Override
     public boolean getLinkState() {
         return linkState;
     }

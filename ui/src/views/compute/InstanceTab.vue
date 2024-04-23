@@ -106,7 +106,7 @@
               <tooltip-button
                 tooltipPlacement="top"
                 :tooltip="$t('label.action.nic.linkstate')"
-                type="primary"
+                :type="record.nic.linkstate ? 'primary' : ''"
                 icon="wifi-outlined" />
             </a-popconfirm>
           </template>

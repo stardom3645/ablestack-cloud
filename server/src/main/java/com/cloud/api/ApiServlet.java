@@ -366,7 +366,7 @@ public class ApiServlet extends HttpServlet {
             auditTrailSb.append(" unknown exception writing api response");
         } finally {
             if (LOGGER.isTraceEnabled()) {
-                LOGGER.trace(auditTrailSb.toString());
+                //LOGGER.trace(auditTrailSb.toString());
             }
             if (LOGGER.isDebugEnabled()) {
                 LOGGER.debug("===END=== " + reqStr);
