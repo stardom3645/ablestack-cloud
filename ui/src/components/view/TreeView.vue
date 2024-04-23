@@ -23,6 +23,7 @@
           <a-input-search
             size="default"
             :placeholder="$t('label.search')"
+            :maxlength="20"
             v-model:value="searchQuery"
             @search="onSearch"
           >

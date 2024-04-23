@@ -34,6 +34,7 @@
             <a-input
               v-model:value="form.account"
               :placeholder="apiParams.addAccountToProject.account.description"
+              :maxlength="20"
               v-focus="true" />
           </a-form-item>
           <a-form-item name="email" ref="email">
@@ -42,6 +43,7 @@
             </template>
             <a-input
               v-model:value="form.email"
+              :maxlength="50"
               :placeholder="apiParams.addAccountToProject.email.description"></a-input>
           </a-form-item>
           <a-form-item name="projectroleid" ref="projectroleid" v-if="apiParams.addAccountToProject.projectroleid">
@@ -106,6 +108,7 @@
             </template>
             <a-input
               v-model:value="form.username"
+              :maxlength="20"
               :placeholder="apiParams.addUserToProject.username.description"
               v-focus="true" />
           </a-form-item>
@@ -115,6 +118,7 @@
             </template>
             <a-input
               v-model:value="form.email"
+              :maxlength="50"
               :placeholder="apiParams.addUserToProject.email.description"></a-input>
           </a-form-item>
           <a-form-item name="projectroleid" ref="projectroleid">

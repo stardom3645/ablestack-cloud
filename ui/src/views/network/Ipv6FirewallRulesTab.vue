@@ -30,11 +30,11 @@
       <div class="form" v-ctrl-enter="addRule">
         <div class="form__item">
           <div class="form__label">{{ $t('label.sourcecidr') }}</div>
-          <a-input v-model:value="newRule.cidrlist" autoFocus></a-input>
+          <a-input v-model:value="newRule.cidrlist" :maxlength="20" autoFocus></a-input>
         </div>
         <div class="form__item">
           <div class="form__label">{{ $t('label.destcidr') }}</div>
-          <a-input v-model:value="newRule.destcidrlist"></a-input>
+          <a-input v-model:value="newRule.destcidrlist" :maxlength="20"></a-input>
         </div>
         <div class="form__item">
           <div class="form__label">{{ $t('label.traffictype') }}</div>
@@ -68,19 +68,19 @@
         </div>
         <div v-show="newRule.protocol === 'tcp' || newRule.protocol === 'udp'" class="form__item">
           <div class="form__label">{{ $t('label.startport') }}</div>
-          <a-input v-model:value="newRule.startport"></a-input>
+          <a-input v-model:value="newRule.startport" :maxlength="20"></a-input>
         </div>
         <div v-show="newRule.protocol === 'tcp' || newRule.protocol === 'udp'" class="form__item">
           <div class="form__label">{{ $t('label.endport') }}</div>
-          <a-input v-model:value="newRule.endport"></a-input>
+          <a-input v-model:value="newRule.endport" :maxlength="20"></a-input>
         </div>
         <div v-show="newRule.protocol === 'icmp'" class="form__item">
           <div class="form__label">{{ $t('label.icmptype') }}</div>
-          <a-input v-model:value="newRule.icmptype"></a-input>
+          <a-input v-model:value="newRule.icmptype" :maxlength="20"></a-input>
         </div>
         <div v-show="newRule.protocol === 'icmp'" class="form__item">
           <div class="form__label">{{ $t('label.icmpcode') }}</div>
-          <a-input v-model:value="newRule.icmpcode"></a-input>
+          <a-input v-model:value="newRule.icmpcode" :maxlength="20"></a-input>
         </div>
         <div class="form__item">
           <a-button :disabled="!('createIpv6FirewallRule' in $store.getters.apis)" type="primary" ref="submit" @click="addRule">{{ $t('label.add') }}</a-button>

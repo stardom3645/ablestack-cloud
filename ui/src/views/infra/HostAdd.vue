@@ -104,6 +104,7 @@
             </template>
             <a-input
               v-model:value="form.hostname"
+              :maxlength="20"
               :placeholder="placeholder.url"></a-input>
           </a-form-item>
           <a-form-item name="username" ref="username" v-if="selectedClusterHyperVisorType !== 'VMware'">
@@ -112,6 +113,7 @@
             </template>
             <a-input
               v-model:value="form.username"
+              :maxlength="20"
               :placeholder="placeholder.username"></a-input>
           </a-form-item>
           <a-form-item name="authmethod" ref="authmethod" v-if="selectedClusterHyperVisorType !== 'VMware'">
@@ -143,6 +145,7 @@
             </template>
             <a-input-password
               v-model:value="form.password"
+              :maxlength="20"
               :placeholder="placeholder.password" />
           </a-form-item>
           <a-form-item name="agentusername" ref="agentusername" v-if="selectedClusterHyperVisorType === 'Ovm3'">
@@ -213,6 +216,7 @@
                 return option.value.toLowerCase().indexOf(input.toLowerCase()) >= 0
               }"
               v-model:value="form.hosttags"
+              :maxlength="20"
               :placeholder="placeholder.hosttags">
               <a-select-option v-for="tag in hostTagsList" :key="tag.name">{{ tag.name }}</a-select-option>
             </a-select>

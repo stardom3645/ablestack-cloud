@@ -73,10 +73,10 @@
             v-ctrl-enter="updateProjectRole"
            >
             <a-form-item ref="name" name="name" :label="$t('label.name')">
-              <a-input v-model:value="form.name" v-focus="true"></a-input>
+              <a-input v-model:value="form.name" v-focus="true" :maxlength="20"></a-input>
             </a-form-item>
             <a-form-item ref="description" name="description" :label="$t('label.description')">
-              <a-input v-model:value="form.description"></a-input>
+              <a-input v-model:value="form.description" :maxlength="100"></a-input>
             </a-form-item>
             <div :span="24" class="action-button">
               <a-button @click="closeAction">{{ $t('label.cancel') }}</a-button>
@@ -103,10 +103,11 @@
             <a-form-item ref="name" name="name" :label="$t('label.name')">
               <a-input
                 v-model:value="form.name"
+                :maxlength="20"
                 v-focus="true"></a-input>
             </a-form-item>
             <a-form-item ref="description" name="description" :label="$t('label.description')">
-              <a-input v-model:value="form.description"></a-input>
+              <a-input v-model:value="form.description" :maxlength="100"></a-input>
             </a-form-item>
             <div :span="24" class="action-button">
               <a-button @click="closeAction">{{ $t('label.cancel') }}</a-button>

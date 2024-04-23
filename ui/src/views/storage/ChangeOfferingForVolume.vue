@@ -60,6 +60,7 @@
         </template>
         <a-input
           v-model:value="form.size"
+          :maxlength="20"
           :placeholder="$t('label.disksize')"/>
       </a-form-item>
     </span>
@@ -70,6 +71,7 @@
         </template>
         <a-input
           v-model:value="form.miniops"
+          :maxlength="20"
           :placeholder="this.$t('label.miniops')"/>
       </a-form-item>
       <a-form-item name="maxiops" ref="maxiops">
@@ -78,6 +80,7 @@
         </template>
         <a-input
           v-model:value="form.maxiops"
+          :maxlength="20"
           :placeholder="this.$t('label.maxiops')"/>
       </a-form-item>
     </span>

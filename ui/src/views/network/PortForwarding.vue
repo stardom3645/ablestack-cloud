@@ -26,6 +26,7 @@
               v-focus="true"
               v-model:value="newRule.privateport"
               :placeholder="$t('label.start')"
+              :maxlength="20"
               style="border-right: 0; width: 60px; margin-right: 0;"></a-input>
             <a-input
               placeholder="-"
@@ -36,6 +37,7 @@
             <a-input
               v-model:value="newRule.privateendport"
               :placeholder="$t('label.end')"
+              :maxlength="20"
               style="border-left: 0; width: 60px; text-align: right; margin-right: 0;"></a-input>
           </a-input-group>
         </div>
@@ -45,6 +47,7 @@
             <a-input
               v-model:value="newRule.publicport"
               :placeholder="$t('label.start')"
+              :maxlength="20"
               style="border-right: 0; width: 60px; margin-right: 0;"></a-input>
             <a-input
               placeholder="-"
@@ -55,6 +58,7 @@
             <a-input
               v-model:value="newRule.publicendport"
               :placeholder="$t('label.end')"
+              :maxlength="20"
               style="border-left: 0; width: 60px; text-align: right; margin-right: 0;"></a-input>
           </a-input-group>
         </div>
@@ -170,13 +174,14 @@
           <a-form-item name="key" ref="key">
             <a-input
               v-focus="true"
-              v-model:value="form.key" />
+              v-model:value="form.key"
+              :maxlength="100" />
           </a-form-item>
         </div>
         <div class="add-tags__input">
           <p class="add-tags__label">{{ $t('label.value') }}</p>
           <a-form-item name="value" ref="value">
-            <a-input v-model:value="form.value" />
+            <a-input v-model:value="form.value" :maxlength="500" />
           </a-form-item>
         </div>
 
@@ -232,6 +237,7 @@
           v-focus="!('vpcid' in resource && !('associatednetworkid' in resource))"
           class="input-search"
           :placeholder="$t('label.search')"
+          :maxlength="20"
           v-model:value="searchQuery"
           allowClear
           @search="onSearch" />

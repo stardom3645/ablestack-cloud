@@ -44,6 +44,7 @@
                 style="width: 150px;"
                 v-model:value="form['ipAddress' + record.id]"
                 :placeholder="record.cidr"
+                :maxlength="20"
                 @change="($event) => updateNetworkData('ipAddress', record.id, $event.target.value)">
                 <template #suffix>
                   <a-tooltip :title="getIpRangeDescription(record)">
@@ -58,6 +59,7 @@
               <a-input
                 style="width: 150px;"
                 :placeholder="$t('label.macaddress')"
+                :maxlength="20"
                 v-model:value="form[`macAddress` + record.id]"
                 @change="($event) => updateNetworkData('macAddress', record.id, $event.target.value)">
                 <template #suffix>

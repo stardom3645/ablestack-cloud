@@ -18,7 +18,7 @@
 <template>
   <a-spin :spinning="componentLoading">
     <div class="new-route" v-ctrl-enter="handleAdd">
-      <a-input v-model:value="newRoute" :placeholder="$t('label.cidr.destination.network')" v-focus="true"></a-input>
+      <a-input v-model:value="newRoute" :placeholder="$t('label.cidr.destination.network')" v-focus="true" :maxlength="20"></a-input>
       <a-button type="primary" :disabled="!('createStaticRoute' in $store.getters.apis)" @click="handleAdd">{{ $t('label.add.route') }}</a-button>
     </div>
 
@@ -57,13 +57,14 @@
             <a-form-item name="key" ref="key">
               <a-input
                 v-focus="true"
-                v-model:value="form.key" />
+                v-model:value="form.key"
+                :maxlength="100" />
             </a-form-item>
           </div>
           <div class="add-tags__input">
             <p class="add-tags__label">{{ $t('label.value') }}</p>
             <a-form-item name="value" ref="value">
-              <a-input v-model:value="form.value" />
+              <a-input v-model:value="form.value" :maxlength="500" />
             </a-form-item>
           </div>
           <a-button type="primary" :disabled="!('createTags' in $store.getters.apis)" @click="handleAddTag">{{ $t('label.add') }}</a-button>

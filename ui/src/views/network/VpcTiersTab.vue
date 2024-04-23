@@ -180,6 +180,7 @@
             <a-input
               :placeholder="$t('label.create.tier.name.description')"
               v-model:value="form.name"
+              :maxlength="20"
               v-focus="true"></a-input>
           </a-form-item>
           <a-form-item ref="networkOffering" name="networkOffering" :colon="false">
@@ -210,6 +211,7 @@
               style="width: 100%;"
               v-model:value="form.privatemtu"
               :placeholder="$t('label.privatemtu')"
+              :maxlength="10"
               @change="updateMtu()"/>
               <div style="color: red" v-if="errorPrivateMtu" v-html="errorPrivateMtu.replace('%x', privateMtuMax)"></div>
           </a-form-item>
@@ -219,6 +221,7 @@
             </template>
             <a-input
               v-model:value="form.vlan"
+              :maxlength="20"
               :placeholder="$t('label.vlan')"/>
           </a-form-item>
           <a-form-item ref="gateway" name="gateway" :colon="false">
@@ -227,6 +230,7 @@
             </template>
             <a-input
               :placeholder="$t('label.create.tier.gateway.description')"
+              :maxlength="20"
               v-model:value="form.gateway"></a-input>
           </a-form-item>
           <a-form-item ref="netmask" name="netmask" :colon="false">
@@ -235,6 +239,7 @@
             </template>
             <a-input
               :placeholder="$t('label.create.tier.netmask.description')"
+              :maxlength="20"
               v-model:value="form.netmask"></a-input>
           </a-form-item>
           <a-form-item ref="externalId" name="externalId" :colon="false">
@@ -243,6 +248,7 @@
             </template>
             <a-input
               :placeholder=" $t('label.create.tier.externalid.description')"
+              :maxlength="20"
               v-model:value="form.externalId"/>
           </a-form-item>
           <a-form-item ref="acl" name="acl" :colon="false">
@@ -296,23 +302,26 @@
             <a-input
               v-focus="true"
               :placeholder="$t('label.internallb.name.description')"
+              :maxlength="20"
               v-model:value="form.name"/>
           </a-form-item>
           <a-form-item ref="description" name="description" :label="$t('label.description')">
             <a-input
               :placeholder="$t('label.internallb.description')"
+              :maxlength="100"
               v-model:value="form.description"/>
           </a-form-item>
           <a-form-item ref="sourceIP" name="sourceIP" :label="$t('label.sourceipaddress')">
             <a-input
               :placeholder="$t('label.internallb.sourceip.description')"
+              :maxlength="20"
               v-model:value="form.sourceIP"/>
           </a-form-item>
           <a-form-item ref="sourcePort" name="sourcePort" :label="$t('label.sourceport')">
-            <a-input v-model:value="form.sourcePort"/>
+            <a-input v-model:value="form.sourcePort" :maxlength="20"/>
           </a-form-item>
           <a-form-item ref="instancePort" name="instancePort" :label="$t('label.instanceport')">
-            <a-input v-model:value="form.instancePort"/>
+            <a-input v-model:value="form.instancePort" :maxlength="20"/>
           </a-form-item>
           <a-form-item ref="algorithm" name="algorithm" :label="$t('label.algorithm')">
             <a-select

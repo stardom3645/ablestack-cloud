@@ -54,6 +54,7 @@
                   <a-input
                     v-model:value="form.gateway"
                     :placeholder="$t('label.gateway')"
+                    :maxlength="20"
                     v-focus="true"
                   />
                 </a-form-item>
@@ -63,6 +64,7 @@
                   <a-input
                     v-model:value="form.netmask"
                     :placeholder="$t('label.netmask')"
+                    :maxlength="20"
                   />
                 </a-form-item>
               </div>
@@ -71,6 +73,7 @@
                   <a-input
                     v-model:value="form.vlan"
                     :placeholder="$t('label.vlan')"
+                    :maxlength="20"
                   />
                 </a-form-item>
               </div>
@@ -79,6 +82,7 @@
                   <a-input
                     v-model:value="form.startIp"
                     :placeholder="$t('label.start.ip')"
+                    :maxlength="20"
                   />
                 </a-form-item>
               </div>
@@ -87,6 +91,7 @@
                   <a-input
                     v-model:value="form.endIp"
                     :placeholder="$t('label.end.ip')"
+                    :maxlength="20"
                   />
                 </a-form-item>
               </div>

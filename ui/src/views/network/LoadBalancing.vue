@@ -21,24 +21,24 @@
       <div class="form">
         <div class="form__item" ref="newRuleName">
           <div class="form__label"><span class="form__required">*</span>{{ $t('label.name') }}</div>
-          <a-input v-focus="true" v-model:value="newRule.name"></a-input>
+          <a-input v-focus="true" v-model:value="newRule.name" :maxlength="20"></a-input>
           <span class="error-text">{{ $t('label.required') }}</span>
         </div>
         <div class="form__item" ref="newRulePublicPort">
           <div class="form__label"><span class="form__required">*</span>{{ $t('label.publicport') }}</div>
-          <a-input v-model:value="newRule.publicport"></a-input>
+          <a-input v-model:value="newRule.publicport" :maxlength="20"></a-input>
           <span class="error-text">{{ $t('label.required') }}</span>
         </div>
         <div class="form__item" ref="newRulePrivatePort">
           <div class="form__label"><span class="form__required">*</span>{{ $t('label.privateport') }}</div>
-          <a-input v-model:value="newRule.privateport"></a-input>
+          <a-input v-model:value="newRule.privateport" :maxlength="20"></a-input>
           <span class="error-text">{{ $t('label.required') }}</span>
         </div>
       </div>
       <div class="form">
         <div class="form__item" ref="newCidrList">
           <tooltip-label :title="$t('label.cidrlist')" bold :tooltip="createLoadBalancerRuleParams.cidrlist.description" :tooltip-placement="'right'"/>
-          <a-input v-model:value="newRule.cidrlist"></a-input>
+          <a-input v-model:value="newRule.cidrlist" :maxlength="20"></a-input>
         </div>
         <div class="form__item">
           <div class="form__label">{{ $t('label.algorithm') }}</div>
@@ -241,13 +241,16 @@
           <a-form-item ref="key" name="key">
             <a-input
               v-focus="true"
-              v-model:value="form.key" />
+              v-model:value="form.key"
+              :maxlength="100"/>
           </a-form-item>
         </div>
         <div class="add-tags__input">
           <p class="add-tags__label">{{ $t('label.value') }}</p>
           <a-form-item ref="value" name="value">
-            <a-input v-model:value="form.value" />
+            <a-input
+              v-model:value="form.value"
+              :maxlength="500"/>
           </a-form-item>
         </div>
         <a-button :disabled="!('createTags' in $store.getters.apis)" type="primary" ref="submit" @click="handleAddTag">{{ $t('label.add') }}</a-button>
@@ -321,7 +324,7 @@
           ref="name"
           v-show="stickinessPolicyMethod === 'LbCookie' || stickinessPolicyMethod ===
             'AppCookie' || stickinessPolicyMethod === 'SourceBased'">
-          <a-input v-model:value="form.name" />
+          <a-input v-model:value="form.name" :maxlength="20"/>
           <template #label>
             <tooltip-label :title="$t('label.sticky.name')" :tooltip="createLoadBalancerStickinessPolicyParams.name.description" :tooltip-placement="'right'"/>
           </template>
@@ -337,7 +340,7 @@
               :label="$t('label.sticky.cookie-name')"
               v-show="stickinessPolicyMethod === 'LbCookie' || stickinessPolicyMethod ===
                 'AppCookie'">
-              <a-input v-model:value="form.cookieName" />
+              <a-input v-model:value="form.cookieName" :maxlength="20"/>
             </a-form-item>
             <a-form-item
               name="mode"
@@ -345,7 +348,7 @@
               :label="$t('label.sticky.mode')"
               v-show="stickinessPolicyMethod === 'LbCookie' || stickinessPolicyMethod ===
                 'AppCookie'">
-              <a-input v-model:value="form.mode" />
+              <a-input v-model:value="form.mode" :maxlength="20"/>
             </a-form-item>
             <a-form-item name="nocache" ref="nocache" :label="$t('label.sticky.nocache')" v-show="stickinessPolicyMethod === 'LbCookie'">
               <a-checkbox v-model:checked="form.nocache"></a-checkbox>
@@ -357,13 +360,13 @@
               <a-checkbox v-model:checked="form.postonly"></a-checkbox>
             </a-form-item>
             <a-form-item name="domain" ref="domain" :label="$t('label.domain')" v-show="stickinessPolicyMethod === 'LbCookie'">
-              <a-input v-model:value="form.domain" />
+              <a-input v-model:value="form.domain" :maxlength="20"/>
             </a-form-item>
             <a-form-item name="length" ref="length" :label="$t('label.sticky.length')" v-show="stickinessPolicyMethod === 'AppCookie'">
-              <a-input v-model:value="form.length" type="number" />
+              <a-input v-model:value="form.length" type="number" :maxlength="10" />
             </a-form-item>
             <a-form-item name="holdtime" ref="holdtime" :label="$t('label.sticky.holdtime')" v-show="stickinessPolicyMethod === 'AppCookie'">
-              <a-input v-model:value="form.holdtime" type="number" />
+              <a-input v-model:value="form.holdtime" type="number" :maxlength="10" />
             </a-form-item>
             <a-form-item name="requestLearn" ref="requestLearn" :label="$t('label.sticky.request-learn')" v-show="stickinessPolicyMethod === 'AppCookie'">
               <a-checkbox v-model:checked="form.requestLearn"></a-checkbox>
@@ -372,10 +375,10 @@
               <a-checkbox v-model:checked="form.prefix"></a-checkbox>
             </a-form-item>
             <a-form-item name="tablesize" ref="tablesize" :label="$t('label.sticky.tablesize')" v-show="stickinessPolicyMethod === 'SourceBased'">
-              <a-input v-model:value="form.tablesize" />
+              <a-input v-model:value="form.tablesize" :maxlength="20"/>
             </a-form-item>
             <a-form-item name="expire" ref="expire" :label="$t('label.sticky.expire')" v-show="stickinessPolicyMethod === 'SourceBased'">
-              <a-input v-model:value="form.expire" />
+              <a-input v-model:value="form.expire" :maxlength="20"/>
             </a-form-item>
           </a-card>
         </div>
@@ -401,7 +404,7 @@
       <div class="edit-rule" v-if="selectedRule" v-ctrl-enter="handleSubmitEditForm">
         <div class="edit-rule__item">
           <p class="edit-rule__label">{{ $t('label.name') }}</p>
-          <a-input v-focus="true" v-model:value="editRuleDetails.name" />
+          <a-input v-focus="true" v-model:value="editRuleDetails.name" :maxlength="20"/>
         </div>
         <div class="edit-rule__item">
           <p class="edit-rule__label">{{ $t('label.algorithm') }}</p>
@@ -476,6 +479,7 @@
           v-focus="!('vpcid' in resource && !('associatednetworkid' in resource))"
           class="input-search"
           :placeholder="$t('label.search')"
+          :maxlength="20"
           v-model:value="searchQuery"
           allowClear
           @search="onSearch" />
@@ -577,13 +581,13 @@
           </a-select>
         </a-form-item>
         <a-form-item name="retry" ref="retry" :label="$t('label.monitor.retry')">
-          <a-input v-model:value="monitorForm.retry" />
+          <a-input v-model:value="monitorForm.retry" :maxlength="20"/>
         </a-form-item>
         <a-form-item name="timeout" ref="timeout" :label="$t('label.monitor.timeout')">
-          <a-input v-model:value="monitorForm.timeout" />
+          <a-input v-model:value="monitorForm.timeout" :maxlength="20"/>
         </a-form-item>
         <a-form-item name="interval" ref="interval" :label="$t('label.monitor.interval')">
-          <a-input v-model:value="monitorForm.interval" />
+          <a-input v-model:value="monitorForm.interval" :maxlength="20"/>
         </a-form-item>
         <a-form-item
           name="httpmethodtype"
@@ -607,14 +611,14 @@
           ref="expectedcode"
           :label="$t('label.monitor.expected.code')"
           v-if="healthMonitorParams.type === 'HTTP'">
-          <a-input v-model:value="monitorForm.expectedcode" />
+          <a-input v-model:value="monitorForm.expectedcode" :maxlength="20"/>
         </a-form-item>
         <a-form-item
           name="urlpath"
           ref="urlpath"
           :label="$t('label.monitor.url')"
           v-if="healthMonitorParams.type === 'HTTP'">
-          <a-input v-model:value="monitorForm.urlpath" />
+          <a-input v-model:value="monitorForm.urlpath" :maxlength="500"/>
         </a-form-item>
 
         <div :span="24" class="action-button">
