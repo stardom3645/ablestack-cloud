@@ -28,7 +28,7 @@
 <!--    펼쳐졌을 때 정보-->
     <template #expandedRowRender="{ record, text }">
       <a-descriptions style="margin-top: 10px" layout="vertical" :column="1" :bordered="false" size="small">
-        <a-descriptions-item :label="$t('label.id')">
+        <a-descriptions-item :label="$t('label.id')" class="bold-label">
           {{ record.id }}
         </a-descriptions-item>
         <a-descriptions-item :label="$t('label.dr.volume.root.disk.status')">

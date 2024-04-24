@@ -23,12 +23,17 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
+import javax.persistence.Transient;
 import java.util.Date;
+import java.util.Map;
 import java.util.UUID;
 
 @Entity
 @Table(name = "disaster_recovery_cluster")
 public class DisasterRecoveryClusterVO implements DisasterRecoveryCluster {
+    @Transient
+    Map<String, String> details;
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
@@ -69,6 +74,14 @@ public class DisasterRecoveryClusterVO implements DisasterRecoveryCluster {
 
     @Column(name = "removed")
     private Date removed;
+
+    public Map<String, String> getDetails() {
+        return details;
+    }
+
+    public void setDetails(Map<String, String> details) {
+        this.details = details;
+    }
 
     public long getId() {
         return id;

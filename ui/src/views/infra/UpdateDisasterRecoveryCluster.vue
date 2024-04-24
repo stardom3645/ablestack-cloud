@@ -191,13 +191,15 @@ export default {
         const values = toRaw(this.form)
         this.loading = true
         const params = {
-          id: this.resource.id
+          id: this.resource.id,
+          drclusterstatus: this.resource.drclusterstatus,
+          mirroringagentstatus: this.resource.mirroringagentstatus
         }
         if (this.isValidValueForKey(values, 'state') && this.arrayHasItems(this.states)) {
           params.state = this.states[values.state].id
         }
-        api('updateAutomationControllerVersion', params).then(json => {
-          this.$message.success(`${this.$t('message.success.update.automation.controller.template.version')}: ${this.resource.name}`)
+        api('updateDisasterRecoveryCluster', params).then(json => {
+          this.$message.success(`${this.$t('message.success.update.disaster.recovery.cluster')}: ${this.resource.name}`)
           this.$emit('refresh-data')
           this.closeAction()
         }).catch(error => {

@@ -33,6 +33,8 @@ import org.apache.cloudstack.api.command.admin.AdminCmd;
 import org.apache.cloudstack.api.response.dr.cluster.GetDisasterRecoveryClusterListResponse;
 
 import javax.inject.Inject;
+import java.util.Collection;
+import java.util.Map;
 
 @APICommand(name = UpdateDisasterRecoveryClusterCmd.APINAME,
         description = "Update a disaster recovery",
@@ -65,6 +67,9 @@ public class UpdateDisasterRecoveryClusterCmd extends BaseCmd implements AdminCm
             required = true)
     private String mirroringAgentStatus;
 
+    @Parameter(name = ApiConstants.DETAILS, type = CommandType.MAP, description = "Details in key/value pairs. 'extraconfig' is not allowed to be passed in details.")
+    protected Map<String, String> details;
+
     /////////////////////////////////////////////////////
     /////////////////// Accessors ///////////////////////
     /////////////////////////////////////////////////////
@@ -78,6 +83,15 @@ public class UpdateDisasterRecoveryClusterCmd extends BaseCmd implements AdminCm
 
     public String getMirroringAgentStatus() {
         return mirroringAgentStatus;
+    }
+
+    public Map<String, String> getDetails() {
+        if (this.details == null || this.details.isEmpty()) {
+            return null;
+        }
+
+        Collection<String> paramsCollection = this.details.values();
+        return (Map<String, String>) (paramsCollection.toArray())[0];
     }
 
     @Override

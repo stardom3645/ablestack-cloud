@@ -30,5 +30,5 @@
     <bean id="disasterRecoveryServiceClusterImpl" class="com.cloud.dr.cluster.DisasterRecoveryClusterServiceImpl" />
     <bean id="disasterRecoveryClusterDaoImpl" class="com.cloud.dr.cluster.dao.DisasterRecoveryClusterDaoImpl"/>
     <bean id="disasterRecoveryClusterVmMapDaoImpl" class="com.cloud.dr.cluster.dao.DisasterRecoveryClusterVmMapDaoImpl"/>
-
+    <bean id="DisasterRecoveryClusterDetailsDaoImpl" class="com.cloud.dr.cluster.dao.DisasterRecoveryClusterDetailsDaoImpl"/>
 </beans>

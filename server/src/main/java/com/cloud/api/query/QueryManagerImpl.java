@@ -34,6 +34,7 @@ import java.util.stream.Stream;
 
 import javax.inject.Inject;
 
+import com.cloud.dr.cluster.DisasterRecoveryDetailConstants;
 import com.cloud.storage.StoragePool;
 import com.cloud.storage.StoragePoolHostVO;
 import com.cloud.event.EventVO;
@@ -4861,6 +4862,9 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
             case VnfTemplate:
                 fillVnfTemplateDetailOptions(options);
                 return new DetailOptionsResponse(options);
+            case DisasterRecoveryCluster:
+                fillDisasterRecoveryClusterDetailOptions(options);
+                return new DetailOptionsResponse(options);
             default:
                 throw new CloudRuntimeException("Resource type not supported.");
         }
@@ -4929,6 +4933,13 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
             options.put(VmDetailConstants.SVGA_VRAM_SIZE, Collections.emptyList());
             options.put(VmDetailConstants.RAM_RESERVATION, Collections.emptyList());
         }
+    }
+
+    private void fillDisasterRecoveryClusterDetailOptions(final Map<String, List<String>> options) {
+        if (options == null) {
+            throw new CloudRuntimeException("Invalid/null detail-options response object passed");
+        }
+        options.put(DisasterRecoveryDetailConstants.KEYBOARD, Arrays.asList("uk", "us", "jp", "fr"));
     }
 
     @Override

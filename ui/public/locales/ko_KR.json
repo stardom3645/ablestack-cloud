@@ -4271,6 +4271,8 @@
 "message.warning.dr.mirroring.test.vm.step.start": "\uBBF8\uB7EC\uB9C1 \uBAA8\uC758\uC2DC\uD5D8 \uC2DC, \uAC00\uC0C1\uBA38\uC2E0\uC774 \uC790\uB3D9\uC73C\uB85C \uC815\uC9C0\uB429\uB2C8\uB2E4.",
 "placeholder.dr.cluster.cluster.selection": "\uC7AC\uB09C \uBCF5\uAD6C \uD074\uB7EC\uC2A4\uD130 \uC120\uD0DD",
 "placeholder.dr.cluster.compute.offering.selection": "\uCEF4\uD4E8\uD2B8 \uC624\uD37C\uB9C1 \uC120\uD0DD",
-"placeholder.dr.cluster.network.selection": "\uB124\uD2B8\uC6CC\uD06C \uC120\uD0DD"
+"placeholder.dr.cluster.network.selection": "\uB124\uD2B8\uC6CC\uD06C \uC120\uD0DD",
+"disaster.recovery.cluster": "DR",
+"message.success.update.disaster.recovery.cluster": "\uC7AC\uB09C \uBCF5\uAD6C \uD074\uB7EC\uC2A4\uD130 \uC815\uBCF4\uB97C \uC5C5\uB370\uC774\uD2B8 \uD588\uC2B5\uB2C8\uB2E4."
 }
 
