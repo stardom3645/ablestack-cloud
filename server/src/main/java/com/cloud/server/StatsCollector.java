@@ -1397,9 +1397,7 @@ public class StatsCollector extends ManagerBase implements ComponentMethodInterc
                                 statsForCurrentIteration.setVmId(vmId);
                                 VMInstanceVO vm = vmMap.get(vmId);
                                 statsForCurrentIteration.setVmUuid(vm.getUuid());
-                                logger.debug("::::::statsForCurrentIteration.getQemuAgentVersion():::::"+statsForCurrentIteration.getQemuAgentVersion());
                                 if(statsForCurrentIteration.getQemuAgentVersion() != null && !"".equals(statsForCurrentIteration.getQemuAgentVersion())){
-                                    logger.debug("::::::statsForCurrentIteration.getQemuAgentVersion():::::"+statsForCurrentIteration.getQemuAgentVersion());
                                     VMInstanceVO vmVO = _vmInstance.findById(vmId);
                                     vmVO.setQemuAgentVersion(statsForCurrentIteration.getQemuAgentVersion());
                                     _vmInstance.update(vmId, vmVO);
