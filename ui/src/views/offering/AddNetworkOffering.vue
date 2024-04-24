@@ -29,6 +29,7 @@
             <tooltip-label :title="$t('label.name')" :tooltip="apiParams.name.description"/>
           </template>
           <a-input
+            :maxlength="20"
             v-focus="true"
             v-model:value="form.name"
             :placeholder="apiParams.name.description"/>
@@ -38,6 +39,7 @@
             <tooltip-label :title="$t('label.displaytext')" :tooltip="apiParams.displaytext.description"/>
           </template>
           <a-input
+            :maxlength="100"
             v-model:value="form.displaytext"
             :placeholder="apiParams.displaytext.description"/>
         </a-form-item>
@@ -46,6 +48,7 @@
             <tooltip-label :title="$t('label.networkrate')" :tooltip="apiParams.networkrate.description"/>
           </template>
           <a-input
+            :maxlength="20"
             v-model:value="form.networkrate"
             :placeholder="apiParams.networkrate.description"/>
         </a-form-item>
@@ -335,6 +338,7 @@
           :label="$t('label.service.lb.netscaler.servicepackages.description')"
           v-if="(guestType === 'shared' || guestType === 'isolated') && lbServiceChecked && lbServiceProvider === 'Netscaler'">
           <a-input
+            :maxlength="20"
             v-model:value="form.netscalerservicepackagesdescription"
             :placeholder="$t('label.service.lb.netscaler.servicepackages.description')"/>
         </a-form-item>
@@ -388,6 +392,7 @@
             <tooltip-label :title="$t('label.tags')" :tooltip="apiParams.tags.description"/>
           </template>
           <a-input
+            :maxlength="20"
             v-model:value="form.tags"
             :placeholder="apiParams.tags.description"/>
         </a-form-item>

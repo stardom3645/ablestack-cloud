@@ -31,8 +31,8 @@
             <tooltip-label :title="$t('label.name')" :tooltip="apiParams.name.description"/>
           </template>
           <a-input
-            v-model:value="form.name"
             :maxlength="20"
+            v-model:value="form.name"
             :placeholder="apiParams.name.description"
             v-focus="true" />
         </a-form-item>
@@ -41,8 +41,8 @@
             <tooltip-label :title="$t('label.userdata')" :tooltip="apiParams.userdata.description"/>
           </template>
           <a-textarea
-            v-model:value="form.userdata"
             :maxlength="10000"
+            v-model:value="form.userdata"
             :placeholder="apiParams.userdata.description"/>
         </a-form-item>
         <a-form-item name="params" ref="params">
@@ -91,8 +91,8 @@
             <tooltip-label :title="$t('label.account')" :tooltip="apiParams.account.description"/>
           </template>
           <a-input
-            v-model:value="form.account"
             :maxlength="500"
+            v-model:value="form.account"
             :placeholder="apiParams.account.description"/>
         </a-form-item>
 

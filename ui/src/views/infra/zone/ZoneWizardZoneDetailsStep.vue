@@ -35,6 +35,7 @@
         v-bind="formItemLayout"
         has-feedback>
         <a-input
+          :maxlength="20"
           v-model:value="form.name"
           v-focus="true"
         />
@@ -46,7 +47,7 @@
           :label="$t('label.ipv4.dns1')"
           v-bind="formItemLayout"
           has-feedback>
-          <a-input v-model:value="form.ipv4Dns1" />
+          <a-input :maxlength="20" v-model:value="form.ipv4Dns1"/>
         </a-form-item>
         <a-form-item
           name="ipv4Dns2"
@@ -54,7 +55,7 @@
           :label="$t('label.ipv4.dns2')"
           v-bind="formItemLayout"
           has-feedback>
-          <a-input v-model:value="form.ipv4Dns2" />
+          <a-input :maxlength="20" v-model:value="form.ipv4Dns2"/>
         </a-form-item>
         <a-form-item
           name="ipv6Dns1"
@@ -63,7 +64,7 @@
           v-bind="formItemLayout"
           v-if="isAdvancedZone"
           has-feedback>
-          <a-input v-model:value="form.ipv6Dns1" />
+          <a-input :maxlength="20" v-model:value="form.ipv6Dns1"/>
         </a-form-item>
         <a-form-item
           name="ipv6Dns2"
@@ -72,7 +73,7 @@
           v-bind="formItemLayout"
           v-if="isAdvancedZone"
           has-feedback>
-          <a-input v-model:value="form.ipv6Dns2" />
+          <a-input :maxlength="20" v-model:value="form.ipv6Dns2"/>
         </a-form-item>
         <a-form-item
           name="ipv6Cidr"
@@ -81,7 +82,7 @@
           v-bind="formItemLayout"
           v-if="isAdvancedZone && securityGroupsEnabled"
           has-feedback>
-          <a-input v-model:value="form.ipv6Cidr" />
+          <a-input :maxlength="20" v-model:value="form.ipv6Cidr"/>
         </a-form-item>
         <a-form-item
           name="ip6gateway"
@@ -90,7 +91,7 @@
           v-bind="formItemLayout"
           v-if="isAdvancedZone && securityGroupsEnabled"
           has-feedback>
-          <a-input v-model:value="form.ip6gateway" />
+          <a-input :maxlength="20" v-model:value="form.ip6gateway"/>
         </a-form-item>
         <a-form-item
           name="internalDns1"
@@ -98,7 +99,7 @@
           :label="$t('label.internal.dns.1')"
           v-bind="formItemLayout"
           has-feedback>
-          <a-input v-model:value="form.internalDns1" />
+          <a-input :maxlength="20" v-model:value="form.internalDns1"/>
         </a-form-item>
         <a-form-item
           name="internalDns2"
@@ -106,7 +107,7 @@
           :label="$t('label.internal.dns.2')"
           v-bind="formItemLayout"
           has-feedback>
-          <a-input v-model:value="form.internalDns2" />
+          <a-input :maxlength="20" v-model:value="form.internalDns2"/>
         </a-form-item>
       </div>
       <a-form-item
@@ -161,7 +162,7 @@
           :label="$t('label.network.domain')"
           v-bind="formItemLayout"
           has-feedback>
-          <a-input v-model:value="form.networkDomain" />
+          <a-input :maxlength="20" v-model:value="form.networkDomain"/>
         </a-form-item>
         <a-form-item
           name="guestcidraddress"
@@ -170,7 +171,7 @@
           v-bind="formItemLayout"
           v-if="isAdvancedZone && !securityGroupsEnabled"
           has-feedback>
-          <a-input v-model:value="form.guestcidraddress" />
+          <a-input :maxlength="20" v-model:value="form.guestcidraddress"/>
         </a-form-item>
       </div>
       <a-form-item
@@ -213,7 +214,7 @@
           :label="$t('label.account')"
           v-bind="formItemLayout"
           v-if="isDedicated">
-          <a-input v-model:value="form.account" />
+          <a-input :maxlength="20" v-model:value="form.account"/>
         </a-form-item>
         <a-form-item
           name="localstorageenabled"

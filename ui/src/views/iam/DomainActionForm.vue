@@ -113,12 +113,14 @@
                 v-else-if="field.type==='long'"
                 v-model:value="form[field.name]"
                 :placeholder="field.description"
+                :maxlength="10"
                 v-focus="fieldIndex === firstIndex"
               />
               <a-input
                 v-else
                 v-model:value="form[field.name]"
                 :placeholder="field.description"
+                :maxlength="20"
                 v-focus="fieldIndex === firstIndex" />
             </a-form-item>
           </template>
