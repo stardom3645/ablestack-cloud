@@ -3831,7 +3831,6 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
                     for (String tag : storageTags) {
                         diskOfferingSearch.and(tag, diskOfferingSearch.entity().getTags(), Op.EQ);
                     }
-                    diskOfferingSearch.done();
                 }
             }
 
