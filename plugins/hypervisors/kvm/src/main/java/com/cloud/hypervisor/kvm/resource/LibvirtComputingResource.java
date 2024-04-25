@@ -4758,9 +4758,14 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
             }
             Map<String, String> nicAddrMap = new HashMap<String, String>();
             String qemuAgentVersion = "Not Installed";
-            String result = dm.qemuAgentCommand(QemuCommand.buildQemuCommand(QemuCommand.AGENT_INFO, null), 2, 0);
-            if (result != null && !(result.startsWith("error"))) {
-                 qemuAgentVersion = new JsonParser().parse(result).getAsJsonObject().get("return").getAsJsonObject().get("version").getAsString();
+            stats.setQemuAgentVersion(qemuAgentVersion);
+
+            // String result = dm.qemuAgentCommand(QemuCommand.buildQemuCommand(QemuCommand.AGENT_INFO, null), 2, 0);
+            String mergeCommand = String.format("virsh qemu-agent-command %s '{\"execute\":\"guest-info\"}'", vmName);
+            String result = Script.runSimpleBashScript(mergeCommand);
+
+            if (result != null) {
+                qemuAgentVersion = new JsonParser().parse(result).getAsJsonObject().get("return").getAsJsonObject().get("version").getAsString();
                 stats.setQemuAgentVersion(qemuAgentVersion);
 
                 result = dm.qemuAgentCommand(QemuCommand.buildQemuCommand(QemuCommand.AGENT_NETWORK_GET_INTERFACES, null), 2, 0);
