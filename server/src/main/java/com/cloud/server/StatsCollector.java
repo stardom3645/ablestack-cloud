@@ -1404,12 +1404,13 @@ public class StatsCollector extends ManagerBase implements ComponentMethodInterc
                                 }
 
                                 Map<String, String> agentNicMap = statsForCurrentIteration.getNicAddrMap();
-                                for (String key : agentNicMap.keySet()) {
-                                    NicVO nicVO = _nicDao.findByMacAddress(key);
-                                    if (listL2NicMacAddr.contains(key)) {
-                                        logger.debug("::::::IP ADDR::::::"+agentNicMap.get(key));
-                                        nicVO.setIPv4Address(agentNicMap.get(key));
-                                        _nicDao.update(nicVO.getId(), nicVO);
+                                if (agentNicMap != null) {
+                                    for (String key : agentNicMap.keySet()) {
+                                        NicVO nicVO = _nicDao.findByMacAddress(key);
+                                        if (listL2NicMacAddr.contains(key)) {
+                                            nicVO.setIPv4Address(agentNicMap.get(key));
+                                            _nicDao.update(nicVO.getId(), nicVO);
+                                        }
                                     }
                                 }
                                 persistVirtualMachineStats(statsForCurrentIteration, timestamp);
@@ -2104,7 +2105,7 @@ public class StatsCollector extends ManagerBase implements ComponentMethodInterc
                 statsForCurrentIteration.getDiskWriteKBs(), statsForCurrentIteration.getDiskReadIOs(), statsForCurrentIteration.getDiskWriteIOs(),
                 statsForCurrentIteration.getEntityType());
         VmStatsVO vmStatsVO = new VmStatsVO(statsForCurrentIteration.getVmId(), msId, timestamp, gson.toJson(vmStats));
-        logger.trace(String.format("Recording VM stats: [%s].", vmStatsVO.toString()));
+        logger.debug(String.format("Recording VM stats: [%s].", vmStatsVO.toString()));
         vmStatsDao.persist(vmStatsVO);
     }
 
