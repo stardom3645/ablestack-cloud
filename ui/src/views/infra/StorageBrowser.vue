@@ -182,16 +182,26 @@
             </template>
           </template>
           <template v-else-if="column.key === 'actions' && (record.templateid || record.snapshotid)">
-              <tooltip-button
-              tooltipPlacement="top"
-              :tooltip="$t('label.migrate.data.from.image.store')"
-              icon="arrows-alt-outlined"
-              :copyResource="String(resource.id)"
-              @onClick="openMigrationModal(record)" />
-            </template>
-            <template v-else-if="column.key == 'deleteactions' && (record.templateid || record.volumeid) == null && !['MOLD-AC', 'MOLD-HB','ccvm'].some(forbiddenName => record.name.includes(forbiddenName))">
-              <a-col flex="auto">
-                <a-popconfirm
+            <tooltip-button
+            tooltipPlacement="top"
+            :tooltip="$t('label.migrate.data.from.image.store')"
+            icon="arrows-alt-outlined"
+            :copyResource="String(resource.id)"
+            @onClick="openMigrationModal(record)" />
+          </template>
+          <template v-else-if="column.key == 'deleteactions' && (record.templateid || record.volumeid) == null && !['MOLD-AC', 'MOLD-HB','ccvm'].some(forbiddenName => record.name.includes(forbiddenName))">
+            <a-col flex="auto">
+              <a-button
+                type="primary"
+                size="medium"
+                shape="round"
+                :tooltip="$t('label.create')"
+                @click="showAddTyModal"
+                :loading="loading"
+                >
+                <template #icon><plus-outlined /></template>
+              </a-button>
+              <a-popconfirm
                 :title="`${$t('label.delete.rbd.image')}?`"
                 @confirm="deleteRbdImage(record.name)"
                 :okText="$t('label.yes')"
@@ -205,10 +215,23 @@
                   :tooltip="$t('label.delete')"
                   :danger="true"
                 />
-                  </a-popconfirm>
-              </a-col>
-              </template>
-              </template>
+              </a-popconfirm>
+            </a-col>
+            <a-modal
+              :visible="showAddTypeModal"
+              :title="$t('label.volumetype')"
+              @cancel="closeModals"
+              @ok="createVolume(record.name, record.size, record.volumeType)">
+              <div class="title">{{ $t('label.create.type.rbd.image') }}</div>
+              <a-form-item ref="root" name="root">
+                <a-select v-model="volumetype" @change="volumeTypeChange">
+                  <a-select-option value='ROOT'>{{ $t('label.rootdisk') }}</a-select-option>
+                  <a-select-option value='DATADISK'>{{ $t('label.data.disk') }}</a-select-option>
+                </a-select>
+              </a-form-item>
+            </a-modal>
+          </template>
+        </template>
       </a-table>
     </div>
   </div>
@@ -217,10 +240,12 @@
 
 <script>
 import { api } from '@/api'
+import { ref, reactive } from 'vue'
 import InfoCard from '@/components/view/InfoCard'
 import TooltipButton from '@/components/widgets/TooltipButton'
 import MigrateImageStoreResource from '@/views/storage/MigrateImageStoreResource'
 import CreateRbdImage from '@/views/storage/CreateRbdImage'
+import CreateVolType from '@/views/storage/CreateVolType'
 
 export default {
   name: 'StorageBrowser',
@@ -228,7 +253,8 @@ export default {
     InfoCard,
     MigrateImageStoreResource,
     TooltipButton,
-    CreateRbdImage
+    CreateRbdImage,
+    CreateVolType
   },
   props: {
     resource: {
@@ -268,7 +294,7 @@ export default {
     if (this.resourceType === 'PrimaryStorage' && this.resource.type === 'RBD') {
       columns.push({
         key: 'deleteactions',
-        title: this.$t('label.delete')
+        title: this.$t('label.create.delete')
       })
     }
     return {
@@ -284,13 +310,29 @@ export default {
       templateIdsToMigrate: [],
       snapshotIdsToMigrate: [],
       showAddVolumeModal: false,
-      keyword: ''
+      showAddTypeModal: false,
+      keyword: '',
+      rootSwitch: true,
+      dataDiskSwitch: false,
+      volumetype: 'ROOT'
     }
   },
   created () {
+    this.initForm()
     this.fetchData()
   },
   methods: {
+    initForm () {
+      this.formRef = ref()
+      this.form = reactive({
+        // name: this.resource.name,
+        // path: this.resource.path,
+        // account: this.resource.account,
+        // domainid: this.resource.domainid,
+        // type: this.resource.type
+      })
+      this.rules = reactive({})
+    },
     openMigrationModal (record) {
       if (record.snapshotid) {
         this.snapshotIdsToMigrate.push(record.snapshotid)
@@ -304,7 +346,49 @@ export default {
       this.pageSize = pagination.pageSize
       this.fetchData()
     },
-
+    volumeTypeChange (val) {
+      this.volumetype = val
+    },
+    createVolume (name, size) {
+      api('listDiskOfferings', { listall: true }).then(json => {
+        this.offerings = json.listdiskofferingsresponse.diskoffering || []
+        this.customDiskOffering = this.offerings.filter(x => x.iscustomized === true)
+        api('createVolume', {
+          diskofferingid: this.customDiskOffering[0].id,
+          size: size / (1024 * 1024 * 1024),
+          name: name,
+          zoneid: this.resource.zoneid
+        }).then(response => {
+          this.$pollJob({
+            jobId: response.createvolumeresponse.jobid,
+            title: this.$t('message.success.create.volume'),
+            successMessage: this.$t('message.success.create.volume'),
+            successMethod: (result) => {
+              api('updateVolume', {
+                id: result.jobresult.volume.id,
+                path: name,
+                storageid: this.resource.id,
+                state: 'Ready',
+                type: this.volumetype
+              }).then(json => {
+              }).catch(error => {
+                this.$notifyError(error)
+              }).finally(() => {
+                this.fetchData()
+                this.loading = false
+              })
+            },
+            errorMessage: this.$t('message.create.volume.failed'),
+            loadingMessage: this.$t('message.create.volume.processing'),
+            catchMessage: this.$t('error.fetching.async.job.result')
+          })
+        }).catch(error => {
+          this.$notifyError(error)
+        })
+      }).catch(error => {
+        this.$notifyError(error)
+      })
+    },
     deleteRbdImage (name) {
       api('deleteRbdImage', {
         name: name,
@@ -353,9 +437,13 @@ export default {
     showAddVolModal () {
       this.showAddVolumeModal = true
     },
+    showAddTyModal () {
+      // this.data1 = aaa
+      this.showAddTypeModal = true
+    },
     closeModals () {
       this.showAddVolumeModal = false
-      this.fetchData()
+      this.showAddTypeModal = false
     },
     fetchData () {
       this.dataSource = []

@@ -1,0 +1,268 @@
+// Licensed to the Apache Software Foundation (ASF) under one
+// or more contributor license agreements.  See the NOTICE file
+// distributed with this work for additional information
+// regarding copyright ownership.  The ASF licenses this file
+// to you under the Apache License, Version 2.0 (the
+// "License"); you may not use this file except in compliance
+// with the License.  You may obtain a copy of the License at
+//
+//   http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing,
+// software distributed under the License is distributed on an
+// "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+// KIND, either express or implied.  See the License for the
+// specific language governing permissions and limitations
+// under the License.
+
+<template>
+  <a-form-item>
+    <a-list
+      class="form-item-scroll"
+      itemLayout="vertical"
+      size="small"
+      :dataSource="osList"
+      :pagination="false">
+      <template #renderItem="{ item, index }">
+        <a-list-item :key="item.id" @click="onClickRow(item)">
+          <a-radio-group
+            class="radio-group"
+            :key="index"
+            v-model:value="value"
+            @change="($event) => updateSelectionTemplateIso($event.target.value)">
+            <a-radio
+              class="radio-group__radio"
+              :value="item.id">
+              <resource-icon
+                v-if="item.icon && item.icon.base64image"
+                class="radio-group__os-logo"
+                :image="item.icon.base64image"
+                size="2x" />
+              <os-logo
+                v-else
+                class="radio-group__os-logo"
+                size="2x"
+                :osId="item.ostypeid"
+                :os-name="item.osName" />
+              &nbsp;
+              {{ item.displaytext }}
+            </a-radio>
+          </a-radio-group>
+        </a-list-item>
+      </template>
+    </a-list>
+
+    <div style="display: block; text-align: right;">
+      <a-pagination
+        size="small"
+        :current="options.page"
+        :pageSize="options.pageSize"
+        :total="itemCount"
+        :showTotal="total => `${$t('label.total')} ${total} ${$t('label.items')}`"
+        :pageSizeOptions="['10', '20', '40', '80', '100', '200']"
+        @change="onChangePage"
+        @showSizeChange="onChangePageSize"
+        showSizeChanger>
+        <template #buildOptionText="props">
+          <span>{{ props.value }} / {{ $t('label.page') }}</span>
+        </template>
+      </a-pagination>
+    </div>
+  </a-form-item>
+</template>
+
+<script>
+import { api } from '@/api'
+import CheckBoxSelectPair from '@/components/CheckBoxSelectPair'
+import OsLogo from '@/components/widgets/OsLogo'
+import ResourceIcon from '@/components/view/ResourceIcon'
+
+export default {
+  name: 'MultiRbdSelection',
+  components: {
+    CheckBoxSelectPair,
+    OsLogo,
+    ResourceIcon
+  },
+  props: {
+    items: {
+      type: Array,
+      default: () => []
+    },
+    zoneId: {
+      type: String,
+      default: () => ''
+    },
+    selectionEnabled: {
+      type: Boolean,
+      default: true
+    },
+    inputDecorator: {
+      type: String,
+      default: ''
+    },
+    selected: {
+      type: String,
+      default: ''
+    },
+    itemCount: {
+      type: Number,
+      default: 0
+    },
+    preFillContent: {
+      type: Object,
+      default: () => {}
+    },
+    autoSelectLabel: {
+      type: String,
+      default: ''
+    },
+    isKVMUnmanage: {
+      type: Boolean,
+      default: false
+    }
+  },
+  data () {
+    return {
+      value: '',
+      image: '',
+      options: {
+        page: 1,
+        pageSize: 10
+      },
+      columns: [
+        {
+          key: 'name',
+          dataIndex: 'name',
+          title: this.$t('label.data.rbd')
+        },
+        {
+          key: 'offering',
+          dataIndex: 'offering',
+          title: this.$t('label.data.rbd.image')
+        }
+      ],
+      loading: false,
+      selectedRowKeys: [],
+      rbdImageings: [],
+      validOfferings: {},
+      selectedCustomDiskOffering: null,
+      values: {}
+    }
+  },
+  computed: {
+    tableSource () {
+      return this.items.map(item => {
+        var rbd = { ...item, disabled: this.validOfferings[item.id] && this.validOfferings[item.id].length === 0 }
+        rbd.name = `${item.name} (${item.size} GB)`
+        return rbd
+      })
+    },
+    rowSelection () {
+      if (this.selectionEnabled === true) {
+        return {
+          type: 'checkbox',
+          selectedRowKeys: this.selectedRowKeys,
+          getCheckboxProps: record => ({
+            props: {
+              disabled: record.disabled
+            }
+          }),
+          onChange: (rows) => {
+            this.selectedRowKeys = rows
+            this.sendValues()
+          }
+        }
+      }
+      return null
+    }
+  },
+  mounted () {
+    this.onSelectTemplateIso()
+  },
+  watch: {
+    selected (newVal, oldVal) {
+      if (newVal === oldVal) return
+      this.onSelectTemplateIso()
+    },
+    items: {
+      deep: true,
+      handler (newItem, oldItem) {
+        if (newItem === oldItem) return
+        this.selectedRowKeys = []
+        this.fetchRbdImages()
+      }
+    },
+    zoneId (newData) {
+      this.fetchRbdImages()
+    }
+  },
+  created () {
+    this.fetchRbdImages()
+  },
+  methods: {
+    fetchRbdImages () {
+      this.rbdImageings = []
+      this.loading = true
+      api('listStoragePoolObjects', {
+        zoneid: this.zoneId,
+        listall: true
+      }).then(response => {
+        this.rbdImageings = response.liststoragepoolobjectsresponse.datastoreobject || []
+      }).finally(() => {
+        this.loading = false
+      })
+    },
+    rbdImageSelect (value, rbdId) {
+      this.values[rbdId] = value
+      this.sendValues()
+    },
+    sendValues () {
+      const data = {}
+      if (this.selectionEnabled) {
+        this.selectedRowKeys.map(x => {
+          data[x] = this.values[x]
+        })
+      } else {
+        for (var x in this.values) {
+          data[x] = this.values[x]
+        }
+      }
+      this.$emit('multi-rbd-select', data)
+    },
+    onSelectTemplateIso () {
+      if (this.inputDecorator === 'templateid') {
+        this.value = !this.preFillContent.templateid ? this.selected : this.preFillContent.templateid
+      } else if (this.inputDecorator === 'isoid') {
+        this.value = !this.preFillContent.isoid ? this.selected : this.preFillContent.isoid
+      } else if (this.inputDecorator === 'rbdImageId') {
+        this.value = !this.preFillContent.rbdImageid ? this.selected : this.preFillContent.isoid
+      }
+      this.$emit('emit-update-template-iso', this.inputDecorator, this.value)
+    },
+    updateSelectionTemplateIso (id) {
+      this.$emit('emit-update-template-iso', this.inputDecorator, id)
+    },
+    onChangePage (page, pageSize) {
+      this.options.page = page
+      this.options.pageSize = pageSize
+      this.$emit('handle-search-filter', this.options)
+    },
+    onChangePageSize (page, pageSize) {
+      this.options.page = page
+      this.options.pageSize = pageSize
+      this.$emit('handle-search-filter', this.options)
+    },
+    onClickRow (os) {
+      this.value = os.id
+      this.$emit('emit-update-template-iso', this.inputDecorator, this.value)
+    }
+  }
+}
+</script>
+
+<style lang="less" scoped>
+  .ant-table-wrapper {
+    margin: 2rem 0;
+  }
+</style>
