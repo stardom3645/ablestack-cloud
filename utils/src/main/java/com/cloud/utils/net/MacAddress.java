@@ -36,6 +36,7 @@ import java.util.List;
  **/
 public class MacAddress {
     protected static Logger LOGGER = LogManager.getLogger(MacAddress.class);
+
     private long _addr = 0;
 
     protected MacAddress() {

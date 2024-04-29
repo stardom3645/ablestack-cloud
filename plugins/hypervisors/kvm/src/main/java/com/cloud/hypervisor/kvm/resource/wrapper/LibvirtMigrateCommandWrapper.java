@@ -375,13 +375,13 @@ public final class LibvirtMigrateCommandWrapper extends CommandWrapper<MigrateCo
      * */
     protected Set<String> getMigrateStorageDeviceLabels(List<DiskDef> diskDefinitions, Map<String, MigrateCommand.MigrateDiskInfo> mapMigrateStorage) {
         HashSet<String> setOfLabels = new HashSet<>();
-        s_logger.debug(String.format("Searching for disk labels of disks [%s].", mapMigrateStorage.keySet()));
+        logger.debug("Searching for disk labels of disks [{}].", mapMigrateStorage.keySet());
         for (String fileName : mapMigrateStorage.keySet()) {
             for (DiskDef diskDef : diskDefinitions) {
                 String diskPath = diskDef.getDiskPath();
                 if (diskPath != null && diskPath.contains(fileName)) {
                     setOfLabels.add(diskDef.getDiskLabel());
-                    s_logger.debug(String.format("Found label [%s] for disk [%s].", diskDef.getDiskLabel(), fileName));
+                    logger.debug("Found label [{}] for disk [{}].", diskDef.getDiskLabel(), fileName);
                     break;
                 }
             }
