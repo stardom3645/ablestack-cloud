@@ -2140,7 +2140,7 @@ export default {
           for (var num = 0; num < Number(values.vmNumber); num++) {
             let args = ''
             let data = ''
-            if (values.name != null) {
+            if (values.name) {
               if (values.vmNumber === 1) {
                 deployVmData.name = values.name
                 deployVmData.displayname = values.name
@@ -2195,7 +2195,11 @@ export default {
                 this.$router.back()
               }
             }).catch(error => {
-              this.$notifyError(error)
+              console.log('1')
+              console.log(error)
+              if (error.message !== undefined) {
+                this.$notifyError(error)
+              }
               this.loading.deploy = false
             }).finally(() => {
               this.form.stayonpage = false
@@ -2213,11 +2217,14 @@ export default {
             })
             return
           }
-
-          this.$notification.error({
-            message: this.$t('message.request.failed'),
-            description: this.$t('error.form.message')
-          })
+          console.log('2')
+          console.log(err)
+          if (err.message !== undefined) {
+            this.$notification.error({
+              message: this.$t('message.request.failed'),
+              description: this.$t('error.form.message')
+            })
+          }
         }
       })
     },
