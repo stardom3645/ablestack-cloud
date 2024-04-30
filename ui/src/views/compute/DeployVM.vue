@@ -2140,16 +2140,16 @@ export default {
           for (var num = 0; num < Number(values.vmNumber); num++) {
             let args = ''
             let data = ''
-            if (values.vmNumber === 1) {
-              if (values.name != null) {
+            if (values.name != null) {
+              if (values.vmNumber === 1) {
                 deployVmData.name = values.name
                 deployVmData.displayname = values.name
-              }
-            } else {
-              var numP = num + 1
-              if (values.name != null) {
-                deployVmData.name = values.name + '-' + numP
-                deployVmData.displayname = values.name + '-' + numP
+              } else {
+                var numP = num + 1
+                if (values.name != null) {
+                  deployVmData.name = values.name + '-' + numP
+                  deployVmData.displayname = values.name + '-' + numP
+                }
               }
             }
             args = httpMethod === 'POST' ? {} : deployVmData
