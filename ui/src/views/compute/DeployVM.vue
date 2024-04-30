@@ -761,7 +761,7 @@
                 <template #description v-if="zoneSelected">
                   <div style="margin-top: 15px">
                     {{ $t('message.vm.review.launch') }}
-                    <a-form-item :label="$t('label.name')" name="name" ref="name">
+                    <a-form-item :label="$t('label.name.optional')" name="name" ref="name">
                       <a-input v-model:value="form.name" />
                     </a-form-item>
                     <a-form-item :label="$t('label.group.optional')" name="group" ref="group">
@@ -1520,8 +1520,7 @@ export default {
       this.form = reactive({})
       this.rules = reactive({
         zoneid: [{ required: true, message: `${this.$t('message.error.select')}` }],
-        hypervisor: [{ required: true, message: `${this.$t('message.error.select')}` }],
-        name: [{ required: true, message: `${this.$t('message.error.name')}` }]
+        hypervisor: [{ required: true, message: `${this.$t('message.error.select')}` }]
       })
 
       if (this.zoneSelected) {
