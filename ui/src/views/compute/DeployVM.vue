@@ -2141,17 +2141,19 @@ export default {
             let args = ''
             let data = ''
             if (values.vmNumber === 1) {
-              deployVmData.name = values.name
-              deployVmData.displayname = values.name
-              args = httpMethod === 'POST' ? {} : deployVmData
-              data = httpMethod === 'POST' ? deployVmData : {}
+              if (values.name != null) {
+                deployVmData.name = values.name
+                deployVmData.displayname = values.name
+              }
             } else {
               var numP = num + 1
-              deployVmData.name = values.name + '-' + numP
-              deployVmData.displayname = values.name + '-' + numP
-              args = httpMethod === 'POST' ? {} : deployVmData
-              data = httpMethod === 'POST' ? deployVmData : {}
+              if (values.name != null) {
+                deployVmData.name = values.name + '-' + numP
+                deployVmData.displayname = values.name + '-' + numP
+              }
             }
+            args = httpMethod === 'POST' ? {} : deployVmData
+            data = httpMethod === 'POST' ? deployVmData : {}
             api('deployVirtualMachine', args, httpMethod, data).then(response => {
               const jobId = response.deployvirtualmachineresponse.jobid
               if (jobId) {
