@@ -90,6 +90,7 @@ import org.apache.cloudstack.api.command.user.vm.StartVMCmd;
 import org.apache.cloudstack.api.command.user.vm.UpdateDefaultNicForVMCmd;
 import org.apache.cloudstack.api.command.user.vm.UpdateVMCmd;
 import org.apache.cloudstack.api.command.user.vm.UpdateVmNicIpCmd;
+import org.apache.cloudstack.api.command.user.vm.UpdateVmNicLinkStateCmd;
 import org.apache.cloudstack.api.command.user.vm.UpgradeVMCmd;
 import org.apache.cloudstack.api.command.user.vmgroup.CreateVMGroupCmd;
 import org.apache.cloudstack.api.command.user.vmgroup.DeleteVMGroupCmd;
@@ -163,6 +164,7 @@ import com.cloud.agent.api.GetVmNetworkStatsCommand;
 import com.cloud.agent.api.GetVolumeStatsAnswer;
 import com.cloud.agent.api.GetVolumeStatsCommand;
 import com.cloud.agent.api.ModifyTargetsCommand;
+import com.cloud.agent.api.NicLinkStateCommand;
 import com.cloud.agent.api.PvlanSetupCommand;
 import com.cloud.agent.api.RestoreVMSnapshotAnswer;
 import com.cloud.agent.api.RestoreVMSnapshotCommand;
@@ -243,6 +245,8 @@ import com.cloud.host.HostVO;
 import com.cloud.host.Status;
 import com.cloud.host.dao.HostDao;
 import com.cloud.hypervisor.Hypervisor.HypervisorType;
+import com.cloud.hypervisor.HypervisorGuru;
+import com.cloud.hypervisor.HypervisorGuruManager;
 import com.cloud.hypervisor.dao.HypervisorCapabilitiesDao;
 import com.cloud.hypervisor.kvm.dpdk.DpdkHelper;
 import com.cloud.network.IpAddressManager;
@@ -604,6 +608,8 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
     VMScheduleManager vmScheduleManager;
     @Inject
     NsxProviderDao nsxProviderDao;
+    @Inject
+    private HypervisorGuruManager _hvGuruMgr;
 
     private ScheduledExecutorService _executor = null;
     private ScheduledExecutorService _vmIpFetchExecutor = null;
@@ -671,7 +677,7 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
             "enable.additional.vm.configuration", "false", "allow additional arbitrary configuration to vm", true, ConfigKey.Scope.Account);
 
     private static final ConfigKey<String> KvmAdditionalConfigAllowList = new ConfigKey<>(String.class,
-    "allow.additional.vm.configuration.list.kvm", "Advanced", "", "Comma separated list of allowed additional configuration options.", true, ConfigKey.Scope.Global, null, null, EnableAdditionalVmConfig.key(), null, null, ConfigKey.Kind.CSV, null);
+    "allow.additional.vm.configuration.list.kvm", "Advanced", "", "Comma separated list of allowed additional configuration options.", true, ConfigKey.Scope.Account, null, null, EnableAdditionalVmConfig.key(), null, null, ConfigKey.Kind.CSV, null);
 
     private static final ConfigKey<String> XenServerAdditionalConfigAllowList = new ConfigKey<>(String.class,
     "allow.additional.vm.configuration.list.xenserver", "Advanced", "", "Comma separated list of allowed additional configuration options", true, ConfigKey.Scope.Global, null, null, EnableAdditionalVmConfig.key(), null, null, ConfigKey.Kind.CSV, null);
@@ -2861,14 +2867,15 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
         if (cleanupDetails){
             if (caller != null && caller.getType() == Account.Type.ADMIN) {
                 for (final UserVmDetailVO detail : existingDetails) {
-                    if (detail != null && detail.isDisplay()) {
+                    if (detail != null && detail.isDisplay() && !isExtraConfig(detail.getName())) {
                         userVmDetailsDao.removeDetail(id, detail.getName());
                     }
                 }
             } else {
                 for (final UserVmDetailVO detail : existingDetails) {
                     if (detail != null && !userDenyListedSettings.contains(detail.getName())
-                            && !userReadOnlySettings.contains(detail.getName()) && detail.isDisplay()) {
+                            && !userReadOnlySettings.contains(detail.getName()) && detail.isDisplay()
+                            && !isExtraConfig(detail.getName())) {
                         userVmDetailsDao.removeDetail(id, detail.getName());
                     }
                 }
@@ -2878,6 +2885,8 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
                 if (details.containsKey("extraconfig")) {
                     throw new InvalidParameterValueException("'extraconfig' should not be included in details as key");
                 }
+
+                details.entrySet().removeIf(detail -> isExtraConfig(detail.getKey()));
 
                 if (caller != null && caller.getType() != Account.Type.ADMIN) {
                     // Ensure denied or read-only detail is not passed by non-root-admin user
@@ -2902,7 +2911,7 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
 
                 // ensure details marked as non-displayable are maintained, regardless of admin or not
                 for (final UserVmDetailVO existingDetail : existingDetails) {
-                    if (!existingDetail.isDisplay()) {
+                    if (!existingDetail.isDisplay() || isExtraConfig(existingDetail.getName())) {
                         details.put(existingDetail.getName(), existingDetail.getValue());
                     }
                 }
@@ -2922,6 +2931,10 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
         }
         return updateVirtualMachine(id, displayName, group, ha, isDisplayVm, osTypeId, userData, userDataId, userDataDetails, isDynamicallyScalable,
                 cmd.getHttpMethod(), cmd.getCustomId(), hostName, cmd.getInstanceName(), securityGroupIdList, cmd.getDhcpOptionsMap());
+    }
+
+    private boolean isExtraConfig(String detailName) {
+        return detailName != null && detailName.startsWith(ApiConstants.EXTRA_CONFIG);
     }
 
     protected void updateDisplayVmFlag(Boolean isDisplayVm, Long id, UserVmVO vmInstance) {
@@ -4057,11 +4070,12 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
             throw new InvalidParameterValueException("Root volume encryption is not supported for hypervisor type " + hypervisorType);
         }
 
+        long additionalDiskSize = 0L;
         if (!isIso && diskOfferingId != null) {
             DiskOfferingVO diskOffering = _diskOfferingDao.findById(diskOfferingId);
-            volumesSize += verifyAndGetDiskSize(diskOffering, diskSize);
+            additionalDiskSize = verifyAndGetDiskSize(diskOffering, diskSize);
         }
-        UserVm vm = getCheckedUserVmResource(zone, hostName, displayName, owner, diskOfferingId, diskSize, networkList, securityGroupIdList, group, httpmethod, userData, userDataId, userDataDetails, sshKeyPairs, caller, requestedIps, defaultIps, isDisplayVm, keyboard, affinityGroupIdList, customParameters, customId, dhcpOptionMap, datadiskTemplateToDiskOfferringMap, userVmOVFPropertiesMap, dynamicScalingEnabled, vmType, template, hypervisorType, accountId, offering, isIso, rootDiskOfferingId, volumesSize);
+        UserVm vm = getCheckedUserVmResource(zone, hostName, displayName, owner, diskOfferingId, diskSize, networkList, securityGroupIdList, group, httpmethod, userData, userDataId, userDataDetails, sshKeyPairs, caller, requestedIps, defaultIps, isDisplayVm, keyboard, affinityGroupIdList, customParameters, customId, dhcpOptionMap, datadiskTemplateToDiskOfferringMap, userVmOVFPropertiesMap, dynamicScalingEnabled, vmType, template, hypervisorType, accountId, offering, isIso, rootDiskOfferingId, volumesSize, additionalDiskSize);
 
         _securityGroupMgr.addInstanceToGroups(vm.getId(), securityGroupIdList);
 
@@ -4081,15 +4095,14 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
         Map<String, Map<Integer, String>> dhcpOptionMap, Map<Long, DiskOffering> datadiskTemplateToDiskOfferringMap,
         Map<String, String> userVmOVFPropertiesMap, boolean dynamicScalingEnabled, String vmType, VMTemplateVO template,
         HypervisorType hypervisorType, long accountId, ServiceOfferingVO offering, boolean isIso,
-        Long rootDiskOfferingId, long volumesSize) throws ResourceAllocationException, StorageUnavailableException,
-            InsufficientCapacityException {
+        Long rootDiskOfferingId, long volumesSize, long additionalDiskSize) throws ResourceAllocationException {
         if (!VirtualMachineManager.ResourceCountRunningVMsonly.value()) {
             List<String> resourceLimitHostTags = resourceLimitService.getResourceLimitHostTags(offering, template);
             try (CheckedReservation vmReservation = new CheckedReservation(owner, ResourceType.user_vm, resourceLimitHostTags, 1l, reservationDao, resourceLimitService);
                  CheckedReservation cpuReservation = new CheckedReservation(owner, ResourceType.cpu, resourceLimitHostTags, Long.valueOf(offering.getCpu()), reservationDao, resourceLimitService);
                  CheckedReservation memReservation = new CheckedReservation(owner, ResourceType.memory, resourceLimitHostTags, Long.valueOf(offering.getRamSize()), reservationDao, resourceLimitService);
             ) {
-                return getUncheckedUserVmResource(zone, hostName, displayName, owner, diskOfferingId, diskSize, networkList, securityGroupIdList, group, httpmethod, userData, userDataId, userDataDetails, sshKeyPairs, caller, requestedIps, defaultIps, isDisplayVm, keyboard, affinityGroupIdList, customParameters, customId, dhcpOptionMap, datadiskTemplateToDiskOfferringMap, userVmOVFPropertiesMap, dynamicScalingEnabled, vmType, template, hypervisorType, accountId, offering, isIso, rootDiskOfferingId, volumesSize);
+                return getUncheckedUserVmResource(zone, hostName, displayName, owner, diskOfferingId, diskSize, networkList, securityGroupIdList, group, httpmethod, userData, userDataId, userDataDetails, sshKeyPairs, caller, requestedIps, defaultIps, isDisplayVm, keyboard, affinityGroupIdList, customParameters, customId, dhcpOptionMap, datadiskTemplateToDiskOfferringMap, userVmOVFPropertiesMap, dynamicScalingEnabled, vmType, template, hypervisorType, accountId, offering, isIso, rootDiskOfferingId, volumesSize, additionalDiskSize);
             } catch (ResourceAllocationException | CloudRuntimeException  e) {
                 throw e;
             } catch (Exception e) {
@@ -4098,7 +4111,7 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
             }
 
         } else {
-            return getUncheckedUserVmResource(zone, hostName, displayName, owner, diskOfferingId, diskSize, networkList, securityGroupIdList, group, httpmethod, userData, userDataId, userDataDetails, sshKeyPairs, caller, requestedIps, defaultIps, isDisplayVm, keyboard, affinityGroupIdList, customParameters, customId, dhcpOptionMap, datadiskTemplateToDiskOfferringMap, userVmOVFPropertiesMap, dynamicScalingEnabled, vmType, template, hypervisorType, accountId, offering, isIso, rootDiskOfferingId, volumesSize);
+            return getUncheckedUserVmResource(zone, hostName, displayName, owner, diskOfferingId, diskSize, networkList, securityGroupIdList, group, httpmethod, userData, userDataId, userDataDetails, sshKeyPairs, caller, requestedIps, defaultIps, isDisplayVm, keyboard, affinityGroupIdList, customParameters, customId, dhcpOptionMap, datadiskTemplateToDiskOfferringMap, userVmOVFPropertiesMap, dynamicScalingEnabled, vmType, template, hypervisorType, accountId, offering, isIso, rootDiskOfferingId, volumesSize, additionalDiskSize);
         }
     }
 
@@ -4115,11 +4128,16 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
         Map<String, Map<Integer, String>> dhcpOptionMap, Map<Long, DiskOffering> datadiskTemplateToDiskOfferringMap,
         Map<String, String> userVmOVFPropertiesMap, boolean dynamicScalingEnabled, String vmType, VMTemplateVO template,
         HypervisorType hypervisorType, long accountId, ServiceOfferingVO offering, boolean isIso,
-        Long rootDiskOfferingId, long volumesSize) throws ResourceAllocationException, StorageUnavailableException,
-            InsufficientCapacityException {
-        List<String> resourceLimitStorageTags = getResourceLimitStorageTags(diskOfferingId != null ? diskOfferingId : offering.getDiskOfferingId());
-        try (CheckedReservation volumeReservation = new CheckedReservation(owner, ResourceType.volume, resourceLimitStorageTags, (isIso || diskOfferingId == null ? 1l : 2), reservationDao, resourceLimitService);
-             CheckedReservation primaryStorageReservation = new CheckedReservation(owner, ResourceType.primary_storage, resourceLimitStorageTags, volumesSize, reservationDao, resourceLimitService)) {
+        Long rootDiskOfferingId, long volumesSize, long additionalDiskSize) throws ResourceAllocationException
+    {
+        List<String> rootResourceLimitStorageTags = getResourceLimitStorageTags(rootDiskOfferingId != null ? rootDiskOfferingId : offering.getDiskOfferingId());
+        List<String> additionalResourceLimitStorageTags = diskOfferingId != null ? getResourceLimitStorageTags(diskOfferingId) : null;
+
+        try (CheckedReservation rootVolumeReservation = new CheckedReservation(owner, ResourceType.volume, rootResourceLimitStorageTags, 1L, reservationDao, resourceLimitService);
+             CheckedReservation additionalVolumeReservation = diskOfferingId != null ? new CheckedReservation(owner, ResourceType.volume, additionalResourceLimitStorageTags, 1L, reservationDao, resourceLimitService) : null;
+             CheckedReservation rootPrimaryStorageReservation = new CheckedReservation(owner, ResourceType.primary_storage, rootResourceLimitStorageTags, volumesSize, reservationDao, resourceLimitService);
+             CheckedReservation additionalPrimaryStorageReservation = diskOfferingId != null ? new CheckedReservation(owner, ResourceType.primary_storage, additionalResourceLimitStorageTags, additionalDiskSize, reservationDao, resourceLimitService) : null;
+        ) {
 
             // verify security group ids
             if (securityGroupIdList != null) {
@@ -4287,7 +4305,6 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
                     } else if (defaultIps.getMacAddress() != null) {
                         profile = new NicProfile(null, null, defaultIps.getMacAddress());
                     }
-
                     profile.setDefaultNic(true);
                     if (!_networkModel.areServicesSupportedInNetwork(network.getId(), new Service[]{Service.UserData})) {
                         if ((userData != null) && (!userData.isEmpty())) {
@@ -4303,7 +4320,7 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
                         }
                     }
                 }
-
+                profile.setLinkState(requestedIpPair.getLinkState());
                 if (_networkModel.isSecurityGroupSupportedInNetwork(network)) {
                     securityGroupEnabled = true;
                 }
@@ -5168,7 +5185,6 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
                 }
 
                 for (VolumeVO createdVol : createdVolumes) {
-//                    volumeService.attachVolumeToVm(cmd, createdVol.getId(), createdVol.getDeviceId());
                     volumeService.attachVolumeToVM(cmd.getEntityId(), createdVol.getId(), createdVol.getDeviceId());
                 }
             } catch (CloudRuntimeException e){
@@ -5188,6 +5204,10 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
                     snapshotService.deleteSnapshot(snapshotLeftOver.getId(), zoneId);
                 }
             }
+        }
+
+        if (!cmd.getStartVm()) {
+            return Optional.of(getUserVm(vmId));
         }
 
         // start the VM if successfull
@@ -6626,7 +6646,7 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
      */
     protected void persistExtraConfigKvm(String decodedUrl, UserVm vm) {
         // validate config against denied cfg commands
-        validateKvmExtraConfig(decodedUrl);
+        validateKvmExtraConfig(decodedUrl, vm.getAccountId());
         String[] extraConfigs = decodedUrl.split("\n\n");
         for (String cfg : extraConfigs) {
             int i = 1;
@@ -6644,6 +6664,18 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
             i++;
         }
     }
+    /**
+     * This method is used to validate if extra config is valid
+     */
+    @Override
+    public void validateExtraConfig(long accountId, HypervisorType hypervisorType, String extraConfig) {
+        if (!EnableAdditionalVmConfig.valueIn(accountId)) {
+            throw new CloudRuntimeException("Additional VM configuration is not enabled for this account");
+        }
+        if (HypervisorType.KVM.equals(hypervisorType)) {
+            validateKvmExtraConfig(extraConfig, accountId);
+        }
+    }
 
     /**
      * This method is called by the persistExtraConfigKvm
@@ -6651,8 +6683,8 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
      * controlled by Root admin
      * @param decodedUrl string containing xml configuration to be validated
      */
-    protected void validateKvmExtraConfig(String decodedUrl) {
-        String[] allowedConfigOptionList = KvmAdditionalConfigAllowList.value().split(",");
+    protected void validateKvmExtraConfig(String decodedUrl, long accountId) {
+        String[] allowedConfigOptionList = KvmAdditionalConfigAllowList.valueIn(accountId).split(",");
         // Skip allowed keys validation for DPDK
         if (!decodedUrl.contains(":")) {
             try {
@@ -6672,7 +6704,7 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
                         }
                     }
                     if (!isValidConfig) {
-                        throw new CloudRuntimeException(String.format("Extra config %s is not on the list of allowed keys for KVM hypervisor hosts", currentConfig));
+                        throw new CloudRuntimeException(String.format("Extra config '%s' is not on the list of allowed keys for KVM hypervisor hosts", currentConfig));
                     }
                 }
             } catch (ParserConfigurationException | IOException | SAXException e) {
@@ -6689,19 +6721,15 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
         String decodedUrl = decodeExtraConfig(extraConfig);
         HypervisorType hypervisorType = vm.getHypervisorType();
 
-        switch (hypervisorType) {
-            case XenServer:
-                persistExtraConfigXenServer(decodedUrl, vm);
-                break;
-            case KVM:
-                persistExtraConfigKvm(decodedUrl, vm);
-                break;
-            case VMware:
-                persistExtraConfigVmware(decodedUrl, vm);
-                break;
-            default:
-                String msg = String.format("This hypervisor %s is not supported for use with this feature", hypervisorType.toString());
-                throw new CloudRuntimeException(msg);
+        if (hypervisorType.equals(HypervisorType.XenServer)) {
+            persistExtraConfigXenServer(decodedUrl, vm);
+        } else if (hypervisorType.equals(HypervisorType.KVM)) {
+            persistExtraConfigKvm(decodedUrl, vm);
+        } else if (hypervisorType.equals(HypervisorType.VMware)) {
+            persistExtraConfigVmware(decodedUrl, vm);
+        } else {
+            String msg = String.format("This hypervisor %s is not supported for use with this feature", hypervisorType.toString());
+            throw new CloudRuntimeException(msg);
         }
     }
 
@@ -6773,6 +6801,12 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
 
             if (details.containsKey("extraconfig")) {
                 throw new InvalidParameterValueException("'extraconfig' should not be included in details as key");
+            }
+
+            for (String detailName : details.keySet()) {
+                if (isExtraConfig(detailName)) {
+                    throw new InvalidParameterValueException("detail name should not start with extraconfig");
+                }
             }
         }
     }
@@ -9026,4 +9060,71 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
             vm.setVncPassword(customParameters.get(VmDetailConstants.KVM_VNC_PASSWORD));
         }
     }
+
+    @ActionEvent(eventType = EventTypes.EVENT_NIC_UPDATE, eventDescription = "UPDATE NIC LINK STATE TO VM", async = true)
+    public UserVm updateVmNicLinkState(UpdateVmNicLinkStateCmd cmd){
+        Long vmId = cmd.getVmId();
+        Long nicId = cmd.getNicId();
+        Account caller = CallContext.current().getCallingAccount();
+
+        UserVmVO vmInstance = _vmDao.findById(vmId);
+        if (vmInstance == null) {
+            throw new InvalidParameterValueException("unable to find a virtual machine with id " + vmId);
+        }
+
+        NicVO nic = _nicDao.findById(nicId);
+        if (nic == null) {
+            throw new InvalidParameterValueException("unable to find a nic with id " + nicId);
+        }
+        NetworkVO network = _networkDao.findById(nic.getNetworkId());
+        if (network == null) {
+            throw new InvalidParameterValueException("unable to find a network with id " + nic.getNetworkId());
+        }
+
+        // Perform permission check on VM
+        _accountMgr.checkAccess(caller, null, true, vmInstance);
+
+        // Verify that zone is not Basic
+        DataCenterVO dc = _dcDao.findById(vmInstance.getDataCenterId());
+        if (dc.getNetworkType() == DataCenter.NetworkType.Basic) {
+            throw new CloudRuntimeException("Zone " + vmInstance.getDataCenterId() + ", has a NetworkType of Basic. Can't change default NIC on a Basic Network");
+        }
+
+        //check to see if nic is attached to VM
+        if (nic.getInstanceId() != vmId) {
+            throw new InvalidParameterValueException(nic + " is not a nic on  " + vmInstance);
+        }
+
+        //make sure the VM is Running or Stopped
+        if ((vmInstance.getState() != State.Running)) {
+            throw new CloudRuntimeException("refusing to set default " + vmInstance + " is not Running");
+        }
+        final NicProfile nicProfile = new NicProfile(nic, network, nic.getBroadcastUri(), nic.getIsolationUri(), _networkModel.getNetworkRate(network.getId(), vmInstance.getId()),
+                _networkModel.isSecurityGroupSupportedInNetwork(network), _networkModel.getNetworkTag(vmInstance.getHypervisorType(), network));
+
+        if (vmInstance.getState() == State.Running) {
+            VirtualMachineProfile vmProfile = new VirtualMachineProfileImpl(vmInstance);
+            final HypervisorGuru hvGuru = _hvGuruMgr.getGuru(vmProfile.getVirtualMachine().getHypervisorType());
+            final NicTO nicTO = hvGuru.toNicTO(nicProfile);
+
+            Long hostId = vmInstance.getHostId() != null ? vmInstance.getHostId() : vmInstance.getLastHostId();
+            NicLinkStateCommand nlscmd = new NicLinkStateCommand(nicTO, vmInstance.getInstanceName(), cmd.getLinkState());
+
+            nic.setLinkState(cmd.getLinkState());
+            _nicDao.update(nicId, nic);
+
+            try {
+                Answer answer = _agentMgr.send(hostId, nlscmd);
+                if (answer == null || !answer.getResult()) {
+                    throw new InvalidParameterValueException(String.format("Failed to Update Nic Link State : %s", caller.getUuid()));
+                }
+            } catch (Exception ex) {
+                nic.setLinkState(!cmd.getLinkState());
+                _nicDao.update(nicId, nic);
+                throw new CloudRuntimeException(ex.getMessage());
+            }
+        }
+        return _vmDao.findById(vmInstance.getId());
+    }
+
 }
