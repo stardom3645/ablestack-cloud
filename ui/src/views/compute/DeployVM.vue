@@ -2146,10 +2146,8 @@ export default {
                 deployVmData.displayname = values.name
               } else {
                 var numP = num + 1
-                if (values.name != null) {
-                  deployVmData.name = values.name + '-' + numP
-                  deployVmData.displayname = values.name + '-' + numP
-                }
+                deployVmData.name = values.name + '-' + numP
+                deployVmData.displayname = values.name + '-' + numP
               }
             }
             args = httpMethod === 'POST' ? {} : deployVmData
