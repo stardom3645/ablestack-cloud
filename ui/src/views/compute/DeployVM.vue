@@ -2141,15 +2141,12 @@ export default {
             let args = ''
             let data = ''
             if (values.vmNumber === 1) {
-              console.log('values.vmNumber=1')
               deployVmData.name = values.name
               deployVmData.displayname = values.name
               args = httpMethod === 'POST' ? {} : deployVmData
               data = httpMethod === 'POST' ? deployVmData : {}
             } else {
-              console.log('values.vmNumber=2')
-              var numP = Number(values.vmNumber) + 1
-              console.log('numP = ' + numP)
+              var numP = num + 1
               deployVmData.name = values.name + '-' + numP
               deployVmData.displayname = values.name + '-' + numP
               console.log('deployVmData.name = ' + deployVmData.name)
