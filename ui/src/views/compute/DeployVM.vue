@@ -779,6 +779,9 @@
                         :filterOption="filterOption"
                       ></a-select>
                     </a-form-item>
+                    <a-form-item :label="$t('label.deploy.vm.number')" name="vmNumber" ref="vmNumber">
+                      <a-input-number :min=2 :max=999 :maxlength="3" v-model:value="form.vmNumber" />
+                    </a-form-item>
                     <a-form-item :label="$t('label.action.start.instance')" name="startvm" ref="startvm">
                       <a-switch v-model:checked="form.startvm" />
                     </a-form-item>
@@ -2131,58 +2134,116 @@ export default {
         }
 
         const httpMethod = deployVmData.userdata ? 'POST' : 'GET'
-        const args = httpMethod === 'POST' ? {} : deployVmData
-        const data = httpMethod === 'POST' ? deployVmData : {}
 
-        api('deployVirtualMachine', args, httpMethod, data).then(response => {
-          const jobId = response.deployvirtualmachineresponse.jobid
-          if (jobId) {
-            this.$pollJob({
-              jobId,
-              title,
-              description,
-              successMethod: result => {
-                const vm = result.jobresult.virtualmachine
-                const name = vm.displayname || vm.name || vm.id
-                if (vm.password) {
-                  this.$notification.success({
-                    message: password + ` ${this.$t('label.for')} ` + name,
-                    description: vm.password,
-                    btn: () => h(
-                      Button,
-                      {
-                        type: 'primary',
-                        size: 'small',
-                        onClick: () => this.copyToClipboard(vm.password)
-                      },
-                      () => [this.$t('label.copy.password')]
-                    ),
-                    duration: 0
-                  })
-                }
-                eventBus.emit('vm-refresh-data')
-              },
-              loadingMessage: `${title} ${this.$t('label.in.progress')}`,
-              catchMessage: this.$t('error.fetching.async.job.result'),
-              action: {
-                isFetchData: false
+        if (values.vmNumber) {
+          for (var num = 0; num < values.vmNumber; num++) {
+            deployVmData.name = values.name + '-' + num + 1
+            deployVmData.displayname = values.name + '-' + num + 1
+            const args = httpMethod === 'POST' ? {} : deployVmData
+            const data = httpMethod === 'POST' ? deployVmData : {}
+            api('deployVirtualMachine', args, httpMethod, data).then(response => {
+              const jobId = response.deployvirtualmachineresponse.jobid
+              if (jobId) {
+                this.$pollJob({
+                  jobId,
+                  title,
+                  description,
+                  successMethod: result => {
+                    const vm = result.jobresult.virtualmachine
+                    const name = vm.displayname || vm.name || vm.id
+                    if (vm.password) {
+                      this.$notification.success({
+                        message: password + ` ${this.$t('label.for')} ` + name,
+                        description: vm.password,
+                        btn: () => h(
+                          Button,
+                          {
+                            type: 'primary',
+                            size: 'small',
+                            onClick: () => this.copyToClipboard(vm.password)
+                          },
+                          () => [this.$t('label.copy.password')]
+                        ),
+                        duration: 0
+                      })
+                    }
+                    eventBus.emit('vm-refresh-data')
+                  },
+                  loadingMessage: `${title} ${this.$t('label.in.progress')}`,
+                  catchMessage: this.$t('error.fetching.async.job.result'),
+                  action: {
+                    isFetchData: false
+                  }
+                })
               }
+              // Sending a refresh in case it hasn't picked up the new VM
+              new Promise(resolve => setTimeout(resolve, 3000)).then(() => {
+                eventBus.emit('vm-refresh-data')
+              })
+              if (!values.stayonpage) {
+                this.$router.back()
+              }
+            }).catch(error => {
+              this.$notifyError(error)
+              this.loading.deploy = false
+            }).finally(() => {
+              this.form.stayonpage = false
+              this.loading.deploy = false
             })
           }
-          // Sending a refresh in case it hasn't picked up the new VM
-          new Promise(resolve => setTimeout(resolve, 3000)).then(() => {
-            eventBus.emit('vm-refresh-data')
+        } else {
+          const args = httpMethod === 'POST' ? {} : deployVmData
+          const data = httpMethod === 'POST' ? deployVmData : {}
+          api('deployVirtualMachine', args, httpMethod, data).then(response => {
+            const jobId = response.deployvirtualmachineresponse.jobid
+            if (jobId) {
+              this.$pollJob({
+                jobId,
+                title,
+                description,
+                successMethod: result => {
+                  const vm = result.jobresult.virtualmachine
+                  const name = vm.displayname || vm.name || vm.id
+                  if (vm.password) {
+                    this.$notification.success({
+                      message: password + ` ${this.$t('label.for')} ` + name,
+                      description: vm.password,
+                      btn: () => h(
+                        Button,
+                        {
+                          type: 'primary',
+                          size: 'small',
+                          onClick: () => this.copyToClipboard(vm.password)
+                        },
+                        () => [this.$t('label.copy.password')]
+                      ),
+                      duration: 0
+                    })
+                  }
+                  eventBus.emit('vm-refresh-data')
+                },
+                loadingMessage: `${title} ${this.$t('label.in.progress')}`,
+                catchMessage: this.$t('error.fetching.async.job.result'),
+                action: {
+                  isFetchData: false
+                }
+              })
+            }
+            // Sending a refresh in case it hasn't picked up the new VM
+            new Promise(resolve => setTimeout(resolve, 3000)).then(() => {
+              eventBus.emit('vm-refresh-data')
+            })
+            if (!values.stayonpage) {
+              this.$router.back()
+            }
+          }).catch(error => {
+            this.$notifyError(error)
+            this.loading.deploy = false
+          }).finally(() => {
+            this.form.stayonpage = false
+            this.loading.deploy = false
           })
-          if (!values.stayonpage) {
-            this.$router.back()
-          }
-        }).catch(error => {
-          this.$notifyError(error)
-          this.loading.deploy = false
-        }).finally(() => {
-          this.form.stayonpage = false
-          this.loading.deploy = false
-        })
+        }
       }).catch(err => {
         this.formRef.value.scrollToField(err.errorFields[0].name)
         if (err) {
