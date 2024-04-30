@@ -2195,8 +2195,6 @@ export default {
                 this.$router.back()
               }
             }).catch(error => {
-              console.log('1')
-              console.log(error)
               if (error.message !== undefined) {
                 this.$notifyError(error)
               }
@@ -2216,14 +2214,6 @@ export default {
               description: this.$t('message.step.license.agreements.continue')
             })
             return
-          }
-          console.log('2')
-          console.log(err)
-          if (err.message !== undefined) {
-            this.$notification.error({
-              message: this.$t('message.request.failed'),
-              description: this.$t('error.form.message')
-            })
           }
         }
       })
