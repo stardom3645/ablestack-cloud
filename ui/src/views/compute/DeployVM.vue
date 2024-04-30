@@ -2149,7 +2149,6 @@ export default {
               var numP = num + 1
               deployVmData.name = values.name + '-' + numP
               deployVmData.displayname = values.name + '-' + numP
-              console.log('deployVmData.name = ' + deployVmData.name)
               args = httpMethod === 'POST' ? {} : deployVmData
               data = httpMethod === 'POST' ? deployVmData : {}
             }
