@@ -163,6 +163,10 @@ public class DisasterRecoveryClusterVO implements DisasterRecoveryCluster {
         this.name = name;
     }
 
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
     public void setDrClusterUrl(String drClusterUrl) {
         this.drClusterUrl = drClusterUrl;
     }

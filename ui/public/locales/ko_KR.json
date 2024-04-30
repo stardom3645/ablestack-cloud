@@ -4273,6 +4273,8 @@
 "placeholder.dr.cluster.compute.offering.selection": "\uCEF4\uD4E8\uD2B8 \uC624\uD37C\uB9C1 \uC120\uD0DD",
 "placeholder.dr.cluster.network.selection": "\uB124\uD2B8\uC6CC\uD06C \uC120\uD0DD",
 "disaster.recovery.cluster": "DR",
-"message.success.update.disaster.recovery.cluster": "\uC7AC\uB09C \uBCF5\uAD6C \uD074\uB7EC\uC2A4\uD130 \uC815\uBCF4\uB97C \uC5C5\uB370\uC774\uD2B8 \uD588\uC2B5\uB2C8\uB2E4."
+"message.success.update.disaster.recovery.cluster": "\uC7AC\uB09C \uBCF5\uAD6C \uD074\uB7EC\uC2A4\uD130 \uC815\uBCF4\uB97C \uC5C5\uB370\uC774\uD2B8 \uD588\uC2B5\uB2C8\uB2E4.",
+"message.disaster.recovery.cluster.connection.test.update.description": "\uC5C5\uB370\uC774\uD2B8\uD558\uB824\uB294 \uD074\uB7EC\uC2A4\uD130\uC640 \uC5F0\uACB0\uD14C\uC2A4\uD2B8\uB97C \uC9C4\uD589\uD569\uB2C8\uB2E4.",
+"message.dr.mirrored.vm.release": "\uBBF8\uB7EC\uB9C1\uC744 \uD574\uC9C0\uD560 \uAC83\uC778\uC9C0 \uD655\uC778\uD558\uC2ED\uC2DC\uC624.",
+"label.dr.release.mirroring": "\uBBF8\uB7EC\uB9C1 \uD574\uC81C"
 }
-

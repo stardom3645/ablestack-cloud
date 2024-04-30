@@ -25,40 +25,20 @@
         layout="vertical">
         <a-form-item name="name" ref="name" :label="$t('label.name')">
           <a-input
-            :placeholder="'temp'"
+            :placeholder="apiParams.name.description"
             v-model:value="form.name"
           />
         </a-form-item>
         <a-form-item name="displaytext" ref="displaytext" :label="$t('label.displaytext')">
           <a-input
-            v-model:value="form.displaytext"
-            :placeholder="'temp'"
+            :placeholder="apiParams.description.description"
+            v-model:value="form.description"
           />
       </a-form-item>
         <a-form-item name="url" ref="url" :label="$t('label.url')">
           <a-input
-            :placeholder="'http://10.10.1.10:8080'"
-            v-model:value="form.url"
-          />
-        </a-form-item>
-        <a-form-item name="apikey" ref="apikey" :label="$t('label.apikey')">
-          <!--          <span>-->
-          <!--            <a-alert type="warning">-->
-          <!--              <template #message>-->
-          <!--                <span v-html="ipv6NetworkOfferingEnabled ? $t('message.offering.internet.protocol.warning') : $t('message.offering.ipv6.warning')" />-->
-          <!--              </template>-->
-          <!--            </a-alert>-->
-          <!--            <br/>-->
-          <!--          </span>-->
-          <a-input
-            :placeholder="temp"
-            v-model:value="form.apikey"
-          />
-        </a-form-item>
-        <a-form-item name="secretkey" ref="secretkey" :label="$t('label.secret.key')">
-          <a-input
-            :placeholder="temp"
-            v-model:value="form.secretkey"
+            :placeholder="apiParams.drclusterurl.description"
+            v-model:value="form.drclusterurl"
           />
         </a-form-item>
 
@@ -78,20 +58,24 @@
           </a-upload-dragger>
         </a-form-item>
 
-        <a-divider />
+        <a-divider v-if="showCode" />
 
-        <a-spin :spinning="spinning">
-          <a-alert :message="$t('message.disaster.recovery.cluster.connection.test.title')" :description="$t('message.disaster.recovery.cluster.connection.test.description')">
-          </a-alert>
-        </a-spin>
-        <div class="spin-state" style="margin-top: 16px">
-          <tooltip-label :title="$t('label.disaster.recovery.cluster.start.connection.test.description')"/>
-          <a-switch v-model:checked="spinning" style="margin-left: 10px"/>
+        <div v-if="showCode">
+          <template v-if="!spinTemplate">
+            <a-spin :tip="loading">
+              <a-alert :message="$t('message.disaster.recovery.cluster.connection.test.title')" :description="alertDescription" :type="info">
+              </a-alert>
+            </a-spin>
+          </template>
+          <template v-else>
+            <a-alert :message="$t('message.disaster.recovery.cluster.connection.test.title')" :description="alertDescription" :type="info">
+            </a-alert>
+          </template>
         </div>
 
         <div :span="24" class="action-button">
-          <a-button @click="closeAction">{{ $t('label.cancel') }}</a-button>
-          <a-button :loading="loading" ref="submit" type="primary" @click="handleSubmit">{{ $t('label.ok') }}</a-button>
+          <a-button @click="() => $emit('close-action')">{{ $t('label.cancel') }}</a-button>
+          <a-button @click="testConnCode" :disabled="buttonDisabled" type="primary">{{ $t('label.disaster.recovery.cluster.start.connection.test.description') }}</a-button>
         </div>
       </a-form>
     </a-spin>
@@ -103,7 +87,7 @@ import { api } from '@/api'
 import TooltipLabel from '@/components/widgets/TooltipLabel.vue'
 
 export default {
-  name: 'updateAutomationControllerVersion',
+  name: 'updateDisasterRecoveryCluster',
   components: { TooltipLabel },
   props: {
     resource: {
@@ -126,11 +110,15 @@ export default {
       states: [],
       stateLoading: false,
       loading: false,
+      spinTemplate: false,
+      showCode: false,
+      buttonDisabled: false,
+      alertDescription: this.$t('message.disaster.recovery.cluster.connection.test.update.description'),
       fileList: []
     }
   },
   beforeCreate () {
-    this.apiParams = this.$getApiParams('updateAutomationControllerVersion')
+    this.apiParams = this.$getApiParams('updateDisasterRecoveryCluster')
   },
   created () {
     this.states = [
@@ -162,6 +150,28 @@ export default {
         }
       }
       this.form.state = selectedState
+      this.fillEditFormFieldValues()
+    },
+    fillEditFormFieldValues () {
+      const form = this.form
+      console.log('formformformformformform')
+      console.log(form)
+      this.loading = true
+      Object.keys(this.apiParams).forEach(item => {
+        const field = this.apiParams[item]
+        let fieldValue = null
+        let fieldName = null
+        if (field.type === 'list' || field.name === 'account') {
+          fieldName = field.name.replace('ids', 'name').replace('id', 'name')
+        } else {
+          fieldName = field.name
+        }
+        fieldValue = this.resource[fieldName] ? this.resource[fieldName] : null
+        if (fieldValue) {
+          form[field.name] = fieldValue
+        }
+      })
+      this.loading = false
     },
     isValidValueForKey (obj, key) {
       return key in obj && obj[key] != null
@@ -176,6 +186,18 @@ export default {
       this.fileList = [file]
       this.form.file = file
       return false
+    },
+    testConnCode () {
+      this.showCode = !this.showCode
+      this.buttonDisabled = true
+    },
+    handleKeyPress (event) {
+      // Check if the button is disabled and if a keyboard key is pressed
+      if (this.buttonDisabled && event.key !== 'Tab') {
+        this.buttonDisabled = false
+        this.alertDescription = this.testDescText === 'Disappear Code' ? this.$t('message.waiting.dr.simulation.test') : this.$t('message.disaster.recovery.cluster.connection.test.update.description')
+        this.spinTemplate = true
+      }
     },
     handleRemove (file) {
       const index = this.fileList.indexOf(file)

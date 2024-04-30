@@ -123,17 +123,17 @@
               tooltipPlacement="bottom"
               :tooltip="$t('label.dr.simulation.test')"
               icon="ExperimentOutlined"
-              :disabled="!('updateVmNicIp' in $store.getters.apis)"
+              :disabled="!('connectivityTestsDisasterRecovery' in $store.getters.apis)"
               @onClick="DrSimulationTest(record)" />
             <a-popconfirm
-              :title="$t('message.network.removenic')"
+              :title="$t('message.dr.mirrored.vm.release')"
               @confirm="removeNIC(record.nic)"
               :okText="$t('label.yes')"
               :cancelText="$t('label.no')"
             >
               <tooltip-button
                 tooltipPlacement="bottom"
-                :tooltip="'미러링 해제'"
+                :tooltip="$t('label.dr.release.mirroring')"
                 :disabled="!('removeNicFromVirtualMachine' in $store.getters.apis)"
                 type="primary"
                 :danger="true"

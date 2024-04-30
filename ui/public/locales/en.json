@@ -4261,6 +4261,7 @@
 "message.launch.dr.simulation.test": "Click the Start Mock Test button to run a mirroring mock test on the virtual machine.",
 "label.launch.dr.simulation.test": "Start mock test",
 "label.dr.simulation.test": "Mirroring mock test",
+"label.dr.action.remove.simulation.test": "Release mirroring",
 "message.waiting.dr.simulation.test": "Please wait until the mock exam is completed...",
 "message.dr.simulation.test.step1": "Simulation Test Level: 1",
 "message.dr.simulation.test.step2": "Simulation Test Level: 2",
@@ -4271,5 +4272,9 @@
 "placeholder.dr.cluster.cluster.selection": "Select a disaster recovery cluster",
 "placeholder.dr.cluster.compute.offering.selection": "Select a Compute Offering",
 "placeholder.dr.cluster.network.selection": "Select network",
-"disaster.recovery.cluster": "DR"
+"disaster.recovery.cluster": "DR",
+"message.success.update.disaster.recovery.cluster": "Recovery cluster information has been updated.",
+"message.disaster.recovery.cluster.connection.test.update.description": "Perform a connection test with the cluster you want to update.",
+"message.dr.mirrored.vm.release": "Confirm whether you want to release mirroring.",
+"label.dr.release.mirroring": "Release mirroring"
 }

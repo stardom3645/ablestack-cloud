@@ -18,38 +18,40 @@
 <template>
   <a-alert type="info" :message="$t('message.info.for.dr')" showIcon />
   <br>
-  <a-table
-    size="small"
-    :columns="drColumns"
-    :dataSource="this.drCluster"
-    :rowKey="item => item.id"
-    :pagination="false"
-  >
-<!--    펼쳐졌을 때 정보-->
-    <template #expandedRowRender="{ record, text }">
-      <a-descriptions style="margin-top: 10px" layout="vertical" :column="1" :bordered="false" size="small">
-        <a-descriptions-item :label="$t('label.id')" class="bold-label">
-          {{ record.id }}
-        </a-descriptions-item>
-        <a-descriptions-item :label="$t('label.dr.volume.root.disk.status')">
-          <status :text="text ? text : ''" displayText />
-          {{ record.mirroredVmRootDisk }}
-        </a-descriptions-item>
-        <a-descriptions-item :label="$t('label.dr.volume.data.disk.status')">
-          <status :text="text ? text : ''" displayText />
-          {{ record.mirroredVmDataDisk }}<br>
-        </a-descriptions-item>
-      </a-descriptions>
-    </template>
-    <template #bodyCell="{ column, text }">
-      <template v-if="column.key === 'state'">
-        <status :text="text ? text : ''" displayText />
+  <a-spin :spinning="loading">
+    <a-table
+      size="small"
+      :columns="drColumns"
+      :dataSource="this.drCluster"
+      :rowKey="item => item.id"
+      :pagination="false"
+    >
+  <!--    펼쳐졌을 때 정보-->
+      <template #expandedRowRender="{ record, text }">
+        <a-descriptions style="margin-top: 10px" layout="vertical" :column="1" :bordered="false" size="small">
+          <a-descriptions-item :label="$t('label.id')" class="bold-label">
+            {{ record.id }}
+          </a-descriptions-item>
+          <a-descriptions-item :label="$t('label.dr.volume.root.disk.status')">
+            <status :text="text ? text : ''" displayText />
+            {{ record.mirroredVmRootDisk }}
+          </a-descriptions-item>
+          <a-descriptions-item :label="$t('label.dr.volume.data.disk.status')">
+            <status :text="text ? text : ''" displayText />
+            {{ record.mirroredVmDataDisk }}<br>
+          </a-descriptions-item>
+        </a-descriptions>
       </template>
-      <template v-if="column.key === 'actions'">
-      <slot name="actions"/>
+      <template #bodyCell="{ column, text }">
+        <template v-if="column.key === 'state'">
+          <status :text="text ? text : ''" displayText />
+        </template>
+        <template v-if="column.key === 'actions'">
+        <slot name="actions"/>
+        </template>
       </template>
-    </template>
-  </a-table>
+    </a-table>
+  </a-spin>
 </template>
 
 <script>
@@ -63,10 +65,6 @@ export default {
     resource: {
       type: Object,
       required: true
-    },
-    loading: {
-      type: Boolean,
-      default: false
     }
   },
   components: {
@@ -76,6 +74,7 @@ export default {
   inject: ['parentFetchData'],
   data () {
     return {
+      loading: false,
       drColumns: [
         {
           key: 'name',
@@ -135,6 +134,7 @@ export default {
   },
   methods: {
     fetchData () {
+      this.loading = true
       api('getDisasterRecoveryClusterList', { name: 'test-sec-cluster-01' }).then(json => {
         this.drCluster = json.getdisasterrecoveryclusterlistresponse.disasterrecoverycluster || []
         this.drVm = json.getdisasterrecoveryclusterlistresponse.disasterrecoverycluster[0].disasterrecoveryclustervmlist[3].name || []
@@ -142,6 +142,7 @@ export default {
         this.drCluster = this.drCluster.map(item => ({ ...item, mirroredVmRootDisk: 'ROOT-673' }))
         this.drCluster = this.drCluster.map(item => ({ ...item, mirroredVmDataDisk: 'DATA-678' }))
       }).finally(() => {
+        this.loading = false
       })
     }
   }

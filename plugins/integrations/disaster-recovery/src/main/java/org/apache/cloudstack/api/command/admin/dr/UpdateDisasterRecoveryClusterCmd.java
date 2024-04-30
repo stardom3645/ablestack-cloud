@@ -57,6 +57,15 @@ public class UpdateDisasterRecoveryClusterCmd extends BaseCmd implements AdminCm
             required = true)
     private Long id;
 
+    @Parameter(name = ApiConstants.NAME, type = CommandType.STRING, description = "name of disaster recovery cluster")
+    private String name;
+
+    @Parameter(name = ApiConstants.DESCRIPTION, type = CommandType.STRING, description = "the description of the disaster recovery cluster")
+    private String description;
+
+    @Parameter(name = ApiConstants.DR_CLUSTER_URL, type = CommandType.STRING, description = "the url of the disaster recovery cluster")
+    private String drClusterUrl;
+
     @Parameter(name = ApiConstants.DR_CLUSTER_STATUS, type = CommandType.STRING,
             description = "the enabled or disabled dr cluster state of the disaster recovery",
             required = true)
@@ -75,6 +84,18 @@ public class UpdateDisasterRecoveryClusterCmd extends BaseCmd implements AdminCm
     /////////////////////////////////////////////////////
     public Long getId() {
         return id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public String getDrClusterUrl() {
+        return drClusterUrl;
     }
 
     public String getDrClusterStatus() {

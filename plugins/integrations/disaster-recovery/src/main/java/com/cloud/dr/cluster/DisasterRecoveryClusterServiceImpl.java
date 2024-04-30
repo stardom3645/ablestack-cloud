@@ -74,7 +74,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
     protected static Logger LOGGER = LogManager.getLogger(DisasterRecoveryClusterServiceImpl.class);
 
     @Override
-    @ActionEvent(eventType = DisasterRecoveryClusterEventTypes.EVENT_DR_TEST_CONNECT, eventDescription = "disaster recovery cluster connection testing")
+    @ActionEvent(eventType = DisasterRecoveryClusterEventTypes.EVENT_DR_TEST_CONNECT, eventDescription = "disaster recovery cluster connection testing", resourceId = 5, resourceType = "DisasterRecoveryCluster")
     public boolean connectivityTestsDisasterRecovery(final ConnectivityTestsDisasterRecoveryClusterCmd cmd) {
         if (!DisasterRecoveryServiceEnabled.value()) {
             throw new CloudRuntimeException("Disaster Recovery Service plugin is disabled");
@@ -98,6 +98,8 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                 if (glueStatus != null) {
                     if (glueStatus.contains("HEALTH_OK")) {
                         return true;
+                    }else if (glueStatus.contains("HEALTH_ERR")) {
+                        return false;
                     }
                 }
             }
@@ -237,13 +239,18 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
             throw new CloudRuntimeException("Disaster Recovery plugin is disabled");
         }
         final Long drClusterId = cmd.getId();
-        Map<String,String> details = cmd.getDetails();
         DisasterRecoveryCluster.DrClusterStatus drClusterStatus = null;
         DisasterRecoveryCluster.MirroringAgentStatus mirroringAgentStatus = null;
         DisasterRecoveryClusterVO drcluster = disasterRecoveryClusterDao.findById(drClusterId);
         if (drcluster == null) {
             throw new InvalidParameterValueException("Invalid Disaster Recovery id specified");
         }
+
+        String drClusterName = cmd.getName();
+        String drClusterDescription = cmd.getDescription();
+        String drClusterUrl = cmd.getDrClusterUrl();
+
+        Map<String,String> details = cmd.getDetails();
         drcluster.setDetails(details);
         disasterRecoveryClusterDao.saveDetails(drcluster);
         try {
@@ -254,6 +261,9 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         }
         if (!drClusterStatus.equals(drcluster.getDrClusterStatus()) && !mirroringAgentStatus.equals(drcluster.getMirroringAgentStatus())) {
             drcluster = disasterRecoveryClusterDao.createForUpdate(drcluster.getId());
+            drcluster.setName(drClusterName);
+            drcluster.setDescription(drClusterDescription);
+            drcluster.setDrClusterUrl(drClusterUrl);
             drcluster.setDrClusterStatus(String.valueOf(drClusterStatus));
             if (!disasterRecoveryClusterDao.update(drcluster.getId(), drcluster)) {
                 throw new CloudRuntimeException(String.format("Failed to update Disaster Recovery ID: %s", drcluster.getUuid()));

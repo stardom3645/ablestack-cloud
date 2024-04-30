@@ -90,14 +90,17 @@ public class ConnectivityTestsDisasterRecoveryClusterCmd extends BaseCmd impleme
     /////////////////////////////////////////////////////
     @Override
     public void execute() throws ServerApiException, ConcurrentOperationException {
+        boolean result = false;
         try {
-            if (!disasterRecoveryClusterService.connectivityTestsDisasterRecovery(this)) {
-                throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, String.format("Failed to connectivity tests disaster recovery."));
-            }
-            SuccessResponse response = new SuccessResponse(getCommandName());
-            setResponseObject(response);
+            result = disasterRecoveryClusterService.connectivityTestsDisasterRecovery(this);
         } catch (CloudRuntimeException ex) {
             throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, ex.getMessage());
+        }
+        if(result) {
+            SuccessResponse response = new SuccessResponse(getCommandName());
+            setResponseObject(response);
+        } else {
+            throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, "Failed to connectivity tests disaster recovery");
         }
     }
 }

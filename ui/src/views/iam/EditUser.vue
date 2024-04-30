@@ -170,6 +170,7 @@ export default {
         if (fieldValue) {
           form[field.name] = fieldValue
         }
+        console.log(fieldValue)
       })
       this.loading = false
     },

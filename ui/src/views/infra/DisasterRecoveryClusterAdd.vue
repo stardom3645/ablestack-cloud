@@ -163,7 +163,8 @@ export default {
       },
       fileList: [],
       buttonDisabled: false,
-      alertDescription: this.$t('message.disaster.recovery.cluster.connection.test.description')
+      alertDescription: this.$t('message.disaster.recovery.cluster.connection.test.description'),
+      testConnResult: false
     }
   },
   computed: {
@@ -183,8 +184,8 @@ export default {
         name: [{ required: true, message: this.$t('label.required') }],
         url: [{ required: true, message: this.$t('label.required') }],
         apikey: [{ required: true, message: this.$t('label.required') }],
-        secretkey: [{ required: true, message: this.$t('label.required') }],
-        file: [{ required: true, message: this.$t('message.error.required.input') }]
+        secretkey: [{ required: true, message: this.$t('label.required') }]
+        // file: [{ required: true, message: this.$t('message.error.required.input') }]
       })
     },
     fetchData () {
@@ -256,10 +257,40 @@ export default {
       this.fileList = newFileList
       this.form.file = undefined
     },
+    // 재난복구클러스터 연결 테스트
     testConnCode () {
       this.showCode = !this.showCode
       this.buttonDisabled = true
+
+      this.formRef.value.validate().then(() => {
+        const values = toRaw(this.form)
+        const params = {
+          name: values.name,
+          description: values.description,
+          drClusterUrl: values.url,
+          apiKey: values.apikey,
+          usersecretkey: values.secretkey
+        }
+        console.log(params)
+        api('connectivityTestsDisasterRecovery', params).then(json => {
+          this.testConnResult = json.connectivitytestsdisasterrecoveryresponse
+          if (this.testConnResult === false) {
+            alert('sdfsdfsd')
+            return
+          }
+          this.$emit('refresh-data')
+        }).catch(error => {
+          this.showCode = !this.showCode
+          this.buttonDisabled = false
+          this.$notification.error({
+            message: this.$t('message.request.failed'),
+            description: (error.response && error.response.headers && error.response.headers['x-description']) || error.message
+          })
+        })
+        this.closeAction()
+      })
     },
+
     handleKeyPress (event) {
       // Check if the button is disabled and if a keyboard key is pressed
       if (this.buttonDisabled && event.key !== 'Tab') {
@@ -285,7 +316,6 @@ export default {
         console.log(params)
         this.buttonDisabled = false
         setTimeout(() => {
-          alert('sdfsdfd')
           this.showCode = false
         }, 3000)
         // api('addAutomationController', params).then(json => {
