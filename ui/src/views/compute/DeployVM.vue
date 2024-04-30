@@ -2137,11 +2137,10 @@ export default {
         const httpMethod = deployVmData.userdata ? 'POST' : 'GET'
 
         if (values.vmNumber) {
-          console.log(values.vmNumber)
           for (var num = 0; num < Number(values.vmNumber); num++) {
             let args = ''
             let data = ''
-            if (values.vmNumber === '1') {
+            if (values.vmNumber === 1) {
               console.log('values.vmNumber=1')
               deployVmData.name = values.name
               deployVmData.displayname = values.name
