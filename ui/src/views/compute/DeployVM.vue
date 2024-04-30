@@ -2215,6 +2215,10 @@ export default {
             })
             return
           }
+          this.$notification.error({
+            message: this.$t('message.request.failed'),
+            description: this.$t('error.form.message')
+          })
         }
       })
     },
