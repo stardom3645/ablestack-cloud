@@ -2161,41 +2161,39 @@ export default {
             }
             args = httpMethod === 'POST' ? {} : deployVmData
             data = httpMethod === 'POST' ? deployVmData : {}
-            api('deployVirtualMachine', args, httpMethod, data).then(response => {
-              const jobId = response.deployvirtualmachineresponse.jobid
-              if (jobId) {
-                this.$pollJob({
-                  jobId,
-                  title,
-                  description,
-                  successMethod: result => {
-                    const vm = result.jobresult.virtualmachine
-                    const name = vm.displayname || vm.name || vm.id
-                    if (vm.password) {
-                      this.$notification.success({
-                        message: password + ` ${this.$t('label.for')} ` + name,
-                        description: vm.password,
-                        btn: () => h(
-                          Button,
-                          {
-                            type: 'primary',
-                            size: 'small',
-                            onClick: () => this.copyToClipboard(vm.password)
-                          },
-                          () => [this.$t('label.copy.password')]
-                        ),
-                        duration: 0
-                      })
-                    }
-                    eventBus.emit('vm-refresh-data')
-                  },
-                  loadingMessage: `${title} ${this.$t('label.in.progress')}`,
-                  catchMessage: this.$t('error.fetching.async.job.result'),
-                  action: {
-                    isFetchData: false
+            try {
+              const jobId =  await this.deployVM(args, httpMethod, data)
+              await this.$pollJob({
+                jobId,
+                title,
+                description,
+                successMethod: result => {
+                  const vm = result.jobresult.virtualmachine
+                  const name = vm.displayname || vm.name || vm.id
+                  if (vm.password) {
+                    this.$notification.success({
+                      message: password + ` ${this.$t('label.for')} ` + name,
+                      description: vm.password,
+                      btn: () => h(
+                        Button,
+                        {
+                          type: 'primary',
+                          size: 'small',
+                          onClick: () => this.copyToClipboard(vm.password)
+                        },
+                        () => [this.$t('label.copy.password')]
+                      ),
+                      duration: 0
+                    })
                   }
-                })
-              }
+                  eventBus.emit('vm-refresh-data')
+                },
+                loadingMessage: `${title} ${this.$t('label.in.progress')}`,
+                catchMessage: this.$t('error.fetching.async.job.result'),
+                action: {
+                  isFetchData: false
+                }
+              })
               // Sending a refresh in case it hasn't picked up the new VM
               new Promise(resolve => setTimeout(resolve, 3000)).then(() => {
                 eventBus.emit('vm-refresh-data')
@@ -2203,15 +2201,10 @@ export default {
               if (!values.stayonpage) {
                 this.$router.back()
               }
-            }).catch(error => {
-              if (error.message !== undefined) {
-                this.$notifyError(error)
-              }
+            } catch (error) {
+              await this.$notifyError(error)
               this.loading.deploy = false
-            }).finally(() => {
-              this.form.stayonpage = false
-              this.loading.deploy = false
-            })
+            }
           }
         }
       }).catch(err => {
@@ -2230,6 +2223,19 @@ export default {
             description: this.$t('error.form.message')
           })
         }
+      })
+    },
+    deployVM (args, httpMethod, data) {
+      return new Promise((resolve, reject) => {
+        api('deployVirtualMachine', args, httpMethod, data).then(json => {
+          const jobId = json.deployvirtualmachineresponse.jobid
+          return resolve(jobId)
+        }).catch(error => {
+          return reject(error)
+        }).finally(() => {
+          this.form.stayonpage = false
+          this.loading.deploy = false
+        })
       })
     },
     fetchZones (zoneId, listZoneAllow) {
