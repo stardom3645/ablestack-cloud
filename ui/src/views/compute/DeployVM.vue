@@ -2146,7 +2146,7 @@ export default {
                 deployVmData.displayname = values.name
               } else {
                 console.log(deployVmData)
-                if (deployVmData['iptonetworklist[0].ip'] != null && deployVmData['iptonetworklist[0].mac'] != null) {
+                if (deployVmData['iptonetworklist[0].ip'] != null || deployVmData['iptonetworklist[0].mac'] != null) {
                   this.$notification.error({
                     message: this.$t('message.request.failed'),
                     description: this.$t('message.deploy.vm.number')
