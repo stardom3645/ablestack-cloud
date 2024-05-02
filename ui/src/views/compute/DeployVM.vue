@@ -2162,7 +2162,7 @@ export default {
             args = httpMethod === 'POST' ? {} : deployVmData
             data = httpMethod === 'POST' ? deployVmData : {}
             try {
-              const jobId =  await this.deployVM(args, httpMethod, data)
+              const jobId = await this.deployVM(args, httpMethod, data)
               await this.$pollJob({
                 jobId,
                 title,
