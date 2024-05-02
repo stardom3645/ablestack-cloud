@@ -2196,7 +2196,7 @@ export default {
                 }
               })
               // Sending a refresh in case it hasn't picked up the new VM
-              if (values.vmNumber === 1) {
+              if (values.vmNumber === 1 || !values.stayonpage) {
                 await new Promise(resolve => setTimeout(resolve, 3000)).then(() => {
                   eventBus.emit('vm-refresh-data')
                 })
@@ -2211,6 +2211,8 @@ export default {
               this.loading.deploy = false
             }
           }
+          this.form.stayonpage = false
+          this.loading.deploy = false
         }
       }).catch(err => {
         this.formRef.value.scrollToField(err.errorFields[0].name)
@@ -2237,9 +2239,6 @@ export default {
           return resolve(jobId)
         }).catch(error => {
           return reject(error)
-        }).finally(() => {
-          this.form.stayonpage = false
-          this.loading.deploy = false
         })
       })
     },
