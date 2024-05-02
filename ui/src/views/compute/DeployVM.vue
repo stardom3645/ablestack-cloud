@@ -2194,9 +2194,11 @@ export default {
                 }
               })
               // Sending a refresh in case it hasn't picked up the new VM
-              await new Promise(resolve => setTimeout(resolve, 3000)).then(() => {
-                eventBus.emit('vm-refresh-data')
-              })
+              if (values.vmNumber === 1) {
+                await new Promise(resolve => setTimeout(resolve, 3000)).then(() => {
+                  eventBus.emit('vm-refresh-data')
+                })
+              }
               if (!values.stayonpage) {
                 await this.$router.back()
               }
