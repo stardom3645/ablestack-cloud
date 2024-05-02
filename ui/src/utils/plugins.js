@@ -89,6 +89,7 @@ export const pollJobPlugin = {
       options.originalPage = options.originalPage || this.$router.currentRoute.value.path
       api('queryAsyncJobResult', { jobId }).then(json => {
         const result = json.queryasyncjobresultresponse
+        console.log(result)
         eventBus.emit('update-job-details', { jobId, resourceId })
         if (result.jobstatus === 1) {
           var content = successMessage

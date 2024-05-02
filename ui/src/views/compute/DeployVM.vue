@@ -2145,6 +2145,16 @@ export default {
                 deployVmData.name = values.name
                 deployVmData.displayname = values.name
               } else {
+                if (networkConfig && networkConfig.length > 0) {
+                  if (networkConfig[0].ipAddress != null || networkConfig[0].macAddress != null) {
+                    this.$notification.error({
+                      message: this.$t('message.request.failed'),
+                      description: this.$t('message.deploy.vm.number')
+                    })
+                    this.loading.deploy = false
+                    return
+                  }
+                }
                 var numP = num + 1
                 deployVmData.name = values.name + '-' + numP
                 deployVmData.displayname = values.name + '-' + numP
