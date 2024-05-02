@@ -780,7 +780,7 @@
                       ></a-select>
                     </a-form-item>
                     <a-form-item :label="$t('label.deploy.vm.number')" name="vmNumber" ref="vmNumber">
-                      <a-input-number :min=1 :max=999 :maxlength="3" v-model:value="form.vmNumber" />
+                      <a-input-number :min=1 :max=50 :maxlength="2" v-model:value="form.vmNumber" />
                     </a-form-item>
                     <a-form-item :label="$t('label.action.start.instance')" name="startvm" ref="startvm">
                       <a-switch v-model:checked="form.startvm" />
