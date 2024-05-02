@@ -2194,11 +2194,11 @@ export default {
                 }
               })
               // Sending a refresh in case it hasn't picked up the new VM
-              new Promise(resolve => setTimeout(resolve, 3000)).then(() => {
+              await new Promise(resolve => setTimeout(resolve, 3000)).then(() => {
                 eventBus.emit('vm-refresh-data')
               })
               if (!values.stayonpage) {
-                this.$router.back()
+                await this.$router.back()
               }
             } catch (error) {
               if (error.message !== undefined) {
