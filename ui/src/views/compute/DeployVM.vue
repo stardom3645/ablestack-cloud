@@ -2145,8 +2145,8 @@ export default {
                 deployVmData.name = values.name
                 deployVmData.displayname = values.name
               } else {
-                if (networkConfig && networkConfig.length > 0) {
-                  if (networkConfig[0].ipAddress != null || networkConfig[0].macAddress != null) {
+                if (this.networkConfig && this.networkConfig.length > 0) {
+                  if (this.networkConfig[0].ipAddress != null || this.networkConfig[0].macAddress != null) {
                     this.$notification.error({
                       message: this.$t('message.request.failed'),
                       description: this.$t('message.deploy.vm.number')
