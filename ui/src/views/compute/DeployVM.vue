@@ -2202,7 +2202,9 @@ export default {
                 this.$router.back()
               }
             } catch (error) {
-              await this.$notifyError(error)
+              if (error.message !== undefined) {
+                await this.$notifyError(error)
+              }
               this.loading.deploy = false
             }
           }
