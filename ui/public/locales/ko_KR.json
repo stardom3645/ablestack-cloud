@@ -4232,7 +4232,5 @@
 "label.action.nic.linkstate.up": "해당 NIC를 활성화(UP) 하시겠습니까?",
 "label.action.nic.linkstate.down": "해당 NIC를 비활성화(DOWN) 하시겠습니까?",
 "message.success.update.nic.linkstate": "Nic 상태 변경에 성공하였습니다.",
-"message.update.nic.linkstate.processing": "Nic 상태 변경중...",
-"label.deploy.vm.number": "생성할 가상머신 수",
-"message.deploy.vm.number": "네트워크의 IP 또는 Mac 주소를 입력한 경우 1개의 가상머신만 생성이 가능합니다."
+"message.update.nic.linkstate.processing": "Nic 상태 변경중..."
 }

@@ -4226,7 +4226,5 @@
 "label.create.rbd.image": "Create Image",
 "message.rbd.name ": "Please enter image name",
 "message.rbd.size": "Please enter image size",
-"label.delete.rbd.image": "Are you sure you want to delete the image",
-"label.deploy.vm.number": "Number of virtual machines to deploy",
-"message.deploy.vm.number": "If you enter a network IP or Mac address, only one virtual machine can be created."
+"label.delete.rbd.image": "Are you sure you want to delete the image"
 }
