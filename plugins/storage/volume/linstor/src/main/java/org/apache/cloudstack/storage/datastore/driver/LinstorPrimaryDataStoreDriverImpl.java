@@ -1013,7 +1013,7 @@ public class LinstorPrimaryDataStoreDriverImpl implements PrimaryDataStoreDriver
                 answer = new Answer(cmd, false, "Unable to get matching Linstor endpoint.");
             }
         } catch (ApiException exc) {
-            s_logger.error("copy volume failed: ", exc);
+            logger.error("copy volume failed: ", exc);
             throw new CloudRuntimeException(exc.getBestMessage());
         }
         return answer;
