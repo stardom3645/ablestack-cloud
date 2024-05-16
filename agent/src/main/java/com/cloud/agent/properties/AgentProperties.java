@@ -696,6 +696,13 @@ public class AgentProperties{
     public static final Property<Boolean> DEVELOPER = new Property<>("developer", false);
 
     /**
+     * If set to "true", the agent will register for libvirt domain events, allowing for immediate updates on crashed or unexpectedly
+     * stopped VMs. Experimental, requires agent restart.
+     * Default value: <code>false</code>
+     */
+    public static final Property<Boolean> LIBVIRT_EVENTS_ENABLED = new Property<>("libvirt.events.enabled", false);
+
+    /**
      * Can only be used if developer = true. This property is used to define the local bridge name and private network name.<br>
      * Data type: String.<br>
      * Default value: <code>null</code>
@@ -734,7 +741,7 @@ public class AgentProperties{
      * Data type: Integer.<br>
      * Default value: <code>0</code>
      */
-    public static final Property<Integer> VM_MEMBALLOON_STATS_PERIOD = new Property<>("vm.memballoon.stats.period", 0);
+    public static final Property<Integer> VM_MEMBALLOON_STATS_PERIOD = new Property<>("vm.memballoon.stats.period", 5);
 
     /**
      * The number of iothreads
@@ -758,12 +765,12 @@ public class AgentProperties{
     public static final Property<String> CONTROL_CIDR = new Property<>("control.cidr", "169.254.0.0/16");
 
     /**
-     * Time interval (in milliseconds) between KVM heartbeats. <br>
+     * Time interval (in milliseconds) between KVM heartbeats timestamp update. <br>
      * This property is for KVM only.
      * Data type: Long.<br>
      * Default value: <code>60000l</code>
      */
-    public static final Property<Long> KVM_HEARTBEAT_UPDATE_FREQUENCY = new Property<>("kvm.heartbeat.update.frequency", 60000L);
+    public static final Property<Long> KVM_HEARTBEAT_UPDATE_FREQUENCY = new Property<>("kvm.heartbeat.update.frequency", 10000L);
 
     /**
      * Number of maximum tries to KVM heartbeats. <br>
@@ -771,7 +778,7 @@ public class AgentProperties{
      * Data type: Long.<br>
      * Default value: <code>5l</code>
      */
-    public static final Property<Long> KVM_HEARTBEAT_UPDATE_MAX_TRIES = new Property<>("kvm.heartbeat.update.max.tries", 5L);
+    public static final Property<Long> KVM_HEARTBEAT_UPDATE_MAX_TRIES = new Property<>("kvm.heartbeat.update.max.tries", 10L);
 
     /**
      * Time amount (in milliseconds) for the KVM heartbeat retry sleep. <br>
@@ -788,6 +795,14 @@ public class AgentProperties{
      * Default value: <code>360000l</code>
      */
     public static final Property<Long> KVM_HEARTBEAT_CHECKER_TIMEOUT = new Property<>("kvm.heartbeat.checker.timeout", 360000L);
+
+    /**
+     * Time interval (in milliseconds) of the KVM heartbeat checker. <br>
+     * This property is for KVM only.
+     * Data type: Long.<br>
+     * Default value: <code>60000l</code>
+     */
+    public static final Property<Long> KVM_HEARTBEAT_CHECKER_FREQUENCY = new Property<>("kvm.heartbeat.checker.timeout", 60000L);
 
     /**
      * Keystore passphrase

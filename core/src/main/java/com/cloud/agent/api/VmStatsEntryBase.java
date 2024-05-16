@@ -19,6 +19,8 @@
 
 package com.cloud.agent.api;
 
+import java.util.Map;
+
 import com.cloud.vm.VmStats;
 
 public class VmStatsEntryBase implements VmStats {
@@ -37,6 +39,8 @@ public class VmStatsEntryBase implements VmStats {
     private double intusablememoryKBs;
     private int numCPUs;
     private String entityType;
+    private Map<String, String> nicAddrMap;
+    private String qemuAgentVersion;
 
     public VmStatsEntryBase() {
 
@@ -199,6 +203,22 @@ public class VmStatsEntryBase implements VmStats {
 
     public void setEntityType(String entityType) {
         this.entityType = entityType;
+    }
+
+    public Map<String, String> getNicAddrMap() {
+        return nicAddrMap;
+    }
+
+    public void setNicAddrMap(Map<String, String> nicAddrMap) {
+        this.nicAddrMap = nicAddrMap;
+    }
+
+    public String getQemuAgentVersion() {
+        return qemuAgentVersion;
+    }
+
+    public void setQemuAgentVersion(String qemuAgentVersion) {
+        this.qemuAgentVersion = qemuAgentVersion;
     }
 
 }

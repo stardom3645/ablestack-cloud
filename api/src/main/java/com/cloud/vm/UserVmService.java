@@ -44,6 +44,8 @@ import org.apache.cloudstack.api.command.user.vm.UpdateVmNicIpCmd;
 import org.apache.cloudstack.api.command.user.vm.UpgradeVMCmd;
 import org.apache.cloudstack.api.command.user.vmgroup.CreateVMGroupCmd;
 import org.apache.cloudstack.api.command.user.vmgroup.DeleteVMGroupCmd;
+import org.apache.cloudstack.api.command.user.vm.UpdateVmNicLinkStateCmd;
+
 
 import com.cloud.dc.DataCenter;
 import com.cloud.exception.ConcurrentOperationException;
@@ -128,7 +130,7 @@ public interface UserVmService {
     UserVm startVirtualMachine(StartVMCmd cmd) throws StorageUnavailableException, ExecutionException, ConcurrentOperationException, ResourceUnavailableException,
         InsufficientCapacityException, ResourceAllocationException;
 
-    UserVm rebootVirtualMachine(RebootVMCmd cmd) throws InsufficientCapacityException, ResourceUnavailableException;
+    UserVm rebootVirtualMachine(RebootVMCmd cmd) throws InsufficientCapacityException, ResourceUnavailableException, ResourceAllocationException;
 
     UserVm updateVirtualMachine(UpdateVMCmd cmd) throws ResourceUnavailableException, InsufficientCapacityException;
 
@@ -510,9 +512,9 @@ public interface UserVmService {
 
     VirtualMachine vmStorageMigration(Long vmId, Map<String, String> volumeToPool);
 
-    UserVm restoreVM(RestoreVMCmd cmd) throws InsufficientCapacityException, ResourceUnavailableException;
+    UserVm restoreVM(RestoreVMCmd cmd) throws InsufficientCapacityException, ResourceUnavailableException, ResourceAllocationException;
 
-    UserVm restoreVirtualMachine(Account caller, long vmId, Long newTemplateId) throws InsufficientCapacityException, ResourceUnavailableException;
+    UserVm restoreVirtualMachine(Account caller, long vmId, Long newTemplateId, Long rootDiskOfferingId, boolean expunge, Map<String, String> details) throws InsufficientCapacityException, ResourceUnavailableException;
 
     UserVm upgradeVirtualMachine(ScaleVMCmd cmd) throws ResourceUnavailableException, ConcurrentOperationException, ManagementServerException,
         VirtualMachineMigrationException;
@@ -551,4 +553,6 @@ public interface UserVmService {
     UserVm allocateVbmcToVM(AllocateVbmcToVMCmd cmd);
 
     UserVm removeVbmcToVM(RemoveVbmcToVMCmd cmd);
+
+    UserVm updateVmNicLinkState(UpdateVmNicLinkStateCmd cmd);
 }
