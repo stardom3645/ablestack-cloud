@@ -27,6 +27,7 @@ import org.apache.cloudstack.api.response.UserVmResponse;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 @SuppressWarnings("unused")
 @EntityReference(value = {DisasterRecoveryCluster.class})
@@ -75,6 +76,10 @@ public class GetDisasterRecoveryClusterListResponse extends BaseResponse {
     @Param(description = "the remove date of the disaster recovery cluster")
     private Date removed;
 
+    @SerializedName(ApiConstants.DETAILS)
+    @Param(description = "Vm details in key/value pairs.", since = "4.2.1")
+    private Map details;
+
     @SerializedName(ApiConstants.DISASTER_RECOVERY_CLUSTER_VM_LIST)
     @Param(description = "the list of virtualmachine associated with this disaster recovery cluster")
     private List<UserVmResponse> disasterRecoveryClusterVms;
@@ -113,6 +118,10 @@ public class GetDisasterRecoveryClusterListResponse extends BaseResponse {
 
     public String getSecretKey() {
         return secretKey;
+    }
+
+    public Map getDetails() {
+        return details;
     }
 
     public Date getCreated() {
@@ -157,6 +166,10 @@ public class GetDisasterRecoveryClusterListResponse extends BaseResponse {
 
     public void setSecretKey(String secretKey) {
         this.secretKey = secretKey;
+    }
+
+    public void setDetails(Map details) {
+        this.details = details;
     }
 
     public void setCreated(Date created) {

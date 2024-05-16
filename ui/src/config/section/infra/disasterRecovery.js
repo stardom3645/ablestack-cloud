@@ -25,7 +25,7 @@ export default {
   icon: 'SubnodeOutlined',
   permission: ['getDisasterRecoveryClusterList'],
   columns: ['name', 'drclustertype', 'drclusterurl', 'drclusterstatus', 'mirroringagentstatus'],
-  details: ['name', 'id', 'drclustertype', 'drclusterurl', 'drclusterstatus', 'mirroringagentstatus'],
+  details: ['name', 'id', 'description', 'drclustertype', 'drclusterurl', 'drclusterstatus', 'mirroringagentstatus'],
   tabs: [
     {
       name: 'details',
@@ -33,7 +33,7 @@ export default {
     },
     {
       name: 'instance',
-      component: shallowRef(defineAsyncComponent(() => import('@/views/infra/DisasterRecoveryClusterTab.vue')))
+      component: shallowRef(defineAsyncComponent(() => import('@/views/infra/DisasterRecoveryClusterVmTab.vue')))
     },
     {
       name: 'settings',
@@ -66,12 +66,14 @@ export default {
       label: 'label.edit.disaster.recovery.cluster',
       dataView: true,
       popup: true,
+      // disabled: (record) => { return record.drclusterstatus === 'Enabled' },
       component: shallowRef(defineAsyncComponent(() => import('@/views/infra/UpdateDisasterRecoveryCluster.vue')))
     },
     {
       api: 'updateDisasterRecoveryCluster',
       icon: 'play-circle-outlined',
       label: 'label.action.enable.disaster.recovery.cluster',
+      message: 'message.enabled.dr.cluster.confirm',
       dataView: true,
       popup: true,
       show: (record) => { return record.drclusterstatus === 'Disabled' },
@@ -86,6 +88,7 @@ export default {
       api: 'updateDisasterRecoveryCluster',
       icon: 'pause-circle-outlined',
       label: 'label.action.disable.disaster.recovery.cluster',
+      message: 'message.disabled.dr.cluster.confirm',
       dataView: true,
       popup: true,
       show: (record) => { return record.drclusterstatus === 'Enabled' },
@@ -100,16 +103,16 @@ export default {
       api: 'updateDisasterRecoveryCluster',
       icon: 'UpSquareOutlined',
       label: 'label.action.promote.disaster.recovery.cluster',
-      message: 'promote',
+      message: 'message.promote.dr.cluster.confirm',
       dataView: true,
       popup: true,
-      show: (record) => { return record.drclustertype === 'secondary' }
+      show: (record) => { return record.drclustertype === 'primary' }
     },
     {
       api: 'updateDisasterRecoveryCluster',
       icon: 'DownSquareOutlined',
       label: 'label.action.demote.disaster.recovery.cluster',
-      message: 'demote',
+      message: 'message.demote.dr.cluster.confirm',
       dataView: true,
       popup: true,
       show: (record) => { return record.drclustertype === 'primary' }
@@ -118,7 +121,7 @@ export default {
       api: 'deletePod',
       icon: 'delete-outlined',
       label: 'label.action.delete.disaster.recovery.cluster',
-      message: 'message.action.delete.pod',
+      message: 'message.delete.dr.cluster.confirm',
       dataView: true
     }
   ]
