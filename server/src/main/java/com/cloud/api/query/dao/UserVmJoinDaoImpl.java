@@ -54,6 +54,7 @@ import com.cloud.api.query.vo.UserVmJoinVO;
 import com.cloud.gpu.GPU;
 import com.cloud.host.ControlState;
 import com.cloud.network.IpAddress;
+import com.cloud.network.Network;
 import com.cloud.network.vpc.VpcVO;
 import com.cloud.network.vpc.dao.VpcDao;
 import com.cloud.service.ServiceOfferingDetailsVO;
@@ -344,6 +345,7 @@ public class UserVmJoinDaoImpl extends GenericDaoBaseWithTagInformation<UserVmJo
                     nicResponse.setPublicIpId(publicIp.getUuid());
                     nicResponse.setPublicIp(publicIp.getAddress().toString());
                 }
+                nicResponse.setLinkState(userVm.getLinkState());
 
                 nicResponse.setObjectName("nic");
 
@@ -447,6 +449,8 @@ public class UserVmJoinDaoImpl extends GenericDaoBaseWithTagInformation<UserVmJo
             userVmResponse.setUserDataDetails(userVm.getUserDataDetails());
             userVmResponse.setUserDataPolicy(userVm.getUserDataPolicy());
         }
+
+        userVmResponse.setQemuAgentVersion(userVm.getQemuAgentVersion());
 
         addVmRxTxDataToResponse(userVm, userVmResponse);
 
@@ -571,6 +575,7 @@ public class UserVmJoinDaoImpl extends GenericDaoBaseWithTagInformation<UserVmJo
                 nicResponse.setPublicIpId(publicIp.getUuid());
                 nicResponse.setPublicIp(publicIp.getAddress().toString());
             }
+            nicResponse.setLinkState(uvo.getLinkState());
 
             /* 18: extra dhcp options */
             nicResponse.setObjectName("nic");
@@ -715,6 +720,16 @@ public class UserVmJoinDaoImpl extends GenericDaoBaseWithTagInformation<UserVmJo
             sc.setParameters("state", states.toArray());
         }
         sc.setParameters("displayVm", 1);
+        return listBy(sc);
+    }
+
+    @Override
+    public List<UserVmJoinVO> listGuestTypeVMs(Network.GuestType type) {
+        SearchBuilder<UserVmJoinVO> GuestTypeVMsSearch = createSearchBuilder();
+        GuestTypeVMsSearch.and("guestType", GuestTypeVMsSearch.entity().getGuestType(), SearchCriteria.Op.EQ);
+        GuestTypeVMsSearch.done();
+        SearchCriteria<UserVmJoinVO> sc = GuestTypeVMsSearch.create();
+        sc.setParameters("guestType", type);
         return listBy(sc);
     }
 }
