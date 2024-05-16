@@ -16,6 +16,8 @@
 // under the License.
 package com.cloud.dr.cluster;
 
+import org.apache.cloudstack.api.ResourceDetail;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -24,38 +26,33 @@ import javax.persistence.Id;
 import javax.persistence.Table;
 
 @Entity
-@Table(name = "disaster_recovery_cluster_vm_map")
-public class DisasterRecoveryClusterVmMapVO implements DisasterRecoveryClusterVmMap {
-
+@Table(name = "disaster_recovery_cluster_details")
+public class DisasterRecoveryClusterDetailsVO implements ResourceDetail {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
-    long id;
+    private long id;
 
-    @Column(name = "disaster_recovery_cluster_id")
-    long disasterRecoveryClusterId;
+    @Column(name = "dr_cluster_id")
+    private long resourceId;
 
-    @Column(name = "vm_id")
-    long vmId;
+    @Column(name = "name")
+    private String name;
 
-    @Column(name = "mirrored_vm_id")
-    long mirroredVmId;
+    @Column(name = "value", length = 5120)
+    private String value;
 
-    @Column(name = "mirrored_vm_name")
-    String mirroredVmName;
+    @Column(name = "display")
+    private boolean display = true;
 
-    @Column(name = "mirrored_vm_status")
-    String mirroredVmStatus;
-
-    @Column(name = "mirrored_vm_volume_status")
-    String mirroredVmVolumeStatus;
-
-    public DisasterRecoveryClusterVmMapVO() {
+    public DisasterRecoveryClusterDetailsVO() {
     }
 
-    public DisasterRecoveryClusterVmMapVO(long disasterRecoveryClusterId, long vmId) {
-        this.disasterRecoveryClusterId = disasterRecoveryClusterId;
-        this.vmId = vmId;
+    public DisasterRecoveryClusterDetailsVO(long drClusterId, String name, String value, boolean display) {
+        this.resourceId = drClusterId;
+        this.name = name;
+        this.value = value;
+        this.display = display;
     }
 
     @Override
@@ -64,21 +61,30 @@ public class DisasterRecoveryClusterVmMapVO implements DisasterRecoveryClusterVm
     }
 
     @Override
-    public long getDisasterRecoveryClusterId() {
-        return disasterRecoveryClusterId;
-    }
-
-    public void setDisasterRecoveryClusterId(long disasterRecoveryClusterId) {
-        this.disasterRecoveryClusterId = disasterRecoveryClusterId;
+    public String getName() {
+        return name;
     }
 
     @Override
-    public long getVmId() {
-        return vmId;
+    public String getValue() {
+        return value;
     }
 
-    public void setVmId(long vmId) {
-        this.vmId = vmId;
+    @Override
+    public long getResourceId() {
+        return resourceId;
     }
 
+    @Override
+    public boolean isDisplay() {
+        return display;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public void setValue(String value) {
+        this.value = value;
+    }
 }

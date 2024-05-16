@@ -33,6 +33,8 @@ import org.apache.cloudstack.api.command.admin.AdminCmd;
 import org.apache.cloudstack.api.response.dr.cluster.GetDisasterRecoveryClusterListResponse;
 
 import javax.inject.Inject;
+import java.util.Collection;
+import java.util.Map;
 
 @APICommand(name = UpdateDisasterRecoveryClusterCmd.APINAME,
         description = "Update a disaster recovery",
@@ -55,6 +57,15 @@ public class UpdateDisasterRecoveryClusterCmd extends BaseCmd implements AdminCm
             required = true)
     private Long id;
 
+    @Parameter(name = ApiConstants.NAME, type = CommandType.STRING, description = "name of disaster recovery cluster")
+    private String name;
+
+    @Parameter(name = ApiConstants.DESCRIPTION, type = CommandType.STRING, description = "the description of the disaster recovery cluster")
+    private String description;
+
+    @Parameter(name = ApiConstants.DR_CLUSTER_URL, type = CommandType.STRING, description = "the url of the disaster recovery cluster")
+    private String drClusterUrl;
+
     @Parameter(name = ApiConstants.DR_CLUSTER_STATUS, type = CommandType.STRING,
             description = "the enabled or disabled dr cluster state of the disaster recovery",
             required = true)
@@ -65,11 +76,26 @@ public class UpdateDisasterRecoveryClusterCmd extends BaseCmd implements AdminCm
             required = true)
     private String mirroringAgentStatus;
 
+    @Parameter(name = ApiConstants.DETAILS, type = CommandType.MAP, description = "Details in key/value pairs. 'extraconfig' is not allowed to be passed in details.")
+    protected Map<String, String> details;
+
     /////////////////////////////////////////////////////
     /////////////////// Accessors ///////////////////////
     /////////////////////////////////////////////////////
     public Long getId() {
         return id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public String getDrClusterUrl() {
+        return drClusterUrl;
     }
 
     public String getDrClusterStatus() {
@@ -78,6 +104,15 @@ public class UpdateDisasterRecoveryClusterCmd extends BaseCmd implements AdminCm
 
     public String getMirroringAgentStatus() {
         return mirroringAgentStatus;
+    }
+
+    public Map<String, String> getDetails() {
+        if (this.details == null || this.details.isEmpty()) {
+            return null;
+        }
+
+        Collection<String> paramsCollection = this.details.values();
+        return (Map<String, String>) (paramsCollection.toArray())[0];
     }
 
     @Override

@@ -82,7 +82,8 @@ public class DisasterRecoveryClusterUtil {
             connection.setRequestMethod(method);
             connection.setConnectTimeout(30000);
             connection.setReadTimeout(600000);
-            connection.setRequestProperty("Accept", "application/json");
+            connection.setRequestProperty("Accept", "application/vnd.ceph.api.v1.0+json");
+            connection.setRequestProperty("Authorization", "application/vnd.ceph.api.v1.0+json");
             connection.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
             LOGGER.info("connection.getResponseCode():::::::::::::::::::::::::::::::");
             LOGGER.info(connection.getResponseCode());
@@ -133,7 +134,8 @@ public class DisasterRecoveryClusterUtil {
             connection.setRequestMethod(method);
             connection.setConnectTimeout(30000);
             connection.setReadTimeout(600000);
-            connection.setRequestProperty("Accept", "application/json");
+            connection.setRequestProperty("Accept", "application/vnd.ceph.api.v1.0+json");
+            connection.setRequestProperty("Authorization", "application/vnd.ceph.api.v1.0+json");
             connection.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
             if (connection.getResponseCode() == 200) {
                 BufferedReader br = new BufferedReader(new InputStreamReader(connection.getInputStream(), "UTF-8"));
@@ -186,7 +188,8 @@ public class DisasterRecoveryClusterUtil {
             connection.setRequestMethod(method);
             connection.setConnectTimeout(30000);
             connection.setReadTimeout(600000);
-            connection.setRequestProperty("Accept", "application/json");
+            connection.setRequestProperty("Accept", "application/vnd.ceph.api.v1.0+json");
+            connection.setRequestProperty("Authorization", "application/vnd.ceph.api.v1.0+json");
             connection.setRequestProperty("Connection","Keep-Alive");
             connection.setRequestProperty("Content-type", "multipart/form-data;boundary=" + boundary);
             // parameter 추가 시 사용 예정
@@ -268,7 +271,8 @@ public class DisasterRecoveryClusterUtil {
             connection.setRequestMethod(method);
             connection.setConnectTimeout(30000);
             connection.setReadTimeout(600000);
-            connection.setRequestProperty("Accept", "application/json");
+            connection.setRequestProperty("Accept", "application/vnd.ceph.api.v1.0+json");
+            connection.setRequestProperty("Authorization", "application/vnd.ceph.api.v1.0+json");
             connection.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
             // parameter 추가 시 사용 예정
             // String apiParams = buildParamsGlues(params);
@@ -316,7 +320,8 @@ public class DisasterRecoveryClusterUtil {
             connection.setRequestMethod(method);
             connection.setConnectTimeout(30000);
             connection.setReadTimeout(600000);
-            connection.setRequestProperty("Accept", "application/json");
+            connection.setRequestProperty("Accept", "application/vnd.ceph.api.v1.0+json");
+            connection.setRequestProperty("Authorization", "application/vnd.ceph.api.v1.0+json");
             connection.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
             if (connection.getResponseCode() == 200) {
                 BufferedReader br = new BufferedReader(new InputStreamReader(connection.getInputStream(), "UTF-8"));
@@ -364,7 +369,8 @@ public class DisasterRecoveryClusterUtil {
             connection.setRequestMethod(method);
             connection.setConnectTimeout(30000);
             connection.setReadTimeout(600000);
-            connection.setRequestProperty("Accept", "application/json");
+            connection.setRequestProperty("Accept", "application/vnd.ceph.api.v1.0+json");
+            connection.setRequestProperty("Authorization", "application/vnd.ceph.api.v1.0+json");
             connection.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
             // parameter 추가 시 사용 예정
             // String apiParams = buildParamsGlues(params);
@@ -409,7 +415,8 @@ public class DisasterRecoveryClusterUtil {
             connection.setRequestMethod(method);
             connection.setConnectTimeout(30000);
             connection.setReadTimeout(600000);
-            connection.setRequestProperty("Accept", "application/json");
+            connection.setRequestProperty("Accept", "application/vnd.ceph.api.v1.0+json");
+            connection.setRequestProperty("Authorization", "application/vnd.ceph.api.v1.0+json");
             connection.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
             if (connection.getResponseCode() == 200) {
                 return true;
@@ -448,7 +455,8 @@ public class DisasterRecoveryClusterUtil {
             connection.setRequestMethod(method);
             connection.setConnectTimeout(30000);
             connection.setReadTimeout(600000);
-            connection.setRequestProperty("Accept", "application/json");
+            connection.setRequestProperty("Accept", "application/vnd.ceph.api.v1.0+json");
+            connection.setRequestProperty("Authorization", "application/vnd.ceph.api.v1.0+json");
             connection.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
             if (connection.getResponseCode() == 200) {
                 return true;

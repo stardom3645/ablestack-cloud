@@ -200,6 +200,16 @@ export default {
       }).finally(() => {
       })
     },
+    listVms () {
+      api('listNetworks', {
+        listAll: 'true',
+        showicon: true,
+        zoneid: this.vm.zoneid
+      }).then(response => {
+        this.addNetworkData.allNetworks = response.listnetworksresponse.network.filter(network => !this.vm.nic.map(nic => nic.networkid).includes(network.id))
+        this.addNetworkData.network = this.addNetworkData.allNetworks[0].id
+      })
+    },
     showAddModal () {
       this.showAddIpModal = true
       this.form.setFieldsValue({

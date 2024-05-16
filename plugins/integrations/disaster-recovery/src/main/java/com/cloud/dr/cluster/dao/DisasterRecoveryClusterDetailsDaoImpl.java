@@ -14,27 +14,17 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-
 package com.cloud.dr.cluster.dao;
 
-import com.cloud.dr.cluster.DisasterRecoveryClusterVO;
-import com.cloud.utils.db.GenericDao;
+import com.cloud.dr.cluster.DisasterRecoveryClusterDetailsVO;
+import org.apache.cloudstack.resourcedetail.ResourceDetailsDaoBase;
+import org.springframework.stereotype.Component;
 
-import java.util.List;
+@Component
+public class DisasterRecoveryClusterDetailsDaoImpl extends ResourceDetailsDaoBase<DisasterRecoveryClusterDetailsVO> implements DisasterRecoveryClusterDetailsDao {
 
-public interface DisasterRecoveryClusterDao extends GenericDao<DisasterRecoveryClusterVO, Long> {
-    /**
-     * @param id
-     * @return Returns all the security checks in the database for the given management server id
-     */
-    List<DisasterRecoveryClusterVO> getDisasterRecoveryClusterList(long id);
-
-     /**
-     * @param msHostId
-     * @param checkName
-     * @return returns the check result for the msHostId, the check name.
-     */
-    DisasterRecoveryClusterVO getDisasterRecoveryResult(long msHostId, String checkName);
-
-    void saveDetails(DisasterRecoveryClusterVO drCluster);
+    @Override
+    public void addDetail(long resourceId, String key, String value, boolean display) {
+        super.addDetail(new DisasterRecoveryClusterDetailsVO(resourceId, key, value, display));
+    }
 }
