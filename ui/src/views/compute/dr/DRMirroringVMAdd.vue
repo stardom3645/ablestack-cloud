@@ -45,7 +45,7 @@
             :placeholder="$t('placeholder.dr.cluster.cluster.selection')"
             >
           <a-select-option v-for="(opt, optIndex) in this.drCluster" :key="optIndex">
-            {{ opt.name }} {{ opt.version }}
+            {{ opt.name }} {{ opt.drclustertype }}
           </a-select-option>
         </a-select>
       </a-form-item>
@@ -63,7 +63,7 @@
             }"
             :placeholder="$t('placeholder.dr.cluster.compute.offering.selection')"
         >
-          <a-select-option v-for="(opt, optIndex) in this.fakeOfferings" :key="optIndex">
+          <a-select-option v-for="(opt, optIndex) in this.secDrClusterOfferings" :key="optIndex">
             {{ opt.name }} {{ opt.version }}
           </a-select-option>
         </a-select>
@@ -157,7 +157,8 @@ export default {
         { id: 1, name: 'Network 1', price: 10 },
         { id: 2, name: 'Network 2', price: 20 },
         { id: 3, name: 'Network 3', price: 30 }
-      ]
+      ],
+      secDrClusterOfferings: []
     }
   },
   created () {
@@ -179,11 +180,20 @@ export default {
     fetchData () {
       this.fetchZones()
       this.fetchDRClusterList()
+      this.fetchSecDRClusterInfoList()
     },
     fetchDRClusterList () {
-      api('getDisasterRecoveryClusterList', { name: 'test-sec-cluster-01' }).then(json => {
+      api('getDisasterRecoveryClusterList', { drclustertype: 'secondary' }).then(json => {
         this.drCluster = json.getdisasterrecoveryclusterlistresponse.disasterrecoverycluster || []
-        console.log(this.drCluster)
+        console.log(this.drCluster[0].id)
+      }).finally(() => {
+      })
+    },
+    // 재해복구용 가상머신 생성 모달에서 DR Secondary 클러스터를 선택했을 때 컴퓨트 오퍼링과 네트워크 목록을 불러오는 함수
+    fetchSecDRClusterInfoList () {
+      api('getSecDisasterRecoveryClusterInfoList', { id: '5518f4d1-c02d-4c6e-84be-d8bced5f3ddf' }).then(json => {
+        this.secDrClusterOfferings = json.getdisasterrecoveryclusterlistresponse.disasterrecoverycluster || []
+        console.log(this.drCluster[0])
       }).finally(() => {
       })
     },

@@ -20,7 +20,6 @@ package org.apache.cloudstack.api.command.admin.dr;
 import com.cloud.dr.cluster.DisasterRecoveryClusterService;
 import com.cloud.exception.ConcurrentOperationException;
 import com.cloud.user.Account;
-
 import org.apache.cloudstack.acl.RoleType;
 import org.apache.cloudstack.api.APICommand;
 import org.apache.cloudstack.api.ApiConstants;
@@ -28,18 +27,19 @@ import org.apache.cloudstack.api.BaseListCmd;
 import org.apache.cloudstack.api.Parameter;
 import org.apache.cloudstack.api.ResponseObject;
 import org.apache.cloudstack.api.ServerApiException;
-import org.apache.cloudstack.api.response.dr.cluster.GetDisasterRecoveryClusterListResponse;
 import org.apache.cloudstack.api.response.ListResponse;
+import org.apache.cloudstack.api.response.ServiceOfferingResponse;
+import org.apache.cloudstack.api.response.dr.cluster.GetDisasterRecoveryClusterListResponse;
 
 import javax.inject.Inject;
 
-@APICommand(name = GetDisasterRecoveryClusterListCmd.APINAME,
+@APICommand(name = GetSecDisasterRecoveryClusterInfoListCmd.APINAME,
         description = "list disastser recovery cluster",
-        responseObject = GetDisasterRecoveryClusterListResponse.class,
+        responseObject = ListResponse.class,
         responseView = ResponseObject.ResponseView.Full,
         authorized = {RoleType.Admin})
-public class GetDisasterRecoveryClusterListCmd extends BaseListCmd {
-    public static final String APINAME = "getDisasterRecoveryClusterList";
+public class GetSecDisasterRecoveryClusterInfoListCmd extends BaseListCmd {
+    public static final String APINAME = "getSecDisasterRecoveryClusterInfoList";
 
     @Inject
     private DisasterRecoveryClusterService disasterRecoveryClusterService;
@@ -56,10 +56,6 @@ public class GetDisasterRecoveryClusterListCmd extends BaseListCmd {
     @Parameter(name = ApiConstants.NAME, type = CommandType.STRING, description = "name of disaster recovery cluster")
     private String name;
 
-    @Parameter(name = ApiConstants.DR_CLUSTER_TYPE, type = CommandType.STRING, description = "the cluster type of the disaster recovery cluster")
-    private String drClusterType;
-
-
     /////////////////////////////////////////////////////
     /////////////////// Accessors ///////////////////////
     /////////////////////////////////////////////////////
@@ -70,10 +66,6 @@ public class GetDisasterRecoveryClusterListCmd extends BaseListCmd {
 
     public String getName() {
         return name;
-    }
-
-    public String getDrClusterType() {
-        return drClusterType;
     }
 
     @Override
@@ -93,7 +85,7 @@ public class GetDisasterRecoveryClusterListCmd extends BaseListCmd {
 
     @Override
     public void execute() throws ConcurrentOperationException, ServerApiException {
-        ListResponse<GetDisasterRecoveryClusterListResponse> response = disasterRecoveryClusterService.listDisasterRecoveryClusterResponse(this);
+        ListResponse<ServiceOfferingResponse> response = disasterRecoveryClusterService.listSecDisasterRecoveryClusterInfoResponse(this);
         response.setResponseName(getCommandName());
         setResponseObject(response);
     }
