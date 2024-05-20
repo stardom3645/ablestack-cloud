@@ -36,6 +36,7 @@ import java.util.stream.Stream;
 
 import javax.inject.Inject;
 
+import com.cloud.dr.cluster.DisasterRecoveryDetailConstants;
 import org.apache.cloudstack.acl.ControlledEntity;
 import org.apache.cloudstack.acl.ControlledEntity.ACLType;
 import org.apache.cloudstack.acl.SecurityChecker;
@@ -2984,7 +2985,7 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
         ListResponse<StoragePoolResponse> response = new ListResponse<>();
 
         List<StoragePoolResponse> poolResponses = ViewResponseHelper.createStoragePoolResponse(storagePools.first().toArray(new StoragePoolJoinVO[storagePools.first().size()]));
-        Map<String, Long> poolUuidToIdMap = storagePools.first().stream().collect(Collectors.toMap(StoragePoolJoinVO::getUuid, StoragePoolJoinVO::getId));
+        Map<String, Long> poolUuidToIdMap = storagePools.first().stream().collect(Collectors.toMap(StoragePoolJoinVO::getUuid, StoragePoolJoinVO::getId, (a, b) -> a));
         for (StoragePoolResponse poolResponse : poolResponses) {
             DataStore store = dataStoreManager.getPrimaryDataStore(poolResponse.getId());
             if (store != null) {
@@ -3752,7 +3753,7 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
                     serviceOfferingSearch.and().op("vmMemory", serviceOfferingSearch.entity().getRamSize(), Op.GTEQ);
                     serviceOfferingSearch.or().op("vmMemoryNull", serviceOfferingSearch.entity().getRamSize(), Op.NULL);
                     serviceOfferingSearch.and().op("maxMemoryDetailsSearch", "vmMaxMemoryNull", maxMemoryDetailsSearch.entity().getValue(), Op.NULL);
-                    serviceOfferingSearch.and("maxMemoryDetailsSearch", "vmMaxMemoryGTEQ", maxMemoryDetailsSearch.entity().getValue(), Op.GTEQ).cp();
+                    serviceOfferingSearch.or("maxMemoryDetailsSearch", "vmMaxMemoryGTEQ", maxMemoryDetailsSearch.entity().getValue(), Op.GTEQ).cp();
 
                     serviceOfferingSearch.cp().cp();
                 }
@@ -3829,9 +3830,8 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
                 List<String> storageTags = com.cloud.utils.StringUtils.csvTagsToList(diskOffering.getTags());
                 if (!storageTags.isEmpty() && VolumeApiServiceImpl.MatchStoragePoolTagsWithDiskOffering.value()) {
                     for (String tag : storageTags) {
-                        diskOfferingSearch.and(tag, diskOfferingSearch.entity().getTags(), Op.EQ);
+                        diskOfferingSearch.and("storageTag" + tag, diskOfferingSearch.entity().getTags(), Op.FIND_IN_SET);
                     }
-                    diskOfferingSearch.done();
                 }
             }
 
@@ -3943,18 +3943,24 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
                     srvOffrDomainDetailSearch.entity().getName(), serviceOfferingSearch.entity().setString(ApiConstants.DOMAIN_ID));
         }
 
+        List<String> hostTags = new ArrayList<>();
         if (currentVmOffering != null) {
-            List<String> hostTags = com.cloud.utils.StringUtils.csvTagsToList(currentVmOffering.getHostTag());
-            if (!hostTags.isEmpty()) {
+            hostTags.addAll(com.cloud.utils.StringUtils.csvTagsToList(currentVmOffering.getHostTag()));
+        }
 
-                serviceOfferingSearch.and().op("hostTag", serviceOfferingSearch.entity().getHostTag(), Op.NULL);
-                serviceOfferingSearch.or().op();
-
-                for(String tag : hostTags) {
-                    serviceOfferingSearch.and(tag, serviceOfferingSearch.entity().getHostTag(), Op.EQ);
+        if (!hostTags.isEmpty()) {
+            serviceOfferingSearch.and().op("hostTag", serviceOfferingSearch.entity().getHostTag(), Op.NULL);
+            serviceOfferingSearch.or();
+            boolean flag = true;
+            for(String tag : hostTags) {
+                if (flag) {
+                    flag = false;
+                    serviceOfferingSearch.op("hostTag" + tag, serviceOfferingSearch.entity().getHostTag(), Op.FIND_IN_SET);
+                } else {
+                    serviceOfferingSearch.and("hostTag" + tag, serviceOfferingSearch.entity().getHostTag(), Op.FIND_IN_SET);
                 }
-                serviceOfferingSearch.cp().cp().done();
             }
+            serviceOfferingSearch.cp().cp();
         }
 
         SearchCriteria<ServiceOfferingVO> sc = serviceOfferingSearch.create();
@@ -4071,41 +4077,19 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
             sc.setJoinParameters("domainDetailSearchNormalUser", "domainIdIN", domainIds.toArray());
         }
 
-        List<String> hostTags = getHostTagsFromTemplateForServiceOfferingsListing(caller, templateId);
-
-        if (currentVmOffering != null) {
-
-            if (diskOffering != null) {
-                List<String> storageTags = com.cloud.utils.StringUtils.csvTagsToList(diskOffering.getTags());
-                if (!storageTags.isEmpty() && VolumeApiServiceImpl.MatchStoragePoolTagsWithDiskOffering.value()) {
-                    for(String tag : storageTags) {
-                        sc.setJoinParameters("diskOfferingSearch", tag, tag);
-                    }
+        if (diskOffering != null) {
+            List<String> storageTags = com.cloud.utils.StringUtils.csvTagsToList(diskOffering.getTags());
+            if (!storageTags.isEmpty() && VolumeApiServiceImpl.MatchStoragePoolTagsWithDiskOffering.value()) {
+                for (String tag : storageTags) {
+                    sc.setJoinParameters("diskOfferingSearch", "storageTag" + tag, tag);
                 }
             }
-
-            List<String> offeringHostTags = com.cloud.utils.StringUtils.csvTagsToList(currentVmOffering.getHostTag());
-            if (!offeringHostTags.isEmpty()) {
-                hostTags.addAll(offeringHostTags);
-            }
         }
+
         if (CollectionUtils.isNotEmpty(hostTags)) {
-            SearchBuilder<ServiceOfferingJoinVO> hostTagsSearchBuilder = _srvOfferingJoinDao.createSearchBuilder();
-            for(String tag : hostTags) {
-                hostTagsSearchBuilder.and(tag, hostTagsSearchBuilder.entity().getHostTag(), Op.FIND_IN_SET);
+            for (String tag : hostTags) {
+                sc.setParameters("hostTag" + tag, tag);
             }
-            hostTagsSearchBuilder.done();
-
-            SearchCriteria<ServiceOfferingJoinVO> hostTagsSearchCriteria = hostTagsSearchBuilder.create();
-            for(String tag : hostTags) {
-                hostTagsSearchCriteria.setParameters(tag, tag);
-            }
-
-            SearchCriteria<ServiceOfferingJoinVO> finalHostTagsSearchCriteria = _srvOfferingJoinDao.createSearchCriteria();
-            finalHostTagsSearchCriteria.addOr("hostTag", Op.NULL);
-            finalHostTagsSearchCriteria.addOr("hostTag", Op.SC, hostTagsSearchCriteria);
-
-            sc.addAnd("hostTagsConstraint", SearchCriteria.Op.SC, finalHostTagsSearchCriteria);
         }
 
         Pair<List<ServiceOfferingVO>, Integer> uniquePair = _srvOfferingDao.searchAndCount(sc, searchFilter);
@@ -4874,6 +4858,9 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
             case VnfTemplate:
                 fillVnfTemplateDetailOptions(options);
                 return new DetailOptionsResponse(options);
+            case DisasterRecoveryCluster:
+                fillDisasterRecoveryClusterDetailOptions(options);
+                return new DetailOptionsResponse(options);
             default:
                 throw new CloudRuntimeException("Resource type not supported.");
         }
@@ -4922,6 +4909,7 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
         options.put(VmDetailConstants.ROOT_DISK_SIZE, Collections.emptyList());
 
         if (HypervisorType.KVM.equals(hypervisorType)) {
+            options.put(VmDetailConstants.CPU_THREAD_PER_CORE, Collections.emptyList());
             options.put(VmDetailConstants.NIC_ADAPTER, Arrays.asList("e1000", "virtio", "rtl8139", "vmxnet3", "ne2k_pci"));
             options.put(VmDetailConstants.ROOT_DISK_CONTROLLER, Arrays.asList("osdefault", "ide", "scsi", "virtio"));
             options.put(VmDetailConstants.DATA_DISK_CONTROLLER, Arrays.asList("osdefault", "ide", "scsi", "virtio"));
@@ -4942,6 +4930,13 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
             options.put(VmDetailConstants.SVGA_VRAM_SIZE, Collections.emptyList());
             options.put(VmDetailConstants.RAM_RESERVATION, Collections.emptyList());
         }
+    }
+
+    private void fillDisasterRecoveryClusterDetailOptions(final Map<String, List<String>> options) {
+        if (options == null) {
+            throw new CloudRuntimeException("Invalid/null detail-options response object passed");
+        }
+        options.put(DisasterRecoveryDetailConstants.KEYBOARD, Arrays.asList("uk", "us", "jp", "fr"));
     }
 
     @Override

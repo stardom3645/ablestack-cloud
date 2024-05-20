@@ -46,7 +46,7 @@ export default {
         return filters
       },
       columns: () => {
-        const fields = ['name', 'state', 'ipaddress']
+        const fields = ['name', 'state', 'qemuagentversion', 'ipaddress']
         const metricsFields = ['cpunumber', 'cputotal', 'cpuused', 'memorytotal',
           {
             memoryused: (record) => {
@@ -69,7 +69,7 @@ export default {
           fields.push(...metricsFields)
         }
         if (store.getters.userInfo.roletype === 'Admin') {
-          fields.splice(2, 0, 'instancename')
+          fields.splice(3, 0, 'instancename')
           fields.push('hostname')
           fields.push('account')
         } else if (store.getters.userInfo.roletype === 'DomainAdmin') {
@@ -85,7 +85,7 @@ export default {
       },
       searchFilters: ['name', 'zoneid', 'domainid', 'account', 'groupid', 'tags'],
       details: () => {
-        var fields = ['name', 'displayname', 'id', 'state', 'publicip', 'ipaddress', 'ip6address', 'templatename', 'ostypename',
+        var fields = ['name', 'qemuagentversion', 'displayname', 'id', 'state', 'publicip', 'ipaddress', 'ip6address', 'templatename', 'ostypename',
           'serviceofferingname', 'isdynamicallyscalable', 'haenable', 'hypervisor', 'boottype', 'bootmode', 'account',
           'domain', 'zonename', 'userdataid', 'userdataname', 'userdataparams', 'userdatadetails', 'userdatapolicy', 'hostcontrolstate', 'vbmcport']
         const listZoneHaveSGEnabled = store.getters.zones.filter(zone => zone.securitygroupsenabled === true)
@@ -186,33 +186,10 @@ export default {
           label: 'label.reinstall.vm',
           message: 'message.reinstall.vm',
           dataView: true,
-          args: ['virtualmachineid', 'templateid'],
-          filters: (record) => {
-            var filters = {}
-            var filterParams = {}
-            filterParams.hypervisortype = record.hypervisor
-            filterParams.zoneid = record.zoneid
-            filters.templateid = filterParams
-            return filters
-          },
+          popup: true,
           show: (record) => { return ['Running', 'Stopped'].includes(record.state) },
-          mapping: {
-            virtualmachineid: {
-              value: (record) => { return record.id }
-            }
-          },
           disabled: (record) => { return record.hostcontrolstate === 'Offline' },
-          successMethod: (obj, result) => {
-            const vm = result.jobresult.virtualmachine || {}
-            if (result.jobstatus === 1 && vm.password) {
-              const name = vm.displayname || vm.name || vm.id
-              obj.$notification.success({
-                message: `${obj.$t('label.reinstall.vm')}: ` + name,
-                description: `${obj.$t('label.password.reset.confirm')}: ` + vm.password,
-                duration: 0
-              })
-            }
-          }
+          component: shallowRef(defineAsyncComponent(() => import('@/views/compute/ReinstallVm.vue')))
         },
         {
           api: 'createVMSnapshot',
@@ -701,6 +678,9 @@ export default {
           groupAction: true,
           popup: true,
           args: (record, store, group) => {
+            if (record.clustertype === 'CloudManaged') {
+              return []
+            }
             return (['Admin'].includes(store.userInfo.roletype) || store.features.allowuserexpungerecovervm)
               ? ['cleanup', 'expunge'] : ['cleanup']
           },

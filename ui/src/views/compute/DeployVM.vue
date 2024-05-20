@@ -779,6 +779,9 @@
                         :filterOption="filterOption"
                       ></a-select>
                     </a-form-item>
+                    <a-form-item :label="$t('label.deploy.vm.number')" name="vmNumber" ref="vmNumber">
+                      <a-input-number :min=1 :max=50 :maxlength="2" v-model:value="form.vmNumber" />
+                    </a-form-item>
                     <a-form-item :label="$t('label.action.start.instance')" name="startvm" ref="startvm">
                       <a-switch v-model:checked="form.startvm" />
                     </a-form-item>
@@ -1523,6 +1526,7 @@ export default {
       if (this.zoneSelected) {
         this.form.startvm = true
       }
+      this.form.vmNumber = 1
 
       if (this.zone && this.zone.networktype !== 'Basic') {
         if (this.zoneSelected && this.vm.templateid && this.templateNics && this.templateNics.length > 0) {
@@ -2131,58 +2135,85 @@ export default {
         }
 
         const httpMethod = deployVmData.userdata ? 'POST' : 'GET'
-        const args = httpMethod === 'POST' ? {} : deployVmData
-        const data = httpMethod === 'POST' ? deployVmData : {}
 
-        api('deployVirtualMachine', args, httpMethod, data).then(response => {
-          const jobId = response.deployvirtualmachineresponse.jobid
-          if (jobId) {
-            this.$pollJob({
-              jobId,
-              title,
-              description,
-              successMethod: result => {
-                const vm = result.jobresult.virtualmachine
-                const name = vm.displayname || vm.name || vm.id
-                if (vm.password) {
-                  this.$notification.success({
-                    message: password + ` ${this.$t('label.for')} ` + name,
-                    description: vm.password,
-                    btn: () => h(
-                      Button,
-                      {
-                        type: 'primary',
-                        size: 'small',
-                        onClick: () => this.copyToClipboard(vm.password)
-                      },
-                      () => [this.$t('label.copy.password')]
-                    ),
-                    duration: 0
+        if (values.vmNumber) {
+          for (var num = 0; num < Number(values.vmNumber); num++) {
+            let args = ''
+            let data = ''
+            if (values.name) {
+              if (values.vmNumber === 1) {
+                deployVmData.name = values.name
+                deployVmData.displayname = values.name
+              } else {
+                if (deployVmData['iptonetworklist[0].ip'] != null || deployVmData['iptonetworklist[0].mac'] != null) {
+                  this.$notification.error({
+                    message: this.$t('message.request.failed'),
+                    description: this.$t('message.deploy.vm.number')
                   })
+                  this.loading.deploy = false
+                  return
                 }
-                eventBus.emit('vm-refresh-data')
-              },
-              loadingMessage: `${title} ${this.$t('label.in.progress')}`,
-              catchMessage: this.$t('error.fetching.async.job.result'),
-              action: {
-                isFetchData: false
+                var numP = num + 1
+                deployVmData.name = values.name + '-' + numP
+                deployVmData.displayname = values.name + '-' + numP
               }
-            })
+            }
+            args = httpMethod === 'POST' ? {} : deployVmData
+            data = httpMethod === 'POST' ? deployVmData : {}
+            try {
+              const jobId = await this.deployVM(args, httpMethod, data)
+              await this.$pollJob({
+                jobId,
+                title,
+                description,
+                successMethod: result => {
+                  const vm = result.jobresult.virtualmachine
+                  const name = vm.displayname || vm.name || vm.id
+                  if (vm.password) {
+                    this.$notification.success({
+                      message: password + ` ${this.$t('label.for')} ` + name,
+                      description: vm.password,
+                      btn: () => h(
+                        Button,
+                        {
+                          type: 'primary',
+                          size: 'small',
+                          onClick: () => this.copyToClipboard(vm.password)
+                        },
+                        () => [this.$t('label.copy.password')]
+                      ),
+                      duration: 0
+                    })
+                  }
+                  if (!values.stayonpage) {
+                    eventBus.emit('vm-refresh-data')
+                  }
+                },
+                loadingMessage: `${title} ${this.$t('label.in.progress')}`,
+                catchMessage: this.$t('error.fetching.async.job.result'),
+                action: {
+                  isFetchData: false
+                }
+              })
+              // Sending a refresh in case it hasn't picked up the new VM
+              if (values.vmNumber === 1 || !values.stayonpage) {
+                await new Promise(resolve => setTimeout(resolve, 3000)).then(() => {
+                  eventBus.emit('vm-refresh-data')
+                })
+              }
+              if (!values.stayonpage) {
+                await this.$router.back()
+              }
+            } catch (error) {
+              if (error.message !== undefined) {
+                await this.$notifyError(error)
+              }
+              this.loading.deploy = false
+            }
           }
-          // Sending a refresh in case it hasn't picked up the new VM
-          new Promise(resolve => setTimeout(resolve, 3000)).then(() => {
-            eventBus.emit('vm-refresh-data')
-          })
-          if (!values.stayonpage) {
-            this.$router.back()
-          }
-        }).catch(error => {
-          this.$notifyError(error)
-          this.loading.deploy = false
-        }).finally(() => {
           this.form.stayonpage = false
           this.loading.deploy = false
-        })
+        }
       }).catch(err => {
         this.formRef.value.scrollToField(err.errorFields[0].name)
         if (err) {
@@ -2199,6 +2230,16 @@ export default {
             description: this.$t('error.form.message')
           })
         }
+      })
+    },
+    deployVM (args, httpMethod, data) {
+      return new Promise((resolve, reject) => {
+        api('deployVirtualMachine', args, httpMethod, data).then(json => {
+          const jobId = json.deployvirtualmachineresponse.jobid
+          return resolve(jobId)
+        }).catch(error => {
+          return reject(error)
+        })
       })
     },
     fetchZones (zoneId, listZoneAllow) {

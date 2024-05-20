@@ -26,7 +26,7 @@
         <a-button
           type="dashed"
           style="width: 100%"
-          :disabled="!('updateTemplate' in $store.getters.apis && 'updateVirtualMachine' in $store.getters.apis && isAdminOrOwner())"
+          :disabled="!(isAdminOrOwner() && hasSettingUpdatePermission())"
           @click="onShowAddDetail">
           <template #icon><plus-outlined /></template>
           {{ $t('label.add.setting') }}
@@ -96,8 +96,7 @@
         </a-list-item-meta>
         <template #actions>
           <div
-            v-if="!disableSettings && 'updateTemplate' in $store.getters.apis &&
-              'updateVirtualMachine' in $store.getters.apis && isAdminOrOwner() && allowEditOfDetail(item.name)">
+            v-if="!disableSettings && isAdminOrOwner() && allowEditOfDetail(item.name) && hasSettingUpdatePermission()">
             <tooltip-button
               :tooltip="$t('label.edit')"
               icon="edit-outlined"
@@ -106,8 +105,7 @@
               @onClick="showEditDetail(index)" />
           </div>
           <div
-            v-if="!disableSettings && 'updateTemplate' in $store.getters.apis &&
-              'updateVirtualMachine' in $store.getters.apis && isAdminOrOwner() && allowEditOfDetail(item.name)">
+            v-if="!disableSettings && isAdminOrOwner() && allowEditOfDetail(item.name) && hasSettingUpdatePermission()">
             <a-popconfirm
               :title="`${$t('label.delete.setting')}?`"
               @confirm="deleteDetail(index)"
@@ -276,6 +274,8 @@ export default {
         apiName = 'updateVirtualMachine'
       } else if (this.resourceType === 'Template') {
         apiName = 'updateTemplate'
+      } else if (this.resourceType === 'DisasterRecoveryCluster') {
+        apiName = 'updateDisasterRecoveryCluster'
       }
       if (!(apiName in this.$store.getters.apis)) {
         this.$notification.error({
@@ -285,7 +285,7 @@ export default {
         return
       }
 
-      var params = { id: this.resource.id }
+      var params = { id: this.resource.id, drclusterstatus: this.resource.drclusterstatus, mirroringagentstatus: this.resource.mirroringagentstatus }
       params = Object.assign(params, this.getDetailsParam(this.details))
       this.loading = true
       api(apiName, params).then(json => {
@@ -294,6 +294,8 @@ export default {
           details = json.updatevirtualmachineresponse.virtualmachine.details
         } else if (this.resourceType === 'Template' && json.updatetemplateresponse.template.details) {
           details = json.updatetemplateresponse.template.details
+        } else if (this.resourceType === 'DisasterRecoveryCluster' && json.updatedisasterreocveryclusterresponse.disasterrecoverycluster.details) {
+          details = json.updatedisasterreocveryclusterresponse.disasterrecoverycluster.details
         }
         this.details = Object.keys(details).map(k => {
           return { name: k, value: details[k], edit: false }
@@ -342,6 +344,12 @@ export default {
       this.newValue = ''
       this.error = false
       this.showAddDetail = false
+    },
+    hasSettingUpdatePermission () {
+      return (
+        (this.resourceType === 'Template' && 'updateTemplate' in this.$store.getters.apis) ||
+        (this.resourceType === 'UserVm' && 'updateVirtualMachine' in this.$store.getters.apis)
+      )
     }
   }
 }

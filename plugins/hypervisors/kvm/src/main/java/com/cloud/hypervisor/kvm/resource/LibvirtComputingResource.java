@@ -65,6 +65,7 @@ import org.apache.cloudstack.utils.hypervisor.HypervisorUtils;
 import org.apache.cloudstack.utils.linux.CPUStat;
 import org.apache.cloudstack.utils.linux.KVMHostInfo;
 import org.apache.cloudstack.utils.linux.MemStat;
+import org.apache.cloudstack.utils.qemu.QemuCommand;
 import org.apache.cloudstack.utils.qemu.QemuImg;
 import org.apache.cloudstack.utils.qemu.QemuImg.PhysicalDiskFormat;
 import org.apache.cloudstack.utils.qemu.QemuImgException;
@@ -97,9 +98,6 @@ import org.libvirt.SchedParameter;
 import org.libvirt.SchedUlongParameter;
 import org.libvirt.Secret;
 import org.libvirt.VcpuInfo;
-import org.libvirt.event.DomainEvent;
-import org.libvirt.event.DomainEventDetail;
-import org.libvirt.event.StoppedDetail;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -214,7 +212,6 @@ import com.cloud.vm.VirtualMachine;
 import com.cloud.vm.VirtualMachine.PowerState;
 import com.cloud.vm.VmDetailConstants;
 import com.google.gson.Gson;
-import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -483,7 +480,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
     protected CPUStat cpuStat = new CPUStat();
     protected MemStat memStat = new MemStat(dom0MinMem, dom0OvercommitMem);
     private final LibvirtUtilitiesHelper libvirtUtilitiesHelper = new LibvirtUtilitiesHelper();
-    private AgentStatusUpdater _agentStatusUpdater;
+    private LibvirtDomainListener libvirtDomainListener;
 
     protected Boolean enableManuallySettingCpuTopologyOnKvmVm = AgentPropertiesFileHandler.getPropertyValue(AgentProperties.ENABLE_MANUALLY_SETTING_CPU_TOPOLOGY_ON_KVM_VM);
 
@@ -517,8 +514,23 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
     }
 
     @Override
-    public void registerStatusUpdater(AgentStatusUpdater updater) {
-        _agentStatusUpdater = updater;
+    public synchronized void registerStatusUpdater(AgentStatusUpdater updater) {
+        if (AgentPropertiesFileHandler.getPropertyValue(AgentProperties.LIBVIRT_EVENTS_ENABLED)) {
+            try {
+                Connect conn = LibvirtConnection.getConnection();
+                if (libvirtDomainListener != null) {
+                    LOGGER.debug("Clearing old domain listener");
+                    conn.removeLifecycleListener(libvirtDomainListener);
+                }
+                libvirtDomainListener = new LibvirtDomainListener(updater);
+                conn.addLifecycleListener(libvirtDomainListener);
+                LOGGER.debug("Set up the libvirt domain event lifecycle listener");
+            } catch (LibvirtException e) {
+                LOGGER.error("Failed to get libvirt connection for domain event lifecycle", e);
+            }
+        } else {
+            LOGGER.debug("Libvirt event listening is disabled, not registering status updater");
+        }
     }
     @Inject
     private PrimaryDataStoreDao _storagePoolDao;
@@ -2015,6 +2027,10 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
     public boolean stop() {
         try {
             final Connect conn = LibvirtConnection.getConnection();
+            if (AgentPropertiesFileHandler.getPropertyValue(AgentProperties.LIBVIRT_EVENTS_ENABLED) && libvirtDomainListener != null) {
+                LOGGER.debug("Clearing old domain listener");
+                conn.removeLifecycleListener(libvirtDomainListener);
+            }
             conn.close();
         } catch (final LibvirtException e) {
             LOGGER.trace("Ignoring libvirt error.", e);
@@ -3373,6 +3389,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
                         }
                     }
                 }
+                pool.customizeLibvirtDiskDef(disk);
             }
 
             if (data instanceof VolumeObjectTO) {
@@ -3752,6 +3769,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
 
                 diskdef.setPhysicalBlockIOSize(attachingPool.getSupportedPhysicalBlockSize());
                 diskdef.setLogicalBlockIOSize(attachingPool.getSupportedLogicalBlockSize());
+                attachingPool.customizeLibvirtDiskDef(diskdef);
             }
 
             final String xml = diskdef.toString();
@@ -3962,48 +3980,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
         } catch (final CloudRuntimeException e) {
             LOGGER.debug("Unable to initialize local storage pool: " + e);
         }
-        setupLibvirtEventListener();
         return sscmd;
-    }
-
-    private void setupLibvirtEventListener() {
-        try {
-            Connect conn = LibvirtConnection.getConnection();
-            conn.addLifecycleListener(this::onDomainLifecycleChange);
-
-            logger.debug("Set up the libvirt domain event lifecycle listener");
-        } catch (LibvirtException e) {
-            logger.error("Failed to get libvirt connection for domain event lifecycle", e);
-        }
-    }
-
-    private int onDomainLifecycleChange(Domain domain, DomainEvent domainEvent) {
-        try {
-            logger.debug(String.format("Got event lifecycle change on Domain %s, event %s", domain.getName(), domainEvent));
-            if (domainEvent != null) {
-                switch (domainEvent.getType()) {
-                    case STOPPED:
-                        /* libvirt-destroyed VMs have detail StoppedDetail.DESTROYED, self shutdown guests are StoppedDetail.SHUTDOWN
-                         * Checking for this helps us differentiate between events where cloudstack or admin stopped the VM vs guest
-                         * initiated, and avoid pushing extra updates for actions we are initiating without a need for extra tracking */
-                        DomainEventDetail detail = domainEvent.getDetail();
-                        if (StoppedDetail.SHUTDOWN.equals(detail) || StoppedDetail.CRASHED.equals(detail) || StoppedDetail.FAILED.equals(detail)) {
-                            logger.info("Triggering out of band status update due to completed self-shutdown or crash of VM");
-                            _agentStatusUpdater.triggerUpdate();
-                        } else {
-                            logger.debug("Event detail: " + detail);
-                        }
-                        break;
-                    default:
-                        logger.debug(String.format("No handling for event %s", domainEvent));
-                }
-            }
-        } catch (LibvirtException e) {
-            logger.error("Libvirt exception while processing lifecycle event", e);
-        } catch (Throwable e) {
-            logger.error("Error during lifecycle", e);
-        }
-        return 0;
     }
 
     public String diskUuidToSerial(String uuid) {
@@ -4757,47 +4734,51 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
                 }
             }
             Map<String, String> nicAddrMap = new HashMap<String, String>();
-            String result = dm.qemuAgentCommand("{\"execute\":\"guest-network-get-interfaces\"}", 2, 0);
-            logger.info("[" +dm.getName() +" :: " + result + "]");
+            String qemuAgentVersion = "Not Installed";
+            stats.setQemuAgentVersion(qemuAgentVersion);
 
-            JsonParser jsonParser = new JsonParser();
-            JsonObject jo = (JsonObject)jsonParser.parse(result);
-            JsonElement nicName;
-            JsonElement nicAddrs;
-            JsonElement nicMac;
-            JsonElement nicAddrIp;
-            JsonElement nicAddrIpType;
-            JsonArray arrData = (JsonArray) jo.get("return");
-            for (JsonElement je : arrData) {
-                nicName = je.getAsJsonObject().get("name") == null ? null : je.getAsJsonObject().get("name");
-                nicAddrs = je.getAsJsonObject().get("ip-addresses") == null ? null : je.getAsJsonObject().get("ip-addresses");
-                if(nicName == null || "lo".equals(nicName.getAsString())) {
-                    continue;
-                } else {
-                    if (nicAddrs ==  null){
-                        continue;
-                    } else {
-                        nicMac = je.getAsJsonObject().get("hardware-address") == null ? null : je.getAsJsonObject().get("hardware-address");
-                        if (nicMac == null) {
+            // String result = dm.qemuAgentCommand(QemuCommand.buildQemuCommand(QemuCommand.AGENT_INFO, null), 2, 0);
+            String mergeCommand = String.format("virsh qemu-agent-command %s '{\"execute\":\"guest-info\"}'", vmName);
+            String result = Script.runSimpleBashScript(mergeCommand);
+
+            if (result != null) {
+                qemuAgentVersion = new JsonParser().parse(result).getAsJsonObject().get("return").getAsJsonObject().get("version").getAsString();
+                stats.setQemuAgentVersion(qemuAgentVersion);
+
+                result = dm.qemuAgentCommand(QemuCommand.buildQemuCommand(QemuCommand.AGENT_NETWORK_GET_INTERFACES, null), 2, 0);
+                if (result != null && !(result.startsWith("error"))) {
+                    logger.debug(dm.getName() +" >>  " + result);
+                    JsonArray arrData = (JsonArray) new JsonParser().parse(result).getAsJsonObject().get("return");
+                    for (JsonElement je : arrData) {
+                        JsonElement nicName = je.getAsJsonObject().get("name") == null ? null : je.getAsJsonObject().get("name");
+                        JsonElement nicAddrs = je.getAsJsonObject().get("ip-addresses") == null ? null : je.getAsJsonObject().get("ip-addresses");
+                        if(nicName == null || "lo".equals(nicName.getAsString())) {
                             continue;
                         } else {
-                            JsonArray arrData2 = (JsonArray) je.getAsJsonObject().get("ip-addresses");
-                            for (JsonElement je2 : arrData2) {
-                                nicAddrIp = je2.getAsJsonObject().get("ip-address") == null  ? null : je2.getAsJsonObject().get("ip-address");
-                                nicAddrIpType = je2.getAsJsonObject().get("ip-address-type") == null ? null : je2.getAsJsonObject().get("ip-address-type");
-
-                                if(nicAddrIp == null || nicAddrIpType== null || !"ipv4".equals(nicAddrIpType.getAsString())) {
+                            if (nicAddrs ==  null){
+                                continue;
+                            } else {
+                                JsonElement nicMac = je.getAsJsonObject().get("hardware-address") == null ? null : je.getAsJsonObject().get("hardware-address");
+                                if (nicMac == null) {
                                     continue;
                                 } else {
-                                    nicAddrMap.put(nicMac.getAsString(), nicAddrIp.getAsString());
+                                    JsonArray arrData2 = (JsonArray) je.getAsJsonObject().get("ip-addresses");
+                                    for (JsonElement je2 : arrData2) {
+                                        JsonElement nicAddrIp = je2.getAsJsonObject().get("ip-address") == null  ? null : je2.getAsJsonObject().get("ip-address");
+                                        JsonElement nicAddrIpType = je2.getAsJsonObject().get("ip-address-type") == null ? null : je2.getAsJsonObject().get("ip-address-type");
+                                        if(nicAddrIp == null || nicAddrIpType== null || !"ipv4".equals(nicAddrIpType.getAsString())) {
+                                            continue;
+                                        } else {
+                                            nicAddrMap.put(nicMac.getAsString(), nicAddrIp.getAsString());
+                                        }
+                                    }
                                 }
                             }
                         }
                     }
+                    stats.setNicAddrMap(nicAddrMap);
                 }
             }
-            stats.setNicAddrMap(nicAddrMap);
-
             /* save to Hashmap */
             final VmStats newStat = new VmStats();
             newStat.usedTime = info.cpuTime;
@@ -5515,31 +5496,48 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
         return false;
     }
 
-    private void setCpuTopology(CpuModeDef cmd, int vCpusInDef, Map<String, String> details) {
+    protected void setCpuTopology(CpuModeDef cmd, int vCpusInDef, Map<String, String> details) {
         if (!enableManuallySettingCpuTopologyOnKvmVm) {
             LOGGER.debug(String.format("Skipping manually setting CPU topology on VM's XML due to it is disabled in agent.properties {\"property\": \"%s\", \"value\": %s}.",
               AgentProperties.ENABLE_MANUALLY_SETTING_CPU_TOPOLOGY_ON_KVM_VM.getName(), enableManuallySettingCpuTopologyOnKvmVm));
             return;
         }
-        // multi cores per socket, for larger core configs
-        int numCoresPerSocket = -1;
+
+        int numCoresPerSocket = 1;
+        int numThreadsPerCore = 1;
+
         if (details != null) {
-            final String coresPerSocket = details.get(VmDetailConstants.CPU_CORE_PER_SOCKET);
-            final int intCoresPerSocket = NumbersUtil.parseInt(coresPerSocket, numCoresPerSocket);
-            if (intCoresPerSocket > 0 && vCpusInDef % intCoresPerSocket == 0) {
-                numCoresPerSocket = intCoresPerSocket;
-            }
+            numCoresPerSocket = NumbersUtil.parseInt(details.get(VmDetailConstants.CPU_CORE_PER_SOCKET), 1);
+            numThreadsPerCore = NumbersUtil.parseInt(details.get(VmDetailConstants.CPU_THREAD_PER_CORE), 1);
         }
-        if (numCoresPerSocket <= 0) {
+
+        if ((numCoresPerSocket * numThreadsPerCore) > vCpusInDef) {
+            LOGGER.warn(String.format("cores per socket (%d) * threads per core (%d) exceeds total VM cores. Ignoring extra topology", numCoresPerSocket, numThreadsPerCore));
+            numCoresPerSocket = 1;
+            numThreadsPerCore = 1;
+        }
+
+        if (vCpusInDef % (numCoresPerSocket * numThreadsPerCore) != 0) {
+            LOGGER.warn(String.format("cores per socket(%d) * threads per core(%d) doesn't divide evenly into total VM cores(%d). Ignoring extra topology", numCoresPerSocket, numThreadsPerCore, vCpusInDef));
+            numCoresPerSocket = 1;
+            numThreadsPerCore = 1;
+        }
+
+        // Set default coupling (makes 4 or 6 core sockets for larger core configs)
+        int numTotalSockets = 1;
+        if (numCoresPerSocket == 1 && numThreadsPerCore == 1) {
             if (vCpusInDef % 6 == 0) {
                 numCoresPerSocket = 6;
             } else if (vCpusInDef % 4 == 0) {
                 numCoresPerSocket = 4;
             }
+            numTotalSockets = vCpusInDef / numCoresPerSocket;
+        } else {
+            int nTotalCores = vCpusInDef / numThreadsPerCore;
+            numTotalSockets = nTotalCores / numCoresPerSocket;
         }
-        if (numCoresPerSocket > 0) {
-            cmd.setTopology(numCoresPerSocket, vCpusInDef / numCoresPerSocket);
-        }
+
+        cmd.setTopology(numCoresPerSocket, numThreadsPerCore, numTotalSockets);
     }
 
     public void setBackingFileFormat(String volPath) {
