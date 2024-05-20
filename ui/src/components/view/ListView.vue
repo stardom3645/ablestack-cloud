@@ -237,6 +237,7 @@
       <template v-if="column.key === 'qemuagentversion'">
         <a-tag v-if="text === 'Not Installed'" color="error">{{ this.$t('label.state.qemuagentversion.notinstalled') }}</a-tag>
         <a-tag v-else-if="text" color="success">{{ text }}</a-tag>
+      </template>
       <template v-if="column.key === 'mirroringagentstatus'">
         <status :text="text ? text : ''" displayText />
       </template>
