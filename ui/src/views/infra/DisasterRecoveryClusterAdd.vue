@@ -99,8 +99,8 @@
 
       <div :span="24" class="action-button">
         <a-button @click="() => $emit('close-action')">{{ $t('label.cancel') }}</a-button>
-        <a-button @click="testConnCode" :disabled="buttonDisabled" type="primary">{{ $t('label.disaster.recovery.cluster.start.connection.test.description') }}</a-button>
-<!--        <a-button @click="handleSubmit" :disabled="!buttonDisabled" v-if="showCode" ref="submit" type="primary">{{ $t('label.ok') }}</a-button>-->
+        <a-button @click="testConnCode" :disabled="buttonDisabled" v-if="!testConnResult" type="primary">{{ $t('label.disaster.recovery.cluster.start.connection.test.description') }}</a-button>
+        <a-button @click="handleSubmit" :disabled="!buttonDisabled" v-if="testConnResult" ref="submit" type="primary">{{ $t('label.ok') }}</a-button>
       </div>
 
     </a-form>
@@ -276,6 +276,9 @@ export default {
           if (this.testConnResult === false) {
             alert('sdfsdfsd')
             return
+          } else {
+            this.showCode = false
+            this.spinTemplate = false
           }
           this.$emit('refresh-data')
         }).catch(error => {
