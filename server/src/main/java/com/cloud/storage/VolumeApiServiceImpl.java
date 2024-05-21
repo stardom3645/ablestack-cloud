@@ -1698,12 +1698,6 @@ public class VolumeApiServiceImpl extends ManagerBase implements VolumeApiServic
         } else if (volume.getState() == Volume.State.Allocated || volume.getState() == Volume.State.Uploaded) {
             throw new InvalidParameterValueException("The volume in Allocated/Uploaded state can only be expunged not destroyed/recovered");
         }
-        // check if Shared Disk
-        DiskOffering offering = _diskOfferingDao.findById(volume.getDiskOfferingId());
-        if (volume.getVolumeType() == Volume.Type.DATADISK && offering.getShareable()) {
-            volume.setPath("");
-            _volsDao.update(volume.getId(), volume);
-        }
     }
 
     @Override
@@ -1714,6 +1708,13 @@ public class VolumeApiServiceImpl extends ManagerBase implements VolumeApiServic
         validateDestroyVolume(volume, caller, expunge, forceExpunge);
 
         destroyVolumeIfPossible(volume);
+
+        // check if Shared Disk
+        DiskOffering offering = _diskOfferingDao.findById(volume.getDiskOfferingId());
+        if (volume.getVolumeType() == Volume.Type.DATADISK && offering.getShareable()) {
+            volume.setPath("");
+            _volsDao.update(volume.getId(), volume);
+        }
 
         if (expunge) {
             // Mark volume as removed if volume has not been created on primary or secondary
