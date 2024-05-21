@@ -37,4 +37,6 @@ public interface DisasterRecoveryClusterDao extends GenericDao<DisasterRecoveryC
     DisasterRecoveryClusterVO getDisasterRecoveryResult(long msHostId, String checkName);
 
     void saveDetails(DisasterRecoveryClusterVO drCluster);
+
+    DisasterRecoveryClusterVO findByName(String name);
 }
