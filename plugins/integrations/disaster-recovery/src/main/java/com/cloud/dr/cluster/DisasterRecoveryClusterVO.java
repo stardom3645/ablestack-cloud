@@ -64,10 +64,10 @@ public class DisasterRecoveryClusterVO implements DisasterRecoveryCluster {
     private String mirroringAgentStatus;
 
     @Column(name = "api_key")
-    private String apiKey;
+    private String drClusterApiKey;
 
     @Column(name = "secret_key")
-    private String secretKey;
+    private String drClusterSecretKey;
 
     @Column(name = "created")
     private Date created;
@@ -128,13 +128,13 @@ public class DisasterRecoveryClusterVO implements DisasterRecoveryCluster {
     }
 
     @Override
-    public String getApiKey() {
-        return apiKey;
+    public String getDrClusterApiKey() {
+        return drClusterApiKey;
     }
 
     @Override
-    public String getSecretKey() {
-        return secretKey;
+    public String getDrClusterSecretKey() {
+        return drClusterSecretKey;
     }
 
     @Override
@@ -183,12 +183,12 @@ public class DisasterRecoveryClusterVO implements DisasterRecoveryCluster {
         this.mirroringAgentStatus = mirroringAgentStatus;
     }
 
-    public void setApiKey(String apiKey) {
-        this.apiKey = apiKey;
+    public void setDrClusterApiKey(String drClusterApiKey) {
+        this.drClusterApiKey = drClusterApiKey;
     }
 
-    public void setSecretKey(String secretKey) {
-        this.secretKey = secretKey;
+    public void setDrClusterSecretKey(String drClusterSecretKey) {
+        this.drClusterSecretKey = drClusterSecretKey;
     }
 
     public void setCreated(Date created) {
@@ -199,14 +199,14 @@ public class DisasterRecoveryClusterVO implements DisasterRecoveryCluster {
         this.removed = removed;
     }
 
-    public DisasterRecoveryClusterVO(long mshostId, String name, String description, String apiKey, String secretKey,
+    public DisasterRecoveryClusterVO(long mshostId, String name, String description, String drClusterApiKey, String drClusterSecretKey,
                                 String drClusterUrl, String drClusterType, String drClusterStatus, String mirroringAgentStatus) {
         this.uuid = UUID.randomUUID().toString();
         this.msHostId = mshostId;
         this.name = name;
         this.description = description;
-        this.apiKey = apiKey;
-        this.secretKey = secretKey;
+        this.drClusterApiKey = drClusterApiKey;
+        this.drClusterSecretKey = drClusterSecretKey;
         this.drClusterUrl = drClusterUrl;
         this.drClusterType = drClusterType;
         this.drClusterStatus = drClusterStatus;

@@ -52,13 +52,13 @@ public class ConnectivityTestsDisasterRecoveryClusterCmd extends BaseCmd impleme
             description = "dr cluster url")
     private String drClusterUrl;
 
-    @Parameter(name = ApiConstants.API_KEY, type = CommandType.STRING, required = true,
+    @Parameter(name = ApiConstants.DR_CLUSTER_API_KEY, type = CommandType.STRING, required = true,
             description = "dr cluster api key")
-    private String apiKey;
+    private String drClusterApiKey;
 
-    @Parameter(name = ApiConstants.SECRET_KEY, type = CommandType.STRING, required = true,
+    @Parameter(name = ApiConstants.DR_CLUSTER_SECRET_KEY, type = CommandType.STRING, required = true,
             description = "dr cluster secret key")
-    private String secretKey;
+    private String drClusterSecretKey;
 
     /////////////////////////////////////////////////////
     /////////////////// Accessors ///////////////////////
@@ -67,12 +67,12 @@ public class ConnectivityTestsDisasterRecoveryClusterCmd extends BaseCmd impleme
         return drClusterUrl;
     }
 
-    public String getApiKey() {
-        return apiKey;
+    public String getDrClusterApiKey() {
+        return drClusterApiKey;
     }
 
-    public String getSecretKey() {
-        return secretKey;
+    public String getDrClusterSecretKey() {
+        return drClusterSecretKey;
     }
 
     @Override
