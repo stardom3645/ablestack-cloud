@@ -96,6 +96,8 @@ public class DisasterRecoveryClusterUtil {
                 JsonParser jParser = new JsonParser();
                 JsonObject jObject = (JsonObject)jParser.parse(sb.toString());
                 String health = jObject.get("health").toString();
+                LOGGER.info("health():::::::::::::::::::::::::::::::");
+                LOGGER.info(health);
                 return health;
             } else {
                 String msg = "Failed to request glue status API. response code : " + connection.getResponseCode();
