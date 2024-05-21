@@ -465,7 +465,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         secParams.put("drClusterType", priClusterType);
         secParams.put("drClusterUrl", priUrl);
         secParams.put("apiKey", priApiKey);
-        secParams.put("secretKey", priSecretKey);
+        secParams.put("usersecretkey", priSecretKey);
         String secCommand = "createDisasterRecoveryCluster";
         String secMethod = "POST";
         String secResponse = DisasterRecoveryClusterUtil.moldCreateDisasterRecoveryClusterAPI(secUrl + "/client/api/", secCommand, secMethod, secApiKey, secSecretKey, secParams);
