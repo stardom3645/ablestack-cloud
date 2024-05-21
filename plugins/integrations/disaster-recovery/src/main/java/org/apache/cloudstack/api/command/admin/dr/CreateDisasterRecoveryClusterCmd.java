@@ -19,8 +19,6 @@ package org.apache.cloudstack.api.command.admin.dr;
 
 import javax.inject.Inject;
 
-import java.io.File;
-
 import org.apache.cloudstack.acl.RoleType;
 import org.apache.cloudstack.api.APICommand;
 import org.apache.cloudstack.api.ApiConstants;
@@ -82,10 +80,10 @@ public class CreateDisasterRecoveryClusterCmd extends BaseAsyncCreateCmd {
             description = "dr cluster secret key")
     private String secretKey;
 
-    @Parameter(name = ApiConstants.PRIVATE_KEY, type = CommandType.OBJECT, required = false,
+    @Parameter(name = ApiConstants.PRIVATE_KEY, type = CommandType.STRING, required = false,
             description = "The private key for the attached disaster cluster.",
             length = 65535)
-    private File privateKey;
+    private String privateKey;
 
     /////////////////////////////////////////////////////
     /////////////////// Accessors ///////////////////////
@@ -114,7 +112,7 @@ public class CreateDisasterRecoveryClusterCmd extends BaseAsyncCreateCmd {
         return secretKey;
     }
 
-    public File getPrivateKey() {
+    public String getPrivateKey() {
         return privateKey;
     }
 
@@ -162,7 +160,7 @@ public class CreateDisasterRecoveryClusterCmd extends BaseAsyncCreateCmd {
         try {
             DisasterRecoveryClusterVO drcluster = disasterRecoveryClusterDao.findById(getEntityId());
             if (drcluster.getDrClusterType().equalsIgnoreCase("secondary")) {
-                if (!disasterRecoveryClusterService.setupDisasterRecoveryCluster(getEntityId(), privateKey)) {
+                if (!disasterRecoveryClusterService.setupDisasterRecoveryCluster(getEntityId())) {
                     throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, "Failed to setup disaster recovery cluster");
                 }
             }

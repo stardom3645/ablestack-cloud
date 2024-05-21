@@ -64,21 +64,11 @@
             v-model:value="form.secretkey"
           />
         </a-form-item>
-
-      <a-form-item name="file" ref="file" :label="$t('label.add.disaster.recovery.cluster.info.glue.pri.key')">
-          <a-upload-dragger
-            :multiple="false"
-            :fileList="fileList"
-            @remove="handleRemove"
-            :beforeUpload="beforeUpload"
-            v-model:value="form.file">
-            <p class="ant-upload-drag-icon">
-              <cloud-upload-outlined />
-            </p>
-            <p class="ant-upload-text" v-if="fileList.length === 0">
-              {{ $t('label.volume.volumefileupload.description') }}
-            </p>
-          </a-upload-dragger>
+        <a-form-item name="file" ref="file" :label="$t('label.add.disaster.recovery.cluster.info.glue.pri.key')">
+          <a-textarea
+            :placeholder="temp"
+            v-model:value="form.file"
+          ></a-textarea>
         </a-form-item>
       </a-card>
 
@@ -113,8 +103,6 @@ import { api } from '@/api'
 import DedicateDomain from '../../components/view/DedicateDomain'
 import ResourceIcon from '@/components/view/ResourceIcon'
 import TooltipLabel from '@/components/widgets/TooltipLabel.vue'
-import { axios } from '@/utils/request'
-import store from '@/store'
 import { Spin, Alert } from 'ant-design-vue'
 
 export default {
@@ -161,10 +149,10 @@ export default {
         startip: null,
         endip: null
       },
-      fileList: [],
       buttonDisabled: false,
       alertDescription: this.$t('message.disaster.recovery.cluster.connection.test.description'),
-      testConnResult: false
+      testConnResult: false,
+      result: null
     }
   },
   computed: {
@@ -184,8 +172,8 @@ export default {
         name: [{ required: true, message: this.$t('label.required') }],
         url: [{ required: true, message: this.$t('label.required') }],
         apikey: [{ required: true, message: this.$t('label.required') }],
-        secretkey: [{ required: true, message: this.$t('label.required') }]
-        // file: [{ required: true, message: this.$t('message.error.required.input') }]
+        secretkey: [{ required: true, message: this.$t('label.required') }],
+        file: [{ required: true, message: this.$t('message.error.required.input') }]
       })
     },
     fetchData () {
@@ -209,54 +197,6 @@ export default {
       this.dedicatedAccount = null
       this.showDedicated = !this.showDedicated
     },
-    beforeUpload (file) {
-      this.fileList = [file]
-      this.form.file = file
-      return false
-    },
-    handleUpload () {
-      const { fileList } = this
-      const formData = new FormData()
-      fileList.forEach(file => {
-        formData.append('files[]', file)
-      })
-      this.uploadPercentage = 0
-      axios.post(this.uploadParams.postURL,
-        formData,
-        {
-          headers: {
-            'content-type': 'multipart/form-data',
-            'x-signature': this.uploadParams.signature,
-            'x-expires': this.uploadParams.expires,
-            'x-metadata': this.uploadParams.metadata,
-            'x-host': this.uploadParams.postURL.split('/')[2]
-          },
-          onUploadProgress: (progressEvent) => {
-            this.uploadPercentage = Number(parseFloat(100 * progressEvent.loaded / progressEvent.total).toFixed(1))
-          },
-          timeout: 86400000
-        }).then((json) => {
-        this.$notification.success({
-          message: this.$t('message.success.upload'),
-          description: this.$t('message.success.upload.template.description')
-        })
-        this.$emit('refresh-data')
-        this.closeAction()
-      }).catch(e => {
-        this.$notification.error({
-          message: this.$t('message.upload.failed'),
-          description: `${this.$t('message.upload.template.failed.description')} -  ${e}`,
-          duration: 0
-        })
-      })
-    },
-    handleRemove (file) {
-      const index = this.fileList.indexOf(file)
-      const newFileList = this.fileList.slice()
-      newFileList.splice(index, 1)
-      this.fileList = newFileList
-      this.form.file = undefined
-    },
     // 재난복구클러스터 연결 테스트
     testConnCode () {
       this.showCode = !this.showCode
@@ -264,8 +204,6 @@ export default {
       this.formRef.value.validate().then(() => {
         const values = toRaw(this.form)
         const params = {
-          name: values.name,
-          description: values.description,
           drClusterUrl: values.url,
           apiKey: values.apikey,
           usersecretkey: values.secretkey
@@ -308,58 +246,26 @@ export default {
         this.loading = true
         const params = {
           name: values.name,
-          description: values.description,
-          domainid: store.getters.project && store.getters.project.id ? null : store.getters.userInfo.domainid,
-          domainname: store.getters.project && store.getters.project.id ? null : store.getters.userInfo.domainname,
-          account: store.getters.project && store.getters.project.id ? null : store.getters.userInfo.account,
-          accountid: store.getters.project && store.getters.project.id ? null : store.getters.userInfo.accountid
+          description: values.displaytext,
+          drClusterUrl: values.url,
+          apiKey: values.apikey,
+          usersecretkey: values.secretkey,
+          privatekey: '',
+          drClusterType: 'secondary'
         }
-        console.log(params)
-        this.buttonDisabled = false
-        setTimeout(() => {
-          this.showCode = false
-        }, 3000)
-        // api('addAutomationController', params).then(json => {
-        //   const jobId = json.addautomationcontrollerresponse.jobid
-        //   this.$pollJob({
-        //     jobId,
-        //     title: this.$t('label.automation.controller.deploy'),
-        //     description: values.name,
-        //     successMethod: () => {
-        //       this.$notification.success({
-        //         message: this.$t('message.success.create.automation.controller'),
-        //         duration: 0
-        //       })
-        //       eventBus.emit('automation-controller-refresh-data')
-        //     },
-        //     loadingMessage: `${this.$t('label.automation.controller.deploy')} ${values.name} ${this.$t('label.in.progress')}`,
-        //     catchMessage: this.$t('error.fetching.async.job.result'),
-        //     catchMethod: () => {
-        //       eventBus.emit('automation-controller-refresh-data')
-        //     },
-        //     action: {
-        //       isFetchData: false
-        //     }
-        //   })
-        //   this.closeAction()
-        // }).catch(error => {
-        //   this.$notifyError(error)
-        // }).finally(() => {
-        //   this.loading = false
-        // })
-        this.handleUpload()
-        // api('getUploadParamsForTemplate', params).then(json => {
-        //   this.uploadParams = (json.postuploadtemplateresponse && json.postuploadtemplateresponse.getuploadparams) ? json.postuploadtemplateresponse.getuploadparams : ''
-        //   this.handleUpload()
-        //   if (this.userdataid !== null) {
-        //     this.linkUserdataToTemplate(this.userdataid, json.postuploadtemplateresponse.template[0].id)
-        //   }
-        // }).catch(error => {
-        //   this.$notifyError(error)
-        // }).finally(() => {
-        //   this.loading = false
-        // })
-        this.loading = false
+        api('createDisasterRecoveryCluster', params).then(json => {
+          this.result = json.createdisasterrecoveryclusterresponse
+          console.log(this.result)
+          this.$emit('refresh-data')
+        }).catch(error => {
+          this.showCode = !this.showCode
+          this.buttonDisabled = false
+          this.$notification.error({
+            message: this.$t('message.request.failed'),
+            description: (error.response && error.response.headers && error.response.headers['x-description']) || error.message
+          })
+        })
+        this.closeAction()
       }).catch(error => {
         this.formRef.value.scrollToField(error.errorFields[0].name)
       })

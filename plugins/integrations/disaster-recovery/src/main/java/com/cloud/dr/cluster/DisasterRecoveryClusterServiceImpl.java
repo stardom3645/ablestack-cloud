@@ -26,6 +26,13 @@ import java.io.InputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.File;
+import java.io.StringReader;
+import java.security.KeyFactory;
+import java.security.PrivateKey;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.PKCS8EncodedKeySpec;
 
 import javax.inject.Inject;
 
@@ -54,6 +61,7 @@ import com.cloud.utils.script.Script;
 import com.cloud.utils.server.ServerProperties;
 import com.cloud.utils.component.ManagerBase;
 import com.cloud.utils.exception.CloudRuntimeException;
+import com.google.common.base.Preconditions;
 
 import org.apache.cloudstack.api.ApiConstants;
 import org.apache.cloudstack.api.ResponseObject;
@@ -73,7 +81,10 @@ import org.apache.cloudstack.context.CallContext;
 import org.apache.cloudstack.framework.config.ConfigKey;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
+import org.apache.commons.lang3.StringUtils;
 import org.json.JSONObject;
+import org.bouncycastle.util.io.pem.PemObject;
+import org.bouncycastle.util.io.pem.PemReader;
 
 public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements DisasterRecoveryClusterService {
 
@@ -366,16 +377,14 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         final String url = cmd.getDrClusterUrl();
         final String apiKey = cmd.getApiKey();
         final String secretKey = cmd.getSecretKey();
-        final File privateKey = cmd.getPrivateKey();
+        final String privateKey = cmd.getPrivateKey();
 
         if (name == null || name.isEmpty()) {
             throw new InvalidParameterValueException("Invalid name for the disaster recovery cluster name:" + name);
         }
-        if (type.equalsIgnoreCase("secondary")) {
-            if (!privateKey.exists()) {
-                throw new InvalidParameterValueException("Invalid private key for the disaster recovery cluster private key:" + privateKey);
-            }
-        }
+        // if (type.equalsIgnoreCase("secondary") && (privateKey == null || privateKey.isEmpty())) {
+        //     throw new InvalidParameterValueException("Invalid private key for the disaster recovery cluster private key:" + privateKey);
+        // }
         if (url == null || url.isEmpty()) {
             throw new InvalidParameterValueException("Invalid url for the disaster recovery cluster url:" + url);
         }
@@ -412,7 +421,22 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         return serverInfo;
     }
 
-    public boolean setupDisasterRecoveryCluster(long clusterId, File privateKey) {
+    private PrivateKey parsePrivateKey(final String key) throws IOException {
+        Preconditions.checkArgument(StringUtils.isNotEmpty(key));
+        try (final PemReader pemReader = new PemReader(new StringReader(key));) {
+            final PemObject pemObject = pemReader.readPemObject();
+            final byte[] content = pemObject.getContent();
+            final PKCS8EncodedKeySpec privKeySpec = new PKCS8EncodedKeySpec(content);
+            final KeyFactory factory = KeyFactory.getInstance("RSA", "BC");
+            return factory.generatePrivate(privKeySpec);
+        } catch (NoSuchAlgorithmException | NoSuchProviderException e) {
+            throw new IOException("No encryption provider available.", e);
+        } catch (final InvalidKeySpecException e) {
+            throw new IOException("Invalid Key format.", e);
+        }
+    }
+
+    public boolean setupDisasterRecoveryCluster(long clusterId) {
         DisasterRecoveryClusterVO drCluster = disasterRecoveryClusterDao.findById(clusterId);
         String drName = drCluster.getName();
         String drDescription = drCluster.getDescription();
@@ -421,6 +445,8 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         String secClusterType = drCluster.getDrClusterType();
         String secApiKey = drCluster.getApiKey();
         String secSecretKey = drCluster.getSecretKey();
+        // String secPrivateKey = drCluster.getPrivateKey();
+        final File permKey = new File("/root/.ssh/dr.key");
         // primary cluster 정보
         String[] properties = getServerProperties();
         ManagementServerHostVO msHost = msHostDao.findByMsid(ManagementServerNode.getManagementServerId());
@@ -482,7 +508,8 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                     glueParams.put("remoteClusterName", "remote");
                     glueParams.put("mirrorPool", "rbd");
                     glueParams.put("host", glueIp);
-                    //boolean result = DisasterRecoveryClusterUtil.glueMirrorSetupAPI(glueUrl, glueCommand, glueMethod, glueParams, privateKey);
+                    //final PrivateKey key = parsePrivateKey(secPrivateKey);
+                    //boolean result = DisasterRecoveryClusterUtil.glueMirrorSetupAPI(glueUrl, glueCommand, glueMethod, glueParams, permKey);
                     boolean result = true;
                     LOGGER.info("result::::::::::::::::::::::::::::::");
                     LOGGER.info(result);
