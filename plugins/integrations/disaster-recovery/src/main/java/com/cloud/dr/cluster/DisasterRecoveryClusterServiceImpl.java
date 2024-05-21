@@ -470,7 +470,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         String secResponse = DisasterRecoveryClusterUtil.moldCreateDisasterRecoveryClusterAPI(secUrl + "/client/api/", secCommand, secMethod, secApiKey, secSecretKey, secParams);
         LOGGER.info("moldCreateDisasterRecoveryClusterAPI secResponse::::::::::::::::::::::::::::::createDisasterRecoveryCluster");
         LOGGER.info(secResponse);
-        if (secResponse != null || !secResponse.isEmpty()) {
+        if (secResponse == null || secResponse.isEmpty()) {
             // secondary cluster의 db에 dr 정보가 정상적으로 업데이트 되지 않은 경우
             // secondary cluster에 UpdateDisasterRecoveryClusterCmd 호출
             Map<String, String> errParams = new HashMap<>();
