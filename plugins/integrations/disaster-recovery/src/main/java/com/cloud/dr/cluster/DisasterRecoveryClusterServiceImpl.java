@@ -474,6 +474,8 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         if (secResponse == null || secResponse.isEmpty()) {
             // secondary cluster의 db에 dr 정보가 정상적으로 업데이트 되지 않은 경우
             // secondary cluster에 UpdateDisasterRecoveryClusterCmd 호출
+            secCommand = "updateDisasterRecoveryCluster";
+            secMethod = "POST";
             Map<String, String> errParams = new HashMap<>();
             errParams.put("name", drName);
             errParams.put("drclusterstatus", DisasterRecoveryCluster.DrClusterStatus.Error.toString());
@@ -492,6 +494,8 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
             if (secResponse == null || secResponse.isEmpty()) {
                 // secondary cluster의 scvm ip 리스트를 가져오지 못한 경우
                 // secondary cluster에 UpdateDisasterRecoveryClusterCmd 호출
+                secCommand = "updateDisasterRecoveryCluster";
+                secMethod = "POST";
                 Map<String, String> errParams = new HashMap<>();
                 errParams.put("name", drName);
                 errParams.put("drclusterstatus", DisasterRecoveryCluster.DrClusterStatus.Error.toString());
@@ -523,11 +527,13 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                         drCluster.setMirroringAgentStatus(DisasterRecoveryCluster.MirroringAgentStatus.Enabled.toString());
                         disasterRecoveryClusterDao.update(drCluster.getId(), drCluster);
                         // secondary cluster db 업데이트
-                        Map<String, String> errParams = new HashMap<>();
-                        errParams.put("name", drName);
-                        errParams.put("drclusterstatus", DisasterRecoveryCluster.DrClusterStatus.Enabled.toString());
-                        errParams.put("mirroringagentstatus", DisasterRecoveryCluster.DrClusterStatus.Enabled.toString());
-                        DisasterRecoveryClusterUtil.moldUpdateDisasterRecoveryClusterAPI(secUrl, secCommand, secMethod, secApiKey, secSecretKey, errParams);
+                        secCommand = "updateDisasterRecoveryCluster";
+                        secMethod = "POST";
+                        Map<String, String> sucParams = new HashMap<>();
+                        sucParams.put("name", drName);
+                        sucParams.put("drclusterstatus", DisasterRecoveryCluster.DrClusterStatus.Enabled.toString());
+                        sucParams.put("mirroringagentstatus", DisasterRecoveryCluster.DrClusterStatus.Enabled.toString());
+                        DisasterRecoveryClusterUtil.moldUpdateDisasterRecoveryClusterAPI(secUrl, secCommand, secMethod, secApiKey, secSecretKey, sucParams);
                         return true;
                     }
                 }
