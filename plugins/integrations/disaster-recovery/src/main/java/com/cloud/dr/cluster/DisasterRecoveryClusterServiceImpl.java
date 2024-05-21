@@ -467,17 +467,17 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         secParams.put("secretKey", priSecretKey);
         String secCommand = "createDisasterRecoveryCluster";
         String secMethod = "POST";
-        String secResponse = DisasterRecoveryClusterUtil.moldCreateDisasterRecoveryClusterAPI(secUrl, secCommand, secMethod, secApiKey, secSecretKey, secParams);
-        LOGGER.info("secResponse::::::::::::::::::::::::::::::createDisasterRecoveryCluster");
+        String secResponse = DisasterRecoveryClusterUtil.moldCreateDisasterRecoveryClusterAPI(secUrl + "/client/api/", secCommand, secMethod, secApiKey, secSecretKey, secParams);
+        LOGGER.info("moldCreateDisasterRecoveryClusterAPI secResponse::::::::::::::::::::::::::::::createDisasterRecoveryCluster");
         LOGGER.info(secResponse);
-        if (secResponse != null) {
+        if (secResponse != null || !secResponse.isEmpty()) {
             // secondary cluster의 db에 dr 정보가 정상적으로 업데이트 되지 않은 경우
             // secondary cluster에 UpdateDisasterRecoveryClusterCmd 호출
             Map<String, String> errParams = new HashMap<>();
             errParams.put("name", drName);
             errParams.put("drClusterStatus", DisasterRecoveryCluster.DrClusterStatus.Error.toString());
             errParams.put("mirroringAgentStatus", DisasterRecoveryCluster.MirroringAgentStatus.Error.toString());
-            DisasterRecoveryClusterUtil.moldUpdateDisasterRecoveryClusterAPI(secUrl, secCommand, secMethod, secApiKey, secSecretKey, errParams);
+            DisasterRecoveryClusterUtil.moldUpdateDisasterRecoveryClusterAPI(secUrl + "/client/api/", secCommand, secMethod, secApiKey, secSecretKey, errParams);
             return false;
         } else {
             // secondary cluster의 db에 dr 정보가 정상적으로 업데이트 된 경우
@@ -485,17 +485,17 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
             secUrl = secUrl + "/client/api/";
             secCommand = "listScvmIpAddress";
             secMethod = "GET";
-            secResponse = DisasterRecoveryClusterUtil.moldListScvmIpAddressAPI(secUrl, secCommand, secMethod, secApiKey, secSecretKey);
-            LOGGER.info("secResponse::::::::::::::::::::::::::::::listScvmIpAddress");
+            secResponse = DisasterRecoveryClusterUtil.moldListScvmIpAddressAPI(secUrl + "/client/api/", secCommand, secMethod, secApiKey, secSecretKey);
+            LOGGER.info("moldListScvmIpAddressAPI secResponse::::::::::::::::::::::::::::::listScvmIpAddress");
             LOGGER.info(secResponse);
-            if (secResponse == null) {
+            if (secResponse == null || secResponse.isEmpty()) {
                 // secondary cluster의 scvm ip 리스트를 가져오지 못한 경우
                 // secondary cluster에 UpdateDisasterRecoveryClusterCmd 호출
                 Map<String, String> errParams = new HashMap<>();
                 errParams.put("name", drName);
                 errParams.put("drClusterStatus", DisasterRecoveryCluster.DrClusterStatus.Error.toString());
                 errParams.put("mirroringAgentStatus", DisasterRecoveryCluster.MirroringAgentStatus.Error.toString());
-                DisasterRecoveryClusterUtil.moldUpdateDisasterRecoveryClusterAPI(secUrl, secCommand, secMethod, secApiKey, secSecretKey, errParams);
+                DisasterRecoveryClusterUtil.moldUpdateDisasterRecoveryClusterAPI(secUrl + "/client/api/", secCommand, secMethod, secApiKey, secSecretKey, errParams);
                 return false;
             } else {
                 // secondary cluster에 glueMirrorSetupAPI 호출
