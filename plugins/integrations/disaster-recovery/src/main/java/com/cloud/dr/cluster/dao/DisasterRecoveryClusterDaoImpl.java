@@ -43,6 +43,10 @@ public class DisasterRecoveryClusterDaoImpl extends GenericDaoBase<DisasterRecov
         DisasterRecoveryClusterListSearchBuilder.and("name", DisasterRecoveryClusterListSearchBuilder.entity().getName(), SearchCriteria.Op.LIKE);
         DisasterRecoveryClusterListSearchBuilder.and("id", DisasterRecoveryClusterListSearchBuilder.entity().getId(), SearchCriteria.Op.EQ);
         DisasterRecoveryClusterListSearchBuilder.done();
+
+        DisasterRecoveryClusterNameSearchBuilder = createSearchBuilder();
+        DisasterRecoveryClusterNameSearchBuilder.and("name", DisasterRecoveryClusterNameSearchBuilder.entity().getName(), SearchCriteria.Op.EQ);
+        DisasterRecoveryClusterListSearchBuilder.done();
     }
 
     @Override
