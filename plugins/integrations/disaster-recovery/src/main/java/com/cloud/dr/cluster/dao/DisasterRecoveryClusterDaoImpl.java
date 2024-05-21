@@ -34,6 +34,7 @@ public class DisasterRecoveryClusterDaoImpl extends GenericDaoBase<DisasterRecov
     @Inject
     DisasterRecoveryClusterDetailsDao _disasterRecoveryClusterDetailsDao;
     protected SearchBuilder<DisasterRecoveryClusterVO> DisasterRecoveryClusterListSearchBuilder;
+    protected SearchBuilder<DisasterRecoveryClusterVO> DisasterRecoveryClusterNameSearchBuilder;
 
     protected DisasterRecoveryClusterDaoImpl() {
         super();
@@ -73,5 +74,12 @@ public class DisasterRecoveryClusterDaoImpl extends GenericDaoBase<DisasterRecov
         }
 
         _disasterRecoveryClusterDetailsDao.saveDetails(details);
+    }
+
+    @Override
+    public DisasterRecoveryClusterVO findByName(String name) {
+        SearchCriteria<DisasterRecoveryClusterVO> sc = DisasterRecoveryClusterNameSearchBuilder.create();
+        sc.setParameters("name", name);
+        return findOneBy(sc);
     }
 }

@@ -53,8 +53,7 @@ public class UpdateDisasterRecoveryClusterCmd extends BaseCmd implements AdminCm
     /////////////////////////////////////////////////////
     @Parameter(name = ApiConstants.ID, type = CommandType.UUID,
             entityType = GetDisasterRecoveryClusterListResponse.class,
-            description = "the ID of the disaster recovery",
-            required = true)
+            description = "the ID of the disaster recovery")
     private Long id;
 
     @Parameter(name = ApiConstants.NAME, type = CommandType.STRING, description = "name of disaster recovery cluster")
@@ -67,13 +66,11 @@ public class UpdateDisasterRecoveryClusterCmd extends BaseCmd implements AdminCm
     private String drClusterUrl;
 
     @Parameter(name = ApiConstants.DR_CLUSTER_STATUS, type = CommandType.STRING,
-            description = "the enabled or disabled dr cluster state of the disaster recovery",
-            required = true)
+            description = "the enabled or disabled dr cluster state of the disaster recovery")
     private String drClusterStatus;
 
     @Parameter(name = ApiConstants.MIRRORING_AGENT_STATUS, type = CommandType.STRING,
-            description = "the enabled or disabled mirroring agent state of the disaster recovery",
-            required = true)
+            description = "the enabled or disabled mirroring agent state of the disaster recovery")
     private String mirroringAgentStatus;
 
     @Parameter(name = ApiConstants.DETAILS, type = CommandType.MAP, description = "Details in key/value pairs. 'extraconfig' is not allowed to be passed in details.")

@@ -28,11 +28,11 @@ import java.util.Date;
 public interface DisasterRecoveryCluster extends InternalIdentity, Identity {
 
     public enum DrClusterStatus {
-        Disabled, Enabled, Error
+        Disabled, Enabled, Created, Error
     }
 
     public enum MirroringAgentStatus {
-        Disabled, Enabled, Error
+        Disabled, Enabled, Created, Error
     }
 
     long getId();
