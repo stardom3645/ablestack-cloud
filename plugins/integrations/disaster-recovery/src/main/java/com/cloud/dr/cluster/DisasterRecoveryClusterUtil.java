@@ -722,9 +722,10 @@ public class DisasterRecoveryClusterUtil {
                     return null;
                 }
             }
+            LOGGER.info("updatedisasterrecoveryclusterresponse::::::::::::::");
+            LOGGER.info(sb.toString());
             JSONObject jObject = XML.toJSONObject(sb.toString());
             JSONObject response = (JSONObject) jObject.get("updatedisasterrecoveryclusterresponse");
-            LOGGER.info("updatedisasterrecoveryclusterresponse::::::::::::::");
             LOGGER.info(response.toString());
             return response.get("disasterrecoverycluster").toString();
         } catch (Exception e) {
