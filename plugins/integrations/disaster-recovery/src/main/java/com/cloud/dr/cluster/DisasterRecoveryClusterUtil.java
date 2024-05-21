@@ -604,6 +604,7 @@ public class DisasterRecoveryClusterUtil {
             String apiParams = buildParamsMold(command, params);
             String urlFinal = buildUrl(apiParams, region, apiKey, secretKey);
             URL url = new URL(urlFinal);
+            LOGGER.info(url);
             if (region.contains("https")) {
                 // SSL 인증서 에러 우회 처리
                 final SSLContext sslContext = SSLUtils.getSSLContext();
