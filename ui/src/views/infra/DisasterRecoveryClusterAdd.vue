@@ -248,8 +248,8 @@ export default {
           name: values.name,
           description: values.displaytext,
           drClusterUrl: values.url,
-          apiKey: values.apikey,
-          usersecretkey: values.secretkey,
+          drClusterApiKey: values.apikey,
+          drClusterSecretKey: values.secretkey,
           privatekey: '',
           drClusterType: 'secondary'
         }

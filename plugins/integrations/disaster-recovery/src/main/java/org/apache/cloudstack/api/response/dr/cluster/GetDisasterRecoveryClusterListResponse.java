@@ -60,13 +60,13 @@ public class GetDisasterRecoveryClusterListResponse extends BaseResponse {
     @Param(description = "the mirroring agent status of the disaster recovery cluster on the mshost")
     private String mirroringAgentStatus;
 
-    @SerializedName(ApiConstants.API_KEY)
+    @SerializedName(ApiConstants.DR_CLUSTER_API_KEY)
     @Param(description = "the api key of the disaster recovery cluster on the mshost")
-    private String apiKey;
+    private String drClusterApiKey;
 
-    @SerializedName(ApiConstants.SECRET_KEY)
+    @SerializedName(ApiConstants.DR_CLUSTER_SECRET_KEY)
     @Param(description = "the secret key of the disaster recovery cluster on the mshost")
-    private String secretKey;
+    private String drClusterSecretKey;
 
     @SerializedName(ApiConstants.CREATED)
     @Param(description = "the creation date of the disaster recovery cluster")
@@ -112,12 +112,12 @@ public class GetDisasterRecoveryClusterListResponse extends BaseResponse {
         return mirroringAgentStatus;
     }
 
-    public String getApiKey() {
-        return apiKey;
+    public String getDrClusterApiKey() {
+        return drClusterApiKey;
     }
 
-    public String getSecretKey() {
-        return secretKey;
+    public String getDrClusterSecretKey() {
+        return drClusterSecretKey;
     }
 
     public Map getDetails() {
@@ -160,12 +160,12 @@ public class GetDisasterRecoveryClusterListResponse extends BaseResponse {
         this.mirroringAgentStatus = mirroringAgentStatus;
     }
 
-    public void setApiKey(String apiKey) {
-        this.apiKey = apiKey;
+    public void setDrClusterApiKey(String drClusterApiKey) {
+        this.drClusterApiKey = drClusterApiKey;
     }
 
-    public void setSecretKey(String secretKey) {
-        this.secretKey = secretKey;
+    public void setDrClusterSecretKey(String drClusterSecretKey) {
+        this.drClusterSecretKey = drClusterSecretKey;
     }
 
     public void setDetails(Map details) {

@@ -109,8 +109,8 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
             throw new CloudRuntimeException("Disaster Recovery Service plugin is disabled");
         }
         String url = cmd.getDrClusterUrl();
-        String apiKey = cmd.getApiKey();
-        String secretKey = cmd.getSecretKey();
+        String apiKey = cmd.getDrClusterApiKey();
+        String secretKey = cmd.getDrClusterSecretKey();
         String moldUrl = url + "/client/api/";
         String moldCommand = "listScvmIpAddress";
         String moldMethod = "GET";
@@ -204,14 +204,14 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         response.setDrClusterUrl(drcluster.getDrClusterUrl());
         response.setDrClusterType(drcluster.getDrClusterType());
         response.setDrClusterStatus(drcluster.getDrClusterStatus());
-        response.setApiKey(drcluster.getApiKey());
-        response.setSecretKey(drcluster.getSecretKey());
+        response.setDrClusterApiKey(drcluster.getDrClusterApiKey());
+        response.setDrClusterSecretKey(drcluster.getDrClusterSecretKey());
         response.setCreated(drcluster.getCreated());
 
         String moldUrl = drcluster.getDrClusterUrl() + "/client/api/";
         String moldCommand = "listScvmIpAddress";
         String moldMethod = "GET";
-        String ScvmResponse = DisasterRecoveryClusterUtil.moldListScvmIpAddressAPI(moldUrl, moldCommand, moldMethod, drcluster.getApiKey(), drcluster.getSecretKey());
+        String ScvmResponse = DisasterRecoveryClusterUtil.moldListScvmIpAddressAPI(moldUrl, moldCommand, moldMethod, drcluster.getDrClusterApiKey(), drcluster.getDrClusterSecretKey());
         if (ScvmResponse != null) {
             String[] array = ScvmResponse.split(",");
             for(int i=0; i < array.length; i++) {
@@ -276,7 +276,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         String moldUrl = drcluster.getDrClusterUrl() + "/client/api/";
         String moldCommand = "listServiceOfferings";
         String moldMethod = "GET";
-        List<JSONObject> secDrClusterInfoListResponse = DisasterRecoveryClusterUtil.getSecDrClusterInfoList(moldUrl, moldCommand, moldMethod, drcluster.getApiKey(), drcluster.getSecretKey());
+        List<JSONObject> secDrClusterInfoListResponse = DisasterRecoveryClusterUtil.getSecDrClusterInfoList(moldUrl, moldCommand, moldMethod, drcluster.getDrClusterApiKey(), drcluster.getDrClusterSecretKey());
         System.out.println(secDrClusterInfoListResponse);
         response.setResponses(secDrClusterInfoListResponse);
 //        disasterRecoveryClusterDao.update(drcluster.getId(), drcluster);
@@ -362,7 +362,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
             @Override
             public DisasterRecoveryClusterVO doInTransaction(TransactionStatus status) {
                 DisasterRecoveryClusterVO newCluster = new DisasterRecoveryClusterVO(msHost.getId(), cmd.getName(), cmd.getDescription(),
-                        cmd.getApiKey(), cmd.getSecretKey(), cmd.getDrClusterUrl(), cmd.getDrClusterType(), DisasterRecoveryCluster.DrClusterStatus.Created.toString(), DisasterRecoveryCluster.MirroringAgentStatus.Created.toString());
+                        cmd.getDrClusterApiKey(), cmd.getDrClusterSecretKey(), cmd.getDrClusterUrl(), cmd.getDrClusterType(), DisasterRecoveryCluster.DrClusterStatus.Created.toString(), DisasterRecoveryCluster.MirroringAgentStatus.Created.toString());
                 disasterRecoveryClusterDao.persist(newCluster);
                 return newCluster;
             }
@@ -377,8 +377,8 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         final String name = cmd.getName();
         final String type = cmd.getDrClusterType();
         final String url = cmd.getDrClusterUrl();
-        final String apiKey = cmd.getApiKey();
-        final String secretKey = cmd.getSecretKey();
+        final String apiKey = cmd.getDrClusterApiKey();
+        final String secretKey = cmd.getDrClusterSecretKey();
         final String privateKey = cmd.getPrivateKey();
 
         if (name == null || name.isEmpty()) {
@@ -445,8 +445,8 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         // secondary cluster 정보
         String secUrl = drCluster.getDrClusterUrl();
         String secClusterType = drCluster.getDrClusterType();
-        String secApiKey = drCluster.getApiKey();
-        String secSecretKey = drCluster.getSecretKey();
+        String secApiKey = drCluster.getDrClusterApiKey();
+        String secSecretKey = drCluster.getDrClusterSecretKey();
         // String secPrivateKey = drCluster.getPrivateKey();
         final File permKey = new File("/root/.ssh/dr.key");
         // primary cluster 정보
@@ -464,8 +464,8 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         secParams.put("description", drDescription);
         secParams.put("drClusterType", priClusterType);
         secParams.put("drClusterUrl", priUrl);
-        secParams.put("apiKey", priApiKey);
-        secParams.put("usersecretkey", priSecretKey);
+        secParams.put("drClusterApiKey", priApiKey);
+        secParams.put("drClusterSecretKey", priSecretKey);
         String secCommand = "createDisasterRecoveryCluster";
         String secMethod = "POST";
         String secResponse = DisasterRecoveryClusterUtil.moldCreateDisasterRecoveryClusterAPI(secUrl + "/client/api/", secCommand, secMethod, secApiKey, secSecretKey, secParams);
@@ -549,8 +549,8 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         response.setDrClusterType(drcluster.getDrClusterType());
         response.setDrClusterStatus(drcluster.getDrClusterStatus());
         response.setMirroringAgentStatus(drcluster.getMirroringAgentStatus());
-        response.setApiKey(drcluster.getApiKey());
-        response.setSecretKey(drcluster.getSecretKey());
+        response.setDrClusterApiKey(drcluster.getDrClusterApiKey());
+        response.setDrClusterSecretKey(drcluster.getDrClusterSecretKey());
         response.setCreated(drcluster.getCreated());
         return response;
     }

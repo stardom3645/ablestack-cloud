@@ -583,15 +583,13 @@ public class DisasterRecoveryClusterUtil {
      *  POST
      * @param name
      *  primary cluster name
+     * @param description
+     *  primary cluster description
      * @param drClusterType
      *  primary
-     * @param drClusterIp
-     *  primary cluster ip
-     * @param drClusterPort
-     *  primary cluster port
-     * @param drClusterProtocol
-     *  primary cluster protocol
-     * @param drClusterApikey
+     * @param drClusterUrl
+     *  primary cluster url
+     * @param drClusterApiKey
      *  primary cluster api key
      * @param drClusterSecretKey
      *  primary cluster secret key
