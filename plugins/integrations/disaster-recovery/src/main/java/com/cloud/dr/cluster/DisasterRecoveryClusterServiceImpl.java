@@ -480,6 +480,10 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         LOGGER.info(secResponse);
         if (secResponse == null || secResponse.isEmpty()) {
             // secondary cluster의 db에 dr 정보가 정상적으로 업데이트 되지 않은 경우
+            // primary cluster db 업데이트
+            drCluster.setDrClusterStatus(DisasterRecoveryCluster.DrClusterStatus.Error.toString());
+            drCluster.setMirroringAgentStatus(DisasterRecoveryCluster.MirroringAgentStatus.Error.toString());
+            disasterRecoveryClusterDao.update(drCluster.getId(), drCluster);
             // secondary cluster에 UpdateDisasterRecoveryClusterCmd 호출
             secCommand = "updateDisasterRecoveryCluster";
             secMethod = "POST";
@@ -500,6 +504,10 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
             LOGGER.info(secResponse);
             if (secResponse == null || secResponse.isEmpty()) {
                 // secondary cluster의 scvm ip 리스트를 가져오지 못한 경우
+                // primary cluster db 업데이트
+                drCluster.setDrClusterStatus(DisasterRecoveryCluster.DrClusterStatus.Error.toString());
+                drCluster.setMirroringAgentStatus(DisasterRecoveryCluster.MirroringAgentStatus.Error.toString());
+                disasterRecoveryClusterDao.update(drCluster.getId(), drCluster);
                 // secondary cluster에 UpdateDisasterRecoveryClusterCmd 호출
                 secCommand = "updateDisasterRecoveryCluster";
                 secMethod = "POST";
