@@ -323,10 +323,17 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                 throw new InvalidParameterValueException("Invalid Disaster Recovery id specified");
             }
         }
+        drcluster = disasterRecoveryClusterDao.createForUpdate(drcluster.getId());
         if (cmd.getDrClusterStatus() != null && cmd.getMirroringAgentStatus() != null) {
-            return setDisasterRecoveryClusterListResultResponse(drcluster.getId());
+            final drClusterStatus = cmd.getDrClusterStatus();
+            final mirroringAgentStatus = cmd.getMirroringAgentStatus();
+            drcluster.setDrClusterStatus(drClusterStatus);
+            drcluster.setMirroringAgentStatus(mirroringAgentStatus);
+            if (!disasterRecoveryClusterDao.update(drcluster.getId(), drcluster)) {
+                throw new CloudRuntimeException(String.format("Failed to update Disaster Recovery ID: %s", drcluster.getUuid()));
+            }
+            drcluster = disasterRecoveryClusterDao.findByName(drClusterName);
         } else {
-            drcluster = disasterRecoveryClusterDao.createForUpdate(drcluster.getId());
             if (cmd.getName() != null) {
                 drcluster.setName(drClusterName);
             }
