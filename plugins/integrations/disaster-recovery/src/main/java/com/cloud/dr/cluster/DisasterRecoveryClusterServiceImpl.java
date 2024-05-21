@@ -452,7 +452,8 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         // primary cluster 정보
         String[] properties = getServerProperties();
         ManagementServerHostVO msHost = msHostDao.findByMsid(ManagementServerNode.getManagementServerId());
-        String priUrl = properties[1] + "://" + msHost.getServiceIP() + ":" + properties[0];
+        // String priUrl = properties[1] + "://" + msHost.getServiceIP() + ":" + properties[0];
+        String priUrl = "http://10.10.254.39:5050";
         String priClusterType = "primary";
         UserAccount user = accountService.getActiveUserAccount("admin", 1L);
         String priApiKey = user.getApiKey();
