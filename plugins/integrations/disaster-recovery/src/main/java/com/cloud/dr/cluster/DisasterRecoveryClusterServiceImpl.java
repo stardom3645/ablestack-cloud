@@ -325,8 +325,8 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         }
         drcluster = disasterRecoveryClusterDao.createForUpdate(drcluster.getId());
         if (cmd.getDrClusterStatus() != null && cmd.getMirroringAgentStatus() != null) {
-            final drClusterStatus = cmd.getDrClusterStatus();
-            final mirroringAgentStatus = cmd.getMirroringAgentStatus();
+            final String drClusterStatus = cmd.getDrClusterStatus();
+            final String mirroringAgentStatus = cmd.getMirroringAgentStatus();
             drcluster.setDrClusterStatus(drClusterStatus);
             drcluster.setMirroringAgentStatus(mirroringAgentStatus);
             if (!disasterRecoveryClusterDao.update(drcluster.getId(), drcluster)) {
