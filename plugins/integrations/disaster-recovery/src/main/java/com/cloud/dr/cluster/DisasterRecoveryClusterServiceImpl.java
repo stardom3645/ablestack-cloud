@@ -462,10 +462,10 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         Map<String, String> secParams = new HashMap<>();
         secParams.put("name", drName);
         secParams.put("description", drDescription);
-        secParams.put("drClusterType", priClusterType);
-        secParams.put("drClusterUrl", priUrl);
-        secParams.put("drClusterApiKey", priApiKey);
-        secParams.put("drClusterSecretKey", priSecretKey);
+        secParams.put("drclustertype", priClusterType);
+        secParams.put("drclusterurl", priUrl);
+        secParams.put("drclusterapikey", priApiKey);
+        secParams.put("drclustersecretkey", priSecretKey);
         String secCommand = "createDisasterRecoveryCluster";
         String secMethod = "POST";
         String secResponse = DisasterRecoveryClusterUtil.moldCreateDisasterRecoveryClusterAPI(secUrl + "/client/api/", secCommand, secMethod, secApiKey, secSecretKey, secParams);
@@ -476,8 +476,8 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
             // secondary cluster에 UpdateDisasterRecoveryClusterCmd 호출
             Map<String, String> errParams = new HashMap<>();
             errParams.put("name", drName);
-            errParams.put("drClusterStatus", DisasterRecoveryCluster.DrClusterStatus.Error.toString());
-            errParams.put("mirroringAgentStatus", DisasterRecoveryCluster.MirroringAgentStatus.Error.toString());
+            errParams.put("drclusterstatus", DisasterRecoveryCluster.DrClusterStatus.Error.toString());
+            errParams.put("mirroringagentstatus", DisasterRecoveryCluster.MirroringAgentStatus.Error.toString());
             DisasterRecoveryClusterUtil.moldUpdateDisasterRecoveryClusterAPI(secUrl + "/client/api/", secCommand, secMethod, secApiKey, secSecretKey, errParams);
             return false;
         } else {
@@ -494,8 +494,8 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                 // secondary cluster에 UpdateDisasterRecoveryClusterCmd 호출
                 Map<String, String> errParams = new HashMap<>();
                 errParams.put("name", drName);
-                errParams.put("drClusterStatus", DisasterRecoveryCluster.DrClusterStatus.Error.toString());
-                errParams.put("mirroringAgentStatus", DisasterRecoveryCluster.MirroringAgentStatus.Error.toString());
+                errParams.put("drclusterstatus", DisasterRecoveryCluster.DrClusterStatus.Error.toString());
+                errParams.put("mirroringagentstatus", DisasterRecoveryCluster.MirroringAgentStatus.Error.toString());
                 DisasterRecoveryClusterUtil.moldUpdateDisasterRecoveryClusterAPI(secUrl + "/client/api/", secCommand, secMethod, secApiKey, secSecretKey, errParams);
                 return false;
             } else {
@@ -525,8 +525,8 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                         // secondary cluster db 업데이트
                         Map<String, String> errParams = new HashMap<>();
                         errParams.put("name", drName);
-                        errParams.put("drClusterStatus", DisasterRecoveryCluster.DrClusterStatus.Enabled.toString());
-                        errParams.put("mirroringAgentStatus", DisasterRecoveryCluster.DrClusterStatus.Enabled.toString());
+                        errParams.put("drclusterstatus", DisasterRecoveryCluster.DrClusterStatus.Enabled.toString());
+                        errParams.put("mirroringagentstatus", DisasterRecoveryCluster.DrClusterStatus.Enabled.toString());
                         DisasterRecoveryClusterUtil.moldUpdateDisasterRecoveryClusterAPI(secUrl, secCommand, secMethod, secApiKey, secSecretKey, errParams);
                         return true;
                     }

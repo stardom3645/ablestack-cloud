@@ -204,9 +204,9 @@ export default {
       this.formRef.value.validate().then(() => {
         const values = toRaw(this.form)
         const params = {
-          drClusterUrl: values.url,
-          apiKey: values.apikey,
-          usersecretkey: values.secretkey
+          drclusterurl: values.url,
+          drclusterapikey: values.apikey,
+          drclustersecretkey: values.secretkey
         }
         console.log(params)
         api('connectivityTestsDisasterRecovery', params).then(json => {
@@ -247,11 +247,11 @@ export default {
         const params = {
           name: values.name,
           description: values.displaytext,
-          drClusterUrl: values.url,
-          drClusterApiKey: values.apikey,
-          drClusterSecretKey: values.secretkey,
+          drclusterurl: values.url,
+          drclusterapikey: values.apikey,
+          drclustersecretkey: values.secretkey,
           privatekey: '',
-          drClusterType: 'secondary'
+          drclustertype: 'secondary'
         }
         api('createDisasterRecoveryCluster', params).then(json => {
           this.result = json.createdisasterrecoveryclusterresponse
