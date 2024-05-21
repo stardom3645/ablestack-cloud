@@ -646,8 +646,10 @@ public class DisasterRecoveryClusterUtil {
                     return null;
                 }
             }
+            LOGGER.info(sb.toString());
             JSONObject jObject = XML.toJSONObject(sb.toString());
             JSONObject response = (JSONObject) jObject.get("createdisasterrecoveryclusterresponse");
+            LOGGER.info(response);
             return response.get("disasterrecoverycluster").toString();
         } catch (Exception e) {
             LOGGER.error(String.format("Mold API endpoint not available"), e);
