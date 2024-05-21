@@ -361,7 +361,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         DisasterRecoveryClusterVO cluster = Transaction.execute(new TransactionCallback<DisasterRecoveryClusterVO>() {
             @Override
             public DisasterRecoveryClusterVO doInTransaction(TransactionStatus status) {
-                DisasterRecoveryClusterVO newCluster = new DisasterRecoveryClusterVO(msHost.getId(), cmd.getName(), cmd.getDescription(), cmd.getDrClusterType(),
+                DisasterRecoveryClusterVO newCluster = new DisasterRecoveryClusterVO(msHost.getId(), cmd.getName(), cmd.getDescription(),
                         cmd.getApiKey(), cmd.getSecretKey(), cmd.getDrClusterUrl(), cmd.getDrClusterType(), DisasterRecoveryCluster.DrClusterStatus.Created.toString(), DisasterRecoveryCluster.MirroringAgentStatus.Created.toString());
                 disasterRecoveryClusterDao.persist(newCluster);
                 return newCluster;
