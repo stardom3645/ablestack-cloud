@@ -184,8 +184,6 @@ public class DisasterRecoveryClusterUtil {
      */
     protected static boolean glueMirrorSetupAPI(String region, String subUrl, String method, Map<String, String> params, File privateKey) {
         try {
-            String readLine = null;
-            StringBuffer sb = null;
             // SSL 인증서 에러 우회 처리
             final SSLContext sslContext = SSLUtils.getSSLContext();
             sslContext.init(null, new TrustManager[]{new TrustAllManager()}, new SecureRandom());
@@ -209,8 +207,11 @@ public class DisasterRecoveryClusterUtil {
             }
             addFilePart("privateKeyFile", privateKey);
             writer.append("--" + boundary + "--").append(LINE_FEED);
+            LOGGER.info("writer.toString()");
+            LOGGER.info(writer.toString());
             writer.close();
-
+            LOGGER.info("outputStream.toString()");
+            LOGGER.info(outputStream.toString());
             if (connection.getResponseCode() == 200) {
                 BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
                 String inputLine;
