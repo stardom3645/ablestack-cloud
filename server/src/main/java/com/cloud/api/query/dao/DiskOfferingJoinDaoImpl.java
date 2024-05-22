@@ -39,6 +39,7 @@ import com.cloud.offering.ServiceOffering;
 import com.cloud.server.ResourceTag;
 import com.cloud.user.AccountManager;
 import com.cloud.utils.db.Attribute;
+import com.cloud.utils.db.Filter;
 import com.cloud.utils.db.GenericDaoBase;
 import com.cloud.utils.db.SearchBuilder;
 import com.cloud.utils.db.SearchCriteria;
@@ -173,7 +174,7 @@ public class DiskOfferingJoinDaoImpl extends GenericDaoBase<DiskOfferingJoinVO, 
         if (batchCfg != null) {
             DETAILS_BATCH_SIZE = Integer.parseInt(batchCfg);
         }
-
+        Filter searchFilter = new Filter(DiskOfferingJoinVO.class, "sortKey", true);
         List<DiskOfferingJoinVO> uvList = new ArrayList<>();
         // query details by batches
         int curr_index = 0;
@@ -185,7 +186,7 @@ public class DiskOfferingJoinDaoImpl extends GenericDaoBase<DiskOfferingJoinVO, 
                 }
                 SearchCriteria<DiskOfferingJoinVO> sc = diskOfferingSearch.create();
                 sc.setParameters("idIN", ids);
-                List<DiskOfferingJoinVO> accounts = searchIncludingRemoved(sc, null, null, false);
+                List<DiskOfferingJoinVO> accounts = searchIncludingRemoved(sc, searchFilter, null, false);
                 if (accounts != null) {
                     uvList.addAll(accounts);
                 }
@@ -201,7 +202,7 @@ public class DiskOfferingJoinDaoImpl extends GenericDaoBase<DiskOfferingJoinVO, 
             }
             SearchCriteria<DiskOfferingJoinVO> sc = diskOfferingSearch.create();
             sc.setParameters("idIN", ids);
-            List<DiskOfferingJoinVO> accounts = searchIncludingRemoved(sc, null, null, false);
+            List<DiskOfferingJoinVO> accounts = searchIncludingRemoved(sc, searchFilter, null, false);
             if (accounts != null) {
                 uvList.addAll(accounts);
             }
