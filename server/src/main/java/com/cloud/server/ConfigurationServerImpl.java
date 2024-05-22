@@ -1206,24 +1206,24 @@ public class ConfigurationServerImpl extends ManagerBase implements Configuratio
                 _networkOfferingDao.persistDefaultL2NetworkOfferings();
 
                 // Offering #9 - network offering for NSX provider - NATTED mode
-                createAndPersistDefaultNsxOffering(NetworkOffering.DEFAULT_NAT_NSX_OFFERING, "Offering for NSX enabled networks - NAT mode",
-                        NetworkOffering.NsxMode.NATTED, false, true);
+                //createAndPersistDefaultNsxOffering(NetworkOffering.DEFAULT_NAT_NSX_OFFERING, "Offering for NSX enabled networks - NAT mode",
+                //        NetworkOffering.NsxMode.NATTED, false, true);
 
                 // Offering #10 - network offering for NSX provider - ROUTED mode
-                createAndPersistDefaultNsxOffering(NetworkOffering.DEFAULT_ROUTED_NSX_OFFERING, "Offering for NSX enabled networks - ROUTED mode",
-                        NetworkOffering.NsxMode.ROUTED, false, true);
+                //createAndPersistDefaultNsxOffering(NetworkOffering.DEFAULT_ROUTED_NSX_OFFERING, "Offering for NSX enabled networks - ROUTED mode",
+                //        NetworkOffering.NsxMode.ROUTED, false, true);
 
                 // Offering #11 - network offering for NSX provider for VPCs - NATTED mode
-                createAndPersistDefaultNsxOffering(NetworkOffering.DEFAULT_NAT_NSX_OFFERING_FOR_VPC, "Offering for NSX enabled networks on VPCs - NAT mode",
-                        NetworkOffering.NsxMode.NATTED, true, true);
+                //createAndPersistDefaultNsxOffering(NetworkOffering.DEFAULT_NAT_NSX_OFFERING_FOR_VPC, "Offering for NSX enabled networks on VPCs - NAT mode",
+                //        NetworkOffering.NsxMode.NATTED, true, true);
 
                 // Offering #12 - network offering for NSX provider for VPCs - ROUTED mode
-                createAndPersistDefaultNsxOffering(NetworkOffering.DEFAULT_ROUTED_NSX_OFFERING_FOR_VPC, "Offering for NSX enabled networks on VPCs - ROUTED mode",
-                        NetworkOffering.NsxMode.ROUTED, true, true);
+                //createAndPersistDefaultNsxOffering(NetworkOffering.DEFAULT_ROUTED_NSX_OFFERING_FOR_VPC, "Offering for NSX enabled networks on VPCs - ROUTED mode",
+                //        NetworkOffering.NsxMode.ROUTED, true, true);
 
                 // Offering #13 - network offering for NSX provider for VPCs with Internal LB - NATTED mode
-                createAndPersistDefaultNsxOffering(NetworkOffering.DEFAULT_NAT_NSX_OFFERING_FOR_VPC_WITH_ILB, "Offering for NSX enabled networks on VPCs with internal LB - NAT mode",
-                        NetworkOffering.NsxMode.NATTED, true, false);
+                //createAndPersistDefaultNsxOffering(NetworkOffering.DEFAULT_NAT_NSX_OFFERING_FOR_VPC_WITH_ILB, "Offering for NSX enabled networks on VPCs with internal LB - NAT mode",
+                //        NetworkOffering.NsxMode.NATTED, true, false);
             }
         });
     }
