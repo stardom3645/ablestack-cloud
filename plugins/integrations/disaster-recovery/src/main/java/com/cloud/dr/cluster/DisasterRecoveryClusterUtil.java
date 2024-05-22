@@ -59,8 +59,8 @@ public class DisasterRecoveryClusterUtil {
     protected final static String boundary = Long.toHexString(System.currentTimeMillis());
     protected final static String LINE_FEED = "\r\n";
     protected final static String charset = "UTF-8";
-    protected final static OutputStream outputStream;
-    protected final static PrintWriter writer;
+    protected static OutputStream outputStream;
+    protected static PrintWriter writer;
 
     // :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
     // Glue API
