@@ -43,6 +43,7 @@ import com.cloud.api.ApiDBUtils;
 import com.cloud.api.query.vo.ServiceOfferingJoinVO;
 import com.cloud.offering.ServiceOffering;
 import com.cloud.server.ResourceTag.ResourceObjectType;
+import com.cloud.utils.db.Filter;
 import com.cloud.utils.db.GenericDaoBase;
 import com.cloud.utils.db.SearchBuilder;
 import com.cloud.utils.db.SearchCriteria;
@@ -236,7 +237,7 @@ public class ServiceOfferingJoinDaoImpl extends GenericDaoBase<ServiceOfferingJo
         if (batchCfg != null) {
             DETAILS_BATCH_SIZE = Integer.parseInt(batchCfg);
         }
-
+        Filter searchFilter = new Filter(ServiceOfferingJoinVO.class, "sortKey", true);
         List<ServiceOfferingJoinVO> uvList = new ArrayList<>();
         // query details by batches
         int curr_index = 0;
@@ -248,7 +249,7 @@ public class ServiceOfferingJoinDaoImpl extends GenericDaoBase<ServiceOfferingJo
                 }
                 SearchCriteria<ServiceOfferingJoinVO> sc = srvOfferingSearch.create();
                 sc.setParameters("idIN", ids);
-                List<ServiceOfferingJoinVO> accounts = searchIncludingRemoved(sc, null, null, false);
+                List<ServiceOfferingJoinVO> accounts = searchIncludingRemoved(sc, searchFilter, null, false);
                 if (accounts != null) {
                     uvList.addAll(accounts);
                 }
@@ -264,7 +265,7 @@ public class ServiceOfferingJoinDaoImpl extends GenericDaoBase<ServiceOfferingJo
             }
             SearchCriteria<ServiceOfferingJoinVO> sc = srvOfferingSearch.create();
             sc.setParameters("idIN", ids);
-            List<ServiceOfferingJoinVO> accounts = searchIncludingRemoved(sc, null, null, false);
+            List<ServiceOfferingJoinVO> accounts = searchIncludingRemoved(sc, searchFilter, null, false);
             if (accounts != null) {
                 uvList.addAll(accounts);
             }

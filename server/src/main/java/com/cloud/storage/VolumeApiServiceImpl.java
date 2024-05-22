@@ -1716,6 +1716,13 @@ public class VolumeApiServiceImpl extends ManagerBase implements VolumeApiServic
 
         destroyVolumeIfPossible(volume);
 
+        // check if Shared Disk
+        DiskOffering offering = _diskOfferingDao.findById(volume.getDiskOfferingId());
+        if (volume.getVolumeType() == Volume.Type.DATADISK && offering.getShareable()) {
+            volume.setPath("");
+            _volsDao.update(volume.getId(), volume);
+        }
+
         if (expunge) {
             // Mark volume as removed if volume has not been created on primary or secondary
             if (volume.getState() == Volume.State.Allocated) {
