@@ -17,9 +17,9 @@
 package com.cloud.dr.cluster;
 
 import java.io.BufferedReader;
-import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
@@ -27,6 +27,7 @@ import java.io.PrintWriter;
 import java.io.OutputStreamWriter;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.net.URLConnection;
 import java.net.HttpURLConnection;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -55,6 +56,11 @@ import com.google.gson.JsonObject;
 public class DisasterRecoveryClusterUtil {
 
     protected static Logger LOGGER = LogManager.getLogger(DisasterRecoveryClusterUtil.class);
+    private final static String boundary = Long.toHexString(System.currentTimeMillis());
+    private final static String LINE_FEED = "\r\n";
+    private final static String charset = "UTF-8";
+    private OutputStream outputStream;
+    private PrintWriter writer;
 
     /**
      * Glue 상태 조회
@@ -172,13 +178,9 @@ public class DisasterRecoveryClusterUtil {
      *  localClusterName("local"), remoteClusterName("remote"), host(<scvmIP>), privateKeyFile(<scvmKey>), mirrorPool("rbd")
      * @return true = 200, 이외 코드는 false 처리
      */
-    protected static boolean glueMirrorSetupAPI(String region, String subUrl, String method, Map<String, String> params, File privateKey) {
+    protected boolean glueMirrorSetupAPI(String region, String subUrl, String method, Map<String, String> params, File privateKey) {
         try {
             String readLine = null;
-            OutputStream outputStream;
-            PrintWriter writer;
-            String boundary = Long.toHexString(System.currentTimeMillis());
-            String CRLF = "\r\n";
             StringBuffer sb = null;
             // SSL 인증서 에러 우회 처리
             final SSLContext sslContext = SSLUtils.getSSLContext();
@@ -193,50 +195,39 @@ public class DisasterRecoveryClusterUtil {
             connection.setRequestProperty("Accept", "application/vnd.ceph.api.v1.0+json");
             connection.setRequestProperty("Authorization", "application/vnd.ceph.api.v1.0+json");
             connection.setRequestProperty("Connection","Keep-Alive");
-            connection.setRequestProperty("Content-type", "multipart/form-data;boundary=" + boundary);
-            // parameter 추가 시 사용 예정
+            connection.setRequestProperty("Content-type", "multipart/form-data;charset=" + charset + ";boundary=" + boundary);
             outputStream = connection.getOutputStream();
-            writer = new PrintWriter(new OutputStreamWriter(outputStream, "UTF-8"), true);
+            writer = new PrintWriter(new OutputStreamWriter(outputStream, charset), true);
             for(Map.Entry<String, String> param : params.entrySet()){
                 String key = param.getKey();
                 String value = param.getValue();
-                // if (key.equalsIgnoreCase("localClusterName")) {
-                //     writer.writeBytes("--" + boundary + CRLF);
-                //     writer.writeBytes("Content-Disposition: form-data; name=\"localClusterName\"" + CRLF + CRLF + value);
-                // } else if (key.equalsIgnoreCase("remoteClusterName")) {
-                //     writer.writeBytes(CRLF + "--" + boundary + CRLF);
-                //     writer.writeBytes("Content-Disposition: form-data; name=\"remoteClusterName\"" + CRLF + CRLF + value);
-                // } else if (key.equalsIgnoreCase("host")) {
-                //     writer.writeBytes(CRLF + "--" + boundary + CRLF);
-                //     writer.writeBytes("Content-Disposition: form-data; name=\"host\"" + CRLF + CRLF + value);
-                // } else if (key.equalsIgnoreCase("mirrorPool")) {
-                //     writer.writeBytes(CRLF + "--" + boundary + CRLF);
-                //     writer.writeBytes("Content-Disposition: form-data; name=\"host\"" + CRLF + CRLF + value);
-                // }
+                addTextPart(key, value);
             }
-            // writer.writeBytes(CRLF + "--" + boundary + CRLF);
-            // writer.writeBytes("Content-Disposition: form-data; name=\"privateKeyFile\"; filename="+ privateKey.getOriginalFilename() + "\r\n");
-            // writer.writeBytes("Content-Type: application/octet-stream\r\n\r\n");
-            FileInputStream fileInputStream = new FileInputStream(privateKey.getPath());
-            int bytesAvailable = fileInputStream.available();
-            int maxBufferSize = 4096;
-            int bufferSize = Math.min(bytesAvailable, maxBufferSize);
-            byte[] buffer = new byte[bufferSize];
+            addFilePart("privateKeyFile", privateKey);
+            writer.append("--" + boundary + "--").append(LINE_FEED);
+            writer.close();
 
-            int bytesRead = fileInputStream.read(buffer, 0, bufferSize);
-            while (bytesRead > 0) {
-                DataOutputStream dataWrite = new DataOutputStream(connection.getOutputStream());
-                dataWrite.write(buffer, 0, bufferSize);
-                bytesAvailable = fileInputStream.available();
-                bufferSize = Math.min(bytesAvailable, maxBufferSize);
-                bytesRead = fileInputStream.read(buffer, 0, bufferSize);
-            }
-            fileInputStream.close();
-            // writer.writeBytes(CRLF + "--" + boundary + "--" + CRLF);
-            // writer.flush();
             if (connection.getResponseCode() == 200) {
+                BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+                String inputLine;
+                StringBuffer response = new StringBuffer();
+                while ((inputLine = in.readLine()) != null) {
+                    response.append(inputLine);
+                }
+                LOGGER.info("glueMirrorSetupAPI Success::::::::::::::::::::");
+                LOGGER.info(response.toString());
+                in.close();
                 return true;
             } else {
+                BufferedReader in = new BufferedReader(new InputStreamReader(connection.getErrorStream()));
+                String inputLine;
+                StringBuffer response = new StringBuffer();
+                while ((inputLine = in.readLine()) != null) {
+                    response.append(inputLine);
+                }
+                LOGGER.info("glueMirrorSetupAPI Fail::::::::::::::::::::");
+                LOGGER.info(response.toString());
+                in.close();
                 String msg = "Failed to request glue mirror setup API. response code : " + connection.getResponseCode();
                 LOGGER.error(msg);
                 return false;
@@ -500,6 +491,45 @@ public class DisasterRecoveryClusterUtil {
     }
 
     /**
+     * glue post 요청 시 사용
+     * @param key
+     * @param value
+     */
+    public void addTextPart(String key, String value) throws IOException {
+        writer.append("--" + boundary).append(LINE_FEED);
+        writer.append("Content-Disposition: form-data; name=\""+key+"\"").append(LINE_FEED);
+        writer.append("Content-Type: text/plain; charset=" + charset).append(LINE_FEED);
+        writer.append(LINE_FEED);
+        writer.append(value).append(LINE_FEED);
+        writer.flush();
+    }
+
+    /**
+     * glue post 요청 시 사용
+     * @param key
+     * @param value
+     */
+    public void addFilePart(String key, File file) throws IOException {
+        writer.append("--" + boundary).append(LINE_FEED);
+        writer.append("Content-Disposition: form-data; name=\""+key+"\"; filename=\"" + file.getName() + "\"").append(LINE_FEED);
+        writer.append("Content-Type: " + URLConnection.guessContentTypeFromName(file.getName())).append(LINE_FEED);
+        writer.append("Content-Transfer-Encoding: binary").append(LINE_FEED);
+        writer.append(LINE_FEED);
+        writer.flush();
+
+        FileInputStream inputStream = new FileInputStream(file);
+        byte[] buffer = new byte[(int)file.length()];
+        int bytesRead = -1;
+        while ((bytesRead = inputStream.read(buffer)) != -1) {
+            outputStream.write(buffer, 0, bytesRead);
+        }
+        outputStream.flush();
+        inputStream.close();
+        writer.append(LINE_FEED);
+        writer.flush();
+    }
+
+    /**
      * Mold listScvmIpAddress API 요청
      * @param region
      *  <url>/client/api/
@@ -656,7 +686,7 @@ public class DisasterRecoveryClusterUtil {
         }
     }
 
-     /**
+    /**
      * Mold updateDisasterRecoveryCluster API 요청
      * @param region
      *  <url>/client/api/
