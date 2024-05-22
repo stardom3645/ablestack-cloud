@@ -533,7 +533,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                     glueParams.put("remoteClusterName", "remote");
                     glueParams.put("mirrorPool", "rbd");
                     glueParams.put("host", glueIp);
-                    final File secPrivateKey = new File("/root/.ssh/dr.key");
+                    final File secPrivateKey = new File("/root/.ssh/id_rsa.dr");
                     boolean result = DisasterRecoveryClusterUtil.glueMirrorSetupAPI(glueUrl, glueCommand, glueMethod, glueParams, secPrivateKey);
                     // boolean result = true;
                     LOGGER.info("result::::::::::::::::::::::::::::::");
