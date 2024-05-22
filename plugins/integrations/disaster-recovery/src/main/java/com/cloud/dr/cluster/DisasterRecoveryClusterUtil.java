@@ -29,6 +29,7 @@ import java.net.URL;
 import java.net.URLEncoder;
 import java.net.URLConnection;
 import java.net.HttpURLConnection;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -516,9 +517,11 @@ public class DisasterRecoveryClusterUtil {
      * @param value
      */
     protected static void addFilePart(String key, File file) throws IOException {
+        Path path = new File(file).toPath();
+        String mimeType = Files.probeContentType(path);
         writer.append("--" + boundary).append(LINE_FEED);
         writer.append("Content-Disposition: form-data; name=\""+key+"\"; filename=\"" + file.getName() + "\"").append(LINE_FEED);
-        writer.append("Content-Type: " + URLConnection.guessContentTypeFromName(file.getName())).append(LINE_FEED);
+        writer.append("Content-Type: " + mimeType).append(LINE_FEED);
         writer.append("Content-Transfer-Encoding: binary").append(LINE_FEED);
         writer.append(LINE_FEED);
         writer.flush();
