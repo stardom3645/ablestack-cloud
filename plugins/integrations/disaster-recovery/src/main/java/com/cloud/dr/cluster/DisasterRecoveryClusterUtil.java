@@ -27,7 +27,6 @@ import java.io.PrintWriter;
 import java.io.OutputStreamWriter;
 import java.net.URL;
 import java.net.URLEncoder;
-import java.net.URLConnection;
 import java.net.HttpURLConnection;
 import java.nio.file.Path;
 import java.util.ArrayList;
