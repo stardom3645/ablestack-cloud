@@ -141,7 +141,9 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         List<ScvmIpAddressResponse> responses = new ArrayList<>();
         ScvmIpAddressResponse response = new ScvmIpAddressResponse();
         String ipList = Script.runSimpleBashScript("cat /etc/hosts | grep -E 'scvm1-mngt|scvm2-mngt|scvm3-mngt' | awk '{print $1}' | tr '\n' ','");
-        ipList = ipList.replaceAll(",$", "");
+        if (ipList != null || !ipList.isEmpty()) {
+            ipList = ipList.replaceAll(",$", "");
+        }
         response.setObjectName("scvmipaddress");
         response.setIpAddress(ipList);
         responses.add(response);
@@ -530,9 +532,9 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                     glueParams.put("remoteClusterName", "remote");
                     glueParams.put("mirrorPool", "rbd");
                     glueParams.put("host", glueIp);
-                    //final PrivateKey key = parsePrivateKey(secPrivateKey);
-                    //boolean result = DisasterRecoveryClusterUtil.glueMirrorSetupAPI(glueUrl, glueCommand, glueMethod, glueParams, permKey);
-                    boolean result = true;
+                    final File secPrivateKey = new File("/root/.ssh/dr.key");
+                    boolean result = DisasterRecoveryClusterUtil.glueMirrorSetupAPI(glueUrl, glueCommand, glueMethod, glueParams, secPrivateKey);
+                    // boolean result = true;
                     LOGGER.info("result::::::::::::::::::::::::::::::");
                     LOGGER.info(result);
                     // mirror setup 성공
