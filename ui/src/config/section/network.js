@@ -340,7 +340,7 @@ export default {
       permission: ['listVnfTemplates'],
       resourceType: 'UserVm',
       params: () => {
-        return { details: 'servoff,tmpl,nics', isvnf: true }
+        return { templatefilter: 'self', details: 'all', isvnf: true }
       },
       columns: () => {
         const fields = ['name', 'state', 'ipaddress']
