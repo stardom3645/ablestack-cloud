@@ -62,6 +62,10 @@ public class DisasterRecoveryClusterUtil {
     private OutputStream outputStream;
     private PrintWriter writer;
 
+    // :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+    // Glue API
+    // :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
     /**
      * Glue 상태 조회
      * @param region
@@ -528,6 +532,10 @@ public class DisasterRecoveryClusterUtil {
         writer.append(LINE_FEED);
         writer.flush();
     }
+
+    // :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+    // Mold API
+    // :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
     /**
      * Mold listScvmIpAddress API 요청
