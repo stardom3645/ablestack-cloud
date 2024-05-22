@@ -871,10 +871,10 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
         Boolean isRecursive = domainIdRecursiveListProject.second();
         ListProjectResourcesCriteria listProjectResourcesCriteria = domainIdRecursiveListProject.third();
 
-        Filter searchFilter = new Filter(EventVO.class, "createDate", false, cmd.getStartIndex(), cmd.getPageSizeVal());
+        Filter searchFilter = new Filter(EventVO.class, "id", false, cmd.getStartIndex(), cmd.getPageSizeVal());
         // additional order by since createdDate does not have milliseconds
         // and two events, created within one second can be incorrectly ordered (for example VM.CREATE Completed before Scheduled)
-        searchFilter.addOrderBy(EventVO.class, "id", false);
+        // searchFilter.addOrderBy(EventVO.class, "id", false);
 
         SearchBuilder<EventVO> eventSearchBuilder = eventDao.createSearchBuilder();
         eventSearchBuilder.select(null, Func.DISTINCT, eventSearchBuilder.entity().getId());

@@ -17,9 +17,6 @@
 package org.apache.cloudstack.api.command.user.vm;
 
 import com.cloud.vm.VmDetailConstants;
-import org.apache.cloudstack.api.ApiCommandResourceType;
-import org.apache.cloudstack.api.response.DiskOfferingResponse;
-
 import org.apache.cloudstack.acl.SecurityChecker.AccessType;
 import org.apache.cloudstack.api.ApiCommandResourceType;
 import org.apache.cloudstack.api.ACL;
@@ -44,6 +41,7 @@ import com.cloud.exception.ResourceUnavailableException;
 import com.cloud.user.Account;
 import com.cloud.uservm.UserVm;
 import com.cloud.vm.VirtualMachine;
+
 
 import java.util.Map;
 
