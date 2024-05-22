@@ -56,11 +56,11 @@ import com.google.gson.JsonObject;
 public class DisasterRecoveryClusterUtil {
 
     protected static Logger LOGGER = LogManager.getLogger(DisasterRecoveryClusterUtil.class);
-    private final static String boundary = Long.toHexString(System.currentTimeMillis());
-    private final static String LINE_FEED = "\r\n";
-    private final static String charset = "UTF-8";
-    private OutputStream outputStream;
-    private PrintWriter writer;
+    protected final static String boundary = Long.toHexString(System.currentTimeMillis());
+    protected final static String LINE_FEED = "\r\n";
+    protected final static String charset = "UTF-8";
+    protected final static OutputStream outputStream;
+    protected final static PrintWriter writer;
 
     // :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
     // Glue API
@@ -182,7 +182,7 @@ public class DisasterRecoveryClusterUtil {
      *  localClusterName("local"), remoteClusterName("remote"), host(<scvmIP>), privateKeyFile(<scvmKey>), mirrorPool("rbd")
      * @return true = 200, 이외 코드는 false 처리
      */
-    protected boolean glueMirrorSetupAPI(String region, String subUrl, String method, Map<String, String> params, File privateKey) {
+    protected static boolean glueMirrorSetupAPI(String region, String subUrl, String method, Map<String, String> params, File privateKey) {
         try {
             String readLine = null;
             StringBuffer sb = null;
@@ -499,7 +499,7 @@ public class DisasterRecoveryClusterUtil {
      * @param key
      * @param value
      */
-    public void addTextPart(String key, String value) throws IOException {
+    protected static void addTextPart(String key, String value) throws IOException {
         writer.append("--" + boundary).append(LINE_FEED);
         writer.append("Content-Disposition: form-data; name=\""+key+"\"").append(LINE_FEED);
         writer.append("Content-Type: text/plain; charset=" + charset).append(LINE_FEED);
@@ -513,7 +513,7 @@ public class DisasterRecoveryClusterUtil {
      * @param key
      * @param value
      */
-    public void addFilePart(String key, File file) throws IOException {
+    protected static void addFilePart(String key, File file) throws IOException {
         writer.append("--" + boundary).append(LINE_FEED);
         writer.append("Content-Disposition: form-data; name=\""+key+"\"; filename=\"" + file.getName() + "\"").append(LINE_FEED);
         writer.append("Content-Type: " + URLConnection.guessContentTypeFromName(file.getName())).append(LINE_FEED);
