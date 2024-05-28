@@ -586,6 +586,7 @@ export default {
       title: 'label.kubernetes',
       icon: ['fa-solid', 'fa-dharmachakra'],
       docHelp: 'plugins/cloudstack-kubernetes-service.html',
+      searchFilters: ['name', 'domainid', 'account', 'state'],
       permission: ['listKubernetesClusters'],
       columns: (store) => {
         var fields = ['name', 'state', 'clustertype', 'size', 'cpunumber', 'memory', 'kubernetesversionname']
@@ -695,6 +696,7 @@ export default {
       docHelp: 'adminguide/autoscale_with_virtual_router.html',
       resourceType: 'AutoScaleVmGroup',
       permission: ['listAutoScaleVmGroups'],
+      searchFilters: ['name', 'zoneid', 'domainid', 'account'],
       columns: (store) => {
         var fields = ['name', 'state', 'associatednetworkname', 'publicip', 'publicport', 'privateport', 'minmembers', 'maxmembers', 'availablevirtualmachinecount', 'account']
         if (store.listAllProjects) {
@@ -805,7 +807,7 @@ export default {
       docHelp: 'adminguide/virtual_machines.html#changing-the-vm-name-os-or-group',
       resourceType: 'VMInstanceGroup',
       permission: ['listInstanceGroups'],
-
+      searchFilters: ['name', 'zoneid', 'domainid', 'account'],
       columns: (store) => {
         var fields = ['name', 'account']
         if (store.listAllProjects) {
@@ -863,6 +865,7 @@ export default {
       icon: 'key-outlined',
       docHelp: 'adminguide/virtual_machines.html#using-ssh-keys-for-authentication',
       permission: ['listSSHKeyPairs'],
+      searchFilters: ['name', 'domainid', 'account', 'fingerprint'],
       columns: () => {
         var fields = ['name', 'fingerprint']
         if (['Admin', 'DomainAdmin'].includes(store.getters.userInfo.roletype)) {
@@ -1023,6 +1026,7 @@ export default {
       icon: 'swap-outlined',
       docHelp: 'adminguide/virtual_machines.html#affinity-groups',
       permission: ['listAffinityGroups'],
+      searchFilters: ['name', 'zoneid', 'domainid', 'account', 'type'],
       columns: () => {
         var fields = ['name', 'type', 'description']
         if (['Admin', 'DomainAdmin'].includes(store.getters.userInfo.roletype)) {
