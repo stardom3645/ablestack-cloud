@@ -9250,7 +9250,7 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
         // Long templateId = cmd.getTemplate();
         boolean dynamicScalingEnabled = cmd.isDynamicScalingEnabled();
 
-        VMTemplateVO template = createDefaultDummyVmImportTemplates(false);
+        VMTemplateVO template = createDefaultDummyVmImportTemplates(true);
 
         // boolean dynamicScalingEnabled = cmd.isDynamicScalingEnabled();
 
@@ -9394,7 +9394,7 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
         try {
             template = VMTemplateVO.createSystemIso(_templateDao.getNextInSequence(Long.class, "id"), templateName, templateName, true,
                     "", true, 64, Account.ACCOUNT_ID_SYSTEM, "",
-                    "VM Import Default Template", false, 142, HypervisorType.Simulator);
+                    "VM Import Default Template", false, 142, HypervisorType.KVM);
             template.setState(VirtualMachineTemplate.State.Inactive);
             template = _templateDao.persist(template);
             if (template == null) {
