@@ -837,7 +837,6 @@ public class DeployVMVolumeCmd extends BaseAsyncCreateCustomIdCmd implements Sec
     public void create() throws ResourceAllocationException {
         try {
             UserVm vm = _userVmService.createVirtualMachineVolume(this);
-            logger.info("asklsdakljsdf"+vm);
             if (vm != null) {
                 setEntityId(vm.getId());
                 setEntityUuid(vm.getUuid());

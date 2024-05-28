@@ -451,7 +451,7 @@ public interface UserVmService {
 
     UserVm createVirtualMachine(DeployVMCmd cmd) throws InsufficientCapacityException, ResourceUnavailableException, ConcurrentOperationException,
         StorageUnavailableException, ResourceAllocationException;
-    
+
     UserVm createVirtualMachineVolume(DeployVMVolumeCmd cmd) throws InsufficientCapacityException, ResourceUnavailableException, ConcurrentOperationException,
         StorageUnavailableException, ResourceAllocationException;
 
