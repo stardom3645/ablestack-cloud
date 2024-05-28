@@ -29,6 +29,7 @@ import org.apache.cloudstack.api.command.user.vm.AddNicToVMCmd;
 import org.apache.cloudstack.api.command.user.vm.CloneVMCmd;
 import org.apache.cloudstack.api.command.user.vm.DeployVMCmd;
 import org.apache.cloudstack.api.command.user.vm.DestroyVMCmd;
+import org.apache.cloudstack.api.command.user.vm.DeployVMVolumeCmd;
 import org.apache.cloudstack.api.command.user.vm.RebootVMCmd;
 import org.apache.cloudstack.api.command.user.vm.RemoveNicFromVMCmd;
 import org.apache.cloudstack.api.command.user.vm.RemoveVbmcToVMCmd;
@@ -421,6 +422,7 @@ public interface UserVmService {
      *             if the resources required the deploy the VM is not currently available.
      */
     UserVm startVirtualMachine(DeployVMCmd cmd) throws InsufficientCapacityException, ConcurrentOperationException, ResourceUnavailableException, ResourceAllocationException;
+    UserVm startVirtualMachineVolume(DeployVMVolumeCmd cmd) throws InsufficientCapacityException, ConcurrentOperationException, ResourceUnavailableException, ResourceAllocationException;
 
     /**
      * Creates a vm group.
@@ -448,6 +450,9 @@ public interface UserVmService {
     HypervisorType getHypervisorTypeOfUserVM(long vmid);
 
     UserVm createVirtualMachine(DeployVMCmd cmd) throws InsufficientCapacityException, ResourceUnavailableException, ConcurrentOperationException,
+        StorageUnavailableException, ResourceAllocationException;
+    
+    UserVm createVirtualMachineVolume(DeployVMVolumeCmd cmd) throws InsufficientCapacityException, ResourceUnavailableException, ConcurrentOperationException,
         StorageUnavailableException, ResourceAllocationException;
 
     UserVm recordVirtualMachineToDB(CloneVMCmd cmd, long templateId) throws InsufficientCapacityException, ResourceUnavailableException, ConcurrentOperationException,

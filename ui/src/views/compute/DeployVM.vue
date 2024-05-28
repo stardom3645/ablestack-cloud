@@ -131,7 +131,7 @@
                 </template>
               </a-step>
               <a-step
-                :title="$t('label.templateiso')"
+                :title="$t('label.template.iso.rbdimage')"
                 :status="zoneSelected ? 'process' : 'wait'">
                 <template #description>
                   <div v-if="zoneSelected" style="margin-top: 15px">
@@ -168,7 +168,7 @@
                           @update-disk-size="updateFieldValue"
                           style="margin-top: 10px;"/>
                       </div>
-                      <div v-else>
+                      <div v-else-if="tabKey === 'isoid'">
                         {{ $t('message.iso.desc') }}
                         <template-iso-selection
                           input-decorator="isoid"
@@ -189,6 +189,21 @@
                             :filterOption="filterOption" />
                         </a-form-item>
                       </div>
+                      <div v-else-if="tabKey === 'volumeId'">
+                        {{ $t('message.rbd.desc') }}
+                        <StorageRbdImageSelection
+                          input-decorator="volumeId"
+                          :items="options.volume"
+                          :selected="tabKey"
+                          :zoneId="zoneId"
+                          :row-count="rowCount.volume"
+                          :loading="loading.volume"
+                          :preFillContent="dataPreFill"
+                          @handle-search-filter="($event) => fetchAllRbdImage($event)"
+                          @on-selected-rbd-size="onSelectRbdSize"
+                          @update-rbd-images="updateFieldValue"
+                          @select-rbd-images-item="($event) => updateRbdImages($event)" />
+                      </div>
                     </a-card>
                     <a-form-item class="form-item-hidden">
                       <a-input v-model:value="form.templateid" />
@@ -198,6 +213,9 @@
                     </a-form-item>
                     <a-form-item class="form-item-hidden">
                       <a-input v-model:value="form.rootdisksize" />
+                    </a-form-item>
+                    <a-form-item class="form-item-hidden">
+                      <a-input v-model:value="form.volumeId" />
                     </a-form-item>
                   </div>
                 </template>
@@ -878,6 +896,7 @@ import UserDataSelection from '@views/compute/wizard/UserDataSelection'
 import SecurityGroupSelection from '@views/compute/wizard/SecurityGroupSelection'
 import TooltipLabel from '@/components/widgets/TooltipLabel'
 import InstanceNicsNetworkSelectListView from '@/components/view/InstanceNicsNetworkSelectListView.vue'
+import StorageRbdImageSelection from '@views/compute/wizard/StorageRbdImageSelection'
 
 export default {
   name: 'Wizard',
@@ -897,7 +916,8 @@ export default {
     SecurityGroupSelection,
     ResourceIcon,
     TooltipLabel,
-    InstanceNicsNetworkSelectListView
+    InstanceNicsNetworkSelectListView,
+    StorageRbdImageSelection
   },
   props: {
     visible: {
@@ -960,7 +980,9 @@ export default {
         bootModes: [],
         tpmversion: [],
         ioPolicyTypes: [],
-        dynamicScalingVmConfig: false
+        dynamicScalingVmConfig: false,
+        storagePoolObjects: [],
+        volume: {}
       },
       rowCount: {},
       loading: {
@@ -978,7 +1000,8 @@ export default {
         pods: false,
         clusters: false,
         hosts: false,
-        groups: false
+        groups: false,
+        volume: false
       },
       instanceConfig: {},
       template: {},
@@ -1062,7 +1085,8 @@ export default {
       zones: [],
       selectedZone: '',
       formModel: {},
-      nicToNetworkSelection: []
+      nicToNetworkSelection: [],
+      rbdSelected: {}
     }
   },
   computed: {
@@ -1280,6 +1304,9 @@ export default {
     networkId () {
       return this.$route.query.networkid || null
     },
+    volumeId () {
+      return this.$route.query.volumeId || null
+    },
     tabList () {
       let tabList = []
       if (this.templateId) {
@@ -1292,6 +1319,11 @@ export default {
           key: 'isoid',
           tab: this.$t('label.isos')
         }]
+      } else if (this.volumeId) {
+        tabList = [{
+          key: 'volumeId',
+          tab: this.$t('label.data.rbd.image')
+        }]
       } else {
         tabList = [{
           key: 'templateid',
@@ -1300,6 +1332,10 @@ export default {
         {
           key: 'isoid',
           tab: this.$t('label.isos')
+        },
+        {
+          key: 'volumeId',
+          tab: this.$t('label.images')
         }]
       }
 
@@ -1451,6 +1487,14 @@ export default {
           if (this.hypervisor) {
             this.vm.hypervisor = this.hypervisor
           }
+
+          if (this.volume) {
+            this.vm.volumeId = this.volume.id
+            this.vm.templateid = this.template.id
+            this.vm.volumesname = this.volume.displaytext
+            this.vm.ostypeid = this.volume.ostypeid
+            this.vm.ostypename = this.volume.ostypename
+          }
         }
 
         if (this.serviceOffering) {
@@ -1508,6 +1552,7 @@ export default {
     return {
       vmFetchTemplates: this.fetchAllTemplates,
       vmFetchIsos: this.fetchAllIsos,
+      vmFetchRbd: this.fetchAllRbdImage,
       vmFetchNetworks: this.fetchNetwork
     }
   },
@@ -1600,6 +1645,10 @@ export default {
           params.isofilter = this.isNormalAndDomainUser ? 'executable' : 'all'
           params.id = this.isoId
           apiName = 'listIsos'
+        } else if (this.volumeId) {
+          apiName = 'listVolumes'
+          params.listall = true
+          params.id = this.volumeId
         } else if (this.networkId) {
           params.listall = true
           params.id = this.networkId
@@ -1732,6 +1781,7 @@ export default {
         hypervisor: null,
         templateid: null,
         templatename: null,
+        volumeId: null,
         keyboard: null,
         keypair: null,
         group: null,
@@ -1753,6 +1803,7 @@ export default {
         this.tabKey = 'templateid'
         this.form.templateid = value
         this.form.isoid = null
+        this.form.volumeId = null
         this.resetFromTemplateConfiguration()
         let template = ''
         for (const key in this.options.templates) {
@@ -1789,16 +1840,28 @@ export default {
         }
       } else if (name === 'isoid') {
         this.templateConfigurations = []
-        this.selectedTemplateConfiguration = {}
         this.templateNics = []
+        this.selectedTemplateConfiguration = {}
         this.templateLicenses = []
         this.templateProperties = {}
         this.tabKey = 'isoid'
         this.resetFromTemplateConfiguration()
         this.form.isoid = value
         this.form.templateid = null
+        this.form.volumeId = null
         this.updateTemplateLinkedUserData(this.iso.userdataid)
         this.userdataDefaultOverridePolicy = this.iso.userdatapolicy
+      } else if (name === 'volumeId') {
+        this.templateConfigurations = []
+        this.selectedTemplateConfiguration = {}
+        this.templateNics = []
+        this.templateLicenses = []
+        this.templateProperties = {}
+        this.tabKey = 'volumeId'
+        this.resetFromTemplateConfiguration()
+        this.form.volumeId = value
+        this.form.templateid = null
+        this.form.isoid = null
       } else if (['cpuspeed', 'cpunumber', 'memory'].includes(name)) {
         this.vm[name] = value
         this.form[name] = value
@@ -1818,6 +1881,13 @@ export default {
         return
       }
       this.form.diskofferingid = id
+    },
+    updateRbdImages (id, name, value) {
+      if (id === '0') {
+        this.form.volumeId = undefined
+        return
+      }
+      this.form.volumeId = id
     },
     updateOverrideDiskOffering (id) {
       if (id === '0') {
@@ -1915,254 +1985,229 @@ export default {
       if (this.loading.deploy) return
       this.formRef.value.validate().then(async () => {
         const values = toRaw(this.form)
-        if (!values.templateid && !values.isoid) {
-          this.$notification.error({
-            message: this.$t('message.request.failed'),
-            description: this.$t('message.template.iso')
-          })
-          return
-        } else if (values.isoid && (!values.diskofferingid || values.diskofferingid === '0')) {
-          this.$notification.error({
-            message: this.$t('message.request.failed'),
-            description: this.$t('message.step.3.continue')
-          })
-          return
-        }
-        if (!values.computeofferingid) {
-          this.$notification.error({
-            message: this.$t('message.request.failed'),
-            description: this.$t('message.step.2.continue')
-          })
-          return
-        }
-        if (this.error) {
-          this.$notification.error({
-            message: this.$t('message.request.failed'),
-            description: this.$t('error.form.message')
-          })
-          return
-        }
-
-        this.loading.deploy = true
-
-        let networkIds = []
-
-        let deployVmData = {}
-        // step 1 : select zone
-        deployVmData.zoneid = values.zoneid
-        deployVmData.podid = values.podid
-        deployVmData.clusterid = values.clusterid
-        deployVmData.hostid = values.hostid
-        deployVmData.keyboard = values.keyboard
-        if (!this.template?.deployasis) {
-          deployVmData.boottype = values.boottype
-          deployVmData.bootmode = values.bootmode
-        }
-        deployVmData.tpmversion = values.tpmversion
-        deployVmData.dynamicscalingenabled = values.dynamicscalingenabled
-        deployVmData.iothreadsenabled = values.iothreadsenabled
-        deployVmData.iodriverpolicy = values.iodriverpolicy
-        deployVmData.nicmultiqueuenumber = values.nicmultiqueuenumber
-        deployVmData.nicpackedvirtqueuesenabled = values.nicpackedvirtqueuesenabled
-        const isUserdataAllowed = !this.userdataDefaultOverridePolicy || (this.userdataDefaultOverridePolicy === 'ALLOWOVERRIDE' && this.doUserdataOverride) || (this.userdataDefaultOverridePolicy === 'APPEND' && this.doUserdataAppend)
-        if (isUserdataAllowed && values.userdata && values.userdata.length > 0) {
-          deployVmData.userdata = this.$toBase64AndURIEncoded(values.userdata)
-        }
-        // step 2: select template/iso
-        if (this.tabKey === 'templateid') {
-          deployVmData.templateid = values.templateid
-          values.hypervisor = null
-        } else {
-          deployVmData.templateid = values.isoid
-        }
-
-        if (this.showRootDiskSizeChanger && values.rootdisksize && values.rootdisksize > 0) {
-          deployVmData.rootdisksize = values.rootdisksize
-        } else if (this.rootDiskSizeFixed > 0 && !this.template.deployasis) {
-          deployVmData.rootdisksize = this.rootDiskSizeFixed
-        }
-
-        if (values.hypervisor && values.hypervisor.length > 0) {
-          deployVmData.hypervisor = values.hypervisor
-        }
-
-        deployVmData.startvm = values.startvm
-
-        // step 3: select service offering
-        deployVmData.serviceofferingid = values.computeofferingid
-        if (this.serviceOffering && this.serviceOffering.iscustomized) {
-          if (values.cpunumber) {
-            deployVmData['details[0].cpuNumber'] = values.cpunumber
-          }
-          if (values.cpuspeed) {
-            deployVmData['details[0].cpuSpeed'] = values.cpuspeed
-          }
-          if (values.memory) {
-            deployVmData['details[0].memory'] = values.memory
-          }
-        }
-        if (this.selectedTemplateConfiguration) {
-          deployVmData['details[0].configurationId'] = this.selectedTemplateConfiguration.id
-        }
-        if (!this.serviceOffering.diskofferingstrictness && values.overridediskofferingid && !values.isoid) {
-          deployVmData.overridediskofferingid = values.overridediskofferingid
-          if (values.rootdisksize && values.rootdisksize > 0) {
-            deployVmData.rootdisksize = values.rootdisksize
-          }
-        }
-        if (this.isCustomizedIOPS) {
-          deployVmData['details[0].minIops'] = this.minIops
-          deployVmData['details[0].maxIops'] = this.maxIops
-        }
-        // step 4: select disk offering
-        if (!this.template.deployasis && this.template.childtemplates && this.template.childtemplates.length > 0) {
-          if (values.multidiskoffering) {
-            let i = 0
-            Object.entries(values.multidiskoffering).forEach(([disk, offering]) => {
-              const diskKey = `datadiskofferinglist[${i}].datadisktemplateid`
-              const offeringKey = `datadiskofferinglist[${i}].diskofferingid`
-              deployVmData[diskKey] = disk
-              deployVmData[offeringKey] = offering
-              i++
+        if (values.templateid !== null && values.volumeId == null) {
+          if (values.isoid && (!values.diskofferingid || values.diskofferingid === '0')) {
+            this.$notification.error({
+              message: this.$t('message.request.failed'),
+              description: this.$t('message.step.3.continue')
             })
+            return
           }
-        } else {
-          deployVmData.diskofferingid = values.diskofferingid
-          if (values.size) {
-            deployVmData.size = values.size
+          if (!values.computeofferingid) {
+            this.$notification.error({
+              message: this.$t('message.request.failed'),
+              description: this.$t('message.step.2.continue')
+            })
+            return
           }
-        }
-        if (this.isCustomizedDiskIOPS) {
-          deployVmData['details[0].minIopsDo'] = this.diskIOpsMin
-          deployVmData['details[0].maxIopsDo'] = this.diskIOpsMax
-        }
-        // step 5: select an affinity group
-        deployVmData.affinitygroupids = (values.affinitygroupids || []).join(',')
-        // step 6: select network
-        if (this.zone.networktype !== 'Basic') {
-          if (this.nicToNetworkSelection && this.nicToNetworkSelection.length > 0) {
-            for (var j in this.nicToNetworkSelection) {
-              var nicNetwork = this.nicToNetworkSelection[j]
-              deployVmData['nicnetworklist[' + j + '].nic'] = nicNetwork.nic
-              deployVmData['nicnetworklist[' + j + '].network'] = nicNetwork.network
+          if (this.error) {
+            this.$notification.error({
+              message: this.$t('message.request.failed'),
+              description: this.$t('error.form.message')
+            })
+            return
+          }
+
+          this.loading.deploy = true
+
+          let networkIds = []
+
+          let deployVmData = {}
+          // step 1 : select zone
+          deployVmData.zoneid = values.zoneid
+          deployVmData.podid = values.podid
+          deployVmData.clusterid = values.clusterid
+          deployVmData.hostid = values.hostid
+          deployVmData.keyboard = values.keyboard
+          if (!this.template?.deployasis) {
+            deployVmData.boottype = values.boottype
+            deployVmData.bootmode = values.bootmode
+          }
+          deployVmData.tpmversion = values.tpmversion
+          deployVmData.dynamicscalingenabled = values.dynamicscalingenabled
+          deployVmData.iothreadsenabled = values.iothreadsenabled
+          deployVmData.iodriverpolicy = values.iodriverpolicy
+          deployVmData.nicmultiqueuenumber = values.nicmultiqueuenumber
+          deployVmData.nicpackedvirtqueuesenabled = values.nicpackedvirtqueuesenabled
+          const isUserdataAllowed = !this.userdataDefaultOverridePolicy || (this.userdataDefaultOverridePolicy === 'ALLOWOVERRIDE' && this.doUserdataOverride) || (this.userdataDefaultOverridePolicy === 'APPEND' && this.doUserdataAppend)
+          if (isUserdataAllowed && values.userdata && values.userdata.length > 0) {
+            deployVmData.userdata = this.$toBase64AndURIEncoded(values.userdata)
+          }
+          // step 2: select template/iso/rbdimage
+          if (this.tabKey === 'templateid') {
+            deployVmData.templateid = values.templateid
+            values.hypervisor = null
+          } else if (this.tabKey === 'isoid') {
+            deployVmData.isoid = values.isoid
+          } else if (this.tabKey === 'volumeId') {
+            deployVmData.volumeId = values.volumeId
+          }
+
+          if (this.showRootDiskSizeChanger && values.rootdisksize && values.rootdisksize > 0) {
+            deployVmData.rootdisksize = values.rootdisksize
+          } else if (this.rootDiskSizeFixed > 0 && !this.template.deployasis) {
+            deployVmData.rootdisksize = this.rootDiskSizeFixed
+          }
+
+          if (values.hypervisor && values.hypervisor.length > 0) {
+            deployVmData.hypervisor = values.hypervisor
+          }
+
+          deployVmData.startvm = values.startvm
+
+          // step 3: select service offering
+          deployVmData.serviceofferingid = values.computeofferingid
+          if (this.serviceOffering && this.serviceOffering.iscustomized) {
+            if (values.cpunumber) {
+              deployVmData['details[0].cpuNumber'] = values.cpunumber
+            }
+            if (values.cpuspeed) {
+              deployVmData['details[0].cpuSpeed'] = values.cpuspeed
+            }
+            if (values.memory) {
+              deployVmData['details[0].memory'] = values.memory
+            }
+          }
+          if (this.selectedTemplateConfiguration) {
+            deployVmData['details[0].configurationId'] = this.selectedTemplateConfiguration.id
+          }
+          if (!this.serviceOffering.diskofferingstrictness && values.overridediskofferingid && !values.isoid) {
+            deployVmData.overridediskofferingid = values.overridediskofferingid
+            if (values.rootdisksize && values.rootdisksize > 0) {
+              deployVmData.rootdisksize = values.rootdisksize
+            }
+          }
+          if (this.isCustomizedIOPS) {
+            deployVmData['details[0].minIops'] = this.minIops
+            deployVmData['details[0].maxIops'] = this.maxIops
+          }
+          // step 4: select disk offering
+          if (!this.template.deployasis && this.template.childtemplates && this.template.childtemplates.length > 0) {
+            if (values.multidiskoffering) {
+              let i = 0
+              Object.entries(values.multidiskoffering).forEach(([disk, offering]) => {
+                const diskKey = `datadiskofferinglist[${i}].datadisktemplateid`
+                const offeringKey = `datadiskofferinglist[${i}].diskofferingid`
+                deployVmData[diskKey] = disk
+                deployVmData[offeringKey] = offering
+                i++
+              })
             }
           } else {
-            const arrNetwork = []
-            networkIds = values.networkids
-            if (networkIds.length > 0) {
-              for (let i = 0; i < networkIds.length; i++) {
-                if (networkIds[i] === this.defaultnetworkid) {
-                  const ipToNetwork = {
-                    networkid: this.defaultnetworkid
-                  }
-                  arrNetwork.unshift(ipToNetwork)
-                } else {
-                  const ipToNetwork = {
-                    networkid: networkIds[i]
-                  }
-                  arrNetwork.push(ipToNetwork)
-                }
+            deployVmData.diskofferingid = values.diskofferingid
+            if (values.size) {
+              deployVmData.size = values.size
+            }
+          }
+          if (this.isCustomizedDiskIOPS) {
+            deployVmData['details[0].minIopsDo'] = this.diskIOpsMin
+            deployVmData['details[0].maxIopsDo'] = this.diskIOpsMax
+          }
+          // step 5: select an affinity group
+          deployVmData.affinitygroupids = (values.affinitygroupids || []).join(',')
+          // step 6: select network
+          if (this.zone.networktype !== 'Basic') {
+            if (this.nicToNetworkSelection && this.nicToNetworkSelection.length > 0) {
+              for (var j in this.nicToNetworkSelection) {
+                var nicNetwork = this.nicToNetworkSelection[j]
+                deployVmData['nicnetworklist[' + j + '].nic'] = nicNetwork.nic
+                deployVmData['nicnetworklist[' + j + '].network'] = nicNetwork.network
               }
             } else {
-              this.$notification.error({
-                message: this.$t('message.request.failed'),
-                description: this.$t('message.step.4.continue')
-              })
-              this.loading.deploy = false
-              return
-            }
-            for (let j = 0; j < arrNetwork.length; j++) {
-              deployVmData['iptonetworklist[' + j + '].networkid'] = arrNetwork[j].networkid
-              if (this.networkConfig.length > 0) {
-                const networkConfig = this.networkConfig.filter((item) => item.key === arrNetwork[j].networkid)
-                if (networkConfig && networkConfig.length > 0) {
-                  deployVmData['iptonetworklist[' + j + '].ip'] = networkConfig[0].ipAddress ? networkConfig[0].ipAddress : undefined
-                  deployVmData['iptonetworklist[' + j + '].mac'] = networkConfig[0].macAddress ? networkConfig[0].macAddress : undefined
-                  deployVmData['iptonetworklist[' + j + '].linkstate'] = networkConfig[0].linkstate === undefined ? true : networkConfig[0].linkstate
+              const arrNetwork = []
+              networkIds = values.networkids
+              if (networkIds.length > 0) {
+                for (let i = 0; i < networkIds.length; i++) {
+                  if (networkIds[i] === this.defaultnetworkid) {
+                    const ipToNetwork = {
+                      networkid: this.defaultnetworkid
+                    }
+                    arrNetwork.unshift(ipToNetwork)
+                  } else {
+                    const ipToNetwork = {
+                      networkid: networkIds[i]
+                    }
+                    arrNetwork.push(ipToNetwork)
+                  }
                 }
-              }
-            }
-          }
-        }
-        if (this.securitygroupids.length > 0) {
-          deployVmData.securitygroupids = this.securitygroupids.join(',')
-        }
-        // step 7: select ssh key pair
-        deployVmData.keypairs = this.sshKeyPairs.join(',')
-        if (isUserdataAllowed) {
-          deployVmData.userdataid = values.userdataid
-        }
-
-        if (values.name) {
-          deployVmData.name = values.name
-          deployVmData.displayname = values.name
-        }
-        if (values.group) {
-          deployVmData.group = values.group
-        }
-        // step 8: enter setup
-        if ('properties' in values) {
-          const keys = Object.keys(values.properties)
-          for (var i = 0; i < keys.length; ++i) {
-            const propKey = keys[i].split('\\002E').join('.')
-            deployVmData['properties[' + i + '].key'] = propKey
-            deployVmData['properties[' + i + '].value'] = values.properties[keys[i]]
-          }
-        }
-        if ('bootintosetup' in values) {
-          deployVmData.bootintosetup = values.bootintosetup
-        }
-
-        const title = this.$t('label.launch.vm')
-        const description = values.name || ''
-        const password = this.$t('label.password')
-
-        deployVmData = Object.fromEntries(
-          Object.entries(deployVmData).filter(([key, value]) => value !== undefined))
-
-        var idx = 0
-        if (this.templateUserDataValues) {
-          for (const [key, value] of Object.entries(this.templateUserDataValues)) {
-            deployVmData['userdatadetails[' + idx + '].' + `${key}`] = value
-            idx++
-          }
-        }
-        if (isUserdataAllowed && this.userDataValues) {
-          for (const [key, value] of Object.entries(this.userDataValues)) {
-            deployVmData['userdatadetails[' + idx + '].' + `${key}`] = value
-            idx++
-          }
-        }
-
-        const httpMethod = deployVmData.userdata ? 'POST' : 'GET'
-
-        if (values.vmNumber) {
-          for (var num = 0; num < Number(values.vmNumber); num++) {
-            let args = ''
-            let data = ''
-            if (values.name) {
-              if (values.vmNumber === 1) {
-                deployVmData.name = values.name
-                deployVmData.displayname = values.name
               } else {
-                if (deployVmData['iptonetworklist[0].ip'] != null || deployVmData['iptonetworklist[0].mac'] != null) {
-                  this.$notification.error({
-                    message: this.$t('message.request.failed'),
-                    description: this.$t('message.deploy.vm.number')
-                  })
-                  this.loading.deploy = false
-                  return
+                this.$notification.error({
+                  message: this.$t('message.request.failed'),
+                  description: this.$t('message.step.4.continue')
+                })
+                this.loading.deploy = false
+                return
+              }
+              for (let j = 0; j < arrNetwork.length; j++) {
+                deployVmData['iptonetworklist[' + j + '].networkid'] = arrNetwork[j].networkid
+                if (this.networkConfig.length > 0) {
+                  const networkConfig = this.networkConfig.filter((item) => item.key === arrNetwork[j].networkid)
+                  if (networkConfig && networkConfig.length > 0) {
+                    deployVmData['iptonetworklist[' + j + '].ip'] = networkConfig[0].ipAddress ? networkConfig[0].ipAddress : undefined
+                    deployVmData['iptonetworklist[' + j + '].mac'] = networkConfig[0].macAddress ? networkConfig[0].macAddress : undefined
+                  }
                 }
-                var numP = num + 1
-                deployVmData.name = values.name + '-' + numP
-                deployVmData.displayname = values.name + '-' + numP
               }
             }
-            args = httpMethod === 'POST' ? {} : deployVmData
-            data = httpMethod === 'POST' ? deployVmData : {}
-            try {
-              const jobId = await this.deployVM(args, httpMethod, data)
-              await this.$pollJob({
+          }
+          if (this.securitygroupids.length > 0) {
+            deployVmData.securitygroupids = this.securitygroupids.join(',')
+          }
+          // step 7: select ssh key pair
+          deployVmData.keypairs = this.sshKeyPairs.join(',')
+          if (isUserdataAllowed) {
+            deployVmData.userdataid = values.userdataid
+          }
+
+          if (values.name) {
+            deployVmData.name = values.name
+            deployVmData.displayname = values.name
+          }
+          if (values.group) {
+            deployVmData.group = values.group
+          }
+          // step 8: enter setup
+          if ('properties' in values) {
+            const keys = Object.keys(values.properties)
+            for (var i = 0; i < keys.length; ++i) {
+              const propKey = keys[i].split('\\002E').join('.')
+              deployVmData['properties[' + i + '].key'] = propKey
+              deployVmData['properties[' + i + '].value'] = values.properties[keys[i]]
+            }
+          }
+          if ('bootintosetup' in values) {
+            deployVmData.bootintosetup = values.bootintosetup
+          }
+
+          const title = this.$t('label.launch.vm')
+          const description = values.name || ''
+          const password = this.$t('label.password')
+
+          deployVmData = Object.fromEntries(
+            Object.entries(deployVmData).filter(([key, value]) => value !== undefined))
+
+          var idx = 0
+          if (this.templateUserDataValues) {
+            for (const [key, value] of Object.entries(this.templateUserDataValues)) {
+              deployVmData['userdatadetails[' + idx + '].' + `${key}`] = value
+              idx++
+            }
+          }
+          if (isUserdataAllowed && this.userDataValues) {
+            for (const [key, value] of Object.entries(this.userDataValues)) {
+              deployVmData['userdatadetails[' + idx + '].' + `${key}`] = value
+              idx++
+            }
+          }
+
+          const httpMethod = deployVmData.userdata ? 'POST' : 'GET'
+          const args = httpMethod === 'POST' ? {} : deployVmData
+          const data = httpMethod === 'POST' ? deployVmData : {}
+
+          api('deployVirtualMachine', args, httpMethod, data).then(response => {
+            const jobId = response.deployvirtualmachineresponse.jobid
+            if (jobId) {
+              this.$pollJob({
                 jobId,
                 title,
                 description,
@@ -2185,9 +2230,7 @@ export default {
                       duration: 0
                     })
                   }
-                  if (!values.stayonpage) {
-                    eventBus.emit('vm-refresh-data')
-                  }
+                  eventBus.emit('vm-refresh-data')
                 },
                 loadingMessage: `${title} ${this.$t('label.in.progress')}`,
                 catchMessage: this.$t('error.fetching.async.job.result'),
@@ -2195,24 +2238,267 @@ export default {
                   isFetchData: false
                 }
               })
-              // Sending a refresh in case it hasn't picked up the new VM
-              if (values.vmNumber === 1 || !values.stayonpage) {
-                await new Promise(resolve => setTimeout(resolve, 3000)).then(() => {
-                  eventBus.emit('vm-refresh-data')
-                })
-              }
-              if (!values.stayonpage) {
-                await this.$router.back()
-              }
-            } catch (error) {
-              if (error.message !== undefined) {
-                await this.$notifyError(error)
-              }
-              this.loading.deploy = false
+            }
+            // Sending a refresh in case it hasn't picked up the new VM
+            new Promise(resolve => setTimeout(resolve, 3000)).then(() => {
+              eventBus.emit('vm-refresh-data')
+            })
+            if (!values.stayonpage) {
+              this.$router.back()
+            }
+          }).catch(error => {
+            this.$notifyError(error)
+            this.loading.deploy = false
+          }).finally(() => {
+            this.form.stayonpage = false
+            this.loading.deploy = false
+          })
+        } else if (values.volumeId !== null && !values.templateid) {
+          if (!values.volumeId) {
+            this.$notification.error({
+              message: this.$t('message.request.failed'),
+              description: this.$t('message.rbdimage')
+            })
+            return
+          }
+          if (!values.computeofferingid) {
+            this.$notification.error({
+              message: this.$t('message.request.failed'),
+              description: this.$t('message.step.2.continue')
+            })
+            return
+          }
+          if (this.error) {
+            this.$notification.error({
+              message: this.$t('message.request.failed'),
+              description: this.$t('error.form.message')
+            })
+            return
+          }
+
+          this.loading.deploy = true
+
+          let networkIds = []
+
+          let deployVmData = {}
+          // step 1 : select zone
+          deployVmData.zoneid = values.zoneid
+          deployVmData.podid = values.podid
+          deployVmData.clusterid = values.clusterid
+          deployVmData.hostid = values.hostid
+          deployVmData.keyboard = values.keyboard
+          if (!this.volume?.deployasis) {
+            deployVmData.boottype = values.boottype
+            deployVmData.bootmode = values.bootmode
+          }
+          deployVmData.tpmversion = values.tpmversion
+          deployVmData.dynamicscalingenabled = values.dynamicscalingenabled
+          deployVmData.iothreadsenabled = values.iothreadsenabled
+          deployVmData.iodriverpolicy = values.iodriverpolicy
+          deployVmData.nicmultiqueuenumber = values.nicmultiqueuenumber
+          deployVmData.nicpackedvirtqueuesenabled = values.nicpackedvirtqueuesenabled
+          const isUserdataAllowed = !this.userdataDefaultOverridePolicy || (this.userdataDefaultOverridePolicy === 'ALLOWOVERRIDE' && this.doUserdataOverride) || (this.userdataDefaultOverridePolicy === 'APPEND' && this.doUserdataAppend)
+          if (isUserdataAllowed && values.userdata && values.userdata.length > 0) {
+            deployVmData.userdata = this.$toBase64AndURIEncoded(values.userdata)
+          }
+          // step 2: select template/iso/rbdimage
+          if (this.tabKey === 'volumeId') {
+            deployVmData.volumeId = values.volumeId
+          }
+
+          if (this.showRootDiskSizeChanger && values.rootdisksize && values.rootdisksize > 0) {
+            deployVmData.rootdisksize = values.rootdisksize
+          } else if (this.rootDiskSizeFixed > 0 && !this.template.deployasis) {
+            deployVmData.rootdisksize = this.rootDiskSizeFixed
+          }
+
+          if (values.hypervisor && values.hypervisor.length > 0) {
+            deployVmData.hypervisor = values.hypervisor
+          }
+
+          deployVmData.startvm = values.startvm
+
+          // step 3: select service offering
+          deployVmData.serviceofferingid = values.computeofferingid
+          if (this.serviceOffering && this.serviceOffering.iscustomized) {
+            if (values.cpunumber) {
+              deployVmData['details[0].cpuNumber'] = values.cpunumber
+            }
+            if (values.cpuspeed) {
+              deployVmData['details[0].cpuSpeed'] = values.cpuspeed
+            }
+            if (values.memory) {
+              deployVmData['details[0].memory'] = values.memory
             }
           }
-          this.form.stayonpage = false
-          this.loading.deploy = false
+          if (this.isCustomizedIOPS) {
+            deployVmData['details[0].minIops'] = this.minIops
+            deployVmData['details[0].maxIops'] = this.maxIops
+          }
+          // step 4: select disk offering
+          if (values.multidiskoffering) {
+            let i = 0
+            Object.entries(values.multidiskoffering).forEach(([disk, offering]) => {
+              const diskKey = `datadiskofferinglist[${i}].datadiskvolumeid`
+              const offeringKey = `datadiskofferinglist[${i}].diskofferingid`
+              deployVmData[diskKey] = disk
+              deployVmData[offeringKey] = offering
+              i++
+            })
+          } else {
+            deployVmData.diskofferingid = values.diskofferingid
+            if (values.size) {
+              deployVmData.size = values.size
+            }
+          }
+          if (this.isCustomizedDiskIOPS) {
+            deployVmData['details[0].minIopsDo'] = this.diskIOpsMin
+            deployVmData['details[0].maxIopsDo'] = this.diskIOpsMax
+          }
+          // step 5: select an affinity group
+          deployVmData.affinitygroupids = (values.affinitygroupids || []).join(',')
+          // step 6: select network
+          if (this.zone.networktype !== 'Basic') {
+            if (this.nicToNetworkSelection && this.nicToNetworkSelection.length > 0) {
+              for (var k in this.nicToNetworkSelection) {
+                var nicNetworks = this.nicToNetworkSelection[j]
+                deployVmData['nicnetworklist[' + k + '].nic'] = nicNetworks.nic
+                deployVmData['nicnetworklist[' + k + '].network'] = nicNetworks.network
+              }
+            } else {
+              const arrNetwork = []
+              networkIds = values.networkids
+              if (networkIds.length > 0) {
+                for (let i = 0; i < networkIds.length; i++) {
+                  if (networkIds[i] === this.defaultnetworkid) {
+                    const ipToNetwork = {
+                      networkid: this.defaultnetworkid
+                    }
+                    arrNetwork.unshift(ipToNetwork)
+                  } else {
+                    const ipToNetwork = {
+                      networkid: networkIds[i]
+                    }
+                    arrNetwork.push(ipToNetwork)
+                  }
+                }
+              } else {
+                this.$notification.error({
+                  message: this.$t('message.request.failed'),
+                  description: this.$t('message.step.4.continue')
+                })
+                this.loading.deploy = false
+                return
+              }
+              for (let j = 0; j < arrNetwork.length; j++) {
+                deployVmData['iptonetworklist[' + j + '].networkid'] = arrNetwork[j].networkid
+                if (this.networkConfig.length > 0) {
+                  const networkConfig = this.networkConfig.filter((item) => item.key === arrNetwork[j].networkid)
+                  if (networkConfig && networkConfig.length > 0) {
+                    deployVmData['iptonetworklist[' + j + '].ip'] = networkConfig[0].ipAddress ? networkConfig[0].ipAddress : undefined
+                    deployVmData['iptonetworklist[' + j + '].mac'] = networkConfig[0].macAddress ? networkConfig[0].macAddress : undefined
+                  }
+                }
+              }
+            }
+          }
+          if (this.securitygroupids.length > 0) {
+            deployVmData.securitygroupids = this.securitygroupids.join(',')
+          }
+          // step 7: select ssh key pair
+          deployVmData.keypairs = this.sshKeyPairs.join(',')
+          if (isUserdataAllowed) {
+            deployVmData.userdataid = values.userdataid
+          }
+
+          if (values.name) {
+            deployVmData.name = values.name
+            deployVmData.displayname = values.name
+          }
+          if (values.group) {
+            deployVmData.group = values.group
+          }
+          // step 8: enter setup
+          if ('properties' in values) {
+            const keys = Object.keys(values.properties)
+            for (var l = 0; l < keys.length; ++l) {
+              const propKey = keys[i].split('\\002E').join('.')
+              deployVmData['properties[' + l + '].key'] = propKey
+              deployVmData['properties[' + l + '].value'] = values.properties[keys[i]]
+            }
+          }
+          if ('bootintosetup' in values) {
+            deployVmData.bootintosetup = values.bootintosetup
+          }
+
+          const title = this.$t('label.launch.vm')
+          const description = values.name || ''
+          const password = this.$t('label.password')
+
+          deployVmData = Object.fromEntries(
+            Object.entries(deployVmData).filter(([key, value]) => value !== undefined))
+
+          var idxs = 0
+          if (isUserdataAllowed && this.userDataValues) {
+            for (const [key, value] of Object.entries(this.userDataValues)) {
+              deployVmData['userdatadetails[' + idxs + '].' + `${key}`] = value
+              idxs++
+            }
+          }
+
+          const httpMethod = deployVmData.userdata ? 'POST' : 'GET'
+          const args = httpMethod === 'POST' ? {} : deployVmData
+          const data = httpMethod === 'POST' ? deployVmData : {}
+
+          api('deployVirtualMachineForVolume', args, httpMethod, data).then(response => {
+            const jobId = response.deployvirtualmachineforvolumeresponse.jobid
+            if (jobId) {
+              this.$pollJob({
+                jobId,
+                title,
+                description,
+                successMethod: result => {
+                  const vm = result.jobresult.virtualmachine
+                  const name = vm.displayname || vm.name || vm.id
+                  if (vm.password) {
+                    this.$notification.success({
+                      message: password + ` ${this.$t('label.for')} ` + name,
+                      description: vm.password,
+                      btn: () => h(
+                        Button,
+                        {
+                          type: 'primary',
+                          size: 'small',
+                          onClick: () => this.copyToClipboard(vm.password)
+                        },
+                        () => [this.$t('label.copy.password')]
+                      ),
+                      duration: 0
+                    })
+                  }
+                  eventBus.emit('vm-refresh-data')
+                },
+                loadingMessage: `${title} ${this.$t('label.in.progress')}`,
+                catchMessage: this.$t('error.fetching.async.job.result'),
+                action: {
+                  isFetchData: false
+                }
+              })
+            }
+            // Sending a refresh in case it hasn't picked up the new VM
+            new Promise(resolve => setTimeout(resolve, 3000)).then(() => {
+              eventBus.emit('vm-refresh-data')
+            })
+            if (!values.stayonpage) {
+              this.$router.back()
+            }
+          }).catch(error => {
+            this.$notifyError(error)
+            this.loading.deploy = false
+          }).finally(() => {
+            this.form.stayonpage = false
+            this.loading.deploy = false
+          })
         }
       }).catch(err => {
         this.formRef.value.scrollToField(err.errorFields[0].name)
@@ -2375,6 +2661,23 @@ export default {
         })
       })
     },
+    fetchRbdImage (params) {
+      this.paramsFilter = {}
+      const args = Object.assign(this.paramsFilter, params)
+      args.zoneid = _.get(this.zone, 'id')
+      args.page = args.page || 1
+      args.pageSize = args.pageSize || 10
+      args.customimages = 'true'
+      args.type = 'ROOT'
+      return new Promise((resolve, reject) => {
+        api('listVolumes', args).then((response) => {
+          resolve(response)
+        }).catch((reason) => {
+          // ToDo: Handle errors
+          reject(reason)
+        })
+      })
+    },
     fetchAllTemplates (params) {
       const promises = []
       const templates = {}
@@ -2415,6 +2718,23 @@ export default {
         this.loading.isos = false
       })
     },
+    fetchAllRbdImage (params) {
+      const promises = []
+      const volume = {}
+      this.loading.volume = true
+      promises.push(this.fetchRbdImage(params))
+      this.options.volume = volume
+      Promise.all(promises).then((response) => {
+        response.forEach((resItem, idx) => {
+          this.options.volume = resItem.listvolumesresponse.volume
+          this.rowCount.volume = resItem.listvolumesresponse.count
+        })
+      }).catch((reason) => {
+        console.log(reason)
+      }).finally(() => {
+        this.loading.volume = false
+      })
+    },
     filterOption (input, option) {
       return option.label.toUpperCase().indexOf(input.toUpperCase()) >= 0
     },
@@ -2433,9 +2753,12 @@ export default {
       this.form.hostid = undefined
       this.form.templateid = undefined
       this.form.isoid = undefined
+      this.form.volumeId = undefined
       this.tabKey = 'templateid'
       if (this.isoId) {
         this.tabKey = 'isoid'
+      } else if (this.volumeId) {
+        this.tabKey = 'volumeId'
       }
       _.each(this.params, (param, name) => {
         if (this.networkId && name === 'networks') {
@@ -2449,8 +2772,10 @@ export default {
       })
       if (this.tabKey === 'templateid') {
         this.fetchAllTemplates()
-      } else {
+      } else if (this.tabKey === 'isoid') {
         this.fetchAllIsos()
+      } else if (this.tabKey === 'volumeId') {
+        this.fetchAllRbdImage()
       }
       this.updateTemplateKey()
       this.formModel = toRaw(this.form)
@@ -2486,6 +2811,8 @@ export default {
       this[type] = key
       if (key === 'isoid') {
         this.fetchAllIsos()
+      } else if (key === 'volumeId') {
+        this.fetchAllRbdImage()
       }
     },
     onUserdataTabChange (key, type) {
@@ -2595,7 +2922,7 @@ export default {
       }
     },
     resetFromTemplateConfiguration () {
-      this.deleteFrom(this.params.serviceOfferings.options, ['templateid', 'cpuspeed', 'cpunumber', 'memory'])
+      this.deleteFrom(this.params.serviceOfferings.options, ['templateid', 'isoid', 'volumeId', 'cpuspeed', 'cpunumber', 'memory'])
       this.deleteFrom(this.dataPreFill, ['cpuspeed', 'cpunumber', 'memory'])
       this.handleSearchFilter('serviceOfferings', {
         page: 1,
@@ -2738,6 +3065,9 @@ export default {
     },
     onSelectDiskSize (rowSelected) {
       this.diskSelected = rowSelected
+    },
+    onSelectRbdSize (rowSelected) {
+      this.rbdSelected = rowSelected
     },
     onSelectRootDiskSize (rowSelected) {
       this.rootDiskSelected = rowSelected
