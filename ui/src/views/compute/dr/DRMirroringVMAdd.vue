@@ -37,6 +37,7 @@
           :label="$t('label.cluster')">
         <a-select
             v-model:value="form.drCluster"
+            @change="updateSelectedId"
             showSearch
             optionFilterProp="label"
             :filterOption="(input, option) => {
@@ -44,18 +45,18 @@
             }"
             :placeholder="$t('placeholder.dr.cluster.cluster.selection')"
             >
-          <a-select-option v-for="(opt, optIndex) in this.drCluster" :key="optIndex">
-            {{ opt.name }} {{ opt.drclustertype }}
+          <a-select-option v-for="(opt) in this.drCluster" :key="opt.id">
+            {{ opt.name }}
           </a-select-option>
         </a-select>
       </a-form-item>
 
       <a-form-item
-          ref="drCluster"
-          name="drCluster"
+          ref="secDrClusterOfferings"
+          name="secDrClusterOfferings"
           :label="$t('label.compute.offerings')">
         <a-select
-            v-model:value="form.drCluster"
+            v-model:value="form.secDrClusterOfferings"
             showSearch
             optionFilterProp="label"
             :filterOption="(input, option) => {
@@ -63,18 +64,18 @@
             }"
             :placeholder="$t('placeholder.dr.cluster.compute.offering.selection')"
         >
-          <a-select-option v-for="(opt, optIndex) in this.secDrClusterOfferings" :key="optIndex">
-            {{ opt.name }} {{ opt.version }}
+          <a-select-option v-for="(opt) in this.secDrClusterOfferings" :key="opt.id">
+            {{ opt.name }}
           </a-select-option>
         </a-select>
       </a-form-item>
 
       <a-form-item
-          ref="drCluster"
-          name="drCluster"
+          ref="secDrClusterNetworkList"
+          name="secDrClusterNetworkList"
           :label="$t('label.network.name')">
         <a-select
-            v-model:value="form.drCluster"
+            v-model:value="form.secDrClusterNetworkList"
             showSearch
             optionFilterProp="label"
             :filterOption="(input, option) => {
@@ -82,8 +83,8 @@
             }"
             :placeholder="$t('placeholder.dr.cluster.network.selection')"
         >
-          <a-select-option v-for="(opt, optIndex) in this.fakeNetworks" :key="optIndex">
-            {{ opt.name }} {{ opt.version }}
+          <a-select-option v-for="(opt) in this.secDrClusterNetworkList" :key="opt.id" :value="opt.name">
+            {{ opt.name }}
           </a-select-option>
         </a-select>
       </a-form-item>
@@ -147,17 +148,10 @@ export default {
       },
       fileList: [],
       drCluster: [],
-      fakeOfferings: [
-        { id: 1, name: 'Offering 1', price: 10 },
-        { id: 2, name: 'Offering 2', price: 20 },
-        { id: 3, name: 'Offering 3', price: 30 }
-      ],
-      fakeNetworks: [
-        { id: 1, name: 'Network 1', price: 10 },
-        { id: 2, name: 'Network 2', price: 20 },
-        { id: 3, name: 'Network 3', price: 30 }
-      ],
-      secDrClusterOfferings: []
+      selectedDrCluster: [],
+      selectedId: '',
+      secDrClusterOfferings: [],
+      secDrClusterNetworkList: []
     }
   },
   created () {
@@ -169,35 +163,69 @@ export default {
       this.formRef = ref()
       this.form = reactive({})
       this.rules = reactive({
-        name: [{ required: true, message: this.$t('label.required') }],
-        url: [{ required: true, message: this.$t('label.required') }],
-        apikey: [{ required: true, message: this.$t('label.required') }],
-        secretkey: [{ required: true, message: this.$t('label.required') }],
-        file: [{ required: true, message: this.$t('message.error.required.input') }]
+        drCluster: [{ required: true, message: this.$t('label.required') }],
+        secDrClusterOfferings: [{ required: true, message: this.$t('label.required') }],
+        secDrClusterNetworkList: [{ required: true, message: this.$t('label.required') }]
       })
     },
     fetchData () {
-      this.fetchZones()
       this.fetchDRClusterList()
       this.fetchSecDRClusterInfoList()
+      this.fetchZones()
     },
     fetchDRClusterList () {
+      this.loading = true
       api('getDisasterRecoveryClusterList', { drclustertype: 'secondary' }).then(json => {
         this.drCluster = json.getdisasterrecoveryclusterlistresponse.disasterrecoverycluster || []
-        console.log(this.drCluster)
-      }).finally(() => {
+        this.form.drCluster = this.drCluster[0].name || ''
+      }).catch(error => {
+        console.error('Error fetching DR cluster list:', error)
+        this.loading = false
       })
     },
     // 재해복구용 가상머신 생성 모달에서 DR Secondary 클러스터를 선택했을 때 컴퓨트 오퍼링과 네트워크 목록을 불러오는 함수
     fetchSecDRClusterInfoList () {
-      api('getSecDisasterRecoveryClusterInfoList', { id: '5518f4d1-c02d-4c6e-84be-d8bced5f3ddf' }).then(json => {
-        this.secDrClusterOfferings = json.getdisasterrecoveryclusterlistresponse.disasterrecoverycluster || []
-        console.log(this.drCluster[0])
+      this.loading = true
+      api('getDisasterRecoveryClusterList', { id: this.selectedClusterId, drclustertype: 'secondary' }).then(json => {
+        const response = json.getdisasterrecoveryclusterlistresponse
+        const clusters = response ? response.disasterrecoverycluster : null
+
+        if (clusters && clusters.length > 0) {
+          const cluster = clusters[0]
+
+          this.secDrClusterOfferings = cluster.serviceofferingdetails || []
+          this.form.secDrClusterOfferings = this.secDrClusterOfferings.length > 0 ? this.secDrClusterOfferings[0].name : ''
+
+          this.secDrClusterNetworkList = cluster.network || []
+          this.form.secDrClusterNetworkList = this.secDrClusterNetworkList.length > 0 ? this.secDrClusterNetworkList[0].name : ''
+
+          if (this.secDrClusterOfferings.length === 0 && this.secDrClusterNetworkList.length === 0) {
+            console.error('No service offering or network details available')
+            this.resetSelection() // Reset selections in case of missing data
+          }
+        } else {
+          console.error('No disaster recovery clusters found')
+          this.resetSelection() // Reset selections in case of missing clusters
+        }
+      }).catch(error => {
+        console.error('API 호출 실패:', error)
+        this.resetSelection() // 에러 발생 후 선택된 값 초기화
+        this.loading = false // 에러 처리 후 로딩 종료
       }).finally(() => {
+        this.loading = false
       })
     },
+    updateSelectedId (value) {
+      this.resetSelection()
+      this.selectedClusterId = value
+      this.fetchSecDRClusterInfoList()
+    },
+    resetSelection () {
+      this.form.secDrClusterOfferings = null
+      this.form.secDrClusterNetworkList = null
+    },
     fetchZones () {
-      this.loading = true
+      // this.loading = true
       api('listZones', { showicon: true }).then(response => {
         this.zonesList = response.listzonesresponse.zone || []
         this.form.zoneid = this.zonesList[0].id
@@ -206,7 +234,7 @@ export default {
       }).catch(error => {
         this.$notifyError(error)
       }).finally(() => {
-        this.loading = false
+        // this.loading = false
       })
     },
     toggleDedicate () {
@@ -272,9 +300,9 @@ export default {
         const values = toRaw(this.form)
         this.loading = true
         const params = {
-          name: values.name,
-          description: values.description,
-          domainid: store.getters.project && store.getters.project.id ? null : store.getters.userInfo.domainid,
+          drcluster: values.drCluster,
+          secdrclusterofferings: values.secDrClusterOfferings,
+          secdrclusternetworklist: values.secDrClusterNetworkList,
           domainname: store.getters.project && store.getters.project.id ? null : store.getters.userInfo.domainname,
           account: store.getters.project && store.getters.project.id ? null : store.getters.userInfo.account,
           accountid: store.getters.project && store.getters.project.id ? null : store.getters.userInfo.accountid
