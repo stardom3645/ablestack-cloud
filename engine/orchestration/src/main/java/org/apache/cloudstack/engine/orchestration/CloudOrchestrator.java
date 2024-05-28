@@ -262,7 +262,7 @@ public class CloudOrchestrator implements OrchestrationService {
     }
 
     @Override
-    public VirtualMachineEntity createVirtualMachineFromScratch(String id, String owner, String isoId, String hostName, String displayName, String hypervisor, String os,
+    public VirtualMachineEntity createVirtualMachineFromScratch(String id, String owner, String isoId, String hostName, String displayName, String hypervisor, String os, Map<String, String> customParameters,
         int cpu, int speed, long memory, Long diskSize, List<String> computeTags, List<String> rootDiskTags, Map<String, List<NicProfile>> networkNicMap, DeploymentPlan plan,
         Map<String, Map<Integer, String>> extraDhcpOptionMap, Long diskOfferingId)
         throws InsufficientCapacityException {
@@ -278,8 +278,10 @@ public class CloudOrchestrator implements OrchestrationService {
 
         DiskOfferingInfo rootDiskOfferingInfo = new DiskOfferingInfo();
 
-        if (diskOfferingId == null) {
-            throw new InvalidParameterValueException("Installing from ISO requires a disk offering to be specified for the root disk.");
+        if (customParameters.get("volumeId") == null){
+            if (diskOfferingId == null) {
+                throw new InvalidParameterValueException("Installing from ISO requires a disk offering to be specified for the root disk.");
+            }
         }
         DiskOfferingVO diskOffering = _diskOfferingDao.findById(diskOfferingId);
         if (diskOffering == null) {
@@ -321,8 +323,11 @@ public class CloudOrchestrator implements OrchestrationService {
 
         HypervisorType hypervisorType = HypervisorType.valueOf(hypervisor);
 
-        _itMgr.allocate(vm.getInstanceName(), _templateDao.findById(new Long(isoId)), computeOffering, rootDiskOfferingInfo, new ArrayList<DiskOfferingInfo>(), networkIpMap, plan, hypervisorType, extraDhcpOptionMap, null);
-
+        if (customParameters.get("volumeId") != null){
+            _itMgr.allocate(vm.getInstanceName(), _templateDao.findById(new Long(isoId)), computeOffering, rootDiskOfferingInfo, new ArrayList<DiskOfferingInfo>(), networkIpMap, plan, hypervisorType, customParameters, extraDhcpOptionMap, null);
+        }else {
+            _itMgr.allocate(vm.getInstanceName(), _templateDao.findById(new Long(isoId)), computeOffering, rootDiskOfferingInfo, new ArrayList<DiskOfferingInfo>(), networkIpMap, plan, hypervisorType, extraDhcpOptionMap, null);
+        }
         return vmEntity;
     }
 
