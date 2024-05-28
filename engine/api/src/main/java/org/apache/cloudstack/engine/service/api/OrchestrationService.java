@@ -76,7 +76,7 @@ public interface OrchestrationService {
         @QueryParam("compute-tags") List<String> computeTags, @QueryParam("root-disk-tags") List<String> rootDiskTags,
         @QueryParam("network-nic-map") Map<String, List<NicProfile>> networkNicMap, @QueryParam("deploymentplan") DeploymentPlan plan,
         @QueryParam("extra-dhcp-option-map") Map<String,  Map<Integer, String>> extraDhcpOptionMap, @QueryParam("disk-offering-id") Long diskOfferingId) throws InsufficientCapacityException;
-    
+
     @POST
     NetworkEntity createNetwork(String id, String name, String domainName, String cidr, String gateway);
 
