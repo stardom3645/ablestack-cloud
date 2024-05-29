@@ -2305,13 +2305,6 @@ export default {
           if (this.tabKey === 'volumeId') {
             deployVmData.volumeId = values.volumeId
           }
-
-          if (this.showRootDiskSizeChanger && values.rootdisksize && values.rootdisksize > 0) {
-            deployVmData.rootdisksize = values.rootdisksize
-          } else if (this.rootDiskSizeFixed > 0 && !this.template.deployasis) {
-            deployVmData.rootdisksize = this.rootDiskSizeFixed
-          }
-
           if (values.hypervisor && values.hypervisor.length > 0) {
             deployVmData.hypervisor = values.hypervisor
           }
