@@ -3983,6 +3983,7 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
             _templateDao.loadDetails(template);
         }
         HypervisorType hypervisorType = null;
+        // HypervisorType hypervisorType = HypervisorType.Simulator;
         if (template.getHypervisorType() == null || template.getHypervisorType() == HypervisorType.None) {
             if (hypervisor == null || hypervisor == HypervisorType.None) {
                 throw new InvalidParameterValueException("hypervisor parameter is needed to deploy VM or the hypervisor parameter value passed is invalid");
@@ -4030,7 +4031,6 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
         }
         // check if account/domain is with in resource limits to create a new vm
         boolean isIso = Storage.ImageFormat.ISO == template.getFormat();
-
         Long rootDiskOfferingId = offering.getDiskOfferingId();
         if (customParameters.get("volumeId") == null && isIso) {
             if (diskOfferingId == null) {
@@ -4045,18 +4045,19 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
             if (!customParameters.containsKey(VmDetailConstants.ROOT_DISK_SIZE) && diskSize != null) {
                 customParameters.put(VmDetailConstants.ROOT_DISK_SIZE, String.valueOf(diskSize));
             }
-        }
-        if (!offering.getDiskOfferingStrictness() && overrideDiskOfferingId != null) {
-            rootDiskOfferingId = overrideDiskOfferingId;
-        }
+            if (!offering.getDiskOfferingStrictness() && overrideDiskOfferingId != null) {
+                rootDiskOfferingId = overrideDiskOfferingId;
+            }
 
-        DiskOfferingVO rootdiskOffering = _diskOfferingDao.findById(rootDiskOfferingId);
-        long volumesSize = configureCustomRootDiskSize(customParameters, template, hypervisorType, rootdiskOffering);
+            DiskOfferingVO rootdiskOffering = _diskOfferingDao.findById(rootDiskOfferingId);
+            long volumesSize = configureCustomRootDiskSize(customParameters, template, hypervisorType, rootdiskOffering);
 
-        if (rootdiskOffering.getEncrypt() && hypervisorType != HypervisorType.KVM) {
-            throw new InvalidParameterValueException("Root volume encryption is not supported for hypervisor type " + hypervisorType);
+            if (rootdiskOffering.getEncrypt() && hypervisorType != HypervisorType.KVM) {
+                throw new InvalidParameterValueException("Root volume encryption is not supported for hypervisor type " + hypervisorType);
+            }
+
         }
-
+        long volumesSize = 0L;
         long additionalDiskSize = 0L;
         if (!isIso && diskOfferingId != null) {
             DiskOfferingVO diskOffering = _diskOfferingDao.findById(diskOfferingId);
@@ -9321,7 +9322,7 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
         Map<String, String> customParameters = cmd.getDetails();
         Long volumeId = cmd.getVolumeId();
         logger.info(volumeId);
-        if (cmd.getVolumeId()!=null) {
+        if (cmd.getVolumeId() != null) {
             customParameters.put("volumeId", String.valueOf(volumeId));
             logger.info(customParameters.get("volumeId"));
         }
@@ -9400,7 +9401,7 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
         try {
             template = VMTemplateVO.createSystemIso(_templateDao.getNextInSequence(Long.class, "id"), templateName, templateName, true,
                     "", true, 64, Account.ACCOUNT_ID_SYSTEM, "",
-                    "VM Import Default Template", false, 15, HypervisorType.KVM);
+                    "Glue Image Default Template", false, 1, HypervisorType.KVM);
             template.setState(VirtualMachineTemplate.State.Inactive);
             template = _templateDao.persist(template);
             if (template == null) {
