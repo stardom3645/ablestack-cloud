@@ -3978,6 +3978,10 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
         if (customParameters.get("volumeId") != null) {
             template = _templateDao.findByIdIncludingRemoved(tmplt.getId());
         }
+
+        if (template != null) {
+            _templateDao.loadDetails(template);
+        }
         HypervisorType hypervisorType = null;
         if (template.getHypervisorType() == null || template.getHypervisorType() == HypervisorType.None) {
             if (hypervisor == null || hypervisor == HypervisorType.None) {
@@ -7724,8 +7728,8 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
         checkVolumesLimits(newAccount, volumes);
 
         // VV 4: Check if new owner can use the vm template
-        if (template == null) {
-            throw new InvalidParameterValueException(String.format("Template for VM: %s cannot be found", vm.getUuid()));
+        if (template == null && volumes == null) {
+            throw new InvalidParameterValueException(String.format("Template, Volume for VM: %s cannot be found", vm.getUuid()));
         }
         if (!template.isPublicTemplate()) {
             Account templateOwner = _accountMgr.getAccount(template.getAccountId());
@@ -9350,7 +9354,9 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
                 vm = createAdvancedVirtualMachine(zone, serviceOffering, template, networkIds, owner, name, displayName, diskOfferingId, size, group,
                         cmd.getHypervisor(), cmd.getHttpMethod(), userData, userDataId, userDataDetails, sshKeyPairNames, cmd.getIpToNetworkMap(), addrs, displayVm, keyboard, cmd.getAffinityGroupIdList(), customParameters,
                         cmd.getCustomId(), cmd.getDhcpOptionsMap(), dataDiskTemplateToDiskOfferingMap, userVmOVFProperties, dynamicScalingEnabled, null, overrideDiskOfferingId);
-
+                // if (cmd instanceof DeployVnfApplianceCmd) {
+                //     vnfTemplateManager.createIsolatedNetworkRulesForVnfAppliance(zone, template, owner, vm, (DeployVnfApplianceCmd) cmd);
+                // }
             }
         }
 
@@ -9394,7 +9400,7 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
         try {
             template = VMTemplateVO.createSystemIso(_templateDao.getNextInSequence(Long.class, "id"), templateName, templateName, true,
                     "", true, 64, Account.ACCOUNT_ID_SYSTEM, "",
-                    "VM Import Default Template", false, 142, HypervisorType.KVM);
+                    "VM Import Default Template", false, 15, HypervisorType.KVM);
             template.setState(VirtualMachineTemplate.State.Inactive);
             template = _templateDao.persist(template);
             if (template == null) {
@@ -9404,14 +9410,14 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
         } catch (Exception e) {
             logger.error("Unable to create default dummy template for VM import", e);
         }
-        logger.info("erfwefweffwe"+template);
+
         return template;
     }
 
     @Override
     @ActionEvent(eventType = EventTypes.EVENT_VM_CREATE, eventDescription = "deploying Vm", async = true)
     public UserVm startVirtualMachineVolume(DeployVMVolumeCmd cmd) throws ResourceUnavailableException, InsufficientCapacityException, ConcurrentOperationException, ResourceAllocationException {
-        logger.info("00000001");
+
         long vmId = cmd.getEntityId();
         if (!cmd.getStartVm()) {
             return getUserVm(vmId);
