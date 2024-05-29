@@ -1335,7 +1335,7 @@ export default {
         },
         {
           key: 'volumeId',
-          tab: this.$t('label.images')
+          tab: this.$t('label.glue.images')
         }]
       }
 
