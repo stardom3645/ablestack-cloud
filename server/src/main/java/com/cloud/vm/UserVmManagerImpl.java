@@ -4032,7 +4032,7 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
         // check if account/domain is with in resource limits to create a new vm
         boolean isIso = Storage.ImageFormat.ISO == template.getFormat();
         Long rootDiskOfferingId = offering.getDiskOfferingId();
-        if (customParameters.get("volumeId") == null && isIso) {
+        if (customParameters.get("volumeId") == null) {
             if (diskOfferingId == null) {
                 DiskOfferingVO diskOffering = _diskOfferingDao.findById(rootDiskOfferingId);
                 if (diskOffering.isComputeOnly()) {
@@ -4055,9 +4055,13 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
             if (rootdiskOffering.getEncrypt() && hypervisorType != HypervisorType.KVM) {
                 throw new InvalidParameterValueException("Root volume encryption is not supported for hypervisor type " + hypervisorType);
             }
-
         }
-        long volumesSize = 0L;
+
+            Long volumeId = Long.valueOf(customParameters.get("volumeId"));
+            VolumeVO volume = _volsDao.findById(volumeId);
+            // Compute the size of the volume
+            long volumesSize = volume.getSize();
+
         long additionalDiskSize = 0L;
         if (!isIso && diskOfferingId != null) {
             DiskOfferingVO diskOffering = _diskOfferingDao.findById(diskOfferingId);
@@ -9327,6 +9331,7 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
             logger.info(customParameters.get("volumeId"));
         }
         VolumeVO volVO =_volsDao.findById(Long.parseLong(customParameters.get("volumeId")));
+        volVO.setDeviceId(0L);
         volVO.setTemplateId(template.getId());
         _volsDao.update(volVO.getId(), volVO);
         logger.info("Updated volume " + volVO.getId() + " with template " + template.getId());
