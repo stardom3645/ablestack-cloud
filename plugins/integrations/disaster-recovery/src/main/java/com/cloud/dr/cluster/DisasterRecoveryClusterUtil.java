@@ -694,7 +694,7 @@ public class DisasterRecoveryClusterUtil {
                 HttpURLConnection connection = (HttpURLConnection)url.openConnection();
                 connection.setDoOutput(true);
                 connection.setRequestMethod(method);
-                connection.setConnectTimeout(10000);
+                connection.setConnectTimeout(5000);
                 connection.setReadTimeout(600000);
                 connection.setRequestProperty("Accept", "application/json");
                 connection.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
