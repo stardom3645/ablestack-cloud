@@ -371,7 +371,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
             @Override
             public DisasterRecoveryClusterVO doInTransaction(TransactionStatus status) {
                 DisasterRecoveryClusterVO newCluster = new DisasterRecoveryClusterVO(msHost.getId(), cmd.getName(), cmd.getDescription(),
-                        cmd.getDrClusterApiKey(), cmd.getDrClusterSecretKey(), cmd.getDrClusterUrl(), cmd.getDrClusterType(), DisasterRecoveryCluster.DrClusterStatus.Created.toString(), DisasterRecoveryCluster.MirroringAgentStatus.Created.toString());
+                        cmd.getDrClusterApiKey(), cmd.getDrClusterSecretKey(), cmd.getDrClusterPrivateKey(), cmd.getDrClusterUrl(), cmd.getDrClusterType(), DisasterRecoveryCluster.DrClusterStatus.Created.toString(), DisasterRecoveryCluster.MirroringAgentStatus.Created.toString());
                 disasterRecoveryClusterDao.persist(newCluster);
                 return newCluster;
             }
@@ -388,7 +388,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         final String url = cmd.getDrClusterUrl();
         final String apiKey = cmd.getDrClusterApiKey();
         final String secretKey = cmd.getDrClusterSecretKey();
-        final String privateKey = cmd.getPrivateKey();
+        final String privateKey = cmd.getDrClusterPrivateKey();
 
         if (name == null || name.isEmpty()) {
             throw new InvalidParameterValueException("Invalid name for the disaster recovery cluster name:" + name);
@@ -457,7 +457,11 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         String secClusterType = drCluster.getDrClusterType();
         String secApiKey = drCluster.getDrClusterApiKey();
         String secSecretKey = drCluster.getDrClusterSecretKey();
-        // String secPrivateKey = drCluster.getPrivateKey();
+        // String secPrivateKey = drCluster.getDrClusterPrivateKey();
+        // PrivateKey secPriKey = parsePrivateKey(secPrivateKey);
+        // FileOutPutStream fos = new FileOutputStream("id-rsa")
+        // fos.write(secPriKey.getEncoded());
+        // File permKey = new File("id-rsa");
         final File permKey = new File("/root/.ssh/dr.key");
         // primary cluster 정보
         String[] properties = getServerProperties();

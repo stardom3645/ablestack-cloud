@@ -80,10 +80,10 @@ public class CreateDisasterRecoveryClusterCmd extends BaseAsyncCreateCmd {
             description = "dr cluster secret key")
     private String drClusterSecretKey;
 
-    @Parameter(name = ApiConstants.PRIVATE_KEY, type = CommandType.STRING, required = false,
-            description = "The private key for the attached disaster cluster.",
-            length = 65535)
-    private String privateKey;
+    @Parameter(name = ApiConstants.DR_CLUSTER_PRIVATE_KEY, type = CommandType.STRING, required = false,
+            description = "dr cluster private key.",
+            length = 16384)
+    private String drClusterPrivateKey;
 
     /////////////////////////////////////////////////////
     /////////////////// Accessors ///////////////////////
@@ -112,8 +112,8 @@ public class CreateDisasterRecoveryClusterCmd extends BaseAsyncCreateCmd {
         return drClusterSecretKey;
     }
 
-    public String getPrivateKey() {
-        return privateKey;
+    public String getDrClusterPrivateKey() {
+        return drClusterPrivateKey;
     }
 
     @Override

@@ -69,6 +69,10 @@ public class DisasterRecoveryClusterVO implements DisasterRecoveryCluster {
     @Column(name = "secret_key")
     private String drClusterSecretKey;
 
+    @Encrypt
+    @Column(name = "private_key", length = 16384)
+    private String drClusterPrivateKey;
+
     @Column(name = "created")
     private Date created;
 
@@ -138,6 +142,11 @@ public class DisasterRecoveryClusterVO implements DisasterRecoveryCluster {
     }
 
     @Override
+    public String getDrClusterPrivateKey() {
+        return drClusterPrivateKey;
+    }
+
+    @Override
     public Date getCreated() {
         return created;
     }
@@ -191,6 +200,10 @@ public class DisasterRecoveryClusterVO implements DisasterRecoveryCluster {
         this.drClusterSecretKey = drClusterSecretKey;
     }
 
+    public String setDrClusterPrivateKey(String drClusterPrivateKey) {
+        this.drClusterPrivateKey = drClusterPrivateKey;
+    }
+
     public void setCreated(Date created) {
         this.created = created;
     }
@@ -199,7 +212,7 @@ public class DisasterRecoveryClusterVO implements DisasterRecoveryCluster {
         this.removed = removed;
     }
 
-    public DisasterRecoveryClusterVO(long mshostId, String name, String description, String drClusterApiKey, String drClusterSecretKey,
+    public DisasterRecoveryClusterVO(long mshostId, String name, String description, String drClusterApiKey, String drClusterSecretKey, String drClusterPrivateKey,
                                 String drClusterUrl, String drClusterType, String drClusterStatus, String mirroringAgentStatus) {
         this.uuid = UUID.randomUUID().toString();
         this.msHostId = mshostId;
@@ -207,6 +220,7 @@ public class DisasterRecoveryClusterVO implements DisasterRecoveryCluster {
         this.description = description;
         this.drClusterApiKey = drClusterApiKey;
         this.drClusterSecretKey = drClusterSecretKey;
+        this.drClusterPrivateKey = drClusterPrivateKey;
         this.drClusterUrl = drClusterUrl;
         this.drClusterType = drClusterType;
         this.drClusterStatus = drClusterStatus;
