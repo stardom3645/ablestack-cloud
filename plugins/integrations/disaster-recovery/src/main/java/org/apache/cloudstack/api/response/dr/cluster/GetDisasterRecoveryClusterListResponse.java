@@ -23,6 +23,8 @@ import com.google.gson.annotations.SerializedName;
 import org.apache.cloudstack.api.ApiConstants;
 import org.apache.cloudstack.api.BaseResponse;
 import org.apache.cloudstack.api.EntityReference;
+import org.apache.cloudstack.api.response.NetworkResponse;
+import org.apache.cloudstack.api.response.ServiceOfferingResponse;
 import org.apache.cloudstack.api.response.UserVmResponse;
 
 import java.util.Date;
@@ -83,6 +85,14 @@ public class GetDisasterRecoveryClusterListResponse extends BaseResponse {
     @SerializedName(ApiConstants.DISASTER_RECOVERY_CLUSTER_VM_LIST)
     @Param(description = "the list of virtualmachine associated with this disaster recovery cluster")
     private List<UserVmResponse> disasterRecoveryClusterVms;
+
+    @SerializedName(ApiConstants.SERVICE_OFFERING_DETAILS)
+    @Param(description = "the list of service offering associated with this second disaster recovery cluster")
+    private List<ServiceOfferingResponse> secDisasterRecoveryClusterInfo;
+
+    @SerializedName(ApiConstants.NETWORK)
+    @Param(description = "the list of networks associated with this second disaster recovery cluster")
+    private List<NetworkResponse> secDisasterRecoveryClusterNetworkList;
 
     public String getId() {
         return id;
@@ -186,5 +196,13 @@ public class GetDisasterRecoveryClusterListResponse extends BaseResponse {
 
     public void setDisasterRecoveryClusterVms(final List<UserVmResponse> disasterRecoveryClusterVms) {
         this.disasterRecoveryClusterVms = disasterRecoveryClusterVms;
+    }
+
+    public void setSecDisasterRecoveryClusterServiceOfferingList(final List<ServiceOfferingResponse> secDisasterRecoveryClusterInfo) {
+        this.secDisasterRecoveryClusterInfo = secDisasterRecoveryClusterInfo;
+    }
+
+    public void setSecDisasterRecoveryClusterNetworkList(final List<NetworkResponse> secDisasterRecoveryClusterNetworkList) {
+        this.secDisasterRecoveryClusterNetworkList = secDisasterRecoveryClusterNetworkList;
     }
 }
