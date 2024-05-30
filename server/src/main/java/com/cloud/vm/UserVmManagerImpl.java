@@ -4032,6 +4032,7 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
         // check if account/domain is with in resource limits to create a new vm
         boolean isIso = Storage.ImageFormat.ISO == template.getFormat();
         Long rootDiskOfferingId = offering.getDiskOfferingId();
+        long volumesSize = 0;
         if (customParameters.get("volumeId") == null) {
             if (diskOfferingId == null) {
                 DiskOfferingVO diskOffering = _diskOfferingDao.findById(rootDiskOfferingId);
@@ -4050,23 +4051,24 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
             }
 
             DiskOfferingVO rootdiskOffering = _diskOfferingDao.findById(rootDiskOfferingId);
-            long volumesSize = configureCustomRootDiskSize(customParameters, template, hypervisorType, rootdiskOffering);
+            volumesSize = configureCustomRootDiskSize(customParameters, template, hypervisorType, rootdiskOffering);
 
             if (rootdiskOffering.getEncrypt() && hypervisorType != HypervisorType.KVM) {
                 throw new InvalidParameterValueException("Root volume encryption is not supported for hypervisor type " + hypervisorType);
             }
-        }
-
+        } else {
             Long volumeId = Long.valueOf(customParameters.get("volumeId"));
             VolumeVO volume = _volsDao.findById(volumeId);
             // Compute the size of the volume
-            long volumesSize = volume.getSize();
+            volumesSize = volume.getSize();
+        }
 
         long additionalDiskSize = 0L;
         if (!isIso && diskOfferingId != null) {
             DiskOfferingVO diskOffering = _diskOfferingDao.findById(diskOfferingId);
             additionalDiskSize = verifyAndGetDiskSize(diskOffering, diskSize);
         }
+
         UserVm vm = getCheckedUserVmResource(zone, hostName, displayName, owner, diskOfferingId, diskSize, networkList, securityGroupIdList, group, httpmethod, userData, userDataId, userDataDetails, sshKeyPairs, caller, requestedIps, defaultIps, isDisplayVm, keyboard, affinityGroupIdList, customParameters, customId, dhcpOptionMap, datadiskTemplateToDiskOfferringMap, userVmOVFPropertiesMap, dynamicScalingEnabled, vmType, template, hypervisorType, accountId, offering, isIso, rootDiskOfferingId, volumesSize, additionalDiskSize);
 
         _securityGroupMgr.addInstanceToGroups(vm.getId(), securityGroupIdList);
