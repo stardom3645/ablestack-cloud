@@ -4033,35 +4033,33 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
         boolean isIso = Storage.ImageFormat.ISO == template.getFormat();
         Long rootDiskOfferingId = offering.getDiskOfferingId();
         long volumesSize = 0;
+
         if (customParameters.get("volumeId") == null && isIso) {
             if (diskOfferingId == null) {
                 DiskOfferingVO diskOffering = _diskOfferingDao.findById(rootDiskOfferingId);
                 if (diskOffering.isComputeOnly()) {
                     throw new InvalidParameterValueException("Installing from ISO requires a disk offering to be specified for the root disk.");
                 }
-            } else {
-                rootDiskOfferingId = diskOfferingId;
-                diskOfferingId = null;
-            }
-            if (!customParameters.containsKey(VmDetailConstants.ROOT_DISK_SIZE) && diskSize != null) {
-                customParameters.put(VmDetailConstants.ROOT_DISK_SIZE, String.valueOf(diskSize));
-            }
-            if (!offering.getDiskOfferingStrictness() && overrideDiskOfferingId != null) {
-                rootDiskOfferingId = overrideDiskOfferingId;
             }
 
-            DiskOfferingVO rootdiskOffering = _diskOfferingDao.findById(rootDiskOfferingId);
-            volumesSize = configureCustomRootDiskSize(customParameters, template, hypervisorType, rootdiskOffering);
-
-            if (rootdiskOffering.getEncrypt() && hypervisorType != HypervisorType.KVM) {
-                throw new InvalidParameterValueException("Root volume encryption is not supported for hypervisor type " + hypervisorType);
-            } else if(customParameters.get("volumeId") != null){
+            if (customParameters.get("volumeId") != null && isIso) {
                 Long volumeId = Long.valueOf(customParameters.get("volumeId"));
                 VolumeVO volume = _volsDao.findById(volumeId);
                 // Compute the size of the volume
                 volumesSize = volume.getSize();
+            } else {
+                rootDiskOfferingId = diskOfferingId;
+                diskOfferingId = null;
             }
-        } else {
+
+            if (!customParameters.containsKey(VmDetailConstants.ROOT_DISK_SIZE) && diskSize != null) {
+                customParameters.put(VmDetailConstants.ROOT_DISK_SIZE, String.valueOf(diskSize));
+            }
+
+            if (!offering.getDiskOfferingStrictness() && overrideDiskOfferingId != null) {
+                rootDiskOfferingId = overrideDiskOfferingId;
+            }
+
             DiskOfferingVO rootdiskOffering = _diskOfferingDao.findById(rootDiskOfferingId);
             volumesSize = configureCustomRootDiskSize(customParameters, template, hypervisorType, rootdiskOffering);
 
