@@ -543,6 +543,16 @@
               <router-link :to="{ path: '/iso/' + resource.isoid }">{{ resource.isodisplaytext || resource.isoname || resource.isoid }} </router-link>
           </div>
         </div>
+
+        <div class="resource-detail-item" v-if="resource.volumeId">
+          <div class="resource-detail-item__label">{{ $t('label.images') }}</div>
+          <div class="resource-detail-item__details">
+            <resource-icon v-if="resource.icon" :image="getImage(resource.icon.base64image)" size="1x" style="margin-right: 5px"/>
+            <IdcardOutlined v-else />
+            <router-link :to="{ path: '/volume/' + resource.volumeId }">{{ resource.volumesdisplaytext || resource.volumesname || resource.volumeId }} </router-link>
+          </div>
+
+        </div>
         <div class="resource-detail-item" v-if="resource.serviceofferingname && resource.serviceofferingid">
           <div class="resource-detail-item__label">{{ $t('label.serviceofferingname') }}</div>
           <div class="resource-detail-item__details">
@@ -560,6 +570,16 @@
             <span v-else>{{ resource.diskofferingname || resource.diskofferingid }}</span>
           </div>
         </div>
+
+        <div class="resource-detail-item" v-if="resource.volumesname && resource.volumeId">
+          <div class="resource-detail-item__label">{{ $t('label.rbdimages') }}</div>
+          <div class="resource-detail-item__details">
+            <IdcardOutlined />
+            <router-link v-if="!isStatic && $router.resolve('/volume/' + resource.volumeId).matched[0].redirect !== '/exception/404'" :to="{ path: '/volume/' + resource.volumeId }">{{ resource.volumesgname || resource.volumeId }} </router-link>
+            <span v-else>{{ resource.volumesname || resource.volumeId }}</span>
+          </div>
+        </div>
+
         <div class="resource-detail-item" v-if="resource.backupofferingid">
           <div class="resource-detail-item__label">{{ $t('label.backupofferingid') }}</div>
           <cloud-upload-outlined />
@@ -861,6 +881,7 @@ export default {
         zone: '',
         template: '',
         iso: '',
+        rbdimages: '',
         domain: '',
         account: '',
         project: '',
@@ -904,14 +925,14 @@ export default {
   },
   computed: {
     tagsSupportingResourceTypes () {
-      return ['UserVm', 'Template', 'ISO', 'Volume', 'Snapshot', 'Backup', 'Network',
+      return ['UserVm', 'Template', 'ISO', 'Volume', 'RbdImages', 'Snapshot', 'Backup', 'Network',
         'LoadBalancer', 'PortForwardingRule', 'FirewallRule', 'SecurityGroup', 'SecurityGroupRule',
         'PublicIpAddress', 'Project', 'Account', 'Vpc', 'NetworkACL', 'StaticRoute', 'VMSnapshot',
         'RemoteAccessVpn', 'User', 'SnapshotPolicy', 'VpcOffering']
     },
     name () {
       return this.resource.displayname || this.resource.name || this.resource.displaytext || this.resource.username ||
-        this.resource.ipaddress || this.resource.virtualmachinename || this.resource.osname || this.resource.osdisplayname || this.resource.templatetype
+        this.resource.ipaddress || this.resource.virtualmachinename || this.resource.osname || this.resource.osdisplayname || this.resource.templatetype || this.resource.rbdimagesname
     },
     keypairs () {
       if (!this.resource.keypairs) {
@@ -971,6 +992,7 @@ export default {
         zone: '',
         template: '',
         iso: '',
+        rbdimages: '',
         domain: '',
         account: '',
         project: '',
@@ -982,6 +1004,9 @@ export default {
       }
       if (this.resource.isoid) {
         await this.fetchResourceIcon(this.resource.isoid, 'iso')
+      }
+      if (this.resource.volumeId) {
+        await this.fetchResourceIcon(this.resource.volumeId, 'volume')
       }
       if (this.resource.zoneid) {
         await this.fetchResourceIcon(this.resource.zoneid, 'zone')
