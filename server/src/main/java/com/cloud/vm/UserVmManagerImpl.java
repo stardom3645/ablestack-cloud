@@ -4033,7 +4033,7 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
         boolean isIso = Storage.ImageFormat.ISO == template.getFormat();
         Long rootDiskOfferingId = offering.getDiskOfferingId();
         long volumesSize = 0;
-        if (customParameters.get("volumeId") == null) {
+        if (customParameters.get("volumeId") == null && isIso) {
             if (diskOfferingId == null) {
                 DiskOfferingVO diskOffering = _diskOfferingDao.findById(rootDiskOfferingId);
                 if (diskOffering.isComputeOnly()) {
