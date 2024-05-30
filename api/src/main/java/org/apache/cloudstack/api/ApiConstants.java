@@ -1202,6 +1202,7 @@ public class ApiConstants {
     public static final String DISASTER_RECOVERY_CLUSTER_VM_LIST = "disasterrecoveryclustervmlist";
     public static final String DR_CLUSTER_API_KEY = "drclusterapikey";
     public static final String DR_CLUSTER_SECRET_KEY = "drclustersecretkey";
+    public static final String DR_CLUSTER_PRIVATE_KEY = "drclusterprivatekey";
 
     /**
      * This enum specifies IO Drivers, each option controls specific policies on I/O.
