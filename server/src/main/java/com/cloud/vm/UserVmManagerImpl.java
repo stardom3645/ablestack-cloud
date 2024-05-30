@@ -4055,12 +4055,19 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
 
             if (rootdiskOffering.getEncrypt() && hypervisorType != HypervisorType.KVM) {
                 throw new InvalidParameterValueException("Root volume encryption is not supported for hypervisor type " + hypervisorType);
+            } else if(customParameters.get("volumeId") != null){
+                Long volumeId = Long.valueOf(customParameters.get("volumeId"));
+                VolumeVO volume = _volsDao.findById(volumeId);
+                // Compute the size of the volume
+                volumesSize = volume.getSize();
             }
         } else {
-            Long volumeId = Long.valueOf(customParameters.get("volumeId"));
-            VolumeVO volume = _volsDao.findById(volumeId);
-            // Compute the size of the volume
-            volumesSize = volume.getSize();
+            DiskOfferingVO rootdiskOffering = _diskOfferingDao.findById(rootDiskOfferingId);
+            volumesSize = configureCustomRootDiskSize(customParameters, template, hypervisorType, rootdiskOffering);
+
+            if (rootdiskOffering.getEncrypt() && hypervisorType != HypervisorType.KVM) {
+                throw new InvalidParameterValueException("Root volume encryption is not supported for hypervisor type " + hypervisorType);
+            }
         }
 
         long additionalDiskSize = 0L;
