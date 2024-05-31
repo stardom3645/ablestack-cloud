@@ -66,9 +66,9 @@
               :rowKey="item => item.id"
               :pagination="false"
           >
-            <template #name="{record}">
+            <!-- <template #name="{record}">
               <router-link :to="{ path: '/vm/' + record.id }">{{ record.name }}</router-link>
-            </template>
+            </template> -->
             <template #state="{text}">
               <status :text="text ? text : ''" displayText />
             </template>
@@ -269,7 +269,7 @@ export default {
     },
     updateCardTitle (condition) {
       const clusterType = this.resource.drclustertype
-      // 클러스터 타입에 따라 테이블 타이틀 변경, primary일 경우 secondary 클러스터에서 사용자가 보는 경우이기때문에 secondary를 왼쪽으로 위치 변경.
+      // 클러스터 타입에 따라 테이블 타이틀 변경, primary일 경우 secondary 클러스터에서 사용자가 보는 경우이기 때문에 secondary를 왼쪽으로 위치 변경.
       if (clusterType === 'primary') {
         this.cardTitleA = this.$t('label.secondary.cluster.vm') // Change title based on condition
         this.cardTitleB = this.$t('label.primary.cluster.vm') // Change title based on condition

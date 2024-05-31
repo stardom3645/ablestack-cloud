@@ -42,9 +42,12 @@
           </a-descriptions-item>
         </a-descriptions>
       </template>
-      <template #bodyCell="{ column, text }">
+      <template #bodyCell="{ column, record, text }">
         <template v-if="column.key === 'state'">
           <status :text="text ? text : ''" displayText />
+        </template>
+         <template v-if="column.key === 'name'">
+          <router-link :to="{ path: '/disasterrecoverycluster/' + record.id }" >{{ text }}</router-link>
         </template>
         <template v-if="column.key === 'actions'">
         <slot name="actions"/>
@@ -76,7 +79,7 @@ export default {
       loading: false,
       drColumns: [
         {
-          key: 'name',
+          key: 'mirroredVmname',
           title: this.$t('label.dr.mirrored.vm.name'),
           dataIndex: 'mirroredVm'
         },
@@ -96,8 +99,10 @@ export default {
           width: 100
         }
       ],
+      drClusterList: [],
       drCluster: [],
       drVm: [],
+      drVmName: '',
       combinedArray: []
     }
   },
@@ -129,14 +134,31 @@ export default {
   created () {
     this.dataResource = this.resource
     this.vm = this.dataResource
-    this.fetchData()
+    this.drVmName = this.dataResource.name
+    this.getDrClusterList()
   },
   methods: {
-    fetchData () {
+    getDrClusterList () {
       this.loading = true
-      api('getDisasterRecoveryClusterList', { name: 'test-sec-cluster-01' }).then(json => {
+      api('getDisasterRecoveryClusterList').then(json => {
+        this.drClusterList = json.getdisasterrecoveryclusterlistresponse.disasterrecoverycluster || []
+        for (const cluster of this.drClusterList) {
+          const vmList = cluster.disasterrecoveryclustervmlist
+          if (vmList.some(vm => vm.name === this.drVmName)) {
+            this.clusterName = cluster.name
+            break
+          }
+        }
+        this.getDrClusterVm()
+      }).finally(() => {
+        this.loading = false
+      })
+    },
+    getDrClusterVm () {
+      this.loading = true
+      api('getDisasterRecoveryClusterList', { name: 'this.clusterName' }).then(json => {
         this.drCluster = json.getdisasterrecoveryclusterlistresponse.disasterrecoverycluster || []
-        this.drVm = json.getdisasterrecoveryclusterlistresponse.disasterrecoverycluster[0].disasterrecoveryclustervmlist[3].name || []
+        this.drVm = this.clusterName
         this.drCluster = this.drCluster.map(item => ({ ...item, mirroredVm: 'mirrored-vm-001' }))
         this.drCluster = this.drCluster.map(item => ({ ...item, mirroredVmRootDisk: 'ROOT-673' }))
         this.drCluster = this.drCluster.map(item => ({ ...item, mirroredVmDataDisk: 'DATA-678' }))

@@ -25,6 +25,7 @@ import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.io.PrintWriter;
 import java.io.OutputStreamWriter;
+java.lang.reflect.Field;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.net.HttpURLConnection;
@@ -41,10 +42,14 @@ import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 
+import org.apache.cloudstack.api.response.NetworkResponse;
+import org.apache.cloudstack.api.response.ServiceOfferingResponse;
 import org.apache.cloudstack.utils.security.SSLUtils;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
+import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.XML;
 import org.json.JSONObject;
 
@@ -824,15 +829,102 @@ public class DisasterRecoveryClusterUtil {
                     return null;
                 }
             }
-            JSONObject jObject = XML.toJSONObject(sb.toString());
-            JSONObject response = (JSONObject) jObject.get("listserviceofferingsresponse");
-            return (List) response;
+            // mold api command에 따라 변경
+            if (command.equals("listServiceOfferings")) {
+                JSONObject jObject = XML.toJSONObject(sb.toString());
+                JSONObject response = (JSONObject) jObject.get("listserviceofferingsresponse");
+                List<ServiceOfferingResponse> serviceOfferingsList = new ArrayList<>();
+                if (response.has("serviceoffering")) {
+                    Object serviceOfferingObject = response.get("serviceoffering");
+                    JSONArray serviceOfferingsArray;
+                    if (serviceOfferingObject instanceof JSONArray) {
+                        serviceOfferingsArray = (JSONArray) serviceOfferingObject;
+                    } else {
+                        serviceOfferingsArray = new JSONArray();
+                        serviceOfferingsArray.put(serviceOfferingObject);
+                    }
+                    for (int i = 0; i < serviceOfferingsArray.length(); i++) {
+                        JSONObject serviceOfferingJSONObject = serviceOfferingsArray.getJSONObject(i);
+                        ServiceOfferingResponse serviceOfferingResponse = new ServiceOfferingResponse();
+                        for (String key : serviceOfferingJSONObject.keySet()) {
+                            try {
+                                Field field = ServiceOfferingResponse.class.getDeclaredField(key);
+                                field.setAccessible(true);
+
+                                Object value = getValue(serviceOfferingJSONObject, key, field.getType());
+                                if (value != null) {
+                                    field.set(serviceOfferingResponse, value);
+                                }
+                            } catch (NoSuchFieldException e) {
+//                                System.err.println("Field not found: " + key);
+                            } catch (IllegalAccessException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                        serviceOfferingsList.add(serviceOfferingResponse);
+                    }
+                }
+                return serviceOfferingsList;
+            } else if (command.equals("listNetworks")) {
+                JSONObject jObject = XML.toJSONObject(sb.toString());
+                JSONObject response = jObject.optJSONObject("listnetworksresponse");
+                List<NetworkResponse> networkResponsesList = new ArrayList<>();
+                if (response != null && response.has("network")) {
+                    Object networkObject = response.get("network");
+                    JSONArray networksArray;
+                    if (networkObject instanceof JSONArray) {
+                        networksArray = (JSONArray) networkObject;
+                    } else {
+                        networksArray = new JSONArray();
+                        networksArray.put(networkObject);
+                    }
+                    for (int i = 0; i < networksArray.length(); i++) {
+                        JSONObject networkJSONObject = networksArray.getJSONObject(i);
+                        NetworkResponse networkResponse = new NetworkResponse();
+                        for (String key : networkJSONObject.keySet()) {
+                            try {
+                                Field field = NetworkResponse.class.getDeclaredField(key);
+                                field.setAccessible(true);
+                                Object value = getValue(networkJSONObject, key, field.getType());
+                                if (value != null) {
+                                    field.set(networkResponse, value);
+                                }
+                            } catch (NoSuchFieldException e) {
+                            } catch (IllegalAccessException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                        networkResponsesList.add(networkResponse);
+                    }
+                }
+                return networkResponsesList;
+            } else {
+                String msg = "Failed to request mold API.";
+                LOGGER.error(msg);
+                return null;
+            }
         } catch (Exception e) {
             LOGGER.error(String.format("Mold API endpoint not available"), e);
             return null;
         }
     }
 
+    private static Object getValue(JSONObject jsonObject, String key, Class<?> fieldType) {
+        try {
+            if (fieldType == String.class) {
+                try {
+                    return jsonObject.getString(key);
+                } catch (JSONException e) {
+                    return String.valueOf(jsonObject.get(key));
+                }
+            } else {
+                return null;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
 
     /**
      * @param command

@@ -66,9 +66,9 @@ import com.google.common.base.Preconditions;
 import org.apache.cloudstack.api.ApiConstants;
 import org.apache.cloudstack.api.ResponseObject;
 import org.apache.cloudstack.api.command.admin.dr.GetDisasterRecoveryClusterListCmd;
-import org.apache.cloudstack.api.command.admin.dr.GetSecDisasterRecoveryClusterInfoListCmd;
 import org.apache.cloudstack.api.command.admin.dr.UpdateDisasterRecoveryClusterCmd;
 import org.apache.cloudstack.api.response.ListResponse;
+import org.apache.cloudstack.api.response.NetworkResponse;
 import org.apache.cloudstack.api.response.ScvmIpAddressResponse;
 import org.apache.cloudstack.api.command.admin.dr.ConnectivityTestsDisasterRecoveryClusterCmd;
 import org.apache.cloudstack.api.command.admin.dr.CreateDisasterRecoveryClusterCmd;
@@ -82,7 +82,6 @@ import org.apache.cloudstack.framework.config.ConfigKey;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 import org.apache.commons.lang3.StringUtils;
-import org.json.JSONObject;
 import org.bouncycastle.util.io.pem.PemObject;
 import org.bouncycastle.util.io.pem.PemReader;
 
@@ -265,46 +264,16 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
             response.setDetails(details);
         }
         response.setDisasterRecoveryClusterVms(disasterRecoveryClusterVmResponses);
-        return response;
-    }
+        
+        // Second dr cluster의 서비스 오퍼링 정보를 가져오는 코드
+        String moldCommandListServiceOfferings = "listServiceOfferings";
+        List<ServiceOfferingResponse> secDrClusterServiceOfferingListResponse = DisasterRecoveryClusterUtil.getSecDrClusterInfoList(moldUrl, moldCommandListServiceOfferings, moldMethod, drcluster.getApiKey(), drcluster.getSecretKey());
+        response.setSecDisasterRecoveryClusterServiceOfferingList(secDrClusterServiceOfferingListResponse);
 
-    @Override
-    public ListResponse<ServiceOfferingResponse> listSecDisasterRecoveryClusterInfoResponse(GetSecDisasterRecoveryClusterInfoListCmd cmd) {
-        final Long drClusterId = cmd.getId();
-        DisasterRecoveryClusterVO drcluster = disasterRecoveryClusterDao.findById(drClusterId);
-        ListResponse response = new ListResponse();
-        response.setObjectName("secdrclusterofferinglist");
-
-        String moldUrl = drcluster.getDrClusterUrl() + "/client/api/";
-        String moldCommand = "listServiceOfferings";
-        String moldMethod = "GET";
-        List<JSONObject> secDrClusterInfoListResponse = DisasterRecoveryClusterUtil.getSecDrClusterInfoList(moldUrl, moldCommand, moldMethod, drcluster.getDrClusterApiKey(), drcluster.getDrClusterSecretKey());
-        System.out.println(secDrClusterInfoListResponse);
-        response.setResponses(secDrClusterInfoListResponse);
-//        disasterRecoveryClusterDao.update(drcluster.getId(), drcluster);
-//        response.setMirroringAgentStatus(drcluster.getMirroringAgentStatus());
-//        List<UserVmResponse> disasterRecoveryClusterVmResponses = new ArrayList<UserVmResponse>();
-//        List<DisasterRecoveryClusterVmMapVO> drClusterVmList = disasterRecoveryClusterVmMapDao.listByDisasterRecoveryClusterId(drcluster.getId());
-//        ResponseObject.ResponseView respView = ResponseObject.ResponseView.Restricted;
-//        Account caller = CallContext.current().getCallingAccount();
-//        if (accountService.isRootAdmin(caller.getId())) {
-//            respView = ResponseObject.ResponseView.Full;
-//        }
-//        String responseName = "drclustervmlist";
-//        if (drClusterVmList != null && !drClusterVmList.isEmpty()) {
-//            for (DisasterRecoveryClusterVmMapVO vmMapVO : drClusterVmList) {
-//                UserVmJoinVO userVM = userVmJoinDao.findById(vmMapVO.getVmId());
-//                if (userVM != null) {
-//                    UserVmResponse cvmResponse = ApiDBUtils.newUserVmResponse(respView, responseName, userVM, EnumSet.of(ApiConstants.VMDetails.nics), caller);
-//                    disasterRecoveryClusterVmResponses.add(cvmResponse);
-//                }
-//            }
-//        }
-//        Map<String, String> details = disasterRecoveryClusterDetailsDao.listDetailsKeyPairs(clusterId);
-//        if (details != null && !details.isEmpty()) {
-//            response.setDetails(details);
-//        }
-//        response.setDisasterRecoveryClusterVms(disasterRecoveryClusterVmResponses);
+        // Second dr cluster의 네트워크 리스트 정보를 가져오는 코드
+        String moldCommandListNetworks = "listNetworks";
+        List<NetworkResponse> secDrClusterNetworksListResponse = DisasterRecoveryClusterUtil.getSecDrClusterInfoList(moldUrl, moldCommandListNetworks, moldMethod, drcluster.getApiKey(), drcluster.getSecretKey());
+        response.setSecDisasterRecoveryClusterNetworkList(secDrClusterNetworksListResponse);
         return response;
     }
 
@@ -593,7 +562,6 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         cmdList.add(ConnectivityTestsDisasterRecoveryClusterCmd.class);
         cmdList.add(GetDisasterRecoveryClusterListCmd.class);
         cmdList.add(UpdateDisasterRecoveryClusterCmd.class);
-        cmdList.add(GetSecDisasterRecoveryClusterInfoListCmd.class);
         cmdList.add(CreateDisasterRecoveryClusterCmd.class);
         return cmdList;
     }
