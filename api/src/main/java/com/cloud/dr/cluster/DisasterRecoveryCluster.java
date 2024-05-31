@@ -26,6 +26,7 @@ public interface DisasterRecoveryCluster extends InternalIdentity, Identity {
     String getMirroringAgentStatus();
     String getDrClusterApiKey();
     String getDrClusterSecretKey();
+    String getDrClusterPrivateKey();
     Date getCreated();
     Date getRemoved();
 
