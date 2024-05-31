@@ -4256,6 +4256,7 @@
 "label.state.qemuagentversion.notinstalled": "Not installed",
 "label.deploy.vm.number": "Number of virtual machines to deploy",
 "message.deploy.vm.number": "If you enter a network IP or Mac address, only one virtual machine can be created.",
+"label.create.type.rbd.image": "Create Volume",
 "label.disaster.recovery.cluster": "Disaster recovery cluster",
 "label.add.disaster.recovery.cluster": "Add disaster recovery cluster",
 "label.disaster.recovery.clusters": "Disaster recovery clusters",
