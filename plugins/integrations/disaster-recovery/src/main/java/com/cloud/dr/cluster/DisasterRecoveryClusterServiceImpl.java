@@ -266,11 +266,11 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         response.setDisasterRecoveryClusterVms(disasterRecoveryClusterVmResponses);
         // Second dr cluster의 서비스 오퍼링 정보를 가져오는 코드
         String moldCommandListServiceOfferings = "listServiceOfferings";
-        List<ServiceOfferingResponse> secDrClusterServiceOfferingListResponse = DisasterRecoveryClusterUtil.getSecDrClusterInfoList(moldUrl, moldCommandListServiceOfferings, moldMethod, drcluster.getApiKey(), drcluster.getSecretKey());
+        List<ServiceOfferingResponse> secDrClusterServiceOfferingListResponse = DisasterRecoveryClusterUtil.getSecDrClusterInfoList(moldUrl, moldCommandListServiceOfferings, moldMethod, drcluster.getDrClusterApiKey(), drcluster.getDrClusterSecretKey());
         response.setSecDisasterRecoveryClusterServiceOfferingList(secDrClusterServiceOfferingListResponse);
         // Second dr cluster의 네트워크 리스트 정보를 가져오는 코드
         String moldCommandListNetworks = "listNetworks";
-        List<NetworkResponse> secDrClusterNetworksListResponse = DisasterRecoveryClusterUtil.getSecDrClusterInfoList(moldUrl, moldCommandListNetworks, moldMethod, drcluster.getApiKey(), drcluster.getSecretKey());
+        List<NetworkResponse> secDrClusterNetworksListResponse = DisasterRecoveryClusterUtil.getSecDrClusterInfoList(moldUrl, moldCommandListNetworks, moldMethod, drcluster.getDrClusterApiKey(), drcluster.getDrClusterSecretKey());
         response.setSecDisasterRecoveryClusterNetworkList(secDrClusterNetworksListResponse);
         return response;
     }
