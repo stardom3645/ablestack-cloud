@@ -202,7 +202,7 @@ public class DisasterRecoveryClusterVO implements DisasterRecoveryCluster {
         this.drClusterSecretKey = drClusterSecretKey;
     }
 
-    public String setDrClusterPrivateKey(String drClusterPrivateKey) {
+    public void setDrClusterPrivateKey(String drClusterPrivateKey) {
         this.drClusterPrivateKey = drClusterPrivateKey;
     }
 
