@@ -28,6 +28,8 @@ import java.util.Date;
 import java.util.Map;
 import java.util.UUID;
 
+import com.cloud.utils.db.Encrypt;
+
 @Entity
 @Table(name = "disaster_recovery_cluster")
 public class DisasterRecoveryClusterVO implements DisasterRecoveryCluster {
