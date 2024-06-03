@@ -433,10 +433,10 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         String secGlueIpAddress = drCluster.getDrClusterGlueIpAddress();
         File permKey = null;
         try {
+            permKey = new File("/tmp/id_rsa_dr");
             PrivateKey secPriKey = parsePrivateKey(secPrivateKey);
-            FileOutputStream fos = new FileOutputStream("id_rsa_dr");
+            FileOutputStream fos = new FileOutputStream(permKey);
             fos.write(secPriKey.getEncoded());
-            permKey = new File("id_rsa_dr");
         } catch (IOException e) {
             throw new CloudRuntimeException("Converting the secondary cluster's private key to a file failed.", e);
         }
@@ -524,8 +524,8 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                         secMethod = "POST";
                         Map<String, String> sucParams = new HashMap<>();
                         sucParams.put("name", drName);
-                        sucParams.put("drclusterstatus", DisasterRecoveryCluster.DrClusterStatus.Enabled.toString());
-                        sucParams.put("mirroringagentstatus", DisasterRecoveryCluster.DrClusterStatus.Enabled.toString());
+                        sucParams.put("drclusterstatus", DisasterRecoveryCluster.DrClusterStatus.Error.toString());
+                        sucParams.put("mirroringagentstatus", DisasterRecoveryCluster.DrClusterStatus.Error.toString());
                         DisasterRecoveryClusterUtil.moldUpdateDisasterRecoveryClusterAPI(secUrl, secCommand, secMethod, secApiKey, secSecretKey, sucParams);
                     }
                 }
