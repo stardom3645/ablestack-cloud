@@ -523,7 +523,6 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                         sucParams.put("drclusterstatus", DisasterRecoveryCluster.DrClusterStatus.Enabled.toString());
                         sucParams.put("mirroringagentstatus", DisasterRecoveryCluster.DrClusterStatus.Enabled.toString());
                         DisasterRecoveryClusterUtil.moldUpdateDisasterRecoveryClusterAPI(secUrl, secCommand, secMethod, secApiKey, secSecretKey, sucParams);
-                        return false;
                     }
                 }
             } else {
@@ -540,7 +539,6 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                 errParams.put("drclusterstatus", DisasterRecoveryCluster.DrClusterStatus.Error.toString());
                 errParams.put("mirroringagentstatus", DisasterRecoveryCluster.MirroringAgentStatus.Error.toString());
                 DisasterRecoveryClusterUtil.moldUpdateDisasterRecoveryClusterAPI(secUrl + "/client/api/", secCommand, secMethod, secApiKey, secSecretKey, errParams);
-                return false;
             }
         }
         // secondary cluster에 UpdateDisasterRecoveryClusterCmd 호출
