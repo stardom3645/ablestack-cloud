@@ -360,9 +360,9 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         if (name == null || name.isEmpty()) {
             throw new InvalidParameterValueException("Invalid name for the disaster recovery cluster name:" + name);
         }
-        // if (type.equalsIgnoreCase("secondary") && (privateKey == null || privateKey.isEmpty())) {
-        //     throw new InvalidParameterValueException("Invalid private key for the disaster recovery cluster private key:" + privateKey);
-        // }
+        if (type.equalsIgnoreCase("secondary") && (privateKey == null || privateKey.isEmpty())) {
+            throw new InvalidParameterValueException("Invalid private key for the disaster recovery cluster private key:" + privateKey);
+        }
         if (url == null || url.isEmpty()) {
             throw new InvalidParameterValueException("Invalid url for the disaster recovery cluster url:" + url);
         }
@@ -524,6 +524,20 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                         sucParams.put("mirroringagentstatus", DisasterRecoveryCluster.DrClusterStatus.Enabled.toString());
                         DisasterRecoveryClusterUtil.moldUpdateDisasterRecoveryClusterAPI(secUrl, secCommand, secMethod, secApiKey, secSecretKey, sucParams);
                         return true;
+                    } else {
+                        // primary cluster db 업데이트
+                        drCluster.setDrClusterStatus(DisasterRecoveryCluster.DrClusterStatus.Error.toString());
+                        drCluster.setMirroringAgentStatus(DisasterRecoveryCluster.MirroringAgentStatus.Error.toString());
+                        disasterRecoveryClusterDao.update(drCluster.getId(), drCluster);
+                        // secondary cluster db 업데이트
+                        secCommand = "updateDisasterRecoveryCluster";
+                        secMethod = "POST";
+                        Map<String, String> sucParams = new HashMap<>();
+                        sucParams.put("name", drName);
+                        sucParams.put("drclusterstatus", DisasterRecoveryCluster.DrClusterStatus.Enabled.toString());
+                        sucParams.put("mirroringagentstatus", DisasterRecoveryCluster.DrClusterStatus.Enabled.toString());
+                        DisasterRecoveryClusterUtil.moldUpdateDisasterRecoveryClusterAPI(secUrl, secCommand, secMethod, secApiKey, secSecretKey, sucParams);
+                        return false;
                     }
                 }
             }
