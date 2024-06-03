@@ -282,22 +282,20 @@ export default {
               }
             })
             this.closeModal()
-          })
-          .catch(error => {
+          }).catch(error => {
             this.showCode = !this.showCode
             this.buttonDisabled = false
             this.$notification.error({
               message: `${this.$t('label.error')} ${error.response.status}`,
               description: error.response.data.errorresponse.errortext,
               duration: 0
+            }).finally(() => {
+              this.loading = false
+            })
           })
-          .finally(() => {
-                this.loading = false
-          })
+        }).catch(error => {
+          this.formRef.value.scrollToField(error.errorFields[0].name)
         })
-      }).catch(error => {
-        this.formRef.value.scrollToField(error.errorFields[0].name)
-      })
     },
     returnPlaceholder (field) {
       this.params.find(i => {
