@@ -248,32 +248,53 @@ export default {
     handleSubmit (e) {
       e.preventDefault()
       if (this.loading) return
-      this.formRef.value.validate().then(() => {
-        const values = toRaw(this.form)
-        this.loading = true
-        const params = {
-          name: values.name,
-          description: values.displaytext,
-          drclusterurl: values.url,
-          drclusterapikey: values.apikey,
-          drclustersecretkey: values.secretkey,
-          drclusterprivatekey: values.file,
-          drclusterglueipaddress: values.glueip,
-          drclustertype: 'secondary'
-        }
-        api('createDisasterRecoveryCluster', params).then(json => {
-          this.result = json.createdisasterrecoveryclusterresponse
-          console.log(this.result)
-          this.$emit('refresh-data')
-        }).catch(error => {
-          this.showCode = !this.showCode
-          this.buttonDisabled = false
-          this.$notification.error({
-            message: this.$t('message.request.failed'),
-            description: (error.response && error.response.headers && error.response.headers['x-description']) || error.message
+      this.formRef.value
+        .validate()
+        .then(() => {
+          const values = toRaw(this.form)
+          this.loading = true
+          const params = {
+            name: values.name,
+            description: values.displaytext,
+            drclusterurl: values.url,
+            drclusterapikey: values.apikey,
+            drclustersecretkey: values.secretkey,
+            drclusterprivatekey: values.file,
+            drclusterglueipaddress: values.glueip,
+            drclustertype: 'secondary'
+          }
+          api('createDisasterRecoveryCluster', params).then(json => {
+            this.$pollJob({
+              jobId: json.createdisasterrecoveryclusterresponse.jobid,
+              title: this.$t('label.action.create.disaster.recovery.cluster'),
+              description: values.name,
+              successMessage: this.$t('message.success.create.disaster.recovery.cluster'),
+              successMethod: () => {},
+              errorMessage: this.$t('message.create.disaster.recovery.cluster.failed'),
+              errorMethod: () => {
+                this.closeModal()
+              },
+              loadingMessage: this.$t('message.create.disaster.recovery.cluster.processing'),
+              catchMessage: this.$t('error.fetching.async.job.result'),
+              catchMethod: () => {
+                this.loading = false
+                this.closeModal()
+              }
+            })
+            this.closeModal()
+          })
+          .catch(error => {
+            this.showCode = !this.showCode
+            this.buttonDisabled = false
+            this.$notification.error({
+              message: `${this.$t('label.error')} ${error.response.status}`,
+              description: error.response.data.errorresponse.errortext,
+              duration: 0
+          })
+          .finally(() => {
+                this.loading = false
           })
         })
-        this.closeAction()
       }).catch(error => {
         this.formRef.value.scrollToField(error.errorFields[0].name)
       })
