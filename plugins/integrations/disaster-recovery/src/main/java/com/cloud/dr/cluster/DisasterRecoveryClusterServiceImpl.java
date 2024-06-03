@@ -429,13 +429,13 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         FileOutputStream fos = null;
         try {
             PrivateKey secPriKey = parsePrivateKey(secPrivateKey);
-            fos = new FileOutputStream(new File("id_rsa"));
+            fos = new FileOutputStream("id_rsa");
             fos.write(secPriKey.getEncoded());
             fos.flush();
         } catch (IOException e) {
             throw new CloudRuntimeException("Converting the secondary cluster's private key to a file failed.", e);
         }
-        File permKey = new File("id-rsa");
+        File permKey = new File("id_rsa");
         // primary cluster 정보
         String[] properties = getServerProperties();
         ManagementServerHostVO msHost = msHostDao.findByMsid(ManagementServerNode.getManagementServerId());
