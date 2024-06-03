@@ -266,22 +266,25 @@ export default {
           api('createDisasterRecoveryCluster', params).then(json => {
             this.$pollJob({
               jobId: json.createdisasterrecoveryclusterresponse.jobid,
-              title: this.$t('label.action.create.disaster.recovery.cluster'),
+              title: this.$t('label.add.disaster.recovery.cluster'),
               description: values.name,
-              successMessage: this.$t('message.success.create.disaster.recovery.cluster'),
-              successMethod: () => {},
-              errorMessage: this.$t('message.create.disaster.recovery.cluster.failed'),
+              successMessage: this.$t('message.success.add.disaster.recovery.cluster'),
+              successMethod: () => {
+                this.loading = false
+                this.closeModals()
+              },
+              errorMessage: this.$t('message.add.disaster.recovery.cluster.failed'),
               errorMethod: () => {
+                this.loading = false
                 this.closeModal()
               },
-              loadingMessage: this.$t('message.create.disaster.recovery.cluster.processing'),
+              loadingMessage: this.$t('message.add.disaster.recovery.cluster.processing'),
               catchMessage: this.$t('error.fetching.async.job.result'),
               catchMethod: () => {
                 this.loading = false
                 this.closeModal()
               }
             })
-            this.closeModal()
           }).catch(error => {
             this.showCode = !this.showCode
             this.buttonDisabled = false
