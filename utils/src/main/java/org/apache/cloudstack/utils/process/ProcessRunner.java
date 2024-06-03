@@ -19,14 +19,16 @@
 
 package org.apache.cloudstack.utils.process;
 
-import com.google.common.base.Preconditions;
-import com.google.common.io.CharStreams;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
+import com.google.common.base.Preconditions;
+import com.google.common.io.CharStreams;
 import org.joda.time.Duration;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
@@ -34,7 +36,10 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import org.apache.commons.lang3.StringUtils;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import com.cloud.utils.Ternary;
 
 public final class ProcessRunner {
     protected Logger logger = LogManager.getLogger(getClass());
@@ -42,9 +47,26 @@ public final class ProcessRunner {
     // Default maximum timeout of 5 minutes for any command
     public static final Duration DEFAULT_MAX_TIMEOUT = new Duration(5 * 60 * 1000);
     private final ExecutorService executor;
+    private final List<Ternary<String, String, String>> commandLogReplacements = new ArrayList<>();
+
+    String removeCommandSensitiveInfoForLogging(String command) {
+        String commandLog = command.trim();
+
+        for (Ternary<String, String, String> replacement : commandLogReplacements) {
+            if (commandLog.contains(replacement.first())) {
+                Pattern pattern = Pattern.compile(replacement.second());
+                Matcher matcher = pattern.matcher(commandLog);
+                if (matcher.find()) {
+                    commandLog = matcher.replaceAll(replacement.third());
+                }
+            }
+        }
+        return commandLog;
+    }
 
     public ProcessRunner(ExecutorService executor) {
         this.executor = executor;
+        commandLogReplacements.add(new Ternary<>("ipmitool", "-P\\s+\\S+", "-P *****"));
     }
 
     /**
@@ -73,8 +95,7 @@ public final class ProcessRunner {
         int retVal = -2;
         String stdOutput = null;
         String stdError = null;
-
-        String oneLineCommand = StringUtils.join(commands, " ");
+        String commandLog = removeCommandSensitiveInfoForLogging(StringUtils.join(commands, " "));
 
         try {
             logger.debug(String.format("Preparing command [%s] to execute.", oneLineCommand));
