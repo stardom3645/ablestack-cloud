@@ -407,7 +407,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         String secGlueIpAddress = drCluster.getDrClusterGlueIpAddress();
         try {
             FileOutputStream fos = new FileOutputStream("glue.key");
-            fos.write(secPrivateKey);
+            fos.write(secPrivateKey.getBytes());
             fos.close();
         } catch (IOException e) {
             throw new CloudRuntimeException("Converting the secondary cluster's private key to a file failed.", e);
