@@ -4316,5 +4316,8 @@
 "message.success.update.disaster.recovery.cluster": "Recovery cluster information has been updated.",
 "message.disaster.recovery.cluster.connection.test.update.description": "Perform a connection test with the cluster you want to update.",
 "message.dr.mirrored.vm.release": "Confirm whether you want to release mirroring.",
-"label.dr.release.mirroring": "Release mirroring"
+"label.dr.release.mirroring": "Release mirroring",
+"message.success.add.disaster.recovery.cluster": "Successfully added disaster recovery cluster",
+"message.add.disaster.recovery.cluster.failed": "Adding disaster recovery cluster failed",
+"message.add.disaster.recovery.cluster.processing": "Adding disaster recovery cluster..."
 }
