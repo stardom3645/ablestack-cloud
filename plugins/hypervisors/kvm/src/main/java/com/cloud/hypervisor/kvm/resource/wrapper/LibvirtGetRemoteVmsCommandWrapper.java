@@ -48,8 +48,7 @@ public final class LibvirtGetRemoteVmsCommandWrapper extends CommandWrapper<GetR
     @Override
     public Answer execute(final GetRemoteVmsCommand command, final LibvirtComputingResource libvirtComputingResource) {
         String result = null;
-        String hypervisorURI = "qemu+tcp://" + command.getRemoteIp() +
-                "/system";
+        String hypervisorURI = "qemu+ssh://" + command.getRemoteIp() + "/system";
         HashMap<String, UnmanagedInstanceTO> unmanagedInstances = new HashMap<>();
         try {
             Connect conn = LibvirtConnection.getConnection(hypervisorURI);
