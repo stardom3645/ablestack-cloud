@@ -64,6 +64,12 @@
             v-model:value="form.secretkey"
           />
         </a-form-item>
+        <a-form-item name="glueip" ref="glueip" :label="'Glue IP'">
+        <a-input
+          :placeholder="'temp'"
+          v-model:value="form.glueip"
+        />
+      </a-form-item>
         <a-form-item name="file" ref="file" :label="$t('label.add.disaster.recovery.cluster.info.glue.pri.key')">
           <a-textarea
             :placeholder="temp"
@@ -173,6 +179,7 @@ export default {
         url: [{ required: true, message: this.$t('label.required') }],
         apikey: [{ required: true, message: this.$t('label.required') }],
         secretkey: [{ required: true, message: this.$t('label.required') }],
+        glueip: [{ required: true, message: this.$t('message.error.required.input') }],
         file: [{ required: true, message: this.$t('message.error.required.input') }]
       })
     },
@@ -251,6 +258,7 @@ export default {
           drclusterapikey: values.apikey,
           drclustersecretkey: values.secretkey,
           drclusterprivatekey: values.file,
+          drclusterglueipaddress: values,glueip,
           drclustertype: 'secondary'
         }
         api('createDisasterRecoveryCluster', params).then(json => {

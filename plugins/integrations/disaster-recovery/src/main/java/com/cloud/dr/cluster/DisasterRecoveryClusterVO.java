@@ -75,6 +75,9 @@ public class DisasterRecoveryClusterVO implements DisasterRecoveryCluster {
     @Column(name = "private_key", length = 16384)
     private String drClusterPrivateKey;
 
+    @Column(name = "glue_ip_address")
+    private String drClusterGlueIpAddress;
+
     @Column(name = "created")
     private Date created;
 
@@ -149,6 +152,11 @@ public class DisasterRecoveryClusterVO implements DisasterRecoveryCluster {
     }
 
     @Override
+    public String getDrClusterGlueIpAddress() {
+        return drClusterGlueIpAddress;
+    }
+
+    @Override
     public Date getCreated() {
         return created;
     }
@@ -206,6 +214,10 @@ public class DisasterRecoveryClusterVO implements DisasterRecoveryCluster {
         this.drClusterPrivateKey = drClusterPrivateKey;
     }
 
+    public void setDrClusterGlueIpAddress(String drClusterGlueIpAddress) {
+        this.drClusterGlueIpAddress = drClusterGlueIpAddress;
+    }
+
     public void setCreated(Date created) {
         this.created = created;
     }
@@ -215,7 +227,7 @@ public class DisasterRecoveryClusterVO implements DisasterRecoveryCluster {
     }
 
     public DisasterRecoveryClusterVO(long mshostId, String name, String description, String drClusterApiKey, String drClusterSecretKey, String drClusterPrivateKey,
-                                String drClusterUrl, String drClusterType, String drClusterStatus, String mirroringAgentStatus) {
+                                String drClusterGlueIpAddress, String drClusterUrl, String drClusterType, String drClusterStatus, String mirroringAgentStatus) {
         this.uuid = UUID.randomUUID().toString();
         this.msHostId = mshostId;
         this.name = name;
@@ -223,6 +235,7 @@ public class DisasterRecoveryClusterVO implements DisasterRecoveryCluster {
         this.drClusterApiKey = drClusterApiKey;
         this.drClusterSecretKey = drClusterSecretKey;
         this.drClusterPrivateKey = drClusterPrivateKey;
+        this.drClusterGlueIpAddress = drClusterGlueIpAddress;
         this.drClusterUrl = drClusterUrl;
         this.drClusterType = drClusterType;
         this.drClusterStatus = drClusterStatus;
