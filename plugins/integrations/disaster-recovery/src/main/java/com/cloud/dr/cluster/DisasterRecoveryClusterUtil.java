@@ -867,10 +867,11 @@ public class DisasterRecoveryClusterUtil {
                     return null;
                 }
             }
-            JSONObject jObject = XML.toJSONObject(sb.toString());
-            JSONObject response = (JSONObject) jObject.get("deletedisasterrecoveryclusterresponse");
-            LOGGER.info(response);
-            return response.get("id").toString();
+            LOGGER.info(sb.toString());
+            // JSONObject jObject = XML.toJSONObject(sb.toString());
+            // JSONObject response = (JSONObject) jObject.get("deletedisasterrecoveryclusterresponse");
+            // LOGGER.info(response);
+            return sb.toString();
         } catch (Exception e) {
             LOGGER.error(String.format("Mold API endpoint not available"), e);
             return null;
