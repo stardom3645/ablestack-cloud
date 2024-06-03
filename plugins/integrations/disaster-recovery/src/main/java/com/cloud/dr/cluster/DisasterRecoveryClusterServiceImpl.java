@@ -591,7 +591,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                     disasterRecoveryClusterDao.remove(drCluster.getId());
                     // secondary cluster db 업데이트
                     String secCommand = "deleteDisasterRecoveryCluster";
-                    String secMethod = "DELETE";
+                    String secMethod = "GET";
                     Map<String, String> sucParams = new HashMap<>();
                     sucParams.put("name", drName);
                     DisasterRecoveryClusterUtil.moldDeleteDisasterRecoveryClusterAPI(secUrl, secCommand, secMethod, secApiKey, secSecretKey, sucParams);
