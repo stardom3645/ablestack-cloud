@@ -95,7 +95,7 @@ public class DisasterRecoveryClusterUtil {
             connection.setDoOutput(true);
             connection.setRequestMethod(method);
             connection.setConnectTimeout(30000);
-            connection.setReadTimeout(600000);
+            connection.setReadTimeout(300000);
             connection.setRequestProperty("Accept", "application/vnd.ceph.api.v1.0+json");
             connection.setRequestProperty("Authorization", "application/vnd.ceph.api.v1.0+json");
             connection.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
@@ -149,7 +149,7 @@ public class DisasterRecoveryClusterUtil {
             connection.setDoOutput(true);
             connection.setRequestMethod(method);
             connection.setConnectTimeout(30000);
-            connection.setReadTimeout(600000);
+            connection.setReadTimeout(300000);
             connection.setRequestProperty("Accept", "application/vnd.ceph.api.v1.0+json");
             connection.setRequestProperty("Authorization", "application/vnd.ceph.api.v1.0+json");
             connection.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
@@ -198,7 +198,7 @@ public class DisasterRecoveryClusterUtil {
             connection.setDoOutput(true);
             connection.setRequestMethod(method);
             connection.setConnectTimeout(30000);
-            connection.setReadTimeout(600000);
+            connection.setReadTimeout(300000);
             connection.setRequestProperty("Accept", "application/vnd.ceph.api.v1.0+json");
             connection.setRequestProperty("Authorization", "application/vnd.ceph.api.v1.0+json");
             connection.setRequestProperty("Connection","Keep-Alive");
@@ -272,7 +272,7 @@ public class DisasterRecoveryClusterUtil {
             connection.setDoOutput(true);
             connection.setRequestMethod(method);
             connection.setConnectTimeout(30000);
-            connection.setReadTimeout(600000);
+            connection.setReadTimeout(300000);
             connection.setRequestProperty("Accept", "application/vnd.ceph.api.v1.0+json");
             connection.setRequestProperty("Authorization", "application/vnd.ceph.api.v1.0+json");
             connection.setRequestProperty("Connection","Keep-Alive");
@@ -348,7 +348,7 @@ public class DisasterRecoveryClusterUtil {
             connection.setDoOutput(true);
             connection.setRequestMethod(method);
             connection.setConnectTimeout(30000);
-            connection.setReadTimeout(600000);
+            connection.setReadTimeout(300000);
             connection.setRequestProperty("Accept", "application/vnd.ceph.api.v1.0+json");
             connection.setRequestProperty("Authorization", "application/vnd.ceph.api.v1.0+json");
             connection.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
@@ -397,7 +397,7 @@ public class DisasterRecoveryClusterUtil {
             connection.setDoOutput(true);
             connection.setRequestMethod(method);
             connection.setConnectTimeout(30000);
-            connection.setReadTimeout(600000);
+            connection.setReadTimeout(300000);
             connection.setRequestProperty("Accept", "application/vnd.ceph.api.v1.0+json");
             connection.setRequestProperty("Authorization", "application/vnd.ceph.api.v1.0+json");
             connection.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
@@ -443,7 +443,7 @@ public class DisasterRecoveryClusterUtil {
             connection.setDoOutput(true);
             connection.setRequestMethod(method);
             connection.setConnectTimeout(30000);
-            connection.setReadTimeout(600000);
+            connection.setReadTimeout(300000);
             connection.setRequestProperty("Accept", "application/vnd.ceph.api.v1.0+json");
             connection.setRequestProperty("Authorization", "application/vnd.ceph.api.v1.0+json");
             connection.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
@@ -483,7 +483,7 @@ public class DisasterRecoveryClusterUtil {
             connection.setDoOutput(true);
             connection.setRequestMethod(method);
             connection.setConnectTimeout(30000);
-            connection.setReadTimeout(600000);
+            connection.setReadTimeout(300000);
             connection.setRequestProperty("Accept", "application/vnd.ceph.api.v1.0+json");
             connection.setRequestProperty("Authorization", "application/vnd.ceph.api.v1.0+json");
             connection.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
@@ -599,7 +599,7 @@ public class DisasterRecoveryClusterUtil {
                 connection.setDoOutput(true);
                 connection.setRequestMethod(method);
                 connection.setConnectTimeout(5000);
-                connection.setReadTimeout(600000);
+                connection.setReadTimeout(300000);
                 connection.setRequestProperty("Accept", "application/json");
                 connection.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
                 if (connection.getResponseCode() == 200) {
@@ -618,7 +618,7 @@ public class DisasterRecoveryClusterUtil {
                 connection.setDoOutput(true);
                 connection.setRequestMethod(method);
                 connection.setConnectTimeout(5000);
-                connection.setReadTimeout(600000);
+                connection.setReadTimeout(300000);
                 connection.setRequestProperty("Accept", "application/json");
                 connection.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
                 if (connection.getResponseCode() == 200) {
@@ -682,7 +682,7 @@ public class DisasterRecoveryClusterUtil {
                 connection.setDoOutput(true);
                 connection.setRequestMethod(method);
                 connection.setConnectTimeout(30000);
-                connection.setReadTimeout(600000);
+                connection.setReadTimeout(300000);
                 connection.setRequestProperty("Accept", "application/json");
                 connection.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
                 if (connection.getResponseCode() == 200) {
@@ -701,7 +701,7 @@ public class DisasterRecoveryClusterUtil {
                 connection.setDoOutput(true);
                 connection.setRequestMethod(method);
                 connection.setConnectTimeout(30000);
-                connection.setReadTimeout(600000);
+                connection.setReadTimeout(300000);
                 connection.setRequestProperty("Accept", "application/json");
                 connection.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
                 if (connection.getResponseCode() == 200) {
@@ -758,7 +758,7 @@ public class DisasterRecoveryClusterUtil {
                 connection.setDoOutput(true);
                 connection.setRequestMethod(method);
                 connection.setConnectTimeout(30000);
-                connection.setReadTimeout(600000);
+                connection.setReadTimeout(300000);
                 connection.setRequestProperty("Accept", "application/json");
                 connection.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
                 if (connection.getResponseCode() == 200) {
@@ -777,7 +777,7 @@ public class DisasterRecoveryClusterUtil {
                 connection.setDoOutput(true);
                 connection.setRequestMethod(method);
                 connection.setConnectTimeout(30000);
-                connection.setReadTimeout(600000);
+                connection.setReadTimeout(300000);
                 connection.setRequestProperty("Accept", "application/json");
                 connection.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
                 if (connection.getResponseCode() == 200) {
@@ -833,7 +833,7 @@ public class DisasterRecoveryClusterUtil {
                 connection.setDoOutput(true);
                 connection.setRequestMethod(method);
                 connection.setConnectTimeout(30000);
-                connection.setReadTimeout(600000);
+                connection.setReadTimeout(300000);
                 connection.setRequestProperty("Accept", "application/json");
                 connection.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
                 if (connection.getResponseCode() == 200) {
@@ -852,7 +852,7 @@ public class DisasterRecoveryClusterUtil {
                 connection.setDoOutput(true);
                 connection.setRequestMethod(method);
                 connection.setConnectTimeout(30000);
-                connection.setReadTimeout(600000);
+                connection.setReadTimeout(300000);
                 connection.setRequestProperty("Accept", "application/json");
                 connection.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
                 if (connection.getResponseCode() == 200) {
@@ -895,7 +895,7 @@ public class DisasterRecoveryClusterUtil {
                 connection.setDoOutput(true);
                 connection.setRequestMethod(method);
                 connection.setConnectTimeout(5000);
-                connection.setReadTimeout(600000);
+                connection.setReadTimeout(300000);
                 connection.setRequestProperty("Accept", "application/json");
                 connection.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
                 if (connection.getResponseCode() == 200) {
@@ -914,7 +914,7 @@ public class DisasterRecoveryClusterUtil {
                 connection.setDoOutput(true);
                 connection.setRequestMethod(method);
                 connection.setConnectTimeout(5000);
-                connection.setReadTimeout(600000);
+                connection.setReadTimeout(300000);
                 connection.setRequestProperty("Accept", "application/json");
                 connection.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
                 if (connection.getResponseCode() == 200) {
