@@ -84,6 +84,7 @@ CREATE TABLE IF NOT EXISTS `disaster_recovery_cluster` (
     `api_key`                varchar(255)    NOT NULL,
     `secret_key`             varchar(255)    NOT NULL,
     `private_key`            varchar(8191)   NULL,
+    `glue_ip_address`        varchar(255)    NULL,
     `created`                datetime        NOT NULL COMMENT 'date created',
     `removed`                datetime        NULL COMMENT 'date removed',
     PRIMARY KEY (`id`),
