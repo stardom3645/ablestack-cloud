@@ -404,21 +404,6 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         return serverInfo;
     }
 
-    private PrivateKey parsePrivateKey(final String key) throws IOException {
-        Preconditions.checkArgument(StringUtils.isNotEmpty(key));
-        try (final PemReader pemReader = new PemReader(new StringReader(key));) {
-            final PemObject pemObject = pemReader.readPemObject();
-            final byte[] content = pemObject.getContent();
-            final PKCS8EncodedKeySpec privKeySpec = new PKCS8EncodedKeySpec(content);
-            final KeyFactory factory = KeyFactory.getInstance("RSA", "BC");
-            return factory.generatePrivate(privKeySpec);
-        } catch (NoSuchAlgorithmException | NoSuchProviderException e) {
-            throw new IOException("No encryption provider available.", e);
-        } catch (final InvalidKeySpecException e) {
-            throw new IOException("Invalid Key format.", e);
-        }
-    }
-
     @Override
     public boolean setupDisasterRecoveryCluster(long clusterId) throws CloudRuntimeException {
         DisasterRecoveryClusterVO drCluster = disasterRecoveryClusterDao.findById(clusterId);
@@ -431,12 +416,9 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         String secSecretKey = drCluster.getDrClusterSecretKey();
         String secPrivateKey = drCluster.getDrClusterPrivateKey();
         String secGlueIpAddress = drCluster.getDrClusterGlueIpAddress();
-        LOGGER.info(secPrivateKey);
         try {
-            PrivateKey secPriKey = parsePrivateKey(secPrivateKey);
             FileOutputStream fos = new FileOutputStream("glue.key");
-            fos.write(secPriKey.getEncoded());
-            LOGGER.info(secPriKey.getEncoded());
+            fos.write(secPrivateKey);
             fos.close();
         } catch (IOException e) {
             throw new CloudRuntimeException("Converting the secondary cluster's private key to a file failed.", e);
