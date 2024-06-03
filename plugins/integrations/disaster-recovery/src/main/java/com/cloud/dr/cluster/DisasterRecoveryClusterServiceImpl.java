@@ -477,7 +477,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                         disasterRecoveryClusterDao.update(drCluster.getId(), drCluster);
                         // secondary cluster db 업데이트
                         secCommand = "updateDisasterRecoveryCluster";
-                        secMethod = "POST";
+                        secMethod = "GET";
                         Map<String, String> sucParams = new HashMap<>();
                         sucParams.put("name", drName);
                         sucParams.put("drclusterstatus", DisasterRecoveryCluster.DrClusterStatus.Enabled.toString());
@@ -491,7 +491,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                         disasterRecoveryClusterDao.update(drCluster.getId(), drCluster);
                         // secondary cluster db 업데이트
                         secCommand = "updateDisasterRecoveryCluster";
-                        secMethod = "POST";
+                        secMethod = "GET";
                         Map<String, String> sucParams = new HashMap<>();
                         sucParams.put("name", drName);
                         sucParams.put("drclusterstatus", DisasterRecoveryCluster.DrClusterStatus.Error.toString());
@@ -507,7 +507,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                 disasterRecoveryClusterDao.update(drCluster.getId(), drCluster);
                 // secondary cluster에 UpdateDisasterRecoveryClusterCmd 호출
                 secCommand = "updateDisasterRecoveryCluster";
-                secMethod = "POST";
+                secMethod = "GET";
                 Map<String, String> errParams = new HashMap<>();
                 errParams.put("name", drName);
                 errParams.put("drclusterstatus", DisasterRecoveryCluster.DrClusterStatus.Error.toString());
@@ -604,7 +604,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                     disasterRecoveryClusterDao.update(drCluster.getId(), drCluster);
                     // secondary cluster db 업데이트
                     String secCommand = "updateDisasterRecoveryCluster";
-                    String secMethod = "POST";
+                    String secMethod = "GET";
                     Map<String, String> sucParams = new HashMap<>();
                     sucParams.put("name", drName);
                     sucParams.put("drclusterstatus", DisasterRecoveryCluster.DrClusterStatus.Error.toString());
