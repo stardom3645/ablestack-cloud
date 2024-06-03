@@ -118,7 +118,7 @@ export default {
       show: (record) => { return record.drclustertype === 'primary' }
     },
     {
-      api: 'deletePod',
+      api: 'deleteDisasterRecoveryCluster',
       icon: 'delete-outlined',
       label: 'label.action.delete.disaster.recovery.cluster',
       message: 'message.delete.dr.cluster.confirm',
