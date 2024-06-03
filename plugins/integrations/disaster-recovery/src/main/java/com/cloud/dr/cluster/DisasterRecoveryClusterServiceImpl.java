@@ -479,6 +479,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
             String ipList = Script.runSimpleBashScript("cat /etc/hosts | grep -E 'scvm1-mngt|scvm2-mngt|scvm3-mngt' | awk '{print $1}' | tr '\n' ','");
             if (ipList != null || !ipList.isEmpty()) {
                 ipList = ipList.replaceAll(",$", "");
+                LOGGER.info(ipList);
                 // primary cluster에 glueMirrorSetupAPI 호출
                 String[] array = ipList.split(",");
                 for (int i=0; i < array.length; i++) {
