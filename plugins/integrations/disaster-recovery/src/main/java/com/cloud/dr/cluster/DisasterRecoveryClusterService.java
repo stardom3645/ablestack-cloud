@@ -50,6 +50,8 @@ public interface DisasterRecoveryClusterService extends PluggableService, Config
 
     boolean setupDisasterRecoveryCluster(long clusterId) throws CloudRuntimeException;
 
+    boolean deleteDisasterRecoveryCluster(long clusterId) throws CloudRuntimeException;
+
     GetDisasterRecoveryClusterListResponse createDisasterRecoveryClusterResponse(long clusterId);
 
 }
