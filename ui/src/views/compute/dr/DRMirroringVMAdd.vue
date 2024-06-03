@@ -298,7 +298,7 @@ export default {
         const params = {
           drcluster: values.drCluster,
           secdrclusterofferings: values.secDrClusterOfferings,
-          secdrclusternetworklist: values.secDrClusterNetworkList,
+          secdrclusternetworklist: values.secDrClusterNetworkList
         }
         console.log(params)
         this.loading = false
