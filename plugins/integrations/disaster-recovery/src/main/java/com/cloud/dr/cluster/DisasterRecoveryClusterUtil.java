@@ -260,33 +260,59 @@ public class DisasterRecoveryClusterUtil {
      *  host(string), privateKeyFile(file), mirrorPool(string)
      * @return true = 200, 이외 코드는 false 처리
      */
-    protected static boolean glueMirrorRemoveAPI(String region, String subUrl, String method, Map<String, String> params) {
+    protected static boolean glueMirrorDeleteAPI(String region, String subUrl, String method, Map<String, String> params, File privateKey) {
         try {
-            String readLine = null;
-            StringBuffer sb = null;
             // SSL 인증서 에러 우회 처리
             final SSLContext sslContext = SSLUtils.getSSLContext();
             sslContext.init(null, new TrustManager[]{new TrustAllManager()}, new SecureRandom());
             URL url = new URL(region + subUrl);
             HttpsURLConnection connection = (HttpsURLConnection)url.openConnection();
             connection.setSSLSocketFactory(sslContext.getSocketFactory());
+            connection.setDoInput(true);
             connection.setDoOutput(true);
             connection.setRequestMethod(method);
             connection.setConnectTimeout(30000);
             connection.setReadTimeout(600000);
             connection.setRequestProperty("Accept", "application/vnd.ceph.api.v1.0+json");
             connection.setRequestProperty("Authorization", "application/vnd.ceph.api.v1.0+json");
-            connection.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
-            // parameter 추가 시 사용 예정
-            // String apiParams = buildParamsGlues(params);
-            // OutputStream os = connection.getOutputStream();
-            // os.write(apiParams.getBytes("UTF-8"));
-            // os.flush();
-            // os.close();
+            connection.setRequestProperty("Connection","Keep-Alive");
+            connection.setRequestProperty("Content-type", "multipart/form-data;charset=" + charset + ";boundary=" + boundary);
+            outputStream = connection.getOutputStream();
+            writer = new PrintWriter(new OutputStreamWriter(outputStream, charset), true);
+            for(Map.Entry<String, String> param : params.entrySet()){
+                String key = param.getKey();
+                String value = param.getValue();
+                addTextPart(key, value);
+            }
+            addFilePart("privateKeyFile", privateKey);
+            writer.append("--" + boundary + "--").append(LINE_FEED);
+            LOGGER.info("writer.toString()");
+            LOGGER.info(writer.toString());
+            writer.close();
+            LOGGER.info("outputStream.toString()");
+            LOGGER.info(outputStream.toString());
             if (connection.getResponseCode() == 200) {
+                BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+                String inputLine;
+                StringBuffer response = new StringBuffer();
+                while ((inputLine = in.readLine()) != null) {
+                    response.append(inputLine);
+                }
+                LOGGER.info("glueMirrorDeleteAPI Success::::::::::::::::::::");
+                LOGGER.info(response.toString());
+                in.close();
                 return true;
             } else {
-                String msg = "Failed to request glue mirror remove API. response code : " + connection.getResponseCode();
+                BufferedReader in = new BufferedReader(new InputStreamReader(connection.getErrorStream()));
+                String inputLine;
+                StringBuffer response = new StringBuffer();
+                while ((inputLine = in.readLine()) != null) {
+                    response.append(inputLine);
+                }
+                LOGGER.info("glueMirrorDeleteAPI Fail::::::::::::::::::::");
+                LOGGER.info(response.toString());
+                in.close();
+                String msg = "Failed to request glue mirror delete API. response code : " + connection.getResponseCode();
                 LOGGER.error(msg);
                 return false;
             }
@@ -772,6 +798,79 @@ public class DisasterRecoveryClusterUtil {
             JSONObject response = (JSONObject) jObject.get("updatedisasterrecoveryclusterresponse");
             LOGGER.info(response.toString());
             return response.get("disasterrecoverycluster").toString();
+        } catch (Exception e) {
+            LOGGER.error(String.format("Mold API endpoint not available"), e);
+            return null;
+        }
+    }
+
+    /**
+     * Mold deleteDisasterRecoveryCluster API 요청
+     * @param region
+     *  <url>/client/api/
+     * @param command
+     *  deleteDisasterRecoveryCluster
+     * @param method
+     *  DELETE
+     * @param name
+     *  primary cluster name
+     * @return true = 200, 이외 코드는 false 처리
+     */
+    protected static String moldDeleteDisasterRecoveryClusterAPI(String region, String command, String method, String apiKey, String secretKey, Map<String, String> params) {
+        try {
+            String readLine = null;
+            StringBuffer sb = null;
+            String apiParams = buildParamsMold(command, params);
+            String urlFinal = buildUrl(apiParams, region, apiKey, secretKey);
+            URL url = new URL(urlFinal);
+            LOGGER.info(url);
+            if (region.contains("https")) {
+                // SSL 인증서 에러 우회 처리
+                final SSLContext sslContext = SSLUtils.getSSLContext();
+                sslContext.init(null, new TrustManager[]{new TrustAllManager()}, new SecureRandom());
+                HttpsURLConnection connection = (HttpsURLConnection)url.openConnection();
+                connection.setSSLSocketFactory(sslContext.getSocketFactory());
+                connection.setDoOutput(true);
+                connection.setRequestMethod(method);
+                connection.setConnectTimeout(30000);
+                connection.setReadTimeout(600000);
+                connection.setRequestProperty("Accept", "application/json");
+                connection.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
+                if (connection.getResponseCode() == 200) {
+                    BufferedReader br = new BufferedReader(new InputStreamReader(connection.getInputStream(), "UTF-8"));
+                    sb = new StringBuffer();
+                    while ((readLine = br.readLine()) != null) {
+                        sb.append(readLine);
+                    }
+                } else {
+                    String msg = "Failed to request mold API. response code : " + connection.getResponseCode();
+                    LOGGER.error(msg);
+                    return null;
+                }
+            } else {
+                HttpURLConnection connection = (HttpURLConnection)url.openConnection();
+                connection.setDoOutput(true);
+                connection.setRequestMethod(method);
+                connection.setConnectTimeout(30000);
+                connection.setReadTimeout(600000);
+                connection.setRequestProperty("Accept", "application/json");
+                connection.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
+                if (connection.getResponseCode() == 200) {
+                    BufferedReader br = new BufferedReader(new InputStreamReader(connection.getInputStream(), "UTF-8"));
+                    sb = new StringBuffer();
+                    while ((readLine = br.readLine()) != null) {
+                        sb.append(readLine);
+                    }
+                } else {
+                    String msg = "Failed to request mold API. response code : " + connection.getResponseCode();
+                    LOGGER.error(msg);
+                    return null;
+                }
+            }
+            JSONObject jObject = XML.toJSONObject(sb.toString());
+            JSONObject response = (JSONObject) jObject.get("deletedisasterrecoveryclusterresponse");
+            LOGGER.info(response);
+            return response.get("id").toString();
         } catch (Exception e) {
             LOGGER.error(String.format("Mold API endpoint not available"), e);
             return null;

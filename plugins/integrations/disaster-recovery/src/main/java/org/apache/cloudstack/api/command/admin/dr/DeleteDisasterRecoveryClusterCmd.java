@@ -55,9 +55,16 @@ public class DeleteDisasterRecoveryClusterCmd extends BaseAsyncCmd {
     @Parameter(name = ApiConstants.ID,
             type = CommandType.UUID,
             entityType = GetDisasterRecoveryClusterListResponse.class,
-            required = true,
+            required = false,
             description = "the ID of the disaster recovery cluster")
     private Long id;
+
+    @Parameter(name = ApiConstants.NAME,
+            type = CommandType.STRING,
+            entityType = GetDisasterRecoveryClusterListResponse.class,
+            required = false,
+            description = "the name of the disaster recovery cluster")
+    private String name;
 
     /////////////////////////////////////////////////////
     /////////////////// Accessors ///////////////////////
@@ -67,6 +74,10 @@ public class DeleteDisasterRecoveryClusterCmd extends BaseAsyncCmd {
         return id;
     }
 
+    public String getName() {
+        return name;
+    }
+
     /////////////////////////////////////////////////////
     /////////////// API Implementation///////////////////
     /////////////////////////////////////////////////////
@@ -74,8 +85,18 @@ public class DeleteDisasterRecoveryClusterCmd extends BaseAsyncCmd {
     @Override
     public void execute() throws ServerApiException {
         try {
-            if (!disasterRecoveryClusterService.deleteDisasterRecoveryCluster(id)) {
-                throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, String.format("Failed to delete disaster recovery cluster ID: %d", getId()));
+            if (id == null && name == null) {
+                throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, String.format("Failed to delete disaster recovery cluster"));
+            }
+            if (id != null) {
+                if (!disasterRecoveryClusterService.deleteDisasterRecoveryCluster(id)) {
+                    throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, String.format("Failed to delete disaster recovery cluster ID: %d", getId()));
+                }
+            }
+            if (name != null) {
+                if (!disasterRecoveryClusterService.deleteDisasterRecoveryCluster(name)) {
+                    throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, String.format("Failed to delete disaster recovery cluster ID: %d", getId()));
+                }
             }
             SuccessResponse response = new SuccessResponse(getCommandName());
             setResponseObject(response);
