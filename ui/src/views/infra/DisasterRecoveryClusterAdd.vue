@@ -258,7 +258,7 @@ export default {
           drclusterapikey: values.apikey,
           drclustersecretkey: values.secretkey,
           drclusterprivatekey: values.file,
-          drclusterglueipaddress: values,glueip,
+          drclusterglueipaddress: values.glueip,
           drclustertype: 'secondary'
         }
         api('createDisasterRecoveryCluster', params).then(json => {
