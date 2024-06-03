@@ -72,7 +72,7 @@ public class DisasterRecoveryClusterVO implements DisasterRecoveryCluster {
     private String drClusterSecretKey;
 
     @Encrypt
-    @Column(name = "private_key", length = 16384)
+    @Column(name = "glue_private_key", length = 16384)
     private String drClusterPrivateKey;
 
     @Column(name = "glue_ip_address")
