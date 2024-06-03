@@ -20,5 +20,5 @@ public class DisasterRecoveryClusterEventTypes {
 
     public static final String EVENT_DR_TEST_CONNECT = "DR.TEST.CONNECT";
     public static final String EVENT_DR_CREATE = "DR.CREATE";
-
+    public static final String EVENT_DR_DELETE = "DR.DELETE";
 }

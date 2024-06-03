@@ -65,6 +65,7 @@ import org.apache.cloudstack.api.response.NetworkResponse;
 import org.apache.cloudstack.api.response.ScvmIpAddressResponse;
 import org.apache.cloudstack.api.command.admin.dr.ConnectivityTestsDisasterRecoveryClusterCmd;
 import org.apache.cloudstack.api.command.admin.dr.CreateDisasterRecoveryClusterCmd;
+import org.apache.cloudstack.api.command.admin.dr.DeleteDisasterRecoveryClusterCmd;
 import org.apache.cloudstack.api.command.admin.glue.ListScvmIpAddressCmd;
 import org.apache.cloudstack.api.response.ServiceOfferingResponse;
 import org.apache.cloudstack.api.response.UserVmResponse;
@@ -433,8 +434,6 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         String secCommand = "createDisasterRecoveryCluster";
         String secMethod = "POST";
         String secResponse = DisasterRecoveryClusterUtil.moldCreateDisasterRecoveryClusterAPI(secUrl + "/client/api/", secCommand, secMethod, secApiKey, secSecretKey, secParams);
-        LOGGER.info("moldCreateDisasterRecoveryClusterAPI secResponse::::::::::::::::::::::::::::::createDisasterRecoveryCluster");
-        LOGGER.info(secResponse);
         if (secResponse == null || secResponse.isEmpty()) {
             // secondary cluster의 db에 dr 정보가 정상적으로 업데이트 되지 않은 경우
             // primary cluster db 업데이트
@@ -470,8 +469,6 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                     glueParams.put("mirrorPool", "rbd");
                     glueParams.put("host", secGlueIpAddress);
                     boolean result = DisasterRecoveryClusterUtil.glueMirrorSetupAPI(glueUrl, glueCommand, glueMethod, glueParams, permKey);
-                    LOGGER.info("result::::::::::::::::::::::::::::::");
-                    LOGGER.info(result);
                     // mirror setup 성공
                     if (result) {
                         // primary cluster db 업데이트
@@ -518,7 +515,6 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                 DisasterRecoveryClusterUtil.moldUpdateDisasterRecoveryClusterAPI(secUrl + "/client/api/", secCommand, secMethod, secApiKey, secSecretKey, errParams);
             }
         }
-        // secondary cluster에 UpdateDisasterRecoveryClusterCmd 호출
         return false;
     }
 
@@ -541,6 +537,19 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
     }
 
     @Override
+    public boolean deleteDisasterRecoveryCluster(long clusterId) throws CloudRuntimeException {
+        if (!DisasterRecoveryServiceEnabled.value()) {
+            throw new CloudRuntimeException("Disaster Recovery Service plugin is disabled");
+        }
+        DisasterRecoveryClusterVO cluster = disasterRecoveryClusterDao.findById(clusterId);
+        if (cluster == null) {
+            throw new InvalidParameterValueException("Invalid disaster recovery cluster id specified");
+        }
+        // glue-api 테스트 후 추가예정
+        return true;
+    }
+
+    @Override
     public List<Class<?>> getCommands() {
         List<Class<?>> cmdList = new ArrayList<Class<?>>();
         if (!DisasterRecoveryServiceEnabled.value()) {
@@ -551,6 +560,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         cmdList.add(GetDisasterRecoveryClusterListCmd.class);
         cmdList.add(UpdateDisasterRecoveryClusterCmd.class);
         cmdList.add(CreateDisasterRecoveryClusterCmd.class);
+        cmdList.add(DeleteDisasterRecoveryClusterCmd.class);
         return cmdList;
     }
 
