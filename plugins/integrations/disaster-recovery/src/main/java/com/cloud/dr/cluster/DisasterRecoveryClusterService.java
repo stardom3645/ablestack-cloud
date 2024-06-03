@@ -16,8 +16,6 @@
 // under the License.
 package com.cloud.dr.cluster;
 
-// import java.io.File;
-
 import org.apache.cloudstack.api.command.admin.dr.ConnectivityTestsDisasterRecoveryClusterCmd;
 import org.apache.cloudstack.api.command.admin.dr.GetDisasterRecoveryClusterListCmd;
 import org.apache.cloudstack.api.command.admin.dr.UpdateDisasterRecoveryClusterCmd;
@@ -50,7 +48,6 @@ public interface DisasterRecoveryClusterService extends PluggableService, Config
 
     DisasterRecoveryCluster createDisasterRecoveryCluster(CreateDisasterRecoveryClusterCmd cmd) throws CloudRuntimeException;
 
-    // boolean setupDisasterRecoveryCluster(long clusterId, File privateKey) throws CloudRuntimeException;
     boolean setupDisasterRecoveryCluster(long clusterId) throws CloudRuntimeException;
 
     GetDisasterRecoveryClusterListResponse createDisasterRecoveryClusterResponse(long clusterId);
