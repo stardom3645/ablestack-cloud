@@ -27,13 +27,6 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.File;
-import java.io.StringReader;
-import java.security.KeyFactory;
-import java.security.PrivateKey;
-import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
-import java.security.spec.InvalidKeySpecException;
-import java.security.spec.PKCS8EncodedKeySpec;
 
 import javax.inject.Inject;
 
@@ -62,7 +55,6 @@ import com.cloud.utils.script.Script;
 import com.cloud.utils.server.ServerProperties;
 import com.cloud.utils.component.ManagerBase;
 import com.cloud.utils.exception.CloudRuntimeException;
-import com.google.common.base.Preconditions;
 
 import org.apache.cloudstack.api.ApiConstants;
 import org.apache.cloudstack.api.ResponseObject;
@@ -82,9 +74,6 @@ import org.apache.cloudstack.context.CallContext;
 import org.apache.cloudstack.framework.config.ConfigKey;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
-import org.apache.commons.lang3.StringUtils;
-import org.bouncycastle.util.io.pem.PemObject;
-import org.bouncycastle.util.io.pem.PemReader;
 
 public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements DisasterRecoveryClusterService {
 
