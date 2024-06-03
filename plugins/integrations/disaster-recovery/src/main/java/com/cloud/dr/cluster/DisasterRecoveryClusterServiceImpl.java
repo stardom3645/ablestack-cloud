@@ -339,7 +339,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
             @Override
             public DisasterRecoveryClusterVO doInTransaction(TransactionStatus status) {
                 DisasterRecoveryClusterVO newCluster = new DisasterRecoveryClusterVO(msHost.getId(), cmd.getName(), cmd.getDescription(),
-                        cmd.getDrClusterApiKey(), cmd.getDrClusterSecretKey(), cmd.getDrClusterPrivateKey(), cmd.getDrClusterUrl(), cmd.getDrClusterType(), DisasterRecoveryCluster.DrClusterStatus.Created.toString(), DisasterRecoveryCluster.MirroringAgentStatus.Created.toString());
+                        cmd.getDrClusterApiKey(), cmd.getDrClusterSecretKey(), cmd.getDrClusterPrivateKey(), cmd.getDrClusterGlueIpAddress(), cmd.getDrClusterUrl(), cmd.getDrClusterType(), DisasterRecoveryCluster.DrClusterStatus.Created.toString(), DisasterRecoveryCluster.MirroringAgentStatus.Created.toString());
                 disasterRecoveryClusterDao.persist(newCluster);
                 return newCluster;
             }
@@ -357,12 +357,16 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         final String apiKey = cmd.getDrClusterApiKey();
         final String secretKey = cmd.getDrClusterSecretKey();
         final String privateKey = cmd.getDrClusterPrivateKey();
+        final String glueIp = cmd.getDrClusterGlueIpAddress();
 
         if (name == null || name.isEmpty()) {
             throw new InvalidParameterValueException("Invalid name for the disaster recovery cluster name:" + name);
         }
         if (type.equalsIgnoreCase("secondary") && (privateKey == null || privateKey.isEmpty())) {
             throw new InvalidParameterValueException("Invalid private key for the disaster recovery cluster private key:" + privateKey);
+        }
+        if (type.equalsIgnoreCase("secondary") && (glueIp == null || glueIp.isEmpty())) {
+            throw new InvalidParameterValueException("Invalid glue ip for the disaster recovery cluster glue ip:" + glueIp);
         }
         if (url == null || url.isEmpty()) {
             throw new InvalidParameterValueException("Invalid url for the disaster recovery cluster url:" + url);
@@ -426,11 +430,11 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         String secApiKey = drCluster.getDrClusterApiKey();
         String secSecretKey = drCluster.getDrClusterSecretKey();
         String secPrivateKey = drCluster.getDrClusterPrivateKey();
-        FileOutputStream fos = null;
+        String secGlueIpAddress = drCluster.getDrClusterGlueIpAddress();
         File permKey = null;
         try {
             PrivateKey secPriKey = parsePrivateKey(secPrivateKey);
-            fos = new FileOutputStream("id_rsa_dr");
+            FileOutputStream fos = new FileOutputStream("id_rsa_dr");
             fos.write(secPriKey.getEncoded());
             permKey = new File("id_rsa_dr");
         } catch (IOException e) {
@@ -475,7 +479,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
             return false;
         } else {
             // secondary cluster의 db에 dr 정보가 정상적으로 업데이트 된 경우
-            // primary cluster에 scvmList 조회
+            // primary cluster에 scvmList 조회하여 api 요청
             String ipList = Script.runSimpleBashScript("cat /etc/hosts | grep -E 'scvm1-mngt|scvm2-mngt|scvm3-mngt' | awk '{print $1}' | tr '\n' ','");
             if (ipList != null || !ipList.isEmpty()) {
                 ipList = ipList.replaceAll(",$", "");
@@ -491,7 +495,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                     glueParams.put("localClusterName", "local");
                     glueParams.put("remoteClusterName", "remote");
                     glueParams.put("mirrorPool", "rbd");
-                    glueParams.put("host", glueIp);
+                    glueParams.put("host", secGlueIpAddress);
                     boolean result = DisasterRecoveryClusterUtil.glueMirrorSetupAPI(glueUrl, glueCommand, glueMethod, glueParams, permKey);
                     LOGGER.info("result::::::::::::::::::::::::::::::");
                     LOGGER.info(result);
