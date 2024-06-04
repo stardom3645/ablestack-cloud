@@ -53,15 +53,9 @@ public class DeleteDisasterRecoveryClusterCmd extends BaseAsyncCmd {
 
     @Parameter(name = ApiConstants.ID,
             type = CommandType.UUID,
-            required = false,
+            required = true,
             description = "the ID of the disaster recovery cluster")
     private Long id;
-
-    @Parameter(name = ApiConstants.NAME,
-            type = CommandType.STRING,
-            required = false,
-            description = "the name of the disaster recovery cluster")
-    private String name;
 
     /////////////////////////////////////////////////////
     /////////////////// Accessors ///////////////////////
@@ -69,10 +63,6 @@ public class DeleteDisasterRecoveryClusterCmd extends BaseAsyncCmd {
 
     public Long getId() {
         return id;
-    }
-
-    public String getName() {
-        return name;
     }
 
     /////////////////////////////////////////////////////

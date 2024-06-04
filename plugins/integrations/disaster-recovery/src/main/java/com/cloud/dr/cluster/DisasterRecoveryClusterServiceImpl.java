@@ -595,20 +595,13 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         if (!DisasterRecoveryServiceEnabled.value()) {
             throw new CloudRuntimeException("Disaster Recovery Service plugin is disabled");
         }
-        if (cmd.getId() == null && cmd.getName() == null) {
-            throw new CloudRuntimeException("Invalid disaster recovery cluster id or name");
+        DisasterRecoveryClusterVO drCluster = disasterRecoveryClusterDao.findById(cmd.getId());
+        if (drCluster == null) {
+            throw new InvalidParameterValueException("Invalid disaster recovery cluster name specified");
         }
-        if (cmd.getName() != null) {
-            DisasterRecoveryClusterVO drCluster = disasterRecoveryClusterDao.findByName(cmd.getName());
-            if (drCluster == null) {
-                throw new InvalidParameterValueException("Invalid disaster recovery cluster name specified");
-            }
+        if (drClusterType.equalsIgnoreCase("primary")) {
             return disasterRecoveryClusterDao.remove(drCluster.getId());
         } else {
-            DisasterRecoveryClusterVO drCluster = disasterRecoveryClusterDao.findById(cmd.getId());
-            if (drCluster == null) {
-                throw new InvalidParameterValueException("Invalid disaster recovery cluster id specified");
-            }
             String drName = drCluster.getName();
             String secUrl = drCluster.getDrClusterUrl();
             String secClusterType = drCluster.getDrClusterType();
@@ -637,7 +630,6 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
             String ipList = Script.runSimpleBashScript("cat /etc/hosts | grep -E 'scvm1-mngt|scvm2-mngt|scvm3-mngt' | awk '{print $1}' | tr '\n' ','");
             if (ipList != null || !ipList.isEmpty()) {
                 ipList = ipList.replaceAll(",$", "");
-                LOGGER.info(ipList);
                 // primary cluster에 glueMirrorDeleteAPI 호출
                 String[] array = ipList.split(",");
                 for (int i=0; i < array.length; i++) {
@@ -653,13 +645,27 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                     if (result) {
                         // primary cluster db 업데이트
                         disasterRecoveryClusterDao.remove(drCluster.getId());
-                        // secondary cluster db 업데이트
-                        String secCommand = "deleteDisasterRecoveryCluster";
+                        // secondary cluster db 조회
+                        String secCommand = "getDisasterRecoveryClusterList";
                         String secMethod = "GET";
                         Map<String, String> sucParams = new HashMap<>();
-                        sucParams.put("name", drName);
-                        DisasterRecoveryClusterUtil.moldDeleteDisasterRecoveryClusterAPI(secUrl, secCommand, secMethod, secApiKey, secSecretKey, sucParams);
-                        return true;
+                        List<GetDisasterRecoveryClusterListResponse> drListResponse = DisasterRecoveryClusterUtil.moldGetDisasterRecoveryClusterListAPI(secUrl, secCommand, secMethod, secApiKey, secSecretKey, sucParams);
+                        if (drListResponse != null || !drListResponse.isEmpty()) {
+                            for (GetDisasterRecoveryClusterListResponse dr : drListResponse) {
+                                if (dr.getName() == drCluster.getName()) {
+                                    long primaryDrId = dr.getId();
+                                    // secondary cluster db 업데이트
+                                    secCommand = "deleteDisasterRecoveryCluster";
+                                    secMethod = "GET";
+                                    sucParams = new HashMap<>();
+                                    sucParams.put("id", primaryDrId);
+                                    DisasterRecoveryClusterUtil.moldDeleteDisasterRecoveryClusterAPI(secUrl, secCommand, secMethod, secApiKey, secSecretKey, sucParams);
+                                    return true;
+                                }
+                            }
+                        } else {
+                            return false; 
+                        }
                     } else {
                         // mirror 삭제 명령 후 실패한 경우 어떻게 처리할것인지??
                         // primary cluster db 업데이트
