@@ -65,9 +65,7 @@ export default {
       icon: 'edit-outlined',
       label: 'label.edit.disaster.recovery.cluster',
       dataView: true,
-      popup: true,
-      // disabled: (record) => { return record.drclusterstatus === 'Enabled' },
-      component: shallowRef(defineAsyncComponent(() => import('@/views/infra/UpdateDisasterRecoveryCluster.vue')))
+      args: ['name', 'description', 'drclusterurl']
     },
     {
       api: 'updateDisasterRecoveryCluster',
