@@ -100,8 +100,6 @@ public class DisasterRecoveryClusterUtil {
             connection.setRequestProperty("Accept", "application/vnd.ceph.api.v1.0+json");
             connection.setRequestProperty("Authorization", "application/vnd.ceph.api.v1.0+json");
             connection.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
-            LOGGER.info("connection.getResponseCode():::::::::::::::::::::::::::::::");
-            LOGGER.info(connection.getResponseCode());
             if (connection.getResponseCode() == 200) {
                 BufferedReader br = new BufferedReader(new InputStreamReader(connection.getInputStream(), "UTF-8"));
                 sb = new StringBuffer();
@@ -111,8 +109,6 @@ public class DisasterRecoveryClusterUtil {
                 JsonParser jParser = new JsonParser();
                 JsonObject jObject = (JsonObject)jParser.parse(sb.toString());
                 String health = jObject.get("health").toString();
-                LOGGER.info("health():::::::::::::::::::::::::::::::");
-                LOGGER.info(health);
                 return health;
             } else {
                 String msg = "Failed to request glue status API. response code : " + connection.getResponseCode();
@@ -213,11 +209,7 @@ public class DisasterRecoveryClusterUtil {
             }
             addFilePart("privateKeyFile", privateKey);
             writer.append("--" + boundary + "--").append(LINE_FEED);
-            LOGGER.info("writer.toString()");
-            LOGGER.info(writer.toString());
             writer.close();
-            LOGGER.info("outputStream.toString()");
-            LOGGER.info(outputStream.toString());
             if (connection.getResponseCode() == 200) {
                 BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
                 String inputLine;
@@ -225,8 +217,6 @@ public class DisasterRecoveryClusterUtil {
                 while ((inputLine = in.readLine()) != null) {
                     response.append(inputLine);
                 }
-                LOGGER.info("glueMirrorSetupAPI Success::::::::::::::::::::");
-                LOGGER.info(response.toString());
                 in.close();
                 return true;
             } else {
@@ -236,8 +226,6 @@ public class DisasterRecoveryClusterUtil {
                 while ((inputLine = in.readLine()) != null) {
                     response.append(inputLine);
                 }
-                LOGGER.info("glueMirrorSetupAPI Fail::::::::::::::::::::");
-                LOGGER.info(response.toString());
                 in.close();
                 String msg = "Failed to request glue mirror setup API. response code : " + connection.getResponseCode();
                 LOGGER.error(msg);
@@ -287,11 +275,7 @@ public class DisasterRecoveryClusterUtil {
             }
             addFilePart("privateKeyFile", privateKey);
             writer.append("--" + boundary + "--").append(LINE_FEED);
-            LOGGER.info("writer.toString()");
-            LOGGER.info(writer.toString());
             writer.close();
-            LOGGER.info("outputStream.toString()");
-            LOGGER.info(outputStream.toString());
             if (connection.getResponseCode() == 200) {
                 BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
                 String inputLine;
@@ -299,8 +283,6 @@ public class DisasterRecoveryClusterUtil {
                 while ((inputLine = in.readLine()) != null) {
                     response.append(inputLine);
                 }
-                LOGGER.info("glueMirrorDeleteAPI Success::::::::::::::::::::");
-                LOGGER.info(response.toString());
                 in.close();
                 return true;
             } else {
@@ -310,8 +292,6 @@ public class DisasterRecoveryClusterUtil {
                 while ((inputLine = in.readLine()) != null) {
                     response.append(inputLine);
                 }
-                LOGGER.info("glueMirrorDeleteAPI Fail::::::::::::::::::::");
-                LOGGER.info(response.toString());
                 in.close();
                 String msg = "Failed to request glue mirror delete API. response code : " + connection.getResponseCode();
                 LOGGER.error(msg);
@@ -895,11 +875,8 @@ public class DisasterRecoveryClusterUtil {
                     return null;
                 }
             }
-            LOGGER.info("updatedisasterrecoveryclusterresponse::::::::::::::");
-            LOGGER.info(sb.toString());
             JSONObject jObject = XML.toJSONObject(sb.toString());
             JSONObject response = (JSONObject) jObject.get("updatedisasterrecoveryclusterresponse");
-            LOGGER.info(response.toString());
             return response.get("disasterrecoverycluster").toString();
         } catch (Exception e) {
             LOGGER.error(String.format("Mold API endpoint not available"), e);
@@ -926,7 +903,6 @@ public class DisasterRecoveryClusterUtil {
             String apiParams = buildParamsMold(command, params);
             String urlFinal = buildUrl(apiParams, region, apiKey, secretKey);
             URL url = new URL(urlFinal);
-            LOGGER.info(url);
             if (region.contains("https")) {
                 // SSL 인증서 에러 우회 처리
                 final SSLContext sslContext = SSLUtils.getSSLContext();
