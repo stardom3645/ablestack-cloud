@@ -664,7 +664,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                                 }
                             }
                         } else {
-                            return false; 
+                            return false;
                         }
                     } else {
                         // mirror 삭제 명령 후 실패한 경우 어떻게 처리할것인지??
