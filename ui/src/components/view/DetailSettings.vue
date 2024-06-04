@@ -348,7 +348,8 @@ export default {
     hasSettingUpdatePermission () {
       return (
         (this.resourceType === 'Template' && 'updateTemplate' in this.$store.getters.apis) ||
-        (this.resourceType === 'UserVm' && 'updateVirtualMachine' in this.$store.getters.apis)
+        (this.resourceType === 'UserVm' && 'updateVirtualMachine' in this.$store.getters.apis) ||
+        (this.resourceType === 'DisasterRecoveryCluster' && 'updateDisasterRecoveryCluster' in this.$store.getters.apis)
       )
     }
   }
