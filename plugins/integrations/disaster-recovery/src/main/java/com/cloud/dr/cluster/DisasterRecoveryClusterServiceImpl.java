@@ -199,13 +199,10 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         response.setDrClusterApiKey(drcluster.getDrClusterApiKey());
         response.setDrClusterSecretKey(drcluster.getDrClusterSecretKey());
         response.setCreated(drcluster.getCreated());
-        LOGGER.info("setDisasterRecoveryClusterListResultResponse");
-        String moldUrl = drcluster.getDrClusterUrl() + "/client/api/";
-        String moldCommand = "listScvmIpAddress";
-        String moldMethod = "GET";
-        String ScvmResponse = DisasterRecoveryClusterUtil.moldListScvmIpAddressAPI(moldUrl, moldCommand, moldMethod, drcluster.getDrClusterApiKey(), drcluster.getDrClusterSecretKey());
-        if (ScvmResponse != null) {
-            String[] array = ScvmResponse.split(",");
+        String ipList = Script.runSimpleBashScript("cat /etc/hosts | grep -E 'scvm1-mngt|scvm2-mngt|scvm3-mngt' | awk '{print $1}' | tr '\n' ','");
+        if (ipList != null || !ipList.isEmpty()) {
+            ipList = ipList.replaceAll(",$", "");
+            String[] array = ipList.split(",");
             for(int i=0; i < array.length; i++) {
                 String glueIp = array[i];
                 String glueUrl = "https://" + glueIp + ":8080/api/v1"; // glue-api 프로토콜과 포트 확정 시 변경 예정
@@ -254,6 +251,8 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
             response.setDetails(details);
         }
         response.setDisasterRecoveryClusterVms(disasterRecoveryClusterVmResponses);
+        String moldUrl = drcluster.getDrClusterUrl() + "/client/api/";
+        String moldMethod = "GET";
         // Second dr cluster의 서비스 오퍼링 정보를 가져오는 코드
         String moldCommandListServiceOfferings = "listServiceOfferings";
         List<ServiceOfferingResponse> secDrClusterServiceOfferingListResponse = DisasterRecoveryClusterUtil.getSecDrClusterInfoList(moldUrl, moldCommandListServiceOfferings, moldMethod, drcluster.getDrClusterApiKey(), drcluster.getDrClusterSecretKey());
