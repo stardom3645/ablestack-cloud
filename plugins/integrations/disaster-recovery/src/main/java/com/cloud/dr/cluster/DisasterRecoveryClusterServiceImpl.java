@@ -653,7 +653,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                         if (drListResponse != null || !drListResponse.isEmpty()) {
                             for (GetDisasterRecoveryClusterListResponse dr : drListResponse) {
                                 if (dr.getName() == drCluster.getName()) {
-                                    String primaryDrId = dr.getId();
+                                    long primaryDrId = Long.valueOf(dr.getId());
                                     // secondary cluster db 업데이트
                                     secCommand = "deleteDisasterRecoveryCluster";
                                     secMethod = "GET";
