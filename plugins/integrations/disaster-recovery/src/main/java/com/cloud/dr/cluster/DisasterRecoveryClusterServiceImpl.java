@@ -648,7 +648,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                         String secCommand = "getDisasterRecoveryClusterList";
                         String secMethod = "GET";
                         Map<String, String> sucParams = new HashMap<>();
-                        List<GetDisasterRecoveryClusterListResponse> drListResponse = DisasterRecoveryClusterUtil.moldGetDisasterRecoveryClusterListAPI(secUrl, secCommand, secMethod, secApiKey, secSecretKey);
+                        List<GetDisasterRecoveryClusterListResponse> drListResponse = DisasterRecoveryClusterUtil.moldGetDisasterRecoveryClusterListAPI (secUrl + "/client/api/", secCommand, secMethod, secApiKey, secSecretKey);
                         if (drListResponse != null || !drListResponse.isEmpty()) {
                             for (GetDisasterRecoveryClusterListResponse dr : drListResponse) {
                                 if (dr.getName() == drCluster.getName()) {
@@ -658,7 +658,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                                     secMethod = "GET";
                                     sucParams = new HashMap<>();
                                     sucParams.put("id", primaryDrId);
-                                    DisasterRecoveryClusterUtil.moldDeleteDisasterRecoveryClusterAPI(secUrl, secCommand, secMethod, secApiKey, secSecretKey, sucParams);
+                                    DisasterRecoveryClusterUtil.moldDeleteDisasterRecoveryClusterAPI(secUrl + "/client/api/", secCommand, secMethod, secApiKey, secSecretKey, sucParams);
                                     return true;
                                 }
                             }
@@ -678,7 +678,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                         sucParams.put("name", drName);
                         sucParams.put("drclusterstatus", DisasterRecoveryCluster.DrClusterStatus.Error.toString());
                         sucParams.put("mirroringagentstatus", DisasterRecoveryCluster.DrClusterStatus.Error.toString());
-                        DisasterRecoveryClusterUtil.moldUpdateDisasterRecoveryClusterAPI(secUrl, secCommand, secMethod, secApiKey, secSecretKey, sucParams);
+                        DisasterRecoveryClusterUtil.moldUpdateDisasterRecoveryClusterAPI(secUrl + "/client/api/", secCommand, secMethod, secApiKey, secSecretKey, sucParams);
                     }
                 }
             } else {
