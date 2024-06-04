@@ -31,6 +31,7 @@ import org.apache.cloudstack.api.ResponseObject;
 import org.apache.cloudstack.api.ServerApiException;
 import org.apache.cloudstack.api.command.admin.AdminCmd;
 import org.apache.cloudstack.api.response.dr.cluster.GetDisasterRecoveryClusterListResponse;
+import org.apache.cloudstack.context.CallContext;
 
 import javax.inject.Inject;
 import java.util.Collection;
@@ -119,7 +120,7 @@ public class UpdateDisasterRecoveryClusterCmd extends BaseCmd implements AdminCm
 
     @Override
     public long getEntityOwnerId() {
-        return 0;
+        return CallContext.current().getCallingAccount().getId();
     }
 
     /////////////////////////////////////////////////////

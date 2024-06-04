@@ -178,8 +178,8 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         }
         List <DisasterRecoveryClusterVO> results = disasterRecoveryClusterDao.search(sc, searchFilter);
         for (DisasterRecoveryClusterVO result : results) {
-            GetDisasterRecoveryClusterListResponse automationControllerResponse = setDisasterRecoveryClusterListResultResponse(result.getId());
-            responsesList.add(automationControllerResponse);
+            GetDisasterRecoveryClusterListResponse disasterRecoveryClusterResponse = setDisasterRecoveryClusterListResultResponse(result.getId());
+            responsesList.add(disasterRecoveryClusterResponse);
         }
         ListResponse<GetDisasterRecoveryClusterListResponse> response = new ListResponse<>();
         response.setResponses(responsesList);
@@ -199,7 +199,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         response.setDrClusterApiKey(drcluster.getDrClusterApiKey());
         response.setDrClusterSecretKey(drcluster.getDrClusterSecretKey());
         response.setCreated(drcluster.getCreated());
-
+        LOGGER.info("setDisasterRecoveryClusterListResultResponse");
         String moldUrl = drcluster.getDrClusterUrl() + "/client/api/";
         String moldCommand = "listScvmIpAddress";
         String moldMethod = "GET";
@@ -266,6 +266,55 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         return response;
     }
 
+    public GetDisasterRecoveryClusterListResponse setDisasterRecoveryClusterResponse(long clusterId) {
+        DisasterRecoveryClusterVO drcluster = disasterRecoveryClusterDao.findById(clusterId);
+        GetDisasterRecoveryClusterListResponse response = new GetDisasterRecoveryClusterListResponse();
+        response.setObjectName("disasterrecoverycluster");
+        response.setId(drcluster.getUuid());
+        response.setName(drcluster.getName());
+        response.setDescription(drcluster.getDescription());
+        response.setDrClusterUrl(drcluster.getDrClusterUrl());
+        response.setDrClusterType(drcluster.getDrClusterType());
+        response.setDrClusterStatus(drcluster.getDrClusterStatus());
+        response.setDrClusterApiKey(drcluster.getDrClusterApiKey());
+        response.setDrClusterSecretKey(drcluster.getDrClusterSecretKey());
+        response.setCreated(drcluster.getCreated());
+        LOGGER.info("setDisasterRecoveryClusterListResultResponse");
+        String moldUrl = drcluster.getDrClusterUrl() + "/client/api/";
+        String moldCommand = "listScvmIpAddress";
+        String moldMethod = "GET";
+        String ScvmResponse = DisasterRecoveryClusterUtil.moldListScvmIpAddressAPI(moldUrl, moldCommand, moldMethod, drcluster.getDrClusterApiKey(), drcluster.getDrClusterSecretKey());
+        if (ScvmResponse != null) {
+            String[] array = ScvmResponse.split(",");
+            for(int i=0; i < array.length; i++) {
+                String glueIp = array[i];
+                String glueUrl = "https://" + glueIp + ":8080/api/v1"; // glue-api 프로토콜과 포트 확정 시 변경 예정
+                String glueCommand = "/mirror";
+                String glueMethod = "GET";
+                String daemonHealth = DisasterRecoveryClusterUtil.glueMirrorStatusAPI(glueUrl, glueCommand, glueMethod);
+                if (daemonHealth != null) {
+                    if (daemonHealth.contains("OK")) {
+                        drcluster.setMirroringAgentStatus(DisasterRecoveryCluster.MirroringAgentStatus.Enabled.toString());
+                        break;
+                    } else if (daemonHealth.contains("WARNING")){
+                        drcluster.setMirroringAgentStatus(DisasterRecoveryCluster.MirroringAgentStatus.Disabled.toString());
+                        break;
+                    } else {
+                        drcluster.setMirroringAgentStatus(DisasterRecoveryCluster.MirroringAgentStatus.Error.toString());
+                        break;
+                    }
+                } else {
+                    drcluster.setMirroringAgentStatus(DisasterRecoveryCluster.MirroringAgentStatus.Error.toString());
+                    break;
+                }
+            }
+        } else {
+            drcluster.setMirroringAgentStatus(DisasterRecoveryCluster.MirroringAgentStatus.Error.toString());
+        }
+        disasterRecoveryClusterDao.update(drcluster.getId(), drcluster);
+        return response;
+    }
+
     @Override
     @ActionEvent(eventType = EventTypes.EVENT_DISASTER_RECOVERY_CLUSTER, eventDescription = "updating dr cluster", resourceId = 5, resourceType = "DisasterRecoveryCluster")
     public GetDisasterRecoveryClusterListResponse updateDisasterRecoveryCluster(UpdateDisasterRecoveryClusterCmd cmd) throws CloudRuntimeException {
@@ -283,10 +332,14 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                 throw new InvalidParameterValueException("Invalid Disaster Recovery id specified");
             }
         }
+        LOGGER.info(drcluster.getName());
         drcluster = disasterRecoveryClusterDao.createForUpdate(drcluster.getId());
         if (cmd.getDrClusterStatus() != null && cmd.getMirroringAgentStatus() != null) {
+            LOGGER.info(":::::::::::::::::::1");
             final String drClusterStatus = cmd.getDrClusterStatus();
             final String mirroringAgentStatus = cmd.getMirroringAgentStatus();
+            LOGGER.info(drClusterStatus);
+            LOGGER.info(mirroringAgentStatus);
             drcluster.setDrClusterStatus(drClusterStatus);
             drcluster.setMirroringAgentStatus(mirroringAgentStatus);
             if (!disasterRecoveryClusterDao.update(drcluster.getId(), drcluster)) {
@@ -294,6 +347,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
             }
             drcluster = disasterRecoveryClusterDao.findByName(drClusterName);
         } else {
+            LOGGER.info(":::::::::::::::::::2");
             if (cmd.getName() != null) {
                 drcluster.setName(drClusterName);
             }
@@ -315,7 +369,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
             }
             drcluster = disasterRecoveryClusterDao.findById(drClusterId);
         }
-        return setDisasterRecoveryClusterListResultResponse(drcluster.getId());
+        return setDisasterRecoveryClusterResponse(drcluster.getId());
     }
 
     @Override
