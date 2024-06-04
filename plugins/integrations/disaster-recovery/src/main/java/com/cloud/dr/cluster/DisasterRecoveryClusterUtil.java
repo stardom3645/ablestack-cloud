@@ -652,10 +652,6 @@ public class DisasterRecoveryClusterUtil {
      *  getDisasterRecoveryClusterList
      * @param method
      *  GET
-     * @param apiKey
-     *  mold API Key
-     * @param secretKey
-     *  mold Secret Key
      * @return true = 200, 이외 코드는 false 처리
      */
     protected static List moldGetDisasterRecoveryClusterListAPI(String region, String command, String method, String apiKey, String secretKey) {
