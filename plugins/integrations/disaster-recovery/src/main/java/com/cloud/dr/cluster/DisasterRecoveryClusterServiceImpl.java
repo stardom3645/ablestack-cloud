@@ -322,50 +322,47 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
             throw new CloudRuntimeException("Disaster Recovery plugin is disabled");
         }
         DisasterRecoveryClusterVO drcluster = null;
-        final Long drClusterId = cmd.getId();
-        final String drClusterName = cmd.getName();
+        Long drClusterId = cmd.getId();
+        String drClusterName = cmd.getName();
         if (drClusterId == null) {
+            // Secondary Cluster 에서 요청한 경우
             drcluster = disasterRecoveryClusterDao.findByName(drClusterName);
         } else {
+            // Primary Cluster 에서 요청한 경우
             drcluster = disasterRecoveryClusterDao.findById(drClusterId);
             if (drcluster == null) {
                 throw new InvalidParameterValueException("Invalid Disaster Recovery id specified");
             }
         }
         drcluster = disasterRecoveryClusterDao.createForUpdate(drcluster.getId());
-        if (cmd.getDrClusterStatus() != null && cmd.getMirroringAgentStatus() != null) {
-            // Secondary Cluster 에서 요청한 경우
-            final String drClusterStatus = cmd.getDrClusterStatus();
-            final String mirroringAgentStatus = cmd.getMirroringAgentStatus();
-            drcluster.setDrClusterStatus(drClusterStatus);
-            drcluster.setMirroringAgentStatus(mirroringAgentStatus);
-            if (!disasterRecoveryClusterDao.update(drcluster.getId(), drcluster)) {
-                throw new CloudRuntimeException(String.format("Failed to update Disaster Recovery ID: %s", drcluster.getUuid()));
-            }
-            drcluster = disasterRecoveryClusterDao.findByName(drClusterName);
-        } else {
-            // Primary Cluster 에서 요청한 경우
-            if (cmd.getName() != null) {
-                drcluster.setName(drClusterName);
-            }
-            if (cmd.getDescription() != null) {
-                String drClusterDescription = cmd.getDescription();
-                drcluster.setDescription(drClusterDescription);
-            }
-            if (cmd.getDrClusterUrl() != null) {
-                String drClusterUrl = cmd.getDrClusterUrl();
-                drcluster.setDrClusterUrl(drClusterUrl);
-            }
-            if (cmd.getDetails() != null) {
-                Map<String,String> details = cmd.getDetails();
-                drcluster.setDetails(details);
-                disasterRecoveryClusterDao.saveDetails(drcluster);
-            }
-            if (!disasterRecoveryClusterDao.update(drcluster.getId(), drcluster)) {
-                throw new CloudRuntimeException(String.format("Failed to update Disaster Recovery ID: %s", drcluster.getUuid()));
-            }
-            drcluster = disasterRecoveryClusterDao.findById(drClusterId);
+        if (cmd.getName() != null) {
+            drcluster.setName(drClusterName);
         }
+        if (cmd.getDescription() != null) {
+            String drClusterDescription = cmd.getDescription();
+            drcluster.setDescription(drClusterDescription);
+        }
+        if (cmd.getDrClusterUrl() != null) {
+            String drClusterUrl = cmd.getDrClusterUrl();
+            drcluster.setDrClusterUrl(drClusterUrl);
+        }
+        if (cmd.getDetails() != null) {
+            Map<String,String> details = cmd.getDetails();
+            drcluster.setDetails(details);
+            disasterRecoveryClusterDao.saveDetails(drcluster);
+        }
+        if (cmd.getDrClusterStatus() != null) {
+            String drClusterStatus = cmd.getDrClusterStatus();
+            drcluster.setDrClusterStatus(drClusterStatus);
+        }
+        if (cmd.getMirroringAgentStatus() != null) {
+            String mirroringAgentStatus = cmd.getMirroringAgentStatus();
+            drcluster.setMirroringAgentStatus(mirroringAgentStatus);
+        }
+        if (!disasterRecoveryClusterDao.update(drcluster.getId(), drcluster)) {
+            throw new CloudRuntimeException(String.format("Failed to update Disaster Recovery ID: %s", drcluster.getUuid()));
+        }
+        drcluster = disasterRecoveryClusterDao.findById(drcluster.getId());
         return setDisasterRecoveryClusterResponse(drcluster.getId());
     }
 
@@ -667,7 +664,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                         }
                     }
                 }
-                // ******** glue-api 에서 삭제 도중 에러난 경우와 api 호출에 실패한 경우 어떻게 처리할 것인지
+                // ******** glue-api 에서 삭제 도중 에러난 경우 가비지 어떻게 처리할 것인지
                 // glueMirrorDeleteAPI 실패
                 // // Primary Cluster - DB 업데이트
                 // drCluster.setDrClusterStatus(DisasterRecoveryCluster.DrClusterStatus.Error.toString());
