@@ -649,9 +649,13 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                         String secMethod = "GET";
                         Map<String, String> sucParams = new HashMap<>();
                         List<GetDisasterRecoveryClusterListResponse> drListResponse = DisasterRecoveryClusterUtil.moldGetDisasterRecoveryClusterListAPI (secUrl + "/client/api/", secCommand, secMethod, secApiKey, secSecretKey);
+                        LOGGER.info(drListResponse);
                         if (drListResponse != null || !drListResponse.isEmpty()) {
                             for (GetDisasterRecoveryClusterListResponse dr : drListResponse) {
+                                LOGGER.info("::::::::::::::1" + dr.getName());
+                                LOGGER.info("::::::::::::::1" + drCluster.getName());
                                 if (dr.getName() == drCluster.getName()) {
+                                    LOGGER.info("::::::::::::::1");
                                     String primaryDrId = dr.getId();
                                     // secondary cluster db 업데이트
                                     secCommand = "deleteDisasterRecoveryCluster";
@@ -661,6 +665,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                                     DisasterRecoveryClusterUtil.moldDeleteDisasterRecoveryClusterAPI(secUrl + "/client/api/", secCommand, secMethod, secApiKey, secSecretKey, sucParams);
                                     return true;
                                 }
+                                LOGGER.info("::::::::::::::2");
                             }
                         } else {
                             return false;
