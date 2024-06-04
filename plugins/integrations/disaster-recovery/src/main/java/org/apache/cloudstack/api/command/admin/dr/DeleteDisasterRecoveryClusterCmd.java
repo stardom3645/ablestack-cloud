@@ -85,16 +85,16 @@ public class DeleteDisasterRecoveryClusterCmd extends BaseAsyncCmd {
     @Override
     public void execute() throws ServerApiException {
         try {
-            if (id == null && name == null) {
+            if (getId() == null && getName() == null) {
                 throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, String.format("Failed to delete disaster recovery cluster"));
             }
-            if (id != null) {
-                if (!disasterRecoveryClusterService.deleteDisasterRecoveryCluster(id)) {
+            if (getId() != null) {
+                if (!disasterRecoveryClusterService.deleteDisasterRecoveryCluster(getId())) {
                     throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, String.format("Failed to delete disaster recovery cluster ID: %d", getId()));
                 }
             }
-            if (name != null) {
-                if (!disasterRecoveryClusterService.deleteDisasterRecoveryCluster(name)) {
+            if (getName() != null) {
+                if (!disasterRecoveryClusterService.deleteDisasterRecoveryCluster(getName())) {
                     throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, String.format("Failed to delete disaster recovery cluster ID: %d", getId()));
                 }
             }
