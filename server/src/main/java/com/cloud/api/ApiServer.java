@@ -749,6 +749,8 @@ public class ApiServer extends ManagerBase implements HttpRequestHandler, ApiSer
         final Long callerUserId = ctx.getCallingUserId();
         final Account caller = ctx.getCallingAccount();
 
+        logger.info(cmdObj.toStrong());
+        logger.info(params.toString());
         // Queue command based on Cmd super class:
         // BaseCmd: cmd is dispatched to ApiDispatcher, executed, serialized and returned.
         // BaseAsyncCreateCmd: cmd params are processed and create() is called, then same workflow as BaseAsyncCmd.
