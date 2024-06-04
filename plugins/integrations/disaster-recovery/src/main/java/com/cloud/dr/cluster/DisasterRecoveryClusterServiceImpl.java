@@ -670,22 +670,21 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                         } else {
                             return false;
                         }
-                    } else {
-                        // mirror 삭제 명령 후 실패한 경우 어떻게 처리할것인지??
-                        // primary cluster db 업데이트
-                        drCluster.setDrClusterStatus(DisasterRecoveryCluster.DrClusterStatus.Error.toString());
-                        drCluster.setMirroringAgentStatus(DisasterRecoveryCluster.MirroringAgentStatus.Error.toString());
-                        disasterRecoveryClusterDao.update(drCluster.getId(), drCluster);
-                        // secondary cluster db 업데이트
-                        String secCommand = "updateDisasterRecoveryCluster";
-                        String secMethod = "GET";
-                        Map<String, String> sucParams = new HashMap<>();
-                        sucParams.put("name", drName);
-                        sucParams.put("drclusterstatus", DisasterRecoveryCluster.DrClusterStatus.Error.toString());
-                        sucParams.put("mirroringagentstatus", DisasterRecoveryCluster.DrClusterStatus.Error.toString());
-                        DisasterRecoveryClusterUtil.moldUpdateDisasterRecoveryClusterAPI(secUrl + "/client/api/", secCommand, secMethod, secApiKey, secSecretKey, sucParams);
                     }
                 }
+                // mirror 삭제 실패한 경우 어떻게 처리할것인지??
+                // primary cluster db 업데이트
+                drCluster.setDrClusterStatus(DisasterRecoveryCluster.DrClusterStatus.Error.toString());
+                drCluster.setMirroringAgentStatus(DisasterRecoveryCluster.MirroringAgentStatus.Error.toString());
+                disasterRecoveryClusterDao.update(drCluster.getId(), drCluster);
+                // secondary cluster db 업데이트
+                String secCommand = "updateDisasterRecoveryCluster";
+                String secMethod = "GET";
+                Map<String, String> sucParams = new HashMap<>();
+                sucParams.put("name", drName);
+                sucParams.put("drclusterstatus", DisasterRecoveryCluster.DrClusterStatus.Error.toString());
+                sucParams.put("mirroringagentstatus", DisasterRecoveryCluster.DrClusterStatus.Error.toString());
+                DisasterRecoveryClusterUtil.moldUpdateDisasterRecoveryClusterAPI(secUrl + "/client/api/", secCommand, secMethod, secApiKey, secSecretKey, sucParams);
             } else {
                 // primary cluster의 scvm ip 리스트를 가져오지 못한 경우
                 throw new CloudRuntimeException("primary cluster scvm list lookup fails.");
