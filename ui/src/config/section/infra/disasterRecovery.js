@@ -71,7 +71,7 @@ export default {
           fields.push('drclusterglueipaddress')
         }
         return fields
-      },
+      }
     },
     {
       api: 'updateDisasterRecoveryCluster',
