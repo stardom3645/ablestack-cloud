@@ -44,6 +44,7 @@ import javax.net.ssl.TrustManager;
 
 import org.apache.cloudstack.api.response.NetworkResponse;
 import org.apache.cloudstack.api.response.ServiceOfferingResponse;
+import org.apache.cloudstack.api.response.GetDisasterRecoveryClusterListResponse;
 import org.apache.cloudstack.utils.security.SSLUtils;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.logging.log4j.Logger;
@@ -644,6 +645,110 @@ public class DisasterRecoveryClusterUtil {
     }
 
     /**
+     * Mold getDisasterRecoveryClusterList API 요청
+     * @param region
+     *  <url>/client/api/
+     * @param command
+     *  getDisasterRecoveryClusterList
+     * @param method
+     *  GET
+     * @param apiKey
+     *  mold API Key
+     * @param secretKey
+     *  mold Secret Key
+     * @return true = 200, 이외 코드는 false 처리
+     */
+    protected static String moldGetDisasterRecoveryClusterListAPI(String region, String command, String method, String apiKey, String secretKey) {
+        try {
+            String readLine = null;
+            StringBuffer sb = null;
+            String apiParams = buildParamsMold(command, null);
+            String urlFinal = buildUrl(apiParams, region, apiKey, secretKey);
+            URL url = new URL(urlFinal);
+            if (region.contains("https")) {
+                // SSL 인증서 에러 우회 처리
+                final SSLContext sslContext = SSLUtils.getSSLContext();
+                sslContext.init(null, new TrustManager[]{new TrustAllManager()}, new SecureRandom());
+                HttpsURLConnection connection = (HttpsURLConnection)url.openConnection();
+                connection.setSSLSocketFactory(sslContext.getSocketFactory());
+                connection.setDoOutput(true);
+                connection.setRequestMethod(method);
+                connection.setConnectTimeout(5000);
+                connection.setReadTimeout(180000);
+                connection.setRequestProperty("Accept", "application/json");
+                connection.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
+                if (connection.getResponseCode() == 200) {
+                    BufferedReader br = new BufferedReader(new InputStreamReader(connection.getInputStream(), "UTF-8"));
+                    sb = new StringBuffer();
+                    while ((readLine = br.readLine()) != null) {
+                        sb.append(readLine);
+                    }
+                } else {
+                    String msg = "Failed to request mold API. response code : " + connection.getResponseCode() + " , request command : " + command;
+                    LOGGER.error(msg);
+                    return null;
+                }
+            } else {
+                HttpURLConnection connection = (HttpURLConnection)url.openConnection();
+                connection.setDoOutput(true);
+                connection.setRequestMethod(method);
+                connection.setConnectTimeout(5000);
+                connection.setReadTimeout(180000);
+                connection.setRequestProperty("Accept", "application/json");
+                connection.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
+                if (connection.getResponseCode() == 200) {
+                    BufferedReader br = new BufferedReader(new InputStreamReader(connection.getInputStream(), "UTF-8"));
+                    sb = new StringBuffer();
+                    while ((readLine = br.readLine()) != null) {
+                        sb.append(readLine);
+                    }
+                } else {
+                    String msg = "Failed to request mold API. response code : " + connection.getResponseCode() + " , request command : " + command;
+                    LOGGER.error(msg);
+                    return null;
+                }
+            }
+            JSONObject jObject = XML.toJSONObject(sb.toString());
+            JSONObject response = (JSONObject) jObject.get("getdisasterrecoveryclusterlistresponse");
+            List<ServiceOfferingResponse> drList = new ArrayList<>();
+            if (response.has("disasterrecoverycluster")) {
+                Object drObject = response.get("disasterrecoverycluster");
+                JSONArray drArray;
+                if (drObject instanceof JSONArray) {
+                    drArray = (JSONArray) drObject;
+                } else {
+                    drArray = new JSONArray();
+                    drArray.put(drObject);
+                }
+                for (int i = 0; i < drArray.length(); i++) {
+                    JSONObject drJSONObject = drArray.getJSONObject(i);
+                    GetDisasterRecoveryClusterListResponse drResponse = new GetDisasterRecoveryClusterListResponse();
+                    for (String key : drJSONObject.keySet()) {
+                        try {
+                            Field field = GetDisasterRecoveryClusterListResponse.class.getDeclaredField(key);
+                            field.setAccessible(true);
+
+                            Object value = getValue(drJSONObject, key, field.getType());
+                            if (value != null) {
+                                field.set(drResponse, value);
+                            }
+                        } catch (NoSuchFieldException e) {
+                            // System.err.println("Field not found: " + key);
+                        } catch (IllegalAccessException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                    drList.add(drResponse);
+                }
+            }
+            return drList;
+        } catch (Exception e) {
+            LOGGER.error(String.format("Mold API endpoint not available"), e);
+            return null;
+        }
+    }
+
+    /**
      * Mold createDisasterRecoveryCluster API 요청
      * @param region
      *  <url>/client/api/
@@ -749,6 +854,7 @@ public class DisasterRecoveryClusterUtil {
             String apiParams = buildParamsMold(command, params);
             String urlFinal = buildUrl(apiParams, region, apiKey, secretKey);
             URL url = new URL(urlFinal);
+            LOGGER.info(url);
             if (region.contains("https")) {
                 // SSL 인증서 에러 우회 처리
                 final SSLContext sslContext = SSLUtils.getSSLContext();
@@ -811,9 +917,9 @@ public class DisasterRecoveryClusterUtil {
      * @param command
      *  deleteDisasterRecoveryCluster
      * @param method
-     *  DELETE
-     * @param name
-     *  primary cluster name
+     *  GET
+     * @param id
+     *  primary cluster id
      * @return true = 200, 이외 코드는 false 처리
      */
     protected static String moldDeleteDisasterRecoveryClusterAPI(String region, String command, String method, String apiKey, String secretKey, Map<String, String> params) {
