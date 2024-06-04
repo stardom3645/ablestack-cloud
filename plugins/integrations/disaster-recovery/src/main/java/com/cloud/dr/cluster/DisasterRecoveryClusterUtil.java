@@ -739,7 +739,7 @@ public class DisasterRecoveryClusterUtil {
      * @param drClusterStatus
      *  primary cluster status
      * @param mirroringAgentStatus
-     *  primary cluster morroring agent status
+     *  primary cluster mirroring agent status
      * @return true = 200, 이외 코드는 false 처리
      */
     protected static String moldUpdateDisasterRecoveryClusterAPI(String region, String command, String method, String apiKey, String secretKey, Map<String, String> params) {
