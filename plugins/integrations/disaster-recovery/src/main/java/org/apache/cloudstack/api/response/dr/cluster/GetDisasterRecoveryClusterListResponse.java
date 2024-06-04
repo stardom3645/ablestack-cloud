@@ -70,6 +70,10 @@ public class GetDisasterRecoveryClusterListResponse extends BaseResponse {
     @Param(description = "the secret key of the disaster recovery cluster on the mshost")
     private String drClusterSecretKey;
 
+    @SerializedName(ApiConstants.DR_CLUSTER_GLUE_IP_ADDRESS)
+    @Param(description = "the ip address of the disaster recovery cluster on the glue")
+    private String drClusterGlueIpAddress;
+
     @SerializedName(ApiConstants.CREATED)
     @Param(description = "the creation date of the disaster recovery cluster")
     private Date created;
@@ -131,6 +135,10 @@ public class GetDisasterRecoveryClusterListResponse extends BaseResponse {
         return drClusterSecretKey;
     }
 
+    public String getDrClusterGlueIpAddress() {
+        return drClusterGlueIpAddress;
+    }
+
     public Map getDetails() {
         return details;
     }
@@ -177,6 +185,10 @@ public class GetDisasterRecoveryClusterListResponse extends BaseResponse {
 
     public void setDrClusterSecretKey(String drClusterSecretKey) {
         this.drClusterSecretKey = drClusterSecretKey;
+    }
+
+    public void setDrClusterGlueIpAddress(String drClusterGlueIpAddress) {
+        this.drClusterGlueIpAddress = drClusterGlueIpAddress;
     }
 
     public void setDetails(Map details) {

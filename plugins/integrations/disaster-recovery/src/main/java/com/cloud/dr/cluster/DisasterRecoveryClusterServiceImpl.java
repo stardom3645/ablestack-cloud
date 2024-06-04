@@ -197,6 +197,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         response.setDrClusterStatus(drcluster.getDrClusterStatus());
         response.setDrClusterApiKey(drcluster.getDrClusterApiKey());
         response.setDrClusterSecretKey(drcluster.getDrClusterSecretKey());
+        response.setDrClusterGlueIpAddress(drcluster.getDrClusterGlueIpAddress());
         response.setCreated(drcluster.getCreated());
         // Primary Cluster - scvm ip 조회
         String ipList = Script.runSimpleBashScript("cat /etc/hosts | grep -E 'scvm1-mngt|scvm2-mngt|scvm3-mngt' | awk '{print $1}' | tr '\n' ','");
@@ -280,6 +281,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         response.setDrClusterStatus(drcluster.getDrClusterStatus());
         response.setDrClusterApiKey(drcluster.getDrClusterApiKey());
         response.setDrClusterSecretKey(drcluster.getDrClusterSecretKey());
+        response.setDrClusterGlueIpAddress(drcluster.getDrClusterGlueIpAddress());
         response.setCreated(drcluster.getCreated());
         // Primary Cluster - scvm ip 조회
         String ipList = Script.runSimpleBashScript("cat /etc/hosts | grep -E 'scvm1-mngt|scvm2-mngt|scvm3-mngt' | awk '{print $1}' | tr '\n' ','");
@@ -576,6 +578,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         response.setMirroringAgentStatus(drcluster.getMirroringAgentStatus());
         response.setDrClusterApiKey(drcluster.getDrClusterApiKey());
         response.setDrClusterSecretKey(drcluster.getDrClusterSecretKey());
+        response.setDrClusterGlueIpAddress(drcluster.getDrClusterGlueIpAddress());
         response.setCreated(drcluster.getCreated());
         return response;
     }
