@@ -733,7 +733,7 @@ public class DisasterRecoveryClusterUtil {
      * @param command
      *  updateDisasterRecoveryCluster
      * @param method
-     *  POST
+     *  GET
      * @param name
      *  primary cluster name
      * @param drClusterStatus
