@@ -442,7 +442,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
             disasterRecoveryClusterDao.update(drCluster.getId(), drCluster);
             // secondary cluster에 UpdateDisasterRecoveryClusterCmd 호출
             secCommand = "updateDisasterRecoveryCluster";
-            secMethod = "POST";
+            secMethod = "PUT";
             Map<String, String> errParams = new HashMap<>();
             errParams.put("name", drName);
             errParams.put("drclusterstatus", DisasterRecoveryCluster.DrClusterStatus.Error.toString());
