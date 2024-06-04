@@ -704,11 +704,13 @@ public class DisasterRecoveryClusterUtil {
                     return null;
                 }
             }
+            LOGGER.info(sb.toString());
             JSONObject jObject = XML.toJSONObject(sb.toString());
             JSONObject response = (JSONObject) jObject.get("getdisasterrecoveryclusterlistresponse");
             List<GetDisasterRecoveryClusterListResponse> drList = new ArrayList<>();
             if (response.has("disasterrecoverycluster")) {
                 Object drObject = response.get("disasterrecoverycluster");
+                LOGGER.info(drObject.toString());
                 JSONArray drArray;
                 if (drObject instanceof JSONArray) {
                     drArray = (JSONArray) drObject;
@@ -723,7 +725,6 @@ public class DisasterRecoveryClusterUtil {
                         try {
                             Field field = GetDisasterRecoveryClusterListResponse.class.getDeclaredField(key);
                             field.setAccessible(true);
-
                             Object value = getValue(drJSONObject, key, field.getType());
                             if (value != null) {
                                 field.set(drResponse, value);
