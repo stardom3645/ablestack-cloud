@@ -648,12 +648,12 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                         // secondary cluster db 조회
                         String secCommand = "getDisasterRecoveryClusterList";
                         String secMethod = "GET";
-                        Map<String, String> sucParams = new HashMap<>();
+                        Map<String, Long> sucParams = new HashMap<>();
                         List<GetDisasterRecoveryClusterListResponse> drListResponse = DisasterRecoveryClusterUtil.moldGetDisasterRecoveryClusterListAPI(secUrl, secCommand, secMethod, secApiKey, secSecretKey);
                         if (drListResponse != null || !drListResponse.isEmpty()) {
                             for (GetDisasterRecoveryClusterListResponse dr : drListResponse) {
                                 if (dr.getName() == drCluster.getName()) {
-                                    long primaryDrId = Long.valueOf(dr.getId());
+                                    Long primaryDrId = Long.valueOf(dr.getId());
                                     // secondary cluster db 업데이트
                                     secCommand = "deleteDisasterRecoveryCluster";
                                     secMethod = "GET";
