@@ -637,22 +637,26 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                         List<GetDisasterRecoveryClusterListResponse> drListResponse = DisasterRecoveryClusterUtil.moldGetDisasterRecoveryClusterListAPI (secUrl + "/client/api/", secCommand, secMethod, secApiKey, secSecretKey);
                         LOGGER.info(drListResponse);
                         if (drListResponse != null || !drListResponse.isEmpty()) {
+                            LOGGER.info("::::::::::::::1");
                             for (GetDisasterRecoveryClusterListResponse dr : drListResponse) {
                                 if (dr.getName().equalsIgnoreCase(drCluster.getName())) {
-                                    LOGGER.info("::::::::::::::1");
+                                    LOGGER.info("::::::::::::::2");
                                     String primaryDrId = dr.getId();
                                     // secondary cluster db 업데이트
                                     secCommand = "deleteDisasterRecoveryCluster";
                                     secMethod = "GET";
                                     sucParams = new HashMap<>();
                                     sucParams.put("id", primaryDrId);
-                                    DisasterRecoveryClusterUtil.moldDeleteDisasterRecoveryClusterAPI(secUrl + "/client/api/", secCommand, secMethod, secApiKey, secSecretKey, sucParams);
-                                    return true;
+                                    String response = DisasterRecoveryClusterUtil.moldDeleteDisasterRecoveryClusterAPI(secUrl + "/client/api/", secCommand, secMethod, secApiKey, secSecretKey, sucParams);
+                                    if (response != null) {
+                                        return true;
+                                    } else {
+                                        return false;
+                                    }
                                 }
-                                LOGGER.info("::::::::::::::2");
                             }
-                            return false;
                         } else {
+                            LOGGER.info("::::::::::::::4");
                             return false;
                         }
                     }
