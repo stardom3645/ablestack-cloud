@@ -26,7 +26,7 @@ import org.apache.cloudstack.api.Parameter;
 import org.apache.cloudstack.api.BaseAsyncCmd;
 import org.apache.cloudstack.api.ServerApiException;
 import org.apache.cloudstack.api.response.SuccessResponse;
-import org.apache.cloudstack.api.response.dr.cluster.GetIntegrityVerificationFinalResultListResponse;
+import org.apache.cloudstack.api.response.dr.cluster.GetDisasterRecoveryClusterListResponse;
 import org.apache.cloudstack.context.CallContext;
 
 import com.cloud.dr.cluster.DisasterRecoveryCluster;
@@ -54,7 +54,7 @@ public class DeleteDisasterRecoveryClusterCmd extends BaseAsyncCmd {
 
     @Parameter(name = ApiConstants.ID,
             type = CommandType.UUID,
-            entityType = GetIntegrityVerificationFinalResultListResponse.class,
+            entityType = GetDisasterRecoveryClusterListResponse.class,
             required = true,
             description = "the ID of the disaster recovery cluster")
     private Long id;
