@@ -2044,6 +2044,8 @@ export default {
           values.hypervisor = null
         } else if (this.tabKey === 'isoid') {
           deployVmData.templateid = values.isoid
+        } else if (this.tabKey === 'volumeId') {
+          deployVmData.volumeId = values.volumeId
         }
 
         if (this.showRootDiskSizeChanger && values.rootdisksize && values.rootdisksize > 0) {
