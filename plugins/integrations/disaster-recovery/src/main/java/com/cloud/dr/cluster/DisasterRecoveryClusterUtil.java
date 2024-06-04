@@ -710,7 +710,7 @@ public class DisasterRecoveryClusterUtil {
             }
             JSONObject jObject = XML.toJSONObject(sb.toString());
             JSONObject response = (JSONObject) jObject.get("getdisasterrecoveryclusterlistresponse");
-            List<ServiceOfferingResponse> drList = new ArrayList<>();
+            List<GetDisasterRecoveryClusterListResponse> drList = new ArrayList<>();
             if (response.has("disasterrecoverycluster")) {
                 Object drObject = response.get("disasterrecoverycluster");
                 JSONArray drArray;

@@ -599,7 +599,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         if (drCluster == null) {
             throw new InvalidParameterValueException("Invalid disaster recovery cluster name specified");
         }
-        if (drClusterType.equalsIgnoreCase("primary")) {
+        if (drCluster.getDrClusterType().equalsIgnoreCase("primary")) {
             return disasterRecoveryClusterDao.remove(drCluster.getId());
         } else {
             String drName = drCluster.getName();
@@ -649,11 +649,11 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                         String secCommand = "getDisasterRecoveryClusterList";
                         String secMethod = "GET";
                         Map<String, String> sucParams = new HashMap<>();
-                        List<GetDisasterRecoveryClusterListResponse> drListResponse = DisasterRecoveryClusterUtil.moldGetDisasterRecoveryClusterListAPI(secUrl, secCommand, secMethod, secApiKey, secSecretKey, sucParams);
+                        List<GetDisasterRecoveryClusterListResponse> drListResponse = DisasterRecoveryClusterUtil.moldGetDisasterRecoveryClusterListAPI(secUrl, secCommand, secMethod, secApiKey, secSecretKey);
                         if (drListResponse != null || !drListResponse.isEmpty()) {
                             for (GetDisasterRecoveryClusterListResponse dr : drListResponse) {
                                 if (dr.getName() == drCluster.getName()) {
-                                    long primaryDrId = dr.getId();
+                                    string primaryDrId = dr.getId();
                                     // secondary cluster db 업데이트
                                     secCommand = "deleteDisasterRecoveryCluster";
                                     secMethod = "GET";
