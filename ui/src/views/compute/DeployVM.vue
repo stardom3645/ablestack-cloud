@@ -1985,468 +1985,259 @@ export default {
       if (this.loading.deploy) return
       this.formRef.value.validate().then(async () => {
         const values = toRaw(this.form)
-        if (values.templateid !== null && values.volumeId == null) {
-          if (values.isoid && (!values.diskofferingid || values.diskofferingid === '0')) {
-            this.$notification.error({
-              message: this.$t('message.request.failed'),
-              description: this.$t('message.step.3.continue')
-            })
-            return
-          }
-          if (!values.computeofferingid) {
-            this.$notification.error({
-              message: this.$t('message.request.failed'),
-              description: this.$t('message.step.2.continue')
-            })
-            return
-          }
-          if (this.error) {
-            this.$notification.error({
-              message: this.$t('message.request.failed'),
-              description: this.$t('error.form.message')
-            })
-            return
-          }
-
-          this.loading.deploy = true
-
-          let networkIds = []
-
-          let deployVmData = {}
-          // step 1 : select zone
-          deployVmData.zoneid = values.zoneid
-          deployVmData.podid = values.podid
-          deployVmData.clusterid = values.clusterid
-          deployVmData.hostid = values.hostid
-          deployVmData.keyboard = values.keyboard
-          if (!this.template?.deployasis) {
-            deployVmData.boottype = values.boottype
-            deployVmData.bootmode = values.bootmode
-          }
-          deployVmData.tpmversion = values.tpmversion
-          deployVmData.dynamicscalingenabled = values.dynamicscalingenabled
-          deployVmData.iothreadsenabled = values.iothreadsenabled
-          deployVmData.iodriverpolicy = values.iodriverpolicy
-          deployVmData.nicmultiqueuenumber = values.nicmultiqueuenumber
-          deployVmData.nicpackedvirtqueuesenabled = values.nicpackedvirtqueuesenabled
-          const isUserdataAllowed = !this.userdataDefaultOverridePolicy || (this.userdataDefaultOverridePolicy === 'ALLOWOVERRIDE' && this.doUserdataOverride) || (this.userdataDefaultOverridePolicy === 'APPEND' && this.doUserdataAppend)
-          if (isUserdataAllowed && values.userdata && values.userdata.length > 0) {
-            deployVmData.userdata = this.$toBase64AndURIEncoded(values.userdata)
-          }
-          // step 2: select template/iso/rbdimage
-          if (this.tabKey === 'templateid') {
-            deployVmData.templateid = values.templateid
-            values.hypervisor = null
-          } else if (this.tabKey === 'isoid') {
-            deployVmData.isoid = values.isoid
-          } else if (this.tabKey === 'volumeId') {
-            deployVmData.volumeId = values.volumeId
-          }
-
-          if (this.showRootDiskSizeChanger && values.rootdisksize && values.rootdisksize > 0) {
-            deployVmData.rootdisksize = values.rootdisksize
-          } else if (this.rootDiskSizeFixed > 0 && !this.template.deployasis) {
-            deployVmData.rootdisksize = this.rootDiskSizeFixed
-          }
-
-          if (values.hypervisor && values.hypervisor.length > 0) {
-            deployVmData.hypervisor = values.hypervisor
-          }
-
-          deployVmData.startvm = values.startvm
-
-          // step 3: select service offering
-          deployVmData.serviceofferingid = values.computeofferingid
-          if (this.serviceOffering && this.serviceOffering.iscustomized) {
-            if (values.cpunumber) {
-              deployVmData['details[0].cpuNumber'] = values.cpunumber
-            }
-            if (values.cpuspeed) {
-              deployVmData['details[0].cpuSpeed'] = values.cpuspeed
-            }
-            if (values.memory) {
-              deployVmData['details[0].memory'] = values.memory
-            }
-          }
-          if (this.selectedTemplateConfiguration) {
-            deployVmData['details[0].configurationId'] = this.selectedTemplateConfiguration.id
-          }
-          if (!this.serviceOffering.diskofferingstrictness && values.overridediskofferingid && !values.isoid) {
-            deployVmData.overridediskofferingid = values.overridediskofferingid
-            if (values.rootdisksize && values.rootdisksize > 0) {
-              deployVmData.rootdisksize = values.rootdisksize
-            }
-          }
-          if (this.isCustomizedIOPS) {
-            deployVmData['details[0].minIops'] = this.minIops
-            deployVmData['details[0].maxIops'] = this.maxIops
-          }
-          // step 4: select disk offering
-          if (!this.template.deployasis && this.template.childtemplates && this.template.childtemplates.length > 0) {
-            if (values.multidiskoffering) {
-              let i = 0
-              Object.entries(values.multidiskoffering).forEach(([disk, offering]) => {
-                const diskKey = `datadiskofferinglist[${i}].datadisktemplateid`
-                const offeringKey = `datadiskofferinglist[${i}].diskofferingid`
-                deployVmData[diskKey] = disk
-                deployVmData[offeringKey] = offering
-                i++
-              })
-            }
-          } else {
-            deployVmData.diskofferingid = values.diskofferingid
-            if (values.size) {
-              deployVmData.size = values.size
-            }
-          }
-          if (this.isCustomizedDiskIOPS) {
-            deployVmData['details[0].minIopsDo'] = this.diskIOpsMin
-            deployVmData['details[0].maxIopsDo'] = this.diskIOpsMax
-          }
-          // step 5: select an affinity group
-          deployVmData.affinitygroupids = (values.affinitygroupids || []).join(',')
-          // step 6: select network
-          if (this.zone.networktype !== 'Basic') {
-            if (this.nicToNetworkSelection && this.nicToNetworkSelection.length > 0) {
-              for (var j in this.nicToNetworkSelection) {
-                var nicNetwork = this.nicToNetworkSelection[j]
-                deployVmData['nicnetworklist[' + j + '].nic'] = nicNetwork.nic
-                deployVmData['nicnetworklist[' + j + '].network'] = nicNetwork.network
-              }
-            } else {
-              const arrNetwork = []
-              networkIds = values.networkids
-              if (networkIds.length > 0) {
-                for (let i = 0; i < networkIds.length; i++) {
-                  if (networkIds[i] === this.defaultnetworkid) {
-                    const ipToNetwork = {
-                      networkid: this.defaultnetworkid
-                    }
-                    arrNetwork.unshift(ipToNetwork)
-                  } else {
-                    const ipToNetwork = {
-                      networkid: networkIds[i]
-                    }
-                    arrNetwork.push(ipToNetwork)
-                  }
-                }
-              } else {
-                this.$notification.error({
-                  message: this.$t('message.request.failed'),
-                  description: this.$t('message.step.4.continue')
-                })
-                this.loading.deploy = false
-                return
-              }
-              for (let j = 0; j < arrNetwork.length; j++) {
-                deployVmData['iptonetworklist[' + j + '].networkid'] = arrNetwork[j].networkid
-                if (this.networkConfig.length > 0) {
-                  const networkConfig = this.networkConfig.filter((item) => item.key === arrNetwork[j].networkid)
-                  if (networkConfig && networkConfig.length > 0) {
-                    deployVmData['iptonetworklist[' + j + '].ip'] = networkConfig[0].ipAddress ? networkConfig[0].ipAddress : undefined
-                    deployVmData['iptonetworklist[' + j + '].mac'] = networkConfig[0].macAddress ? networkConfig[0].macAddress : undefined
-                  }
-                }
-              }
-            }
-          }
-          if (this.securitygroupids.length > 0) {
-            deployVmData.securitygroupids = this.securitygroupids.join(',')
-          }
-          // step 7: select ssh key pair
-          deployVmData.keypairs = this.sshKeyPairs.join(',')
-          if (isUserdataAllowed) {
-            deployVmData.userdataid = values.userdataid
-          }
-
-          if (values.name) {
-            deployVmData.name = values.name
-            deployVmData.displayname = values.name
-          }
-          if (values.group) {
-            deployVmData.group = values.group
-          }
-          // step 8: enter setup
-          if ('properties' in values) {
-            const keys = Object.keys(values.properties)
-            for (var i = 0; i < keys.length; ++i) {
-              const propKey = keys[i].split('\\002E').join('.')
-              deployVmData['properties[' + i + '].key'] = propKey
-              deployVmData['properties[' + i + '].value'] = values.properties[keys[i]]
-            }
-          }
-          if ('bootintosetup' in values) {
-            deployVmData.bootintosetup = values.bootintosetup
-          }
-
-          const title = this.$t('label.launch.vm')
-          const description = values.name || ''
-          const password = this.$t('label.password')
-
-          deployVmData = Object.fromEntries(
-            Object.entries(deployVmData).filter(([key, value]) => value !== undefined))
-
-          var idx = 0
-          if (this.templateUserDataValues) {
-            for (const [key, value] of Object.entries(this.templateUserDataValues)) {
-              deployVmData['userdatadetails[' + idx + '].' + `${key}`] = value
-              idx++
-            }
-          }
-          if (isUserdataAllowed && this.userDataValues) {
-            for (const [key, value] of Object.entries(this.userDataValues)) {
-              deployVmData['userdatadetails[' + idx + '].' + `${key}`] = value
-              idx++
-            }
-          }
-
-          const httpMethod = deployVmData.userdata ? 'POST' : 'GET'
-          const args = httpMethod === 'POST' ? {} : deployVmData
-          const data = httpMethod === 'POST' ? deployVmData : {}
-
-          api('deployVirtualMachine', args, httpMethod, data).then(response => {
-            const jobId = response.deployvirtualmachineresponse.jobid
-            if (jobId) {
-              this.$pollJob({
-                jobId,
-                title,
-                description,
-                successMethod: result => {
-                  const vm = result.jobresult.virtualmachine
-                  const name = vm.displayname || vm.name || vm.id
-                  if (vm.password) {
-                    this.$notification.success({
-                      message: password + ` ${this.$t('label.for')} ` + name,
-                      description: vm.password,
-                      btn: () => h(
-                        Button,
-                        {
-                          type: 'primary',
-                          size: 'small',
-                          onClick: () => this.copyToClipboard(vm.password)
-                        },
-                        () => [this.$t('label.copy.password')]
-                      ),
-                      duration: 0
-                    })
-                  }
-                  eventBus.emit('vm-refresh-data')
-                },
-                loadingMessage: `${title} ${this.$t('label.in.progress')}`,
-                catchMessage: this.$t('error.fetching.async.job.result'),
-                action: {
-                  isFetchData: false
-                }
-              })
-            }
-            // Sending a refresh in case it hasn't picked up the new VM
-            new Promise(resolve => setTimeout(resolve, 3000)).then(() => {
-              eventBus.emit('vm-refresh-data')
-            })
-            if (!values.stayonpage) {
-              this.$router.back()
-            }
-          }).catch(error => {
-            this.$notifyError(error)
-            this.loading.deploy = false
-          }).finally(() => {
-            this.form.stayonpage = false
-            this.loading.deploy = false
+        if (!values.templateid && !values.isoid && !values.volumeId) {
+          this.$notification.error({
+            message: this.$t('message.request.failed'),
+            description: this.$t('message.template.iso')
           })
-        } else if (values.volumeId !== null && !values.templateid) {
-          if (!values.volumeId) {
-            this.$notification.error({
-              message: this.$t('message.request.failed'),
-              description: this.$t('message.rbdimage')
-            })
-            return
-          }
-          if (!values.computeofferingid) {
-            this.$notification.error({
-              message: this.$t('message.request.failed'),
-              description: this.$t('message.step.2.continue')
-            })
-            return
-          }
-          if (this.error) {
-            this.$notification.error({
-              message: this.$t('message.request.failed'),
-              description: this.$t('error.form.message')
-            })
-            return
-          }
+          return
+        } else if (values.isoid && values.volumeId == null && (!values.diskofferingid || values.diskofferingid === '0')) {
+          this.$notification.error({
+            message: this.$t('message.request.failed'),
+            description: this.$t('message.step.3.continue')
+          })
+          return
+        }
+        if (!values.computeofferingid) {
+          this.$notification.error({
+            message: this.$t('message.request.failed'),
+            description: this.$t('message.step.2.continue')
+          })
+          return
+        }
+        if (this.error) {
+          this.$notification.error({
+            message: this.$t('message.request.failed'),
+            description: this.$t('error.form.message')
+          })
+          return
+        }
 
-          this.loading.deploy = true
+        this.loading.deploy = true
 
-          let networkIds = []
+        let networkIds = []
 
-          let deployVmData = {}
-          // step 1 : select zone
-          deployVmData.zoneid = values.zoneid
-          deployVmData.podid = values.podid
-          deployVmData.clusterid = values.clusterid
-          deployVmData.hostid = values.hostid
-          deployVmData.keyboard = values.keyboard
-          if (!this.volume?.deployasis) {
-            deployVmData.boottype = values.boottype
-            deployVmData.bootmode = values.bootmode
-          }
-          deployVmData.tpmversion = values.tpmversion
-          deployVmData.dynamicscalingenabled = values.dynamicscalingenabled
-          deployVmData.iothreadsenabled = values.iothreadsenabled
-          deployVmData.iodriverpolicy = values.iodriverpolicy
-          deployVmData.nicmultiqueuenumber = values.nicmultiqueuenumber
-          deployVmData.nicpackedvirtqueuesenabled = values.nicpackedvirtqueuesenabled
-          const isUserdataAllowed = !this.userdataDefaultOverridePolicy || (this.userdataDefaultOverridePolicy === 'ALLOWOVERRIDE' && this.doUserdataOverride) || (this.userdataDefaultOverridePolicy === 'APPEND' && this.doUserdataAppend)
-          if (isUserdataAllowed && values.userdata && values.userdata.length > 0) {
-            deployVmData.userdata = this.$toBase64AndURIEncoded(values.userdata)
-          }
-          // step 2: select template/iso/rbdimage
-          if (this.tabKey === 'volumeId') {
-            deployVmData.volumeId = values.volumeId
-          }
-          if (values.hypervisor && values.hypervisor.length > 0) {
-            deployVmData.hypervisor = values.hypervisor
-          }
+        let deployVmData = {}
+        // step 1 : select zone
+        deployVmData.zoneid = values.zoneid
+        deployVmData.podid = values.podid
+        deployVmData.clusterid = values.clusterid
+        deployVmData.hostid = values.hostid
+        deployVmData.keyboard = values.keyboard
+        if (!this.template?.deployasis) {
+          deployVmData.boottype = values.boottype
+          deployVmData.bootmode = values.bootmode
+        }
+        deployVmData.tpmversion = values.tpmversion
+        deployVmData.dynamicscalingenabled = values.dynamicscalingenabled
+        deployVmData.iothreadsenabled = values.iothreadsenabled
+        deployVmData.iodriverpolicy = values.iodriverpolicy
+        deployVmData.nicmultiqueuenumber = values.nicmultiqueuenumber
+        deployVmData.nicpackedvirtqueuesenabled = values.nicpackedvirtqueuesenabled
+        const isUserdataAllowed = !this.userdataDefaultOverridePolicy || (this.userdataDefaultOverridePolicy === 'ALLOWOVERRIDE' && this.doUserdataOverride) || (this.userdataDefaultOverridePolicy === 'APPEND' && this.doUserdataAppend)
+        if (isUserdataAllowed && values.userdata && values.userdata.length > 0) {
+          deployVmData.userdata = this.$toBase64AndURIEncoded(values.userdata)
+        }
+        // step 2: select template/iso/rbdimage
+        if (this.tabKey === 'templateid') {
+          deployVmData.templateid = values.templateid
+          values.hypervisor = null
+        } else if (this.tabKey === 'isoid') {
+          deployVmData.templateid = values.isoid
+        }
 
-          deployVmData.startvm = values.startvm
+        if (this.showRootDiskSizeChanger && values.rootdisksize && values.rootdisksize > 0) {
+          deployVmData.rootdisksize = values.rootdisksize
+        } else if (this.rootDiskSizeFixed > 0 && !this.template.deployasis) {
+          deployVmData.rootdisksize = this.rootDiskSizeFixed
+        }
 
-          // step 3: select service offering
-          deployVmData.serviceofferingid = values.computeofferingid
-          if (this.serviceOffering && this.serviceOffering.iscustomized) {
-            if (values.cpunumber) {
-              deployVmData['details[0].cpuNumber'] = values.cpunumber
-            }
-            if (values.cpuspeed) {
-              deployVmData['details[0].cpuSpeed'] = values.cpuspeed
-            }
-            if (values.memory) {
-              deployVmData['details[0].memory'] = values.memory
-            }
+        if (values.hypervisor && values.hypervisor.length > 0) {
+          deployVmData.hypervisor = values.hypervisor
+        }
+
+        deployVmData.startvm = values.startvm
+
+        // step 3: select service offering
+        deployVmData.serviceofferingid = values.computeofferingid
+        if (this.serviceOffering && this.serviceOffering.iscustomized) {
+          if (values.cpunumber) {
+            deployVmData['details[0].cpuNumber'] = values.cpunumber
           }
-          if (this.isCustomizedIOPS) {
-            deployVmData['details[0].minIops'] = this.minIops
-            deployVmData['details[0].maxIops'] = this.maxIops
+          if (values.cpuspeed) {
+            deployVmData['details[0].cpuSpeed'] = values.cpuspeed
           }
-          // step 4: select disk offering
+          if (values.memory) {
+            deployVmData['details[0].memory'] = values.memory
+          }
+        }
+        if (this.selectedTemplateConfiguration) {
+          deployVmData['details[0].configurationId'] = this.selectedTemplateConfiguration.id
+        }
+        if (!this.serviceOffering.diskofferingstrictness && values.overridediskofferingid && !values.isoid) {
+          deployVmData.overridediskofferingid = values.overridediskofferingid
+          if (values.rootdisksize && values.rootdisksize > 0) {
+            deployVmData.rootdisksize = values.rootdisksize
+          }
+        }
+        if (this.isCustomizedIOPS) {
+          deployVmData['details[0].minIops'] = this.minIops
+          deployVmData['details[0].maxIops'] = this.maxIops
+        }
+        // step 4: select disk offering
+        if (!this.template.deployasis && this.template.childtemplates && this.template.childtemplates.length > 0) {
           if (values.multidiskoffering) {
             let i = 0
             Object.entries(values.multidiskoffering).forEach(([disk, offering]) => {
-              const diskKey = `datadiskofferinglist[${i}].datadiskvolumeid`
+              const diskKey = `datadiskofferinglist[${i}].datadisktemplateid`
               const offeringKey = `datadiskofferinglist[${i}].diskofferingid`
               deployVmData[diskKey] = disk
               deployVmData[offeringKey] = offering
               i++
             })
-          } else {
-            deployVmData.diskofferingid = values.diskofferingid
-            if (values.size) {
-              deployVmData.size = values.size
+          }
+        } else {
+          deployVmData.diskofferingid = values.diskofferingid
+          if (values.size) {
+            deployVmData.size = values.size
+          }
+        }
+        if (this.isCustomizedDiskIOPS) {
+          deployVmData['details[0].minIopsDo'] = this.diskIOpsMin
+          deployVmData['details[0].maxIopsDo'] = this.diskIOpsMax
+        }
+        // step 5: select an affinity group
+        deployVmData.affinitygroupids = (values.affinitygroupids || []).join(',')
+        // step 6: select network
+        if (this.zone.networktype !== 'Basic') {
+          if (this.nicToNetworkSelection && this.nicToNetworkSelection.length > 0) {
+            for (var j in this.nicToNetworkSelection) {
+              var nicNetwork = this.nicToNetworkSelection[j]
+              deployVmData['nicnetworklist[' + j + '].nic'] = nicNetwork.nic
+              deployVmData['nicnetworklist[' + j + '].network'] = nicNetwork.network
             }
-          }
-          if (this.isCustomizedDiskIOPS) {
-            deployVmData['details[0].minIopsDo'] = this.diskIOpsMin
-            deployVmData['details[0].maxIopsDo'] = this.diskIOpsMax
-          }
-          // step 5: select an affinity group
-          deployVmData.affinitygroupids = (values.affinitygroupids || []).join(',')
-          // step 6: select network
-          if (this.zone.networktype !== 'Basic') {
-            if (this.nicToNetworkSelection && this.nicToNetworkSelection.length > 0) {
-              for (var k in this.nicToNetworkSelection) {
-                var nicNetworks = this.nicToNetworkSelection[j]
-                deployVmData['nicnetworklist[' + k + '].nic'] = nicNetworks.nic
-                deployVmData['nicnetworklist[' + k + '].network'] = nicNetworks.network
+          } else {
+            const arrNetwork = []
+            networkIds = values.networkids
+            if (networkIds.length > 0) {
+              for (let i = 0; i < networkIds.length; i++) {
+                if (networkIds[i] === this.defaultnetworkid) {
+                  const ipToNetwork = {
+                    networkid: this.defaultnetworkid
+                  }
+                  arrNetwork.unshift(ipToNetwork)
+                } else {
+                  const ipToNetwork = {
+                    networkid: networkIds[i]
+                  }
+                  arrNetwork.push(ipToNetwork)
+                }
               }
             } else {
-              const arrNetwork = []
-              networkIds = values.networkids
-              if (networkIds.length > 0) {
-                for (let i = 0; i < networkIds.length; i++) {
-                  if (networkIds[i] === this.defaultnetworkid) {
-                    const ipToNetwork = {
-                      networkid: this.defaultnetworkid
-                    }
-                    arrNetwork.unshift(ipToNetwork)
-                  } else {
-                    const ipToNetwork = {
-                      networkid: networkIds[i]
-                    }
-                    arrNetwork.push(ipToNetwork)
-                  }
+              this.$notification.error({
+                message: this.$t('message.request.failed'),
+                description: this.$t('message.step.4.continue')
+              })
+              this.loading.deploy = false
+              return
+            }
+            for (let j = 0; j < arrNetwork.length; j++) {
+              deployVmData['iptonetworklist[' + j + '].networkid'] = arrNetwork[j].networkid
+              if (this.networkConfig.length > 0) {
+                const networkConfig = this.networkConfig.filter((item) => item.key === arrNetwork[j].networkid)
+                if (networkConfig && networkConfig.length > 0) {
+                  deployVmData['iptonetworklist[' + j + '].ip'] = networkConfig[0].ipAddress ? networkConfig[0].ipAddress : undefined
+                  deployVmData['iptonetworklist[' + j + '].mac'] = networkConfig[0].macAddress ? networkConfig[0].macAddress : undefined
+                  deployVmData['iptonetworklist[' + j + '].linkstate'] = networkConfig[0].linkstate === undefined ? true : networkConfig[0].linkstate
                 }
+              }
+            }
+          }
+        }
+        if (this.securitygroupids.length > 0) {
+          deployVmData.securitygroupids = this.securitygroupids.join(',')
+        }
+        // step 7: select ssh key pair
+        deployVmData.keypairs = this.sshKeyPairs.join(',')
+        if (isUserdataAllowed) {
+          deployVmData.userdataid = values.userdataid
+        }
+
+        if (values.name) {
+          deployVmData.name = values.name
+          deployVmData.displayname = values.name
+        }
+        if (values.group) {
+          deployVmData.group = values.group
+        }
+        // step 8: enter setup
+        if ('properties' in values) {
+          const keys = Object.keys(values.properties)
+          for (var i = 0; i < keys.length; ++i) {
+            const propKey = keys[i].split('\\002E').join('.')
+            deployVmData['properties[' + i + '].key'] = propKey
+            deployVmData['properties[' + i + '].value'] = values.properties[keys[i]]
+          }
+        }
+        if ('bootintosetup' in values) {
+          deployVmData.bootintosetup = values.bootintosetup
+        }
+
+        const title = this.$t('label.launch.vm')
+        const description = values.name || ''
+        const password = this.$t('label.password')
+
+        deployVmData = Object.fromEntries(
+          Object.entries(deployVmData).filter(([key, value]) => value !== undefined))
+
+        var idx = 0
+        if (this.templateUserDataValues) {
+          for (const [key, value] of Object.entries(this.templateUserDataValues)) {
+            deployVmData['userdatadetails[' + idx + '].' + `${key}`] = value
+            idx++
+          }
+        }
+        if (isUserdataAllowed && this.userDataValues) {
+          for (const [key, value] of Object.entries(this.userDataValues)) {
+            deployVmData['userdatadetails[' + idx + '].' + `${key}`] = value
+            idx++
+          }
+        }
+
+        const httpMethod = deployVmData.userdata ? 'POST' : 'GET'
+
+        if (values.vmNumber) {
+          for (var num = 0; num < Number(values.vmNumber); num++) {
+            let args = ''
+            let data = ''
+            if (values.name) {
+              if (values.vmNumber === 1) {
+                deployVmData.name = values.name
+                deployVmData.displayname = values.name
               } else {
-                this.$notification.error({
-                  message: this.$t('message.request.failed'),
-                  description: this.$t('message.step.4.continue')
-                })
-                this.loading.deploy = false
-                return
-              }
-              for (let j = 0; j < arrNetwork.length; j++) {
-                deployVmData['iptonetworklist[' + j + '].networkid'] = arrNetwork[j].networkid
-                if (this.networkConfig.length > 0) {
-                  const networkConfig = this.networkConfig.filter((item) => item.key === arrNetwork[j].networkid)
-                  if (networkConfig && networkConfig.length > 0) {
-                    deployVmData['iptonetworklist[' + j + '].ip'] = networkConfig[0].ipAddress ? networkConfig[0].ipAddress : undefined
-                    deployVmData['iptonetworklist[' + j + '].mac'] = networkConfig[0].macAddress ? networkConfig[0].macAddress : undefined
-                  }
+                if (deployVmData['iptonetworklist[0].ip'] != null || deployVmData['iptonetworklist[0].mac'] != null) {
+                  this.$notification.error({
+                    message: this.$t('message.request.failed'),
+                    description: this.$t('message.deploy.vm.number')
+                  })
+                  this.loading.deploy = false
+                  return
                 }
+                var numP = num + 1
+                deployVmData.name = values.name + '-' + numP
+                deployVmData.displayname = values.name + '-' + numP
               }
             }
-          }
-          if (this.securitygroupids.length > 0) {
-            deployVmData.securitygroupids = this.securitygroupids.join(',')
-          }
-          // step 7: select ssh key pair
-          deployVmData.keypairs = this.sshKeyPairs.join(',')
-          if (isUserdataAllowed) {
-            deployVmData.userdataid = values.userdataid
-          }
-
-          if (values.name) {
-            deployVmData.name = values.name
-            deployVmData.displayname = values.name
-          }
-          if (values.group) {
-            deployVmData.group = values.group
-          }
-          // step 8: enter setup
-          if ('properties' in values) {
-            const keys = Object.keys(values.properties)
-            for (var l = 0; l < keys.length; ++l) {
-              const propKey = keys[i].split('\\002E').join('.')
-              deployVmData['properties[' + l + '].key'] = propKey
-              deployVmData['properties[' + l + '].value'] = values.properties[keys[i]]
-            }
-          }
-          if ('bootintosetup' in values) {
-            deployVmData.bootintosetup = values.bootintosetup
-          }
-
-          const title = this.$t('label.launch.vm')
-          const description = values.name || ''
-          const password = this.$t('label.password')
-
-          deployVmData = Object.fromEntries(
-            Object.entries(deployVmData).filter(([key, value]) => value !== undefined))
-
-          var idxs = 0
-          if (isUserdataAllowed && this.userDataValues) {
-            for (const [key, value] of Object.entries(this.userDataValues)) {
-              deployVmData['userdatadetails[' + idxs + '].' + `${key}`] = value
-              idxs++
-            }
-          }
-
-          const httpMethod = deployVmData.userdata ? 'POST' : 'GET'
-          const args = httpMethod === 'POST' ? {} : deployVmData
-          const data = httpMethod === 'POST' ? deployVmData : {}
-
-          api('deployVirtualMachineForVolume', args, httpMethod, data).then(response => {
-            const jobId = response.deployvirtualmachineforvolumeresponse.jobid
-            if (jobId) {
-              this.$pollJob({
+            args = httpMethod === 'POST' ? {} : deployVmData
+            data = httpMethod === 'POST' ? deployVmData : {}
+            try {
+              let jobId
+              if (values.volumeId) {
+                jobId = await this.deployVirtualMachineForVolume(args, httpMethod, data)
+              } else {
+                jobId = await this.deployVM(args, httpMethod, data)
+              }
+              await this.$pollJob({
                 jobId,
                 title,
                 description,
@@ -2469,7 +2260,9 @@ export default {
                       duration: 0
                     })
                   }
-                  eventBus.emit('vm-refresh-data')
+                  if (!values.stayonpage) {
+                    eventBus.emit('vm-refresh-data')
+                  }
                 },
                 loadingMessage: `${title} ${this.$t('label.in.progress')}`,
                 catchMessage: this.$t('error.fetching.async.job.result'),
@@ -2477,21 +2270,25 @@ export default {
                   isFetchData: false
                 }
               })
+
+              // Sending a refresh in case it hasn't picked up the new VM
+              if (values.vmNumber === 1 || !values.stayonpage) {
+                await new Promise(resolve => setTimeout(resolve, 3000)).then(() => {
+                  eventBus.emit('vm-refresh-data')
+                })
+              }
+              if (!values.stayonpage) {
+                await this.$router.back()
+              }
+            } catch (error) {
+              if (error.message !== undefined) {
+                await this.$notifyError(error)
+              }
+              this.loading.deploy = false
             }
-            // Sending a refresh in case it hasn't picked up the new VM
-            new Promise(resolve => setTimeout(resolve, 3000)).then(() => {
-              eventBus.emit('vm-refresh-data')
-            })
-            if (!values.stayonpage) {
-              this.$router.back()
-            }
-          }).catch(error => {
-            this.$notifyError(error)
-            this.loading.deploy = false
-          }).finally(() => {
-            this.form.stayonpage = false
-            this.loading.deploy = false
-          })
+          }
+          this.form.stayonpage = false
+          this.loading.deploy = false
         }
       }).catch(err => {
         this.formRef.value.scrollToField(err.errorFields[0].name)
@@ -2515,6 +2312,16 @@ export default {
       return new Promise((resolve, reject) => {
         api('deployVirtualMachine', args, httpMethod, data).then(json => {
           const jobId = json.deployvirtualmachineresponse.jobid
+          return resolve(jobId)
+        }).catch(error => {
+          return reject(error)
+        })
+      })
+    },
+    deployVirtualMachineForVolume (args, httpMethod, data) {
+      return new Promise((resolve, reject) => {
+        api('deployVirtualMachineForVolume', args, httpMethod, data).then(json => {
+          const jobId = json.deployvirtualmachineforvolumeresponse.jobid
           return resolve(jobId)
         }).catch(error => {
           return reject(error)
