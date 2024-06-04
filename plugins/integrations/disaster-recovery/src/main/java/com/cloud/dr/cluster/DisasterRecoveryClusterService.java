@@ -20,6 +20,7 @@ import org.apache.cloudstack.api.command.admin.dr.ConnectivityTestsDisasterRecov
 import org.apache.cloudstack.api.command.admin.dr.GetDisasterRecoveryClusterListCmd;
 import org.apache.cloudstack.api.command.admin.dr.UpdateDisasterRecoveryClusterCmd;
 import org.apache.cloudstack.api.command.admin.dr.CreateDisasterRecoveryClusterCmd;
+import org.apache.cloudstack.api.command.admin.dr.DeleteDisasterRecoveryClusterCmd;
 import org.apache.cloudstack.api.command.admin.glue.ListScvmIpAddressCmd;
 import org.apache.cloudstack.api.response.ListResponse;
 import org.apache.cloudstack.api.response.ScvmIpAddressResponse;
@@ -50,9 +51,7 @@ public interface DisasterRecoveryClusterService extends PluggableService, Config
 
     boolean setupDisasterRecoveryCluster(long clusterId) throws CloudRuntimeException;
 
-    boolean deleteDisasterRecoveryCluster(long clusterId) throws CloudRuntimeException;
-
-    boolean deleteDisasterRecoveryCluster(String clusterName) throws CloudRuntimeException;
+    boolean deleteDisasterRecoveryCluster(DeleteDisasterRecoveryClusterCmd cmd) throws CloudRuntimeException;
 
     GetDisasterRecoveryClusterListResponse createDisasterRecoveryClusterResponse(long clusterId);
 
