@@ -322,14 +322,10 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                 throw new InvalidParameterValueException("Invalid Disaster Recovery id specified");
             }
         }
-        LOGGER.info(drcluster.getName());
         drcluster = disasterRecoveryClusterDao.createForUpdate(drcluster.getId());
         if (cmd.getDrClusterStatus() != null && cmd.getMirroringAgentStatus() != null) {
-            LOGGER.info(":::::::::::::::::::1");
             final String drClusterStatus = cmd.getDrClusterStatus();
             final String mirroringAgentStatus = cmd.getMirroringAgentStatus();
-            LOGGER.info(drClusterStatus);
-            LOGGER.info(mirroringAgentStatus);
             drcluster.setDrClusterStatus(drClusterStatus);
             drcluster.setMirroringAgentStatus(mirroringAgentStatus);
             if (!disasterRecoveryClusterDao.update(drcluster.getId(), drcluster)) {
@@ -337,7 +333,6 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
             }
             drcluster = disasterRecoveryClusterDao.findByName(drClusterName);
         } else {
-            LOGGER.info(":::::::::::::::::::2");
             if (cmd.getName() != null) {
                 drcluster.setName(drClusterName);
             }
@@ -616,7 +611,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
             UserAccount user = accountService.getActiveUserAccount("admin", 1L);
             String priApiKey = user.getApiKey();
             String priSecretKey = user.getSecretKey();
-            // primary cluster에 scvmList 조회하여 api 요청
+            // cluster의 glueIp 조회
             String ipList = Script.runSimpleBashScript("cat /etc/hosts | grep -E 'scvm1-mngt|scvm2-mngt|scvm3-mngt' | awk '{print $1}' | tr '\n' ','");
             if (ipList != null || !ipList.isEmpty()) {
                 ipList = ipList.replaceAll(",$", "");
@@ -643,9 +638,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                         LOGGER.info(drListResponse);
                         if (drListResponse != null || !drListResponse.isEmpty()) {
                             for (GetDisasterRecoveryClusterListResponse dr : drListResponse) {
-                                LOGGER.info("::::::::::::::1" + dr.getName());
-                                LOGGER.info("::::::::::::::1" + drCluster.getName());
-                                if (dr.getName() == drCluster.getName()) {
+                                if (dr.getName().equalsIgnoreCase(drCluster.getName())) {
                                     LOGGER.info("::::::::::::::1");
                                     String primaryDrId = dr.getId();
                                     // secondary cluster db 업데이트
@@ -658,6 +651,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                                 }
                                 LOGGER.info("::::::::::::::2");
                             }
+                            return false;
                         } else {
                             return false;
                         }
