@@ -12,7 +12,7 @@ public interface DisasterRecoveryCluster extends InternalIdentity, Identity {
     }
 
     public enum MirroringAgentStatus {
-        Disabled, Enabled, Created, Error
+        Disabled, Enabled, Created, Error, Unknown
     }
 
     long getId();
