@@ -264,37 +264,29 @@ export default {
             drclustertype: 'secondary'
           }
           api('createDisasterRecoveryCluster', params).then(json => {
+            const jobId = json.createdisasterrecoveryclusterresponse.jobid
             this.$pollJob({
-              jobId: json.createdisasterrecoveryclusterresponse.jobid,
+              jobId,
               title: this.$t('label.add.disaster.recovery.cluster'),
               description: values.name,
-              successMessage: this.$t('message.success.add.disaster.recovery.cluster'),
               successMethod: () => {
-                this.loading = false
-                this.closeModals()
+                this.$notification.success({
+                  message: this.$t('message.success.add.disaster.recovery.cluster'),
+                  duration: 0
+                })
+                eventBus.emit('dr-refresh-data')
               },
-              errorMessage: this.$t('message.add.disaster.recovery.cluster.failed'),
-              errorMethod: () => {
-                this.loading = false
-                this.closeModal()
-              },
-              loadingMessage: this.$t('message.add.disaster.recovery.cluster.processing'),
+              loadingMessage: `${this.$t('label.add.disaster.recovery.cluster')} ${values.name} ${this.$t('label.in.progress')}`,
               catchMessage: this.$t('error.fetching.async.job.result'),
               catchMethod: () => {
-                this.loading = false
-                this.closeModal()
+                eventBus.emit('dr-refresh-data')
               }
             })
+            this.closeModal()
           }).catch(error => {
-            this.showCode = !this.showCode
-            this.buttonDisabled = false
-            this.$notification.error({
-              message: `${this.$t('label.error')} ${error.response.status}`,
-              description: error.response.data.errorresponse.errortext,
-              duration: 0
-            }).finally(() => {
+            this.$notifyError(error)
+          }).finally(() => {
               this.loading = false
-            })
           })
         }).catch(error => {
           this.formRef.value.scrollToField(error.errorFields[0].name)
