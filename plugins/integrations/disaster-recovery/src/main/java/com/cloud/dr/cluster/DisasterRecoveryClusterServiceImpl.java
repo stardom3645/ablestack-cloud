@@ -298,12 +298,8 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                         drcluster.setMirroringAgentStatus(DisasterRecoveryCluster.MirroringAgentStatus.Error.toString());
                         break;
                     }
-                } else {
-                    drcluster.setMirroringAgentStatus(DisasterRecoveryCluster.MirroringAgentStatus.Error.toString());
                 }
             }
-        } else {
-            drcluster.setMirroringAgentStatus(DisasterRecoveryCluster.MirroringAgentStatus.Error.toString());
         }
         disasterRecoveryClusterDao.update(drcluster.getId(), drcluster);
         return response;
