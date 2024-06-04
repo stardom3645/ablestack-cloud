@@ -947,6 +947,7 @@ public class DisasterRecoveryClusterUtil {
                 }
             }
             JSONObject jObject = XML.toJSONObject(sb.toString());
+            LOGGER.info(sb.toString());
             JSONObject response = (JSONObject) jObject.get("deletedisasterrecoveryclusterresponse");
             return response.get("jobid").toString();
         } catch (Exception e) {
