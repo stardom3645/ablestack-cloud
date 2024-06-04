@@ -352,6 +352,15 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
             Map<String,String> details = cmd.getDetails();
             drcluster.setDetails(details);
             disasterRecoveryClusterDao.saveDetails(drcluster);
+            if (details.containsKey(ApiConstants.DR_CLUSTER_API_KEY)) {
+                drcluster.setDrClusterApiKey(details.get(ApiConstants.DR_CLUSTER_API_KEY));
+            }
+            if (details.containsKey(ApiConstants.DR_CLUSTER_SECRET_KEY)) {
+                drcluster.setDrClusterSecretKey(details.get(ApiConstants.DR_CLUSTER_SECRET_KEY));
+            }
+            if (details.containsKey(ApiConstants.DR_CLUSTER_PRIVATE_KEY)) {
+                drcluster.setDrClusterPrivateKey(details.get(ApiConstants.DR_CLUSTER_PRIVATE_KEY));
+            }
         }
         if (cmd.getDrClusterStatus() != null) {
             String drClusterStatus = cmd.getDrClusterStatus();
@@ -381,6 +390,19 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                 DisasterRecoveryClusterVO newCluster = new DisasterRecoveryClusterVO(msHost.getId(), cmd.getName(), cmd.getDescription(),
                         cmd.getDrClusterApiKey(), cmd.getDrClusterSecretKey(), cmd.getDrClusterPrivateKey(), cmd.getDrClusterGlueIpAddress(), cmd.getDrClusterUrl(), cmd.getDrClusterType(), DisasterRecoveryCluster.DrClusterStatus.Created.toString(), DisasterRecoveryCluster.MirroringAgentStatus.Created.toString());
                 disasterRecoveryClusterDao.persist(newCluster);
+                List<DisasterRecoveryClusterDetailsVO> drDetailsVO = new ArrayList<DisasterRecoveryClusterDetailsVO>();
+                if (cmd.getDrClusterApiKey() != null) {
+                    drDetailsVO.add(new DisasterRecoveryClusterDetailsVO(newCluster.getId(), ApiConstants.DR_CLUSTER_API_KEY, newCluster.getDrClusterApiKey(), true));
+                }
+                if (cmd.getDrClusterSecretKey() != null) {
+                    drDetailsVO.add(new DisasterRecoveryClusterDetailsVO(newCluster.getId(), ApiConstants.DR_CLUSTER_SECRET_KEY, newCluster.getDrClusterSecretKey(), true));
+                }
+                if (cmd.getDrClusterPrivateKey() != null) {
+                    drDetailsVO.add(new DisasterRecoveryClusterDetailsVO(newCluster.getId(), ApiConstants.DR_CLUSTER_PRIVATE_KEY, newCluster.getDrClusterPrivateKey(), true));
+                }
+                if (!drDetailsVO.isEmpty()) {
+                    disasterRecoveryClusterDetailsDao.saveDetails(drDetailsVO);
+                }
                 return newCluster;
             }
         });
