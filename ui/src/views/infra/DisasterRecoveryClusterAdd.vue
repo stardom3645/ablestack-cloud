@@ -109,6 +109,7 @@ import { api } from '@/api'
 import DedicateDomain from '../../components/view/DedicateDomain'
 import ResourceIcon from '@/components/view/ResourceIcon'
 import TooltipLabel from '@/components/widgets/TooltipLabel.vue'
+import eventBus from '@/config/eventBus'
 import { Spin, Alert } from 'ant-design-vue'
 
 export default {
