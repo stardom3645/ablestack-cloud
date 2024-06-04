@@ -225,7 +225,6 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                     }
                 } else {
                     drcluster.setMirroringAgentStatus(DisasterRecoveryCluster.MirroringAgentStatus.Error.toString());
-                    break;
                 }
             }
         } else {
