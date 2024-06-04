@@ -535,23 +535,23 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                         sucParams.put("name", drName);
                         sucParams.put("drclusterstatus", DisasterRecoveryCluster.DrClusterStatus.Enabled.toString());
                         sucParams.put("mirroringagentstatus", DisasterRecoveryCluster.DrClusterStatus.Enabled.toString());
-                        DisasterRecoveryClusterUtil.moldUpdateDisasterRecoveryClusterAPI(secUrl, secCommand, secMethod, secApiKey, secSecretKey, sucParams);
+                        DisasterRecoveryClusterUtil.moldUpdateDisasterRecoveryClusterAPI(secUrl + "/client/api/", secCommand, secMethod, secApiKey, secSecretKey, sucParams);
                         return true;
-                    } else {
-                        // primary cluster db 업데이트
-                        drCluster.setDrClusterStatus(DisasterRecoveryCluster.DrClusterStatus.Error.toString());
-                        drCluster.setMirroringAgentStatus(DisasterRecoveryCluster.MirroringAgentStatus.Error.toString());
-                        disasterRecoveryClusterDao.update(drCluster.getId(), drCluster);
-                        // secondary cluster db 업데이트
-                        secCommand = "updateDisasterRecoveryCluster";
-                        secMethod = "GET";
-                        Map<String, String> sucParams = new HashMap<>();
-                        sucParams.put("name", drName);
-                        sucParams.put("drclusterstatus", DisasterRecoveryCluster.DrClusterStatus.Error.toString());
-                        sucParams.put("mirroringagentstatus", DisasterRecoveryCluster.DrClusterStatus.Error.toString());
-                        DisasterRecoveryClusterUtil.moldUpdateDisasterRecoveryClusterAPI(secUrl, secCommand, secMethod, secApiKey, secSecretKey, sucParams);
                     }
                 }
+                // mirror setup 실패
+                // primary cluster db 업데이트
+                drCluster.setDrClusterStatus(DisasterRecoveryCluster.DrClusterStatus.Error.toString());
+                drCluster.setMirroringAgentStatus(DisasterRecoveryCluster.MirroringAgentStatus.Error.toString());
+                disasterRecoveryClusterDao.update(drCluster.getId(), drCluster);
+                // secondary cluster db 업데이트
+                secCommand = "updateDisasterRecoveryCluster";
+                secMethod = "GET";
+                Map<String, String> sucParams = new HashMap<>();
+                sucParams.put("name", drName);
+                sucParams.put("drclusterstatus", DisasterRecoveryCluster.DrClusterStatus.Error.toString());
+                sucParams.put("mirroringagentstatus", DisasterRecoveryCluster.DrClusterStatus.Error.toString());
+                DisasterRecoveryClusterUtil.moldUpdateDisasterRecoveryClusterAPI(secUrl + "/client/api/", secCommand, secMethod, secApiKey, secSecretKey, sucParams);
             } else {
                 // primary cluster의 scvm ip 리스트를 가져오지 못한 경우
                 // primary cluster db 업데이트
