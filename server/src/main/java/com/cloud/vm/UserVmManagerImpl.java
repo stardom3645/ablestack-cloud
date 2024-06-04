@@ -9409,6 +9409,10 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
 
     private VMTemplateVO createDefaultDummyVmImportTemplates(boolean isKVM) {
         String templateName = (isKVM) ? KVM_VM_IMPORT_DEFAULT_TEMPLATE_NAME : VM_IMPORT_DEFAULT_TEMPLATE_NAME;
+        VMTemplateVO existingTemplate = _templateDao.findByName(templateName);
+        if (existingTemplate != null) {
+            return existingTemplate;
+        }
         VMTemplateVO template = null;
         try {
             template = VMTemplateVO.createSystemIso(_templateDao.getNextInSequence(Long.class, "id"), templateName, templateName, true,

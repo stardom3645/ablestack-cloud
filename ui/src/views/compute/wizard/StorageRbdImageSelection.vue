@@ -194,13 +194,6 @@ export default {
     },
     initDataItem () {
       this.dataItems = []
-      if (this.options.page === 1) {
-        this.dataItems.push({
-          id: '0',
-          name: this.$t('label.noselect'),
-          size: undefined
-        })
-      }
     },
     onSelectRow (value) {
       const rowSelected = this.items.filter(item => item.id === value[0])
