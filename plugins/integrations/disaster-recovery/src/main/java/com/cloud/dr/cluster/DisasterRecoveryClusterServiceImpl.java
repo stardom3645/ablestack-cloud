@@ -346,6 +346,10 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
             String drClusterUrl = cmd.getDrClusterUrl();
             drcluster.setDrClusterUrl(drClusterUrl);
         }
+        if (cmd.getDrClusterGlueIpAddress() != null) {
+            String drClusterGlueIpAddress = cmd.getDrClusterGlueIpAddress();
+            drcluster.setDrClusterGlueIpAddress(drClusterGlueIpAddress);
+        }
         if (cmd.getDetails() != null) {
             Map<String,String> details = cmd.getDetails();
             drcluster.setDetails(details);

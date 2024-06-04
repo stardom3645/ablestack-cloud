@@ -65,7 +65,7 @@ export default {
       icon: 'edit-outlined',
       label: 'label.edit.disaster.recovery.cluster',
       dataView: true,
-      args: ['name', 'description', 'drclusterurl']
+      args: ['name', 'description', 'drclusterurl', 'drclusterglueipaddress']
     },
     {
       api: 'updateDisasterRecoveryCluster',

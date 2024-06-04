@@ -66,6 +66,10 @@ public class UpdateDisasterRecoveryClusterCmd extends BaseCmd implements AdminCm
     @Parameter(name = ApiConstants.DR_CLUSTER_URL, type = CommandType.STRING, description = "the url of the disaster recovery cluster")
     private String drClusterUrl;
 
+    @Parameter(name = ApiConstants.DR_CLUSTER_GLUE_IP_ADDRESS, type = CommandType.STRING, required = false,
+            description = "dr cluster glue ip address")
+    private String drClusterGlueIpAddress;
+
     @Parameter(name = ApiConstants.DR_CLUSTER_STATUS, type = CommandType.STRING,
             description = "the enabled or disabled dr cluster state of the disaster recovery")
     private String drClusterStatus;
@@ -94,6 +98,10 @@ public class UpdateDisasterRecoveryClusterCmd extends BaseCmd implements AdminCm
 
     public String getDrClusterUrl() {
         return drClusterUrl;
+    }
+
+    public String getDrClusterGlueIpAddress() {
+        return drClusterGlueIpAddress;
     }
 
     public String getDrClusterStatus() {
