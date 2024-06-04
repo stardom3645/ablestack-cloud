@@ -658,7 +658,7 @@ public class DisasterRecoveryClusterUtil {
      *  mold Secret Key
      * @return true = 200, 이외 코드는 false 처리
      */
-    protected static String moldGetDisasterRecoveryClusterListAPI(String region, String command, String method, String apiKey, String secretKey) {
+    protected static List moldGetDisasterRecoveryClusterListAPI(String region, String command, String method, String apiKey, String secretKey) {
         try {
             String readLine = null;
             StringBuffer sb = null;
