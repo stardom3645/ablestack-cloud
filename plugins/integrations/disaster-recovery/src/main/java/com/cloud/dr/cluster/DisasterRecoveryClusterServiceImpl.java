@@ -327,19 +327,15 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         Long drClusterId = cmd.getId();
         String drClusterName = cmd.getName();
         if (drClusterId == null) {
-            // Secondary Cluster 에서 요청한 경우
+            // Primary Cluster 에서 request MoldAPI로 요청한 경우
             drcluster = disasterRecoveryClusterDao.findByName(drClusterName);
         } else {
-            // Primary Cluster 에서 요청한 경우
             drcluster = disasterRecoveryClusterDao.findById(drClusterId);
             if (drcluster == null) {
                 throw new InvalidParameterValueException("Invalid Disaster Recovery id specified");
             }
         }
         drcluster = disasterRecoveryClusterDao.createForUpdate(drcluster.getId());
-        if (cmd.getName() != null) {
-            drcluster.setName(drClusterName);
-        }
         if (cmd.getDescription() != null) {
             String drClusterDescription = cmd.getDescription();
             drcluster.setDescription(drClusterDescription);

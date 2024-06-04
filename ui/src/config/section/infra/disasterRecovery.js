@@ -65,7 +65,13 @@ export default {
       icon: 'edit-outlined',
       label: 'label.edit.disaster.recovery.cluster',
       dataView: true,
-      args: ['name', 'description', 'drclusterurl', 'drclusterglueipaddress']
+      args: (record) => {
+        var fields = ['description', 'drclusterurl']
+        if (record.drclusterglueipaddress !== undefined) {
+          fields.push('drclusterglueipaddress')
+        }
+        return fields
+      },
     },
     {
       api: 'updateDisasterRecoveryCluster',
