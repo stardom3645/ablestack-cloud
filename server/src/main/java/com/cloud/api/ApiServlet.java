@@ -182,8 +182,6 @@ public class ApiServlet extends HttpServlet {
         final StringBuilder auditTrailSb = new StringBuilder(128);
         auditTrailSb.append(" ").append(remoteAddress.getHostAddress());
         auditTrailSb.append(" -- ").append(req.getMethod()).append(' ');
-        LOGGER.info(":::::::::::::::::::::::::::::::::::::::::::::::");
-        LOGGER.info(req.getMethod());
         // get the response format since we'll need it in a couple of places
         String responseType = HttpUtils.RESPONSE_TYPE_XML;
         final Map<String, Object[]> params = new HashMap<String, Object[]>();
