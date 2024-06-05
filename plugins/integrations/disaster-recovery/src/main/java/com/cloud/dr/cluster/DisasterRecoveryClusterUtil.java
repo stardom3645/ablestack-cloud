@@ -161,6 +161,16 @@ public class DisasterRecoveryClusterUtil {
                 String daemonHealth = jObject.get("daemon_health").toString();
                 return daemonHealth;
             } else {
+                LOGGER.info(":::::::mirror status::::::::::::");
+                LOGGER.info(connection.getResponseCode());
+                BufferedReader br = new BufferedReader(new InputStreamReader(connection.getInputStream(), "UTF-8"));
+                sb = new StringBuffer();
+                while ((readLine = br.readLine()) != null) {
+                    sb.append(readLine);
+                }
+                LOGGER.info(sb.toString());
+                JsonParser jParser = new JsonParser();
+                JsonObject jObject = (JsonObject)jParser.parse(sb.toString());
                 String msg = "Failed to request glue mirror status API. response code : " + connection.getResponseCode();
                 LOGGER.error(msg);
                 return null;
