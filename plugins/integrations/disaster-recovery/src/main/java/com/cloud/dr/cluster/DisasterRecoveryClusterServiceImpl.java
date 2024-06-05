@@ -474,7 +474,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         // Secondary Cluster 정보
         String secUrl = drCluster.getDrClusterUrl();
         String secClusterType = drCluster.getDrClusterType();
-        Map<String, String> details = disasterRecoveryClusterDetailsDao.listDetailsKeyPairs(drcluster.getId());
+        Map<String, String> details = disasterRecoveryClusterDetailsDao.listDetailsKeyPairs(drCluster.getId());
         String secApiKey = details.get(ApiConstants.DR_CLUSTER_API_KEY);
         String secSecretKey = details.get(ApiConstants.DR_CLUSTER_SECRET_KEY);
         String secPrivateKey = details.get(ApiConstants.DR_CLUSTER_PRIVATE_KEY);
