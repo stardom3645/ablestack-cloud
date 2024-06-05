@@ -612,6 +612,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         }
         // Secondary Cluster에서 요청한 경우
         if (drCluster.getDrClusterType().equalsIgnoreCase("primary")) {
+            disasterRecoveryClusterDetailsDao.removeDetails(drCluster.getId());
             return disasterRecoveryClusterDao.remove(drCluster.getId());
         } else {
             // Primary Cluster에서 요청한 경우
@@ -657,6 +658,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                     // glueMirrorDeleteAPI 성공
                     if (result) {
                         // Primary Cluster - DB 업데이트
+                        disasterRecoveryClusterDetailsDao.removeDetails(drCluster.getId());
                         disasterRecoveryClusterDao.remove(drCluster.getId());
                         // Secondary Cluster - moldGetDisasterRecoveryClusterListAPI 호출
                         String secCommand = "getDisasterRecoveryClusterList";
