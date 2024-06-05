@@ -194,8 +194,6 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         response.setDrClusterUrl(drcluster.getDrClusterUrl());
         response.setDrClusterType(drcluster.getDrClusterType());
         response.setDrClusterStatus(drcluster.getDrClusterStatus());
-        response.setDrClusterApiKey(drcluster.getDrClusterApiKey());
-        response.setDrClusterSecretKey(drcluster.getDrClusterSecretKey());
         response.setDrClusterGlueIpAddress(drcluster.getDrClusterGlueIpAddress());
         response.setCreated(drcluster.getCreated());
         // Primary Cluster - scvm ip 조회
@@ -254,6 +252,8 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
             }
         }
         Map<String, String> details = disasterRecoveryClusterDetailsDao.listDetailsKeyPairs(clusterId);
+        String secApiKey = details.get(ApiConstants.DR_CLUSTER_API_KEY);
+        String secSecretKey = details.get(ApiConstants.DR_CLUSTER_SECRET_KEY);
         if (details != null && !details.isEmpty()) {
             response.setDetails(details);
         }
@@ -262,11 +262,11 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         String moldMethod = "GET";
         // Secondary Cluster - listServiceOfferings 호출
         String moldCommandListServiceOfferings = "listServiceOfferings";
-        List<ServiceOfferingResponse> secDrClusterServiceOfferingListResponse = DisasterRecoveryClusterUtil.getSecDrClusterInfoList(moldUrl, moldCommandListServiceOfferings, moldMethod, drcluster.getDrClusterApiKey(), drcluster.getDrClusterSecretKey());
+        List<ServiceOfferingResponse> secDrClusterServiceOfferingListResponse = DisasterRecoveryClusterUtil.getSecDrClusterInfoList(moldUrl, moldCommandListServiceOfferings, moldMethod, secApiKey, secSecretKey);
         response.setSecDisasterRecoveryClusterServiceOfferingList(secDrClusterServiceOfferingListResponse);
         // Secondary Cluster - listNetworks 호출
         String moldCommandListNetworks = "listNetworks";
-        List<NetworkResponse> secDrClusterNetworksListResponse = DisasterRecoveryClusterUtil.getSecDrClusterInfoList(moldUrl, moldCommandListNetworks, moldMethod, drcluster.getDrClusterApiKey(), drcluster.getDrClusterSecretKey());
+        List<NetworkResponse> secDrClusterNetworksListResponse = DisasterRecoveryClusterUtil.getSecDrClusterInfoList(moldUrl, moldCommandListNetworks, moldMethod, secApiKey, secSecretKey);
         response.setSecDisasterRecoveryClusterNetworkList(secDrClusterNetworksListResponse);
         return response;
     }
@@ -281,8 +281,6 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         response.setDrClusterUrl(drcluster.getDrClusterUrl());
         response.setDrClusterType(drcluster.getDrClusterType());
         response.setDrClusterStatus(drcluster.getDrClusterStatus());
-        response.setDrClusterApiKey(drcluster.getDrClusterApiKey());
-        response.setDrClusterSecretKey(drcluster.getDrClusterSecretKey());
         response.setDrClusterGlueIpAddress(drcluster.getDrClusterGlueIpAddress());
         response.setCreated(drcluster.getCreated());
         // Primary Cluster - scvm ip 조회
@@ -363,15 +361,6 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
             Map<String,String> details = cmd.getDetails();
             drcluster.setDetails(details);
             disasterRecoveryClusterDao.saveDetails(drcluster);
-            if (details.containsKey(ApiConstants.DR_CLUSTER_API_KEY)) {
-                drcluster.setDrClusterApiKey(details.get(ApiConstants.DR_CLUSTER_API_KEY));
-            }
-            if (details.containsKey(ApiConstants.DR_CLUSTER_SECRET_KEY)) {
-                drcluster.setDrClusterSecretKey(details.get(ApiConstants.DR_CLUSTER_SECRET_KEY));
-            }
-            if (details.containsKey(ApiConstants.DR_CLUSTER_PRIVATE_KEY)) {
-                drcluster.setDrClusterPrivateKey(details.get(ApiConstants.DR_CLUSTER_PRIVATE_KEY));
-            }
         }
         if (cmd.getDrClusterStatus() != null) {
             String drClusterStatus = cmd.getDrClusterStatus();
@@ -399,17 +388,17 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
             @Override
             public DisasterRecoveryClusterVO doInTransaction(TransactionStatus status) {
                 DisasterRecoveryClusterVO newCluster = new DisasterRecoveryClusterVO(msHost.getId(), cmd.getName(), cmd.getDescription(),
-                        cmd.getDrClusterApiKey(), cmd.getDrClusterSecretKey(), cmd.getDrClusterPrivateKey(), cmd.getDrClusterGlueIpAddress(), cmd.getDrClusterUrl(), cmd.getDrClusterType(), DisasterRecoveryCluster.DrClusterStatus.Created.toString(), DisasterRecoveryCluster.MirroringAgentStatus.Created.toString());
+                        cmd.getDrClusterGlueIpAddress(), cmd.getDrClusterUrl(), cmd.getDrClusterType(), DisasterRecoveryCluster.DrClusterStatus.Created.toString(), DisasterRecoveryCluster.MirroringAgentStatus.Created.toString());
                 disasterRecoveryClusterDao.persist(newCluster);
                 List<DisasterRecoveryClusterDetailsVO> drDetailsVO = new ArrayList<DisasterRecoveryClusterDetailsVO>();
                 if (cmd.getDrClusterApiKey() != null) {
-                    drDetailsVO.add(new DisasterRecoveryClusterDetailsVO(newCluster.getId(), ApiConstants.DR_CLUSTER_API_KEY, newCluster.getDrClusterApiKey(), true));
+                    drDetailsVO.add(new DisasterRecoveryClusterDetailsVO(newCluster.getId(), ApiConstants.DR_CLUSTER_API_KEY, cmd.getDrClusterApiKey(), true));
                 }
                 if (cmd.getDrClusterSecretKey() != null) {
-                    drDetailsVO.add(new DisasterRecoveryClusterDetailsVO(newCluster.getId(), ApiConstants.DR_CLUSTER_SECRET_KEY, newCluster.getDrClusterSecretKey(), true));
+                    drDetailsVO.add(new DisasterRecoveryClusterDetailsVO(newCluster.getId(), ApiConstants.DR_CLUSTER_SECRET_KEY, cmd.getDrClusterSecretKey(), true));
                 }
                 if (cmd.getDrClusterPrivateKey() != null) {
-                    drDetailsVO.add(new DisasterRecoveryClusterDetailsVO(newCluster.getId(), ApiConstants.DR_CLUSTER_PRIVATE_KEY, newCluster.getDrClusterPrivateKey(), true));
+                    drDetailsVO.add(new DisasterRecoveryClusterDetailsVO(newCluster.getId(), ApiConstants.DR_CLUSTER_PRIVATE_KEY, cmd.getDrClusterPrivateKey(), true));
                 }
                 if (!drDetailsVO.isEmpty()) {
                     disasterRecoveryClusterDetailsDao.saveDetails(drDetailsVO);
@@ -485,9 +474,10 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         // Secondary Cluster 정보
         String secUrl = drCluster.getDrClusterUrl();
         String secClusterType = drCluster.getDrClusterType();
-        String secApiKey = drCluster.getDrClusterApiKey();
-        String secSecretKey = drCluster.getDrClusterSecretKey();
-        String secPrivateKey = drCluster.getDrClusterPrivateKey();
+        Map<String, String> details = disasterRecoveryClusterDetailsDao.listDetailsKeyPairs(drcluster.getId());
+        String secApiKey = details.get(ApiConstants.DR_CLUSTER_API_KEY);
+        String secSecretKey = details.get(ApiConstants.DR_CLUSTER_SECRET_KEY);
+        String secPrivateKey = details.get(ApiConstants.DR_CLUSTER_PRIVATE_KEY);
         String secGlueIpAddress = drCluster.getDrClusterGlueIpAddress();
         try {
             FileOutputStream fos = new FileOutputStream("glue.key");
@@ -605,9 +595,11 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         response.setDrClusterType(drcluster.getDrClusterType());
         response.setDrClusterStatus(drcluster.getDrClusterStatus());
         response.setMirroringAgentStatus(drcluster.getMirroringAgentStatus());
-        response.setDrClusterApiKey(drcluster.getDrClusterApiKey());
-        response.setDrClusterSecretKey(drcluster.getDrClusterSecretKey());
         response.setDrClusterGlueIpAddress(drcluster.getDrClusterGlueIpAddress());
+        Map<String, String> details = disasterRecoveryClusterDetailsDao.listDetailsKeyPairs(drcluster.getId());
+        if (details != null && !details.isEmpty()) {
+            response.setDetails(details);
+        }
         response.setCreated(drcluster.getCreated());
         return response;
     }
@@ -630,9 +622,10 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
             String drName = drCluster.getName();
             String secUrl = drCluster.getDrClusterUrl();
             String secClusterType = drCluster.getDrClusterType();
-            String secApiKey = drCluster.getDrClusterApiKey();
-            String secSecretKey = drCluster.getDrClusterSecretKey();
-            String secPrivateKey = drCluster.getDrClusterPrivateKey();
+            Map<String, String> details = disasterRecoveryClusterDetailsDao.listDetailsKeyPairs(drCluster.getId());
+            String secApiKey = details.get(ApiConstants.DR_CLUSTER_API_KEY);
+            String secSecretKey = details.get(ApiConstants.DR_CLUSTER_SECRET_KEY);
+            String secPrivateKey = details.get(ApiConstants.DR_CLUSTER_PRIVATE_KEY);
             String secGlueIpAddress = drCluster.getDrClusterGlueIpAddress();
             try {
                 FileOutputStream fos = new FileOutputStream("glue.key");
