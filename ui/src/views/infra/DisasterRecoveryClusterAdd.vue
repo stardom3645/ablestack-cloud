@@ -94,7 +94,7 @@
       </div>
 
       <div :span="24" class="action-button">
-        <a-button @click="() => $emit('close-action')">{{ $t('label.cancel') }}</a-button>
+        <a-button @click="closeModals">{{ $t('label.cancel') }}</a-button>
         <a-button @click="testConnCode" :disabled="buttonDisabled" v-if="!testConnResult" type="primary">{{ $t('label.disaster.recovery.cluster.start.connection.test.description') }}</a-button>
         <a-button @click="handleSubmit" :disabled="!buttonDisabled" v-if="testConnResult" ref="submit" type="primary">{{ $t('label.ok') }}</a-button>
       </div>
@@ -282,7 +282,7 @@ export default {
                 eventBus.emit('dr-refresh-data')
               }
             })
-            $emit('close-action')
+            this.closeModals()
           }).finally(() => {
             this.loading = false
           })
@@ -294,6 +294,9 @@ export default {
       this.params.find(i => {
         if (i.name === field) this.placeholder[field] = i.description
       })
+    },
+    closeModals () {
+      this.$emit('close-action')
     }
   },
   mounted () {
