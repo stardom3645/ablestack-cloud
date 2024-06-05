@@ -62,14 +62,6 @@ public class GetDisasterRecoveryClusterListResponse extends BaseResponse {
     @Param(description = "the mirroring agent status of the disaster recovery cluster on the mshost")
     private String mirroringAgentStatus;
 
-    @SerializedName(ApiConstants.DR_CLUSTER_API_KEY)
-    @Param(description = "the api key of the disaster recovery cluster on the mshost")
-    private String drClusterApiKey;
-
-    @SerializedName(ApiConstants.DR_CLUSTER_SECRET_KEY)
-    @Param(description = "the secret key of the disaster recovery cluster on the mshost")
-    private String drClusterSecretKey;
-
     @SerializedName(ApiConstants.DR_CLUSTER_GLUE_IP_ADDRESS)
     @Param(description = "the ip address of the disaster recovery cluster on the glue")
     private String drClusterGlueIpAddress;
@@ -127,14 +119,6 @@ public class GetDisasterRecoveryClusterListResponse extends BaseResponse {
         return mirroringAgentStatus;
     }
 
-    public String getDrClusterApiKey() {
-        return drClusterApiKey;
-    }
-
-    public String getDrClusterSecretKey() {
-        return drClusterSecretKey;
-    }
-
     public String getDrClusterGlueIpAddress() {
         return drClusterGlueIpAddress;
     }
@@ -177,14 +161,6 @@ public class GetDisasterRecoveryClusterListResponse extends BaseResponse {
 
     public void setMirroringAgentStatus(String mirroringAgentStatus) {
         this.mirroringAgentStatus = mirroringAgentStatus;
-    }
-
-    public void setDrClusterApiKey(String drClusterApiKey) {
-        this.drClusterApiKey = drClusterApiKey;
-    }
-
-    public void setDrClusterSecretKey(String drClusterSecretKey) {
-        this.drClusterSecretKey = drClusterSecretKey;
     }
 
     public void setDrClusterGlueIpAddress(String drClusterGlueIpAddress) {

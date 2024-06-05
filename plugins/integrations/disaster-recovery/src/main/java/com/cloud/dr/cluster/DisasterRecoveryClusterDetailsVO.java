@@ -39,7 +39,7 @@ public class DisasterRecoveryClusterDetailsVO implements ResourceDetail {
     @Column(name = "name")
     private String name;
 
-    @Column(name = "value", length = 5120)
+    @Column(name = "value", length = 16384)
     private String value;
 
     @Column(name = "display")
