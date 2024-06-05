@@ -290,13 +290,19 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
             String[] array = ipList.split(",");
             String daemonHealth = null;
             for(int i=0; i < array.length; i++) {
+                LOGGER.info(":::::::::::::::::::::");
+                LOGGER.info(i);
                 String glueIp = array[i];
                 String glueUrl = "https://" + glueIp + ":8080/api/v1"; // glue-api 프로토콜과 포트 확정 시 변경 예정
                 String glueCommand = "/mirror";
                 String glueMethod = "GET";
                 daemonHealth = DisasterRecoveryClusterUtil.glueMirrorStatusAPI(glueUrl, glueCommand, glueMethod);
                 // glueMirrorStatusAPI 성공
+                LOGGER.info(":::::::::::::::::::::");
+                LOGGER.info(daemonHealth);
+                LOGGER.info(":::::::::::::::::::::");
                 if (daemonHealth != null) {
+                    LOGGER.info(":::::::::daemonHealth != null::::::::::::");
                     if (daemonHealth.contains("OK")) {
                         drcluster.setMirroringAgentStatus(DisasterRecoveryCluster.MirroringAgentStatus.Enabled.toString());
                         break;
@@ -309,7 +315,9 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                     }
                 }
             }
+            LOGGER.info(":::::::::::out::::::::::");
             if (daemonHealth == null) {
+                LOGGER.info(":::::::::daemonHealth == null::::::::::::");
                 // glueMirrorStatusAPI 실패
                 drcluster.setMirroringAgentStatus(DisasterRecoveryCluster.MirroringAgentStatus.Unknown.toString());
             }
