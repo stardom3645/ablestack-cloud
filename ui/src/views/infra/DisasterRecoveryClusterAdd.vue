@@ -234,7 +234,6 @@ export default {
             description: (error.response && error.response.headers && error.response.headers['x-description']) || error.message
           })
         })
-        this.closeAction()
       })
     },
     handleKeyPress (event) {
