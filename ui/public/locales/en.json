@@ -4318,5 +4318,9 @@
 "message.dr.mirrored.vm.release": "Confirm whether you want to release mirroring.",
 "label.dr.release.mirroring": "Release mirroring",
 "message.success.add.disaster.recovery.cluster": "Successfully added disaster recovery cluster",
-"label.drclusterglueipaddress": "cluster glue ip"
+"label.drclusterglueipaddress": "cluster glue ip",
+"dr.create": "DR.CREATE",
+"dr.test.connect": "DR.TEST.CONNECT",
+"dr.delete": "DR.DELETE",
+"dr.update": "DR.UPDATE"
 }

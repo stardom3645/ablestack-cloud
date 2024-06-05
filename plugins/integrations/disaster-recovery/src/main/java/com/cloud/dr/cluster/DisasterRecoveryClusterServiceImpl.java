@@ -289,12 +289,13 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
             ipList = ipList.replaceAll(",$", "");
             // Primary Cluster - glueMirrorStatusAPI 호출
             String[] array = ipList.split(",");
+            String daemonHealth = null;
             for(int i=0; i < array.length; i++) {
                 String glueIp = array[i];
                 String glueUrl = "https://" + glueIp + ":8080/api/v1"; // glue-api 프로토콜과 포트 확정 시 변경 예정
                 String glueCommand = "/mirror";
                 String glueMethod = "GET";
-                String daemonHealth = DisasterRecoveryClusterUtil.glueMirrorStatusAPI(glueUrl, glueCommand, glueMethod);
+                daemonHealth = DisasterRecoveryClusterUtil.glueMirrorStatusAPI(glueUrl, glueCommand, glueMethod);
                 // glueMirrorStatusAPI 성공
                 if (daemonHealth != null) {
                     if (daemonHealth.contains("OK")) {
@@ -307,10 +308,11 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                         drcluster.setMirroringAgentStatus(DisasterRecoveryCluster.MirroringAgentStatus.Error.toString());
                         break;
                     }
-                } else {
-                    // glueMirrorStatusAPI 실패
-                    drcluster.setMirroringAgentStatus(DisasterRecoveryCluster.MirroringAgentStatus.Unknown.toString());
                 }
+            }
+            if (daemonHealth == null) {
+                // glueMirrorStatusAPI 실패
+                drcluster.setMirroringAgentStatus(DisasterRecoveryCluster.MirroringAgentStatus.Unknown.toString());
             }
         }
         disasterRecoveryClusterDao.update(drcluster.getId(), drcluster);
@@ -318,7 +320,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
     }
 
     @Override
-    @ActionEvent(eventType = EventTypes.EVENT_DISASTER_RECOVERY_CLUSTER, eventDescription = "updating dr cluster", resourceId = 5, resourceType = "DisasterRecoveryCluster")
+    @ActionEvent(eventType = DisasterRecoveryClusterEventTypes.EVENT_DR_UPDATE, eventDescription = "updating dr cluster", resourceId = 5, resourceType = "DisasterRecoveryCluster")
     public GetDisasterRecoveryClusterListResponse updateDisasterRecoveryCluster(UpdateDisasterRecoveryClusterCmd cmd) throws CloudRuntimeException {
         if (!DisasterRecoveryClusterService.DisasterRecoveryServiceEnabled.value()) {
             throw new CloudRuntimeException("Disaster Recovery plugin is disabled");
