@@ -39,7 +39,6 @@ import com.cloud.dr.cluster.dao.DisasterRecoveryClusterDao;
 import com.cloud.dr.cluster.dao.DisasterRecoveryClusterDetailsDao;
 import com.cloud.dr.cluster.dao.DisasterRecoveryClusterVmMapDao;
 import com.cloud.event.ActionEvent;
-import com.cloud.event.EventTypes;
 import com.cloud.exception.InvalidParameterValueException;
 import com.cloud.user.Account;
 import com.cloud.user.AccountService;
