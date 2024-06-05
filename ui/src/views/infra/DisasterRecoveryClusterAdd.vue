@@ -54,13 +54,13 @@
         </a-form-item>
         <a-form-item name="apikey" ref="apikey" :label="$t('label.apikey')">
           <a-input
-            :placeholder="temp"
+            :placeholder="'temp'"
             v-model:value="form.apikey"
           />
         </a-form-item>
         <a-form-item name="secretkey" ref="secretkey" :label="$t('label.secret.key')">
           <a-input
-            :placeholder="temp"
+            :placeholder="'temp'"
             v-model:value="form.secretkey"
           />
         </a-form-item>
@@ -72,7 +72,7 @@
       </a-form-item>
         <a-form-item name="file" ref="file" :label="$t('label.add.disaster.recovery.cluster.info.glue.pri.key')">
           <a-textarea
-            :placeholder="temp"
+            :placeholder="'temp'"
             v-model:value="form.file"
           ></a-textarea>
         </a-form-item>
@@ -216,7 +216,6 @@ export default {
           drclusterapikey: values.apikey,
           drclustersecretkey: values.secretkey
         }
-        console.log(params)
         api('connectivityTestsDisasterRecovery', params).then(json => {
           this.testConnResult = json.connectivitytestsdisasterrecoveryresponse
           if (this.testConnResult === false) {
@@ -280,16 +279,19 @@ export default {
               loadingMessage: `${this.$t('label.add.disaster.recovery.cluster')} ${values.name} ${this.$t('label.in.progress')}`,
               catchMessage: this.$t('error.fetching.async.job.result'),
               catchMethod: () => {
+                console.log("1");
                 eventBus.emit('dr-refresh-data')
               }
             })
             this.closeModal()
           }).catch(error => {
+            console.log("2");
             this.$notifyError(error)
           }).finally(() => {
             this.loading = false
           })
         }).catch(error => {
+          console.log("3");
           this.formRef.value.scrollToField(error.errorFields[0].name)
         })
     },
@@ -304,7 +306,10 @@ export default {
   },
   beforeUnmount () {
     document.body.removeEventListener('keydown', this.handleKeyPress)
-  }
+  },
+  closeModal () {
+      this.$emit('close-modal')
+    }
 }
 </script>
 
