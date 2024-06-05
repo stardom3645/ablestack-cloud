@@ -282,7 +282,7 @@ export default {
                 eventBus.emit('dr-refresh-data')
               }
             })
-            this.closeModal()
+            $emit('close-action')
           }).finally(() => {
             this.loading = false
           })
@@ -294,9 +294,6 @@ export default {
       this.params.find(i => {
         if (i.name === field) this.placeholder[field] = i.description
       })
-    },
-    closeModal () {
-      this.$emit('close-modal')
     }
   },
   mounted () {
