@@ -298,11 +298,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                 String glueMethod = "GET";
                 daemonHealth = DisasterRecoveryClusterUtil.glueMirrorStatusAPI(glueUrl, glueCommand, glueMethod);
                 // glueMirrorStatusAPI 성공
-                LOGGER.info(":::::::::::::::::::::");
-                LOGGER.info(daemonHealth);
-                LOGGER.info(":::::::::::::::::::::");
                 if (daemonHealth != null) {
-                    LOGGER.info(":::::::::daemonHealth != null::::::::::::");
                     if (daemonHealth.contains("OK")) {
                         drcluster.setMirroringAgentStatus(DisasterRecoveryCluster.MirroringAgentStatus.Enabled.toString());
                         break;
@@ -315,12 +311,14 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                     }
                 }
             }
-            LOGGER.info(":::::::::::out::::::::::");
             if (daemonHealth == null) {
-                LOGGER.info(":::::::::daemonHealth == null::::::::::::");
                 // glueMirrorStatusAPI 실패
                 drcluster.setMirroringAgentStatus(DisasterRecoveryCluster.MirroringAgentStatus.Unknown.toString());
             }
+        }
+        Map<String, String> details = disasterRecoveryClusterDetailsDao.listDetailsKeyPairs(drcluster.getId());
+        if (details != null && !details.isEmpty()) {
+            response.setDetails(details);
         }
         disasterRecoveryClusterDao.update(drcluster.getId(), drcluster);
         return response;
