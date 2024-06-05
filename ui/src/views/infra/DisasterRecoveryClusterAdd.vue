@@ -279,19 +279,19 @@ export default {
               loadingMessage: `${this.$t('label.add.disaster.recovery.cluster')} ${values.name} ${this.$t('label.in.progress')}`,
               catchMessage: this.$t('error.fetching.async.job.result'),
               catchMethod: () => {
-                console.log("1");
+                console.log('1')
                 eventBus.emit('dr-refresh-data')
               }
             })
             this.closeModal()
           }).catch(error => {
-            console.log("2");
+            console.log('2')
             this.$notifyError(error)
           }).finally(() => {
             this.loading = false
           })
         }).catch(error => {
-          console.log("3");
+          console.log('3')
           this.formRef.value.scrollToField(error.errorFields[0].name)
         })
     },
@@ -308,8 +308,8 @@ export default {
     document.body.removeEventListener('keydown', this.handleKeyPress)
   },
   closeModal () {
-      this.$emit('close-modal')
-    }
+    this.$emit('close-modal')
+  }
 }
 </script>
 
