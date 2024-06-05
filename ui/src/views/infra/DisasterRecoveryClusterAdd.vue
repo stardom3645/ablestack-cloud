@@ -281,6 +281,7 @@ export default {
                 eventBus.emit('dr-refresh-data')
               }
             })
+            eventBus.emit('dr-refresh-data')
             this.closeModals()
           }).finally(() => {
             this.loading = false
