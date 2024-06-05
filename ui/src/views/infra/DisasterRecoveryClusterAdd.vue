@@ -283,8 +283,6 @@ export default {
               }
             })
             this.closeModal()
-          }).catch(error => {
-            // this.$notifyError(error)
           }).finally(() => {
             this.loading = false
           })
