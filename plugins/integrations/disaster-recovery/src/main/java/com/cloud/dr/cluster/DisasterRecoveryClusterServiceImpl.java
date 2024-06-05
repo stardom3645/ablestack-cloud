@@ -671,7 +671,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                         String secCommand = "getDisasterRecoveryClusterList";
                         String secMethod = "GET";
                         Map<String, String> sucParams = new HashMap<>();
-                        List<GetDisasterRecoveryClusterListResponse> drListResponse = DisasterRecoveryClusterUtil.moldGetDisasterRecoveryClusterListAPI (secUrl + "/client/api/", secCommand, secMethod, secApiKey, secSecretKey);
+                        List<GetDisasterRecoveryClusterListResponse> drListResponse = DisasterRecoveryClusterUtil.moldGetDisasterRecoveryClusterListAPI(secUrl + "/client/api/", secCommand, secMethod, secApiKey, secSecretKey);
                         if (drListResponse != null || !drListResponse.isEmpty()) {
                             // Secondary Cluster - moldGetDisasterRecoveryClusterListAPI 성공
                             for (GetDisasterRecoveryClusterListResponse dr : drListResponse) {
