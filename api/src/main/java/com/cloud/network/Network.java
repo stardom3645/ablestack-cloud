@@ -364,7 +364,7 @@ public interface Network extends ControlledEntity, StateObject<Network.State>, I
         private String ip4Address;
         private String ip6Address;
         private String macAddress;
-        private boolean linkState;
+        private boolean linkState = true;
 
         public String getMacAddress() {
             return macAddress;
