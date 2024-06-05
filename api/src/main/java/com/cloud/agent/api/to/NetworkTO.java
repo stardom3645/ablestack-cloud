@@ -43,7 +43,7 @@ public class NetworkTO {
     protected String ip6cidr;
     protected String ip6Dns1;
     protected String ip6Dns2;
-    protected boolean linkState;
+    protected boolean linkState = true;
 
     public NetworkTO() {
     }

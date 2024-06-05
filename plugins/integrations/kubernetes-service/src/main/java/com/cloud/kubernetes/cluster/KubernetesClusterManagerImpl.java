@@ -181,7 +181,7 @@ import org.apache.logging.log4j.Level;
 
 public class KubernetesClusterManagerImpl extends ManagerBase implements KubernetesClusterService {
 
-    private static final String DEFAULT_NETWORK_OFFERING_FOR_KUBERNETES_SERVICE_NAME = "DefaultNetworkOfferingforKubernetesService";
+    private static final String DEFAULT_NETWORK_OFFERING_FOR_KUBERNETES_SERVICE_NAME = "쿠버네테스 서비스에 대한 기본 네트워크오퍼링";
     private static final String DEFAULT_NETWORK_OFFERING_FOR_KUBERNETES_SERVICE_DISPLAY_TEXT = "Network Offering used for CloudStack Kubernetes service";
     private static final String DEFAULT_NSX_NETWORK_OFFERING_FOR_KUBERNETES_SERVICE_NAME = "DefaultNSXNetworkOfferingforKubernetesService";
     private static final String DEFAULT_NSX_VPC_TIER_NETWORK_OFFERING_FOR_KUBERNETES_SERVICE_NAME = "DefaultNSXVPCNetworkOfferingforKubernetesService";
@@ -638,13 +638,16 @@ public class KubernetesClusterManagerImpl extends ManagerBase implements Kuberne
         }
     }
 
-    private DataCenter validateAndGetZoneForKubernetesCreateParameters(Long zoneId) {
+    private DataCenter validateAndGetZoneForKubernetesCreateParameters(Long zoneId, Long networkId) {
         DataCenter zone = dataCenterDao.findById(zoneId);
         if (zone == null) {
             throw new InvalidParameterValueException("Unable to find zone by ID: " + zoneId);
         }
         if (zone.getAllocationState() == Grouping.AllocationState.Disabled) {
             throw new PermissionDeniedException(String.format("Cannot perform this operation, zone ID: %s is currently disabled", zone.getUuid()));
+        }
+        if (DataCenter.Type.Edge.equals(zone.getType()) && networkId == null) {
+            throw new PermissionDeniedException("Kubernetes clusters cannot be created on an edge zone without an existing network");
         }
         return zone;
     }
@@ -685,7 +688,7 @@ public class KubernetesClusterManagerImpl extends ManagerBase implements Kuberne
             throw new InvalidParameterValueException("Invalid name for the Kubernetes cluster name: " + name);
         }
 
-        validateAndGetZoneForKubernetesCreateParameters(zoneId);
+        validateAndGetZoneForKubernetesCreateParameters(zoneId, networkId);
         validateSshKeyPairForKubernetesCreateParameters(sshKeyPair, owner);
 
         if (nodeRootDiskSize != null && nodeRootDiskSize <= 0) {
@@ -761,18 +764,7 @@ public class KubernetesClusterManagerImpl extends ManagerBase implements Kuberne
                 String.format("Maximum cluster size can not exceed %d. Please contact your administrator", maxClusterSize));
         }
 
-        DataCenter zone = dataCenterDao.findById(zoneId);
-        if (zone == null) {
-            throw new InvalidParameterValueException("Unable to find zone by ID: " + zoneId);
-        }
-
-        if (Grouping.AllocationState.Disabled == zone.getAllocationState()) {
-            throw new PermissionDeniedException(String.format("Zone ID: %s is currently disabled", zone.getUuid()));
-        }
-
-        if (DataCenter.Type.Edge.equals(zone.getType()) && networkId == null) {
-            throw new PermissionDeniedException("Kubernetes clusters cannot be created on an edge zone without an existing network");
-        }
+        DataCenter zone = validateAndGetZoneForKubernetesCreateParameters(zoneId, networkId);
 
         if (!isKubernetesServiceConfigured(zone)) {
             throw new CloudRuntimeException("Kubernetes service has not been configured properly to provision Kubernetes clusters");
@@ -1486,7 +1478,6 @@ public class KubernetesClusterManagerImpl extends ManagerBase implements Kuberne
             sc.setParameters("state", state);
         }
         if(keyword != null){
-            sc.addOr("uuid", SearchCriteria.Op.LIKE, "%" + keyword + "%");
             sc.setParameters("keyword", "%" + keyword + "%");
         }
         if (clusterId != null) {
@@ -1910,11 +1901,11 @@ public class KubernetesClusterManagerImpl extends ManagerBase implements Kuberne
         createNetworkOfferingForKubernetes(DEFAULT_NETWORK_OFFERING_FOR_KUBERNETES_SERVICE_NAME,
                 DEFAULT_NETWORK_OFFERING_FOR_KUBERNETES_SERVICE_DISPLAY_TEXT, false, false);
 
-        createNetworkOfferingForKubernetes(DEFAULT_NSX_NETWORK_OFFERING_FOR_KUBERNETES_SERVICE_NAME,
-                DEFAULT_NSX_NETWORK_OFFERING_FOR_KUBERNETES_SERVICE_DISPLAY_TEXT, true, false);
+        // createNetworkOfferingForKubernetes(DEFAULT_NSX_NETWORK_OFFERING_FOR_KUBERNETES_SERVICE_NAME,
+        //         DEFAULT_NSX_NETWORK_OFFERING_FOR_KUBERNETES_SERVICE_DISPLAY_TEXT, true, false);
 
-        createNetworkOfferingForKubernetes(DEFAULT_NSX_VPC_TIER_NETWORK_OFFERING_FOR_KUBERNETES_SERVICE_NAME,
-                DEFAULT_NSX_VPC_NETWORK_OFFERING_FOR_KUBERNETES_SERVICE_DISPLAY_TEXT , true, true);
+        // createNetworkOfferingForKubernetes(DEFAULT_NSX_VPC_TIER_NETWORK_OFFERING_FOR_KUBERNETES_SERVICE_NAME,
+        //         DEFAULT_NSX_VPC_NETWORK_OFFERING_FOR_KUBERNETES_SERVICE_DISPLAY_TEXT , true, true);
 
         _gcExecutor.scheduleWithFixedDelay(new KubernetesClusterGarbageCollector(), 300, 300, TimeUnit.SECONDS);
         _stateScanner.scheduleWithFixedDelay(new KubernetesClusterStatusScanner(), 300, 30, TimeUnit.SECONDS);
@@ -1944,8 +1935,8 @@ public class KubernetesClusterManagerImpl extends ManagerBase implements Kuberne
         }
 
         NetworkOfferingVO defaultKubernetesServiceNetworkOffering =
-                new NetworkOfferingVO("쿠버네테스 서비스에 대한 기본 네트워크오퍼링",
-                "쿠버네테스 서비스에 대한 기본 네트워크오퍼링", Networks.TrafficType.Guest,
+                new NetworkOfferingVO(offeringName,
+                        offeringDesc, Networks.TrafficType.Guest,
                         false, false, null, null, true,
                         NetworkOffering.Availability.Required, null, Network.GuestType.Isolated, true,
                         true, false, false, false, false,
