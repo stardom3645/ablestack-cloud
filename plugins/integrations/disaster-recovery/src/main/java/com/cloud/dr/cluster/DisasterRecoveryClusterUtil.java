@@ -161,6 +161,7 @@ public class DisasterRecoveryClusterUtil {
                 String daemonHealth = jObject.get("daemon_health").toString();
                 return daemonHealth;
             } else {
+                // mirror pool 비활성화된 경우 처리
                 if (connection.getResponseCode() == 500) {
                     String daemonHealth = "DISABLED";
                     return daemonHealth;
