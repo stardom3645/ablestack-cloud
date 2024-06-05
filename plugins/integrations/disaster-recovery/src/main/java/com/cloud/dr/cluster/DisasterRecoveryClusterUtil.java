@@ -161,16 +161,7 @@ public class DisasterRecoveryClusterUtil {
                 String daemonHealth = jObject.get("daemon_health").toString();
                 return daemonHealth;
             } else {
-                LOGGER.info(":::::::mirror status::::::::::::");
-                BufferedReader br = new BufferedReader(new InputStreamReader(connection.getInputStream(), "UTF-8"));
-                sb = new StringBuffer();
-                while ((readLine = br.readLine()) != null) {
-                    sb.append(readLine);
-                }
-                JsonParser jParser = new JsonParser();
-                JsonObject jObject = (JsonObject)jParser.parse(sb.toString());
-                LOGGER.info(sb.toString());
-                if (sb.toString().contains("mirroring not enabled on the pool")) {
+                if (connection.getResponseCode() == 500) {
                     String daemonHealth = "DISABLED";
                     return daemonHealth;
                 } else {
