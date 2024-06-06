@@ -428,7 +428,7 @@ public class LinstorPrimaryDataStoreDriverImpl implements PrimaryDataStoreDriver
 
             applyAuxProps(api, rscName, volName, vmName);
 
-            return LinstorUtil.getDevicePath(linstorApi, rscName);
+            return LinstorUtil.getDevicePath(api, rscName);
         } catch (ApiException apiEx)
         {
             logger.error("Linstor: ApiEx - " + apiEx.getMessage());
@@ -446,6 +446,9 @@ public class LinstorPrimaryDataStoreDriverImpl implements PrimaryDataStoreDriver
 
         try
         {
+            applyQoSSettings(storagePoolVO, linstorApi, rscName, vol.getMaxIops());
+
+            return LinstorUtil.getDevicePath(linstorApi, rscName);
         } catch (ApiException apiEx)
             logger.error("Linstor: ApiEx - " + apiEx.getMessage());
             throw new CloudRuntimeException(apiEx.getBestMessage(), apiEx);
@@ -917,7 +920,7 @@ public class LinstorPrimaryDataStoreDriverImpl implements PrimaryDataStoreDriver
 
         api.resourceSnapshotRestore(rscName, snapshotName, sr);
 
-        return getDeviceName(api, restoredName);
+        return LinstorUtil.getDevicePath(api, restoredName);
     }
 
     private Answer copyTemplate(DataObject srcData, DataObject dstData) {
