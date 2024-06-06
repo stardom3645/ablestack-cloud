@@ -29,7 +29,6 @@ import com.linbit.linstor.api.model.ResourceDefinitionCreate;
 import com.linbit.linstor.api.model.ResourceDefinitionModify;
 import com.linbit.linstor.api.model.ResourceGroupSpawn;
 import com.linbit.linstor.api.model.ResourceMakeAvailable;
-import com.linbit.linstor.api.model.ResourceWithVolumes;
 import com.linbit.linstor.api.model.Snapshot;
 import com.linbit.linstor.api.model.SnapshotRestore;
 import com.linbit.linstor.api.model.VolumeDefinition;
@@ -101,6 +100,7 @@ import org.apache.cloudstack.storage.datastore.db.PrimaryDataStoreDao;
 import org.apache.cloudstack.storage.datastore.db.StoragePoolVO;
 import org.apache.cloudstack.storage.datastore.util.LinstorConfigurationManager;
 import org.apache.cloudstack.storage.datastore.util.LinstorUtil;
+import org.apache.cloudstack.storage.snapshot.SnapshotObject;
 import org.apache.cloudstack.storage.to.SnapshotObjectTO;
 import org.apache.cloudstack.storage.to.VolumeObjectTO;
 import org.apache.cloudstack.storage.volume.VolumeObject;
@@ -343,25 +343,6 @@ public class LinstorPrimaryDataStoreDriverImpl implements PrimaryDataStoreDriver
         return answers.stream().filter(ApiCallRc::isError).findFirst().map(ApiCallRc::getMessage).orElse(null);
     }
 
-    private String getDeviceName(DevelopersApi linstorApi, String rscName) throws ApiException {
-        List<ResourceWithVolumes> resources = linstorApi.viewResources(
-            Collections.emptyList(),
-            Collections.singletonList(rscName),
-            Collections.emptyList(),
-            null,
-            null,
-            null);
-        if (!resources.isEmpty() && !resources.get(0).getVolumes().isEmpty())
-        {
-            logger.info("Linstor: Created drbd device: " + resources.get(0).getVolumes().get(0).getDevicePath());
-            return resources.get(0).getVolumes().get(0).getDevicePath();
-        } else
-        {
-            logger.error("Linstor: viewResources didn't return resources or volumes.");
-            throw new CloudRuntimeException("Linstor: viewResources didn't return resources or volumes.");
-        }
-    }
-
     private void applyQoSSettings(StoragePoolVO storagePool, DevelopersApi api, String rscName, Long maxIops)
         throws ApiException
     {
@@ -447,7 +428,7 @@ public class LinstorPrimaryDataStoreDriverImpl implements PrimaryDataStoreDriver
 
             applyAuxProps(api, rscName, volName, vmName);
 
-            return getDeviceName(api, rscName);
+            return LinstorUtil.getDevicePath(linstorApi, rscName);
         } catch (ApiException apiEx)
         {
             logger.error("Linstor: ApiEx - " + apiEx.getMessage());
@@ -465,11 +446,7 @@ public class LinstorPrimaryDataStoreDriverImpl implements PrimaryDataStoreDriver
 
         try
         {
-            applyQoSSettings(storagePoolVO, linstorApi, rscName, vol.getMaxIops());
-
-            return deviceName;
         } catch (ApiException apiEx)
-        {
             logger.error("Linstor: ApiEx - " + apiEx.getMessage());
             throw new CloudRuntimeException(apiEx.getBestMessage(), apiEx);
         }
@@ -519,7 +496,7 @@ public class LinstorPrimaryDataStoreDriverImpl implements PrimaryDataStoreDriver
                 applyAuxProps(linstorApi, rscName, volumeInfo.getName(), volumeInfo.getAttachedVmName());
                 applyQoSSettings(storagePoolVO, linstorApi, rscName, volumeInfo.getMaxIops());
 
-                return getDeviceName(linstorApi, rscName);
+                return LinstorUtil.getDevicePath(linstorApi, rscName);
             } catch (ApiException apiEx) {
                 logger.error("Linstor: ApiEx - " + apiEx.getMessage());
                 throw new CloudRuntimeException(apiEx.getBestMessage(), apiEx);
@@ -571,7 +548,7 @@ public class LinstorPrimaryDataStoreDriverImpl implements PrimaryDataStoreDriver
             applyAuxProps(linstorApi, rscName, volumeVO.getName(), null);
             applyQoSSettings(storagePoolVO, linstorApi, rscName, volumeVO.getMaxIops());
 
-            return getDeviceName(linstorApi, rscName);
+            return LinstorUtil.getDevicePath(linstorApi, rscName);
         } catch (ApiException apiEx) {
             logger.error("Linstor: ApiEx - " + apiEx.getMessage());
             throw new CloudRuntimeException(apiEx.getBestMessage(), apiEx);
