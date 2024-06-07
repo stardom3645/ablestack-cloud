@@ -16,13 +16,14 @@
 // under the License.
 package com.cloud.kubernetes.cluster;
 
+import javax.inject.Inject; 
+
 import org.apache.cloudstack.acl.ControlledEntity;
 import org.apache.cloudstack.framework.config.ConfigKey;
 import org.apache.cloudstack.framework.config.Configurable;
 import org.apache.log4j.Logger;
 import org.springframework.stereotype.Component;
 
-import javax.inject.Inject;
 import java.util.Objects;
 import com.cloud.kubernetes.cluster.dao.KubernetesClusterDao;
 import com.cloud.kubernetes.cluster.dao.KubernetesClusterVmMapDao;
@@ -53,6 +54,26 @@ public class KubernetesClusterHelperImpl extends AdapterBase implements Kubernet
         return kubernetesClusterDao.findById(clusterVmMapVO.getClusterId());
     }
 
+    public void checkVmCanBeDestroyed(UserVm userVm) {
+        if (!UserVmManager.CKS_NODE.equals(userVm.getUserVmType())) {
+            return;
+        }
+        KubernetesClusterVmMapVO vmMapVO = kubernetesClusterVmMapDao.findByVmId(userVm.getId());
+        if (vmMapVO == null) {
+            return;
+        }
+        logger.error(String.format("VM ID: %s is a part of Kubernetes cluster ID: %d", userVm.getId(), vmMapVO.getClusterId()));
+        KubernetesCluster kubernetesCluster = kubernetesClusterDao.findById(vmMapVO.getClusterId());
+        String msg = "Instance is a part of a Kubernetes cluster";
+        if (kubernetesCluster != null) {
+            msg += String.format(": %s", kubernetesCluster.getName());
+        }
+        msg += ". Use Instance delete option from Kubernetes cluster details or scale API for " +
+                "Kubernetes clusters with 'nodeids' to destroy the instance.";
+        throw new CloudRuntimeException(msg);
+    }
+
+    @Override
     public void checkVmCanBeDestroyed(UserVm userVm) {
         if (!UserVmManager.CKS_NODE.equals(userVm.getUserVmType())) {
             return;

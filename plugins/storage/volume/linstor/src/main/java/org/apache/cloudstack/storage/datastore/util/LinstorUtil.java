@@ -226,14 +226,14 @@ public class LinstorUtil {
                 // CloudStack resource always only have 1 volume
                 String devicePath = rsc.getVolumes().get(0).getDevicePath();
                 if (devicePath != null && !devicePath.isEmpty()) {
-                    s_logger.debug(String.format("getDevicePath: %s -> %s", rscName, devicePath));
+                    LOGGER.debug("getDevicePath: {} -> {}", rscName, devicePath);
                     return devicePath;
                 }
             }
         }
 
         final String errMsg = "viewResources didn't return resources or volumes for " + rscName;
-        s_logger.error(errMsg);
+        LOGGER.error(errMsg);
         throw new CloudRuntimeException("Linstor: " + errMsg);
     }
 }

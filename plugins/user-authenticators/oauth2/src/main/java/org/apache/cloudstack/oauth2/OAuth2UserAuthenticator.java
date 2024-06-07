@@ -50,10 +50,10 @@ public class OAuth2UserAuthenticator extends AdapterBase implements UserAuthenti
         }
 
         if (!isOAuthPluginEnabled()) {
-            s_logger.debug("OAuth2 plugin is disabled");
+            logger.debug("OAuth2 plugin is disabled");
             return new Pair<Boolean, ActionOnFailedAuthentication>(false, null);
         } else if (requestParameters == null) {
-            s_logger.debug("Request parameters are null");
+            logger.debug("Request parameters are null");
             return new Pair<Boolean, ActionOnFailedAuthentication>(false, null);
         }
 

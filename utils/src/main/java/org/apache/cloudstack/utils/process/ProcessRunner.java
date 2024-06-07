@@ -98,10 +98,10 @@ public final class ProcessRunner {
         String commandLog = removeCommandSensitiveInfoForLogging(StringUtils.join(commands, " "));
 
         try {
-            logger.debug(String.format("Preparing command [%s] to execute.", oneLineCommand));
+            logger.debug("Preparing command [{}] to execute.", commandLog);
             final Process process = new ProcessBuilder().command(commands).start();
 
-            logger.debug(String.format("Submitting command [%s].", oneLineCommand));
+            logger.debug("Submitting command [{}].", commandLog);
             final Future<Integer> processFuture = executor.submit(new Callable<Integer>() {
                 @Override
                 public Integer call() throws Exception {
@@ -109,14 +109,14 @@ public final class ProcessRunner {
                 }
             });
             try {
-                logger.debug(String.format("Waiting for a response from command [%s]. Defined timeout: [%s].", oneLineCommand, timeOut.getStandardSeconds()));
+                logger.debug("Waiting for a response from command [{}]. Defined timeout: [{}].", commandLog, timeOut.getStandardSeconds());
                 retVal = processFuture.get(timeOut.getStandardSeconds(), TimeUnit.SECONDS);
             } catch (ExecutionException e) {
-                logger.warn(String.format("Failed to complete the requested command [%s] due to execution error.", oneLineCommand), e);
+                logger.warn("Failed to complete the requested command [{}] due to execution error.", commands, e);
                 retVal = -2;
                 stdError = e.getMessage();
             } catch (TimeoutException e) {
-                logger.warn(String.format("Failed to complete the requested command [%s] within timeout. Defined timeout: [%s].", oneLineCommand, timeOut.getStandardSeconds()), e);
+                logger.warn("Failed to complete the requested command [{}] within timeout. Defined timeout: [{}].", commandLog, timeOut.getStandardSeconds(), e);
                 retVal = -1;
                 stdError = "Operation timed out, aborted.";
             } finally {
@@ -127,10 +127,10 @@ public final class ProcessRunner {
                 process.destroy();
             }
 
-            logger.debug(String.format("Process standard output for command [%s]: [%s].", oneLineCommand, stdOutput));
-            logger.debug(String.format("Process standard error output command [%s]: [%s].", oneLineCommand, stdError));
+            logger.debug("Process standard output for command [{}]: [{}].", commandLog, stdOutput);
+            logger.debug("Process standard error output command [{}]: [{}].", commandLog, stdError);
         } catch (IOException | InterruptedException e) {
-            logger.error(String.format("Exception caught error running command [%s].", oneLineCommand), e);
+            logger.error("Exception caught error running command [{}].", commandLog, e);
             stdError = e.getMessage();
         }
         return new ProcessResult(stdOutput, stdError, retVal);
