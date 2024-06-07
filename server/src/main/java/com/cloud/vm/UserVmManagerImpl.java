@@ -620,6 +620,7 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
     private HypervisorGuruManager _hvGuruMgr;
 
 
+
     private ScheduledExecutorService _executor = null;
     private ScheduledExecutorService _vmIpFetchExecutor = null;
     private int _expungeInterval;
@@ -3345,7 +3346,7 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
                     ComponentContext.getDelegateComponentOfType(KubernetesClusterHelper.class);
             kubernetesClusterHelper.checkVmCanBeDestroyed(vm);
         } catch (NoSuchBeanDefinitionException ignored) {
-            s_logger.debug("No KubernetesClusterHelper bean found");
+            logger.debug("No KubernetesClusterHelper bean found");
         }
     }
 
