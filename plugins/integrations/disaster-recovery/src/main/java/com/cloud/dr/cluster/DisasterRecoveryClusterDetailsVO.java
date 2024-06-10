@@ -16,7 +16,7 @@
 // under the License.
 package com.cloud.dr.cluster;
 
-import org.apache.cloudstack.api.ResourceDetail;
+import org.apache.cloudstack.api.InternalIdentity;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -27,14 +27,14 @@ import javax.persistence.Table;
 
 @Entity
 @Table(name = "disaster_recovery_cluster_details")
-public class DisasterRecoveryClusterDetailsVO implements ResourceDetail {
+public class DisasterRecoveryClusterDetailsVO implements InternalIdentity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
     private long id;
 
     @Column(name = "dr_cluster_id")
-    private long resourceId;
+    private long clusterId;
 
     @Column(name = "name")
     private String name;
@@ -42,17 +42,13 @@ public class DisasterRecoveryClusterDetailsVO implements ResourceDetail {
     @Column(name = "value", length = 16384)
     private String value;
 
-    @Column(name = "display")
-    private boolean display = true;
-
     public DisasterRecoveryClusterDetailsVO() {
     }
 
-    public DisasterRecoveryClusterDetailsVO(long drClusterId, String name, String value, boolean display) {
-        this.resourceId = drClusterId;
+    public DisasterRecoveryClusterDetailsVO(long clusterId, String name, String value) {
+        this.clusterId = clusterId;
         this.name = name;
         this.value = value;
-        this.display = display;
     }
 
     @Override
@@ -60,24 +56,16 @@ public class DisasterRecoveryClusterDetailsVO implements ResourceDetail {
         return id;
     }
 
-    @Override
     public String getName() {
         return name;
     }
 
-    @Override
     public String getValue() {
         return value;
     }
 
-    @Override
-    public long getResourceId() {
-        return resourceId;
-    }
-
-    @Override
-    public boolean isDisplay() {
-        return display;
+    public long getClusterId() {
+        return clusterId;
     }
 
     public void setName(String name) {
