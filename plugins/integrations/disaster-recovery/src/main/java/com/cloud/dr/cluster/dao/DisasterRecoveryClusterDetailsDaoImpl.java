@@ -16,113 +16,15 @@
 // under the License.
 package com.cloud.dr.cluster.dao;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import org.apache.cloudstack.framework.config.ConfigKey;
-
-import com.cloud.utils.crypt.DBEncryptionUtil;
-import com.cloud.utils.db.GenericDaoBase;
-import com.cloud.utils.db.SearchBuilder;
-import com.cloud.utils.db.SearchCriteria;
-import com.cloud.utils.db.TransactionLegacy;
 import com.cloud.dr.cluster.DisasterRecoveryClusterDetailsVO;
+import org.apache.cloudstack.resourcedetail.ResourceDetailsDaoBase;
+import org.springframework.stereotype.Component;
 
-public class DisasterRecoveryClusterDetailsDaoImpl extends GenericDaoBase<DisasterRecoveryClusterDetailsVO, Long> implements DisasterRecoveryClusterDetailsDao {
-
-    protected final SearchBuilder<DisasterRecoveryClusterDetailsVO> ClusterSearch;
-    protected final SearchBuilder<DisasterRecoveryClusterDetailsVO> DetailSearch;
-
-    private final String drClusterPrivateKey = "drclusterprivatekey";
-
-    protected DisasterRecoveryClusterDetailsDaoImpl() {
-        ClusterSearch = createSearchBuilder();
-        ClusterSearch.and("clusterId", ClusterSearch.entity().getClusterId(), SearchCriteria.Op.EQ);
-        ClusterSearch.done();
-
-        DetailSearch = createSearchBuilder();
-        DetailSearch.and("clusterId", DetailSearch.entity().getClusterId(), SearchCriteria.Op.EQ);
-        DetailSearch.and("name", DetailSearch.entity().getName(), SearchCriteria.Op.EQ);
-        DetailSearch.done();
-    }
+@Component
+public class DisasterRecoveryClusterDetailsDaoImpl extends ResourceDetailsDaoBase<DisasterRecoveryClusterDetailsVO> implements DisasterRecoveryClusterDetailsDao {
 
     @Override
-    public DisasterRecoveryClusterDetailsVO findDetail(long clusterId, String name) {
-        SearchCriteria<DisasterRecoveryClusterDetailsVO> sc = DetailSearch.create();
-        // This is temporary fix to support list/update configuration api for cpu and memory overprovisioning ratios
-        sc.setParameters("clusterId", clusterId);
-        sc.setParameters("name", name);
-
-        DisasterRecoveryClusterDetailsVO detail = findOneIncludingRemovedBy(sc);
-        if (drClusterPrivateKey.equals(name) && detail != null) {
-            detail.setValue(DBEncryptionUtil.decrypt(detail.getValue()));
-        }
-        return detail;
-    }
-
-    @Override
-    public Map<String, String> findDetails(long clusterId) {
-        SearchCriteria<DisasterRecoveryClusterDetailsVO> sc = ClusterSearch.create();
-        sc.setParameters("clusterId", clusterId);
-        List<DisasterRecoveryClusterDetailsVO> results = search(sc, null);
-        Map<String, String> details = new HashMap<String, String>(results.size());
-        for (DisasterRecoveryClusterDetailsVO result : results) {
-            if (drClusterPrivateKey.equals(result.getName())) {
-                details.put(result.getName(), DBEncryptionUtil.decrypt(result.getValue()));
-            } else {
-                details.put(result.getName(), result.getValue());
-            }
-        }
-        return details;
-    }
-
-    @Override
-    public void deleteDetails(long clusterId) {
-        SearchCriteria<DisasterRecoveryClusterDetailsVO> sc = ClusterSearch.create();
-        sc.setParameters("clusterId", clusterId);
-        List<DisasterRecoveryClusterDetailsVO> results = search(sc, null);
-        for (DisasterRecoveryClusterDetailsVO result : results) {
-            remove(result.getId());
-        }
-    }
-
-    @Override
-    public void persist(long clusterId, Map<String, String> details) {
-        TransactionLegacy txn = TransactionLegacy.currentTxn();
-        txn.start();
-        SearchCriteria<DisasterRecoveryClusterDetailsVO> sc = ClusterSearch.create();
-        sc.setParameters("clusterId", clusterId);
-        expunge(sc);
-
-        for (Map.Entry<String, String> detail : details.entrySet()) {
-            String name = detail.getKey();
-            String value = detail.getValue();
-            if (drClusterPrivateKey.equals(detail.getKey())) {
-                value = DBEncryptionUtil.encrypt(value);
-            }
-            DisasterRecoveryClusterDetailsVO vo = new DisasterRecoveryClusterDetailsVO(clusterId, name, value);
-            persist(vo);
-        }
-        txn.commit();
-    }
-
-    @Override
-    public void persist(long clusterId, String name, String value) {
-        TransactionLegacy txn = TransactionLegacy.currentTxn();
-        txn.start();
-        SearchCriteria<DisasterRecoveryClusterDetailsVO> sc = DetailSearch.create();
-        sc.setParameters("clusterId", clusterId);
-        sc.setParameters("name", name);
-        expunge(sc);
-
-        DisasterRecoveryClusterDetailsVO vo = new DisasterRecoveryClusterDetailsVO(clusterId, name, value);
-        persist(vo);
-        txn.commit();
-    }
-
-    public String getConfigValue(long id, ConfigKey<?> key) {
-        DisasterRecoveryClusterDetailsVO vo = findDetail(id, key.key());
-        return vo == null ? null : vo.getValue();
+    public void addDetail(long resourceId, String key, String value, boolean display) {
+        super.addDetail(new DisasterRecoveryClusterDetailsVO(resourceId, key, value, display));
     }
 }

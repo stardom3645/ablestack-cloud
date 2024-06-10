@@ -253,7 +253,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                 }
             }
         }
-        Map<String, String> details = disasterRecoveryClusterDetailsDao.findDetails(clusterId);
+        Map<String, String> details = disasterRecoveryClusterDetailsDao.listDetailsKeyPairs(clusterId);
         String secApiKey = details.get(ApiConstants.DR_CLUSTER_API_KEY);
         String secSecretKey = details.get(ApiConstants.DR_CLUSTER_SECRET_KEY);
         if (details != null && !details.isEmpty()) {
@@ -320,7 +320,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                 drcluster.setMirroringAgentStatus(DisasterRecoveryCluster.MirroringAgentStatus.Unknown.toString());
             }
         }
-        Map<String, String> details = disasterRecoveryClusterDetailsDao.findDetails(drcluster.getId());
+        Map<String, String> details = disasterRecoveryClusterDetailsDao.listDetailsKeyPairs(drcluster.getId());
         if (details != null && !details.isEmpty()) {
             response.setDetails(details);
         }
@@ -362,7 +362,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         if (cmd.getDetails() != null) {
             Map<String,String> details = cmd.getDetails();
             drcluster.setDetails(details);
-            disasterRecoveryClusterDetailsDao.persist(drcluster.getId(), details);
+            disasterRecoveryClusterDao.saveDetails(drcluster);
         }
         if (cmd.getDrClusterStatus() != null) {
             String drClusterStatus = cmd.getDrClusterStatus();
@@ -392,17 +392,19 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                 DisasterRecoveryClusterVO newCluster = new DisasterRecoveryClusterVO(msHost.getId(), cmd.getName(), cmd.getDescription(),
                         cmd.getDrClusterGlueIpAddress(), cmd.getDrClusterUrl(), cmd.getDrClusterType(), DisasterRecoveryCluster.DrClusterStatus.Created.toString(), DisasterRecoveryCluster.MirroringAgentStatus.Created.toString());
                 disasterRecoveryClusterDao.persist(newCluster);
-                Map<String, String> drDetails = disasterRecoveryClusterDetailsDao.findDetails(newCluster.getId());
+                List<DisasterRecoveryClusterDetailsVO> drDetailsVO = new ArrayList<DisasterRecoveryClusterDetailsVO>();
                 if (cmd.getDrClusterApiKey() != null) {
-                    drDetails.put(ApiConstants.DR_CLUSTER_API_KEY, cmd.getDrClusterApiKey());
+                    drDetailsVO.add(new DisasterRecoveryClusterDetailsVO(newCluster.getId(), ApiConstants.DR_CLUSTER_API_KEY, cmd.getDrClusterApiKey(), true));
                 }
                 if (cmd.getDrClusterSecretKey() != null) {
-                    drDetails.put(ApiConstants.DR_CLUSTER_SECRET_KEY, cmd.getDrClusterSecretKey());
+                    drDetailsVO.add(new DisasterRecoveryClusterDetailsVO(newCluster.getId(), ApiConstants.DR_CLUSTER_SECRET_KEY, cmd.getDrClusterSecretKey(), true));
                 }
                 if (cmd.getDrClusterPrivateKey() != null) {
-                    drDetails.put(ApiConstants.DR_CLUSTER_PRIVATE_KEY, cmd.getDrClusterSecretKey());
+                    drDetailsVO.add(new DisasterRecoveryClusterDetailsVO(newCluster.getId(), ApiConstants.DR_CLUSTER_PRIVATE_KEY, cmd.getDrClusterPrivateKey(), true));
                 }
-                disasterRecoveryClusterDetailsDao.persist(newCluster.getId(), drDetails);
+                if (!drDetailsVO.isEmpty()) {
+                    disasterRecoveryClusterDetailsDao.saveDetails(drDetailsVO);
+                }
                 return newCluster;
             }
         });
@@ -474,7 +476,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         // Secondary Cluster 정보
         String secUrl = drCluster.getDrClusterUrl();
         String secClusterType = drCluster.getDrClusterType();
-        Map<String, String> details = disasterRecoveryClusterDetailsDao.findDetails(drCluster.getId());
+        Map<String, String> details = disasterRecoveryClusterDetailsDao.listDetailsKeyPairs(drCluster.getId());
         String secApiKey = details.get(ApiConstants.DR_CLUSTER_API_KEY);
         String secSecretKey = details.get(ApiConstants.DR_CLUSTER_SECRET_KEY);
         String secPrivateKey = details.get(ApiConstants.DR_CLUSTER_PRIVATE_KEY);
@@ -596,7 +598,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         response.setDrClusterStatus(drcluster.getDrClusterStatus());
         response.setMirroringAgentStatus(drcluster.getMirroringAgentStatus());
         response.setDrClusterGlueIpAddress(drcluster.getDrClusterGlueIpAddress());
-        Map<String, String> details = disasterRecoveryClusterDetailsDao.findDetails(drcluster.getId());
+        Map<String, String> details = disasterRecoveryClusterDetailsDao.listDetailsKeyPairs(drcluster.getId());
         if (details != null && !details.isEmpty()) {
             response.setDetails(details);
         }
@@ -615,14 +617,14 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         }
         // Secondary Cluster에서 요청한 경우
         if (drCluster.getDrClusterType().equalsIgnoreCase("primary")) {
-            disasterRecoveryClusterDetailsDao.deleteDetails(drCluster.getId());
+            disasterRecoveryClusterDetailsDao.removeDetails(drCluster.getId());
             return disasterRecoveryClusterDao.remove(drCluster.getId());
         } else {
             // Primary Cluster에서 요청한 경우
             String drName = drCluster.getName();
             String secUrl = drCluster.getDrClusterUrl();
             String secClusterType = drCluster.getDrClusterType();
-            Map<String, String> details = disasterRecoveryClusterDetailsDao.findDetails(drCluster.getId());
+            Map<String, String> details = disasterRecoveryClusterDetailsDao.listDetailsKeyPairs(drCluster.getId());
             String secApiKey = details.get(ApiConstants.DR_CLUSTER_API_KEY);
             String secSecretKey = details.get(ApiConstants.DR_CLUSTER_SECRET_KEY);
             String secPrivateKey = details.get(ApiConstants.DR_CLUSTER_PRIVATE_KEY);
@@ -662,7 +664,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                     // glueMirrorDeleteAPI 성공
                     if (result) {
                         // Primary Cluster - DB 업데이트
-                        disasterRecoveryClusterDetailsDao.deleteDetails(drCluster.getId());
+                        disasterRecoveryClusterDetailsDao.removeDetails(drCluster.getId());
                         disasterRecoveryClusterDao.remove(drCluster.getId());
                         // Secondary Cluster - moldGetDisasterRecoveryClusterListAPI 호출
                         String secCommand = "getDisasterRecoveryClusterList";
