@@ -362,9 +362,9 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         }
         if (cmd.getDetails() != null) {
             Map<String,String> details = cmd.getDetails();
-            for (Map<String,String> ele : details.entrySet()) {
-                if (ele.getKey() == ApiConstants.DR_CLUSTER_PRIVATE_KEY) {
-                    String encryptKey = DBEncryptionUtil.encrypt(ele.getValue());
+            for (String key : details.keySet()) {
+                if (key.equalsIgnoreCase(ApiConstants.DR_CLUSTER_PRIVATE_KEY)) {
+                    String encryptKey = DBEncryptionUtil.encrypt(details.get(key));
                     details.put(ApiConstants.DR_CLUSTER_PRIVATE_KEY, encryptKey);
                 }
             }
