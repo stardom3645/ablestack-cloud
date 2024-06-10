@@ -20,7 +20,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.inject.Inject;
+
 import org.apache.cloudstack.framework.config.ConfigKey;
+import org.springframework.stereotype.Component;
 
 import com.cloud.utils.crypt.DBEncryptionUtil;
 import com.cloud.utils.db.GenericDaoBase;
@@ -29,8 +32,9 @@ import com.cloud.utils.db.SearchCriteria;
 import com.cloud.utils.db.TransactionLegacy;
 import com.cloud.dr.cluster.DisasterRecoveryClusterDetailsVO;
 
+@Component
 public class DisasterRecoveryClusterDetailsDaoImpl extends GenericDaoBase<DisasterRecoveryClusterDetailsVO, Long> implements DisasterRecoveryClusterDetailsDao {
-
+    @Inject
     protected final SearchBuilder<DisasterRecoveryClusterDetailsVO> ClusterSearch;
     protected final SearchBuilder<DisasterRecoveryClusterDetailsVO> DetailSearch;
 
