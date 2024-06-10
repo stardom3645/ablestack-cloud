@@ -17,27 +17,24 @@
 
 package org.apache.cloudstack.api.command.admin.dr;
 
-import com.cloud.dr.cluster.DisasterRecoveryCluster;
-import com.cloud.dr.cluster.DisasterRecoveryClusterEventTypes;
-import com.cloud.dr.cluster.DisasterRecoveryClusterService;
-import com.cloud.exception.ConcurrentOperationException;
-import com.cloud.utils.exception.CloudRuntimeException;
+import javax.inject.Inject;
 
 import org.apache.cloudstack.acl.RoleType;
 import org.apache.cloudstack.api.APICommand;
 import org.apache.cloudstack.api.ApiConstants;
 import org.apache.cloudstack.api.ApiErrorCode;
-import org.apache.cloudstack.api.BaseCmd;
 import org.apache.cloudstack.api.Parameter;
-import org.apache.cloudstack.api.ResponseObject;
+import org.apache.cloudstack.api.BaseAsyncCmd;
 import org.apache.cloudstack.api.ServerApiException;
-import org.apache.cloudstack.api.command.admin.AdminCmd;
+import org.apache.cloudstack.api.response.SuccessResponse;
 import org.apache.cloudstack.api.response.dr.cluster.GetDisasterRecoveryClusterListResponse;
 import org.apache.cloudstack.context.CallContext;
 
-import javax.inject.Inject;
-import java.util.Collection;
-import java.util.Map;
+import com.cloud.dr.cluster.DisasterRecoveryCluster;
+import com.cloud.dr.cluster.DisasterRecoveryClusterEventTypes;
+import com.cloud.dr.cluster.DisasterRecoveryClusterService;
+import com.cloud.dr.cluster.dao.DisasterRecoveryClusterDao;
+import com.cloud.utils.exception.CloudRuntimeException;
 
 @APICommand(name = EnableDisasterRecoveryClusterCmd.APINAME,
         description = "enable a disaster recovery cluster",
