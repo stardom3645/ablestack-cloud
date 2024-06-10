@@ -740,7 +740,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         }
         // Secondary Cluster에서 요청한 경우
         if (drCluster.getDrClusterType().equalsIgnoreCase("primary")) {
-            // 
+            //
         } else {
             // Primary Cluster에서 요청한 경우
         }
@@ -758,7 +758,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         }
         // Secondary Cluster에서 요청한 경우
         if (drCluster.getDrClusterType().equalsIgnoreCase("primary")) {
-            // 
+            //
         } else {
             // Primary Cluster에서 요청한 경우
         }
