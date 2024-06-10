@@ -38,7 +38,6 @@ import com.cloud.utils.exception.CloudRuntimeException;
 @APICommand(name = DisableDisasterRecoveryClusterCmd.APINAME,
         description = "disable a disaster recovery cluster",
         responseObject = SuccessResponse.class,
-        responseView = ResponseObject.ResponseView.Full,
         entityType = {DisasterRecoveryCluster.class},
         authorized = {RoleType.Admin})
 public class DisableDisasterRecoveryClusterCmd extends BaseAsyncCmd {
@@ -77,11 +76,23 @@ public class DisableDisasterRecoveryClusterCmd extends BaseAsyncCmd {
         return DisasterRecoveryClusterEventTypes.EVENT_DR_DISABLE;
     }
 
+    @Override
+    public String getEventDescription() {
+        String description = "Disabling disaster recovery cluster";
+        DisasterRecoveryCluster cluster = _entityMgr.findById(DisasterRecoveryCluster.class, getId());
+        if (cluster != null) {
+            description += String.format(" ID: %s", cluster.getUuid());
+        } else {
+            description += String.format(" ID: %d", getId());
+        }
+        return description;
+    }
+
     /////////////////////////////////////////////////////
     /////////////// API Implementation///////////////////
     /////////////////////////////////////////////////////
     @Override
-    public void execute() throws ServerApiException, ConcurrentOperationException {
+    public void execute() throws ServerApiException {
         try {
             if (!disasterRecoveryClusterService.disableDisasterRecoveryCluster(this)) {
                 throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, String.format("Failed to disable disaster recovery cluster ID: %d", getId()));
