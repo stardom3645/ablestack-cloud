@@ -52,7 +52,7 @@ export default {
   ],
   actions: [
     {
-      api: 'addImageStore',
+      api: 'createDisasterRecoveryCluster',
       icon: 'plus-outlined',
       docHelp: '',
       label: 'label.add.disaster.recovery.cluster',
@@ -74,7 +74,7 @@ export default {
       }
     },
     {
-      api: 'updateDisasterRecoveryCluster',
+      api: 'enableDisasterRecoveryCluster',
       icon: 'play-circle-outlined',
       label: 'label.action.enable.disaster.recovery.cluster',
       message: 'message.enabled.dr.cluster.confirm',
@@ -89,7 +89,7 @@ export default {
       }
     },
     {
-      api: 'updateDisasterRecoveryCluster',
+      api: 'disableDisasterRecoveryCluster',
       icon: 'pause-circle-outlined',
       label: 'label.action.disable.disaster.recovery.cluster',
       message: 'message.disabled.dr.cluster.confirm',

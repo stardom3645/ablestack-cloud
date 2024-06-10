@@ -52,6 +52,7 @@ import com.cloud.utils.db.Transaction;
 import com.cloud.utils.PropertiesUtil;
 import com.cloud.utils.script.Script;
 import com.cloud.utils.server.ServerProperties;
+import com.cloud.utils.crypt.DBEncryptionUtil;
 import com.cloud.utils.component.ManagerBase;
 import com.cloud.utils.exception.CloudRuntimeException;
 
@@ -65,6 +66,8 @@ import org.apache.cloudstack.api.response.ScvmIpAddressResponse;
 import org.apache.cloudstack.api.command.admin.dr.ConnectivityTestsDisasterRecoveryClusterCmd;
 import org.apache.cloudstack.api.command.admin.dr.CreateDisasterRecoveryClusterCmd;
 import org.apache.cloudstack.api.command.admin.dr.DeleteDisasterRecoveryClusterCmd;
+import org.apache.cloudstack.api.command.admin.dr.DisableDisasterRecoveryClusterCmd;
+import org.apache.cloudstack.api.command.admin.dr.EnableDisasterRecoveryClusterCmd;
 import org.apache.cloudstack.api.command.admin.glue.ListScvmIpAddressCmd;
 import org.apache.cloudstack.api.response.ServiceOfferingResponse;
 import org.apache.cloudstack.api.response.UserVmResponse;
@@ -359,6 +362,12 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         }
         if (cmd.getDetails() != null) {
             Map<String,String> details = cmd.getDetails();
+            for (Map<String,String> ele : details.entrySet()) {
+                if (ele.getKey() == ApiConstants.DR_CLUSTER_PRIVATE_KEY) {
+                    String encryptKey = DBEncryptionUtil.encrypt(ele.getValue());
+                    details.put(ApiConstants.DR_CLUSTER_PRIVATE_KEY, encryptKey);
+                }
+            }
             drcluster.setDetails(details);
             disasterRecoveryClusterDao.saveDetails(drcluster);
         }
@@ -398,7 +407,8 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                     drDetailsVO.add(new DisasterRecoveryClusterDetailsVO(newCluster.getId(), ApiConstants.DR_CLUSTER_SECRET_KEY, cmd.getDrClusterSecretKey(), true));
                 }
                 if (cmd.getDrClusterPrivateKey() != null) {
-                    drDetailsVO.add(new DisasterRecoveryClusterDetailsVO(newCluster.getId(), ApiConstants.DR_CLUSTER_PRIVATE_KEY, cmd.getDrClusterPrivateKey(), true));
+                    String keyEnc = DBEncryptionUtil.encrypt(cmd.getDrClusterPrivateKey());
+                    drDetailsVO.add(new DisasterRecoveryClusterDetailsVO(newCluster.getId(), ApiConstants.DR_CLUSTER_PRIVATE_KEY, keyEnc, true));
                 }
                 if (!drDetailsVO.isEmpty()) {
                     disasterRecoveryClusterDetailsDao.saveDetails(drDetailsVO);
@@ -477,7 +487,8 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         Map<String, String> details = disasterRecoveryClusterDetailsDao.listDetailsKeyPairs(drCluster.getId());
         String secApiKey = details.get(ApiConstants.DR_CLUSTER_API_KEY);
         String secSecretKey = details.get(ApiConstants.DR_CLUSTER_SECRET_KEY);
-        String secPrivateKey = details.get(ApiConstants.DR_CLUSTER_PRIVATE_KEY);
+        String secPrivateKeyEnc = details.get(ApiConstants.DR_CLUSTER_PRIVATE_KEY);
+        String secPrivateKey = DBEncryptionUtil.decrypt(secPrivateKeyEnc);
         String secGlueIpAddress = drCluster.getDrClusterGlueIpAddress();
         try {
             FileOutputStream fos = new FileOutputStream("glue.key");
@@ -625,7 +636,8 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
             Map<String, String> details = disasterRecoveryClusterDetailsDao.listDetailsKeyPairs(drCluster.getId());
             String secApiKey = details.get(ApiConstants.DR_CLUSTER_API_KEY);
             String secSecretKey = details.get(ApiConstants.DR_CLUSTER_SECRET_KEY);
-            String secPrivateKey = details.get(ApiConstants.DR_CLUSTER_PRIVATE_KEY);
+            String secPrivateKeyEnc = details.get(ApiConstants.DR_CLUSTER_PRIVATE_KEY);
+            String secPrivateKey = DBEncryptionUtil.decrypt(secPrivateKeyEnc);
             String secGlueIpAddress = drCluster.getDrClusterGlueIpAddress();
             try {
                 FileOutputStream fos = new FileOutputStream("glue.key");
@@ -718,6 +730,42 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
     }
 
     @Override
+    public boolean enableDisasterRecoveryCluster(EnableDisasterRecoveryClusterCmd cmd) throws CloudRuntimeException {
+        if (!DisasterRecoveryServiceEnabled.value()) {
+            throw new CloudRuntimeException("Disaster Recovery Service plugin is disabled");
+        }
+        DisasterRecoveryClusterVO drCluster = disasterRecoveryClusterDao.findById(cmd.getId());
+        if (drCluster == null) {
+            throw new InvalidParameterValueException("Invalid disaster recovery cluster name specified");
+        }
+        // Secondary Cluster에서 요청한 경우
+        if (drCluster.getDrClusterType().equalsIgnoreCase("primary")) {
+            // 
+        } else {
+            // Primary Cluster에서 요청한 경우
+        }
+        return false;
+    }
+
+    @Override
+    public boolean disableDisasterRecoveryCluster(DisableDisasterRecoveryClusterCmd cmd) throws CloudRuntimeException {
+        if (!DisasterRecoveryServiceEnabled.value()) {
+            throw new CloudRuntimeException("Disaster Recovery Service plugin is disabled");
+        }
+        DisasterRecoveryClusterVO drCluster = disasterRecoveryClusterDao.findById(cmd.getId());
+        if (drCluster == null) {
+            throw new InvalidParameterValueException("Invalid disaster recovery cluster name specified");
+        }
+        // Secondary Cluster에서 요청한 경우
+        if (drCluster.getDrClusterType().equalsIgnoreCase("primary")) {
+            // 
+        } else {
+            // Primary Cluster에서 요청한 경우
+        }
+        return false;
+    }
+
+    @Override
     public List<Class<?>> getCommands() {
         List<Class<?>> cmdList = new ArrayList<Class<?>>();
         if (!DisasterRecoveryServiceEnabled.value()) {
@@ -729,6 +777,8 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         cmdList.add(UpdateDisasterRecoveryClusterCmd.class);
         cmdList.add(CreateDisasterRecoveryClusterCmd.class);
         cmdList.add(DeleteDisasterRecoveryClusterCmd.class);
+        cmdList.add(EnableDisasterRecoveryClusterCmd.class);
+        cmdList.add(DisableDisasterRecoveryClusterCmd.class);
         return cmdList;
     }
 
