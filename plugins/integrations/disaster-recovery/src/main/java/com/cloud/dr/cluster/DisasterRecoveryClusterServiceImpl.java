@@ -52,7 +52,6 @@ import com.cloud.utils.db.Transaction;
 import com.cloud.utils.PropertiesUtil;
 import com.cloud.utils.script.Script;
 import com.cloud.utils.server.ServerProperties;
-import com.cloud.utils.crypt.DBEncryptionUtil;
 import com.cloud.utils.component.ManagerBase;
 import com.cloud.utils.exception.CloudRuntimeException;
 
@@ -362,12 +361,6 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         }
         if (cmd.getDetails() != null) {
             Map<String,String> details = cmd.getDetails();
-            for (String key : details.keySet()) {
-                if (key.equalsIgnoreCase(ApiConstants.DR_CLUSTER_PRIVATE_KEY)) {
-                    String encryptKey = DBEncryptionUtil.encrypt(details.get(key));
-                    details.put(ApiConstants.DR_CLUSTER_PRIVATE_KEY, encryptKey);
-                }
-            }
             drcluster.setDetails(details);
             disasterRecoveryClusterDao.saveDetails(drcluster);
         }
@@ -407,8 +400,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                     drDetailsVO.add(new DisasterRecoveryClusterDetailsVO(newCluster.getId(), ApiConstants.DR_CLUSTER_SECRET_KEY, cmd.getDrClusterSecretKey(), true));
                 }
                 if (cmd.getDrClusterPrivateKey() != null) {
-                    String keyEnc = DBEncryptionUtil.encrypt(cmd.getDrClusterPrivateKey());
-                    drDetailsVO.add(new DisasterRecoveryClusterDetailsVO(newCluster.getId(), ApiConstants.DR_CLUSTER_PRIVATE_KEY, keyEnc, true));
+                    drDetailsVO.add(new DisasterRecoveryClusterDetailsVO(newCluster.getId(), ApiConstants.DR_CLUSTER_PRIVATE_KEY, cmd.getDrClusterPrivateKey(), true));
                 }
                 if (!drDetailsVO.isEmpty()) {
                     disasterRecoveryClusterDetailsDao.saveDetails(drDetailsVO);
@@ -487,8 +479,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         Map<String, String> details = disasterRecoveryClusterDetailsDao.listDetailsKeyPairs(drCluster.getId());
         String secApiKey = details.get(ApiConstants.DR_CLUSTER_API_KEY);
         String secSecretKey = details.get(ApiConstants.DR_CLUSTER_SECRET_KEY);
-        String secPrivateKeyEnc = details.get(ApiConstants.DR_CLUSTER_PRIVATE_KEY);
-        String secPrivateKey = DBEncryptionUtil.decrypt(secPrivateKeyEnc);
+        String secPrivateKey = details.get(ApiConstants.DR_CLUSTER_PRIVATE_KEY);
         String secGlueIpAddress = drCluster.getDrClusterGlueIpAddress();
         try {
             FileOutputStream fos = new FileOutputStream("glue.key");
@@ -636,8 +627,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
             Map<String, String> details = disasterRecoveryClusterDetailsDao.listDetailsKeyPairs(drCluster.getId());
             String secApiKey = details.get(ApiConstants.DR_CLUSTER_API_KEY);
             String secSecretKey = details.get(ApiConstants.DR_CLUSTER_SECRET_KEY);
-            String secPrivateKeyEnc = details.get(ApiConstants.DR_CLUSTER_PRIVATE_KEY);
-            String secPrivateKey = DBEncryptionUtil.decrypt(secPrivateKeyEnc);
+            String secPrivateKey = details.get(ApiConstants.DR_CLUSTER_PRIVATE_KEY);
             String secGlueIpAddress = drCluster.getDrClusterGlueIpAddress();
             try {
                 FileOutputStream fos = new FileOutputStream("glue.key");
