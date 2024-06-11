@@ -4322,5 +4322,7 @@
 "dr.create": "DR.CREATE",
 "dr.test.connect": "DR.TEST.CONNECT",
 "dr.delete": "DR.DELETE",
-"dr.update": "DR.UPDATE"
+"dr.update": "DR.UPDATE",
+"dr.enable": "DR.ENABLE",
+"dr.disable": "DR.DISABLE"
 }

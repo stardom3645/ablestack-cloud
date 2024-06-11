@@ -4322,5 +4322,7 @@
 "dr.create": "DR.\uc0dd\uc131",
 "dr.test.connect": "DR.\uc5f0\uacb0.\ud14c\uc2a4\ud2b8",
 "dr.delete": "DR.\uc0ad\uc81c",
-"dr.update": "DR.\uc5c5\ub370\uc774\ud2b8"
+"dr.update": "DR.\uc5c5\ub370\uc774\ud2b8",
+"dr.enable": "DR.\ud65c\uc131\ud654",
+"dr.disable": "DR.\ube44\ud65c\uc131\ud654"
 }
