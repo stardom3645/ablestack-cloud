@@ -467,6 +467,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
     }
 
     @Override
+    @ActionEvent(eventType = DisasterRecoveryClusterEventTypes.EVENT_DR_CREATE, eventDescription = "creating disaster recovery cluster", async = true, resourceId = 5, resourceType = "DisasterRecoveryCluster")
     public boolean setupDisasterRecoveryCluster(long clusterId) throws CloudRuntimeException {
         DisasterRecoveryClusterVO drCluster = disasterRecoveryClusterDao.findById(clusterId);
         String drName = drCluster.getName();
@@ -605,6 +606,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
     }
 
     @Override
+    @ActionEvent(eventType = DisasterRecoveryClusterEventTypes.EVENT_DR_DELETE, eventDescription = "deleting disaster recovery cluster", async = true, resourceId = 5, resourceType = "DisasterRecoveryCluster")
     public boolean deleteDisasterRecoveryCluster(DeleteDisasterRecoveryClusterCmd cmd) throws CloudRuntimeException {
         if (!DisasterRecoveryServiceEnabled.value()) {
             throw new CloudRuntimeException("Disaster Recovery Service plugin is disabled");
@@ -718,6 +720,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
     }
 
     @Override
+    @ActionEvent(eventType = DisasterRecoveryClusterEventTypes.EVENT_DR_ENABLE, eventDescription = "enabling disaster recovery cluster", async = true, resourceId = 5, resourceType = "DisasterRecoveryCluster")
     public boolean enableDisasterRecoveryCluster(EnableDisasterRecoveryClusterCmd cmd) throws CloudRuntimeException {
         if (!DisasterRecoveryServiceEnabled.value()) {
             throw new CloudRuntimeException("Disaster Recovery Service plugin is disabled");
@@ -808,6 +811,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
     }
 
     @Override
+    @ActionEvent(eventType = DisasterRecoveryClusterEventTypes.EVENT_DR_DISABLE, eventDescription = "disabling disaster recovery cluster", async = true, resourceId = 5, resourceType = "DisasterRecoveryCluster")
     public boolean disableDisasterRecoveryCluster(DisableDisasterRecoveryClusterCmd cmd) throws CloudRuntimeException {
         if (!DisasterRecoveryServiceEnabled.value()) {
             throw new CloudRuntimeException("Disaster Recovery Service plugin is disabled");
