@@ -29,6 +29,7 @@ import java.util.Map;
 
 import org.springframework.stereotype.Component;
 
+import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 import org.apache.cloudstack.api.ApiConstants;
 
@@ -38,7 +39,7 @@ public class DisasterRecoveryClusterDetailsDaoImpl extends GenericDaoBase<Disast
     protected final SearchBuilder<DisasterRecoveryClusterDetailsVO> ClusterSearch;
     protected final SearchBuilder<DisasterRecoveryClusterDetailsVO> DetailSearch;
 
-    protected static java.util.logging.Logger LOGGER = LogManager.getLogger(DisasterRecoveryClusterDetailsDaoImpl.class);
+    protected static Logger LOGGER = LogManager.getLogger(DisasterRecoveryClusterDetailsDaoImpl.class);
     public DisasterRecoveryClusterDetailsDaoImpl() {
         ClusterSearch = createSearchBuilder();
         ClusterSearch.and("clusterId", ClusterSearch.entity().getClusterId(), SearchCriteria.Op.EQ);
