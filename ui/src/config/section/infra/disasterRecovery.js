@@ -80,7 +80,8 @@ export default {
       message: 'message.enabled.dr.cluster.confirm',
       dataView: true,
       popup: true,
-      show: (record) => { return record.drclusterstatus === 'Disabled' },
+      // show: (record) => { return record.drclusterstatus === 'Disabled' && record.drclustertype === 'secondary' },
+      show: (record) => { return record.drclustertype === 'secondary' },
       args: ['drclusterstatus'],
       mapping: {
         drclusterstatus: {
@@ -95,7 +96,8 @@ export default {
       message: 'message.disabled.dr.cluster.confirm',
       dataView: true,
       popup: true,
-      show: (record) => { return record.drclusterstatus === 'Enabled' },
+      // show: (record) => { return record.drclusterstatus === 'Enabled' && record.drclustertype === 'secondary' },
+      show: (record) => { return record.drclustertype === 'secondary' },
       args: ['drclusterstatus'],
       mapping: {
         drclusterstatus: {
