@@ -341,7 +341,8 @@ export default {
           { value: 'User' },
           { value: 'VirtualMachine' },
           { value: 'Volume' },
-          { value: 'QuotaTariff' }
+          { value: 'QuotaTariff' },
+          { value: 'DisasterRecoveryCluster' }
         ]
         this.fields[resourceTypeIndex].loading = false
       }
