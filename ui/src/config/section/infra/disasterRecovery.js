@@ -81,13 +81,7 @@ export default {
       dataView: true,
       popup: true,
       // show: (record) => { return record.drclusterstatus === 'Disabled' && record.drclustertype === 'secondary' },
-      show: (record) => { return record.drclustertype === 'secondary' },
-      args: ['drclusterstatus'],
-      mapping: {
-        drclusterstatus: {
-          value: (record) => 'Enabled'
-        }
-      }
+      show: (record) => { return record.drclustertype === 'secondary' }
     },
     {
       api: 'disableDisasterRecoveryCluster',
@@ -97,13 +91,7 @@ export default {
       dataView: true,
       popup: true,
       // show: (record) => { return record.drclusterstatus === 'Enabled' && record.drclustertype === 'secondary' },
-      show: (record) => { return record.drclustertype === 'secondary' },
-      args: ['drclusterstatus'],
-      mapping: {
-        drclusterstatus: {
-          value: (record) => 'Disabled'
-        }
-      }
+      show: (record) => { return record.drclustertype === 'secondary' }
     },
     {
       api: 'updateDisasterRecoveryCluster',
