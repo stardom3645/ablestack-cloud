@@ -2901,18 +2901,9 @@ public class StorageManagerImpl extends ManagerBase implements StorageManager, C
         List<Pair<Volume, Answer>> answers = new ArrayList<Pair<Volume, Answer>>();
 
         for (Pair<Volume, DiskProfile> volumeDiskProfilePair : volumes) {
-            String storagePolicyId = null;
             Volume volume = volumeDiskProfilePair.first();
             DiskProfile diskProfile = volumeDiskProfilePair.second();
-            if (volume.getVolumeType() == Type.ROOT) {
-                Long vmId = volume.getInstanceId();
-                if (vmId != null) {
-                    VMInstanceVO vm = _vmInstanceDao.findByIdIncludingRemoved(vmId);
-                    storagePolicyId = _serviceOfferingDetailsDao.getDetail(vm.getServiceOfferingId(), ApiConstants.STORAGE_POLICY);
-                }
-            } else {
-                storagePolicyId = _diskOfferingDetailsDao.getDetail(diskProfile.getDiskOfferingId(), ApiConstants.STORAGE_POLICY);
-            }
+            String storagePolicyId = _diskOfferingDetailsDao.getDetail(diskProfile.getDiskOfferingId(), ApiConstants.STORAGE_POLICY);
             Answer answer = getCheckDatastorePolicyComplianceAnswer(storagePolicyId, pool);
             if (answer != null) {
                 answers.add(new Pair<>(volume, answer));
