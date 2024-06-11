@@ -16,9 +16,17 @@
 // under the License.
 package com.cloud.dr.cluster.dao;
 
+import java.util.Map;
+
 import com.cloud.dr.cluster.DisasterRecoveryClusterDetailsVO;
 import com.cloud.utils.db.GenericDao;
-import org.apache.cloudstack.resourcedetail.ResourceDetailsDao;
 
-public interface DisasterRecoveryClusterDetailsDao extends GenericDao<DisasterRecoveryClusterDetailsVO, Long>, ResourceDetailsDao<DisasterRecoveryClusterDetailsVO> {
+public interface DisasterRecoveryClusterDetailsDao extends GenericDao<DisasterRecoveryClusterDetailsVO, Long> {
+    Map<String, String> findDetails(long clusterId);
+
+    void persist(long clusterId, Map<String, String> details);
+
+    DisasterRecoveryClusterDetailsVO findDetail(long clusterId, String name);
+
+    void deleteDetails(long clusterId);
 }
