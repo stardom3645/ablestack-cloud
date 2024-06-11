@@ -17,22 +17,16 @@
 
 package com.cloud.dr.cluster.dao;
 
-import com.cloud.dr.cluster.DisasterRecoveryClusterDetailsVO;
 import com.cloud.dr.cluster.DisasterRecoveryClusterVO;
 import com.cloud.utils.db.GenericDaoBase;
 import com.cloud.utils.db.SearchBuilder;
 import com.cloud.utils.db.SearchCriteria;
 import org.springframework.stereotype.Component;
 
-import javax.inject.Inject;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 @Component
 public class DisasterRecoveryClusterDaoImpl extends GenericDaoBase<DisasterRecoveryClusterVO, Long> implements DisasterRecoveryClusterDao {
-    @Inject
-    DisasterRecoveryClusterDetailsDao _disasterRecoveryClusterDetailsDao;
     protected SearchBuilder<DisasterRecoveryClusterVO> DisasterRecoveryClusterListSearchBuilder;
     protected SearchBuilder<DisasterRecoveryClusterVO> DisasterRecoveryClusterNameSearchBuilder;
 
@@ -63,21 +57,6 @@ public class DisasterRecoveryClusterDaoImpl extends GenericDaoBase<DisasterRecov
         sc.setParameters("name", name);
         List<DisasterRecoveryClusterVO> checks = listBy(sc);
         return checks.isEmpty() ? null : checks.get(0);
-    }
-
-    @Override
-    public void saveDetails(DisasterRecoveryClusterVO tmpl) {
-        Map<String, String> detailsStr = tmpl.getDetails();
-        if (detailsStr == null) {
-            return;
-        }
-        List<DisasterRecoveryClusterDetailsVO> details = new ArrayList<DisasterRecoveryClusterDetailsVO>();
-        for (String key : detailsStr.keySet()) {
-            DisasterRecoveryClusterDetailsVO detail = new DisasterRecoveryClusterDetailsVO(tmpl.getId(), key, detailsStr.get(key), true);
-            details.add(detail);
-        }
-
-        _disasterRecoveryClusterDetailsDao.saveDetails(details);
     }
 
     @Override
