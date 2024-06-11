@@ -29,12 +29,17 @@ import java.util.Map;
 
 import org.springframework.stereotype.Component;
 
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.cloudstack.api.ApiConstants;
+
 @Component
 public class DisasterRecoveryClusterDetailsDaoImpl extends GenericDaoBase<DisasterRecoveryClusterDetailsVO, Long> implements DisasterRecoveryClusterDetailsDao {
 
     protected final SearchBuilder<DisasterRecoveryClusterDetailsVO> ClusterSearch;
     protected final SearchBuilder<DisasterRecoveryClusterDetailsVO> DetailSearch;
 
+    protected static java.util.logging.Logger LOGGER = LogManager.getLogger(DisasterRecoveryClusterDetailsDaoImpl.class);
     public DisasterRecoveryClusterDetailsDaoImpl() {
         ClusterSearch = createSearchBuilder();
         ClusterSearch.and("clusterId", ClusterSearch.entity().getClusterId(), SearchCriteria.Op.EQ);
@@ -53,7 +58,7 @@ public class DisasterRecoveryClusterDetailsDaoImpl extends GenericDaoBase<Disast
         sc.setParameters("name", name);
 
         DisasterRecoveryClusterDetailsVO detail = findOneIncludingRemovedBy(sc);
-        if ("drclusterprivatekey".equals(name) && detail != null) {
+        if (ApiConstants.DR_CLUSTER_PRIVATE_KEY.equalsIgnoreCase(name) && detail != null) {
             detail.setValue(DBEncryptionUtil.decrypt(detail.getValue()));
         }
         return detail;
@@ -67,7 +72,7 @@ public class DisasterRecoveryClusterDetailsDaoImpl extends GenericDaoBase<Disast
         List<DisasterRecoveryClusterDetailsVO> results = search(sc, null);
         Map<String, String> details = new HashMap<String, String>(results.size());
         for (DisasterRecoveryClusterDetailsVO result : results) {
-            if ("drclusterprivatekey".equals(result.getName())) {
+            if (ApiConstants.DR_CLUSTER_PRIVATE_KEY.equalsIgnoreCase(result.getName())) {
                 details.put(result.getName(), DBEncryptionUtil.decrypt(result.getValue()));
             } else {
                 details.put(result.getName(), result.getValue());
@@ -98,7 +103,10 @@ public class DisasterRecoveryClusterDetailsDaoImpl extends GenericDaoBase<Disast
         for (Map.Entry<String, String> detail : details.entrySet()) {
             String name = detail.getKey();
             String value = detail.getValue();
-            if ("drclusterprivatekey".equals(detail.getKey())) {
+            LOGGER.info("persist");
+            if (ApiConstants.DR_CLUSTER_PRIVATE_KEY.equalsIgnoreCase(detail.getKey())) {
+                LOGGER.info("in::::::::::::::::::::::::::::::::");
+                LOGGER.info(value);
                 value = DBEncryptionUtil.encrypt(value);
             }
             DisasterRecoveryClusterDetailsVO vo = new DisasterRecoveryClusterDetailsVO(clusterId, name, value);
