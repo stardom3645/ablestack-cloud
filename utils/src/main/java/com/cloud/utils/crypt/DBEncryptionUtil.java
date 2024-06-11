@@ -33,25 +33,21 @@ public class DBEncryptionUtil {
 
     public static String encrypt(String plain) {
         if (!EncryptionSecretKeyChecker.useEncryption() || (plain == null) || plain.isEmpty()) {
-            LOGGER.info("plain");
             return plain;
         }
         if (s_encryptor == null) {
             initialize();
         }
-        LOGGER.info("encrypt");
         return s_encryptor.encrypt(plain);
     }
 
     public static String decrypt(String encrypted) {
         if (!EncryptionSecretKeyChecker.useEncryption() || (encrypted == null) || encrypted.isEmpty()) {
-            LOGGER.info("encrypted");
             return encrypted;
         }
         if (s_encryptor == null) {
             initialize();
         }
-        LOGGER.info("decrypt");
         return s_encryptor.decrypt(encrypted);
     }
 
