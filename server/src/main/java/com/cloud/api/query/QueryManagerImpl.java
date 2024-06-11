@@ -4689,6 +4689,10 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
             scc.addOr("uuid", SearchCriteria.Op.LIKE, "%" + keyword + "%");
             sc.addAnd("name", SearchCriteria.Op.SC, scc);
         } else if (name != null) {
+            scc.addOr("displayText", SearchCriteria.Op.LIKE, "%" + keyword + "%");
+            sc.addAnd("name", SearchCriteria.Op.SC, scc);
+        }
+        if (name != null) {
             sc.addAnd("name", SearchCriteria.Op.EQ, name);
         }
 
