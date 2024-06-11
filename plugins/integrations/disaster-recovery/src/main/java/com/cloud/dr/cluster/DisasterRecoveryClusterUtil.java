@@ -310,6 +310,138 @@ public class DisasterRecoveryClusterUtil {
     }
 
     /**
+     * Glue 미러링 클러스터 활성화
+     * @param region
+     *  https://<IP>:8080/api/v1
+     * @param subUrl
+     *  /mirror/pool/mirrorPool(string)
+     * @param method
+     *  POST
+     * @param parameter
+     *  localClusterName("local"), remoteClusterName("remote"), host(<scvmIP>), privateKeyFile(<scvmKey>), mirrorPool("rbd")
+     * @return true = 200, 이외 코드는 false 처리
+     */
+    protected static boolean glueMirrorEnableAPI(String region, String subUrl, String method, Map<String, String> params, File privateKey) {
+        try {
+            // SSL 인증서 에러 우회 처리
+            final SSLContext sslContext = SSLUtils.getSSLContext();
+            sslContext.init(null, new TrustManager[]{new TrustAllManager()}, new SecureRandom());
+            URL url = new URL(region + subUrl);
+            HttpsURLConnection connection = (HttpsURLConnection)url.openConnection();
+            connection.setSSLSocketFactory(sslContext.getSocketFactory());
+            connection.setDoInput(true);
+            connection.setDoOutput(true);
+            connection.setRequestMethod(method);
+            connection.setConnectTimeout(30000);
+            connection.setReadTimeout(180000);
+            connection.setRequestProperty("Accept", "application/vnd.ceph.api.v1.0+json");
+            connection.setRequestProperty("Authorization", "application/vnd.ceph.api.v1.0+json");
+            connection.setRequestProperty("Connection","Keep-Alive");
+            connection.setRequestProperty("Content-type", "multipart/form-data;charset=" + charset + ";boundary=" + boundary);
+            outputStream = connection.getOutputStream();
+            writer = new PrintWriter(new OutputStreamWriter(outputStream, charset), true);
+            for(Map.Entry<String, String> param : params.entrySet()){
+                String key = param.getKey();
+                String value = param.getValue();
+                addTextPart(key, value);
+            }
+            addFilePart("privateKeyFile", privateKey);
+            writer.append("--" + boundary + "--").append(LINE_FEED);
+            writer.close();
+            if (connection.getResponseCode() == 200) {
+                BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+                String inputLine;
+                StringBuffer response = new StringBuffer();
+                while ((inputLine = in.readLine()) != null) {
+                    response.append(inputLine);
+                }
+                in.close();
+                return true;
+            } else {
+                BufferedReader in = new BufferedReader(new InputStreamReader(connection.getErrorStream()));
+                String inputLine;
+                StringBuffer response = new StringBuffer();
+                while ((inputLine = in.readLine()) != null) {
+                    response.append(inputLine);
+                }
+                in.close();
+                String msg = "Failed to request glue mirror enable API. response code : " + connection.getResponseCode();
+                LOGGER.error(msg);
+                return false;
+            }
+        } catch (Exception e) {
+            LOGGER.error(String.format("Glue API endpoint not available"), e);
+            return false;
+        }
+    }
+
+    /**
+     * Glue 미러링 클러스터 비활성화
+     * @param region
+     *  https://<IP>:8080/api/v1
+     * @param subUrl
+     *  /mirror/pool/mirrorPool(string)
+     * @param method
+     *  DELETE
+     * @param parameter
+     *  host(string), privateKeyFile(file), mirrorPool(string)
+     * @return true = 200, 이외 코드는 false 처리
+     */
+    protected static boolean glueMirrorDisableAPI(String region, String subUrl, String method, Map<String, String> params, File privateKey) {
+        try {
+            // SSL 인증서 에러 우회 처리
+            final SSLContext sslContext = SSLUtils.getSSLContext();
+            sslContext.init(null, new TrustManager[]{new TrustAllManager()}, new SecureRandom());
+            URL url = new URL(region + subUrl);
+            HttpsURLConnection connection = (HttpsURLConnection)url.openConnection();
+            connection.setSSLSocketFactory(sslContext.getSocketFactory());
+            connection.setDoInput(true);
+            connection.setDoOutput(true);
+            connection.setRequestMethod(method);
+            connection.setConnectTimeout(30000);
+            connection.setReadTimeout(180000);
+            connection.setRequestProperty("Accept", "application/vnd.ceph.api.v1.0+json");
+            connection.setRequestProperty("Authorization", "application/vnd.ceph.api.v1.0+json");
+            connection.setRequestProperty("Connection","Keep-Alive");
+            connection.setRequestProperty("Content-type", "multipart/form-data;charset=" + charset + ";boundary=" + boundary);
+            outputStream = connection.getOutputStream();
+            writer = new PrintWriter(new OutputStreamWriter(outputStream, charset), true);
+            for(Map.Entry<String, String> param : params.entrySet()){
+                String key = param.getKey();
+                String value = param.getValue();
+                addTextPart(key, value);
+            }
+            addFilePart("privateKeyFile", privateKey);
+            writer.append("--" + boundary + "--").append(LINE_FEED);
+            writer.close();
+            if (connection.getResponseCode() == 200) {
+                BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+                String inputLine;
+                StringBuffer response = new StringBuffer();
+                while ((inputLine = in.readLine()) != null) {
+                    response.append(inputLine);
+                }
+                in.close();
+                return true;
+            } else {
+                BufferedReader in = new BufferedReader(new InputStreamReader(connection.getErrorStream()));
+                String inputLine;
+                StringBuffer response = new StringBuffer();
+                while ((inputLine = in.readLine()) != null) {
+                    response.append(inputLine);
+                }
+                in.close();
+                String msg = "Failed to request glue mirror disable API. response code : " + connection.getResponseCode();
+                LOGGER.error(msg);
+                return false;
+            }
+        } catch (Exception e) {
+            LOGGER.error(String.format("Glue API endpoint not available"), e);
+            return false;
+        }
+    }
+
+    /**
      * Glue 미러링된 이미지 목록 조회
      * @param region
      *  https://<IP>:8080/api/v1
