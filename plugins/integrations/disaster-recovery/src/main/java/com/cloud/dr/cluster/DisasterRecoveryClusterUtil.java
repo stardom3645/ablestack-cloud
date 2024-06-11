@@ -314,7 +314,7 @@ public class DisasterRecoveryClusterUtil {
      * @param region
      *  https://<IP>:8080/api/v1
      * @param subUrl
-     *  /mirror/pool/mirrorPool(string)
+     *  /mirror/mirrorPool(string)
      * @param method
      *  POST
      * @param parameter
@@ -380,7 +380,7 @@ public class DisasterRecoveryClusterUtil {
      * @param region
      *  https://<IP>:8080/api/v1
      * @param subUrl
-     *  /mirror/pool/mirrorPool(string)
+     *  /mirror/mirrorPool(string)
      * @param method
      *  DELETE
      * @param parameter
