@@ -29,7 +29,6 @@ import java.util.Map;
 
 import org.springframework.stereotype.Component;
 
-import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 import org.apache.cloudstack.api.ApiConstants;
 
