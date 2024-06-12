@@ -950,16 +950,14 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                             if (!result) {
                                 return false;
                             }
-                            return true;
                         }
                     }
+                    return true;
                 } else {
                     throw new CloudRuntimeException("There are no images being mirrored.");
                 }
-                return false;
             }
         } else {
-            // Secondary Cluster - scvm ip 조회 실패
             throw new CloudRuntimeException("secondary cluster scvm list lookup fails.");
         }
         return false;
@@ -1004,16 +1002,14 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                             if (!result) {
                                 return false;
                             }
-                            return true;
                         }
                     }
+                    return true;
                 } else {
                     throw new CloudRuntimeException("There are no images being mirrored.");
                 }
-                return false;
             }
         } else {
-            // Secondary Cluster - scvm ip 조회 실패
             throw new CloudRuntimeException("secondary cluster scvm list lookup fails.");
         }
         return false;
