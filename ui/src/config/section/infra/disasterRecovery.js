@@ -94,7 +94,7 @@ export default {
       show: (record) => { return record.drclustertype === 'secondary' }
     },
     {
-      api: 'updateDisasterRecoveryCluster',
+      api: 'promoteDisasterRecoveryCluster',
       icon: 'UpSquareOutlined',
       label: 'label.action.promote.disaster.recovery.cluster',
       message: 'message.promote.dr.cluster.confirm',
@@ -103,7 +103,7 @@ export default {
       show: (record) => { return record.drclustertype === 'primary' }
     },
     {
-      api: 'updateDisasterRecoveryCluster',
+      api: 'demoteDisasterRecoveryCluster',
       icon: 'DownSquareOutlined',
       label: 'label.action.demote.disaster.recovery.cluster',
       message: 'message.demote.dr.cluster.confirm',
