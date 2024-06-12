@@ -4324,5 +4324,7 @@
 "dr.delete": "DR.\uc0ad\uc81c",
 "dr.update": "DR.\uc5c5\ub370\uc774\ud2b8",
 "dr.enable": "DR.\ud65c\uc131\ud654",
-"dr.disable": "DR.\ube44\ud65c\uc131\ud654"
+"dr.disable": "DR.\ube44\ud65c\uc131\ud654",
+"dr.promote": "DR.\ud504\ub85c\ubaa8\ud2b8",
+"dr.demote": "DR.\ub514\ubaa8\ud2b8"
 }

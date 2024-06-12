@@ -4324,5 +4324,7 @@
 "dr.delete": "DR.DELETE",
 "dr.update": "DR.UPDATE",
 "dr.enable": "DR.ENABLE",
-"dr.disable": "DR.DISABLE"
+"dr.disable": "DR.DISABLE",
+"dr.promote": "DR.PROMOTE",
+"dr.demote": "DR.DEMOTE"
 }
