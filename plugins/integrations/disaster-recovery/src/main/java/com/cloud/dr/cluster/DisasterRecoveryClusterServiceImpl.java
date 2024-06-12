@@ -54,6 +54,7 @@ import com.cloud.utils.script.Script;
 import com.cloud.utils.server.ServerProperties;
 import com.cloud.utils.component.ManagerBase;
 import com.cloud.utils.exception.CloudRuntimeException;
+import com.cloud.vm.VirtualMachine;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -921,6 +922,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         if (drCluster == null) {
             throw new InvalidParameterValueException("Invalid disaster recovery cluster id specified");
         }
+        validateDisasterRecoveryClusterMirrorParameters(drCluster);
         // Secondary Cluster - scvm ip 조회
         String ipList = Script.runSimpleBashScript("cat /etc/hosts | grep -E 'scvm1-mngt|scvm2-mngt|scvm3-mngt' | awk '{print $1}' | tr '\n' ','");
         if (ipList != null || !ipList.isEmpty()) {
@@ -974,6 +976,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         if (drCluster == null) {
             throw new InvalidParameterValueException("Invalid disaster recovery cluster id specified");
         }
+        validateDisasterRecoveryClusterMirrorParameters(drCluster);
         // Secondary Cluster - scvm ip 조회
         String ipList = Script.runSimpleBashScript("cat /etc/hosts | grep -E 'scvm1-mngt|scvm2-mngt|scvm3-mngt' | awk '{print $1}' | tr '\n' ','");
         if (ipList != null || !ipList.isEmpty()) {
@@ -993,7 +996,6 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                         if (imageName != null) {
                             // Secondary Cluster - glueImageMirrorDemoteAPI 호출
                             // 호출 시 primary cluster 의 glueAPI로 호출해야하는지 확인 필요
-                            // 단 양쪽 모두 중지 되어 있는 가상머신에 대해서만 가능하며 해당 로직 필요
                             glueCommand = "/mirror/image/demote/{mirrorPool}/{imageName}";
                             glueMethod = "DELETE";
                             Map<String, String> glueParams = new HashMap<>();
@@ -1015,6 +1017,52 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
             throw new CloudRuntimeException("secondary cluster scvm list lookup fails.");
         }
         return false;
+    }
+
+    private void validateDisasterRecoveryClusterMirrorParameters(final DisasterRecoveryClusterVO drCluster) throws CloudRuntimeException {
+        // Secondary Cluster DR VM 상태 조회
+        List<DisasterRecoveryClusterVmMapVO> drClusterVmList = disasterRecoveryClusterVmMapDao.listByDisasterRecoveryClusterId(drCluster.getId());
+        ResponseObject.ResponseView respView = ResponseObject.ResponseView.Restricted;
+        Account caller = CallContext.current().getCallingAccount();
+        if (accountService.isRootAdmin(caller.getId())) {
+            respView = ResponseObject.ResponseView.Full;
+        }
+        String responseName = "drclustervmlist";
+        if (drClusterVmList != null && !drClusterVmList.isEmpty()) {
+            for (DisasterRecoveryClusterVmMapVO vmMapVO : drClusterVmList) {
+                UserVmJoinVO userVM = userVmJoinDao.findById(vmMapVO.getVmId());
+                if (userVM != null) {
+                    if (userVM.getState() != VirtualMachine.State.Stopped) {
+                        throw new InvalidParameterValueException("Forced promote and demote functions cannot be executed because there is a running disaster recovery secondary cluster virtual machine.");
+                    }
+                }
+            }
+        }
+        String url = drCluster.getDrClusterUrl();
+        Map<String, String> details = disasterRecoveryClusterDetailsDao.findDetails(drCluster.getId());
+        String apiKey = details.get(ApiConstants.DR_CLUSTER_API_KEY);
+        String secretKey = details.get(ApiConstants.DR_CLUSTER_SECRET_KEY);
+        // Primary Cluster DR VM 상태 조회
+        String command = "getDisasterRecoveryClusterList";
+        String method = "GET";
+        Map<String, String> params = new HashMap<>();
+        List<GetDisasterRecoveryClusterListResponse> drListResponse = DisasterRecoveryClusterUtil.moldGetDisasterRecoveryClusterListAPI(url + "/client/api/", command, method, apiKey, secretKey);
+        if (drListResponse != null || !drListResponse.isEmpty()) {
+            // Primary Cluster - moldGetDisasterRecoveryClusterListAPI 성공
+            for (GetDisasterRecoveryClusterListResponse dr : drListResponse) {
+                if (dr.getName().equalsIgnoreCase(drCluster.getName())) {
+                    List<UserVmResponse> vmListResponse = dr.getDisasterRecoveryClusterVms();
+                    for (UserVmResponse vm : vmListResponse) {
+                        if (!vm.getState().equalsIgnoreCase("Stopped")) {
+                            throw new InvalidParameterValueException("Forced promote and demote functions cannot be executed because there is a running disaster recovery primary cluster virtual machine.");
+                        }
+                    }
+                }
+            }
+        } else {
+            // Primary Cluster - moldGetDisasterRecoveryClusterListAPI - 실패
+            throw new InvalidParameterValueException("Forced promote and demote functions cannot be executed because failed to query primary cluster DR information.");
+        }
     }
 
     @Override
