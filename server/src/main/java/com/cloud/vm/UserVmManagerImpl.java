@@ -4146,7 +4146,6 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
             }
 
             if (datadiskTemplateToDiskOfferringMap != null && !datadiskTemplateToDiskOfferringMap.isEmpty()) {
-                logger.info("datadiskTemplateToDiskOfferringMap::::"+datadiskTemplateToDiskOfferringMap);
                 for (Entry<Long, DiskOffering> datadiskTemplateToDiskOffering : datadiskTemplateToDiskOfferringMap.entrySet()) {
                     VMTemplateVO dataDiskTemplate = _templateDao.findById(datadiskTemplateToDiskOffering.getKey());
                     DiskOffering dataDiskOffering = datadiskTemplateToDiskOffering.getValue();
@@ -5149,7 +5148,6 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
             VolumeVO newDatadisk = null;
             try {
                 for (VolumeVO dataDisk : dataDisks) {
-                    logger.info(" dataDisk.getname() :::::" + dataDisk.getName());
                     long diskId = dataDisk.getId();
                     SnapshotVO dataSnapShot = (SnapshotVO) volumeService.allocSnapshot(diskId, Snapshot.INTERNAL_POLICY_ID, dataDisk.getName(), null, cmd.getZoneIds());
                     if (dataSnapShot == null) {
@@ -9329,7 +9327,6 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
         volVO.setDeviceId(0L);
         volVO.setTemplateId(template.getId());
         _volsDao.update(volVO.getId(), volVO);
-        logger.info("Updated volume " + volVO.getId() + " with template " + template.getId());
 
         if (zone.getNetworkType() == NetworkType.Basic) {
             if (networkIds != null) {
