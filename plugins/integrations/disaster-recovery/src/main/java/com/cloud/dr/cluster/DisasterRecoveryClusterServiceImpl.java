@@ -994,7 +994,8 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                 String glueUrl = "https://" + glueIp + ":8080/api/v1"; // glue-api 프로토콜과 포트 확정 시 변경 예정
                 String glueCommand = "/mirror/image";
                 String glueMethod = "GET";
-                String mirrorList = DisasterRecoveryClusterUtil.glueImageMirrorAPI(glueUrl, glueCommand, glueMethod);
+                // String mirrorList = DisasterRecoveryClusterUtil.glueImageMirrorAPI(glueUrl, glueCommand, glueMethod);
+                String mirrorList = "{'Local': [{'image': 'string1','items': [{'interval': 'string','start_time': 'string'}],'namespace': 'string','pool': 'string'}, {'image': 'string2','items': [{'interval': 'string','start_time': 'string'}],'namespace': 'string','pool': 'string'}]}";
                 JsonParser jParser = new JsonParser();
                 JsonObject jObject = (JsonObject)jParser.parse(mirrorList);
                 Object localObject = jObject.get("Local");
