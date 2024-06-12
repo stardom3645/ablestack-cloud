@@ -48,6 +48,7 @@ public class DBEncryptionUtil {
         if (s_encryptor == null) {
             initialize();
         }
+
         return s_encryptor.decrypt(encrypted);
     }
 
