@@ -984,10 +984,14 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                 String glueCommand = "/mirror/image";
                 String glueMethod = "GET";
                 String mirrorList = DisasterRecoveryClusterUtil.glueImageMirrorAPI(glueUrl, glueCommand, glueMethod);
+                LOGGER.info("mirrorList:::::::::::::::::::::::::::::::");
+                LOGGER.info(mirrorList);
                 JsonArray drArray = (JsonArray) new JsonParser().parse(mirrorList).getAsJsonObject().get("Local");
+                LOGGER.info("drArray:::::::::::::::::::::::::::::::");
+                LOGGER.info(drArray);
                 for (JsonElement dr : drArray) {
                     JsonElement imageName = dr.getAsJsonObject().get("image") == null ? null : dr.getAsJsonObject().get("image");
-                    LOGGER.info(imageName);
+                    LOGGER.info("imageName:::::::::::::::::::::::::::::::");
                     LOGGER.info(imageName.getAsString());
                     if (imageName != null) {
                         // Secondary Cluster - glueImageMirrorDemoteAPI 호출
