@@ -944,7 +944,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                     drArray.put(localObject);
                 }
                 for (int j = 0; j < drArray.length(); j++) {
-                    if (drArray(j) != null) {
+                    if (drArray.getJSONObject(j) != null) {
                         String image = drArray.getJSONObject(j).getString("image");
                         LOGGER.info("image");
                         LOGGER.info(image);
