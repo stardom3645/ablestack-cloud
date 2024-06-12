@@ -987,6 +987,8 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                 JsonArray drArray = (JsonArray) new JsonParser().parse(mirrorList).getAsJsonObject().get("Local");
                 for (JsonElement dr : drArray) {
                     JsonElement imageName = dr.getAsJsonObject().get("image") == null ? null : dr.getAsJsonObject().get("image");
+                    LOGGER.info(imageName);
+                    LOGGER.info(imageName.getAsString());
                     if (imageName != null) {
                         // Secondary Cluster - glueImageMirrorDemoteAPI 호출
                         // glueCommand = "/mirror/image/demote/{mirrorPool}/{imageName}";
