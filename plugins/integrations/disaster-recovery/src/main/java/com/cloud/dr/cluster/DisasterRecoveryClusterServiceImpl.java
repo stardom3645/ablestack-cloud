@@ -58,6 +58,7 @@ import com.google.gson.JsonParser;
 import com.google.gson.JsonObject;
 
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.apache.cloudstack.api.ApiConstants;
 import org.apache.cloudstack.api.ResponseObject;
 import org.apache.cloudstack.api.command.admin.dr.GetDisasterRecoveryClusterListCmd;
@@ -944,25 +945,24 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                     drArray.put(localObject);
                 }
                 for (int j = 0; j < drArray.length(); j++) {
-                    if (drArray.getJSONObject(j) != null) {
+                    try {
                         String image = drArray.getJSONObject(j).getString("image");
                         LOGGER.info("image");
                         LOGGER.info(image);
-                    };
-                    LOGGER.info("null");
-                    // Primary Cluster - glueImageMirrorPromoteAPI 호출
-                    // glueIp = array[i];
-                    // glueUrl = "https://" + glueIp + ":8080/api/v1"; // glue-api 프로토콜과 포트 확정 시 변경 예정
-                    // glueCommand = "/mirror/image/demote/{mirrorPool}/{imageName}";
-                    // glueMethod = "POST";
-                    // Map<String, String> glueParams = new HashMap<>();
-                    // glueParams.put("mirrorPool", "rbd");
-                    // glueParams.put("imageName", value);
-                    // boolean result = DisasterRecoveryClusterUtil.glueImageMirrorPromoteAPI(glueUrl, glueCommand, glueMethod, glueParams);
-                    // // glueImageMirrorPromoteAPI 성공
-                    // if (!result) {
-                    //     return false;
-                    // }
+                        // Secondary Cluster - glueImageMirrorPromoteAPI 호출
+                        // glueCommand = "/mirror/image/demote/{mirrorPool}/{imageName}";
+                        // glueMethod = "POST";
+                        // Map<String, String> glueParams = new HashMap<>();
+                        // glueParams.put("mirrorPool", "rbd");
+                        // glueParams.put("imageName", image);
+                        // boolean result = DisasterRecoveryClusterUtil.glueImageMirrorPromoteAPI(glueUrl, glueCommand, glueMethod, glueParams);
+                        // // glueImageMirrorPromoteAPI 성공
+                        // if (!result) {
+                        //     return false;
+                        // }
+                    } catch (JSONException e) {
+                        throw new CloudRuntimeException("There are no images being mirrored.");
+                    }
                 }
                 return false;
             }
@@ -1006,25 +1006,24 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                     drArray.put(localObject);
                 }
                 for (int j = 0; j < drArray.length(); j++) {
-                    if (drArray.getJSONObject(j) != null) {
+                    try {
                         String image = drArray.getJSONObject(j).getString("image");
                         LOGGER.info("image");
                         LOGGER.info(image);
-                    };
-                    LOGGER.info("null");
-                    // Primary Cluster - glueImageMirrorDemoteAPI 호출
-                    // glueIp = array[i];
-                    // glueUrl = "https://" + glueIp + ":8080/api/v1"; // glue-api 프로토콜과 포트 확정 시 변경 예정
-                    // glueCommand = "/mirror/image/demote/{mirrorPool}/{imageName}";
-                    // glueMethod = "DELETE";
-                    // Map<String, String> glueParams = new HashMap<>();
-                    // glueParams.put("mirrorPool", "rbd");
-                    // glueParams.put("imageName", value);
-                    // boolean result = DisasterRecoveryClusterUtil.glueImageMirrorDemoteAPI(glueUrl, glueCommand, glueMethod, glueParams);
-                    // // glueImageMirrorDemoteAPI 성공
-                    // if (!result) {
-                    //     return false;
-                    // }
+                        // Secondary Cluster - glueImageMirrorDemoteAPI 호출
+                        // glueCommand = "/mirror/image/demote/{mirrorPool}/{imageName}";
+                        // glueMethod = "DELETE";
+                        // Map<String, String> glueParams = new HashMap<>();
+                        // glueParams.put("mirrorPool", "rbd");
+                        // glueParams.put("imageName", image);
+                        // boolean result = DisasterRecoveryClusterUtil.glueImageMirrorDemoteAPI(glueUrl, glueCommand, glueMethod, glueParams);
+                        // // glueImageMirrorDemoteAPI 성공
+                        // if (!result) {
+                        //     return false;
+                        // }
+                    } catch (JSONException e) {
+                        throw new CloudRuntimeException("There are no images being mirrored.");
+                    }
                 }
                 return false;
             }
