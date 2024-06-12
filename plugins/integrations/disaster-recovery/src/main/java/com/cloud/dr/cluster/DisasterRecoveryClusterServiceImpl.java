@@ -933,7 +933,6 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         Map<String, String> details = disasterRecoveryClusterDetailsDao.findDetails(drCluster.getId());
         String secApiKey = details.get(ApiConstants.DR_CLUSTER_API_KEY);
         String secSecretKey = details.get(ApiConstants.DR_CLUSTER_SECRET_KEY);
-        String secPrivateKey = details.get(ApiConstants.DR_CLUSTER_PRIVATE_KEY);
         String secGlueIpAddress = drCluster.getDrClusterGlueIpAddress();
         // Primary Cluster 정보
         String[] properties = getServerProperties();
@@ -948,8 +947,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         String ipList = Script.runSimpleBashScript("cat /etc/hosts | grep -E 'scvm1-mngt|scvm2-mngt|scvm3-mngt' | awk '{print $1}' | tr '\n' ','");
         if (ipList != null || !ipList.isEmpty()) {
             ipList = ipList.replaceAll(",$", "");
-            // Primary Cluster - glueImageMirrorAPI 호출하여 이미지 목록 조회 후 해당 이미지마다 glueImageMirrorPromoteAPI 호출해야함
-            // 추가 작성 예정
+            // Primary Cluster - glueImageMirrorAPI 호출하여 이미지 조회 후 해당 이미지마다 glueImageMirrorPromoteAPI 호출하는 로직 추가 필요
             // Primary Cluster - glueImageMirrorPromoteAPI 호출
             String[] array = ipList.split(",");
             for (int i=0; i < array.length; i++) {
@@ -989,7 +987,6 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         Map<String, String> details = disasterRecoveryClusterDetailsDao.findDetails(drCluster.getId());
         String secApiKey = details.get(ApiConstants.DR_CLUSTER_API_KEY);
         String secSecretKey = details.get(ApiConstants.DR_CLUSTER_SECRET_KEY);
-        String secPrivateKey = details.get(ApiConstants.DR_CLUSTER_PRIVATE_KEY);
         String secGlueIpAddress = drCluster.getDrClusterGlueIpAddress();
         // Primary Cluster 정보
         String[] properties = getServerProperties();
@@ -1004,8 +1001,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         String ipList = Script.runSimpleBashScript("cat /etc/hosts | grep -E 'scvm1-mngt|scvm2-mngt|scvm3-mngt' | awk '{print $1}' | tr '\n' ','");
         if (ipList != null || !ipList.isEmpty()) {
             ipList = ipList.replaceAll(",$", "");
-            // Primary Cluster - glueImageMirrorAPI 호출하여 이미지 목록 조회 후 해당 이미지마다 glueImageMirrorDemoteAPI 호출해야함
-            // 추가 작성 예정
+            // Primary Cluster - glueImageMirrorAPI 호출하여 이미지 조회 후 해당 이미지마다 glueImageMirrorDemoteAPI 호출하는 로직 추가 필요
             // Primary Cluster - glueImageMirrorDemoteAPI 호출
             String[] array = ipList.split(",");
             for (int i=0; i < array.length; i++) {
