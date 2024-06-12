@@ -55,10 +55,9 @@ import com.cloud.utils.server.ServerProperties;
 import com.cloud.utils.component.ManagerBase;
 import com.cloud.utils.exception.CloudRuntimeException;
 import com.google.gson.JsonParser;
-import com.google.gson.JsonObject;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 
-import org.json.JSONArray;
-import org.json.JSONException;
 import org.apache.cloudstack.api.ApiConstants;
 import org.apache.cloudstack.api.ResponseObject;
 import org.apache.cloudstack.api.command.admin.dr.GetDisasterRecoveryClusterListCmd;
@@ -933,35 +932,14 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                 String glueUrl = "https://" + glueIp + ":8080/api/v1"; // glue-api 프로토콜과 포트 확정 시 변경 예정
                 String glueCommand = "/mirror/image";
                 String glueMethod = "GET";
-                String mirrorList = DisasterRecoveryClusterUtil.glueImageMirrorAPI(glueUrl, glueCommand, glueMethod);
-                JsonParser jParser = new JsonParser();
-                JsonObject jObject = (JsonObject)jParser.parse(mirrorList);
-                Object localObject = jObject.get("Local");
-                JSONArray drArray;
-                if (localObject instanceof JSONArray) {
-                    drArray = (JSONArray) localObject;
-                } else {
-                    drArray = new JSONArray();
-                    drArray.put(localObject);
-                }
-                for (int j = 0; j < drArray.length(); j++) {
-                    try {
-                        String image = drArray.getJSONObject(j).getString("image");
+                // String mirrorList = DisasterRecoveryClusterUtil.glueImageMirrorAPI(glueUrl, glueCommand, glueMethod);
+                String mirrorList = "{'Local': [{'image': 'string1','items': [{'interval': 'string','start_time': 'string'}],'namespace': 'string','pool': 'string'}, {'image': 'string2','items': [{'interval': 'string','start_time': 'string'}],'namespace': 'string','pool': 'string'}]}";
+                JsonArray drArray = (JsonArray) new JsonParser().parse(mirrorList).getAsJsonObject().get("Local");
+                for (JsonElement dr : drArray) {
+                    JsonElement imageName = dr.getAsJsonObject().get("image") == null ? null : dr.getAsJsonObject().get("image");
+                    if (imageName != null) {
                         LOGGER.info("image");
-                        LOGGER.info(image);
-                        // Secondary Cluster - glueImageMirrorPromoteAPI 호출
-                        // glueCommand = "/mirror/image/demote/{mirrorPool}/{imageName}";
-                        // glueMethod = "POST";
-                        // Map<String, String> glueParams = new HashMap<>();
-                        // glueParams.put("mirrorPool", "rbd");
-                        // glueParams.put("imageName", image);
-                        // boolean result = DisasterRecoveryClusterUtil.glueImageMirrorPromoteAPI(glueUrl, glueCommand, glueMethod, glueParams);
-                        // // glueImageMirrorPromoteAPI 성공
-                        // if (!result) {
-                        //     return false;
-                        // }
-                    } catch (JSONException e) {
-                        throw new CloudRuntimeException("There are no images being mirrored.");
+                        LOGGER.info(imageName.getAsString());
                     }
                 }
                 return false;
@@ -996,37 +974,28 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                 String glueMethod = "GET";
                 // String mirrorList = DisasterRecoveryClusterUtil.glueImageMirrorAPI(glueUrl, glueCommand, glueMethod);
                 String mirrorList = "{'Local': [{'image': 'string1','items': [{'interval': 'string','start_time': 'string'}],'namespace': 'string','pool': 'string'}, {'image': 'string2','items': [{'interval': 'string','start_time': 'string'}],'namespace': 'string','pool': 'string'}]}";
-                JsonParser jParser = new JsonParser();
-                JsonObject jObject = (JsonObject)jParser.parse(mirrorList);
-                Object localObject = jObject.get("Local");
-                LOGGER.info(localObject.toString());
-                JSONArray drArray;
-                if (localObject instanceof JSONArray) {
-                    drArray = (JSONArray) localObject;
-                } else {
-                    drArray = new JSONArray();
-                    drArray.put(localObject);
-                }
-                for (int j = 0; j < drArray.length(); j++) {
-                    try {
-                        String image = drArray.getJSONObject(j).getString("image");
+                JsonArray drArray = (JsonArray) new JsonParser().parse(mirrorList).getAsJsonObject().get("Local");
+                for (JsonElement dr : drArray) {
+                    JsonElement imageName = dr.getAsJsonObject().get("image") == null ? null : dr.getAsJsonObject().get("image");
+                    if (imageName != null) {
                         LOGGER.info("image");
-                        LOGGER.info(image);
-                        // Secondary Cluster - glueImageMirrorDemoteAPI 호출
-                        // glueCommand = "/mirror/image/demote/{mirrorPool}/{imageName}";
-                        // glueMethod = "DELETE";
-                        // Map<String, String> glueParams = new HashMap<>();
-                        // glueParams.put("mirrorPool", "rbd");
-                        // glueParams.put("imageName", image);
-                        // boolean result = DisasterRecoveryClusterUtil.glueImageMirrorDemoteAPI(glueUrl, glueCommand, glueMethod, glueParams);
-                        // // glueImageMirrorDemoteAPI 성공
-                        // if (!result) {
-                        //     return false;
-                        // }
-                    } catch (JSONException e) {
-                        LOGGER.info(e);
-                        throw new CloudRuntimeException("There are no images being mirrored.");
+                        LOGGER.info(imageName.getAsString());
                     }
+                    // Secondary Cluster - glueImageMirrorDemoteAPI 호출
+                    // glueCommand = "/mirror/image/demote/{mirrorPool}/{imageName}";
+                    // glueMethod = "DELETE";
+                    // Map<String, String> glueParams = new HashMap<>();
+                    // glueParams.put("mirrorPool", "rbd");
+                    // glueParams.put("imageName", image);
+                    // boolean result = DisasterRecoveryClusterUtil.glueImageMirrorDemoteAPI(glueUrl, glueCommand, glueMethod, glueParams);
+                    // // glueImageMirrorDemoteAPI 성공
+                    // if (!result) {
+                    //     return false;
+                    // }
+                    // } catch (JsonException e) {
+                    //     LOGGER.info(e);
+                    //     throw new CloudRuntimeException("There are no images being mirrored.");
+                    // }
                 }
                 return false;
             }
