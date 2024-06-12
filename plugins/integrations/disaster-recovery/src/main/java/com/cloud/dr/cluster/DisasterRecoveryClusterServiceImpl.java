@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Map;
 import java.util.Properties;
 import java.util.HashMap;
+import java.util.Objects;
 import java.io.InputStream;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -1014,7 +1015,8 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                     drArray.put(localObject);
                 }
                 for (int j = 0; j < drArray.length(); j++) {
-                    String image = drArray.getJsonObject(j).getString("image");
+                    String image = drArray.getJSONObject(j).getString("image");
+                    LOGGER.info("image");
                     LOGGER.info(image);
                     // Primary Cluster - glueImageMirrorDemoteAPI 호출
                     // glueIp = array[i];
