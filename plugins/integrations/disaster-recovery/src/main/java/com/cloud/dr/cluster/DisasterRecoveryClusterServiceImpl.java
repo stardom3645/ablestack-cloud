@@ -216,7 +216,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                         drcluster.setMirroringAgentStatus(DisasterRecoveryCluster.MirroringAgentStatus.Enabled.toString());
                         break;
                     } else if (daemonHealth.contains("WARNING")){
-                        drcluster.setMirroringAgentStatus(DisasterRecoveryCluster.MirroringAgentStatus.Error.toString());
+                        drcluster.setMirroringAgentStatus(DisasterRecoveryCluster.MirroringAgentStatus.Warning.toString());
                         break;
                     } else if (daemonHealth.contains("DISABLED")){
                         drcluster.setMirroringAgentStatus(DisasterRecoveryCluster.MirroringAgentStatus.Disabled.toString());
@@ -304,7 +304,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                         drcluster.setMirroringAgentStatus(DisasterRecoveryCluster.MirroringAgentStatus.Enabled.toString());
                         break;
                     } else if (daemonHealth.contains("WARNING")){
-                        drcluster.setMirroringAgentStatus(DisasterRecoveryCluster.MirroringAgentStatus.Error.toString());
+                        drcluster.setMirroringAgentStatus(DisasterRecoveryCluster.MirroringAgentStatus.Warning.toString());
                         break;
                     } else if (daemonHealth.contains("DISABLED")){
                         drcluster.setMirroringAgentStatus(DisasterRecoveryCluster.MirroringAgentStatus.Disabled.toString());
