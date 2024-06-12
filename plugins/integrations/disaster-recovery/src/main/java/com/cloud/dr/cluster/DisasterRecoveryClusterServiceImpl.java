@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Map;
 import java.util.Properties;
 import java.util.HashMap;
+import java.util.Objects;
 import java.io.InputStream;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -80,7 +81,6 @@ import org.apache.cloudstack.api.response.dr.cluster.GetDisasterRecoveryClusterL
 import org.apache.cloudstack.utils.identity.ManagementServerNode;
 import org.apache.cloudstack.context.CallContext;
 import org.apache.cloudstack.framework.config.ConfigKey;
-import org.apache.commons.lang3.ObjectUtils;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 
@@ -1009,8 +1009,8 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                 JsonObject jObject = (JsonObject)jParser.parse(mirrorList);
                 Object localObject = jObject.get("Local");
                 JSONArray drArray;
-                if (ObjectUtils.isEmpty(localObject)) {
-                    LOGGER.info("true 면 null:::::::::::::::::::");
+                if (Objects.isNull(localObject)) {
+                    LOGGER.info("null:::::::::::::::::::");
                 }
                 if (localObject instanceof JSONArray) {
                     LOGGER.info("1:::::::::::::::");
