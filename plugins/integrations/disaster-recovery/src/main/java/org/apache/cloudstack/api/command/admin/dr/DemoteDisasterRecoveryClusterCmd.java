@@ -41,7 +41,7 @@ import com.cloud.utils.exception.CloudRuntimeException;
         entityType = {DisasterRecoveryCluster.class},
         authorized = {RoleType.Admin})
 public class DemoteDisasterRecoveryClusterCmd extends BaseAsyncCmd {
-    public static final String APINAME = "disableDisasterRecoveryCluster";
+    public static final String APINAME = "demoteDisasterRecoveryCluster";
 
     @Inject
     private DisasterRecoveryClusterService disasterRecoveryClusterService;
