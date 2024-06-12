@@ -9318,10 +9318,8 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
         Map<String, String> userVmOVFProperties = cmd.getVmProperties();
         Map<String, String> customParameters = cmd.getDetails();
         Long volumeId = cmd.getVolumeId();
-        logger.info(volumeId);
         if (cmd.getVolumeId() != null) {
             customParameters.put("volumeId", String.valueOf(volumeId));
-            logger.info(customParameters.get("volumeId"));
         }
         VolumeVO volVO =_volsDao.findById(Long.parseLong(customParameters.get("volumeId")));
         volVO.setDeviceId(0L);
