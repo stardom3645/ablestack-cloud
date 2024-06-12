@@ -80,6 +80,7 @@ import org.apache.cloudstack.api.response.dr.cluster.GetDisasterRecoveryClusterL
 import org.apache.cloudstack.utils.identity.ManagementServerNode;
 import org.apache.cloudstack.context.CallContext;
 import org.apache.cloudstack.framework.config.ConfigKey;
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 
@@ -1004,22 +1005,21 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                 String glueMethod = "GET";
                 String mirrorList = DisasterRecoveryClusterUtil.glueImageMirrorAPI(glueUrl, glueCommand, glueMethod);
                 // glueImageMirrorAPI 성공
-                LOGGER.info("mirrorList");
-                LOGGER.info(mirrorList);
                 JsonParser jParser = new JsonParser();
                 JsonObject jObject = (JsonObject)jParser.parse(mirrorList);
                 Object localObject = jObject.get("Local");
-                LOGGER.info("localObject.toString()");
-                LOGGER.info(localObject.toString());
                 JSONArray drArray;
+                if (ObjectUtils.isEmpty(localObject)) {
+                    LOGGER.info("true 면 null:::::::::::::::::::");
+                }
                 if (localObject instanceof JSONArray) {
+                    LOGGER.info("1:::::::::::::::");
                     drArray = (JSONArray) localObject;
                 } else {
+                    LOGGER.info("2:::::::::::::::");
                     drArray = new JSONArray();
                     drArray.put(localObject);
                 }
-                LOGGER.info("drArray.length()");
-                LOGGER.info(drArray.length());
                 for (int j = 0; j < drArray.length(); j++) {
                     JSONObject drJSONObject = drArray.getJSONObject(j);
                     LOGGER.info("drJSONObject.toString()");
