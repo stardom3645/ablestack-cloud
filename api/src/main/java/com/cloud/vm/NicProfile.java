@@ -42,7 +42,7 @@ public class NicProfile implements InternalIdentity, Serializable {
     String uuid;
 
     String macAddress;
-    boolean linkState;
+    boolean linkState = true;
     BroadcastDomainType broadcastType;
     Mode mode;
     AddressFormat format;
