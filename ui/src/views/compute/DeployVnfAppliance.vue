@@ -2278,7 +2278,7 @@ export default {
         const data = httpMethod === 'POST' ? createVnfAppData : {}
 
         api('deployVnfAppliance', args, httpMethod, data).then(response => {
-          const jobId = response.deployvirtualmachineresponse.jobid
+          const jobId = response.deployvnfapplianceresponse.jobid
           if (jobId) {
             this.$pollJob({
               jobId,
