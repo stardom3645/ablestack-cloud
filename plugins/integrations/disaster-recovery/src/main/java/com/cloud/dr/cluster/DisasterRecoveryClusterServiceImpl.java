@@ -1009,39 +1009,28 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                 JsonObject jObject = (JsonObject)jParser.parse(mirrorList);
                 Object localObject = jObject.get("Local");
                 JSONArray drArray;
-                if (Objects.isNull(localObject)) {
-                    LOGGER.info("null:::::::::::::::::::");
-                }
                 if (localObject instanceof JSONArray) {
-                    LOGGER.info("1:::::::::::::::");
                     drArray = (JSONArray) localObject;
                 } else {
-                    LOGGER.info("2:::::::::::::::");
                     drArray = new JSONArray();
                     drArray.put(localObject);
                 }
                 for (int j = 0; j < drArray.length(); j++) {
-                    JSONObject drJSONObject = drArray.getJSONObject(j);
-                    LOGGER.info("drJSONObject.toString()");
-                    LOGGER.info(drJSONObject.toString());
-                    for (String key : drJSONObject.keySet()) {
-                        Object value = drJSONObject.getString(key);
-                        if (key.equalsIgnoreCase("image")) {
-                            // Primary Cluster - glueImageMirrorDemoteAPI 호출
-                            // glueIp = array[i];
-                            // glueUrl = "https://" + glueIp + ":8080/api/v1"; // glue-api 프로토콜과 포트 확정 시 변경 예정
-                            // glueCommand = "/mirror/image/demote/{mirrorPool}/{imageName}";
-                            // glueMethod = "DELETE";
-                            // Map<String, String> glueParams = new HashMap<>();
-                            // glueParams.put("mirrorPool", "rbd");
-                            // glueParams.put("imageName", value);
-                            // boolean result = DisasterRecoveryClusterUtil.glueImageMirrorDemoteAPI(glueUrl, glueCommand, glueMethod, glueParams);
-                            // // glueImageMirrorDemoteAPI 성공
-                            // if (!result) {
-                            //     return false;
-                            // }
-                        }
-                    }
+                    String image = drArray.getJsonObject(j).getString("image");
+                    LOGGER.info(image);
+                    // Primary Cluster - glueImageMirrorDemoteAPI 호출
+                    // glueIp = array[i];
+                    // glueUrl = "https://" + glueIp + ":8080/api/v1"; // glue-api 프로토콜과 포트 확정 시 변경 예정
+                    // glueCommand = "/mirror/image/demote/{mirrorPool}/{imageName}";
+                    // glueMethod = "DELETE";
+                    // Map<String, String> glueParams = new HashMap<>();
+                    // glueParams.put("mirrorPool", "rbd");
+                    // glueParams.put("imageName", value);
+                    // boolean result = DisasterRecoveryClusterUtil.glueImageMirrorDemoteAPI(glueUrl, glueCommand, glueMethod, glueParams);
+                    // // glueImageMirrorDemoteAPI 성공
+                    // if (!result) {
+                    //     return false;
+                    // }
                 }
                 return false;
             }
