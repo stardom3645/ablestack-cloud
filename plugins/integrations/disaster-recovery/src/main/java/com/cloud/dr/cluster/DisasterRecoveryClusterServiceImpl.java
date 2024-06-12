@@ -58,7 +58,6 @@ import com.google.gson.JsonParser;
 import com.google.gson.JsonObject;
 
 import org.json.JSONArray;
-import org.json.JSONObject;
 import org.apache.cloudstack.api.ApiConstants;
 import org.apache.cloudstack.api.ResponseObject;
 import org.apache.cloudstack.api.command.admin.dr.GetDisasterRecoveryClusterListCmd;
