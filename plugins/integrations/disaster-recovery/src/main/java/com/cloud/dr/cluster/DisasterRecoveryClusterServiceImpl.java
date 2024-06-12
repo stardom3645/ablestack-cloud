@@ -849,15 +849,6 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
             throw new CloudRuntimeException("Converting the secondary cluster's private key to a file failed.", e);
         }
         File permKey = new File("glue.key");
-        // Primary Cluster 정보
-        String[] properties = getServerProperties();
-        ManagementServerHostVO msHost = msHostDao.findByMsid(ManagementServerNode.getManagementServerId());
-        // String priUrl = properties[1] + "://" + msHost.getServiceIP() + ":" + properties[0];
-        String priUrl = "http://10.10.254.39:5050"; // VM 테스트로 임시 변수 설정
-        String priClusterType = "primary";
-        UserAccount user = accountService.getActiveUserAccount("admin", 1L);
-        String priApiKey = user.getApiKey();
-        String priSecretKey = user.getSecretKey();
         // Primary Cluster - scvm ip 조회
         String ipList = Script.runSimpleBashScript("cat /etc/hosts | grep -E 'scvm1-mngt|scvm2-mngt|scvm3-mngt' | awk '{print $1}' | tr '\n' ','");
         if (ipList != null || !ipList.isEmpty()) {
@@ -930,46 +921,54 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         if (drCluster == null) {
             throw new InvalidParameterValueException("Invalid disaster recovery cluster id specified");
         }
-        String drName = drCluster.getName();
-        String secUrl = drCluster.getDrClusterUrl();
-        String secClusterType = drCluster.getDrClusterType();
-        Map<String, String> details = disasterRecoveryClusterDetailsDao.findDetails(drCluster.getId());
-        String secApiKey = details.get(ApiConstants.DR_CLUSTER_API_KEY);
-        String secSecretKey = details.get(ApiConstants.DR_CLUSTER_SECRET_KEY);
-        String secGlueIpAddress = drCluster.getDrClusterGlueIpAddress();
-        // Primary Cluster 정보
-        String[] properties = getServerProperties();
-        ManagementServerHostVO msHost = msHostDao.findByMsid(ManagementServerNode.getManagementServerId());
-        // String priUrl = properties[1] + "://" + msHost.getServiceIP() + ":" + properties[0];
-        String priUrl = "http://10.10.254.39:5050"; // VM 테스트로 임시 변수 설정
-        String priClusterType = "primary";
-        UserAccount user = accountService.getActiveUserAccount("admin", 1L);
-        String priApiKey = user.getApiKey();
-        String priSecretKey = user.getSecretKey();
-        // Primary Cluster - scvm ip 조회
+        // Secondary Cluster - scvm ip 조회
         String ipList = Script.runSimpleBashScript("cat /etc/hosts | grep -E 'scvm1-mngt|scvm2-mngt|scvm3-mngt' | awk '{print $1}' | tr '\n' ','");
         if (ipList != null || !ipList.isEmpty()) {
             ipList = ipList.replaceAll(",$", "");
-            // Primary Cluster - glueImageMirrorAPI 호출하여 이미지 조회 후 해당 이미지마다 glueImageMirrorPromoteAPI 호출하는 로직 추가 필요
-            // Primary Cluster - glueImageMirrorPromoteAPI 호출
+            // Secondary Cluster - glueImageMirrorAPI 호출
             String[] array = ipList.split(",");
             for (int i=0; i < array.length; i++) {
                 String glueIp = array[i];
                 String glueUrl = "https://" + glueIp + ":8080/api/v1"; // glue-api 프로토콜과 포트 확정 시 변경 예정
-                String glueCommand = "/mirror/image/promote/{mirrorPool}/{imageName}";
-                String glueMethod = "POST";
-                Map<String, String> glueParams = new HashMap<>();
-                glueParams.put("mirrorPool", "rbd");
-                glueParams.put("imageName", "imageName");
-                boolean result = DisasterRecoveryClusterUtil.glueImageMirrorPromoteAPI(glueUrl, glueCommand, glueMethod, glueParams);
-                // glueImageMirrorPromoteAPI 성공
-                if (result) {
-                    return true;
+                String glueCommand = "/mirror/image";
+                String glueMethod = "GET";
+                String mirrorList = DisasterRecoveryClusterUtil.glueImageMirrorAPI(glueUrl, glueCommand, glueMethod);
+                JsonParser jParser = new JsonParser();
+                JsonObject jObject = (JsonObject)jParser.parse(mirrorList);
+                Object localObject = jObject.get("Local");
+                JSONArray drArray;
+                if (localObject instanceof JSONArray) {
+                    drArray = (JSONArray) localObject;
+                } else {
+                    drArray = new JSONArray();
+                    drArray.put(localObject);
                 }
+                for (int j = 0; j < drArray.length(); j++) {
+                    if (drArray(j) != null) {
+                        String image = drArray.getJSONObject(j).getString("image");
+                        LOGGER.info("image");
+                        LOGGER.info(image);
+                    };
+                    LOGGER.info("null");
+                    // Primary Cluster - glueImageMirrorPromoteAPI 호출
+                    // glueIp = array[i];
+                    // glueUrl = "https://" + glueIp + ":8080/api/v1"; // glue-api 프로토콜과 포트 확정 시 변경 예정
+                    // glueCommand = "/mirror/image/demote/{mirrorPool}/{imageName}";
+                    // glueMethod = "POST";
+                    // Map<String, String> glueParams = new HashMap<>();
+                    // glueParams.put("mirrorPool", "rbd");
+                    // glueParams.put("imageName", value);
+                    // boolean result = DisasterRecoveryClusterUtil.glueImageMirrorPromoteAPI(glueUrl, glueCommand, glueMethod, glueParams);
+                    // // glueImageMirrorPromoteAPI 성공
+                    // if (!result) {
+                    //     return false;
+                    // }
+                }
+                return false;
             }
         } else {
-            // Primary Cluster - scvm ip 조회 실패
-            throw new CloudRuntimeException("primary cluster scvm list lookup fails.");
+            // Secondary Cluster - scvm ip 조회 실패
+            throw new CloudRuntimeException("secondary cluster scvm list lookup fails.");
         }
         return false;
     }
@@ -984,25 +983,18 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         if (drCluster == null) {
             throw new InvalidParameterValueException("Invalid disaster recovery cluster id specified");
         }
-        String url = drCluster.getDrClusterUrl();
-        Map<String, String> details = disasterRecoveryClusterDetailsDao.findDetails(drCluster.getId());
-        String apiKey = details.get(ApiConstants.DR_CLUSTER_API_KEY);
-        String secretKey = details.get(ApiConstants.DR_CLUSTER_SECRET_KEY);
-        String moldUrl = url + "/client/api/";
-        String moldCommand = "listScvmIpAddress";
-        String moldMethod = "GET";
-        // Primary Cluster - moldListScvmIpAddressAPI 호출
-        String response = DisasterRecoveryClusterUtil.moldListScvmIpAddressAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey);
-        if (response != null) {
-            // Primary Cluster - glueImageMirrorAPI 호출
-            String[] array = response.split(",");
+        // Secondary Cluster - scvm ip 조회
+        String ipList = Script.runSimpleBashScript("cat /etc/hosts | grep -E 'scvm1-mngt|scvm2-mngt|scvm3-mngt' | awk '{print $1}' | tr '\n' ','");
+        if (ipList != null || !ipList.isEmpty()) {
+            ipList = ipList.replaceAll(",$", "");
+            // Secondary Cluster - glueImageMirrorAPI 호출
+            String[] array = ipList.split(",");
             for (int i=0; i < array.length; i++) {
                 String glueIp = array[i];
                 String glueUrl = "https://" + glueIp + ":8080/api/v1"; // glue-api 프로토콜과 포트 확정 시 변경 예정
                 String glueCommand = "/mirror/image";
                 String glueMethod = "GET";
                 String mirrorList = DisasterRecoveryClusterUtil.glueImageMirrorAPI(glueUrl, glueCommand, glueMethod);
-                // glueImageMirrorAPI 성공
                 JsonParser jParser = new JsonParser();
                 JsonObject jObject = (JsonObject)jParser.parse(mirrorList);
                 Object localObject = jObject.get("Local");
@@ -1014,9 +1006,12 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                     drArray.put(localObject);
                 }
                 for (int j = 0; j < drArray.length(); j++) {
-                    String image = drArray.getJSONObject(j).getString("image");
-                    LOGGER.info("image");
-                    LOGGER.info(image);
+                    if (drArray.getJSONObject(j) != null) {
+                        String image = drArray.getJSONObject(j).getString("image");
+                        LOGGER.info("image");
+                        LOGGER.info(image);
+                    };
+                    LOGGER.info("null");
                     // Primary Cluster - glueImageMirrorDemoteAPI 호출
                     // glueIp = array[i];
                     // glueUrl = "https://" + glueIp + ":8080/api/v1"; // glue-api 프로토콜과 포트 확정 시 변경 예정
@@ -1034,8 +1029,8 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                 return false;
             }
         } else {
-            // Primary Cluster - scvm ip 조회 실패
-            throw new CloudRuntimeException("primary cluster scvm list lookup fails.");
+            // Secondary Cluster - scvm ip 조회 실패
+            throw new CloudRuntimeException("secondary cluster scvm list lookup fails.");
         }
         return false;
     }
