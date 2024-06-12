@@ -999,6 +999,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                 JsonParser jParser = new JsonParser();
                 JsonObject jObject = (JsonObject)jParser.parse(mirrorList);
                 Object localObject = jObject.get("Local");
+                LOGGER.info(localObject.toString());
                 JSONArray drArray;
                 if (localObject instanceof JSONArray) {
                     drArray = (JSONArray) localObject;
@@ -1023,6 +1024,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                         //     return false;
                         // }
                     } catch (JSONException e) {
+                        LOGGER.info(e);
                         throw new CloudRuntimeException("There are no images being mirrored.");
                     }
                 }
