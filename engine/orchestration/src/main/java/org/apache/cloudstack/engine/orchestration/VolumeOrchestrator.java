@@ -911,16 +911,15 @@ public class VolumeOrchestrator extends ManagerBase implements VolumeOrchestrati
         if (deviceId != null) {
             vol.setDeviceId(deviceId);
         } else if (type.equals(Type.ROOT)) {
-            vol.setDeviceId(0l);
+            vol.setDeviceId(0L);
         } else {
-            vol.setDeviceId(1l);
+            vol.setDeviceId(1L);
         }
         if (template.getFormat() == ImageFormat.ISO) {
             vol.setIsoId(template.getId());
         } else if (template.getTemplateType().equals(Storage.TemplateType.DATADISK)) {
             vol.setTemplateId(template.getId());
         }
-        // display flag matters only for the User vms
         if (vm.getType() == VirtualMachine.Type.User) {
             UserVmVO userVm = _userVmDao.findById(vm.getId());
             vol.setDisplayVolume(userVm.isDisplayVm());
@@ -931,7 +930,6 @@ public class VolumeOrchestrator extends ManagerBase implements VolumeOrchestrati
 
         saveVolumeDetails(offering.getId(), vol.getId());
 
-        // Save usage event and update resource count for user vm volumes
         if (vm.getType() == VirtualMachine.Type.User) {
             UsageEventUtils.publishUsageEvent(EventTypes.EVENT_VOLUME_CREATE, vol.getAccountId(), vol.getDataCenterId(), vol.getId(), vol.getName(), offering.getId(), null, size,
                     Volume.class.getName(), vol.getUuid(), vol.isDisplayVolume());
