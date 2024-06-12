@@ -940,6 +940,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                         if (imageName != null) {
                             // Secondary Cluster - glueImageMirrorPromoteAPI 호출
                             // 호출 시 primary cluster 의 glueAPI로 호출해야하는지 확인 필요
+                            // 단 양쪽 모두 중지 되어 있는 가상머신에 대해서만 가능하며 해당 로직 필요
                             glueCommand = "/mirror/image/promote/{mirrorPool}/{imageName}";
                             glueMethod = "POST";
                             Map<String, String> glueParams = new HashMap<>();
@@ -992,6 +993,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                         if (imageName != null) {
                             // Secondary Cluster - glueImageMirrorDemoteAPI 호출
                             // 호출 시 primary cluster 의 glueAPI로 호출해야하는지 확인 필요
+                            // 단 양쪽 모두 중지 되어 있는 가상머신에 대해서만 가능하며 해당 로직 필요
                             glueCommand = "/mirror/image/demote/{mirrorPool}/{imageName}";
                             glueMethod = "DELETE";
                             Map<String, String> glueParams = new HashMap<>();
