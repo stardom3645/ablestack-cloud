@@ -442,104 +442,6 @@ public class DisasterRecoveryClusterUtil {
     }
 
     /**
-     * Glue 미러링된 이미지 목록 조회
-     * @param region
-     *  https://<IP>:8080/api/v1
-     * @param subUrl
-     *  /mirror/image
-     * @param method
-     *  GET
-     * @return
-     *  String
-     *  {"Local": [{"image": "string","items": [{"interval": "string","start_time": "string"}],"namespace": "string","pool": "string"}],
-        "Remote": [{"image": "string","items": [{"interval": "string","start_time": "string"}],"namespace": "string","pool": "string"}]}
-     */
-    protected static String glueImageMirrorAPI(String region, String subUrl, String method) {
-        try {
-            String readLine = null;
-            StringBuffer sb = null;
-            // SSL 인증서 에러 우회 처리
-            final SSLContext sslContext = SSLUtils.getSSLContext();
-            sslContext.init(null, new TrustManager[]{new TrustAllManager()}, new SecureRandom());
-            URL url = new URL(region + subUrl);
-            HttpsURLConnection connection = (HttpsURLConnection)url.openConnection();
-            connection.setSSLSocketFactory(sslContext.getSocketFactory());
-            connection.setDoOutput(true);
-            connection.setRequestMethod(method);
-            connection.setConnectTimeout(30000);
-            connection.setReadTimeout(180000);
-            connection.setRequestProperty("Accept", "application/vnd.ceph.api.v1.0+json");
-            connection.setRequestProperty("Authorization", "application/vnd.ceph.api.v1.0+json");
-            connection.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
-            if (connection.getResponseCode() == 200) {
-                BufferedReader br = new BufferedReader(new InputStreamReader(connection.getInputStream(), "UTF-8"));
-                sb = new StringBuffer();
-                while ((readLine = br.readLine()) != null) {
-                    sb.append(readLine);
-                }
-                JsonParser jParser = new JsonParser();
-                JsonObject jObject = (JsonObject)jParser.parse(sb.toString());
-                return jObject.toString();
-            } else {
-                String msg = "Failed to request glue image mirror status API. response code : " + connection.getResponseCode();
-                LOGGER.error(msg);
-                return null;
-            }
-        } catch (Exception e) {
-            LOGGER.error(String.format("Glue API endpoint not available"), e);
-            return null;
-        }
-    }
-
-    /**
-     * Glue 이미지 미러링 설정
-     * @param region
-     *  https://<IP>:8080/api/v1
-     * @param subUrl
-     *  /mirror/image/mirrorPool(string)/imageName(string)
-     * @param method
-     *  POST
-     * @param parameter
-     *  interval(string), startTime(string)
-     * @return true = 200, 이외 코드는 false 처리
-     */
-    protected static boolean glueImageMirrorSetupAPI(String region, String subUrl, String method, Map<String, String> params) {
-        try {
-            String readLine = null;
-            StringBuffer sb = null;
-            // SSL 인증서 에러 우회 처리
-            final SSLContext sslContext = SSLUtils.getSSLContext();
-            sslContext.init(null, new TrustManager[]{new TrustAllManager()}, new SecureRandom());
-            URL url = new URL(region + subUrl);
-            HttpsURLConnection connection = (HttpsURLConnection)url.openConnection();
-            connection.setSSLSocketFactory(sslContext.getSocketFactory());
-            connection.setDoOutput(true);
-            connection.setRequestMethod(method);
-            connection.setConnectTimeout(30000);
-            connection.setReadTimeout(180000);
-            connection.setRequestProperty("Accept", "application/vnd.ceph.api.v1.0+json");
-            connection.setRequestProperty("Authorization", "application/vnd.ceph.api.v1.0+json");
-            connection.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
-            // parameter 추가 시 사용 예정
-            // String apiParams = buildParamsGlues(params);
-            // OutputStream os = connection.getOutputStream();
-            // os.write(apiParams.getBytes("UTF-8"));
-            // os.flush();
-            // os.close();
-            if (connection.getResponseCode() == 200) {
-                return true;
-            } else {
-                String msg = "Failed to request glue image mirror setup API. response code : " + connection.getResponseCode();
-                LOGGER.error(msg);
-                return false;
-            }
-        } catch (Exception e) {
-            LOGGER.error(String.format("Glue API endpoint not available"), e);
-            return false;
-        }
-    }
-
-    /**
      * Glue 미러링 이미지 프로모트
      * @param region
      *  https://<IP>:8080/api/v1
@@ -656,6 +558,121 @@ public class DisasterRecoveryClusterUtil {
                 }
                 in.close();
                 String msg = "Failed to request glue mirror image demote API. response code : " + connection.getResponseCode();
+                LOGGER.error(msg);
+                return false;
+            }
+        } catch (Exception e) {
+            LOGGER.error(String.format("Glue API endpoint not available"), e);
+            return false;
+        }
+    }
+
+    /**
+     * Glue 미러링된 이미지 목록 조회
+     * @param region
+     *  https://<IP>:8080/api/v1
+     * @param subUrl
+     *  /mirror/image
+     * @param method
+     *  GET
+     * @return
+     *  String
+     *  {"Local": [{"image": "string","items": [{"interval": "string","start_time": "string"}],"namespace": "string","pool": "string"}],
+        "Remote": [{"image": "string","items": [{"interval": "string","start_time": "string"}],"namespace": "string","pool": "string"}]}
+     */
+    protected static String glueImageMirrorAPI(String region, String subUrl, String method) {
+        try {
+            String readLine = null;
+            StringBuffer sb = null;
+            // SSL 인증서 에러 우회 처리
+            final SSLContext sslContext = SSLUtils.getSSLContext();
+            sslContext.init(null, new TrustManager[]{new TrustAllManager()}, new SecureRandom());
+            URL url = new URL(region + subUrl);
+            HttpsURLConnection connection = (HttpsURLConnection)url.openConnection();
+            connection.setSSLSocketFactory(sslContext.getSocketFactory());
+            connection.setDoOutput(true);
+            connection.setRequestMethod(method);
+            connection.setConnectTimeout(30000);
+            connection.setReadTimeout(180000);
+            connection.setRequestProperty("Accept", "application/vnd.ceph.api.v1.0+json");
+            connection.setRequestProperty("Authorization", "application/vnd.ceph.api.v1.0+json");
+            connection.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
+            if (connection.getResponseCode() == 200) {
+                BufferedReader br = new BufferedReader(new InputStreamReader(connection.getInputStream(), "UTF-8"));
+                sb = new StringBuffer();
+                while ((readLine = br.readLine()) != null) {
+                    sb.append(readLine);
+                }
+                JsonParser jParser = new JsonParser();
+                JsonObject jObject = (JsonObject)jParser.parse(sb.toString());
+                return jObject.toString();
+            } else {
+                String msg = "Failed to request list of mirrored snapshot API. response code : " + connection.getResponseCode();
+                LOGGER.error(msg);
+                return null;
+            }
+        } catch (Exception e) {
+            LOGGER.error(String.format("Glue API endpoint not available"), e);
+            return null;
+        }
+    }
+
+    /**
+     * Glue 이미지 미러링 설정
+     * @param region
+     *  https://<IP>:8080/api/v1
+     * @param subUrl
+     *  /mirror/image/mirrorPool(string)/imageName(string)
+     * @param method
+     *  POST
+     * @param parameter
+     *  mirrorPool(string), imageName(string), interval(string), startTime(string)
+     * @return true = 200, 이외 코드는 false 처리
+     */
+    protected static boolean glueImageMirrorSetupAPI(String region, String subUrl, String method, Map<String, String> params) {
+        try {
+            // SSL 인증서 에러 우회 처리
+            final SSLContext sslContext = SSLUtils.getSSLContext();
+            sslContext.init(null, new TrustManager[]{new TrustAllManager()}, new SecureRandom());
+            URL url = new URL(region + subUrl);
+            HttpsURLConnection connection = (HttpsURLConnection)url.openConnection();
+            connection.setSSLSocketFactory(sslContext.getSocketFactory());
+            connection.setDoInput(true);
+            connection.setDoOutput(true);
+            connection.setRequestMethod(method);
+            connection.setConnectTimeout(30000);
+            connection.setReadTimeout(180000);
+            connection.setRequestProperty("Accept", "application/vnd.ceph.api.v1.0+json");
+            connection.setRequestProperty("Authorization", "application/vnd.ceph.api.v1.0+json");
+            connection.setRequestProperty("Connection","Keep-Alive");
+            connection.setRequestProperty("Content-type", "multipart/form-data;charset=" + charset + ";boundary=" + boundary);
+            outputStream = connection.getOutputStream();
+            writer = new PrintWriter(new OutputStreamWriter(outputStream, charset), true);
+            for(Map.Entry<String, String> param : params.entrySet()){
+                String key = param.getKey();
+                String value = param.getValue();
+                addTextPart(key, value);
+            }
+            writer.append("--" + boundary + "--").append(LINE_FEED);
+            writer.close();
+            if (connection.getResponseCode() == 200) {
+                BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+                String inputLine;
+                StringBuffer response = new StringBuffer();
+                while ((inputLine = in.readLine()) != null) {
+                    response.append(inputLine);
+                }
+                in.close();
+                return true;
+            } else {
+                BufferedReader in = new BufferedReader(new InputStreamReader(connection.getErrorStream()));
+                String inputLine;
+                StringBuffer response = new StringBuffer();
+                while ((inputLine = in.readLine()) != null) {
+                    response.append(inputLine);
+                }
+                in.close();
+                String msg = "Failed to request glue mirror image setup API. response code : " + connection.getResponseCode();
                 LOGGER.error(msg);
                 return false;
             }
@@ -1139,7 +1156,17 @@ public class DisasterRecoveryClusterUtil {
         }
     }
 
-    // 재해복구용 가상머신 생성 모달에서 DR Secondary 클러스터를 선택했을 때 컴퓨트 오퍼링과 네트워크 목록을 불러오는 함수
+    /**
+     * Mold listServiceOfferings, listNetworks API 요청
+     * 재해복구용 가상머신 생성 모달에서 DR Secondary 클러스터를 선택했을 때 컴퓨트 오퍼링과 네트워크 목록을 불러오는 함수
+     * @param region
+     *  <url>/client/api/
+     * @param command
+     *  listServiceOfferings or listNetworks
+     * @param method
+     *  GET
+     * @return true = 200, 이외 코드는 false 처리
+     */
     protected static List getSecDrClusterInfoList(String region, String command, String method, String apiKey, String secretKey) {
         try {
             String readLine = null;
@@ -1217,7 +1244,7 @@ public class DisasterRecoveryClusterUtil {
                                     field.set(serviceOfferingResponse, value);
                                 }
                             } catch (NoSuchFieldException e) {
-//                                System.err.println("Field not found: " + key);
+                                // System.err.println("Field not found: " + key);
                             } catch (IllegalAccessException e) {
                                 e.printStackTrace();
                             }
@@ -1270,6 +1297,12 @@ public class DisasterRecoveryClusterUtil {
         }
     }
 
+    /**
+     * Mold listServiceOfferings, listNetworks API 요청 시 사용
+     * @param JSONObject
+     * @param key
+     * @param fieldType
+     */
     private static Object getValue(JSONObject jsonObject, String key, Class<?> fieldType) {
         try {
             if (fieldType == String.class) {
@@ -1315,9 +1348,10 @@ public class DisasterRecoveryClusterUtil {
         return paramString.toString();
     }
 
-    // Mold API 요청 최종 URL 생성
+    /**
+     * Mold API 요청 최종 URL 생성
+     */
     private static String buildUrl(String apiParams, String region, String apiKey, String secretKey) {
-
         String encodedApiKey;
         try {
             encodedApiKey = URLEncoder.encode(apiKey, "UTF-8");
@@ -1358,7 +1392,9 @@ public class DisasterRecoveryClusterUtil {
         }
     }
 
-    // Mold Signature 생성
+    /**
+     * Mold Signature 생성
+     */
     private static String signRequest(String request, String key) {
         try {
             Mac mac = Mac.getInstance("HmacSHA256");
