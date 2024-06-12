@@ -987,7 +987,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                 JsonArray drArray = (JsonArray) new JsonParser().parse(mirrorList).getAsJsonObject().get("Local");
                 LOGGER.info("drArray:::::::::::::::::::::::::::::::");
                 LOGGER.info(drArray);
-                if (drArray != null || !drArray.isEmpty()) {
+                if (drArray.size() != 0) {
                     for (JsonElement dr : drArray) {
                         JsonElement imageName = dr.getAsJsonObject().get("image") == null ? null : dr.getAsJsonObject().get("image");
                         LOGGER.info("imageName:::::::::::::::::::::::::::::::");
