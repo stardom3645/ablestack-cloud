@@ -97,6 +97,9 @@ public class ListVolumesCmd extends BaseListRetrieveOnlyResourceCountCmd impleme
     @Parameter(name = ApiConstants.CUSTOMIMAGES, type = CommandType.BOOLEAN, description = "state of the volume. Possible values are: Ready, Allocated, Destroy, Expunging, Expunged.")
     private Boolean customimages;
 
+    @Parameter(name = ApiConstants.IS_ENCRYPTED, type = CommandType.BOOLEAN, description = "list only volumes that are encrypted", since = "4.19.1",
+            authorized = { RoleType.Admin })
+    private Boolean encrypted;
     /////////////////////////////////////////////////////
     /////////////////// Accessors ///////////////////////
     /////////////////////////////////////////////////////
@@ -155,6 +158,10 @@ public class ListVolumesCmd extends BaseListRetrieveOnlyResourceCountCmd impleme
     }
     public Boolean getCustomImages() {
         return BooleanUtils.toBooleanDefaultIfNull(customimages, false);
+    }
+
+    public Boolean isEncrypted() {
+        return encrypted;
     }
 
     /////////////////////////////////////////////////////

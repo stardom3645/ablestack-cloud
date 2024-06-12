@@ -178,7 +178,7 @@ public class VolumeJoinDaoImpl extends GenericDaoBaseWithTagInformation<VolumeJo
 
         if (view == ResponseView.Full) {
             volResponse.setPath(volume.getPath());
-            volResponse.setEncryptFormat(volume.getEncryptFormat());
+            volResponse.setEncryptionFormat(volume.getEncryptionFormat());
         }
 
         // populate owner.
@@ -277,6 +277,7 @@ public class VolumeJoinDaoImpl extends GenericDaoBaseWithTagInformation<VolumeJo
 
         volResponse.setObjectName("volume");
         volResponse.setExternalUuid(volume.getExternalUuid());
+        volResponse.setEncryptionFormat(volume.getEncryptionFormat());
         return volResponse;
     }
 
