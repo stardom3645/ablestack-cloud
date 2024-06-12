@@ -2413,7 +2413,8 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
         Map<String, String> tags = cmd.getTags();
         String storageId = cmd.getStorageId();
         Long clusterId = cmd.getClusterId();
-        Long diskOffId = cmd.getDiskOfferingId();
+        Long serviceOfferingId = cmd.getServiceOfferingId();
+        Long diskOfferingId = cmd.getDiskOfferingId();
         Boolean display = cmd.getDisplay();
         String state = cmd.getState();
         boolean shouldListSystemVms = shouldListSystemVms(cmd, caller.getId());
@@ -2423,6 +2424,13 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
         Long podId = cmd.getPodId();
 
         List<Long> ids = getIdsListFromCmd(cmd.getId(), cmd.getIds());
+
+        if (diskOfferingId == null && serviceOfferingId != null) {
+            ServiceOfferingVO serviceOffering = _srvOfferingDao.findById(serviceOfferingId);
+            if (serviceOffering != null) {
+                diskOfferingId = serviceOffering.getDiskOfferingId();
+            }
+        }
 
         Ternary<Long, Boolean, ListProjectResourcesCriteria> domainIdRecursiveListProject = new Ternary<>(cmd.getDomainId(), cmd.isRecursive(), null);
         accountMgr.buildACLSearchParameters(caller, id, cmd.getAccountName(), cmd.getProjectId(), permittedAccounts, domainIdRecursiveListProject, cmd.listAll(), false);
@@ -2558,8 +2566,8 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
             }
         }
 
-        if (diskOffId != null) {
-            sc.setParameters("diskOfferingId", diskOffId);
+        if (diskOfferingId != null) {
+            sc.setParameters("diskOfferingId", diskOfferingId);
         }
 
         if (id != null) {
