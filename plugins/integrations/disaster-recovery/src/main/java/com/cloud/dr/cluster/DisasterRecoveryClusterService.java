@@ -43,15 +43,17 @@ public interface DisasterRecoveryClusterService extends PluggableService, Config
             "Indicates whether Disaster Recovery Service plugin is enabled or not. Management server restart needed on change",
             true);
 
-    boolean connectivityTestsDisasterRecovery(ConnectivityTestsDisasterRecoveryClusterCmd cmd) throws CloudRuntimeException;
-
     ListResponse<ScvmIpAddressResponse> listScvmIpAddressResponse(ListScvmIpAddressCmd cmd);
 
     ListResponse<GetDisasterRecoveryClusterListResponse> listDisasterRecoveryClusterResponse(GetDisasterRecoveryClusterListCmd cmd);
 
     GetDisasterRecoveryClusterListResponse updateDisasterRecoveryCluster(UpdateDisasterRecoveryClusterCmd cmd) throws CloudRuntimeException;
 
+    GetDisasterRecoveryClusterListResponse createDisasterRecoveryClusterResponse(long clusterId);
+
     DisasterRecoveryCluster createDisasterRecoveryCluster(CreateDisasterRecoveryClusterCmd cmd) throws CloudRuntimeException;
+
+    boolean connectivityTestsDisasterRecovery(ConnectivityTestsDisasterRecoveryClusterCmd cmd) throws CloudRuntimeException;
 
     boolean setupDisasterRecoveryCluster(long clusterId) throws CloudRuntimeException;
 
@@ -64,7 +66,5 @@ public interface DisasterRecoveryClusterService extends PluggableService, Config
     boolean promoteDisasterRecoveryCluster(PromoteDisasterRecoveryClusterCmd cmd) throws CloudRuntimeException;
 
     boolean demoteDisasterRecoveryCluster(DemoteDisasterRecoveryClusterCmd cmd) throws CloudRuntimeException;
-
-    GetDisasterRecoveryClusterListResponse createDisasterRecoveryClusterResponse(long clusterId);
 
 }
