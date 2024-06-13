@@ -504,7 +504,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                     }
                 }
                 // glueMirrorSetupAPI 실패
-               // Primary Cluster DB 업데이트
+                // Primary Cluster DB 업데이트
                 drCluster.setDrClusterStatus(DisasterRecoveryCluster.DrClusterStatus.Error.toString());
                 drCluster.setMirroringAgentStatus(DisasterRecoveryCluster.MirroringAgentStatus.Error.toString());
                 disasterRecoveryClusterDao.update(drCluster.getId(), drCluster);
