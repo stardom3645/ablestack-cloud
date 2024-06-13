@@ -609,7 +609,8 @@ public class DisasterRecoveryClusterUtil {
             } else {
                 String msg = "Failed to request list of mirrored snapshot API. response code : " + connection.getResponseCode();
                 LOGGER.error(msg);
-                return null;
+                throw new CloudRuntimeException("Failed to request list of mirrored snapshot API. response code : " + connection.getResponseCode());
+                // return null;
             }
         } catch (Exception e) {
             LOGGER.error(String.format("Glue API endpoint not available"), e);

@@ -880,27 +880,29 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                 String glueCommand = "/mirror/image";
                 String glueMethod = "GET";
                 String mirrorList = DisasterRecoveryClusterUtil.glueImageMirrorAPI(glueUrl, glueCommand, glueMethod);
-                JsonArray drArray = (JsonArray) new JsonParser().parse(mirrorList).getAsJsonObject().get("Local");
-                if (drArray.size() != 0) {
-                    for (JsonElement dr : drArray) {
-                        JsonElement imageName = dr.getAsJsonObject().get("image") == null ? null : dr.getAsJsonObject().get("image");
-                        if (imageName != null) {
-                            // Secondary Cluster - glueImageMirrorPromoteAPI 호출
-                            glueCommand = "/mirror/image/promote/{mirrorPool}/{imageName}";
-                            glueMethod = "POST";
-                            Map<String, String> glueParams = new HashMap<>();
-                            glueParams.put("mirrorPool", "rbd");
-                            glueParams.put("imageName", imageName.getAsString());
-                            boolean result = DisasterRecoveryClusterUtil.glueImageMirrorPromoteAPI(glueUrl, glueCommand, glueMethod, glueParams);
-                            // glueImageMirrorPromoteAPI 성공
-                            if (!result) {
-                                return false;
+                if (mirrorList != null) {
+                    JsonArray drArray = (JsonArray) new JsonParser().parse(mirrorList).getAsJsonObject().get("Local");
+                    if (drArray.size() != 0) {
+                        for (JsonElement dr : drArray) {
+                            JsonElement imageName = dr.getAsJsonObject().get("image") == null ? null : dr.getAsJsonObject().get("image");
+                            if (imageName != null) {
+                                // Secondary Cluster - glueImageMirrorPromoteAPI 호출
+                                glueCommand = "/mirror/image/promote/{mirrorPool}/{imageName}";
+                                glueMethod = "POST";
+                                Map<String, String> glueParams = new HashMap<>();
+                                glueParams.put("mirrorPool", "rbd");
+                                glueParams.put("imageName", imageName.getAsString());
+                                boolean result = DisasterRecoveryClusterUtil.glueImageMirrorPromoteAPI(glueUrl, glueCommand, glueMethod, glueParams);
+                                // glueImageMirrorPromoteAPI 성공
+                                if (!result) {
+                                    return false;
+                                }
                             }
                         }
+                        return true;
+                    } else {
+                        throw new CloudRuntimeException("There are no images being mirrored.");
                     }
-                    return true;
-                } else {
-                    throw new CloudRuntimeException("There are no images being mirrored.");
                 }
             }
         } else {
@@ -932,27 +934,29 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                 String glueCommand = "/mirror/image";
                 String glueMethod = "GET";
                 String mirrorList = DisasterRecoveryClusterUtil.glueImageMirrorAPI(glueUrl, glueCommand, glueMethod);
-                JsonArray drArray = (JsonArray) new JsonParser().parse(mirrorList).getAsJsonObject().get("Local");
-                if (drArray.size() != 0) {
-                    for (JsonElement dr : drArray) {
-                        JsonElement imageName = dr.getAsJsonObject().get("image") == null ? null : dr.getAsJsonObject().get("image");
-                        if (imageName != null) {
-                            // Secondary Cluster - glueImageMirrorDemoteAPI 호출
-                            glueCommand = "/mirror/image/demote/{mirrorPool}/{imageName}";
-                            glueMethod = "DELETE";
-                            Map<String, String> glueParams = new HashMap<>();
-                            glueParams.put("mirrorPool", "rbd");
-                            glueParams.put("imageName", imageName.getAsString());
-                            boolean result = DisasterRecoveryClusterUtil.glueImageMirrorDemoteAPI(glueUrl, glueCommand, glueMethod, glueParams);
-                            // glueImageMirrorDemoteAPI 성공
-                            if (!result) {
-                                return false;
+                if (mirrorList != null) {
+                    JsonArray drArray = (JsonArray) new JsonParser().parse(mirrorList).getAsJsonObject().get("Local");
+                    if (drArray.size() != 0) {
+                        for (JsonElement dr : drArray) {
+                            JsonElement imageName = dr.getAsJsonObject().get("image") == null ? null : dr.getAsJsonObject().get("image");
+                            if (imageName != null) {
+                                // Secondary Cluster - glueImageMirrorDemoteAPI 호출
+                                glueCommand = "/mirror/image/demote/{mirrorPool}/{imageName}";
+                                glueMethod = "DELETE";
+                                Map<String, String> glueParams = new HashMap<>();
+                                glueParams.put("mirrorPool", "rbd");
+                                glueParams.put("imageName", imageName.getAsString());
+                                boolean result = DisasterRecoveryClusterUtil.glueImageMirrorDemoteAPI(glueUrl, glueCommand, glueMethod, glueParams);
+                                // glueImageMirrorDemoteAPI 성공
+                                if (!result) {
+                                    return false;
+                                }
                             }
                         }
+                        return true;
+                    } else {
+                        throw new CloudRuntimeException("There are no images being mirrored.");
                     }
-                    return true;
-                } else {
-                    throw new CloudRuntimeException("There are no images being mirrored.");
                 }
             }
         } else {
