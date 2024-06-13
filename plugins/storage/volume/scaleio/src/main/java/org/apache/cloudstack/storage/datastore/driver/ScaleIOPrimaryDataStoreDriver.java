@@ -497,7 +497,7 @@ public class ScaleIOPrimaryDataStoreDriver implements PrimaryDataStoreDriver {
     }
 
     public CreateObjectAnswer createVolume(VolumeInfo volumeInfo, long storagePoolId, boolean migrationInvolved, Long usageSize) {
-        LOGGER.debug("Creating PowerFlex volume");
+        logger.debug("Creating PowerFlex volume");
 
         StoragePoolVO storagePool = storagePoolDao.findById(storagePoolId);
 
@@ -869,7 +869,7 @@ public class ScaleIOPrimaryDataStoreDriver implements PrimaryDataStoreDriver {
             GetVolumeStatCommand statCmd = new GetVolumeStatCommand(srcVolumeInfo.getPath(), srcVolumeInfo.getStoragePoolType(), srcStore.getUuid());
             GetVolumeStatAnswer statAnswer = (GetVolumeStatAnswer) ep.sendMessage(statCmd);
             if (!statAnswer.getResult() ) {
-                LOGGER.warn(String.format("Unable to get volume %s stats", srcVolumeInfo.getId()));
+                logger.warn(String.format("Unable to get volume %s stats", srcVolumeInfo.getId()));
             } else if (statAnswer.getVirtualSize() > 0) {
                 srcVolumeUsableSize = statAnswer.getVirtualSize();
             }
