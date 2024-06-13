@@ -1027,8 +1027,9 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
             // Primary Cluster - moldGetDisasterRecoveryClusterListAPI 성공
             for (GetDisasterRecoveryClusterListResponse dr : drListResponse) {
                 if (dr.getName().equalsIgnoreCase(drCluster.getName())) {
-                    List<UserVmResponse> vmListResponse = dr.getDisasterRecoveryClusterVms();
-                    if (vmListResponse != null || !vmListResponse.isEmpty()) {
+                    LOGGER.info(dr.getDisasterRecoveryClusterVms());
+                    if (dr.getDisasterRecoveryClusterVms() != null) {
+                        List<UserVmResponse> vmListResponse = dr.getDisasterRecoveryClusterVms();
                         for (UserVmResponse vm : vmListResponse) {
                             if (!vm.getState().equalsIgnoreCase("Stopped")) {
                                 throw new InvalidParameterValueException("Forced promote and demote functions cannot be executed because there is a running disaster recovery primary cluster virtual machine : " + vm.getName());
