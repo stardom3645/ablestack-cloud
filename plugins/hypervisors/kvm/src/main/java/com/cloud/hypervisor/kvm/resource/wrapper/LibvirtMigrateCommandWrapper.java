@@ -774,7 +774,7 @@ public final class LibvirtMigrateCommandWrapper extends CommandWrapper<MigrateCo
                                     Element newChildSourceNode = doc.createElement("source");
                                     newChildSourceNode.setAttribute("file", newIsoVolumePath);
                                     diskNode.appendChild(newChildSourceNode);
-                                    s_logger.debug(String.format("Replaced ISO path [%s] with [%s] in VM [%s] XML configuration.", oldIsoVolumePath, newIsoVolumePath, vmName));
+                                    logger.debug(String.format("Replaced ISO path [%s] with [%s] in VM [%s] XML configuration.", oldIsoVolumePath, newIsoVolumePath, vmName));
                                     return getXml(doc);
                                 }
                             }

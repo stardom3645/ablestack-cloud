@@ -1786,7 +1786,7 @@ public class VpcManagerImpl extends ManagerBase implements VpcManager, VpcProvis
     @ActionEvent(eventType = EventTypes.EVENT_VPC_CREATE, eventDescription = "creating vpc", async = true)
     public void startVpc(final CreateVPCCmd cmd) throws ConcurrentOperationException, ResourceUnavailableException, InsufficientCapacityException {
         if (!cmd.isStart()) {
-            s_logger.debug("Not starting VPC as " + ApiConstants.START + "=false was passed to the API");
+            logger.debug("Not starting VPC as " + ApiConstants.START + "=false was passed to the API");
             return;
         }
         startVpc(cmd.getEntityId(), true);

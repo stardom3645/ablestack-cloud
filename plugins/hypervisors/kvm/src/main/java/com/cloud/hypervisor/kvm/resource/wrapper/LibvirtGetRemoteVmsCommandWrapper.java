@@ -59,14 +59,14 @@ public final class LibvirtGetRemoteVmsCommandWrapper extends CommandWrapper<GetR
                 final DomainInfo.DomainState ps = domain.getInfo().state;
                 final VirtualMachine.PowerState state = libvirtComputingResource.convertToPowerState(ps);
 
-                logger.debug("VM " + domain.getName() + ": powerstate = " + ps + "; vm state=" + state.toString());
+                logger.debug("VM " + domain.getName() + " - powerstate: " + ps + ", state: " + state.toString());
 
                 if (state == VirtualMachine.PowerState.PowerOff) {
                     try {
                         UnmanagedInstanceTO instance = getUnmanagedInstance(libvirtComputingResource, domain, conn);
                         unmanagedInstances.put(instance.getName(), instance);
                     } catch (Exception e) {
-                        logger.error("Error while fetching instance details", e);
+                        logger.error("Couldn't fetch VM " + domain.getName() + " details, due to: " + e.getMessage(), e);
                     }
                 }
                 domain.free();

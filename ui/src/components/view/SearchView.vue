@@ -493,6 +493,18 @@ export default {
         promises.push(await this.fetchDiskOfferings(searchKeyword))
       }
 
+      if (arrayField.includes('serviceofferingid')) {
+        serviceOfferingIndex = this.fields.findIndex(item => item.name === 'serviceofferingid')
+        this.fields[serviceOfferingIndex].loading = true
+        promises.push(await this.fetchServiceOfferings(searchKeyword))
+      }
+
+      if (arrayField.includes('diskofferingid')) {
+        diskOfferingIndex = this.fields.findIndex(item => item.name === 'diskofferingid')
+        this.fields[diskOfferingIndex].loading = true
+        promises.push(await this.fetchDiskOfferings(searchKeyword))
+      }
+
       Promise.all(promises).then(response => {
         if (typeIndex > -1) {
           const types = response.filter(item => item.type === 'type')
