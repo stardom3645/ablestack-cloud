@@ -885,13 +885,11 @@ public class DisasterRecoveryClusterUtil {
                     return null;
                 }
             }
-            LOGGER.info(sb.toString());
             JSONObject jObject = XML.toJSONObject(sb.toString());
             JSONObject response = (JSONObject) jObject.get("getdisasterrecoveryclusterlistresponse");
             List<GetDisasterRecoveryClusterListResponse> drList = new ArrayList<>();
             if (response.has("disasterrecoverycluster")) {
                 Object drObject = response.get("disasterrecoverycluster");
-                LOGGER.info(drObject.toString());
                 JSONArray drArray;
                 if (drObject instanceof JSONArray) {
                     drArray = (JSONArray) drObject;
@@ -955,7 +953,6 @@ public class DisasterRecoveryClusterUtil {
             String apiParams = buildParamsMold(command, params);
             String urlFinal = buildUrl(apiParams, region, apiKey, secretKey);
             URL url = new URL(urlFinal);
-            LOGGER.info(url);
             if (region.contains("https")) {
                 // SSL 인증서 에러 우회 처리
                 final SSLContext sslContext = SSLUtils.getSSLContext();
@@ -1031,7 +1028,6 @@ public class DisasterRecoveryClusterUtil {
             String apiParams = buildParamsMold(command, params);
             String urlFinal = buildUrl(apiParams, region, apiKey, secretKey);
             URL url = new URL(urlFinal);
-            LOGGER.info(url);
             if (region.contains("https")) {
                 // SSL 인증서 에러 우회 처리
                 final SSLContext sslContext = SSLUtils.getSSLContext();
@@ -1147,7 +1143,6 @@ public class DisasterRecoveryClusterUtil {
                 }
             }
             JSONObject jObject = XML.toJSONObject(sb.toString());
-            LOGGER.info(sb.toString());
             JSONObject response = (JSONObject) jObject.get("deletedisasterrecoveryclusterresponse");
             return response.get("jobid").toString();
         } catch (Exception e) {
