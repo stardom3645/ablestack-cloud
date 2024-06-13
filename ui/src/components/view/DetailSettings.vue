@@ -294,8 +294,8 @@ export default {
           details = json.updatevirtualmachineresponse.virtualmachine.details
         } else if (this.resourceType === 'Template' && json.updatetemplateresponse.template.details) {
           details = json.updatetemplateresponse.template.details
-        } else if (this.resourceType === 'DisasterRecoveryCluster' && json.updatedisasterreocveryclusterresponse.disasterrecoverycluster.details) {
-          details = json.updatedisasterreocveryclusterresponse.disasterrecoverycluster.details
+        } else if (this.resourceType === 'DisasterRecoveryCluster' && json.updatedisasterrecoveryclusterresponse.disasterrecoverycluster.details) {
+          details = json.updatedisasterrecoveryclusterresponse.disasterrecoverycluster.details
         }
         this.details = Object.keys(details).map(k => {
           return { name: k, value: details[k], edit: false }
@@ -348,7 +348,8 @@ export default {
     hasSettingUpdatePermission () {
       return (
         (this.resourceType === 'Template' && 'updateTemplate' in this.$store.getters.apis) ||
-        (this.resourceType === 'UserVm' && 'updateVirtualMachine' in this.$store.getters.apis)
+        (this.resourceType === 'UserVm' && 'updateVirtualMachine' in this.$store.getters.apis) ||
+        (this.resourceType === 'DisasterRecoveryCluster' && 'updateDisasterRecoveryCluster' in this.$store.getters.apis)
       )
     }
   }

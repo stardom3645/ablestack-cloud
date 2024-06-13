@@ -54,19 +54,25 @@
         </a-form-item>
         <a-form-item name="apikey" ref="apikey" :label="$t('label.apikey')">
           <a-input
-            :placeholder="temp"
+            :placeholder="'temp'"
             v-model:value="form.apikey"
           />
         </a-form-item>
         <a-form-item name="secretkey" ref="secretkey" :label="$t('label.secret.key')">
           <a-input
-            :placeholder="temp"
+            :placeholder="'temp'"
             v-model:value="form.secretkey"
           />
         </a-form-item>
+        <a-form-item name="glueip" ref="glueip" :label="'Glue IP'">
+        <a-input
+          :placeholder="'temp'"
+          v-model:value="form.glueip"
+        />
+      </a-form-item>
         <a-form-item name="file" ref="file" :label="$t('label.add.disaster.recovery.cluster.info.glue.pri.key')">
           <a-textarea
-            :placeholder="temp"
+            :placeholder="'temp'"
             v-model:value="form.file"
           ></a-textarea>
         </a-form-item>
@@ -88,7 +94,7 @@
       </div>
 
       <div :span="24" class="action-button">
-        <a-button @click="() => $emit('close-action')">{{ $t('label.cancel') }}</a-button>
+        <a-button @click="closeModals">{{ $t('label.cancel') }}</a-button>
         <a-button @click="testConnCode" :disabled="buttonDisabled" v-if="!testConnResult" type="primary">{{ $t('label.disaster.recovery.cluster.start.connection.test.description') }}</a-button>
         <a-button @click="handleSubmit" :disabled="!buttonDisabled" v-if="testConnResult" ref="submit" type="primary">{{ $t('label.ok') }}</a-button>
       </div>
@@ -103,6 +109,7 @@ import { api } from '@/api'
 import DedicateDomain from '../../components/view/DedicateDomain'
 import ResourceIcon from '@/components/view/ResourceIcon'
 import TooltipLabel from '@/components/widgets/TooltipLabel.vue'
+import eventBus from '@/config/eventBus'
 import { Spin, Alert } from 'ant-design-vue'
 
 export default {
@@ -173,6 +180,7 @@ export default {
         url: [{ required: true, message: this.$t('label.required') }],
         apikey: [{ required: true, message: this.$t('label.required') }],
         secretkey: [{ required: true, message: this.$t('label.required') }],
+        glueip: [{ required: true, message: this.$t('message.error.required.input') }],
         file: [{ required: true, message: this.$t('message.error.required.input') }]
       })
     },
@@ -208,7 +216,6 @@ export default {
           drclusterapikey: values.apikey,
           drclustersecretkey: values.secretkey
         }
-        console.log(params)
         api('connectivityTestsDisasterRecovery', params).then(json => {
           this.testConnResult = json.connectivitytestsdisasterrecoveryresponse
           if (this.testConnResult === false) {
@@ -227,7 +234,6 @@ export default {
             description: (error.response && error.response.headers && error.response.headers['x-description']) || error.message
           })
         })
-        this.closeAction()
       })
     },
     handleKeyPress (event) {
@@ -241,39 +247,56 @@ export default {
     handleSubmit (e) {
       e.preventDefault()
       if (this.loading) return
-      this.formRef.value.validate().then(() => {
-        const values = toRaw(this.form)
-        this.loading = true
-        const params = {
-          name: values.name,
-          description: values.displaytext,
-          drclusterurl: values.url,
-          drclusterapikey: values.apikey,
-          drclustersecretkey: values.secretkey,
-          privatekey: '',
-          drclustertype: 'secondary'
-        }
-        api('createDisasterRecoveryCluster', params).then(json => {
-          this.result = json.createdisasterrecoveryclusterresponse
-          console.log(this.result)
-          this.$emit('refresh-data')
-        }).catch(error => {
-          this.showCode = !this.showCode
-          this.buttonDisabled = false
-          this.$notification.error({
-            message: this.$t('message.request.failed'),
-            description: (error.response && error.response.headers && error.response.headers['x-description']) || error.message
+      this.formRef.value
+        .validate()
+        .then(() => {
+          const values = toRaw(this.form)
+          this.loading = true
+          const params = {
+            name: values.name,
+            description: values.displaytext,
+            drclusterurl: values.url,
+            drclusterapikey: values.apikey,
+            drclustersecretkey: values.secretkey,
+            drclusterprivatekey: values.file,
+            drclusterglueipaddress: values.glueip,
+            drclustertype: 'secondary'
+          }
+          api('createDisasterRecoveryCluster', params).then(json => {
+            const jobId = json.createdisasterrecoveryclusterresponse.jobid
+            this.$pollJob({
+              jobId,
+              title: this.$t('label.add.disaster.recovery.cluster'),
+              description: values.name,
+              successMethod: () => {
+                this.$notification.success({
+                  message: this.$t('message.success.add.disaster.recovery.cluster'),
+                  duration: 0
+                })
+                eventBus.emit('dr-refresh-data')
+              },
+              loadingMessage: `${this.$t('label.add.disaster.recovery.cluster')} ${values.name} ${this.$t('label.in.progress')}`,
+              catchMessage: this.$t('error.fetching.async.job.result'),
+              catchMethod: () => {
+                eventBus.emit('dr-refresh-data')
+              }
+            })
+            eventBus.emit('dr-refresh-data')
+            this.closeModals()
+          }).finally(() => {
+            this.loading = false
           })
+        }).catch(error => {
+          this.formRef.value.scrollToField(error.errorFields[0].name)
         })
-        this.closeAction()
-      }).catch(error => {
-        this.formRef.value.scrollToField(error.errorFields[0].name)
-      })
     },
     returnPlaceholder (field) {
       this.params.find(i => {
         if (i.name === field) this.placeholder[field] = i.description
       })
+    },
+    closeModals () {
+      this.$emit('close-action')
     }
   },
   mounted () {

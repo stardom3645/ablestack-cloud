@@ -81,9 +81,7 @@ CREATE TABLE IF NOT EXISTS `disaster_recovery_cluster` (
     `dr_cluster_type`        varchar(255)    NOT NULL,
     `dr_cluster_status`      varchar(255)    NOT NULL,
     `mirroring_agent_status` varchar(255)    NOT NULL,
-    `api_key`                varchar(255)    NOT NULL,
-    `secret_key`             varchar(255)    NOT NULL,
-    `private_key`            varchar(8191)   NULL,
+    `glue_ip_address`        varchar(255)    NULL,
     `created`                datetime        NOT NULL COMMENT 'date created',
     `removed`                datetime        NULL COMMENT 'date removed',
     PRIMARY KEY (`id`),
@@ -111,7 +109,6 @@ CREATE TABLE IF NOT EXISTS `disaster_recovery_cluster_details` (
     `dr_cluster_id` bigint unsigned NOT NULL COMMENT 'disaster_recovery_cluster id',
     `name` varchar(255) NOT NULL,
     `value` varchar(5120) NOT NULL,
-    `display` tinyint(1) DEFAULT 1 NOT NULL COMMENT 'True if the detail can be displayed to the end user',
     PRIMARY KEY (`id`),
     CONSTRAINT `fk_disaster_recovery_cluster_details__dr_cluster_id` FOREIGN KEY (`dr_cluster_id`) REFERENCES `disaster_recovery_cluster` (`id`) ON DELETE CASCADE
     ) ENGINE=InnoDB CHARSET=utf8mb3;

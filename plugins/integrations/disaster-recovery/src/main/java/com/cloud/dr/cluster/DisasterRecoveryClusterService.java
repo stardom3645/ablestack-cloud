@@ -16,12 +16,15 @@
 // under the License.
 package com.cloud.dr.cluster;
 
-// import java.io.File;
-
 import org.apache.cloudstack.api.command.admin.dr.ConnectivityTestsDisasterRecoveryClusterCmd;
 import org.apache.cloudstack.api.command.admin.dr.GetDisasterRecoveryClusterListCmd;
 import org.apache.cloudstack.api.command.admin.dr.UpdateDisasterRecoveryClusterCmd;
 import org.apache.cloudstack.api.command.admin.dr.CreateDisasterRecoveryClusterCmd;
+import org.apache.cloudstack.api.command.admin.dr.DeleteDisasterRecoveryClusterCmd;
+import org.apache.cloudstack.api.command.admin.dr.EnableDisasterRecoveryClusterCmd;
+import org.apache.cloudstack.api.command.admin.dr.DisableDisasterRecoveryClusterCmd;
+import org.apache.cloudstack.api.command.admin.dr.PromoteDisasterRecoveryClusterCmd;
+import org.apache.cloudstack.api.command.admin.dr.DemoteDisasterRecoveryClusterCmd;
 import org.apache.cloudstack.api.command.admin.glue.ListScvmIpAddressCmd;
 import org.apache.cloudstack.api.response.ListResponse;
 import org.apache.cloudstack.api.response.ScvmIpAddressResponse;
@@ -50,8 +53,17 @@ public interface DisasterRecoveryClusterService extends PluggableService, Config
 
     DisasterRecoveryCluster createDisasterRecoveryCluster(CreateDisasterRecoveryClusterCmd cmd) throws CloudRuntimeException;
 
-    // boolean setupDisasterRecoveryCluster(long clusterId, File privateKey) throws CloudRuntimeException;
     boolean setupDisasterRecoveryCluster(long clusterId) throws CloudRuntimeException;
+
+    boolean deleteDisasterRecoveryCluster(DeleteDisasterRecoveryClusterCmd cmd) throws CloudRuntimeException;
+
+    boolean enableDisasterRecoveryCluster(EnableDisasterRecoveryClusterCmd cmd) throws CloudRuntimeException;
+
+    boolean disableDisasterRecoveryCluster(DisableDisasterRecoveryClusterCmd cmd) throws CloudRuntimeException;
+
+    boolean promoteDisasterRecoveryCluster(PromoteDisasterRecoveryClusterCmd cmd) throws CloudRuntimeException;
+
+    boolean demoteDisasterRecoveryCluster(DemoteDisasterRecoveryClusterCmd cmd) throws CloudRuntimeException;
 
     GetDisasterRecoveryClusterListResponse createDisasterRecoveryClusterResponse(long clusterId);
 

@@ -189,12 +189,16 @@ export default {
       api('getDisasterRecoveryClusterList', { id: this.selectedClusterId, drclustertype: 'secondary' }).then(json => {
         const response = json.getdisasterrecoveryclusterlistresponse
         const clusters = response ? response.disasterrecoverycluster : null
+
         if (clusters && clusters.length > 0) {
           const cluster = clusters[0]
+
           this.secDrClusterOfferings = cluster.serviceofferingdetails || []
           this.form.secDrClusterOfferings = this.secDrClusterOfferings.length > 0 ? this.secDrClusterOfferings[0].name : ''
+
           this.secDrClusterNetworkList = cluster.network || []
           this.form.secDrClusterNetworkList = this.secDrClusterNetworkList.length > 0 ? this.secDrClusterNetworkList[0].name : ''
+
           if (this.secDrClusterOfferings.length === 0 && this.secDrClusterNetworkList.length === 0) {
             console.error('No service offering or network details available')
             this.resetSelection() // Reset selections in case of missing data
@@ -299,6 +303,9 @@ export default {
           drcluster: values.drCluster,
           secdrclusterofferings: values.secDrClusterOfferings,
           secdrclusternetworklist: values.secDrClusterNetworkList,
+          domainname: store.getters.project && store.getters.project.id ? null : store.getters.userInfo.domainname,
+          account: store.getters.project && store.getters.project.id ? null : store.getters.userInfo.account,
+          accountid: store.getters.project && store.getters.project.id ? null : store.getters.userInfo.accountid
         }
         console.log(params)
         this.loading = false

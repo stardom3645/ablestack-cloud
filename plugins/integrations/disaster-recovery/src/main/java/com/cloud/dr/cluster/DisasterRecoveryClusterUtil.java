@@ -44,6 +44,7 @@ import javax.net.ssl.TrustManager;
 
 import org.apache.cloudstack.api.response.NetworkResponse;
 import org.apache.cloudstack.api.response.ServiceOfferingResponse;
+import org.apache.cloudstack.api.response.dr.cluster.GetDisasterRecoveryClusterListResponse;
 import org.apache.cloudstack.utils.security.SSLUtils;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.logging.log4j.Logger;
@@ -95,12 +96,10 @@ public class DisasterRecoveryClusterUtil {
             connection.setDoOutput(true);
             connection.setRequestMethod(method);
             connection.setConnectTimeout(30000);
-            connection.setReadTimeout(600000);
+            connection.setReadTimeout(180000);
             connection.setRequestProperty("Accept", "application/vnd.ceph.api.v1.0+json");
             connection.setRequestProperty("Authorization", "application/vnd.ceph.api.v1.0+json");
             connection.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
-            LOGGER.info("connection.getResponseCode():::::::::::::::::::::::::::::::");
-            LOGGER.info(connection.getResponseCode());
             if (connection.getResponseCode() == 200) {
                 BufferedReader br = new BufferedReader(new InputStreamReader(connection.getInputStream(), "UTF-8"));
                 sb = new StringBuffer();
@@ -110,8 +109,6 @@ public class DisasterRecoveryClusterUtil {
                 JsonParser jParser = new JsonParser();
                 JsonObject jObject = (JsonObject)jParser.parse(sb.toString());
                 String health = jObject.get("health").toString();
-                LOGGER.info("health():::::::::::::::::::::::::::::::");
-                LOGGER.info(health);
                 return health;
             } else {
                 String msg = "Failed to request glue status API. response code : " + connection.getResponseCode();
@@ -149,7 +146,7 @@ public class DisasterRecoveryClusterUtil {
             connection.setDoOutput(true);
             connection.setRequestMethod(method);
             connection.setConnectTimeout(30000);
-            connection.setReadTimeout(600000);
+            connection.setReadTimeout(180000);
             connection.setRequestProperty("Accept", "application/vnd.ceph.api.v1.0+json");
             connection.setRequestProperty("Authorization", "application/vnd.ceph.api.v1.0+json");
             connection.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
@@ -164,9 +161,15 @@ public class DisasterRecoveryClusterUtil {
                 String daemonHealth = jObject.get("daemon_health").toString();
                 return daemonHealth;
             } else {
-                String msg = "Failed to request glue mirror status API. response code : " + connection.getResponseCode();
-                LOGGER.error(msg);
-                return null;
+                // mirror pool 비활성화된 경우 처리
+                if (connection.getResponseCode() == 500) {
+                    String daemonHealth = "DISABLED";
+                    return daemonHealth;
+                } else {
+                    String msg = "Failed to request glue mirror status API. response code : " + connection.getResponseCode();
+                    LOGGER.error(msg);
+                    return null;
+                }
             }
         } catch (Exception e) {
             LOGGER.error(String.format("Glue API endpoint not available"), e);
@@ -198,7 +201,7 @@ public class DisasterRecoveryClusterUtil {
             connection.setDoOutput(true);
             connection.setRequestMethod(method);
             connection.setConnectTimeout(30000);
-            connection.setReadTimeout(600000);
+            connection.setReadTimeout(180000);
             connection.setRequestProperty("Accept", "application/vnd.ceph.api.v1.0+json");
             connection.setRequestProperty("Authorization", "application/vnd.ceph.api.v1.0+json");
             connection.setRequestProperty("Connection","Keep-Alive");
@@ -212,11 +215,7 @@ public class DisasterRecoveryClusterUtil {
             }
             addFilePart("privateKeyFile", privateKey);
             writer.append("--" + boundary + "--").append(LINE_FEED);
-            LOGGER.info("writer.toString()");
-            LOGGER.info(writer.toString());
             writer.close();
-            LOGGER.info("outputStream.toString()");
-            LOGGER.info(outputStream.toString());
             if (connection.getResponseCode() == 200) {
                 BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
                 String inputLine;
@@ -224,8 +223,6 @@ public class DisasterRecoveryClusterUtil {
                 while ((inputLine = in.readLine()) != null) {
                     response.append(inputLine);
                 }
-                LOGGER.info("glueMirrorSetupAPI Success::::::::::::::::::::");
-                LOGGER.info(response.toString());
                 in.close();
                 return true;
             } else {
@@ -235,8 +232,6 @@ public class DisasterRecoveryClusterUtil {
                 while ((inputLine = in.readLine()) != null) {
                     response.append(inputLine);
                 }
-                LOGGER.info("glueMirrorSetupAPI Fail::::::::::::::::::::");
-                LOGGER.info(response.toString());
                 in.close();
                 String msg = "Failed to request glue mirror setup API. response code : " + connection.getResponseCode();
                 LOGGER.error(msg);
@@ -260,33 +255,309 @@ public class DisasterRecoveryClusterUtil {
      *  host(string), privateKeyFile(file), mirrorPool(string)
      * @return true = 200, 이외 코드는 false 처리
      */
-    protected static boolean glueMirrorRemoveAPI(String region, String subUrl, String method, Map<String, String> params) {
+    protected static boolean glueMirrorDeleteAPI(String region, String subUrl, String method, Map<String, String> params, File privateKey) {
         try {
-            String readLine = null;
-            StringBuffer sb = null;
             // SSL 인증서 에러 우회 처리
             final SSLContext sslContext = SSLUtils.getSSLContext();
             sslContext.init(null, new TrustManager[]{new TrustAllManager()}, new SecureRandom());
             URL url = new URL(region + subUrl);
             HttpsURLConnection connection = (HttpsURLConnection)url.openConnection();
             connection.setSSLSocketFactory(sslContext.getSocketFactory());
+            connection.setDoInput(true);
             connection.setDoOutput(true);
             connection.setRequestMethod(method);
             connection.setConnectTimeout(30000);
-            connection.setReadTimeout(600000);
+            connection.setReadTimeout(180000);
             connection.setRequestProperty("Accept", "application/vnd.ceph.api.v1.0+json");
             connection.setRequestProperty("Authorization", "application/vnd.ceph.api.v1.0+json");
-            connection.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
-            // parameter 추가 시 사용 예정
-            // String apiParams = buildParamsGlues(params);
-            // OutputStream os = connection.getOutputStream();
-            // os.write(apiParams.getBytes("UTF-8"));
-            // os.flush();
-            // os.close();
+            connection.setRequestProperty("Connection","Keep-Alive");
+            connection.setRequestProperty("Content-type", "multipart/form-data;charset=" + charset + ";boundary=" + boundary);
+            outputStream = connection.getOutputStream();
+            writer = new PrintWriter(new OutputStreamWriter(outputStream, charset), true);
+            for(Map.Entry<String, String> param : params.entrySet()){
+                String key = param.getKey();
+                String value = param.getValue();
+                addTextPart(key, value);
+            }
+            addFilePart("privateKeyFile", privateKey);
+            writer.append("--" + boundary + "--").append(LINE_FEED);
+            writer.close();
             if (connection.getResponseCode() == 200) {
+                BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+                String inputLine;
+                StringBuffer response = new StringBuffer();
+                while ((inputLine = in.readLine()) != null) {
+                    response.append(inputLine);
+                }
+                in.close();
                 return true;
             } else {
-                String msg = "Failed to request glue mirror remove API. response code : " + connection.getResponseCode();
+                BufferedReader in = new BufferedReader(new InputStreamReader(connection.getErrorStream()));
+                String inputLine;
+                StringBuffer response = new StringBuffer();
+                while ((inputLine = in.readLine()) != null) {
+                    response.append(inputLine);
+                }
+                in.close();
+                String msg = "Failed to request glue mirror delete API. response code : " + connection.getResponseCode();
+                LOGGER.error(msg);
+                return false;
+            }
+        } catch (Exception e) {
+            LOGGER.error(String.format("Glue API endpoint not available"), e);
+            return false;
+        }
+    }
+
+    /**
+     * Glue 미러링 클러스터 활성화
+     * @param region
+     *  https://<IP>:8080/api/v1
+     * @param subUrl
+     *  /mirror/mirrorPool(string)
+     * @param method
+     *  POST
+     * @param parameter
+     *  localClusterName("local"), remoteClusterName("remote"), host(<scvmIP>), privateKeyFile(<scvmKey>), mirrorPool("rbd")
+     * @return true = 200, 이외 코드는 false 처리
+     */
+    protected static boolean glueMirrorEnableAPI(String region, String subUrl, String method, Map<String, String> params, File privateKey) {
+        try {
+            // SSL 인증서 에러 우회 처리
+            final SSLContext sslContext = SSLUtils.getSSLContext();
+            sslContext.init(null, new TrustManager[]{new TrustAllManager()}, new SecureRandom());
+            URL url = new URL(region + subUrl);
+            HttpsURLConnection connection = (HttpsURLConnection)url.openConnection();
+            connection.setSSLSocketFactory(sslContext.getSocketFactory());
+            connection.setDoInput(true);
+            connection.setDoOutput(true);
+            connection.setRequestMethod(method);
+            connection.setConnectTimeout(30000);
+            connection.setReadTimeout(180000);
+            connection.setRequestProperty("Accept", "application/vnd.ceph.api.v1.0+json");
+            connection.setRequestProperty("Authorization", "application/vnd.ceph.api.v1.0+json");
+            connection.setRequestProperty("Connection","Keep-Alive");
+            connection.setRequestProperty("Content-type", "multipart/form-data;charset=" + charset + ";boundary=" + boundary);
+            outputStream = connection.getOutputStream();
+            writer = new PrintWriter(new OutputStreamWriter(outputStream, charset), true);
+            for(Map.Entry<String, String> param : params.entrySet()){
+                String key = param.getKey();
+                String value = param.getValue();
+                addTextPart(key, value);
+            }
+            addFilePart("privateKeyFile", privateKey);
+            writer.append("--" + boundary + "--").append(LINE_FEED);
+            writer.close();
+            if (connection.getResponseCode() == 200) {
+                BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+                String inputLine;
+                StringBuffer response = new StringBuffer();
+                while ((inputLine = in.readLine()) != null) {
+                    response.append(inputLine);
+                }
+                in.close();
+                return true;
+            } else {
+                BufferedReader in = new BufferedReader(new InputStreamReader(connection.getErrorStream()));
+                String inputLine;
+                StringBuffer response = new StringBuffer();
+                while ((inputLine = in.readLine()) != null) {
+                    response.append(inputLine);
+                }
+                in.close();
+                String msg = "Failed to request glue mirror enable API. response code : " + connection.getResponseCode();
+                LOGGER.error(msg);
+                return false;
+            }
+        } catch (Exception e) {
+            LOGGER.error(String.format("Glue API endpoint not available"), e);
+            return false;
+        }
+    }
+
+    /**
+     * Glue 미러링 클러스터 비활성화
+     * @param region
+     *  https://<IP>:8080/api/v1
+     * @param subUrl
+     *  /mirror/mirrorPool(string)
+     * @param method
+     *  DELETE
+     * @param parameter
+     *  host(string), privateKeyFile(file), mirrorPool(string)
+     * @return true = 200, 이외 코드는 false 처리
+     */
+    protected static boolean glueMirrorDisableAPI(String region, String subUrl, String method, Map<String, String> params, File privateKey) {
+        try {
+            // SSL 인증서 에러 우회 처리
+            final SSLContext sslContext = SSLUtils.getSSLContext();
+            sslContext.init(null, new TrustManager[]{new TrustAllManager()}, new SecureRandom());
+            URL url = new URL(region + subUrl);
+            HttpsURLConnection connection = (HttpsURLConnection)url.openConnection();
+            connection.setSSLSocketFactory(sslContext.getSocketFactory());
+            connection.setDoInput(true);
+            connection.setDoOutput(true);
+            connection.setRequestMethod(method);
+            connection.setConnectTimeout(30000);
+            connection.setReadTimeout(180000);
+            connection.setRequestProperty("Accept", "application/vnd.ceph.api.v1.0+json");
+            connection.setRequestProperty("Authorization", "application/vnd.ceph.api.v1.0+json");
+            connection.setRequestProperty("Connection","Keep-Alive");
+            connection.setRequestProperty("Content-type", "multipart/form-data;charset=" + charset + ";boundary=" + boundary);
+            outputStream = connection.getOutputStream();
+            writer = new PrintWriter(new OutputStreamWriter(outputStream, charset), true);
+            for(Map.Entry<String, String> param : params.entrySet()){
+                String key = param.getKey();
+                String value = param.getValue();
+                addTextPart(key, value);
+            }
+            addFilePart("privateKeyFile", privateKey);
+            writer.append("--" + boundary + "--").append(LINE_FEED);
+            writer.close();
+            if (connection.getResponseCode() == 200) {
+                BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+                String inputLine;
+                StringBuffer response = new StringBuffer();
+                while ((inputLine = in.readLine()) != null) {
+                    response.append(inputLine);
+                }
+                in.close();
+                return true;
+            } else {
+                BufferedReader in = new BufferedReader(new InputStreamReader(connection.getErrorStream()));
+                String inputLine;
+                StringBuffer response = new StringBuffer();
+                while ((inputLine = in.readLine()) != null) {
+                    response.append(inputLine);
+                }
+                in.close();
+                String msg = "Failed to request glue mirror disable API. response code : " + connection.getResponseCode();
+                LOGGER.error(msg);
+                return false;
+            }
+        } catch (Exception e) {
+            LOGGER.error(String.format("Glue API endpoint not available"), e);
+            return false;
+        }
+    }
+
+    /**
+     * Glue 미러링 이미지 프로모트
+     * @param region
+     *  https://<IP>:8080/api/v1
+     * @param subUrl
+     *  /mirror/image/promote/<mirrorPool>/<imageName>
+     * @param method
+     *  POST
+     * @return true = 200, 이외 코드는 false 처리
+     */
+    protected static boolean glueImageMirrorPromoteAPI(String region, String subUrl, String method, Map<String, String> params) {
+        try {
+            // SSL 인증서 에러 우회 처리
+            final SSLContext sslContext = SSLUtils.getSSLContext();
+            sslContext.init(null, new TrustManager[]{new TrustAllManager()}, new SecureRandom());
+            URL url = new URL(region + subUrl);
+            HttpsURLConnection connection = (HttpsURLConnection)url.openConnection();
+            connection.setSSLSocketFactory(sslContext.getSocketFactory());
+            connection.setDoInput(true);
+            connection.setDoOutput(true);
+            connection.setRequestMethod(method);
+            connection.setConnectTimeout(30000);
+            connection.setReadTimeout(180000);
+            connection.setRequestProperty("Accept", "application/vnd.ceph.api.v1.0+json");
+            connection.setRequestProperty("Authorization", "application/vnd.ceph.api.v1.0+json");
+            connection.setRequestProperty("Connection","Keep-Alive");
+            connection.setRequestProperty("Content-type", "multipart/form-data;charset=" + charset + ";boundary=" + boundary);
+            outputStream = connection.getOutputStream();
+            writer = new PrintWriter(new OutputStreamWriter(outputStream, charset), true);
+            for(Map.Entry<String, String> param : params.entrySet()){
+                String key = param.getKey();
+                String value = param.getValue();
+                addTextPart(key, value);
+            }
+            writer.append("--" + boundary + "--").append(LINE_FEED);
+            writer.close();
+            if (connection.getResponseCode() == 200) {
+                BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+                String inputLine;
+                StringBuffer response = new StringBuffer();
+                while ((inputLine = in.readLine()) != null) {
+                    response.append(inputLine);
+                }
+                in.close();
+                return true;
+            } else {
+                BufferedReader in = new BufferedReader(new InputStreamReader(connection.getErrorStream()));
+                String inputLine;
+                StringBuffer response = new StringBuffer();
+                while ((inputLine = in.readLine()) != null) {
+                    response.append(inputLine);
+                }
+                in.close();
+                String msg = "Failed to request glue mirror image promote API. response code : " + connection.getResponseCode();
+                LOGGER.error(msg);
+                return false;
+            }
+        } catch (Exception e) {
+            LOGGER.error(String.format("Glue API endpoint not available"), e);
+            return false;
+        }
+    }
+
+    /**
+     * Glue 미러링 이미지 디모트
+     * @param region
+     *  https://<IP>:8080/api/v1
+     * @param subUrl
+     *  /mirror/image/demote/<mirrorPool>/<imageName>
+     * @param method
+     *  DELETE
+     * @return true = 200, 이외 코드는 false 처리
+     */
+    protected static boolean glueImageMirrorDemoteAPI(String region, String subUrl, String method, Map<String, String> params) {
+        try {
+            // SSL 인증서 에러 우회 처리
+            final SSLContext sslContext = SSLUtils.getSSLContext();
+            sslContext.init(null, new TrustManager[]{new TrustAllManager()}, new SecureRandom());
+            URL url = new URL(region + subUrl);
+            HttpsURLConnection connection = (HttpsURLConnection)url.openConnection();
+            connection.setSSLSocketFactory(sslContext.getSocketFactory());
+            connection.setDoInput(true);
+            connection.setDoOutput(true);
+            connection.setRequestMethod(method);
+            connection.setConnectTimeout(30000);
+            connection.setReadTimeout(180000);
+            connection.setRequestProperty("Accept", "application/vnd.ceph.api.v1.0+json");
+            connection.setRequestProperty("Authorization", "application/vnd.ceph.api.v1.0+json");
+            connection.setRequestProperty("Connection","Keep-Alive");
+            connection.setRequestProperty("Content-type", "multipart/form-data;charset=" + charset + ";boundary=" + boundary);
+            outputStream = connection.getOutputStream();
+            writer = new PrintWriter(new OutputStreamWriter(outputStream, charset), true);
+            for(Map.Entry<String, String> param : params.entrySet()){
+                String key = param.getKey();
+                String value = param.getValue();
+                addTextPart(key, value);
+            }
+            writer.append("--" + boundary + "--").append(LINE_FEED);
+            writer.close();
+            if (connection.getResponseCode() == 200) {
+                BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+                String inputLine;
+                StringBuffer response = new StringBuffer();
+                while ((inputLine = in.readLine()) != null) {
+                    response.append(inputLine);
+                }
+                in.close();
+                return true;
+            } else {
+                BufferedReader in = new BufferedReader(new InputStreamReader(connection.getErrorStream()));
+                String inputLine;
+                StringBuffer response = new StringBuffer();
+                while ((inputLine = in.readLine()) != null) {
+                    response.append(inputLine);
+                }
+                in.close();
+                String msg = "Failed to request glue mirror image demote API. response code : " + connection.getResponseCode();
                 LOGGER.error(msg);
                 return false;
             }
@@ -322,7 +593,7 @@ public class DisasterRecoveryClusterUtil {
             connection.setDoOutput(true);
             connection.setRequestMethod(method);
             connection.setConnectTimeout(30000);
-            connection.setReadTimeout(600000);
+            connection.setReadTimeout(180000);
             connection.setRequestProperty("Accept", "application/vnd.ceph.api.v1.0+json");
             connection.setRequestProperty("Authorization", "application/vnd.ceph.api.v1.0+json");
             connection.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
@@ -336,7 +607,7 @@ public class DisasterRecoveryClusterUtil {
                 JsonObject jObject = (JsonObject)jParser.parse(sb.toString());
                 return jObject.toString();
             } else {
-                String msg = "Failed to request glue image mirror status API. response code : " + connection.getResponseCode();
+                String msg = "Failed to request list of mirrored snapshot API. response code : " + connection.getResponseCode();
                 LOGGER.error(msg);
                 return null;
             }
@@ -355,116 +626,53 @@ public class DisasterRecoveryClusterUtil {
      * @param method
      *  POST
      * @param parameter
-     *  interval(string), startTime(string)
+     *  mirrorPool(string), imageName(string), interval(string), startTime(string)
      * @return true = 200, 이외 코드는 false 처리
      */
     protected static boolean glueImageMirrorSetupAPI(String region, String subUrl, String method, Map<String, String> params) {
         try {
-            String readLine = null;
-            StringBuffer sb = null;
             // SSL 인증서 에러 우회 처리
             final SSLContext sslContext = SSLUtils.getSSLContext();
             sslContext.init(null, new TrustManager[]{new TrustAllManager()}, new SecureRandom());
             URL url = new URL(region + subUrl);
             HttpsURLConnection connection = (HttpsURLConnection)url.openConnection();
             connection.setSSLSocketFactory(sslContext.getSocketFactory());
+            connection.setDoInput(true);
             connection.setDoOutput(true);
             connection.setRequestMethod(method);
             connection.setConnectTimeout(30000);
-            connection.setReadTimeout(600000);
+            connection.setReadTimeout(180000);
             connection.setRequestProperty("Accept", "application/vnd.ceph.api.v1.0+json");
             connection.setRequestProperty("Authorization", "application/vnd.ceph.api.v1.0+json");
-            connection.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
-            // parameter 추가 시 사용 예정
-            // String apiParams = buildParamsGlues(params);
-            // OutputStream os = connection.getOutputStream();
-            // os.write(apiParams.getBytes("UTF-8"));
-            // os.flush();
-            // os.close();
-            if (connection.getResponseCode() == 200) {
-                return true;
-            } else {
-                String msg = "Failed to request glue image mirror setup API. response code : " + connection.getResponseCode();
-                LOGGER.error(msg);
-                return false;
+            connection.setRequestProperty("Connection","Keep-Alive");
+            connection.setRequestProperty("Content-type", "multipart/form-data;charset=" + charset + ";boundary=" + boundary);
+            outputStream = connection.getOutputStream();
+            writer = new PrintWriter(new OutputStreamWriter(outputStream, charset), true);
+            for(Map.Entry<String, String> param : params.entrySet()){
+                String key = param.getKey();
+                String value = param.getValue();
+                addTextPart(key, value);
             }
-        } catch (Exception e) {
-            LOGGER.error(String.format("Glue API endpoint not available"), e);
-            return false;
-        }
-    }
-
-    /**
-     * Glue 미러링 이미지 프로모트
-     * @param region
-     *  https://<IP>:8080/api/v1
-     * @param subUrl
-     *  /mirror/promote/<mirrorPool>/<imageName>
-     * @param method
-     *  POST
-     * @return true = 200, 이외 코드는 false 처리
-     */
-    protected static boolean glueImageMirrorPromoteAPI(String region, String subUrl, String method) {
-        try {
-            String readLine = null;
-            StringBuffer sb = null;
-            // SSL 인증서 에러 우회 처리
-            final SSLContext sslContext = SSLUtils.getSSLContext();
-            sslContext.init(null, new TrustManager[]{new TrustAllManager()}, new SecureRandom());
-            URL url = new URL(region + subUrl);
-            HttpsURLConnection connection = (HttpsURLConnection)url.openConnection();
-            connection.setSSLSocketFactory(sslContext.getSocketFactory());
-            connection.setDoOutput(true);
-            connection.setRequestMethod(method);
-            connection.setConnectTimeout(30000);
-            connection.setReadTimeout(600000);
-            connection.setRequestProperty("Accept", "application/vnd.ceph.api.v1.0+json");
-            connection.setRequestProperty("Authorization", "application/vnd.ceph.api.v1.0+json");
-            connection.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
+            writer.append("--" + boundary + "--").append(LINE_FEED);
+            writer.close();
             if (connection.getResponseCode() == 200) {
+                BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+                String inputLine;
+                StringBuffer response = new StringBuffer();
+                while ((inputLine = in.readLine()) != null) {
+                    response.append(inputLine);
+                }
+                in.close();
                 return true;
             } else {
-                String msg = "Failed to request glue image mirror promote API. response code : " + connection.getResponseCode();
-                LOGGER.error(msg);
-                return false;
-            }
-        } catch (Exception e) {
-            LOGGER.error(String.format("Glue API endpoint not available"), e);
-            return false;
-        }
-    }
-
-    /**
-     * Glue 미러링 이미지 디모트
-     * @param region
-     *  https://<IP>:8080/api/v1
-     * @param subUrl
-     *  /mirror/demote/<mirrorPool>/<imageName>
-     * @param method
-     *  DELETE
-     * @return true = 200, 이외 코드는 false 처리
-     */
-    protected static boolean glueImageMirrorDemoteAPI(String region, String subUrl, String method) {
-        try {
-            String readLine = null;
-            StringBuffer sb = null;
-            // SSL 인증서 에러 우회 처리
-            final SSLContext sslContext = SSLUtils.getSSLContext();
-            sslContext.init(null, new TrustManager[]{new TrustAllManager()}, new SecureRandom());
-            URL url = new URL(region + subUrl);
-            HttpsURLConnection connection = (HttpsURLConnection)url.openConnection();
-            connection.setSSLSocketFactory(sslContext.getSocketFactory());
-            connection.setDoOutput(true);
-            connection.setRequestMethod(method);
-            connection.setConnectTimeout(30000);
-            connection.setReadTimeout(600000);
-            connection.setRequestProperty("Accept", "application/vnd.ceph.api.v1.0+json");
-            connection.setRequestProperty("Authorization", "application/vnd.ceph.api.v1.0+json");
-            connection.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
-            if (connection.getResponseCode() == 200) {
-                return true;
-            } else {
-                String msg = "Failed to request glue image mirror demote API. response code : " + connection.getResponseCode();
+                BufferedReader in = new BufferedReader(new InputStreamReader(connection.getErrorStream()));
+                String inputLine;
+                StringBuffer response = new StringBuffer();
+                while ((inputLine = in.readLine()) != null) {
+                    response.append(inputLine);
+                }
+                in.close();
+                String msg = "Failed to request glue mirror image setup API. response code : " + connection.getResponseCode();
                 LOGGER.error(msg);
                 return false;
             }
@@ -573,7 +781,7 @@ public class DisasterRecoveryClusterUtil {
                 connection.setDoOutput(true);
                 connection.setRequestMethod(method);
                 connection.setConnectTimeout(5000);
-                connection.setReadTimeout(600000);
+                connection.setReadTimeout(180000);
                 connection.setRequestProperty("Accept", "application/json");
                 connection.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
                 if (connection.getResponseCode() == 200) {
@@ -592,7 +800,7 @@ public class DisasterRecoveryClusterUtil {
                 connection.setDoOutput(true);
                 connection.setRequestMethod(method);
                 connection.setConnectTimeout(5000);
-                connection.setReadTimeout(600000);
+                connection.setReadTimeout(180000);
                 connection.setRequestProperty("Accept", "application/json");
                 connection.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
                 if (connection.getResponseCode() == 200) {
@@ -611,6 +819,107 @@ public class DisasterRecoveryClusterUtil {
             JSONObject response = (JSONObject) jObject.get("listscvmipaddressresponse");
             JSONObject ipaddress = (JSONObject) response.get("scvmipaddress");
             return ipaddress.get("ipaddress").toString();
+        } catch (Exception e) {
+            LOGGER.error(String.format("Mold API endpoint not available"), e);
+            return null;
+        }
+    }
+
+    /**
+     * Mold getDisasterRecoveryClusterList API 요청
+     * @param region
+     *  <url>/client/api/
+     * @param command
+     *  getDisasterRecoveryClusterList
+     * @param method
+     *  GET
+     * @return true = 200, 이외 코드는 false 처리
+     */
+    protected static List moldGetDisasterRecoveryClusterListAPI(String region, String command, String method, String apiKey, String secretKey) {
+        try {
+            String readLine = null;
+            StringBuffer sb = null;
+            String apiParams = buildParamsMold(command, null);
+            String urlFinal = buildUrl(apiParams, region, apiKey, secretKey);
+            URL url = new URL(urlFinal);
+            if (region.contains("https")) {
+                // SSL 인증서 에러 우회 처리
+                final SSLContext sslContext = SSLUtils.getSSLContext();
+                sslContext.init(null, new TrustManager[]{new TrustAllManager()}, new SecureRandom());
+                HttpsURLConnection connection = (HttpsURLConnection)url.openConnection();
+                connection.setSSLSocketFactory(sslContext.getSocketFactory());
+                connection.setDoOutput(true);
+                connection.setRequestMethod(method);
+                connection.setConnectTimeout(5000);
+                connection.setReadTimeout(180000);
+                connection.setRequestProperty("Accept", "application/json");
+                connection.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
+                if (connection.getResponseCode() == 200) {
+                    BufferedReader br = new BufferedReader(new InputStreamReader(connection.getInputStream(), "UTF-8"));
+                    sb = new StringBuffer();
+                    while ((readLine = br.readLine()) != null) {
+                        sb.append(readLine);
+                    }
+                } else {
+                    String msg = "Failed to request mold API. response code : " + connection.getResponseCode() + " , request command : " + command;
+                    LOGGER.error(msg);
+                    return null;
+                }
+            } else {
+                HttpURLConnection connection = (HttpURLConnection)url.openConnection();
+                connection.setDoOutput(true);
+                connection.setRequestMethod(method);
+                connection.setConnectTimeout(5000);
+                connection.setReadTimeout(180000);
+                connection.setRequestProperty("Accept", "application/json");
+                connection.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
+                if (connection.getResponseCode() == 200) {
+                    BufferedReader br = new BufferedReader(new InputStreamReader(connection.getInputStream(), "UTF-8"));
+                    sb = new StringBuffer();
+                    while ((readLine = br.readLine()) != null) {
+                        sb.append(readLine);
+                    }
+                } else {
+                    String msg = "Failed to request mold API. response code : " + connection.getResponseCode() + " , request command : " + command;
+                    LOGGER.error(msg);
+                    return null;
+                }
+            }
+            LOGGER.info(sb.toString());
+            JSONObject jObject = XML.toJSONObject(sb.toString());
+            JSONObject response = (JSONObject) jObject.get("getdisasterrecoveryclusterlistresponse");
+            List<GetDisasterRecoveryClusterListResponse> drList = new ArrayList<>();
+            if (response.has("disasterrecoverycluster")) {
+                Object drObject = response.get("disasterrecoverycluster");
+                LOGGER.info(drObject.toString());
+                JSONArray drArray;
+                if (drObject instanceof JSONArray) {
+                    drArray = (JSONArray) drObject;
+                } else {
+                    drArray = new JSONArray();
+                    drArray.put(drObject);
+                }
+                for (int i = 0; i < drArray.length(); i++) {
+                    JSONObject drJSONObject = drArray.getJSONObject(i);
+                    GetDisasterRecoveryClusterListResponse drResponse = new GetDisasterRecoveryClusterListResponse();
+                    for (String key : drJSONObject.keySet()) {
+                        try {
+                            Field field = GetDisasterRecoveryClusterListResponse.class.getDeclaredField(key);
+                            field.setAccessible(true);
+                            Object value = getValue(drJSONObject, key, field.getType());
+                            if (value != null) {
+                                field.set(drResponse, value);
+                            }
+                        } catch (NoSuchFieldException e) {
+                            // System.err.println("Field not found: " + key);
+                        } catch (IllegalAccessException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                    drList.add(drResponse);
+                }
+            }
+            return drList;
         } catch (Exception e) {
             LOGGER.error(String.format("Mold API endpoint not available"), e);
             return null;
@@ -656,7 +965,7 @@ public class DisasterRecoveryClusterUtil {
                 connection.setDoOutput(true);
                 connection.setRequestMethod(method);
                 connection.setConnectTimeout(30000);
-                connection.setReadTimeout(600000);
+                connection.setReadTimeout(180000);
                 connection.setRequestProperty("Accept", "application/json");
                 connection.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
                 if (connection.getResponseCode() == 200) {
@@ -675,7 +984,7 @@ public class DisasterRecoveryClusterUtil {
                 connection.setDoOutput(true);
                 connection.setRequestMethod(method);
                 connection.setConnectTimeout(30000);
-                connection.setReadTimeout(600000);
+                connection.setReadTimeout(180000);
                 connection.setRequestProperty("Accept", "application/json");
                 connection.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
                 if (connection.getResponseCode() == 200) {
@@ -692,7 +1001,6 @@ public class DisasterRecoveryClusterUtil {
             }
             JSONObject jObject = XML.toJSONObject(sb.toString());
             JSONObject response = (JSONObject) jObject.get("createdisasterrecoveryclusterresponse");
-            LOGGER.info(response);
             return response.get("id").toString();
         } catch (Exception e) {
             LOGGER.error(String.format("Mold API endpoint not available"), e);
@@ -707,13 +1015,13 @@ public class DisasterRecoveryClusterUtil {
      * @param command
      *  updateDisasterRecoveryCluster
      * @param method
-     *  POST
+     *  GET
      * @param name
      *  primary cluster name
      * @param drClusterStatus
      *  primary cluster status
      * @param mirroringAgentStatus
-     *  primary cluster morroring agent status
+     *  primary cluster mirroring agent status
      * @return true = 200, 이외 코드는 false 처리
      */
     protected static String moldUpdateDisasterRecoveryClusterAPI(String region, String command, String method, String apiKey, String secretKey, Map<String, String> params) {
@@ -723,6 +1031,7 @@ public class DisasterRecoveryClusterUtil {
             String apiParams = buildParamsMold(command, params);
             String urlFinal = buildUrl(apiParams, region, apiKey, secretKey);
             URL url = new URL(urlFinal);
+            LOGGER.info(url);
             if (region.contains("https")) {
                 // SSL 인증서 에러 우회 처리
                 final SSLContext sslContext = SSLUtils.getSSLContext();
@@ -732,7 +1041,7 @@ public class DisasterRecoveryClusterUtil {
                 connection.setDoOutput(true);
                 connection.setRequestMethod(method);
                 connection.setConnectTimeout(30000);
-                connection.setReadTimeout(600000);
+                connection.setReadTimeout(180000);
                 connection.setRequestProperty("Accept", "application/json");
                 connection.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
                 if (connection.getResponseCode() == 200) {
@@ -751,7 +1060,7 @@ public class DisasterRecoveryClusterUtil {
                 connection.setDoOutput(true);
                 connection.setRequestMethod(method);
                 connection.setConnectTimeout(30000);
-                connection.setReadTimeout(600000);
+                connection.setReadTimeout(180000);
                 connection.setRequestProperty("Accept", "application/json");
                 connection.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
                 if (connection.getResponseCode() == 200) {
@@ -766,11 +1075,8 @@ public class DisasterRecoveryClusterUtil {
                     return null;
                 }
             }
-            LOGGER.info("updatedisasterrecoveryclusterresponse::::::::::::::");
-            LOGGER.info(sb.toString());
             JSONObject jObject = XML.toJSONObject(sb.toString());
             JSONObject response = (JSONObject) jObject.get("updatedisasterrecoveryclusterresponse");
-            LOGGER.info(response.toString());
             return response.get("disasterrecoverycluster").toString();
         } catch (Exception e) {
             LOGGER.error(String.format("Mold API endpoint not available"), e);
@@ -778,7 +1084,89 @@ public class DisasterRecoveryClusterUtil {
         }
     }
 
-    // 재해복구용 가상머신 생성 모달에서 DR Secondary 클러스터를 선택했을 때 컴퓨트 오퍼링과 네트워크 목록을 불러오는 함수
+    /**
+     * Mold deleteDisasterRecoveryCluster API 요청
+     * @param region
+     *  <url>/client/api/
+     * @param command
+     *  deleteDisasterRecoveryCluster
+     * @param method
+     *  GET
+     * @param id
+     *  primary cluster id
+     * @return true = 200, 이외 코드는 false 처리
+     */
+    protected static String moldDeleteDisasterRecoveryClusterAPI(String region, String command, String method, String apiKey, String secretKey, Map<String, String> params) {
+        try {
+            String readLine = null;
+            StringBuffer sb = null;
+            String apiParams = buildParamsMold(command, params);
+            String urlFinal = buildUrl(apiParams, region, apiKey, secretKey);
+            URL url = new URL(urlFinal);
+            if (region.contains("https")) {
+                // SSL 인증서 에러 우회 처리
+                final SSLContext sslContext = SSLUtils.getSSLContext();
+                sslContext.init(null, new TrustManager[]{new TrustAllManager()}, new SecureRandom());
+                HttpsURLConnection connection = (HttpsURLConnection)url.openConnection();
+                connection.setSSLSocketFactory(sslContext.getSocketFactory());
+                connection.setDoOutput(true);
+                connection.setRequestMethod(method);
+                connection.setConnectTimeout(30000);
+                connection.setReadTimeout(180000);
+                connection.setRequestProperty("Accept", "application/json");
+                connection.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
+                if (connection.getResponseCode() == 200) {
+                    BufferedReader br = new BufferedReader(new InputStreamReader(connection.getInputStream(), "UTF-8"));
+                    sb = new StringBuffer();
+                    while ((readLine = br.readLine()) != null) {
+                        sb.append(readLine);
+                    }
+                } else {
+                    String msg = "Failed to request mold API. response code : " + connection.getResponseCode();
+                    LOGGER.error(msg);
+                    return null;
+                }
+            } else {
+                HttpURLConnection connection = (HttpURLConnection)url.openConnection();
+                connection.setDoOutput(true);
+                connection.setRequestMethod(method);
+                connection.setConnectTimeout(30000);
+                connection.setReadTimeout(180000);
+                connection.setRequestProperty("Accept", "application/json");
+                connection.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
+                if (connection.getResponseCode() == 200) {
+                    BufferedReader br = new BufferedReader(new InputStreamReader(connection.getInputStream(), "UTF-8"));
+                    sb = new StringBuffer();
+                    while ((readLine = br.readLine()) != null) {
+                        sb.append(readLine);
+                    }
+                } else {
+                    String msg = "Failed to request mold API. response code : " + connection.getResponseCode();
+                    LOGGER.error(msg);
+                    return null;
+                }
+            }
+            JSONObject jObject = XML.toJSONObject(sb.toString());
+            LOGGER.info(sb.toString());
+            JSONObject response = (JSONObject) jObject.get("deletedisasterrecoveryclusterresponse");
+            return response.get("jobid").toString();
+        } catch (Exception e) {
+            LOGGER.error(String.format("Mold API endpoint not available"), e);
+            return null;
+        }
+    }
+
+    /**
+     * Mold listServiceOfferings, listNetworks API 요청
+     * 재해복구용 가상머신 생성 모달에서 DR Secondary 클러스터를 선택했을 때 컴퓨트 오퍼링과 네트워크 목록을 불러오는 함수
+     * @param region
+     *  <url>/client/api/
+     * @param command
+     *  listServiceOfferings or listNetworks
+     * @param method
+     *  GET
+     * @return true = 200, 이외 코드는 false 처리
+     */
     protected static List getSecDrClusterInfoList(String region, String command, String method, String apiKey, String secretKey) {
         try {
             String readLine = null;
@@ -795,7 +1183,7 @@ public class DisasterRecoveryClusterUtil {
                 connection.setDoOutput(true);
                 connection.setRequestMethod(method);
                 connection.setConnectTimeout(5000);
-                connection.setReadTimeout(600000);
+                connection.setReadTimeout(180000);
                 connection.setRequestProperty("Accept", "application/json");
                 connection.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
                 if (connection.getResponseCode() == 200) {
@@ -814,7 +1202,7 @@ public class DisasterRecoveryClusterUtil {
                 connection.setDoOutput(true);
                 connection.setRequestMethod(method);
                 connection.setConnectTimeout(5000);
-                connection.setReadTimeout(600000);
+                connection.setReadTimeout(180000);
                 connection.setRequestProperty("Accept", "application/json");
                 connection.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
                 if (connection.getResponseCode() == 200) {
@@ -856,7 +1244,7 @@ public class DisasterRecoveryClusterUtil {
                                     field.set(serviceOfferingResponse, value);
                                 }
                             } catch (NoSuchFieldException e) {
-//                                System.err.println("Field not found: " + key);
+                                // System.err.println("Field not found: " + key);
                             } catch (IllegalAccessException e) {
                                 e.printStackTrace();
                             }
@@ -909,6 +1297,12 @@ public class DisasterRecoveryClusterUtil {
         }
     }
 
+    /**
+     * Mold listServiceOfferings, listNetworks API 요청 시 사용
+     * @param JSONObject
+     * @param key
+     * @param fieldType
+     */
     private static Object getValue(JSONObject jsonObject, String key, Class<?> fieldType) {
         try {
             if (fieldType == String.class) {
@@ -954,9 +1348,10 @@ public class DisasterRecoveryClusterUtil {
         return paramString.toString();
     }
 
-    // Mold API 요청 최종 URL 생성
+    /**
+     * Mold API 요청 최종 URL 생성
+     */
     private static String buildUrl(String apiParams, String region, String apiKey, String secretKey) {
-
         String encodedApiKey;
         try {
             encodedApiKey = URLEncoder.encode(apiKey, "UTF-8");
@@ -997,7 +1392,9 @@ public class DisasterRecoveryClusterUtil {
         }
     }
 
-    // Mold Signature 생성
+    /**
+     * Mold Signature 생성
+     */
     private static String signRequest(String request, String key) {
         try {
             Mac mac = Mac.getInstance("HmacSHA256");

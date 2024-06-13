@@ -31,6 +31,7 @@ import org.apache.cloudstack.api.ResponseObject;
 import org.apache.cloudstack.api.ServerApiException;
 import org.apache.cloudstack.api.command.admin.AdminCmd;
 import org.apache.cloudstack.api.response.dr.cluster.GetDisasterRecoveryClusterListResponse;
+import org.apache.cloudstack.context.CallContext;
 
 import javax.inject.Inject;
 import java.util.Collection;
@@ -65,6 +66,10 @@ public class UpdateDisasterRecoveryClusterCmd extends BaseCmd implements AdminCm
     @Parameter(name = ApiConstants.DR_CLUSTER_URL, type = CommandType.STRING, description = "the url of the disaster recovery cluster")
     private String drClusterUrl;
 
+    @Parameter(name = ApiConstants.DR_CLUSTER_GLUE_IP_ADDRESS, type = CommandType.STRING, required = false,
+            description = "dr cluster glue ip address")
+    private String drClusterGlueIpAddress;
+
     @Parameter(name = ApiConstants.DR_CLUSTER_STATUS, type = CommandType.STRING,
             description = "the enabled or disabled dr cluster state of the disaster recovery")
     private String drClusterStatus;
@@ -95,6 +100,10 @@ public class UpdateDisasterRecoveryClusterCmd extends BaseCmd implements AdminCm
         return drClusterUrl;
     }
 
+    public String getDrClusterGlueIpAddress() {
+        return drClusterGlueIpAddress;
+    }
+
     public String getDrClusterStatus() {
         return drClusterStatus;
     }
@@ -119,7 +128,7 @@ public class UpdateDisasterRecoveryClusterCmd extends BaseCmd implements AdminCm
 
     @Override
     public long getEntityOwnerId() {
-        return 0;
+        return CallContext.current().getCallingAccount().getId();
     }
 
     /////////////////////////////////////////////////////

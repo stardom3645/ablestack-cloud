@@ -4316,5 +4316,15 @@
 "message.success.update.disaster.recovery.cluster": "Recovery cluster information has been updated.",
 "message.disaster.recovery.cluster.connection.test.update.description": "Perform a connection test with the cluster you want to update.",
 "message.dr.mirrored.vm.release": "Confirm whether you want to release mirroring.",
-"label.dr.release.mirroring": "Release mirroring"
+"label.dr.release.mirroring": "Release mirroring",
+"message.success.add.disaster.recovery.cluster": "Successfully added disaster recovery cluster",
+"label.drclusterglueipaddress": "cluster glue ip",
+"dr.create": "DR.CREATE",
+"dr.test.connect": "DR.TEST.CONNECT",
+"dr.delete": "DR.DELETE",
+"dr.update": "DR.UPDATE",
+"dr.enable": "DR.ENABLE",
+"dr.disable": "DR.DISABLE",
+"dr.promote": "DR.PROMOTE",
+"dr.demote": "DR.DEMOTE"
 }

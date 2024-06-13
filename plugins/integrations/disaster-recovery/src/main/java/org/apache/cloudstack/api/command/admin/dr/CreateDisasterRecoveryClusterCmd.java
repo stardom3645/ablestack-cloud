@@ -85,6 +85,10 @@ public class CreateDisasterRecoveryClusterCmd extends BaseAsyncCreateCmd {
             length = 16384)
     private String drClusterPrivateKey;
 
+    @Parameter(name = ApiConstants.DR_CLUSTER_GLUE_IP_ADDRESS, type = CommandType.STRING, required = false,
+            description = "dr cluster glue ip address")
+    private String drClusterGlueIpAddress;
+
     /////////////////////////////////////////////////////
     /////////////////// Accessors ///////////////////////
     /////////////////////////////////////////////////////
@@ -114,6 +118,10 @@ public class CreateDisasterRecoveryClusterCmd extends BaseAsyncCreateCmd {
 
     public String getDrClusterPrivateKey() {
         return drClusterPrivateKey;
+    }
+
+    public String getDrClusterGlueIpAddress() {
+        return drClusterGlueIpAddress;
     }
 
     @Override

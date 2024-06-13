@@ -52,7 +52,7 @@ export default {
   ],
   actions: [
     {
-      api: 'addImageStore',
+      api: 'createDisasterRecoveryCluster',
       icon: 'plus-outlined',
       docHelp: '',
       label: 'label.add.disaster.recovery.cluster',
@@ -65,42 +65,36 @@ export default {
       icon: 'edit-outlined',
       label: 'label.edit.disaster.recovery.cluster',
       dataView: true,
-      popup: true,
-      // disabled: (record) => { return record.drclusterstatus === 'Enabled' },
-      component: shallowRef(defineAsyncComponent(() => import('@/views/infra/UpdateDisasterRecoveryCluster.vue')))
+      args: (record) => {
+        var fields = ['description', 'drclusterurl']
+        if (record.drclusterglueipaddress !== undefined) {
+          fields.push('drclusterglueipaddress')
+        }
+        return fields
+      }
     },
     {
-      api: 'updateDisasterRecoveryCluster',
+      api: 'enableDisasterRecoveryCluster',
       icon: 'play-circle-outlined',
       label: 'label.action.enable.disaster.recovery.cluster',
       message: 'message.enabled.dr.cluster.confirm',
       dataView: true,
       popup: true,
-      show: (record) => { return record.drclusterstatus === 'Disabled' },
-      args: ['drclusterstatus'],
-      mapping: {
-        drclusterstatus: {
-          value: (record) => 'Enabled'
-        }
-      }
+      // show: (record) => { return record.drclusterstatus === 'Disabled' && record.drclustertype === 'secondary' },
+      show: (record) => { return record.drclustertype === 'secondary' }
     },
     {
-      api: 'updateDisasterRecoveryCluster',
+      api: 'disableDisasterRecoveryCluster',
       icon: 'pause-circle-outlined',
       label: 'label.action.disable.disaster.recovery.cluster',
       message: 'message.disabled.dr.cluster.confirm',
       dataView: true,
       popup: true,
-      show: (record) => { return record.drclusterstatus === 'Enabled' },
-      args: ['drclusterstatus'],
-      mapping: {
-        drclusterstatus: {
-          value: (record) => 'Disabled'
-        }
-      }
+      // show: (record) => { return record.drclusterstatus === 'Enabled' && record.drclustertype === 'secondary' },
+      show: (record) => { return record.drclustertype === 'secondary' }
     },
     {
-      api: 'updateDisasterRecoveryCluster',
+      api: 'promoteDisasterRecoveryCluster',
       icon: 'UpSquareOutlined',
       label: 'label.action.promote.disaster.recovery.cluster',
       message: 'message.promote.dr.cluster.confirm',
@@ -109,7 +103,7 @@ export default {
       show: (record) => { return record.drclustertype === 'primary' }
     },
     {
-      api: 'updateDisasterRecoveryCluster',
+      api: 'demoteDisasterRecoveryCluster',
       icon: 'DownSquareOutlined',
       label: 'label.action.demote.disaster.recovery.cluster',
       message: 'message.demote.dr.cluster.confirm',
@@ -118,7 +112,7 @@ export default {
       show: (record) => { return record.drclustertype === 'primary' }
     },
     {
-      api: 'deletePod',
+      api: 'deleteDisasterRecoveryCluster',
       icon: 'delete-outlined',
       label: 'label.action.delete.disaster.recovery.cluster',
       message: 'message.delete.dr.cluster.confirm',

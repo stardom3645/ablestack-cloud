@@ -24,15 +24,9 @@ import java.util.Properties;
 import java.util.HashMap;
 import java.io.InputStream;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.File;
-import java.io.StringReader;
-import java.security.KeyFactory;
-import java.security.PrivateKey;
-import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
-import java.security.spec.InvalidKeySpecException;
-import java.security.spec.PKCS8EncodedKeySpec;
 
 import javax.inject.Inject;
 
@@ -45,7 +39,6 @@ import com.cloud.dr.cluster.dao.DisasterRecoveryClusterDao;
 import com.cloud.dr.cluster.dao.DisasterRecoveryClusterDetailsDao;
 import com.cloud.dr.cluster.dao.DisasterRecoveryClusterVmMapDao;
 import com.cloud.event.ActionEvent;
-import com.cloud.event.EventTypes;
 import com.cloud.exception.InvalidParameterValueException;
 import com.cloud.user.Account;
 import com.cloud.user.AccountService;
@@ -61,7 +54,10 @@ import com.cloud.utils.script.Script;
 import com.cloud.utils.server.ServerProperties;
 import com.cloud.utils.component.ManagerBase;
 import com.cloud.utils.exception.CloudRuntimeException;
-import com.google.common.base.Preconditions;
+import com.cloud.vm.VirtualMachine;
+import com.google.gson.JsonParser;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 
 import org.apache.cloudstack.api.ApiConstants;
 import org.apache.cloudstack.api.ResponseObject;
@@ -72,6 +68,11 @@ import org.apache.cloudstack.api.response.NetworkResponse;
 import org.apache.cloudstack.api.response.ScvmIpAddressResponse;
 import org.apache.cloudstack.api.command.admin.dr.ConnectivityTestsDisasterRecoveryClusterCmd;
 import org.apache.cloudstack.api.command.admin.dr.CreateDisasterRecoveryClusterCmd;
+import org.apache.cloudstack.api.command.admin.dr.DeleteDisasterRecoveryClusterCmd;
+import org.apache.cloudstack.api.command.admin.dr.DisableDisasterRecoveryClusterCmd;
+import org.apache.cloudstack.api.command.admin.dr.EnableDisasterRecoveryClusterCmd;
+import org.apache.cloudstack.api.command.admin.dr.PromoteDisasterRecoveryClusterCmd;
+import org.apache.cloudstack.api.command.admin.dr.DemoteDisasterRecoveryClusterCmd;
 import org.apache.cloudstack.api.command.admin.glue.ListScvmIpAddressCmd;
 import org.apache.cloudstack.api.response.ServiceOfferingResponse;
 import org.apache.cloudstack.api.response.UserVmResponse;
@@ -81,9 +82,6 @@ import org.apache.cloudstack.context.CallContext;
 import org.apache.cloudstack.framework.config.ConfigKey;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
-import org.apache.commons.lang3.StringUtils;
-import org.bouncycastle.util.io.pem.PemObject;
-import org.bouncycastle.util.io.pem.PemReader;
 
 public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements DisasterRecoveryClusterService {
 
@@ -113,9 +111,10 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         String moldUrl = url + "/client/api/";
         String moldCommand = "listScvmIpAddress";
         String moldMethod = "GET";
-
+        // Secondary Cluster - moldListScvmIpAddressAPI 호출
         String response = DisasterRecoveryClusterUtil.moldListScvmIpAddressAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey);
         if (response != null) {
+            // Secondary Cluster - glueStatusAPI 호출
             String[] array = response.split(",");
             for(int i=0; i < array.length; i++) {
                 String glueIp = array[i];
@@ -123,9 +122,8 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                 String glueCommand = "/glue";
                 String glueMethod = "GET";
                 String glueStatus = DisasterRecoveryClusterUtil.glueStatusAPI(glueUrl, glueCommand, glueMethod);
-                LOGGER.info(glueStatus);
                 if (glueStatus != null) {
-                    // glue 상태에 따라 오픈 여부 설정 필요
+                    // ******** glue 상태에 따라 오픈 여부 설정 필요
                     if (glueStatus.contains("HEALTH_OK") || glueStatus.contains("HEALTH_WARN") ) {
                         return true;
                     }
@@ -151,7 +149,6 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         return listResponse;
     }
 
-    // DR 클러스터 리스트 관련 코드
     @Override
     public ListResponse<GetDisasterRecoveryClusterListResponse> listDisasterRecoveryClusterResponse(GetDisasterRecoveryClusterListCmd cmd) {
         Long id = cmd.getId();
@@ -187,8 +184,8 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         }
         List <DisasterRecoveryClusterVO> results = disasterRecoveryClusterDao.search(sc, searchFilter);
         for (DisasterRecoveryClusterVO result : results) {
-            GetDisasterRecoveryClusterListResponse automationControllerResponse = setDisasterRecoveryClusterListResultResponse(result.getId());
-            responsesList.add(automationControllerResponse);
+            GetDisasterRecoveryClusterListResponse disasterRecoveryClusterResponse = setDisasterRecoveryClusterListResultResponse(result.getId());
+            responsesList.add(disasterRecoveryClusterResponse);
         }
         ListResponse<GetDisasterRecoveryClusterListResponse> response = new ListResponse<>();
         response.setResponses(responsesList);
@@ -205,16 +202,14 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         response.setDrClusterUrl(drcluster.getDrClusterUrl());
         response.setDrClusterType(drcluster.getDrClusterType());
         response.setDrClusterStatus(drcluster.getDrClusterStatus());
-        response.setDrClusterApiKey(drcluster.getDrClusterApiKey());
-        response.setDrClusterSecretKey(drcluster.getDrClusterSecretKey());
+        response.setDrClusterGlueIpAddress(drcluster.getDrClusterGlueIpAddress());
         response.setCreated(drcluster.getCreated());
-
-        String moldUrl = drcluster.getDrClusterUrl() + "/client/api/";
-        String moldCommand = "listScvmIpAddress";
-        String moldMethod = "GET";
-        String ScvmResponse = DisasterRecoveryClusterUtil.moldListScvmIpAddressAPI(moldUrl, moldCommand, moldMethod, drcluster.getDrClusterApiKey(), drcluster.getDrClusterSecretKey());
-        if (ScvmResponse != null) {
-            String[] array = ScvmResponse.split(",");
+        // Primary Cluster - scvm ip 조회
+        String ipList = Script.runSimpleBashScript("cat /etc/hosts | grep -E 'scvm1-mngt|scvm2-mngt|scvm3-mngt' | awk '{print $1}' | tr '\n' ','");
+        if (ipList != null || !ipList.isEmpty()) {
+            ipList = ipList.replaceAll(",$", "");
+            // Primary Cluster - glueMirrorStatusAPI 호출
+            String[] array = ipList.split(",");
             for(int i=0; i < array.length; i++) {
                 String glueIp = array[i];
                 String glueUrl = "https://" + glueIp + ":8080/api/v1"; // glue-api 프로토콜과 포트 확정 시 변경 예정
@@ -222,10 +217,14 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                 String glueMethod = "GET";
                 String daemonHealth = DisasterRecoveryClusterUtil.glueMirrorStatusAPI(glueUrl, glueCommand, glueMethod);
                 if (daemonHealth != null) {
+                    // glueMirrorStatusAPI 성공
                     if (daemonHealth.contains("OK")) {
                         drcluster.setMirroringAgentStatus(DisasterRecoveryCluster.MirroringAgentStatus.Enabled.toString());
                         break;
                     } else if (daemonHealth.contains("WARNING")){
+                        drcluster.setMirroringAgentStatus(DisasterRecoveryCluster.MirroringAgentStatus.Warning.toString());
+                        break;
+                    } else if (daemonHealth.contains("DISABLED")){
                         drcluster.setMirroringAgentStatus(DisasterRecoveryCluster.MirroringAgentStatus.Disabled.toString());
                         break;
                     } else {
@@ -233,12 +232,13 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                         break;
                     }
                 } else {
-                    drcluster.setMirroringAgentStatus(DisasterRecoveryCluster.MirroringAgentStatus.Error.toString());
-                    break;
+                    // glueMirrorStatusAPI 실패
+                    drcluster.setMirroringAgentStatus(DisasterRecoveryCluster.MirroringAgentStatus.Unknown.toString());
                 }
             }
         } else {
-            drcluster.setMirroringAgentStatus(DisasterRecoveryCluster.MirroringAgentStatus.Error.toString());
+            // Primary Cluster - scvm ip 조회 실패
+            drcluster.setMirroringAgentStatus(DisasterRecoveryCluster.MirroringAgentStatus.Unknown.toString());
         }
         disasterRecoveryClusterDao.update(drcluster.getId(), drcluster);
         response.setMirroringAgentStatus(drcluster.getMirroringAgentStatus());
@@ -259,32 +259,92 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                 }
             }
         }
-        Map<String, String> details = disasterRecoveryClusterDetailsDao.listDetailsKeyPairs(clusterId);
+        Map<String, String> details = disasterRecoveryClusterDetailsDao.findDetails(clusterId);
+        String secApiKey = details.get(ApiConstants.DR_CLUSTER_API_KEY);
+        String secSecretKey = details.get(ApiConstants.DR_CLUSTER_SECRET_KEY);
         if (details != null && !details.isEmpty()) {
             response.setDetails(details);
         }
         response.setDisasterRecoveryClusterVms(disasterRecoveryClusterVmResponses);
-        // Second dr cluster의 서비스 오퍼링 정보를 가져오는 코드
+        String moldUrl = drcluster.getDrClusterUrl() + "/client/api/";
+        String moldMethod = "GET";
+        // Secondary Cluster - listServiceOfferings 호출
         String moldCommandListServiceOfferings = "listServiceOfferings";
-        List<ServiceOfferingResponse> secDrClusterServiceOfferingListResponse = DisasterRecoveryClusterUtil.getSecDrClusterInfoList(moldUrl, moldCommandListServiceOfferings, moldMethod, drcluster.getDrClusterApiKey(), drcluster.getDrClusterSecretKey());
+        List<ServiceOfferingResponse> secDrClusterServiceOfferingListResponse = DisasterRecoveryClusterUtil.getSecDrClusterInfoList(moldUrl, moldCommandListServiceOfferings, moldMethod, secApiKey, secSecretKey);
         response.setSecDisasterRecoveryClusterServiceOfferingList(secDrClusterServiceOfferingListResponse);
-        // Second dr cluster의 네트워크 리스트 정보를 가져오는 코드
+        // Secondary Cluster - listNetworks 호출
         String moldCommandListNetworks = "listNetworks";
-        List<NetworkResponse> secDrClusterNetworksListResponse = DisasterRecoveryClusterUtil.getSecDrClusterInfoList(moldUrl, moldCommandListNetworks, moldMethod, drcluster.getDrClusterApiKey(), drcluster.getDrClusterSecretKey());
+        List<NetworkResponse> secDrClusterNetworksListResponse = DisasterRecoveryClusterUtil.getSecDrClusterInfoList(moldUrl, moldCommandListNetworks, moldMethod, secApiKey, secSecretKey);
         response.setSecDisasterRecoveryClusterNetworkList(secDrClusterNetworksListResponse);
         return response;
     }
 
+    public GetDisasterRecoveryClusterListResponse setDisasterRecoveryClusterResponse(long clusterId) {
+        DisasterRecoveryClusterVO drcluster = disasterRecoveryClusterDao.findById(clusterId);
+        GetDisasterRecoveryClusterListResponse response = new GetDisasterRecoveryClusterListResponse();
+        response.setObjectName("disasterrecoverycluster");
+        response.setId(drcluster.getUuid());
+        response.setName(drcluster.getName());
+        response.setDescription(drcluster.getDescription());
+        response.setDrClusterUrl(drcluster.getDrClusterUrl());
+        response.setDrClusterType(drcluster.getDrClusterType());
+        response.setDrClusterStatus(drcluster.getDrClusterStatus());
+        response.setDrClusterGlueIpAddress(drcluster.getDrClusterGlueIpAddress());
+        response.setCreated(drcluster.getCreated());
+        // Primary Cluster - scvm ip 조회
+        String ipList = Script.runSimpleBashScript("cat /etc/hosts | grep -E 'scvm1-mngt|scvm2-mngt|scvm3-mngt' | awk '{print $1}' | tr '\n' ','");
+        if (ipList != null || !ipList.isEmpty()) {
+            ipList = ipList.replaceAll(",$", "");
+            // Primary Cluster - glueMirrorStatusAPI 호출
+            String[] array = ipList.split(",");
+            String daemonHealth = null;
+            for(int i=0; i < array.length; i++) {
+                String glueIp = array[i];
+                String glueUrl = "https://" + glueIp + ":8080/api/v1"; // glue-api 프로토콜과 포트 확정 시 변경 예정
+                String glueCommand = "/mirror";
+                String glueMethod = "GET";
+                daemonHealth = DisasterRecoveryClusterUtil.glueMirrorStatusAPI(glueUrl, glueCommand, glueMethod);
+                // glueMirrorStatusAPI 성공
+                if (daemonHealth != null) {
+                    if (daemonHealth.contains("OK")) {
+                        drcluster.setMirroringAgentStatus(DisasterRecoveryCluster.MirroringAgentStatus.Enabled.toString());
+                        break;
+                    } else if (daemonHealth.contains("WARNING")){
+                        drcluster.setMirroringAgentStatus(DisasterRecoveryCluster.MirroringAgentStatus.Warning.toString());
+                        break;
+                    } else if (daemonHealth.contains("DISABLED")){
+                        drcluster.setMirroringAgentStatus(DisasterRecoveryCluster.MirroringAgentStatus.Disabled.toString());
+                        break;
+                    } else {
+                        drcluster.setMirroringAgentStatus(DisasterRecoveryCluster.MirroringAgentStatus.Error.toString());
+                        break;
+                    }
+                }
+            }
+            if (daemonHealth == null) {
+                // glueMirrorStatusAPI 실패
+                drcluster.setMirroringAgentStatus(DisasterRecoveryCluster.MirroringAgentStatus.Unknown.toString());
+            }
+        }
+        Map<String, String> details = disasterRecoveryClusterDetailsDao.findDetails(drcluster.getId());
+        if (details != null && !details.isEmpty()) {
+            response.setDetails(details);
+        }
+        disasterRecoveryClusterDao.update(drcluster.getId(), drcluster);
+        return response;
+    }
+
     @Override
-    @ActionEvent(eventType = EventTypes.EVENT_DISASTER_RECOVERY_CLUSTER, eventDescription = "updating dr cluster", resourceId = 5, resourceType = "DisasterRecoveryCluster")
+    @ActionEvent(eventType = DisasterRecoveryClusterEventTypes.EVENT_DR_UPDATE, eventDescription = "updating dr cluster", resourceId = 5, resourceType = "DisasterRecoveryCluster")
     public GetDisasterRecoveryClusterListResponse updateDisasterRecoveryCluster(UpdateDisasterRecoveryClusterCmd cmd) throws CloudRuntimeException {
         if (!DisasterRecoveryClusterService.DisasterRecoveryServiceEnabled.value()) {
             throw new CloudRuntimeException("Disaster Recovery plugin is disabled");
         }
         DisasterRecoveryClusterVO drcluster = null;
-        final Long drClusterId = cmd.getId();
-        final String drClusterName = cmd.getName();
+        Long drClusterId = cmd.getId();
+        String drClusterName = cmd.getName();
         if (drClusterId == null) {
+            // Primary Cluster 에서 request MoldAPI로 요청한 경우
             drcluster = disasterRecoveryClusterDao.findByName(drClusterName);
         } else {
             drcluster = disasterRecoveryClusterDao.findById(drClusterId);
@@ -293,38 +353,36 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
             }
         }
         drcluster = disasterRecoveryClusterDao.createForUpdate(drcluster.getId());
-        if (cmd.getDrClusterStatus() != null && cmd.getMirroringAgentStatus() != null) {
-            final String drClusterStatus = cmd.getDrClusterStatus();
-            final String mirroringAgentStatus = cmd.getMirroringAgentStatus();
-            drcluster.setDrClusterStatus(drClusterStatus);
-            drcluster.setMirroringAgentStatus(mirroringAgentStatus);
-            if (!disasterRecoveryClusterDao.update(drcluster.getId(), drcluster)) {
-                throw new CloudRuntimeException(String.format("Failed to update Disaster Recovery ID: %s", drcluster.getUuid()));
-            }
-            drcluster = disasterRecoveryClusterDao.findByName(drClusterName);
-        } else {
-            if (cmd.getName() != null) {
-                drcluster.setName(drClusterName);
-            }
-            if (cmd.getDescription() != null) {
-                String drClusterDescription = cmd.getDescription();
-                drcluster.setDescription(drClusterDescription);
-            }
-            if (cmd.getDrClusterUrl() != null) {
-                String drClusterUrl = cmd.getDrClusterUrl();
-                drcluster.setDrClusterUrl(drClusterUrl);
-            }
-            if (cmd.getDetails() != null) {
-                Map<String,String> details = cmd.getDetails();
-                drcluster.setDetails(details);
-                disasterRecoveryClusterDao.saveDetails(drcluster);
-            }
-            if (!disasterRecoveryClusterDao.update(drcluster.getId(), drcluster)) {
-                throw new CloudRuntimeException(String.format("Failed to update Disaster Recovery ID: %s", drcluster.getUuid()));
-            }
-            drcluster = disasterRecoveryClusterDao.findById(drClusterId);
+        if (cmd.getDescription() != null) {
+            String drClusterDescription = cmd.getDescription();
+            drcluster.setDescription(drClusterDescription);
         }
-        return setDisasterRecoveryClusterListResultResponse(drcluster.getId());
+        if (cmd.getDrClusterUrl() != null) {
+            String drClusterUrl = cmd.getDrClusterUrl();
+            drcluster.setDrClusterUrl(drClusterUrl);
+        }
+        if (cmd.getDrClusterGlueIpAddress() != null) {
+            String drClusterGlueIpAddress = cmd.getDrClusterGlueIpAddress();
+            drcluster.setDrClusterGlueIpAddress(drClusterGlueIpAddress);
+        }
+        if (cmd.getDetails() != null) {
+            Map<String,String> details = cmd.getDetails();
+            drcluster.setDetails(details);
+            disasterRecoveryClusterDetailsDao.persist(drcluster.getId(), details);
+        }
+        if (cmd.getDrClusterStatus() != null) {
+            String drClusterStatus = cmd.getDrClusterStatus();
+            drcluster.setDrClusterStatus(drClusterStatus);
+        }
+        if (cmd.getMirroringAgentStatus() != null) {
+            String mirroringAgentStatus = cmd.getMirroringAgentStatus();
+            drcluster.setMirroringAgentStatus(mirroringAgentStatus);
+        }
+        if (!disasterRecoveryClusterDao.update(drcluster.getId(), drcluster)) {
+            throw new CloudRuntimeException(String.format("Failed to update Disaster Recovery ID: %s", drcluster.getUuid()));
+        }
+        drcluster = disasterRecoveryClusterDao.findById(drcluster.getId());
+        return setDisasterRecoveryClusterResponse(drcluster.getId());
     }
 
     @Override
@@ -338,8 +396,19 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
             @Override
             public DisasterRecoveryClusterVO doInTransaction(TransactionStatus status) {
                 DisasterRecoveryClusterVO newCluster = new DisasterRecoveryClusterVO(msHost.getId(), cmd.getName(), cmd.getDescription(),
-                        cmd.getDrClusterApiKey(), cmd.getDrClusterSecretKey(), cmd.getDrClusterPrivateKey(), cmd.getDrClusterUrl(), cmd.getDrClusterType(), DisasterRecoveryCluster.DrClusterStatus.Created.toString(), DisasterRecoveryCluster.MirroringAgentStatus.Created.toString());
+                        cmd.getDrClusterGlueIpAddress(), cmd.getDrClusterUrl(), cmd.getDrClusterType(), DisasterRecoveryCluster.DrClusterStatus.Created.toString(), DisasterRecoveryCluster.MirroringAgentStatus.Created.toString());
                 disasterRecoveryClusterDao.persist(newCluster);
+                Map<String, String> drDetails = disasterRecoveryClusterDetailsDao.findDetails(newCluster.getId());
+                if (cmd.getDrClusterApiKey() != null) {
+                    drDetails.put(ApiConstants.DR_CLUSTER_API_KEY, cmd.getDrClusterApiKey());
+                }
+                if (cmd.getDrClusterSecretKey() != null) {
+                    drDetails.put(ApiConstants.DR_CLUSTER_SECRET_KEY, cmd.getDrClusterSecretKey());
+                }
+                if (cmd.getDrClusterPrivateKey() != null) {
+                    drDetails.put(ApiConstants.DR_CLUSTER_PRIVATE_KEY, cmd.getDrClusterPrivateKey());
+                }
+                disasterRecoveryClusterDetailsDao.persist(newCluster.getId(), drDetails);
                 return newCluster;
             }
         });
@@ -356,13 +425,17 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         final String apiKey = cmd.getDrClusterApiKey();
         final String secretKey = cmd.getDrClusterSecretKey();
         final String privateKey = cmd.getDrClusterPrivateKey();
+        final String glueIp = cmd.getDrClusterGlueIpAddress();
 
         if (name == null || name.isEmpty()) {
             throw new InvalidParameterValueException("Invalid name for the disaster recovery cluster name:" + name);
         }
-        // if (type.equalsIgnoreCase("secondary") && (privateKey == null || privateKey.isEmpty())) {
-        //     throw new InvalidParameterValueException("Invalid private key for the disaster recovery cluster private key:" + privateKey);
-        // }
+        if (type.equalsIgnoreCase("secondary") && (privateKey == null || privateKey.isEmpty())) {
+            throw new InvalidParameterValueException("Invalid private key for the disaster recovery cluster private key:" + privateKey);
+        }
+        if (type.equalsIgnoreCase("secondary") && (glueIp == null || glueIp.isEmpty())) {
+            throw new InvalidParameterValueException("Invalid glue ip for the disaster recovery cluster glue ip:" + glueIp);
+        }
         if (url == null || url.isEmpty()) {
             throw new InvalidParameterValueException("Invalid url for the disaster recovery cluster url:" + url);
         }
@@ -399,47 +472,38 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         return serverInfo;
     }
 
-    private PrivateKey parsePrivateKey(final String key) throws IOException {
-        Preconditions.checkArgument(StringUtils.isNotEmpty(key));
-        try (final PemReader pemReader = new PemReader(new StringReader(key));) {
-            final PemObject pemObject = pemReader.readPemObject();
-            final byte[] content = pemObject.getContent();
-            final PKCS8EncodedKeySpec privKeySpec = new PKCS8EncodedKeySpec(content);
-            final KeyFactory factory = KeyFactory.getInstance("RSA", "BC");
-            return factory.generatePrivate(privKeySpec);
-        } catch (NoSuchAlgorithmException | NoSuchProviderException e) {
-            throw new IOException("No encryption provider available.", e);
-        } catch (final InvalidKeySpecException e) {
-            throw new IOException("Invalid Key format.", e);
-        }
-    }
-
     @Override
-    public boolean setupDisasterRecoveryCluster(long clusterId) {
+    @ActionEvent(eventType = DisasterRecoveryClusterEventTypes.EVENT_DR_CREATE, eventDescription = "creating disaster recovery cluster", async = true, resourceId = 5, resourceType = "DisasterRecoveryCluster")
+    public boolean setupDisasterRecoveryCluster(long clusterId) throws CloudRuntimeException {
         DisasterRecoveryClusterVO drCluster = disasterRecoveryClusterDao.findById(clusterId);
         String drName = drCluster.getName();
         String drDescription = drCluster.getDescription();
-        // secondary cluster 정보
+        // Secondary Cluster 정보
         String secUrl = drCluster.getDrClusterUrl();
         String secClusterType = drCluster.getDrClusterType();
-        String secApiKey = drCluster.getDrClusterApiKey();
-        String secSecretKey = drCluster.getDrClusterSecretKey();
-        // String secPrivateKey = drCluster.getDrClusterPrivateKey();
-        // PrivateKey secPriKey = parsePrivateKey(secPrivateKey);
-        // FileOutPutStream fos = new FileOutputStream("id-rsa")
-        // fos.write(secPriKey.getEncoded());
-        // File permKey = new File("id-rsa");
-        final File permKey = new File("/root/.ssh/dr.key");
-        // primary cluster 정보
+        Map<String, String> details = disasterRecoveryClusterDetailsDao.findDetails(drCluster.getId());
+        String secApiKey = details.get(ApiConstants.DR_CLUSTER_API_KEY);
+        String secSecretKey = details.get(ApiConstants.DR_CLUSTER_SECRET_KEY);
+        String secPrivateKey = details.get(ApiConstants.DR_CLUSTER_PRIVATE_KEY);
+        String secGlueIpAddress = drCluster.getDrClusterGlueIpAddress();
+        try {
+            FileOutputStream fos = new FileOutputStream("glue.key");
+            fos.write(secPrivateKey.getBytes());
+            fos.close();
+        } catch (IOException e) {
+            throw new CloudRuntimeException("Converting the secondary cluster's private key to a file failed.", e);
+        }
+        File permKey = new File("glue.key");
+        // Primary Cluster 정보
         String[] properties = getServerProperties();
         ManagementServerHostVO msHost = msHostDao.findByMsid(ManagementServerNode.getManagementServerId());
         // String priUrl = properties[1] + "://" + msHost.getServiceIP() + ":" + properties[0];
-        String priUrl = "http://10.10.254.39:5050";
+        String priUrl = "http://10.10.254.39:5050"; // VM 테스트로 임시 변수 설정
         String priClusterType = "primary";
         UserAccount user = accountService.getActiveUserAccount("admin", 1L);
         String priApiKey = user.getApiKey();
         String priSecretKey = user.getSecretKey();
-        // secondary cluster에 CreateDisasterRecoveryClusterCmd 호출
+        // Secondary Cluster - moldCreateDisasterRecoveryClusterAPI 호출
         Map<String, String> secParams = new HashMap<>();
         secParams.put("name", drName);
         secParams.put("description", drDescription);
@@ -450,50 +514,22 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         String secCommand = "createDisasterRecoveryCluster";
         String secMethod = "POST";
         String secResponse = DisasterRecoveryClusterUtil.moldCreateDisasterRecoveryClusterAPI(secUrl + "/client/api/", secCommand, secMethod, secApiKey, secSecretKey, secParams);
-        LOGGER.info("moldCreateDisasterRecoveryClusterAPI secResponse::::::::::::::::::::::::::::::createDisasterRecoveryCluster");
-        LOGGER.info(secResponse);
         if (secResponse == null || secResponse.isEmpty()) {
-            // secondary cluster의 db에 dr 정보가 정상적으로 업데이트 되지 않은 경우
-            // primary cluster db 업데이트
+            // Secondary Cluster - moldCreateDisasterRecoveryClusterAPI 실패
+            // Primary Cluster DB 업데이트
             drCluster.setDrClusterStatus(DisasterRecoveryCluster.DrClusterStatus.Error.toString());
             drCluster.setMirroringAgentStatus(DisasterRecoveryCluster.MirroringAgentStatus.Error.toString());
             disasterRecoveryClusterDao.update(drCluster.getId(), drCluster);
-            // secondary cluster에 UpdateDisasterRecoveryClusterCmd 호출
-            secCommand = "updateDisasterRecoveryCluster";
-            secMethod = "POST";
-            Map<String, String> errParams = new HashMap<>();
-            errParams.put("name", drName);
-            errParams.put("drclusterstatus", DisasterRecoveryCluster.DrClusterStatus.Error.toString());
-            errParams.put("mirroringagentstatus", DisasterRecoveryCluster.MirroringAgentStatus.Error.toString());
-            DisasterRecoveryClusterUtil.moldUpdateDisasterRecoveryClusterAPI(secUrl + "/client/api/", secCommand, secMethod, secApiKey, secSecretKey, errParams);
             return false;
         } else {
-            // secondary cluster의 db에 dr 정보가 정상적으로 업데이트 된 경우
-            // secondary cluster에 ListScvmIpAddressCmd 호출
-            secUrl = secUrl + "/client/api/";
-            secCommand = "listScvmIpAddress";
-            secMethod = "GET";
-            secResponse = DisasterRecoveryClusterUtil.moldListScvmIpAddressAPI(secUrl + "/client/api/", secCommand, secMethod, secApiKey, secSecretKey);
-            LOGGER.info("moldListScvmIpAddressAPI secResponse::::::::::::::::::::::::::::::listScvmIpAddress");
-            LOGGER.info(secResponse);
-            if (secResponse == null || secResponse.isEmpty()) {
-                // secondary cluster의 scvm ip 리스트를 가져오지 못한 경우
-                // primary cluster db 업데이트
-                drCluster.setDrClusterStatus(DisasterRecoveryCluster.DrClusterStatus.Error.toString());
-                drCluster.setMirroringAgentStatus(DisasterRecoveryCluster.MirroringAgentStatus.Error.toString());
-                disasterRecoveryClusterDao.update(drCluster.getId(), drCluster);
-                // secondary cluster에 UpdateDisasterRecoveryClusterCmd 호출
-                secCommand = "updateDisasterRecoveryCluster";
-                secMethod = "POST";
-                Map<String, String> errParams = new HashMap<>();
-                errParams.put("name", drName);
-                errParams.put("drclusterstatus", DisasterRecoveryCluster.DrClusterStatus.Error.toString());
-                errParams.put("mirroringagentstatus", DisasterRecoveryCluster.MirroringAgentStatus.Error.toString());
-                DisasterRecoveryClusterUtil.moldUpdateDisasterRecoveryClusterAPI(secUrl + "/client/api/", secCommand, secMethod, secApiKey, secSecretKey, errParams);
-                return false;
-            } else {
-                // secondary cluster에 glueMirrorSetupAPI 호출
-                String[] array = secResponse.split(",");
+            // Secondary Cluster - moldCreateDisasterRecoveryClusterAPI 성공
+            // Primary Cluster - scvm ip 조회
+            String ipList = Script.runSimpleBashScript("cat /etc/hosts | grep -E 'scvm1-mngt|scvm2-mngt|scvm3-mngt' | awk '{print $1}' | tr '\n' ','");
+            if (ipList != null || !ipList.isEmpty()) {
+                ipList = ipList.replaceAll(",$", "");
+                LOGGER.info(ipList);
+                // Primary Cluster - glueMirrorSetupAPI 호출
+                String[] array = ipList.split(",");
                 for (int i=0; i < array.length; i++) {
                     String glueIp = array[i];
                     String glueUrl = "https://" + glueIp + ":8080/api/v1"; // glue-api 프로토콜과 포트 확정 시 변경 예정
@@ -503,32 +539,54 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                     glueParams.put("localClusterName", "local");
                     glueParams.put("remoteClusterName", "remote");
                     glueParams.put("mirrorPool", "rbd");
-                    glueParams.put("host", glueIp);
-                    final File secPrivateKey = new File("/root/.ssh/id_rsa.dr");
-                    boolean result = DisasterRecoveryClusterUtil.glueMirrorSetupAPI(glueUrl, glueCommand, glueMethod, glueParams, secPrivateKey);
-                    // boolean result = true;
-                    LOGGER.info("result::::::::::::::::::::::::::::::");
-                    LOGGER.info(result);
-                    // mirror setup 성공
+                    glueParams.put("host", secGlueIpAddress);
+                    boolean result = DisasterRecoveryClusterUtil.glueMirrorSetupAPI(glueUrl, glueCommand, glueMethod, glueParams, permKey);
+                    // glueMirrorSetupAPI 성공
                     if (result) {
-                        // primary cluster db 업데이트
+                        // Primary Cluster DB 업데이트
                         drCluster.setDrClusterStatus(DisasterRecoveryCluster.DrClusterStatus.Enabled.toString());
                         drCluster.setMirroringAgentStatus(DisasterRecoveryCluster.MirroringAgentStatus.Enabled.toString());
                         disasterRecoveryClusterDao.update(drCluster.getId(), drCluster);
-                        // secondary cluster db 업데이트
+                        // Secondary Cluster - moldUpdateDisasterRecoveryClusterAPI 호출
                         secCommand = "updateDisasterRecoveryCluster";
-                        secMethod = "POST";
+                        secMethod = "GET";
                         Map<String, String> sucParams = new HashMap<>();
                         sucParams.put("name", drName);
                         sucParams.put("drclusterstatus", DisasterRecoveryCluster.DrClusterStatus.Enabled.toString());
                         sucParams.put("mirroringagentstatus", DisasterRecoveryCluster.DrClusterStatus.Enabled.toString());
-                        DisasterRecoveryClusterUtil.moldUpdateDisasterRecoveryClusterAPI(secUrl, secCommand, secMethod, secApiKey, secSecretKey, sucParams);
+                        DisasterRecoveryClusterUtil.moldUpdateDisasterRecoveryClusterAPI(secUrl + "/client/api/", secCommand, secMethod, secApiKey, secSecretKey, sucParams);
                         return true;
                     }
                 }
+                // glueMirrorSetupAPI 실패
+               // Primary Cluster DB 업데이트
+                drCluster.setDrClusterStatus(DisasterRecoveryCluster.DrClusterStatus.Error.toString());
+                drCluster.setMirroringAgentStatus(DisasterRecoveryCluster.MirroringAgentStatus.Error.toString());
+                disasterRecoveryClusterDao.update(drCluster.getId(), drCluster);
+                // Secondary Cluster - moldUpdateDisasterRecoveryClusterAPI 호출
+                secCommand = "updateDisasterRecoveryCluster";
+                secMethod = "GET";
+                Map<String, String> sucParams = new HashMap<>();
+                sucParams.put("name", drName);
+                sucParams.put("drclusterstatus", DisasterRecoveryCluster.DrClusterStatus.Error.toString());
+                sucParams.put("mirroringagentstatus", DisasterRecoveryCluster.DrClusterStatus.Error.toString());
+                DisasterRecoveryClusterUtil.moldUpdateDisasterRecoveryClusterAPI(secUrl + "/client/api/", secCommand, secMethod, secApiKey, secSecretKey, sucParams);
+            } else {
+                // Primary Cluster - scvm ip 조회 실패
+                // Primary Cluster DB 업데이트
+                drCluster.setDrClusterStatus(DisasterRecoveryCluster.DrClusterStatus.Error.toString());
+                drCluster.setMirroringAgentStatus(DisasterRecoveryCluster.MirroringAgentStatus.Error.toString());
+                disasterRecoveryClusterDao.update(drCluster.getId(), drCluster);
+                // Secondary Cluster - moldUpdateDisasterRecoveryClusterAPI 호출
+                secCommand = "updateDisasterRecoveryCluster";
+                secMethod = "GET";
+                Map<String, String> errParams = new HashMap<>();
+                errParams.put("name", drName);
+                errParams.put("drclusterstatus", DisasterRecoveryCluster.DrClusterStatus.Error.toString());
+                errParams.put("mirroringagentstatus", DisasterRecoveryCluster.MirroringAgentStatus.Error.toString());
+                DisasterRecoveryClusterUtil.moldUpdateDisasterRecoveryClusterAPI(secUrl + "/client/api/", secCommand, secMethod, secApiKey, secSecretKey, errParams);
             }
         }
-        // secondary cluster에 UpdateDisasterRecoveryClusterCmd 호출
         return false;
     }
 
@@ -544,10 +602,467 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         response.setDrClusterType(drcluster.getDrClusterType());
         response.setDrClusterStatus(drcluster.getDrClusterStatus());
         response.setMirroringAgentStatus(drcluster.getMirroringAgentStatus());
-        response.setDrClusterApiKey(drcluster.getDrClusterApiKey());
-        response.setDrClusterSecretKey(drcluster.getDrClusterSecretKey());
+        response.setDrClusterGlueIpAddress(drcluster.getDrClusterGlueIpAddress());
+        Map<String, String> details = disasterRecoveryClusterDetailsDao.findDetails(drcluster.getId());
+        if (details != null && !details.isEmpty()) {
+            response.setDetails(details);
+        }
         response.setCreated(drcluster.getCreated());
         return response;
+    }
+
+    @Override
+    @ActionEvent(eventType = DisasterRecoveryClusterEventTypes.EVENT_DR_DELETE, eventDescription = "deleting disaster recovery cluster", async = true, resourceId = 5, resourceType = "DisasterRecoveryCluster")
+    public boolean deleteDisasterRecoveryCluster(DeleteDisasterRecoveryClusterCmd cmd) throws CloudRuntimeException {
+        if (!DisasterRecoveryServiceEnabled.value()) {
+            throw new CloudRuntimeException("Disaster Recovery Service plugin is disabled");
+        }
+        DisasterRecoveryClusterVO drCluster = disasterRecoveryClusterDao.findById(cmd.getId());
+        if (drCluster == null) {
+            throw new InvalidParameterValueException("Invalid disaster recovery cluster id specified");
+        }
+        // Secondary Cluster에서 요청한 경우
+        if (drCluster.getDrClusterType().equalsIgnoreCase("primary")) {
+            disasterRecoveryClusterDetailsDao.deleteDetails(drCluster.getId());
+            return disasterRecoveryClusterDao.remove(drCluster.getId());
+        } else {
+            // Primary Cluster에서 요청한 경우
+            String drName = drCluster.getName();
+            String secUrl = drCluster.getDrClusterUrl();
+            String secClusterType = drCluster.getDrClusterType();
+            Map<String, String> details = disasterRecoveryClusterDetailsDao.findDetails(drCluster.getId());
+            String secApiKey = details.get(ApiConstants.DR_CLUSTER_API_KEY);
+            String secSecretKey = details.get(ApiConstants.DR_CLUSTER_SECRET_KEY);
+            String secPrivateKey = details.get(ApiConstants.DR_CLUSTER_PRIVATE_KEY);
+            String secGlueIpAddress = drCluster.getDrClusterGlueIpAddress();
+            try {
+                FileOutputStream fos = new FileOutputStream("glue.key");
+                fos.write(secPrivateKey.getBytes());
+                fos.close();
+            } catch (IOException e) {
+                throw new CloudRuntimeException("Converting the secondary cluster's private key to a file failed.", e);
+            }
+            File permKey = new File("glue.key");
+            // Primary Cluster 정보
+            String[] properties = getServerProperties();
+            ManagementServerHostVO msHost = msHostDao.findByMsid(ManagementServerNode.getManagementServerId());
+            // String priUrl = properties[1] + "://" + msHost.getServiceIP() + ":" + properties[0];
+            String priUrl = "http://10.10.254.39:5050"; // VM 테스트로 임시 변수 설정
+            String priClusterType = "primary";
+            UserAccount user = accountService.getActiveUserAccount("admin", 1L);
+            String priApiKey = user.getApiKey();
+            String priSecretKey = user.getSecretKey();
+            // Primary Cluster - scvm ip 조회
+            String ipList = Script.runSimpleBashScript("cat /etc/hosts | grep -E 'scvm1-mngt|scvm2-mngt|scvm3-mngt' | awk '{print $1}' | tr '\n' ','");
+            if (ipList != null || !ipList.isEmpty()) {
+                ipList = ipList.replaceAll(",$", "");
+                // Primary Cluster - glueMirrorDeleteAPI 호출
+                String[] array = ipList.split(",");
+                for (int i=0; i < array.length; i++) {
+                    String glueIp = array[i];
+                    String glueUrl = "https://" + glueIp + ":8080/api/v1"; // glue-api 프로토콜과 포트 확정 시 변경 예정
+                    String glueCommand = "/mirror";
+                    String glueMethod = "DELETE";
+                    Map<String, String> glueParams = new HashMap<>();
+                    glueParams.put("mirrorPool", "rbd");
+                    glueParams.put("host", secGlueIpAddress);
+                    boolean result = DisasterRecoveryClusterUtil.glueMirrorDeleteAPI(glueUrl, glueCommand, glueMethod, glueParams, permKey);
+                    // glueMirrorDeleteAPI 성공
+                    if (result) {
+                        // Primary Cluster - DB 업데이트
+                        disasterRecoveryClusterDetailsDao.deleteDetails(drCluster.getId());
+                        disasterRecoveryClusterDao.remove(drCluster.getId());
+                        // Secondary Cluster - moldGetDisasterRecoveryClusterListAPI 호출
+                        String secCommand = "getDisasterRecoveryClusterList";
+                        String secMethod = "GET";
+                        Map<String, String> sucParams = new HashMap<>();
+                        List<GetDisasterRecoveryClusterListResponse> drListResponse = DisasterRecoveryClusterUtil.moldGetDisasterRecoveryClusterListAPI(secUrl + "/client/api/", secCommand, secMethod, secApiKey, secSecretKey);
+                        if (drListResponse != null || !drListResponse.isEmpty()) {
+                            // Secondary Cluster - moldGetDisasterRecoveryClusterListAPI 성공
+                            for (GetDisasterRecoveryClusterListResponse dr : drListResponse) {
+                                if (dr.getName().equalsIgnoreCase(drCluster.getName())) {
+                                    String primaryDrId = dr.getId();
+                                    // Secondary Cluster - moldDeleteDisasterRecoveryClusterAPI 호출
+                                    secCommand = "deleteDisasterRecoveryCluster";
+                                    secMethod = "GET";
+                                    sucParams = new HashMap<>();
+                                    sucParams.put("id", primaryDrId);
+                                    String response = DisasterRecoveryClusterUtil.moldDeleteDisasterRecoveryClusterAPI(secUrl + "/client/api/", secCommand, secMethod, secApiKey, secSecretKey, sucParams);
+                                    if (response != null) {
+                                        // Secondary Cluster - moldDeleteDisasterRecoveryClusterAPI 성공
+                                        return true;
+                                    } else {
+                                        // Secondary Cluster - moldDeleteDisasterRecoveryClusterAPI 실패
+                                        return false;
+                                    }
+                                }
+                            }
+                        } else {
+                            // Secondary Cluster - moldGetDisasterRecoveryClusterListAPI 실패
+                            return false;
+                        }
+                    }
+                }
+                // ******** glue-api 에서 삭제 도중 에러난 경우 가비지 어떻게 처리할 것인지
+                // glueMirrorDeleteAPI 실패
+                // // Primary Cluster - DB 업데이트
+                // drCluster.setDrClusterStatus(DisasterRecoveryCluster.DrClusterStatus.Error.toString());
+                // drCluster.setMirroringAgentStatus(DisasterRecoveryCluster.MirroringAgentStatus.Error.toString());
+                // disasterRecoveryClusterDao.update(drCluster.getId(), drCluster);
+                // // Secondary Cluster - moldUpdateDisasterRecoveryClusterAPI 호출
+                // String secCommand = "updateDisasterRecoveryCluster";
+                // String secMethod = "GET";
+                // Map<String, String> sucParams = new HashMap<>();
+                // sucParams.put("name", drName);
+                // sucParams.put("drclusterstatus", DisasterRecoveryCluster.DrClusterStatus.Error.toString());
+                // sucParams.put("mirroringagentstatus", DisasterRecoveryCluster.DrClusterStatus.Error.toString());
+                // DisasterRecoveryClusterUtil.moldUpdateDisasterRecoveryClusterAPI(secUrl + "/client/api/", secCommand, secMethod, secApiKey, secSecretKey, sucParams);
+            } else {
+                // Primary Cluster - scvm ip 조회 실패
+                throw new CloudRuntimeException("primary cluster scvm list lookup fails.");
+            }
+            return false;
+        }
+    }
+
+    @Override
+    @ActionEvent(eventType = DisasterRecoveryClusterEventTypes.EVENT_DR_ENABLE, eventDescription = "enabling disaster recovery cluster", async = true, resourceId = 5, resourceType = "DisasterRecoveryCluster")
+    public boolean enableDisasterRecoveryCluster(EnableDisasterRecoveryClusterCmd cmd) throws CloudRuntimeException {
+        if (!DisasterRecoveryServiceEnabled.value()) {
+            throw new CloudRuntimeException("Disaster Recovery Service plugin is disabled");
+        }
+        DisasterRecoveryClusterVO drCluster = disasterRecoveryClusterDao.findById(cmd.getId());
+        if (drCluster == null) {
+            throw new InvalidParameterValueException("Invalid disaster recovery cluster id specified");
+        }
+        String drName = drCluster.getName();
+        String secUrl = drCluster.getDrClusterUrl();
+        String secClusterType = drCluster.getDrClusterType();
+        Map<String, String> details = disasterRecoveryClusterDetailsDao.findDetails(drCluster.getId());
+        String secApiKey = details.get(ApiConstants.DR_CLUSTER_API_KEY);
+        String secSecretKey = details.get(ApiConstants.DR_CLUSTER_SECRET_KEY);
+        String secPrivateKey = details.get(ApiConstants.DR_CLUSTER_PRIVATE_KEY);
+        String secGlueIpAddress = drCluster.getDrClusterGlueIpAddress();
+        try {
+            FileOutputStream fos = new FileOutputStream("glue.key");
+            fos.write(secPrivateKey.getBytes());
+            fos.close();
+        } catch (IOException e) {
+            throw new CloudRuntimeException("Converting the secondary cluster's private key to a file failed.", e);
+        }
+        File permKey = new File("glue.key");
+        // Primary Cluster 정보
+        String[] properties = getServerProperties();
+        ManagementServerHostVO msHost = msHostDao.findByMsid(ManagementServerNode.getManagementServerId());
+        // String priUrl = properties[1] + "://" + msHost.getServiceIP() + ":" + properties[0];
+        String priUrl = "http://10.10.254.39:5050"; // VM 테스트로 임시 변수 설정
+        String priClusterType = "primary";
+        UserAccount user = accountService.getActiveUserAccount("admin", 1L);
+        String priApiKey = user.getApiKey();
+        String priSecretKey = user.getSecretKey();
+        // Primary Cluster - scvm ip 조회
+        String ipList = Script.runSimpleBashScript("cat /etc/hosts | grep -E 'scvm1-mngt|scvm2-mngt|scvm3-mngt' | awk '{print $1}' | tr '\n' ','");
+        if (ipList != null || !ipList.isEmpty()) {
+            ipList = ipList.replaceAll(",$", "");
+            // Primary Cluster - glueMirrorEnableAPI 호출
+            String[] array = ipList.split(",");
+            for (int i=0; i < array.length; i++) {
+                String glueIp = array[i];
+                String glueUrl = "https://" + glueIp + ":8080/api/v1"; // glue-api 프로토콜과 포트 확정 시 변경 예정
+                String glueCommand = "/mirror/{mirrorPool}";
+                String glueMethod = "POST";
+                Map<String, String> glueParams = new HashMap<>();
+                glueParams.put("localClusterName", "local");
+                glueParams.put("remoteClusterName", "remote");
+                glueParams.put("mirrorPool", "rbd");
+                glueParams.put("host", secGlueIpAddress);
+                boolean result = DisasterRecoveryClusterUtil.glueMirrorEnableAPI(glueUrl, glueCommand, glueMethod, glueParams, permKey);
+                // glueMirrorEnableAPI 성공
+                if (result) {
+                    // Primary Cluster - DB 업데이트
+                    drCluster.setDrClusterStatus(DisasterRecoveryCluster.DrClusterStatus.Enabled.toString());
+                    drCluster.setMirroringAgentStatus(DisasterRecoveryCluster.MirroringAgentStatus.Enabled.toString());
+                    disasterRecoveryClusterDao.update(drCluster.getId(), drCluster);
+                    // Secondary Cluster - moldGetDisasterRecoveryClusterListAPI 호출
+                    String secCommand = "getDisasterRecoveryClusterList";
+                    String secMethod = "GET";
+                    Map<String, String> sucParams = new HashMap<>();
+                    List<GetDisasterRecoveryClusterListResponse> drListResponse = DisasterRecoveryClusterUtil.moldGetDisasterRecoveryClusterListAPI(secUrl + "/client/api/", secCommand, secMethod, secApiKey, secSecretKey);
+                    if (drListResponse != null || !drListResponse.isEmpty()) {
+                        // Secondary Cluster - moldGetDisasterRecoveryClusterListAPI 성공
+                        for (GetDisasterRecoveryClusterListResponse dr : drListResponse) {
+                            if (dr.getName().equalsIgnoreCase(drCluster.getName())) {
+                                String primaryDrId = dr.getId();
+                                // Secondary Cluster - moldUpdateDisasterRecoveryClusterAPI 호출
+                                secCommand = "updateDisasterRecoveryCluster";
+                                secMethod = "GET";
+                                sucParams.put("name", drName);
+                                sucParams.put("drclusterstatus", DisasterRecoveryCluster.DrClusterStatus.Enabled.toString());
+                                sucParams.put("mirroringagentstatus", DisasterRecoveryCluster.MirroringAgentStatus.Enabled.toString());
+                                DisasterRecoveryClusterUtil.moldUpdateDisasterRecoveryClusterAPI(secUrl + "/client/api/", secCommand, secMethod, secApiKey, secSecretKey, sucParams);
+                                return true;
+                            }
+                        }
+                    } else {
+                        // Primary Cluster - DB 업데이트
+                        drCluster.setDrClusterStatus(DisasterRecoveryCluster.DrClusterStatus.Error.toString());
+                        drCluster.setMirroringAgentStatus(DisasterRecoveryCluster.MirroringAgentStatus.Error.toString());
+                        disasterRecoveryClusterDao.update(drCluster.getId(), drCluster);
+                        // Secondary Cluster - moldGetDisasterRecoveryClusterListAPI 실패
+                        return false;
+                    }
+                }
+            }
+        } else {
+            // Primary Cluster - scvm ip 조회 실패
+            throw new CloudRuntimeException("primary cluster scvm list lookup fails.");
+        }
+        // Primary Cluster - DB 업데이트
+        drCluster.setDrClusterStatus(DisasterRecoveryCluster.DrClusterStatus.Error.toString());
+        drCluster.setMirroringAgentStatus(DisasterRecoveryCluster.MirroringAgentStatus.Error.toString());
+        disasterRecoveryClusterDao.update(drCluster.getId(), drCluster);
+        return false;
+    }
+
+    @Override
+    @ActionEvent(eventType = DisasterRecoveryClusterEventTypes.EVENT_DR_DISABLE, eventDescription = "disabling disaster recovery cluster", async = true, resourceId = 5, resourceType = "DisasterRecoveryCluster")
+    public boolean disableDisasterRecoveryCluster(DisableDisasterRecoveryClusterCmd cmd) throws CloudRuntimeException {
+        if (!DisasterRecoveryServiceEnabled.value()) {
+            throw new CloudRuntimeException("Disaster Recovery Service plugin is disabled");
+        }
+        DisasterRecoveryClusterVO drCluster = disasterRecoveryClusterDao.findById(cmd.getId());
+        if (drCluster == null) {
+            throw new InvalidParameterValueException("Invalid disaster recovery cluster id specified");
+        }
+        String drName = drCluster.getName();
+        String secUrl = drCluster.getDrClusterUrl();
+        String secClusterType = drCluster.getDrClusterType();
+        Map<String, String> details = disasterRecoveryClusterDetailsDao.findDetails(drCluster.getId());
+        String secApiKey = details.get(ApiConstants.DR_CLUSTER_API_KEY);
+        String secSecretKey = details.get(ApiConstants.DR_CLUSTER_SECRET_KEY);
+        String secPrivateKey = details.get(ApiConstants.DR_CLUSTER_PRIVATE_KEY);
+        String secGlueIpAddress = drCluster.getDrClusterGlueIpAddress();
+        try {
+            FileOutputStream fos = new FileOutputStream("glue.key");
+            fos.write(secPrivateKey.getBytes());
+            fos.close();
+        } catch (IOException e) {
+            throw new CloudRuntimeException("Converting the secondary cluster's private key to a file failed.", e);
+        }
+        File permKey = new File("glue.key");
+        // Primary Cluster - scvm ip 조회
+        String ipList = Script.runSimpleBashScript("cat /etc/hosts | grep -E 'scvm1-mngt|scvm2-mngt|scvm3-mngt' | awk '{print $1}' | tr '\n' ','");
+        if (ipList != null || !ipList.isEmpty()) {
+            ipList = ipList.replaceAll(",$", "");
+            // Primary Cluster - glueMirrorDisableAPI 호출
+            String[] array = ipList.split(",");
+            for (int i=0; i < array.length; i++) {
+                String glueIp = array[i];
+                String glueUrl = "https://" + glueIp + ":8080/api/v1"; // glue-api 프로토콜과 포트 확정 시 변경 예정
+                String glueCommand = "/mirror/{mirrorPool}";
+                String glueMethod = "DELETE";
+                Map<String, String> glueParams = new HashMap<>();
+                glueParams.put("mirrorPool", "rbd");
+                glueParams.put("host", secGlueIpAddress);
+                boolean result = DisasterRecoveryClusterUtil.glueMirrorDisableAPI(glueUrl, glueCommand, glueMethod, glueParams, permKey);
+                // glueMirrorDisableAPI 성공
+                if (result) {
+                    // Primary Cluster - DB 업데이트
+                    drCluster.setDrClusterStatus(DisasterRecoveryCluster.DrClusterStatus.Disabled.toString());
+                    drCluster.setMirroringAgentStatus(DisasterRecoveryCluster.MirroringAgentStatus.Disabled.toString());
+                    disasterRecoveryClusterDao.update(drCluster.getId(), drCluster);
+                    // Secondary Cluster - moldGetDisasterRecoveryClusterListAPI 호출
+                    String secCommand = "getDisasterRecoveryClusterList";
+                    String secMethod = "GET";
+                    Map<String, String> sucParams = new HashMap<>();
+                    List<GetDisasterRecoveryClusterListResponse> drListResponse = DisasterRecoveryClusterUtil.moldGetDisasterRecoveryClusterListAPI(secUrl + "/client/api/", secCommand, secMethod, secApiKey, secSecretKey);
+                    if (drListResponse != null || !drListResponse.isEmpty()) {
+                        // Secondary Cluster - moldGetDisasterRecoveryClusterListAPI 성공
+                        for (GetDisasterRecoveryClusterListResponse dr : drListResponse) {
+                            if (dr.getName().equalsIgnoreCase(drCluster.getName())) {
+                                String primaryDrId = dr.getId();
+                                // Secondary Cluster - moldUpdateDisasterRecoveryClusterAPI 호출
+                                secCommand = "updateDisasterRecoveryCluster";
+                                secMethod = "GET";
+                                sucParams.put("name", drName);
+                                sucParams.put("drclusterstatus", DisasterRecoveryCluster.DrClusterStatus.Disabled.toString());
+                                sucParams.put("mirroringagentstatus", DisasterRecoveryCluster.MirroringAgentStatus.Disabled.toString());
+                                DisasterRecoveryClusterUtil.moldUpdateDisasterRecoveryClusterAPI(secUrl + "/client/api/", secCommand, secMethod, secApiKey, secSecretKey, sucParams);
+                                return true;
+                            }
+                        }
+                    } else {
+                        // Primary Cluster - DB 업데이트
+                        drCluster.setDrClusterStatus(DisasterRecoveryCluster.DrClusterStatus.Error.toString());
+                        drCluster.setMirroringAgentStatus(DisasterRecoveryCluster.MirroringAgentStatus.Error.toString());
+                        disasterRecoveryClusterDao.update(drCluster.getId(), drCluster);
+                        // Secondary Cluster - moldGetDisasterRecoveryClusterListAPI 실패
+                        return false;
+                    }
+                }
+            }
+        } else {
+            // Primary Cluster - scvm ip 조회 실패
+            throw new CloudRuntimeException("primary cluster scvm list lookup fails.");
+        }
+        // Primary Cluster - DB 업데이트
+        drCluster.setDrClusterStatus(DisasterRecoveryCluster.DrClusterStatus.Error.toString());
+        drCluster.setMirroringAgentStatus(DisasterRecoveryCluster.MirroringAgentStatus.Error.toString());
+        disasterRecoveryClusterDao.update(drCluster.getId(), drCluster);
+        return false;
+    }
+
+    @Override
+    @ActionEvent(eventType = DisasterRecoveryClusterEventTypes.EVENT_DR_PROMOTE, eventDescription = "promoting disaster recovery cluster", async = true, resourceId = 5, resourceType = "DisasterRecoveryCluster")
+    public boolean promoteDisasterRecoveryCluster(PromoteDisasterRecoveryClusterCmd cmd) throws CloudRuntimeException {
+        if (!DisasterRecoveryServiceEnabled.value()) {
+            throw new CloudRuntimeException("Disaster Recovery Service plugin is disabled");
+        }
+        DisasterRecoveryClusterVO drCluster = disasterRecoveryClusterDao.findById(cmd.getId());
+        if (drCluster == null) {
+            throw new InvalidParameterValueException("Invalid disaster recovery cluster id specified");
+        }
+        validateDisasterRecoveryClusterMirrorParameters(drCluster);
+        // Secondary Cluster - scvm ip 조회
+        String ipList = Script.runSimpleBashScript("cat /etc/hosts | grep -E 'scvm1-mngt|scvm2-mngt|scvm3-mngt' | awk '{print $1}' | tr '\n' ','");
+        if (ipList != null || !ipList.isEmpty()) {
+            ipList = ipList.replaceAll(",$", "");
+            // Secondary Cluster - glueImageMirrorAPI 호출
+            String[] array = ipList.split(",");
+            for (int i=0; i < array.length; i++) {
+                String glueIp = array[i];
+                String glueUrl = "https://" + glueIp + ":8080/api/v1"; // glue-api 프로토콜과 포트 확정 시 변경 예정
+                String glueCommand = "/mirror/image";
+                String glueMethod = "GET";
+                String mirrorList = DisasterRecoveryClusterUtil.glueImageMirrorAPI(glueUrl, glueCommand, glueMethod);
+                JsonArray drArray = (JsonArray) new JsonParser().parse(mirrorList).getAsJsonObject().get("Local");
+                if (drArray.size() != 0) {
+                    for (JsonElement dr : drArray) {
+                        JsonElement imageName = dr.getAsJsonObject().get("image") == null ? null : dr.getAsJsonObject().get("image");
+                        if (imageName != null) {
+                            // Secondary Cluster - glueImageMirrorPromoteAPI 호출
+                            // 호출 시 primary cluster 의 glueAPI로 호출해야하는지 확인 필요
+                            // 단 양쪽 모두 중지 되어 있는 가상머신에 대해서만 가능하며 해당 로직 필요
+                            glueCommand = "/mirror/image/promote/{mirrorPool}/{imageName}";
+                            glueMethod = "POST";
+                            Map<String, String> glueParams = new HashMap<>();
+                            glueParams.put("mirrorPool", "rbd");
+                            glueParams.put("imageName", imageName.getAsString());
+                            boolean result = DisasterRecoveryClusterUtil.glueImageMirrorPromoteAPI(glueUrl, glueCommand, glueMethod, glueParams);
+                            // glueImageMirrorPromoteAPI 성공
+                            if (!result) {
+                                return false;
+                            }
+                        }
+                    }
+                    return true;
+                } else {
+                    throw new CloudRuntimeException("There are no images being mirrored.");
+                }
+            }
+        } else {
+            throw new CloudRuntimeException("secondary cluster scvm list lookup fails.");
+        }
+        return false;
+    }
+
+    @Override
+    @ActionEvent(eventType = DisasterRecoveryClusterEventTypes.EVENT_DR_DEMOTE, eventDescription = "demoting disaster recovery cluster", async = true, resourceId = 5, resourceType = "DisasterRecoveryCluster")
+    public boolean demoteDisasterRecoveryCluster(DemoteDisasterRecoveryClusterCmd cmd) throws CloudRuntimeException {
+        if (!DisasterRecoveryServiceEnabled.value()) {
+            throw new CloudRuntimeException("Disaster Recovery Service plugin is disabled");
+        }
+        DisasterRecoveryClusterVO drCluster = disasterRecoveryClusterDao.findById(cmd.getId());
+        if (drCluster == null) {
+            throw new InvalidParameterValueException("Invalid disaster recovery cluster id specified");
+        }
+        validateDisasterRecoveryClusterMirrorParameters(drCluster);
+        // Secondary Cluster - scvm ip 조회
+        String ipList = Script.runSimpleBashScript("cat /etc/hosts | grep -E 'scvm1-mngt|scvm2-mngt|scvm3-mngt' | awk '{print $1}' | tr '\n' ','");
+        if (ipList != null || !ipList.isEmpty()) {
+            ipList = ipList.replaceAll(",$", "");
+            // Secondary Cluster - glueImageMirrorAPI 호출
+            String[] array = ipList.split(",");
+            for (int i=0; i < array.length; i++) {
+                String glueIp = array[i];
+                String glueUrl = "https://" + glueIp + ":8080/api/v1"; // glue-api 프로토콜과 포트 확정 시 변경 예정
+                String glueCommand = "/mirror/image";
+                String glueMethod = "GET";
+                String mirrorList = DisasterRecoveryClusterUtil.glueImageMirrorAPI(glueUrl, glueCommand, glueMethod);
+                JsonArray drArray = (JsonArray) new JsonParser().parse(mirrorList).getAsJsonObject().get("Local");
+                if (drArray.size() != 0) {
+                    for (JsonElement dr : drArray) {
+                        JsonElement imageName = dr.getAsJsonObject().get("image") == null ? null : dr.getAsJsonObject().get("image");
+                        if (imageName != null) {
+                            // Secondary Cluster - glueImageMirrorDemoteAPI 호출
+                            // 호출 시 primary cluster 의 glueAPI로 호출해야하는지 확인 필요
+                            glueCommand = "/mirror/image/demote/{mirrorPool}/{imageName}";
+                            glueMethod = "DELETE";
+                            Map<String, String> glueParams = new HashMap<>();
+                            glueParams.put("mirrorPool", "rbd");
+                            glueParams.put("imageName", imageName.getAsString());
+                            boolean result = DisasterRecoveryClusterUtil.glueImageMirrorDemoteAPI(glueUrl, glueCommand, glueMethod, glueParams);
+                            // glueImageMirrorDemoteAPI 성공
+                            if (!result) {
+                                return false;
+                            }
+                        }
+                    }
+                    return true;
+                } else {
+                    throw new CloudRuntimeException("There are no images being mirrored.");
+                }
+            }
+        } else {
+            throw new CloudRuntimeException("secondary cluster scvm list lookup fails.");
+        }
+        return false;
+    }
+
+    private void validateDisasterRecoveryClusterMirrorParameters(final DisasterRecoveryClusterVO drCluster) throws CloudRuntimeException {
+        // Secondary Cluster DR VM 상태 조회
+        List<DisasterRecoveryClusterVmMapVO> drClusterVmList = disasterRecoveryClusterVmMapDao.listByDisasterRecoveryClusterId(drCluster.getId());
+        ResponseObject.ResponseView respView = ResponseObject.ResponseView.Restricted;
+        Account caller = CallContext.current().getCallingAccount();
+        if (accountService.isRootAdmin(caller.getId())) {
+            respView = ResponseObject.ResponseView.Full;
+        }
+        String responseName = "drclustervmlist";
+        if (drClusterVmList != null && !drClusterVmList.isEmpty()) {
+            for (DisasterRecoveryClusterVmMapVO vmMapVO : drClusterVmList) {
+                UserVmJoinVO userVM = userVmJoinDao.findById(vmMapVO.getVmId());
+                if (userVM != null) {
+                    if (userVM.getState() != VirtualMachine.State.Stopped) {
+                        throw new InvalidParameterValueException("Forced promote and demote functions cannot be executed because there is a running disaster recovery secondary cluster virtual machine.");
+                    }
+                }
+            }
+        }
+        String url = drCluster.getDrClusterUrl();
+        Map<String, String> details = disasterRecoveryClusterDetailsDao.findDetails(drCluster.getId());
+        String apiKey = details.get(ApiConstants.DR_CLUSTER_API_KEY);
+        String secretKey = details.get(ApiConstants.DR_CLUSTER_SECRET_KEY);
+        // Primary Cluster DR VM 상태 조회
+        String command = "getDisasterRecoveryClusterList";
+        String method = "GET";
+        Map<String, String> params = new HashMap<>();
+        List<GetDisasterRecoveryClusterListResponse> drListResponse = DisasterRecoveryClusterUtil.moldGetDisasterRecoveryClusterListAPI(url + "/client/api/", command, method, apiKey, secretKey);
+        if (drListResponse != null || !drListResponse.isEmpty()) {
+            // Primary Cluster - moldGetDisasterRecoveryClusterListAPI 성공
+            for (GetDisasterRecoveryClusterListResponse dr : drListResponse) {
+                if (dr.getName().equalsIgnoreCase(drCluster.getName())) {
+                    List<UserVmResponse> vmListResponse = dr.getDisasterRecoveryClusterVms();
+                    for (UserVmResponse vm : vmListResponse) {
+                        if (!vm.getState().equalsIgnoreCase("Stopped")) {
+                            throw new InvalidParameterValueException("Forced promote and demote functions cannot be executed because there is a running disaster recovery primary cluster virtual machine.");
+                        }
+                    }
+                }
+            }
+        } else {
+            // Primary Cluster - moldGetDisasterRecoveryClusterListAPI - 실패
+            throw new InvalidParameterValueException("Forced promote and demote functions cannot be executed because failed to query primary cluster DR information.");
+        }
     }
 
     @Override
@@ -561,6 +1076,11 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         cmdList.add(GetDisasterRecoveryClusterListCmd.class);
         cmdList.add(UpdateDisasterRecoveryClusterCmd.class);
         cmdList.add(CreateDisasterRecoveryClusterCmd.class);
+        cmdList.add(DeleteDisasterRecoveryClusterCmd.class);
+        cmdList.add(EnableDisasterRecoveryClusterCmd.class);
+        cmdList.add(DisableDisasterRecoveryClusterCmd.class);
+        cmdList.add(PromoteDisasterRecoveryClusterCmd.class);
+        cmdList.add(DemoteDisasterRecoveryClusterCmd.class);
         return cmdList;
     }
 
