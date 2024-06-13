@@ -55,7 +55,6 @@ import org.json.XML;
 import org.json.JSONObject;
 
 import com.cloud.utils.nio.TrustAllManager;
-import com.cloud.utils.exception.CloudRuntimeException;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonObject;
 
@@ -610,8 +609,7 @@ public class DisasterRecoveryClusterUtil {
             } else {
                 String msg = "Failed to request list of mirrored snapshot API. response code : " + connection.getResponseCode();
                 LOGGER.error(msg);
-                throw new CloudRuntimeException("Failed to request list of mirrored snapshot API. response code : " + connection.getResponseCode());
-                // return null;
+                return null;
             }
         } catch (Exception e) {
             LOGGER.error(String.format("Glue API endpoint not available"), e);
