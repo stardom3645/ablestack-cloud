@@ -418,60 +418,6 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         return cluster;
     }
 
-    private void validateDisasterRecoveryClusterCreateParameters(final CreateDisasterRecoveryClusterCmd cmd) throws CloudRuntimeException {
-        final String name = cmd.getName();
-        final String type = cmd.getDrClusterType();
-        final String url = cmd.getDrClusterUrl();
-        final String apiKey = cmd.getDrClusterApiKey();
-        final String secretKey = cmd.getDrClusterSecretKey();
-        final String privateKey = cmd.getDrClusterPrivateKey();
-        final String glueIp = cmd.getDrClusterGlueIpAddress();
-
-        if (name == null || name.isEmpty()) {
-            throw new InvalidParameterValueException("Invalid name for the disaster recovery cluster name:" + name);
-        }
-        if (type.equalsIgnoreCase("secondary") && (privateKey == null || privateKey.isEmpty())) {
-            throw new InvalidParameterValueException("Invalid private key for the disaster recovery cluster private key:" + privateKey);
-        }
-        if (type.equalsIgnoreCase("secondary") && (glueIp == null || glueIp.isEmpty())) {
-            throw new InvalidParameterValueException("Invalid glue ip for the disaster recovery cluster glue ip:" + glueIp);
-        }
-        if (url == null || url.isEmpty()) {
-            throw new InvalidParameterValueException("Invalid url for the disaster recovery cluster url:" + url);
-        }
-        if (apiKey == null || apiKey.isEmpty()) {
-            throw new InvalidParameterValueException("Invalid api key for the disaster recovery cluster api key:" + apiKey);
-        }
-        if (secretKey == null || secretKey.isEmpty()) {
-            throw new InvalidParameterValueException("Invalid secret key for the disaster recovery cluster secret key:" + secretKey);
-        }
-    }
-
-    private String[] getServerProperties() {
-        String[] serverInfo = null;
-        final String HTTP_PORT = "http.port";
-        final String HTTPS_ENABLE = "https.enable";
-        final String HTTPS_PORT = "https.port";
-        final File confFile = PropertiesUtil.findConfigFile("server.properties");
-        try {
-            InputStream is = new FileInputStream(confFile);
-            String port = null;
-            String protocol = null;
-            final Properties properties = ServerProperties.getServerProperties(is);
-            if (properties.getProperty(HTTPS_ENABLE).equals("true")){
-                port = properties.getProperty(HTTPS_PORT);
-                protocol = "https://";
-            } else {
-                port = properties.getProperty(HTTP_PORT);
-                protocol = "http://";
-            }
-            serverInfo = new String[]{port, protocol};
-        } catch (final IOException e) {
-            LOGGER.debug("Failed to read configuration from server.properties file", e);
-        }
-        return serverInfo;
-    }
-
     @Override
     @ActionEvent(eventType = DisasterRecoveryClusterEventTypes.EVENT_DR_CREATE, eventDescription = "creating disaster recovery cluster", async = true, resourceId = 5, resourceType = "DisasterRecoveryCluster")
     public boolean setupDisasterRecoveryCluster(long clusterId) throws CloudRuntimeException {
@@ -941,8 +887,6 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                         JsonElement imageName = dr.getAsJsonObject().get("image") == null ? null : dr.getAsJsonObject().get("image");
                         if (imageName != null) {
                             // Secondary Cluster - glueImageMirrorPromoteAPI 호출
-                            // 호출 시 primary cluster 의 glueAPI로 호출해야하는지 확인 필요
-                            // 단 양쪽 모두 중지 되어 있는 가상머신에 대해서만 가능하며 해당 로직 필요
                             glueCommand = "/mirror/image/promote/{mirrorPool}/{imageName}";
                             glueMethod = "POST";
                             Map<String, String> glueParams = new HashMap<>();
@@ -995,7 +939,6 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                         JsonElement imageName = dr.getAsJsonObject().get("image") == null ? null : dr.getAsJsonObject().get("image");
                         if (imageName != null) {
                             // Secondary Cluster - glueImageMirrorDemoteAPI 호출
-                            // 호출 시 primary cluster 의 glueAPI로 호출해야하는지 확인 필요
                             glueCommand = "/mirror/image/demote/{mirrorPool}/{imageName}";
                             glueMethod = "DELETE";
                             Map<String, String> glueParams = new HashMap<>();
@@ -1017,6 +960,35 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
             throw new CloudRuntimeException("secondary cluster scvm list lookup fails.");
         }
         return false;
+    }
+
+    private void validateDisasterRecoveryClusterCreateParameters(final CreateDisasterRecoveryClusterCmd cmd) throws CloudRuntimeException {
+        final String name = cmd.getName();
+        final String type = cmd.getDrClusterType();
+        final String url = cmd.getDrClusterUrl();
+        final String apiKey = cmd.getDrClusterApiKey();
+        final String secretKey = cmd.getDrClusterSecretKey();
+        final String privateKey = cmd.getDrClusterPrivateKey();
+        final String glueIp = cmd.getDrClusterGlueIpAddress();
+
+        if (name == null || name.isEmpty()) {
+            throw new InvalidParameterValueException("Invalid name for the disaster recovery cluster name:" + name);
+        }
+        if (type.equalsIgnoreCase("secondary") && (privateKey == null || privateKey.isEmpty())) {
+            throw new InvalidParameterValueException("Invalid private key for the disaster recovery cluster private key:" + privateKey);
+        }
+        if (type.equalsIgnoreCase("secondary") && (glueIp == null || glueIp.isEmpty())) {
+            throw new InvalidParameterValueException("Invalid glue ip for the disaster recovery cluster glue ip:" + glueIp);
+        }
+        if (url == null || url.isEmpty()) {
+            throw new InvalidParameterValueException("Invalid url for the disaster recovery cluster url:" + url);
+        }
+        if (apiKey == null || apiKey.isEmpty()) {
+            throw new InvalidParameterValueException("Invalid api key for the disaster recovery cluster api key:" + apiKey);
+        }
+        if (secretKey == null || secretKey.isEmpty()) {
+            throw new InvalidParameterValueException("Invalid secret key for the disaster recovery cluster secret key:" + secretKey);
+        }
     }
 
     private void validateDisasterRecoveryClusterMirrorParameters(final DisasterRecoveryClusterVO drCluster) throws CloudRuntimeException {
@@ -1063,6 +1035,31 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
             // Primary Cluster - moldGetDisasterRecoveryClusterListAPI - 실패
             throw new InvalidParameterValueException("Forced promote and demote functions cannot be executed because failed to query primary cluster DR information.");
         }
+    }
+
+    private String[] getServerProperties() {
+        String[] serverInfo = null;
+        final String HTTP_PORT = "http.port";
+        final String HTTPS_ENABLE = "https.enable";
+        final String HTTPS_PORT = "https.port";
+        final File confFile = PropertiesUtil.findConfigFile("server.properties");
+        try {
+            InputStream is = new FileInputStream(confFile);
+            String port = null;
+            String protocol = null;
+            final Properties properties = ServerProperties.getServerProperties(is);
+            if (properties.getProperty(HTTPS_ENABLE).equals("true")){
+                port = properties.getProperty(HTTPS_PORT);
+                protocol = "https://";
+            } else {
+                port = properties.getProperty(HTTP_PORT);
+                protocol = "http://";
+            }
+            serverInfo = new String[]{port, protocol};
+        } catch (final IOException e) {
+            LOGGER.debug("Failed to read configuration from server.properties file", e);
+        }
+        return serverInfo;
     }
 
     @Override
