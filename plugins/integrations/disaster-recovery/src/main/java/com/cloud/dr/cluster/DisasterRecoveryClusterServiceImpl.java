@@ -988,6 +988,11 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         if (secretKey == null || secretKey.isEmpty()) {
             throw new InvalidParameterValueException("Invalid secret key for the disaster recovery cluster secret key:" + secretKey);
         }
+
+        DisasterRecoveryClusterVO drcluster = disasterRecoveryClusterDao.findByName(name);
+        if (drcluster != null) {
+            throw new InvalidParameterValueException("A disaster recovery cluster with the same name exists:" + name);
+        }
     }
 
     private void validateDisasterRecoveryClusterMirrorParameters(final DisasterRecoveryClusterVO drCluster) throws CloudRuntimeException {
