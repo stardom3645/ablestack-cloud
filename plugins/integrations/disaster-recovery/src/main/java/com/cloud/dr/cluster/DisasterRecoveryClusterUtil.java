@@ -55,6 +55,7 @@ import org.json.XML;
 import org.json.JSONObject;
 
 import com.cloud.utils.nio.TrustAllManager;
+import com.cloud.utils.exception.CloudRuntimeException;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonObject;
 
