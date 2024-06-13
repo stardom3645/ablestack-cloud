@@ -1005,7 +1005,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                 UserVmJoinVO userVM = userVmJoinDao.findById(vmMapVO.getVmId());
                 if (userVM != null) {
                     if (userVM.getState() != VirtualMachine.State.Stopped) {
-                        throw new InvalidParameterValueException("Forced promote and demote functions cannot be executed because there is a running disaster recovery secondary cluster virtual machine.");
+                        throw new InvalidParameterValueException("Forced promote and demote functions cannot be executed because there is a running disaster recovery secondary cluster virtual machine : " + userVM.getName());
                     }
                 }
             }
@@ -1026,7 +1026,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                     List<UserVmResponse> vmListResponse = dr.getDisasterRecoveryClusterVms();
                     for (UserVmResponse vm : vmListResponse) {
                         if (!vm.getState().equalsIgnoreCase("Stopped")) {
-                            throw new InvalidParameterValueException("Forced promote and demote functions cannot be executed because there is a running disaster recovery primary cluster virtual machine.");
+                            throw new InvalidParameterValueException("Forced promote and demote functions cannot be executed because there is a running disaster recovery primary cluster virtual machine : " + vm.getName());
                         }
                     }
                 }
