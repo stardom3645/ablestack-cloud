@@ -1647,20 +1647,17 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
                 suitableHosts = allocator.allocateTo(vmProfile, plan, Host.Type.Routing, excludes, HostAllocator.RETURN_UPTO_ALL, false);
             }
 
-            if (suitableHosts != null && !suitableHosts.isEmpty()) {
+            if (CollectionUtils.isNotEmpty(suitableHosts)) {
                 break;
             }
         }
 
-        // re-order hosts by priority
         _dpMgr.reorderHostsByPriority(plan.getHostPriorities(), suitableHosts);
 
-        if (logger.isDebugEnabled()) {
-            if (suitableHosts.isEmpty()) {
-                logger.debug("No suitable hosts found");
-            } else {
-                logger.debug("Hosts having capacity and suitable for migration: " + suitableHosts);
-            }
+        if (suitableHosts.isEmpty()) {
+            logger.warn("No suitable hosts found.");
+        } else {
+            logger.debug("Hosts having capacity and suitable for migration: " + suitableHosts);
         }
 
         return new Ternary<>(otherHosts, suitableHosts, requiresStorageMotion);
