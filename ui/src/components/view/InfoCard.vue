@@ -545,7 +545,7 @@
         </div>
 
         <div class="resource-detail-item" v-if="resource.volumeId">
-          <div class="resource-detail-item__label">{{ $t('label.images') }}</div>
+          <div class="resource-detail-item__label">{{ $t('label.gule.images') }}</div>
           <div class="resource-detail-item__details">
             <resource-icon v-if="resource.icon" :image="getImage(resource.icon.base64image)" size="1x" style="margin-right: 5px"/>
             <IdcardOutlined v-else />
