@@ -4578,7 +4578,7 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
 
         Long rootDiskSize = null;
         // custom root disk size, resizes base template to larger size
-        if (customParameters.containsKey(VmDetailConstants.ROOT_DISK_SIZE)) {
+        if (customParameters.containsKey(VmDetailConstants.ROOT_DISK_SIZE) && customParameters.get("volumeId") == null) {
             // already verified for positive number
             rootDiskSize = Long.parseLong(customParameters.get(VmDetailConstants.ROOT_DISK_SIZE));
 

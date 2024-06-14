@@ -224,7 +224,10 @@
                 :title="$t('label.serviceofferingid')"
                 :status="zoneSelected ? 'process' : 'wait'">
                 <template #description>
-                  <div v-if="zoneSelected">
+                  <div v-if="zoneSelected" style="margin-top: 5px">
+                    <div v-if="tabKey=='volumeId'" style="margin-bottom: 10px">
+                      <a-alert :message="$t('label.override.root.no')" type="warning" />
+                    </div>
                     <a-form-item v-if="zoneSelected && templateConfigurationExists" name="templateConfiguration" ref="templateConfiguration">
                       <template #label>
                         <tooltip-label :title="$t('label.configuration')" :tooltip="$t('message.ovf.configurations')"/>
@@ -294,7 +297,7 @@
                         <a-input v-model:value="form.memory"/>
                       </a-form-item>
                     </span>
-                    <span v-if="tabKey!=='isoid'">
+                    <span v-if="tabKey!=='isoid' && tabKey!=='volumeId'">
                       {{ $t('label.override.root.diskoffering') }}
                       <a-switch
                         v-model:checked="showOverrideDiskOfferingOption"
