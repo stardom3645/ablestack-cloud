@@ -85,7 +85,9 @@ import com.cloud.network.vpc.NetworkACLItem;
 import com.cloud.network.vpc.NetworkACLItemDao;
 import com.cloud.network.vpc.NetworkACLItemVO;
 import com.cloud.network.vpc.NetworkACLService;
+import com.cloud.offering.NetworkOffering;
 import com.cloud.offering.ServiceOffering;
+import com.cloud.offerings.dao.NetworkOfferingDao;
 import com.cloud.resource.ResourceManager;
 import com.cloud.storage.Volume;
 import com.cloud.storage.VolumeApiService;
@@ -347,7 +349,7 @@ public class KubernetesClusterResourceModifierActionWorker extends KubernetesClu
             ResourceUnavailableException, InsufficientCapacityException {
         List<UserVm> nodes = new ArrayList<>();
         for (int i = offset + 1; i <= nodeCount; i++) {
-            CallContext vmContext = CallContext.register(CallContext.current(), ApiCommandResourceType.VirtualMachine);
+            CallContext vmContext = CallContext.register(CallContext.current(), ApiCommandResourceType.VirtualMachine);NetworkServiceImpl.java
             try {
                 UserVm vm = createKubernetesNode(publicIpAddress);
                 vmContext.setEventResourceId(vm.getId());
@@ -361,9 +363,7 @@ public class KubernetesClusterResourceModifierActionWorker extends KubernetesClu
                     throw new ManagementServerException(String.format("Failed to provision worker VM for Kubernetes cluster : %s", kubernetesCluster.getName()));
                 }
                 nodes.add(vm);
-                if (logger.isInfoEnabled()) {
-                    logger.info(String.format("Provisioned node VM : %s in to the Kubernetes cluster : %s", vm.getDisplayName(), kubernetesCluster.getName()));
-                }
+                logger.info("Provisioned node VM : {} in to the Kubernetes cluster : {}", vm.getDisplayName(), kubernetesCluster.getName());
             } finally {
                 CallContext.unregister();
             }

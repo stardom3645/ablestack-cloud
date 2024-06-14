@@ -1099,8 +1099,8 @@ public class LinstorPrimaryDataStoreDriverImpl implements PrimaryDataStoreDriver
             }
             return answer;
         } catch (Exception e) {
-            logger.debug("copy snapshot failed: ", e);
-            throw new CloudRuntimeException("Copy snapshot failed, please cleanup snapshot manually: " + e);
+            logger.debug("copy snapshot failed, please cleanup snapshot manually: ", e);
+            throw new CloudRuntimeException(e.toString());
         }
 
     }

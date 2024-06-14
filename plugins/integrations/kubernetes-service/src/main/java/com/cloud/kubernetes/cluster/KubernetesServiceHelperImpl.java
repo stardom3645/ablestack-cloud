@@ -44,7 +44,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class KubernetesServiceHelperImpl extends AdapterBase implements KubernetesServiceHelper, Configurable {
-    private static final Logger logger = Logger.getLogger(KubernetesServiceHelperImpl.class);
+    private static final Logger logger = LogManager.getLogger(KubernetesServiceHelperImpl.class);
 
     @Inject
     private KubernetesClusterDao kubernetesClusterDao;

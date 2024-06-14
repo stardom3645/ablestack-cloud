@@ -144,7 +144,7 @@ public class SAML2LoginAPIAuthenticatorCmd extends BaseCmd implements APIAuthent
 
     protected void checkAndFailOnMissingSAMLSignature(Signature signature) {
         if (signature == null && SAML2AuthManager.SAMLCheckSignature.value()) {
-            s_logger.error("Failing SAML login due to missing signature in the SAML response and signature check is enforced. " +
+            logger.error("Failing SAML login due to missing signature in the SAML response and signature check is enforced. " +
                     "Please check and ensure the IDP configuration has signing certificate or relax the saml2.check.signature setting.");
             throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, "Signature is missing from the SAML Response. Please contact the Administrator");
         }
