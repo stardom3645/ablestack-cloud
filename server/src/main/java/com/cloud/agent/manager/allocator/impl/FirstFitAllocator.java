@@ -25,7 +25,6 @@ import java.util.Map;
 import javax.inject.Inject;
 import javax.naming.ConfigurationException;
 
-import com.cloud.utils.exception.CloudRuntimeException;
 import org.apache.cloudstack.framework.config.dao.ConfigurationDao;
 import org.apache.cloudstack.utils.reflectiontostringbuilderutils.ReflectionToStringBuilderUtils;
 import org.springframework.stereotype.Component;
@@ -138,9 +137,7 @@ public class FirstFitAllocator extends AdapterBase implements HostAllocator {
             return new ArrayList<Host>();
         }
 
-        if (logger.isDebugEnabled()) {
-            logger.debug("Looking for hosts in dc: " + dcId + "  pod:" + podId + "  cluster:" + clusterId);
-        }
+        logger.debug("Looking for hosts in zone [{}], pod [{}], cluster [{}]", dcId, podId, clusterId);
 
         String hostTagOnOffering = offering.getHostTag();
         String hostTagOnTemplate = template.getTemplateTag();

@@ -36,7 +36,6 @@ import com.cloud.deploy.DeploymentPlan;
 import com.cloud.deploy.DeploymentPlanner.ExcludeList;
 import com.cloud.host.Host;
 import com.cloud.host.Host.Type;
-import com.cloud.host.HostVO;
 import com.cloud.host.dao.HostDao;
 import com.cloud.offering.ServiceOffering;
 import com.cloud.resource.ResourceManager;
@@ -88,8 +87,7 @@ public class RandomAllocator extends AdapterBase implements HostAllocator {
         Long podId = plan.getPodId();
         Long clusterId = plan.getClusterId();
         ServiceOffering offering = vmProfile.getServiceOffering();
-        List<? extends Host> hostsCopy = null;
-        List<Host> suitableHosts = new ArrayList<Host>();
+        List<Host> suitableHosts = new ArrayList<>();
 
         if (type == Host.Type.Storage) {
             return suitableHosts;
@@ -132,6 +130,7 @@ public class RandomAllocator extends AdapterBase implements HostAllocator {
         if (hostsCopy.size() == 0) {
             return suitableHosts;
         }
+
         Collections.shuffle(hostsCopy);
         for (Host host : hostsCopy) {
             if (suitableHosts.size() == returnUpTo) {
