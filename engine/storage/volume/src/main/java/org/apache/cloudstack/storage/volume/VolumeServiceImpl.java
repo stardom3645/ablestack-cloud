@@ -32,7 +32,10 @@ import java.util.concurrent.ExecutionException;
 
 import javax.inject.Inject;
 
+import com.cloud.exception.InvalidParameterValueException;
+import com.cloud.storage.DiskOfferingVO;
 import com.cloud.storage.VolumeApiServiceImpl;
+import com.cloud.storage.dao.DiskOfferingDao;
 import org.apache.cloudstack.annotation.AnnotationService;
 import org.apache.cloudstack.annotation.dao.AnnotationDao;
 import org.apache.cloudstack.api.command.user.volume.CheckAndRepairVolumeCmd;
@@ -215,7 +218,7 @@ public class VolumeServiceImpl implements VolumeService {
     @Inject
     private PassphraseDao passphraseDao;
     @Inject
-    private DiskOfferingDao diskOfferingDao;
+    protected DiskOfferingDao diskOfferingDao;
 
     public VolumeServiceImpl() {
     }
@@ -2794,6 +2797,16 @@ public class VolumeServiceImpl implements VolumeService {
                 volumeInfo.addPayload(payload);
                 checkAndRepairVolumeThroughHost(volumeInfo, host);
             }
+        }
+    }
+
+    @Override
+    public void validateChangeDiskOfferingEncryptionType(long existingDiskOfferingId, long newDiskOfferingId) {
+        DiskOfferingVO existingDiskOffering = diskOfferingDao.findByIdIncludingRemoved(existingDiskOfferingId);
+        DiskOfferingVO newDiskOffering = diskOfferingDao.findById(newDiskOfferingId);
+
+        if (existingDiskOffering.getEncrypt() != newDiskOffering.getEncrypt()) {
+            throw new InvalidParameterValueException("Cannot change the encryption type of a volume, please check the selected offering");
         }
     }
 
