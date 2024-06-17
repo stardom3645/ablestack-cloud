@@ -4260,6 +4260,6 @@
 "label.glue.images": "Glue Images",
 "label.template.iso.rbdimage": "Template/ISO/Glue Images",
 "message.rbd.desc": "A Glue image that allows you to clone a volume to start a virtual machine",
-"label.override.root.no ": "The root disk size is ignored when selecting a grey image.",
+"label.override.root.no ": "The root disk size is ignored when selecting a Glue images.",
 "label.gule.images": "Glue Images"
 }
