@@ -444,8 +444,8 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         // Primary Cluster 정보
         String[] properties = getServerProperties();
         ManagementServerHostVO msHost = msHostDao.findByMsid(ManagementServerNode.getManagementServerId());
-        // String priUrl = properties[1] + "://" + msHost.getServiceIP() + ":" + properties[0];
-        String priUrl = "http://10.10.254.39:5050"; // VM 테스트로 임시 변수 설정
+        String priUrl = properties[1] + "://" + msHost.getServiceIP() + ":" + properties[0];
+        // String priUrl = "http://10.10.254.39:5050"; // VM 테스트로 임시 변수 설정
         String priClusterType = "primary";
         UserAccount user = accountService.getActiveUserAccount("admin", 1L);
         String priApiKey = user.getApiKey();
@@ -592,8 +592,8 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
             // Primary Cluster 정보
             String[] properties = getServerProperties();
             ManagementServerHostVO msHost = msHostDao.findByMsid(ManagementServerNode.getManagementServerId());
-            // String priUrl = properties[1] + "://" + msHost.getServiceIP() + ":" + properties[0];
-            String priUrl = "http://10.10.254.39:5050"; // VM 테스트로 임시 변수 설정
+            String priUrl = properties[1] + "://" + msHost.getServiceIP() + ":" + properties[0];
+            // String priUrl = "http://10.10.254.39:5050"; // VM 테스트로 임시 변수 설정
             String priClusterType = "primary";
             UserAccount user = accountService.getActiveUserAccount("admin", 1L);
             String priApiKey = user.getApiKey();
@@ -700,8 +700,8 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         // Primary Cluster 정보
         String[] properties = getServerProperties();
         ManagementServerHostVO msHost = msHostDao.findByMsid(ManagementServerNode.getManagementServerId());
-        // String priUrl = properties[1] + "://" + msHost.getServiceIP() + ":" + properties[0];
-        String priUrl = "http://10.10.254.39:5050"; // VM 테스트로 임시 변수 설정
+        String priUrl = properties[1] + "://" + msHost.getServiceIP() + ":" + properties[0];
+        // String priUrl = "http://10.10.254.39:5050"; // VM 테스트로 임시 변수 설정
         String priClusterType = "primary";
         UserAccount user = accountService.getActiveUserAccount("admin", 1L);
         String priApiKey = user.getApiKey();
@@ -1141,10 +1141,10 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
             final Properties properties = ServerProperties.getServerProperties(is);
             if (properties.getProperty(HTTPS_ENABLE).equals("true")){
                 port = properties.getProperty(HTTPS_PORT);
-                protocol = "https://";
+                protocol = "https";
             } else {
                 port = properties.getProperty(HTTP_PORT);
-                protocol = "http://";
+                protocol = "http";
             }
             serverInfo = new String[]{port, protocol};
         } catch (final IOException e) {
