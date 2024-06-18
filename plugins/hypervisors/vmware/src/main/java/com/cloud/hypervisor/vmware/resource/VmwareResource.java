@@ -782,7 +782,7 @@ public class VmwareResource extends ServerResourceBase implements StoragePoolRes
      */
     protected EnumMap<VmwareStorageProcessorConfigurableFields, Object> examineStorageSubSystemCommandFullCloneFlagForVmware(CopyCommand cmd,
             EnumMap<VmwareStorageProcessorConfigurableFields, Object> params) {
-        EnumMap<VmwareStorageProcessorConfigurableFields, Object> paramsCopy = new EnumMap<VmwareStorageProcessorConfigurableFields, Object>(params);
+        EnumMap<VmwareStorageProcessorConfigurableFields, Object> paramsCopy = new EnumMap<>(params);
         HypervisorType hypervisor = cmd.getDestTO().getHypervisorType();
         if (hypervisor != null && hypervisor.equals(HypervisorType.VMware)) {
             DataStoreTO destDataStore = cmd.getDestTO().getDataStore();

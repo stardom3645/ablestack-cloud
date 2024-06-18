@@ -42,7 +42,6 @@ import com.cloud.resource.ResourceManager;
 import com.cloud.storage.VMTemplateVO;
 import com.cloud.utils.Pair;
 import com.cloud.utils.component.AdapterBase;
-import com.cloud.utils.exception.CloudRuntimeException;
 import com.cloud.vm.VirtualMachine;
 import com.cloud.vm.VirtualMachineProfile;
 
@@ -87,6 +86,7 @@ public class RandomAllocator extends AdapterBase implements HostAllocator {
         Long podId = plan.getPodId();
         Long clusterId = plan.getClusterId();
         ServiceOffering offering = vmProfile.getServiceOffering();
+        List<? extends Host> hostsCopy = null;
         List<Host> suitableHosts = new ArrayList<>();
 
         if (type == Host.Type.Storage) {
@@ -105,7 +105,7 @@ public class RandomAllocator extends AdapterBase implements HostAllocator {
         }
         if (hosts != null) {
             // retain all computing hosts, regardless of whether they support routing...it's random after all
-            hostsCopy = new ArrayList<Host>(hosts);
+            hostsCopy = new ArrayList<>(hosts);
             if (ObjectUtils.anyNotNull(offeringHostTag, templateTag)) {
                 hostsCopy.retainAll(listHostsByTags(type, dcId, podId, clusterId, offeringHostTag, templateTag));
             } else {
@@ -122,12 +122,12 @@ public class RandomAllocator extends AdapterBase implements HostAllocator {
         hostsCopy = ListUtils.union(hostsCopy, _hostDao.findHostsWithTagRuleThatMatchComputeOferringTags(offeringHostTag));
 
         if (hostsCopy.isEmpty()) {
-            logger.error(String.format("No suitable host found for vm [%s] with tags [%s].", vmProfile, hostTag));
-            throw new CloudRuntimeException(String.format("No suitable host found for vm [%s].", vmProfile));
+            logger.info("No suitable host found for VM [{}] in {}.", vmProfile, hostTag);
+            return null;
         }
 
-        logger.debug("Random Allocator found " + hostsCopy.size() + "  hosts");
-        if (hostsCopy.size() == 0) {
+        logger.debug("Random Allocator found {} hosts", hostsCopy.size());
+        if (hostsCopy.isEmpty()) {
             return suitableHosts;
         }
 
@@ -173,7 +173,7 @@ public class RandomAllocator extends AdapterBase implements HostAllocator {
             if (logger.isDebugEnabled()) {
                 logger.debug("Random Allocator found 0 hosts as given host list is empty");
             }
-            return new ArrayList<Host>();
+            return new ArrayList<>();
         }
         return findSuitableHosts(vmProfile, plan, type, avoid, hosts, returnUpTo, considerReservedCapacity);
     }

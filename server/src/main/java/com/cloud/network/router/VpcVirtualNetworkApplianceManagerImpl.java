@@ -248,7 +248,7 @@ public class VpcVirtualNetworkApplianceManagerImpl extends VirtualNetworkApplian
     private boolean manageKeepalivedServiceOnRouter(VirtualRouter router,
             Network network, String action) throws ConcurrentOperationException, ResourceUnavailableException {
         if (network.getTrafficType() != TrafficType.Guest) {
-            s_logger.warn("Network " + network + " is not of type " + TrafficType.Guest);
+            logger.warn("Network {} is not of type {}", network, TrafficType.Guest);
             return false;
         }
         boolean result = true;
@@ -263,18 +263,19 @@ public class VpcVirtualNetworkApplianceManagerImpl extends VirtualNetworkApplian
 
                 final Answer setupAnswer = cmds.getAnswer("manageKeepalived");
                 if (!(setupAnswer != null && setupAnswer.getResult())) {
-                    s_logger.warn("Unable to " + action + " keepalived on router " + router);
+                    logger.warn("Unable to {} keepalived on router {}", action, router);
                     result = false;
                 }
             } else if (router.getState() == State.Stopped || router.getState() == State.Stopping) {
-                s_logger.debug("Router " + router.getInstanceName() + " is in " + router.getState() + ", so not sending command to the backend");
+                logger.debug("Router {} is in {}, so not sending command to the backend", router.getInstanceName(), router.getState());
             } else {
                 String message = "Unable to " + action + " keepalived on virtual router [" + router + "] is not in the right state " + router.getState();
-                s_logger.warn(message);
+                logger.warn(message);
                 throw new ResourceUnavailableException(message, DataCenter.class, router.getDataCenterId());
             }
         } catch (final Exception ex) {
-            s_logger.warn("Failed to " + action + "  keepalived on router " + router + " to network " + network + " due to ", ex);
+            logger.warn("Failed to {}  keepalived on router {} to network {} due to {}", action, router, network, ex.getLocalizedMessage());
+            logger.debug("Failed to {}  keepalived on router {} to network {}", action, router, network, ex);
             result = false;
         }
         return result;

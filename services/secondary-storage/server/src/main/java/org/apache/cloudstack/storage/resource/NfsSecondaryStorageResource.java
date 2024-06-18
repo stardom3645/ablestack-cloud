@@ -249,11 +249,11 @@ public class NfsSecondaryStorageResource extends ServerResourceBase implements S
     private String _storageNetmask;
     private String _storageGateway;
     private String _nfsVersion;
-    private final List<String> nfsIps = new ArrayList<String>();
+    private final List<String> nfsIps = new ArrayList<>();
     protected String _parent = "/mnt/SecStorage";
     final private String _tmpltpp = "template.properties";
     protected String createTemplateFromSnapshotXenScript;
-    private HashMap<String, UploadEntity> uploadEntityStateMap = new HashMap<String, UploadEntity>();
+    private HashMap<String, UploadEntity> uploadEntityStateMap = new HashMap<>();
     private String _ssvmPSK = null;
     private long processTimeout;
 
@@ -2347,7 +2347,7 @@ public class NfsSecondaryStorageResource extends ServerResourceBase implements S
         String rule =  String.format("-o %s -d %s -p tcp -m state --state NEW -m tcp -j ACCEPT", intf, destCidr);
         String errMsg = String.format("Error in allowing outgoing to %s", destCidr);
 
-        s_logger.info(String.format("Adding rule if required: " + rule));
+        logger.info("Adding rule if required: {}", rule);
         String result = IpTablesHelper.addConditionally(IpTablesHelper.OUTPUT_CHAIN, true, rule, errMsg);
         if (result != null) {
             return result;
