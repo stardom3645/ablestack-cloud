@@ -106,17 +106,15 @@
 <script>
 import { ref, reactive, toRaw } from 'vue'
 import { api } from '@/api'
-import DedicateDomain from '../../components/view/DedicateDomain'
 import ResourceIcon from '@/components/view/ResourceIcon'
 import TooltipLabel from '@/components/widgets/TooltipLabel.vue'
 import eventBus from '@/config/eventBus'
 import { Spin, Alert } from 'ant-design-vue'
 
 export default {
-  name: 'ClusterAdd',
+  name: 'DisasterRecoveryClusterAdd',
   components: {
     TooltipLabel,
-    DedicateDomain,
     ResourceIcon,
     Spin,
     Alert
@@ -143,23 +141,10 @@ export default {
       loading: false,
       spinTemplate: false,
       showCode: false,
-      zonesList: [],
-      showDedicated: false,
-      dedicatedDomainId: null,
-      dedicatedAccount: null,
-      domainError: false,
       params: [],
-      placeholder: {
-        name: null,
-        gateway: null,
-        netmask: null,
-        startip: null,
-        endip: null
-      },
       buttonDisabled: false,
       alertDescription: this.$t('message.disaster.recovery.cluster.connection.test.description'),
-      testConnResult: false,
-      result: null
+      testConnResult: false
     }
   },
   computed: {
@@ -169,11 +154,9 @@ export default {
   },
   beforeCreate () {
     this.apiParams = this.$getApiParams('createDisasterRecoveryCluster')
-    console.log(this.apiParams)
   },
   created () {
     this.initForm()
-    this.fetchData()
   },
   methods: {
     initForm () {
@@ -187,27 +170,6 @@ export default {
         glueip: [{ required: true, message: this.$t('message.error.required.input') }],
         file: [{ required: true, message: this.$t('message.error.required.input') }]
       })
-    },
-    fetchData () {
-      this.fetchZones()
-    },
-    fetchZones () {
-      this.loading = true
-      api('listZones', { showicon: true }).then(response => {
-        this.zonesList = response.listzonesresponse.zone || []
-        this.form.zoneid = this.zonesList[0].id
-        this.params = this.$store.getters.apis.createPod.params
-        Object.keys(this.placeholder).forEach(item => { this.returnPlaceholder(item) })
-      }).catch(error => {
-        this.$notifyError(error)
-      }).finally(() => {
-        this.loading = false
-      })
-    },
-    toggleDedicate () {
-      this.dedicatedDomainId = null
-      this.dedicatedAccount = null
-      this.showDedicated = !this.showDedicated
     },
     // 재난복구클러스터 연결 테스트
     testConnCode () {
@@ -223,7 +185,6 @@ export default {
         api('connectivityTestsDisasterRecovery', params).then(json => {
           this.testConnResult = json.connectivitytestsdisasterrecoveryresponse
           if (this.testConnResult === false) {
-            alert('sdfsdfsd')
             return
           } else {
             this.showCode = false
@@ -238,6 +199,10 @@ export default {
             description: (error.response && error.response.headers && error.response.headers['x-description']) || error.message
           })
         })
+      }).catch(error => {
+        this.formRef.value.scrollToField(error.errorFields[0].name)
+        this.showCode = !this.showCode
+        this.buttonDisabled = false
       })
     },
     handleKeyPress (event) {
@@ -293,11 +258,6 @@ export default {
         }).catch(error => {
           this.formRef.value.scrollToField(error.errorFields[0].name)
         })
-    },
-    returnPlaceholder (field) {
-      this.params.find(i => {
-        if (i.name === field) this.placeholder[field] = i.description
-      })
     },
     closeModals () {
       this.$emit('close-action')
