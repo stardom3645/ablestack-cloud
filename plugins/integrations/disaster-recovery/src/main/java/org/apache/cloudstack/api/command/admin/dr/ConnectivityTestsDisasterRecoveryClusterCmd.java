@@ -100,7 +100,7 @@ public class ConnectivityTestsDisasterRecoveryClusterCmd extends BaseCmd impleme
             SuccessResponse response = new SuccessResponse(getCommandName());
             setResponseObject(response);
         } else {
-            throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, "Failed to connectivity tests disaster recovery");
+            throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, "Failed to connectivity tests disaster recovery cluster");
         }
     }
 }
