@@ -155,7 +155,7 @@ public class QuotaManagerImpl extends ManagerBase implements QuotaManager {
                 .map(quotaUsageVO -> new Pair<>(quotaUsageVO.getStartDate(), quotaUsageVO.getEndDate()))
                 .collect(Collectors.toCollection(LinkedHashSet::new));
 
-        logger.info(String.format("Processing quota balance for account[%s] between [%s] and [%s].", accountToString, startDate, lastQuotaUsageEndDate));
+        logger.info(String.format("Processing quota balance for account[{}] between [{}] and [{}].", accountToString, startDate, lastQuotaUsageEndDate));
 
         long accountId = accountVo.getAccountId();
         long domainId = accountVo.getDomainId();
@@ -215,7 +215,7 @@ public class QuotaManagerImpl extends ManagerBase implements QuotaManager {
             QuotaBalanceVO lastRealBalance = _quotaBalanceDao.findLastBalanceEntry(accountId, domainId, startDate);
 
             if (lastRealBalance == null) {
-                logger.warn(String.format("Account [%s] has quota usage entries, however it does not have a quota balance.", accountToString));
+                logger.warn("Account [{}] has quota usage entries, however it does not have a quota balance.", accountToString);
             } else {
                 accountBalance = accountBalance.add(lastRealBalance.getCreditBalance());
             }
