@@ -33,7 +33,7 @@
       </a-alert>
       <a-form-item name="name" ref="name" :label="$t('label.name')">
         <a-input
-          :placeholder="'temp'"
+          :placeholder="apiParams.name.description"
           v-model:value="form.name"
         />
       </a-form-item>
@@ -41,7 +41,7 @@
       <a-form-item name="displaytext" ref="displaytext" :label="$t('label.displaytext')">
         <a-input
           v-model:value="form.displaytext"
-          :placeholder="'temp'"
+          :placeholder="apiParams.description.description"
         />
       </a-form-item>
 
@@ -54,25 +54,25 @@
         </a-form-item>
         <a-form-item name="apikey" ref="apikey" :label="$t('label.apikey')">
           <a-input
-            :placeholder="'temp'"
+            :placeholder="apiParams.drclusterapikey.description"
             v-model:value="form.apikey"
           />
         </a-form-item>
         <a-form-item name="secretkey" ref="secretkey" :label="$t('label.secret.key')">
           <a-input
-            :placeholder="'temp'"
+            :placeholder="apiParams.drclustersecretkey.description"
             v-model:value="form.secretkey"
           />
         </a-form-item>
         <a-form-item name="glueip" ref="glueip" :label="'Glue IP'">
         <a-input
-          :placeholder="'temp'"
+          :placeholder="apiParams.drclusterglueipaddress.description"
           v-model:value="form.glueip"
         />
       </a-form-item>
         <a-form-item name="file" ref="file" :label="$t('label.add.disaster.recovery.cluster.info.glue.pri.key')">
           <a-textarea
-            :placeholder="'temp'"
+            :placeholder="apiParams.drclusterprivatekey.description"
             v-model:value="form.file"
           ></a-textarea>
         </a-form-item>
@@ -166,6 +166,10 @@ export default {
     testDescText () {
       return this.showCode ? 'Disappear Code' : 'Show Code'
     }
+  },
+  beforeCreate () {
+    this.apiParams = this.$getApiParams('createDisasterRecoveryCluster')
+    console.log(this.apiParams)
   },
   created () {
     this.initForm()

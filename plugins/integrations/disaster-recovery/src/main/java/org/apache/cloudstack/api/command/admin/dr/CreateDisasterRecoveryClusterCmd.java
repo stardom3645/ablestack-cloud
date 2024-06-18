@@ -57,36 +57,36 @@ public class CreateDisasterRecoveryClusterCmd extends BaseAsyncCreateCmd {
     //////////////// API parameters /////////////////////
     /////////////////////////////////////////////////////
     @Parameter(name = ApiConstants.NAME, type = CommandType.STRING, required = true,
-            description = "dr cluster name")
+            description = "disaster recovery cluster name")
     private String name;
 
     @Parameter(name = ApiConstants.DESCRIPTION, type = CommandType.STRING, required = true,
-            description = "dr cluster description")
+            description = "disaster recovery cluster description")
     private String description;
 
     @Parameter(name = ApiConstants.DR_CLUSTER_URL, type = CommandType.STRING, required = true,
-    description = "dr cluster url")
+    description = "disaster recovery cluster mold url ex) http://10.10.1.10:8080")
     private String drClusterUrl;
 
     @Parameter(name = ApiConstants.DR_CLUSTER_TYPE, type = CommandType.STRING, required = true,
-            description = "dr cluster type")
+            description = "disaster recovery cluster type")
     private String drClusterType;
 
     @Parameter(name = ApiConstants.DR_CLUSTER_API_KEY, type = CommandType.STRING, required = true,
-            description = "dr cluster api key")
+            description = "disaster recovery cluster mold api key")
     private String drClusterApiKey;
 
     @Parameter(name = ApiConstants.DR_CLUSTER_SECRET_KEY, type = CommandType.STRING, required = true,
-            description = "dr cluster secret key")
+            description = "disaster recovery cluster mold secret key")
     private String drClusterSecretKey;
 
     @Parameter(name = ApiConstants.DR_CLUSTER_PRIVATE_KEY, type = CommandType.STRING, required = false,
-            description = "dr cluster private key.",
+            description = "disaster recovery cluster glue private key",
             length = 16384)
     private String drClusterPrivateKey;
 
     @Parameter(name = ApiConstants.DR_CLUSTER_GLUE_IP_ADDRESS, type = CommandType.STRING, required = false,
-            description = "dr cluster glue ip address")
+            description = "disaster recovery cluster glue ip address")
     private String drClusterGlueIpAddress;
 
     /////////////////////////////////////////////////////
