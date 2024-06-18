@@ -750,10 +750,6 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                             }
                         }
                     } else {
-                        // Primary Cluster - DB 업데이트
-                        drCluster.setDrClusterStatus(DisasterRecoveryCluster.DrClusterStatus.Error.toString());
-                        drCluster.setMirroringAgentStatus(DisasterRecoveryCluster.MirroringAgentStatus.Error.toString());
-                        disasterRecoveryClusterDao.update(drCluster.getId(), drCluster);
                         // Secondary Cluster - moldGetDisasterRecoveryClusterListAPI 실패
                         return false;
                     }
@@ -763,10 +759,6 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
             // Primary Cluster - scvm ip 조회 실패
             throw new CloudRuntimeException("primary cluster scvm list lookup fails.");
         }
-        // Primary Cluster - DB 업데이트
-        drCluster.setDrClusterStatus(DisasterRecoveryCluster.DrClusterStatus.Error.toString());
-        drCluster.setMirroringAgentStatus(DisasterRecoveryCluster.MirroringAgentStatus.Error.toString());
-        disasterRecoveryClusterDao.update(drCluster.getId(), drCluster);
         return false;
     }
 
@@ -838,10 +830,6 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                             }
                         }
                     } else {
-                        // Primary Cluster - DB 업데이트
-                        drCluster.setDrClusterStatus(DisasterRecoveryCluster.DrClusterStatus.Error.toString());
-                        drCluster.setMirroringAgentStatus(DisasterRecoveryCluster.MirroringAgentStatus.Error.toString());
-                        disasterRecoveryClusterDao.update(drCluster.getId(), drCluster);
                         // Secondary Cluster - moldGetDisasterRecoveryClusterListAPI 실패
                         return false;
                     }
@@ -851,10 +839,6 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
             // Primary Cluster - scvm ip 조회 실패
             throw new CloudRuntimeException("primary cluster scvm list lookup fails.");
         }
-        // Primary Cluster - DB 업데이트
-        drCluster.setDrClusterStatus(DisasterRecoveryCluster.DrClusterStatus.Error.toString());
-        drCluster.setMirroringAgentStatus(DisasterRecoveryCluster.MirroringAgentStatus.Error.toString());
-        disasterRecoveryClusterDao.update(drCluster.getId(), drCluster);
         return false;
     }
 
