@@ -53,25 +53,25 @@ public class CreateDisasterRecoveryClusterVmCmd extends BaseAsyncCmd {
     @Parameter(name = ApiConstants.DR_CLUSTER_ID,
                 type = CommandType.UUID,
                 required = true,
-                description = "dr cluster id")
+                description = "disaster recovery cluster id")
     private Long drClusterId;
 
     @Parameter(name = ApiConstants.VIRTUAL_MACHINE_ID,
                 type = CommandType.UUID,
                 required = true,
-                description = "the virtual machine ID used by dr cluster")
+                description = "the virtual machine ID used by disaster recovery cluster")
     private Long vmId;
 
     @Parameter(name = ApiConstants.SERVICE_OFFERING_ID,
                 type = CommandType.UUID,
                 required = true,
-                description = "the service offering ID used by dr cluster")
+                description = "the service offering ID used by disaster recovery cluster")
     private Long serviceOfferingId;
 
     @Parameter(name = ApiConstants.NETWORK_ID,
                 type = CommandType.UUID,
                 required = true,
-                description = "the network ID used by dr cluster")
+                description = "the network ID used by disaster recovery cluster")
     private Long networkId;
 
 
