@@ -25,6 +25,7 @@ import org.apache.cloudstack.api.command.admin.dr.EnableDisasterRecoveryClusterC
 import org.apache.cloudstack.api.command.admin.dr.DisableDisasterRecoveryClusterCmd;
 import org.apache.cloudstack.api.command.admin.dr.PromoteDisasterRecoveryClusterCmd;
 import org.apache.cloudstack.api.command.admin.dr.DemoteDisasterRecoveryClusterCmd;
+import org.apache.cloudstack.api.command.admin.dr.CreateDisasterRecoveryClusterVmCmd;
 import org.apache.cloudstack.api.command.admin.glue.ListScvmIpAddressCmd;
 import org.apache.cloudstack.api.response.ListResponse;
 import org.apache.cloudstack.api.response.ScvmIpAddressResponse;
@@ -66,5 +67,7 @@ public interface DisasterRecoveryClusterService extends PluggableService, Config
     boolean promoteDisasterRecoveryCluster(PromoteDisasterRecoveryClusterCmd cmd) throws CloudRuntimeException;
 
     boolean demoteDisasterRecoveryCluster(DemoteDisasterRecoveryClusterCmd cmd) throws CloudRuntimeException;
+
+    boolean setupDisasterRecoveryClusterVm(CreateDisasterRecoveryClusterVmCmd cmd) throws CloudRuntimeException;
 
 }
