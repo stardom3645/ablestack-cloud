@@ -370,6 +370,33 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
             Map<String,String> details = cmd.getDetails();
             drcluster.setDetails(details);
             disasterRecoveryClusterDetailsDao.persist(drcluster.getId(), details);
+            List<DisasterRecoveryClusterVmMapVO> drClusterVmList = disasterRecoveryClusterVmMapDao.listByDisasterRecoveryClusterId(drcluster.getId());
+            if (drClusterVmList != null && !drClusterVmList.isEmpty()) {
+                String ipList = Script.runSimpleBashScript("cat /etc/hosts | grep -E 'scvm1-mngt|scvm2-mngt|scvm3-mngt' | awk '{print $1}' | tr '\n' ','");
+                ipList = ipList.replaceAll(",$", "");
+                String[] array = ipList.split(",");
+                for (DisasterRecoveryClusterVmMapVO vmMapVO : drClusterVmList) {
+                    UserVmJoinVO userVM = userVmJoinDao.findById(vmMapVO.getVmId());
+                    if (userVM != null && (ipList != null || !ipList.isEmpty())) {
+                        for (int i=0; i < array.length; i++) {
+                            // Secondary Cluster - glueImageMirrorSetupUpdateAPI 호출
+                            String glueIp = array[i];
+                            String glueUrl = "https://" + glueIp + ":8080/api/v1"; // glue-api 프로토콜과 포트 확정 시 변경 예정
+                            String glueCommand = "/mirror/image/{mirrorPool}/{imageName}";
+                            String glueMethod = "PATCH";
+                            Map<String, String> glueParams = new HashMap<>();
+                            glueParams.put("mirrorPool", "rbd");
+                            glueParams.put("imageName", userVM.getVolumeUuid());
+                            glueParams.put("interval", details.get("mirrorscheduleinterval"));
+                            glueParams.put("startTime", details.get("mirrorschedulestarttime"));
+                            boolean result = DisasterRecoveryClusterUtil.glueImageMirrorSetupUpdateAPI(glueUrl, glueCommand, glueMethod, glueParams);
+                            if (result) {
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
         }
         if (cmd.getDrClusterStatus() != null) {
             String drClusterStatus = cmd.getDrClusterStatus();
@@ -408,6 +435,10 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                 }
                 if (cmd.getDrClusterPrivateKey() != null) {
                     drDetails.put(ApiConstants.DR_CLUSTER_PRIVATE_KEY, cmd.getDrClusterPrivateKey());
+                }
+                if (cmd.getDrClusterType().equalsIgnoreCase("secondary")) {
+                    drDetails.put("mirrorscheduleinterval", "24h"); // interval h,m,d format
+                    drDetails.put("mirrorschedulestarttime", ""); // start-time ISO 8601 time format
                 }
                 disasterRecoveryClusterDetailsDao.persist(newCluster.getId(), drDetails);
                 return newCluster;
@@ -970,6 +1001,8 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         Map<String, String> details = disasterRecoveryClusterDetailsDao.findDetails(clusterId);
         String apiKey = details.get(ApiConstants.DR_CLUSTER_API_KEY);
         String secretKey = details.get(ApiConstants.DR_CLUSTER_SECRET_KEY);
+        String interval = details.get("mirrorscheduleinterval");
+        String startTime = details.get("mirrorschedulestarttime");
         String moldUrl = url + "/client/api/";
         String moldCommand = "listScvmIpAddress";
         String moldMethod = "GET";
@@ -986,8 +1019,8 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                 Map<String, String> glueParams = new HashMap<>();
                 glueParams.put("mirrorPool", "rbd");
                 glueParams.put("imageName", volumeUuid);
-                glueParams.put("interval", "");
-                glueParams.put("startTime", "");
+                glueParams.put("interval", interval);
+                glueParams.put("startTime", startTime);
                 boolean result = DisasterRecoveryClusterUtil.glueImageMirrorSetupAPI(glueUrl, glueCommand, glueMethod, glueParams);
                 // glueImageMirrorSetupAPI 성공
                 if (result) {
