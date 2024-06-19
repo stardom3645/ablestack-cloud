@@ -117,7 +117,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         if (response != null) {
             // Secondary Cluster - glueStatusAPI 호출
             String[] array = response.split(",");
-            for(int i=0; i < array.length; i++) {
+            for (int i=0; i < array.length; i++) {
                 String glueIp = array[i];
                 String glueUrl = "https://" + glueIp + ":8080/api/v1"; // glue-api 프로토콜과 포트 확정 시 변경 예정
                 String glueCommand = "/glue";
@@ -211,7 +211,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
             ipList = ipList.replaceAll(",$", "");
             // Primary Cluster - glueMirrorStatusAPI 호출
             String[] array = ipList.split(",");
-            for(int i=0; i < array.length; i++) {
+            for (int i=0; i < array.length; i++) {
                 String glueIp = array[i];
                 String glueUrl = "https://" + glueIp + ":8080/api/v1"; // glue-api 프로토콜과 포트 확정 시 변경 예정
                 String glueCommand = "/mirror";
@@ -299,7 +299,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
             // Primary Cluster - glueMirrorStatusAPI 호출
             String[] array = ipList.split(",");
             String daemonHealth = null;
-            for(int i=0; i < array.length; i++) {
+            for (int i=0; i < array.length; i++) {
                 String glueIp = array[i];
                 String glueUrl = "https://" + glueIp + ":8080/api/v1"; // glue-api 프로토콜과 포트 확정 시 변경 예정
                 String glueCommand = "/mirror";
@@ -1011,7 +1011,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         if (response != null) {
             // Secondary Cluster - glueImageMirrorSetupAPI 호출
             String[] array = response.split(",");
-            for(int i=0; i < array.length; i++) {
+            for (int i=0; i < array.length; i++) {
                 String glueIp = array[i];
                 String glueUrl = "https://" + glueIp + ":8080/api/v1"; // glue-api 프로토콜과 포트 확정 시 변경 예정
                 String glueCommand = "/mirror/image/{mirrorPool}/{imageName}";
