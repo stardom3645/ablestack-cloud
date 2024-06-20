@@ -266,6 +266,7 @@ public class UploadManagerImpl extends ManagerBase implements UploadManager {
         }
         // Create the directory structure so that its visible under apache server root
         String extractDir = "/var/www/html/userdata/";
+        extractDir = extractDir + cmd.getFilepathInExtractURL() + File.separator;
         Script command = new Script("/bin/su", logger);
         command.add("-s");
         command.add("/bin/bash");
