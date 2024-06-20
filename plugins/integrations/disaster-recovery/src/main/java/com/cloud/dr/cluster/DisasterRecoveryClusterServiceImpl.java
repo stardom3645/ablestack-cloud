@@ -1133,7 +1133,6 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
             // Primary Cluster - moldGetDisasterRecoveryClusterListAPI 성공
             for (GetDisasterRecoveryClusterListResponse dr : drListResponse) {
                 if (dr.getName().equalsIgnoreCase(drCluster.getName())) {
-                    LOGGER.info(dr.getDisasterRecoveryClusterVms());
                     if (dr.getDisasterRecoveryClusterVms() != null) {
                         List<UserVmResponse> vmListResponse = dr.getDisasterRecoveryClusterVms();
                         for (UserVmResponse vm : vmListResponse) {

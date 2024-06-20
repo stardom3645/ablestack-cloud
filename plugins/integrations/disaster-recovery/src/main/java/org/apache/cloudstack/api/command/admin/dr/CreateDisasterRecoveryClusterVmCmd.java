@@ -25,7 +25,6 @@ import org.apache.cloudstack.api.ApiConstants;
 import org.apache.cloudstack.api.ApiErrorCode;
 import org.apache.cloudstack.api.Parameter;
 import org.apache.cloudstack.api.BaseAsyncCmd;
-import org.apache.cloudstack.api.ResponseObject.ResponseView;
 import org.apache.cloudstack.api.response.SuccessResponse;
 import org.apache.cloudstack.api.ServerApiException;
 import org.apache.cloudstack.context.CallContext;
@@ -37,9 +36,6 @@ import com.cloud.utils.exception.CloudRuntimeException;
 @APICommand(name = CreateDisasterRecoveryClusterVmCmd.APINAME,
         description = "Create Disaster Recovery Cluster Virtual Machine",
         responseObject = SuccessResponse.class,
-        responseView = ResponseView.Restricted,
-        requestHasSensitiveInfo = false,
-        responseHasSensitiveInfo = true,
         authorized = {RoleType.Admin})
 public class CreateDisasterRecoveryClusterVmCmd extends BaseAsyncCmd {
     public static final String APINAME = "createDisasterRecoveryClusterVm";
