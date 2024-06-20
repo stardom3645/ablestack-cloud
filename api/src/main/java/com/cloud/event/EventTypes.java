@@ -725,6 +725,8 @@ public class EventTypes {
 
     // SystemVM
     public static final String EVENT_LIVE_PATCH_SYSTEMVM = "LIVE.PATCH.SYSTEM.VM";
+    //Purge resources
+    public static final String EVENT_PURGE_EXPUNGED_RESOURCES = "PURGE.EXPUNGED.RESOURCES";
 
     // Security
     public static final String EVENT_SECURITY_CHECK = "SECURITY.CHECK";
