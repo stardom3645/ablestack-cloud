@@ -90,7 +90,7 @@ export default {
       }, {
         name: 'vnf.settings',
         component: shallowRef(defineAsyncComponent(() => import('@/views/image/TemplateVnfSettings.vue'))),
-        show: (record) => { return record.templatetype === 'VNF' }
+        show: (record) => { return record.templatetype === 'VNF' && 'updateVnfTemplate' in store.getters.apis }
       },
       {
         name: 'events',
@@ -367,8 +367,21 @@ export default {
       icon: ['fa-solid', 'fa-dharmachakra'],
       docHelp: 'plugins/cloudstack-kubernetes-service.html#kubernetes-supported-versions',
       permission: ['listKubernetesSupportedVersions'],
+      searchFilters: ['zoneid', 'minimumsemanticversion'],
       columns: ['name', 'state', 'semanticversion', 'isostate', 'mincpunumber', 'minmemory', 'zonename'],
       details: ['name', 'semanticversion', 'supportsautoscaling', 'zoneid', 'zonename', 'isoid', 'isoname', 'isostate', 'mincpunumber', 'minmemory', 'supportsha', 'state', 'created'],
+      tabs: [
+        {
+          name: 'details',
+          component: shallowRef(defineAsyncComponent(() => import('@/components/view/DetailsTab.vue')))
+        },
+        {
+          name: 'events',
+          resourceType: 'KubernetesSupportedVersion',
+          component: shallowRef(defineAsyncComponent(() => import('@/components/view/EventsTab.vue'))),
+          show: () => { return 'listEvents' in store.getters.apis }
+        }
+      ],
       actions: [
         {
           api: 'addKubernetesSupportedVersion',
