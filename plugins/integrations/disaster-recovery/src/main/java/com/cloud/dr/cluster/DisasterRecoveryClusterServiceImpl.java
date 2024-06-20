@@ -884,12 +884,19 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
             throw new InvalidParameterValueException("Invalid disaster recovery cluster id specified");
         }
         validateDisasterRecoveryClusterMirrorParameters(drCluster);
-        // Secondary Cluster - scvm ip 조회
-        String ipList = Script.runSimpleBashScript("cat /etc/hosts | grep -E 'scvm1-mngt|scvm2-mngt|scvm3-mngt' | awk '{print $1}' | tr '\n' ','");
-        if (ipList != null || !ipList.isEmpty()) {
-            ipList = ipList.replaceAll(",$", "");
+
+        String url = drCluster.getDrClusterUrl();
+        Map<String, String> details = disasterRecoveryClusterDetailsDao.findDetails(drCluster.getId());
+        String apiKey = details.get(ApiConstants.DR_CLUSTER_API_KEY);
+        String secretKey = details.get(ApiConstants.DR_CLUSTER_SECRET_KEY);
+        String moldUrl = url + "/client/api/";
+        String moldCommand = "listScvmIpAddress";
+        String moldMethod = "GET";
+        // Primary Cluster - moldListScvmIpAddressAPI 호출
+        String response = DisasterRecoveryClusterUtil.moldListScvmIpAddressAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey);
+        if (response != null) {
             // Secondary Cluster - glueImageMirrorAPI 호출
-            String[] array = ipList.split(",");
+            String[] array = response.split(",");
             for (int i=0; i < array.length; i++) {
                 String glueIp = array[i];
                 String glueUrl = "https://" + glueIp + ":8080/api/v1"; // glue-api 프로토콜과 포트 확정 시 변경 예정
@@ -938,12 +945,18 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
             throw new InvalidParameterValueException("Invalid disaster recovery cluster id specified");
         }
         validateDisasterRecoveryClusterMirrorParameters(drCluster);
-        // Secondary Cluster - scvm ip 조회
-        String ipList = Script.runSimpleBashScript("cat /etc/hosts | grep -E 'scvm1-mngt|scvm2-mngt|scvm3-mngt' | awk '{print $1}' | tr '\n' ','");
-        if (ipList != null || !ipList.isEmpty()) {
-            ipList = ipList.replaceAll(",$", "");
+        String url = drCluster.getDrClusterUrl();
+        Map<String, String> details = disasterRecoveryClusterDetailsDao.findDetails(drCluster.getId());
+        String apiKey = details.get(ApiConstants.DR_CLUSTER_API_KEY);
+        String secretKey = details.get(ApiConstants.DR_CLUSTER_SECRET_KEY);
+        String moldUrl = url + "/client/api/";
+        String moldCommand = "listScvmIpAddress";
+        String moldMethod = "GET";
+        // Primary Cluster - moldListScvmIpAddressAPI 호출
+        String response = DisasterRecoveryClusterUtil.moldListScvmIpAddressAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey);
+        if (response != null) {
             // Secondary Cluster - glueImageMirrorAPI 호출
-            String[] array = ipList.split(",");
+            String[] array = response.split(",");
             for (int i=0; i < array.length; i++) {
                 String glueIp = array[i];
                 String glueUrl = "https://" + glueIp + ":8080/api/v1"; // glue-api 프로토콜과 포트 확정 시 변경 예정
@@ -1003,14 +1016,11 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         String secretKey = details.get(ApiConstants.DR_CLUSTER_SECRET_KEY);
         String interval = details.get("mirrorscheduleinterval");
         String startTime = details.get("mirrorschedulestarttime");
-        String moldUrl = url + "/client/api/";
-        String moldCommand = "listScvmIpAddress";
-        String moldMethod = "GET";
-        // Secondary Cluster - moldListScvmIpAddressAPI 호출
-        String response = DisasterRecoveryClusterUtil.moldListScvmIpAddressAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey);
-        if (response != null) {
+        String ipList = Script.runSimpleBashScript("cat /etc/hosts | grep -E 'scvm1-mngt|scvm2-mngt|scvm3-mngt' | awk '{print $1}' | tr '\n' ','");
+        if (ipList != null || !ipList.isEmpty()) {
+            ipList = ipList.replaceAll(",$", "");
             // Secondary Cluster - glueImageMirrorSetupAPI 호출
-            String[] array = response.split(",");
+            String[] array = ipList.split(",");
             for (int i=0; i < array.length; i++) {
                 String glueIp = array[i];
                 String glueUrl = "https://" + glueIp + ":8080/api/v1"; // glue-api 프로토콜과 포트 확정 시 변경 예정
@@ -1024,8 +1034,9 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                 boolean result = DisasterRecoveryClusterUtil.glueImageMirrorSetupAPI(glueUrl, glueCommand, glueMethod, glueParams);
                 // glueImageMirrorSetupAPI 성공
                 if (result) {
-                    moldCommand = "deployVirtualMachines";
-                    moldMethod = "POST";
+                    String moldUrl = url + "/client/api/";
+                    String moldCommand = "deployVirtualMachines";
+                    String moldMethod = "POST";
                     // Secondary Cluster - deployVirtualMachines 호출
                     // String response = DisasterRecoveryClusterUtil.moldListScvmIpAddressAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey);
                     return true;
