@@ -4702,8 +4702,6 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
             SearchCriteria<TemplateJoinVO> scc = _templateJoinDao.createSearchCriteria();
             scc.addOr("name", SearchCriteria.Op.LIKE, "%" + keyword + "%");
             scc.addOr("uuid", SearchCriteria.Op.LIKE, "%" + keyword + "%");
-            sc.addAnd("name", SearchCriteria.Op.SC, scc);
-        } else if (name != null) {
             scc.addOr("displayText", SearchCriteria.Op.LIKE, "%" + keyword + "%");
             sc.addAnd("name", SearchCriteria.Op.SC, scc);
         }
