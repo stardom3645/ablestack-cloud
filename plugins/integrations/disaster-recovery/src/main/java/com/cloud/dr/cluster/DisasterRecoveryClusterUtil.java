@@ -615,26 +615,24 @@ public class DisasterRecoveryClusterUtil {
             URL url = new URL(region + subUrl);
             HttpsURLConnection connection = (HttpsURLConnection)url.openConnection();
             connection.setSSLSocketFactory(sslContext.getSocketFactory());
-            connection.setDoInput(true);
             connection.setDoOutput(true);
             connection.setRequestMethod(method);
             connection.setConnectTimeout(30000);
             connection.setReadTimeout(180000);
             connection.setRequestProperty("Accept", "application/vnd.ceph.api.v1.0+json");
             connection.setRequestProperty("Authorization", "application/vnd.ceph.api.v1.0+json");
-            connection.setRequestProperty("Connection","Keep-Alive");
-            connection.setRequestProperty("Content-type", "multipart/form-data;charset=" + charset + ";boundary=" + boundary);
-            outputStream = connection.getOutputStream();
-            writer = new PrintWriter(new OutputStreamWriter(outputStream, charset), true);
+            connection.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
+            StringBuilder postData = new StringBuilder();
             for(Map.Entry<String, String> param : params.entrySet()){
-                String key = param.getKey();
-                String value = param.getValue();
-                addTextPart(key, value);
+                postData.append("&");
+                postData.append(URLEncoder.encode(param.getKey(), "UTF-8"));
+                postData.append("=");
+                postData.append(URLEncoder.encode(String.valueOf(param.getValue()), "UTF-8"));
             }
-            writer.append("--" + boundary + "--").append(LINE_FEED);
-            writer.close();
+            byte[] postDataBytes = postData.toString().getBytes("UTF-8");
+            connection.getOutputStream().write(postDataBytes);
             if (connection.getResponseCode() == 200) {
-                BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+                BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream(), "UTF-8"));
                 String inputLine;
                 StringBuffer response = new StringBuffer();
                 while ((inputLine = in.readLine()) != null) {
@@ -643,7 +641,7 @@ public class DisasterRecoveryClusterUtil {
                 in.close();
                 return true;
             } else {
-                BufferedReader in = new BufferedReader(new InputStreamReader(connection.getErrorStream()));
+                BufferedReader in = new BufferedReader(new InputStreamReader(connection.getErrorStream(), "UTF-8"));
                 String inputLine;
                 StringBuffer response = new StringBuffer();
                 while ((inputLine = in.readLine()) != null) {
@@ -651,6 +649,7 @@ public class DisasterRecoveryClusterUtil {
                 }
                 in.close();
                 String msg = "Failed to request glue mirror image setup API. response code : " + connection.getResponseCode();
+                LOGGER.error(response);
                 LOGGER.error(msg);
                 return false;
             }
