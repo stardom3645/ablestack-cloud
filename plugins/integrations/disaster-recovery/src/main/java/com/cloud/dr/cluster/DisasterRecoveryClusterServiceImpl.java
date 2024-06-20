@@ -1029,10 +1029,10 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                 // glueImageMirrorSetupAPI 성공
                 if (result) {
                     String moldUrl = url + "/client/api/";
-                    String moldCommand = "deployVirtualMachines";
+                    String moldCommand = "deployVirtualMachineForVolume";
                     String moldMethod = "POST";
-                    // Secondary Cluster - deployVirtualMachines 호출
-                    // String response = DisasterRecoveryClusterUtil.moldListScvmIpAddressAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey);
+                    // Secondary Cluster - deployVirtualMachineForVolume 호출
+                    // String response = DisasterRecoveryClusterUtil.moldDeployVirtualMachineForVolumeAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey);
                     return true;
                 }
             }
