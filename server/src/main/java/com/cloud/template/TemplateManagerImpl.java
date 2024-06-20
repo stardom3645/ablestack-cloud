@@ -619,7 +619,7 @@ public class TemplateManagerImpl extends ManagerBase implements TemplateManager,
         if (vm.getIsoId() != null) {
             Map<Volume, StoragePool> storageForDisks = dest.getStorageForDisks();
             Long poolId = null;
-            TemplateInfo template;
+            TemplateInfo template = null;
             if (MapUtils.isNotEmpty(storageForDisks)) {
                 for (StoragePool storagePool : storageForDisks.values()) {
                     if (poolId != null && storagePool.getId() != poolId) {
@@ -628,27 +628,28 @@ public class TemplateManagerImpl extends ManagerBase implements TemplateManager,
                     poolId = storagePool.getId();
                 }
             }
-            template = prepareIso(vm.getIsoId(), vm.getDataCenterId(), dest.getHost().getId(), poolId);
+            VMTemplateVO templateVO = _tmpltDao.findById(vm.getIsoId());
+            if(templateVO != null){
+                template = prepareIso(vm.getIsoId(), vm.getDataCenterId(), dest.getHost().getId(), poolId);
+                if (template == null){
+                    logger.error("Failed to prepare ISO on secondary or cache storage");
+                    throw new CloudRuntimeException("Failed to prepare ISO on secondary or cache storage");
+                }
+                if (template.isBootable()) {
+                    profile.setBootLoaderType(BootloaderType.CD);
+                }
+                GuestOSVO guestOS = _guestOSDao.findById(template.getGuestOSId());
+                String displayName = null;
+                if (guestOS != null) {
+                    displayName = guestOS.getDisplayName();
+                }
 
-            if (template == null){
-                logger.error("Failed to prepare ISO on secondary or cache storage");
-                throw new CloudRuntimeException("Failed to prepare ISO on secondary or cache storage");
+                TemplateObjectTO iso = (TemplateObjectTO)template.getTO();
+                iso.setDirectDownload(template.isDirectDownload());
+                iso.setGuestOsType(displayName);
+                DiskTO disk = new DiskTO(iso, 3L, null, Volume.Type.ISO);
+                profile.addDisk(disk);
             }
-            if (template.isBootable()) {
-                profile.setBootLoaderType(BootloaderType.CD);
-            }
-
-            GuestOSVO guestOS = _guestOSDao.findById(template.getGuestOSId());
-            String displayName = null;
-            if (guestOS != null) {
-                displayName = guestOS.getDisplayName();
-            }
-
-            TemplateObjectTO iso = (TemplateObjectTO)template.getTO();
-            iso.setDirectDownload(template.isDirectDownload());
-            iso.setGuestOsType(displayName);
-            DiskTO disk = new DiskTO(iso, 3L, null, Volume.Type.ISO);
-            profile.addDisk(disk);
         } else {
             TemplateObjectTO iso = new TemplateObjectTO();
             iso.setFormat(ImageFormat.ISO);

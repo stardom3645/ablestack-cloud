@@ -253,6 +253,14 @@ public class VMTemplateVO implements VirtualMachineTemplate {
                 guestOSId, false, null);
     }
 
+
+     public static VMTemplateVO createSystemRaw(Long id, String uniqueName, String name, boolean isPublic,
+                                                String url, boolean requiresHvm, int bits, long accountId, String cksum,
+                                                String displayText, boolean enablePassword, long guestOSId, HypervisorType hyperType) {
+                                            return new VMTemplateVO(id, uniqueName, name, ImageFormat.RAW, isPublic, false, TemplateType.USER, url, null, requiresHvm, bits, accountId, cksum, displayText, enablePassword,
+                                            guestOSId, true, hyperType);
+}
+
     public VMTemplateVO(Long id, String uniqueName, String name, ImageFormat format, boolean isPublic, boolean featured, TemplateType type, String url, Date created,
             boolean requiresHvm, int bits, long accountId, String cksum, String displayText, boolean enablePassword, long guestOSId, boolean bootable,
             HypervisorType hyperType) {
