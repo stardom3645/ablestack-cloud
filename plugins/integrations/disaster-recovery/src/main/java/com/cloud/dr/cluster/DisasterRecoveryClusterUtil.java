@@ -540,6 +540,10 @@ public class DisasterRecoveryClusterUtil {
             }
             writer.append("--" + boundary + "--").append(LINE_FEED);
             writer.close();
+            LOGGER.info(outputStream);
+            LOGGER.info(url);
+            LOGGER.info(method);
+            LOGGER.info(params);
             if (connection.getResponseCode() == 200) {
                 BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
                 String inputLine;
@@ -557,6 +561,7 @@ public class DisasterRecoveryClusterUtil {
                     response.append(inputLine);
                 }
                 in.close();
+                LOGGER.info(response);
                 String msg = "Failed to request glue mirror image demote API. response code : " + connection.getResponseCode();
                 LOGGER.error(msg);
                 return false;
