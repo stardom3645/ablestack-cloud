@@ -104,7 +104,6 @@ import { api } from '@/api'
 import DedicateDomain from '@comp/view/DedicateDomain.vue'
 import ResourceIcon from '@/components/view/ResourceIcon.vue'
 import TooltipLabel from '@/components/widgets/TooltipLabel.vue'
-import eventBus from '@/config/eventBus'
 export default {
   name: 'DRMirroringVMAdd',
   components: {
@@ -225,26 +224,14 @@ export default {
           networkid: values.secDrClusterNetworkList
         }
         api('createDisasterRecoveryClusterVm', params).then(json => {
-          const jobId = json.createdisasterrecoveryclustervmresponse.jobid
-          this.$pollJob({
-            jobId,
-            title: this.$t('label.add.disaster.recovery.cluster.vm'),
-            description: values.name,
-            successMethod: () => {
-              this.$notification.success({
-                message: this.$t('message.success.add.disaster.recovery.cluster.vm'),
-                duration: 0
-              })
-              eventBus.emit('dr-refresh-data')
-            },
-            loadingMessage: `${this.$t('label.add.disaster.recovery.cluster.vm')} ${values.name} ${this.$t('label.in.progress')}`,
-            catchMessage: this.$t('error.fetching.async.job.result'),
-            catchMethod: () => {
-              eventBus.emit('dr-refresh-data')
-            }
+          this.$notification.success({
+            message: this.$t('label.add.disaster.recovery.cluster.vm'),
+            description: this.$t('label.add.disaster.recovery.cluster.vm')
           })
-          eventBus.emit('dr-refresh-data')
-          this.closeModals()
+          this.closeModal()
+          this.parentFetchData()
+        }).catch(error => {
+          this.$notifyError(error)
         }).finally(() => {
           this.loading = false
         })
