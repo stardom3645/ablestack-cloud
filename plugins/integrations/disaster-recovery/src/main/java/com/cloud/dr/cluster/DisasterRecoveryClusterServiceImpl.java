@@ -910,12 +910,9 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                             JsonElement imageName = dr.getAsJsonObject().get("image") == null ? null : dr.getAsJsonObject().get("image");
                             if (imageName != null) {
                                 // Secondary Cluster - glueImageMirrorPromoteAPI 호출
-                                glueCommand = "/mirror/image/promote/{mirrorPool}/{imageName}";
+                                glueCommand = "/mirror/image/promote/rbd/"+imageName.getAsString();
                                 glueMethod = "POST";
-                                Map<String, String> glueParams = new HashMap<>();
-                                glueParams.put("mirrorPool", "rbd");
-                                glueParams.put("imageName", imageName.getAsString());
-                                boolean result = DisasterRecoveryClusterUtil.glueImageMirrorPromoteAPI(glueUrl, glueCommand, glueMethod, glueParams);
+                                boolean result = DisasterRecoveryClusterUtil.glueImageMirrorPromoteAPI(glueUrl, glueCommand, glueMethod);
                                 // glueImageMirrorPromoteAPI 성공
                                 if (!result) {
                                     return false;
@@ -964,25 +961,17 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                 String glueMethod = "GET";
                 String mirrorList = DisasterRecoveryClusterUtil.glueImageMirrorAPI(glueUrl, glueCommand, glueMethod);
                 if (mirrorList != null) {
-                    LOGGER.info("demoteDisasterRecoveryCluster4:::::::::::::::::");
-                    LOGGER.info(mirrorList);
                     JsonArray drArray = (JsonArray) new JsonParser().parse(mirrorList).getAsJsonObject().get("Local");
                     if (drArray.size() != 0) {
                         for (JsonElement dr : drArray) {
                             JsonElement imageName = dr.getAsJsonObject().get("image") == null ? null : dr.getAsJsonObject().get("image");
                             if (imageName != null) {
-                                LOGGER.info("demoteDisasterRecoveryCluster5:::::::::::::::::");
-                                LOGGER.info(imageName.getAsString());
                                 // Secondary Cluster - glueImageMirrorDemoteAPI 호출
-                                glueCommand = "/mirror/image/demote/{mirrorPool}/{imageName}";
+                                glueCommand = "/mirror/image/demote/rbd/"+imageName.getAsString();
                                 glueMethod = "DELETE";
-                                Map<String, String> glueParams = new HashMap<>();
-                                glueParams.put("mirrorPool", "rbd");
-                                glueParams.put("imageName", imageName.getAsString());
-                                boolean result = DisasterRecoveryClusterUtil.glueImageMirrorDemoteAPI(glueUrl, glueCommand, glueMethod, glueParams);
+                                boolean result = DisasterRecoveryClusterUtil.glueImageMirrorDemoteAPI(glueUrl, glueCommand, glueMethod);
                                 // glueImageMirrorDemoteAPI 성공
                                 if (!result) {
-                                    LOGGER.info("demoteDisasterRecoveryCluster6:::::::::::::::::");
                                     return false;
                                 }
                             }

@@ -451,7 +451,7 @@ public class DisasterRecoveryClusterUtil {
      *  POST
      * @return true = 200, 이외 코드는 false 처리
      */
-    protected static boolean glueImageMirrorPromoteAPI(String region, String subUrl, String method, Map<String, String> params) {
+    protected static boolean glueImageMirrorPromoteAPI(String region, String subUrl, String method) {
         try {
             // SSL 인증서 에러 우회 처리
             final SSLContext sslContext = SSLUtils.getSSLContext();
@@ -459,24 +459,12 @@ public class DisasterRecoveryClusterUtil {
             URL url = new URL(region + subUrl);
             HttpsURLConnection connection = (HttpsURLConnection)url.openConnection();
             connection.setSSLSocketFactory(sslContext.getSocketFactory());
-            connection.setDoInput(true);
             connection.setDoOutput(true);
             connection.setRequestMethod(method);
             connection.setConnectTimeout(30000);
             connection.setReadTimeout(180000);
             connection.setRequestProperty("Accept", "application/vnd.ceph.api.v1.0+json");
             connection.setRequestProperty("Authorization", "application/vnd.ceph.api.v1.0+json");
-            connection.setRequestProperty("Connection","Keep-Alive");
-            connection.setRequestProperty("Content-type", "multipart/form-data;charset=" + charset + ";boundary=" + boundary);
-            outputStream = connection.getOutputStream();
-            writer = new PrintWriter(new OutputStreamWriter(outputStream, charset), true);
-            for(Map.Entry<String, String> param : params.entrySet()){
-                String key = param.getKey();
-                String value = param.getValue();
-                addTextPart(key, value);
-            }
-            writer.append("--" + boundary + "--").append(LINE_FEED);
-            writer.close();
             if (connection.getResponseCode() == 200) {
                 BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
                 String inputLine;
@@ -496,6 +484,7 @@ public class DisasterRecoveryClusterUtil {
                 in.close();
                 String msg = "Failed to request glue mirror image promote API. response code : " + connection.getResponseCode();
                 LOGGER.error(msg);
+                LOGGER.error(response);
                 return false;
             }
         } catch (Exception e) {
@@ -514,7 +503,7 @@ public class DisasterRecoveryClusterUtil {
      *  DELETE
      * @return true = 200, 이외 코드는 false 처리
      */
-    protected static boolean glueImageMirrorDemoteAPI(String region, String subUrl, String method, Map<String, String> params) {
+    protected static boolean glueImageMirrorDemoteAPI(String region, String subUrl, String method) {
         try {
             // SSL 인증서 에러 우회 처리
             final SSLContext sslContext = SSLUtils.getSSLContext();
@@ -522,28 +511,12 @@ public class DisasterRecoveryClusterUtil {
             URL url = new URL(region + subUrl);
             HttpsURLConnection connection = (HttpsURLConnection)url.openConnection();
             connection.setSSLSocketFactory(sslContext.getSocketFactory());
-            connection.setDoInput(true);
             connection.setDoOutput(true);
             connection.setRequestMethod(method);
             connection.setConnectTimeout(30000);
             connection.setReadTimeout(180000);
             connection.setRequestProperty("Accept", "application/vnd.ceph.api.v1.0+json");
             connection.setRequestProperty("Authorization", "application/vnd.ceph.api.v1.0+json");
-            connection.setRequestProperty("Connection","Keep-Alive");
-            connection.setRequestProperty("Content-type", "multipart/form-data;charset=" + charset + ";boundary=" + boundary);
-            outputStream = connection.getOutputStream();
-            writer = new PrintWriter(new OutputStreamWriter(outputStream, charset), true);
-            for(Map.Entry<String, String> param : params.entrySet()){
-                String key = param.getKey();
-                String value = param.getValue();
-                addTextPart(key, value);
-            }
-            writer.append("--" + boundary + "--").append(LINE_FEED);
-            writer.close();
-            LOGGER.info(outputStream);
-            LOGGER.info(url);
-            LOGGER.info(method);
-            LOGGER.info(params);
             if (connection.getResponseCode() == 200) {
                 BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
                 String inputLine;
@@ -561,9 +534,9 @@ public class DisasterRecoveryClusterUtil {
                     response.append(inputLine);
                 }
                 in.close();
-                LOGGER.info(response);
                 String msg = "Failed to request glue mirror image demote API. response code : " + connection.getResponseCode();
                 LOGGER.error(msg);
+                LOGGER.error(response);
                 return false;
             }
         } catch (Exception e) {
