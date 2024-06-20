@@ -556,7 +556,7 @@
                   </span>
                   <div style="margin-top: 15px" v-if="showDetails">
                     <div
-                      v-if="vm.templateid && ['KVM', 'VMware', 'XenServer'].includes(hypervisor) && !template.deployasis">
+                      v-if="(vm.templateid && ['KVM', 'VMware', 'XenServer'].includes(hypervisor) && !template.deployasis) || tabKey == 'volumeId'">
                       <a-form-item :label="$t('label.boottype')" name="boottype" ref="boottype">
                         <a-select
                           v-model:value="form.boottype"
@@ -743,7 +743,7 @@
                         @select-affinity-group-item="($event) => updateAffinityGroups($event)"
                         @handle-search-filter="($event) => handleSearchFilter('affinityGroups', $event)"/>
                     </a-form-item>
-                    <a-form-item name="nicmultiqueuenumber" ref="nicmultiqueuenumber" v-if="vm.templateid && ['KVM'].includes(hypervisor)">
+                    <a-form-item name="nicmultiqueuenumber" ref="nicmultiqueuenumber" v-if="vm.templateid && ['KVM'].includes(hypervisor) || tabKey == 'volumeId'">
                       <template #label>
                         <tooltip-label :title="$t('label.nicmultiqueuenumber')" :tooltip="$t('label.nicmultiqueuenumber.tooltip')"/>
                       </template>
@@ -751,7 +751,7 @@
                         style="width: 100%;"
                         v-model:value="form.nicmultiqueuenumber" />
                     </a-form-item>
-                    <a-form-item name="nicpackedvirtqueuesenabled" ref="nicpackedvirtqueuesenabled" v-if="vm.templateid && ['KVM'].includes(hypervisor)">
+                    <a-form-item name="nicpackedvirtqueuesenabled" ref="nicpackedvirtqueuesenabled" v-if="vm.templateid && ['KVM'].includes(hypervisor) || tabKey == 'volumeId'">
                       <template #label>
                         <tooltip-label :title="$t('label.nicpackedvirtqueuesenabled')" :tooltip="$t('label.nicpackedvirtqueuesenabled.tooltip')"/>
                       </template>
@@ -760,7 +760,7 @@
                         :checked="nicpackedvirtqueuesenabled"
                         @change="val => { nicpackedvirtqueuesenabled = val }"/>
                     </a-form-item>
-                    <a-form-item name="iothreadsenabled" ref="iothreadsenabled" v-if="vm.templateid && ['KVM'].includes(hypervisor)">
+                    <a-form-item name="iothreadsenabled" ref="iothreadsenabled" v-if="vm.templateid && ['KVM'].includes(hypervisor) || tabKey == 'volumeId'">
                       <template #label>
                         <tooltip-label :title="$t('label.iothreadsenabled')" :tooltip="$t('label.iothreadsenabled.tooltip')"/>
                       </template>
@@ -771,7 +771,7 @@
                           @change="val => { iothreadsenabled = val }"/>
                       </a-form-item>
                     </a-form-item>
-                    <a-form-item name="iodriverpolicy" ref="iodriverpolicy" v-if="vm.templateid && ['KVM'].includes(hypervisor)">
+                    <a-form-item name="iodriverpolicy" ref="iodriverpolicy" v-if="vm.templateid && ['KVM'].includes(hypervisor) || tabKey == 'volumeId'">
                       <template #label>
                         <tooltip-label :title="$t('label.iodriverpolicy')" :tooltip="$t('label.iodriverpolicy.tooltip')"/>
                       </template>
