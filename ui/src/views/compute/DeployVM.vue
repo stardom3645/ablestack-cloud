@@ -2749,7 +2749,6 @@ export default {
       }
     },
     resetFromTemplateConfiguration () {
-      this.deleteFrom(this.params.serviceOfferings.options, ['templateid', 'isoid', 'volumeId', 'cpuspeed', 'cpunumber', 'memory'])
       this.deleteFrom(this.instanceConfig, ['disksize', 'rootdisksize'])
       this.deleteFrom(this.params.serviceOfferings.options, ['templateid', 'cpuspeed', 'cpunumber', 'memory'])
       this.deleteFrom(this.dataPreFill, ['cpuspeed', 'cpunumber', 'memory'])
