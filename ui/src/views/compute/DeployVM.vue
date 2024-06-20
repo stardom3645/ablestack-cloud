@@ -142,7 +142,7 @@
                 </template>
               </a-step>
               <a-step
-                :title="$t('label.templateiso')"
+                :title="$t('label.template.iso.rbdimage')"
                 :status="zoneSelected ? 'process' : 'wait'">
                 <template #description>
                   <div v-if="zoneSelected" style="margin-top: 15px">
@@ -179,7 +179,7 @@
                           @update-disk-size="updateFieldValue"
                           style="margin-top: 10px;"/>
                       </div>
-                      <div v-else>
+                      <div v-else-if="tabKey === 'isoid'">
                         {{ $t('message.iso.desc') }}
                         <template-iso-selection
                           input-decorator="isoid"
@@ -200,6 +200,21 @@
                             :filterOption="filterOption" />
                         </a-form-item>
                       </div>
+                      <div v-else-if="tabKey === 'volumeId'">
+                        {{ $t('message.rbd.desc') }}
+                        <StorageRbdImageSelection
+                          input-decorator="volumeId"
+                          :items="options.volume"
+                          :selected="tabKey"
+                          :zoneId="zoneId"
+                          :row-count="rowCount.volume"
+                          :loading="loading.volume"
+                          :preFillContent="dataPreFill"
+                          @handle-search-filter="($event) => fetchAllRbdImage($event)"
+                          @on-selected-rbd-size="onSelectRbdSize"
+                          @update-rbd-images="updateFieldValue"
+                          @select-rbd-images-item="($event) => updateRbdImages($event)" />
+                      </div>
                     </a-card>
                     <a-form-item class="form-item-hidden">
                       <a-input v-model:value="form.templateid" />
@@ -210,6 +225,9 @@
                     <a-form-item class="form-item-hidden">
                       <a-input v-model:value="form.rootdisksize" />
                     </a-form-item>
+                    <a-form-item class="form-item-hidden">
+                      <a-input v-model:value="form.volumeId" />
+                    </a-form-item>
                   </div>
                 </template>
               </a-step>
@@ -217,7 +235,10 @@
                 :title="$t('label.serviceofferingid')"
                 :status="zoneSelected ? 'process' : 'wait'">
                 <template #description>
-                  <div v-if="zoneSelected">
+                  <div v-if="zoneSelected" style="margin-top: 5px">
+                    <div v-if="tabKey=='volumeId'" style="margin-bottom: 10px">
+                      <a-alert :message="$t('label.override.root.no')" type="warning" />
+                    </div>
                     <a-form-item v-if="zoneSelected && templateConfigurationExists" name="templateConfiguration" ref="templateConfiguration">
                       <template #label>
                         <tooltip-label :title="$t('label.configuration')" :tooltip="$t('message.ovf.configurations')"/>
@@ -287,7 +308,7 @@
                         <a-input v-model:value="form.memory"/>
                       </a-form-item>
                     </span>
-                    <span v-if="tabKey!=='isoid'">
+                    <span v-if="tabKey!=='isoid' && tabKey!=='volumeId'">
                       {{ $t('label.override.root.diskoffering') }}
                       <a-switch
                         v-model:checked="showOverrideDiskOfferingOption"
@@ -790,9 +811,11 @@
                         :filterOption="filterOption"
                       ></a-select>
                     </a-form-item>
+                    <a-form-item v-if="tabKey!=='volumeId'">
                     <a-form-item :label="$t('label.deploy.vm.number')" name="vmNumber" ref="vmNumber">
                       <a-input-number :min=1 :max=50 :maxlength="2" v-model:value="form.vmNumber" />
                     </a-form-item>
+                  </a-form-item>
                     <a-form-item :label="$t('label.action.start.instance')" name="startvm" ref="startvm">
                       <a-switch v-model:checked="form.startvm" />
                     </a-form-item>
@@ -890,6 +913,7 @@ import UserDataSelection from '@views/compute/wizard/UserDataSelection'
 import SecurityGroupSelection from '@views/compute/wizard/SecurityGroupSelection'
 import TooltipLabel from '@/components/widgets/TooltipLabel'
 import InstanceNicsNetworkSelectListView from '@/components/view/InstanceNicsNetworkSelectListView.vue'
+import StorageRbdImageSelection from '@views/compute/wizard/StorageRbdImageSelection'
 
 export default {
   name: 'Wizard',
@@ -910,7 +934,8 @@ export default {
     SecurityGroupSelection,
     ResourceIcon,
     TooltipLabel,
-    InstanceNicsNetworkSelectListView
+    InstanceNicsNetworkSelectListView,
+    StorageRbdImageSelection
   },
   props: {
     visible: {
@@ -973,7 +998,9 @@ export default {
         bootModes: [],
         tpmversion: [],
         ioPolicyTypes: [],
-        dynamicScalingVmConfig: false
+        dynamicScalingVmConfig: false,
+        storagePoolObjects: [],
+        volume: {}
       },
       rowCount: {},
       loading: {
@@ -991,7 +1018,8 @@ export default {
         pods: false,
         clusters: false,
         hosts: false,
-        groups: false
+        groups: false,
+        volume: false
       },
       owner: {
         projectid: store.getters.project?.id,
@@ -1080,7 +1108,8 @@ export default {
       zones: [],
       selectedZone: '',
       formModel: {},
-      nicToNetworkSelection: []
+      nicToNetworkSelection: [],
+      rbdSelected: {}
     }
   },
   computed: {
@@ -1317,6 +1346,9 @@ export default {
     networkId () {
       return this.$route.query.networkid || null
     },
+    volumeId () {
+      return this.$route.query.volumeId || null
+    },
     tabList () {
       let tabList = []
       if (this.templateId) {
@@ -1329,6 +1361,11 @@ export default {
           key: 'isoid',
           tab: this.$t('label.isos')
         }]
+      } else if (this.volumeId) {
+        tabList = [{
+          key: 'volumeId',
+          tab: this.$t('label.data.rbd.image')
+        }]
       } else {
         tabList = [{
           key: 'templateid',
@@ -1337,6 +1374,10 @@ export default {
         {
           key: 'isoid',
           tab: this.$t('label.isos')
+        },
+        {
+          key: 'volumeId',
+          tab: this.$t('label.glue.images')
         }]
       }
 
@@ -1488,6 +1529,14 @@ export default {
           if (this.hypervisor) {
             this.vm.hypervisor = this.hypervisor
           }
+
+          if (this.volume) {
+            this.vm.volumeId = this.volume.id
+            this.vm.templateid = this.template.id
+            this.vm.volumesname = this.volume.displaytext
+            this.vm.ostypeid = this.volume.ostypeid
+            this.vm.ostypename = this.volume.ostypename
+          }
         }
 
         if (this.serviceOffering) {
@@ -1545,6 +1594,7 @@ export default {
     return {
       vmFetchTemplates: this.fetchAllTemplates,
       vmFetchIsos: this.fetchAllIsos,
+      vmFetchRbd: this.fetchAllRbdImage,
       vmFetchNetworks: this.fetchNetwork
     }
   },
@@ -1637,6 +1687,10 @@ export default {
           params.isofilter = this.isNormalAndDomainUser ? 'executable' : 'all'
           params.id = this.isoId
           apiName = 'listIsos'
+        } else if (this.volumeId) {
+          apiName = 'listVolumes'
+          params.listall = true
+          params.id = this.volumeId
         } else if (this.networkId) {
           params.listall = true
           params.id = this.networkId
@@ -1769,6 +1823,7 @@ export default {
         hypervisor: null,
         templateid: null,
         templatename: null,
+        volumeId: null,
         keyboard: null,
         keypair: null,
         group: null,
@@ -1790,6 +1845,7 @@ export default {
         this.tabKey = 'templateid'
         this.form.templateid = value
         this.form.isoid = null
+        this.form.volumeId = null
         this.resetFromTemplateConfiguration()
         let template = ''
         for (const key in this.options.templates) {
@@ -1826,16 +1882,28 @@ export default {
         }
       } else if (name === 'isoid') {
         this.templateConfigurations = []
-        this.selectedTemplateConfiguration = {}
         this.templateNics = []
+        this.selectedTemplateConfiguration = {}
         this.templateLicenses = []
         this.templateProperties = {}
         this.tabKey = 'isoid'
         this.resetFromTemplateConfiguration()
         this.form.isoid = value
         this.form.templateid = null
+        this.form.volumeId = null
         this.updateTemplateLinkedUserData(this.iso.userdataid)
         this.userdataDefaultOverridePolicy = this.iso.userdatapolicy
+      } else if (name === 'volumeId') {
+        this.templateConfigurations = []
+        this.selectedTemplateConfiguration = {}
+        this.templateNics = []
+        this.templateLicenses = []
+        this.templateProperties = {}
+        this.tabKey = 'volumeId'
+        this.resetFromTemplateConfiguration()
+        this.form.volumeId = value
+        this.form.templateid = null
+        this.form.isoid = null
       } else if (['cpuspeed', 'cpunumber', 'memory'].includes(name)) {
         this.vm[name] = value
         this.form[name] = value
@@ -1855,6 +1923,13 @@ export default {
         return
       }
       this.form.diskofferingid = id
+    },
+    updateRbdImages (id, name, value) {
+      if (id === '0') {
+        this.form.volumeId = undefined
+        return
+      }
+      this.form.volumeId = id
     },
     updateOverrideDiskOffering (id) {
       if (id === '0') {
@@ -1952,13 +2027,13 @@ export default {
       if (this.loading.deploy) return
       this.formRef.value.validate().then(async () => {
         const values = toRaw(this.form)
-        if (!values.templateid && !values.isoid) {
+        if (!values.templateid && !values.isoid && !values.volumeId) {
           this.$notification.error({
             message: this.$t('message.request.failed'),
             description: this.$t('message.template.iso')
           })
           return
-        } else if (values.isoid && (!values.diskofferingid || values.diskofferingid === '0')) {
+        } else if (values.isoid && values.volumeId == null && (!values.diskofferingid || values.diskofferingid === '0')) {
           this.$notification.error({
             message: this.$t('message.request.failed'),
             description: this.$t('message.step.3.continue')
@@ -2005,12 +2080,14 @@ export default {
         if (isUserdataAllowed && values.userdata && values.userdata.length > 0) {
           deployVmData.userdata = this.$toBase64AndURIEncoded(values.userdata)
         }
-        // step 2: select template/iso
+        // step 2: select template/iso/rbdimage
         if (this.tabKey === 'templateid') {
           deployVmData.templateid = values.templateid
           values.hypervisor = null
-        } else {
+        } else if (this.tabKey === 'isoid') {
           deployVmData.templateid = values.isoid
+        } else if (this.tabKey === 'volumeId') {
+          deployVmData.volumeId = values.volumeId
         }
 
         if (this.showRootDiskSizeChanger && values.rootdisksize && values.rootdisksize > 0) {
@@ -2206,7 +2283,12 @@ export default {
             args = httpMethod === 'POST' ? {} : deployVmData
             data = httpMethod === 'POST' ? deployVmData : {}
             try {
-              const jobId = await this.deployVM(args, httpMethod, data)
+              let jobId
+              if (values.volumeId) {
+                jobId = await this.deployVirtualMachineForVolume(args, httpMethod, data)
+              } else {
+                jobId = await this.deployVM(args, httpMethod, data)
+              }
               await this.$pollJob({
                 jobId,
                 title,
@@ -2240,6 +2322,7 @@ export default {
                   isFetchData: false
                 }
               })
+
               // Sending a refresh in case it hasn't picked up the new VM
               if (values.vmNumber === 1 || !values.stayonpage) {
                 await new Promise(resolve => setTimeout(resolve, 3000)).then(() => {
@@ -2281,6 +2364,16 @@ export default {
       return new Promise((resolve, reject) => {
         api('deployVirtualMachine', args, httpMethod, data).then(json => {
           const jobId = json.deployvirtualmachineresponse.jobid
+          return resolve(jobId)
+        }).catch(error => {
+          return reject(error)
+        })
+      })
+    },
+    deployVirtualMachineForVolume (args, httpMethod, data) {
+      return new Promise((resolve, reject) => {
+        api('deployVirtualMachineForVolume', args, httpMethod, data).then(json => {
+          const jobId = json.deployvirtualmachineforvolumeresponse.jobid
           return resolve(jobId)
         }).catch(error => {
           return reject(error)
@@ -2445,6 +2538,23 @@ export default {
         })
       })
     },
+    fetchRbdImage (params) {
+      this.paramsFilter = {}
+      const args = Object.assign(this.paramsFilter, params)
+      args.zoneid = _.get(this.zone, 'id')
+      args.page = args.page || 1
+      args.pageSize = args.pageSize || 10
+      args.customimages = 'true'
+      args.type = 'ROOT'
+      return new Promise((resolve, reject) => {
+        api('listVolumes', args).then((response) => {
+          resolve(response)
+        }).catch((reason) => {
+          // ToDo: Handle errors
+          reject(reason)
+        })
+      })
+    },
     fetchAllTemplates (params) {
       const promises = []
       const templates = {}
@@ -2485,6 +2595,23 @@ export default {
         this.loading.isos = false
       })
     },
+    fetchAllRbdImage (params) {
+      const promises = []
+      const volume = {}
+      this.loading.volume = true
+      promises.push(this.fetchRbdImage(params))
+      this.options.volume = volume
+      Promise.all(promises).then((response) => {
+        response.forEach((resItem, idx) => {
+          this.options.volume = resItem.listvolumesresponse.volume
+          this.rowCount.volume = resItem.listvolumesresponse.count
+        })
+      }).catch((reason) => {
+        console.log(reason)
+      }).finally(() => {
+        this.loading.volume = false
+      })
+    },
     filterOption (input, option) {
       return option.label.toUpperCase().indexOf(input.toUpperCase()) >= 0
     },
@@ -2503,9 +2630,12 @@ export default {
       this.form.hostid = undefined
       this.form.templateid = undefined
       this.form.isoid = undefined
+      this.form.volumeId = undefined
       this.tabKey = 'templateid'
       if (this.isoId) {
         this.tabKey = 'isoid'
+      } else if (this.volumeId) {
+        this.tabKey = 'volumeId'
       }
       _.each(this.params, (param, name) => {
         if (this.networkId && name === 'networks') {
@@ -2519,8 +2649,10 @@ export default {
       })
       if (this.tabKey === 'templateid') {
         this.fetchAllTemplates()
-      } else {
+      } else if (this.tabKey === 'isoid') {
         this.fetchAllIsos()
+      } else if (this.tabKey === 'volumeId') {
+        this.fetchAllRbdImage()
       }
       this.updateTemplateKey()
       this.formModel = toRaw(this.form)
@@ -2556,6 +2688,8 @@ export default {
       this[type] = key
       if (key === 'isoid') {
         this.fetchAllIsos()
+      } else if (key === 'volumeId') {
+        this.fetchAllRbdImage()
       }
     },
     onUserdataTabChange (key, type) {
@@ -2809,6 +2943,9 @@ export default {
     },
     onSelectDiskSize (rowSelected) {
       this.diskSelected = rowSelected
+    },
+    onSelectRbdSize (rowSelected) {
+      this.rbdSelected = rowSelected
     },
     onSelectRootDiskSize (rowSelected) {
       this.rootDiskSelected = rowSelected

@@ -190,7 +190,17 @@
               @onClick="openMigrationModal(record)" />
             </template>
             <template v-else-if="column.key == 'deleteactions' && (record.templateid || record.volumeid) == null && !['MOLD-AC', 'MOLD-HB','ccvm'].some(forbiddenName => record.name.includes(forbiddenName))">
-              <a-col flex="auto">
+                <a-col flex="auto">
+                  <a-button
+                    type="primary"
+                    size="medium"
+                    shape="circle"
+                    :tooltip="$t('label.create')"
+                    @click="showAddTyModal"
+                    :loading="loading"
+                    >
+                    <template #icon><plus-outlined /></template>
+                  </a-button>
                 <a-popconfirm
                 :title="`${$t('label.delete.rbd.image')}?`"
                 @confirm="deleteRbdImage(record.name)"
