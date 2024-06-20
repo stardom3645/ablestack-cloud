@@ -772,7 +772,9 @@
 "label.disk.volume": "Disk volume",
 "label.disk.usage.info": "Disk usage information",
 "label.diskbytesreadrate": "Disk read rate (BPS)",
+"label.diskbytesreadratemax": "Max disk read rate (BPS)",
 "label.diskbyteswriterate": "Disk write rate (BPS)",
+"label.diskbyteswriteratemax": "Max disk write rate (BPS)",
 "label.diskiopsmax": "Max IOPS",
 "label.diskiopsmin": "Min IOPS",
 "label.diskiopsreadrate": "Disk read rate (IOPS)",
@@ -1164,6 +1166,7 @@
 "label.ipv6.subnets": "IPv6 Subnets",
 "label.ip.addresses": "IP Addresses",
 "label.iqn": "Target IQN",
+"label.is.base64.encoded": "Base64 encoded",
 "label.is.in.progress": "is in progress",
 "label.is.shared": "Is shared",
 "label.is2faenabled": "Is 2FA enabled",
@@ -4314,5 +4317,10 @@
 "label.state.qemuagentversion.notinstalled": "Not installed",
 "label.deploy.vm.number": "Number of virtual machines to deploy",
 "message.deploy.vm.number": "If you enter a network IP or Mac address, only one virtual machine can be created.",
-"label.create.type.rbd.image": "Create Volume"
+"label.create.type.rbd.image": "Create Volume",
+"label.glue.images": "Glue Images",
+"label.template.iso.rbdimage": "Template/ISO/Glue Images",
+"message.rbd.desc": "A Glue image that allows you to clone a volume to start a virtual machine",
+"label.override.root.no ": "If you have selected a Glue image as your virtual machine image, please select the Compute offering to match the image size",
+"label.gule.images": "Glue Images"
 }

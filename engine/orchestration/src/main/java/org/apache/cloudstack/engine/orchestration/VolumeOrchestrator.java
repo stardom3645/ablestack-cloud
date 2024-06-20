@@ -827,7 +827,69 @@ public class VolumeOrchestrator extends ManagerBase implements VolumeOrchestrati
         return new DiskProfile(vol.getId(), vol.getVolumeType(), vol.getName(), offering.getId(), vol.getSize(), offering.getTagsArray(), offering.isUseLocalStorage(), offering.isRecreatable(),
                 vol.getTemplateId(), offering.getShareable());
     }
+    @ActionEvent(eventType = EventTypes.EVENT_VOLUME_CREATE, eventDescription = "creating volume", create = true)
+    @Override
+    public DiskProfile allocateRawVolumes(Type type, String name, DiskOffering offering, Long size, Long minIops, Long maxIops, VirtualMachine vm, VirtualMachineTemplate template, Account owner,
+                                         Long deviceId, Map<String, String> customParameters) {
+            if (size == null) {
+                size = offering.getDiskSize();
+            } else {
+                size = (size * 1024 * 1024 * 1024);
+            }
 
+            minIops = minIops != null ? minIops : offering.getMinIops();
+            maxIops = maxIops != null ? maxIops : offering.getMaxIops();
+
+            VolumeVO vol = new VolumeVO(type, name, vm.getDataCenterId(), owner.getDomainId(), owner.getId(), offering.getId(), offering.getProvisioningType(), size, minIops, maxIops, null);
+            if (vm != null) {
+                vol.setInstanceId(vm.getId());
+            }
+
+            if (deviceId != null) {
+                vol.setDeviceId(deviceId);
+            } else if (type.equals(Type.ROOT)) {
+                vol.setDeviceId(0l);
+            } else {
+                vol.setDeviceId(1l);
+            }
+            if (template.getFormat() == ImageFormat.ISO) {
+                vol.setIsoId(template.getId());
+            } else if (template.getTemplateType().equals(Storage.TemplateType.DATADISK)) {
+                vol.setTemplateId(template.getId());
+            }
+            // display flag matters only for the User vms
+            if (vm.getType() == VirtualMachine.Type.User) {
+                UserVmVO userVm = _userVmDao.findById(vm.getId());
+                vol.setDisplayVolume(userVm.isDisplayVm());
+            }
+
+            vol.setFormat(getSupportedImageFormatForCluster(vm.getHypervisorType()));
+
+            List<VolumeDetailVO> volumeDetailsVO = new ArrayList<VolumeDetailVO>();
+            DiskOfferingDetailVO bandwidthLimitDetail = _diskOfferingDetailDao.findDetail(offering.getId(), Volume.BANDWIDTH_LIMIT_IN_MBPS);
+            if (bandwidthLimitDetail != null) {
+                volumeDetailsVO.add(new VolumeDetailVO(vol.getId(), Volume.BANDWIDTH_LIMIT_IN_MBPS, bandwidthLimitDetail.getValue(), false));
+            }
+            DiskOfferingDetailVO iopsLimitDetail = _diskOfferingDetailDao.findDetail(offering.getId(), Volume.IOPS_LIMIT);
+            if (iopsLimitDetail != null) {
+                volumeDetailsVO.add(new VolumeDetailVO(vol.getId(), Volume.IOPS_LIMIT, iopsLimitDetail.getValue(), false));
+            }
+            if (!volumeDetailsVO.isEmpty()) {
+                _volDetailDao.saveDetails(volumeDetailsVO);
+            }
+            // saveVolumeDetails(offering.getId(), vol.getId());
+            // Save usage event and update resource count for user vm volumes
+            if (vm.getType() == VirtualMachine.Type.User) {
+                UsageEventUtils.publishUsageEvent(EventTypes.EVENT_VOLUME_CREATE, vol.getAccountId(), vol.getDataCenterId(), vol.getId(), vol.getName(), offering.getId(), null, size,
+                        Volume.class.getName(), vol.getUuid(), vol.isDisplayVolume());
+                _resourceLimitMgr.incrementVolumeResourceCount(vm.getAccountId(), vol.isDisplayVolume(), vol.getSize(), offering);
+            }
+            DiskProfile diskProfile = toDiskProfile(vol, offering);
+
+            updateRootDiskVolumeEventDetails(type, vm, List.of(diskProfile));
+
+            return diskProfile;
+        }
     @ActionEvent(eventType = EventTypes.EVENT_VOLUME_CREATE, eventDescription = "creating volume", create = true)
     @Override
     public DiskProfile allocateRawVolume(Type type, String name, DiskOffering offering, Long size, Long minIops, Long maxIops, VirtualMachine vm, VirtualMachineTemplate template, Account owner,
@@ -849,16 +911,15 @@ public class VolumeOrchestrator extends ManagerBase implements VolumeOrchestrati
         if (deviceId != null) {
             vol.setDeviceId(deviceId);
         } else if (type.equals(Type.ROOT)) {
-            vol.setDeviceId(0l);
+            vol.setDeviceId(0L);
         } else {
-            vol.setDeviceId(1l);
+            vol.setDeviceId(1L);
         }
         if (template.getFormat() == ImageFormat.ISO) {
             vol.setIsoId(template.getId());
         } else if (template.getTemplateType().equals(Storage.TemplateType.DATADISK)) {
             vol.setTemplateId(template.getId());
         }
-        // display flag matters only for the User vms
         if (vm.getType() == VirtualMachine.Type.User) {
             UserVmVO userVm = _userVmDao.findById(vm.getId());
             vol.setDisplayVolume(userVm.isDisplayVm());
@@ -869,7 +930,6 @@ public class VolumeOrchestrator extends ManagerBase implements VolumeOrchestrati
 
         saveVolumeDetails(offering.getId(), vol.getId());
 
-        // Save usage event and update resource count for user vm volumes
         if (vm.getType() == VirtualMachine.Type.User) {
             UsageEventUtils.publishUsageEvent(EventTypes.EVENT_VOLUME_CREATE, vol.getAccountId(), vol.getDataCenterId(), vol.getId(), vol.getName(), offering.getId(), null, size,
                     Volume.class.getName(), vol.getUuid(), vol.isDisplayVolume());

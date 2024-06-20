@@ -959,7 +959,6 @@ export default {
     },
     getOkProps () {
       if (this.selectedRowKeys.length > 0 && this.currentAction?.groupAction) {
-        return { props: { type: 'default' } }
       } else {
         return { props: { type: 'primary' } }
       }
