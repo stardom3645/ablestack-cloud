@@ -101,16 +101,6 @@ public class CreateDisasterRecoveryClusterVmCmd extends BaseCmd implements Admin
         return CallContext.current().getCallingAccountId();
     }
 
-    @Override
-    public String getEventType() {
-        return DisasterRecoveryClusterEventTypes.EVENT_DR_VM_CREATE;
-    }
-
-    @Override
-    public String getEventDescription() {
-        return "creating disaster recovery cluster virtual machine";
-    }
-
     /////////////////////////////////////////////////////
     /////////////// API Implementation///////////////////
     /////////////////////////////////////////////////////
