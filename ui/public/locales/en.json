@@ -4317,5 +4317,10 @@
 "label.state.qemuagentversion.notinstalled": "Not installed",
 "label.deploy.vm.number": "Number of virtual machines to deploy",
 "message.deploy.vm.number": "If you enter a network IP or Mac address, only one virtual machine can be created.",
-"label.create.type.rbd.image": "Create Volume"
+"label.create.type.rbd.image": "Create Volume",
+"label.glue.images": "Glue Images",
+"label.template.iso.rbdimage": "Template/ISO/Glue Images",
+"message.rbd.desc": "A Glue image that allows you to clone a volume to start a virtual machine",
+"label.override.root.no ": "If you have selected a Glue image as your virtual machine image, please select the Compute offering to match the image size",
+"label.gule.images": "Glue Images"
 }

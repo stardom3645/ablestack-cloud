@@ -286,6 +286,8 @@ import org.apache.cloudstack.api.command.admin.vlan.UpdateVlanIpRangeCmd;
 import org.apache.cloudstack.api.command.admin.vm.AddNicToVMCmdByAdmin;
 import org.apache.cloudstack.api.command.admin.vm.AssignVMCmd;
 import org.apache.cloudstack.api.command.admin.vm.DeployVMCmdByAdmin;
+import org.apache.cloudstack.api.command.admin.vm.DeployVMVolumeCmdByAdmin;
+
 import org.apache.cloudstack.api.command.admin.vm.DestroyVMCmdByAdmin;
 import org.apache.cloudstack.api.command.admin.vm.ExpungeVMCmd;
 import org.apache.cloudstack.api.command.admin.vm.GetVMUserDataCmd;
@@ -526,6 +528,7 @@ import org.apache.cloudstack.api.command.user.vm.AllocateVbmcToVMCmd;
 import org.apache.cloudstack.api.command.user.vm.RemoveVbmcToVMCmd;
 import org.apache.cloudstack.api.command.user.vm.CloneVMCmd;
 import org.apache.cloudstack.api.command.user.vm.DeployVMCmd;
+import org.apache.cloudstack.api.command.user.vm.DeployVMVolumeCmd;
 import org.apache.cloudstack.api.command.user.vm.DestroyVMCmd;
 import org.apache.cloudstack.api.command.user.vm.GetVMPasswordCmd;
 import org.apache.cloudstack.api.command.user.vm.ListNicsCmd;
@@ -3994,6 +3997,8 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
         cmdList.add(ListLoadBalancerRuleInstancesCmdByAdmin.class);
         cmdList.add(DeployVMCmdByAdmin.class);
         cmdList.add(DestroyVMCmdByAdmin.class);
+        cmdList.add(DeployVMVolumeCmdByAdmin.class);
+        cmdList.add(DeployVMVolumeCmd.class);
         cmdList.add(RebootVMCmdByAdmin.class);
         cmdList.add(ResetVMPasswordCmdByAdmin.class);
         cmdList.add(ResetVMSSHKeyCmdByAdmin.class);
