@@ -1028,11 +1028,56 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                 boolean result = DisasterRecoveryClusterUtil.glueImageMirrorSetupAPI(glueUrl, glueCommand, glueMethod, glueParams);
                 // glueImageMirrorSetupAPI 성공
                 if (result) {
+                    // Secondary Cluster - listStoragePoolsMetrics 호출
                     String moldUrl = url + "/client/api/";
-                    String moldCommand = "deployVirtualMachineForVolume";
-                    String moldMethod = "POST";
-                    // Secondary Cluster - deployVirtualMachineForVolume 호출
-                    // String response = DisasterRecoveryClusterUtil.moldDeployVirtualMachineForVolumeAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey);
+                    String moldCommand = "listStoragePoolsMetrics";
+                    String moldMethod = "GET";
+                    String psInfo = DisasterRecoveryClusterUtil.moldListStoragePoolsMetricsAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey);
+                    String zoneId = new JsonParser().parse(psInfo).getAsJsonObject().get("zoneid").getAsString();
+                    String poolId = new JsonParser().parse(psInfo).getAsJsonObject().get("id").getAsString();
+                    // Secondary Cluster - listStoragePoolObjects 호출
+                    moldCommand = "listStoragePoolObjects";
+                    Map<String, String> poolParams = new HashMap<>();
+                    poolParams.put("id", poolId);
+                    String volumeInfo = DisasterRecoveryClusterUtil.moldListStoragePoolObjectsAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey, poolParams, volumeUuid);
+                    String size = new JsonParser().parse(volumeInfo).getAsJsonObject().get("size").getAsString();
+                    String name = new JsonParser().parse(volumeInfo).getAsJsonObject().get("name").getAsString();
+                    // Secondary Cluster - listDiskOfferings 호출
+                    moldCommand = "listDiskOfferings";
+                    String diskOfferingId = DisasterRecoveryClusterUtil.moldListDiskOfferingsAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey);
+                    // Secondary Cluster - createVolume 호출 (비동기)
+                    moldMethod = "POST";
+                    Map<String, String> volParams = new HashMap<>();
+                    volParams.put("diskofferingid", diskOfferingId);
+                    volParams.put("size", size);
+                    volParams.put("name", name);
+                    volParams.put("zoneid", zoneId);
+                    String volumeId = DisasterRecoveryClusterUtil.moldCreateVolumeAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey, volParams);
+                    moldCommand = "deployVirtualMachineForVolume";
+                    Map<String, String> vmParams = new HashMap<>();
+                    vmParams.put("volumeid", ""); // volumeId
+                    vmParams.put("zoneid", zoneId); // psInfo의 zoneid
+                    vmParams.put("serviceofferingid", offeringId.toString());
+                    vmParams.put("rootdisksize", size); // volumeInfo의 size
+                    vmParams.put("name", "");
+                    vmParams.put("displayname", "");
+                    vmParams.put("account", "admin");
+                    vmParams.put("domainid", "");
+                    vmParams.put("iptonetworklist[0].networkid", networkId.toString());
+                    // vmParams.put("details[0].cpuNumber", "");
+                    // vmParams.put("details[0].memory", "");
+                    vmParams.put("startvm", "false");
+                    vmParams.put("hypervisor", "KVM");
+                    vmParams.put("keypairs", "");
+                    vmParams.put("boottype", "BIOS");
+                    vmParams.put("affinitygroupids", "");
+                    vmParams.put("bootmode", "LEGACY");
+                    vmParams.put("tpmversion", "NONE");
+                    vmParams.put("dynamicscalingenabled", "true");
+                    vmParams.put("iothreadsenabled", "true");
+                    vmParams.put("iodriverpolicy", "io_uring");
+                    // Secondary Cluster - deployVirtualMachineForVolume 호출 (비동기)
+                    String response = DisasterRecoveryClusterUtil.moldDeployVirtualMachineForVolumeAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey, vmParams);
                     return true;
                 }
             }
@@ -1064,6 +1109,19 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         List<DisasterRecoveryClusterVmMapVO> drVm = disasterRecoveryClusterVmMapDao.listByDisasterRecoveryClusterVmId(drClusterId, vmId);
         if (drVm != null) {
             throw new InvalidParameterValueException("A disaster recovery cluster with the same virtual machine id exists:" + vmId);
+        }
+
+        DisasterRecoveryClusterVO drCluster = disasterRecoveryClusterDao.findById(drClusterId);
+        String url = drCluster.getDrClusterUrl();
+        Map<String, String> details = disasterRecoveryClusterDetailsDao.findDetails(drClusterId);
+        String apiKey = details.get(ApiConstants.DR_CLUSTER_API_KEY);
+        String secretKey = details.get(ApiConstants.DR_CLUSTER_SECRET_KEY);
+        String moldCommand = "listDiskOfferings";
+        String moldUrl = url + "/client/api/";
+        String moldMethod = "GET";
+        String diskOffering = DisasterRecoveryClusterUtil.moldListDiskOfferingsAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey);
+        if (diskOffering == "" || diskOffering.isEmpty()) {
+            throw new CloudRuntimeException("A mirroring virtual machine cannot be added because a disk offering with a custom disk size does not exist.");
         }
     }
 
