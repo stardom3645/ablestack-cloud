@@ -34,10 +34,8 @@ import org.apache.cloudstack.api.response.dr.cluster.GetDisasterRecoveryClusterL
 import org.apache.cloudstack.api.ServerApiException;
 import org.apache.cloudstack.context.CallContext;
 
-import com.cloud.dr.cluster.DisasterRecoveryCluster;
 import com.cloud.dr.cluster.DisasterRecoveryClusterService;
 import com.cloud.utils.exception.CloudRuntimeException;
-import com.cloud.vm.VirtualMachine;
 
 @APICommand(name = CreateDisasterRecoveryClusterVmCmd.APINAME,
         description = "Create Disaster Recovery Cluster Virtual Machine",
