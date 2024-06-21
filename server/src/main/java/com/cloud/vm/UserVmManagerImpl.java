@@ -16,6 +16,7 @@
 // under the License.
 package com.cloud.vm;
 
+import static com.cloud.configuration.ConfigurationManager.VM_USERDATA_MAX_LENGTH;
 import static com.cloud.configuration.ConfigurationManagerImpl.VM_USERDATA_MAX_LENGTH;
 import static com.cloud.storage.Volume.IOPS_LIMIT;
 import static com.cloud.utils.NumbersUtil.toHumanReadableSize;
@@ -3992,7 +3993,7 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
             throw new PermissionDeniedException("The owner of vm to deploy is disabled: " + owner);
         }
         VMTemplateVO template = _templateDao.findById(tmplt.getId());
-        if (!customParameters.isEmpty() && customParameters.containsKey("volumeId")){
+        if (!MapUtils.isEmpty(customParameters) && customParameters.containsKey("volumeId")){
             template = _templateDao.findByIdIncludingRemoved(tmplt.getId());
         }
 
@@ -4074,7 +4075,7 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
             throw new InvalidParameterValueException("Root volume encryption is not supported for hypervisor type " + hypervisorType);
         }
 
-        if (!customParameters.isEmpty() && customParameters.containsKey("volumeId")){
+        if (!MapUtils.isEmpty(customParameters) && customParameters.containsKey("volumeId")){
             Long volumeId = Long.valueOf(customParameters.get("volumeId"));
             VolumeVO volume = _volsDao.findById(volumeId);
             // Compute the size of the volume
@@ -4498,7 +4499,7 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
             _volumeService.validateVolumeSizeInBytes(rootDiskSize);
             return rootDiskSize;
         } else {
-            if (!customParameters.isEmpty() && !customParameters.containsKey("volumeId")){
+            if (!MapUtils.isEmpty(customParameters) && !customParameters.containsKey("volumeId")){
                 // For baremetal, size can be 0 (zero)
                 Long templateSize = _templateDao.findById(template.getId()).getSize();
                 if (templateSize != null) {
@@ -4562,7 +4563,7 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
                 offering.getLimitCpuUse(), owner.getDomainId(), owner.getId(), userId, offering.getId(), userData, userDataId, userDataDetails, hostName);
         vm.setUuid(uuidName);
         vm.setDynamicallyScalable(dynamicScalingEnabled);
-        if (!customParameters.isEmpty() && customParameters.containsKey("volumeId")){
+        if (!MapUtils.isEmpty(customParameters) && customParameters.containsKey("volumeId")){
             template = _templateDao.findByIdIncludingRemoved(template.getId());
         }
         Map<String, String> details = template.getDetails();
