@@ -27,11 +27,17 @@ import org.apache.cloudstack.api.Parameter;
 import org.apache.cloudstack.api.BaseCmd;
 import org.apache.cloudstack.api.command.admin.AdminCmd;
 import org.apache.cloudstack.api.response.SuccessResponse;
+import org.apache.cloudstack.api.response.UserVmResponse;
+import org.apache.cloudstack.api.response.NetworkResponse;
+import org.apache.cloudstack.api.response.ServiceOfferingResponse;
+import org.apache.cloudstack.api.response.dr.cluster.GetDisasterRecoveryClusterListResponse;
 import org.apache.cloudstack.api.ServerApiException;
 import org.apache.cloudstack.context.CallContext;
 
+import com.cloud.dr.cluster.DisasterRecoveryCluster;
 import com.cloud.dr.cluster.DisasterRecoveryClusterService;
 import com.cloud.utils.exception.CloudRuntimeException;
+import com.cloud.vm.VirtualMachine;
 
 @APICommand(name = CreateDisasterRecoveryClusterVmCmd.APINAME,
         description = "Create Disaster Recovery Cluster Virtual Machine",
@@ -48,24 +54,28 @@ public class CreateDisasterRecoveryClusterVmCmd extends BaseCmd implements Admin
     /////////////////////////////////////////////////////
     @Parameter(name = ApiConstants.DR_CLUSTER_ID,
                 type = CommandType.UUID,
+                entityType = GetDisasterRecoveryClusterListResponse.class,
                 required = true,
                 description = "disaster recovery cluster id")
     private Long drClusterId;
 
     @Parameter(name = ApiConstants.VIRTUAL_MACHINE_ID,
                 type = CommandType.UUID,
+                entityType = UserVmResponse.class,
                 required = true,
                 description = "the virtual machine ID used by disaster recovery cluster")
     private Long vmId;
 
     @Parameter(name = ApiConstants.SERVICE_OFFERING_ID,
                 type = CommandType.UUID,
+                entityType = ServiceOfferingResponse.class,
                 required = true,
                 description = "the service offering ID used by disaster recovery cluster")
     private Long serviceOfferingId;
 
     @Parameter(name = ApiConstants.NETWORK_ID,
                 type = CommandType.UUID,
+                entityType = NetworkResponse.class,
                 required = true,
                 description = "the network ID used by disaster recovery cluster")
     private Long networkId;
