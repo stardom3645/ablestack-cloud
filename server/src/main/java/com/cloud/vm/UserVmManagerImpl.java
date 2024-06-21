@@ -16,6 +16,7 @@
 // under the License.
 package com.cloud.vm;
 
+import static com.cloud.configuration.ConfigurationManager.VM_USERDATA_MAX_LENGTH;
 import static com.cloud.configuration.ConfigurationManagerImpl.VM_USERDATA_MAX_LENGTH;
 import static com.cloud.storage.Volume.IOPS_LIMIT;
 import static com.cloud.utils.NumbersUtil.toHumanReadableSize;
@@ -3992,7 +3993,7 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
             throw new PermissionDeniedException("The owner of vm to deploy is disabled: " + owner);
         }
         VMTemplateVO template = _templateDao.findById(tmplt.getId());
-        if (customParameters.get("volumeId") != null) {
+        if (!MapUtils.isEmpty(customParameters) && customParameters.containsKey("volumeId")){
             template = _templateDao.findByIdIncludingRemoved(tmplt.getId());
         }
 
@@ -4074,7 +4075,7 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
             throw new InvalidParameterValueException("Root volume encryption is not supported for hypervisor type " + hypervisorType);
         }
 
-        if (customParameters.get("volumeId") != null) {
+        if (!MapUtils.isEmpty(customParameters) && customParameters.containsKey("volumeId")){
             Long volumeId = Long.valueOf(customParameters.get("volumeId"));
             VolumeVO volume = _volsDao.findById(volumeId);
             // Compute the size of the volume
@@ -4498,14 +4499,14 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
             _volumeService.validateVolumeSizeInBytes(rootDiskSize);
             return rootDiskSize;
         } else {
-            if (customParameters.get("volumeId") == null) {
-            // For baremetal, size can be 0 (zero)
-            Long templateSize = _templateDao.findById(template.getId()).getSize();
-            if (templateSize != null) {
-                return templateSize;
+            if (!MapUtils.isEmpty(customParameters) && !customParameters.containsKey("volumeId")){
+                // For baremetal, size can be 0 (zero)
+                Long templateSize = _templateDao.findById(template.getId()).getSize();
+                if (templateSize != null) {
+                    return templateSize;
+                }
             }
         }
-    }
         return 0;
     }
 
@@ -4562,7 +4563,7 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
                 offering.getLimitCpuUse(), owner.getDomainId(), owner.getId(), userId, offering.getId(), userData, userDataId, userDataDetails, hostName);
         vm.setUuid(uuidName);
         vm.setDynamicallyScalable(dynamicScalingEnabled);
-        if (customParameters.get("volumeId") != null) {
+        if (!MapUtils.isEmpty(customParameters) && customParameters.containsKey("volumeId")){
             template = _templateDao.findByIdIncludingRemoved(template.getId());
         }
         Map<String, String> details = template.getDetails();
@@ -4596,7 +4597,7 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
 
         Long rootDiskSize = null;
         // custom root disk size, resizes base template to larger size
-        if (customParameters.containsKey(VmDetailConstants.ROOT_DISK_SIZE) && customParameters.get("volumeId") == null) {
+        if (customParameters.containsKey(VmDetailConstants.ROOT_DISK_SIZE) && !customParameters.containsKey("volumeId")) {
             // already verified for positive number
             rootDiskSize = Long.parseLong(customParameters.get(VmDetailConstants.ROOT_DISK_SIZE));
 
@@ -4606,7 +4607,6 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
                 ipve.add(VirtualMachine.class, vm.getUuid());
                 throw ipve;
             }
-
             validateRootDiskResize(hypervisorType, rootDiskSize, templateVO, vm, customParameters);
         }
 
@@ -9341,10 +9341,10 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
         Map<String, String> userVmOVFProperties = cmd.getVmProperties();
         Map<String, String> customParameters = cmd.getDetails();
         Long volumeId = cmd.getVolumeId();
-        if (cmd.getVolumeId() != null) {
+        if (volumeId != null) {
             customParameters.put("volumeId", String.valueOf(volumeId));
         }
-        VolumeVO volVO =_volsDao.findById(Long.parseLong(customParameters.get("volumeId")));
+        VolumeVO volVO =_volsDao.findById(volumeId);
         volVO.setDeviceId(0L);
         volVO.setTemplateId(template.getId());
         _volsDao.update(volVO.getId(), volVO);
