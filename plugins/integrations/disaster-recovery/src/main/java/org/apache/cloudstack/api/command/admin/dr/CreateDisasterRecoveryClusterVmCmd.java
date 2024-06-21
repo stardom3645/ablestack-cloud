@@ -28,8 +28,6 @@ import org.apache.cloudstack.api.BaseCmd;
 import org.apache.cloudstack.api.command.admin.AdminCmd;
 import org.apache.cloudstack.api.response.SuccessResponse;
 import org.apache.cloudstack.api.response.UserVmResponse;
-import org.apache.cloudstack.api.response.NetworkResponse;
-import org.apache.cloudstack.api.response.ServiceOfferingResponse;
 import org.apache.cloudstack.api.response.dr.cluster.GetDisasterRecoveryClusterListResponse;
 import org.apache.cloudstack.api.ServerApiException;
 import org.apache.cloudstack.context.CallContext;
@@ -66,14 +64,12 @@ public class CreateDisasterRecoveryClusterVmCmd extends BaseCmd implements Admin
 
     @Parameter(name = ApiConstants.SERVICE_OFFERING_ID,
                 type = CommandType.UUID,
-                entityType = ServiceOfferingResponse.class,
                 required = true,
                 description = "the service offering ID used by disaster recovery cluster")
     private Long serviceOfferingId;
 
     @Parameter(name = ApiConstants.NETWORK_ID,
                 type = CommandType.UUID,
-                entityType = NetworkResponse.class,
                 required = true,
                 description = "the network ID used by disaster recovery cluster")
     private Long networkId;
