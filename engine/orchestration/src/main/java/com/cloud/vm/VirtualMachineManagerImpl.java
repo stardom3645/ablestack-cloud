@@ -511,7 +511,7 @@ public class VirtualMachineManagerImpl extends ManagerBase implements VirtualMac
 
             logger.debug("Allocating disks for {}",  persistedVm);
 
-            if (!customParameters.isEmpty() && customParameters.containsKey("volumeId")){
+            if (!MapUtils.isEmpty(customParameters) && customParameters.containsKey("volumeId")){
                 VolumeVO volVO =_volsDao.findById(Long.parseLong(customParameters.get("volumeId")));
                 volVO.setInstanceId(vm.getId());
                 _volsDao.update(volVO.getId(), volVO);
