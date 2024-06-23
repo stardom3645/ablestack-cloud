@@ -279,6 +279,16 @@ public class LibvirtStorageAdaptor implements StorageAdaptor {
         }
     }
 
+    private void checkNetfsStoragePoolMounted(String uuid) {
+        String targetPath = _mountPoint + File.separator + uuid;
+        int mountpointResult = Script.runSimpleBashScriptForExitValue("mountpoint -q " + targetPath);
+        if (mountpointResult != 0) {
+            String errMsg = String.format("libvirt failed to mount storage pool %s at %s", uuid, targetPath);
+            s_logger.error(errMsg);
+            throw new CloudRuntimeException(errMsg);
+        }
+    }
+
     private StoragePool createNetfsStoragePool(PoolType fsType, Connect conn, String uuid, String host, String path) throws LibvirtException {
         String targetPath = _mountPoint + File.separator + uuid;
         LibvirtStoragePoolDef spd = new LibvirtStoragePoolDef(fsType, uuid, uuid, host, path, targetPath);
@@ -749,6 +759,10 @@ public class LibvirtStorageAdaptor implements StorageAdaptor {
             if (sp.isActive() == 0) {
                 logger.debug("Attempting to activate pool " + name);
                 sp.create(0);
+            }
+
+            if (type == StoragePoolType.NetworkFilesystem) {
+                checkNetfsStoragePoolMounted(name);
             }
 
             return getStoragePool(name);
