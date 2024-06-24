@@ -1026,7 +1026,6 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                 glueParams.put("imageName", volumeUuid);
                 glueParams.put("interval", interval);
                 glueParams.put("startTime", startTime);
-                LOGGER.info(glueParams);
                 boolean result = DisasterRecoveryClusterUtil.glueImageMirrorSetupAPI(glueUrl, glueCommand, glueMethod, glueParams);
                 // glueImageMirrorSetupAPI 성공
                 if (result) {
@@ -1065,17 +1064,16 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                     moldCommand = "createVolume";
                     Map<String, String> volParams = new HashMap<>();
                     volParams.put("diskofferingid", diskOfferingId);
-                    volParams.put("size", String.valueOf(vol.getSize()));
+                    volParams.put("size", String.valueOf(vol.getSize() / (1024 * 1024 * 1024)));
                     volParams.put("name", volumeUuid);
                     volParams.put("zoneid", zoneId);
-                    LOGGER.info(volParams);
                     String volumeId = DisasterRecoveryClusterUtil.moldCreateVolumeAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey, volParams);
                     moldCommand = "deployVirtualMachineForVolume";
                     Map<String, String> vmParams = new HashMap<>();
-                    vmParams.put("volumeid", volumeId); // volumeId
-                    vmParams.put("zoneid", zoneId); // psInfo의 zoneid
+                    vmParams.put("volumeid", volumeId);
+                    vmParams.put("zoneid", zoneId);
                     vmParams.put("serviceofferingid", offeringId);
-                    vmParams.put("rootdisksize", String.valueOf(vol.getSize())); // volumeInfo의 size
+                    vmParams.put("rootdisksize", String.valueOf(vol.getSize() / (1024 * 1024 * 1024)));
                     vmParams.put("name", userVM.getName()+"-mirror");
                     vmParams.put("displayname", userVM.getDisplayName()+"-mirror");
                     vmParams.put("domainid", domainId);
@@ -1097,7 +1095,11 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                     // Secondary Cluster - deployVirtualMachineForVolume 호출 (비동기)
                     String response = DisasterRecoveryClusterUtil.moldDeployVirtualMachineForVolumeAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey, vmParams);
                     LOGGER.info(response);
-                    return true;
+                    if (response != null) {
+                        return true;
+                    } else {
+                        return false;
+                    }
                 }
             }
         } else {
