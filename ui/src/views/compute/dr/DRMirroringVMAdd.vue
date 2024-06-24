@@ -45,7 +45,7 @@
             }"
             :placeholder="$t('placeholder.dr.cluster.cluster.selection')"
             >
-          <a-select-option v-for="(opt) in this.drCluster" :key="opt.id" :value="opt.id">
+          <a-select-option v-for="(opt) in this.drCluster" :key="opt.id" :value="opt.name">
             {{ opt.name }}
           </a-select-option>
         </a-select>
@@ -64,7 +64,7 @@
             }"
             :placeholder="$t('placeholder.dr.cluster.compute.offering.selection')"
         >
-          <a-select-option v-for="(opt) in this.secDrClusterOfferings" :key="opt.id" :value="opt.id">
+          <a-select-option v-for="(opt) in this.secDrClusterOfferings" :key="opt.id" :value="opt.name">
             {{ opt.name }}
           </a-select-option>
         </a-select>
@@ -83,7 +83,7 @@
             }"
             :placeholder="$t('placeholder.dr.cluster.network.selection')"
         >
-          <a-select-option v-for="(opt) in this.secDrClusterNetworkList" :key="opt.id" :value="opt.id">
+          <a-select-option v-for="(opt) in this.secDrClusterNetworkList" :key="opt.id" :value="opt.name">
             {{ opt.name }}
           </a-select-option>
         </a-select>
@@ -161,7 +161,7 @@ export default {
       this.loading = true
       api('getDisasterRecoveryClusterList', { drclustertype: 'secondary' }).then(json => {
         this.drCluster = json.getdisasterrecoveryclusterlistresponse.disasterrecoverycluster || []
-        this.form.drCluster = this.drCluster[0].id || ''
+        this.form.drCluster = this.drCluster[0].name || ''
       }).catch(error => {
         console.error('Error fetching DR cluster list:', error)
         this.loading = false
@@ -178,10 +178,10 @@ export default {
           const cluster = clusters[0]
 
           this.secDrClusterOfferings = cluster.serviceofferingdetails || []
-          this.form.secDrClusterOfferings = this.secDrClusterOfferings.length > 0 ? this.secDrClusterOfferings[0].id : ''
+          this.form.secDrClusterOfferings = this.secDrClusterOfferings.length > 0 ? this.secDrClusterOfferings[0].name : ''
 
           this.secDrClusterNetworkList = cluster.network || []
-          this.form.secDrClusterNetworkList = this.secDrClusterNetworkList.length > 0 ? this.secDrClusterNetworkList[0].id : ''
+          this.form.secDrClusterNetworkList = this.secDrClusterNetworkList.length > 0 ? this.secDrClusterNetworkList[0].name : ''
 
           if (this.secDrClusterOfferings.length === 0 && this.secDrClusterNetworkList.length === 0) {
             console.error('No service offering or network details available')
@@ -219,9 +219,9 @@ export default {
         this.loading = true
         const params = {
           virtualmachineid: this.resource.id,
-          drclusterid: values.drCluster,
-          serviceofferingid: values.secDrClusterOfferings,
-          networkid: values.secDrClusterNetworkList
+          drclustername: values.drCluster,
+          serviceofferingname: values.secDrClusterOfferings,
+          networkname: values.secDrClusterNetworkList
         }
         api('createDisasterRecoveryClusterVm', params).then(json => {
           this.$notification.success({
