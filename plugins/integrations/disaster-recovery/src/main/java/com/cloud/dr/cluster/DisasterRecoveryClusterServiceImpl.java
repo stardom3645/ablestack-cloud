@@ -1018,13 +1018,14 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
             for (int i=0; i < array.length; i++) {
                 String glueIp = array[i];
                 String glueUrl = "https://" + glueIp + ":8080/api/v1"; // glue-api 프로토콜과 포트 확정 시 변경 예정
-                String glueCommand = "/mirror/image/{mirrorPool}/{imageName}";
+                String glueCommand = "/mirror/image/rbd/" + volumeUuid;
                 String glueMethod = "POST";
                 Map<String, String> glueParams = new HashMap<>();
                 glueParams.put("mirrorPool", "rbd");
                 glueParams.put("imageName", volumeUuid);
                 glueParams.put("interval", interval);
                 glueParams.put("startTime", startTime);
+                LOGGER.info(glueParams);
                 boolean result = DisasterRecoveryClusterUtil.glueImageMirrorSetupAPI(glueUrl, glueCommand, glueMethod, glueParams);
                 // glueImageMirrorSetupAPI 성공
                 if (result) {
@@ -1129,7 +1130,6 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         DisasterRecoveryClusterVO drCluster = disasterRecoveryClusterDao.findByName(drClusterName);
 
         List<DisasterRecoveryClusterVmMapVO> drVm = disasterRecoveryClusterVmMapDao.listByDisasterRecoveryClusterVmId(drCluster.getId(), vmId);
-        LOGGER.info(drVm);
         if (!drVm.isEmpty()) {
             throw new InvalidParameterValueException("A disaster recovery cluster with the same virtual machine id exists:" + vmId);
         }
