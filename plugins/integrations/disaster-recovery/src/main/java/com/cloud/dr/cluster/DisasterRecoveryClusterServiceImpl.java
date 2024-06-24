@@ -1062,6 +1062,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                     String diskOfferingId = DisasterRecoveryClusterUtil.moldListDiskOfferingsAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey);
                     // Secondary Cluster - createVolume 호출 (비동기)
                     moldMethod = "POST";
+                    moldCommand = "createVolume";
                     Map<String, String> volParams = new HashMap<>();
                     volParams.put("diskofferingid", diskOfferingId);
                     volParams.put("size", String.valueOf(vol.getSize()));
