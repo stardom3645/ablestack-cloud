@@ -493,7 +493,7 @@ public class CreateServiceOfferingCmd extends BaseCmd {
     public boolean getShareable() {
         return shareable == null ? false : shareable;
     }
-    
+
     public boolean isPurgeResources() {
         return Boolean.TRUE.equals(purgeResources);
     }
