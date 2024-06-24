@@ -482,6 +482,8 @@ public class ParamProcessWorker implements DispatchWorker {
 
         // There may be multiple entities defined on the @EntityReference of a Response.class
         // UUID CommandType would expect only one entityType, so use the first entityType
+        logger.info(uuid);
+        logger.info(annotation.toString());
         final Class<?>[] entities = annotation.entityType()[0].getAnnotation(EntityReference.class).value();
 
         // Allow both uuid and internal id for pre3x apis
