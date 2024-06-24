@@ -1130,7 +1130,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
 
         List<DisasterRecoveryClusterVmMapVO> drVm = disasterRecoveryClusterVmMapDao.listByDisasterRecoveryClusterVmId(drCluster.getId(), vmId);
         LOGGER.info(drVm);
-        if (drVm != null || !drVm.isEmpty()) {
+        if (!drVm.isEmpty()) {
             throw new InvalidParameterValueException("A disaster recovery cluster with the same virtual machine id exists:" + vmId);
         }
 
