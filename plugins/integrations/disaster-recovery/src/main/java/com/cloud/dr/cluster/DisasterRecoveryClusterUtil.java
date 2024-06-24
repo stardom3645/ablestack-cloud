@@ -1338,7 +1338,6 @@ public class DisasterRecoveryClusterUtil {
                 }
                 for (int i = 0; i < array.length(); i++) {
                     JSONObject jSONObject = array.getJSONObject(i);
-                    LOGGER.info(jSONObject.get("iscustomized"));
                     if (jSONObject.get("name").equals("admin")) {
                         result = jSONObject.get("domainid").toString();
                         break;
