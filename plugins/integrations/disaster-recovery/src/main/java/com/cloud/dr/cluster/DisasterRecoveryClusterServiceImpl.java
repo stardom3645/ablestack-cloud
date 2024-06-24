@@ -895,7 +895,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         // Primary Cluster - moldListScvmIpAddressAPI 호출
         String response = DisasterRecoveryClusterUtil.moldListScvmIpAddressAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey);
         if (response != null) {
-            // Secondary Cluster - glueImageMirrorAPI 호출
+            // Primary Cluster - glueImageMirrorAPI 호출
             String[] array = response.split(",");
             for (int i=0; i < array.length; i++) {
                 String glueIp = array[i];
@@ -909,7 +909,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                         for (JsonElement dr : drArray) {
                             JsonElement imageName = dr.getAsJsonObject().get("image") == null ? null : dr.getAsJsonObject().get("image");
                             if (imageName != null) {
-                                // Secondary Cluster - glueImageMirrorPromoteAPI 호출
+                                // Primary Cluster - glueImageMirrorPromoteAPI 호출
                                 glueCommand = "/mirror/image/promote/rbd/"+imageName.getAsString();
                                 glueMethod = "POST";
                                 boolean result = DisasterRecoveryClusterUtil.glueImageMirrorPromoteAPI(glueUrl, glueCommand, glueMethod);
@@ -952,7 +952,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         // Primary Cluster - moldListScvmIpAddressAPI 호출
         String response = DisasterRecoveryClusterUtil.moldListScvmIpAddressAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey);
         if (response != null) {
-            // Secondary Cluster - glueImageMirrorAPI 호출
+            // Primary Cluster - glueImageMirrorAPI 호출
             String[] array = response.split(",");
             for (int i=0; i < array.length; i++) {
                 String glueIp = array[i];
@@ -966,7 +966,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                         for (JsonElement dr : drArray) {
                             JsonElement imageName = dr.getAsJsonObject().get("image") == null ? null : dr.getAsJsonObject().get("image");
                             if (imageName != null) {
-                                // Secondary Cluster - glueImageMirrorDemoteAPI 호출
+                                // Primary Cluster - glueImageMirrorDemoteAPI 호출
                                 glueCommand = "/mirror/image/demote/rbd/"+imageName.getAsString();
                                 glueMethod = "DELETE";
                                 boolean result = DisasterRecoveryClusterUtil.glueImageMirrorDemoteAPI(glueUrl, glueCommand, glueMethod);
