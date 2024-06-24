@@ -1737,6 +1737,7 @@
 "label.publickey": "\uacf5\uac1c \ud0a4",
 "label.publicnetwork": "\uc11c\ube44\uc2a4\uc6a9 \ub124\ud2b8\uc6cc\ud06c",
 "label.publicport": "Public \ud3ec\ud2b8",
+"label.purgeresources": "Purge Resources",
 "label.purpose": "\ubaa9\uc801",
 "label.qostype": "QoS \uc720\ud615",
 "label.quickview": "\ube60\ub978 \ubcf4\uae30",
