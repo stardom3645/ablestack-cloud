@@ -996,14 +996,10 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         }
         validateDisasterRecoveryClusterVmCreateParameters(cmd);
         DisasterRecoveryClusterVO drCluster = disasterRecoveryClusterDao.findByName(cmd.getDrClusterName());
-        DisasterRecoveryClusterVmMapVO newClusterVmMapVO = new DisasterRecoveryClusterVmMapVO(drCluster.getId(), cmd.getVmId());
-        disasterRecoveryClusterVmMapDao.persist(newClusterVmMapVO);
-        Long clusterId = newClusterVmMapVO.getDisasterRecoveryClusterId();
-        Long vmId = newClusterVmMapVO.getVmId();
-        UserVmJoinVO userVM = userVmJoinDao.findById(vmId);
+        UserVmJoinVO userVM = userVmJoinDao.findById(cmd.getVmId());
         String volumeUuid = userVM.getVolumeUuid();
         String url = drCluster.getDrClusterUrl();
-        Map<String, String> details = disasterRecoveryClusterDetailsDao.findDetails(clusterId);
+        Map<String, String> details = disasterRecoveryClusterDetailsDao.findDetails(drCluster.getId());
         String apiKey = details.get(ApiConstants.DR_CLUSTER_API_KEY);
         String secretKey = details.get(ApiConstants.DR_CLUSTER_SECRET_KEY);
         String interval = details.get("mirrorscheduleinterval");
@@ -1028,7 +1024,9 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                 LOGGER.info(glueParams);
                 boolean result = DisasterRecoveryClusterUtil.glueImageMirrorSetupAPI(glueUrl, glueCommand, glueMethod, glueParams);
                 // glueImageMirrorSetupAPI 성공
-                if (result) {
+                if (result) {   
+                    DisasterRecoveryClusterVmMapVO newClusterVmMapVO = new DisasterRecoveryClusterVmMapVO(drCluster.getId(), cmd.getVmId());
+                    disasterRecoveryClusterVmMapDao.persist(newClusterVmMapVO);
                     String moldUrl = url + "/client/api/";
                     String moldMethod = "GET";
                     String moldCommand = "listServiceOfferings";
