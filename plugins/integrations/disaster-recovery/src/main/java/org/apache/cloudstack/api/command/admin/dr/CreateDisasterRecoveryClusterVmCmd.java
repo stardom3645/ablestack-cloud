@@ -48,19 +48,18 @@ public class CreateDisasterRecoveryClusterVmCmd extends BaseCmd implements Admin
     /////////////////////////////////////////////////////
     //////////////// API parameters /////////////////////
     /////////////////////////////////////////////////////
-    @Parameter(name = ApiConstants.DR_CLUSTER_ID,
-                type = CommandType.UUID,
-                entityType = GetDisasterRecoveryClusterListResponse.class,
-                required = true,
-                description = "disaster recovery cluster id")
-    private Long drClusterId;
-
     @Parameter(name = ApiConstants.VIRTUAL_MACHINE_ID,
                 type = CommandType.UUID,
                 entityType = UserVmResponse.class,
                 required = true,
                 description = "the virtual machine ID used by disaster recovery cluster")
     private Long vmId;
+
+    @Parameter(name = ApiConstants.DR_CLUSTER_ID,
+                type = CommandType.UUID,
+                required = true,
+                description = "disaster recovery cluster id")
+    private Long drClusterId;
 
     @Parameter(name = ApiConstants.SERVICE_OFFERING_ID,
                 type = CommandType.UUID,
