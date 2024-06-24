@@ -1037,7 +1037,10 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                     // Secondary Cluster - listServiceOfferings 호출
                     List<ServiceOfferingResponse> secDrClusterServiceOfferingListResponse = DisasterRecoveryClusterUtil.getSecDrClusterInfoList(moldUrl, moldCommand, moldMethod, apiKey, secretKey);
                     for (ServiceOfferingResponse serviceOff : secDrClusterServiceOfferingListResponse) {
-                        if (serviceOff.getName() == cmd.getServiceOfferingName()) {
+                        LOGGER.info(serviceOff.getName());
+                        LOGGER.info(cmd.getServiceOfferingName());
+                        if (serviceOff.getName().equals(cmd.getServiceOfferingName())) {
+                            LOGGER.info(serviceOff.getId());
                             offeringId = serviceOff.getId();
                         }
                     }
@@ -1045,7 +1048,10 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                     moldCommand = "listNetworks";
                     List<NetworkResponse> secDrClusterNetworksListResponse = DisasterRecoveryClusterUtil.getSecDrClusterInfoList(moldUrl, moldCommand, moldMethod, apiKey, secretKey);
                     for (NetworkResponse net : secDrClusterNetworksListResponse) {
-                        if (net.getName() == cmd.getNetworkName()) {
+                        LOGGER.info(net.getName());
+                        LOGGER.info(cmd.getNetworkName());
+                        if (net.getName().equals(cmd.getNetworkName())) {
+                            LOGGER.info(net.getId());
                             networkId = net.getId();
                         }
                     }
