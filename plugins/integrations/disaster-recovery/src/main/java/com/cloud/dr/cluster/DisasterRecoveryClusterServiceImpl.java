@@ -1024,7 +1024,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                 LOGGER.info(glueParams);
                 boolean result = DisasterRecoveryClusterUtil.glueImageMirrorSetupAPI(glueUrl, glueCommand, glueMethod, glueParams);
                 // glueImageMirrorSetupAPI 성공
-                if (result) {   
+                if (result) {
                     DisasterRecoveryClusterVmMapVO newClusterVmMapVO = new DisasterRecoveryClusterVmMapVO(drCluster.getId(), cmd.getVmId());
                     disasterRecoveryClusterVmMapDao.persist(newClusterVmMapVO);
                     String moldUrl = url + "/client/api/";
