@@ -16,7 +16,6 @@
 // under the License.
 package com.cloud.configuration;
 
-import java.io.ObjectInputFilter.Config;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
