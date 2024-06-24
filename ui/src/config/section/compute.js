@@ -173,12 +173,12 @@ export default {
           docHelp: 'adminguide/virtual_machines.html#cloning-vms',
           dataView: true,
           show: (record) => { return true },
-          args: ['name', 'virtualmachineid', 'type', 'startvm'],
+          args: ['name', 'virtualmachineid', 'clonetype', 'startvm'],
           mapping: {
             virtualmachineid: {
               value: (record, params) => { return record.id }
             },
-            type: {
+            clonetype: {
               options: ['FULL', 'LINKED']
             }
           }
