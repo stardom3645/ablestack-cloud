@@ -121,4 +121,6 @@ public interface VolumeService {
     Pair<String, String> checkAndRepairVolume(VolumeInfo volume);
 
     void checkAndRepairVolumeBasedOnConfig(DataObject dataObject, Host host);
+
+    AsyncCallFuture<VolumeApiResult> flattenVolumeAsync(SnapshotInfo snapshot, DataStore store);
 }

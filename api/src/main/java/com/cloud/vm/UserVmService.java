@@ -61,8 +61,6 @@ import com.cloud.network.Network.IpAddresses;
 import com.cloud.offering.DiskOffering;
 import com.cloud.offering.ServiceOffering;
 import com.cloud.storage.StoragePool;
-import com.cloud.storage.VolumeApiService;
-import com.cloud.storage.snapshot.SnapshotApiService;
 import com.cloud.template.VirtualMachineTemplate;
 import com.cloud.user.Account;
 import com.cloud.uservm.UserVm;
@@ -102,7 +100,7 @@ public interface UserVmService {
      *           - the command specifying vmId to be cloned
      * @return the VM if cloneVM operation is successful
      * */
-    Optional<UserVm> cloneVirtualMachine(CloneVMCmd cmd, VolumeApiService volumeService, SnapshotApiService snapshotService) throws ResourceUnavailableException, ConcurrentOperationException, InsufficientCapacityException, ResourceAllocationException;
+    Optional<UserVm> cloneVirtualMachine(CloneVMCmd cmd) throws ResourceUnavailableException, ConcurrentOperationException, InsufficientCapacityException, ResourceAllocationException;
 
     void validateCloneCondition(CloneVMCmd cmd) throws ResourceUnavailableException, ConcurrentOperationException, ResourceAllocationException;
 
@@ -450,7 +448,7 @@ public interface UserVmService {
     UserVm createVirtualMachine(DeployVMCmd cmd) throws InsufficientCapacityException, ResourceUnavailableException, ConcurrentOperationException,
         StorageUnavailableException, ResourceAllocationException;
 
-    UserVm recordVirtualMachineToDB(CloneVMCmd cmd, long templateId) throws InsufficientCapacityException, ResourceUnavailableException, ConcurrentOperationException,
+    UserVm recordVirtualMachineToDB(CloneVMCmd cmd, long templateId, long rootVolumeId) throws InsufficientCapacityException, ResourceUnavailableException, ConcurrentOperationException,
             StorageUnavailableException, ResourceAllocationException;
     /**
      * This API is mostly to trigger VM.CREATE event for deployVirtualMachine with startvm=false, because there is no code in "execute" part of VM creation.
