@@ -54,42 +54,42 @@ public class CreateDisasterRecoveryClusterVmCmd extends BaseCmd implements Admin
                 description = "the virtual machine ID used by disaster recovery cluster")
     private Long vmId;
 
-    @Parameter(name = ApiConstants.DR_CLUSTER_ID,
-                type = CommandType.UUID,
+    @Parameter(name = "drclustername",
+                type = CommandType.STRING,
                 required = true,
-                description = "disaster recovery cluster id")
-    private Long drClusterId;
+                description = "disaster recovery cluster name")
+    private String drClusterName;
 
-    @Parameter(name = ApiConstants.SERVICE_OFFERING_ID,
-                type = CommandType.UUID,
+    @Parameter(name = "serviceofferingname",
+                type = CommandType.STRING,
                 required = true,
-                description = "the service offering ID used by disaster recovery cluster")
-    private Long serviceOfferingId;
+                description = "the service offering name used by disaster recovery cluster")
+    private String serviceOfferingName;
 
-    @Parameter(name = ApiConstants.NETWORK_ID,
-                type = CommandType.UUID,
+    @Parameter(name = ApiConstants.NETWORK_NAME,
+                type = CommandType.STRING,
                 required = true,
-                description = "the network ID used by disaster recovery cluster")
-    private Long networkId;
+                description = "the network name used by disaster recovery cluster")
+    private String networkName;
 
 
     /////////////////////////////////////////////////////
     /////////////////// Accessors ///////////////////////
     /////////////////////////////////////////////////////
-    public Long getDrClusterId() {
-        return drClusterId;
+    public String getDrClusterName() {
+        return drClusterName;
     }
 
     public Long getVmId() {
         return vmId;
     }
 
-    public Long getServiceOfferingId() {
-        return serviceOfferingId;
+    public String getServiceOfferingName() {
+        return serviceOfferingName;
     }
 
-    public Long getNetworkId() {
-        return networkId;
+    public String getNetworkName() {
+        return networkName;
     }
 
     @Override

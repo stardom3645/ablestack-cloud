@@ -995,21 +995,21 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
             throw new CloudRuntimeException("Disaster Recovery Service plugin is disabled");
         }
         validateDisasterRecoveryClusterVmCreateParameters(cmd);
-        DisasterRecoveryClusterVmMapVO newClusterVmMapVO = new DisasterRecoveryClusterVmMapVO(cmd.getDrClusterId(), cmd.getVmId());
+        DisasterRecoveryClusterVO drCluster = disasterRecoveryClusterDao.findByName(cmd.getDrClusterName());
+        DisasterRecoveryClusterVmMapVO newClusterVmMapVO = new DisasterRecoveryClusterVmMapVO(drCluster.getId(), cmd.getVmId());
         disasterRecoveryClusterVmMapDao.persist(newClusterVmMapVO);
         Long clusterId = newClusterVmMapVO.getDisasterRecoveryClusterId();
         Long vmId = newClusterVmMapVO.getVmId();
-        Long networkId = cmd.getNetworkId();
-        Long offeringId = cmd.getServiceOfferingId();
         UserVmJoinVO userVM = userVmJoinDao.findById(vmId);
         String volumeUuid = userVM.getVolumeUuid();
-        DisasterRecoveryClusterVO drCluster = disasterRecoveryClusterDao.findById(clusterId);
         String url = drCluster.getDrClusterUrl();
         Map<String, String> details = disasterRecoveryClusterDetailsDao.findDetails(clusterId);
         String apiKey = details.get(ApiConstants.DR_CLUSTER_API_KEY);
         String secretKey = details.get(ApiConstants.DR_CLUSTER_SECRET_KEY);
         String interval = details.get("mirrorscheduleinterval");
         String startTime = details.get("mirrorschedulestarttime");
+        String offeringId = "";
+        String networkId = "";
         String ipList = Script.runSimpleBashScript("cat /etc/hosts | grep -E 'scvm1-mngt|scvm2-mngt|scvm3-mngt' | awk '{print $1}' | tr '\n' ','");
         if (ipList != null || !ipList.isEmpty()) {
             ipList = ipList.replaceAll(",$", "");
@@ -1028,10 +1028,26 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                 boolean result = DisasterRecoveryClusterUtil.glueImageMirrorSetupAPI(glueUrl, glueCommand, glueMethod, glueParams);
                 // glueImageMirrorSetupAPI 성공
                 if (result) {
-                    // Secondary Cluster - listStoragePoolsMetrics 호출
                     String moldUrl = url + "/client/api/";
-                    String moldCommand = "listStoragePoolsMetrics";
                     String moldMethod = "GET";
+                    String moldCommand = "listServiceOfferings";
+                    // Secondary Cluster - listServiceOfferings 호출
+                    List<ServiceOfferingResponse> secDrClusterServiceOfferingListResponse = DisasterRecoveryClusterUtil.getSecDrClusterInfoList(moldUrl, moldCommand, moldMethod, apiKey, secretKey);
+                    for (ServiceOfferingResponse serviceOff : secDrClusterServiceOfferingListResponse) {
+                        if (serviceOff.getName() == cmd.getServiceOfferingName()) {
+                            offeringId = serviceOff.getId();
+                        }
+                    }
+                    // Secondary Cluster - listNetworks 호출
+                    moldCommand = "listNetworks";
+                    List<NetworkResponse> secDrClusterNetworksListResponse = DisasterRecoveryClusterUtil.getSecDrClusterInfoList(moldUrl, moldCommand, moldMethod, apiKey, secretKey);
+                    for (NetworkResponse net : secDrClusterNetworksListResponse) {
+                        if (net.getName() == cmd.getNetworkName()) {
+                            networkId = net.getId();
+                        }
+                    }
+                    // Secondary Cluster - listStoragePoolsMetrics 호출
+                    moldCommand = "listStoragePoolsMetrics";
                     String psInfo = DisasterRecoveryClusterUtil.moldListStoragePoolsMetricsAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey);
                     String zoneId = new JsonParser().parse(psInfo).getAsJsonObject().get("zoneid").getAsString();
                     String poolId = new JsonParser().parse(psInfo).getAsJsonObject().get("id").getAsString();
@@ -1039,9 +1055,11 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                     moldCommand = "listStoragePoolObjects";
                     Map<String, String> poolParams = new HashMap<>();
                     poolParams.put("id", poolId);
+                    LOGGER.info(poolParams);
                     String volumeInfo = DisasterRecoveryClusterUtil.moldListStoragePoolObjectsAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey, poolParams, volumeUuid);
                     String size = new JsonParser().parse(volumeInfo).getAsJsonObject().get("size").getAsString();
                     String name = new JsonParser().parse(volumeInfo).getAsJsonObject().get("name").getAsString();
+                    LOGGER.info(volumeInfo);
                     // Secondary Cluster - listDiskOfferings 호출
                     moldCommand = "listDiskOfferings";
                     String diskOfferingId = DisasterRecoveryClusterUtil.moldListDiskOfferingsAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey);
@@ -1052,18 +1070,19 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                     volParams.put("size", size);
                     volParams.put("name", name);
                     volParams.put("zoneid", zoneId);
+                    LOGGER.info(volParams);
                     String volumeId = DisasterRecoveryClusterUtil.moldCreateVolumeAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey, volParams);
                     moldCommand = "deployVirtualMachineForVolume";
                     Map<String, String> vmParams = new HashMap<>();
                     vmParams.put("volumeid", ""); // volumeId
                     vmParams.put("zoneid", zoneId); // psInfo의 zoneid
-                    vmParams.put("serviceofferingid", offeringId.toString());
+                    vmParams.put("serviceofferingid", offeringId);
                     vmParams.put("rootdisksize", size); // volumeInfo의 size
                     vmParams.put("name", "");
                     vmParams.put("displayname", "");
                     vmParams.put("account", "admin");
                     vmParams.put("domainid", "");
-                    vmParams.put("iptonetworklist[0].networkid", networkId.toString());
+                    vmParams.put("iptonetworklist[0].networkid", networkId);
                     // vmParams.put("details[0].cpuNumber", "");
                     // vmParams.put("details[0].memory", "");
                     vmParams.put("startvm", "false");
@@ -1076,6 +1095,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                     vmParams.put("dynamicscalingenabled", "true");
                     vmParams.put("iothreadsenabled", "true");
                     vmParams.put("iodriverpolicy", "io_uring");
+                    LOGGER.info(vmParams);
                     // Secondary Cluster - deployVirtualMachineForVolume 호출 (비동기)
                     String response = DisasterRecoveryClusterUtil.moldDeployVirtualMachineForVolumeAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey, vmParams);
                     return true;
@@ -1089,31 +1109,32 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
 
     private void validateDisasterRecoveryClusterVmCreateParameters(final CreateDisasterRecoveryClusterVmCmd cmd) throws CloudRuntimeException {
         final Long vmId = cmd.getVmId();
-        final Long drClusterId = cmd.getDrClusterId();
-        final Long networkId = cmd.getNetworkId();
-        final Long serOfferingId = cmd.getServiceOfferingId();
+        final String drClusterName = cmd.getDrClusterName();
+        final String networkName = cmd.getNetworkName();
+        final String serOfferingName = cmd.getServiceOfferingName();
 
         if (vmId == null) {
             throw new InvalidParameterValueException("Invalid id for the virtual machine id:" + vmId);
         }
-        if (drClusterId == null) {
-            throw new InvalidParameterValueException("Invalid id for the disaster recovery cluster id:" + drClusterId);
+        if (drClusterName == null) {
+            throw new InvalidParameterValueException("Invalid name for the disaster recovery cluster name:" + drClusterName);
         }
-        if (networkId == null) {
-            throw new InvalidParameterValueException("Invalid id for the disaster recovery cluster vm network id:" + networkId);
+        if (networkName == null) {
+            throw new InvalidParameterValueException("Invalid name for the disaster recovery cluster vm network name:" + networkName);
         }
-        if (serOfferingId == null) {
-            throw new InvalidParameterValueException("Invalid id for the disaster recovery cluster vm service offering id:" + serOfferingId);
+        if (serOfferingName == null) {
+            throw new InvalidParameterValueException("Invalid name for the disaster recovery cluster vm service offering name:" + serOfferingName);
         }
 
-        List<DisasterRecoveryClusterVmMapVO> drVm = disasterRecoveryClusterVmMapDao.listByDisasterRecoveryClusterVmId(drClusterId, vmId);
+        DisasterRecoveryClusterVO drCluster = disasterRecoveryClusterDao.findByName(drClusterName);
+
+        List<DisasterRecoveryClusterVmMapVO> drVm = disasterRecoveryClusterVmMapDao.listByDisasterRecoveryClusterVmId(drCluster.getId(), vmId);
         if (drVm != null) {
             throw new InvalidParameterValueException("A disaster recovery cluster with the same virtual machine id exists:" + vmId);
         }
 
-        DisasterRecoveryClusterVO drCluster = disasterRecoveryClusterDao.findById(drClusterId);
         String url = drCluster.getDrClusterUrl();
-        Map<String, String> details = disasterRecoveryClusterDetailsDao.findDetails(drClusterId);
+        Map<String, String> details = disasterRecoveryClusterDetailsDao.findDetails(drCluster.getId());
         String apiKey = details.get(ApiConstants.DR_CLUSTER_API_KEY);
         String secretKey = details.get(ApiConstants.DR_CLUSTER_SECRET_KEY);
         String moldCommand = "listDiskOfferings";
