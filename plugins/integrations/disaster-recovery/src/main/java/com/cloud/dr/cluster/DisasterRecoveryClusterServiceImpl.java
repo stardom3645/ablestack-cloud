@@ -1078,7 +1078,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                     volUpParams.put("storageid", poolId);
                     volUpParams.put("state", "Ready");
                     volUpParams.put("type", "ROOT");
-                    String volumeUpId = DisasterRecoveryClusterUtil.moldUpdateVolumeAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey, volUpParams);
+                    String response = DisasterRecoveryClusterUtil.moldUpdateVolumeAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey, volUpParams);
                     moldMethod = "POST";
                     moldCommand = "deployVirtualMachineForVolume";
                     Map<String, String> vmParams = new HashMap<>();
