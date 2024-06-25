@@ -1029,8 +1029,6 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                 boolean result = DisasterRecoveryClusterUtil.glueImageMirrorSetupAPI(glueUrl, glueCommand, glueMethod, glueParams);
                 // glueImageMirrorSetupAPI 성공
                 if (result) {
-                    DisasterRecoveryClusterVmMapVO newClusterVmMapVO = new DisasterRecoveryClusterVmMapVO(drCluster.getId(), cmd.getVmId());
-                    disasterRecoveryClusterVmMapDao.persist(newClusterVmMapVO);
                     String moldUrl = url + "/client/api/";
                     String moldMethod = "GET";
                     String moldCommand = "listServiceOfferings";
@@ -1059,6 +1057,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                     moldCommand = "listStoragePoolsMetrics";
                     String psInfo = DisasterRecoveryClusterUtil.moldListStoragePoolsMetricsAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey);
                     String zoneId = new JsonParser().parse(psInfo).getAsJsonObject().get("zoneid").getAsString();
+                    String poolId = new JsonParser().parse(psInfo).getAsJsonObject().get("id").getAsString();
                     // Secondary Cluster - listAccounts 호출
                     moldCommand = "listAccounts";
                     String domainId = DisasterRecoveryClusterUtil.moldListAccountsAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey);
@@ -1074,6 +1073,17 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                     volParams.put("name", volumeUuid);
                     volParams.put("zoneid", zoneId);
                     String volumeId = DisasterRecoveryClusterUtil.moldCreateVolumeAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey, volParams);
+                    // Secondary Cluster - updateVolume 호출
+                    moldMethod = "GET";
+                    moldCommand = "updateVolume";
+                    Map<String, String> volUpParams = new HashMap<>();
+                    volUpParams.put("id", volumeId);
+                    volUpParams.put("path", volumeUuid);
+                    volUpParams.put("storageid", poolId);
+                    volUpParams.put("state", "Ready");
+                    volUpParams.put("type", "ROOT");
+                    String volumeUpId = DisasterRecoveryClusterUtil.moldUpdateVolumeAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey, volUpParams);
+                    moldMethod = "POST";
                     moldCommand = "deployVirtualMachineForVolume";
                     Map<String, String> vmParams = new HashMap<>();
                     vmParams.put("volumeid", volumeId);
@@ -1097,11 +1107,11 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                     vmParams.put("dynamicscalingenabled", "true");
                     vmParams.put("iothreadsenabled", "true");
                     vmParams.put("iodriverpolicy", "io_uring");
-                    LOGGER.info(vmParams);
                     // Secondary Cluster - deployVirtualMachineForVolume 호출 (비동기)
-                    String response = DisasterRecoveryClusterUtil.moldDeployVirtualMachineForVolumeAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey, vmParams);
-                    LOGGER.info(response);
-                    if (response != null) {
+                    String vmId = DisasterRecoveryClusterUtil.moldDeployVirtualMachineForVolumeAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey, vmParams);
+                    if (vmId != null) {
+                        DisasterRecoveryClusterVmMapVO newClusterVmMapVO = new DisasterRecoveryClusterVmMapVO(drCluster.getId(), cmd.getVmId(), Long.valueOf(vmId), userVM.getName()+"-mirror", "Stopped", "");
+                        disasterRecoveryClusterVmMapDao.persist(newClusterVmMapVO);
                         return true;
                     } else {
                         return false;
