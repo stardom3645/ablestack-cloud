@@ -30,11 +30,11 @@
       <template #expandedRowRender="{ record, text }">
         <a-descriptions style="margin-top: 10px" layout="vertical" :column="1" :bordered="false" size="small">
           <a-descriptions-item :label="$t('label.id')" class="bold-label">
-            {{ record.id }}
+            {{ record.mirroredVmId }}
           </a-descriptions-item>
           <a-descriptions-item :label="$t('label.dr.volume.root.disk.status')">
             <status :text="text ? text : ''" displayText />
-            {{ record.mirroredVmRootDisk }}
+            {{ record.mirroredVmVolStatus }}
           </a-descriptions-item>
           <a-descriptions-item :label="$t('label.dr.volume.data.disk.status')">
             <status :text="text ? text : ''" displayText />
@@ -162,8 +162,8 @@ export default {
         this.drCluster = this.drCluster.map(item => ({ ...item, drName: item.drclustername }))
         this.drCluster = this.drCluster.map(item => ({ ...item, mirroredVm: item.drclustermirrorvmname }))
         this.drCluster = this.drCluster.map(item => ({ ...item, mirroredStatus: item.drclustermirrorvmstatus }))
-        this.drCluster = this.drCluster.map(item => ({ ...item, mirroredVmRootDisk: 'ROOT-673' }))
-        this.drCluster = this.drCluster.map(item => ({ ...item, mirroredVmDataDisk: 'DATA-678' }))
+        this.drCluster = this.drCluster.map(item => ({ ...item, mirroredVmId: item.drclustermirrorvmid }))
+        this.drCluster = this.drCluster.map(item => ({ ...item, mirroredVmVolStatus: item.drclustermirrorvmvolstatus }))
       }).finally(() => {
         this.loading = false
       })
