@@ -39,7 +39,7 @@ public class DisasterRecoveryClusterVmMapVO implements DisasterRecoveryClusterVm
     long vmId;
 
     @Column(name = "mirrored_vm_id")
-    long mirroredVmId;
+    String mirroredVmId;
 
     @Column(name = "mirrored_vm_name")
     String mirroredVmName;
@@ -53,7 +53,7 @@ public class DisasterRecoveryClusterVmMapVO implements DisasterRecoveryClusterVm
     public DisasterRecoveryClusterVmMapVO() {
     }
 
-    public DisasterRecoveryClusterVmMapVO(long disasterRecoveryClusterId, long vmId, long mirroredVmId, String mirroredVmName, String mirroredVmStatus, String mirroredVmVolumeStatus) {
+    public DisasterRecoveryClusterVmMapVO(long disasterRecoveryClusterId, long vmId, String mirroredVmId, String mirroredVmName, String mirroredVmStatus, String mirroredVmVolumeStatus) {
         this.disasterRecoveryClusterId = disasterRecoveryClusterId;
         this.vmId = vmId;
         this.mirroredVmId = mirroredVmId;

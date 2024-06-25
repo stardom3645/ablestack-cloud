@@ -1106,7 +1106,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                     // Secondary Cluster - deployVirtualMachineForVolume 호출 (비동기)
                     String vmId = DisasterRecoveryClusterUtil.moldDeployVirtualMachineForVolumeAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey, vmParams);
                     if (vmId != null) {
-                        DisasterRecoveryClusterVmMapVO newClusterVmMapVO = new DisasterRecoveryClusterVmMapVO(drCluster.getId(), cmd.getVmId(), Long.valueOf(vmId), userVM.getName(), "Stopped", "");
+                        DisasterRecoveryClusterVmMapVO newClusterVmMapVO = new DisasterRecoveryClusterVmMapVO(drCluster.getId(), cmd.getVmId(), vmId, userVM.getName(), "Stopped", "");
                         disasterRecoveryClusterVmMapDao.persist(newClusterVmMapVO);
                         return true;
                     } else {
