@@ -43,7 +43,7 @@
           <status :text="text ? text : ''" displayText />
         </template>
          <template v-if="column.key === 'name'">
-          <router-link :to="{ path: '/disasterrecoverycluster/' + record.id }" >{{ text }}</router-link>
+          <router-link :to="{ path: '/disasterrecoverycluster/' + record.drId }" >{{ text }}</router-link>
         </template>
         <template v-if="column.key === 'actions'">
         <slot name="actions"/>
@@ -156,6 +156,7 @@ export default {
         this.drCluster = json.getdisasterrecoveryclusterlistresponse.disasterrecoverycluster[0].drclustervmmap || []
         this.drVm = this.clusterName
         this.drCluster = this.drCluster.map(item => ({ ...item, drName: item.drclustername }))
+        this.drCluster = this.drCluster.map(item => ({ ...item, drId: json.getdisasterrecoveryclusterlistresponse.disasterrecoverycluster[0].id }))
         this.drCluster = this.drCluster.map(item => ({ ...item, mirroredVm: item.drclustermirrorvmname }))
         this.drCluster = this.drCluster.map(item => ({ ...item, mirroredStatus: item.drclustermirrorvmstatus }))
         this.drCluster = this.drCluster.map(item => ({ ...item, mirroredVmId: item.drclustermirrorvmid }))
