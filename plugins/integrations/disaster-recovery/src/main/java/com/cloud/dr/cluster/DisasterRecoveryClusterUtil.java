@@ -1555,18 +1555,7 @@ public class DisasterRecoveryClusterUtil {
             }
             JSONObject jObject = XML.toJSONObject(sb.toString());
             JSONObject response = (JSONObject) jObject.get("listvirtualmachinesresponse");
-            if (response.has("virtualmachine")) {
-                Object object = response.get("virtualmachine");
-                JSONArray array;
-                if (object instanceof JSONArray) {
-                    array = (JSONArray) object;
-                } else {
-                    array = new JSONArray();
-                    array.put(object);
-                }
-                return array.toString();
-            }
-            return null;
+            return response.toString();
         } catch (Exception e) {
             LOGGER.error(String.format("Mold API endpoint not available"), e);
             return null;

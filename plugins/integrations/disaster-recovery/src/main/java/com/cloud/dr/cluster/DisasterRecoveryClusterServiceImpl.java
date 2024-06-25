@@ -85,6 +85,8 @@ import org.apache.cloudstack.context.CallContext;
 import org.apache.cloudstack.framework.config.ConfigKey;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements DisasterRecoveryClusterService {
 
@@ -1160,6 +1162,18 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         String diskOffering = DisasterRecoveryClusterUtil.moldListDiskOfferingsAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey);
         if (diskOffering == "" || diskOffering.isEmpty()) {
             throw new CloudRuntimeException("A mirroring virtual machine cannot be added because a disk offering with a custom disk size does not exist.");
+        }
+
+        UserVmJoinVO userVM = userVmJoinDao.findById(cmd.getVmId());
+        moldCommand = "listVirtualMachines";
+        String vmList = DisasterRecoveryClusterUtil.moldListVirtualMachinesAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey);
+        JSONObject jsonObject = new JSONObject(vmList);
+        JSONArray jsonArray = jsonObject.getJSONArray("virtualmachine");
+        for (int i = 0; i < jsonArray.length(); i++) {
+            JSONObject object = jsonArray.getJSONObject(i);
+            if (object.get("name").toString().equalsIgnoreCase(userVM.getName())) {
+                throw new CloudRuntimeException("A mirroring virtual machine cannot be added because a virtual machine with the same name as the corresponding virtual machine exists in the DR cluster.");
+            }
         }
     }
 
