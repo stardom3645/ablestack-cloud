@@ -26,5 +26,9 @@ public interface DisasterRecoveryClusterVmMap {
     long getId();
     long getDisasterRecoveryClusterId();
     long getVmId();
+    String getMirroredVmId();
+    String getMirroredVmName();
+    String getMirroredVmStatus();
+    String getMirroredVmVolumeStatus();
 }
 

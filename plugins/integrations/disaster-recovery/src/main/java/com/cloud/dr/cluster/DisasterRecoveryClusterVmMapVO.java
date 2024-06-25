@@ -86,4 +86,25 @@ public class DisasterRecoveryClusterVmMapVO implements DisasterRecoveryClusterVm
         this.vmId = vmId;
     }
 
+    @Override
+    public String getMirroredVmId() {
+        return mirroredVmId;
+    }
+
+    @Override
+    public String getMirroredVmName() {
+        return mirroredVmName;
+    }
+
+    @Override
+    public String getMirroredVmStatus() {
+        return mirroredVmStatus;
+    }
+
+    @Override
+    public String getMirroredVmVolumeStatus() {
+        return mirroredVmVolumeStatus;
+    }
+
+
 }
