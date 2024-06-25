@@ -1090,8 +1090,8 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                     vmParams.put("zoneid", zoneId);
                     vmParams.put("serviceofferingid", offeringId);
                     vmParams.put("rootdisksize", String.valueOf(vol.getSize() / (1024 * 1024 * 1024)));
-                    vmParams.put("name", userVM.getName()+"-mirror");
-                    vmParams.put("displayname", userVM.getDisplayName()+"-mirror");
+                    vmParams.put("name", userVM.getName());
+                    vmParams.put("displayname", userVM.getDisplayName());
                     vmParams.put("domainid", domainId);
                     vmParams.put("iptonetworklist[0].networkid", networkId);
                     vmParams.put("account", "admin");
@@ -1110,7 +1110,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                     // Secondary Cluster - deployVirtualMachineForVolume 호출 (비동기)
                     String vmId = DisasterRecoveryClusterUtil.moldDeployVirtualMachineForVolumeAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey, vmParams);
                     if (vmId != null) {
-                        DisasterRecoveryClusterVmMapVO newClusterVmMapVO = new DisasterRecoveryClusterVmMapVO(drCluster.getId(), cmd.getVmId(), Long.valueOf(vmId), userVM.getName()+"-mirror", "Stopped", "");
+                        DisasterRecoveryClusterVmMapVO newClusterVmMapVO = new DisasterRecoveryClusterVmMapVO(drCluster.getId(), cmd.getVmId(), Long.valueOf(vmId), userVM.getName(), "Stopped", "");
                         disasterRecoveryClusterVmMapDao.persist(newClusterVmMapVO);
                         return true;
                     } else {
