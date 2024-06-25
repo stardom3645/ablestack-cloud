@@ -97,7 +97,6 @@ export default {
       ],
       drClusterList: [],
       drCluster: [],
-      drVm: [],
       drVmName: '',
       combinedArray: []
     }
@@ -154,7 +153,6 @@ export default {
       this.loading = true
       api('getDisasterRecoveryClusterList', { name: this.clusterName }).then(json => {
         this.drCluster = json.getdisasterrecoveryclusterlistresponse.disasterrecoverycluster[0].drclustervmmap || []
-        this.drVm = this.clusterName
         this.drCluster = this.drCluster.map(item => ({ ...item, drName: item.drclustername }))
         this.drCluster = this.drCluster.map(item => ({ ...item, drId: json.getdisasterrecoveryclusterlistresponse.disasterrecoverycluster[0].id }))
         this.drCluster = this.drCluster.map(item => ({ ...item, mirroredVm: item.drclustermirrorvmname }))
