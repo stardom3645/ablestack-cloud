@@ -1311,7 +1311,7 @@ public class DisasterRecoveryClusterUtil {
             JSONObject jObject = XML.toJSONObject(sb.toString());
             JSONObject response = (JSONObject) jObject.get("deployvirtualmachineforvolumeresponse");
             LOGGER.info(response.toString());
-            return response.get("jobid").toString();
+            return response.get("id").toString();
         } catch (Exception e) {
             LOGGER.error(String.format("Mold API endpoint not available"), e);
             return null;
