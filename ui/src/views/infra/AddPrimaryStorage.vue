@@ -232,7 +232,7 @@
             </a-select>
           </a-form-item>
         </div>
-        <div v-if="form.provider !== 'DefaultPrimary' && form.provider !== 'PowerFlex' && form.provider !== 'Linstor' && form.provider !== 'ABLESTACK'" >
+        <div v-if="form.provider !== 'DefaultPrimary' && form.provider !== 'PowerFlex' && form.provider !== 'Linstor' && form.provider !== 'ABLESTACK' && form.protocol !== 'FiberChannel'">
           <a-form-item name="managed" ref="managed">
             <template #label>
               <tooltip-label :title="$t('label.ismanaged')" :tooltip="apiParams.managed.description"/>
@@ -286,6 +286,70 @@
             <a-input v-model:value="form.powerflexStoragePool" :placeholder="$t('label.powerflex.storage.pool')"/>
           </a-form-item>
         </div>
+        <div v-if="form.provider === 'Primera'">
+          <a-form-item name="primeraURL" ref="primeraURL">
+            <template #label>
+              <tooltip-label :title="$t('label.url')" :tooltip="$t('label.primera.url.tooltip')"/>
+            </template>
+            <a-input v-model:value="form.primeraURL" :placeholder="$t('label.primera.url.tooltip')"/>
+          </a-form-item>
+          <a-form-item name="primeraUsername" ref="primeraUsername">
+            <template #label>
+              <tooltip-label :title="$t('label.username')" :tooltip="$t('label.primera.username.tooltip')"/>
+            </template>
+            <a-input v-model:value="form.primeraUsername" :placeholder="$t('label.primera.username.tooltip')"/>
+          </a-form-item>
+          <a-form-item name="primeraPassword" ref="primeraPassword">
+            <template #label>
+              <tooltip-label :title="$t('label.password')" :tooltip="$t('label.primera.password')"/>
+            </template>
+            <a-input-password v-model:value="form.primeraPassword" :placeholder="$t('label.primera.password')"/>
+          </a-form-item>
+          <a-form-item name="capacityBytes" ref="capacityBytes">
+            <template #label>
+              <tooltip-label :title="$t('label.capacitybytes')" :tooltip="apiParams.capacitybytes.description"/>
+            </template>
+            <a-input v-model:value="form.capacityBytes" :placeholder="apiParams.capacitybytes.description" />
+          </a-form-item>
+          <a-form-item name="capacityIops" ref="capacityIops">
+            <template #label>
+              <tooltip-label :title="$t('label.capacityiops')" :tooltip="apiParams.capacityiops.description"/>
+            </template>
+            <a-input v-model:value="form.capacityIops" :placeholder="apiParams.capacityiops.description" />
+          </a-form-item>
+        </div>
+        <div v-if="form.provider === 'Flash Array'">
+          <a-form-item name="flashArrayURL" ref="flashArrayURL">
+            <template #label>
+              <tooltip-label :title="$t('label.url')" :tooltip="$t('label.flashArray.url.tooltip')"/>
+            </template>
+            <a-input v-model:value="form.flashArrayURL" :placeholder="$t('label.flashArray.url.tooltip')"/>
+          </a-form-item>
+          <a-form-item name="flashArrayUsername" ref="flashArrayUsername">
+            <template #label>
+              <tooltip-label :title="$t('label.username')" :tooltip="$t('label.flashArray.username.tooltip')"/>
+            </template>
+            <a-input v-model:value="form.flashArrayUsername" :placeholder="$t('label.flashArray.username.tooltip')"/>
+          </a-form-item>
+          <a-form-item name="flashArrayPassword" ref="flashArrayPassword">
+            <template #label>
+              <tooltip-label :title="$t('label.password')" :tooltip="$t('label.flashArray.password')"/>
+            </template>
+            <a-input-password v-model:value="form.flashArrayPassword" :placeholder="$t('label.flashArray.password')"/>
+          </a-form-item>
+          <a-form-item name="capacityBytes" ref="capacityBytes">
+            <template #label>
+              <tooltip-label :title="$t('label.capacitybytes')" :tooltip="apiParams.capacitybytes.description"/>
+            </template>
+            <a-input v-model:value="form.capacityBytes" :placeholder="apiParams.capacitybytes.description" />
+          </a-form-item>
+          <a-form-item name="capacityIops" ref="capacityIops">
+            <template #label>
+              <tooltip-label :title="$t('label.capacityiops')" :tooltip="apiParams.capacityiops.description"/>
+            </template>
+            <a-input v-model:value="form.capacityIops" :placeholder="apiParams.capacityiops.description" />
+          </a-form-item>
+        </div>
         <div v-if="form.protocol === 'RBD'">
           <a-form-item name="radosmonitor" ref="radosmonitor">
             <template #label>
@@ -321,10 +385,7 @@
           </a-form-item>
         </div>
         <div v-if="form.protocol === 'Glue FileSystem' && form.provider === 'ABLESTACK'">
-          <a-form-item name="gluefsserver" ref="gluefsserver">
-            <template #label>
-              <tooltip-label :title="$t('label.gluefs.server')" :tooltip="$t('label.gluefs.server')"/>
-            </template>
+          <a-form-item name="gluefsserver" ref="gluefsserver" :label="$t('label.gluefs.server')">
             <a-input v-model:value="form.gluefsserver" :placeholder="$t('label.gluefs.server')" />
           </a-form-item>
           <a-form-item name="gluefsuser" ref="gluefsuser" :label="$t('label.gluefs.user')">
@@ -333,14 +394,14 @@
           <a-form-item name="gluefsname" ref="gluefsname" :label="$t('label.gluefs.name')">
             <a-input v-model:value="form.gluefsname" :placeholder="$t('label.gluefs.name')" />
           </a-form-item>
-          <a-form-item name="gluefstargetpath" ref="gluefstargetpath">
-            <template #label>
-              <tooltip-label :title="$t('label.gluefs.path')" :tooltip="$t('label.gluefs.path')"/>
-            </template>
-            <a-input v-model:value="form.gluefstargetpath" :placeholder="$t('label.gluefs.path')"/>
-          </a-form-item>
           <a-form-item name="gluefssecret" ref="gluefssecret" :label="$t('label.gluefs.secret')">
             <a-input v-model:value="form.gluefssecret" :placeholder="$t('label.gluefs.secret')" />
+          </a-form-item>
+          <a-form-item name="gluefstargetpath" ref="gluefstargetpath">
+            <template #label>
+              <tooltip-label :title="$t('label.gluefs.path')" :tooltip="$t('label.gluefs.path.tooltip')"/>
+            </template>
+            <a-input v-model:value="form.gluefstargetpath" :placeholder="$t('label.gluefs.path.tooltip')"/>
           </a-form-item>
         </div>
         <div v-if="form.protocol === 'CLVM'">
@@ -353,7 +414,7 @@
             <a-input v-model:value="form.volume" :placeholder="$t('label.volume')"/>
           </a-form-item>
         </div>
-        <div v-if="form.protocol === 'Linstor'">
+        <div v-if="form.protocol === 'Linstor' || form.provider === 'Linstor'">
           <a-form-item name="capacityIops" ref="capacityIops">
             <template #label>
               <tooltip-label :title="$t('label.capacityiops')" :tooltip="apiParams.capacityiops.description"/>
@@ -464,7 +525,15 @@ export default {
         powerflexGateway: [{ required: true, message: this.$t('label.required') }],
         powerflexGatewayUsername: [{ required: true, message: this.$t('label.required') }],
         powerflexGatewayPassword: [{ required: true, message: this.$t('label.required') }],
-        powerflexStoragePool: [{ required: true, message: this.$t('label.required') }]
+        powerflexStoragePool: [{ required: true, message: this.$t('label.required') }],
+        username: [{ required: true, message: this.$t('label.required') }],
+        password: [{ required: true, message: this.$t('label.required') }],
+        primeraURL: [{ required: true, message: this.$t('label.url') }],
+        primeraUsername: [{ required: true, message: this.$t('label.username') }],
+        primeraPassword: [{ required: true, message: this.$t('label.password') }],
+        flashArrayURL: [{ required: true, message: this.$t('label.url') }],
+        flashArrayUsername: [{ required: true, message: this.$t('label.username') }],
+        flashArrayPassword: [{ required: true, message: this.$t('label.password') }]
       })
     },
     fetchData () {
@@ -555,7 +624,7 @@ export default {
       const cluster = this.clusters.find(cluster => cluster.id === this.form.cluster)
       this.hypervisorType = cluster.hypervisortype
       if (this.hypervisorType === 'KVM') {
-        this.protocols = ['Glue Block', 'Glue FileSystem', 'nfs', 'SharedMountPoint', 'RBD', 'CLVM', 'Gluster', 'Linstor', 'custom']
+        this.protocols = ['Glue Block', 'Glue FileSystem', 'nfs', 'SharedMountPoint', 'RBD', 'CLVM', 'Gluster', 'Linstor', 'custom', 'FiberChannel']
         if (this.form.scope === 'host') {
           this.protocols.push('Filesystem')
         }
@@ -731,6 +800,9 @@ export default {
       if (value === 'PowerFlex') {
         this.protocols = ['custom']
         this.form.protocol = 'custom'
+      } else if (value === 'Flash Array' || value === 'Primera') {
+        this.protocols = ['FiberChannel']
+        this.form.protocol = 'FiberChannel'
       } else {
         this.fetchHypervisor(value)
       }
@@ -852,16 +924,28 @@ export default {
           var lun = values.lun
           url = this.iscsiURL(server, iqn, lun)
         } else if (values.protocol === 'Linstor') {
-          url = this.linstorURL(server)
           params.provider = 'Linstor'
+        } else if (values.protocol === 'Filesystem') {
+          url = this.filesystemURL(values.host, path)
+        } else if (values.provider === 'Primera') {
+          params['details[0].api_username'] = values.primeraUsername
+          params['details[0].api_password'] = values.primeraPassword
+          url = values.primeraURL
+        } else if (values.provider === 'Flash Array') {
+          params['details[0].api_username'] = values.flashArrayUsername
+          params['details[0].api_password'] = values.flashArrayPassword
+          url = values.flashArrayURL
+        }
+
+        if (values.provider === 'Linstor') {
+          url = this.linstorURL(server)
           values.managed = false
           params['details[0].resourceGroup'] = values.resourcegroup
           if (values.capacityIops && values.capacityIops.length > 0) {
             params.capacityIops = values.capacityIops.split(',').join('')
           }
-        } else if (values.protocol === 'Filesystem') {
-          url = this.filesystemURL(values.host, path)
         }
+
         params.url = url
         if (values.provider !== 'DefaultPrimary' && values.provider !== 'PowerFlex' && values.provider !== 'ABLESTACK') {
           if (values.managed) {

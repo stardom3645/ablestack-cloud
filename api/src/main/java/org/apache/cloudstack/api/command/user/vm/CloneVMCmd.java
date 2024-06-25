@@ -42,15 +42,13 @@ import org.apache.cloudstack.api.response.DomainResponse;
 import org.apache.cloudstack.api.response.UserVmResponse;
 import org.apache.cloudstack.api.response.ZoneResponse;
 import org.apache.cloudstack.context.CallContext;
-import org.apache.log4j.Logger;
 
 import java.util.Optional;
 import java.util.List;
 
-@APICommand(name = "cloneVirtualMachine", responseObject = UserVmResponse.class, description = "clone a virtual VM",
-        responseView = ResponseObject.ResponseView.Restricted, requestHasSensitiveInfo = false, responseHasSensitiveInfo = true, entityType = {VirtualMachine.class}, since="4.16.0")
+@APICommand(name = "cloneVirtualMachine", responseObject = UserVmResponse.class, description = "clone a virtual machine",
+        responseView = ResponseObject.ResponseView.Restricted, requestHasSensitiveInfo = false, responseHasSensitiveInfo = true, entityType = {VirtualMachine.class}, since="4.19.0")
 public class CloneVMCmd extends BaseAsyncCreateCmd implements UserCmd {
-    public static final Logger s_logger = Logger.getLogger(CloneVMCmd.class.getName());
     private static final String s_name = "clonevirtualmachineresponse";
     private static final String CLONE_IDENTIFIER = "Clone";
 
@@ -59,7 +57,7 @@ public class CloneVMCmd extends BaseAsyncCreateCmd implements UserCmd {
     /////////////////////////////////////////////////////
     @ACL(accessType = AccessType.OperateEntry)
     @Parameter(name = ApiConstants.VIRTUAL_MACHINE_ID, type = CommandType.UUID, entityType=UserVmResponse.class,
-            required = true, description = "The ID of the virtual machine")
+            required = true, description = "The ID of the virtual machine to clone")
     private Long virtualmachineid;
 
     @Parameter(name = ApiConstants.NAME, type = CommandType.STRING, description = "name of the cloned virtual machine")
@@ -71,6 +69,9 @@ public class CloneVMCmd extends BaseAsyncCreateCmd implements UserCmd {
 
     @Parameter(name = ApiConstants.DOMAIN_ID, type = CommandType.UUID, entityType = DomainResponse.class, description = "an optional domainId for the virtual machine. If the account parameter is used, domainId must also be used.")
     private Long domainId;
+
+    @Parameter(name = ApiConstants.START_VM, type = CommandType.BOOLEAN, description = "true if start vm after creating; defaulted to false if not specified")
+    private Boolean startVm;
 
     @Parameter(name = ApiConstants.ZONE_ID_LIST,
             type=CommandType.LIST,
@@ -113,6 +114,10 @@ public class CloneVMCmd extends BaseAsyncCreateCmd implements UserCmd {
         return ApiCommandResourceType.VirtualMachine;
     }
 
+    public boolean getStartVm() {
+        return startVm == null ? false : startVm;
+    }
+
     @Override
     public String getEventDescription() {
         return "Cloning user VM: " + this._uuidMgr.getUuid(VirtualMachine.class, getId());
@@ -125,10 +130,10 @@ public class CloneVMCmd extends BaseAsyncCreateCmd implements UserCmd {
             _userVmService.prepareCloneVirtualMachine(this);
         }
         catch (ResourceUnavailableException | InsufficientCapacityException e) {
-            s_logger.warn("Exception: ", e);
+            logger.warn("Exception: ", e);
             throw new ServerApiException(ApiErrorCode.RESOURCE_UNAVAILABLE_ERROR, e.getMessage());
         } catch (InvalidParameterValueException e) {
-            s_logger.warn("Exception: ", e);
+            logger.warn("Exception: ", e);
             throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, e.getMessage());
         } catch (ServerApiException e) {
             throw new ServerApiException(e.getErrorCode(), e.getDescription());
@@ -157,17 +162,17 @@ public class CloneVMCmd extends BaseAsyncCreateCmd implements UserCmd {
         Optional<UserVm> result;
         try {
             CallContext.current().setEventDetails("Vm Id for full clone: " + getEntityId());
-            s_logger.info("starting actual VM id: " + getEntityId());
+            logger.info("starting actual VM id: " + getEntityId());
             result = _userVmService.cloneVirtualMachine(this, _volumeService, _snapshotService);
         } catch (ResourceUnavailableException ex) {
-            s_logger.warn("Exception: ", ex);
+            logger.warn("Exception: ", ex);
             throw new ServerApiException(ApiErrorCode.RESOURCE_UNAVAILABLE_ERROR, ex.getMessage());
         } catch (ConcurrentOperationException ex) {
-            s_logger.warn("Exception: ", ex);
+            logger.warn("Exception: ", ex);
             throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, ex.getMessage());
         }
         catch (ResourceAllocationException | InsufficientCapacityException ex) {
-            s_logger.warn("Exception: ", ex);
+            logger.warn("Exception: ", ex);
             throw new ServerApiException(ApiErrorCode.RESOURCE_ALLOCATION_ERROR, ex.getMessage());
         }
         result.ifPresentOrElse((userVm)-> {

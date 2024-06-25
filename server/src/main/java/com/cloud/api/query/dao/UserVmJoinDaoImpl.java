@@ -43,9 +43,9 @@ import org.apache.cloudstack.api.response.VnfNicResponse;
 import org.apache.cloudstack.context.CallContext;
 import org.apache.cloudstack.framework.config.dao.ConfigurationDao;
 import org.apache.cloudstack.query.QueryService;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
 import org.springframework.stereotype.Component;
 
 import com.cloud.api.ApiDBUtils;
@@ -54,6 +54,7 @@ import com.cloud.api.query.vo.UserVmJoinVO;
 import com.cloud.gpu.GPU;
 import com.cloud.host.ControlState;
 import com.cloud.network.IpAddress;
+import com.cloud.network.Network;
 import com.cloud.network.vpc.VpcVO;
 import com.cloud.network.vpc.dao.VpcDao;
 import com.cloud.service.ServiceOfferingDetailsVO;
@@ -89,7 +90,6 @@ import com.cloud.vm.dao.VbmcDao;
 
 @Component
 public class UserVmJoinDaoImpl extends GenericDaoBaseWithTagInformation<UserVmJoinVO, UserVmResponse> implements UserVmJoinDao {
-    public static final Logger s_logger = Logger.getLogger(UserVmJoinDaoImpl.class);
 
     @Inject
     private ConfigurationDao _configDao;
@@ -202,6 +202,7 @@ public class UserVmJoinDaoImpl extends GenericDaoBaseWithTagInformation<UserVmJo
             userVmResponse.setTemplateDisplayText(userVm.getTemplateDisplayText());
             userVmResponse.setPasswordEnabled(userVm.isPasswordEnabled());
             userVmResponse.setTemplateType(userVm.getTemplateType().toString());
+            userVmResponse.setTemplateFormat(userVm.getTemplateFormat().toString());
         }
         if (details.contains(VMDetails.all) || details.contains(VMDetails.iso)) {
             userVmResponse.setIsoId(userVm.getIsoUuid());
@@ -345,6 +346,7 @@ public class UserVmJoinDaoImpl extends GenericDaoBaseWithTagInformation<UserVmJo
                     nicResponse.setPublicIpId(publicIp.getUuid());
                     nicResponse.setPublicIp(publicIp.getAddress().toString());
                 }
+                nicResponse.setLinkState(userVm.getLinkState());
 
                 nicResponse.setObjectName("nic");
 
@@ -448,6 +450,8 @@ public class UserVmJoinDaoImpl extends GenericDaoBaseWithTagInformation<UserVmJo
             userVmResponse.setUserDataDetails(userVm.getUserDataDetails());
             userVmResponse.setUserDataPolicy(userVm.getUserDataPolicy());
         }
+
+        userVmResponse.setQemuAgentVersion(userVm.getQemuAgentVersion());
 
         addVmRxTxDataToResponse(userVm, userVmResponse);
 
@@ -572,6 +576,7 @@ public class UserVmJoinDaoImpl extends GenericDaoBaseWithTagInformation<UserVmJo
                 nicResponse.setPublicIpId(publicIp.getUuid());
                 nicResponse.setPublicIp(publicIp.getAddress().toString());
             }
+            nicResponse.setLinkState(uvo.getLinkState());
 
             /* 18: extra dhcp options */
             nicResponse.setObjectName("nic");
@@ -692,4 +697,40 @@ public class UserVmJoinDaoImpl extends GenericDaoBaseWithTagInformation<UserVmJo
         return searchByIds(vmIdSet.toArray(new Long[vmIdSet.size()]));
     }
 
+    @Override
+    public List<UserVmJoinVO> listByAccountServiceOfferingTemplateAndNotInState(long accountId, List<State> states,
+            List<Long> offeringIds, List<Long> templateIds) {
+        SearchBuilder<UserVmJoinVO> userVmSearch = createSearchBuilder();
+        userVmSearch.and("accountId", userVmSearch.entity().getAccountId(), Op.EQ);
+        userVmSearch.and("serviceOfferingId", userVmSearch.entity().getServiceOfferingId(), Op.IN);
+        userVmSearch.and("templateId", userVmSearch.entity().getTemplateId(), Op.IN);
+        userVmSearch.and("state", userVmSearch.entity().getState(), SearchCriteria.Op.NIN);
+        userVmSearch.and("displayVm", userVmSearch.entity().isDisplayVm(), Op.EQ);
+        userVmSearch.groupBy(userVmSearch.entity().getId()); // select distinct
+        userVmSearch.done();
+
+        SearchCriteria<UserVmJoinVO> sc = userVmSearch.create();
+        sc.setParameters("accountId", accountId);
+        if (CollectionUtils.isNotEmpty(offeringIds)) {
+            sc.setParameters("serviceOfferingId", offeringIds.toArray());
+        }
+        if (CollectionUtils.isNotEmpty(templateIds)) {
+            sc.setParameters("templateId", templateIds.toArray());
+        }
+        if (CollectionUtils.isNotEmpty(states)) {
+            sc.setParameters("state", states.toArray());
+        }
+        sc.setParameters("displayVm", 1);
+        return listBy(sc);
+    }
+
+    @Override
+    public List<UserVmJoinVO> listGuestTypeVMs(Network.GuestType type) {
+        SearchBuilder<UserVmJoinVO> GuestTypeVMsSearch = createSearchBuilder();
+        GuestTypeVMsSearch.and("guestType", GuestTypeVMsSearch.entity().getGuestType(), SearchCriteria.Op.EQ);
+        GuestTypeVMsSearch.done();
+        SearchCriteria<UserVmJoinVO> sc = GuestTypeVMsSearch.create();
+        sc.setParameters("guestType", type);
+        return listBy(sc);
+    }
 }

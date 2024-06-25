@@ -30,6 +30,7 @@ import javax.persistence.Id;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 
+import org.apache.cloudstack.utils.reflectiontostringbuilderutils.ReflectionToStringBuilderUtils;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
@@ -129,6 +130,9 @@ public class NicVO implements Nic {
 
     @Column(name = "mtu")
     Integer mtu;
+
+    @Column(name = "link_state")
+    private boolean linkState = true;
 
     @Transient
     transient String nsxLogicalSwitchUuid;
@@ -329,17 +333,7 @@ public class NicVO implements Nic {
 
     @Override
     public String toString() {
-        return new StringBuilder("Nic[").append(id)
-            .append("-")
-            .append(instanceId)
-            .append("-")
-            .append(deviceId)
-            .append("-")
-            .append(reservationId)
-            .append("-")
-            .append(iPv4Address)
-            .append("]")
-            .toString();
+        return String.format("Nic %s", ReflectionToStringBuilderUtils.reflectOnlySelectedFields(this, "id", "instanceId", "deviceId", "broadcastUri", "reservationId", "iPv4Address"));
     }
 
     @Override
@@ -419,5 +413,14 @@ public class NicVO implements Nic {
 
     public void setMtu(Integer mtu) {
         this.mtu = mtu;
+    }
+
+    @Override
+    public boolean getLinkState() {
+        return linkState;
+    }
+
+    public void setLinkState(boolean linkState) {
+        this.linkState = linkState;
     }
 }

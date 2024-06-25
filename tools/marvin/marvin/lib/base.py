@@ -527,7 +527,7 @@ class VirtualMachine:
                customcpuspeed=None, custommemory=None, rootdisksize=None,
                rootdiskcontroller=None, vpcid=None, macaddress=None, datadisktemplate_diskoffering_list={},
                properties=None, nicnetworklist=None, bootmode=None, boottype=None, dynamicscalingenabled=None,
-               userdataid=None, userdatadetails=None, extraconfig=None):
+               userdataid=None, userdatadetails=None, extraconfig=None, size=None):
         """Create the instance"""
 
         cmd = deployVirtualMachine.deployVirtualMachineCmd()
@@ -649,7 +649,9 @@ class VirtualMachine:
         if rootdiskcontroller:
             cmd.details[0]["rootDiskController"] = rootdiskcontroller
 
-        if "size" in services:
+        if size:
+            cmd.size = size
+        elif "size" in services:
             cmd.size = services["size"]
 
         if group:
@@ -789,12 +791,25 @@ class VirtualMachine:
         if response[0] == FAIL:
             raise Exception(response[1])
 
-    def restore(self, apiclient, templateid=None):
+    def restore(self, apiclient, templateid=None, diskofferingid=None, rootdisksize=None, expunge=None, details=None):
         """Restore the instance"""
         cmd = restoreVirtualMachine.restoreVirtualMachineCmd()
         cmd.virtualmachineid = self.id
         if templateid:
             cmd.templateid = templateid
+        if diskofferingid:
+            cmd.diskofferingid = diskofferingid
+        if rootdisksize:
+            cmd.rootdisksize = rootdisksize
+        if expunge is not None:
+            cmd.expunge = expunge
+        if details:
+            for key, value in list(details.items()):
+                cmd.details.append({
+                    'key': key,
+                    'value': value
+                })
+
         return apiclient.restoreVirtualMachine(cmd)
 
     def get_ssh_client(
@@ -1470,7 +1485,7 @@ class Template:
     @classmethod
     def register(cls, apiclient, services, zoneid=None,
                  account=None, domainid=None, hypervisor=None,
-                 projectid=None, details=None, randomize_name=True):
+                 projectid=None, details=None, randomize_name=True, templatetag=None):
         """Create template from URL"""
 
         # Create template from Virtual machine and Volume ID
@@ -1534,6 +1549,9 @@ class Template:
 
         if details:
             cmd.details = details
+
+        if templatetag:
+            cmd.templatetag = templatetag
 
         if "directdownload" in services:
             cmd.directdownload = services["directdownload"]
@@ -4890,7 +4908,7 @@ class NiciraNvp:
 
 
 class NetworkServiceProvider:
-    """Manage network serivce providers for CloudStack"""
+    """Manage network service providers for CloudStack"""
 
     def __init__(self, items):
         self.__dict__.update(items)
@@ -5996,7 +6014,9 @@ class ResourceDetails:
         cmd.resourcetype = resourcetype
         return (apiclient.removeResourceDetail(cmd))
 
+
 # Backup and Recovery
+
 
 class BackupOffering:
 
@@ -6062,6 +6082,7 @@ class BackupOffering:
         cmd.forced = forced
         return (apiclient.removeVirtualMachineFromBackupOffering(cmd))
 
+
 class Backup:
 
     def __init__(self, items):
@@ -6073,14 +6094,16 @@ class Backup:
 
         cmd = createBackup.createBackupCmd()
         cmd.virtualmachineid = vmid
-        return (apiclient.createBackup(cmd))
+        return Backup(apiclient.createBackup(cmd).__dict__)
 
     @classmethod
-    def delete(self, apiclient, id):
+    def delete(self, apiclient, id, forced=None):
         """Delete VM backup"""
 
         cmd = deleteBackup.deleteBackupCmd()
         cmd.id = id
+        if forced:
+            cmd.forced = forced
         return (apiclient.deleteBackup(cmd))
 
     @classmethod
@@ -6092,12 +6115,65 @@ class Backup:
         cmd.listall = True
         return (apiclient.listBackups(cmd))
 
-    def restoreVM(self, apiclient):
+    @classmethod
+    def restoreVM(self, apiclient, backupid):
         """Restore VM from backup"""
 
         cmd = restoreBackup.restoreBackupCmd()
-        cmd.id = self.id
+        cmd.id = backupid
         return (apiclient.restoreBackup(cmd))
+
+    @classmethod
+    def restoreVolumeFromBackupAndAttachToVM(self, apiclient, backupid, volumeid, virtualmachineid):
+        """Restore VM from backup"""
+
+        cmd = restoreVolumeFromBackupAndAttachToVM.restoreVolumeFromBackupAndAttachToVMCmd()
+        cmd.backupid = backupid
+        cmd.volumeid = volumeid
+        cmd.virtualmachineid = virtualmachineid
+        return (apiclient.restoreVolumeFromBackupAndAttachToVM(cmd))
+
+
+class BackupSchedule:
+
+    def __init__(self, items):
+        self.__dict__.update(items)
+
+    @classmethod
+    def create(self, apiclient, vmid, **kwargs):
+        """Create VM backup schedule"""
+
+        cmd = createBackupSchedule.createBackupScheduleCmd()
+        cmd.virtualmachineid = vmid
+        [setattr(cmd, k, v) for k, v in list(kwargs.items())]
+        return BackupSchedule(apiclient.createBackupSchedule(cmd).__dict__)
+
+    @classmethod
+    def delete(self, apiclient, vmid):
+        """Delete VM backup schedule"""
+
+        cmd = deleteBackupSchedule.deleteBackupScheduleCmd()
+        cmd.virtualmachineid = vmid
+        return (apiclient.deleteBackupSchedule(cmd))
+
+    @classmethod
+    def list(self, apiclient, vmid):
+        """List VM backup schedule"""
+
+        cmd = listBackupSchedule.listBackupScheduleCmd()
+        cmd.virtualmachineid = vmid
+        cmd.listall = True
+        return (apiclient.listBackupSchedule(cmd))
+
+    @classmethod
+    def update(self, apiclient, vmid, **kwargs):
+        """Update VM backup schedule"""
+
+        cmd = updateBackupSchedule.updateBackupScheduleCmd()
+        cmd.virtualmachineid = vmid
+        [setattr(cmd, k, v) for k, v in list(kwargs.items())]
+        return (apiclient.updateBackupSchedule(cmd))
+
 
 class ProjectRole:
 
@@ -7166,3 +7242,65 @@ class Bucket:
         cmd.id = self.id
         [setattr(cmd, k, v) for k, v in list(kwargs.items())]
         return apiclient.updateBucket(cmd)
+
+class Webhook:
+    """Manage Webhook Life cycle"""
+
+    def __init__(self, items):
+        self.__dict__.update(items)
+
+    @classmethod
+    def create(cls, apiclient, name, payloadurl, **kwargs):
+        """Create Webhook"""
+        cmd = createWebhook.createWebhookCmd()
+        cmd.name = name
+        cmd.payloadurl = payloadurl
+        [setattr(cmd, k, v) for k, v in list(kwargs.items())]
+
+        return Webhook(apiclient.createWebhook(cmd).__dict__)
+
+    @classmethod
+    def list(cls, apiclient, **kwargs):
+        cmd = listWebhooks.listWebhooksCmd()
+        [setattr(cmd, k, v) for k, v in list(kwargs.items())]
+        if 'account' in list(kwargs.keys()) and 'domainid' in list(kwargs.keys()):
+            cmd.listall = True
+        return apiclient.listWebhooks(cmd)
+
+    def delete(self, apiclient):
+        """Delete Webhook"""
+        cmd = deleteWebhook.deleteWebhookCmd()
+        cmd.id = self.id
+        apiclient.deleteWebhook(cmd)
+
+    def update(self, apiclient, **kwargs):
+        """Update Webhook"""
+
+        cmd = updateWebhook.updateWebhookCmd()
+        cmd.id = self.id
+        [setattr(cmd, k, v) for k, v in list(kwargs.items())]
+        return apiclient.updateWebhook(cmd)
+
+    def list_deliveries(self, apiclient, **kwargs):
+        """List Webhook Deliveries"""
+
+        cmd = listWebhookDeliveries.listWebhookDeliveriesCmd()
+        cmd.webhookid = self.id
+        [setattr(cmd, k, v) for k, v in list(kwargs.items())]
+        return apiclient.listWebhookDeliveries(cmd)
+
+    def execute_delivery(self, apiclient, **kwargs):
+        """Execute Webhook Delivery"""
+
+        cmd = executeWebhookDelivery.executeWebhookDeliveryCmd()
+        cmd.webhookid = self.id
+        [setattr(cmd, k, v) for k, v in list(kwargs.items())]
+        return apiclient.executeWebhookDelivery(cmd)
+
+    def delete_deliveries(self, apiclient, **kwargs):
+        """Delete Webhook Deliveries"""
+
+        cmd = deleteWebhookDelivery.deleteWebhookDeliveryCmd()
+        cmd.webhookid = self.id
+        [setattr(cmd, k, v) for k, v in list(kwargs.items())]
+        return apiclient.deleteWebhookDelivery(cmd)

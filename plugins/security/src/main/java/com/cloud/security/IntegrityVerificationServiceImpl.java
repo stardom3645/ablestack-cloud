@@ -47,7 +47,6 @@ import org.apache.cloudstack.managed.context.ManagedContextRunnable;
 import org.apache.cloudstack.management.ManagementServerHost;
 import org.apache.cloudstack.utils.identity.ManagementServerNode;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
 
 import javax.inject.Inject;
 import javax.naming.ConfigurationException;
@@ -69,8 +68,6 @@ import java.util.stream.Collectors;
 import java.util.Date;
 
 public class IntegrityVerificationServiceImpl extends ManagerBase implements PluggableService, IntegrityVerificationService, Configurable {
-
-    private static final Logger LOGGER = Logger.getLogger(IntegrityVerificationServiceImpl.class);
 
     private static final ConfigKey<Integer> IntegrityVerificationInterval = new ConfigKey<>("Advanced", Integer.class,
             "integrity.verification.interval", "1",
@@ -105,7 +102,7 @@ public class IntegrityVerificationServiceImpl extends ManagerBase implements Plu
             try {
                 integrityVerification();
             } catch (Exception e) {
-                LOGGER.error("Exception in Integrity Verification : "+ e);
+                logger.error("Exception in Integrity Verification : "+ e);
             }
         }
 
@@ -339,7 +336,7 @@ public class IntegrityVerificationServiceImpl extends ManagerBase implements Plu
 
     private void updateIntegrityVerificationFinalResult(final long msHostId, String uuid, boolean verificationFinalResult, String verificationFailedListToString, String type) {
         if (verificationFinalResult == false) {
-            alertManager.sendAlert(AlertManager.AlertType.ALERT_TYPE_MANAGMENT_NODE, 0, new Long(0), " integrity verification failed.(uuid:"+uuid+") could not be verified. at last verification.", "");
+            alertManager.sendAlert(AlertManager.AlertType.ALERT_TYPE_MANAGEMENT_NODE, 0, new Long(0), " integrity verification failed.(uuid:"+uuid+") could not be verified. at last verification.", "");
             ActionEventUtils.onCompletedActionEvent(CallContext.current().getCallingUserId(), CallContext.current().getCallingAccountId(), EventVO.LEVEL_INFO,
                     EventTypes.EVENT_INTEGRITY_VERIFICATION, "Failed to execute "+type+" integrity verification on the management server when running the product.", new Long(0), null, 0);
         }else {

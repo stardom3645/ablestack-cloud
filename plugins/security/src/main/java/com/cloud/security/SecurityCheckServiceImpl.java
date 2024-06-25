@@ -41,7 +41,6 @@ import org.apache.cloudstack.managed.context.ManagedContextRunnable;
 import org.apache.cloudstack.management.ManagementServerHost;
 import org.apache.cloudstack.utils.identity.ManagementServerNode;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
 
 import com.cloud.alert.AlertManager;
 import com.cloud.cluster.ManagementServerHostVO;
@@ -58,8 +57,6 @@ import com.cloud.utils.exception.CloudRuntimeException;
 import com.cloud.utils.script.Script;
 
 public class SecurityCheckServiceImpl extends ManagerBase implements PluggableService, SecurityCheckService, Configurable {
-
-    private static final Logger LOGGER = Logger.getLogger(SecurityCheckServiceImpl.class);
 
     private static final ConfigKey<Integer> SecurityCheckInterval = new ConfigKey<>("Advanced", Integer.class,
             "security.check.interval", "1",
@@ -101,7 +98,7 @@ public class SecurityCheckServiceImpl extends ManagerBase implements PluggableSe
             try {
                 securityCheck();
             } catch (Exception e) {
-                LOGGER.error("Exception in security check schedule : "+ e);
+                logger.error("Exception in security check schedule : "+ e);
             }
         }
 
@@ -116,7 +113,7 @@ public class SecurityCheckServiceImpl extends ManagerBase implements PluggableSe
             ManagementServerHostVO msHost = msHostDao.findByMsid(ManagementServerNode.getManagementServerId());
             String path = Script.findScript("scripts/security/", "securitycheck.sh");
             if (path == null) {
-                LOGGER.error("Unable to find the securitycheck script");
+                logger.error("Unable to find the securitycheck script");
             }
             ProcessBuilder processBuilder = new ProcessBuilder("sh", path);
             Process process = null;
@@ -132,9 +129,9 @@ public class SecurityCheckServiceImpl extends ManagerBase implements PluggableSe
                     if ("false".equals(checkResult)) {
                         checkMessage = "process does not operate normally at last check";
                         if (runMode == "first") {
-                            alertManager.sendAlert(AlertManager.AlertType.ALERT_TYPE_MANAGMENT_NODE, 0, new Long(0), "Management server node " + msHost.getServiceIP() + " security check when running the product failed : "+ checkName + " " + checkMessage, "");
+                            alertManager.sendAlert(AlertManager.AlertType.ALERT_TYPE_MANAGEMENT_NODE, 0, new Long(0), "Management server node " + msHost.getServiceIP() + " security check when running the product failed : "+ checkName + " " + checkMessage, "");
                         } else {
-                            alertManager.sendAlert(AlertManager.AlertType.ALERT_TYPE_MANAGMENT_NODE, 0, new Long(0), "Management server node " + msHost.getServiceIP() + " security check schedule failed : "+ checkName + " " + checkMessage, "");
+                            alertManager.sendAlert(AlertManager.AlertType.ALERT_TYPE_MANAGEMENT_NODE, 0, new Long(0), "Management server node " + msHost.getServiceIP() + " security check schedule failed : "+ checkName + " " + checkMessage, "");
                         }
                     } else {
                         checkMessage = "process operates normally";
@@ -151,7 +148,7 @@ public class SecurityCheckServiceImpl extends ManagerBase implements PluggableSe
                 runMode = "";
             } catch (IOException e) {
                 runMode = "";
-                LOGGER.error("Failed to execute security check schedule for management server: "+e);
+                logger.error("Failed to execute security check schedule for management server: "+e);
             }
         }
     }
@@ -196,7 +193,7 @@ public class SecurityCheckServiceImpl extends ManagerBase implements PluggableSe
                 String checkMessage;
                 if ("false".equals(checkResult)) {
                     checkMessage = "process does not operate normally at last check";
-                    alertManager.sendAlert(AlertManager.AlertType.ALERT_TYPE_MANAGMENT_NODE, 0, new Long(0), "Management server node " + mshost.getServiceIP() + " security check when operating the product failed : "+ checkName + " " + checkMessage, "");
+                    alertManager.sendAlert(AlertManager.AlertType.ALERT_TYPE_MANAGEMENT_NODE, 0, new Long(0), "Management server node " + mshost.getServiceIP() + " security check when operating the product failed : "+ checkName + " " + checkMessage, "");
                 } else {
                     checkMessage = "process operates normally";
                 }

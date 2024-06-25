@@ -16,7 +16,6 @@
 // under the License.
 package org.apache.cloudstack.api.command.user.volume;
 
-import org.apache.log4j.Logger;
 
 import org.apache.cloudstack.acl.RoleType;
 import org.apache.cloudstack.acl.SecurityChecker.AccessType;
@@ -41,7 +40,6 @@ import com.cloud.storage.Volume;
 @APICommand(name = "updateVolume", description = "Updates the volume.", responseObject = VolumeResponse.class, responseView = ResponseView.Restricted, entityType = {Volume.class},
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class UpdateVolumeCmd extends BaseAsyncCustomIdCmd implements UserCmd {
-    public static final Logger s_logger = Logger.getLogger(UpdateVolumeCmd.class.getName());
     private static final String s_name = "updatevolumeresponse";
 
     /////////////////////////////////////////////////////
@@ -73,8 +71,11 @@ public class UpdateVolumeCmd extends BaseAsyncCustomIdCmd implements UserCmd {
 
     @Parameter(name = ApiConstants.DISPLAY_VOLUME,
                type = CommandType.BOOLEAN,
- description = "an optional field, whether to the display the volume to the end user or not.", authorized = {RoleType.Admin})
+     description = "an optional field, whether to the display the volume to the end user or not.", authorized = {RoleType.Admin})
     private Boolean displayVolume;
+
+    @Parameter(name = ApiConstants.TYPE, type = CommandType.STRING, description = "The state of the volume", since = "4.3")
+    private String VolumeType;
 
     @Parameter(name = ApiConstants.NAME, type = CommandType.STRING, description = "new name of the volume", since = "4.16")
     private String name;
@@ -97,6 +98,10 @@ public class UpdateVolumeCmd extends BaseAsyncCustomIdCmd implements UserCmd {
 
     public String getState() {
         return state;
+    }
+
+    public String getVolumeType() {
+        return VolumeType;
     }
 
     public Boolean getDisplayVolume() {
@@ -163,6 +168,10 @@ public class UpdateVolumeCmd extends BaseAsyncCustomIdCmd implements UserCmd {
             desc.append(", name " + getName());
         }
 
+        if (getVolumeType() != null) {
+            desc.append(", volumeType " + getVolumeType());
+        }
+
         return desc.toString();
     }
 
@@ -170,7 +179,7 @@ public class UpdateVolumeCmd extends BaseAsyncCustomIdCmd implements UserCmd {
     public void execute() {
         CallContext.current().setEventDetails("Volume Id: " + this._uuidMgr.getUuid(Volume.class, getId()));
         Volume result = _volumeService.updateVolume(getId(), getPath(), getState(), getStorageId(), getDisplayVolume(),
-                getCustomId(), getEntityOwnerId(), getChainInfo(), getName());
+                getCustomId(), getEntityOwnerId(), getChainInfo(), getName(), getVolumeType());
         if (result != null) {
             VolumeResponse response = _responseGenerator.createVolumeResponse(getResponseView(), result);
             response.setResponseName(getCommandName());

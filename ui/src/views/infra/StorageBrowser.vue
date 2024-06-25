@@ -35,22 +35,56 @@
             </template>
           </a-breadcrumb>
           </a-col>
-          <a-col>
-          <a-tooltip placement="bottom">
-            <template #title>{{ $t('label.refresh') }}</template>
-            <a-button
-              style="margin-top: 4px"
+          <a-divider/>
+          <template v-if="resourceType === 'PrimaryStorage'">
+          <a-col flex="75%">
+            <a-input-search
+              allowClear
+              size="medium"
+              v-model:value="keyword"
+              :placeholder="$t('label.objectstore.search')"
               :loading="loading"
-              shape="round"
-              size="small"
-              @click="fetchData()"
-            >
-            <template #icon><ReloadOutlined /></template>
-            {{ $t('label.refresh') }}
-          </a-button>
-          </a-tooltip>
-        </a-col>
+              @search="fetchData()"
+              :enter-button="$t('label.search')"/>
+          </a-col>
+        </template>
+          <a-col>
+            <a-tooltip placement="bottom">
+              <template #title>{{ $t('label.refresh') }}</template>
+              <a-button
+                style="margin-top: 1px; left: 10px;"
+                :loading="loading"
+                shape="round"
+                size="medium"
+                @click="fetchData()"
+              >
+                <template #icon><ReloadOutlined /></template>
+                {{ $t('label.refresh') }}
+              </a-button>
+            </a-tooltip>
+            <template v-if="resource.type === 'RBD'">
+              <a-button
+                type="primary"
+                style="width: auto%; margin-top: 1px; left: 20px;"
+                shape="round"
+                @click="showAddVolModal"
+                :loading="loading"
+                :disabled="('CreateRbdImage' in $store.getters.apis)">
+                <template #icon><plus-outlined /></template> {{ $t('label.create.rbd.image') }}
+              </a-button>
+            </template>
+          </a-col>
       </a-row>
+      <a-modal
+        :visible="showAddVolumeModal"
+        :title="$t('label.create.rbd.image')"
+        :maskClosable="false"
+        :closable="true"
+        :footer="null"
+        @click="fetchData()"
+        @cancel="closeModals">
+          <CreateRbdImage :resource="resource" @close-action="closeModals" />
+      </a-modal>
     </a-card>
 
     <a-modal
@@ -155,8 +189,50 @@
               :copyResource="String(resource.id)"
               @onClick="openMigrationModal(record)" />
             </template>
-        </template>
+            <template v-else-if="column.key == 'deleteactions' && (record.templateid || record.volumeid) == null && !['MOLD-AC', 'MOLD-HB','ccvm'].some(forbiddenName => record.name.includes(forbiddenName))">
+              <a-col flex="auto">
+                <a-button
+                  type="primary"
+                  size="medium"
+                  shape="circle"
+                  :tooltip="$t('label.create')"
+                  @click="showAddTyModal(record.name, record.size)"
+                  :loading="loading"
+                  >
+                    <template #icon><plus-outlined /></template>
+                </a-button>
+                <a-popconfirm
+                  :title="`${$t('label.delete.rbd.image')}?`"
+                  @confirm="deleteRbdImage(record.name)"
+                  :okText="$t('label.yes')"
+                  :cancelText="$t('label.no')"
+                  placement="left">
+                  <tooltip-button
+                    tooltipPlacement="bottom"
+                    type="primary"
+                    size="medium"
+                    icon="delete-outlined"
+                    :tooltip="$t('label.delete')"
+                    :danger="true"
+                  />
+                </a-popconfirm>
+              </a-col>
+            </template>
+          </template>
       </a-table>
+      <a-modal
+        :visible="showAddTypeModal"
+        :title="$t('label.volumetype')"
+        @cancel="closeModals"
+        @ok="createVolume()">
+        <div class="title">{{ $t('label.create.type.rbd.image') }}</div>
+        <a-form-item ref="volumetype" name="volumetype">
+          <a-select v-model:value="volumetype" @change="volumeTypeChange">
+            <a-select-option value='ROOT'>{{ $t('label.rootdisk') }}</a-select-option>
+            <a-select-option value='DATADISK'>{{ $t('label.data.disk') }}</a-select-option>
+          </a-select>
+        </a-form-item>
+      </a-modal>
     </div>
   </div>
 
@@ -164,16 +240,19 @@
 
 <script>
 import { api } from '@/api'
+import { ref, reactive } from 'vue'
 import InfoCard from '@/components/view/InfoCard'
 import TooltipButton from '@/components/widgets/TooltipButton'
 import MigrateImageStoreResource from '@/views/storage/MigrateImageStoreResource'
+import CreateRbdImage from '@/views/storage/CreateRbdImage'
 
 export default {
   name: 'StorageBrowser',
   components: {
     InfoCard,
     MigrateImageStoreResource,
-    TooltipButton
+    TooltipButton,
+    CreateRbdImage
   },
   props: {
     resource: {
@@ -210,6 +289,12 @@ export default {
         title: this.$t('label.actions')
       })
     }
+    if (this.resourceType === 'PrimaryStorage' && this.resource.type === 'RBD') {
+      columns.push({
+        key: 'deleteactions',
+        title: this.$t('label.actions')
+      })
+    }
     return {
       loading: false,
       dataSource: [],
@@ -221,13 +306,28 @@ export default {
       migrateModalLoading: false,
       showMigrateModal: false,
       templateIdsToMigrate: [],
-      snapshotIdsToMigrate: []
+      snapshotIdsToMigrate: [],
+      showAddVolumeModal: false,
+      showAddTypeModal: false,
+      rootSwitch: true,
+      dataDiskSwitch: false,
+      volumetype: 'ROOT',
+      keyword: '',
+      targetName: '',
+      targetSize: ''
     }
   },
   created () {
+    this.initForm()
     this.fetchData()
   },
   methods: {
+    initForm () {
+      this.formRef = ref()
+      this.form = reactive({
+      })
+      this.rules = reactive({})
+    },
     openMigrationModal (record) {
       if (record.snapshotid) {
         this.snapshotIdsToMigrate.push(record.snapshotid)
@@ -240,6 +340,61 @@ export default {
       this.page = pagination.current
       this.pageSize = pagination.pageSize
       this.fetchData()
+    },
+    volumeTypeChange (val) {
+      this.volumetype = val
+    },
+    createVolume () {
+      api('listDiskOfferings', { listall: true }).then(json => {
+        this.offerings = json.listdiskofferingsresponse.diskoffering || []
+        this.customDiskOffering = this.offerings.filter(x => x.iscustomized === true)
+        api('createVolume', {
+          diskofferingid: this.customDiskOffering[0].id,
+          size: this.targetSize / (1024 * 1024 * 1024),
+          name: this.targetName,
+          zoneid: this.resource.zoneid
+        }).then(response => {
+          this.$pollJob({
+            jobId: response.createvolumeresponse.jobid,
+            title: this.$t('message.success.create.volume'),
+            successMessage: this.$t('message.success.create.volume'),
+            successMethod: (result) => {
+              api('updateVolume', {
+                id: result.jobresult.volume.id,
+                path: this.targetName,
+                storageid: this.resource.id,
+                state: 'Ready',
+                type: this.volumetype
+              }).then(json => {
+              }).catch(error => {
+                this.$notifyError(error)
+              }).finally(() => {
+                this.fetchData()
+                this.loading = false
+              })
+            },
+            errorMessage: this.$t('message.create.volume.failed'),
+            loadingMessage: this.$t('message.create.volume.processing'),
+            catchMessage: this.$t('error.fetching.async.job.result')
+          })
+        }).catch(error => {
+          this.$notifyError(error)
+        })
+      }).catch(error => {
+        this.$notifyError(error)
+      })
+    },
+    deleteRbdImage (name) {
+      api('deleteRbdImage', {
+        name: name,
+        id: this.resource.id
+      }).then(json => {
+        this.dataSource = json.liststoragepoolobjectsresponse.datastoreobject
+        this.total = json.liststoragepoolobjectsresponse.count
+      }).finally(() => {
+        this.fetchData()
+        this.loading = false
+      })
     },
     fetchImageStoreObjects () {
       this.loading = true
@@ -261,13 +416,31 @@ export default {
         path: this.browserPath,
         id: this.resource.id,
         page: this.page,
-        pagesize: this.pageSize
+        pagesize: this.pageSize,
+        keyword: this.keyword
       }).then(json => {
         this.dataSource = json.liststoragepoolobjectsresponse.datastoreobject
         this.total = json.liststoragepoolobjectsresponse.count
       }).finally(() => {
         this.loading = false
       })
+    },
+    deleteDetail (index) {
+      this.details.splice(index, 1)
+      this.runApi()
+    },
+    showAddVolModal () {
+      this.showAddVolumeModal = true
+    },
+    showAddTyModal (name, size) {
+      this.showAddTypeModal = true
+      this.targetName = name
+      this.targetSize = size
+    },
+    closeModals () {
+      this.showAddVolumeModal = false
+      this.showAddTypeModal = false
+      this.fetchData()
     },
     fetchData () {
       this.dataSource = []

@@ -192,12 +192,16 @@ def unmapStorage():
 
         for volume in domain.getElementsByTagName("disk"):
             target = volume.getElementsByTagName("target")[0]
-            if target.getAttribute("bus") == "scsi":
+            #if target.getAttribute("bus") == "scsi":
+            try:
                 disk = volume.getElementsByTagName("source")[0]
                 img = disk.getAttribute("dev")
                 ret_code = executeProgram("/usr/bin/rbd", ["unmap", img])
                 if ret_code == 22:
                     logger.error('rbd unmap failed: %s is not rbd image' % img)
+            except Exception as e:
+                logger.exception("exception: %s\n" % (e))
+                pass
 
         # print(domain.toxml())
     except Exception as e:

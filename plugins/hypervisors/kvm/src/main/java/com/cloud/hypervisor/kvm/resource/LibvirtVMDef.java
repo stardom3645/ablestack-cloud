@@ -26,13 +26,14 @@ import org.apache.cloudstack.api.ApiConstants.IoDriverPolicy;
 import org.apache.cloudstack.utils.qemu.QemuObject;
 import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import com.cloud.agent.properties.AgentProperties;
 import com.cloud.agent.properties.AgentPropertiesFileHandler;
 
 public class LibvirtVMDef {
-    private static final Logger s_logger = Logger.getLogger(LibvirtVMDef.class);
+    protected static Logger LOGGER = LogManager.getLogger(LibvirtVMDef.class);
 
     private String _hvsType;
     private static long s_libvirtVersion;
@@ -250,9 +251,7 @@ public class LibvirtVMDef {
                         guestDef.append("<boot dev='" + bo + "'/>\n");
                     }
                 }
-                if (_arch == null || !_arch.equals("aarch64")) {
-                    guestDef.append("<smbios mode='sysinfo'/>\n");
-                }
+                guestDef.append("<smbios mode='sysinfo'/>\n");
                 guestDef.append("</os>\n");
                 if (iothreads) {
                     guestDef.append(String.format("<iothreads>%s</iothreads>", NUMBER_OF_IOTHREADS));
@@ -623,6 +622,22 @@ public class LibvirtVMDef {
             public QemuObject.EncryptFormat getEncryptFormat() { return this.encryptFormat; }
         }
 
+        public static class DiskGeometry {
+            int cylinders;
+            int heads;
+            int sectors;
+
+            public DiskGeometry(int cylinders, int heads, int sectors) {
+                this.cylinders = cylinders;
+                this.heads = heads;
+                this.sectors = sectors;
+            }
+
+            public String toXml() {
+                return String.format("<geometry cyls='%d' heads='%d' secs='%d'/>\n", this.cylinders, this.heads, this.sectors);
+            }
+        }
+
         public enum DeviceType {
             FLOPPY("floppy"), DISK("disk"), CDROM("cdrom"), LUN("lun");
             String _type;
@@ -727,6 +742,18 @@ public class LibvirtVMDef {
 
         }
 
+        public enum BlockIOSize {
+            SIZE_512("512"), SIZE_4K("4096");
+            final String blockSize;
+
+            BlockIOSize(String size) { this.blockSize = size; }
+
+            @Override
+            public String toString() {
+                return blockSize;
+            }
+        }
+
         private DeviceType _deviceType; /* floppy, disk, cdrom */
         private DiskType _diskType;
         private DiskProtocol _diskProtocol;
@@ -760,6 +787,9 @@ public class LibvirtVMDef {
         private IoDriverPolicy ioDriver;
         private LibvirtDiskEncryptDetails encryptDetails;
         private boolean isIothreadsEnabled;
+        private BlockIOSize logicalBlockIOSize = null;
+        private BlockIOSize physicalBlockIOSize = null;
+        private DiskGeometry geometry = null;
 
         public DiscardType getDiscard() {
             return _discard;
@@ -784,6 +814,10 @@ public class LibvirtVMDef {
         public void isIothreadsEnabled(boolean isIothreadsEnabled) {
             this.isIothreadsEnabled = isIothreadsEnabled;
         }
+
+        public void setPhysicalBlockIOSize(BlockIOSize size) { this.physicalBlockIOSize = size; }
+
+        public void setLogicalBlockIOSize(BlockIOSize size) { this.logicalBlockIOSize = size; }
 
         public void defFileBasedDisk(String filePath, String diskLabel, DiskBus bus, DiskFmtType diskFmtType) {
             _diskType = DiskType.FILE;
@@ -889,7 +923,7 @@ public class LibvirtVMDef {
 
         public void defISODisk(String volPath, Integer devId, String diskLabel) {
             if (devId == null && StringUtils.isBlank(diskLabel)) {
-                s_logger.debug(String.format("No ID or label informed for volume [%s].", volPath));
+                LOGGER.debug(String.format("No ID or label informed for volume [%s].", volPath));
                 defISODisk(volPath);
                 return;
             }
@@ -899,11 +933,11 @@ public class LibvirtVMDef {
             _sourcePath = volPath;
 
             if (StringUtils.isNotBlank(diskLabel)) {
-                s_logger.debug(String.format("Using informed label [%s] for volume [%s].", diskLabel, volPath));
+                LOGGER.debug(String.format("Using informed label [%s] for volume [%s].", diskLabel, volPath));
                 _diskLabel = diskLabel;
             } else {
                 _diskLabel = getDevLabel(devId, DiskBus.IDE, true);
-                s_logger.debug(String.format("Using device ID [%s] to define the label [%s] for volume [%s].", devId, _diskLabel, volPath));
+                LOGGER.debug(String.format("Using device ID [%s] to define the label [%s] for volume [%s].", devId, _diskLabel, volPath));
             }
 
             _diskFmtType = DiskFmtType.RAW;
@@ -1012,6 +1046,10 @@ public class LibvirtVMDef {
             return _diskLabel;
         }
 
+        public void setDiskLabel(String label) {
+            _diskLabel = label;
+        }
+
         public DiskType getDiskType() {
             return _diskType;
         }
@@ -1106,9 +1144,20 @@ public class LibvirtVMDef {
             this._serial = serial;
         }
 
-        public void setLibvirtDiskEncryptDetails(LibvirtDiskEncryptDetails details) { this.encryptDetails = details; }
+        public void setLibvirtDiskEncryptDetails(LibvirtDiskEncryptDetails details)
+        {
+            this.encryptDetails = details;
+        }
 
-        public LibvirtDiskEncryptDetails getLibvirtDiskEncryptDetails() { return this.encryptDetails; }
+        public LibvirtDiskEncryptDetails getLibvirtDiskEncryptDetails()
+        {
+            return this.encryptDetails;
+        }
+
+        public void setGeometry(DiskGeometry geometry)
+        {
+            this.geometry = geometry;
+        }
 
         public String getSourceHost() {
             return _sourceHost;
@@ -1192,6 +1241,21 @@ public class LibvirtVMDef {
                 diskBuilder.append(" bus='" + _bus + "'");
             }
             diskBuilder.append("/>\n");
+
+            if (geometry != null) {
+                diskBuilder.append(geometry.toXml());
+            }
+
+            if (logicalBlockIOSize != null || physicalBlockIOSize != null) {
+                diskBuilder.append("<blockio ");
+                if (logicalBlockIOSize != null) {
+                    diskBuilder.append(String.format("logical_block_size='%s' ", logicalBlockIOSize));
+                }
+                if (physicalBlockIOSize != null) {
+                    diskBuilder.append(String.format("physical_block_size='%s' ", physicalBlockIOSize));
+                }
+                diskBuilder.append("/>\n");
+            }
 
             if (_serial != null && !_serial.isEmpty() && _deviceType != DeviceType.LUN) {
                 diskBuilder.append("<serial>" + _serial + "</serial>\n");
@@ -1734,6 +1798,7 @@ public class LibvirtVMDef {
         private String _model;
         private List<String> _features;
         private int _coresPerSocket = -1;
+        private int _threadsPerCore = -1;
         private int _sockets = -1;
 
         public void setMode(String mode) {
@@ -1750,8 +1815,9 @@ public class LibvirtVMDef {
             _model = model;
         }
 
-        public void setTopology(int coresPerSocket, int sockets) {
+        public void setTopology(int coresPerSocket, int threadsPerCore, int sockets) {
             _coresPerSocket = coresPerSocket;
+            _threadsPerCore = threadsPerCore;
             _sockets = sockets;
         }
 
@@ -1780,9 +1846,9 @@ public class LibvirtVMDef {
                 }
             }
 
-            // add topology
-            if (_sockets > 0 && _coresPerSocket > 0) {
-                modeBuilder.append("<topology sockets='" + _sockets + "' cores='" + _coresPerSocket + "' threads='1' />");
+            // add topology. Note we require sockets, cores, and threads defined
+            if (_sockets > 0 && _coresPerSocket > 0 && _threadsPerCore > 0) {
+                modeBuilder.append("<topology sockets='" + _sockets + "' cores='" + _coresPerSocket + "' threads='"  + _threadsPerCore + "' />");
             }
 
             // close cpu def
@@ -1793,6 +1859,8 @@ public class LibvirtVMDef {
         public int getCoresPerSocket() {
             return _coresPerSocket;
         }
+        public int getThreadsPerCore() { return _threadsPerCore; }
+        public int getSockets() { return _sockets; }
     }
 
     public static class SerialDef {
@@ -2128,7 +2196,7 @@ public class LibvirtVMDef {
         }
     }
 
-    public static class MetadataDef {
+    public class MetadataDef {
         Map<String, Object> customNodes = new HashMap<>();
 
         public <T> T getMetadataNode(Class<T> fieldClass) {
@@ -2138,7 +2206,7 @@ public class LibvirtVMDef {
                     field = fieldClass.newInstance();
                     customNodes.put(field.getClass().getName(), field);
                 } catch (InstantiationException | IllegalAccessException e) {
-                    s_logger.debug("No default constructor available in class " + fieldClass.getName() + ", ignoring exception", e);
+                    LOGGER.debug("No default constructor available in class " + fieldClass.getName() + ", ignoring exception", e);
                 }
             }
             return field;
@@ -2259,7 +2327,7 @@ public class LibvirtVMDef {
 
     public static class WatchDogDef {
         enum WatchDogModel {
-            I6300ESB("i6300esb"), IB700("ib700"), DIAG288("diag288");
+            I6300ESB("i6300esb"), IB700("ib700"), DIAG288("diag288"), ITCO("itco");
             String model;
 
             WatchDogModel(String model) {
@@ -2273,7 +2341,7 @@ public class LibvirtVMDef {
         }
 
         enum WatchDogAction {
-            RESET("reset"), SHUTDOWN("shutdown"), POWEROFF("poweroff"), PAUSE("pause"), NONE("none"), DUMP("dump");
+            RESET("reset"), SHUTDOWN("shutdown"), POWEROFF("poweroff"), PAUSE("pause"), NONE("none"), DUMP("dump"), INJECT_NMI("inject-nmi");
             String action;
 
             WatchDogAction(String action) {

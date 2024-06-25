@@ -48,6 +48,9 @@ public class ListStoragePoolObjectsCmd extends BaseListCmd {
     @Parameter(name = ApiConstants.PATH, type = CommandType.STRING, description = "path to list on storage pool")
     private String path;
 
+    @Parameter(name = ApiConstants.KEYWORD, type = CommandType.STRING, description = "keyword to list on storage pool")
+    private String keyword;
+
     /////////////////////////////////////////////////////
     /////////////////// Accessors ///////////////////////
     /////////////////////////////////////////////////////
@@ -62,6 +65,10 @@ public class ListStoragePoolObjectsCmd extends BaseListCmd {
         }
         // We prepend "/" to path and normalize to prevent path traversal attacks
         return Path.of(String.format("/%s", path)).normalize().toString().substring(1);
+    }
+
+    public String getkeyword() {
+        return keyword;
     }
 
     /////////////////////////////////////////////////////
