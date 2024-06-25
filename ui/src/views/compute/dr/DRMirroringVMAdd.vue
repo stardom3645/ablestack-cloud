@@ -90,7 +90,7 @@
       </a-form-item>
 
       <div :span="24" class="action-button">
-        <a-button @click="cancel">{{ $t('label.cancel') }}</a-button>
+        <a-button @click="closeAction">{{ $t('label.cancel') }}</a-button>
         <a-button @click="handleSubmit" ref="submit" type="primary">{{ $t('label.ok') }}</a-button>
       </div>
 
@@ -208,9 +208,6 @@ export default {
       this.form.secDrClusterOfferings = null
       this.form.secDrClusterNetworkList = null
     },
-    cancel () {
-      this.$emit('cancel')
-    },
     handleSubmit (e) {
       e.preventDefault()
       if (this.loading) return
@@ -224,12 +221,9 @@ export default {
           networkname: values.secDrClusterNetworkList
         }
         api('createDisasterRecoveryClusterVm', params).then(json => {
-          this.$notification.success({
-            message: this.$t('label.add.disaster.recovery.cluster.vm'),
-            description: this.$t('label.add.disaster.recovery.cluster.vm')
-          })
-          this.closeModal()
-          this.parentFetchData()
+          this.$message.success(`${this.$t('label.add.disaster.recovery.cluster.vm')}: ${this.resource.name}`)
+          this.closeAction()
+          this.$emit('refresh-data')
         }).catch(error => {
           this.$notifyError(error)
         }).finally(() => {
@@ -238,6 +232,9 @@ export default {
       }).catch(error => {
         this.formRef.value.scrollToField(error.errorFields[0].name)
       })
+    },
+    closeAction () {
+      this.$emit('close-action')
     }
   }
 }
