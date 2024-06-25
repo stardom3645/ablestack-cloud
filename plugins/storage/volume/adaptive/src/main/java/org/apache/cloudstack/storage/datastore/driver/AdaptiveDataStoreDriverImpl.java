@@ -484,7 +484,7 @@ public class AdaptiveDataStoreDriverImpl extends CloudStackPrimaryDataStoreDrive
     }
 
     public boolean grantAccess(DataObject dataObject, Host host, DataStore dataStore) {
-        s_logger.debug("Granting host " + host.getName() + " access to volume " + dataObject.getUuid());
+        logger.debug("Granting host " + host.getName() + " access to volume " + dataObject.getUuid());
 
         try {
             StoragePoolVO storagePool = _storagePoolDao.findById(dataObject.getDataStore().getId());
@@ -502,11 +502,11 @@ public class AdaptiveDataStoreDriverImpl extends CloudStackPrimaryDataStoreDrive
             persistVolumeOrTemplateData(storagePool, details, dataObject, vol, connIdMap);
 
 
-            s_logger.info("Granted host " + host.getName() + " access to volume " + dataObject.getUuid());
+            logger.info("Granted host " + host.getName() + " access to volume " + dataObject.getUuid());
             return true;
         } catch (Throwable e) {
             String msg = "Error granting host " + host.getName() + " access to volume " + dataObject.getUuid() + ":" + e.getMessage();
-            s_logger.error(msg);
+            logger.error(msg);
             throw new CloudRuntimeException(msg, e);
         }
     }
@@ -517,7 +517,7 @@ public class AdaptiveDataStoreDriverImpl extends CloudStackPrimaryDataStoreDrive
             return;
         }
 
-        s_logger.debug("Revoking access for host " + host.getName() + " to volume " + dataObject.getUuid());
+        logger.debug("Revoking access for host " + host.getName() + " to volume " + dataObject.getUuid());
 
         try {
             StoragePoolVO storagePool = _storagePoolDao.findById(dataObject.getDataStore().getId());
@@ -535,10 +535,10 @@ public class AdaptiveDataStoreDriverImpl extends CloudStackPrimaryDataStoreDrive
             Map<String,String> connIdMap = api.getConnectionIdMap(dataIn);
             persistVolumeOrTemplateData(storagePool, details, dataObject, vol, connIdMap);
 
-            s_logger.info("Revoked access for host " + host.getName() + " to volume " + dataObject.getUuid());
+            logger.info("Revoked access for host " + host.getName() + " to volume " + dataObject.getUuid());
         } catch (Throwable e) {
             String msg = "Error revoking access for host " + host.getName() + " to volume " + dataObject.getUuid() + ":" + e.getMessage();
-            s_logger.error(msg);
+            logger.error(msg);
             throw new CloudRuntimeException(msg, e);
         }
     }

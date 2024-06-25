@@ -7741,8 +7741,8 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
         checkVolumesLimits(newAccount, volumes);
 
         // VV 4: Check if new owner can use the vm template
-        if (template == null && volumes == null) {
-            throw new InvalidParameterValueException(String.format("Template, Volume for VM: %s cannot be found", vm.getUuid()));
+        if (template == null) {
+            throw new InvalidParameterValueException(String.format("Template for VM: %s cannot be found", vm.getUuid()));
         }
         _accountMgr.checkAccess(newAccount, AccessType.UseEntry, true, template);
 

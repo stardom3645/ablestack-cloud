@@ -103,7 +103,7 @@ public class DefaultModuleDefinitionSet implements ModuleDefinitionSet {
                     ApplicationContext context = getApplicationContext(moduleDefinitionName);
                     try {
                         if (context == null) {
-                            log.warn(String.format("Application context not found for module definition [%s]", moduleDefinitionName));
+                            logger.warn(String.format("Application context not found for module definition [%s]", moduleDefinitionName));
                         } else if (context.containsBean("moduleStartup")) {
                             Runnable runnable = context.getBean("moduleStartup", Runnable.class);
                             logger.info(String.format("Starting module [%s].", moduleDefinitionName));

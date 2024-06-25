@@ -21,7 +21,8 @@ import java.util.List;
 
 import javax.annotation.PostConstruct;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Component;
 
 import com.cloud.utils.db.Filter;
@@ -34,7 +35,7 @@ import com.cloud.vm.VmStatsVO;
 @Component
 public class VmStatsDaoImpl extends GenericDaoBase<VmStatsVO, Long> implements VmStatsDao {
 
-    protected Logger logger = Logger.getLogger(getClass());
+    protected Logger logger = LogManager.getLogger(getClass());
 
     protected SearchBuilder<VmStatsVO> vmIdSearch;
     protected SearchBuilder<VmStatsVO> vmIdTimestampGreaterThanEqualSearch;

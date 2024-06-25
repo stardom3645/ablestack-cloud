@@ -875,7 +875,7 @@ public class StorageSystemDataMotionStrategy implements DataMotionStrategy {
                 try {
                     _volumeService.revokeAccess(destVolumeInfo, hostVO, destVolumeInfo.getDataStore());
                 } catch (Exception e) {
-                    LOGGER.warn(String.format("Failed to revoke access for volume 'name=%s,uuid=%s' after a migration attempt", destVolumeInfo.getVolume(), destVolumeInfo.getUuid()), e);
+                    logger.warn(String.format("Failed to revoke access for volume 'name=%s,uuid=%s' after a migration attempt", destVolumeInfo.getVolume(), destVolumeInfo.getUuid()), e);
                 }
             }
 
@@ -961,7 +961,7 @@ public class StorageSystemDataMotionStrategy implements DataMotionStrategy {
                     _volumeDao.remove(tempVolumeVO.getId());
                 }
             } catch (Throwable e2) {
-                LOGGER.warn("Failed to delete temporary volume created for copy", e2);
+                logger.warn("Failed to delete temporary volume created for copy", e2);
             }
 
             throw e;
@@ -1009,7 +1009,7 @@ public class StorageSystemDataMotionStrategy implements DataMotionStrategy {
             copyCmdAnswer = (CopyCmdAnswer)agentManager.send(hostVO.getId(), copyCommand);
         } catch (Exception ex) {
             String msg = "Failed to create template from snapshot (Snapshot ID = " + snapshotInfo.getId() + ") : ";
-            LOGGER.warn(msg, ex);
+            logger.warn(msg, ex);
             throw new CloudRuntimeException(msg + ex.getMessage(), ex);
         }
         finally {
@@ -1023,7 +1023,7 @@ public class StorageSystemDataMotionStrategy implements DataMotionStrategy {
                 try {
                     srcFinal.getDataStore().getDriver().deleteAsync(srcFinal.getDataStore(), srcFinal, null);
                 } catch (Throwable e) {
-                    LOGGER.warn("Failed to delete temporary volume created for copy", e);
+                    logger.warn("Failed to delete temporary volume created for copy", e);
                 }
             }
 
@@ -1893,7 +1893,7 @@ public class StorageSystemDataMotionStrategy implements DataMotionStrategy {
      */
     private void deleteVolumeFromSnapshot(SnapshotInfo snapshotInfo) {
         try {
-            LOGGER.debug("Cleaning up temporary volume created for copy from a snapshot");
+            logger.debug("Cleaning up temporary volume created for copy from a snapshot");
 
             SnapshotDetailsVO snapshotDetails = handleSnapshotDetails(snapshotInfo.getId(), "delete");
 
@@ -1905,7 +1905,7 @@ public class StorageSystemDataMotionStrategy implements DataMotionStrategy {
             }
 
         } catch (Throwable e) {
-            LOGGER.warn("Failed to clean up temporary volume created for copy from a snapshot, transction will not be failed but an adminstrator should clean this up: " + snapshotInfo.getUuid() + " - " + snapshotInfo.getPath(), e);
+            logger.warn("Failed to clean up temporary volume created for copy from a snapshot, transction will not be failed but an adminstrator should clean this up: " + snapshotInfo.getUuid() + " - " + snapshotInfo.getPath(), e);
         }
     }
 
