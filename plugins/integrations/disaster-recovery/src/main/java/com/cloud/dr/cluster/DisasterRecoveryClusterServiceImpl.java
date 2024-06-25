@@ -1037,10 +1037,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                     // Secondary Cluster - listServiceOfferings 호출
                     List<ServiceOfferingResponse> secDrClusterServiceOfferingListResponse = DisasterRecoveryClusterUtil.getSecDrClusterInfoList(moldUrl, moldCommand, moldMethod, apiKey, secretKey);
                     for (ServiceOfferingResponse serviceOff : secDrClusterServiceOfferingListResponse) {
-                        LOGGER.info(serviceOff.getName());
-                        LOGGER.info(cmd.getServiceOfferingName());
                         if (serviceOff.getName().equals(cmd.getServiceOfferingName())) {
-                            LOGGER.info(serviceOff.getId());
                             offeringId = serviceOff.getId();
                         }
                     }
@@ -1048,10 +1045,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                     moldCommand = "listNetworks";
                     List<NetworkResponse> secDrClusterNetworksListResponse = DisasterRecoveryClusterUtil.getSecDrClusterInfoList(moldUrl, moldCommand, moldMethod, apiKey, secretKey);
                     for (NetworkResponse net : secDrClusterNetworksListResponse) {
-                        LOGGER.info(net.getName());
-                        LOGGER.info(cmd.getNetworkName());
                         if (net.getName().equals(cmd.getNetworkName())) {
-                            LOGGER.info(net.getId());
                             networkId = net.getId();
                         }
                     }
@@ -1172,7 +1166,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         for (int i = 0; i < jsonArray.length(); i++) {
             JSONObject object = jsonArray.getJSONObject(i);
             if (object.get("name").toString().equalsIgnoreCase(userVM.getName())) {
-                throw new CloudRuntimeException("A mirroring virtual machine cannot be added because a virtual machine with the same name as the corresponding virtual machine exists in the DR cluster.");
+                throw new CloudRuntimeException("A mirroring virtual machine cannot be added because a virtual machine with the same name as the corresponding virtual machine exists in the disaster recovery cluster.");
             }
         }
     }
