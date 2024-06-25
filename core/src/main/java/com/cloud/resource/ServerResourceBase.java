@@ -24,30 +24,38 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.net.NetworkInterface;
 import java.net.SocketException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import javax.naming.ConfigurationException;
 
+import org.apache.cloudstack.storage.command.browser.ListRbdObjectsAnswer;
 import org.apache.cloudstack.storage.command.browser.ListDataStoreObjectsAnswer;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import com.cloud.agent.IAgentControl;
 import com.cloud.agent.api.Answer;
 import com.cloud.agent.api.Command;
 import com.cloud.agent.api.StartupCommand;
+
 import com.cloud.utils.net.NetUtils;
+import com.cloud.utils.script.OutputInterpreter;
 import com.cloud.utils.script.Script;
 
+
 public abstract class ServerResourceBase implements ServerResource {
-    private static final Logger s_logger = Logger.getLogger(ServerResourceBase.class);
+    protected Logger logger = LogManager.getLogger(getClass());
     protected String name;
     private ArrayList<String> warnings = new ArrayList<String>();
     private ArrayList<String> errors = new ArrayList<String>();
@@ -80,7 +88,7 @@ public abstract class ServerResourceBase implements ServerResource {
 
         String infos[] = NetUtils.getNetworkParams(privateNic);
         if (infos == null) {
-            s_logger.warn("Incorrect details for private Nic during initialization of ServerResourceBase");
+            logger.warn("Incorrect details for private Nic during initialization of ServerResourceBase");
             return false;
         }
         params.put("host.ip", infos[0]);
@@ -106,7 +114,7 @@ public abstract class ServerResourceBase implements ServerResource {
     }
 
     protected void tryToAutoDiscoverResourcePrivateNetworkInterface() throws ConfigurationException {
-        s_logger.info("Trying to autodiscover this resource's private network interface.");
+        logger.info("Trying to autodiscover this resource's private network interface.");
 
         List<NetworkInterface> nics;
         try {
@@ -118,11 +126,11 @@ public abstract class ServerResourceBase implements ServerResource {
             throw new ConfigurationException(String.format("Could not retrieve the environment NICs due to [%s].", e.getMessage()));
         }
 
-        s_logger.debug(String.format("Searching the private NIC along the environment NICs [%s].", Arrays.toString(nics.toArray())));
+        logger.debug(String.format("Searching the private NIC along the environment NICs [%s].", Arrays.toString(nics.toArray())));
 
         for (NetworkInterface nic : nics) {
             if (isValidNicToUseAsPrivateNic(nic))  {
-                s_logger.info(String.format("Using NIC [%s] as private NIC.", nic));
+                logger.info(String.format("Using NIC [%s] as private NIC.", nic));
                 privateNic = nic;
                 return;
             }
@@ -134,25 +142,155 @@ public abstract class ServerResourceBase implements ServerResource {
     protected boolean isValidNicToUseAsPrivateNic(NetworkInterface nic) {
         String nicName = nic.getName();
 
-        s_logger.debug(String.format("Verifying if NIC [%s] can be used as private NIC.", nic));
+        logger.debug(String.format("Verifying if NIC [%s] can be used as private NIC.", nic));
 
         String[] nicNameStartsToAvoid = {"vnif", "vnbr", "peth", "vif", "virbr"};
         if (nic.isVirtual() || StringUtils.startsWithAny(nicName, nicNameStartsToAvoid) || nicName.contains(":")) {
-            s_logger.debug(String.format("Not using NIC [%s] because it is either virtual, starts with %s, or contains \":\"" +
+            logger.debug(String.format("Not using NIC [%s] because it is either virtual, starts with %s, or contains \":\"" +
              " in its name.", Arrays.toString(nicNameStartsToAvoid), nic));
             return false;
         }
 
         String[] info = NetUtils.getNicParams(nicName);
         if (info == null || info[0] == null) {
-            s_logger.debug(String.format("Not using NIC [%s] because it does not have a valid IP to use as the private IP.", nic));
+            logger.debug(String.format("Not using NIC [%s] because it does not have a valid IP to use as the private IP.", nic));
             return false;
         }
 
         return true;
     }
 
-     protected Answer listFilesAtPath(String nfsMountPoint, String relativePath, int startIndex, int pageSize) {
+    protected Answer createImageRbd(String names, long sizes, String poolPath) {
+        sizes = (sizes * 1024);
+        String cmdout = Script.runSimpleBashScript("rbd -p " + poolPath + " create -s " + sizes + " " + names);
+        if (cmdout == null) {
+            logger.debug(cmdout);
+        }else{
+        }
+        return new ListRbdObjectsAnswer(true, names);
+    }
+
+    protected Answer deleteImageRbd(String name, String poolPath) {
+
+        String cmdout = Script.runSimpleBashScript("rbd -p " + poolPath + " rm " + name);
+        if (cmdout == null) {
+            logger.debug(cmdout);
+        }else{
+        }
+        return new ListRbdObjectsAnswer(true, name);
+    }
+
+    protected Answer listRbdFilesAtPath(int startIndex, int pageSize, String poolPath, String keyword) {
+        int count = 0;
+        List<String> names = new ArrayList<>();
+        List<String> paths = new ArrayList<>();
+        List<String> absPaths = new ArrayList<>();
+        List<Boolean> isDirs = new ArrayList<>();
+        List<Long> sizes = new ArrayList<>();
+        List<Long> modifiedList = new ArrayList<>();
+
+        Script listCommand = new Script("/bin/bash", logger);
+        listCommand.add("-c");
+
+        if (keyword != null && !keyword.isEmpty()) {
+            listCommand.add("rbd -p " + poolPath + " ls | grep " + keyword );
+        } else {
+            listCommand.add("rbd -p " + poolPath + " ls");
+        }
+        OutputInterpreter.AllLinesParser listParser = new OutputInterpreter.AllLinesParser();
+        String listResult = listCommand.execute(listParser);
+        if (listResult == null && listParser.getLines() != null) {
+            String[] imageNames = listParser.getLines().split("\\n");
+
+            for (String imageName : imageNames) {
+                if (count >= startIndex && count < startIndex + pageSize) {
+                    Long imageSize = 0L;
+                    Long lastModified = 0L;
+                    names.add(imageName.trim());
+                    paths.add(imageName);
+                    isDirs.add(false);
+                    absPaths.add("/");
+
+                    Script infoCommand = new Script("rbd");
+                    infoCommand.add("-p", poolPath);
+                    infoCommand.add("info", imageName.trim());
+                    OutputInterpreter.AllLinesParser infoParser = new OutputInterpreter.AllLinesParser();
+                    String infoResult = infoCommand.execute(infoParser);
+                    if (infoResult == null && infoParser.getLines() != null) {
+                        String[] infoLines = infoParser.getLines().split("\\n");
+                        for (String infoLine : infoLines) {
+                            if (infoLine.contains("size")) {
+                                String[] part = infoLine.split(" ");
+                                String numberString = part[1];
+                                double number = Double.parseDouble(numberString);
+                                imageSize = (long) (number * 1024 * 1024 * 1024);
+                                sizes.add(imageSize);
+                            }
+                            if (infoLine.contains("modify_timestamp")) {
+                                String[] parts = infoLine.split(": ");
+                                try {
+                                    String modifyTimestamp = parts[1].trim();
+                                    SimpleDateFormat inputDateFormat = new SimpleDateFormat("EEE MMM dd HH:mm:ss yyyy", Locale.US);
+                                    Date modifyDate = inputDateFormat.parse(modifyTimestamp);
+                                    lastModified = modifyDate.getTime();
+                                    modifiedList.add(lastModified);
+                                } catch (ParseException e) {
+                                    e.printStackTrace();
+                                }
+                            }
+                        }
+                    }
+                }
+                count++;
+            }
+        }
+        return new ListDataStoreObjectsAnswer(true, count, names, paths, absPaths, isDirs, sizes, modifiedList);
+    }
+
+
+protected Answer listFilesAtPath(String nfsMountPoint, String relativePath, int startIndex, int pageSize, String keyword) {
+    int count = 0;
+    File file = new File(nfsMountPoint, relativePath);
+    List<String> names = new ArrayList<>();
+    List<String> paths = new ArrayList<>();
+    List<String> absPaths = new ArrayList<>();
+    List<Boolean> isDirs = new ArrayList<>();
+    List<Long> sizes = new ArrayList<>();
+    List<Long> modifiedList = new ArrayList<>();
+    if (file.isFile()) {
+        count = 1;
+        names.add(file.getName());
+        paths.add(file.getPath().replace(nfsMountPoint, ""));
+        absPaths.add(file.getPath());
+        isDirs.add(file.isDirectory());
+        sizes.add(file.length());
+        modifiedList.add(file.lastModified());
+    } else if (file.isDirectory()) {
+        String[] files = file.list();
+        List<String> filteredFiles = new ArrayList<>();
+        if (keyword != null && !"".equals(keyword)) {
+            for (String fileName : files) {
+                if (fileName.contains(keyword)) {
+                    filteredFiles.add(fileName);
+                }
+            }
+        } else {
+            filteredFiles.addAll(Arrays.asList(files));
+        }
+        count = filteredFiles.size();
+        for (int i = startIndex; i < startIndex + pageSize && i < count; i++) {
+            File f = new File(nfsMountPoint, relativePath + '/' + filteredFiles.get(i));
+            names.add(f.getName());
+            paths.add(f.getPath().replace(nfsMountPoint, ""));
+            absPaths.add(f.getPath());
+            isDirs.add(f.isDirectory());
+            sizes.add(f.length());
+            modifiedList.add(f.lastModified());
+        }
+    }
+    return new ListDataStoreObjectsAnswer(file.exists(), count, names, paths, absPaths, isDirs, sizes, modifiedList);
+}
+    protected Answer listFilesAtPath(String nfsMountPoint, String relativePath, int startIndex, int pageSize) {
         int count = 0;
         File file = new File(nfsMountPoint, relativePath);
         List<String> names = new ArrayList<>();
@@ -182,16 +320,15 @@ public abstract class ServerResourceBase implements ServerResource {
                 modifiedList.add(f.lastModified());
             }
         }
-         return new ListDataStoreObjectsAnswer(file.exists(), count, names, paths, absPaths, isDirs, sizes, modifiedList);
+        return new ListDataStoreObjectsAnswer(file.exists(), count, names, paths, absPaths, isDirs, sizes, modifiedList);
     }
-
     protected void fillNetworkInformation(final StartupCommand cmd) {
         String[] info = null;
         if (privateNic != null) {
             info = NetUtils.getNetworkParams(privateNic);
             if (info != null) {
-                if (s_logger.isDebugEnabled()) {
-                    s_logger.debug("Parameters for private nic: " + info[0] + " - " + info[1] + "-" + info[2]);
+                if (logger.isDebugEnabled()) {
+                    logger.debug("Parameters for private nic: " + info[0] + " - " + info[1] + "-" + info[2]);
                 }
                 cmd.setPrivateIpAddress(info[0]);
                 cmd.setPrivateMacAddress(info[1]);
@@ -200,16 +337,16 @@ public abstract class ServerResourceBase implements ServerResource {
         }
 
         if (storageNic != null) {
-            if (s_logger.isDebugEnabled()) {
-                s_logger.debug("Storage has its now nic: " + storageNic.getName());
+            if (logger.isDebugEnabled()) {
+                logger.debug("Storage has its now nic: " + storageNic.getName());
             }
             info = NetUtils.getNetworkParams(storageNic);
         }
 
         // NOTE: In case you're wondering, this is not here by mistake.
         if (info != null) {
-            if (s_logger.isDebugEnabled()) {
-                s_logger.debug("Parameters for storage nic: " + info[0] + " - " + info[1] + "-" + info[2]);
+            if (logger.isDebugEnabled()) {
+                logger.debug("Parameters for storage nic: " + info[0] + " - " + info[1] + "-" + info[2]);
             }
             cmd.setStorageIpAddress(info[0]);
             cmd.setStorageMacAddress(info[1]);
@@ -219,8 +356,8 @@ public abstract class ServerResourceBase implements ServerResource {
         if (publicNic != null) {
             info = NetUtils.getNetworkParams(publicNic);
             if (info != null) {
-                if (s_logger.isDebugEnabled()) {
-                    s_logger.debug("Parameters for public nic: " + info[0] + " - " + info[1] + "-" + info[2]);
+                if (logger.isDebugEnabled()) {
+                    logger.debug("Parameters for public nic: " + info[0] + " - " + info[1] + "-" + info[2]);
                 }
                 cmd.setPublicIpAddress(info[0]);
                 cmd.setPublicMacAddress(info[1]);
@@ -231,8 +368,8 @@ public abstract class ServerResourceBase implements ServerResource {
         if (storageNic2 != null) {
             info = NetUtils.getNetworkParams(storageNic2);
             if (info != null) {
-                if (s_logger.isDebugEnabled()) {
-                    s_logger.debug("Parameters for storage nic 2: " + info[0] + " - " + info[1] + "-" + info[2]);
+                if (logger.isDebugEnabled()) {
+                    logger.debug("Parameters for storage nic 2: " + info[0] + " - " + info[1] + "-" + info[2]);
                 }
                 cmd.setStorageIpAddressDeux(info[0]);
                 cmd.setStorageMacAddressDeux(info[1]);
@@ -333,3 +470,4 @@ public abstract class ServerResourceBase implements ServerResource {
         return true;
     }
 }
+

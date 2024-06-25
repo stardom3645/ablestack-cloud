@@ -254,7 +254,7 @@ export default {
       api('listZones', { id: this.zoneId }).then(json => {
         const zoneResponse = json.listzonesresponse.zone || []
         this.showCreateButton = false
-        if (zoneResponse && zoneResponse.length > 0 && (!zoneResponse[0].securitygroupsenabled || (isAdmin() && zoneResponse[0].networktype === 'Advanced'))) {
+        if ('createNetwork' in store.getters.apis && zoneResponse && zoneResponse.length > 0 && (!zoneResponse[0].securitygroupsenabled || (isAdmin() && zoneResponse[0].networktype === 'Advanced'))) {
           this.showCreateButton = true
         }
       })
@@ -268,7 +268,7 @@ export default {
               return
             }
             this.oldZoneId = this.zoneId
-            this.selectedRowKeys = [this.items[0].id]
+            // this.selectedRowKeys = [this.items[0].id]
             this.$emit('select-network-item', this.selectedRowKeys)
           } else {
             this.selectedRowKeys = []

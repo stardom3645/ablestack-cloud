@@ -134,6 +134,9 @@ known_categories = {
     'removeTungstenFabricNetworkGatewayFromLogicalRouter': 'Tungsten',
     'updateTungstenFabricLBHealthMonitor': 'Tungsten',
     'listTungstenFabricLBHealthMonitor': 'Tungsten',
+    'listNsxControllers': 'NSX',
+    'addNsxController': 'NSX',
+    'deleteNsxController': 'NSX',
     'Vpn': 'VPN',
     'Limit': 'Limit',
     'ResourceCount': 'Limit',
@@ -201,6 +204,7 @@ known_categories = {
     'addIpToNic': 'Nic',
     'removeIpFromNic': 'Nic',
     'updateVmNicIp': 'Nic',
+    'UpdateVmNicLinkState': 'Nic',
     'listNics':'Nic',
 	'AffinityGroup': 'Affinity Group',
     'addImageStore': 'Image Store',
@@ -277,6 +281,8 @@ known_categories = {
     'Shutdown': 'Shutdown',
     'addObjectStoragePool': 'Object Store',
     'listObjectStoragePools': 'Object Store',
+    'createRbdImage': 'Object Store',
+    'deleteRbdImage': 'Object Store',
     'deleteObjectStoragePool': 'Object Store',
     'updateObjectStoragePool': 'Object Store',
     'createBucket': 'Object Store',
@@ -284,7 +290,10 @@ known_categories = {
     'deleteBucket': 'Object Store',
     'listBuckets': 'Object Store',
     'listVmsForImport': 'Virtual Machine',
-    'importVm': 'Virtual Machine'
+    'importVm': 'Virtual Machine',
+    'Webhook': 'Webhook',
+    'Webhooks': 'Webhook',
+    'purgeExpungedResources': 'Resource'
 }
 
 

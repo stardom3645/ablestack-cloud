@@ -68,7 +68,7 @@ import org.apache.cloudstack.utils.qemu.QemuImg.PhysicalDiskFormat;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.SystemUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 import org.joda.time.Duration;
 import org.junit.Assert;
 import org.junit.Before;
@@ -174,7 +174,7 @@ import com.cloud.agent.properties.AgentPropertiesFileHandler;
 import com.cloud.agent.resource.virtualnetwork.VirtualRoutingResource;
 import com.cloud.exception.InternalErrorException;
 import com.cloud.hypervisor.Hypervisor.HypervisorType;
-import com.cloud.hypervisor.kvm.resource.KVMHABase.NfsStoragePool;
+import com.cloud.hypervisor.kvm.resource.KVMHABase.HAStoragePool;
 import com.cloud.hypervisor.kvm.resource.LibvirtVMDef.ChannelDef;
 import com.cloud.hypervisor.kvm.resource.LibvirtVMDef.ClockDef;
 import com.cloud.hypervisor.kvm.resource.LibvirtVMDef.ConsoleDef;
@@ -271,7 +271,7 @@ public class LibvirtComputingResourceTest {
     public void setup() throws Exception {
         libvirtComputingResourceSpy.qemuSocketsPath = new File("/var/run/qemu");
         libvirtComputingResourceSpy.parser = parserMock;
-        LibvirtComputingResource.s_logger = loggerMock;
+        LibvirtComputingResource.LOGGER = loggerMock;
     }
 
     /**
@@ -3346,8 +3346,8 @@ public class LibvirtComputingResourceTest {
 
         final KVMHAMonitor monitor = Mockito.mock(KVMHAMonitor.class);
 
-        final NfsStoragePool storagePool = Mockito.mock(NfsStoragePool.class);
-        final List<NfsStoragePool> pools = new ArrayList<NfsStoragePool>();
+        final HAStoragePool storagePool = Mockito.mock(HAStoragePool.class);
+        final List<HAStoragePool> pools = new ArrayList<HAStoragePool>();
         pools.add(storagePool);
 
         when(libvirtComputingResourceMock.getMonitor()).thenReturn(monitor);
@@ -6050,7 +6050,7 @@ public class LibvirtComputingResourceTest {
 
         List<Integer> result = libvirtComputingResourceSpy.getVmsToSetMemoryBalloonStatsPeriod(connMock);
 
-        Mockito.verify(loggerMock).error(Mockito.anyString(), Mockito.any());
+        Mockito.verify(loggerMock).error(Mockito.anyString(), (Throwable) Mockito.any());
         Assert.assertTrue(result.isEmpty());
     }
 
@@ -6293,6 +6293,42 @@ public class LibvirtComputingResourceTest {
             libvirtComputingResourceSpy.calculateHostCpuMaxCapacity(cpuCores, cpuSpeed);
 
             Assert.assertEquals(expectedShares, libvirtComputingResourceSpy.getHostCpuMaxCapacity());
+        }
+    }
+
+    @Test
+    public void testGetHostTags() throws ConfigurationException {
+        try (MockedStatic<AgentPropertiesFileHandler> ignored = Mockito.mockStatic(AgentPropertiesFileHandler.class)) {
+            Mockito.when(AgentPropertiesFileHandler.getPropertyValue(Mockito.eq(AgentProperties.HOST_TAGS)))
+                    .thenReturn("aa,bb,cc,dd");
+
+            List<String> hostTagsList = libvirtComputingResourceSpy.getHostTags();
+            Assert.assertEquals(4, hostTagsList.size());
+            Assert.assertEquals("aa,bb,cc,dd", StringUtils.join(hostTagsList, ","));
+        }
+    }
+
+    @Test
+    public void testGetHostTagsWithSpace() throws ConfigurationException {
+        try (MockedStatic<AgentPropertiesFileHandler> ignored = Mockito.mockStatic(AgentPropertiesFileHandler.class)) {
+            Mockito.when(AgentPropertiesFileHandler.getPropertyValue(Mockito.eq(AgentProperties.HOST_TAGS)))
+                    .thenReturn(" aa, bb , cc , dd ");
+
+            List<String> hostTagsList = libvirtComputingResourceSpy.getHostTags();
+            Assert.assertEquals(4, hostTagsList.size());
+            Assert.assertEquals("aa,bb,cc,dd", StringUtils.join(hostTagsList, ","));
+        }
+    }
+
+    @Test
+    public void testGetHostTagsWithEmptyPropertyValue() throws ConfigurationException {
+        try (MockedStatic<AgentPropertiesFileHandler> ignored = Mockito.mockStatic(AgentPropertiesFileHandler.class)) {
+            Mockito.when(AgentPropertiesFileHandler.getPropertyValue(Mockito.eq(AgentProperties.HOST_TAGS)))
+                    .thenReturn(" ");
+
+            List<String> hostTagsList = libvirtComputingResourceSpy.getHostTags();
+            Assert.assertEquals(0, hostTagsList.size());
+            Assert.assertEquals("", StringUtils.join(hostTagsList, ","));
         }
     }
 }

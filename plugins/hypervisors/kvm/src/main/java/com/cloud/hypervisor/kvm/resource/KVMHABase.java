@@ -18,12 +18,14 @@ package com.cloud.hypervisor.kvm.resource;
 
 import java.io.File;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.libvirt.LibvirtException;
 import org.libvirt.StoragePool;
 import org.libvirt.StoragePoolInfo;
 import org.libvirt.StoragePoolInfo.StoragePoolState;
 
+import com.cloud.hypervisor.kvm.storage.KVMStoragePool;
 import com.cloud.utils.script.OutputInterpreter;
 import com.cloud.utils.script.OutputInterpreter.AllLinesParser;
 import com.cloud.utils.script.Script;
@@ -31,7 +33,7 @@ import com.cloud.agent.properties.AgentProperties;
 import com.cloud.agent.properties.AgentPropertiesFileHandler;
 
 public class KVMHABase {
-    private static final Logger s_logger = Logger.getLogger(KVMHABase.class);
+    protected Logger logger = LogManager.getLogger(getClass());
     private long _timeout = 60000; /* 1 minutes */
     protected static String s_heartBeatPath;
     protected static String s_heartBeatPathRbd;
@@ -45,62 +47,126 @@ public class KVMHABase {
         PrimaryStorage, SecondaryStorage
     }
 
-    public static class NfsStoragePool {
-        String _poolUUID;
-        String _poolIp;
-        String _poolMountSourcePath;
-        String _mountDestPath;
-        PoolType _type;
+    public static class HAStoragePool {
+        String poolUuid;
+        String poolIp;
+        String poolMountSourcePath;
+        String mountDestPath;
+        PoolType poolType;
+        KVMStoragePool pool;
 
-        public NfsStoragePool(String poolUUID, String poolIp, String poolSourcePath, String mountDestPath, PoolType type) {
-            _poolUUID = poolUUID;
-            _poolIp = poolIp;
-            _poolMountSourcePath = poolSourcePath;
-            _mountDestPath = mountDestPath;
-            _type = type;
+        String monHost;
+        String poolAuthUserName;
+        String poolAuthSecret;
+        String poolSourceHost;
+
+        public HAStoragePool(KVMStoragePool pool, String host, String path, PoolType type) {
+            this.pool = pool;
+            this.poolUuid = pool.getUuid();
+            this.mountDestPath = pool.getLocalPath();
+            this.poolIp = host;
+            this.poolMountSourcePath = path;
+            this.poolType = type;
         }
+
+        public HAStoragePool(KVMStoragePool pool, String monHost, String poolSourcePath, String mountDestPath, PoolType type, String poolAuthUserName, String poolAuthSecret, String poolSourceHost) {
+            this.pool = pool;
+            this.poolUuid = pool.getUuid();
+            this.monHost = monHost;
+            this.poolMountSourcePath = poolSourcePath;
+            this.mountDestPath = mountDestPath;
+            this.poolType = type;
+            this.poolAuthUserName = poolAuthUserName;
+            this.poolAuthSecret = poolAuthSecret;
+            this.poolSourceHost = poolSourceHost;
+        }
+
+        public String getPoolUUID() {
+            return poolUuid;
+        }
+
+        public void setPoolUUID(String poolUuid) {
+            this.poolUuid = poolUuid;
+        }
+
+        public String getPoolIp() {
+            return poolIp;
+        }
+
+        public void setPoolIp(String poolIp) {
+            this.poolIp = poolIp;
+        }
+
+        public String getPoolMountSourcePath() {
+            return poolMountSourcePath;
+        }
+
+        public void setPoolMountSourcePath(String poolMountSourcePath) {
+            this.poolMountSourcePath = poolMountSourcePath;
+        }
+
+        public String getMountDestPath() {
+            return mountDestPath;
+        }
+
+        public void setMountDestPath(String mountDestPath) {
+            this.mountDestPath = mountDestPath;
+        }
+
+        public PoolType getType() {
+            return poolType;
+        }
+
+        public void setType(PoolType type) {
+            this.poolType = type;
+        }
+
+        public KVMStoragePool getPool() {
+            return pool;
+        }
+
+        public void setPool(KVMStoragePool pool) {
+            this.pool = pool;
+        }
+
+        public String getMonHost() {
+            return monHost;
+        }
+
+        public void setMonHost(String monHost) {
+            this.monHost = monHost;
+        }
+
+        public String getPoolAuthUserName() {
+            return poolAuthUserName;
+        }
+
+        public void setPoolAuthUserName(String poolAuthUserName) {
+            this.poolAuthUserName = poolAuthUserName;
+        }
+
+        public String getPoolAuthSecret() {
+            return poolAuthSecret;
+        }
+
+        public void setPoolAuthSecret(String poolAuthSecret) {
+            this.poolAuthSecret = poolAuthSecret;
+        }
+
+        public String getPoolSourceHost() {
+            return poolSourceHost;
+        }
+
+        public void setPoolSourceHost(String poolSourceHost) {
+            this.poolSourceHost = poolSourceHost;
+        }
+
     }
 
-    public static class RbdStoragePool {
-        String _poolUUID;
-        String _monHost;
-        String _poolMountSourcePath;
-        String _mountDestPath;
-        PoolType _type;
-        String _poolAuthUserName;
-        String _poolAuthSecret;
-        String _poolSourceHost;
-
-        public RbdStoragePool(String poolUUID, String monHost, String poolSourcePath, String mountDestPath, PoolType type, String poolAuthUserName, String poolAuthSecret, String poolSourceHost) {
-            _poolUUID = poolUUID;
-            _monHost = monHost;
-            _poolMountSourcePath = poolSourcePath;
-            _mountDestPath = mountDestPath;
-            _type = type;
-            _poolAuthUserName = poolAuthUserName;
-            _poolAuthSecret = poolAuthSecret;
-            _poolSourceHost = poolSourceHost;
-        }
-    }
-
-    public static class ClvmStoragePool {
-        String _poolUUID;
-        String _poolIp;
-        String _poolMountSourcePath;
-        PoolType _type;
-
-        public ClvmStoragePool(String poolUUID, String poolIp, String poolMountSourcePath, PoolType type) {
-            _poolUUID = poolUUID;
-            _poolIp = poolIp;
-            _poolMountSourcePath = poolMountSourcePath;
-            _type = type;
-        }
-    }
-
-    protected String checkingMountPoint(NfsStoragePool pool, String poolName) {
-        String mountSource = pool._poolIp + ":" + pool._poolMountSourcePath;
+    protected String checkingMountPoint(HAStoragePool pool, String poolName) {
+        String mountSource = pool.getPoolIp() + ":" + pool.getPoolMountSourcePath();
         String mountPaths = Script.runSimpleBashScript("cat /proc/mounts | grep " + mountSource);
-        String destPath = pool._mountDestPath;
+        String destPath = pool.getMountDestPath();
 
         if (mountPaths != null) {
             String token[] = mountPaths.split(" ");
@@ -140,12 +206,12 @@ public class KVMHABase {
         return destPath;
     }
 
-    protected String getMountPoint(NfsStoragePool storagePool) {
+    protected String getMountPoint(HAStoragePool storagePool) {
 
         StoragePool pool = null;
         String poolName = null;
         try {
-            pool = LibvirtConnection.getConnection().storagePoolLookupByUUIDString(storagePool._poolUUID);
+            pool = LibvirtConnection.getConnection().storagePoolLookupByUUIDString(storagePool.getPoolUUID());
             if (pool != null) {
                 StoragePoolInfo spi = pool.getInfo();
                 if (spi.state != StoragePoolState.VIR_STORAGE_POOL_RUNNING) {
@@ -160,14 +226,14 @@ public class KVMHABase {
             }
 
         } catch (LibvirtException e) {
-            s_logger.debug("Ignoring libvirt error.", e);
+            logger.debug("Ignoring libvirt error.", e);
         } finally {
             try {
                 if (pool != null) {
                     pool.free();
                 }
             } catch (LibvirtException e) {
-                s_logger.debug("Ignoring libvirt error.", e);
+                logger.debug("Ignoring libvirt error.", e);
             }
         }
 

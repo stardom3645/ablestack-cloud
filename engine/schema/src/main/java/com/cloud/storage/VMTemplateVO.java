@@ -21,6 +21,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import javax.persistence.Column;
+import javax.persistence.Convert;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
@@ -32,6 +33,7 @@ import javax.persistence.TemporalType;
 import javax.persistence.Transient;
 
 import com.cloud.user.UserData;
+import org.apache.cloudstack.util.HypervisorTypeConverter;
 import org.apache.cloudstack.utils.reflectiontostringbuilderutils.ReflectionToStringBuilderUtils;
 
 import com.cloud.hypervisor.Hypervisor.HypervisorType;
@@ -108,7 +110,7 @@ public class VMTemplateVO implements VirtualMachineTemplate {
     private boolean crossZones = false;
 
     @Column(name = "hypervisor_type")
-    @Enumerated(value = EnumType.STRING)
+    @Convert(converter = HypervisorTypeConverter.class)
     private HypervisorType hypervisorType;
 
     @Column(name = "extractable")
@@ -250,6 +252,14 @@ public class VMTemplateVO implements VirtualMachineTemplate {
         return new VMTemplateVO(id, uniqueName, name, ImageFormat.ISO, isPublic, false, TemplateType.SYSTEM, url, null, requiresHvm, bits, accountId, cksum, displayText, enablePassword,
                 guestOSId, false, null);
     }
+
+
+     public static VMTemplateVO createSystemRaw(Long id, String uniqueName, String name, boolean isPublic,
+                                                String url, boolean requiresHvm, int bits, long accountId, String cksum,
+                                                String displayText, boolean enablePassword, long guestOSId, HypervisorType hyperType) {
+                                            return new VMTemplateVO(id, uniqueName, name, ImageFormat.RAW, isPublic, false, TemplateType.USER, url, null, requiresHvm, bits, accountId, cksum, displayText, enablePassword,
+                                            guestOSId, true, hyperType);
+}
 
     public VMTemplateVO(Long id, String uniqueName, String name, ImageFormat format, boolean isPublic, boolean featured, TemplateType type, String url, Date created,
             boolean requiresHvm, int bits, long accountId, String cksum, String displayText, boolean enablePassword, long guestOSId, boolean bootable,

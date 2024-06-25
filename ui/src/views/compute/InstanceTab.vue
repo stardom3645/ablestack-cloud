@@ -17,6 +17,8 @@
 
 <template>
   <a-spin :spinning="loading">
+    <a-alert v-if="vm.qemuagentversion === 'Not Installed'" :message="$t('message.alert.qemuagentversion')" type="error" show-icon />
+    <br/>
     <a-tabs
       :activeKey="currentTab"
       :tabPosition="device === 'mobile' ? 'top' : 'left'"
@@ -33,7 +35,7 @@
         <router-link :to="{ path: '/iso/' + vm.isoid }">{{ vm.isoname }}</router-link> <br/>
         <barcode-outlined /> {{ vm.isoid }}
       </a-tab-pane>
-      <a-tab-pane :tab="$t('label.volumes')" key="volumes">
+      <a-tab-pane :tab="$t('label.volumes')" key="volumes" v-if="'listVolumes' in $store.getters.apis">
         <a-button
           type="primary"
           style="width: 100%; margin-bottom: 10px"
@@ -96,6 +98,18 @@
                 type="primary"
                 :danger="true"
                 icon="delete-outlined" />
+            </a-popconfirm>
+            <a-popconfirm
+              :title="`${record.nic.linkstate ? $t('label.action.nic.linkstate.down') : $t('label.action.nic.linkstate.up')}`"
+              @confirm="onChangeNicLinkState(record)"
+              :okText="$t('label.yes')"
+              :cancelText="$t('label.no')"
+            >
+              <tooltip-button
+                tooltipPlacement="top"
+                :tooltip="$t('label.action.nic.linkstate')"
+                :type="record.nic.linkstate ? 'primary' : ''"
+                icon="wifi-outlined" />
             </a-popconfirm>
           </template>
         </NicsTable>
@@ -299,7 +313,6 @@
         </a-list-item>
       </a-list>
     </a-modal>
-
   </a-spin>
 </template>
 
@@ -378,7 +391,9 @@ export default {
         opts: []
       },
       annotations: [],
-      dataResource: {}
+      dataResource: {},
+      editeNic: '',
+      editNicLinkStat: ''
     }
   },
   created () {
@@ -518,6 +533,37 @@ export default {
       if (record.nic.type === 'Shared') {
         this.fetchPublicIps(record.nic.networkid)
       }
+    },
+    onChangeNicLinkState (record) {
+      console.log('record.nic.id :>> ', record.nic.id)
+      console.log('record.nic.id :>> ', record.nic.linkstate)
+      const params = {}
+      params.virtualmachineid = this.vm.id
+      params.nicid = record.nic.id
+      params.linkstate = !record.nic.linkstate
+      api('UpdateVmNicLinkState', params).then(response => {
+        this.$pollJob({
+          jobId: response.updatevmniclinkstateresponse.jobid,
+          successMessage: this.$t('message.success.update.nic.linkstate'),
+          successMethod: () => {
+            this.loadingNic = false
+          },
+          errorMessage: this.$t('label.error'),
+          errorMethod: () => {
+            this.loadingNic = false
+          },
+          loadingMessage: this.$t('message.update.nic.linkstate.processing'),
+          catchMessage: this.$t('error.fetching.async.job.result'),
+          catchMethod: () => {
+            this.loadingNic = false
+            this.parentFetchData()
+          }
+        })
+      })
+        .catch(error => {
+          this.$notifyError(error)
+          this.loadingNic = false
+        })
     },
     onAcquireSecondaryIPAddress (record) {
       if (record.nic.type === 'Shared') {

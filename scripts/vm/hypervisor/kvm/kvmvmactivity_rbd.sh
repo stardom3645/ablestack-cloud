@@ -16,13 +16,14 @@
 # specific language governing permissions and limitations
 # under the License.
 help() {
-  printf "Usage: $0 
+  printf "Usage: $0
                     -p rbd pool name
                     -n pool auth username
                     -s pool auth secret
                     -h host
                     -i source host ip
-                    -u volume uuid list"
+                    -u volume uuid list
+                    -t time on ms\n"
   exit 1
 }
 #set -x
@@ -30,10 +31,10 @@ PoolName=
 PoolAuthUserName=
 PoolAuthSecret=
 HostIP=
-SourceHostIP=
 UUIDList=
+interval=0
 
-while getopts 'p:n:s:h:i:u:d:' OPTION
+while getopts 'p:n:s:h:u:t:' OPTION
 do
   case $OPTION in
   p)
@@ -48,11 +49,11 @@ do
   h)
      HostIP="$OPTARG"
      ;;
-  i)
-     SourceHostIP="$OPTARG"
-     ;;
   u)
      UUIDList="$OPTARG"
+     ;;
+  t)
+     interval="$OPTARG"
      ;;
   *)
      help
@@ -64,44 +65,56 @@ if [ -z "$PoolName" ]; then
   exit 2
 fi
 
-#Creating Ceph keyring for executing rbd commands
-keyringFile="/etc/cloudstack/agent/keyring.bin"
+# if [ -z "$SuspectTime" ]; then
+#   exit 2
+# fi
 
-if [ ! -f $keyringFile ]; then
-    echo -e "[client.$PoolAuthUserName]\n key=$PoolAuthSecret" > $keyringFile
+# First check: heartbeat filei
+
+now=$(date +%s)
+getHbTime=$(rbd -p $PoolName --id $PoolAuthUserName image-meta get MOLD-HB $HostIP)
+if [ $? -gt 0 ] || [ -z "$getHbTime" ]; then
+   diff=$(expr $interval + 10)
 fi
 
-# First check: heartbeat watcher
-status=$(rbd status hb-$HostIP --pool $PoolName -m $SourceHostIP -k $keyringFile)
-if [ "$status" != "Watchers: none" ]; then
-    echo "=====> ALIVE <====="
-    exit 0
+if [ $? -eq 0 ]; then
+   diff=$(expr $now - $getHbTime)
+else
+   diff=$(expr $interval + 10)
+fi
+
+if [ $diff -le $interval ]; then
+   echo "### [HOST STATE : ALIVE] ###"
+   exit 0
 fi
 
 if [ -z "$UUIDList" ]; then
-    echo "=====> Considering host as DEAD due to empty UUIDList <======"
-    exit 0
+   echo " ### [HOST STATE : DEAD] Volume UUID list is empty => Considered host down ###"
+   exit 0
 fi
 
 # Second check: disk activity check
-statusFlag=true
-for UUID in $(echo $UUIDList | sed 's/,/ /g'); do
-    diskStatus=$(rbd status $UUID --pool $PoolName -m $SourceHostIP -k $keyringFile)
-    if [ "$status" == "Watchers: none" ]; then
-        statusFlag=false
-        break
-    fi
+for uuid in $(echo $UUIDList | sed 's/,/ /g'); do
+   acTime=$(rbd -p $PoolName --id $PoolAuthUserName image-meta get MOLD-AC $uuid > /dev/null 2>&1)
+   if [ $? -gt 0 ]; then
+      echo "### [HOST STATE : DEAD] Unable to confirm normal activity of volume image list => Considered host down ### "
+      exit 0
+   else
+      acTime=$(rbd -p $PoolName --id $PoolAuthUserName image-meta get MOLD-AC $uuid)
+      if [ -z "$acTime" ]; then
+         echo "### [HOST STATE : DEAD] Unable to confirm normal activity of volume image list => Considered host down ### "
+         exit 0
+      else
+         arrTime=(${acTime//:/ })
+         acTime=${arrTime[1]}
+         if [ $(expr $now - $acTime) > $interval ]; then
+            echo "### [HOST STATE : DEAD] Unable to confirm normal activity of volume image list => Considered host down ### "
+            exit 0
+         fi
+      fi
+   fi
 done
 
-if [ statusFlag == "true" ]; then
-    echo "=====> ALIVE <====="
-else
-    echo "=====> Considering host as DEAD due to [RBD '$PoolName' pool] Image Watcher does not exists <======"
-fi
-
-#Deleting Ceph keyring
-if [ -f $keyringFile ]; then
-    rm -rf $keyringFile
-fi
+echo "### [HOST STATE : ALIVE] ###"
 
 exit 0

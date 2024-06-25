@@ -6,24 +6,27 @@
 # to you under the Apache License, Version 2.0 (the
 # "License"); you may not use this file except in compliance
 # with the License.  You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing,
 # software distributed under the License is distributed on an
 # "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
+# under the License.
 
 help() {
-  printf "Usage: $0 
+  printf "Usage: $0
                     -p rbd pool name
                     -n pool auth username
                     -s pool auth secret
                     -h host
                     -i source host ip
-                    -r create/read hb watcher
-                    -c cleanup"
+                    -u volume uuid list
+                    -r write/read hb log
+                    -c cleanup
+                    -t interval between read hb log\n"
   exit 1
 }
 #set -x
@@ -32,10 +35,12 @@ PoolAuthUserName=
 PoolAuthSecret=
 HostIP=
 SourceHostIP=
+interval=0
 rflag=0
 cflag=0
+UUIDList=
 
-while getopts 'p:n:s:h:i:rc' OPTION
+while getopts 'p:n:s:h:i:t:u:r:c' OPTION
 do
   case $OPTION in
   p)
@@ -53,11 +58,17 @@ do
   i)
      SourceHostIP="$OPTARG"
      ;;
+  t)
+     interval="$OPTARG"
+     ;;
+  u)
+     UUIDList="$OPTARG"
+     ;;
   r)
-     rflag=1 
+     rflag=1
      ;;
   c)
-    cflag=1
+     cflag=1
      ;;
   *)
      help
@@ -69,67 +80,78 @@ if [ -z "$PoolName" ]; then
   exit 2
 fi
 
-keyringFile="/etc/cloudstack/agent/keyring"
+# rados object touch action for vol list
+res=$(rbd -p $PoolName ls --id $PoolAuthUserName | grep MOLD-AC)
+if [ $? -gt 0 ]; then
+  rbd -p $PoolName create --size 1 --id $PoolAuthUserName MOLD-AC
+fi
 
-create_cephKeyring() {
-#Creating Ceph keyring for executing rbd commands
-  if [ ! -f $keyringFile ]; then
-    echo -e "[client.$PoolAuthUserName]\n key=$PoolAuthSecret" > $keyringFile
-  fi
-}
+timestamp=$(date +%s)
 
-delete_cephKeyring() {
-#Deleting Ceph keyring
-  if [ -f $keyringFile ]; then
-    rm -rf $keyringFile
-  fi
-}
+if [ -n "$UUIDList" ]; then
+    for uuid in $(echo $UUIDList | sed 's/,/ /g'); do
+      objId=$(rbd -p $PoolName info $uuid --id $PoolAuthUserName | grep 'id:')
+      objId=${objId#*id: }
+      res=$(timeout 3s bash -c "rados -p $PoolName touch rbd_object_map.$objId")
+    if [ $? -eq 0 ]; then
+      # 정상적인 touch 상태면 image meta에 key: uuid / value : timestamp 입력
+      rbd -p $PoolName --id $PoolAuthUserName image-meta set MOLD-AC $uuid $HostIP:$timestamp
+    else
+      # 정상적으로 touch 상태가 아니면 image meta에 key : uuid 삭제
+      rbd -p $PoolName --id $PoolAuthUserName image-meta rm MOLD-AC $uuid
+    fi
+  done
+fi
 
-cretae_hbWatcher() {
-#Create HB RBD Image and watcher
-  status=$(rbd status hb-$HostIP --pool $PoolName -m $SourceHostIP -k $keyringFile)
-  if [ $? == 2 ]; then
-    rbd create hb-$HostIP --size 1 --pool $PoolName
-    setsid sh -c 'exec rbd watch hb-'$HostIP' --pool $PoolName -m '$SourceHostIP' -k '$keyringFile' <> /dev/tty20 >&0 2>&1'
+#write the heart beat log
+write_hbLog() {
+  Timestamp=$(date +%s)
+  obj=$(rbd -p $PoolName ls --id $PoolAuthUserName | grep MOLD-HB)
+
+  if [ $? -gt 0 ]; then
+     rbd -p $PoolName create --size 1 --id $PoolAuthUserName MOLD-HB
   fi
 
-  if [ "$status" == "Watchers: none" ]; then
-    setsid sh -c 'exec rbd watch hb-'$HostIP' --pool $PoolName -m '$SourceHostIP' -k '$keyringFile' <> /dev/tty20 >&0 2>&1'
+  obj=$(rbd -p $PoolName --id $PoolAuthUserName image-meta set MOLD-HB $HostIP $Timestamp)
+  if [ $? -gt 0 ]; then
+   	printf "Failed to create rbd file"
+    return 2
   fi
-  
   return 0
 }
 
-check_hbWatcher() {
-#check the heart beat watcher
-  hb=$(rbd status hb-$HostIP --pool $PoolName -m $SourceHostIP -k $keyringFile)
-  if [ "$hb" == "Watchers: none" ]; then
-    return 2
-  else
-    return 0
+#check the heart beat log
+check_hbLog() {
+  now=$(date +%s)
+  getHbTime=$(rbd -p $PoolName --id $PoolAuthUserName image-meta get MOLD-HB $HostIP)
+  if [ $? -gt 0 ] || [ -z "$getHbTime" ]; then
+    return 1
   fi
+
+  diff=$(expr $now - $getHbTime)
+
+  if [ $diff -gt $interval ]; then
+    return $diff
+  fi
+  return 0
 }
 
 if [ "$rflag" == "1" ]; then
-  create_cephKeyring
-  check_hbWatcher
-  hb=$?
-  if [ "$hb" != "Watchers: none" ]; then
-    echo "=====> ALIVE <====="
+  check_hbLog
+  diff=$?
+  if [ $diff == 0 ]; then
+    echo "### [HOST STATE : ALIVE] ###"
   else
-    echo "=====> Considering host as DEAD due to [hb-$HostIP] watcher that the host is seeing is not running. <======"
+    echo "### [HOST STATE : DEAD] Set maximum interval: ($interval seconds), Actual difference: ($diff seconds) => Considered host down ###"
   fi
-  delete_cephKeyring
-  exit 0
+    exit 0
 elif [ "$cflag" == "1" ]; then
-  /usr/bin/logger -t heartbeat "kvmheartbeat_rbd.sh reboots the system because there is no heartbeat watcher."
+  /usr/bin/logger -t heartbeat "kvmheartbeat_rbd.sh will reboot system because it was unable to write the heartbeat to the storage."
   sync &
   sleep 5
   echo b > /proc/sysrq-trigger
   exit $?
 else
-  create_cephKeyring
-  cretae_hbWatcher
-  delete_cephKeyring
+  write_hbLog
   exit 0
 fi

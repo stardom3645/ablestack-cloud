@@ -21,8 +21,12 @@ import java.util.Map;
 
 import com.cloud.agent.properties.AgentProperties;
 import com.cloud.agent.properties.AgentPropertiesFileHandler;
+import com.cloud.hypervisor.kvm.resource.LibvirtVMDef;
 import org.apache.cloudstack.utils.qemu.QemuImg.PhysicalDiskFormat;
+import org.joda.time.Duration;
 
+import com.cloud.agent.api.to.HostTO;
+import com.cloud.hypervisor.kvm.resource.KVMHABase.HAStoragePool;
 import com.cloud.storage.Storage;
 import com.cloud.storage.Storage.StoragePoolType;
 
@@ -33,7 +37,12 @@ public interface KVMStoragePool {
     public static final long HeartBeatUpdateMaxTries = AgentPropertiesFileHandler.getPropertyValue(AgentProperties.KVM_HEARTBEAT_UPDATE_MAX_TRIES);
     public static final long HeartBeatUpdateRetrySleep = AgentPropertiesFileHandler.getPropertyValue(AgentProperties.KVM_HEARTBEAT_UPDATE_RETRY_SLEEP);
     public static final long HeartBeatCheckerTimeout = AgentPropertiesFileHandler.getPropertyValue(AgentProperties.KVM_HEARTBEAT_CHECKER_TIMEOUT);
+    public static final long HeartBeatCheckerFreq = AgentPropertiesFileHandler.getPropertyValue(AgentProperties.KVM_HEARTBEAT_CHECKER_FREQUENCY);
+    public static final String kvmScriptsDir = AgentPropertiesFileHandler.getPropertyValue(AgentProperties.KVM_SCRIPTS_DIR);
 
+    public default KVMPhysicalDisk createPhysicalDisk(String volumeUuid, PhysicalDiskFormat format, Storage.ProvisioningType provisioningType, long size, Long usableSize, byte[] passphrase) {
+        return createPhysicalDisk(volumeUuid, format, provisioningType, size, passphrase);
+    }
 
     public KVMPhysicalDisk createPhysicalDisk(String volumeUuid, PhysicalDiskFormat format, Storage.ProvisioningType provisioningType, long size, byte[] passphrase);
 
@@ -84,4 +93,30 @@ public interface KVMStoragePool {
     public boolean supportsConfigDriveIso();
 
     public Map<String, String> getDetails();
+
+    public boolean isPoolSupportHA();
+
+    public String getHearthBeatPath();
+
+    public String createHeartBeatCommand(HAStoragePool primaryStoragePool, String hostPrivateIp, boolean hostValidation);
+
+    public String getStorageNodeId();
+
+    public Boolean checkingHeartBeat(HAStoragePool pool, HostTO host);
+
+    public Boolean checkingHeartBeatRBD(HAStoragePool pool, HostTO host, String volumeList);
+
+    public Boolean vmActivityCheck(HAStoragePool pool, HostTO host, Duration activityScriptTimeout, String volumeUUIDListString, String vmActivityCheckPath, long duration);
+
+    default LibvirtVMDef.DiskDef.BlockIOSize getSupportedLogicalBlockSize() {
+        return null;
+    }
+
+    default LibvirtVMDef.DiskDef.BlockIOSize getSupportedPhysicalBlockSize() {
+        return null;
+    }
+
+    default void customizeLibvirtDiskDef(LibvirtVMDef.DiskDef disk) {
+    }
 }
+

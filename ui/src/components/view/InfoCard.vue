@@ -140,6 +140,12 @@
             <status class="status" :text="resource.resourcestate" displayText/>
           </div>
         </div>
+        <div class="resource-detail-item" v-if="('success' in resource) && $route.meta.name === 'webhookdeliveries'">
+          <div class="resource-detail-item__label">{{ $t('label.success') }}</div>
+          <div class="resource-detail-item__details">
+            <status class="status" :text="resource.success ? 'success' : 'error'"/>
+          </div>
+        </div>
 
         <div class="resource-detail-item" v-if="resource.id">
           <div class="resource-detail-item__label">{{ $t('label.id') }}</div>
@@ -299,10 +305,20 @@
           </div>
         </div>
         <div class="resource-detail-item" v-if="resource.volumes || resource.sizegb">
-          <div class="resource-detail-item__label">{{ $t('label.disksize') }}</div>
+          <div class="resource-detail-item__label" v-if="$route.meta.name === 'backup'">{{ $t('label.size') }}</div>
+          <div class="resource-detail-item__label" v-else>{{ $t('label.disksize') }}</div>
           <div class="resource-detail-item__details">
             <hdd-outlined />
             <span style="width: 100%;" v-if="$route.meta.name === 'vm' && resource.volumes">{{ (resource.volumes.reduce((total, item) => total += item.size, 0) / (1024 * 1024 * 1024.0)).toFixed(2) }} GB Storage</span>
+            <span style="width: 100%;" v-else-if="$route.meta.name === 'backup'">
+              {{ $bytesToHumanReadableSize(resource.size) }}
+              <a-tooltip placement="right">
+                <template #title>
+                  {{ resource.size }} bytes
+                </template>
+                <QuestionCircleOutlined />
+              </a-tooltip>
+            </span>
             <span style="width: 100%;" v-else-if="resource.sizegb || resource.size">{{ resource.sizegb || (resource.size/1024.0) }}</span>
           </div>
           <div style="margin-left: 25px; margin-top: 5px" v-if="resource.diskkbsread && resource.diskkbswrite && resource.diskioread && resource.diskiowrite">
@@ -482,7 +498,6 @@
           <div class="resource-detail-item__details">
             <gateway-outlined />
             <router-link v-if="resource.publicipid" :to="{ path: '/publicip/' + resource.publicipid }">{{ resource.publicip }} </router-link>
-            <copy-label :label="resource.publicip"/>
           </div>
         </div>
         <div class="resource-detail-item" v-if="resource.vpcid">
@@ -523,7 +538,7 @@
           <div class="resource-detail-item__details">
             <resource-icon v-if="resource.icon" :image="getImage(resource.icon.base64image)" size="1x" style="margin-right: 5px"/>
             <SaveOutlined v-else />
-            <router-link :to="{ path: '/template/' + resource.templateid }">{{ resource.templatedisplaytext || resource.templatename || resource.templateid }} </router-link>
+            <router-link :to="{ path: (resource.templateformat === 'ISO' ? '/iso/' : '/template/') + resource.templateid }">{{ resource.templatedisplaytext || resource.templatename || resource.templateid }} </router-link>
           </div>
         </div>
         <div class="resource-detail-item" v-if="resource.isoid">
@@ -533,6 +548,16 @@
             <UsbOutlined v-else />
               <router-link :to="{ path: '/iso/' + resource.isoid }">{{ resource.isodisplaytext || resource.isoname || resource.isoid }} </router-link>
           </div>
+        </div>
+
+        <div class="resource-detail-item" v-if="resource.volumeId">
+          <div class="resource-detail-item__label">{{ $t('label.gule.images') }}</div>
+          <div class="resource-detail-item__details">
+            <resource-icon v-if="resource.icon" :image="getImage(resource.icon.base64image)" size="1x" style="margin-right: 5px"/>
+            <IdcardOutlined v-else />
+            <router-link :to="{ path: '/volume/' + resource.volumeId }">{{ resource.volumesdisplaytext || resource.volumesname || resource.volumeId }} </router-link>
+          </div>
+
         </div>
         <div class="resource-detail-item" v-if="resource.serviceofferingname && resource.serviceofferingid">
           <div class="resource-detail-item__label">{{ $t('label.serviceofferingname') }}</div>
@@ -551,6 +576,16 @@
             <span v-else>{{ resource.diskofferingname || resource.diskofferingid }}</span>
           </div>
         </div>
+
+        <div class="resource-detail-item" v-if="resource.volumesname && resource.volumeId">
+          <div class="resource-detail-item__label">{{ $t('label.rbdimages') }}</div>
+          <div class="resource-detail-item__details">
+            <IdcardOutlined />
+            <router-link v-if="!isStatic && $router.resolve('/volume/' + resource.volumeId).matched[0].redirect !== '/exception/404'" :to="{ path: '/volume/' + resource.volumeId }">{{ resource.volumesgname || resource.volumeId }} </router-link>
+            <span v-else>{{ resource.volumesname || resource.volumeId }}</span>
+          </div>
+        </div>
+
         <div class="resource-detail-item" v-if="resource.backupofferingid">
           <div class="resource-detail-item__label">{{ $t('label.backupofferingid') }}</div>
           <cloud-upload-outlined />
@@ -669,6 +704,22 @@
             <block-outlined v-else />
             <router-link v-if="!isStatic && $store.getters.userInfo.roletype !== 'User'" :to="{ path: '/domain/' + resource.domainid, query: { tab: 'details'}  }">{{ resource.domain || resource.domainid }}</router-link>
             <span v-else>{{ resource.domain || resource.domainid }}</span>
+          </div>
+        </div>
+        <div class="resource-detail-item" v-if="resource.payloadurl">
+          <div class="resource-detail-item__label">{{ $t('label.payloadurl') }}</div>
+          <div class="resource-detail-item__details">
+          <link-outlined/>
+            <a v-if="!isStatic" :href="resource.payloadurl">{{ resource.payloadurl }}</a>
+            <span v-else>{{ resource.payloadurl }}</span>
+          </div>
+        </div>
+        <div class="resource-detail-item" v-if="resource.webhookid">
+          <div class="resource-detail-item__label">{{ $t('label.webhook') }}</div>
+          <div class="resource-detail-item__details">
+            <node-index-outlined />
+            <router-link v-if="!isStatic && $router.resolve('/webhook/' + resource.webhookid).matched[0].redirect !== '/exception/404'" :to="{ path: '/webhook/' + resource.webhookid }">{{ resource.webhookname || resource.webhookid }}</router-link>
+            <span v-else>{{ resource.webhookname || resource.webhookid }}</span>
           </div>
         </div>
         <div class="resource-detail-item" v-if="resource.managementserverid">
@@ -852,6 +903,7 @@ export default {
         zone: '',
         template: '',
         iso: '',
+        rbdimages: '',
         domain: '',
         account: '',
         project: '',
@@ -895,14 +947,14 @@ export default {
   },
   computed: {
     tagsSupportingResourceTypes () {
-      return ['UserVm', 'Template', 'ISO', 'Volume', 'Snapshot', 'Backup', 'Network',
+      return ['UserVm', 'Template', 'ISO', 'Volume', 'RbdImages', 'Snapshot', 'Backup', 'Network',
         'LoadBalancer', 'PortForwardingRule', 'FirewallRule', 'SecurityGroup', 'SecurityGroupRule',
         'PublicIpAddress', 'Project', 'Account', 'Vpc', 'NetworkACL', 'StaticRoute', 'VMSnapshot',
         'RemoteAccessVpn', 'User', 'SnapshotPolicy', 'VpcOffering']
     },
     name () {
       return this.resource.displayname || this.resource.name || this.resource.displaytext || this.resource.username ||
-        this.resource.ipaddress || this.resource.virtualmachinename || this.resource.osname || this.resource.osdisplayname || this.resource.templatetype
+        this.resource.ipaddress || this.resource.virtualmachinename || this.resource.osname || this.resource.osdisplayname || this.resource.templatetype || this.resource.rbdimagesname
     },
     keypairs () {
       if (!this.resource.keypairs) {
@@ -962,6 +1014,7 @@ export default {
         zone: '',
         template: '',
         iso: '',
+        rbdimages: '',
         domain: '',
         account: '',
         project: '',
@@ -973,6 +1026,9 @@ export default {
       }
       if (this.resource.isoid) {
         await this.fetchResourceIcon(this.resource.isoid, 'iso')
+      }
+      if (this.resource.volumeId) {
+        await this.fetchResourceIcon(this.resource.volumeId, 'volume')
       }
       if (this.resource.zoneid) {
         await this.fetchResourceIcon(this.resource.zoneid, 'zone')
