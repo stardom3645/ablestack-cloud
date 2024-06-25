@@ -53,7 +53,7 @@ public final class LibvirtGetRemoteVmsCommandWrapper extends CommandWrapper<GetR
         try {
             Connect conn = LibvirtConnection.getConnection(hypervisorURI);
             final List<String> allVmNames = libvirtComputingResource.getAllVmNames(conn);
-            s_logger.info(String.format("Found %d VMs on the remote host %s", allVmNames.size(), remoteIp));
+            logger.info(String.format("Found %d VMs on the remote host %s", allVmNames.size(), remoteIp));
             for (String name : allVmNames) {
                 final Domain domain = libvirtComputingResource.getDomain(conn, name);
                 final DomainInfo.DomainState ps = domain.getInfo().state;

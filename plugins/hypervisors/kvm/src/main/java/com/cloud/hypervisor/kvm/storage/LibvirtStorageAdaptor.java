@@ -284,7 +284,7 @@ public class LibvirtStorageAdaptor implements StorageAdaptor {
         int mountpointResult = Script.runSimpleBashScriptForExitValue("mountpoint -q " + targetPath);
         if (mountpointResult != 0) {
             String errMsg = String.format("libvirt failed to mount storage pool %s at %s", uuid, targetPath);
-            s_logger.error(errMsg);
+            logger.error(errMsg);
             throw new CloudRuntimeException(errMsg);
         }
     }
@@ -828,11 +828,11 @@ public class LibvirtStorageAdaptor implements StorageAdaptor {
             // handle ebusy error when pool is quickly destroyed
             if (e.toString().contains("exit status 16")) {
                 String targetPath = _mountPoint + File.separator + uuid;
-                logger.error("deleteStoragePool removed pool from libvirt, but libvirt had trouble unmounting the pool. Trying umount location " + targetPath +
-                        "again in a few seconds");
+                    logger.error("deleteStoragePool removed pool from libvirt, but libvirt had trouble unmounting the pool. Trying umount location " + targetPath +
+                        " again in a few seconds");
                 String result = Script.runSimpleBashScript("sleep 5 && umount " + targetPath);
                 if (result == null) {
-                    logger.error("Succeeded in unmounting " + targetPath);
+                    logger.info("Succeeded in unmounting " + targetPath);
                     return true;
                 }
                 logger.error("Failed to unmount " + targetPath);

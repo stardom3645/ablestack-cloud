@@ -802,7 +802,7 @@ public class UnmanagedVMsManagerImpl implements UnmanagedVMsManager {
         }
         int copyTimeoutInSecs = copyTimeout * 60;
         copyRemoteVolumeCommand.setWait(copyTimeoutInSecs);
-        LOGGER.error(String.format("Initiating copy remote volume %s from %s, timeout %d secs", path, remoteUrl, copyTimeoutInSecs));
+        logger.error(String.format("Initiating copy remote volume %s from %s, timeout %d secs", path, remoteUrl, copyTimeoutInSecs));
         Answer answer = agentManager.easySend(dest.getHost().getId(), copyRemoteVolumeCommand);
         if (!(answer instanceof CopyRemoteVolumeAnswer)) {
             throw new CloudRuntimeException("Error while copying volume of remote instance: " + answer.getDetails());

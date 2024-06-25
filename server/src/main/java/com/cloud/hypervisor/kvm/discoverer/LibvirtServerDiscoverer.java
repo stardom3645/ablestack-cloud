@@ -493,7 +493,7 @@ public abstract class LibvirtServerDiscoverer extends DiscovererBase implements 
             return true;
         }
         if (COMPATIBLE_HOST_OSES.contains(hostOsInCluster) && COMPATIBLE_HOST_OSES.contains(hostOs)) {
-            s_logger.info(String.format("The host OS (%s) is compatible with the existing host OS (%s) in the cluster.", hostOs, hostOsInCluster));
+            logger.info(String.format("The host OS (%s) is compatible with the existing host OS (%s) in the cluster.", hostOs, hostOsInCluster));
             return true;
         }
         return false;

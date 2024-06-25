@@ -138,8 +138,8 @@ public class NetworkOrchestratorTest extends TestCase {
         when(provider.getCapabilities()).thenReturn(services);
         capabilities.put(Network.Capability.DhcpAccrossMultipleSubnets, "true");
 
-        when(testOrchastrator._ntwkSrvcDao.getProviderForServiceInNetwork(ArgumentMatchers.anyLong(), ArgumentMatchers.eq(Service.Dhcp))).thenReturn(dhcpProvider);
-        when(testOrchastrator._networkModel.getElementImplementingProvider(dhcpProvider)).thenReturn(provider);
+        when(testOrchestrator._ntwkSrvcDao.getProviderForServiceInNetwork(ArgumentMatchers.anyLong(), ArgumentMatchers.eq(Service.Dhcp))).thenReturn(dhcpProvider);
+        when(testOrchestrator._networkModel.getElementImplementingProvider(dhcpProvider)).thenReturn(provider);
 
         when(guru.getName()).thenReturn(guruName);
         List<NetworkGuru> networkGurus = new ArrayList<NetworkGuru>();
