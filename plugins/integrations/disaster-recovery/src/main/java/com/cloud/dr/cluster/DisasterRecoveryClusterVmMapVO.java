@@ -53,9 +53,14 @@ public class DisasterRecoveryClusterVmMapVO implements DisasterRecoveryClusterVm
     public DisasterRecoveryClusterVmMapVO() {
     }
 
-    public DisasterRecoveryClusterVmMapVO(long disasterRecoveryClusterId, long vmId) {
+    public DisasterRecoveryClusterVmMapVO(long disasterRecoveryClusterId, long vmId, long mirroredVmId, String mirroredVmName, String mirroredVmStatus, String mirroredVmVolumeStatus) {
         this.disasterRecoveryClusterId = disasterRecoveryClusterId;
         this.vmId = vmId;
+        this.mirroredVmId = mirroredVmId;
+        this.mirroredVmName = mirroredVmName;
+        this.mirroredVmStatus = mirroredVmStatus;
+        this.mirroredVmVolumeStatus = mirroredVmVolumeStatus;
+
     }
 
     @Override

@@ -596,6 +596,59 @@ public class DisasterRecoveryClusterUtil {
     }
 
     /**
+     * Glue 미러링된 이미지 상태 조회
+     * @param region
+     *  https://<IP>:8080/api/v1
+     * @param subUrl
+     *  /mirror/image/status/{mirrorPool}/{imageName}
+     * @param method
+     *  GET
+     * @return
+     *  "peer_sites": [{
+            "site_name": "remote",
+            "mirror_uuids": "37beb208-7c05-4ecc-ad14-b2c43f4ea79f",
+            "state": "up+replaying",
+            "description": "replaying, {\"bytes_per_second\":0.0,\"bytes_per_snapshot\":271091712.0,\"last_snapshot_bytes\":271091712,\"last_snapshot_sync_seconds\":2,\"local_snapshot_timestamp\":1719214141,\"remote_snapshot_timestamp\":1719214141,\"replay_state\":\"idle\"}",
+            "last_update": "2024-06-24 17:52:43" }],
+     */
+    protected static String glueImageMirrorStatusAPI(String region, String subUrl, String method) {
+        try {
+            String readLine = null;
+            StringBuffer sb = null;
+            // SSL 인증서 에러 우회 처리
+            final SSLContext sslContext = SSLUtils.getSSLContext();
+            sslContext.init(null, new TrustManager[]{new TrustAllManager()}, new SecureRandom());
+            URL url = new URL(region + subUrl);
+            HttpsURLConnection connection = (HttpsURLConnection)url.openConnection();
+            connection.setSSLSocketFactory(sslContext.getSocketFactory());
+            connection.setDoOutput(true);
+            connection.setRequestMethod(method);
+            connection.setConnectTimeout(30000);
+            connection.setReadTimeout(180000);
+            connection.setRequestProperty("Accept", "application/vnd.ceph.api.v1.0+json");
+            connection.setRequestProperty("Authorization", "application/vnd.ceph.api.v1.0+json");
+            connection.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
+            if (connection.getResponseCode() == 200) {
+                BufferedReader br = new BufferedReader(new InputStreamReader(connection.getInputStream(), "UTF-8"));
+                sb = new StringBuffer();
+                while ((readLine = br.readLine()) != null) {
+                    sb.append(readLine);
+                }
+                JsonParser jParser = new JsonParser();
+                JsonObject jObject = (JsonObject)jParser.parse(sb.toString());
+                return jObject.toString();
+            } else {
+                String msg = "Failed to request status of mirror image API. response code : " + connection.getResponseCode();
+                LOGGER.error(msg);
+                return null;
+            }
+        } catch (Exception e) {
+            LOGGER.error(String.format("Glue API endpoint not available"), e);
+            return null;
+        }
+    }
+
+    /**
      * Glue 이미지 미러링 설정
      * @param region
      *  https://<IP>:8080/api/v1
@@ -1257,7 +1310,7 @@ public class DisasterRecoveryClusterUtil {
             }
             JSONObject jObject = XML.toJSONObject(sb.toString());
             JSONObject response = (JSONObject) jObject.get("deployvirtualmachineforvolumeresponse");
-            return response.get("jobid").toString();
+            return response.get("id").toString();
         } catch (Exception e) {
             LOGGER.error(String.format("Mold API endpoint not available"), e);
             return null;
@@ -1434,6 +1487,86 @@ public class DisasterRecoveryClusterUtil {
                 }
             }
             return result;
+        } catch (Exception e) {
+            LOGGER.error(String.format("Mold API endpoint not available"), e);
+            return null;
+        }
+    }
+
+    /**
+     * Mold listVirtualMachines API 요청
+     * @param region
+     *  <url>/client/api/
+     * @param command
+     *  listVirtualMachines
+     * @param method
+     *  GET
+     * @return true = 200, 이외 코드는 false 처리
+     */
+    protected static String moldListVirtualMachinesAPI(String region, String command, String method, String apiKey, String secretKey) {
+        try {
+            String readLine = null;
+            StringBuffer sb = null;
+            String apiParams = buildParamsMold(command, null);
+            String urlFinal = buildUrl(apiParams, region, apiKey, secretKey);
+            URL url = new URL(urlFinal);
+            if (region.contains("https")) {
+                // SSL 인증서 에러 우회 처리
+                final SSLContext sslContext = SSLUtils.getSSLContext();
+                sslContext.init(null, new TrustManager[]{new TrustAllManager()}, new SecureRandom());
+                HttpsURLConnection connection = (HttpsURLConnection)url.openConnection();
+                connection.setSSLSocketFactory(sslContext.getSocketFactory());
+                connection.setDoOutput(true);
+                connection.setRequestMethod(method);
+                connection.setConnectTimeout(30000);
+                connection.setReadTimeout(180000);
+                connection.setRequestProperty("Accept", "application/json");
+                connection.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
+                if (connection.getResponseCode() == 200) {
+                    BufferedReader br = new BufferedReader(new InputStreamReader(connection.getInputStream(), "UTF-8"));
+                    sb = new StringBuffer();
+                    while ((readLine = br.readLine()) != null) {
+                        sb.append(readLine);
+                    }
+                } else {
+                    String msg = "Failed to request mold API. response code : " + connection.getResponseCode();
+                    LOGGER.error(msg);
+                    return null;
+                }
+            } else {
+                HttpURLConnection connection = (HttpURLConnection)url.openConnection();
+                connection.setDoOutput(true);
+                connection.setRequestMethod(method);
+                connection.setConnectTimeout(30000);
+                connection.setReadTimeout(180000);
+                connection.setRequestProperty("Accept", "application/json");
+                connection.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
+                if (connection.getResponseCode() == 200) {
+                    BufferedReader br = new BufferedReader(new InputStreamReader(connection.getInputStream(), "UTF-8"));
+                    sb = new StringBuffer();
+                    while ((readLine = br.readLine()) != null) {
+                        sb.append(readLine);
+                    }
+                } else {
+                    String msg = "Failed to request mold API. response code : " + connection.getResponseCode();
+                    LOGGER.error(msg);
+                    return null;
+                }
+            }
+            JSONObject jObject = XML.toJSONObject(sb.toString());
+            JSONObject response = (JSONObject) jObject.get("listvirtualmachinesresponse");
+            if (response.has("virtualmachine")) {
+                Object object = response.get("virtualmachine");
+                JSONArray array;
+                if (object instanceof JSONArray) {
+                    array = (JSONArray) object;
+                } else {
+                    array = new JSONArray();
+                    array.put(object);
+                }
+                return array.toString();
+            }
+            return null;
         } catch (Exception e) {
             LOGGER.error(String.format("Mold API endpoint not available"), e);
             return null;
@@ -1825,6 +1958,85 @@ public class DisasterRecoveryClusterUtil {
             }
             JSONObject jObject = XML.toJSONObject(sb.toString());
             JSONObject response = (JSONObject) jObject.get("createvolumeresponse");
+            return response.get("id").toString();
+        } catch (Exception e) {
+            LOGGER.error(String.format("Mold API endpoint not available"), e);
+            return null;
+        }
+    }
+
+    /**
+     * Mold updateVolume API 요청
+     * @param region
+     *  <url>/client/api/
+     * @param command
+     *  updateVolume
+     * @param method
+     *  POST
+     * @param id
+     *  disk id
+     * @param path
+     *  disk path
+     * @param storageid
+     *  storage pool id
+     * @param state
+     *  disk state
+     * @param type
+     *  disk type
+     * @return true = 200, 이외 코드는 false 처리
+     */
+    protected static String moldUpdateVolumeAPI(String region, String command, String method, String apiKey, String secretKey, Map<String, String> params) {
+        try {
+            String readLine = null;
+            StringBuffer sb = null;
+            String apiParams = buildParamsMold(command, params);
+            String urlFinal = buildUrl(apiParams, region, apiKey, secretKey);
+            URL url = new URL(urlFinal);
+            if (region.contains("https")) {
+                // SSL 인증서 에러 우회 처리
+                final SSLContext sslContext = SSLUtils.getSSLContext();
+                sslContext.init(null, new TrustManager[]{new TrustAllManager()}, new SecureRandom());
+                HttpsURLConnection connection = (HttpsURLConnection)url.openConnection();
+                connection.setSSLSocketFactory(sslContext.getSocketFactory());
+                connection.setDoOutput(true);
+                connection.setRequestMethod(method);
+                connection.setConnectTimeout(30000);
+                connection.setReadTimeout(180000);
+                connection.setRequestProperty("Accept", "application/json");
+                connection.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
+                if (connection.getResponseCode() == 200) {
+                    BufferedReader br = new BufferedReader(new InputStreamReader(connection.getInputStream(), "UTF-8"));
+                    sb = new StringBuffer();
+                    while ((readLine = br.readLine()) != null) {
+                        sb.append(readLine);
+                    }
+                } else {
+                    String msg = "Failed to request mold API. response code : " + connection.getResponseCode();
+                    LOGGER.error(msg);
+                    return null;
+                }
+            } else {
+                HttpURLConnection connection = (HttpURLConnection)url.openConnection();
+                connection.setDoOutput(true);
+                connection.setRequestMethod(method);
+                connection.setConnectTimeout(30000);
+                connection.setReadTimeout(180000);
+                connection.setRequestProperty("Accept", "application/json");
+                connection.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
+                if (connection.getResponseCode() == 200) {
+                    BufferedReader br = new BufferedReader(new InputStreamReader(connection.getInputStream(), "UTF-8"));
+                    sb = new StringBuffer();
+                    while ((readLine = br.readLine()) != null) {
+                        sb.append(readLine);
+                    }
+                } else {
+                    String msg = "Failed to request mold API. response code : " + connection.getResponseCode();
+                    LOGGER.error(msg);
+                    return null;
+                }
+            }
+            JSONObject jObject = XML.toJSONObject(sb.toString());
+            JSONObject response = (JSONObject) jObject.get("updatevolumeresponse");
             return response.get("id").toString();
         } catch (Exception e) {
             LOGGER.error(String.format("Mold API endpoint not available"), e);
