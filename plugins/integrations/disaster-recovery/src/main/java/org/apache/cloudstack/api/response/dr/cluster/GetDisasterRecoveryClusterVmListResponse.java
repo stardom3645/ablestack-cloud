@@ -47,6 +47,10 @@ public class GetDisasterRecoveryClusterVmListResponse extends BaseResponse {
     @Param(description = "the status of the disaster recovery cluster vm")
     private String drClusterVmStatus;
 
+    @SerializedName(ApiConstants.DR_CLUSTER_VM_VOL_STATUS)
+    @Param(description = "the status of the disaster recovery cluster vm volume")
+    private String drClusterVmVolStatus;
+
     @SerializedName(ApiConstants.DR_CLUSTER_MIRROR_VM_ID)
     @Param(description = "the id of the disaster recovery cluster mirror vm")
     private String mirroredVmId;
@@ -79,6 +83,14 @@ public class GetDisasterRecoveryClusterVmListResponse extends BaseResponse {
         return drClusterVmId;
     }
 
+    public String getDrClusterVmStatus() {
+        return drClusterVmStatus;
+    }
+
+    public String getDrClusterVmVolStatus() {
+        return drClusterVmVolStatus;
+    }
+
     public String getMirroredVmId() {
         return mirroredVmId;
     }
@@ -109,6 +121,10 @@ public class GetDisasterRecoveryClusterVmListResponse extends BaseResponse {
 
     public void setDrClusterVmStatus(String drClusterVmStatus) {
         this.drClusterVmStatus = drClusterVmStatus;
+    }
+
+    public void setDrClusterVmVolStatus(String drClusterVmVolStatus) {
+        this.drClusterVmVolStatus = drClusterVmVolStatus;
     }
 
     public void setMirroredVmId(String mirroredVmId) {
