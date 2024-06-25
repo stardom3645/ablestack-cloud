@@ -1211,6 +1211,8 @@ public class ApiConstants {
 
     public static final String WEBHOOK_ID = "webhookid";
     public static final String WEBHOOK_NAME = "webhookname";
+    
+    public static final String NFS_MOUNT_OPTIONS = "nfsmountopts";
 
     /**
      * This enum specifies IO Drivers, each option controls specific policies on I/O.

@@ -412,6 +412,10 @@ public class CloudStackPrimaryDataStoreLifeCycleImpl implements PrimaryDataStore
                 throw new CloudRuntimeException("Storage has already been added as local storage");
             } catch (Exception e) {
                 logger.warn("Unable to establish a connection between " + h + " and " + primarystore, e);
+                String reason = storageMgr.getStoragePoolMountFailureReason(e.getMessage());
+                if (reason != null) {
+                    throw new CloudRuntimeException(reason);
+                }
             }
         }
 
@@ -439,6 +443,10 @@ public class CloudStackPrimaryDataStoreLifeCycleImpl implements PrimaryDataStore
                     throw new CloudRuntimeException("Storage has already been added as local storage to host: " + host.getName());
             } catch (Exception e) {
                 logger.warn("Unable to establish a connection between " + host + " and " + dataStore, e);
+                String reason = storageMgr.getStoragePoolMountFailureReason(e.getMessage());
+                if (reason != null) {
+                    throw new CloudRuntimeException(reason);
+                }
             }
         }
         if (poolHosts.isEmpty()) {
@@ -459,8 +467,8 @@ public class CloudStackPrimaryDataStoreLifeCycleImpl implements PrimaryDataStore
 
     @Override
     public boolean cancelMaintain(DataStore store) {
-        dataStoreHelper.cancelMaintain(store);
         storagePoolAutmation.cancelMaintain(store);
+        dataStoreHelper.cancelMaintain(store);
         return true;
     }
 
