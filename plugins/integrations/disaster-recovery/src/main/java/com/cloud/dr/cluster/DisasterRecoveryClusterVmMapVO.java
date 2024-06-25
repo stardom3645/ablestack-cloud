@@ -101,10 +101,17 @@ public class DisasterRecoveryClusterVmMapVO implements DisasterRecoveryClusterVm
         return mirroredVmStatus;
     }
 
+    public void setMirroredVmStatus(String mirroredVmStatus) {
+        this.mirroredVmStatus = mirroredVmStatus;
+    }
+
     @Override
     public String getMirroredVmVolumeStatus() {
         return mirroredVmVolumeStatus;
     }
 
+    public void setMirroredVmVolumeStatus(String mirroredVmVolumeStatus) {
+        this.mirroredVmVolumeStatus = mirroredVmVolumeStatus;
+    }
 
 }
