@@ -344,14 +344,15 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
     }
 
     public List<GetDisasterRecoveryClusterVmListResponse> setDisasterRecoveryClusterVmResponse(long clusterId) {
+        DisasterRecoveryClusterVO drcluster = disasterRecoveryClusterDao.findById(clusterId);
         List<GetDisasterRecoveryClusterVmListResponse> disasterRecoveryClusterVmListResponse = new ArrayList<>();
         List<DisasterRecoveryClusterVmMapVO> vmMap = disasterRecoveryClusterVmMapDao.listByDisasterRecoveryClusterId(clusterId);
         GetDisasterRecoveryClusterVmListResponse response = new GetDisasterRecoveryClusterVmListResponse();
         for (DisasterRecoveryClusterVmMapVO map : vmMap) {
-            response.setObjectName("disasterrecoveryclustervmlist");
-            response.setId(String.valueOf(map.getId()));
-            response.setDrClusterId(String.valueOf(map.getDisasterRecoveryClusterId()));
+            UserVmJoinVO userVM = userVmJoinDao.findById(map.getVmId());
+            response.setDrClusterName(drcluster.getName());
             response.setDrClusterVmId(String.valueOf(map.getVmId()));
+            response.setDrClusterVmStatus(userVM.getState().toString());
             response.setMirroredVmId(map.getMirroredVmId());
             response.setMirroredVmName(map.getMirroredVmName());
             response.setMirroredVmStatus(map.getMirroredVmStatus());
@@ -409,7 +410,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                             String glueIp = array[i];
                             String glueUrl = "https://" + glueIp + ":8080/api/v1"; // glue-api 프로토콜과 포트 확정 시 변경 예정
                             String glueCommand = "/mirror/image/{mirrorPool}/{imageName}";
-                            String glueMethod = "PATCH";
+                            String glueMethod = "POST";
                             Map<String, String> glueParams = new HashMap<>();
                             glueParams.put("mirrorPool", "rbd");
                             glueParams.put("imageName", userVM.getVolumeUuid());

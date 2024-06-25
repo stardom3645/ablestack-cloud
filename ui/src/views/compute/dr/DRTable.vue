@@ -86,12 +86,12 @@ export default {
         {
           key: 'state',
           title: this.$t('label.dr.mirrored.vm.status'),
-          dataIndex: 'drclusterstatus'
+          dataIndex: 'mirroredStatus'
         },
         {
           key: 'name',
           title: this.$t('label.dr.mirrored.cluster.name'),
-          dataIndex: 'name'
+          dataIndex: 'drName'
         },
         {
           key: 'actions',
@@ -143,9 +143,9 @@ export default {
       api('getDisasterRecoveryClusterList').then(json => {
         this.drClusterList = json.getdisasterrecoveryclusterlistresponse.disasterrecoverycluster || []
         for (const cluster of this.drClusterList) {
-          const vmList = cluster.disasterrecoveryclustervmlist
-          if (vmList.some(vm => vm.name === this.drVmName)) {
-            this.clusterName = cluster.name
+          const vmList = cluster.drclustervmmap
+          if (vmList.some(vm => vm.drclustermirrorvmname === this.drVmName)) {
+            this.clusterName = cluster.drclustermirrorvmname
             break
           }
         }
@@ -157,9 +157,11 @@ export default {
     getDrClusterVm () {
       this.loading = true
       api('getDisasterRecoveryClusterList', { name: this.clusterName }).then(json => {
-        this.drCluster = json.getdisasterrecoveryclusterlistresponse.disasterrecoverycluster || []
+        this.drCluster = json.getdisasterrecoveryclusterlistresponse.disasterrecoverycluster[0].drclustervmmap || []
         this.drVm = this.clusterName
-        this.drCluster = this.drCluster.map(item => ({ ...item, mirroredVm: 'mirrored-vm-001' }))
+        this.drCluster = this.drCluster.map(item => ({ ...item, drName: item.drclustername }))
+        this.drCluster = this.drCluster.map(item => ({ ...item, mirroredVm: item.drclustermirrorvmname }))
+        this.drCluster = this.drCluster.map(item => ({ ...item, mirroredStatus: item.drclustermirrorvmstatus }))
         this.drCluster = this.drCluster.map(item => ({ ...item, mirroredVmRootDisk: 'ROOT-673' }))
         this.drCluster = this.drCluster.map(item => ({ ...item, mirroredVmDataDisk: 'DATA-678' }))
       }).finally(() => {
