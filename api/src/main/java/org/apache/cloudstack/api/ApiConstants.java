@@ -1220,6 +1220,13 @@ public class ApiConstants {
     public static final String DR_CLUSTER_SECRET_KEY = "drclustersecretkey";
     public static final String DR_CLUSTER_PRIVATE_KEY = "drclusterprivatekey";
     public static final String DR_CLUSTER_GLUE_IP_ADDRESS = "drclusterglueipaddress";
+    public static final String DR_CLUSTER_VM_MAP = "drclustervmmap";
+    public static final String DR_CLUSTER_ID = "drclusterid";
+    public static final String DR_CLUSTER_VM_ID = "drclustervmid";
+    public static final String DR_CLUSTER_MIRROR_VM_ID = "drclustermirrorvmid";
+    public static final String DR_CLUSTER_MIRROR_VM_NAME = "drclustermirrorvmname";
+    public static final String DR_CLUSTER_MIRROR_VM_STATUS = "drclustermirrorvmstatus";
+    public static final String DR_CLUSTER_MIRROR_VM_VOL_STATUS = "drclustermirrorvmvolstatus";
 
     /**
      * This enum specifies IO Drivers, each option controls specific policies on I/O.

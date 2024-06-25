@@ -156,7 +156,7 @@ export default {
     },
     getDrClusterVm () {
       this.loading = true
-      api('getDisasterRecoveryClusterList', { name: 'this.clusterName' }).then(json => {
+      api('getDisasterRecoveryClusterList', { name: this.clusterName }).then(json => {
         this.drCluster = json.getdisasterrecoveryclusterlistresponse.disasterrecoverycluster || []
         this.drVm = this.clusterName
         this.drCluster = this.drCluster.map(item => ({ ...item, mirroredVm: 'mirrored-vm-001' }))

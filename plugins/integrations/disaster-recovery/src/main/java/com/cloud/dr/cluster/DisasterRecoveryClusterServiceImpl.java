@@ -16,7 +16,6 @@
 // under the License.
 package com.cloud.dr.cluster;
 
-import java.util.EnumSet;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Map;
@@ -30,7 +29,6 @@ import java.io.File;
 
 import javax.inject.Inject;
 
-import com.cloud.api.ApiDBUtils;
 import com.cloud.api.query.dao.UserVmJoinDao;
 import com.cloud.api.query.vo.UserVmJoinVO;
 import com.cloud.cluster.dao.ManagementServerHostDao;
@@ -80,6 +78,7 @@ import org.apache.cloudstack.api.command.admin.glue.ListScvmIpAddressCmd;
 import org.apache.cloudstack.api.response.ServiceOfferingResponse;
 import org.apache.cloudstack.api.response.UserVmResponse;
 import org.apache.cloudstack.api.response.dr.cluster.GetDisasterRecoveryClusterListResponse;
+import org.apache.cloudstack.api.response.dr.cluster.GetDisasterRecoveryClusterVmListResponse;
 import org.apache.cloudstack.utils.identity.ManagementServerNode;
 import org.apache.cloudstack.context.CallContext;
 import org.apache.cloudstack.framework.config.ConfigKey;
@@ -249,30 +248,33 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         }
         disasterRecoveryClusterDao.update(drcluster.getId(), drcluster);
         response.setMirroringAgentStatus(drcluster.getMirroringAgentStatus());
-        List<UserVmResponse> disasterRecoveryClusterVmResponses = new ArrayList<UserVmResponse>();
-        List<DisasterRecoveryClusterVmMapVO> drClusterVmList = disasterRecoveryClusterVmMapDao.listByDisasterRecoveryClusterId(drcluster.getId());
-        ResponseObject.ResponseView respView = ResponseObject.ResponseView.Restricted;
-        Account caller = CallContext.current().getCallingAccount();
-        if (accountService.isRootAdmin(caller.getId())) {
-            respView = ResponseObject.ResponseView.Full;
-        }
-        String responseName = "drclustervmlist";
-        if (drClusterVmList != null && !drClusterVmList.isEmpty()) {
-            for (DisasterRecoveryClusterVmMapVO vmMapVO : drClusterVmList) {
-                UserVmJoinVO userVM = userVmJoinDao.findById(vmMapVO.getVmId());
-                if (userVM != null) {
-                    UserVmResponse cvmResponse = ApiDBUtils.newUserVmResponse(respView, responseName, userVM, EnumSet.of(ApiConstants.VMDetails.nics), caller);
-                    disasterRecoveryClusterVmResponses.add(cvmResponse);
-                }
-            }
-        }
+        List<GetDisasterRecoveryClusterVmListResponse> disasterRecoveryClusterVmListResponse = setDisasterRecoveryClusterVmResponse(drcluster.getId());
+        response.setDisasterRecoveryClusterVmMap(disasterRecoveryClusterVmListResponse);
+        // List<UserVmResponse> disasterRecoveryClusterVmResponses = new ArrayList<UserVmResponse>();
+        // List<DisasterRecoveryClusterVmMapVO> drClusterVmList = disasterRecoveryClusterVmMapDao.listByDisasterRecoveryClusterId(drcluster.getId());
+        // ResponseObject.ResponseView respView = ResponseObject.ResponseView.Restricted;
+        // Account caller = CallContext.current().getCallingAccount();
+        // if (accountService.isRootAdmin(caller.getId())) {
+        //     respView = ResponseObject.ResponseView.Full;
+        // }
+        // String responseName = "drclustervmlist";
+        // List<GetDisasterRecoveryClusterVmListResponse> disasterRecoveryClusterVmListResponse = new ArrayList<GetDisasterRecoveryClusterVmListResponse>();
+        // if (drClusterVmList != null && !drClusterVmList.isEmpty()) {
+        //     for (DisasterRecoveryClusterVmMapVO vmMapVO : drClusterVmList) {
+        //         UserVmJoinVO userVM = userVmJoinDao.findById(vmMapVO.getVmId());
+        //         if (userVM != null) {
+        //             UserVmResponse cvmResponse = ApiDBUtils.newUserVmResponse(respView, responseName, userVM, EnumSet.of(ApiConstants.VMDetails.nics), caller);
+        //             disasterRecoveryClusterVmResponses.add(cvmResponse);
+        //         }
+        //     }
+        // }
+        // response.setDisasterRecoveryClusterVms(disasterRecoveryClusterVmResponses);
         Map<String, String> details = disasterRecoveryClusterDetailsDao.findDetails(clusterId);
         String secApiKey = details.get(ApiConstants.DR_CLUSTER_API_KEY);
         String secSecretKey = details.get(ApiConstants.DR_CLUSTER_SECRET_KEY);
         if (details != null && !details.isEmpty()) {
             response.setDetails(details);
         }
-        response.setDisasterRecoveryClusterVms(disasterRecoveryClusterVmResponses);
         String moldUrl = drcluster.getDrClusterUrl() + "/client/api/";
         String moldMethod = "GET";
         // Secondary Cluster - listServiceOfferings 호출
@@ -339,6 +341,24 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         }
         disasterRecoveryClusterDao.update(drcluster.getId(), drcluster);
         return response;
+    }
+
+    public List<GetDisasterRecoveryClusterVmListResponse> setDisasterRecoveryClusterVmResponse(long clusterId) {
+        List<GetDisasterRecoveryClusterVmListResponse> disasterRecoveryClusterVmListResponse = new ArrayList<>();
+        List<DisasterRecoveryClusterVmMapVO> vmMap = disasterRecoveryClusterVmMapDao.listByDisasterRecoveryClusterId(clusterId);
+        GetDisasterRecoveryClusterVmListResponse response = new GetDisasterRecoveryClusterVmListResponse();
+        for (DisasterRecoveryClusterVmMapVO map : vmMap) {
+            response.setObjectName("disasterrecoveryclustervmlist");
+            response.setId(String.valueOf(map.getId()));
+            response.setDrClusterId(String.valueOf(map.getDisasterRecoveryClusterId()));
+            response.setDrClusterVmId(String.valueOf(map.getVmId()));
+            response.setMirroredVmId(map.getMirroredVmId());
+            response.setMirroredVmName(map.getMirroredVmName());
+            response.setMirroredVmStatus(map.getMirroredVmStatus());
+            response.setMirroredVmVolumeStatus(map.getMirroredVmVolumeStatus());
+            disasterRecoveryClusterVmListResponse.add(response);
+        }
+        return disasterRecoveryClusterVmListResponse;
     }
 
     @Override

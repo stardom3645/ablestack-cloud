@@ -90,6 +90,10 @@ public class GetDisasterRecoveryClusterListResponse extends BaseResponse {
     @Param(description = "the list of networks associated with this second disaster recovery cluster")
     private List<NetworkResponse> secDisasterRecoveryClusterNetworkList;
 
+    @SerializedName(ApiConstants.DR_CLUSTER_VM_MAP)
+    @Param(description = "this list of disaster recovery cluster vm map")
+    private List<GetDisasterRecoveryClusterVmListResponse> disasterRecoveryClusterVmMap;
+
 
     public String getId() {
         return id;
@@ -193,5 +197,13 @@ public class GetDisasterRecoveryClusterListResponse extends BaseResponse {
 
     public void setSecDisasterRecoveryClusterNetworkList(final List<NetworkResponse> secDisasterRecoveryClusterNetworkList) {
         this.secDisasterRecoveryClusterNetworkList = secDisasterRecoveryClusterNetworkList;
+    }
+
+    public List<GetDisasterRecoveryClusterVmListResponse> getDisasterRecoveryClusterVmMap() {
+        return this.disasterRecoveryClusterVmMap;
+    }
+
+    public void setDisasterRecoveryClusterVmMap(final List<GetDisasterRecoveryClusterVmListResponse> disasterRecoveryClusterVmMap) {
+        this.disasterRecoveryClusterVmMap = disasterRecoveryClusterVmMap;
     }
 }
