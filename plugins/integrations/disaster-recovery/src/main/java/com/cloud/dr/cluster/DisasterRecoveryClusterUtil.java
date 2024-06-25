@@ -613,9 +613,6 @@ public class DisasterRecoveryClusterUtil {
      */
     protected static String glueImageMirrorStatusAPI(String region, String subUrl, String method) {
         try {
-            String readLine = null;
-            StringBuffer sb = null;
-            // SSL 인증서 에러 우회 처리
             final SSLContext sslContext = SSLUtils.getSSLContext();
             sslContext.init(null, new TrustManager[]{new TrustAllManager()}, new SecureRandom());
             URL url = new URL(region + subUrl);
@@ -627,18 +624,19 @@ public class DisasterRecoveryClusterUtil {
             connection.setReadTimeout(180000);
             connection.setRequestProperty("Accept", "application/vnd.ceph.api.v1.0+json");
             connection.setRequestProperty("Authorization", "application/vnd.ceph.api.v1.0+json");
-            connection.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
             if (connection.getResponseCode() == 200) {
-                BufferedReader br = new BufferedReader(new InputStreamReader(connection.getInputStream(), "UTF-8"));
-                sb = new StringBuffer();
-                while ((readLine = br.readLine()) != null) {
-                    sb.append(readLine);
+                BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+                String inputLine;
+                StringBuffer response = new StringBuffer();
+                while ((inputLine = in.readLine()) != null) {
+                    response.append(inputLine);
                 }
+                in.close();
                 JsonParser jParser = new JsonParser();
-                JsonObject jObject = (JsonObject)jParser.parse(sb.toString());
+                JsonObject jObject = (JsonObject)jParser.parse(response.toString());
                 return jObject.toString();
             } else {
-                String msg = "Failed to request status of mirror image API. response code : " + connection.getResponseCode();
+                String msg = "Failed to request glue mirror image mirror status API. response code : " + connection.getResponseCode();
                 LOGGER.error(msg);
                 return null;
             }
