@@ -1310,6 +1310,7 @@ public class DisasterRecoveryClusterUtil {
             }
             JSONObject jObject = XML.toJSONObject(sb.toString());
             JSONObject response = (JSONObject) jObject.get("deployvirtualmachineforvolumeresponse");
+            LOGGER.info(response.toString());
             return response.get("jobid").toString();
         } catch (Exception e) {
             LOGGER.error(String.format("Mold API endpoint not available"), e);
@@ -1479,7 +1480,6 @@ public class DisasterRecoveryClusterUtil {
                 }
                 for (int i = 0; i < array.length(); i++) {
                     JSONObject jSONObject = array.getJSONObject(i);
-                    LOGGER.info(jSONObject.get("iscustomized"));
                     if (jSONObject.get("iscustomized").equals(true)) {
                         result = jSONObject.get("id").toString();
                         break;
