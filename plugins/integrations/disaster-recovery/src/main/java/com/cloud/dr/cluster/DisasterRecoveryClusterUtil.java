@@ -768,6 +768,7 @@ public class DisasterRecoveryClusterUtil {
                     response.append(inputLine);
                 }
                 in.close();
+                LOGGER.info(response.toString());
                 String msg = "Failed to request glue mirror image setup update API. response code : " + connection.getResponseCode();
                 LOGGER.error(msg);
                 return false;

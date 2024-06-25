@@ -409,7 +409,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                             // Secondary Cluster - glueImageMirrorSetupUpdateAPI 호출
                             String glueIp = array[i];
                             String glueUrl = "https://" + glueIp + ":8080/api/v1"; // glue-api 프로토콜과 포트 확정 시 변경 예정
-                            String glueCommand = "/mirror/image/{mirrorPool}/{imageName}";
+                            String glueCommand = "/mirror/image/rbd/" +userVM.getVolumeUuid();
                             String glueMethod = "POST";
                             Map<String, String> glueParams = new HashMap<>();
                             glueParams.put("mirrorPool", "rbd");
