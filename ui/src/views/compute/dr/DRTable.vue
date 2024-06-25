@@ -36,10 +36,6 @@
             <status :text="text ? text : ''" displayText />
             {{ record.mirroredVmVolStatus }}
           </a-descriptions-item>
-          <a-descriptions-item :label="$t('label.dr.volume.data.disk.status')">
-            <status :text="text ? text : ''" displayText />
-            {{ record.mirroredVmDataDisk }}<br>
-          </a-descriptions-item>
         </a-descriptions>
       </template>
       <template #bodyCell="{ column, record, text }">

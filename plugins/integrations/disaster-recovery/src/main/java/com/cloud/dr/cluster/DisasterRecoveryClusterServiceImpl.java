@@ -337,7 +337,8 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         for (DisasterRecoveryClusterVmMapVO map : vmMap) {
             UserVmJoinVO userVM = userVmJoinDao.findById(map.getVmId());
             response.setDrClusterName(drcluster.getName());
-            response.setDrClusterVmId(String.valueOf(map.getVmId()));
+            response.setDrClusterVmId(userVM.getUuid());
+            response.setDrClusterVmName(userVM.getName());
             response.setDrClusterVmStatus(userVM.getState().toString());
             response.setMirroredVmId(map.getMirroredVmId());
             response.setMirroredVmName(map.getMirroredVmName());

@@ -36,15 +36,15 @@
             </a-tooltip>
           </template>
           <a-table
-              class="table"
-              size="small"
-              :columns="firshDrVmColumns"
-              :dataSource="this.disasterrecoveryclustervmlist"
-              :rowKey="item => item.id"
-              :pagination="false"
+            class="table"
+            size="small"
+            :columns="priDrVmColumns"
+            :dataSource="this.disasterrecoveryclustervmlist"
+            :rowKey="item => item.id"
+            :pagination="false"
           >
             <template #name="{record}">
-              <router-link :to="{ path: '/vm/' + record.id }">{{ record.name }}</router-link>
+              <router-link :to="{ path: '/vm/' + record.drclustervmid }">{{ record.drclustervmname }}</router-link>
             </template>
             <template #state="{text}">
               <status :text="text ? text : ''" displayText />
@@ -59,16 +59,12 @@
             </a-tooltip>
           </template>
         <a-table
-              class="table"
-              size="small"
-              :columns="secDrVmColumns"
-              :dataSource="this.disasterrecoveryclustervmlistsecond"
-              :rowKey="item => item.id"
-              :pagination="false"
-          >
-            <!-- <template #name="{record}">
-              <router-link :to="{ path: '/vm/' + record.id }">{{ record.name }}</router-link>
-            </template> -->
+          class="table"
+          size="small"
+          :columns="secDrVmColumns"
+          :dataSource="this.disasterrecoveryclustervmlist"
+          :rowKey="item => item.id"
+          :pagination="false">
             <template #state="{text}">
               <status :text="text ? text : ''" displayText />
             </template>
@@ -97,44 +93,17 @@
 </template>
 
 <script>
-import { api } from '@/api'
 import { mixinDevice } from '@/utils/mixin.js'
-import ResourceLayout from '@/layouts/ResourceLayout'
 import Status from '@/components/widgets/Status'
-import DetailsTab from '@/components/view/DetailsTab'
-import DesktopNicsTable from '@/views/network/DesktopNicsTable'
-import ListResourceTable from '@/components/view/ListResourceTable'
-import TooltipButton from '@/components/widgets/TooltipButton'
-import AnnotationsTab from '@/components/view/AnnotationsTab.vue'
-import EventsTab from '@/components/view/EventsTab.vue'
 
 export default {
-  name: 'DisasterRecoveryTab',
+  name: 'DisasterRecoveryClusterVmTab',
   components: {
-    EventsTab,
-    AnnotationsTab,
-    ResourceLayout,
-    DetailsTab,
-    DesktopNicsTable,
-    Status,
-    ListResourceTable,
-    TooltipButton
+    Status
   },
   mixins: [mixinDevice],
   props: {
     resource: {
-      type: Object,
-      default: () => {}
-    },
-    apiName: {
-      type: String,
-      default: ''
-    },
-    routerlinks: {
-      type: Function,
-      default: () => { return {} }
-    },
-    params: {
       type: Object,
       default: () => {}
     },
@@ -157,7 +126,6 @@ export default {
       loading: false,
       vm: {},
       disasterrecoveryclustervmlist: [],
-      disasterrecoveryclustervmlistsecond: [],
       cardTitleA: '',
       cardTitleB: '',
       tooltipTitleA: '',
@@ -167,7 +135,6 @@ export default {
       totalStorage: 0,
       itemCount: 0,
       currentTab: 'details',
-      showAddIpModal: false,
       loadingNic: false,
       filter: '',
       defaultPagination: false,
@@ -179,49 +146,43 @@ export default {
       min: '',
       max: '',
       dataResource: {},
-      firshDrVmColumns: [
+      priDrVmColumns: [
         {
           title: this.$t('label.name'),
-          dataIndex: 'name',
+          dataIndex: 'drclustermirrorvmname',
           slots: { customRender: 'name' }
         },
         {
           title: this.$t('label.state'),
-          dataIndex: 'state',
+          dataIndex: 'drclustervmstatus',
+          slots: { customRender: 'state' }
+        },
+        {
+          title: this.$t('label.dr.volume.status'),
+          dataIndex: 'drclustervmvolstatus',
           slots: { customRender: 'state' }
         }
       ],
       secDrVmColumns: [
         {
           title: this.$t('label.name'),
-          dataIndex: 'name',
+          dataIndex: 'drclustermirrorvmname',
           slots: { customRender: 'name' }
         },
         {
           title: this.$t('label.state'),
-          dataIndex: 'state',
+          dataIndex: 'drclustermirrorvmstatus',
           slots: { customRender: 'state' }
         },
         {
           title: this.$t('label.dr.volume.status'),
-          dataIndex: 'state',
+          dataIndex: 'drclustermirrorvmvolstatus',
           slots: { customRender: 'state' }
         }
       ]
     }
   },
-  beforeCreate () {
-    // this.form = this.$form.createForm(this)
-    // this.apiParams = this.$getApiParams('addDesktopClusterIpRanges')
-  },
   created () {
-    // const userInfo = this.$store.getters.userInfo
-    // if (!['Admin'].includes(userInfo.roletype) &&
-    //   (userInfo.account !== this.resource.account || userInfo.domain !== this.resource.domain)) {
-    //   this.controlVmColumns = this.controlVmColumns.filter(col => { return col.dataIndex !== 'hostname' })
-    //   this.controlVmColumns = this.controlVmColumns.filter(col => { return col.dataIndex !== 'instancename' })
-    // }
-    // this.vm = this.resource
     const self = this
     this.dataResource = this.resource
     this.vm = this.dataResource
@@ -282,20 +243,6 @@ export default {
         this.tooltipTitleB = this.$t('message.secondary.cluster.vm')
       }
     },
-    handleChangeTab (e) {
-      this.currentTab = e
-      const query = Object.assign({}, this.$route.query)
-      query.tab = e
-      history.replaceState(
-        {},
-        null,
-        '#' + this.$route.path + '?' + Object.keys(query).map(key => {
-          return (
-            encodeURIComponent(key) + '=' + encodeURIComponent(query[key])
-          )
-        }).join('&')
-      )
-    },
     fetchData () {
       this.itemCount = 0
       if (this.items && this.items.length > 0) {
@@ -306,7 +253,7 @@ export default {
         }
         return
       }
-      this.disasterrecoveryclustervmlist = this.resource.disasterrecoveryclustervmlist || []
+      this.disasterrecoveryclustervmlist = this.resource.drclustervmmap || []
       const keyword = this.options.keyword
       if (keyword) {
         this.disasterrecoveryclustervmlist = this.disasterrecoveryclustervmlist.filter(entry => {
@@ -317,29 +264,6 @@ export default {
       this.min = (Math.min(this.itemCount, 1 + ((this.options.page - 1) * this.options.pageSize)) - 1)
       this.max = Math.min(this.options.page * this.options.pageSize, this.itemCount)
       this.disasterrecoveryclustervmlist = this.disasterrecoveryclustervmlist.slice(this.min, this.max)
-      // 임시 코드
-      this.disasterrecoveryclustervmlistsecond = this.disasterrecoveryclustervmlist
-    },
-    fetchComments () {
-      this.fetchLoading = true
-      api('listAnnotations', { entityid: this.resource.id, entitytype: 'DISASTER_RECOVERY', annotationfilter: 'all' }).then(json => {
-        if (json.listannotationsresponse && json.listannotationsresponse.annotation) {
-          this.annotations = json.listannotationsresponse.annotation
-        }
-      }).catch(error => {
-        this.$notifyError(error)
-      }).finally(() => {
-        this.fetchLoading = false
-      })
-    },
-    showAddModal () {
-      this.showAddIpModal = true
-      this.form.setFieldsValue({
-        gateway: [],
-        netmask: [],
-        startip: [],
-        endip: []
-      })
     },
     handleSearch (value) {
       this.filter = value
@@ -362,9 +286,6 @@ export default {
       return this.jsonData.filter(entry => {
         return entry.name.includes(this.filter)
       })
-    },
-    closeModals () {
-      this.showAddIpModal = false
     }
   }
 }

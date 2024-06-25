@@ -1230,6 +1230,7 @@ public class ApiConstants {
     public static final String DR_CLUSTER_MIRROR_VM_VOL_STATUS = "drclustermirrorvmvolstatus";
     public static final String DR_CLUSTER_NAME = "drclustername";
     public static final String DR_CLUSTER_VM_VOL_STATUS = "drclustervmvolstatus";
+    public static final String DR_CLUSTER_VM_NAME = "drclustervmname";
 
     /**
      * This enum specifies IO Drivers, each option controls specific policies on I/O.
