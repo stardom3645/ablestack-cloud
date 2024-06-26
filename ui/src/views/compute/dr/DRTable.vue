@@ -24,16 +24,13 @@
       :columns="drColumns"
       :dataSource="this.drCluster"
       :rowKey="item => item.id"
-      :pagination="false"
-    >
-  <!--    펼쳐졌을 때 정보-->
-      <template #expandedRowRender="{ record, text }">
+      :pagination="false">
+      <template #expandedRowRender="{ record }">
         <a-descriptions style="margin-top: 10px" layout="vertical" :column="1" :bordered="false" size="small">
           <a-descriptions-item :label="$t('label.id')" class="bold-label">
             {{ record.mirroredVmId }}
           </a-descriptions-item>
           <a-descriptions-item :label="$t('label.dr.volume.root.disk.status')">
-            <status :text="text ? text : ''" displayText />
             {{ record.mirroredVmVolStatus }}
           </a-descriptions-item>
         </a-descriptions>
@@ -42,7 +39,7 @@
         <template v-if="column.key === 'state'">
           <status :text="text ? text : ''" displayText />
         </template>
-         <template v-if="column.key === 'name'">
+          <template v-if="column.key === 'name'">
           <router-link :to="{ path: '/disasterrecoverycluster/' + record.drId }" >{{ text }}</router-link>
         </template>
         <template v-if="column.key === 'actions'">
@@ -98,6 +95,8 @@ export default {
       drClusterList: [],
       drCluster: [],
       drVmName: '',
+      clusterName: '',
+      drClusterVmList: [],
       combinedArray: []
     }
   },
@@ -139,8 +138,8 @@ export default {
         this.drClusterList = json.getdisasterrecoveryclusterlistresponse.disasterrecoverycluster || []
         for (const cluster of this.drClusterList) {
           const vmList = cluster.drclustervmmap
-          if (vmList.some(vm => vm.drclustermirrorvmname === this.drVmName)) {
-            this.clusterName = cluster.drclustermirrorvmname
+          if (vmList.some(vm => vm.drclustervmname === this.drVmName)) {
+            this.clusterName = cluster.name
             break
           }
         }
@@ -152,13 +151,18 @@ export default {
     getDrClusterVm () {
       this.loading = true
       api('getDisasterRecoveryClusterList', { name: this.clusterName }).then(json => {
-        this.drCluster = json.getdisasterrecoveryclusterlistresponse.disasterrecoverycluster[0].drclustervmmap || []
-        this.drCluster = this.drCluster.map(item => ({ ...item, drName: item.drclustername }))
-        this.drCluster = this.drCluster.map(item => ({ ...item, drId: json.getdisasterrecoveryclusterlistresponse.disasterrecoverycluster[0].id }))
-        this.drCluster = this.drCluster.map(item => ({ ...item, mirroredVm: item.drclustermirrorvmname }))
-        this.drCluster = this.drCluster.map(item => ({ ...item, mirroredStatus: item.drclustermirrorvmstatus }))
-        this.drCluster = this.drCluster.map(item => ({ ...item, mirroredVmId: item.drclustermirrorvmid }))
-        this.drCluster = this.drCluster.map(item => ({ ...item, mirroredVmVolStatus: item.drclustermirrorvmvolstatus }))
+        this.drClusterVmList = json.getdisasterrecoveryclusterlistresponse.disasterrecoverycluster[0].drclustervmmap || []
+        for (const clusterVm of this.drClusterVmList) {
+          if (clusterVm.drclustervmname === this.drVmName) {
+            this.drCluster.push(clusterVm)
+            this.drCluster = this.drCluster.map(item => ({ ...item, drName: item.drclustername }))
+            this.drCluster = this.drCluster.map(item => ({ ...item, drId: json.getdisasterrecoveryclusterlistresponse.disasterrecoverycluster[0].id }))
+            this.drCluster = this.drCluster.map(item => ({ ...item, mirroredVm: item.drclustermirrorvmname }))
+            this.drCluster = this.drCluster.map(item => ({ ...item, mirroredStatus: item.drclustermirrorvmstatus }))
+            this.drCluster = this.drCluster.map(item => ({ ...item, mirroredVmId: item.drclustermirrorvmid }))
+            this.drCluster = this.drCluster.map(item => ({ ...item, mirroredVmVolStatus: item.drclustermirrorvmvolstatus }))
+          }
+        }
       }).finally(() => {
         this.loading = false
       })
