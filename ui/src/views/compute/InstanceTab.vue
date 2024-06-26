@@ -148,10 +148,10 @@
               <tooltip-button
                 tooltipPlacement="bottom"
                 :tooltip="$t('label.dr.release.mirroring')"
-                :disabled="!('removeNicFromVirtualMachine' in $store.getters.apis)"
+                :disabled="!('deleteDisasterRecoveryClusterVm' in $store.getters.apis)"
                 type="primary"
                 :danger="true"
-                icon="delete-outlined" />
+                icon="link-outlined" />
             </a-popconfirm>
           </template>
         </DRTable>
