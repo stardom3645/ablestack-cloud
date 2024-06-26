@@ -222,12 +222,12 @@ export default {
         }
         api('createDisasterRecoveryClusterVm', params).then(json => {
           this.$message.success(`${this.$t('label.add.disaster.recovery.cluster.vm')}: ${this.resource.name}`)
-          this.closeAction()
-          this.$emit('refresh-data')
         }).catch(error => {
           this.$notifyError(error)
         }).finally(() => {
+          this.$emit('refresh-data')
           this.loading = false
+          this.closeAction()
         })
       }).catch(error => {
         this.formRef.value.scrollToField(error.errorFields[0].name)
