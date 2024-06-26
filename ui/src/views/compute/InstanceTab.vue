@@ -127,7 +127,7 @@
           type="primary"
           style="width: 100%; margin-bottom: 10px"
           @click="showAddMirVMModal"
-          :loading="loadingNic"
+          :loading="loadingMirror"
           :disabled="!('createDisasterRecoveryClusterVm' in $store.getters.apis)">
           <template #icon><plus-outlined /></template> {{ $t('label.add.dr.mirroring.vm') }}
         </a-button>
@@ -141,7 +141,7 @@
               @onClick="DrSimulationTest(record)" />
             <a-popconfirm
               :title="$t('message.dr.mirrored.vm.release')"
-              @confirm="removeNIC(record.nic)"
+              @confirm="removeMirror(record.dr)"
               :okText="$t('label.yes')"
               :cancelText="$t('label.no')"
             >
@@ -444,6 +444,7 @@ export default {
         ip: ''
       },
       loadingNic: false,
+      loadingMirror: false,
       editIpAddressNic: '',
       editIpAddressValue: '',
       editNetworkId: '',
@@ -758,35 +759,19 @@ export default {
           this.loadingNic = false
         })
     },
-    removeNIC (item) {
-      this.loadingNic = true
-
-      api('removeNicFromVirtualMachine', {
-        nicid: item.id,
+    removeMirror (item) {
+      this.loadingMirror = true
+      api('deleteDisasterRecoveryClusterVm', {
+        drclustername: item.drclustername,
         virtualmachineid: this.vm.id
-      }).then(response => {
-        this.$pollJob({
-          jobId: response.removenicfromvirtualmachineresponse.jobid,
-          successMessage: this.$t('message.success.remove.nic'),
-          successMethod: () => {
-            this.loadingNic = false
-          },
-          errorMessage: this.$t('message.error.remove.nic'),
-          errorMethod: () => {
-            this.loadingNic = false
-          },
-          loadingMessage: this.$t('message.remove.nic.processing'),
-          catchMessage: this.$t('error.fetching.async.job.result'),
-          catchMethod: () => {
-            this.loadingNic = false
-            this.parentFetchData()
-          }
-        })
+      }).then(json => {
+        this.$message.success(`${this.$t('label.delete.disaster.recovery.cluster.vm')}: ${this.vm.id}`)
+      }).catch(error => {
+        this.$notifyError(error)
+      }).finally(() => {
+        this.$emit('refresh-data')
+        this.loadingMirror = false
       })
-        .catch(error => {
-          this.$notifyError(error)
-          this.loadingNic = false
-        })
     },
     submitSecondaryIP () {
       if (this.loadingNic) return

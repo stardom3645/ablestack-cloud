@@ -43,7 +43,7 @@
           <router-link :to="{ path: '/disasterrecoverycluster/' + record.drId }" >{{ text }}</router-link>
         </template>
         <template v-if="column.key === 'actions'">
-        <slot name="actions"/>
+        <slot name="actions" :dr="record"/>
         </template>
       </template>
     </a-table>
