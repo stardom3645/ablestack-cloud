@@ -402,6 +402,9 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                                     response.setDrClusterVmVolStatus("SYNCING");
                                     map.setMirroredVmVolumeStatus("READY");
                                 }
+                            } else if (description.getAsString().equals("status not found")) {
+                                response.setDrClusterVmVolStatus("UNKNOWN");
+                                map.setMirroredVmVolumeStatus("UNKNOWN");
                             } else {
                                 if (drcluster.getDrClusterType().equalsIgnoreCase("primary")) {
                                     response.setDrClusterVmVolStatus("SYNCING");
@@ -494,6 +497,9 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                                         response.setDrClusterVmVolStatus("SYNCING");
                                         map.setMirroredVmVolumeStatus("READY");
                                     }
+                                } else if (description.getAsString().equals("status not found")){
+                                    response.setDrClusterVmVolStatus("UNKNOWN");
+                                    map.setMirroredVmVolumeStatus("UNKNOWN");
                                 } else {
                                     if (drcluster.getDrClusterType().equalsIgnoreCase("primary")) {
                                         response.setDrClusterVmVolStatus("SYNCING");
