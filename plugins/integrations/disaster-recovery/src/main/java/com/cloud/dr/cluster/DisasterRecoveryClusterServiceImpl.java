@@ -40,6 +40,7 @@ import com.cloud.event.ActionEvent;
 import com.cloud.exception.InvalidParameterValueException;
 import com.cloud.storage.dao.VolumeDao;
 import com.cloud.storage.VolumeVO;
+import com.cloud.storage.Volume;
 import com.cloud.user.Account;
 import com.cloud.user.AccountService;
 import com.cloud.user.UserAccount;
@@ -348,7 +349,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         response.setMirroredVmName(map.getMirroredVmName());
         String volumeUuid = userVM.getVolumeUuid();
         if (drcluster.getDrClusterType().equalsIgnoreCase("primary")) {
-            VolumeVO vol = volsDao.findByInstance(userVM.getId());
+            VolumeVO vol = volsDao.findByInstanceAndType(userVM.getId(), Volume.Type.ROOT);
             volumeUuid = vol.getPath();
         }
         String moldUrl = url + "/client/api/";
@@ -429,7 +430,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
             response.setMirroredVmName(map.getMirroredVmName());
             String volumeUuid = userVM.getVolumeUuid();
             if (drcluster.getDrClusterType().equalsIgnoreCase("primary")) {
-                VolumeVO vol = volsDao.findByInstance(userVM.getId());
+                VolumeVO vol = volsDao.findByInstanceAndType(userVM.getId(), Volume.Type.ROOT);
                 volumeUuid = vol.getPath();
             }
             String moldUrl = url + "/client/api/";
