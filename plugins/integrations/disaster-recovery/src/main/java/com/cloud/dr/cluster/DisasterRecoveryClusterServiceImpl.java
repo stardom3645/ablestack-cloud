@@ -55,6 +55,8 @@ import com.cloud.utils.server.ServerProperties;
 import com.cloud.utils.component.ManagerBase;
 import com.cloud.utils.exception.CloudRuntimeException;
 import com.cloud.vm.VirtualMachine;
+import com.cloud.vm.VMInstanceVO;
+import com.cloud.vm.dao.VMInstanceDao;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -63,6 +65,7 @@ import org.apache.cloudstack.api.ApiConstants;
 import org.apache.cloudstack.api.ResponseObject;
 import org.apache.cloudstack.api.command.admin.dr.GetDisasterRecoveryClusterListCmd;
 import org.apache.cloudstack.api.command.admin.dr.UpdateDisasterRecoveryClusterCmd;
+import org.apache.cloudstack.api.command.admin.dr.UpdateDisasterRecoveryClusterVmCmd;
 import org.apache.cloudstack.api.response.ListResponse;
 import org.apache.cloudstack.api.response.NetworkResponse;
 import org.apache.cloudstack.api.response.ScvmIpAddressResponse;
@@ -93,6 +96,8 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
     private ManagementServerHostDao msHostDao;
     @Inject
     private VolumeDao volsDao;
+    @Inject
+    private VMInstanceDao vmDao;
     @Inject
     private DisasterRecoveryClusterDao disasterRecoveryClusterDao;
     @Inject
@@ -249,7 +254,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         disasterRecoveryClusterDao.update(drcluster.getId(), drcluster);
         response.setMirroringAgentStatus(drcluster.getMirroringAgentStatus());
         // disaster recovery vm map 추가
-        List<GetDisasterRecoveryClusterVmListResponse> disasterRecoveryClusterVmListResponse = setDisasterRecoveryClusterVmResponse(drcluster.getId());
+        List<GetDisasterRecoveryClusterVmListResponse> disasterRecoveryClusterVmListResponse = setDisasterRecoveryClusterVmListResponse(drcluster.getId());
         response.setDisasterRecoveryClusterVmMap(disasterRecoveryClusterVmListResponse);
         Map<String, String> details = disasterRecoveryClusterDetailsDao.findDetails(clusterId);
         String secApiKey = details.get(ApiConstants.DR_CLUSTER_API_KEY);
@@ -325,7 +330,72 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         return response;
     }
 
-    public List<GetDisasterRecoveryClusterVmListResponse> setDisasterRecoveryClusterVmResponse(long clusterId) {
+    public GetDisasterRecoveryClusterVmListResponse setDisasterRecoveryClusterVmResponse(long mapId) {
+        DisasterRecoveryClusterVmMapVO map = disasterRecoveryClusterVmMapDao.findById(mapId);
+        DisasterRecoveryClusterVO drcluster = disasterRecoveryClusterDao.findById(map.getDisasterRecoveryClusterId());
+        String url = drcluster.getDrClusterUrl();
+        Map<String, String> details = disasterRecoveryClusterDetailsDao.findDetails(drcluster.getId());
+        String apiKey = details.get(ApiConstants.DR_CLUSTER_API_KEY);
+        String secretKey = details.get(ApiConstants.DR_CLUSTER_SECRET_KEY);
+        GetDisasterRecoveryClusterVmListResponse response = new GetDisasterRecoveryClusterVmListResponse();
+        UserVmJoinVO userVM = userVmJoinDao.findById(map.getVmId());
+        response.setObjectName("disasterrecoveryclustervm");
+        response.setDrClusterName(drcluster.getName());
+        response.setDrClusterVmId(userVM.getUuid());
+        response.setDrClusterVmName(userVM.getName());
+        response.setDrClusterVmStatus(userVM.getState().toString());
+        response.setMirroredVmId(map.getMirroredVmId());
+        response.setMirroredVmName(map.getMirroredVmName());
+        String volumeUuid = userVM.getVolumeUuid();
+        String moldUrl = url + "/client/api/";
+        String moldCommand = "listVirtualMachines";
+        String moldMethod = "GET";
+        String vmList = DisasterRecoveryClusterUtil.moldListVirtualMachinesAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey);
+        JSONObject jsonObject = new JSONObject(vmList);
+        JSONArray jsonArray = jsonObject.getJSONArray("virtualmachine");
+        for (int i = 0; i < jsonArray.length(); i++) {
+            JSONObject object = jsonArray.getJSONObject(i);
+            if (object.get("name").toString().equalsIgnoreCase(userVM.getName())) {
+                map.setMirroredVmStatus(object.get("state").toString());
+                disasterRecoveryClusterVmMapDao.update(map.getId(), map);
+            }
+        }
+        response.setMirroredVmStatus(map.getMirroredVmStatus());
+        String ipList = Script.runSimpleBashScript("cat /etc/hosts | grep -E 'scvm1-mngt|scvm2-mngt|scvm3-mngt' | awk '{print $1}' | tr '\n' ','");
+        ipList = ipList.replaceAll(",$", "");
+        String[] array = ipList.split(",");
+        for (int i=0; i < array.length; i++) {
+            String glueIp = array[i];
+            String glueUrl = "https://" + glueIp + ":8080/api/v1"; // glue-api 프로토콜과 포트 확정 시 변경 예정
+            String glueCommand = "/mirror/image/status/rbd/" +volumeUuid;
+            String glueMethod = "GET";
+            String mirrorImageStatus = DisasterRecoveryClusterUtil.glueImageMirrorStatusAPI(glueUrl, glueCommand, glueMethod);
+            if (mirrorImageStatus != null) {
+                JsonArray drArray = (JsonArray) new JsonParser().parse(mirrorImageStatus).getAsJsonObject().get("peer_sites");
+                if (drArray.size() != 0) {
+                    for (JsonElement dr : drArray) {
+                        JsonElement siteName = dr.getAsJsonObject().get("site_name") == null ? null : dr.getAsJsonObject().get("site_name");
+                        JsonElement description = dr.getAsJsonObject().get("description") == null ? null : dr.getAsJsonObject().get("description");
+                        if (siteName != null && description != null) {
+                            if (description.getAsString().equals("local image is primary")) {
+                                response.setDrClusterVmVolStatus("SYNCING");
+                                map.setMirroredVmVolumeStatus("READY");
+                            } else {
+                                response.setDrClusterVmVolStatus("READY");
+                                map.setMirroredVmVolumeStatus("SYNCING");
+                            }
+                            disasterRecoveryClusterVmMapDao.update(map.getId(), map);
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        response.setMirroredVmVolumeStatus(map.getMirroredVmVolumeStatus());
+        return response;
+    }
+
+    public List<GetDisasterRecoveryClusterVmListResponse> setDisasterRecoveryClusterVmListResponse(long clusterId) {
         DisasterRecoveryClusterVO drcluster = disasterRecoveryClusterDao.findById(clusterId);
         String url = drcluster.getDrClusterUrl();
         Map<String, String> details = disasterRecoveryClusterDetailsDao.findDetails(drcluster.getId());
@@ -394,7 +464,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
     }
 
     @Override
-    @ActionEvent(eventType = DisasterRecoveryClusterEventTypes.EVENT_DR_UPDATE, eventDescription = "updating dr cluster", resourceId = 5, resourceType = "DisasterRecoveryCluster")
+    @ActionEvent(eventType = DisasterRecoveryClusterEventTypes.EVENT_DR_UPDATE, eventDescription = "updating disaster recovery cluster", resourceId = 5, resourceType = "DisasterRecoveryCluster")
     public GetDisasterRecoveryClusterListResponse updateDisasterRecoveryCluster(UpdateDisasterRecoveryClusterCmd cmd) throws CloudRuntimeException {
         if (!DisasterRecoveryClusterService.DisasterRecoveryServiceEnabled.value()) {
             throw new CloudRuntimeException("Disaster Recovery plugin is disabled");
@@ -469,6 +539,36 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         }
         drcluster = disasterRecoveryClusterDao.findById(drcluster.getId());
         return setDisasterRecoveryClusterResponse(drcluster.getId());
+    }
+
+    @Override
+    @ActionEvent(eventType = DisasterRecoveryClusterEventTypes.EVENT_DR_VM_UPDATE, eventDescription = "updating disaster recovery cluster vm map", resourceId = 5, resourceType = "DisasterRecoveryCluster")
+    public GetDisasterRecoveryClusterVmListResponse updateDisasterRecoveryClusterVm(UpdateDisasterRecoveryClusterVmCmd cmd) throws CloudRuntimeException {
+        if (!DisasterRecoveryClusterService.DisasterRecoveryServiceEnabled.value()) {
+            throw new CloudRuntimeException("Disaster Recovery plugin is disabled");
+        }
+        DisasterRecoveryClusterVO drcluster = null;
+        Long drClusterId = cmd.getId();
+        String drClusterVmId = cmd.getDrClusterVmId();
+        String mirrorVmId = cmd.getMirrorVmId();
+        String mirrorVmName = cmd.getMirrorVmName();
+        String mirrorVmStatus = cmd.getMirrorVmStatus();
+        String mirrorVmVolStatus = cmd.getMirrorVmVolumeStatus();
+        String drClusterName = cmd.getDrClusterName();
+        if (drClusterId == null) {
+            // Primary Cluster 에서 request MoldAPI로 요청한 경우
+            drcluster = disasterRecoveryClusterDao.findByName(drClusterName);
+        } else {
+            drcluster = disasterRecoveryClusterDao.findById(drClusterId);
+            if (drcluster == null) {
+                throw new InvalidParameterValueException("Invalid Disaster Recovery id specified");
+            }
+        }
+        VMInstanceVO vm = vmDao.findByUuid(drClusterVmId);
+        DisasterRecoveryClusterVmMapVO newClusterVmMapVO = new DisasterRecoveryClusterVmMapVO(drcluster.getId(), vm.getId(), mirrorVmId, mirrorVmName, mirrorVmStatus, mirrorVmVolStatus);
+        disasterRecoveryClusterVmMapDao.persist(newClusterVmMapVO);
+        return setDisasterRecoveryClusterVmResponse(newClusterVmMapVO.getId());
+
     }
 
     @Override
@@ -1158,8 +1258,19 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                     // Secondary Cluster - deployVirtualMachineForVolume 호출 (비동기)
                     String vmId = DisasterRecoveryClusterUtil.moldDeployVirtualMachineForVolumeAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey, vmParams);
                     if (vmId != null) {
-                        DisasterRecoveryClusterVmMapVO newClusterVmMapVO = new DisasterRecoveryClusterVmMapVO(drCluster.getId(), cmd.getVmId(), vmId, userVM.getName(), "Stopped", "");
+                        DisasterRecoveryClusterVmMapVO newClusterVmMapVO = new DisasterRecoveryClusterVmMapVO(drCluster.getId(), cmd.getVmId(), vmId, userVM.getName(), "Stopped", "SYNCING");
                         disasterRecoveryClusterVmMapDao.persist(newClusterVmMapVO);
+                        // Secondary Cluster - UpdateDisasterRecoveryClusterVm 호출
+                        moldMethod = "GET";
+                        moldCommand = "updateDisasterRecoveryClusterVm";
+                        Map<String, String> vmMapParams = new HashMap<>();
+                        vmMapParams.put("drclustername", drCluster.getName());
+                        vmMapParams.put("drclustervmid", vmId);
+                        vmMapParams.put("drclustermirrorvmid", userVM.getUuid());
+                        vmMapParams.put("drclustermirrorvmname", userVM.getName());
+                        vmMapParams.put("drclustermirrorvmstatus", userVM.getState().toString());
+                        vmMapParams.put("drclustermirrorvmvolstatus", "READY");
+                        DisasterRecoveryClusterUtil.moldUpdateDisasterRecoveryClusterVmAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey, vmMapParams);
                         return true;
                     } else {
                         return false;
@@ -1347,6 +1458,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         cmdList.add(PromoteDisasterRecoveryClusterCmd.class);
         cmdList.add(DemoteDisasterRecoveryClusterCmd.class);
         cmdList.add(CreateDisasterRecoveryClusterVmCmd.class);
+        cmdList.add(UpdateDisasterRecoveryClusterVmCmd.class);
         return cmdList;
     }
 
