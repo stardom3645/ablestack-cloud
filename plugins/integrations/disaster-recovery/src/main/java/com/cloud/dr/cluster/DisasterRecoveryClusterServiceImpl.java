@@ -395,11 +395,21 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                         JsonElement description = dr.getAsJsonObject().get("description") == null ? null : dr.getAsJsonObject().get("description");
                         if (siteName != null && description != null) {
                             if (description.getAsString().equals("local image is primary")) {
-                                response.setDrClusterVmVolStatus("SYNCING");
-                                map.setMirroredVmVolumeStatus("READY");
+                                if (drcluster.getDrClusterType().equalsIgnoreCase("primary")) {
+                                    response.setDrClusterVmVolStatus("READY");
+                                    map.setMirroredVmVolumeStatus("SYNCING");
+                                } else {
+                                    response.setDrClusterVmVolStatus("SYNCING");
+                                    map.setMirroredVmVolumeStatus("READY");
+                                }
                             } else {
-                                response.setDrClusterVmVolStatus("READY");
-                                map.setMirroredVmVolumeStatus("SYNCING");
+                                if (drcluster.getDrClusterType().equalsIgnoreCase("primary")) {
+                                    response.setDrClusterVmVolStatus("SYNCING");
+                                    map.setMirroredVmVolumeStatus("READY");
+                                } else {
+                                    response.setDrClusterVmVolStatus("READY");
+                                    map.setMirroredVmVolumeStatus("SYNCING");
+                                }
                             }
                             disasterRecoveryClusterVmMapDao.update(map.getId(), map);
                             break;
@@ -477,11 +487,21 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                             JsonElement description = dr.getAsJsonObject().get("description") == null ? null : dr.getAsJsonObject().get("description");
                             if (siteName != null && description != null) {
                                 if (description.getAsString().equals("local image is primary")) {
-                                    response.setDrClusterVmVolStatus("SYNCING");
-                                    map.setMirroredVmVolumeStatus("READY");
+                                    if (drcluster.getDrClusterType().equalsIgnoreCase("primary")) {
+                                        response.setDrClusterVmVolStatus("READY");
+                                        map.setMirroredVmVolumeStatus("SYNCING");
+                                    } else {
+                                        response.setDrClusterVmVolStatus("SYNCING");
+                                        map.setMirroredVmVolumeStatus("READY");
+                                    }
                                 } else {
-                                    response.setDrClusterVmVolStatus("READY");
-                                    map.setMirroredVmVolumeStatus("SYNCING");
+                                    if (drcluster.getDrClusterType().equalsIgnoreCase("primary")) {
+                                        response.setDrClusterVmVolStatus("SYNCING");
+                                        map.setMirroredVmVolumeStatus("READY");
+                                    } else {
+                                        response.setDrClusterVmVolStatus("READY");
+                                        map.setMirroredVmVolumeStatus("SYNCING");
+                                    }
                                 }
                                 disasterRecoveryClusterVmMapDao.update(map.getId(), map);
                                 break;
