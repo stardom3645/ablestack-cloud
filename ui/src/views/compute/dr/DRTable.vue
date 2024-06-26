@@ -152,8 +152,9 @@ export default {
       this.loading = true
       api('getDisasterRecoveryClusterList', { name: this.clusterName }).then(json => {
         this.drClusterVmList = json.getdisasterrecoveryclusterlistresponse.disasterrecoverycluster[0].drclustervmmap || []
+        const clusterType = json.getdisasterrecoveryclusterlistresponse.disasterrecoverycluster[0].drclustertype
         for (const clusterVm of this.drClusterVmList) {
-          if (clusterVm.drclustervmname === this.drVmName) {
+          if (clusterVm.drclustervmname === this.drVmName && clusterType !== 'primary') {
             this.drCluster.push(clusterVm)
             this.drCluster = this.drCluster.map(item => ({ ...item, drName: item.drclustername }))
             this.drCluster = this.drCluster.map(item => ({ ...item, drId: json.getdisasterrecoveryclusterlistresponse.disasterrecoverycluster[0].id }))
