@@ -348,7 +348,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         response.setMirroredVmName(map.getMirroredVmName());
         String volumeUuid = userVM.getVolumeUuid();
         if (drcluster.getDrClusterType().equalsIgnoreCase("primary")) {
-            VolumeVO vol = volsDao.findByPoolIdAndPath(userVM.getPoolId(), volumeUuid);
+            VolumeVO vol = volsDao.findByInstance(userVM.getId());
             volumeUuid = vol.getPath();
         }
         String moldUrl = url + "/client/api/";
@@ -429,7 +429,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
             response.setMirroredVmName(map.getMirroredVmName());
             String volumeUuid = userVM.getVolumeUuid();
             if (drcluster.getDrClusterType().equalsIgnoreCase("primary")) {
-                VolumeVO vol = volsDao.findByPoolIdAndPath(userVM.getPoolId(), volumeUuid);
+                VolumeVO vol = volsDao.findByInstance(userVM.getId());
                 volumeUuid = vol.getPath();
             }
             String moldUrl = url + "/client/api/";
