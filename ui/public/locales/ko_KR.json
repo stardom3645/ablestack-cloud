@@ -4394,5 +4394,6 @@
 "dr.demote": "DR.\ub514\ubaa8\ud2b8",
 "dr.vm.create": "DR.VM.\uc0dd\uc131",
 "label.add.disaster.recovery.cluster.vm": "\uc7ac\ud574\ubcf5\uad6c\uc6a9 \uac00\uc0c1\uba38\uc2e0 \uc0dd\uc131",
+"label.delete.disaster.recovery.cluster.vm": "\uc7ac\ud574\ubcf5\uad6c\uc6a9 \uac00\uc0c1\uba38\uc2e0 \ubbf8\ub7ec\ub9c1 \uc5f0\uacb0 \ud574\uc81c",
 "message.success.add.disaster.recovery.cluster.vm": "\uc7ac\ud574\ubcf5\uad6c\uc6a9 \uac00\uc0c1\uba38\uc2e0 \uc0dd\uc131\uc774 \uc131\uacf5\uc801\uc73c\ub85c \uc644\ub8cc\ub418\uc5c8\uc2b5\ub2c8\ub2e4."
 }
