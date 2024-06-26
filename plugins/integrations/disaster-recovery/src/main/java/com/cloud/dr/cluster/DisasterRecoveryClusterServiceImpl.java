@@ -361,9 +361,20 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
             }
         }
         response.setMirroredVmStatus(map.getMirroredVmStatus());
-        String ipList = Script.runSimpleBashScript("cat /etc/hosts | grep -E 'scvm1-mngt|scvm2-mngt|scvm3-mngt' | awk '{print $1}' | tr '\n' ','");
-        ipList = ipList.replaceAll(",$", "");
-        String[] array = ipList.split(",");
+        String[] array = null;
+        if (drcluster.getDrClusterType().equalsIgnoreCase("primary")) {
+            moldCommand = "listScvmIpAddress";
+            // Primary Cluster - moldListScvmIpAddressAPI 호출
+            String scvmList = DisasterRecoveryClusterUtil.moldListScvmIpAddressAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey);
+            if (scvmList != null) {
+                // Secondary Cluster - glueStatusAPI 호출
+                array = scvmList.split(",");
+            }
+        } else {
+            String ipList = Script.runSimpleBashScript("cat /etc/hosts | grep -E 'scvm1-mngt|scvm2-mngt|scvm3-mngt' | awk '{print $1}' | tr '\n' ','");
+            ipList = ipList.replaceAll(",$", "");
+            array = ipList.split(",");
+        }
         for (int i=0; i < array.length; i++) {
             String glueIp = array[i];
             String glueUrl = "https://" + glueIp + ":8080/api/v1"; // glue-api 프로토콜과 포트 확정 시 변경 예정
@@ -427,9 +438,20 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                 }
             }
             response.setMirroredVmStatus(map.getMirroredVmStatus());
-            String ipList = Script.runSimpleBashScript("cat /etc/hosts | grep -E 'scvm1-mngt|scvm2-mngt|scvm3-mngt' | awk '{print $1}' | tr '\n' ','");
-            ipList = ipList.replaceAll(",$", "");
-            String[] array = ipList.split(",");
+            String[] array = null;
+            if (drcluster.getDrClusterType().equalsIgnoreCase("primary")) {
+                moldCommand = "listScvmIpAddress";
+                // Primary Cluster - moldListScvmIpAddressAPI 호출
+                String scvmList = DisasterRecoveryClusterUtil.moldListScvmIpAddressAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey);
+                if (scvmList != null) {
+                    // Secondary Cluster - glueStatusAPI 호출
+                    array = scvmList.split(",");
+                }
+            } else {
+                String ipList = Script.runSimpleBashScript("cat /etc/hosts | grep -E 'scvm1-mngt|scvm2-mngt|scvm3-mngt' | awk '{print $1}' | tr '\n' ','");
+                ipList = ipList.replaceAll(",$", "");
+                array = ipList.split(",");
+            }
             for (int i=0; i < array.length; i++) {
                 String glueIp = array[i];
                 String glueUrl = "https://" + glueIp + ":8080/api/v1"; // glue-api 프로토콜과 포트 확정 시 변경 예정
