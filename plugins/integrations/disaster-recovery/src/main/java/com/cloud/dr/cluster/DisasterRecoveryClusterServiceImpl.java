@@ -430,8 +430,8 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         String secretKey = details.get(ApiConstants.DR_CLUSTER_SECRET_KEY);
         List<GetDisasterRecoveryClusterVmListResponse> disasterRecoveryClusterVmListResponse = new ArrayList<>();
         List<DisasterRecoveryClusterVmMapVO> vmMap = disasterRecoveryClusterVmMapDao.listByDisasterRecoveryClusterId(clusterId);
-        GetDisasterRecoveryClusterVmListResponse response = new GetDisasterRecoveryClusterVmListResponse();
         for (DisasterRecoveryClusterVmMapVO map : vmMap) {
+            GetDisasterRecoveryClusterVmListResponse response = new GetDisasterRecoveryClusterVmListResponse();
             UserVmJoinVO userVM = userVmJoinDao.findById(map.getVmId());
             response.setDrClusterName(drcluster.getName());
             response.setDrClusterVmId(userVM.getUuid());
