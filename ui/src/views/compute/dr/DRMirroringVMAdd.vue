@@ -90,7 +90,7 @@
       </a-form-item>
 
       <div :span="24" class="action-button">
-        <a-button @click="closeAction">{{ $t('label.cancel') }}</a-button>
+        <a-button @click="closeModals">{{ $t('label.cancel') }}</a-button>
         <a-button @click="handleSubmit" ref="submit" type="primary">{{ $t('label.ok') }}</a-button>
       </div>
 
@@ -222,18 +222,18 @@ export default {
         }
         api('createDisasterRecoveryClusterVm', params).then(json => {
           this.$message.success(`${this.$t('label.add.disaster.recovery.cluster.vm')}: ${this.resource.name}`)
+          this.closeModals()
         }).catch(error => {
           this.$notifyError(error)
         }).finally(() => {
           this.$emit('refresh-data')
           this.loading = false
-          this.closeAction()
         })
       }).catch(error => {
         this.formRef.value.scrollToField(error.errorFields[0].name)
       })
     },
-    closeAction () {
+    closeModals () {
       this.$emit('close-action')
     }
   }
