@@ -1067,6 +1067,10 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                     drCluster.setDrClusterStatus(DisasterRecoveryCluster.DrClusterStatus.Disabled.toString());
                     drCluster.setMirroringAgentStatus(DisasterRecoveryCluster.MirroringAgentStatus.Disabled.toString());
                     disasterRecoveryClusterDao.update(drCluster.getId(), drCluster);
+                    List<DisasterRecoveryClusterVmMapVO> vmMap = disasterRecoveryClusterVmMapDao.listByDisasterRecoveryClusterId(drCluster.getId());
+                    for (DisasterRecoveryClusterVmMap vm : vmMap) {
+                        disasterRecoveryClusterVmMapDao.remove(vm.getId());
+                    }
                     // Secondary Cluster - moldGetDisasterRecoveryClusterListAPI 호출
                     String secCommand = "getDisasterRecoveryClusterList";
                     String secMethod = "GET";
@@ -1084,6 +1088,14 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                                 sucParams.put("drclusterstatus", DisasterRecoveryCluster.DrClusterStatus.Disabled.toString());
                                 sucParams.put("mirroringagentstatus", DisasterRecoveryCluster.MirroringAgentStatus.Disabled.toString());
                                 DisasterRecoveryClusterUtil.moldUpdateDisasterRecoveryClusterAPI(secUrl + "/client/api/", secCommand, secMethod, secApiKey, secSecretKey, sucParams);
+                                // Secondary Cluster - moldDeleteDisasterRecoveryClusterVmAPI 호출
+                                for (DisasterRecoveryClusterVmMap vms : vmMap) {
+                                    secCommand = "deleteDisasterRecoveryClusterVm";
+                                    Map<String, String> vmParams = new HashMap<>();
+                                    vmParams.put("drclustername", drCluster.getName());
+                                    vmParams.put("id", vms.getMirroredVmId());
+                                    DisasterRecoveryClusterUtil.moldDeleteDisasterRecoveryClusterVmAPI(secUrl + "/client/api/", secCommand, secMethod, secApiKey, secSecretKey, vmParams);
+                                }
                                 return true;
                             }
                         }
