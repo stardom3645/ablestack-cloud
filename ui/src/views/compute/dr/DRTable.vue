@@ -30,7 +30,10 @@
           <a-descriptions-item :label="$t('label.id')" class="bold-label">
             {{ record.mirroredVmId }}
           </a-descriptions-item>
-          <a-descriptions-item :label="$t('label.dr.volume.root.disk.status')">
+          <a-descriptions-item v-if="record.mirroredVmVolType === 'ROOT'":label="$t('label.dr.volume.root.disk.status')">
+            {{ record.mirroredVmVolStatus }}
+          </a-descriptions-item>
+          <a-descriptions-item v-if="record.mirroredVmVolType === 'DATADISK'":label="$t('label.dr.volume.data.disk.status')">
             {{ record.mirroredVmVolStatus }}
           </a-descriptions-item>
         </a-descriptions>
@@ -161,7 +164,9 @@ export default {
             this.drCluster = this.drCluster.map(item => ({ ...item, mirroredVm: item.drclustermirrorvmname }))
             this.drCluster = this.drCluster.map(item => ({ ...item, mirroredStatus: item.drclustermirrorvmstatus }))
             this.drCluster = this.drCluster.map(item => ({ ...item, mirroredVmId: item.drclustermirrorvmid }))
+            this.drCluster = this.drCluster.map(item => ({ ...item, mirroredVmVolType: item.drclustermirrorvmvoltype }))
             this.drCluster = this.drCluster.map(item => ({ ...item, mirroredVmVolStatus: item.drclustermirrorvmvolstatus }))
+            this.drCluster = this.drCluster.map(item => ({ ...item, mirroredVmVolPath: item.drclustermirrorvmvolpath }))
           }
         }
       }).finally(() => {
