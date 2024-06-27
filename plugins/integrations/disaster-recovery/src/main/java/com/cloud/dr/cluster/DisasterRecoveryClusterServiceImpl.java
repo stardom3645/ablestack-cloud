@@ -1313,7 +1313,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
             List<VolumeVO> dataVolumes = volsDao.findByInstanceAndType(userVM.getId(), Volume.Type.DATADISK);
             if (!dataVolumes.isEmpty()) {
                 for (VolumeVO dataVolume : dataVolumes) {
-                    // DATA 디스크 생성 및 편집 mold-api 호출
+                    // DATA 디스크 생성 및 편집 및 연결 mold-api 호출
                     String dataVolumeUuid = dataVolume.getPath();
                     moldMethod = "POST";
                     moldCommand = "createVolume";
@@ -1331,7 +1331,12 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                     volUpParams.put("state", "Ready");
                     volUpParams.put("type", dataVolume.getVolumeType().toString());
                     String dataResponse = DisasterRecoveryClusterUtil.moldUpdateVolumeAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey, volUpParams);
-                    moldMethod = "GET";
+                    moldCommand = "attachVolume";
+                    Map<String, String> attParams = new HashMap<>();
+                    attParams.put("id", dataVolumeId);
+                    attParams.put("virtualmachineid", userVM.getUuid());
+                    String attachId = DisasterRecoveryClusterUtil.moldAttachVolumeAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey, attParams);
+                    ///////////////////// 비동기 호출 예외 처리 필요
                     moldCommand = "updateDisasterRecoveryClusterVm";
                     vmMapParams.put("drclustername", drCluster.getName());
                     vmMapParams.put("drclustervmid", vmId);
