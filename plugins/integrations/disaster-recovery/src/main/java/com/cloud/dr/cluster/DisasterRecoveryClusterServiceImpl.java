@@ -1374,7 +1374,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                     UserVmVO vmVO = userVmDao.findById(userVM.getId());
                     if (map.getVmId() == userVM.getId()) {
                         try {
-                            if (vmVO != null && !vmVO.isRemoved()) {
+                            if (vmVO != null) {
                                 UserVm vm = userVmService.destroyVm(vmId, true);
                                 if (!userVmManager.expunge(vmVO)) {
                                     LOGGER.info(String.format("Unable to expunge VM %s : %s, destroying disaster recovery cluster virtual machine will probably fail",
@@ -1420,6 +1420,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                             if (!CollectionUtils.isEmpty(vmMap)) {
                                 for (DisasterRecoveryClusterVmMapVO map : vmMap) {
                                     if (map.getVmId() == userVM.getId() && volumeUuid.equals(map.getMirroredVmVolumePath())) {
+                                        String mirrorVmId = map.getMirroredVmId();
                                         disasterRecoveryClusterVmMapDao.remove(map.getId());
                                         List<DisasterRecoveryClusterVmMapVO> finalMap = disasterRecoveryClusterVmMapDao.listByDisasterRecoveryClusterVmId(drCluster.getId(), vmId);
                                         if (CollectionUtils.isEmpty(finalMap)) {
@@ -1428,7 +1429,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                                             String moldCommand = "deleteDisasterRecoveryClusterVm";
                                             Map<String, String> vmParams = new HashMap<>();
                                             vmParams.put("drclustername", drCluster.getName());
-                                            vmParams.put("id", map.getMirroredVmId());
+                                            vmParams.put("id", mirrorVmId);
                                             String response = DisasterRecoveryClusterUtil.moldDeleteDisasterRecoveryClusterVmAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey, vmParams);
                                             if (response != null) {
                                                 return true;
