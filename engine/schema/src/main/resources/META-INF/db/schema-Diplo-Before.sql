@@ -96,6 +96,8 @@ CREATE TABLE IF NOT EXISTS `disaster_recovery_cluster_vm_map` (
     `mirrored_vm_id`               varchar(40)     NULL,
     `mirrored_vm_name`             varchar(255)    NULL,
     `mirrored_vm_status`           varchar(255)    NULL,
+    `mirrored_vm_volume_type`      varchar(255)    NULL,
+    `mirrored_vm_volume_path`        varchar(255)    NULL,
     `mirrored_vm_volume_status`    varchar(255)    NULL,
     PRIMARY KEY (`id`),
     CONSTRAINT `fk_disaster_recovery_cluster_vm_map_disaster_recovery_cluster_id` FOREIGN KEY (`disaster_recovery_cluster_id`) REFERENCES `disaster_recovery_cluster` (`id`) ON DELETE CASCADE,

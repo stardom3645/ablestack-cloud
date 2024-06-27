@@ -70,6 +70,12 @@ public class UpdateDisasterRecoveryClusterVmCmd extends BaseCmd implements Admin
     @Parameter(name = ApiConstants.DR_CLUSTER_MIRROR_VM_STATUS, type = CommandType.STRING, description = "the status of the disaster recovery cluster mirror vm")
     private String mirrorVmStatus;
 
+    @Parameter(name = ApiConstants.DR_CLUSTER_MIRROR_VM_VOL_TYPE, type = CommandType.STRING, description = "the type of the disaster recovery cluster mirror vm volume")
+    private String mirrorVmVolumeType;
+
+    @Parameter(name = ApiConstants.DR_CLUSTER_MIRROR_VM_VOL_PATH, type = CommandType.STRING, description = "the path of the disaster recovery cluster mirror vm volume")
+    private String mirrorVmVolumePath;
+
     @Parameter(name = ApiConstants.DR_CLUSTER_MIRROR_VM_VOL_STATUS, type = CommandType.STRING, description = "the status of the disaster recovery cluster mirror vm volume")
     private String mirrorVmVolumeStatus;
 
@@ -98,6 +104,14 @@ public class UpdateDisasterRecoveryClusterVmCmd extends BaseCmd implements Admin
 
     public String getMirrorVmStatus() {
         return mirrorVmStatus;
+    }
+
+    public String getMirrorVmVolumeType() {
+        return mirrorVmVolumeType;
+    }
+
+    public String getMirrorVmVolumePath() {
+        return mirrorVmVolumePath;
     }
 
     public String getMirrorVmVolumeStatus() {

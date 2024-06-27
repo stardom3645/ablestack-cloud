@@ -1229,6 +1229,8 @@ public class ApiConstants {
     public static final String DR_CLUSTER_MIRROR_VM_STATUS = "drclustermirrorvmstatus";
     public static final String DR_CLUSTER_MIRROR_VM_VOL_STATUS = "drclustermirrorvmvolstatus";
     public static final String DR_CLUSTER_NAME = "drclustername";
+    public static final String DR_CLUSTER_MIRROR_VM_VOL_TYPE = "drclustervmvoltype";
+    public static final String DR_CLUSTER_MIRROR_VM_VOL_PATH = "drclustervmvolpath";
     public static final String DR_CLUSTER_VM_VOL_STATUS = "drclustervmvolstatus";
     public static final String DR_CLUSTER_VM_NAME = "drclustervmname";
 

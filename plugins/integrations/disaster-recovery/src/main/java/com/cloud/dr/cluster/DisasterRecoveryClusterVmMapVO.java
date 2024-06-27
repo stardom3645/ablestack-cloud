@@ -47,18 +47,26 @@ public class DisasterRecoveryClusterVmMapVO implements DisasterRecoveryClusterVm
     @Column(name = "mirrored_vm_status")
     String mirroredVmStatus;
 
+    @Column(name = "mirrored_vm_volume_type")
+    String mirroredVmVolumeType;
+
+    @Column(name = "mirrored_vm_volume_path")
+    String mirroredVmVolumePath;
+
     @Column(name = "mirrored_vm_volume_status")
     String mirroredVmVolumeStatus;
 
     public DisasterRecoveryClusterVmMapVO() {
     }
 
-    public DisasterRecoveryClusterVmMapVO(long disasterRecoveryClusterId, long vmId, String mirroredVmId, String mirroredVmName, String mirroredVmStatus, String mirroredVmVolumeStatus) {
+    public DisasterRecoveryClusterVmMapVO(long disasterRecoveryClusterId, long vmId, String mirroredVmId, String mirroredVmName, String mirroredVmStatus, String mirroredVmVolumeType, String mirroredVmVolumePath, String mirroredVmVolumeStatus) {
         this.disasterRecoveryClusterId = disasterRecoveryClusterId;
         this.vmId = vmId;
         this.mirroredVmId = mirroredVmId;
         this.mirroredVmName = mirroredVmName;
         this.mirroredVmStatus = mirroredVmStatus;
+        this.mirroredVmVolumeType = mirroredVmVolumeType;
+        this.mirroredVmVolumePath = mirroredVmVolumePath;
         this.mirroredVmVolumeStatus = mirroredVmVolumeStatus;
 
     }
@@ -103,6 +111,24 @@ public class DisasterRecoveryClusterVmMapVO implements DisasterRecoveryClusterVm
 
     public void setMirroredVmStatus(String mirroredVmStatus) {
         this.mirroredVmStatus = mirroredVmStatus;
+    }
+
+    @Override
+    public String getMirroredVmVolumeType() {
+        return mirroredVmVolumeType;
+    }
+
+    public void setMirroredVmVolumeType(String mirroredVmVolumeType) {
+        this.mirroredVmVolumeType = mirroredVmVolumeType;
+    }
+
+    @Override
+    public String getMirroredVmVolumePath() {
+        return mirroredVmVolumePath;
+    }
+
+    public void setMirroredVmVolumePath(String mirroredVmVolumePath) {
+        this.mirroredVmVolumePath = mirroredVmVolumePath;
     }
 
     @Override

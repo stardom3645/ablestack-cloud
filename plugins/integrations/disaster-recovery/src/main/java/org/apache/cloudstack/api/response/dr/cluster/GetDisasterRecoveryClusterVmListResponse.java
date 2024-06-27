@@ -67,6 +67,14 @@ public class GetDisasterRecoveryClusterVmListResponse extends BaseResponse {
     @Param(description = "the status of the disaster recovery cluster mirror vm")
     private String mirroredVmStatus;
 
+    @SerializedName(ApiConstants.DR_CLUSTER_MIRROR_VM_VOL_TYPE)
+    @Param(description = "the type of the disaster recovery cluster mirror vm volume")
+    private String mirroredVmVolumeType;
+
+    @SerializedName(ApiConstants.DR_CLUSTER_MIRROR_VM_VOL_PATH)
+    @Param(description = "the path of the disaster recovery cluster mirror vm volume")
+    private String mirroredVmVolumePath;
+
     @SerializedName(ApiConstants.DR_CLUSTER_MIRROR_VM_VOL_STATUS)
     @Param(description = "the status of the disaster recovery cluster mirror vm volume")
     private String mirroredVmVolumeStatus;
@@ -111,6 +119,14 @@ public class GetDisasterRecoveryClusterVmListResponse extends BaseResponse {
         return mirroredVmStatus;
     }
 
+    public String getMirroredVmVolumeType() {
+        return mirroredVmVolumeType;
+    }
+
+    public String getMirroredVmVolumePath() {
+        return mirroredVmVolumePath;
+    }
+
     public String getMirroredVmVolumeStatus() {
         return mirroredVmVolumeStatus;
     }
@@ -149,6 +165,14 @@ public class GetDisasterRecoveryClusterVmListResponse extends BaseResponse {
 
     public void setMirroredVmStatus(String mirroredVmStatus) {
         this.mirroredVmStatus = mirroredVmStatus;
+    }
+
+    public void setMirroredVmVolumeType(String mirroredVmVolumeType) {
+        this.mirroredVmVolumeType = mirroredVmVolumeType;
+    }
+
+    public void setMirroredVmVolumePath(String mirroredVmVolumePath) {
+        this.mirroredVmVolumePath = mirroredVmVolumePath;
     }
 
     public void setMirroredVmVolumeStatus(String mirroredVmVolumeStatus) {
