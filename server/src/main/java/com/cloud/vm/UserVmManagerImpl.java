@@ -16,6 +16,7 @@
 // under the License.
 package com.cloud.vm;
 
+import static com.cloud.configuration.ConfigurationManager.VM_USERDATA_MAX_LENGTH;
 import static com.cloud.configuration.ConfigurationManagerImpl.VM_USERDATA_MAX_LENGTH;
 import static com.cloud.storage.Volume.IOPS_LIMIT;
 import static com.cloud.utils.NumbersUtil.toHumanReadableSize;
@@ -409,7 +410,8 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
 
     private static final long GiB_TO_BYTES = 1024 * 1024 * 1024;
 
-    public static final String KVM_VM_IMPORT_DEFAULT_TEMPLATE_NAME = "kvm-default-vm-import-dummy-template";
+    private static final String VM_IMPORT_DEFAULT_TEMPLATE_NAME = "system-default-vm-import-dummy-template.iso";
+    private static final String KVM_VM_IMPORT_DEFAULT_TEMPLATE_NAME = "kvm-default-vm-import-dummy-template";
 
     @Inject
     private EntityManager _entityMgr;
@@ -8986,8 +8988,7 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
             vm.setVncPassword(customParameters.get(VmDetailConstants.KVM_VNC_PASSWORD));
         }
     }
-    private static final String VM_IMPORT_DEFAULT_TEMPLATE_NAME = "system-default-vm-import-dummy-template.iso";
-    private static final String KVM_VM_IMPORT_DEFAULT_TEMPLATE_NAME = "kvm-default-vm-import-dummy-template";
+
     @Override
     public UserVm createVirtualMachineVolume(DeployVMVolumeCmd cmd) throws InsufficientCapacityException, ResourceUnavailableException, ConcurrentOperationException,
     StorageUnavailableException, ResourceAllocationException {
@@ -9386,25 +9387,24 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
 
     @Override
     public void prepareCloneVirtualMachine(CloneVMCmd cmd) throws ResourceAllocationException, ResourceUnavailableException, InsufficientCapacityException {
-        long vmId = cmd.getEntityId();
+        long vmId = cmd.getId();
         UserVmVO curVm = _vmDao.findById(vmId);
         Account curVmAccount = _accountDao.findById(curVm.getAccountId());
         long zoneId = cmd.getTargetVM().getDataCenterId();
         String clone_type = cmd.getType();
-
+        SnapshotVO snapshot = null;
         try {
             Account owner = _accountService.getAccount(cmd.getEntityOwnerId());
             Account caller = CallContext.current().getCallingAccount();
             _accountMgr.checkAccess(caller, null, true, owner);
-            Long nextSnapId = _templateDao.getNextInSequence(Long.class, "id");
             Long volumeId = _volsDao.findByInstanceAndType(cmd.getId(), Volume.Type.ROOT).get(0).getId();
             VolumeVO volume = _volsDao.findById(volumeId);
             if (volume == null) {
                 throw new InvalidParameterValueException("Failed to create private template record, unable to find root volume " + volumeId);
             }
             _accountMgr.checkAccess(caller, null, true, volume);
-            logger.info("Creating snapshot for root volume creation");
-            SnapshotVO snapshot = (SnapshotVO) _volumeService.allocSnapshot(volumeId, Snapshot.INTERNAL_POLICY_ID, cmd.getTargetVM().getDisplayName() + "-Clone-" + nextSnapId, null, cmd.getZoneIds());
+            logger.info("Clone VM >> Creating snapshot for root volume creation");
+            snapshot = (SnapshotVO) _volumeService.allocSnapshot(volumeId, Snapshot.INTERNAL_POLICY_ID, cmd.getTargetVM().getDisplayName() + "-RootSnapForClone", null, cmd.getZoneIds());
             if (snapshot == null) {
                 throw new CloudRuntimeException("Unable to create a snapshot during the template creation recording");
             }
@@ -9429,31 +9429,25 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
             VolumeVO newDatadisk = saveDataDiskVolumeFromSnapShot(curVmAccount, true, zoneId, diskOfferingId, provisioningType, size, minIops, maxIops, parentVolume,
                                                                     volumeName, _uuidMgr.generateUuid(Volume.class, null), new HashMap<>(), Volume.Type.ROOT, clone_type);
             VolumeVO rootVolume = (VolumeVO) _volumeService.cloneRootOrDataVolume(cmd.getEntityId(), snapshotEntity.getId(), newDatadisk);
-
-            // Snapshot snapshot = _tmplService.createSnapshotFromTemplateOwner(cmd.getId(), cmd.getTargetVM(), owner, _volumeService, cmd.getZoneIds());
-            // VirtualMachineTemplate template = _tmplService.createPrivateTemplateRecord(cmd, owner, _volumeService, snapshot);
-            // if (template == null) {
-            //     throw new CloudRuntimeException("failed to create a template to db");
-            // }
-            // logger.info("The template id recorded is: " + template.getId());
-            // _tmplService.createPrivateTemplate(cmd, snapshot.getId(), template.getId());
-            long templateId = getDummyTemplateId();
-            UserVm vmRecord = recordVirtualMachineToDB(cmd, templateId, rootVolume.getId());
+            if (rootVolume == null) {
+                throw new CloudRuntimeException("Creation of root volume is not queried. The virtual machine cannot be cloned!");
+            }
+            UserVm vmRecord = recordVirtualMachineToDB(cmd, String.valueOf(rootVolume.getId()));
             if (vmRecord == null) {
                 throw new CloudRuntimeException("Unable to record the VM to DB!");
             }
             cmd.setEntityUuid(vmRecord.getUuid());
             cmd.setEntityId(vmRecord.getId());
         } finally {
-            // if (temporarySnapshotId != null) {
-            //     _snapshotService.deleteSnapshot(temporarySnapshotId, cmd.getTargetVM().getDataCenterId());
-            //     logger.warn("clearing the temporary snapshot: " + temporarySnapshotId);
-            // }
+            if (snapshot != null) {
+                _snapshotService.deleteSnapshot(snapshot.getId(), cmd.getTargetVM().getDataCenterId());
+                logger.warn("Clone VM >> Clearing the temporary root disk snapshot : " + snapshot.getId());
+            }
         }
     }
 
     @Override
-    public UserVm recordVirtualMachineToDB(CloneVMCmd cmd, long templateId, long rootVolumeId) throws ConcurrentOperationException, ResourceAllocationException, InsufficientCapacityException, ResourceUnavailableException {
+    public UserVm recordVirtualMachineToDB(CloneVMCmd cmd, String rootVolumeId) throws ConcurrentOperationException, ResourceAllocationException, InsufficientCapacityException, ResourceUnavailableException {
         //network configurations and check, then create the template
         UserVm curVm = cmd.getTargetVM();
         // check if host is available
@@ -9461,8 +9455,11 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
         getDestinationHost(hostId, true, false);
         Long zoneId = curVm.getDataCenterId();
         DataCenter dataCenter = _entityMgr.findById(DataCenter.class, zoneId);
-        Map<String, String> details = userVmDetailsDao.listDetailsKeyPairs(curVm.getId());
-        String keyboard = details.get(VmDetailConstants.KEYBOARD);
+        Map<String, String> customParameters = userVmDetailsDao.listDetailsKeyPairs(curVm.getId());
+        String keyboard = customParameters.get(VmDetailConstants.KEYBOARD);
+        if (!rootVolumeId.isBlank()) {
+            customParameters.put("volumeId", rootVolumeId);
+        }
         HypervisorType hypervisorType = curVm.getHypervisorType();
         Account curAccount = _accountDao.findById(curVm.getAccountId());
         String ipv6Address = null;
@@ -9485,7 +9482,8 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
         Map<Long, IpAddresses> ipToNetoworkMap = null; // Since we've specified Ip
         boolean isDisplayVM = curVm.isDisplayVm();
         boolean dynamicScalingEnabled = curVm.isDynamicallyScalable();
-        VirtualMachineTemplate template = _entityMgr.findById(VirtualMachineTemplate.class, templateId);
+        VMTemplateVO templateVo = createDefaultDummyVmImportTemplates();
+        VirtualMachineTemplate template = _entityMgr.findByIdIncludingRemoved(VirtualMachineTemplate.class, templateVo.getId());
         if (template == null) {
             throw new CloudRuntimeException("the temporary template is not created, server error, contact your sys admin");
         }
@@ -9502,15 +9500,16 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
                                         boxed().
                                         collect(Collectors.toList());
         try {
+            logger.info("Clone VM >> Start creating a virtual machine");
             if (dataCenter.getNetworkType() == NetworkType.Basic) {
                 vmResult = createBasicSecurityGroupVirtualMachine(dataCenter, serviceOffering, template, securityGroupIdList, curAccount, name, displayName, null,
                         size, group, hypervisorType, cmd.getHttpMethod(), userData, null, null, null, ipToNetoworkMap, addr, isDisplayVM, keyboard, affinityGroupIdList,
-                        details, null, new HashMap<>(),
-                        null, new HashMap<>(), dynamicScalingEnabled, null); //이석민 diskOfferingId null 처리
+                        customParameters, null, new HashMap<>(),
+                        null, new HashMap<>(), dynamicScalingEnabled, null);
             } else {
                 vmResult = createAdvancedVirtualMachine(dataCenter, serviceOffering, template, networkIds, curAccount, name, displayName, null, size, group,
-                        hypervisorType, cmd.getHttpMethod(), userData, null, null, null, ipToNetoworkMap, addr, isDisplayVM, keyboard, affinityGroupIdList, details,
-                        null, new HashMap<>(), null, new HashMap<>(), dynamicScalingEnabled, null, null); //이석민 diskOfferingId null 처리
+                        hypervisorType, cmd.getHttpMethod(), userData, null, null, null, ipToNetoworkMap, addr, isDisplayVM, keyboard, affinityGroupIdList, customParameters,
+                        null, new HashMap<>(), null, new HashMap<>(), dynamicScalingEnabled, null, null);
             }
         } catch (CloudRuntimeException e) {
             _templateMgr.delete(curAccount.getId(), template.getId(), zoneId);
@@ -9533,12 +9532,12 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
         List<VolumeVO> createdVolumes = new ArrayList<>();
         long zoneId = cmd.getTargetVM().getDataCenterId();
         String clone_type = cmd.getType();
-        logger.info("Trying to attach data disk before starting the VM...");
         if (dataDisks.size() > 0) {
+            logger.info("Clone VM >> Trying to attach data disk before starting the VM.");
             VolumeVO newDatadisk = null;
             try {
                 for (VolumeVO dataDisk : dataDisks) {
-                    logger.info(" dataDisk.getname() :::::" + dataDisk.getName());
+                    logger.info("Clone VM >> Start creating data disk snapshots : " + dataDisk.getId());
                     long diskId = dataDisk.getId();
                     SnapshotVO dataSnapShot = (SnapshotVO) _volumeService.allocSnapshot(diskId, Snapshot.INTERNAL_POLICY_ID, dataDisk.getName(), null, cmd.getZoneIds());
                     if (dataSnapShot == null) {
@@ -9583,6 +9582,7 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
             } finally {
                 // clear the temporary data snapshots
                 for (Snapshot snapshotLeftOver : createdSnapshots) {
+                    logger.warn("Clone VM >> Clearing the temporary data disk snapshot : " + snapshotLeftOver.getId());
                     _snapshotService.deleteSnapshot(snapshotLeftOver.getId(), zoneId);
                 }
             }
@@ -9647,29 +9647,4 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
             return volume;
         });
     }
-
-    private long getDummyTemplateId() {
-        VMTemplateVO template = _templateDao.findByName(KVM_VM_IMPORT_DEFAULT_TEMPLATE_NAME);
-        if (template != null) {
-            return template.getId();
-        } else {
-            try {
-                template = VMTemplateVO.createSystemIso(_templateDao.getNextInSequence(Long.class, "id"), KVM_VM_IMPORT_DEFAULT_TEMPLATE_NAME, KVM_VM_IMPORT_DEFAULT_TEMPLATE_NAME, true,
-                        "", true, 64, Account.ACCOUNT_ID_SYSTEM, "",
-                        "VM Import Default Template", false, 1);
-                template.setState(VirtualMachineTemplate.State.Inactive);
-                template = _templateDao.persist(template);
-                if (template == null) {
-                    return 0l;
-                }
-                _templateDao.remove(template.getId());
-                template = _templateDao.findByName(KVM_VM_IMPORT_DEFAULT_TEMPLATE_NAME);
-            } catch (Exception e) {
-                logger.error("Unable to create default dummy template for VM import", e);
-            }
-        }
-
-        return template.getId();
-    }
-
 }

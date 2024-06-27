@@ -60,7 +60,7 @@ public class CloneVMCmd extends BaseAsyncCreateCmd implements UserCmd {
             required = true, description = "The ID of the virtual machine to clone")
     private Long virtualmachineid;
 
-    @Parameter(name = ApiConstants.NAME, type = CommandType.STRING, description = "name of the cloned virtual machine")
+    @Parameter(name = ApiConstants.NAME, type = CommandType.STRING, required = true, description = "name of the cloned virtual machine")
     private String name;
 
     //Owner information
@@ -70,10 +70,10 @@ public class CloneVMCmd extends BaseAsyncCreateCmd implements UserCmd {
     @Parameter(name = ApiConstants.DOMAIN_ID, type = CommandType.UUID, entityType = DomainResponse.class, description = "an optional domainId for the virtual machine. If the account parameter is used, domainId must also be used.")
     private Long domainId;
 
-    @Parameter(name = ApiConstants.START_VM, type = CommandType.BOOLEAN, description = "true if start vm after creating; defaulted to false if not specified")
+    @Parameter(name = ApiConstants.START_VM, type = CommandType.BOOLEAN, required = true, description = "true if start vm after creating; defaulted to false if not specified")
     private Boolean startVm;
 
-    @Parameter(name = ApiConstants.CLONE_TYPE, type = CommandType.STRING, description = "select fast(linked) clone type or full clone type(default is fast clone)", required = true)
+    @Parameter(name = ApiConstants.CLONE_TYPE, type = CommandType.STRING, required = true, description = "select fast(linked) clone type or full clone type(default is fast clone)")
     private String type;
 
     @Parameter(name = ApiConstants.ZONE_ID_LIST,
