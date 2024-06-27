@@ -1334,7 +1334,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                     moldCommand = "attachVolume";
                     Map<String, String> attParams = new HashMap<>();
                     attParams.put("id", dataVolumeId);
-                    attParams.put("virtualmachineid", userVM.getUuid());
+                    attParams.put("virtualmachineid", vmId);
                     String attachId = DisasterRecoveryClusterUtil.moldAttachVolumeAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey, attParams);
                     ///////////////////// 비동기 호출 예외 처리 필요
                     moldCommand = "updateDisasterRecoveryClusterVm";
@@ -1347,6 +1347,8 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                     vmMapParams.put("drclustermirrorvmvolpath", dataVolumeUuid);
                     vmMapParams.put("drclustermirrorvmvolstatus", "READY");
                     DisasterRecoveryClusterUtil.moldUpdateDisasterRecoveryClusterVmAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey, vmMapParams);
+                    DisasterRecoveryClusterVmMapVO newClusterDataVmMapVO = new DisasterRecoveryClusterVmMapVO(drCluster.getId(), cmd.getVmId(), vmId, userVM.getName(), "Stopped", dataVolume.getVolumeType().toString(), dataVolumeUuid, "SYNCING");
+                    disasterRecoveryClusterVmMapDao.persist(newClusterDataVmMapVO);
                 }
             }
             return true;
