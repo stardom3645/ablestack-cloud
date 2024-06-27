@@ -173,16 +173,10 @@ export default {
           message: 'message.action.clone.instance',
           docHelp: 'adminguide/virtual_machines.html#cloning-vms',
           dataView: true,
+          popup: true,
           show: (record) => { return true },
-          args: ['name', 'virtualmachineid', 'clonetype', 'startvm'],
-          mapping: {
-            virtualmachineid: {
-              value: (record, params) => { return record.id }
-            },
-            clonetype: {
-              options: ['FULL', 'LINKED']
-            }
-          }
+          disabled: (record) => { return record.hostcontrolstate === 'Offline' && record.hypervisor === 'KVM' },
+          component: shallowRef(defineAsyncComponent(() => import('@/views/compute/CloneVM.vue')))
         },
         {
           api: 'restoreVirtualMachine',
