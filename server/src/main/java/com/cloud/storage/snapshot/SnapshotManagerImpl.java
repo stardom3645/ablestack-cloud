@@ -1654,6 +1654,74 @@ public class SnapshotManagerImpl extends MutualExclusiveIdsManagerBase implement
 
         try {
             _resourceLimitMgr.checkResourceLimit(owner, ResourceType.snapshot);
+            _resourceLimitMgr.checkResourceLimit(owner, ResourceType.secondary_storage, new Long(volume.getSize()).longValue());
+        } catch (ResourceAllocationException e) {
+            if (snapshotType != Type.MANUAL) {
+                String msg = "Snapshot resource limit exceeded for account id : " + owner.getId() + ". Failed to create recurring snapshots";
+                logger.warn(msg);
+                _alertMgr.sendAlert(AlertManager.AlertType.ALERT_TYPE_UPDATE_RESOURCE_COUNT, 0L, 0L, msg, "Snapshot resource limit exceeded for account id : " + owner.getId()
+                        + ". Failed to create recurring snapshots; please use updateResourceLimit to increase the limit");
+            }
+            throw e;
+        }
+
+        // Determine the name for this snapshot
+        // Snapshot Name: VMInstancename + volumeName + timeString
+        String timeString = DateUtil.getDateDisplayString(DateUtil.GMT_TIMEZONE, new Date(), DateUtil.YYYYMMDD_FORMAT);
+
+        VMInstanceVO vmInstance = _vmDao.findById(volume.getInstanceId());
+        String vmDisplayName = "detached";
+        if (vmInstance != null) {
+            vmDisplayName = vmInstance.getHostName();
+        }
+        if (snapshotName == null)
+            snapshotName = vmDisplayName + "_" + volume.getName() + "_" + timeString;
+
+        HypervisorType hypervisorType = HypervisorType.None;
+        StoragePoolVO storagePool = _storagePoolDao.findById(volume.getDataStore().getId());
+        if (storagePool.getScope() == ScopeType.ZONE) {
+            hypervisorType = storagePool.getHypervisor();
+
+            // at the time being, managed storage only supports XenServer, ESX(i), and KVM (i.e. not Hyper-V), so the VHD file type can be mapped to XenServer
+            if (storagePool.isManaged() && HypervisorType.Any.equals(hypervisorType)) {
+                if (ImageFormat.VHD.equals(volume.getFormat())) {
+                    hypervisorType = HypervisorType.XenServer;
+                } else if (ImageFormat.OVA.equals(volume.getFormat())) {
+                    hypervisorType = HypervisorType.VMware;
+                } else if (ImageFormat.QCOW2.equals(volume.getFormat())) {
+                    hypervisorType = HypervisorType.KVM;
+                }
+            }
+        } else {
+            hypervisorType = volume.getHypervisorType();
+        }
+
+        SnapshotVO snapshotVO = new SnapshotVO(volume.getDataCenterId(), volume.getAccountId(), volume.getDomainId(), volume.getId(), volume.getDiskOfferingId(), snapshotName,
+                (short)snapshotType.ordinal(), snapshotType.name(), volume.getSize(), volume.getMinIops(), volume.getMaxIops(), hypervisorType, locationType);
+
+        SnapshotVO snapshot = _snapshotDao.persist(snapshotVO);
+        if (snapshot == null) {
+            throw new CloudRuntimeException("Failed to create snapshot for volume: " + volume.getId());
+        }
+        CallContext.current().putContextParameter(Snapshot.class, snapshot.getUuid());
+        _resourceLimitMgr.incrementResourceCount(volume.getAccountId(), ResourceType.snapshot);
+        _resourceLimitMgr.incrementResourceCount(volume.getAccountId(), ResourceType.secondary_storage, new Long(volume.getSize()));
+        return snapshot;
+    }
+
+    @Override
+    public Snapshot allocSnapshot(Long volumeId, Long policyId, String snapshotName, Snapshot.LocationType locationType, Boolean isFromVmSnapshot, List<Long> zoneIds, String cloneType) throws ResourceAllocationException {
+        Account caller = CallContext.current().getCallingAccount();
+        VolumeInfo volume = volFactory.getVolume(volumeId);
+        supportedByHypervisor(volume, isFromVmSnapshot);
+
+        // Verify permissions
+        _accountMgr.checkAccess(caller, null, true, volume);
+        Type snapshotType = getSnapshotType(policyId);
+        Account owner = _accountMgr.getAccount(volume.getAccountId());
+
+        try {
+            _resourceLimitMgr.checkResourceLimit(owner, ResourceType.snapshot);
             _resourceLimitMgr.checkResourceLimit(owner, ResourceType.secondary_storage, volume.getSize().longValue());
         } catch (ResourceAllocationException e) {
             if (snapshotType != Type.MANUAL) {
@@ -1697,12 +1765,11 @@ public class SnapshotManagerImpl extends MutualExclusiveIdsManagerBase implement
         }
 
         VolumeVO vol = _volsDao.findById(volumeId);
-        String volCloneType = vol.getCloneType();
 
         SnapshotVO snapshotVO = new SnapshotVO(volume.getDataCenterId(), volume.getAccountId(), volume.getDomainId(), volume.getId(), volume.getDiskOfferingId(), snapshotName,
                 (short)snapshotType.ordinal(), snapshotType.name(), volume.getSize(), volume.getMinIops(), volume.getMaxIops(), hypervisorType, locationType);
 
-        if (volCloneType != null && "full".equals(volCloneType)) {
+        if (cloneType != null && !cloneType.isBlank()  && "full".equals(cloneType)) {
             snapshotVO.setCloneStatus("full");
         }
         SnapshotVO snapshot = _snapshotDao.persist(snapshotVO);

@@ -154,6 +154,7 @@ import org.apache.commons.lang.math.NumberUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
+import org.checkerframework.checker.units.qual.A;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -2744,25 +2745,28 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
                         List<SnapshotVO> snapshot = _snapshotDao.listFullCloneVolumesToFlatten();
                         if (logger.isInfoEnabled()) {
                             if (snapshot.size() == 0) {
-                                logger.trace("Found " + snapshot.size() + " volumes to flatten.");
+                                logger.trace("Not Found volumes to flatten.");
                             } else {
-                                logger.info("Found " + snapshot.size() + " volumes to flatten.");
+                                logger.info("There is a total of " + snapshot.size() + " volume to flatten. The volume making the current flatten request is [id : " +snapshot.get(0).getVolumeId()+ "]");
+                                try {
+                                    VolumeInfo volume = volFactory.getVolume(snapshot.get(0).getVolumeId());
+                                    DataStore dataStore = _dataStoreMgr.getDataStore(volume.getPoolId(), DataStoreRole.Primary);
+                                    SnapshotInfo snapshotInfo = snapshotFactory.getSnapshot(snapshot.get(0).getId(), dataStore);
+                                    _volService.flattenVolumeAsync(snapshotInfo, dataStore);
+
+                                    SnapshotVO snap = _snapshotDao.findByIdIncludingRemoved(snapshot.get(0).getId());
+                                    snap.setCloneStatus("full-flattened");
+                                    _snapshotDao.update(snap.getId(), snap);
+
+                                    // VolumeVO vol = _volsDao.findById(snapshot.get(0).getVolumeId());
+                                    // vol.setCloneType("full-flattened");
+                                    // _volsDao.update(snap.getId(), vol);
+
+                                    // _volService.flattenVolumeAsync(volume);
+                                } catch (Exception e) {
+                                    logger.warn("Unable to flatten " + snapshot.get(0).getId(), e);
+                                }
                             }
-                        }
-                        try {
-                            VolumeInfo volume = volFactory.getVolume(snapshot.get(0).getVolumeId());
-                            DataStore dataStore = _dataStoreMgr.getDataStore(volume.getPoolId(), DataStoreRole.Primary);
-
-                            SnapshotVO snap = _snapshotDao.findById(snapshot.get(0).getId());
-                            SnapshotInfo snapshotInfo = snapshotFactory.getSnapshot(snap.getId(), dataStore);
-
-                            _volService.flattenVolumeAsync(snapshotInfo, dataStore);
-
-                            snap.setCloneStatus("full-flattened");
-                            _snapshotDao.update(snap.getId(), snap);
-                            // _volService.flattenVolumeAsync(volume);
-                        } catch (Exception e) {
-                            logger.warn("Unable to flatten " + snapshot.get(0).getId(), e);
                         }
                     } catch (Exception e) {
                         logger.error("Caught the following Exception", e);
@@ -9404,7 +9408,8 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
             }
             _accountMgr.checkAccess(caller, null, true, volume);
             logger.info("Clone VM >> Creating snapshot for root volume creation");
-            snapshot = (SnapshotVO) _volumeService.allocSnapshot(volumeId, Snapshot.INTERNAL_POLICY_ID, cmd.getTargetVM().getDisplayName() + "-RootSnapForClone", null, cmd.getZoneIds());
+
+            snapshot = (SnapshotVO) _volumeService.allocSnapshot(volumeId, Snapshot.INTERNAL_POLICY_ID, cmd.getTargetVM().getDisplayName() + "-RootSnapForClone", null, cmd.getZoneIds(), clone_type);
             if (snapshot == null) {
                 throw new CloudRuntimeException("Unable to create a snapshot during the template creation recording");
             }
@@ -9539,7 +9544,7 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
                 for (VolumeVO dataDisk : dataDisks) {
                     logger.info("Clone VM >> Start creating data disk snapshots : " + dataDisk.getId());
                     long diskId = dataDisk.getId();
-                    SnapshotVO dataSnapShot = (SnapshotVO) _volumeService.allocSnapshot(diskId, Snapshot.INTERNAL_POLICY_ID, dataDisk.getName(), null, cmd.getZoneIds());
+                    SnapshotVO dataSnapShot = (SnapshotVO) _volumeService.allocSnapshot(diskId, Snapshot.INTERNAL_POLICY_ID, dataDisk.getName(), null, cmd.getZoneIds(), clone_type);
                     if (dataSnapShot == null) {
                         throw new CloudRuntimeException("Unable to allocate snapshot of data disk: " + dataDisk.getId() + " name: " + dataDisk.getName());
                     }
