@@ -30,10 +30,10 @@
           <a-descriptions-item :label="$t('label.id')" class="bold-label">
             {{ record.mirroredVmId }}
           </a-descriptions-item>
-          <a-descriptions-item v-if="record.mirroredVmVolType === 'ROOT'":label="$t('label.dr.volume.root.disk.status')">
+          <a-descriptions-item v-if="record.mirroredVmVolType === 'ROOT'" :label="$t('label.dr.volume.root.disk.status')">
             {{ record.mirroredVmVolStatus }}
           </a-descriptions-item>
-          <a-descriptions-item v-if="record.mirroredVmVolType === 'DATADISK'":label="$t('label.dr.volume.data.disk.status')">
+          <a-descriptions-item v-if="record.mirroredVmVolType === 'DATADISK'" :label="$t('label.dr.volume.data.disk.status')">
             {{ record.mirroredVmVolStatus }}
           </a-descriptions-item>
         </a-descriptions>
