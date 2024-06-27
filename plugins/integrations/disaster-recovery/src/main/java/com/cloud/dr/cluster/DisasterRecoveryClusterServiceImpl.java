@@ -1416,14 +1416,18 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                         glueParams.put("imageName", volumeUuid);
                         boolean result = DisasterRecoveryClusterUtil.glueImageMirrorDeleteAPI(glueUrl, glueCommand, glueMethod, glueParams);
                         if (result) {
+                            LOGGER.info("glueImageMirrorDeleteAPI 성공:::::::::::::::::::::::::::::");
                             List<DisasterRecoveryClusterVmMapVO> vmMap = disasterRecoveryClusterVmMapDao.listByDisasterRecoveryClusterId(drCluster.getId());
                             if (!CollectionUtils.isEmpty(vmMap)) {
                                 for (DisasterRecoveryClusterVmMapVO map : vmMap) {
-                                    if (map.getVmId() == userVM.getId() && volumeUuid.equals(map.getMirroredVmVolumePath())) {
+                                    UserVmJoinVO vm = userVmJoinDao.findById(map.getVmId());
+                                    if (String.valueOf(vmId).equals(vm.getUuid()) && volumeUuid.equals(map.getMirroredVmVolumePath())) {
+                                        LOGGER.info("DisasterRecoveryClusterVmMapVO in:::::::::::::::::::::::::::::");
                                         String mirrorVmId = map.getMirroredVmId();
                                         disasterRecoveryClusterVmMapDao.remove(map.getId());
                                         List<DisasterRecoveryClusterVmMapVO> finalMap = disasterRecoveryClusterVmMapDao.listByDisasterRecoveryClusterVmId(drCluster.getId(), vmId);
                                         if (CollectionUtils.isEmpty(finalMap)) {
+                                            LOGGER.info("moldDeleteDisasterRecoveryClusterVmAPI in:::::::::::::::::::::::::::::");
                                             String moldUrl = url + "/client/api/";
                                             String moldMethod = "GET";
                                             String moldCommand = "deleteDisasterRecoveryClusterVm";
