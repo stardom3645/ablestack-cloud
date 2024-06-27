@@ -24,6 +24,8 @@ import com.cloud.dc.dao.DataCenterIpAddressDao;
 import com.cloud.dc.dao.DedicatedResourceDao;
 import com.cloud.dc.dao.HostPodDao;
 import com.cloud.dc.dao.VlanDao;
+import com.cloud.domain.Domain;
+import com.cloud.domain.dao.DomainDao;
 import com.cloud.exception.InvalidParameterValueException;
 import com.cloud.host.dao.HostDao;
 import com.cloud.network.Network;
@@ -34,63 +36,63 @@ import com.cloud.network.dao.IPAddressDao;
 import com.cloud.network.dao.NsxProviderDao;
 import com.cloud.network.dao.PhysicalNetworkDao;
 import com.cloud.network.element.NsxProviderVO;
+import com.cloud.offering.DiskOffering;
 import com.cloud.offering.NetworkOffering;
 import com.cloud.offerings.NetworkOfferingVO;
 import com.cloud.offerings.dao.NetworkOfferingDao;
+import com.cloud.storage.DiskOfferingVO;
 import com.cloud.storage.StorageManager;
 import com.cloud.storage.dao.VMTemplateZoneDao;
 import com.cloud.storage.dao.VolumeDao;
+import com.cloud.user.Account;
+import com.cloud.user.User;
+import com.cloud.utils.db.EntityManager;
+import com.cloud.utils.db.SearchCriteria;
 import com.cloud.utils.net.NetUtils;
 import com.cloud.vm.dao.VMInstanceDao;
 import org.apache.cloudstack.annotation.dao.AnnotationDao;
 import org.apache.cloudstack.api.command.admin.network.CreateNetworkOfferingCmd;
+import org.apache.cloudstack.api.command.admin.offering.UpdateDiskOfferingCmd;
 import org.apache.cloudstack.api.command.admin.zone.DeleteZoneCmd;
 import org.apache.cloudstack.engine.subsystem.api.storage.ZoneScope;
 import org.apache.cloudstack.framework.config.ConfigDepot;
 import org.apache.cloudstack.framework.config.ConfigKey;
 import org.apache.cloudstack.framework.config.dao.ConfigurationDao;
-import org.apache.cloudstack.storage.datastore.db.ImageStoreDao;
-import com.cloud.domain.Domain;
-import com.cloud.domain.dao.DomainDao;
-import com.cloud.offering.DiskOffering;
-import com.cloud.storage.DiskOfferingVO;
-import com.cloud.user.Account;
-import com.cloud.user.User;
-import com.cloud.utils.db.EntityManager;
-import com.cloud.utils.db.SearchCriteria;
-import org.apache.cloudstack.api.command.admin.offering.UpdateDiskOfferingCmd;
+import org.apache.cloudstack.framework.config.impl.ConfigurationVO;
 import org.apache.cloudstack.resourcedetail.DiskOfferingDetailVO;
 import org.apache.cloudstack.resourcedetail.dao.DiskOfferingDetailsDao;
+import org.apache.cloudstack.storage.datastore.db.ImageStoreDao;
+import org.apache.cloudstack.vm.UnmanagedVMsManager;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
+import org.mockito.Spy;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import java.util.Collections;
-import org.mockito.InjectMocks;
-import org.mockito.Spy;
-
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.Mockito.when;
-import static org.mockito.Mockito.lenient;
-import static org.mockito.Mockito.anyString;
 import static org.mockito.Mockito.anyBoolean;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.nullable;
-import static org.mockito.Mockito.anyMap;
-import static org.mockito.Mockito.anyList;
 import static org.mockito.Mockito.anyInt;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.anyList;
+import static org.mockito.Mockito.anyMap;
+import static org.mockito.Mockito.anyString;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.nullable;
 import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @RunWith(MockitoJUnitRunner.class)
 public class ConfigurationManagerImplTest {
@@ -108,6 +110,8 @@ public class ConfigurationManagerImplTest {
     User userMock;
     @Mock
     Domain domainMock;
+    @Mock
+    DataCenterDao zoneDaoMock;
     @Mock
     DomainDao domainDaoMock;
     @Mock
