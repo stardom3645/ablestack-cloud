@@ -1399,13 +1399,13 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
             String ipList = Script.runSimpleBashScript("cat /etc/hosts | grep -E 'scvm1-mngt|scvm2-mngt|scvm3-mngt' | awk '{print $1}' | tr '\n' ','");
             // 미러링 해제 glue-api 호출
             if (ipList != null || !ipList.isEmpty()) {
-                ipList = ipList.replaceAll(",$", "");
-                String[] array = ipList.split(",");
-                for (int i=0; i < array.length; i++) {
-                    UserVmJoinVO userVM = userVmJoinDao.findById(vmId);
-                    List<VolumeVO> volumes = volsDao.findByInstance(userVM.getId());
-                    for (VolumeVO vol : volumes) {
-                        String volumeUuid = vol.getPath();
+                UserVmJoinVO userVM = userVmJoinDao.findById(vmId);
+                List<VolumeVO> volumes = volsDao.findByInstance(userVM.getId());
+                for (VolumeVO vol : volumes) {
+                    String volumeUuid = vol.getPath();
+                    ipList = ipList.replaceAll(",$", "");
+                    String[] array = ipList.split(",");
+                    for (int i=0; i < array.length; i++) {
                         String glueIp = array[i];
                         ///////////////////// glue-api 프로토콜과 포트 확정 시 변경 예정
                         String glueUrl = "https://" + glueIp + ":8080/api/v1";
@@ -1437,6 +1437,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                                     }
                                 }
                             }
+                            break;
                         }
                     }
                 }
