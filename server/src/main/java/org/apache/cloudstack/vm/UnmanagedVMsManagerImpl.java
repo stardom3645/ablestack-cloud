@@ -1632,7 +1632,7 @@ public class UnmanagedVMsManagerImpl implements UnmanagedVMsManager {
         try {
             HostVO convertHost = selectInstanceConversionKVMHostInCluster(destinationCluster, convertInstanceHostId);
             CheckConvertInstanceAnswer conversionSupportAnswer = checkConversionSupportOnHost(convertHost, sourceVMName, false);
-            LOGGER.debug(String.format("The host %s (%s) is selected to execute the conversion of the instance %s" +
+            logger.debug(String.format("The host %s (%s) is selected to execute the conversion of the instance %s" +
                     " from VMware to KVM ", convertHost.getId(), convertHost.getName(), sourceVMName));
 
             temporaryConvertLocation = selectInstanceConversionTemporaryLocation(destinationCluster, convertStoragePoolId);
@@ -1797,10 +1797,10 @@ public class UnmanagedVMsManagerImpl implements UnmanagedVMsManager {
         if (!result) {
             String msg = String.format("Could not remove the template file %s on datastore %s",
                     ovfTemplateOnConvertLocation, convertLocation.getUrl());
-            LOGGER.warn(msg);
+            logger.warn(msg);
             return;
         }
-        LOGGER.debug(String.format("Removed the template file %s on datastore %s",
+        logger.debug(String.format("Removed the template file %s on datastore %s",
                 ovfTemplateOnConvertLocation, convertLocation.getUrl()));
     }
 
@@ -1831,7 +1831,7 @@ public class UnmanagedVMsManagerImpl implements UnmanagedVMsManager {
             }
             return selectedHost;
         }
-
+        
         // Auto select host with conversion capability
         List<HostVO> hosts = hostDao.listByClusterHypervisorTypeAndHostCapability(destinationCluster.getId(), destinationCluster.getHypervisorType(), Host.HOST_INSTANCE_CONVERSION);
         if (CollectionUtils.isNotEmpty(hosts)) {
@@ -1846,12 +1846,12 @@ public class UnmanagedVMsManagerImpl implements UnmanagedVMsManager {
 
         String err = String.format("Could not find any suitable %s host in cluster %s to perform the instance conversion",
                 destinationCluster.getHypervisorType(), destinationCluster.getName());
-        LOGGER.error(err);
+        logger.error(err);
         throw new CloudRuntimeException(err);
     }
 
     private CheckConvertInstanceAnswer checkConversionSupportOnHost(HostVO convertHost, String sourceVM, boolean checkWindowsGuestConversionSupport) {
-        LOGGER.debug(String.format("Checking the %s conversion support on the host %s (%s)", checkWindowsGuestConversionSupport? "windows guest" : "", convertHost.getId(), convertHost.getName()));
+        logger.debug(String.format("Checking the %s conversion support on the host %s (%s)", checkWindowsGuestConversionSupport? "windows guest" : "", convertHost.getId(), convertHost.getName()));
         CheckConvertInstanceCommand cmd = new CheckConvertInstanceCommand(checkWindowsGuestConversionSupport);
         int timeoutSeconds = 60;
         cmd.setWait(timeoutSeconds);
@@ -1862,14 +1862,14 @@ public class UnmanagedVMsManagerImpl implements UnmanagedVMsManager {
         } catch (AgentUnavailableException | OperationTimedoutException e) {
             String err = String.format("Failed to check %s conversion support on the host %s for converting instance %s from VMware to KVM due to: %s",
                     checkWindowsGuestConversionSupport? "windows guest" : "", convertHost.getName(), sourceVM, e.getMessage());
-            LOGGER.error(err);
+            logger.error(err);
             throw new CloudRuntimeException(err);
         }
 
         if (!checkConvertInstanceAnswer.getResult()) {
             String err = String.format("The host %s doesn't support conversion of instance %s from VMware to KVM due to: %s",
                     convertHost.getName(), sourceVM, checkConvertInstanceAnswer.getDetails());
-            LOGGER.error(err);
+            logger.error(err);
             throw new CloudRuntimeException(err);
         }
 
@@ -1879,7 +1879,7 @@ public class UnmanagedVMsManagerImpl implements UnmanagedVMsManager {
     private UnmanagedInstanceTO convertVmwareInstanceToKVMWithOVFOnConvertLocation(String sourceVM, UnmanagedInstanceTO sourceVMwareInstance, HostVO convertHost,
                                                                                    List<StoragePoolVO> convertStoragePools, DataStoreTO temporaryConvertLocation,
                                                                                    String ovfTemplateDirConvertLocation) {
-        LOGGER.debug(String.format("Delegating the conversion of instance %s from VMware to KVM to the host %s (%s) using OVF %s on conversion datastore",
+        logger.debug(String.format("Delegating the conversion of instance %s from VMware to KVM to the host %s (%s) using OVF %s on conversion datastore",
                 sourceVM, convertHost.getId(), convertHost.getName(), ovfTemplateDirConvertLocation));
 
         RemoteInstanceTO remoteInstanceTO = new RemoteInstanceTO(sourceVM);
@@ -1900,8 +1900,8 @@ public class UnmanagedVMsManagerImpl implements UnmanagedVMsManager {
         }
 
         if (!convertAnswer.getResult()) {
-            String err = String.format("The host %s doesn't support conversion of instance %s from VMware to KVM due to: %s",
-                    convertHost.getName(), sourceVM, checkConvertInstanceAnswer.getDetails());
+            String err = String.format("The convert process failed for instance %s from VMware to KVM on host %s: %s",
+                    sourceVM, convertHost.getName(), convertAnswer.getDetails());
             logger.error(err);
             throw new CloudRuntimeException(err);
         }
@@ -1911,7 +1911,7 @@ public class UnmanagedVMsManagerImpl implements UnmanagedVMsManager {
     private UnmanagedInstanceTO convertVmwareInstanceToKVMAfterExportingOVFToConvertLocation(String sourceVM, UnmanagedInstanceTO sourceVMwareInstance, HostVO convertHost,
                                                                                              List<StoragePoolVO> convertStoragePools, DataStoreTO temporaryConvertLocation,
                                                                                              String vcenterHost, String vcenterUsername, String vcenterPassword, String datacenterName) {
-        LOGGER.debug(String.format("Delegating the conversion of instance %s from VMware to KVM to the host %s (%s) after OVF export through ovftool",
+        logger.debug(String.format("Delegating the conversion of instance %s from VMware to KVM to the host %s (%s) after OVF export through ovftool",
                 sourceVM, convertHost.getId(), convertHost.getName()));
 
         RemoteInstanceTO remoteInstanceTO = new RemoteInstanceTO(sourceVMwareInstance.getName(), vcenterHost, vcenterUsername, vcenterPassword, datacenterName);
@@ -1933,14 +1933,14 @@ public class UnmanagedVMsManagerImpl implements UnmanagedVMsManager {
         } catch (AgentUnavailableException | OperationTimedoutException e) {
             String err = String.format("Could not send the convert instance command to host %s (%s) due to: %s",
                     convertHost.getId(), convertHost.getName(), e.getMessage());
-            LOGGER.error(err, e);
+            logger.error(err, e);
             throw new CloudRuntimeException(err);
         }
 
         if (!convertAnswer.getResult()) {
             String err = String.format("The convert process failed for instance %s from VMware to KVM on host %s: %s",
                     sourceVM, convertHost.getName(), convertAnswer.getDetails());
-            LOGGER.error(err);
+            logger.error(err);
             throw new CloudRuntimeException(err);
         }
         return ((ConvertInstanceAnswer) convertAnswer).getConvertedInstance();
@@ -1954,7 +1954,7 @@ public class UnmanagedVMsManagerImpl implements UnmanagedVMsManager {
         pools.addAll(zonePools);
         if (pools.isEmpty()) {
             String msg = String.format("Cannot find suitable storage pools in cluster %s for the conversion", destinationCluster.getName());
-            LOGGER.error(msg);
+            logger.error(msg);
             throw new CloudRuntimeException(msg);
         }
         return pools;

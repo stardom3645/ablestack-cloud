@@ -461,6 +461,65 @@ public class ConfigurationManagerImplTest {
         Assert.assertNotNull(offering);
     }
 
+    public void testValidateInvalidConfiguration() {
+        Mockito.doReturn(null).when(configDao).findByName(Mockito.anyString());
+        String msg = configurationManagerImplSpy.validateConfigurationValue("test.config.name", "testvalue", ConfigKey.Scope.Global.toString());
+        Assert.assertEquals("Invalid configuration variable.", msg);
+    }
+
+    @Test
+    public void testValidateInvalidScopeForConfiguration() {
+        ConfigurationVO cfg = mock(ConfigurationVO.class);
+        when(cfg.getScope()).thenReturn(ConfigKey.Scope.Account.toString());
+        Mockito.doReturn(cfg).when(configDao).findByName(Mockito.anyString());
+        String msg = configurationManagerImplSpy.validateConfigurationValue("test.config.name", "testvalue", ConfigKey.Scope.Domain.toString());
+        Assert.assertEquals("Invalid scope id provided for the parameter test.config.name", msg);
+    }
+
+    @Test(expected = InvalidParameterValueException.class)
+    public void testValidateConfig_ThreadsOnKVMHostToTransferVMwareVMFiles_Failure() {
+        ConfigurationVO cfg = mock(ConfigurationVO.class);
+        when(cfg.getScope()).thenReturn(ConfigKey.Scope.Global.toString());
+        ConfigKey<Integer> configKey = UnmanagedVMsManager.ThreadsOnKVMHostToImportVMwareVMFiles;
+        Mockito.doReturn(cfg).when(configDao).findByName(Mockito.anyString());
+        Mockito.doReturn(configKey).when(configurationManagerImplSpy._configDepot).get(configKey.key());
+        configurationManagerImplSpy.validateConfigurationValue(configKey.key(), "11", configKey.scope().toString());
+    }
+
+    @Test
+    public void testValidateConfig_ThreadsOnKVMHostToTransferVMwareVMFiles_Success() {
+        ConfigurationVO cfg = mock(ConfigurationVO.class);
+        when(cfg.getScope()).thenReturn(ConfigKey.Scope.Global.toString());
+        ConfigKey<Integer> configKey = UnmanagedVMsManager.ThreadsOnKVMHostToImportVMwareVMFiles;
+        Mockito.doReturn(cfg).when(configDao).findByName(Mockito.anyString());
+        Mockito.doReturn(configKey).when(configurationManagerImplSpy._configDepot).get(configKey.key());
+        String msg = configurationManagerImplSpy.validateConfigurationValue(configKey.key(), "10", configKey.scope().toString());
+        Assert.assertNull(msg);
+    }
+
+    @Test(expected = InvalidParameterValueException.class)
+    public void testValidateConfig_ConvertVmwareInstanceToKvmTimeout_Failure() {
+        ConfigurationVO cfg = mock(ConfigurationVO.class);
+        when(cfg.getScope()).thenReturn(ConfigKey.Scope.Global.toString());
+        ConfigKey<Integer> configKey = UnmanagedVMsManager.ConvertVmwareInstanceToKvmTimeout;
+        Mockito.doReturn(cfg).when(configDao).findByName(Mockito.anyString());
+        Mockito.doReturn(configKey).when(configurationManagerImplSpy._configDepot).get(configKey.key());
+        configurationManagerImplSpy.populateConfigValuesForValidationSet();
+        configurationManagerImplSpy.validateConfigurationValue(configKey.key(), "0", configKey.scope().toString());
+    }
+
+    @Test
+    public void testValidateConfig_ConvertVmwareInstanceToKvmTimeout_Success() {
+        ConfigurationVO cfg = mock(ConfigurationVO.class);
+        when(cfg.getScope()).thenReturn(ConfigKey.Scope.Global.toString());
+        ConfigKey<Integer> configKey = UnmanagedVMsManager.ConvertVmwareInstanceToKvmTimeout;
+        Mockito.doReturn(cfg).when(configDao).findByName(Mockito.anyString());
+        Mockito.doReturn(configKey).when(configurationManagerImplSpy._configDepot).get(configKey.key());
+        configurationManagerImplSpy.populateConfigValuesForValidationSet();
+        String msg = configurationManagerImplSpy.validateConfigurationValue(configKey.key(), "9", configKey.scope().toString());
+        Assert.assertNull(msg);
+    }
+
     @Test
     public void validateDomainTestInvalidIdThrowException() {
         Mockito.doReturn(null).when(domainDaoMock).findById(invalidId);

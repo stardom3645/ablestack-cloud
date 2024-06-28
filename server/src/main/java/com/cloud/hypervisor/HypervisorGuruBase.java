@@ -441,13 +441,13 @@ public abstract class HypervisorGuruBase extends AdapterBase implements Hypervis
 
     @Override
     public String createVMTemplateOutOfBand(String hostIp, String vmName, Map<String, String> params, DataStoreTO templateLocation, int threadsCountToExportOvf) {
-        s_logger.error("Unsupported operation: cannot create template file");
+        logger.error("Unsupported operation: cannot create template file");
         return null;
     }
 
     @Override
     public boolean removeVMTemplateOutOfBand(DataStoreTO templateLocation, String templateDir) {
-        s_logger.error("Unsupported operation: cannot remove template file");
+        logger.error("Unsupported operation: cannot remove template file");
         return false;
     }
 }
