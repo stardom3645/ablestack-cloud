@@ -445,7 +445,7 @@ public class LibvirtStorageAdaptor implements StorageAdaptor {
                 return true;
             }
         } catch (LibvirtException e) {
-            s_logger.error("Failure in destroying the pre-existing storage pool for changing the NFS mount options" + e);
+            logger.error("Failure in destroying the pre-existing storage pool for changing the NFS mount options" + e);
         }
         return false;
     }

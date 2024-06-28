@@ -335,7 +335,7 @@ public class StoragePoolAutomationImpl implements StoragePoolAutomation {
                     logger.debug("ModifyStoragePool add failed due to " + ((answer == null) ? "answer null" : answer.getDetails()));
                 }
                 if (answer != null && nfsMountOpts.second()) {
-                    s_logger.error(String.format("Unable to attach storage pool to the host %s due to %s",  host,  answer.getDetails()));
+                    logger.error(String.format("Unable to attach storage pool to the host %s due to %s",  host,  answer.getDetails()));
                     StringBuilder exceptionSB = new StringBuilder("Unable to attach storage pool to the host ").append(host.getName());
                     String reason = storageManager.getStoragePoolMountFailureReason(answer.getDetails());
                     if (reason!= null) {

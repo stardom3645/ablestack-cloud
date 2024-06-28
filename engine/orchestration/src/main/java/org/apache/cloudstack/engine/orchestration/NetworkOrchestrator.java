@@ -1062,7 +1062,7 @@ public class NetworkOrchestrator extends ManagerBase implements NetworkOrchestra
     private NicVO checkForRaceAndAllocateNic(final NicProfile requested, final Network network, final Boolean isDefaultNic, int deviceId, final VirtualMachineProfile vm)
             throws InsufficientVirtualNetworkCapacityException, InsufficientAddressCapacityException {
         final NetworkVO ntwkVO = _networksDao.findById(network.getId());
-        s_logger.debug("Allocating nic for vm " + vm.getVirtualMachine() + " in network " + network + " with requested profile " + requested);
+        logger.debug("Allocating nic for vm {} in network {} with requested profile {}", vm.getVirtualMachine(), network, requested);
         final NetworkGuru guru = AdapterBase.getAdapterByName(networkGurus, ntwkVO.getGuruName());
 
         NicVO vo = null;

@@ -224,14 +224,14 @@ public class StorPoolStatsCollector extends ManagerBase {
                     Map<String, String> snapshotsWithDelayDelete = new HashMap<>();
 
                     try {
-                        log.debug(String.format("Collecting snapshots marked to be deleted for zone [%s]", storagePool.getDataCenterId()));
+                        logger.debug(String.format("Collecting snapshots marked to be deleted for zone [%s]", storagePool.getDataCenterId()));
                         JsonArray arr = StorPoolUtil.snapshotsListAllClusters(StorPoolUtil.getSpConnection(storagePool.getUuid(),
                                 storagePool.getId(), storagePoolDetailsDao, storagePoolDao));
                          snapshotsWithDelayDelete.putAll(getSnapshotsMarkedForDeletion(arr));
-                         log.debug(String.format("Found snapshot details [%s] and snapshots on StorPool with delay delete flag [%s]", snapshotsDetails, snapshotsWithDelayDelete));
+                         logger.debug(String.format("Found snapshot details [%s] and snapshots on StorPool with delay delete flag [%s]", snapshotsDetails, snapshotsWithDelayDelete));
                          syncSnapshots(snapshotsDetails, snapshotsWithDelayDelete);
                     } catch (Exception e) {
-                        log.debug("Could not fetch the snapshots with delay delete flag " + e.getMessage());
+                        logger.debug("Could not fetch the snapshots with delay delete flag " + e.getMessage());
                     }
                 }
             }
@@ -273,7 +273,7 @@ public class StorPoolStatsCollector extends ManagerBase {
                 }
                 collectSnapshots(snapshotsWithDelayDelete, response);
             }
-            log.debug("Found snapshots on StorPool" + snapshotsWithDelayDelete);
+            logger.debug("Found snapshots on StorPool" + snapshotsWithDelayDelete);
             return snapshotsWithDelayDelete;
         }
 

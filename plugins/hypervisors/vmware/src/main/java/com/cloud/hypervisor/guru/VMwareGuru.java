@@ -1370,9 +1370,9 @@ public class VMwareGuru extends HypervisorGuruBase implements HypervisorGuru, Co
         String dataStoreUrl = getDataStoreUrlForTemplate(convertLocation);
         String vmOvfName = UUID.randomUUID().toString();
         String vmOvfCreationPath = createDirOnStorage(vmOvfName, dataStoreUrl, null);
-        s_logger.debug(String.format("Creating OVF %s for the VM %s at %s", vmOvfName, vmMO.getName(), vmOvfCreationPath));
+        logger.debug(String.format("Creating OVF %s for the VM %s at %s", vmOvfName, vmMO.getName(), vmOvfCreationPath));
         vmMO.exportVm(vmOvfCreationPath, vmOvfName, false, false, threadsCountToExportOvf);
-        s_logger.debug(String.format("Created OVF %s for the VM %s at %s", vmOvfName, vmMO.getName(), vmOvfCreationPath));
+        logger.debug(String.format("Created OVF %s for the VM %s at %s", vmOvfName, vmMO.getName(), vmOvfCreationPath));
         return vmOvfName;
     }
 
@@ -1404,19 +1404,19 @@ public class VMwareGuru extends HypervisorGuruBase implements HypervisorGuru, Co
                 if (isWindowsVm(vmMo)) {
                     String err = String.format("VM %s is a Windows VM and its Running, cannot be imported." +
                             " Please gracefully shut it down before attempting the import", vmName);
-                    s_logger.error(err);
+                    logger.error(err);
                     throw new CloudRuntimeException(err);
                 }
 
                 if (isVMOnStandaloneHost(vmMo)) { // or datacenter.equalsIgnoreCase("ha-datacenter")? [Note: default datacenter name on standalone host: ha-datacenter]
                     String err = String.format("VM %s might be on standalone host and is Running, cannot be imported." +
                             " Please shut it down before attempting the import", vmName);
-                    s_logger.error(err);
+                    logger.error(err);
                     throw new CloudRuntimeException(err);
                 }
             }
 
-            s_logger.debug(String.format("Cloning VM %s at VMware host %s on vCenter %s", vmName, hostIp, vcenter));
+            logger.debug(String.format("Cloning VM %s at VMware host %s on vCenter %s", vmName, hostIp, vcenter));
             VirtualMachineMO clonedVM = createCloneFromSourceVM(vmName, vmMo, dataCenterMO);
             logger.debug(String.format("VM %s cloned successfully, to VM %s", vmName, clonedVM.getName()));
             UnmanagedInstanceTO clonedInstance = VmwareHelper.getUnmanagedInstance(vmMo.getRunningHost(), clonedVM);
@@ -1459,7 +1459,7 @@ public class VMwareGuru extends HypervisorGuruBase implements HypervisorGuru, Co
         String datacenter = params.get(VmDetailConstants.VMWARE_DATACENTER_NAME);
         String username = params.get(VmDetailConstants.VMWARE_VCENTER_USERNAME);
         String password = params.get(VmDetailConstants.VMWARE_VCENTER_PASSWORD);
-        s_logger.debug(String.format("Creating template of the VM %s at VMware host %s on vCenter %s", vmName, hostIp, vcenter));
+        logger.debug(String.format("Creating template of the VM %s at VMware host %s on vCenter %s", vmName, hostIp, vcenter));
 
         try {
             VmwareContext context = connectToVcenter(vcenter, username, password);
@@ -1467,15 +1467,15 @@ public class VMwareGuru extends HypervisorGuruBase implements HypervisorGuru, Co
             VirtualMachineMO vmMo = dataCenterMO.findVm(vmName);
             if (vmMo == null) {
                 String err = String.format("Cannot find VM with name %s on vCenter %s/%s, to create template file", vmName, vcenter, datacenter);
-                s_logger.error(err);
+                logger.error(err);
                 throw new CloudRuntimeException(err);
             }
             String ovaTemplate = createOVFTemplateOfVM(vmMo, templateLocation, threadsCountToExportOvf);
-            s_logger.debug(String.format("OVF %s created successfully on the datastore", ovaTemplate));
+            logger.debug(String.format("OVF %s created successfully on the datastore", ovaTemplate));
             return ovaTemplate;
         } catch (Exception e) {
             String err = String.format("Error create template file of the VM: %s from vCenter %s: %s", vmName, vcenter, e.getMessage());
-            s_logger.error(err, e);
+            logger.error(err, e);
             throw new CloudRuntimeException(err, e);
         }
     }
@@ -1486,7 +1486,7 @@ public class VMwareGuru extends HypervisorGuruBase implements HypervisorGuru, Co
         String datacenter = params.get(VmDetailConstants.VMWARE_DATACENTER_NAME);
         String username = params.get(VmDetailConstants.VMWARE_VCENTER_USERNAME);
         String password = params.get(VmDetailConstants.VMWARE_VCENTER_PASSWORD);
-        s_logger.debug(String.format("Removing cloned VM %s at VMware host %s on vCenter %s", vmName, hostIp, vcenter));
+        logger.debug(String.format("Removing cloned VM %s at VMware host %s on vCenter %s", vmName, hostIp, vcenter));
 
         try {
             VmwareContext context = connectToVcenter(vcenter, username, password);
@@ -1509,14 +1509,14 @@ public class VMwareGuru extends HypervisorGuruBase implements HypervisorGuru, Co
 
     @Override
     public boolean removeVMTemplateOutOfBand(DataStoreTO templateLocation, String templateDir) {
-        s_logger.debug(String.format("Removing template %s", templateDir));
+        logger.debug(String.format("Removing template %s", templateDir));
 
         try {
             String dataStoreUrl = getDataStoreUrlForTemplate(templateLocation);
             return deleteDirOnStorage(templateDir, dataStoreUrl, null);
         } catch (Exception e) {
             String err = String.format("Error removing template file %s: %s", templateDir, e.getMessage());
-            s_logger.error(err, e);
+            logger.error(err, e);
             return false;
         }
     }
@@ -1544,7 +1544,7 @@ public class VMwareGuru extends HypervisorGuruBase implements HypervisorGuru, Co
 
     private String createDirOnStorage(String dirName, String nfsStorageUrl, String nfsVersion) throws Exception {
         String mountPoint = mountManager.getMountPoint(nfsStorageUrl, nfsVersion);
-        s_logger.debug("Create dir storage location - url: " + nfsStorageUrl + ", mount point: " + mountPoint + ", dir: " + dirName);
+        logger.debug("Create dir storage location - url: " + nfsStorageUrl + ", mount point: " + mountPoint + ", dir: " + dirName);
         String dirMountPath = mountPoint + File.separator + dirName;
         createDir(dirMountPath);
         return dirMountPath;
@@ -1552,13 +1552,13 @@ public class VMwareGuru extends HypervisorGuruBase implements HypervisorGuru, Co
 
     private void createDir(String dirName) throws Exception {
         synchronized (dirName.intern()) {
-            Script command = new Script("mkdir", s_logger);
+            Script command = new Script("mkdir", logger);
             command.add("-p");
             command.add(dirName);
             String cmdResult = command.execute();
             if (cmdResult != null) {
                 String msg = "Unable to create directory: " + dirName + ", error msg: " + cmdResult;
-                s_logger.error(msg);
+                logger.error(msg);
                 throw new Exception(msg);
             }
         }
@@ -1567,26 +1567,26 @@ public class VMwareGuru extends HypervisorGuruBase implements HypervisorGuru, Co
     private boolean deleteDirOnStorage(String dirName, String nfsStorageUrl, String nfsVersion) throws Exception {
         try {
             String mountPoint = mountManager.getMountPoint(nfsStorageUrl, nfsVersion);
-            s_logger.debug("Delete dir storage location - url: " + nfsStorageUrl + ", mount point: " + mountPoint + ", dir: " + dirName);
+            logger.debug("Delete dir storage location - url: " + nfsStorageUrl + ", mount point: " + mountPoint + ", dir: " + dirName);
             String dirMountPath = mountPoint + File.separator + dirName;
             deleteDir(dirMountPath);
             return true;
         } catch (Exception e) {
             String err = String.format("Unable to delete dir %s: %s", dirName, e.getMessage());
-            s_logger.error(err, e);
+            logger.error(err, e);
             return false;
         }
     }
 
     private void deleteDir(String dirName) throws Exception {
         synchronized (dirName.intern()) {
-            Script command = new Script("rm", s_logger);
+            Script command = new Script("rm", logger);
             command.add("-rf");
             command.add(dirName);
             String cmdResult = command.execute();
             if (cmdResult != null) {
                 String msg = "Unable to delete directory: " + dirName + ", error msg: " + cmdResult;
-                s_logger.error(msg);
+                logger.error(msg);
                 throw new Exception(msg);
             }
         }

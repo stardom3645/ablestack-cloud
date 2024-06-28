@@ -1520,6 +1520,27 @@ public class VirtualMachineManagerImpl extends ManagerBase implements VirtualMac
         vmProfile.setMemoryOvercommitRatio(Float.parseFloat(clusterDetailRam.getValue()));
     }
 
+    private void updateOverCommitRatioForVmProfile(VirtualMachineProfile vmProfile, long clusterId) {
+        final ClusterDetailsVO clusterDetailCpu = _clusterDetailsDao.findDetail(clusterId, VmDetailConstants.CPU_OVER_COMMIT_RATIO);
+        final ClusterDetailsVO clusterDetailRam = _clusterDetailsDao.findDetail(clusterId, VmDetailConstants.MEMORY_OVER_COMMIT_RATIO);
+        final float parsedClusterCpuDetailCpu = Float.parseFloat(clusterDetailCpu.getValue());
+        final float parsedClusterDetailRam = Float.parseFloat(clusterDetailRam.getValue());
+        UserVmDetailVO vmDetailCpu = userVmDetailsDao.findDetail(vmProfile.getId(), VmDetailConstants.CPU_OVER_COMMIT_RATIO);
+        UserVmDetailVO vmDetailRam = userVmDetailsDao.findDetail(vmProfile.getId(), VmDetailConstants.MEMORY_OVER_COMMIT_RATIO);
+
+        if ((vmDetailCpu == null && parsedClusterCpuDetailCpu > 1f) ||
+                (vmDetailCpu != null && Float.parseFloat(vmDetailCpu.getValue()) != parsedClusterCpuDetailCpu)) {
+            userVmDetailsDao.addDetail(vmProfile.getId(), VmDetailConstants.CPU_OVER_COMMIT_RATIO, clusterDetailCpu.getValue(), true);
+        }
+        if ((vmDetailRam == null && parsedClusterDetailRam > 1f) ||
+                (vmDetailRam != null && Float.parseFloat(vmDetailRam.getValue()) != parsedClusterDetailRam)) {
+            userVmDetailsDao.addDetail(vmProfile.getId(), VmDetailConstants.MEMORY_OVER_COMMIT_RATIO, clusterDetailRam.getValue(), true);
+        }
+
+        vmProfile.setCpuOvercommitRatio(Float.parseFloat(clusterDetailCpu.getValue()));
+        vmProfile.setMemoryOvercommitRatio(Float.parseFloat(clusterDetailRam.getValue()));
+    }
+
     /**
      * Setting pod id to null can result in migration of Volumes across pods. This is not desirable for VMs which
      * have a volume in Ready state (happens when a VM is shutdown and started again).
@@ -4862,7 +4883,7 @@ public class VirtualMachineManagerImpl extends ManagerBase implements VirtualMac
                     + " -> Running) from out-of-context transition. VM network environment may need to be reset");
 
             ActionEventUtils.onActionEvent(User.UID_SYSTEM, Account.ACCOUNT_ID_SYSTEM, vm.getDomainId(),
-                    EventTypes.EVENT_VM_START, "Out of band VM power on", vm.getId(), ApiCommandResourceType.VirtualMachine.toString());
+                EventTypes.EVENT_VM_START, "Out of band VM power on", vm.getId(), getApiCommandResourceTypeForVm(vm).toString());
             logger.info("VM {} is sync-ed to at Running state according to power-on report from hypervisor.", vm.getInstanceName());
             break;
 

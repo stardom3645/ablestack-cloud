@@ -101,7 +101,7 @@ public class LibvirtConvertInstanceCommandWrapper extends CommandWrapper<Convert
             String exportInstanceOVAUrl = getExportInstanceOVAUrl(sourceInstance);
             if (StringUtils.isBlank(exportInstanceOVAUrl)) {
                 String err = String.format("Couldn't export OVA for the VM %s, due to empty url", sourceInstanceName);
-                s_logger.error(err);
+                logger.error(err);
                 return new ConvertInstanceAnswer(cmd, false, err);
             }
 
@@ -115,7 +115,7 @@ public class LibvirtConvertInstanceCommandWrapper extends CommandWrapper<Convert
             ovfExported = exportOVAFromVMOnVcenter(exportInstanceOVAUrl, sourceOVFDirPath, noOfThreads, timeout);
             if (!ovfExported) {
                 String err = String.format("Export OVA for the VM %s failed", sourceInstanceName);
-                s_logger.error(err);
+                logger.error(err);
                 return new ConvertInstanceAnswer(cmd, false, err);
             }
             sourceOVFDirPath = String.format("%s%s/", sourceOVFDirPath, sourceInstanceName);
@@ -124,7 +124,7 @@ public class LibvirtConvertInstanceCommandWrapper extends CommandWrapper<Convert
             sourceOVFDirPath = String.format("%s/%s/", temporaryConvertPath, ovfTemplateDirOnConversionLocation);
         }
 
-        s_logger.info(String.format("Attempting to convert the OVF %s of the instance %s from %s to KVM", ovfTemplateDirOnConversionLocation, sourceInstanceName, sourceHypervisorType));
+        logger.info(String.format("Attempting to convert the OVF %s of the instance %s from %s to KVM", ovfTemplateDirOnConversionLocation, sourceInstanceName, sourceHypervisorType));
         final String temporaryConvertUuid = UUID.randomUUID().toString();
         boolean verboseModeEnabled = serverResource.isConvertInstanceVerboseModeEnabled();
 
@@ -283,7 +283,7 @@ public class LibvirtConvertInstanceCommandWrapper extends CommandWrapper<Convert
             }
             if (destinationPool.getType() != Storage.StoragePoolType.NetworkFilesystem) {
                 String err = String.format("Storage pool by URI: %s is not an NFS storage", poolPath);
-                s_logger.error(err);
+                logger.error(err);
                 continue;
             }
             KVMPhysicalDisk sourceDisk = temporaryDisks.get(i);
@@ -357,7 +357,7 @@ public class LibvirtConvertInstanceCommandWrapper extends CommandWrapper<Convert
         String sourceHostIp = null;
         String sourcePath = null;
         String storagePoolMountPoint = Script.runSimpleBashScript(String.format("mount | grep %s", storagePool.getLocalPath()));
-        s_logger.debug(String.format("NFS Storage pool: %s - local path: %s, mount point: %s", storagePool.getUuid(), storagePool.getLocalPath(), storagePoolMountPoint));
+        logger.debug(String.format("NFS Storage pool: %s - local path: %s, mount point: %s", storagePool.getUuid(), storagePool.getLocalPath(), storagePoolMountPoint));
         if (StringUtils.isNotEmpty(storagePoolMountPoint)) {
             String[] res = storagePoolMountPoint.strip().split(" ");
             res = res[0].split(":");
@@ -373,7 +373,7 @@ public class LibvirtConvertInstanceCommandWrapper extends CommandWrapper<Convert
                                              String targetOvfDir,
                                              int noOfThreads,
                                              long timeout) {
-        Script script = new Script("ovftool", timeout, s_logger);
+        Script script = new Script("ovftool", timeout, logger);
         script.add("--noSSLVerify");
         if (noOfThreads > 1) {
             script.add(String.format("--parallelThreads=%s", noOfThreads));
@@ -382,7 +382,7 @@ public class LibvirtConvertInstanceCommandWrapper extends CommandWrapper<Convert
         script.add(targetOvfDir);
 
         String logPrefix = "export ovf";
-        OutputInterpreter.LineByLineOutputLogger outputLogger = new OutputInterpreter.LineByLineOutputLogger(s_logger, logPrefix);
+        OutputInterpreter.LineByLineOutputLogger outputLogger = new OutputInterpreter.LineByLineOutputLogger(logger, logPrefix);
         script.execute(outputLogger);
         int exitValue = script.getExitValue();
         return exitValue == 0;
@@ -392,7 +392,7 @@ public class LibvirtConvertInstanceCommandWrapper extends CommandWrapper<Convert
                                                 String temporaryConvertFolder,
                                                 String temporaryConvertUuid,
                                                 long timeout, boolean verboseModeEnabled) {
-        Script script = new Script("virt-v2v", timeout, s_logger);
+        Script script = new Script("virt-v2v", timeout, logger);
         script.add("--root", "first");
         script.add("-i", "ova");
         script.add(sourceOVFDirPath);
@@ -405,7 +405,7 @@ public class LibvirtConvertInstanceCommandWrapper extends CommandWrapper<Convert
         }
 
         String logPrefix = String.format("virt-v2v ovf source: %s progress", sourceOVFDirPath);
-        OutputInterpreter.LineByLineOutputLogger outputLogger = new OutputInterpreter.LineByLineOutputLogger(s_logger, logPrefix);
+        OutputInterpreter.LineByLineOutputLogger outputLogger = new OutputInterpreter.LineByLineOutputLogger(logger, logPrefix);
         script.execute(outputLogger);
         int exitValue = script.getExitValue();
         return exitValue == 0;
