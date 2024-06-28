@@ -2289,7 +2289,7 @@ export default {
               } else {
                 jobId = await this.deployVM(args, httpMethod, data)
               }
-              if (num === Number(values.vmNumber) - 1) {
+              if (num === 0) {
                 this.$pollJob({
                   jobId,
                   title,
