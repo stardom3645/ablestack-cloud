@@ -2503,16 +2503,10 @@ export default {
       args.domainid = store.getters.project?.id ? null : this.owner.domainid
       args.projectid = store.getters.project?.id || this.owner.projectid
       args.templatefilter = templateFilter
-      if (this.$store.getters.project?.id) {
-        args.projectid = this.$store.getters.project.id
-      } else {
-        args.projectid = -1
-      }
       args.details = 'all'
       args.showicon = 'true'
       args.id = this.templateId
       args.isvnf = false
-      args.listall = true
 
       return new Promise((resolve, reject) => {
         api('listTemplates', args).then((response) => {
@@ -2531,15 +2525,9 @@ export default {
       }
       args.zoneid = _.get(this.zone, 'id')
       args.isoFilter = isoFilter
-      if (this.$store.getters.project?.id) {
-        args.projectid = this.$store.getters.project.id
-      } else {
-        args.projectid = -1
-      }
       args.bootable = true
       args.showicon = 'true'
       args.id = this.isoId
-      args.listall = true
 
       return new Promise((resolve, reject) => {
         api('listIsos', args).then((response) => {
