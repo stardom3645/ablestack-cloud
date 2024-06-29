@@ -75,7 +75,7 @@ import com.cloud.utils.UriUtils;
 import com.cloud.utils.crypt.DBEncryptionUtil;
 import com.cloud.utils.exception.CloudRuntimeException;
 
-public class ScaleIOPrimaryDataStoreLifeCycle implements PrimaryDataStoreLifeCycle {
+public class ScaleIOPrimaryDataStoreLifeCycle extends BasePrimaryDataStoreLifeCycleImpl implements PrimaryDataStoreLifeCycle {
     protected Logger logger = LogManager.getLogger(getClass());
 
     @Inject

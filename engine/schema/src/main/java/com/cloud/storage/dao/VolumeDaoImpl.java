@@ -78,10 +78,11 @@ public class VolumeDaoImpl extends GenericDaoBase<VolumeVO, Long> implements Vol
     protected GenericSearchBuilder<VolumeVO, SumCount> primaryStorageSearch2;
     protected GenericSearchBuilder<VolumeVO, SumCount> secondaryStorageSearch;
     private final SearchBuilder<VolumeVO> poolAndPathSearch;
+
     @Inject
     ReservationDao reservationDao;
     @Inject
-    ResourceTagDao _tagsDao;
+    ResourceTagDao tagsDao;
 
     // need to account for zone-wide primary storage where storage_pool has
     // null-value pod and cluster, where hypervisor information is stored in
@@ -509,7 +510,6 @@ public class VolumeDaoImpl extends GenericDaoBase<VolumeVO, Long> implements Vol
         poolAndPathSearch.and("poolId", poolAndPathSearch.entity().getPoolId(), Op.EQ);
         poolAndPathSearch.and("path", poolAndPathSearch.entity().getPath(), Op.EQ);
         poolAndPathSearch.done();
-
     }
 
     @Override
@@ -747,7 +747,7 @@ public class VolumeDaoImpl extends GenericDaoBase<VolumeVO, Long> implements Vol
         logger.debug(String.format("Removing volume %s from DB", id));
         VolumeVO entry = findById(id);
         if (entry != null) {
-            _tagsDao.removeByIdAndType(id, ResourceObjectType.Volume);
+            tagsDao.removeByIdAndType(id, ResourceObjectType.Volume);
         }
         boolean result = super.remove(id);
 
@@ -770,7 +770,7 @@ public class VolumeDaoImpl extends GenericDaoBase<VolumeVO, Long> implements Vol
             destVol.setInstanceId(instanceId);
             update(srcVolId, srcVol);
             update(destVolId, destVol);
-            _tagsDao.updateResourceId(srcVolId, destVolId, ResourceObjectType.Volume);
+            tagsDao.updateResourceId(srcVolId, destVolId, ResourceObjectType.Volume);
         } catch (Exception e) {
             throw new CloudRuntimeException("Unable to persist the sequence number for this host");
         }
