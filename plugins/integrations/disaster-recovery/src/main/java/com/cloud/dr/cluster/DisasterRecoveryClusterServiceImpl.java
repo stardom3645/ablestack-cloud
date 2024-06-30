@@ -1370,7 +1370,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
             List<DisasterRecoveryClusterVmMapVO> vmMap = disasterRecoveryClusterVmMapDao.listByDisasterRecoveryClusterId(drCluster.getId());
             if (!CollectionUtils.isEmpty(vmMap)) {
                 for (DisasterRecoveryClusterVmMapVO map : vmMap) {
-                    UserVmJoinVO userVM = userVmJoinDao.findById(vmId);
+                    UserVmJoinVO userVM = userVmJoinDao.findById(map.getVmId());
                     UserVmVO vmVO = userVmDao.findById(userVM.getId());
                     if (map.getVmId() == userVM.getId()) {
                         try {
