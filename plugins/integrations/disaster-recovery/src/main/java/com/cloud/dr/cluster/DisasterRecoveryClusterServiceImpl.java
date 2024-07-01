@@ -47,6 +47,7 @@ import com.cloud.storage.VolumeApiService;
 import com.cloud.user.Account;
 import com.cloud.user.AccountService;
 import com.cloud.user.UserAccount;
+import com.cloud.user.dao.AccountDao;
 import com.cloud.uservm.UserVm;
 import com.cloud.utils.db.Filter;
 import com.cloud.utils.db.SearchBuilder;
@@ -111,6 +112,8 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
     private VMInstanceDao vmDao;
     @Inject
     private UserVmDao userVmDao;
+    @Inject
+    private AccountDao accountDao;
     @Inject
     private DisasterRecoveryClusterDao disasterRecoveryClusterDao;
     @Inject
@@ -1400,18 +1403,19 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                                 if (!userVmManager.expunge(vmVO)) {
                                     LOGGER.info(String.format("Unable to expunge VM %s : %s, destroying disaster recovery cluster virtual machine will probably fail",
                                         vm.getInstanceName() , vm.getUuid()));
-                                        return false;
+                                    return false;
                                 } else {
-                                    LOGGER.info("expunge success:::::::::::::::::::");
                                     List<DisasterRecoveryClusterVmMapVO> finalMap = disasterRecoveryClusterVmMapDao.listByDisasterRecoveryClusterVmId(drCluster.getId(), map.getVmId());
                                     if (!CollectionUtils.isEmpty(finalMap)) {
                                         for (DisasterRecoveryClusterVmMapVO finals : finalMap) {
                                             if (finals.getMirroredVmVolumeType().equals("DATADISK")) {
-                                                LOGGER.info("DATADISK in:::::::::::::::::::");
                                                 VolumeVO volume = volsDao.findByPath(finals.getMirroredVmVolumePath());
                                                 LOGGER.info(finals.getMirroredVmVolumePath());
                                                 LOGGER.info(volume.getId());
-                                                Volume result = volumeService.destroyVolume(volume.getId(), CallContext.current().getCallingAccount(), true, false);
+                                                LOGGER.info(volume.getUuid());
+                                                LOGGER.info(volume.getName());
+                                                Account account = accountDao.findActiveAccount("admin", 1L);
+                                                Volume result = volumeService.destroyVolume(volume.getId(), account, true, false);
                                             }
                                             disasterRecoveryClusterVmMapDao.remove(finals.getId());
                                         }
