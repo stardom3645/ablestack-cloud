@@ -43,6 +43,7 @@ import com.cloud.exception.ConcurrentOperationException;
 import com.cloud.storage.dao.VolumeDao;
 import com.cloud.storage.VolumeVO;
 import com.cloud.storage.Volume;
+import com.cloud.storage.VolumeApiService;
 import com.cloud.user.Account;
 import com.cloud.user.AccountService;
 import com.cloud.user.UserAccount;
@@ -124,6 +125,8 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
     protected UserVmService userVmService;
     @Inject
     protected UserVmManager userVmManager;
+    @Inject
+    protected VolumeApiService volumeService;
     protected static Logger LOGGER = LogManager.getLogger(DisasterRecoveryClusterServiceImpl.class);
 
     @Override
@@ -1402,6 +1405,10 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                                     List<DisasterRecoveryClusterVmMapVO> finalMap = disasterRecoveryClusterVmMapDao.listByDisasterRecoveryClusterVmId(drCluster.getId(), map.getVmId());
                                     if (!CollectionUtils.isEmpty(finalMap)) {
                                         for (DisasterRecoveryClusterVmMapVO finals : finalMap) {
+                                            if (finals.getMirroredVmVolumeType().equals("DATADISK")) {
+                                                VolumeVO volume = volsDao.findByPath(finals.getMirroredVmVolumePath());
+                                                volumeService.destroyVolume(volume.getId(), CallContext.current().getCallingAccount(), true, false);
+                                            }
                                             disasterRecoveryClusterVmMapDao.remove(finals.getId());
                                         }
                                     }
