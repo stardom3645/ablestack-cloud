@@ -399,6 +399,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                                         map.setMirroredVmVolumeStatus("READY");
                                     }
                                     disasterRecoveryClusterVmMapDao.update(map.getId(), map);
+                                    // dr map 업데이트
                                 }
                             }
                             break;
@@ -502,6 +503,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                                             }
                                         }
                                         disasterRecoveryClusterVmMapDao.update(map.getId(), map);
+                                        // dr map 업데이트 필요
                                         break;
                                     }
                                 }
@@ -1387,20 +1389,27 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
             if (!CollectionUtils.isEmpty(vmMap)) {
                 for (DisasterRecoveryClusterVmMapVO map : vmMap) {
                     UserVmJoinVO userVM = userVmJoinDao.findById(map.getVmId());
-                    UserVmVO vmVO = userVmDao.findById(userVM.getId());
-                    if (map.getVmId() == userVM.getId()) {
-                        try {
-                            if (vmVO != null) {
-                                UserVm vm = userVmService.destroyVm(vmId, true);
-                                if (!userVmManager.expunge(vmVO)) {
-                                    LOGGER.info(String.format("Unable to expunge VM %s : %s, destroying disaster recovery cluster virtual machine will probably fail",
-                                        vm.getInstanceName() , vm.getUuid()));
+                    if (!CollectionUtils.isEmpty(userVM)) {
+                        UserVmVO vmVO = userVmDao.findById(userVM.getId());
+                        if (map.getVmId() == userVM.getId()) {
+                            try {
+                                if (vmVO != null) {
+                                    UserVm vm = userVmService.destroyVm(vmId, true);
+                                    if (!userVmManager.expunge(vmVO)) {
+                                        LOGGER.info(String.format("Unable to expunge VM %s : %s, destroying disaster recovery cluster virtual machine will probably fail",
+                                            vm.getInstanceName() , vm.getUuid()));
+                                    }
                                 }
+                                List<DisasterRecoveryClusterVmMapVO> finalMap = disasterRecoveryClusterVmMapDao.listByDisasterRecoveryClusterVmId(drCluster.getId(), map.getVmId());
+                                if (!CollectionUtils.isEmpty(finalMap)) {
+                                    for (DisasterRecoveryClusterVmMapVO finals : finalMap) {
+                                        disasterRecoveryClusterVmMapDao.remove(finals.getId());
+                                    }
+                                }
+                            } catch (ResourceUnavailableException | ConcurrentOperationException e) {
+                                LOGGER.error(String.format("Failed to destroy VM : %s disaster recovery cluster virtual machine : %s cleanup. Moving on with destroying remaining resources provisioned for the disaster recovery cluster", userVM.getDisplayName(), drCluster.getName()), e);
+                                return false;
                             }
-                            disasterRecoveryClusterVmMapDao.remove(map.getId());
-                        } catch (ResourceUnavailableException | ConcurrentOperationException e) {
-                            LOGGER.error(String.format("Failed to destroy VM : %s disaster recovery cluster virtual machine : %s cleanup. Moving on with destroying remaining resources provisioned for the disaster recovery cluster", userVM.getDisplayName(), drCluster.getName()), e);
-                            return false;
                         }
                     }
                 }
