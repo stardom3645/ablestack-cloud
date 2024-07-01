@@ -1421,11 +1421,11 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                             if (!CollectionUtils.isEmpty(vmMap)) {
                                 for (DisasterRecoveryClusterVmMapVO map : vmMap) {
                                     UserVmJoinVO vm = userVmJoinDao.findById(map.getVmId());
-                                    LOGGER.info(String.valueOf(vmId));
-                                    LOGGER.info(vm.getUuid());
+                                    LOGGER.info(vmId);
+                                    LOGGER.info(map.getVmId());
                                     LOGGER.info(volumeUuid);
                                     LOGGER.info(map.getMirroredVmVolumePath());
-                                    if (String.valueOf(vmId).equals(vm.getUuid()) && volumeUuid.equals(map.getMirroredVmVolumePath())) {
+                                    if (vmId.equals(map.getVmId()) && volumeUuid.equals(map.getMirroredVmVolumePath())) {
                                         LOGGER.info("DisasterRecoveryClusterVmMapVO in:::::::::::::::::::::::::::::");
                                         String mirrorVmId = map.getMirroredVmId();
                                         disasterRecoveryClusterVmMapDao.remove(map.getId());
