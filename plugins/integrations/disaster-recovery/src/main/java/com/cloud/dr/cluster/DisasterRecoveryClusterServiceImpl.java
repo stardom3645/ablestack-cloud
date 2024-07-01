@@ -1397,6 +1397,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                                 if (!userVmManager.expunge(vmVO)) {
                                     LOGGER.info(String.format("Unable to expunge VM %s : %s, destroying disaster recovery cluster virtual machine will probably fail",
                                         vm.getInstanceName() , vm.getUuid()));
+                                        return false;
                                 } else {
                                     List<DisasterRecoveryClusterVmMapVO> finalMap = disasterRecoveryClusterVmMapDao.listByDisasterRecoveryClusterVmId(drCluster.getId(), map.getVmId());
                                     if (!CollectionUtils.isEmpty(finalMap)) {
@@ -1404,6 +1405,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                                             disasterRecoveryClusterVmMapDao.remove(finals.getId());
                                         }
                                     }
+                                    return true;
                                 }
                             }
                         } catch (ResourceUnavailableException | ConcurrentOperationException e) {
@@ -1457,6 +1459,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                                             vmParams.put("virtualmachineid", mirrorVmId);
                                             String response = DisasterRecoveryClusterUtil.moldDeleteDisasterRecoveryClusterVmAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey, vmParams);
                                             if (response != null) {
+                                                LOGGER.info(response);
                                                 return true;
                                             }
                                         }
