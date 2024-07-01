@@ -106,9 +106,6 @@ public class StorageManagerImplTest {
     @Mock
     ClusterDao clusterDao;
 
-    @Mock
-    PrimaryDataStoreDao storagePoolDao;
-
     @Spy
     @InjectMocks
     private StorageManagerImpl storageManagerImpl;

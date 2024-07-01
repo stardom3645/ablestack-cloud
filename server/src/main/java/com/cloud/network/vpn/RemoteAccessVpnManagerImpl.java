@@ -175,7 +175,7 @@ public class RemoteAccessVpnManagerImpl extends ManagerBase implements RemoteAcc
             IPAddressVO ipAddress = _ipAddressDao.acquireInLockTable(publicIpId);
 
             if (ipAddress == null) {
-                s_logger.error(String.format("Unable to acquire lock on public IP %s.", publicIpId));
+                logger.error(String.format("Unable to acquire lock on public IP %s.", publicIpId));
                 throw new CloudRuntimeException("Unable to acquire lock on public IP.");
             }
 

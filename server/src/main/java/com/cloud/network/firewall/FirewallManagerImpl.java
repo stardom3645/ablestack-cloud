@@ -682,7 +682,7 @@ public class FirewallManagerImpl extends ManagerBase implements FirewallService,
         try {
             IPAddressVO ipAddress = _ipAddressDao.acquireInLockTable(ipId);
             if (ipAddress == null) {
-                s_logger.error(String.format("Unable to acquire lock for public IP [%s].", ipId));
+                logger.error(String.format("Unable to acquire lock for public IP [%s].", ipId));
                 throw new CloudRuntimeException("Unable to acquire lock for public IP.");
             }
             List<FirewallRuleVO> rules = _firewallDao.listByIpAndPurpose(ipId, Purpose.Firewall);
