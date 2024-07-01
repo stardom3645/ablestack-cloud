@@ -1416,28 +1416,21 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                         glueParams.put("imageName", volumeUuid);
                         boolean result = DisasterRecoveryClusterUtil.glueImageMirrorDeleteAPI(glueUrl, glueCommand, glueMethod, glueParams);
                         if (result) {
-                            LOGGER.info("glueImageMirrorDeleteAPI 성공:::::::::::::::::::::::::::::");
                             List<DisasterRecoveryClusterVmMapVO> vmMap = disasterRecoveryClusterVmMapDao.listByDisasterRecoveryClusterId(drCluster.getId());
                             if (!CollectionUtils.isEmpty(vmMap)) {
                                 for (DisasterRecoveryClusterVmMapVO map : vmMap) {
                                     UserVmJoinVO vm = userVmJoinDao.findById(map.getVmId());
-                                    LOGGER.info(vmId);
-                                    LOGGER.info(map.getVmId());
-                                    LOGGER.info(volumeUuid);
-                                    LOGGER.info(map.getMirroredVmVolumePath());
                                     if (vmId.equals(map.getVmId()) && volumeUuid.equals(map.getMirroredVmVolumePath())) {
-                                        LOGGER.info("DisasterRecoveryClusterVmMapVO in:::::::::::::::::::::::::::::");
                                         String mirrorVmId = map.getMirroredVmId();
                                         disasterRecoveryClusterVmMapDao.remove(map.getId());
                                         List<DisasterRecoveryClusterVmMapVO> finalMap = disasterRecoveryClusterVmMapDao.listByDisasterRecoveryClusterVmId(drCluster.getId(), vmId);
                                         if (CollectionUtils.isEmpty(finalMap)) {
-                                            LOGGER.info("moldDeleteDisasterRecoveryClusterVmAPI in:::::::::::::::::::::::::::::");
                                             String moldUrl = url + "/client/api/";
                                             String moldMethod = "GET";
                                             String moldCommand = "deleteDisasterRecoveryClusterVm";
                                             Map<String, String> vmParams = new HashMap<>();
                                             vmParams.put("drclustername", drCluster.getName());
-                                            vmParams.put("id", mirrorVmId);
+                                            vmParams.put("virtualmachineid", mirrorVmId);
                                             String response = DisasterRecoveryClusterUtil.moldDeleteDisasterRecoveryClusterVmAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey, vmParams);
                                             if (response != null) {
                                                 return true;
