@@ -1389,27 +1389,26 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
             if (!CollectionUtils.isEmpty(vmMap)) {
                 for (DisasterRecoveryClusterVmMapVO map : vmMap) {
                     UserVmJoinVO userVM = userVmJoinDao.findById(map.getVmId());
-                    if (!CollectionUtils.isEmpty(userVM)) {
+                    if (userVM != null) {
                         UserVmVO vmVO = userVmDao.findById(userVM.getId());
-                        if (map.getVmId() == userVM.getId()) {
-                            try {
-                                if (vmVO != null) {
-                                    UserVm vm = userVmService.destroyVm(vmId, true);
-                                    if (!userVmManager.expunge(vmVO)) {
-                                        LOGGER.info(String.format("Unable to expunge VM %s : %s, destroying disaster recovery cluster virtual machine will probably fail",
-                                            vm.getInstanceName() , vm.getUuid()));
+                        try {
+                            if (vmVO != null) {
+                                UserVm vm = userVmService.destroyVm(vmId, true);
+                                if (!userVmManager.expunge(vmVO)) {
+                                    LOGGER.info(String.format("Unable to expunge VM %s : %s, destroying disaster recovery cluster virtual machine will probably fail",
+                                        vm.getInstanceName() , vm.getUuid()));
+                                } else {
+                                    List<DisasterRecoveryClusterVmMapVO> finalMap = disasterRecoveryClusterVmMapDao.listByDisasterRecoveryClusterVmId(drCluster.getId(), map.getVmId());
+                                    if (!CollectionUtils.isEmpty(finalMap)) {
+                                        for (DisasterRecoveryClusterVmMapVO finals : finalMap) {
+                                            disasterRecoveryClusterVmMapDao.remove(finals.getId());
+                                        }
                                     }
                                 }
-                                List<DisasterRecoveryClusterVmMapVO> finalMap = disasterRecoveryClusterVmMapDao.listByDisasterRecoveryClusterVmId(drCluster.getId(), map.getVmId());
-                                if (!CollectionUtils.isEmpty(finalMap)) {
-                                    for (DisasterRecoveryClusterVmMapVO finals : finalMap) {
-                                        disasterRecoveryClusterVmMapDao.remove(finals.getId());
-                                    }
-                                }
-                            } catch (ResourceUnavailableException | ConcurrentOperationException e) {
-                                LOGGER.error(String.format("Failed to destroy VM : %s disaster recovery cluster virtual machine : %s cleanup. Moving on with destroying remaining resources provisioned for the disaster recovery cluster", userVM.getDisplayName(), drCluster.getName()), e);
-                                return false;
                             }
+                        } catch (ResourceUnavailableException | ConcurrentOperationException e) {
+                            LOGGER.error(String.format("Failed to destroy VM : %s disaster recovery cluster virtual machine : %s cleanup. Moving on with destroying remaining resources provisioned for the disaster recovery cluster", userVM.getDisplayName(), drCluster.getName()), e);
+                            return false;
                         }
                     }
                 }
