@@ -766,11 +766,13 @@ export default {
         virtualmachineid: this.vm.id
       }).then(json => {
         this.$message.success(`${this.$t('label.delete.disaster.recovery.cluster.vm')}: ${this.vm.id}`)
+        this.loadingMirror = false
       }).catch(error => {
         this.$notifyError(error)
-      }).finally(() => {
-        this.$emit('refresh-data')
         this.loadingMirror = false
+      }).finally(() => {
+        this.loadingMirror = false
+        this.parentFetchData()
       })
     },
     submitSecondaryIP () {
