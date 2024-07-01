@@ -127,7 +127,7 @@
           type="primary"
           style="width: 100%; margin-bottom: 10px"
           @click="showAddMirVMModal"
-          :loading="loadingMirror"
+          :loading="loading"
           :disabled="!('createDisasterRecoveryClusterVm' in $store.getters.apis)">
           <template #icon><plus-outlined /></template> {{ $t('label.add.dr.mirroring.vm') }}
         </a-button>
@@ -245,14 +245,13 @@
     </a-modal>
 
     <a-modal
-      v-model="showAddMirrorVMModal"
       :visible="showAddMirrorVMModal"
       :title="$t('label.add.dr.mirroring.vm')"
       :maskClosable="false"
       :closable="true"
       :footer="null"
       @cancel="closeModals">
-      <ShowAddMirVMModal :resource="resource" @cancel="closeModals" />
+      <DRMirroringVMAdd :resource="resource" @close-action="closeModals" />
     </a-modal>
 
     <a-modal
@@ -392,7 +391,7 @@ import AnnotationsTab from '@/components/view/AnnotationsTab'
 import VolumesTab from '@/components/view/VolumesTab.vue'
 import DRTable from '@/views/compute/dr/DRTable.vue'
 import DRsimulationTestModal from '@/views/compute/dr/DRsimulationTestModal.vue'
-import ShowAddMirVMModal from '@/views/compute/dr/DRMirroringVMAdd.vue'
+import DRMirroringVMAdd from '@/views/compute/dr/DRMirroringVMAdd'
 
 export default {
   name: 'InstanceTab',
@@ -406,7 +405,7 @@ export default {
     NicsTable,
     DRTable,
     DRsimulationTestModal,
-    ShowAddMirVMModal,
+    DRMirroringVMAdd,
     InstanceSchedules,
     ListResourceTable,
     TooltipButton,

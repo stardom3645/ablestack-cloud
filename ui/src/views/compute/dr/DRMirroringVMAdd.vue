@@ -18,11 +18,11 @@
 <template>
   <a-spin :spinning="loading">
     <a-form
+      class="form"
+      layout="vertical"
       :ref="formRef"
       :model="form"
       :rules="rules"
-      layout="vertical"
-      class="form"
       @finish="handleSubmit"
       v-ctrl-enter="handleSubmit"
     >
@@ -32,19 +32,19 @@
         </template>
       </a-alert>
       <a-form-item
-          ref="drCluster"
-          name="drCluster"
-          :label="$t('label.cluster')">
+        ref="drCluster"
+        name="drCluster"
+        :label="$t('label.cluster')">
         <a-select
-            v-model:value="form.drCluster"
-            @change="updateSelectedId"
-            showSearch
-            optionFilterProp="label"
-            :filterOption="(input, option) => {
-              return option.children[0].children.toLowerCase().indexOf(input.toLowerCase()) >= 0
-            }"
-            :placeholder="$t('placeholder.dr.cluster.cluster.selection')"
-            >
+          v-model:value="form.drCluster"
+          :loading="loading"
+          @change="updateSelectedId"
+          showSearch
+          optionFilterProp="label"
+          :filterOption="(input, option) => {
+            return option.children[0].children.toLowerCase().indexOf(input.toLowerCase()) >= 0
+          }"
+          :placeholder="$t('placeholder.dr.cluster.cluster.selection')">
           <a-select-option v-for="(opt) in this.drCluster" :key="opt.id" :value="opt.name">
             {{ opt.name }}
           </a-select-option>
@@ -52,18 +52,18 @@
       </a-form-item>
 
       <a-form-item
-          ref="secDrClusterOfferings"
-          name="secDrClusterOfferings"
-          :label="$t('label.compute.offerings')">
+        ref="secDrClusterOfferings"
+        name="secDrClusterOfferings"
+        :label="$t('label.compute.offerings')">
         <a-select
-            v-model:value="form.secDrClusterOfferings"
-            showSearch
-            optionFilterProp="label"
-            :filterOption="(input, option) => {
-              return option.children[0].children.toLowerCase().indexOf(input.toLowerCase()) >= 0
-            }"
-            :placeholder="$t('placeholder.dr.cluster.compute.offering.selection')"
-        >
+          v-model:value="form.secDrClusterOfferings"
+          :loading="loading"
+          showSearch
+          optionFilterProp="label"
+          :filterOption="(input, option) => {
+            return option.children[0].children.toLowerCase().indexOf(input.toLowerCase()) >= 0
+          }"
+          :placeholder="$t('placeholder.dr.cluster.compute.offering.selection')">
           <a-select-option v-for="(opt) in this.secDrClusterOfferings" :key="opt.id" :value="opt.name">
             {{ opt.name }}
           </a-select-option>
@@ -71,29 +71,26 @@
       </a-form-item>
 
       <a-form-item
-          ref="secDrClusterNetworkList"
-          name="secDrClusterNetworkList"
-          :label="$t('label.network.name')">
+        ref="secDrClusterNetworkList"
+        name="secDrClusterNetworkList"
+        :label="$t('label.network.name')">
         <a-select
-            v-model:value="form.secDrClusterNetworkList"
-            showSearch
-            optionFilterProp="label"
-            :filterOption="(input, option) => {
-              return option.children[0].children.toLowerCase().indexOf(input.toLowerCase()) >= 0
-            }"
-            :placeholder="$t('placeholder.dr.cluster.network.selection')"
-        >
+          v-model:value="form.secDrClusterNetworkList"
+          showSearch
+          optionFilterProp="label"
+          :filterOption="(input, option) => {
+            return option.children[0].children.toLowerCase().indexOf(input.toLowerCase()) >= 0
+          }"
+          :placeholder="$t('placeholder.dr.cluster.network.selection')">
           <a-select-option v-for="(opt) in this.secDrClusterNetworkList" :key="opt.id" :value="opt.name">
             {{ opt.name }}
           </a-select-option>
         </a-select>
       </a-form-item>
-
       <div :span="24" class="action-button">
         <a-button @click="closeModal">{{ $t('label.cancel') }}</a-button>
-        <a-button @click="handleSubmit" ref="submit" type="primary">{{ $t('label.ok') }}</a-button>
+        <a-button type="primary" ref="submit" @click="handleSubmit">{{ $t('label.ok') }}</a-button>
       </div>
-
     </a-form>
   </a-spin>
 </template>
@@ -101,31 +98,18 @@
 <script>
 import { ref, reactive, toRaw } from 'vue'
 import { api } from '@/api'
-import DedicateDomain from '@comp/view/DedicateDomain.vue'
 import ResourceIcon from '@/components/view/ResourceIcon.vue'
 import TooltipLabel from '@/components/widgets/TooltipLabel.vue'
 export default {
   name: 'DRMirroringVMAdd',
   components: {
     TooltipLabel,
-    DedicateDomain,
     ResourceIcon
   },
   props: {
     resource: {
       type: Object,
-      required: true
-    }
-  },
-  inject: ['parentFetchData'],
-  setup () {
-    const spinning = ref(false)
-    const changeSpinning = () => {
-      spinning.value = !spinning.value
-    }
-    return {
-      spinning,
-      changeSpinning
+      default: () => {}
     }
   },
   data () {
@@ -162,8 +146,7 @@ export default {
       api('getDisasterRecoveryClusterList', { drclustertype: 'secondary' }).then(json => {
         this.drCluster = json.getdisasterrecoveryclusterlistresponse.disasterrecoverycluster || []
         this.form.drCluster = this.drCluster[0].name || ''
-      }).catch(error => {
-        console.error('Error fetching DR cluster list:', error)
+      }).finally(() => {
         this.loading = false
       })
     },
@@ -184,15 +167,12 @@ export default {
           this.form.secDrClusterNetworkList = this.secDrClusterNetworkList.length > 0 ? this.secDrClusterNetworkList[0].name : ''
 
           if (this.secDrClusterOfferings.length === 0 && this.secDrClusterNetworkList.length === 0) {
-            console.error('No service offering or network details available')
             this.resetSelection() // Reset selections in case of missing data
           }
         } else {
-          console.error('No disaster recovery clusters found')
           this.resetSelection() // Reset selections in case of missing clusters
         }
-      }).catch(error => {
-        console.error('API 호출 실패:', error)
+      }).catch(() => {
         this.resetSelection() // 에러 발생 후 선택된 값 초기화
         this.loading = false // 에러 처리 후 로딩 종료
       }).finally(() => {
@@ -222,7 +202,6 @@ export default {
         }
         api('createDisasterRecoveryClusterVm', params).then(json => {
           this.$message.success(`${this.$t('label.add.disaster.recovery.cluster.vm')}: ${this.resource.name}`)
-          this.parentFetchData()
           this.closeModal()
         }).catch(error => {
           this.$notifyError(error)
