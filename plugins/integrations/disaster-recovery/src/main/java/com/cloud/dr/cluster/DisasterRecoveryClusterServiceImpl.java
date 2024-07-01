@@ -1402,12 +1402,16 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                                         vm.getInstanceName() , vm.getUuid()));
                                         return false;
                                 } else {
+                                    LOGGER.info("expunge success:::::::::::::::::::");
                                     List<DisasterRecoveryClusterVmMapVO> finalMap = disasterRecoveryClusterVmMapDao.listByDisasterRecoveryClusterVmId(drCluster.getId(), map.getVmId());
                                     if (!CollectionUtils.isEmpty(finalMap)) {
                                         for (DisasterRecoveryClusterVmMapVO finals : finalMap) {
                                             if (finals.getMirroredVmVolumeType().equals("DATADISK")) {
+                                                LOGGER.info("DATADISK in:::::::::::::::::::");
                                                 VolumeVO volume = volsDao.findByPath(finals.getMirroredVmVolumePath());
-                                                volumeService.destroyVolume(volume.getId(), CallContext.current().getCallingAccount(), true, false);
+                                                LOGGER.info(finals.getMirroredVmVolumePath());
+                                                LOGGER.info(volume.getId());
+                                                Volume result = volumeService.destroyVolume(volume.getId(), CallContext.current().getCallingAccount(), true, false);
                                             }
                                             disasterRecoveryClusterVmMapDao.remove(finals.getId());
                                         }
