@@ -225,7 +225,7 @@ public class RulesManagerImpl extends ManagerBase implements RulesManager, Rules
                 if (assignToVpcNtwk) {
                     _networkModel.checkIpForService(ipAddress, Service.PortForwarding, networkId);
 
-                    s_logger.debug("The ip is not associated with the VPC network id=" + networkId + ", so assigning");
+                    logger.debug("The ip is not associated with the VPC network id=" + networkId + ", so assigning");
                     try {
                         ipAddress = _ipAddrMgr.associateIPToGuestNetwork(ipAddrId, networkId, false);
                         performedIpAssoc = true;

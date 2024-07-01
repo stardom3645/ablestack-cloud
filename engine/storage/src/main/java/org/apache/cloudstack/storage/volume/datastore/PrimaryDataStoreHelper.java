@@ -289,7 +289,7 @@ public class PrimaryDataStoreHelper {
                 _capacityDao.update(capacity.getId(), capacity);
             }
         });
-        s_logger.debug("Scope of storage pool id=" + pool.getId() + " is changed to zone");
+        logger.debug("Scope of storage pool id=" + pool.getId() + " is changed to zone");
     }
 
     public void switchToCluster(DataStore store, ClusterScope clusterScope) {
@@ -315,6 +315,6 @@ public class PrimaryDataStoreHelper {
                 _capacityDao.update(capacity.getId(), capacity);
             }
         });
-        s_logger.debug("Scope of storage pool id=" + pool.getId() + " is changed to cluster id=" + clusterScope.getScopeId());
+        logger.debug("Scope of storage pool id=" + pool.getId() + " is changed to cluster id=" + clusterScope.getScopeId());
     }
 }

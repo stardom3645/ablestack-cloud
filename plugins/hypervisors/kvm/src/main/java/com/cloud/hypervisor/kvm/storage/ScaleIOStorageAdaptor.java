@@ -569,12 +569,12 @@ public class ScaleIOStorageAdaptor implements StorageAdaptor {
 
     public Ternary<Boolean, Map<String, String>, String> prepareStorageClient(Storage.StoragePoolType type, String uuid, Map<String, String> details) {
         if (!ScaleIOUtil.isSDCServiceInstalled()) {
-            LOGGER.debug("SDC service not installed on host, preparing the SDC client not possible");
+            logger.debug("SDC service not installed on host, preparing the SDC client not possible");
             return new Ternary<>(false, null, "SDC service not installed on host");
         }
 
         if (!ScaleIOUtil.isSDCServiceEnabled()) {
-            LOGGER.debug("SDC service not enabled on host, enabling it");
+            logger.debug("SDC service not enabled on host, enabling it");
             if (!ScaleIOUtil.enableSDCService()) {
                 return new Ternary<>(false, null, "SDC service not enabled on host");
             }
@@ -593,12 +593,12 @@ public class ScaleIOStorageAdaptor implements StorageAdaptor {
 
     public Pair<Boolean, String> unprepareStorageClient(Storage.StoragePoolType type, String uuid) {
         if (!ScaleIOUtil.isSDCServiceInstalled()) {
-            LOGGER.debug("SDC service not installed on host, no need to unprepare the SDC client");
+            logger.debug("SDC service not installed on host, no need to unprepare the SDC client");
             return new Pair<>(true, "SDC service not installed on host, no need to unprepare the SDC client");
         }
 
         if (!ScaleIOUtil.isSDCServiceEnabled()) {
-            LOGGER.debug("SDC service not enabled on host, no need to unprepare the SDC client");
+            logger.debug("SDC service not enabled on host, no need to unprepare the SDC client");
             return new Pair<>(true, "SDC service not enabled on host, no need to unprepare the SDC client");
         }
 

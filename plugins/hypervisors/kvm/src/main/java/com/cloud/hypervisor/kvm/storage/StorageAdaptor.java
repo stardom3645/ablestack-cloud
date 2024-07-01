@@ -117,8 +117,8 @@ public interface StorageAdaptor {
     default boolean supportsPhysicalDiskCopy(StoragePoolType type) {
         return StoragePoolType.PowerFlex == type;
     }
-    
-    /** 
+
+    /**
      * Prepares the storage client.
      * @param type type of the storage pool
      * @param uuid uuid of the storage pool

@@ -89,7 +89,7 @@ public class ScaleIOHostListener implements HypervisorHostListener {
                 storagePoolHost.setLocalPath(sdcId);
                 _storagePoolHostDao.update(storagePoolHost.getId(), storagePoolHost);
             }
-            s_logger.info("Connection established between storage pool: " + storagePool + " and host: " + hostId);
+            logger.info("Connection established between storage pool: " + storagePool + " and host: " + hostId);
         }
         return true;
     }
