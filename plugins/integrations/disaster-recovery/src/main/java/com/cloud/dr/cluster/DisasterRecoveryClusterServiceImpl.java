@@ -1402,15 +1402,10 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                                 List<VolumeVO> dataVolumes = volsDao.findByInstanceAndType(userVM.getId(), Volume.Type.DATADISK);
                                 if (!dataVolumes.isEmpty()) {
                                     for (VolumeVO dataVolume : dataVolumes) {
+                                        LOGGER.info(dataVolume.getName());
                                         Account account = accountDao.findActiveAccount("admin", 1L);
+                                        volumeService.detachVolumeViaDestroyVM(dataVolume.getInstanceId(), dataVolume.getId());
                                         Volume result = volumeService.destroyVolume(dataVolume.getId(), account, true, false);
-                                        LOGGER.info("volumeResult :::::::::::::::::");
-                                        LOGGER.info(result.getVolumeType());
-                                        LOGGER.info(result.getName());
-                                        LOGGER.info(result.getId());
-                                        if (result == null) {
-                                            return false;
-                                        }
                                     }
                                 }
                                 try {
