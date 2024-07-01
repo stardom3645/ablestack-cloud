@@ -1394,19 +1394,16 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
             List<DisasterRecoveryClusterVmMapVO> vmMap = disasterRecoveryClusterVmMapDao.listByDisasterRecoveryClusterId(drCluster.getId());
             if (!CollectionUtils.isEmpty(vmMap)) {
                 for (DisasterRecoveryClusterVmMapVO map : vmMap) {
-                    LOGGER.info(map.getVmId());
-                    LOGGER.info(vmId);
                     if (map.getVmId() == vmId) {
-                        LOGGER.info("::::::::::::::::::::::::::::");
                         UserVmJoinVO userVM = userVmJoinDao.findById(map.getVmId());
                         if (userVM != null) {
                             UserVmVO vmVO = userVmDao.findById(userVM.getId());
                             if (vmVO != null) {
-                                List<VolumeVO> volumes = volsDao.findByInstance(userVM.getId());
-                                for (VolumeVO vol : volumes) {
-                                    if (vol.getVolumeType().equals("DATADISK")) {
+                                List<VolumeVO> dataVolumes = volsDao.findByInstanceAndType(userVM.getId(), Volume.Type.DATADISK);
+                                if (!dataVolumes.isEmpty()) {
+                                    for (VolumeVO dataVolume : dataVolumes) {
                                         Account account = accountDao.findActiveAccount("admin", 1L);
-                                        Volume result = volumeService.destroyVolume(vol.getId(), account, true, false);
+                                        Volume result = volumeService.destroyVolume(dataVolume.getId(), account, true, false);
                                         LOGGER.info("volumeResult :::::::::::::::::");
                                         LOGGER.info(result.getVolumeType());
                                         LOGGER.info(result.getName());
