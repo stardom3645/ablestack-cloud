@@ -1394,38 +1394,47 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
             List<DisasterRecoveryClusterVmMapVO> vmMap = disasterRecoveryClusterVmMapDao.listByDisasterRecoveryClusterId(drCluster.getId());
             if (!CollectionUtils.isEmpty(vmMap)) {
                 for (DisasterRecoveryClusterVmMapVO map : vmMap) {
-                    UserVmJoinVO userVM = userVmJoinDao.findById(map.getVmId());
-                    if (userVM != null) {
-                        UserVmVO vmVO = userVmDao.findById(userVM.getId());
-                        try {
+                    LOGGER.info(map.getVmId());
+                    LOGGER.info(vmId);
+                    if (map.getVmId() == vmId) {
+                        LOGGER.info("::::::::::::::::::::::::::::");
+                        UserVmJoinVO userVM = userVmJoinDao.findById(map.getVmId());
+                        if (userVM != null) {
+                            UserVmVO vmVO = userVmDao.findById(userVM.getId());
                             if (vmVO != null) {
-                                UserVm vm = userVmService.destroyVm(vmId, true);
-                                if (!userVmManager.expunge(vmVO)) {
-                                    LOGGER.info(String.format("Unable to expunge VM %s : %s, destroying disaster recovery cluster virtual machine will probably fail",
-                                        vm.getInstanceName() , vm.getUuid()));
-                                    return false;
-                                } else {
-                                    List<DisasterRecoveryClusterVmMapVO> finalMap = disasterRecoveryClusterVmMapDao.listByDisasterRecoveryClusterVmId(drCluster.getId(), map.getVmId());
-                                    if (!CollectionUtils.isEmpty(finalMap)) {
-                                        for (DisasterRecoveryClusterVmMapVO finals : finalMap) {
-                                            if (finals.getMirroredVmVolumeType().equals("DATADISK")) {
-                                                VolumeVO volume = volsDao.findByPath(finals.getMirroredVmVolumePath());
-                                                LOGGER.info(finals.getMirroredVmVolumePath());
-                                                LOGGER.info(volume.getId());
-                                                LOGGER.info(volume.getUuid());
-                                                LOGGER.info(volume.getName());
-                                                Account account = accountDao.findActiveAccount("admin", 1L);
-                                                Volume result = volumeService.destroyVolume(volume.getId(), account, true, false);
-                                            }
-                                            disasterRecoveryClusterVmMapDao.remove(finals.getId());
+                                List<VolumeVO> volumes = volsDao.findByInstance(userVM.getId());
+                                for (VolumeVO vol : volumes) {
+                                    if (vol.getVolumeType().equals("DATADISK")) {
+                                        Account account = accountDao.findActiveAccount("admin", 1L);
+                                        Volume result = volumeService.destroyVolume(vol.getId(), account, true, false);
+                                        LOGGER.info("volumeResult :::::::::::::::::");
+                                        LOGGER.info(result.getVolumeType());
+                                        LOGGER.info(result.getName());
+                                        LOGGER.info(result.getId());
+                                        if (result == null) {
+                                            return false;
                                         }
                                     }
-                                    return true;
+                                }
+                                try {
+                                    UserVm vm = userVmService.destroyVm(vmId, true);
+                                    if (!userVmManager.expunge(vmVO)) {
+                                        LOGGER.error(String.format("Unable to expunge VM %s : %s, destroying disaster recovery cluster virtual machine will probably fail", vm.getInstanceName(), vm.getUuid()));
+                                        return false;
+                                    } else {
+                                        List<DisasterRecoveryClusterVmMapVO> finalMap = disasterRecoveryClusterVmMapDao.listByDisasterRecoveryClusterVmId(drCluster.getId(), map.getVmId());
+                                        if (!CollectionUtils.isEmpty(finalMap)) {
+                                            for (DisasterRecoveryClusterVmMapVO finals : finalMap) {
+                                                disasterRecoveryClusterVmMapDao.remove(finals.getId());
+                                            }
+                                        }
+                                        return true;
+                                    }
+                                } catch (ResourceUnavailableException | ConcurrentOperationException e) {
+                                    LOGGER.error(String.format("Failed to destroy VM : %s disaster recovery cluster virtual machine : %s cleanup. Moving on with destroying remaining resources provisioned for the disaster recovery cluster", userVM.getDisplayName(), drCluster.getName()), e);
+                                    return false;
                                 }
                             }
-                        } catch (ResourceUnavailableException | ConcurrentOperationException e) {
-                            LOGGER.error(String.format("Failed to destroy VM : %s disaster recovery cluster virtual machine : %s cleanup. Moving on with destroying remaining resources provisioned for the disaster recovery cluster", userVM.getDisplayName(), drCluster.getName()), e);
-                            return false;
                         }
                     }
                 }
