@@ -127,7 +127,7 @@
           type="primary"
           style="width: 100%; margin-bottom: 10px"
           @click="showAddMirVMModal"
-          :loading="loading"
+          :loading="loadingMirror"
           :disabled="!('createDisasterRecoveryClusterVm' in $store.getters.apis)">
           <template #icon><plus-outlined /></template> {{ $t('label.add.dr.mirroring.vm') }}
         </a-button>
