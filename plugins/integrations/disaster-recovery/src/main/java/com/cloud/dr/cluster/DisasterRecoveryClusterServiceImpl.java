@@ -1041,7 +1041,6 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                     if (drListResponse != null || !drListResponse.isEmpty()) {
                         for (GetDisasterRecoveryClusterListResponse dr : drListResponse) {
                             if (dr.getName().equalsIgnoreCase(drCluster.getName())) {
-                                String primaryDrId = dr.getId();
                                 secCommand = "updateDisasterRecoveryCluster";
                                 secMethod = "GET";
                                 sucParams.put("name", drName);
@@ -1053,7 +1052,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                                         secCommand = "deleteDisasterRecoveryClusterVm";
                                         Map<String, String> vmParams = new HashMap<>();
                                         vmParams.put("drclustername", drCluster.getName());
-                                        vmParams.put("id", vms.getMirroredVmId());
+                                        vmParams.put("virtualmachineid", vms.getMirroredVmId());
                                         DisasterRecoveryClusterUtil.moldDeleteDisasterRecoveryClusterVmAPI(secUrl + "/client/api/", secCommand, secMethod, secApiKey, secSecretKey, vmParams);
                                     }
                                 }
