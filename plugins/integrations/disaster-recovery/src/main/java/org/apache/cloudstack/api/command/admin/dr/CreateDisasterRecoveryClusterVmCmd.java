@@ -54,7 +54,7 @@ public class CreateDisasterRecoveryClusterVmCmd extends BaseCmd implements Admin
                 description = "the virtual machine ID used by disaster recovery cluster")
     private Long vmId;
 
-    @Parameter(name = "drclustername",
+    @Parameter(name = ApiConstants.DR_CLUSTER_NAME,
                 type = CommandType.STRING,
                 required = true,
                 description = "disaster recovery cluster name")
