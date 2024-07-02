@@ -25,6 +25,7 @@ import javax.naming.ConfigurationException;
 
 import org.apache.cloudstack.ca.CAManager;
 import org.apache.cloudstack.framework.config.ConfigDepot;
+import org.apache.log4j.Logger;
 
 import com.cloud.cluster.dao.ManagementServerHostDao;
 import com.cloud.utils.NumbersUtil;

@@ -43,6 +43,9 @@ import org.apache.logging.log4j.Logger;
 import com.cloud.utils.exception.CloudRuntimeException;
 import com.cloud.utils.ssh.SshHelper;
 
+import com.cloud.utils.exception.CloudRuntimeException;
+import com.cloud.utils.ssh.SshHelper;
+
 public class FileUtil {
     protected static Logger LOGGER = LogManager.getLogger(FileUtil.class);
 
@@ -53,6 +56,21 @@ public class FileUtil {
                 for (File file : files) {
                     if (!deleteFileOrDirectory(file)) {
                         LOGGER.trace(String.format("Failed to delete file: %s", file.getAbsoluteFile()));
+                        return false;
+                    }
+                }
+            }
+        }
+        return fileOrDirectory.delete();
+    }
+
+    private static boolean deleteFileOrDirectory(File fileOrDirectory) {
+        if (fileOrDirectory.isDirectory()) {
+            File[] files = fileOrDirectory.listFiles();
+            if (files != null) {
+                for (File file : files) {
+                    if (!deleteFileOrDirectory(file)) {
+                        s_logger.trace(String.format("Failed to delete file: %s", file.getAbsoluteFile()));
                         return false;
                     }
                 }
