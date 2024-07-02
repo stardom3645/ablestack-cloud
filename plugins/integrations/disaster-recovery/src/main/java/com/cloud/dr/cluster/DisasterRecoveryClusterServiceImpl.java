@@ -368,52 +368,6 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         response.setMirroredVmName(map.getMirroredVmName());
         response.setMirroredVmVolumeType(map.getMirroredVmVolumeType());
         response.setMirroredVmVolumePath(map.getMirroredVmVolumePath());
-
-        // 미러링 가상머신 볼륨 상태 업데이트
-        if (drcluster.getDrClusterType().equalsIgnoreCase("primary")) {
-            String moldUrl = url + "/client/api/";
-            String moldCommand = "listScvmIpAddress";
-            String moldMethod = "GET";
-            String scvmList = DisasterRecoveryClusterUtil.moldListScvmIpAddressAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey);
-            if (scvmList != null) {
-                String[] array = scvmList.split(",");
-                for (int i=0; i < array.length; i++) {
-                    String glueIp = array[i];
-                    ///////////////////// glue-api 프로토콜과 포트 확정 시 변경 예정
-                    String glueUrl = "https://" + glueIp + ":8080/api/v1";
-                    String glueCommand = "/mirror/image/status/rbd/" + map.getMirroredVmVolumePath();
-                    String glueMethod = "GET";
-                    String mirrorImageStatus = DisasterRecoveryClusterUtil.glueImageMirrorStatusAPI(glueUrl, glueCommand, glueMethod);
-                    if (mirrorImageStatus != null) {
-                        JsonArray drArray = (JsonArray) new JsonParser().parse(mirrorImageStatus).getAsJsonObject().get("peer_sites");
-                        if (drArray.size() != 0) {
-                            for (JsonElement dr : drArray) {
-                                JsonElement siteName = dr.getAsJsonObject().get("site_name") == null ? null : dr.getAsJsonObject().get("site_name");
-                                JsonElement description = dr.getAsJsonObject().get("description") == null ? null : dr.getAsJsonObject().get("description");
-                                if (siteName != null && description != null) {
-                                    if (description.getAsString().equals("local image is primary")) {
-                                        response.setDrClusterVmVolStatus("READY");
-                                        map.setMirroredVmVolumeStatus("SYNCING");
-                                    } else if (description.getAsString().equals("status not found")) {
-                                        response.setDrClusterVmVolStatus("UNKNOWN");
-                                        map.setMirroredVmVolumeStatus("UNKNOWN");
-                                    } else if (description.getAsString().contains("error")) {
-                                        response.setDrClusterVmVolStatus("ERROR");
-                                        map.setMirroredVmVolumeStatus("ERROR");
-                                    } else {
-                                        response.setDrClusterVmVolStatus("SYNCING");
-                                        map.setMirroredVmVolumeStatus("READY");
-                                    }
-                                    disasterRecoveryClusterVmMapDao.update(map.getId(), map);
-                                    // dr map 업데이트
-                                }
-                            }
-                            break;
-                        }
-                    }
-                }
-            }
-        }
         response.setMirroredVmVolumeStatus(map.getMirroredVmVolumeStatus());
         return response;
     }
@@ -477,39 +431,36 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                         String glueMethod = "GET";
                         String mirrorImageStatus = DisasterRecoveryClusterUtil.glueImageMirrorStatusAPI(glueUrl, glueCommand, glueMethod);
                         if (mirrorImageStatus != null) {
-                            ////////////////////// ///////////  이미지 상태 조회 재정리 필요 ***********
                             JsonArray drArray = (JsonArray) new JsonParser().parse(mirrorImageStatus).getAsJsonObject().get("peer_sites");
                             if (drArray.size() != 0 && drArray != null) {
                                 for (JsonElement dr : drArray) {
                                     JsonElement peerName = dr.getAsJsonObject().get("site_name") == null ? null : dr.getAsJsonObject().get("site_name");
                                     JsonElement peerState = dr.getAsJsonObject().get("state") == null ? null : dr.getAsJsonObject().get("state");
-                                    JsonElement description = dr.getAsJsonObject().get("description") == null ? null : dr.getAsJsonObject().get("description");
-                                    if (peerName != null && description != null) {
-                                        if (description.getAsString().equals("local image is primary")) {
+                                    if (peerName != null && peerState != null) {
+                                        if (peerState.getAsString().contains("replaying")) {
                                             if (drcluster.getDrClusterType().equalsIgnoreCase("primary")) {
-                                                response.setDrClusterVmVolStatus("READY");
-                                                map.setMirroredVmVolumeStatus("SYNCING");
-                                            } else {
                                                 response.setDrClusterVmVolStatus("SYNCING");
                                                 map.setMirroredVmVolumeStatus("READY");
+                                            } else {
+                                                response.setDrClusterVmVolStatus("READY");
+                                                map.setMirroredVmVolumeStatus("SYNCING");
                                             }
-                                        } else if (description.getAsString().equals("status not found")){
-                                            response.setDrClusterVmVolStatus("UNKNOWN");
-                                            map.setMirroredVmVolumeStatus("UNKNOWN");
-                                        } else if (description.getAsString().contains("error")){
+                                        } else if (peerState.getAsString().contains("error")){
                                             response.setDrClusterVmVolStatus("ERROR");
                                             map.setMirroredVmVolumeStatus("ERROR");
+                                        } else if (peerState.getAsString().contains("unknown")){
+                                            response.setDrClusterVmVolStatus("UNKNOWN");
+                                            map.setMirroredVmVolumeStatus("UNKNOWN");
                                         } else {
                                             if (drcluster.getDrClusterType().equalsIgnoreCase("primary")) {
-                                                response.setDrClusterVmVolStatus("SYNCING");
-                                                map.setMirroredVmVolumeStatus("READY");
-                                            } else {
                                                 response.setDrClusterVmVolStatus("READY");
                                                 map.setMirroredVmVolumeStatus("SYNCING");
+                                            } else {
+                                                response.setDrClusterVmVolStatus("SYNCING");
+                                                map.setMirroredVmVolumeStatus("READY");
                                             }
                                         }
                                         disasterRecoveryClusterVmMapDao.update(map.getId(), map);
-                                        // dr map 업데이트 필요
                                         break;
                                     }
                                 }
