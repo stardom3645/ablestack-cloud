@@ -1267,8 +1267,6 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         volParams.put("size", String.valueOf(rootVol.getSize() / (1024 * 1024 * 1024)));
         volParams.put("name", rootVolumeUuid);
         volParams.put("zoneid", zoneId);
-        LOGGER.info("volParams::::::::::::::::::::::::::");
-        LOGGER.info(volParams);
         String rootVolumeId = DisasterRecoveryClusterUtil.moldCreateVolumeAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey, volParams);
         ///////////////////// 비동기 호출 예외 처리 필요
         moldMethod = "GET";
@@ -1279,8 +1277,6 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         volUpParams.put("storageid", poolId);
         volUpParams.put("state", "Ready");
         volUpParams.put("type", rootVol.getVolumeType().toString());
-        LOGGER.info("volUpParams::::::::::::::::::::::::::");
-        LOGGER.info(volUpParams);
         DisasterRecoveryClusterUtil.moldUpdateVolumeAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey, volUpParams);
         // 생성된 ROOT 디스크로 미러링 가상머신 생성
         moldMethod = "POST";
@@ -1305,8 +1301,6 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         vmParams.put("dynamicscalingenabled", "true");
         vmParams.put("iothreadsenabled", "true");
         vmParams.put("iodriverpolicy", "io_uring");
-        LOGGER.info("vmParams::::::::::::::::::::::::::");
-        LOGGER.info(vmParams);
         String vmId = DisasterRecoveryClusterUtil.moldDeployVirtualMachineForVolumeAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey, vmParams);
         ///////////////////// 비동기 호출 예외 처리 필요
         if (vmId != null) {
@@ -1323,8 +1317,6 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
             vmMapParams.put("drclustermirrorvmvoltype", rootVol.getVolumeType().toString());
             vmMapParams.put("drclustermirrorvmvolpath", rootVolumeUuid);
             vmMapParams.put("drclustermirrorvmvolstatus", "READY");
-            LOGGER.info("vmMapParams::::::::::::::::::::::::::");
-            LOGGER.info(vmMapParams);
             DisasterRecoveryClusterUtil.moldUpdateDisasterRecoveryClusterVmAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey, vmMapParams);
             List<VolumeVO> dataVolumes = volsDao.findByInstanceAndType(userVM.getId(), Volume.Type.DATADISK);
             if (!dataVolumes.isEmpty()) {
@@ -1337,8 +1329,6 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                     volParams.put("size", String.valueOf(dataVolume.getSize() / (1024 * 1024 * 1024)));
                     volParams.put("name", dataVolumeUuid);
                     volParams.put("zoneid", zoneId);
-                    LOGGER.info("volParams::::::::::::::::::::::::::");
-                    LOGGER.info(volParams);
                     String dataVolumeId = DisasterRecoveryClusterUtil.moldCreateVolumeAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey, volParams);
                     ///////////////////// 비동기 호출 예외 처리 필요
                     moldMethod = "GET";
@@ -1348,15 +1338,11 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                     volUpParams.put("storageid", poolId);
                     volUpParams.put("state", "Ready");
                     volUpParams.put("type", dataVolume.getVolumeType().toString());
-                    LOGGER.info("volUpParams::::::::::::::::::::::::::");
-                    LOGGER.info(volUpParams);
                     String dataResponse = DisasterRecoveryClusterUtil.moldUpdateVolumeAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey, volUpParams);
                     moldCommand = "attachVolume";
                     Map<String, String> attParams = new HashMap<>();
                     attParams.put("id", dataVolumeId);
                     attParams.put("virtualmachineid", vmId);
-                    LOGGER.info("attParams::::::::::::::::::::::::::");
-                    LOGGER.info(attParams);
                     String attachId = DisasterRecoveryClusterUtil.moldAttachVolumeAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey, attParams);
                     ///////////////////// 비동기 호출 예외 처리 필요
                     moldCommand = "updateDisasterRecoveryClusterVm";
@@ -1368,8 +1354,6 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                     vmMapParams.put("drclustermirrorvmvoltype", dataVolume.getVolumeType().toString());
                     vmMapParams.put("drclustermirrorvmvolpath", dataVolumeUuid);
                     vmMapParams.put("drclustermirrorvmvolstatus", "READY");
-                    LOGGER.info("vmMapParams::::::::::::::::::::::::::");
-                    LOGGER.info(vmMapParams);
                     DisasterRecoveryClusterUtil.moldUpdateDisasterRecoveryClusterVmAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey, vmMapParams);
                     DisasterRecoveryClusterVmMapVO newClusterDataVmMapVO = new DisasterRecoveryClusterVmMapVO(drCluster.getId(), cmd.getVmId(), vmId, userVM.getName(), "Stopped", dataVolume.getVolumeType().toString(), dataVolumeUuid, "SYNCING");
                     disasterRecoveryClusterVmMapDao.persist(newClusterDataVmMapVO);
@@ -1402,7 +1386,6 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                                 List<VolumeVO> dataVolumes = volsDao.findByInstanceAndType(userVM.getId(), Volume.Type.DATADISK);
                                 if (!dataVolumes.isEmpty()) {
                                     for (VolumeVO dataVolume : dataVolumes) {
-                                        LOGGER.info(dataVolume.getName());
                                         Account account = accountDao.findActiveAccount("admin", 1L);
                                         volumeService.detachVolumeViaDestroyVM(dataVolume.getInstanceId(), dataVolume.getId());
                                         Volume result = volumeService.destroyVolume(dataVolume.getId(), account, true, false);
@@ -1475,7 +1458,6 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                                             vmParams.put("virtualmachineid", mirrorVmId);
                                             String response = DisasterRecoveryClusterUtil.moldDeleteDisasterRecoveryClusterVmAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey, vmParams);
                                             if (response != null) {
-                                                LOGGER.info(response);
                                                 return true;
                                             }
                                         }
