@@ -90,7 +90,6 @@ import org.apache.cloudstack.api.command.admin.dr.PromoteDisasterRecoveryCluster
 import org.apache.cloudstack.api.command.admin.dr.DemoteDisasterRecoveryClusterCmd;
 import org.apache.cloudstack.api.command.admin.glue.ListScvmIpAddressCmd;
 import org.apache.cloudstack.api.response.ServiceOfferingResponse;
-import org.apache.cloudstack.api.response.UserVmResponse;
 import org.apache.cloudstack.api.response.dr.cluster.GetDisasterRecoveryClusterListResponse;
 import org.apache.cloudstack.api.response.dr.cluster.GetDisasterRecoveryClusterVmListResponse;
 import org.apache.cloudstack.utils.identity.ManagementServerNode;
@@ -1542,10 +1541,10 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
             // Primary Cluster - moldGetDisasterRecoveryClusterListAPI 성공
             for (GetDisasterRecoveryClusterListResponse dr : drListResponse) {
                 if (dr.getName().equalsIgnoreCase(drCluster.getName())) {
-                    if (dr.getDisasterRecoveryClusterVms() != null) {
-                        List<UserVmResponse> vmListResponse = dr.getDisasterRecoveryClusterVms();
-                        for (UserVmResponse vm : vmListResponse) {
-                            if (!vm.getState().equalsIgnoreCase("Stopped")) {
+                    if (dr.getDisasterRecoveryClusterVmMap() != null) {
+                        List<GetDisasterRecoveryClusterVmListResponse> vmListResponse = dr.getDisasterRecoveryClusterVms();
+                        for (GetDisasterRecoveryClusterVmListResponse vm : vmListResponse) {
+                            if (!vm.getDrClusterVmStatus().equalsIgnoreCase("Stopped")) {
                                 throw new InvalidParameterValueException("Forced promote and demote functions cannot be executed because there is a running disaster recovery primary cluster virtual machine : " + vm.getName());
                             }
                         }
