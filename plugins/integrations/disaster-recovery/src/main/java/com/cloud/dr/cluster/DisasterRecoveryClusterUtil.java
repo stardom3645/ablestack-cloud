@@ -832,8 +832,8 @@ public class DisasterRecoveryClusterUtil {
                 in.close();
                 LOGGER.info(connection.getResponseCode());
                 LOGGER.info(response.toString());
-                // parent 이미지가 다른 이미지의 상위 이미지인 경우 미러링이 비활성화되지 못하여 발생하는 에러 예외처리
-                if (connection.getResponseCode() == 500 && response.toString().contains("mirroring is enabled")) {
+                // parent 이미지가 미러링 중인 다른 이미지의 parent 이미지인 경우 미러링이 비활성화되지 못하여 발생하는 에러 예외처리
+                if (connection.getResponseCode() == 500 && response.toString().contains("mirroring is enabled on one or more children")) {
                     return true;
                 }
                 String msg = "Failed to request glue mirror image delete API. response code : " + connection.getResponseCode();
