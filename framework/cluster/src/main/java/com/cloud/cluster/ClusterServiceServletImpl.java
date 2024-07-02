@@ -126,7 +126,7 @@ public class ClusterServiceServletImpl implements ClusterService {
         try {
             method.setEntity(new UrlEncodedFormEntity(postParameters, HttpUtils.UTF_8));
         } catch (UnsupportedEncodingException e) {
-            s_logger.error("Failed to encode ping request POST parameters", e);
+            logger.error("Failed to encode ping request POST parameters", e);
             logPostParametersForFailedEncoding(postParameters);
             throw new RemoteException("Failed to encode ping request POST parameters", e);
         }

@@ -23,28 +23,21 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
+import org.mockito.MockedConstruction;
 import org.mockito.Mockito;
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
+import org.mockito.junit.MockitoJUnitRunner;
 
-@RunWith(PowerMockRunner.class)
-@PrepareForTest(ApiServer.class)
+@RunWith(MockitoJUnitRunner.class)
 public class ApiServerTest {
 
     @InjectMocks
     ApiServer apiServer = new ApiServer();
 
-    private List<ApiServer.ListenerThread> createdListeners;
-
     private void runTestSetupIntegrationPortListenerInvalidPorts(Integer port) {
-        try {
-            ApiServer.ListenerThread mocked = Mockito.mock(ApiServer.ListenerThread.class);
-            PowerMockito.whenNew(ApiServer.ListenerThread.class).withAnyArguments().thenReturn(mocked);
+        try (MockedConstruction<ApiServer.ListenerThread> mocked =
+                     Mockito.mockConstruction(ApiServer.ListenerThread.class)) {
             apiServer.setupIntegrationPortListener(port);
-            Mockito.verify(mocked, Mockito.never()).start();
-        } catch (Exception e) {
-            Assert.fail(String.format("Exception occurred: %s", e.getMessage()));
+            Assert.assertTrue(mocked.constructed().isEmpty());
         }
     }
 
@@ -60,14 +53,12 @@ public class ApiServerTest {
     @Test
     public void testSetupIntegrationPortListenerValidPort() {
         Integer validPort = 8080;
-        try {
-            ApiServer.ListenerThread mocked = Mockito.mock(ApiServer.ListenerThread.class);
-            PowerMockito.whenNew(ApiServer.ListenerThread.class).withAnyArguments().thenReturn(mocked);
+        try (MockedConstruction<ApiServer.ListenerThread> mocked =
+                     Mockito.mockConstruction(ApiServer.ListenerThread.class)) {
             apiServer.setupIntegrationPortListener(validPort);
-            PowerMockito.verifyNew(ApiServer.ListenerThread.class).withArguments(apiServer, validPort);
-            Mockito.verify(mocked).start();
-        } catch (Exception e) {
-            Assert.fail(String.format("Exception occurred: %s", e.getMessage()));
+            Assert.assertFalse(mocked.constructed().isEmpty());
+            ApiServer.ListenerThread listenerThread = mocked.constructed().get(0);
+            Mockito.verify(listenerThread).start();
         }
     }
 }

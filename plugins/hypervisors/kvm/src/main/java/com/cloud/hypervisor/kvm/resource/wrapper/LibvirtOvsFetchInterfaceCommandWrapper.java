@@ -87,6 +87,56 @@ public final class LibvirtOvsFetchInterfaceCommandWrapper extends CommandWrapper
         return new Ternary<>(null, null, null);
     }
 
+    private String getSubnetMaskForAddress(NetworkInterface networkInterface, InetAddress inetAddress) {
+        for (InterfaceAddress address : networkInterface.getInterfaceAddresses()) {
+            if (!inetAddress.equals(address.getAddress())) {
+                continue;
+            }
+            int prefixLength = address.getNetworkPrefixLength();
+            int mask = 0xffffffff << (32 - prefixLength);
+            return String.format("%d.%d.%d.%d",
+                    (mask >>> 24) & 0xff,
+                    (mask >>> 16) & 0xff,
+                    (mask >>> 8) & 0xff,
+                    mask & 0xff);
+        }
+        return "";
+    }
+
+    private String getMacAddress(NetworkInterface networkInterface) throws SocketException {
+        byte[] macBytes = networkInterface.getHardwareAddress();
+        if (macBytes == null) {
+            return "";
+        }
+        StringBuilder macAddress = new StringBuilder();
+        for (byte b : macBytes) {
+            macAddress.append(String.format("%02X:", b));
+        }
+        if (macAddress.length() > 0) {
+            macAddress.deleteCharAt(macAddress.length() - 1);  // Remove trailing colon
+        }
+        return macAddress.toString();
+    }
+
+    public Ternary<String, String, String> getInterfaceDetails(String interfaceName) throws SocketException {
+        NetworkInterface networkInterface = NetworkInterface.getByName(interfaceName);
+        if (networkInterface == null) {
+            logger.warn(String.format("Network interface: '%s' not found", interfaceName));
+            return new Ternary<>(null, null, null);
+        }
+        Enumeration<InetAddress> inetAddresses = networkInterface.getInetAddresses();
+        while (inetAddresses.hasMoreElements()) {
+            InetAddress inetAddress = inetAddresses.nextElement();
+            if (inetAddress instanceof java.net.Inet4Address) {
+                String ipAddress = inetAddress.getHostAddress();
+                String subnetMask = getSubnetMaskForAddress(networkInterface, inetAddress);
+                String macAddress = getMacAddress(networkInterface);
+                return new Ternary<>(ipAddress, subnetMask, macAddress);
+            }
+        }
+        return new Ternary<>(null, null, null);
+    }
+
     @Override
     public Answer execute(final OvsFetchInterfaceCommand command, final LibvirtComputingResource libvirtComputingResource) {
         final String label = "'" + command.getLabel() + "'";

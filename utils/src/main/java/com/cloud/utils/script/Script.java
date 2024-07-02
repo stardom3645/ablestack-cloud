@@ -661,8 +661,8 @@ public class Script implements Callable<String> {
         return executable;
     }
 
-    private static Script getScriptForCommandRun(String... command) {
-        Script s = new Script(command[0], 0);
+    private static Script getScriptForCommandRun(long timeout, String... command) {
+        Script s = new Script(command[0], timeout);
         if (command.length > 1) {
             for (int i = 1; i < command.length; ++i) {
                 s.add(command[i]);
@@ -671,12 +671,20 @@ public class Script implements Callable<String> {
         return s;
     }
 
+    private static Script getScriptForCommandRun(String... command) {
+        return getScriptForCommandRun(0, command);
+    }
+
     public static String executeCommand(String... command) {
         return runScript(getScriptForCommandRun(command));
     }
 
+    public static int executeCommandForExitValue(long timeout, String... command) {
+        return runScriptForExitValue(getScriptForCommandRun(timeout, command));
+    }
+
     public static int executeCommandForExitValue(String... command) {
-        return runScriptForExitValue(getScriptForCommandRun(command));
+        return executeCommandForExitValue(0, command);
     }
 
     public static Pair<Integer, String> executePipedCommands(List<String[]> commands, long timeout) {
@@ -694,10 +702,10 @@ public class Script implements Callable<String> {
                     output.append(line).append(System.lineSeparator());
                 }
                 last.waitFor();
-                s_logger.debug("Piped commands executed successfully");
+                LOGGER.debug("Piped commands executed successfully");
                 return new Pair<>(last.exitValue(), output.toString());
             } catch (IOException | InterruptedException e) {
-                s_logger.error("Error executing piped commands", e);
+                LOGGER.error("Error executing piped commands", e);
                 return new Pair<>(-1, stackTraceAsString(e));
             }
         };
@@ -707,11 +715,11 @@ public class Script implements Callable<String> {
         try {
             result = future.get(timeout, TimeUnit.MILLISECONDS);
         } catch (TimeoutException e) {
-            s_logger.error("Piped command execution timed out, attempting to terminate the processes.");
+            LOGGER.error("Piped command execution timed out, attempting to terminate the processes.");
             future.cancel(true);
             result.second(ERR_TIMEOUT);
         } catch (InterruptedException | ExecutionException e) {
-            s_logger.error("Error executing piped commands", e);
+            LOGGER.error("Error executing piped commands", e);
         }
         return result;
     }
@@ -727,6 +735,36 @@ public class Script implements Callable<String> {
                 return -1;
             }
         }
+    }
+
+    public static int runSimpleBashScriptForExitValue(String command) {
+        return runSimpleBashScriptForExitValue(command, 0, false);
+    }
+
+    public static int runSimpleBashScriptForExitValueAvoidLogging(String command) {
+        return runSimpleBashScriptForExitValue(command, 0, true);
+    }
+
+    /**
+     * Executes a bash script and returns the exit value of the script.
+     *
+     * @param command
+     *         The bash command to be executed.
+     * @param timeout
+     *         The maximum time (in milliseconds) that the script is allowed to run before it is forcibly terminated.
+     * @param avoidLogging
+     *         If set to true, some logging is avoided.
+     *
+     * @return The exit value of the script. Returns -1 if the result is null or empty, or if it cannot be parsed into
+     *         an integer which can happen in case of a timeout.
+     */
+    public static int runSimpleBashScriptForExitValue(String command, int timeout, boolean avoidLogging) {
+
+        Script s = new Script("/bin/bash", timeout);
+        s.add("-c");
+        s.add(command);
+        s.setAvoidLoggingCommand(avoidLogging);
+        return runScriptForExitValue(s);
     }
 
     public static String runBashScriptIgnoreExitValue(String command, int exitValue) {
