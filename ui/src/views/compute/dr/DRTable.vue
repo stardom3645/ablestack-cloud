@@ -26,17 +26,14 @@
       :rowKey="item => item.id"
       :pagination="false">
       <template #expandedRowRender="{ record }">
-        <a-descriptions style="margin-top: 10px" layout="vertical" :column="1" :bordered="false" size="small">
-          <a-descriptions-item :label="$t('label.id')" class="bold-label">
-            {{ record.mirroredVmId }}
-          </a-descriptions-item>
-          <a-descriptions-item v-if="record.mirroredVmVolType === 'ROOT'" :label="$t('label.dr.volume.root.disk.status')">
-            {{ record.mirroredVmVolStatus }}
-          </a-descriptions-item>
-          <a-descriptions-item v-if="record.mirroredVmVolType === 'DATADISK'" :label="$t('label.dr.volume.data.disk.status')">
-            {{ record.mirroredVmVolStatus }}
-          </a-descriptions-item>
-        </a-descriptions>
+        <a-table
+          style="margin: 10px 0;"
+          :columns="innerColumns"
+          :dataSource="this.volList"
+          :pagination="false"
+          :bordered="true"
+          :rowKey="record.id">
+        </a-table>
       </template>
       <template #bodyCell="{ column, record, text }">
         <template v-if="column.key === 'state'">
@@ -100,7 +97,26 @@ export default {
       drVmName: '',
       clusterName: '',
       drClusterVmList: [],
-      combinedArray: []
+      combinedArray: [],
+      volList: [],
+      infoList: [],
+      innerColumns: [
+        {
+          key: 'type',
+          title: this.$t('label.dr.mirrored.volume.type'),
+          dataIndex: 'mirroredVmVolType'
+        },
+        {
+          key: 'state',
+          title: this.$t('label.dr.mirrored.volume.status'),
+          dataIndex: 'mirroredVmVolStatus'
+        },
+        {
+          key: 'path',
+          title: this.$t('label.dr.mirrored.volume.path'),
+          dataIndex: 'mirroredVmVolPath'
+        }
+      ]
     }
   },
   watch: {
@@ -155,18 +171,14 @@ export default {
       this.loading = true
       api('getDisasterRecoveryClusterList', { name: this.clusterName }).then(json => {
         this.drClusterVmList = json.getdisasterrecoveryclusterlistresponse.disasterrecoverycluster[0].drclustervmmap || []
+        const clusterId = json.getdisasterrecoveryclusterlistresponse.disasterrecoverycluster[0].id
         const clusterType = json.getdisasterrecoveryclusterlistresponse.disasterrecoverycluster[0].drclustertype
         for (const clusterVm of this.drClusterVmList) {
           if (clusterVm.drclustervmname === this.drVmName && clusterType !== 'primary') {
-            this.drCluster.push(clusterVm)
-            this.drCluster = this.drCluster.map(item => ({ ...item, drName: item.drclustername }))
-            this.drCluster = this.drCluster.map(item => ({ ...item, drId: json.getdisasterrecoveryclusterlistresponse.disasterrecoverycluster[0].id }))
-            this.drCluster = this.drCluster.map(item => ({ ...item, mirroredVm: item.drclustermirrorvmname }))
-            this.drCluster = this.drCluster.map(item => ({ ...item, mirroredStatus: item.drclustermirrorvmstatus }))
-            this.drCluster = this.drCluster.map(item => ({ ...item, mirroredVmId: item.drclustermirrorvmid }))
-            this.drCluster = this.drCluster.map(item => ({ ...item, mirroredVmVolType: item.drclustermirrorvmvoltype }))
-            this.drCluster = this.drCluster.map(item => ({ ...item, mirroredVmVolStatus: item.drclustermirrorvmvolstatus }))
-            this.drCluster = this.drCluster.map(item => ({ ...item, mirroredVmVolPath: item.drclustermirrorvmvolpath }))
+            if (this.drCluster.length === 0) {
+              this.drCluster.push({ drName: clusterVm.drclustername, drId: clusterId, mirroredVm: clusterVm.drclustermirrorvmname, mirroredVmId: clusterVm.drclustermirrorvmid, mirroredStatus: clusterVm.drclustermirrorvmstatus })
+            }
+            this.volList.push({ mirroredVmVolType: clusterVm.drclustermirrorvmvoltype, mirroredVmVolPath: clusterVm.drclustermirrorvmvolpath, mirroredVmVolStatus: clusterVm.drclustermirrorvmvolstatus })
           }
         }
       }).finally(() => {

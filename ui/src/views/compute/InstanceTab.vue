@@ -761,7 +761,7 @@ export default {
     removeMirror (item) {
       this.loadingMirror = true
       api('deleteDisasterRecoveryClusterVm', {
-        drclustername: item.drclustername,
+        drclustername: item.drName,
         virtualmachineid: this.vm.id
       }).then(json => {
         this.$message.success(`${this.$t('label.delete.disaster.recovery.cluster.vm')}: ${this.vm.id}`)
