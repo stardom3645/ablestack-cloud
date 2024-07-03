@@ -72,8 +72,10 @@ import org.apache.cloudstack.annotation.AnnotationService;
 import org.apache.cloudstack.annotation.dao.AnnotationDao;
 import org.apache.cloudstack.api.ApiCommandResourceType;
 import org.apache.cloudstack.api.ApiConstants;
+import org.apache.cloudstack.api.ApiErrorCode;
 import org.apache.cloudstack.api.command.admin.vm.DeployVMVolumeCmdByAdmin;
 import org.apache.cloudstack.api.BaseCmd.HTTPMethod;
+import org.apache.cloudstack.api.ServerApiException;
 import org.apache.cloudstack.api.command.admin.vm.AssignVMCmd;
 import org.apache.cloudstack.api.command.admin.vm.DeployVMCmdByAdmin;
 import org.apache.cloudstack.api.command.admin.vm.RecoverVMCmd;
@@ -397,9 +399,12 @@ import com.cloud.vm.dao.UserVmDetailsDao;
 import com.cloud.vm.dao.VMInstanceDao;
 import com.cloud.vm.dao.VbmcDao;
 import com.cloud.vm.dao.VmStatsDao;
+import com.cloud.vm.snapshot.VMSnapshot;
+import com.cloud.vm.snapshot.VMSnapshotDetailsVO;
 import com.cloud.vm.snapshot.VMSnapshotManager;
 import com.cloud.vm.snapshot.VMSnapshotVO;
 import com.cloud.vm.snapshot.dao.VMSnapshotDao;
+import com.cloud.vm.snapshot.dao.VMSnapshotDetailsDao;
 
 public class UserVmManagerImpl extends ManagerBase implements UserVmManager, VirtualMachineGuru, Configurable {
 
@@ -624,7 +629,8 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
     NsxProviderDao nsxProviderDao;
     @Inject
     private HypervisorGuruManager _hvGuruMgr;
-
+    @Inject
+    VMSnapshotDetailsDao vmSnapshotDetailsDao;
 
 
     private ScheduledExecutorService _executor = null;
@@ -2754,7 +2760,7 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
                                     _volService.flattenVolumeAsync(snapshotInfo, dataStore);
 
                                     SnapshotVO snap = _snapshotDao.findByIdIncludingRemoved(snapshot.get(0).getId());
-                                    snap.setCloneStatus("full-flattened");
+                                    snap.setCloneType("full-flattened");
                                     _snapshotDao.update(snap.getId(), snap);
 
                                     // VolumeVO vol = _volsDao.findById(snapshot.get(0).getVolumeId());
@@ -9389,9 +9395,9 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
     }
 
     @Override
-    public void prepareCloneVirtualMachine(CloneVMCmd cmd) throws ResourceAllocationException, ResourceUnavailableException, InsufficientCapacityException {
-        long vmId = cmd.getId();
-        UserVmVO curVm = _vmDao.findById(vmId);
+    @ActionEvent(eventType = EventTypes.EVENT_VM_CLONE, eventDescription = "VM CLONE", async = true)
+    public Optional<UserVm> cloneVirtualMachine(CloneVMCmd cmd) throws ResourceAllocationException, ResourceUnavailableException, InsufficientCapacityException {
+        UserVmVO curVm = _vmDao.findById(cmd.getId());
         Account curVmAccount = _accountDao.findById(curVm.getAccountId());
         long zoneId = cmd.getTargetVM().getDataCenterId();
         String clone_type = cmd.getType();
@@ -9407,41 +9413,144 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
             }
             _accountMgr.checkAccess(caller, null, true, volume);
             logger.info("Clone VM >> Creating snapshot for root volume creation");
+            VMSnapshot vmSnapshot;
+            try {
+                vmSnapshot = _vmSnapshotMgr.allocVMSnapshot(curVm.getId(), null, null, curVm.getState() == VirtualMachine.State.Running ? true : false, clone_type);
+                if (vmSnapshot == null) {
+                    throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, "Failed to create vm snapshot");
+                }
+                vmSnapshot = _vmSnapshotMgr.createVMSnapshot(curVm.getId(), vmSnapshot.getId(), true);
+                if (vmSnapshot == null) {
+                    throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, "Failed to create vm snapshot due to an internal error creating snapshot for vm " + curVm.getId());
+                }
 
-            snapshot = (SnapshotVO) _volumeService.allocSnapshot(volumeId, Snapshot.INTERNAL_POLICY_ID, cmd.getTargetVM().getDisplayName() + "-RootSnapForClone", null, cmd.getZoneIds(), clone_type);
-            if (snapshot == null) {
-                throw new CloudRuntimeException("Unable to create a snapshot during the template creation recording");
-            }
-            SnapshotVO snapshotEntity = (SnapshotVO) _volumeService.takeSnapshot(volumeId, Snapshot.INTERNAL_POLICY_ID, snapshot.getId(), caller, false, null, false, new HashMap<>(), cmd.getZoneIds());
-
-            if (snapshotEntity == null) {
-                throw new CloudRuntimeException("Error when creating the snapshot entity");
-            }
-            if (snapshotEntity.getState() != Snapshot.State.BackedUp) {
-                throw new CloudRuntimeException("Async backup of snapshot happens during the clone for snapshot id: " + snapshot.getId());
+            } catch (CloudRuntimeException e) {
+                throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, "Failed to create vm snapshot: " + e.getMessage(), e);
             }
 
-            long diskOfferingId = snapshotEntity.getDiskOfferingId();
-            DiskOfferingVO diskOffering = _diskOfferingDao.findById(diskOfferingId);
-            Long minIops = snapshotEntity.getMinIops();
-            Long maxIops = snapshotEntity.getMaxIops();
-            Long size = snapshotEntity.getSize();
-            Storage.ProvisioningType provisioningType = diskOffering.getProvisioningType();
-            VolumeVO parentVolume = _volsDao.findByIdIncludingRemoved(snapshotEntity.getVolumeId());
-            String volumeName = snapshotEntity.getName() + "-Clone";
+            List<VMSnapshotDetailsVO> listSnapshots = vmSnapshotDetailsDao.findDetails(vmSnapshot.getId(), "kvmStorageSnapshot");
+            for (VMSnapshotDetailsVO vmSnapshotDetailsVO : listSnapshots) {
+                SnapshotVO snapVO = _snapshotDao.findById(Long.parseLong(vmSnapshotDetailsVO.getValue()));
+                if (snapVO == null) {
+                    throw new CloudRuntimeException("Could not find snapshot for VM snapshot");
+                }
 
-            VolumeVO newDatadisk = saveDataDiskVolumeFromSnapShot(curVmAccount, true, zoneId, diskOfferingId, provisioningType, size, minIops, maxIops, parentVolume,
-                                                                    volumeName, _uuidMgr.generateUuid(Volume.class, null), new HashMap<>(), Volume.Type.ROOT, clone_type);
-            VolumeVO rootVolume = (VolumeVO) _volumeService.cloneRootOrDataVolume(cmd.getEntityId(), snapshotEntity.getId(), newDatadisk);
-            if (rootVolume == null) {
-                throw new CloudRuntimeException("Creation of root volume is not queried. The virtual machine cannot be cloned!");
+                VolumeVO parentRootVolume = _volsDao.findByIdIncludingRemoved(snapVO.getVolumeId());
+                long diskOfferingId = snapVO.getDiskOfferingId();
+                DiskOfferingVO diskOffering = _diskOfferingDao.findById(diskOfferingId);
+                Long minIops = snapVO.getMinIops();
+                Long maxIops = snapVO.getMaxIops();
+                Long size = snapVO.getSize();
+                Storage.ProvisioningType provisioningType = diskOffering.getProvisioningType();
+                String rootVolumeName = cmd.getName() + "-" + parentRootVolume.getName() + "-Clone";
+
+                if (parentRootVolume.getVolumeType() == Volume.Type.ROOT) {
+                    snapVO.setCloneType(clone_type);
+                    _snapshotDao.update(snapVO.getId(), snapVO);
+
+                    VolumeVO newVol = saveDataDiskVolumeFromSnapShot(curVmAccount, true, zoneId, diskOfferingId, provisioningType, size, minIops, maxIops, parentRootVolume, rootVolumeName,
+                                                                        _uuidMgr.generateUuid(Volume.class, null), new HashMap<>(), Volume.Type.ROOT);
+                    VolumeVO rootVolume = (VolumeVO) _volumeService.cloneRootOrDataVolume(curVm.getId(), snapVO.getId(), newVol);
+                    if (rootVolume == null) {
+                        throw new CloudRuntimeException("Creation of root volume is not queried. The virtual machine cannot be cloned!");
+                    }
+                    UserVm cloneVM = recordVirtualMachineToDB(cmd, String.valueOf(rootVolume.getId()));
+                    if (cloneVM == null) {
+                        throw new CloudRuntimeException("Unable to record the VM to DB!");
+                    }
+                    cmd.setEntityUuid(cloneVM.getUuid());
+                    cmd.setEntityId(cloneVM.getId());
+                    break;
+                }
             }
-            UserVm vmRecord = recordVirtualMachineToDB(cmd, String.valueOf(rootVolume.getId()));
-            if (vmRecord == null) {
-                throw new CloudRuntimeException("Unable to record the VM to DB!");
+
+            List<VolumeVO> createdVolumes = new ArrayList<>();
+            for (VMSnapshotDetailsVO vmSnapshotDetailsVO : listSnapshots) {
+                SnapshotVO snapVO = _snapshotDao.findById(Long.parseLong(vmSnapshotDetailsVO.getValue()));
+                if (snapVO == null) {
+                    throw new CloudRuntimeException("Could not find snapshot for VM snapshot");
+                }
+
+                VolumeVO parentDataDiskVolume = _volsDao.findByIdIncludingRemoved(snapVO.getVolumeId());
+                long diskOfferingId = snapVO.getDiskOfferingId();
+                DiskOfferingVO diskOffering = _diskOfferingDao.findById(diskOfferingId);
+                Long minIops = snapVO.getMinIops();
+                Long maxIops = snapVO.getMaxIops();
+                Long size = snapVO.getSize();
+                Storage.ProvisioningType provisioningType = diskOffering.getProvisioningType();
+                String dataVolumeName = cmd.getName() + "-" + parentDataDiskVolume.getName() + "-Clone";
+
+                if (parentDataDiskVolume.getVolumeType() == Volume.Type.DATADISK) {
+                    snapVO.setCloneType(clone_type);
+                    _snapshotDao.update(snapVO.getId(), snapVO);
+
+                    VolumeVO newDataDiskVol = null;
+                    try {
+                        newDataDiskVol = saveDataDiskVolumeFromSnapShot(curVmAccount, true, zoneId, diskOfferingId, provisioningType, size, minIops, maxIops, parentDataDiskVolume, dataVolumeName,
+                                                                            _uuidMgr.generateUuid(Volume.class, null), new HashMap<>(), Volume.Type.ROOT);
+                        VolumeVO dataDiskVolume = (VolumeVO) _volumeService.cloneRootOrDataVolume(curVm.getId(), snapVO.getId(), newDataDiskVol);
+                        if (dataDiskVolume == null) {
+                            throw new CloudRuntimeException("Creation of root volume is not queried. The virtual machine cannot be cloned!");
+                        }
+                        createdVolumes.add(dataDiskVolume);
+
+                        for (VolumeVO createdVol : createdVolumes) {
+                            _volumeService.attachVolumeToVM(cmd.getEntityId(), createdVol.getId(), createdVol.getDeviceId());
+                        }
+                    } catch (CloudRuntimeException e){
+                        logger.warn("data disk process failed during clone, clearing the temporary resources...");
+                        for (VolumeVO dataDiskToClear : createdVolumes) {
+                            _volumeService.destroyVolume(dataDiskToClear.getId(), caller, true, false);
+                        }
+                        // clear the created disks
+                        if (newDataDiskVol != null) {
+                            _volumeService.destroyVolume(newDataDiskVol.getId(), caller, true, false);
+                        }
+                        destroyVm(cmd.getEntityId(), true);
+                        throw new CloudRuntimeException(e.getMessage());
+                    } finally {
+                        _vmSnapshotMgr.deleteVMSnapshot(vmSnapshot.getId());
+                        // clear the temporary data snapshots
+                        // for (Snapshot snapshotLeftOver : createdSnapshots) {
+                        //     logger.warn("Clone VM >> Clearing the temporary data disk snapshot : " + snapshotLeftOver.getId());
+                        //     _snapshotService.deleteSnapshot(snapshotLeftOver.getId(), zoneId);
+                        // }
+                    }
+                }
             }
-            cmd.setEntityUuid(vmRecord.getUuid());
-            cmd.setEntityId(vmRecord.getId());
+
+            // snapshot = (SnapshotVO) _volumeService.allocSnapshot(volumeId, Snapshot.INTERNAL_POLICY_ID, volume.getName(), null, cmd.getZoneIds(), clone_type);
+            // if (snapshot == null) {
+            //     throw new CloudRuntimeException("Unable to create a snapshot during the template creation recording");
+            // }
+            // SnapshotVO snapshotEntity = (SnapshotVO) _volumeService.takeSnapshot(volumeId, Snapshot.INTERNAL_POLICY_ID, snapshot.getId(), caller, false, null, false, new HashMap<>(), cmd.getZoneIds());
+
+            // if (snapshotEntity == null) {
+            //     throw new CloudRuntimeException("Error when creating the snapshot entity");
+            // }
+            // if (snapshotEntity.getState() != Snapshot.State.BackedUp) {
+            //     throw new CloudRuntimeException("Async backup of snapshot happens during the clone for snapshot id: " + snapshot.getId());
+            // }
+
+
+            if (!cmd.getStartVm()) {
+                return Optional.of(getUserVm(cmd.getEntityId()));
+            }
+
+            // start the VM if successfull
+            Long podId = curVm.getPodIdToDeployIn();
+            Long clusterId = null;
+            Long hostId = curVm.getHostId();
+            Map<VirtualMachineProfile.Param, Object> additonalParams =  new HashMap<>();
+            Map<Long, DiskOffering> diskOfferingMap = new HashMap<>();
+            if (MapUtils.isNotEmpty(curVm.getDetails()) && curVm.getDetails().containsKey(ApiConstants.BootType.UEFI.toString())) {
+                Map<String, String> map = curVm.getDetails();
+                additonalParams.put(VirtualMachineProfile.Param.UefiFlag, "Yes");
+                additonalParams.put(VirtualMachineProfile.Param.BootType, ApiConstants.BootType.UEFI.toString());
+                additonalParams.put(VirtualMachineProfile.Param.BootMode, map.get(ApiConstants.BootType.UEFI.toString()));
+            }
+
+            return Optional.of(startVirtualMachine(cmd.getEntityId(), podId, clusterId, hostId, diskOfferingMap, additonalParams, null));
         } finally {
             if (snapshot != null) {
                 _snapshotService.deleteSnapshot(snapshot.getId(), cmd.getTargetVM().getDataCenterId());
@@ -9473,16 +9582,16 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
         ServiceOffering serviceOffering = serviceOfferingDao.findById(curVm.getId(), serviceOfferingId);
         List<SecurityGroupVO> securityGroupList = _securityGroupMgr.getSecurityGroupsForVm(curVm.getId());
         List<Long> securityGroupIdList = securityGroupList.stream().map(SecurityGroupVO::getId).collect(Collectors.toList());
-        String uuidName = _uuidMgr.generateUuid(UserVm.class, null);
-//        String hostName = generateHostName(uuidName);
-//        String displayName = hostName + "-Clone";
+        // String uuidName = _uuidMgr.generateUuid(UserVm.class, null);
+        // String hostName = generateHostName(uuidName);
+        // String displayName = hostName + "-Clone";
         String name = cmd.getName();
         String displayName = cmd.getName();
-        VolumeVO curVolume = _volsDao.findByInstance(curVm.getId()).get(0);
-        Long diskOfferingId = curVolume.getDiskOfferingId();
+        // VolumeVO curVolume = _volsDao.findByInstance(curVm.getId()).get(0);
+        // Long diskOfferingId = curVolume.getDiskOfferingId();
         Long size = null; // mutual exclusive with disk offering id
         String userData = curVm.getUserData();
-        String sshKeyPair = null;
+        // String sshKeyPair = null;
         Map<Long, IpAddresses> ipToNetoworkMap = null; // Since we've specified Ip
         boolean isDisplayVM = curVm.isDisplayVm();
         boolean dynamicScalingEnabled = curVm.isDynamicallyScalable();
@@ -9522,100 +9631,100 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
         return vmResult;
     }
 
-    @Override
-    @ActionEvent(eventType = EventTypes.EVENT_VM_CLONE, eventDescription = "VM CLONE", async = true)
-    public Optional<UserVm> cloneVirtualMachine(CloneVMCmd cmd) throws ResourceUnavailableException, ConcurrentOperationException, CloudRuntimeException, InsufficientCapacityException, ResourceAllocationException {
-        long vmId = cmd.getEntityId();
-        UserVmVO curVm = _vmDao.findById(vmId);
-        Account curVmAccount = _accountDao.findById(curVm.getAccountId());
-        // create and attach data disk
-        long targetClonedVmId = cmd.getId();
-        Account caller = CallContext.current().getCallingAccount();
-        List<VolumeVO> dataDisks = _volsDao.findByInstanceAndType(targetClonedVmId, Volume.Type.DATADISK);
-        List<Snapshot> createdSnapshots = new ArrayList<>();
-        List<VolumeVO> createdVolumes = new ArrayList<>();
-        long zoneId = cmd.getTargetVM().getDataCenterId();
-        String clone_type = cmd.getType();
-        if (dataDisks.size() > 0) {
-            logger.info("Clone VM >> Trying to attach data disk before starting the VM.");
-            VolumeVO newDatadisk = null;
-            try {
-                for (VolumeVO dataDisk : dataDisks) {
-                    logger.info("Clone VM >> Start creating data disk snapshots : " + dataDisk.getId());
-                    long diskId = dataDisk.getId();
-                    SnapshotVO dataSnapShot = (SnapshotVO) _volumeService.allocSnapshot(diskId, Snapshot.INTERNAL_POLICY_ID, dataDisk.getName(), null, cmd.getZoneIds(), clone_type);
-                    if (dataSnapShot == null) {
-                        throw new CloudRuntimeException("Unable to allocate snapshot of data disk: " + dataDisk.getId() + " name: " + dataDisk.getName());
-                    }
-                    createdSnapshots.add(dataSnapShot);
-                    SnapshotVO snapshotEntity = (SnapshotVO) _volumeService.takeSnapshot(diskId, Snapshot.INTERNAL_POLICY_ID, dataSnapShot.getId(), caller, false, null, false, new HashMap<>(), cmd.getZoneIds());
-                    if (snapshotEntity == null) {
-                        throw new CloudRuntimeException("Error when creating the snapshot entity");
-                    }
-                    if (snapshotEntity.getState() != Snapshot.State.BackedUp) {
-                        throw new CloudRuntimeException("Async backup of snapshot happens during the clone for snapshot id: " + dataSnapShot.getId());
-                    }
-                    long diskOfferingId = snapshotEntity.getDiskOfferingId();
-                    DiskOfferingVO diskOffering = _diskOfferingDao.findById(diskOfferingId);
-                    Long minIops = snapshotEntity.getMinIops();
-                    Long maxIops = snapshotEntity.getMaxIops();
-                    Long size = snapshotEntity.getSize();
-                    Storage.ProvisioningType provisioningType = diskOffering.getProvisioningType();
-                    String volumeName = snapshotEntity.getName() + "-Clone";
-                    VolumeVO parentVolume = _volsDao.findByIdIncludingRemoved(snapshotEntity.getVolumeId());
-                    newDatadisk = saveDataDiskVolumeFromSnapShot(curVmAccount, true, zoneId, diskOfferingId, provisioningType, size, minIops, maxIops, parentVolume,
-                                                                    volumeName, _uuidMgr.generateUuid(Volume.class, null), new HashMap<>(), Volume.Type.DATADISK, clone_type);
-                    VolumeVO volumeEntity = (VolumeVO) _volumeService.cloneRootOrDataVolume(vmId, snapshotEntity.getId(), newDatadisk);
-                    createdVolumes.add(volumeEntity);
-                }
+    // @Override
+    // @ActionEvent(eventType = EventTypes.EVENT_VM_CLONE, eventDescription = "VM CLONE", async = true)
+    // public Optional<UserVm> cloneVirtualMachine(CloneVMCmd cmd) throws ResourceUnavailableException, ConcurrentOperationException, CloudRuntimeException, InsufficientCapacityException, ResourceAllocationException {
+    //     long vmId = cmd.getEntityId();
+    //     UserVmVO curVm = _vmDao.findById(vmId);
+    //     Account curVmAccount = _accountDao.findById(curVm.getAccountId());
+    //     // create and attach data disk
+    //     long targetClonedVmId = cmd.getId();
+    //     Account caller = CallContext.current().getCallingAccount();
+    //     List<VolumeVO> dataDisks = _volsDao.findByInstanceAndType(targetClonedVmId, Volume.Type.DATADISK);
+    //     List<Snapshot> createdSnapshots = new ArrayList<>();
+    //     List<VolumeVO> createdVolumes = new ArrayList<>();
+    //     long zoneId = cmd.getTargetVM().getDataCenterId();
+    //     String clone_type = cmd.getType();
+    //     if (dataDisks.size() > 0) {
+    //         logger.info("Clone VM >> Trying to attach data disk before starting the VM.");
+    //         VolumeVO newDatadisk = null;
+    //         try {
+    //             for (VolumeVO dataDisk : dataDisks) {
+    //                 logger.info("Clone VM >> Start creating data disk snapshots : " + dataDisk.getId());
+    //                 long diskId = dataDisk.getId();
+    //                 SnapshotVO dataSnapShot = (SnapshotVO) _volumeService.allocSnapshot(diskId, Snapshot.INTERNAL_POLICY_ID, dataDisk.getName(), null, cmd.getZoneIds(), clone_type);
+    //                 if (dataSnapShot == null) {
+    //                     throw new CloudRuntimeException("Unable to allocate snapshot of data disk: " + dataDisk.getId() + " name: " + dataDisk.getName());
+    //                 }
+    //                 createdSnapshots.add(dataSnapShot);
+    //                 SnapshotVO snapshotEntity = (SnapshotVO) _volumeService.takeSnapshot(diskId, Snapshot.INTERNAL_POLICY_ID, dataSnapShot.getId(), caller, false, null, false, new HashMap<>(), cmd.getZoneIds());
+    //                 if (snapshotEntity == null) {
+    //                     throw new CloudRuntimeException("Error when creating the snapshot entity");
+    //                 }
+    //                 if (snapshotEntity.getState() != Snapshot.State.BackedUp) {
+    //                     throw new CloudRuntimeException("Async backup of snapshot happens during the clone for snapshot id: " + dataSnapShot.getId());
+    //                 }
+    //                 long diskOfferingId = snapshotEntity.getDiskOfferingId();
+    //                 DiskOfferingVO diskOffering = _diskOfferingDao.findById(diskOfferingId);
+    //                 Long minIops = snapshotEntity.getMinIops();
+    //                 Long maxIops = snapshotEntity.getMaxIops();
+    //                 Long size = snapshotEntity.getSize();
+    //                 Storage.ProvisioningType provisioningType = diskOffering.getProvisioningType();
+    //                 String volumeName = snapshotEntity.getName() + "-Clone";
+    //                 VolumeVO parentVolume = _volsDao.findByIdIncludingRemoved(snapshotEntity.getVolumeId());
+    //                 newDatadisk = saveDataDiskVolumeFromSnapShot(curVmAccount, true, zoneId, diskOfferingId, provisioningType, size, minIops, maxIops, parentVolume,
+    //                                                                 volumeName, _uuidMgr.generateUuid(Volume.class, null), new HashMap<>(), Volume.Type.DATADISK, clone_type);
+    //                 VolumeVO volumeEntity = (VolumeVO) _volumeService.cloneRootOrDataVolume(vmId, snapshotEntity.getId(), newDatadisk);
+    //                 createdVolumes.add(volumeEntity);
+    //             }
 
-                for (VolumeVO createdVol : createdVolumes) {
-                    _volumeService.attachVolumeToVM(vmId, createdVol.getId(), createdVol.getDeviceId());
-                }
-            } catch (CloudRuntimeException e){
-                logger.warn("data disk process failed during clone, clearing the temporary resources...");
-                for (VolumeVO dataDiskToClear : createdVolumes) {
-                    _volumeService.destroyVolume(dataDiskToClear.getId(), caller, true, false);
-                }
-                // clear the created disks
-                if (newDatadisk != null) {
-                    _volumeService.destroyVolume(newDatadisk.getId(), caller, true, false);
-                }
-                destroyVm(vmId, true);
-                throw new CloudRuntimeException(e.getMessage());
-            } finally {
-                // clear the temporary data snapshots
-                for (Snapshot snapshotLeftOver : createdSnapshots) {
-                    logger.warn("Clone VM >> Clearing the temporary data disk snapshot : " + snapshotLeftOver.getId());
-                    _snapshotService.deleteSnapshot(snapshotLeftOver.getId(), zoneId);
-                }
-            }
-        }
+    //             for (VolumeVO createdVol : createdVolumes) {
+    //                 _volumeService.attachVolumeToVM(vmId, createdVol.getId(), createdVol.getDeviceId());
+    //             }
+    //         } catch (CloudRuntimeException e){
+    //             logger.warn("data disk process failed during clone, clearing the temporary resources...");
+    //             for (VolumeVO dataDiskToClear : createdVolumes) {
+    //                 _volumeService.destroyVolume(dataDiskToClear.getId(), caller, true, false);
+    //             }
+    //             // clear the created disks
+    //             if (newDatadisk != null) {
+    //                 _volumeService.destroyVolume(newDatadisk.getId(), caller, true, false);
+    //             }
+    //             destroyVm(vmId, true);
+    //             throw new CloudRuntimeException(e.getMessage());
+    //         } finally {
+    //             // clear the temporary data snapshots
+    //             for (Snapshot snapshotLeftOver : createdSnapshots) {
+    //                 logger.warn("Clone VM >> Clearing the temporary data disk snapshot : " + snapshotLeftOver.getId());
+    //                 _snapshotService.deleteSnapshot(snapshotLeftOver.getId(), zoneId);
+    //             }
+    //         }
+    //     }
 
-        if (!cmd.getStartVm()) {
-            return Optional.of(getUserVm(vmId));
-        }
+    //     if (!cmd.getStartVm()) {
+    //         return Optional.of(getUserVm(vmId));
+    //     }
 
-        // start the VM if successfull
-        Long podId = curVm.getPodIdToDeployIn();
-        Long clusterId = null;
-        Long hostId = curVm.getHostId();
-        Map<VirtualMachineProfile.Param, Object> additonalParams =  new HashMap<>();
-        Map<Long, DiskOffering> diskOfferingMap = new HashMap<>();
-        if (MapUtils.isNotEmpty(curVm.getDetails()) && curVm.getDetails().containsKey(ApiConstants.BootType.UEFI.toString())) {
-            Map<String, String> map = curVm.getDetails();
-            additonalParams.put(VirtualMachineProfile.Param.UefiFlag, "Yes");
-            additonalParams.put(VirtualMachineProfile.Param.BootType, ApiConstants.BootType.UEFI.toString());
-            additonalParams.put(VirtualMachineProfile.Param.BootMode, map.get(ApiConstants.BootType.UEFI.toString()));
-        }
+    //     // start the VM if successfull
+    //     Long podId = curVm.getPodIdToDeployIn();
+    //     Long clusterId = null;
+    //     Long hostId = curVm.getHostId();
+    //     Map<VirtualMachineProfile.Param, Object> additonalParams =  new HashMap<>();
+    //     Map<Long, DiskOffering> diskOfferingMap = new HashMap<>();
+    //     if (MapUtils.isNotEmpty(curVm.getDetails()) && curVm.getDetails().containsKey(ApiConstants.BootType.UEFI.toString())) {
+    //         Map<String, String> map = curVm.getDetails();
+    //         additonalParams.put(VirtualMachineProfile.Param.UefiFlag, "Yes");
+    //         additonalParams.put(VirtualMachineProfile.Param.BootType, ApiConstants.BootType.UEFI.toString());
+    //         additonalParams.put(VirtualMachineProfile.Param.BootMode, map.get(ApiConstants.BootType.UEFI.toString()));
+    //     }
 
-        return Optional.of(startVirtualMachine(vmId, podId, clusterId, hostId, diskOfferingMap, additonalParams, null));
-    }
+    //     return Optional.of(startVirtualMachine(vmId, podId, clusterId, hostId, diskOfferingMap, additonalParams, null));
+    // }
 
     private VolumeVO saveDataDiskVolumeFromSnapShot(final Account owner, final Boolean displayVolume, final Long zoneId, final Long diskOfferingId,
                                                     final Storage.ProvisioningType provisioningType, final Long size, final Long minIops, final Long maxIops,
                                                     final VolumeVO parentVolume, final String volumeName, final String uuid, final Map<String, String> details,
-                                                    Volume.Type volType, String cloneType) {
+                                                    Volume.Type volType) {
         return Transaction.execute((TransactionCallback<VolumeVO>) status -> {
             VolumeVO volume = new VolumeVO(volumeName, -1, -1, -1, -1, Long.valueOf(-1), null, null, provisioningType, 0, volType);
             volume.setPoolId(null);
@@ -9636,9 +9745,6 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
                 volume.setFormat(parentVolume.getFormat());
             } else {
                 volume.setTemplateId(null);
-            }
-            if (cloneType != null) {
-                volume.setCloneType(cloneType.toLowerCase());
             }
 
             volume = _volsDao.persist(volume);
