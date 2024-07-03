@@ -931,7 +931,7 @@ public class VolumeDaoImpl extends GenericDaoBase<VolumeVO, Long> implements Vol
         Filter filter = new Filter(VolumeVO.class, "id", true, 0L, batchSize);
         return searchIncludingRemoved(sc, filter, null, false);
     }
-    
+
     public VolumeVO findOneByIScsiName(String iScsiName) {
         SearchCriteria<VolumeVO> sc = AllFieldsSearch.create();
         sc.setParameters("iScsiName", iScsiName);

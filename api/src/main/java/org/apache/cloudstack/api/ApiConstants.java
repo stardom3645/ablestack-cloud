@@ -1214,8 +1214,6 @@ public class ApiConstants {
 
     public static final String WEBHOOK_ID = "webhookid";
     public static final String WEBHOOK_NAME = "webhookname";
-    
-    public static final String NFS_MOUNT_OPTIONS = "nfsmountopts";
 
     public static final String NFS_MOUNT_OPTIONS = "nfsmountopts";
 

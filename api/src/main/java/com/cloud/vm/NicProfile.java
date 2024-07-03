@@ -415,7 +415,7 @@ public class NicProfile implements InternalIdentity, Serializable {
     public void setLinkState(boolean linkState) {
         this.linkState = linkState;
     }
-    
+
     public boolean getIpv4AllocationRaceCheck() {
         return this.ipv4AllocationRaceCheck;
     }
