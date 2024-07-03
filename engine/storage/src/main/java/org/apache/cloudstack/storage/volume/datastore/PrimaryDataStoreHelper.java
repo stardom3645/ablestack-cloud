@@ -39,8 +39,6 @@ import org.apache.cloudstack.engine.subsystem.api.storage.HostScope;
 import org.apache.cloudstack.engine.subsystem.api.storage.PrimaryDataStoreParameters;
 import org.apache.cloudstack.storage.datastore.db.PrimaryDataStoreDao;
 import org.apache.cloudstack.storage.datastore.db.StoragePoolVO;
-import org.apache.log4j.Logger;
-import org.springframework.stereotype.Component;
 
 import com.cloud.agent.api.StoragePoolInfo;
 import com.cloud.capacity.Capacity;
@@ -105,7 +103,6 @@ public class PrimaryDataStoreHelper {
         dataStoreVO.setCapacityBytes(params.getCapacityBytes());
         dataStoreVO.setUsedBytes(params.getUsedBytes());
         dataStoreVO.setHypervisor(params.getHypervisorType());
-        dataStoreVO.setKrbdPath(params.getKrbdPath());
 
         Map<String, String> details = params.getDetails();
         if (params.getType() == StoragePoolType.SMB && details != null) {

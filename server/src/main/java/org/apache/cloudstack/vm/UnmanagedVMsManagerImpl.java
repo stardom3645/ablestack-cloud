@@ -1831,7 +1831,7 @@ public class UnmanagedVMsManagerImpl implements UnmanagedVMsManager {
             }
             return selectedHost;
         }
-        
+
         // Auto select host with conversion capability
         List<HostVO> hosts = hostDao.listByClusterHypervisorTypeAndHostCapability(destinationCluster.getId(), destinationCluster.getHypervisorType(), Host.HOST_INSTANCE_CONVERSION);
         if (CollectionUtils.isNotEmpty(hosts)) {
