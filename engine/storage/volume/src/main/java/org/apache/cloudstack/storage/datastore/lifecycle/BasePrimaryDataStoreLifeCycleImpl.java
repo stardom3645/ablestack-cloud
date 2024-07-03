@@ -25,7 +25,8 @@ import javax.inject.Inject;
 import org.apache.cloudstack.engine.subsystem.api.storage.ClusterScope;
 import org.apache.cloudstack.engine.subsystem.api.storage.DataStore;
 import org.apache.cloudstack.storage.volume.datastore.PrimaryDataStoreHelper;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import com.cloud.agent.AgentManager;
 import com.cloud.agent.api.Answer;
@@ -41,7 +42,7 @@ import com.cloud.storage.dao.StoragePoolHostDao;
 import com.cloud.utils.Pair;
 
 public class BasePrimaryDataStoreLifeCycleImpl {
-    private static final Logger s_logger = Logger.getLogger(BasePrimaryDataStoreLifeCycleImpl.class);
+    private static final Logger s_logger = LogManager.getLogger(BasePrimaryDataStoreLifeCycleImpl.class);
     @Inject
     AgentManager agentMgr;
     @Inject
