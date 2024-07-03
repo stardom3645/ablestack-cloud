@@ -134,9 +134,9 @@ public class CloneVMCmd extends BaseAsyncCreateCmd implements UserCmd {
     public void create() throws ResourceAllocationException {
         try {
             _userVmService.validateCloneCondition(this);
-            _userVmService.prepareCloneVirtualMachine(this);
+            // _userVmService.prepareCloneVirtualMachine(this);
         }
-        catch (ResourceUnavailableException | InsufficientCapacityException e) {
+        catch (ResourceUnavailableException e) {
             logger.warn("Exception: ", e);
             throw new ServerApiException(ApiErrorCode.RESOURCE_UNAVAILABLE_ERROR, e.getMessage());
         } catch (InvalidParameterValueException e) {
@@ -168,8 +168,8 @@ public class CloneVMCmd extends BaseAsyncCreateCmd implements UserCmd {
     public void execute() {
         Optional<UserVm> result;
         try {
-            CallContext.current().setEventDetails("Vm Id for full clone: " + getEntityId());
-            logger.info("starting actual VM id: " + getEntityId());
+            CallContext.current().setEventDetails("Vm Id for clone: " + getEntityId());
+            logger.info("Cloning actual VM id: " + getEntityId());
             result = _userVmService.cloneVirtualMachine(this);
         } catch (ResourceUnavailableException ex) {
             logger.warn("Exception: ", ex);
@@ -184,7 +184,7 @@ public class CloneVMCmd extends BaseAsyncCreateCmd implements UserCmd {
         }
         result.ifPresentOrElse((userVm)-> {
             UserVmResponse response = _responseGenerator.createUserVmResponse(getResponseView(), "virtualmachine", result.get()).get(0);
-            response.setResponseName("full_clone");
+            response.setResponseName(this.getType() + "_clone");
             setResponseObject(response);
         }, ()-> {
             throw new ServerApiException(ApiErrorCode.INSUFFICIENT_CAPACITY_ERROR, "failed to clone VM: " + getId());

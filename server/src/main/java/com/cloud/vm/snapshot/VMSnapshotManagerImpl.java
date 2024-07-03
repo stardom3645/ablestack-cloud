@@ -443,6 +443,160 @@ public class VMSnapshotManagerImpl extends MutualExclusiveIdsManagerBase impleme
         return null;
     }
 
+    @Override
+    public VMSnapshot allocVMSnapshot(Long vmId, String vsDisplayName, String vsDescription, Boolean snapshotMemory, String cloneType) throws ResourceAllocationException {
+
+        Account caller = getCaller();
+
+        // check if VM exists
+        UserVmVO userVmVo = _userVMDao.findById(vmId);
+        if (userVmVo == null) {
+            throw new InvalidParameterValueException("Creating VM snapshot failed due to VM:" + vmId + " is a system VM or does not exist");
+        }
+
+        // VM snapshot with memory is not supported for VGPU Vms
+        if (snapshotMemory && _serviceOfferingDetailsDao.findDetail(userVmVo.getServiceOfferingId(), GPU.Keys.vgpuType.toString()) != null) {
+            throw new InvalidParameterValueException("VM snapshot with MEMORY is not supported for vGPU enabled VMs.");
+        }
+
+        // check hypervisor capabilities
+        if (!_hypervisorCapabilitiesDao.isVmSnapshotEnabled(userVmVo.getHypervisorType(), "default"))
+            throw new InvalidParameterValueException("VM snapshot is not enabled for hypervisor type: " + userVmVo.getHypervisorType());
+
+        // parameter length check
+        if (vsDisplayName != null && vsDisplayName.length() > 255)
+            throw new InvalidParameterValueException("Creating VM snapshot failed due to length of VM snapshot vsDisplayName should not exceed 255");
+        if (vsDescription != null && vsDescription.length() > 255)
+            throw new InvalidParameterValueException("Creating VM snapshot failed due to length of VM snapshot vsDescription should not exceed 255");
+
+        // VM snapshot display name must be unique for a VM
+        String timeString = DateUtil.getDateDisplayString(DateUtil.GMT_TIMEZONE, new Date(), DateUtil.YYYYMMDD_FORMAT);
+        String vmSnapshotName = userVmVo.getInstanceName() + "_VS_" + timeString;
+        if (vsDisplayName == null) {
+            vsDisplayName = vmSnapshotName;
+        }
+        if (_vmSnapshotDao.findByName(vmId, vsDisplayName) != null) {
+            throw new InvalidParameterValueException("Creating VM snapshot failed due to VM snapshot with name" + vsDisplayName + "  already exists");
+        }
+
+        // check VM state
+        if (userVmVo.getState() != VirtualMachine.State.Running && userVmVo.getState() != VirtualMachine.State.Stopped) {
+            throw new InvalidParameterValueException("Creating vm snapshot failed due to VM:" + vmId + " is not in the running or Stopped state");
+        }
+
+        if(snapshotMemory && userVmVo.getState() != VirtualMachine.State.Running){
+            throw new InvalidParameterValueException("Can not snapshot memory when VM is not in Running state");
+        }
+
+        List<VolumeVO> rootVolumes = _volumeDao.findReadyRootVolumesByInstance(userVmVo.getId());
+        if (rootVolumes == null || rootVolumes.isEmpty()) {
+            throw new CloudRuntimeException("Unable to find root volume for the user vm:" + userVmVo.getUuid());
+        }
+
+        VolumeVO rootVolume = rootVolumes.get(0);
+        StoragePoolVO rootVolumePool = _storagePoolDao.findById(rootVolume.getPoolId());
+        if (rootVolumePool == null) {
+            throw new CloudRuntimeException("Unable to find root volume storage pool for the user vm:" + userVmVo.getUuid());
+        }
+
+        if (userVmVo.getHypervisorType() == HypervisorType.KVM) {
+            //DefaultVMSnapshotStrategy - allows snapshot with memory when VM is in running state and all volumes have to be in QCOW format
+            //ScaleIOVMSnapshotStrategy - allows group snapshots without memory; all VM's volumes should be on same storage pool; The state of VM could be Running/Stopped; RAW image format is only supported
+            //StorageVMSnapshotStrategy - allows volume snapshots without memory; VM has to be in Running state; No limitation of the image format if the storage plugin supports volume snapshots; "kvm.vmstoragesnapshot.enabled" has to be enabled
+            //Other Storage volume plugins could integrate this with their own functionality for group snapshots
+            VMSnapshotStrategy snapshotStrategy = storageStrategyFactory.getVmSnapshotStrategy(userVmVo.getId(), rootVolumePool.getId(), snapshotMemory);
+
+            if (snapshotStrategy == null) {
+                String message = "KVM does not support the type of snapshot requested";
+                logger.debug(message);
+                throw new CloudRuntimeException(message);
+            }
+
+            // disallow KVM snapshots for VMs if root volume is encrypted (Qemu crash)
+            if (rootVolume.getPassphraseId() != null && userVmVo.getState() == VirtualMachine.State.Running && Boolean.TRUE.equals(snapshotMemory)) {
+                throw new UnsupportedOperationException("Cannot create VM memory snapshots on KVM from encrypted root volumes");
+            }
+
+        }
+
+        // check access
+        _accountMgr.checkAccess(caller, null, true, userVmVo);
+
+        // check max snapshot limit for per VM
+        if (_vmSnapshotDao.findByVm(vmId).size() >= _vmSnapshotMax) {
+            throw new CloudRuntimeException("Creating vm snapshot failed due to a VM can just have : " + _vmSnapshotMax + " VM snapshots. Please delete old ones");
+        }
+
+        // check if there are active volume snapshots tasks
+        List<VolumeVO> listVolumes = _volumeDao.findByInstance(vmId);
+        for (VolumeVO volume : listVolumes) {
+            List<SnapshotVO> activeSnapshots =
+                _snapshotDao.listByInstanceId(volume.getInstanceId(), Snapshot.State.Creating, Snapshot.State.CreatedOnPrimary, Snapshot.State.BackingUp);
+            if (activeSnapshots.size() > 0) {
+                throw new CloudRuntimeException("There is other active volume snapshot tasks on the instance to which the volume is attached, please try again later.");
+            }
+            DiskOffering offering = _diskOfferingDao.findById(volume.getDiskOfferingId());
+            if (volume.getVolumeType() == Volume.Type.DATADISK && offering.getShareable()) {
+                throw new CloudRuntimeException("If it is a shared volume, you cannot create a VM snapshot.");
+            }
+        }
+
+        // check if there are other active VM snapshot tasks
+        if (hasActiveVMSnapshotTasks(vmId)) {
+            throw new CloudRuntimeException("There is other active vm snapshot tasks on the instance, please try again later");
+        }
+
+        VMSnapshot.Type vmSnapshotType = VMSnapshot.Type.Disk;
+        if (snapshotMemory && userVmVo.getState() == VirtualMachine.State.Running)
+            vmSnapshotType = VMSnapshot.Type.DiskAndMemory;
+
+        if (rootVolumePool.getPoolType() == Storage.StoragePoolType.PowerFlex) {
+            vmSnapshotType = VMSnapshot.Type.Disk;
+        }
+
+        try {
+            return createAndPersistVMSnapshot(userVmVo, vsDescription, vmSnapshotName, vsDisplayName, vmSnapshotType, cloneType);
+        } catch (Exception e) {
+            String msg = e.getMessage();
+            logger.error("Create vm snapshot record failed for vm: " + vmId + " due to: " + msg);
+        }
+        return null;
+    }
+
+        /**
+     * Create, persist and return vm snapshot for userVmVo with given parameters.
+     * Persistence and support for custom service offerings are done on the same transaction
+     * @param userVmVo user vm
+     * @param vmId vm id
+     * @param vsDescription vm description
+     * @param vmSnapshotName vm snapshot name
+     * @param vsDisplayName vm snapshot display name
+     * @param vmSnapshotType vm snapshot type
+     * @return vm snapshot
+     * @throws CloudRuntimeException if vm snapshot couldn't be persisted
+     */
+    protected VMSnapshot createAndPersistVMSnapshot(UserVmVO userVmVo, String vsDescription, String vmSnapshotName, String vsDisplayName, VMSnapshot.Type vmSnapshotType, String cloneType) {
+        final Long vmId = userVmVo.getId();
+        final Long serviceOfferingId = userVmVo.getServiceOfferingId();
+        final VMSnapshotVO vmSnapshotVo =
+                new VMSnapshotVO(userVmVo.getAccountId(), userVmVo.getDomainId(), vmId, vsDescription, vmSnapshotName, vsDisplayName, serviceOfferingId,
+                        vmSnapshotType, null);
+                        vmSnapshotVo.setCloneType(cloneType);
+        return Transaction.execute(new TransactionCallbackWithException<VMSnapshot, CloudRuntimeException>() {
+            @Override
+            public VMSnapshot doInTransaction(TransactionStatus status) {
+                VMSnapshot vmSnapshot = _vmSnapshotDao.persist(vmSnapshotVo);
+                if (vmSnapshot == null) {
+                    throw new CloudRuntimeException("Failed to create snapshot for vm: " + vmId);
+                }
+                addSupportForCustomServiceOffering(vmId, serviceOfferingId, vmSnapshot.getId());
+                CallContext.current().putContextParameter(VMSnapshot.class, vmSnapshot.getUuid());
+                return vmSnapshot;
+            }
+        });
+    }
+
+
     /**
      * Create, persist and return vm snapshot for userVmVo with given parameters.
      * Persistence and support for custom service offerings are done on the same transaction

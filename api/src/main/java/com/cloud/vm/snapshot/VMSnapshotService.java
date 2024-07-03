@@ -40,6 +40,8 @@ public interface VMSnapshotService {
 
     VMSnapshot allocVMSnapshot(Long vmId, String vsDisplayName, String vsDescription, Boolean snapshotMemory) throws ResourceAllocationException;
 
+    VMSnapshot allocVMSnapshot(Long vmId, String vsDisplayName, String vsDescription, Boolean snapshotMemory, String cloneType) throws ResourceAllocationException;
+
     boolean deleteVMSnapshot(Long vmSnapshotId);
 
     UserVm revertToSnapshot(Long vmSnapshotId) throws InsufficientServerCapacityException, InsufficientCapacityException, ResourceUnavailableException,
