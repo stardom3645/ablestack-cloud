@@ -1586,7 +1586,9 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
             }
             for (int i = 0; i < array.length(); i++) {
                 JSONObject jSONObject = array.getJSONObject(i);
+                LOGGER.info(jSONObject.toString());
                 if (jSONObject.get("name").equals(drCluster.getName())) {
+                    LOGGER.info(":::::::::::::::::::::::::::::::");
                     Object obj = jSONObject.get("drclustervmmap");
                     JSONArray vmArray;
                     if (obj instanceof JSONArray) {
@@ -1597,6 +1599,8 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                     }
                     for (int j = 0; j < vmArray.length(); j++) {
                         JSONObject jSONObj = vmArray.getJSONObject(j);
+                        LOGGER.info(jSONObj.toString());
+                        LOGGER.info(jSONObj.get("drclustervmstatus"));
                         if (jSONObj.get("drclustervmstatus").equals("Stopped")) {
                             throw new InvalidParameterValueException("Forced promote and demote functions cannot be executed because there is a running disaster recovery primary cluster virtual machine : " + jSONObj.get("drclustervmname"));
                         }
