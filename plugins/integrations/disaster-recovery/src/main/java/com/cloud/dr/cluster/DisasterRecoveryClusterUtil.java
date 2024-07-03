@@ -2343,7 +2343,7 @@ public class DisasterRecoveryClusterUtil {
      */
     private static Object getValue(JSONObject jsonObject, String key, Class<?> fieldType) {
         try {
-            LOGGER.info(jsonObject.toString(key));
+            LOGGER.info(jsonObject.getString(key));
             LOGGER.info(key);
             if (fieldType == String.class) {
                 try {
