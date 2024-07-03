@@ -1552,6 +1552,8 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                                 throw new InvalidParameterValueException("Forced promote and demote functions cannot be executed because there is a running disaster recovery primary cluster virtual machine : " + vm.getDrClusterVmName());
                             }
                         }
+                    } else {
+                        throw new InvalidParameterValueException("Forced promote and demote functions cannot be executed because failed to query primary cluster DR VM information.");
                     }
                 }
             }
