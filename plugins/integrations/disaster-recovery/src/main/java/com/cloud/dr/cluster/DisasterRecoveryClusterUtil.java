@@ -44,7 +44,6 @@ import javax.net.ssl.TrustManager;
 
 import org.apache.cloudstack.api.response.NetworkResponse;
 import org.apache.cloudstack.api.response.ServiceOfferingResponse;
-import org.apache.cloudstack.api.response.dr.cluster.GetDisasterRecoveryClusterListResponse;
 import org.apache.cloudstack.utils.security.SSLUtils;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.logging.log4j.Logger;
@@ -1000,9 +999,9 @@ public class DisasterRecoveryClusterUtil {
      *  getDisasterRecoveryClusterList
      * @param method
      *  GET
-     * @return true = 200, 이외 코드는 false 처리
+     * @return String
      */
-    protected static List moldGetDisasterRecoveryClusterListAPI(String region, String command, String method, String apiKey, String secretKey) {
+    protected static String moldGetDisasterRecoveryClusterListAPI(String region, String command, String method, String apiKey, String secretKey) {
         try {
             String readLine = null;
             StringBuffer sb = null;
@@ -1054,41 +1053,7 @@ public class DisasterRecoveryClusterUtil {
             }
             JSONObject jObject = XML.toJSONObject(sb.toString());
             JSONObject response = (JSONObject) jObject.get("getdisasterrecoveryclusterlistresponse");
-            LOGGER.info(response.toString());
-            List<GetDisasterRecoveryClusterListResponse> drList = new ArrayList<>();
-            if (response.has("disasterrecoverycluster")) {
-                Object drObject = response.get("disasterrecoverycluster");
-                JSONArray drArray;
-                if (drObject instanceof JSONArray) {
-                    drArray = (JSONArray) drObject;
-                } else {
-                    drArray = new JSONArray();
-                    drArray.put(drObject);
-                }
-                for (int i = 0; i < drArray.length(); i++) {
-                    JSONObject drJSONObject = drArray.getJSONObject(i);
-                    GetDisasterRecoveryClusterListResponse drResponse = new GetDisasterRecoveryClusterListResponse();
-                    for (String key : drJSONObject.keySet()) {
-                        LOGGER.info(key);
-                        try {
-                            Field field = GetDisasterRecoveryClusterListResponse.class.getDeclaredField(key);
-                            field.setAccessible(true);
-                            LOGGER.info(field.getType());
-                            Object value = getValue(drJSONObject, key, field.getType());
-                            if (value != null) {
-                                field.set(drResponse, value);
-                            }
-                        } catch (NoSuchFieldException e) {
-                            // System.err.println("Field not found: " + key);
-                        } catch (IllegalAccessException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                    LOGGER.info(drResponse);
-                    drList.add(drResponse);
-                }
-            }
-            return drList;
+            return response.toString();
         } catch (Exception e) {
             LOGGER.error(String.format("Mold API endpoint not available"), e);
             return null;
@@ -2343,8 +2308,6 @@ public class DisasterRecoveryClusterUtil {
      */
     private static Object getValue(JSONObject jsonObject, String key, Class<?> fieldType) {
         try {
-            LOGGER.info(jsonObject.getString(key));
-            LOGGER.info(key);
             if (fieldType == String.class) {
                 try {
                     return jsonObject.getString(key);
