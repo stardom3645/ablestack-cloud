@@ -9415,7 +9415,7 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
             logger.info("Clone VM >> Creating snapshot for root volume creation");
             VMSnapshot vmSnapshot;
             try {
-                vmSnapshot = _vmSnapshotMgr.allocVMSnapshot(curVm.getId(), null, null, curVm.getState() == VirtualMachine.State.Running ? true : false, clone_type);
+                vmSnapshot = _vmSnapshotMgr.allocVMSnapshot(curVm.getId(), null, null, curVm.getState() == VirtualMachine.State.Running ? true : false);
                 if (vmSnapshot == null) {
                     throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, "Failed to create vm snapshot");
                 }
