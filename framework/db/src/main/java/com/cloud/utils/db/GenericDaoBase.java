@@ -1241,7 +1241,7 @@ public abstract class GenericDaoBase<T, ID extends Serializable> extends Compone
         Filter filter = new Filter(limit);
         return expunge(sc, filter);
     }
-    
+
     @Override
     public int expunge(final SearchCriteria<T> sc, final Filter filter) {
         if (sc == null) {
@@ -1256,11 +1256,6 @@ public abstract class GenericDaoBase<T, ID extends Serializable> extends Compone
             str.append(sc.getWhereClause());
         }
         addFilter(str, filter);
-
-        if (limit > 0) {
-            str.append(" LIMIT ");
-            str.append(limit);
-        }
 
         final String sql = str.toString();
 

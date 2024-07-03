@@ -436,7 +436,7 @@ public class QueryManagerImplTest {
         result = queryManager.getHostTagsFromTemplateForServiceOfferingsListing(account, templateId);
         Assert.assertTrue(CollectionUtils.isNotEmpty(result));
     }
-    
+
     public void testListAffectedVmsForScopeChange() {
         Long clusterId = 1L;
         Long poolId = 2L;
