@@ -452,9 +452,11 @@ public class DisasterRecoveryClusterUtil {
      *  /mirror/image/promote/<mirrorPool>/<imageName>
      * @param method
      *  POST
+     * @param parameter
+     *  mirrorPool(string), imageName(string)
      * @return true = 200, 이외 코드는 false 처리
      */
-    protected static boolean glueImageMirrorPromoteAPI(String region, String subUrl, String method) {
+    protected static boolean glueImageMirrorPromoteAPI(String region, String subUrl, String method, Map<String, String> params) {
         try {
             // SSL 인증서 에러 우회 처리
             final SSLContext sslContext = SSLUtils.getSSLContext();
@@ -468,6 +470,17 @@ public class DisasterRecoveryClusterUtil {
             connection.setReadTimeout(180000);
             connection.setRequestProperty("Accept", "application/vnd.ceph.api.v1.0+json");
             connection.setRequestProperty("Authorization", "application/vnd.ceph.api.v1.0+json");
+            connection.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
+            StringBuilder postData = new StringBuilder();
+            for(Map.Entry<String, String> param : params.entrySet()){
+                postData.append("&");
+                postData.append(URLEncoder.encode(param.getKey(), "UTF-8"));
+                postData.append("=");
+                postData.append(URLEncoder.encode(String.valueOf(param.getValue()), "UTF-8"));
+            }
+            byte[] postDataBytes = postData.toString().getBytes("UTF-8");
+            connection.getOutputStream().write(postDataBytes);
+
             if (connection.getResponseCode() == 200) {
                 BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
                 String inputLine;
@@ -504,9 +517,11 @@ public class DisasterRecoveryClusterUtil {
      *  /mirror/image/demote/<mirrorPool>/<imageName>
      * @param method
      *  DELETE
+     * @param parameter
+     *  mirrorPool(string), imageName(string)
      * @return true = 200, 이외 코드는 false 처리
      */
-    protected static boolean glueImageMirrorDemoteAPI(String region, String subUrl, String method) {
+    protected static boolean glueImageMirrorDemoteAPI(String region, String subUrl, String method, Map<String, String> params) {
         try {
             // SSL 인증서 에러 우회 처리
             final SSLContext sslContext = SSLUtils.getSSLContext();
@@ -520,6 +535,17 @@ public class DisasterRecoveryClusterUtil {
             connection.setReadTimeout(180000);
             connection.setRequestProperty("Accept", "application/vnd.ceph.api.v1.0+json");
             connection.setRequestProperty("Authorization", "application/vnd.ceph.api.v1.0+json");
+            connection.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
+            StringBuilder postData = new StringBuilder();
+            for(Map.Entry<String, String> param : params.entrySet()){
+                postData.append("&");
+                postData.append(URLEncoder.encode(param.getKey(), "UTF-8"));
+                postData.append("=");
+                postData.append(URLEncoder.encode(String.valueOf(param.getValue()), "UTF-8"));
+            }
+            byte[] postDataBytes = postData.toString().getBytes("UTF-8");
+            connection.getOutputStream().write(postDataBytes);
+
             if (connection.getResponseCode() == 200) {
                 BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
                 String inputLine;
