@@ -102,9 +102,6 @@ public class VMSnapshotVO implements VMSnapshot {
     @Column(name = "update_count", updatable = true, nullable = false)
     protected long updatedCount;
 
-    @Column(name = "clone_type")
-    private String cloneType;
-
     @Transient
     VMSnapshotOptions options;
 
@@ -259,13 +256,5 @@ public class VMSnapshotVO implements VMSnapshot {
     @Override
     public long getServiceOfferingId() {
         return serviceOfferingId;
-    }
-
-    public String getCloneType() {
-        return cloneType;
-    }
-
-    public void setCloneType(String cloneType) {
-        this.cloneType = cloneType;
     }
 }
