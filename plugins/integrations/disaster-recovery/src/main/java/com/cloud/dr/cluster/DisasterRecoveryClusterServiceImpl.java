@@ -1538,12 +1538,16 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         Map<String, String> params = new HashMap<>();
         List<GetDisasterRecoveryClusterListResponse> drListResponse = DisasterRecoveryClusterUtil.moldGetDisasterRecoveryClusterListAPI(url + "/client/api/", command, method, apiKey, secretKey);
         if (drListResponse != null || !drListResponse.isEmpty()) {
-            // Primary Cluster - moldGetDisasterRecoveryClusterListAPI 성공
             for (GetDisasterRecoveryClusterListResponse dr : drListResponse) {
                 if (dr.getName().equalsIgnoreCase(drCluster.getName())) {
+                    LOGGER.info("::::::::::getDisasterRecoveryClusterList");
+                    LOGGER.info(dr.getDisasterRecoveryClusterVmMap());
                     if (dr.getDisasterRecoveryClusterVmMap() != null) {
+                        LOGGER.info("::::::::::getDisasterRecoveryClusterVmMap");
                         List<GetDisasterRecoveryClusterVmListResponse> vmListResponse = dr.getDisasterRecoveryClusterVmMap();
                         for (GetDisasterRecoveryClusterVmListResponse vm : vmListResponse) {
+                            LOGGER.info("::::::::::GetDisasterRecoveryClusterVmListResponse");
+                            LOGGER.info(vm.getDrClusterVmStatus());
                             if (!vm.getDrClusterVmStatus().equalsIgnoreCase("Stopped")) {
                                 throw new InvalidParameterValueException("Forced promote and demote functions cannot be executed because there is a running disaster recovery primary cluster virtual machine : " + vm.getDrClusterVmName());
                             }
