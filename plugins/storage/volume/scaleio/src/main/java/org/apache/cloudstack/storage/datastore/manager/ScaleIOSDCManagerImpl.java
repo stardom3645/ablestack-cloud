@@ -30,7 +30,8 @@ import org.apache.cloudstack.storage.datastore.client.ScaleIOGatewayClientConnec
 import org.apache.cloudstack.storage.datastore.db.StoragePoolDetailsDao;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.springframework.stereotype.Component;
 
 import com.cloud.agent.AgentManager;
@@ -51,7 +52,7 @@ import com.cloud.utils.exception.CloudRuntimeException;
 
 @Component
 public class ScaleIOSDCManagerImpl implements ScaleIOSDCManager {
-    private static final Logger LOGGER = Logger.getLogger(ScaleIOSDCManagerImpl.class);
+    protected Logger logger = LogManager.getLogger(getClass());
 
     @Inject
     AgentManager agentManager;
