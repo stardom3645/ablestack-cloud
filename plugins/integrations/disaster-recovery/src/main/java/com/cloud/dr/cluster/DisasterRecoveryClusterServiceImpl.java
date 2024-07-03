@@ -1553,6 +1553,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                             }
                         }
                     } else {
+                        // 테스트 후 삭제 예정
                         throw new InvalidParameterValueException("Forced promote and demote functions cannot be executed because failed to query primary cluster DR VM information.");
                     }
                 }

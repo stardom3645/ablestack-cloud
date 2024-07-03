@@ -1069,9 +1069,11 @@ public class DisasterRecoveryClusterUtil {
                     JSONObject drJSONObject = drArray.getJSONObject(i);
                     GetDisasterRecoveryClusterListResponse drResponse = new GetDisasterRecoveryClusterListResponse();
                     for (String key : drJSONObject.keySet()) {
+                        LOGGER.info(key);
                         try {
                             Field field = GetDisasterRecoveryClusterListResponse.class.getDeclaredField(key);
                             field.setAccessible(true);
+                            LOGGER.info(field.getType());
                             Object value = getValue(drJSONObject, key, field.getType());
                             if (value != null) {
                                 field.set(drResponse, value);
@@ -1082,6 +1084,7 @@ public class DisasterRecoveryClusterUtil {
                             e.printStackTrace();
                         }
                     }
+                    LOGGER.info(drResponse);
                     drList.add(drResponse);
                 }
             }
@@ -2340,6 +2343,8 @@ public class DisasterRecoveryClusterUtil {
      */
     private static Object getValue(JSONObject jsonObject, String key, Class<?> fieldType) {
         try {
+            LOGGER.info(jsonObject.toString(key));
+            LOGGER.info(key);
             if (fieldType == String.class) {
                 try {
                     return jsonObject.getString(key);
