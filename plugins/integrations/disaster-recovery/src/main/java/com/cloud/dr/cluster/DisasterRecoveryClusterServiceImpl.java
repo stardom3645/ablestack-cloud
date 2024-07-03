@@ -823,12 +823,14 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                         String secCommand = "getDisasterRecoveryClusterList";
                         String secMethod = "GET";
                         Map<String, String> sucParams = new HashMap<>();
-                        List<GetDisasterRecoveryClusterListResponse> drListResponse = DisasterRecoveryClusterUtil.moldGetDisasterRecoveryClusterListAPI(secUrl + "/client/api/", secCommand, secMethod, secApiKey, secSecretKey);
-                        if (drListResponse != null || !drListResponse.isEmpty()) {
-                            for (GetDisasterRecoveryClusterListResponse dr : drListResponse) {
-                                if (dr.getName().equalsIgnoreCase(drCluster.getName())) {
-                                    String primaryDrId = dr.getId();
-                                    secCommand = "deleteDisasterRecoveryCluster";
+                        String drList = DisasterRecoveryClusterUtil.moldGetDisasterRecoveryClusterListAPI(secUrl + "/client/api/", secCommand, secMethod, secApiKey, secSecretKey);
+                        if (drList != null || !drList.isEmpty()) {
+                            JSONObject jsonObject = new JSONObject(drList);
+                            JSONArray jsonArray = jsonObject.getJSONArray("disasterrecoverycluster");
+                            for (int j = 0; j < jsonArray.length(); j++) {
+                                JSONObject object = jsonArray.getJSONObject(j);
+                                if (object.get("name").toString().equalsIgnoreCase(drCluster.getName())) {
+                                    String primaryDrId = object.get("id").toString();
                                     secMethod = "GET";
                                     sucParams = new HashMap<>();
                                     sucParams.put("id", primaryDrId);
@@ -908,11 +910,13 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                     String secCommand = "getDisasterRecoveryClusterList";
                     String secMethod = "GET";
                     Map<String, String> sucParams = new HashMap<>();
-                    List<GetDisasterRecoveryClusterListResponse> drListResponse = DisasterRecoveryClusterUtil.moldGetDisasterRecoveryClusterListAPI(secUrl + "/client/api/", secCommand, secMethod, secApiKey, secSecretKey);
-                    if (drListResponse != null || !drListResponse.isEmpty()) {
-                        for (GetDisasterRecoveryClusterListResponse dr : drListResponse) {
-                            if (dr.getName().equalsIgnoreCase(drCluster.getName())) {
-                                String primaryDrId = dr.getId();
+                    String drList = DisasterRecoveryClusterUtil.moldGetDisasterRecoveryClusterListAPI(secUrl + "/client/api/", secCommand, secMethod, secApiKey, secSecretKey);
+                    if (drList != null || !drList.isEmpty()) {
+                        JSONObject jsonObject = new JSONObject(drList);
+                        JSONArray jsonArray = jsonObject.getJSONArray("disasterrecoverycluster");
+                        for (int j = 0; j < jsonArray.length(); j++) {
+                            JSONObject object = jsonArray.getJSONObject(j);
+                            if (object.get("name").toString().equalsIgnoreCase(drCluster.getName())) {
                                 secCommand = "updateDisasterRecoveryCluster";
                                 secMethod = "GET";
                                 sucParams.put("name", drName);
@@ -987,10 +991,13 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                     String secCommand = "getDisasterRecoveryClusterList";
                     String secMethod = "GET";
                     Map<String, String> sucParams = new HashMap<>();
-                    List<GetDisasterRecoveryClusterListResponse> drListResponse = DisasterRecoveryClusterUtil.moldGetDisasterRecoveryClusterListAPI(secUrl + "/client/api/", secCommand, secMethod, secApiKey, secSecretKey);
-                    if (drListResponse != null || !drListResponse.isEmpty()) {
-                        for (GetDisasterRecoveryClusterListResponse dr : drListResponse) {
-                            if (dr.getName().equalsIgnoreCase(drCluster.getName())) {
+                    String drList = DisasterRecoveryClusterUtil.moldGetDisasterRecoveryClusterListAPI(secUrl + "/client/api/", secCommand, secMethod, secApiKey, secSecretKey);
+                    if (drList != null || !drList.isEmpty()) {
+                        JSONObject jsonObject = new JSONObject(drList);
+                        JSONArray jsonArray = jsonObject.getJSONArray("disasterrecoverycluster");
+                        for (int j = 0; j < jsonArray.length(); j++) {
+                            JSONObject object = jsonArray.getJSONObject(j);
+                            if (object.get("name").toString().equalsIgnoreCase(drCluster.getName())) {
                                 secCommand = "updateDisasterRecoveryCluster";
                                 secMethod = "GET";
                                 sucParams.put("name", drName);
@@ -1536,25 +1543,21 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         String command = "getDisasterRecoveryClusterList";
         String method = "GET";
         Map<String, String> params = new HashMap<>();
-        List<GetDisasterRecoveryClusterListResponse> drListResponse = DisasterRecoveryClusterUtil.moldGetDisasterRecoveryClusterListAPI(url + "/client/api/", command, method, apiKey, secretKey);
-        if (drListResponse != null || !drListResponse.isEmpty()) {
-            for (GetDisasterRecoveryClusterListResponse dr : drListResponse) {
-                if (dr.getName().equalsIgnoreCase(drCluster.getName())) {
-                    LOGGER.info("::::::::::getDisasterRecoveryClusterList");
-                    LOGGER.info(dr.getDisasterRecoveryClusterVmMap());
-                    if (dr.getDisasterRecoveryClusterVmMap() != null) {
-                        LOGGER.info("::::::::::getDisasterRecoveryClusterVmMap");
-                        List<GetDisasterRecoveryClusterVmListResponse> vmListResponse = dr.getDisasterRecoveryClusterVmMap();
-                        for (GetDisasterRecoveryClusterVmListResponse vm : vmListResponse) {
-                            LOGGER.info("::::::::::GetDisasterRecoveryClusterVmListResponse");
-                            LOGGER.info(vm.getDrClusterVmStatus());
-                            if (!vm.getDrClusterVmStatus().equalsIgnoreCase("Stopped")) {
-                                throw new InvalidParameterValueException("Forced promote and demote functions cannot be executed because there is a running disaster recovery primary cluster virtual machine : " + vm.getDrClusterVmName());
+        String drList = DisasterRecoveryClusterUtil.moldGetDisasterRecoveryClusterListAPI(url + "/client/api/", command, method, apiKey, secretKey);
+        if (drList != null || !drList.isEmpty()) {
+            JSONObject jsonObject = new JSONObject(drList);
+            JSONArray jsonArray = jsonObject.getJSONArray("disasterrecoverycluster");
+            for (int i = 0; i < jsonArray.length(); i++) {
+                JSONObject object = jsonArray.getJSONObject(i);
+                if (object.get("name").toString().equalsIgnoreCase(drCluster.getName())) {
+                    JSONArray vmArray = object.getJSONArray("drclustervmmap");
+                    if (vmArray.length() > 0) {
+                        for (int j = 0; j < vmArray.length(); j++) {
+                            JSONObject obj = vmArray.getJSONObject(i);
+                            if (obj.get("drclustervmstatus").toString().equalsIgnoreCase("Stopped")) {
+                                throw new InvalidParameterValueException("Forced promote and demote functions cannot be executed because there is a running disaster recovery primary cluster virtual machine : " + obj.get("drclustervmname").toString());
                             }
                         }
-                    } else {
-                        // 테스트 후 삭제 예정
-                        throw new InvalidParameterValueException("Forced promote and demote functions cannot be executed because failed to query primary cluster DR VM information.");
                     }
                 }
             }
