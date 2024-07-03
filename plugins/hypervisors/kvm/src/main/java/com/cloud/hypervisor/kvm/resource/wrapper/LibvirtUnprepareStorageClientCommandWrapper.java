@@ -19,7 +19,8 @@
 
 package com.cloud.hypervisor.kvm.resource.wrapper;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import com.cloud.agent.api.Answer;
 import com.cloud.agent.api.UnprepareStorageClientAnswer;
@@ -33,7 +34,7 @@ import com.cloud.utils.Pair;
 @ResourceWrapper(handles = UnprepareStorageClientCommand.class)
 public class LibvirtUnprepareStorageClientCommandWrapper extends CommandWrapper<UnprepareStorageClientCommand, Answer, LibvirtComputingResource> {
 
-    private static final Logger s_logger = Logger.getLogger(LibvirtUnprepareStorageClientCommandWrapper.class);
+    private static final Logger s_logger = LogManager.getLogger(LibvirtUnprepareStorageClientCommandWrapper.class);
 
     @Override
     public Answer execute(UnprepareStorageClientCommand cmd, LibvirtComputingResource libvirtComputingResource) {
