@@ -1098,7 +1098,10 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                                 // 이미지 프로모트 glue-api 호출
                                 glueCommand = "/mirror/image/promote/rbd/" + imageName.getAsString();
                                 glueMethod = "POST";
-                                boolean result = DisasterRecoveryClusterUtil.glueImageMirrorPromoteAPI(glueUrl, glueCommand, glueMethod);
+                                Map<String, String> glueParams = new HashMap<>();
+                                glueParams.put("mirrorPool", "rbd");
+                                glueParams.put("imageName", imageName.getAsString());
+                                boolean result = DisasterRecoveryClusterUtil.glueImageMirrorPromoteAPI(glueUrl, glueCommand, glueMethod, glueParams);
                                 if (!result) {
                                     return false;
                                 }
@@ -1154,7 +1157,10 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                                 // 이미지 디모트 glue-api 호출
                                 glueCommand = "/mirror/image/demote/rbd/"+imageName.getAsString();
                                 glueMethod = "DELETE";
-                                boolean result = DisasterRecoveryClusterUtil.glueImageMirrorDemoteAPI(glueUrl, glueCommand, glueMethod);
+                                Map<String, String> glueParams = new HashMap<>();
+                                glueParams.put("mirrorPool", "rbd");
+                                glueParams.put("imageName", imageName.getAsString());
+                                boolean result = DisasterRecoveryClusterUtil.glueImageMirrorDemoteAPI(glueUrl, glueCommand, glueMethod, glueParams);
                                 if (!result) {
                                     return false;
                                 }
