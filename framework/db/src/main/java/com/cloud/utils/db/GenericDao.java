@@ -254,7 +254,7 @@ public interface GenericDao<T, ID extends Serializable> {
      * @return Number of rows deleted
      */
     int expunge(SearchCriteria<T> sc, long limit);
-    
+
     /**
      * expunge the removed rows.
      */
