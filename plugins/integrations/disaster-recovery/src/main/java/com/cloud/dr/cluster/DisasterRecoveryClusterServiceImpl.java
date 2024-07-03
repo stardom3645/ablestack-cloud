@@ -396,13 +396,22 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                 String moldCommand = "listVirtualMachines";
                 String moldMethod = "GET";
                 String vmList = DisasterRecoveryClusterUtil.moldListVirtualMachinesAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey);
-                JSONObject jsonObject = new JSONObject(vmList);
-                JSONArray jsonArray = jsonObject.getJSONArray("virtualmachine");
-                for (int i = 0; i < jsonArray.length(); i++) {
-                    JSONObject object = jsonArray.getJSONObject(i);
-                    if (object.get("name").toString().equalsIgnoreCase(userVM.getName())) {
-                        map.setMirroredVmStatus(object.get("state").toString());
-                        disasterRecoveryClusterVmMapDao.update(map.getId(), map);
+                if (vmList != null || !vmList.isEmpty()) {
+                    JSONObject jsonObject = new JSONObject(vmList);
+                    Object object = jsonObject.get("virtualmachine");
+                    JSONArray array;
+                    if (object instanceof JSONArray) {
+                        array = (JSONArray) object;
+                    } else {
+                        array = new JSONArray();
+                        array.put(object);
+                    }
+                    for (int i = 0; i < array.length(); i++) {
+                        JSONObject jSONObject = array.getJSONObject(i);
+                        if (jSONObject.get("name").equals(userVM.getName())) {
+                            map.setMirroredVmStatus(jSONObject.get("state").toString());
+                            disasterRecoveryClusterVmMapDao.update(map.getId(), map);
+                        }
                     }
                 }
                 response.setMirroredVmStatus(map.getMirroredVmStatus());
@@ -826,11 +835,18 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                         String drList = DisasterRecoveryClusterUtil.moldGetDisasterRecoveryClusterListAPI(secUrl + "/client/api/", secCommand, secMethod, secApiKey, secSecretKey);
                         if (drList != null || !drList.isEmpty()) {
                             JSONObject jsonObject = new JSONObject(drList);
-                            JSONArray jsonArray = jsonObject.getJSONArray("disasterrecoverycluster");
-                            for (int j = 0; j < jsonArray.length(); j++) {
-                                JSONObject object = jsonArray.getJSONObject(j);
-                                if (object.get("name").toString().equalsIgnoreCase(drCluster.getName())) {
-                                    String primaryDrId = object.get("id").toString();
+                            Object object = jsonObject.get("disasterrecoverycluster");
+                            JSONArray arr;
+                            if (object instanceof JSONArray) {
+                                arr = (JSONArray) object;
+                            } else {
+                                arr = new JSONArray();
+                                arr.put(object);
+                            }
+                            for (int j = 0; j < arr.length(); j++) {
+                                JSONObject jSONObject = arr.getJSONObject(j);
+                                if (jSONObject.get("name").equals(drCluster.getName())) {
+                                    String primaryDrId = jSONObject.get("id").toString();
                                     secMethod = "GET";
                                     sucParams = new HashMap<>();
                                     sucParams.put("id", primaryDrId);
@@ -913,10 +929,17 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                     String drList = DisasterRecoveryClusterUtil.moldGetDisasterRecoveryClusterListAPI(secUrl + "/client/api/", secCommand, secMethod, secApiKey, secSecretKey);
                     if (drList != null || !drList.isEmpty()) {
                         JSONObject jsonObject = new JSONObject(drList);
-                        JSONArray jsonArray = jsonObject.getJSONArray("disasterrecoverycluster");
-                        for (int j = 0; j < jsonArray.length(); j++) {
-                            JSONObject object = jsonArray.getJSONObject(j);
-                            if (object.get("name").toString().equalsIgnoreCase(drCluster.getName())) {
+                        Object object = jsonObject.get("disasterrecoverycluster");
+                        JSONArray arr;
+                        if (object instanceof JSONArray) {
+                            arr = (JSONArray) object;
+                        } else {
+                            arr = new JSONArray();
+                            arr.put(object);
+                        }
+                        for (int j = 0; j < arr.length(); j++) {
+                            JSONObject jSONObject = arr.getJSONObject(j);
+                            if (jSONObject.get("name").equals(drCluster.getName())) {
                                 secCommand = "updateDisasterRecoveryCluster";
                                 secMethod = "GET";
                                 sucParams.put("name", drName);
@@ -994,10 +1017,17 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                     String drList = DisasterRecoveryClusterUtil.moldGetDisasterRecoveryClusterListAPI(secUrl + "/client/api/", secCommand, secMethod, secApiKey, secSecretKey);
                     if (drList != null || !drList.isEmpty()) {
                         JSONObject jsonObject = new JSONObject(drList);
-                        JSONArray jsonArray = jsonObject.getJSONArray("disasterrecoverycluster");
-                        for (int j = 0; j < jsonArray.length(); j++) {
-                            JSONObject object = jsonArray.getJSONObject(j);
-                            if (object.get("name").toString().equalsIgnoreCase(drCluster.getName())) {
+                        Object object = jsonObject.get("disasterrecoverycluster");
+                        JSONArray arr;
+                        if (object instanceof JSONArray) {
+                            arr = (JSONArray) object;
+                        } else {
+                            arr = new JSONArray();
+                            arr.put(object);
+                        }
+                        for (int j = 0; j < arr.length(); j++) {
+                            JSONObject jSONObject = arr.getJSONObject(j);
+                            if (jSONObject.get("name").equals(drCluster.getName())) {
                                 secCommand = "updateDisasterRecoveryCluster";
                                 secMethod = "GET";
                                 sucParams.put("name", drName);
@@ -1546,17 +1576,29 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         String drList = DisasterRecoveryClusterUtil.moldGetDisasterRecoveryClusterListAPI(url + "/client/api/", command, method, apiKey, secretKey);
         if (drList != null || !drList.isEmpty()) {
             JSONObject jsonObject = new JSONObject(drList);
-            JSONArray jsonArray = jsonObject.getJSONArray("disasterrecoverycluster");
-            for (int i = 0; i < jsonArray.length(); i++) {
-                JSONObject object = jsonArray.getJSONObject(i);
-                if (object.get("name").toString().equalsIgnoreCase(drCluster.getName())) {
-                    JSONArray vmArray = object.getJSONArray("drclustervmmap");
-                    if (vmArray.length() > 0) {
-                        for (int j = 0; j < vmArray.length(); j++) {
-                            JSONObject obj = vmArray.getJSONObject(i);
-                            if (obj.get("drclustervmstatus").toString().equalsIgnoreCase("Stopped")) {
-                                throw new InvalidParameterValueException("Forced promote and demote functions cannot be executed because there is a running disaster recovery primary cluster virtual machine : " + obj.get("drclustervmname").toString());
-                            }
+            Object object = jsonObject.get("disasterrecoverycluster");
+            JSONArray array;
+            if (object instanceof JSONArray) {
+                array = (JSONArray) object;
+            } else {
+                array = new JSONArray();
+                array.put(object);
+            }
+            for (int i = 0; i < array.length(); i++) {
+                JSONObject jSONObject = array.getJSONObject(i);
+                if (jSONObject.get("name").equals(drCluster.getName())) {
+                    Object obj = jSONObject.get("drclustervmmap");
+                    JSONArray vmArray;
+                    if (obj instanceof JSONArray) {
+                        vmArray = (JSONArray) obj;
+                    } else {
+                        vmArray = new JSONArray();
+                        vmArray.put(obj);
+                    }
+                    for (int j = 0; j < vmArray.length(); j++) {
+                        JSONObject jSONObj = vmArray.getJSONObject(j);
+                        if (jSONObj.get("drclustervmstatus").equals("Stopped")) {
+                            throw new InvalidParameterValueException("Forced promote and demote functions cannot be executed because there is a running disaster recovery primary cluster virtual machine : " + jSONObj.get("drclustervmname"));
                         }
                     }
                 }
