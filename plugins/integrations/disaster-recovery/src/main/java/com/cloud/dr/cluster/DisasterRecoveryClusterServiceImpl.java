@@ -1542,10 +1542,10 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
             for (GetDisasterRecoveryClusterListResponse dr : drListResponse) {
                 if (dr.getName().equalsIgnoreCase(drCluster.getName())) {
                     if (dr.getDisasterRecoveryClusterVmMap() != null) {
-                        List<GetDisasterRecoveryClusterVmListResponse> vmListResponse = dr.getDisasterRecoveryClusterVms();
+                        List<GetDisasterRecoveryClusterVmListResponse> vmListResponse = dr.getDisasterRecoveryClusterVmMap();
                         for (GetDisasterRecoveryClusterVmListResponse vm : vmListResponse) {
                             if (!vm.getDrClusterVmStatus().equalsIgnoreCase("Stopped")) {
-                                throw new InvalidParameterValueException("Forced promote and demote functions cannot be executed because there is a running disaster recovery primary cluster virtual machine : " + vm.getName());
+                                throw new InvalidParameterValueException("Forced promote and demote functions cannot be executed because there is a running disaster recovery primary cluster virtual machine : " + vm.getDrClusterVmName());
                             }
                         }
                     }
