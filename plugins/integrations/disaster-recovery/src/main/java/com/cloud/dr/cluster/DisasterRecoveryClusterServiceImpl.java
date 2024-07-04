@@ -1153,8 +1153,6 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                     if (drArray.size() != 0) {
                         for (JsonElement dr : drArray) {
                             JsonElement imageName = dr.getAsJsonObject().get("image") == null ? null : dr.getAsJsonObject().get("image");
-                            LOGGER.info("imageName.getAsString():::::::::::::::::::::::::::::::::::::::::::::::");
-                            LOGGER.info(imageName.getAsString());
                             if (imageName != null) {
                                 // 이미지 디모트 glue-api 호출
                                 glueCommand = "/mirror/image/demote/rbd/"+imageName.getAsString();
@@ -1162,11 +1160,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                                 Map<String, String> glueParams = new HashMap<>();
                                 glueParams.put("mirrorPool", "rbd");
                                 glueParams.put("imageName", imageName.getAsString());
-                                LOGGER.info("glueParams:::::::::::::::::::::::::::::::::::::::::::::::");
-                                LOGGER.info(glueParams);
                                 boolean result = DisasterRecoveryClusterUtil.glueImageMirrorDemoteAPI(glueUrl, glueCommand, glueMethod, glueParams);
-                                LOGGER.info("result:::::::::::::::::::::::::::::::::::::::::::::::");
-                                LOGGER.info(result);
                                 if (!result) {
                                     return false;
                                 }
