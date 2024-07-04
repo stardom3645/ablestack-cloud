@@ -33,6 +33,11 @@
           :pagination="false"
           :bordered="true"
           :rowKey="record.id">
+          <template #bodyCell="{ column, text }">
+            <template v-if="column.key === 'state'">
+              <status :text="text ? text : ''" displayText />
+            </template>
+          </template>
         </a-table>
       </template>
       <template #bodyCell="{ column, record, text }">
