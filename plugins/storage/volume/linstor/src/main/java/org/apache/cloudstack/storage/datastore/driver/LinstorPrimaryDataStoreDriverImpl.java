@@ -719,7 +719,7 @@ public class LinstorPrimaryDataStoreDriverImpl implements PrimaryDataStoreDriver
     private String doRevertSnapshot(final SnapshotInfo snapshot, final VolumeInfo volumeInfo) {
         final StoragePool pool = (StoragePool) volumeInfo.getDataStore();
         final DevelopersApi linstorApi = LinstorUtil.getLinstorAPI(pool.getHostAddress());
-        final String rscName = LinstorUtil.RSC_PREFIX + volumeInfo.getUuid();
+        final String rscName = LinstorUtil.RSC_PREFIX + volumeInfo.getPath();
         String resultMsg;
         try {
             if (snapshot.getDataStore().getRole() == DataStoreRole.Primary) {
