@@ -4417,6 +4417,8 @@
 "dr.promote": "DR.PROMOTE",
 "dr.demote": "DR.DEMOTE",
 "dr.vm.create": "DR.VM.CREATE",
+"dr.vm.update": "DR.VM.UPDATE",
+"dr.vm.delete": "DR.VM.DELETE",
 "label.add.disaster.recovery.cluster.vm": "Add disaster recovery cluster virtual machine",
 "label.delete.disaster.recovery.cluster.vm": "Disconnect disaster recovery cluster virtual machine mirroring",
 "message.success.add.disaster.recovery.cluster.vm": "Successfully added disaster recovery cluster virtual machine",
