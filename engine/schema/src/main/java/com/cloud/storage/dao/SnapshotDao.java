@@ -59,4 +59,7 @@ public interface SnapshotDao extends GenericDao<SnapshotVO, Long>, StateDao<Snap
     List<SnapshotVO> listByIds(Object... ids);
 
     List<SnapshotVO> listFullCloneVolumesToFlatten();
+
+    List<SnapshotVO> searchByVolumes(List<Long> volumeIds);
+
 }
