@@ -1700,7 +1700,7 @@ public class DisasterRecoveryClusterUtil {
                 }
                 for (int i = 0; i < array.length(); i++) {
                     JSONObject jSONObject = array.getJSONObject(i);
-                    if (jSONObject.get("iscustomized").equals(true)) {
+                    if (jSONObject.get("iscustomized").equals(true) && jSONObject.get("shareable").equals(false)) {
                         result = jSONObject.get("id").toString();
                         break;
                     }

@@ -40,10 +40,12 @@ import com.cloud.event.ActionEvent;
 import com.cloud.exception.InvalidParameterValueException;
 import com.cloud.exception.ResourceUnavailableException;
 import com.cloud.exception.ConcurrentOperationException;
+import com.cloud.storage.dao.DiskOfferingDao;
 import com.cloud.storage.dao.VolumeDao;
 import com.cloud.storage.VolumeVO;
 import com.cloud.storage.Volume;
 import com.cloud.storage.VolumeApiService;
+import com.cloud.offering.DiskOffering;
 import com.cloud.user.Account;
 import com.cloud.user.AccountService;
 import com.cloud.user.UserAccount;
@@ -113,6 +115,8 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
     private UserVmDao userVmDao;
     @Inject
     private AccountDao accountDao;
+    @Inject
+    private DiskOfferingDao diskOfferingDao;
     @Inject
     private DisasterRecoveryClusterDao disasterRecoveryClusterDao;
     @Inject
@@ -454,6 +458,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                                                 map.setMirroredVmVolumeStatus("SYNCING");
                                             }
                                         } else if (peerState.getAsString().contains("error")){
+                                            // description이 "split-brain detected" 인 경우 rbd mirror image resync 필요
                                             response.setDrClusterVmVolStatus("ERROR");
                                             map.setMirroredVmVolumeStatus("ERROR");
                                         } else if (peerState.getAsString().contains("unknown")){
@@ -1502,10 +1507,17 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         String moldMethod = "GET";
         String diskOffering = DisasterRecoveryClusterUtil.moldListDiskOfferingsAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey);
         if (diskOffering == "" || diskOffering.isEmpty()) {
-            throw new CloudRuntimeException("A mirroring virtual machine cannot be added because a disk offering with a custom disk size does not exist.");
+            throw new CloudRuntimeException("A mirroring virtual machine cannot be added because a disk offering with a custom disk size or shared volumes disabled does not exist.");
         }
 
         UserVmJoinVO userVM = userVmJoinDao.findById(cmd.getVmId());
+        List<VolumeVO> volumes = volsDao.findByInstance(userVM.getId());
+        for (VolumeVO vol : volumes) {
+            DiskOffering offering = diskOfferingDao.findById(vol.getDiskOfferingId());
+            if (offering.getShareable()) {
+                throw new CloudRuntimeException("Shared volumes are enabled for the virtual machine's disk offering cannot add a mirrored virtual machine.");
+            }
+        }
         moldCommand = "listVirtualMachines";
         String vmList = DisasterRecoveryClusterUtil.moldListVirtualMachinesAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey);
         JSONObject jsonObject = new JSONObject(vmList);
