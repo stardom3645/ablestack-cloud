@@ -39,15 +39,30 @@
             class="table"
             size="small"
             :columns="priDrVmColumns"
-            :dataSource="this.disasterrecoveryclustervmlist"
-            :rowKey="item => item.id"
+            :dataSource="this.priList"
+            :rowKey="item => item.priVmName"
             :pagination="false"
           >
             <template #name="{record}">
-              <router-link :to="{ path: '/vm/' + record.drclustervmid }">{{ record.drclustervmname }}</router-link>
+              <router-link :to="{ path: '/vm/' + record.priVmId }">{{ record.priVmName }}</router-link>
             </template>
             <template #state="{text}">
               <status :text="text ? text : ''" displayText />
+            </template>
+            <template #expandedRowRender="{ record }">
+              <a-table
+                style="margin: 10px 0;"
+                :columns="priColumns"
+                :dataSource="this.priVol.filter((row) => row.priVmName === record.priVmName)"
+                :pagination="false"
+                :bordered="true"
+                :rowKey="record.priVmName">
+                <template #bodyCell="{ column, text }">
+                  <template v-if="column.key === 'state'">
+                    <status :text="text ? text : ''" displayText />
+                  </template>
+                </template>
+              </a-table>
             </template>
           </a-table>
         </a-card>
@@ -62,11 +77,26 @@
           class="table"
           size="small"
           :columns="secDrVmColumns"
-          :dataSource="this.disasterrecoveryclustervmlist"
-          :rowKey="item => item.id"
+          :dataSource="this.secList"
+          :rowKey="item => item.secVmName"
           :pagination="false">
             <template #state="{text}">
               <status :text="text ? text : ''" displayText />
+            </template>
+            <template #expandedRowRender="{ record }">
+              <a-table
+                style="margin: 10px 0;"
+                :columns="secColumns"
+                :dataSource="this.secVol.filter((row) => row.secVmName === record.secVmName)"
+                :pagination="false"
+                :bordered="true"
+                :rowKey="record.secVmName">
+                <template #bodyCell="{ column, text }">
+                  <template v-if="column.key === 'state'">
+                    <status :text="text ? text : ''" displayText />
+                  </template>
+                </template>
+              </a-table>
             </template>
           </a-table>
         </a-card>
@@ -109,7 +139,7 @@ export default {
     },
     columns: {
       type: Array,
-      required: true
+      default: () => []
     },
     showSearch: {
       type: Boolean,
@@ -126,16 +156,17 @@ export default {
       loading: false,
       vm: {},
       disasterrecoveryclustervmlist: [],
+      priList: [],
+      secList: [],
+      priVol: [],
+      secVol: [],
       cardTitleA: '',
       cardTitleB: '',
       tooltipTitleA: '',
       tooltipTitleB: '',
       annotations: [],
-      instances: [],
-      totalStorage: 0,
       itemCount: 0,
       currentTab: 'details',
-      loadingNic: false,
       filter: '',
       defaultPagination: false,
       options: {
@@ -149,35 +180,49 @@ export default {
       priDrVmColumns: [
         {
           title: this.$t('label.name'),
-          dataIndex: 'drclustermirrorvmname',
+          dataIndex: 'priVmName',
           slots: { customRender: 'name' }
         },
         {
           title: this.$t('label.state'),
-          dataIndex: 'drclustervmstatus',
-          slots: { customRender: 'state' }
-        },
-        {
-          title: this.$t('label.dr.volume.status'),
-          dataIndex: 'drclustervmvolstatus',
+          dataIndex: 'priVmStatus',
           slots: { customRender: 'state' }
         }
       ],
       secDrVmColumns: [
         {
           title: this.$t('label.name'),
-          dataIndex: 'drclustermirrorvmname',
+          dataIndex: 'secVmName',
           slots: { customRender: 'name' }
         },
         {
           title: this.$t('label.state'),
-          dataIndex: 'drclustermirrorvmstatus',
+          dataIndex: 'secVmStatus',
           slots: { customRender: 'state' }
+        }
+      ],
+      priColumns: [
+        {
+          key: 'type',
+          title: this.$t('label.dr.mirrored.volume.type'),
+          dataIndex: 'priVolType'
         },
         {
-          title: this.$t('label.dr.volume.status'),
-          dataIndex: 'drclustermirrorvmvolstatus',
-          slots: { customRender: 'state' }
+          key: 'state',
+          title: this.$t('label.dr.mirrored.volume.status'),
+          dataIndex: 'priVolStatus'
+        }
+      ],
+      secColumns: [
+        {
+          key: 'type',
+          title: this.$t('label.dr.mirrored.volume.type'),
+          dataIndex: 'secVolType'
+        },
+        {
+          key: 'state',
+          title: this.$t('label.dr.mirrored.volume.status'),
+          dataIndex: 'secVolStatus'
         }
       ]
     }
@@ -254,16 +299,34 @@ export default {
         return
       }
       this.disasterrecoveryclustervmlist = this.resource.drclustervmmap || []
-      const keyword = this.options.keyword
-      if (keyword) {
-        this.disasterrecoveryclustervmlist = this.disasterrecoveryclustervmlist.filter(entry => {
-          return entry.name.includes(keyword)
-        })
-      }
       this.itemCount = this.disasterrecoveryclustervmlist.length
       this.min = (Math.min(this.itemCount, 1 + ((this.options.page - 1) * this.options.pageSize)) - 1)
       this.max = Math.min(this.options.page * this.options.pageSize, this.itemCount)
       this.disasterrecoveryclustervmlist = this.disasterrecoveryclustervmlist.slice(this.min, this.max)
+      for (const clusterVm of this.disasterrecoveryclustervmlist) {
+        if (this.priList.length === 0) {
+          this.priList.push({ priVmName: clusterVm.drclustervmname, priVmId: clusterVm.drclustervmid, priVmStatus: clusterVm.drclustervmstatus })
+          this.secList.push({ secVmName: clusterVm.drclustermirrorvmname, secVmStatus: clusterVm.drclustermirrorvmstatus })
+          this.priVol.push({ priVolType: clusterVm.drclustermirrorvmvoltype, priVolStatus: clusterVm.drclustervmvolstatus, priVmName: clusterVm.drclustervmname })
+          this.secVol.push({ secVolType: clusterVm.drclustermirrorvmvoltype, secVolStatus: clusterVm.drclustermirrorvmvolstatus, secVmName: clusterVm.drclustermirrorvmname })
+        } else {
+          if (!this.priList.some(entry => entry.priVmName.includes(clusterVm.drclustervmname))) {
+            this.priList.push({ priVmName: clusterVm.drclustervmname, priVmId: clusterVm.drclustervmid, priVmStatus: clusterVm.drclustervmstatus })
+            this.secList.push({ secVmName: clusterVm.drclustermirrorvmname, secVmStatus: clusterVm.drclustermirrorvmstatus })
+          }
+          this.priVol.push({ priVolType: clusterVm.drclustermirrorvmvoltype, priVolStatus: clusterVm.drclustervmvolstatus, priVmName: clusterVm.drclustervmname })
+          this.secVol.push({ secVolType: clusterVm.drclustermirrorvmvoltype, secVolStatus: clusterVm.drclustermirrorvmvolstatus, secVmName: clusterVm.drclustermirrorvmname })
+        }
+      }
+      const keyword = this.options.keyword
+      if (keyword) {
+        this.priList = this.priList.filter(entry => {
+          return entry.priVmName.includes(keyword)
+        })
+        this.secList = this.secList.filter(entry => {
+          return entry.secVmName.includes(keyword)
+        })
+      }
     },
     handleSearch (value) {
       this.filter = value
