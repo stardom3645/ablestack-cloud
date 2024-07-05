@@ -9385,6 +9385,8 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
         for (VolumeVO volumeToCheck : totalVolumes) {
             totalSize += volumeToCheck.getSize();
         }
+        cmd.setEntityUuid(curVm.getUuid());
+        cmd.setEntityId(curVm.getId());
         _resourceLimitMgr.checkResourceLimit(activeOwner, ResourceType.primary_storage, totalSize);
     }
 
@@ -9409,7 +9411,7 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
             logger.info("Clone VM >> Creating snapshot for root volume creation");
             VMSnapshot vmSnapshot;
             try {
-                vmSnapshot = _vmSnapshotMgr.allocVMSnapshot(curVm.getId(), null, null, curVm.getState() == VirtualMachine.State.Running ? true : false);
+                vmSnapshot = _vmSnapshotMgr.allocVMSnapshot(curVm.getId(), null, null, false);
                 if (vmSnapshot == null) {
                     throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, "Failed to create vm snapshot");
                 }
@@ -9481,7 +9483,7 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
                     VolumeVO newDataDiskVol = null;
                     try {
                         newDataDiskVol = saveDataDiskVolumeFromSnapShot(curVmAccount, true, zoneId, diskOfferingId, provisioningType, size, minIops, maxIops, parentDataDiskVolume, dataVolumeName,
-                                                                            _uuidMgr.generateUuid(Volume.class, null), new HashMap<>(), Volume.Type.ROOT);
+                                                                            _uuidMgr.generateUuid(Volume.class, null), new HashMap<>(), Volume.Type.DATADISK);
                         VolumeVO dataDiskVolume = (VolumeVO) _volumeService.cloneRootOrDataVolume(curVm.getId(), snapVO.getId(), newDataDiskVol);
                         if (dataDiskVolume == null) {
                             throw new CloudRuntimeException("Creation of root volume is not queried. The virtual machine cannot be cloned!");
@@ -9503,7 +9505,7 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
                         destroyVm(cmd.getEntityId(), true);
                         throw new CloudRuntimeException(e.getMessage());
                     } finally {
-                        _vmSnapshotMgr.deleteVMSnapshot(vmSnapshot.getId());
+                        // _vmSnapshotMgr.deleteVMSnapshot(vmSnapshot.getId());
                         // clear the temporary data snapshots
                         // for (Snapshot snapshotLeftOver : createdSnapshots) {
                         //     logger.warn("Clone VM >> Clearing the temporary data disk snapshot : " + snapshotLeftOver.getId());
@@ -9546,10 +9548,10 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
 
             return Optional.of(startVirtualMachine(cmd.getEntityId(), podId, clusterId, hostId, diskOfferingMap, additonalParams, null));
         } finally {
-            if (snapshot != null) {
-                _snapshotService.deleteSnapshot(snapshot.getId(), cmd.getTargetVM().getDataCenterId());
-                logger.warn("Clone VM >> Clearing the temporary root disk snapshot : " + snapshot.getId());
-            }
+            // if (snapshot != null) {
+            //     _snapshotService.deleteSnapshot(snapshot.getId(), cmd.getTargetVM().getDataCenterId());
+            //     logger.warn("Clone VM >> Clearing the temporary root disk snapshot : " + snapshot.getId());
+            // }
         }
     }
 
@@ -9734,6 +9736,9 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
             volume.setInstanceId(null);
             volume.setUpdated(new Date());
             volume.setDisplayVolume(displayVolume);
+            if (volType == Volume.Type.ROOT) {
+                volume.setDeviceId(0L);
+            }
             if (parentVolume != null) {
                 volume.setTemplateId(parentVolume.getTemplateId());
                 volume.setFormat(parentVolume.getFormat());
