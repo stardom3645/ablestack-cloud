@@ -300,6 +300,7 @@ public class SnapshotDaoImpl extends GenericDaoBase<SnapshotVO, Long> implements
         SearchCriteria<SnapshotVO> sc = volumesToFlattenSearch.create();
         sc.setParameters("cloneType", "full");
         return listBy(sc);
+    }
 
     @Override
     public List<SnapshotVO> searchByVolumes(List<Long> volumeIds) {
