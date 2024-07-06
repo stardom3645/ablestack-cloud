@@ -57,8 +57,8 @@ public class ClusterServiceServletImpl implements ClusterService {
     protected static CloseableHttpClient s_client = null;
 
     private void logPostParametersForFailedEncoding(List<NameValuePair> parameters) {
-        if (s_logger.isTraceEnabled()) {
-            s_logger.trace(String.format("%s encoding failed for POST parameters: %s", HttpUtils.UTF_8,
+        if (logger.isTraceEnabled()) {
+            logger.trace(String.format("%s encoding failed for POST parameters: %s", HttpUtils.UTF_8,
                     gson.toJson(parameters)));
         }
     }
@@ -67,7 +67,7 @@ public class ClusterServiceServletImpl implements ClusterService {
     }
 
     public ClusterServiceServletImpl(final String serviceUrl, final CAService caService) {
-        logger.info(String.format("Setup cluster service servlet. service url: %s, request timeout: %d seconds", serviceUrl,
+            logger.info(String.format("Setup cluster service servlet. service url: %s, request timeout: %d seconds", serviceUrl,
                 ClusterServiceAdapter.ClusterMessageTimeOut.value()));
         this.serviceUrl = serviceUrl;
         this.caService = caService;
@@ -89,8 +89,8 @@ public class ClusterServiceServletImpl implements ClusterService {
 
     @Override
     public String execute(final ClusterServicePdu pdu) throws RemoteException {
-        if (s_logger.isDebugEnabled()) {
-            s_logger.debug(String.format("Executing ClusterServicePdu with service URL: %s", serviceUrl));
+        if (logger.isDebugEnabled()) {
+            logger.debug(String.format("Executing ClusterServicePdu with service URL: %s", serviceUrl));
         }
         final CloseableHttpClient client = getHttpClient();
         final HttpPost method = new HttpPost(serviceUrl);
@@ -98,7 +98,7 @@ public class ClusterServiceServletImpl implements ClusterService {
         try {
             method.setEntity(new UrlEncodedFormEntity(postParameters, HttpUtils.UTF_8));
         } catch (UnsupportedEncodingException e) {
-            s_logger.error("Failed to encode request POST parameters", e);
+            logger.error("Failed to encode request POST parameters", e);
             logPostParametersForFailedEncoding(postParameters);
             throw new RemoteException("Failed to encode request POST parameters", e);
         }

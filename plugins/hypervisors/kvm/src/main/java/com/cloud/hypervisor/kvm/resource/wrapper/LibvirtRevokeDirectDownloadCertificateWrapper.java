@@ -93,7 +93,7 @@ public class LibvirtRevokeDirectDownloadCertificateWrapper extends CommandWrappe
                 logger.debug("Revoking certificate alias " + certificateAlias + " from keystore " + keyStoreFile);
                 Script.executeCommandForExitValue(keyToolPath, "-delete", "-alias",
                         sanitizeBashCommandArgument(certificateAlias), "-keystore", keyStoreFile, "-storepass",
-                        privatePassword);;
+                        privatePassword);
             }
         } catch (FileNotFoundException | CloudRuntimeException e) {
             logger.error("Error while setting up certificate " + certificateAlias, e);
