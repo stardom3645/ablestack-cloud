@@ -81,6 +81,7 @@ public class ClusterServiceServletContainer {
         }
     }
 
+
     protected static SSLServerSocket getSecuredServerSocket(SSLContext sslContext, String ip, int port)
             throws IOException {
         SSLServerSocketFactory sslFactory = sslContext.getServerSocketFactory();
@@ -96,6 +97,8 @@ public class ClusterServiceServletContainer {
     }
 
     static class ListenerThread extends Thread {
+
+        private static Logger LOGGER = LogManager.getLogger(ListenerThread.class);
         private HttpService httpService = null;
         private volatile SSLServerSocket serverSocket = null;
         private HttpParams params = null;
@@ -111,7 +114,7 @@ public class ClusterServiceServletContainer {
                 SSLContext sslContext = Link.initManagementSSLContext(caService);
                 serverSocket = getSecuredServerSocket(sslContext, ip, port);
             } catch (IOException | GeneralSecurityException e) {
-                s_logger.error("Error initializing cluster service servlet container for secure connection",
+                LOGGER.error("Error initializing cluster service servlet container for secure connection",
                         e);
                 return;
             }
@@ -178,7 +181,7 @@ public class ClusterServiceServletContainer {
                     final DefaultHttpServerConnection conn = new DefaultHttpServerConnection();
                     conn.bind(socket, params);
                     if (!isValidPeerConnection(socket)) {
-                        s_logger.warn(String.format("Failure during validating cluster request from %s",
+                        LOGGER.warn(String.format("Failure during validating cluster request from %s",
                                 socket.getInetAddress().getHostAddress()));
                         conn.shutdown();
                         continue;

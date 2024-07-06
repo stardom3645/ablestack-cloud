@@ -380,8 +380,8 @@ public final class RootCAProvider extends AdapterBase implements CAProvider, Con
         domainNames.add(NetUtils.getHostName());
         domainNames.add(CAManager.CertManagementCustomSubjectAlternativeName.value());
 
-        final Certificate serverCertificate = issueCertificate(domainNames, nicIps, getCaValidityDays());   
-        
+        final Certificate serverCertificate = issueCertificate(domainNames, nicIps, getCaValidityDays());
+
         if (serverCertificate == null || serverCertificate.getPrivateKey() == null) {
             throw new CloudRuntimeException("Failed to generate management server certificate and load management server keystore");
         }

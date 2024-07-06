@@ -22,8 +22,6 @@ package com.cloud.hypervisor.kvm.resource.wrapper;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.log4j.Logger;
-
 import com.cloud.agent.api.Answer;
 import com.cloud.agent.api.GetVmIpAddressCommand;
 import com.cloud.hypervisor.kvm.resource.LibvirtComputingResource;
