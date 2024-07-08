@@ -767,6 +767,7 @@ public class LibvirtVMDef {
         private DiskFmtType _diskFmtType; /* qcow2, raw etc. */
         private boolean _readonly = false;
         private boolean _shareable = false;
+        private boolean _kvdoEnable = false;
         private boolean _deferAttach = false;
         private Long _bytesReadRate;
         private Long _bytesReadRateMax;
@@ -1028,6 +1029,10 @@ public class LibvirtVMDef {
 
         public void setSharable() {
             _shareable = true;
+        }
+
+        public void setKvdoEnable() {
+            _kvdoEnable = true;
         }
 
         public void setAttachDeferred(boolean deferAttach) {

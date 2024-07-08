@@ -1202,6 +1202,7 @@ public class ApiConstants {
     public static final String REDIRECT_URI = "redirecturi";
 
     public static final String SHAREABLE = "shareable";
+    public static final String KVDO_ENABLE = "kvdoenable";
     public static final String VBMC_PORT = "vbmcport";
     public static final String IS_TAG_A_RULE = "istagarule";
     public static final String LINK_STATE = "linkstate";
