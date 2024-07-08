@@ -261,6 +261,9 @@ if __name__ == '__main__':
         logger.error('The given action: %s, is not a valid libvirt qemu operation.' % action)
         sys.exit(0)
 
+    # 테스트 로그
+    logger.error('!!!!!! action: %s, status %s' % (action,status))
+
     # if action == "prepare" and status == "begin":
     #     getOwnership()
 

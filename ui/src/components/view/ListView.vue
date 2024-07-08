@@ -412,6 +412,10 @@
       <template v-if="column.key === 'duration' && ['webhook', 'webhookdeliveries'].includes($route.path.split('/')[1])">
         <span>  {{ getDuration(record.startdate, record.enddate) }} </span>
       </template>
+      <template v-if="column.key === 'kvdoenable'">
+        <status :text="record.kvdoenable ? record.kvdoenable.toString() : 'false'" />
+        {{ record.kvdoenable ? 'Enabled' : 'Disabled' }}
+      </template>
       <template v-if="column.key === 'order'">
         <div class="shift-btns">
           <a-tooltip :name="text" placement="top">
