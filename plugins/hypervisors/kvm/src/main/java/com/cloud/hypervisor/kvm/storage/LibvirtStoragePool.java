@@ -303,6 +303,9 @@ public class LibvirtStoragePool implements KVMStoragePool {
         if (type == StoragePoolType.NetworkFilesystem) {
             return Script.findScript(kvmScriptsDir, "kvmheartbeat.sh");
         }
+        if (type == StoragePoolType.SharedMountPoint) {
+            return Script.findScript(kvmScriptsDir, "kvmheartbeat_gluegfs.sh");
+        }
         if (type == StoragePoolType.RBD) {
             return Script.findScript(kvmScriptsDir, "kvmheartbeat_rbd.sh");
         }
@@ -325,6 +328,15 @@ public class LibvirtStoragePool implements KVMStoragePool {
             if (!hostValidation) {
                 cmd.add("-c");
             }
+        } else if (primaryStoragePool.getPool().getType() == StoragePoolType.SharedMountPoint) {
+                cmd = new Script(getHearthBeatPath(), HeartBeatUpdateTimeout, logger);
+                cmd.add("-m", primaryStoragePool.getMountDestPath());
+                if (hostValidation) {
+                    cmd.add("-h", hostPrivateIp);
+                }
+                if (!hostValidation) {
+                    cmd.add("-c");
+                }
         } else if (primaryStoragePool.getPool().getType() == StoragePoolType.RBD) {
             cmd.add("-i", primaryStoragePool.getPoolSourceHost());
             cmd.add("-p", primaryStoragePool.getPoolMountSourcePath());
@@ -363,6 +375,11 @@ public class LibvirtStoragePool implements KVMStoragePool {
         if (pool.getPool().getType() == StoragePoolType.NetworkFilesystem) {
             cmd.add("-i", pool.getPoolIp());
             cmd.add("-p", pool.getPoolMountSourcePath());
+            cmd.add("-m", pool.getMountDestPath());
+            cmd.add("-h", host.getPrivateNetwork().getIp());
+            cmd.add("-r");
+            cmd.add("-t", String.valueOf(HeartBeatCheckerFreq / 1000));
+        } else if (pool.getPool().getType() == StoragePoolType.SharedMountPoint) {
             cmd.add("-m", pool.getMountDestPath());
             cmd.add("-h", host.getPrivateNetwork().getIp());
             cmd.add("-r");

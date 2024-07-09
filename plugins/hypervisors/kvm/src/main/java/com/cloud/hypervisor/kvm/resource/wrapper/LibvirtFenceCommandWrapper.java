@@ -45,6 +45,7 @@ public final class LibvirtFenceCommandWrapper extends CommandWrapper<FenceComman
         final KVMHAMonitor monitor = libvirtComputingResource.getMonitor();
 
         final List<HAStoragePool> pools = monitor.getStoragePools();
+        final List<HAStoragePool> gfspools = monitor.getGfsStoragePools();
         final List<HAStoragePool> rbdpools = monitor.getRbdStoragePools();
         final List<HAStoragePool> clvmpools = monitor.getClvmStoragePools();
 
@@ -67,7 +68,7 @@ public final class LibvirtFenceCommandWrapper extends CommandWrapper<FenceComman
             return new FenceAnswer(command, false, logline);
         }
 
-        final KVMHAChecker ha = new KVMHAChecker(pools, rbdpools, clvmpools, command.getHost(), command.isReportCheckFailureIfOneStorageIsDown(), null);
+        final KVMHAChecker ha = new KVMHAChecker(pools, gfspools, rbdpools, clvmpools, command.getHost(), command.isReportCheckFailureIfOneStorageIsDown(), null);
 
         final Future<Boolean> future = executors.submit(ha);
         try {
