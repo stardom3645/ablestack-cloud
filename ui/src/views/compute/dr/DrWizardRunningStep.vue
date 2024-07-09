@@ -377,7 +377,7 @@ export default {
     statusVm () {
       return new Promise((resolve, reject) => {
         setTimeout(() => {
-          // 1min status check
+          // 1 min status check
           resolve()
         }, 60000)
       })
