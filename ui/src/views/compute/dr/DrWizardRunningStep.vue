@@ -17,49 +17,45 @@
 
 <template>
   <div>
-    <div>
-      <a-card class="ant-form-text card-launch-description">
-        {{ $t(description.launching) }}
-      </a-card>
-      <a-card
-          id="launch-content"
-          class="ant-form-text card-launch-content">
-        <a-steps
-            size="small"
-            direction="vertical"
-            :current="currentStep"
-        >
-          <a-step
-              v-for="(step, index) in steps"
-              :key="index"
-              :title="$t(step.title)"
-              :status="step.status">
-            <template #icon>
-              <LoadingOutlined v-if="step.status===status.PROCESS" />
-              <CloseCircleOutlined v-else-if="step.status===status.FAILED" />
-            </template>
-            <template #description>
-              <a-card
-                  class="step-error"
-                  v-if="step.status===status.FAILED"
-              >
-                <div><strong>{{ $t('label.error.something.went.wrong.please.correct.the.following') }}:</strong></div>
-                <div>{{ messageError }}</div>
-              </a-card>
-            </template>
-          </a-step>
-        </a-steps>
-      </a-card>
-    <div class="form-action">
-      <a-button
-        v-if="processStatus==='error'"
-        class="button-next"
-        type="primary"
-        :loading="loading"
-        @click="closeModal">{{ $t('label.cancel') }}
-      </a-button>
-    </div>
-    </div>
+    <a-card class="ant-form-text card-launch-description">
+      {{ $t(description.launching) }}
+    </a-card>
+    <a-card class="ant-form-text card-launch-content">
+      <a-steps
+        size="small"
+        direction="vertical"
+        :current="currentStep"
+      >
+        <a-step
+          v-for="(step, index) in steps"
+          :key="index"
+          :title="$t(step.title)"
+          :status="step.status">
+          <template #icon>
+            <LoadingOutlined v-if="step.status===status.PROCESS" />
+            <CloseCircleOutlined v-else-if="step.status===status.FAILED" />
+          </template>
+          <template #description>
+            <a-card
+                class="step-error"
+                v-if="step.status===status.FAILED"
+            >
+              <div><strong>{{ $t('label.error') }}:</strong></div>
+              <div>{{ messageError }}</div>
+            </a-card>
+          </template>
+        </a-step>
+      </a-steps>
+    </a-card>
+  </div>
+  <div class="form-action">
+    <a-button
+      v-if="processStatus==='error'"
+      class="button-next"
+      type="primary"
+      :loading="loading"
+      @click="closeModal">{{ $t('label.cancel') }}
+    </a-button>
   </div>
 </template>
 
@@ -71,15 +67,19 @@ const STATUS_FINISH = 'finish'
 const STATUS_FAILED = 'error'
 export default {
   props: {
-    prefillContent: {
+    launchData: {
       type: Object,
-      default: function () {
+      default () {
         return {}
       }
     },
-    isFixError: {
+    launchMock: {
       type: Boolean,
       default: false
+    },
+    stepChild: {
+      type: String,
+      default: ''
     },
     resource: {
       type: Object,
@@ -87,12 +87,7 @@ export default {
     }
   },
   data: () => ({
-    formItemLayout: {
-      labelCol: { span: 6 },
-      wrapperCol: { span: 14 }
-    },
     formModel: {},
-    isLaunchTest: false,
     processStatus: null,
     description: {
       waiting: 'message.launch.dr.simulation.test',
@@ -114,21 +109,6 @@ export default {
   }),
   created () {
     this.initForm()
-  },
-  watch: {
-    formModel: {
-      deep: true,
-      handler (changedFields) {
-        const fieldsChanged = toRaw(changedFields)
-        this.$emit('fieldsChanged', fieldsChanged)
-      }
-    }
-  },
-  updated () {
-    const launchElm = this.$el.querySelector('#launch-content')
-    if (launchElm) {
-      launchElm.scrollTop = launchElm.scrollHeight
-    }
   },
   mounted () {
     if (this.launchMock) {
@@ -168,6 +148,8 @@ export default {
       await this.stepOneTestDr()
     },
     async stepOneTestDr () {
+      console.log(this.steps)
+      console.log(this.stepData.stepMove)
       this.addStep('message.dr.simulation.test.step1', 'stepOneTestDr')
       try {
         if (!this.stepData.stepMove.includes('stepOneTestDr')) {
@@ -176,13 +158,13 @@ export default {
           await this.stopDrVm()
           this.stepData.stepMove.push('stepOneTestDr')
         }
-        await this.stepTwoTestDr()
-        await this.stepThreeTestDr()
-        await this.stepFourTestDr()
-        await this.stepFiveTestDr()
-        await this.stepSixTestDr()
-        await this.stepSevenTestDr()
-        await this.stepLastTestDr()
+        // await this.stepTwoTestDr()
+        // await this.stepThreeTestDr()
+        // await this.stepFourTestDr()
+        // await this.stepFiveTestDr()
+        // await this.stepSixTestDr()
+        // await this.stepSevenTestDr()
+        this.$emit('nextPressed')
       } catch (e) {
         this.messageError = e
         this.processStatus = STATUS_FAILED
@@ -196,82 +178,58 @@ export default {
       this.setStepStatus(STATUS_FINISH)
       this.currentStep++
       this.addStep('message.dr.simulation.test.step2', 'stepTwoTestDr')
-      try {
-        await this.demoteImage()
-        this.stepData.stepMove.push('stepTwoTestDr')
-      } catch (e) {
-        this.messageError = e
-        this.processStatus = STATUS_FAILED
-        this.setStepStatus(STATUS_FAILED)
-      }
+      await this.demoteImage()
+      this.stepData.stepMove.push('stepTwoTestDr')
     },
     async stepThreeTestDr () {
+      if (this.stepData.stepMove.includes('stepThreeTestDr')) {
+        return
+      }
       this.setStepStatus(STATUS_FINISH)
       this.currentStep++
       this.addStep('message.dr.simulation.test.step3', 'stepThreeTestDr')
-      try {
-        await this.startDrVm()
-        this.stepData.stepMove.push('stepThreeTestDr')
-      } catch (e) {
-        this.messageError = e
-        this.processStatus = STATUS_FAILED
-        this.setStepStatus(STATUS_FAILED)
-      }
+      await this.startDrVm()
+      this.stepData.stepMove.push('stepThreeTestDr')
     },
     async stepFourTestDr () {
+      if (this.stepData.stepMove.includes('stepFourTestDr')) {
+        return
+      }
       this.setStepStatus(STATUS_FINISH)
       this.currentStep++
       this.addStep('message.dr.simulation.test.step4', 'stepFourTestDr')
-      try {
-        await this.statusVm()
-        this.stepData.stepMove.push('stepFourTestDr')
-      } catch (e) {
-        this.messageError = e
-        this.processStatus = STATUS_FAILED
-        this.setStepStatus(STATUS_FAILED)
-      }
+      await this.statusVm()
+      this.stepData.stepMove.push('stepFourTestDr')
     },
     async stepFiveTestDr () {
+      if (this.stepData.stepMove.includes('stepFiveTestDr')) {
+        return
+      }
       this.setStepStatus(STATUS_FINISH)
       this.currentStep++
       this.addStep('message.dr.simulation.test.step5', 'stepFiveTestDr')
-      try {
-        await this.stopDrVm()
-        this.stepData.stepMove.push('stepFiveTestDr')
-      } catch (e) {
-        this.messageError = e
-        this.processStatus = STATUS_FAILED
-        this.setStepStatus(STATUS_FAILED)
-      }
+      await this.stopDrVm()
+      this.stepData.stepMove.push('stepFiveTestDr')
     },
     async stepSixTestDr () {
+      if (this.stepData.stepMove.includes('stepSixTestDr')) {
+        return
+      }
       this.setStepStatus(STATUS_FINISH)
       this.currentStep++
       this.addStep('message.dr.simulation.test.step6', 'stepSixTestDr')
-      try {
-        await this.promoteDrImage()
-        this.stepData.stepMove.push('stepSixTestDr')
-      } catch (e) {
-        this.messageError = e
-        this.processStatus = STATUS_FAILED
-        this.setStepStatus(STATUS_FAILED)
-      }
+      await this.promoteDrImage()
+      this.stepData.stepMove.push('stepSixTestDr')
     },
     async stepSevenTestDr () {
+      if (this.stepData.stepMove.includes('stepSevenTestDr')) {
+        return
+      }
       this.setStepStatus(STATUS_FINISH)
       this.currentStep++
       this.addStep('message.dr.simulation.test.step7', 'stepSevenTestDr')
-      try {
-        await this.startVm()
-        this.stepData.stepMove.push('stepSevenTestDr')
-      } catch (e) {
-        this.messageError = e
-        this.processStatus = STATUS_FAILED
-        this.setStepStatus(STATUS_FAILED)
-      }
-    },
-    async stepLastTestDr () {
-      await this.stepComplete()
+      await this.startVm()
+      this.stepData.stepMove.push('stepSevenTestDr')
     },
     async pollJob (jobId) {
       return new Promise(resolve => {
@@ -334,10 +292,11 @@ export default {
     },
     stopDrVm () {
       return new Promise((resolve, reject) => {
+        console.log(this.clusters)
         let message = ''
         const params = {}
-        params.id = this.resource.id
-        params.drclustername = this.clusters.drclustername
+        params.virtualmachineid = this.resource.id
+        params.drclustername = this.clusters.name
         api('stopDisasterRecoveryClusterVm', params).then(json => {
           resolve()
         }).catch(error => {
@@ -351,10 +310,13 @@ export default {
         let message = ''
         const params = {}
         params.id = this.resource.id
-        params.drclustername = this.clusters.drclustername
+        params.drclustername = this.clusters.name
         api('demoteDisasterRecoveryClusterVm', params).then(json => {
           resolve()
         }).catch(error => {
+          console.log('=============')
+          console.log(error.response.headers['x-description'])
+          console.log('=============')
           message = error.response.headers['x-description']
           reject(message)
         })
@@ -365,7 +327,7 @@ export default {
         let message = ''
         const params = {}
         params.id = this.resource.id
-        params.drclustername = this.clusters.drclustername
+        params.drclustername = this.clusters.name
         api('startDisasterRecoveryClusterVm', params).then(json => {
           resolve()
         }).catch(error => {
@@ -387,7 +349,7 @@ export default {
         let message = ''
         const params = {}
         params.id = this.resource.id
-        params.drclustername = this.clusters.drclustername
+        params.drclustername = this.clusters.name
         api('promoteDisasterRecoveryClusterVm', params).then(json => {
           resolve()
         }).catch(error => {
@@ -419,16 +381,10 @@ export default {
         })
       })
     },
-    stepComplete () {
-      this.setStepStatus(STATUS_FINISH)
-      this.currentStep++
-      this.addStep('message.dr.test.complete', 'stepComplete')
-      this.setStepStatus(STATUS_FINISH)
-      this.processStatus = STATUS_FINISH
-    },
     closeModal () {
+      this.loading = false
       this.steps = []
-      this.$emit('close-modal')
+      this.$emit('closeAction')
       this.$emit('refresh-data')
     }
   }

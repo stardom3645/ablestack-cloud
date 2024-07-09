@@ -17,20 +17,17 @@
 
 <template>
   <div>
-    <a-card
-      class="ant-form-text card-waiting-launch"
-      :ref="formRef"
-      :model="form"
-      :rules="rules"
-      style="text-align: justify; margin: 10px 0; padding: 24px;"
-      v-html="$t(description.finish)">
+    <a-card class="ant-form-text card-waiting-launch">
+      <check-circle-two-tone
+        twoToneColor="#52c41a"
+        style="font-size: 20px;"/>
+      {{ $t(description.finish) }}
     </a-card>
     <div class="form-action">
       <a-button
-        v-if="processStatus==='finish'"
         class="button-next"
         type="primary"
-        :loading="loading"
+        ref="submit"
         @click="closeModal">{{ $t('label.cancel') }}
       </a-button>
     </div>
@@ -38,7 +35,6 @@
 </template>
 
 <script>
-import { ref, reactive } from 'vue'
 export default {
   props: {
     resource: {
@@ -48,26 +44,12 @@ export default {
   },
   data: () => ({
     description: {
-      waiting: 'message.launch.dr.simulation.test',
-      launching: 'message.waiting.dr.simulation.test',
       finish: 'message.finish.dr.simulation.test'
-    },
-    isLaunchTest: false
+    }
   }),
-  created () {
-    this.initForm()
-  },
   methods: {
-    initForm () {
-      this.formRef = ref()
-      this.form = reactive({
-      })
-      this.rules = reactive({
-      })
-    },
     closeModal () {
-      this.steps = []
-      this.$emit('close-modal')
+      this.$emit('closeAction')
       this.$emit('refresh-data')
     }
   }

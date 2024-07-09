@@ -83,7 +83,7 @@ public class DemoteDisasterRecoveryClusterVmCmd extends BaseCmd implements Admin
     public void execute() throws ServerApiException {
         try {
             if (!disasterRecoveryClusterService.demoteDisasterRecoveryClusterVm(this)) {
-                throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, String.format("Failed to promote disaster recovery cluster virtual machine ID: %d", getId()));
+                throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, String.format("Failed to demote disaster recovery cluster virtual machine ID: %d", getId()));
             }
             SuccessResponse response = new SuccessResponse(getCommandName());
             setResponseObject(response);

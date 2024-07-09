@@ -4392,6 +4392,7 @@
 "label.dr.simulation.test": "Mirroring mock test",
 "label.dr.action.remove.simulation.test": "Release mirroring",
 "message.waiting.dr.simulation.test": "Please wait until the mock exam is completed...",
+"message.finish.dr.simulation.test": "The mirroring mock test was completed successfully.",
 "message.dr.simulation.test.step1": "Simulation Test Level: 1 Stop virtualmachine and mirroring virtualmachine",
 "message.dr.simulation.test.step2": "Simulation Test Level: 2 Image demote and mirroring image promote",
 "message.dr.simulation.test.step3": "Simulation Test Level: 3 Start mirroring virtualmachine",

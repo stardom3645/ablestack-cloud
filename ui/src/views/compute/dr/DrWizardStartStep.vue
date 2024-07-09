@@ -17,15 +17,11 @@
 
 <template>
   <div>
-    <a-card
-      class="ant-form-text card-waiting-launch"
-      :ref="formRef"
-      :model="form"
-      :rules="rules"
-      style="text-align: justify; margin: 10px 0; padding: 24px;"
-      v-html="$t(description.waiting)"
-      @finish="handleSubmit"
-      v-ctrl-enter="handleSubmit">
+    <a-card class="ant-form-text card-waiting-launch">
+      <check-circle-two-tone
+        twoToneColor="#52c41a"
+        style="font-size: 20px;"/>
+      {{ $t(description.waiting) }}
     </a-card>
     <div class="form-action">
       <a-button ref="submit" type="primary" @click="handleSubmit" class="button-next">
@@ -36,7 +32,6 @@
 </template>
 
 <script>
-import { ref, reactive } from 'vue'
 export default {
   props: {
     resource: {
@@ -46,24 +41,11 @@ export default {
   },
   data: () => ({
     description: {
-      waiting: 'message.launch.dr.simulation.test',
-      launching: 'message.waiting.dr.simulation.test'
-    },
-    isLaunchTest: false
+      waiting: 'message.launch.dr.simulation.test'
+    }
   }),
-  created () {
-    this.initForm()
-  },
   methods: {
-    initForm () {
-      this.formRef = ref()
-      this.form = reactive({
-      })
-      this.rules = reactive({
-      })
-    },
     handleSubmit () {
-      this.isLaunchTest = true
       this.$emit('nextPressed')
     }
   }
