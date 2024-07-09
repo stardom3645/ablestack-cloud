@@ -3329,7 +3329,8 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
                      */
                     final PrimaryDataStoreTO store = (PrimaryDataStoreTO)data.getDataStore();
                     if(store.getProvider() != null && !store.getProvider().isEmpty() && "ABLESTACK".equals(store.getProvider())){
-                        final String device = mapRbdDevice(physicalDisk);
+                        final VolumeObjectTO volumeObject = (VolumeObjectTO)data;
+                        final String device = mapRbdDevice(physicalDisk, volumeObject.getKvdoEnable());
                         if (device != null) {
                             LOGGER.debug("RBD device on host is: " + device);
                             String path = store.getKrbdPath() == null ? "/dev/rbd/" : store.getKrbdPath() + "/";
@@ -3442,7 +3443,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
                     final KVMStoragePool pool = physicalDisk.getPool();
                     if(StoragePoolType.RBD.equals(pool.getType())) {
                         final int devId = volume.getDiskSeq().intValue();
-                        final String device = mapRbdDevice(physicalDisk);
+                        final String device = mapRbdDevice(physicalDisk,false);
                         if (device != null) {
                             LOGGER.debug("RBD device on host is: " + device);
                             final DiskDef diskdef = new DiskDef();
@@ -5331,7 +5332,10 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
         return hypervisorType;
     }
 
-    public String mapRbdDevice(final KVMPhysicalDisk disk){
+    public String mapRbdDevice(final KVMPhysicalDisk disk, boolean kvdoEnable){
+        LOGGER.debug(String.format("kvdoEnable!!!!!!!!!!!!! %s", kvdoEnable));
+        LOGGER.debug(String.format("size!!!!!!!!!!!!! %s", disk.getSize()));
+
         final KVMStoragePool pool = disk.getPool();
         //Check if rbd image is already mapped
         final String[] splitPoolImage = disk.getPath().split("/");
@@ -5341,6 +5345,21 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
             Script.runSimpleBashScript("rbd map " + disk.getPath() + " --id " + pool.getAuthUserName());
             device = Script.runSimpleBashScript("rbd showmapped | grep \""+splitPoolImage[0]+"[ ]*"+splitPoolImage[1]+"\" | grep -o \"[^ ]*[ ]*$\"");
         }
+
+        // kvdo가 활성화 되어있음
+        device = Script.runSimpleBashScript("rbd showmapped | grep \""+splitPoolImage[0]+"[ ]*"+splitPoolImage[1]+"\" | grep -o \"[^ ]*[ ]*$\"");
+        // if(volumeObject.getKvdoEnable()){
+        //     if(){ // lvs에 없음
+        //         try {
+
+        //         } catch (final Exception e) {
+        //             LOGGER.error(String.format("aaa %s", "aa"));
+        //         }
+        //     }else{ // lvs에 있음
+
+        //     }
+        // }
+
         return device;
     }
 
