@@ -358,16 +358,14 @@
       </a-list>
     </a-modal>
     <a-modal
-        :visible="showDrSimulationTestModal"
-        :title="$t('label.dr.simulation.test')"
-        :maskClosable="false"
-        :closable="true"
-        :footer="null"
-        width="850px"
-        @cancel="closeModals"
-    >
-      <DRsimulationTestModal>
-      </DRsimulationTestModal>
+      :visible="showDrSimulationTestModal"
+      :title="$t('label.dr.simulation.test')"
+      :maskClosable="false"
+      :closable="true"
+      :footer="null"
+      width="850px"
+      @cancel="closeModals">
+      <DRsimulationTestModal :resource="this.resource" @close-action="closeModals" />
     </a-modal>
   </a-spin>
 </template>
@@ -844,7 +842,7 @@ export default {
         this.fetchSecondaryIPs(this.selectedNicId)
       })
     },
-    DrSimulationTest (record) {
+    DrSimulationTest () {
       this.showDrSimulationTestModal = true
     }
   }

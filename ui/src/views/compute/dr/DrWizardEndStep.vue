@@ -23,13 +23,15 @@
       :model="form"
       :rules="rules"
       style="text-align: justify; margin: 10px 0; padding: 24px;"
-      v-html="$t(description.waiting)"
-      @finish="handleSubmit"
-      v-ctrl-enter="handleSubmit">
+      v-html="$t(description.finish)">
     </a-card>
     <div class="form-action">
-      <a-button ref="submit" type="primary" @click="handleSubmit" class="button-next">
-        <experiment-outlined /> {{ $t('label.launch.dr.simulation.test') }}
+      <a-button
+        v-if="processStatus==='finish'"
+        class="button-next"
+        type="primary"
+        :loading="loading"
+        @click="closeModal">{{ $t('label.cancel') }}
       </a-button>
     </div>
   </div>
@@ -47,7 +49,8 @@ export default {
   data: () => ({
     description: {
       waiting: 'message.launch.dr.simulation.test',
-      launching: 'message.waiting.dr.simulation.test'
+      launching: 'message.waiting.dr.simulation.test',
+      finish: 'message.finish.dr.simulation.test'
     },
     isLaunchTest: false
   }),
@@ -62,9 +65,10 @@ export default {
       this.rules = reactive({
       })
     },
-    handleSubmit () {
-      this.isLaunchTest = true
-      this.$emit('nextPressed')
+    closeModal () {
+      this.steps = []
+      this.$emit('close-modal')
+      this.$emit('refresh-data')
     }
   }
 }
