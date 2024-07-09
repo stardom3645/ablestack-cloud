@@ -16,19 +16,19 @@
 // under the License.
 
 <template>
-  <a-alert v-if="drTestSteps[currentStep].name === 'start'" style="margin-bottom: 5px" type="warning" show-icon>
+  <a-alert v-if="drSteps[currentStep].name === 'start'" style="margin-bottom: 5px" type="warning" show-icon>
     <template #message>
       <span v-html="$t('message.warning.dr.mirroring.test.vm.step.start')" />
     </template>
   </a-alert>
   <div class="form">
     <a-steps
-      ref="zoneStep"
+      ref="drStep"
       labelPlacement="vertical"
       size="small"
       :current="currentStep">
       <a-step
-        v-for="(item, index) in drTestSteps"
+        v-for="(item, index) in drSteps"
         :key="item.title"
         :title="$t(item.title)"
         :ref="`step${index}`">
@@ -36,82 +36,75 @@
     </a-steps>
     <div>
       <dr-wizard-start-step
-          v-if="drTestSteps[currentStep].name === 'start'"
+          v-if="drSteps[currentStep].name === 'start'"
           @nextPressed="nextPressed"
-          @fieldsChanged="onFieldsChanged"
-          :prefillContent="zoneConfig"
+          :resource="this.resource"
       />
-      <dr-wizard-running-step
-        v-else-if="drTestSteps[currentStep].name === 'coreType'"
-        @nextPressed="nextPressed"
-        @backPressed="backPressed"
-        @fieldsChanged="onFieldsChanged"
-        :isFixError="stepFixError"
-        :prefillContent="zoneConfig"
-      />
-      <dr-wizard-launch
-        v-else
+      <dr-wizard-end-step
+        v-else-if="drSteps[currentStep].name === 'stepComplete'"
         @closeAction="onCloseAction"
         @refresh-data="onRefreshData"
         @stepError="onStepError"
-        :launchZone="launchZone"
+        :stepComplete="stepComplete"
         :stepChild="stepChild"
-        :launchData="launchData"
-        :isFixError="stepFixError"
-        :prefillContent="zoneConfig"
+        :mockData="mockData"
+        :resource="this.resource"
+      />
+      <dr-wizard-running-step
+        v-else
+        @nextPressed="nextPressed"
+        @backPressed="backPressed"
+        :resource="this.resource"
       />
     </div>
   </div>
 </template>
 <script>
 import { mixinDevice } from '@/utils/mixin.js'
-import DrWizardLaunch from '@/views/compute/dr/DrWizardLaunch.vue'
+import DrWizardEndStep from '@/views/compute/dr/DrWizardEndStep.vue'
 import DrWizardStartStep from '@/views/compute/dr/DrWizardStartStep.vue'
 import DrWizardRunningStep from '@/views/compute/dr/DrWizardRunningStep.vue'
 export default {
   components: {
     DrWizardStartStep,
-    DrWizardLaunch,
-    DrWizardRunningStep
+    DrWizardRunningStep,
+    DrWizardEndStep
+  },
+  props: {
+    resource: {
+      type: Object,
+      default: () => {}
+    }
   },
   mixins: [mixinDevice],
   data () {
     return {
       currentStep: 0,
-      stepFixError: false,
-      launchZone: false,
-      launchData: {},
+      stepComplete: false,
+      mockData: {},
       stepChild: '',
-      coreTypeStep: {
-        name: 'coreType',
-        title: 'label.running',
-        step: [],
-        description: this.$t('message.select.zone.description'),
-        hint: this.$t('message.select.zone.hint')
-      },
       steps: [
         {
           name: 'start',
           title: 'label.start',
-          step: [],
-          description: this.$t('message.select.zone.description'),
-          hint: this.$t('message.select.zone.hint')
+          step: []
         },
         {
-          name: 'launch',
+          name: 'running',
+          title: 'label.running',
+          step: ['stepOneTestDr', 'stepTwoTestDr', 'stepThreeTestDr', 'stepFourTestDr', 'stepFiveTestDr', 'stepSixTestDr', 'stepSevenTestDr']
+        },
+        {
+          name: 'end',
           title: 'label.end',
-          step: ['launchZone'],
-          description: this.$t('message.launch.zone.description'),
-          hint: this.$t('message.launch.zone.hint')
+          step: ['stepComplete']
         }
-      ],
-      zoneConfig: {}
+      ]
     }
   },
   computed: {
-    drTestSteps () {
+    drSteps () {
       var steps = [...this.steps]
-      steps.splice(1, 0, this.coreTypeStep)
       return steps
     }
   },
@@ -129,23 +122,15 @@ export default {
         return
       }
       this.$nextTick(() => {
-        if (!this.$refs.zoneStep) {
+        if (!this.$refs.drStep) {
           return
         }
         if (this.currentStep === 0) {
-          this.$refs.zoneStep.$el.scrollLeft = 0
+          this.$refs.drStep.$el.scrollLeft = 0
           return
         }
-        this.$refs.zoneStep.$el.scrollLeft = this.$refs['step' + (this.currentStep - 1)][0].$el.offsetLeft
+        this.$refs.drStep.$el.scrollLeft = this.$refs['step' + (this.currentStep - 1)][0].$el.offsetLeft
       })
-    },
-    onFieldsChanged (data) {
-      if (data.zoneType &&
-        this.zoneConfig.zoneType &&
-        data.zoneType !== this.zoneConfig.zoneType) {
-        this.zoneConfig.physicalNetworks = null
-      }
-      this.zoneConfig = { ...this.zoneConfig, ...data }
     },
     onCloseAction () {
       this.$emit('close-action')
@@ -155,17 +140,11 @@ export default {
       this.$emit('refresh-data')
       this.onCloseAction()
     },
-    onStepError (step, launchData) {
-      this.currentStep = this.drTestSteps.findIndex(item => item.step.includes(step))
+    onStepError (step, mockData) {
+      this.currentStep = this.drSteps.findIndex(item => item.step.includes(step))
       this.stepChild = step
-      this.launchData = launchData
-      this.launchZone = false
-      this.stepFixError = true
-    },
-    onLaunchZone () {
-      this.stepFixError = false
-      this.launchZone = true
-      this.currentStep = this.drTestSteps.findIndex(item => item.step.includes('launchZone'))
+      this.mockData = mockData
+      this.stepComplete = false
     }
   }
 }

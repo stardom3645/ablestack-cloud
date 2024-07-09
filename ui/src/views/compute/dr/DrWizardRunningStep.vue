@@ -19,7 +19,7 @@
   <div>
     <div>
       <a-card class="ant-form-text card-launch-description">
-        {{ $t(description.waiting) }}
+        {{ $t(description.launching) }}
       </a-card>
       <a-card
           id="launch-content"
@@ -50,30 +50,22 @@
           </a-step>
         </a-steps>
       </a-card>
-      <div class="form-action">
-        <a-button
-            v-if="processStatus==='finish'"
-            class="button-next"
-            type="primary"
-            :loading="loading"
-            @click="enableZoneAction"
-        >
-          <template #icon><play-circle-outlined /></template>
-          {{ $t('label.action.enable.zone') }}
-        </a-button>
-        <a-button
-            v-if="processStatus==='error'"
-            class="button-next"
-            type="primary"
-            @click="handleFixesError"
-        >{{ $t('label.fix.errors') }}</a-button>
-      </div>
+    <div class="form-action">
+      <a-button
+        v-if="processStatus==='error'"
+        class="button-next"
+        type="primary"
+        :loading="loading"
+        @click="closeModal">{{ $t('label.cancel') }}
+      </a-button>
+    </div>
     </div>
   </div>
 </template>
 
 <script>
 import { ref, reactive, toRaw } from 'vue'
+import { api } from '@/api'
 const STATUS_PROCESS = 'process'
 const STATUS_FINISH = 'finish'
 const STATUS_FAILED = 'error'
@@ -88,6 +80,10 @@ export default {
     isFixError: {
       type: Boolean,
       default: false
+    },
+    resource: {
+      type: Object,
+      default: () => {}
     }
   },
   data: () => ({
@@ -95,17 +91,13 @@ export default {
       labelCol: { span: 6 },
       wrapperCol: { span: 14 }
     },
-    zoneDescription: {
-      Basic: 'message.desc.basic.zone',
-      Advanced: 'message.desc.advanced.zone',
-      SecurityGroups: 'message.advanced.security.group'
-    },
     formModel: {},
     isLaunchTest: false,
     processStatus: null,
     description: {
-      waiting: 'message.waiting.dr.simulation.test',
-      launching: 'message.please.wait.while.zone.is.being.created'
+      waiting: 'message.launch.dr.simulation.test',
+      launching: 'message.waiting.dr.simulation.test',
+      finish: 'message.finish.dr.simulation.test'
     },
     loading: false,
     messageError: '',
@@ -116,7 +108,9 @@ export default {
       PROCESS: STATUS_PROCESS,
       FAILED: STATUS_FAILED,
       FINISH: STATUS_FINISH
-    }
+    },
+    clusters: [],
+    vmMap: []
   }),
   created () {
     this.initForm()
@@ -136,19 +130,8 @@ export default {
       launchElm.scrollTop = launchElm.scrollHeight
     }
   },
-  computed: {
-    isAdvancedZone () {
-      return this.zoneType === 'Advanced'
-    },
-    zoneType () {
-      return this.prefillContent.zoneType ? this.prefillContent.zoneType : 'Advanced'
-    },
-    securityGroupsEnabled () {
-      return this.isAdvancedZone && (this.prefillContent?.securityGroupsEnabled || false)
-    }
-  },
   mounted () {
-    if (this.launchZone) {
+    if (this.launchMock) {
       this.processStatus = STATUS_PROCESS
       this.stepData = this.launchData
     }
@@ -158,11 +141,8 @@ export default {
     initForm () {
       this.formRef = ref()
       this.form = reactive({
-        zoneType: this.zoneType,
-        securityGroupsEnabled: this.securityGroupsEnabled
       })
       this.rules = reactive({
-        zoneType: [{ required: true, message: this.$t('message.error.zone.type') }]
       })
       this.formModel = toRaw(this.form)
     },
@@ -180,69 +160,275 @@ export default {
       this.steps[index].status = status
       this.nsx = false
     },
-    handleBack () {
-      this.$emit('backPressed')
-    },
     async handleSubmit () {
       this.processStatus = STATUS_PROCESS
       if (!this.stepData.stepMove) {
         this.stepData.stepMove = []
       }
-      await this.stepTestDr()
+      await this.stepOneTestDr()
     },
-    async stepTestDr () {
-      this.addStep('message.dr.simulation.test.step1', 'stepTestDr')
+    async stepOneTestDr () {
+      this.addStep('message.dr.simulation.test.step1', 'stepOneTestDr')
       try {
-        if (!this.stepData.stepMove.includes('createZone')) {
-          this.stepData.stepMove.push('createZone')
+        if (!this.stepData.stepMove.includes('stepOneTestDr')) {
+          await this.drInfo()
+          await this.stopVm()
+          await this.stopDrVm()
+          this.stepData.stepMove.push('stepOneTestDr')
         }
-        await this.stepOneDedicateTestDr()
-        await this.stepTwoDedicateTestDr()
+        await this.stepTwoTestDr()
+        await this.stepThreeTestDr()
+        await this.stepFourTestDr()
+        await this.stepFiveTestDr()
+        await this.stepSixTestDr()
+        await this.stepSevenTestDr()
+        await this.stepLastTestDr()
       } catch (e) {
         this.messageError = e
         this.processStatus = STATUS_FAILED
         this.setStepStatus(STATUS_FAILED)
       }
     },
-    async stepOneDedicateTestDr () {
-      if (!this.isDedicated || this.stepData.stepMove.includes('dedicateTestDr')) {
+    async stepTwoTestDr () {
+      if (this.stepData.stepMove.includes('stepTwoTestDr')) {
         return
       }
       this.setStepStatus(STATUS_FINISH)
       this.currentStep++
-      this.addStep('message.dr.simulation.test.step1', 'dedicateTestDr')
+      this.addStep('message.dr.simulation.test.step2', 'stepTwoTestDr')
       try {
-        this.stepData.stepMove.push('dedicateTestDr')
+        await this.demoteImage()
+        this.stepData.stepMove.push('stepTwoTestDr')
       } catch (e) {
         this.messageError = e
         this.processStatus = STATUS_FAILED
         this.setStepStatus(STATUS_FAILED)
       }
     },
-    async stepTwoDedicateTestDr () {
+    async stepThreeTestDr () {
       this.setStepStatus(STATUS_FINISH)
       this.currentStep++
-      this.addStep('message.dr.simulation.test.step2', 'physicalNetwork')
+      this.addStep('message.dr.simulation.test.step3', 'stepThreeTestDr')
       try {
-        this.stepData.stepMove.push('physicalNetwork')
-        await this.stepThreeDedicateTestDr()
+        await this.startDrVm()
+        this.stepData.stepMove.push('stepThreeTestDr')
       } catch (e) {
         this.messageError = e
         this.processStatus = STATUS_FAILED
         this.setStepStatus(STATUS_FAILED)
       }
     },
-    async stepThreeDedicateTestDr () {
+    async stepFourTestDr () {
       this.setStepStatus(STATUS_FINISH)
       this.currentStep++
-      this.addStep('message.dr.simulation.test.step3', 'physicalNetwork')
+      this.addStep('message.dr.simulation.test.step4', 'stepFourTestDr')
       try {
-        this.stepData.stepMove.push('createPhysicalNetwork')
+        await this.statusVm()
+        this.stepData.stepMove.push('stepFourTestDr')
       } catch (e) {
         this.messageError = e
         this.processStatus = STATUS_FAILED
         this.setStepStatus(STATUS_FAILED)
       }
+    },
+    async stepFiveTestDr () {
+      this.setStepStatus(STATUS_FINISH)
+      this.currentStep++
+      this.addStep('message.dr.simulation.test.step5', 'stepFiveTestDr')
+      try {
+        await this.stopDrVm()
+        this.stepData.stepMove.push('stepFiveTestDr')
+      } catch (e) {
+        this.messageError = e
+        this.processStatus = STATUS_FAILED
+        this.setStepStatus(STATUS_FAILED)
+      }
+    },
+    async stepSixTestDr () {
+      this.setStepStatus(STATUS_FINISH)
+      this.currentStep++
+      this.addStep('message.dr.simulation.test.step6', 'stepSixTestDr')
+      try {
+        await this.promoteDrImage()
+        this.stepData.stepMove.push('stepSixTestDr')
+      } catch (e) {
+        this.messageError = e
+        this.processStatus = STATUS_FAILED
+        this.setStepStatus(STATUS_FAILED)
+      }
+    },
+    async stepSevenTestDr () {
+      this.setStepStatus(STATUS_FINISH)
+      this.currentStep++
+      this.addStep('message.dr.simulation.test.step7', 'stepSevenTestDr')
+      try {
+        await this.startVm()
+        this.stepData.stepMove.push('stepSevenTestDr')
+      } catch (e) {
+        this.messageError = e
+        this.processStatus = STATUS_FAILED
+        this.setStepStatus(STATUS_FAILED)
+      }
+    },
+    async stepLastTestDr () {
+      await this.stepComplete()
+    },
+    async pollJob (jobId) {
+      return new Promise(resolve => {
+        const asyncJobInterval = setInterval(() => {
+          api('queryAsyncJobResult', { jobId }).then(async json => {
+            const result = json.queryasyncjobresultresponse
+            if (result.jobstatus === 0) {
+              return
+            }
+            clearInterval(asyncJobInterval)
+            resolve(result)
+          })
+        }, 1000)
+      })
+    },
+    drInfo () {
+      return new Promise((resolve, reject) => {
+        api('getDisasterRecoveryClusterList', {
+          drclustertype: 'secondary'
+        }).then(json => {
+          this.drClusterList = json.getdisasterrecoveryclusterlistresponse.disasterrecoverycluster || []
+          for (const cluster of this.drClusterList) {
+            const vmList = cluster.drclustervmmap
+            if (vmList.some(vm => vm.drclustervmid === this.resource.id)) {
+              this.clusters = cluster
+              var map = cluster.drclustervmmap
+              this.vmMap = map.filter(it => it.drclustervmid === this.resource.id)
+              break
+            }
+          }
+          console.log(this.vmMap)
+          resolve(this.vmMap)
+        }).catch(error => {
+          reject(error)
+        })
+      })
+    },
+    async stopVm () {
+      return new Promise((resolve, reject) => {
+        let message = ''
+        const params = {}
+        params.id = this.resource.id
+        params.forced = true
+        api('stopVirtualMachine', params).then(async json => {
+          const jobId = json.stopvirtualmachineresponse.jobid
+          if (jobId) {
+            const result = await this.pollJob(jobId)
+            if (result.jobstatus === 2) {
+              message = `stopVirtualMachine ${this.$t('label.failed').toLowerCase()}. ${this.$t('label.error')}: ` + result.jobresult.errortext
+              reject(message)
+              return
+            }
+            resolve(result)
+          }
+        }).catch(error => {
+          message = error.response.headers['x-description']
+          reject(message)
+        })
+      })
+    },
+    stopDrVm () {
+      return new Promise((resolve, reject) => {
+        let message = ''
+        const params = {}
+        params.id = this.resource.id
+        params.drclustername = this.clusters.drclustername
+        api('stopDisasterRecoveryClusterVm', params).then(json => {
+          resolve()
+        }).catch(error => {
+          message = error.response.headers['x-description']
+          reject(message)
+        })
+      })
+    },
+    demoteImage () {
+      return new Promise((resolve, reject) => {
+        let message = ''
+        const params = {}
+        params.id = this.resource.id
+        params.drclustername = this.clusters.drclustername
+        api('demoteDisasterRecoveryClusterVm', params).then(json => {
+          resolve()
+        }).catch(error => {
+          message = error.response.headers['x-description']
+          reject(message)
+        })
+      })
+    },
+    startDrVm () {
+      return new Promise((resolve, reject) => {
+        let message = ''
+        const params = {}
+        params.id = this.resource.id
+        params.drclustername = this.clusters.drclustername
+        api('startDisasterRecoveryClusterVm', params).then(json => {
+          resolve()
+        }).catch(error => {
+          message = error.response.headers['x-description']
+          reject(message)
+        })
+      })
+    },
+    statusVm () {
+      return new Promise((resolve, reject) => {
+        setTimeout(() => {
+          // 1min status check
+        }, 60000)
+      })
+    },
+    promoteDrImage () {
+      return new Promise((resolve, reject) => {
+        let message = ''
+        const params = {}
+        params.id = this.resource.id
+        params.drclustername = this.clusters.drclustername
+        api('promoteDisasterRecoveryClusterVm', params).then(json => {
+          resolve()
+        }).catch(error => {
+          message = error.response.headers['x-description']
+          reject(message)
+        })
+      })
+    },
+    async startVm () {
+      return new Promise((resolve, reject) => {
+        let message = ''
+        const params = {}
+        params.id = this.resource.id
+        params.considerlasthost = true
+        api('startVirtualMachine', params).then(async json => {
+          const jobId = json.startvirtualmachineresponse.jobid
+          if (jobId) {
+            const result = await this.pollJob(jobId)
+            if (result.jobstatus === 2) {
+              message = `startVirtualMachine ${this.$t('label.failed').toLowerCase()}. ${this.$t('label.error')}: ` + result.jobresult.errortext
+              reject(message)
+              return
+            }
+            resolve(result)
+          }
+        }).catch(error => {
+          message = error.response.headers['x-description']
+          reject(message)
+        })
+      })
+    },
+    stepComplete () {
+      this.setStepStatus(STATUS_FINISH)
+      this.currentStep++
+      this.addStep('message.dr.test.complete', 'stepComplete')
+      this.setStepStatus(STATUS_FINISH)
+      this.processStatus = STATUS_FINISH
+    },
+    closeModal () {
+      this.steps = []
+      this.$emit('close-modal')
+      this.$emit('refresh-data')
     }
   }
 }

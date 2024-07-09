@@ -181,7 +181,7 @@ export default {
         for (const clusterVm of this.drClusterVmList) {
           if (clusterVm.drclustervmname === this.drVmName && clusterType !== 'primary') {
             if (this.drCluster.length === 0) {
-              this.drCluster.push({ drName: clusterVm.drclustername, drId: clusterId, mirroredVm: clusterVm.drclustermirrorvmname, mirroredVmId: clusterVm.drclustermirrorvmid, mirroredStatus: clusterVm.drclustermirrorvmstatus })
+              this.drCluster.push({ drName: clusterVm.drclustername, drId: clusterId, drVmId: this.resource.id, mirroredVm: clusterVm.drclustermirrorvmname, mirroredVmId: clusterVm.drclustermirrorvmid, mirroredStatus: clusterVm.drclustermirrorvmstatus })
             }
             this.volList.push({ mirroredVmVolType: clusterVm.drclustermirrorvmvoltype, mirroredVmVolPath: clusterVm.drclustermirrorvmvolpath, mirroredVmVolStatus: clusterVm.drclustermirrorvmvolstatus })
           }
