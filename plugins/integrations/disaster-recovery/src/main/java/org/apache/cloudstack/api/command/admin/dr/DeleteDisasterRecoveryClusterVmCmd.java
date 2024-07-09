@@ -83,7 +83,7 @@ public class DeleteDisasterRecoveryClusterVmCmd extends BaseCmd implements Admin
     public void execute() throws ServerApiException {
         try {
             if (!disasterRecoveryClusterService.deleteDisasterRecoveryClusterVm(this)) {
-                throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, String.format("Failed to delete disaster recovery cluster ID: %d", getId()));
+                throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, String.format("Failed to delete disaster recovery cluster virtual machine ID: %d", getId()));
             }
             SuccessResponse response = new SuccessResponse(getCommandName());
             setResponseObject(response);
