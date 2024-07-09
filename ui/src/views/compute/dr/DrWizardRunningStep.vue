@@ -378,6 +378,7 @@ export default {
       return new Promise((resolve, reject) => {
         setTimeout(() => {
           // 1min status check
+          resolve()
         }, 60000)
       })
     },
