@@ -40,20 +40,25 @@
           @nextPressed="nextPressed"
           :resource="this.resource"
       />
-      <dr-wizard-end-step
-        v-else-if="drSteps[currentStep].name === 'stepComplete'"
+      <dr-wizard-running-step
+        v-else-if="drSteps[currentStep].name === 'running'"
+        @nextPressed="nextPressed"
         @closeAction="onCloseAction"
         @refresh-data="onRefreshData"
         @stepError="onStepError"
-        :stepComplete="stepComplete"
+        @submitLaunchMock="onLaunchMock"
+        :launchMock="launchMock"
         :stepChild="stepChild"
-        :mockData="mockData"
+        :launchData="launchData"
         :resource="this.resource"
       />
-      <dr-wizard-running-step
+      <dr-wizard-end-step
         v-else
-        @nextPressed="nextPressed"
-        @backPressed="backPressed"
+        @closeAction="onCloseAction"
+        @refresh-data="onRefreshData"
+        @submitLaunchMock="onLaunchMock"
+        :launchMock="launchMock"
+        :launchData="launchData"
         :resource="this.resource"
       />
     </div>
@@ -80,8 +85,8 @@ export default {
   data () {
     return {
       currentStep: 0,
-      stepComplete: false,
-      mockData: {},
+      launchMock: false,
+      launchData: {},
       stepChild: '',
       steps: [
         {
@@ -97,7 +102,7 @@ export default {
         {
           name: 'end',
           title: 'label.end',
-          step: ['stepComplete']
+          step: ['launchMock']
         }
       ]
     }
@@ -111,40 +116,26 @@ export default {
   methods: {
     nextPressed () {
       this.currentStep++
-      this.scrollToStepActive()
-    },
-    backPressed (data) {
-      this.currentStep--
-      this.scrollToStepActive()
-    },
-    scrollToStepActive () {
-      if (!this.isMobile()) {
-        return
-      }
-      this.$nextTick(() => {
-        if (!this.$refs.drStep) {
-          return
-        }
-        if (this.currentStep === 0) {
-          this.$refs.drStep.$el.scrollLeft = 0
-          return
-        }
-        this.$refs.drStep.$el.scrollLeft = this.$refs['step' + (this.currentStep - 1)][0].$el.offsetLeft
-      })
     },
     onCloseAction () {
+      console.log('here')
       this.$emit('close-action')
     },
     onRefreshData () {
-      this.$message.success(this.$t('message.processing.complete'))
+      console.log('here')
       this.$emit('refresh-data')
       this.onCloseAction()
     },
-    onStepError (step, mockData) {
+    onStepError (step, launchData) {
       this.currentStep = this.drSteps.findIndex(item => item.step.includes(step))
       this.stepChild = step
-      this.mockData = mockData
-      this.stepComplete = false
+      this.launchData = launchData
+      this.launchMock = false
+    },
+    onLaunchMock () {
+      console.log('here')
+      this.launchMock = true
+      this.currentStep = this.drSteps.findIndex(item => item.step.includes('launchMock'))
     }
   }
 }
