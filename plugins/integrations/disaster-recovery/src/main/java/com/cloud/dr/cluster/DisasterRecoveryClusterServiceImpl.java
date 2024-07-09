@@ -89,7 +89,11 @@ import org.apache.cloudstack.api.command.admin.dr.DeleteDisasterRecoveryClusterV
 import org.apache.cloudstack.api.command.admin.dr.DisableDisasterRecoveryClusterCmd;
 import org.apache.cloudstack.api.command.admin.dr.EnableDisasterRecoveryClusterCmd;
 import org.apache.cloudstack.api.command.admin.dr.PromoteDisasterRecoveryClusterCmd;
+import org.apache.cloudstack.api.command.admin.dr.PromoteDisasterRecoveryClusterVmCmd;
 import org.apache.cloudstack.api.command.admin.dr.DemoteDisasterRecoveryClusterCmd;
+import org.apache.cloudstack.api.command.admin.dr.DemoteDisasterRecoveryClusterVmCmd;
+import org.apache.cloudstack.api.command.admin.dr.StartDisasterRecoveryClusterVmCmd;
+import org.apache.cloudstack.api.command.admin.dr.StopDisasterRecoveryClusterVmCmd;
 import org.apache.cloudstack.api.command.admin.glue.ListScvmIpAddressCmd;
 import org.apache.cloudstack.api.response.ServiceOfferingResponse;
 import org.apache.cloudstack.api.response.dr.cluster.GetDisasterRecoveryClusterListResponse;
@@ -1472,6 +1476,180 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         return false;
     }
 
+    @Override
+    @ActionEvent(eventType = DisasterRecoveryClusterEventTypes.EVENT_DR_VM_START, eventDescription = "starting disaster recovery cluster virtual machine", resourceId = 5, resourceType = "DisasterRecoveryCluster")
+    public boolean startDisasterRecoveryClusterVm(StartDisasterRecoveryClusterVmCmd cmd) throws CloudRuntimeException {
+        if (!DisasterRecoveryServiceEnabled.value()) {
+            throw new CloudRuntimeException("Disaster Recovery Service plugin is disabled");
+        }
+        String drName = cmd.getDrClusterName();
+        Long vmId = cmd.getId();
+        DisasterRecoveryClusterVO drCluster = disasterRecoveryClusterDao.findByName(drName);
+        String url = drCluster.getDrClusterUrl();
+        Map<String, String> details = disasterRecoveryClusterDetailsDao.findDetails(drCluster.getId());
+        String apiKey = details.get(ApiConstants.DR_CLUSTER_API_KEY);
+        String secretKey = details.get(ApiConstants.DR_CLUSTER_SECRET_KEY);
+        String drVmId = "";
+        List<DisasterRecoveryClusterVmMapVO> vmMap = disasterRecoveryClusterVmMapDao.listByDisasterRecoveryClusterId(drCluster.getId());
+        if (!CollectionUtils.isEmpty(vmMap)) {
+            for (DisasterRecoveryClusterVmMapVO map : vmMap) {
+                if (map.getVmId() == vmId) {
+                    drVmId = map.getMirroredVmId();
+                }
+            }
+        }
+        String moldUrl = url + "/client/api/";
+        String moldCommand = "startVirtualMachine";
+        String moldMethod = "GET";
+        Map<String, String> vmParams = new HashMap<>();
+        vmParams.put("considerlasthost", "true");
+        vmParams.put("id", drVmId);
+        String jobId = DisasterRecoveryClusterUtil.moldStartVirtualMachineAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey, vmParams);
+        if (jobId != null) {
+            return true;
+        }
+        return false;
+    }
+
+    @Override
+    @ActionEvent(eventType = DisasterRecoveryClusterEventTypes.EVENT_DR_VM_STOP, eventDescription = "stopping disaster recovery cluster virtual machine", resourceId = 5, resourceType = "DisasterRecoveryCluster")
+    public boolean stopDisasterRecoveryClusterVm(StopDisasterRecoveryClusterVmCmd cmd) throws CloudRuntimeException {
+        if (!DisasterRecoveryServiceEnabled.value()) {
+            throw new CloudRuntimeException("Disaster Recovery Service plugin is disabled");
+        }
+        String drName = cmd.getDrClusterName();
+        Long vmId = cmd.getId();
+        DisasterRecoveryClusterVO drCluster = disasterRecoveryClusterDao.findByName(drName);
+        String url = drCluster.getDrClusterUrl();
+        Map<String, String> details = disasterRecoveryClusterDetailsDao.findDetails(drCluster.getId());
+        String apiKey = details.get(ApiConstants.DR_CLUSTER_API_KEY);
+        String secretKey = details.get(ApiConstants.DR_CLUSTER_SECRET_KEY);
+        String drVmId = "";
+        List<DisasterRecoveryClusterVmMapVO> vmMap = disasterRecoveryClusterVmMapDao.listByDisasterRecoveryClusterId(drCluster.getId());
+        if (!CollectionUtils.isEmpty(vmMap)) {
+            for (DisasterRecoveryClusterVmMapVO map : vmMap) {
+                if (map.getVmId() == vmId) {
+                    drVmId = map.getMirroredVmId();
+                }
+            }
+        }
+        String moldUrl = url + "/client/api/";
+        String moldCommand = "stopVirtualMachine";
+        String moldMethod = "GET";
+        Map<String, String> vmParams = new HashMap<>();
+        vmParams.put("forced", "true");
+        vmParams.put("id", drVmId);
+        String jobId = DisasterRecoveryClusterUtil.moldStopVirtualMachineAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey, vmParams);
+        if (jobId != null) {
+            return true;
+        }
+        return false;
+    }
+
+    @Override
+    @ActionEvent(eventType = DisasterRecoveryClusterEventTypes.EVENT_DR_VM_PROMOTE, eventDescription = "stopping disaster recovery cluster virtual machine", resourceId = 5, resourceType = "DisasterRecoveryCluster")
+    public boolean promoteDisasterRecoveryClusterVm(PromoteDisasterRecoveryClusterVmCmd cmd) throws CloudRuntimeException {
+        if (!DisasterRecoveryServiceEnabled.value()) {
+            throw new CloudRuntimeException("Disaster Recovery Service plugin is disabled");
+        }
+        String drName = cmd.getDrClusterName();
+        Long vmId = cmd.getId();
+        DisasterRecoveryClusterVO drCluster = disasterRecoveryClusterDao.findByName(drName);
+        String url = drCluster.getDrClusterUrl();
+        Map<String, String> details = disasterRecoveryClusterDetailsDao.findDetails(drCluster.getId());
+        String apiKey = details.get(ApiConstants.DR_CLUSTER_API_KEY);
+        String secretKey = details.get(ApiConstants.DR_CLUSTER_SECRET_KEY);
+        String drVmId = "";
+        List<DisasterRecoveryClusterVmMapVO> vmMap = disasterRecoveryClusterVmMapDao.listByDisasterRecoveryClusterId(drCluster.getId());
+        if (!CollectionUtils.isEmpty(vmMap)) {
+            for (DisasterRecoveryClusterVmMapVO map : vmMap) {
+                if (map.getVmId() == vmId) {
+                    drVmId = map.getMirroredVmId();
+                }
+            }
+        }
+        String moldUrl = url + "/client/api/";
+        String moldCommand = "listScvmIpAddress";
+        String moldMethod = "GET";
+        String response = DisasterRecoveryClusterUtil.moldListScvmIpAddressAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey);
+        if (response != null) {
+            UserVmJoinVO userVM = userVmJoinDao.findById(vmId);
+            List<VolumeVO> volumes = volsDao.findByInstance(userVM.getId());
+            for (VolumeVO vol : volumes) {
+                String volumeUuid = vol.getPath();
+                String[] array = response.split(",");
+                for (int j=0; j < array.length; j++) {
+                    String glueIp = array[j];
+                    ///////////////////// glue-api 프로토콜과 포트 확정 시 변경 예정
+                    String glueUrl = "https://" + glueIp + ":8080/api/v1";
+                    String glueCommand = "/mirror/image/promote/rbd/" + volumeUuid;
+                    String glueMethod = "POST";
+                    Map<String, String> glueParams = new HashMap<>();
+                    glueParams.put("mirrorPool", "rbd");
+                    glueParams.put("imageName", volumeUuid);
+                    boolean result = DisasterRecoveryClusterUtil.glueImageMirrorPromoteAPI(glueUrl, glueCommand, glueMethod, glueParams);
+                    if (!result) {
+                        return false;
+                    }
+                }
+            }
+            return true;
+        }
+        return false;
+    }
+
+    @Override
+    @ActionEvent(eventType = DisasterRecoveryClusterEventTypes.EVENT_DR_VM_DEMOTE, eventDescription = "stopping disaster recovery cluster virtual machine", resourceId = 5, resourceType = "DisasterRecoveryCluster")
+    public boolean demoteDisasterRecoveryClusterVm(DemoteDisasterRecoveryClusterVmCmd cmd) throws CloudRuntimeException {
+        if (!DisasterRecoveryServiceEnabled.value()) {
+            throw new CloudRuntimeException("Disaster Recovery Service plugin is disabled");
+        }
+        String drName = cmd.getDrClusterName();
+        Long vmId = cmd.getId();
+        DisasterRecoveryClusterVO drCluster = disasterRecoveryClusterDao.findByName(drName);
+        String url = drCluster.getDrClusterUrl();
+        Map<String, String> details = disasterRecoveryClusterDetailsDao.findDetails(drCluster.getId());
+        String apiKey = details.get(ApiConstants.DR_CLUSTER_API_KEY);
+        String secretKey = details.get(ApiConstants.DR_CLUSTER_SECRET_KEY);
+        String drVmId = "";
+        List<DisasterRecoveryClusterVmMapVO> vmMap = disasterRecoveryClusterVmMapDao.listByDisasterRecoveryClusterId(drCluster.getId());
+        if (!CollectionUtils.isEmpty(vmMap)) {
+            for (DisasterRecoveryClusterVmMapVO map : vmMap) {
+                if (map.getVmId() == vmId) {
+                    drVmId = map.getMirroredVmId();
+                }
+            }
+        }
+        String moldUrl = url + "/client/api/";
+        String moldCommand = "listScvmIpAddress";
+        String moldMethod = "GET";
+        String response = DisasterRecoveryClusterUtil.moldListScvmIpAddressAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey);
+        if (response != null) {
+            UserVmJoinVO userVM = userVmJoinDao.findById(vmId);
+            List<VolumeVO> volumes = volsDao.findByInstance(userVM.getId());
+            for (VolumeVO vol : volumes) {
+                String volumeUuid = vol.getPath();
+                String[] array = response.split(",");
+                for (int j=0; j < array.length; j++) {
+                    String glueIp = array[j];
+                    ///////////////////// glue-api 프로토콜과 포트 확정 시 변경 예정
+                    String glueUrl = "https://" + glueIp + ":8080/api/v1";
+                    String glueCommand = "/mirror/image/demote/rbd/" + volumeUuid;
+                    String glueMethod = "DELETE";
+                    Map<String, String> glueParams = new HashMap<>();
+                    glueParams.put("mirrorPool", "rbd");
+                    glueParams.put("imageName", volumeUuid);
+                    boolean result = DisasterRecoveryClusterUtil.glueImageMirrorDemoteAPI(glueUrl, glueCommand, glueMethod, glueParams);
+                    if (!result) {
+                        return false;
+                    }
+                }
+            }
+            return true;
+        }
+        return false;
+    }
+
     private void validateDisasterRecoveryClusterVmCreateParameters(final CreateDisasterRecoveryClusterVmCmd cmd) throws CloudRuntimeException {
         final Long vmId = cmd.getVmId();
         final String drClusterName = cmd.getDrClusterName();
@@ -1670,6 +1848,10 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         cmdList.add(CreateDisasterRecoveryClusterVmCmd.class);
         cmdList.add(UpdateDisasterRecoveryClusterVmCmd.class);
         cmdList.add(DeleteDisasterRecoveryClusterVmCmd.class);
+        cmdList.add(StartDisasterRecoveryClusterVmCmd.class);
+        cmdList.add(StopDisasterRecoveryClusterVmCmd.class);
+        cmdList.add(PromoteDisasterRecoveryClusterVmCmd.class);
+        cmdList.add(DemoteDisasterRecoveryClusterVmCmd.class);
         return cmdList;
     }
 

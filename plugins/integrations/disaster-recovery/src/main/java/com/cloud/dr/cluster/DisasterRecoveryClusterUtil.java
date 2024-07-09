@@ -1458,6 +1458,152 @@ public class DisasterRecoveryClusterUtil {
     }
 
     /**
+     * Mold stopVirtualMachine API 요청
+     * @param region
+     *  <url>/client/api/
+     * @param command
+     *  stopVirtualMachine
+     * @param method
+     *  GET
+     * @param id
+     *  vm id
+     * @param forced
+     *  action forced (true or false)
+     * @return true = 200, 이외 코드는 false 처리
+     */
+    protected static String moldStopVirtualMachineAPI(String region, String command, String method, String apiKey, String secretKey, Map<String, String> params) {
+        try {
+            String readLine = null;
+            StringBuffer sb = null;
+            String apiParams = buildParamsMold(command, params);
+            String urlFinal = buildUrl(apiParams, region, apiKey, secretKey);
+            URL url = new URL(urlFinal);
+            if (region.contains("https")) {
+                // SSL 인증서 에러 우회 처리
+                final SSLContext sslContext = SSLUtils.getSSLContext();
+                sslContext.init(null, new TrustManager[]{new TrustAllManager()}, new SecureRandom());
+                HttpsURLConnection connection = (HttpsURLConnection)url.openConnection();
+                connection.setSSLSocketFactory(sslContext.getSocketFactory());
+                connection.setDoOutput(true);
+                connection.setRequestMethod(method);
+                connection.setConnectTimeout(30000);
+                connection.setReadTimeout(180000);
+                connection.setRequestProperty("Accept", "application/json");
+                connection.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
+                if (connection.getResponseCode() == 200) {
+                    BufferedReader br = new BufferedReader(new InputStreamReader(connection.getInputStream(), "UTF-8"));
+                    sb = new StringBuffer();
+                    while ((readLine = br.readLine()) != null) {
+                        sb.append(readLine);
+                    }
+                } else {
+                    String msg = "Failed to request mold API. response code : " + connection.getResponseCode();
+                    LOGGER.error(msg);
+                    return null;
+                }
+            } else {
+                HttpURLConnection connection = (HttpURLConnection)url.openConnection();
+                connection.setDoOutput(true);
+                connection.setRequestMethod(method);
+                connection.setConnectTimeout(30000);
+                connection.setReadTimeout(180000);
+                connection.setRequestProperty("Accept", "application/json");
+                connection.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
+                if (connection.getResponseCode() == 200) {
+                    BufferedReader br = new BufferedReader(new InputStreamReader(connection.getInputStream(), "UTF-8"));
+                    sb = new StringBuffer();
+                    while ((readLine = br.readLine()) != null) {
+                        sb.append(readLine);
+                    }
+                } else {
+                    String msg = "Failed to request mold API. response code : " + connection.getResponseCode();
+                    LOGGER.error(msg);
+                    return null;
+                }
+            }
+            JSONObject jObject = XML.toJSONObject(sb.toString());
+            JSONObject response = (JSONObject) jObject.get("stopvirtualmachineresponse");
+            return response.get("jobid").toString();
+        } catch (Exception e) {
+            LOGGER.error(String.format("Mold API endpoint not available"), e);
+            return null;
+        }
+    }
+
+    /**
+     * Mold startVirtualMachine API 요청
+     * @param region
+     *  <url>/client/api/
+     * @param command
+     *  startVirtualMachine
+     * @param method
+     *  GET
+     * @param id
+     *  vm id
+     * @param considerlasthost
+     *  last host consider (true or false)
+     * @return true = 200, 이외 코드는 false 처리
+     */
+    protected static String moldStartVirtualMachineAPI(String region, String command, String method, String apiKey, String secretKey, Map<String, String> params) {
+        try {
+            String readLine = null;
+            StringBuffer sb = null;
+            String apiParams = buildParamsMold(command, params);
+            String urlFinal = buildUrl(apiParams, region, apiKey, secretKey);
+            URL url = new URL(urlFinal);
+            if (region.contains("https")) {
+                // SSL 인증서 에러 우회 처리
+                final SSLContext sslContext = SSLUtils.getSSLContext();
+                sslContext.init(null, new TrustManager[]{new TrustAllManager()}, new SecureRandom());
+                HttpsURLConnection connection = (HttpsURLConnection)url.openConnection();
+                connection.setSSLSocketFactory(sslContext.getSocketFactory());
+                connection.setDoOutput(true);
+                connection.setRequestMethod(method);
+                connection.setConnectTimeout(30000);
+                connection.setReadTimeout(180000);
+                connection.setRequestProperty("Accept", "application/json");
+                connection.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
+                if (connection.getResponseCode() == 200) {
+                    BufferedReader br = new BufferedReader(new InputStreamReader(connection.getInputStream(), "UTF-8"));
+                    sb = new StringBuffer();
+                    while ((readLine = br.readLine()) != null) {
+                        sb.append(readLine);
+                    }
+                } else {
+                    String msg = "Failed to request mold API. response code : " + connection.getResponseCode();
+                    LOGGER.error(msg);
+                    return null;
+                }
+            } else {
+                HttpURLConnection connection = (HttpURLConnection)url.openConnection();
+                connection.setDoOutput(true);
+                connection.setRequestMethod(method);
+                connection.setConnectTimeout(30000);
+                connection.setReadTimeout(180000);
+                connection.setRequestProperty("Accept", "application/json");
+                connection.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
+                if (connection.getResponseCode() == 200) {
+                    BufferedReader br = new BufferedReader(new InputStreamReader(connection.getInputStream(), "UTF-8"));
+                    sb = new StringBuffer();
+                    while ((readLine = br.readLine()) != null) {
+                        sb.append(readLine);
+                    }
+                } else {
+                    String msg = "Failed to request mold API. response code : " + connection.getResponseCode();
+                    LOGGER.error(msg);
+                    return null;
+                }
+            }
+            JSONObject jObject = XML.toJSONObject(sb.toString());
+            JSONObject response = (JSONObject) jObject.get("startvirtualmachineresponse");
+            return response.get("jobid").toString();
+        } catch (Exception e) {
+            LOGGER.error(String.format("Mold API endpoint not available"), e);
+            return null;
+        }
+    }
+
+    /**
      * Mold updateDisasterRecoveryClusterVm API 요청
      * @param region
      *  <url>/client/api/
