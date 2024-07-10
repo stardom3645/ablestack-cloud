@@ -1564,7 +1564,10 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                                             Map<String, String> vmParams = new HashMap<>();
                                             vmParams.put("drclustername", drCluster.getName());
                                             vmParams.put("virtualmachineid", mirrorVmId);
-                                            DisasterRecoveryClusterUtil.moldDeleteDisasterRecoveryClusterVmAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey, vmParams);
+                                            String response = DisasterRecoveryClusterUtil.moldDeleteDisasterRecoveryClusterVmAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey, vmParams);
+                                            if (response == null) {
+                                                throw new CloudRuntimeException("Failed to request deleteDisasterRecoveryClusterVm Mold-API.");
+                                            }
                                         }
                                     }
                                 }
