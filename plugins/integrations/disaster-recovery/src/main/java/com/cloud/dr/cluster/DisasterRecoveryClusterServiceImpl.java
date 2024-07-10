@@ -1858,47 +1858,47 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                     }
                 }
             }
-        }
-        String url = drCluster.getDrClusterUrl();
-        Map<String, String> details = disasterRecoveryClusterDetailsDao.findDetails(drCluster.getId());
-        String apiKey = details.get(ApiConstants.DR_CLUSTER_API_KEY);
-        String secretKey = details.get(ApiConstants.DR_CLUSTER_SECRET_KEY);
-        // Primary Cluster DR VM 상태 조회
-        String command = "getDisasterRecoveryClusterList";
-        String method = "GET";
-        Map<String, String> params = new HashMap<>();
-        String drList = DisasterRecoveryClusterUtil.moldGetDisasterRecoveryClusterListAPI(url + "/client/api/", command, method, apiKey, secretKey);
-        if (drList != null || !drList.isEmpty()) {
-            JSONObject jsonObject = new JSONObject(drList);
-            Object object = jsonObject.get("disasterrecoverycluster");
-            JSONArray array;
-            if (object instanceof JSONArray) {
-                array = (JSONArray) object;
-            } else {
-                array = new JSONArray();
-                array.put(object);
-            }
-            for (int i = 0; i < array.length(); i++) {
-                JSONObject jSONObject = array.getJSONObject(i);
-                if (jSONObject.get("name").equals(drCluster.getName())) {
-                    Object obj = jSONObject.get("drclustervmmap");
-                    JSONArray vmArray;
-                    if (obj instanceof JSONArray) {
-                        vmArray = (JSONArray) obj;
-                    } else {
-                        vmArray = new JSONArray();
-                        vmArray.put(obj);
-                    }
-                    for (int j = 0; j < vmArray.length(); j++) {
-                        JSONObject jSONObj = vmArray.getJSONObject(j);
-                        if (!jSONObj.get("drclustervmstatus").equals("Stopped")) {
-                            throw new InvalidParameterValueException("Forced promote and demote functions cannot be executed because there is a running disaster recovery primary cluster virtual machine : " + jSONObj.get("drclustervmname"));
+            String url = drCluster.getDrClusterUrl();
+            Map<String, String> details = disasterRecoveryClusterDetailsDao.findDetails(drCluster.getId());
+            String apiKey = details.get(ApiConstants.DR_CLUSTER_API_KEY);
+            String secretKey = details.get(ApiConstants.DR_CLUSTER_SECRET_KEY);
+            // Primary Cluster DR VM 상태 조회
+            String command = "getDisasterRecoveryClusterList";
+            String method = "GET";
+            Map<String, String> params = new HashMap<>();
+            String drList = DisasterRecoveryClusterUtil.moldGetDisasterRecoveryClusterListAPI(url + "/client/api/", command, method, apiKey, secretKey);
+            if (drList != null || !drList.isEmpty()) {
+                JSONObject jsonObject = new JSONObject(drList);
+                Object object = jsonObject.get("disasterrecoverycluster");
+                JSONArray array;
+                if (object instanceof JSONArray) {
+                    array = (JSONArray) object;
+                } else {
+                    array = new JSONArray();
+                    array.put(object);
+                }
+                for (int i = 0; i < array.length(); i++) {
+                    JSONObject jSONObject = array.getJSONObject(i);
+                    if (jSONObject.get("name").equals(drCluster.getName())) {
+                        Object obj = jSONObject.get("drclustervmmap");
+                        JSONArray vmArray;
+                        if (obj instanceof JSONArray) {
+                            vmArray = (JSONArray) obj;
+                        } else {
+                            vmArray = new JSONArray();
+                            vmArray.put(obj);
+                        }
+                        for (int j = 0; j < vmArray.length(); j++) {
+                            JSONObject jSONObj = vmArray.getJSONObject(j);
+                            if (!jSONObj.get("drclustervmstatus").equals("Stopped")) {
+                                throw new InvalidParameterValueException("Forced promote and demote functions cannot be executed because there is a running disaster recovery primary cluster virtual machine : " + jSONObj.get("drclustervmname"));
+                            }
                         }
                     }
                 }
+            } else {
+                throw new InvalidParameterValueException("Forced promote and demote functions cannot be executed because failed to query primary cluster DR information.");
             }
-        } else {
-            throw new InvalidParameterValueException("Forced promote and demote functions cannot be executed because failed to query primary cluster DR information.");
         }
     }
 
