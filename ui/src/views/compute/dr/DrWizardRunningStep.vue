@@ -158,10 +158,10 @@ export default {
         }
         await this.stepTwoTestDr()
         await this.stepThreeTestDr()
-        // await this.stepFourTestDr()
-        // await this.stepFiveTestDr()
-        // await this.stepSixTestDr()
-        // await this.stepSevenTestDr()
+        await this.stepFourTestDr()
+        await this.stepFiveTestDr()
+        await this.stepSixTestDr()
+        await this.stepSevenTestDr()
         this.$emit('nextPressed')
       } catch (e) {
         this.messageError = e
@@ -320,7 +320,7 @@ export default {
       return new Promise((resolve, reject) => {
         let message = ''
         const params = {}
-        params.id = this.resource.id
+        params.virtualmachineid = this.resource.id
         params.drclustername = this.clusters.name
         api('startDisasterRecoveryClusterVm', params).then(json => {
           resolve()
@@ -342,7 +342,7 @@ export default {
       return new Promise((resolve, reject) => {
         let message = ''
         const params = {}
-        params.id = this.resource.id
+        params.virtualmachineid = this.resource.id
         params.drclustername = this.clusters.name
         api('promoteDisasterRecoveryClusterVm', params).then(json => {
           resolve()
