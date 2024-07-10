@@ -295,7 +295,7 @@ public class LibvirtStoragePool implements KVMStoragePool {
 
     @Override
     public boolean isPoolSupportHA() {
-        return type == StoragePoolType.NetworkFilesystem || type == StoragePoolType.RBD || type == StoragePoolType.CLVM;
+        return type == StoragePoolType.NetworkFilesystem || type == StoragePoolType.SharedMountPoint || type == StoragePoolType.RBD || type == StoragePoolType.CLVM;
     }
 
     @Override
@@ -330,7 +330,7 @@ public class LibvirtStoragePool implements KVMStoragePool {
             }
         } else if (primaryStoragePool.getPool().getType() == StoragePoolType.SharedMountPoint) {
                 cmd = new Script(getHearthBeatPath(), HeartBeatUpdateTimeout, logger);
-                cmd.add("-m", primaryStoragePool.getMountDestPath());
+                cmd.add("-m", primaryStoragePool.getPoolMountSourcePath());
                 if (hostValidation) {
                     cmd.add("-h", hostPrivateIp);
                 }
@@ -370,6 +370,9 @@ public class LibvirtStoragePool implements KVMStoragePool {
 
     @Override
     public Boolean checkingHeartBeat(HAStoragePool pool, HostTO host) {
+        logger.info(":::::::::::::" +pool.getPool().getType());
+        logger.info(":::::::::::::" +pool.getMountDestPath());
+        logger.info(":::::::::::::" +host.getPrivateNetwork().getIp());
         boolean validResult = false;
         Script cmd = new Script(getHearthBeatPath(), HeartBeatCheckerTimeout, logger);
         if (pool.getPool().getType() == StoragePoolType.NetworkFilesystem) {
@@ -444,6 +447,12 @@ public class LibvirtStoragePool implements KVMStoragePool {
         if (pool.getPool().getType() == StoragePoolType.NetworkFilesystem) {
             cmd.add("-i", pool.getPoolIp());
             cmd.add("-p", pool.getPoolMountSourcePath());
+            cmd.add("-m", pool.getMountDestPath());
+            cmd.add("-h", host.getPrivateNetwork().getIp());
+            cmd.add("-u", volumeUUIDListString);
+            cmd.add("-t", String.valueOf(String.valueOf(System.currentTimeMillis() / 1000)));
+            cmd.add("-d", String.valueOf(duration));
+        } else if (pool.getPool().getType() == StoragePoolType.SharedMountPoint) {
             cmd.add("-m", pool.getMountDestPath());
             cmd.add("-h", host.getPrivateNetwork().getIp());
             cmd.add("-u", volumeUUIDListString);
