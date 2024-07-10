@@ -1589,15 +1589,6 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         Map<String, String> details = disasterRecoveryClusterDetailsDao.findDetails(drCluster.getId());
         String apiKey = details.get(ApiConstants.DR_CLUSTER_API_KEY);
         String secretKey = details.get(ApiConstants.DR_CLUSTER_SECRET_KEY);
-        String drVmId = "";
-        List<DisasterRecoveryClusterVmMapVO> vmMap = disasterRecoveryClusterVmMapDao.listByDisasterRecoveryClusterId(drCluster.getId());
-        if (!CollectionUtils.isEmpty(vmMap)) {
-            for (DisasterRecoveryClusterVmMapVO map : vmMap) {
-                if (map.getVmId() == vmId) {
-                    drVmId = map.getMirroredVmId();
-                }
-            }
-        }
         String moldUrl = url + "/client/api/";
         String moldCommand = "listScvmIpAddress";
         String moldMethod = "GET";
@@ -1642,15 +1633,6 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         Map<String, String> details = disasterRecoveryClusterDetailsDao.findDetails(drCluster.getId());
         String apiKey = details.get(ApiConstants.DR_CLUSTER_API_KEY);
         String secretKey = details.get(ApiConstants.DR_CLUSTER_SECRET_KEY);
-        String drVmId = "";
-        List<DisasterRecoveryClusterVmMapVO> vmMap = disasterRecoveryClusterVmMapDao.listByDisasterRecoveryClusterId(drCluster.getId());
-        if (!CollectionUtils.isEmpty(vmMap)) {
-            for (DisasterRecoveryClusterVmMapVO map : vmMap) {
-                if (map.getVmId() == vmId) {
-                    drVmId = map.getMirroredVmId();
-                }
-            }
-        }
         String moldUrl = url + "/client/api/";
         String moldCommand = "listScvmIpAddress";
         String moldMethod = "GET";
