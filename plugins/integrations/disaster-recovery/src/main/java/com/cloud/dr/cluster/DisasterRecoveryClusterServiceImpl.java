@@ -1533,9 +1533,20 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         vmParams.put("considerlasthost", "true");
         vmParams.put("id", drVmId);
         String jobId = DisasterRecoveryClusterUtil.moldStartVirtualMachineAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey, vmParams);
-        ///////////////////// 비동기 호출 예외 처리 필요
+        int jobStatus = 0;
         if (jobId != null) {
-            return true;
+            moldCommand = "queryAsyncJobResult";
+            Map<String, String> params = new HashMap<>();
+            params.put("jobid", jobId);
+            while (jobStatus == 0) {
+                String result = DisasterRecoveryClusterUtil.moldQueryAsyncJobResultAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey, params);
+                jobStatus = Integer.parseInt(result);
+                LOGGER.info("jobStatus");
+                LOGGER.info(jobStatus);
+            }
+            if (jobStatus == 1) {
+                return true;
+            }
         }
         return false;
     }
@@ -1569,11 +1580,21 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         vmParams.put("forced", "true");
         vmParams.put("id", drVmId);
         String jobId = DisasterRecoveryClusterUtil.moldStopVirtualMachineAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey, vmParams);
-        ///////////////////// 비동기 호출 예외 처리 필요
+        int jobStatus = 0;
         if (jobId != null) {
-            return true;
+            moldCommand = "queryAsyncJobResult";
+            Map<String, String> params = new HashMap<>();
+            params.put("jobid", jobId);
+            while (jobStatus == 0) {
+                String result = DisasterRecoveryClusterUtil.moldQueryAsyncJobResultAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey, params);
+                jobStatus = Integer.parseInt(result);
+                LOGGER.info("jobStatus");
+                LOGGER.info(jobStatus);
+            }
+            if (jobStatus == 1) {
+                return true;
+            }
         }
-        return false;
     }
 
     @Override
