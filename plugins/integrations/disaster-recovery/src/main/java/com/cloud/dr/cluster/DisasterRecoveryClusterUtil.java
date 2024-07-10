@@ -1918,11 +1918,7 @@ public class DisasterRecoveryClusterUtil {
                 }
                 for (int i = 0; i < array.length(); i++) {
                     JSONObject jSONObject = array.getJSONObject(i);
-                    LOGGER.info(jSONObject.get("name").toString());
-                    LOGGER.info(jSONObject.get("iscustomized").toString());
-                    LOGGER.info(jSONObject.get("shareable").toString());
                     if (jSONObject.get("iscustomized").equals(true) && jSONObject.get("shareable").equals(false)) {
-                        LOGGER.info("::::::::::::::::::::::::::::::::::");
                         result = jSONObject.get("id").toString();
                         break;
                     }
