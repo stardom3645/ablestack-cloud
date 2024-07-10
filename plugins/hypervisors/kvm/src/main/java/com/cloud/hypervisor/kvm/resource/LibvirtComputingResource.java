@@ -334,9 +334,11 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
     private String resizeVolumePath;
     private String createTmplPath;
     private String heartBeatPath;
+    private String heartBeatPathGfs;
     private String heartBeatPathRbd;
     private String heartBeatPathClvm;
     private String vmActivityCheckPath;
+    private String vmActivityCheckPathGfs;
     private String vmActivityCheckPathRbd;
     private String vmActivityCheckPathClvm;
     private String securityGroupPath;
@@ -730,6 +732,10 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
         return vmActivityCheckPath;
     }
 
+    public String getVmActivityCheckPathGfs() {
+        return vmActivityCheckPathGfs;
+    }
+
     public String getVmActivityCheckPathRbd() {
         return vmActivityCheckPathRbd;
     }
@@ -999,6 +1005,11 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
             throw new ConfigurationException("Unable to find kvmheartbeat.sh");
         }
 
+        heartBeatPathGfs = Script.findScript(kvmScriptsDir, "kvmheartbeat_gluegfs.sh");
+        if (heartBeatPathGfs == null) {
+            throw new ConfigurationException("Unable to find kvmheartbeat_gluegfs.sh");
+        }
+
         heartBeatPathRbd = Script.findScript(kvmScriptsDir, "kvmheartbeat_rbd.sh");
         if (heartBeatPathRbd == null) {
             throw new ConfigurationException("Unable to find kvmheartbeat_rbd.sh");
@@ -1026,6 +1037,11 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
 
         vmActivityCheckPath = Script.findScript(kvmScriptsDir, "kvmvmactivity.sh");
         if (vmActivityCheckPath == null) {
+            throw new ConfigurationException("Unable to find kvmvmactivity.sh");
+        }
+
+        vmActivityCheckPathGfs = Script.findScript(kvmScriptsDir, "kvmvmactivity_gluegfs.sh");
+        if (vmActivityCheckPathGfs == null) {
             throw new ConfigurationException("Unable to find kvmvmactivity.sh");
         }
 
@@ -1280,7 +1296,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
 
         final String[] info = NetUtils.getNetworkParams(privateNic);
 
-        kvmhaMonitor = new KVMHAMonitor(null, info[0], heartBeatPath, heartBeatPathRbd, heartBeatPathClvm);
+        kvmhaMonitor = new KVMHAMonitor(null, info[0], heartBeatPath, heartBeatPathGfs, heartBeatPathRbd, heartBeatPathClvm);
 
         final Thread ha = new Thread(kvmhaMonitor);
         ha.start();
