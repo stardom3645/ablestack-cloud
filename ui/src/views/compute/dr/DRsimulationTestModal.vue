@@ -44,7 +44,7 @@
         v-else-if="drSteps[currentStep].name === 'running'"
         @nextPressed="nextPressed"
         @closeAction="onCloseAction"
-        @refresh-data="onRefreshData"
+        @refresh-data="parentFetchData"
         @stepError="onStepError"
         @submitLaunchMock="onLaunchMock"
         :launchMock="launchMock"
@@ -55,7 +55,7 @@
       <dr-wizard-end-step
         v-else
         @closeAction="onCloseAction"
-        @refresh-data="onRefreshData"
+        @refresh-data="parentFetchData"
         @submitLaunchMock="onLaunchMock"
         :launchMock="launchMock"
         :launchData="launchData"
@@ -75,6 +75,7 @@ export default {
     DrWizardRunningStep,
     DrWizardEndStep
   },
+  inject: ['parentFetchData'],
   props: {
     resource: {
       type: Object,
@@ -118,13 +119,8 @@ export default {
       this.currentStep++
     },
     onCloseAction () {
-      console.log('here')
       this.$emit('close-action')
-    },
-    onRefreshData () {
-      console.log('here')
       this.$emit('refresh-data')
-      this.onCloseAction()
     },
     onStepError (step, launchData) {
       this.currentStep = this.drSteps.findIndex(item => item.step.includes(step))
@@ -133,7 +129,6 @@ export default {
       this.launchMock = false
     },
     onLaunchMock () {
-      console.log('here')
       this.launchMock = true
       this.currentStep = this.drSteps.findIndex(item => item.step.includes('launchMock'))
     }

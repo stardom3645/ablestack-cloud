@@ -28,7 +28,7 @@
         class="button-next"
         type="primary"
         ref="submit"
-        @click="closeModal">{{ $t('label.cancel') }}
+        @click="closeModal">{{ $t('label.ok') }}
       </a-button>
     </div>
   </div>
