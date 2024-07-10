@@ -58,11 +58,15 @@ public final class LibvirtFenceCommandWrapper extends CommandWrapper<FenceComman
             String logline = String.format("No NFS storage pools found. No way to safely fence %s on host %s", command.getVmName(), command.getHostGuid());
             logger.warn(logline);
             return new FenceAnswer(command, false, logline);
+        } else if (gfspools.size() == 0) {
+            String logline = String.format("No Glue GFS storage pools found. No way to safely fence %s on host %s", command.getVmName(), command.getHostGuid());
+            logger.warn(logline);
+            return new FenceAnswer(command, false, logline);
         } else if (rbdpools.size() == 0) {
             String logline = String.format("No RBD storage pools found. No way to safely fence %s on host %s", command.getVmName(), command.getHostGuid());
             logger.warn(logline);
             return new FenceAnswer(command, false, logline);
-        }else if (clvmpools.size() == 0) {
+        } else if (clvmpools.size() == 0) {
             String logline = String.format("No CLVM storage pools found. No way to safely fence %s on host %s", command.getVmName(), command.getHostGuid());
             logger.warn(logline);
             return new FenceAnswer(command, false, logline);

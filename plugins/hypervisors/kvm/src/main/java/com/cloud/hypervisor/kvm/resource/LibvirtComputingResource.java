@@ -338,6 +338,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
     private String heartBeatPathRbd;
     private String heartBeatPathClvm;
     private String vmActivityCheckPath;
+    private String vmActivityCheckPathGfs;
     private String vmActivityCheckPathRbd;
     private String vmActivityCheckPathClvm;
     private String securityGroupPath;
@@ -731,6 +732,10 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
         return vmActivityCheckPath;
     }
 
+    public String getVmActivityCheckPathGfs() {
+        return vmActivityCheckPathGfs;
+    }
+
     public String getVmActivityCheckPathRbd() {
         return vmActivityCheckPathRbd;
     }
@@ -1032,6 +1037,11 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
 
         vmActivityCheckPath = Script.findScript(kvmScriptsDir, "kvmvmactivity.sh");
         if (vmActivityCheckPath == null) {
+            throw new ConfigurationException("Unable to find kvmvmactivity.sh");
+        }
+
+        vmActivityCheckPathGfs = Script.findScript(kvmScriptsDir, "kvmvmactivity_gluegfs.sh");
+        if (vmActivityCheckPathGfs == null) {
             throw new ConfigurationException("Unable to find kvmvmactivity.sh");
         }
 

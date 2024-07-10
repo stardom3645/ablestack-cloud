@@ -577,7 +577,7 @@ public class LibvirtStorageAdaptor implements StorageAdaptor {
             if (spd.getPoolType() == LibvirtStoragePoolDef.PoolType.NETFS) {
                 type = StoragePoolType.NetworkFilesystem;
             } else if (spd.getPoolType() == LibvirtStoragePoolDef.PoolType.DIR) {
-                type = StoragePoolType.Filesystem;
+                type = StoragePoolType.SharedMountPoint;
             } else if (spd.getPoolType() == LibvirtStoragePoolDef.PoolType.RBD) {
                 type = StoragePoolType.RBD;
             } else if (spd.getPoolType() == LibvirtStoragePoolDef.PoolType.LOGICAL) {

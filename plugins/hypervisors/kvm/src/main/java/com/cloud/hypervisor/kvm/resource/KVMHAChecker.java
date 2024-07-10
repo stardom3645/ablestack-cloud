@@ -59,7 +59,7 @@ public class KVMHAChecker extends KVMHABase implements Callable<Boolean> {
             }
         }
 
-        hostAndPools = String.format("host IP [%s] in Glue GFS pools [%s]", host.getPrivateNetwork().getIp(), gfsStoragePools.stream().map(pool -> pool.monHost).collect(Collectors.joining(", ")));
+        hostAndPools = String.format("host IP [%s] in Glue GFS pools [%s]", host.getPrivateNetwork().getIp(), gfsStoragePools.stream().map(pool -> pool.getPoolUUID()).collect(Collectors.joining(", ")));
         for (HAStoragePool gfspool : gfsStoragePools) {
             logger.debug(String.format("Checking heart beat with KVMHAChecker Glue GFS for %s", hostAndPools));
             validResult = gfspool.getPool().checkingHeartBeat(gfspool, host);
