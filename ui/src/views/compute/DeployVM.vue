@@ -2259,9 +2259,7 @@ export default {
         const httpMethod = deployVmData.userdata ? 'POST' : 'GET'
 
         if (values.vmNumber) {
-          const multiKey = 'mmm'
-          console.log('values.vmNumber) :>> ', values.vmNumber)
-          for (var num = 1; num <= Number(values.vmNumber); num++) {
+          for (var num = 0; num < Number(values.vmNumber); num++) {
             let args = ''
             let data = ''
             if (values.name) {
@@ -2277,8 +2275,9 @@ export default {
                   this.loading.deploy = false
                   return
                 }
-                deployVmData.name = values.name + '-' + num
-                deployVmData.displayname = values.name + '-' + num
+                var numP = num + 1
+                deployVmData.name = values.name + '-' + numP
+                deployVmData.displayname = values.name + '-' + numP
               }
             }
             args = httpMethod === 'POST' ? {} : deployVmData
@@ -2290,18 +2289,6 @@ export default {
               } else {
                 jobId = await this.deployVM(args, httpMethod, data)
               }
-
-              this.$message.loading({
-                content: `${title} ${this.$t('label.in.progress')}`,
-                key: multiKey,
-                duration: 0
-              })
-
-              this.$message.loading({
-                content: `${title} ${this.$t('label.in.progress')}`,
-                key: multiKey,
-                duration: 0
-              })
               await this.$pollJob({
                 jobId,
                 title,
@@ -2325,9 +2312,9 @@ export default {
                       duration: 0
                     })
                   }
-                  // if (!values.stayonpage) {
-                  //   eventBus.emit('vm-refresh-data')
-                  // }
+                  if (!values.stayonpage) {
+                    eventBus.emit('vm-refresh-data')
+                  }
                 },
                 loadingMessage: `${title} ${this.$t('label.in.progress')}`,
                 catchMessage: this.$t('error.fetching.async.job.result'),
@@ -2337,7 +2324,7 @@ export default {
               })
 
               // Sending a refresh in case it hasn't picked up the new VM
-              if (num === 1 || num === values.vmNumber || !values.stayonpage) {
+              if (values.vmNumber === 1 || !values.stayonpage) {
                 await new Promise(resolve => setTimeout(resolve, 3000)).then(() => {
                   eventBus.emit('vm-refresh-data')
                 })
