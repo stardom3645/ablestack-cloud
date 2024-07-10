@@ -148,8 +148,6 @@ export default {
       await this.stepOneTestDr()
     },
     async stepOneTestDr () {
-      console.log(this.steps)
-      console.log(this.stepData.stepMove)
       this.addStep('message.dr.simulation.test.step1', 'stepOneTestDr')
       try {
         if (!this.stepData.stepMove.includes('stepOneTestDr')) {
@@ -158,8 +156,8 @@ export default {
           await this.stopDrVm()
           this.stepData.stepMove.push('stepOneTestDr')
         }
-        // await this.stepTwoTestDr()
-        // await this.stepThreeTestDr()
+        await this.stepTwoTestDr()
+        await this.stepThreeTestDr()
         // await this.stepFourTestDr()
         // await this.stepFiveTestDr()
         // await this.stepSixTestDr()
@@ -292,7 +290,6 @@ export default {
     },
     stopDrVm () {
       return new Promise((resolve, reject) => {
-        console.log(this.clusters)
         let message = ''
         const params = {}
         params.virtualmachineid = this.resource.id
@@ -309,14 +306,11 @@ export default {
       return new Promise((resolve, reject) => {
         let message = ''
         const params = {}
-        params.id = this.resource.id
+        params.virtualmachineid = this.resource.id
         params.drclustername = this.clusters.name
         api('demoteDisasterRecoveryClusterVm', params).then(json => {
           resolve()
         }).catch(error => {
-          console.log('=============')
-          console.log(error.response.headers['x-description'])
-          console.log('=============')
           message = error.response.headers['x-description']
           reject(message)
         })
