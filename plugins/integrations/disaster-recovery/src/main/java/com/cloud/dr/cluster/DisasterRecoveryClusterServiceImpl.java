@@ -1557,7 +1557,6 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                                         disasterRecoveryClusterVmMapDao.remove(map.getId());
                                         List<DisasterRecoveryClusterVmMapVO> finalMap = disasterRecoveryClusterVmMapDao.listByDisasterRecoveryClusterVmId(drCluster.getId(), vmId);
                                         if (CollectionUtils.isEmpty(finalMap)) {
-                                            LOGGER.info("::::::::::::::::::::::::::::finalMap");
                                             String moldUrl = url + "/client/api/";
                                             String moldMethod = "GET";
                                             String moldCommand = "deleteDisasterRecoveryClusterVm";
