@@ -684,11 +684,18 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         String secCommand = "createDisasterRecoveryCluster";
         String secMethod = "POST";
         String secResponse = DisasterRecoveryClusterUtil.moldCreateDisasterRecoveryClusterAPI(secUrl + "/client/api/", secCommand, secMethod, secApiKey, secSecretKey, secParams);
-        if (secResponse == null || secResponse.isEmpty()) {
+        if (secResponse == null) {
             drCluster.setDrClusterStatus(DisasterRecoveryCluster.DrClusterStatus.Error.toString());
             drCluster.setMirroringAgentStatus(DisasterRecoveryCluster.MirroringAgentStatus.Error.toString());
             disasterRecoveryClusterDao.update(drCluster.getId(), drCluster);
+            throw new CloudRuntimeException("Failed to request createDisasterRecoveryCluster Mold-API.");
         } else {
+            JSONObject jsonObject = new JSONObject(secResponse);
+            String jobId = jsonObject.get("jobid").toString();
+            int jobStatus = getAsyncJobResult(secUrl + "/client/api/", secApiKey, secSecretKey, jobId);
+            if (jobStatus == 2) {
+                throw new CloudRuntimeException("CreateDisasterRecoveryCluster Mold-API async job resulted in failure.");
+            }
             String ipList = Script.runSimpleBashScript("cat /etc/hosts | grep -E 'scvm1-mngt|scvm2-mngt|scvm3-mngt' | awk '{print $1}' | tr '\n' ','");
             if (ipList != null || !ipList.isEmpty()) {
                 // 클러스터 설정
@@ -743,6 +750,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                 errParams.put("drclusterstatus", DisasterRecoveryCluster.DrClusterStatus.Error.toString());
                 errParams.put("mirroringagentstatus", DisasterRecoveryCluster.MirroringAgentStatus.Error.toString());
                 DisasterRecoveryClusterUtil.moldUpdateDisasterRecoveryClusterAPI(secUrl + "/client/api/", secCommand, secMethod, secApiKey, secSecretKey, errParams);
+                throw new CloudRuntimeException("Failed to lookup primary cluster scvm ip address.");
             }
         }
         return false;
@@ -860,7 +868,15 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                                     sucParams = new HashMap<>();
                                     sucParams.put("id", primaryDrId);
                                     String response = DisasterRecoveryClusterUtil.moldDeleteDisasterRecoveryClusterAPI(secUrl + "/client/api/", secCommand, secMethod, secApiKey, secSecretKey, sucParams);
-                                    if (response != null) {
+                                    if (response == null) {
+                                        throw new CloudRuntimeException("Failed to request DeleteDisasterRecoveryCluster Mold-API.");
+                                    } else {
+                                        JSONObject jObject = new JSONObject(response);
+                                        String jobId = jObject.get("jobid").toString();
+                                        int jobStatus = getAsyncJobResult(secUrl + "/client/api/", secApiKey, secSecretKey, jobId);
+                                        if (jobStatus == 2) {
+                                            throw new CloudRuntimeException("DeleteDisasterRecoveryCluster Mold-API async job resulted in failure.");
+                                        }
                                         return true;
                                     }
                                 }
@@ -872,7 +888,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                     }
                 }
             } else {
-                throw new CloudRuntimeException("primary cluster scvm list lookup fails.");
+                throw new CloudRuntimeException("Failed to lookup primary cluster scvm ip address.");
             }
             return false;
         }
@@ -964,7 +980,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                 }
             }
         } else {
-            throw new CloudRuntimeException("primary cluster scvm list lookup fails.");
+            throw new CloudRuntimeException("Failed to lookup primary cluster scvm ip address.");
         }
         return false;
     }
@@ -1061,7 +1077,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                 }
             }
         } else {
-            throw new CloudRuntimeException("primary cluster scvm list lookup fails.");
+            throw new CloudRuntimeException("Failed to lookup primary cluster scvm ip address.");
         }
         return false;
     }
@@ -1136,7 +1152,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                 throw new CloudRuntimeException("There are no images being mirrored.");
             }
         } else {
-            throw new CloudRuntimeException("secondary cluster scvm list lookup fails.");
+            throw new CloudRuntimeException("Failed to lookup secondary cluster scvm ip address.");
         }
     }
 
@@ -1209,7 +1225,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                 throw new CloudRuntimeException("There are no images being mirrored.");
             }
         } else {
-            throw new CloudRuntimeException("secondary cluster scvm list lookup fails.");
+            throw new CloudRuntimeException("Failed to lookup secondary cluster scvm ip address.");
         }
     }
 
@@ -1287,6 +1303,9 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         String domainId = DisasterRecoveryClusterUtil.moldListAccountsAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey);
         moldCommand = "listDiskOfferings";
         String diskOfferingId = DisasterRecoveryClusterUtil.moldListDiskOfferingsAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey);
+        String jobId = null;
+        int jobStatus = 0;
+        JSONObject jsonObject;
         // 미러링 ROOT 디스크 생성 및 편집 mold-api 호출
         List<VolumeVO> rootVolumes = volsDao.findByInstanceAndType(userVM.getId(), Volume.Type.ROOT);
         VolumeVO rootVol = rootVolumes.get(0);
@@ -1298,99 +1317,156 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         volParams.put("size", String.valueOf(rootVol.getSize() / (1024 * 1024 * 1024)));
         volParams.put("name", rootVolumeUuid);
         volParams.put("zoneid", zoneId);
-        String rootVolumeId = DisasterRecoveryClusterUtil.moldCreateVolumeAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey, volParams);
-        ///////////////////// 비동기 호출 예외 처리 필요
-        moldMethod = "GET";
-        moldCommand = "updateVolume";
-        Map<String, String> volUpParams = new HashMap<>();
-        volUpParams.put("id", rootVolumeId);
-        volUpParams.put("path", rootVolumeUuid);
-        volUpParams.put("storageid", poolId);
-        volUpParams.put("state", "Ready");
-        volUpParams.put("type", rootVol.getVolumeType().toString());
-        DisasterRecoveryClusterUtil.moldUpdateVolumeAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey, volUpParams);
-        // 생성된 ROOT 디스크로 미러링 가상머신 생성
-        moldMethod = "POST";
-        moldCommand = "deployVirtualMachineForVolume";
-        Map<String, String> vmParams = new HashMap<>();
-        vmParams.put("volumeid", rootVolumeId);
-        vmParams.put("zoneid", zoneId);
-        vmParams.put("serviceofferingid", offeringId);
-        vmParams.put("rootdisksize", String.valueOf(rootVol.getSize() / (1024 * 1024 * 1024)));
-        vmParams.put("name", userVM.getName());
-        vmParams.put("displayname", userVM.getDisplayName());
-        vmParams.put("domainid", domainId);
-        vmParams.put("iptonetworklist[0].networkid", networkId);
-        vmParams.put("account", "admin");
-        vmParams.put("startvm", "false");
-        vmParams.put("hypervisor", "KVM");
-        vmParams.put("keypairs", "");
-        vmParams.put("boottype", "BIOS");
-        vmParams.put("affinitygroupids", "");
-        vmParams.put("bootmode", "LEGACY");
-        vmParams.put("tpmversion", "NONE");
-        vmParams.put("dynamicscalingenabled", "true");
-        vmParams.put("iothreadsenabled", "true");
-        vmParams.put("iodriverpolicy", "io_uring");
-        String vmId = DisasterRecoveryClusterUtil.moldDeployVirtualMachineForVolumeAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey, vmParams);
-        ///////////////////// 비동기 호출 예외 처리 필요
-        if (vmId != null) {
-            DisasterRecoveryClusterVmMapVO newClusterVmMapVO = new DisasterRecoveryClusterVmMapVO(drCluster.getId(), cmd.getVmId(), vmId, userVM.getName(), "Stopped", rootVol.getVolumeType().toString(), rootVolumeUuid, "SYNCING");
-            disasterRecoveryClusterVmMapDao.persist(newClusterVmMapVO);
+        String createVolResult = DisasterRecoveryClusterUtil.moldCreateVolumeAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey, volParams);
+        if (createVolResult == null) {
+            throw new CloudRuntimeException("Failed to request createVolume Mold-API.");
+        } else {
+            jsonObject = new JSONObject(createVolResult);
+            jobId = jsonObject.get("jobid").toString();
+            String rootVolumeId = jsonObject.get("id").toString();
+            jobStatus = getAsyncJobResult(moldUrl, apiKey, secretKey, jobId);
+            if (jobStatus == 2) {
+                throw new CloudRuntimeException("CreateVolume Mold-API async job resulted in failure.");
+            }
             moldMethod = "GET";
-            moldCommand = "updateDisasterRecoveryClusterVm";
-            Map<String, String> vmMapParams = new HashMap<>();
-            vmMapParams.put("drclustername", drCluster.getName());
-            vmMapParams.put("drclustervmid", vmId);
-            vmMapParams.put("drclustermirrorvmid", userVM.getUuid());
-            vmMapParams.put("drclustermirrorvmname", userVM.getName());
-            vmMapParams.put("drclustermirrorvmstatus", userVM.getState().toString());
-            vmMapParams.put("drclustermirrorvmvoltype", rootVol.getVolumeType().toString());
-            vmMapParams.put("drclustermirrorvmvolpath", rootVolumeUuid);
-            vmMapParams.put("drclustermirrorvmvolstatus", "READY");
-            DisasterRecoveryClusterUtil.moldUpdateDisasterRecoveryClusterVmAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey, vmMapParams);
-            List<VolumeVO> dataVolumes = volsDao.findByInstanceAndType(userVM.getId(), Volume.Type.DATADISK);
-            if (!dataVolumes.isEmpty()) {
-                for (VolumeVO dataVolume : dataVolumes) {
-                    // DATA 디스크 생성 및 편집 및 연결 mold-api 호출
-                    String dataVolumeUuid = dataVolume.getPath();
-                    moldMethod = "POST";
-                    moldCommand = "createVolume";
-                    volParams.put("diskofferingid", diskOfferingId);
-                    volParams.put("size", String.valueOf(dataVolume.getSize() / (1024 * 1024 * 1024)));
-                    volParams.put("name", dataVolumeUuid);
-                    volParams.put("zoneid", zoneId);
-                    String dataVolumeId = DisasterRecoveryClusterUtil.moldCreateVolumeAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey, volParams);
-                    ///////////////////// 비동기 호출 예외 처리 필요
+            moldCommand = "updateVolume";
+            Map<String, String> volUpParams = new HashMap<>();
+            volUpParams.put("id", rootVolumeId);
+            volUpParams.put("path", rootVolumeUuid);
+            volUpParams.put("storageid", poolId);
+            volUpParams.put("state", "Ready");
+            volUpParams.put("type", rootVol.getVolumeType().toString());
+            String updateVolResult = DisasterRecoveryClusterUtil.moldUpdateVolumeAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey, volUpParams);
+            if (updateVolResult == null) {
+                throw new CloudRuntimeException("Failed to request updateVolume Mold-API.");
+            } else {
+                jsonObject = new JSONObject(updateVolResult);
+                jobId = jsonObject.get("jobid").toString();
+                jobStatus = getAsyncJobResult(moldUrl, apiKey, secretKey, jobId);
+                if (jobStatus == 2) {
+                    throw new CloudRuntimeException("UpdateVolume Mold-API async job resulted in failure.");
+                }
+                // 생성된 ROOT 디스크로 미러링 가상머신 생성
+                moldMethod = "POST";
+                moldCommand = "deployVirtualMachineForVolume";
+                Map<String, String> vmParams = new HashMap<>();
+                vmParams.put("volumeid", rootVolumeId);
+                vmParams.put("zoneid", zoneId);
+                vmParams.put("serviceofferingid", offeringId);
+                vmParams.put("rootdisksize", String.valueOf(rootVol.getSize() / (1024 * 1024 * 1024)));
+                vmParams.put("name", userVM.getName());
+                vmParams.put("displayname", userVM.getDisplayName());
+                vmParams.put("domainid", domainId);
+                vmParams.put("iptonetworklist[0].networkid", networkId);
+                vmParams.put("account", "admin");
+                vmParams.put("startvm", "false");
+                vmParams.put("hypervisor", "KVM");
+                vmParams.put("keypairs", "");
+                vmParams.put("boottype", "BIOS");
+                vmParams.put("affinitygroupids", "");
+                vmParams.put("bootmode", "LEGACY");
+                vmParams.put("tpmversion", "NONE");
+                vmParams.put("dynamicscalingenabled", "true");
+                vmParams.put("iothreadsenabled", "true");
+                vmParams.put("iodriverpolicy", "io_uring");
+                String deployVmResult = DisasterRecoveryClusterUtil.moldDeployVirtualMachineForVolumeAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey, vmParams);
+                if (deployVmResult == null) {
+                    throw new CloudRuntimeException("Failed to request DeployVirtualMachineForVolume Mold-API.");
+                } else {
+                    jsonObject = new JSONObject(deployVmResult);
+                    jobId = jsonObject.get("jobid").toString();
+                    String vmId = jsonObject.get("id").toString();
+                    jobStatus = getAsyncJobResult(moldUrl, apiKey, secretKey, jobId);
+                    if (jobStatus == 2) {
+                        throw new CloudRuntimeException("DeployVirtualMachineForVolume Mold-API async job resulted in failure.");
+                    }
+                    DisasterRecoveryClusterVmMapVO newClusterVmMapVO = new DisasterRecoveryClusterVmMapVO(drCluster.getId(), cmd.getVmId(), vmId, userVM.getName(), "Stopped", rootVol.getVolumeType().toString(), rootVolumeUuid, "SYNCING");
+                    disasterRecoveryClusterVmMapDao.persist(newClusterVmMapVO);
                     moldMethod = "GET";
-                    moldCommand = "updateVolume";
-                    volUpParams.put("id", dataVolumeId);
-                    volUpParams.put("path", dataVolumeUuid);
-                    volUpParams.put("storageid", poolId);
-                    volUpParams.put("state", "Ready");
-                    volUpParams.put("type", dataVolume.getVolumeType().toString());
-                    String dataResponse = DisasterRecoveryClusterUtil.moldUpdateVolumeAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey, volUpParams);
-                    moldCommand = "attachVolume";
-                    Map<String, String> attParams = new HashMap<>();
-                    attParams.put("id", dataVolumeId);
-                    attParams.put("virtualmachineid", vmId);
-                    String attachId = DisasterRecoveryClusterUtil.moldAttachVolumeAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey, attParams);
-                    ///////////////////// 비동기 호출 예외 처리 필요
                     moldCommand = "updateDisasterRecoveryClusterVm";
+                    Map<String, String> vmMapParams = new HashMap<>();
                     vmMapParams.put("drclustername", drCluster.getName());
                     vmMapParams.put("drclustervmid", vmId);
                     vmMapParams.put("drclustermirrorvmid", userVM.getUuid());
                     vmMapParams.put("drclustermirrorvmname", userVM.getName());
                     vmMapParams.put("drclustermirrorvmstatus", userVM.getState().toString());
-                    vmMapParams.put("drclustermirrorvmvoltype", dataVolume.getVolumeType().toString());
-                    vmMapParams.put("drclustermirrorvmvolpath", dataVolumeUuid);
+                    vmMapParams.put("drclustermirrorvmvoltype", rootVol.getVolumeType().toString());
+                    vmMapParams.put("drclustermirrorvmvolpath", rootVolumeUuid);
                     vmMapParams.put("drclustermirrorvmvolstatus", "READY");
                     DisasterRecoveryClusterUtil.moldUpdateDisasterRecoveryClusterVmAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey, vmMapParams);
-                    DisasterRecoveryClusterVmMapVO newClusterDataVmMapVO = new DisasterRecoveryClusterVmMapVO(drCluster.getId(), cmd.getVmId(), vmId, userVM.getName(), "Stopped", dataVolume.getVolumeType().toString(), dataVolumeUuid, "SYNCING");
-                    disasterRecoveryClusterVmMapDao.persist(newClusterDataVmMapVO);
+                    List<VolumeVO> dataVolumes = volsDao.findByInstanceAndType(userVM.getId(), Volume.Type.DATADISK);
+                    if (!dataVolumes.isEmpty()) {
+                        for (VolumeVO dataVolume : dataVolumes) {
+                            // DATA 디스크 생성 및 편집 및 연결 mold-api 호출
+                            String dataVolumeUuid = dataVolume.getPath();
+                            moldMethod = "POST";
+                            moldCommand = "createVolume";
+                            volParams.put("diskofferingid", diskOfferingId);
+                            volParams.put("size", String.valueOf(dataVolume.getSize() / (1024 * 1024 * 1024)));
+                            volParams.put("name", dataVolumeUuid);
+                            volParams.put("zoneid", zoneId);
+                            String dataVolResult = DisasterRecoveryClusterUtil.moldCreateVolumeAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey, volParams);
+                            if (dataVolResult == null) {
+                                throw new CloudRuntimeException("Failed to request createVolume Mold-API.");
+                            } else {
+                                jsonObject = new JSONObject(dataVolResult);
+                                jobId = jsonObject.get("jobid").toString();
+                                String dataVolumeId = jsonObject.get("id").toString();
+                                jobStatus = getAsyncJobResult(moldUrl, apiKey, secretKey, jobId);
+                                if (jobStatus == 2) {
+                                    throw new CloudRuntimeException("CreateVolume Mold-API async job resulted in failure.");
+                                }
+                                moldMethod = "GET";
+                                moldCommand = "updateVolume";
+                                volUpParams.put("id", dataVolumeId);
+                                volUpParams.put("path", dataVolumeUuid);
+                                volUpParams.put("storageid", poolId);
+                                volUpParams.put("state", "Ready");
+                                volUpParams.put("type", dataVolume.getVolumeType().toString());
+                                updateVolResult = DisasterRecoveryClusterUtil.moldUpdateVolumeAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey, volUpParams);
+                                if (updateVolResult == null) {
+                                    throw new CloudRuntimeException("Failed to request updateVolume Mold-API.");
+                                } else {
+                                    jsonObject = new JSONObject(updateVolResult);
+                                    jobId = jsonObject.get("jobid").toString();
+                                    jobStatus = getAsyncJobResult(moldUrl, apiKey, secretKey, jobId);
+                                    if (jobStatus == 2) {
+                                        throw new CloudRuntimeException("UpdateVolume Mold-API async job resulted in failure.");
+                                    }
+                                    moldCommand = "attachVolume";
+                                    Map<String, String> attParams = new HashMap<>();
+                                    attParams.put("id", dataVolumeId);
+                                    attParams.put("virtualmachineid", vmId);
+                                    String attachVolResult = DisasterRecoveryClusterUtil.moldAttachVolumeAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey, attParams);
+                                    if (attachVolResult == null) {
+                                        throw new CloudRuntimeException("Failed to request attachVolume Mold-API.");
+                                    } else {
+                                        jsonObject = new JSONObject(attachVolResult);
+                                        jobId = jsonObject.get("jobid").toString();
+                                        jobStatus = getAsyncJobResult(moldUrl, apiKey, secretKey, jobId);
+                                        if (jobStatus == 2) {
+                                            throw new CloudRuntimeException("AttachVolume Mold-API async job resulted in failure.");
+                                        }
+                                        moldCommand = "updateDisasterRecoveryClusterVm";
+                                        vmMapParams.put("drclustername", drCluster.getName());
+                                        vmMapParams.put("drclustervmid", vmId);
+                                        vmMapParams.put("drclustermirrorvmid", userVM.getUuid());
+                                        vmMapParams.put("drclustermirrorvmname", userVM.getName());
+                                        vmMapParams.put("drclustermirrorvmstatus", userVM.getState().toString());
+                                        vmMapParams.put("drclustermirrorvmvoltype", dataVolume.getVolumeType().toString());
+                                        vmMapParams.put("drclustermirrorvmvolpath", dataVolumeUuid);
+                                        vmMapParams.put("drclustermirrorvmvolstatus", "READY");
+                                        DisasterRecoveryClusterUtil.moldUpdateDisasterRecoveryClusterVmAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey, vmMapParams);
+                                        DisasterRecoveryClusterVmMapVO newClusterDataVmMapVO = new DisasterRecoveryClusterVmMapVO(drCluster.getId(), cmd.getVmId(), vmId, userVM.getName(), "Stopped", dataVolume.getVolumeType().toString(), dataVolumeUuid, "SYNCING");
+                                        disasterRecoveryClusterVmMapDao.persist(newClusterDataVmMapVO);
+                                    }
+                                }
+                            }
+                        }
+                        return true;
+                    }
                 }
             }
-            return true;
         }
         return false;
     }
@@ -1499,7 +1575,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                 }
                 return result;
             } else {
-                throw new CloudRuntimeException("secondary cluster scvm list lookup fails.");
+                throw new CloudRuntimeException("Failed to lookup secondary cluster scvm ip address.");
             }
         }
     }
@@ -1533,17 +1609,10 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         vmParams.put("considerlasthost", "true");
         vmParams.put("id", drVmId);
         String jobId = DisasterRecoveryClusterUtil.moldStartVirtualMachineAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey, vmParams);
-        int jobStatus = 0;
-        if (jobId != null) {
-            moldCommand = "queryAsyncJobResult";
-            Map<String, String> params = new HashMap<>();
-            params.put("jobid", jobId);
-            while (jobStatus == 0) {
-                String result = DisasterRecoveryClusterUtil.moldQueryAsyncJobResultAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey, params);
-                jobStatus = Integer.parseInt(result);
-                LOGGER.info("jobStatus");
-                LOGGER.info(jobStatus);
-            }
+        if (jobId == null) {
+            throw new CloudRuntimeException("Failed to request StartVirtualMachine Mold-API.");
+        } else {
+            int jobStatus = getAsyncJobResult(moldUrl, apiKey, secretKey, jobId);
             if (jobStatus == 1) {
                 return true;
             }
@@ -1580,17 +1649,10 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         vmParams.put("forced", "true");
         vmParams.put("id", drVmId);
         String jobId = DisasterRecoveryClusterUtil.moldStopVirtualMachineAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey, vmParams);
-        int jobStatus = 0;
-        if (jobId != null) {
-            moldCommand = "queryAsyncJobResult";
-            Map<String, String> params = new HashMap<>();
-            params.put("jobid", jobId);
-            while (jobStatus == 0) {
-                String result = DisasterRecoveryClusterUtil.moldQueryAsyncJobResultAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey, params);
-                jobStatus = Integer.parseInt(result);
-                LOGGER.info("jobStatus");
-                LOGGER.info(jobStatus);
-            }
+        if (jobId == null) {
+            throw new CloudRuntimeException("Failed to request StopVirtualMachine Mold-API.");
+        } else {
+            int jobStatus = getAsyncJobResult(moldUrl, apiKey, secretKey, jobId);
             if (jobStatus == 1) {
                 return true;
             }
@@ -1838,6 +1900,28 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         } else {
             throw new InvalidParameterValueException("Forced promote and demote functions cannot be executed because failed to query primary cluster DR information.");
         }
+    }
+
+    private int getAsyncJobResult(String moldUrl, String apiKey, String secretKey, String jobId) throws CloudRuntimeException {
+        int jobStatus = 0;
+        String moldCommand = "queryAsyncJobResult";
+        String moldMethod = "GET";
+        Map<String, String> params = new HashMap<>();
+        params.put("jobid", jobId);
+        while (jobStatus == 0) {
+            String result = DisasterRecoveryClusterUtil.moldQueryAsyncJobResultAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey, params);
+            if (result != null) {
+                jobStatus = Integer.parseInt(result);
+                try {
+                    Thread.sleep(10000);
+                } catch (InterruptedException e) {
+                    throw new CloudRuntimeException("disaster recovery get asyncjob result sleep interrupted", e);
+                }
+            } else {
+                throw new CloudRuntimeException("Failed to request queryAsyncJobResult Mold-API.");
+            }
+        }
+        return jobStatus;
     }
 
     private String[] getServerProperties() {
