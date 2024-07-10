@@ -1379,6 +1379,8 @@ public class DisasterRecoveryClusterUtil {
             }
             JSONObject jObject = XML.toJSONObject(sb.toString());
             JSONObject response = (JSONObject) jObject.get("deletedisasterrecoveryclustervmresponse");
+            LOGGER.info("deletedisasterrecoveryclustervmresponse:::::::::::::::::::");
+            LOGGER.info(response.toString());
             return response.toString();
         } catch (Exception e) {
             LOGGER.error(String.format("Mold API endpoint not available"), e);
@@ -1916,7 +1918,11 @@ public class DisasterRecoveryClusterUtil {
                 }
                 for (int i = 0; i < array.length(); i++) {
                     JSONObject jSONObject = array.getJSONObject(i);
+                    LOGGER.info(jSONObject.get("name").toString());
+                    LOGGER.info(jSONObject.get("iscustomized").toString());
+                    LOGGER.info(jSONObject.get("shareable").toString());
                     if (jSONObject.get("iscustomized").equals(true) && jSONObject.get("shareable").equals(false)) {
+                        LOGGER.info("::::::::::::::::::::::::::::::::::");
                         result = jSONObject.get("id").toString();
                         break;
                     }
