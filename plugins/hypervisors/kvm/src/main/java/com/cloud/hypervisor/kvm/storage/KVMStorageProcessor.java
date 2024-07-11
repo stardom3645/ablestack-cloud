@@ -56,6 +56,7 @@ import org.apache.cloudstack.storage.command.CreateObjectCommand;
 import org.apache.cloudstack.storage.command.DeleteCommand;
 import org.apache.cloudstack.storage.command.DettachAnswer;
 import org.apache.cloudstack.storage.command.DettachCommand;
+import org.apache.cloudstack.storage.command.FlattenCmdAnswer;
 import org.apache.cloudstack.storage.command.FlattenCommand;
 import org.apache.cloudstack.storage.command.ForgetObjectCmd;
 import org.apache.cloudstack.storage.command.IntroduceObjectCmd;
@@ -2361,27 +2362,19 @@ public class KVMStorageProcessor implements StorageProcessor {
 
     @Override
     public Answer flattenFromRBDSnapshot(final FlattenCommand cmd) {
-        logger.info("11 :::::::::: " + cmd.getSrcTO());
         final DataTO srcData = cmd.getSrcTO();
         final SnapshotObjectTO snapshot = (SnapshotObjectTO)srcData;
         final VolumeObjectTO volume = snapshot.getVolume();
-        logger.info("22 :::::::::: " + volume);
+        Integer cloneImageCount = 0;
         try {
             final DataStoreTO imageStore = srcData.getDataStore();
-
-            logger.info("33 :::::::::: " + volume.getPath());
             final String snapshotFullPath = snapshot.getPath();
             final int index = snapshotFullPath.lastIndexOf("/");
             final String snapshotName = snapshotFullPath.substring(index + 1);
-
             PrimaryDataStoreTO primaryStore = (PrimaryDataStoreTO) imageStore;
 
             KVMStoragePool srcPool = storagePoolMgr.getStoragePool(primaryStore.getPoolType(), primaryStore.getUuid());
             KVMPhysicalDisk disk = new KVMPhysicalDisk(srcPool.getSourceDir() + "/" + volume.getUuid(), volume.getUuid(), srcPool);
-            logger.info("44 :::::::::: " + disk);
-            logger.info("44 :::::::::: " + volume.getUuid());
-            logger.info("44 :::::::::: " + volume.getName());
-
             try {
                 Rados r = new Rados(srcPool.getAuthUserName());
                 r.confSet("mon_host", srcPool.getSourceHost() + ":" + srcPool.getSourcePort());
@@ -2391,7 +2384,7 @@ public class KVMStorageProcessor implements StorageProcessor {
 
                 IoCTX io = r.ioCtxCreate(srcPool.getSourceDir());
                 Rbd rbd = new Rbd(io);
-                RbdImage srcImage = rbd.open(volume.getName());
+                RbdImage srcImage = rbd.open(disk.getName());
 
                 List<RbdSnapInfo> snaps = srcImage.snapList();
                 boolean snapFound = false;
@@ -2403,21 +2396,24 @@ public class KVMStorageProcessor implements StorageProcessor {
                 }
                 if (!snapFound) {
                     logger.debug(String.format("Could not find snapshot %s on RBD", snapshotName));
-                    return null;
+                    return new FlattenCmdAnswer(srcData, cmd, true,  "0");
                 }
 
                 List<String> listChildren = srcImage.listChildren(snapshotName);
+                cloneImageCount = listChildren.size();
                 if(listChildren.size() > 0) {
                     String[] volumeToFlatten = listChildren.get(0).split(File.separator);
-                    logger.debug(String.format("Try to flatten snapshot %s on RBD", snapshotName));
                     RbdImage diskImage = rbd.open(volumeToFlatten[1]);
 
+                    logger.debug(String.format("Try to flatten image %s on RBD", diskImage));
                     diskImage.flatten();
                     rbd.close(diskImage);
 
-                    logger.debug(String.format("Try to unprotect snapshot %s on RBD", snapshotName));
-                    srcImage.snapUnprotect(snapshotName);
-                    srcImage.snapRemove(snapshotName);
+                    if (listChildren.size() == 1) {
+                        logger.debug(String.format("Try to unprotect and remove snapshot %s on RBD", snapshotName));
+                        srcImage.snapUnprotect(snapshotName);
+                        srcImage.snapRemove(snapshotName);
+                    }
                 }
                 rbd.close(srcImage);
                 r.ioCtxDestroy(io);
@@ -2425,11 +2421,10 @@ public class KVMStorageProcessor implements StorageProcessor {
                 logger.error(String.format("Failed due to %s", e.getMessage()), e);
                 disk = null;
             }
-
-            return new Answer(null);
+            return new FlattenCmdAnswer(srcData, cmd, true, Integer.toString(cloneImageCount));
         } catch (final CloudRuntimeException e) {
             logger.debug("Failed to Flatten Rbd Volume From Snapshot: ", e);
-            return new Answer(null, false, e.toString());
+            return new FlattenCmdAnswer(e.toString());
         }
     }
 

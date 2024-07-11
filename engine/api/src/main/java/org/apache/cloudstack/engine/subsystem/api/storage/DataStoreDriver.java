@@ -26,6 +26,7 @@ import org.apache.cloudstack.storage.command.CommandResult;
 import com.cloud.agent.api.to.DataStoreTO;
 import com.cloud.agent.api.to.DataTO;
 import com.cloud.host.Host;
+import com.cloud.utils.ExecutionResult;
 
 public interface DataStoreDriver {
     Map<String, String> getCapabilities();
@@ -46,6 +47,6 @@ public interface DataStoreDriver {
 
     void resize(DataObject data, AsyncCompletionCallback<CreateCmdResult> callback);
 
-    void flattenAsync(DataStore store, DataObject data, AsyncCompletionCallback<CreateCmdResult> callback);
+    void flattenAsync(DataStore store, DataObject data, AsyncCompletionCallback<ExecutionResult> callback);
 
 }

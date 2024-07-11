@@ -76,6 +76,9 @@ public class CloneVMCmd extends BaseAsyncCreateCmd implements UserCmd {
     @Parameter(name = ApiConstants.CLONE_TYPE, type = CommandType.STRING, required = true, description = "select fast(linked) clone type or full clone type(default is fast clone)")
     private String type;
 
+    @Parameter(name=ApiConstants.COUNT, type=CommandType.INTEGER, description="count of clone vm")
+    private Integer count;
+
     @Parameter(name = ApiConstants.ZONE_ID_LIST,
             type=CommandType.LIST,
             collectionType = CommandType.UUID,
@@ -123,6 +126,10 @@ public class CloneVMCmd extends BaseAsyncCreateCmd implements UserCmd {
 
     public String getType() {
         return type;
+    }
+
+    public Integer getCount() {
+        return count;
     }
 
     @Override
