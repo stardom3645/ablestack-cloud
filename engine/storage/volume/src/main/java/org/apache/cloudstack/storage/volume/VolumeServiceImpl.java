@@ -148,7 +148,6 @@ import com.cloud.storage.template.TemplateProp;
 import com.cloud.user.Account;
 import com.cloud.user.AccountManager;
 import com.cloud.user.ResourceLimitService;
-import com.cloud.utils.ExecutionResult;
 import com.cloud.utils.NumbersUtil;
 import com.cloud.utils.Pair;
 import com.cloud.utils.db.DB;
@@ -335,23 +334,15 @@ public class VolumeServiceImpl implements VolumeService {
         return null;
     }
 
-    protected Void flattenCallback(AsyncCallbackDispatcher<VolumeServiceImpl, CreateCmdResult> callback, CreateVolumeContext<VolumeApiResult> context) {
-        CreateCmdResult result = callback.getResult();
-        DataObject vo = context.getVolume();
-        String errMsg = null;
-        if (result.isSuccess()) {
-            vo.processEvent(Event.OperationSuccessed, result.getAnswer());
-        } else {
-            vo.processEvent(Event.OperationFailed);
-            errMsg = result.getResult();
-        }
-        VolumeApiResult volResult = new VolumeApiResult((VolumeObject)vo);
-        if (errMsg != null) {
-            volResult.setResult(errMsg);
-        }
-        context.getFuture().complete(volResult);
-        return null;
-    }
+    // protected Void flattenCallback(AsyncCallbackDispatcher<VolumeServiceImpl, ExecutionResult> callback, CreateVolumeContext<VolumeApiResult> context) {
+    //     ExecutionResult result = callback.getResult();
+    //     DataObject vo = context.getVolume();
+
+    //     VolumeApiResult volResult = new VolumeApiResult();
+    //     volResult.setResult(result.getDetails());
+    //     context.getFuture().complete(volResult);
+    //     return null;
+    // }
 
     private class DeleteVolumeContext<T> extends AsyncRpcContext<T> {
         private final VolumeObject volume;
@@ -2806,31 +2797,32 @@ public class VolumeServiceImpl implements VolumeService {
         return snapshot;
     }
 
-    @Override
-    public AsyncCallFuture<VolumeApiResult> flattenVolumeAsync(SnapshotInfo snapshot, DataStore dataStore) {
-        AsyncCallFuture<VolumeApiResult> future = new AsyncCallFuture<VolumeApiResult>();
-        // DataObject volumeOnStore = dataStore.create(snapshot);
-        // volumeOnStore.processEvent(Event.FlattenRequested);
+    // @Override
+    // public AsyncCallFuture<VolumeApiResult> flattenVolumeAsync(SnapshotInfo snapshot, DataStore dataStore) {
+    //     AsyncCallFuture<VolumeApiResult> future = new AsyncCallFuture<VolumeApiResult>();
+    //     dataStore.
+    //     // DataObject volumeOnStore = dataStore.create(snapshot);
+    //     // volumeOnStore.processEvent(Event.FlattenRequested);
 
-        try {
-            CreateVolumeContext<VolumeApiResult> context = new CreateVolumeContext<VolumeApiResult>(null, snapshot, future);
-            AsyncCallbackDispatcher<VolumeServiceImpl, ExecutionResult> caller = AsyncCallbackDispatcher.create(this);
-            caller.setCallback(caller.getTarget().flattenCallback(null, null)).setContext(context);
+    //     try {
+    //         CreateVolumeContext<VolumeApiResult> context = new CreateVolumeContext<VolumeApiResult>(null, snapshot, future);
+    //         AsyncCallbackDispatcher<VolumeServiceImpl, ExecutionResult> caller = AsyncCallbackDispatcher.create(this);
+    //         caller.setCallback(caller.getTarget().flattenCallback(null, null)).setContext(context);
 
-            dataStore.getDriver().flattenAsync(dataStore, snapshot, caller);
-        } catch (CloudRuntimeException ex) {
-            // clean up already persisted volume_store_ref entry in case of createVolumeCallback is never called
-            // VolumeDataStoreVO volStoreVO = _volumeStoreDao.findByStoreVolume(dataStore.getId(), snapshot.getVolumeId());
-            // if (volStoreVO != null) {
-            //     VolumeInfo volObj = volFactory.getVolume(snapshot.getVolumeId(), dataStore);
-            //     // volObj.processEvent(ObjectInDataStoreStateMachine.Event.OperationFailed);
-            // }
-            // VolumeApiResult volResult = new VolumeApiResult(volObj);
-            // volResult.setResult(ex.getMessage());
-            // future.complete(volResult);
-        }
-        return future;
-    }
+    //         dataStore.getDriver().flattenAsync(dataStore, snapshot, caller);
+    //     } catch (CloudRuntimeException ex) {
+    //         // clean up already persisted volume_store_ref entry in case of createVolumeCallback is never called
+    //         // VolumeDataStoreVO volStoreVO = _volumeStoreDao.findByStoreVolume(dataStore.getId(), snapshot.getVolumeId());
+    //         // if (volStoreVO != null) {
+    //         //     VolumeInfo volObj = volFactory.getVolume(snapshot.getVolumeId(), dataStore);
+    //         //     // volObj.processEvent(ObjectInDataStoreStateMachine.Event.OperationFailed);
+    //         // }
+    //         // VolumeApiResult volResult = new VolumeApiResult(volObj);
+    //         // volResult.setResult(ex.getMessage());
+    //         // future.complete(volResult);
+    //     }
+    //     return future;
+    // }
 
     @Override
     public void checkAndRepairVolumeBasedOnConfig(DataObject dataObject, Host host) {

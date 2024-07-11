@@ -116,6 +116,7 @@ import org.apache.cloudstack.engine.subsystem.api.storage.PrimaryDataStore;
 import org.apache.cloudstack.engine.subsystem.api.storage.PrimaryDataStoreDriver;
 import org.apache.cloudstack.engine.subsystem.api.storage.SnapshotDataFactory;
 import org.apache.cloudstack.engine.subsystem.api.storage.SnapshotInfo;
+import org.apache.cloudstack.engine.subsystem.api.storage.SnapshotService;
 import org.apache.cloudstack.engine.subsystem.api.storage.VolumeDataFactory;
 import org.apache.cloudstack.engine.subsystem.api.storage.VolumeInfo;
 import org.apache.cloudstack.engine.subsystem.api.storage.VolumeService;
@@ -591,6 +592,8 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
     private BackupManager backupManager;
     @Inject
     private SnapshotApiService _snapshotService;
+    @Inject
+    private SnapshotService _snapService;
     @Inject
     private AnnotationDao annotationDao;
     @Inject
@@ -2759,16 +2762,12 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
                                     VolumeInfo volume = volFactory.getVolume(snapshot.get(0).getVolumeId());
                                     DataStore dataStore = _dataStoreMgr.getDataStore(volume.getPoolId(), DataStoreRole.Primary);
                                     SnapshotInfo snapshotInfo = snapshotFactory.getSnapshot(snapshot.get(0).getId(), dataStore);
-                                    AsyncCallFuture<VolumeApiResult> future = _volService.flattenVolumeAsync(snapshotInfo, dataStore);
-                                    SnapshotVO snap = _snapshotDao.findByIdIncludingRemoved(snapshot.get(0).getId());
-                                    snap.setCloneType("full-flattened");
-                                    _snapshotDao.update(snap.getId(), snap);
-
-                                    // VolumeVO vol = _volsDao.findById(snapshot.get(0).getVolumeId());
-                                    // vol.setCloneType("full-flattened");
-                                    // _volsDao.update(snap.getId(), vol);
-
-                                    // _volService.flattenVolumeAsync(volume);
+                                    boolean bool = _snapService.flattenVolumeAsync(snapshotInfo, dataStore);
+                                    if (bool) {
+                                        SnapshotVO snap = _snapshotDao.findByIdIncludingRemoved(snapshot.get(0).getId());
+                                        snap.setCloneType("full-flattened");
+                                        _snapshotDao.update(snap.getId(), snap);
+                                    }
                                 } catch (Exception e) {
                                     logger.warn("Unable to flatten " + snapshot.get(0).getId(), e);
                                 }
@@ -9454,7 +9453,7 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
                         throw new CloudRuntimeException("Creation of root volume is not queried. The virtual machine cannot be cloned!");
                     }
                     cmd.setName(cmd.getName() + (countOfCloneVM > 1 ? Integer.toString(cnt) : ""));
-                    UserVm cloneVM = recordVirtualMachineToDB(cmd, String.valueOf(rootVolume.getId()));
+                    UserVm cloneVM = recordVirtualMachineToDB(cmd, String.valueOf(rootVolume.getId()), (countOfCloneVM > 1 ? Integer.toString(cnt) : "");
                     if (cloneVM == null) {
                         throw new CloudRuntimeException("Unable to record the VM to DB!");
                     }
@@ -9544,8 +9543,7 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
         return null;
     }
 
-    @Override
-    public UserVm recordVirtualMachineToDB(CloneVMCmd cmd, String rootVolumeId) throws ConcurrentOperationException, ResourceAllocationException, InsufficientCapacityException, ResourceUnavailableException {
+    public UserVm recordVirtualMachineToDB(CloneVMCmd cmd, String rootVolumeId, String cnt) throws ConcurrentOperationException, ResourceAllocationException, InsufficientCapacityException, ResourceUnavailableException {
         //network configurations and check, then create the template
         UserVm curVm = cmd.getTargetVM();
         // check if host is available
@@ -9570,8 +9568,8 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
         // String uuidName = _uuidMgr.generateUuid(UserVm.class, null);
         // String hostName = generateHostName(uuidName);
         // String displayName = hostName + "-Clone";
-        String name = cmd.getName();
-        String displayName = cmd.getName();
+        String name = cmd.getName() + cnt;
+        String displayName = cmd.getName() + cnt;
         // VolumeVO curVolume = _volsDao.findByInstance(curVm.getId()).get(0);
         // Long diskOfferingId = curVolume.getDiskOfferingId();
         Long size = null; // mutual exclusive with disk offering id

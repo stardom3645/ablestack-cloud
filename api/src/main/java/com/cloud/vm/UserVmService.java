@@ -438,8 +438,6 @@ public interface UserVmService {
     UserVm createVirtualMachineVolume(DeployVMVolumeCmd cmd) throws InsufficientCapacityException, ResourceUnavailableException, ConcurrentOperationException,
         StorageUnavailableException, ResourceAllocationException;
 
-    UserVm recordVirtualMachineToDB(CloneVMCmd cmd, String rootVolumeId) throws InsufficientCapacityException, ResourceUnavailableException, ConcurrentOperationException,
-        StorageUnavailableException, ResourceAllocationException;
     /**
      * This API is mostly to trigger VM.CREATE event for deployVirtualMachine with startvm=false, because there is no code in "execute" part of VM creation.
      * However, it can be used for additional VM customization in the future.

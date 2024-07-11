@@ -82,7 +82,6 @@ import com.cloud.storage.dao.VMTemplateDao;
 import com.cloud.storage.dao.VolumeDao;
 import com.cloud.storage.snapshot.SnapshotManager;
 import com.cloud.template.TemplateManager;
-import com.cloud.utils.ExecutionResult;
 import com.cloud.utils.Pair;
 import com.cloud.vm.VMInstanceVO;
 import com.cloud.vm.VirtualMachine;
@@ -559,28 +558,27 @@ public class AblestackPrimaryDataStoreDriverImpl implements PrimaryDataStoreDriv
     }
 
     @Override
-    public void flattenAsync(DataStore store, DataObject srcData, AsyncCompletionCallback<ExecutionResult> callback) {
+    public void flattenAsync(DataStore store, DataObject srcData, AsyncCompletionCallback<CommandResult> callback) {
         SnapshotObjectTO srcTO = (SnapshotObjectTO) srcData.getTO();
         FlattenCommand cmd = new FlattenCommand(srcTO);
-        ExecutionResult result = new ExecutionResult(false, "");
+        CommandResult result = new CommandResult();
         try {
             EndPoint ep = epSelector.select(srcData);
             if (ep == null) {
                 String errMsg = "No remote endpoint to send FlattenCommand, check if host or ssvm is down?";
                 logger.error(errMsg);
-                result.setDetails(errMsg);
+                result.setResult(errMsg);
             } else {
                 Answer answer = ep.sendMessage(cmd);
                 if (answer != null) {
                     if (answer.getResult()) {
                         result.setSuccess(true);
                     }
-                    result.setDetails(answer.getDetails());
                 }
             }
         } catch (Exception ex) {
             logger.debug("Unable to flatten volume" + srcData.getId(), ex);
-            result.setDetails(ex.toString());
+            result.setResult(ex.toString());
         }
         callback.complete(result);
     }

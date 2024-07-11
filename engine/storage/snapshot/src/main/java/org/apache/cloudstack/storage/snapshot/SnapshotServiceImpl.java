@@ -168,6 +168,18 @@ public class SnapshotServiceImpl implements SnapshotService {
 
     }
 
+    static private class FlattenSnapshotContext<T> extends AsyncRpcContext<T> {
+        final SnapshotInfo snapshot;
+        final AsyncCallFuture<SnapshotResult> future;
+
+        public FlattenSnapshotContext(AsyncCompletionCallback<T> callback, SnapshotInfo snapshot, AsyncCallFuture<SnapshotResult> future) {
+            super(callback);
+            this.snapshot = snapshot;
+            this.future = future;
+        }
+
+    }
+
     private String generateCopyUrlBase(String hostname, String dir) {
         String scheme = "http";
         boolean _sslCopy = false;
@@ -784,5 +796,50 @@ public class SnapshotServiceImpl implements SnapshotService {
         QuerySnapshotZoneCopyCommand cmd = new QuerySnapshotZoneCopyCommand((SnapshotObjectTO)(snapshot.getTO()));
         ep.sendMessageAsync(cmd, caller);
         return future;
+    }
+
+    @Override
+    public boolean flattenVolumeAsync(SnapshotInfo snapshot, DataStore dataStore) {
+        // snapInfo.processEvent(ObjectInDataStoreStateMachine.Event.DestroyRequested);
+
+        AsyncCallFuture<SnapshotResult> future = new AsyncCallFuture<SnapshotResult>();
+        FlattenSnapshotContext<CommandResult> context = new FlattenSnapshotContext<CommandResult>(null, snapshot, future);
+        AsyncCallbackDispatcher<SnapshotServiceImpl, CommandResult> caller = AsyncCallbackDispatcher.create(this);
+        caller.setCallback(caller.getTarget().flattenCallback(null, null)).setContext(context);
+
+        dataStore.getDriver().flattenAsync(dataStore, snapshot, caller);
+
+        SnapshotResult result = null;
+        try {
+            result = future.get();
+            if (result.isFailed()) {
+                throw new CloudRuntimeException(result.getResult());
+            }
+            logger.debug(String.format("Successfully deleted snapshot [%s] with ID [%s].", snapInfo.getName(), snapInfo.getUuid()));
+            return true;
+        } catch (InterruptedException | ExecutionException e) {
+            logger.error(String.format("Failed to delete snapshot [%s] due to: [%s].", snapInfo.getUuid(), e.getMessage()));
+            logger.debug(String.format("Failed to delete snapshot [%s].", snapInfo.getUuid()), e);
+        }
+
+        return false;
+    }
+
+    protected Void flattenCallback(AsyncCallbackDispatcher<SnapshotServiceImpl, CommandResult> callback, FlattenSnapshotContext<CommandResult> context) {
+
+        CommandResult result = callback.getResult();
+        AsyncCallFuture<SnapshotResult> future = context.future;
+        SnapshotInfo snapshot = context.snapshot;
+        SnapshotResult res = null;
+        try {
+            logger.debug(String.format("Failed to flatten snapshot [%s] due to: [%s].", snapshot.getUuid(), result.getResult()));
+            res = new SnapshotResult(context.snapshot, null);
+            res.setResult(result.getResult());
+        } catch (Exception e) {
+            logger.error(String.format("An exception occurred while processing an event in delete snapshot callback from snapshot [%s].", snapshot.getUuid()));
+            res.setResult(e.toString());
+        }
+        future.complete(res);
+        return null;
     }
 }

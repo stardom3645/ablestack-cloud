@@ -32,6 +32,7 @@ import javax.inject.Inject;
 import org.apache.cloudstack.engine.subsystem.api.storage.DataObject;
 import org.apache.cloudstack.engine.subsystem.api.storage.DataStore;
 import org.apache.cloudstack.framework.async.AsyncCompletionCallback;
+import org.apache.cloudstack.storage.command.CommandResult;
 import org.apache.cloudstack.storage.datastore.db.ObjectStoreDao;
 import org.apache.cloudstack.storage.datastore.db.ObjectStoreDetailsDao;
 import org.apache.cloudstack.storage.datastore.db.ObjectStoreVO;
@@ -50,7 +51,6 @@ import com.cloud.storage.dao.BucketDao;
 import com.cloud.user.Account;
 import com.cloud.user.AccountDetailsDao;
 import com.cloud.user.dao.AccountDao;
-import com.cloud.utils.ExecutionResult;
 import com.cloud.utils.exception.CloudRuntimeException;
 
 import io.minio.BucketExistsArgs;
@@ -445,6 +445,6 @@ public class MinIOObjectStoreDriverImpl extends BaseObjectStoreDriverImpl {
     }
 
     @Override
-    public void flattenAsync(DataStore store, DataObject data, AsyncCompletionCallback<ExecutionResult> callback) {
+    public void flattenAsync(DataStore store, DataObject data, AsyncCompletionCallback<CommandResult> callback) {
     }
 }
