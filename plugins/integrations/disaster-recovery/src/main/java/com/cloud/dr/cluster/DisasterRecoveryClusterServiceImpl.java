@@ -71,6 +71,7 @@ import com.cloud.vm.dao.UserVmDao;
 import com.cloud.vm.dao.VMInstanceDao;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 import com.google.gson.JsonElement;
 
 import org.apache.cloudstack.api.ApiConstants;
@@ -1099,30 +1100,42 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                             glueIp = array[j];
                             ///////////////////// glue-api 프로토콜과 포트 확정 시 변경 예정
                             glueUrl = "https://" + glueIp + ":8080/api/v1";
-                            glueCommand = "/mirror/image/demote/peer/rbd/" + imageName.getAsString();
-                            glueMethod = "DELETE";
-                            Map<String, String> glueParams = new HashMap<>();
-                            glueParams.put("mirrorPool", "rbd");
-                            glueParams.put("imageName", imageName.getAsString());
-                            result = DisasterRecoveryClusterUtil.glueImageMirrorDemoteAPI(glueUrl, glueCommand, glueMethod, glueParams);
-                            if (result) {
-                                glueCommand = "/mirror/image/promote/rbd/" + imageName.getAsString();
-                                glueMethod = "POST";
-                                result = DisasterRecoveryClusterUtil.glueImageMirrorPromoteAPI(glueUrl, glueCommand, glueMethod, glueParams);
-                                if (result) {
-                                    glueCommand = "/mirror/image/resync/peer/rbd/" + imageName.getAsString();
-                                    glueMethod = "PUT";
-                                    result = DisasterRecoveryClusterUtil.glueImageMirrorResyncAPI(glueUrl, glueCommand, glueMethod, glueParams);
-                                    if (result) {
-                                        break;
-                                    } else {
-                                        throw new CloudRuntimeException("Failed to request ImageMirrorResyncPeer Glue-API.");
+                            glueCommand = "/mirror/image/status/rbd/" +imageName.getAsString();
+                            glueMethod = "GET";
+                            String mirrorImageStatus = DisasterRecoveryClusterUtil.glueImageMirrorStatusAPI(glueUrl, glueCommand, glueMethod);
+                            if (mirrorImageStatus != null) {
+                                JsonObject statObject = (JsonObject) new JsonParser().parse(mirrorImageStatus).getAsJsonObject();
+                                if (statObject.has("description")) {
+                                    if (!statObject.get("description").getAsString().equals("local image is primary")) {
+                                        glueCommand = "/mirror/image/demote/peer/rbd/" + imageName.getAsString();
+                                        glueMethod = "DELETE";
+                                        Map<String, String> glueParams = new HashMap<>();
+                                        glueParams.put("mirrorPool", "rbd");
+                                        glueParams.put("imageName", imageName.getAsString());
+                                        result = DisasterRecoveryClusterUtil.glueImageMirrorDemoteAPI(glueUrl, glueCommand, glueMethod, glueParams);
+                                        if (result) {
+                                            glueCommand = "/mirror/image/promote/rbd/" + imageName.getAsString();
+                                            glueMethod = "POST";
+                                            result = DisasterRecoveryClusterUtil.glueImageMirrorPromoteAPI(glueUrl, glueCommand, glueMethod, glueParams);
+                                            if (result) {
+                                                glueCommand = "/mirror/image/resync/peer/rbd/" + imageName.getAsString();
+                                                glueMethod = "PUT";
+                                                result = DisasterRecoveryClusterUtil.glueImageMirrorResyncAPI(glueUrl, glueCommand, glueMethod, glueParams);
+                                                if (result) {
+                                                    break;
+                                                } else {
+                                                    throw new CloudRuntimeException("Failed to request ImageMirrorResyncPeer Glue-API.");
+                                                }
+                                            } else {
+                                                throw new CloudRuntimeException("Failed to request ImageMirrorPromote Glue-API.");
+                                            }
+                                        } else {
+                                            throw new CloudRuntimeException("Failed to request ImageMirrorDemotePeer Glue-API.");
+                                        }
                                     }
-                                } else {
-                                    throw new CloudRuntimeException("Failed to request ImageMirrorPromote Glue-API.");
                                 }
                             } else {
-                                throw new CloudRuntimeException("Failed to request ImageMirrorDemotePeer Glue-API.");
+                                throw new CloudRuntimeException("Failed to request mirror image status Glue-API.");
                             }
                         }
                     } else {
@@ -1183,30 +1196,42 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                             glueIp = array[j];
                             ///////////////////// glue-api 프로토콜과 포트 확정 시 변경 예정
                             glueUrl = "https://" + glueIp + ":8080/api/v1";
-                            glueCommand = "/mirror/image/demote/rbd/" + imageName.getAsString();
-                            glueMethod = "DELETE";
-                            Map<String, String> glueParams = new HashMap<>();
-                            glueParams.put("mirrorPool", "rbd");
-                            glueParams.put("imageName", imageName.getAsString());
-                            result = DisasterRecoveryClusterUtil.glueImageMirrorDemoteAPI(glueUrl, glueCommand, glueMethod, glueParams);
-                            if (result) {
-                                glueCommand = "/mirror/image/promote/peer/rbd/" + imageName.getAsString();
-                                glueMethod = "POST";
-                                result = DisasterRecoveryClusterUtil.glueImageMirrorPromoteAPI(glueUrl, glueCommand, glueMethod, glueParams);
-                                if (result) {
-                                    glueCommand = "/mirror/image/resync/rbd/" + imageName.getAsString();
-                                    glueMethod = "PUT";
-                                    result = DisasterRecoveryClusterUtil.glueImageMirrorResyncAPI(glueUrl, glueCommand, glueMethod, glueParams);
-                                    if (result) {
-                                        break;
-                                    } else {
-                                        throw new CloudRuntimeException("Failed to request ImageMirrorResync Glue-API.");
+                            glueCommand = "/mirror/image/status/rbd/" +imageName.getAsString();
+                            glueMethod = "GET";
+                            String mirrorImageStatus = DisasterRecoveryClusterUtil.glueImageMirrorStatusAPI(glueUrl, glueCommand, glueMethod);
+                            if (mirrorImageStatus != null) {
+                                JsonObject statObject = (JsonObject) new JsonParser().parse(mirrorImageStatus).getAsJsonObject();
+                                if (statObject.has("description")) {
+                                    if (!statObject.get("description").getAsString().equals("replaying")) {
+                                        glueCommand = "/mirror/image/demote/rbd/" + imageName.getAsString();
+                                        glueMethod = "DELETE";
+                                        Map<String, String> glueParams = new HashMap<>();
+                                        glueParams.put("mirrorPool", "rbd");
+                                        glueParams.put("imageName", imageName.getAsString());
+                                        result = DisasterRecoveryClusterUtil.glueImageMirrorDemoteAPI(glueUrl, glueCommand, glueMethod, glueParams);
+                                        if (result) {
+                                            glueCommand = "/mirror/image/promote/peer/rbd/" + imageName.getAsString();
+                                            glueMethod = "POST";
+                                            result = DisasterRecoveryClusterUtil.glueImageMirrorPromoteAPI(glueUrl, glueCommand, glueMethod, glueParams);
+                                            if (result) {
+                                                glueCommand = "/mirror/image/resync/rbd/" + imageName.getAsString();
+                                                glueMethod = "PUT";
+                                                result = DisasterRecoveryClusterUtil.glueImageMirrorResyncAPI(glueUrl, glueCommand, glueMethod, glueParams);
+                                                if (result) {
+                                                    break;
+                                                } else {
+                                                    throw new CloudRuntimeException("Failed to request ImageMirrorResync Glue-API.");
+                                                }
+                                            } else {
+                                                throw new CloudRuntimeException("Failed to request ImageMirrorPromotePeer Glue-API.");
+                                            }
+                                        } else {
+                                            throw new CloudRuntimeException("Failed to request ImageMirrorDemote Glue-API.");
+                                        }
                                     }
-                                } else {
-                                    throw new CloudRuntimeException("Failed to request ImageMirrorPromotePeer Glue-API.");
                                 }
                             } else {
-                                throw new CloudRuntimeException("Failed to request ImageMirrorDemote Glue-API.");
+                                throw new CloudRuntimeException("Failed to request mirror image status Glue-API.");
                             }
                         }
                     } else {
@@ -1866,7 +1891,6 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
     }
 
     private void validateDisasterRecoveryClusterMirrorParameters(final DisasterRecoveryClusterVO drCluster) throws CloudRuntimeException {
-        // Secondary Cluster DR VM 상태 조회
         List<DisasterRecoveryClusterVmMapVO> drClusterVmList = disasterRecoveryClusterVmMapDao.listByDisasterRecoveryClusterId(drCluster.getId());
         ResponseObject.ResponseView respView = ResponseObject.ResponseView.Restricted;
         Account caller = CallContext.current().getCallingAccount();
@@ -1882,47 +1906,6 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                         throw new InvalidParameterValueException("Forced promote and demote functions cannot be executed because there is a running disaster recovery secondary cluster virtual machine : " + userVM.getName());
                     }
                 }
-            }
-            String url = drCluster.getDrClusterUrl();
-            Map<String, String> details = disasterRecoveryClusterDetailsDao.findDetails(drCluster.getId());
-            String apiKey = details.get(ApiConstants.DR_CLUSTER_API_KEY);
-            String secretKey = details.get(ApiConstants.DR_CLUSTER_SECRET_KEY);
-            // Primary Cluster DR VM 상태 조회
-            String command = "getDisasterRecoveryClusterList";
-            String method = "GET";
-            Map<String, String> params = new HashMap<>();
-            String drList = DisasterRecoveryClusterUtil.moldGetDisasterRecoveryClusterListAPI(url + "/client/api/", command, method, apiKey, secretKey);
-            if (drList != null || !drList.isEmpty()) {
-                JSONObject jsonObject = new JSONObject(drList);
-                Object object = jsonObject.get("disasterrecoverycluster");
-                JSONArray array;
-                if (object instanceof JSONArray) {
-                    array = (JSONArray) object;
-                } else {
-                    array = new JSONArray();
-                    array.put(object);
-                }
-                for (int i = 0; i < array.length(); i++) {
-                    JSONObject jSONObject = array.getJSONObject(i);
-                    if (jSONObject.get("name").equals(drCluster.getName())) {
-                        Object obj = jSONObject.get("drclustervmmap");
-                        JSONArray vmArray;
-                        if (obj instanceof JSONArray) {
-                            vmArray = (JSONArray) obj;
-                        } else {
-                            vmArray = new JSONArray();
-                            vmArray.put(obj);
-                        }
-                        for (int j = 0; j < vmArray.length(); j++) {
-                            JSONObject jSONObj = vmArray.getJSONObject(j);
-                            if (!jSONObj.get("drclustervmstatus").equals("Stopped")) {
-                                throw new InvalidParameterValueException("Forced promote and demote functions cannot be executed because there is a running disaster recovery primary cluster virtual machine : " + jSONObj.get("drclustervmname"));
-                            }
-                        }
-                    }
-                }
-            } else {
-                throw new InvalidParameterValueException("Forced promote and demote functions cannot be executed because failed to query primary cluster DR information.");
             }
         }
     }
