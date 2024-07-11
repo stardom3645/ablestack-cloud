@@ -57,6 +57,7 @@ import com.cloud.storage.Volume;
 import com.cloud.storage.VolumeVO;
 import com.cloud.storage.dao.VolumeDao;
 import com.cloud.user.dao.AccountDao;
+import com.cloud.utils.ExecutionResult;
 import com.cloud.utils.Pair;
 
 public class NexentaPrimaryDataStoreDriver implements PrimaryDataStoreDriver {
@@ -277,6 +278,6 @@ public class NexentaPrimaryDataStoreDriver implements PrimaryDataStoreDriver {
     }
 
     @Override
-    public void flattenAsync(DataStore dataStore, DataObject data, AsyncCompletionCallback<CreateCmdResult> callback) {
+    public void flattenAsync(DataStore dataStore, DataObject data, AsyncCompletionCallback<ExecutionResult> callback) {
     }
 }

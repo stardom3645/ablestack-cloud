@@ -2418,7 +2418,7 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
 
         String flattenWorkers = configs.get("flatten.workers");
         int fwrks = NumbersUtil.parseInt(flattenWorkers, 3);
-        _flattenInterval = NumbersUtil.parseInt(configs.get("flatten.interval"), 300);
+        _flattenInterval = NumbersUtil.parseInt(configs.get("flatten.interval"), 60);
 
         _flattenExecutor = Executors.newScheduledThreadPool(fwrks, new NamedThreadFactory("FlattenCloneImage-Scavenger"));
 
@@ -2759,8 +2759,7 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
                                     VolumeInfo volume = volFactory.getVolume(snapshot.get(0).getVolumeId());
                                     DataStore dataStore = _dataStoreMgr.getDataStore(volume.getPoolId(), DataStoreRole.Primary);
                                     SnapshotInfo snapshotInfo = snapshotFactory.getSnapshot(snapshot.get(0).getId(), dataStore);
-                                    _volService.flattenVolumeAsync(snapshotInfo, dataStore);
-
+                                    AsyncCallFuture<VolumeApiResult> future = _volService.flattenVolumeAsync(snapshotInfo, dataStore);
                                     SnapshotVO snap = _snapshotDao.findByIdIncludingRemoved(snapshot.get(0).getId());
                                     snap.setCloneType("full-flattened");
                                     _snapshotDao.update(snap.getId(), snap);
@@ -9398,33 +9397,37 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
         long zoneId = cmd.getTargetVM().getDataCenterId();
         String clone_type = cmd.getType();
         SnapshotVO snapshot = null;
+
+        Account owner = _accountService.getAccount(cmd.getEntityOwnerId());
+        Account caller = CallContext.current().getCallingAccount();
+        _accountMgr.checkAccess(caller, null, true, owner);
+        Long volumeId = _volsDao.findByInstanceAndType(cmd.getId(), Volume.Type.ROOT).get(0).getId();
+        VolumeVO volume = _volsDao.findById(volumeId);
+        if (volume == null) {
+            throw new InvalidParameterValueException("Failed to create private template record, unable to find root volume " + volumeId);
+        }
+        _accountMgr.checkAccess(caller, null, true, volume);
+        logger.info("Clone VM >> Creating snapshot for root volume creation");
+        VMSnapshot vmSnapshot;
         try {
-            Account owner = _accountService.getAccount(cmd.getEntityOwnerId());
-            Account caller = CallContext.current().getCallingAccount();
-            _accountMgr.checkAccess(caller, null, true, owner);
-            Long volumeId = _volsDao.findByInstanceAndType(cmd.getId(), Volume.Type.ROOT).get(0).getId();
-            VolumeVO volume = _volsDao.findById(volumeId);
-            if (volume == null) {
-                throw new InvalidParameterValueException("Failed to create private template record, unable to find root volume " + volumeId);
+            vmSnapshot = _vmSnapshotMgr.allocVMSnapshot(curVm.getId(), null, null, false);
+            if (vmSnapshot == null) {
+                throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, "Failed to create vm snapshot");
             }
-            _accountMgr.checkAccess(caller, null, true, volume);
-            logger.info("Clone VM >> Creating snapshot for root volume creation");
-            VMSnapshot vmSnapshot;
-            try {
-                vmSnapshot = _vmSnapshotMgr.allocVMSnapshot(curVm.getId(), null, null, false);
-                if (vmSnapshot == null) {
-                    throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, "Failed to create vm snapshot");
-                }
-                vmSnapshot = _vmSnapshotMgr.createVMSnapshot(curVm.getId(), vmSnapshot.getId(), true);
-                if (vmSnapshot == null) {
-                    throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, "Failed to create vm snapshot due to an internal error creating snapshot for vm " + curVm.getId());
-                }
-
-            } catch (CloudRuntimeException e) {
-                throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, "Failed to create vm snapshot: " + e.getMessage(), e);
+            vmSnapshot = _vmSnapshotMgr.createVMSnapshot(curVm.getId(), vmSnapshot.getId(), true);
+            if (vmSnapshot == null) {
+                throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, "Failed to create vm snapshot due to an internal error creating snapshot for vm " + curVm.getId());
             }
 
-            List<VMSnapshotDetailsVO> listSnapshots = vmSnapshotDetailsDao.findDetails(vmSnapshot.getId(), "kvmStorageSnapshot");
+        } catch (CloudRuntimeException e) {
+            throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, "Failed to create vm snapshot: " + e.getMessage(), e);
+        }
+
+        List<VMSnapshotDetailsVO> listSnapshots = vmSnapshotDetailsDao.findDetails(vmSnapshot.getId(), "kvmStorageSnapshot");
+
+        Integer countOfCloneVM = cmd.getCount();
+        for (int cnt = 1; cnt <= countOfCloneVM; cnt++) {
+
             for (VMSnapshotDetailsVO vmSnapshotDetailsVO : listSnapshots) {
                 SnapshotVO snapVO = _snapshotDao.findById(Long.parseLong(vmSnapshotDetailsVO.getValue()));
                 if (snapVO == null) {
@@ -9438,7 +9441,7 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
                 Long maxIops = snapVO.getMaxIops();
                 Long size = snapVO.getSize();
                 Storage.ProvisioningType provisioningType = diskOffering.getProvisioningType();
-                String rootVolumeName = cmd.getName() + "-" + parentRootVolume.getName() + "-Clone";
+                String rootVolumeName = cmd.getName() + "-" + parentRootVolume.getName() + "-Clone" + (countOfCloneVM > 1 ? Integer.toString(cnt) : "");
 
                 if (parentRootVolume.getVolumeType() == Volume.Type.ROOT) {
                     snapVO.setCloneType(clone_type);
@@ -9450,6 +9453,7 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
                     if (rootVolume == null) {
                         throw new CloudRuntimeException("Creation of root volume is not queried. The virtual machine cannot be cloned!");
                     }
+                    cmd.setName(cmd.getName() + (countOfCloneVM > 1 ? Integer.toString(cnt) : ""));
                     UserVm cloneVM = recordVirtualMachineToDB(cmd, String.valueOf(rootVolume.getId()));
                     if (cloneVM == null) {
                         throw new CloudRuntimeException("Unable to record the VM to DB!");
@@ -9474,7 +9478,7 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
                 Long maxIops = snapVO.getMaxIops();
                 Long size = snapVO.getSize();
                 Storage.ProvisioningType provisioningType = diskOffering.getProvisioningType();
-                String dataVolumeName = cmd.getName() + "-" + parentDataDiskVolume.getName() + "-Clone";
+                String dataVolumeName = cmd.getName() + "-" + parentDataDiskVolume.getName() + "-Clone" + (countOfCloneVM > 1 ? Integer.toString(cnt) : "");
 
                 if (parentDataDiskVolume.getVolumeType() == Volume.Type.DATADISK) {
                     snapVO.setCloneType(clone_type);
@@ -9515,24 +9519,6 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
                 }
             }
 
-            // snapshot = (SnapshotVO) _volumeService.allocSnapshot(volumeId, Snapshot.INTERNAL_POLICY_ID, volume.getName(), null, cmd.getZoneIds(), clone_type);
-            // if (snapshot == null) {
-            //     throw new CloudRuntimeException("Unable to create a snapshot during the template creation recording");
-            // }
-            // SnapshotVO snapshotEntity = (SnapshotVO) _volumeService.takeSnapshot(volumeId, Snapshot.INTERNAL_POLICY_ID, snapshot.getId(), caller, false, null, false, new HashMap<>(), cmd.getZoneIds());
-
-            // if (snapshotEntity == null) {
-            //     throw new CloudRuntimeException("Error when creating the snapshot entity");
-            // }
-            // if (snapshotEntity.getState() != Snapshot.State.BackedUp) {
-            //     throw new CloudRuntimeException("Async backup of snapshot happens during the clone for snapshot id: " + snapshot.getId());
-            // }
-
-
-            if (!cmd.getStartVm()) {
-                return Optional.of(getUserVm(cmd.getEntityId()));
-            }
-
             // start the VM if successfull
             Long podId = curVm.getPodIdToDeployIn();
             Long clusterId = null;
@@ -9546,13 +9532,16 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
                 additonalParams.put(VirtualMachineProfile.Param.BootMode, map.get(ApiConstants.BootType.UEFI.toString()));
             }
 
-            return Optional.of(startVirtualMachine(cmd.getEntityId(), podId, clusterId, hostId, diskOfferingMap, additonalParams, null));
-        } finally {
-            // if (snapshot != null) {
-            //     _snapshotService.deleteSnapshot(snapshot.getId(), cmd.getTargetVM().getDataCenterId());
-            //     logger.warn("Clone VM >> Clearing the temporary root disk snapshot : " + snapshot.getId());
-            // }
+            if (countOfCloneVM == cnt) {
+                if (!cmd.getStartVm()) {
+                    return Optional.of(getUserVm(cmd.getEntityId()));
+                }
+                return Optional.of(startVirtualMachine(cmd.getEntityId(), podId, clusterId, hostId, diskOfferingMap, additonalParams, null));
+            } else {
+                startVirtualMachine(cmd.getEntityId(), podId, clusterId, hostId, diskOfferingMap, additonalParams, null);
+            }
         }
+        return null;
     }
 
     @Override

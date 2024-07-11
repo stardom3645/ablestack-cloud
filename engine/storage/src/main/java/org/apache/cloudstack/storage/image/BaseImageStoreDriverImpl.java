@@ -86,6 +86,7 @@ import com.cloud.storage.dao.VMTemplateDao;
 import com.cloud.storage.dao.VMTemplateZoneDao;
 import com.cloud.storage.dao.VolumeDao;
 import com.cloud.storage.download.DownloadMonitor;
+import com.cloud.utils.ExecutionResult;
 import com.cloud.utils.NumbersUtil;
 import com.cloud.utils.db.TransactionLegacy;
 import com.cloud.utils.exception.CloudRuntimeException;
@@ -554,6 +555,6 @@ public abstract class BaseImageStoreDriverImpl implements ImageStoreDriver {
     }
 
     @Override
-    public void flattenAsync(DataStore dataStore, DataObject data, AsyncCompletionCallback<CreateCmdResult> callback) {
+    public void flattenAsync(DataStore dataStore, DataObject data, AsyncCompletionCallback<ExecutionResult> callback) {
     }
 }

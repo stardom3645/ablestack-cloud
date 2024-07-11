@@ -52,11 +52,11 @@
         <a-switch v-model:checked="form.startvm" />
       </a-form-item>
       <a-form-item :label="$t('label.deploy.vm.number')" name="vmNumber" ref="vmNumber">
-        <a-input-number :min=1 :max=50 :maxlength="2" v-model:value="vmNumber" />
+        <a-input-number :min=1 :max=50 :maxlength="2" v-model:value="form.count" />
       </a-form-item>
 
       <div :span="24" class="action-button">
-        <a-button :loading="loading" @click="onCloseAction">{{ $t('label.cancel') }}</a-button>
+        <a-button :loading="loading" @click="closeAction">{{ $t('label.cancel') }}</a-button>
         <a-button :loading="loading" ref="submit" type="primary" @click="handleSubmit">{{ $t('label.ok') }}</a-button>
       </div>
     </a-form>
@@ -80,7 +80,6 @@ export default {
   },
   data () {
     return {
-      vmNumber: 1,
       loading: false
     }
   },
@@ -95,7 +94,8 @@ export default {
       this.formRef = ref()
       this.form = reactive({
         clonetype: 'full',
-        startvm: false
+        startvm: false,
+        count: 1
       })
       this.rules = reactive({
         name: [{ required: true, message: `${this.$t('label.required')}` }],
@@ -120,15 +120,14 @@ export default {
         params.startvm = this.form.startvm
         console.log(params)
         api('cloneVirtualMachine', params).then(json => {
-          const jobId = json.startvirtualmachineresponse.jobid
+          const jobId = json.clonevirtualmachineresponse.jobid
           this.$pollJob({
             jobId,
-            title: this.$t('label.action.start.instance'),
+            title: this.$t('label.action.clone.vm'),
             description: this.resource.name,
-            loadingMessage: `${this.$t('label.action.start.instance')} ${this.resource.name}`,
+            loadingMessage: `${this.$t('label.action.clone.vm')} ${this.resource.name}`,
             catchMessage: this.$t('error.fetching.async.job.result'),
-            successMessage: `${this.$t('label.action.start.instance')} ${this.resource.name}`,
-            response: (result) => { return result.virtualmachine && result.virtualmachine.password ? `The password of VM <b>${result.virtualmachine.displayname}</b> is <b>${result.virtualmachine.password}</b>` : null }
+            successMessage: `${this.$t('label.action.clone.vm')} ${this.resource.name}`
           })
           this.closeAction()
         }).catch(error => {

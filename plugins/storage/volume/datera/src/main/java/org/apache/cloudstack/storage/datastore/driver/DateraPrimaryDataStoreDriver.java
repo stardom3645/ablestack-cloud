@@ -79,6 +79,7 @@ import com.cloud.storage.dao.SnapshotDetailsVO;
 import com.cloud.storage.dao.VMTemplatePoolDao;
 import com.cloud.storage.dao.VolumeDao;
 import com.cloud.storage.dao.VolumeDetailsDao;
+import com.cloud.utils.ExecutionResult;
 import com.cloud.utils.Pair;
 import com.cloud.utils.db.GlobalLock;
 import com.cloud.utils.exception.CloudRuntimeException;
@@ -1898,6 +1899,6 @@ public class DateraPrimaryDataStoreDriver implements PrimaryDataStoreDriver {
     }
 
     @Override
-    public void flattenAsync(DataStore dataStore, DataObject data, AsyncCompletionCallback<CreateCmdResult> callback) {
+    public void flattenAsync(DataStore dataStore, DataObject data, AsyncCompletionCallback<ExecutionResult> callback) {
     }
 }

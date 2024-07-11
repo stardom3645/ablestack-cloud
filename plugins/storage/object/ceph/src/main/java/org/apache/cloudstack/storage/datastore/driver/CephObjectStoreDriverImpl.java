@@ -43,6 +43,7 @@ import com.cloud.storage.dao.BucketDao;
 import com.cloud.user.Account;
 import com.cloud.user.AccountDetailsDao;
 import com.cloud.user.dao.AccountDao;
+import com.cloud.utils.ExecutionResult;
 import com.cloud.utils.exception.CloudRuntimeException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -52,7 +53,6 @@ import java.util.Map;
 import java.util.Optional;
 import javax.inject.Inject;
 
-import org.apache.cloudstack.engine.subsystem.api.storage.CreateCmdResult;
 import org.apache.cloudstack.engine.subsystem.api.storage.DataObject;
 import org.apache.cloudstack.engine.subsystem.api.storage.DataStore;
 import org.apache.cloudstack.framework.async.AsyncCompletionCallback;
@@ -409,6 +409,6 @@ public class CephObjectStoreDriverImpl extends BaseObjectStoreDriverImpl {
     }
 
     @Override
-    public void flattenAsync(DataStore store, DataObject data, AsyncCompletionCallback<CreateCmdResult> callback) {
+    public void flattenAsync(DataStore store, DataObject data, AsyncCompletionCallback<ExecutionResult> callback) {
     }
 }
