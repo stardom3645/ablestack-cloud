@@ -244,11 +244,20 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         response.setDrClusterGlueIpAddress(drcluster.getDrClusterGlueIpAddress());
         response.setCreated(drcluster.getCreated());
 
+        Map<String, String> details = disasterRecoveryClusterDetailsDao.findDetails(clusterId);
+        String secApiKey = details.get(ApiConstants.DR_CLUSTER_API_KEY);
+        String secSecretKey = details.get(ApiConstants.DR_CLUSTER_SECRET_KEY);
+        if (details != null && !details.isEmpty()) {
+            response.setDetails(details);
+        }
+
         // 미러링 데몬 상태 업데이트
-        String ipList = Script.runSimpleBashScript("cat /etc/hosts | grep -E 'scvm1-mngt|scvm2-mngt|scvm3-mngt' | awk '{print $1}' | tr '\n' ','");
-        if (ipList != null || !ipList.isEmpty()) {
-            ipList = ipList.replaceAll(",$", "");
-            String[] array = ipList.split(",");
+        String moldUrl = drcluster.getDrClusterUrl() + "/client/api/";
+        String moldCommand = "listScvmIpAddress";
+        String moldMethod = "GET";
+        String scvmList = DisasterRecoveryClusterUtil.moldListScvmIpAddressAPI(moldUrl, moldCommand, moldMethod, secApiKey, secSecretKey);
+        if (scvmList != null) {
+            String[] array = scvmList.split(",");
             for (int i=0; i < array.length; i++) {
                 String glueIp = array[i];
                 ///////////////////// glue-api 프로토콜과 포트 확정 시 변경 예정
@@ -280,18 +289,9 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         disasterRecoveryClusterDao.update(drcluster.getId(), drcluster);
         response.setMirroringAgentStatus(drcluster.getMirroringAgentStatus());
 
-        Map<String, String> details = disasterRecoveryClusterDetailsDao.findDetails(clusterId);
-        String secApiKey = details.get(ApiConstants.DR_CLUSTER_API_KEY);
-        String secSecretKey = details.get(ApiConstants.DR_CLUSTER_SECRET_KEY);
-        if (details != null && !details.isEmpty()) {
-            response.setDetails(details);
-        }
-
         List<GetDisasterRecoveryClusterVmListResponse> disasterRecoveryClusterVmListResponse = setDisasterRecoveryClusterVmListResponse(drcluster.getId());
         response.setDisasterRecoveryClusterVmMap(disasterRecoveryClusterVmListResponse);
 
-        String moldUrl = drcluster.getDrClusterUrl() + "/client/api/";
-        String moldMethod = "GET";
         String moldCommandListServiceOfferings = "listServiceOfferings";
         List<ServiceOfferingResponse> secDrClusterServiceOfferingListResponse = DisasterRecoveryClusterUtil.getSecDrClusterInfoList(moldUrl, moldCommandListServiceOfferings, moldMethod, secApiKey, secSecretKey);
         response.setSecDisasterRecoveryClusterServiceOfferingList(secDrClusterServiceOfferingListResponse);
@@ -315,12 +315,21 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         response.setDrClusterGlueIpAddress(drcluster.getDrClusterGlueIpAddress());
         response.setCreated(drcluster.getCreated());
 
+        Map<String, String> details = disasterRecoveryClusterDetailsDao.findDetails(drcluster.getId());
+        String secApiKey = details.get(ApiConstants.DR_CLUSTER_API_KEY);
+        String secSecretKey = details.get(ApiConstants.DR_CLUSTER_SECRET_KEY);
+        if (details != null && !details.isEmpty()) {
+            response.setDetails(details);
+        }
+
         // 미러링 데몬 상태 업데이트
-        String ipList = Script.runSimpleBashScript("cat /etc/hosts | grep -E 'scvm1-mngt|scvm2-mngt|scvm3-mngt' | awk '{print $1}' | tr '\n' ','");
-        if (ipList != null || !ipList.isEmpty()) {
-            ipList = ipList.replaceAll(",$", "");
-            String[] array = ipList.split(",");
+        String moldUrl = drcluster.getDrClusterUrl() + "/client/api/";
+        String moldCommand = "listScvmIpAddress";
+        String moldMethod = "GET";
+        String scvmList = DisasterRecoveryClusterUtil.moldListScvmIpAddressAPI(moldUrl, moldCommand, moldMethod, secApiKey, secSecretKey);
+        if (scvmList != null) {
             String daemonHealth = null;
+            String[] array = scvmList.split(",");
             for (int i=0; i < array.length; i++) {
                 String glueIp = array[i];
                 ///////////////////// glue-api 프로토콜과 포트 확정 시 변경 예정
@@ -348,10 +357,6 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
             }
         }
 
-        Map<String, String> details = disasterRecoveryClusterDetailsDao.findDetails(drcluster.getId());
-        if (details != null && !details.isEmpty()) {
-            response.setDetails(details);
-        }
         disasterRecoveryClusterDao.update(drcluster.getId(), drcluster);
         return response;
     }
@@ -424,21 +429,10 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                 }
                 response.setMirroredVmStatus(map.getMirroredVmStatus());
                 // 미러링 가상머신 볼륨 상태 조회
-                String[] array = null;
-                if (drcluster.getDrClusterType().equalsIgnoreCase("primary")) {
-                    moldCommand = "listScvmIpAddress";
-                    // secondary 클러스터에서 요청한 경우
-                    String scvmList = DisasterRecoveryClusterUtil.moldListScvmIpAddressAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey);
-                    if (scvmList != null) {
-                        array = scvmList.split(",");
-                    }
-                } else {
-                    // primary 클러스터에서 요청한 경우
-                    String ipList = Script.runSimpleBashScript("cat /etc/hosts | grep -E 'scvm1-mngt|scvm2-mngt|scvm3-mngt' | awk '{print $1}' | tr '\n' ','");
-                    ipList = ipList.replaceAll(",$", "");
-                    array = ipList.split(",");
-                }
-                if (array != null) {
+                moldCommand = "listScvmIpAddress";
+                String scvmList = DisasterRecoveryClusterUtil.moldListScvmIpAddressAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey);
+                if (scvmList != null) {
+                    String[] array = scvmList.split(",");
                     for (int i=0; i < array.length; i++) {
                         String glueIp = array[i];
                         ///////////////////// glue-api 프로토콜과 포트 확정 시 변경 예정
@@ -454,7 +448,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                                     JsonElement peerState = dr.getAsJsonObject().get("state") == null ? null : dr.getAsJsonObject().get("state");
                                     if (peerName != null && peerState != null) {
                                         if (peerState.getAsString().contains("replaying")) {
-                                            if (drcluster.getDrClusterType().equalsIgnoreCase("primary")) {
+                                            if (peerName.getAsString().equals("local")) {
                                                 response.setDrClusterVmVolStatus("SYNCING");
                                                 map.setMirroredVmVolumeStatus("READY");
                                             } else {
@@ -469,7 +463,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                                             response.setDrClusterVmVolStatus("UNKNOWN");
                                             map.setMirroredVmVolumeStatus("UNKNOWN");
                                         } else {
-                                            if (drcluster.getDrClusterType().equalsIgnoreCase("primary")) {
+                                            if (peerName.getAsString().equals("local")) {
                                                 response.setDrClusterVmVolStatus("READY");
                                                 map.setMirroredVmVolumeStatus("SYNCING");
                                             } else {
@@ -529,17 +523,16 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
             disasterRecoveryClusterDetailsDao.persist(drcluster.getId(), details);
             // 미러링 가상머신이 존재하며, primary cluster로 요청이 온 경우
             List<DisasterRecoveryClusterVmMapVO> drClusterVmList = disasterRecoveryClusterVmMapDao.listByDisasterRecoveryClusterId(drcluster.getId());
-            if (!CollectionUtils.isEmpty(drClusterVmList) && drcluster.getDrClusterType().equalsIgnoreCase("secondary")) {
+            if (!CollectionUtils.isEmpty(drClusterVmList)) {
                 String url = drcluster.getDrClusterUrl();
                 String apiKey = details.get(ApiConstants.DR_CLUSTER_API_KEY);
                 String secretKey = details.get(ApiConstants.DR_CLUSTER_SECRET_KEY);
                 String moldCommand = "listScvmIpAddress";
                 String moldUrl = url + "/client/api/";
                 String moldMethod = "GET";
-                String ipList = Script.runSimpleBashScript("cat /etc/hosts | grep -E 'scvm1-mngt|scvm2-mngt|scvm3-mngt' | awk '{print $1}' | tr '\n' ','");
-                if (ipList != null || !ipList.isEmpty()) {
-                    ipList = ipList.replaceAll(",$", "");
-                    String []array = ipList.split(",");
+                String scvmList = DisasterRecoveryClusterUtil.moldListScvmIpAddressAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey);
+                if (scvmList != null) {
+                    String[] array = scvmList.split(",");
                     for (DisasterRecoveryClusterVmMapVO vmMapVO : drClusterVmList) {
                         UserVmJoinVO userVM = userVmJoinDao.findById(vmMapVO.getVmId());
                         List<VolumeVO> volumes = volsDao.findByInstance(userVM.getId());
@@ -1679,14 +1672,13 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         String moldCommand = "listScvmIpAddress";
         String moldMethod = "GET";
         boolean result = false;
-        String ipList = Script.runSimpleBashScript("cat /etc/hosts | grep -E 'scvm1-mngt|scvm2-mngt|scvm3-mngt' | awk '{print $1}' | tr '\n' ','");
-        if (ipList != null || !ipList.isEmpty()) {
+        String scvmList = DisasterRecoveryClusterUtil.moldListScvmIpAddressAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey);
+        if (scvmList != null) {
             UserVmJoinVO userVM = userVmJoinDao.findById(vmId);
             List<VolumeVO> volumes = volsDao.findByInstance(userVM.getId());
             for (VolumeVO vol : volumes) {
                 String volumeUuid = vol.getPath();
-                ipList = ipList.replaceAll(",$", "");
-                String[] array = ipList.split(",");
+                String[] array = scvmList.split(",");
                 for (int j=0; j < array.length; j++) {
                     String glueIp = array[j];
                     ///////////////////// glue-api 프로토콜과 포트 확정 시 변경 예정
@@ -1723,14 +1715,13 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         String moldCommand = "listScvmIpAddress";
         String moldMethod = "GET";
         boolean result = false;
-        String ipList = Script.runSimpleBashScript("cat /etc/hosts | grep -E 'scvm1-mngt|scvm2-mngt|scvm3-mngt' | awk '{print $1}' | tr '\n' ','");
-        if (ipList != null || !ipList.isEmpty()) {
+        String scvmList = DisasterRecoveryClusterUtil.moldListScvmIpAddressAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey);
+        if (scvmList != null) {
             UserVmJoinVO userVM = userVmJoinDao.findById(vmId);
             List<VolumeVO> volumes = volsDao.findByInstance(userVM.getId());
             for (VolumeVO vol : volumes) {
                 String volumeUuid = vol.getPath();
-                ipList = ipList.replaceAll(",$", "");
-                String[] array = ipList.split(",");
+                String[] array = scvmList.split(",");
                 for (int j=0; j < array.length; j++) {
                     String glueIp = array[j];
                     ///////////////////// glue-api 프로토콜과 포트 확정 시 변경 예정
