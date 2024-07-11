@@ -1076,6 +1076,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
             String glueUrl = "";
             String glueCommand = "";
             String glueMethod = "";
+            int glueStep = 0;
             JsonArray drArray = null;
             // 미러링 중인 이미지 목록 조회 glue-api 호출
             for (int i=0; i < array.length; i++) {
@@ -1124,22 +1125,24 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                                                 if (result) {
                                                     break;
                                                 } else {
-                                                    throw new CloudRuntimeException("Failed to request ImageMirrorResyncPeer Glue-API.");
+                                                    LOGGER.error("Failed to request ImageMirrorResyncPeer Glue-API.");
                                                 }
                                             } else {
-                                                throw new CloudRuntimeException("Failed to request ImageMirrorPromote Glue-API.");
+                                                LOGGER.error("Failed to request ImageMirrorPromote Glue-API.");
                                             }
                                         } else {
-                                            throw new CloudRuntimeException("Failed to request ImageMirrorDemotePeer Glue-API.");
+                                            LOGGER.error("Failed to request ImageMirrorDemotePeer Glue-API.");
                                         }
+                                    } else {
+                                        break;
                                     }
                                 }
                             } else {
-                                throw new CloudRuntimeException("Failed to request mirror image status Glue-API.");
+                                LOGGER.error("Failed to request mirror image status Glue-API.");
                             }
                         }
                     } else {
-                        throw new CloudRuntimeException("Failed to request list of mirrored snapshot Glue-API.");
+                        LOGGER.error("Failed to request list of mirrored snapshot Glue-API.");
                     }
                 }
                 return result;
@@ -1220,22 +1223,24 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                                                 if (result) {
                                                     break;
                                                 } else {
-                                                    throw new CloudRuntimeException("Failed to request ImageMirrorResync Glue-API.");
+                                                    LOGGER.error("Failed to request ImageMirrorResync Glue-API.");
                                                 }
                                             } else {
-                                                throw new CloudRuntimeException("Failed to request ImageMirrorPromotePeer Glue-API.");
+                                                LOGGER.error("Failed to request ImageMirrorPromotePeer Glue-API.");
                                             }
                                         } else {
-                                            throw new CloudRuntimeException("Failed to request ImageMirrorDemote Glue-API.");
+                                            LOGGER.error("Failed to request ImageMirrorDemote Glue-API.");
                                         }
+                                    } else {
+                                        break;
                                     }
                                 }
                             } else {
-                                throw new CloudRuntimeException("Failed to request mirror image status Glue-API.");
+                                LOGGER.error("Failed to request mirror image status Glue-API.");
                             }
                         }
                     } else {
-                        throw new CloudRuntimeException("Failed to request list of mirrored snapshot Glue-API.");
+                        LOGGER.error("Failed to request list of mirrored snapshot Glue-API.");
                     }
                 }
                 return result;
@@ -1725,13 +1730,13 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                             if (result) {
                                 break;
                             } else {
-                                throw new CloudRuntimeException("Failed to request ImageMirrorResyncPeer Glue-API.");
+                                LOGGER.error("Failed to request ImageMirrorResyncPeer Glue-API.");
                             }
                         } else {
-                            throw new CloudRuntimeException("Failed to request ImgageMirrorPromote Glue-API.");
+                            LOGGER.error("Failed to request ImgageMirrorPromote Glue-API.");
                         }
                     } else {
-                        throw new CloudRuntimeException("Failed to request ImgageMirrorDemotePeer Glue-API.");
+                        LOGGER.error("Failed to request ImgageMirrorDemotePeer Glue-API.");
                     }
                 }
             }
@@ -1784,13 +1789,13 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                             if (result) {
                                 break;
                             } else {
-                                throw new CloudRuntimeException("Failed to request ImageMirrorResync Glue-API.");
+                                LOGGER.error("Failed to request ImageMirrorResync Glue-API.");
                             }
                         } else {
-                            throw new CloudRuntimeException("Failed to request ImageMirrorPromotePeer Glue-API.");
+                            LOGGER.error("Failed to request ImageMirrorPromotePeer Glue-API.");
                         }
                     } else {
-                        throw new CloudRuntimeException("Failed to request ImageMirrorDemote Glue-API.");
+                        LOGGER.error("Failed to request ImageMirrorDemote Glue-API.");
                     }
                 }
             }
