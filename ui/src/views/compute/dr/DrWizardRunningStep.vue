@@ -258,7 +258,6 @@ export default {
               break
             }
           }
-          console.log(this.vmMap)
           resolve(this.vmMap)
         }).catch(error => {
           reject(error)
