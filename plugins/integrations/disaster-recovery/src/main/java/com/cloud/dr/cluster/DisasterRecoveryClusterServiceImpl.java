@@ -1086,23 +1086,17 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
             throw new InvalidParameterValueException("Invalid disaster recovery cluster id specified");
         }
         validateDisasterRecoveryClusterMirrorParameters(drCluster);
-
-        String url = drCluster.getDrClusterUrl();
-        Map<String, String> details = disasterRecoveryClusterDetailsDao.findDetails(drCluster.getId());
-        String apiKey = details.get(ApiConstants.DR_CLUSTER_API_KEY);
-        String secretKey = details.get(ApiConstants.DR_CLUSTER_SECRET_KEY);
-        String moldUrl = url + "/client/api/";
-        String moldCommand = "listScvmIpAddress";
-        String moldMethod = "GET";
-        String response = DisasterRecoveryClusterUtil.moldListScvmIpAddressAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey);
-        if (response != null) {
+        String ipList = Script.runSimpleBashScript("cat /etc/hosts | grep -E 'scvm1-mngt|scvm2-mngt|scvm3-mngt' | awk '{print $1}' | tr '\n' ','");
+        if (ipList != null || !ipList.isEmpty()) {
+            // 클러스터 설정
+            ipList = ipList.replaceAll(",$", "");
+            String[] array = ipList.split(",");
             String glueIp = "";
             String glueUrl = "";
             String glueCommand = "";
             String glueMethod = "";
             JsonArray drArray = null;
             // 미러링 중인 이미지 목록 조회 glue-api 호출
-            String[] array = response.split(",");
             for (int i=0; i < array.length; i++) {
                 glueIp = array[i];
                 ///////////////////// glue-api 프로토콜과 포트 확정 시 변경 예정
@@ -1187,22 +1181,17 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
             throw new InvalidParameterValueException("Invalid disaster recovery cluster id specified");
         }
         validateDisasterRecoveryClusterMirrorParameters(drCluster);
-        String url = drCluster.getDrClusterUrl();
-        Map<String, String> details = disasterRecoveryClusterDetailsDao.findDetails(drCluster.getId());
-        String apiKey = details.get(ApiConstants.DR_CLUSTER_API_KEY);
-        String secretKey = details.get(ApiConstants.DR_CLUSTER_SECRET_KEY);
-        String moldUrl = url + "/client/api/";
-        String moldCommand = "listScvmIpAddress";
-        String moldMethod = "GET";
-        String response = DisasterRecoveryClusterUtil.moldListScvmIpAddressAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey);
-        if (response != null) {
+        String ipList = Script.runSimpleBashScript("cat /etc/hosts | grep -E 'scvm1-mngt|scvm2-mngt|scvm3-mngt' | awk '{print $1}' | tr '\n' ','");
+        if (ipList != null || !ipList.isEmpty()) {
+            // 클러스터 설정
+            ipList = ipList.replaceAll(",$", "");
+            String[] array = ipList.split(",");
             String glueIp = "";
             String glueUrl = "";
             String glueCommand = "";
             String glueMethod = "";
             JsonArray drArray = null;
             // 미러링 중인 이미지 목록 조회 glue-api 호출
-            String[] array = response.split(",");
             for (int i=0; i < array.length; i++) {
                 glueIp = array[i];
                 ///////////////////// glue-api 프로토콜과 포트 확정 시 변경 예정
