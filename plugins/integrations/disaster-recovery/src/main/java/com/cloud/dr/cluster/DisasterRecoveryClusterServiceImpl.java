@@ -1702,13 +1702,14 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         String moldCommand = "listScvmIpAddress";
         String moldMethod = "GET";
         boolean result = false;
-        String scvmList = DisasterRecoveryClusterUtil.moldListScvmIpAddressAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey);
-        if (scvmList != null) {
+        String ipList = Script.runSimpleBashScript("cat /etc/hosts | grep -E 'scvm1-mngt|scvm2-mngt|scvm3-mngt' | awk '{print $1}' | tr '\n' ','");
+        if (ipList != null || !ipList.isEmpty()) {
             UserVmJoinVO userVM = userVmJoinDao.findById(vmId);
             List<VolumeVO> volumes = volsDao.findByInstance(userVM.getId());
             for (VolumeVO vol : volumes) {
                 String volumeUuid = vol.getPath();
-                String[] array = scvmList.split(",");
+                ipList = ipList.replaceAll(",$", "");
+                String[] array = ipList.split(",");
                 for (int j=0; j < array.length; j++) {
                     String glueIp = array[j];
                     ///////////////////// glue-api 프로토콜과 포트 확정 시 변경 예정
@@ -1761,13 +1762,14 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         String moldCommand = "listScvmIpAddress";
         String moldMethod = "GET";
         boolean result = false;
-        String scvmList = DisasterRecoveryClusterUtil.moldListScvmIpAddressAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey);
-        if (scvmList != null) {
+        String ipList = Script.runSimpleBashScript("cat /etc/hosts | grep -E 'scvm1-mngt|scvm2-mngt|scvm3-mngt' | awk '{print $1}' | tr '\n' ','");
+        if (ipList != null || !ipList.isEmpty()) {
             UserVmJoinVO userVM = userVmJoinDao.findById(vmId);
             List<VolumeVO> volumes = volsDao.findByInstance(userVM.getId());
             for (VolumeVO vol : volumes) {
                 String volumeUuid = vol.getPath();
-                String[] array = scvmList.split(",");
+                ipList = ipList.replaceAll(",$", "");
+                String[] array = ipList.split(",");
                 for (int j=0; j < array.length; j++) {
                     String glueIp = array[j];
                     ///////////////////// glue-api 프로토콜과 포트 확정 시 변경 예정
