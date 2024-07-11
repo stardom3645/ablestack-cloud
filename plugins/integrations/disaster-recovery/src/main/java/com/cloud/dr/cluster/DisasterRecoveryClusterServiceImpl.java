@@ -1727,23 +1727,36 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                         glueMethod = "POST";
                         while(glueStep < 5) {
                             glueStep += 1;
+                            try {
+                                Thread.sleep(10000);
+                            } catch (InterruptedException e) {
+                                throw new CloudRuntimeException("promoteDisasterRecoveryClusterVm sleep interrupted", e);
+                            }
                             result = DisasterRecoveryClusterUtil.glueImageMirrorPromoteAPI(glueUrl, glueCommand, glueMethod, glueParams);
                             if (result) {
                                 glueCommand = "/mirror/image/resync/peer/rbd/" + volumeUuid;
                                 glueMethod = "PUT";
                                 result = DisasterRecoveryClusterUtil.glueImageMirrorResyncAPI(glueUrl, glueCommand, glueMethod, glueParams);
                                 if (result) {
-                                    break Loop;
+                                    glueCommand = "/mirror/image/rbd/" + volumeUuid;
+                                    glueMethod = "POST";
+                                    glueParams = new HashMap<>();
+                                    glueParams.put("mirrorPool", "rbd");
+                                    glueParams.put("imageName", volumeUuid);
+                                    glueParams.put("interval", details.get("mirrorscheduleinterval"));
+                                    glueParams.put("startTime", details.get("mirrorschedulestarttime"));
+                                    result = DisasterRecoveryClusterUtil.glueImageMirrorSetupUpdateAPI(glueUrl, glueCommand, glueMethod, glueParams);
+                                    if (result) {
+                                        break Loop;
+                                    } else {
+                                        // 모의시험 중 디모트한 이미지가 다시 프로모트 될 때 스케줄이 삭제되며 반드시 재설정 필요함 **
+                                        throw new CloudRuntimeException("The image was promoted successfully, but scheduling the image failed. For volumes with a path of " + volumeUuid + ", please add a schedule manually.");
+                                    }
                                 } else {
                                     LOGGER.error("Failed to request ImageMirrorResyncPeer Glue-API.");
                                 }
                             } else {
                                 LOGGER.error("Failed to request ImgageMirrorPromote Glue-API.");
-                            }
-                            try {
-                                Thread.sleep(5000);
-                            } catch (InterruptedException e) {
-                                throw new CloudRuntimeException("promoteDisasterRecoveryClusterVm sleep interrupted", e);
                             }
                         }
                     } else {
@@ -1797,6 +1810,11 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                         glueMethod = "POST";
                         while(glueStep < 5) {
                             glueStep += 1;
+                            try {
+                                Thread.sleep(10000);
+                            } catch (InterruptedException e) {
+                                throw new CloudRuntimeException("demoteDisasterRecoveryClusterVm sleep interrupted", e);
+                            }
                             result = DisasterRecoveryClusterUtil.glueImageMirrorPromoteAPI(glueUrl, glueCommand, glueMethod, glueParams);
                             if (result) {
                                 glueCommand = "/mirror/image/resync/rbd/" + volumeUuid;
@@ -1809,11 +1827,6 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                                 }
                             } else {
                                 LOGGER.error("Failed to request ImageMirrorPromotePeer Glue-API.");
-                            }
-                            try {
-                                Thread.sleep(5000);
-                            } catch (InterruptedException e) {
-                                throw new CloudRuntimeException("promoteDisasterRecoveryClusterVm sleep interrupted", e);
                             }
                         }
                     } else {
