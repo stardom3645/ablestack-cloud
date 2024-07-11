@@ -815,11 +815,11 @@ public class SnapshotServiceImpl implements SnapshotService {
             if (result.isFailed()) {
                 throw new CloudRuntimeException(result.getResult());
             }
-            logger.debug(String.format("Successfully deleted snapshot [%s] with ID [%s].", snapInfo.getName(), snapInfo.getUuid()));
+            logger.debug(String.format("Successfully flatten snapshot [%s] with ID [%s].", snapshot.getName(), snapshot.getUuid()));
             return true;
         } catch (InterruptedException | ExecutionException e) {
-            logger.error(String.format("Failed to delete snapshot [%s] due to: [%s].", snapInfo.getUuid(), e.getMessage()));
-            logger.debug(String.format("Failed to delete snapshot [%s].", snapInfo.getUuid()), e);
+            logger.error(String.format("Failed to flatten snapshot [%s] due to: [%s].", snapshot.getUuid(), e.getMessage()));
+            logger.debug(String.format("Failed to flatten snapshot [%s].", snapshot.getUuid()), e);
         }
 
         return false;
