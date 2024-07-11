@@ -1702,6 +1702,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         String moldCommand = "listScvmIpAddress";
         String moldMethod = "GET";
         boolean result = false;
+        int glueStep = 0;
         String ipList = Script.runSimpleBashScript("cat /etc/hosts | grep -E 'scvm1-mngt|scvm2-mngt|scvm3-mngt' | awk '{print $1}' | tr '\n' ','");
         if (ipList != null || !ipList.isEmpty()) {
             UserVmJoinVO userVM = userVmJoinDao.findById(vmId);
@@ -1710,6 +1711,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                 String volumeUuid = vol.getPath();
                 ipList = ipList.replaceAll(",$", "");
                 String[] array = ipList.split(",");
+                Loop :
                 for (int j=0; j < array.length; j++) {
                     String glueIp = array[j];
                     ///////////////////// glue-api 프로토콜과 포트 확정 시 변경 예정
@@ -1723,18 +1725,26 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                     if (result) {
                         glueCommand = "/mirror/image/promote/rbd/" + volumeUuid;
                         glueMethod = "POST";
-                        result = DisasterRecoveryClusterUtil.glueImageMirrorPromoteAPI(glueUrl, glueCommand, glueMethod, glueParams);
-                        if (result) {
-                            glueCommand = "/mirror/image/resync/peer/rbd/" + volumeUuid;
-                            glueMethod = "PUT";
-                            result = DisasterRecoveryClusterUtil.glueImageMirrorResyncAPI(glueUrl, glueCommand, glueMethod, glueParams);
+                        while(glueStep < 5) {
+                            glueStep += 1;
+                            result = DisasterRecoveryClusterUtil.glueImageMirrorPromoteAPI(glueUrl, glueCommand, glueMethod, glueParams);
                             if (result) {
-                                break;
+                                glueCommand = "/mirror/image/resync/peer/rbd/" + volumeUuid;
+                                glueMethod = "PUT";
+                                result = DisasterRecoveryClusterUtil.glueImageMirrorResyncAPI(glueUrl, glueCommand, glueMethod, glueParams);
+                                if (result) {
+                                    break Loop;
+                                } else {
+                                    LOGGER.error("Failed to request ImageMirrorResyncPeer Glue-API.");
+                                }
                             } else {
-                                LOGGER.error("Failed to request ImageMirrorResyncPeer Glue-API.");
+                                LOGGER.error("Failed to request ImgageMirrorPromote Glue-API.");
                             }
-                        } else {
-                            LOGGER.error("Failed to request ImgageMirrorPromote Glue-API.");
+                            try {
+                                Thread.sleep(5000);
+                            } catch (InterruptedException e) {
+                                throw new CloudRuntimeException("promoteDisasterRecoveryClusterVm sleep interrupted", e);
+                            }
                         }
                     } else {
                         LOGGER.error("Failed to request ImgageMirrorDemotePeer Glue-API.");
@@ -1762,6 +1772,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         String moldCommand = "listScvmIpAddress";
         String moldMethod = "GET";
         boolean result = false;
+        int glueStep = 0;
         String ipList = Script.runSimpleBashScript("cat /etc/hosts | grep -E 'scvm1-mngt|scvm2-mngt|scvm3-mngt' | awk '{print $1}' | tr '\n' ','");
         if (ipList != null || !ipList.isEmpty()) {
             UserVmJoinVO userVM = userVmJoinDao.findById(vmId);
@@ -1770,6 +1781,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                 String volumeUuid = vol.getPath();
                 ipList = ipList.replaceAll(",$", "");
                 String[] array = ipList.split(",");
+                Loop :
                 for (int j=0; j < array.length; j++) {
                     String glueIp = array[j];
                     ///////////////////// glue-api 프로토콜과 포트 확정 시 변경 예정
@@ -1783,18 +1795,26 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                     if (result) {
                         glueCommand = "/mirror/image/promote/peer/rbd/" + volumeUuid;
                         glueMethod = "POST";
-                        result = DisasterRecoveryClusterUtil.glueImageMirrorPromoteAPI(glueUrl, glueCommand, glueMethod, glueParams);
-                        if (result) {
-                            glueCommand = "/mirror/image/resync/rbd/" + volumeUuid;
-                            glueMethod = "PUT";
-                            result = DisasterRecoveryClusterUtil.glueImageMirrorResyncAPI(glueUrl, glueCommand, glueMethod, glueParams);
+                        while(glueStep < 5) {
+                            glueStep += 1;
+                            result = DisasterRecoveryClusterUtil.glueImageMirrorPromoteAPI(glueUrl, glueCommand, glueMethod, glueParams);
                             if (result) {
-                                break;
+                                glueCommand = "/mirror/image/resync/rbd/" + volumeUuid;
+                                glueMethod = "PUT";
+                                result = DisasterRecoveryClusterUtil.glueImageMirrorResyncAPI(glueUrl, glueCommand, glueMethod, glueParams);
+                                if (result) {
+                                    break Loop;
+                                } else {
+                                    LOGGER.error("Failed to request ImageMirrorResync Glue-API.");
+                                }
                             } else {
-                                LOGGER.error("Failed to request ImageMirrorResync Glue-API.");
+                                LOGGER.error("Failed to request ImageMirrorPromotePeer Glue-API.");
                             }
-                        } else {
-                            LOGGER.error("Failed to request ImageMirrorPromotePeer Glue-API.");
+                            try {
+                                Thread.sleep(5000);
+                            } catch (InterruptedException e) {
+                                throw new CloudRuntimeException("promoteDisasterRecoveryClusterVm sleep interrupted", e);
+                            }
                         }
                     } else {
                         LOGGER.error("Failed to request ImageMirrorDemote Glue-API.");
