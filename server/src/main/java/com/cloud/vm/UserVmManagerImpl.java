@@ -9453,7 +9453,7 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
                         throw new CloudRuntimeException("Creation of root volume is not queried. The virtual machine cannot be cloned!");
                     }
                     cmd.setName(cmd.getName() + (countOfCloneVM > 1 ? Integer.toString(cnt) : ""));
-                    UserVm cloneVM = recordVirtualMachineToDB(cmd, String.valueOf(rootVolume.getId()), (countOfCloneVM > 1 ? Integer.toString(cnt) : "");
+                    UserVm cloneVM = recordVirtualMachineToDB(cmd, String.valueOf(rootVolume.getId()), (countOfCloneVM > 1 ? Integer.toString(cnt) : ""));
                     if (cloneVM == null) {
                         throw new CloudRuntimeException("Unable to record the VM to DB!");
                     }
