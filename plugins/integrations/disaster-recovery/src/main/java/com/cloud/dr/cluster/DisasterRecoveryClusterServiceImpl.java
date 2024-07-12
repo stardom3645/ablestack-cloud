@@ -1110,6 +1110,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                                 JsonObject statObject = (JsonObject) new JsonParser().parse(mirrorImageStatus).getAsJsonObject();
                                 if (statObject.has("description")) {
                                     if (!statObject.get("description").getAsString().equals("local image is primary")) {
+                                        LOGGER.info(":::::::::::::::::::::::in");
                                         glueCommand = "/mirror/image/demote/peer/rbd/" + imageName.getAsString();
                                         glueMethod = "DELETE";
                                         Map<String, String> glueParams = new HashMap<>();
@@ -1236,8 +1237,11 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                             String mirrorImageStatus = DisasterRecoveryClusterUtil.glueImageMirrorStatusAPI(glueUrl, glueCommand, glueMethod);
                             if (mirrorImageStatus != null) {
                                 JsonObject statObject = (JsonObject) new JsonParser().parse(mirrorImageStatus).getAsJsonObject();
+                                LOGGER.info(":::::::::::::::::::::::::::::::::::::::");
+                                LOGGER.info(statObject.toString());
+                                LOGGER.info(statObject.get("description").getAsString());
                                 if (statObject.has("description")) {
-                                    if (!statObject.get("description").getAsString().equals("replaying")) {
+                                    if (!statObject.get("description").getAsString().contains("replaying")) {
                                         glueCommand = "/mirror/image/demote/rbd/" + imageName.getAsString();
                                         glueMethod = "DELETE";
                                         Map<String, String> glueParams = new HashMap<>();
@@ -1285,6 +1289,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                                             LOGGER.error("Failed to request ImageMirrorDemote Glue-API.");
                                         }
                                     } else {
+                                        LOGGER.info(":::::::::::::::::::::::break");
                                         break;
                                     }
                                 }
