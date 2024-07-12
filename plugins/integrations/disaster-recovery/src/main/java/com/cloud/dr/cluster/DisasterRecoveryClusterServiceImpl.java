@@ -604,10 +604,8 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                 if (cmd.getDrClusterPrivateKey() != null) {
                     drDetails.put(ApiConstants.DR_CLUSTER_PRIVATE_KEY, cmd.getDrClusterPrivateKey());
                 }
-                if (cmd.getDrClusterType().equalsIgnoreCase("secondary")) {
-                    drDetails.put("mirrorscheduleinterval", "1h");
-                    drDetails.put("mirrorschedulestarttime", "");
-                }
+                drDetails.put("mirrorscheduleinterval", "1h");
+                drDetails.put("mirrorschedulestarttime", "");
                 disasterRecoveryClusterDetailsDao.persist(newCluster.getId(), drDetails);
                 return newCluster;
             }
@@ -1235,9 +1233,6 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                             String mirrorImageStatus = DisasterRecoveryClusterUtil.glueImageMirrorStatusAPI(glueUrl, glueCommand, glueMethod);
                             if (mirrorImageStatus != null) {
                                 JsonObject statObject = (JsonObject) new JsonParser().parse(mirrorImageStatus).getAsJsonObject();
-                                LOGGER.info(":::::::::::::::::::::::::::::::::::::::");
-                                LOGGER.info(statObject.toString());
-                                LOGGER.info(statObject.get("description").getAsString());
                                 if (statObject.has("description")) {
                                     if (!statObject.get("description").getAsString().contains("replaying")) {
                                         glueCommand = "/mirror/image/demote/rbd/" + imageName.getAsString();
@@ -1287,7 +1282,6 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                                             LOGGER.error("Failed to request ImageMirrorDemote Glue-API.");
                                         }
                                     } else {
-                                        LOGGER.info(":::::::::::::::::::::::break");
                                         break;
                                     }
                                 }
