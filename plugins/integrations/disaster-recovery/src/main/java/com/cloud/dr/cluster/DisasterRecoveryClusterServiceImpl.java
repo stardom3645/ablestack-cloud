@@ -490,6 +490,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                 throw new InvalidParameterValueException("Invalid Disaster Recovery id specified");
             }
         }
+        String url = drcluster.getDrClusterUrl();
         drcluster = disasterRecoveryClusterDao.createForUpdate(drcluster.getId());
         if (cmd.getDescription() != null) {
             String drClusterDescription = cmd.getDescription();
@@ -509,7 +510,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
             disasterRecoveryClusterDetailsDao.persist(drcluster.getId(), details);
             String apiKey = details.get(ApiConstants.DR_CLUSTER_API_KEY);
             String secretKey = details.get(ApiConstants.DR_CLUSTER_SECRET_KEY);
-            String moldUrl = drcluster.getDrClusterUrl() + "/client/api/";
+            String moldUrl = url + "/client/api/";
             String moldCommand = "listScvmIpAddress";
             String moldMethod = "GET";
             List<DisasterRecoveryClusterVmMapVO> drClusterVmList = disasterRecoveryClusterVmMapDao.listByDisasterRecoveryClusterId(drcluster.getId());
