@@ -519,20 +519,30 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                         for (VolumeVO vol : volumes) {
                             String volumeUuid = vol.getPath();
                             for (int i=0; i < array.length; i++) {
-                                // 미러링 스케줄 설정 업데이트 glue-api 호출
+                                // READY 상태의 이미지의 경우에만 미러링 스케줄 설정 업데이트 glue-api 호출
                                 String glueIp = array[i];
                                 ///////////////////// glue-api 프로토콜과 포트 확정 시 변경 예정
                                 String glueUrl = "https://" + glueIp + ":8080/api/v1";
-                                String glueCommand = "/mirror/image/rbd/" + volumeUuid;
-                                String glueMethod = "POST";
-                                Map<String, String> glueParams = new HashMap<>();
-                                glueParams.put("mirrorPool", "rbd");
-                                glueParams.put("imageName", volumeUuid);
-                                glueParams.put("interval", details.get("mirrorscheduleinterval"));
-                                glueParams.put("startTime", details.get("mirrorschedulestarttime"));
-                                boolean result = DisasterRecoveryClusterUtil.glueImageMirrorSetupUpdateAPI(glueUrl, glueCommand, glueMethod, glueParams);
-                                if (result) {
-                                    break;
+                                String glueCommand = "/mirror/image/status/rbd/" + volumeUuid;
+                                String glueMethod = "GET";
+                                String mirrorImageStatus = DisasterRecoveryClusterUtil.glueImageMirrorStatusAPI(glueUrl, glueCommand, glueMethod);
+                                if (mirrorImageStatus != null) {
+                                    JsonObject statObject = (JsonObject) new JsonParser().parse(mirrorImageStatus).getAsJsonObject();
+                                    if (statObject.has("description")) {
+                                        if (statObject.get("description").getAsString().equals("local image is primary")) {
+                                            glueCommand = "/mirror/image/rbd/" + volumeUuid;
+                                            glueMethod = "POST";
+                                            Map<String, String> glueParams = new HashMap<>();
+                                            glueParams.put("mirrorPool", "rbd");
+                                            glueParams.put("imageName", volumeUuid);
+                                            glueParams.put("interval", details.get("mirrorscheduleinterval"));
+                                            glueParams.put("startTime", details.get("mirrorschedulestarttime"));
+                                            boolean result = DisasterRecoveryClusterUtil.glueImageMirrorSetupUpdateAPI(glueUrl, glueCommand, glueMethod, glueParams);
+                                            if (result) {
+                                                break;
+                                            }
+                                        }
+                                    }
                                 }
                             }
                         }
