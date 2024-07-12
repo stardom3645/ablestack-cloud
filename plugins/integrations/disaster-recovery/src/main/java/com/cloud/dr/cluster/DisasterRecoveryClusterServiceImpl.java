@@ -1087,9 +1087,10 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                 String mirrorList = DisasterRecoveryClusterUtil.glueImageMirrorAPI(glueUrl, glueCommand, glueMethod);
                 if (mirrorList != null) {
                     drArray = (JsonArray) new JsonParser().parse(mirrorList).getAsJsonObject().get("Remote");
-                } else {
-                    throw new CloudRuntimeException("Failed to request list of mirrored snapshot Glue-API.");
                 }
+            }
+            if (drArray == null) {
+                throw new CloudRuntimeException("Failed to request list of mirrored snapshot Glue-API.");
             }
             int glueStep = 0;
             if (drArray.size() != 0) {
@@ -1213,9 +1214,10 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                 String mirrorList = DisasterRecoveryClusterUtil.glueImageMirrorAPI(glueUrl, glueCommand, glueMethod);
                 if (mirrorList != null) {
                     drArray = (JsonArray) new JsonParser().parse(mirrorList).getAsJsonObject().get("Remote");
-                } else {
-                    throw new CloudRuntimeException("Failed to request list of mirrored snapshot Glue-API.");
                 }
+            }
+            if (drArray == null) {
+                throw new CloudRuntimeException("Failed to request list of mirrored snapshot Glue-API.");
             }
             int glueStep = 0;
             if (drArray.size() != 0) {
