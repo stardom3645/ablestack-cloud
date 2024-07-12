@@ -1086,6 +1086,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                 String mirrorList = DisasterRecoveryClusterUtil.glueImageMirrorAPI(glueUrl, glueCommand, glueMethod);
                 if (mirrorList != null) {
                     drArray = (JsonArray) new JsonParser().parse(mirrorList).getAsJsonObject().get("Remote");
+                    break;
                 }
             }
             if (drArray == null) {
@@ -1213,6 +1214,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                 String mirrorList = DisasterRecoveryClusterUtil.glueImageMirrorAPI(glueUrl, glueCommand, glueMethod);
                 if (mirrorList != null) {
                     drArray = (JsonArray) new JsonParser().parse(mirrorList).getAsJsonObject().get("Remote");
+                    break;
                 }
             }
             if (drArray == null) {
