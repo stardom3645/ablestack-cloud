@@ -553,6 +553,9 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                                             if (response != null) {
                                                 String[] scvmList = response.split(",");
                                                 for (int j=0; j < scvmList.length; j++) {
+                                                    glueIp = scvmList[j];
+                                                     ///////////////////// glue-api 프로토콜과 포트 확정 시 변경 예정
+                                                    glueUrl = "https://" + glueIp + ":8080/api/v1";
                                                     glueCommand = "/mirror/image/rbd/" + volumeUuid;
                                                     glueMethod = "POST";
                                                     Map<String, String> glueParams = new HashMap<>();
