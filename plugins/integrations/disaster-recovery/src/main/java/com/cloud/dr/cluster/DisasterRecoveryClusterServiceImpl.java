@@ -605,9 +605,8 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                     drDetails.put(ApiConstants.DR_CLUSTER_PRIVATE_KEY, cmd.getDrClusterPrivateKey());
                 }
                 if (cmd.getDrClusterType().equalsIgnoreCase("secondary")) {
-                    ///////////////////// glue-api 스캐줄 interval과 starttime 픽스 필요
-                    drDetails.put("mirrorscheduleinterval", "24h"); // interval h,m,d format
-                    drDetails.put("mirrorschedulestarttime", ""); // start-time ISO 8601 time format
+                    drDetails.put("mirrorscheduleinterval", "1h");
+                    drDetails.put("mirrorschedulestarttime", "");
                 }
                 disasterRecoveryClusterDetailsDao.persist(newCluster.getId(), drDetails);
                 return newCluster;
