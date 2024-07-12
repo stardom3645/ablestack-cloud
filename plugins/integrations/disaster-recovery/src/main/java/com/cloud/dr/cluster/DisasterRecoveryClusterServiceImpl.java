@@ -538,7 +538,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                                     if (statObject.has("description")) {
                                         if (statObject.get("description").getAsString().equals("local image is primary")) {
                                             glueCommand = "/mirror/image/rbd/" + volumeUuid;
-                                            glueMethod = "POST";
+                                            glueMethod = "PUT";
                                             Map<String, String> glueParams = new HashMap<>();
                                             glueParams.put("mirrorPool", "rbd");
                                             glueParams.put("imageName", volumeUuid);
@@ -557,7 +557,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                                                      ///////////////////// glue-api 프로토콜과 포트 확정 시 변경 예정
                                                     glueUrl = "https://" + glueIp + ":8080/api/v1";
                                                     glueCommand = "/mirror/image/rbd/" + volumeUuid;
-                                                    glueMethod = "POST";
+                                                    glueMethod = "PUT";
                                                     Map<String, String> glueParams = new HashMap<>();
                                                     glueParams.put("mirrorPool", "rbd");
                                                     glueParams.put("imageName", volumeUuid);
@@ -1169,7 +1169,6 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                                                     boolean resync = DisasterRecoveryClusterUtil.glueImageMirrorResyncAPI(glueUrl, glueCommand, glueMethod, glueParams);
                                                     if (resync) {
                                                         glueCommand = "/mirror/image/rbd/" + imageName.getAsString();
-                                                        glueMethod = "POST";
                                                         glueParams = new HashMap<>();
                                                         glueParams.put("mirrorPool", "rbd");
                                                         glueParams.put("imageName", imageName.getAsString());
@@ -1295,7 +1294,6 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                                                     boolean resync = DisasterRecoveryClusterUtil.glueImageMirrorResyncAPI(glueUrl, glueCommand, glueMethod, glueParams);
                                                     if (resync) {
                                                         glueCommand = "/mirror/image/rbd/" + imageName.getAsString();
-                                                        glueMethod = "POST";
                                                         glueParams = new HashMap<>();
                                                         glueParams.put("mirrorPool", "rbd");
                                                         glueParams.put("imageName", imageName.getAsString());
@@ -1825,7 +1823,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                                 result = DisasterRecoveryClusterUtil.glueImageMirrorResyncAPI(glueUrl, glueCommand, glueMethod, glueParams);
                                 if (result) {
                                     glueCommand = "/mirror/image/rbd/" + volumeUuid;
-                                    glueMethod = "POST";
+                                    glueMethod = "PUT";
                                     glueParams = new HashMap<>();
                                     glueParams.put("mirrorPool", "rbd");
                                     glueParams.put("imageName", volumeUuid);
