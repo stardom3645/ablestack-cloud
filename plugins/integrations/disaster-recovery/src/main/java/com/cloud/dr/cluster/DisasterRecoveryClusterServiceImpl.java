@@ -1101,7 +1101,6 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         validateDisasterRecoveryClusterMirrorParameters(drCluster);
         String ipList = Script.runSimpleBashScript("cat /etc/hosts | grep -E 'scvm1-mngt|scvm2-mngt|scvm3-mngt' | awk '{print $1}' | tr '\n' ','");
         if (ipList != null || !ipList.isEmpty()) {
-            // 클러스터 설정
             ipList = ipList.replaceAll(",$", "");
             String[] array = ipList.split(",");
             String glueIp = "";
@@ -1178,7 +1177,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                                                             try {
                                                                 Thread.sleep(10000);
                                                             } catch (InterruptedException e) {
-                                                                throw new CloudRuntimeException("promoteDisasterRecoveryClusterVm sleep interrupted", e);
+                                                                throw new CloudRuntimeException("promoteDisasterRecoveryCluster sleep interrupted", e);
                                                             }
                                                             result = DisasterRecoveryClusterUtil.glueImageMirrorSetupUpdateAPI(glueUrl, glueCommand, glueMethod, glueParams);
                                                             if (result) {
@@ -1188,7 +1187,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                                                             }
                                                         }
                                                         if (!result) {
-                                                            // 모의시험 중 디모트한 이미지가 다시 프로모트 될 때 스케줄이 삭제되며 반드시 재설정이 필요함 **
+                                                            // 이미지가 프로모트 될 때 스케줄이 삭제되며 반드시 재설정이 필요함 **
                                                             throw new CloudRuntimeException("The image was promoted successfully, but scheduling the image failed. For volumes with a path of " + imageName.getAsString() + ", please add a schedule manually.");
                                                         }
                                                     } else {
@@ -1239,7 +1238,6 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         validateDisasterRecoveryClusterMirrorParameters(drCluster);
         String ipList = Script.runSimpleBashScript("cat /etc/hosts | grep -E 'scvm1-mngt|scvm2-mngt|scvm3-mngt' | awk '{print $1}' | tr '\n' ','");
         if (ipList != null || !ipList.isEmpty()) {
-            // 클러스터 설정
             ipList = ipList.replaceAll(",$", "");
             String[] array = ipList.split(",");
             String glueIp = "";
@@ -1264,6 +1262,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                 throw new CloudRuntimeException("Failed to request list of mirrored snapshot Glue-API.");
             }
             int glueStep = 0;
+            int glueNum = 0;
             if (drArray.size() != 0) {
                 boolean result = false;
                 for (JsonElement dr : drArray) {
@@ -1310,11 +1309,22 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                                                         glueParams.put("imageName", imageName.getAsString());
                                                         glueParams.put("interval", details.get("mirrorscheduleinterval"));
                                                         glueParams.put("startTime", details.get("mirrorschedulestarttime"));
-                                                        result = DisasterRecoveryClusterUtil.glueImageMirrorSetupUpdateAPI(glueUrl, glueCommand, glueMethod, glueParams);
-                                                        if (result) {
-                                                            break Loop;
-                                                        } else {
-                                                            // 이미지가 프로모트 될 때 스케줄이 삭제되며 반드시 재설정 필요함 **
+                                                        while(glueNum < 5) {
+                                                            glueNum += 1;
+                                                            try {
+                                                                Thread.sleep(10000);
+                                                            } catch (InterruptedException e) {
+                                                                throw new CloudRuntimeException("demoteDisasterRecoveryCluster sleep interrupted", e);
+                                                            }
+                                                            result = DisasterRecoveryClusterUtil.glueImageMirrorSetupUpdateAPI(glueUrl, glueCommand, glueMethod, glueParams);
+                                                            if (result) {
+                                                                break Loop;
+                                                            } else {
+                                                                LOGGER.error("Failed to request ImageMirrorSetupUpdate Glue-API.");
+                                                            }
+                                                        }
+                                                        if (!result) {
+                                                            // 이미지가 프로모트 될 때 스케줄이 삭제되며 반드시 재설정이 필요함 **
                                                             throw new CloudRuntimeException("The image was promoted successfully, but scheduling the image failed. For volumes with a path of " + imageName.getAsString() + ", please add a schedule manually.");
                                                         }
                                                     } else {
