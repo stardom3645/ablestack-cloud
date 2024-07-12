@@ -507,6 +507,11 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
             Map<String,String> details = cmd.getDetails();
             drcluster.setDetails(details);
             disasterRecoveryClusterDetailsDao.persist(drcluster.getId(), details);
+            String apiKey = details.get(ApiConstants.DR_CLUSTER_API_KEY);
+            String secretKey = details.get(ApiConstants.DR_CLUSTER_SECRET_KEY);
+            String moldUrl = drcluster.getDrClusterUrl() + "/client/api/";
+            String moldCommand = "listScvmIpAddress";
+            String moldMethod = "GET";
             List<DisasterRecoveryClusterVmMapVO> drClusterVmList = disasterRecoveryClusterVmMapDao.listByDisasterRecoveryClusterId(drcluster.getId());
             if (!CollectionUtils.isEmpty(drClusterVmList)) {
                 String ipList = Script.runSimpleBashScript("cat /etc/hosts | grep -E 'scvm1-mngt|scvm2-mngt|scvm3-mngt' | awk '{print $1}' | tr '\n' ','");
@@ -518,8 +523,9 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                         List<VolumeVO> volumes = volsDao.findByInstance(userVM.getId());
                         for (VolumeVO vol : volumes) {
                             String volumeUuid = vol.getPath();
+                            Loop :
                             for (int i=0; i < array.length; i++) {
-                                // READY 상태의 이미지의 경우에만 미러링 스케줄 설정 업데이트 glue-api 호출
+                                // 미러링 스케줄 설정 업데이트 glue-api 호출
                                 String glueIp = array[i];
                                 ///////////////////// glue-api 프로토콜과 포트 확정 시 변경 예정
                                 String glueUrl = "https://" + glueIp + ":8080/api/v1";
@@ -539,6 +545,25 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                                             glueParams.put("startTime", details.get("mirrorschedulestarttime"));
                                             boolean result = DisasterRecoveryClusterUtil.glueImageMirrorSetupUpdateAPI(glueUrl, glueCommand, glueMethod, glueParams);
                                             if (result) {
+                                                break;
+                                            }
+                                        } else {
+                                            String response = DisasterRecoveryClusterUtil.moldListScvmIpAddressAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey);
+                                            if (response != null) {
+                                                String[] scvmList = response.split(",");
+                                                for (int j=0; j < scvmList.length; j++) {
+                                                    glueCommand = "/mirror/image/rbd/" + volumeUuid;
+                                                    glueMethod = "POST";
+                                                    Map<String, String> glueParams = new HashMap<>();
+                                                    glueParams.put("mirrorPool", "rbd");
+                                                    glueParams.put("imageName", volumeUuid);
+                                                    glueParams.put("interval", details.get("mirrorscheduleinterval"));
+                                                    glueParams.put("startTime", details.get("mirrorschedulestarttime"));
+                                                    boolean result = DisasterRecoveryClusterUtil.glueImageMirrorSetupUpdateAPI(glueUrl, glueCommand, glueMethod, glueParams);
+                                                    if (result) {
+                                                        break Loop;
+                                                    }
+                                                }
                                                 break;
                                             }
                                         }
@@ -1759,11 +1784,6 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         DisasterRecoveryClusterVO drCluster = disasterRecoveryClusterDao.findByName(drName);
         String url = drCluster.getDrClusterUrl();
         Map<String, String> details = disasterRecoveryClusterDetailsDao.findDetails(drCluster.getId());
-        String apiKey = details.get(ApiConstants.DR_CLUSTER_API_KEY);
-        String secretKey = details.get(ApiConstants.DR_CLUSTER_SECRET_KEY);
-        String moldUrl = url + "/client/api/";
-        String moldCommand = "listScvmIpAddress";
-        String moldMethod = "GET";
         boolean result = false;
         int glueStep = 0;
         String ipList = Script.runSimpleBashScript("cat /etc/hosts | grep -E 'scvm1-mngt|scvm2-mngt|scvm3-mngt' | awk '{print $1}' | tr '\n' ','");
@@ -1842,11 +1862,6 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         DisasterRecoveryClusterVO drCluster = disasterRecoveryClusterDao.findByName(drName);
         String url = drCluster.getDrClusterUrl();
         Map<String, String> details = disasterRecoveryClusterDetailsDao.findDetails(drCluster.getId());
-        String apiKey = details.get(ApiConstants.DR_CLUSTER_API_KEY);
-        String secretKey = details.get(ApiConstants.DR_CLUSTER_SECRET_KEY);
-        String moldUrl = url + "/client/api/";
-        String moldCommand = "listScvmIpAddress";
-        String moldMethod = "GET";
         boolean result = false;
         int glueStep = 0;
         String ipList = Script.runSimpleBashScript("cat /etc/hosts | grep -E 'scvm1-mngt|scvm2-mngt|scvm3-mngt' | awk '{print $1}' | tr '\n' ','");
