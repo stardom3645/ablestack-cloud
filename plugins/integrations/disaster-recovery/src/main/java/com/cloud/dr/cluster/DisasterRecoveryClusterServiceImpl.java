@@ -1086,7 +1086,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                 glueMethod = "GET";
                 String mirrorList = DisasterRecoveryClusterUtil.glueImageMirrorAPI(glueUrl, glueCommand, glueMethod);
                 if (mirrorList != null) {
-                    drArray = (JsonArray) new JsonParser().parse(mirrorList).getAsJsonObject().get("Local");
+                    drArray = (JsonArray) new JsonParser().parse(mirrorList).getAsJsonObject().get("Remote");
                 } else {
                     throw new CloudRuntimeException("Failed to request list of mirrored snapshot Glue-API.");
                 }
@@ -1212,7 +1212,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                 glueMethod = "GET";
                 String mirrorList = DisasterRecoveryClusterUtil.glueImageMirrorAPI(glueUrl, glueCommand, glueMethod);
                 if (mirrorList != null) {
-                    drArray = (JsonArray) new JsonParser().parse(mirrorList).getAsJsonObject().get("Local");
+                    drArray = (JsonArray) new JsonParser().parse(mirrorList).getAsJsonObject().get("Remote");
                 } else {
                     throw new CloudRuntimeException("Failed to request list of mirrored snapshot Glue-API.");
                 }
