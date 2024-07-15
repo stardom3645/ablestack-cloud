@@ -516,7 +516,9 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                 String moldMethod = "GET";
                 Map<String, String> moldParams = new HashMap<>();
                 moldParams.put("name", drClusterName);
-                moldParams.put("details[0].mirrorschedulestarttime", details.get("mirrorschedulestarttime"));
+                if (details.get("mirrorschedulestarttime") != "") {
+                    moldParams.put("details[0].mirrorschedulestarttime", details.get("mirrorschedulestarttime"));
+                }
                 moldParams.put("details[0].mirrorscheduleinterval", details.get("mirrorscheduleinterval"));
                 DisasterRecoveryClusterUtil.moldUpdateDisasterRecoveryClusterAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey, moldParams);
                 List<DisasterRecoveryClusterVmMapVO> drClusterVmList = disasterRecoveryClusterVmMapDao.listByDisasterRecoveryClusterId(drcluster.getId());
