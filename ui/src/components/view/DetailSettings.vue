@@ -100,7 +100,7 @@
             <tooltip-button
               :tooltip="$t('label.edit')"
               icon="edit-outlined"
-              :disabled="deployasistemplate === true || item.name.startsWith('extraconfig')"
+              :disabled="deployasistemplate === true || item.name.startsWith('extraconfig') || (resource.drclustertype === 'primary' && item.name.startsWith('drclusterprivatekey'))"
               v-if="!item.edit"
               @onClick="showEditDetail(index)" />
           </div>
@@ -115,7 +115,7 @@
             >
               <tooltip-button
                 :tooltip="$t('label.delete')"
-                :disabled="deployasistemplate === true || item.name.startsWith('extraconfig')"
+                :disabled="deployasistemplate === true || item.name.startsWith('extraconfig') || (resource.drclustertype === 'primary' && item.name.startsWith('drclusterprivatekey'))"
                 type="primary"
                 :danger="true"
                 icon="delete-outlined" />
@@ -151,7 +151,8 @@ export default {
       loading: false,
       resourceType: 'UserVm',
       deployasistemplate: false,
-      error: false
+      error: false,
+      drClusterType: ''
     }
   },
   watch: {
@@ -186,6 +187,9 @@ export default {
   },
   created () {
     this.updateResource(this.resource)
+    console.log('0')
+    console.log(this.details)
+    console.log('0')
   },
   methods: {
     filterOption (input, option) {
@@ -194,18 +198,26 @@ export default {
       )
     },
     updateResource (resource) {
+      console.log('1')
+      console.log(resource)
+      console.log('1')
       this.details = []
       if (!resource) {
         return
       }
       this.resourceType = this.$route.meta.resourceType
       if (resource.details) {
+        console.log('2')
         this.details = Object.keys(resource.details).map(k => {
+          console.log(k)
+          console.log(resource.details[k])
           return { name: k, value: resource.details[k], edit: false }
         })
+        console.log('2')
       }
       api('listDetailOptions', { resourcetype: this.resourceType, resourceid: resource.id }).then(json => {
         this.detailOptions = json.listdetailoptionsresponse.detailoptions.details
+        console.log(this.detailOptions)
       })
       this.disableSettings = (this.$route.meta.name === 'vm' && resource.state !== 'Stopped')
       api('listTemplates', { templatefilter: 'all', id: resource.templateid }).then(json => {
@@ -213,6 +225,7 @@ export default {
       })
     },
     allowEditOfDetail (name) {
+      console.log(name)
       if (this.resource.readonlydetails) {
         if (this.resource.readonlydetails.split(',').map(item => item.trim()).includes(name)) {
           return false
