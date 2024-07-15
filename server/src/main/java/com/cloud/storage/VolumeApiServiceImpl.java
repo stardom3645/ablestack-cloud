@@ -1066,7 +1066,7 @@ public class VolumeApiServiceImpl extends ManagerBase implements VolumeApiServic
     }
 
     @Override
-    public Volume cloneDataVolume(long vmId, long snapshotId, Volume volume) throws StorageUnavailableException {
+    public Volume cloneRootOrDataVolume(long vmId, long snapshotId, Volume volume) throws StorageUnavailableException {
         return createVolumeFromSnapshot((VolumeVO) volume, snapshotId, vmId);
     }
 
@@ -3862,8 +3862,6 @@ public class VolumeApiServiceImpl extends ManagerBase implements VolumeApiServic
                 }
             }
         }
-
-
         return snapshotMgr.allocSnapshot(volumeId, policyId, snapshotName, locationType, false, zoneIds);
     }
 
