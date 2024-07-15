@@ -1299,6 +1299,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                                                         glueParams.put("imageName", imageName.getAsString());
                                                         glueParams.put("interval", details.get("mirrorscheduleinterval"));
                                                         glueParams.put("startTime", details.get("mirrorschedulestarttime"));
+                                                        glueParams.put("imageRegion", "remote");
                                                         boolean schedule = DisasterRecoveryClusterUtil.glueImageMirrorSetupUpdateAPI(glueUrl, glueCommand, glueMethod, glueParams);
                                                         if (!schedule) {
                                                             LOGGER.error("Failed to request ImageMirrorSetupUpdate Glue-API.");
