@@ -2650,8 +2650,11 @@ public class DisasterRecoveryClusterUtil {
                 for(Map.Entry<String, String> param : params.entrySet() ){
                     String key = param.getKey();
                     String value = param.getValue();
+                    LOGGER.info(key);
+                    LOGGER.info(value);
                     paramString.append("&" + param.getKey() + "=" + URLEncoder.encode(param.getValue(), "UTF-8"));
                 }
+                LOGGER.info(paramString.toString());
             } catch (UnsupportedEncodingException e) {
                 LOGGER.error(e.getMessage());
                 return null;
