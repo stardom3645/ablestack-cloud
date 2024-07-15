@@ -4376,7 +4376,7 @@
 "message.secondary.cluster.vm": "A virtual machine existing in a secondary cluster and mirrored with a virtual machine operating in the primary cluster.",
 "label.dr.volume.status": "Volume status",
 "message.enabled.dr.cluster.confirm": "Activates the currently selected cluster.",
-"message.disabled.dr.cluster.confirm": "Deactivates the currently selected cluster.",
+"message.disabled.dr.cluster.confirm": "Disables the currently selected cluster. If there is a mirroring virtual machine, mirroring is disabled and a new mirroring virtual machine must be added.",
 "message.delete.dr.cluster.confirm": "Delete the currently selected cluster.",
 "message.promote.dr.cluster.confirm": "Promote the currently selected cluster.",
 "message.demote.dr.cluster.confirm": "Demote the currently selected cluster.",
