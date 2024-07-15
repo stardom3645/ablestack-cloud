@@ -520,6 +520,8 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                     moldParams.put("details[0].mirrorschedulestarttime", details.get("mirrorschedulestarttime"));
                 }
                 moldParams.put("details[0].mirrorscheduleinterval", details.get("mirrorscheduleinterval"));
+                LOGGER.info(details.get("mirrorscheduleinterval"));
+                LOGGER.info(moldParams.toString());
                 DisasterRecoveryClusterUtil.moldUpdateDisasterRecoveryClusterAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey, moldParams);
                 List<DisasterRecoveryClusterVmMapVO> drClusterVmList = disasterRecoveryClusterVmMapDao.listByDisasterRecoveryClusterId(drcluster.getId());
                 if (!CollectionUtils.isEmpty(drClusterVmList)) {
