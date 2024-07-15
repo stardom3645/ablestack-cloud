@@ -1255,9 +1255,7 @@ public class DisasterRecoveryClusterUtil {
             String readLine = null;
             StringBuffer sb = null;
             String apiParams = buildParamsMold(command, params);
-            LOGGER.info(apiParams);
             String urlFinal = buildUrl(apiParams, region, apiKey, secretKey);
-            LOGGER.info(urlFinal);
             URL url = new URL(urlFinal);
             if (region.contains("https")) {
                 // SSL 인증서 에러 우회 처리
@@ -1299,8 +1297,6 @@ public class DisasterRecoveryClusterUtil {
                 } else {
                     String msg = "Failed to request mold API. response code : " + connection.getResponseCode();
                     LOGGER.error(msg);
-                    JSONObject test = XML.toJSONObject(sb.toString());
-                    LOGGER.info(test.toString());
                     return null;
                 }
             }
