@@ -508,67 +508,75 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
             Map<String,String> details = cmd.getDetails();
             drcluster.setDetails(details);
             disasterRecoveryClusterDetailsDao.persist(drcluster.getId(), details);
-            String apiKey = details.get(ApiConstants.DR_CLUSTER_API_KEY);
-            String secretKey = details.get(ApiConstants.DR_CLUSTER_SECRET_KEY);
-            String moldUrl = url + "/client/api/";
-            String moldCommand = "listScvmIpAddress";
-            String moldMethod = "GET";
-            List<DisasterRecoveryClusterVmMapVO> drClusterVmList = disasterRecoveryClusterVmMapDao.listByDisasterRecoveryClusterId(drcluster.getId());
-            if (!CollectionUtils.isEmpty(drClusterVmList)) {
-                String ipList = Script.runSimpleBashScript("cat /etc/hosts | grep -E 'scvm1-mngt|scvm2-mngt|scvm3-mngt' | awk '{print $1}' | tr '\n' ','");
-                if (ipList != null || !ipList.isEmpty()) {
-                    ipList = ipList.replaceAll(",$", "");
-                    String[] array = ipList.split(",");
-                    for (DisasterRecoveryClusterVmMapVO vmMapVO : drClusterVmList) {
-                        UserVmJoinVO userVM = userVmJoinDao.findById(vmMapVO.getVmId());
-                        List<VolumeVO> volumes = volsDao.findByInstance(userVM.getId());
-                        for (VolumeVO vol : volumes) {
-                            String volumeUuid = vol.getPath();
-                            Loop :
-                            for (int i=0; i < array.length; i++) {
-                                // 미러링 스케줄 설정 업데이트 glue-api 호출
-                                String glueIp = array[i];
-                                ///////////////////// glue-api 프로토콜과 포트 확정 시 변경 예정
-                                String glueUrl = "https://" + glueIp + ":8080/api/v1";
-                                String glueCommand = "/mirror/image/status/rbd/" + volumeUuid;
-                                String glueMethod = "GET";
-                                String mirrorImageStatus = DisasterRecoveryClusterUtil.glueImageMirrorStatusAPI(glueUrl, glueCommand, glueMethod);
-                                if (mirrorImageStatus != null) {
-                                    JsonObject statObject = (JsonObject) new JsonParser().parse(mirrorImageStatus).getAsJsonObject();
-                                    if (statObject.has("description")) {
-                                        if (statObject.get("description").getAsString().equals("local image is primary")) {
-                                            glueCommand = "/mirror/image/rbd/" + volumeUuid;
-                                            glueMethod = "PUT";
-                                            Map<String, String> glueParams = new HashMap<>();
-                                            glueParams.put("mirrorPool", "rbd");
-                                            glueParams.put("imageName", volumeUuid);
-                                            glueParams.put("interval", details.get("mirrorscheduleinterval"));
-                                            glueParams.put("startTime", details.get("mirrorschedulestarttime"));
-                                            boolean result = DisasterRecoveryClusterUtil.glueImageMirrorSetupUpdateAPI(glueUrl, glueCommand, glueMethod, glueParams);
-                                            if (result) {
-                                                break;
-                                            }
-                                        } else {
-                                            String response = DisasterRecoveryClusterUtil.moldListScvmIpAddressAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey);
-                                            if (response != null) {
-                                                String[] scvmList = response.split(",");
-                                                for (int j=0; j < scvmList.length; j++) {
-                                                    glueIp = scvmList[j];
-                                                     ///////////////////// glue-api 프로토콜과 포트 확정 시 변경 예정
-                                                    glueUrl = "https://" + glueIp + ":8080/api/v1";
-                                                    glueCommand = "/mirror/image/rbd/" + volumeUuid;
-                                                    glueMethod = "PUT";
-                                                    Map<String, String> glueParams = new HashMap<>();
-                                                    glueParams.put("mirrorPool", "rbd");
-                                                    glueParams.put("imageName", volumeUuid);
-                                                    glueParams.put("interval", details.get("mirrorscheduleinterval"));
-                                                    glueParams.put("startTime", details.get("mirrorschedulestarttime"));
-                                                    boolean result = DisasterRecoveryClusterUtil.glueImageMirrorSetupUpdateAPI(glueUrl, glueCommand, glueMethod, glueParams);
-                                                    if (result) {
-                                                        break Loop;
-                                                    }
+            if (drClusterId != null) {
+                String apiKey = details.get(ApiConstants.DR_CLUSTER_API_KEY);
+                String secretKey = details.get(ApiConstants.DR_CLUSTER_SECRET_KEY);
+                String moldUrl = url + "/client/api/";
+                String moldCommand = "updateDisasterRecoveryCluster";
+                String moldMethod = "GET";
+                Map<String, String> moldParams = new HashMap<>();
+                moldParams.put("name", drClusterName);
+                moldParams.put("details[0].mirrorschedulestarttime", details.get("mirrorschedulestarttime"));
+                moldParams.put("details[0].mirrorscheduleinterval", details.get("mirrorscheduleinterval"));
+                DisasterRecoveryClusterUtil.moldUpdateDisasterRecoveryClusterAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey, moldParams);
+                List<DisasterRecoveryClusterVmMapVO> drClusterVmList = disasterRecoveryClusterVmMapDao.listByDisasterRecoveryClusterId(drcluster.getId());
+                if (!CollectionUtils.isEmpty(drClusterVmList)) {
+                    String ipList = Script.runSimpleBashScript("cat /etc/hosts | grep -E 'scvm1-mngt|scvm2-mngt|scvm3-mngt' | awk '{print $1}' | tr '\n' ','");
+                    if (ipList != null || !ipList.isEmpty()) {
+                        ipList = ipList.replaceAll(",$", "");
+                        String[] array = ipList.split(",");
+                        for (DisasterRecoveryClusterVmMapVO vmMapVO : drClusterVmList) {
+                            UserVmJoinVO userVM = userVmJoinDao.findById(vmMapVO.getVmId());
+                            List<VolumeVO> volumes = volsDao.findByInstance(userVM.getId());
+                            for (VolumeVO vol : volumes) {
+                                String volumeUuid = vol.getPath();
+                                Loop :
+                                for (int i=0; i < array.length; i++) {
+                                    // 미러링 스케줄 설정 업데이트 glue-api 호출
+                                    String glueIp = array[i];
+                                    ///////////////////// glue-api 프로토콜과 포트 확정 시 변경 예정
+                                    String glueUrl = "https://" + glueIp + ":8080/api/v1";
+                                    String glueCommand = "/mirror/image/status/rbd/" + volumeUuid;
+                                    String glueMethod = "GET";
+                                    String mirrorImageStatus = DisasterRecoveryClusterUtil.glueImageMirrorStatusAPI(glueUrl, glueCommand, glueMethod);
+                                    if (mirrorImageStatus != null) {
+                                        JsonObject statObject = (JsonObject) new JsonParser().parse(mirrorImageStatus).getAsJsonObject();
+                                        if (statObject.has("description")) {
+                                            if (statObject.get("description").getAsString().equals("local image is primary")) {
+                                                glueCommand = "/mirror/image/rbd/" + volumeUuid;
+                                                glueMethod = "PUT";
+                                                Map<String, String> glueParams = new HashMap<>();
+                                                glueParams.put("mirrorPool", "rbd");
+                                                glueParams.put("imageName", volumeUuid);
+                                                glueParams.put("interval", details.get("mirrorscheduleinterval"));
+                                                glueParams.put("startTime", details.get("mirrorschedulestarttime"));
+                                                boolean result = DisasterRecoveryClusterUtil.glueImageMirrorSetupUpdateAPI(glueUrl, glueCommand, glueMethod, glueParams);
+                                                if (result) {
+                                                    break;
                                                 }
-                                                break;
+                                            } else {
+                                                moldCommand = "listScvmIpAddress";
+                                                String response = DisasterRecoveryClusterUtil.moldListScvmIpAddressAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey);
+                                                if (response != null) {
+                                                    String[] scvmList = response.split(",");
+                                                    for (int j=0; j < scvmList.length; j++) {
+                                                        glueIp = scvmList[j];
+                                                        ///////////////////// glue-api 프로토콜과 포트 확정 시 변경 예정
+                                                        glueUrl = "https://" + glueIp + ":8080/api/v1";
+                                                        glueCommand = "/mirror/image/rbd/" + volumeUuid;
+                                                        glueMethod = "PUT";
+                                                        Map<String, String> glueParams = new HashMap<>();
+                                                        glueParams.put("mirrorPool", "rbd");
+                                                        glueParams.put("imageName", volumeUuid);
+                                                        glueParams.put("interval", details.get("mirrorscheduleinterval"));
+                                                        glueParams.put("startTime", details.get("mirrorschedulestarttime"));
+                                                        boolean result = DisasterRecoveryClusterUtil.glueImageMirrorSetupUpdateAPI(glueUrl, glueCommand, glueMethod, glueParams);
+                                                        if (result) {
+                                                            break Loop;
+                                                        }
+                                                    }
+                                                    break;
+                                                }
                                             }
                                         }
                                     }
