@@ -187,7 +187,6 @@ public class SnapshotDaoImpl extends GenericDaoBase<SnapshotVO, Long> implements
 
         volumesToFlattenSearch = createSearchBuilder();
         volumesToFlattenSearch.and("cloneType", volumesToFlattenSearch.entity().getCloneType(), Op.EQ);
-        volumesToFlattenSearch.and("status", volumesToFlattenSearch.entity().getState(), Op.EQ);
         volumesToFlattenSearch.and("removed", volumesToFlattenSearch.entity().getRemoved(), Op.NULL);
         volumesToFlattenSearch.done();
     }
@@ -301,7 +300,6 @@ public class SnapshotDaoImpl extends GenericDaoBase<SnapshotVO, Long> implements
     public List<SnapshotVO> listFullCloneVolumesToFlatten() {
         SearchCriteria<SnapshotVO> sc = volumesToFlattenSearch.create();
         sc.setParameters("cloneType", "full");
-        sc.setParameters("status", State.BackedUp);
         return listBy(sc);
     }
 

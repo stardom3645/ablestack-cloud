@@ -541,22 +541,6 @@ public class AblestackPrimaryDataStoreDriverImpl implements PrimaryDataStoreDriv
     public void detachVolumeFromAllStorageNodes(Volume volume) {
     }
 
-    public Answer flattenVolume(DataObject srcdata) throws StorageUnavailableException {
-        SnapshotObjectTO srcTO = (SnapshotObjectTO) srcdata.getTO();
-
-        FlattenCommand cmd = new FlattenCommand(srcTO);
-        EndPoint ep = epSelector.select(srcdata);
-        Answer answer = null;
-        if (ep == null) {
-            String errMsg = "No remote endpoint to send FlattenCommand, check if host or ssvm is down?";
-            logger.error(errMsg);
-            answer = new Answer(cmd, false, errMsg);
-        } else {
-            answer = ep.sendMessage(cmd);
-        }
-        return answer;
-    }
-
     @Override
     public void flattenAsync(DataStore store, DataObject srcData, AsyncCompletionCallback<CommandResult> callback) {
         SnapshotObjectTO srcTO = (SnapshotObjectTO) srcData.getTO();
@@ -571,9 +555,9 @@ public class AblestackPrimaryDataStoreDriverImpl implements PrimaryDataStoreDriv
             } else {
                 Answer answer = ep.sendMessage(cmd);
                 if (answer != null) {
-                    if (answer.getResult()) {
-                        result.setSuccess(true);
-                    }
+                    result.setSuccess(answer.getResult());
+                } else {
+                    result.setResult("[flattenAsync] Fail to flatten command");
                 }
             }
         } catch (Exception ex) {
