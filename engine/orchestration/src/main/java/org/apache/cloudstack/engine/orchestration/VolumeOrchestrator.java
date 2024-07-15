@@ -606,7 +606,9 @@ public class VolumeOrchestrator extends ManagerBase implements VolumeOrchestrati
             logger.debug("Exception: ", e);
             throw new CloudRuntimeException(message, e);
         } finally {
-            snapshotHelper.expungeTemporarySnapshot(kvmSnapshotOnlyInPrimaryStorage, snapInfo);
+            if (!kvmSnapshotOnlyInPrimaryStorage){
+                snapshotHelper.expungeTemporarySnapshot(kvmSnapshotOnlyInPrimaryStorage, snapInfo);
+            }
         }
 
     }
