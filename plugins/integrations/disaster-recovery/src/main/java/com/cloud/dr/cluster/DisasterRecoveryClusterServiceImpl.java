@@ -490,6 +490,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                 throw new InvalidParameterValueException("Invalid Disaster Recovery id specified");
             }
         }
+        String name = drcluster.getName();
         String url = drcluster.getDrClusterUrl();
         drcluster = disasterRecoveryClusterDao.createForUpdate(drcluster.getId());
         if (cmd.getDescription() != null) {
@@ -515,13 +516,9 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                 String moldCommand = "updateDisasterRecoveryCluster";
                 String moldMethod = "GET";
                 Map<String, String> moldParams = new HashMap<>();
-                moldParams.put("name", drClusterName);
-                if (details.get("mirrorschedulestarttime") != "") {
-                    moldParams.put("details[0].mirrorschedulestarttime", details.get("mirrorschedulestarttime"));
-                }
+                moldParams.put("name", name);
+                moldParams.put("details[0].mirrorschedulestarttime", details.get("mirrorschedulestarttime"));
                 moldParams.put("details[0].mirrorscheduleinterval", details.get("mirrorscheduleinterval"));
-                LOGGER.info(details.get("mirrorscheduleinterval"));
-                LOGGER.info(moldParams.toString());
                 DisasterRecoveryClusterUtil.moldUpdateDisasterRecoveryClusterAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey, moldParams);
                 List<DisasterRecoveryClusterVmMapVO> drClusterVmList = disasterRecoveryClusterVmMapDao.listByDisasterRecoveryClusterId(drcluster.getId());
                 if (!CollectionUtils.isEmpty(drClusterVmList)) {
