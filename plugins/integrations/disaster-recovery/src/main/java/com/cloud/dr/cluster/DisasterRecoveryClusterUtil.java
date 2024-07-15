@@ -832,7 +832,6 @@ public class DisasterRecoveryClusterUtil {
             connection.setRequestMethod(method);
             connection.setConnectTimeout(30000);
             connection.setReadTimeout(180000);
-            connection.setRequestProperty("X-HTTP-Method-Override", "PATCH");
             connection.setRequestProperty("Accept", "application/vnd.ceph.api.v1.0+json");
             connection.setRequestProperty("Authorization", "application/vnd.ceph.api.v1.0+json");
             connection.setRequestProperty("Connection","Keep-Alive");
