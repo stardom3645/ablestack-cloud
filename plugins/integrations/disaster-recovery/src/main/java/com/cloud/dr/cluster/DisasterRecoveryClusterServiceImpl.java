@@ -490,6 +490,8 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                 throw new InvalidParameterValueException("Invalid Disaster Recovery id specified");
             }
         }
+        Long drId = drcluster.getId();
+        Map<String, String> drDetails = disasterRecoveryClusterDetailsDao.findDetails(drId);
         String name = drcluster.getName();
         String url = drcluster.getDrClusterUrl();
         drcluster = disasterRecoveryClusterDao.createForUpdate(drcluster.getId());
@@ -507,23 +509,22 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         }
         if (cmd.getDetails() != null) {
             Map<String,String> details = cmd.getDetails();
-            LOGGER.info(details.toString());
-            drcluster.setDetails(details);
-            disasterRecoveryClusterDetailsDao.persist(drcluster.getId(), details);
-            if (drClusterId != null) {
+            if (drClusterId == null) {
+                // secondary cluster로 요청이 온 경우
+                drDetails.put("mirrorscheduleinterval", details.get("mirrorscheduleinterval"));
+                drDetails.put("mirrorschedulestarttime", details.get("mirrorschedulestarttime"));
+                drcluster.setDetails(drDetails);
+                disasterRecoveryClusterDetailsDao.persist(drId, drDetails);
+            } else {
+                drcluster.setDetails(details);
+                disasterRecoveryClusterDetailsDao.persist(drcluster.getId(), details);
                 String apiKey = details.get(ApiConstants.DR_CLUSTER_API_KEY);
                 String secretKey = details.get(ApiConstants.DR_CLUSTER_SECRET_KEY);
-                UserAccount user = accountService.getActiveUserAccount("admin", 1L);
-                String priApiKey = user.getApiKey();
-                String priSecretKey = user.getSecretKey();
                 String moldUrl = url + "/client/api/";
                 String moldCommand = "updateDisasterRecoveryCluster";
                 String moldMethod = "GET";
                 Map<String, String> moldParams = new HashMap<>();
                 moldParams.put("name", name);
-                moldParams.put("details[0].drclusterapikey", priApiKey);
-                moldParams.put("details[0].drclustersecretkey", priSecretKey);
-                moldParams.put("details[0].drclusterprivatekey", details.get(ApiConstants.DR_CLUSTER_PRIVATE_KEY));
                 moldParams.put("details[0].mirrorschedulestarttime", details.get("mirrorschedulestarttime"));
                 moldParams.put("details[0].mirrorscheduleinterval", details.get("mirrorscheduleinterval"));
                 DisasterRecoveryClusterUtil.moldUpdateDisasterRecoveryClusterAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey, moldParams);
@@ -706,7 +707,6 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         secParams.put("drclusterurl", priUrl);
         secParams.put("drclusterapikey", priApiKey);
         secParams.put("drclustersecretkey", priSecretKey);
-        secParams.put("drclusterprivatekey", secPrivateKey);
         String secCommand = "createDisasterRecoveryCluster";
         String secMethod = "POST";
         String secResponse = DisasterRecoveryClusterUtil.moldCreateDisasterRecoveryClusterAPI(secUrl + "/client/api/", secCommand, secMethod, secApiKey, secSecretKey, secParams);

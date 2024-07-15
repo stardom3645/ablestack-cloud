@@ -100,7 +100,7 @@
             <tooltip-button
               :tooltip="$t('label.edit')"
               icon="edit-outlined"
-              :disabled="deployasistemplate === true || item.name.startsWith('extraconfig') || (resource.drclustertype === 'primary' && item.name.startsWith('drclusterprivatekey'))"
+              :disabled="deployasistemplate === true || item.name.startsWith('extraconfig')"
               v-if="!item.edit"
               @onClick="showEditDetail(index)" />
           </div>
@@ -115,7 +115,7 @@
             >
               <tooltip-button
                 :tooltip="$t('label.delete')"
-                :disabled="deployasistemplate === true || item.name.startsWith('extraconfig') || (resource.drclustertype === 'primary' && item.name.startsWith('drclusterprivatekey'))"
+                :disabled="deployasistemplate === true || item.name.startsWith('extraconfig')"
                 type="primary"
                 :danger="true"
                 icon="delete-outlined" />
