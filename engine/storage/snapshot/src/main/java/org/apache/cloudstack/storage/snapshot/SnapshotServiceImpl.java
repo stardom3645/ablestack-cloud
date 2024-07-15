@@ -800,8 +800,6 @@ public class SnapshotServiceImpl implements SnapshotService {
 
     @Override
     public boolean flattenVolumeAsync(SnapshotInfo snapshot, DataStore dataStore) {
-        // snapInfo.processEvent(ObjectInDataStoreStateMachine.Event.DestroyRequested);
-
         AsyncCallFuture<SnapshotResult> future = new AsyncCallFuture<SnapshotResult>();
         FlattenSnapshotContext<CommandResult> context = new FlattenSnapshotContext<CommandResult>(null, snapshot, future);
         AsyncCallbackDispatcher<SnapshotServiceImpl, CommandResult> caller = AsyncCallbackDispatcher.create(this);
@@ -812,14 +810,16 @@ public class SnapshotServiceImpl implements SnapshotService {
         SnapshotResult result = null;
         try {
             result = future.get();
-            if (result.isFailed()) {
-                throw new CloudRuntimeException(result.getResult());
+            logger.debug(String.format("Successfully flatten command [%s] with ID [%s].", snapshot.getName(), snapshot.getUuid()));
+
+            if (result.isSuccess()) {
+                return true;
+            } else {
+                return false;
             }
-            logger.debug(String.format("Successfully flatten snapshot [%s] with ID [%s].", snapshot.getName(), snapshot.getUuid()));
-            return true;
         } catch (InterruptedException | ExecutionException e) {
-            logger.error(String.format("Failed to flatten snapshot [%s] due to: [%s].", snapshot.getUuid(), e.getMessage()));
-            logger.debug(String.format("Failed to flatten snapshot [%s].", snapshot.getUuid()), e);
+            logger.error(String.format("Failed to flatten command [%s] due to: [%s].", snapshot.getUuid(), e.getMessage()));
+            logger.debug(String.format("Failed to flatten command [%s].", snapshot.getUuid()), e);
         }
 
         return false;
@@ -832,11 +832,11 @@ public class SnapshotServiceImpl implements SnapshotService {
         SnapshotInfo snapshot = context.snapshot;
         SnapshotResult res = null;
         try {
-            logger.debug(String.format("Failed to flatten snapshot [%s] due to: [%s].", snapshot.getUuid(), result.getResult()));
+            logger.debug(String.format("Failed to flatten command [%s] due to: [%s].", snapshot.getUuid(), result.isSuccess()));
             res = new SnapshotResult(context.snapshot, null);
-            res.setResult(result.getResult());
+            res.setSuccess(result.isSuccess());
         } catch (Exception e) {
-            logger.error(String.format("An exception occurred while processing an event in delete snapshot callback from snapshot [%s].", snapshot.getUuid()));
+            logger.error(String.format("An exception occurred while processing an event in flatten command callback from snapshot [%s].", snapshot.getUuid()));
             res.setResult(e.toString());
         }
         future.complete(res);
