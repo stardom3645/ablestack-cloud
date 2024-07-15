@@ -70,6 +70,8 @@ CALL `cloud`.`ADD_COL`('nics', 'link_state', 'tinyint(1) unsigned NOT NULL DEFAU
 
 CALL `cloud`.`ADD_COL`('vm_instance', 'qemu_agent_version', 'varchar(16)');
 
+CALL `cloud`.`ADD_COL`('snapshots', 'clone_type', 'varchar(32)');
+
 -- Adding disaster_recovery_cluster table
 CREATE TABLE IF NOT EXISTS `disaster_recovery_cluster` (
     `id`                     bigint unsigned AUTO_INCREMENT,
@@ -114,3 +116,4 @@ CREATE TABLE IF NOT EXISTS `disaster_recovery_cluster_details` (
     PRIMARY KEY (`id`),
     CONSTRAINT `fk_disaster_recovery_cluster_details__dr_cluster_id` FOREIGN KEY (`dr_cluster_id`) REFERENCES `disaster_recovery_cluster` (`id`) ON DELETE CASCADE
     ) ENGINE=InnoDB CHARSET=utf8mb3;
+
