@@ -522,6 +522,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                 moldParams.put("name", name);
                 moldParams.put("details[0].drclusterapikey", priApiKey);
                 moldParams.put("details[0].drclustersecretkey", priSecretKey);
+                moldParams.put("details[0].drclusterprivatekey", details.get(ApiConstants.DR_CLUSTER_PRIVATE_KEY));
                 moldParams.put("details[0].mirrorschedulestarttime", details.get("mirrorschedulestarttime"));
                 moldParams.put("details[0].mirrorscheduleinterval", details.get("mirrorscheduleinterval"));
                 DisasterRecoveryClusterUtil.moldUpdateDisasterRecoveryClusterAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey, moldParams);
@@ -704,6 +705,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         secParams.put("drclusterurl", priUrl);
         secParams.put("drclusterapikey", priApiKey);
         secParams.put("drclustersecretkey", priSecretKey);
+        secParams.put("drclusterprivatekey", secPrivateKey);
         String secCommand = "createDisasterRecoveryCluster";
         String secMethod = "POST";
         String secResponse = DisasterRecoveryClusterUtil.moldCreateDisasterRecoveryClusterAPI(secUrl + "/client/api/", secCommand, secMethod, secApiKey, secSecretKey, secParams);
