@@ -168,7 +168,7 @@ public class SnapshotHelper {
      * @return true if snapInfo is null and dataStoreRole is {@link DataStoreRole#Image} or is a KVM snapshot that is only kept in primary storage, else false.
      */
     protected boolean isSnapshotBackupable(SnapshotInfo snapInfo, DataStoreRole dataStoreRole, boolean kvmSnapshotOnlyInPrimaryStorage) {
-        return (snapInfo == null && dataStoreRole == DataStoreRole.Image) || kvmSnapshotOnlyInPrimaryStorage;
+        return (snapInfo == null && dataStoreRole == DataStoreRole.Image) || !kvmSnapshotOnlyInPrimaryStorage;
     }
 
     /**
