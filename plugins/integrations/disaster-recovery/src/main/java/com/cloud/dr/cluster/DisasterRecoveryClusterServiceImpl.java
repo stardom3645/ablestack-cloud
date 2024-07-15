@@ -507,6 +507,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         }
         if (cmd.getDetails() != null) {
             Map<String,String> details = cmd.getDetails();
+            LOGGER.info(details.toString());
             drcluster.setDetails(details);
             disasterRecoveryClusterDetailsDao.persist(drcluster.getId(), details);
             if (drClusterId != null) {
