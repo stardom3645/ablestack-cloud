@@ -512,11 +512,16 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
             if (drClusterId != null) {
                 String apiKey = details.get(ApiConstants.DR_CLUSTER_API_KEY);
                 String secretKey = details.get(ApiConstants.DR_CLUSTER_SECRET_KEY);
+                UserAccount user = accountService.getActiveUserAccount("admin", 1L);
+                String priApiKey = user.getApiKey();
+                String priSecretKey = user.getSecretKey();
                 String moldUrl = url + "/client/api/";
                 String moldCommand = "updateDisasterRecoveryCluster";
                 String moldMethod = "GET";
                 Map<String, String> moldParams = new HashMap<>();
                 moldParams.put("name", name);
+                moldParams.put("details[0].drclusterapikey", priApiKey);
+                moldParams.put("details[0].drclustersecretkey", priSecretKey);
                 moldParams.put("details[0].mirrorschedulestarttime", details.get("mirrorschedulestarttime"));
                 moldParams.put("details[0].mirrorscheduleinterval", details.get("mirrorscheduleinterval"));
                 DisasterRecoveryClusterUtil.moldUpdateDisasterRecoveryClusterAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey, moldParams);
