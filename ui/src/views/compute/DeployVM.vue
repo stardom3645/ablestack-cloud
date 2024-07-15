@@ -2259,7 +2259,7 @@ export default {
         const httpMethod = deployVmData.userdata ? 'POST' : 'GET'
 
         if (values.vmNumber) {
-          for (var num = 0; num < Number(values.vmNumber); num++) {
+          for (var num = 1; num <= Number(values.vmNumber); num++) {
             let args = ''
             let data = ''
             if (values.name) {
@@ -2275,9 +2275,8 @@ export default {
                   this.loading.deploy = false
                   return
                 }
-                var numP = num + 1
-                deployVmData.name = values.name + '-' + numP
-                deployVmData.displayname = values.name + '-' + numP
+                deployVmData.name = values.name + '-' + num
+                deployVmData.displayname = values.name + '-' + num
               }
             }
             args = httpMethod === 'POST' ? {} : deployVmData
@@ -2289,7 +2288,7 @@ export default {
               } else {
                 jobId = await this.deployVM(args, httpMethod, data)
               }
-              if (num === 0) {
+              if (num === 1) {
                 this.$pollJob({
                   jobId,
                   title,
