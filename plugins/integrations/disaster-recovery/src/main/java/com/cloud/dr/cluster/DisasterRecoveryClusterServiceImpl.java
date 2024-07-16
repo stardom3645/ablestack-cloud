@@ -408,7 +408,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                 String moldCommand = "listVirtualMachines";
                 String moldMethod = "GET";
                 String vmList = DisasterRecoveryClusterUtil.moldListVirtualMachinesAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey);
-                if (vmList != null || !vmList.isEmpty()) {
+                if (vmList != null) {
                     JSONObject jsonObject = new JSONObject(vmList);
                     Object object = jsonObject.get("virtualmachine");
                     JSONArray array;
