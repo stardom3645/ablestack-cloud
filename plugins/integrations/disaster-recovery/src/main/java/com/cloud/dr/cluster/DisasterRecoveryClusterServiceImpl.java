@@ -1172,7 +1172,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                                         if (result) {
                                             glueCommand = "/mirror/image/promote/rbd/" + imageName.getAsString();
                                             glueMethod = "POST";
-                                            while(glueStep < 5) {
+                                            while(glueStep < 10) {
                                                 glueStep += 1;
                                                 try {
                                                     Thread.sleep(10000);
@@ -1297,7 +1297,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                                         if (result) {
                                             glueCommand = "/mirror/image/promote/peer/rbd/" + imageName.getAsString();
                                             glueMethod = "POST";
-                                            while(glueStep < 5) {
+                                            while(glueStep < 10) {
                                                 glueStep += 1;
                                                 try {
                                                     Thread.sleep(10000);
@@ -1827,7 +1827,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                     if (result) {
                         glueCommand = "/mirror/image/promote/rbd/" + volumeUuid;
                         glueMethod = "POST";
-                        while(glueStep < 5) {
+                        while(glueStep < 10) {
                             glueStep += 1;
                             try {
                                 Thread.sleep(10000);
@@ -1905,7 +1905,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                     if (result) {
                         glueCommand = "/mirror/image/promote/peer/rbd/" + volumeUuid;
                         glueMethod = "POST";
-                        while(glueStep < 5) {
+                        while(glueStep < 10) {
                             glueStep += 1;
                             try {
                                 Thread.sleep(10000);
