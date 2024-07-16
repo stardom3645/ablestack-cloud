@@ -117,6 +117,7 @@ export default {
       loading: false,
       params: [],
       drCluster: [],
+      drVm: [],
       selectedDrCluster: [],
       selectedId: '',
       secDrClusterOfferings: [],
@@ -139,27 +140,59 @@ export default {
     },
     fetchData () {
       this.fetchDRClusterList()
-      this.fetchSecDRClusterInfoList()
     },
     fetchDRClusterList () {
       this.loading = true
+      var drName = ''
       api('getDisasterRecoveryClusterList', { drclustertype: 'secondary' }).then(json => {
-        this.drCluster = json.getdisasterrecoveryclusterlistresponse.disasterrecoverycluster || []
-        this.form.drCluster = this.drCluster[0].name || ''
+        this.drCluster = json.getdisasterrecoveryclusterlistresponse.disasterrecoverycluster
+        for (const dr of this.drCluster) {
+          for (const vm of dr.drclustervmmap) {
+            if (vm.drclustervmid === this.resource.id) {
+              drName = vm.drclustername
+            }
+          }
+        }
+        if (drName !== '') {
+          this.drCluster = this.drCluster.filter(entry => {
+            return !entry.name.includes(drName)
+          })
+        }
+        if (this.drCluster.length > 0) {
+          this.form.drCluster = this.drCluster[0].name
+        } else {
+          this.form.drCluster = null
+        }
       }).finally(() => {
         this.loading = false
+        this.fetchSecDRClusterInfoList()
       })
     },
     // 재해복구용 가상머신 생성 모달에서 DR Secondary 클러스터를 선택했을 때 컴퓨트 오퍼링과 네트워크 목록을 불러오는 함수
     fetchSecDRClusterInfoList () {
       this.loading = true
-      api('getDisasterRecoveryClusterList', { id: this.selectedClusterId, drclustertype: 'secondary' }).then(json => {
+      if (this.selectedClusterId === undefined) {
+        if (this.form.drCluster != null) {
+          this.secDrClusterOfferings = this.drCluster[0].serviceofferingdetails || []
+          this.form.secDrClusterOfferings = this.secDrClusterOfferings.length > 0 ? this.secDrClusterOfferings[0].name : null
+          this.secDrClusterNetworkList = this.drCluster[0].network || []
+          this.form.secDrClusterNetworkList = this.secDrClusterNetworkList.length > 0 ? this.secDrClusterNetworkList[0].name : null
+        } else {
+          this.form.secDrClusterOfferings = null
+          this.form.secDrClusterNetworkList = null
+        }
+        this.loading = false
+      } else {
+        this.SecDRClusterInfoList(this.selectedClusterId)
+      }
+    },
+    SecDRClusterInfoList (selectId) {
+      api('getDisasterRecoveryClusterList', { id: selectId, drclustertype: 'secondary' }).then(json => {
         const response = json.getdisasterrecoveryclusterlistresponse
         const clusters = response ? response.disasterrecoverycluster : null
 
         if (clusters && clusters.length > 0) {
           const cluster = clusters[0]
-
           this.secDrClusterOfferings = cluster.serviceofferingdetails || []
           this.form.secDrClusterOfferings = this.secDrClusterOfferings.length > 0 ? this.secDrClusterOfferings[0].name : ''
 
