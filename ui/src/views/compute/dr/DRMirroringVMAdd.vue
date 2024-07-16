@@ -234,26 +234,10 @@ export default {
           networkname: values.secDrClusterNetworkList
         }
         api('createDisasterRecoveryClusterVm', params).then(json => {
-          const jobId = json.createdisasterrecoveryclustservmresponse.jobid
-          this.$pollJob({
-            jobId,
-            title: this.$t('label.add.disaster.recovery.cluster.vm'),
-            description: this.resource.name,
-            successMethod: () => {
-              this.$notification.success({
-                message: this.$t('message.success.add.disaster.recovery.cluster.vm'),
-                duration: 0
-              })
-              this.$emit('refresh-data')
-            },
-            loadingMessage: `${this.$t('label.add.disaster.recovery.cluster.vm')} ${this.resource.name} ${this.$t('label.in.progress')}`,
-            catchMessage: this.$t('error.fetching.async.job.result'),
-            catchMethod: () => {
-              this.$emit('refresh-data')
-            }
-          })
-          this.$emit('refresh-data')
-          this.closeModals()
+          this.$message.success(`${this.$t('label.add.disaster.recovery.cluster.vm')}: ${this.resource.name}`)
+          this.closeModal()
+        }).catch(error => {
+          this.$notifyError(error)
         }).finally(() => {
           this.loading = false
         })
