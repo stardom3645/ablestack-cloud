@@ -431,6 +431,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                 String ipList = Script.runSimpleBashScript("cat /etc/hosts | grep -E 'scvm1-mngt|scvm2-mngt|scvm3-mngt' | awk '{print $1}' | tr '\n' ','");
                 ipList = ipList.replaceAll(",$", "");
                 String[] array = ipList.split(",");
+                Loop :
                 for (int i=0; i < array.length; i++) {
                     String glueIp = array[i];
                     ///////////////////// glue-api 프로토콜과 포트 확정 시 변경 예정
@@ -459,7 +460,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                                         map.setMirroredVmVolumeStatus("READY");
                                     }
                                     disasterRecoveryClusterVmMapDao.update(map.getId(), map);
-                                    break;
+                                    break Loop;
                                 }
                             }
                         }
