@@ -1205,7 +1205,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                                                     LOGGER.error("Failed to request ImageMirrorPromote Glue-API.");
                                                 }
                                             }
-                                            throw new CloudRuntimeException("Failed to promote image, For volumes with a path of " + imageName.getAsString() + ".");
+                                            throw new CloudRuntimeException("Failed to promote image, For volumes with a path of " + imageName.getAsString() + ", You must manually promote local images and resync remote image, add a local image snapshots schedule.");
                                         } else {
                                             LOGGER.error("Failed to request ImageMirrorDemotePeer Glue-API.");
                                         }
@@ -1331,7 +1331,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                                                     LOGGER.error("Failed to request ImageMirrorPromotePeer Glue-API.");
                                                 }
                                             }
-                                            throw new CloudRuntimeException("Failed to promote remote image, For volumes with a path of " + imageName.getAsString() + ".");
+                                            throw new CloudRuntimeException("Failed to promote remote image, For volumes with a path of " + imageName.getAsString() + ", You must manually promote remote images and resync local image, add a remote image snapshots schedule.");
                                         } else {
                                             LOGGER.error("Failed to request ImageMirrorDemote Glue-API.");
                                         }
