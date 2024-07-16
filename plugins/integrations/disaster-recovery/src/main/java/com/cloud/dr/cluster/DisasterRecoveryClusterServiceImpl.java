@@ -1128,101 +1128,82 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
             String glueUrl = "";
             String glueCommand = "";
             String glueMethod = "";
-            JsonArray drArray = null;
-            // 미러링 중인 이미지 목록 조회 glue-api 호출
-            for (int i=0; i < array.length; i++) {
-                glueIp = array[i];
-                ///////////////////// glue-api 프로토콜과 포트 확정 시 변경 예정
-                glueUrl = "https://" + glueIp + ":8080/api/v1";
-                glueCommand = "/mirror/image";
-                glueMethod = "GET";
-                String mirrorList = DisasterRecoveryClusterUtil.glueImageMirrorAPI(glueUrl, glueCommand, glueMethod);
-                if (mirrorList != null) {
-                    drArray = (JsonArray) new JsonParser().parse(mirrorList).getAsJsonObject().get("Remote");
-                    break;
-                }
-            }
-            if (drArray == null) {
-                throw new CloudRuntimeException("Failed to request list of mirrored snapshot Glue-API.");
-            }
             int glueStep = 0;
-            if (drArray.size() != 0) {
-                boolean result = false;
-                for (JsonElement dr : drArray) {
-                    JsonElement imageName = dr.getAsJsonObject().get("image") == null ? null : dr.getAsJsonObject().get("image");
-                    if (imageName != null) {
-                        Loop :
-                        for (int j=0; j < array.length; j++) {
-                            glueIp = array[j];
-                            ///////////////////// glue-api 프로토콜과 포트 확정 시 변경 예정
-                            glueUrl = "https://" + glueIp + ":8080/api/v1";
-                            glueCommand = "/mirror/image/status/rbd/" +imageName.getAsString();
-                            glueMethod = "GET";
-                            String mirrorImageStatus = DisasterRecoveryClusterUtil.glueImageMirrorStatusAPI(glueUrl, glueCommand, glueMethod);
-                            if (mirrorImageStatus != null) {
-                                JsonObject statObject = (JsonObject) new JsonParser().parse(mirrorImageStatus).getAsJsonObject();
-                                if (statObject.has("description")) {
-                                    if (!statObject.get("description").getAsString().equals("local image is primary")) {
-                                        glueCommand = "/mirror/image/demote/peer/rbd/" + imageName.getAsString();
-                                        glueMethod = "DELETE";
-                                        Map<String, String> glueParams = new HashMap<>();
-                                        glueParams.put("mirrorPool", "rbd");
-                                        glueParams.put("imageName", imageName.getAsString());
-                                        result = DisasterRecoveryClusterUtil.glueImageMirrorDemoteAPI(glueUrl, glueCommand, glueMethod, glueParams);
-                                        if (result) {
-                                            glueCommand = "/mirror/image/promote/rbd/" + imageName.getAsString();
-                                            glueMethod = "POST";
-                                            while(glueStep < 20) {
-                                                glueStep += 1;
-                                                try {
-                                                    Thread.sleep(10000);
-                                                } catch (InterruptedException e) {
-                                                    LOGGER.error("promoteDisasterRecoveryCluster sleep interrupted");
-                                                }
-                                                result = DisasterRecoveryClusterUtil.glueImageMirrorPromoteAPI(glueUrl, glueCommand, glueMethod, glueParams);
-                                                if (result) {
-                                                    glueCommand = "/mirror/image/resync/peer/rbd/" + imageName.getAsString();
-                                                    glueMethod = "PUT";
-                                                    boolean resync = DisasterRecoveryClusterUtil.glueImageMirrorResyncAPI(glueUrl, glueCommand, glueMethod, glueParams);
-                                                    if (resync) {
-                                                        glueCommand = "/mirror/image/rbd/" + imageName.getAsString();
-                                                        glueParams = new HashMap<>();
-                                                        glueParams.put("mirrorPool", "rbd");
-                                                        glueParams.put("imageName", imageName.getAsString());
-                                                        glueParams.put("interval", details.get("mirrorscheduleinterval"));
-                                                        glueParams.put("startTime", details.get("mirrorschedulestarttime"));
-                                                        boolean schedule = DisasterRecoveryClusterUtil.glueImageMirrorSetupUpdateAPI(glueUrl, glueCommand, glueMethod, glueParams);
-                                                        if (!schedule) {
-                                                            LOGGER.error("Failed to request ImageMirrorSetupUpdate Glue-API.");
-                                                            LOGGER.error("The image was promoted successfully, but scheduling the image failed. For volumes with a path of " + imageName.getAsString() + ", please add a schedule manually.");
-                                                        }
-                                                    } else {
-                                                        LOGGER.error("Failed to request ImageMirrorResync Glue-API.");
-                                                        LOGGER.error("The image was promoted successfully, but resyncing the image failed. For volumes with a path of " + imageName.getAsString() + ", Manually set image resync and snapshot schedules.");
-                                                    }
-                                                    break Loop;
-                                                } else {
-                                                    LOGGER.error("Failed to request ImageMirrorPromote Glue-API.");
-                                                }
+            boolean result = false;
+            // DR 상황 발생 시 glue-API로 이미지를 조회하지않고, vmMap 조회하여 실행
+            List<DisasterRecoveryClusterVmMapVO> vmMap = disasterRecoveryClusterVmMapDao.listByDisasterRecoveryClusterId(drCluster.getId());
+            if (!CollectionUtils.isEmpty(vmMap)) {
+                for (DisasterRecoveryClusterVmMapVO map : vmMap) {
+                    String imageName = map.getMirroredVmVolumePath();
+                    Loop :
+                    for (int i=0; i < array.length; i++) {
+                        glueIp = array[i];
+                        ///////////////////// glue-api 프로토콜과 포트 확정 시 변경 예정
+                        glueUrl = "https://" + glueIp + ":8080/api/v1";
+                        glueCommand = "/mirror/image/status/rbd/" +imageName;
+                        glueMethod = "GET";
+                        String mirrorImageStatus = DisasterRecoveryClusterUtil.glueImageMirrorStatusAPI(glueUrl, glueCommand, glueMethod);
+                        if (mirrorImageStatus != null) {
+                            JsonObject statObject = (JsonObject) new JsonParser().parse(mirrorImageStatus).getAsJsonObject();
+                            if (statObject.has("description")) {
+                                if (!statObject.get("description").getAsString().equals("local image is primary")) {
+                                    glueCommand = "/mirror/image/demote/peer/rbd/" + imageName;
+                                    glueMethod = "DELETE";
+                                    Map<String, String> glueParams = new HashMap<>();
+                                    glueParams.put("mirrorPool", "rbd");
+                                    glueParams.put("imageName", imageName);
+                                    result = DisasterRecoveryClusterUtil.glueImageMirrorDemoteAPI(glueUrl, glueCommand, glueMethod, glueParams);
+                                    if (result) {
+                                        glueCommand = "/mirror/image/promote/rbd/" + imageName;
+                                        glueMethod = "POST";
+                                        while(glueStep < 20) {
+                                            glueStep += 1;
+                                            try {
+                                                Thread.sleep(10000);
+                                            } catch (InterruptedException e) {
+                                                LOGGER.error("promoteDisasterRecoveryCluster sleep interrupted");
                                             }
-                                            throw new CloudRuntimeException("Failed to promote image, For volumes with a path of " + imageName.getAsString() + ", You must manually promote local images and resync remote image, add a local image snapshots schedule.");
-                                        } else {
-                                            LOGGER.error("Failed to request ImageMirrorDemotePeer Glue-API.");
+                                            result = DisasterRecoveryClusterUtil.glueImageMirrorPromoteAPI(glueUrl, glueCommand, glueMethod, glueParams);
+                                            if (result) {
+                                                glueCommand = "/mirror/image/resync/peer/rbd/" + imageName;
+                                                glueMethod = "PUT";
+                                                boolean resync = DisasterRecoveryClusterUtil.glueImageMirrorResyncAPI(glueUrl, glueCommand, glueMethod, glueParams);
+                                                if (resync) {
+                                                    glueCommand = "/mirror/image/rbd/" + imageName;
+                                                    glueParams = new HashMap<>();
+                                                    glueParams.put("mirrorPool", "rbd");
+                                                    glueParams.put("imageName", imageName);
+                                                    glueParams.put("interval", details.get("mirrorscheduleinterval"));
+                                                    glueParams.put("startTime", details.get("mirrorschedulestarttime"));
+                                                    boolean schedule = DisasterRecoveryClusterUtil.glueImageMirrorSetupUpdateAPI(glueUrl, glueCommand, glueMethod, glueParams);
+                                                    if (!schedule) {
+                                                        LOGGER.error("Failed to request ImageMirrorSetupUpdate Glue-API.");
+                                                        LOGGER.error("The image was promoted successfully, but scheduling the image failed. For volumes with a path of " + imageName + ", please add a schedule manually.");
+                                                    }
+                                                } else {
+                                                    LOGGER.error("Failed to request ImageMirrorResync Glue-API.");
+                                                    LOGGER.error("The image was promoted successfully, but resyncing the image failed. For volumes with a path of " + imageName + ", Manually set image resync and snapshot schedules.");
+                                                }
+                                                break Loop;
+                                            } else {
+                                                LOGGER.error("Failed to request ImageMirrorPromote Glue-API.");
+                                            }
                                         }
+                                        throw new CloudRuntimeException("Failed to promote image, For volumes with a path of " + imageName + ", You must manually promote local images and resync remote image, add a local image snapshots schedule.");
                                     } else {
-                                        break;
+                                        LOGGER.error("Failed to request ImageMirrorDemotePeer Glue-API.");
                                     }
+                                } else {
+                                    break;
                                 }
-                            } else {
-                                LOGGER.error("Failed to request mirror image status Glue-API.");
                             }
+                        } else {
+                            LOGGER.error("Failed to request mirror image status Glue-API.");
                         }
-                    } else {
-                        LOGGER.error("Failed to request list of mirrored snapshot Glue-API.");
                     }
                 }
                 if (glueStep == 0) {
-                    throw new CloudRuntimeException("Promote cannot be executed because the current image is in Ready state.");
+                    throw new CloudRuntimeException("Demote cannot be executed because the current image is in Ready state.");
                 }
                 return result;
             } else {
@@ -1253,98 +1234,79 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
             String glueUrl = "";
             String glueCommand = "";
             String glueMethod = "";
-            JsonArray drArray = null;
-            // 미러링 중인 이미지 목록 조회 glue-api 호출
-            for (int i=0; i < array.length; i++) {
-                glueIp = array[i];
-                ///////////////////// glue-api 프로토콜과 포트 확정 시 변경 예정
-                glueUrl = "https://" + glueIp + ":8080/api/v1";
-                glueCommand = "/mirror/image";
-                glueMethod = "GET";
-                String mirrorList = DisasterRecoveryClusterUtil.glueImageMirrorAPI(glueUrl, glueCommand, glueMethod);
-                if (mirrorList != null) {
-                    drArray = (JsonArray) new JsonParser().parse(mirrorList).getAsJsonObject().get("Local");
-                    break;
-                }
-            }
-            if (drArray == null) {
-                throw new CloudRuntimeException("Failed to request list of mirrored snapshot Glue-API.");
-            }
             int glueStep = 0;
-            if (drArray.size() != 0) {
-                boolean result = false;
-                for (JsonElement dr : drArray) {
-                    JsonElement imageName = dr.getAsJsonObject().get("image") == null ? null : dr.getAsJsonObject().get("image");
-                    if (imageName != null) {
-                        Loop :
-                        for (int j=0; j < array.length; j++) {
-                            glueIp = array[j];
-                            ///////////////////// glue-api 프로토콜과 포트 확정 시 변경 예정
-                            glueUrl = "https://" + glueIp + ":8080/api/v1";
-                            glueCommand = "/mirror/image/status/rbd/" +imageName.getAsString();
-                            glueMethod = "GET";
-                            String mirrorImageStatus = DisasterRecoveryClusterUtil.glueImageMirrorStatusAPI(glueUrl, glueCommand, glueMethod);
-                            if (mirrorImageStatus != null) {
-                                JsonObject statObject = (JsonObject) new JsonParser().parse(mirrorImageStatus).getAsJsonObject();
-                                if (statObject.has("description")) {
-                                    if (!statObject.get("description").getAsString().contains("replaying")) {
-                                        glueCommand = "/mirror/image/demote/rbd/" + imageName.getAsString();
-                                        glueMethod = "DELETE";
-                                        Map<String, String> glueParams = new HashMap<>();
-                                        glueParams.put("mirrorPool", "rbd");
-                                        glueParams.put("imageName", imageName.getAsString());
-                                        result = DisasterRecoveryClusterUtil.glueImageMirrorDemoteAPI(glueUrl, glueCommand, glueMethod, glueParams);
-                                        if (result) {
-                                            glueCommand = "/mirror/image/promote/peer/rbd/" + imageName.getAsString();
-                                            glueMethod = "POST";
-                                            while(glueStep < 20) {
-                                                glueStep += 1;
-                                                try {
-                                                    Thread.sleep(10000);
-                                                } catch (InterruptedException e) {
-                                                    LOGGER.error("demoteDisasterRecoveryCluster sleep interrupted");
-                                                }
-                                                result = DisasterRecoveryClusterUtil.glueImageMirrorPromoteAPI(glueUrl, glueCommand, glueMethod, glueParams);
-                                                if (result) {
-                                                    glueCommand = "/mirror/image/resync/rbd/" + imageName.getAsString();
-                                                    glueMethod = "PUT";
-                                                    boolean resync = DisasterRecoveryClusterUtil.glueImageMirrorResyncAPI(glueUrl, glueCommand, glueMethod, glueParams);
-                                                    if (resync) {
-                                                        glueCommand = "/mirror/image/rbd/" + imageName.getAsString();
-                                                        glueParams = new HashMap<>();
-                                                        glueParams.put("mirrorPool", "rbd");
-                                                        glueParams.put("imageName", imageName.getAsString());
-                                                        glueParams.put("interval", details.get("mirrorscheduleinterval"));
-                                                        glueParams.put("startTime", details.get("mirrorschedulestarttime"));
-                                                        glueParams.put("imageRegion", "remote");
-                                                        boolean schedule = DisasterRecoveryClusterUtil.glueImageMirrorSetupUpdateAPI(glueUrl, glueCommand, glueMethod, glueParams);
-                                                        if (!schedule) {
-                                                            LOGGER.error("Failed to request ImageMirrorSetupUpdate Glue-API.");
-                                                            LOGGER.error("The image was promoted successfully, but scheduling the image failed. For volumes with a path of " + imageName.getAsString() + ", please add a schedule manually.");
-                                                        }
-                                                    } else {
-                                                        LOGGER.error("Failed to request ImageMirrorResync Glue-API.");
-                                                        LOGGER.error("The image was promoted successfully, but resyncing the image failed. For volumes with a path of " + imageName.getAsString() + ", Manually set image resync and snapshot schedules.");
-                                                    }
-                                                    break Loop;
-                                                } else {
-                                                    LOGGER.error("Failed to request ImageMirrorPromotePeer Glue-API.");
-                                                }
+            boolean result = false;
+            // DR 상황 발생 시 glue-API로 이미지를 조회하지않고, vmMap 조회하여 실행
+            List<DisasterRecoveryClusterVmMapVO> vmMap = disasterRecoveryClusterVmMapDao.listByDisasterRecoveryClusterId(drCluster.getId());
+            if (!CollectionUtils.isEmpty(vmMap)) {
+                for (DisasterRecoveryClusterVmMapVO map : vmMap) {
+                    String imageName = map.getMirroredVmVolumePath();
+                    Loop :
+                    for (int i=0; i < array.length; i++) {
+                        glueIp = array[i];
+                        ///////////////////// glue-api 프로토콜과 포트 확정 시 변경 예정
+                        glueUrl = "https://" + glueIp + ":8080/api/v1";
+                        glueCommand = "/mirror/image/status/rbd/" +imageName;
+                        glueMethod = "GET";
+                        String mirrorImageStatus = DisasterRecoveryClusterUtil.glueImageMirrorStatusAPI(glueUrl, glueCommand, glueMethod);
+                        if (mirrorImageStatus != null) {
+                            JsonObject statObject = (JsonObject) new JsonParser().parse(mirrorImageStatus).getAsJsonObject();
+                            if (statObject.has("description")) {
+                                if (!statObject.get("description").getAsString().contains("replaying")) {
+                                    glueCommand = "/mirror/image/demote/rbd/" + imageName;
+                                    glueMethod = "DELETE";
+                                    Map<String, String> glueParams = new HashMap<>();
+                                    glueParams.put("mirrorPool", "rbd");
+                                    glueParams.put("imageName", imageName);
+                                    result = DisasterRecoveryClusterUtil.glueImageMirrorDemoteAPI(glueUrl, glueCommand, glueMethod, glueParams);
+                                    if (result) {
+                                        glueCommand = "/mirror/image/promote/peer/rbd/" + imageName;
+                                        glueMethod = "POST";
+                                        while(glueStep < 20) {
+                                            glueStep += 1;
+                                            try {
+                                                Thread.sleep(10000);
+                                            } catch (InterruptedException e) {
+                                                LOGGER.error("demoteDisasterRecoveryCluster sleep interrupted");
                                             }
-                                            throw new CloudRuntimeException("Failed to promote remote image, For volumes with a path of " + imageName.getAsString() + ", You must manually promote remote images and resync local image, add a remote image snapshots schedule.");
-                                        } else {
-                                            LOGGER.error("Failed to request ImageMirrorDemote Glue-API.");
+                                            result = DisasterRecoveryClusterUtil.glueImageMirrorPromoteAPI(glueUrl, glueCommand, glueMethod, glueParams);
+                                            if (result) {
+                                                glueCommand = "/mirror/image/resync/rbd/" + imageName;
+                                                glueMethod = "PUT";
+                                                boolean resync = DisasterRecoveryClusterUtil.glueImageMirrorResyncAPI(glueUrl, glueCommand, glueMethod, glueParams);
+                                                if (resync) {
+                                                    glueCommand = "/mirror/image/rbd/" + imageName;
+                                                    glueParams = new HashMap<>();
+                                                    glueParams.put("mirrorPool", "rbd");
+                                                    glueParams.put("imageName", imageName);
+                                                    glueParams.put("interval", details.get("mirrorscheduleinterval"));
+                                                    glueParams.put("startTime", details.get("mirrorschedulestarttime"));
+                                                    glueParams.put("imageRegion", "remote");
+                                                    boolean schedule = DisasterRecoveryClusterUtil.glueImageMirrorSetupUpdateAPI(glueUrl, glueCommand, glueMethod, glueParams);
+                                                    if (!schedule) {
+                                                        LOGGER.error("Failed to request ImageMirrorSetupUpdate Glue-API.");
+                                                        LOGGER.error("The image was promoted successfully, but scheduling the image failed. For volumes with a path of " + imageName + ", please add a schedule manually.");
+                                                    }
+                                                } else {
+                                                    LOGGER.error("Failed to request ImageMirrorResync Glue-API.");
+                                                    LOGGER.error("The image was promoted successfully, but resyncing the image failed. For volumes with a path of " + imageName + ", Manually set image resync and snapshot schedules.");
+                                                }
+                                                break Loop;
+                                            } else {
+                                                LOGGER.error("Failed to request ImageMirrorPromotePeer Glue-API.");
+                                            }
                                         }
+                                        throw new CloudRuntimeException("Failed to promote remote image, For volumes with a path of " + imageName + ", You must manually promote remote images and resync local image, add a remote image snapshots schedule.");
                                     } else {
-                                        break;
+                                        LOGGER.error("Failed to request ImageMirrorDemote Glue-API.");
                                     }
+                                } else {
+                                    break;
                                 }
-                            } else {
-                                LOGGER.error("Failed to request mirror image status Glue-API.");
                             }
+                        } else {
+                            LOGGER.error("Failed to request mirror image status Glue-API.");
                         }
-                    } else {
-                        LOGGER.error("Failed to request list of mirrored snapshot Glue-API.");
                     }
                 }
                 if (glueStep == 0) {
