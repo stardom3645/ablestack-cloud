@@ -289,6 +289,8 @@ export default {
       }
     },
     fetchData () {
+      this.priVol = []
+      this.secVol = []
       this.itemCount = 0
       if (this.items && this.items.length > 0) {
         this.dataSource = this.items
@@ -299,10 +301,6 @@ export default {
         return
       }
       this.disasterrecoveryclustervmlist = this.resource.drclustervmmap || []
-      this.itemCount = this.disasterrecoveryclustervmlist.length
-      this.min = (Math.min(this.itemCount, 1 + ((this.options.page - 1) * this.options.pageSize)) - 1)
-      this.max = Math.min(this.options.page * this.options.pageSize, this.itemCount)
-      this.disasterrecoveryclustervmlist = this.disasterrecoveryclustervmlist.slice(this.min, this.max)
       for (const clusterVm of this.disasterrecoveryclustervmlist) {
         if (this.priList.length === 0) {
           this.priList.push({ priVmName: clusterVm.drclustervmname, priVmId: clusterVm.drclustervmid, priVmStatus: clusterVm.drclustervmstatus })
@@ -318,6 +316,11 @@ export default {
           this.secVol.push({ secVolType: clusterVm.drclustermirrorvmvoltype, secVolStatus: clusterVm.drclustermirrorvmvolstatus, secVmName: clusterVm.drclustermirrorvmname })
         }
       }
+      this.itemCount = this.priList.length
+      this.min = (Math.min(this.itemCount, 1 + ((this.options.page - 1) * this.options.pageSize)) - 1)
+      this.max = Math.min(this.options.page * this.options.pageSize, this.itemCount)
+      this.priList = this.priList.slice(this.min, this.max)
+      this.secList = this.secList.slice(this.min, this.max)
       const keyword = this.options.keyword
       if (keyword) {
         this.priList = this.priList.filter(entry => {
