@@ -158,7 +158,6 @@ export default {
     },
     getDrClusterList () {
       this.loading = true
-      this.drCluster = []
       api('getDisasterRecoveryClusterList').then(json => {
         this.drClusterList = json.getdisasterrecoveryclusterlistresponse.disasterrecoverycluster || []
         for (const cluster of this.drClusterList) {
