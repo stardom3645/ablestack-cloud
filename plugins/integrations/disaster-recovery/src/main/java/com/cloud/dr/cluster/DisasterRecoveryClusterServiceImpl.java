@@ -1134,11 +1134,8 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
             // DR 상황 발생 시 glue-API로 이미지를 조회하지 않고, vmMap 조회하여 실행
             List<DisasterRecoveryClusterVmMapVO> vmMap = disasterRecoveryClusterVmMapDao.listByDisasterRecoveryClusterId(drCluster.getId());
             if (!CollectionUtils.isEmpty(vmMap)) {
-                LOGGER.info("promote vmMap !isEmpty:::::::::::::::::::::::::::::::::::::::");
                 for (DisasterRecoveryClusterVmMapVO map : vmMap) {
                     String imageName = map.getMirroredVmVolumePath();
-                    LOGGER.info("promote imageName:::::::::::::::::::::::::::::::::::::::");
-                    LOGGER.info(imageName);
                     Loop :
                     for (int i=0; i < array.length; i++) {
                         glueIp = array[i];
@@ -1148,12 +1145,9 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                         glueMethod = "GET";
                         String mirrorImageStatus = DisasterRecoveryClusterUtil.glueImageMirrorStatusAPI(glueUrl, glueCommand, glueMethod);
                         if (mirrorImageStatus != null) {
-                            LOGGER.info("promote mirrorImageStatus:::::::::::::::::::::::::::::::::::::::");
-                            LOGGER.info(mirrorImageStatus);
                             JsonObject statObject = (JsonObject) new JsonParser().parse(mirrorImageStatus).getAsJsonObject();
                             if (statObject.has("description")) {
                                 if (!statObject.get("description").getAsString().equals("local image is primary")) {
-                                    LOGGER.info("promote syncing:::::::::::::::::::::::::::::::::::::::");
                                     Map<String, String> glueParams = new HashMap<>();
                                     glueParams.put("mirrorPool", "rbd");
                                     glueParams.put("imageName", imageName);
@@ -1167,8 +1161,6 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                                             LOGGER.error("promoteDisasterRecoveryCluster sleep interrupted");
                                         }
                                         result = DisasterRecoveryClusterUtil.glueImageMirrorPromoteAPI(glueUrl, glueCommand, glueMethod, glueParams);
-                                        LOGGER.info("promote result:::::::::::::::::::::::::::::::::::::::");
-                                        LOGGER.info(result);
                                         if (result) {
                                             glueCommand = "/mirror/image/rbd/" + imageName;
                                             glueMethod = "PUT";
@@ -1178,8 +1170,6 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                                             glueParams.put("interval", details.get("mirrorscheduleinterval"));
                                             glueParams.put("startTime", details.get("mirrorschedulestarttime"));
                                             boolean schedule = DisasterRecoveryClusterUtil.glueImageMirrorSetupUpdateAPI(glueUrl, glueCommand, glueMethod, glueParams);
-                                            LOGGER.info("promote schedule:::::::::::::::::::::::::::::::::::::::");
-                                            LOGGER.info(schedule);
                                             if (!schedule) {
                                                 LOGGER.error("Failed to request ImageMirrorSetupUpdate Glue-API.");
                                                 LOGGER.error("The image was promoted successfully, but scheduling the image failed. For volumes with a path of " + imageName + ", please add a schedule manually.");
