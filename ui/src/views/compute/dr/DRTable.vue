@@ -100,11 +100,8 @@ export default {
       drClusterList: [],
       drCluster: [],
       drVmName: '',
-      clusterName: '',
-      drClusterVmList: [],
       combinedArray: [],
       volList: [],
-      infoList: [],
       innerColumns: [
         {
           key: 'type',
@@ -156,34 +153,24 @@ export default {
     this.getDrClusterList()
   },
   methods: {
+    fetchData () {
+      this.getDrClusterList()
+    },
     getDrClusterList () {
       this.loading = true
+      this.drCluster = []
       api('getDisasterRecoveryClusterList').then(json => {
         this.drClusterList = json.getdisasterrecoveryclusterlistresponse.disasterrecoverycluster || []
         for (const cluster of this.drClusterList) {
-          const vmList = cluster.drclustervmmap
-          if (vmList.some(vm => vm.drclustervmname === this.drVmName)) {
-            this.clusterName = cluster.name
-            break
-          }
-        }
-        this.getDrClusterVm()
-      }).finally(() => {
-        this.loading = false
-      })
-    },
-    getDrClusterVm () {
-      this.loading = true
-      api('getDisasterRecoveryClusterList', { name: this.clusterName }).then(json => {
-        this.drClusterVmList = json.getdisasterrecoveryclusterlistresponse.disasterrecoverycluster[0].drclustervmmap || []
-        const clusterId = json.getdisasterrecoveryclusterlistresponse.disasterrecoverycluster[0].id
-        const clusterType = json.getdisasterrecoveryclusterlistresponse.disasterrecoverycluster[0].drclustertype
-        for (const clusterVm of this.drClusterVmList) {
-          if (clusterVm.drclustervmname === this.drVmName && clusterType !== 'primary') {
-            if (this.drCluster.length === 0) {
-              this.drCluster.push({ drName: clusterVm.drclustername, drId: clusterId, drVmId: this.resource.id, mirroredVm: clusterVm.drclustermirrorvmname, mirroredVmId: clusterVm.drclustermirrorvmid, mirroredStatus: clusterVm.drclustermirrorvmstatus })
+          const clusterId = cluster.id
+          const clusterType = cluster.drclustertype
+          for (const vm of cluster.drclustervmmap) {
+            if (vm.drclustervmname === this.drVmName && clusterType !== 'primary') {
+              if (this.drCluster.length === 0) {
+                this.drCluster.push({ drName: vm.drclustername, drId: clusterId, drVmId: this.resource.id, mirroredVm: vm.drclustermirrorvmname, mirroredVmId: vm.drclustermirrorvmid, mirroredStatus: vm.drclustermirrorvmstatus })
+              }
+              this.volList.push({ mirroredVmVolType: vm.drclustermirrorvmvoltype, mirroredVmVolPath: vm.drclustermirrorvmvolpath, mirroredVmVolStatus: vm.drclustermirrorvmvolstatus })
             }
-            this.volList.push({ mirroredVmVolType: clusterVm.drclustermirrorvmvoltype, mirroredVmVolPath: clusterVm.drclustermirrorvmvolpath, mirroredVmVolStatus: clusterVm.drclustermirrorvmvolstatus })
           }
         }
       }).finally(() => {
