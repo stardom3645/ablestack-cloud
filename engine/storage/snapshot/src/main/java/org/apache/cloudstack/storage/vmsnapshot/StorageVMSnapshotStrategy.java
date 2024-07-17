@@ -163,7 +163,7 @@ public class StorageVMSnapshotStrategy extends DefaultVMSnapshotStrategy {
 
             thawCmd = new FreezeThawVMCommand(userVm.getInstanceName());
             thawCmd.setOption(FreezeThawVMCommand.THAW);
-            if (freezeAnswer != null && freezeAnswer.getResult()) {
+            // if (freezeAnswer != null && freezeAnswer.getResult()) {
                 logger.info("The virtual machine is frozen");
                 for (VolumeInfo vol : vinfos) {
                     long startSnapshtot = System.nanoTime();
@@ -184,9 +184,9 @@ public class StorageVMSnapshotStrategy extends DefaultVMSnapshotStrategy {
                             "Virtual machne is thawed. The freeze of virtual machine took %s milliseconds.",
                             TimeUnit.MILLISECONDS.convert(elapsedTime(startFreeze), TimeUnit.NANOSECONDS)));
                 }
-            } else {
-                throw new CloudRuntimeException("Could not freeze VM." + freezeAnswer.getDetails());
-            }
+            // } else {
+                // throw new CloudRuntimeException("Could not freeze VM." + freezeAnswer.getDetails());
+            // }
             if (answer != null && answer.getResult()) {
                 processAnswer(vmSnapshotVO, userVm, answer, null);
                 logger.debug("Create vm snapshot " + vmSnapshot.getName() + " succeeded for vm: " + userVm.getInstanceName());
@@ -201,7 +201,8 @@ public class StorageVMSnapshotStrategy extends DefaultVMSnapshotStrategy {
             } else {
                 String errMsg = "Creating VM snapshot: " + vmSnapshot.getName() + " failed";
                 logger.error(errMsg);
-                throw new CloudRuntimeException(errMsg);
+                // throw new CloudRuntimeException(errMsg);
+                return vmSnapshot;
             }
         } catch (OperationTimedoutException e) {
             logger.debug("Creating VM snapshot: " + vmSnapshot.getName() + " failed: " + e.toString());
@@ -358,7 +359,7 @@ public class StorageVMSnapshotStrategy extends DefaultVMSnapshotStrategy {
     public StrategyPriority canHandle(Long vmId, Long rootPoolId, boolean snapshotMemory) {
         if (SnapshotManager.VmStorageSnapshotKvm.value() && !snapshotMemory) {
             UserVmVO vm = userVmDao.findById(vmId);
-            if (vm.getState() == VirtualMachine.State.Running) {
+            if (vm.getState() == VirtualMachine.State.Running || vm.getState() == VirtualMachine.State.Stopped) {
                 return StrategyPriority.HYPERVISOR;
             }
         }
