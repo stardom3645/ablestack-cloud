@@ -47,12 +47,12 @@ public class LibvirtFreezeThawVMCommandWrapper extends CommandWrapper<FreezeThaw
             Connect connect = libvirtUtilitiesHelper.getConnection();
             domain = serverResource.getDomain(connect, vmName);
             if (domain == null) {
-                return new FreezeThawVMAnswer(command, false, String.format("Failed to %s due to %s was not found",
+                return new FreezeThawVMAnswer(command, true, String.format("Failed to %s due to %s was not found",
                         command.getOption(), vmName));
             }
             DomainState domainState = domain.getInfo().state ;
             if (domainState != DomainState.VIR_DOMAIN_RUNNING) {
-                return new FreezeThawVMAnswer(command, false,
+                return new FreezeThawVMAnswer(command, true,
                         String.format("%s of VM failed due to vm %s is in %s state", command.getOption(),
                                 vmName, domainState));
             }
