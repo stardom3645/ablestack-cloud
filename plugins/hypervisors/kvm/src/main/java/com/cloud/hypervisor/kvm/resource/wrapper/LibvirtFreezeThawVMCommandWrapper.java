@@ -74,8 +74,13 @@ public class LibvirtFreezeThawVMCommandWrapper extends CommandWrapper<FreezeThaw
             return new FreezeThawVMAnswer(command, false, String.format("Failed to %s vm %s due to result status is: %s",
                     command.getOption(), vmName, status));
         } catch (LibvirtException libvirtException) {
-            return new FreezeThawVMAnswer(command, false,  String.format("Failed to %s VM - %s due to %s",
-                    command.getOption(), vmName, libvirtException.getMessage()));
+            if(libvirtException.getMessage().contains("Domain not found")){
+                return new FreezeThawVMAnswer(command, true,  String.format("Failed to %s VM - %s due to %s",
+                command.getOption(), vmName, libvirtException.getMessage()));
+            } else {
+                return new FreezeThawVMAnswer(command, false,  String.format("Failed to %s VM - %s due to %s",
+                command.getOption(), vmName, libvirtException.getMessage()));
+            }
         } finally {
             if (domain != null) {
                 try {
