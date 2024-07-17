@@ -9409,7 +9409,7 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
         }
         _accountMgr.checkAccess(caller, null, true, volume);
         logger.info("Clone VM >> Creating snapshot for root volume creation");
-        VMSnapshot vmSnapshot;
+        VMSnapshot vmSnapshot = null;
         try {
             vmSnapshot = _vmSnapshotMgr.allocVMSnapshot(curVm.getId(), null, null, false);
             if (vmSnapshot == null) {
@@ -9421,6 +9421,9 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
             }
 
         } catch (CloudRuntimeException e) {
+            if(vmSnapshot != null){
+                _vmSnapshotMgr.deleteVMSnapshot(vmSnapshot.getId());
+            }
             throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, "Failed to create vm snapshot: " + e.getMessage(), e);
         }
 
