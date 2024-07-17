@@ -163,30 +163,28 @@ public class StorageVMSnapshotStrategy extends DefaultVMSnapshotStrategy {
 
             thawCmd = new FreezeThawVMCommand(userVm.getInstanceName());
             thawCmd.setOption(FreezeThawVMCommand.THAW);
-            if (freezeAnswer != null && freezeAnswer.getResult()) {
-                logger.info("The virtual machine is frozen");
-                for (VolumeInfo vol : vinfos) {
-                    long startSnapshtot = System.nanoTime();
-                    SnapshotInfo snapInfo = createDiskSnapshot(vmSnapshot, forRollback, vol);
 
-                    if (snapInfo == null) {
-                        thawAnswer = (FreezeThawVMAnswer) agentMgr.send(hostId, thawCmd);
-                        throw new CloudRuntimeException("Could not take snapshot for volume with id=" + vol.getId());
-                    }
-                    logger.info(String.format("Snapshot with id=%s, took  %s milliseconds", snapInfo.getId(),
-                            TimeUnit.MILLISECONDS.convert(elapsedTime(startSnapshtot), TimeUnit.NANOSECONDS)));
+            logger.info("The virtual machine is frozen");
+            for (VolumeInfo vol : vinfos) {
+                long startSnapshtot = System.nanoTime();
+                SnapshotInfo snapInfo = createDiskSnapshot(vmSnapshot, forRollback, vol);
+
+                if (snapInfo == null) {
+                    thawAnswer = (FreezeThawVMAnswer) agentMgr.send(hostId, thawCmd);
+                    throw new CloudRuntimeException("Could not take snapshot for volume with id=" + vol.getId());
                 }
-                answer = new CreateVMSnapshotAnswer(ccmd, true, "");
-                answer.setVolumeTOs(volumeTOs);
-                thawAnswer = (FreezeThawVMAnswer) agentMgr.send(hostId, thawCmd);
-                if (thawAnswer != null && thawAnswer.getResult()) {
-                    logger.info(String.format(
-                            "Virtual machne is thawed. The freeze of virtual machine took %s milliseconds.",
-                            TimeUnit.MILLISECONDS.convert(elapsedTime(startFreeze), TimeUnit.NANOSECONDS)));
-                }
-            } else {
-                throw new CloudRuntimeException("Could not freeze VM." + freezeAnswer.getDetails());
+                logger.info(String.format("Snapshot with id=%s, took  %s milliseconds", snapInfo.getId(),
+                        TimeUnit.MILLISECONDS.convert(elapsedTime(startSnapshtot), TimeUnit.NANOSECONDS)));
             }
+            answer = new CreateVMSnapshotAnswer(ccmd, true, "");
+            answer.setVolumeTOs(volumeTOs);
+            thawAnswer = (FreezeThawVMAnswer) agentMgr.send(hostId, thawCmd);
+            if (thawAnswer != null && thawAnswer.getResult()) {
+                logger.info(String.format(
+                        "Virtual machne is thawed. The freeze of virtual machine took %s milliseconds.",
+                        TimeUnit.MILLISECONDS.convert(elapsedTime(startFreeze), TimeUnit.NANOSECONDS)));
+            }
+
             if (answer != null && answer.getResult()) {
                 processAnswer(vmSnapshotVO, userVm, answer, null);
                 logger.debug("Create vm snapshot " + vmSnapshot.getName() + " succeeded for vm: " + userVm.getInstanceName());
@@ -201,7 +199,8 @@ public class StorageVMSnapshotStrategy extends DefaultVMSnapshotStrategy {
             } else {
                 String errMsg = "Creating VM snapshot: " + vmSnapshot.getName() + " failed";
                 logger.error(errMsg);
-                throw new CloudRuntimeException(errMsg);
+                // throw new CloudRuntimeException(errMsg);
+                return vmSnapshot;
             }
         } catch (OperationTimedoutException e) {
             logger.debug("Creating VM snapshot: " + vmSnapshot.getName() + " failed: " + e.toString());
@@ -358,7 +357,7 @@ public class StorageVMSnapshotStrategy extends DefaultVMSnapshotStrategy {
     public StrategyPriority canHandle(Long vmId, Long rootPoolId, boolean snapshotMemory) {
         if (SnapshotManager.VmStorageSnapshotKvm.value() && !snapshotMemory) {
             UserVmVO vm = userVmDao.findById(vmId);
-            if (vm.getState() == VirtualMachine.State.Running) {
+            if (vm.getState() == VirtualMachine.State.Running || vm.getState() == VirtualMachine.State.Stopped) {
                 return StrategyPriority.HYPERVISOR;
             }
         }
