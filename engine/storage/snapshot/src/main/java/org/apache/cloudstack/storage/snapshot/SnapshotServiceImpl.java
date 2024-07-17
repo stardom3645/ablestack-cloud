@@ -832,7 +832,7 @@ public class SnapshotServiceImpl implements SnapshotService {
         SnapshotInfo snapshot = context.snapshot;
         SnapshotResult res = null;
         try {
-            logger.debug(String.format("Failed to flatten command [%s] due to: [%s].", snapshot.getUuid(), result.isSuccess()));
+            logger.debug(String.format("flattenCallback to flatten command [%s] due to: [%s].", snapshot.getUuid(), result.isSuccess()));
             res = new SnapshotResult(context.snapshot, null);
             res.setSuccess(result.isSuccess());
         } catch (Exception e) {
