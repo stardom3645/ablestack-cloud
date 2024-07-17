@@ -552,7 +552,7 @@ public class UsageDaoImpl extends GenericDaoBase<UsageVO, Long> implements Usage
                     txn.commit();
                 } catch (Exception ex) {
                     txn.rollback();
-                    s_logger.error("error removing old cloud_usage records for interval: " + days);
+                    logger.error("error removing old cloud_usage records for interval: " + days);
                 } finally {
                     txn.close();
                 }
