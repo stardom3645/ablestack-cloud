@@ -9424,7 +9424,6 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
             if(vmSnapshot != null){
                 _vmSnapshotMgr.deleteVMSnapshot(vmSnapshot.getId());
             }
-            
             throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, "Failed to create vm snapshot: " + e.getMessage(), e);
         }
 
