@@ -891,6 +891,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                                 JSONObject jSONObject = arr.getJSONObject(j);
                                 if (jSONObject.get("name").equals(drCluster.getName())) {
                                     String primaryDrId = jSONObject.get("id").toString();
+                                    secCommand = "deleteDisasterRecoveryCluster";
                                     secMethod = "GET";
                                     sucParams = new HashMap<>();
                                     sucParams.put("id", primaryDrId);
