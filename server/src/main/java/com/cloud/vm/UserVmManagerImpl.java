@@ -635,11 +635,10 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
     private HypervisorGuruManager _hvGuruMgr;
     @Inject
     VMSnapshotDetailsDao vmSnapshotDetailsDao;
-
     @Inject
-    protected DisasterRecoveryClusterDao disasterRecoveryClusterDao;
+    DisasterRecoveryClusterDao disasterRecoveryClusterDao;
     @Inject
-    protected DisasterRecoveryClusterVmMapDao disasterRecoveryClusterVmMapDao;
+    DisasterRecoveryClusterVmMapDao disasterRecoveryClusterVmMapDao;
 
     private ScheduledExecutorService _executor = null;
     private ScheduledExecutorService _flattenExecutor = null;
