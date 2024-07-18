@@ -221,10 +221,7 @@ import com.cloud.deployasis.dao.UserVmDeployAsIsDetailsDao;
 import com.cloud.domain.Domain;
 import com.cloud.domain.DomainVO;
 import com.cloud.domain.dao.DomainDao;
-import com.cloud.dr.cluster.DisasterRecoveryClusterVO;
-import com.cloud.dr.cluster.DisasterRecoveryClusterVmMapVO;
-import com.cloud.dr.cluster.dao.DisasterRecoveryClusterDao;
-import com.cloud.dr.cluster.dao.DisasterRecoveryClusterVmMapDao;
+import com.cloud.dr.cluster.DisasterRecoveryHelper;
 import com.cloud.event.ActionEvent;
 import com.cloud.event.ActionEventUtils;
 import com.cloud.event.EventTypes;
@@ -635,10 +632,6 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
     private HypervisorGuruManager _hvGuruMgr;
     @Inject
     VMSnapshotDetailsDao vmSnapshotDetailsDao;
-    @Inject
-    DisasterRecoveryClusterDao disasterRecoveryClusterDao;
-    @Inject
-    DisasterRecoveryClusterVmMapDao disasterRecoveryClusterVmMapDao;
 
     private ScheduledExecutorService _executor = null;
     private ScheduledExecutorService _flattenExecutor = null;
@@ -650,6 +643,7 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
     private int capacityReleaseInterval;
     private ExecutorService _vmIpFetchThreadExecutor;
     private List<KubernetesServiceHelper> kubernetesServiceHelpers;
+    private List<DisasterRecoveryHelper> disasterRecoveryHelpers;
 
 
     private String _instance;
@@ -669,6 +663,14 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
 
     public void setKubernetesServiceHelpers(final List<KubernetesServiceHelper> kubernetesServiceHelpers) {
         this.kubernetesServiceHelpers = kubernetesServiceHelpers;
+    }
+
+    public List<DisasterRecoveryHelper> getDisasterRecoveryHelpers() {
+        return disasterRecoveryHelpers;
+    }
+
+    public void setDisasterRecoveryHelpers(final List<DisasterRecoveryHelper> disasterRecoveryHelpers) {
+        this.disasterRecoveryHelpers = disasterRecoveryHelpers;
     }
 
     @Inject
@@ -3430,6 +3432,16 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
         return  null;
     }
 
+    protected void checkDisasterRecoveryIfVmCanBeDestroyed(long vmId) {
+        try {
+            DisasterRecoveryHelper disasterRecoveryHelper =
+                    ComponentContext.getDelegateComponentOfType(DisasterRecoveryHelper.class);
+                    disasterRecoveryHelper.checkVmCanBeDestroyed(vmId);
+        } catch (NoSuchBeanDefinitionException ignored) {
+            logger.debug("No DisasterRecoveryHelper bean found");
+        }
+    }
+
     protected void checkPluginsIfVmCanBeDestroyed(UserVm vm) {
         try {
             KubernetesServiceHelper kubernetesServiceHelper =
@@ -3448,17 +3460,7 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
         boolean expunge = cmd.getExpunge();
 
         // Check if there is a mirroring virtual machine
-        List<DisasterRecoveryClusterVO> drCluster = disasterRecoveryClusterDao.listAll();
-        for (DisasterRecoveryClusterVO dr : drCluster) {
-            List<DisasterRecoveryClusterVmMapVO> vmMap = disasterRecoveryClusterVmMapDao.listByDisasterRecoveryClusterId(dr.getId());
-            if (!CollectionUtils.isEmpty(vmMap)) {
-                for (DisasterRecoveryClusterVmMapVO map : vmMap) {
-                    if (map.getVmId() == vmId) {
-                        throw new CloudRuntimeException("If a mirroring virtual machine exists, the virtual machine cannot be destroyed or expunged.");
-                    }
-                }
-            }
-        }
+        checkDisasterRecoveryIfVmCanBeDestroyed(vmId);
 
         // When trying to expunge, permission is denied when the caller is not an admin and the AllowUserExpungeRecoverVm is false for the caller.
         if (expunge && !_accountMgr.isAdmin(ctx.getCallingAccount().getId()) && !AllowUserExpungeRecoverVm.valueIn(cmd.getEntityOwnerId())) {
