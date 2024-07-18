@@ -221,6 +221,10 @@ import com.cloud.deployasis.dao.UserVmDeployAsIsDetailsDao;
 import com.cloud.domain.Domain;
 import com.cloud.domain.DomainVO;
 import com.cloud.domain.dao.DomainDao;
+import com.cloud.dr.cluster.DisasterRecoveryClusterVO;
+import com.cloud.dr.cluster.DisasterRecoveryClusterVmMapVO;
+import com.cloud.dr.cluster.dao.DisasterRecoveryClusterDao;
+import com.cloud.dr.cluster.dao.DisasterRecoveryClusterVmMapDao;
 import com.cloud.event.ActionEvent;
 import com.cloud.event.ActionEventUtils;
 import com.cloud.event.EventTypes;
@@ -631,6 +635,11 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
     private HypervisorGuruManager _hvGuruMgr;
     @Inject
     VMSnapshotDetailsDao vmSnapshotDetailsDao;
+
+    @Inject
+    private DisasterRecoveryClusterDao disasterRecoveryClusterDao;
+    @Inject
+    private DisasterRecoveryClusterVmMapDao disasterRecoveryClusterVmMapDao;
 
 
     private ScheduledExecutorService _executor = null;
@@ -3439,6 +3448,19 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
         CallContext ctx = CallContext.current();
         long vmId = cmd.getId();
         boolean expunge = cmd.getExpunge();
+
+        // Check if there is a mirroring virtual machine
+        List<DisasterRecoveryClusterVO> drCluster = disasterRecoveryClusterDao.listAll();
+        for (DisasterRecoveryClusterVO dr : drCluster) {
+            List<DisasterRecoveryClusterVmMapVO> vmMap = disasterRecoveryClusterVmMapDao.listByDisasterRecoveryClusterId(dr.getId());
+            if (!CollectionUtils.isEmpty(vmMap)) {
+                for (DisasterRecoveryClusterVmMapVO map : vmMap) {
+                    if (map.getVmId() == vmId) {
+                        throw new CloudRuntimeException("If a mirroring virtual machine exists, the virtual machine cannot be destroyed or expunged.");
+                    }
+                }
+            }
+        }
 
         // When trying to expunge, permission is denied when the caller is not an admin and the AllowUserExpungeRecoverVm is false for the caller.
         if (expunge && !_accountMgr.isAdmin(ctx.getCallingAccount().getId()) && !AllowUserExpungeRecoverVm.valueIn(cmd.getEntityOwnerId())) {
