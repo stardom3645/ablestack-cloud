@@ -110,15 +110,8 @@ export default {
       show: (record) => { return record.drclustertype === 'primary' }
     },
     {
-      api: 'deleteDisasterRecoveryCluster',
-      icon: 'delete-outlined',
-      label: 'label.action.delete.disaster.recovery.cluster',
-      message: 'message.delete.dr.cluster.confirm',
-      dataView: true
-    },
-    {
       api: 'resyncDisasterRecoveryCluster',
-      icon: 'sync-outlined',
+      icon: 'SyncOutlined',
       label: 'label.action.sync.disaster.recovery.cluster',
       message: 'message.sync.dr.cluster.confirm',
       dataView: true,
@@ -126,11 +119,18 @@ export default {
     },
     {
       api: 'clearDisasterRecoveryCluster',
-      icon: 'clear-outlined',
+      icon: 'ClearOutlined',
       label: 'label.action.clear.disaster.recovery.cluster',
       message: 'message.clear.dr.cluster.confirm',
       dataView: true,
       show: (record) => { return record.drclustertype === 'primary' }
+    },
+    {
+      api: 'deleteDisasterRecoveryCluster',
+      icon: 'delete-outlined',
+      label: 'label.action.delete.disaster.recovery.cluster',
+      message: 'message.delete.dr.cluster.confirm',
+      dataView: true
     }
   ]
 }
