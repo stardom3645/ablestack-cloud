@@ -91,6 +91,7 @@ import org.apache.cloudstack.api.command.admin.dr.DisableDisasterRecoveryCluster
 import org.apache.cloudstack.api.command.admin.dr.EnableDisasterRecoveryClusterCmd;
 import org.apache.cloudstack.api.command.admin.dr.PromoteDisasterRecoveryClusterCmd;
 import org.apache.cloudstack.api.command.admin.dr.PromoteDisasterRecoveryClusterVmCmd;
+import org.apache.cloudstack.api.command.admin.dr.ResyncDisasterRecoveryClusterCmd;
 import org.apache.cloudstack.api.command.admin.dr.DemoteDisasterRecoveryClusterCmd;
 import org.apache.cloudstack.api.command.admin.dr.DemoteDisasterRecoveryClusterVmCmd;
 import org.apache.cloudstack.api.command.admin.dr.StartDisasterRecoveryClusterVmCmd;
@@ -1310,6 +1311,94 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
     }
 
     @Override
+    @ActionEvent(eventType = DisasterRecoveryClusterEventTypes.EVENT_DR_RESYNC, eventDescription = "resyncing disaster recovery cluster", async = true, resourceId = 5, resourceType = "DisasterRecoveryCluster")
+    public boolean resyncDisasterRecoveryCluster(ResyncDisasterRecoveryClusterCmd cmd) throws CloudRuntimeException {
+        if (!DisasterRecoveryServiceEnabled.value()) {
+            throw new CloudRuntimeException("Disaster Recovery Service plugin is disabled");
+        }
+        DisasterRecoveryClusterVO drCluster = disasterRecoveryClusterDao.findById(cmd.getId());
+        if (drCluster == null) {
+            throw new InvalidParameterValueException("Invalid disaster recovery cluster id specified");
+        }
+        Map<String, String> details = disasterRecoveryClusterDetailsDao.findDetails(drCluster.getId());
+        validateResyncDisasterRecoveryClusterMirrorParameters(drCluster);
+        String ipList = Script.runSimpleBashScript("cat /etc/hosts | grep -E 'scvm1-mngt|scvm2-mngt|scvm3-mngt' | awk '{print $1}' | tr '\n' ','");
+        if (ipList != null || !ipList.isEmpty()) {
+            ipList = ipList.replaceAll(",$", "");
+            String[] array = ipList.split(",");
+            String glueIp = "";
+            String glueUrl = "";
+            String glueCommand = "";
+            String glueMethod = "";
+            int glueStep = 0;
+            boolean result = false;
+            // DR 상황 발생 후 Primary 클러스터를 복구하여 재동기화하는 경우 사용
+            List<DisasterRecoveryClusterVmMapVO> vmMap = disasterRecoveryClusterVmMapDao.listByDisasterRecoveryClusterId(drCluster.getId());
+            if (!CollectionUtils.isEmpty(vmMap)) {
+                for (DisasterRecoveryClusterVmMapVO map : vmMap) {
+                    String imageName = map.getMirroredVmVolumePath();
+                    Loop :
+                    for (int i=0; i < array.length; i++) {
+                        glueIp = array[i];
+                        ///////////////////// glue-api 프로토콜과 포트 확정 시 변경 예정
+                        glueUrl = "https://" + glueIp + ":8080/api/v1";
+                        glueCommand = "/mirror/image/status/rbd/" +imageName;
+                        glueMethod = "GET";
+                        String mirrorImageStatus = DisasterRecoveryClusterUtil.glueImageMirrorStatusAPI(glueUrl, glueCommand, glueMethod);
+                        if (mirrorImageStatus != null) {
+                            JsonObject statObject = (JsonObject) new JsonParser().parse(mirrorImageStatus).getAsJsonObject();
+                            if (statObject.has("description")) {
+                                if (statObject.get("description").getAsString().contains("force promoting")) {
+                                    glueCommand = "/mirror/image/demote/peer/rbd/" + imageName;
+                                    glueMethod = "DELETE";
+                                    Map<String, String> glueParams = new HashMap<>();
+                                    glueParams.put("mirrorPool", "rbd");
+                                    glueParams.put("imageName", imageName);
+                                    result = DisasterRecoveryClusterUtil.glueImageMirrorDemoteAPI(glueUrl, glueCommand, glueMethod, glueParams);
+                                    if (result) {
+                                        while(glueStep < 20) {
+                                            glueStep += 1;
+                                            try {
+                                                Thread.sleep(10000);
+                                            } catch (InterruptedException e) {
+                                                LOGGER.error("resyncDisasterRecoveryCluster sleep interrupted");
+                                            }
+                                            glueCommand = "/mirror/image/resync/peer/rbd/" + imageName;
+                                            glueMethod = "PUT";
+                                            result = DisasterRecoveryClusterUtil.glueImageMirrorResyncAPI(glueUrl, glueCommand, glueMethod, glueParams);
+                                            if (result) {
+                                                break Loop;
+                                            } else {
+                                                LOGGER.error("Failed to request ImageMirrorResyncPeer Glue-API.");
+                                                LOGGER.error("The peer image was demoted successfully, but resync the image failed. For volumes with a path of " + imageName + ", Manually set image resync.");
+                                            }
+                                        }
+                                        throw new CloudRuntimeException("Failed to resync primary cluster image, For volumes with a path of " + imageName + ", You must manually resync primary cluster image.");
+                                    } else {
+                                        LOGGER.error("Failed to request ImageMirrorDemotePeer Glue-API.");
+                                    }
+                                } else {
+                                    break;
+                                }
+                            }
+                        } else {
+                            LOGGER.error("Failed to request mirror image status Glue-API.");
+                        }
+                    }
+                }
+                if (glueStep == 0) {
+                    throw new CloudRuntimeException("Resync cannot be executed because the current image is not force promoting state.");
+                }
+                return result;
+            } else {
+                throw new CloudRuntimeException("There are no images being mirrored.");
+            }
+        } else {
+            throw new CloudRuntimeException("Failed to lookup primary cluster scvm ip address.");
+        }
+    }
+
+    @Override
     @ActionEvent(eventType = DisasterRecoveryClusterEventTypes.EVENT_DR_VM_CREATE, eventDescription = "creating disaster recovery virtual machine", resourceId = 5, resourceType = "DisasterRecoveryCluster")
     public boolean setupDisasterRecoveryClusterVm(CreateDisasterRecoveryClusterVmCmd cmd) throws CloudRuntimeException {
         if (!DisasterRecoveryServiceEnabled.value()) {
@@ -1977,6 +2066,40 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         DisasterRecoveryClusterVO drcluster = disasterRecoveryClusterDao.findByName(name);
         if (drcluster != null) {
             throw new InvalidParameterValueException("A disaster recovery cluster with the same name exists:" + name);
+        }
+    }
+
+    private void validateResyncDisasterRecoveryClusterMirrorParameters(final DisasterRecoveryClusterVO drCluster) throws CloudRuntimeException {
+        Map<String, String> details = disasterRecoveryClusterDetailsDao.findDetails(drCluster.getId());
+        List<DisasterRecoveryClusterVmMapVO> vmMap = disasterRecoveryClusterVmMapDao.listByDisasterRecoveryClusterId(drCluster.getId());
+        if (!CollectionUtils.isEmpty(vmMap)) {
+            String url = drCluster.getDrClusterUrl();
+            String apiKey = details.get(ApiConstants.DR_CLUSTER_API_KEY);
+            String secretKey = details.get(ApiConstants.DR_CLUSTER_SECRET_KEY);
+            String moldUrl = url + "/client/api/";
+            String moldCommand = "listVirtualMachines";
+            String moldMethod = "GET";
+            String vmList = DisasterRecoveryClusterUtil.moldListVirtualMachinesAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey);
+            if (vmList != null) {
+                JSONObject jsonObject = new JSONObject(vmList);
+                Object object = jsonObject.get("virtualmachine");
+                JSONArray array;
+                if (object instanceof JSONArray) {
+                    array = (JSONArray) object;
+                } else {
+                    array = new JSONArray();
+                    array.put(object);
+                }
+                for (int i = 0; i < array.length(); i++) {
+                    JSONObject jSONObject = array.getJSONObject(i);
+                    for (DisasterRecoveryClusterVmMapVO map : vmMap) {
+                        String vmName = map.getMirroredVmName();
+                        if (jSONObject.get("name").equals(vmName) && !jSONObject.get("state").equals("stopped")) {
+                            throw new InvalidParameterValueException("Resync functions cannot be executed because there is a running disaster recovery primary cluster virtual machine : " + vmName);
+                        }
+                    }
+                }
+            }
         }
     }
 

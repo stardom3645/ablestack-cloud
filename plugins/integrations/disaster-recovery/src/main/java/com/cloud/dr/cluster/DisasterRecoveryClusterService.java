@@ -27,6 +27,7 @@ import org.apache.cloudstack.api.command.admin.dr.EnableDisasterRecoveryClusterC
 import org.apache.cloudstack.api.command.admin.dr.DisableDisasterRecoveryClusterCmd;
 import org.apache.cloudstack.api.command.admin.dr.PromoteDisasterRecoveryClusterCmd;
 import org.apache.cloudstack.api.command.admin.dr.PromoteDisasterRecoveryClusterVmCmd;
+import org.apache.cloudstack.api.command.admin.dr.ResyncDisasterRecoveryClusterCmd;
 import org.apache.cloudstack.api.command.admin.dr.StartDisasterRecoveryClusterVmCmd;
 import org.apache.cloudstack.api.command.admin.dr.StopDisasterRecoveryClusterVmCmd;
 import org.apache.cloudstack.api.command.admin.dr.DemoteDisasterRecoveryClusterCmd;
@@ -78,6 +79,8 @@ public interface DisasterRecoveryClusterService extends PluggableService, Config
     boolean promoteDisasterRecoveryCluster(PromoteDisasterRecoveryClusterCmd cmd) throws CloudRuntimeException;
 
     boolean demoteDisasterRecoveryCluster(DemoteDisasterRecoveryClusterCmd cmd) throws CloudRuntimeException;
+
+    boolean resyncDisasterRecoveryCluster(ResyncDisasterRecoveryClusterCmd cmd) throws CloudRuntimeException;
 
     boolean setupDisasterRecoveryClusterVm(CreateDisasterRecoveryClusterVmCmd cmd) throws CloudRuntimeException;
 
