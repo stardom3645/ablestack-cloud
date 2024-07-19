@@ -1379,6 +1379,8 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                                         LOGGER.error("Failed to request ImageMirrorDemotePeer Glue-API.");
                                     }
                                 } else {
+                                    // DR 상황 테스트 force promoting 상태가 쭉 유지되는지 확인 필요
+                                    // throw new CloudRuntimeException("Resync cannot be executed because the current image is not force promoting state.");
                                     break;
                                 }
                             }
@@ -2160,6 +2162,8 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                         }
                     }
                 }
+            } else {
+                throw new InvalidParameterValueException("Resync functions cannot be executed because primary cluster Mold failed to request API.");
             }
         }
     }
