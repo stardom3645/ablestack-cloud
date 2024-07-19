@@ -4424,6 +4424,7 @@
 "dr.disable": "DR.DISABLE",
 "dr.promote": "DR.PROMOTE",
 "dr.demote": "DR.DEMOTE",
+"dr.resync": "DR.RESYNC",
 "dr.vm.create": "DR.VM.CREATE",
 "dr.vm.update": "DR.VM.UPDATE",
 "dr.vm.delete": "DR.VM.DELETE",
@@ -4436,5 +4437,7 @@
 "message.success.add.disaster.recovery.cluster.vm": "Successfully added disaster recovery cluster virtual machine",
 "label.dr.mirrored.volume.status": "Mirrored volume status",
 "label.dr.mirrored.volume.path": "Mirrored volume path",
-"label.dr.mirrored.volume.type": "Mirrored volume type"
+"label.dr.mirrored.volume.type": "Mirrored volume type",
+"label.action.sync.disaster.recovery.cluster": "Resync disaster recovery cluster",
+"message.sync.dr.cluster.confirm": "If the primary cluster is recovered when a disaster recovery situation occurs, execute a task to synchronize the Glue image of the recovered primary cluster before executing a forced demote."
 }
