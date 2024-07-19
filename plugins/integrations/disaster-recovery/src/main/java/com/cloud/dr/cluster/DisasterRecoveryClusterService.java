@@ -16,6 +16,7 @@
 // under the License.
 package com.cloud.dr.cluster;
 
+import org.apache.cloudstack.api.command.admin.dr.ClearDisasterRecoveryClusterCmd;
 import org.apache.cloudstack.api.command.admin.dr.ConnectivityTestsDisasterRecoveryClusterCmd;
 import org.apache.cloudstack.api.command.admin.dr.GetDisasterRecoveryClusterListCmd;
 import org.apache.cloudstack.api.command.admin.dr.UpdateDisasterRecoveryClusterCmd;
@@ -81,6 +82,8 @@ public interface DisasterRecoveryClusterService extends PluggableService, Config
     boolean demoteDisasterRecoveryCluster(DemoteDisasterRecoveryClusterCmd cmd) throws CloudRuntimeException;
 
     boolean resyncDisasterRecoveryCluster(ResyncDisasterRecoveryClusterCmd cmd) throws CloudRuntimeException;
+
+    boolean clearDisasterRecoveryCluster(ClearDisasterRecoveryClusterCmd cmd) throws CloudRuntimeException;
 
     boolean setupDisasterRecoveryClusterVm(CreateDisasterRecoveryClusterVmCmd cmd) throws CloudRuntimeException;
 

@@ -82,6 +82,7 @@ import org.apache.cloudstack.api.command.admin.dr.UpdateDisasterRecoveryClusterV
 import org.apache.cloudstack.api.response.ListResponse;
 import org.apache.cloudstack.api.response.NetworkResponse;
 import org.apache.cloudstack.api.response.ScvmIpAddressResponse;
+import org.apache.cloudstack.api.command.admin.dr.ClearDisasterRecoveryClusterCmd;
 import org.apache.cloudstack.api.command.admin.dr.ConnectivityTestsDisasterRecoveryClusterCmd;
 import org.apache.cloudstack.api.command.admin.dr.CreateDisasterRecoveryClusterCmd;
 import org.apache.cloudstack.api.command.admin.dr.CreateDisasterRecoveryClusterVmCmd;
@@ -1399,6 +1400,66 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
     }
 
     @Override
+    @ActionEvent(eventType = DisasterRecoveryClusterEventTypes.EVENT_DR_CLEAR, eventDescription = "clearing disaster recovery cluster", async = true, resourceId = 5, resourceType = "DisasterRecoveryCluster")
+    public boolean clearDisasterRecoveryCluster(ClearDisasterRecoveryClusterCmd cmd) throws CloudRuntimeException {
+        if (!DisasterRecoveryServiceEnabled.value()) {
+            throw new CloudRuntimeException("Disaster Recovery Service plugin is disabled");
+        }
+        DisasterRecoveryClusterVO drCluster = disasterRecoveryClusterDao.findById(cmd.getId());
+        if (drCluster == null) {
+            throw new InvalidParameterValueException("Invalid disaster recovery cluster id specified");
+        }
+        Map<String, String> details = disasterRecoveryClusterDetailsDao.findDetails(drCluster.getId());
+        String ipList = Script.runSimpleBashScript("cat /etc/hosts | grep -E 'scvm1-mngt|scvm2-mngt|scvm3-mngt' | awk '{print $1}' | tr '\n' ','");
+        if (ipList != null || !ipList.isEmpty()) {
+            ipList = ipList.replaceAll(",$", "");
+            String[] array = ipList.split(",");
+            String glueIp = "";
+            String glueUrl = "";
+            String glueCommand = "";
+            String glueMethod = "";
+            int glueStep = 0;
+            boolean result = false;
+            // DR 상황 발생 후 Primary 클러스터를 복구하지않고, 가비지를 삭제하는 경우
+            List<DisasterRecoveryClusterVmMapVO> vmMap = disasterRecoveryClusterVmMapDao.listByDisasterRecoveryClusterId(drCluster.getId());
+            if (!CollectionUtils.isEmpty(vmMap)) {
+                for (DisasterRecoveryClusterVmMapVO map : vmMap) {
+                    String imageName = map.getMirroredVmVolumePath();
+                    Loop :
+                    for (int i=0; i < array.length; i++) {
+                        glueIp = array[i];
+                        ///////////////////// glue-api 프로토콜과 포트 확정 시 변경 예정
+                        glueUrl = "https://" + glueIp + ":8080/api/v1";
+                        glueCommand = "/mirror/image/status/rbd/" +imageName;
+                        glueMethod = "GET";
+                        String mirrorImageStatus = DisasterRecoveryClusterUtil.glueImageMirrorStatusAPI(glueUrl, glueCommand, glueMethod);
+                        if (mirrorImageStatus != null) {
+                            JsonObject statObject = (JsonObject) new JsonParser().parse(mirrorImageStatus).getAsJsonObject();
+                            if (statObject.has("description")) {
+                                if (statObject.get("description").getAsString().contains("force promoting")) {
+                                    // 추가 예정
+                                } else {
+                                    break;
+                                }
+                            }
+                        } else {
+                            LOGGER.error("Failed to request mirror image status Glue-API.");
+                        }
+                    }
+                }
+                if (glueStep == 0) {
+                    throw new CloudRuntimeException("Clear cannot be executed because the current image is not force promoting state.");
+                }
+                return result;
+            } else {
+                throw new CloudRuntimeException("There are no images being mirrored.");
+            }
+        } else {
+            throw new CloudRuntimeException("Failed to lookup primary cluster scvm ip address.");
+        }
+    }
+
+    @Override
     @ActionEvent(eventType = DisasterRecoveryClusterEventTypes.EVENT_DR_VM_CREATE, eventDescription = "creating disaster recovery virtual machine", resourceId = 5, resourceType = "DisasterRecoveryCluster")
     public boolean setupDisasterRecoveryClusterVm(CreateDisasterRecoveryClusterVmCmd cmd) throws CloudRuntimeException {
         if (!DisasterRecoveryServiceEnabled.value()) {
@@ -2193,6 +2254,8 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         cmdList.add(StopDisasterRecoveryClusterVmCmd.class);
         cmdList.add(PromoteDisasterRecoveryClusterVmCmd.class);
         cmdList.add(DemoteDisasterRecoveryClusterVmCmd.class);
+        cmdList.add(ResyncDisasterRecoveryClusterCmd.class);
+        cmdList.add(ClearDisasterRecoveryClusterCmd.class);
         return cmdList;
     }
 
