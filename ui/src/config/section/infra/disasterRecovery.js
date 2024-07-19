@@ -123,6 +123,14 @@ export default {
       message: 'message.sync.dr.cluster.confirm',
       dataView: true,
       show: (record) => { return record.drclustertype === 'primary' }
+    },
+    {
+      api: 'clearDisasterRecoveryCluster',
+      icon: 'clear-outlined',
+      label: 'label.action.clear.disaster.recovery.cluster',
+      message: 'message.clear.dr.cluster.confirm',
+      dataView: true,
+      show: (record) => { return record.drclustertype === 'primary' }
     }
   ]
 }

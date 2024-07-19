@@ -35,13 +35,13 @@ import com.cloud.dr.cluster.DisasterRecoveryClusterEventTypes;
 import com.cloud.dr.cluster.DisasterRecoveryClusterService;
 import com.cloud.utils.exception.CloudRuntimeException;
 
-@APICommand(name = ResyncDisasterRecoveryClusterCmd.APINAME,
-        description = "resync a disaster recovery cluster",
+@APICommand(name = ClearDisasterRecoveryClusterCmd.APINAME,
+        description = "clear a disaster recovery cluster",
         responseObject = SuccessResponse.class,
         entityType = {DisasterRecoveryCluster.class},
         authorized = {RoleType.Admin})
-public class ResyncDisasterRecoveryClusterCmd extends BaseAsyncCmd {
-    public static final String APINAME = "resyncDisasterRecoveryCluster";
+public class ClearDisasterRecoveryClusterCmd extends BaseAsyncCmd {
+    public static final String APINAME = "clearDisasterRecoveryCluster";
 
     @Inject
     private DisasterRecoveryClusterService disasterRecoveryClusterService;
@@ -73,12 +73,12 @@ public class ResyncDisasterRecoveryClusterCmd extends BaseAsyncCmd {
 
     @Override
     public String getEventType() {
-        return DisasterRecoveryClusterEventTypes.EVENT_DR_RESYNC;
+        return DisasterRecoveryClusterEventTypes.EVENT_DR_CLEAR;
     }
 
     @Override
     public String getEventDescription() {
-        String description = "Resyncing disaster recovery cluster";
+        String description = "Clearing disaster recovery cluster";
         DisasterRecoveryCluster cluster = _entityMgr.findById(DisasterRecoveryCluster.class, getId());
         if (cluster != null) {
             description += String.format(" ID: %s", cluster.getUuid());
@@ -94,8 +94,8 @@ public class ResyncDisasterRecoveryClusterCmd extends BaseAsyncCmd {
     @Override
     public void execute() throws ServerApiException {
         try {
-            if (!disasterRecoveryClusterService.resyncDisasterRecoveryCluster(this)) {
-                throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, String.format("Failed to resync disaster recovery cluster ID: %d", getId()));
+            if (!disasterRecoveryClusterService.clearDisasterRecoveryCluster(this)) {
+                throw new ServerApiException(ApiErrorCode.INTERNAL_ERROR, String.format("Failed to clear disaster recovery cluster ID: %d", getId()));
             }
             SuccessResponse response = new SuccessResponse(getCommandName());
             setResponseObject(response);

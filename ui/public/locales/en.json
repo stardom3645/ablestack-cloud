@@ -4425,6 +4425,7 @@
 "dr.promote": "DR.PROMOTE",
 "dr.demote": "DR.DEMOTE",
 "dr.resync": "DR.RESYNC",
+"dr.clear": "DR.CLEAR",
 "dr.vm.create": "DR.VM.CREATE",
 "dr.vm.update": "DR.VM.UPDATE",
 "dr.vm.delete": "DR.VM.DELETE",
@@ -4439,5 +4440,7 @@
 "label.dr.mirrored.volume.path": "Mirrored volume path",
 "label.dr.mirrored.volume.type": "Mirrored volume type",
 "label.action.sync.disaster.recovery.cluster": "Resync disaster recovery cluster",
-"message.sync.dr.cluster.confirm": "If the primary cluster is recovered when a disaster recovery situation occurs, execute a task to synchronize the Glue image of the recovered primary cluster before executing a forced demote."
+"message.sync.dr.cluster.confirm": "If the primary cluster is recovered when a disaster recovery situation occurs, execute a task to synchronize the Glue image of the recovered primary cluster before executing a forced demote.",
+"label.action.clear.disaster.recovery.cluster": "Clear disaster recovery cluster",
+"message.clear.dr.cluster.confirm": "If the primary cluster is not recovered when a disaster recovery situation occurs, Glue garbage for the existing disaster recovery cluster is deleted."
 }
