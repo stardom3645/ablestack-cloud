@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.Map;
 import java.util.Properties;
 import java.util.HashMap;
+import java.util.Objects;
 import java.io.InputStream;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -2119,7 +2120,9 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
             for (DisasterRecoveryClusterVmMapVO map : vmMap) {
                 UserVmJoinVO userVM = userVmJoinDao.findById(map.getVmId());
                 if (!Objects.isNull(userVM.getTemplateId())) {
-                    vmTemplate.add(userVM.getTemplateId());
+                    LOGGER.info("::::::::::::::::::::::::::::::::::::::::::userVM.getTemplateId()");
+                    LOGGER.info(Long.toString(userVM.getTemplateId()));
+                    vmTemplate.add(Long.toString(userVM.getTemplateId()));
                 }
             }
         }
