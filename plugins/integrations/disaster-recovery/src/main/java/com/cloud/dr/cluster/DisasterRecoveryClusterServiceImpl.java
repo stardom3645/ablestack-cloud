@@ -1215,7 +1215,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
             throw new InvalidParameterValueException("Invalid disaster recovery cluster id specified");
         }
         Map<String, String> details = disasterRecoveryClusterDetailsDao.findDetails(drCluster.getId());
-        validateDisasterRecoveryClusterMirrorParameters(drCluster);
+        validateDemoteDisasterRecoveryClusterMirrorParameters(drCluster);
         String ipList = Script.runSimpleBashScript("cat /etc/hosts | grep -E 'scvm1-mngt|scvm2-mngt|scvm3-mngt' | awk '{print $1}' | tr '\n' ','");
         if (ipList != null || !ipList.isEmpty()) {
             ipList = ipList.replaceAll(",$", "");
@@ -2271,6 +2271,59 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                 if (userVM != null) {
                     if (userVM.getState() != VirtualMachine.State.Stopped) {
                         throw new InvalidParameterValueException("Forced promote and demote functions cannot be executed because there is a running disaster recovery secondary cluster virtual machine : " + userVM.getName());
+                    }
+                }
+            }
+        }
+    }
+
+    private void validateDemoteDisasterRecoveryClusterMirrorParameters(final DisasterRecoveryClusterVO drCluster) throws CloudRuntimeException {
+        List<DisasterRecoveryClusterVmMapVO> drClusterVmList = disasterRecoveryClusterVmMapDao.listByDisasterRecoveryClusterId(drCluster.getId());
+        ResponseObject.ResponseView respView = ResponseObject.ResponseView.Restricted;
+        Account caller = CallContext.current().getCallingAccount();
+        if (accountService.isRootAdmin(caller.getId())) {
+            respView = ResponseObject.ResponseView.Full;
+        }
+        String responseName = "drclustervmlist";
+        if (!CollectionUtils.isEmpty(drClusterVmList)) {
+            for (DisasterRecoveryClusterVmMapVO vmMapVO : drClusterVmList) {
+                UserVmJoinVO userVM = userVmJoinDao.findById(vmMapVO.getVmId());
+                if (userVM != null) {
+                    if (userVM.getState() != VirtualMachine.State.Stopped) {
+                        throw new InvalidParameterValueException("Forced promote and demote functions cannot be executed because there is a running disaster recovery secondary cluster virtual machine : " + userVM.getName());
+                    }
+                }
+            }
+        }
+        String ipList = Script.runSimpleBashScript("cat /etc/hosts | grep -E 'scvm1-mngt|scvm2-mngt|scvm3-mngt' | awk '{print $1}' | tr '\n' ','");
+        if (ipList != null || !ipList.isEmpty()) {
+            ipList = ipList.replaceAll(",$", "");
+            String[] array = ipList.split(",");
+            List<DisasterRecoveryClusterVmMapVO> vmMap = disasterRecoveryClusterVmMapDao.listByDisasterRecoveryClusterId(drCluster.getId());
+            if (!CollectionUtils.isEmpty(vmMap)) {
+                for (DisasterRecoveryClusterVmMapVO map : vmMap) {
+                    String imageName = map.getMirroredVmVolumePath();
+                    for (int i=0; i < array.length; i++) {
+                        String glueIp = array[i];
+                        ///////////////////// glue-api 프로토콜과 포트 확정 시 변경 예정
+                        String glueUrl = "https://" + glueIp + ":8080/api/v1";
+                        String glueCommand = "/mirror/image/status/rbd/" +imageName;
+                        String glueMethod = "GET";
+                        String mirrorImageStatus = DisasterRecoveryClusterUtil.glueImageMirrorStatusAPI(glueUrl, glueCommand, glueMethod);
+                        if (mirrorImageStatus != null) {
+                            JsonArray drArray = (JsonArray) new JsonParser().parse(mirrorImageStatus).getAsJsonObject().get("peer_sites");
+                            JsonElement peerState = null;
+                            if (drArray.size() != 0 && drArray != null) {
+                                for (JsonElement dr : drArray) {
+                                    peerState = dr.getAsJsonObject().get("state") == null ? null : dr.getAsJsonObject().get("state");
+                                }
+                            }
+                            if (peerState != null) {
+                                if (peerState.getAsString().contains("error") || peerState.getAsString().contains("unknown")) {
+                                    throw new InvalidParameterValueException("Forced demote functions cannot be executed because peer state is " + peerState.getAsString() + "in volume path : " + imageName);
+                                }
+                            }
+                        }
                     }
                 }
             }
