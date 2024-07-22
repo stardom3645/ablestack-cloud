@@ -2397,7 +2397,7 @@ public class KVMStorageProcessor implements StorageProcessor {
             }
             if (!snapFound) {
                 logger.debug(String.format("[Flatten Command] Could not find snapshot %s on RBD", snapshotName));
-                return new FlattenCmdAnswer(srcData, cmd, true, "0");
+                return new FlattenCmdAnswer(srcData, cmd, true, "Could not find snapshot");
             }
 
             List<String> listChildren = srcImage.listChildren(snapshotName);
@@ -2409,23 +2409,25 @@ public class KVMStorageProcessor implements StorageProcessor {
 
                 logger.debug(String.format("[Flatten Command] Try to flatten image %s on RBD", diskImage));
                 diskImage.flatten();
-                rbd.close(diskImage);
             }
-            if (cloneImageCount < 2) {
-                logger.debug(String.format("[Flatten Command] Try to unprotect and remove snapshot %s on RBD", snapshotName));
-                srcImage.snapUnprotect(snapshotName);
-                srcImage.snapRemove(snapshotName);
-                rbd.close(srcImage);
-                r.ioCtxDestroy(io);
-                return new FlattenCmdAnswer(srcData, cmd, true, Integer.toString(cloneImageCount));
+            boolean finalSuccess = false;
+            if (cloneImageCount > 1) {
+                finalSuccess = false;
             } else {
-                rbd.close(srcImage);
-                r.ioCtxDestroy(io);
-                return new FlattenCmdAnswer(srcData, cmd, false, Integer.toString(cloneImageCount));
+                finalSuccess = true;
+                if (cloneImageCount == 1) {
+                    logger.debug(String.format("[Flatten Command] Try to unprotect and remove snapshot %s on RBD", snapshotName));
+                    srcImage.snapUnprotect(snapshotName);
+                    srcImage.snapRemove(snapshotName);
+                }
             }
+            rbd.close(srcImage);
+            r.ioCtxDestroy(io);
+            return new FlattenCmdAnswer(srcData, cmd, finalSuccess, Integer.toString(cloneImageCount));
+
         } catch (final CloudRuntimeException | RadosException | RbdException e) {
             logger.debug("Failed to Flatten Rbd Volume From Snapshot: ", e);
-            return new FlattenCmdAnswer(e.toString());
+            return new FlattenCmdAnswer(srcData, cmd, false, e.toString());
         }
     }
 
