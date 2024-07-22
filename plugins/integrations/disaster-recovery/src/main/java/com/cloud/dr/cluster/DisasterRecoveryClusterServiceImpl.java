@@ -2157,7 +2157,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                     JSONObject jSONObject = array.getJSONObject(i);
                     for (DisasterRecoveryClusterVmMapVO map : vmMap) {
                         String vmName = map.getMirroredVmName();
-                        if (jSONObject.get("name").equals(vmName) && !jSONObject.get("state").equals("stopped")) {
+                        if (jSONObject.get("name").equals(vmName) && !jSONObject.get("state").equals("Stopped")) {
                             throw new InvalidParameterValueException("Resync functions cannot be executed because there is a running disaster recovery primary cluster virtual machine : " + vmName);
                         }
                     }
