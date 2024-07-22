@@ -2133,20 +2133,25 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                 if (mirrorImageInfo != null) {
                     JsonObject infoObject = (JsonObject) new JsonParser().parse(mirrorImageInfo).getAsJsonObject();
                     if (infoObject.has("image")) {
+                        LOGGER.info("::::::::::::::::::infoObject.get('image').getAsString()");
+                        LOGGER.info(infoObject.get("image").getAsString());
                         vmTemplate.add(infoObject.get("image").getAsString());
+                        break;
                     }
                 }
             }
         }
         if (!vmTemplate.isEmpty()) {
             for (String value : vmTemplate) {
-                if (!template.contains(value)) {
+                if (!template.contains(value) && value != "") {
                     template.add(value);
                 }
             }
         }
         if (!template.isEmpty()) {
+            LOGGER.info("::::::::::::::::::template");
             for (String imageName : template) {
+                LOGGER.info("::::::::::::::::::imageName");
                 String[] array = ipList.split(",");
                 int glueStep = 0;
                 boolean result = false;
