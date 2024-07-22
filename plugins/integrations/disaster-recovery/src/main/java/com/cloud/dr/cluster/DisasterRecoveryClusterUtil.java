@@ -445,6 +445,71 @@ public class DisasterRecoveryClusterUtil {
     }
 
     /**
+     * Glue 미러링 클러스터 가비지 제거
+     * @param region
+     *  https://<IP>:8080/api/v1
+     * @param subUrl
+     *  /mirror
+     * @param method
+     *  DELETE
+     * @param parameter
+     *   mirrorPool(string)
+     * @return true = 200, 이외 코드는 false 처리
+     */
+    protected static boolean glueMirrorDeleteGarbageAPI(String region, String subUrl, String method, Map<String, String> params) {
+        try {
+            // SSL 인증서 에러 우회 처리
+            final SSLContext sslContext = SSLUtils.getSSLContext();
+            sslContext.init(null, new TrustManager[]{new TrustAllManager()}, new SecureRandom());
+            URL url = new URL(region + subUrl);
+            HttpsURLConnection connection = (HttpsURLConnection)url.openConnection();
+            connection.setSSLSocketFactory(sslContext.getSocketFactory());
+            connection.setDoOutput(true);
+            connection.setRequestMethod(method);
+            connection.setConnectTimeout(30000);
+            connection.setReadTimeout(180000);
+            connection.setRequestProperty("Accept", "application/vnd.ceph.api.v1.0+json");
+            connection.setRequestProperty("Authorization", "application/vnd.ceph.api.v1.0+json");
+            connection.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
+            StringBuilder postData = new StringBuilder();
+            for(Map.Entry<String, String> param : params.entrySet()){
+                postData.append("&");
+                postData.append(URLEncoder.encode(param.getKey(), "UTF-8"));
+                postData.append("=");
+                postData.append(URLEncoder.encode(String.valueOf(param.getValue()), "UTF-8"));
+            }
+            byte[] postDataBytes = postData.toString().getBytes("UTF-8");
+            connection.getOutputStream().write(postDataBytes);
+
+            if (connection.getResponseCode() == 200) {
+                BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+                String inputLine;
+                StringBuffer response = new StringBuffer();
+                while ((inputLine = in.readLine()) != null) {
+                    response.append(inputLine);
+                }
+                in.close();
+                return true;
+            } else {
+                BufferedReader in = new BufferedReader(new InputStreamReader(connection.getErrorStream()));
+                String inputLine;
+                StringBuffer response = new StringBuffer();
+                while ((inputLine = in.readLine()) != null) {
+                    response.append(inputLine);
+                }
+                in.close();
+                String msg = "Failed to request glue mirror garbage delete API. response code : " + connection.getResponseCode();
+                LOGGER.error(msg);
+                LOGGER.error(response);
+                return false;
+            }
+        } catch (Exception e) {
+            LOGGER.error(String.format("Glue API endpoint not available"), e);
+            return false;
+        }
+    }
+
+    /**
      * Glue 미러링 이미지 프로모트 또는 Peer 미러링 이미지 프로모트
      * @param region
      *  https://<IP>:8080/api/v1
