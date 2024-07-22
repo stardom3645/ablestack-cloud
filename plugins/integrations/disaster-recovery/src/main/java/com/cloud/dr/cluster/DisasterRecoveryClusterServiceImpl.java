@@ -2132,7 +2132,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                 String mirrorImageInfo = DisasterRecoveryClusterUtil.glueImageMirrorInfoAPI(glueUrl, glueCommand, glueMethod);
                 if (mirrorImageInfo != null) {
                     JsonObject infoObject = (JsonObject) new JsonParser().parse(mirrorImageInfo).getAsJsonObject();
-                    if (infoObject.has("image")) {
+                    if (!infoObject.get("image").getAsString().equals("")) {
                         LOGGER.info("::::::::::::::::::infoObject.get('image').getAsString()");
                         LOGGER.info(infoObject.get("image").getAsString());
                         vmTemplate.add(infoObject.get("image").getAsString());
@@ -2143,7 +2143,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         }
         if (!vmTemplate.isEmpty()) {
             for (String value : vmTemplate) {
-                if (!template.contains(value) && value != "") {
+                if (!template.contains(value)) {
                     template.add(value);
                 }
             }
