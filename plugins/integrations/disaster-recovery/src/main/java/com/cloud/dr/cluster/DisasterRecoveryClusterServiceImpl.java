@@ -1348,8 +1348,15 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                         String mirrorImageStatus = DisasterRecoveryClusterUtil.glueImageMirrorStatusAPI(glueUrl, glueCommand, glueMethod);
                         if (mirrorImageStatus != null) {
                             JsonObject statObject = (JsonObject) new JsonParser().parse(mirrorImageStatus).getAsJsonObject();
-                            if (statObject.has("description")) {
-                                if (statObject.get("description").getAsString().contains("force promoting")) {
+                            JsonArray drArray = (JsonArray) new JsonParser().parse(mirrorImageStatus).getAsJsonObject().get("peer_sites");
+                            JsonElement peerDescription = null;
+                            if (drArray.size() != 0 && drArray != null) {
+                                for (JsonElement dr : drArray) {
+                                    peerDescription = dr.getAsJsonObject().get("description") == null ? null : dr.getAsJsonObject().get("state");
+                                }
+                            }
+                            if (statObject.has("description") && peerDescription != null) {
+                                if (statObject.get("description").getAsString().contains("force promoting") || (peerDescription.getAsString().contains("local image is primary") && statObject.get("description").getAsString().contains("local image is primary"))) {
                                     glueCommand = "/mirror/image/demote/peer/rbd/" + imageName;
                                     glueMethod = "DELETE";
                                     Map<String, String> glueParams = new HashMap<>();
@@ -1379,8 +1386,6 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                                         LOGGER.error("Failed to request ImageMirrorDemotePeer Glue-API.");
                                     }
                                 } else {
-                                    // DR 상황 테스트 force promoting 상태가 쭉 유지되는지 확인 필요
-                                    // throw new CloudRuntimeException("Resync cannot be executed because the current image is not force promoting state.");
                                     break;
                                 }
                             }
