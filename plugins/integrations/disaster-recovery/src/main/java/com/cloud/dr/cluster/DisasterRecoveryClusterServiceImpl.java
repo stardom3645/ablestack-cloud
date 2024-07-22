@@ -1431,9 +1431,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
             Map<String, String> glueParams = new HashMap<>();
             List<DisasterRecoveryClusterVmMapVO> vmMap = disasterRecoveryClusterVmMapDao.listByDisasterRecoveryClusterId(drCluster.getId());
             if (!CollectionUtils.isEmpty(vmMap)) {
-                LOGGER.info("::::::::::::::::::::::::::::::::::::::::::promoteParentImage");
                 promoteParentImage(drCluster);
-                LOGGER.info("::::::::::::::::::::::::::::::::::::::::::glueImageMirrorDeleteAPI");
                 for (DisasterRecoveryClusterVmMapVO map : vmMap) {
                     String imageName = map.getMirroredVmVolumePath();
                     for (int i=0; i < array.length; i++) {
@@ -1455,7 +1453,6 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                     }
                 }
             }
-            LOGGER.info("::::::::::::::::::::::::::::::::::::::::::glueMirrorDeleteGarbageAPI");
             for (int j=0; j < array.length; j++) {
                 glueIp = array[j];
                 glueUrl = "https://" + glueIp + ":8080/api/v1";
@@ -2133,8 +2130,6 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                 if (mirrorImageInfo != null) {
                     JsonObject infoObject = (JsonObject) new JsonParser().parse(mirrorImageInfo).getAsJsonObject();
                     if (!infoObject.get("image").getAsString().equals("")) {
-                        LOGGER.info("::::::::::::::::::infoObject.get('image').getAsString()");
-                        LOGGER.info(infoObject.get("image").getAsString());
                         vmTemplate.add(infoObject.get("image").getAsString());
                         break;
                     }
@@ -2149,9 +2144,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
             }
         }
         if (!template.isEmpty()) {
-            LOGGER.info("::::::::::::::::::template");
             for (String imageName : template) {
-                LOGGER.info("::::::::::::::::::imageName");
                 String[] array = ipList.split(",");
                 int glueStep = 0;
                 boolean result = false;

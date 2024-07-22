@@ -799,7 +799,6 @@ public class DisasterRecoveryClusterUtil {
                 in.close();
                 JsonParser jParser = new JsonParser();
                 JsonObject jObject = (JsonObject)jParser.parse(response.toString());
-                LOGGER.info(jObject.toString());
                 if (jObject.has("parent")) {
                     return jObject.get("parent").toString();
                 } else {
