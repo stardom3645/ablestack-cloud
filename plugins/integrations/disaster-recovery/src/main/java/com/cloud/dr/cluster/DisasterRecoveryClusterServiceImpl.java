@@ -1352,7 +1352,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                             JsonElement peerDescription = null;
                             if (drArray.size() != 0 && drArray != null) {
                                 for (JsonElement dr : drArray) {
-                                    peerDescription = dr.getAsJsonObject().get("description") == null ? null : dr.getAsJsonObject().get("state");
+                                    peerDescription = dr.getAsJsonObject().get("description") == null ? null : dr.getAsJsonObject().get("description");
                                 }
                             }
                             if (statObject.has("description") && peerDescription != null) {
