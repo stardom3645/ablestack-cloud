@@ -2397,7 +2397,7 @@ public class KVMStorageProcessor implements StorageProcessor {
             }
             if (!snapFound) {
                 logger.debug(String.format("[Flatten Command] Could not find snapshot %s on RBD", snapshotName));
-                return new FlattenCmdAnswer(srcData, cmd, true, "0");
+                return new FlattenCmdAnswer(srcData, cmd, true, "Could not find snapshot");
             }
 
             List<String> listChildren = srcImage.listChildren(snapshotName);
@@ -2414,13 +2414,11 @@ public class KVMStorageProcessor implements StorageProcessor {
             if (cloneImageCount > 1) {
                 finalSuccess = false;
             } else {
-                if (cloneImageCount == 0) {
-                    finalSuccess = true;
-                } else if (cloneImageCount == 1) {
+                finalSuccess = true;
+                if (cloneImageCount == 1) {
                     logger.debug(String.format("[Flatten Command] Try to unprotect and remove snapshot %s on RBD", snapshotName));
                     srcImage.snapUnprotect(snapshotName);
                     srcImage.snapRemove(snapshotName);
-                    finalSuccess = true;
                 }
             }
             rbd.close(srcImage);
@@ -2429,7 +2427,7 @@ public class KVMStorageProcessor implements StorageProcessor {
 
         } catch (final CloudRuntimeException | RadosException | RbdException e) {
             logger.debug("Failed to Flatten Rbd Volume From Snapshot: ", e);
-            return new FlattenCmdAnswer(srcData, cmd, false, Integer.toString(cloneImageCount));
+            return new FlattenCmdAnswer(srcData, cmd, false, e.toString());
         }
     }
 
