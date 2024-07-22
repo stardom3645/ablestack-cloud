@@ -42,10 +42,12 @@ import com.cloud.exception.InvalidParameterValueException;
 import com.cloud.exception.ResourceUnavailableException;
 import com.cloud.exception.ConcurrentOperationException;
 import com.cloud.storage.dao.DiskOfferingDao;
+import com.cloud.storage.dao.VMTemplateDao;
 import com.cloud.storage.dao.VolumeDao;
 import com.cloud.storage.VolumeVO;
 import com.cloud.storage.Volume;
 import com.cloud.storage.VolumeApiService;
+import com.cloud.storage.VMTemplateVO;
 import com.cloud.offering.DiskOffering;
 import com.cloud.user.Account;
 import com.cloud.user.AccountService;
@@ -123,6 +125,8 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
     private UserVmDao userVmDao;
     @Inject
     private AccountDao accountDao;
+    @Inject
+    private VMTemplateDao templateDao;
     @Inject
     private DiskOfferingDao diskOfferingDao;
     @Inject
@@ -2120,9 +2124,10 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
             for (DisasterRecoveryClusterVmMapVO map : vmMap) {
                 UserVmJoinVO userVM = userVmJoinDao.findById(map.getVmId());
                 if (!Objects.isNull(userVM.getTemplateId())) {
+                    VMTemplateVO temp = templateDao.findById(userVM.getTemplateId());
                     LOGGER.info("::::::::::::::::::::::::::::::::::::::::::userVM.getTemplateId()");
-                    LOGGER.info(Long.toString(userVM.getTemplateId()));
-                    vmTemplate.add(Long.toString(userVM.getTemplateId()));
+                    LOGGER.info(temp.getUuid());
+                    vmTemplate.add(temp.getUuid());
                 }
             }
         }
