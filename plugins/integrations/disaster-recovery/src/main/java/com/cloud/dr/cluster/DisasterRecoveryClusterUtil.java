@@ -758,6 +758,65 @@ public class DisasterRecoveryClusterUtil {
     }
 
     /**
+     * Glue 미러링된 이미지 Parent 정보 조회
+     * @param region
+     *  https://<IP>:8080/api/v1
+     * @param subUrl
+     *  /mirror/image/info/{mirrorPool}/{imageName}
+     * @param method
+     *  GET
+     * @return
+     *  "parent": {
+     *      "pool": "rbd",
+     *      "pool_namespace": "",
+     *      "image": "350a0193-1ea3-4160-b28c-ceb3cd5af8e1",
+     *      "id": "e64905a88850d0",
+     *      "snapshot": "cloudstack-base-snap",
+     *      "trash": false,
+     *      "overlap": 53687091200
+     *   },
+     */
+    protected static String glueImageMirrorInfoAPI(String region, String subUrl, String method) {
+        try {
+            final SSLContext sslContext = SSLUtils.getSSLContext();
+            sslContext.init(null, new TrustManager[]{new TrustAllManager()}, new SecureRandom());
+            URL url = new URL(region + subUrl);
+            HttpsURLConnection connection = (HttpsURLConnection)url.openConnection();
+            connection.setSSLSocketFactory(sslContext.getSocketFactory());
+            connection.setDoOutput(true);
+            connection.setRequestMethod(method);
+            connection.setConnectTimeout(30000);
+            connection.setReadTimeout(180000);
+            connection.setRequestProperty("Accept", "application/vnd.ceph.api.v1.0+json");
+            connection.setRequestProperty("Authorization", "application/vnd.ceph.api.v1.0+json");
+            if (connection.getResponseCode() == 200) {
+                BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+                String inputLine;
+                StringBuffer response = new StringBuffer();
+                while ((inputLine = in.readLine()) != null) {
+                    response.append(inputLine);
+                }
+                in.close();
+                JsonParser jParser = new JsonParser();
+                JsonObject jObject = (JsonObject)jParser.parse(response.toString());
+                LOGGER.info(jObject.toString());
+                if (jObject.has("parent")) {
+                    return jObject.get("parent").toString();
+                } else {
+                    return null;
+                }
+            } else {
+                String msg = "Failed to request glue mirror image mirror info API. response code : " + connection.getResponseCode();
+                LOGGER.error(msg);
+                return null;
+            }
+        } catch (Exception e) {
+            LOGGER.error(String.format("Glue API endpoint not available"), e);
+            return null;
+        }
+    }
+
+    /**
      * Glue 미러링된 이미지 상태 조회
      * @param region
      *  https://<IP>:8080/api/v1

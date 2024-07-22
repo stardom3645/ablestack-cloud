@@ -21,7 +21,6 @@ import java.util.ArrayList;
 import java.util.Map;
 import java.util.Properties;
 import java.util.HashMap;
-import java.util.Objects;
 import java.io.InputStream;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -42,12 +41,10 @@ import com.cloud.exception.InvalidParameterValueException;
 import com.cloud.exception.ResourceUnavailableException;
 import com.cloud.exception.ConcurrentOperationException;
 import com.cloud.storage.dao.DiskOfferingDao;
-import com.cloud.storage.dao.VMTemplateDao;
 import com.cloud.storage.dao.VolumeDao;
 import com.cloud.storage.VolumeVO;
 import com.cloud.storage.Volume;
 import com.cloud.storage.VolumeApiService;
-import com.cloud.storage.VMTemplateVO;
 import com.cloud.offering.DiskOffering;
 import com.cloud.user.Account;
 import com.cloud.user.AccountService;
@@ -125,8 +122,6 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
     private UserVmDao userVmDao;
     @Inject
     private AccountDao accountDao;
-    @Inject
-    private VMTemplateDao templateDao;
     @Inject
     private DiskOfferingDao diskOfferingDao;
     @Inject
@@ -2117,64 +2112,54 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
     }
 
     private void promoteParentImage(final DisasterRecoveryClusterVO drCluster)throws CloudRuntimeException {
-        ArrayList<String> vmTemplate = new ArrayList<>();
-        ArrayList<String> template = new ArrayList<>();
         List<DisasterRecoveryClusterVmMapVO> vmMap = disasterRecoveryClusterVmMapDao.listByDisasterRecoveryClusterId(drCluster.getId());
         if (!CollectionUtils.isEmpty(vmMap)) {
+            String glueCommand = "";
+            String glueMethod = "";
+            String imageName = "";
             for (DisasterRecoveryClusterVmMapVO map : vmMap) {
-                UserVmJoinVO userVM = userVmJoinDao.findById(map.getVmId());
-                if (!Objects.isNull(userVM.getTemplateId())) {
-                    VMTemplateVO temp = templateDao.findById(userVM.getTemplateId());
-                    LOGGER.info("::::::::::::::::::::::::::::::::::::::::::userVM.getTemplateId()");
-                    LOGGER.info(temp.getUuid());
-                    vmTemplate.add(temp.getUuid());
-                }
-            }
-        }
-        if (!vmTemplate.isEmpty()) {
-            for (String value : vmTemplate) {
-                if (!template.contains(value)) {
-                    template.add(value);
-                }
-            }
-        }
-        if (!template.isEmpty()) {
-            String ipList = Script.runSimpleBashScript("cat /etc/hosts | grep -E 'scvm1-mngt|scvm2-mngt|scvm3-mngt' | awk '{print $1}' | tr '\n' ','");
-            if (ipList != null || !ipList.isEmpty()) {
-                ipList = ipList.replaceAll(",$", "");
-                String[] array = ipList.split(",");
-                int glueStep = 0;
-                boolean result = false;
-                for (String id : template) {
-                    LOGGER.info("::::::::::::::::::::::::::::::::::::::::::id");
-                    LOGGER.info(id);
+                String ipList = Script.runSimpleBashScript("cat /etc/hosts | grep -E 'scvm1-mngt|scvm2-mngt|scvm3-mngt' | awk '{print $1}' | tr '\n' ','");
+                if (ipList != null || !ipList.isEmpty()) {
+                    ipList = ipList.replaceAll(",$", "");
+                    String[] array = ipList.split(",");
+                    int glueStep = 0;
+                    boolean result = false;
                     Loop :
                     for (int i=0; i < array.length; i++) {
                         String glueIp = array[i];
                         ///////////////////// glue-api 프로토콜과 포트 확정 시 변경 예정
                         String glueUrl = "https://" + glueIp + ":8080/api/v1";
-                        String glueCommand = "/mirror/image/promote/rbd/" + id;
-                        String glueMethod = "POST";
-                        Map<String, String> glueParams = new HashMap<>();
-                        glueParams.put("mirrorPool", "rbd");
-                        glueParams.put("imageName", id);
-                        while(glueStep < 20) {
-                            glueStep += 1;
-                            try {
-                                Thread.sleep(10000);
-                            } catch (InterruptedException e) {
-                                LOGGER.error("promoteParentImage sleep interrupted");
-                            }
-                            result = DisasterRecoveryClusterUtil.glueImageMirrorPromoteAPI(glueUrl, glueCommand, glueMethod, glueParams);
-                            if (result) {
-                                break Loop;
-                            } else {
-                                LOGGER.error("Failed to request ImageMirrorPromote Glue-API.");
+                        glueCommand = "/mirror/image/info/rbd/" +map.getMirroredVmVolumePath();
+                        glueMethod = "GET";
+                        String mirrorImageInfo = DisasterRecoveryClusterUtil.glueImageMirrorInfoAPI(glueUrl, glueCommand, glueMethod);
+                        if (mirrorImageInfo != null) {
+                            JsonObject infoObject = (JsonObject) new JsonParser().parse(mirrorImageInfo).getAsJsonObject();
+                            if (infoObject.has("image")) {
+                                imageName = infoObject.get("image").getAsString();
+                                glueCommand = "/mirror/image/promote/rbd/" + imageName;
+                                glueMethod = "POST";
+                                Map<String, String> glueParams = new HashMap<>();
+                                glueParams.put("mirrorPool", "rbd");
+                                glueParams.put("imageName", imageName);
+                                while(glueStep < 20) {
+                                    glueStep += 1;
+                                    try {
+                                        Thread.sleep(10000);
+                                    } catch (InterruptedException e) {
+                                        LOGGER.error("promoteParentImage sleep interrupted");
+                                    }
+                                    result = DisasterRecoveryClusterUtil.glueImageMirrorPromoteAPI(glueUrl, glueCommand, glueMethod, glueParams);
+                                    if (result) {
+                                        break Loop;
+                                    } else {
+                                        LOGGER.error("Failed to request ImageMirrorPromote Glue-API.");
+                                    }
+                                }
                             }
                         }
                     }
                     if (!result) {
-                        throw new CloudRuntimeException("Failed to promote parent image, For volumes with a path of " + id + ".");
+                        throw new CloudRuntimeException("Failed to promote parent image, For volumes with a path of " + imageName + ".");
                     }
                 }
             }
