@@ -1158,11 +1158,12 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                                     glueMethod = "POST";
                                     while(glueStep < 20) {
                                         glueStep += 1;
-                                        try {
-                                            Thread.sleep(10000);
-                                        } catch (InterruptedException e) {
-                                            LOGGER.error("promoteDisasterRecoveryCluster sleep interrupted");
-                                        }
+                                        timeSleep();
+                                        // try {
+                                        //     Thread.sleep(10000);
+                                        // } catch (InterruptedException e) {
+                                        //     LOGGER.error("promoteDisasterRecoveryCluster sleep interrupted");
+                                        // }
                                         result = DisasterRecoveryClusterUtil.glueImageMirrorPromoteAPI(glueUrl, glueCommand, glueMethod, glueParams);
                                         if (result) {
                                             glueCommand = "/mirror/image/rbd/" + imageName;
@@ -1255,11 +1256,12 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                                         glueMethod = "POST";
                                         while(glueStep < 20) {
                                             glueStep += 1;
-                                            try {
-                                                Thread.sleep(10000);
-                                            } catch (InterruptedException e) {
-                                                LOGGER.error("demoteDisasterRecoveryCluster sleep interrupted");
-                                            }
+                                            timeSleep();
+                                            // try {
+                                            //     Thread.sleep(10000);
+                                            // } catch (InterruptedException e) {
+                                            //     LOGGER.error("demoteDisasterRecoveryCluster sleep interrupted");
+                                            // }
                                             result = DisasterRecoveryClusterUtil.glueImageMirrorPromoteAPI(glueUrl, glueCommand, glueMethod, glueParams);
                                             if (result) {
                                                 glueCommand = "/mirror/image/resync/rbd/" + imageName;
@@ -2162,11 +2164,12 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                     glueParams.put("imageName", imageName);
                     while(glueStep < 20) {
                         glueStep += 1;
-                        try {
-                            Thread.sleep(10000);
-                        } catch (InterruptedException e) {
-                            LOGGER.error("promoteParentImage sleep interrupted");
-                        }
+                        timeSleep();
+                        // try {
+                        //     Thread.sleep(10000);
+                        // } catch (InterruptedException e) {
+                        //     LOGGER.error("promoteParentImage sleep interrupted");
+                        // }
                         result = DisasterRecoveryClusterUtil.glueImageMirrorPromoteAPI(glueUrl, glueCommand, glueMethod, glueParams);
                         if (result) {
                             break Loop;
@@ -2232,19 +2235,35 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                     Map<String, String> glueParams = new HashMap<>();
                     glueParams.put("mirrorPool", "rbd");
                     glueParams.put("imageName", imageName);
-                    while(glueStep < 20) {
-                        glueStep += 1;
-                        try {
-                            Thread.sleep(10000);
-                        } catch (InterruptedException e) {
-                            LOGGER.error("demoteParentImage sleep interrupted");
+                    result = DisasterRecoveryClusterUtil.glueImageMirrorDemoteAPI(glueUrl, glueCommand, glueMethod, glueParams);
+                    if (result) {
+                        glueCommand = "/mirror/image/promote/peer/rbd/" + imageName;
+                        glueMethod = "POST";
+                        while(glueStep < 20) {
+                            glueStep += 1;
+                            timeSleep();
+                            // try {
+                            //     Thread.sleep(10000);
+                            // } catch (InterruptedException e) {
+                            //     LOGGER.error("demoteParentImage sleep interrupted");
+                            // }
+                            result = DisasterRecoveryClusterUtil.glueImageMirrorPromoteAPI(glueUrl, glueCommand, glueMethod, glueParams);
+                            if (result) {
+                                glueCommand = "/mirror/image/resync/rbd/" + imageName;
+                                glueMethod = "PUT";
+                                result = DisasterRecoveryClusterUtil.glueImageMirrorResyncAPI(glueUrl, glueCommand, glueMethod, glueParams);
+                                if (!result) {
+                                    LOGGER.error("Failed to request ImageMirrorResync Glue-API.");
+                                    LOGGER.error("The image was promoted successfully, but resyncing the image failed. For volumes with a path of " + imageName + ", Manually set image resync and snapshot schedules.");
+                                }
+                                break Loop;
+                            } else {
+                                LOGGER.error("Failed to request ImageMirrorPromotePeer Glue-API.");
+                            }
                         }
-                        result = DisasterRecoveryClusterUtil.glueImageMirrorDemoteAPI(glueUrl, glueCommand, glueMethod, glueParams);
-                        if (result) {
-                            break Loop;
-                        } else {
-                            LOGGER.error("Failed to request ImageMirrorDemote Glue-API.");
-                        }
+                        throw new CloudRuntimeException("Failed to promote remote parent image, For volumes with a path of " + imageName + ", You must manually promote remote images and resync local image, add a remote image snapshots schedule.");
+                    } else {
+                        LOGGER.error("Failed to request ImageMirrorDemote Glue-API.");
                     }
                 }
                 if (!result) {
@@ -2547,6 +2566,14 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
             LOGGER.debug("Failed to read configuration from server.properties file", e);
         }
         return serverInfo;
+    }
+
+    private synchronized void timeSleep() {
+        try {
+            Thread.sleep(10000);
+        } catch (InterruptedException e) {
+            LOGGER.error("disaster recovery timeSleep interrupted error");
+        }
     }
 
     @Override
