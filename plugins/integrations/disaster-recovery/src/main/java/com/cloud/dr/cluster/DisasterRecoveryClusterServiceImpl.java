@@ -2502,12 +2502,14 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                         String mirrorImageStatus = DisasterRecoveryClusterUtil.glueImageMirrorStatusAPI(glueUrl, glueCommand, glueMethod);
                         if (mirrorImageStatus != null) {
                             JsonArray drArray = (JsonArray) new JsonParser().parse(mirrorImageStatus).getAsJsonObject().get("peer_sites");
-                            JsonElement peerState = null;
                             if (drArray.size() != 0 && drArray != null) {
                                 for (JsonElement dr : drArray) {
-                                    peerState = dr.getAsJsonObject().get("state") == null ? null : dr.getAsJsonObject().get("state");
+                                    JsonElement peerState = dr.getAsJsonObject().get("state") == null ? null : dr.getAsJsonObject().get("state");
+                                    LOGGER.info("::::::::::::::::::::::::peerState.getAsString()");
+                                    LOGGER.info(peerState.getAsString());
                                     if (peerState != null) {
                                         if (peerState.getAsString().contains("error") || peerState.getAsString().contains("unknown")) {
+                                            LOGGER.info("::::::::::::::::::::::::peerState.getAsString() in");
                                             throw new InvalidParameterValueException("Forced demote functions cannot be executed because peer state is " + peerState.getAsString() + "in volume path : " + imageName);
                                         }
                                     }
