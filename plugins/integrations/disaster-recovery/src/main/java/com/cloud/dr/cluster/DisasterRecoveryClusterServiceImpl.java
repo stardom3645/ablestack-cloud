@@ -966,7 +966,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                 String glueIp = array[i];
                 ///////////////////// glue-api 프로토콜과 포트 확정 시 변경 예정
                 String glueUrl = "https://" + glueIp + ":8080/api/v1";
-                String glueCommand = "/mirror/{mirrorPool}";
+                String glueCommand = "/mirror/rbd";
                 String glueMethod = "POST";
                 Map<String, String> glueParams = new HashMap<>();
                 glueParams.put("localClusterName", "local");
@@ -1050,7 +1050,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                 String glueIp = array[i];
                 ///////////////////// glue-api 프로토콜과 포트 확정 시 변경 예정
                 String glueUrl = "https://" + glueIp + ":8080/api/v1";
-                String glueCommand = "/mirror/{mirrorPool}";
+                String glueCommand = "/mirror/rbd";
                 String glueMethod = "DELETE";
                 Map<String, String> glueParams = new HashMap<>();
                 glueParams.put("mirrorPool", "rbd");
