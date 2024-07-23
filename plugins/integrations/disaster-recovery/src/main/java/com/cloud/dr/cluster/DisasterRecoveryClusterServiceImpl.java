@@ -1249,13 +1249,13 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                                     if (result) {
                                         glueCommand = "/mirror/image/promote/peer/rbd/" + imageName;
                                         glueMethod = "POST";
-                                        try {
-                                            Thread.sleep(10000);
-                                        } catch (InterruptedException e) {
-                                            LOGGER.error("demoteDisasterRecoveryCluster sleep interrupted");
-                                        }
                                         while(glueStep < 100) {
                                             glueStep += 1;
+                                            try {
+                                                Thread.sleep(10000);
+                                            } catch (InterruptedException e) {
+                                                LOGGER.error("demoteDisasterRecoveryCluster sleep interrupted");
+                                            }
                                             result = DisasterRecoveryClusterUtil.glueImageMirrorPromoteAPI(glueUrl, glueCommand, glueMethod, glueParams);
                                             if (result) {
                                                 glueCommand = "/mirror/image/resync/rbd/" + imageName;
@@ -2222,13 +2222,13 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                     if (result) {
                         glueCommand = "/mirror/image/promote/peer/rbd/" + imageName;
                         glueMethod = "POST";
-                        try {
-                            Thread.sleep(10000);
-                        } catch (InterruptedException e) {
-                            LOGGER.error("demoteParentImage sleep interrupted");
-                        }
                         while(glueStep < 100) {
                             glueStep += 1;
+                            try {
+                                Thread.sleep(10000);
+                            } catch (InterruptedException e) {
+                                LOGGER.error("demoteParentImage sleep interrupted");
+                            }
                             result = DisasterRecoveryClusterUtil.glueImageMirrorPromoteAPI(glueUrl, glueCommand, glueMethod, glueParams);
                             if (result) {
                                 glueCommand = "/mirror/image/resync/rbd/" + imageName;
@@ -2482,11 +2482,8 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                             if (drArray.size() != 0 && drArray != null) {
                                 for (JsonElement dr : drArray) {
                                     JsonElement peerState = dr.getAsJsonObject().get("state") == null ? null : dr.getAsJsonObject().get("state");
-                                    LOGGER.info("::::::::::::::::::::::::peerState.getAsString()");
-                                    LOGGER.info(peerState.getAsString());
                                     if (peerState != null) {
                                         if (peerState.getAsString().contains("error") || peerState.getAsString().contains("unknown")) {
-                                            LOGGER.info("::::::::::::::::::::::::peerState.getAsString() in");
                                             throw new InvalidParameterValueException("Forced demote functions cannot be executed because peer state is " + peerState.getAsString() + "in volume path : " + imageName);
                                         }
                                     }
