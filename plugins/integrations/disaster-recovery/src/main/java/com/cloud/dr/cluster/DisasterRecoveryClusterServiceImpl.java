@@ -1156,14 +1156,8 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                                     glueParams.put("imageName", imageName);
                                     glueCommand = "/mirror/image/promote/rbd/" + imageName;
                                     glueMethod = "POST";
-                                    while(glueStep < 20) {
+                                    while(glueStep < 100) {
                                         glueStep += 1;
-                                        timeSleep();
-                                        // try {
-                                        //     Thread.sleep(10000);
-                                        // } catch (InterruptedException e) {
-                                        //     LOGGER.error("promoteDisasterRecoveryCluster sleep interrupted");
-                                        // }
                                         result = DisasterRecoveryClusterUtil.glueImageMirrorPromoteAPI(glueUrl, glueCommand, glueMethod, glueParams);
                                         if (result) {
                                             glueCommand = "/mirror/image/rbd/" + imageName;
@@ -1197,6 +1191,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                     throw new CloudRuntimeException("Demote cannot be executed because the current image is in Ready state.");
                 }
                 promoteParentImage(drCluster);
+                timeSleep();
                 return result;
             } else {
                 throw new CloudRuntimeException("There are no images being mirrored.");
@@ -1254,14 +1249,13 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                                     if (result) {
                                         glueCommand = "/mirror/image/promote/peer/rbd/" + imageName;
                                         glueMethod = "POST";
-                                        while(glueStep < 20) {
+                                        try {
+                                            Thread.sleep(10000);
+                                        } catch (InterruptedException e) {
+                                            LOGGER.error("demoteDisasterRecoveryCluster sleep interrupted");
+                                        }
+                                        while(glueStep < 100) {
                                             glueStep += 1;
-                                            timeSleep();
-                                            // try {
-                                            //     Thread.sleep(10000);
-                                            // } catch (InterruptedException e) {
-                                            //     LOGGER.error("demoteDisasterRecoveryCluster sleep interrupted");
-                                            // }
                                             result = DisasterRecoveryClusterUtil.glueImageMirrorPromoteAPI(glueUrl, glueCommand, glueMethod, glueParams);
                                             if (result) {
                                                 glueCommand = "/mirror/image/resync/rbd/" + imageName;
@@ -1368,13 +1362,8 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                                     glueParams.put("imageName", imageName);
                                     result = DisasterRecoveryClusterUtil.glueImageMirrorDemoteAPI(glueUrl, glueCommand, glueMethod, glueParams);
                                     if (result) {
-                                        while(glueStep < 20) {
+                                        while(glueStep < 100) {
                                             glueStep += 1;
-                                            try {
-                                                Thread.sleep(10000);
-                                            } catch (InterruptedException e) {
-                                                LOGGER.error("resyncDisasterRecoveryCluster sleep interrupted");
-                                            }
                                             glueCommand = "/mirror/image/resync/peer/rbd/" + imageName;
                                             glueMethod = "PUT";
                                             result = DisasterRecoveryClusterUtil.glueImageMirrorResyncAPI(glueUrl, glueCommand, glueMethod, glueParams);
@@ -2162,14 +2151,8 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                     Map<String, String> glueParams = new HashMap<>();
                     glueParams.put("mirrorPool", "rbd");
                     glueParams.put("imageName", imageName);
-                    while(glueStep < 20) {
+                    while(glueStep < 100) {
                         glueStep += 1;
-                        timeSleep();
-                        // try {
-                        //     Thread.sleep(10000);
-                        // } catch (InterruptedException e) {
-                        //     LOGGER.error("promoteParentImage sleep interrupted");
-                        // }
                         result = DisasterRecoveryClusterUtil.glueImageMirrorPromoteAPI(glueUrl, glueCommand, glueMethod, glueParams);
                         if (result) {
                             break Loop;
@@ -2239,14 +2222,13 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                     if (result) {
                         glueCommand = "/mirror/image/promote/peer/rbd/" + imageName;
                         glueMethod = "POST";
-                        while(glueStep < 20) {
+                        try {
+                            Thread.sleep(10000);
+                        } catch (InterruptedException e) {
+                            LOGGER.error("demoteParentImage sleep interrupted");
+                        }
+                        while(glueStep < 100) {
                             glueStep += 1;
-                            timeSleep();
-                            // try {
-                            //     Thread.sleep(10000);
-                            // } catch (InterruptedException e) {
-                            //     LOGGER.error("demoteParentImage sleep interrupted");
-                            // }
                             result = DisasterRecoveryClusterUtil.glueImageMirrorPromoteAPI(glueUrl, glueCommand, glueMethod, glueParams);
                             if (result) {
                                 glueCommand = "/mirror/image/resync/rbd/" + imageName;
@@ -2341,13 +2323,8 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                                 glueParams.put("imageName", imageName);
                                 result = DisasterRecoveryClusterUtil.glueImageMirrorDemoteAPI(glueUrl, glueCommand, glueMethod, glueParams);
                                 if (result) {
-                                    while(glueStep < 20) {
+                                    while(glueStep < 100) {
                                         glueStep += 1;
-                                        try {
-                                            Thread.sleep(10000);
-                                        } catch (InterruptedException e) {
-                                            LOGGER.error("resyncParentImage sleep interrupted");
-                                        }
                                         glueCommand = "/mirror/image/resync/peer/rbd/" + imageName;
                                         glueMethod = "PUT";
                                         result = DisasterRecoveryClusterUtil.glueImageMirrorResyncAPI(glueUrl, glueCommand, glueMethod, glueParams);
@@ -2572,7 +2549,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
 
     private synchronized void timeSleep() {
         try {
-            Thread.sleep(10000);
+            Thread.sleep(300 * 1000);
         } catch (InterruptedException e) {
             LOGGER.error("disaster recovery timeSleep interrupted error");
         }
