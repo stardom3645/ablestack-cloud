@@ -1195,6 +1195,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                 if (glueStep == 0) {
                     throw new CloudRuntimeException("Demote cannot be executed because the current image is in Ready state.");
                 }
+                promoteParentImage(drCluster);
                 return result;
             } else {
                 throw new CloudRuntimeException("There are no images being mirrored.");
@@ -1302,6 +1303,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                 if (glueStep == 0) {
                     throw new CloudRuntimeException("Demote cannot be executed because the current image is in Syncing state.");
                 }
+                demoteParentImage(drCluster);
                 return result;
             } else {
                 throw new CloudRuntimeException("There are no images being mirrored.");
@@ -1397,6 +1399,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                 if (glueStep == 0) {
                     throw new CloudRuntimeException("Resync cannot be executed because the current image is not force promoting state.");
                 }
+                resyncParentImage(drCluster);
                 return result;
             } else {
                 throw new CloudRuntimeException("There are no images being mirrored.");
@@ -1431,7 +1434,6 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
             Map<String, String> glueParams = new HashMap<>();
             List<DisasterRecoveryClusterVmMapVO> vmMap = disasterRecoveryClusterVmMapDao.listByDisasterRecoveryClusterId(drCluster.getId());
             if (!CollectionUtils.isEmpty(vmMap)) {
-                promoteParentImage(drCluster);
                 for (DisasterRecoveryClusterVmMapVO map : vmMap) {
                     String imageName = map.getMirroredVmVolumePath();
                     for (int i=0; i < array.length; i++) {
@@ -2175,6 +2177,182 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                 }
                 if (!result) {
                     throw new CloudRuntimeException("Failed to promote parent image, For volumes with a path of " + imageName + ".");
+                }
+            }
+        }
+    }
+
+    private void demoteParentImage(final DisasterRecoveryClusterVO drCluster)throws CloudRuntimeException {
+        List<DisasterRecoveryClusterVmMapVO> vmMap = disasterRecoveryClusterVmMapDao.listByDisasterRecoveryClusterId(drCluster.getId());
+        ArrayList<String> vmTemplate = new ArrayList<>();
+        ArrayList<String> template = new ArrayList<>();
+        String ipList = Script.runSimpleBashScript("cat /etc/hosts | grep -E 'scvm1-mngt|scvm2-mngt|scvm3-mngt' | awk '{print $1}' | tr '\n' ','");
+        if (ipList != null || !ipList.isEmpty()) {
+            ipList = ipList.replaceAll(",$", "");
+        }
+        String glueCommand = "";
+        String glueMethod = "";
+        for (DisasterRecoveryClusterVmMapVO map : vmMap) {
+            String[] array = ipList.split(",");
+            for (int i=0; i < array.length; i++) {
+                String glueIp = array[i];
+                ///////////////////// glue-api 프로토콜과 포트 확정 시 변경 예정
+                String glueUrl = "https://" + glueIp + ":8080/api/v1";
+                glueCommand = "/mirror/image/info/rbd/" +map.getMirroredVmVolumePath();
+                glueMethod = "GET";
+                String mirrorImageInfo = DisasterRecoveryClusterUtil.glueImageMirrorInfoAPI(glueUrl, glueCommand, glueMethod);
+                if (mirrorImageInfo != null) {
+                    JsonObject infoObject = (JsonObject) new JsonParser().parse(mirrorImageInfo).getAsJsonObject();
+                    if (!infoObject.get("image").getAsString().equals("")) {
+                        vmTemplate.add(infoObject.get("image").getAsString());
+                        break;
+                    }
+                }
+            }
+        }
+        if (!vmTemplate.isEmpty()) {
+            for (String value : vmTemplate) {
+                if (!template.contains(value)) {
+                    template.add(value);
+                }
+            }
+        }
+        if (!template.isEmpty()) {
+            for (String imageName : template) {
+                String[] array = ipList.split(",");
+                int glueStep = 0;
+                boolean result = false;
+                Loop :
+                for (int j=0; j < array.length; j++) {
+                    String glueIp = array[j];
+                    ///////////////////// glue-api 프로토콜과 포트 확정 시 변경 예정
+                    String glueUrl = "https://" + glueIp + ":8080/api/v1";
+                    glueCommand = "/mirror/image/demote/rbd/" + imageName;
+                    glueMethod = "DELETE";
+                    Map<String, String> glueParams = new HashMap<>();
+                    glueParams.put("mirrorPool", "rbd");
+                    glueParams.put("imageName", imageName);
+                    while(glueStep < 20) {
+                        glueStep += 1;
+                        try {
+                            Thread.sleep(10000);
+                        } catch (InterruptedException e) {
+                            LOGGER.error("demoteParentImage sleep interrupted");
+                        }
+                        result = DisasterRecoveryClusterUtil.glueImageMirrorDemoteAPI(glueUrl, glueCommand, glueMethod, glueParams);
+                        if (result) {
+                            break Loop;
+                        } else {
+                            LOGGER.error("Failed to request ImageMirrorDemote Glue-API.");
+                        }
+                    }
+                }
+                if (!result) {
+                    throw new CloudRuntimeException("Failed to demote parent image, For volumes with a path of " + imageName + ".");
+                }
+            }
+        }
+    }
+
+    private void resyncParentImage(final DisasterRecoveryClusterVO drCluster)throws CloudRuntimeException {
+        List<DisasterRecoveryClusterVmMapVO> vmMap = disasterRecoveryClusterVmMapDao.listByDisasterRecoveryClusterId(drCluster.getId());
+        ArrayList<String> vmTemplate = new ArrayList<>();
+        ArrayList<String> template = new ArrayList<>();
+        String ipList = Script.runSimpleBashScript("cat /etc/hosts | grep -E 'scvm1-mngt|scvm2-mngt|scvm3-mngt' | awk '{print $1}' | tr '\n' ','");
+        if (ipList != null || !ipList.isEmpty()) {
+            ipList = ipList.replaceAll(",$", "");
+        }
+        String glueCommand = "";
+        String glueMethod = "";
+        for (DisasterRecoveryClusterVmMapVO map : vmMap) {
+            String[] array = ipList.split(",");
+            for (int i=0; i < array.length; i++) {
+                String glueIp = array[i];
+                ///////////////////// glue-api 프로토콜과 포트 확정 시 변경 예정
+                String glueUrl = "https://" + glueIp + ":8080/api/v1";
+                glueCommand = "/mirror/image/info/rbd/" +map.getMirroredVmVolumePath();
+                glueMethod = "GET";
+                String mirrorImageInfo = DisasterRecoveryClusterUtil.glueImageMirrorInfoAPI(glueUrl, glueCommand, glueMethod);
+                if (mirrorImageInfo != null) {
+                    JsonObject infoObject = (JsonObject) new JsonParser().parse(mirrorImageInfo).getAsJsonObject();
+                    if (!infoObject.get("image").getAsString().equals("")) {
+                        vmTemplate.add(infoObject.get("image").getAsString());
+                        break;
+                    }
+                }
+            }
+        }
+        if (!vmTemplate.isEmpty()) {
+            for (String value : vmTemplate) {
+                if (!template.contains(value)) {
+                    template.add(value);
+                }
+            }
+        }
+        if (!template.isEmpty()) {
+            String[] array = ipList.split(",");
+            for (String imageName : template) {
+                String glueIp = "";
+                String glueUrl = "";
+                int glueStep = 0;
+                boolean result = false;
+                Loop :
+                for (int j=0; j < array.length; j++) {
+                    glueIp = array[j];
+                    ///////////////////// glue-api 프로토콜과 포트 확정 시 변경 예정
+                    glueUrl = "https://" + glueIp + ":8080/api/v1";
+                    glueCommand = "/mirror/image/status/rbd/" +imageName;
+                    glueMethod = "GET";
+                    String mirrorImageStatus = DisasterRecoveryClusterUtil.glueImageMirrorStatusAPI(glueUrl, glueCommand, glueMethod);
+                    if (mirrorImageStatus != null) {
+                        JsonObject statObject = (JsonObject) new JsonParser().parse(mirrorImageStatus).getAsJsonObject();
+                        JsonArray drArray = (JsonArray) new JsonParser().parse(mirrorImageStatus).getAsJsonObject().get("peer_sites");
+                        JsonElement peerDescription = null;
+                        if (drArray.size() != 0 && drArray != null) {
+                            for (JsonElement dr : drArray) {
+                                peerDescription = dr.getAsJsonObject().get("description") == null ? null : dr.getAsJsonObject().get("description");
+                            }
+                        }
+                        if (statObject.has("description") && peerDescription != null) {
+                            if (statObject.get("description").getAsString().contains("force promoting") || (peerDescription.getAsString().contains("local image is primary") && statObject.get("description").getAsString().contains("local image is primary"))) {
+                                glueCommand = "/mirror/image/demote/peer/rbd/" + imageName;
+                                glueMethod = "DELETE";
+                                Map<String, String> glueParams = new HashMap<>();
+                                glueParams.put("mirrorPool", "rbd");
+                                glueParams.put("imageName", imageName);
+                                result = DisasterRecoveryClusterUtil.glueImageMirrorDemoteAPI(glueUrl, glueCommand, glueMethod, glueParams);
+                                if (result) {
+                                    while(glueStep < 20) {
+                                        glueStep += 1;
+                                        try {
+                                            Thread.sleep(10000);
+                                        } catch (InterruptedException e) {
+                                            LOGGER.error("resyncParentImage sleep interrupted");
+                                        }
+                                        glueCommand = "/mirror/image/resync/peer/rbd/" + imageName;
+                                        glueMethod = "PUT";
+                                        result = DisasterRecoveryClusterUtil.glueImageMirrorResyncAPI(glueUrl, glueCommand, glueMethod, glueParams);
+                                        if (result) {
+                                            break Loop;
+                                        } else {
+                                            LOGGER.error("Failed to request ImageMirrorResyncPeer Glue-API.");
+                                            LOGGER.error("The peer image was demoted successfully, but resync the image failed. For volumes with a path of " + imageName + ", Manually set image resync.");
+                                        }
+                                    }
+                                    throw new CloudRuntimeException("Failed to resync primary cluster image, For volumes with a path of " + imageName + ", You must manually resync primary cluster image.");
+                                } else {
+                                    LOGGER.error("Failed to request ImageMirrorDemotePeer Glue-API.");
+                                }
+                            } else {
+                                break;
+                            }
+                        }
+                    } else {
+                        LOGGER.error("Failed to request mirror image status Glue-API.");
+                    }
+                }
+                if (glueStep == 0) {
+                    throw new CloudRuntimeException("Resync cannot be executed because the current parent image is not force promoting state.");
                 }
             }
         }
