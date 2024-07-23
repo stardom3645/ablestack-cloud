@@ -2487,11 +2487,11 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                             if (drArray.size() != 0 && drArray != null) {
                                 for (JsonElement dr : drArray) {
                                     peerState = dr.getAsJsonObject().get("state") == null ? null : dr.getAsJsonObject().get("state");
-                                }
-                            }
-                            if (peerState != null) {
-                                if (peerState.getAsString().contains("error") || peerState.getAsString().contains("unknown")) {
-                                    throw new InvalidParameterValueException("Forced demote functions cannot be executed because peer state is " + peerState.getAsString() + "in volume path : " + imageName);
+                                    if (peerState != null) {
+                                        if (peerState.getAsString().contains("error") || peerState.getAsString().contains("unknown")) {
+                                            throw new InvalidParameterValueException("Forced demote functions cannot be executed because peer state is " + peerState.getAsString() + "in volume path : " + imageName);
+                                        }
+                                    }
                                 }
                             }
                         }
