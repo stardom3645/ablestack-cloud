@@ -1300,6 +1300,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                     throw new CloudRuntimeException("Demote cannot be executed because the current image is in Syncing state.");
                 }
                 demoteParentImage(drCluster);
+                timeSleep();
                 return result;
             } else {
                 throw new CloudRuntimeException("There are no images being mirrored.");
