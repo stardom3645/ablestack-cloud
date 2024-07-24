@@ -1299,7 +1299,6 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                 if (glueStep == 0) {
                     throw new CloudRuntimeException("Demote cannot be executed because the current image is in Syncing state.");
                 }
-                timeSleep();
                 demoteParentImage(drCluster);
                 return result;
             } else {
@@ -2489,12 +2488,6 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                                         peerState = dr.getAsJsonObject().get("state");
                                     }
                                 }
-                                LOGGER.info(":::::imageName");
-                                LOGGER.info(":::::" + imageName);
-                                LOGGER.info(":::::statObject.get('description')");
-                                LOGGER.info(":::::" + statObject.get("description"));
-                                LOGGER.info(":::::peerState.getAsString()");
-                                LOGGER.info(":::::" + peerState.getAsString());
                                 if (peerState != null) {
                                     if (!statObject.get("description").getAsString().equals("local image is primary") && !peerState.getAsString().contains("replaying") ) {
                                         throw new InvalidParameterValueException("Forced demote functions cannot be executed because peer state is " + peerState.getAsString() + "in volume path : " + imageName);
