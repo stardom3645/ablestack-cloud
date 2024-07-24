@@ -442,23 +442,30 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                     String glueMethod = "GET";
                     String mirrorImageStatus = DisasterRecoveryClusterUtil.glueImageMirrorStatusAPI(glueUrl, glueCommand, glueMethod);
                     if (mirrorImageStatus != null) {
+                        JsonObject statObject = (JsonObject) new JsonParser().parse(mirrorImageStatus).getAsJsonObject();  
+                        if (statObject.has("state")) {
+                            if (statObject.get("state").getAsString().contains("replaying")) {
+                                response.setDrClusterVmVolStatus("READY");
+                            } else if (statObject.get("state").getAsString().contains("error")){
+                                response.setDrClusterVmVolStatus("ERROR");
+                            } else if (statObject.get("state").getAsString().contains("unknown")){
+                                response.setDrClusterVmVolStatus("UNKNOWN");
+                            } else {
+                                response.setDrClusterVmVolStatus("SYNCING");
+                            }
+                        }
                         JsonArray drArray = (JsonArray) new JsonParser().parse(mirrorImageStatus).getAsJsonObject().get("peer_sites");
                         if (drArray.size() != 0 && drArray != null) {
                             for (JsonElement dr : drArray) {
-                                JsonElement peerName = dr.getAsJsonObject().get("site_name") == null ? null : dr.getAsJsonObject().get("site_name");
                                 JsonElement peerState = dr.getAsJsonObject().get("state") == null ? null : dr.getAsJsonObject().get("state");
-                                if (peerName != null && peerState != null) {
+                                if (peerState != null) {
                                     if (peerState.getAsString().contains("replaying")) {
-                                        response.setDrClusterVmVolStatus("READY");
                                         map.setMirroredVmVolumeStatus("SYNCING");
                                     } else if (peerState.getAsString().contains("error")){
-                                        response.setDrClusterVmVolStatus("ERROR");
                                         map.setMirroredVmVolumeStatus("ERROR");
                                     } else if (peerState.getAsString().contains("unknown")){
-                                        response.setDrClusterVmVolStatus("UNKNOWN");
                                         map.setMirroredVmVolumeStatus("UNKNOWN");
                                     } else {
-                                        response.setDrClusterVmVolStatus("SYNCING");
                                         map.setMirroredVmVolumeStatus("READY");
                                     }
                                     disasterRecoveryClusterVmMapDao.update(map.getId(), map);
