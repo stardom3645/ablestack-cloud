@@ -445,13 +445,13 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                         JsonObject statObject = (JsonObject) new JsonParser().parse(mirrorImageStatus).getAsJsonObject();
                         if (statObject.has("state")) {
                             if (statObject.get("state").getAsString().contains("replaying")) {
-                                response.setDrClusterVmVolStatus("READY");
+                                response.setDrClusterVmVolStatus("SYNCING");
                             } else if (statObject.get("state").getAsString().contains("error")){
                                 response.setDrClusterVmVolStatus("ERROR");
                             } else if (statObject.get("state").getAsString().contains("unknown")){
                                 response.setDrClusterVmVolStatus("UNKNOWN");
                             } else {
-                                response.setDrClusterVmVolStatus("SYNCING");
+                                response.setDrClusterVmVolStatus("READY");
                             }
                         }
                         JsonArray drArray = (JsonArray) new JsonParser().parse(mirrorImageStatus).getAsJsonObject().get("peer_sites");
