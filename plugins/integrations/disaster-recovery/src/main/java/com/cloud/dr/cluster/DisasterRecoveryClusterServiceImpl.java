@@ -442,7 +442,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                     String glueMethod = "GET";
                     String mirrorImageStatus = DisasterRecoveryClusterUtil.glueImageMirrorStatusAPI(glueUrl, glueCommand, glueMethod);
                     if (mirrorImageStatus != null) {
-                        JsonObject statObject = (JsonObject) new JsonParser().parse(mirrorImageStatus).getAsJsonObject();  
+                        JsonObject statObject = (JsonObject) new JsonParser().parse(mirrorImageStatus).getAsJsonObject();
                         if (statObject.has("state")) {
                             if (statObject.get("state").getAsString().contains("replaying")) {
                                 response.setDrClusterVmVolStatus("READY");
