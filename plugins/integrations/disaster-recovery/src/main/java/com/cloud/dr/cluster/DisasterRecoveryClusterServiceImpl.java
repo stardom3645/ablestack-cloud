@@ -1299,6 +1299,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                 if (glueStep == 0) {
                     throw new CloudRuntimeException("Demote cannot be executed because the current image is in Syncing state.");
                 }
+                timeSleep();
                 demoteParentImage(drCluster);
                 return result;
             } else {
@@ -2478,14 +2479,18 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                         String glueMethod = "GET";
                         String mirrorImageStatus = DisasterRecoveryClusterUtil.glueImageMirrorStatusAPI(glueUrl, glueCommand, glueMethod);
                         if (mirrorImageStatus != null) {
+                            JsonObject statObject = (JsonObject) new JsonParser().parse(mirrorImageStatus).getAsJsonObject();
                             JsonArray drArray = (JsonArray) new JsonParser().parse(mirrorImageStatus).getAsJsonObject().get("peer_sites");
-                            if (drArray.size() != 0 && drArray != null) {
+                            if (statObject.has("description") && drArray.size() != 0 && drArray != null) {
+                                JsonElement peerState = null;
                                 for (JsonElement dr : drArray) {
-                                    JsonElement peerState = dr.getAsJsonObject().get("state") == null ? null : dr.getAsJsonObject().get("state");
-                                    if (peerState != null) {
-                                        if (peerState.getAsString().contains("error") || peerState.getAsString().contains("unknown")) {
-                                            throw new InvalidParameterValueException("Forced demote functions cannot be executed because peer state is " + peerState.getAsString() + "in volume path : " + imageName);
-                                        }
+                                    if (dr.getAsJsonObject().get("state") != null) {
+                                        peerState = dr.getAsJsonObject().get("state");
+                                    }
+                                }
+                                if (peerState != null) {
+                                    if (!statObject.get("description").getAsString().equals("local image is primary") && !peerState.getAsString().contains("replaying") ) {
+                                        throw new InvalidParameterValueException("Forced demote functions cannot be executed because peer state is " + peerState.getAsString() + "in volume path : " + imageName);
                                     }
                                 }
                             }
