@@ -1392,6 +1392,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                     throw new CloudRuntimeException("Resync cannot be executed because the current image is not force promoting state.");
                 }
                 resyncParentImage(drCluster);
+                timeSleep();
                 return result;
             } else {
                 throw new CloudRuntimeException("There are no images being mirrored.");
@@ -2494,6 +2495,12 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                                     }
                                 }
                             }
+                            LOGGER.info(":::::imageName");
+                            LOGGER.info(":::::" + imageName);
+                            LOGGER.info(":::::statObject.get('description')");
+                            LOGGER.info(":::::peerState.getAsString()");
+                            LOGGER.info(":::::" + statObject.get("description"));
+                            LOGGER.info(":::::" + peerState.getAsString());
                             break;
                         }
                     }
