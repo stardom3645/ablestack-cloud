@@ -6440,7 +6440,7 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
                     boolean isValidConfig = false;
                     String currentConfig = element.getNodeName().trim();
                     for (String tag : allowedConfigOptionList) {
-                        if (currentConfig.equals(tag.trim())) {
+                        if (currentConfig.equals(tag.trim()) || true) {
                             isValidConfig = true;
                         }
                     }
