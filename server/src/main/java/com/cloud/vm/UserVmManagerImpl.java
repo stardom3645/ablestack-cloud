@@ -6386,7 +6386,6 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
      * @param vm
      */
     protected void persistExtraConfigKvm(String decodedUrl, UserVm vm) {
-        logger.info("11111111");
         // validate config against denied cfg commands
         validateKvmExtraConfig(decodedUrl, vm.getAccountId());
         String[] extraConfigs = decodedUrl.split("\n\n");
@@ -6412,7 +6411,7 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
     @Override
     public void validateExtraConfig(long accountId, HypervisorType hypervisorType, String extraConfig) {
         if (!EnableAdditionalVmConfig.valueIn(accountId)) {
-            // throw new CloudRuntimeException("Additional VM configuration is not enabled for this account");
+            throw new CloudRuntimeException("Additional VM configuration is not enabled for this account");
         }
         if (HypervisorType.KVM.equals(hypervisorType)) {
             validateKvmExtraConfig(extraConfig, accountId);
@@ -6547,7 +6546,7 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
 
             for (String detailName : details.keySet()) {
                 if (isExtraConfig(detailName)) {
-                    // throw new InvalidParameterValueException("detail name should not start with extraconfig");
+                    throw new InvalidParameterValueException("detail name should not start with extraconfig");
                 }
             }
         }
