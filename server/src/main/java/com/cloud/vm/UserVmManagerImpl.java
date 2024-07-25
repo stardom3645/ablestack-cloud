@@ -704,9 +704,7 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
             "enable.additional.vm.configuration", "false", "allow additional arbitrary configuration to vm", true, ConfigKey.Scope.Account);
 
     private static final ConfigKey<String> KvmAdditionalConfigAllowList = new ConfigKey<>(String.class,
-            "allow.additional.vm.configuration.list.kvm", "Advanced", "", "Comma separated list of allowed additional configuration options.", true, ConfigKey.Scope.Global, null, null, EnableAdditionalVmConfig.key(), null, null, ConfigKey.Kind.CSV, null);
-    // private static final ConfigKey<String> KvmAdditionalConfigAllowList = new ConfigKey<>(String.class,
-    //           "allow.additional.vm.configuration.list.kvm", "Advanced", "", "Comma separated list of allowed additional configuration options.", true, ConfigKey.Scope.Account, null, null, EnableAdditionalVmConfig.key(), null, null, ConfigKey.Kind.CSV, null);
+    "allow.additional.vm.configuration.list.kvm", "Advanced", "", "Comma separated list of allowed additional configuration options.", true, ConfigKey.Scope.Account, null, null, EnableAdditionalVmConfig.key(), null, null, ConfigKey.Kind.CSV, null);
 
     private static final ConfigKey<String> XenServerAdditionalConfigAllowList = new ConfigKey<>(String.class,
     "allow.additional.vm.configuration.list.xenserver", "Advanced", "", "Comma separated list of allowed additional configuration options", true, ConfigKey.Scope.Global, null, null, EnableAdditionalVmConfig.key(), null, null, ConfigKey.Kind.CSV, null);
@@ -2925,15 +2923,15 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
         if (cleanupDetails){
             if (caller != null && caller.getType() == Account.Type.ADMIN) {
                 for (final UserVmDetailVO detail : existingDetails) {
-                    if (detail != null && detail.isDisplay() /* && !isExtraConfig(detail.getName()) */) {
+                    if (detail != null && detail.isDisplay() && !isExtraConfig(detail.getName())) {
                         userVmDetailsDao.removeDetail(id, detail.getName());
                     }
                 }
             } else {
                 for (final UserVmDetailVO detail : existingDetails) {
                     if (detail != null && !userDenyListedSettings.contains(detail.getName())
-                            /* && !userReadOnlySettings.contains(detail.getName()) && detail.isDisplay()
-                            && !isExtraConfig(detail.getName()) */) {
+                            && !userReadOnlySettings.contains(detail.getName()) && detail.isDisplay()
+                            && !isExtraConfig(detail.getName())) {
                         userVmDetailsDao.removeDetail(id, detail.getName());
                     }
                 }
@@ -2944,7 +2942,7 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
                     throw new InvalidParameterValueException("'extraconfig' should not be included in details as key");
                 }
 
-                // details.entrySet().removeIf(detail -> isExtraConfig(detail.getKey()));
+                details.entrySet().removeIf(detail -> isExtraConfig(detail.getKey()));
 
                 if (caller != null && caller.getType() != Account.Type.ADMIN) {
                     // Ensure denied or read-only detail is not passed by non-root-admin user
@@ -2969,7 +2967,7 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
 
                 // ensure details marked as non-displayable are maintained, regardless of admin or not
                 for (final UserVmDetailVO existingDetail : existingDetails) {
-                    if (!existingDetail.isDisplay()/* || isExtraConfig(existingDetail.getName()) */) {
+                    if (!existingDetail.isDisplay() || isExtraConfig(existingDetail.getName())) {
                         details.put(existingDetail.getName(), existingDetail.getValue());
                     }
                 }
@@ -2991,9 +2989,9 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
                 cmd.getHttpMethod(), cmd.getCustomId(), hostName, cmd.getInstanceName(), securityGroupIdList, cmd.getDhcpOptionsMap());
     }
 
-    // private boolean isExtraConfig(String detailName) {
-    //     return detailName != null && detailName.startsWith(ApiConstants.EXTRA_CONFIG);
-    // }
+    private boolean isExtraConfig(String detailName) {
+        return false;
+    }
 
     protected void updateDisplayVmFlag(Boolean isDisplayVm, Long id, UserVmVO vmInstance) {
         vmInstance.setDisplayVm(isDisplayVm);
@@ -6388,9 +6386,9 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
      * @param vm
      */
     protected void persistExtraConfigKvm(String decodedUrl, UserVm vm) {
+        logger.info("11111111");
         // validate config against denied cfg commands
-        validateKvmExtraConfig(decodedUrl);
-        // validateKvmExtraConfig(decodedUrl, vm.getAccountId());
+        validateKvmExtraConfig(decodedUrl, vm.getAccountId());
         String[] extraConfigs = decodedUrl.split("\n\n");
         for (String cfg : extraConfigs) {
             int i = 1;
@@ -6411,15 +6409,15 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
     /**
      * This method is used to validate if extra config is valid
      */
-    // @Override
-    // public void validateExtraConfig(long accountId, HypervisorType hypervisorType, String extraConfig) {
-    //     if (!EnableAdditionalVmConfig.valueIn(accountId)) {
-    //         throw new CloudRuntimeException("Additional VM configuration is not enabled for this account");
-    //     }
-    //     if (HypervisorType.KVM.equals(hypervisorType)) {
-    //         validateKvmExtraConfig(extraConfig, accountId);
-    //     }
-    // }
+    @Override
+    public void validateExtraConfig(long accountId, HypervisorType hypervisorType, String extraConfig) {
+        if (!EnableAdditionalVmConfig.valueIn(accountId)) {
+            // throw new CloudRuntimeException("Additional VM configuration is not enabled for this account");
+        }
+        if (HypervisorType.KVM.equals(hypervisorType)) {
+            validateKvmExtraConfig(extraConfig, accountId);
+        }
+    }
 
     /**
      * This method is called by the persistExtraConfigKvm
@@ -6427,10 +6425,8 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
      * controlled by Root admin
      * @param decodedUrl string containing xml configuration to be validated
      */
-    protected void validateKvmExtraConfig(String decodedUrl) {
-        String[] allowedConfigOptionList = KvmAdditionalConfigAllowList.value().split(",");
-    // protected void validateKvmExtraConfig(String decodedUrl, long accountId) {
-    //     String[] allowedConfigOptionList = KvmAdditionalConfigAllowList.valueIn(accountId).split(",");
+    protected void validateKvmExtraConfig(String decodedUrl, long accountId) {
+        String[] allowedConfigOptionList = KvmAdditionalConfigAllowList.valueIn(accountId).split(",");
         // Skip allowed keys validation for DPDK
         if (!decodedUrl.contains(":")) {
             try {
@@ -6450,8 +6446,7 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
                         }
                     }
                     if (!isValidConfig) {
-                        throw new CloudRuntimeException(String.format("Extra config %s is not on the list of allowed keys for KVM hypervisor hosts", currentConfig));
-                        // throw new CloudRuntimeException(String.format("Extra config '%s' is not on the list of allowed keys for KVM hypervisor hosts", currentConfig));
+                        throw new CloudRuntimeException(String.format("Extra config '%s' is not on the list of allowed keys for KVM hypervisor hosts", currentConfig));
                     }
                 }
             } catch (ParserConfigurationException | IOException | SAXException e) {
@@ -6550,11 +6545,11 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
                 throw new InvalidParameterValueException("'extraconfig' should not be included in details as key");
             }
 
-            // for (String detailName : details.keySet()) {
-            //     if (isExtraConfig(detailName)) {
-            //         throw new InvalidParameterValueException("detail name should not start with extraconfig");
-            //     }
-            // }
+            for (String detailName : details.keySet()) {
+                if (isExtraConfig(detailName)) {
+                    // throw new InvalidParameterValueException("detail name should not start with extraconfig");
+                }
+            }
         }
     }
 

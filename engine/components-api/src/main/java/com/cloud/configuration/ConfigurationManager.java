@@ -275,5 +275,5 @@ public interface ConfigurationManager {
 
     List<ConfigurationSubGroupVO> getConfigurationSubGroups(Long groupId);
 
-    // void validateExtraConfigInServiceOfferingDetail(String detailName);
+    void validateExtraConfigInServiceOfferingDetail(String detailName);
 }
