@@ -75,7 +75,6 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonElement;
 
 import org.apache.cloudstack.api.ApiConstants;
-import org.apache.cloudstack.api.ResponseObject;
 import org.apache.cloudstack.api.command.admin.dr.GetDisasterRecoveryClusterListCmd;
 import org.apache.cloudstack.api.command.admin.dr.UpdateDisasterRecoveryClusterCmd;
 import org.apache.cloudstack.api.command.admin.dr.UpdateDisasterRecoveryClusterVmCmd;
@@ -102,7 +101,6 @@ import org.apache.cloudstack.api.response.ServiceOfferingResponse;
 import org.apache.cloudstack.api.response.dr.cluster.GetDisasterRecoveryClusterListResponse;
 import org.apache.cloudstack.api.response.dr.cluster.GetDisasterRecoveryClusterVmListResponse;
 import org.apache.cloudstack.utils.identity.ManagementServerNode;
-import org.apache.cloudstack.context.CallContext;
 import org.apache.cloudstack.framework.config.ConfigKey;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.logging.log4j.Logger;
@@ -226,7 +224,12 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         }
         List <DisasterRecoveryClusterVO> results = disasterRecoveryClusterDao.search(sc, searchFilter);
         for (DisasterRecoveryClusterVO result : results) {
-            GetDisasterRecoveryClusterListResponse disasterRecoveryClusterResponse = setDisasterRecoveryClusterListResultResponse(result.getId());
+            GetDisasterRecoveryClusterListResponse disasterRecoveryClusterResponse = new GetDisasterRecoveryClusterListResponse();
+            if (id != null && drClusterType != null) {
+                disasterRecoveryClusterResponse = setDisasterRecoveryClusterListResultResponse(result.getId(), true);
+            } else {
+                disasterRecoveryClusterResponse = setDisasterRecoveryClusterListResultResponse(result.getId(), false);
+            }
             responsesList.add(disasterRecoveryClusterResponse);
         }
         ListResponse<GetDisasterRecoveryClusterListResponse> response = new ListResponse<>();
@@ -234,7 +237,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         return response;
     }
 
-    public GetDisasterRecoveryClusterListResponse setDisasterRecoveryClusterListResultResponse(long clusterId) {
+    public GetDisasterRecoveryClusterListResponse setDisasterRecoveryClusterListResultResponse(long clusterId, boolean moldRequest) {
         DisasterRecoveryClusterVO drcluster = disasterRecoveryClusterDao.findById(clusterId);
         GetDisasterRecoveryClusterListResponse response = new GetDisasterRecoveryClusterListResponse();
         response.setObjectName("disasterrecoverycluster");
@@ -293,15 +296,16 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         List<GetDisasterRecoveryClusterVmListResponse> disasterRecoveryClusterVmListResponse = setDisasterRecoveryClusterVmListResponse(drcluster.getId());
         response.setDisasterRecoveryClusterVmMap(disasterRecoveryClusterVmListResponse);
 
-        String moldUrl = drcluster.getDrClusterUrl() + "/client/api/";
-        String moldMethod = "GET";
-        String moldCommandListServiceOfferings = "listServiceOfferings";
-        List<ServiceOfferingResponse> secDrClusterServiceOfferingListResponse = DisasterRecoveryClusterUtil.getSecDrClusterInfoList(moldUrl, moldCommandListServiceOfferings, moldMethod, secApiKey, secSecretKey);
-        response.setSecDisasterRecoveryClusterServiceOfferingList(secDrClusterServiceOfferingListResponse);
-        String moldCommandListNetworks = "listNetworks";
-        List<NetworkResponse> secDrClusterNetworksListResponse = DisasterRecoveryClusterUtil.getSecDrClusterInfoList(moldUrl, moldCommandListNetworks, moldMethod, secApiKey, secSecretKey);
-        response.setSecDisasterRecoveryClusterNetworkList(secDrClusterNetworksListResponse);
-
+        if (moldRequest) {
+            String moldUrl = drcluster.getDrClusterUrl() + "/client/api/";
+            String moldMethod = "GET";
+            String moldCommandListServiceOfferings = "listServiceOfferings";
+            List<ServiceOfferingResponse> secDrClusterServiceOfferingListResponse = DisasterRecoveryClusterUtil.getSecDrClusterInfoList(moldUrl, moldCommandListServiceOfferings, moldMethod, secApiKey, secSecretKey);
+            response.setSecDisasterRecoveryClusterServiceOfferingList(secDrClusterServiceOfferingListResponse);
+            String moldCommandListNetworks = "listNetworks";
+            List<NetworkResponse> secDrClusterNetworksListResponse = DisasterRecoveryClusterUtil.getSecDrClusterInfoList(moldUrl, moldCommandListNetworks, moldMethod, secApiKey, secSecretKey);
+            response.setSecDisasterRecoveryClusterNetworkList(secDrClusterNetworksListResponse);
+        }
         return response;
     }
 
@@ -1139,9 +1143,9 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
             String glueUrl = "";
             String glueCommand = "";
             String glueMethod = "";
+            String mirrorImageStatus = null;
             int glueStep = 0;
             boolean result = false;
-            // DR 상황 발생 시 glue-API로 이미지를 조회하지 않고, vmMap 조회하여 실행
             List<DisasterRecoveryClusterVmMapVO> vmMap = disasterRecoveryClusterVmMapDao.listByDisasterRecoveryClusterId(drCluster.getId());
             if (!CollectionUtils.isEmpty(vmMap)) {
                 for (DisasterRecoveryClusterVmMapVO map : vmMap) {
@@ -1153,17 +1157,17 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                         glueUrl = "https://" + glueIp + ":8080/api/v1";
                         glueCommand = "/mirror/image/status/rbd/" +imageName;
                         glueMethod = "GET";
-                        String mirrorImageStatus = DisasterRecoveryClusterUtil.glueImageMirrorStatusAPI(glueUrl, glueCommand, glueMethod);
+                        mirrorImageStatus = DisasterRecoveryClusterUtil.glueImageMirrorStatusAPI(glueUrl, glueCommand, glueMethod);
                         if (mirrorImageStatus != null) {
                             JsonObject statObject = (JsonObject) new JsonParser().parse(mirrorImageStatus).getAsJsonObject();
                             if (statObject.has("description")) {
-                                if (!statObject.get("description").getAsString().equals("local image is primary")) {
+                                if (!statObject.get("description").getAsString().equals("local image is primary") && !statObject.get("description").getAsString().equals("force promoting")) {
                                     Map<String, String> glueParams = new HashMap<>();
                                     glueParams.put("mirrorPool", "rbd");
                                     glueParams.put("imageName", imageName);
                                     glueCommand = "/mirror/image/promote/rbd/" + imageName;
                                     glueMethod = "POST";
-                                    while(glueStep < 100) {
+                                    while(glueStep < 20) {
                                         glueStep += 1;
                                         result = DisasterRecoveryClusterUtil.glueImageMirrorPromoteAPI(glueUrl, glueCommand, glueMethod, glueParams);
                                         if (result) {
@@ -1189,13 +1193,14 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                                     break;
                                 }
                             }
-                        } else {
-                            LOGGER.error("Failed to request mirror image status Glue-API.");
                         }
+                    }
+                    if (mirrorImageStatus == null) {
+                        throw new CloudRuntimeException("Failed to request mirror image status Glue-API.");
                     }
                 }
                 if (glueStep == 0) {
-                    throw new CloudRuntimeException("Demote cannot be executed because the current image is in Ready state.");
+                    throw new CloudRuntimeException("Promote cannot be executed because the current image is in ready or force promote.");
                 }
                 promoteParentImage(drCluster);
                 // timeSleep();
@@ -1378,7 +1383,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                                     glueParams.put("imageName", imageName);
                                     result = DisasterRecoveryClusterUtil.glueImageMirrorDemoteAPI(glueUrl, glueCommand, glueMethod, glueParams);
                                     if (result) {
-                                        while(glueStep < 100) {
+                                        while(glueStep < 20) {
                                             glueStep += 1;
                                             glueCommand = "/mirror/image/resync/peer/rbd/" + imageName;
                                             glueMethod = "PUT";
@@ -2166,7 +2171,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                     Map<String, String> glueParams = new HashMap<>();
                     glueParams.put("mirrorPool", "rbd");
                     glueParams.put("imageName", imageName);
-                    while(glueStep < 100) {
+                    while(glueStep < 20) {
                         glueStep += 1;
                         result = DisasterRecoveryClusterUtil.glueImageMirrorPromoteAPI(glueUrl, glueCommand, glueMethod, glueParams);
                         if (result) {
@@ -2338,7 +2343,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                                 glueParams.put("imageName", imageName);
                                 result = DisasterRecoveryClusterUtil.glueImageMirrorDemoteAPI(glueUrl, glueCommand, glueMethod, glueParams);
                                 if (result) {
-                                    while(glueStep < 100) {
+                                    while(glueStep < 20) {
                                         glueStep += 1;
                                         glueCommand = "/mirror/image/resync/peer/rbd/" + imageName;
                                         glueMethod = "PUT";
