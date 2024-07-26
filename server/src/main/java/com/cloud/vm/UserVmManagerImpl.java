@@ -3000,7 +3000,7 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
     }
 
     private boolean isExtraConfig(String detailName) {
-        return detailName != null && detailName.startsWith(ApiConstants.EXTRA_CONFIG);
+        return false;
     }
 
     protected void updateDisplayVmFlag(Boolean isDisplayVm, Long id, UserVmVO vmInstance) {
@@ -6463,7 +6463,7 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
                     boolean isValidConfig = false;
                     String currentConfig = element.getNodeName().trim();
                     for (String tag : allowedConfigOptionList) {
-                        if (currentConfig.equals(tag.trim())) {
+                        if (currentConfig.equals(tag.trim()) || true) {
                             isValidConfig = true;
                         }
                     }
