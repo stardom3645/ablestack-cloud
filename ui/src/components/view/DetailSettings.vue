@@ -100,7 +100,7 @@
             <tooltip-button
               :tooltip="$t('label.edit')"
               icon="edit-outlined"
-              :disabled="deployasistemplate === true || item.name.startsWith('extraconfig')"
+              :disabled="deployasistemplate === true"
               v-if="!item.edit"
               @onClick="showEditDetail(index)" />
           </div>
@@ -113,12 +113,7 @@
               :cancelText="$t('label.no')"
               placement="left"
             >
-              <tooltip-button
-                :tooltip="$t('label.delete')"
-                :disabled="deployasistemplate === true || item.name.startsWith('extraconfig')"
-                type="primary"
-                :danger="true"
-                icon="delete-outlined" />
+              <tooltip-button :tooltip="$t('label.delete')" :disabled="deployasistemplate === true" type="primary" :danger="true" icon="delete-outlined" />
             </a-popconfirm>
           </div>
         </template>
@@ -308,10 +303,6 @@ export default {
     addDetail () {
       if (this.newKey === '' || this.newValue === '') {
         this.error = this.$t('message.error.provide.setting')
-        return
-      }
-      if (this.newKey.startsWith('extraconfig')) {
-        this.error = this.$t('error.unable.to.add.setting.extraconfig')
         return
       }
       if (!this.allowEditOfDetail(this.newKey)) {
