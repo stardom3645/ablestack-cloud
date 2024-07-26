@@ -224,12 +224,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         }
         List <DisasterRecoveryClusterVO> results = disasterRecoveryClusterDao.search(sc, searchFilter);
         for (DisasterRecoveryClusterVO result : results) {
-            GetDisasterRecoveryClusterListResponse disasterRecoveryClusterResponse = new GetDisasterRecoveryClusterListResponse();
-            if (id != null && drClusterType != null) {
-                disasterRecoveryClusterResponse = setDisasterRecoveryClusterListResultResponse(result.getId(), true);
-            } else {
-                disasterRecoveryClusterResponse = setDisasterRecoveryClusterListResultResponse(result.getId(), false);
-            }
+            disasterRecoveryClusterResponse = setDisasterRecoveryClusterListResultResponse(result.getId());
             responsesList.add(disasterRecoveryClusterResponse);
         }
         ListResponse<GetDisasterRecoveryClusterListResponse> response = new ListResponse<>();
@@ -237,7 +232,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         return response;
     }
 
-    public GetDisasterRecoveryClusterListResponse setDisasterRecoveryClusterListResultResponse(long clusterId, boolean moldRequest) {
+    public GetDisasterRecoveryClusterListResponse setDisasterRecoveryClusterListResultResponse(long clusterId) {
         DisasterRecoveryClusterVO drcluster = disasterRecoveryClusterDao.findById(clusterId);
         GetDisasterRecoveryClusterListResponse response = new GetDisasterRecoveryClusterListResponse();
         response.setObjectName("disasterrecoverycluster");
@@ -296,16 +291,14 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         List<GetDisasterRecoveryClusterVmListResponse> disasterRecoveryClusterVmListResponse = setDisasterRecoveryClusterVmListResponse(drcluster.getId());
         response.setDisasterRecoveryClusterVmMap(disasterRecoveryClusterVmListResponse);
 
-        if (moldRequest) {
-            String moldUrl = drcluster.getDrClusterUrl() + "/client/api/";
-            String moldMethod = "GET";
-            String moldCommandListServiceOfferings = "listServiceOfferings";
-            List<ServiceOfferingResponse> secDrClusterServiceOfferingListResponse = DisasterRecoveryClusterUtil.getSecDrClusterInfoList(moldUrl, moldCommandListServiceOfferings, moldMethod, secApiKey, secSecretKey);
-            response.setSecDisasterRecoveryClusterServiceOfferingList(secDrClusterServiceOfferingListResponse);
-            String moldCommandListNetworks = "listNetworks";
-            List<NetworkResponse> secDrClusterNetworksListResponse = DisasterRecoveryClusterUtil.getSecDrClusterInfoList(moldUrl, moldCommandListNetworks, moldMethod, secApiKey, secSecretKey);
-            response.setSecDisasterRecoveryClusterNetworkList(secDrClusterNetworksListResponse);
-        }
+        String moldUrl = drcluster.getDrClusterUrl() + "/client/api/";
+        String moldMethod = "GET";
+        String moldCommandListServiceOfferings = "listServiceOfferings";
+        List<ServiceOfferingResponse> secDrClusterServiceOfferingListResponse = DisasterRecoveryClusterUtil.getSecDrClusterInfoList(moldUrl, moldCommandListServiceOfferings, moldMethod, secApiKey, secSecretKey);
+        response.setSecDisasterRecoveryClusterServiceOfferingList(secDrClusterServiceOfferingListResponse);
+        String moldCommandListNetworks = "listNetworks";
+        List<NetworkResponse> secDrClusterNetworksListResponse = DisasterRecoveryClusterUtil.getSecDrClusterInfoList(moldUrl, moldCommandListNetworks, moldMethod, secApiKey, secSecretKey);
+        response.setSecDisasterRecoveryClusterNetworkList(secDrClusterNetworksListResponse);
         return response;
     }
 
