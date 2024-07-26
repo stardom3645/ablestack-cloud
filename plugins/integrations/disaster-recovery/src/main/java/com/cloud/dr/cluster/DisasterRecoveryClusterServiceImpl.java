@@ -224,7 +224,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         }
         List <DisasterRecoveryClusterVO> results = disasterRecoveryClusterDao.search(sc, searchFilter);
         for (DisasterRecoveryClusterVO result : results) {
-            disasterRecoveryClusterResponse = setDisasterRecoveryClusterListResultResponse(result.getId());
+            GetDisasterRecoveryClusterListResponse disasterRecoveryClusterResponse = setDisasterRecoveryClusterListResultResponse(result.getId());
             responsesList.add(disasterRecoveryClusterResponse);
         }
         ListResponse<GetDisasterRecoveryClusterListResponse> response = new ListResponse<>();
