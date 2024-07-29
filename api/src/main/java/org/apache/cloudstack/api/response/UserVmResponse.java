@@ -1179,4 +1179,7 @@ public class UserVmResponse extends BaseResponseWithTagInformation implements Co
         this.qemuAgentVersion = qemuAgentVersion;
     }
 
+    public void setIpAddress(String ipAddress) {
+        this.ipAddress = ipAddress;
+    }
 }
