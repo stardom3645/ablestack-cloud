@@ -9451,7 +9451,7 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
                     _snapshotDao.update(snapVO.getId(), snapVO);
                     VolumeVO newVol = cloneVolumeFromSnapToDB(curVmAccount, true, zoneId, diskOfferingId, provisioningType, size, minIops, maxIops, parentRootVolume, rootVolumeName,
                                                                         _uuidMgr.generateUuid(Volume.class, null), new HashMap<>(), Volume.Type.ROOT);
-                    VolumeVO rootVolume = (VolumeVO) _volumeService.cloneRootOrDataVolume(curVm.getId(), snapVO.getId(), newVol);
+                    VolumeVO rootVolume = (VolumeVO) _volumeService.cloneVolumeFromSnapshot(newVol, snapVO.getId(), curVm.getId());
                     if (rootVolume == null) {
                         throw new CloudRuntimeException("Creation of root volume is not queried. The virtual machine cannot be cloned!");
                     }
@@ -9489,7 +9489,7 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
                     try {
                         newDataDiskVol = cloneVolumeFromSnapToDB(curVmAccount, true, zoneId, diskOfferingId, provisioningType, size, minIops, maxIops, parentDataDiskVolume, dataVolumeName,
                                                                             _uuidMgr.generateUuid(Volume.class, null), new HashMap<>(), Volume.Type.DATADISK);
-                        VolumeVO dataDiskVolume = (VolumeVO) _volumeService.cloneRootOrDataVolume(curVm.getId(), snapVO.getId(), newDataDiskVol);
+                        VolumeVO dataDiskVolume = (VolumeVO) _volumeService.cloneVolumeFromSnapshot(newDataDiskVol, snapVO.getId(), curVm.getId());
                         if (dataDiskVolume == null) {
                             throw new CloudRuntimeException("Creation of root volume is not queried. The virtual machine cannot be cloned!");
                         }
