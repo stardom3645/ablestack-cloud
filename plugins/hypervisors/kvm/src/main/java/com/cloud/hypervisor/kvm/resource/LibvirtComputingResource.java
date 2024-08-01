@@ -336,6 +336,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
     private String heartBeatPath;
     private String heartBeatPathRbd;
     private String heartBeatPathClvm;
+    private String createKvdo;
     private String vmActivityCheckPath;
     private String vmActivityCheckPathRbd;
     private String vmActivityCheckPathClvm;
@@ -1007,6 +1008,11 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
         heartBeatPathClvm = Script.findScript(kvmScriptsDir, "kvmheartbeat_clvm.sh");
         if (heartBeatPathClvm == null) {
             throw new ConfigurationException("Unable to find kvmheartbeat_clvm.sh");
+        }
+
+        createKvdo = Script.findScript(kvmScriptsDir, "create_kvdo.sh");
+        if (createKvdo == null) {
+            throw new ConfigurationException("Unable to find create_kvdo.sh");
         }
 
         createVmPath = Script.findScript(storageScriptsDir, "createvm.sh");
@@ -1967,6 +1973,26 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
         command.add(port);
         LOGGER.info(command);
         String result = command.execute();
+        if (result != null) {
+            return false;
+        }
+        return true;
+    }
+
+    public boolean createKvdoCmdLine(final String poolName, final String poolUsername, final String imageName, final String imageSize) throws InternalErrorException {
+        if (poolName == null || poolUsername == null || imageName == null || imageName == null) {
+            return false;
+        }
+
+        final Script command = new Script("/bin/sh", timeout);
+        command.add(createKvdo);
+        command.add("-p", poolName);
+        command.add("-n", poolUsername);
+        command.add("-i", imageName);
+        command.add("-s", imageSize);
+        LOGGER.info(command);
+        String result = command.execute();
+        LOGGER.info(result);
         if (result != null) {
             return false;
         }
@@ -3343,8 +3369,11 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
                         final VolumeObjectTO volumeObject = (VolumeObjectTO)data;
                         final String device = mapRbdDevice(physicalDisk, volumeObject.getKvdoEnable());
                         if (device != null) {
-                            LOGGER.debug("RBD device on host is: " + device);
+                            LOGGER.debug("RBD device on host is5: " + device);
                             String path = store.getKrbdPath() == null ? "/dev/rbd/" : store.getKrbdPath() + "/";
+                            if(volumeObject.getKvdoEnable()){
+                                path = device;
+                            }
                             if (volume.getType() == Volume.Type.DATADISK) {
                                 disk.defBlockBasedDisk(path + physicalDisk.getPath(), devId, diskBusTypeData);
                             }
@@ -3456,7 +3485,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
                         final int devId = volume.getDiskSeq().intValue();
                         final String device = mapRbdDevice(physicalDisk,false);
                         if (device != null) {
-                            LOGGER.debug("RBD device on host is: " + device);
+                            LOGGER.debug("RBD device on host is6: " + device);
                             final DiskDef diskdef = new DiskDef();
                             diskdef.defBlockBasedDisk(device, devId, DiskDef.DiskBus.VIRTIO);
                             diskdef.setQemuDriver(false);
@@ -5345,8 +5374,6 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
     }
 
     public String mapRbdDevice(final KVMPhysicalDisk disk, boolean kvdoEnable){
-        LOGGER.debug(String.format("kvdoEnable!!!!!!!!!!!!! %s", kvdoEnable));
-        LOGGER.debug(String.format("size!!!!!!!!!!!!! %s", disk.getSize()));
 
         final KVMStoragePool pool = disk.getPool();
         //Check if rbd image is already mapped
@@ -5360,29 +5387,40 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
 
         // kvdo가 활성화 되어있음
         device = Script.runSimpleBashScript("rbd showmapped | grep \""+splitPoolImage[0]+"[ ]*"+splitPoolImage[1]+"\" | grep -o \"[^ ]*[ ]*$\"");
-        // if(volumeObject.getKvdoEnable()){
-        //     if(){ // lvs에 없음
-        //         try {
 
-        //         } catch (final Exception e) {
-        //             LOGGER.error(String.format("aaa %s", "aa"));
-        //         }
-        //     }else{ // lvs에 있음
-
-        //     }
-        // }
+        if(kvdoEnable){
+            try {
+                logger.info("createKvdoCmdLine Action Call!!!");
+                createKvdoCmdLine(splitPoolImage[0], pool.getAuthUserName(), splitPoolImage[1], String.valueOf(disk.getSize()));
+                device = "/dev/mapper/vg_"+splitPoolImage[1].replace("-","")+"-ablestack_kvdo";
+                logger.info("device name !!! "+device);
+            } catch (InternalErrorException e) {
+                logger.info("createKvdoCmdLine Action Error!!!");
+            }
+        }
 
         return device;
     }
 
-    public String unmapRbdDevice(final KVMPhysicalDisk disk){
+    public String unmapRbdDevice(final KVMPhysicalDisk disk, boolean kvdoEnable){
+        LOGGER.debug(String.format("unmapRbdDevice!!!!!!!!!!!!!"));
         final KVMStoragePool pool = disk.getPool();
         //Check if rbd image is already mapped
         final String[] splitPoolImage = disk.getPath().split("/");
+        
         String device = Script.runSimpleBashScript("rbd showmapped | grep \""+splitPoolImage[0]+"[ ]*"+splitPoolImage[1]+"\" | grep -o \"[^ ]*[ ]*$\"");
 
         if(device != null) {
             //If not mapped, map and return mapped device
+            if(kvdoEnable){
+                try {
+                    logger.info("unmapRbdDevice Action Call!!!");
+                    String vgName = "vg_"+splitPoolImage[1].replace("-","")+"-ablestack_kvdo";
+                    Script.runSimpleBashScript("vgchange -an " + vgName);
+                } catch(IOException e){
+
+                }
+            }
             Script.runSimpleBashScript("rbd unmap " + disk.getPath() + " --id " + pool.getAuthUserName());
             device = Script.runSimpleBashScript("rbd showmapped | grep \""+splitPoolImage[0]+"[ ]*"+splitPoolImage[1]+"\" | grep -o \"[^ ]*[ ]*$\"");
         }

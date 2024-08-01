@@ -1386,7 +1386,7 @@ public class KVMStorageProcessor implements StorageProcessor {
                     if (resource.getHypervisorType() == Hypervisor.HypervisorType.LXC) {
                         final String device = resource.mapRbdDevice(attachingDisk, kvdoEnable);
                         if (device != null) {
-                            logger.debug("RBD device on host is: "+device);
+                            logger.debug("RBD device on host is1: "+device);
                             attachingDisk.setPath(device);
                         } else {
                             throw new InternalErrorException("Error while mapping disk "+attachingDisk.getPath()+" on host");
@@ -1434,7 +1434,7 @@ public class KVMStorageProcessor implements StorageProcessor {
                         // For LXC, map image to host and then attach to Vm
                         final String device = resource.mapRbdDevice(attachingDisk, false);
                         if (device != null) {
-                            logger.debug("RBD device on host is: "+device);
+                            logger.debug("RBD device on host is2: "+device);
                             diskdef.defBlockBasedDisk(device, devId, busT);
                         } else {
                             throw new InternalErrorException("Error while mapping disk "+attachingDisk.getPath()+" on host");
@@ -1443,8 +1443,13 @@ public class KVMStorageProcessor implements StorageProcessor {
                         if(provider != null && !provider.isEmpty() && "ABLESTACK".equals(provider)){
                             final String device = resource.mapRbdDevice(attachingDisk, kvdoEnable);
                             if (device != null) {
-                                logger.debug("RBD device on host is: " + device);
-                                diskdef.defBlockBasedDisk(krbdpath + "/" + attachingDisk.getPath(), devId);
+                                if(!kvdoEnable){
+                                    logger.debug("RBD device on host is3: " + device);
+                                    diskdef.defBlockBasedDisk(krbdpath + "/" + attachingDisk.getPath(), devId);
+                                }else{
+                                    logger.debug("RBD device on host is4: " + device);
+                                    diskdef.defBlockBasedDisk(device, devId);
+                                }
                             } else {
                                 throw new InternalErrorException("Error while mapping RBD device on host");
                             }
@@ -1539,7 +1544,7 @@ public class KVMStorageProcessor implements StorageProcessor {
                 dm.free();
             }
             if(!attach && attachingPool.getType() == StoragePoolType.RBD && provider != null && !provider.isEmpty() && "ABLESTACK".equals(provider)){
-                final String unmap = resource.unmapRbdDevice(attachingDisk);
+                final String unmap = resource.unmapRbdDevice(attachingDisk, kvdoEnable);
                 if (unmap == null) {
                     attachingDisk.setPath(krbdpath + "/" + attachingDisk.getPath());
                     logger.debug("Glue Block unmap device on host is: " + attachingDisk.getPath());
