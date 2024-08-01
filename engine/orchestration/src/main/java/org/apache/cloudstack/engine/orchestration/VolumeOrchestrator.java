@@ -558,12 +558,10 @@ public class VolumeOrchestrator extends ManagerBase implements VolumeOrchestrati
             logger.info(msg);
             throw new StorageUnavailableException(msg, -1);
         }
-
         VolumeInfo vol = volFactory.getVolume(volume.getId());
         DataStore store = dataStoreMgr.getDataStore(pool.getId(), DataStoreRole.Primary);
         DataStoreRole dataStoreRole = snapshotHelper.getDataStoreRole(snapshot);
-        SnapshotInfo snapInfo = snapshotFactory.getSnapshotWithRoleAndZone(snapshot.getId(), dataStoreRole, volume.getDataCenterId());
-
+        SnapshotInfo snapInfo = snapshotFactory.getSnapshotOnPrimaryStore(snapshot.getId());
          // create volume on primary from snapshot
         AsyncCallFuture<VolumeApiResult> future = volService.createVolumeFromSnapshot(vol, store, snapInfo);
         String snapshotToString = getReflectOnlySelectedFields(snapInfo.getSnapshotVO());
