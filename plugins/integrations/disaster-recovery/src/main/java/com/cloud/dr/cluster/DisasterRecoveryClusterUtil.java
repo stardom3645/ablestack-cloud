@@ -2263,7 +2263,7 @@ public class DisasterRecoveryClusterUtil {
                 }
                 for (int i = 0; i < array.length(); i++) {
                     JSONObject jSONObject = array.getJSONObject(i);
-                    if (jSONObject.get("path").toString().equalsIgnoreCase("rbd")) {
+                    if (jSONObject.get("path").toString().equalsIgnoreCase("rbd") && jSONObject.get("tags").toString().equalsIgnoreCase("rbd")) {
                         result = jSONObject.toString();
                     }
                 }
