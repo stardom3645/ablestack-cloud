@@ -68,7 +68,6 @@ import com.cloud.vm.UserVmManagerImpl;
 import com.cloud.vm.UserVmVO;
 import com.cloud.vm.VMInstanceVO;
 import com.cloud.vm.snapshot.VMSnapshotVO;
-
 @RunWith(MockitoJUnitRunner.class)
 public class AccountManagerImplTest extends AccountManagetImplTestBase {
 
