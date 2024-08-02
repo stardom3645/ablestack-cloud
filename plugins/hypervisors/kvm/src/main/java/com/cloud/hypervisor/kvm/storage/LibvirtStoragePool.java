@@ -370,9 +370,6 @@ public class LibvirtStoragePool implements KVMStoragePool {
 
     @Override
     public Boolean checkingHeartBeat(HAStoragePool pool, HostTO host) {
-        logger.info(":::::::::::::" +pool.getPool().getType());
-        logger.info(":::::::::::::" +pool.getMountDestPath());
-        logger.info(":::::::::::::" +host.getPrivateNetwork().getIp());
         boolean validResult = false;
         Script cmd = new Script(getHearthBeatPath(), HeartBeatCheckerTimeout, logger);
         if (pool.getPool().getType() == StoragePoolType.NetworkFilesystem) {
