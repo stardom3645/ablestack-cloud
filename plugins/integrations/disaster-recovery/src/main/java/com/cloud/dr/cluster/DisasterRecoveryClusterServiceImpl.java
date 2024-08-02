@@ -2104,12 +2104,21 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         }
         moldCommand = "listVirtualMachines";
         String vmList = DisasterRecoveryClusterUtil.moldListVirtualMachinesAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey);
-        JSONObject jsonObject = new JSONObject(vmList);
-        JSONArray jsonArray = jsonObject.getJSONArray("virtualmachine");
-        for (int i = 0; i < jsonArray.length(); i++) {
-            JSONObject object = jsonArray.getJSONObject(i);
-            if (object.get("name").toString().equalsIgnoreCase(userVM.getName())) {
-                throw new CloudRuntimeException("A mirroring virtual machine cannot be added because a virtual machine with the same name as the corresponding virtual machine exists in the disaster recovery cluster.");
+        if (vmList != null) {
+            JSONObject jsonObject = new JSONObject(vmList);
+            Object object = jsonObject.get("virtualmachine");
+            JSONArray array;
+            if (object instanceof JSONArray) {
+                array = (JSONArray) object;
+            } else {
+                array = new JSONArray();
+                array.put(object);
+            }
+            for (int i = 0; i < array.length(); i++) {
+                JSONObject jSONObject = array.getJSONObject(i);
+                if (jSONObject.get("name").toString().equalsIgnoreCase(userVM.getName())) {
+                    throw new CloudRuntimeException("A mirroring virtual machine cannot be added because a virtual machine with the same name as the corresponding virtual machine exists in the disaster recovery cluster.");
+                }
             }
         }
     }
