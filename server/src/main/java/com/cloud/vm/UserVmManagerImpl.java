@@ -9461,6 +9461,10 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
                     }
                     cmd.setEntityUuid(cloneVM.getUuid());
                     cmd.setEntityId(cloneVM.getId());
+
+                    VMInstanceVO vmInstance = _vmInstanceDao.findById(cloneVM.getId());
+                    vmInstance.setGuestOSId(cmd.getTargetVM().getGuestOSId());
+                    _vmInstanceDao.update(cloneVM.getId(), vmInstance);
                     break;
                 }
             }
@@ -9509,13 +9513,6 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
                         }
                         destroyVm(cmd.getEntityId(), true);
                         throw new CloudRuntimeException(e.getMessage());
-                    } finally {
-                        // _vmSnapshotMgr.deleteVMSnapshot(vmSnapshot.getId());
-                        // clear the temporary data snapshots
-                        // for (Snapshot snapshotLeftOver : createdSnapshots) {
-                        //     logger.warn("Clone VM >> Clearing the temporary data disk snapshot : " + snapshotLeftOver.getId());
-                        //     _snapshotService.deleteSnapshot(snapshotLeftOver.getId(), zoneId);
-                        // }
                     }
                 }
             }
@@ -9534,12 +9531,6 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
             }
 
             if (countOfCloneVM == cnt) {
-                // VMSnapshotVO vmSnapVO = _vmSnapshotDao.findById(vmSnapshot.getId());
-                // List<VMSnapshotDetailsVO> vmSnapshotDetails = vmSnapshotDetailsDao.listDetails(vmSnapVO.getId());
-                // for (VMSnapshotDetailsVO vmSnapshotDetailsVO : vmSnapshotDetails) {
-                //     vmSnapshotDetailsDao.remove(vmSnapshotDetailsVO.getId());
-                // }
-                // _vmSnapshotDao.remove(vmSnapVO.getId());
                 _vmSnapshotMgr.deleteVMSnapshot(vmSnapshot.getId());
 
                 if (!cmd.getStartVm()) {
