@@ -188,5 +188,5 @@ public interface VolumeApiService {
 
     Pair<String, String> checkAndRepairVolume(CheckAndRepairVolumeCmd cmd) throws ResourceAllocationException;
 
-    Volume cloneRootOrDataVolume(long vmId, long snapshotId, Volume volume) throws StorageUnavailableException;
+    Volume cloneVolumeFromSnapshot(Volume volume, long snapshotId, Long vmId) throws StorageUnavailableException;
 }
