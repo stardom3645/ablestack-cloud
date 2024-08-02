@@ -70,10 +70,6 @@ write_hbLog() {
   if [ $? -eq 0 ]
   then
     timestamp=$(date +%s)
-    obj=$(rados -p $PoolName ls --id $PoolAuthUserName | grep hb-$HostIP)
-    if [ $? -gt 0 ]; then
-      rados -p $PoolName create hb-$HostIP --id $PoolAuthUserName
-    fi
     echo $timestamp | rados -p $PoolName put hb-$HostIP - --id $PoolAuthUserName
     if [ $? -gt 0 ]; then
       printf "Failed to create rbd file"
