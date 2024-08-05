@@ -180,7 +180,8 @@ export default {
         const params = {
           drclusterurl: values.url,
           drclusterapikey: values.apikey,
-          drclustersecretkey: values.secretkey
+          drclustersecretkey: values.secretkey,
+          drclusterglueipaddress: values.glueip
         }
         api('connectivityTestsDisasterRecovery', params).then(json => {
           this.testConnResult = json.connectivitytestsdisasterrecoveryresponse
