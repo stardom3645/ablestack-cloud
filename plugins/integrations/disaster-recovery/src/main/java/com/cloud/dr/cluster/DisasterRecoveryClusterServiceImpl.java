@@ -156,7 +156,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         String moldMethod = "GET";
         String response = DisasterRecoveryClusterUtil.moldListScvmIpAddressAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey);
         if (response != null) {
-            String[] array = response.split(",");     
+            String[] array = response.split(",");
             if (!Arrays.asList(array).contains(glueIpAddress)) {
                 throw new CloudRuntimeException("The Glue IP was entered incorrectly. Please check again.");
             }
