@@ -1911,7 +1911,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
     }
 
     @Override
-    @ActionEvent(eventType = DisasterRecoveryClusterEventTypes.EVENT_DR_VM_PROMOTE, eventDescription = "stopping disaster recovery cluster virtual machine", resourceType = "DisasterRecoveryCluster")
+    @ActionEvent(eventType = DisasterRecoveryClusterEventTypes.EVENT_DR_VM_PROMOTE, eventDescription = "promoting disaster recovery cluster virtual machine", resourceType = "DisasterRecoveryCluster")
     public boolean promoteDisasterRecoveryClusterVm(PromoteDisasterRecoveryClusterVmCmd cmd) throws CloudRuntimeException {
         if (!DisasterRecoveryServiceEnabled.value()) {
             throw new CloudRuntimeException("Disaster Recovery Service plugin is disabled");
@@ -1991,7 +1991,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
     }
 
     @Override
-    @ActionEvent(eventType = DisasterRecoveryClusterEventTypes.EVENT_DR_VM_DEMOTE, eventDescription = "stopping disaster recovery cluster virtual machine", resourceType = "DisasterRecoveryCluster")
+    @ActionEvent(eventType = DisasterRecoveryClusterEventTypes.EVENT_DR_VM_DEMOTE, eventDescription = "demoting disaster recovery cluster virtual machine", resourceType = "DisasterRecoveryCluster")
     public boolean demoteDisasterRecoveryClusterVm(DemoteDisasterRecoveryClusterVmCmd cmd) throws CloudRuntimeException {
         if (!DisasterRecoveryServiceEnabled.value()) {
             throw new CloudRuntimeException("Disaster Recovery Service plugin is disabled");
