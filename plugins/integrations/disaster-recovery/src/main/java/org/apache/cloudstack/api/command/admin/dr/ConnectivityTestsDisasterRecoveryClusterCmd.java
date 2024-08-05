@@ -60,6 +60,10 @@ public class ConnectivityTestsDisasterRecoveryClusterCmd extends BaseCmd impleme
             description = "dr cluster secret key")
     private String drClusterSecretKey;
 
+    @Parameter(name = ApiConstants.DR_CLUSTER_GLUE_IP_ADDRESS, type = CommandType.STRING, required = true,
+            description = "dr cluster glue ip address")
+    private String drClusterGlueIpAddress;
+
     /////////////////////////////////////////////////////
     /////////////////// Accessors ///////////////////////
     /////////////////////////////////////////////////////
@@ -73,6 +77,10 @@ public class ConnectivityTestsDisasterRecoveryClusterCmd extends BaseCmd impleme
 
     public String getDrClusterSecretKey() {
         return drClusterSecretKey;
+    }
+
+    public String getDrClusterGlueIpAddress() {
+        return drClusterGlueIpAddress;
     }
 
     @Override

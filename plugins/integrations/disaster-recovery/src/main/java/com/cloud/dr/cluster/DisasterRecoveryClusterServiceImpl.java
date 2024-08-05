@@ -17,6 +17,7 @@
 package com.cloud.dr.cluster;
 
 import java.util.List;
+import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.Properties;
@@ -149,12 +150,16 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         String url = cmd.getDrClusterUrl();
         String apiKey = cmd.getDrClusterApiKey();
         String secretKey = cmd.getDrClusterSecretKey();
+        String glueIpAddress = cmd.getDrClusterGlueIpAddress();
         String moldUrl = url + "/client/api/";
         String moldCommand = "listScvmIpAddress";
         String moldMethod = "GET";
         String response = DisasterRecoveryClusterUtil.moldListScvmIpAddressAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey);
         if (response != null) {
-            String[] array = response.split(",");
+            String[] array = response.split(",");     
+            if (!Arrays.asList(array).contains(glueIpAddress)) {
+                throw new CloudRuntimeException("The Glue IP was entered incorrectly. Please check again.");
+            }
             for (int i=0; i < array.length; i++) {
                 String glueIp = array[i];
                 ///////////////////// glue-api 프로토콜과 포트 확정 시 변경 예정
