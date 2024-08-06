@@ -411,7 +411,10 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                 String moldUrl = url + "/client/api/";
                 String moldCommand = "listVirtualMachines";
                 String moldMethod = "GET";
+                LOGGER.info("DisasterRecoveryClusterServiceImpl.java moldListVirtualMachinesAPI 호출 전");
                 String vmList = DisasterRecoveryClusterUtil.moldListVirtualMachinesAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey);
+                LOGGER.info("DisasterRecoveryClusterServiceImpl.java moldListVirtualMachinesAPI 호출 결과");
+                LOGGER.info(vmList);
                 if (vmList != null) {
                     JSONObject jsonObject = new JSONObject(vmList);
                     Object object = jsonObject.get("virtualmachine");
@@ -430,6 +433,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                         }
                     }
                 }
+                LOGGER.info("DisasterRecoveryClusterServiceImpl.java moldListVirtualMachinesAPI 호출 후 결과 저장");
                 response.setMirroredVmStatus(map.getMirroredVmStatus());
                 // 미러링 가상머신 볼륨 상태 조회
                 String ipList = Script.runSimpleBashScript("cat /etc/hosts | grep -E 'scvm1-mngt|scvm2-mngt|scvm3-mngt' | awk '{print $1}' | tr '\n' ','");
