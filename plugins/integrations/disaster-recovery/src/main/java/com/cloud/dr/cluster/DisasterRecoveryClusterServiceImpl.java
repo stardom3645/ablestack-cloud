@@ -411,8 +411,10 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                 String moldUrl = url + "/client/api/";
                 String moldCommand = "listVirtualMachines";
                 String moldMethod = "GET";
+                Map<String, String> moldParams = new HashMap<>();
+                moldParams.put("keyword", userVM.getName());
                 LOGGER.info("DisasterRecoveryClusterServiceImpl.java moldListVirtualMachinesAPI 호출 전");
-                String vmList = DisasterRecoveryClusterUtil.moldListVirtualMachinesAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey);
+                String vmList = DisasterRecoveryClusterUtil.moldListVirtualMachinesAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey, moldParams);
                 LOGGER.info("DisasterRecoveryClusterServiceImpl.java moldListVirtualMachinesAPI 호출 결과");
                 LOGGER.info(vmList);
                 if (vmList != null) {
@@ -2126,7 +2128,9 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
             }
         }
         moldCommand = "listVirtualMachines";
-        String vmList = DisasterRecoveryClusterUtil.moldListVirtualMachinesAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey);
+        Map<String, String> moldParams = new HashMap<>();
+        moldParams.put("keyword", userVM.getName());
+        String vmList = DisasterRecoveryClusterUtil.moldListVirtualMachinesAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey, moldParams);
         if (vmList != null) {
             JSONObject jsonObject = new JSONObject(vmList);
             if (jsonObject.has("virtualmachine")) {
@@ -2443,7 +2447,8 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
             String moldUrl = url + "/client/api/";
             String moldCommand = "listVirtualMachines";
             String moldMethod = "GET";
-            String vmList = DisasterRecoveryClusterUtil.moldListVirtualMachinesAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey);
+            Map<String, String> moldParams = null;
+            String vmList = DisasterRecoveryClusterUtil.moldListVirtualMachinesAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey, moldParams);
             if (vmList != null) {
                 JSONObject jsonObject = new JSONObject(vmList);
                 Object object = jsonObject.get("virtualmachine");
