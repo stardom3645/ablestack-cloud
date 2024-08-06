@@ -2130,11 +2130,11 @@ public class DisasterRecoveryClusterUtil {
      *  GET
      * @return true = 200, 이외 코드는 false 처리
      */
-    protected static String moldListVirtualMachinesAPI(String region, String command, String method, String apiKey, String secretKey) {
+    protected static String moldListVirtualMachinesAPI(String region, String command, String method, String apiKey, String secretKey, Map<String, String> params) {
         try {
             String readLine = null;
             StringBuffer sb = null;
-            String apiParams = buildParamsMold(command, null);
+            String apiParams = buildParamsMold(command, params);
             String urlFinal = buildUrl(apiParams, region, apiKey, secretKey);
             URL url = new URL(urlFinal);
             if (region.contains("https")) {
