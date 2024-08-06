@@ -302,6 +302,10 @@ public class DisasterRecoveryClusterUtil {
                 String msg = "Failed to request glue mirror delete API. response code : " + connection.getResponseCode();
                 LOGGER.error(msg);
                 LOGGER.error(response);
+                // glue-key 잘못 넣어서 생성된 클러스터 삭제 시 예외처리
+                if (response.toString().contains("mirroring is disabled")) {
+                    return true;
+                }
                 return false;
             }
         } catch (Exception e) {
