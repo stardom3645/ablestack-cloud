@@ -140,14 +140,14 @@
               :disabled="!('connectivityTestsDisasterRecovery' in $store.getters.apis)"
               @onClick="DrSimulationTest(record)" />
             <a-popconfirm
-              :title="$t('message.dr.mirrored.vm.release')"
+              :title="$t('message.dr.mirrored.vm.remove')"
               @confirm="removeMirror(record.dr)"
               :okText="$t('label.yes')"
               :cancelText="$t('label.no')"
             >
               <tooltip-button
                 tooltipPlacement="bottom"
-                :tooltip="$t('label.dr.release.mirroring')"
+                :tooltip="$t('label.dr.remove.mirroring')"
                 :disabled="!('deleteDisasterRecoveryClusterVm' in $store.getters.apis)"
                 type="primary"
                 :danger="true"
@@ -780,15 +780,27 @@ export default {
       api('deleteDisasterRecoveryClusterVm', {
         drclustername: item.drName,
         virtualmachineid: this.vm.id
-      }).then(json => {
-        this.$message.success(`${this.$t('label.delete.disaster.recovery.cluster.vm')}: ${this.vm.id}`)
-        this.loadingMirror = false
+      }).then(response => {
+        this.$pollJob({
+          jobId: response.deletedisasterrecoveryclustervmresponse.jobid,
+          successMessage: this.$t('message.success.remove.disaster.recovery.cluster.vm'),
+          successMethod: () => {
+            this.loadingMirror = false
+          },
+          errorMessage: this.$t('message.error.remove.disaster.recovery.cluster.vm'),
+          errorMethod: () => {
+            this.loadingMirror = false
+          },
+          loadingMessage: this.$t('message.remove.disaster.recovery.cluster.vm.processing'),
+          catchMessage: this.$t('error.fetching.async.job.result'),
+          catchMethod: () => {
+            this.loadingMirror = false
+            this.parentFetchData()
+          }
+        })
       }).catch(error => {
         this.$notifyError(error)
         this.loadingMirror = false
-      }).finally(() => {
-        this.loadingMirror = false
-        this.parentFetchData()
       })
     },
     submitSecondaryIP () {

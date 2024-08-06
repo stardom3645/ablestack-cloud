@@ -4448,8 +4448,8 @@
 "disaster.recovery.cluster": "DR",
 "message.success.update.disaster.recovery.cluster": "Recovery cluster information has been updated.",
 "message.disaster.recovery.cluster.connection.test.update.description": "Perform a connection test with the cluster you want to update.",
-"message.dr.mirrored.vm.release": "Confirm whether you want to release mirroring.",
-"label.dr.release.mirroring": "Release mirroring",
+"message.dr.mirrored.vm.remove": "Confirm whether you want to remove mirroring.",
+"label.dr.remove.mirroring": "remove mirroring",
 "message.success.add.disaster.recovery.cluster": "Successfully added disaster recovery cluster",
 "label.drclusterglueipaddress": "cluster glue ip",
 "dr.create": "DR.CREATE",
@@ -4470,7 +4470,6 @@
 "dr.vm.promote": "DR.VM.PROMOTE",
 "dr.vm.demote": "DR.VM.DEMOTE",
 "label.add.disaster.recovery.cluster.vm": "Add disaster recovery cluster virtual machine",
-"label.delete.disaster.recovery.cluster.vm": "Disconnect disaster recovery cluster virtual machine mirroring",
 "message.success.add.disaster.recovery.cluster.vm": "Successfully added disaster recovery cluster virtual machine",
 "label.dr.mirrored.volume.status": "Mirrored volume status",
 "label.dr.mirrored.volume.path": "Mirrored volume path",
@@ -4478,5 +4477,8 @@
 "label.action.sync.disaster.recovery.cluster": "Resync disaster recovery cluster",
 "message.sync.dr.cluster.confirm": "If the primary cluster is recovered when a disaster recovery situation occurs, execute a task to synchronize the Glue image of the recovered primary cluster before executing a forced demote.",
 "label.action.clear.disaster.recovery.cluster": "Clear disaster recovery cluster",
-"message.clear.dr.cluster.confirm": "If the primary cluster is not recovered when a disaster recovery situation occurs, Glue garbage for the existing disaster recovery cluster is deleted."
+"message.clear.dr.cluster.confirm": "If the primary cluster is not recovered when a disaster recovery situation occurs, Glue garbage for the existing disaster recovery cluster is deleted.",
+"message.remove.disaster.recovery.cluster.vm.processing": "removing disaster recovery cluster virtual machine mirroring...",
+"message.error.remove.disaster.recovery.cluster.vm": "There was an error removing disaster recovery cluster virtual machine mirroring",
+"message.success.remove.disaster.recovery.cluster.vm": "Successfully removed mirroring"
 }
