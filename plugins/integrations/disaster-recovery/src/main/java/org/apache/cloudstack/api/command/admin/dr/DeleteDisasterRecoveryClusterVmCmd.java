@@ -23,13 +23,13 @@ import org.apache.cloudstack.api.APICommand;
 import org.apache.cloudstack.api.ApiConstants;
 import org.apache.cloudstack.api.ApiErrorCode;
 import org.apache.cloudstack.api.Parameter;
-import org.apache.cloudstack.api.BaseCmd;
-import org.apache.cloudstack.api.command.admin.AdminCmd;
+import org.apache.cloudstack.api.BaseAsyncCmd;
 import org.apache.cloudstack.api.ServerApiException;
 import org.apache.cloudstack.api.response.SuccessResponse;
 import org.apache.cloudstack.api.response.UserVmResponse;
 import org.apache.cloudstack.context.CallContext;
 
+import com.cloud.dr.cluster.DisasterRecoveryClusterEventTypes;
 import com.cloud.dr.cluster.DisasterRecoveryClusterService;
 import com.cloud.dr.cluster.dao.DisasterRecoveryClusterDao;
 import com.cloud.utils.exception.CloudRuntimeException;
@@ -38,7 +38,7 @@ import com.cloud.utils.exception.CloudRuntimeException;
         description = "Delete Disaster Recovery Cluster virtual machine",
         responseObject = SuccessResponse.class,
         authorized = {RoleType.Admin})
-public class DeleteDisasterRecoveryClusterVmCmd extends BaseCmd implements AdminCmd {
+public class DeleteDisasterRecoveryClusterVmCmd extends BaseAsyncCmd {
     public static final String APINAME = "deleteDisasterRecoveryClusterVm";
 
     @Inject
@@ -100,6 +100,18 @@ public class DeleteDisasterRecoveryClusterVmCmd extends BaseCmd implements Admin
     @Override
     public long getEntityOwnerId() {
         return CallContext.current().getCallingAccount().getId();
+    }
+
+    @Override
+    public String getEventType() {
+        return DisasterRecoveryClusterEventTypes.EVENT_DR_VM_DELETE;
+    }
+
+    @Override
+    public String getEventDescription() {
+        String description = "Deleting disaster recovery cluster virtual machine";
+        description += String.format(" ID: %d", getId());
+        return description;
     }
 
 }

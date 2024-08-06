@@ -1729,7 +1729,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
     }
 
     @Override
-    @ActionEvent(eventType = DisasterRecoveryClusterEventTypes.EVENT_DR_VM_DELETE, eventDescription = "deleting disaster recovery cluster virtual machine", resourceType = "DisasterRecoveryCluster")
+    @ActionEvent(eventType = DisasterRecoveryClusterEventTypes.EVENT_DR_VM_DELETE, async = true, eventDescription = "deleting disaster recovery cluster virtual machine", resourceType = "DisasterRecoveryCluster")
     public boolean deleteDisasterRecoveryClusterVm(DeleteDisasterRecoveryClusterVmCmd cmd) throws CloudRuntimeException {
         if (!DisasterRecoveryServiceEnabled.value()) {
             throw new CloudRuntimeException("Disaster Recovery Service plugin is disabled");
