@@ -234,6 +234,7 @@ public class DisasterRecoveryClusterUtil {
                 in.close();
                 String msg = "Failed to request glue mirror setup API. response code : " + connection.getResponseCode();
                 LOGGER.error(msg);
+                LOGGER.error(response);
                 return false;
             }
         } catch (Exception e) {
@@ -300,6 +301,7 @@ public class DisasterRecoveryClusterUtil {
                 in.close();
                 String msg = "Failed to request glue mirror delete API. response code : " + connection.getResponseCode();
                 LOGGER.error(msg);
+                LOGGER.error(response);
                 return false;
             }
         } catch (Exception e) {
@@ -366,6 +368,7 @@ public class DisasterRecoveryClusterUtil {
                 in.close();
                 String msg = "Failed to request glue mirror enable API. response code : " + connection.getResponseCode();
                 LOGGER.error(msg);
+                LOGGER.error(response);
                 return false;
             }
         } catch (Exception e) {
@@ -432,6 +435,7 @@ public class DisasterRecoveryClusterUtil {
                 in.close();
                 String msg = "Failed to request glue mirror disable API. response code : " + connection.getResponseCode();
                 LOGGER.error(msg);
+                LOGGER.error(response);
                 return false;
             }
         } catch (Exception e) {
