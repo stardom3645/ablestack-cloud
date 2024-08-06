@@ -280,7 +280,7 @@ public class HostResponse extends BaseResponseWithAnnotations {
 
     @SerializedName("ueficapability")
     @Param(description = "true if the host has capability to support UEFI boot")
-    private Boolean uefiCapabilty;
+    private Boolean uefiCapability;
 
     @SerializedName("tpmcapability")
     @Param(description = "true if the host has capability to support TPM 2.0 Device")
