@@ -523,16 +523,6 @@ export default {
         this.diskOfferings = response.listdiskofferingsresponse.diskoffering
       })
     },
-    listMirroredVMs () {
-      api('listNetworks', {
-        listAll: 'true',
-        showicon: true,
-        zoneid: this.vm.zoneid
-      }).then(response => {
-        this.addNetworkData.allNetworks = response.listnetworksresponse.network.filter(network => !this.vm.nic.map(nic => nic.networkid).includes(network.id))
-        // this.addNetworkData.network = this.addNetworkData.allNetworks[0].id
-      })
-    },
     listNetworks () {
       api('listNetworks', {
         listAll: 'true',
@@ -591,7 +581,6 @@ export default {
     },
     showAddMirVMModal () {
       this.showAddMirrorVMModal = true
-      this.listMirroredVMs()
     },
     closeModals () {
       this.showAddVolumeModal = false
@@ -752,6 +741,34 @@ export default {
         })
       })
         .catch(error => {
+          this.$notifyError(error)
+          this.loadingNic = false
+        })
+    },
+    removeNic (item) {
+      this.loadingNic = true
+      api('removeNicFromVirtualMachine', {
+        nicid: item.id,
+      }).then(response => {
+        this.$pollJob({
+          jobId: response.removenicfromvirtualmachineresponse.jobid,
+          successMessage: this.$t('message.success.remove.nic'),
+          successMethod: () => {
+            this.loadingNic = false
+          },
+          errorMessage: this.$t('message.error.remove.nic'),
+          errorMethod: () => {
+            this.loadingNic = false
+          },
+          loadingMessage: this.$t('message.remove.nic.processing'),
+          catchMessage: this.$t('error.fetching.async.job.result'),
+          catchMethod: () => {
+            this.loadingNic = false
+            this.parentFetchData()
+          }
+        })
+      })
+      .catch(error => {
           this.$notifyError(error)
           this.loadingNic = false
         })
