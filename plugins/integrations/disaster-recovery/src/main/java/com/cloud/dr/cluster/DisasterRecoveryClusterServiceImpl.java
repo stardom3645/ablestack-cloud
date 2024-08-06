@@ -2215,19 +2215,29 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         String glueCommand = "";
         String glueMethod = "";
         for (DisasterRecoveryClusterVmMapVO map : vmMap) {
+            int glueStep = 0;
             String[] array = ipList.split(",");
+            Loop :
             for (int i=0; i < array.length; i++) {
                 String glueIp = array[i];
                 ///////////////////// glue-api 프로토콜과 포트 확정 시 변경 예정
                 String glueUrl = "https://" + glueIp + ":8080/api/v1";
                 glueCommand = "/mirror/image/info/rbd/" +map.getMirroredVmVolumePath();
                 glueMethod = "GET";
-                String mirrorImageInfo = DisasterRecoveryClusterUtil.glueImageMirrorInfoAPI(glueUrl, glueCommand, glueMethod);
-                if (mirrorImageInfo != null) {
-                    JsonObject infoObject = (JsonObject) new JsonParser().parse(mirrorImageInfo).getAsJsonObject();
-                    if (!infoObject.get("image").getAsString().equals("")) {
-                        vmTemplate.add(infoObject.get("image").getAsString());
-                        break;
+                while(glueStep < 20) {
+                    glueStep += 1;
+                    try {
+                        Thread.sleep(10000);
+                    } catch (InterruptedException e) {
+                        LOGGER.error("demoteParentImage sleep interrupted");
+                    }
+                    String mirrorImageInfo = DisasterRecoveryClusterUtil.glueImageMirrorInfoAPI(glueUrl, glueCommand, glueMethod);
+                    if (mirrorImageInfo != null) {
+                        JsonObject infoObject = (JsonObject) new JsonParser().parse(mirrorImageInfo).getAsJsonObject();
+                        if (!infoObject.get("image").getAsString().equals("")) {
+                            vmTemplate.add(infoObject.get("image").getAsString());
+                            break Loop;
+                        }
                     }
                 }
             }
