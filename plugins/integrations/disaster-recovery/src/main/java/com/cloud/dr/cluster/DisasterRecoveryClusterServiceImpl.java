@@ -442,10 +442,15 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                     String glueUrl = "https://" + glueIp + ":8080/api/v1";
                     String glueCommand = "/mirror/image/status/rbd/" +map.getMirroredVmVolumePath();
                     String glueMethod = "GET";
+                    LOGGER.info("DisasterRecoveryClusterServiceImpl.java mirrorStatusAPI 호출 전");
                     String mirrorImageStatus = DisasterRecoveryClusterUtil.glueImageMirrorStatusAPI(glueUrl, glueCommand, glueMethod);
+                    LOGGER.info("DisasterRecoveryClusterServiceImpl.java mirrorStatusAPI 호출 결과");
+                    LOGGER.info(mirrorImageStatus);
                     if (mirrorImageStatus != null) {
                         JsonObject statObject = (JsonObject) new JsonParser().parse(mirrorImageStatus).getAsJsonObject();
                         if (statObject.has("state")) {
+                            LOGGER.info("DisasterRecoveryClusterServiceImpl.java statObject");
+                            LOGGER.info(statObject.get("state").getAsString());
                             if (statObject.get("state").getAsString().contains("replaying")) {
                                 response.setDrClusterVmVolStatus("SYNCING");
                             } else if (statObject.get("state").getAsString().contains("error")){
@@ -455,24 +460,33 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                             } else {
                                 response.setDrClusterVmVolStatus("READY");
                             }
+                            LOGGER.info("DisasterRecoveryClusterServiceImpl.java mirrorStatusAPI 호출 후 response 저장 완료");
                         }
                         JsonArray drArray = (JsonArray) new JsonParser().parse(mirrorImageStatus).getAsJsonObject().get("peer_sites");
                         if (drArray.size() != 0 && drArray != null) {
+                            LOGGER.info("DisasterRecoveryClusterServiceImpl.java peerState 로직 for문 전");
+                            JsonElement peerState = null;
                             for (JsonElement dr : drArray) {
-                                JsonElement peerState = dr.getAsJsonObject().get("state") == null ? null : dr.getAsJsonObject().get("state");
-                                if (peerState != null) {
-                                    if (peerState.getAsString().contains("replaying")) {
-                                        map.setMirroredVmVolumeStatus("SYNCING");
-                                    } else if (peerState.getAsString().contains("error")){
-                                        map.setMirroredVmVolumeStatus("ERROR");
-                                    } else if (peerState.getAsString().contains("unknown")){
-                                        map.setMirroredVmVolumeStatus("UNKNOWN");
-                                    } else {
-                                        map.setMirroredVmVolumeStatus("READY");
-                                    }
-                                    disasterRecoveryClusterVmMapDao.update(map.getId(), map);
-                                    break Loop;
+                                if (dr.getAsJsonObject().get("state") != null) {
+                                    peerState = dr.getAsJsonObject().get("state");
                                 }
+                            }
+                            LOGGER.info("DisasterRecoveryClusterServiceImpl.java peerState 로직 for문 후");
+                            if (peerState != null) {
+                                LOGGER.info("DisasterRecoveryClusterServiceImpl.java peerState");
+                                LOGGER.info(peerState.getAsString());
+                                if (peerState.getAsString().contains("replaying")) {
+                                    map.setMirroredVmVolumeStatus("SYNCING");
+                                } else if (peerState.getAsString().contains("error")){
+                                    map.setMirroredVmVolumeStatus("ERROR");
+                                } else if (peerState.getAsString().contains("unknown")){
+                                    map.setMirroredVmVolumeStatus("UNKNOWN");
+                                } else {
+                                    map.setMirroredVmVolumeStatus("READY");
+                                }
+                                disasterRecoveryClusterVmMapDao.update(map.getId(), map);
+                                LOGGER.info("DisasterRecoveryClusterServiceImpl.java mirrorStatusAPI 호출 후 map 저장 완료");
+                                break Loop;
                             }
                         }
                     }
