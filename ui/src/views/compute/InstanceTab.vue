@@ -745,10 +745,12 @@ export default {
           this.loadingNic = false
         })
     },
-    removeNic (item) {
+    removeNIC (item) {
       this.loadingNic = true
+
       api('removeNicFromVirtualMachine', {
         nicid: item.id,
+        virtualmachineid: this.vm.id
       }).then(response => {
         this.$pollJob({
           jobId: response.removenicfromvirtualmachineresponse.jobid,
@@ -768,7 +770,7 @@ export default {
           }
         })
       })
-      .catch(error => {
+        .catch(error => {
           this.$notifyError(error)
           this.loadingNic = false
         })
