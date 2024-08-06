@@ -127,32 +127,32 @@
                   <build-outlined/>
                 </template>
                 <template v-else-if="record.volumeid">
-                  <hdd-outlined/>
+                    <hdd-outlined/>
                 </template>
                 <template v-else-if="record.templateid">
-                  <usb-outlined v-if="record.format === 'ISO'"/>
-                  <save-outlined v-else />
+                    <usb-outlined v-if="record.format === 'ISO'"/>
+                    <save-outlined v-else />
                 </template>
                 {{ record.name }}
               </a>
             </template>
             <template v-else>
               <template v-if="record.snapshotid">
-                <build-outlined/>
-              </template>
-              <template v-else-if="record.volumeid">
-                <hdd-outlined/>
-              </template>
-              <template v-else-if="record.templateid">
-                <usb-outlined v-if="record.format === 'ISO'"/>
-                <save-outlined v-else />
-              </template>
-              {{ record.name }}
+                  <build-outlined/>
+                </template>
+                <template v-else-if="record.volumeid">
+                    <hdd-outlined/>
+                </template>
+                <template v-else-if="record.templateid">
+                    <usb-outlined v-if="record.format === 'ISO'"/>
+                    <save-outlined v-else />
+                </template>
+                {{ record.name }}
             </template>
           </template>
           <template v-if="column.key == 'size'">
             <template v-if="!record.isdirectory">
-              {{ convertBytes(record.size) }}
+            {{ convertBytes(record.size) }}
             </template>
           </template>
           <template v-if="column.key == 'lastupdated'">
@@ -182,47 +182,46 @@
             </template>
           </template>
           <template v-else-if="column.key === 'actions' && (record.templateid || record.snapshotid)">
-            <tooltip-button
+              <tooltip-button
               tooltipPlacement="top"
               :tooltip="$t('label.migrate.data.from.image.store')"
               icon="arrows-alt-outlined"
               :copyResource="String(resource.id)"
               @onClick="openMigrationModal(record)" />
-          </template>
-          <template v-else-if="column.key == 'deleteactions' && (record.templateid || record.volumeid) == null && !['MOLD-AC', 'MOLD-HB','ccvm'].some(forbiddenName => record.name.includes(forbiddenName))">
-            <a-col flex="auto">
-              <a-tooltip
-              :title="$t('label.action.create.volume')">
-                <a-button
-                  type="primary"
-                  size="medium"
-                  shape="circle"
-                  @click="showAddTyModal(record.name, record.size)"
-                  :loading="loading"
-                >
+            </template>
+            <template v-else-if="column.key == 'deleteactions' && (record.templateid || record.volumeid) == null && !['MOLD-AC', 'MOLD-HB','ccvm'].some(forbiddenName => record.name.includes(forbiddenName))">
+              <a-col flex="auto">
+                <a-tooltip
+                :title="$t('label.action.create.volume')">
+                  <a-button
+                    type="primary"
+                    size="medium"
+                    shape="circle"
+                    @click="showAddTyModal(record.name, record.size)"
+                    :loading="loading">
                   <template #icon><plus-outlined /></template>
                 </a-button>
               </a-tooltip>
-              <a-popconfirm
-                :title="`${$t('label.delete.rbd.image')}?`"
-                @confirm="deleteRbdImage(record.name)"
-                :okText="$t('label.yes')"
-                :cancelText="$t('label.no')"
-                placement="left">
-                <a-tooltip
-                :title="$t('label.delete')">
+                <a-popconfirm
+                  :title="`${$t('label.delete.rbd.image')}?`"
+                  @confirm="deleteRbdImage(record.name)"
+                  :okText="$t('label.yes')"
+                  :cancelText="$t('label.no')"
+                  placement="left">
+                  <a-tooltip
+                  :title="$t('label.delete')">
                   <a-button
                     type="primary"
                     size="medium"
                     shape="circle"
                     danger="true">
-                    <template #icon><delete-outlined /></template>
-                  </a-button>
-                </a-tooltip>
-              </a-popconfirm>
-            </a-col>
+                      <template #icon><delete-outlined /></template>
+                    </a-button>
+                  </a-tooltip>
+                </a-popconfirm>
+              </a-col>
+            </template>
           </template>
-        </template>
       </a-table>
       <a-modal
         :visible="showAddTypeModal"
