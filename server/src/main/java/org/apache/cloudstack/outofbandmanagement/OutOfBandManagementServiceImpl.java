@@ -433,10 +433,25 @@ public class OutOfBandManagementServiceImpl extends ManagerBase implements OutOf
         final OutOfBandManagement outOfBandManagementConfig = getConfigForHost(host);
         final ImmutableMap<OutOfBandManagement.Option, String> options = getOptions(outOfBandManagementConfig);
         final OutOfBandManagementDriver driver = getDriver(outOfBandManagementConfig);
-
+        boolean sameStatus = false;
         Long actionTimeOut = timeout;
         if (actionTimeOut == null) {
             actionTimeOut = ActionTimeout.valueIn(host.getClusterId());
+        }
+
+        final OutOfBandManagementDriverPowerCommand currnetStatusCmd = new OutOfBandManagementDriverPowerCommand(options, actionTimeOut, OutOfBandManagement.PowerOperation.STATUS);
+        final OutOfBandManagementDriverResponse currentDriverResponse = driver.execute(currnetStatusCmd);
+        if (currentDriverResponse == null) {
+            throw new CloudRuntimeException(String.format("Out-of-band Management action [%s] on %s failed due to no response from the driver", OutOfBandManagement.PowerOperation.STATUS, host));
+        }
+        final OutOfBandManagementResponse response = new OutOfBandManagementResponse(outOfBandManagementDao.findByHost(host.getId()));
+        OutOfBandManagement.PowerState.Event curStatus = currentDriverResponse.toEvent();
+        if(powerOperation.toString().toLowerCase().equals(curStatus.name().toLowerCase())){
+            response.setSuccess(true);
+            response.setResultDescription("The currently requested action and host status value are the same.");
+            response.setId(host.getUuid());
+            response.setOutOfBandManagementAction(powerOperation.toString());
+            return response;
         }
 
         final OutOfBandManagementDriverPowerCommand cmd = new OutOfBandManagementDriverPowerCommand(options, actionTimeOut, powerOperation);
@@ -463,7 +478,6 @@ public class OutOfBandManagementServiceImpl extends ManagerBase implements OutOf
             throw new CloudRuntimeException(errorMessage);
         }
 
-        final OutOfBandManagementResponse response = new OutOfBandManagementResponse(outOfBandManagementDao.findByHost(host.getId()));
         response.setSuccess(driverResponse.isSuccess());
         response.setResultDescription(driverResponse.getResult());
         response.setId(host.getUuid());
