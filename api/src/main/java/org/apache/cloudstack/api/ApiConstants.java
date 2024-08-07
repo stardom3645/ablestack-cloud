@@ -1222,8 +1222,6 @@ public class ApiConstants {
     public static final String DR_CLUSTER_TYPE = "drclustertype";
     public static final String DR_CLUSTER_URL = "drclusterurl";
     public static final String DR_CLUSTER_STATUS = "drclusterstatus";
-    public static final String MIRRORING_AGENT_STATUS = "mirroringagentstatus";
-    public static final String DISASTER_RECOVERY_CLUSTER_VM_LIST = "disasterrecoveryclustervmlist";
     public static final String DR_CLUSTER_API_KEY = "drclusterapikey";
     public static final String DR_CLUSTER_SECRET_KEY = "drclustersecretkey";
     public static final String DR_CLUSTER_PRIVATE_KEY = "drclusterprivatekey";
@@ -1241,6 +1239,8 @@ public class ApiConstants {
     public static final String DR_CLUSTER_NAME = "drclustername";
     public static final String DR_CLUSTER_VM_VOL_STATUS = "drclustervmvolstatus";
     public static final String DR_CLUSTER_VM_NAME = "drclustervmname";
+    public static final String MIRRORING_AGENT_STATUS = "mirroringagentstatus";
+    public static final String DISASTER_RECOVERY_CLUSTER_VM_LIST = "disasterrecoveryclustervmlist";
 
     /**
      * This enum specifies IO Drivers, each option controls specific policies on I/O.
