@@ -2246,9 +2246,9 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                     if (mirrorImageInfo != null) {
                         JsonObject infoObject = (JsonObject) new JsonParser().parse(mirrorImageInfo).getAsJsonObject();
                         if (!infoObject.get("image").getAsString().equals("")) {
-                            vmTemplate.add(infoObject.get("image").getAsString());
-                            break Loop;
+                            vmTemplate.add(infoObject.get("image").getAsString()); 
                         }
+                        break Loop;
                     }
                 }
             }
