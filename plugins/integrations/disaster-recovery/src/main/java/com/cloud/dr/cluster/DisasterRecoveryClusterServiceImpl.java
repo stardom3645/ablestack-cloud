@@ -1353,9 +1353,9 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
             throw new InvalidParameterValueException("Invalid disaster recovery cluster id specified");
         }
         Map<String, String> details = disasterRecoveryClusterDetailsDao.findDetails(drCluster.getId());
-        validateResyncDisasterRecoveryClusterMirrorParameters(drCluster);
         // DR 상황 발생 후 Primary 클러스터를 복구하여 재동기화 실행전 스냅샷 스케줄 추가
         beforeDemoteDisasterRecoveryClusterMirrorSchedule(drCluster);
+        validateResyncDisasterRecoveryClusterMirrorParameters(drCluster);
         String ipList = Script.runSimpleBashScript("cat /etc/hosts | grep -E 'scvm1-mngt|scvm2-mngt|scvm3-mngt' | awk '{print $1}' | tr '\n' ','");
         if (ipList != null || !ipList.isEmpty()) {
             ipList = ipList.replaceAll(",$", "");
@@ -2463,14 +2463,10 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                         Map<String, String> glueParams = new HashMap<>();
                         Date date = new Date();
                         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm");
-                        LOGGER.info("CurrentDate:::::::::::::::::::::::::::::::::::::::::::");
-                        LOGGER.info(sdf.format(date));
                         Calendar calendar = Calendar.getInstance();
                         calendar.setTime(date);
                         calendar.add(Calendar.MINUTE, -2);
                         String isoDate = sdf.format(calendar.getTime());
-                        LOGGER.info("isoDate:::::::::::::::::::::::::::::::::::::::::::");
-                        LOGGER.info(isoDate);
                         glueParams.put("mirrorPool", "rbd");
                         glueParams.put("imageName", imageName);
                         glueParams.put("interval", "1m");
