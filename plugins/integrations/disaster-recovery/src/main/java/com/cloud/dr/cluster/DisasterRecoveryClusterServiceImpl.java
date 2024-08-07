@@ -1174,18 +1174,18 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                                         glueStep += 1;
                                         result = DisasterRecoveryClusterUtil.glueImageMirrorPromoteAPI(glueUrl, glueCommand, glueMethod, glueParams);
                                         if (result) {
-                                            glueCommand = "/mirror/image/rbd/" + imageName;
-                                            glueMethod = "PUT";
-                                            glueParams = new HashMap<>();
-                                            glueParams.put("mirrorPool", "rbd");
-                                            glueParams.put("imageName", imageName);
-                                            glueParams.put("interval", details.get("mirrorscheduleinterval"));
-                                            glueParams.put("startTime", details.get("mirrorschedulestarttime"));
-                                            boolean schedule = DisasterRecoveryClusterUtil.glueImageMirrorSetupUpdateAPI(glueUrl, glueCommand, glueMethod, glueParams);
-                                            if (!schedule) {
-                                                LOGGER.error("Failed to request ImageMirrorSetupUpdate Glue-API.");
-                                                LOGGER.error("The image was promoted successfully, but scheduling the image failed. For volumes with a path of " + imageName + ", please add a schedule manually.");
-                                            }
+                                            // glueCommand = "/mirror/image/rbd/" + imageName;
+                                            // glueMethod = "PUT";
+                                            // glueParams = new HashMap<>();
+                                            // glueParams.put("mirrorPool", "rbd");
+                                            // glueParams.put("imageName", imageName);
+                                            // glueParams.put("interval", details.get("mirrorscheduleinterval"));
+                                            // glueParams.put("startTime", details.get("mirrorschedulestarttime"));
+                                            // boolean schedule = DisasterRecoveryClusterUtil.glueImageMirrorSetupUpdateAPI(glueUrl, glueCommand, glueMethod, glueParams);
+                                            // if (!schedule) {
+                                            //     LOGGER.error("Failed to request ImageMirrorSetupUpdate Glue-API.");
+                                            //     LOGGER.error("The image was promoted successfully, but scheduling the image failed. For volumes with a path of " + imageName + ", please add a schedule manually.");
+                                            // }
                                             break Loop;
                                         } else {
                                             LOGGER.error("Failed to request ImageMirrorPromote Glue-API.");
@@ -1345,6 +1345,8 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         }
         Map<String, String> details = disasterRecoveryClusterDetailsDao.findDetails(drCluster.getId());
         validateResyncDisasterRecoveryClusterMirrorParameters(drCluster);
+        // DR 상황 발생 후 Primary 클러스터를 복구하여 재동기화 실행전 스냅샷 스케줄 추가
+        beforeDemoteDisasterRecoveryClusterMirrorSchedule(drCluster);
         String ipList = Script.runSimpleBashScript("cat /etc/hosts | grep -E 'scvm1-mngt|scvm2-mngt|scvm3-mngt' | awk '{print $1}' | tr '\n' ','");
         if (ipList != null || !ipList.isEmpty()) {
             ipList = ipList.replaceAll(",$", "");
@@ -2429,6 +2431,41 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         DisasterRecoveryClusterVO drcluster = disasterRecoveryClusterDao.findByName(name);
         if (drcluster != null) {
             throw new InvalidParameterValueException("A disaster recovery cluster with the same name exists:" + name);
+        }
+    }
+
+    private void beforeDemoteDisasterRecoveryClusterMirrorSchedule(final DisasterRecoveryClusterVO drCluster) throws CloudRuntimeException {
+        Map<String, String> details = disasterRecoveryClusterDetailsDao.findDetails(drCluster.getId());
+        List<DisasterRecoveryClusterVmMapVO> vmMap = disasterRecoveryClusterVmMapDao.listByDisasterRecoveryClusterId(drCluster.getId());
+        if (!CollectionUtils.isEmpty(vmMap)) {
+            String ipList = Script.runSimpleBashScript("cat /etc/hosts | grep -E 'scvm1-mngt|scvm2-mngt|scvm3-mngt' | awk '{print $1}' | tr '\n' ','");
+            if (ipList != null || !ipList.isEmpty()) {
+                ipList = ipList.replaceAll(",$", "");
+                String[] array = ipList.split(",");
+                for (DisasterRecoveryClusterVmMapVO map : vmMap) {
+                    String imageName = map.getMirroredVmVolumePath();
+                    Loop :
+                    for (int i=0; i < array.length; i++) {
+                        String glueIp = array[i];
+                        ///////////////////// glue-api 프로토콜과 포트 확정 시 변경 예정
+                        String glueUrl = "https://" + glueIp + ":8080/api/v1";
+                        String glueCommand = "/mirror/image/rbd/" + imageName;
+                        String glueMethod = "PUT";
+                        Map<String, String> glueParams = new HashMap<>();
+                        glueParams.put("mirrorPool", "rbd");
+                        glueParams.put("imageName", imageName);
+                        glueParams.put("interval", details.get("mirrorscheduleinterval"));
+                        glueParams.put("startTime", details.get("mirrorschedulestarttime"));
+                        boolean result = DisasterRecoveryClusterUtil.glueImageMirrorSetupUpdateAPI(glueUrl, glueCommand, glueMethod, glueParams);
+                        if (result) {
+                            break Loop;
+                        } else {
+                            LOGGER.error("Failed to request ImageMirrorSetupUpdate Glue-API.");
+                            throw new InvalidParameterValueException("Resync functions cannot be executed because scheduling the image failed. For volumes with a path of " + imageName);
+                        }
+                    }
+                }
+            }
         }
     }
 
