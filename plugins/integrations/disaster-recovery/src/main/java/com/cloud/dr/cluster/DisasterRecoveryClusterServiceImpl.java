@@ -512,7 +512,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         }
         if (cmd.getDetails() != null) {
             Map<String,String> details = cmd.getDetails();
-            if (!details.get("mirrorscheduleinterval").contains("d") || !details.get("mirrorscheduleinterval").contains("h") || !details.get("mirrorscheduleinterval").contains("m")) {
+            if (!details.get("mirrorscheduleinterval").contains("d") && !details.get("mirrorscheduleinterval").contains("h") && !details.get("mirrorscheduleinterval").contains("m")) {
                 throw new InvalidParameterValueException("The mirror schedule interval can be specified in days, hours, or minutes using d, h, m suffix respectively");
             }
         }
