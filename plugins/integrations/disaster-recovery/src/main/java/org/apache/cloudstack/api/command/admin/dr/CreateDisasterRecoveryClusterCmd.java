@@ -142,9 +142,8 @@ public class CreateDisasterRecoveryClusterCmd extends BaseAsyncCreateCmd {
 
     @Override
     public String getEventDescription() {
-        return "creating a disaster recovery cluster";
+        return "Creating a disaster recovery cluster";
     }
-
 
     @Override
     public ApiCommandResourceType getApiResourceType() {
