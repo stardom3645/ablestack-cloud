@@ -22,11 +22,13 @@ import java.util.ArrayList;
 import java.util.Map;
 import java.util.Properties;
 import java.util.HashMap;
+import java.util.Date;
 import java.io.InputStream;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.File;
+import java.text.SimpleDateFormat;
 
 import javax.inject.Inject;
 
@@ -2452,10 +2454,14 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                         String glueCommand = "/mirror/image/rbd/" + imageName;
                         String glueMethod = "PUT";
                         Map<String, String> glueParams = new HashMap<>();
+                        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+                        String isoDate = sdf.format(new Date());
+                        LOGGER.info("isoDate:::::::::::::::::::::::::::::::::::::::::::");
+                        LOGGER.info(isoDate);
                         glueParams.put("mirrorPool", "rbd");
                         glueParams.put("imageName", imageName);
                         glueParams.put("interval", details.get("mirrorscheduleinterval"));
-                        glueParams.put("startTime", details.get("mirrorschedulestarttime"));
+                        glueParams.put("startTime", isoDate);
                         boolean result = DisasterRecoveryClusterUtil.glueImageMirrorSetupUpdateAPI(glueUrl, glueCommand, glueMethod, glueParams);
                         if (result) {
                             break Loop;
