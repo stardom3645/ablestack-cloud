@@ -21,6 +21,7 @@ import javax.inject.Inject;
 
 import org.apache.cloudstack.acl.RoleType;
 import org.apache.cloudstack.api.APICommand;
+import org.apache.cloudstack.api.ApiCommandResourceType;
 import org.apache.cloudstack.api.ApiConstants;
 import org.apache.cloudstack.api.ApiErrorCode;
 import org.apache.cloudstack.api.Parameter;
@@ -31,7 +32,9 @@ import org.apache.cloudstack.api.ServerApiException;
 import org.apache.cloudstack.context.CallContext;
 
 import com.cloud.dr.cluster.DisasterRecoveryClusterEventTypes;
+import com.cloud.dr.cluster.DisasterRecoveryClusterVO;
 import com.cloud.dr.cluster.DisasterRecoveryClusterService;
+import com.cloud.dr.cluster.dao.DisasterRecoveryClusterDao;
 import com.cloud.utils.exception.CloudRuntimeException;
 
 @APICommand(name = CreateDisasterRecoveryClusterVmCmd.APINAME,
@@ -43,6 +46,8 @@ public class CreateDisasterRecoveryClusterVmCmd extends BaseAsyncCmd {
 
     @Inject
     private DisasterRecoveryClusterService disasterRecoveryClusterService;
+    @Inject
+    private DisasterRecoveryClusterDao disasterRecoveryClusterDao;
 
     /////////////////////////////////////////////////////
     //////////////// API parameters /////////////////////
@@ -105,6 +110,17 @@ public class CreateDisasterRecoveryClusterVmCmd extends BaseAsyncCmd {
     @Override
     public String getEventType() {
         return DisasterRecoveryClusterEventTypes.EVENT_DR_VM_CREATE;
+    }
+
+    @Override
+    public ApiCommandResourceType getApiResourceType() {
+        return ApiCommandResourceType.DisasterRecoveryCluster;
+    }
+
+    @Override
+    public Long getApiResourceId() {
+        DisasterRecoveryClusterVO drCluster = disasterRecoveryClusterDao.findByName(getDrClusterName());
+        return drCluster.getId();
     }
 
     @Override

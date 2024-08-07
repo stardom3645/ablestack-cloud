@@ -21,6 +21,7 @@ import javax.inject.Inject;
 
 import org.apache.cloudstack.acl.RoleType;
 import org.apache.cloudstack.api.APICommand;
+import org.apache.cloudstack.api.ApiCommandResourceType;
 import org.apache.cloudstack.api.ApiConstants;
 import org.apache.cloudstack.api.ApiErrorCode;
 import org.apache.cloudstack.api.Parameter;
@@ -86,6 +87,16 @@ public class PromoteDisasterRecoveryClusterCmd extends BaseAsyncCmd {
             description += String.format(" ID: %d", getId());
         }
         return description;
+    }
+
+    @Override
+    public ApiCommandResourceType getApiResourceType() {
+        return ApiCommandResourceType.DisasterRecoveryCluster;
+    }
+
+    @Override
+    public Long getApiResourceId() {
+        return getId();
     }
 
     /////////////////////////////////////////////////////

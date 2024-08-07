@@ -36,7 +36,7 @@ import com.cloud.dr.cluster.dao.DisasterRecoveryClusterDao;
 import com.cloud.utils.exception.CloudRuntimeException;
 
 @APICommand(name = StopDisasterRecoveryClusterVmCmd.APINAME,
-        description = "stop a disaster recovery cluster virtual machine",
+        description = "Stop a disaster recovery cluster virtual machine",
         responseObject = SuccessResponse.class,
         authorized = {RoleType.Admin})
 public class StopDisasterRecoveryClusterVmCmd extends BaseCmd implements AdminCmd {
