@@ -18,6 +18,7 @@ package com.cloud.dr.cluster;
 
 import java.util.List;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.Properties;
@@ -507,6 +508,12 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
             drcluster = disasterRecoveryClusterDao.findById(drClusterId);
             if (drcluster == null) {
                 throw new InvalidParameterValueException("Invalid Disaster Recovery id specified");
+            }
+        }
+        if (cmd.getDetails() != null) {
+            Map<String,String> details = cmd.getDetails();
+            if (!details.get("mirrorscheduleinterval").contains("d") || !details.get("mirrorscheduleinterval").contains("h") || !details.get("mirrorscheduleinterval").contains("m")) {
+                throw new InvalidParameterValueException("The mirror schedule interval can be specified in days, hours, or minutes using d, h, m suffix respectively");
             }
         }
         Long drId = drcluster.getId();
@@ -2454,13 +2461,19 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                         String glueCommand = "/mirror/image/rbd/" + imageName;
                         String glueMethod = "PUT";
                         Map<String, String> glueParams = new HashMap<>();
+                        Date date = new Date();
                         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm");
-                        String isoDate = sdf.format(new Date());
+                        LOGGER.info("CurrentDate:::::::::::::::::::::::::::::::::::::::::::");
+                        LOGGER.info(sdf.format(date));
+                        Calendar calendar = Calendar.getInstance();
+                        calendar.setTime(date);
+                        calendar.add(Calendar.MINUTE, -2);
+                        String isoDate = sdf.format(calendar.getTime());
                         LOGGER.info("isoDate:::::::::::::::::::::::::::::::::::::::::::");
                         LOGGER.info(isoDate);
                         glueParams.put("mirrorPool", "rbd");
                         glueParams.put("imageName", imageName);
-                        glueParams.put("interval", details.get("mirrorscheduleinterval"));
+                        glueParams.put("interval", "1m");
                         glueParams.put("startTime", isoDate);
                         boolean result = DisasterRecoveryClusterUtil.glueImageMirrorSetupUpdateAPI(glueUrl, glueCommand, glueMethod, glueParams);
                         if (result) {
