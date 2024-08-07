@@ -4469,7 +4469,6 @@
 "dr.vm.stop": "DR.VM.STOP",
 "dr.vm.promote": "DR.VM.PROMOTE",
 "dr.vm.demote": "DR.VM.DEMOTE",
-"label.add.disaster.recovery.cluster.vm": "Add disaster recovery cluster virtual machine",
 "message.success.add.disaster.recovery.cluster.vm": "Successfully added disaster recovery cluster virtual machine",
 "label.dr.mirrored.volume.status": "Mirrored volume status",
 "label.dr.mirrored.volume.path": "Mirrored volume path",
@@ -4480,5 +4479,8 @@
 "message.clear.dr.cluster.confirm": "If the primary cluster is not recovered when a disaster recovery situation occurs, Glue garbage for the existing disaster recovery cluster is deleted.",
 "message.remove.disaster.recovery.cluster.vm.processing": "removing disaster recovery cluster virtual machine mirroring...",
 "message.error.remove.disaster.recovery.cluster.vm": "There was an error removing disaster recovery cluster virtual machine mirroring",
-"message.success.remove.disaster.recovery.cluster.vm": "Successfully removed mirroring"
+"message.success.remove.disaster.recovery.cluster.vm": "Successfully removed mirroring",
+"message.success.create.disaster.recovery.cluster.vm": "Successfully created mirroring",
+"message.create.disaster.recovery.cluster.vm.processing": "creating disaster recovery cluster virtual machine mirroring...",
+"message.error.create.disaster.recovery.cluster.vm": "There was an error creating disaster recovery cluster virtual machine mirroring"
 }

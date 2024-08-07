@@ -233,8 +233,19 @@ export default {
           serviceofferingname: values.secDrClusterOfferings,
           networkname: values.secDrClusterNetworkList
         }
-        api('createDisasterRecoveryClusterVm', params).then(json => {
-          this.$message.success(`${this.$t('label.add.disaster.recovery.cluster.vm')}: ${this.resource.name}`)
+        api('createDisasterRecoveryClusterVm', params).then(response => {
+          this.$pollJob({
+            jobId: response.createdisasterrecoveryclustervmresponse.jobid,
+            title: this.$t('message.success.create.disaster.recovery.cluster.vm'),
+            description: this.resource.id,
+            successMessage: this.$t('message.success.create.disaster.recovery.cluster.vm'),
+            successMethod: () => {
+              this.closeModal()
+            },
+            errorMessage: this.$t('message.error.create.disaster.recovery.cluster.vm'),
+            loadingMessage: this.$t('message.create.disaster.recovery.cluster.vm.processing'),
+            catchMessage: this.$t('error.fetching.async.job.result')
+          })
           this.closeModal()
         }).catch(error => {
           this.$notifyError(error)
