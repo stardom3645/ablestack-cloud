@@ -4469,7 +4469,6 @@
 "dr.vm.stop": "DR.VM.STOP",
 "dr.vm.promote": "DR.VM.PROMOTE",
 "dr.vm.demote": "DR.VM.DEMOTE",
-"message.success.add.disaster.recovery.cluster.vm": "Successfully added disaster recovery cluster virtual machine",
 "label.dr.mirrored.volume.status": "Mirrored volume status",
 "label.dr.mirrored.volume.path": "Mirrored volume path",
 "label.dr.mirrored.volume.type": "Mirrored volume type",
@@ -4477,10 +4476,10 @@
 "message.sync.dr.cluster.confirm": "If the primary cluster is recovered when a disaster recovery situation occurs, execute a task to synchronize the Glue image of the recovered primary cluster before executing a forced demote.",
 "label.action.clear.disaster.recovery.cluster": "Clear disaster recovery cluster",
 "message.clear.dr.cluster.confirm": "If the primary cluster is not recovered when a disaster recovery situation occurs, Glue garbage for the existing disaster recovery cluster is deleted.",
-"message.remove.disaster.recovery.cluster.vm.processing": "removing disaster recovery cluster virtual machine mirroring...",
-"message.error.remove.disaster.recovery.cluster.vm": "There was an error removing disaster recovery cluster virtual machine mirroring",
+"message.remove.disaster.recovery.cluster.vm.processing": "removing mirroring virtualmachine...",
+"message.error.remove.disaster.recovery.cluster.vm": "There was an error removing mirroring virtualmachine",
 "message.success.remove.disaster.recovery.cluster.vm": "Successfully removed mirroring",
 "message.success.create.disaster.recovery.cluster.vm": "Successfully created mirroring",
-"message.create.disaster.recovery.cluster.vm.processing": "creating disaster recovery cluster virtual machine mirroring...",
-"message.error.create.disaster.recovery.cluster.vm": "There was an error creating disaster recovery cluster virtual machine mirroring"
+"message.create.disaster.recovery.cluster.vm.processing": "creating mirroring virtualmachine...",
+"message.error.create.disaster.recovery.cluster.vm": "There was an error creating mirroring virtualmachine"
 }
