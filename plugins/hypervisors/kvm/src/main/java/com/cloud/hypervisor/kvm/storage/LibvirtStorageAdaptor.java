@@ -830,8 +830,8 @@ public class LibvirtStorageAdaptor implements StorageAdaptor {
         try {
             sp = conn.storagePoolLookupByUUIDString(uuid);
         } catch (LibvirtException exc) {
-            s_logger.warn("Storage pool " + uuid + " doesn't exist in libvirt. Assuming it is already removed");
-            s_logger.warn(exc.getStackTrace());
+            logger.warn("Storage pool " + uuid + " doesn't exist in libvirt. Assuming it is already removed");
+            logger.warn(exc.getStackTrace());
             return true;
         }
 
@@ -846,7 +846,7 @@ public class LibvirtStorageAdaptor implements StorageAdaptor {
 
             return true;
         } else {
-            s_logger.warn("Storage pool " + uuid + " doesn't exist in libvirt. Assuming it is already removed");
+            logger.warn("Storage pool " + uuid + " doesn't exist in libvirt. Assuming it is already removed");
             return false;
         }
     }
@@ -856,7 +856,7 @@ public class LibvirtStorageAdaptor implements StorageAdaptor {
         try {
             return destroyStoragePool(conn, uuid);
         } catch (LibvirtException e) {
-            s_logger.error(String.format("Failed to destroy libvirt pool %s: %s", uuid, e));
+            logger.error(String.format("Failed to destroy libvirt pool %s: %s", uuid, e));
         }
         return false;
     }
