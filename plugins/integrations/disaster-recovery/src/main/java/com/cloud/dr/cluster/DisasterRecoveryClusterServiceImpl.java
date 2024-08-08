@@ -260,7 +260,6 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
             response.setDetails(details);
         }
 
-        String daemonHealth = null;
         // 미러링 데몬 상태 업데이트
         String ipList = Script.runSimpleBashScript("cat /etc/hosts | grep -E 'scvm1-mngt|scvm2-mngt|scvm3-mngt' | awk '{print $1}' | tr '\n' ','");
         if (ipList != null || !ipList.isEmpty()) {
@@ -272,7 +271,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                 String glueUrl = "https://" + glueIp + ":8080/api/v1";
                 String glueCommand = "/mirror";
                 String glueMethod = "GET";
-                daemonHealth = DisasterRecoveryClusterUtil.glueMirrorStatusAPI(glueUrl, glueCommand, glueMethod);
+                String daemonHealth = DisasterRecoveryClusterUtil.glueMirrorStatusAPI(glueUrl, glueCommand, glueMethod);
                 if (daemonHealth != null) {
                     if (daemonHealth.contains("OK")) {
                         drcluster.setMirroringAgentStatus(DisasterRecoveryCluster.MirroringAgentStatus.Enabled.toString());
@@ -297,19 +296,17 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         disasterRecoveryClusterDao.update(drcluster.getId(), drcluster);
         response.setMirroringAgentStatus(drcluster.getMirroringAgentStatus());
 
-        List<GetDisasterRecoveryClusterVmListResponse> disasterRecoveryClusterVmListResponse = setDisasterRecoveryClusterVmListResponse(drcluster.getId(), daemonHealth);
+        List<GetDisasterRecoveryClusterVmListResponse> disasterRecoveryClusterVmListResponse = setDisasterRecoveryClusterVmListResponse(drcluster.getId());
         response.setDisasterRecoveryClusterVmMap(disasterRecoveryClusterVmListResponse);
 
-        if (daemonHealth != null) {
-            String moldUrl = drcluster.getDrClusterUrl() + "/client/api/";
-            String moldMethod = "GET";
-            String moldCommandListServiceOfferings = "listServiceOfferings";
-            List<ServiceOfferingResponse> secDrClusterServiceOfferingListResponse = DisasterRecoveryClusterUtil.getSecDrClusterInfoList(moldUrl, moldCommandListServiceOfferings, moldMethod, secApiKey, secSecretKey);
-            response.setSecDisasterRecoveryClusterServiceOfferingList(secDrClusterServiceOfferingListResponse);
-            String moldCommandListNetworks = "listNetworks";
-            List<NetworkResponse> secDrClusterNetworksListResponse = DisasterRecoveryClusterUtil.getSecDrClusterInfoList(moldUrl, moldCommandListNetworks, moldMethod, secApiKey, secSecretKey);
-            response.setSecDisasterRecoveryClusterNetworkList(secDrClusterNetworksListResponse);
-        }
+        String moldUrl = drcluster.getDrClusterUrl() + "/client/api/";
+        String moldMethod = "GET";
+        String moldCommandListServiceOfferings = "listServiceOfferings";
+        List<ServiceOfferingResponse> secDrClusterServiceOfferingListResponse = DisasterRecoveryClusterUtil.getSecDrClusterInfoList(moldUrl, moldCommandListServiceOfferings, moldMethod, secApiKey, secSecretKey);
+        response.setSecDisasterRecoveryClusterServiceOfferingList(secDrClusterServiceOfferingListResponse);
+        String moldCommandListNetworks = "listNetworks";
+        List<NetworkResponse> secDrClusterNetworksListResponse = DisasterRecoveryClusterUtil.getSecDrClusterInfoList(moldUrl, moldCommandListNetworks, moldMethod, secApiKey, secSecretKey);
+        response.setSecDisasterRecoveryClusterNetworkList(secDrClusterNetworksListResponse);
         return response;
     }
 
@@ -393,7 +390,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         return response;
     }
 
-    public List<GetDisasterRecoveryClusterVmListResponse> setDisasterRecoveryClusterVmListResponse(long clusterId, String daemonHealth) {
+    public List<GetDisasterRecoveryClusterVmListResponse> setDisasterRecoveryClusterVmListResponse(long clusterId) {
         DisasterRecoveryClusterVO drcluster = disasterRecoveryClusterDao.findById(clusterId);
         String url = drcluster.getDrClusterUrl();
         Map<String, String> details = disasterRecoveryClusterDetailsDao.findDetails(drcluster.getId());
@@ -413,36 +410,34 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                 response.setMirroredVmName(map.getMirroredVmName());
                 response.setMirroredVmVolumeType(map.getMirroredVmVolumeType());
                 response.setMirroredVmVolumePath(map.getMirroredVmVolumePath());
-                if (daemonHealth != null) {
-                    // 미러링 가상머신 상태 조회
-                    String moldUrl = url + "/client/api/";
-                    String moldCommand = "listVirtualMachines";
-                    String moldMethod = "GET";
-                    Map<String, String> moldParams = new HashMap<>();
-                    moldParams.put("keyword", userVM.getName());
-                    String vmList = DisasterRecoveryClusterUtil.moldListVirtualMachinesAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey, moldParams);
-                    if (vmList != null) {
-                        JSONObject jsonObject = new JSONObject(vmList);
-                        Object object = jsonObject.get("virtualmachine");
-                        JSONArray array;
-                        if (object instanceof JSONArray) {
-                            array = (JSONArray) object;
-                        } else {
-                            array = new JSONArray();
-                            array.put(object);
-                        }
-                        for (int i = 0; i < array.length(); i++) {
-                            JSONObject jSONObject = array.getJSONObject(i);
-                            if (jSONObject.get("name").equals(userVM.getName())) {
-                                map.setMirroredVmStatus(jSONObject.get("state").toString());
-                                disasterRecoveryClusterVmMapDao.update(map.getId(), map);
-                            }
+                // 미러링 가상머신 상태 조회
+                String moldUrl = url + "/client/api/";
+                String moldCommand = "listVirtualMachines";
+                String moldMethod = "GET";
+                Map<String, String> moldParams = new HashMap<>();
+                moldParams.put("keyword", userVM.getName());
+                String vmList = DisasterRecoveryClusterUtil.moldListVirtualMachinesAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey, moldParams);
+                if (vmList != null) {
+                    JSONObject jsonObject = new JSONObject(vmList);
+                    Object object = jsonObject.get("virtualmachine");
+                    JSONArray array;
+                    if (object instanceof JSONArray) {
+                        array = (JSONArray) object;
+                    } else {
+                        array = new JSONArray();
+                        array.put(object);
+                    }
+                    for (int i = 0; i < array.length(); i++) {
+                        JSONObject jSONObject = array.getJSONObject(i);
+                        if (jSONObject.get("name").equals(userVM.getName())) {
+                            map.setMirroredVmStatus(jSONObject.get("state").toString());
+                            disasterRecoveryClusterVmMapDao.update(map.getId(), map);
                         }
                     }
                 }
                 response.setMirroredVmStatus(map.getMirroredVmStatus());
                 // 미러링 가상머신 볼륨 상태 조회
-                if (daemonHealth != null) {
+                if (vmList != null) {
                     String ipList = Script.runSimpleBashScript("cat /etc/hosts | grep -E 'scvm1-mngt|scvm2-mngt|scvm3-mngt' | awk '{print $1}' | tr '\n' ','");
                     ipList = ipList.replaceAll(",$", "");
                     String[] array = ipList.split(",");
