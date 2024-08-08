@@ -491,6 +491,8 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                                     break Loop;
                                 }
                             }
+                        } else {
+                            response.setDrClusterVmVolStatus("UNKNOWN");
                         }
                     }
                 }
