@@ -94,7 +94,7 @@ public class DisasterRecoveryClusterUtil {
             connection.setSSLSocketFactory(sslContext.getSocketFactory());
             connection.setDoOutput(true);
             connection.setRequestMethod(method);
-            connection.setConnectTimeout(30000);
+            connection.setConnectTimeout(10000);
             connection.setReadTimeout(180000);
             connection.setRequestProperty("Accept", "application/vnd.ceph.api.v1.0+json");
             connection.setRequestProperty("Authorization", "application/vnd.ceph.api.v1.0+json");
@@ -144,7 +144,7 @@ public class DisasterRecoveryClusterUtil {
             connection.setSSLSocketFactory(sslContext.getSocketFactory());
             connection.setDoOutput(true);
             connection.setRequestMethod(method);
-            connection.setConnectTimeout(30000);
+            connection.setConnectTimeout(10000);
             connection.setReadTimeout(180000);
             connection.setRequestProperty("Accept", "application/vnd.ceph.api.v1.0+json");
             connection.setRequestProperty("Authorization", "application/vnd.ceph.api.v1.0+json");
@@ -199,7 +199,7 @@ public class DisasterRecoveryClusterUtil {
             connection.setDoInput(true);
             connection.setDoOutput(true);
             connection.setRequestMethod(method);
-            connection.setConnectTimeout(30000);
+            connection.setConnectTimeout(10000);
             connection.setReadTimeout(180000);
             connection.setRequestProperty("Accept", "application/vnd.ceph.api.v1.0+json");
             connection.setRequestProperty("Authorization", "application/vnd.ceph.api.v1.0+json");
@@ -266,7 +266,7 @@ public class DisasterRecoveryClusterUtil {
             connection.setDoInput(true);
             connection.setDoOutput(true);
             connection.setRequestMethod(method);
-            connection.setConnectTimeout(30000);
+            connection.setConnectTimeout(10000);
             connection.setReadTimeout(180000);
             connection.setRequestProperty("Accept", "application/vnd.ceph.api.v1.0+json");
             connection.setRequestProperty("Authorization", "application/vnd.ceph.api.v1.0+json");
@@ -337,7 +337,7 @@ public class DisasterRecoveryClusterUtil {
             connection.setDoInput(true);
             connection.setDoOutput(true);
             connection.setRequestMethod(method);
-            connection.setConnectTimeout(30000);
+            connection.setConnectTimeout(10000);
             connection.setReadTimeout(180000);
             connection.setRequestProperty("Accept", "application/vnd.ceph.api.v1.0+json");
             connection.setRequestProperty("Authorization", "application/vnd.ceph.api.v1.0+json");
@@ -404,7 +404,7 @@ public class DisasterRecoveryClusterUtil {
             connection.setDoInput(true);
             connection.setDoOutput(true);
             connection.setRequestMethod(method);
-            connection.setConnectTimeout(30000);
+            connection.setConnectTimeout(10000);
             connection.setReadTimeout(180000);
             connection.setRequestProperty("Accept", "application/vnd.ceph.api.v1.0+json");
             connection.setRequestProperty("Authorization", "application/vnd.ceph.api.v1.0+json");
@@ -470,7 +470,7 @@ public class DisasterRecoveryClusterUtil {
             connection.setSSLSocketFactory(sslContext.getSocketFactory());
             connection.setDoOutput(true);
             connection.setRequestMethod(method);
-            connection.setConnectTimeout(30000);
+            connection.setConnectTimeout(10000);
             connection.setReadTimeout(180000);
             connection.setRequestProperty("Accept", "application/vnd.ceph.api.v1.0+json");
             connection.setRequestProperty("Authorization", "application/vnd.ceph.api.v1.0+json");
@@ -536,7 +536,7 @@ public class DisasterRecoveryClusterUtil {
             connection.setSSLSocketFactory(sslContext.getSocketFactory());
             connection.setDoOutput(true);
             connection.setRequestMethod(method);
-            connection.setConnectTimeout(30000);
+            connection.setConnectTimeout(10000);
             connection.setReadTimeout(180000);
             connection.setRequestProperty("Accept", "application/vnd.ceph.api.v1.0+json");
             connection.setRequestProperty("Authorization", "application/vnd.ceph.api.v1.0+json");
@@ -602,7 +602,7 @@ public class DisasterRecoveryClusterUtil {
             connection.setSSLSocketFactory(sslContext.getSocketFactory());
             connection.setDoOutput(true);
             connection.setRequestMethod(method);
-            connection.setConnectTimeout(30000);
+            connection.setConnectTimeout(10000);
             connection.setReadTimeout(180000);
             connection.setRequestProperty("Accept", "application/vnd.ceph.api.v1.0+json");
             connection.setRequestProperty("Authorization", "application/vnd.ceph.api.v1.0+json");
@@ -668,7 +668,7 @@ public class DisasterRecoveryClusterUtil {
             connection.setSSLSocketFactory(sslContext.getSocketFactory());
             connection.setDoOutput(true);
             connection.setRequestMethod(method);
-            connection.setConnectTimeout(30000);
+            connection.setConnectTimeout(10000);
             connection.setReadTimeout(180000);
             connection.setRequestProperty("Accept", "application/vnd.ceph.api.v1.0+json");
             connection.setRequestProperty("Authorization", "application/vnd.ceph.api.v1.0+json");
@@ -736,7 +736,7 @@ public class DisasterRecoveryClusterUtil {
             connection.setSSLSocketFactory(sslContext.getSocketFactory());
             connection.setDoOutput(true);
             connection.setRequestMethod(method);
-            connection.setConnectTimeout(30000);
+            connection.setConnectTimeout(10000);
             connection.setReadTimeout(180000);
             connection.setRequestProperty("Accept", "application/vnd.ceph.api.v1.0+json");
             connection.setRequestProperty("Authorization", "application/vnd.ceph.api.v1.0+json");
@@ -789,7 +789,7 @@ public class DisasterRecoveryClusterUtil {
             connection.setSSLSocketFactory(sslContext.getSocketFactory());
             connection.setDoOutput(true);
             connection.setRequestMethod(method);
-            connection.setConnectTimeout(30000);
+            connection.setConnectTimeout(10000);
             connection.setReadTimeout(180000);
             connection.setRequestProperty("Accept", "application/vnd.ceph.api.v1.0+json");
             connection.setRequestProperty("Authorization", "application/vnd.ceph.api.v1.0+json");
@@ -844,7 +844,7 @@ public class DisasterRecoveryClusterUtil {
             connection.setSSLSocketFactory(sslContext.getSocketFactory());
             connection.setDoOutput(true);
             connection.setRequestMethod(method);
-            connection.setConnectTimeout(30000);
+            connection.setConnectTimeout(10000);
             connection.setReadTimeout(180000);
             connection.setRequestProperty("Accept", "application/vnd.ceph.api.v1.0+json");
             connection.setRequestProperty("Authorization", "application/vnd.ceph.api.v1.0+json");
@@ -892,7 +892,7 @@ public class DisasterRecoveryClusterUtil {
             connection.setSSLSocketFactory(sslContext.getSocketFactory());
             connection.setDoOutput(true);
             connection.setRequestMethod(method);
-            connection.setConnectTimeout(30000);
+            connection.setConnectTimeout(10000);
             connection.setReadTimeout(180000);
             connection.setRequestProperty("Accept", "application/vnd.ceph.api.v1.0+json");
             connection.setRequestProperty("Authorization", "application/vnd.ceph.api.v1.0+json");
@@ -957,7 +957,7 @@ public class DisasterRecoveryClusterUtil {
             connection.setDoInput(true);
             connection.setDoOutput(true);
             connection.setRequestMethod(method);
-            connection.setConnectTimeout(30000);
+            connection.setConnectTimeout(10000);
             connection.setReadTimeout(180000);
             connection.setRequestProperty("Accept", "application/vnd.ceph.api.v1.0+json");
             connection.setRequestProperty("Authorization", "application/vnd.ceph.api.v1.0+json");
@@ -1022,7 +1022,7 @@ public class DisasterRecoveryClusterUtil {
             connection.setSSLSocketFactory(sslContext.getSocketFactory());
             connection.setDoOutput(true);
             connection.setRequestMethod(method);
-            connection.setConnectTimeout(30000);
+            connection.setConnectTimeout(10000);
             connection.setReadTimeout(180000);
             connection.setRequestProperty("Accept", "application/vnd.ceph.api.v1.0+json");
             connection.setRequestProperty("Authorization", "application/vnd.ceph.api.v1.0+json");
@@ -1313,7 +1313,7 @@ public class DisasterRecoveryClusterUtil {
                 connection.setSSLSocketFactory(sslContext.getSocketFactory());
                 connection.setDoOutput(true);
                 connection.setRequestMethod(method);
-                connection.setConnectTimeout(30000);
+                connection.setConnectTimeout(10000);
                 connection.setReadTimeout(180000);
                 connection.setRequestProperty("Accept", "application/json");
                 connection.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
@@ -1332,7 +1332,7 @@ public class DisasterRecoveryClusterUtil {
                 HttpURLConnection connection = (HttpURLConnection)url.openConnection();
                 connection.setDoOutput(true);
                 connection.setRequestMethod(method);
-                connection.setConnectTimeout(30000);
+                connection.setConnectTimeout(10000);
                 connection.setReadTimeout(180000);
                 connection.setRequestProperty("Accept", "application/json");
                 connection.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
@@ -1388,7 +1388,7 @@ public class DisasterRecoveryClusterUtil {
                 connection.setSSLSocketFactory(sslContext.getSocketFactory());
                 connection.setDoOutput(true);
                 connection.setRequestMethod(method);
-                connection.setConnectTimeout(30000);
+                connection.setConnectTimeout(10000);
                 connection.setReadTimeout(180000);
                 connection.setRequestProperty("Accept", "application/json");
                 connection.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
@@ -1407,7 +1407,7 @@ public class DisasterRecoveryClusterUtil {
                 HttpURLConnection connection = (HttpURLConnection)url.openConnection();
                 connection.setDoOutput(true);
                 connection.setRequestMethod(method);
-                connection.setConnectTimeout(30000);
+                connection.setConnectTimeout(10000);
                 connection.setReadTimeout(180000);
                 connection.setRequestProperty("Accept", "application/json");
                 connection.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
@@ -1460,7 +1460,7 @@ public class DisasterRecoveryClusterUtil {
                 connection.setSSLSocketFactory(sslContext.getSocketFactory());
                 connection.setDoOutput(true);
                 connection.setRequestMethod(method);
-                connection.setConnectTimeout(30000);
+                connection.setConnectTimeout(10000);
                 connection.setReadTimeout(180000);
                 connection.setRequestProperty("Accept", "application/json");
                 connection.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
@@ -1479,7 +1479,7 @@ public class DisasterRecoveryClusterUtil {
                 HttpURLConnection connection = (HttpURLConnection)url.openConnection();
                 connection.setDoOutput(true);
                 connection.setRequestMethod(method);
-                connection.setConnectTimeout(30000);
+                connection.setConnectTimeout(10000);
                 connection.setReadTimeout(180000);
                 connection.setRequestProperty("Accept", "application/json");
                 connection.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
@@ -1533,7 +1533,7 @@ public class DisasterRecoveryClusterUtil {
                 connection.setSSLSocketFactory(sslContext.getSocketFactory());
                 connection.setDoOutput(true);
                 connection.setRequestMethod(method);
-                connection.setConnectTimeout(30000);
+                connection.setConnectTimeout(10000);
                 connection.setReadTimeout(180000);
                 connection.setRequestProperty("Accept", "application/json");
                 connection.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
@@ -1552,7 +1552,7 @@ public class DisasterRecoveryClusterUtil {
                 HttpURLConnection connection = (HttpURLConnection)url.openConnection();
                 connection.setDoOutput(true);
                 connection.setRequestMethod(method);
-                connection.setConnectTimeout(30000);
+                connection.setConnectTimeout(10000);
                 connection.setReadTimeout(180000);
                 connection.setRequestProperty("Accept", "application/json");
                 connection.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
@@ -1604,7 +1604,7 @@ public class DisasterRecoveryClusterUtil {
                 connection.setSSLSocketFactory(sslContext.getSocketFactory());
                 connection.setDoOutput(true);
                 connection.setRequestMethod(method);
-                connection.setConnectTimeout(30000);
+                connection.setConnectTimeout(10000);
                 connection.setReadTimeout(180000);
                 connection.setRequestProperty("Accept", "application/json");
                 connection.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
@@ -1623,7 +1623,7 @@ public class DisasterRecoveryClusterUtil {
                 HttpURLConnection connection = (HttpURLConnection)url.openConnection();
                 connection.setDoOutput(true);
                 connection.setRequestMethod(method);
-                connection.setConnectTimeout(30000);
+                connection.setConnectTimeout(10000);
                 connection.setReadTimeout(180000);
                 connection.setRequestProperty("Accept", "application/json");
                 connection.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
@@ -1677,7 +1677,7 @@ public class DisasterRecoveryClusterUtil {
                 connection.setSSLSocketFactory(sslContext.getSocketFactory());
                 connection.setDoOutput(true);
                 connection.setRequestMethod(method);
-                connection.setConnectTimeout(30000);
+                connection.setConnectTimeout(10000);
                 connection.setReadTimeout(180000);
                 connection.setRequestProperty("Accept", "application/json");
                 connection.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
@@ -1696,7 +1696,7 @@ public class DisasterRecoveryClusterUtil {
                 HttpURLConnection connection = (HttpURLConnection)url.openConnection();
                 connection.setDoOutput(true);
                 connection.setRequestMethod(method);
-                connection.setConnectTimeout(30000);
+                connection.setConnectTimeout(10000);
                 connection.setReadTimeout(180000);
                 connection.setRequestProperty("Accept", "application/json");
                 connection.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
@@ -1750,7 +1750,7 @@ public class DisasterRecoveryClusterUtil {
                 connection.setSSLSocketFactory(sslContext.getSocketFactory());
                 connection.setDoOutput(true);
                 connection.setRequestMethod(method);
-                connection.setConnectTimeout(30000);
+                connection.setConnectTimeout(10000);
                 connection.setReadTimeout(180000);
                 connection.setRequestProperty("Accept", "application/json");
                 connection.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
@@ -1769,7 +1769,7 @@ public class DisasterRecoveryClusterUtil {
                 HttpURLConnection connection = (HttpURLConnection)url.openConnection();
                 connection.setDoOutput(true);
                 connection.setRequestMethod(method);
-                connection.setConnectTimeout(30000);
+                connection.setConnectTimeout(10000);
                 connection.setReadTimeout(180000);
                 connection.setRequestProperty("Accept", "application/json");
                 connection.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
@@ -1831,7 +1831,7 @@ public class DisasterRecoveryClusterUtil {
                 connection.setSSLSocketFactory(sslContext.getSocketFactory());
                 connection.setDoOutput(true);
                 connection.setRequestMethod(method);
-                connection.setConnectTimeout(30000);
+                connection.setConnectTimeout(10000);
                 connection.setReadTimeout(180000);
                 connection.setRequestProperty("Accept", "application/json");
                 connection.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
@@ -1850,7 +1850,7 @@ public class DisasterRecoveryClusterUtil {
                 HttpURLConnection connection = (HttpURLConnection)url.openConnection();
                 connection.setDoOutput(true);
                 connection.setRequestMethod(method);
-                connection.setConnectTimeout(30000);
+                connection.setConnectTimeout(10000);
                 connection.setReadTimeout(180000);
                 connection.setRequestProperty("Accept", "application/json");
                 connection.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
@@ -1900,7 +1900,7 @@ public class DisasterRecoveryClusterUtil {
                 connection.setSSLSocketFactory(sslContext.getSocketFactory());
                 connection.setDoOutput(true);
                 connection.setRequestMethod(method);
-                connection.setConnectTimeout(30000);
+                connection.setConnectTimeout(10000);
                 connection.setReadTimeout(180000);
                 connection.setRequestProperty("Accept", "application/json");
                 connection.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
@@ -1919,7 +1919,7 @@ public class DisasterRecoveryClusterUtil {
                 HttpURLConnection connection = (HttpURLConnection)url.openConnection();
                 connection.setDoOutput(true);
                 connection.setRequestMethod(method);
-                connection.setConnectTimeout(30000);
+                connection.setConnectTimeout(10000);
                 connection.setReadTimeout(180000);
                 connection.setRequestProperty("Accept", "application/json");
                 connection.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
@@ -1989,7 +1989,7 @@ public class DisasterRecoveryClusterUtil {
                 connection.setSSLSocketFactory(sslContext.getSocketFactory());
                 connection.setDoOutput(true);
                 connection.setRequestMethod(method);
-                connection.setConnectTimeout(30000);
+                connection.setConnectTimeout(10000);
                 connection.setReadTimeout(180000);
                 connection.setRequestProperty("Accept", "application/json");
                 connection.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
@@ -2008,7 +2008,7 @@ public class DisasterRecoveryClusterUtil {
                 HttpURLConnection connection = (HttpURLConnection)url.openConnection();
                 connection.setDoOutput(true);
                 connection.setRequestMethod(method);
-                connection.setConnectTimeout(30000);
+                connection.setConnectTimeout(10000);
                 connection.setReadTimeout(180000);
                 connection.setRequestProperty("Accept", "application/json");
                 connection.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
@@ -2058,7 +2058,7 @@ public class DisasterRecoveryClusterUtil {
                 connection.setSSLSocketFactory(sslContext.getSocketFactory());
                 connection.setDoOutput(true);
                 connection.setRequestMethod(method);
-                connection.setConnectTimeout(30000);
+                connection.setConnectTimeout(10000);
                 connection.setReadTimeout(180000);
                 connection.setRequestProperty("Accept", "application/json");
                 connection.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
@@ -2077,7 +2077,7 @@ public class DisasterRecoveryClusterUtil {
                 HttpURLConnection connection = (HttpURLConnection)url.openConnection();
                 connection.setDoOutput(true);
                 connection.setRequestMethod(method);
-                connection.setConnectTimeout(30000);
+                connection.setConnectTimeout(10000);
                 connection.setReadTimeout(180000);
                 connection.setRequestProperty("Accept", "application/json");
                 connection.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
@@ -2145,7 +2145,7 @@ public class DisasterRecoveryClusterUtil {
                 connection.setSSLSocketFactory(sslContext.getSocketFactory());
                 connection.setDoOutput(true);
                 connection.setRequestMethod(method);
-                connection.setConnectTimeout(30000);
+                connection.setConnectTimeout(10000);
                 connection.setReadTimeout(180000);
                 connection.setRequestProperty("Accept", "application/json");
                 connection.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
@@ -2164,7 +2164,7 @@ public class DisasterRecoveryClusterUtil {
                 HttpURLConnection connection = (HttpURLConnection)url.openConnection();
                 connection.setDoOutput(true);
                 connection.setRequestMethod(method);
-                connection.setConnectTimeout(30000);
+                connection.setConnectTimeout(10000);
                 connection.setReadTimeout(180000);
                 connection.setRequestProperty("Accept", "application/json");
                 connection.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
@@ -2214,7 +2214,7 @@ public class DisasterRecoveryClusterUtil {
                 connection.setSSLSocketFactory(sslContext.getSocketFactory());
                 connection.setDoOutput(true);
                 connection.setRequestMethod(method);
-                connection.setConnectTimeout(30000);
+                connection.setConnectTimeout(10000);
                 connection.setReadTimeout(180000);
                 connection.setRequestProperty("Accept", "application/json");
                 connection.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
@@ -2233,7 +2233,7 @@ public class DisasterRecoveryClusterUtil {
                 HttpURLConnection connection = (HttpURLConnection)url.openConnection();
                 connection.setDoOutput(true);
                 connection.setRequestMethod(method);
-                connection.setConnectTimeout(30000);
+                connection.setConnectTimeout(10000);
                 connection.setReadTimeout(180000);
                 connection.setRequestProperty("Accept", "application/json");
                 connection.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
@@ -2302,7 +2302,7 @@ public class DisasterRecoveryClusterUtil {
                 connection.setSSLSocketFactory(sslContext.getSocketFactory());
                 connection.setDoOutput(true);
                 connection.setRequestMethod(method);
-                connection.setConnectTimeout(30000);
+                connection.setConnectTimeout(10000);
                 connection.setReadTimeout(180000);
                 connection.setRequestProperty("Accept", "application/json");
                 connection.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
@@ -2321,7 +2321,7 @@ public class DisasterRecoveryClusterUtil {
                 HttpURLConnection connection = (HttpURLConnection)url.openConnection();
                 connection.setDoOutput(true);
                 connection.setRequestMethod(method);
-                connection.setConnectTimeout(30000);
+                connection.setConnectTimeout(10000);
                 connection.setReadTimeout(180000);
                 connection.setRequestProperty("Accept", "application/json");
                 connection.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
@@ -2537,7 +2537,7 @@ public class DisasterRecoveryClusterUtil {
                 connection.setSSLSocketFactory(sslContext.getSocketFactory());
                 connection.setDoOutput(true);
                 connection.setRequestMethod(method);
-                connection.setConnectTimeout(30000);
+                connection.setConnectTimeout(10000);
                 connection.setReadTimeout(180000);
                 connection.setRequestProperty("Accept", "application/json");
                 connection.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
@@ -2556,7 +2556,7 @@ public class DisasterRecoveryClusterUtil {
                 HttpURLConnection connection = (HttpURLConnection)url.openConnection();
                 connection.setDoOutput(true);
                 connection.setRequestMethod(method);
-                connection.setConnectTimeout(30000);
+                connection.setConnectTimeout(10000);
                 connection.setReadTimeout(180000);
                 connection.setRequestProperty("Accept", "application/json");
                 connection.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
@@ -2610,7 +2610,7 @@ public class DisasterRecoveryClusterUtil {
                 connection.setSSLSocketFactory(sslContext.getSocketFactory());
                 connection.setDoOutput(true);
                 connection.setRequestMethod(method);
-                connection.setConnectTimeout(30000);
+                connection.setConnectTimeout(10000);
                 connection.setReadTimeout(180000);
                 connection.setRequestProperty("Accept", "application/json");
                 connection.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
@@ -2629,7 +2629,7 @@ public class DisasterRecoveryClusterUtil {
                 HttpURLConnection connection = (HttpURLConnection)url.openConnection();
                 connection.setDoOutput(true);
                 connection.setRequestMethod(method);
-                connection.setConnectTimeout(30000);
+                connection.setConnectTimeout(10000);
                 connection.setReadTimeout(180000);
                 connection.setRequestProperty("Accept", "application/json");
                 connection.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
@@ -2689,7 +2689,7 @@ public class DisasterRecoveryClusterUtil {
                 connection.setSSLSocketFactory(sslContext.getSocketFactory());
                 connection.setDoOutput(true);
                 connection.setRequestMethod(method);
-                connection.setConnectTimeout(30000);
+                connection.setConnectTimeout(10000);
                 connection.setReadTimeout(180000);
                 connection.setRequestProperty("Accept", "application/json");
                 connection.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
@@ -2708,7 +2708,7 @@ public class DisasterRecoveryClusterUtil {
                 HttpURLConnection connection = (HttpURLConnection)url.openConnection();
                 connection.setDoOutput(true);
                 connection.setRequestMethod(method);
-                connection.setConnectTimeout(30000);
+                connection.setConnectTimeout(10000);
                 connection.setReadTimeout(180000);
                 connection.setRequestProperty("Accept", "application/json");
                 connection.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
