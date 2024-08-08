@@ -1396,10 +1396,19 @@ public class KVMStorageProcessor implements StorageProcessor {
 
                 for (final DiskDef disk : disks) {
                     final String file = disk.getDiskPath();
+                    logger.debug("remove!!!!!! disk : "+file + " : " +kvdoEnable);
+                    logger.debug("file : "+file + ", getPath : " +attachingDisk.getPath() + ", getName : " +attachingDisk.getName());
                     if(attachingPool.getType() == StoragePoolType.RBD && provider != null && !provider.isEmpty() && "ABLESTACK".equals(provider)) {
-                        if (file != null && file.equalsIgnoreCase(krbdpath + "/" + attachingDisk.getPath())) {
-                            diskdef = disk;
-                            break;
+                        if(!kvdoEnable){
+                            if (file != null && file.equalsIgnoreCase(krbdpath + "/" + attachingDisk.getPath())) {
+                                diskdef = disk;
+                                break;
+                            }
+                        }else{
+                            if (file != null && file.contains(attachingDisk.getName().replace("-",""))) {
+                                diskdef = disk;
+                                break;
+                            }
                         }
                     } else {
                         if (file != null && file.equalsIgnoreCase(attachingDisk.getPath())) {
