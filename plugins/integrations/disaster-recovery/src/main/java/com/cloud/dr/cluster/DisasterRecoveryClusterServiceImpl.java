@@ -1215,6 +1215,16 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                 }
                 promoteParentImage(drCluster);
                 // timeSleep();
+                if (result) {
+                    glueCommand = "/service/rbd-mirror";
+                    glueMethod = "POST";
+                    Map<String, String> glueParams = new HashMap<>();
+                    glueParams.put("service_name", "rbd-mirror");
+                    glueParams.put("control", "restart");
+                    String daemon = DisasterRecoveryClusterUtil.glueServiceControlAPI(glueUrl, glueCommand, glueMethod, glueParams);
+                    LOGGER.info("rbd-mirror restart result:::::::::::::");
+                    LOGGER.info(daemon);
+                }
                 return result;
             } else {
                 throw new CloudRuntimeException("There are no images being mirrored.");
