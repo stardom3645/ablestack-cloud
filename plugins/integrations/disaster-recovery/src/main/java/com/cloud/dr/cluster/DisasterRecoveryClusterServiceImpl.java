@@ -1857,6 +1857,9 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                             break;
                         }
                     }
+                    if (!result) {
+                        throw new CloudRuntimeException("Failed to request glueImageMirrorDelete Glue-API. For volume path : " + volumeUuid);
+                    }
                 }
                 return result;
             } else {
