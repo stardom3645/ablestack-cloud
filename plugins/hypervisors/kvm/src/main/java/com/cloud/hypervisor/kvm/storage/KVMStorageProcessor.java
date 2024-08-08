@@ -1803,13 +1803,15 @@ public class KVMStorageProcessor implements StorageProcessor {
 
             String diskPath = disk.getPath();
             String snapshotPath = diskPath + File.separator + snapshotName;
+            logger.info("111111:::::::"+ state);
+            logger.info("111111:::::::"+ primaryPool.isExternalSnapshot());
+
             if (state == DomainInfo.DomainState.VIR_DOMAIN_RUNNING && !primaryPool.isExternalSnapshot()) {
 
                 validateAvailableSizeOnPoolToTakeVolumeSnapshot(primaryPool, disk);
 
                 try {
                     snapshotPath = getSnapshotPathInPrimaryStorage(primaryPool.getLocalPath(), snapshotName);
-
                     String diskLabel = takeVolumeSnapshot(resource.getDisks(conn, vmName), snapshotName, diskPath, vm);
                     String convertResult = convertBaseFileToSnapshotFileInPrimaryStorageDir(primaryPool, disk, snapshotPath, volume, cmd.getWait());
 
@@ -1852,6 +1854,7 @@ public class KVMStorageProcessor implements StorageProcessor {
                  * barriers properly (>2.6.32) this won't be any different then pulling the power
                  * cord out of a running machine.
                  */
+                logger.info("primaryPool.getType() :::::::"+ primaryPool.getType());
                 if (primaryPool.getType() == StoragePoolType.RBD) {
                     try {
                         Rados r = radosConnect(primaryPool);
@@ -1879,7 +1882,8 @@ public class KVMStorageProcessor implements StorageProcessor {
                         return new CreateObjectAnswer("Failed to manage snapshot: " + result);
                     }
                 } else {
-                    snapshotPath = getSnapshotPathInPrimaryStorage(primaryPool.getLocalPath(), snapshotName);
+                    snapshotPath = getSnapshotPathInPrimaryStorage(primaryPool.getLocalPath(), disk.getName()+ "@"+snapshotName);
+                    logger.info("snapshotPath:::::::"+ snapshotPath);
                     String convertResult = convertBaseFileToSnapshotFileInPrimaryStorageDir(primaryPool, disk, snapshotPath, volume, cmd.getWait());
                     validateConvertResult(convertResult, snapshotPath);
                 }
@@ -2037,7 +2041,13 @@ public class KVMStorageProcessor implements StorageProcessor {
 
         QemuImgFile destFile = new QemuImgFile(snapshotPath);
         destFile.setFormat(PhysicalDiskFormat.QCOW2);
-
+        logger.info("::::baseFile.getPath():::"+baseFile.getPath());
+        logger.info("::::snapshotPath:::"+snapshotPath);
+        logger.info("srcFile.getFileName() ::::"+srcFile.getFileName());
+        logger.info("destFile ::::"+destFile.getFileName());
+        logger.info("destFile.getFileName() ::::"+options);
+        logger.info("qemuObjects ::::"+qemuObjects);
+        logger.info("qemuImageOpts ::::"+qemuImageOpts);
         QemuImg q = new QemuImg(wait);
         q.convert(srcFile, destFile, options, qemuObjects, qemuImageOpts, null, true);
     }
