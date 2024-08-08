@@ -1353,8 +1353,11 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
             throw new InvalidParameterValueException("Invalid disaster recovery cluster id specified");
         }
         Map<String, String> details = disasterRecoveryClusterDetailsDao.findDetails(drCluster.getId());
-        // DR 상황 발생 후 Primary 클러스터를 복구하여 재동기화 실행전 스냅샷 스케줄 추가
-        beforeDemoteDisasterRecoveryClusterMirrorSchedule(drCluster);
+        // 스케줄이 설정되어있는지 사전 확인 후 Primary 클러스터를 복구하여 재동기화 실행전 스냅샷 스케줄 추가
+        boolean check = checkDemoteDisasterRecoveryClusterMirrorSchedule(drCluster);
+        if (!check) {
+            beforeDemoteDisasterRecoveryClusterMirrorSchedule(drCluster);
+        }
         validateResyncDisasterRecoveryClusterMirrorParameters(drCluster);
         String ipList = Script.runSimpleBashScript("cat /etc/hosts | grep -E 'scvm1-mngt|scvm2-mngt|scvm3-mngt' | awk '{print $1}' | tr '\n' ','");
         if (ipList != null || !ipList.isEmpty()) {
@@ -2443,6 +2446,40 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         }
     }
 
+    private boolean checkDemoteDisasterRecoveryClusterMirrorSchedule(final DisasterRecoveryClusterVO drCluster) throws CloudRuntimeException {
+        Map<String, String> details = disasterRecoveryClusterDetailsDao.findDetails(drCluster.getId());
+        List<DisasterRecoveryClusterVmMapVO> vmMap = disasterRecoveryClusterVmMapDao.listByDisasterRecoveryClusterId(drCluster.getId());
+        if (!CollectionUtils.isEmpty(vmMap)) {
+            String ipList = Script.runSimpleBashScript("cat /etc/hosts | grep -E 'scvm1-mngt|scvm2-mngt|scvm3-mngt' | awk '{print $1}' | tr '\n' ','");
+            if (ipList != null || !ipList.isEmpty()) {
+                ipList = ipList.replaceAll(",$", "");
+                String[] array = ipList.split(",");
+                for (DisasterRecoveryClusterVmMapVO map : vmMap) {
+                    String imageName = map.getMirroredVmVolumePath();
+                    for (int i=0; i < array.length; i++) {
+                        String glueIp = array[i];
+                        ///////////////////// glue-api 프로토콜과 포트 확정 시 변경 예정
+                        String glueUrl = "https://" + glueIp + ":8080/api/v1";
+                        String glueCommand = "/mirror/image";
+                        String glueMethod = "GET";
+                        String response = DisasterRecoveryClusterUtil.glueImageMirrorAPI(glueUrl, glueCommand, glueMethod);
+                        if (response != null) {
+                            JsonArray drArray = (JsonArray) new JsonParser().parse(response).getAsJsonObject().get("Local");
+                            if (drArray.size() != 0 && drArray != null) {
+                                for (JsonElement dr : drArray) {
+                                    if (dr.getAsJsonObject().get("items") != null) {
+                                        return true;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
     private void beforeDemoteDisasterRecoveryClusterMirrorSchedule(final DisasterRecoveryClusterVO drCluster) throws CloudRuntimeException {
         Map<String, String> details = disasterRecoveryClusterDetailsDao.findDetails(drCluster.getId());
         List<DisasterRecoveryClusterVmMapVO> vmMap = disasterRecoveryClusterVmMapDao.listByDisasterRecoveryClusterId(drCluster.getId());
@@ -2494,29 +2531,30 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
             String moldUrl = url + "/client/api/";
             String moldCommand = "listVirtualMachines";
             String moldMethod = "GET";
-            Map<String, String> moldParams = null;
-            String vmList = DisasterRecoveryClusterUtil.moldListVirtualMachinesAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey, moldParams);
-            if (vmList != null) {
-                JSONObject jsonObject = new JSONObject(vmList);
-                Object object = jsonObject.get("virtualmachine");
-                JSONArray array;
-                if (object instanceof JSONArray) {
-                    array = (JSONArray) object;
-                } else {
-                    array = new JSONArray();
-                    array.put(object);
-                }
-                for (int i = 0; i < array.length(); i++) {
-                    JSONObject jSONObject = array.getJSONObject(i);
-                    for (DisasterRecoveryClusterVmMapVO map : vmMap) {
-                        String vmName = map.getMirroredVmName();
+            for (DisasterRecoveryClusterVmMapVO map : vmMap) {
+                String vmName = map.getMirroredVmName();
+                Map<String, String> moldParams = new HashMap<>();
+                moldParams.put("keyword", vmName);
+                String vmList = DisasterRecoveryClusterUtil.moldListVirtualMachinesAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey, moldParams);
+                if (vmList != null) {
+                    JSONObject jsonObject = new JSONObject(vmList);
+                    Object object = jsonObject.get("virtualmachine");
+                    JSONArray array;
+                    if (object instanceof JSONArray) {
+                        array = (JSONArray) object;
+                    } else {
+                        array = new JSONArray();
+                        array.put(object);
+                    }
+                    for (int i = 0; i < array.length(); i++) {
+                        JSONObject jSONObject = array.getJSONObject(i);
                         if (jSONObject.get("name").equals(vmName) && !jSONObject.get("state").equals("Stopped")) {
                             throw new InvalidParameterValueException("Resync functions cannot be executed because there is a running disaster recovery primary cluster virtual machine : " + vmName);
                         }
                     }
+                } else {
+                    throw new InvalidParameterValueException("Resync functions cannot be executed because primary cluster Mold failed to request API.");
                 }
-            } else {
-                throw new InvalidParameterValueException("Resync functions cannot be executed because primary cluster Mold failed to request API.");
             }
         }
     }
