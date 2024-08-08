@@ -732,7 +732,6 @@ public class AncientDataMotionStrategy implements DataMotionStrategy {
         DataStore store = snapObj.getDataStore();
         DataStoreTO storTO = store.getTO();
         DataObject srcData = snapObj;
-        logger.info("storTO::::::"+ storTO);
         try {
             String value = configDao.getValue(Config.CreateVolumeFromSnapshotWait.toString());
             int _createVolumeFromSnapshotWait = NumbersUtil.parseInt(value, Integer.parseInt(Config.CreateVolumeFromSnapshotWait.getDefaultValue()));

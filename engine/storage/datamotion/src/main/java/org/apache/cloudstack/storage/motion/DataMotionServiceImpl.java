@@ -57,8 +57,6 @@ public class DataMotionServiceImpl implements DataMotionService {
     VolumeDao volDao;
     @Inject
     PassphraseDao passphraseDao;
-    @Inject
-    DataMotionStrategy stra;
 
     @Override
     public void copyAsync(DataObject srcData, DataObject destData, Host destHost, AsyncCompletionCallback<CopyCommandResult> callback) {
@@ -116,7 +114,7 @@ public class DataMotionServiceImpl implements DataMotionService {
             return;
         }
 
-        stra.cloneAsync(srcData, destData, destHost, callback);
+        strategy.cloneAsync(srcData, destData, destHost, callback);
     }
 
 
