@@ -1194,18 +1194,6 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                                         glueStep += 1;
                                         result = DisasterRecoveryClusterUtil.glueImageMirrorPromoteAPI(glueUrl, glueCommand, glueMethod, glueParams);
                                         if (result) {
-                                            // glueCommand = "/mirror/image/rbd/" + imageName;
-                                            // glueMethod = "PUT";
-                                            // glueParams = new HashMap<>();
-                                            // glueParams.put("mirrorPool", "rbd");
-                                            // glueParams.put("imageName", imageName);
-                                            // glueParams.put("interval", details.get("mirrorscheduleinterval"));
-                                            // glueParams.put("startTime", details.get("mirrorschedulestarttime"));
-                                            // boolean schedule = DisasterRecoveryClusterUtil.glueImageMirrorSetupUpdateAPI(glueUrl, glueCommand, glueMethod, glueParams);
-                                            // if (!schedule) {
-                                            //     LOGGER.error("Failed to request ImageMirrorSetupUpdate Glue-API.");
-                                            //     LOGGER.error("The image was promoted successfully, but scheduling the image failed. For volumes with a path of " + imageName + ", please add a schedule manually.");
-                                            // }
                                             break Loop;
                                         } else {
                                             LOGGER.error("Failed to request ImageMirrorPromote Glue-API.");
@@ -1282,7 +1270,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                                     }
                                 }
                                 if (peerState != null) {
-                                    if (!statObject.get("description").getAsString().equals("local image is primary") && !peerState.getAsString().contains("replaying") ) {
+                                    if (!statObject.get("description").getAsString().equals("local image is primary") || !peerState.getAsString().contains("replaying")) {
                                         throw new InvalidParameterValueException("Forced demote functions cannot be executed because peer state is " + peerState.getAsString() + "in volume path : " + imageName);
                                     }
                                 }
