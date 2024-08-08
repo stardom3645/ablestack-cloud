@@ -121,6 +121,66 @@ public class DisasterRecoveryClusterUtil {
     }
 
     /**
+     * Glue 서비스 제어
+     * @param region
+     *  https://<IP>:8080/api/v1
+     * @param subUrl
+     *  /service/{service_name}
+     * @param method
+     *  POST
+     * @param parameter
+     *  service_name(string), control(string)
+     * @return true = 200, 이외 코드는 false 처리
+     *  ex) "Success"
+     */
+    protected static String glueServiceControlAPI(String region, String subUrl, String method, Map<String, String> params) {
+        try {
+            // SSL 인증서 에러 우회 처리
+            final SSLContext sslContext = SSLUtils.getSSLContext();
+            sslContext.init(null, new TrustManager[]{new TrustAllManager()}, new SecureRandom());
+            URL url = new URL(region + subUrl);
+            HttpsURLConnection connection = (HttpsURLConnection)url.openConnection();
+            connection.setSSLSocketFactory(sslContext.getSocketFactory());
+            connection.setDoOutput(true);
+            connection.setRequestMethod(method);
+            connection.setConnectTimeout(10000);
+            connection.setReadTimeout(180000);
+            connection.setRequestProperty("Accept", "application/vnd.ceph.api.v1.0+json");
+            connection.setRequestProperty("Authorization", "application/vnd.ceph.api.v1.0+json");
+            connection.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
+            StringBuilder postData = new StringBuilder();
+            for(Map.Entry<String, String> param : params.entrySet()){
+                postData.append("&");
+                postData.append(URLEncoder.encode(param.getKey(), "UTF-8"));
+                postData.append("=");
+                postData.append(URLEncoder.encode(String.valueOf(param.getValue()), "UTF-8"));
+            }
+            byte[] postDataBytes = postData.toString().getBytes("UTF-8");
+            connection.getOutputStream().write(postDataBytes);
+
+            if (connection.getResponseCode() == 200) {
+                BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+                String inputLine;
+                StringBuffer response = new StringBuffer();
+                while ((inputLine = in.readLine()) != null) {
+                    response.append(inputLine);
+                }
+                in.close();
+                JsonParser jParser = new JsonParser();
+                JsonObject jObject = (JsonObject)jParser.parse(response.toString());
+                return jObject.toString();
+            } else {
+                String msg = "Failed to request control glue service API. response code : " + connection.getResponseCode();
+                LOGGER.error(msg);
+                return null;
+            }
+        } catch (Exception e) {
+            LOGGER.error(String.format("Glue API endpoint not available"), e);
+            return null;
+        }
+    }
+
+    /**
      * Glue 미러링 상태 조회
      * @param region
      *  https://<IP>:8080/api/v1
