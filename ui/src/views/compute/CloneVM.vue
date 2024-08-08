@@ -25,18 +25,18 @@
       :rules="rules"
       v-ctrl-enter="handleSubmit"
       @finish="handleSubmit">
-      <a-alert style="margin-bottom: 5px" type="info" show-icon>
+      <!-- <a-alert style="margin-bottom: 5px" type="info" show-icon>
         <template #message>
           <span v-html="$t('message.clone.vm')" />
         </template>
-      </a-alert>
+      </a-alert> -->
       <a-form-item name="name" ref="name">
         <template #label>
           <tooltip-label :title="$t('label.name')" :tooltip="apiParams.name.description"/>
         </template>
         <a-input v-model:value="form.name" v-focus="true" />
       </a-form-item>
-      <a-form-item ref="clonetype" name="clonetype">
+      <a-form-item v-if="resource.pooltype == 'RBD'" ref="clonetype" name="clonetype">
         <template #label>
           <tooltip-label :title="$t('label.clonetype')" :tooltip="apiParams.clonetype.description"/>
         </template>
@@ -118,7 +118,7 @@ export default {
           }
         }
         params.startvm = this.form.startvm
-        console.log(params)
+        // console.log(params)
         api('cloneVirtualMachine', params).then(json => {
           const jobId = json.clonevirtualmachineresponse.jobid
           this.$pollJob({
@@ -150,10 +150,10 @@ export default {
 </script>
 
 <style scoped lang="less">
-  .backup-layout {
+  .form-layout {
     width: 80vw;
     @media (min-width: 800px) {
-      width: 600px;
+      width: 400px;
     }
   }
 </style>
