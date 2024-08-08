@@ -5407,7 +5407,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
         final KVMStoragePool pool = disk.getPool();
         //Check if rbd image is already mapped
         final String[] splitPoolImage = disk.getPath().split("/");
-        
+
         String device = Script.runSimpleBashScript("rbd showmapped | grep \""+splitPoolImage[0]+"[ ]*"+splitPoolImage[1]+"\" | grep -o \"[^ ]*[ ]*$\"");
 
         if(device != null) {
@@ -5415,10 +5415,10 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
             if(kvdoEnable){
                 try {
                     logger.info("unmapRbdDevice Action Call!!!");
-                    String vgName = "vg_"+splitPoolImage[1].replace("-","")+"-ablestack_kvdo";
+                    String vgName = "vg_"+splitPoolImage[1].replace("-","");
                     Script.runSimpleBashScript("vgchange -an " + vgName);
-                } catch(IOException e){
-
+                } catch (Exception e) {
+                    logger.info("unmapRbdDevice Action error : "+e);
                 }
             }
             Script.runSimpleBashScript("rbd unmap " + disk.getPath() + " --id " + pool.getAuthUserName());

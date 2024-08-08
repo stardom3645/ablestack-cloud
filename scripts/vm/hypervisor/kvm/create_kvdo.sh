@@ -63,23 +63,25 @@ fi
 
 # 파티션이 존재하는지 확인
 partitionExist=$(lsblk $devicePath -p -J |jq -r '.blockdevices[0].children')
+vg_name=vg_$(echo $ImageName| sed 's/-//g')
 if [ "$partitionExist" == "null" ]; then
   # create partition
   parted --script $devicePath mklabel gpt
   parted --script $devicePath mkpart primary 1 100%
 
-fi
   firstPartitionPath=$(lsblk $devicePath -p -J |jq -r '.blockdevices[0].children[0].name')
 
   # create pv
   pvcreate $firstPartitionPath
 
   # create vg
-  vg_name=vg_$(echo $ImageName| sed 's/-//g')
   vgcreate $vg_name $firstPartitionPath
 
   # create lv
   size=$(expr $ImageSize - 10485760 )
   lvcreate --type vdo --name ablestack_kvdo --size $size"B" --virtualsize $size"B" $vg_name
+else
+  vgchange -ay $vg_name
+fi
 
 exit 0
