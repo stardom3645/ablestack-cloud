@@ -960,13 +960,8 @@ public class KVMStorageProcessor implements StorageProcessor {
 
         final String secondaryStoragePoolUrl = nfsImageStore.getUrl();
         // NOTE: snapshot name is encoded in snapshot path
-        logger.info("snapshot:::::::::"+snapshot);
-        logger.info("snapshot.getPath:::::::::"+snapshot.getPath());
         final int index = snapshot.getPath().lastIndexOf("/");
         final boolean isCreatedFromVmSnapshot = index == -1; // -1 means the snapshot is created from existing vm snapshot
-        logger.info("index:::::::::"+index);
-        logger.info("iisCreatedFromVmSnapshotndex:::::::::"+isCreatedFromVmSnapshot);
-
 
         final String snapshotName = snapshot.getPath().substring(index + 1);
         String descName = snapshotName;
@@ -1040,8 +1035,6 @@ public class KVMStorageProcessor implements StorageProcessor {
                 }
             } else if (primaryPool.getType() == StoragePoolType.SharedMountPoint) {
                 final Script command = new Script(_manageSnapshotPath, cmd.getWaitInMillSeconds(), logger);
-                logger.info("snapshotDisk::::"+snapshotDisk);
-                logger.info("snapshotDisk.getPath()::::"+snapshotDisk.getPath());
                 command.add("-b", isCreatedFromVmSnapshot ? snapshotDisk.getPath() + "@" + snapshot.getPath() : snapshot.getPath());
                 command.add(NAME_OPTION, snapshotName);
                 command.add("-p", snapshotDestPath);
@@ -1060,8 +1053,7 @@ public class KVMStorageProcessor implements StorageProcessor {
                 }
             } else {
                 final Script command = new Script(_manageSnapshotPath, cmd.getWaitInMillSeconds(), logger);
-                logger.info("snapshotDisk::::"+snapshotDisk);
-                logger.info("snapshotDisk.getPath()::::"+snapshotDisk.getPath());
+
                 command.add("-b", isCreatedFromVmSnapshot ? snapshotDisk.getPath() : snapshot.getPath());
                 command.add(NAME_OPTION, snapshotName);
                 command.add("-p", snapshotDestPath);
@@ -2069,13 +2061,6 @@ public class KVMStorageProcessor implements StorageProcessor {
 
         QemuImgFile destFile = new QemuImgFile(snapshotPath);
         destFile.setFormat(PhysicalDiskFormat.QCOW2);
-        logger.info("::::baseFile.getPath():::"+baseFile.getPath());
-        logger.info("::::snapshotPath:::"+snapshotPath);
-        logger.info("srcFile.getFileName() ::::"+srcFile.getFileName());
-        logger.info("destFile ::::"+destFile.getFileName());
-        logger.info("destFile.getFileName() ::::"+options);
-        logger.info("qemuObjects ::::"+qemuObjects);
-        logger.info("qemuImageOpts ::::"+qemuImageOpts);
         QemuImg q = new QemuImg(wait);
         q.convert(srcFile, destFile, options, qemuObjects, qemuImageOpts, null, true);
     }
