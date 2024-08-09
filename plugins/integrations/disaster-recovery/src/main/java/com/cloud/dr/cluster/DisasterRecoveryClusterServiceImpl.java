@@ -18,7 +18,6 @@ package com.cloud.dr.cluster;
 
 import java.util.List;
 import java.util.Arrays;
-import java.util.Calendar;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.Properties;
@@ -2510,12 +2509,8 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                         String glueCommand = "/mirror/image/rbd/" + imageName;
                         String glueMethod = "PUT";
                         Map<String, String> glueParams = new HashMap<>();
-                        Date date = new Date();
                         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm");
-                        Calendar calendar = Calendar.getInstance();
-                        calendar.setTime(date);
-                        calendar.add(Calendar.MINUTE, -2);
-                        String isoDate = sdf.format(calendar.getTime());
+                        String isoDate = sdf.format(new Date());
                         glueParams.put("mirrorPool", "rbd");
                         glueParams.put("imageName", imageName);
                         glueParams.put("interval", "1m");
