@@ -133,6 +133,7 @@ public class DefaultHostListener implements HypervisorHostListener {
         Pair<Map<String, String>, Boolean> nfsMountOpts = storageManager.getStoragePoolNFSMountOpts(pool, null);
 
         ModifyStoragePoolCommand cmd = new ModifyStoragePoolCommand(true, pool, nfsMountOpts.first());
+        cmd.setDetails(primaryStoreDao.getDetails(poolId));
         cmd.setWait(modifyStoragePoolCommandWait);
         logger.debug(String.format("Sending modify storage pool command to agent: %d for storage pool: %d with timeout %d seconds",
                 hostId, poolId, cmd.getWait()));
