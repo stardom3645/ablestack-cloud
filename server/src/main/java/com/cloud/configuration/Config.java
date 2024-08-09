@@ -559,6 +559,15 @@ public enum Config {
             "The interval (in seconds) to wait before running the expunge thread.",
             null),
     ExpungeWorkers("Advanced", UserVmManager.class, Integer.class, "expunge.workers", "1", "Number of workers performing expunge ", null),
+    FlattenInterval(
+            "Advanced",
+            UserVmManager.class,
+            Integer.class,
+            "flatten.interval",
+            "60",
+            "The interval (in seconds) to wait before running the flatten thread.",
+            null),
+    FlattenWorkers("Advanced", UserVmManager.class, Integer.class, "flatten.workers", "3", "Number of workers performing flatten ", null),
     ExtractURLCleanUpInterval(
             "Advanced",
             ManagementServer.class,
@@ -1381,6 +1390,14 @@ public enum Config {
             "200",
             "The default maximum primary storage space (in GiB) that can be used for an account",
             null),
+DefaultMaxAccountProjects(
+                "Account Defaults",
+                ManagementServer.class,
+                Long.class,
+                "max.account.projects",
+                "10",
+                "The default maximum number of projects that can be created for an account",
+                null),
 
     //disabling lb as cluster sync does not work with distributed cluster
     SubDomainNetworkAccess(
@@ -1430,6 +1447,7 @@ public enum Config {
     DefaultMaxDomainMemory("Domain Defaults", ManagementServer.class, Long.class, "max.domain.memory", "81920", "The default maximum memory (in MB) that can be used for a domain", null),
     DefaultMaxDomainPrimaryStorage("Domain Defaults", ManagementServer.class, Long.class, "max.domain.primary.storage", "400", "The default maximum primary storage space (in GiB) that can be used for a domain", null),
     DefaultMaxDomainSecondaryStorage("Domain Defaults", ManagementServer.class, Long.class, "max.domain.secondary.storage", "800", "The default maximum secondary storage space (in GiB) that can be used for a domain", null),
+    DefaultMaxDomainProjects("Domain Defaults",ManagementServer.class,Long.class,"max.domain.projects","50","The default maximum number of projects that can be created for a domain",null),
 
     DefaultMaxProjectUserVms(
             "Project Defaults",
