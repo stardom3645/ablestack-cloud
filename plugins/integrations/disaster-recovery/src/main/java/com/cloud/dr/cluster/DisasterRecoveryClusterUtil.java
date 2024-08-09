@@ -149,28 +149,19 @@ public class DisasterRecoveryClusterUtil {
             connection.setRequestProperty("Accept", "application/vnd.ceph.api.v1.0+json");
             connection.setRequestProperty("Authorization", "application/vnd.ceph.api.v1.0+json");
             connection.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
+            BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+            String inputLine;
+            StringBuffer response = new StringBuffer();
+            while ((inputLine = in.readLine()) != null) {
+                response.append(inputLine);
+            }
+            in.close();
             if (connection.getResponseCode() == 200) {
-                BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-                String inputLine;
-                StringBuffer response = new StringBuffer();
-                while ((inputLine = in.readLine()) != null) {
-                    response.append(inputLine);
-                }
-                in.close();
-                JsonParser jParser = new JsonParser();
-                JsonObject jObject = (JsonObject)jParser.parse(response.toString());
-                return jObject.toString();
+                return response.toString();
             } else {
-                BufferedReader in = new BufferedReader(new InputStreamReader(connection.getErrorStream()));
-                String inputLine;
-                StringBuffer response = new StringBuffer();
-                while ((inputLine = in.readLine()) != null) {
-                    response.append(inputLine);
-                }
-                in.close();
                 String msg = "Failed to request control glue service API. response code : " + connection.getResponseCode();
                 LOGGER.error(msg);
-                LOGGER.error(response);
+                LOGGER.error(response.toString());
                 return null;
             }
         } catch (Exception e) {
