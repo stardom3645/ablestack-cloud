@@ -133,12 +133,13 @@ public class DisasterRecoveryClusterUtil {
      * @return true = 200, 이외 코드는 false 처리
      *  ex) "Success"
      */
-    protected static String glueServiceControlAPI(String region, String subUrl, String method, Map<String, String> params) {
+    protected static String glueServiceControlAPI(String region, String subUrl, String method) {
         try {
             // SSL 인증서 에러 우회 처리
             final SSLContext sslContext = SSLUtils.getSSLContext();
             sslContext.init(null, new TrustManager[]{new TrustAllManager()}, new SecureRandom());
-            URL url = new URL(region + subUrl);
+            String query = String.format("control=%s", URLEncoder.encode("restart", "UTF-8"));
+            URL url = new URL(region + subUrl + "?" + query);
             HttpsURLConnection connection = (HttpsURLConnection)url.openConnection();
             connection.setSSLSocketFactory(sslContext.getSocketFactory());
             connection.setDoOutput(true);
@@ -148,16 +149,6 @@ public class DisasterRecoveryClusterUtil {
             connection.setRequestProperty("Accept", "application/vnd.ceph.api.v1.0+json");
             connection.setRequestProperty("Authorization", "application/vnd.ceph.api.v1.0+json");
             connection.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
-            StringBuilder postData = new StringBuilder();
-            for(Map.Entry<String, String> param : params.entrySet()){
-                postData.append("&");
-                postData.append(URLEncoder.encode(param.getKey(), "UTF-8"));
-                postData.append("=");
-                postData.append(URLEncoder.encode(String.valueOf(param.getValue()), "UTF-8"));
-            }
-            byte[] postDataBytes = postData.toString().getBytes("UTF-8");
-            connection.getOutputStream().write(postDataBytes);
-
             if (connection.getResponseCode() == 200) {
                 BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
                 String inputLine;
@@ -170,8 +161,16 @@ public class DisasterRecoveryClusterUtil {
                 JsonObject jObject = (JsonObject)jParser.parse(response.toString());
                 return jObject.toString();
             } else {
+                BufferedReader in = new BufferedReader(new InputStreamReader(connection.getErrorStream()));
+                String inputLine;
+                StringBuffer response = new StringBuffer();
+                while ((inputLine = in.readLine()) != null) {
+                    response.append(inputLine);
+                }
+                in.close();
                 String msg = "Failed to request control glue service API. response code : " + connection.getResponseCode();
                 LOGGER.error(msg);
+                LOGGER.error(response);
                 return null;
             }
         } catch (Exception e) {
