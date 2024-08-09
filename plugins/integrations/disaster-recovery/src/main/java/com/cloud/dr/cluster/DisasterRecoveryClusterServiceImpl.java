@@ -1215,14 +1215,17 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                 promoteParentImage(drCluster);
                 // timeSleep();
                 if (result) {
-                    glueCommand = "/service/rbd-mirror";
-                    glueMethod = "POST";
-                    Map<String, String> glueParams = new HashMap<>();
-                    glueParams.put("service_name", "rbd-mirror");
-                    glueParams.put("control", "restart");
-                    String daemon = DisasterRecoveryClusterUtil.glueServiceControlAPI(glueUrl, glueCommand, glueMethod, glueParams);
-                    LOGGER.info("rbd-mirror restart result:::::::::::::");
-                    LOGGER.info(daemon);
+                    for (int j=0; j < array.length; j++) {
+                        glueIp = array[j];
+                        ///////////////////// glue-api 프로토콜과 포트 확정 시 변경 예정
+                        glueUrl = "https://" + glueIp + ":8080/api/v1";
+                        glueCommand = "/service/rbd-mirror";
+                        glueMethod = "POST";
+                        String daemon = DisasterRecoveryClusterUtil.glueServiceControlAPI(glueUrl, glueCommand, glueMethod);
+                        LOGGER.info("rbd-mirror restart result:::::::::::::");
+                        LOGGER.info(daemon);
+                        if (daemon != null) break;
+                    }
                 }
                 return result;
             } else {
