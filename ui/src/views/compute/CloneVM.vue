@@ -98,8 +98,7 @@ export default {
         count: 1
       })
       this.rules = reactive({
-        name: [{ required: true, message: `${this.$t('label.required')}` }],
-        clonetype: [{ required: true, message: `${this.$t('label.required')}` }]
+        name: [{ required: true, message: `${this.$t('label.required')}` }]
       })
     },
     handleSubmit (e) {
@@ -118,6 +117,9 @@ export default {
           }
         }
         params.startvm = this.form.startvm
+        if (this.resource.pooltype !== 'RBD') {
+          params.clonetype = null
+        }
         // console.log(params)
         api('cloneVirtualMachine', params).then(json => {
           const jobId = json.clonevirtualmachineresponse.jobid
