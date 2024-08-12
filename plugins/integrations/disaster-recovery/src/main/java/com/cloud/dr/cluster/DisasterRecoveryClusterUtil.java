@@ -128,8 +128,8 @@ public class DisasterRecoveryClusterUtil {
      *  /service/{service_name}
      * @param method
      *  POST
-     * @param parameter
-     *  service_name(string), control(string)
+     * @param query
+     *  control(string)
      * @return true = 200, 이외 코드는 false 처리
      *  ex) "Success"
      */
