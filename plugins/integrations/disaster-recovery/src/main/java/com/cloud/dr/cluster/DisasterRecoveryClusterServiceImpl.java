@@ -1222,8 +1222,6 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                         glueCommand = "/service/rbd-mirror";
                         glueMethod = "POST";
                         String daemon = DisasterRecoveryClusterUtil.glueServiceControlAPI(glueUrl, glueCommand, glueMethod);
-                        LOGGER.info("rbd-mirror restart result:::::::::::::");
-                        LOGGER.info(daemon);
                         if (daemon != null) break;
                     }
                 }
