@@ -2550,6 +2550,12 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
             String moldCommand = "listVirtualMachines";
             String moldMethod = "GET";
             for (DisasterRecoveryClusterVmMapVO map : vmMap) {
+                UserVmJoinVO userVM = userVmJoinDao.findById(map.getVmId());
+                if (userVM != null) {
+                    if (userVM.getState() != VirtualMachine.State.Stopped) {
+                        throw new InvalidParameterValueException("Resync functions cannot be executed because there is a running disaster recovery secondary cluster virtual machine : " + userVM.getName());
+                    }
+                }
                 String vmName = map.getMirroredVmName();
                 Map<String, String> moldParams = new HashMap<>();
                 moldParams.put("keyword", vmName);
