@@ -242,7 +242,7 @@ public class Site2SiteVpnManagerImpl extends ManagerBase implements Site2SiteVpn
             ikeVersion = "ike";
         }
 
-        // checkCustomerGatewayCidrList(peerCidrList);
+        checkCustomerGatewayCidrList(peerCidrList);
 
         Site2SiteCustomerGatewayVO gw =
             new Site2SiteCustomerGatewayVO(name, accountId, owner.getDomainId(), gatewayIp, peerCidrList, ipsecPsk, ikePolicy, espPolicy, ikeLifetime, espLifetime, dpd, encap, splitConnections, ikeVersion);
@@ -492,7 +492,7 @@ public class Site2SiteVpnManagerImpl extends ManagerBase implements Site2SiteVpn
 
         String ikeVersion = cmd.getIkeVersion();
 
-        // checkCustomerGatewayCidrList(guestCidrList);
+        checkCustomerGatewayCidrList(guestCidrList);
 
         long accountId = gw.getAccountId();
         Site2SiteCustomerGatewayVO existedGw = _customerGatewayDao.findByNameAndAccountId(name, accountId);
