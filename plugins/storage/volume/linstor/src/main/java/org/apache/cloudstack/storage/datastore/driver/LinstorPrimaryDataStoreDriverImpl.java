@@ -1122,7 +1122,7 @@ public class LinstorPrimaryDataStoreDriverImpl implements PrimaryDataStoreDriver
 
         ResizeVolumeCommand resizeCmd =
             new ResizeVolumeCommand(vol.getPath(), new StorageFilerTO(pool), oldSize, resizeParameter.newSize, resizeParameter.shrinkOk,
-                resizeParameter.instanceName, null);
+                resizeParameter.instanceName, null, vol.getKvdoEnable());
         CreateCmdResult result = new CreateCmdResult(null, null);
         try {
             ResizeVolumeAnswer answer = (ResizeVolumeAnswer) _storageMgr.sendToPool(pool, resizeParameter.hosts, resizeCmd);
