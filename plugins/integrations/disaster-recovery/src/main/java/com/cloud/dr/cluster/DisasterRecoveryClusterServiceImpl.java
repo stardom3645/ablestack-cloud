@@ -1367,7 +1367,10 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                 glueCommand = "/service/rbd-mirror";
                 glueMethod = "POST";
                 String daemon = DisasterRecoveryClusterUtil.glueServiceControlAPI(glueUrl, glueCommand, glueMethod);
-                if (daemon != null) break;
+                if (daemon != null) {
+                    timeSleep();
+                    break;
+                }
             }
         }
         // 스케줄이 설정되어있는지 사전 확인 후 Primary 클러스터를 복구하여 재동기화 실행전 스냅샷 스케줄 추가
@@ -1404,12 +1407,6 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                                 }
                             }
                             if (statObject.has("description") && peerDescription != null) {
-                                LOGGER.info("imageName::::::::::::::::::");
-                                LOGGER.info(imageName);
-                                LOGGER.info("peerDescription.getAsString()::::::::::::::::::::::");
-                                LOGGER.info(peerDescription.getAsString());
-                                LOGGER.info("statObject.get('description').getAsString()::::::::::::::::::::::");
-                                LOGGER.info(statObject.get("description").getAsString());
                                 if (peerDescription.getAsString().equals("local image is primary") && statObject.get("description").getAsString().equals("local image is primary")) {
                                     glueCommand = "/mirror/image/demote/peer/rbd/" + imageName;
                                     glueMethod = "DELETE";
@@ -2396,12 +2393,6 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                             }
                         }
                         if (statObject.has("description") && peerDescription != null) {
-                            LOGGER.info("imageName::::::::::::::::::");
-                            LOGGER.info(imageName);
-                            LOGGER.info("peerDescription.getAsString()::::::::::::::::::::::");
-                            LOGGER.info(peerDescription.getAsString());
-                            LOGGER.info("statObject.get('description').getAsString()::::::::::::::::::::::");
-                            LOGGER.info(statObject.get("description").getAsString());
                             if (peerDescription.getAsString().equals("local image is primary") && statObject.get("description").getAsString().equals("local image is primary")) {
                                 glueCommand = "/mirror/image/demote/peer/rbd/" + imageName;
                                 glueMethod = "DELETE";
