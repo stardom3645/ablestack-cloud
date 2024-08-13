@@ -1355,15 +1355,30 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         String glueUrl = "";
         String glueCommand = "";
         String glueMethod = "";
-        // 복구된 경우 rbd-mirror 서비스 재시작 및 재시작 후 이미지가 정상적으로 조회되는지 확인
-        restartMirrorDaemon(drCluster);
+        // 복구된 경우 rbd-mirror 서비스 재시작 후 동기화 작업 진행
+        String ipList = Script.runSimpleBashScript("cat /etc/hosts | grep -E 'scvm1-mngt|scvm2-mngt|scvm3-mngt' | awk '{print $1}' | tr '\n' ','");
+        if (ipList != null || !ipList.isEmpty()) {
+            ipList = ipList.replaceAll(",$", "");
+            String[] array = ipList.split(",");
+            for (int j=0; j < array.length; j++) {
+                glueIp = array[j];
+                ///////////////////// glue-api 프로토콜과 포트 확정 시 변경 예정
+                glueUrl = "https://" + glueIp + ":8080/api/v1";
+                glueCommand = "/service/rbd-mirror";
+                glueMethod = "POST";
+                String daemon = DisasterRecoveryClusterUtil.glueServiceControlAPI(glueUrl, glueCommand, glueMethod);
+                if (daemon != null) {
+                    timeSleep();
+                    break;
+                }
+            }
+        }
         // 스케줄이 설정되어있는지 사전 확인 후 Primary 클러스터를 복구하여 재동기화 실행전 스냅샷 스케줄 추가
         boolean check = checkDemoteDisasterRecoveryClusterMirrorSchedule(drCluster);
         if (!check) {
             beforeDemoteDisasterRecoveryClusterMirrorSchedule(drCluster);
         }
         validateResyncDisasterRecoveryClusterMirrorParameters(drCluster);
-        String ipList = Script.runSimpleBashScript("cat /etc/hosts | grep -E 'scvm1-mngt|scvm2-mngt|scvm3-mngt' | awk '{print $1}' | tr '\n' ','");
         if (ipList != null || !ipList.isEmpty()) {
             ipList = ipList.replaceAll(",$", "");
             String[] array = ipList.split(",");
@@ -2446,58 +2461,6 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         DisasterRecoveryClusterVO drcluster = disasterRecoveryClusterDao.findByName(name);
         if (drcluster != null) {
             throw new InvalidParameterValueException("A disaster recovery cluster with the same name exists:" + name);
-        }
-    }
-
-    private void restartMirrorDaemon(final DisasterRecoveryClusterVO drCluster) throws CloudRuntimeException {
-        String ipList = Script.runSimpleBashScript("cat /etc/hosts | grep -E 'scvm1-mngt|scvm2-mngt|scvm3-mngt' | awk '{print $1}' | tr '\n' ','");
-        String glueIp = "";
-        String glueUrl = "";
-        String glueCommand = "";
-        String glueMethod = "";
-        if (ipList != null || !ipList.isEmpty()) {
-            ipList = ipList.replaceAll(",$", "");
-            String[] array = ipList.split(",");
-            for (int i=0; i < array.length; i++) {
-                glueIp = array[i];
-                ///////////////////// glue-api 프로토콜과 포트 확정 시 변경 예정
-                glueUrl = "https://" + glueIp + ":8080/api/v1";
-                glueCommand = "/service/rbd-mirror";
-                glueMethod = "POST";
-                String daemon = DisasterRecoveryClusterUtil.glueServiceControlAPI(glueUrl, glueCommand, glueMethod);
-                if (daemon != null) {
-                    break;
-                }
-            }
-            int glueStep = 0;
-            List<DisasterRecoveryClusterVmMapVO> vmMap = disasterRecoveryClusterVmMapDao.listByDisasterRecoveryClusterId(drCluster.getId());
-            if (!CollectionUtils.isEmpty(vmMap)) {
-                for (DisasterRecoveryClusterVmMapVO map : vmMap) {
-                    String imageName = map.getMirroredVmVolumePath();
-                    Loop :
-                    for (int i=0; i < array.length; i++) {
-                        glueIp = array[i];
-                        ///////////////////// glue-api 프로토콜과 포트 확정 시 변경 예정
-                        glueUrl = "https://" + glueIp + ":8080/api/v1";
-                        glueCommand = "/mirror/image/status/rbd/" +imageName;
-                        glueMethod = "GET";
-                        while(glueStep < 100) {
-                            String mirrorImageStatus = DisasterRecoveryClusterUtil.glueImageMirrorStatusAPI(glueUrl, glueCommand, glueMethod);
-                            if (mirrorImageStatus == null) {
-                                glueStep += 1;
-                                try {
-                                    Thread.sleep(10000);
-                                } catch (InterruptedException e) {
-                                    LOGGER.error("restartMirrorDaemon sleep interrupted");
-                                }
-                            } else {
-                                break Loop;
-                            }
-                        }
-                        throw new InvalidParameterValueException("Resync functions cannot be executed because after restarting the rbd-mirror service, the image does not up properly.. For volumes with a path of " + imageName);
-                    }
-                }
-            }
         }
     }
 
