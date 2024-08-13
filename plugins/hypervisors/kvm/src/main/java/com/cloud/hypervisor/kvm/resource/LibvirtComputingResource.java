@@ -3375,7 +3375,11 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
                                 path = device;
                             }
                             if (volume.getType() == Volume.Type.DATADISK) {
-                                disk.defBlockBasedDisk(path + physicalDisk.getPath(), devId, diskBusTypeData);
+                                if(!volumeObject.getKvdoEnable()){
+                                    disk.defBlockBasedDisk(path + physicalDisk.getPath(), devId, diskBusTypeData);
+                                }else{
+                                    disk.defBlockBasedDisk(path, devId, diskBusTypeData);
+                                }
                             }
                             else {
                                 disk.defBlockBasedDisk(path + physicalDisk.getPath(), devId, diskBusType);

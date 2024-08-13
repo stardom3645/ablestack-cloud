@@ -93,8 +93,22 @@ notifyqemu() {
     then
       sizeinkb=$(($newsize/1024))
       devicepath=$(virsh domblklist $vmname | grep $path | awk '{print $1}')
+      echo ""
+      echo "1 vmname: "$vmname
+      echo "2 sizeinkb: "$sizeinkb
+      echo "3 devicepath: "$devicepath
+      echo "4 path: "$path
+      echo "5 kvdoenable "$kvdoenable
+      if [ "$kvdoenable" == "true" ]; then
+        # kvdo devicepath
+        IFS='/' read -r -a image <<< "$path"
+        image_name="${image[1]}"
+        result="${image_name//-/}"
+        echo "6 kvdoenable /dev/mapper/vg_"$result"-ablestack_kvdo"
+      fi
       virsh blockresize --path $devicepath --size $sizeinkb $vmname >/dev/null 2>&1
       retval=$?
+      echo "6 retval: "$retval
       if [ -z $retval ] || [ $retval -ne 0 ]
       then
         log "failed to live resize $path to size of $sizeinkb kb" 1
@@ -238,8 +252,9 @@ pflag=
 vflag=
 tflag=
 rflag=
+kflag=
 
-while getopts 'c:s:v:p:t:r:' OPTION
+while getopts 'c:s:v:p:t:r:k:' OPTION
 do
   case $OPTION in
   s)	sflag=1
@@ -260,6 +275,9 @@ do
   r)    rflag=1
                 shrink="$OPTARG"
                 ;;
+  k)	kflag=1
+		kvdoenable="$OPTARG"
+		;;
   ?)	usage
 		exit 2
 		;;
