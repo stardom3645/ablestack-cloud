@@ -2482,16 +2482,21 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                         glueCommand = "/mirror/image/status/rbd/" +imageName;
                         glueMethod = "GET";
                         while(glueStep < 100) {
+                            glueStep += 1;
                             String mirrorImageStatus = DisasterRecoveryClusterUtil.glueImageMirrorStatusAPI(glueUrl, glueCommand, glueMethod);
                             if (mirrorImageStatus == null) {
-                                glueStep += 1;
                                 try {
                                     Thread.sleep(10000);
                                 } catch (InterruptedException e) {
                                     LOGGER.error("restartMirrorDaemon sleep interrupted");
                                 }
                             } else {
-                                break Loop;
+                                JsonObject statObject = (JsonObject) new JsonParser().parse(mirrorImageStatus).getAsJsonObject();
+                                if (statObject.has("state")) {
+                                    if (statObject.get("state").getAsString().contains("stopped")) {
+                                        break Loop;
+                                    }
+                                }
                             }
                         }
                         throw new InvalidParameterValueException("Resync functions cannot be executed because after restarting the rbd-mirror service, the image does not up properly.. For volumes with a path of " + imageName);
