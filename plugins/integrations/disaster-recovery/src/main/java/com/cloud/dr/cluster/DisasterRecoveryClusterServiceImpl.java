@@ -1214,17 +1214,6 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                 }
                 promoteParentImage(drCluster);
                 // timeSleep();
-                if (result) {
-                    for (int j=0; j < array.length; j++) {
-                        glueIp = array[j];
-                        ///////////////////// glue-api 프로토콜과 포트 확정 시 변경 예정
-                        glueUrl = "https://" + glueIp + ":8080/api/v1";
-                        glueCommand = "/service/rbd-mirror";
-                        glueMethod = "POST";
-                        String daemon = DisasterRecoveryClusterUtil.glueServiceControlAPI(glueUrl, glueCommand, glueMethod);
-                        if (daemon != null) break;
-                    }
-                }
                 return result;
             } else {
                 throw new CloudRuntimeException("There are no images being mirrored.");
@@ -1362,20 +1351,34 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
             throw new InvalidParameterValueException("Invalid disaster recovery cluster id specified");
         }
         Map<String, String> details = disasterRecoveryClusterDetailsDao.findDetails(drCluster.getId());
+        String glueIp = "";
+        String glueUrl = "";
+        String glueCommand = "";
+        String glueMethod = "";
+        // 복구된 경우 rbd-mirror 서비스 재시작 후 동기화 작업 진행
+        String ipList = Script.runSimpleBashScript("cat /etc/hosts | grep -E 'scvm1-mngt|scvm2-mngt|scvm3-mngt' | awk '{print $1}' | tr '\n' ','");
+        if (ipList != null || !ipList.isEmpty()) {
+            ipList = ipList.replaceAll(",$", "");
+            String[] array = ipList.split(",");
+            for (int j=0; j < array.length; j++) {
+                glueIp = array[j];
+                ///////////////////// glue-api 프로토콜과 포트 확정 시 변경 예정
+                glueUrl = "https://" + glueIp + ":8080/api/v1";
+                glueCommand = "/service/rbd-mirror";
+                glueMethod = "POST";
+                String daemon = DisasterRecoveryClusterUtil.glueServiceControlAPI(glueUrl, glueCommand, glueMethod);
+                if (daemon != null) break;
+            }
+        }
         // 스케줄이 설정되어있는지 사전 확인 후 Primary 클러스터를 복구하여 재동기화 실행전 스냅샷 스케줄 추가
         boolean check = checkDemoteDisasterRecoveryClusterMirrorSchedule(drCluster);
         if (!check) {
             beforeDemoteDisasterRecoveryClusterMirrorSchedule(drCluster);
         }
         validateResyncDisasterRecoveryClusterMirrorParameters(drCluster);
-        String ipList = Script.runSimpleBashScript("cat /etc/hosts | grep -E 'scvm1-mngt|scvm2-mngt|scvm3-mngt' | awk '{print $1}' | tr '\n' ','");
         if (ipList != null || !ipList.isEmpty()) {
             ipList = ipList.replaceAll(",$", "");
             String[] array = ipList.split(",");
-            String glueIp = "";
-            String glueUrl = "";
-            String glueCommand = "";
-            String glueMethod = "";
             int glueStep = 0;
             boolean result = false;
             // DR 상황 발생 후 Primary 클러스터를 복구하여 재동기화하는 경우 사용
