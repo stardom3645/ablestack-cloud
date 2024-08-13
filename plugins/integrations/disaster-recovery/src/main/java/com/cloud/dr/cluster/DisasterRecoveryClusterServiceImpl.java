@@ -1368,7 +1368,11 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                 glueMethod = "POST";
                 String daemon = DisasterRecoveryClusterUtil.glueServiceControlAPI(glueUrl, glueCommand, glueMethod);
                 if (daemon != null) {
-                    timeSleep();
+                    try {
+                        Thread.sleep(180 * 1000);
+                    } catch (InterruptedException e) {
+                        LOGGER.error("resyncDisasterRecoveryCluster sleep interrupted");
+                    }
                     break;
                 }
             }
