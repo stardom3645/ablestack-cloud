@@ -77,9 +77,7 @@ if [ "$partitionExist" == "null" ]; then
   # create vg
   vgcreate $vg_name $firstPartitionPath
 
-  # create lv
-  size=$(expr $ImageSize - 10485760 )
-  lvcreate --type vdo --name ablestack_kvdo --size $size"B" --virtualsize $size"B" $vg_name
+  lvcreate --type vdo --name ablestack_kvdo -l +100%FREE --virtualsize $ImageSize"B" $vg_name
 else
   vgchange -ay $vg_name
 fi
