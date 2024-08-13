@@ -1404,7 +1404,13 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                                 }
                             }
                             if (statObject.has("description") && peerDescription != null) {
-                                if (peerDescription.getAsString().contains("local image is primary") && statObject.get("description").getAsString().contains("local image is primary")) {
+                                LOGGER.info("imageName::::::::::::::::::");
+                                LOGGER.info(imageName);
+                                LOGGER.info("peerDescription.getAsString()::::::::::::::::::::::");
+                                LOGGER.info(peerDescription.getAsString());
+                                LOGGER.info("statObject.get('description').getAsString()::::::::::::::::::::::");
+                                LOGGER.info(statObject.get("description").getAsString());
+                                if (peerDescription.getAsString().equals("local image is primary") && statObject.get("description").getAsString().equals("local image is primary")) {
                                     glueCommand = "/mirror/image/demote/peer/rbd/" + imageName;
                                     glueMethod = "DELETE";
                                     Map<String, String> glueParams = new HashMap<>();
