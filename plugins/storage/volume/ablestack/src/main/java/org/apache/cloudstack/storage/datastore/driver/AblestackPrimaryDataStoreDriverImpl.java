@@ -429,7 +429,6 @@ public class AblestackPrimaryDataStoreDriverImpl implements PrimaryDataStoreDriv
         StoragePool pool = (StoragePool) data.getDataStore();
         ResizeVolumePayload resizeParameter = (ResizeVolumePayload) vol.getpayload();
         DiskOffering diskOffering = diskOfferingDao.findById(vol.getDiskOfferingId());
-        
         logger.debug("kvdo : 11111 : "+vol.getKvdoEnable());
         logger.debug("kvdo : 11111 : "+diskOffering.getKvdoEnable());
         ResizeVolumeCommand resizeCmd =
