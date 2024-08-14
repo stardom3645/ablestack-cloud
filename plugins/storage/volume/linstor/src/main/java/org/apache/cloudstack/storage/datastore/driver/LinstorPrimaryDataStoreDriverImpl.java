@@ -1119,7 +1119,7 @@ public class LinstorPrimaryDataStoreDriverImpl implements PrimaryDataStoreDriver
         ResizeVolumePayload resizeParameter)
     {
         StoragePool pool = (StoragePool) vol.getDataStore();
-
+        logger.debug("kvdo : 333333");
         ResizeVolumeCommand resizeCmd =
             new ResizeVolumeCommand(vol.getPath(), new StorageFilerTO(pool), oldSize, resizeParameter.newSize, resizeParameter.shrinkOk,
                 resizeParameter.instanceName, null, vol.getKvdoEnable());
