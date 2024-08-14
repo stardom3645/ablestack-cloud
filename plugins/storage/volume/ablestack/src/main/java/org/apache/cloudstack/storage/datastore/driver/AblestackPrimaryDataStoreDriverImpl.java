@@ -85,7 +85,6 @@ import com.cloud.utils.Pair;
 import com.cloud.vm.VMInstanceVO;
 import com.cloud.vm.VirtualMachine;
 import com.cloud.vm.dao.VMInstanceDao;
-import com.cloud.offering.DiskOffering;
 
 public class AblestackPrimaryDataStoreDriverImpl implements PrimaryDataStoreDriver {
 
@@ -428,12 +427,10 @@ public class AblestackPrimaryDataStoreDriverImpl implements PrimaryDataStoreDriv
         VolumeObject vol = (VolumeObject) data;
         StoragePool pool = (StoragePool) data.getDataStore();
         ResizeVolumePayload resizeParameter = (ResizeVolumePayload) vol.getpayload();
-        DiskOffering diskOffering = diskOfferingDao.findById(vol.getDiskOfferingId());
-        logger.debug("kvdo : 11111 : "+vol.getKvdoEnable());
-        logger.debug("kvdo : 11111 : "+diskOffering.getKvdoEnable());
+
         ResizeVolumeCommand resizeCmd =
                 new ResizeVolumeCommand(vol.getPath(), new StorageFilerTO(pool), vol.getSize(), resizeParameter.newSize, resizeParameter.shrinkOk,
-                        resizeParameter.instanceName, vol.getChainInfo(), diskOffering.getKvdoEnable());
+                        resizeParameter.instanceName, vol.getChainInfo(), vol.getKvdoEnable());
         if (pool.getParent() != 0) {
             resizeCmd.setContextParam(DiskTO.PROTOCOL_TYPE, Storage.StoragePoolType.DatastoreCluster.toString());
         }
