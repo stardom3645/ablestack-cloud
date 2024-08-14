@@ -435,7 +435,6 @@ public class CloudStackPrimaryDataStoreDriverImpl implements PrimaryDataStoreDri
             EndPoint ep = epSelector.select(data, encryptionRequired);
             endpointsToRunResize = new long[] {ep.getId()};
         }
-        logger.debug("kvdo : 22222");
         ResizeVolumeCommand resizeCmd = new ResizeVolumeCommand(vol.getPath(), new StorageFilerTO(pool), vol.getSize(),
                 resizeParameter.newSize, resizeParameter.shrinkOk, resizeParameter.instanceName, vol.getChainInfo(), vol.getPassphrase(), vol.getEncryptFormat(), vol.getKvdoEnable());
         if (pool.getParent() != 0) {
