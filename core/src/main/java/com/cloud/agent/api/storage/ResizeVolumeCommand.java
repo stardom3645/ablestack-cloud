@@ -66,6 +66,7 @@ public class ResizeVolumeCommand extends Command {
     public ResizeVolumeCommand(String path, StorageFilerTO pool, Long currentSize, Long newSize, boolean shrinkOk, String vmInstance, String chainInfo, boolean kvdoEnable) {
         this(path, pool, currentSize, newSize, shrinkOk, vmInstance);
         this.chainInfo = chainInfo;
+        this.kvdoEnable = kvdoEnable;
     }
 
     public ResizeVolumeCommand(String path, StorageFilerTO pool, Long currentSize, Long newSize, boolean shrinkOk, String vmInstance,
