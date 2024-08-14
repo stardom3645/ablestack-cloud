@@ -1458,12 +1458,13 @@ public class VolumeApiServiceImpl extends ManagerBase implements VolumeApiServic
         try {
             VolumeInfo vol = volFactory.getVolume(volume.getId());
             vol.addPayload(payload);
-
             // this call to resize has a different impact depending on whether the
             // underlying primary storage is managed or not
             // if managed, this is the chance for the plug-in to change the size and/or IOPS values
             // if not managed, this is the chance for the plug-in to talk to the hypervisor layer
             // to change the size of the disk
+            DiskOffering diskOffering = _diskOfferingDao.findById(volume.getDiskOfferingId());
+            vol.setKvdoEnable(diskOffering.getKvdoEnable());
             AsyncCallFuture<VolumeApiResult> future = volService.resize(vol);
             VolumeApiResult result = future.get();
 
