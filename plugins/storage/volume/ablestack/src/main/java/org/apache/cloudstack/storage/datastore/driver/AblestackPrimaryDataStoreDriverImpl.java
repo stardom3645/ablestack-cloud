@@ -427,7 +427,7 @@ public class AblestackPrimaryDataStoreDriverImpl implements PrimaryDataStoreDriv
         VolumeObject vol = (VolumeObject) data;
         StoragePool pool = (StoragePool) data.getDataStore();
         ResizeVolumePayload resizeParameter = (ResizeVolumePayload) vol.getpayload();
-
+        logger.debug("kvdo : 11111");
         ResizeVolumeCommand resizeCmd =
                 new ResizeVolumeCommand(vol.getPath(), new StorageFilerTO(pool), vol.getSize(), resizeParameter.newSize, resizeParameter.shrinkOk,
                         resizeParameter.instanceName, vol.getChainInfo(), vol.getKvdoEnable());
