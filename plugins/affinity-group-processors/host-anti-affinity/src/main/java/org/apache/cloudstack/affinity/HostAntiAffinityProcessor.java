@@ -172,8 +172,8 @@ public class HostAntiAffinityProcessor extends AffinityProcessorBase implements 
                     for (Long groupVMId : groupVMIds) {
                         VMReservationVO vmReservation = _reservationDao.findByVmId(groupVMId);
                         if (vmReservation != null && vmReservation.getHostId() != null && vmReservation.getHostId().equals(plannedHostId)) {
-                            if (s_logger.isDebugEnabled()) {
-                                s_logger.debug("Planned destination for VM " + vm.getId() + " conflicts with an existing VM " + vmReservation.getVmId() +
+                            if (logger.isDebugEnabled()) {
+                                logger.debug("Planned destination for VM " + vm.getId() + " conflicts with an existing VM " + vmReservation.getVmId() +
                                         " reserved on the same host " + plannedHostId);
                             }
                             return false;
