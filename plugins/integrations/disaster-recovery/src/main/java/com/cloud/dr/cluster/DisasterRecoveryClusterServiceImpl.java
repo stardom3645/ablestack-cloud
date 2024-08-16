@@ -2335,18 +2335,23 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
             ipList = ipList.replaceAll(",$", "");
             for (DisasterRecoveryClusterVmMapVO map : vmMap) {
                 String[] array = ipList.split(",");
+                int glueStep = 0;
+                Loop :
                 for (int i=0; i < array.length; i++) {
                     String glueIp = array[i];
                     ///////////////////// glue-api 프로토콜과 포트 확정 시 변경 예정
                     String glueUrl = "https://" + glueIp + ":8080/api/v1";
                     String glueCommand = "/mirror/image/info/rbd/" +map.getMirroredVmVolumePath();
                     String glueMethod = "GET";
-                    String mirrorImageInfo = DisasterRecoveryClusterUtil.glueImageMirrorInfoAPI(glueUrl, glueCommand, glueMethod);
-                    if (mirrorImageInfo != null) {
-                        JsonObject infoObject = (JsonObject) new JsonParser().parse(mirrorImageInfo).getAsJsonObject();
-                        if (!infoObject.get("image").getAsString().equals("")) {
-                            vmTemplate.add(infoObject.get("image").getAsString());
-                            break;
+                    while(glueStep < 100) {
+                        glueStep += 1;
+                        String mirrorImageInfo = DisasterRecoveryClusterUtil.glueImageMirrorInfoAPI(glueUrl, glueCommand, glueMethod);
+                        if (mirrorImageInfo != null) {
+                            JsonObject infoObject = (JsonObject) new JsonParser().parse(mirrorImageInfo).getAsJsonObject();
+                            if (!infoObject.get("image").getAsString().equals("")) {
+                                vmTemplate.add(infoObject.get("image").getAsString());
+                            }
+                            break Loop;
                         }
                     }
                 }
