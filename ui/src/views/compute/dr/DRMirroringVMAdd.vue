@@ -239,9 +239,6 @@ export default {
             title: this.$t('message.success.create.disaster.recovery.cluster.vm'),
             description: this.resource.id,
             successMessage: this.$t('message.success.create.disaster.recovery.cluster.vm'),
-            successMethod: () => {
-              this.closeModal()
-            },
             errorMessage: this.$t('message.error.create.disaster.recovery.cluster.vm'),
             loadingMessage: this.$t('message.create.disaster.recovery.cluster.vm.processing'),
             catchMessage: this.$t('error.fetching.async.job.result')
