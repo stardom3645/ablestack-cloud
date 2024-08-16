@@ -786,10 +786,12 @@ export default {
           successMessage: this.$t('message.success.remove.disaster.recovery.cluster.vm'),
           successMethod: () => {
             this.loadingMirror = false
+            this.parentFetchData()
           },
           errorMessage: this.$t('message.error.remove.disaster.recovery.cluster.vm'),
           errorMethod: () => {
             this.loadingMirror = false
+            this.parentFetchData()
           },
           loadingMessage: this.$t('message.remove.disaster.recovery.cluster.vm.processing'),
           catchMessage: this.$t('error.fetching.async.job.result'),
