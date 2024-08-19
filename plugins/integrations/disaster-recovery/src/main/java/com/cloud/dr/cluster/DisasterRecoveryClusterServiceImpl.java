@@ -2224,7 +2224,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                             while(glueStep < 100) {
                                 glueStep += 1;
                                 try {
-                                    Thread.sleep(10000);
+                                    Thread.sleep(60000);
                                 } catch (InterruptedException e) {
                                     LOGGER.error("demoteParentImage sleep interrupted");
                                 }
