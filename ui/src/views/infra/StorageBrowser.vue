@@ -202,16 +202,6 @@
                 <template #icon><plus-outlined /></template>
               </a-button>
             </a-tooltip>
-              <a-button
-                type="primary"
-                size="medium"
-                shape="circle"
-                :tooltip="$t('label.create')"
-                @click="showAddTyModal(record.name, record.size)"
-                :loading="loading"
-                >
-                  <template #icon><plus-outlined /></template>
-              </a-button>
                 <a-popconfirm
                   :title="`${$t('label.delete.rbd.image')}?`"
                   @confirm="deleteRbdImage(record.name)"
@@ -228,14 +218,6 @@
                     <template #icon><delete-outlined /></template>
                   </a-button>
                 </a-tooltip>
-                <tooltip-button
-                  tooltipPlacement="bottom"
-                  type="primary"
-                  size="medium"
-                  icon="delete-outlined"
-                  :tooltip="$t('label.delete')"
-                  :danger="true"
-                />
                 </a-popconfirm>
               </a-col>
             </template>
