@@ -135,6 +135,9 @@ public class DiskOfferingVO implements DiskOffering {
     @Column(name = "shareable")
     private boolean shareable;
 
+    @Column(name = "kvdo_enable")
+    private boolean kvdoEnable;
+
     @Column(name = "cache_mode", updatable = true, nullable = false)
     @Enumerated(value = EnumType.STRING)
     private DiskCacheMode cacheMode;
@@ -299,6 +302,16 @@ public class DiskOfferingVO implements DiskOffering {
     @Override
     public boolean getShareable() {
         return shareable;
+    }
+
+    @Override
+    public void setKvdoEnable(boolean kvdoEnable) {
+        this.kvdoEnable = kvdoEnable;
+    }
+
+    @Override
+    public boolean getKvdoEnable() {
+        return kvdoEnable;
     }
 
     @Override

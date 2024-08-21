@@ -336,6 +336,12 @@ public class VolumeObject implements VolumeInfo {
     }
 
     @Override
+    public boolean getKvdoEnable() {
+        DiskOfferingVO diskOfferingVO = getDiskOfferingVO();
+        return diskOfferingVO.getKvdoEnable();
+    }
+
+    @Override
     public MigrationOptions getMigrationOptions() {
         return migrationOptions;
     }
