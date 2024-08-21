@@ -3349,7 +3349,7 @@ public class ConfigurationManagerImpl extends ManagerBase implements Configurati
     public void validateExtraConfigInServiceOfferingDetail(String detailName) {
         if (!detailName.equals(DpdkHelper.DPDK_NUMA) && !detailName.equals(DpdkHelper.DPDK_HUGE_PAGES)
                 && !detailName.startsWith(DpdkHelper.DPDK_INTERFACE_PREFIX)) {
-            throw new InvalidParameterValueException("Only extraconfig for DPDK are supported in service offering details");
+            // throw new InvalidParameterValueException("Only extraconfig for DPDK are supported in service offering details");
         }
     }
 

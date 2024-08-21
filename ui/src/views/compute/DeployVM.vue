@@ -1123,25 +1123,54 @@ export default {
       return ['User'].includes(this.$store.getters.userInfo.roletype) || store.getters.project.id
     },
     diskSize () {
-      let dataDiskSize
-      let rootDiskSize = _.get(this.instanceConfig, 'rootdisksize', 0)
-      const diskOfferingDiskSize = _.get(this.diskOffering, 'disksize', 0)
-      const customDiskSize = _.get(this.instanceConfig, 'size', 0)
+      const customRootDiskSize = _.get(this.instanceConfig, 'rootdisksize', null)
+      const customDataDiskSize = _.get(this.instanceConfig, 'size', null)
+      let computeOfferingDiskSize = _.get(this.serviceOffering, 'rootdisksize', null)
+      computeOfferingDiskSize = computeOfferingDiskSize > 0 ? computeOfferingDiskSize : null
+      const diskOfferingDiskSize = _.get(this.diskOffering, 'disksize', null)
+      const overrideDiskOfferingDiskSize = _.get(this.overrideDiskOffering, 'disksize', null)
 
+      let rootDiskSize
+      let dataDiskSize
       if (this.vm.isoid != null) {
-        rootDiskSize = diskOfferingDiskSize > 0 ? diskOfferingDiskSize : customDiskSize
+        rootDiskSize = this.diskOffering?.iscustomized ? customDataDiskSize : diskOfferingDiskSize
       } else {
-        dataDiskSize = diskOfferingDiskSize > 0 ? diskOfferingDiskSize : customDiskSize
+        rootDiskSize = this.overrideDiskOffering?.iscustomized ? customRootDiskSize : overrideDiskOfferingDiskSize || computeOfferingDiskSize || this.dataPreFill.minrootdisksize
+        dataDiskSize = this.diskOffering?.iscustomized ? customDataDiskSize : diskOfferingDiskSize
       }
 
       const size = []
-      if (rootDiskSize > 0) {
+      if (rootDiskSize) {
         size.push(`${rootDiskSize} GB (Root)`)
       }
-      if (dataDiskSize > 0) {
+      if (dataDiskSize) {
         size.push(`${dataDiskSize} GB (Data)`)
       }
       return size.join(' | ')
+    },
+    rootDiskOffering () {
+      const rootDiskOffering = this.vm.isoid != null ? this.diskOffering : this.overrideDiskOffering
+
+      const id = _.get(rootDiskOffering, 'id', null)
+      const displayText = _.get(rootDiskOffering, 'displaytext', null)
+
+      return {
+        id: id,
+        displayText: `${displayText} (Root)`
+      }
+    },
+    dataDiskOffering () {
+      if (this.vm.isoid != null) {
+        return null
+      }
+
+      const id = _.get(this.diskOffering, 'id', null)
+      const displayText = _.get(this.diskOffering, 'displaytext', null)
+
+      return {
+        id: id,
+        displayText: `${displayText} (Data)`
+      }
     },
     affinityGroupIds () {
       return _.map(this.affinityGroups, 'id')
@@ -1496,16 +1525,10 @@ export default {
           this.vm.hostname = host.name
         }
 
-        if (this.serviceOffering?.rootdisksize) {
-          this.vm.disksizetotalgb = this.serviceOffering.rootdisksize
-        } else if (this.diskSize) {
+        if (this.diskSize) {
           this.vm.disksizetotalgb = this.diskSize
         } else {
           this.vm.disksizetotalgb = null
-        }
-
-        if (this.diskSize) {
-          this.vm.disksizetotalgb = this.diskSize
         }
 
         if (this.networks) {
@@ -1562,6 +1585,11 @@ export default {
           this.vm.diskofferingname = this.diskOffering.displaytext
           this.vm.diskofferingsize = this.diskOffering.disksize
         }
+
+        this.vm.rootdiskofferingid = this.rootDiskOffering?.id
+        this.vm.rootdiskofferingdisplaytext = this.rootDiskOffering?.displayText
+        this.vm.datadiskofferingid = this.dataDiskOffering?.id
+        this.vm.datadiskofferingdisplaytext = this.dataDiskOffering?.displayText
 
         if (this.affinityGroups) {
           this.vm.affinitygroup = this.affinityGroups
@@ -2259,7 +2287,7 @@ export default {
         const httpMethod = deployVmData.userdata ? 'POST' : 'GET'
 
         if (values.vmNumber) {
-          for (var num = 0; num < Number(values.vmNumber); num++) {
+          for (var num = 1; num <= Number(values.vmNumber); num++) {
             let args = ''
             let data = ''
             if (values.name) {
@@ -2275,9 +2303,8 @@ export default {
                   this.loading.deploy = false
                   return
                 }
-                var numP = num + 1
-                deployVmData.name = values.name + '-' + numP
-                deployVmData.displayname = values.name + '-' + numP
+                deployVmData.name = values.name + '-' + num
+                deployVmData.displayname = values.name + '-' + num
               }
             }
             args = httpMethod === 'POST' ? {} : deployVmData
@@ -2289,48 +2316,40 @@ export default {
               } else {
                 jobId = await this.deployVM(args, httpMethod, data)
               }
-              await this.$pollJob({
-                jobId,
-                title,
-                description,
-                successMethod: result => {
-                  const vm = result.jobresult.virtualmachine
-                  const name = vm.displayname || vm.name || vm.id
-                  if (vm.password) {
-                    this.$notification.success({
-                      message: password + ` ${this.$t('label.for')} ` + name,
-                      description: vm.password,
-                      btn: () => h(
-                        Button,
-                        {
-                          type: 'primary',
-                          size: 'small',
-                          onClick: () => this.copyToClipboard(vm.password)
-                        },
-                        () => [this.$t('label.copy.password')]
-                      ),
-                      duration: 0
-                    })
+              if (num === 1) {
+                this.$pollJob({
+                  jobId,
+                  title,
+                  description,
+                  successMethod: result => {
+                    const vm = result.jobresult.virtualmachine
+                    const name = vm.displayname || vm.name || vm.id
+                    if (vm.password) {
+                      this.$notification.success({
+                        message: password + ` ${this.$t('label.for')} ` + name,
+                        description: vm.password,
+                        btn: () => h(
+                          Button,
+                          {
+                            type: 'primary',
+                            size: 'small',
+                            onClick: () => this.copyToClipboard(vm.password)
+                          },
+                          () => [this.$t('label.copy.password')]
+                        ),
+                        duration: 0
+                      })
+                    }
+                    if (!values.stayonpage) {
+                      eventBus.emit('vm-refresh-data')
+                    }
+                  },
+                  loadingMessage: `${title} ${this.$t('label.in.progress')}`,
+                  catchMessage: this.$t('error.fetching.async.job.result'),
+                  action: {
+                    isFetchData: false
                   }
-                  if (!values.stayonpage) {
-                    eventBus.emit('vm-refresh-data')
-                  }
-                },
-                loadingMessage: `${title} ${this.$t('label.in.progress')}`,
-                catchMessage: this.$t('error.fetching.async.job.result'),
-                action: {
-                  isFetchData: false
-                }
-              })
-
-              // Sending a refresh in case it hasn't picked up the new VM
-              if (values.vmNumber === 1 || !values.stayonpage) {
-                await new Promise(resolve => setTimeout(resolve, 3000)).then(() => {
-                  eventBus.emit('vm-refresh-data')
                 })
-              }
-              if (!values.stayonpage) {
-                await this.$router.back()
               }
             } catch (error) {
               if (error.message !== undefined) {
@@ -2338,6 +2357,12 @@ export default {
               }
               this.loading.deploy = false
             }
+          }
+          await new Promise(resolve => setTimeout(resolve, 3000)).then(() => {
+            eventBus.emit('vm-refresh-data')
+          })
+          if (!values.stayonpage) {
+            await this.$router.back()
           }
           this.form.stayonpage = false
           this.loading.deploy = false
@@ -2352,7 +2377,6 @@ export default {
             })
             return
           }
-
           this.$notification.error({
             message: this.$t('message.request.failed'),
             description: this.$t('error.form.message')
