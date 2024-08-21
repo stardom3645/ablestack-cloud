@@ -223,7 +223,7 @@
                   :cpuSpeedInputDecorator="cpuSpeedKey"
                   :memoryInputDecorator="memoryKey"
                   :computeOfferingId="computeOffering.id"
-                  :preFillContent="resource"
+                  :preFillContent="dataPreFill"
                   :isConstrained="'serviceofferingdetails' in computeOffering"
                   :minCpu="getMinCpu()"
                   :maxCpu="getMaxCpu()"

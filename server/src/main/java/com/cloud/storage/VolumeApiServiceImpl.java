@@ -1065,9 +1065,24 @@ public class VolumeApiServiceImpl extends ManagerBase implements VolumeApiServic
         }
     }
 
-    @Override
-    public Volume cloneDataVolume(long vmId, long snapshotId, Volume volume) throws StorageUnavailableException {
-        return createVolumeFromSnapshot((VolumeVO) volume, snapshotId, vmId);
+    public Volume cloneVolumeFromSnapshot(Volume volume, long snapshotId, Long vmId) throws StorageUnavailableException {
+        VolumeInfo createdVolume = null;
+        SnapshotVO snapshot = _snapshotDao.findById(snapshotId);
+        snapshot.getVolumeId();
+
+        UserVmVO vm = null;
+        if (vmId != null) {
+            vm = _userVmDao.findById(vmId);
+        }
+
+        // sync old snapshots to region store if necessary
+
+        createdVolume = _volumeMgr.cloneVolumeFromSnapshot(volume, snapshot, vm);
+        VolumeVO volumeVo = _volsDao.findById(createdVolume.getId());
+        UsageEventUtils.publishUsageEvent(EventTypes.EVENT_VOLUME_CREATE, createdVolume.getAccountId(), createdVolume.getDataCenterId(), createdVolume.getId(), createdVolume.getName(),
+                createdVolume.getDiskOfferingId(), null, createdVolume.getSize(), Volume.class.getName(), createdVolume.getUuid(), volumeVo.isDisplayVolume());
+
+        return volume;
     }
 
     protected VolumeVO createVolumeFromSnapshot(VolumeVO volume, long snapshotId, Long vmId) throws StorageUnavailableException {
@@ -3862,8 +3877,6 @@ public class VolumeApiServiceImpl extends ManagerBase implements VolumeApiServic
                 }
             }
         }
-
-
         return snapshotMgr.allocSnapshot(volumeId, policyId, snapshotName, locationType, false, zoneIds);
     }
 

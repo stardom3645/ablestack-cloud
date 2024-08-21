@@ -580,7 +580,7 @@ public class ScaleIOPrimaryDataStoreDriver implements PrimaryDataStoreDriver {
         try {
             final ScaleIOGatewayClient client = getScaleIOClient(storagePoolId);
             final String scaleIOStoragePoolId = storagePool.getPath();
-            final Long sizeInBytes = templateInfo.getSize();
+            final Long sizeInBytes = templateInfo.getSize() == 0L ? 8589934592L : templateInfo.getSize();
             final long sizeInGb = (long) Math.ceil(sizeInBytes / (1024.0 * 1024.0 * 1024.0));
             final String scaleIOVolumeName = String.format("%s-%s-%s-%s", ScaleIOUtil.TEMPLATE_PREFIX, templateInfo.getId(),
                     storagePool.getUuid().split("-")[0].substring(4), ManagementServerImpl.customCsIdentifier.value());
@@ -1349,6 +1349,9 @@ public class ScaleIOPrimaryDataStoreDriver implements PrimaryDataStoreDriver {
 
     @Override
     public long getVolumeSizeRequiredOnPool(long volumeSize, Long templateSize, boolean isEncryptionRequired) {
+        if(volumeSize == 0) {
+            volumeSize = 8589934592L;
+        }
         long newSizeInGB = volumeSize / (1024 * 1024 * 1024);
         if (templateSize != null && isEncryptionRequired && needsExpansionForEncryptionHeader(templateSize, volumeSize)) {
             newSizeInGB = (volumeSize + (1<<30)) / (1024 * 1024 * 1024);
@@ -1533,5 +1536,9 @@ public class ScaleIOPrimaryDataStoreDriver implements PrimaryDataStoreDriver {
     @Override
     public boolean zoneWideVolumesAvailableWithoutClusterMotion() {
         return true;
+    }
+
+    @Override
+    public void flattenAsync(DataStore dataStore, DataObject data, AsyncCompletionCallback<CommandResult> callback) {
     }
 }

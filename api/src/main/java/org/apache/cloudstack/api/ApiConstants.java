@@ -595,6 +595,7 @@ public class ApiConstants {
     public static final String AGGREGATE_NAME = "aggregatename";
     public static final String POOL_NAME = "poolname";
     public static final String VOLUME_NAME = "volumename";
+    public static final String VOLUME_STATE = "volumestate";
     public static final String SNAPSHOT_POLICY = "snapshotpolicy";
     public static final String SNAPSHOT_RESERVATION = "snapshotreservation";
     public static final String IP_NETWORK_LIST = "iptonetworklist";
@@ -1210,6 +1211,7 @@ public class ApiConstants {
     public static final String IS_TAG_A_RULE = "istagarule";
     public static final String LINK_STATE = "linkstate";
     public static final String QEMU_AGENT_VERSION = "qemuagentversion";
+    public static final String CLONE_TYPE = "clonetype";
 
     public static final String PARAMETER_DESCRIPTION_IS_TAG_A_RULE = "Whether the informed tag is a JS interpretable rule or not.";
 
