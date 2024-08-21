@@ -3203,7 +3203,7 @@ public class ConfigurationManagerImpl extends ManagerBase implements Configurati
                 cmd.getIopsReadRate(), cmd.getIopsReadRateMax(), cmd.getIopsReadRateMaxLength(),
                 cmd.getIopsWriteRate(), cmd.getIopsWriteRateMax(), cmd.getIopsWriteRateMaxLength(),
                 cmd.getHypervisorSnapshotReserve(), cmd.getCacheMode(), storagePolicyId, cmd.getDynamicScalingEnabled(), diskOfferingId,
-                cmd.getDiskOfferingStrictness(), cmd.isCustomized(), cmd.getEncryptRoot(), cmd.getShareable(), cmd.isPurgeResources());
+                cmd.getDiskOfferingStrictness(), cmd.isCustomized(), cmd.getEncryptRoot(), cmd.getShareable(), cmd.getKvdoEnable(), cmd.isPurgeResources());
     }
 
     protected ServiceOfferingVO createServiceOffering(final long userId, final boolean isSystem, final VirtualMachine.Type vmType,
@@ -3215,7 +3215,7 @@ public class ConfigurationManagerImpl extends ManagerBase implements Configurati
             Long iopsReadRate, Long iopsReadRateMax, Long iopsReadRateMaxLength,
             Long iopsWriteRate, Long iopsWriteRateMax, Long iopsWriteRateMaxLength,
             final Integer hypervisorSnapshotReserve, String cacheMode, final Long storagePolicyID, final boolean dynamicScalingEnabled, final Long diskOfferingId,
-            final boolean diskOfferingStrictness, final boolean isCustomized, final boolean encryptRoot, final boolean shareable, final boolean purgeResources) {
+            final boolean diskOfferingStrictness, final boolean isCustomized, final boolean encryptRoot, final boolean shareable, final boolean kvdoEnable, final boolean purgeResources) {
 
         // Filter child domains when both parent and child domains are present
         List<Long> filteredDomainIds = filterChildSubDomains(domainIds);
@@ -3307,7 +3307,7 @@ public class ConfigurationManagerImpl extends ManagerBase implements Configurati
                     bytesWriteRate, bytesWriteRateMax, bytesWriteRateMaxLength,
                     iopsReadRate, iopsReadRateMax, iopsReadRateMaxLength,
                     iopsWriteRate, iopsWriteRateMax, iopsWriteRateMaxLength,
-                    hypervisorSnapshotReserve, cacheMode, storagePolicyID, encryptRoot, shareable);
+                    hypervisorSnapshotReserve, cacheMode, storagePolicyID, encryptRoot, shareable, kvdoEnable);
         } else {
             diskOffering = _diskOfferingDao.findById(diskOfferingId);
             String diskStoragePolicyId = diskOfferingDetailsDao.getDetail(diskOfferingId, ApiConstants.STORAGE_POLICY);
@@ -3359,7 +3359,7 @@ public class ConfigurationManagerImpl extends ManagerBase implements Configurati
                                                       Long bytesWriteRate, Long bytesWriteRateMax, Long bytesWriteRateMaxLength,
                                                       Long iopsReadRate, Long iopsReadRateMax, Long iopsReadRateMaxLength,
                                                       Long iopsWriteRate, Long iopsWriteRateMax, Long iopsWriteRateMaxLength,
-                                                      final Integer hypervisorSnapshotReserve, String cacheMode, final Long storagePolicyID, boolean encrypt, boolean shareable) {
+                                                      final Integer hypervisorSnapshotReserve, String cacheMode, final Long storagePolicyID, boolean encrypt, boolean shareable, boolean kvdoEnable) {
 
         DiskOfferingVO diskOffering = new DiskOfferingVO(name, displayText, typedProvisioningType, false, tags, false, localStorageRequired, false);
 
@@ -3401,6 +3401,7 @@ public class ConfigurationManagerImpl extends ManagerBase implements Configurati
         diskOffering.setMaxIops(maxIops);
         diskOffering.setEncrypt(encrypt);
         diskOffering.setShareable(shareable);
+        diskOffering.setKvdoEnable(kvdoEnable);
 
         setBytesRate(diskOffering, bytesReadRate, bytesReadRateMax, bytesReadRateMaxLength, bytesWriteRate, bytesWriteRateMax, bytesWriteRateMaxLength);
         setIopsRate(diskOffering, iopsReadRate, iopsReadRateMax, iopsReadRateMaxLength, iopsWriteRate, iopsWriteRateMax, iopsWriteRateMaxLength);
@@ -3692,7 +3693,7 @@ public class ConfigurationManagerImpl extends ManagerBase implements Configurati
                                                 Long iopsReadRate, Long iopsReadRateMax, Long iopsReadRateMaxLength,
                                                 Long iopsWriteRate, Long iopsWriteRateMax, Long iopsWriteRateMaxLength,
                                                 final Integer hypervisorSnapshotReserve, String cacheMode, final Map<String, String> details, final Long storagePolicyID,
-                                                final boolean diskSizeStrictness, final boolean encrypt, final boolean shareable) {
+                                                final boolean diskSizeStrictness, final boolean encrypt, final boolean shareable, final boolean kvdoEnable) {
         long diskSize = 0;// special case for custom disk offerings
         long maxVolumeSizeInGb = VolumeOrchestrationService.MaxVolumeSize.value();
         if (numGibibytes != null && numGibibytes <= 0) {
@@ -3776,6 +3777,7 @@ public class ConfigurationManagerImpl extends ManagerBase implements Configurati
 
         newDiskOffering.setEncrypt(encrypt);
         newDiskOffering.setShareable(shareable);
+        newDiskOffering.setKvdoEnable(kvdoEnable);
         newDiskOffering.setHypervisorSnapshotReserve(hypervisorSnapshotReserve);
         newDiskOffering.setDiskSizeStrictness(diskSizeStrictness);
 
@@ -3890,6 +3892,7 @@ public class ConfigurationManagerImpl extends ManagerBase implements Configurati
         final String cacheMode = cmd.getCacheMode();
         final boolean encrypt = cmd.getEncrypt();
         final boolean shareable = cmd.getShareable();
+        final boolean kvdoEnable = cmd.getKvdoEnable();
 
         validateMaxRateEqualsOrGreater(iopsReadRate, iopsReadRateMax, IOPS_READ_RATE);
         validateMaxRateEqualsOrGreater(iopsWriteRate, iopsWriteRateMax, IOPS_WRITE_RATE);
@@ -3903,7 +3906,7 @@ public class ConfigurationManagerImpl extends ManagerBase implements Configurati
                 localStorageRequired, isDisplayOfferingEnabled, isCustomizedIops, minIops,
                 maxIops, bytesReadRate, bytesReadRateMax, bytesReadRateMaxLength, bytesWriteRate, bytesWriteRateMax, bytesWriteRateMaxLength,
                 iopsReadRate, iopsReadRateMax, iopsReadRateMaxLength, iopsWriteRate, iopsWriteRateMax, iopsWriteRateMaxLength,
-                hypervisorSnapshotReserve, cacheMode, details, storagePolicyId, diskSizeStrictness, encrypt, shareable);
+                hypervisorSnapshotReserve, cacheMode, details, storagePolicyId, diskSizeStrictness, encrypt, shareable, kvdoEnable);
     }
 
     /**

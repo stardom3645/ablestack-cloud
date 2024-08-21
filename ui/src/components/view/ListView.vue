@@ -423,6 +423,10 @@
       <template v-if="column.key === 'duration' && ['webhook', 'webhookdeliveries'].includes($route.path.split('/')[1])">
         <span>  {{ getDuration(record.startdate, record.enddate) }} </span>
       </template>
+      <template v-if="column.key === 'kvdoenable'">
+        <status :text="record.kvdoenable ? record.kvdoenable.toString() : 'false'" />
+        {{ record.kvdoenable ? 'Enabled' : 'Disabled' }}
+      </template>
       <template v-if="['startdate', 'enddate'].includes(column.key) && ['usage'].includes($route.path.split('/')[1])">
         {{ $toLocaleDate(text.replace('\'T\'', ' ')) }}
       </template>
