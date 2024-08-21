@@ -176,16 +176,32 @@ export default {
       })
     },
     fetchDiskOfferings () {
+      var resourceKvdo = false
       api('listDiskOfferings', {
-        volumeid: this.resource.id,
+        id: this.resource.diskofferingid,
         listall: true
       }).then(response => {
-        this.diskOfferings = response.listdiskofferingsresponse.diskoffering
-        if (this.diskOfferings) {
-          this.selectedDiskOfferingId = this.diskOfferings[0].id
-          this.customDiskOffering = this.diskOfferings[0].iscustomized || false
-          this.isCustomizedDiskIOps = this.diskOfferings[0]?.iscustomizediops || false
-        }
+        resourceKvdo = response.listdiskofferingsresponse.diskoffering[0].kvdoenable
+        api('listDiskOfferings', {
+          volumeid: this.resource.id,
+          listall: true
+        }).then(response => {
+          // this.diskOfferings = response.listdiskofferingsresponse.diskoffering
+          var ret = response.listdiskofferingsresponse.diskoffering
+          ret.forEach((item) => {
+            if (item.kvdoenable === resourceKvdo) {
+              this.diskOfferings.push(item)
+            }
+          })
+          if (this.diskOfferings) {
+            this.selectedDiskOfferingId = this.diskOfferings[0].id
+            this.customDiskOffering = this.diskOfferings[0].iscustomized || false
+            this.isCustomizedDiskIOps = this.diskOfferings[0]?.iscustomizediops || false
+          }
+        }).catch(error => {
+          this.$notifyError(error)
+          this.closeModal()
+        })
       }).catch(error => {
         this.$notifyError(error)
         this.closeModal()

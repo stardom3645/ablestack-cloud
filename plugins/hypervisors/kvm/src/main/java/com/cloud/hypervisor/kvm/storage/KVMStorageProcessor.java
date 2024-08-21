@@ -1386,7 +1386,7 @@ public class KVMStorageProcessor implements StorageProcessor {
                     if (resource.getHypervisorType() == Hypervisor.HypervisorType.LXC) {
                         final String device = resource.mapRbdDevice(attachingDisk, kvdoEnable);
                         if (device != null) {
-                            logger.debug("RBD device on host is1: "+device);
+                            logger.debug("RBD device on host is: "+device);
                             attachingDisk.setPath(device);
                         } else {
                             throw new InternalErrorException("Error while mapping disk "+attachingDisk.getPath()+" on host");
@@ -1396,8 +1396,6 @@ public class KVMStorageProcessor implements StorageProcessor {
 
                 for (final DiskDef disk : disks) {
                     final String file = disk.getDiskPath();
-                    logger.debug("remove!!!!!! disk : "+file + " : " +kvdoEnable);
-                    logger.debug("file : "+file + ", getPath : " +attachingDisk.getPath() + ", getName : " +attachingDisk.getName());
                     if(attachingPool.getType() == StoragePoolType.RBD && provider != null && !provider.isEmpty() && "ABLESTACK".equals(provider)) {
                         if(!kvdoEnable){
                             if (file != null && file.equalsIgnoreCase(krbdpath + "/" + attachingDisk.getPath())) {
@@ -1443,7 +1441,7 @@ public class KVMStorageProcessor implements StorageProcessor {
                         // For LXC, map image to host and then attach to Vm
                         final String device = resource.mapRbdDevice(attachingDisk, false);
                         if (device != null) {
-                            logger.debug("RBD device on host is2: "+device);
+                            logger.debug("RBD device on host is: "+device);
                             diskdef.defBlockBasedDisk(device, devId, busT);
                         } else {
                             throw new InternalErrorException("Error while mapping disk "+attachingDisk.getPath()+" on host");
@@ -1453,10 +1451,10 @@ public class KVMStorageProcessor implements StorageProcessor {
                             final String device = resource.mapRbdDevice(attachingDisk, kvdoEnable);
                             if (device != null) {
                                 if(!kvdoEnable){
-                                    logger.debug("RBD device on host is3: " + device);
+                                    logger.debug("RBD device on host is: " + device);
                                     diskdef.defBlockBasedDisk(krbdpath + "/" + attachingDisk.getPath(), devId);
                                 }else{
-                                    logger.debug("RBD device on host is4: " + device);
+                                    logger.debug("RBD device on host is: " + device);
                                     diskdef.defBlockBasedDisk(device, devId);
                                 }
                             } else {

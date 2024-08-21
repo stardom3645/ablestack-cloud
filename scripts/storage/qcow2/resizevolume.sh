@@ -93,22 +93,22 @@ notifyqemu() {
     then
       sizeinkb=$(($newsize/1024))
       devicepath=$(virsh domblklist $vmname | grep $path | awk '{print $1}')
-      echo ""
-      echo "1 vmname: "$vmname
-      echo "2 sizeinkb: "$sizeinkb
-      echo "3 devicepath: "$devicepath
-      echo "4 path: "$path
-      echo "5 kvdoenable "$kvdoenable
       if [ "$kvdoenable" == "true" ]; then
         # kvdo devicepath
-        IFS='/' read -r -a image <<< "$path"
-        image_name="${image[1]}"
-        result="${image_name//-/}"
-        echo "6 kvdoenable /dev/mapper/vg_"$result"-ablestack_kvdo"
+        IFS='/' read -r -a image_info <<< "$path"
+        devicePath=$(rbd showmapped | grep "${image_info[0]}[ ]*${image_info[1]}" | grep -o "[^ ]*[ ]*$")
+        result="${image_info[1]}"
+        image_name="${result//-/}"
+        partition_name=$(lsblk $devicePath -p -J |jq -r '.blockdevices[0].children[0].name')
+
+        parted -f --script $devicePath resizepart 1 100%
+        pvresize $partition_name
+        lvresize -l +100%FREE "vg_"$image_name
+        lvresize --size $sizeinkb"kb" "vg_"$image_name"/ablestack_kvdo"
+        devicepath=$(virsh domblklist $vmname | grep "/dev/mapper/vg_$image_name-ablestack_kvdo" | awk '{print $1}')
       fi
       virsh blockresize --path $devicepath --size $sizeinkb $vmname >/dev/null 2>&1
       retval=$?
-      echo "6 retval: "$retval
       if [ -z $retval ] || [ $retval -ne 0 ]
       then
         log "failed to live resize $path to size of $sizeinkb kb" 1
