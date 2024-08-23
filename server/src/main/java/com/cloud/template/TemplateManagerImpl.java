@@ -2048,7 +2048,7 @@ public class TemplateManagerImpl extends ManagerBase implements TemplateManager,
         Boolean isPublic = cmd.isPublic();
         Boolean featured = cmd.isFeatured();
         int bitsValue = ((bits == null) ? 64 : bits.intValue());
-        boolean requiresHvmValue = ((requiresHvm == null) ? true : requiresHvm.booleanValue());
+        boolean requiresHvmValue = ((requiresHvm == null) ? false : requiresHvm.booleanValue());
         boolean passwordEnabledValue = ((passwordEnabled == null) ? false : passwordEnabled.booleanValue());
         boolean sshKeyEnabledValue = ((sshKeyEnabled == null) ? false : sshKeyEnabled.booleanValue());
         if (isPublic == null) {
