@@ -698,6 +698,7 @@ public class ApiConstants {
     public static final String TRAFFIC_TYPE_IMPLEMENTOR = "traffictypeimplementor";
     public static final String KEYWORD = "keyword";
     public static final String LIST_ALL = "listall";
+    public static final String LIST_ONLY_REMOVED = "listonlyremoved";
     public static final String LIST_SYSTEM_VMS = "listsystemvms";
     public static final String IP_RANGES = "ipranges";
     public static final String IPV6_ROUTING = "ip6routing";
@@ -1218,6 +1219,11 @@ public class ApiConstants {
     public static final String WEBHOOK_NAME = "webhookname";
 
     public static final String NFS_MOUNT_OPTIONS = "nfsmountopts";
+
+    public static final String PARAMETER_DESCRIPTION_ACTIVATION_RULE = "Quota tariff's activation rule. It can receive a JS script that results in either " +
+            "a boolean or a numeric value: if it results in a boolean value, the tariff value will be applied according to the result; if it results in a numeric value, the " +
+            "numeric value will be applied; if the result is neither a boolean nor a numeric value, the tariff will not be applied. If the rule is not informed, the tariff " +
+            "value will be applied.";
 
     public static final String DR_CLUSTER_TYPE = "drclustertype";
     public static final String DR_CLUSTER_URL = "drclusterurl";

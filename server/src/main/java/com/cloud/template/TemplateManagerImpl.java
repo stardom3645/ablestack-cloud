@@ -301,7 +301,6 @@ public class TemplateManagerImpl extends ManagerBase implements TemplateManager,
     @Inject
     private HypervisorGuruManager _hvGuruMgr;
 
-    private boolean _disableExtraction = false;
     private List<TemplateAdapter> _adapters;
 
     ExecutorService _preloadExecutor;
@@ -542,7 +541,7 @@ public class TemplateManagerImpl extends ManagerBase implements TemplateManager,
         if (isISO) {
             desc = Upload.Type.ISO.toString();
         }
-        if (!_accountMgr.isRootAdmin(caller.getId()) && _disableExtraction) {
+        if (!_accountMgr.isRootAdmin(caller.getId()) && ApiDBUtils.isExtractionDisabled()) {
             throw new PermissionDeniedException("Extraction has been disabled by admin");
         }
 
@@ -1116,10 +1115,6 @@ public class TemplateManagerImpl extends ManagerBase implements TemplateManager,
 
     @Override
     public boolean configure(String name, Map<String, Object> params) throws ConfigurationException {
-
-        String disableExtraction = _configDao.getValue(Config.DisableExtraction.toString());
-        _disableExtraction = (disableExtraction == null) ? false : Boolean.parseBoolean(disableExtraction);
-
         _preloadExecutor = Executors.newFixedThreadPool(TemplatePreloaderPoolSize.value(), new NamedThreadFactory("Template-Preloader"));
 
         return true;
