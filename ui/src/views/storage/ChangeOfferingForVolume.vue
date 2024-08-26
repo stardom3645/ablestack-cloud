@@ -193,7 +193,7 @@ export default {
               this.diskOfferings.push(item)
             }
           })
-          if (this.diskOfferings) {
+          if (this.diskOfferings.length > 0) {
             this.selectedDiskOfferingId = this.diskOfferings[0].id
             this.customDiskOffering = this.diskOfferings[0].iscustomized || false
             this.isCustomizedDiskIOps = this.diskOfferings[0]?.iscustomizediops || false
