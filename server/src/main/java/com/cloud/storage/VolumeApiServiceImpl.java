@@ -2018,6 +2018,10 @@ public class VolumeApiServiceImpl extends ManagerBase implements VolumeApiServic
         DiskOfferingVO newDiskOffering = _diskOfferingDao.findById(newDiskOfferingId);
         Integer newHypervisorSnapshotReserve = null;
 
+        if (existingDiskOffering.getKvdoEnable() != newDiskOffering.getKvdoEnable()) {
+            throw new CloudRuntimeException(String.format("If the KVDO settings of the existing disk offering and the KVDO settings of the disk offering to be changed are different, changes are not possible."));
+        }
+
         boolean volumeMigrateRequired = false;
         boolean volumeResizeRequired = false;
 
