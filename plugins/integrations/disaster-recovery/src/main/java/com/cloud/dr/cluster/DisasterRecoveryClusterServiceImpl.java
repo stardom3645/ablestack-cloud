@@ -696,7 +696,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                 if (cmd.getDrClusterPrivateKey() != null) {
                     drDetails.put(ApiConstants.DR_CLUSTER_PRIVATE_KEY, cmd.getDrClusterPrivateKey());
                 }
-                drDetails.put("mirrorscheduleinterval", "1h");
+                drDetails.put("mirrorscheduleinterval", "4h");
                 drDetails.put("mirrorschedulestarttime", "");
                 disasterRecoveryClusterDetailsDao.persist(newCluster.getId(), drDetails);
                 return newCluster;
