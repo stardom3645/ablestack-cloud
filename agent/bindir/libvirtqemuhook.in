@@ -196,9 +196,28 @@ def unmapStorage():
             try:
                 disk = volume.getElementsByTagName("source")[0]
                 img = disk.getAttribute("dev")
-                ret_code = executeProgram("/usr/bin/rbd", ["unmap", img])
-                if ret_code == 22:
-                    logger.error('rbd unmap failed: %s is not rbd image' % img)
+                #kvdo 일 경우 비활성화 작업 필요
+                if img.startswith("vg_") and img.endswith("-ablestack_kvdo"):
+                    # 정규 표현식 패턴 정의
+                    pattern = r'/dev/mapper/vg_([0-9a-f]{32})-ablestack_kvdo'
+                    match = re.search(pattern, img)
+                    # 매칭된 결과가 있을 경우
+                    if match:
+                        ret_code = executeProgram("vgchange", "-an", "vg_"+match.group(1))
+                        if ret_code == 22:
+                            logger.error('kvdo vgchange failed: %s' % img)
+                        # UUID 형식으로 변환
+                        hex_string = match.group(1)
+                        image_uuid = f"{hex_string[:8]}-{hex_string[8:12]}-{hex_string[12:16]}-{hex_string[16:20]}-{hex_string[20:]}"
+                        ret_code = executeProgram("/usr/bin/rbd", ["unmap", image_uuid])
+                        if ret_code == 22:
+                            logger.error('kvdo rbd unmap failed: %s is not rbd image' % img)
+                    else:
+                        logger.error('rbd kvdo unmap failed: %s is not ablestack kvdo image' % img)
+                else:
+                    ret_code = executeProgram("/usr/bin/rbd", ["unmap", img])
+                    if ret_code == 22:
+                        logger.error('rbd unmap failed: %s is not rbd image' % img)
             except Exception as e:
                 logger.exception("exception: %s\n" % (e))
                 pass
