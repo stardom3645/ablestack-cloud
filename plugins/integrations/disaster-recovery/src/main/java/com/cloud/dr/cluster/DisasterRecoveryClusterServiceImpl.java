@@ -1183,7 +1183,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                         if (mirrorImageStatus != null) {
                             JsonObject statObject = (JsonObject) new JsonParser().parse(mirrorImageStatus).getAsJsonObject();
                             if (statObject.has("description")) {
-                                if (!statObject.get("description").getAsString().equals("local image is primary") && !statObject.get("description").getAsString().equals("force promoting")) {
+                                if (!statObject.get("description").getAsString().equals("local image is primary") && !statObject.get("description").getAsString().contains("force promoting")) {
                                     Map<String, String> glueParams = new HashMap<>();
                                     glueParams.put("mirrorPool", "rbd");
                                     glueParams.put("imageName", imageName);
