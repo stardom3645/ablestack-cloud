@@ -1443,7 +1443,7 @@ public class LibvirtComputingResource extends ServerResourceBase
 
     /**
      * Gets the ID list of the VMs to set memory balloon stats period.
-     * 
+     *
      * @param conn the Libvirt connection.
      * @return the list of VM IDs.
      */
@@ -1497,7 +1497,7 @@ public class LibvirtComputingResource extends ServerResourceBase
 
     /**
      * Gets the current VM balloon stats period from the agent.properties file.
-     * 
+     *
      * @return the current VM balloon stats period.
      */
     protected Integer getCurrentVmBalloonStatsPeriod() {
@@ -1521,7 +1521,7 @@ public class LibvirtComputingResource extends ServerResourceBase
     /**
      * Sets the balloon driver of each VM to get the memory stats at the time
      * interval defined in the agent.properties file.
-     * 
+     *
      * @param conn the Libvirt connection.
      */
     protected void setupMemoryBalloonStatsPeriod(Connect conn) {
@@ -2110,7 +2110,7 @@ public class LibvirtComputingResource extends ServerResourceBase
              * We create a transient domain here. When this method gets
              * called we receive a full XML specification of the guest,
              * so no need to define it persistent.
-             * 
+             *
              * This also makes sure we never have any old "garbage" defined
              * in libvirt which might haunt us.
              */
@@ -4241,7 +4241,7 @@ public class LibvirtComputingResource extends ServerResourceBase
     /**
      * Given a disk path on KVM host, attempts to find source host and path using
      * mount command
-     * 
+     *
      * @param diskPath KVM host path for virtual disk
      * @return Pair with IP of host and path
      */
@@ -5131,7 +5131,7 @@ public class LibvirtComputingResource extends ServerResourceBase
 
     /**
      * Function to destroy the security group rules applied to the nic's
-     * 
+     *
      * @param conn
      * @param vmName
      * @param nic
@@ -5182,7 +5182,7 @@ public class LibvirtComputingResource extends ServerResourceBase
 
     /**
      * Function to apply default network rules for a VM
-     * 
+     *
      * @param conn
      * @param vm
      * @param checkBeforeApply
@@ -5221,7 +5221,7 @@ public class LibvirtComputingResource extends ServerResourceBase
 
     /**
      * Function to apply default network rules for a NIC
-     * 
+     *
      * @param conn
      * @param vmName
      * @param vmId
@@ -5751,7 +5751,7 @@ public class LibvirtComputingResource extends ServerResourceBase
 
     /**
      * Test host for volume encryption support
-     * 
+     *
      * @return boolean
      */
     public boolean hostSupportsVolumeEncryption() {
@@ -5908,7 +5908,7 @@ public class LibvirtComputingResource extends ServerResourceBase
      * "https://github.com/libvirt/libvirt/blob/master/src/conf/domain_conf.c">https://github.com/libvirt/libvirt/blob/master/src/conf/domain_conf.c</a>,
      * function <b>virDomainDefParseMemory</b>) uses <b>total memory</b> as the tag
      * <b>memory</b>, in VM's XML.
-     * 
+     *
      * @param dm domain of the VM.
      * @return the memory of the VM.
      * @throws org.libvirt.LibvirtException
@@ -5919,7 +5919,7 @@ public class LibvirtComputingResource extends ServerResourceBase
 
     /**
      * Retrieves the quantity of running VCPUs of the running VM. <br/>
-     * 
+     *
      * @param dm domain of the VM.
      * @return the quantity of running VCPUs of the running VM.
      * @throws org.libvirt.LibvirtException
@@ -5931,7 +5931,7 @@ public class LibvirtComputingResource extends ServerResourceBase
 
     /**
      * Retrieves the cpu_shares (priority) of the running VM <br/>
-     * 
+     *
      * @param dm domain of the VM.
      * @return the value of cpu_shares of the running VM.
      * @throws org.libvirt.LibvirtException
@@ -5942,14 +5942,14 @@ public class LibvirtComputingResource extends ServerResourceBase
                 return Integer.parseInt(c.getValueAsString());
             }
         }
-        LOGGER.warn(String.format("Could not get cpu_shares of domain: [%s]. Returning default value of 0. ",
+        LOGGER.warn(String.format("Could not get cpu_shares of domain: [%s]. Returning deㅔㅔfault value of 0. ",
                 dm.getName()));
         return 0;
     }
 
     /**
      * Sets the cpu_shares (priority) of the running VM <br/>
-     * 
+     *
      * @param dm        domain of the VM.
      * @param cpuShares new priority of the running VM.
      * @throws org.libvirt.LibvirtException
