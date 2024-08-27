@@ -2352,6 +2352,12 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                                 vmTemplate.add(infoObject.get("image").getAsString());
                             }
                             break Loop;
+                        } else {
+                            try {
+                                Thread.sleep(60000);
+                            } catch (InterruptedException e) {
+                                LOGGER.error("parentImageList sleep interrupted");
+                            }
                         }
                     }
                 }
