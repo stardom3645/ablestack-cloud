@@ -4689,11 +4689,11 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
             }
         } else {
             try {
-                s_logger.debug(String.format("Trying to validate the root certificate format"));
+                logger.debug(String.format("Trying to validate the root certificate format"));
                 CertificateHelper.buildCertificate(certificate);
             } catch (CertificateException e) {
                 String errorMsg = String.format("Failed to pass certificate validation check with error: Certificate validation failed due to exception: %s", e.getMessage());
-                s_logger.error(errorMsg);
+                logger.error(errorMsg);
                 throw new InvalidParameterValueException(errorMsg);
             }
         }
