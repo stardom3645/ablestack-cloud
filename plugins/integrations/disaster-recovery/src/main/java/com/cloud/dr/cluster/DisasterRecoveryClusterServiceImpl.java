@@ -1399,7 +1399,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                                     glueParams.put("imageName", imageName);
                                     result = DisasterRecoveryClusterUtil.glueImageMirrorDemoteAPI(glueUrl, glueCommand, glueMethod, glueParams);
                                     if (result) {
-                                        while(glueStep < 20) {
+                                        while(glueStep < 100) {
                                             glueStep += 1;
                                             glueCommand = "/mirror/image/resync/peer/rbd/" + imageName;
                                             glueMethod = "PUT";
@@ -1407,6 +1407,11 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                                             if (result) {
                                                 break Loop;
                                             } else {
+                                                try {
+                                                    Thread.sleep(10000);
+                                                } catch (InterruptedException e) {
+                                                    LOGGER.error("resyncDisasterRecoveryCluster sleep interrupted");
+                                                }
                                                 LOGGER.error("Failed to request ImageMirrorResyncPeer Glue-API.");
                                                 LOGGER.error("The peer image was demoted successfully, but resync the image failed. For volumes with a path of " + imageName + ", Manually set image resync.");
                                             }
