@@ -27,12 +27,13 @@ import com.cloud.hypervisor.kvm.resource.LibvirtComputingResource;
 import com.cloud.resource.CommandWrapper;
 import com.cloud.resource.ResourceWrapper;
 import com.cloud.utils.Pair;
+
 import org.apache.cloudstack.utils.linux.CPUStat;
 import org.apache.cloudstack.utils.linux.MemStat;
+import com.cloud.utils.script.Script;
 
 @ResourceWrapper(handles =  GetHostStatsCommand.class)
 public final class LibvirtGetHostStatsCommandWrapper extends CommandWrapper<GetHostStatsCommand, Answer, LibvirtComputingResource> {
-
 
     @Override
     public Answer execute(final GetHostStatsCommand command, final LibvirtComputingResource libvirtComputingResource) {
@@ -45,6 +46,20 @@ public final class LibvirtGetHostStatsCommandWrapper extends CommandWrapper<GetH
         final Pair<Double, Double> nicStats = libvirtComputingResource.getNicStats(libvirtComputingResource.getPublicBridgeName());
 
         final HostStatsEntry hostStats = new HostStatsEntry(command.getHostId(), cpuUtil, nicStats.first() / 1024, nicStats.second() / 1024, "host", memStat.getTotal() / 1024, memStat.getAvailable() / 1024, 0, loadAvg);
+        String[] ret = Script.runSimpleBashScript("vdostats | awk 'NR > 1 {print $1, $6}' | tr '\n' '/'").split("/");
+        for(int i=0 ; i < ret.length ; i++){
+            //volume id and saving data % extraction
+            String[] kvdoInfo = ret[i].split(" ");
+            // vg_name
+            // kvdoInfo[0]
+            // saving data %
+            // kvdoInfo[1]
+            //volume.update
+
+            // VolumeVO volumeVO = _volumeDao.findById("1111");
+            // VolumeVO volumeVO.setSavingStats(kvdoInfo[1]);
+            // _volumeDao.update(volumeId, volumeVO);
+        }
         return new GetHostStatsAnswer(command, hostStats);
     }
 }
