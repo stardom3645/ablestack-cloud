@@ -234,6 +234,7 @@ CREATE TABLE IF NOT EXISTS `cloud`.`passphrase` (
 -- Add passphrase column to volumes table
 CALL `cloud`.`IDEMPOTENT_ADD_COLUMN`('cloud.volumes', 'passphrase_id', 'bigint unsigned DEFAULT NULL COMMENT "encryption passphrase id" ');
 CALL `cloud`.`IDEMPOTENT_ADD_COLUMN`('cloud.volumes', 'encrypt_format', 'varchar(64) DEFAULT NULL COMMENT "encryption format" ');
+CALL `cloud`.`IDEMPOTENT_ADD_COLUMN`('cloud.volumes', 'saving_state', 'varchar(64) DEFAULT NULL COMMENT "saving data state" ');
 
 -- Add encrypt column to disk_offering
 CALL `cloud`.`IDEMPOTENT_ADD_COLUMN`('cloud.disk_offering', 'encrypt', 'tinyint(1) DEFAULT 0 COMMENT "volume encrypt requested" ');

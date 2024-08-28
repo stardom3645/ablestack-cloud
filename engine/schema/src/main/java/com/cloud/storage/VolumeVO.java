@@ -182,6 +182,9 @@ public class VolumeVO implements Volume {
     @Column(name = "encrypt_format")
     private String encryptFormat;
 
+    @Column(name = "saving_stats")
+    private String savingStats;
+
     // Real Constructor
     public VolumeVO(Type type, String name, long dcId, long domainId,
             long accountId, long diskOfferingId, Storage.ProvisioningType provisioningType, long size,
@@ -677,4 +680,8 @@ public class VolumeVO implements Volume {
     public String getEncryptFormat() { return encryptFormat; }
 
     public void setEncryptFormat(String encryptFormat) { this.encryptFormat = encryptFormat; }
+
+    public String getSavingStats() { return savingStats; }
+
+    public void setSavingStats(String savingStats) { this.savingStats = savingStats; }
 }
