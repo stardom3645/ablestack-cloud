@@ -282,6 +282,7 @@ public class VolumeVO implements Volume {
         uuid = UUID.randomUUID().toString();
         deployAsIs = that.isDeployAsIs();
         externalUuid = that.getExternalUuid();
+        savingStats = that.getSavingStats();
     }
 
     @Override

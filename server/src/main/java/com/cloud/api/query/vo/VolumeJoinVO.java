@@ -280,6 +280,9 @@ public class VolumeJoinVO extends BaseViewWithTagInformationVO implements Contro
     @Column(name = "encrypt_format")
     private String encryptionFormat = null;
 
+    @Column(name = "saving_stats")
+    private String savingStats = null;
+
     public VolumeJoinVO() {
     }
 
@@ -617,6 +620,10 @@ public class VolumeJoinVO extends BaseViewWithTagInformationVO implements Contro
 
     public String getEncryptionFormat() {
         return encryptionFormat;
+    }
+
+    public String getSavingStats() {
+        return savingStats;
     }
 
     @Override

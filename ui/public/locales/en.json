@@ -4352,6 +4352,7 @@
 "alert.vr.private.iface.mtu":"VR.PRIVATE.IFACE.MTU",
 "alert.login":"LOGIN",
 "label.kvdoenable": "KVOD Enable",
+"label.savingstats": "Saving Data(%)",
 "label.shareable": "Shareable Volume",
 "label.action.update.volume": "Update Volume",
 "message.success.update.volume": "Successfully updated volume",
