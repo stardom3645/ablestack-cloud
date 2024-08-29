@@ -4351,6 +4351,8 @@
 "alert.vr.public.iface.mtu":"VR.\uacf5\uc778\uc778\ud130\ud398\uc774\uc2a4.MTU",
 "alert.vr.private.iface.mtu":"VR.\uc0ac\uc124\uc778\ud130\ud398\uc774\uc2a4.MTU",
 "alert.login":"\ub85c\uadf8\uc778",
+"label.kvdoenable": "KVOD \uc124\uc815",
+"label.savingstats": "\uc6a9\ub7c9 \uc808\uc57d(%)",
 "label.shareable": "\uacf5\uc720 \ubcfc\ub968",
 "label.action.update.volume": "\ubcfc\ub968 \uc5c5\ub370\uc774\ud2b8",
 "message.success.update.volume": "\ubcfc\ub968\uc744 \uc5c5\ub370\uc774\ud2b8 \ud588\uc2b5\ub2c8\ub2e4.",

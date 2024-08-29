@@ -101,6 +101,10 @@ public class VolumeJoinDaoImpl extends GenericDaoBaseWithTagInformation<VolumeJo
             volResponse.setVmType(volume.getVmType().toString());
         }
 
+        if (volume.getSavingStats() != null) {
+            volResponse.setSavingStats(volume.getSavingStats());
+        }
+
         if (volume.getVolumeType() != null) {
             volResponse.setVolumeType(volume.getVolumeType().toString());
         }

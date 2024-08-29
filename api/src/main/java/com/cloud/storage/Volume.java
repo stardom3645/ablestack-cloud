@@ -278,4 +278,8 @@ public interface Volume extends ControlledEntity, Identity, InternalIdentity, Ba
     public String getEncryptFormat();
 
     public void setEncryptFormat(String encryptFormat);
+
+    String getSavingStats();
+
+    void setSavingStats(String savingStats);
 }

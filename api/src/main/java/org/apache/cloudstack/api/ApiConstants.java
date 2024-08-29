@@ -118,6 +118,7 @@ public class ApiConstants {
     public static final String CURRENT_END_IP = "currentendip";
     public static final String ENCRYPT = "encrypt";
     public static final String ENCRYPT_FORMAT = "encryptformat";
+    public static final String SAVING_STATS = "savingstats";
     public static final String ENCRYPT_ROOT = "encryptroot";
     public static final String ENCRYPTION_SUPPORTED = "encryptionsupported";
     public static final String MIN_IOPS = "miniops";

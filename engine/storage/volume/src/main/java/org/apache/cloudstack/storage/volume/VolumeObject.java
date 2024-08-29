@@ -954,4 +954,14 @@ public class VolumeObject implements VolumeInfo {
     public boolean isFollowRedirects() {
         return followRedirects;
     }
+
+    @Override
+    public String getSavingStats() {
+        return volumeVO.getExternalUuid();
+    }
+
+    @Override
+    public void setSavingStats(String savingStats) {
+        volumeVO.setExternalUuid(savingStats);
+    }
 }

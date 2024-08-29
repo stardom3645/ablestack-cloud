@@ -301,6 +301,10 @@ public class VolumeResponse extends BaseResponseWithTagInformation implements Co
     @Param(description = "the format of the disk encryption if applicable", since = "4.19.1")
     private String encryptionFormat;
 
+    @SerializedName(ApiConstants.SAVING_STATS)
+    @Param(description = "the format of the disk encryption if applicable", since = "4.20")
+    private String savingStats;
+
     public String getPath() {
         return path;
     }
@@ -849,5 +853,13 @@ public class VolumeResponse extends BaseResponseWithTagInformation implements Co
 
     public void setEncryptionFormat(String encryptionFormat) {
         this.encryptionFormat = encryptionFormat;
+    }
+
+    public String getSavingStats() {
+        return savingStats;
+    }
+
+    public void setSavingStats(String savingStats) {
+        this.savingStats = savingStats;
     }
 }

@@ -73,3 +73,5 @@ CALL `cloud`.`ADD_COL`('nics', 'link_state', 'tinyint(1) unsigned NOT NULL DEFAU
 CALL `cloud`.`ADD_COL`('vm_instance', 'qemu_agent_version', 'varchar(16)');
 
 CALL `cloud`.`ADD_COL`('snapshots', 'clone_type', 'varchar(32)');
+
+CALL `cloud`.`ADD_COL`('volumes', 'saving_stats', 'varchar(16)');
