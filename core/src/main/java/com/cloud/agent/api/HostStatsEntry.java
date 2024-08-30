@@ -33,6 +33,7 @@ public class HostStatsEntry implements HostStats {
     double networkWriteKBs;
     double totalMemoryKBs;
     double freeMemoryKBs;
+    String[] kvdoStats;
 
     public HostStatsEntry() {
     }
@@ -136,5 +137,13 @@ public class HostStatsEntry implements HostStats {
 
     public void setHostVo(HostVO hostVo) {
         this.hostVo = hostVo;
+    }
+
+    public String[] getKvdoStats() {
+        return this.kvdoStats;
+    }
+
+    public void setKvdoStats(String[] kvdoStats) {
+        this.kvdoStats = kvdoStats;
     }
 }

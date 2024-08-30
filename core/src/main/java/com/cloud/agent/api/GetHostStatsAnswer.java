@@ -93,4 +93,9 @@ public class GetHostStatsAnswer extends Answer implements HostStats {
     public HostStats getHostStats() {
         return hostStats;
     }
+
+    @Override
+    public String[] getKvdoStats() {
+        return hostStats.getKvdoStats();
+    }
 }

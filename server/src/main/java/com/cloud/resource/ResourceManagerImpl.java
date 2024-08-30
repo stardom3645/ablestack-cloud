@@ -3298,12 +3298,14 @@ public class ResourceManagerImpl extends ManagerBase implements ResourceManager,
 
     @Override
     public HostStats getHostStatistics(final long hostId) {
+        logger.debug("id1111-1 !!!!! : ");
         final Answer answer = _agentMgr.easySend(hostId, new GetHostStatsCommand(_hostDao.findById(hostId).getGuid(), _hostDao.findById(hostId).getName(), hostId));
-
+        logger.debug("value1 !!!!! : "+((GetHostStatsAnswer)answer).getHostStats().getKvdoStats());
+        logger.debug("value2 !!!!! : "+((GetHostStatsAnswer)answer).getHostStats().getKvdoStats()[0]);
+        logger.debug("id3333-1 !!!!! : ");
         if (answer != null && answer instanceof UnsupportedAnswer) {
             return null;
         }
-
         if (answer == null || !answer.getResult()) {
             final String msg = "Unable to obtain host " + hostId + " statistics. ";
             logger.warn(msg);
