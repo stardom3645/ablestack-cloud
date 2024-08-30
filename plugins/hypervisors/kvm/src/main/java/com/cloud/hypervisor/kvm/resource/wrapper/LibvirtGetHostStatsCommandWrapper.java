@@ -26,11 +26,7 @@ import com.cloud.agent.api.HostStatsEntry;
 import com.cloud.hypervisor.kvm.resource.LibvirtComputingResource;
 import com.cloud.resource.CommandWrapper;
 import com.cloud.resource.ResourceWrapper;
-import com.cloud.storage.VolumeVO;
-import com.cloud.storage.dao.VolumeDao;
 import com.cloud.utils.Pair;
-
-import javax.inject.Inject;
 
 import org.apache.cloudstack.utils.linux.CPUStat;
 import org.apache.cloudstack.utils.linux.MemStat;
@@ -39,9 +35,6 @@ import com.cloud.utils.script.Script;
 @ResourceWrapper(handles =  GetHostStatsCommand.class)
 public final class LibvirtGetHostStatsCommandWrapper extends CommandWrapper<GetHostStatsCommand, Answer, LibvirtComputingResource> {
 
-    @Inject
-    private VolumeDao _volumeDao;
-
     @Override
     public Answer execute(final GetHostStatsCommand command, final LibvirtComputingResource libvirtComputingResource) {
         CPUStat cpuStat = libvirtComputingResource.getCPUStat();
@@ -49,26 +42,31 @@ public final class LibvirtGetHostStatsCommandWrapper extends CommandWrapper<GetH
 
         final double cpuUtil = cpuStat.getCpuUsedPercent();
         final double loadAvg = cpuStat.getCpuLoadAverage();
-
+        logger.debug("id2222 !!!!! : ");
         final Pair<Double, Double> nicStats = libvirtComputingResource.getNicStats(libvirtComputingResource.getPublicBridgeName());
 
         final HostStatsEntry hostStats = new HostStatsEntry(command.getHostId(), cpuUtil, nicStats.first() / 1024, nicStats.second() / 1024, "host", memStat.getTotal() / 1024, memStat.getAvailable() / 1024, 0, loadAvg);
         String[] ret = Script.runSimpleBashScript("vdostats | awk 'NR > 1 {print $1, $6}' | tr '\n' '/'").split("/");
-        for(int i=0 ; i < ret.length ; i++){
-            //volume id and saving data % extraction
-            String[] kvdoInfo = ret[i].split(" ");
-            String volume_uuid = kvdoInfo[0].replace("vg_", "").replace("-vpool0-vpool", "");
-            if (volume_uuid.length() == 32) {
-                String uuid = volume_uuid.substring(0, 8) + "-" +
-                    volume_uuid.substring(8, 12) + "-" +
-                    volume_uuid.substring(12, 16) + "-" +
-                    volume_uuid.substring(16, 20) + "-" +
-                    volume_uuid.substring(20, 32);
-                VolumeVO volumeVO = _volumeDao.findByUuid(uuid);
-                volumeVO.setSavingStats(kvdoInfo[1]);
-                _volumeDao.update(volumeVO.getId(), volumeVO);
-            }
-        }
+        // for(int i=0 ; i < ret.length ; i++){
+        //     //volume id and saving data % extraction
+        //     String[] kvdoInfo = ret[i].split(" ");
+        //     String volume_uuid = kvdoInfo[0].replace("vg_", "").replace("-vpool0-vpool", "");
+        //     if (volume_uuid.length() == 32) {
+        //         String uuid = volume_uuid.substring(0, 8) + "-" +
+        //         volume_uuid.substring(8, 12) + "-" +
+        //         volume_uuid.substring(12, 16) + "-" +
+        //         volume_uuid.substring(16, 20) + "-" +
+        //         volume_uuid.substring(20, 32);
+        //         logger.debug("id1 !!!!! : " + uuid);
+        //         logger.debug("id 2!!!!! : " + kvdoInfo[1]);
+        //         VolumeVO volumeVO = new VolumeVO("aaa");
+        //         logger.debug("id 3!!!!! : " + volumeVO.getId());
+        //         volumeVO.setSavingStats(kvdoInfo[1]);
+        //         logger.debug("id 4!!!!! : " + volumeVO.getSavingStats());
+        //         _volumeDao.update(volumeVO.getId(), volumeVO);
+        //     }
+        // }
+        hostStats.setKvdoStats(ret);
         return new GetHostStatsAnswer(command, hostStats);
     }
 }
