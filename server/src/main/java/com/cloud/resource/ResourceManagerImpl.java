@@ -3298,11 +3298,7 @@ public class ResourceManagerImpl extends ManagerBase implements ResourceManager,
 
     @Override
     public HostStats getHostStatistics(final long hostId) {
-        logger.debug("id1111-1 !!!!! : ");
         final Answer answer = _agentMgr.easySend(hostId, new GetHostStatsCommand(_hostDao.findById(hostId).getGuid(), _hostDao.findById(hostId).getName(), hostId));
-        logger.debug("value1 !!!!! : "+((GetHostStatsAnswer)answer).getHostStats().getKvdoStats());
-        logger.debug("value2 !!!!! : "+((GetHostStatsAnswer)answer).getHostStats().getKvdoStats()[0]);
-        logger.debug("id3333-1 !!!!! : ");
         String[] kvdoStats = ((GetHostStatsAnswer)answer).getHostStats().getKvdoStats();
         for(int i=0 ; i < kvdoStats.length ; i++){
             //volume id and saving data % extraction
@@ -3314,11 +3310,8 @@ public class ResourceManagerImpl extends ManagerBase implements ResourceManager,
                 volume_uuid.substring(12, 16) + "-" +
                 volume_uuid.substring(16, 20) + "-" +
                 volume_uuid.substring(20, 32);
-                logger.debug("id1 !!!!! : " + uuid);
-                logger.debug("id 2!!!!! : " + kvdoInfo[1]);
                 VolumeVO volume = volumeDao.findByUuid(uuid);
                 volume.setSavingStats(kvdoInfo[1]);
-                logger.debug("id 4!!!!! : " + volume.getSavingStats());
                 volumeDao.update(volume.getId(), volume);
             }
         }
