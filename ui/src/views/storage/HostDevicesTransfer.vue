@@ -23,7 +23,13 @@
       :ref="formRef"
       :model="form"
     >
-      <a-form-item :label="$t('label.virtualmachineid')" name="virtualmachineid" ref="virtualmachineid">
+      <a-alert type="warning">
+        <template #message>
+          <span v-html="$t('message.warning.host.devices')" />
+        </template>
+      </a-alert>
+      <br>
+      <a-form-item :label="$t('label.virtualmachine')" name="virtualmachineid" ref="virtualmachineid">
         <a-select
           v-focus="true"
           v-model:value="form.virtualmachineid"
@@ -101,7 +107,7 @@ export default {
       const apiName = 'updateVirtualMachine'
 
       if (!(apiName in this.$store.getters.apis)) {
-        this.$notification.error({
+        this.$message.error({
           message: this.$t('error.execute.api.failed') + ' ' + apiName,
           description: this.$t('message.user.not.permitted.api')
         })
@@ -111,30 +117,38 @@ export default {
 
       api(apiName, {
         id: vmId,
-        'details[0].extraconfig': xmlConfig
+        'details[0].extraconfig-1': xmlConfig
       }).then(() => {
-        this.$notifySuccess(this.$t('message.success.update.vm'))
+        this.$message.success(this.$t('message.success.update.vm'))
         this.closeAction()
       }).catch(error => {
         this.$notifyError(error.message || 'Failed to update VM')
+        this.formRef.value.scrollToField('virtualmachineid')
       }).finally(() => {
         this.loading = false
       })
     },
 
     generateXmlConfig (pciname) {
+      const [pciAddress] = pciname.split(' ')
+      const [bus, slotFunction] = pciAddress.split(':')
+      const [slot, func] = slotFunction.split('.')
+
       return `
-      <hostdev mode="subsystem" type="pci" managed="yes">
-  <source>
-    <address domain="0" bus="0" slot="0" function="0"/>
-  </source>
-</hostdev>
+      <devices>
+        <hostdev mode='subsystem' type='pci' managed='yes'>
+        <source>
+          <address domain='0x0000' bus='${parseInt(bus, 16)}' slot='0x${parseInt(slot, 16)}' function='0x${parseInt(func, 16)}'/>
+        </source>
+      </hostdev>
+      </devices>
       `
     },
 
     closeAction () {
       this.$emit('close-action')
     },
+
     filterOption (input, option) {
       return option.label.toLowerCase().indexOf(input.toLowerCase()) >= 0
     }
