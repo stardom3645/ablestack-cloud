@@ -113,6 +113,8 @@ public class LibvirtVMDef {
         }
 
         private GuestType _type;
+        private String manufacturer;
+        private String product;
         private BootType _boottype;
         private BootMode _bootmode;
         private String _arch;
@@ -142,6 +144,22 @@ public class LibvirtVMDef {
 
         public GuestType getGuestType() {
             return _type;
+        }
+
+        public String getManufacturer() {
+            return manufacturer;
+        }
+
+        public void setManufacturer(String manufacturer) {
+            this.manufacturer = manufacturer;
+        }
+
+        public String getProduct() {
+            return product;
+        }
+
+        public void setProduct(String product) {
+            this.product = product;
         }
 
         public void setNvram(String nvram) { _nvram = nvram; }
@@ -210,8 +228,8 @@ public class LibvirtVMDef {
 
                 guestDef.append("<sysinfo type='smbios'>\n");
                 guestDef.append("<system>\n");
-                guestDef.append("<entry name='manufacturer'>ABLECLOUD CO.LTD</entry>\n");
-                guestDef.append("<entry name='product'>CloudStack - ABLESTACK CELL Hypervisor</entry>\n");
+                guestDef.append("<entry name='manufacturer'>" + getManufacturer() +"</entry>\n");
+                guestDef.append("<entry name='product'>" + getProduct() + "</entry>\n");
                 guestDef.append("<entry name='uuid'>" + _uuid + "</entry>\n");
                 guestDef.append("</system>\n");
                 guestDef.append("</sysinfo>\n");
