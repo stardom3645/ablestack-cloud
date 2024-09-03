@@ -17,29 +17,29 @@
 
 package org.apache.cloudstack.api.response;
 
-import com.google.gson.annotations.SerializedName;
-import org.apache.cloudstack.api.EntityReference;
-import java.util.List;
 import com.cloud.host.Host;
+import com.cloud.serializer.Param;
+import com.google.gson.annotations.SerializedName;
+import java.util.List;
 import org.apache.cloudstack.api.ApiConstants;
 import org.apache.cloudstack.api.BaseResponse;
+import org.apache.cloudstack.api.EntityReference;
 
-import com.cloud.serializer.Param;
 
 @EntityReference(value = Host.class)
 public class ListHostDevicesResponse extends BaseResponse {
 
-    @SerializedName(ApiConstants.PCI_NAME)
+    @SerializedName(ApiConstants.HOSTDEVICES_NAME)
     @Param(description = "Allocated IP address")
-    private List<String> pciNames;
+    private List<String> hostDevicesName;
 
-    @SerializedName(ApiConstants.PCI_TEXT)
+    @SerializedName(ApiConstants.HOSTDEVICES_TEXT)
     @Param(description = "the ID of the pod the  IP address belongs to")
-    private List<String> pciTexts;
+    private List<String> hostDevicesText;
 
-    public ListHostDevicesResponse(List<String> pciNames, List<String> pciTexts) {
-        this.pciNames = pciNames;
-        this.pciTexts = pciTexts;
+    public ListHostDevicesResponse(List<String> hostDevicesName, List<String> hostDevicesText) {
+        this.hostDevicesName = hostDevicesName;
+        this.hostDevicesText = hostDevicesText;
     }
 
     public ListHostDevicesResponse() {
@@ -47,20 +47,20 @@ public class ListHostDevicesResponse extends BaseResponse {
         this.setObjectName("listhostdevices");
     }
 
-    public List<String> getPciNames() {
-        return pciNames;
+    public List<String> getHostDevicesNames() {
+        return hostDevicesName;
     }
 
-    public List<String> getPciTexts() {
-        return pciTexts;
+    public List<String> getHostDevicesTexts() {
+        return hostDevicesText;
     }
 
-    public void setPciNames(List<String> pciNames) {
-        this.pciNames = pciNames;
+    public void setHostDevicesNames(List<String> hostDevicesName) {
+        this.hostDevicesName = hostDevicesName;
     }
 
-    public void setPciTexts(List<String> pciTexts) {
-        this.pciTexts = pciTexts;
+    public void setHostDevicesTexts(List<String> hostDevicesText) {
+        this.hostDevicesText = hostDevicesText;
     }
 
 }

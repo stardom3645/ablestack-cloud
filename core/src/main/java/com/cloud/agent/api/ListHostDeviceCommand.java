@@ -23,8 +23,8 @@ import java.util.List;
 
 public class ListHostDeviceCommand extends Command {
 
-    private List<String> pciNames;
-    private List<String> pciTexts;
+    private List<String> hostDevicesName;
+    private List<String> hostDevicesText;
     private Long id;
 
     public ListHostDeviceCommand() {
@@ -40,12 +40,12 @@ public class ListHostDeviceCommand extends Command {
         return false;
     }
 
-    public List<String> getPciNames() {
-        return pciNames;
+    public List<String> getHostDevicesName() {
+        return hostDevicesName;
     }
 
-    public List<String> getPciTexts() {
-        return pciTexts;
+    public List<String> getHostDevicesText() {
+        return hostDevicesText;
     }
 
     public Long getId() {

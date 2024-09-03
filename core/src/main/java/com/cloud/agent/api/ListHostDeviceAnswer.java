@@ -24,23 +24,23 @@ import java.util.List;
 
 public class ListHostDeviceAnswer extends Answer {
     private boolean successMessage;
-    private List<String> pciTexts;
+    private List<String> hostDevicesText;
 
     public ListHostDeviceAnswer() {
         super();
     }
 
-    public ListHostDeviceAnswer(boolean successMessage, List<String> pciTexts) {
+    public ListHostDeviceAnswer(boolean successMessage, List<String> hostDevicesText) {
         super();
         this.successMessage = successMessage;
-        this.pciTexts = pciTexts;
+        this.hostDevicesText = hostDevicesText;
     }
 
-    public List<String> getPciTexts() {
-        if (pciTexts == null) {
+    public List<String> getHostDevicesTexts() {
+        if (hostDevicesText == null) {
             return Collections.emptyList();
         }
-        return pciTexts;
+        return hostDevicesText;
     }
 
     public boolean isSuccessMessage() {
