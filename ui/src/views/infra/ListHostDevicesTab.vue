@@ -24,13 +24,13 @@
       size="middle"
       :scroll="{ y: 1000 }">
       <template #headerCell="{ column }">
-        <template v-if="column.key === 'pcitext'">
+        <template v-if="column.key === 'hostdevicestexts'">
           {{ $t('label.details') }}
         </template>
       </template>
       <template #bodyCell="{ column, record }">
-        <template v-if="column.key === 'pciname'">{{ record.pciname }}</template>
-        <template v-if="column.key === 'pcitext'">{{ record.pcitext }}</template>
+        <template v-if="column.key === 'HostDevicesNames'">{{ record.HostDevicesNames }}</template>
+        <template v-if="column.key === 'hostdevicestexts'">{{ record.hostdevicestexts }}</template>
         <template v-if="column.key === 'action'">
           <a-button
             type="primary"
@@ -79,14 +79,14 @@ export default {
     return {
       columns: [
         {
-          key: 'pciname',
-          dataIndex: 'pciname',
+          key: 'hostdevicesnames',
+          dataIndex: 'hostdevicesnames',
           title: this.$t('label.name'),
           width: '30%'
         },
         {
-          key: 'pcitext',
-          dataIndex: 'pcitext',
+          key: 'hostdevicestexts',
+          dataIndex: 'hostdevicestexts',
           title: this.$t('label.text'),
           width: '50%'
         },
@@ -108,8 +108,8 @@ export default {
       return this.dataItems.map((item, index) => {
         return {
           key: index,
-          pciname: item.pciname,
-          pcitext: item.pcitext,
+          hostdevicesnames: item.hostdevicesnames,
+          hostdevicestexts: item.hostdevicestexts,
           action: 'action'
         }
       })
@@ -120,7 +120,7 @@ export default {
   },
   methods: {
     openModal (record) {
-      this.selectedResource = { ...this.resource, pciname: record.pciname }
+      this.selectedResource = { ...this.resource, hostdevicesnames: record.hostdevicesnames }
       this.showAddModal = true
     },
     closeModals () {
@@ -136,11 +136,11 @@ export default {
         const response = json.listhostdevicesresponse
         if (response && response.listhostdevices && response.listhostdevices.length > 0) {
           const data = response.listhostdevices[0]
-          const pcinames = data.pciname || []
-          const pcitexts = data.pcitext || []
-          this.dataItems = pcinames.map((pciname, index) => ({
-            pciname: pciname,
-            pcitext: pcitexts[index] || ''
+          const hostdevicesnames = data.hostdevicesnames || []
+          const hostdevicestexts = data.hostdevicestexts || []
+          this.dataItems = hostdevicesnames.map((hostdevicesnames, index) => ({
+            hostdevicesnames: hostdevicesnames,
+            hostdevicestexts: hostdevicestexts[index] || ''
           }))
         } else {
           this.dataItems = []
