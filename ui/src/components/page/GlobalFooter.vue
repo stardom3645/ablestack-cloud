@@ -32,6 +32,9 @@
 </template>
 
 <script>
+import semver from 'semver'
+import { getParsedVersion } from '@/utils/util'
+
 export default {
   name: 'LayoutFooter',
   data () {
@@ -47,6 +50,16 @@ export default {
     //   const date = m.getFullYear() + ('0' + (m.getMonth() + 1)).slice(-2) + ('0' + m.getDate()).slice(-2)
     //   this.buildVersion = version + '-' + date + '-dev'
     // }
+  },
+  methods: {
+    showVersionUpdate () {
+      if (this.$store.getters?.features?.cloudstackversion && this.$store.getters?.latestVersion?.version) {
+        const currentVersion = getParsedVersion(this.$store.getters?.features?.cloudstackversion)
+        const latestVersion = getParsedVersion(this.$store.getters?.latestVersion?.version)
+        return semver.valid(currentVersion) && semver.valid(latestVersion) && semver.gt(latestVersion, currentVersion)
+      }
+      return false
+    }
   }
 }
 </script>
