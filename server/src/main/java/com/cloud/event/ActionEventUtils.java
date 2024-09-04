@@ -39,7 +39,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
-import org.w3c.dom.events.Event;
 
 import com.cloud.configuration.Config;
 import com.cloud.event.dao.EventDao;

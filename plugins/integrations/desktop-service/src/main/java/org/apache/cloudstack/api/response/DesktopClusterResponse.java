@@ -103,6 +103,10 @@ public class DesktopClusterResponse extends BaseResponse implements ControlledEn
     @Param(description = "the name of the domain in which the Desktop Cluster exists")
     private String domainName;
 
+    @SerializedName(ApiConstants.DOMAIN_PATH)
+    @Param(description = "path of the domain to which the Kubernetes cluster belongs", since = "4.19.2.0")
+    private String domainPath;
+
     @SerializedName(ApiConstants.STATE)
     @Param(description = "the state of the Desktop Cluster")
     private String state;
@@ -247,6 +251,11 @@ public class DesktopClusterResponse extends BaseResponse implements ControlledEn
         this.domainName = domainName;
     }
 
+    @Override
+    public void setDomainPath(String domainPath) {
+        this.domainPath = domainPath;
+    }
+
     public String getState() {
         return state;
     }
@@ -322,4 +331,5 @@ public class DesktopClusterResponse extends BaseResponse implements ControlledEn
     public void setCreated(Date created) {
         this.created = created;
     }
+
 }
