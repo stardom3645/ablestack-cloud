@@ -102,6 +102,7 @@ import com.cloud.storage.VMTemplateStoragePoolVO;
 import com.cloud.storage.VMTemplateVO;
 import com.cloud.storage.Volume;
 import com.cloud.storage.VolumeApiService;
+import com.cloud.storage.VolumeApiServiceImpl;
 import com.cloud.storage.VolumeVO;
 import com.cloud.storage.dao.DiskOfferingDao;
 import com.cloud.storage.dao.GuestOSDao;
@@ -542,6 +543,7 @@ public class UnmanagedVMsManagerImpl implements UnmanagedVMsManager {
         final String dsPath = disk.getDatastorePath();
         final String dsType = disk.getDatastoreType();
         final String dsName = disk.getDatastoreName();
+        logger.debug("### DataStore [Host:%s, Path:%s, Type:%s, Uuid:%s" ,dsHost, dsPath, dsType, dsName);
         if (dsType != null) {
             List<StoragePoolVO> pools = primaryDataStoreDao.listPoolByHostPath(dsHost, dsPath);
             for (StoragePool pool : pools) {
@@ -557,15 +559,12 @@ public class UnmanagedVMsManagerImpl implements UnmanagedVMsManager {
             List<StoragePoolVO> pools = primaryDataStoreDao.listPoolsByCluster(cluster.getId());
             pools.addAll(primaryDataStoreDao.listByDataCenterId(zone.getId()));
             for (StoragePool pool : pools) {
-                String searchPoolParam = StringUtils.isNotBlank(dsPath) ? dsPath : dsName;
-                if (Storage.StoragePoolType.RBD.equals(pool.getPoolType())) {
-                    String[] rbdPath = dsName.split("/");
-                    searchPoolParam = rbdPath[2];
-                }
-
-                if (StringUtils.contains(pool.getPath(), searchPoolParam)) {
-                    storagePool = pool;
-                    break;
+                if (pool.getUuid().equals(dsName)) {
+                    StoragePoolVO spool = primaryDataStoreDao.findByUuid(dsName);
+                    if (spool != null) {
+                        storagePool = pool;
+                        break;
+                    }
                 }
             }
         }
@@ -1641,7 +1640,9 @@ public class UnmanagedVMsManagerImpl implements UnmanagedVMsManager {
                     " from VMware to KVM ", convertHost.getId(), convertHost.getName(), sourceVMName));
 
             temporaryConvertLocation = selectInstanceConversionTemporaryLocation(destinationCluster, convertStoragePoolId);
-            List<StoragePoolVO> convertStoragePools = findInstanceConversionStoragePoolsInCluster(destinationCluster);
+            // List<StoragePoolVO> convertStoragePools = findInstanceConversionStoragePoolsInCluster(destinationCluster);
+            DiskOffering diskOffering = diskOfferingDao.findById(serviceOffering.getDiskOfferingId());
+            List<StoragePoolVO> convertStoragePools = primaryDataStoreDao.findPoolsByTags(zone.getId(), destinationCluster.getPodId(), destinationCluster.getId(), diskOffering.getTagsArray(), true, VolumeApiServiceImpl.storageTagRuleExecutionTimeout.value());
             long importStartTime = System.currentTimeMillis();
             Pair<UnmanagedInstanceTO, Boolean> sourceInstanceDetails = getSourceVmwareUnmanagedInstance(vcenter, datacenterName, username, password, clusterName, sourceHostName, sourceVMName);
             sourceVMwareInstance = sourceInstanceDetails.first();
