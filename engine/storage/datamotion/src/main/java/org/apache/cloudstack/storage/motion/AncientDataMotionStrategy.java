@@ -248,7 +248,6 @@ public class AncientDataMotionStrategy implements DataMotionStrategy {
     protected DataObject cacheSnapshotChain(SnapshotInfo snapshot, Scope scope) {
         DataObject leafData = null;
         DataStore store = cacheMgr.getCacheStorage(snapshot, scope);
-        logger.info("store::::::"+store);
         while (snapshot != null) {
             DataObject cacheData = cacheMgr.createCacheObject(snapshot, store);
             if (leafData == null) {
@@ -282,7 +281,6 @@ public class AncientDataMotionStrategy implements DataMotionStrategy {
         DataStore store = snapObj.getDataStore();
         DataStoreTO storTO = store.getTO();
         DataObject srcData = snapObj;
-        logger.info("storTO::::::"+ storTO);
         try {
             if (!(storTO instanceof NfsTO)) {
                 // cache snapshot to zone-wide staging store for the volume to be created
