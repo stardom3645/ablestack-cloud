@@ -24,13 +24,13 @@
       size="middle"
       :scroll="{ y: 1000 }">
       <template #headerCell="{ column }">
-        <template v-if="column.key === 'hostdevicestexts'">
+        <template v-if="column.key === 'hostDevicesText'">
           {{ $t('label.details') }}
         </template>
       </template>
       <template #bodyCell="{ column, record }">
-        <template v-if="column.key === 'HostDevicesNames'">{{ record.HostDevicesNames }}</template>
-        <template v-if="column.key === 'hostdevicestexts'">{{ record.hostdevicestexts }}</template>
+        <template v-if="column.key === 'hostDevicesName'">{{ record.hostDevicesName }}</template>
+        <template v-if="column.key === 'hostDevicesText'">{{ record.hostDevicesText }}</template>
         <template v-if="column.key === 'action'">
           <a-button
             type="primary"
@@ -79,14 +79,14 @@ export default {
     return {
       columns: [
         {
-          key: 'hostdevicesnames',
-          dataIndex: 'hostdevicesnames',
+          key: 'hostDevicesName',
+          dataIndex: 'hostDevicesName',
           title: this.$t('label.name'),
           width: '30%'
         },
         {
-          key: 'hostdevicestexts',
-          dataIndex: 'hostdevicestexts',
+          key: 'hostDevicesText',
+          dataIndex: 'hostDevicesText',
           title: this.$t('label.text'),
           width: '50%'
         },
@@ -108,8 +108,8 @@ export default {
       return this.dataItems.map((item, index) => {
         return {
           key: index,
-          hostdevicesnames: item.hostdevicesnames,
-          hostdevicestexts: item.hostdevicestexts,
+          hostDevicesName: item.hostDevicesName,
+          hostDevicesText: item.hostDevicesText,
           action: 'action'
         }
       })
@@ -120,7 +120,7 @@ export default {
   },
   methods: {
     openModal (record) {
-      this.selectedResource = { ...this.resource, hostdevicesnames: record.hostdevicesnames }
+      this.selectedResource = { ...this.resource, hostDevicesName: record.hostDevicesName }
       this.showAddModal = true
     },
     closeModals () {
@@ -136,11 +136,11 @@ export default {
         const response = json.listhostdevicesresponse
         if (response && response.listhostdevices && response.listhostdevices.length > 0) {
           const data = response.listhostdevices[0]
-          const hostdevicesnames = data.hostdevicesnames || []
-          const hostdevicestexts = data.hostdevicestexts || []
-          this.dataItems = hostdevicesnames.map((hostdevicesnames, index) => ({
-            hostdevicesnames: hostdevicesnames,
-            hostdevicestexts: hostdevicestexts[index] || ''
+          const hostdevicesnames = data.hostdevicesname || []
+          const hostdevicestext = data.hostdevicestext || []
+          this.dataItems = hostdevicesnames.map((hostdevicesname, index) => ({
+            hostDevicesName: hostdevicesname,
+            hostDevicesText: hostdevicestext[index] || ''
           }))
         } else {
           this.dataItems = []

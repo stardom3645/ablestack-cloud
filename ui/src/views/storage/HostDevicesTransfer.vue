@@ -100,9 +100,9 @@ export default {
       this.loading = true
 
       const vmId = this.form.virtualmachineid
-      const HostDevicesNames = this.resource.HostDevicesNames
+      const hostDevicesName = this.resource.hostDevicesName
 
-      const xmlConfig = this.generateXmlConfig(HostDevicesNames)
+      const xmlConfig = this.generateXmlConfig(hostDevicesName)
 
       const apiName = 'updateVirtualMachine'
 
@@ -129,8 +129,8 @@ export default {
       })
     },
 
-    generateXmlConfig (HostDevicesNames) {
-      const [pciAddress] = HostDevicesNames.split(' ')
+    generateXmlConfig (hostDevicesName) {
+      const [pciAddress] = hostDevicesName.split(' ')
       const [bus, slotFunction] = pciAddress.split(':')
       const [slot, func] = slotFunction.split('.')
 
