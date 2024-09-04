@@ -304,7 +304,7 @@ public class LinstorStorageAdaptor implements StorageAdaptor {
         rcm.deleteProps(deleteProps);
         ApiCallRcList answers = api.resourceConnectionModify(rscName, localNodeName, inUseNode, rcm);
         if (answers.hasError()) {
-            s_logger.error(
+            logger.error(
                     String.format("Failed to remove 'protocol' and 'allow-two-primaries' on %s/%s/%s: %s",
                             localNodeName,
                             inUseNode,
@@ -349,7 +349,7 @@ public class LinstorStorageAdaptor implements StorageAdaptor {
                     removeTwoPrimariesRcProps(api, inUseNode, rsc.getName());
                 }
             } catch (ApiException apiEx) {
-                s_logger.error(apiEx.getBestMessage());
+                logger.error(apiEx.getBestMessage());
                 // do not fail here as removing allow-two-primaries property or deleting diskless isn't fatal
             }
 

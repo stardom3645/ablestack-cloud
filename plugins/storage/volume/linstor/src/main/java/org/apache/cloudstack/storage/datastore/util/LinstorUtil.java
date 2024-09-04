@@ -203,8 +203,8 @@ public class LinstorUtil {
                     .map(Resource::getNodeName)
                     .findFirst()
                     .orElse(null);
-       }
-        s_logger.error("isResourceInUse: null returned from resourceList");
+        }
+        LOGGER.error("isResourceInUse: null returned from resourceList");
         return null;
     }
 

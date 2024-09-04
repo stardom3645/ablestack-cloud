@@ -1337,7 +1337,7 @@ public class ConfigurationManagerImpl extends ManagerBase implements Configurati
                 final String[] cidrs = value.split(",");
                 for (final String cidr : cidrs) {
                     if (!NetUtils.isValidIp4(cidr) && !NetUtils.isValidIp6(cidr) && !NetUtils.getCleanIp4Cidr(cidr).equals(cidr)) {
-                        s_logger.error(String.format("Invalid CIDR %s value specified for the config %s", cidr, name));
+                        logger.error(String.format("Invalid CIDR %s value specified for the config %s", cidr, name));
                         throw new InvalidParameterValueException(String.format("Invalid CIDR %s value specified for the config %s", cidr, name));
                     }
                 }
