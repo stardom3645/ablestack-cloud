@@ -100,6 +100,4 @@ public interface RoleService {
     List<RolePermission> findAllPermissionsBy(Long roleId);
 
     Permission getRolePermission(String permission);
-
-    Pair<List<Role>, Integer> findRolesByKeyword(String keyword, Long startIndex, Long pageSizeVal);
 }
