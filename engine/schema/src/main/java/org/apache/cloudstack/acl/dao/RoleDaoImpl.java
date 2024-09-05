@@ -89,6 +89,9 @@ public class RoleDaoImpl extends GenericDaoBase<RoleVO, Long> implements RoleDao
         if (StringUtils.isNotEmpty(state)) {
             sc.setParameters("state", state);
         }
+        sc.addOr("uuid", SearchCriteria.Op.LIKE, "%" + keyword + "%");
+        sc.addOr("roleType", SearchCriteria.Op.LIKE, "%" + keyword + "%");
+        sc.addOr("description", SearchCriteria.Op.LIKE, "%" + keyword + "%");
 
         return searchAndCount(sc, new Filter(RoleVO.class, "id", true, offset, limit));
     }
