@@ -403,6 +403,10 @@ public class UserVmResponse extends BaseResponseWithTagInformation implements Co
     @SerializedName(ApiConstants.QEMU_AGENT_VERSION)
     @Param(description = "qemu agent version")
     private String qemuAgentVersion;
+    
+    @SerializedName((ApiConstants.VM_TYPE))
+    @Param(description = "User VM type", since = "4.20.0")
+    private String vmType;
 
     public UserVmResponse() {
         securityGroupList = new LinkedHashSet<>();
@@ -1185,6 +1189,14 @@ public class UserVmResponse extends BaseResponseWithTagInformation implements Co
 
     public void setQemuAgentVersion(String qemuAgentVersion) {
         this.qemuAgentVersion = qemuAgentVersion;
+    }
+    
+    public void setVmType(String vmType) {
+        this.vmType = vmType;
+    }
+
+    public String getVmType() {
+        return vmType;
     }
 
     public void setIpAddress(String ipAddress) {

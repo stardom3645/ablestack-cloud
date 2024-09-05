@@ -85,6 +85,7 @@ import {
   FieldTimeOutlined,
   FileDoneOutlined,
   FileProtectOutlined,
+  FileTextOutlined,
   FilterOutlined,
   FilterTwoTone,
   FileAddOutlined,
@@ -262,6 +263,7 @@ export default {
     app.component('FieldTimeOutlined', FieldTimeOutlined)
     app.component('FileDoneOutlined', FileDoneOutlined)
     app.component('FileProtectOutlined', FileProtectOutlined)
+    app.component('FileTextOutlined', FileTextOutlined)
     app.component('FilterOutlined', FilterOutlined)
     app.component('FilterTwoTone', FilterTwoTone)
     app.component('FireOutlined', FireOutlined)
