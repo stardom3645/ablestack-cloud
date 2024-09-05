@@ -270,21 +270,13 @@ public class LibvirtConvertInstanceCommandWrapper extends CommandWrapper<Convert
                                                                   List<String> destinationStoragePools,
                                                                   KVMStoragePoolManager storagePoolMgr) {
         List<KVMPhysicalDisk> targetDisks = new ArrayList<>();
-        if (temporaryDisks.size() != destinationStoragePools.size()) {
-            String warn = String.format("Discrepancy between the converted instance disks (%s) " +
-                    "and the expected number of disks (%s)", temporaryDisks.size(), destinationStoragePools.size());
-            logger.warn(warn);
-        }
+        String poolUuid = destinationStoragePools.get(0);
+        logger.debug("Destination Pool UUID : %s", poolUuid);
         for (int i = 0; i < temporaryDisks.size(); i++) {
-            String poolPath = destinationStoragePools.get(i);
-            KVMStoragePool destinationPool = storagePoolMgr.getStoragePool(Storage.StoragePoolType.NetworkFilesystem, poolPath);
+            KVMStoragePool destinationPool = storagePoolMgr.getStoragePool(Storage.StoragePoolType.RBD, poolUuid);
+            logger.debug(":::destinationPool Info : %s", destinationPool);
             if (destinationPool == null) {
-                String err = String.format("Could not find a storage pool by URI: %s", poolPath);
-                logger.error(err);
-                continue;
-            }
-            if (destinationPool.getType() != Storage.StoragePoolType.NetworkFilesystem) {
-                String err = String.format("Storage pool by URI: %s is not an NFS storage", poolPath);
+                String err = String.format("Could not find a storage pool : %s", destinationPool);
                 logger.error(err);
                 continue;
             }
