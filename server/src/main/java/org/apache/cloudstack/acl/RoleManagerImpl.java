@@ -60,8 +60,6 @@ import com.cloud.utils.ListUtils;
 import com.cloud.utils.Pair;
 import com.cloud.utils.component.ManagerBase;
 import com.cloud.utils.component.PluggableService;
-import com.cloud.utils.db.Filter;
-import com.cloud.utils.db.SearchCriteria;
 import com.cloud.utils.db.Transaction;
 import com.cloud.utils.db.TransactionCallback;
 import com.cloud.utils.db.TransactionStatus;
@@ -447,26 +445,7 @@ public class RoleManagerImpl extends ManagerBase implements RoleService, Configu
         }
         return new Pair<List<Role>, Integer>(new ArrayList<Role>(), 0);
     }
-    @Override
-    public Pair<List<Role>, Integer> findRolesByKeyword(String keyword, Long startIndex, Long limit) {
-        final Filter searchFilter = new Filter(RoleVO.class, "uuid", false,startIndex,limit );
-        if (StringUtils.isNotBlank(keyword)) {
-            Pair<List<RoleVO>, Integer> data = roleDao.findAllByName(null, keyword, startIndex, limit, isCallerRootAdmin());
-            int removed = removeRolesIfNeeded(data.first());
-            final SearchCriteria<RoleVO> sc = roleDao.createSearchCriteria();
-            if (keyword != null) {
-                SearchCriteria<RoleVO> ssc = roleDao.createSearchCriteria();
-                ssc.addOr("name", SearchCriteria.Op.LIKE, "%" + keyword + "%");
-                ssc.addOr("uuid", SearchCriteria.Op.LIKE, "%" + keyword + "%");
-                ssc.addOr("roleType", SearchCriteria.Op.LIKE, "%" + keyword + "%");
-                ssc.addOr("description", SearchCriteria.Op.LIKE, "%" + keyword + "%");
-                sc.addAnd("name", SearchCriteria.Op.SC, ssc);
-            }
-            final Pair<List<RoleVO>, Integer> result = roleDao.searchAndCount(sc, searchFilter);
-            return new Pair<List<Role>,Integer>(ListUtils.toListOfInterface(result.first()), Integer.valueOf(result.second() - removed));
-        }
-        return new Pair<List<Role>, Integer>(new ArrayList<Role>(), 0);
-    }
+
     /**
      *  Removes roles from the given list if the role has different or more permissions than the user's calling the method role
      */
