@@ -530,4 +530,8 @@ public abstract class BaseImageStoreDriverImpl implements ImageStoreDriver {
     private Integer getCopyCmdsCountToSpecificSSVM(Long ssvmId) {
         return _cmdExecLogDao.getCopyCmdCountForSSVM(ssvmId);
     }
+
+    @Override
+    public void flattenAsync(DataStore dataStore, DataObject data, AsyncCompletionCallback<CommandResult> callback) {
+    }
 }
