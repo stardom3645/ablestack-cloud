@@ -774,6 +774,9 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                     glueParams.put("remoteClusterName", "remote");
                     glueParams.put("mirrorPool", "rbd");
                     glueParams.put("host", secGlueIpAddress);
+                    glueParams.put("moldUrl", priUrl + "/client/api/");
+                    glueParams.put("moldApiKey", priApiKey);
+                    glueParams.put("moldSecretKey", priSecretKey);
                     boolean result = DisasterRecoveryClusterUtil.glueMirrorSetupAPI(glueUrl, glueCommand, glueMethod, glueParams, permKey);
                     if (result) {
                         drCluster.setDrClusterStatus(DisasterRecoveryCluster.DrClusterStatus.Enabled.toString());
