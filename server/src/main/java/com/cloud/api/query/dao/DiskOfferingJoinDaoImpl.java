@@ -38,11 +38,12 @@ import com.cloud.offering.DiskOffering;
 import com.cloud.offering.ServiceOffering;
 import com.cloud.server.ResourceTag;
 import com.cloud.user.AccountManager;
-import com.cloud.utils.db.Attribute;
 import com.cloud.utils.db.Filter;
 import com.cloud.utils.db.GenericDaoBase;
 import com.cloud.utils.db.SearchBuilder;
 import com.cloud.utils.db.SearchCriteria;
+
+import static org.apache.cloudstack.query.QueryService.SortKeyAscending;
 
 @Component
 public class DiskOfferingJoinDaoImpl extends GenericDaoBase<DiskOfferingJoinVO, Long> implements DiskOfferingJoinDao {
@@ -58,7 +59,6 @@ public class DiskOfferingJoinDaoImpl extends GenericDaoBase<DiskOfferingJoinVO, 
 
     private final SearchBuilder<DiskOfferingJoinVO> dofIdSearch;
     private SearchBuilder<DiskOfferingJoinVO> diskOfferingSearch;
-    private final Attribute _typeAttr;
 
     protected DiskOfferingJoinDaoImpl() {
 
@@ -69,9 +69,6 @@ public class DiskOfferingJoinDaoImpl extends GenericDaoBase<DiskOfferingJoinVO, 
         diskOfferingSearch = createSearchBuilder();
         diskOfferingSearch.and("idIN", diskOfferingSearch.entity().getId(), SearchCriteria.Op.IN);
         diskOfferingSearch.done();
-
-
-        _typeAttr = _allAttributes.get("type");
 
         _count = "select count(distinct id) from disk_offering_view WHERE ";
     }
@@ -168,6 +165,8 @@ public class DiskOfferingJoinDaoImpl extends GenericDaoBase<DiskOfferingJoinVO, 
 
     @Override
     public List<DiskOfferingJoinVO> searchByIds(Long... offeringIds) {
+        Filter searchFilter = new Filter(DiskOfferingJoinVO.class, "sortKey", SortKeyAscending.value());
+        searchFilter.addOrderBy(DiskOfferingJoinVO.class, "id", true);
         // set detail batch query size
         int DETAILS_BATCH_SIZE = 2000;
         String batchCfg = configDao.getValue("detail.batch.query.size");
