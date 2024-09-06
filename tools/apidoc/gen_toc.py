@@ -51,6 +51,7 @@ known_categories = {
     'VirtualMachine': 'Virtual Machine',
     'VM': 'Virtual Machine',
     'Vnf': 'Virtual Network Functions',
+    'GuestSubnet': 'Routing',
     'Domain': 'Domain',
     'Template': 'Template',
     'Iso': 'ISO',
@@ -296,7 +297,13 @@ known_categories = {
     'SharedFileSystem': 'Shared FileSystem',
     'Webhook': 'Webhook',
     'Webhooks': 'Webhook',
-    'purgeExpungedResources': 'Resource'
+    'purgeExpungedResources': 'Resource',
+    'BgpPeer': 'BGP Peer',
+    'createASNRange': 'AS Number Range',
+    'listASNRange': 'AS Number Range',
+    'deleteASNRange': 'AS Number Range',
+    'listASNumbers': 'AS Number',
+    'releaseASNumber': 'AS Number'
 }
 
 
