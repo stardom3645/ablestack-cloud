@@ -1175,6 +1175,14 @@ class Volume:
 
         return Volume(apiclient.createVolume(cmd).__dict__)
 
+    def update(self, apiclient, **kwargs):
+        """Updates the volume"""
+
+        cmd = updateVolume.updateVolumeCmd()
+        cmd.id = self.id
+        [setattr(cmd, k, v) for k, v in list(kwargs.items())]
+        return (apiclient.updateVolume(cmd))
+
     @classmethod
     def create_custom_disk(cls, apiclient, services, account=None,
                            domainid=None, diskofferingid=None, projectid=None):
