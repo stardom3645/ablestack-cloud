@@ -33,6 +33,7 @@ import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
+import java.util.EnumSet;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -47,6 +48,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
@@ -177,6 +179,8 @@ import com.cloud.user.dao.UserDao;
 import com.cloud.utils.ConstantTimeComparator;
 import com.cloud.utils.DateUtil;
 import com.cloud.utils.HttpUtils;
+import com.cloud.utils.HttpUtils.ApiSessionKeySameSite;
+import com.cloud.utils.HttpUtils.ApiSessionKeyCheckOption;
 import com.cloud.utils.Pair;
 import com.cloud.utils.ReflectUtil;
 import com.cloud.utils.StringUtils;
@@ -344,6 +348,24 @@ public class ApiServer extends ManagerBase implements HttpRequestHandler, ApiSer
             , "A setting that enables/disables features developed for security features."
             , false
             , ConfigKey.Scope.Global);
+
+    static final ConfigKey<String> ApiSessionKeyCookieSameSiteSetting = new ConfigKey<>(String.class
+            , "api.sessionkey.cookie.samesite"
+            , ConfigKey.CATEGORY_ADVANCED
+            , ApiSessionKeySameSite.Lax.name()
+            , "The SameSite attribute of cookie 'sessionkey'. Valid options are: Lax (default), Strict, NoneAndSecure and Null."
+            , true
+            , ConfigKey.Scope.Global, null, null, null, null, null, ConfigKey.Kind.Select,
+            EnumSet.allOf(ApiSessionKeySameSite.class).stream().map(Enum::toString).collect(Collectors.joining(", ")));
+
+    public static final ConfigKey<String> ApiSessionKeyCheckLocations = new ConfigKey<>(String.class
+            , "api.sessionkey.check.locations"
+            , ConfigKey.CATEGORY_ADVANCED
+            , ApiSessionKeyCheckOption.CookieAndParameter.name()
+            , "The locations of 'sessionkey' during the validation of the API requests. Valid options are: CookieOrParameter, ParameterOnly, CookieAndParameter (default)."
+            , true
+            , ConfigKey.Scope.Global, null, null, null, null, null, ConfigKey.Kind.Select,
+            EnumSet.allOf(ApiSessionKeyCheckOption.class).stream().map(Enum::toString).collect(Collectors.joining(", ")));
 
     @Override
     public boolean configure(final String name, final Map<String, Object> params) throws ConfigurationException {
@@ -1689,7 +1711,9 @@ public class ApiServer extends ManagerBase implements HttpRequestHandler, ApiSer
                 listOfForwardHeaders,
                 ConcurrentConnectEnabled,
                 BlockExistConnection,
-                SecurityFeaturesEnabled
+                SecurityFeaturesEnabled,
+                ApiSessionKeyCookieSameSiteSetting,
+                ApiSessionKeyCheckLocations
         };
     }
 }
