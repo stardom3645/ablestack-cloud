@@ -59,6 +59,7 @@
         <property name="userPasswordEncoders"
             value="#{userPasswordEncodersRegistry.registered}" />
     </bean>
+    <bean id="passwordReset" class="org.apache.cloudstack.user.UserPasswordResetManagerImpl" />
 
     <bean id="managementServerImpl" class="com.cloud.server.ManagementServerImpl">
         <property name="lockControllerListener" ref="lockControllerListener" />
