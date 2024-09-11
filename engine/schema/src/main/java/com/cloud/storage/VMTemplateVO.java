@@ -154,6 +154,9 @@ public class VMTemplateVO implements VirtualMachineTemplate {
     @Column(name = "direct_download")
     private boolean directDownload;
 
+    @Column(name = "kvdo_enable")
+    private boolean kvdoEnable;
+
     @Column(name = "parent_template_id")
     private Long parentTemplateId;
 
@@ -208,8 +211,7 @@ public class VMTemplateVO implements VirtualMachineTemplate {
     }
 
     public VMTemplateVO(long id, String name, ImageFormat format, boolean isPublic, boolean featured, boolean isExtractable, TemplateType type, String url, boolean requiresHvm, int bits, long accountId, String cksum, String displayText, boolean enablePassword, long guestOSId, boolean bootable,
-                        HypervisorType hyperType, String templateTag, Map<String, String> details, boolean sshKeyEnabled, boolean isDynamicallyScalable, boolean directDownload,
-                        boolean deployAsIs) {
+                        HypervisorType hyperType, String templateTag, Map<String, String> details, boolean sshKeyEnabled, boolean isDynamicallyScalable, boolean directDownload, boolean kvdoEnable, boolean deployAsIs) {
         this(id,
             name,
             format,
@@ -234,6 +236,7 @@ public class VMTemplateVO implements VirtualMachineTemplate {
         dynamicallyScalable = isDynamicallyScalable;
         state = State.Active;
         this.directDownload = directDownload;
+        this.kvdoEnable = kvdoEnable;
         this.deployAsIs = deployAsIs;
     }
 
@@ -639,6 +642,10 @@ public class VMTemplateVO implements VirtualMachineTemplate {
 
     public boolean isDirectDownload() {
         return directDownload;
+    }
+
+    public boolean isKvdoEnable() {
+        return kvdoEnable;
     }
 
     @Override

@@ -195,6 +195,10 @@ public class TemplateResponse extends BaseResponseWithTagInformation implements 
     @Param(description = "KVM Only: true if template is directly downloaded to Primary Storage bypassing Secondary Storage")
     private Boolean directDownload;
 
+    @SerializedName(ApiConstants.KVDO_ENABLE)
+    @Param(description = "KVM Only: true if template is directly downloaded to Primary Storage bypassing Secondary Storage")
+    private Boolean kvdoEnable;
+
     @SerializedName(ApiConstants.DEPLOY_AS_IS)
     @Param(description = "VMware only: true if template is deployed without orchestrating disks and networks but \"as-is\" defined in the template.",
             since = "4.15")
@@ -434,6 +438,14 @@ public class TemplateResponse extends BaseResponseWithTagInformation implements 
 
     public Boolean getDirectDownload() {
         return directDownload;
+    }
+
+    public void setKvdoEnable(Boolean kvdoEnable) {
+        this.kvdoEnable = kvdoEnable;
+    }
+
+    public Boolean getKvdoEnable() {
+        return kvdoEnable;
     }
 
     public void setDeployAsIs(Boolean deployAsIs) {
