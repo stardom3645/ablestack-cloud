@@ -60,16 +60,6 @@ export default {
       }
       return false
     }
-  },
-  methods: {
-    showVersionUpdate () {
-      if (this.$store.getters?.features?.cloudstackversion && this.$store.getters?.latestVersion?.version) {
-        const currentVersion = getParsedVersion(this.$store.getters?.features?.cloudstackversion)
-        const latestVersion = getParsedVersion(this.$store.getters?.latestVersion?.version)
-        return semver.valid(currentVersion) && semver.valid(latestVersion) && semver.gt(latestVersion, currentVersion)
-      }
-      return false
-    }
   }
 }
 </script>
