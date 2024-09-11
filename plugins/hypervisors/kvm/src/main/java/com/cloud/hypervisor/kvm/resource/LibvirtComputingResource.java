@@ -3396,7 +3396,11 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
                                 }
                             }
                             else {
-                                disk.defBlockBasedDisk(path + physicalDisk.getPath(), devId, diskBusType);
+                                if(!volumeObject.getKvdoEnable()){
+                                    disk.defBlockBasedDisk(path + physicalDisk.getPath(), devId, diskBusType);
+                                }else{
+                                    disk.defBlockBasedDisk(path, devId, diskBusType);
+                                }
                             }
                         } else {
                             throw new InternalErrorException("Error while mapping RBD device on host");
@@ -5410,7 +5414,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
             try {
                 createKvdoCmdLine(splitPoolImage[0], pool.getAuthUserName(), splitPoolImage[1], String.valueOf(disk.getSize()));
                 device = "/dev/mapper/vg_"+splitPoolImage[1].replace("-","")+"-ablestack_kvdo";
-                logger.info("device name !!! "+device);
+                logger.info("device name : "+device);
             } catch (InternalErrorException e) {
                 logger.info("createKvdoCmdLine Action Error : "+e);
             }

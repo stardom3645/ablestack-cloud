@@ -68,6 +68,8 @@ CALL `cloud`.`ADD_COL`('disk_offering', 'shareable', 'tinyint(1) unsigned NOT NU
 
 CALL `cloud`.`ADD_COL`('disk_offering', 'kvdo_enable', 'tinyint(1) unsigned NOT NULL DEFAULT 0');
 
+CALL `cloud`.`ADD_COL`('vm_template', 'kvdo_enable', 'tinyint(1) unsigned NOT NULL DEFAULT 0');
+
 CALL `cloud`.`ADD_COL`('nics', 'link_state', 'tinyint(1) unsigned NOT NULL DEFAULT 1');
 
 CALL `cloud`.`ADD_COL`('vm_instance', 'qemu_agent_version', 'varchar(16)');
