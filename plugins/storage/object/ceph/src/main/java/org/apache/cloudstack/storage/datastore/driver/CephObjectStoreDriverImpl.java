@@ -57,12 +57,10 @@ import org.apache.cloudstack.engine.subsystem.api.storage.DataObject;
 import org.apache.cloudstack.engine.subsystem.api.storage.DataStore;
 import org.apache.cloudstack.framework.async.AsyncCompletionCallback;
 import org.apache.cloudstack.storage.command.CommandResult;
-import org.apache.cloudstack.engine.subsystem.api.storage.DataStore;
 import org.apache.cloudstack.storage.datastore.db.ObjectStoreDao;
 import org.apache.cloudstack.storage.datastore.db.ObjectStoreDetailsDao;
 import org.apache.cloudstack.storage.datastore.db.ObjectStoreVO;
 import org.apache.cloudstack.storage.object.BaseObjectStoreDriverImpl;
-import org.apache.cloudstack.storage.object.Bucket;
 import org.apache.cloudstack.storage.object.BucketObject;
 import org.twonote.rgwadmin4j.model.BucketInfo;
 import org.twonote.rgwadmin4j.model.S3Credential;
@@ -318,8 +316,11 @@ public class CephObjectStoreDriverImpl extends BaseObjectStoreDriverImpl {
 
             SetBucketVersioningConfigurationRequest setBucketVersioningConfigurationRequest =
                     new SetBucketVersioningConfigurationRequest(bucket.getName(), configuration);
-
+            client.setBucketVersioningConfiguration(setBucketVersioningConfigurationRequest);
             return true;
+        } catch (AmazonS3Exception e) {
+            throw new CloudRuntimeException(e);
+        }
     }
 
     @Override

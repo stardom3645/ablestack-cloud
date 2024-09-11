@@ -187,6 +187,8 @@
         <org.springframework.version>5.3.26</org.springframework.version>
         <cs.ini.version>0.5.4</cs.ini.version>
         <cs.caffeine.version>3.1.7</cs.caffeine.version>
+        <cs.gmavenplus.version>3.0.2</cs.gmavenplus.version>
+        <cs.exec-maven-plugin.version>3.4.1</cs.exec-maven-plugin.version>
     </properties>
 
     <distributionManagement>
