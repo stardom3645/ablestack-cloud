@@ -1517,12 +1517,14 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         validateDisasterRecoveryClusterVmCreateParameters(cmd);
         DisasterRecoveryClusterVO drCluster = disasterRecoveryClusterDao.findByName(cmd.getDrClusterName());
         UserVmJoinVO userVM = userVmJoinDao.findById(cmd.getVmId());
+        String hostName = userVM.getHostName();
+        String vmName = userVM.getInstanceName();
         String url = drCluster.getDrClusterUrl();
         Map<String, String> details = disasterRecoveryClusterDetailsDao.findDetails(drCluster.getId());
         String apiKey = details.get(ApiConstants.DR_CLUSTER_API_KEY);
         String secretKey = details.get(ApiConstants.DR_CLUSTER_SECRET_KEY);
         String interval = details.get("mirrorscheduleinterval");
-        String startTime = details.get("mirrorschedulestarttime");
+        // String startTime = details.get("mirrorschedulestarttime");
         String offeringId = "";
         String networkId = "";
         // vm 의 볼륨 미러링 설정 glue-api 호출
@@ -1538,14 +1540,15 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                     String glueIp = array[i];
                     ///////////////////// glue-api 프로토콜과 포트 확정 시 변경 예정
                     String glueUrl = "https://" + glueIp + ":8080/api/v1";
-                    String glueCommand = "/mirror/image/rbd/" + volumeUuid;
+                    String glueCommand = "/mirror/image/rbd/" + volumeUuid + "/" + hostName + "/" + vmName;
                     String glueMethod = "POST";
                     Map<String, String> glueParams = new HashMap<>();
                     glueParams.put("mirrorPool", "rbd");
                     glueParams.put("imageName", volumeUuid);
+                    glueParams.put("hostName", hostName);
+                    glueParams.put("vmName", vmName);
                     glueParams.put("interval", interval);
-                    glueParams.put("startTime", startTime);
-                    result = DisasterRecoveryClusterUtil.glueImageMirrorSetupAPI(glueUrl, glueCommand, glueMethod, glueParams);
+                    result = DisasterRecoveryClusterUtil.glueImageMirrorScheduleSetupAPI(glueUrl, glueCommand, glueMethod, glueParams);
                     if (result) {
                         break;
                     }
