@@ -5005,10 +5005,9 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
             options.put(VmDetailConstants.NIC_ADAPTER, Arrays.asList("e1000", "virtio", "rtl8139", "vmxnet3", "ne2k_pci"));
             options.put(VmDetailConstants.ROOT_DISK_CONTROLLER, Arrays.asList("osdefault", "ide", "scsi", "virtio"));
             options.put(VmDetailConstants.DATA_DISK_CONTROLLER, Arrays.asList("osdefault", "ide", "scsi", "virtio"));
-            options.put(VmDetailConstants.EXTRACONFIG_99, Arrays.asList("<devices><sound model=\"ich6\"/></devices>"));
+            options.put(VmDetailConstants.EXTRACONFIG_SOUND, Arrays.asList("<devices><sound model=\"ich6\"/></devices>"));
             options.put(VmDetailConstants.VIDEO_HARDWARE, Arrays.asList("cirrus", "vga", "qxl", "virtio"));
-            options.put(VmDetailConstants.EXTRACONFIG_100, Arrays.asList("<devices><video><model type=\"virtio\"/></video></devices>"));
-            options.put(VmDetailConstants.EXTRACONFIG_101, Arrays.asList("<devices><video><model type=\"virtio\"/></video></devices>"));
+            options.put(VmDetailConstants.EXTRACONFIG_VIDEO, Arrays.asList("<devices><video><model type=\"virtio\"/></video></devices>"));
             options.put(VmDetailConstants.VIDEO_RAM, Collections.emptyList());
             options.put("tpmversion", Arrays.asList(ApiConstants.TpmVersion.NONE.toString(), ApiConstants.TpmVersion.V2_0.toString()));
             options.put(VmDetailConstants.IO_POLICY, Arrays.asList("threads", "native", "io_uring", "storage_specific"));
