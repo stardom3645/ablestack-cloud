@@ -44,10 +44,10 @@ public interface VmDetailConstants {
     String KVM_VNC_PASSWORD = "kvm.vnc.password";
 
     // KVM specific, custom virtual GPU hardware
-    String SOUND= "sound";
+    String EXTRACONFIG_99= "extraconfig_99";
     String VIDEO_HARDWARE = "video.hardware";
-    String VIDEO_HARDWARE_1 = "video.hardware_1";
-    String VIDEO_HARDWARE_2 = "video.hardware_2";
+    String EXTRACONFIG_100 = "extraconfig_100";
+    String EXTRACONFIG_101 = "extraconfig_101";
     String VIDEO_RAM = "video.ram";
 
     //KVM specific, loop threads for block IO requests
