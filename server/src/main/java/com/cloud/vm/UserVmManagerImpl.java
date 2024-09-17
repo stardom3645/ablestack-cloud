@@ -997,7 +997,7 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
             throw new InvalidParameterValueException("unable to find a virtual machine by id" + cmd.getId());
         }
         if (UserVmManager.SHAREDFSVM.equals(userVm.getUserVmType())) {
-            throw new InvalidParameterValueException("Operation not supported on Shared FileSystem VM");
+            throw new InvalidParameterValueException("Operation not supported on Shared FileSystem Instance");
         }
         _accountMgr.checkAccess(caller, null, true, userVm);
 
@@ -1044,7 +1044,7 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
             throw new InvalidParameterValueException("unable to find a virtual machine by id" + cmd.getId());
         }
         if (UserVmManager.SHAREDFSVM.equals(userVm.getUserVmType())) {
-            throw new InvalidParameterValueException("Operation not supported on Shared FileSystem VM");
+            throw new InvalidParameterValueException("Operation not supported on Shared FileSystem Instance");
         }
 
         VMTemplateVO template = _templateDao.findByIdIncludingRemoved(userVm.getTemplateId());
@@ -1489,7 +1489,7 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
             if ((network.getAclType() != ControlledEntity.ACLType.Account) ||
                     (network.getDomainId() != vmInstance.getDomainId()) ||
                     (network.getAccountId() != vmInstance.getAccountId())) {
-                throw new InvalidParameterValueException("Shared network which is not Account scoped and not belonging to the same account can not be added to a Shared FileSystem VM");
+                throw new InvalidParameterValueException("Shared network which is not Account scoped and not belonging to the same account can not be added to a Shared FileSystem Instance");
             }
         }
 
@@ -2331,7 +2331,7 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
             throw new InvalidParameterValueException("unable to find a virtual machine with id " + vmId);
         }
         if (UserVmManager.SHAREDFSVM.equals(vm.getUserVmType())) {
-            throw new InvalidParameterValueException("Operation not supported on Shared FileSystem VM");
+            throw new InvalidParameterValueException("Operation not supported on Shared FileSystem Instance");
         }
 
         // When trying to expunge, permission is denied when the caller is not an admin and the AllowUserExpungeRecoverVm is false for the caller.
@@ -2921,7 +2921,7 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
         }
         UserVmVO userVm = _vmDao.findById(cmd.getId());
         if (userVm != null && UserVmManager.SHAREDFSVM.equals(userVm.getUserVmType())) {
-            throw new InvalidParameterValueException("Operation not supported on Shared FileSystem VM");
+            throw new InvalidParameterValueException("Operation not supported on Shared FileSystem Instance");
         }
 
         String userData = cmd.getUserData();
@@ -3512,7 +3512,7 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
             throw new InvalidParameterValueException("unable to find a virtual machine with id " + vmId);
         }
         if (UserVmManager.SHAREDFSVM.equals(vm.getUserVmType())) {
-            throw new InvalidParameterValueException("Operation not supported on Shared FileSystem VM");
+            throw new InvalidParameterValueException("Operation not supported on Shared FileSystem Instance");
         }
 
         if (Arrays.asList(State.Destroyed, State.Expunging).contains(vm.getState()) && !expunge) {
@@ -6067,7 +6067,7 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
             throw ex;
         }
         if (UserVmManager.SHAREDFSVM.equals(vm.getUserVmType())) {
-            throw new InvalidParameterValueException("Operation not supported on Shared FileSystem VM");
+            throw new InvalidParameterValueException("Operation not supported on Shared FileSystem Instance");
         }
 
         if (vm.getRemoved() != null) {
@@ -7529,7 +7529,7 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
             throw ex;
         }
         if (UserVmManager.SHAREDFSVM.equals(vm.getUserVmType())) {
-            throw new InvalidParameterValueException("Operation not supported on Shared FileSystem VM");
+            throw new InvalidParameterValueException("Operation not supported on Shared FileSystem Instance");
         }
 
         final Account oldAccount = _accountService.getActiveAccountById(vm.getAccountId());
@@ -8052,7 +8052,7 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
             throw ex;
         }
         if (UserVmManager.SHAREDFSVM.equals(vm.getUserVmType())) {
-            throw new InvalidParameterValueException("Operation not supported on Shared FileSystem VM");
+            throw new InvalidParameterValueException("Operation not supported on Shared FileSystem Instance");
         }
         _accountMgr.checkAccess(caller, null, true, vm);
 
