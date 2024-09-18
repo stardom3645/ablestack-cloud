@@ -242,7 +242,7 @@ export default {
           docHelp: 'adminguide/virtual_machines.html#backup-offerings',
           dataView: true,
           args: ['virtualmachineid', 'backupofferingid'],
-          show: (record) => { return !record.backupofferingid && record.vmtype !== 'sharedfsvm' },
+          show: (record) => { return !record.backupofferingid },
           mapping: {
             virtualmachineid: {
               value: (record, params) => { return record.id }
@@ -257,7 +257,7 @@ export default {
           docHelp: 'adminguide/virtual_machines.html#creating-vm-backups',
           dataView: true,
           args: ['virtualmachineid'],
-          show: (record) => { return record.backupofferingid && record.vmtype !== 'sharedfsvm' },
+          show: (record) => { return record.backupofferingid },
           mapping: {
             virtualmachineid: {
               value: (record, params) => { return record.id }
@@ -271,7 +271,7 @@ export default {
           docHelp: 'adminguide/virtual_machines.html#creating-vm-backups',
           dataView: true,
           popup: true,
-          show: (record) => { return record.backupofferingid && record.vmtype !== 'sharedfsvm' },
+          show: (record) => { return record.backupofferingid },
           component: shallowRef(defineAsyncComponent(() => import('@/views/compute/BackupScheduleWizard.vue'))),
           mapping: {
             virtualmachineid: {
@@ -290,7 +290,7 @@ export default {
           docHelp: 'adminguide/virtual_machines.html#restoring-vm-backups',
           dataView: true,
           args: ['virtualmachineid', 'forced'],
-          show: (record) => { return record.backupofferingid && record.vmtype !== 'sharedfsvm' },
+          show: (record) => { return record.backupofferingid },
           mapping: {
             virtualmachineid: {
               value: (record, params) => { return record.id }
