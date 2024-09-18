@@ -47,7 +47,7 @@ export default {
         return filters
       },
       columns: () => {
-        const fields = ['name', 'state', 'qemuagentversion', 'ipaddress']
+        const fields = ['displayname', 'state', 'qemuagentversion', 'ipaddress']
         const metricsFields = ['cpunumber', 'cputotal', 'cpuused', 'memorytotal',
           {
             memoryused: (record) => {
@@ -84,7 +84,7 @@ export default {
         fields.push('zonename')
         return fields
       },
-      searchFilters: ['name', 'zoneid', 'domainid', 'account', 'groupid', 'tags'],
+      searchFilters: ['displayname', 'zoneid', 'domainid', 'account', 'groupid', 'tags'],
       details: () => {
         var fields = ['name', 'qemuagentversion', 'displayname', 'id', 'state', 'publicip', 'ipaddress', 'ip6address', 'templatename', 'ostypename',
           'serviceofferingname', 'isdynamicallyscalable', 'haenable', 'hypervisor', 'boottype', 'bootmode', 'account',
