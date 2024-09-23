@@ -1532,6 +1532,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         boolean result = false;
         for (VolumeVO vol : volumes) {
             String volumeUuid = vol.getPath();
+            String volumeType = vol.getVolumeType().toString();
             String ipList = Script.runSimpleBashScript("cat /etc/hosts | grep -E 'scvm1-mngt|scvm2-mngt|scvm3-mngt' | awk '{print $1}' | tr '\n' ','");
             if (ipList != null || !ipList.isEmpty()) {
                 ipList = ipList.replaceAll(",$", "");
@@ -1548,6 +1549,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                     glueParams.put("hostName", hostName);
                     glueParams.put("vmName", vmName);
                     glueParams.put("interval", interval);
+                    glueParams.put("volType", volumeType);
                     result = DisasterRecoveryClusterUtil.glueImageMirrorScheduleSetupAPI(glueUrl, glueCommand, glueMethod, glueParams);
                     if (result) {
                         break;
