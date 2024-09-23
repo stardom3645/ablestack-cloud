@@ -674,6 +674,8 @@ public class AgentProperties{
      */
     public static final Property<String> VM_VIDEO_HARDWARE = new Property<>("vm.video.hardware", null, String.class);
 
+    public static final Property<String> VM_VIDEO_HARDWARE_2 = new Property<>("vm.video.hardware_2", null, String.class);
+
     public static final Property<String> SOUND = new Property<>("sound", null, String.class);
 
     /**

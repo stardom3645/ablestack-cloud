@@ -46,6 +46,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.inject.Inject;
+import javax.naming.ConfigurationException;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.ParserConfigurationException;
 import org.apache.cloudstack.api.ApiConstants.IoDriverPolicy;
@@ -168,6 +169,7 @@ import com.cloud.hypervisor.kvm.resource.LibvirtVMDef.SoundDef;
 import com.cloud.hypervisor.kvm.resource.LibvirtVMDef.TPMDef;
 import com.cloud.hypervisor.kvm.resource.LibvirtVMDef.TermPolicy;
 import com.cloud.hypervisor.kvm.resource.LibvirtVMDef.VideoDef;
+import com.cloud.hypervisor.kvm.resource.LibvirtVMDef.VideoDef_2;
 import com.cloud.hypervisor.kvm.resource.LibvirtVMDef.WatchDogDef;
 import com.cloud.hypervisor.kvm.resource.LibvirtVMDef.WatchDogDef.WatchDogAction;
 import com.cloud.hypervisor.kvm.resource.LibvirtVMDef.WatchDogDef.WatchDogModel;
@@ -415,6 +417,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
     protected String guestCpuModel;
     protected boolean noKvmClock;
     protected String videoHw;
+    protected String videoHw2;
     protected String sound;
     protected int videoRam;
     protected Pair<Integer,Integer> hostOsVersion;
@@ -1178,6 +1181,8 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
         manualCpuSpeed = AgentPropertiesFileHandler.getPropertyValue(AgentProperties.HOST_CPU_MANUAL_SPEED_MHZ);
 
         videoHw = AgentPropertiesFileHandler.getPropertyValue(AgentProperties.VM_VIDEO_HARDWARE);
+
+        videoHw2 = AgentPropertiesFileHandler.getPropertyValue(AgentProperties.VM_VIDEO_HARDWARE_2);
 
         sound = AgentPropertiesFileHandler.getPropertyValue(AgentProperties.SOUND);
 
@@ -2818,6 +2823,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
         devices.addDevice(createChannelDef(vmTO));
         devices.addDevice(createWatchDogDef());
         devices.addDevice(createVideoDef(vmTO));
+        devices.addDevice(createVideoDef_2(vmTO));
         devices.addDevice(createConsoleDef());
         devices.addDevice(createGraphicDef(vmTO));
         devices.addDevice(createTabletInputDef());
@@ -2936,6 +2942,22 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
             }
         }
         return new VideoDef(videoHw, videoRam);
+    }
+
+    protected VideoDef_2 createVideoDef_2(VirtualMachineTO vmTO) {
+        Map<String, String> details = vmTO.getDetails();
+        String videoHw2 = this.videoHw2;
+        int videoRam = this.videoRam;
+        if (details != null) {
+            if (details.containsKey(VmDetailConstants.VIDEO_HARDWARE_2)) {
+                videoHw2 = details.get(VmDetailConstants.VIDEO_HARDWARE_2);
+            }
+            if (details.containsKey(VmDetailConstants.VIDEO_RAM)) {
+                String value = details.get(VmDetailConstants.VIDEO_RAM);
+                videoRam = NumbersUtil.parseInt(value, videoRam);
+            }
+        }
+        return new VideoDef_2(videoHw2, videoRam);
     }
 
     protected SoundDef createSoundDef(VirtualMachineTO vmTO) {

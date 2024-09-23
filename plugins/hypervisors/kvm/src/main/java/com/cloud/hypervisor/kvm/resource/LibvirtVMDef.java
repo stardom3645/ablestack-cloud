@@ -1915,6 +1915,32 @@ public class LibvirtVMDef {
         }
     }
 
+    public static class VideoDef_2 {
+        private String _videoModel;
+        private int _videoRam;
+
+        public VideoDef_2(String videoModel, int videoRam) {
+            _videoModel = videoModel;
+            _videoRam = videoRam;
+        }
+
+        @Override
+        public String toString() {
+            StringBuilder videoBuilder = new StringBuilder();
+            if (_videoModel != null && !_videoModel.isEmpty()){
+                videoBuilder.append("<video>\n");
+                if (_videoRam != 0) {
+                    videoBuilder.append("<model type='" + _videoModel + "' vram='" + _videoRam + "'/>\n");
+                } else {
+                    videoBuilder.append("<model type='" + _videoModel + "'/>\n");
+                }
+                videoBuilder.append("</video>\n");
+                return videoBuilder.toString();
+            }
+            return "";
+        }
+    }
+
     public static class SoundDef {
         private String _SoundModel;
 
