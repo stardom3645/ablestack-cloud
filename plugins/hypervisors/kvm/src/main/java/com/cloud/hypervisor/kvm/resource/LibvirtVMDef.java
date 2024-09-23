@@ -16,21 +16,21 @@
 // under the License.
 package com.cloud.hypervisor.kvm.resource;
 
+import com.cloud.agent.properties.AgentProperties;
+import com.cloud.agent.properties.AgentPropertiesFileHandler;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
 import org.apache.cloudstack.api.ApiConstants.IoDriverPolicy;
 import org.apache.cloudstack.utils.qemu.QemuObject;
 import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
-import com.cloud.agent.properties.AgentProperties;
-import com.cloud.agent.properties.AgentPropertiesFileHandler;
+
 
 public class LibvirtVMDef {
     protected static Logger LOGGER = LogManager.getLogger(LibvirtVMDef.class);
@@ -1910,6 +1910,26 @@ public class LibvirtVMDef {
                 }
                 videoBuilder.append("</video>\n");
                 return videoBuilder.toString();
+            }
+            return "";
+        }
+    }
+
+    public static class SoundDef {
+        private String _SoundModel;
+
+        public SoundDef(String soundModel) {
+            _SoundModel = soundModel;
+        }
+
+        @Override
+        public String toString() {
+            StringBuilder soundBuilder = new StringBuilder();
+            if (_SoundModel != null && !_SoundModel.isEmpty()){
+                soundBuilder.append("<devices>\n");
+                soundBuilder.append("<model type='" + _SoundModel + "/>\n");
+                soundBuilder.append("</devices>\n");
+                return soundBuilder.toString();
             }
             return "";
         }

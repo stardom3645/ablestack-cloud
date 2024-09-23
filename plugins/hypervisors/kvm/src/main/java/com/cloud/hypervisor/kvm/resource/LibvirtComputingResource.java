@@ -19,6 +19,7 @@ package com.cloud.hypervisor.kvm.resource;
 import static com.cloud.host.Host.HOST_INSTANCE_CONVERSION;
 import static com.cloud.host.Host.HOST_VOLUME_ENCRYPTION;
 
+import com.google.gson.JsonParser;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -44,19 +45,15 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
 import javax.inject.Inject;
-import javax.naming.ConfigurationException;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.ParserConfigurationException;
-
 import org.apache.cloudstack.api.ApiConstants.IoDriverPolicy;
 import org.apache.cloudstack.engine.orchestration.service.NetworkOrchestrationService;
 import org.apache.cloudstack.storage.command.browser.CreateRbdObjectsCommand;
 import org.apache.cloudstack.storage.command.browser.DeleteRbdObjectsCommand;
 import org.apache.cloudstack.storage.command.browser.ListDataStoreObjectsCommand;
 import org.apache.cloudstack.storage.configdrive.ConfigDrive;
-import com.cloud.agent.api.ListHostDeviceCommand;
 import org.apache.cloudstack.storage.datastore.db.PrimaryDataStoreDao;
 import org.apache.cloudstack.storage.to.PrimaryDataStoreTO;
 import org.apache.cloudstack.storage.to.TemplateObjectTO;
@@ -110,6 +107,7 @@ import org.xml.sax.SAXException;
 import com.cloud.agent.api.Answer;
 import com.cloud.agent.api.Command;
 import com.cloud.agent.api.HostVmStateReportEntry;
+import com.cloud.agent.api.ListHostDeviceCommand;
 import com.cloud.agent.api.PingCommand;
 import com.cloud.agent.api.PingRoutingCommand;
 import com.cloud.agent.api.PingRoutingWithNwGroupsCommand;
@@ -166,8 +164,9 @@ import com.cloud.hypervisor.kvm.resource.LibvirtVMDef.RngDef;
 import com.cloud.hypervisor.kvm.resource.LibvirtVMDef.RngDef.RngBackendModel;
 import com.cloud.hypervisor.kvm.resource.LibvirtVMDef.SCSIDef;
 import com.cloud.hypervisor.kvm.resource.LibvirtVMDef.SerialDef;
-import com.cloud.hypervisor.kvm.resource.LibvirtVMDef.TermPolicy;
+import com.cloud.hypervisor.kvm.resource.LibvirtVMDef.SoundDef;
 import com.cloud.hypervisor.kvm.resource.LibvirtVMDef.TPMDef;
+import com.cloud.hypervisor.kvm.resource.LibvirtVMDef.TermPolicy;
 import com.cloud.hypervisor.kvm.resource.LibvirtVMDef.VideoDef;
 import com.cloud.hypervisor.kvm.resource.LibvirtVMDef.WatchDogDef;
 import com.cloud.hypervisor.kvm.resource.LibvirtVMDef.WatchDogDef.WatchDogAction;
@@ -187,8 +186,8 @@ import com.cloud.network.Networks.IsolationType;
 import com.cloud.network.Networks.RouterPrivateIpStrategy;
 import com.cloud.network.Networks.TrafficType;
 import com.cloud.resource.AgentStatusUpdater;
-import com.cloud.resource.ResourceStatusUpdater;
 import com.cloud.resource.RequestWrapper;
+import com.cloud.resource.ResourceStatusUpdater;
 import com.cloud.resource.ServerResource;
 import com.cloud.resource.ServerResourceBase;
 import com.cloud.storage.JavaStorageLayer;
@@ -214,7 +213,6 @@ import com.cloud.vm.VirtualMachine;
 import com.cloud.vm.VirtualMachine.PowerState;
 import com.cloud.vm.VmDetailConstants;
 import com.google.gson.Gson;
-import com.google.gson.JsonParser;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 
@@ -417,6 +415,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
     protected String guestCpuModel;
     protected boolean noKvmClock;
     protected String videoHw;
+    protected String sound;
     protected int videoRam;
     protected Pair<Integer,Integer> hostOsVersion;
     protected int migrateSpeed;
@@ -1179,6 +1178,8 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
         manualCpuSpeed = AgentPropertiesFileHandler.getPropertyValue(AgentProperties.HOST_CPU_MANUAL_SPEED_MHZ);
 
         videoHw = AgentPropertiesFileHandler.getPropertyValue(AgentProperties.VM_VIDEO_HARDWARE);
+
+        sound = AgentPropertiesFileHandler.getPropertyValue(AgentProperties.SOUND);
 
         videoRam = AgentPropertiesFileHandler.getPropertyValue(AgentProperties.VM_VIDEO_RAM);
 
@@ -2820,6 +2821,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
         devices.addDevice(createConsoleDef());
         devices.addDevice(createGraphicDef(vmTO));
         devices.addDevice(createTabletInputDef());
+        devices.addDevice(createSoundDef(vmTO));
 
         if (isGuestAarch64()) {
             createArm64UsbDef(devices);
@@ -2934,6 +2936,16 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
             }
         }
         return new VideoDef(videoHw, videoRam);
+    }
+
+    protected SoundDef createSoundDef(VirtualMachineTO vmTO) {
+        Map<String, String> details = vmTO.getDetails();
+        String sound = this.sound;
+        if (details != null) {
+            if (details.containsKey(VmDetailConstants.SOUND)) {
+            }
+        }
+        return new SoundDef(sound);
     }
 
     protected RngDef createRngDef() {

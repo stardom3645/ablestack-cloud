@@ -343,13 +343,24 @@ export default {
         {
           api: 'migrateVirtualMachine',
           icon: 'drag-outlined',
-          label: 'label.migrate.instance.to.host',
+          label: 'label.migrate.instance.to.ps',
           docHelp: 'adminguide/virtual_machines.html#moving-vms-between-hosts-manual-live-migration',
           dataView: true,
-          show: (record, store) => { return ['Running'].includes(record.state) && ['Admin'].includes(store.userInfo.roletype) },
-          disabled: (record) => { return record.hostcontrolstate === 'Offline' },
-          popup: true,
-          component: shallowRef(defineAsyncComponent(() => import('@/views/compute/MigrateWizard.vue')))
+          show: (record, store) => {
+            return ['Running'].includes(record.state) && ['Admin'].includes(store.userInfo.roletype)
+          },
+          disabled: (record) => {
+            return record.details && 'extraconfig-1' in record.details
+          },
+          tooltip: (record) => {
+            if (record.details && 'extraconfig-1' in record.details) {
+              return 'label.enable.host'
+            } else {
+              return 'label.migrate.instance.to.ps'
+            }
+          },
+          component: shallowRef(defineAsyncComponent(() => import('@/views/compute/MigrateWizard.vue'))),
+          popup: true
         },
         {
           api: 'migrateVirtualMachine',
@@ -358,8 +369,19 @@ export default {
           message: 'message.migrate.instance.to.ps',
           docHelp: 'adminguide/virtual_machines.html#moving-vms-between-hosts-manual-live-migration',
           dataView: true,
-          show: (record, store) => { return ['Stopped'].includes(record.state) && ['Admin'].includes(store.userInfo.roletype) },
-          disabled: (record) => { return record.hostcontrolstate === 'Offline' },
+          show: (record, store) => {
+            return ['Stopped'].includes(record.state) && ['Admin'].includes(store.userInfo.roletype)
+          },
+          disabled: (record) => {
+            return record.hostcontrolstate === 'Offline' || (record.details && 'extraconfig-1' in record.details)
+          },
+          tooltip: (record) => {
+            if (record.hostcontrolstate === 'Offline' || (record.details && 'extraconfig-1' in record.details)) {
+              return 'label.enable.host'
+            } else {
+              return 'label.migrate.instance.to.ps'
+            }
+          },
           component: shallowRef(defineAsyncComponent(() => import('@/views/compute/MigrateVMStorage'))),
           popup: true
         },
