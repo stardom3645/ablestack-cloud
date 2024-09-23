@@ -46,7 +46,7 @@ public interface VmDetailConstants {
     // KVM specific, custom virtual GPU hardware
     String SOUND= "sound";
     String VIDEO_HARDWARE = "video.hardware";
-    String EXTRACONFIG_VIDEO = "extraconfig_video";
+    String VIDEO_HARDWARE_2 = "video.hardware_2";
     String VIDEO_RAM = "video.ram";
 
     //KVM specific, loop threads for block IO requests
