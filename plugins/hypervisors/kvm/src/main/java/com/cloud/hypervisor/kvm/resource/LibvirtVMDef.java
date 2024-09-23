@@ -1943,7 +1943,7 @@ public class LibvirtVMDef {
 
     public static class SoundDef {
         private String _SoundModel;
-
+    
         public SoundDef(String soundModel) {
             _SoundModel = soundModel;
         }
@@ -1951,13 +1951,12 @@ public class LibvirtVMDef {
         @Override
         public String toString() {
             StringBuilder soundBuilder = new StringBuilder();
-            if (_SoundModel != null && !_SoundModel.isEmpty()){
+            if (_SoundModel != null && !_SoundModel.isEmpty()) {
                 soundBuilder.append("<devices>\n");
-                soundBuilder.append("<model type='" + _SoundModel + "/>\n");
+                soundBuilder.append("<sound model='").append(_SoundModel).append("'/>\n");
                 soundBuilder.append("</devices>\n");
-                return soundBuilder.toString();
             }
-            return "";
+            return soundBuilder.toString();
         }
     }
 
