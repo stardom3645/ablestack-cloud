@@ -1915,11 +1915,11 @@ public class LibvirtVMDef {
         }
     }
 
-    public static class VideoDef_2 {
+    public static class VideoDef2 {
         private String _videoModel;
         private int _videoRam;
 
-        public VideoDef_2(String videoModel, int videoRam) {
+        public VideoDef2(String videoModel, int videoRam) {
             _videoModel = videoModel;
             _videoRam = videoRam;
         }

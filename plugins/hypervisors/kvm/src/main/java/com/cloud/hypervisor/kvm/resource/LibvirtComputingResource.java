@@ -169,7 +169,7 @@ import com.cloud.hypervisor.kvm.resource.LibvirtVMDef.SoundDef;
 import com.cloud.hypervisor.kvm.resource.LibvirtVMDef.TPMDef;
 import com.cloud.hypervisor.kvm.resource.LibvirtVMDef.TermPolicy;
 import com.cloud.hypervisor.kvm.resource.LibvirtVMDef.VideoDef;
-import com.cloud.hypervisor.kvm.resource.LibvirtVMDef.VideoDef_2;
+import com.cloud.hypervisor.kvm.resource.LibvirtVMDef.VideoDef2;
 import com.cloud.hypervisor.kvm.resource.LibvirtVMDef.WatchDogDef;
 import com.cloud.hypervisor.kvm.resource.LibvirtVMDef.WatchDogDef.WatchDogAction;
 import com.cloud.hypervisor.kvm.resource.LibvirtVMDef.WatchDogDef.WatchDogModel;
@@ -2823,7 +2823,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
         devices.addDevice(createChannelDef(vmTO));
         devices.addDevice(createWatchDogDef());
         devices.addDevice(createVideoDef(vmTO));
-        devices.addDevice(createVideoDef_2(vmTO));
+        devices.addDevice(createVideoDef2(vmTO));
         devices.addDevice(createConsoleDef());
         devices.addDevice(createGraphicDef(vmTO));
         devices.addDevice(createTabletInputDef());
@@ -2944,7 +2944,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
         return new VideoDef(videoHw, videoRam);
     }
 
-    protected VideoDef_2 createVideoDef_2(VirtualMachineTO vmTO) {
+    protected VideoDef2 createVideoDef2(VirtualMachineTO vmTO) {
         Map<String, String> details = vmTO.getDetails();
         String videoHw2 = this.videoHw2;
         int videoRam = this.videoRam;
@@ -2957,7 +2957,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
                 videoRam = NumbersUtil.parseInt(value, videoRam);
             }
         }
-        return new VideoDef_2(videoHw2, videoRam);
+        return new VideoDef2(videoHw2, videoRam);
     }
 
     protected SoundDef createSoundDef(VirtualMachineTO vmTO) {
