@@ -1943,7 +1943,6 @@ public class LibvirtVMDef {
 
     public static class SoundDef {
         private String _SoundModel;
-    
         public SoundDef(String soundModel) {
             _SoundModel = soundModel;
         }
