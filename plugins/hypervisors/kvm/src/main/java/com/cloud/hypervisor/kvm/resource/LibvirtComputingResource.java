@@ -2932,6 +2932,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
         Map<String, String> details = vmTO.getDetails();
         String videoHw = this.videoHw;
         int videoRam = this.videoRam;
+
         if (details != null) {
             if (details.containsKey(VmDetailConstants.VIDEO_HARDWARE)) {
                 videoHw = details.get(VmDetailConstants.VIDEO_HARDWARE);
@@ -2948,6 +2949,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
         Map<String, String> details = vmTO.getDetails();
         String videoHw2 = this.videoHw2;
         int videoRam = this.videoRam;
+
         if (details != null) {
             if (details.containsKey(VmDetailConstants.VIDEO_HARDWARE_2)) {
                 videoHw2 = details.get(VmDetailConstants.VIDEO_HARDWARE_2);
@@ -2963,7 +2965,11 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
     protected SoundDef createSoundDef(VirtualMachineTO vmTO) {
         Map<String, String> details = vmTO.getDetails();
         String sound = this.sound;
-            details.containsKey(VmDetailConstants.SOUND);
+        if (details != null) {
+            if (details.containsKey(VmDetailConstants.SOUND)) {
+                sound = details.get(VmDetailConstants.SOUND);
+            }
+        }
         return new SoundDef(sound);
     }
 
