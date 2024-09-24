@@ -39,7 +39,13 @@ import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 
+import com.cloud.bgp.ASNumber;
+import com.cloud.bgp.ASNumberRange;
+import com.cloud.dc.ASNumberRangeVO;
+import com.cloud.dc.ASNumberVO;
 import com.cloud.dc.VlanDetailsVO;
+import com.cloud.dc.dao.ASNumberDao;
+import com.cloud.dc.dao.ASNumberRangeDao;
 import com.cloud.dc.dao.VlanDetailsDao;
 import com.cloud.hypervisor.Hypervisor;
 import com.cloud.storage.BucketVO;
@@ -61,13 +67,17 @@ import org.apache.cloudstack.api.response.AccountResponse;
 import org.apache.cloudstack.api.response.ApplicationLoadBalancerInstanceResponse;
 import org.apache.cloudstack.api.response.ApplicationLoadBalancerResponse;
 import org.apache.cloudstack.api.response.ApplicationLoadBalancerRuleResponse;
+import org.apache.cloudstack.api.response.ASNRangeResponse;
+import org.apache.cloudstack.api.response.ASNumberResponse;
 import org.apache.cloudstack.api.response.AsyncJobResponse;
 import org.apache.cloudstack.api.response.AutoScalePolicyResponse;
 import org.apache.cloudstack.api.response.AutoScaleVmGroupResponse;
 import org.apache.cloudstack.api.response.AutoScaleVmProfileResponse;
 import org.apache.cloudstack.api.response.BackupOfferingResponse;
+import org.apache.cloudstack.api.response.BackupRepositoryResponse;
 import org.apache.cloudstack.api.response.BackupResponse;
 import org.apache.cloudstack.api.response.BackupScheduleResponse;
+import org.apache.cloudstack.api.response.BgpPeerResponse;
 import org.apache.cloudstack.api.response.BucketResponse;
 import org.apache.cloudstack.api.response.CapabilityResponse;
 import org.apache.cloudstack.api.response.CapacityResponse;
@@ -89,6 +99,7 @@ import org.apache.cloudstack.api.response.DomainResponse;
 import org.apache.cloudstack.api.response.DomainRouterResponse;
 import org.apache.cloudstack.api.response.EventResponse;
 import org.apache.cloudstack.api.response.ExtractResponse;
+import org.apache.cloudstack.api.response.SharedFSResponse;
 import org.apache.cloudstack.api.response.FirewallResponse;
 import org.apache.cloudstack.api.response.FirewallRuleResponse;
 import org.apache.cloudstack.api.response.GlobalLoadBalancerResponse;
@@ -108,6 +119,7 @@ import org.apache.cloudstack.api.response.InternalLoadBalancerElementResponse;
 import org.apache.cloudstack.api.response.IpForwardingRuleResponse;
 import org.apache.cloudstack.api.response.IpQuarantineResponse;
 import org.apache.cloudstack.api.response.IpRangeResponse;
+import org.apache.cloudstack.api.response.Ipv4RouteResponse;
 import org.apache.cloudstack.api.response.Ipv6RouteResponse;
 import org.apache.cloudstack.api.response.IsolationMethodResponse;
 import org.apache.cloudstack.api.response.LBHealthCheckPolicyResponse;
@@ -184,8 +196,10 @@ import org.apache.cloudstack.api.response.VpnUsersResponse;
 import org.apache.cloudstack.api.response.ZoneResponse;
 import org.apache.cloudstack.backup.Backup;
 import org.apache.cloudstack.backup.BackupOffering;
+import org.apache.cloudstack.backup.BackupRepository;
 import org.apache.cloudstack.backup.BackupSchedule;
 import org.apache.cloudstack.backup.dao.BackupOfferingDao;
+import org.apache.cloudstack.backup.dao.BackupRepositoryDao;
 import org.apache.cloudstack.config.Configuration;
 import org.apache.cloudstack.config.ConfigurationGroup;
 import org.apache.cloudstack.config.ConfigurationSubGroup;
@@ -202,6 +216,9 @@ import org.apache.cloudstack.engine.subsystem.api.storage.SnapshotInfo;
 import org.apache.cloudstack.framework.jobs.AsyncJob;
 import org.apache.cloudstack.framework.jobs.AsyncJobManager;
 import org.apache.cloudstack.management.ManagementServerHost;
+import org.apache.cloudstack.network.BgpPeerVO;
+import org.apache.cloudstack.network.RoutedIpv4Manager;
+import org.apache.cloudstack.network.dao.BgpPeerDao;
 import org.apache.cloudstack.network.lb.ApplicationLoadBalancerRule;
 import org.apache.cloudstack.region.PortableIp;
 import org.apache.cloudstack.region.PortableIpRange;
@@ -213,6 +230,8 @@ import org.apache.cloudstack.storage.datastore.db.PrimaryDataStoreDao;
 import org.apache.cloudstack.storage.datastore.db.SnapshotDataStoreDao;
 import org.apache.cloudstack.storage.datastore.db.SnapshotDataStoreVO;
 import org.apache.cloudstack.storage.datastore.db.StoragePoolVO;
+import org.apache.cloudstack.storage.sharedfs.SharedFS;
+import org.apache.cloudstack.storage.sharedfs.query.vo.SharedFSJoinVO;
 import org.apache.cloudstack.storage.object.Bucket;
 import org.apache.cloudstack.storage.object.ObjectStore;
 import org.apache.cloudstack.usage.Usage;
@@ -346,6 +365,7 @@ import com.cloud.network.vpc.StaticRoute;
 import com.cloud.network.vpc.Vpc;
 import com.cloud.network.vpc.VpcOffering;
 import com.cloud.network.vpc.VpcVO;
+import com.cloud.network.vpc.dao.VpcOfferingDao;
 import com.cloud.offering.DiskOffering;
 import com.cloud.offering.NetworkOffering;
 import com.cloud.offering.NetworkOffering.Detail;
@@ -487,9 +507,21 @@ public class ApiResponseHelper implements ResponseGenerator {
     UserDataDao userDataDao;
     @Inject
     VlanDetailsDao vlanDetailsDao;
+    @Inject
+    BackupRepositoryDao backupRepositoryDao;
+    @Inject
+    private ASNumberRangeDao asNumberRangeDao;
+    @Inject
+    private ASNumberDao asNumberDao;
 
     @Inject
     ObjectStoreDao _objectStoreDao;
+    @Inject
+    VpcOfferingDao vpcOfferingDao;
+    @Inject
+    BgpPeerDao bgpPeerDao;
+    @Inject
+    RoutedIpv4Manager routedIpv4Manager;
 
     @Override
     public UserResponse createUserResponse(User user) {
@@ -796,6 +828,7 @@ public class ApiResponseHelper implements ResponseGenerator {
         if (domain != null) {
             vmSnapshotResponse.setDomainId(domain.getUuid());
             vmSnapshotResponse.setDomainName(domain.getName());
+            vmSnapshotResponse.setDomainPath(domain.getPath());
         }
 
         List<? extends ResourceTag> tags = _resourceTagDao.listBy(vmSnapshot.getId(), ResourceObjectType.VMSnapshot);
@@ -1506,6 +1539,9 @@ public class ApiResponseHelper implements ResponseGenerator {
         clusterResponse.setCpuOvercommitRatio(cpuOvercommitRatio);
         clusterResponse.setMemoryOvercommitRatio(memoryOvercommitRatio);
         clusterResponse.setResourceDetails(_clusterDetailsDao.findDetails(cluster.getId()));
+        if (cluster.getArch() != null) {
+            clusterResponse.setArch(cluster.getArch().getType());
+        }
 
         if (showCapacities != null && showCapacities) {
             List<SummedCapacity> capacities = ApiDBUtils.getCapacityByClusterPodZone(null, null, cluster.getId());
@@ -2252,6 +2288,7 @@ public class ApiResponseHelper implements ResponseGenerator {
 
             response.setDomainId(securityGroup.getDomainUuid());
             response.setDomainName(securityGroup.getDomainName());
+            response.setDomainPath(securityGroup.getDomainPath());
 
             for (SecurityRule securityRule : securityRules) {
                 SecurityGroupRuleResponse securityGroupData = new SecurityGroupRuleResponse();
@@ -2388,7 +2425,9 @@ public class ApiResponseHelper implements ResponseGenerator {
         response.setForVpc(_configMgr.isOfferingForVpc(offering));
         response.setForTungsten(offering.isForTungsten());
         response.setForNsx(offering.isForNsx());
-        response.setNsxMode(offering.getNsxMode());
+        if (offering.getNetworkMode() != null) {
+            response.setNetworkMode(offering.getNetworkMode().name());
+        }
         response.setServices(serviceResponses);
         //set network offering details
         Map<Detail, String> details = _ntwkModel.getNtwkOffDetails(offering.getId());
@@ -2491,7 +2530,6 @@ public class ApiResponseHelper implements ResponseGenerator {
             }
         }
         response.setReservedIpRange(reservation);
-
         // return vlan information only to Root admin
         if (network.getBroadcastUri() != null && view == ResponseView.Full) {
             String broadcastUri = network.getBroadcastUri().toString();
@@ -2538,6 +2576,13 @@ public class ApiResponseHelper implements ResponseGenerator {
             response.setIsPersistent(networkOffering.isPersistent());
             if (Network.GuestType.Isolated.equals(network.getGuestType()) && network.getVpcId() == null) {
                 response.setEgressDefaultPolicy(networkOffering.isEgressDefaultPolicy());
+            }
+            ASNumberVO asNumberVO = networkOffering.isForVpc() ?
+                    asNumberDao.findByZoneAndVpcId(network.getDataCenterId(), network.getVpcId()) :
+                    asNumberDao.findByZoneAndNetworkId(network.getDataCenterId(), network.getId());
+            if (Objects.nonNull(asNumberVO)) {
+                response.setAsNumberId(asNumberVO.getUuid());
+                response.setAsNumber(asNumberVO.getAsNumber());
             }
         }
 
@@ -2656,6 +2701,7 @@ public class ApiResponseHelper implements ResponseGenerator {
             if (domain != null) {
                 response.setDomainId(domain.getUuid());
                 response.setDomainName(domain.getName());
+                response.setDomainPath(domain.getPath());
             }
 
         }
@@ -2717,6 +2763,29 @@ public class ApiResponseHelper implements ResponseGenerator {
         }
         response.setBytesReceived(bytesReceived);
         response.setBytesSent(bytesSent);
+
+        if (networkOfferingDao.isRoutedNetwork(network.getNetworkOfferingId())) {
+            if (routedIpv4Manager.isDynamicRoutedNetwork(network)) {
+                response.setIpv4Routing(Network.Routing.Dynamic.name());
+            } else {
+                response.setIpv4Routing(Network.Routing.Static.name());
+            }
+            response.setIpv4Routes(new LinkedHashSet<>());
+            List<IPAddressVO> ips = network.getVpcId() != null ? userIpAddressDao.listByAssociatedVpc(network.getVpcId(), true):
+                    userIpAddressDao.listByAssociatedNetwork(network.getId(), true);
+            for (IpAddress ip : ips) {
+                Ipv4RouteResponse route = new Ipv4RouteResponse(network.getCidr(), ip.getAddress().addr());
+                response.addIpv4Route(route);
+            }
+
+            if (view == ResponseView.Full) {
+                List<BgpPeerVO> bgpPeerVOS = bgpPeerDao.listNonRevokeByNetworkId(network.getId());
+                for (BgpPeerVO bgpPeerVO : bgpPeerVOS) {
+                    BgpPeerResponse bgpPeerResponse = routedIpv4Manager.createBgpPeerResponse(bgpPeerVO);
+                    response.addBgpPeer(bgpPeerResponse);
+                }
+            }
+        }
 
         if (networkOfferingDao.isIpv6Supported(network.getNetworkOfferingId())) {
             response.setInternetProtocol(networkOfferingDao.getNetworkOfferingInternetProtocol(network.getNetworkOfferingId(), NetUtils.InternetProtocol.IPv4).toString());
@@ -2782,19 +2851,19 @@ public class ApiResponseHelper implements ResponseGenerator {
         List<String> cidrs = ApiDBUtils.findFirewallSourceCidrs(fwRule.getId());
         response.setCidrList(StringUtils.join(cidrs, ","));
 
-        if(fwRule.getTrafficType() == FirewallRule.TrafficType.Egress){
-            List<String> destCidrs = ApiDBUtils.findFirewallDestCidrs(fwRule.getId());
-            response.setDestCidr(StringUtils.join(destCidrs,","));
-        }
+        List<String> destCidrs = ApiDBUtils.findFirewallDestCidrs(fwRule.getId());
+        response.setDestCidr(StringUtils.join(destCidrs,","));
 
         if (fwRule.getTrafficType() == FirewallRule.TrafficType.Ingress) {
-            IpAddress ip = ApiDBUtils.findIpAddressById(fwRule.getSourceIpAddressId());
-            response.setPublicIpAddressId(ip.getUuid());
-            response.setPublicIpAddress(ip.getAddress().addr());
+            if (fwRule.getSourceIpAddressId() != null) {
+                IpAddress ip = ApiDBUtils.findIpAddressById(fwRule.getSourceIpAddressId());
+                response.setPublicIpAddressId(ip.getUuid());
+                response.setPublicIpAddress(ip.getAddress().addr());
+            }
         }
 
-            Network network = ApiDBUtils.findNetworkById(fwRule.getNetworkId());
-            response.setNetworkId(network.getUuid());
+        Network network = ApiDBUtils.findNetworkById(fwRule.getNetworkId());
+        response.setNetworkId(network.getUuid());
 
         FirewallRule.State state = fwRule.getState();
         String stateToSet = state.toString();
@@ -2805,6 +2874,7 @@ public class ApiResponseHelper implements ResponseGenerator {
         response.setIcmpCode(fwRule.getIcmpCode());
         response.setIcmpType(fwRule.getIcmpType());
         response.setForDisplay(fwRule.isDisplay());
+        response.setTrafficType(fwRule.getTrafficType().toString());
 
         // set tag information
         List<? extends ResourceTag> tags = ApiDBUtils.listByResourceTypeAndId(ResourceObjectType.FirewallRule, fwRule.getId());
@@ -2904,6 +2974,7 @@ public class ApiResponseHelper implements ResponseGenerator {
         Domain domain = ApiDBUtils.findDomainById(object.getDomainId());
         response.setDomainId(domain.getUuid());
         response.setDomainName(domain.getName());
+        response.setDomainPath(domain.getPath());
     }
 
     private void populateOwner(ControlledViewEntityResponse response, ControlledEntity object) {
@@ -2921,6 +2992,7 @@ public class ApiResponseHelper implements ResponseGenerator {
         Domain domain = ApiDBUtils.findDomainById(object.getDomainId());
         response.setDomainId(domain.getUuid());
         response.setDomainName(domain.getName());
+        response.setDomainPath(domain.getPath());
     }
 
     public static void populateOwner(ControlledViewEntityResponse response, ControlledViewEntity object) {
@@ -2934,6 +3006,7 @@ public class ApiResponseHelper implements ResponseGenerator {
 
         response.setDomainId(object.getDomainUuid());
         response.setDomainName(object.getDomainName());
+        response.setDomainPath(object.getDomainPath());
     }
 
     private void populateAccount(ControlledEntityResponse response, long accountId) {
@@ -2960,6 +3033,7 @@ public class ApiResponseHelper implements ResponseGenerator {
 
         response.setDomainId(domain.getUuid());
         response.setDomainName(domain.getName());
+        response.setDomainPath(domain.getPath());
     }
 
     @Override
@@ -3384,7 +3458,11 @@ public class ApiResponseHelper implements ResponseGenerator {
         response.setUsesDistributedRouter(vpc.usesDistributedRouter());
         response.setRedundantRouter(vpc.isRedundant());
         response.setRegionLevelVpc(vpc.isRegionLevelVpc());
-
+        ASNumberVO asNumberVO = asNumberDao.findByZoneAndVpcId(vpc.getZoneId(), vpc.getId());
+        if (Objects.nonNull(asNumberVO)) {
+            response.setAsNumberId(asNumberVO.getUuid());
+            response.setAsNumber(asNumberVO.getAsNumber());
+        }
         Map<Service, Set<Provider>> serviceProviderMap = ApiDBUtils.listVpcOffServices(vpc.getVpcOfferingId());
         List<ServiceResponse> serviceResponses = new ArrayList<ServiceResponse>();
         for (Map.Entry<Service,Set<Provider>>entry : serviceProviderMap.entrySet()) {
@@ -3442,6 +3520,31 @@ public class ApiResponseHelper implements ResponseGenerator {
         response.setDns2(vpc.getIp4Dns2());
         response.setIpv6Dns1(vpc.getIp6Dns1());
         response.setIpv6Dns2(vpc.getIp6Dns2());
+
+        // add IPv4 routes
+        if (vpcOfferingDao.isRoutedVpc(vpc.getVpcOfferingId())) {
+            if (Objects.nonNull(asNumberVO)) {
+                response.setIpv4Routing(Network.Routing.Dynamic.name());
+            } else {
+                response.setIpv4Routing(Network.Routing.Static.name());
+            }
+            response.setIpv4Routes(new LinkedHashSet<>());
+            List<IPAddressVO> ips = userIpAddressDao.listByAssociatedVpc(vpc.getId(), true);
+            for (Network network : networkDao.listByVpc(vpc.getId())) {
+                for (IPAddressVO ip : ips) {
+                    Ipv4RouteResponse route = new Ipv4RouteResponse(network.getCidr(), ip.getAddress().addr());
+                    response.addIpv4Route(route);
+                }
+            }
+            if (view == ResponseView.Full) {
+                List<BgpPeerVO> bgpPeerVOS = bgpPeerDao.listNonRevokeByVpcId(vpc.getId());
+                for (BgpPeerVO bgpPeerVO : bgpPeerVOS) {
+                    BgpPeerResponse bgpPeerResponse = routedIpv4Manager.createBgpPeerResponse(bgpPeerVO);
+                    response.addBgpPeer(bgpPeerResponse);
+                }
+            }
+        }
+
         response.setObjectName("vpc");
         return response;
     }
@@ -3898,6 +4001,7 @@ public class ApiResponseHelper implements ResponseGenerator {
         if (domain != null) {
             usageRecResponse.setDomainId(domain.getUuid());
             usageRecResponse.setDomainName(domain.getName());
+            usageRecResponse.setDomainPath(domain.getPath());
         }
 
         if (usageRecord.getZoneId() != null) {
@@ -4695,6 +4799,7 @@ public class ApiResponseHelper implements ResponseGenerator {
         if (domain != null) {
             response.setDomainId(domain.getUuid());
             response.setDomainName(domain.getName());
+            response.setDomainPath(domain.getPath());
         }
 
         response.setObjectName("affinitygroup");
@@ -5279,5 +5384,84 @@ public class ApiResponseHelper implements ResponseGenerator {
         bucketResponse.setProvider(objectStoreVO.getProviderName());
         populateAccount(bucketResponse, bucket.getAccountId());
         return bucketResponse;
+    }
+
+    @Override
+    public ASNRangeResponse createASNumberRangeResponse(ASNumberRange asnRange) {
+        ASNRangeResponse response = new ASNRangeResponse();
+        response.setId(asnRange.getUuid());
+        DataCenterVO zone = ApiDBUtils.findZoneById(asnRange.getDataCenterId());
+        if (zone != null) {
+            response.setZoneId(zone.getUuid());
+        }
+        response.setStartASNumber(asnRange.getStartASNumber());
+        response.setEndASNumber(asnRange.getEndASNumber());
+        response.setCreated(asnRange.getCreated());
+        response.setObjectName("asnumberrange");
+        return response;
+    }
+
+    @Override
+    public ASNumberResponse createASNumberResponse(ASNumber asn) {
+        ASNumberResponse response = new ASNumberResponse();
+        response.setId(asn.getUuid());
+        if (asn.getAccountId() != null) {
+            Account account = ApiDBUtils.findAccountById(asn.getAccountId());
+            response.setAccountId(account.getUuid());
+            response.setAccountName(account.getAccountName());
+        }
+        if (asn.getDomainId() != null) {
+            DomainVO domain = ApiDBUtils.findDomainById(asn.getDomainId());
+            response.setDomainId(domain.getUuid());
+            response.setDomainName(domain.getName());
+        }
+        DataCenterVO zone = ApiDBUtils.findZoneById(asn.getDataCenterId());
+        response.setZoneId(zone.getUuid());
+        response.setZoneName(zone.getName());
+        response.setAsNumber(asn.getAsNumber());
+        ASNumberRangeVO range = asNumberRangeDao.findById(asn.getAsNumberRangeId());
+        response.setAsNumberRangeId(range.getUuid());
+        String rangeText = String.format("%s-%s", range.getStartASNumber(), range.getEndASNumber());
+        response.setAsNumberRange(rangeText);
+        response.setAllocated(asn.getAllocatedTime());
+        response.setAllocationState(asn.isAllocated() ? "Allocated" : "Free");
+        if (asn.getVpcId() != null) {
+            VpcVO vpc = ApiDBUtils.findVpcById(asn.getVpcId());
+            response.setVpcId(vpc.getUuid());
+            response.setVpcName(vpc.getName());
+        } else if (asn.getNetworkId() != null) {
+            NetworkVO network = ApiDBUtils.findNetworkById(asn.getNetworkId());
+            response.setAssociatedNetworkId(network.getUuid());
+            response.setAssociatedNetworkName(network.getName());
+        }
+        response.setCreated(asn.getCreated());
+        response.setObjectName("asnumber");
+        return response;
+    }
+
+    @Override
+    public BackupRepositoryResponse createBackupRepositoryResponse(BackupRepository backupRepository) {
+        BackupRepositoryResponse response = new BackupRepositoryResponse();
+        response.setName(backupRepository.getName());
+        response.setId(backupRepository.getUuid());
+        response.setCreated(backupRepository.getCreated());
+        response.setAddress(backupRepository.getAddress());
+        response.setProviderName(backupRepository.getProvider());
+        response.setType(backupRepository.getType());
+        response.setMountOptions(backupRepository.getMountOptions());
+        response.setCapacityBytes(backupRepository.getCapacityBytes());
+        response.setObjectName("backuprepository");
+        DataCenter zone = ApiDBUtils.findZoneById(backupRepository.getZoneId());
+        if (zone != null) {
+            response.setZoneId(zone.getUuid());
+            response.setZoneName(zone.getName());
+        }
+        return response;
+    }
+
+    @Override
+    public SharedFSResponse createSharedFSResponse(ResponseView view, SharedFS sharedFS) {
+        SharedFSJoinVO sharedFSView = ApiDBUtils.newSharedFSView(sharedFS);
+        return ApiDBUtils.newSharedFSResponse(view, sharedFSView);
     }
 }

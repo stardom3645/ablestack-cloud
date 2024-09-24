@@ -222,6 +222,7 @@ import com.cloud.vm.dao.UserVmDao;
 import com.cloud.vm.dao.UserVmDetailsDao;
 import com.cloud.vm.dao.VMInstanceDao;
 import java.lang.reflect.Field;
+import java.security.cert.CertificateException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -271,6 +272,11 @@ import org.apache.cloudstack.api.command.admin.affinitygroup.UpdateVMAffinityGro
 import org.apache.cloudstack.api.command.admin.alert.GenerateAlertCmd;
 import org.apache.cloudstack.api.command.admin.autoscale.CreateCounterCmd;
 import org.apache.cloudstack.api.command.admin.autoscale.DeleteCounterCmd;
+import org.apache.cloudstack.api.command.admin.bgp.CreateASNRangeCmd;
+import org.apache.cloudstack.api.command.admin.bgp.DeleteASNRangeCmd;
+import org.apache.cloudstack.api.command.admin.bgp.ListASNRangesCmd;
+import org.apache.cloudstack.api.command.user.bgp.ListASNumbersCmd;
+import org.apache.cloudstack.api.command.admin.bgp.ReleaseASNumberCmd;
 import org.apache.cloudstack.api.command.admin.cluster.AddClusterCmd;
 import org.apache.cloudstack.api.command.admin.cluster.DeleteClusterCmd;
 import org.apache.cloudstack.api.command.admin.cluster.ListClustersCmd;
@@ -4139,6 +4145,11 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
         cmdList.add(RemoveSecondaryStorageSelectorCmd.class);
         cmdList.add(ListAffectedVmsForStorageScopeChangeCmd.class);
 
+        cmdList.add(CreateASNRangeCmd.class);
+        cmdList.add(ListASNRangesCmd.class);
+        cmdList.add(DeleteASNRangeCmd.class);
+        cmdList.add(ListASNumbersCmd.class);
+        cmdList.add(ReleaseASNumberCmd.class);
 
         // Out-of-band management APIs for admins
         cmdList.add(EnableOutOfBandManagementForHostCmd.class);
@@ -4173,6 +4184,7 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
         cmdList.add(UpdateBucketCmd.class);
         cmdList.add(DeleteBucketCmd.class);
         cmdList.add(ListBucketsCmd.class);
+
         return cmdList;
     }
 
@@ -4593,6 +4605,7 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
         final boolean allowUserViewDestroyedVM = (QueryService.AllowUserViewDestroyedVM.valueIn(caller.getId()) | _accountService.isAdmin(caller.getId()));
         final boolean allowUserExpungeRecoverVM = (UserVmManager.AllowUserExpungeRecoverVm.valueIn(caller.getId()) | _accountService.isAdmin(caller.getId()));
         final boolean allowUserExpungeRecoverVolume = (VolumeApiServiceImpl.AllowUserExpungeRecoverVolume.valueIn(caller.getId()) | _accountService.isAdmin(caller.getId()));
+        final boolean allowUserForceStopVM = (UserVmManager.AllowUserForceStopVm.valueIn(caller.getId()) | _accountService.isAdmin(caller.getId()));
 
         final boolean allowUserViewAllDomainAccounts = (QueryService.AllowUserViewAllDomainAccounts.valueIn(caller.getDomainId()));
 
@@ -4618,6 +4631,9 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
             regionSecondaryEnabled = true;
         }
 
+        final Integer fsVmMinCpu = Integer.parseInt(_configDao.getValue("sharedfsvm.min.cpu.count"));
+        final Integer fsVmMinRam = Integer.parseInt(_configDao.getValue("sharedfsvm.min.ram.size"));
+
         capabilities.put("securityGroupsEnabled", securityGroupsEnabled);
         capabilities.put("userPublicTemplateEnabled", userPublicTemplateEnabled);
         capabilities.put("cloudStackVersion", getVersion());
@@ -4632,6 +4648,7 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
         capabilities.put("allowUserExpungeRecoverVM", allowUserExpungeRecoverVM);
         capabilities.put("allowUserExpungeRecoverVolume", allowUserExpungeRecoverVolume);
         capabilities.put("allowUserViewAllDomainAccounts", allowUserViewAllDomainAccounts);
+        capabilities.put(ApiConstants.ALLOW_USER_FORCE_STOP_VM, allowUserForceStopVM);
         capabilities.put("kubernetesServiceEnabled", kubernetesServiceEnabled);
         capabilities.put("kubernetesClusterExperimentalFeaturesEnabled", kubernetesClusterExperimentalFeaturesEnabled);
         capabilities.put("customHypervisorDisplayName", HypervisorGuru.HypervisorCustomDisplayName.value());
@@ -4656,6 +4673,8 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
             capabilities.put("apiLimitInterval", apiLimitInterval);
             capabilities.put("apiLimitMax", apiLimitMax);
         }
+        capabilities.put(ApiConstants.SHAREDFSVM_MIN_CPU_COUNT, fsVmMinCpu);
+        capabilities.put(ApiConstants.SHAREDFSVM_MIN_RAM_SIZE, fsVmMinRam);
 
         return capabilities;
     }
@@ -4732,9 +4751,7 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
         final String key = cmd.getPrivateKey();
         String domainSuffix = cmd.getDomainSuffix();
 
-        if (cmd.getPrivateKey() != null && !_ksMgr.validateCertificate(certificate, key, cmd.getDomainSuffix())) {
-            throw new InvalidParameterValueException("Failed to pass certificate validation check");
-        }
+        validateCertificate(certificate, key, domainSuffix);
 
         if (cmd.getPrivateKey() != null) {
             _ksMgr.saveCertificate(ConsoleProxyManager.CERTIFICATE_NAME, certificate, key, domainSuffix);
@@ -4752,6 +4769,24 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
         return "Certificate has been successfully updated, if its the server certificate we would reboot all "
         + "running console proxy VMs and secondary storage VMs to propagate the new certificate, "
         + "please give a few minutes for console access and storage services service to be up and working again";
+    }
+
+    private void validateCertificate(String certificate, String key, String domainSuffix) {
+        if (key != null) {
+            Pair<Boolean, String> result = _ksMgr.validateCertificate(certificate, key, domainSuffix);
+            if (!result.first()) {
+                throw new InvalidParameterValueException(String.format("Failed to pass certificate validation check with error: %s", result.second()));
+            }
+        } else {
+            try {
+                logger.debug(String.format("Trying to validate the root certificate format"));
+                CertificateHelper.buildCertificate(certificate);
+            } catch (CertificateException e) {
+                String errorMsg = String.format("Failed to pass certificate validation check with error: Certificate validation failed due to exception: %s", e.getMessage());
+                logger.error(errorMsg);
+                throw new InvalidParameterValueException(errorMsg);
+            }
+        }
     }
 
     @Override

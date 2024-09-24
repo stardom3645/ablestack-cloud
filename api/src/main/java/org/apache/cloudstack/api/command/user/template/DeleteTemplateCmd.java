@@ -87,7 +87,7 @@ public class DeleteTemplateCmd extends BaseAsyncCmd {
     public void setIsDesktop(Boolean isDesktop) {
         this.isDesktop = isDesktop;
     }
-    
+
     public boolean getIsSystem() {
         return BooleanUtils.toBooleanDefaultIfNull(isSystem, false);
     }
