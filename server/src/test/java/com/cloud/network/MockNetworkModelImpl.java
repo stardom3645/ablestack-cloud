@@ -950,7 +950,7 @@ public class MockNetworkModelImpl extends ManagerBase implements NetworkModel {
     }
 
     @Override
-    public boolean checkSecurityGroupSupportForNetwork(DataCenter zone, List<Long> networkIds, List<Long> securityGroupsIds) {
+    public boolean checkSecurityGroupSupportForNetwork(Account account, DataCenter zone, List<Long> networkIds, List<Long> securityGroupsIds) {
         return false;
     }
 }
