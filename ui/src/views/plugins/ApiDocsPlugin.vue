@@ -103,11 +103,11 @@
             </a-alert>
             <a-result
               status="success"
-              :title="$t('label.download') + ' CloudStack CloudMonkey CLI'"
+              :title="$t('label.download') + ' ABLESTACK MOLD CLI'"
               sub-title="For API automation and orchestration"
             >
               <template #extra>
-                <a-button type="primary"><a href="https://github.com/apache/cloudstack-cloudmonkey/releases" target="_blank">{{ $t('label.download') }} CLI</a></a-button>
+                <a-button type="primary"><a href="https://images.ablecloud.io/mold/ablestack-mold-cli/" target="_blank">{{ $t('label.download') }} CLI</a></a-button>
                 <a-button><a href="https://github.com/apache/cloudstack-cloudmonkey/wiki/Usage" target="_blank">{{ $t('label.open.documentation') }} (CLI)</a></a-button>
                 <br/>
                 <br/>

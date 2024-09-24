@@ -137,14 +137,14 @@ public class BucketApiServiceImpl extends ManagerBase implements BucketApiServic
         ObjectStoreVO objectStoreVO = _objectStoreDao.findById(cmd.getObjectStoragePoolId());
         ObjectStoreEntity objectStore = (ObjectStoreEntity)_dataStoreMgr.getDataStore(objectStoreVO.getId(), DataStoreRole.Object);
         BucketVO bucket = _bucketDao.findById(cmd.getEntityId());
-        BucketTO bucketTO = null;
+        BucketTO bucketTO = new BucketTO(bucket);
         boolean objectLock = false;
         boolean bucketCreated = false;
         if(cmd.isObjectLocking()) {
             objectLock = true;
         }
         try {
-            objectStore.createBucket(bucket, objectLock);
+            bucketTO = new BucketTO(objectStore.createBucket(bucket, objectLock));
             bucketCreated = true;
 
             bucket = _bucketDao.findById(cmd.getEntityId());
