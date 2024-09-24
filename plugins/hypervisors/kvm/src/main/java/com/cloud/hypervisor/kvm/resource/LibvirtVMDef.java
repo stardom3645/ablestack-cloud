@@ -1901,12 +1901,13 @@ public class LibvirtVMDef {
         @Override
         public String toString() {
             StringBuilder videoBuilder = new StringBuilder();
-            if (_videoModel != null && !_videoModel.isEmpty()){
+            if (_videoModel != null && !_videoModel.isEmpty()) {
                 videoBuilder.append("<video>\n");
                 if (_videoRam != 0) {
-                    videoBuilder.append("<model type='" + _videoModel + "' vram='" + _videoRam + "'/>\n");
+                    videoBuilder.append("<model type='").append(_videoModel)
+                                .append("' vram='").append(_videoRam).append("'/>\n");
                 } else {
-                    videoBuilder.append("<model type='" + _videoModel + "'/>\n");
+                    videoBuilder.append("<model type='").append(_videoModel).append("'/>\n");
                 }
                 videoBuilder.append("</video>\n");
                 return videoBuilder.toString();
@@ -1927,12 +1928,13 @@ public class LibvirtVMDef {
         @Override
         public String toString() {
             StringBuilder videoBuilder = new StringBuilder();
-            if (_videoModel != null && !_videoModel.isEmpty()){
+            if (_videoModel != null && !_videoModel.isEmpty()) {
                 videoBuilder.append("<video>\n");
                 if (_videoRam != 0) {
-                    videoBuilder.append("<model type='" + _videoModel + "' vram='" + _videoRam + "'/>\n");
+                    videoBuilder.append("<model type='").append(_videoModel)
+                                .append("' vram='").append(_videoRam).append("'/>\n");
                 } else {
-                    videoBuilder.append("<model type='" + _videoModel + "'/>\n");
+                    videoBuilder.append("<model type='").append(_videoModel).append("'/>\n");
                 }
                 videoBuilder.append("</video>\n");
                 return videoBuilder.toString();
@@ -1942,18 +1944,17 @@ public class LibvirtVMDef {
     }
 
     public static class SoundDef {
-        private String _SoundModel;
+        private String _soundModel;
         public SoundDef(String soundModel) {
-            _SoundModel = soundModel;
+            _soundModel = soundModel;
         }
 
         @Override
         public String toString() {
             StringBuilder soundBuilder = new StringBuilder();
-            if (_SoundModel != null && !_SoundModel.isEmpty()) {
-                soundBuilder.append("<devices>\n");
-                soundBuilder.append("<sound model='").append(_SoundModel).append("'/>\n");
-                soundBuilder.append("</devices>\n");
+            LOGGER.info("ddd"+_soundModel);
+            if (_soundModel != null && !_soundModel.isEmpty()) {
+                soundBuilder.append("<sound model='" + _soundModel + "'/>\n");
             }
             return soundBuilder.toString();
         }
