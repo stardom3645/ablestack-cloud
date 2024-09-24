@@ -4224,7 +4224,7 @@ public class NetworkServiceImpl extends ManagerBase implements NetworkService, C
                     try {
                         addDefaultTungstenProviderToPhysicalNetwork(pNetwork.getId());
                     } catch (Exception ex) {
-                        s_logger.warn("Failed to add Tungsten provider to physical network due to:" + ex.getMessage());
+                        logger.warn("Failed to add Tungsten provider to physical network due to:" + ex.getMessage());
                     }
 
                     // Add the config drive provider

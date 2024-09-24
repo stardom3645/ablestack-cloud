@@ -2791,7 +2791,8 @@ public class NetworkModelImpl extends ManagerBase implements NetworkModel, Confi
     }
 
     @Override
-    public boolean checkSecurityGroupSupportForNetwork(DataCenter zone, List<Long> networkIds,
+    public boolean checkSecurityGroupSupportForNetwork(Account account, DataCenter zone,
+                                                       List<Long> networkIds,
                                                        List<Long> securityGroupsIds) {
         if (zone.isSecurityGroupEnabled()) {
             return true;
@@ -2807,7 +2808,7 @@ public class NetworkModelImpl extends ManagerBase implements NetworkModel, Confi
                 }
             }
         } else if (CollectionUtils.isNotEmpty(securityGroupsIds)) {
-            Network networkWithSecurityGroup = getNetworkWithSGWithFreeIPs(zone.getId());
+            Network networkWithSecurityGroup = getNetworkWithSGWithFreeIPs(account, zone.getId());
             return networkWithSecurityGroup != null;
         }
         return false;
