@@ -16,21 +16,21 @@
 // under the License.
 package com.cloud.hypervisor.kvm.resource;
 
+import com.cloud.agent.properties.AgentProperties;
+import com.cloud.agent.properties.AgentPropertiesFileHandler;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
 import org.apache.cloudstack.api.ApiConstants.IoDriverPolicy;
 import org.apache.cloudstack.utils.qemu.QemuObject;
 import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
-import com.cloud.agent.properties.AgentProperties;
-import com.cloud.agent.properties.AgentPropertiesFileHandler;
+
 
 public class LibvirtVMDef {
     protected static Logger LOGGER = LogManager.getLogger(LibvirtVMDef.class);
@@ -1926,17 +1926,62 @@ public class LibvirtVMDef {
         @Override
         public String toString() {
             StringBuilder videoBuilder = new StringBuilder();
-            if (_videoModel != null && !_videoModel.isEmpty()){
+            if (_videoModel != null && !_videoModel.isEmpty()) {
                 videoBuilder.append("<video>\n");
                 if (_videoRam != 0) {
-                    videoBuilder.append("<model type='" + _videoModel + "' vram='" + _videoRam + "'/>\n");
+                    videoBuilder.append("<model type='").append(_videoModel)
+                                .append("' vram='").append(_videoRam).append("'/>\n");
                 } else {
-                    videoBuilder.append("<model type='" + _videoModel + "'/>\n");
+                    videoBuilder.append("<model type='").append(_videoModel).append("'/>\n");
                 }
                 videoBuilder.append("</video>\n");
                 return videoBuilder.toString();
             }
             return "";
+        }
+    }
+
+    public static class VideoDef2 {
+        private String _videoModel;
+        private int _videoRam;
+
+        public VideoDef2(String videoModel, int videoRam) {
+            _videoModel = videoModel;
+            _videoRam = videoRam;
+        }
+
+        @Override
+        public String toString() {
+            StringBuilder videoBuilder = new StringBuilder();
+            if (_videoModel != null && !_videoModel.isEmpty()) {
+                videoBuilder.append("<video>\n");
+                if (_videoRam != 0) {
+                    videoBuilder.append("<model type='").append(_videoModel)
+                                .append("' vram='").append(_videoRam).append("'/>\n");
+                } else {
+                    videoBuilder.append("<model type='").append(_videoModel).append("'/>\n");
+                }
+                videoBuilder.append("</video>\n");
+                return videoBuilder.toString();
+            }
+            return "";
+        }
+    }
+
+    public static class SoundDef {
+        private String _soundModel;
+        public SoundDef(String soundModel) {
+            _soundModel = soundModel;
+        }
+
+        @Override
+        public String toString() {
+            StringBuilder soundBuilder = new StringBuilder();
+            LOGGER.info("ddd"+_soundModel);
+            if (_soundModel != null && !_soundModel.isEmpty()) {
+                soundBuilder.append("<sound model='" + _soundModel + "'/>\n");
+            }
+            return soundBuilder.toString();
         }
     }
 
