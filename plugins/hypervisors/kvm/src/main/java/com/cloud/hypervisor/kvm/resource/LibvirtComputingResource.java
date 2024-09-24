@@ -748,7 +748,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
     public String getVmActivityCheckPathClvm() {
         return vmActivityCheckPathClvm;
     }
-    
+
     public String getNasBackupPath() {
         return nasBackupPath;
     }
@@ -1063,7 +1063,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
         if (vmActivityCheckPathClvm == null) {
             throw new ConfigurationException("Unable to find kvmvmactivity_clvm.sh");
         }
-        
+
         nasBackupPath = Script.findScript(kvmScriptsDir, "nasbackup.sh");
         if (nasBackupPath == null) {
             throw new ConfigurationException("Unable to find nasbackup.sh");

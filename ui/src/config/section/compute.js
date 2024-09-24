@@ -209,7 +209,7 @@ export default {
           args: ['virtualmachineid', 'name', 'description', 'snapshotmemory', 'quiescevm'],
           show: (record) => {
             return (((['Running'].includes(record.state) && record.hypervisor !== 'LXC') ||
-              (['Stopped'].includes(record.state) && 
+              (['Stopped'].includes(record.state) &&
               ((record.hypervisor !== 'KVM' && record.hypervisor !== 'LXC') ||
               (record.hypervisor === 'KVM' && record.pooltype === 'PowerFlex' || record.pooltype === 'RBD')))) && record.vmtype !== 'sharedfsvm')
           },

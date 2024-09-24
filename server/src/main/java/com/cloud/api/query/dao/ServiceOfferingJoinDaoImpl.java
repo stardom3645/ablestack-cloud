@@ -46,7 +46,6 @@ import com.cloud.utils.db.Filter;
 import com.cloud.storage.DiskOfferingVO;
 import com.cloud.user.AccountManager;
 import com.cloud.utils.db.GenericDaoBase;
-import com.cloud.utils.db.Filter;
 import com.cloud.utils.db.SearchBuilder;
 import com.cloud.utils.db.SearchCriteria;
 import com.cloud.utils.db.TransactionLegacy;
@@ -247,7 +246,6 @@ public class ServiceOfferingJoinDaoImpl extends GenericDaoBase<ServiceOfferingJo
         if (batchCfg != null) {
             DETAILS_BATCH_SIZE = Integer.parseInt(batchCfg);
         }
-        Filter searchFilter = new Filter(ServiceOfferingJoinVO.class, "sortKey", true);
         List<ServiceOfferingJoinVO> uvList = new ArrayList<>();
         // query details by batches
         int curr_index = 0;
