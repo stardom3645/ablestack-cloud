@@ -173,7 +173,6 @@ public class DiskOfferingJoinDaoImpl extends GenericDaoBase<DiskOfferingJoinVO, 
         if (batchCfg != null) {
             DETAILS_BATCH_SIZE = Integer.parseInt(batchCfg);
         }
-        Filter searchFilter = new Filter(DiskOfferingJoinVO.class, "sortKey", true);
         List<DiskOfferingJoinVO> uvList = new ArrayList<>();
         // query details by batches
         int curr_index = 0;

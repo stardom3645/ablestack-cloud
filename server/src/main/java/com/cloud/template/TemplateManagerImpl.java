@@ -1960,9 +1960,13 @@ public class TemplateManagerImpl extends ManagerBase implements TemplateManager,
         String description = ""; // TODO: add this to clone parameter in the future
         boolean isExtractable = false;
         Long sourceTemplateId = null;
+        CPU.CPUArch arch = CPU.CPUArch.amd64;
         if (volume != null) {
             VMTemplateVO template = ApiDBUtils.findTemplateById(volume.getTemplateId());
             isExtractable = template != null && template.isExtractable() && template.getTemplateType() != Storage.TemplateType.SYSTEM;
+            if (template != null) {
+                arch = template.getArch();
+            }
             if (volume.getIsoId() != null && volume.getIsoId() != 0) {
                 sourceTemplateId = volume.getIsoId();
             } else if (volume.getTemplateId() != null) {
@@ -1973,7 +1977,7 @@ public class TemplateManagerImpl extends ManagerBase implements TemplateManager,
         VMTemplateVO privateTemplate = null;
         privateTemplate = new VMTemplateVO(nextTemplateId, name, ImageFormat.RAW, isPublic, featured, isExtractable,
                 TemplateType.USER, null, true, 64, templateOwner.getId(), null, description,
-                false, guestOS.getId(), true, hyperType, null, new HashMap<>(){{put("template to be cleared", "yes");}}, false, false, false, false);
+                false, guestOS.getId(), true, hyperType, null, new HashMap<>(){{put("template to be cleared", "yes");}}, false, false, false, false, arch);
         List<ImageStoreVO> stores = _imgStoreDao.findRegionImageStores();
         if (!CollectionUtils.isEmpty(stores)) {
             privateTemplate.setCrossZones(true);

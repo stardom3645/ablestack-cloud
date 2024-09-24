@@ -9604,7 +9604,7 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
                         createdVolumes.add(dataDiskVolume);
 
                         for (VolumeVO createdVol : createdVolumes) {
-                            _volumeService.attachVolumeToVM(cmd.getEntityId(), createdVol.getId(), createdVol.getDeviceId());
+                            _volumeService.attachVolumeToVM(cmd.getEntityId(), createdVol.getId(), createdVol.getDeviceId(), false);
                         }
                     } catch (CloudRuntimeException e){
                         logger.warn("data disk process failed during clone, clearing the temporary resources...");
