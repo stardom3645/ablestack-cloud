@@ -1219,6 +1219,12 @@ public class ApiConstants {
     public static final String WEBHOOK_NAME = "webhookname";
 
     public static final String NFS_MOUNT_OPTIONS = "nfsmountopts";
+
+    public static final String MOUNT_OPTIONS = "mountopts";
+
+    public static final String SHAREDFSVM_MIN_CPU_COUNT = "sharedfsvmmincpucount";
+    public static final String SHAREDFSVM_MIN_RAM_SIZE = "sharedfsvmminramsize";
+
     public static final String LISTHOSTDEVICES = "listhostdevices";
     public static final String HOSTDEVICES_NAME = "hostdevicesname";
     public static final String HOSTDEVICES_TEXT = "hostdevicestext";
