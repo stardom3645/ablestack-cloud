@@ -3881,6 +3881,7 @@
 "GB*Month": "GB * \uc6d4",
 "IP*Month": "IP * \uc6d4",
 "Policy*Month": "\uc815\ucc45 * \uc6d4",
+"label.mountopts":"\ub9c8\uc6b4\ud2b8 \uc635\uc158",
 
 "label.desktop.service": "\ub370\uc2a4\ud06c\ud1b1",
 "title.desktop.cluster": "\ud074\ub7ec\uc2a4\ud130",
