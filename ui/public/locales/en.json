@@ -3881,6 +3881,7 @@
 "GB*Month": "GB * Month",
 "IP*Month": "IP * Month",
 "Policy*Month": "Policy * Month",
+"label.mountopts":"Mount Options",
 
 "label.desktop.service": "Desktop",
 "title.desktop.cluster": "Clusters",
