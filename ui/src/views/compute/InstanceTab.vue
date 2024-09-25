@@ -202,7 +202,6 @@ export default {
     DetailSettings,
     CreateVolume,
     NicsTab,
-    NicsTable,
     DRTable,
     DRsimulationTestModal,
     DRMirroringVMAdd,
@@ -233,30 +232,9 @@ export default {
       currentTab: 'details',
       showAddVolumeModal: false,
       diskOfferings: [],
-      showAddNetworkModal: false,
       showAddMirrorVMModal: false,
-      showUpdateIpModal: false,
-      showSecondaryIpModal: false,
       showDrSimulationTestModal: false,
-      diskOfferings: [],
-      addNetworkData: {
-        allNetworks: [],
-        network: '',
-        ip: ''
-      },
-      loadingNic: false,
       loadingMirror: false,
-      editIpAddressNic: '',
-      editIpAddressValue: '',
-      editNetworkId: '',
-      secondaryIPs: [],
-      selectedNicId: '',
-      newSecondaryIp: '',
-      editNicResource: {},
-      listIps: {
-        loading: false,
-        opts: []
-      },
       annotations: [],
       dataResource: {},
       editeNic: '',
@@ -351,101 +329,8 @@ export default {
     closeModals () {
       this.showAddVolumeModal = false
       this.showUpdateSecurityGroupsModal = false
-      this.showAddNetworkModal = false
       this.showAddMirrorVMModal = false
-      this.showUpdateIpModal = false
-      this.showSecondaryIpModal = false
       this.showDrSimulationTestModal = false
-      this.addNetworkData.network = ''
-      this.addNetworkData.ip = ''
-      this.editIpAddressValue = ''
-      this.newSecondaryIp = ''
-    },
-    onChangeIPAddress (record) {
-      this.editNicResource = record.nic
-      this.editIpAddressNic = record.nic.id
-      this.showUpdateIpModal = true
-      if (record.nic.type === 'Shared') {
-        this.fetchPublicIps(record.nic.networkid)
-      }
-    },
-    onChangeNicLinkState (record) {
-      console.log('record.nic.id :>> ', record.nic.id)
-      console.log('record.nic.id :>> ', record.nic.linkstate)
-      const params = {}
-      params.virtualmachineid = this.vm.id
-      params.nicid = record.nic.id
-      params.linkstate = !record.nic.linkstate
-      api('UpdateVmNicLinkState', params).then(response => {
-        this.$pollJob({
-          jobId: response.updatevmniclinkstateresponse.jobid,
-          successMessage: this.$t('message.success.update.nic.linkstate'),
-          successMethod: () => {
-            this.loadingNic = false
-          },
-          errorMessage: this.$t('label.error'),
-          errorMethod: () => {
-            this.loadingNic = false
-          },
-          loadingMessage: this.$t('message.update.nic.linkstate.processing'),
-          catchMessage: this.$t('error.fetching.async.job.result'),
-          catchMethod: () => {
-            this.loadingNic = false
-            this.parentFetchData()
-          }
-        })
-      })
-        .catch(error => {
-          this.$notifyError(error)
-          this.loadingNic = false
-        })
-    },
-    onAcquireSecondaryIPAddress (record) {
-      if (record.nic.type === 'Shared') {
-        this.fetchPublicIps(record.nic.networkid)
-      } else {
-        this.listIps.opts = []
-      }
-
-      this.editNicResource = record.nic
-      this.editNetworkId = record.nic.networkid
-      this.fetchSecondaryIPs(record.nic.id)
-    },
-    submitAddNetwork () {
-      if (this.loadingNic) return
-      const params = {}
-      params.virtualmachineid = this.vm.id
-      params.networkid = this.addNetworkData.network
-      if (this.addNetworkData.ip) {
-        params.ipaddress = this.addNetworkData.ip
-      }
-      this.showAddNetworkModal = false
-      this.loadingNic = true
-      api('addNicToVirtualMachine', params).then(response => {
-        this.$pollJob({
-          jobId: response.addnictovirtualmachineresponse.jobid,
-          successMessage: this.$t('message.success.add.network'),
-          successMethod: () => {
-            this.loadingNic = false
-            this.closeModals()
-          },
-          errorMessage: this.$t('message.add.network.failed'),
-          errorMethod: () => {
-            this.loadingNic = false
-            this.closeModals()
-          },
-          loadingMessage: this.$t('message.add.network.processing'),
-          catchMessage: this.$t('error.fetching.async.job.result'),
-          catchMethod: () => {
-            this.loadingNic = false
-            this.closeModals()
-            this.parentFetchData()
-          }
-        })
-      }).catch(error => {
-        this.$notifyError(error)
-        this.loadingNic = false
-      })
     },
     updateSecurityGroupsSelection (securitygroupids) {
       this.securitygroupids = securitygroupids || []
