@@ -57,6 +57,40 @@
           :columns="['displayname', 'state', 'type', 'created']"
           :routerlinks="(record) => { return { displayname: '/vmsnapshot/' + record.id } }"/>
       </a-tab-pane>
+      <a-tab-pane :tab="$t('label.dr')" key="disasterrecoverycluster" v-if="'createDisasterRecoveryClusterVm' in $store.getters.apis">
+        <a-button
+          type="primary"
+          style="width: 100%; margin-bottom: 10px"
+          @click="showAddMirVMModal"
+          :loading="loadingMirror"
+          :disabled="!('createDisasterRecoveryClusterVm' in $store.getters.apis)">
+          <template #icon><plus-outlined /></template> {{ $t('label.add.dr.mirroring.vm') }}
+        </a-button>
+        <DRTable :resource="vm" :loading="loading">
+          <template #actions="record">
+            <tooltip-button
+              tooltipPlacement="bottom"
+              :tooltip="$t('label.dr.simulation.test')"
+              icon="ExperimentOutlined"
+              :disabled="!('connectivityTestsDisasterRecovery' in $store.getters.apis)"
+              @onClick="DrSimulationTest(record)" />
+            <a-popconfirm
+              :title="$t('message.dr.mirrored.vm.remove')"
+              @confirm="removeMirror(record.dr)"
+              :okText="$t('label.yes')"
+              :cancelText="$t('label.no')"
+            >
+              <tooltip-button
+                tooltipPlacement="bottom"
+                :tooltip="$t('label.dr.remove.mirroring')"
+                :disabled="!('deleteDisasterRecoveryClusterVm' in $store.getters.apis)"
+                type="primary"
+                :danger="true"
+                icon="link-outlined" />
+            </a-popconfirm>
+          </template>
+        </DRTable>
+      </a-tab-pane>
       <a-tab-pane :tab="$t('label.backup')" key="backups" v-if="'listBackups' in $store.getters.apis">
         <ListResourceTable
           apiName="listBackups"
@@ -124,6 +158,15 @@
       <CreateVolume :resource="resource" @close-action="closeModals" />
     </a-modal>
 
+    <a-modal
+      :visible="showAddMirrorVMModal"
+      :title="$t('label.add.dr.mirroring.vm')"
+      :maskClosable="false"
+      :closable="true"
+      :footer="null"
+      @cancel="closeModals">
+      <DRMirroringVMAdd :resource="resource" @close-action="closeModals" />
+    </a-modal>
   </a-spin>
 </template>
 
@@ -145,6 +188,9 @@ import ResourceIcon from '@/components/view/ResourceIcon'
 import AnnotationsTab from '@/components/view/AnnotationsTab'
 import VolumesTab from '@/components/view/VolumesTab.vue'
 import SecurityGroupSelection from '@views/compute/wizard/SecurityGroupSelection'
+import DRTable from '@/views/compute/dr/DRTable.vue'
+import DRsimulationTestModal from '@/views/compute/dr/DRsimulationTestModal.vue'
+import DRMirroringVMAdd from '@/views/compute/dr/DRMirroringVMAdd'
 
 export default {
   name: 'InstanceTab',
@@ -156,6 +202,10 @@ export default {
     DetailSettings,
     CreateVolume,
     NicsTab,
+    NicsTable,
+    DRTable,
+    DRsimulationTestModal,
+    DRMirroringVMAdd,
     InstanceSchedules,
     ListResourceTable,
     SecurityGroupSelection,
@@ -183,6 +233,30 @@ export default {
       currentTab: 'details',
       showAddVolumeModal: false,
       diskOfferings: [],
+      showAddNetworkModal: false,
+      showAddMirrorVMModal: false,
+      showUpdateIpModal: false,
+      showSecondaryIpModal: false,
+      showDrSimulationTestModal: false,
+      diskOfferings: [],
+      addNetworkData: {
+        allNetworks: [],
+        network: '',
+        ip: ''
+      },
+      loadingNic: false,
+      loadingMirror: false,
+      editIpAddressNic: '',
+      editIpAddressValue: '',
+      editNetworkId: '',
+      secondaryIPs: [],
+      selectedNicId: '',
+      newSecondaryIp: '',
+      editNicResource: {},
+      listIps: {
+        loading: false,
+        opts: []
+      },
       annotations: [],
       dataResource: {},
       editeNic: '',
@@ -271,9 +345,107 @@ export default {
       this.showUpdateSecurityGroupsModal = true
       this.loadingSG = false
     },
+    showAddMirVMModal () {
+      this.showAddMirrorVMModal = true
+    },
     closeModals () {
       this.showAddVolumeModal = false
       this.showUpdateSecurityGroupsModal = false
+      this.showAddNetworkModal = false
+      this.showAddMirrorVMModal = false
+      this.showUpdateIpModal = false
+      this.showSecondaryIpModal = false
+      this.showDrSimulationTestModal = false
+      this.addNetworkData.network = ''
+      this.addNetworkData.ip = ''
+      this.editIpAddressValue = ''
+      this.newSecondaryIp = ''
+    },
+    onChangeIPAddress (record) {
+      this.editNicResource = record.nic
+      this.editIpAddressNic = record.nic.id
+      this.showUpdateIpModal = true
+      if (record.nic.type === 'Shared') {
+        this.fetchPublicIps(record.nic.networkid)
+      }
+    },
+    onChangeNicLinkState (record) {
+      console.log('record.nic.id :>> ', record.nic.id)
+      console.log('record.nic.id :>> ', record.nic.linkstate)
+      const params = {}
+      params.virtualmachineid = this.vm.id
+      params.nicid = record.nic.id
+      params.linkstate = !record.nic.linkstate
+      api('UpdateVmNicLinkState', params).then(response => {
+        this.$pollJob({
+          jobId: response.updatevmniclinkstateresponse.jobid,
+          successMessage: this.$t('message.success.update.nic.linkstate'),
+          successMethod: () => {
+            this.loadingNic = false
+          },
+          errorMessage: this.$t('label.error'),
+          errorMethod: () => {
+            this.loadingNic = false
+          },
+          loadingMessage: this.$t('message.update.nic.linkstate.processing'),
+          catchMessage: this.$t('error.fetching.async.job.result'),
+          catchMethod: () => {
+            this.loadingNic = false
+            this.parentFetchData()
+          }
+        })
+      })
+        .catch(error => {
+          this.$notifyError(error)
+          this.loadingNic = false
+        })
+    },
+    onAcquireSecondaryIPAddress (record) {
+      if (record.nic.type === 'Shared') {
+        this.fetchPublicIps(record.nic.networkid)
+      } else {
+        this.listIps.opts = []
+      }
+
+      this.editNicResource = record.nic
+      this.editNetworkId = record.nic.networkid
+      this.fetchSecondaryIPs(record.nic.id)
+    },
+    submitAddNetwork () {
+      if (this.loadingNic) return
+      const params = {}
+      params.virtualmachineid = this.vm.id
+      params.networkid = this.addNetworkData.network
+      if (this.addNetworkData.ip) {
+        params.ipaddress = this.addNetworkData.ip
+      }
+      this.showAddNetworkModal = false
+      this.loadingNic = true
+      api('addNicToVirtualMachine', params).then(response => {
+        this.$pollJob({
+          jobId: response.addnictovirtualmachineresponse.jobid,
+          successMessage: this.$t('message.success.add.network'),
+          successMethod: () => {
+            this.loadingNic = false
+            this.closeModals()
+          },
+          errorMessage: this.$t('message.add.network.failed'),
+          errorMethod: () => {
+            this.loadingNic = false
+            this.closeModals()
+          },
+          loadingMessage: this.$t('message.add.network.processing'),
+          catchMessage: this.$t('error.fetching.async.job.result'),
+          catchMethod: () => {
+            this.loadingNic = false
+            this.closeModals()
+            this.parentFetchData()
+          }
+        })
+      }).catch(error => {
+        this.$notifyError(error)
+        this.loadingNic = false
+      })
     },
     updateSecurityGroupsSelection (securitygroupids) {
       this.securitygroupids = securitygroupids || []
@@ -285,6 +457,39 @@ export default {
         this.closeModals()
         this.parentFetchData()
       })
+    },
+    removeMirror (item) {
+      this.loadingMirror = true
+      api('deleteDisasterRecoveryClusterVm', {
+        drclustername: item.drName,
+        virtualmachineid: this.vm.id
+      }).then(response => {
+        this.$pollJob({
+          jobId: response.deletedisasterrecoveryclustervmresponse.jobid,
+          successMessage: this.$t('message.success.remove.disaster.recovery.cluster.vm'),
+          successMethod: () => {
+            this.loadingMirror = false
+            this.parentFetchData()
+          },
+          errorMessage: this.$t('message.error.remove.disaster.recovery.cluster.vm'),
+          errorMethod: () => {
+            this.loadingMirror = false
+            this.parentFetchData()
+          },
+          loadingMessage: this.$t('message.remove.disaster.recovery.cluster.vm.processing'),
+          catchMessage: this.$t('error.fetching.async.job.result'),
+          catchMethod: () => {
+            this.loadingMirror = false
+            this.parentFetchData()
+          }
+        })
+      }).catch(error => {
+        this.$notifyError(error)
+        this.loadingMirror = false
+      })
+    },
+    DrSimulationTest () {
+      this.showDrSimulationTestModal = true
     }
   }
 }
@@ -392,6 +597,9 @@ export default {
       margin-left: 10px;
     }
 
+  }
+  .dr-simulation-modal {
+    width: 100%;
   }
 
   .ant-list-item-meta-title {
