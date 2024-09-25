@@ -1252,14 +1252,10 @@ public class ApiConstants {
     public static final String SHAREDFSVM_MIN_CPU_COUNT = "sharedfsvmmincpucount";
     public static final String SHAREDFSVM_MIN_RAM_SIZE = "sharedfsvmminramsize";
 
-    public static final String MOUNT_OPTIONS = "mountopts";
-
-    public static final String SHAREDFSVM_MIN_CPU_COUNT = "sharedfsvmmincpucount";
-    public static final String SHAREDFSVM_MIN_RAM_SIZE = "sharedfsvmminramsize";
-
     public static final String LISTHOSTDEVICES = "listhostdevices";
     public static final String HOSTDEVICES_NAME = "hostdevicesname";
     public static final String HOSTDEVICES_TEXT = "hostdevicestext";
+
     public static final String PARAMETER_DESCRIPTION_ACTIVATION_RULE = "Quota tariff's activation rule. It can receive a JS script that results in either " +
             "a boolean or a numeric value: if it results in a boolean value, the tariff value will be applied according to the result; if it results in a numeric value, the " +
             "numeric value will be applied; if the result is neither a boolean nor a numeric value, the tariff will not be applied. If the rule is not informed, the tariff " +
