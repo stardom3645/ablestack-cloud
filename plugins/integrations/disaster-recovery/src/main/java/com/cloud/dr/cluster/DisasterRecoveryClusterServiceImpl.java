@@ -184,7 +184,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
     public ListResponse<ScvmIpAddressResponse> listScvmIpAddressResponse(ListScvmIpAddressCmd cmd) {
         List<ScvmIpAddressResponse> responses = new ArrayList<>();
         ScvmIpAddressResponse response = new ScvmIpAddressResponse();
-        String ipList = Script.runSimpleBashScript("cat /etc/hosts | grep -E 'scvm1-mngt|scvm2-mngt|scvm3-mngt' | awk '{print $1}' | tr '\n' ','");
+        String ipList = Script.runSimpleBashScript("cat /etc/hosts | grep -E 'scvm.*-mngt' | awk '{print $1}' | tr '\n' ','");
         if (ipList != null || !ipList.isEmpty()) {
             ipList = ipList.replaceAll(",$", "");
         }
@@ -260,7 +260,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         }
 
         // 미러링 데몬 상태 업데이트
-        String ipList = Script.runSimpleBashScript("cat /etc/hosts | grep -E 'scvm1-mngt|scvm2-mngt|scvm3-mngt' | awk '{print $1}' | tr '\n' ','");
+        String ipList = Script.runSimpleBashScript("cat /etc/hosts | grep -E 'scvm.*-mngt' | awk '{print $1}' | tr '\n' ','");
         if (ipList != null || !ipList.isEmpty()) {
             ipList = ipList.replaceAll(",$", "");
             String[] array = ipList.split(",");
@@ -335,7 +335,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         }
 
         // 미러링 데몬 상태 업데이트
-        String ipList = Script.runSimpleBashScript("cat /etc/hosts | grep -E 'scvm1-mngt|scvm2-mngt|scvm3-mngt' | awk '{print $1}' | tr '\n' ','");
+        String ipList = Script.runSimpleBashScript("cat /etc/hosts | grep -E 'scvm.*-mngt' | awk '{print $1}' | tr '\n' ','");
         if (ipList != null || !ipList.isEmpty()) {
             ipList = ipList.replaceAll(",$", "");
             String[] array = ipList.split(",");
@@ -444,7 +444,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                 response.setMirroredVmStatus(map.getMirroredVmStatus());
                 // 미러링 가상머신 볼륨 상태 조회
                 if (test != null) {
-                    String ipList = Script.runSimpleBashScript("cat /etc/hosts | grep -E 'scvm1-mngt|scvm2-mngt|scvm3-mngt' | awk '{print $1}' | tr '\n' ','");
+                    String ipList = Script.runSimpleBashScript("cat /etc/hosts | grep -E 'scvm.*-mngt' | awk '{print $1}' | tr '\n' ','");
                     ipList = ipList.replaceAll(",$", "");
                     String[] array = ipList.split(",");
                     Loop :
@@ -581,7 +581,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         // glue 미러링 클러스터 설정 업데이트
         if (cmd.getDetails() != null || cmd.getDrClusterUrl() != null) {
             Map<String, String> det = disasterRecoveryClusterDetailsDao.findDetails(drcluster.getId());
-            String ipList = Script.runSimpleBashScript("cat /etc/hosts | grep -E 'scvm1-mngt|scvm2-mngt|scvm3-mngt' | awk '{print $1}' | tr '\n' ','");
+            String ipList = Script.runSimpleBashScript("cat /etc/hosts | grep -E 'scvm.*-mngt' | awk '{print $1}' | tr '\n' ','");
             if (ipList != null || !ipList.isEmpty()) {
                 ipList = ipList.replaceAll(",$", "");
                 String[] array = ipList.split(",");
@@ -718,7 +718,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
             if (jobStatus == 2) {
                 throw new CloudRuntimeException("CreateDisasterRecoveryCluster Mold-API async job resulted in failure.");
             }
-            String ipList = Script.runSimpleBashScript("cat /etc/hosts | grep -E 'scvm1-mngt|scvm2-mngt|scvm3-mngt' | awk '{print $1}' | tr '\n' ','");
+            String ipList = Script.runSimpleBashScript("cat /etc/hosts | grep -E 'scvm.*-mngt' | awk '{print $1}' | tr '\n' ','");
             if (ipList != null || !ipList.isEmpty()) {
                 // 클러스터 설정
                 ipList = ipList.replaceAll(",$", "");
@@ -848,7 +848,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
             String priApiKey = user.getApiKey();
             String priSecretKey = user.getSecretKey();
             // 미러링 클러스터 삭제 glue-api 호출
-            String ipList = Script.runSimpleBashScript("cat /etc/hosts | grep -E 'scvm1-mngt|scvm2-mngt|scvm3-mngt' | awk '{print $1}' | tr '\n' ','");
+            String ipList = Script.runSimpleBashScript("cat /etc/hosts | grep -E 'scvm.*-mngt' | awk '{print $1}' | tr '\n' ','");
             if (ipList != null || !ipList.isEmpty()) {
                 ipList = ipList.replaceAll(",$", "");
                 String[] array = ipList.split(",");
@@ -954,7 +954,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         String priApiKey = user.getApiKey();
         String priSecretKey = user.getSecretKey();
         // 미러링 활성화 glue-api 호출
-        String ipList = Script.runSimpleBashScript("cat /etc/hosts | grep -E 'scvm1-mngt|scvm2-mngt|scvm3-mngt' | awk '{print $1}' | tr '\n' ','");
+        String ipList = Script.runSimpleBashScript("cat /etc/hosts | grep -E 'scvm.*-mngt' | awk '{print $1}' | tr '\n' ','");
         if (ipList != null || !ipList.isEmpty()) {
             ipList = ipList.replaceAll(",$", "");
             String[] array = ipList.split(",");
@@ -1038,7 +1038,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         }
         File permKey = new File("glue.key");
         // 미러링 비활성화 glue-api 호출
-        String ipList = Script.runSimpleBashScript("cat /etc/hosts | grep -E 'scvm1-mngt|scvm2-mngt|scvm3-mngt' | awk '{print $1}' | tr '\n' ','");
+        String ipList = Script.runSimpleBashScript("cat /etc/hosts | grep -E 'scvm.*-mngt' | awk '{print $1}' | tr '\n' ','");
         if (ipList != null || !ipList.isEmpty()) {
             ipList = ipList.replaceAll(",$", "");
             String[] array = ipList.split(",");
@@ -1120,7 +1120,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         }
         Map<String, String> details = disasterRecoveryClusterDetailsDao.findDetails(drCluster.getId());
         validateDisasterRecoveryClusterMirrorParameters(drCluster);
-        String ipList = Script.runSimpleBashScript("cat /etc/hosts | grep -E 'scvm1-mngt|scvm2-mngt|scvm3-mngt' | awk '{print $1}' | tr '\n' ','");
+        String ipList = Script.runSimpleBashScript("cat /etc/hosts | grep -E 'scvm.*-mngt' | awk '{print $1}' | tr '\n' ','");
         if (ipList != null || !ipList.isEmpty()) {
             ipList = ipList.replaceAll(",$", "");
             String[] array = ipList.split(",");
@@ -1198,7 +1198,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         }
         Map<String, String> details = disasterRecoveryClusterDetailsDao.findDetails(drCluster.getId());
         validateDisasterRecoveryClusterMirrorParameters(drCluster);
-        String ipList = Script.runSimpleBashScript("cat /etc/hosts | grep -E 'scvm1-mngt|scvm2-mngt|scvm3-mngt' | awk '{print $1}' | tr '\n' ','");
+        String ipList = Script.runSimpleBashScript("cat /etc/hosts | grep -E 'scvm.*-mngt' | awk '{print $1}' | tr '\n' ','");
         if (ipList != null || !ipList.isEmpty()) {
             ipList = ipList.replaceAll(",$", "");
             String[] array = ipList.split(",");
@@ -1299,7 +1299,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         String glueCommand = "";
         String glueMethod = "";
         // 복구된 경우 rbd-mirror 서비스 재시작 후 동기화 작업 진행
-        String ipList = Script.runSimpleBashScript("cat /etc/hosts | grep -E 'scvm1-mngt|scvm2-mngt|scvm3-mngt' | awk '{print $1}' | tr '\n' ','");
+        String ipList = Script.runSimpleBashScript("cat /etc/hosts | grep -E 'scvm.*-mngt' | awk '{print $1}' | tr '\n' ','");
         if (ipList != null || !ipList.isEmpty()) {
             ipList = ipList.replaceAll(",$", "");
             String[] array = ipList.split(",");
@@ -1415,7 +1415,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
             throw new InvalidParameterValueException("Invalid disaster recovery cluster id specified");
         }
         Map<String, String> details = disasterRecoveryClusterDetailsDao.findDetails(drCluster.getId());
-        String ipList = Script.runSimpleBashScript("cat /etc/hosts | grep -E 'scvm1-mngt|scvm2-mngt|scvm3-mngt' | awk '{print $1}' | tr '\n' ','");
+        String ipList = Script.runSimpleBashScript("cat /etc/hosts | grep -E 'scvm.*-mngt' | awk '{print $1}' | tr '\n' ','");
         if (ipList != null || !ipList.isEmpty()) {
             ipList = ipList.replaceAll(",$", "");
             String[] array = ipList.split(",");
@@ -1493,7 +1493,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         for (VolumeVO vol : volumes) {
             String volumeUuid = vol.getPath();
             String volumeType = vol.getVolumeType().toString();
-            String ipList = Script.runSimpleBashScript("cat /etc/hosts | grep -E 'scvm1-mngt|scvm2-mngt|scvm3-mngt' | awk '{print $1}' | tr '\n' ','");
+            String ipList = Script.runSimpleBashScript("cat /etc/hosts | grep -E 'scvm.*-mngt' | awk '{print $1}' | tr '\n' ','");
             if (ipList != null || !ipList.isEmpty()) {
                 ipList = ipList.replaceAll(",$", "");
                 String[] array = ipList.split(",");
@@ -1771,7 +1771,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
             Map<String, String> details = disasterRecoveryClusterDetailsDao.findDetails(drCluster.getId());
             String apiKey = details.get(ApiConstants.DR_CLUSTER_API_KEY);
             String secretKey = details.get(ApiConstants.DR_CLUSTER_SECRET_KEY);
-            String ipList = Script.runSimpleBashScript("cat /etc/hosts | grep -E 'scvm1-mngt|scvm2-mngt|scvm3-mngt' | awk '{print $1}' | tr '\n' ','");
+            String ipList = Script.runSimpleBashScript("cat /etc/hosts | grep -E 'scvm.*-mngt' | awk '{print $1}' | tr '\n' ','");
             // 미러링 해제 glue-api 호출
             if (ipList != null || !ipList.isEmpty()) {
                 UserVmJoinVO userVM = userVmJoinDao.findById(vmId);
@@ -1922,7 +1922,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         Map<String, String> details = disasterRecoveryClusterDetailsDao.findDetails(drCluster.getId());
         boolean result = false;
         int glueStep = 0;
-        String ipList = Script.runSimpleBashScript("cat /etc/hosts | grep -E 'scvm1-mngt|scvm2-mngt|scvm3-mngt' | awk '{print $1}' | tr '\n' ','");
+        String ipList = Script.runSimpleBashScript("cat /etc/hosts | grep -E 'scvm.*-mngt' | awk '{print $1}' | tr '\n' ','");
         if (ipList != null || !ipList.isEmpty()) {
             UserVmJoinVO userVM = userVmJoinDao.findById(vmId);
             List<VolumeVO> volumes = volsDao.findByInstance(userVM.getId());
@@ -2002,7 +2002,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         Map<String, String> details = disasterRecoveryClusterDetailsDao.findDetails(drCluster.getId());
         boolean result = false;
         int glueStep = 0;
-        String ipList = Script.runSimpleBashScript("cat /etc/hosts | grep -E 'scvm1-mngt|scvm2-mngt|scvm3-mngt' | awk '{print $1}' | tr '\n' ','");
+        String ipList = Script.runSimpleBashScript("cat /etc/hosts | grep -E 'scvm.*-mngt' | awk '{print $1}' | tr '\n' ','");
         if (ipList != null || !ipList.isEmpty()) {
             UserVmJoinVO userVM = userVmJoinDao.findById(vmId);
             List<VolumeVO> volumes = volsDao.findByInstance(userVM.getId());
@@ -2130,7 +2130,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         List<DisasterRecoveryClusterVmMapVO> vmMap = disasterRecoveryClusterVmMapDao.listByDisasterRecoveryClusterId(drCluster.getId());
         ArrayList<String> template = parentImageList(drCluster);
         if (!template.isEmpty()) {
-            String ipList = Script.runSimpleBashScript("cat /etc/hosts | grep -E 'scvm1-mngt|scvm2-mngt|scvm3-mngt' | awk '{print $1}' | tr '\n' ','");
+            String ipList = Script.runSimpleBashScript("cat /etc/hosts | grep -E 'scvm.*-mngt' | awk '{print $1}' | tr '\n' ','");
             if (ipList != null || !ipList.isEmpty()) {
                 ipList = ipList.replaceAll(",$", "");
                 for (String imageName : template) {
@@ -2169,7 +2169,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         List<DisasterRecoveryClusterVmMapVO> vmMap = disasterRecoveryClusterVmMapDao.listByDisasterRecoveryClusterId(drCluster.getId());
         ArrayList<String> template = parentImageList(drCluster);
         if (!template.isEmpty()) {
-            String ipList = Script.runSimpleBashScript("cat /etc/hosts | grep -E 'scvm1-mngt|scvm2-mngt|scvm3-mngt' | awk '{print $1}' | tr '\n' ','");
+            String ipList = Script.runSimpleBashScript("cat /etc/hosts | grep -E 'scvm.*-mngt' | awk '{print $1}' | tr '\n' ','");
             if (ipList != null || !ipList.isEmpty()) {
                 ipList = ipList.replaceAll(",$", "");
                 for (String imageName : template) {
@@ -2232,7 +2232,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         List<DisasterRecoveryClusterVmMapVO> vmMap = disasterRecoveryClusterVmMapDao.listByDisasterRecoveryClusterId(drCluster.getId());
         ArrayList<String> template = parentImageList(drCluster);
         if (!template.isEmpty()) {
-            String ipList = Script.runSimpleBashScript("cat /etc/hosts | grep -E 'scvm1-mngt|scvm2-mngt|scvm3-mngt' | awk '{print $1}' | tr '\n' ','");
+            String ipList = Script.runSimpleBashScript("cat /etc/hosts | grep -E 'scvm.*-mngt' | awk '{print $1}' | tr '\n' ','");
             if (ipList != null || !ipList.isEmpty()) {
                 ipList = ipList.replaceAll(",$", "");
                 String[] array = ipList.split(",");
@@ -2303,7 +2303,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         List<DisasterRecoveryClusterVmMapVO> vmMap = disasterRecoveryClusterVmMapDao.listByDisasterRecoveryClusterId(drCluster.getId());
         ArrayList<String> vmTemplate = new ArrayList<>();
         ArrayList<String> template = new ArrayList<>();
-        String ipList = Script.runSimpleBashScript("cat /etc/hosts | grep -E 'scvm1-mngt|scvm2-mngt|scvm3-mngt' | awk '{print $1}' | tr '\n' ','");
+        String ipList = Script.runSimpleBashScript("cat /etc/hosts | grep -E 'scvm.*-mngt' | awk '{print $1}' | tr '\n' ','");
         if (ipList != null || !ipList.isEmpty()) {
             ipList = ipList.replaceAll(",$", "");
             for (DisasterRecoveryClusterVmMapVO map : vmMap) {
@@ -2383,7 +2383,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
     private void checkDemoteDisasterRecoveryClusterMirror(final DisasterRecoveryClusterVO drCluster) throws CloudRuntimeException {
         List<DisasterRecoveryClusterVmMapVO> vmMap = disasterRecoveryClusterVmMapDao.listByDisasterRecoveryClusterId(drCluster.getId());
         if (!CollectionUtils.isEmpty(vmMap)) {
-            String ipList = Script.runSimpleBashScript("cat /etc/hosts | grep -E 'scvm1-mngt|scvm2-mngt|scvm3-mngt' | awk '{print $1}' | tr '\n' ','");
+            String ipList = Script.runSimpleBashScript("cat /etc/hosts | grep -E 'scvm.*-mngt' | awk '{print $1}' | tr '\n' ','");
             if (ipList != null || !ipList.isEmpty()) {
                 ipList = ipList.replaceAll(",$", "");
                 String[] array = ipList.split(",");
@@ -2476,7 +2476,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
     private boolean checkDemoteDisasterRecoveryClusterMirrorSchedule(final DisasterRecoveryClusterVO drCluster) throws CloudRuntimeException {
         List<DisasterRecoveryClusterVmMapVO> vmMap = disasterRecoveryClusterVmMapDao.listByDisasterRecoveryClusterId(drCluster.getId());
         if (!CollectionUtils.isEmpty(vmMap)) {
-            String ipList = Script.runSimpleBashScript("cat /etc/hosts | grep -E 'scvm1-mngt|scvm2-mngt|scvm3-mngt' | awk '{print $1}' | tr '\n' ','");
+            String ipList = Script.runSimpleBashScript("cat /etc/hosts | grep -E 'scvm.*-mngt' | awk '{print $1}' | tr '\n' ','");
             if (ipList != null || !ipList.isEmpty()) {
                 ipList = ipList.replaceAll(",$", "");
                 String[] array = ipList.split(",");
@@ -2509,7 +2509,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
     private void beforeDemoteDisasterRecoveryClusterMirrorSchedule(final DisasterRecoveryClusterVO drCluster) throws CloudRuntimeException {
         List<DisasterRecoveryClusterVmMapVO> vmMap = disasterRecoveryClusterVmMapDao.listByDisasterRecoveryClusterId(drCluster.getId());
         if (!CollectionUtils.isEmpty(vmMap)) {
-            String ipList = Script.runSimpleBashScript("cat /etc/hosts | grep -E 'scvm1-mngt|scvm2-mngt|scvm3-mngt' | awk '{print $1}' | tr '\n' ','");
+            String ipList = Script.runSimpleBashScript("cat /etc/hosts | grep -E 'scvm.*-mngt' | awk '{print $1}' | tr '\n' ','");
             if (ipList != null || !ipList.isEmpty()) {
                 ipList = ipList.replaceAll(",$", "");
                 String[] array = ipList.split(",");
