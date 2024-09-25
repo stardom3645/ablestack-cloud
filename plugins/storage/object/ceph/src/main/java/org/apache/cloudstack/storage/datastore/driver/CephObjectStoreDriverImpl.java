@@ -19,25 +19,26 @@
 package org.apache.cloudstack.storage.datastore.driver;
 
 import com.amazonaws.AmazonServiceException;
+import com.amazonaws.SdkClientException;
+import com.amazonaws.services.s3.model.BucketCrossOriginConfiguration;
+import com.amazonaws.services.s3.model.CORSRule;
+
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.client.builder.AwsClientBuilder;
-import com.amazonaws.SdkClientException;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
-import com.amazonaws.services.s3.model.AccessControlList;
 import com.amazonaws.services.s3.model.AmazonS3Exception;
-import com.amazonaws.services.s3.model.BucketCrossOriginConfiguration;
+import com.amazonaws.services.s3.model.AccessControlList;
 import com.amazonaws.services.s3.model.BucketPolicy;
 import com.amazonaws.services.s3.model.BucketVersioningConfiguration;
-import com.amazonaws.services.s3.model.CORSRule;
 import com.amazonaws.services.s3.model.DeleteBucketPolicyRequest;
-import com.amazonaws.services.s3.model.GetBucketPolicyRequest;
 import com.amazonaws.services.s3.model.SetBucketPolicyRequest;
+import com.amazonaws.services.s3.model.GetBucketPolicyRequest;
 import com.amazonaws.services.s3.model.SetBucketVersioningConfigurationRequest;
-
 import com.cloud.agent.api.to.BucketTO;
 import com.cloud.agent.api.to.DataStoreTO;
+import org.apache.cloudstack.storage.object.Bucket;
 import com.cloud.storage.BucketVO;
 import com.cloud.storage.dao.BucketDao;
 import com.cloud.user.Account;
@@ -60,7 +61,6 @@ import org.apache.cloudstack.storage.datastore.db.ObjectStoreDao;
 import org.apache.cloudstack.storage.datastore.db.ObjectStoreDetailsDao;
 import org.apache.cloudstack.storage.datastore.db.ObjectStoreVO;
 import org.apache.cloudstack.storage.object.BaseObjectStoreDriverImpl;
-import org.apache.cloudstack.storage.object.Bucket;
 import org.apache.cloudstack.storage.object.BucketObject;
 import org.twonote.rgwadmin4j.model.BucketInfo;
 import org.twonote.rgwadmin4j.model.S3Credential;
@@ -68,7 +68,12 @@ import org.twonote.rgwadmin4j.model.User;
 import org.twonote.rgwadmin4j.RgwAdmin;
 import org.twonote.rgwadmin4j.RgwAdminBuilder;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 public class CephObjectStoreDriverImpl extends BaseObjectStoreDriverImpl {
+    private static final Logger s_logger = LogManager.getLogger(CephObjectStoreDriverImpl.class);
+
     @Inject
     AccountDao _accountDao;
 
@@ -311,7 +316,6 @@ public class CephObjectStoreDriverImpl extends BaseObjectStoreDriverImpl {
 
             SetBucketVersioningConfigurationRequest setBucketVersioningConfigurationRequest =
                     new SetBucketVersioningConfigurationRequest(bucket.getName(), configuration);
-
             client.setBucketVersioningConfiguration(setBucketVersioningConfigurationRequest);
             return true;
         } catch (AmazonS3Exception e) {

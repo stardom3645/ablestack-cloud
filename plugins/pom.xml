@@ -62,6 +62,7 @@
 
         <module>backup/dummy</module>
         <module>backup/networker</module>
+        <module>backup/nas</module>
 
         <module>ca/root-ca</module>
 
@@ -123,6 +124,7 @@
         <module>shutdown</module>
         <module>security</module>
 
+        <module>storage/sharedfs/storagevm</module>
         <module>storage/image/default</module>
         <module>storage/image/s3</module>
         <module>storage/image/sample</module>
