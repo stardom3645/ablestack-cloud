@@ -14,8 +14,18 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-package com.cloud.consoleproxy.util;
 
-public interface LoggerFactory {
-    Logger getLogger(Class<?> clazz);
+package org.apache.cloudstack.backup.dao;
+
+import java.util.List;
+
+import org.apache.cloudstack.backup.BackupRepository;
+import org.apache.cloudstack.backup.BackupRepositoryVO;
+
+import com.cloud.utils.db.GenericDao;
+
+public interface BackupRepositoryDao extends GenericDao<BackupRepositoryVO, Long> {
+    List<BackupRepository> listByZoneAndProvider(Long zoneId, String provider);
+
+    BackupRepository findByBackupOfferingId(Long backupOfferingId);
 }

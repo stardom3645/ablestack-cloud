@@ -38,7 +38,8 @@ import java.util.List;
 import java.util.Map;
 
 public class CephObjectStoreLifeCycleImpl implements ObjectStoreLifeCycle {
-    protected Logger logger = LogManager.getLogger(getClass());
+
+    private static final Logger s_logger = LogManager.getLogger(CephObjectStoreLifeCycleImpl.class);
 
     @Inject
     ObjectStoreHelper objectStoreHelper;
@@ -71,7 +72,7 @@ public class CephObjectStoreLifeCycleImpl implements ObjectStoreLifeCycle {
         objectStoreParameters.put("accesskey", accessKey);
         objectStoreParameters.put("secretkey", secretKey);
 
-        logger.info("Attempting to connect to Ceph RGW at " + url + " with access key " + accessKey);
+        s_logger.info("Attempting to connect to Ceph RGW at " + url + " with access key " + accessKey);
 
         RgwAdmin rgwAdmin = new RgwAdminBuilder()
                 .accessKey(accessKey)
@@ -80,10 +81,10 @@ public class CephObjectStoreLifeCycleImpl implements ObjectStoreLifeCycle {
                 .build();
         try {
             List<String> buckets = rgwAdmin.listBucket();
-            logger.debug("Found " + buckets + " buckets at Ceph RGW: " + url);
-            logger.info("Successfully connected to Ceph RGW: " + url);
+            s_logger.debug("Found " + buckets + " buckets at Ceph RGW: " + url);
+            s_logger.info("Successfully connected to Ceph RGW: " + url);
         } catch (Exception e) {
-            logger.debug("Error while initializing Ceph RGW Object Store: " + e.getMessage());
+            s_logger.debug("Error while initializing Ceph RGW Object Store: " + e.getMessage());
             throw new RuntimeException("Error while initializing Ceph RGW Object Store. Invalid credentials or URL");
         }
 

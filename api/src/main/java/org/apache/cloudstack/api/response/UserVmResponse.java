@@ -324,6 +324,10 @@ public class UserVmResponse extends BaseResponseWithTagInformation implements Co
     @Param(description = "true if vm contains XS/VMWare tools inorder to support dynamic scaling of VM cpu/memory.")
     private Boolean isDynamicallyScalable;
 
+    @SerializedName(ApiConstants.DELETE_PROTECTION)
+    @Param(description = "true if vm has delete protection.", since = "4.20.0")
+    private boolean deleteProtection;
+
     @SerializedName(ApiConstants.SERVICE_STATE)
     @Param(description = "State of the Service from LB rule")
     private String serviceState;
@@ -403,6 +407,10 @@ public class UserVmResponse extends BaseResponseWithTagInformation implements Co
     @SerializedName(ApiConstants.QEMU_AGENT_VERSION)
     @Param(description = "qemu agent version")
     private String qemuAgentVersion;
+
+    @SerializedName((ApiConstants.VM_TYPE))
+    @Param(description = "User VM type", since = "4.20.0")
+    private String vmType;
 
     public UserVmResponse() {
         securityGroupList = new LinkedHashSet<>();
@@ -1015,6 +1023,14 @@ public class UserVmResponse extends BaseResponseWithTagInformation implements Co
         isDynamicallyScalable = dynamicallyScalable;
     }
 
+    public boolean isDeleteProtection() {
+        return deleteProtection;
+    }
+
+    public void setDeleteProtection(boolean deleteProtection) {
+        this.deleteProtection = deleteProtection;
+    }
+
     public String getOsTypeId() {
         return osTypeId;
     }
@@ -1185,6 +1201,14 @@ public class UserVmResponse extends BaseResponseWithTagInformation implements Co
 
     public void setQemuAgentVersion(String qemuAgentVersion) {
         this.qemuAgentVersion = qemuAgentVersion;
+    }
+
+    public void setVmType(String vmType) {
+        this.vmType = vmType;
+    }
+
+    public String getVmType() {
+        return vmType;
     }
 
     public void setIpAddress(String ipAddress) {
