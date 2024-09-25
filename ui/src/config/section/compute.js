@@ -354,7 +354,7 @@ export default {
         {
           api: 'migrateVirtualMachine',
           icon: 'drag-outlined',
-          label: 'label.migrate.instance.to.host',
+          label: 'label.migrate.instance.to.ps',
           docHelp: 'adminguide/virtual_machines.html#moving-vms-between-hosts-manual-live-migration',
           dataView: true,
           show: (record, store) => {
@@ -367,7 +367,7 @@ export default {
             if (record.details && 'extraconfig-1' in record.details) {
               return 'label.enable.host'
             } else {
-              return 'label.migrate.instance.to.host'
+              return 'label.migrate.instance.to.ps'
             }
           },
           component: shallowRef(defineAsyncComponent(() => import('@/views/compute/MigrateWizard.vue'))),
