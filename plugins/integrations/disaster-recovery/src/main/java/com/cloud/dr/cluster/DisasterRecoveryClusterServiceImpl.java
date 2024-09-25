@@ -579,8 +579,10 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         }
         drcluster = disasterRecoveryClusterDao.findById(drcluster.getId());
         // glue 미러링 클러스터 설정 업데이트
-        if (cmd.getDetails() != null || cmd.getDrClusterUrl() != null) {
-            Map<String, String> det = disasterRecoveryClusterDetailsDao.findDetails(drcluster.getId());
+        if (cmd.getDrClusterUrl() != null) {
+            UserAccount user = accountService.getActiveUserAccount("admin", 1L);
+            String priApiKey = user.getApiKey();
+            String priSecretKey = user.getSecretKey();
             String ipList = Script.runSimpleBashScript("cat /etc/hosts | grep -E 'scvm.*-mngt' | awk '{print $1}' | tr '\n' ','");
             if (ipList != null || !ipList.isEmpty()) {
                 ipList = ipList.replaceAll(",$", "");
@@ -594,8 +596,8 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                     String glueMethod = "PUT";
                     Map<String, String> glueParams = new HashMap<>();
                     glueParams.put("moldUrl", drcluster.getDrClusterUrl() + "/client/api/");
-                    glueParams.put("moldApiKey", det.get(ApiConstants.DR_CLUSTER_API_KEY));
-                    glueParams.put("moldSecretKey", det.get(ApiConstants.DR_CLUSTER_SECRET_KEY));
+                    glueParams.put("moldApiKey", priApiKey);
+                    glueParams.put("moldSecretKey", priSecretKey);
                     boolean result = DisasterRecoveryClusterUtil.glueMirrorUpdateAPI(glueUrl, glueCommand, glueMethod, glueParams);
                     if (result) {
                         return setDisasterRecoveryClusterResponse(drcluster.getId());
