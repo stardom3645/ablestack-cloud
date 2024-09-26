@@ -751,7 +751,29 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                         sucParams.put("drclusterstatus", DisasterRecoveryCluster.DrClusterStatus.Enabled.toString());
                         sucParams.put("mirroringagentstatus", DisasterRecoveryCluster.DrClusterStatus.Enabled.toString());
                         DisasterRecoveryClusterUtil.moldUpdateDisasterRecoveryClusterAPI(secUrl + "/client/api/", secCommand, secMethod, secApiKey, secSecretKey, sucParams);
-                        return true;
+                        // secondary cluster glue-api DR 클러스터 업데이트 로직 추가
+                        String moldUrl = secUrl + "/client/api/";
+                        String moldCommand = "listScvmIpAddress";
+                        String moldMethod = "GET";
+                        String response = DisasterRecoveryClusterUtil.moldListScvmIpAddressAPI(moldUrl, moldCommand, moldMethod, secApiKey, secSecretKey);
+                        if (response != null) {
+                            String[] arrays = response.split(",");
+                            for (int j=0; j < arrays.length; j++) {
+                                glueIp = arrays[j];
+                                ///////////////////// glue-api 프로토콜과 포트 확정 시 변경 예정
+                                glueUrl = "https://" + glueIp + ":8080/api/v1";
+                                glueCommand = "/mirror";
+                                glueMethod = "PUT";
+                                glueParams = new HashMap<>();
+                                glueParams.put("moldUrl", secUrl + "/client/api/");
+                                glueParams.put("moldApiKey", secApiKey);
+                                glueParams.put("moldSecretKey", secSecretKey);
+                                result = DisasterRecoveryClusterUtil.glueMirrorUpdateAPI(glueUrl, glueCommand, glueMethod, glueParams);
+                                if (result) {
+                                    return true;
+                                }
+                            }
+                        }
                     }
                 }
                 // 클러스터 설정 실패
