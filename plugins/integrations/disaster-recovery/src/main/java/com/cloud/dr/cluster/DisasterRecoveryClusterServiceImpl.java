@@ -1267,23 +1267,23 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                                     glueCommand = "/mirror/image/resync/rbd/" + imageName;
                                     glueMethod = "PUT";
                                     boolean resync = DisasterRecoveryClusterUtil.glueImageMirrorResyncAPI(glueUrl, glueCommand, glueMethod, glueParams);
-                                    if (resync) {
-                                        glueCommand = "/mirror/image/rbd/" + imageName;
-                                        glueParams = new HashMap<>();
-                                        glueParams.put("mirrorPool", "rbd");
-                                        glueParams.put("imageName", imageName);
-                                        glueParams.put("interval", details.get("mirrorscheduleinterval"));
-                                        // glueParams.put("startTime", details.get("mirrorschedulestarttime"));
-                                        glueParams.put("imageRegion", "remote");
-                                        boolean schedule = DisasterRecoveryClusterUtil.glueImageMirrorSetupUpdateAPI(glueUrl, glueCommand, glueMethod, glueParams);
-                                        if (!schedule) {
-                                            LOGGER.error("Failed to request ImageMirrorSetupUpdate Glue-API.");
-                                            LOGGER.error("The image was promoted successfully, but scheduling the image failed. For volumes with a path of " + imageName + ", please add a schedule manually.");
-                                        }
-                                    } else {
-                                        LOGGER.error("Failed to request ImageMirrorResync Glue-API.");
-                                        LOGGER.error("The image was promoted successfully, but resyncing the image failed. For volumes with a path of " + imageName + ", Manually set image resync and snapshot schedules.");
-                                    }
+                                    // if (resync) {
+                                    //     glueCommand = "/mirror/image/rbd/" + imageName;
+                                    //     glueParams = new HashMap<>();
+                                    //     glueParams.put("mirrorPool", "rbd");
+                                    //     glueParams.put("imageName", imageName);
+                                    //     glueParams.put("interval", details.get("mirrorscheduleinterval"));
+                                    //     // glueParams.put("startTime", details.get("mirrorschedulestarttime"));
+                                    //     glueParams.put("imageRegion", "remote");
+                                    //     boolean schedule = DisasterRecoveryClusterUtil.glueImageMirrorSetupUpdateAPI(glueUrl, glueCommand, glueMethod, glueParams);
+                                    //     if (!schedule) {
+                                    //         LOGGER.error("Failed to request ImageMirrorSetupUpdate Glue-API.");
+                                    //         LOGGER.error("The image was promoted successfully, but scheduling the image failed. For volumes with a path of " + imageName + ", please add a schedule manually.");
+                                    //     }
+                                    // } else {
+                                    //     LOGGER.error("Failed to request ImageMirrorResync Glue-API.");
+                                    //     LOGGER.error("The image was promoted successfully, but resyncing the image failed. For volumes with a path of " + imageName + ", Manually set image resync and snapshot schedules.");
+                                    // }
                                     break Loop;
                                 } else {
                                     LOGGER.error("Failed to request ImageMirrorPromotePeer Glue-API.");
@@ -1347,10 +1347,10 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
             }
         }
         // 스케줄이 설정되어있는지 사전 확인 후 Primary 클러스터를 복구하여 재동기화 실행전 스냅샷 스케줄 추가
-        boolean check = checkDemoteDisasterRecoveryClusterMirrorSchedule(drCluster);
-        if (!check) {
-            beforeDemoteDisasterRecoveryClusterMirrorSchedule(drCluster);
-        }
+        // boolean check = checkDemoteDisasterRecoveryClusterMirrorSchedule(drCluster);
+        // if (!check) {
+        //     beforeDemoteDisasterRecoveryClusterMirrorSchedule(drCluster);
+        // }
         validateResyncDisasterRecoveryClusterMirrorParameters(drCluster);
         if (ipList != null || !ipList.isEmpty()) {
             ipList = ipList.replaceAll(",$", "");
