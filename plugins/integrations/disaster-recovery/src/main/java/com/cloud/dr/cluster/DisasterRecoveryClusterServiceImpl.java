@@ -771,6 +771,8 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                                 result = DisasterRecoveryClusterUtil.glueMirrorUpdateAPI(glueUrl, glueCommand, glueMethod, glueParams);
                                 if (result) {
                                     return true;
+                                } else {
+                                    throw new CloudRuntimeException("Failed to request mirror update glue api. Please manually update the mold.json file in scvm of the secondary cluster.");
                                 }
                             }
                         }
@@ -1981,23 +1983,23 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                                 glueMethod = "PUT";
                                 result = DisasterRecoveryClusterUtil.glueImageMirrorResyncAPI(glueUrl, glueCommand, glueMethod, glueParams);
                                 if (result) {
-                                    glueCommand = "/mirror/image/rbd/" + volumeUuid;
-                                    glueMethod = "PUT";
-                                    glueParams = new HashMap<>();
-                                    glueParams.put("mirrorPool", "rbd");
-                                    glueParams.put("imageName", volumeUuid);
-                                    glueParams.put("interval", details.get("mirrorscheduleinterval"));
-                                    // glueParams.put("startTime", details.get("mirrorschedulestarttime"));
-                                    result = DisasterRecoveryClusterUtil.glueImageMirrorSetupUpdateAPI(glueUrl, glueCommand, glueMethod, glueParams);
-                                    if (result) {
-                                        break Loop;
-                                    } else {
-                                        // 모의시험 중 디모트한 이미지가 다시 프로모트 될 때 스케줄 설정 작업이 필요함 **
-                                        throw new CloudRuntimeException("The image was promoted successfully, but scheduling the image failed. For volumes with a path of " + volumeUuid + ", please add a schedule manually.");
-                                    }
+                                    // glueCommand = "/mirror/image/rbd/" + volumeUuid;
+                                    // glueMethod = "PUT";
+                                    // glueParams = new HashMap<>();
+                                    // glueParams.put("mirrorPool", "rbd");
+                                    // glueParams.put("imageName", volumeUuid);
+                                    // glueParams.put("interval", details.get("mirrorscheduleinterval"));
+                                    // // glueParams.put("startTime", details.get("mirrorschedulestarttime"));
+                                    // result = DisasterRecoveryClusterUtil.glueImageMirrorSetupUpdateAPI(glueUrl, glueCommand, glueMethod, glueParams);
+                                    // if (result) {
+                                    break Loop;
+                                    // } else {
+                                    //     // 모의시험 중 디모트한 이미지가 다시 프로모트 될 때 스케줄 설정 작업이 필요함 **
+                                    //     throw new CloudRuntimeException("The image was promoted successfully, but scheduling the image failed. For volumes with a path of " + volumeUuid + ", please add a schedule manually.");
+                                    // }
                                 } else {
-                                    // 모의시험 중 디모트한 이미지가 다시 프로모트 될 때 재동기화 작업과 스케줄 설정 작업이 필요함 **
-                                    throw new CloudRuntimeException("The image was promoted successfully, but resyncing the image failed. For volumes with a path of " + volumeUuid + ", Manually set image resync and snapshot schedules.");
+                                    // 모의시험 중 디모트한 이미지가 다시 프로모트 될 때 재동기화 작업이 필요함 **
+                                    throw new CloudRuntimeException("The image was promoted successfully, but resyncing the image failed. For volumes with a path of " + volumeUuid + ", Manually set image resync.");
                                 }
                             } else {
                                 LOGGER.error("Failed to request ImgageMirrorPromote Glue-API.");
