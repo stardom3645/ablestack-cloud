@@ -55,6 +55,7 @@ import org.json.JSONObject;
 
 import com.cloud.utils.nio.TrustAllManager;
 import com.google.gson.JsonParser;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
 public class DisasterRecoveryClusterUtil {
@@ -831,13 +832,11 @@ public class DisasterRecoveryClusterUtil {
      * @param region
      *  https://<IP>:8080/api/v1
      * @param subUrl
-     *  /mirror/image
+     *  /mirror/image/{mirrorPool}
      * @param method
      *  GET
      * @return
      *  String
-     *  {"Local": [{"image": "string","items": [{"interval": "string","start_time": "string"}],"namespace": "string","pool": "string"}],
-        "Remote": [{"image": "string","items": [{"interval": "string","start_time": "string"}],"namespace": "string","pool": "string"}]}
      */
     protected static String glueImageMirrorAPI(String region, String subUrl, String method) {
         try {
@@ -863,10 +862,10 @@ public class DisasterRecoveryClusterUtil {
                     sb.append(readLine);
                 }
                 JsonParser jParser = new JsonParser();
-                JsonObject jObject = (JsonObject)jParser.parse(sb.toString());
-                return jObject.toString();
+                JsonArray jArray = (JsonArray)jParser.parse(sb.toString()).getAsJsonObject().get("images");
+                return jArray.toString();
             } else {
-                String msg = "Failed to request list of mirrored snapshot API. response code : " + connection.getResponseCode();
+                String msg = "Failed to request glue mirror image list API. response code : " + connection.getResponseCode();
                 LOGGER.error(msg);
                 return null;
             }
