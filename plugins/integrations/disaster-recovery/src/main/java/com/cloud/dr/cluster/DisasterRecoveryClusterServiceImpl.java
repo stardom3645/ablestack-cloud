@@ -409,6 +409,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                 String glueCommand = "/mirror/image/rbd";
                 String glueMethod = "GET";
                 String response = DisasterRecoveryClusterUtil.glueImageMirrorAPI(glueUrl, glueCommand, glueMethod);
+                LOGGER.info(response);
                 if (response != null) {
                     mirrorList = (JsonArray) new JsonParser().parse(response);
                     break;
@@ -454,10 +455,13 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                 }
                 response.setMirroredVmStatus(map.getMirroredVmStatus());
                 // 미러링 가상머신 볼륨 상태 조회
+                LOGGER.info(mirrorList.toString());
                 if (mirrorList.size() != 0 && mirrorList != null) {
                     for (JsonElement dr : mirrorList) {
+                        LOGGER.info(dr.getAsJsonObject().get("name").getAsString());
+                        LOGGER.info(map.getMirroredVmVolumePath());
                         if (dr.getAsJsonObject().get("name").getAsString() == map.getMirroredVmVolumePath()) {
-                            LOGGER.info(dr.getAsJsonObject().get("name").getAsString());
+                            LOGGER.info("in::::::::::::::::::::::::::::::");
                             LOGGER.info(dr.getAsJsonObject().get("state").getAsString());
                             if (dr.getAsJsonObject().get("state").getAsString().contains("replaying")) {
                                 response.setDrClusterVmVolStatus("SYNCING");
