@@ -458,11 +458,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                 LOGGER.info(mirrorList.toString());
                 if (mirrorList.size() != 0 && mirrorList != null) {
                     for (JsonElement dr : mirrorList) {
-                        LOGGER.info(dr.getAsJsonObject().get("name").getAsString());
-                        LOGGER.info(map.getMirroredVmVolumePath());
                         if (dr.getAsJsonObject().get("name").getAsString().equals(map.getMirroredVmVolumePath())) {
-                            LOGGER.info("in::::::::::::::::::::::::::::::");
-                            LOGGER.info(dr.getAsJsonObject().get("state").getAsString());
                             if (dr.getAsJsonObject().get("state").getAsString().contains("replaying")) {
                                 response.setDrClusterVmVolStatus("SYNCING");
                             } else if (dr.getAsJsonObject().get("state").getAsString().contains("error")) {
@@ -479,7 +475,6 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                                     peerState = peer.getAsJsonObject().get("state");
                                 }
                             }
-                            LOGGER.info(peerState.getAsString());
                             if (peerState != null) {
                                 if (peerState.getAsString().contains("replaying")) {
                                     map.setMirroredVmVolumeStatus("SYNCING");
