@@ -101,8 +101,7 @@ CALL `cloud`.`IDEMPOTENT_ADD_COLUMN`('cloud.snapshot_store_ref', 'download_url',
 CALL `cloud`.`IDEMPOTENT_ADD_COLUMN`('cloud.snapshot_store_ref', 'download_url_created', 'datetime DEFAULT NULL');
 
 -- Webhooks feature
-DROP TABLE IF EXISTS `cloud`.`webhook`;
-CREATE TABLE `cloud`.`webhook` (
+CREATE TABLE IF NOT EXISTS `cloud`.`webhook` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT COMMENT 'id of the webhook',
   `uuid` varchar(255) COMMENT 'uuid of the webhook',
   `name` varchar(255) NOT NULL COMMENT 'name of the webhook',
@@ -121,8 +120,7 @@ CREATE TABLE `cloud`.`webhook` (
   CONSTRAINT `fk_webhook__account_id` FOREIGN KEY (`account_id`) REFERENCES `account`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-DROP TABLE IF EXISTS `cloud`.`webhook_delivery`;
-CREATE TABLE `cloud`.`webhook_delivery` (
+CREATE TABLE IF NOT EXISTS `cloud`.`webhook_delivery` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT COMMENT 'id of the webhook delivery',
   `uuid` varchar(255) COMMENT 'uuid of the webhook',
   `event_id` bigint unsigned NOT NULL COMMENT 'id of the event',
@@ -159,7 +157,7 @@ WHERE
     AND value NOT IN ("true", "y", "t", "1", "on", "yes");
 
 -- Create tables for static and dynamic routing
-CREATE TABLE `cloud`.`dc_ip4_guest_subnets` (
+CREATE TABLE IF NOT EXISTS `cloud`.`dc_ip4_guest_subnets` (
    `id` bigint unsigned NOT NULL auto_increment COMMENT 'id',
    `uuid` varchar(40) DEFAULT NULL,
    `data_center_id` bigint(20) unsigned NOT NULL COMMENT 'zone it belongs to',
@@ -175,7 +173,7 @@ CREATE TABLE `cloud`.`dc_ip4_guest_subnets` (
    CONSTRAINT `uc_dc_ip4_guest_subnets__uuid` UNIQUE (`uuid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-CREATE TABLE `cloud`.`ip4_guest_subnet_network_map` (
+CREATE TABLE IF NOT EXISTS `cloud`.`ip4_guest_subnet_network_map` (
    `id` bigint unsigned NOT NULL auto_increment COMMENT 'id',
    `uuid` varchar(40) DEFAULT NULL,
    `parent_id` bigint(20) unsigned COMMENT 'ip4 guest subnet which subnet belongs to',
@@ -258,7 +256,7 @@ CREATE TABLE IF NOT EXISTS `cloud`.`bgp_peers` (
     UNIQUE KEY `uk_bgp_peers__uuid` (`uuid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-CREATE TABLE `cloud`.`bgp_peer_details` (
+CREATE TABLE IF NOT EXISTS `cloud`.`bgp_peer_details` (
     `id` bigint unsigned NOT NULL auto_increment,
     `bgp_peer_id` bigint unsigned NOT NULL COMMENT 'bgp peer id',
     `name` varchar(255) NOT NULL,
@@ -282,7 +280,7 @@ CREATE TABLE IF NOT EXISTS `cloud`.`bgp_peer_network_map` (
     CONSTRAINT `fk_bgp_peer_network_map__vpc_id` FOREIGN KEY (`vpc_id`) REFERENCES `vpc`(`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-CREATE TABLE `cloud`.`shared_filesystem`(
+CREATE TABLE IF NOT EXISTS `cloud`.`shared_filesystem`(
     `id` bigint unsigned NOT NULL auto_increment COMMENT 'ID',
     `uuid` varchar(40) COMMENT 'UUID',
     `name` varchar(255) NOT NULL COMMENT 'Name of the shared filesystem',
