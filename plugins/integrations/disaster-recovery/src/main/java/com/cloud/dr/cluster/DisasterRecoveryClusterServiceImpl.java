@@ -460,7 +460,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                     for (JsonElement dr : mirrorList) {
                         LOGGER.info(dr.getAsJsonObject().get("name").getAsString());
                         LOGGER.info(map.getMirroredVmVolumePath());
-                        if (dr.getAsJsonObject().get("name").getAsString() == map.getMirroredVmVolumePath()) {
+                        if (dr.getAsJsonObject().get("name").getAsString().equals(map.getMirroredVmVolumePath())) {
                             LOGGER.info("in::::::::::::::::::::::::::::::");
                             LOGGER.info(dr.getAsJsonObject().get("state").getAsString());
                             if (dr.getAsJsonObject().get("state").getAsString().contains("replaying")) {
