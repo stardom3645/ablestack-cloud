@@ -1172,6 +1172,7 @@ public class ApiServer extends ManagerBase implements HttpRequestHandler, ApiSer
         } else {
             domainId = userDomain.getId();
         }
+
         final UserAccount userAcct = accountMgr.authenticateUser(username, password, domainId, loginIpAddress, requestParameters);
         List<String> sessionIds = new ArrayList<>();
         if (userAcct != null) {
