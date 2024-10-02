@@ -603,6 +603,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                     String glueCommand = "/mirror";
                     String glueMethod = "PUT";
                     Map<String, String> glueParams = new HashMap<>();
+                    glueParams.put("interval", details.get("mirrorscheduleinterval"));
                     glueParams.put("moldUrl", priUrl + "/client/api/");
                     glueParams.put("moldApiKey", priApiKey);
                     glueParams.put("moldSecretKey", priSecretKey);

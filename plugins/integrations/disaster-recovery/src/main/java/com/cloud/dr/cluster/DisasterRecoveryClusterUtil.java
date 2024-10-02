@@ -1119,7 +1119,7 @@ public class DisasterRecoveryClusterUtil {
      * @param subUrl
      *  /mirror/image/mirrorPool(string)/imageName(string)
      * @param method
-     *  PATCH
+     *  PUT
      * @param parameter
      *  mirrorPool(string), imageName(string), interval(string), startTime(string)
      * @return true = 200, 이외 코드는 false 처리
