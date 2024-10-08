@@ -1389,6 +1389,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
         final KVMStorageProcessor storageProcessor = new KVMStorageProcessor(storagePoolManager, this);
         storageProcessor.configure(name, params);
         storageHandler = new StorageSubsystemCommandHandlerBase(storageProcessor);
+        LOGGER.info("StorageSubsystemCommandHandlerBase excute1");
 
         Boolean iscsiCleanUpEnabled = AgentPropertiesFileHandler.getPropertyValue(AgentProperties.ISCSI_SESSION_CLEANUP_ENABLED);
 

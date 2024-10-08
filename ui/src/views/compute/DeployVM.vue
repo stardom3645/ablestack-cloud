@@ -228,6 +228,9 @@
                     <a-form-item class="form-item-hidden">
                       <a-input v-model:value="form.volumeId" />
                     </a-form-item>
+                    <a-form-item class="form-item-hidden">
+                      <a-input v-model:value="form.templateKvdoEnable" />
+                    </a-form-item>
                   </div>
                 </template>
               </a-step>
@@ -271,7 +274,7 @@
                       :minimum-cpunumber="templateConfigurationExists && selectedTemplateConfiguration && selectedTemplateConfiguration.cpunumber ? selectedTemplateConfiguration.cpunumber : 0"
                       :minimum-cpuspeed="templateConfigurationExists && selectedTemplateConfiguration && selectedTemplateConfiguration.cpuspeed ? selectedTemplateConfiguration.cpuspeed : 0"
                       :minimum-memory="templateConfigurationExists && selectedTemplateConfiguration && selectedTemplateConfiguration.memory ? selectedTemplateConfiguration.memory : 0"
-                      @select-compute-item="($event) => updateComputeOffering($event)"
+                      @select-compute-item="($event, $kvdoEnable) => updateComputeOffering($event, $kvdoEnable)"
                       @handle-search-filter="($event) => handleSearchFilter('serviceOfferings', $event)"
                     ></compute-offering-selection>
                     <compute-selection
@@ -281,6 +284,7 @@
                       memoryInputDecorator="memory"
                       :preFillContent="dataPreFill"
                       :computeOfferingId="instanceConfig.computeofferingid"
+                      :computeOfferingKvdoEnable="serviceOffering.kvdoenable"
                       :isConstrained="isOfferingConstrained(serviceOffering)"
                       :minCpu="'serviceofferingdetails' in serviceOffering ? serviceOffering.serviceofferingdetails.mincpunumber*1 : 0"
                       :maxCpu="'serviceofferingdetails' in serviceOffering ? serviceOffering.serviceofferingdetails.maxcpunumber*1 : Number.MAX_SAFE_INTEGER"
@@ -307,6 +311,9 @@
                       <a-form-item class="form-item-hidden" name="memory" ref="memory">
                         <a-input v-model:value="form.memory"/>
                       </a-form-item>
+                      <!-- <a-form-item class="form-item-hidden">
+                        <a-input v-model:value="form.computeOfferingKvdoEnable" />
+                      </a-form-item> -->
                     </span>
                     <span v-if="tabKey!=='isoid' && tabKey!=='volumeId'">
                       {{ $t('label.override.root.diskoffering') }}
@@ -362,6 +369,9 @@
                               @update-root-disk-iops-value="updateIOPSValue"/>
                             <a-form-item class="form-item-hidden">
                               <a-input v-model:value="form.rootdisksize"/>
+                            </a-form-item>
+                            <a-form-item class="form-item-hidden">
+                              <a-input v-model:value="form.offeringKvdoEnable" />
                             </a-form-item>
                           </div>
                         </template>
@@ -1904,6 +1914,7 @@ export default {
           this.form.iothreadsenabled = template.details && Object.prototype.hasOwnProperty.call(template.details, 'iothreads')
           this.form.iodriverpolicy = template.details?.['io.policy']
           this.form.keyboard = template.details?.keyboard
+          this.form.templateKvdoEnable = template.kvdoenable
           if (template.details['vmware-to-kvm-mac-addresses']) {
             this.dataPreFill.macAddressArray = JSON.parse(template.details['vmware-to-kvm-mac-addresses'])
           }
@@ -1939,8 +1950,9 @@ export default {
         this.form[name] = value
       }
     },
-    updateComputeOffering (id) {
+    updateComputeOffering (id, kvdoEnable) {
       this.form.computeofferingid = id
+      this.form.computeOfferingKvdoEnable = kvdoEnable
       setTimeout(() => {
         this.updateTemplateConfigurationOfferingDetails(id)
       }, 500)
@@ -2112,6 +2124,14 @@ export default {
         if (this.tabKey === 'templateid') {
           deployVmData.templateid = values.templateid
           values.hypervisor = null
+          if (values.templateKvdoEnable !== values.computeOfferingKvdoEnable) {
+            this.$notification.error({
+              message: this.$t('message.request.failed'),
+              description: this.$t('message.step.3.kvdo')
+            })
+            this.loading.deploy = false
+            return
+          }
         } else if (this.tabKey === 'isoid') {
           deployVmData.templateid = values.isoid
         } else if (this.tabKey === 'volumeId') {
@@ -2927,7 +2947,7 @@ export default {
             if (this.selectedTemplateConfiguration) {
               this.updateFieldValue('templateConfiguration', this.selectedTemplateConfiguration.id)
             }
-            this.updateComputeOffering(null) // reset as existing selection may be incompatible
+            this.updateComputeOffering(null, null) // reset as existing selection may be incompatible
           }
         }, 500)
         this.updateFormProperties()
@@ -2936,7 +2956,7 @@ export default {
     onSelectTemplateConfigurationId (value) {
       this.selectedTemplateConfiguration = _.find(this.templateConfigurations, (option) => option.id === value)
       this.handleTemplateConfiguration()
-      this.updateComputeOffering(null)
+      this.updateComputeOffering(null, null)
     },
     updateTemplateConfigurationOfferingDetails (offeringId) {
       this.rootDiskSizeFixed = 0
