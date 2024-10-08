@@ -520,6 +520,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                 throw new InvalidParameterValueException("Invalid Disaster Recovery id specified");
             }
         }
+        String drType = drcluster.getDrClusterType();
         if (cmd.getDetails() != null) {
             Map<String,String> details = cmd.getDetails();
             if (!details.get("mirrorscheduleinterval").contains("d") && !details.get("mirrorscheduleinterval").contains("h") && !details.get("mirrorscheduleinterval").contains("m")) {
@@ -603,7 +604,9 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                     String glueCommand = "/mirror";
                     String glueMethod = "PUT";
                     Map<String, String> glueParams = new HashMap<>();
-                    glueParams.put("interval", details.get("mirrorscheduleinterval"));
+                    if (drType.equalsIgnoreCase("primary")) {
+                        glueParams.put("interval", details.get("mirrorscheduleinterval"));
+                    }
                     glueParams.put("moldUrl", priUrl + "/client/api/");
                     glueParams.put("moldApiKey", priApiKey);
                     glueParams.put("moldSecretKey", priSecretKey);
