@@ -45,7 +45,7 @@
                 :osId="item.ostypeid"
                 :os-name="item.osName" />
               &nbsp;
-              {{ item.displaytext }}
+              {{ item.displaytext  }} [kvdo : {{item.kvdoenable ? this.$t('label.enabled') : this.$t('label.disabled')}}]
               <span v-if="item?.projectid">
                 | <project-outlined /> {{ item.project }}
             </span>

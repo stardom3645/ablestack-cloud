@@ -1653,6 +1653,7 @@ public class TemplateManagerImpl extends ManagerBase implements TemplateManager,
         boolean kvmSnapshotOnlyInPrimaryStorage = false;
         SnapshotInfo snapInfo = null;
 
+        logger.debug("!!!!!!!!2");
         try {
             TemplateInfo tmplInfo = _tmplFactory.getTemplate(templateId, DataStoreRole.Image);
             long zoneId = 0;

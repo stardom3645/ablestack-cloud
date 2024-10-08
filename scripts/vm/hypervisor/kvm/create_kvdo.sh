@@ -61,6 +61,7 @@ if [ -z "$devicePath" ]; then
   devicePath=$(rbd map "$PoolName/$ImageName" --id "$PoolAuthUserName")
 fi
 
+
 # 파티션이 존재하는지 확인
 partitionExist=$(lsblk $devicePath -p -J |jq -r '.blockdevices[0].children')
 vg_name=vg_$(echo $ImageName| sed 's/-//g')
@@ -78,7 +79,34 @@ if [ "$partitionExist" == "null" ]; then
   vgcreate $vg_name $firstPartitionPath
 
   lvcreate --type vdo --name ablestack_kvdo -l +100%FREE --virtualsize $ImageSize"B" $vg_name
+  # vgcreate $ImageName $firstPartitionPath
+
+  # lvcreate --type vdo --name ablestack_kvdo -l +100%FREE --virtualsize $ImageSize"B" $ImageName
+
+  # ex_vg_name=$(pvs $firstPartitionPath --reportformat json |jq -r '.report[0].pv[0].vg_name')
+  # echo "1-1 : " $vg_name
+  # echo "2-1 : " $devicePath
+  # echo "3-1 : " $firstPartitionPath
+  # echo "4-1 : " $ex_vg_name
+  # if [ "$ex_vg_name" != "null" ] && [ -n "$ex_vg_name" ]; then
+  #   echo "5-1 : "
+  #   vgrename $ex_vg_name $vg_name
+  #   vgchange --uuid $vg_name
+  #   pvchange --uuid $firstPartitionPath
+  # fi
 else
+  firstPartitionPath=$(lsblk $devicePath -p -J |jq -r '.blockdevices[0].children[0].name')
+  ex_vg_name=$(pvs $firstPartitionPath --reportformat json |jq -r '.report[0].pv[0].vg_name')
+  echo "1 : " $vg_name
+  echo "2 : " $devicePath
+  echo "3 : " $firstPartitionPath
+  echo "4 : " $ex_vg_name
+  if [ -n "$ex_vg_name" ] && [ "$ex_vg_name" != "null" ] && [ $ex_vg_name != $vg_name ]; then
+  echo "5 : "
+    vgrename $ex_vg_name $vg_name
+    vgchange --uuid $vg_name
+    pvchange --uuid $firstPartitionPath
+  fi
   vgchange -ay $vg_name
 fi
 

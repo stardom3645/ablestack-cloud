@@ -149,6 +149,7 @@ public class KVMStorageProcessor implements StorageProcessor {
     private StorageLayer storageLayer;
     private String _createTmplPath;
     private String _manageSnapshotPath;
+    private String _convertKvdoTemplate;
     private int _cmdsTimeout;
 
     private static final String MANAGE_SNAPSTHOT_CREATE_OPTION = "-c";
@@ -185,6 +186,11 @@ public class KVMStorageProcessor implements StorageProcessor {
         _manageSnapshotPath = Script.findScript(storageScriptsDir, "managesnapshot.sh");
         if (_manageSnapshotPath == null) {
             throw new ConfigurationException("Unable to find the managesnapshot.sh");
+        }
+
+        _convertKvdoTemplate = Script.findScript(storageScriptsDir, "convert_kvdo_template.sh");
+        if (_convertKvdoTemplate == null) {
+            throw new ConfigurationException("Unable to find the convert_kvdo_template.sh");
         }
 
         _cmdsTimeout = AgentPropertiesFileHandler.getPropertyValue(AgentProperties.CMDS_TIMEOUT) * 1000;
@@ -654,10 +660,9 @@ public class KVMStorageProcessor implements StorageProcessor {
                 }
             } else {
                 logger.debug("Converting RBD disk " + disk.getPath() + " into template " + templateName);
-
                 final QemuImgFile srcFile =
-                        new QemuImgFile(KVMPhysicalDisk.RBDStringBuilder(primary.getSourceHost(), primary.getSourcePort(), primary.getAuthUserName(),
-                                primary.getAuthSecret(), disk.getPath()));
+                new QemuImgFile(KVMPhysicalDisk.RBDStringBuilder(primary.getSourceHost(), primary.getSourcePort(), primary.getAuthUserName(),
+                primary.getAuthSecret(), disk.getPath()));
                 srcFile.setFormat(PhysicalDiskFormat.RAW);
 
                 final QemuImgFile destFile = new QemuImgFile(tmpltPath + "/" + templateName + ".qcow2");
@@ -665,7 +670,32 @@ public class KVMStorageProcessor implements StorageProcessor {
 
                 final QemuImg q = new QemuImg(cmd.getWaitInMillSeconds());
                 try {
+                    logger.debug("!!!!!!!!!");
+                    if (volume.getKvdoEnable()) {
+                        srcFile.setKvdoEnable(volume.getKvdoEnable());
+                    }
+                    logger.debug("volume.getKvdoEnable() : " + volume.getKvdoEnable());
+                    logger.debug("disk.getPath() : " + disk.getPath());
+                    logger.debug("primary.getSourceHost() : " + primary.getSourceHost());
+                    logger.debug("primary.getSourcePort() : " + primary.getSourcePort());
+                    logger.debug("primary.getAuthUserName() : " + primary.getAuthUserName());
+                    logger.debug("primary.getAuthSecret() : " + primary.getAuthSecret());
+                    logger.debug("srcFile.getFileName() : " + srcFile.getFileName());
+                    logger.debug("destFile.getFileName() : " + destFile.getFileName());
+                    logger.debug("primary.getAuthSecret() : " + primary.getAuthSecret());
+                    logger.debug("!!!!!!!!!");
+                    // Script.runSimpleBashScript("mkdir -f /root/test");
                     q.convert(srcFile, destFile);
+
+                    if (volume.getKvdoEnable()) {
+                        final Script command = new Script(_convertKvdoTemplate, cmd.getWaitInMillSeconds(), logger);
+                        command.add("-n", destFile.getFileName());
+                        command.add("-u", templateName);
+                        final String result = command.execute();
+                        if (result != null) {
+                            logger.error("Failed to reset compressed deduplication template PV, VG, LV.");
+                        }
+                    }
                 } catch (final QemuImgException | LibvirtException e) {
                     final String message = "Failed to create new template while converting " + srcFile.getFileName() + " to " + destFile.getFileName() + " the error was: " +
                             e.getMessage();

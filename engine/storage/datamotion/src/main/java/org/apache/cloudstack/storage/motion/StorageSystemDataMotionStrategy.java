@@ -346,6 +346,7 @@ public class StorageSystemDataMotionStrategy implements DataMotionStrategy {
             TemplateInfo destTemplateInfo = (TemplateInfo)destData;
 
             handleCreateTemplateFromManagedVolume(srcVolumeInfo, destTemplateInfo, callback);
+            logger.info("handleCreateTemplateFromManagedVolume excute2");
         }
         else {
             handleError(OPERATION_NOT_SUPPORTED, callback);
@@ -2561,7 +2562,6 @@ public class StorageSystemDataMotionStrategy implements DataMotionStrategy {
                 Map<String, String> srcDetails = getVolumeDetails(volumeInfo);
 
                 copyCommand.setOptions(srcDetails);
-
                 copyCmdAnswer = (CopyCmdAnswer)agentManager.send(hostVO.getId(), copyCommand);
 
                 if (!copyCmdAnswer.getResult()) {
