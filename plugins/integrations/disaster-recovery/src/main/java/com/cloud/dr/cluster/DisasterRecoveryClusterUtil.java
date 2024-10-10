@@ -1057,7 +1057,7 @@ public class DisasterRecoveryClusterUtil {
      * @param method
      *  POST
      * @param parameter
-     *  mirrorPool(string), imageName(string), hostName(string), vmName(string), interval(string)
+     *  mirrorPool(string), imageName(string), hostName(string), vmName(string), volType(string)
      * @return true = 200, 이외 코드는 false 처리
      */
     protected static boolean glueImageMirrorScheduleSetupAPI(String region, String subUrl, String method, Map<String, String> params) {
