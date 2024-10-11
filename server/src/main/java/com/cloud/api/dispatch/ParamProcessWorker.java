@@ -342,7 +342,7 @@ public class ParamProcessWorker implements DispatchWorker {
         }
 
         if (cmd.getEntityOwnerId() == Account.ACCOUNT_ID_SYSTEM && cmd instanceof BaseAsyncCmd && cmd.getApiResourceType() == ApiCommandResourceType.Network) {
-            s_logger.debug("Skipping access check on the network owner if the owner is ROOT/system.");
+            logger.debug("Skipping access check on the network owner if the owner is ROOT/system.");
         } else {
             Account owner = _accountMgr.getAccount(cmd.getEntityOwnerId());
             if (owner != null) {
