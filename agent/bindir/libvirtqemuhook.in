@@ -204,7 +204,6 @@ def unmapStorage():
                         # If there are matching results
                         if match:
                             vg_name = "vg_"+str(match.group(1))
-                            logger.error('kvdo vg name : %s' % vg_name)
                             ret_code = executeProgram("/usr/sbin/vgchange", ["-an", vg_name])
                             if ret_code == 22:
                                 logger.error('kvdo vgchange failed: %s' % img)

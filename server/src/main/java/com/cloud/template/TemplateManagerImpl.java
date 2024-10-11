@@ -2182,16 +2182,20 @@ public class TemplateManagerImpl extends ManagerBase implements TemplateManager,
                 logger.debug("Adding template tag: " + templateTag);
             }
         }
+        boolean kvdoEnable = false;
+        if (volumeId != null) {
+            VolumeInfo volInfo = _volFactory.getVolume(volumeId);
+            kvdoEnable = volInfo.getKvdoEnable();
+        }
         privateTemplate = new VMTemplateVO(nextTemplateId, name, ImageFormat.RAW, isPublic, featured, isExtractable,
                 TemplateType.USER, null, requiresHvmValue, bitsValue, templateOwner.getId(), null, description,
-                passwordEnabledValue, guestOS.getId(), true, hyperType, templateTag, cmd.getDetails(), sshKeyEnabledValue, isDynamicScalingEnabled, false, false, false);
+                passwordEnabledValue, guestOS.getId(), true, hyperType, templateTag, cmd.getDetails(), sshKeyEnabledValue, isDynamicScalingEnabled, false, kvdoEnable, false);
 
         if (sourceTemplateId != null) {
             if (logger.isDebugEnabled()) {
                 logger.debug("This template is getting created from other template, setting source template Id to: " + sourceTemplateId);
             }
         }
-
 
         // for region wide storage, set cross zones flag
         List<ImageStoreVO> stores = _imgStoreDao.findRegionImageStores();
