@@ -72,7 +72,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 public class CephObjectStoreDriverImpl extends BaseObjectStoreDriverImpl {
-    private static final Logger s_logger = LogManager.getLogger(CephObjectStoreDriverImpl.class);
 
     @Inject
     AccountDao _accountDao;
