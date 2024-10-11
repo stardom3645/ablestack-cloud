@@ -2429,11 +2429,8 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         UserAccount user = accountService.getActiveUserAccount("admin", 1L);
         String priApiKey = user.getApiKey();
         String priSecretKey = user.getSecretKey();
-        if (priApiKey == null || priApiKey.isEmpty()) {
-            throw new InvalidParameterValueException("Please create the API and Secret keys for the Admin account first.");
-        }
-        if (priSecretKey == null || priSecretKey.isEmpty()) {
-            throw new InvalidParameterValueException("Please create the API and Secret keys for the Admin account first.");
+        if (StringUtils.isAnyEmpty(priApiKey, priSecretKey)) {
+            accountService.createApiKeyAndSecretKey(user.getId());
         }
     }
 
