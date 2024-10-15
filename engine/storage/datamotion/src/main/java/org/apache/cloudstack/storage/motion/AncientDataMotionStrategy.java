@@ -513,6 +513,7 @@ public class AncientDataMotionStrategy implements DataMotionStrategy {
     // Note: destHost is currently only used if the copyObject method is invoked
     @Override
     public void copyAsync(DataObject srcData, DataObject destData, Host destHost, AsyncCompletionCallback<CopyCommandResult> callback) {
+        logger.debug("kvdo_test30");
         Answer answer = null;
         String errMsg = null;
         try {
