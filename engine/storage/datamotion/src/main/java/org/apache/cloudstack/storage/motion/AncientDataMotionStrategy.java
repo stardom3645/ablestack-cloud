@@ -520,12 +520,17 @@ public class AncientDataMotionStrategy implements DataMotionStrategy {
             if (logger.isDebugEnabled()) logger.debug("copyAsync inspecting src type " + srcData.getType().toString() + " copyAsync inspecting dest type " + destData.getType().toString());
             if (srcData.getType() == DataObjectType.SNAPSHOT && destData.getType() == DataObjectType.VOLUME) {
                 answer = copyVolumeFromSnapshot(srcData, destData);
+                logger.debug("kvdo_test30-1");
             } else if (srcData.getType() == DataObjectType.SNAPSHOT && destData.getType() == DataObjectType.TEMPLATE) {
                 answer = createTemplateFromSnapshot(srcData, destData);
+                logger.debug("kvdo_test30-2");
             } else if (srcData.getType() == DataObjectType.TEMPLATE && destData.getType() == DataObjectType.VOLUME) {
+                logger.debug("kvdo_test30-3");
                 answer = cloneVolume(srcData, destData);
+                logger.debug("kvdo_test30-4");
             } else if (destData.getType() == DataObjectType.VOLUME && srcData.getType() == DataObjectType.VOLUME &&
                 srcData.getDataStore().getRole() == DataStoreRole.Primary && destData.getDataStore().getRole() == DataStoreRole.Primary) {
+                logger.debug("kvdo_test30-5");
                 if (logger.isDebugEnabled()) logger.debug("About to MIGRATE copy between datasources");
                 if (srcData.getId() == destData.getId()) {
                     // The volume has to be migrated across storage pools.
@@ -539,8 +544,10 @@ public class AncientDataMotionStrategy implements DataMotionStrategy {
                 }
             } else if (srcData.getType() == DataObjectType.SNAPSHOT && destData.getType() == DataObjectType.SNAPSHOT) {
                 answer = copySnapshot(srcData, destData);
+                logger.debug("kvdo_test30-6");
             } else {
                 answer = copyObject(srcData, destData, destHost);
+                logger.debug("kvdo_test30-7");
             }
 
             if (answer != null && !answer.getResult()) {
