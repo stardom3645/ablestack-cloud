@@ -173,6 +173,7 @@ public class StorPoolDataMotionStrategy implements DataMotionStrategy {
     @Override
     public void copyAsync(DataObject srcData, DataObject destData, Host destHost,
             AsyncCompletionCallback<CopyCommandResult> callback) {
+        logger.debug("kvdo_test40");
         SnapshotObjectTO snapshot = (SnapshotObjectTO) srcData.getTO();
         TemplateObjectTO template = (TemplateObjectTO) destData.getTO();
         DataStore store = _dataStore.getDataStore(snapshot.getVolume().getDataStore().getUuid(),
