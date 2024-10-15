@@ -60,12 +60,13 @@ public class DataMotionServiceImpl implements DataMotionService {
 
     @Override
     public void copyAsync(DataObject srcData, DataObject destData, Host destHost, AsyncCompletionCallback<CopyCommandResult> callback) {
+        logger.debug("kvdo_test7");
         if (srcData.getDataStore() == null || destData.getDataStore() == null) {
             String errMsg = "can't find data store";
             invokeCallback(errMsg, callback);
             return;
         }
-
+        logger.debug("kvdo_test8");
         if (srcData.getDataStore().getDriver().canCopy(srcData, destData)) {
             srcData.getDataStore().getDriver().copyAsync(srcData, destData, destHost, callback);
             return;
@@ -73,7 +74,7 @@ public class DataMotionServiceImpl implements DataMotionService {
             destData.getDataStore().getDriver().copyAsync(srcData, destData, destHost, callback);
             return;
         }
-
+        logger.debug("kvdo_test9");
         DataMotionStrategy strategy = storageStrategyFactory.getDataMotionStrategy(srcData, destData);
         if (strategy == null) {
             // OfflineVmware volume migration
@@ -84,7 +85,7 @@ public class DataMotionServiceImpl implements DataMotionService {
             invokeCallback(errMsg, callback);
             return;
         }
-
+        logger.debug("kvdo_test10");
         strategy.copyAsync(srcData, destData, destHost, callback);
     }
 
@@ -144,6 +145,7 @@ public class DataMotionServiceImpl implements DataMotionService {
 
     @Override
     public void copyAsync(DataObject srcData, DataObject destData, AsyncCompletionCallback<CopyCommandResult> callback) {
+        logger.debug("kvdo_test6");
         copyAsync(srcData, destData, null, callback);
     }
 

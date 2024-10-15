@@ -1676,6 +1676,7 @@ public class TemplateManagerImpl extends ManagerBase implements TemplateManager,
             AsyncCallFuture<TemplateApiResult> future = null;
 
             if (snapshotId != null) {
+                logger.debug("kvdo_test1");
                 DataStoreRole dataStoreRole = snapshotHelper.getDataStoreRole(snapshot);
                 kvmSnapshotOnlyInPrimaryStorage = snapshotHelper.isKvmSnapshotOnlyInPrimaryStorage(snapshot, dataStoreRole);
 
@@ -1692,6 +1693,7 @@ public class TemplateManagerImpl extends ManagerBase implements TemplateManager,
 
                 future = _tmpltSvr.createTemplateFromSnapshotAsync(snapInfo, tmplInfo, store);
             } else if (volumeId != null) {
+                logger.debug("kvdo_test2");
                 VolumeInfo volInfo = _volFactory.getVolume(volumeId);
                 if (volInfo == null) {
                     throw new InvalidParameterValueException("No such volume exist");
