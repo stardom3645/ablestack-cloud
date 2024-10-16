@@ -21,7 +21,7 @@
       <a-select
         @change="changeDomain"
         v-model:value="selectedAccountType"
-        defaultValue="account"
+        defaultValue="account"  
         autoFocus
         showSearch
         optionFilterProp="label"
@@ -31,8 +31,8 @@
           }
         "
       >
-        <a-select-option :value="$t('label.account')">{{ $t('label.account') }}</a-select-option>
-        <a-select-option :value="$t('label.project')">{{ $t('label.project') }}</a-select-option>
+        <a-select-option value="Account">{{ $t('label.account') }}</a-select-option>
+        <a-select-option value="Project">{{ $t('label.project') }}</a-select-option>
       </a-select>
     </a-form-item>
     <a-form-item :label="$t('label.domain')" required>
