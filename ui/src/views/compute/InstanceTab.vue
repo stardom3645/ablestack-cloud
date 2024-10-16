@@ -167,6 +167,17 @@
       @cancel="closeModals">
       <DRMirroringVMAdd :resource="resource" @close-action="closeModals" />
     </a-modal>
+
+    <a-modal
+      :visible="showDrSimulationTestModal"
+      :title="$t('label.dr.simulation.test')"
+      :maskClosable="false"
+      :closable="true"
+      :footer="null"
+      width="850px"
+      @cancel="closeModals">
+      <DRsimulationTestModal :resource="resource" @close-action="closeModals" />
+    </a-modal>
   </a-spin>
 </template>
 
@@ -188,8 +199,8 @@ import ResourceIcon from '@/components/view/ResourceIcon'
 import AnnotationsTab from '@/components/view/AnnotationsTab'
 import VolumesTab from '@/components/view/VolumesTab.vue'
 import SecurityGroupSelection from '@views/compute/wizard/SecurityGroupSelection'
-import DRTable from '@/views/compute/dr/DRTable.vue'
-import DRsimulationTestModal from '@/views/compute/dr/DRsimulationTestModal.vue'
+import DRTable from '@/views/compute/dr/DRTable'
+import DRsimulationTestModal from '@/views/compute/dr/DRsimulationTestModal'
 import DRMirroringVMAdd from '@/views/compute/dr/DRMirroringVMAdd'
 
 export default {
