@@ -2669,33 +2669,3 @@ public class TemplateManagerImpl extends ManagerBase implements TemplateManager,
         return _tmpltDao.findById(template.getId());
     }
 }
-
-// protected void copyLocalToNfs(File localFile, File isoFile, DataStoreTO destData) throws ConfigurationException, IOException {
-//     String scriptsDir = "scripts/storage/convert";
-//     String convertKvdoTemp = Script.findScript(scriptsDir, "convert_kvdo_template.sh");
-//     if (convertKvdoTemp == null) {
-//         throw new ConfigurationException("Unable to find convert_kvdo_template.sh");
-//     }
-//     logger.info("convert_kvdo_template.sh found in " + convertKvdoTemp);
-
-//     int installTimeoutPerGig = 180 * 60 * 1000;
-//     int imgSizeGigs = (int) Math.ceil(localFile.length() * 1.0d / (1024 * 1024 * 1024));
-//     imgSizeGigs++; // add one just in case
-//     long timeout = imgSizeGigs * installTimeoutPerGig;
-
-//     Script command = new Script(convertKvdoTemp, timeout, logger);
-
-//     command.add("-n", destFile.getFileName());
-//     command.add("-u", templateName);
-//     final String result = command.execute();
-//     if (result != null) {
-//         logger.error("Failed to reset compressed deduplication template PV, VG, LV.");
-//     }
-
-//     result = command.execute();
-
-//     if (result != null) {
-//         // script execution failure
-//         throw new CloudRuntimeException("Failed to run script " + convertKvdoTemp);
-//     }
-// }
