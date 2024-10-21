@@ -670,32 +670,7 @@ public class KVMStorageProcessor implements StorageProcessor {
 
                 final QemuImg q = new QemuImg(cmd.getWaitInMillSeconds());
                 try {
-                    logger.debug("!!!!!!!!!");
-                    if (volume.getKvdoEnable()) {
-                        srcFile.setKvdoEnable(volume.getKvdoEnable());
-                    }
-                    logger.debug("volume.getKvdoEnable() : " + volume.getKvdoEnable());
-                    logger.debug("disk.getPath() : " + disk.getPath());
-                    logger.debug("primary.getSourceHost() : " + primary.getSourceHost());
-                    logger.debug("primary.getSourcePort() : " + primary.getSourcePort());
-                    logger.debug("primary.getAuthUserName() : " + primary.getAuthUserName());
-                    logger.debug("primary.getAuthSecret() : " + primary.getAuthSecret());
-                    logger.debug("srcFile.getFileName() : " + srcFile.getFileName());
-                    logger.debug("destFile.getFileName() : " + destFile.getFileName());
-                    logger.debug("primary.getAuthSecret() : " + primary.getAuthSecret());
-                    logger.debug("!!!!!!!!!");
-                    // Script.runSimpleBashScript("mkdir -f /root/test");
                     q.convert(srcFile, destFile);
-
-                    if (volume.getKvdoEnable()) {
-                        final Script command = new Script(_convertKvdoTemplate, cmd.getWaitInMillSeconds(), logger);
-                        command.add("-n", destFile.getFileName());
-                        command.add("-u", templateName);
-                        final String result = command.execute();
-                        if (result != null) {
-                            logger.error("Failed to reset compressed deduplication template PV, VG, LV.");
-                        }
-                    }
                 } catch (final QemuImgException | LibvirtException e) {
                     final String message = "Failed to create new template while converting " + srcFile.getFileName() + " to " + destFile.getFileName() + " the error was: " +
                             e.getMessage();

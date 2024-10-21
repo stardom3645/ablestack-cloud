@@ -21,12 +21,16 @@ help() {
   exit 1
 }
 #set -x
+TempPath=
 TmpFile=
 Uuid=
 
-while getopts 'n:u:' OPTION
+while getopts 'p:n:u:' OPTION
 do
   case $OPTION in
+  p)
+     TempPath="$OPTARG"
+     ;;
   n)
      TmpFile="$OPTARG"
      ;;
@@ -53,6 +57,9 @@ targetNbd=$(lsblk /dev/nbd* -p |grep 0B | cut -d ' ' -f 1 | grep -v '^$' | head 
 echo "1 : " $targetNbd
 
 # TmpFile="/nfs/secondary/template/tmpl/2/224/c3aaf7dd-57ed-4f4d-8be6-88abfd646d51.qcow2"
+fileName=$(find / -path "*$TempPath/template.properties" | head -n 1 | grep "^filename=" template.properties | cut -d'=' -f2)
+TmpFile=$(find / -path "*$TempPath/$fileName" | head -n 1)
+
 echo "2 : "  $TmpFile
 
 # nbd 연결
