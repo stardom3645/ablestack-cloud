@@ -1395,6 +1395,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         String glueUrl = "";
         String glueCommand = "";
         String glueMethod = "";
+        validateResyncDisasterRecoveryClusterMirrorParameters(drCluster);
         // 복구된 경우 rbd-mirror 서비스 재시작 후 동기화 작업 진행
         String ipList = Script.runSimpleBashScript("cat /etc/hosts | grep -E 'scvm.*-mngt' | awk '{print $1}' | tr '\n' ','");
         if (ipList != null || !ipList.isEmpty()) {
@@ -1417,7 +1418,6 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                 }
             }
         }
-        validateResyncDisasterRecoveryClusterMirrorParameters(drCluster);
         if (ipList != null || !ipList.isEmpty()) {
             ipList = ipList.replaceAll(",$", "");
             String[] array = ipList.split(",");
