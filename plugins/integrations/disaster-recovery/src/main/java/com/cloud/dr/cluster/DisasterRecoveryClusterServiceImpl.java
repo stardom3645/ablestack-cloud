@@ -2089,7 +2089,6 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         }
         String drName = cmd.getDrClusterName();
         Long vmId = cmd.getId();
-        checkSimulationTestDisasterRecoveryClusterMirror(vmId);
         DisasterRecoveryClusterVO drCluster = disasterRecoveryClusterDao.findByName(drName);
         String url = drCluster.getDrClusterUrl();
         Map<String, String> details = disasterRecoveryClusterDetailsDao.findDetails(drCluster.getId());
@@ -2477,56 +2476,6 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         String priSecretKey = user.getSecretKey();
         if (StringUtils.isAnyEmpty(priApiKey, priSecretKey)) {
             accountService.createApiKeyAndSecretKey(user.getId());
-        }
-    }
-
-    private void checkSimulationTestDisasterRecoveryClusterMirror(final Long vmId) throws CloudRuntimeException {
-        UserVmJoinVO userVM = userVmJoinDao.findById(vmId);
-        List<VolumeVO> volumes = volsDao.findByInstance(userVM.getId());
-        for (VolumeVO vol : volumes) {
-            String volumeUuid = vol.getPath();
-            String ipList = Script.runSimpleBashScript("cat /etc/hosts | grep -E 'scvm.*-mngt' | awk '{print $1}' | tr '\n' ','");
-            if (ipList != null || !ipList.isEmpty()) {
-                ipList = ipList.replaceAll(",$", "");
-                String[] array = ipList.split(",");
-                for (int i=0; i < array.length; i++) {
-                    String glueIp = array[i];
-                    ///////////////////// glue-api 프로토콜과 포트 확정 시 변경 예정
-                    String glueUrl = "https://" + glueIp + ":8080/api/v1";
-                    String glueCommand = "/mirror/image/status/rbd/" +volumeUuid;
-                    String glueMethod = "GET";
-                    String mirrorImageStatus = DisasterRecoveryClusterUtil.glueImageMirrorStatusAPI(glueUrl, glueCommand, glueMethod);
-                    if (mirrorImageStatus != null) {
-                        JsonObject statObject = (JsonObject) new JsonParser().parse(mirrorImageStatus).getAsJsonObject();
-                        JsonArray drArray = (JsonArray) new JsonParser().parse(mirrorImageStatus).getAsJsonObject().get("peer_sites");
-                        if (statObject.has("description") && drArray.size() != 0 && drArray != null) {
-                            JsonElement peerState = null;
-                            JsonElement peerDescription = null;
-                            for (JsonElement dr : drArray) {
-                                if (dr.getAsJsonObject().get("state") != null) {
-                                    peerState = dr.getAsJsonObject().get("state");
-                                }
-                                if (dr.getAsJsonObject().get("description") != null) {
-                                    peerDescription = dr.getAsJsonObject().get("description");
-                                }
-                            }
-                            if (peerState != null) {
-                                if (!statObject.get("description").getAsString().equals("local image is primary") || !peerState.getAsString().contains("replaying")) {
-                                    throw new InvalidParameterValueException("Simulation test functions cannot be executed because peer state is " + peerState.getAsString() + "in volume path : " + volumeUuid);
-                                }
-                                if (peerDescription != null) {
-                                    if (!peerDescription.getAsString().contains("idle")) {
-                                        throw new InvalidParameterValueException("Simulation test functions cannot be executed because peer state is syncing in volume path : " + volumeUuid + ". Please try again later.");
-                                    }
-                                }
-                            }
-                        }
-                        break;
-                    } else {
-                        throw new InvalidParameterValueException("Simulation test functions cannot be executed because image mirror status glue-API request failed.");
-                    }
-                }
-            }
         }
     }
 
