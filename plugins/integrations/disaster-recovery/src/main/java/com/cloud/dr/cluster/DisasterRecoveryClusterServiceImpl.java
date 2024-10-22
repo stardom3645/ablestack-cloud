@@ -1336,6 +1336,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                                                 ///////////////////// glue-api 프로토콜과 포트 확정 시 변경 예정
                                                 glueUrl = "https://" + glueIp + ":8080/api/v1";
                                                 glueCommand = "/mirror/image/snapshot/rbd/" + vmName;
+                                                glueMethod = "POST";
                                                 glueParams = new HashMap<>();
                                                 glueParams.put("mirrorPool", "rbd");
                                                 glueParams.put("vmName", vmName);
