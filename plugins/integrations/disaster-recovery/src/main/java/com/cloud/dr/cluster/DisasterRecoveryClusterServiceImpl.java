@@ -2305,7 +2305,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
 
     private void demoteParentImage(final DisasterRecoveryClusterVO drCluster)throws CloudRuntimeException {
         List<DisasterRecoveryClusterVmMapVO> vmMap = disasterRecoveryClusterVmMapDao.listByDisasterRecoveryClusterId(drCluster.getId());
-        ArrayList<String> template = parentImageList(drCluster);
+        ArrayList<String> template = demoteParentImageList(drCluster);
         if (!template.isEmpty()) {
             String ipList = Script.runSimpleBashScript("cat /etc/hosts | grep -E 'scvm.*-mngt' | awk '{print $1}' | tr '\n' ','");
             if (ipList != null || !ipList.isEmpty()) {
@@ -2435,6 +2435,59 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                 }
             }
         }
+    }
+
+    private ArrayList<String> demoteParentImageList(final DisasterRecoveryClusterVO drCluster) throws CloudRuntimeException {
+        List<DisasterRecoveryClusterVmMapVO> vmMap = disasterRecoveryClusterVmMapDao.listByDisasterRecoveryClusterId(drCluster.getId());
+        ArrayList<String> vmTemplate = new ArrayList<>();
+        ArrayList<String> template = new ArrayList<>();
+        Map<String, String> details = disasterRecoveryClusterDetailsDao.findDetails(drCluster.getId());
+        String secUrl = drCluster.getDrClusterUrl();
+        String secApiKey = details.get(ApiConstants.DR_CLUSTER_API_KEY);
+        String secSecretKey = details.get(ApiConstants.DR_CLUSTER_SECRET_KEY);
+        String moldUrl = secUrl + "/client/api/";
+        String moldCommand = "listScvmIpAddress";
+        String moldMethod = "GET";
+        String response = DisasterRecoveryClusterUtil.moldListScvmIpAddressAPI(moldUrl, moldCommand, moldMethod, secApiKey, secSecretKey);
+        if (response != null) {
+            String[] array = response.split(",");
+            for (DisasterRecoveryClusterVmMapVO map : vmMap) {
+                int glueStep = 0;
+                Loop :
+                for (int i=0; i < array.length; i++) {
+                    String glueIp = array[i];
+                    ///////////////////// glue-api 프로토콜과 포트 확정 시 변경 예정
+                    String glueUrl = "https://" + glueIp + ":8080/api/v1";
+                    String glueCommand = "/mirror/image/info/rbd/" +map.getMirroredVmVolumePath();
+                    String glueMethod = "GET";
+                    while(glueStep < 100) {
+                        glueStep += 1;
+                        String mirrorImageInfo = DisasterRecoveryClusterUtil.glueImageMirrorInfoAPI(glueUrl, glueCommand, glueMethod);
+                        if (mirrorImageInfo != null) {
+                            JsonObject infoObject = (JsonObject) new JsonParser().parse(mirrorImageInfo).getAsJsonObject();
+                            if (!infoObject.get("image").getAsString().equals("")) {
+                                vmTemplate.add(infoObject.get("image").getAsString());
+                            }
+                            break Loop;
+                        } else {
+                            try {
+                                Thread.sleep(60000);
+                            } catch (InterruptedException e) {
+                                LOGGER.error("demoteParentImageList sleep interrupted");
+                            }
+                        }
+                    }
+                }
+            }
+            if (!vmTemplate.isEmpty()) {
+                for (String value : vmTemplate) {
+                    if (!template.contains(value)) {
+                        template.add(value);
+                    }
+                }
+            }
+        }
+        return template;
     }
 
     private ArrayList<String> parentImageList(final DisasterRecoveryClusterVO drCluster) throws CloudRuntimeException {
