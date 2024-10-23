@@ -2644,7 +2644,6 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                             Map<String, String> glueParams = new HashMap<>();
                             glueParams.put("mirrorPool", "rbd");
                             glueParams.put("imageList", join.toString());
-                            glueParams.put("hostName", hostName);
                             glueParams.put("vmName", vmName);
                             boolean result = DisasterRecoveryClusterUtil.glueImageMirrorSnapAPI(glueUrl, glueCommand, glueMethod, glueParams);
                             if (result) {
