@@ -71,6 +71,8 @@ import com.cloud.vm.UserVmManager;
 import com.cloud.vm.UserVmService;
 import com.cloud.vm.VMInstanceVO;
 import com.cloud.vm.UserVmVO;
+import com.cloud.vm.UserVmDetailVO;
+import com.cloud.vm.dao.UserVmDetailsDao;
 import com.cloud.vm.dao.UserVmDao;
 import com.cloud.vm.dao.VMInstanceDao;
 import com.google.gson.JsonParser;
@@ -127,6 +129,8 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
     private AccountDao accountDao;
     @Inject
     private DiskOfferingDao diskOfferingDao;
+    @Inject
+    private UserVmDetailsDao userVmDetailsDao;
     @Inject
     private DisasterRecoveryClusterDao disasterRecoveryClusterDao;
     @Inject
@@ -1688,7 +1692,30 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                 if (jobStatus == 2) {
                     throw new CloudRuntimeException("UpdateVolume Mold-API async job resulted in failure.");
                 }
+                String bootType = "BIOS";
+                String bootMode = "LEGACY";
+                String tpmVersion = "NONE";
+                String ioPolicy = "";
+                String ioThread = "false";
                 // 생성된 ROOT 디스크로 미러링 가상머신 생성
+                List<UserVmDetailVO> vmDetails = userVmDetailsDao.listDetails(userVM.getId(), true);
+                if (vmDetails != null) {
+                    for (UserVmDetailVO userVmDetailVO : vmDetails) {
+                        if ((ApiConstants.BootType.UEFI.toString()).equalsIgnoreCase(userVmDetailVO.getName())) {
+                            bootType = "UEFI";
+                            bootMode = userVmDetailVO.getValue().toLowerCase();
+                        }
+                        if ((ApiConstants.TPM_VERSION.toString()).equalsIgnoreCase(userVmDetailVO.getName())) {
+                            tpmVersion = userVmDetailVO.getValue().toLowerCase();
+                        }
+                        if ((ApiConstants.IO_DRIVER_POLICY.toString()).equalsIgnoreCase(userVmDetailVO.getName())) {
+                            ioPolicy = userVmDetailVO.getValue().toLowerCase();
+                        }
+                        if ((ApiConstants.IOTHREADS_ENABLED.toString()).equalsIgnoreCase(userVmDetailVO.getName())) {
+                            ioThread = userVmDetailVO.getValue().toLowerCase();
+                        }
+                    }
+                }
                 moldMethod = "POST";
                 moldCommand = "deployVirtualMachineForVolume";
                 Map<String, String> vmParams = new HashMap<>();
@@ -1704,13 +1731,13 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                 vmParams.put("startvm", "false");
                 vmParams.put("hypervisor", "KVM");
                 vmParams.put("keypairs", "");
-                vmParams.put("boottype", "BIOS");
+                vmParams.put("boottype", bootType);
                 vmParams.put("affinitygroupids", "");
-                vmParams.put("bootmode", "LEGACY");
-                vmParams.put("tpmversion", "NONE");
-                vmParams.put("dynamicscalingenabled", "true");
-                vmParams.put("iothreadsenabled", "true");
-                vmParams.put("iodriverpolicy", "io_uring");
+                vmParams.put("bootmode", bootMode);
+                vmParams.put("tpmversion", tpmVersion);
+                vmParams.put("dynamicscalingenabled", "false");
+                vmParams.put("iothreadsenabled", ioThread);
+                vmParams.put("iodriverpolicy", ioPolicy);
                 String deployVmResult = DisasterRecoveryClusterUtil.moldDeployVirtualMachineForVolumeAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey, vmParams);
                 if (deployVmResult == null) {
                     throw new CloudRuntimeException("Failed to request DeployVirtualMachineForVolume Mold-API.");
