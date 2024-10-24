@@ -961,8 +961,6 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                                     }
                                 }
                             }
-                        } else {
-                            return false;
                         }
                         break;
                     }
