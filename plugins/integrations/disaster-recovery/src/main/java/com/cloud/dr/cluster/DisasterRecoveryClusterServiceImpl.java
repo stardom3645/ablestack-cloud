@@ -1271,6 +1271,12 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                 checkDemoteDisasterRecoveryClusterMirror(drCluster);
                 // 강제 디모트 전 각 이미지 수동 스냅샷 생성
                 takeSnapDemoteDisasterRecoveryClusterMirror(drCluster);
+                // 스냅샷 생성 후 바로 디모트 하지않고 간격을 두고 진행
+                try {
+                    Thread.sleep(60000);
+                } catch (InterruptedException e) {
+                    LOGGER.error("demoteDisasterRecoveryCluster sleep interrupted");
+                }
                 // DR 상황 발생 시 glue-API로 이미지를 조회하지않고, vmMap 조회하여 실행
                 List<DisasterRecoveryClusterVmMapVO> vmMap = disasterRecoveryClusterVmMapDao.listByDisasterRecoveryClusterId(drCluster.getId());
                 if (!CollectionUtils.isEmpty(vmMap)) {
