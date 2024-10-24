@@ -344,9 +344,9 @@
           </a-form-item>
           <a-form-item name="flashArrayPassword" ref="flashArrayPassword">
             <template #label>
-              <tooltip-label :title="$t('label.password')" :tooltip="$t('label.flashArray.password')"/>
+              <tooltip-label :title="$t('label.password')" :tooltip="$t('label.password')"/>
             </template>
-            <a-input-password v-model:value="form.flashArrayPassword" :placeholder="$t('label.flashArray.password')"/>
+            <a-input-password v-model:value="form.flashArrayPassword" :placeholder="$t('label.password')"/>
           </a-form-item>
           <a-form-item name="capacityBytes" ref="capacityBytes">
             <template #label>
