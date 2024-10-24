@@ -188,11 +188,6 @@ public class KVMStorageProcessor implements StorageProcessor {
             throw new ConfigurationException("Unable to find the managesnapshot.sh");
         }
 
-        _convertKvdoTemplate = Script.findScript(storageScriptsDir, "convert_kvdo_template.sh");
-        if (_convertKvdoTemplate == null) {
-            throw new ConfigurationException("Unable to find the convert_kvdo_template.sh");
-        }
-
         _cmdsTimeout = AgentPropertiesFileHandler.getPropertyValue(AgentProperties.CMDS_TIMEOUT) * 1000;
         return true;
     }
