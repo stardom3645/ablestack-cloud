@@ -648,6 +648,20 @@ public class AncientDataMotionStrategy implements DataMotionStrategy {
             answer = ep.sendMessage(cmd);
         }
 
+        final DataTO srcDataTo = cmd.getSrcTO();
+        final VolumeObjectTO volume = (VolumeObjectTO)srcDataTo;
+        if (volume.getKvdoEnable()) {
+            // logger.debug("destData.getDataStore().getTO().getUrl(): "+destData.getDataStore().getTO().getUrl());
+            // destData.getDataStore().getTO().getUrl() = nfs://mngt-ip/nfs/secondary
+            // logger.debug("destData.getTO().getPath(): "+destData.getTO().getPath());
+            // destData.getTO().getPath() = template/tmpl/2/200
+            try {
+                convertKvdo(destData.getTO().getPath());
+            }  catch (Exception e) {
+                throw new CloudRuntimeException(e.toString());
+            }
+        }
+
         // clean up snapshot copied to staging
         if (needCache && srcData != null) {
             cacheMgr.releaseCacheObject(srcData);  // reduce ref count, but keep it there on cache which is converted from previous secondary storage
@@ -800,7 +814,7 @@ public class AncientDataMotionStrategy implements DataMotionStrategy {
         command.add("-p", path);
         final String result = command.execute();
         if (result != null) {
-            logger.error("Failed to reset compressed deduplication template PV, VG, LV.");
+            logger.error("Failed to reset compressed deduplication template PV, VG, LV. path : " + path);
             throw new CloudRuntimeException("Failed to run script " + convertKvdoTemp);
         }
     }

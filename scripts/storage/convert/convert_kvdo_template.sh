@@ -17,7 +17,8 @@
 # under the License.
 help() {
   printf "Usage: $0
-                    -p rbd pool name\n"
+                    -p template file path\n
+                    -u template file uuid\n"
   exit 1
 }
 #set -x
@@ -25,7 +26,7 @@ TempPath=
 TmpFile=
 Uuid=
 
-while getopts 'p:n:u:' OPTION
+while getopts 'p:' OPTION
 do
   case $OPTION in
   p)
@@ -43,10 +44,6 @@ do
   esac
 done
 
-# if [ -z "$PoolName" ] || [ -z "$ImageName" ]; then
-#   exit 2
-# fi
-
 # 1 nbd 활성화
 # vgchange -an vg_12df76b6ba4d4d1781627131620bbd94
 # qemu-nbd -d /dev/nbd0
@@ -57,13 +54,14 @@ targetNbd=$(lsblk /dev/nbd* -p |grep 0B | cut -d ' ' -f 1 | grep -v '^$' | head 
 echo "1 : " $targetNbd
 
 # TmpFile="/nfs/secondary/template/tmpl/2/224/c3aaf7dd-57ed-4f4d-8be6-88abfd646d51.qcow2"
-fileName=$(find / -path "*$TempPath/template.properties" | head -n 1 | grep "^filename=" template.properties | cut -d'=' -f2)
-TmpFile=$(find / -path "*$TempPath/$fileName" | head -n 1)
+fileName=$(find / -path "*$TempPath/template.properties" 2>/dev/null | head -n 1  | xargs grep '^filename=' | cut -d'=' -f2)
+TmpFile=$(find / -path "*$TempPath/$fileName" 2>/dev/null | head -n 1)
 
+echo "2 : "  $fileName
 echo "2 : "  $TmpFile
 
 # nbd 연결
-qemu-nbd -c $targetNbd $TmpFile
+sudo qemu-nbd -c $targetNbd $TmpFile
 
 # 4 pv 확인
 
@@ -84,23 +82,23 @@ firstPartitionPath=$(lsblk $targetNbd -p -J |jq -r '.blockdevices[0].children[0]
 
 echo "3 : " $targetNbd
 echo "3 : " $firstPartitionPath
-ex_vg_name=$(pvs $firstPartitionPath --reportformat json |jq -r '.report[0].pv[0].vg_name')
+ex_vg_name=$(sudo pvs $firstPartitionPath --reportformat json |jq -r '.report[0].pv[0].vg_name')
 echo "4 : " $ex_vg_name
 
 # 6 vg 비활성화
-vgchange -an $ex_vg_name
+sudo vgchange -an $ex_vg_name
 
 # 7 vg 이름 랜덤하게 변경
-# temp_uuid=ab999218-95c7-422c-af1d-cfc68c5a0eb6
-vgrename $ex_vg_name $Uuid
+temp_uuid=ab999218-95c7-422c-af1d-cfc68c5a0eb6
+sudo vgrename $ex_vg_name $temp_uuid
 
 # 8 pv uuid 변경
-vgchange --uuid $temp_uuid
+sudo vgchange --uuid $temp_uuid
 
 # 9 vg uuid 변경
-pvchange --uuid $firstPartitionPath
+sudo pvchange --uuid $firstPartitionPath
 
 # 10 nbd 해제
-qemu-nbd -d $targetNbd
+sudo qemu-nbd -d $targetNbd
 
 exit 0
