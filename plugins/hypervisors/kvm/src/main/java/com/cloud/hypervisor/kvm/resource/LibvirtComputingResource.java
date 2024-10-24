@@ -3458,6 +3458,9 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
                     else {
                         disk.defBlockBasedDisk(physicalDisk.getPath(), devId, diskBusType);
                     }
+                    if (pool.getType() == StoragePoolType.Linstor) {
+                        disk.setDiscard(DiscardType.UNMAP);
+                    }
                 } else {
                     if (volume.getType() == Volume.Type.DATADISK && !(isWindowsTemplate && isUefiEnabled)) {
                         disk.defFileBasedDisk(physicalDisk.getPath(), devId, diskBusTypeData, DiskDef.DiskFmtType.QCOW2);
@@ -3808,6 +3811,9 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
                     diskdef.defFileBasedDisk(attachingDisk.getPath(), devId, busT, DiskDef.DiskFmtType.QCOW2);
                 } else if (attachingDisk.getFormat() == PhysicalDiskFormat.RAW) {
                     diskdef.defBlockBasedDisk(attachingDisk.getPath(), devId, busT);
+                    if (attachingPool.getType() == StoragePoolType.Linstor) {
+                        diskdef.setDiscard(DiscardType.UNMAP);
+                    }
                 }
                 if (bytesReadRate != null && bytesReadRate > 0) {
                     diskdef.setBytesReadRate(bytesReadRate);
