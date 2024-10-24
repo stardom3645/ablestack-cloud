@@ -102,7 +102,6 @@ import com.cloud.storage.VMTemplateStoragePoolVO;
 import com.cloud.storage.VMTemplateVO;
 import com.cloud.storage.Volume;
 import com.cloud.storage.VolumeApiService;
-import com.cloud.storage.VolumeApiServiceImpl;
 import com.cloud.storage.VolumeVO;
 import com.cloud.storage.dao.DiskOfferingDao;
 import com.cloud.storage.dao.GuestOSDao;
@@ -1642,7 +1641,7 @@ public class UnmanagedVMsManagerImpl implements UnmanagedVMsManager {
             temporaryConvertLocation = selectInstanceConversionTemporaryLocation(destinationCluster, convertStoragePoolId);
             // List<StoragePoolVO> convertStoragePools = findInstanceConversionStoragePoolsInCluster(destinationCluster);
             DiskOffering diskOffering = diskOfferingDao.findById(serviceOffering.getDiskOfferingId());
-            List<StoragePoolVO> convertStoragePools = primaryDataStoreDao.findPoolsByTags(zone.getId(), destinationCluster.getPodId(), destinationCluster.getId(), diskOffering.getTagsArray(), true, VolumeApiServiceImpl.storageTagRuleExecutionTimeout.value());
+            List<StoragePoolVO> convertStoragePools = primaryDataStoreDao.findZoneWideStoragePoolsByTags(zone.getId(), diskOffering.getTagsArray(), true);
             long importStartTime = System.currentTimeMillis();
             Pair<UnmanagedInstanceTO, Boolean> sourceInstanceDetails = getSourceVmwareUnmanagedInstance(vcenter, datacenterName, username, password, clusterName, sourceHostName, sourceVMName);
             sourceVMwareInstance = sourceInstanceDetails.first();
