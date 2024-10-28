@@ -929,7 +929,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                         String secMethod = "GET";
                         Map<String, String> sucParams = new HashMap<>();
                         String drList = DisasterRecoveryClusterUtil.moldGetDisasterRecoveryClusterListAPI(secUrl + "/client/api/", secCommand, secMethod, secApiKey, secSecretKey);
-                        if (drList != null || !drList.isEmpty()) {
+                        if (drList != null) {
                             JSONObject jsonObject = new JSONObject(drList);
                             Object object = jsonObject.get("disasterrecoverycluster");
                             JSONArray arr;
@@ -1030,7 +1030,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                     String secMethod = "GET";
                     Map<String, String> sucParams = new HashMap<>();
                     String drList = DisasterRecoveryClusterUtil.moldGetDisasterRecoveryClusterListAPI(secUrl + "/client/api/", secCommand, secMethod, secApiKey, secSecretKey);
-                    if (drList != null || !drList.isEmpty()) {
+                    if (drList != null) {
                         JSONObject jsonObject = new JSONObject(drList);
                         Object object = jsonObject.get("disasterrecoverycluster");
                         JSONArray arr;
@@ -1118,7 +1118,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                     String secMethod = "GET";
                     Map<String, String> sucParams = new HashMap<>();
                     String drList = DisasterRecoveryClusterUtil.moldGetDisasterRecoveryClusterListAPI(secUrl + "/client/api/", secCommand, secMethod, secApiKey, secSecretKey);
-                    if (drList != null || !drList.isEmpty()) {
+                    if (drList != null) {
                         JSONObject jsonObject = new JSONObject(drList);
                         Object object = jsonObject.get("disasterrecoverycluster");
                         JSONArray arr;
