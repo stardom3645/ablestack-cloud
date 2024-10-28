@@ -112,6 +112,7 @@ export default {
       default: () => {}
     }
   },
+  inject: ['parentFetchData'],
   data () {
     return {
       loading: false,
@@ -239,14 +240,25 @@ export default {
             title: this.$t('message.success.create.disaster.recovery.cluster.vm'),
             description: this.resource.id,
             successMessage: this.$t('message.success.create.disaster.recovery.cluster.vm'),
+            successMethod: () => {
+              this.loading = false
+              this.parentFetchData()
+            },
             errorMessage: this.$t('message.error.create.disaster.recovery.cluster.vm'),
+            errorMethod: () => {
+              this.loading = false
+              this.parentFetchData()
+            },
             loadingMessage: this.$t('message.create.disaster.recovery.cluster.vm.processing'),
-            catchMessage: this.$t('error.fetching.async.job.result')
+            catchMessage: this.$t('error.fetching.async.job.result'),
+            catchMethod: () => {
+              this.loading = false
+              this.parentFetchData()
+            }
           })
           this.closeModal()
         }).catch(error => {
           this.$notifyError(error)
-        }).finally(() => {
           this.loading = false
         })
       }).catch(error => {
