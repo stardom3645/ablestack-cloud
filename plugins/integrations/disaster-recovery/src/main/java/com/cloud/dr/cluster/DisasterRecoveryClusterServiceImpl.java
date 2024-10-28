@@ -22,14 +22,12 @@ import java.util.ArrayList;
 import java.util.Map;
 import java.util.Properties;
 import java.util.HashMap;
-import java.util.Date;
 import java.util.StringJoiner;
 import java.io.InputStream;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.File;
-import java.text.SimpleDateFormat;
 
 import javax.inject.Inject;
 
