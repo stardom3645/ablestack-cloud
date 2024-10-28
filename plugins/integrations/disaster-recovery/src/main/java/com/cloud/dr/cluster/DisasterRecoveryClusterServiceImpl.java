@@ -1585,7 +1585,6 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         String apiKey = details.get(ApiConstants.DR_CLUSTER_API_KEY);
         String secretKey = details.get(ApiConstants.DR_CLUSTER_SECRET_KEY);
         String interval = details.get("mirrorscheduleinterval");
-        // String startTime = details.get("mirrorschedulestarttime");
         String offeringId = "";
         String networkId = "";
         // vm 의 볼륨 미러링 설정 glue-api 호출
@@ -2733,75 +2732,6 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                             if (result) {
                                 break;
                             }
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    private boolean checkDemoteDisasterRecoveryClusterMirrorSchedule(final DisasterRecoveryClusterVO drCluster) throws CloudRuntimeException {
-        List<DisasterRecoveryClusterVmMapVO> vmMap = disasterRecoveryClusterVmMapDao.listByDisasterRecoveryClusterId(drCluster.getId());
-        if (!CollectionUtils.isEmpty(vmMap)) {
-            String ipList = Script.runSimpleBashScript("cat /etc/hosts | grep -E 'scvm.*-mngt' | awk '{print $1}' | tr '\n' ','");
-            if (ipList != null || !ipList.isEmpty()) {
-                ipList = ipList.replaceAll(",$", "");
-                String[] array = ipList.split(",");
-                for (DisasterRecoveryClusterVmMapVO map : vmMap) {
-                    String imageName = map.getMirroredVmVolumePath();
-                    for (int i=0; i < array.length; i++) {
-                        String glueIp = array[i];
-                        ///////////////////// glue-api 프로토콜과 포트 확정 시 변경 예정
-                        String glueUrl = "https://" + glueIp + ":8080/api/v1";
-                        String glueCommand = "/mirror/image/rbd";
-                        String glueMethod = "GET";
-                        String response = DisasterRecoveryClusterUtil.glueImageMirrorAPI(glueUrl, glueCommand, glueMethod);
-                        if (response != null) {
-                            JsonArray drArray = (JsonArray) new JsonParser().parse(response).getAsJsonObject().get("Images");
-                            if (drArray.size() != 0 && drArray != null) {
-                                for (JsonElement dr : drArray) {
-                                    if (dr.getAsJsonObject().get("items") != null) {
-                                        return true;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        return false;
-    }
-
-    private void beforeDemoteDisasterRecoveryClusterMirrorSchedule(final DisasterRecoveryClusterVO drCluster) throws CloudRuntimeException {
-        List<DisasterRecoveryClusterVmMapVO> vmMap = disasterRecoveryClusterVmMapDao.listByDisasterRecoveryClusterId(drCluster.getId());
-        if (!CollectionUtils.isEmpty(vmMap)) {
-            String ipList = Script.runSimpleBashScript("cat /etc/hosts | grep -E 'scvm.*-mngt' | awk '{print $1}' | tr '\n' ','");
-            if (ipList != null || !ipList.isEmpty()) {
-                ipList = ipList.replaceAll(",$", "");
-                String[] array = ipList.split(",");
-                for (DisasterRecoveryClusterVmMapVO map : vmMap) {
-                    String imageName = map.getMirroredVmVolumePath();
-                    Loop :
-                    for (int i=0; i < array.length; i++) {
-                        String glueIp = array[i];
-                        ///////////////////// glue-api 프로토콜과 포트 확정 시 변경 예정
-                        String glueUrl = "https://" + glueIp + ":8080/api/v1";
-                        String glueCommand = "/mirror/image/rbd/" + imageName;
-                        String glueMethod = "PUT";
-                        Map<String, String> glueParams = new HashMap<>();
-                        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm");
-                        String isoDate = sdf.format(new Date());
-                        glueParams.put("mirrorPool", "rbd");
-                        glueParams.put("imageName", imageName);
-                        glueParams.put("interval", "1m");
-                        // glueParams.put("startTime", isoDate);
-                        boolean result = DisasterRecoveryClusterUtil.glueImageMirrorSetupUpdateAPI(glueUrl, glueCommand, glueMethod, glueParams);
-                        if (result) {
-                            break Loop;
-                        } else {
-                            LOGGER.error("Failed to request ImageMirrorSetupUpdate Glue-API.");
-                            throw new InvalidParameterValueException("Resync functions cannot be executed because scheduling the image failed. For volumes with a path of " + imageName);
                         }
                     }
                 }
