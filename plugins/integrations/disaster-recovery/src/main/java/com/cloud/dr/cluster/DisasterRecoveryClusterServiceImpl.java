@@ -461,7 +461,6 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                 }
                 response.setMirroredVmStatus(map.getMirroredVmStatus());
                 // 미러링 가상머신 볼륨 상태 조회
-                LOGGER.info(mirrorList.toString());
                 if (mirrorList.size() != 0 && mirrorList != null) {
                     for (JsonElement dr : mirrorList) {
                         if (dr.getAsJsonObject().get("name").getAsString().equals(map.getMirroredVmVolumePath())) {

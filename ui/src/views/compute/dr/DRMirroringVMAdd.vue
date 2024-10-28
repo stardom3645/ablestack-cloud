@@ -159,6 +159,9 @@ export default {
             return !entry.name.includes(drName)
           })
         }
+        this.drCluster = this.drCluster.filter(dr => {
+          return dr.drclusterstatus !== 'Disabled'
+        })
         if (this.drCluster.length > 0) {
           this.form.drCluster = this.drCluster[0].name
         } else {
