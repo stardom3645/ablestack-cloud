@@ -70,6 +70,7 @@ import com.cloud.vm.dao.InstanceGroupVMMapDao;
 import com.cloud.vm.dao.NicDao;
 import com.cloud.vm.dao.UserVmDetailsDao;
 import com.cloud.storage.VolumeVO;
+import com.cloud.dr.cluster.DisasterRecoveryDetailConstants;
 import org.apache.cloudstack.acl.ControlledEntity;
 import org.apache.cloudstack.acl.ControlledEntity.ACLType;
 import org.apache.cloudstack.acl.SecurityChecker;
@@ -5025,6 +5026,9 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
             case VnfTemplate:
                 fillVnfTemplateDetailOptions(options);
                 return new DetailOptionsResponse(options);
+            case DisasterRecoveryCluster:
+                fillDisasterRecoveryClusterDetailOptions(options);
+                return new DetailOptionsResponse(options);
             default:
                 throw new CloudRuntimeException("Resource type not supported.");
         }
@@ -5096,6 +5100,13 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
             options.put(VmDetailConstants.SVGA_VRAM_SIZE, Collections.emptyList());
             options.put(VmDetailConstants.RAM_RESERVATION, Collections.emptyList());
         }
+    }
+
+    private void fillDisasterRecoveryClusterDetailOptions(final Map<String, List<String>> options) {
+        if (options == null) {
+            throw new CloudRuntimeException("Invalid/null detail-options response object passed");
+        }
+        options.put(DisasterRecoveryDetailConstants.KEYBOARD, Arrays.asList("uk", "us", "jp", "fr"));
     }
 
     @Override
