@@ -449,11 +449,10 @@ export default {
 
 <style lang="scss" scoped>
 .form {
-  width: 80vw;
+  width: 85vw;
 
-  @media (min-width: 500px) {
-    min-width: 400px;
-    width: 100%;
+  @media (min-width: 760px) {
+    width: 500px;
   }
 }
 </style>
