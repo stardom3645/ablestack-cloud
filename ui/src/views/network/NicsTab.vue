@@ -69,6 +69,18 @@
             :danger="true"
             icon="delete-outlined" />
         </a-popconfirm>
+        <a-popconfirm
+              :title="`${record.nic.linkstate ? $t('label.action.nic.linkstate.down') : $t('label.action.nic.linkstate.up')}`"
+              @confirm="onChangeNicLinkState(record)"
+              :okText="$t('label.yes')"
+              :cancelText="$t('label.no')"
+            >
+              <tooltip-button
+                tooltipPlacement="top"
+                :tooltip="$t('label.action.nic.linkstate')"
+                :type="record.nic.linkstate ? 'primary' : ''"
+                icon="wifi-outlined" />
+            </a-popconfirm>
       </template>
     </NicsTable>
 
@@ -554,6 +566,37 @@ export default {
         this.loadingNic = false
         this.fetchSecondaryIPs(this.selectedNicId)
       })
+    },
+    onChangeNicLinkState (record) {
+      console.log('record.nic.id :>> ', record.nic.id)
+      console.log('record.nic.id :>> ', record.nic.linkstate)
+      const params = {}
+      params.virtualmachineid = this.vm.id
+      params.nicid = record.nic.id
+      params.linkstate = !record.nic.linkstate
+      api('UpdateVmNicLinkState', params).then(response => {
+        this.$pollJob({
+          jobId: response.updatevmniclinkstateresponse.jobid,
+          successMessage: this.$t('message.success.update.nic.linkstate'),
+          successMethod: () => {
+            this.loadingNic = false
+          },
+          errorMessage: this.$t('label.error'),
+          errorMethod: () => {
+            this.loadingNic = false
+          },
+          loadingMessage: this.$t('message.update.nic.linkstate.processing'),
+          catchMessage: this.$t('error.fetching.async.job.result'),
+          catchMethod: () => {
+            this.loadingNic = false
+            this.parentFetchData()
+          }
+        })
+      })
+        .catch(error => {
+          this.$notifyError(error)
+          this.loadingNic = false
+        })
     }
   }
 }

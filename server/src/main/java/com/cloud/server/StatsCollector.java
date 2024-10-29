@@ -1370,10 +1370,6 @@ public class StatsCollector extends ManagerBase implements ComponentMethodInterc
 
                 for (UserVmJoinVO vm : listL2netVMs) {
                     if(!listL2NicMacAddr.contains(vm.getMacAddress())){
-                        NicVO nicVO = _nicDao.findById(vm.getNicId());
-                        nicVO.setIPv4Address(null);
-                        _nicDao.update(vm.getNicId(), nicVO);
-
                         listL2NicMacAddr.add(vm.getMacAddress());
                     }
                 }
