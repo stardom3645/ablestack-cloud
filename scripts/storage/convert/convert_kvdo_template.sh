@@ -47,7 +47,7 @@ done
 # 1 nbd 활성화
 # vgchange -an vg_12df76b6ba4d4d1781627131620bbd94
 # qemu-nbd -d /dev/nbd0
-modprobe nbd
+sudo modprobe nbd
 
 # 2 사용하지 않는 nbd 확인
 targetNbd=$(lsblk /dev/nbd* -p |grep 0B | cut -d ' ' -f 1 | grep -v '^$' | head -n 1)
