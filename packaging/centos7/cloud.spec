@@ -112,6 +112,7 @@ Requires: tzdata-java
 Requires: %{name}-common = %{_ver}
 Requires: libvirt
 Requires: bridge-utils
+Requires: libvirt-daemon-driver-storage-rbd
 Requires: ebtables
 Requires: iptables
 Requires: ethtool
