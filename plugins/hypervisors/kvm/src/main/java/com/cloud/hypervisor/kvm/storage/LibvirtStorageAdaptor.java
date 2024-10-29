@@ -36,6 +36,8 @@ import org.apache.commons.codec.binary.Base64;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections.MapUtils;
+import org.apache.commons.lang3.ObjectUtils;
 import org.libvirt.Connect;
 import org.libvirt.LibvirtException;
 import org.libvirt.Secret;
@@ -687,7 +689,7 @@ public class LibvirtStorageAdaptor implements StorageAdaptor {
         logger.info("Attempting to create storage pool " + name + " (" + type.toString() + ") in libvirt");
 
         // gluefs mount script call
-        if (type == StoragePoolType.SharedMountPoint && details != null && !details.isEmpty() && !details.get("provider").isEmpty() && "ABLESTACK".equals(details.get("provider"))) {
+        if (type == StoragePoolType.SharedMountPoint && !MapUtils.isEmpty(details) && !ObjectUtils.isEmpty(details.get("provider")) && "ABLESTACK".equals(details.get("provider"))) {
             logger.info("Run the command to create the gluefs mount.");
             Boolean gluefs = createGluefsMount(host, path, userInfo, details);
             if (!gluefs) {
@@ -786,7 +788,7 @@ public class LibvirtStorageAdaptor implements StorageAdaptor {
                     throw new CloudRuntimeException(e.toString());
                 }
             } else if (type == StoragePoolType.SharedMountPoint || type == StoragePoolType.Filesystem) {
-                if (details != null && !details.isEmpty() && !details.get("provider").isEmpty() && "ABLESTACK".equals(details.get("provider"))) {
+                if (!MapUtils.isEmpty(details) && !ObjectUtils.isEmpty(details.get("provider")) && "ABLESTACK".equals(details.get("provider"))) {
                     sp = createGluefsSharedStoragePool(conn, name, host, path);
                 } else {
                     sp = createSharedStoragePool(conn, name, host, path);
@@ -1693,9 +1695,9 @@ public class LibvirtStorageAdaptor implements StorageAdaptor {
     }
 
     private boolean createPathFolder(String path) {
-        String mountPoint = _mountPoint + File.separator + path;
+        // String mountPoint = _mountPoint + File.separator + path;
 
-        File f = new File(mountPoint + File.separator + path);
+        File f = new File(_mountPoint + File.separator + path);
         if (!f.exists()) {
             f.mkdirs();
         }
