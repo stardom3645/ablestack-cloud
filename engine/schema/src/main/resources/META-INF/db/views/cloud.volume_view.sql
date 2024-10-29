@@ -78,6 +78,7 @@ SELECT
     `disk_offering`.`iops_read_rate` AS `iops_read_rate`,
     `disk_offering`.`iops_write_rate` AS `iops_write_rate`,
     `disk_offering`.`cache_mode` AS `cache_mode`,
+    `disk_offering`.`kvdo_enable` AS `kvdo_enable`,
     `storage_pool`.`id` AS `pool_id`,
     `storage_pool`.`uuid` AS `pool_uuid`,
     `storage_pool`.`name` AS `pool_name`,

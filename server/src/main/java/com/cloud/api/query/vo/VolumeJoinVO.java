@@ -283,6 +283,9 @@ public class VolumeJoinVO extends BaseViewWithTagInformationVO implements Contro
     @Column(name = "saving_stats")
     private String savingStats = null;
 
+    @Column(name = "kvdo_enable")
+    private boolean kvdoEnable;
+
     public VolumeJoinVO() {
     }
 
@@ -624,6 +627,10 @@ public class VolumeJoinVO extends BaseViewWithTagInformationVO implements Contro
 
     public String getSavingStats() {
         return savingStats;
+    }
+
+    public boolean getKvdoEnable() {
+        return kvdoEnable;
     }
 
     @Override

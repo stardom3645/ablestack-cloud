@@ -1653,7 +1653,6 @@ public class TemplateManagerImpl extends ManagerBase implements TemplateManager,
         boolean kvmSnapshotOnlyInPrimaryStorage = false;
         SnapshotInfo snapInfo = null;
 
-        logger.debug("!!!!!!!!2");
         try {
             TemplateInfo tmplInfo = _tmplFactory.getTemplate(templateId, DataStoreRole.Image);
             long zoneId = 0;
@@ -1676,7 +1675,6 @@ public class TemplateManagerImpl extends ManagerBase implements TemplateManager,
             AsyncCallFuture<TemplateApiResult> future = null;
 
             if (snapshotId != null) {
-                logger.debug("kvdo_test1");
                 DataStoreRole dataStoreRole = snapshotHelper.getDataStoreRole(snapshot);
                 kvmSnapshotOnlyInPrimaryStorage = snapshotHelper.isKvmSnapshotOnlyInPrimaryStorage(snapshot, dataStoreRole);
 
@@ -1693,7 +1691,6 @@ public class TemplateManagerImpl extends ManagerBase implements TemplateManager,
 
                 future = _tmpltSvr.createTemplateFromSnapshotAsync(snapInfo, tmplInfo, store);
             } else if (volumeId != null) {
-                logger.debug("kvdo_test2");
                 VolumeInfo volInfo = _volFactory.getVolume(volumeId);
                 if (volInfo == null) {
                     throw new InvalidParameterValueException("No such volume exist");
@@ -2184,11 +2181,16 @@ public class TemplateManagerImpl extends ManagerBase implements TemplateManager,
                 logger.debug("Adding template tag: " + templateTag);
             }
         }
+
         boolean kvdoEnable = false;
         if (volumeId != null) {
             VolumeInfo volInfo = _volFactory.getVolume(volumeId);
             kvdoEnable = volInfo.getKvdoEnable();
+        } else if (volume != null) {
+            VolumeInfo volInfo = _volFactory.getVolume(volume.getId());
+            kvdoEnable = volInfo.getKvdoEnable();
         }
+
         privateTemplate = new VMTemplateVO(nextTemplateId, name, ImageFormat.RAW, isPublic, featured, isExtractable,
                 TemplateType.USER, null, requiresHvmValue, bitsValue, templateOwner.getId(), null, description,
                 passwordEnabledValue, guestOS.getId(), true, hyperType, templateTag, cmd.getDetails(), sshKeyEnabledValue, isDynamicScalingEnabled, false, kvdoEnable, false);
