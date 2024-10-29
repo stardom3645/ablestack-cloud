@@ -21,7 +21,7 @@
       <a-select
         @change="changeDomain"
         v-model:value="selectedAccountType"
-        defaultValue="account"  
+        defaultValue="account"
         autoFocus
         showSearch
         optionFilterProp="label"
