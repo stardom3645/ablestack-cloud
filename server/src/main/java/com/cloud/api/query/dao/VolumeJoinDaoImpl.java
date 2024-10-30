@@ -110,6 +110,8 @@ public class VolumeJoinDaoImpl extends GenericDaoBaseWithTagInformation<VolumeJo
         }
         volResponse.setDeviceId(volume.getDeviceId());
 
+        volResponse.setKvdoEnable(volume.getKvdoEnable());
+
         long instanceId = volume.getVmId();
         if (instanceId > 0 && volume.getState() != Volume.State.Destroy) {
             volResponse.setVirtualMachineId(volume.getVmUuid());
