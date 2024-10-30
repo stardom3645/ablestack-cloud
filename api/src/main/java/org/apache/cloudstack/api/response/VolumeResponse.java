@@ -305,6 +305,10 @@ public class VolumeResponse extends BaseResponseWithTagInformation implements Co
     @Param(description = "the format of the disk encryption if applicable", since = "4.20")
     private String savingStats;
 
+    @SerializedName(ApiConstants.KVDO_ENABLE)
+    @Param(description = "Whether to use it as a shared volume", since = "4.19")
+    private Boolean kvdoEnable;
+
     public String getPath() {
         return path;
     }
@@ -861,5 +865,13 @@ public class VolumeResponse extends BaseResponseWithTagInformation implements Co
 
     public void setSavingStats(String savingStats) {
         this.savingStats = savingStats;
+    }
+
+    public boolean getKvdoEnable() {
+        return kvdoEnable;
+    }
+
+    public void setKvdoEnable(boolean kvdoEnable) {
+        this.kvdoEnable = kvdoEnable;
     }
 }

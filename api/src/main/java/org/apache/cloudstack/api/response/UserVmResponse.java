@@ -400,6 +400,10 @@ public class UserVmResponse extends BaseResponseWithTagInformation implements Co
     @Param(description = "qemu agent version")
     private String qemuAgentVersion;
 
+    @SerializedName(ApiConstants.KVDO_ENABLE)
+    @Param(description = "Whether to use it as a shared volume", since = "4.19")
+    private Boolean kvdoEnable;
+
     public UserVmResponse() {
         securityGroupList = new LinkedHashSet<>();
         nics = new TreeSet<>(Comparator.comparingInt(x -> Integer.parseInt(x.getDeviceId())));
@@ -1177,6 +1181,13 @@ public class UserVmResponse extends BaseResponseWithTagInformation implements Co
 
     public void setQemuAgentVersion(String qemuAgentVersion) {
         this.qemuAgentVersion = qemuAgentVersion;
+    }
+    public boolean getKvdoEnable() {
+        return kvdoEnable;
+    }
+
+    public void setKvdoEnable(boolean kvdoEnable) {
+        this.kvdoEnable = kvdoEnable;
     }
 
 }
