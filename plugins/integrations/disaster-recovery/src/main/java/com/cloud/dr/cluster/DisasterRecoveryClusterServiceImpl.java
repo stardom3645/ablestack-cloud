@@ -742,6 +742,9 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
             String jobId = jsonObject.get("jobid").toString();
             int jobStatus = getAsyncJobResult(secUrl + "/client/api/", secApiKey, secSecretKey, jobId);
             if (jobStatus == 2) {
+                drCluster.setDrClusterStatus(DisasterRecoveryCluster.DrClusterStatus.Error.toString());
+                drCluster.setMirroringAgentStatus(DisasterRecoveryCluster.MirroringAgentStatus.Error.toString());
+                disasterRecoveryClusterDao.update(drCluster.getId(), drCluster);
                 throw new CloudRuntimeException("CreateDisasterRecoveryCluster Mold-API async job resulted in failure.");
             }
             String ipList = Script.runSimpleBashScript("cat /etc/hosts | grep -E 'scvm.*-mngt' | awk '{print $1}' | tr '\n' ','");
@@ -796,9 +799,10 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                                 result = DisasterRecoveryClusterUtil.glueMirrorUpdateAPI(glueUrl, glueCommand, glueMethod, glueParams);
                                 if (result) {
                                     return true;
-                                } else {
-                                    throw new CloudRuntimeException("Failed to request mirror update glue api. Please manually update the mold.json file in scvm of the secondary cluster.");
                                 }
+                            }
+                            if (!result) {
+                                throw new CloudRuntimeException("Failed to request mirror update glue api. Please manually update the mold.json file in scvm of the secondary cluster.");
                             }
                         }
                     }
@@ -914,14 +918,6 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                     glueParams.put("host", secGlueIpAddress);
                     boolean result = DisasterRecoveryClusterUtil.glueMirrorDeleteAPI(glueUrl, glueCommand, glueMethod, glueParams, permKey);
                     if (result) {
-                        disasterRecoveryClusterDetailsDao.deleteDetails(drCluster.getId());
-                        disasterRecoveryClusterDao.remove(drCluster.getId());
-                        List<DisasterRecoveryClusterVmMapVO> vmMap = disasterRecoveryClusterVmMapDao.listByDisasterRecoveryClusterId(drCluster.getId());
-                        if (!CollectionUtils.isEmpty(vmMap)) {
-                            for (DisasterRecoveryClusterVmMap vm : vmMap) {
-                                disasterRecoveryClusterVmMapDao.remove(vm.getId());
-                            }
-                        }
                         String secCommand = "getDisasterRecoveryClusterList";
                         String secMethod = "GET";
                         Map<String, String> sucParams = new HashMap<>();
@@ -953,6 +949,14 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                                         int jobStatus = getAsyncJobResult(secUrl + "/client/api/", secApiKey, secSecretKey, jobId);
                                         if (jobStatus == 2) {
                                             throw new CloudRuntimeException("DeleteDisasterRecoveryCluster Mold-API async job resulted in failure.");
+                                        }
+                                        disasterRecoveryClusterDetailsDao.deleteDetails(drCluster.getId());
+                                        disasterRecoveryClusterDao.remove(drCluster.getId());
+                                        List<DisasterRecoveryClusterVmMapVO> vmMap = disasterRecoveryClusterVmMapDao.listByDisasterRecoveryClusterId(drCluster.getId());
+                                        if (!CollectionUtils.isEmpty(vmMap)) {
+                                            for (DisasterRecoveryClusterVmMap vm : vmMap) {
+                                                disasterRecoveryClusterVmMapDao.remove(vm.getId());
+                                            }
                                         }
                                         return true;
                                     }
@@ -1225,7 +1229,6 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                     throw new CloudRuntimeException("Promote cannot be executed because the current image is in ready or force promote.");
                 }
                 promoteParentImage(drCluster);
-                // timeSleep();
                 return result;
             } else {
                 throw new CloudRuntimeException("There are no images being mirrored.");
@@ -1373,7 +1376,6 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                         throw new CloudRuntimeException("Demote cannot be executed because the current image is in Syncing state.");
                     }
                     demoteParentImage(drCluster);
-                    // timeSleep();
                     return result;
                 } else {
                     throw new CloudRuntimeException("There are no images being mirrored.");
