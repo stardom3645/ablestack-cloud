@@ -21,7 +21,7 @@
       class="form-item-scroll"
       itemLayout="vertical"
       size="small"
-      :dataSource="osList"
+      :dataSource="setData()"
       :pagination="false">
       <template #renderItem="{ item, index }">
         <a-list-item :key="item.id" @click="onClickRow(item)">
@@ -126,6 +126,19 @@ export default {
     }
   },
   methods: {
+    setData () {
+      if (this.preFillContent.isreinstall) {
+        if (this.preFillContent.kvdoenable) {
+          const osListFilter = this.osList.filter(osList => osList.kvdoenable)
+          return osListFilter
+        } else if (!this.preFillContent.kvdoenable) {
+          const osListFilter = this.osList.filter(osList => !osList.kvdoenable)
+          return osListFilter
+        }
+      } else {
+        return this.osList
+      }
+    },
     onSelectTemplateIso () {
       if (this.inputDecorator === 'templateid') {
         this.value = !this.preFillContent.templateid ? this.selected : this.preFillContent.templateid
