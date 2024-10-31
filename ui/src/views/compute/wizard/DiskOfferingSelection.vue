@@ -143,7 +143,13 @@ export default {
   created () {
     this.initDataItem()
     if (this.items) {
-      this.dataItems = this.dataItems.concat(this.items)
+      var diskFilter = this.items
+      if (this.preFillContent.kvdoenable) {
+        diskFilter = this.items.filter(items => items.kvdoenable)
+      } else if (!this.preFillContent.kvdoenable) {
+        diskFilter = this.items.filter(items => !items.kvdoenable)
+      }
+      this.dataItems = this.dataItems.concat(diskFilter)
     }
   },
   computed: {
