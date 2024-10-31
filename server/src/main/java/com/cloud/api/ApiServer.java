@@ -367,24 +367,6 @@ public class ApiServer extends ManagerBase implements HttpRequestHandler, ApiSer
             , ConfigKey.Scope.Global, null, null, null, null, null, ConfigKey.Kind.Select,
             EnumSet.allOf(ApiSessionKeyCheckOption.class).stream().map(Enum::toString).collect(Collectors.joining(", ")));
 
-    static final ConfigKey<String> ApiSessionKeyCookieSameSiteSetting = new ConfigKey<>(String.class
-            , "api.sessionkey.cookie.samesite"
-            , ConfigKey.CATEGORY_ADVANCED
-            , ApiSessionKeySameSite.Lax.name()
-            , "The SameSite attribute of cookie 'sessionkey'. Valid options are: Lax (default), Strict, NoneAndSecure and Null."
-            , true
-            , ConfigKey.Scope.Global, null, null, null, null, null, ConfigKey.Kind.Select,
-            EnumSet.allOf(ApiSessionKeySameSite.class).stream().map(Enum::toString).collect(Collectors.joining(", ")));
-
-    public static final ConfigKey<String> ApiSessionKeyCheckLocations = new ConfigKey<>(String.class
-            , "api.sessionkey.check.locations"
-            , ConfigKey.CATEGORY_ADVANCED
-            , ApiSessionKeyCheckOption.CookieAndParameter.name()
-            , "The locations of 'sessionkey' during the validation of the API requests. Valid options are: CookieOrParameter, ParameterOnly, CookieAndParameter (default)."
-            , true
-            , ConfigKey.Scope.Global, null, null, null, null, null, ConfigKey.Kind.Select,
-            EnumSet.allOf(ApiSessionKeyCheckOption.class).stream().map(Enum::toString).collect(Collectors.joining(", ")));
-
     @Override
     public boolean configure(final String name, final Map<String, Object> params) throws ConfigurationException {
         messageBus.subscribe(AsyncJob.Topics.JOB_EVENT_PUBLISH, MessageDispatcher.getDispatcher(this));
