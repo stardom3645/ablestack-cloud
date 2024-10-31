@@ -68,9 +68,6 @@ import org.twonote.rgwadmin4j.model.User;
 import org.twonote.rgwadmin4j.RgwAdmin;
 import org.twonote.rgwadmin4j.RgwAdminBuilder;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 public class CephObjectStoreDriverImpl extends BaseObjectStoreDriverImpl {
 
     @Inject
