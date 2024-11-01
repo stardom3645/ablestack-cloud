@@ -958,6 +958,11 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                                         List<DisasterRecoveryClusterVmMapVO> vmMap = disasterRecoveryClusterVmMapDao.listByDisasterRecoveryClusterId(drCluster.getId());
                                         if (!CollectionUtils.isEmpty(vmMap)) {
                                             for (DisasterRecoveryClusterVmMap vm : vmMap) {
+                                                secCommand = "deleteDisasterRecoveryClusterVm";
+                                                Map<String, String> vmParams = new HashMap<>();
+                                                vmParams.put("drclustername", drCluster.getName());
+                                                vmParams.put("virtualmachineid", vm.getMirroredVmId());
+                                                DisasterRecoveryClusterUtil.moldDeleteDisasterRecoveryClusterVmAPI(secUrl + "/client/api/", secCommand, secMethod, secApiKey, secSecretKey, vmParams);
                                                 disasterRecoveryClusterVmMapDao.remove(vm.getId());
                                             }
                                         }
