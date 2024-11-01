@@ -4629,6 +4629,7 @@
 "label.primary.cluster.vm": "Primary \uD074\uB7EC\uC2A4\uD130 \uAC00\uC0C1\uBA38\uC2E0",
 "label.secondary.cluster.vm": "Secondary \uD074\uB7EC\uC2A4\uD130 \uAC00\uC0C1\uBA38\uC2E0",
 "label.dr.volume.status": "\uBCFC\uB968 \uC0C1\uD0DC",
+"label.dr.volume.type": "\uBCFC\uB968 \uc720\ud615",
 "label.dr.volume.root.disk.status": "ROOT \uB514\uC2A4\uD06C \uBBF8\uB7EC\uB9C1 \uC0C1\uD0DC",
 "label.dr.volume.data.disk.status": "DATA \uB514\uC2A4\uD06C \uBBF8\uB7EC\uB9C1 \uC0C1\uD0DC",
 "label.dr": "DR",

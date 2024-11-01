@@ -204,24 +204,24 @@ export default {
       priColumns: [
         {
           key: 'type',
-          title: this.$t('label.dr.mirrored.volume.type'),
+          title: this.$t('label.dr.volume.type'),
           dataIndex: 'priVolType'
         },
         {
           key: 'state',
-          title: this.$t('label.dr.mirrored.volume.status'),
+          title: this.$t('label.dr.volume.status'),
           dataIndex: 'priVolStatus'
         }
       ],
       secColumns: [
         {
           key: 'type',
-          title: this.$t('label.dr.mirrored.volume.type'),
+          title: this.$t('label.dr.volume.type'),
           dataIndex: 'secVolType'
         },
         {
           key: 'state',
-          title: this.$t('label.dr.mirrored.volume.status'),
+          title: this.$t('label.dr.volume.status'),
           dataIndex: 'secVolStatus'
         }
       ]
