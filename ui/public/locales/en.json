@@ -4629,6 +4629,7 @@
 "label.primary.cluster.vm": "Primary cluster virtual machine",
 "label.secondary.cluster.vm": "Secondary cluster virtual machine",
 "label.dr.volume.status": "Volume status",
+"label.dr.volume.type": "Volume type",
 "label.dr.volume.root.disk.status": "Root disk Mirroring status",
 "label.dr.volume.data.disk.status": "Data disk Mirroring status",
 "label.dr": "DR",
