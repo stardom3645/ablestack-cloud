@@ -530,6 +530,9 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
             if (!details.get("mirrorscheduleinterval").contains("d") && !details.get("mirrorscheduleinterval").contains("h") && !details.get("mirrorscheduleinterval").contains("m")) {
                 throw new InvalidParameterValueException("The mirror schedule interval can be specified in days, hours, or minutes using d, h, m suffix respectively");
             }
+            if (!details.get("mirrorscheduleinterval").endsWith("d") && !details.get("mirrorscheduleinterval").endsWith("h") && !details.get("mirrorscheduleinterval").endsWith("m")) {
+                throw new InvalidParameterValueException("The mirror schedule interval can be specified in days, hours, or minutes using d, h, m suffix respectively");
+            }
         }
         Long drId = drcluster.getId();
         Map<String, String> drDetails = disasterRecoveryClusterDetailsDao.findDetails(drId);
