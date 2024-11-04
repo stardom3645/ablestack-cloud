@@ -16,32 +16,18 @@
 // specific language governing permissions and limitations
 // under the License.
 //
+package com.cloud.agent.api;
 
-package org.apache.cloudstack.storage.command;
+public class CompressDedupVolumeAnswer extends Answer {
 
-import com.cloud.agent.api.Command;
-import com.cloud.storage.VolumeVO;
-
-public class CompressDedupVolumeCommand extends Command {
-
-    String action;
-    VolumeVO volume;
-
-    public CompressDedupVolumeCommand(String action, VolumeVO volume) {
-        this.action = action;
-        this.volume = volume;
+    protected CompressDedupVolumeAnswer() {
     }
 
-    @Override
-    public boolean executeInSequence() {
-        return false;
+    public CompressDedupVolumeAnswer(CompressDedupVolumeCommand cmd, String details, boolean success) {
+        super(cmd, success, details);
     }
 
-    public String getAction() {
-        return action;
-    }
-
-    public VolumeVO getVolume() {
-        return volume;
+    public CompressDedupVolumeAnswer(CompressDedupVolumeCommand cmd, Exception e) {
+        super(cmd, e);
     }
 }
