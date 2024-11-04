@@ -938,9 +938,20 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                             for (int j = 0; j < arr.length(); j++) {
                                 JSONObject jSONObject = arr.getJSONObject(j);
                                 if (jSONObject.get("name").equals(drCluster.getName())) {
+                                    List<DisasterRecoveryClusterVmMapVO> vmMap = disasterRecoveryClusterVmMapDao.listByDisasterRecoveryClusterId(drCluster.getId());
+                                    if (!CollectionUtils.isEmpty(vmMap)) {
+                                        for (DisasterRecoveryClusterVmMap vm : vmMap) {
+                                            secCommand = "deleteDisasterRecoveryClusterVm";
+                                            secMethod = "GET";
+                                            Map<String, String> vmParams = new HashMap<>();
+                                            vmParams.put("drclustername", drCluster.getName());
+                                            vmParams.put("virtualmachineid", vm.getMirroredVmId());
+                                            DisasterRecoveryClusterUtil.moldDeleteDisasterRecoveryClusterVmAPI(secUrl + "/client/api/", secCommand, secMethod, secApiKey, secSecretKey, vmParams);
+                                            disasterRecoveryClusterVmMapDao.remove(vm.getId());
+                                        }
+                                    }
                                     String primaryDrId = jSONObject.get("id").toString();
                                     secCommand = "deleteDisasterRecoveryCluster";
-                                    secMethod = "GET";
                                     sucParams = new HashMap<>();
                                     sucParams.put("id", primaryDrId);
                                     String response = DisasterRecoveryClusterUtil.moldDeleteDisasterRecoveryClusterAPI(secUrl + "/client/api/", secCommand, secMethod, secApiKey, secSecretKey, sucParams);
@@ -955,17 +966,6 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                                         }
                                         disasterRecoveryClusterDetailsDao.deleteDetails(drCluster.getId());
                                         disasterRecoveryClusterDao.remove(drCluster.getId());
-                                        List<DisasterRecoveryClusterVmMapVO> vmMap = disasterRecoveryClusterVmMapDao.listByDisasterRecoveryClusterId(drCluster.getId());
-                                        if (!CollectionUtils.isEmpty(vmMap)) {
-                                            for (DisasterRecoveryClusterVmMap vm : vmMap) {
-                                                secCommand = "deleteDisasterRecoveryClusterVm";
-                                                Map<String, String> vmParams = new HashMap<>();
-                                                vmParams.put("drclustername", drCluster.getName());
-                                                vmParams.put("virtualmachineid", vm.getMirroredVmId());
-                                                DisasterRecoveryClusterUtil.moldDeleteDisasterRecoveryClusterVmAPI(secUrl + "/client/api/", secCommand, secMethod, secApiKey, secSecretKey, vmParams);
-                                                disasterRecoveryClusterVmMapDao.remove(vm.getId());
-                                            }
-                                        }
                                         return true;
                                     }
                                 }
