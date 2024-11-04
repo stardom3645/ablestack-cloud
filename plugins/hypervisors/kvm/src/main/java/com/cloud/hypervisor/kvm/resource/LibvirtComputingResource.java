@@ -338,6 +338,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
     private String heartBeatPathRbd;
     private String heartBeatPathClvm;
     private String createKvdo;
+    private String compressDedupVolume;
     private String vmActivityCheckPath;
     private String vmActivityCheckPathGfs;
     private String vmActivityCheckPathRbd;
@@ -1024,6 +1025,11 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
         createKvdo = Script.findScript(kvmScriptsDir, "create_kvdo.sh");
         if (createKvdo == null) {
             throw new ConfigurationException("Unable to find create_kvdo.sh");
+        }
+
+        compressDedupVolume = Script.findScript(kvmScriptsDir, "compress_dedup_volume.sh");
+        if (compressDedupVolume == null) {
+            throw new ConfigurationException("Unable to find compress_dedup_volume.sh");
         }
 
         createVmPath = Script.findScript(storageScriptsDir, "createvm.sh");
@@ -2007,6 +2013,23 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
         command.add("-n", poolUsername);
         command.add("-i", imageName);
         command.add("-s", imageSize);
+        String result = command.execute();
+        if (result != null) {
+            return false;
+        }
+        return true;
+    }
+
+    public boolean CompressDedupVolumeCmdLine(final String action, final String imageName) throws InternalErrorException {
+        if (action == null || imageName == null) {
+            return false;
+        }
+
+        final Script command = new Script("/bin/sh", timeout);
+        command.add(compressDedupVolume);
+        command.add("-a", action);
+        command.add("-i", imageName);
+        LOGGER.info(command);
         String result = command.execute();
         if (result != null) {
             return false;

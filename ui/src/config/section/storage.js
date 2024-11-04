@@ -271,6 +271,14 @@ export default {
           }
         },
         {
+          api: 'enableCompressDedup',
+          icon: 'link-outlined',
+          label: 'label.action.delete.volume',
+          message: 'message.enable.kvdo',
+          dataView: true,
+          show: (record) => { return record.virtualmachineid && ['Running'].includes(record.vmstate) }
+        },
+        {
           api: 'recoverVolume',
           icon: 'medicine-box-outlined',
           label: 'label.action.recover.volume',

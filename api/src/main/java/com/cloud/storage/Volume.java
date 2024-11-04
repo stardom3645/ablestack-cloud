@@ -282,4 +282,8 @@ public interface Volume extends ControlledEntity, Identity, InternalIdentity, Ba
     String getSavingStats();
 
     void setSavingStats(String savingStats);
+
+    boolean getCompressDedup();
+
+    void setCompressDedup(boolean compressDedup);
 }

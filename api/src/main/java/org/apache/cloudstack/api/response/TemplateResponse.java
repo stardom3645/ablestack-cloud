@@ -196,7 +196,7 @@ public class TemplateResponse extends BaseResponseWithTagInformation implements 
     private Boolean directDownload;
 
     @SerializedName(ApiConstants.KVDO_ENABLE)
-    @Param(description = "KVM Only: true if template is directly downloaded to Primary Storage bypassing Secondary Storage")
+    @Param(description = "KVM and ABLESTACK Block Only: True if volume compression/deduplication feature is used.")
     private Boolean kvdoEnable;
 
     @SerializedName(ApiConstants.DEPLOY_AS_IS)
