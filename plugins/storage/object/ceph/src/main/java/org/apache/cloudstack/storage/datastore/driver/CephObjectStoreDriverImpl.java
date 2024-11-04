@@ -70,8 +70,6 @@ import org.twonote.rgwadmin4j.RgwAdminBuilder;
 
 public class CephObjectStoreDriverImpl extends BaseObjectStoreDriverImpl {
 
-    protected Logger logger = LogManager.getLogger(getClass());
-
     @Inject
     AccountDao _accountDao;
 
