@@ -3202,7 +3202,7 @@ public class VolumeApiServiceImpl extends ManagerBase implements VolumeApiServic
     }
 
     @Override
-    @ActionEvent(eventType = EventTypes.EVENT_VOLUME_COMPRESS_DEDUP_ENABLE, eventDescription = "enable compress dedup volume.", async = true)
+    @ActionEvent(eventType = EventTypes.EVENT_VOLUME_COMPRESS_DEDUP_ENABLE, eventDescription = "enable compress dedup volume", async = true)
     public Volume enableCompressDedupVolume(EnableCompressDedupCmd cmmd) {
         Account caller = CallContext.current().getCallingAccount();
         if (cmmd.getId() == null) {
@@ -3246,7 +3246,7 @@ public class VolumeApiServiceImpl extends ManagerBase implements VolumeApiServic
         _accountMgr.checkAccess(caller, null, true, vm);
 
         Long hostId = vm.getHostId() != null ? vm.getHostId() : vm.getLastHostId();
-        CompressDedupVolumeCommand cdvCmd = new CompressDedupVolumeCommand("enable", volume);
+        CompressDedupVolumeCommand cdvCmd = new CompressDedupVolumeCommand("enable", volume.getPath());
         try {
             Answer answer = _agentMgr.send(hostId, cdvCmd);
             if (answer == null || !answer.getResult()) {

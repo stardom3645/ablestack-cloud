@@ -23,20 +23,22 @@ import org.apache.cloudstack.api.ACL;
 import org.apache.cloudstack.api.APICommand;
 import org.apache.cloudstack.api.ApiConstants;
 import org.apache.cloudstack.api.ApiErrorCode;
-import org.apache.cloudstack.api.BaseCmd;
+import org.apache.cloudstack.api.BaseAsyncCmd;
 import org.apache.cloudstack.api.Parameter;
 import org.apache.cloudstack.api.ServerApiException;
+import org.apache.cloudstack.api.command.user.UserCmd;
 import org.apache.cloudstack.api.response.SuccessResponse;
 import org.apache.cloudstack.api.response.VolumeResponse;
 import org.apache.cloudstack.context.CallContext;
 
+import com.cloud.event.EventTypes;
 import com.cloud.exception.ConcurrentOperationException;
 import com.cloud.storage.Volume;
 import com.cloud.user.Account;
 
 @APICommand(name = "enableCompressDedup", description = "Enables compression deduplication on the volume", responseObject = VolumeResponse.class, responseView = ResponseView.Restricted, entityType = {Volume.class},
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
-public class EnableCompressDedupCmd extends BaseCmd {
+public class EnableCompressDedupCmd extends BaseAsyncCmd implements UserCmd {
 
     /////////////////////////////////////////////////////
     //////////////// API parameters /////////////////////
@@ -81,6 +83,17 @@ public class EnableCompressDedupCmd extends BaseCmd {
     @Override
     public ApiCommandResourceType getApiResourceType() {
         return ApiCommandResourceType.Volume;
+    }
+
+    
+    @Override
+    public String getEventType() {
+        return EventTypes.EVENT_VOLUME_COMPRESS_DEDUP_ENABLE;
+    }
+
+    @Override
+    public String getEventDescription() {
+        return "enable compress dedup volume : " + this._uuidMgr.getUuid(Volume.class, getId());
     }
 
     @Override

@@ -33,8 +33,8 @@ public final class CompressDedupVolumeWrapper extends CommandWrapper<CompressDed
     @Override
     public Answer execute(final CompressDedupVolumeCommand command, final LibvirtComputingResource libvirtComputingResource) {
         try {
-            logger.info("CompressDedupVolumeCommand Action Call [ volume path : " +command.getVolume().getPath()+ " ]");
-            if (libvirtComputingResource.CompressDedupVolumeCmdLine(command.getAction(), command.getVolume().getPath())) {
+            logger.info("CompressDedupVolumeCommand Action Call [ volume path : " +command.getPath()+ " ]");
+            if (libvirtComputingResource.CompressDedupVolumeCmdLine(command.getAction(), command.getPath())) {
                 logger.info("CompressDedupVolumeCommand Action >>> Success");
                 return new CompressDedupVolumeAnswer(command, "", true);
             } else {
