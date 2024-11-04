@@ -19,10 +19,9 @@
 
 package com.cloud.hypervisor.kvm.resource.wrapper;
 
-import org.apache.cloudstack.storage.command.CompressDedupVolumeAnswer;
-import org.apache.cloudstack.storage.command.CompressDedupVolumeCommand;
-
 import com.cloud.agent.api.Answer;
+import com.cloud.agent.api.CompressDedupVolumeAnswer;
+import com.cloud.agent.api.CompressDedupVolumeCommand;
 import com.cloud.exception.InternalErrorException;
 import com.cloud.hypervisor.kvm.resource.LibvirtComputingResource;
 import com.cloud.resource.ResourceWrapper;

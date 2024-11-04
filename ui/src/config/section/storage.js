@@ -273,8 +273,8 @@ export default {
         {
           api: 'enableCompressDedup',
           icon: 'link-outlined',
-          label: 'label.action.delete.volume',
-          message: 'message.enable.kvdo',
+          label: 'label.action.enable.compress.dedup',
+          message: 'message.enable.compress.dedup',
           dataView: true,
           show: (record) => { return record.virtualmachineid && ['Running'].includes(record.vmstate) }
         },
