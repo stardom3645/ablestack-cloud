@@ -957,11 +957,21 @@ public class VolumeObject implements VolumeInfo {
 
     @Override
     public String getSavingStats() {
-        return volumeVO.getExternalUuid();
+        return volumeVO.getSavingStats();
     }
 
     @Override
     public void setSavingStats(String savingStats) {
-        volumeVO.setExternalUuid(savingStats);
+        volumeVO.setSavingStats(savingStats);
+    }
+
+    @Override
+    public boolean getCompressDedup() {
+        return volumeVO.getCompressDedup();
+    }
+
+    @Override
+    public void setCompressDedup(boolean compressDedup) {
+        volumeVO.setCompressDedup(compressDedup);
     }
 }

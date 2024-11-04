@@ -41,6 +41,7 @@ SELECT
     `volumes`.`external_uuid` AS `external_uuid`,
     `volumes`.`encrypt_format` AS `encrypt_format`,
     `volumes`.`saving_stats` AS `saving_stats`,
+    `volumes`.`compress_dedup` AS `compress_dedup`,
     `account`.`id` AS `account_id`,
     `account`.`uuid` AS `account_uuid`,
     `account`.`account_name` AS `account_name`,

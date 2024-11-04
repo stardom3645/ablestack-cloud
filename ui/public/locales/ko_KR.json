@@ -4047,6 +4047,7 @@
 "volume.destroy": "\ubcfc\ub968.\uc0ad\uc81c",
 "volume.recover": "\ubcfc\ub968.\ubcf5\uad6c",
 "volume.change.disk.offering": "\ubcfc\ub968.\ub514\uc2a4\ud06c.\uc624\ud37c\ub9c1.\ubcc0\uacbd",
+"volume.compress.dedup.enable": "\ubcfc\ub968.\uc555\ucd95.\uc911\ubcf5\uc81c\uac70.\ud65c\uc131\ud654",
 "domain.create": "\ub3c4\uba54\uc778.\uc0dd\uc131",
 "domain.delete": "\ub3c4\uba54\uc778.\uc0ad\uc81c",
 "domain.update": "\ub3c4\uba54\uc778.\uc5c5\ub370\uc774\ud2b8",

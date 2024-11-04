@@ -302,12 +302,16 @@ public class VolumeResponse extends BaseResponseWithTagInformation implements Co
     private String encryptionFormat;
 
     @SerializedName(ApiConstants.SAVING_STATS)
-    @Param(description = "the format of the disk encryption if applicable", since = "4.20")
+    @Param(description = "Space saved by compression deduplication", since = "4.20")
     private String savingStats;
 
     @SerializedName(ApiConstants.KVDO_ENABLE)
-    @Param(description = "Whether to use it as a shared volume", since = "4.19")
+    @Param(description = "Whether to KVDO compression and deduplication the volume", since = "4.20")
     private Boolean kvdoEnable;
+
+    @SerializedName(ApiConstants.COMPRESS_DEDUP)
+    @Param(description = "Whether to On or Off it as a KVDO compress, dedup volume", since = "4.20")
+    private Boolean compressDedup;
 
     public String getPath() {
         return path;
@@ -873,5 +877,13 @@ public class VolumeResponse extends BaseResponseWithTagInformation implements Co
 
     public void setKvdoEnable(boolean kvdoEnable) {
         this.kvdoEnable = kvdoEnable;
+    }
+
+    public boolean getCompressDedup() {
+        return compressDedup;
+    }
+
+    public void setCompressDedup(boolean compressDedup) {
+        this.compressDedup = compressDedup;
     }
 }

@@ -4047,6 +4047,7 @@
 "volume.destroy": "VOLUME.DESTROY",
 "volume.recover": "VOLUME.RECOVER",
 "volume.change.disk.offering": "VOLUME.CHANGE.DISK.OFFERING",
+"volume.compress.dedup.enable": "VOLUME_COMPRESS_DEDUP_ENABLE",
 "domain.create": "DOMAIN.CREATE",
 "domain.delete": "DOMAIN.DELETE",
 "domain.update": "DOMAIN.UPDATE",

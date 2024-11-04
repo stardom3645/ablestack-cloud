@@ -286,6 +286,9 @@ public class VolumeJoinVO extends BaseViewWithTagInformationVO implements Contro
     @Column(name = "kvdo_enable")
     private boolean kvdoEnable;
 
+    @Column(name = "compress_dedup")
+    private boolean compressDedup;
+
     public VolumeJoinVO() {
     }
 
@@ -631,6 +634,10 @@ public class VolumeJoinVO extends BaseViewWithTagInformationVO implements Contro
 
     public boolean getKvdoEnable() {
         return kvdoEnable;
+    }
+
+    public boolean getCompressDedup() {
+        return compressDedup;
     }
 
     @Override

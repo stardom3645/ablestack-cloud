@@ -239,7 +239,7 @@ public class ServiceOfferingResponse extends BaseResponseWithAnnotations {
     private Boolean shareable;
 
     @SerializedName(ApiConstants.KVDO_ENABLE)
-    @Param(description = "Whether to use it as a shared volume", since = "4.19")
+    @Param(description = "Whether to KVDO compression and deduplication the volume", since = "4.20")
     private Boolean kvdoEnable;
 
     @SerializedName(ApiConstants.PURGE_RESOURCES)
