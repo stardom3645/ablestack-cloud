@@ -3258,7 +3258,7 @@ public class VolumeApiServiceImpl extends ManagerBase implements VolumeApiServic
         _accountMgr.checkAccess(caller, null, true, vm);
 
         Long hostId = vm.getHostId() != null ? vm.getHostId() : vm.getLastHostId();
-        CompressDedupVolumeCommand cdvCmd = new CompressDedupVolumeCommand("enable", volume);
+        CompressDedupVolumeCommand cdvCmd = new CompressDedupVolumeCommand("enable", volume.getPath());
         try {
             Answer answer = _agentMgr.send(hostId, cdvCmd);
             if (answer == null || !answer.getResult()) {
@@ -3329,7 +3329,7 @@ public class VolumeApiServiceImpl extends ManagerBase implements VolumeApiServic
         _accountMgr.checkAccess(caller, null, true, vm);
 
         Long hostId = vm.getHostId() != null ? vm.getHostId() : vm.getLastHostId();
-        CompressDedupVolumeCommand cdvCmd = new CompressDedupVolumeCommand("disable", volume);
+        CompressDedupVolumeCommand cdvCmd = new CompressDedupVolumeCommand("disable", volume.getPath());
         try {
             Answer answer = _agentMgr.send(hostId, cdvCmd);
             if (answer == null || !answer.getResult()) {
