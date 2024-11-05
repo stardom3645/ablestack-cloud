@@ -272,11 +272,19 @@ export default {
         },
         {
           api: 'enableCompressDedup',
-          icon: 'link-outlined',
+          icon: 'clear-outlined',
           label: 'label.action.enable.compress.dedup',
           message: 'message.enable.compress.dedup',
           dataView: true,
-          show: (record) => { return record.virtualmachineid && ['Running'].includes(record.vmstate) }
+          show: (record) => { return record.virtualmachineid && ['Running'].includes(record.vmstate) && !record.compressdedup }
+        },
+        {
+          api: 'disableCompressDedup',
+          icon: 'compress-outlined',
+          label: 'label.action.disable.compress.dedup',
+          message: 'message.disable.compress.dedup',
+          dataView: true,
+          show: (record) => { return record.virtualmachineid && ['Running'].includes(record.vmstate) && record.compressdedup }
         },
         {
           api: 'recoverVolume',

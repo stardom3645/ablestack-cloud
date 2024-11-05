@@ -54,15 +54,14 @@ if [ -z "$PoolName" ] || [ -z "$ImageName" ]; then
   exit 2
 fi
 
-# rbd image가 존재하는지 체크
+# Check if rbd image exists
 devicePath=$(rbd showmapped | grep "$PoolName[ ]*$ImageName" | grep -o "[^ ]*[ ]*$")
 if [ -z "$devicePath" ]; then
   # device no exist
   devicePath=$(rbd map "$PoolName/$ImageName" --id "$PoolAuthUserName")
 fi
 
-
-# 파티션이 존재하는지 확인
+# Check if a partition exists
 partitionExist=$(lsblk $devicePath -p -J |jq -r '.blockdevices[0].children')
 vg_name=vg_$(echo $ImageName| sed 's/-//g')
 if [ "$partitionExist" == "null" ]; then
@@ -79,21 +78,7 @@ if [ "$partitionExist" == "null" ]; then
   vgcreate $vg_name $firstPartitionPath
 
   lvcreate --type vdo --name ablestack_kvdo -l +100%FREE --virtualsize $ImageSize"B" $vg_name
-  # vgcreate $ImageName $firstPartitionPath
 
-  # lvcreate --type vdo --name ablestack_kvdo -l +100%FREE --virtualsize $ImageSize"B" $ImageName
-
-  # ex_vg_name=$(pvs $firstPartitionPath --reportformat json |jq -r '.report[0].pv[0].vg_name')
-  # echo "1-1 : " $vg_name
-  # echo "2-1 : " $devicePath
-  # echo "3-1 : " $firstPartitionPath
-  # echo "4-1 : " $ex_vg_name
-  # if [ "$ex_vg_name" != "null" ] && [ -n "$ex_vg_name" ]; then
-  #   echo "5-1 : "
-  #   vgrename $ex_vg_name $vg_name
-  #   vgchange --uuid $vg_name
-  #   pvchange --uuid $firstPartitionPath
-  # fi
 else
   firstPartitionPath=$(lsblk $devicePath -p -J |jq -r '.blockdevices[0].children[0].name')
   ex_vg_name=$(pvs $firstPartitionPath --reportformat json |jq -r '.report[0].pv[0].vg_name')

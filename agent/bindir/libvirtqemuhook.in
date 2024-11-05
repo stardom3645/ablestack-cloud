@@ -19,6 +19,7 @@ import re
 import sys
 import os
 import subprocess
+import time
 from threading import Timer
 from xml.dom.minidom import parse
 from cloudutils.configFileOps import configFileOps
@@ -204,9 +205,15 @@ def unmapStorage():
                         # If there are matching results
                         if match:
                             vg_name = "vg_"+str(match.group(1))
-                            ret_code = executeProgram("/usr/sbin/vgchange", ["-an", vg_name])
-                            if ret_code == 22:
-                                logger.error('kvdo vgchange failed: %s' % img)
+                            for i in range(60):
+                                ret_code = executeProgram("/usr/sbin/vgchange", ["-an", vg_name])
+                                if ret_code == 0:
+                                    break
+                                elif i < 60 and ret_code == 22:
+                                    time.sleep(1)  # 1초 대기
+                                else:
+                                    logger.error('kvdo vgchange failed: %s' % img)
+
                             # Convert to UUID format
                             hex_string = match.group(1)
                             image_uuid = f"{hex_string[:8]}-{hex_string[8:12]}-{hex_string[12:16]}-{hex_string[16:20]}-{hex_string[20:]}"

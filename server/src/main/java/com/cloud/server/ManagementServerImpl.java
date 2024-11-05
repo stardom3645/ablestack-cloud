@@ -578,6 +578,7 @@ import org.apache.cloudstack.api.command.user.volume.ResizeVolumeCmd;
 import org.apache.cloudstack.api.command.user.volume.UpdateVolumeCmd;
 import org.apache.cloudstack.api.command.user.volume.UploadVolumeCmd;
 import org.apache.cloudstack.api.command.user.volume.EnableCompressDedupCmd;
+import org.apache.cloudstack.api.command.user.volume.DisableCompressDedupCmd;
 import org.apache.cloudstack.api.command.user.vpc.CreatePrivateGatewayCmd;
 import org.apache.cloudstack.api.command.user.vpc.CreateStaticRouteCmd;
 import org.apache.cloudstack.api.command.user.vpc.CreateVPCCmd;
@@ -3871,6 +3872,7 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
         cmdList.add(DestroyVolumeCmd.class);
         cmdList.add(RecoverVolumeCmd.class);
         cmdList.add(EnableCompressDedupCmd.class);
+        cmdList.add(DisableCompressDedupCmd.class);
         cmdList.add(ChangeOfferingForVolumeCmd.class);
         cmdList.add(CreateStaticRouteCmd.class);
         cmdList.add(CreateVPCCmd.class);

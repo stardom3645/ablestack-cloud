@@ -741,6 +741,7 @@ public class VolumeApiServiceImpl extends ManagerBase implements VolumeApiServic
         Long maxIops = null;
         // Volume VO used for extracting the source template id
         VolumeVO parentVolume = null;
+        boolean kvdoEnable = false;
 
         // validate input parameters before creating the volume
         if (cmd.getSnapshotId() == null && cmd.getDiskOfferingId() == null) {
@@ -805,6 +806,7 @@ public class VolumeApiServiceImpl extends ManagerBase implements VolumeApiServic
             }
 
             Boolean isCustomizedIops = diskOffering.isCustomizedIops();
+            kvdoEnable = diskOffering.getKvdoEnable();
 
             if (isCustomizedIops != null) {
                 if (isCustomizedIops) {
@@ -938,7 +940,7 @@ public class VolumeApiServiceImpl extends ManagerBase implements VolumeApiServic
         String userSpecifiedName = getVolumeNameFromCommand(cmd);
 
         return commitVolume(cmd, caller, owner, displayVolume, zoneId, diskOfferingId, provisioningType, size, minIops, maxIops, parentVolume, userSpecifiedName,
-                _uuidMgr.generateUuid(Volume.class, cmd.getCustomId()), details);
+                _uuidMgr.generateUuid(Volume.class, cmd.getCustomId()), details, kvdoEnable);
     }
 
     @Override
@@ -952,7 +954,7 @@ public class VolumeApiServiceImpl extends ManagerBase implements VolumeApiServic
     }
 
     private VolumeVO commitVolume(final CreateVolumeCmd cmd, final Account caller, final Account owner, final Boolean displayVolume, final Long zoneId, final Long diskOfferingId,
-                                  final Storage.ProvisioningType provisioningType, final Long size, final Long minIops, final Long maxIops, final VolumeVO parentVolume, final String userSpecifiedName, final String uuid, final Map<String, String> details) {
+                                  final Storage.ProvisioningType provisioningType, final Long size, final Long minIops, final Long maxIops, final VolumeVO parentVolume, final String userSpecifiedName, final String uuid, final Map<String, String> details, boolean kvdoEnable) {
         return Transaction.execute(new TransactionCallback<VolumeVO>() {
             @Override
             public VolumeVO doInTransaction(TransactionStatus status) {
@@ -975,6 +977,10 @@ public class VolumeApiServiceImpl extends ManagerBase implements VolumeApiServic
                     volume.setFormat(parentVolume.getFormat());
                 } else {
                     volume.setTemplateId(null);
+                }
+
+                if(kvdoEnable){
+                    volume.setCompressDedup(true);
                 }
 
                 volume = _volsDao.persist(volume);
