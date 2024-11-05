@@ -46,6 +46,7 @@ import {
   CheckCircleTwoTone,
   CheckOutlined,
   CheckSquareOutlined,
+  ClearOutlined,
   CloseSquareOutlined,
   ClockCircleOutlined,
   CloseCircleOutlined,
@@ -59,6 +60,7 @@ import {
   CloudSyncOutlined,
   CodeOutlined,
   CompassOutlined,
+  CompressOutlined,
   ContainerOutlined,
   ControlOutlined,
   CopyOutlined,
@@ -222,6 +224,7 @@ export default {
     app.component('CheckCircleTwoTone', CheckCircleTwoTone)
     app.component('CheckOutlined', CheckOutlined)
     app.component('CheckSquareOutlined', CheckSquareOutlined)
+    app.component('ClearOutlined', ClearOutlined)
     app.component('CloseSquareOutlined', CloseSquareOutlined)
     app.component('ClockCircleOutlined', ClockCircleOutlined)
     app.component('CloseCircleOutlined', CloseCircleOutlined)
@@ -237,6 +240,7 @@ export default {
     app.component('ContainerOutlined', ContainerOutlined)
     app.component('ControlOutlined', ControlOutlined)
     app.component('CompassOutlined', CompassOutlined)
+    app.component('CompressOutlined', CompressOutlined)
     app.component('CopyOutlined', CopyOutlined)
     app.component('CreditCardOutlined', CreditCardOutlined)
     app.component('DashboardOutlined', DashboardOutlined)
