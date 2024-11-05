@@ -295,7 +295,8 @@ known_categories = {
     'Webhook': 'Webhook',
     'Webhooks': 'Webhook',
     'purgeExpungedResources': 'Resource',
-    'enableCompressDedup': 'Volume'
+    'enableCompressDedup': 'Volume',
+    'disableCompressDedup': 'Volume'
 }
 
 
