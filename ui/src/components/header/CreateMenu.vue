@@ -19,19 +19,19 @@
   <a-dropdown v-if="accessibleCreateActions && accessibleCreateActions.length > 0">
     <template #overlay>
       <a-menu>
-        <a-menu-item style="width: 100%; padding: 12px" v-for="menuItem in accessibleCreateActions" :key="menuItem.api">
+        <a-menu-item v-for="menuItem in accessibleCreateActions" :key="menuItem.api" style="width: 100%; padding: 12px">
           <router-link :to="menuItem.route">
             <a-row>
               <a-col style="margin-right: 12px">
                 <a-avatar :style="{ backgroundColor: $config.theme['@primary-color'] }">
                   <template #icon>
-                    <render-icon v-if="(typeof menuItem.icon === 'string')" :icon="menuItem.icon" />
+                    <render-icon v-if="typeof menuItem.icon === 'string'" :icon="menuItem.icon" />
                     <font-awesome-icon v-else :icon="menuItem.icon" />
                   </template>
                 </a-avatar>
               </a-col>
               <a-col>
-                <h3 style="margin-bottom: 0px;">
+                <h3 style="margin-bottom: 0;">
                   {{ menuItem.title }}
                 </h3>
                 <small>{{ menuItem.subtitle }}</small>
@@ -46,13 +46,27 @@
       <DownOutlined />
     </a-button>
   </a-dropdown>
+  <div>
+    <a-button @click="toggleSidebar">{{ $t('label.event') }}</a-button>
+  </div>
+  <event-sidebar :isVisible="isSidebarVisible" @update:isVisible="isSidebarVisible = $event" />
 </template>
 
 <script>
+import EventSidebar from '@/components/view/EventSidebar.vue'
 
 export default {
   name: 'CreateMenu',
-  beforeCreate () {
+  components: {
+    EventSidebar
+  },
+  data () {
+    return {
+      accessibleCreateActions: [],
+      isSidebarVisible: false
+    }
+  },
+  created () {
     const menuItems = [
       {
         api: 'deployVirtualMachine',
@@ -91,7 +105,7 @@ export default {
       },
       {
         api: 'registerTemplate',
-        title: this.$t('label.templatename'),
+        title: this.$t('label.template'),
         subtitle: this.$t('label.action.register.template'),
         icon: 'picture-outlined',
         route: { path: '/template', query: { action: 'registerTemplate' } }
@@ -105,6 +119,11 @@ export default {
       }
     ]
     this.accessibleCreateActions = menuItems.filter(m => m.api in this.$store.getters.apis)
+  },
+  methods: {
+    toggleSidebar () {
+      this.isSidebarVisible = !this.isSidebarVisible
+    }
   }
 }
 </script>
