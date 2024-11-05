@@ -36,9 +36,9 @@ import com.cloud.exception.ConcurrentOperationException;
 import com.cloud.storage.Volume;
 import com.cloud.user.Account;
 
-@APICommand(name = "enableCompressDedup", description = "Enable compression deduplication on the volume", responseObject = VolumeResponse.class, responseView = ResponseView.Restricted, entityType = {Volume.class},
+@APICommand(name = "disableCompressDedup", description = "disable compression deduplication on the volume", responseObject = VolumeResponse.class, responseView = ResponseView.Restricted, entityType = {Volume.class},
         requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
-public class EnableCompressDedupCmd extends BaseAsyncCmd implements UserCmd {
+public class DisableCompressDedupCmd extends BaseAsyncCmd implements UserCmd {
 
     /////////////////////////////////////////////////////
     //////////////// API parameters /////////////////////
@@ -87,7 +87,7 @@ public class EnableCompressDedupCmd extends BaseAsyncCmd implements UserCmd {
 
     @Override
     public String getEventType() {
-        return EventTypes.EVENT_VOLUME_COMPRESS_DEDUP_ENABLE;
+        return EventTypes.EVENT_VOLUME_COMPRESS_DEDUP_DISABLE;
     }
 
     @Override
@@ -98,7 +98,7 @@ public class EnableCompressDedupCmd extends BaseAsyncCmd implements UserCmd {
     @Override
     public void execute() throws ConcurrentOperationException {
         CallContext.current().setEventDetails("Volume Id: " + this._uuidMgr.getUuid(Volume.class, getId()));
-        Volume result = _volumeService.enableCompressDedupVolume(this);
+        Volume result = _volumeService.disableCompressDedupVolume(this);
         if (result != null) {
             SuccessResponse response = new SuccessResponse(getCommandName());
             setResponseObject(response);

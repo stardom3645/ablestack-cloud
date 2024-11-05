@@ -19,14 +19,16 @@
 
 package com.cloud.agent.api;
 
+import com.cloud.storage.VolumeVO;
+
 public class CompressDedupVolumeCommand extends Command {
 
     String action;
-    String path;
+    VolumeVO volume;
 
-    public CompressDedupVolumeCommand(String action, String path) {
+    public CompressDedupVolumeCommand(String action, VolumeVO volume) {
         this.action = action;
-        this.path = path;
+        this.volume = volume;
     }
 
     @Override
@@ -38,7 +40,7 @@ public class CompressDedupVolumeCommand extends Command {
         return action;
     }
 
-    public String getPath() {
-        return path;
+    public VolumeVO getVolumeVO() {
+        return volume;
     }
 }
