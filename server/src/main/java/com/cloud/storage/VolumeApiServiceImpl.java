@@ -3341,7 +3341,7 @@ public class VolumeApiServiceImpl extends ManagerBase implements VolumeApiServic
             if (answer == null || !answer.getResult()) {
                 throw new InvalidParameterValueException(String.format("Failed to enable compressed duplicate volume action. %s", caller.getUuid()));
             }
-            volume.setCompressDedup(true);
+            volume.setCompressDedup(false);
             _volsDao.update(volume.getId(), volume);
         } catch (Exception ex) {
             throw new CloudRuntimeException(ex.getMessage());

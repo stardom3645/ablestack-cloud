@@ -2377,6 +2377,9 @@ export default {
               }
               this.loading.deploy = false
             }
+            if (values.templateKvdoEnable && values.vmNumber > 1) {
+              await new Promise(resolve => setTimeout(resolve, 6000)).then(() => {})
+            }
           }
           await new Promise(resolve => setTimeout(resolve, 3000)).then(() => {
             eventBus.emit('vm-refresh-data')
