@@ -82,12 +82,8 @@ if [ "$partitionExist" == "null" ]; then
 else
   firstPartitionPath=$(lsblk $devicePath -p -J |jq -r '.blockdevices[0].children[0].name')
   ex_vg_name=$(pvs $firstPartitionPath --reportformat json |jq -r '.report[0].pv[0].vg_name')
-  echo "1 : " $vg_name
-  echo "2 : " $devicePath
-  echo "3 : " $firstPartitionPath
-  echo "4 : " $ex_vg_name
+
   if [ -n "$ex_vg_name" ] && [ "$ex_vg_name" != "null" ] && [ $ex_vg_name != $vg_name ]; then
-  echo "5 : "
     vgrename $ex_vg_name $vg_name
     vgchange --uuid $vg_name
     pvchange --uuid $firstPartitionPath

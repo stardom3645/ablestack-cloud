@@ -60,11 +60,11 @@ export default {
         }
         fields.push('zonename')
         fields.push('kvdoenable')
-        fields.push('savingstats')
+        // fields.push('savingstats')
 
         return fields
       },
-      details: ['name', 'id', 'type', 'storagetype', 'diskofferingdisplaytext', 'deviceid', 'sizegb', 'physicalsize', 'provisioningtype', 'utilization', 'diskkbsread', 'diskkbswrite', 'diskioread', 'diskiowrite', 'diskiopstotal', 'miniops', 'maxiops', 'path', 'kvdoenable', 'savingstats'],
+      details: ['name', 'id', 'type', 'storagetype', 'diskofferingdisplaytext', 'deviceid', 'sizegb', 'physicalsize', 'provisioningtype', 'utilization', 'diskkbsread', 'diskkbswrite', 'diskioread', 'diskiowrite', 'diskiopstotal', 'miniops', 'maxiops', 'path', 'kvdoenable', 'compressdedup', 'savingstats'],
       related: [{
         name: 'snapshot',
         title: 'label.snapshots',
