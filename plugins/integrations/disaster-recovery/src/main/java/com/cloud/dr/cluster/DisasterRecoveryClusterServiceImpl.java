@@ -972,6 +972,14 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                                     }
                                 }
                             } else {
+                                List<DisasterRecoveryClusterVmMapVO> vmMap = disasterRecoveryClusterVmMapDao.listByDisasterRecoveryClusterId(drCluster.getId());
+                                if (!CollectionUtils.isEmpty(vmMap)) {
+                                    for (DisasterRecoveryClusterVmMap vm : vmMap) {
+                                        disasterRecoveryClusterVmMapDao.remove(vm.getId());
+                                    }
+                                }
+                                disasterRecoveryClusterDetailsDao.deleteDetails(drCluster.getId());
+                                disasterRecoveryClusterDao.remove(drCluster.getId());
                                 return true;
                             }
                         }
