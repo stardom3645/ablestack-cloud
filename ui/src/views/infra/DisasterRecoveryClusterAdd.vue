@@ -46,7 +46,7 @@
       </a-form-item>
 
       <a-card size="small" :title="$t('label.add.disaster.recovery.cluster.info')" style="margin-top: 15px">
-        <a-form-item name="url" ref="url" :label="$t('label.url')">
+        <a-form-item name="url" ref="url" :label="'Mold URL'">
           <a-input
             :placeholder="apiParams.drclusterurl.description"
             v-model:value="form.url"
@@ -64,7 +64,7 @@
             v-model:value="form.secretkey"
           />
         </a-form-item>
-        <a-form-item name="glueip" ref="glueip" :label="'Glue IP'">
+        <a-form-item name="glueip" ref="glueip" :label="'Glue URL'">
         <a-input
           :placeholder="apiParams.drclusterglueipaddress.description"
           v-model:value="form.glueip"
