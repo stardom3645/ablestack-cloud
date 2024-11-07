@@ -413,7 +413,6 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                 String glueCommand = "/mirror/image/rbd";
                 String glueMethod = "GET";
                 String response = DisasterRecoveryClusterUtil.glueImageMirrorAPI(glueUrl, glueCommand, glueMethod);
-                LOGGER.info(response);
                 if (response != null) {
                     mirrorList = (JsonArray) new JsonParser().parse(response);
                     break;
