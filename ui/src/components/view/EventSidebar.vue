@@ -21,45 +21,36 @@
     :mask="false"
     :maskClosable="false"
     placement="bottom"
-    :height="200"
-    :closable="false"
+    :height="300"
     @close="closeSidebar"
+    :closable="false"
   >
     <div class="sidebar-header">
-      <h3><schedule-outlined /> {{ $t('label.events') }}</h3>
-      <a-button @click="closeSidebar">{{ $t('label.close') }}</a-button>
+      <a-button
+        v-if="isVisible"
+        type="primary"
+        class="close-btn"
+        @click="closeSidebar"
+        style="width: 40px; height: 40px; padding: 0;"
+      >
+        <close-outlined />
+      </a-button>
     </div>
 
     <a-col :xs="{ span: 24 }" :lg="{ span: 24 }">
       <chart-card :loading="loading" class="dashboard-card dashboard-event">
-        <a-divider style="margin: 6px 0px; border-width: 0px" />
-        <a-timeline>
-          <a-timeline-item
-            v-for="event in events"
-            :key="event.id"
-            :color="getEventColour(event)"
-            style="display: block;"
-          >
-            <span :style="{ color: '#999' }">
-              <small>{{ $toLocaleDate(event.created) }}</small>
-            </span>
-            <br>
-            <span :style="{ color: '#666' }">
-              <small>
-                <router-link :to="{ path: '/event/' + event.id }">{{ event.level }} {{ event.type }} {{ event.state }} {{ event.resourceType }} </router-link>
-              </small>
-            </span>
-            <span>
-              <resource-label :resourceType="event.resourcetype" :resourceId="event.resourceid" :resourceName="event.resourcename" />
-            </span>
-            <span :style="{ color: '#aaa' }">{{ event.resourcename }} ({{ event.username }}) {{ event.description }}</span>
-          </a-timeline-item>
-        </a-timeline>
-        <router-link :to="{ path: '/event' }">
-          <a-button>
-            {{ $t('label.view') }} {{ $t('label.events') }}
-          </a-button>
-        </router-link>
+        <a-divider style="margin: 0px 0px; border-width: 0px" />
+        <a-table
+          :loading="loading"
+          :columns="columns"
+          :dataSource="events"
+          rowKey="id"
+          :bordered="false"
+          :pagination="false"
+          size="small"
+          class="event-table no-border-table"
+        >
+        </a-table>
       </chart-card>
     </a-col>
   </a-drawer>
@@ -80,7 +71,71 @@ export default {
     return {
       events: [],
       loading: false,
-      refreshInterval: null
+      refreshInterval: null,
+      columns: [
+        {
+          title: this.$t('label.level'),
+          dataIndex: 'level',
+          key: 'level',
+          width: 40,
+          ellipsis: true
+        },
+        {
+          title: this.$t('label.type'),
+          dataIndex: 'type',
+          key: 'type',
+          width: 120
+        },
+        {
+          title: this.$t('label.state'),
+          dataIndex: 'state',
+          key: 'state',
+          width: 50,
+          ellipsis: true
+        },
+        {
+          title: this.$t('label.description'),
+          dataIndex: 'description',
+          key: 'description',
+          width: 300
+        },
+        {
+          title: this.$t('label.resource'),
+          dataIndex: 'resourcename',
+          key: 'resourcename',
+          width: 80
+        },
+        {
+          title: this.$t('label.username'),
+          dataIndex: 'username',
+          key: 'username',
+          width: 40
+        },
+        {
+          title: this.$t('label.account'),
+          dataIndex: 'account',
+          key: 'account',
+          width: 40
+        },
+        {
+          title: this.$t('label.domain'),
+          dataIndex: 'domain',
+          key: 'domain',
+          width: 40,
+          ellipsis: true
+        },
+        {
+          title: this.$t('label.created'),
+          dataIndex: 'created',
+          key: 'created',
+          width: 100,
+          ellipsis: true,
+          customRender: ({ text }) => {
+            return this.formatDate(text)
+          }
+        }
+      ],
+      columnKeys: ['level', 'type', 'state', 'description', 'resourcename', 'username', 'account', 'domain', 'created']
     }
   },
   created () {
@@ -101,17 +156,42 @@ export default {
       this.loading = true
       const params = {
         page: 1,
-        pagesize: 8,
+        pagesize: 20,
         listall: true
       }
       try {
         const response = await api('listEvents', params)
-        this.events = response.listeventsresponse?.event || []
+        if (response && response.listeventsresponse) {
+          const events = response.listeventsresponse.event || []
+          const recentEvents = this.filterRecentEvents(events)
+          this.events = recentEvents
+        } else {
+          console.error('No events found in the response')
+        }
       } catch (error) {
         console.error('Error getting event list:', error)
       } finally {
         this.loading = false
       }
+    },
+    filterRecentEvents (events) {
+      const fiveMinutesAgo = Date.now() - (5 * 60 * 1000)
+      return events.filter(event => {
+        const eventTime = new Date(event.created).getTime()
+        return eventTime >= fiveMinutesAgo
+      }).slice(0, 20)
+    },
+    formatDate (dateString) {
+      const date = new Date(dateString)
+      return new Intl.DateTimeFormat('en-GB', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false
+      }).format(date)
     },
     getEventColour (event) {
       return 'blue'
@@ -125,8 +205,32 @@ export default {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  font-size: 14px;
 }
-.event-list {
-  padding: 16px;
+
+.close-btn {
+  position: fixed;
+  top: -40px;
+  right: 0px;
+  z-index: 1000;
+}
+
+.no-border-table .ant-table-cell,
+.no-border-table .ant-table-thead > tr > th {
+  border: none;
+}
+
+a-table .ant-table-content {
+  overflow: auto;
+}
+
+a-table .ant-table-cell {
+  font-size: 10px;
+  line-height: 1.2;
+}
+
+a-table .ant-table-content .ant-table-row {
+  max-height: 200px;
+  overflow: auto;
 }
 </style>
