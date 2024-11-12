@@ -16,7 +16,7 @@
 // under the License.
 
 <template>
-  <div class="footer">
+  <div :class="['footer', { expanded: isSidebarVisible }]">
     <div class="line">
       <span v-html="$config.footer" />
     </div>
@@ -28,18 +28,31 @@
         {{ $t('label.report.bug') }}
       </a>
     </div>
+
+    <div style="position: fixed; bottom: 45px; right: 0px; z-index: 100;">
+      <a-button type="primary" @click="toggleSidebar" style="width: 40px; height: 40px; padding: 0;">
+        <ScheduleOutlined />
+      </a-button>
+    </div>
+
+    <event-sidebar :isVisible="isSidebarVisible" @update:isVisible="isSidebarVisible = $event" />
   </div>
 </template>
 
 <script>
 import semver from 'semver'
 import { getParsedVersion } from '@/utils/util'
+import EventSidebar from '@/components/view/EventSidebar.vue'
 
 export default {
   name: 'LayoutFooter',
+  components: {
+    EventSidebar
+  },
   data () {
     return {
-      buildVersion: this.$config.buildVersion
+      buildVersion: this.$config.buildVersion,
+      isSidebarVisible: false
     }
   },
   created () {
@@ -52,6 +65,9 @@ export default {
     // }
   },
   methods: {
+    toggleSidebar () {
+      this.isSidebarVisible = !this.isSidebarVisible
+    },
     showVersionUpdate () {
       if (this.$store.getters?.features?.cloudstackversion && this.$store.getters?.latestVersion?.version) {
         const currentVersion = getParsedVersion(this.$store.getters?.features?.cloudstackversion)
@@ -69,6 +85,11 @@ export default {
     padding: 0 16px;
     margin: 48px 0 24px;
     text-align: center;
+    transition: all 0.3s ease;
+
+    &.expanded {
+      margin-bottom: 324px;
+    }
 
     .line {
       margin-bottom: 8px;
