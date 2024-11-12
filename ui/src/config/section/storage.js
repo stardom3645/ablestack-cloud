@@ -154,6 +154,16 @@ export default {
           component: shallowRef(defineAsyncComponent(() => import('@/views/storage/UpdateVolume.vue')))
         },
         {
+          api: 'updateCompressDedup',
+          icon: 'clear-outlined',
+          label: 'label.action.update.compress.dedup',
+          message: 'message.enable.compress.dedup',
+          dataView: true,
+          show: (record) => { return record.virtualmachineid && ['Running'].includes(record.vmstate) && !record.compressdedup },
+          popup: true,
+          component: shallowRef(defineAsyncComponent(() => import('@/views/storage/UpdateCompressDedup.vue')))
+        },
+        {
           api: 'createSnapshot',
           icon: 'camera-outlined',
           docHelp: 'adminguide/storage.html#working-with-volume-snapshots',
@@ -269,14 +279,6 @@ export default {
               value: (record) => { return record.id }
             }
           }
-        },
-        {
-          api: 'updateCompressDedup',
-          icon: 'clear-outlined',
-          label: 'label.action.enable.compress.dedup',
-          message: 'message.enable.compress.dedup',
-          dataView: true,
-          show: (record) => { return record.virtualmachineid && ['Running'].includes(record.vmstate) && !record.compressdedup }
         },
         {
           api: 'recoverVolume',

@@ -35,7 +35,7 @@
       <template #headerCell="{ column }">
         <template v-if="column.key === 'cpu'"><appstore-outlined /> {{ $t('label.cpu') }}</template>
         <template v-if="column.key === 'ram'"><bulb-outlined /> {{ $t('label.memory') }}</template>
-        <template v-if="column.key === 'kvdo'"><appstore-outlined /> {{ $t('label.kvdo') }}</template>
+        <template v-if="column.key === 'kvdo'"><appstore-outlined /> {{ $t('label.kvdoenable') }}</template>
       </template>
     </a-table>
 
