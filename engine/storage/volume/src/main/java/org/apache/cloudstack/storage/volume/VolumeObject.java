@@ -966,12 +966,22 @@ public class VolumeObject implements VolumeInfo {
     }
 
     @Override
-    public boolean getCompressDedup() {
-        return volumeVO.getCompressDedup();
+    public boolean getCompress() {
+        return volumeVO.getCompress();
     }
 
     @Override
-    public void setCompressDedup(boolean compressDedup) {
-        volumeVO.setCompressDedup(compressDedup);
+    public void setCompress(boolean compress) {
+        volumeVO.setCompress(compress);
+    }
+
+    @Override
+    public boolean getDedup() {
+        return volumeVO.getDedup();
+    }
+
+    @Override
+    public void setDedup(boolean dedup) {
+        volumeVO.setDedup(dedup);
     }
 }

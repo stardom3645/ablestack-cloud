@@ -185,8 +185,11 @@ public class VolumeVO implements Volume {
     @Column(name = "saving_stats")
     private String savingStats;
 
-    @Column(name = "compress_dedup")
-    private boolean compressDedup;
+    @Column(name = "compress")
+    private boolean compress;
+
+    @Column(name = "dedup")
+    private boolean dedup;
 
     // Real Constructor
     public VolumeVO(Type type, String name, long dcId, long domainId,
@@ -286,7 +289,8 @@ public class VolumeVO implements Volume {
         deployAsIs = that.isDeployAsIs();
         externalUuid = that.getExternalUuid();
         savingStats = that.getSavingStats();
-        compressDedup = that.getCompressDedup();
+        compress = that.getCompress();
+        dedup = that.getDedup();
     }
 
     @Override
@@ -690,7 +694,11 @@ public class VolumeVO implements Volume {
 
     public void setSavingStats(String savingStats) { this.savingStats = savingStats; }
 
-    public boolean getCompressDedup() { return compressDedup; }
+    public boolean getCompress() { return compress; }
 
-    public void setCompressDedup(boolean compressDedup) { this.compressDedup = compressDedup; }
+    public void setCompress(boolean compress) { this.compress = compress; }
+
+    public boolean getDedup() { return dedup; }
+
+    public void setDedup(boolean dedup) { this.dedup = dedup; }
 }

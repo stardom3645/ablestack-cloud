@@ -205,21 +205,26 @@ def unmapStorage():
                         # If there are matching results
                         if match:
                             vg_name = "vg_"+str(match.group(1))
-                            for i in range(60):
+                            for i in range(10):
                                 ret_code = executeProgram("/usr/sbin/vgchange", ["-an", vg_name])
                                 if ret_code == 0:
                                     break
-                                elif i < 60 and ret_code == 22:
-                                    time.sleep(1)  # 1초 대기
+                                elif i < 10 and ret_code != 0:
+                                    time.sleep(6)
                                 else:
                                     logger.error('kvdo vgchange failed: %s' % img)
 
                             # Convert to UUID format
                             hex_string = match.group(1)
                             image_uuid = f"{hex_string[:8]}-{hex_string[8:12]}-{hex_string[12:16]}-{hex_string[16:20]}-{hex_string[20:]}"
-                            ret_code = executeProgram("/usr/bin/rbd", ["unmap", image_uuid])
-                            if ret_code == 22:
-                                logger.error('kvdo rbd unmap failed: %s is not rbd image' % img)
+                            for i in range(10):
+                                ret_code = executeProgram("/usr/bin/rbd", ["unmap", image_uuid])
+                                if ret_code == 0:
+                                    break
+                                elif i < 10 and ret_code != 0:
+                                    time.sleep(6)
+                                else:
+                                    logger.error('kvdo rbd unmap failed: %s is not rbd image' % img)
                         else:
                             logger.error('rbd kvdo unmap failed: %s is not ablestack kvdo image' % img)
                     else:

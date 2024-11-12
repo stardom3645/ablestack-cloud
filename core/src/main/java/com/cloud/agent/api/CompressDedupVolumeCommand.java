@@ -21,11 +21,13 @@ package com.cloud.agent.api;
 
 public class CompressDedupVolumeCommand extends Command {
 
-    String action;
+    String compress;
+    String dedup;
     String path;
 
-    public CompressDedupVolumeCommand(String action, String path) {
-        this.action = action;
+    public CompressDedupVolumeCommand(String compress, String dedup, String path) {
+        this.compress = compress;
+        this.dedup = dedup;
         this.path = path;
     }
 
@@ -34,8 +36,12 @@ public class CompressDedupVolumeCommand extends Command {
         return false;
     }
 
-    public String getAction() {
-        return action;
+    public String getCompress() {
+        return compress;
+    }
+
+    public String getDedup() {
+        return dedup;
     }
 
     public String getPath() {

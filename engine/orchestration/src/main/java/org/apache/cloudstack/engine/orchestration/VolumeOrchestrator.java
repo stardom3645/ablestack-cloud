@@ -1039,7 +1039,8 @@ public class VolumeOrchestrator extends ManagerBase implements VolumeOrchestrati
         }
 
         if (offering.getKvdoEnable()) {
-            vol.setCompressDedup(true);
+            vol.setCompress(true);
+            vol.setDedup(true);
         }
 
         vol.setFormat(getSupportedImageFormatForCluster(vm.getHypervisorType()));
@@ -1101,7 +1102,8 @@ public class VolumeOrchestrator extends ManagerBase implements VolumeOrchestrati
         }
 
         if (offering.getKvdoEnable()) {
-            vol.setCompressDedup(true);
+            vol.setCompress(true);
+            vol.setDedup(true);
         }
 
         vol = _volsDao.persist(vol);

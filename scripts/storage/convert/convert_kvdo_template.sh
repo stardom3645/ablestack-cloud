@@ -60,15 +60,15 @@ sudo qemu-nbd -c $targetNbd $TmpFile
 # 5 Check the vg of the corresponding pv
 max_checks=60 # Maximum number of checks
 for ((i=1; i<=max_checks; i++)); do
-    child_name=$(lsblk "$targetNbd" -p -J | jq -r '.blockdevices[0].children[0].name')
+    child_size=$(lsblk "$targetNbd" -p -J | jq -r '.blockdevices[0].size')
 
-    if [[ "$child_name" != "null" ]]; then
+    if [[ "$child_size" != "0B" ]]; then
         break
     fi
-    sleep 2
+    sleep 1
 done
 
-firstPartitionPath=$(lsblk $targetNbd -p -J |jq -r '.blockdevices[0].children[0].name')
+firstPartitionPath=$(lsblk $targetNbd -p -J |jq -r '.blockdevices[0].name')
 
 ex_vg_name=$(sudo pvs $firstPartitionPath --reportformat json |jq -r '.report[0].pv[0].vg_name')
 

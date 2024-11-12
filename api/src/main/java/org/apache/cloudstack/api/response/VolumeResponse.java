@@ -309,9 +309,13 @@ public class VolumeResponse extends BaseResponseWithTagInformation implements Co
     @Param(description = "Whether to KVDO compression and deduplication the volume", since = "4.20")
     private Boolean kvdoEnable;
 
-    @SerializedName(ApiConstants.COMPRESS_DEDUP)
-    @Param(description = "Whether to On or Off it as a KVDO compress, dedup volume", since = "4.20")
-    private Boolean compressDedup;
+    @SerializedName(ApiConstants.COMPRESS)
+    @Param(description = "Whether to On or Off it as a KVDO compress volume", since = "4.20")
+    private Boolean compress;
+
+    @SerializedName(ApiConstants.DEDUP)
+    @Param(description = "Whether to On or Off it as a KVDO dedup volume", since = "4.20")
+    private Boolean dedup;
 
     public String getPath() {
         return path;
@@ -879,11 +883,19 @@ public class VolumeResponse extends BaseResponseWithTagInformation implements Co
         this.kvdoEnable = kvdoEnable;
     }
 
-    public boolean getCompressDedup() {
-        return compressDedup;
+    public boolean getCompress() {
+        return compress;
     }
 
-    public void setCompressDedup(boolean compressDedup) {
-        this.compressDedup = compressDedup;
+    public void setCompress(boolean compress) {
+        this.compress = compress;
+    }
+
+    public boolean getDedup() {
+        return dedup;
+    }
+
+    public void setDedup(boolean dedup) {
+        this.dedup = dedup;
     }
 }
