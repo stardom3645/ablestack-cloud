@@ -1903,6 +1903,7 @@ export default {
         if (template) {
           var size = template.size / (1024 * 1024 * 1024) || 0 // bytes to GB
           this.dataPreFill.minrootdisksize = Math.ceil(size)
+          this.dataPreFill.kvdoenable = template.kvdoenable
           this.updateTemplateLinkedUserData(template.userdataid)
           this.userdataDefaultOverridePolicy = template.userdatapolicy
           this.form.dynamicscalingenabled = template.isdynamicallyscalable
@@ -1915,6 +1916,7 @@ export default {
           this.form.iodriverpolicy = template.details?.['io.policy']
           this.form.keyboard = template.details?.keyboard
           this.form.templateKvdoEnable = template.kvdoenable
+          this.showOverrideDiskOfferingOption = false
           if (template.details['vmware-to-kvm-mac-addresses']) {
             this.dataPreFill.macAddressArray = JSON.parse(template.details['vmware-to-kvm-mac-addresses'])
           }
@@ -2950,7 +2952,7 @@ export default {
             if (this.selectedTemplateConfiguration) {
               this.updateFieldValue('templateConfiguration', this.selectedTemplateConfiguration.id)
             }
-            this.updateComputeOffering(null, null) // reset as existing selection may be incompatible
+            this.updateComputeOffering(null, this.template.kvdoEnable) // reset as existing selection may be incompatible
           }
         }, 500)
         this.updateFormProperties()

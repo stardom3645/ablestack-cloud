@@ -78,4 +78,6 @@ CALL `cloud`.`ADD_COL`('snapshots', 'clone_type', 'varchar(32)');
 
 CALL `cloud`.`ADD_COL`('volumes', 'saving_stats', 'varchar(16)');
 
-CALL `cloud`.`ADD_COL`('volumes', 'compress_dedup', 'tinyint(1) unsigned NOT NULL DEFAULT 0');
+CALL `cloud`.`ADD_COL`('volumes', 'compress', 'tinyint(1) unsigned NOT NULL DEFAULT 0');
+
+CALL `cloud`.`ADD_COL`('volumes', 'dedup', 'tinyint(1) unsigned NOT NULL DEFAULT 0');

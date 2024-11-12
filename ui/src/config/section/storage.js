@@ -64,7 +64,7 @@ export default {
 
         return fields
       },
-      details: ['name', 'id', 'type', 'storagetype', 'diskofferingdisplaytext', 'deviceid', 'sizegb', 'physicalsize', 'provisioningtype', 'utilization', 'diskkbsread', 'diskkbswrite', 'diskioread', 'diskiowrite', 'diskiopstotal', 'miniops', 'maxiops', 'path', 'kvdoenable', 'compressdedup', 'savingstats'],
+      details: ['name', 'id', 'type', 'storagetype', 'diskofferingdisplaytext', 'deviceid', 'sizegb', 'physicalsize', 'provisioningtype', 'utilization', 'kvdoenable', 'compress', 'dedup', 'savingstats', 'diskkbsread', 'diskkbswrite', 'diskioread', 'diskiowrite', 'diskiopstotal', 'miniops', 'maxiops', 'path'],
       related: [{
         name: 'snapshot',
         title: 'label.snapshots',
@@ -271,20 +271,12 @@ export default {
           }
         },
         {
-          api: 'enableCompressDedup',
+          api: 'updateCompressDedup',
           icon: 'clear-outlined',
           label: 'label.action.enable.compress.dedup',
           message: 'message.enable.compress.dedup',
           dataView: true,
           show: (record) => { return record.virtualmachineid && ['Running'].includes(record.vmstate) && !record.compressdedup }
-        },
-        {
-          api: 'disableCompressDedup',
-          icon: 'compress-outlined',
-          label: 'label.action.disable.compress.dedup',
-          message: 'message.disable.compress.dedup',
-          dataView: true,
-          show: (record) => { return record.virtualmachineid && ['Running'].includes(record.vmstate) && record.compressdedup }
         },
         {
           api: 'recoverVolume',

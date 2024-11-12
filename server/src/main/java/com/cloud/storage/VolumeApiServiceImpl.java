@@ -45,8 +45,7 @@ import org.apache.cloudstack.api.command.user.volume.ChangeOfferingForVolumeCmd;
 import org.apache.cloudstack.api.command.user.volume.CheckAndRepairVolumeCmd;
 import org.apache.cloudstack.api.command.user.volume.CreateVolumeCmd;
 import org.apache.cloudstack.api.command.user.volume.DetachVolumeCmd;
-import org.apache.cloudstack.api.command.user.volume.EnableCompressDedupCmd;
-import org.apache.cloudstack.api.command.user.volume.DisableCompressDedupCmd;
+import org.apache.cloudstack.api.command.user.volume.UpdateCompressDedupCmd;
 import org.apache.cloudstack.api.command.user.volume.ExtractVolumeCmd;
 import org.apache.cloudstack.api.command.user.volume.GetUploadParamsForVolumeCmd;
 import org.apache.cloudstack.api.command.user.volume.MigrateVolumeCmd;
@@ -980,7 +979,8 @@ public class VolumeApiServiceImpl extends ManagerBase implements VolumeApiServic
                 }
 
                 if(kvdoEnable){
-                    volume.setCompressDedup(true);
+                    volume.setCompress(true);
+                    volume.setDedup(true);
                 }
 
                 volume = _volsDao.persist(volume);
@@ -3209,8 +3209,8 @@ public class VolumeApiServiceImpl extends ManagerBase implements VolumeApiServic
     }
 
     @Override
-    @ActionEvent(eventType = EventTypes.EVENT_VOLUME_COMPRESS_DEDUP_ENABLE, eventDescription = "enable compress dedup volume", async = true)
-    public Volume enableCompressDedupVolume(EnableCompressDedupCmd cmmd) {
+    @ActionEvent(eventType = EventTypes.EVENT_VOLUME_COMPRESS_DEDUP_UPDATE, eventDescription = "update compress dedup volume", async = true)
+    public Volume updateCompressDedupVolume(UpdateCompressDedupCmd cmmd) {
         Account caller = CallContext.current().getCallingAccount();
         if (cmmd.getId() == null) {
             throw new InvalidParameterValueException("Please provide either a volume id");
@@ -3264,84 +3264,15 @@ public class VolumeApiServiceImpl extends ManagerBase implements VolumeApiServic
         _accountMgr.checkAccess(caller, null, true, vm);
 
         Long hostId = vm.getHostId() != null ? vm.getHostId() : vm.getLastHostId();
-        CompressDedupVolumeCommand cdvCmd = new CompressDedupVolumeCommand("enable", volume.getPath());
+
+        CompressDedupVolumeCommand cdvCmd = new CompressDedupVolumeCommand(cmmd.getCompress() ? "y" : "n", cmmd.getDedup() ? "y" : "n", volume.getPath());
         try {
             Answer answer = _agentMgr.send(hostId, cdvCmd);
             if (answer == null || !answer.getResult()) {
-                throw new InvalidParameterValueException(String.format("Failed to enable compressed duplicate volume action. %s", caller.getUuid()));
+                throw new InvalidParameterValueException(String.format("Failed to update compressed duplicate volume action. %s", caller.getUuid()));
             }
-            volume.setCompressDedup(true);
-            _volsDao.update(volume.getId(), volume);
-        } catch (Exception ex) {
-            throw new CloudRuntimeException(ex.getMessage());
-        }
-
-        return volume;
-    }
-
-    @Override
-    @ActionEvent(eventType = EventTypes.EVENT_VOLUME_COMPRESS_DEDUP_DISABLE, eventDescription = "disable compress dedup volume", async = true)
-    public Volume disableCompressDedupVolume(DisableCompressDedupCmd cmmd) {
-        Account caller = CallContext.current().getCallingAccount();
-        if (cmmd.getId() == null) {
-            throw new InvalidParameterValueException("Please provide either a volume id");
-        }
-
-        Long volumeId = cmmd.getId();
-        VolumeVO volume = null;
-
-        if (volumeId != null) {
-            volume = _volsDao.findById(volumeId);
-        }
-
-        // Check that the volume ID is valid
-        if (volume == null) {
-            throw new InvalidParameterValueException("Unable to find volume with ID: " + volumeId);
-        }
-
-        DiskOfferingVO diskOffering = _diskOfferingDao.findById(volume.getDiskOfferingId());
-        // Check that the diskOffering ID is valid
-        if (diskOffering == null) {
-            throw new InvalidParameterValueException("Unable to find diskOffering with ID: " + volume.getDiskOfferingId());
-        }
-
-        // Check that the diskOffering ID is valid
-        if (!diskOffering.getKvdoEnable()) {
-            throw new InvalidParameterValueException("KVM and ABLESTACK Block Only: volume compression/deduplication feature is used.");
-        }
-
-        Long vmId = null;
-        vmId = volume.getInstanceId();
-
-        // Check that the VM ID is valid
-        if (vmId == null) {
-            throw new InvalidParameterValueException("Unable to find instance VM with ID: " + vmId);
-        }
-
-        // Permissions check
-        _accountMgr.checkAccess(caller, null, true, volume);
-
-        // Check that the VM is in the correct state
-        UserVmVO vm = _userVmDao.findById(vmId);
-        if (vm.getState() != State.Running) {
-            throw new InvalidParameterValueException("Please specify a VM that is either running.");
-        }
-
-        // Check that the volume is a data/root volume
-        if (!(volume.getVolumeType() == Volume.Type.ROOT || volume.getVolumeType() == Volume.Type.DATADISK)) {
-            throw new InvalidParameterValueException("Please specify volume of type " + Volume.Type.DATADISK.toString() + " or " + Volume.Type.ROOT.toString());
-        }
-
-        _accountMgr.checkAccess(caller, null, true, vm);
-
-        Long hostId = vm.getHostId() != null ? vm.getHostId() : vm.getLastHostId();
-        CompressDedupVolumeCommand cdvCmd = new CompressDedupVolumeCommand("disable", volume.getPath());
-        try {
-            Answer answer = _agentMgr.send(hostId, cdvCmd);
-            if (answer == null || !answer.getResult()) {
-                throw new InvalidParameterValueException(String.format("Failed to enable compressed duplicate volume action. %s", caller.getUuid()));
-            }
-            volume.setCompressDedup(false);
+            volume.setCompress(cmmd.getCompress());
+            volume.setDedup(cmmd.getDedup());
             _volsDao.update(volume.getId(), volume);
         } catch (Exception ex) {
             throw new CloudRuntimeException(ex.getMessage());

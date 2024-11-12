@@ -2020,14 +2020,15 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
         return true;
     }
 
-    public boolean CompressDedupVolumeCmdLine(final String action, final String imageName) throws InternalErrorException {
-        if (action == null || imageName == null) {
+    public boolean CompressDedupVolumeCmdLine(final String compress, final String dedup, final String imageName) throws InternalErrorException {
+        if (compress == null || dedup == null || imageName == null) {
             return false;
         }
 
         final Script command = new Script("/bin/sh", timeout);
         command.add(compressDedupVolume);
-        command.add("-a", action);
+        command.add("-c", compress);
+        command.add("-d", dedup);
         command.add("-i", imageName);
         LOGGER.info(command);
         String result = command.execute();

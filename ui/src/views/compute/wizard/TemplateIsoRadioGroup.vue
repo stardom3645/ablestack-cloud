@@ -60,7 +60,7 @@
         size="small"
         :current="options.page"
         :pageSize="options.pageSize"
-        :total="itemCount"
+        :total="itemCountNum"
         :showTotal="total => `${$t('label.total')} ${total} ${$t('label.items')}`"
         :pageSizeOptions="['10', '20', '40', '80', '100', '200']"
         @change="onChangePage"
@@ -127,16 +127,27 @@ export default {
   },
   methods: {
     setData () {
+      // if (this.preFillContent.isreinstall) {
+      //   if (this.preFillContent.kvdoenable) {
+      //     const osListFilter = this.osList.filter(osList => osList.kvdoenable)
+      //     this.itemCountNum = osListFilter.length
+      //     return osListFilter
+      //   } else if (!this.preFillContent.kvdoenable) {
+      //     const osListFilter = this.osList.filter(osList => !osList.kvdoenable)
+      //     this.itemCountNum = osListFilter.length
+      //     return osListFilter
+      //   }
+      // } else {
+      //   this.itemCountNum = osList.length
+      //   return this.osList
+      // }
       if (this.preFillContent.isreinstall) {
-        if (this.preFillContent.kvdoenable) {
-          const osListFilter = this.osList.filter(osList => osList.kvdoenable)
-          return osListFilter
-        } else if (!this.preFillContent.kvdoenable) {
-          const osListFilter = this.osList.filter(osList => !osList.kvdoenable)
-          return osListFilter
-        }
+        const osListFilter = this.osList.filter(osList => osList.kvdoenable === this.preFillContent.kvdoenable);
+        this.itemCountNum = osListFilter.length;
+        return osListFilter;
       } else {
-        return this.osList
+        this.itemCountNum = this.osList.length;
+        return this.osList;
       }
     },
     onSelectTemplateIso () {

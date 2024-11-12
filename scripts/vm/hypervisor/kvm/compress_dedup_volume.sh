@@ -17,38 +17,40 @@
 # under the License.
 help() {
   printf "Usage: $0
-                    -i image name
-                    -a action type (enable or disable)\n"
+                    -c compress y/n
+                    -d dedup y/n
+                    -i image name\n"
   exit 1
 }
 #set -x
+Compress=
+Dedup=
 ImageName=
-Action=
 
-while getopts 'i:a:' OPTION
+while getopts 'c:d:i:' OPTION
 do
   case $OPTION in
+  c)
+    Compress="$OPTARG"
+    ;;
+  d)
+    Dedup="$OPTARG"
+    ;;
   i)
-     ImageName="$OPTARG"
-     ;;
-  a)
-     Action="$OPTARG"
-     ;;
+    ImageName="$OPTARG"
+    ;;
   *)
      help
      ;;
   esac
 done
 
-if [ -z "$ImageName" ] || [ -z "$Action" ]; then
+if [ -z "$ImageName" ]; then
   exit 2
 fi
 
 vgName="vg_${ImageName//-/}"
-if [ "$Action" = "enable" ]; then
-  lvchange --compression y --deduplication y $vgName
-elif [ "$Action" = "disable" ]; then
-  lvchange --compression n --deduplication n $vgName
-fi
+
+lvchange --compression $Compress --deduplication $Dedup $vgName
 
 exit 0

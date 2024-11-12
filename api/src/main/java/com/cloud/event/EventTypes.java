@@ -323,8 +323,7 @@ public class EventTypes {
     public static final String EVENT_VOLUME_IMPORT = "VOLUME.IMPORT";
     public static final String EVENT_VOLUME_UNMANAGE = "VOLUME.UNMANAGE";
     public static final String EVENT_VOLUME_CHANGE_DISK_OFFERING = "VOLUME.CHANGE.DISK.OFFERING";
-    public static final String EVENT_VOLUME_COMPRESS_DEDUP_ENABLE = "VOLUME.COMPRESS.DEDUP.ENABLE";
-    public static final String EVENT_VOLUME_COMPRESS_DEDUP_DISABLE = "VOLUME.COMPRESS.DEDUP.DISABLE";
+    public static final String EVENT_VOLUME_COMPRESS_DEDUP_UPDATE = "VOLUME.COMPRESS.DEDUP.UPDATE";
 
     // Domains
     public static final String EVENT_DOMAIN_CREATE = "DOMAIN.CREATE";
