@@ -127,27 +127,13 @@ export default {
   },
   methods: {
     setData () {
-      // if (this.preFillContent.isreinstall) {
-      //   if (this.preFillContent.kvdoenable) {
-      //     const osListFilter = this.osList.filter(osList => osList.kvdoenable)
-      //     this.itemCountNum = osListFilter.length
-      //     return osListFilter
-      //   } else if (!this.preFillContent.kvdoenable) {
-      //     const osListFilter = this.osList.filter(osList => !osList.kvdoenable)
-      //     this.itemCountNum = osListFilter.length
-      //     return osListFilter
-      //   }
-      // } else {
-      //   this.itemCountNum = osList.length
-      //   return this.osList
-      // }
       if (this.preFillContent.isreinstall) {
-        const osListFilter = this.osList.filter(osList => osList.kvdoenable === this.preFillContent.kvdoenable);
-        this.itemCountNum = osListFilter.length;
-        return osListFilter;
+        const osListFilter = this.osList.filter(osList => osList.kvdoenable === this.preFillContent.kvdoenable)
+        this.itemCountNum = osListFilter.length
+        return osListFilter
       } else {
-        this.itemCountNum = this.osList.length;
-        return this.osList;
+        this.itemCountNum = this.osList.length
+        return this.osList
       }
     },
     onSelectTemplateIso () {
