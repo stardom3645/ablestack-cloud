@@ -535,7 +535,7 @@ public class TemplateServiceImpl implements TemplateService {
                             }
                             // if this is private template, skip sync to a new image store
                             if (isSkipTemplateStoreDownload(tmplt, zoneId)) {
-                                s_logger.info("Skip sync downloading private template " + tmplt.getUniqueName() + " to a new image store");
+                                logger.info("Skip sync downloading private template " + tmplt.getUniqueName() + " to a new image store");
                                 continue;
                             }
 
