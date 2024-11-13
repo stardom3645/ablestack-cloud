@@ -914,11 +914,11 @@ public class LibvirtStorageAdaptor implements StorageAdaptor {
 
         // decrement and check if storage pool still in use
         if (decStoragePoolRefCount(uuid)) {
-            s_logger.info(String.format("deleteStoragePool: Storage pool %s still in use", uuid));
+            logger.info(String.format("deleteStoragePool: Storage pool %s still in use", uuid));
             return true;
         }
 
-        Connect conn;
+        Connect conn = null;
         try {
             conn = LibvirtConnection.getConnection();
         } catch (LibvirtException e) {
