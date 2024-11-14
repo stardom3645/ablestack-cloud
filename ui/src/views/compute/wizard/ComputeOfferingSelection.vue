@@ -148,19 +148,18 @@ export default {
     }
   },
   computed: {
-    rowCountSet () {
-      var computeItems = this.computeItems
+    filteredComputeItems () {
+      let computeItems = this.computeItems
       if (this.selectedTemplate && Object.keys(this.selectedTemplate).length >= 1 && this.preFillContent.kvdoenable !== undefined) {
-        computeItems = this.computeItems.filter((item) => item.kvdoenable === this.preFillContent.kvdoenable)
+        computeItems = computeItems.filter(item => item.kvdoenable === this.preFillContent.kvdoenable)
       }
-      return computeItems.length
+      return computeItems
+    },
+    rowCountSet () {
+      return this.filteredComputeItems.length
     },
     tableSource () {
-      var computeItems = this.computeItems
-      if (this.selectedTemplate && Object.keys(this.selectedTemplate).length >= 1 && this.preFillContent.kvdoenable !== undefined) {
-        computeItems = this.computeItems.filter((item) => item.kvdoenable === this.preFillContent.kvdoenable)
-      }
-      return computeItems.map((item) => {
+      return this.filteredComputeItems.map((item) => {
         var maxCpuNumber = item.cpunumber
         var maxCpuSpeed = item.cpuspeed
         var maxMemory = item.memory
@@ -230,6 +229,12 @@ export default {
     }
   },
   watch: {
+    computeItems () {
+      if (this.tableSource.length > 0) {
+        this.selectedRowKeys = [this.tableSource[0].key]
+        this.$emit('select-compute-item', this.tableSource[0].key, this.tableSource[0].selectKvdoEnable)
+      }
+    },
     value (newValue, oldValue) {
       if (newValue && newValue !== oldValue) {
         this.selectedRowKeys = [newValue]
@@ -244,7 +249,7 @@ export default {
         }
         if (this.preFillContent.computeofferingid) {
           this.selectedRowKeys = [this.preFillContent.computeofferingid]
-          this.$emit('select-compute-item', this.preFillContent.computeofferingid, '444')
+          this.$emit('select-compute-item', this.preFillContent.computeofferingid, this.preFillContent.kvdoenable)
         } else {
           if (this.oldZoneId === this.zoneId) {
             return

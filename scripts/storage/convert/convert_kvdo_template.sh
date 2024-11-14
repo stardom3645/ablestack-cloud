@@ -23,17 +23,13 @@ help() {
 }
 #set -x
 TempPath=
-TmpFile=
 Uuid=
 
-while getopts 'p:' OPTION
+while getopts 'p:u:' OPTION
 do
   case $OPTION in
   p)
      TempPath="$OPTARG"
-     ;;
-  n)
-     TmpFile="$OPTARG"
      ;;
   u)
      Uuid="$OPTARG"
@@ -60,15 +56,15 @@ sudo qemu-nbd -c $targetNbd $TmpFile
 # 5 Check the vg of the corresponding pv
 max_checks=60 # Maximum number of checks
 for ((i=1; i<=max_checks; i++)); do
-    child_size=$(lsblk "$targetNbd" -p -J | jq -r '.blockdevices[0].size')
+    child_name=$(lsblk "$targetNbd" -p -J | jq -r '.blockdevices[0].children[0].name')
 
-    if [[ "$child_size" != "0B" ]]; then
+    if [[ "$child_name" != "null" ]]; then
         break
     fi
     sleep 1
 done
 
-firstPartitionPath=$(lsblk $targetNbd -p -J |jq -r '.blockdevices[0].name')
+firstPartitionPath=$(lsblk $targetNbd -p -J |jq -r '.blockdevices[0].children[0].name')
 
 ex_vg_name=$(sudo pvs $firstPartitionPath --reportformat json |jq -r '.report[0].pv[0].vg_name')
 
