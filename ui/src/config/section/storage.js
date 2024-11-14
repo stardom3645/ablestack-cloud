@@ -159,7 +159,7 @@ export default {
           label: 'label.action.update.compress.dedup',
           message: 'message.enable.compress.dedup',
           dataView: true,
-          show: (record) => { return record.virtualmachineid && ['Running'].includes(record.vmstate) && !record.compressdedup },
+          show: (record) => { return record.virtualmachineid && ['Running'].includes(record.vmstate) && record.kvdoenable },
           popup: true,
           component: shallowRef(defineAsyncComponent(() => import('@/views/storage/UpdateCompressDedup.vue')))
         },

@@ -62,25 +62,25 @@ if [ -z "$devicePath" ]; then
 fi
 
 # Check if a partition exists
-partitionExist=$(lsblk $devicePath -p -J |jq -r '.blockdevices[0].name')
+partitionExist=$(lsblk $devicePath -p -J |jq -r '.blockdevices[0].children')
 vg_name=vg_$(echo $ImageName| sed 's/-//g')
 if [ "$partitionExist" == "null" ]; then
   # create partition
-  # parted --script $devicePath mklabel gpt
-  # parted --script $devicePath mkpart primary 1 100%
+  parted --script $devicePath mklabel gpt
+  parted --script $devicePath mkpart primary 1 100%
 
-  # firstPartitionPath=$(lsblk $devicePath -p -J |jq -r '.blockdevices[0].children[0].name')
+  firstPartitionPath=$(lsblk $devicePath -p -J |jq -r '.blockdevices[0].children[0].name')
 
   # create pv
-  pvcreate $devicePath
+  pvcreate $firstPartitionPath
 
   # create vg
-  vgcreate $vg_name $devicePath
+  vgcreate $vg_name $firstPartitionPath
 
   lvcreate --type vdo --name ablestack_kvdo -l +100%FREE --virtualsize $ImageSize"B" $vg_name
 
 else
-  firstPartitionPath=$(lsblk $devicePath -p -J |jq -r '.blockdevices[0].name')
+  firstPartitionPath=$(lsblk $devicePath -p -J |jq -r '.blockdevices[0].children[0].name')
   ex_vg_name=$(pvs $firstPartitionPath --reportformat json |jq -r '.report[0].pv[0].vg_name')
 
   if [ -n "$ex_vg_name" ] && [ "$ex_vg_name" != "null" ] && [ $ex_vg_name != $vg_name ]; then

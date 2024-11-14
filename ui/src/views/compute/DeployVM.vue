@@ -1917,6 +1917,7 @@ export default {
           this.form.keyboard = template.details?.keyboard
           this.form.templateKvdoEnable = template.kvdoenable
           this.showOverrideDiskOfferingOption = false
+          this.updateOverrideRootDiskShowParam(false)
           if (template.details['vmware-to-kvm-mac-addresses']) {
             this.dataPreFill.macAddressArray = JSON.parse(template.details['vmware-to-kvm-mac-addresses'])
           }

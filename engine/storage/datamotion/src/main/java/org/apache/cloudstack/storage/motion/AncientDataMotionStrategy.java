@@ -193,7 +193,7 @@ public class AncientDataMotionStrategy implements DataMotionStrategy {
                 final DataTO srcDataTo = cmd.getSrcTO();
                 final VolumeObjectTO volume = (VolumeObjectTO)srcDataTo;
                 if (volume.getKvdoEnable()) {
-                    convertKvdo(destData.getTO().getPath());
+                    convertKvdo(destData.getTO().getPath(), destData.getUuid());
                 }
             }
 
@@ -798,7 +798,7 @@ public class AncientDataMotionStrategy implements DataMotionStrategy {
         }
     }
 
-    protected void convertKvdo(String path) throws ConfigurationException, IOException {
+    protected void convertKvdo(String path, String uuid) throws ConfigurationException, IOException {
         String scriptsDir = "scripts/storage/convert";
         String convertKvdoTemp = Script.findScript(scriptsDir, "convert_kvdo_template.sh");
         if (convertKvdoTemp == null) {
@@ -809,6 +809,7 @@ public class AncientDataMotionStrategy implements DataMotionStrategy {
         Script command = new Script(convertKvdoTemp, 60000, logger);
 
         command.add("-p", path);
+        command.add("-u", uuid);
         final String result = command.execute();
         if (result != null) {
             logger.error("Failed to reset compressed deduplication template PV, VG, LV. path : " + path);
