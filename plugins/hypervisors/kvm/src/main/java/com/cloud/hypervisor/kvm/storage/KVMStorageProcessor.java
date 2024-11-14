@@ -2646,10 +2646,10 @@ public class KVMStorageProcessor implements StorageProcessor {
                     try {
                         Files.deleteIfExists(Path.of(templatePath));
                     } catch (IOException ioException) {
-                        s_logger.warn(String.format("Unable to remove file [%s]; consider removing it manually.", templatePath), ioException);
+                        logger.warn("Unable to remove file [{}]; consider removing it manually.", templatePath, ioException);
                     }
 
-                    s_logger.error(String.format("The downloaded file [%s] is not a valid QCOW2.", templatePath), e);
+                    logger.error("The downloaded file [{}] is not a valid QCOW2.", templatePath, e);
                     return new DirectDownloadAnswer(false, "The downloaded file is not a valid QCOW2. Ask the administrator to check the logs for more details.", true);
                 }
             }
