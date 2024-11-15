@@ -2278,6 +2278,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
         if (diskOffering == "" || diskOffering.isEmpty()) {
             throw new CloudRuntimeException("A mirroring virtual machine cannot be added because a disk offering with a custom disk size or shared volumes disabled does not exist.");
         }
+        // 압축 중복 제거 개발 완료 후 해당 VM에 적용 여부 판단하여 Secondary 클러스터의 디스크오퍼링에 동일한 기능이 적용된 오퍼링이 있는지 예외처리 로직 추가 예정
 
         UserVmJoinVO userVM = userVmJoinDao.findById(cmd.getVmId());
         List<VolumeVO> volumes = volsDao.findByInstance(userVM.getId());
