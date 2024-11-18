@@ -74,20 +74,14 @@
               icon="ExperimentOutlined"
               :disabled="!('connectivityTestsDisasterRecovery' in $store.getters.apis)"
               @onClick="DrSimulationTest(record)" />
-            <a-popconfirm
-              :title="$t('message.dr.mirrored.vm.remove')"
-              @confirm="removeMirror(record.dr)"
-              :okText="$t('label.yes')"
-              :cancelText="$t('label.no')"
-            >
-              <tooltip-button
-                tooltipPlacement="bottom"
-                :tooltip="$t('label.dr.remove.mirroring')"
-                :disabled="!('deleteDisasterRecoveryClusterVm' in $store.getters.apis)"
-                type="primary"
-                :danger="true"
-                icon="link-outlined" />
-            </a-popconfirm>
+            <tooltip-button
+              tooltipPlacement="bottom"
+              :tooltip="$t('label.dr.remove.mirroring')"
+              :disabled="!('deleteDisasterRecoveryClusterVm' in $store.getters.apis)"
+              type="primary"
+              :danger="true"
+              icon="link-outlined"
+              @onClick="removeMirror(record)" />
           </template>
         </DRTable>
       </a-tab-pane>
@@ -178,6 +172,16 @@
       @cancel="closeModals">
       <DRsimulationTestModal :resource="resource" @close-action="closeModals" />
     </a-modal>
+
+    <a-modal
+      :visible="showRemoveMirrorVMModal"
+      :title="$t('label.dr.remove.mirroring')"
+      :maskClosable="false"
+      :closable="true"
+      :footer="null"
+      @cancel="closeModals">
+      <DRMirroringVMRemove :resource="resource" @close-action="closeModals" />
+    </a-modal>
   </a-spin>
 </template>
 
@@ -202,6 +206,7 @@ import SecurityGroupSelection from '@views/compute/wizard/SecurityGroupSelection
 import DRTable from '@/views/compute/dr/DRTable'
 import DRsimulationTestModal from '@/views/compute/dr/DRsimulationTestModal'
 import DRMirroringVMAdd from '@/views/compute/dr/DRMirroringVMAdd'
+import DRMirroringVMRemove from '@/views/compute/dr/DRMirroringVMRemove'
 
 export default {
   name: 'InstanceTab',
@@ -216,6 +221,7 @@ export default {
     DRTable,
     DRsimulationTestModal,
     DRMirroringVMAdd,
+    DRMirroringVMRemove,
     InstanceSchedules,
     ListResourceTable,
     SecurityGroupSelection,
@@ -245,6 +251,7 @@ export default {
       diskOfferings: [],
       showAddMirrorVMModal: false,
       showDrSimulationTestModal: false,
+      showRemoveMirrorVMModal: false,
       loadingMirror: false,
       annotations: [],
       dataResource: {},
@@ -341,6 +348,7 @@ export default {
       this.showAddVolumeModal = false
       this.showUpdateSecurityGroupsModal = false
       this.showAddMirrorVMModal = false
+      this.showRemoveMirrorVMModal = false
       this.showDrSimulationTestModal = false
     },
     updateSecurityGroupsSelection (securitygroupids) {
@@ -354,38 +362,11 @@ export default {
         this.parentFetchData()
       })
     },
-    removeMirror (item) {
-      this.loadingMirror = true
-      api('deleteDisasterRecoveryClusterVm', {
-        drclustername: item.drName,
-        virtualmachineid: this.vm.id
-      }).then(response => {
-        this.$pollJob({
-          jobId: response.deletedisasterrecoveryclustervmresponse.jobid,
-          successMessage: this.$t('message.success.remove.disaster.recovery.cluster.vm'),
-          successMethod: () => {
-            this.loadingMirror = false
-            this.parentFetchData()
-          },
-          errorMessage: this.$t('message.error.remove.disaster.recovery.cluster.vm'),
-          errorMethod: () => {
-            this.loadingMirror = false
-            this.parentFetchData()
-          },
-          loadingMessage: this.$t('message.remove.disaster.recovery.cluster.vm.processing'),
-          catchMessage: this.$t('error.fetching.async.job.result'),
-          catchMethod: () => {
-            this.loadingMirror = false
-            this.parentFetchData()
-          }
-        })
-      }).catch(error => {
-        this.$notifyError(error)
-        this.loadingMirror = false
-      })
-    },
     DrSimulationTest () {
       this.showDrSimulationTestModal = true
+    },
+    removeMirror () {
+      this.showRemoveMirrorVMModal = true
     }
   }
 }
