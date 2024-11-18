@@ -4647,6 +4647,9 @@
 "label.dr.mirrored.volume.type": "Mirrored volume type",
 "label.action.sync.disaster.recovery.cluster": "Resync disaster recovery cluster",
 "label.action.clear.disaster.recovery.cluster": "Clear disaster recovery cluster",
+"label.action.confirm.remove.dr.mirroring.vm": "I would like to delete it",
+"label.action.confirm.disable.dr.mirroring.cluster": "I would like to disable it",
+"message.error.confirm.remove.dr.mirroring.vm": "Please enter the phrase accurately.",
 "message.primary.cluster.vm": "Virtual machines currently running in the primary cluster",
 "message.secondary.cluster.vm": "A virtual machine existing in a secondary cluster and mirrored with a virtual machine operating in the primary cluster.",
 "message.add.disaster.recovery.cluster": "We are adding a disaster recovery cluster to connect with the current cluster. Once the addition is complete, the disaster recovery cluster will be automatically registered in the menu list of the counterpart disaster recovery cluster.",
@@ -4672,7 +4675,7 @@
 "message.warning.dr.mirroring.test.vm.step.start": "During mirroring simulation, the virtual machine is automatically stopped.",
 "message.success.update.disaster.recovery.cluster": "Recovery cluster information has been updated.",
 "message.disaster.recovery.cluster.connection.test.update.description": "Perform a connection test with the cluster you want to update.",
-"message.dr.mirrored.vm.remove": "Confirm whether you want to remove mirroring.",
+"message.dr.mirrored.vm.remove": "If you disable mirroring of the selected virtual machine, the mirroring virtual machine in the secondary cluster will be deleted. If you wish to delete it, please enter the phrase 'I would like to delete it'",
 "message.success.add.disaster.recovery.cluster": "Successfully added disaster recovery cluster",
 "message.sync.dr.cluster.confirm": "If the primary cluster is recovered when a disaster recovery situation occurs, execute a task to synchronize the Glue image of the recovered primary cluster before executing a forced demote.",
 "message.clear.dr.cluster.confirm": "If the primary cluster is not recovered when a disaster recovery situation occurs, Glue garbage for the existing disaster recovery cluster is deleted.",
@@ -4681,5 +4684,7 @@
 "message.success.remove.disaster.recovery.cluster.vm": "Successfully removed mirroring",
 "message.success.create.disaster.recovery.cluster.vm": "Successfully created mirroring",
 "message.create.disaster.recovery.cluster.vm.processing": "creating mirroring virtualmachine...",
-"message.error.create.disaster.recovery.cluster.vm": "There was an error creating mirroring virtualmachine"
+"message.error.create.disaster.recovery.cluster.vm": "There was an error creating mirroring virtualmachine",
+"message.dr.mirrored.cluster.disable": "If you disable the selected disaster recovery cluster, all mirroring virtual machines in the secondary cluster will be deleted. If you wish to disable, please enter the phrase 'I would like to disable it'.",
+"message.success.disable.disaster.recovery.cluster": "Successfully disabled disaster recovery cluster"
 }

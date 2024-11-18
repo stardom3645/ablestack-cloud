@@ -86,10 +86,10 @@ export default {
       api: 'disableDisasterRecoveryCluster',
       icon: 'pause-circle-outlined',
       label: 'label.action.disable.disaster.recovery.cluster',
-      message: 'message.disabled.dr.cluster.confirm',
       dataView: true,
       popup: true,
-      show: (record) => { return record.drclusterstatus === 'Enabled' && record.drclustertype === 'secondary' }
+      show: (record) => { return record.drclusterstatus === 'Enabled' && record.drclustertype === 'secondary' },
+      component: shallowRef(defineAsyncComponent(() => import('@/views/infra/DisasterRecoveryClusterDisable.vue')))
     },
     {
       api: 'promoteDisasterRecoveryCluster',
