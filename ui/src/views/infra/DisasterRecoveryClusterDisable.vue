@@ -100,12 +100,9 @@ export default {
             return
           }
           this.loading = true
-          console.log(this.resource)
-          console.log(this.resource.id)
           const params = {
             id: this.resource.id
           }
-          console.log(params)
           api('disableDisasterRecoveryCluster', params).then(json => {
             const jobId = json.disabledisasterrecoveryclusterresponse.jobid
             this.$pollJob({
@@ -126,7 +123,7 @@ export default {
               }
             })
             eventBus.emit('dr-refresh-data')
-            this.closeModals()
+            this.closeModal()
           }).finally(() => {
             this.loading = false
           })
@@ -134,7 +131,7 @@ export default {
           this.formRef.value.scrollToField(error.errorFields[0].name)
         })
     },
-    closeModals () {
+    closeModal () {
       this.$emit('close-action')
     }
   }
