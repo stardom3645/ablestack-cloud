@@ -124,6 +124,7 @@
 
 <script>
 import { mixinDevice } from '@/utils/mixin.js'
+import { api } from '@/api'
 import Status from '@/components/widgets/Status'
 
 export default {
@@ -158,6 +159,7 @@ export default {
       disasterrecoveryclustervmlist: [],
       priList: [],
       secList: [],
+      drCluster: [],
       priVol: [],
       secVol: [],
       cardTitleA: '',
@@ -291,6 +293,7 @@ export default {
     fetchData () {
       this.priVol = []
       this.secVol = []
+      this.drCluster = []
       this.itemCount = 0
       if (this.items && this.items.length > 0) {
         this.dataSource = this.items
@@ -300,36 +303,42 @@ export default {
         }
         return
       }
-      this.disasterrecoveryclustervmlist = this.resource.drclustervmmap || []
-      for (const clusterVm of this.disasterrecoveryclustervmlist) {
-        if (this.priList.length === 0) {
-          this.priList.push({ priVmName: clusterVm.drclustervmname, priVmId: clusterVm.drclustervmid, priVmStatus: clusterVm.drclustervmstatus })
-          this.secList.push({ secVmName: clusterVm.drclustermirrorvmname, secVmStatus: clusterVm.drclustermirrorvmstatus })
-          this.priVol.push({ priVolType: clusterVm.drclustermirrorvmvoltype, priVolStatus: clusterVm.drclustervmvolstatus, priVmName: clusterVm.drclustervmname })
-          this.secVol.push({ secVolType: clusterVm.drclustermirrorvmvoltype, secVolStatus: clusterVm.drclustermirrorvmvolstatus, secVmName: clusterVm.drclustermirrorvmname })
-        } else {
-          if (!this.priList.some(entry => entry.priVmName.includes(clusterVm.drclustervmname))) {
+      this.loading = true
+      api('getDisasterRecoveryClusterList', { name: this.resource.name }).then(json => {
+        this.drCluster = json.getdisasterrecoveryclusterlistresponse.disasterrecoverycluster
+        this.disasterrecoveryclustervmlist = this.drCluster[0].drclustervmmap || []
+        for (const clusterVm of this.disasterrecoveryclustervmlist) {
+          if (this.priList.length === 0) {
             this.priList.push({ priVmName: clusterVm.drclustervmname, priVmId: clusterVm.drclustervmid, priVmStatus: clusterVm.drclustervmstatus })
             this.secList.push({ secVmName: clusterVm.drclustermirrorvmname, secVmStatus: clusterVm.drclustermirrorvmstatus })
+            this.priVol.push({ priVolType: clusterVm.drclustermirrorvmvoltype, priVolStatus: clusterVm.drclustervmvolstatus, priVmName: clusterVm.drclustervmname })
+            this.secVol.push({ secVolType: clusterVm.drclustermirrorvmvoltype, secVolStatus: clusterVm.drclustermirrorvmvolstatus, secVmName: clusterVm.drclustermirrorvmname })
+          } else {
+            if (!this.priList.some(entry => entry.priVmName.includes(clusterVm.drclustervmname))) {
+              this.priList.push({ priVmName: clusterVm.drclustervmname, priVmId: clusterVm.drclustervmid, priVmStatus: clusterVm.drclustervmstatus })
+              this.secList.push({ secVmName: clusterVm.drclustermirrorvmname, secVmStatus: clusterVm.drclustermirrorvmstatus })
+            }
+            this.priVol.push({ priVolType: clusterVm.drclustermirrorvmvoltype, priVolStatus: clusterVm.drclustervmvolstatus, priVmName: clusterVm.drclustervmname })
+            this.secVol.push({ secVolType: clusterVm.drclustermirrorvmvoltype, secVolStatus: clusterVm.drclustermirrorvmvolstatus, secVmName: clusterVm.drclustermirrorvmname })
           }
-          this.priVol.push({ priVolType: clusterVm.drclustermirrorvmvoltype, priVolStatus: clusterVm.drclustervmvolstatus, priVmName: clusterVm.drclustervmname })
-          this.secVol.push({ secVolType: clusterVm.drclustermirrorvmvoltype, secVolStatus: clusterVm.drclustermirrorvmvolstatus, secVmName: clusterVm.drclustermirrorvmname })
+          this.itemCount = this.priList.length
+          this.min = (Math.min(this.itemCount, 1 + ((this.options.page - 1) * this.options.pageSize)) - 1)
+          this.max = Math.min(this.options.page * this.options.pageSize, this.itemCount)
+          this.priList = this.priList.slice(this.min, this.max)
+          this.secList = this.secList.slice(this.min, this.max)
+          const keyword = this.options.keyword
+          if (keyword) {
+            this.priList = this.priList.filter(entry => {
+              return entry.priVmName.includes(keyword)
+            })
+            this.secList = this.secList.filter(entry => {
+              return entry.secVmName.includes(keyword)
+            })
+          }
         }
-      }
-      this.itemCount = this.priList.length
-      this.min = (Math.min(this.itemCount, 1 + ((this.options.page - 1) * this.options.pageSize)) - 1)
-      this.max = Math.min(this.options.page * this.options.pageSize, this.itemCount)
-      this.priList = this.priList.slice(this.min, this.max)
-      this.secList = this.secList.slice(this.min, this.max)
-      const keyword = this.options.keyword
-      if (keyword) {
-        this.priList = this.priList.filter(entry => {
-          return entry.priVmName.includes(keyword)
-        })
-        this.secList = this.secList.filter(entry => {
-          return entry.secVmName.includes(keyword)
-        })
-      }
+      }).finally(() => {
+        this.loading = false
+      })
     },
     handleSearch (value) {
       this.filter = value
