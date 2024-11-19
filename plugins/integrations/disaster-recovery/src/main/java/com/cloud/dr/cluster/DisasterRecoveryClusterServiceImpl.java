@@ -1268,7 +1268,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
             throw new InvalidParameterValueException("Invalid disaster recovery cluster id specified");
         }
         Map<String, String> details = disasterRecoveryClusterDetailsDao.findDetails(drCluster.getId());
-        validateDisasterRecoveryClusterMirrorParameters(drCluster);
+        validateDemoteDisasterRecoveryClusterMirrorParameters(drCluster);
         String secUrl = drCluster.getDrClusterUrl();
         String secApiKey = details.get(ApiConstants.DR_CLUSTER_API_KEY);
         String secSecretKey = details.get(ApiConstants.DR_CLUSTER_SECRET_KEY);
@@ -2809,8 +2809,52 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                 UserVmJoinVO userVM = userVmJoinDao.findById(vmMapVO.getVmId());
                 if (userVM != null) {
                     if (userVM.getState() != VirtualMachine.State.Stopped) {
-                        throw new InvalidParameterValueException("Forced promote and demote functions cannot be executed because there is a running disaster recovery secondary cluster virtual machine : " + userVM.getName());
+                        throw new InvalidParameterValueException("Forced promote functions cannot be executed because there is a running disaster recovery secondary cluster virtual machine : " + userVM.getName());
                     }
+                }
+            }
+        }
+    }
+
+    private void validateDemoteDisasterRecoveryClusterMirrorParameters(final DisasterRecoveryClusterVO drCluster) throws CloudRuntimeException {
+        Map<String, String> details = disasterRecoveryClusterDetailsDao.findDetails(drCluster.getId());
+        List<DisasterRecoveryClusterVmMapVO> vmMap = disasterRecoveryClusterVmMapDao.listByDisasterRecoveryClusterId(drCluster.getId());
+        if (!CollectionUtils.isEmpty(vmMap)) {
+            String url = drCluster.getDrClusterUrl();
+            String apiKey = details.get(ApiConstants.DR_CLUSTER_API_KEY);
+            String secretKey = details.get(ApiConstants.DR_CLUSTER_SECRET_KEY);
+            String moldUrl = url + "/client/api/";
+            String moldCommand = "listVirtualMachines";
+            String moldMethod = "GET";
+            for (DisasterRecoveryClusterVmMapVO map : vmMap) {
+                UserVmJoinVO userVM = userVmJoinDao.findById(map.getVmId());
+                if (userVM != null) {
+                    if (userVM.getState() != VirtualMachine.State.Stopped) {
+                        throw new InvalidParameterValueException("Forced demote functions cannot be executed because there is a running disaster recovery secondary cluster virtual machine : " + userVM.getName());
+                    }
+                }
+                String vmName = map.getMirroredVmName();
+                Map<String, String> moldParams = new HashMap<>();
+                moldParams.put("keyword", vmName);
+                String vmList = DisasterRecoveryClusterUtil.moldListVirtualMachinesAPI(moldUrl, moldCommand, moldMethod, apiKey, secretKey, moldParams);
+                if (vmList != null) {
+                    JSONObject jsonObject = new JSONObject(vmList);
+                    Object object = jsonObject.get("virtualmachine");
+                    JSONArray array;
+                    if (object instanceof JSONArray) {
+                        array = (JSONArray) object;
+                    } else {
+                        array = new JSONArray();
+                        array.put(object);
+                    }
+                    for (int i = 0; i < array.length(); i++) {
+                        JSONObject jSONObject = array.getJSONObject(i);
+                        if (jSONObject.get("name").equals(vmName) && !jSONObject.get("state").equals("Stopped")) {
+                            throw new InvalidParameterValueException("Forced demote functions cannot be executed because there is a running disaster recovery primary cluster virtual machine : " + vmName);
+                        }
+                    }
+                } else {
+                    throw new InvalidParameterValueException("Forced demote functions cannot be executed because primary cluster Mold failed to request API.");
                 }
             }
         }
