@@ -89,6 +89,11 @@
               {{ dataResource.rootdisksize }} GB
             </div>
           </div>
+          <div v-else-if="$route.meta.name === 'buckets' && item === 'size'">
+            <div>
+              {{ convertKB(dataResource.size) }}
+            </div>
+          </div>
           <div v-else-if="['template', 'iso'].includes($route.meta.name) && item === 'size'">
             <div>
               {{ parseFloat(dataResource.size / (1024.0 * 1024.0 * 1024.0)).toFixed(2) }} GiB
@@ -425,6 +430,13 @@ export default {
       })
 
       return resources
+    },
+    convertKB (val) {
+      if (val < 1024) return `${(val).toFixed(2)} KB`
+      if (val < 1024 * 1024) return `${(val / 1024).toFixed(2)} MB`
+      if (val < 1024 * 1024 * 1024) return `${(val / 1024 / 1024).toFixed(2)} GB`
+      if (val < 1024 * 1024 * 1024 * 1024) return `${(val / 1024 / 1024 / 1024).toFixed(2)} TB`
+      return val
     }
   }
 }
