@@ -3559,7 +3559,10 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
         autoScaleManager.checkIfVmActionAllowed(vmId);
 
         // Check if there is a mirroring virtual machine
-        checkDisasterRecoveryIfVmCanBeDestroyed(vmId);
+        final boolean disasterRecoveryEnabled = Boolean.parseBoolean(_configDao.getValue("cloud.dr.service.enabled"));
+        if (disasterRecoveryEnabled) {
+            checkDisasterRecoveryIfVmCanBeDestroyed(vmId);
+        }
 
         // check if vm belongs to any plugin resources
         checkPluginsIfVmCanBeDestroyed(vm);
