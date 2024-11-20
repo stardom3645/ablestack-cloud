@@ -3503,6 +3503,16 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
         }
     }
 
+    protected void checkDisasterRecoveryIfVmCanBeStarted(long vmId) {
+        try {
+            DisasterRecoveryHelper disasterRecoveryHelper =
+                    ComponentContext.getDelegateComponentOfType(DisasterRecoveryHelper.class);
+                    disasterRecoveryHelper.checkVmCanBeStarted(vmId);
+        } catch (NoSuchBeanDefinitionException ignored) {
+            logger.debug("No DisasterRecoveryHelper bean found");
+        }
+    }
+
     protected void checkPluginsIfVmCanBeDestroyed(UserVm vm) {
         try {
             KubernetesServiceHelper kubernetesServiceHelper =
@@ -5663,6 +5673,13 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
             ServiceOfferingVO offering = serviceOfferingDao.findById(vm.getId(), vm.getServiceOfferingId());
             resourceLimitService.checkVmResourceLimit(owner, vm.isDisplayVm(), offering, template);
         }
+
+        // check if vm is disaster recovery cluster vm enabled
+        final boolean disasterRecoveryEnabled = Boolean.parseBoolean(_configDao.getValue("cloud.dr.service.enabled"));
+        if (disasterRecoveryEnabled) {
+            checkDisasterRecoveryIfVmCanBeStarted(vmId);
+        }
+
         // check if vm is security group enabled
         if (_securityGroupMgr.isVmSecurityGroupEnabled(vmId) && _securityGroupMgr.getSecurityGroupsForVm(vmId).isEmpty()
                 && !_securityGroupMgr.isVmMappedToDefaultSecurityGroup(vmId) && _networkModel.canAddDefaultSecurityGroup()) {
