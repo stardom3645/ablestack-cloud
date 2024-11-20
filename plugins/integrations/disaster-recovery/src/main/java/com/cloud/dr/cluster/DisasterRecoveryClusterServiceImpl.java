@@ -455,6 +455,9 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                             }
                         }
                     }
+                } else {
+                    map.setMirroredVmStatus("unknown");
+                    disasterRecoveryClusterVmMapDao.update(map.getId(), map);
                 }
                 response.setMirroredVmStatus(map.getMirroredVmStatus());
                 // 미러링 가상머신 볼륨 상태 조회
@@ -483,7 +486,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                                         map.setMirroredVmVolumeStatus("SYNCING");
                                     } else if (peerState.getAsString().contains("error")){
                                         map.setMirroredVmVolumeStatus("ERROR");
-                                    } else if (peerState.getAsString().contains("unknown")){
+                                    } else if (peerState.getAsString().contains("unknown") || peerState.getAsString().contains("down")){
                                         map.setMirroredVmVolumeStatus("UNKNOWN");
                                     } else {
                                         map.setMirroredVmVolumeStatus("READY");
