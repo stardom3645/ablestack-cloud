@@ -26,6 +26,7 @@
     :closable="false"
   >
     <div class="sidebar-header">
+      <span class="sidebar-title">{{ $t('label.recent.events') }}</span>
       <a-button
         v-if="isVisible"
         type="primary"
@@ -207,12 +208,20 @@ export default {
   align-items: center;
   font-size: 14px;
 }
+.sidebar-title {
+  font-size: 16px;
+  font-weight: bold;
+  margin-right: auto;
+}
 
 .close-btn {
   position: fixed;
   top: -40px;
   right: 0px;
   z-index: 1000;
+  background: #ccc;
+  border: none;
+  color: #666;
 }
 
 .no-border-table .ant-table-cell,
