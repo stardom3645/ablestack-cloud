@@ -144,9 +144,9 @@ public class DisasterRecoveryHelperImpl extends AdapterBase implements DisasterR
                 }
             }
         } catch (SQLException e) {
-            throw new CloudRuntimeException("Failed to read the event table for starting a VM with mirroring enabled. ", e);
+            throw new CloudRuntimeException("The virtual machine cannot be started because the forced demote is not completed. ", e);
         } catch (Throwable e) {
-            throw new CloudRuntimeException("Failed to read the event table for starting a VM with mirroring enabled. ", e);
+            throw new CloudRuntimeException("The virtual machine cannot be started because the forced demote is not completed. ", e);
         }
         return;
     }
