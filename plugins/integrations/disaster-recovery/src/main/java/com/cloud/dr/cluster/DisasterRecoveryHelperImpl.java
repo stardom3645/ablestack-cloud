@@ -20,10 +20,15 @@ package com.cloud.dr.cluster;
 import javax.inject.Inject;
 
 import java.util.List;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 
 import com.cloud.dr.cluster.dao.DisasterRecoveryClusterDao;
 import com.cloud.dr.cluster.dao.DisasterRecoveryClusterVmMapDao;
+import com.cloud.utils.script.Script;
 import com.cloud.utils.component.AdapterBase;
+import com.cloud.utils.db.TransactionLegacy;
 import com.cloud.utils.exception.CloudRuntimeException;
 
 import org.apache.logging.log4j.Logger;
@@ -32,6 +37,11 @@ import org.apache.cloudstack.framework.config.ConfigKey;
 import org.apache.cloudstack.framework.config.Configurable;
 import org.apache.commons.collections.CollectionUtils;
 import org.springframework.stereotype.Component;
+
+import com.google.gson.JsonParser;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonElement;
 
 @Component
 public class DisasterRecoveryHelperImpl extends AdapterBase implements DisasterRecoveryHelper, Configurable {
@@ -53,6 +63,90 @@ public class DisasterRecoveryHelperImpl extends AdapterBase implements DisasterR
                     }
                 }
             }
+        }
+        return;
+    }
+
+    public void checkVmCanBeStarted(long vmId) {
+        TransactionLegacy txn = TransactionLegacy.currentTxn();
+        PreparedStatement pstmt = null;
+        try {
+            pstmt = txn.prepareAutoCloseStatement("select * from `cloud`.`event` where type = 'DR.DEMOTE' and created > CURRENT_DATE()");
+            int numRows = 0;
+            ResultSet rs = pstmt.executeQuery();
+            if (rs.next()) {
+                numRows = rs.getInt(1);
+            }
+            if (numRows > 0) {
+                pstmt = txn.prepareAutoCloseStatement("select * from `cloud`.`event` where type = 'DR.DEMOTE' and state = 'Completed' and description = 'Successfully completed demoting disaster recovery cluster' and created > CURRENT_DATE()");
+                numRows = 0;
+                rs = pstmt.executeQuery();
+                if (rs.next()) {
+                    numRows = rs.getInt(1);
+                }
+                if (numRows > 0) {
+                    List<DisasterRecoveryClusterVO> drCluster = disasterRecoveryClusterDao.listAll();
+                    for (DisasterRecoveryClusterVO drc : drCluster) {
+                        List<DisasterRecoveryClusterVmMapVO> vmMap = disasterRecoveryClusterVmMapDao.listByDisasterRecoveryClusterId(drc.getId());
+                        if (!CollectionUtils.isEmpty(vmMap)) {
+                            for (DisasterRecoveryClusterVmMapVO map : vmMap) {
+                                if (map.getVmId() == vmId) {
+                                    String ipList = Script.runSimpleBashScript("cat /etc/hosts | grep -E 'scvm.*-mngt' | awk '{print $1}' | tr '\n' ','");
+                                    if (ipList != null || !ipList.isEmpty()) {
+                                        ipList = ipList.replaceAll(",$", "");
+                                        String[] array = ipList.split(",");
+                                        String imageName = map.getMirroredVmVolumePath();
+                                        int cnt = 0;
+                                        for (int i=0; i < array.length; i++) {
+                                            String glueIp = array[i];
+                                            ///////////////////// glue-api 프로토콜과 포트 확정 시 변경 예정
+                                            String glueUrl = "https://" + glueIp + ":8080/api/v1";
+                                            String glueCommand = "/mirror/image/status/rbd/" +imageName;
+                                            String glueMethod = "GET";
+                                            String mirrorImageStatus = DisasterRecoveryClusterUtil.glueImageMirrorStatusAPI(glueUrl, glueCommand, glueMethod);
+                                            if (mirrorImageStatus != null) {
+                                                JsonObject statObject = (JsonObject) new JsonParser().parse(mirrorImageStatus).getAsJsonObject();
+                                                JsonArray drArray = (JsonArray) new JsonParser().parse(mirrorImageStatus).getAsJsonObject().get("peer_sites");
+                                                if (statObject.has("description") && drArray.size() != 0 && drArray != null) {
+                                                    JsonElement peerState = null;
+                                                    JsonElement peerDescription = null;
+                                                    for (JsonElement dr : drArray) {
+                                                        if (dr.getAsJsonObject().get("state") != null) {
+                                                            peerState = dr.getAsJsonObject().get("state");
+                                                        }
+                                                        if (dr.getAsJsonObject().get("description") != null) {
+                                                            peerDescription = dr.getAsJsonObject().get("description");
+                                                        }
+                                                    }
+                                                    if (peerState != null && peerDescription != null) {
+                                                        if (statObject.get("description").getAsString().equals("local image is primary")) {
+                                                            if (peerState.getAsString().contains("replaying") && !peerDescription.getAsString().contains("idle")) {
+                                                                throw new CloudRuntimeException("The virtual machine cannot be started because the image syncing process for the mirroring virtual machine has not completed.");
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                                break;
+                                            } else {
+                                                cnt += 1;
+                                            }
+                                        }
+                                        if (cnt > 2) {
+                                            throw new CloudRuntimeException("The virtual machine cannot be started because the image syncing process for the mirroring virtual machine has not completed.");
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    throw new CloudRuntimeException("The virtual machine cannot be started because the forced demote is not completed.");
+                }
+            }
+        } catch (SQLException e) {
+            throw new CloudRuntimeException("Failed to read the event table for starting a VM with mirroring enabled. ", e);
+        } catch (Throwable e) {
+            throw new CloudRuntimeException("Failed to read the event table for starting a VM with mirroring enabled. ", e);
         }
         return;
     }
