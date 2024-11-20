@@ -1227,7 +1227,7 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                                     glueParams.put("imageName", imageName);
                                     glueCommand = "/mirror/image/promote/rbd/" + imageName;
                                     glueMethod = "POST";
-                                    while(glueStep < 20) {
+                                    while(glueStep < 100) {
                                         glueStep += 1;
                                         result = DisasterRecoveryClusterUtil.glueImageMirrorPromoteAPI(glueUrl, glueCommand, glueMethod, glueParams);
                                         if (result) {
