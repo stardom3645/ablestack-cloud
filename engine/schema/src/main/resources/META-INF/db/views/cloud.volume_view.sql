@@ -43,6 +43,7 @@ SELECT
     `volumes`.`saving_stats` AS `saving_stats`,
     `volumes`.`compress` AS `compress`,
     `volumes`.`dedup` AS `dedup`,
+    `volumes`.`used_bytes` AS `used_bytes`,
     `account`.`id` AS `account_id`,
     `account`.`uuid` AS `account_uuid`,
     `account`.`account_name` AS `account_name`,

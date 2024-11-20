@@ -984,4 +984,14 @@ public class VolumeObject implements VolumeInfo {
     public void setDedup(boolean dedup) {
         volumeVO.setDedup(dedup);
     }
+
+    @Override
+    public Long getUsedBytes() {
+        return volumeVO.getUsedBytes();
+    }
+
+    @Override
+    public void setUsedBytes(Long usedBytes) {
+        volumeVO.setUsedBytes(usedBytes);
+    }
 }

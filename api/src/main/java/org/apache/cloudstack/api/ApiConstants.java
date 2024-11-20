@@ -121,6 +121,7 @@ public class ApiConstants {
     public static final String SAVING_STATS = "savingstats";
     public static final String COMPRESS = "compress";
     public static final String DEDUP = "dedup";
+    public static final String USED_BYTES = "usedbytes";
     public static final String ENCRYPT_ROOT = "encryptroot";
     public static final String ENCRYPTION_SUPPORTED = "encryptionsupported";
     public static final String MIN_IOPS = "miniops";

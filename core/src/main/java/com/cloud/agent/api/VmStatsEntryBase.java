@@ -41,6 +41,7 @@ public class VmStatsEntryBase implements VmStats {
     private String entityType;
     private Map<String, String> nicAddrMap;
     private String qemuAgentVersion;
+    private Map<String, Long> fsUsageMap;
 
     public VmStatsEntryBase() {
 
@@ -219,6 +220,14 @@ public class VmStatsEntryBase implements VmStats {
 
     public void setQemuAgentVersion(String qemuAgentVersion) {
         this.qemuAgentVersion = qemuAgentVersion;
+    }
+
+    public Map<String, Long> getFsUsageMap() {
+        return fsUsageMap;
+    }
+
+    public void setFsUsageMap(Map<String, Long> fsUsageMap) {
+        this.fsUsageMap = fsUsageMap;
     }
 
 }
