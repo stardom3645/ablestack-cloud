@@ -16,39 +16,18 @@
 // under the License.
 
 <template>
-  <div :class="['footer', { expanded: isSidebarVisible }]">
+  <div :class="['footer']">
     <div class="line">
-      <span v-html="$config.footer" />
     </div>
-    <div class="line" v-if="$store.getters.userInfo.roletype === 'Admin'">
-      ABLESTACK {{ buildVersion }}
-      <a-divider type="vertical" />
-      <a href="https://github.com/ablecloud-team/ablestack-cloud/issues/new" target="_blank">
-        <github-outlined />
-        {{ $t('label.report.bug') }}
-      </a>
-    </div>
-
-    <div style="position: fixed; bottom: 45px; right: 0px; z-index: 100;">
-      <a-button type="primary" @click="toggleSidebar" style="width: 40px; height: 40px; padding: 0;">
-        <ScheduleOutlined />
-      </a-button>
-    </div>
-
-    <event-sidebar :isVisible="isSidebarVisible" @update:isVisible="isSidebarVisible = $event" />
   </div>
 </template>
 
 <script>
 import semver from 'semver'
 import { getParsedVersion } from '@/utils/util'
-import EventSidebar from '@/components/view/EventSidebar.vue'
 
 export default {
   name: 'LayoutFooter',
-  components: {
-    EventSidebar
-  },
   data () {
     return {
       buildVersion: this.$config.buildVersion,
