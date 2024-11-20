@@ -290,4 +290,8 @@ public interface Volume extends ControlledEntity, Identity, InternalIdentity, Ba
     boolean getDedup();
 
     void setDedup(boolean dedup);
+
+    Long getUsedBytes();
+
+    void setUsedBytes(Long usedBytes);
 }

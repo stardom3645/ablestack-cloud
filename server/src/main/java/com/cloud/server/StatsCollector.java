@@ -1408,6 +1408,23 @@ public class StatsCollector extends ManagerBase implements ComponentMethodInterc
                                         }
                                     }
                                 }
+
+                                Map<String, Long> fsInfoMap = statsForCurrentIteration.getFsUsageMap();
+                                if (fsInfoMap != null) {
+                                    SearchCriteria<VolumeVO> sc_volume = _volsDao.createSearchCriteria();
+                                    sc_volume.addAnd("removed", SearchCriteria.Op.EQ, null);
+                                    List<VolumeVO> volumes = _volsDao.search(sc_volume, null);
+                                    for (String key : fsInfoMap.keySet()) {
+                                        for (VolumeVO volVo : volumes){
+                                            if (volVo.getUuid().contains(key)) {
+                                                volVo.setUsedBytes(fsInfoMap.get(key));
+                                                _volsDao.update(volVo.getId(), volVo);
+                                                break;
+                                            }
+                                        }
+                                    }
+                                }
+
                                 persistVirtualMachineStats(statsForCurrentIteration, timestamp);
 
                                 if (externalStatsType == ExternalStatsProtocol.GRAPHITE) {

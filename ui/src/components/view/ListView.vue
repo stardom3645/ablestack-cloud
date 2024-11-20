@@ -269,6 +269,10 @@
         <router-link v-if="record.storageid" :to="{ path: '/storagepool/' + record.storageid }">{{ text }}</router-link>
         <span v-else>{{ text }}</span>
       </template>
+      <template v-if="column.key === 'diskofferingname'">
+        <router-link v-if="record.diskofferingname" :to="{ path: '/diskoffering/' + record.diskofferingid }">{{ text }}</router-link>
+        <span v-else>{{ text }}</span>
+      </template>
       <template v-for="(value, name) in thresholdMapping" :key="name">
         <template v-if="column.key === name">
           <span>

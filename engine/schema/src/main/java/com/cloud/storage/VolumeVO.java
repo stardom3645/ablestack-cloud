@@ -191,6 +191,9 @@ public class VolumeVO implements Volume {
     @Column(name = "dedup")
     private boolean dedup;
 
+    @Column(name = "used_bytes")
+    private Long usedBytes;
+
     // Real Constructor
     public VolumeVO(Type type, String name, long dcId, long domainId,
             long accountId, long diskOfferingId, Storage.ProvisioningType provisioningType, long size,
@@ -291,6 +294,7 @@ public class VolumeVO implements Volume {
         savingStats = that.getSavingStats();
         compress = that.getCompress();
         dedup = that.getDedup();
+        usedBytes = that.getUsedBytes();
     }
 
     @Override
@@ -701,4 +705,8 @@ public class VolumeVO implements Volume {
     public boolean getDedup() { return dedup; }
 
     public void setDedup(boolean dedup) { this.dedup = dedup; }
+
+    public Long getUsedBytes() { return usedBytes; }
+
+    public void setUsedBytes(Long usedBytes) { this.usedBytes = usedBytes; }
 }

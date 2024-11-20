@@ -292,6 +292,9 @@ public class VolumeJoinVO extends BaseViewWithTagInformationVO implements Contro
     @Column(name = "dedup")
     private boolean dedup;
 
+    @Column(name = "used_bytes")
+    private Long usedBytes;
+
     public VolumeJoinVO() {
     }
 
@@ -645,6 +648,10 @@ public class VolumeJoinVO extends BaseViewWithTagInformationVO implements Contro
 
     public boolean getDedup() {
         return dedup;
+    }
+
+    public Long getUsedBytes() {
+        return usedBytes;
     }
 
     @Override

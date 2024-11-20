@@ -216,6 +216,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 
 /**
  * LibvirtComputingResource execute requests on the computing/routing host using
@@ -243,7 +244,6 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
 
     protected static Logger LOGGER = LogManager.getLogger(LibvirtComputingResource.class);
     private static final String CONFIG_VALUES_SEPARATOR = ",";
-
 
     private static final String LEGACY = "legacy";
     private static final String SECURE = "secure";
@@ -4837,6 +4837,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
                 }
             }
             Map<String, String> nicAddrMap = new HashMap<String, String>();
+            Map<String, Long> fsUsageMap = new HashMap<String, Long>();
             String qemuAgentVersion = "Not Installed";
             stats.setQemuAgentVersion(qemuAgentVersion);
 
@@ -4880,6 +4881,50 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
                         }
                     }
                     stats.setNicAddrMap(nicAddrMap);
+                }
+
+                result = dm.qemuAgentCommand(QemuCommand.buildQemuCommand(QemuCommand.AGENT_GET_FSINFO, null), 2, 0);
+                if (result != null && !(result.startsWith("error"))) {
+                    // logger.debug(dm.getName() + " >>  " + result);
+
+                    JsonArray arrData = (JsonArray) new JsonParser().parse(result).getAsJsonObject().get("return");
+
+                    for (JsonElement je : arrData) {
+                        JsonObject jsonObj = je.getAsJsonObject();
+                        JsonElement diskInfo = jsonObj.get("disk");
+
+                        if (diskInfo != null && diskInfo.isJsonArray()) {
+                            for (JsonElement diskElement : diskInfo.getAsJsonArray()) {
+                                JsonObject diskObj = diskElement.getAsJsonObject();
+                                String serial = diskObj.get("serial").getAsString();
+                                JsonElement usedBytesElement = jsonObj.get("used-bytes");
+                                if (serial == null || serial.isEmpty() || usedBytesElement == null || usedBytesElement.isJsonNull()) {
+                                    continue;
+                                }
+                                long usedBytes = usedBytesElement.getAsLong();
+                                if (serial.length() >= 20) {
+                                    String serial_val = serial.substring(serial.length() - 20);
+                                    String serial_uuid = serial_val.substring(0, 8) + "_"
+                                    + serial_val.substring(8, 12) + "_"
+                                    + serial_val.substring(12, 16) + "_"
+                                    + serial_val.substring(16, 20) + "_"
+                                    + serial_val.substring(20);
+                                    serial = serial_uuid;
+                                    System.out.println(serial);
+
+                                }
+                                fsUsageMap.put(serial, fsUsageMap.getOrDefault(serial, 0L) + usedBytes);
+                            }
+                        }
+                    }
+
+                    stats.setFsUsageMap(fsUsageMap);
+                    // serial별로 used-bytes 합산된 결과 출력
+                    for (Map.Entry<String, Long> entry : fsUsageMap.entrySet()) {
+                        String serial = entry.getKey();
+                        long totalUsedBytes = entry.getValue();
+                        logger.debug("Serial: " + serial + " - Total Used Bytes: " + totalUsedBytes);
+                    }
                 }
             }
             /* save to Hashmap */

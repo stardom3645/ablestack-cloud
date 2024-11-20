@@ -652,7 +652,7 @@ public class AncientDataMotionStrategy implements DataMotionStrategy {
             final SnapshotObjectTO snapObjTO = (SnapshotObjectTO)srcDataTo;
             if (snapObjTO.getVolume().getKvdoEnable()) {
                 try {
-                    convertKvdo(destData.getTO().getPath());
+                    convertKvdo(destData.getTO().getPath(), destData.getUuid());
                 }  catch (Exception e) {
                     throw new CloudRuntimeException(e.toString());
                 }

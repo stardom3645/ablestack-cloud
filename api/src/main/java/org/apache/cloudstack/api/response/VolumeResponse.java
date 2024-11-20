@@ -317,6 +317,10 @@ public class VolumeResponse extends BaseResponseWithTagInformation implements Co
     @Param(description = "Whether to On or Off it as a KVDO dedup volume", since = "4.20")
     private Boolean dedup;
 
+    @SerializedName(ApiConstants.USED_BYTES)
+    @Param(description = "Disk file system actual usage (qemu-guest-agnet must be installed on virtual machine)", since = "4.20")
+    private Long usedBytes;
+
     public String getPath() {
         return path;
     }
@@ -897,5 +901,13 @@ public class VolumeResponse extends BaseResponseWithTagInformation implements Co
 
     public void setDedup(boolean dedup) {
         this.dedup = dedup;
+    }
+
+    public Long getUsedBytes() {
+        return usedBytes;
+    }
+
+    public void setUsedBytes(Long usedBytes) {
+        this.usedBytes = usedBytes;
     }
 }
