@@ -84,13 +84,18 @@ public class DisasterRecoveryHelperImpl extends AdapterBase implements DisasterR
                 if (rs.next()) {
                     numRows = rs.getInt(1);
                 }
-                if (numRows > 0) {
-                    List<DisasterRecoveryClusterVO> drCluster = disasterRecoveryClusterDao.listAll();
-                    for (DisasterRecoveryClusterVO drc : drCluster) {
-                        List<DisasterRecoveryClusterVmMapVO> vmMap = disasterRecoveryClusterVmMapDao.listByDisasterRecoveryClusterId(drc.getId());
-                        if (!CollectionUtils.isEmpty(vmMap)) {
-                            for (DisasterRecoveryClusterVmMapVO map : vmMap) {
-                                if (map.getVmId() == vmId) {
+                List<DisasterRecoveryClusterVO> drCluster = disasterRecoveryClusterDao.listAll();
+                for (DisasterRecoveryClusterVO drc : drCluster) {
+                    List<DisasterRecoveryClusterVmMapVO> vmMap = disasterRecoveryClusterVmMapDao.listByDisasterRecoveryClusterId(drc.getId());
+                    if (!CollectionUtils.isEmpty(vmMap)) {
+                        for (DisasterRecoveryClusterVmMapVO map : vmMap) {
+                            logger.info("map.getVmId():::::::::::::::::::");
+                            logger.info(map.getVmId());
+                            logger.info("vmId:::::::::::::::::::");
+                            logger.info(vmId);
+                            if (map.getVmId() == vmId) {
+                                logger.info("mirrorVM:::::::::::::::::::::");
+                                if (numRows > 0) {
                                     String ipList = Script.runSimpleBashScript("cat /etc/hosts | grep -E 'scvm.*-mngt' | awk '{print $1}' | tr '\n' ','");
                                     if (ipList != null || !ipList.isEmpty()) {
                                         ipList = ipList.replaceAll(",$", "");
@@ -135,17 +140,17 @@ public class DisasterRecoveryHelperImpl extends AdapterBase implements DisasterR
                                             throw new CloudRuntimeException("The virtual machine cannot be started because the image syncing process for the mirroring virtual machine has not completed.");
                                         }
                                     }
+                                } else {
+                                    throw new CloudRuntimeException("The virtual machine cannot be started because the forced demote is not completed.");
                                 }
+                            } else {
+                                logger.info("NonMirrorVM:::::::::::::::::::::");
                             }
                         }
                     }
-                } else {
-                    throw new CloudRuntimeException("The virtual machine cannot be started because the forced demote is not completed.");
                 }
             }
         } catch (SQLException e) {
-            throw new CloudRuntimeException("The virtual machine cannot be started because the forced demote is not completed. ", e);
-        } catch (Throwable e) {
             throw new CloudRuntimeException("The virtual machine cannot be started because the forced demote is not completed. ", e);
         }
         return;
