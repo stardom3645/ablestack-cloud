@@ -4820,6 +4820,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
                 io_wr += blockStats.wr_req;
                 bytes_rd += blockStats.rd_bytes;
                 bytes_wr += blockStats.wr_bytes;
+
                 if (rbdLsResult != null && rbdLsResult != ""){
                     // JSON 배열 파싱
                     JSONArray rbdLsJsonArray = new JSONArray(rbdLsResult);
@@ -4838,11 +4839,11 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
                             }
                         }
                     }
-                    if (rbdUuid != "" && usedPhysicalSize != 0) {
+                    if (rbdUuid != "") {
                         rbdDuMap.put(rbdUuid, usedPhysicalSize);
                     }
+                    stats.setRbdDuMap(rbdDuMap);
                 }
-                stats.setRbdDuMap(rbdDuMap);
             }
 
             if (oldStats != null) {
