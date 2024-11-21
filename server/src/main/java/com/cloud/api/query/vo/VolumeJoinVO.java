@@ -295,6 +295,9 @@ public class VolumeJoinVO extends BaseViewWithTagInformationVO implements Contro
     @Column(name = "used_bytes")
     private Long usedBytes;
 
+    @Column(name = "used_physical_size")
+    private Long usedPhysicalSize;
+
     public VolumeJoinVO() {
     }
 
@@ -652,6 +655,10 @@ public class VolumeJoinVO extends BaseViewWithTagInformationVO implements Contro
 
     public Long getUsedBytes() {
         return usedBytes;
+    }
+
+    public Long getUsedPhysicalBytes() {
+        return usedPhysicalSize;
     }
 
     @Override

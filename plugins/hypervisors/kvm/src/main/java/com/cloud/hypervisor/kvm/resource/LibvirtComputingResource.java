@@ -85,6 +85,7 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 import org.apache.xerces.impl.xpath.regex.Match;
 import org.joda.time.Duration;
+import org.json.JSONArray;
 import org.libvirt.Connect;
 import org.libvirt.Domain;
 import org.libvirt.DomainBlockStats;
@@ -4838,6 +4839,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
             }
             Map<String, String> nicAddrMap = new HashMap<String, String>();
             Map<String, Long> fsUsageMap = new HashMap<String, Long>();
+            Map<String, Long> rbdDuMap = new HashMap<String, Long>();
             String qemuAgentVersion = "Not Installed";
             stats.setQemuAgentVersion(qemuAgentVersion);
 
@@ -4883,6 +4885,9 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
                     stats.setNicAddrMap(nicAddrMap);
                 }
 
+                String rbdLsCommand = String.format("timeout 3 rbd ls --format json 2>/dev/null");
+                String rbdLsResult = Script.runSimpleBashScript(rbdLsCommand);
+
                 result = dm.qemuAgentCommand(QemuCommand.buildQemuCommand(QemuCommand.AGENT_GET_FSINFO, null), 2, 0);
                 if (result != null && !(result.startsWith("error"))) {
                     // logger.debug(dm.getName() + " >>  " + result);
@@ -4895,36 +4900,59 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
 
                         if (diskInfo != null && diskInfo.isJsonArray()) {
                             for (JsonElement diskElement : diskInfo.getAsJsonArray()) {
+                                // Capacity used by disk file system
                                 JsonObject diskObj = diskElement.getAsJsonObject();
-                                String serial = diskObj.get("serial").getAsString();
+
+                                JsonElement serialElement = diskObj.get("serial");
                                 JsonElement usedBytesElement = jsonObj.get("used-bytes");
-                                if (serial == null || serial.isEmpty() || usedBytesElement == null || usedBytesElement.isJsonNull()) {
+                                if (serialElement == null || serialElement.isJsonNull() || usedBytesElement == null || usedBytesElement.isJsonNull()) {
                                     continue;
                                 }
+
+                                String serial = diskObj.get("serial").getAsString();
                                 long usedBytes = usedBytesElement.getAsLong();
                                 if (serial.length() >= 20) {
+                                    //serial to half path uuid
                                     String serial_val = serial.substring(serial.length() - 20);
-                                    String serial_uuid = serial_val.substring(0, 8) + "_"
-                                    + serial_val.substring(8, 12) + "_"
-                                    + serial_val.substring(12, 16) + "_"
-                                    + serial_val.substring(16, 20) + "_"
-                                    + serial_val.substring(20);
+                                    String serial_uuid = serial_val.substring(0, 8) + "-"
+                                    + serial_val.substring(8, 12) + "-"
+                                    + serial_val.substring(12, 16) + "-"
+                                    + serial_val.substring(16, 20);
                                     serial = serial_uuid;
                                     System.out.println(serial);
-
                                 }
                                 fsUsageMap.put(serial, fsUsageMap.getOrDefault(serial, 0L) + usedBytes);
                             }
                         }
                     }
-
                     stats.setFsUsageMap(fsUsageMap);
-                    // serial별로 used-bytes 합산된 결과 출력
-                    for (Map.Entry<String, Long> entry : fsUsageMap.entrySet()) {
-                        String serial = entry.getKey();
-                        long totalUsedBytes = entry.getValue();
-                        logger.debug("Serial: " + serial + " - Total Used Bytes: " + totalUsedBytes);
+
+                    if (fsUsageMap != null && rbdLsResult != null && rbdLsResult != ""){
+                        logger.debug("rbdLsResult >>  " + rbdLsResult);
+                        logger.debug("fsUsageMap size : " + fsUsageMap.size());
+                        // JSON 배열 파싱
+                        JSONArray rbdLsJsonArray = new JSONArray(rbdLsResult);
+                        for (String key : fsUsageMap.keySet()) {
+                            String rbdUuid = "";
+                            long usedPhysicalSize = 0;
+                            for (int i = 0; i < rbdLsJsonArray.length(); i++) {
+                                String rbdImageName = rbdLsJsonArray.getString(i);
+                                if (rbdImageName.contains(key)) {
+                                    String rbdDuCommand = String.format("timeout 1 rbd du --format json --merge-snapshots --image " + rbdImageName + " 2>/dev/null");
+                                    String rbdDuResult = Script.runSimpleBashScript(rbdDuCommand);
+                                    if (rbdDuResult != null && rbdDuResult != "" && rbdDuResult.contains("images")){
+                                        JsonArray rbdDuJsonArray = (JsonArray) new JsonParser().parse(rbdDuResult).getAsJsonObject().get("images");
+                                        rbdUuid = rbdDuJsonArray.get(0).getAsJsonObject().get("name").getAsString();
+                                        usedPhysicalSize = Long.parseLong(rbdDuJsonArray.get(0).getAsJsonObject().get("used_size").getAsString());
+                                    }
+                                }
+                            }
+                            if (rbdUuid != "" && usedPhysicalSize != 0) {
+                                rbdDuMap.put(rbdUuid, usedPhysicalSize);
+                            }
+                        }
                     }
+                    stats.setRbdDuMap(fsUsageMap);
                 }
             }
             /* save to Hashmap */

@@ -321,6 +321,10 @@ public class VolumeResponse extends BaseResponseWithTagInformation implements Co
     @Param(description = "Disk file system actual usage (qemu-guest-agnet must be installed on virtual machine)", since = "4.20")
     private Long usedBytes;
 
+    @SerializedName(ApiConstants.USED_PHYSICAL_SIZE)
+    @Param(description = "Disk Physical actual usage (qemu-guest-agnet must be installed on virtual machine)", since = "4.20")
+    private Long usedPhysicalSize;
+
     public String getPath() {
         return path;
     }
@@ -909,5 +913,13 @@ public class VolumeResponse extends BaseResponseWithTagInformation implements Co
 
     public void setUsedBytes(Long usedBytes) {
         this.usedBytes = usedBytes;
+    }
+
+    public Long getUsedPhysicalSize() {
+        return usedPhysicalSize;
+    }
+
+    public void setUsedPhysicalSize(Long usedPhysicalSize) {
+        this.usedPhysicalSize = usedPhysicalSize;
     }
 }

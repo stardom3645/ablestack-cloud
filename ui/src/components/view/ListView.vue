@@ -431,6 +431,11 @@
         <status :text="record.kvdoenable ? record.kvdoenable.toString() : 'false'" />
         {{ record.kvdoenable ? 'Enabled' : 'Disabled' }}
       </template>
+      <template v-if="column.key === 'usedbytes'">
+        <span v-if="text">
+          {{ isNaN(text) ? text : (parseFloat(parseFloat(text) / 1024.0 / 1024.0 / 1024.0).toFixed(2) + ' GiB') }}
+        </span>
+      </template>
       <template v-if="['startdate', 'enddate'].includes(column.key) && ['usage'].includes($route.path.split('/')[1])">
         {{ $toLocaleDate(text.replace('\'T\'', ' ')) }}
       </template>

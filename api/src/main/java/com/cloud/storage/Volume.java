@@ -293,5 +293,9 @@ public interface Volume extends ControlledEntity, Identity, InternalIdentity, Ba
 
     Long getUsedBytes();
 
-    void setUsedBytes(Long usedBytes);
+    void setUsedBytes(Long usedPhysicalBytes);
+
+    Long getUsedPhysicalSize();
+
+    void setUsedPhysicalSize(Long usedPhysicalSize);
 }
