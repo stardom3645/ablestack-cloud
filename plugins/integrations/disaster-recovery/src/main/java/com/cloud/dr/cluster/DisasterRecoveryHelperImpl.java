@@ -91,7 +91,7 @@ public class DisasterRecoveryHelperImpl extends AdapterBase implements DisasterR
                                 if (mirrorImageStatus != null) {
                                     JsonObject statObject = (JsonObject) new JsonParser().parse(mirrorImageStatus).getAsJsonObject();
                                     if (statObject.has("description")) {
-                                        if (!statObject.get("description").getAsString().equals("local image is primary") && !statObject.get("description").getAsString().contains("force promote")) {
+                                        if (!statObject.get("description").getAsString().equals("local image is primary") && !statObject.get("description").getAsString().contains("orphan (force promoting)")) {
                                             throw new CloudRuntimeException("The virtual machine cannot be started because the mirroring image not ready status.");
                                         }
                                     }
