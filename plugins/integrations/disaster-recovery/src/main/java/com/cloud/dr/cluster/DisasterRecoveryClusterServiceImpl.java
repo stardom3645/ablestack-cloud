@@ -174,7 +174,6 @@ public class DisasterRecoveryClusterServiceImpl extends ManagerBase implements D
                 String glueMethod = "GET";
                 String glueStatus = DisasterRecoveryClusterUtil.glueStatusAPI(glueUrl, glueCommand, glueMethod);
                 if (glueStatus != null) {
-                    ///////////////////// glue 상태에 따라 오픈 여부 설정 필요
                     if (glueStatus.contains("HEALTH_OK") || glueStatus.contains("HEALTH_WARN") ) {
                         return true;
                     }
