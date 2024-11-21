@@ -994,4 +994,14 @@ public class VolumeObject implements VolumeInfo {
     public void setUsedBytes(Long usedBytes) {
         volumeVO.setUsedBytes(usedBytes);
     }
+
+    @Override
+    public Long getUsedPhysicalSize() {
+        return volumeVO.getUsedPhysicalSize();
+    }
+
+    @Override
+    public void setUsedPhysicalSize(Long usedPhysicalSize) {
+        volumeVO.setUsedPhysicalSize(usedPhysicalSize);
+    }
 }

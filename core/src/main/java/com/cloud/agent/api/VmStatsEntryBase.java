@@ -42,6 +42,7 @@ public class VmStatsEntryBase implements VmStats {
     private Map<String, String> nicAddrMap;
     private String qemuAgentVersion;
     private Map<String, Long> fsUsageMap;
+    private Map<String, Long> rbdDuMap;
 
     public VmStatsEntryBase() {
 
@@ -228,6 +229,14 @@ public class VmStatsEntryBase implements VmStats {
 
     public void setFsUsageMap(Map<String, Long> fsUsageMap) {
         this.fsUsageMap = fsUsageMap;
+    }
+
+    public Map<String, Long> getRbdDuMap() {
+        return rbdDuMap;
+    }
+
+    public void setRbdDuMap(Map<String, Long> rbdDuMap) {
+        this.rbdDuMap = rbdDuMap;
     }
 
 }

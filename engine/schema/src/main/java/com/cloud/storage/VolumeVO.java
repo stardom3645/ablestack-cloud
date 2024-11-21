@@ -194,6 +194,9 @@ public class VolumeVO implements Volume {
     @Column(name = "used_bytes")
     private Long usedBytes;
 
+    @Column(name = "used_physical_size")
+    private Long usedPhysicalSize;
+
     // Real Constructor
     public VolumeVO(Type type, String name, long dcId, long domainId,
             long accountId, long diskOfferingId, Storage.ProvisioningType provisioningType, long size,
@@ -295,6 +298,7 @@ public class VolumeVO implements Volume {
         compress = that.getCompress();
         dedup = that.getDedup();
         usedBytes = that.getUsedBytes();
+        usedPhysicalSize = that.getUsedPhysicalSize();
     }
 
     @Override
@@ -709,4 +713,8 @@ public class VolumeVO implements Volume {
     public Long getUsedBytes() { return usedBytes; }
 
     public void setUsedBytes(Long usedBytes) { this.usedBytes = usedBytes; }
+
+    public Long getUsedPhysicalSize() { return usedPhysicalSize; }
+
+    public void setUsedPhysicalSize(Long usedPhysicalSize) { this.usedPhysicalSize = usedPhysicalSize; }
 }
