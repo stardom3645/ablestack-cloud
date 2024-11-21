@@ -20,6 +20,7 @@ import static com.cloud.vm.VmDetailConstants.SSH_PUBLIC_KEY;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -2432,6 +2433,15 @@ public class QueryManagerImpl extends MutualExclusiveIdsManagerBase implements Q
             DataStoreDriver driver = store.getDriver();
             if (driver == null) {
                 continue;
+            }
+
+            if (vr.getUsedPhysicalSize() != null && vr.getVirtualsize() != null) {
+                DecimalFormat df = new DecimalFormat("0.0%");
+                vr.setPhysicalsize(vr.getUsedPhysicalSize());
+                long vsz = vr.getVirtualsize();
+                long psz = vr.getUsedPhysicalSize();
+                double util = (double)psz/vsz;
+                vr.setUtilization(df.format(util));                
             }
 
             Map<String, String> caps = driver.getCapabilities();
