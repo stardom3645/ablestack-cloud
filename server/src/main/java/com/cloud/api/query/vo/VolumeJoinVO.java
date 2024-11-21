@@ -657,7 +657,7 @@ public class VolumeJoinVO extends BaseViewWithTagInformationVO implements Contro
         return usedBytes;
     }
 
-    public Long getUsedPhysicalBytes() {
+    public Long getUsedPhysicalSize() {
         return usedPhysicalSize;
     }
 
